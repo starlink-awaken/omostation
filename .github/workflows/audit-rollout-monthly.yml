@@ -7,6 +7,10 @@ on:
     # 每月 1 号 01:00 UTC (晚于 omo 仓 refresh-baseline 1h, 让 baseline 先就位)
     - cron: '0 1 1 * *'
   workflow_dispatch:  # 支持手动触发
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 permissions:
   contents: write

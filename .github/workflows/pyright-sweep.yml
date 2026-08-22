@@ -20,6 +20,10 @@ on:
         description: "A4 --diff-mode: only scan projects touched in origin/main..HEAD"
         type: boolean
         default: false
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   sweep:

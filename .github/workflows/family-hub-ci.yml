@@ -8,6 +8,10 @@ on:
   pull_request:
     branches: [main]
     paths: ['projects/family-hub/**', '.github/workflows/family-hub-ci.yml']
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   test:

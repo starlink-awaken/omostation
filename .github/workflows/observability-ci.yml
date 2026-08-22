@@ -8,6 +8,10 @@ on:
   pull_request:
     branches: [main]
     paths: ['projects/observability/**', '.github/workflows/observability-ci.yml']
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   validate:

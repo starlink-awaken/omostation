@@ -11,6 +11,10 @@ on:
       package:
         description: 'Package to publish (leave empty for all)'
         required: false
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   build-and-publish:
