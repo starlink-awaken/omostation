@@ -51,6 +51,26 @@ def lms_generating_locally() -> bool:
     return any(r.get("status") == "generating" for r in rows)
 
 
+def embedding_probe(model_id: str) -> tuple[str, str]:
+    try:
+        r = httpx.post(
+            f"{BASE_URL}/v1/embeddings",
+            json={"model": model_id, "input": "贯通测试"},
+            timeout=60,
+        )
+    except Exception as e:
+        return "FAIL", str(e)[:150]
+    if r.status_code != 200:
+        return "FAIL", f"HTTP {r.status_code}: {r.text[:150]}"
+    try:
+        vec = r.json()["data"][0]["embedding"]
+    except Exception as e:
+        return "FAIL", f"parse error: {e}"
+    if not vec or len(vec) == 0:
+        return "GARBAGE", "empty vector"
+    return "OK", f"dim={len(vec)}"
+
+
 def chat_probe(model_id: str, max_tokens: int = 300) -> tuple[str, str]:
     try:
         r = httpx.post(
@@ -86,6 +106,7 @@ def main() -> int:
     with open(CONFIG_PATH, "rb") as f:
         cfg = tomllib.load(f)
 
+    role_by_model = {m["id"]: m.get("role", "chat") for m in cfg["models"]}
     placements = [p for p in cfg["placements"] if p["backend_id"] == "mbp-m5-max-128g-omlx-app"]
     if wanted:
         placements = [p for p in placements if p["id"] in wanted]
@@ -115,7 +136,11 @@ def main() -> int:
             results.append((placement_id, "SKIP-BUSY", "lm studio generating"))
             continue
 
-        verdict, detail = chat_probe(model_id)
+        role = role_by_model.get(p["model_id"], "chat")
+        if role == "embedding":
+            verdict, detail = embedding_probe(model_id)
+        else:
+            verdict, detail = chat_probe(model_id)
         print(f"  {verdict}: {detail}", flush=True)
         results.append((placement_id, verdict, detail))
 
