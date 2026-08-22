@@ -48,10 +48,12 @@ def _stable_python3() -> str:
     import os
 
     for path in os.environ.get("PATH", "").split(os.pathsep):
-        if ".cache/uv" in path or "/.tmp" in path:
+        # 跳过 uv 临时目录、uv 管理的 .venv 入口 (uv run 会把 .venv/bin 提到 PATH 最前),
+        # 这些都是 uv 拥有生命周期的 Python, GC 后会失效或切版本 — 不属于 "stable" 锚点.
+        if ".cache/uv" in path or "/.tmp" in path or "/.venv/bin" in path or "/.venv/" in path:
             continue
         p = shutil.which("python3", path=path)
-        if p and not (".cache/uv" in p or "/.tmp" in p):
+        if p and not (".cache/uv" in p or "/.tmp" in p or "/.venv/bin" in p):
             return p
     return "/opt/homebrew/bin/python3"
 
@@ -94,7 +96,7 @@ def resolve_interpreter(spec: str) -> str:
             )
         interp = resolved
     # 校验禁 uv 临时路径 (治 P2 + uv run 时 shutil.which 返回 .tmp 的坑 — PR#77 不彻底)
-    if ".cache/uv/builds" in interp or "/.tmp" in interp:
+    if ".cache/uv/builds" in interp or "/.tmp" in interp or "/.venv/bin" in interp:
         raise ValueError(f"interpreter 含 uv 临时路径 (禁, uv GC 后失效): {interp}")
     return interp
 
