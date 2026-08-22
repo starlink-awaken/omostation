@@ -1,6 +1,6 @@
 ---
-status: SUPERSEDED
-lifecycle: ARCHIVED
+status: superseded
+lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-22
 ---
