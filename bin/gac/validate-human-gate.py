@@ -39,7 +39,7 @@ def extract_evidence_refs(scene_card_path: Path) -> list[str]:
     return refs
 
 
-def validate_human_gate(scene_card_path: Path, allow_manual: bool = False) -> dict:
+def validate_human_gate(scene_card_path: Path) -> dict:
     refs = extract_evidence_refs(scene_card_path)
     prohibited = []
     for ref in refs:
@@ -50,16 +50,14 @@ def validate_human_gate(scene_card_path: Path, allow_manual: bool = False) -> di
         "scene_card": str(scene_card_path),
         "prohibited_count": len(prohibited),
         "prohibited_sources": prohibited,
-        "allowed": allow_manual,
     }
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate human gate evidence sources")
     parser.add_argument("--scene-card", type=Path, required=True)
-    parser.add_argument("--allow-manual", action="store_true")
     args = parser.parse_args(argv)
-    report = validate_human_gate(args.scene_card, args.allow_manual)
+    report = validate_human_gate(args.scene_card)
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 1 if report["prohibited_count"] > 0 else 0
 
