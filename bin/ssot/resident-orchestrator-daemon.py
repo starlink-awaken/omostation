@@ -66,10 +66,100 @@ def _log(msg: str) -> None:
         pass
 
 
+_ROUTES_FILE = Path(__file__).resolve().parent / "resident-routes.yaml"
+_ROUTES: dict[str, dict[str, Any]] = {}
+
+
+def _load_routes(path: Path = _ROUTES_FILE) -> dict[str, dict[str, Any]]:
+    """Load the rule-level subscription routes (fail-closed on invalid YAML)."""
+    import yaml  # noqa: PLC0415
+
+    global _ROUTES  # noqa: PLW0603
+    if not path.is_file():
+        _ROUTES = {}
+        return _ROUTES
+    try:
+        doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        _log(f"routes_load_failed invalid_yaml: {exc}")
+        raise
+    routes = doc.get("routes", []) if isinstance(doc, dict) else None
+    if not isinstance(routes, list):
+        _log("routes_load_failed missing_routes_list")
+        raise ValueError("resident-routes.yaml must contain a routes list")
+    result: dict[str, dict[str, Any]] = {}
+    for rule in routes:
+        if not isinstance(rule, dict) or not rule.get("event_type"):
+            _log("routes_load_failed invalid_rule")
+            raise ValueError("each route needs event_type")
+        result[str(rule["event_type"])] = rule
+    _ROUTES = result
+    return result
+
+
+def _condition_holds(condition: str, event: dict[str, Any]) -> bool:
+    """Evaluate a restricted condition expression against the event.
+
+    Supports simple ``payload.<field> <op> <literal>`` comparisons and the
+    ``in (<a>,<b>)`` membership check. Anything else is rejected (fail-closed).
+    """
+    import ast  # noqa: PLC0415
+
+    expr = condition.strip()
+    try:
+        tree = ast.parse(expr, mode="eval")
+    except SyntaxError:
+        return False
+    node = tree.body
+
+    # payload.field in (a, b)
+    if (
+        isinstance(node, ast.Compare)
+        and len(node.ops) == 1
+        and isinstance(node.ops[0], ast.In)
+        and isinstance(node.left, ast.Attribute)
+        and isinstance(node.left.value, ast.Name)
+        and node.left.value.id == "payload"
+        and isinstance(node.comparators[0], ast.Tuple)
+    ):
+        field = node.left.attr
+        actual = event.get("payload", {}).get(field) if isinstance(event.get("payload"), dict) else None
+        allowed = {c.value for c in node.comparators[0].elts if isinstance(c, ast.Constant)}
+        return actual in allowed
+
+    # payload.field == literal
+    if (
+        isinstance(node, ast.Compare)
+        and len(node.ops) == 1
+        and isinstance(node.ops[0], ast.Eq)
+        and isinstance(node.left, ast.Attribute)
+        and isinstance(node.left.value, ast.Name)
+        and node.left.value.id == "payload"
+        and isinstance(node.comparators[0], ast.Constant)
+    ):
+        field = node.left.attr
+        actual = event.get("payload", {}).get(field) if isinstance(event.get("payload"), dict) else None
+        return actual == node.comparators[0].value
+
+    return False  # unsupported expression → fail-closed
+
+
 def _route(event: dict[str, Any]) -> None:
     event_type = str(event.get("event_type") or "")
-    handler = _EVENT_HANDLERS.get(event_type, _handler_placeholder)
-    if _APPROVAL_REQUIRED and handler.__name__ not in _SAFE_HANDLERS:
+    rule = _ROUTES.get(event_type)
+    handler = None
+    if rule is not None:
+        condition = rule.get("condition")
+        if condition and not _condition_holds(str(condition), event):
+            return  # condition not met → skip
+        action = str(rule.get("action") or "")
+        handler = _EVENT_HANDLERS.get(action, _handler_placeholder)
+        # safe 由规则声明; 若未声明则按 handler 注册的 safe 集合判断
+        safe = bool(rule.get("safe", False)) or handler.__name__ in _SAFE_HANDLERS
+    else:
+        handler = _handler_placeholder
+        safe = True
+    if _APPROVAL_REQUIRED and not safe:
         _log(f"handler_blocked_awaiting_approval event_type={event_type} handler={handler.__name__}")
         return
     try:
@@ -78,40 +168,42 @@ def _route(event: dict[str, Any]) -> None:
         _log(f"handler_error event_type={event_type} err={type(exc).__name__}: {exc}")
 
 
-def tick_once(
-    broker: Any, events_jsonl: Path, *, projector: str = PROJECTOR_ID, topic_filter: set[str] | None = None
-) -> dict[str, Any]:
-    """Read new events from the JSONL (after checkpoint), route each, advance watermark.
+def _wm_path(projector: str) -> Path:
+    return WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator" / "watermarks" / f"{projector}.json"
 
-    ``projector`` is this daemon's independent checkpoint name (multi-agent
-    parallelism: each agent daemon consumes its own event slice). ``topic_filter``
-    restricts which event types this daemon handles (e.g. only WorkflowClosed).
+
+def _load_byte_offset(projector: str) -> int:
+    try:
+        data = json.loads(_wm_path(projector).read_text(encoding="utf-8"))
+        return int(data.get("byte_offset", 0))
+    except (OSError, json.JSONDecodeError):
+        return 0
+
+
+def _save_byte_offset(projector: str, byte_offset: int) -> None:
+    path = _wm_path(projector)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"byte_offset": byte_offset}), encoding="utf-8")
+
+
+def _read_incremental(events_jsonl: Path, byte_offset: int) -> tuple[list[dict[str, Any]], int]:
+    """Seek-read only the bytes after ``byte_offset`` (incremental tail read).
+
+    If the file was truncated/rebuilt (size < offset) we fall back to a full
+    scan from byte 0. Returns (new_events, new_file_size).
     """
-    cp = broker.checkpoint_get(projector)
-    last_index = int((cp or {}).get("last_sequence", 0))
-    events = _read_events(events_jsonl)
-    scanned = events[last_index:]
-    # 每个 agent 完整扫描自己的水位之后的行, 但只处理属于自己 topic_filter 的事件。
-    # checkpoint 推进到"文件扫描末尾"而非"处理数量"——否则多 agent 分片时
-    # 各自推进不同行号会导致漏处理/重复处理。
-    new_events = scanned
-    if topic_filter:
-        new_events = [ev for ev in scanned if (ev.get("event_type") or "") in topic_filter]
-    processed = 0
-    for event in new_events:
-        _route(event)
-        processed += 1
-    broker.checkpoint_set(projector, last_index + len(scanned))
-    return {"start_index": last_index, "processed": processed, "events_in_file": len(events)}
-
-
-def _read_events(events_jsonl: Path) -> list[dict[str, Any]]:
-    import json  # noqa: PLC0415
-
     if not events_jsonl.is_file():
-        return []
+        return [], 0
+    file_size = events_jsonl.stat().st_size
+    if file_size < byte_offset:
+        byte_offset = 0  # truncate/recreate → full rescan
+    if byte_offset == file_size:
+        return [], file_size
     events: list[dict[str, Any]] = []
-    for line in events_jsonl.read_text(encoding="utf-8").splitlines():
+    with events_jsonl.open("rb") as fh:
+        fh.seek(byte_offset)
+        data = fh.read()
+    for line in data.decode("utf-8", "replace").splitlines():
         line = line.strip()
         if not line:
             continue
@@ -119,7 +211,32 @@ def _read_events(events_jsonl: Path) -> list[dict[str, Any]]:
             events.append(json.loads(line))
         except json.JSONDecodeError:
             continue
-    return events
+    return events, file_size
+
+
+def tick_once(
+    broker: Any, events_jsonl: Path, *, projector: str = PROJECTOR_ID, topic_filter: set[str] | None = None
+) -> dict[str, Any]:
+    """Read new events incrementally (byte-offset watermark), route, advance.
+
+    ``projector`` is this daemon's independent checkpoint name (multi-agent
+    parallelism). ``topic_filter`` restricts which event types this daemon
+    handles. The ledger checkpoint stores the row watermark (compat); the local
+    watermark file stores the byte offset for incremental tail reads.
+    """
+    cp = broker.checkpoint_get(projector)
+    last_index = int((cp or {}).get("last_sequence", 0))
+    byte_offset = _load_byte_offset(projector)
+    scanned, file_size = _read_incremental(events_jsonl, byte_offset)
+    # 每个 agent 扫描增量窗口, 但只处理属于自己 topic_filter 的事件。
+    new_events = scanned if not topic_filter else [ev for ev in scanned if (ev.get("event_type") or "") in topic_filter]
+    processed = 0
+    for event in new_events:
+        _route(event)
+        processed += 1
+    broker.checkpoint_set(projector, last_index + len(scanned))
+    _save_byte_offset(projector, file_size)
+    return {"start_index": last_index, "processed": processed, "events_in_file": last_index + len(scanned)}
 
 
 def _events_after(events: list[dict[str, Any]], last_event_id: str) -> list[dict[str, Any]]:
@@ -178,6 +295,7 @@ def run_daemon(
 ) -> int:
     _inject_paths()
     _register_default_handlers()
+    _load_routes()  # WP-C: rule-level subscription table (fail-closed)
     broker = _connect_with_retry(ledger)
     PID_FILE.parent.mkdir(parents=True, exist_ok=True)
     PID_FILE.write_text(str(os.getpid()), encoding="utf-8")
