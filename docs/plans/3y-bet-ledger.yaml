@@ -4259,6 +4259,11 @@ bets:
     trigger: '任一: 用户明确发起解封评估; 重新参与中试/政策申报业务; 出现真实申报任务'
     verify: '运行 resume_acceptance 全部通过(依赖 done + 场景卡存在 + 管线可用 + done_when 起点不重置)'
     approval: '人工批准解封(blocked_reentry_policy: human_approval_required)'
+    commands:
+    - 'python3 bin/plan/bet-ledger.py show BET-Y2Q2-T7-02 | grep status=done'
+    - 'python3 bin/plan/bet-ledger.py show BET-Y3H1-T3-01 | grep status=done'
+    - 'grep -c lifecycle docs/scene-cards/v2/*zhongshi* 2>/dev/null || ls docs/scene-cards/v2/'
+    - 'omo external-resources engineering-delivery-review-queue --json'
   resume_acceptance:
   - '依赖仍 done: Y2Q2-T7-02 + Y3H1-T3-01 status=done'
   - '场景卡 lifecycle 未回退: docs/scene-cards/v2/ 中试场景存在'
@@ -4372,6 +4377,10 @@ bets:
     trigger: '任一: 用户明确发起解封评估; 重新参与公文业务; 出现真实公文任务'
     verify: '运行 resume_acceptance 全部通过(依赖状态 + 场景卡存在 + 管线可用 + done_when 起点不重置)'
     approval: '人工批准解封(blocked_reentry_policy: human_approval_required)'
+    commands:
+    - 'python3 bin/plan/bet-ledger.py show BET-Y3H1-T7-01 | grep status'
+    - 'grep -c "lifecycle: routine" docs/scene-cards/v2/document-review.yaml 2>/dev/null || ls docs/scene-cards/v2/'
+    - 'omo external-resources engineering-delivery-review-queue --json'
   resume_acceptance:
   - '依赖仍 done: Y3H1-T7-01 解封或维持 blocked(不影响公文独立恢复)'
   - '场景卡 lifecycle 未回退: document-review.yaml 存在且可评估'
