@@ -9,6 +9,8 @@ import shutil
 import sys
 from pathlib import Path
 
+import yaml
+
 WORKSPACE = Path(__file__).resolve().parents[2]
 
 
@@ -18,8 +20,6 @@ def _load_run_ids(runs_dir: Path) -> set[str]:
         return run_ids
     for run_file in sorted(runs_dir.glob("*.yaml")):
         try:
-            import yaml
-
             payload = yaml.safe_load(run_file.read_text(encoding="utf-8")) or {}
         except Exception:
             continue
@@ -40,8 +40,6 @@ def scan_orphan_locks(workspace: Path) -> list[dict[str, object]]:
         if lock_file.name.startswith("."):
             continue
         try:
-            import yaml
-
             lock = yaml.safe_load(lock_file.read_text(encoding="utf-8")) or {}
         except Exception:
             continue
