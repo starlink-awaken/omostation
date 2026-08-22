@@ -77,10 +77,16 @@ def _read_events(events_jsonl: Path) -> list[dict[str, Any]]:
     return events
 
 
-def publish_events(*, dry_run: bool = False, events_jsonl: Path = EVENTS_JSONL) -> dict[str, Any]:
-    """Publish new events to the bus; return a report dict."""
+def publish_events(*, dry_run: bool = False, events_jsonl: Path = EVENTS_JSONL, ledger: Path | None = None) -> dict[str, Any]:
+    """Publish new events to the bus; optionally also ingest into the ledger."""
     last_id = _load_watermark()
     events = _read_events(events_jsonl)
+
+    # Optionally ingest new events into the event ledger (jsonl_shadow is
+    # idempotent by content hash), so the resident daemon can consume them.
+    ledger_report = None
+    if ledger is not None and not dry_run:
+        ledger_report = _ingest_into_ledger(events_jsonl, ledger)
 
     # New events are those after the watermark (by file order).
     new_events: list[dict[str, Any]] = []
@@ -151,16 +157,45 @@ def publish_events(*, dry_run: bool = False, events_jsonl: Path = EVENTS_JSONL) 
         "failed": failed,
         "new_events": len(new_events),
         "watermark": _load_watermark(),
+        "ledger": ledger_report,
     }
+
+
+def _ingest_into_ledger(events_jsonl: Path, ledger: Path) -> dict[str, Any]:
+    """Idempotently import the JSONL into the event ledger (shadow events)."""
+    try:
+        _inject_omo_path()
+        from omo.event_ledger.broker import LedgerBroker  # noqa: PLC0415
+        from omo.event_ledger.jsonl_shadow import import_jsonl  # noqa: PLC0415
+
+        broker = LedgerBroker.connect(str(ledger))
+        try:
+            report = import_jsonl(broker, events_jsonl)
+        finally:
+            broker.close()
+        return {
+            "imported": report.get("imported", 0),
+            "duplicates": report.get("duplicates", 0),
+            "quarantined": report.get("quarantined", 0),
+        }
+    except Exception as exc:  # noqa: BLE001 - ledger ingest is optional
+        return {"error": f"ledger ingest failed: {type(exc).__name__}: {exc}"}
+
+
+def _inject_omo_path() -> None:
+    candidate = WORKSPACE / "projects" / "omo" / "src"
+    if candidate.is_dir() and str(candidate) not in sys.path:
+        sys.path.insert(0, str(candidate))
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", help="show new events without publishing")
     parser.add_argument("--events-jsonl", type=Path, default=EVENTS_JSONL, help="override events.jsonl path")
+    parser.add_argument("--ledger", type=Path, default=None, help="also ingest into this event ledger")
     args = parser.parse_args()
 
-    report = publish_events(dry_run=args.dry_run, events_jsonl=args.events_jsonl)
+    report = publish_events(dry_run=args.dry_run, events_jsonl=args.events_jsonl, ledger=args.ledger)
     print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
     return 0 if report.get("failed", 0) == 0 else 1
 
