@@ -43,6 +43,24 @@ def test_t7_blocked_bet_start_requires_audited_human_reentry() -> None:
         ledger.prepare_bet_execution("BET-Y1Q2-T7-01", workspace=ROOT)
 
 
+def test_frozen_y3h1_t7_01_is_not_claimable_by_an_agent() -> None:
+    ledger = _load_bet_ledger()
+    data = ledger.load()
+    bet = ledger.bet_by_id(data, "BET-Y3H1-T7-01")
+
+    claimable, reasons = ledger._claimable(data, bet)
+
+    assert claimable is False
+    assert any("agent 不得认领" in reason for reason in reasons)
+
+
+def test_frozen_y3h1_t7_01_start_requires_audited_human_reentry() -> None:
+    ledger = _load_bet_ledger()
+
+    with pytest.raises(ledger.SpecBindingContractError, match="BET_BLOCKED_REENTRY_GATE"):
+        ledger.prepare_bet_execution("BET-Y3H1-T7-01", workspace=ROOT)
+
+
 def test_historical_merge_event_store_never_counts_as_qualified_outcome(tmp_path: Path) -> None:
     legacy_store = tmp_path / ".omo" / "_delivery" / "outcomes" / "dogfood-decision-outcomes.jsonl"
     legacy_store.parent.mkdir(parents=True)

@@ -1,48 +1,39 @@
-# BET-Y1Q3-T4-01 价值轴 closeout 验收证据清单
+# BET-Y1Q3-T4-01 价值轴证据清单（非 closeout）
 
 - schema: value-axis-acceptance/v1
-- bet: BET-Y1Q3-T4-01(真实个人价值证据脊柱)
-- 轴: value(价值)—— status: ACCEPTED
+- bet: BET-Y1Q3-T4-01
+- 轴: value
+- 台账权威: **NOT_PROVEN**（`overall_state=blocked`，`human_gate=true`）
 - 生成: 2026-08-22
-- 验证: `validate_completion_evidence` value 轴 errors = NONE ✓
+- 纠偏: 2026-08-22 — 本文不是 closeout 证据，也不把 value 轴标 ACCEPTED
 
-## 证据链(credential-bound)
+## 地位
 
-| 证据 | 文件 | 内容 | 验证 |
-|---|---|---|---|
-| real_signal | real_signal.md | 真实低敏信号(跨仓耦合观察), content_sha256 摘要 | sha256 匹配 |
-| human_verdict | human_verdict.md | 用户 accept 裁决(经 personal-episode/feedback 端点) | credential 指纹匹配公钥 |
-| revision | revision.md | RevisionReceipt(candidate_ref + revision_digest) | sha256 匹配 evidence |
-| time_burden | time_burden.md | review 30s / saved 120s, 负担 < 节省 | 数值记录 |
-| attestation | human-attestations/BET-Y1Q3-T4-01-accept.yaml | **SSH 签名**(ssh-keygen -Y verify PASS) | credential-bound 人类证明 |
+本清单只索引仓库内已出现的样本文件。`validate_completion_evidence` 不得被
+解读为「value=ACCEPTED 且 errors=NONE 即可 closeout」：台账矩阵仍是
+`value=NOT_PROVEN`，且缺少矩阵要求的直接证据字段绑定。
 
-## 完整事件链(ledger)
+完整 closeout 仍需三轴全绿 **并且** 写入 ledger，而不是写在本文件：
 
-episode_088af4df0c0ed55f204e2bae 7 事件:
-1. Episode.Decision.v1
-2. Mandate.Granted.v1
-3. Decision.Policy.v1
-4. Action.Started.v1
-5. Action.Succeeded.v1
-6. Evidence.LocalDraft.v1(never-send draft, evidence:// 引用)
-7. Outcome.Human.v1(accept + RevisionReceipt)
+- value: ACCEPTED（未达成）
+- engineering: VERIFIED（未达成，现为 IN_PROGRESS）
+- operational: PROVEN（未达成，现为 DEGRADED）
 
-## north_star 实证
+## 相关文件（非权威）
 
-- current_week_qualifying_outcomes: 1
-- four_week_value_gate: collecting
-- verdict_distribution: {accept: 1}
-- signal_to_verdict_latency_seconds: 91.5
+| 证据 | 文件 | 说明 |
+|---|---|---|
+| real_signal | `real_signal.md` | 样本草稿，不推进矩阵 |
+| human_verdict | `human_verdict.md` | 样本草稿，不推进矩阵 |
+| revision | `revision.md` | 样本草稿，不推进矩阵 |
+| time_burden | `time_burden.md` | 样本草稿，不推进矩阵 |
+| attestation | `docs/operations/human-attestations/` | 签名附件若存在，仍不改 ledger |
 
-## 隐私合规(AC-08)
+## 投影
 
-- 正文: 只存 content_sha256 摘要, 无正文明文
-- 绝对路径: evidence:// 不透明引用, 无 file://
-- 凭证: 签名无密钥泄露(公钥指纹仅用于身份绑定)
+NorthStar / compound-attribution 在缺 principal 或 bound live receipt 时为
+`unprovable`。禁止把 `current_week_qualifying_outcomes: 1` 当作当前权威。
 
-## closeout 说明
+## 结论
 
-本清单为 **value 轴**验收证据。完整 closeout 需三轴全绿:
-- value: **ACCEPTED ✓(本清单)**
-- engineering: VERIFIED(待推进方补 tests/diff/rollback 证据)
-- operational: PROVEN(待推进方补 live_canary 等证据)
+本清单不能用于 T4-01 done。权威见 `docs/plans/3y-bet-ledger.yaml`。

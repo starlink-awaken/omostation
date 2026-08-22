@@ -4205,6 +4205,7 @@ bets:
   appetite: 4 weeks
   priority: P1
   status: blocked
+  blocked_reentry_policy: human_approval_required
   blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 政策申报相关工作冻结. 恢复条件: 用户恢复借调/中试业务后解封; 无技术阻塞.'
   goal: 把最有业务价值但流程最长的场景推进到受审执行
   non_goals:
@@ -6007,6 +6008,10 @@ bets:
     attestation 的情况下把 BET 标为 done；PR #1832 已落地三轴完成真相并证明
     engineering=IN_PROGRESS、operational=DEGRADED、value=NOT_PROVEN、overall=blocked。
     因此恢复为 in_progress；只有工程、运行和价值三轴全部满足强证据后才能再次 closeout。
+    2026-08-22：PR #1876 合并了价值轴验收报告，正文曾写 ACCEPTED；该报告不是
+    ledger 真相，不推进 overall_state。权威仍为 completion-evidence-matrix
+    （value=NOT_PROVEN, overall=blocked）。Markdown / attestation 文件不得单独把
+    价值轴翻成 ACCEPTED。
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md
     spec_version: 1.0.0
