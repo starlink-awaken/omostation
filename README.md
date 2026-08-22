@@ -72,6 +72,9 @@ cd projects/knowledge/gbrain && bun test
 | SSOT watcher | `make ssot-{status,log,sync}` | SHA-256 change tracking for 12 SSOT files, audit log in `.omo/ssot-audit-log.jsonl` |
 | GaC local gate | `make gac-local-gate` | Full governance gate (validate, drift, lint, AGCP, MOF, SSOT) |
 | Agent workflow | `bin/agent-workflow.py` | Workflow lifecycle: bootstrap, start, claim, verify, closeout, compliance |
+| MOF reasoning | `mof-reason` / `mof-derive` / `mof-gate` | Impact analysis, cross-repo reasoning, L0 bypass detection |
+| MOF prediction | `mof-predictive-loop` | Unified constraint+M0+M1 predictive governance report |
+| L0 constraints | `ecos-constraint-compiler` | Compile L0-constraints.yaml → executable, enforceable rules |
 | API versioning | `/api/version`, `/api/version/history` | Cockpit API version management with FastAPI middleware |
 
 ### Navigation
