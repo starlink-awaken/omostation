@@ -5999,7 +5999,7 @@ bets:
   title: 真实个人价值证据脊柱与战略事实重基线
   appetite: 2 weeks
   priority: P0
-  status: in_progress
+  status: done
   started_at: 2026-08-21
   run_ref: 20260821T111433Z-bet-execution-967f03e6
   progress_note: >-
@@ -6016,15 +6016,53 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: "git://origin/main@9c4978c4bb680a214df4c2d4d2212454adba0a7d"
+          tests:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/tests.md"
+            sha256: "sha256:bc31fdd6df872ab5f01aa481b257828a6e93e0cd357870d35d72d3877cd8c307"
+          diff:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/diff.md"
+            sha256: "sha256:30480cdef0ebbd7965408e950592dd5964f7a1fa80bb534f66ab728ffe94732a"
+          rollback:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/rollback.md"
+            sha256: "sha256:e7bd0fa5f46198887cc47a00a2f2245b4bc9e2a3c5f84cc54b35db230333ecc9"
       operational:
-        status: DEGRADED
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/live_canary.md"
+            sha256: "sha256:4e8101121a691c77533366fd19edda9b99040546478d853953b72cb67e935838"
+          fresh_receipt:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/fresh_receipt.md"
+            sha256: "sha256:3e35dbb8feb51e18725ceede00b7004a43f3386334df2d78ad05c9c4beee7a4f"
+          replay:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/replay.md"
+            sha256: "sha256:1bc90dd4b9864375c68293cef7950558f8a3d6b807f2fb72995708167f7a90d1"
+          cleanup:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/cleanup.md"
+            sha256: "sha256:d5398636abeeb601880f4ff8b02c1b4b704a6efeb4594153302e7dbdbb6d5c7c"
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: blocked
+        status: ACCEPTED
+        evidence:
+          real_signal:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/real_signal.md"
+            sha256: "sha256:7a8ea13366d4253db480b6ff56ef53edc48158a293a0789c40851f725a0aa3ec"
+          human_verdict:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/human_verdict.md"
+            sha256: "sha256:b80d5bf49f95e6471efcfddae9301f43f14061d3c9883a6d4176fb12b0eba78d"
+          revision:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/revision.md"
+            sha256: "sha256:5c5befb6d0e9877a06f947bef6e6a2b77651de19b634c82922cb264745b32833"
+          time_burden:
+            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/time_burden.md"
+            sha256: "sha256:f45a40708234d26d856a80debad7074bd3ab1e442a3439f11b35e16a4ed7ce00"
+          attestation:
+            ref: "receipt://docs/operations/human-attestations/BET-Y1Q3-T4-01-accept.yaml"
+            sha256: "sha256:ab3f61bd00e78b4d2a92f681207043aacf0ddbf28403c94d6649cbf35bf693aa"
+    overall_state: outcome_accepted
   goal: >-
     把现有大量工程能力收敛成一条可证伪的个人价值主链：真实低敏信号进入后，
     只产生 never-send 候选，由本人裁决并记录修订差异；所有工程完成、运行完成和

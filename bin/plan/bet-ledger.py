@@ -277,9 +277,17 @@ HUMAN_ATTESTATION_MESSAGE_FIELDS = (
 )
 # Trusted signer keys: "<identity> <pubkey>" lines accepted by ssh-keygen -Y.
 # Server-owned configuration; a caller path never redirects it.
+# Repository copy (committed) is the CI-resolvable default; a local override
+# under runtime/omo/ (gitignored) wins when present.
+_REPO_ALLOWED_SIGNERS = str(
+    Path(__file__).resolve().parents[2] / "docs" / "operations" / "human-attestation-allowed-signers"
+)
+_LOCAL_ALLOWED_SIGNERS = str(
+    Path(__file__).resolve().parents[2] / "runtime" / "omo" / "human-attestation-allowed-signers"
+)
 HUMAN_ATTESTATION_ALLOWED_SIGNERS = (
     os.environ.get("HUMAN_ATTESTATION_ALLOWED_SIGNERS")
-    or str(Path(__file__).resolve().parents[2] / "runtime" / "omo" / "human-attestation-allowed-signers")
+    or (_LOCAL_ALLOWED_SIGNERS if Path(_LOCAL_ALLOWED_SIGNERS).is_file() else _REPO_ALLOWED_SIGNERS)
 )
 
 
