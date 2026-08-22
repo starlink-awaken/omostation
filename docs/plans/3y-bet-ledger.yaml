@@ -4256,6 +4256,11 @@ bets:
   blocked_at: 2026-08-20
   blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 政策申报相关工作冻结. 技术前置已就绪(depends_on Y2Q2-T7-02 + Y3H1-T3-01 全 done), 仅业务前提冻结.'
   resume_condition: '用户恢复借调/中试业务后, 人工批准解封'
+  resume_acceptance:
+  - '依赖仍 done: Y2Q2-T7-02 + Y3H1-T3-01 status=done'
+  - '场景卡 lifecycle 未回退: docs/scene-cards/v2/ 中试场景存在'
+  - '申报管线可用: 相关 skill/观测命令可运行'
+  - 'done_when 从冻结点继续: calibration 采样起点不重置'
   goal: 把最有业务价值但流程最长的场景推进到受审执行
   non_goals:
   - 自动提交申报材料
@@ -4361,6 +4366,11 @@ bets:
   blocked_at: 2026-08-20
   blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 公文场景相关工作冻结. 技术前置已就绪(依赖 Y3H1-T7-01 且其依赖全 done), 仅业务前提冻结.'
   resume_condition: '用户恢复公文业务后, 人工批准解封'
+  resume_acceptance:
+  - '依赖仍 done: Y3H1-T7-01 解封或维持 blocked(不影响公文独立恢复)'
+  - '场景卡 lifecycle 未回退: document-review.yaml 存在且可评估'
+  - '公文管线可用: 相关 skill/观测命令可运行'
+  - 'done_when 从冻结点继续: calibration 连续计数起点不重置'
   goal: 三年内第一个进入全自动的动作类型 — 且只限格式类
   non_goals:
   - 内容生成自动化

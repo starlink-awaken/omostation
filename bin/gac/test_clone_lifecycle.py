@@ -204,6 +204,8 @@ def test_onboard_initializes_only_requested_submodules_and_verifies(tmp_path, mo
             revision="origin/main",
             destination=str(tmp_path / "agent-1" / "ws"),
             manifest=str(tmp_path / "baseline.json"),
+            readiness=None,
+            profile=None,
             submodule=["projects/omo"],
             all_submodules=False,
         )
@@ -214,7 +216,63 @@ def test_onboard_initializes_only_requested_submodules_and_verifies(tmp_path, mo
     assert "--no-submodules" not in calls[0]
     assert calls[0][-2:] == ["--submodule", "projects/omo"]
     assert calls[2][2] == "verify"
+    assert calls[3][2] == "readiness"
     assert (tmp_path / "agent-1").is_dir()
+
+
+def test_onboard_defaults_to_governance_profile_and_emits_readiness(tmp_path, monkeypatch):
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **_kwargs) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, "{}", "")
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    rc = lc.cmd_onboard(
+        argparse.Namespace(
+            agent_id="agent-1",
+            source="source",
+            revision="origin/main",
+            destination=str(tmp_path / "agent-1" / "ws"),
+            manifest=str(tmp_path / "baseline.json"),
+            readiness=str(tmp_path / "readiness.json"),
+            profile=None,
+            submodule=[],
+            all_submodules=False,
+        )
+    )
+
+    assert rc == 0
+    assert calls[0][-2:] == ["--profile", "governance"]
+    assert calls[3][2] == "readiness"
+    assert calls[3][-2:] == ["--output", str(tmp_path / "readiness.json")]
+
+
+def test_onboard_all_submodules_maps_to_full_named_profile(tmp_path, monkeypatch):
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **_kwargs) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, "{}", "")
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    rc = lc.cmd_onboard(
+        argparse.Namespace(
+            agent_id="agent-1",
+            source="source",
+            revision="origin/main",
+            destination=str(tmp_path / "agent-1" / "ws"),
+            manifest=str(tmp_path / "baseline.json"),
+            readiness=str(tmp_path / "readiness.json"),
+            profile=None,
+            submodule=[],
+            all_submodules=True,
+        )
+    )
+
+    assert rc == 0
+    assert calls[0][-2:] == ["--profile", "full"]
+    assert calls[3][2] == "readiness"
 
 
 def test_onboard_parser_defaults_to_canonical_main_and_allows_override():
@@ -237,6 +295,14 @@ def test_onboard_parser_defaults_to_canonical_main_and_allows_override():
 
     assert default.revision == "origin/main"
     assert pinned.revision == "refs/tags/baseline-v1"
+    assert default.profile is None
+
+
+def test_makefile_has_one_clone_onboard_target_and_separate_scan_target():
+    makefile = (lc.ROOT / "Makefile").read_text(encoding="utf-8")
+    target_lines = [line for line in makefile.splitlines() if line.startswith("clone-onboard:")]
+    assert len(target_lines) == 1
+    assert "clone-onboard-scan:" in makefile
 
 
 def test_snapshot_creates_valid_manifest(tmp_path):
@@ -248,6 +314,28 @@ def test_snapshot_creates_valid_manifest(tmp_path):
     d = json.loads(output.read_text())
     assert "root_head_sha" in d
     assert "repositories" in d
+
+
+def test_readiness_resume_routes_through_agent_clone(tmp_path, monkeypatch, capsys):
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **_kwargs) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, '{"status":"ready"}\n', "")
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    rc = lc.cmd_readiness(
+        argparse.Namespace(
+            clone=str(tmp_path / "agent" / "ws"),
+            manifest=str(tmp_path / "baseline.json"),
+            output=str(tmp_path / "readiness.json"),
+        )
+    )
+
+    assert rc == 0
+    assert calls[0][2] == "readiness"
+    assert calls[0][-2:] == ["--output", str(tmp_path / "readiness.json")]
+    assert json.loads(capsys.readouterr().out)["status"] == "ready"
 
 
 def test_changeset_no_change(tmp_path, monkeypatch):
