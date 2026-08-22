@@ -30,7 +30,7 @@ AetherForge 网关 (dev 最新 / 生产 pinned 落后若干 commit)
 
 ### P0 · 严重 / 安全相关
 
-#### 债务 #1：y7000p 的 SSH 控制通道被错误配对到 mac-mini（今日新发现，未修复）
+#### 债务 #1：y7000p 的 SSH 控制通道被错误配对到 mac-mini（今日新发现，**已修复**）
 
 **证据链**：
 1. `ssh xia@100.64.43.36 hostname` → 正确返回 `xia-y7000p`，SSH 目标本身没连错机器
@@ -47,7 +47,14 @@ AetherForge 网关 (dev 最新 / 生产 pinned 落后若干 commit)
 - mac-mini 同时被两个源头下发控制指令：它自己合法的 `mac-mini-m4-24g-lm_studio` backend，以及来自 y7000p 幽灵配对的指令，状态有被交叉污染的风险
 - `policies.remote_resident` 里给 y7000p 定义的常驻策略（`qwen/qwen3.5-9b -c 8192 --ttl 3600`）如果有对应的维护任务在跑，同样会打偏到 mac-mini
 
-**处置建议**：需要在 y7000p 机器上执行 `lms link` 相关命令解除配对，或直接在 LM Studio GUI 断开 remote 连接——这是改动远程机器状态的操作，需要你确认后我再执行（或你自己在 Windows 上点一下更快）。**在解除配对前，不建议真实生产流量路由到 y7000p 的 lm_studio/lm_link placement**，config 层面可以考虑临时降权或标记该风险。
+**处置记录**（用户确认后执行，同一会话内完成）：
+
+1. `ssh xia@100.64.43.36 'lms link disable'` — 解除 LM Link 配对
+2. `lms link disable` 未立即生效（CLI 有缓存的连接状态），`lms server stop` + `lms server start` 重启后 `lms ps` 才回归本机真实状态（`No models are currently loaded`）
+3. **意外副作用**：`lms server start` 默认 `--bind 127.0.0.1`（仅本机回环），而此前（LM Link 配对期间）server 是监听 `0.0.0.0`（对外可访问）。重启后外部 HTTP 全部超时（`netstat` 确认只监听 `127.0.0.1:1234`）。补充 `lms server start --bind 0.0.0.0` 后恢复对外监听
+4. **顺带发现并清理**：解除配对后 `lms ls` 显示 y7000p 真实本地只有 10 个模型（39.23GB），此前 HTTP `/v1/models` 看到的 19 个模型里有一半是 LM Link 跨设备合并视图的假象（来自 mac-mini/MBP）。`config.toml` 里 y7000p 的 3 个 placement 中，`embed-bge-m3--y7000p...`（指向不存在的 `bge-m3-mlx`）和 `baai-bge-reranker...--y7000p...`（指向不存在的 `baai-bge-reranker-v2-m3-mlx`）是从 mac-mini 抄错的死配置，已删除；`mythos-fast--y7000p...` 的 `backend_model_id` 修正为真实存在的 `qwythos-9b-claude-mythos-5-1m`（原来多了个不存在的 `-mlx` 后缀）
+
+**端到端验证**：`lms ps` 显示 DEVICE 从 `MacMini-M4` 变为 `Local`，context/TTL 精确匹配下发参数；`mythos-fast--y7000p-rtx4070-8g-lm_studio` placement 探测转绿；直接对 y7000p 真实 chat 请求 200 + 正确生成内容；全程确认 mac-mini 状态零干扰。
 
 #### 债务 #2：内存读数口径不统一
 
@@ -88,8 +95,8 @@ AetherForge 网关 (dev 最新 / 生产 pinned 落后若干 commit)
 ## 三、优先级路线图
 
 **立即可做（低风险高收益）**
-- [ ] 修 `full-status.sh` 内存口径，回填 `safe_audit.py` 已验证的公式
-- [ ] y7000p LM Link 配对问题：等你确认是否现在处理（涉及改动 Windows 机器状态）
+- [x] 修 `full-status.sh` 内存口径，回填 `safe_audit.py` 已验证的公式
+- [x] y7000p LM Link 配对问题：已解除配对 + 修正 config.toml 死配置，端到端验证通过
 
 **本周内（中等改动量）**
 - [ ] MBP 常驻策略扩展：挑 1-2 个高频模型（如 `coding`/`vision`）从 `resident=false` 改 `true`，复刻今天在 mac-mini 上验证过的常驻收益
@@ -102,6 +109,12 @@ AetherForge 网关 (dev 最新 / 生产 pinned 落后若干 commit)
 
 ---
 
-## 四、给你的直接结论：Windows (y7000p) 现状
+## 四、Windows (y7000p) 现状：已修复
 
-Tailscale 和 LM Studio 都在正常运行、可达（局域网直连，6-14ms）。它自己端口 1234 的 LM Studio 服务器活着，也确实挂着一批真实模型（`qwen/qwen3.5-9b`、OCR、whisper、kokoro 等）。**但它的 `lms` 命令行控制通道当前被远程配对到了 mac-mini**——这是今天深度审计时才挖出来的，光看界面看不出来。这也解释了一个历史疑点：即便 y7000p 之前长期离线，`config.toml` 里给它配置的受控加载策略事实上从未在它自己身上真正生效过，因为控制通道从一开始就没对准过自己。
+Tailscale 和 LM Studio 都在正常运行、可达（局域网直连，6-14ms）。它自己端口 1234 的 LM Studio 服务器活着，真实本地有 10 个模型（39.23GB）。控制通道被远程配对到 mac-mini 的问题已解除，`config.toml` 里从 mac-mini 抄错的死配置已修正为 y7000p 真实拥有的模型 ID，端到端真实推理验证通过（RTX4070 8GB 上跑 9B 模型，~19s 完成一次短生成，符合预期）。
+
+## 五、附：本次修复过程中反复出现的仓库异常（需要你关注）
+
+处理这次修复期间，`omlxc` 本地仓库连续两次被静默 checkout 到旧提交（`main → e3cec15 → main → e3cec15 → 7615b5c`），文件内容一度回退到早于本次会话所有改动的状态。两次都确认 `origin/main` 完好、无数据丢失，`git checkout main` 即可恢复。
+
+reflog 显示这个模式很规律（在两个特定提交间反复横跳，且间隔很短），同时 `ps aux` 里有一个常驻的 `oh-my-claudecode` 插件桥接进程（`bridge/mcp-server.cjs`），`.omc/` 目录下的状态文件也在持续变化。**怀疑是这个插件的某个后台功能在做仓库快照/对比时误 checkout 了 omlxc**，但这超出本次审计范围，未深入排查插件内部逻辑。建议你留意：如果之后还遇到"改动莫名消失"的情况，先检查 `git reflog` 和 `origin/main`（大概率数据都还在，只是本地检出指针被挪动了），必要时可以考虑暂时关闭该插件观察是否复现。
