@@ -29,6 +29,7 @@ except ImportError:  # pragma: no cover - exercised by the CLI environment
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REGISTRY = ROOT / "docs" / "generated" / "capability-registry.yaml"
 CANONICAL_GENERATOR = ROOT / "bin" / "cockpit" / "gen-capability-registry.py"
+FEDERATION_AUDITOR = ROOT / "lib" / "capability_federation_audit.py"
 AGORA_SRC = ROOT / "projects" / "agora" / "src"
 SUPPORTED_SCHEMA_MAJOR = 1
 MAX_INPUT_JSON_BYTES = 1024 * 1024
@@ -412,6 +413,20 @@ def _delegate_to_writer(action: str, registry_path: Path) -> int:
     return subprocess.run(command, check=False).returncode
 
 
+def _delegate_to_federation_auditor(workspace_root: Path, *, strict: bool) -> int:
+    """Run the internal read-only observer through a fixed public command."""
+    command = [
+        sys.executable,
+        str(FEDERATION_AUDITOR),
+        "--workspace-root",
+        str(workspace_root),
+        "--json",
+    ]
+    if strict:
+        command.append("--strict")
+    return subprocess.run(command, check=False).returncode
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Capability registry compatibility and discovery CLI")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -421,6 +436,14 @@ def _parser() -> argparse.ArgumentParser:
 
     check_parser = commands.add_parser("check", help="delegate read-only drift check")
     check_parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
+
+    audit_parser = commands.add_parser(
+        "federation-audit",
+        help="audit native capability authorities without writing or invoking them",
+    )
+    audit_parser.add_argument("--workspace-root", type=Path, default=ROOT)
+    audit_parser.add_argument("--json", action="store_true", help="emit canonical JSON")
+    audit_parser.add_argument("--strict", action="store_true", help="treat warnings as non-zero")
 
     find_parser = commands.add_parser("find", help="resolve one capability without invoking it")
     selector = find_parser.add_mutually_exclusive_group(required=True)
@@ -443,6 +466,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
     args = _parser().parse_args(argv)
     if args.command in {"sync", "check"}:
         return _delegate_to_writer(args.command, args.registry)
+
+    if args.command == "federation-audit":
+        return _delegate_to_federation_auditor(args.workspace_root, strict=args.strict)
 
     if args.command in {"load", "invoke"}:
         selector = {"capability_id": args.capability_id}
