@@ -132,8 +132,17 @@ workers:
     class: external_agent_cli
     transports:
       cli_prompt:
+        # BlueprintControlService injects one isolated --receipt path at execution time.
         command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/pi-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 120 --prompt "{prompt}"'
         worker_ack_protocol: omo-worker-origin-ack/v1
+        provider_conformance:
+          transport_id: pi_cli
+          backend_ref: omlxc
+          route_ref: bos://compute/aetherforge/infer
+          operation_level: L0
+          write_scope: none
+          workspace_admission: not_required_read_only
+          states: [succeeded, failed]
     capabilities: [reasoning, verification]
     require_explicit_capabilities: true
     allowed_operation_level: L0
@@ -153,8 +162,17 @@ workers:
     class: external_agent_cli
     transports:
       cli_prompt:
+        # BlueprintControlService injects one isolated --receipt path at execution time.
         command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/omp-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 120 --prompt "{prompt}"'
         worker_ack_protocol: omo-worker-origin-ack/v1
+        provider_conformance:
+          transport_id: omp_cli
+          backend_ref: omlxc
+          route_ref: bos://compute/aetherforge/infer
+          operation_level: L0
+          write_scope: none
+          workspace_admission: not_required_read_only
+          states: [succeeded, failed]
     capabilities: [reasoning, verification]
     require_explicit_capabilities: true
     allowed_operation_level: L0
@@ -178,6 +196,26 @@ workers:
         # A legacy direct launch intentionally exits non-zero on missing args.
         command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/orca-codex-supervisor.py" start'
         worker_ack_protocol: omo-worker-origin-ack/v1
+        provider_conformance:
+          transport_id: orca_manual_break_glass
+          backend_ref: codex
+          route_ref: null
+          operation_level: L1
+          write_scope: human_gated
+          workspace_admission: verified_independent_clone
+          states: [awaiting_human_action, settled_observed, failed]
+      bounded_exec:
+        # BlueprintControlService injects one isolated --receipt path at execution time.
+        command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/codex-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 900 --prompt "{prompt}"'
+        worker_ack_protocol: omo-worker-origin-ack/v1
+        provider_conformance:
+          transport_id: codex_exec
+          backend_ref: codex
+          route_ref: null
+          operation_level: L1
+          write_scope: bounded
+          workspace_admission: verified_independent_clone
+          states: [succeeded, failed]
     capabilities: [code_change, test_execution, verification]
     require_explicit_capabilities: true
     allowed_operation_level: L1

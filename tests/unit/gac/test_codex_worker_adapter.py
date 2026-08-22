@@ -370,6 +370,8 @@ def test_observed_approval_event_fails_closed_without_receipt_or_patch(
         )
 
     assert raised.value.provider_review == "human_required"
+    assert raised.value.provider_attempt["state"] == "failed"
+    assert raised.value.provider_attempt["error_code"] == "human_approval_required"
     assert not receipt.exists()
     assert not (root / "allowed.txt").exists()
     assert (
@@ -402,6 +404,22 @@ def test_nonzero_empty_or_malformed_output_fails_closed(tmp_path: Path, stdout: 
             tmp_path,
             popen_factory=lambda *_args, **_kwargs: FakeProcess(stdout=stdout, returncode=returncode),
         )
+
+
+def test_provider_quota_failure_is_explicit_and_redacted(tmp_path: Path) -> None:
+    with pytest.raises(adapter.AdapterError, match="provider_quota_exhausted") as raised:
+        run_success(
+            tmp_path,
+            popen_factory=lambda *_args, **_kwargs: FakeProcess(
+                stdout="",
+                stderr="insufficient_quota: private provider detail",
+                returncode=7,
+            ),
+        )
+
+    assert raised.value.provider_attempt["state"] == "failed"
+    assert raised.value.provider_attempt["error_code"] == "provider_quota_exhausted"
+    assert "private provider detail" not in json.dumps(raised.value.provider_attempt)
 
 
 def test_exact_marker_must_match_final_message(tmp_path: Path):
@@ -561,6 +579,13 @@ def test_receipt_is_exclusive_temp_only_canonical_and_redacted(tmp_path: Path, m
             "provider_review": "completed_without_observed_escalation",
         }
         assert payload["readiness"] == "model_output_observed"
+        assert payload["provider_attempt"]["provider_id"] == "codex"
+        assert payload["provider_attempt"]["transport"] == "codex_exec"
+        assert payload["provider_attempt"]["route_ref"] is None
+        assert payload["provider_attempt"]["state"] == "succeeded"
+        assert payload["provider_attempt"]["authority"]["workspace_admission"] == (
+            "verified_independent_clone"
+        )
         assert payload["baseline_digest"].startswith("sha256:")
         assert payload["post_digest"].startswith("sha256:")
         assert payload["patch_digest"].startswith("sha256:")
@@ -654,7 +679,7 @@ def test_cli_failure_emits_only_safe_provider_review(monkeypatch: pytest.MonkeyP
     }
 
 
-def test_codex_worker_registry_admits_only_the_interactive_orca_supervisor() -> None:
+def test_codex_worker_registry_admits_manual_orca_and_bounded_exec_profiles() -> None:
     registry = list(yaml.safe_load_all(WORKERS.read_text(encoding="utf-8")))[-1]
     codex = next(worker for worker in registry["workers"] if worker["id"] == "codex")
 
@@ -675,7 +700,35 @@ def test_codex_worker_registry_admits_only_the_interactive_orca_supervisor() -> 
         "cli_prompt": {
             "command": ('uv run --with pyyaml python "{workspace_root}/bin/gac/orca-codex-supervisor.py" start'),
             "worker_ack_protocol": "omo-worker-origin-ack/v1",
-        }
+            "provider_conformance": {
+                "transport_id": "orca_manual_break_glass",
+                "backend_ref": "codex",
+                "route_ref": None,
+                "operation_level": "L1",
+                "write_scope": "human_gated",
+                "workspace_admission": "verified_independent_clone",
+                "states": ["awaiting_human_action", "settled_observed", "failed"],
+            },
+        },
+        "bounded_exec": {
+            "command": (
+                'uv run --with pyyaml python "{workspace_root}/bin/gac/codex-worker-adapter.py" '
+                'run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" '
+                '--packet-id "{packet_id}" --packet-hash "{packet_hash}" '
+                '--instruction-binding-json "{instruction_binding_json}" '
+                '--timeout-seconds 900 --prompt "{prompt}"'
+            ),
+            "worker_ack_protocol": "omo-worker-origin-ack/v1",
+            "provider_conformance": {
+                "transport_id": "codex_exec",
+                "backend_ref": "codex",
+                "route_ref": None,
+                "operation_level": "L1",
+                "write_scope": "bounded",
+                "workspace_admission": "verified_independent_clone",
+                "states": ["succeeded", "failed"],
+            },
+        },
     }
     assert codex["supervision"] == {
         "controller_approval": "required",
@@ -1240,7 +1293,16 @@ def test_adapter_accepts_one_real_persisted_governed_run(tmp_path: Path) -> None
     instruction_path = workspace / "docs/operations/blueprint-agent-instruction-pack-v1.md"
     spec_path.parent.mkdir(parents=True)
     instruction_path.parent.mkdir(parents=True)
-    spec_path.write_text("# Accepted worker binding specification\n", encoding="utf-8")
+    spec_path.write_text(
+        "---\n"
+        "schema_version: specification/v1\n"
+        "spec_version: 1.0.0\n"
+        "status: accepted\n"
+        "bet_id: BET-REAL-WORKER-BINDING\n"
+        "---\n\n"
+        "# Accepted worker binding specification\n",
+        encoding="utf-8",
+    )
     instruction_path.write_text("# Canonical worker instructions\n", encoding="utf-8")
     (workspace / "projects").mkdir()
     (workspace / "projects/ecos").symlink_to(SCRIPT.parents[2] / "projects/ecos")
@@ -1328,7 +1390,16 @@ def test_worker_adapter_reconciles_both_planes_and_appends_real_origin_ack(
     instruction_path = workspace / "docs/operations/blueprint-agent-instruction-pack-v1.md"
     spec_path.parent.mkdir(parents=True)
     instruction_path.parent.mkdir(parents=True)
-    spec_path.write_text("# Accepted worker Mesh ACK specification\n", encoding="utf-8")
+    spec_path.write_text(
+        "---\n"
+        "schema_version: specification/v1\n"
+        "spec_version: 1.0.0\n"
+        "status: accepted\n"
+        "bet_id: BET-REAL-MESH-ACK\n"
+        "---\n\n"
+        "# Accepted worker Mesh ACK specification\n",
+        encoding="utf-8",
+    )
     instruction_path.write_text("# Canonical worker instructions\n", encoding="utf-8")
     (workspace / "projects").mkdir()
     (workspace / "projects/ecos").symlink_to(SCRIPT.parents[2] / "projects/ecos")

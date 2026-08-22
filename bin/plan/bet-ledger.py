@@ -287,6 +287,347 @@ class SpecBindingContractError(ValueError):
     """Raised when a BET cannot be represented by the shared delivery contract."""
 
 
+class ProviderConformanceError(ValueError):
+    """Raised when a provider attempt violates the shared receipt contract."""
+
+
+PROVIDER_ATTEMPT_SCHEMA_VERSION = "provider-attempt/v1"
+PROVIDER_ATTEMPT_KEYS = frozenset(
+    {
+        "schema",
+        "attempt_id",
+        "provider_id",
+        "transport",
+        "route_ref",
+        "binding",
+        "authority",
+        "state",
+        "outcome",
+        "error_code",
+        "human_action_required",
+        "completion_observed",
+        "evidence_digest",
+        "previous_attempt_id",
+        "previous_receipt_digest",
+        "revision",
+        "receipt_digest",
+    }
+)
+PROVIDER_ATTEMPT_BINDING_KEYS = frozenset(
+    {"run_id", "packet_id", "packet_hash", "instruction_digest"}
+)
+PROVIDER_ATTEMPT_AUTHORITY_KEYS = frozenset(
+    {"operation_level", "workspace_admission", "write_scope"}
+)
+PROVIDER_ATTEMPT_PROFILE_KEYS = frozenset(
+    {
+        "backend_ref",
+        "operation_level",
+        "route_ref",
+        "states",
+        "transport_id",
+        "workspace_admission",
+        "write_scope",
+    }
+)
+PROVIDER_ATTEMPT_STATES = {
+    "succeeded": ("succeeded", False, True),
+    "failed": ("failed", False, False),
+    "awaiting_human_action": ("not_proven", True, False),
+    "settled_observed": ("observed_not_adjudicated", True, True),
+}
+PROVIDER_ATTEMPT_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:+-]{0,255}$")
+
+
+def provider_attempt_digest(payload: dict[str, Any]) -> str:
+    """Return the canonical digest without trusting caller key order."""
+    projected = {key: value for key, value in payload.items() if key != "receipt_digest"}
+    encoded = json.dumps(projected, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return "sha256:" + hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def load_provider_attempt_profiles(*, workspace: Path = WS) -> dict[str, dict[str, Any]]:
+    """Load admitted provider profiles from the existing worker registry SSOT."""
+    registry_path = workspace / ".omo" / "_truth" / "registry" / "workers.yaml"
+    try:
+        documents = yaml.safe_load_all(registry_path.read_text(encoding="utf-8"))
+        registry = next(
+            document
+            for document in documents
+            if isinstance(document, dict) and isinstance(document.get("workers"), list)
+        )
+    except (OSError, UnicodeError, yaml.YAMLError, StopIteration) as exc:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_PROFILE_UNAVAILABLE") from exc
+    profiles: dict[str, dict[str, Any]] = {}
+    for worker in registry["workers"]:
+        if (
+            not isinstance(worker, dict)
+            or worker.get("enabled") is not True
+            or worker.get("admission_state") != "admitted"
+        ):
+            continue
+        transports = worker.get("transports")
+        if not isinstance(transports, dict):
+            continue
+        for transport in transports.values():
+            if not isinstance(transport, dict) or "provider_conformance" not in transport:
+                continue
+            profile = transport["provider_conformance"]
+            if not isinstance(profile, dict) or set(profile) != PROVIDER_ATTEMPT_PROFILE_KEYS:
+                raise ProviderConformanceError("PROVIDER_ATTEMPT_PROFILE_INVALID")
+            transport_id = profile.get("transport_id")
+            states = profile.get("states")
+            route_ref = profile.get("route_ref")
+            if (
+                not isinstance(transport_id, str)
+                or PROVIDER_ATTEMPT_ID_RE.fullmatch(transport_id) is None
+                or transport_id in profiles
+                or not isinstance(profile.get("backend_ref"), str)
+                or PROVIDER_ATTEMPT_ID_RE.fullmatch(profile["backend_ref"]) is None
+                or route_ref is not None
+                and (not isinstance(route_ref, str) or not route_ref.startswith("bos://"))
+                or not isinstance(states, list)
+                or not states
+                or any(state not in PROVIDER_ATTEMPT_STATES for state in states)
+                or profile.get("operation_level") not in {"L0", "L1"}
+                or profile.get("write_scope") not in {"none", "bounded", "human_gated"}
+                or profile.get("workspace_admission")
+                not in {"not_required_read_only", "verified_independent_clone"}
+            ):
+                raise ProviderConformanceError("PROVIDER_ATTEMPT_PROFILE_INVALID")
+            profiles[transport_id] = {**profile, "states": frozenset(states)}
+    if not profiles:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_PROFILE_UNAVAILABLE")
+    return profiles
+
+
+def _provider_attempt_transport_policy(
+    *, provider_id: object, transport: object, route_ref: object, workspace: Path = WS
+) -> dict[str, Any]:
+    profiles = load_provider_attempt_profiles(workspace=workspace)
+    policy = profiles.get(transport) if isinstance(transport, str) else None
+    if (
+        policy is None
+        or provider_id != policy["backend_ref"]
+        or route_ref != policy["route_ref"]
+    ):
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_ROUTE_REJECTED")
+    return policy
+
+
+def validate_provider_attempt_receipt(payload: dict[str, Any]) -> dict[str, Any]:
+    """Validate one privacy-bounded, transport-specific provider attempt."""
+    if not isinstance(payload, dict) or set(payload) != PROVIDER_ATTEMPT_KEYS:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_SHAPE_INVALID")
+    if payload.get("schema") != PROVIDER_ATTEMPT_SCHEMA_VERSION:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_SCHEMA_INVALID")
+    if not isinstance(payload.get("attempt_id"), str) or SHA256_REF_RE.fullmatch(payload["attempt_id"]) is None:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_ID_INVALID")
+
+    policy = _provider_attempt_transport_policy(
+        provider_id=payload.get("provider_id"),
+        transport=payload.get("transport"),
+        route_ref=payload.get("route_ref"),
+    )
+    binding = payload.get("binding")
+    if not isinstance(binding, dict) or set(binding) != PROVIDER_ATTEMPT_BINDING_KEYS:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_BINDING_INVALID")
+    if (
+        not isinstance(binding.get("run_id"), str)
+        or PROVIDER_ATTEMPT_ID_RE.fullmatch(binding["run_id"]) is None
+        or not isinstance(binding.get("packet_id"), str)
+        or PROVIDER_ATTEMPT_ID_RE.fullmatch(binding["packet_id"]) is None
+        or not isinstance(binding.get("packet_hash"), str)
+        or SHA256_REF_RE.fullmatch(binding["packet_hash"]) is None
+        or not isinstance(binding.get("instruction_digest"), str)
+        or SHA256_REF_RE.fullmatch(binding["instruction_digest"]) is None
+    ):
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_BINDING_INVALID")
+
+    authority = payload.get("authority")
+    if not isinstance(authority, dict) or set(authority) != PROVIDER_ATTEMPT_AUTHORITY_KEYS:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_AUTHORITY_INVALID")
+    expected_authority = {
+        "operation_level": policy["operation_level"],
+        "workspace_admission": policy["workspace_admission"],
+        "write_scope": policy["write_scope"],
+    }
+    if authority != expected_authority:
+        if policy["write_scope"] != "none":
+            raise ProviderConformanceError("PROVIDER_ATTEMPT_CLONE_REQUIRED")
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_AUTHORITY_INVALID")
+
+    state = payload.get("state")
+    state_policy = PROVIDER_ATTEMPT_STATES.get(state) if isinstance(state, str) else None
+    if state_policy is None or state not in policy["states"]:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_STATE_INVALID")
+    expected_outcome, expected_human_action, expected_completion = state_policy
+    if (
+        payload.get("outcome") != expected_outcome
+        or payload.get("human_action_required") is not expected_human_action
+        or payload.get("completion_observed") is not expected_completion
+    ):
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_STATE_INVALID")
+
+    error_code = payload.get("error_code")
+    if state == "failed":
+        if not isinstance(error_code, str) or PROVIDER_ATTEMPT_ID_RE.fullmatch(error_code) is None:
+            raise ProviderConformanceError("PROVIDER_ATTEMPT_ERROR_REQUIRED")
+    elif error_code is not None:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_ERROR_FORBIDDEN")
+    if not isinstance(payload.get("evidence_digest"), str) or SHA256_REF_RE.fullmatch(payload["evidence_digest"]) is None:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_EVIDENCE_INVALID")
+    previous_attempt_id = payload.get("previous_attempt_id")
+    if previous_attempt_id is not None and (
+        not isinstance(previous_attempt_id, str) or SHA256_REF_RE.fullmatch(previous_attempt_id) is None
+    ):
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_LINEAGE_INVALID")
+    previous_receipt_digest = payload.get("previous_receipt_digest")
+    if previous_receipt_digest is not None and (
+        not isinstance(previous_receipt_digest, str)
+        or SHA256_REF_RE.fullmatch(previous_receipt_digest) is None
+    ):
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_LINEAGE_INVALID")
+    revision = payload.get("revision")
+    if not isinstance(revision, int) or isinstance(revision, bool) or revision < 1:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_REVISION_INVALID")
+    if revision == 1 and ((previous_attempt_id is None) != (previous_receipt_digest is None)):
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_LINEAGE_INVALID")
+    if revision > 1 and (previous_attempt_id is not None or previous_receipt_digest is None):
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_LINEAGE_INVALID")
+    if payload.get("receipt_digest") != provider_attempt_digest(payload):
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_DIGEST_MISMATCH")
+    return payload
+
+
+def validate_provider_attempt_transition(
+    previous: dict[str, Any], current: dict[str, Any]
+) -> dict[str, Any]:
+    """Require replay identity or explicit lineage from one failed attempt."""
+    validate_provider_attempt_receipt(previous)
+    validate_provider_attempt_receipt(current)
+    if current["attempt_id"] == previous["attempt_id"]:
+        if current == previous:
+            return current
+        immutable_keys = {
+            "provider_id",
+            "transport",
+            "route_ref",
+            "binding",
+            "authority",
+            "attempt_id",
+        }
+        if any(current[key] != previous[key] for key in immutable_keys):
+            raise ProviderConformanceError("PROVIDER_ATTEMPT_REPLAY_MISMATCH")
+        if (
+            current["revision"] != previous["revision"] + 1
+            or current["previous_attempt_id"] is not None
+            or current["previous_receipt_digest"] != previous["receipt_digest"]
+            or (previous["state"], current["state"])
+            not in {
+                ("awaiting_human_action", "settled_observed"),
+                ("awaiting_human_action", "failed"),
+            }
+        ):
+            raise ProviderConformanceError("PROVIDER_ATTEMPT_REPLAY_MISMATCH")
+        return current
+    if previous["state"] == "awaiting_human_action":
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_HUMAN_FENCE")
+    if (
+        current["previous_attempt_id"] != previous["attempt_id"]
+        or current["previous_receipt_digest"] != previous["receipt_digest"]
+        or current["revision"] != 1
+    ):
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_LINEAGE_REQUIRED")
+    if previous["state"] != "failed":
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_PREDECESSOR_NOT_FAILED")
+    if current["binding"] != previous["binding"]:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_BINDING_MISMATCH")
+    return current
+
+
+def build_provider_attempt_receipt(
+    *,
+    provider_id: str,
+    transport: str,
+    route_ref: str | None,
+    binding_receipt: dict[str, Any],
+    attempt_key: str,
+    state: str,
+    evidence_digest: str,
+    workspace_admission: str,
+    error_code: str | None = None,
+    previous_attempt: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build one normalized attempt without retaining prompt, output, path, or key material."""
+    if PROVIDER_ATTEMPT_ID_RE.fullmatch(attempt_key) is None:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_KEY_INVALID")
+    policy = _provider_attempt_transport_policy(
+        provider_id=provider_id,
+        transport=transport,
+        route_ref=route_ref,
+    )
+    if workspace_admission != policy["workspace_admission"]:
+        if policy["write_scope"] != "none":
+            raise ProviderConformanceError("PROVIDER_ATTEMPT_CLONE_REQUIRED")
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_AUTHORITY_INVALID")
+    binding = {
+        key: binding_receipt.get(key)
+        for key in sorted(PROVIDER_ATTEMPT_BINDING_KEYS)
+    }
+    state_policy = PROVIDER_ATTEMPT_STATES.get(state)
+    if state_policy is None:
+        raise ProviderConformanceError("PROVIDER_ATTEMPT_STATE_INVALID")
+    outcome, human_action_required, completion_observed = state_policy
+    identity = {
+        "attempt_key": attempt_key,
+        "binding": binding,
+        "provider_id": provider_id,
+        "route_ref": route_ref,
+        "transport": transport,
+    }
+    attempt_id = provider_attempt_digest(identity)
+    previous_attempt_id: str | None = None
+    previous_receipt_digest: str | None = None
+    revision = 1
+    if previous_attempt is not None:
+        validate_provider_attempt_receipt(previous_attempt)
+        previous_receipt_digest = previous_attempt["receipt_digest"]
+        if previous_attempt["attempt_id"] == attempt_id:
+            revision = previous_attempt["revision"] + 1
+        elif previous_attempt["state"] == "awaiting_human_action":
+            raise ProviderConformanceError("PROVIDER_ATTEMPT_HUMAN_FENCE")
+        else:
+            previous_attempt_id = previous_attempt["attempt_id"]
+    receipt = {
+        "schema": PROVIDER_ATTEMPT_SCHEMA_VERSION,
+        "attempt_id": attempt_id,
+        "provider_id": provider_id,
+        "transport": transport,
+        "route_ref": route_ref,
+        "binding": binding,
+        "authority": {
+            "operation_level": policy["operation_level"],
+            "workspace_admission": workspace_admission,
+            "write_scope": policy["write_scope"],
+        },
+        "state": state,
+        "outcome": outcome,
+        "error_code": error_code,
+        "human_action_required": human_action_required,
+        "completion_observed": completion_observed,
+        "evidence_digest": evidence_digest,
+        "previous_attempt_id": previous_attempt_id,
+        "previous_receipt_digest": previous_receipt_digest,
+        "revision": revision,
+    }
+    receipt["receipt_digest"] = provider_attempt_digest(receipt)
+    validate_provider_attempt_receipt(receipt)
+    if previous_attempt is not None:
+        validate_provider_attempt_transition(previous_attempt, receipt)
+    return receipt
+
+
 # ── 载入 ──────────────────────────────────────────────────────
 def load() -> dict:
     if not LEDGER.exists():
