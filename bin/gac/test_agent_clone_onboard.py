@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -20,7 +21,7 @@ def test_detect_active_agents(tmp_path, monkeypatch):
     runs_dir = tmp_path / "runs"
     runs_dir.mkdir()
     # 活跃 run
-    (runs_dir / "test1.yaml").write_text(f"""\
+    (runs_dir / "test1.yaml").write_text("""\
 run_id: 20260803T135152Z-test-workflow-abc12345
 status: active
 actor: test-agent
@@ -61,6 +62,23 @@ def test_onboard_dry_run(tmp_path, monkeypatch):
     result = ob.onboard_agent("test-agent", dry_run=True)
     assert result["status"] == "would_create"
     assert not (tmp_path / "test-agent" / "ws").exists()
+
+
+def test_onboard_apply_routes_once_through_governance_lifecycle(tmp_path, monkeypatch):
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str]) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, "{}", "")
+
+    monkeypatch.setattr(ob, "AGENTS_DIR", tmp_path)
+    monkeypatch.setattr(ob, "run", fake_run)
+    result = ob.onboard_agent("test-agent", dry_run=False, profile="governance")
+
+    assert result["status"] == "created"
+    assert len(calls) == 1
+    assert calls[0][1:4] == [str(ob.LIFECYCLE), "onboard", "--agent-id"]
+    assert calls[0][-2:] == ["--profile", "governance"]
 
 
 def test_extract_agent_from_runid():

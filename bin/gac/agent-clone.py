@@ -34,19 +34,33 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import warnings
 from pathlib import Path, PurePosixPath
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 SCHEMA_MANIFEST = "agent-clone-manifest/v1"
 SCHEMA_CHANGESET = "cross-repo-changeset/v1"
 SCHEMA_CHANGESET_CLAIMS = "cross-repo-changeset/v2"
 SCHEMA_CLAIM_SNAPSHOT = "agent-workflow-claim-snapshot/v1"
 SCHEMA_IDENTITY = "agent-clone-identity/v1"
+SCHEMA_READINESS = "clone-readiness/v1"
+SCHEMA_SUBMODULE_PROFILE = "clone-submodule-profile/v1"
 IDENTITY_FILENAME = "agent-clone-identity.json"
+READINESS_FILENAME = "agent-clone-readiness.json"
 CLAIMS_AUTHORITY_POLICY = ".omo/_truth/registry/swarm-coordination.yaml"
 ACCOUNT_WORKSPACE_ROOT = Path(pwd.getpwuid(os.getuid()).pw_dir) / "Workspace"
 AGENT_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+GOVERNANCE_SUBMODULES = (
+    "projects/agora",
+    "projects/cockpit",
+    "projects/cockpit-ui",
+    "projects/ecos",
+    "projects/omo",
+)
+SUBMODULE_PROFILES = ("root-only", "governance", "full")
+READINESS_PROFILES = (*SUBMODULE_PROFILES, "custom")
 
 EXIT_OK = 0
 EXIT_POLICY = 1
@@ -162,6 +176,79 @@ def submodule_state(repo_root: str, rel_path: str) -> tuple[bool, str | None, st
     return True, head, origin, clean
 
 
+def resolve_submodule_profile(profile: str, links: dict[str, str]) -> list[str]:
+    """Resolve a named profile to an exact set of root gitlinks."""
+    if profile == "root-only":
+        return []
+    if profile == "full":
+        return sorted(links)
+    if profile != "governance":
+        raise ToolError(
+            "profile_unknown",
+            f"unknown clone submodule profile {profile!r}",
+            EXIT_USAGE,
+        )
+    missing = sorted(set(GOVERNANCE_SUBMODULES) - set(links))
+    if missing:
+        raise ToolError(
+            "profile_gitlink_missing",
+            f"governance profile requires missing root gitlinks: {missing}",
+            EXIT_POLICY,
+            {"profile": profile, "missing_gitlinks": missing},
+        )
+    return list(GOVERNANCE_SUBMODULES)
+
+
+def expected_submodule_origins(repo_root: str) -> dict[str, str]:
+    """Read path-to-origin bindings from the tracked .gitmodules file."""
+    proc = git(
+        repo_root,
+        "config",
+        "--file",
+        ".gitmodules",
+        "--get-regexp",
+        r"^submodule\..*\.(path|url)$",
+    )
+    if proc.returncode != 0:
+        return {}
+    sections: dict[str, dict[str, str]] = {}
+    for line in proc.stdout.splitlines():
+        key, separator, value = line.partition(" ")
+        if not separator or not key.startswith("submodule."):
+            continue
+        section, field = key[len("submodule.") :].rsplit(".", 1)
+        sections.setdefault(section, {})[field] = value.strip()
+    origins: dict[str, str] = {}
+    for section, fields in sections.items():
+        if not fields.get("path") or not fields.get("url"):
+            continue
+        # `git submodule init/update` resolves relative .gitmodules URLs using
+        # the superproject remote and stores the result in local config.  Use
+        # Git's resolved value rather than reimplementing those URL semantics.
+        configured = git(repo_root, "config", "--get", f"submodule.{section}.url")
+        origins[fields["path"]] = (
+            configured.stdout.strip()
+            if configured.returncode == 0 and configured.stdout.strip()
+            else fields["url"]
+        )
+    return origins
+
+
+def redact_remote(remote: str | None) -> str | None:
+    """Remove embedded URL credentials before a remote enters a portable receipt."""
+    if remote is None:
+        return None
+    parsed = urlsplit(remote)
+    if parsed.scheme and parsed.hostname:
+        host = parsed.hostname
+        if parsed.port is not None:
+            host = f"{host}:{parsed.port}"
+        return urlunsplit((parsed.scheme, host, parsed.path, "", ""))
+    if "@" in remote and ":" in remote.split("@", 1)[1]:
+        return remote.split("@", 1)[1]
+    return remote
+
+
 def extract_uv_path_dependencies(repo_root: str) -> list[str]:
     """Extract local path dependencies from [tool.uv.sources].
 
@@ -260,6 +347,10 @@ def identity_path(repo_root: str) -> str:
     return os.path.join(git_common_dir(repo_root), IDENTITY_FILENAME)
 
 
+def readiness_path(repo_root: str) -> str:
+    return os.path.join(git_common_dir(repo_root), READINESS_FILENAME)
+
+
 def read_identity(repo_root: str, required: bool = True) -> dict | None:
     path = identity_path(repo_root)
     if not os.path.isfile(path):
@@ -292,6 +383,17 @@ def write_identity(repo_root: str, identity: dict) -> str:
         fh.write("\n")
     os.replace(tmp, path)
     return path
+
+
+def write_json_replace(path: str, payload: dict) -> None:
+    """Atomically replace one clone-internal JSON projection."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, indent=2, sort_keys=True)
+        fh.write("\n")
+        fh.flush()
+        os.fsync(fh.fileno())
+    os.replace(tmp, path)
 
 
 # ---------------------------------------------------------------------------
@@ -476,6 +578,31 @@ def write_json_exclusive(output_path: str, payload: dict, failure_reason: str) -
         ) from exc
 
 
+def write_json_exclusive_or_match(output_path: str, payload: dict, failure_reason: str) -> None:
+    """Publish once, or accept an identical artifact left by an interrupted retry."""
+    try:
+        write_json_exclusive(output_path, payload, failure_reason)
+        return
+    except ToolError as exc:
+        if exc.reason != "output_collision":
+            raise
+    try:
+        with open(output_path, encoding="utf-8") as fh:
+            existing = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ToolError(
+            "output_collision",
+            f"output {output_path} exists but is not a matching resumable receipt: {exc}",
+            EXIT_POLICY,
+        ) from exc
+    if existing != payload:
+        raise ToolError(
+            "output_collision",
+            f"output {output_path} exists with different content; refusing overwrite",
+            EXIT_POLICY,
+        )
+
+
 def cmd_create(args: argparse.Namespace) -> dict:
     agent_id = args.agent_id
     if not agent_id or not AGENT_ID_RE.match(agent_id):
@@ -607,6 +734,8 @@ def cmd_create(args: argparse.Namespace) -> dict:
                 )
 
         requested_submodules = sorted(set(getattr(args, "submodule", None) or []))
+        requested_profile = getattr(args, "profile", None)
+        identity_profile = requested_profile or ("custom" if requested_submodules else None)
         all_gitlinks = gitlinks(staging_clone)
         unknown_submodules = sorted(set(requested_submodules) - set(all_gitlinks))
         if unknown_submodules:
@@ -615,7 +744,9 @@ def cmd_create(args: argparse.Namespace) -> dict:
                 f"requested paths are not root gitlinks: {unknown_submodules}",
                 EXIT_POLICY,
             )
-        if requested_submodules:
+        if requested_profile:
+            initialize_paths = resolve_submodule_profile(requested_profile, all_gitlinks)
+        elif requested_submodules:
             initialize_paths = requested_submodules
         elif args.no_submodules:
             initialize_paths = []
@@ -672,6 +803,9 @@ def cmd_create(args: argparse.Namespace) -> dict:
                 )
 
         frozen_sha = root_head(staging_clone)
+        reinstall_ok, reinstall_msg = reinstall_path_dependencies(staging_clone)
+        if not reinstall_ok:
+            warnings.warn(f"uv sync --reinstall-package warning: {reinstall_msg}")
         identity = {
             "schema": SCHEMA_IDENTITY,
             "agent_id": agent_id,
@@ -680,7 +814,14 @@ def cmd_create(args: argparse.Namespace) -> dict:
             "frozen_root_sha": frozen_sha,
             "working_branch": working_branch,
             "ready": True,
+            "requested_revision": source_revision_ref,
+            "dependency_reinstall_status": "pass" if reinstall_ok else "degraded",
+            "dependency_reinstall_message": reinstall_msg,
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
+        if identity_profile:
+            identity["profile"] = identity_profile
+            identity["required_submodules"] = initialize_paths
         write_identity(staging_clone, identity)
         atomic_publish_no_replace(staging_clone, dest)
         published = True
@@ -724,12 +865,6 @@ def cmd_create(args: argparse.Namespace) -> dict:
         raise ToolError("clone_failed", "clone was not published", EXIT_POLICY)
     identity_file = identity_path(dest)
 
-    # E8: 子仓版本号未动但文件变了时 uv 不重装 (2026-08-15 实证),
-    # clone 后强制 reinstall 每个 path 依赖。失败不阻塞 create（打印 warning）。
-    reinstall_ok, reinstall_msg = reinstall_path_dependencies(dest)
-    if not reinstall_ok:
-        warnings.warn(f"uv sync --reinstall-package warning: {reinstall_msg}")
-
     return {
         "ok": True,
         "reason": "clone_created",
@@ -738,11 +873,235 @@ def cmd_create(args: argparse.Namespace) -> dict:
         "source_url": identity["source_url"],
         "frozen_root_sha": frozen_sha,
         "working_branch": working_branch,
+        "profile": identity_profile,
         "submodules_initialized": submodules_initialized,
         "initialized_submodules": initialize_paths,
         "identity_file": identity_file,
         "reinstall_status": "ok" if reinstall_ok else "warning",
         "reinstall_message": reinstall_msg,
+    }
+
+
+def managed_python_probe(repo_root: str, profile: str) -> tuple[dict, dict | None]:
+    """Run the tracked managed-Python probe and return a receipt-safe check."""
+    runner = os.path.join(repo_root, "bin", "gac", "managed-python")
+    if not os.path.isfile(runner) or not os.access(runner, os.X_OK):
+        return (
+            {
+                "status": "degraded",
+                "required": True,
+                "detail": "tracked managed-python runner is missing or not executable",
+            },
+            None,
+        )
+    try:
+        proc = subprocess.run(
+            [runner, "probe", "--profile", profile, "--json"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return ({"status": "degraded", "required": True, "detail": str(exc)[:240]}, None)
+    if proc.returncode != 0:
+        detail = proc.stderr.strip() or proc.stdout.strip() or f"exit {proc.returncode}"
+        return ({"status": "degraded", "required": True, "detail": detail[:240]}, None)
+    try:
+        receipt = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return (
+            {
+                "status": "degraded",
+                "required": True,
+                "detail": "managed-python emitted invalid JSON",
+            },
+            None,
+        )
+    if receipt.get("schema") != "managed-python-runtime-receipt/v1":
+        return (
+            {
+                "status": "degraded",
+                "required": True,
+                "detail": "managed-python receipt schema mismatch",
+            },
+            None,
+        )
+    return ({"status": "pass", "required": True}, receipt)
+
+
+def workflow_entrypoint_check(repo_root: str) -> dict:
+    """Execute the workflow status seam without mutating workflow state."""
+    runner = os.path.join(repo_root, "bin", "gac", "managed-python")
+    entrypoint = os.path.join(repo_root, "bin", "agent-workflow.py")
+    try:
+        proc = subprocess.run(
+            [runner, "run", "--profile", "pyyaml", "--", entrypoint, "status", "--json"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"status": "degraded", "required": True, "detail": str(exc)[:240]}
+    if proc.returncode == 0:
+        try:
+            payload = json.loads(proc.stdout)
+        except json.JSONDecodeError:
+            payload = {}
+        if payload.get("ok") is True:
+            return {"status": "pass", "required": True}
+        return {
+            "status": "degraded",
+            "required": True,
+            "detail": "workflow status did not emit an ok JSON receipt",
+        }
+    detail = proc.stderr.strip() or proc.stdout.strip() or f"exit {proc.returncode}"
+    return {"status": "degraded", "required": True, "detail": detail[:240]}
+
+
+def cmd_readiness(args: argparse.Namespace) -> dict:
+    """Verify a named-profile clone and publish a canonical readiness receipt."""
+    cmd_verify(argparse.Namespace(clone=args.clone, manifest=args.manifest))
+    identity = read_identity(args.clone)
+    profile = identity.get("profile")
+    if profile not in READINESS_PROFILES:
+        raise ToolError(
+            "readiness_profile_missing",
+            "clone identity does not bind a named submodule profile",
+            EXIT_POLICY,
+        )
+    try:
+        with open(args.manifest, encoding="utf-8") as fh:
+            manifest = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ToolError("manifest_unreadable", str(exc), EXIT_POLICY) from exc
+
+    links = {entry["path"]: entry["pinned_sha"] for entry in manifest["repositories"]}
+    if profile == "custom":
+        required_paths = sorted(identity.get("required_submodules") or [])
+        missing = sorted(set(required_paths) - set(links))
+        if not required_paths or missing:
+            raise ToolError(
+                "readiness_profile_missing",
+                f"custom profile has invalid required submodules: {missing or required_paths}",
+                EXIT_POLICY,
+            )
+    else:
+        required_paths = resolve_submodule_profile(profile, links)
+    by_path = {entry["path"]: entry for entry in manifest["repositories"]}
+    configured_origins = expected_submodule_origins(args.clone)
+    required_submodules = []
+    for path in required_paths:
+        entry = by_path[path]
+        expected_origin = configured_origins.get(path)
+        if expected_origin is None or normalize_source(entry.get("origin") or "") != normalize_source(
+            expected_origin
+        ):
+            raise ToolError(
+                "profile_origin_mismatch",
+                f"submodule {path} origin does not match tracked .gitmodules",
+                EXIT_POLICY,
+                {
+                    "path": path,
+                    "expected_origin": redact_remote(expected_origin),
+                    "actual_origin": redact_remote(entry.get("origin")),
+                },
+            )
+        required_submodules.append(
+            {
+                **entry,
+                "origin": redact_remote(entry.get("origin")),
+                "expected_origin": redact_remote(expected_origin),
+            }
+        )
+    initialized_submodules = sorted(
+        entry["path"] for entry in manifest["repositories"] if entry.get("initialized")
+    )
+    if initialized_submodules != required_paths:
+        raise ToolError(
+            "profile_initialization_mismatch",
+            f"profile {profile} requires {required_paths}, initialized {initialized_submodules}",
+            EXIT_POLICY,
+        )
+
+    checks: dict[str, dict] = {
+        "root_repository": {"status": "pass", "required": True},
+        "profile_submodules": {"status": "pass", "required": True},
+        "manifest": {"status": "pass", "required": True},
+        "hooks": {
+            "status": "pass" if manifest.get("hooks_path") == ".githooks" else "degraded",
+            "required": True,
+        },
+        "dependencies": {
+            "status": identity.get("dependency_reinstall_status", "degraded"),
+            "required": True,
+            "detail": identity.get("dependency_reinstall_message", "dependency status missing"),
+        },
+    }
+    managed_python: dict[str, dict] = {}
+    stdlib_check, stdlib_receipt = managed_python_probe(args.clone, "stdlib")
+    checks["managed_python_stdlib"] = stdlib_check
+    if stdlib_receipt is not None:
+        managed_python["stdlib"] = stdlib_receipt
+
+    if profile in {"governance", "full"}:
+        pyyaml_check, pyyaml_receipt = managed_python_probe(args.clone, "pyyaml")
+        checks["managed_python_pyyaml"] = pyyaml_check
+        if pyyaml_receipt is not None:
+            managed_python["pyyaml"] = pyyaml_receipt
+        checks["workflow_entrypoint"] = workflow_entrypoint_check(args.clone)
+    else:
+        checks["writer_admission"] = {
+            "status": "degraded",
+            "required": True,
+            "detail": f"{profile} profile is intentionally read-only and cannot admit a writer",
+        }
+
+    degraded = sorted(
+        check_id
+        for check_id, check in checks.items()
+        if check.get("required") and check.get("status") != "pass"
+    )
+    status = "ready" if not degraded else "degraded"
+    receipt = {
+        "schema": SCHEMA_READINESS,
+        "profile_schema": SCHEMA_SUBMODULE_PROFILE,
+        "profile_version": 1,
+        "profile": profile,
+        "agent_id": identity["agent_id"],
+        "clone_root": canonical(args.clone),
+        "source_url": redact_remote(identity["source_url"]),
+        "requested_revision": identity.get("requested_revision"),
+        "root_head_sha": manifest["root_head_sha"],
+        "working_branch": identity["working_branch"],
+        "required_submodules": required_submodules,
+        "initialized_submodules": initialized_submodules,
+        "managed_python": managed_python,
+        "checks": checks,
+        "degraded_checks": degraded,
+        "status": status,
+        "generated_at": identity["created_at"],
+    }
+    receipt["receipt_digest"] = canonical_digest(receipt, exclude_field="receipt_digest")
+    write_json_exclusive_or_match(args.output, receipt, "readiness_write_failed")
+    write_json_replace(readiness_path(args.clone), receipt)
+    identity["readiness_profile"] = profile
+    identity["readiness_status"] = status
+    identity["readiness_receipt_digest"] = receipt["receipt_digest"]
+    identity["ready"] = status == "ready"
+    write_identity(args.clone, identity)
+    return {
+        "ok": True,
+        "reason": "readiness_generated",
+        "clone_root": canonical(args.clone),
+        "profile": profile,
+        "status": status,
+        "degraded_checks": degraded,
+        "readiness_path": args.output,
+        "receipt_digest": receipt["receipt_digest"],
     }
 
 
@@ -1632,6 +1991,67 @@ def cmd_guard(args: argparse.Namespace) -> dict:
         result["state"] = "legacy_isolated_worktree"
         result["reason"] = "legacy_isolated_worktree_allowed"
         return result
+    if identity.get("profile") is not None:
+        profile = identity.get("profile")
+        if profile not in {"governance", "full"}:
+            raise ToolError(
+                "clone_readiness_mismatch",
+                f"profile {profile!r} is not eligible for writer admission",
+                EXIT_POLICY,
+            )
+        receipt_file = readiness_path(ws)
+        try:
+            with open(receipt_file, encoding="utf-8") as fh:
+                receipt = json.load(fh)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ToolError(
+                "clone_readiness_missing",
+                f"named-profile clone has no valid readiness receipt: {exc}",
+                EXIT_POLICY,
+            ) from exc
+        receipt_digest = canonical_digest(receipt, exclude_field="receipt_digest")
+        if (
+            receipt.get("schema") != SCHEMA_READINESS
+            or receipt.get("receipt_digest") != receipt_digest
+            or identity.get("readiness_receipt_digest") != receipt_digest
+            or identity.get("readiness_status") != "ready"
+            or receipt.get("status") != "ready"
+            or receipt.get("profile") != profile
+            or receipt.get("agent_id") != identity.get("agent_id")
+            or receipt.get("clone_root") != ws
+            or receipt.get("source_url") != redact_remote(identity.get("source_url"))
+            or receipt.get("root_head_sha") != root_head(ws)
+            or receipt.get("working_branch") != identity.get("working_branch")
+        ):
+            raise ToolError(
+                "clone_readiness_mismatch",
+                "named-profile clone readiness is missing, degraded, or digest-mismatched",
+                EXIT_POLICY,
+            )
+        live_links = gitlinks(ws)
+        required_paths = resolve_submodule_profile(profile, live_links)
+        receipt_paths = [entry.get("path") for entry in receipt.get("required_submodules", [])]
+        configured_origins = expected_submodule_origins(ws)
+        if receipt_paths != required_paths:
+            raise ToolError(
+                "clone_readiness_mismatch",
+                "readiness receipt required submodules do not match the named profile",
+                EXIT_POLICY,
+            )
+        for path in required_paths:
+            initialized, child_head, child_origin, clean = submodule_state(ws, path)
+            if (
+                not initialized
+                or child_head != live_links[path]
+                or not clean
+                or normalize_source(child_origin or "")
+                != normalize_source(configured_origins.get(path, ""))
+            ):
+                raise ToolError(
+                    "clone_readiness_mismatch",
+                    f"live submodule {path} no longer satisfies the named profile",
+                    EXIT_POLICY,
+                )
     hooks_proc = git(ws, "config", "--get", "core.hooksPath")
     hooks_path = hooks_proc.stdout.strip() if hooks_proc.returncode == 0 else None
     if (
@@ -1677,6 +2097,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--revision")
     group = p.add_mutually_exclusive_group()
     group.add_argument("--no-submodules", action="store_true")
+    group.add_argument("--profile", choices=SUBMODULE_PROFILES)
     group.add_argument(
         "--submodule",
         action="append",
@@ -1684,6 +2105,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="initialize only this root gitlink; repeat for multiple paths",
     )
     p.set_defaults(func=cmd_create)
+
+    p = sub.add_parser("readiness")
+    add_common(p)
+    p.add_argument("--clone", required=True)
+    p.add_argument("--manifest", required=True)
+    p.add_argument("--output", required=True)
+    p.set_defaults(func=cmd_readiness)
 
     p = sub.add_parser("manifest")
     add_common(p)
