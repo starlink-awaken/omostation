@@ -4255,7 +4255,10 @@ bets:
   blocked_reentry_policy: human_approval_required
   blocked_at: 2026-08-20
   blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 政策申报相关工作冻结. 技术前置已就绪(depends_on Y2Q2-T7-02 + Y3H1-T3-01 全 done), 仅业务前提冻结.'
-  resume_condition: '用户恢复借调/中试业务后, 人工批准解封'
+  resume_condition:
+    trigger: '任一: 用户明确发起解封评估; 重新参与中试/政策申报业务; 出现真实申报任务'
+    verify: '运行 resume_acceptance 全部通过(依赖 done + 场景卡存在 + 管线可用 + done_when 起点不重置)'
+    approval: '人工批准解封(blocked_reentry_policy: human_approval_required)'
   resume_acceptance:
   - '依赖仍 done: Y2Q2-T7-02 + Y3H1-T3-01 status=done'
   - '场景卡 lifecycle 未回退: docs/scene-cards/v2/ 中试场景存在'
@@ -4365,7 +4368,10 @@ bets:
   blocked_reentry_policy: human_approval_required
   blocked_at: 2026-08-20
   blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 公文场景相关工作冻结. 技术前置已就绪(依赖 Y3H1-T7-01 且其依赖全 done), 仅业务前提冻结.'
-  resume_condition: '用户恢复公文业务后, 人工批准解封'
+  resume_condition:
+    trigger: '任一: 用户明确发起解封评估; 重新参与公文业务; 出现真实公文任务'
+    verify: '运行 resume_acceptance 全部通过(依赖状态 + 场景卡存在 + 管线可用 + done_when 起点不重置)'
+    approval: '人工批准解封(blocked_reentry_policy: human_approval_required)'
   resume_acceptance:
   - '依赖仍 done: Y3H1-T7-01 解封或维持 blocked(不影响公文独立恢复)'
   - '场景卡 lifecycle 未回退: document-review.yaml 存在且可评估'
