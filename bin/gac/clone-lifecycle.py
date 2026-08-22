@@ -77,6 +77,44 @@ def github_repo_slug(remote_url: str) -> str | None:
     return f"{match.group(1)}/{match.group(2)}" if match else None
 
 
+def bound_repository_slug(clone: Path, identity: dict) -> tuple[str | None, str | None]:
+    """Resolve a lifecycle repository, live-verifying new provenance identities."""
+    if identity.get("provenance_required") is True:
+        env = os.environ.copy()
+        env["AGENT_ID"] = str(identity.get("agent_id", ""))
+        guarded = run(
+            [
+                sys.executable,
+                str(AGENT_CLONE),
+                "guard",
+                "--workspace",
+                str(clone),
+                "--require-clone",
+                "--json",
+            ],
+            env=env,
+        )
+        if guarded.returncode != 0:
+            return None, guarded.stdout.strip() or guarded.stderr.strip() or "provenance guard failed"
+        try:
+            receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
+        except (OSError, json.JSONDecodeError) as exc:
+            return None, f"provenance receipt unreadable: {exc}"
+        canonical_repository = (receipt.get("repository") or {}).get("canonical_repository", "")
+        match = re.fullmatch(
+            r"github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)",
+            canonical_repository,
+        )
+        if not match:
+            return None, "provenance receipt repository is invalid"
+        return f"{match.group(1)}/{match.group(2)}", None
+    remote_probe = run(["git", "-C", str(clone), "remote", "get-url", "origin"])
+    if remote_probe.returncode != 0:
+        return None, "cannot resolve origin remote"
+    slug = github_repo_slug(remote_probe.stdout)
+    return (slug, None) if slug else (None, "origin is not an exact GitHub repository URL")
+
+
 def workflow_activity(root: Path) -> tuple[list[str], list[str], list[str]]:
     workflow_root = root / ".omo" / "_delivery" / "agent-workflows"
     locks = [str(path) for path in (workflow_root / "locks").glob("*") if path.is_file()]
@@ -212,6 +250,11 @@ def cmd_onboard(args: argparse.Namespace) -> int:
     readiness_path = (
         Path(args.readiness) if getattr(args, "readiness", None) else dest.parent / f"{agent_id}-readiness.json"
     )
+    provenance_path = (
+        Path(args.provenance)
+        if getattr(args, "provenance", None)
+        else dest.parent / f"{agent_id}-provenance.json"
+    )
     audit("onboard_start", f"agent={agent_id} dest={dest}")
     if os.path.lexists(manifest_path):
         return reject(
@@ -224,6 +267,12 @@ def cmd_onboard(args: argparse.Namespace) -> int:
             "onboard",
             "readiness_collision",
             f"readiness output already exists: {readiness_path}",
+        )
+    if os.path.lexists(provenance_path):
+        return reject(
+            "onboard",
+            "provenance_collision",
+            f"provenance output already exists: {provenance_path}",
         )
     if os.path.lexists(dest):
         return reject("onboard", "destination_collision", f"destination already exists: {dest}")
@@ -265,6 +314,40 @@ def cmd_onboard(args: argparse.Namespace) -> int:
         create_payload = json.loads(r.stdout)
     except json.JSONDecodeError:
         create_payload = {}
+    provenance_payload: dict = {}
+    if effective_profile in {"governance", "full"}:
+        expected_repository = getattr(args, "expected_repository", None)
+        if not expected_repository:
+            origin = run(["git", "-C", str(dest), "remote", "get-url", "origin"])
+            expected_repository = github_repo_slug(origin.stdout) if origin.returncode == 0 else None
+        if not expected_repository:
+            audit("onboard_failed", f"provenance authority unavailable recoverable_clone={dest}")
+            return reject(
+                "onboard",
+                "repository_provenance_unbound",
+                "named writer profile requires an explicit GitHub repository authority",
+                recoverable_clone=str(dest),
+            )
+        cmd = [
+            sys.executable,
+            str(AGENT_CLONE),
+            "provenance",
+            "--clone",
+            str(dest),
+            "--expected-repository",
+            expected_repository,
+            "--output",
+            str(provenance_path),
+        ]
+        r = run(cmd)
+        if r.returncode != 0:
+            audit("onboard_failed", f"provenance rc={r.returncode} recoverable_clone={dest}")
+            print(r.stderr, file=sys.stderr)
+            return EXIT_POLICY
+        try:
+            provenance_payload = json.loads(r.stdout)
+        except json.JSONDecodeError:
+            provenance_payload = {}
     # 2. 生成基线 manifest
     cmd = [
         sys.executable,
@@ -339,6 +422,13 @@ def cmd_onboard(args: argparse.Namespace) -> int:
                 "verification": "verified",
                 "requested_revision": args.revision,
                 "profile": effective_profile,
+                "provenance": (
+                    str(provenance_path)
+                    if effective_profile in {"governance", "full"}
+                    else None
+                ),
+                "provenance_status": provenance_payload.get("status"),
+                "provenance_digest": provenance_payload.get("receipt_digest"),
                 "readiness": str(readiness_path) if effective_profile is not None else None,
                 "readiness_status": readiness_payload.get("status"),
                 "readiness_digest": readiness_payload.get("receipt_digest"),
@@ -389,6 +479,30 @@ def cmd_readiness(args: argparse.Namespace) -> int:
         print(r.stderr, file=sys.stderr)
         return EXIT_POLICY
     audit("readiness_ok", f"clone={args.clone} output={args.output}")
+    print(r.stdout, end="" if r.stdout.endswith("\n") else "\n")
+    return EXIT_OK
+
+
+def cmd_provenance(args: argparse.Namespace) -> int:
+    """Resume or verify an identical repository/author provenance binding."""
+    audit("provenance_start", f"clone={args.clone}")
+    cmd = [
+        sys.executable,
+        str(AGENT_CLONE),
+        "provenance",
+        "--clone",
+        str(args.clone),
+        "--expected-repository",
+        args.expected_repository,
+        "--output",
+        str(args.output),
+    ]
+    r = run(cmd)
+    if r.returncode != 0:
+        audit("provenance_failed", f"rc={r.returncode}")
+        print(r.stderr, file=sys.stderr)
+        return EXIT_POLICY
+    audit("provenance_ok", f"clone={args.clone} output={args.output}")
     print(r.stdout, end="" if r.stdout.endswith("\n") else "\n")
     return EXIT_OK
 
@@ -531,12 +645,13 @@ def cmd_integrate(args: argparse.Namespace) -> int:
     head_sha = head_probe.stdout.strip()
     if head_sha != verification.get("root_head_sha"):
         return reject("integrate", "changeset_head_raced", "clone HEAD changed after changeset verification")
-    remote_probe = run(["git", "-C", str(clone), "remote", "get-url", "origin"])
-    if remote_probe.returncode != 0:
-        return reject("integrate", "origin_unreadable", "cannot resolve origin remote")
-    repo_slug = github_repo_slug(remote_probe.stdout)
+    repo_slug, provenance_error = bound_repository_slug(clone, identity)
     if repo_slug is None:
-        return reject("integrate", "github_repository_unbound", "origin is not an exact GitHub repository URL")
+        return reject(
+            "integrate",
+            "github_repository_unbound",
+            provenance_error or "repository provenance is unavailable",
+        )
     owner = repo_slug.split("/", 1)[0]
     final_verification = run(verify_cmd)
     if final_verification.returncode != 0:
@@ -704,12 +819,13 @@ def cmd_retire(args: argparse.Namespace) -> int:
             unreadable=state_errors,
         )
 
-    remote_probe = run(["git", "-C", str(dest), "remote", "get-url", "origin"])
-    if remote_probe.returncode != 0:
-        return reject("retire", "origin_unreadable", "cannot resolve origin remote")
-    repo_slug = github_repo_slug(remote_probe.stdout)
+    repo_slug, provenance_error = bound_repository_slug(dest, identity)
     if repo_slug is None:
-        return reject("retire", "github_repository_unbound", "origin is not an exact GitHub repository URL")
+        return reject(
+            "retire",
+            "github_repository_unbound",
+            provenance_error or "repository provenance is unavailable",
+        )
     owner = repo_slug.split("/", 1)[0]
     remote_ref = f"refs/heads/{branch}"
     remote = run(["git", "-C", str(dest), "ls-remote", "--exit-code", "--heads", "origin", remote_ref])
@@ -799,6 +915,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--destination", required=True)
     sp.add_argument("--manifest")
     sp.add_argument("--readiness", help="external clone-readiness/v1 receipt path")
+    sp.add_argument("--provenance", help="external clone-provenance/v1 receipt path")
+    sp.add_argument(
+        "--expected-repository",
+        help="canonical GitHub owner/repository authority; defaults to the created clone origin",
+    )
     onboard_mode = sp.add_mutually_exclusive_group()
     onboard_mode.add_argument(
         "--profile",
@@ -822,6 +943,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--clone", required=True)
     sp.add_argument("--output", required=True)
     sp.set_defaults(func=cmd_snapshot)
+    # provenance recovery
+    sp = sub.add_parser("provenance", help="恢复或复核 clone provenance receipt")
+    sp.add_argument("--clone", required=True)
+    sp.add_argument("--expected-repository", required=True)
+    sp.add_argument("--output", required=True)
+    sp.set_defaults(func=cmd_provenance)
     # readiness recovery
     sp = sub.add_parser("readiness", help="恢复或复核 clone readiness receipt")
     sp.add_argument("--clone", required=True)

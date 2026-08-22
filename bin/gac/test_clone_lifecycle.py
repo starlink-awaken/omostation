@@ -205,6 +205,8 @@ def test_onboard_initializes_only_requested_submodules_and_verifies(tmp_path, mo
             destination=str(tmp_path / "agent-1" / "ws"),
             manifest=str(tmp_path / "baseline.json"),
             readiness=None,
+            provenance=None,
+            expected_repository=None,
             profile=None,
             submodule=["projects/omo"],
             all_submodules=False,
@@ -236,6 +238,8 @@ def test_onboard_defaults_to_governance_profile_and_emits_readiness(tmp_path, mo
             destination=str(tmp_path / "agent-1" / "ws"),
             manifest=str(tmp_path / "baseline.json"),
             readiness=str(tmp_path / "readiness.json"),
+            provenance=str(tmp_path / "provenance.json"),
+            expected_repository="starlink-awaken/omostation",
             profile=None,
             submodule=[],
             all_submodules=False,
@@ -244,8 +248,11 @@ def test_onboard_defaults_to_governance_profile_and_emits_readiness(tmp_path, mo
 
     assert rc == 0
     assert calls[0][-2:] == ["--profile", "governance"]
-    assert calls[3][2] == "readiness"
-    assert calls[3][-2:] == ["--output", str(tmp_path / "readiness.json")]
+    assert calls[1][2] == "provenance"
+    assert calls[1][calls[1].index("--expected-repository") + 1] == "starlink-awaken/omostation"
+    assert calls[1][-2:] == ["--output", str(tmp_path / "provenance.json")]
+    assert calls[4][2] == "readiness"
+    assert calls[4][-2:] == ["--output", str(tmp_path / "readiness.json")]
 
 
 def test_onboard_all_submodules_maps_to_full_named_profile(tmp_path, monkeypatch):
@@ -264,6 +271,8 @@ def test_onboard_all_submodules_maps_to_full_named_profile(tmp_path, monkeypatch
             destination=str(tmp_path / "agent-1" / "ws"),
             manifest=str(tmp_path / "baseline.json"),
             readiness=str(tmp_path / "readiness.json"),
+            provenance=str(tmp_path / "provenance.json"),
+            expected_repository="starlink-awaken/omostation",
             profile=None,
             submodule=[],
             all_submodules=True,
@@ -272,7 +281,8 @@ def test_onboard_all_submodules_maps_to_full_named_profile(tmp_path, monkeypatch
 
     assert rc == 0
     assert calls[0][-2:] == ["--profile", "full"]
-    assert calls[3][2] == "readiness"
+    assert calls[1][2] == "provenance"
+    assert calls[4][2] == "readiness"
 
 
 def test_onboard_parser_defaults_to_canonical_main_and_allows_override():
@@ -296,6 +306,42 @@ def test_onboard_parser_defaults_to_canonical_main_and_allows_override():
     assert default.revision == "origin/main"
     assert pinned.revision == "refs/tags/baseline-v1"
     assert default.profile is None
+    assert default.expected_repository is None
+    assert default.provenance is None
+
+
+def test_bound_repository_slug_reenters_provenance_guard(tmp_path, monkeypatch):
+    clone = tmp_path / "agent-1" / "ws"
+    (clone / ".git").mkdir(parents=True)
+    (clone / ".git" / "agent-clone-provenance.json").write_text(
+        json.dumps(
+            {
+                "repository": {
+                    "canonical_repository": "github.com/starlink-awaken/omostation"
+                }
+            }
+        )
+    )
+    calls: list[tuple[list[str], dict]] = []
+
+    def fake_run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        calls.append((cmd, kwargs))
+        return subprocess.CompletedProcess(cmd, 0, '{"ok":true}\n', "")
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    slug, error = lc.bound_repository_slug(
+        clone,
+        {
+            "agent_id": "agent-1",
+            "provenance_required": True,
+        },
+    )
+
+    assert error is None
+    assert slug == "starlink-awaken/omostation"
+    assert calls[0][0][1] == str(lc.AGENT_CLONE)
+    assert "guard" in calls[0][0]
+    assert calls[0][1]["env"]["AGENT_ID"] == "agent-1"
 
 
 def test_makefile_has_one_clone_onboard_target_and_separate_scan_target():
