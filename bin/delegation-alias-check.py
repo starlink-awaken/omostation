@@ -20,8 +20,8 @@ Output categories:
   - IN_BOTH: synced pairs.
 
 Exit codes (semantic):
-  0  synced — no drift
-  1  drift detected (IN_OPENCODE_ONLY or IN_LITELLM_ONLY non-empty)
+  0  route-safe — no OpenCode alias is missing a gateway route; unused gateway capacity is diagnostic
+  1  routing gap detected (IN_OPENCODE_ONLY non-empty)
   2  configuration / IO error (missing file, missing provider block, parse error)
 
 Usage:
@@ -122,8 +122,8 @@ def normalize(name: str) -> str:
 
 def compare(aliases: list[str], model_names: list[str]) -> dict[str, list[str]]:
     """返回 IN_OPENCODE_ONLY / IN_LITELLM_ONLY / IN_BOTH 三个桶."""
-    alias_set = {normalize(a) for a in aliases}
-    gateway_set = {normalize(m) for m in model_names}
+    alias_set = {normalized for alias in aliases if (normalized := normalize(alias))}
+    gateway_set = {normalized for model in model_names if (normalized := normalize(model))}
     return {
         "IN_OPENCODE_ONLY": sorted(alias_set - gateway_set),
         "IN_LITELLM_ONLY": sorted(gateway_set - alias_set),
@@ -132,6 +132,12 @@ def compare(aliases: list[str], model_names: list[str]) -> dict[str, list[str]]:
 
 
 def drift_detected(result: dict[str, list[str]]) -> bool:
+    """Return whether an exposed OpenCode alias has no executable gateway route."""
+    return bool(result["IN_OPENCODE_ONLY"])
+
+
+def any_drift_detected(result: dict[str, list[str]]) -> bool:
+    """Return whether the two inventories differ in either direction."""
     return bool(result["IN_OPENCODE_ONLY"] or result["IN_LITELLM_ONLY"])
 
 
@@ -149,8 +155,10 @@ def render_text(
         f"  workspace root: {workspace_root}",
         "",
     ]
-    if drift_detected(result):
-        lines.append("DRIFT DETECTED — opencode 与网关模型别名不一致")
+    if result["IN_OPENCODE_ONLY"]:
+        lines.append("ROUTING GAP — opencode 暴露的别名缺少网关路由")
+    elif result["IN_LITELLM_ONLY"]:
+        lines.append("ROUTE SAFE — 仅存在未暴露的网关容量 (diagnostic)")
     else:
         lines.append("SYNCED — opencode 与网关模型别名一致")
     lines.append("")
@@ -211,7 +219,8 @@ def main() -> int:
 
     if args.json:
         payload = {
-            "synced": not drift_detected(result),
+            "synced": not any_drift_detected(result),
+            "route_safe": not drift_detected(result),
             "opencode_config": str(opencode_path),
             "litellm_config": str(litellm_path),
             "opencode_aliases": aliases,
