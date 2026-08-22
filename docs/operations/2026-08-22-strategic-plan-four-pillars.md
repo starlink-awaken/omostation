@@ -143,3 +143,21 @@
 ### 端到端验证（从真正的外部 tailnet 设备发起，不是本机 loopback）
 
 从 mac-mini SSH 发起真实请求打 `100.68.80.44:4000`：认证通过，路由到 `mac-mini-m4-24g-lm_studio`，真实生成 "贯通"，`finish_reason: stop`。**这是今天第一次真正验证"外部可用"这件事——此前所有测试都是本机 loopback，掩盖了这个缺口。**
+
+## 九、AetherForge 安全升级 + 生产部署同步
+
+### 依赖升级（修复 GitHub Dependabot 发现的高危漏洞）
+
+推送战略文档时 GitHub 提示了 19 个开放漏洞，6 个 high severity，其中 4 个直接在 `projects/aetherforge/uv.lock`——时效性高：网关当天刚从仅 loopback 可达修复为 tailnet 对外可达，依赖链风险因此被放大。定向升级（`--upgrade-package`，不做全量升级）：
+
+- `starlette` → 1.6.0（CVE-2026-54283：`request.form()` 大小限制被静默忽略，DoS）
+- `mcp` → 1.29.0（CVE-2026-59950：WebSocket transport 缺 Host/Origin 校验，DNS rebinding 类攻击面）
+- `cryptography` → 50.0.0（CVE-2026-69249 证书链指数级 DoS；CVE-2026-69247 PKCS#7 Bleichenbacher oracle；打包的 OpenSSL 已知漏洞）
+
+`make test` 403 passed（gateway 全部 + mesh 全部），无回归，已推送到 dev 仓库 main（`6c255ec`）。
+
+### 生产 pinned 部署同步
+
+顺带发现 pinned 部署（`~/aetherforge-final-ae3570f`）有两个文件的本地未提交修改（`aliases.yaml`/`gateway.py`）——核实后确认这不是需要保留的独立 hotfix，而是内容已经和 dev 最新代码完全一致（`mid-local` 死链修复等），只是 git HEAD 指针从未跟上。安全丢弃后切换到 `6c255ec`，`uv sync` 确认安全版本生效，`make test` 403 passed，重启网关服务。
+
+**端到端验证**：从 mac-mini 真实 tailnet 设备访问 `/v1/models`，200（0.88s）。一次真实推理请求撞上了用户当时正在使用 `qwythos-9b`（GENERATING）触发的容量保护（409/no_capacity），这是系统按预期工作，不是升级引入的问题——日志确认该请求实际推理耗时 34.8 秒，只是客户端 30 秒超时提前放弃，不是失败。
