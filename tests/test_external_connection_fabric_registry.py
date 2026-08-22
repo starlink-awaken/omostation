@@ -23,6 +23,7 @@ def test_registry_covers_the_external_resource_surface() -> None:
         "tool_capability",
         "channel",
         "model_provider",
+        "asset_source",
     }
 
 

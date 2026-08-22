@@ -37,6 +37,10 @@ descriptor:
     - owner
     - version
     - permission_ref
+  optional_fields:
+    - bos_uri
+    - domain
+    - visibility
   secret_policy: credential_ref_only
   forbidden_fields:
     - access_token
@@ -73,6 +77,11 @@ resource_kinds:
     owner: aetherforge
     allowed_capabilities: [discover, infer, embed, evaluate]
     default_mode: proposal_only
+  asset_source:
+    owner: runtime
+    allowed_capabilities: [discover, read, snapshot, resolve]
+    default_mode: governed_snapshot
+    note: "统一资源注册表资产类: 运行资产/产出物/artifact 索引 (WP4)"
 connection_modes:
   live_query:
     copy_policy: zero_copy_preferred
@@ -352,6 +361,68 @@ scene_activation_gate:
     - no_outcome_metric
     - no_owner
     - no_permission_boundary
+resources:
+  # 统一资源注册表 (WP4): 六类资源登记, descriptor 见上, 供 agora/agent 发现。
+  # domain/visibility 为 WP5 预留(当前全 public)。
+  - id: resident-event-center
+    kind: resource_provider
+    provider: bus-foundation
+    protocol: bus
+    capabilities: [publish, subscribe]
+    data_classification: internal
+    provenance: projects/bus-foundation
+    lifecycle: active
+    health: operational
+    owner: architecture-governance
+    version: "1.0"
+    permission_ref: permission://internal/event-bus
+    bos_uri: bos://capability/bus/event
+    domain: system
+    visibility: public
+  - id: resident-knowledge
+    kind: knowledge_source
+    provider: omo
+    protocol: local_fs
+    capabilities: [search, read, snapshot]
+    data_classification: internal
+    provenance: .omo/_knowledge
+    lifecycle: active
+    health: operational
+    owner: architecture-governance
+    version: "1.0"
+    permission_ref: permission://internal/knowledge
+    bos_uri: bos://memory/mos/knowledge-ref
+    domain: system
+    visibility: public
+  - id: resident-memory
+    kind: resource_provider
+    provider: kairon
+    protocol: bos
+    capabilities: [recall, write, consolidate]
+    data_classification: internal
+    provenance: projects/knowledge/kairon
+    lifecycle: active
+    health: operational
+    owner: architecture-governance
+    version: "1.0"
+    permission_ref: permission://internal/memory
+    bos_uri: bos://memory/mos
+    domain: system
+    visibility: public
+  - id: resident-sediment
+    kind: asset_source
+    provider: omo
+    protocol: local_fs
+    capabilities: [read, snapshot]
+    data_classification: internal
+    provenance: .omo/_knowledge/sediment
+    lifecycle: active
+    health: operational
+    owner: architecture-governance
+    version: "1.0"
+    permission_ref: permission://internal/knowledge
+    domain: system
+    visibility: public
 bindings:
   source_adapters: projects/knowledge/kairon/packages/iris
   method_compiler: projects/knowledge/kairon/packages/sophia
