@@ -2,7 +2,7 @@
 
 ## 定位
 
-`projects/` 是多项目容器，承载多个子仓（如 `projects/cockpit`、`projects/gbrain`、`projects/omo` 等）。该目录仅负责项目边界治理，不作为单一代码构建单元。
+`projects/` 是多项目容器，承载多个子仓（如 `projects/cockpit`、`projects/omlxc`、`projects/omo` 等）。该目录仅负责项目边界治理，不作为单一代码构建单元。
 
 ## 首先阅读
 
