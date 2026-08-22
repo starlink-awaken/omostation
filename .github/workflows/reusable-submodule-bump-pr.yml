@@ -20,6 +20,10 @@ on:
     secrets:
       bot_token:
         required: true
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   bump-pointer:

@@ -36,6 +36,10 @@ on:
       - "LAYER-INDEX.md"
   schedule:
     - cron: "0 */6 * * *"  # 每6小时自动运行，确保SSOT长期绿色
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   interface-check:

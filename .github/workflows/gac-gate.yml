@@ -13,6 +13,10 @@ on:
   # feature branch path-filtered runs (not main)
   # implemented as additional push without branch filter + job if:
   # keep simple: always on main + all PRs is enough for protection.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   gac-gate:

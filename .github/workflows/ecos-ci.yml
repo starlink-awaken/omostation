@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
     paths: ['projects/ecos/**', '.github/workflows/ecos-ci.yml']
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest

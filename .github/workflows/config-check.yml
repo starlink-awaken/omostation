@@ -2,6 +2,10 @@ name: Config Check
 on:
   push:
     paths: ["projects/knowledge/kairon/packages/agora/agora-services.json", "projects/agora/src/agora-services.json"]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest

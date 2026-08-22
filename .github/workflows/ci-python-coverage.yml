@@ -21,6 +21,10 @@ on:
       - 'projects/bus-foundation/**'
       - 'projects/*/pyproject.toml'
       - '.github/workflows/ci-python-coverage.yml'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: ${{ matrix.pkg }}
