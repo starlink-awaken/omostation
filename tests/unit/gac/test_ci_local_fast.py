@@ -202,6 +202,29 @@ def test_ruff_baseline_cannot_replace_an_approved_bucket_at_same_cap(
         module._load_ruff_baseline(baseline_path)
 
 
+def test_ruff_debt_scope_does_not_require_retired_scripts_tree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Live debt_scope must not list archived scripts/; _ruff_json must not demand that tree."""
+    module = _load_module()
+    payload = yaml.safe_load(module.BASELINE_PATH.read_text(encoding="utf-8"))
+    policy = payload["policy"]
+    assert "scripts" not in list(policy.get("debt_scope") or [])
+
+    for scope in policy["debt_scope"]:
+        (tmp_path / str(scope)).mkdir(parents=True, exist_ok=True)
+    assert not (tmp_path / "scripts").exists()
+
+    def fake_run(command, *, cwd, capture_output, text, check):  # noqa: ARG001
+        assert command[0] == "ruff"
+        assert "scripts" not in command
+        return subprocess.CompletedProcess(command, 0, stdout="[]", stderr="")
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    diagnostics = module._ruff_json(policy, root=tmp_path, debt=True)
+    assert diagnostics == []
+
+
 def test_make_plan_ignores_ci_local_runner_environment_override() -> None:
     env = os.environ.copy()
     env["CI_LOCAL_RUNNER"] = "true"

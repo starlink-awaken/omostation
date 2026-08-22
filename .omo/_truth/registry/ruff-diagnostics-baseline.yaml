@@ -13,7 +13,6 @@ policy:
   ignore: [F401, F403, F821, E402, E722, F841, E501]
   debt_scope:
     - projects/omo/src
-    - scripts
   debt_ignore: [F401, F821, E402, E722]
   growth_policy: forbidden
   hard_cap: 26  # independent code maxima freeze all six approved buckets
