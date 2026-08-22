@@ -126,6 +126,11 @@ DEFAULT_POLICY = {
             "ci_only": True,
         },
         {"id": "doc-ssot-snapshots", "command": ["bin/ssot/doc-governance-check.py"]},
+        {
+            "id": "state-freshness-check",
+            "command": ["bin/gac/state-freshness-check.py"],
+            "ci_only": True,
+        },
         {"id": "doc-link-check", "command": ["bin/ssot/doc-link-check.py"]},
         {
             "id": "change-lane-check",
