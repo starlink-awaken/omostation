@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import AsyncIterator
 from pathlib import Path
@@ -178,3 +179,46 @@ class TestLmStudioContract(BackendAdapterContract):
         assert len(load_calls) == 1, "chat 前必须恰好触发一次受控 lms load"
         argv = load_calls[0]
         assert "-c" in argv and "16384" in argv, f"受控加载必须带 -c 16384: {argv}"
+
+    @pytest.mark.asyncio
+    async def test_busy_probe_model_does_not_kill_entire_discover(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """busy-probe 回归: 探针模型正忙于长生成时, probe chat 排队超时
+        只损失 generation_ready, 目录/加载状态照常返回 — 不得掐死整个
+        discover 导致全部 placement 判死 (2026-08-22 实测 30/37↔0/15 摆动)。"""
+        import omlxc.adapters.lmstudio as lmstudio_module
+
+        monkeypatch.setattr(lmstudio_module, "_PROBE_CHAT_TIMEOUT", 0.1)
+
+        async def runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
+            del timeout
+            if "ps" in argv:
+                rows = [{"modelKey": "model-a", "identifier": "model-a"}]
+                return ProcessOutput(returncode=0, stdout=json.dumps(rows), stderr="")
+            raise AssertionError(f"unexpected argv: {argv}")
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path == "/v1/models":
+                return httpx.Response(200, json={"data": [{"id": "model-a"}]})
+            if request.url.path == "/v1/chat/completions":
+                await asyncio.sleep(1.0)  # 模拟排在长生成后面
+                return httpx.Response(200, json={"choices": [{"message": {"content": "O"}}]})
+            raise AssertionError(f"unexpected request: {request.url.path}")
+
+        adapter = LmStudioAdapter(
+            backend_id="remote-lmstudio",
+            base_url="https://lmstudio.invalid",
+            ssh_target="node.invalid",
+            known_hosts_file=Path(__file__).resolve(),
+            platform=LmsPlatform.MACOS,
+            process_runner=runner,
+            transport=httpx.MockTransport(handler),
+        )
+        snapshot = await adapter.discover()
+        # 目录与加载状态不受探针超时影响
+        assert snapshot.reachable is True
+        assert snapshot.compatible is True
+        assert snapshot.model_available is True
+        # 仅 generation_ready 降级 (探针没能在短超时内完成)
+        assert snapshot.generation_ready is False

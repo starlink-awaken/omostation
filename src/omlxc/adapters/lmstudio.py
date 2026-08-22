@@ -60,6 +60,9 @@ from .tool_calls import parse_tool_call_deltas, parse_tool_calls, tools_payload
 _default_process_runner = default_process_runner
 
 _TIMEOUT = httpx.Timeout(connect=2.0, read=30.0, write=10.0, pool=2.0)
+# 探针 chat 的独立短超时 (秒)。必须显著小于 backend 级 probe_timeout,
+# 保证探针排队时 discover 仍能整体返回。测试可 monkeypatch。
+_PROBE_CHAT_TIMEOUT = 5.0
 DEFAULT_PROCESS_OUTPUT_LIMIT = 1024 * 1024
 _UNSUPPORTED_STATUSES = frozenset({404, 405, 501})
 _SAFE_TARGET_PART = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,252}[A-Za-z0-9])?$")
@@ -563,21 +566,32 @@ class LmStudioAdapter:
             self._loaded_cache_valid = True
         generation_ready = False
         if probe_id is not None and probe_id in loaded_ids:
-            probe = await self.chat(
-                ChatRequest(
-                    request_id="lmstudio-readiness-probe",
-                    model=probe_id,
-                    messages=(ChatMessage(role="user", content="Reply O only"),),
-                    # 100 而非 1: 输出 reasoning_content 的模型会先消耗思维链 token,
-                    # 预算为 1 时 content 必为空 → generation_ready 永假 (后端实际健康
-                    # 却被判定不可用)。100 足够覆盖常见思维链前缀并拿到首个可见 token。
-                    max_tokens=100,
-                    temperature=0.0,
-                )
-            )
-            generation_ready = probe.success and bool(probe.content)
-            if probe.error is not None:
-                errors += (probe.error,)
+            # probe 用独立短超时: 探针模型可能正忙于长生成 (用户真实请求),
+            # probe chat 会排在它后面。没有独立超时时, 排队会吃光 backend 级
+            # probe_timeout → 整个 discover 被掐死 → 全部 placement 判死
+            # (2026-08-22 实测可用性在 30/37↔0/15 摆动)。独立超时后, busy
+            # 只损失 generation_ready (该模型自己的 placement 降级), 目录与
+            # 加载状态照常返回。
+            try:
+                async with asyncio.timeout(_PROBE_CHAT_TIMEOUT):
+                    probe = await self.chat(
+                        ChatRequest(
+                            request_id="lmstudio-readiness-probe",
+                            model=probe_id,
+                            messages=(ChatMessage(role="user", content="Reply O only"),),
+                            # 100 而非 1: 输出 reasoning_content 的模型会先消耗思维链 token,
+                            # 预算为 1 时 content 必为空 → generation_ready 永假 (后端实际健康
+                            # 却被判定不可用)。100 足够覆盖常见思维链前缀并拿到首个可见 token。
+                            max_tokens=100,
+                            temperature=0.0,
+                        )
+                    )
+            except TimeoutError:
+                probe = None
+            if probe is not None:
+                generation_ready = probe.success and bool(probe.content)
+                if probe.error is not None:
+                    errors += (probe.error,)
         capabilities = {
             AdapterCapability.CHAT,
             AdapterCapability.STREAMING,
