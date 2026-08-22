@@ -4,9 +4,9 @@ bet: BET-Y1Q3-T4-01
 axis: engineering
 evidence_key: merged_reachable_commit
 primary_commit: 9c4978c4bb680a214df4c2d4d2212454adba0a7d
-commit_ref: git://origin/main@9c4978c4bb680a214df4c2d4d2212454adba0a7d
+commit_ref: "git://origin/main@9c4978c4bb680a214df4c2d4d2212454adba0a7d"
 pr: "1831"
-title: governance(bet): close BET-Y1Q3-T4-01 as done
+title: "governance(bet): close BET-Y1Q3-T4-01 as done"
 reachable_from_main: true
 verified_at: 2026-08-22
 ---

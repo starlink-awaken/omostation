@@ -1,3 +1,12 @@
+---
+schema: value-axis-acceptance/v1
+bet: BET-Y1Q3-T4-01
+title: "BET-Y1Q3-T4-01 价值轴 closeout 验收证据清单"
+axis: value
+status: ACCEPTED
+generated_at: 2026-08-22
+---
+
 # BET-Y1Q3-T4-01 价值轴 closeout 验收证据清单
 
 - schema: value-axis-acceptance/v1
