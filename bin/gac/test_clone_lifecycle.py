@@ -201,6 +201,7 @@ def test_onboard_initializes_only_requested_submodules_and_verifies(tmp_path, mo
         argparse.Namespace(
             agent_id="agent-1",
             source="source",
+            revision="origin/main",
             destination=str(tmp_path / "agent-1" / "ws"),
             manifest=str(tmp_path / "baseline.json"),
             submodule=["projects/omo"],
@@ -209,10 +210,33 @@ def test_onboard_initializes_only_requested_submodules_and_verifies(tmp_path, mo
     )
 
     assert rc == 0
+    assert calls[0][calls[0].index("--revision") + 1] == "origin/main"
     assert "--no-submodules" not in calls[0]
     assert calls[0][-2:] == ["--submodule", "projects/omo"]
     assert calls[2][2] == "verify"
     assert (tmp_path / "agent-1").is_dir()
+
+
+def test_onboard_parser_defaults_to_canonical_main_and_allows_override():
+    parser = lc.build_parser()
+
+    default = parser.parse_args(
+        ["onboard", "--agent-id", "agent-1", "--destination", "/tmp/agent-1/ws"]
+    )
+    pinned = parser.parse_args(
+        [
+            "onboard",
+            "--agent-id",
+            "agent-1",
+            "--destination",
+            "/tmp/agent-1/ws",
+            "--revision",
+            "refs/tags/baseline-v1",
+        ]
+    )
+
+    assert default.revision == "origin/main"
+    assert pinned.revision == "refs/tags/baseline-v1"
 
 
 def test_snapshot_creates_valid_manifest(tmp_path):
