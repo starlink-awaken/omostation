@@ -1,6 +1,6 @@
 # CLAUDE.md — omostation AI Context Loader
 
-> 最后更新: 2026-08-03
+> 最后更新: 2026-08-22
 > Purpose: session startup protocol for AI agents.
 > Detailed engineering rules live in [`AGENTS.md`](AGENTS.md).
 > Stable architecture contracts live in [`ARCHITECTURE.md`](ARCHITECTURE.md).
@@ -68,51 +68,17 @@ make omo-status        # 或 bin/omo-status：<0.2s 秒级 Rich 快照 (Agent心
 make omo-top           # 或 bin/omo-top：Textual 实时 4 象限互动大盘
 ```
 
-### Step B.1 · RED LINE — 需求迭代强制 Workflow（ADR-0203）
+### Step B.1 · 需求迭代强制 Workflow（ADR-0203）
 
-**所有需求迭代（功能/缺陷/运维落地、治理/SSOT/ADR、交付 closeout）必须先 `start` 再改文件。**  
-SSOT: `agent-workflows/::requirement_iteration_policy`（`mode: required`）。  
-细节: [`AGENTS.md` §1.6](AGENTS.md) · [`.omo/standards/agent-workflow-contract.md` §3.1](.omo/standards/agent-workflow-contract.md) · [ADR-0203](.omo/_knowledge/decisions/0203-requirement-iteration-workflow-mandatory.md)。
+所有需求迭代必须先 `start` 再改文件。详见 [`AGENTS.md` §1.1](AGENTS.md)。
 
-```bash
-# 有 diff 时先选对 workflow（防错位 project-code-change）
-uv run --with "pyyaml" python "bin/agent-workflow.py" suggest --from-diff --profile <agent-profile>
-uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
-  --profile <agent-profile> --objective "<summary>"
-uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
-```
+### Step B.2 · 三年规划执行台账
 
-豁免仅限：纯只读、`observer-audit`、用户书面 waiver（模板 [`docs/operations/workflow-waiver-template.md`](docs/operations/workflow-waiver-template.md)）。跳过 workflow 直接交付 = 违规。
+不确定当前该做哪件事时，读台账，不要自行拟定任务。详见 [`AGENTS.md` §1.4](AGENTS.md)。
 
-### Step B.2 · 我该做什么 — 三年规划执行台账
+### Step B.3 · 多 Agent 并行的 Git 纪律
 
-不确定当前该做哪件事时，读台账，不要自行拟定任务：
-
-```bash
-uv run --with pyyaml python bin/plan/bet-ledger.py status        # 当前可认领的 bet
-uv run --with pyyaml python bin/plan/bet-ledger.py claim-check <BET-ID>
-```
-
-| 内容 | 位置 |
-|------|------|
-| 台账 SSOT（机器可读） | [`docs/plans/3y-bet-ledger.yaml`](docs/plans/3y-bet-ledger.yaml) |
-| 台账人类视图 | [`docs/plans/3Y-BET-LEDGER.md`](docs/plans/3Y-BET-LEDGER.md) |
-| Agent 执行指令（首次执行前通读） | [`docs/plans/AGENT-BRIEF.md`](docs/plans/AGENT-BRIEF.md) |
-| 三年规划（战略依据） | [`docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md`](docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md) |
-| 现状审计（证据基础） | [`docs/reports/2026-08-06-deep-review-proactive-agent-and-scenario-orchestration.md`](docs/reports/2026-08-06-deep-review-proactive-agent-and-scenario-orchestration.md) |
-| 多 Agent Git 拓扑分析 | [`docs/reports/2026-08-06-multi-agent-git-topology.md`](docs/reports/2026-08-06-multi-agent-git-topology.md) |
-| 技能 | skill `bet-execution` · skill `git-discipline` |
-
-> bet 数量、窗口进度、可认领项均为运行时事实，从 CLI 读取，**不要抄进本文**（守 doc-ssot-contract）。
-
-### Step B.3 · RED LINE — 多 Agent 并行的 Git 纪律
-
-共享主树上并行的 agent 会互相删除产物。2026-08-06 实测当天丢失交付物 4 次。**详见 skill `git-discipline`**，最低限度守住三条：
-
-1. **不在 `~/Workspace` 主仓直接工作** — 先 `bash bin/gac/gac-worktree.sh claim <session>`，在隔离树里做。主仓禁用 `checkout` / `reset --hard` / `clean -fd` / `stash -u` / `rebase`。
-2. **交付三段式 `add` → `commit` → `tag`** — commit 只是暂时安全，共享分支被 rebase 时提交会脱离历史；tag 的 ref 不会。
-3. **逃生口只有 `bin/gac/swarm-git`** — raw `git --no-verify` 会绕过白名单校验与 `.omo/_delivery/swarm-escape/` 审计台账。`CI_LOCAL_SKIP` 仍会先跑预检并记录 fingerprint（ADR-0422）。预存门禁债登记 `gate-known-debt.yaml`，不要拿 `emergency-human-hotfix` 跳过 agent 自己引入的失败。
-4. **高频并发域（bin/scripts convergence、台账、SSOT 文件）agent 会把共享 checkout 的 staged 改动直接 `add -A && commit` 成混合 commit** — 2026-08-16 实证：我的 round9 登记被并发 agent 吸收进其 round11 commit 并合入 main（reflog 可查非主动 commit）。识别 + 处理见 memory `feedback_shared_checkout_concurrent_absorb_20260816.md`：不贸然 reset → 展示 diff 审查 → 验证已合入 main 后 `agent-workflow close --status blocked` → 勿 reset 被并发直接 push 的本地 main。
+共享主树上并行的 agent 会互相删除产物。详见 [`AGENTS.md` §1.3](AGENTS.md) · skill `git-discipline`。
 
 ## 1.5 P74 Workflow Solidification Check (ADR-0130)
 
@@ -150,22 +116,7 @@ It must not duplicate project tables, architecture diagrams, historical closeout
 
 ## 3. Mandatory Boundaries
 
-The authoritative SSOT map (all fact types and sources) lives in [`ARCHITECTURE.md` §1](ARCHITECTURE.md). The table below lists only the boundaries most relevant to session startup.
-
-| Topic | Rule | Read More |
-|------|------|-----------|
-| Runtime state | Read from `.omo/state/system.yaml`; do not hard-code | [`ARCHITECTURE.md` §1](ARCHITECTURE.md) |
-| Runtime projection refresh | Use `uv run --project projects/omo omo state sync`; do not run ad-hoc generator scripts from hooks | [`.omo/_knowledge/decisions/0128-state-generation-concurrency.md`](.omo/_knowledge/decisions/0128-state-generation-concurrency.md) |
-| Governed `.omo/` writes | Use `omo` CLI/MCP or approved broker, not ad-hoc file I/O | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
-| Ports | Read and register through `protocols/port-registry.yaml` | [`ARCHITECTURE.md` §1](ARCHITECTURE.md) |
-| Vault paths | Read from `protocols/vault-paths.yaml`; do not hard-code `~/Documents/` paths | [`ARCHITECTURE.md` §1](ARCHITECTURE.md) |
-| Project metadata | Read from `docs/project-registry.yaml` | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
-| Agent workflows | Use `bin/agent-workflow.py`; do not rely on prompt memory alone | [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
-| Scene cards | Read/edit in `docs/scene-cards/`; validate via `make scene-card-check`; admission via dual-track preflight | [`.omo/standards/external-connection-fabric.md`](.omo/standards/external-connection-fabric.md) |
-| Journey specs | Read/edit in `docs/journey-specs/`; validate via `make journey-check`; run via `bin/ssot/journey-runner.py` | [`docs/journey-specs/`](docs/journey-specs/) |
-| Scene execution | `journey-runner.py` dispatches scenes; signal-poller triggers; outcome-recorder records | [`bin/ssot/journey-runner.py`](bin/ssot/journey-runner.py) |
-| Permission scopes | Internal pipeline scenes use RBAC scopes from controlled vocabulary | [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) |
-| Signal sources | External signal registration in `signal-sources.yaml`; polled by `signal-poller.py` | [`.omo/_truth/registry/signal-sources.yaml`](.omo/_truth/registry/signal-sources.yaml) |
+The authoritative SSOT map (all fact types, sources, and boundaries) lives in [`ARCHITECTURE.md` §1](ARCHITECTURE.md). Read it before hard-coding any runtime fact, port, vault path, or governed-state write.
 
 ## 4. Working Discipline
 
@@ -178,136 +129,31 @@ The authoritative SSOT map (all fact types and sources) lives in [`ARCHITECTURE.
 
 ## 5. Common Commands
 
-**Gate & lint:**
-
-```bash
-make ci-local                               # 本地一键跑全部门 (ci-local-fast 超集, Makefile:105)
-make check-layers                           # 分层依赖检查 (docs/layer-contract.yaml)
-make gac-local-gate
-make gac-local-gate --scope files --file <path> --json
-make doc-ssot-lint
-make ssot-guardian
-```
-
-**SSOT 变更追踪:**
-
-```bash
-make ssot-status                            # SSOT 变更状态检查
-make ssot-log                               # SSOT 审计日志查看
-make ssot-sync                              # SSOT 变更记录到审计日志
-make sync-submodules                        # 推送子模块未推送的 commit 到远程
-```
-
-**Agent workflow lifecycle** (`bootstrap` → inspect → `start` → `claim` → `verify` → `closeout` → `compliance`):
-
-```bash
-make agent-workflow-bootstrap
-make agent-workflow-status
-make agent-workflows
-make agent-workflow-agents
-make agent-workflow-integrations
-make agent-workflow-adapters
-uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --objective "<summary>"
-uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
-uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
-make agent-workflow-closeout RUN_ID=<run-id>
-make agent-workflow-compliance  # optional: RUN_ID for specific run
-make agent-workflow-doctor
-```
-
 <!-- doc-ssot-lint: raw form "bin/agent-workflow.py" bootstrap, "bin/agent-workflow.py" closeout, "bin/agent-workflow.py" compliance -->
 
-**State sync:**
-
 ```bash
-make state-sync-dry
-make state-sync
+uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap   # 单入口: 加载 SSOT 运行时事实
+uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>   # 闭环收尾
+uv run --with "pyyaml" python "bin/agent-workflow.py" compliance  # 合规审计
 ```
 
-**Scene cards & journeys (四面一脊执行闭环):**
-
-```bash
-make scene-card-check                      # 验证所有 scene card (双轨自动路由)
-make scene-chain-check                     # 验证场景链 downstream_refs + 反馈环
-make journey-check                         # 验证所有 journey spec (状态机 + 不可达检测)
-make adr-number-check                      # 检查 ADR 编号冲突
-python3 bin/ssot/journey-runner.py run --journey <id> --dry-run  # Journey dry-run
-python3 bin/ssot/journey-runner.py run --journey <id> --live     # Journey 真实执行
-python3 bin/ssot/journey-runner.py resume --journey-id <id> --run-id <id>  # 从 checkpoint 恢复
-python3 bin/ssot/signal-poller.py          # 感知面: 检测信号变化
-python3 bin/ssot/scene-outcome-recorder.py record --scene-card <path> --run-id <id> --adjudication accepted  # 结果面
-```
-
-**Tests — project-level and single-test:**
-
-```bash
-bash "tests/integration/run-all.sh"          # root integration suite
-cd "projects/knowledge/kairon" && make test-diff        # kairon (Python) — changed-surface tests
-cd "projects/knowledge/gbrain" && bun test              # gbrain (TypeScript)
-```
-
-Run a single test with each framework's native filter (see the target project's `AGENTS.md` for project-specific targets):
-
-- Python (`uv run pytest`): `pytest -k "test_name"` or `pytest path/to/test.py::TestClass::test_method` — 根仓 `tests/` 需 `uv run --with pyyaml --with pytest python -m pytest` (裸 `uv run pytest` 命中 pipx pytest, 无 pyyaml)
-- TypeScript (`bun test`): `bun test --filter "pattern"`
-- cockpit-ui: `npm run build` / `bun run build`
-- observability: `docker compose config -q`
+For the full command reference (gate & lint, SSOT tracking, agent workflow lifecycle, state sync, scene cards & journeys, tests), see [`AGENTS.md` §5](AGENTS.md).
 
 ## 6. Routing Hints
 
-### 6a. By document
+The authoritative SSOT map (fact types → sources) lives in [`ARCHITECTURE.md` §1](ARCHITECTURE.md). Use the INDEX docs to narrow by category:
 
 | Need | Route |
 |------|-------|
-| Workspace architecture | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
-| Layer/project placement | [`LAYER-INDEX.md`](LAYER-INDEX.md) |
-| Current debts & goals | [`BRIEF.md`](BRIEF.md) · [`.omo/goals/current.yaml`](.omo/goals/current.yaml) |
-| Agent development rules | [`AGENTS.md`](AGENTS.md) — esp. §6 git/submodules, §9 closeout, §10 Round Workflow (ADR-0148) |
-| Project metadata | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
-| System panorama & BOS routing | [`docs/PANORAMA.md`](docs/PANORAMA.md) |
-| Architecture deep-dive | [`docs/ARCHITECTURE-DETAILED-MAP.md`](docs/ARCHITECTURE-DETAILED-MAP.md) |
-| Functional capability map | [`docs/FUNCTIONAL-CAPABILITY-MAP.md`](docs/FUNCTIONAL-CAPABILITY-MAP.md) |
-| Agora callchain | [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) |
-| Vision & roadmap | [`docs/VISION-ROADMAP.md`](docs/VISION-ROADMAP.md) |
-| OMO governance kernel rules | [`projects/omo/CLAUDE.md`](projects/omo/CLAUDE.md) |
-| Executable agent workflows | [`.omo/_truth/registry/agent-workflows/`](.omo/_truth/registry/agent-workflows/) |
-| AGCP status/scoped gate/claim policy | [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
-| Internal integration contracts | `make agent-workflow-integrations` |
-| MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
-| External adapter contracts | `make agent-workflow-adapters` |
-| External adapter health | `make agent-workflow-doctor` |
-| Scene cards (9 cards, dual-track) | [`docs/scene-cards/`](docs/scene-cards/) |
-| Journey specs (state machines) | [`docs/journey-specs/`](docs/journey-specs/) |
-| External connection fabric | [`.omo/standards/external-connection-fabric.md`](.omo/standards/external-connection-fabric.md) |
-| Dual-track admission (ADR-0387) | [`.omo/_knowledge/decisions/0387-dual-track-scene-admission.md`](.omo/_knowledge/decisions/0387-dual-track-scene-admission.md) |
-| Permission scope vocabulary | [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) |
-| Signal sources (感知面) | [`.omo/_truth/registry/signal-sources.yaml`](.omo/_truth/registry/signal-sources.yaml) |
-| Scene execution tools | `bin/ssot/journey-runner.py` · `signal-poller.py` · `scene-reflection.py` · `scene-outcome-recorder.py` · `capability-token.py` |
-| L0/SSOT/M0/MOF alignment audit | [`.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md`](.omo/_knowledge/audits/2026-06-29-l0-ssot-m0-mof-alignment.md) |
-| Agent 红线/灰线 (severity) | `docs/generated/agent-redlines.md` (gitignored 运行时生成; `make gen-agent-redlines` 或 `python3 bin/mof/gen-agent-redlines.py`; executor ∈ {hook_pre_edit, ci_gate} → red, 否则 gray; ADR-0171) |
-| Codebase knowledge graph (callers/impact) | [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) |
+| Projects by layer/stack | [`docs/INDEX-PROJECTS.md`](docs/INDEX-PROJECTS.md) |
+| Tools and scripts | [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) |
+| ADRs, audits, patterns | [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) |
+| Agent skills & setup | [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) |
+| System navigation hub | [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) |
+| Scene cards & journeys | [`docs/scene-cards/`](docs/scene-cards/) · [`docs/journey-specs/`](docs/journey-specs/) |
+| Code callers / impact | [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) |
 
-### 6b. By task — "I want to change X, where do I look first?"
-
-| Task | First read |
-|------|-----------|
-| BOS service / route | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) · [`docs/I0-AGORA-CALLCHAIN.md`](docs/I0-AGORA-CALLCHAIN.md) |
-| Governance rule (X1-X4 / GaC) | [`.omo/_truth/registry/governance-checks.yaml`](.omo/_truth/registry/governance-checks.yaml) · [`docs/generated/agent-gac-rules.md`](docs/generated/agent-gac-rules.md) |
-| Port assignment | [`protocols/port-registry.yaml`](protocols/port-registry.yaml) (read-only for agents; register through it) |
-| Runtime state / health | [`.omo/state/system.yaml`](.omo/state/system.yaml) · refresh via `omo state sync` |
-| L0 / MOF constraint | [`projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml`](projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml) |
-| Add / change an agent workflow | [`.omo/_truth/registry/agent-workflows/`](.omo/_truth/registry/agent-workflows/) · [`.omo/standards/agent-workflow-contract.md`](.omo/standards/agent-workflow-contract.md) |
-| Document SSOT contract | [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md) |
-| Write an ADR | [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) · [`.omo/standards/adr-process.md`](.omo/standards/adr-process.md) |
-| Project layer placement | [`docs/project-registry.yaml`](docs/project-registry.yaml) → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md) |
-| Land changes to root `main` | [`bin/gac/gac-worktree.sh`](bin/gac/gac-worktree.sh) (claim/submit/merge) · [`AGENTS.md` §6.1](AGENTS.md) · [`docs/AGENT-ISOLATION-ROLLOUT.md`](docs/AGENT-ISOLATION-ROLLOUT.md) |
-| Code callers / impact / structure graph | [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) · MCP `codebase-memory-mcp` · skill `codebase-memory` |
-| Create/modify scene card | [`docs/scene-cards/`](docs/scene-cards/) · validate: `make scene-card-check` · admission: `bin/ssot/internal-scene-preflight.py` or `external-activation-preflight.py` |
-| Create/modify journey spec | [`docs/journey-specs/`](docs/journey-specs/) · validate: `make journey-check` · run: `bin/ssot/journey-runner.py` |
-| Run a journey end-to-end | `bin/ssot/journey-runner.py run --journey <id> --dry-run` → checkpoint → resume → outcome record |
-| Scene admission (external resource) | `bin/ssot/external-scene-trial.py` · [`.omo/standards/external-connection-fabric.md`](.omo/standards/external-connection-fabric.md) |
-| Scene admission (internal pipeline) | `bin/ssot/internal-scene-trial.py` · [ADR-0387](.omo/_knowledge/decisions/0387-dual-track-scene-admission.md) |
-| Perception signal detection | `bin/ssot/signal-poller.py` · [`.omo/_truth/registry/signal-sources.yaml`](.omo/_truth/registry/signal-sources.yaml) |
+For task-level routing (BOS, governance, ports, ADRs, main landing, scene admission), see [`ARCHITECTURE.md` §1](ARCHITECTURE.md) and the INDEX docs above.
 
 ## 7. Closeout
 
@@ -327,8 +173,8 @@ Run broader tests only when the edited surface warrants them. Documentation-only
 > **自动刷新时间**: 2026-07-06 15:44:53 | 模式: RAG Top-2 按需激活
 > 新进 Agent 必须通读并深度对齐以下前人沉淀的历史避坑基因，严禁在同一坑中二次栽倒：
 
-- **P74 — Workflow Solidification Pattern (常态化工作流沉默治理)** ([p74-workflow-solidification-pattern.md](file:///Users/xiamingxing/Workspace/.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md))
+- **P74 — Workflow Solidification Pattern (常态化工作流沉默治理)** ([p74-workflow-solidification-pattern.md](.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md))
   > 任一即触发 P74 评估: 1. **沉默 workflow**:registry 登记 ≥ 1 周,无 `agent_workflow_start` 事件。 2. **错位 workflow**:实际做的事 ≥ 3 次,却走通用 `project-code-change` 而非专属 workflow。
 
-- **P73 Truth-Driven Engineering Pattern — eCOS 多迁移/并发/声明执行鸿沟下的工程纪律** ([p73-truth-driven-engineering-pattern.md](file:///Users/xiamingxing/Workspace/.omo/_knowledge/patterns/p73-truth-driven-engineering-pattern.md))
+- **P73 Truth-Driven Engineering Pattern — eCOS 多迁移/并发/声明执行鸿沟下的工程纪律** ([p73-truth-driven-engineering-pattern.md](.omo/_knowledge/patterns/p73-truth-driven-engineering-pattern.md))
   > | 陷阱 | 症状 | 本轮案例 | |------|------|---------| | **D1** 凭路径直觉判存在性 | 报"X 零实现/不存在/悬空" 其实文件已迁移或运行时写面未创建 | 连续 3 轮把 debt(空=运行时写面正常) / task(卡 ingress delivery) / GaC(3 drift 非 129) 判错 |
