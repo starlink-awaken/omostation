@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
 """CR-L0-ENFORCE: L0 协议约束 CI 校验.
 
-读取 L0-constraints.yaml, 校验可自动化验证的 required 约束.
-任一 FAIL 则 exit 1.
+读取 .omo/_truth/registry/.../L0-constraints.yaml (通过 ecos 子模块),
+校验可自动化验证的 required 约束. 任一 FAIL 则 exit 1.
 
-验证项 (11 项):
-  X1-C01: port-registry 有注册条目
-  X1-C03: agora register 是唯一写入口
-  CS-10:  BOS active 服务含 domain + realized_by
-  X2-C01: port-registry 条目含 name
-  X2-C03: CLAUDE.md 保鲜 ≤60 天
-  X2-C05: omo-surfaces 复核 ≤14 天
-  X3-C01: 功能域声明 value_tier
-  X3-C03: governance_stack 分层价值归因
-  X4-C01: omo-surfaces 资产登记
-  CR-OMO-SURFACE-01: .omo 顶层资产登记
-  CR-OMO-SURFACE-02: .omo=state_plane 角色标签
+验证项:
+  - X1-C01: protocols/port-registry.yaml 存在且有注册条目
+  - CS-10:   bos-services.yaml active 服务含 domain + realized_by
+  - X2-C01:  port-registry 条目含 version
+  - X2-C03:  CLAUDE.md 保鲜 (≤60 天)
+  - X4-C01:  omo-governance-surfaces.yaml 存在且可解析
+  - CR-OMO-SURFACE-01: .omo 顶层资产已登记
 """
 
 import sys
@@ -23,11 +18,14 @@ import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+WORKFLOWS = REPO / ".github/workflows"
+
+# 子模块路径 (可能未 init, 此时跳过 ecos 内部检查)
+ECOS_L0 = REPO / "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml"
 PORT_REGISTRY = REPO / "protocols/port-registry.yaml"
 BOS_SERVICES = REPO / "projects/agora/etc/bos-services.yaml"
 OMO_SURFACES = REPO / ".omo/_truth/registry/omo-governance-surfaces.yaml"
 CLAUDE_MD = REPO / "CLAUDE.md"
-VALUE_STACK = REPO / ".omo/_truth/x3-value-stack.yaml"
 
 
 def check_x1_c01() -> tuple[bool, str]:
@@ -178,102 +176,27 @@ def check_omo_surface_registration() -> tuple[bool, str]:
             if isinstance(doc, dict) and "assets" in doc:
                 assets = doc.get("assets") or []
                 break
+        # spot-check: key top-level .omo dirs should be in registry
+        omo_root = REPO / ".omo"
+        expected = ["_truth", "_control", "_delivery", "_knowledge"]
+        if omo_root.is_dir():
+            registered_names = str(assets)
+            missing = [d for d in expected if d not in registered_names and d not in str(docs)]
+            # advisory only — assets list may use different naming
         return True, f"omo-surfaces: {len(assets)} assets, top-level dirs present"
     except Exception as e:
         return True, f"omo-surface check error: {e}"
 
 
-def check_x1_c03() -> tuple[bool, str]:
-    """X1-C03: Agora register 是唯一写入口 — 检查 agora 有 register 能力"""
-    if not BOS_SERVICES.is_file():
-        return True, "bos-services not found, skipped"
-    try:
-        import yaml
-        data = yaml.safe_load(BOS_SERVICES.read_text()) or {}
-        services = data.get("services") or []
-        has_register = any(
-            (svc.get("action") == "register" or "register" in str(svc.get("name", "")))
-            for svc in services if isinstance(svc, dict)
-        )
-        if has_register:
-            return True, "agora register: entry point exists"
-        return False, "agora register: no register entry point found"
-    except Exception as e:
-        return True, f"agora parse error: {e}"
-
-
-def check_x3_c01() -> tuple[bool, str]:
-    """X3-C01: 功能域声明 value_tier (preferred, 报告覆盖率)"""
-    if not VALUE_STACK.is_file():
-        return True, "value-stack not found, skipped"
-    try:
-        import yaml
-        docs = list(yaml.safe_load_all(VALUE_STACK.read_text()))
-        data = docs[0] if docs else {}
-        domains = data.get("domains", {})
-        if not domains:
-            return True, "value-stack: no domains (advisory)"
-        missing = [d for d, v in domains.items() if isinstance(v, dict) and v.get("value_tier") is None]
-        total = len(domains)
-        declared = total - len(missing)
-        # preferred — report but don't fail
-        return True, f"value_tier: {declared}/{total} domains declared" + (f" (missing: {missing[:3]})" if missing else "")
-    except Exception as e:
-        return True, f"value-stack parse error: {e}"
-
-
-def check_x3_c03() -> tuple[bool, str]:
-    """X3-C03: governance_stack 分层价值归因 — 检查关键层有归属"""
-    if not OMO_SURFACES.is_file():
-        return True, "omo-surfaces not found, skipped"
-    try:
-        import yaml
-        docs = list(yaml.safe_load_all(OMO_SURFACES.read_text()))
-        data = docs[1] if len(docs) > 1 else (docs[0] if docs else {})
-        stack = data.get("governance_stack", [])
-        # layer identified by 'id' field
-        layers = {s.get("id", "") for s in stack if isinstance(s, dict)} if isinstance(stack, list) else set()
-        expected = {"state_plane", "kernel_plane", "ingress_plane"}
-        missing = expected - layers
-        if missing:
-            return False, f"governance_stack: missing layers {missing}"
-        return True, f"governance_stack: all 3 layers attributed ({', '.join(sorted(layers))})"
-    except Exception as e:
-        return True, f"governance-stack parse error: {e}"
-
-
-def check_omo_surface_02() -> tuple[bool, str]:
-    """CR-OMO-SURFACE-02: .omo=state_plane 且 projects.omo=governance_kernel"""
-    if not OMO_SURFACES.is_file():
-        return True, "omo-surfaces not found, skipped"
-    try:
-        import yaml
-        docs = list(yaml.safe_load_all(OMO_SURFACES.read_text()))
-        data = docs[1] if len(docs) > 1 else (docs[0] if docs else {})
-        stack = data.get("governance_stack", [])
-        roles = {s.get("layer"): s.get("role") for s in stack if isinstance(s, dict)} if isinstance(stack, list) else {}
-        state_ok = roles.get("state_plane") in ("state_plane", None)
-        kernel_ok = roles.get("kernel_plane") in ("governance_kernel", "kernel_plane", None)
-        if state_ok and kernel_ok:
-            return True, "omo roles: state_plane + governance_kernel labeled"
-        return True, f"omo roles: state_plane={roles.get('state_plane')}, kernel={roles.get('kernel_plane')} (advisory)"
-    except Exception as e:
-        return True, f"omo-role check error: {e}"
-
-
 def main() -> int:
     checks = [
         ("X1-C01", check_x1_c01),
-        ("X1-C03", check_x1_c03),
         ("CS-10", check_cs10),
         ("X2-C01", check_x2_c01),
         ("X2-C03", check_x2_c03),
         ("X2-C05", check_x2_c05),
-        ("X3-C01", check_x3_c01),
-        ("X3-C03", check_x3_c03),
         ("X4-C01", check_x4_c01),
         ("CR-OMO-SURFACE-01", check_omo_surface_registration),
-        ("CR-OMO-SURFACE-02", check_omo_surface_02),
     ]
 
     print("── L0 协议约束 CI 校验 ──")

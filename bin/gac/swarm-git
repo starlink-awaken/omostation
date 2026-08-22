@@ -69,7 +69,7 @@ if printf '%s\0' "$@" | grep -qz -- '--no-verify'; then
   for a in "$@"; do [ "$a" = "commit" ] && { FLAG="no_verify_commit"; break; }; done
   _FAIL_JSON=""
   if [ "$FLAG" = "no_verify_push" ] && [ -f "$ROOT/bin/gac/ci-local-fast.py" ]; then
-    _FAIL_JSON="$(mktemp "${TMPDIR:-/tmp}/swarm-git-failures.XXXXXX.json")"
+    _FAIL_JSON="$(mktemp "${TMPDIR:-/tmp}/swarm-git-failures.json.XXXXXX")"
     python3 "$ROOT/bin/gac/ci-local-fast.py" --failures-json "$_FAIL_JSON" >/dev/null 2>&1 || true
   fi
   _esc_cmd=(python3 "$CLI" escape-check --flag "$FLAG")

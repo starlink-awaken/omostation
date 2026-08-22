@@ -1,12 +1,12 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-08-22T11:57:04.562998Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `41/100`
+> **Generated**: `2026-08-22T12:32:51.066331Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `86/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/closed/decision-checklist-13-items.md`.
 
 ### ⏳ 待处理卡片与债务 (Needs Human Decisions)
-- **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/ws-sync-stale-candidates/.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml)
+- **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/ws-fix-debt-dashboard-mirror/.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml)
 
 > 📊 **治理预算**: 40/40/20 (治理≤40%/协作≥40%/弹性20%, ADR-0249). 超40%须送卡.
 
@@ -41,6 +41,6 @@
 
 ## ⚙️ 治理健康分详情 (Health Detail)
 
-- **复合健康分**: `41/100` (警戒, 请看下方分项)
-- **GAC 异常扣分**: `70/100`
-- **常驻 daemon 在线率**: `0.00%`
+- **复合健康分**: `86/100` (警戒, 请看下方分项)
+- **GAC 异常扣分**: `54/100`
+- **常驻 daemon 在线率**: `100.00%`
