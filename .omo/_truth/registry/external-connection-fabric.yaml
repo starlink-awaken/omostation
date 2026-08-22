@@ -423,6 +423,36 @@ resources:
     permission_ref: permission://internal/knowledge
     domain: system
     visibility: public
+  - id: resident-method-pack
+    kind: method_pack
+    provider: kairon.sophia
+    protocol: local_fs
+    capabilities: [discover, explain, compile, evaluate]
+    data_classification: internal
+    provenance: .omo/_knowledge/patterns
+    lifecycle: active
+    health: operational
+    owner: architecture-governance
+    version: "1.0"
+    permission_ref: permission://internal/methods
+    bos_uri: bos://capability/method-pack
+    domain: system
+    visibility: public
+  - id: resident-tools
+    kind: tool_capability
+    provider: agora
+    protocol: bos
+    capabilities: [discover, invoke, validate]
+    data_classification: internal
+    provenance: bin/gac
+    lifecycle: active
+    health: operational
+    owner: architecture-governance
+    version: "1.0"
+    permission_ref: permission://internal/tools
+    bos_uri: bos://capability/tools
+    domain: system
+    visibility: public
 bindings:
   source_adapters: projects/knowledge/kairon/packages/iris
   method_compiler: projects/knowledge/kairon/packages/sophia
