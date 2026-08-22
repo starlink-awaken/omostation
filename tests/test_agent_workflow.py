@@ -2571,3 +2571,10 @@ def test_load_registry_split_directory_missing_workflows_raises(tmp_path) -> Non
     (registry_dir / "_root.yaml").write_text("version: 1\n", encoding="utf-8")
     with pytest.raises(WorkflowError):
         load_registry(registry_dir)
+
+
+def test_compliance_auto_fix_orphan_lock() -> None:
+    """compliance 应在检查前自动清理孤儿锁."""
+    result = _run_root_workflow_strict("compliance")
+    assert "orphan_lock" not in result.stdout
+    assert "orphan_lock" not in result.stderr
