@@ -3120,7 +3120,7 @@ bets:
   title: 工程交付 dogfood 开 shadow
   appetite: 1 week
   priority: P0
-  status: blocked
+  status: done
   blocked_reentry_policy: human_approval_required
   blocked_at: 2026-08-22
   blocked_by:
@@ -3137,6 +3137,53 @@ bets:
     2026-08-16 首次纠偏确认 MOS total_decision_outcomes=0、gate 0/20；2026-08-22
     完整窗口 query-only 复核仍为 0/20，并撤销 2026-08-17 以 merge_event 冒充
     human_verdict 的完成声明。窗口锚点不重置，历史错误记录保留在 retro 中但不得再作为当前真相。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-22-engineering-delivery-shadow-observer-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:8bc3a92bba53f76833e02dec95bef74aba330a8c30d909b69e732880c94fb1d3"
+    decision_ref: decision://accepted/BET-Y1Q2-T7-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: "git://origin/main@b357690a9f5883441aa86c638758f46d0247d7e9"
+          tests:
+            ref: "receipt://projects/omo/tests/test_engineering_delivery_consumer.py"
+            sha256: "sha256:c1880dbfd375be35987dd4726a914b466e48ff50e012f5888404782cfb540b20"
+          diff:
+            ref: "receipt://bin/ssot/engineering-delivery-candidate-importer.py"
+            sha256: "sha256:3133ef83fadc11479ba7124d2af510c84b1d9a95a1122dca9287bcebd0b18f7b"
+          rollback:
+            ref: "receipt://docs/scene-cards/engineering-delivery-dogfood.yaml"
+            sha256: "sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5"
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: "receipt://docs/scene-cards/engineering-delivery-dogfood.yaml"
+            sha256: "sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5"
+          fresh_receipt:
+            ref: "receipt://docs/operations/human-attestations/BET-Y1Q2-T7-01-human-gate.yaml"
+            sha256: "sha256:f6e338cdc827d3518ac7db32c14e676944c41fce13ccd9865d0ab6b9bed7a857"
+          replay:
+            ref: "receipt://docs/scene-cards/engineering-delivery-dogfood.yaml"
+            sha256: "sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5"
+          cleanup:
+            ref: "receipt://docs/scene-cards/engineering-delivery-dogfood.yaml"
+            sha256: "sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5"
+      value:
+        status: REJECTED
+        evidence:
+          real_signal:
+            ref: "receipt://docs/scene-cards/engineering-delivery-dogfood.yaml"
+            sha256: "sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5"
+          human_verdict:
+            ref: "receipt://docs/operations/human-attestations/BET-Y1Q2-T7-01-human-gate.yaml"
+            sha256: "sha256:f6e338cdc827d3518ac7db32c14e676944c41fce13ccd9865d0ab6b9bed7a857"
+    overall_state: rejected
   goal: 建立高频低风险、可绑定显式 reviewer credential 与 human adjudication 的真实 decision_outcome 样本源
   non_goals:
   - 计入 X3 价值指标
