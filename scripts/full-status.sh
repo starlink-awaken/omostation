@@ -50,9 +50,20 @@ lms ps 2>/dev/null | tail -n +2 | grep -v "^$" | while read -r line; do
 done
 
 echo ""
-echo "--- Tailscale (mac-mini / y7000p 依赖这个) ---"
-ts_line=$(tailscale status 2>&1 | head -1)
-echo "  $ts_line"
+echo "--- Tailscale / 远程节点 ---"
+if pgrep -f "tailscale.brew.sock" > /dev/null 2>&1; then
+  /usr/local/bin/tailscale status 2>/dev/null | grep -E "mac-mini|y7000p" | while read -r line; do
+    echo "  $line"
+  done
+  # 远程常驻模型存活 (2026-08-22 起 gemma-4-e4b 常驻 mac-mini 分担轻负载)
+  if curl -sf -m 8 http://100.99.210.78:1234/v1/models 2>/dev/null | grep -q gemma-4-e4b; then
+    echo "  ✅ mac-mini LM Studio 可达 (含常驻 gemma-4-e4b)"
+  else
+    echo "  ⚠️ mac-mini LM Studio 不可达或常驻模型丢失"
+  fi
+else
+  echo "  ❌ brew tailscaled 未运行 — 远程链路断 (watchdog 应已报警)"
+fi
 
 echo ""
 echo "--- AetherForge 网关 ---"

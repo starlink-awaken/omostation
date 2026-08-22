@@ -34,6 +34,11 @@ if ! check_http "http://127.0.0.1:8000/v1/models"; then
   fi
 fi
 
+# --- brew tailscaled (临时进程守护: 死了报警; 持久化方案待用户批准) ---
+if ! pgrep -f "tailscale.brew.sock" > /dev/null; then
+  log "[ERROR] brew tailscaled 不在运行 — 远程节点链路已断"
+fi
+
 # --- LM Studio：只监控记录，不自动重启 ---
 # LM Studio 有已知的 JIT 加载失控上下文问题(见 docs/operations/2026-08-22-*),
 # 自动重启解决不了根因，反而可能在同一个坑里循环重启，宁可如实报警。
