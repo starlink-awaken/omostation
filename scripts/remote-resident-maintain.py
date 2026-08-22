@@ -72,6 +72,14 @@ def lms_generating(rows: list[dict[str, object]]) -> bool:
     return any(r.get("status") == "generating" for r in rows)
 
 
+def lm_link_contamination(rows: list[dict[str, object]]) -> list[str]:
+    """LM Link 污染检测: 本机自己的模型 deviceIdentifier 恒为 null, 混入
+    其他设备的记录 deviceIdentifier 非空 (2026-08-22 验证过这个判据在
+    三节点当前干净状态下成立)。今天 LM Link 错配复发过两次(一次单向一次
+    双向), 这里让每轮巡检都能主动发现, 不必等人手工撞见。"""
+    return [str(r.get("identifier")) for r in rows if r.get("deviceIdentifier")]
+
+
 def maintain_lms_entry(entry: dict[str, object], target: str) -> None:
     node_id = entry["node_id"]
     model_id = str(entry["backend_model_id"])
@@ -79,6 +87,10 @@ def maintain_lms_entry(entry: dict[str, object], target: str) -> None:
     rows = lms_ps(target)
     if rows is None:
         return  # SSH/网络不稳, 静默容忍, 下一轮再看
+
+    contaminated = lm_link_contamination(rows)
+    if contaminated:
+        log(f"[WARN] LM Link 污染: {node_id} 混入外部设备模型 {contaminated} — 需要 lms link disable")
 
     if lms_loaded(rows, model_id):
         return  # 已在线, 无需动作
