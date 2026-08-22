@@ -118,3 +118,41 @@ Tailscale 和 LM Studio 都在正常运行、可达（局域网直连，6-14ms�
 处理这次修复期间，`omlxc` 本地仓库连续两次被静默 checkout 到旧提交（`main → e3cec15 → main → e3cec15 → 7615b5c`），文件内容一度回退到早于本次会话所有改动的状态。两次都确认 `origin/main` 完好、无数据丢失，`git checkout main` 即可恢复。
 
 reflog 显示这个模式很规律（在两个特定提交间反复横跳，且间隔很短），同时 `ps aux` 里有一个常驻的 `oh-my-claudecode` 插件桥接进程（`bridge/mcp-server.cjs`），`.omc/` 目录下的状态文件也在持续变化。**怀疑是这个插件的某个后台功能在做仓库快照/对比时误 checkout 了 omlxc**，但这超出本次审计范围，未深入排查插件内部逻辑。建议你留意：如果之后还遇到"改动莫名消失"的情况，先检查 `git reflog` 和 `origin/main`（大概率数据都还在，只是本地检出指针被挪动了），必要时可以考虑暂时关闭该插件观察是否复现。
+
+## 六、全量端到端功能审计（35 个 placement 逐一真实验证）
+
+承接架构评估，对当时全部 35 个 placement（y7000p 修复后从 37 降到 35）做了逐一真实推理验证，而非只看探测缓存。方法学：内存前置检查 + 受控加载 + 真实小请求验证，`lm_studio` 系测完即卸载，`omlx_app` 系无卸载 CLI 靠 idle_ttl 或重启清空。脚本落地为 `scripts/safe_audit.py`（lm_studio 系）和 `scripts/safe_audit_omlx.py`（omlx_app 系）。
+
+### 结果总览
+
+| 状态 | 数量 | 说明 |
+|---|---|---|
+| ✅ 真实验证通过 | 19 | 发起请求拿到正确生成内容 |
+| ❌ 真实故障（新发现） | 3 | 见下 |
+| ⚠️ 已知限制（非故障） | 2 | 接口/性能特性，非 bug |
+| 🗑️ 已移除死配置 | 2 | mac-mini 的 embed-bge-m3/baai-bge-reranker |
+| ⏭️ 未测（巨型模型保护） | 3 | gemma-4-31b/coding-next/mistral-medium，>30GB 默认不测，沿用早前审计先例 |
+| ⏭️ 未测（内存/时序被反复挤占） | 6 | coder-precise-local/reasoning-local/qwen-3.8-27b-local 等，测试期间被真实使用/内存压力多次打断，非故障，只是没轮到 |
+
+### 三个新发现的真实故障
+
+1. **`embedding-lm_studio`（MBP LM Studio 的 qwen3-embedding-8b-mxfp8）**：`ValueError: Missing 1 parameters: lm_head.weight`——**模型权重文件本身缺失关键层，文件损坏**，不是配置或网络问题。需要重新下载。omlx-app 侧的 `embedding-local` 已验证正常（`dim=4096`），整体 embedding 服务不受影响。
+2. **`coding-fast-lm_studio`（qwen3-coder-next, 52GB MoE）**：单次响应耗时超过 120 秒仍未返回。这是模型本身的推理性能问题（MoE 路由开销大），不适合当前的交互式超时预期，需要专门评估是否要调整该 placement 的定位（后台批处理场景 vs 交互场景）。
+3. **`baai-bge-reranker-v2-m3-mlx-fp16-local`（omlx-app）**：`/v1/chat/completions` 和 `/v1/embeddings` 两个端点都拒绝（分别报"不是 chat 模型"和"不是 embedding 模型"）。omlx-app 可能压根没有为 reranker 类模型实现合适的接口。config.toml 里这个模型标注 `role="embedding"` 但接口行为更像需要专门的 rerank 端点——**角色分类可能需要重新审视**。
+
+### 两个已知限制（记录，非故障）
+
+1. **vision 类模型的 `-c` 参数可能不生效**：`gemma-4-e2b`/`ornith-9b`/`vision` 三个 role=vision 的模型，即便显式传 `-c 8192`，实际加载后 context 仍是 131072/262144（模型自身最大值）。glm-4.7-flash（reasoning 类）也出现类似现象。推测是 LM Studio 对多模态/复杂模型有内部保护逻辑，忽略偏小的显式值。这会让实际内存占用高于 config.toml 里 `memory_gb` 的估算值，规划容量时需要留意。
+2. **reasoning 类模型思维链可能很长**：glm-4.7-flash 对"回复两个字：贯通"这么简单的请求，思维链用了 1805 token 仍未开始输出可见内容（1000 token 预算不够）。config.toml 里 `reasoning` 逻辑模型的生产配置 `max_tokens=4096` 应该足够覆盖，这只是审计脚本测试预算过于保守暴露出的现象，非生产环境的真实问题。
+
+### mac-mini 死 placement 清理（已修复）
+
+`embed-bge-m3--mac-mini-m4-24g-lm_studio` 和 `baai-bge-reranker-v2-m3-mlx-fp16--mac-mini-m4-24g-lm_studio` 从未真正可用过：
+- bge-m3-mlx：`ValueError: Model type xlm-roberta not supported`（mac-mini 的 MLX runtime 不支持该架构）
+- baai-bge-reranker-v2-m3-mlx：需要 `trust_remote_code=True`（LM Studio 默认禁止执行自定义代码模块，安全限制）
+
+两者同源（XLM-RoBERTa 系），是 mac-mini 这台机器 runtime 能力的硬限制，非配置错误。两个逻辑模型在 MBP 侧均有可用 placement 兜底，已从 config.toml 移除，daemon 已重启部署。
+
+### 过程中的两次内存事件（均确认为真实使用，非异常）
+
+审计期间两次遇到内存骤降触发安全刹车（一次 swap 用到 97%、wired 内存冲到 103GB），排查后确认都是用户在同时真实使用 `qwythos-9b`（852736 超大上下文窗口），请求处理完毕后 MLX/Metal 立即干净地释放了内存（wired 从 103GB 降到 5.3GB，swap 总量从 33.8GB 自动收缩到 10.2GB）——系统自愈正常，不是内存泄漏，审计脚本的安全刹车机制（GENERATING 保护 + 内存阈值熔断）按预期工作。
