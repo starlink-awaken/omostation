@@ -121,7 +121,7 @@ receipt that can be appended as OMO `EvidenceRecorded` without owning workflow s
 ```
 .omo/                 -> state plane: goals, state, evidence, tasks, audits
 projects/omo/         -> kernel plane: schemas, brokers, audit/lint/sync logic
-projects/c2g/         -> ingress plane: strategy/pitch-to-task materialization
+                        + c2g ingress (strategy/pitch-to-task materialization, ADR-0412 内包)
 projects/ecos/        -> protocol plane: MOF and L0 constraints
 ```
 
