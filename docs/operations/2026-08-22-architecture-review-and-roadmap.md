@@ -156,3 +156,21 @@ reflog 显示这个模式很规律（在两个特定提交间反复横跳，且�
 ### 过程中的两次内存事件（均确认为真实使用，非异常）
 
 审计期间两次遇到内存骤降触发安全刹车（一次 swap 用到 97%、wired 内存冲到 103GB），排查后确认都是用户在同时真实使用 `qwythos-9b`（852736 超大上下文窗口），请求处理完毕后 MLX/Metal 立即干净地释放了内存（wired 从 103GB 降到 5.3GB，swap 总量从 33.8GB 自动收缩到 10.2GB）——系统自愈正常，不是内存泄漏，审计脚本的安全刹车机制（GENERATING 保护 + 内存阈值熔断）按预期工作。
+
+## 七、qwythos-9b 限制尝试与最终结论（omlx-app 优先原则确立）
+
+### 尝试过程
+
+1. **改 LM Studio 全局 `defaultContextLength`**（`{"type":"max"}` → 尝试 `{"type":"fixed","value":32768}`）：猜测的 `type` 值不是合法枚举，触发内部错误（"Failed to resolve model metadata"），HTTP 层报错但未损坏已加载模型。已用 `shutil.copyfile` 强制恢复备份并验证服务完全正常。**教训：不要在不确定 schema 的情况下盲改第三方应用的内部配置文件**，即便改动本身是纯文件写、不直接触发进程重启。
+2. **CLI 显式受控加载**（`lms load qwythos-9b-claude-mythos-5-1m-mlx -c 65536 --parallel 1 --ttl 86400`）：命令执行成功，`--parallel`/`--ttl` 生效，但 **`-c` 参数对这个模型完全不生效**，加载后 `CONTEXT` 依然是 852736。这坐实了本文档第四节早前记录的现象："即便请求前手动 `lms load -c 8192` 显式限制过也没用"——**这是该模型（或 qwen3_5 架构）层面的硬限制，不是操作或配置问题**。副作用：LM Studio 会为同一 model key 创建带 `:2` 后缀的新实例而非替换旧实例，导致内存双重占用，已识别并卸载清理。
+
+### 最终结论：omlx-app 优先，LM Studio 不做兜底
+
+`mythos`（omlx-app 上的 qwythos-9b bf16 版本，`context_limit=32768`，走独立于 LM Studio 的 MLX 加载路径）已验证：真实角色扮演回复正常（`finish_reason: stop`，未截断）、加载受控、且完全不影响 LM Studio 侧用户直连的会话。**结论：日常使用 Qwythos 风格对话应通过 `mythos` model_id 走 omlx-app，不要直连 LM Studio 的 `qwythos-9b-claude-mythos-5-1m-mlx`。** MBP 本地 LM Studio 侧本来就没有为 `mythos`/`mythos-fast` 配置 fallback placement——这是好事，不给失控源头留兜底机会。风险未完全消除的场景仅剩：用户直接在 LM Studio 原生界面/直连 API 使用该模型（这条路径不受 omlxc 管辖，只能靠"这个峰值可自愈"这个已验证的事实兜底，以及避免同时叠加其他大模型）。
+
+## 八、本轮（qwythos 排查session）额外清理
+
+- **`embedding-lm_studio` 移除**：`qwen3-embedding-8b-mxfp8` 模型文件确认损坏（`Missing 1 parameters: lm_head.weight`），需要重新下载 `/Volumes/Model/LMStudio/mlx-community/Qwen3-Embedding-8B-mxfp8` 才能真正修复，非配置问题。已从 config.toml 移除，omlx-app 侧 `embedding-local`（primary，已验证 `dim=4096`）不受影响。
+- **`coding-fast-lm_studio`（qwen3-coder-next）响应超 120 秒未返回**：复测确认非偶发——这是 52GB MoE 模型的固有推理延迟，不像是能通过配置调整解决的问题，未做进一步改动（避免重蹈本节开头"盲改配置引发意外故障"的教训）。建议：如果这个 placement 主要用于交互式场景，应评估是否降级为仅后台批处理场景使用；如果需要保留交互能力，需要专门评估 GPU offload / 推测解码等参数，这超出本轮范围。
+- **`baai-bge-reranker-v2-m3-mlx-fp16-local`（omlx-app）接口缺失**：`/v1/chat/completions` 和 `/v1/embeddings` 两个端点都明确拒绝该模型，omlx-app 可能没有为 reranker 类模型实现专门接口。记录为待跟进的功能缺口，不是今天能在 config 层面修复的问题。
+- **y7000p 再次掉线**（今天第 N 次），确认是该 Windows 机器自身网络/tailscale 客户端不稳定，brew tailscaled（本机）和 mac-mini 全程稳定 active，不是 omlxc 或本机链路问题。
