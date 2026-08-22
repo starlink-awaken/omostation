@@ -80,7 +80,28 @@ make omo-top           # 或 bin/omo-top：Textual 实时 4 象限互动大盘
 
 共享主树上并行的 agent 会互相删除产物。详见 [`AGENTS.md` §1.3](AGENTS.md) · skill `git-discipline`。
 
-## 1.5 P74 Workflow Solidification Check (ADR-0130)
+## 1.5 MOF Reasoning & Prediction (L0/MOF)
+
+当需要做影响分析、合规推演或预测性治理时:
+
+```bash
+# 影响分析 (节点变更影响链)
+uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-reason.py impact <node_id>
+
+# 跨仓本体推理 (7阶段/4门禁/3Phase)
+uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-derive.py
+
+# L0 绕过检测 (资产变更未同步L0)
+uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-gate.py
+
+# 预测治理闭环 (约束+M0+M1 统一报告)
+uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-predictive-loop.py
+
+# 内容匹配 (M1 ↔ .omo/tasks 桥接)
+uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-bridge-match.py
+```
+
+## 1.6 P74 Workflow Solidification Check (ADR-0130)
 
 After bootstrap, every agent MUST verify P74 health. P74 is the常态化 mechanism
 (常态化机制) for agent-workflow silence detection — see `.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`.

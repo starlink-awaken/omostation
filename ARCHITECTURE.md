@@ -29,6 +29,7 @@
 | MOF M1 governance 实例 | [`projects/ecos/src/ecos/ssot/mof/m1/governance/`](projects/ecos/src/ecos/ssot/mof/m1/governance/) |
 | MOF capabilities | [`.omo/_truth/registry/mof-capabilities.yaml`](.omo/_truth/registry/mof-capabilities.yaml) |
 | MOF tooling (compiler/bridge/predictive) | [`projects/ecos/src/ecos/ssot/tools/`](projects/ecos/src/ecos/ssot/tools/) · `mof-scan` · `mof-bridge-match` · `mof-predictive-loop` · `ecos-constraint-compiler` |
+| Reasoning & prediction | `mof-reason` (impact/state/value) · `mof-derive` (cross-repo) · `mof-gate` (L0 bypass) · `mof-enforce` (layer compliance) |
 | P74 workflow solidification (ADR-0130) | [`.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`](.omo/_knowledge/decisions/0130-p74-workflow-solidification.md) |
 | 知识网关 L3-I0 解耦 + 事件索引管道 (ADR-0294) | [`.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`](.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md) |
 | Memory OS 控制面 (ADR-0372) | [`.omo/_knowledge/decisions/0372-memory-os-control-plane.md`](.omo/_knowledge/decisions/0372-memory-os-control-plane.md) · [architecture](docs/architecture/memory-os.md) · [registry](.omo/_truth/registry/memory-os.yaml) |
@@ -39,6 +40,10 @@
 | Journey specs (state machines) | [`docs/journey-specs/`](docs/journey-specs/) · validate: `make journey-check` |
 | Dual-track scene admission (ADR-0387) | [`.omo/_knowledge/decisions/0387-dual-track-scene-admission.md`](.omo/_knowledge/decisions/0387-dual-track-scene-admission.md) |
 | Scene execution engine | `bin/ssot/journey-runner.py` (rebuild) · `signal-poller.py` (感知面) · `scene-outcome-recorder.py` (结果面) |
+| L1 Runtime | [`projects/ecos/src/ecos/l1/runtime/`](projects/ecos/src/ecos/l1/runtime/) · scheduler · L0 bus events |
+| L2 Engine | [`projects/ecos/src/ecos/l2/engine/`](projects/ecos/src/ecos/l2/engine/) · knowledge engine · M1/M2 query |
+| L3 Entry | [`projects/ecos/src/ecos/l3/entry/`](projects/ecos/src/ecos/l3/entry/) · unified API |
+| Observability | [`projects/ecos/src/ecos/observability/`](projects/ecos/src/ecos/observability/) · health · metrics |
 | Permission scope vocabulary | [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) |
 | Signal sources registry | [`.omo/_truth/registry/signal-sources.yaml`](.omo/_truth/registry/signal-sources.yaml) |
 
