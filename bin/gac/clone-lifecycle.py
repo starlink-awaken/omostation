@@ -229,6 +229,8 @@ def cmd_onboard(args: argparse.Namespace) -> int:
         agent_id,
         "--source",
         args.source,
+        "--revision",
+        args.revision,
         "--destination",
         str(dest),
     ]
@@ -295,6 +297,7 @@ def cmd_onboard(args: argparse.Namespace) -> int:
                 "clone": str(dest),
                 "manifest": str(manifest_path),
                 "verification": "verified",
+                "requested_revision": args.revision,
                 "initialized_submodules": requested_submodules if not getattr(args, "all_submodules", False) else "all",
             },
             indent=2,
@@ -717,6 +720,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("onboard", help="创建 clone + 生成 manifest")
     sp.add_argument("--agent-id", required=True)
     sp.add_argument("--source", default=str(ROOT))
+    sp.add_argument(
+        "--revision",
+        default="origin/main",
+        help="source revision to pin before creating the private branch (default: origin/main)",
+    )
     sp.add_argument("--destination", required=True)
     sp.add_argument("--manifest")
     onboard_mode = sp.add_mutually_exclusive_group()
