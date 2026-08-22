@@ -7,6 +7,7 @@ M1 心跳契约 — 关键状态投影文件的 generated_at/last_scan 是否超
 M2 引用活性   — cron / launchd 登记中的可执行目标路径是否存在
 
 输出: 单行 JSON; exit 0=全绿, 1=存在失活项 (供调度层告警)
+--refs-only: 跳过 M1 心跳 (CI 检出态投影恒陈旧, 仅验仓库侧引用活性)
 纯标准库, 可由裸 python3 cron 直跑.
 """
 from __future__ import annotations
@@ -183,10 +184,12 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--workspace", type=Path, default=WORKSPACE,
                     help="工作区根目录 (默认取脚本位置推导)")
+    ap.add_argument("--refs-only", action="store_true",
+                    help="仅跑 M2 引用活性 (CI/无本地心跳语境: 投影 SLA 不适用)")
     args = ap.parse_args(argv)
     ws_root = args.workspace.resolve()
 
-    beats = check_heartbeats(ws_root)
+    beats = [] if args.refs_only else check_heartbeats(ws_root)
     refs = collect_references(ws_root)
 
     stale_beats = [b for b in beats if not b["ok"]]
