@@ -143,6 +143,7 @@ DEFAULT_POLICY = {
         {
             "id": "governance-semantic-gate",
             "command": ["bin/gac/governance-semantic-gate.py", "--json"],
+            "timeout": 60,
         },
         {"id": "adr-coverage", "command": ["bin/adr/adr-coverage.py", "--json"]},
         # ADR-0373 (C5): sweep history drift gate (CR-SWEEP-INDEX-AUTO)
@@ -375,7 +376,13 @@ CI_ONLY_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_only")}
 CI_SKIP_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_skip")}
 AGENT_WORKFLOW_GATE_CHECKS = {g["id"] for g in GATES_LIST if g.get("agent_workflow_only")}
 BROKEN_CHECKS = {g["id"] for g in GATES_LIST if g.get("broken")}
-_CHECK_TIMEOUTS = {g["id"]: g.get("timeout", 15) for g in GATES_LIST}
+# Live sgf-policy.yaml often omits timeout; semantic-gate runs several
+# subprocesses and false-timeouts at the 15s default. Named defaults apply
+# unless the gate dict sets an explicit timeout.
+_DEFAULT_CHECK_TIMEOUTS = {"governance-semantic-gate": 60}
+_CHECK_TIMEOUTS = {
+    g["id"]: g.get("timeout", _DEFAULT_CHECK_TIMEOUTS.get(g["id"], 15)) for g in GATES_LIST
+}
 # SOFT checks: finding_topics 仍输出, 但不翻转 gate (门禁降噪)
 SOFT_CHECKS = {
     "governance-semantic-gate",  # evolution/release_ready 是软信号, 非门禁阻断
