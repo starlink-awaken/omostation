@@ -187,7 +187,7 @@ def merged_pr_runner(head: str, calls: list[list[str]] | None = None):
     def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
         if calls is not None:
             calls.append(cmd)
-        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:6] == ["remote", "get-url", "origin"]:
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:5] == ["remote", "get-url"] and cmd[-1] == "origin":
             return subprocess.CompletedProcess(
                 cmd,
                 0,
@@ -208,6 +208,335 @@ def merged_pr_runner(head: str, calls: list[list[str]] | None = None):
         return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
 
     return _run
+
+
+def make_abortable_clone(tmp_path: Path) -> tuple[Path, Path, Path, str]:
+    """A v2 root-only clone that was deliberately never admitted as a writer."""
+    clone, _remote, head = make_retirable_clone(tmp_path)
+    attempt = "attempt-001"
+    branch = f"agent/agent-1--{attempt}"
+    git(clone, "branch", "-m", branch)
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity.update(
+        {
+            "schema": "agent-clone-identity/v2",
+            "agent_id": "agent-1",
+            "actor_id": "agent-1",
+            "delivery_attempt_id": attempt,
+            "canonical_root": str(clone.resolve()),
+            "source_url": "https://github.com/owner/repository.git",
+            "frozen_root_sha": head,
+            "working_branch": branch,
+            "profile": "root-only",
+            "readiness_profile": "root-only",
+            "readiness_status": "degraded",
+            "ready": False,
+            "required_submodules": [],
+        }
+    )
+    identity_path.write_text(json.dumps(identity))
+    baseline = tmp_path / "baseline.json"
+    baseline_payload = {
+        "schema": "agent-clone-manifest/v2",
+        "agent_id": "agent-1",
+        "actor_id": "agent-1",
+        "delivery_attempt_id": attempt,
+        "canonical_root": str(clone.resolve()),
+        "origin_url": "https://github.com/owner/repository.git",
+        "root_head_sha": head,
+        "branch": branch,
+        "detached": False,
+        "repositories": [],
+    }
+    baseline_payload["manifest_digest"] = lc._canonical_json_digest(baseline_payload)
+    baseline.write_text(json.dumps(baseline_payload))
+    readiness = tmp_path / "readiness.json"
+    readiness_payload = {
+        "schema": "clone-readiness/v2",
+        "agent_id": "agent-1",
+        "actor_id": "agent-1",
+        "delivery_attempt_id": attempt,
+        "profile": "root-only",
+        "source_url": "https://github.com/owner/repository.git",
+        "root_head_sha": head,
+        "working_branch": branch,
+        "required_submodules": [],
+        "initialized_submodules": [],
+        "checks": {"writer_admission": {"required": True, "status": "degraded"}},
+        "degraded_checks": ["writer_admission"],
+        "status": "degraded",
+    }
+    readiness_payload["receipt_digest"] = lc._canonical_json_digest(readiness_payload)
+    readiness.write_text(json.dumps(readiness_payload))
+    (clone / ".git" / "agent-clone-readiness.json").write_text(json.dumps(readiness_payload))
+    identity["readiness_receipt_digest"] = readiness_payload["receipt_digest"]
+    identity_path.write_text(json.dumps(identity))
+    authority = tmp_path / "authority"
+    (authority / ".omo" / "_delivery" / "agent-workflows" / "runs").mkdir(parents=True)
+    return clone, baseline, readiness, head
+
+
+def abort_runner(head: str, calls: list[list[str]] | None = None):
+    def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        if calls is not None:
+            calls.append(cmd)
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:5] == ["remote", "get-url"] and cmd[-1] == "origin":
+            return subprocess.CompletedProcess(cmd, 0, "https://github.com/owner/repository.git\n", "")
+        if cmd[:3] == ["gh", "pr", "list"]:
+            return subprocess.CompletedProcess(cmd, 0, "[]", "")
+        if len(cmd) >= 4 and cmd[0:2] == ["git", "-C"] and "ls-remote" in cmd:
+            return subprocess.CompletedProcess(cmd, 2, "", "")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+    return _run
+
+
+def abort_args(tmp_path: Path, clone: Path, baseline: Path, readiness: Path, *, apply: bool = False):
+    return argparse.Namespace(
+        destination=str(clone), agent_id="agent-1", delivery_attempt_id="attempt-001",
+        expected_repository="owner/repository", baseline=str(baseline), readiness=str(readiness),
+        claims_root=str(tmp_path / "authority"), evidence=str(tmp_path / "abort-authorization.json"), apply=apply,
+    )
+
+
+def test_abort_unready_dry_run_then_apply_removes_only_exact_degraded_fixture(tmp_path, monkeypatch):
+    clone, baseline, readiness, head = make_abortable_clone(tmp_path)
+    monkeypatch.setattr(lc, "run", abort_runner(head))
+    args = abort_args(tmp_path, clone, baseline, readiness)
+    assert lc.cmd_abort_unready(args) == lc.EXIT_OK
+    assert clone.exists() and not Path(args.evidence).exists()
+    args.apply = True
+    assert lc.cmd_abort_unready(args) == lc.EXIT_OK
+    assert not clone.exists()
+    receipt = json.loads(Path(args.evidence).read_text())
+    assert receipt["schema"] == "clone-abort-authorization/v1"
+    assert receipt["status"] == "authorized"
+
+
+def test_abort_unready_rejects_identity_and_readiness_mismatch(tmp_path, monkeypatch):
+    clone, baseline, readiness, head = make_abortable_clone(tmp_path)
+    monkeypatch.setattr(lc, "run", abort_runner(head))
+    args = abort_args(tmp_path, clone, baseline, readiness)
+    identity = json.loads((clone / ".git" / "agent-clone-identity.json").read_text())
+    identity["ready"] = True
+    (clone / ".git" / "agent-clone-identity.json").write_text(json.dumps(identity))
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+
+
+def test_abort_unready_rejects_recomputed_readiness_digest_and_baseline_branch_mismatch(tmp_path, monkeypatch):
+    clone, baseline, readiness, head = make_abortable_clone(tmp_path)
+    monkeypatch.setattr(lc, "run", abort_runner(head))
+    args = abort_args(tmp_path, clone, baseline, readiness)
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity["readiness_receipt_digest"] = "0" * 64
+    identity_path.write_text(json.dumps(identity))
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+    identity["readiness_receipt_digest"] = json.loads(readiness.read_text())["receipt_digest"]
+    identity_path.write_text(json.dumps(identity))
+    baseline_payload = json.loads(baseline.read_text())
+    baseline_payload["branch"] = "agent/other--attempt"
+    baseline_payload["manifest_digest"] = lc._canonical_json_digest(baseline_payload, "manifest_digest")
+    baseline.write_text(json.dumps(baseline_payload))
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+    identity["ready"] = False
+    (clone / ".git" / "agent-clone-identity.json").write_text(json.dumps(identity))
+    payload = json.loads(readiness.read_text())
+    payload["degraded_checks"] = ["writer_admission", "dependencies"]
+    payload["receipt_digest"] = lc._canonical_json_digest(payload, "receipt_digest")
+    readiness.write_text(json.dumps(payload))
+    (clone / ".git" / "agent-clone-readiness.json").write_text(json.dumps(payload))
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+
+
+def test_abort_unready_rejects_reflog_ignored_and_stash(tmp_path, monkeypatch):
+    clone, baseline, readiness, head = make_abortable_clone(tmp_path)
+    monkeypatch.setattr(lc, "run", abort_runner(head))
+    args = abort_args(tmp_path, clone, baseline, readiness)
+    (clone / "ignored.tmp").write_text("x\n")
+    (clone / ".gitignore").write_text(".omo/_delivery/\nignored.tmp\n")
+    git(clone, "add", ".gitignore")
+    git(clone, "commit", "-m", "ignore")
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+    git(clone, "reset", "--hard", head)
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY  # reset hides files, never its attempt reflog.
+    git(clone, "reflog", "expire", "--expire=now", "--all")
+    git(clone, "gc", "--prune=now")
+    (clone / "stash-me").write_text("x\n")
+    git(clone, "stash", "push", "-u", "-m", "new work")
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+
+
+def test_abort_unready_allows_divergent_pre_attempt_head_reflog(tmp_path, monkeypatch):
+    clone, baseline, readiness, head = make_abortable_clone(tmp_path)
+    branch = "agent/agent-1--attempt-001"
+    git(clone, "switch", "main")
+    (clone / "pre-attempt.txt").write_text("not attempt work\n")
+    git(clone, "add", "pre-attempt.txt")
+    git(clone, "commit", "-m", "pre-attempt clone source")
+    git(clone, "switch", branch)
+    monkeypatch.setattr(lc, "run", abort_runner(head))
+    assert lc.cmd_abort_unready(abort_args(tmp_path, clone, baseline, readiness)) == lc.EXIT_OK
+
+
+def test_abort_unready_rejects_active_actor_missing_authority_and_symlink(tmp_path, monkeypatch):
+    clone, baseline, readiness, head = make_abortable_clone(tmp_path)
+    monkeypatch.setattr(lc, "run", abort_runner(head))
+    args = abort_args(tmp_path, clone, baseline, readiness)
+    run_file = Path(args.claims_root) / ".omo" / "_delivery" / "agent-workflows" / "runs" / "active.yaml"
+    run_file.write_text("status: active\nactor: agent-1\n")
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+    run_file.unlink()
+    shutil = __import__("shutil")
+    shutil.rmtree(Path(args.claims_root) / ".omo")
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+    (Path(args.claims_root) / ".omo" / "_delivery" / "agent-workflows" / "runs").mkdir(parents=True)
+    link = tmp_path / "agent-link" / "ws"
+    link.parent.mkdir()
+    link.symlink_to(clone, target_is_directory=True)
+    args.destination = str(link)
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+
+
+def test_abort_unready_accepts_initialized_submodule_gitfile_and_rejects_authorization_tamper(tmp_path, monkeypatch):
+    clone, baseline, readiness, _head = make_abortable_clone(tmp_path)
+    child_remote = tmp_path / "child.git"
+    child_remote.mkdir()
+    git(child_remote, "init", "--bare", "-b", "main")
+    child_source = tmp_path / "child-source"
+    child_source.mkdir()
+    git(child_source, "init", "-b", "main")
+    (child_source / "child.txt").write_text("child\n")
+    git(child_source, "add", "child.txt")
+    git(child_source, "commit", "-m", "child")
+    git(child_source, "remote", "add", "origin", str(child_remote))
+    git(child_source, "push", "origin", "main")
+    configured = git(clone, "-c", "protocol.file.allow=always", "submodule", "add", str(child_remote), "projects/omo")
+    assert configured.returncode == 0, configured.stderr
+    git(clone, "add", ".gitmodules", "projects/omo")
+    git(clone, "commit", "-m", "add child")
+    head = git(clone, "rev-parse", "HEAD").stdout.strip()
+    child_head = git(clone / "projects/omo", "rev-parse", "HEAD").stdout.strip()
+    assert (clone / "projects/omo" / ".git").is_file()
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity.update({"frozen_root_sha": head, "required_submodules": ["projects/omo"]})
+    identity_path.write_text(json.dumps(identity))
+    baseline_payload = json.loads(baseline.read_text())
+    baseline_payload.update({"root_head_sha": head, "branch": "agent/agent-1--attempt-001", "detached": False, "repositories": [{"path": "projects/omo", "pinned_sha": child_head, "child_head": child_head, "origin": "https://github.com/owner/repository.git"}]})
+    baseline_payload["manifest_digest"] = lc._canonical_json_digest(baseline_payload, "manifest_digest")
+    baseline.write_text(json.dumps(baseline_payload))
+    readiness_payload = json.loads(readiness.read_text())
+    readiness_payload.update({"root_head_sha": head, "required_submodules": [{"path": "projects/omo", "pinned_sha": child_head, "child_head": child_head, "initialized": True, "origin": "https://github.com/owner/repository.git", "expected_origin": "https://github.com/owner/repository.git"}], "initialized_submodules": ["projects/omo"]})
+    readiness_payload["receipt_digest"] = lc._canonical_json_digest(readiness_payload, "receipt_digest")
+    readiness.write_text(json.dumps(readiness_payload))
+    (clone / ".git" / "agent-clone-readiness.json").write_text(json.dumps(readiness_payload))
+    identity["readiness_receipt_digest"] = readiness_payload["receipt_digest"]
+    identity_path.write_text(json.dumps(identity))
+    monkeypatch.setattr(lc, "run", abort_runner(head))
+    args = abort_args(tmp_path, clone, baseline, readiness)
+    assert lc.cmd_abort_unready(args) == lc.EXIT_OK
+    args.apply = True
+    Path(args.evidence).write_text("{\"schema\":\"forged\"}\n")
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+    assert clone.exists()
+
+
+def test_abort_unready_rejects_evidence_parent_resolving_inside_clone(tmp_path, monkeypatch):
+    clone, baseline, readiness, head = make_abortable_clone(tmp_path)
+    monkeypatch.setattr(lc, "run", abort_runner(head))
+    link = tmp_path / "evidence-link"
+    link.symlink_to(clone / ".git", target_is_directory=True)
+    evidence = link / "receipt.json"
+    payload = lc._authorization_payload(abort_args(tmp_path, clone, baseline, readiness), clone, "a" * 64)
+    assert lc._write_authorization(str(evidence), payload, clone) is False
+    assert not (clone / ".git" / "receipt.json").exists()
+
+
+def test_abort_unready_authorization_parent_swap_never_writes_into_clone(tmp_path, monkeypatch):
+    clone, baseline, readiness, _head = make_abortable_clone(tmp_path)
+    parent = tmp_path / "evidence-parent"
+    parent.mkdir()
+    evidence = parent / "receipt.json"
+    payload = lc._authorization_payload(abort_args(tmp_path, clone, baseline, readiness), clone, "a" * 64)
+    real_open = lc.os.open
+    swapped = False
+
+    def swapping_open(path, flags, *args, **kwargs):
+        nonlocal swapped
+        result = real_open(path, flags, *args, **kwargs)
+        if (Path(path) == parent or path == parent.name) and not swapped:
+            swapped = True
+            original = tmp_path / "evidence-parent-original"
+            parent.rename(original)
+            parent.symlink_to(clone / ".git", target_is_directory=True)
+        return result
+
+    monkeypatch.setattr(lc.os, "open", swapping_open)
+    assert lc._write_authorization(str(evidence), payload, clone) is False
+    assert swapped is True
+    assert not (clone / ".git" / "receipt.json").exists()
+
+
+def test_abort_unready_authorization_rejects_inode_preserving_ancestor_swap(tmp_path, monkeypatch):
+    clone, baseline, readiness, _head = make_abortable_clone(tmp_path)
+    root = tmp_path / "evidence-root"
+    parent = root / "parent"
+    parent.mkdir(parents=True)
+    evidence = parent / "receipt.json"
+    payload = lc._authorization_payload(abort_args(tmp_path, clone, baseline, readiness), clone, "a" * 64)
+    real_open = lc.os.open
+    swapped = False
+
+    def swapping_open(path, flags, *args, **kwargs):
+        nonlocal swapped
+        result = real_open(path, flags, *args, **kwargs)
+        if (Path(path) == parent or path == "parent") and not swapped:
+            swapped = True
+            parent.rename(clone / ".git" / "parent")
+            root.rename(tmp_path / "evidence-root-original")
+            root.symlink_to(clone / ".git", target_is_directory=True)
+        return result
+
+    monkeypatch.setattr(lc.os, "open", swapping_open)
+    assert lc._write_authorization(str(evidence), payload, clone) is False
+    assert swapped is True
+    assert not (clone / ".git" / "parent" / "receipt.json").exists()
+
+
+def test_abort_unready_second_read_race_restores_clone(tmp_path, monkeypatch):
+    clone, baseline, readiness, head = make_abortable_clone(tmp_path)
+    calls: list[list[str]] = []
+    monkeypatch.setattr(lc, "run", abort_runner(head, calls))
+    args = abort_args(tmp_path, clone, baseline, readiness, apply=True)
+    real_assess = lc._abort_assessment
+    count = 0
+    def race_assessment(*values):
+        nonlocal count
+        count += 1
+        if count == 2:
+            return None, "remote_changed"
+        return real_assess(*values)
+    monkeypatch.setattr(lc, "_abort_assessment", race_assessment)
+    assert lc.cmd_abort_unready(args) == lc.EXIT_POLICY
+    assert clone.exists()
+    assert Path(args.evidence).exists()
+
+
+def test_abort_unready_absent_requires_matching_authorization_and_parser_preserves_retire(tmp_path, monkeypatch):
+    clone, baseline, readiness, head = make_abortable_clone(tmp_path)
+    monkeypatch.setattr(lc, "run", abort_runner(head))
+    args = abort_args(tmp_path, clone, baseline, readiness, apply=True)
+    assert lc.cmd_abort_unready(args) == lc.EXIT_OK
+    assert lc.cmd_abort_unready(args) == lc.EXIT_OK
+    bad = argparse.Namespace(**vars(args))
+    bad.delivery_attempt_id = "other"
+    assert lc.cmd_abort_unready(bad) == lc.EXIT_POLICY
+    parser = lc.build_parser()
+    dry = parser.parse_args(["abort-unready", "--destination", "/tmp/a/ws", "--agent-id", "a", "--delivery-attempt-id", "x", "--expected-repository", "owner/repo", "--baseline", "/tmp/b", "--readiness", "/tmp/r", "--claims-root", "/tmp/c"])
+    apply = parser.parse_args(["abort-unready", "--destination", "/tmp/a/ws", "--agent-id", "a", "--delivery-attempt-id", "x", "--expected-repository", "owner/repo", "--baseline", "/tmp/b", "--readiness", "/tmp/r", "--claims-root", "/tmp/c", "--apply", "--evidence", "/tmp/e"])
+    retire = parser.parse_args(["retire", "--destination", "/tmp/a/ws"])
+    assert dry.apply is False and apply.apply is True and retire.func is lc.cmd_retire
 
 
 def test_onboard_initializes_only_requested_submodules_and_verifies(tmp_path, monkeypatch):
