@@ -155,10 +155,45 @@ jobs:
         run: python3 bin/ssot/doc-governance-check.py --no-new-warnings
       - name: Emit failure signal on break
         if: failure()
+        continue-on-error: true
+        env:
+          FAILURE_LOG: ${{ runner.temp }}/omo-events.jsonl
+          FAILURE_REF: ${{ github.ref }}
+          FAILURE_SHA: ${{ github.sha }}
+          FAILURE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          uv run --package omo python -m omo.cli event emit \
+          payload="$(python3 - <<'PY'
+          import json
+          import os
+
+          print(json.dumps({
+              "ref": os.environ["FAILURE_REF"],
+              "sha": os.environ["FAILURE_SHA"],
+              "run_url": os.environ["FAILURE_RUN_URL"],
+          }, separators=(",", ":")))
+          PY
+          )"
+          signal_status=0
+          uv run --project projects/omo python -m omo.cli event emit \
             --type governance_verify_failed \
             --source ci/governance-check.yml \
-            --payload '{"ref":"${{ github.ref }}","sha":"${{ github.sha }}","run_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' \
-            --workspace-root .
-          echo "❌ governance-verify failed; signal emitted"
+            --payload "$payload" \
+            --log "$FAILURE_LOG" || signal_status=$?
+          {
+            echo "## Governance verification failure signal"
+            echo "- ref: \`$FAILURE_REF\`"
+            echo "- sha: \`$FAILURE_SHA\`"
+            echo "- run: $FAILURE_RUN_URL"
+            echo "- emitter exit: \`$signal_status\`"
+            echo "- artifact: \`governance-verify-failure-signal-${{ github.run_id }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$signal_status"
+
+      - name: Upload governance failure signal
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-verify-failure-signal-${{ github.run_id }}
+          path: ${{ runner.temp }}/omo-events.jsonl
+          if-no-files-found: warn
+          retention-days: 14
