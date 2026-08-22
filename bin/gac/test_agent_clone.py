@@ -689,6 +689,423 @@ def _commit_transfer_delta(clone: Path) -> None:
     )
 
 
+def _commit_gitlink_delta(clone: Path, path: str, child_sha: str) -> None:
+    """Pin one initialized child checkout and commit only its root gitlink."""
+    child = clone / path
+    git(child, "checkout", child_sha)
+    git(clone, "add", path)
+    git(
+        clone,
+        "commit",
+        "-m",
+        f"advance {path}",
+        env={
+            "GIT_AUTHOR_NAME": "Agent One",
+            "GIT_AUTHOR_EMAIL": "agent-one@example.test",
+            "GIT_COMMITTER_NAME": "Agent One",
+            "GIT_COMMITTER_EMAIL": "agent-one@example.test",
+        },
+    )
+
+
+def _advance_governance_child(child: Path, content: str) -> str:
+    (child / "payload.txt").write_text(content)
+    git(child, "add", "payload.txt")
+    git(child, "commit", "-m", f"advance {content.strip()}")
+    return git(child, "rev-parse", "HEAD").stdout.strip()
+
+
+def _commit_quoted_gitmodule_authority(clone: Path, authority: str) -> None:
+    modules = clone / ".gitmodules"
+    modules.write_text(modules.read_text().replace(f"url = {authority}", f'url = "{authority}" # tracked'))
+    git(clone, "add", ".gitmodules")
+    git(
+        clone,
+        "commit",
+        "-m",
+        "quote tracked submodule authority",
+        env={
+            "GIT_AUTHOR_NAME": "Agent One",
+            "GIT_AUTHOR_EMAIL": "agent-one@example.test",
+            "GIT_COMMITTER_NAME": "Agent One",
+            "GIT_COMMITTER_EMAIL": "agent-one@example.test",
+        },
+    )
+
+
+def _git_probe_state(repo: Path) -> dict[str, str]:
+    index_path = git(repo, "rev-parse", "--git-path", "index").stdout.strip()
+    return {
+        "head": git(repo, "rev-parse", "HEAD").stdout.strip(),
+        "refs": git(repo, "show-ref", "--head").stdout,
+        "status": git(repo, "status", "--porcelain", "--untracked-files=all").stdout,
+        "index_digest": hashlib.sha256(Path(index_path).read_bytes()).hexdigest(),
+    }
+
+
+def test_transfer_v1_strict_gitlinks_proves_exact_child_forwarding_without_mutation(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    child_sha = _advance_governance_child(tmp_path / "governance-child", "strict exact\n")
+    for clone in (source, target):
+        git(clone / "projects" / "omo", "fetch", "origin")
+        _commit_gitlink_delta(clone, "projects/omo", child_sha)
+        _commit_quoted_gitmodule_authority(clone, str(tmp_path / "governance-child"))
+    before = {
+        str(repo): _git_probe_state(repo)
+        for repo in (source, target, source / "projects" / "omo", target / "projects" / "omo")
+    }
+
+    verified = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", check=False,
+    )
+
+    assert verified.returncode == 0, verified.stderr
+    receipt = parse_json(verified)
+    assert receipt["content_verified"] is True, receipt
+    assert receipt["pending_strict_proof"] is False
+    assert receipt["root_content_status"] == "verified"
+    assert receipt["gitlink_status"] == "verified", receipt
+    proof = receipt["gitlink_proofs"][0]
+    assert proof["schema"] == "gitlink-transfer-proof/v1"
+    assert proof["source_candidate_sha"] == child_sha
+    assert proof["target_candidate_sha"] == child_sha
+    assert proof["proof_digest"] == sha256_canonical(proof, exclude="proof_digest")
+    after = {str(repo): _git_probe_state(repo) for repo in (source, target, source / "projects" / "omo", target / "projects" / "omo")}
+    assert after == before
+
+
+def test_transfer_v1_strict_gitlinks_proves_source_to_target_forward_progression(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    child = tmp_path / "governance-child"
+    first = _advance_governance_child(child, "strict first\n")
+    for clone in (source, target):
+        git(clone / "projects" / "omo", "fetch", "origin")
+    _commit_gitlink_delta(source, "projects/omo", first)
+    second = _advance_governance_child(child, "strict second\n")
+    git(source / "projects" / "omo", "fetch", "origin")
+    git(target / "projects" / "omo", "fetch", "origin")
+    _commit_gitlink_delta(target, "projects/omo", second)
+
+    verified = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", check=False,
+    )
+
+    assert verified.returncode == 0, verified.stderr
+    receipt = parse_json(verified)
+    assert receipt["gitlink_status"] == "verified", receipt
+    proof = receipt["gitlink_proofs"][0]
+    assert proof["source_candidate_sha"] == first
+    assert proof["target_candidate_sha"] == second
+    assert all(proof["predicates"].values())
+
+
+def test_transfer_v1_strict_gitlinks_partitions_history_and_remote_object_gaps(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    child = tmp_path / "governance-child"
+    first = _advance_governance_child(child, "strict first\n")
+    for clone in (source, target):
+        git(clone / "projects" / "omo", "fetch", "origin")
+        _commit_gitlink_delta(clone, "projects/omo", first)
+    # Advancing the authority after both child checkouts are frozen leaves its
+    # object absent locally; strict transfer must not fetch it to make a proof.
+    _advance_governance_child(child, "remote only\n")
+    before = _git_probe_state(source / "projects" / "omo")
+    missing_remote_object = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", check=False,
+    )
+    receipt = parse_json(missing_remote_object)
+    assert missing_remote_object.returncode == 0
+    assert receipt["gitlink_status"] == "unprovable"
+    assert receipt["reason"] == "gitlink_required_object_missing"
+    assert _git_probe_state(source / "projects" / "omo") == before
+
+    # Once both observers receive the authority object, a source rewind relative
+    # to the target remains an evidence failure rather than a Git repair action.
+    for clone in (source, target):
+        git(clone / "projects" / "omo", "fetch", "origin")
+    second = git(child, "rev-parse", "HEAD").stdout.strip()
+    _commit_gitlink_delta(source, "projects/omo", second)
+    history_gap = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", check=False,
+    )
+    receipt = parse_json(history_gap)
+    assert history_gap.returncode == 0
+    assert receipt["gitlink_status"] == "unprovable"
+    assert receipt["reason"] == "gitlink_history_unprovable"
+    assert receipt["gitlink_evidence"]["predicates"]["source_candidate_to_target_candidate"] is False
+
+
+def test_transfer_v1_strict_gitlinks_rejects_uninitialized_and_origin_mismatch(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    child_sha = _advance_governance_child(tmp_path / "governance-child", "strict exact\n")
+    for clone in (source, target):
+        git(clone / "projects" / "omo", "fetch", "origin")
+        _commit_gitlink_delta(clone, "projects/omo", child_sha)
+    git(target / "projects" / "omo", "remote", "set-url", "origin", str(tmp_path / "wrong-origin"))
+    origin_mismatch = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", check=False,
+    )
+    assert origin_mismatch.returncode == 0
+    assert parse_json(origin_mismatch)["reason"] == "gitlink_child_origin_mismatch"
+
+    # Restore the tracked authority, then deinitialize only the test child.
+    git(target / "projects" / "omo", "remote", "set-url", "origin", str(tmp_path / "governance-child"))
+    git(target, "submodule", "deinit", "-f", "projects/omo")
+    uninitialized = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", check=False,
+    )
+    assert uninitialized.returncode == 0
+    assert parse_json(uninitialized)["reason"] == "gitlink_child_uninitialized"
+
+
+def test_transfer_v1_strict_gitlinks_isolates_poisoned_repository_scope_and_receipt_digest(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    child_sha = _advance_governance_child(tmp_path / "governance-child", "strict exact\n")
+    for clone in (source, target):
+        git(clone / "projects" / "omo", "fetch", "origin")
+        _commit_gitlink_delta(clone, "projects/omo", child_sha)
+    poisoned = {
+        "GIT_DIR": str(source / ".git"), "GIT_WORK_TREE": str(source),
+        "GIT_INDEX_FILE": str(source / ".git" / "index"),
+        "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "remote.origin.url",
+        "GIT_CONFIG_VALUE_0": "https://attacker.invalid/repo.git",
+        "GIT_OBJECT_DIRECTORY": str(source / ".git" / "objects"),
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES": str(source / ".git" / "objects"),
+        "GIT_SHALLOW_FILE": str(source / ".git" / "shallow"),
+    }
+    first = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", env=poisoned, check=False,
+    )
+    second = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", env=poisoned, check=False,
+    )
+    assert first.returncode == second.returncode == 0
+    assert parse_json(first) == parse_json(second)
+    receipt = parse_json(first)
+    assert receipt["gitlink_status"] == "verified"
+    assert receipt["receipt_digest"] == sha256_canonical(receipt, exclude="receipt_digest")
+    assert "attacker.invalid" not in json.dumps(receipt)
+
+
+def test_transfer_v1_strict_gitlinks_rejects_local_only_side_branch(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    source_child = source / "projects" / "omo"
+    target_child = target / "projects" / "omo"
+    git(source_child, "checkout", "-b", "local-only")
+    (source_child / "payload.txt").write_text("not on authority main\n")
+    git(source_child, "add", "payload.txt")
+    git(source_child, "commit", "-m", "local only child")
+    candidate = git(source_child, "rev-parse", "HEAD").stdout.strip()
+    # Test setup may make the object visible, but does not publish it to the
+    # tracked authority.  The transfer command itself must only observe this.
+    git(target_child, "fetch", str(source_child), candidate)
+    _commit_gitlink_delta(source, "projects/omo", candidate)
+    _commit_gitlink_delta(target, "projects/omo", candidate)
+
+    rejected = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", check=False,
+    )
+
+    assert rejected.returncode == 0
+    receipt = parse_json(rejected)
+    assert receipt["reason"] == "gitlink_history_unprovable"
+    assert receipt["gitlink_evidence"]["predicates"]["target_candidate_to_remote_main"] is False
+
+
+def test_transfer_v1_strict_gitlinks_allows_target_baseline_already_at_source_candidate(tmp_path):
+    root_source, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    child = tmp_path / "governance-child"
+    child_sha = _advance_governance_child(child, "target already forwarded\n")
+    git(root_source / "projects" / "omo", "fetch", "origin")
+    git(root_source / "projects" / "omo", "checkout", child_sha)
+    git(root_source, "add", "projects/omo")
+    git(root_source, "commit", "-m", "publish child pointer for target attempt")
+    git(root_source, "push", "origin", "main")
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    git(source / "projects" / "omo", "fetch", "origin")
+    _commit_gitlink_delta(source, "projects/omo", child_sha)
+
+    verified = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", check=False,
+    )
+
+    assert verified.returncode == 0, verified.stderr
+    receipt = parse_json(verified)
+    assert receipt["gitlink_status"] == "verified", receipt
+    proof = receipt["gitlink_proofs"][0]
+    assert proof["source_candidate_sha"] == proof["target_base_sha"] == proof["target_candidate_sha"] == child_sha
+
+
+def test_transfer_v1_strict_gitlinks_rejects_url_insteadof_rewrite(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    child_sha = _advance_governance_child(tmp_path / "governance-child", "strict exact\n")
+    for clone in (source, target):
+        git(clone / "projects" / "omo", "fetch", "origin")
+        _commit_gitlink_delta(clone, "projects/omo", child_sha)
+    authority = str(tmp_path / "governance-child")
+    attacker = tmp_path / "attacker.git"
+    git(tmp_path, "init", "--bare", "-b", "main", attacker.name)
+    git(tmp_path / "governance-child", "push", str(attacker), "main")
+    # A clone-local rule makes the attacker answer the same main query that
+    # would otherwise prove forwarding.  Strict transfer must not query it.
+    git(source / "projects" / "omo", "config", f"url.{attacker}.insteadOf", authority)
+
+    rejected = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", check=False,
+    )
+
+    assert rejected.returncode == 0
+    receipt = parse_json(rejected)
+    assert receipt["gitlink_status"] == "unprovable"
+    assert receipt["reason"] == "gitlink_authority_rewrite_detected"
+    assert str(attacker) not in json.dumps(receipt)
+    git(source / "projects" / "omo", "config", "--unset-all", f"url.{attacker}.insteadOf")
+    selected_global = tmp_path / "selected-global.gitconfig"
+    git(tmp_path, "config", "--file", str(selected_global), f"url.{attacker}.insteadOf", authority)
+    caller_global = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json", env={"GIT_CONFIG_GLOBAL": str(selected_global)}, check=False,
+    )
+    assert caller_global.returncode == 0
+    assert parse_json(caller_global)["reason"] == "gitlink_authority_rewrite_detected"
+
+
+def test_transfer_v1_strict_gitlinks_partitions_a_remote_main_race(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    child = tmp_path / "governance-child"
+    first = _advance_governance_child(child, "race first\n")
+    for clone in (source, target):
+        git(clone / "projects" / "omo", "fetch", "origin")
+        _commit_gitlink_delta(clone, "projects/omo", first)
+    git(child, "checkout", "-b", "race-next")
+    next_sha = _advance_governance_child(child, "race next\n")
+    git(child, "checkout", "main")
+    wrapper_dir = tmp_path / "git-wrapper"
+    wrapper_dir.mkdir()
+    marker = tmp_path / "remote-main-moved"
+    wrapper = wrapper_dir / "git"
+    wrapper.write_text(
+        "#!/bin/sh\n"
+        "if [ \"$3\" = ls-remote ] && [ \"$4\" = --exit-code ] && [ ! -e \"$RACE_MARKER\" ]; then\n"
+        "  \"$REAL_GIT\" \"$@\"\n"
+        "  rc=$?\n"
+        "  \"$REAL_GIT\" -C \"$RACE_CHILD\" update-ref refs/heads/main \"$RACE_NEXT_SHA\"\n"
+        "  : > \"$RACE_MARKER\"\n"
+        "  exit $rc\n"
+        "fi\n"
+        "exec \"$REAL_GIT\" \"$@\"\n"
+    )
+    wrapper.chmod(0o755)
+
+    raced = run_cli(
+        "transfer",
+        "--source-clone", str(source), "--source-baseline", str(source_baseline),
+        "--target-clone", str(target), "--target-baseline", str(target_baseline),
+        "--strict-gitlinks", "--json",
+        env={
+            "PATH": str(wrapper_dir) + os.pathsep + os.environ["PATH"],
+            "REAL_GIT": shutil.which("git") or "git",
+            "RACE_MARKER": str(marker),
+            "RACE_CHILD": str(child),
+            "RACE_NEXT_SHA": next_sha,
+        },
+        check=False,
+    )
+
+    assert raced.returncode == 0
+    assert marker.exists()
+    receipt = parse_json(raced)
+    assert receipt["reason"] == "gitlink_remote_main_race"
+    assert receipt["gitlink_status"] == "unprovable"
+
 def test_transfer_v1_proves_same_actor_attempt_patch_without_mutation(tmp_path):
     _src, bare = make_governance_profile_source(tmp_path)
     source, source_baseline = _ready_transfer_clone(
