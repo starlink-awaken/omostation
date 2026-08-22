@@ -183,10 +183,24 @@ def qualify_clone_attempt(clone: Path, attempt_id: str = "attempt-001") -> str:
     return branch
 
 
-def merged_pr_runner(head: str, calls: list[list[str]] | None = None):
+def merged_pr_runner(
+    head: str,
+    calls: list[list[str]] | None = None,
+    *,
+    branch: str = "agent/agent-1",
+    provenance_guard_ok: bool = False,
+):
     def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
         if calls is not None:
             calls.append(cmd)
+        if (
+            provenance_guard_ok
+            and len(cmd) >= 3
+            and cmd[0] == sys.executable
+            and cmd[1] == str(lc.AGENT_CLONE)
+            and cmd[2] == "guard"
+        ):
+            return subprocess.CompletedProcess(cmd, 0, '{"ok":true}\n', "")
         if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:5] == ["remote", "get-url"] and cmd[-1] == "origin":
             return subprocess.CompletedProcess(
                 cmd,
@@ -200,7 +214,7 @@ def merged_pr_runner(head: str, calls: list[list[str]] | None = None):
                     "number": 7,
                     "url": "https://example.test/pr/7",
                     "headRefOid": head,
-                    "headRefName": "agent/agent-1",
+                    "headRefName": branch,
                     "headRepositoryOwner": {"login": "owner"},
                 }
             ]
@@ -1486,6 +1500,92 @@ def test_retire_allows_exact_merged_pr_after_remote_branch_deleted(tmp_path, mon
     assert rc == lc.EXIT_OK
     assert not clone.exists()
     assert any(cmd[:3] == ["gh", "pr", "list"] for cmd in calls)
+
+
+def test_retire_removes_ready_attempt_qualified_v2_clone(tmp_path, monkeypatch):
+    clone, _remote, head = make_retirable_clone(tmp_path)
+    branch = qualify_clone_attempt(clone, "attempt-002")
+    provenance = {
+        "schema": "clone-provenance/v2",
+        "agent_id": "agent-1",
+        "actor_id": "agent-1",
+        "delivery_attempt_id": "attempt-002",
+        "clone_root": str(clone.resolve()),
+        "repository": {
+            "canonical_repository": "github.com/owner/repository",
+            "fetch_transport": "https",
+            "fetch_url_digest": "1" * 64,
+            "push_transport": "https",
+            "push_url_digest": "1" * 64,
+        },
+        "author": {
+            "email_digest": "2" * 64,
+            "identity_digest": "3" * 64,
+            "name_digest": "4" * 64,
+            "source": "clone-local",
+            "use_config_only": True,
+        },
+        "frozen_root_sha": head,
+        "working_branch": branch,
+        "status": "ready",
+        "generated_at": "2026-08-23T00:00:00Z",
+    }
+    provenance["receipt_digest"] = lc._canonical_json_digest(provenance)
+    (clone / ".git" / "agent-clone-provenance.json").write_text(json.dumps(provenance))
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity.update(
+        {
+            "provenance_required": True,
+            "provenance_status": "ready",
+            "provenance_receipt_digest": provenance["receipt_digest"],
+        }
+    )
+    identity_path.write_text(json.dumps(identity))
+    calls: list[list[str]] = []
+    monkeypatch.setattr(
+        lc,
+        "run",
+        merged_pr_runner(head, calls, branch=branch, provenance_guard_ok=True),
+    )
+
+    rc = lc.cmd_retire(argparse.Namespace(destination=str(clone)))
+
+    assert rc == lc.EXIT_OK
+    assert not clone.exists()
+    assert any(
+        len(cmd) >= 3
+        and cmd[0] == sys.executable
+        and cmd[1] == str(lc.AGENT_CLONE)
+        and cmd[2] == "guard"
+        and "--require-clone" in cmd
+        for cmd in calls
+    )
+    pr_call = next(cmd for cmd in calls if cmd[:3] == ["gh", "pr", "list"])
+    assert branch in pr_call
+
+
+@pytest.mark.parametrize("binding", ["actor", "attempt", "branch"])
+def test_retire_rejects_v2_clone_without_exact_actor_attempt_binding(tmp_path, monkeypatch, binding):
+    clone, _remote, head = make_retirable_clone(tmp_path)
+    branch = qualify_clone_attempt(clone, "attempt-002")
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    if binding == "actor":
+        identity["actor_id"] = "other-agent"
+    elif binding == "attempt":
+        identity["delivery_attempt_id"] = ""
+    else:
+        identity["working_branch"] = "agent/agent-1"
+    identity_path.write_text(json.dumps(identity))
+    calls: list[list[str]] = []
+    monkeypatch.setattr(lc, "run", merged_pr_runner(head, calls, branch=branch))
+
+    rc = lc.cmd_retire(argparse.Namespace(destination=str(clone)))
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert not any(cmd[:3] == ["gh", "pr"] for cmd in calls)
 
 
 def test_retire_rejects_dirty_or_unpushed_clone(tmp_path, monkeypatch):
