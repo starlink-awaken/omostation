@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -198,6 +199,7 @@ def quarantine_remove_verified(
     dest: Path,
     expected_stat: os.stat_result,
     expected_head: str,
+    post_quarantine: object | None = None,
 ) -> tuple[bool, str]:
     """Atomically isolate the checked inode before recursive deletion."""
     quarantine = Path(
@@ -229,6 +231,13 @@ def quarantine_remove_verified(
         locks, active_runs, state_errors = workflow_activity(payload)
         if locks or active_runs or state_errors:
             return restore("workflow lease or lock appeared at quarantine boundary")
+        if post_quarantine is not None:
+            try:
+                verdict = post_quarantine(payload)
+            except Exception as exc:  # fail closed before an irreversible operation
+                return restore(f"post-quarantine verification failed: {exc}")
+            if verdict is not True:
+                return restore("post-quarantine verification changed")
         if not FD_BOUND_DELETE_SUPPORTED:
             return restore("platform lacks fd-bound symlink-safe recursive deletion")
         remove_payload_by_fd(payload, moved_stat)
@@ -241,6 +250,464 @@ def quarantine_remove_verified(
             except OSError:
                 pass
         return False, f"secure retirement failed: {exc}; inspect {quarantine}"
+
+
+# ``abort-unready`` intentionally has a narrower contract than ``retire``.  It
+# is the only escape hatch for a clone that *never became a writer*.  Keep its
+# evidence and Git reads local to this file so the mature ready-clone retirement
+# path stays unchanged.
+def _canonical_json_digest(payload: dict, exclude: str | None = None) -> str:
+    body = {key: value for key, value in payload.items() if key != exclude} if exclude else payload
+    return hashlib.sha256(
+        json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+    ).hexdigest()
+
+
+def _isolated_git_env() -> dict[str, str]:
+    """Discard ambient Git config/redirects for every abort eligibility probe."""
+    keep = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    keep.update({"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull})
+    return keep
+
+
+def _git_abort(repo: Path, *args: str) -> subprocess.CompletedProcess:
+    return run(["git", "-C", str(repo), *args], env=_isolated_git_env())
+
+
+def _abort_reject(reason: str) -> tuple[None, str]:
+    return None, reason
+
+
+def _safe_external_json(
+    path_value: str, dest: Path, label: str, *, must_be_external: bool = True
+) -> tuple[dict | None, str | None]:
+    path = Path(path_value).expanduser().absolute()
+    try:
+        st = path.lstat()
+        resolved = path.resolve(strict=True)
+    except OSError as exc:
+        return _abort_reject(f"{label}_unreadable:{exc}")
+    if (
+        stat.S_ISLNK(st.st_mode)
+        or not stat.S_ISREG(st.st_mode)
+        or (must_be_external and (resolved == dest or dest in resolved.parents))
+    ):
+        return _abort_reject(f"{label}_unsafe_path")
+    try:
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+        fd = os.open(path, flags)
+        with os.fdopen(fd, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+        if not os.path.samestat(st, path.lstat()):
+            return _abort_reject(f"{label}_raced")
+    except (OSError, json.JSONDecodeError) as exc:
+        return _abort_reject(f"{label}_invalid:{exc}")
+    return (payload, None) if isinstance(payload, dict) else _abort_reject(f"{label}_invalid")
+
+
+def _exact_github_slug(url: str) -> str | None:
+    # github_repo_slug deliberately already rejects credential-bearing HTTPS URLs.
+    return github_repo_slug(url)
+
+
+def _one_origin_url(repo: Path, push: bool = False) -> tuple[str | None, str | None]:
+    all_args = ["remote", "get-url"] + (["--push", "--all"] if push else ["--all"]) + ["origin"]
+    got = _git_abort(repo, *all_args)
+    values = [line.strip() for line in got.stdout.splitlines() if line.strip()]
+    if got.returncode != 0 or len(values) != 1:
+        return _abort_reject("origin_unreadable_or_ambiguous")
+    if _exact_github_slug(values[0]) is None:
+        return _abort_reject("origin_not_exact_github")
+    return values[0], None
+
+
+def _no_local_url_rewrites(repo: Path) -> bool:
+    rewritten = _git_abort(repo, "config", "--local", "--get-regexp", r"^url\..*\.(insteadOf|pushInsteadOf)$")
+    return rewritten.returncode == 1 and not rewritten.stdout.strip()
+
+
+def _abort_worktree_clean(repo: Path, *, independent_root: bool) -> bool:
+    status = _git_abort(repo, "status", "--porcelain", "--ignored", "--ignore-submodules=none")
+    if status.returncode != 0 or status.stdout.strip():
+        return False
+    stash = _git_abort(repo, "stash", "list", "--format=%H")
+    if stash.returncode != 0 or stash.stdout.strip():
+        return False
+    common = _git_abort(repo, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    git_dir = repo / ".git"
+    if common.returncode != 0 or (independent_root and (not git_dir.is_dir() or Path(common.stdout.strip()).resolve() != git_dir.resolve())):
+        return False
+    common_dir = Path(common.stdout.strip())
+    if (common_dir / "objects" / "info" / "alternates").exists():
+        return False
+    worktrees = _git_abort(repo, "worktree", "list", "--porcelain")
+    if worktrees.returncode != 0 or sum(line.startswith("worktree ") for line in worktrees.stdout.splitlines()) != 1:
+        return False
+    if any((common_dir / marker).exists() for marker in ("MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "rebase-merge", "rebase-apply", "sequencer")):
+        return False
+    return True
+
+
+def _actor_has_activity(root: Path, actor: str, *, require_root: bool) -> bool:
+    workflow_root = root / ".omo" / "_delivery" / "agent-workflows"
+    if not workflow_root.is_dir():
+        return require_root
+    for lock in (workflow_root / "locks").glob("*"):
+        if lock.is_file() and actor in lock.read_text(encoding="utf-8", errors="replace"):
+            return True
+    for run_file in (workflow_root / "runs").glob("*.yaml"):
+        try:
+            text = run_file.read_text(encoding="utf-8")
+        except OSError:
+            return True
+        active = re.search(r"(?m)^status:\s*(?:active|in_progress|running|executing)\s*$", text)
+        actor_match = re.search(r"(?m)^actor:\s*([^\s#]+)", text)
+        claim_match = re.search(rf"(?m)^\s*actor:\s*{re.escape(actor)}\s*$", text)
+        if active and ((actor_match and actor_match.group(1) == actor) or claim_match):
+            return True
+    return False
+
+
+def _abort_assessment(args: argparse.Namespace, physical: Path, logical: Path) -> tuple[dict | None, str | None]:
+    """Return an immutable eligibility digest; every failed predicate is deny-by-default."""
+    # After the atomic quarantine move the physical name is ``payload`` while
+    # the immutable identity continues to bind the original logical ``ws``.
+    if physical.is_symlink() or logical.name != "ws":
+        return _abort_reject("unsafe_destination")
+    try:
+        if physical.resolve(strict=True) != physical or logical.resolve(strict=False) != logical:
+            return _abort_reject("destination_resolution_mismatch")
+        initial = physical.lstat()
+    except OSError as exc:
+        return _abort_reject(f"destination_unreadable:{exc}")
+    git_dir = physical / ".git"
+    identity_path = git_dir / "agent-clone-identity.json"
+    try:
+        identity_stat = identity_path.lstat()
+        if not stat.S_ISREG(identity_stat.st_mode) or stat.S_ISLNK(identity_stat.st_mode):
+            return _abort_reject("identity_unsafe")
+        identity = json.loads(identity_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return _abort_reject(f"identity_unreadable:{exc}")
+    branch = f"agent/{args.agent_id}--{args.delivery_attempt_id}"
+    frozen = identity.get("frozen_root_sha")
+    if (
+        identity.get("schema") != "agent-clone-identity/v2"
+        or identity.get("agent_id") != args.agent_id
+        or identity.get("actor_id") != args.agent_id
+        or identity.get("delivery_attempt_id") != args.delivery_attempt_id
+        or identity.get("canonical_root") != str(logical)
+        or identity.get("working_branch") != branch
+        or identity.get("ready") is not False
+        or identity.get("readiness_status") != "degraded"
+        or identity.get("profile") not in {"custom", "root-only"}
+        or identity.get("readiness_profile") != identity.get("profile")
+        or identity.get("provenance_required") is True
+        or any(identity.get(key) not in {None, "", False} for key in ("provenance_status", "provenance_receipt_digest"))
+        or (git_dir / "agent-clone-provenance.json").exists()
+        or not isinstance(frozen, str)
+        or not re.fullmatch(r"[0-9a-f]{40,64}", frozen)
+    ):
+        return _abort_reject("identity_mismatch")
+    baseline, error = _safe_external_json(args.baseline, logical, "baseline")
+    if error:
+        return None, error
+    readiness, error = _safe_external_json(args.readiness, logical, "readiness")
+    if error:
+        return None, error
+    if (
+        baseline.get("schema") != "agent-clone-manifest/v2"
+        or not isinstance(baseline.get("manifest_digest"), str)
+        or baseline.get("manifest_digest") != _canonical_json_digest(baseline, "manifest_digest")
+        or readiness.get("schema") != "clone-readiness/v2"
+        or not isinstance(readiness.get("receipt_digest"), str)
+        or readiness.get("receipt_digest") != _canonical_json_digest(readiness, "receipt_digest")
+    ):
+        return _abort_reject("artifact_digest_mismatch")
+    if (
+        baseline.get("agent_id") != args.agent_id
+        or baseline.get("actor_id") != args.agent_id
+        or baseline.get("delivery_attempt_id") != args.delivery_attempt_id
+        or baseline.get("canonical_root") != str(logical)
+        or baseline.get("root_head_sha") != frozen
+        or baseline.get("branch") != branch
+        or baseline.get("detached") is not False
+        or readiness.get("agent_id") != args.agent_id
+        or readiness.get("actor_id") != args.agent_id
+        or readiness.get("delivery_attempt_id") != args.delivery_attempt_id
+        or readiness.get("working_branch") != branch
+        or readiness.get("root_head_sha") != frozen
+        or identity.get("readiness_receipt_digest") != readiness.get("receipt_digest")
+        or readiness.get("profile") != identity.get("profile")
+        or readiness.get("status") != "degraded"
+        or readiness.get("degraded_checks") != ["writer_admission"]
+        or readiness.get("checks", {}).get("writer_admission", {}).get("status") != "degraded"
+        or any(check.get("status") != "pass" for key, check in readiness.get("checks", {}).items() if key != "writer_admission" and check.get("required"))
+    ):
+        return _abort_reject("artifact_binding_mismatch")
+    internal, error = _safe_external_json(
+        str(git_dir / "agent-clone-readiness.json"), logical, "internal_readiness", must_be_external=False
+    )
+    if error or internal != readiness:
+        return _abort_reject("internal_readiness_mismatch")
+    fetch_url, error = _one_origin_url(physical)
+    push_url, push_error = _one_origin_url(physical, push=True)
+    if error or push_error or fetch_url != push_url or not _no_local_url_rewrites(physical):
+        return _abort_reject("origin_mismatch")
+    expected = args.expected_repository
+    authority_urls = [identity.get("source_url"), baseline.get("origin_url"), readiness.get("source_url"), fetch_url]
+    if any(not isinstance(value, str) or _exact_github_slug(value) != expected for value in authority_urls):
+        return _abort_reject("repository_authority_mismatch")
+    symbolic = _git_abort(physical, "symbolic-ref", "--short", "-q", "HEAD")
+    head = _git_abort(physical, "rev-parse", "HEAD")
+    if symbolic.returncode != 0 or symbolic.stdout.strip() != branch or head.returncode != 0 or head.stdout.strip() != frozen:
+        return _abort_reject("head_or_branch_mismatch")
+    if not _abort_worktree_clean(physical, independent_root=True):
+        return _abort_reject("clone_not_clean_or_isolated")
+    # HEAD's reflog includes the clone transport's pre-attempt checkout.  The
+    # identity-bound private branch is the sole authority for attempt work.
+    log = _git_abort(physical, "reflog", "show", "--format=%H", branch)
+    if log.returncode != 0:
+        return _abort_reject("reflog_unreadable")
+    for sha in {line.strip() for line in log.stdout.splitlines() if line.strip()}:
+        ancestral = _git_abort(physical, "merge-base", "--is-ancestor", sha, frozen)
+        if ancestral.returncode != 0:
+            return _abort_reject("reflog_contains_new_work")
+    pinned = {}
+    index = _git_abort(physical, "ls-files", "--stage")
+    if index.returncode != 0:
+        return _abort_reject("gitlinks_unreadable")
+    for line in index.stdout.splitlines():
+        if "\t" in line and line.startswith("160000 "):
+            meta, path = line.split("\t", 1)
+            pinned[path] = meta.split()[1]
+    required_paths = identity.get("required_submodules") or []
+    if sorted(required_paths) != sorted(readiness.get("initialized_submodules") or []):
+        return _abort_reject("required_submodules_mismatch")
+    children = []
+    baseline_children = {entry.get("path"): entry for entry in baseline.get("repositories", []) if isinstance(entry, dict)}
+    for entry in readiness.get("required_submodules") or []:
+        path, pin = entry.get("path"), entry.get("pinned_sha")
+        child = physical / str(path)
+        baseline_child = baseline_children.get(path)
+        if (
+            path not in required_paths
+            or pinned.get(path) != pin
+            or entry.get("child_head") != pin
+            or not entry.get("initialized")
+            or not isinstance(baseline_child, dict)
+            or baseline_child.get("pinned_sha") != pin
+            or baseline_child.get("child_head") != pin
+            or baseline_child.get("origin") != entry.get("origin")
+        ):
+            return _abort_reject("child_gitlink_mismatch")
+        child_head = _git_abort(child, "rev-parse", "HEAD")
+        child_origin, child_error = _one_origin_url(child)
+        expected_origin = entry.get("expected_origin")
+        if (
+            child_head.returncode != 0
+            or child_head.stdout.strip() != pin
+            or child_error
+            or child_origin != expected_origin
+            or not _no_local_url_rewrites(child)
+            or not _abort_worktree_clean(child, independent_root=False)
+        ):
+            return _abort_reject("child_state_mismatch")
+        children.append({"path": path, "head": pin, "origin": child_origin})
+    claims_root = Path(args.claims_root).expanduser().absolute()
+    if _actor_has_activity(physical, args.agent_id, require_root=False) or _actor_has_activity(claims_root, args.agent_id, require_root=True):
+        return _abort_reject("active_workflow_or_claim")
+    remote_ref = f"refs/heads/{branch}"
+    remote = _git_abort(physical, "ls-remote", "--exit-code", "--heads", "origin", remote_ref)
+    if remote.returncode != 2 or remote.stdout.strip():
+        return _abort_reject("attempt_branch_exists_or_remote_unreadable")
+    prs = run(["gh", "pr", "list", "--repo", expected, "--head", branch, "--state", "all", "--json", "number,url,headRefName", "--limit", "100"], cwd=str(physical), env=_isolated_git_env())
+    try:
+        pr_payload = json.loads(prs.stdout or "[]")
+    except json.JSONDecodeError:
+        return _abort_reject("pr_query_invalid")
+    if prs.returncode != 0 or pr_payload:
+        return _abort_reject("attempt_pr_exists_or_query_failed")
+    state = {
+        "identity_digest": _canonical_json_digest(identity),
+        "baseline_digest": baseline["manifest_digest"],
+        "readiness_digest": readiness["receipt_digest"],
+        "head": frozen,
+        "branch": branch,
+        "origin": fetch_url,
+        "children": children,
+        "tag_attribution": "unbound_not_gate",
+    }
+    return ({"state": state, "state_digest": _canonical_json_digest(state), "initial_stat": initial}, None)
+
+
+def _authorization_payload(args: argparse.Namespace, dest: Path, state_digest: str) -> dict:
+    receipt = {
+        "schema": "clone-abort-authorization/v1",
+        "status": "authorized",
+        "actor_id": args.agent_id,
+        "agent_id": args.agent_id,
+        "delivery_attempt_id": args.delivery_attempt_id,
+        "repository": args.expected_repository,
+        "destination": str(dest),
+        "state_digest": state_digest,
+        "consistency": "double-read-non-atomic",
+    }
+    receipt["receipt_digest"] = _canonical_json_digest(receipt, "receipt_digest")
+    return receipt
+
+
+def _open_nofollow_directory_chain(abs_parent: Path) -> int:
+    """Open an absolute directory by FD, rejecting every symlink component."""
+    if not abs_parent.is_absolute():
+        raise OSError("authorization parent must be absolute")
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    fd = os.open(abs_parent.anchor, flags)
+    try:
+        for component in abs_parent.parts[1:]:
+            child_fd = os.open(component, flags, dir_fd=fd)
+            os.close(fd)
+            fd = child_fd
+        return fd
+    except Exception:
+        os.close(fd)
+        raise
+
+
+def _same_nofollow_directory_chain(abs_parent: Path, original_fd: int) -> bool:
+    """Re-open the named path and prove it remains the initial directory inode."""
+    current_fd = -1
+    try:
+        current_fd = _open_nofollow_directory_chain(abs_parent)
+        return os.path.samestat(os.fstat(original_fd), os.fstat(current_fd))
+    except OSError:
+        return False
+    finally:
+        if current_fd >= 0:
+            os.close(current_fd)
+
+
+def _write_authorization(path_value: str, payload: dict, dest: Path) -> bool:
+    path = Path(path_value).expanduser().absolute()
+    if path == dest or dest in path.parents or path.is_symlink():
+        return False
+    # O_NOFOLLOW covers only the leaf.  Every extant parent must also be a
+    # non-symlink and resolve outside the clone before an authorization can be
+    # made durable there.
+    parent = path.parent
+    while True:
+        try:
+            parent_stat = parent.lstat()
+            resolved_parent = parent.resolve(strict=True)
+        except OSError:
+            return False
+        if stat.S_ISLNK(parent_stat.st_mode) or resolved_parent == dest or dest in resolved_parent.parents:
+            return False
+        if parent == parent.parent:
+            break
+        parent = parent.parent
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True) + "\n"
+    parent_fd = -1
+    created = False
+    written_stat: os.stat_result | None = None
+    try:
+        parent_fd = _open_nofollow_directory_chain(path.parent)
+        fd = os.open(
+            path.name,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0),
+            0o600,
+            dir_fd=parent_fd,
+        )
+        created = True
+    except FileExistsError:
+        try:
+            fd = os.open(path.name, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0), dir_fd=parent_fd)
+            with os.fdopen(fd, "r", encoding="utf-8") as handle:
+                existing = json.load(handle)
+            return (
+                isinstance(existing, dict)
+                and existing == payload
+                and _same_nofollow_directory_chain(path.parent, parent_fd)
+            )
+        except (OSError, json.JSONDecodeError):
+            return False
+    except OSError:
+        return False
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(encoded)
+            handle.flush()
+            os.fsync(handle.fileno())
+            written_stat = os.fstat(handle.fileno())
+        os.fsync(parent_fd)
+        if created and _same_nofollow_directory_chain(path.parent, parent_fd):
+            return True
+        # The FD can still refer to the directory where this invocation wrote.
+        # Remove only the inode we created; never follow a raced replacement.
+        try:
+            current = os.stat(path.name, dir_fd=parent_fd, follow_symlinks=False)
+            if written_stat is not None and os.path.samestat(current, written_stat):
+                os.unlink(path.name, dir_fd=parent_fd)
+                os.fsync(parent_fd)
+        except OSError:
+            pass
+        return False
+    except OSError:
+        return False
+    finally:
+        if parent_fd >= 0:
+            os.close(parent_fd)
+
+
+def _absent_authorized(args: argparse.Namespace, dest: Path) -> bool:
+    if not getattr(args, "evidence", None):
+        return False
+    receipt, error = _safe_external_json(args.evidence, dest, "authorization")
+    return bool(
+        error is None
+        and receipt
+        and receipt.get("schema") == "clone-abort-authorization/v1"
+        and receipt.get("status") == "authorized"
+        and receipt.get("actor_id") == args.agent_id
+        and receipt.get("agent_id") == args.agent_id
+        and receipt.get("delivery_attempt_id") == args.delivery_attempt_id
+        and receipt.get("repository") == args.expected_repository
+        and receipt.get("destination") == str(dest)
+        and receipt.get("receipt_digest") == _canonical_json_digest(receipt, "receipt_digest")
+    )
+
+
+def cmd_abort_unready(args: argparse.Namespace) -> int:
+    """Remove only a never-writer, degraded clone after a double-read authorization."""
+    dest = Path(args.destination).expanduser().absolute()
+    audit("abort_unready_start", f"dest={dest} actor={args.agent_id} attempt={args.delivery_attempt_id}")
+    if not os.path.lexists(dest):
+        if _absent_authorized(args, dest):
+            print(json.dumps({"ok": True, "already_absent": str(dest), "authorized": True}))
+            return EXIT_OK
+        return reject("abort_unready", "absent_without_authorization", "destination is absent without exact authorization evidence")
+    assessment, error = _abort_assessment(args, dest, dest)
+    if error:
+        return reject("abort_unready", error, "clone is not eligible for unready abort")
+    result = {"ok": True, "dry_run": not args.apply, "destination": str(dest), "state_digest": assessment["state_digest"], "assessment": assessment["state"]}
+    if not args.apply:
+        print(json.dumps(result, sort_keys=True))
+        return EXIT_OK
+    if not args.evidence:
+        return reject("abort_unready", "evidence_required", "--apply requires --evidence")
+    authorization = _authorization_payload(args, dest, assessment["state_digest"])
+    if not _write_authorization(args.evidence, authorization, dest):
+        return reject("abort_unready", "authorization_write_failed", "cannot exclusively write matching authorization receipt")
+
+    def second_read(payload: Path) -> bool:
+        checked, second_error = _abort_assessment(args, payload, dest)
+        return second_error is None and checked is not None and checked["state_digest"] == assessment["state_digest"]
+
+    removed, detail = quarantine_remove_verified(dest, assessment["initial_stat"], assessment["state"]["head"], second_read)
+    if not removed:
+        return reject("abort_unready", "second_read_or_delete_failed", detail)
+    print(json.dumps({"ok": True, "removed": str(dest), "state_digest": assessment["state_digest"], "authorization": str(Path(args.evidence).absolute())}, sort_keys=True))
+    return EXIT_OK
 
 
 def cmd_onboard(args: argparse.Namespace) -> int:
@@ -1049,6 +1516,20 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("retire", help="清理 clone")
     sp.add_argument("--destination", required=True)
     sp.set_defaults(func=cmd_retire)
+    # abort-unready -- intentionally separate from ready-clone retirement.
+    sp = sub.add_parser("abort-unready", help="双读清理从未获 writer admission 的降级 clone")
+    sp.add_argument("--destination", required=True)
+    sp.add_argument("--agent-id", required=True)
+    sp.add_argument("--delivery-attempt-id", required=True)
+    sp.add_argument("--expected-repository", required=True)
+    sp.add_argument("--baseline", required=True)
+    sp.add_argument("--readiness", required=True)
+    sp.add_argument("--claims-root", required=True)
+    mode = sp.add_mutually_exclusive_group()
+    mode.add_argument("--apply", action="store_true", help="write authorization then remove the verified clone")
+    mode.add_argument("--dry-run", action="store_true", help="assess only (default)")
+    sp.add_argument("--evidence", help="exclusive clone-abort-authorization/v1 output (required with --apply)")
+    sp.set_defaults(func=cmd_abort_unready, apply=False)
     return p
 
 
