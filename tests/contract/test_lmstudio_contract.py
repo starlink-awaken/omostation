@@ -90,10 +90,22 @@ class TestLmStudioContract(BackendAdapterContract):
                         },
                     )
                 payload = json.loads(request.content)
-                assert payload["max_tokens"] == 1
+                # 预算必须覆盖 reasoning 模型的思维链前缀 (1 token 时 content
+                # 必空 → generation_ready 永假的线上 bug, 2026-08-20 实测)
+                assert payload["max_tokens"] == 100
                 return httpx.Response(
                     200,
-                    json={"choices": [{"message": {"content": "O"}}]},
+                    json={
+                        "choices": [
+                            {
+                                "message": {
+                                    "content": "<think>user asked for O, I should just comply</think>O",
+                                    "reasoning_content": "user asked for O, I should just comply",
+                                },
+                                "finish_reason": "stop",
+                            }
+                        ]
+                    },
                 )
             raise AssertionError(f"unexpected request: {request.method} {request.url.path}")
 

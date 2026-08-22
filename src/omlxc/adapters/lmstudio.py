@@ -555,7 +555,10 @@ class LmStudioAdapter:
                     request_id="lmstudio-readiness-probe",
                     model=probe_id,
                     messages=(ChatMessage(role="user", content="Reply O only"),),
-                    max_tokens=1,
+                    # 100 而非 1: 输出 reasoning_content 的模型会先消耗思维链 token,
+                    # 预算为 1 时 content 必为空 → generation_ready 永假 (后端实际健康
+                    # 却被判定不可用)。100 足够覆盖常见思维链前缀并拿到首个可见 token。
+                    max_tokens=100,
                     temperature=0.0,
                 )
             )
