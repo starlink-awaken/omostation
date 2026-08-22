@@ -572,6 +572,32 @@ def test_onboard_initializes_only_requested_submodules_and_verifies(tmp_path, mo
     assert (tmp_path / "agent-1").is_dir()
 
 
+def test_onboard_forwards_transport_sources_and_returns_create_transport(tmp_path, monkeypatch, capsys):
+    calls: list[list[str]] = []
+    transport = {"schema": "clone-transport/v1", "transport_digest": "digest"}
+
+    def fake_run(cmd: list[str], **_kwargs) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        stdout = json.dumps({"transport": transport}) if cmd[2] == "create" else "{}"
+        return subprocess.CompletedProcess(cmd, 0, stdout, "")
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    rc = lc.cmd_onboard(
+        argparse.Namespace(
+            agent_id="agent-1", delivery_attempt_id="attempt-1", source="authority", revision="origin/main",
+            transport_source="/tmp/local-root", submodule_source=["projects/omo=/tmp/local-omo"],
+            destination=str(tmp_path / "agent-1" / "ws"), manifest=str(tmp_path / "baseline.json"),
+            readiness=str(tmp_path / "readiness.json"), provenance=str(tmp_path / "provenance.json"),
+            expected_repository="owner/repo", profile=None, submodule=["projects/omo"], all_submodules=False,
+        )
+    )
+    assert rc == lc.EXIT_OK
+    create = calls[0]
+    assert create[create.index("--transport-source") + 1] == "/tmp/local-root"
+    assert create[create.index("--submodule-source") + 1] == "projects/omo=/tmp/local-omo"
+    assert json.loads(capsys.readouterr().out)["transport"] == transport
+
+
 def test_onboard_defaults_to_governance_profile_and_emits_readiness(tmp_path, monkeypatch):
     calls: list[list[str]] = []
 
@@ -695,12 +721,20 @@ def test_onboard_parser_defaults_to_canonical_main_and_allows_override():
             "refs/tags/baseline-v1",
         ]
     )
+    transported = parser.parse_args(
+        [
+            "onboard", "--agent-id", "agent-1", "--destination", "/tmp/agent-1/ws",
+            "--transport-source", "/tmp/root", "--submodule-source", "projects/omo=/tmp/omo",
+        ]
+    )
 
     assert default.revision == "origin/main"
     assert pinned.revision == "refs/tags/baseline-v1"
     assert default.profile is None
     assert default.expected_repository is None
     assert default.provenance is None
+    assert transported.transport_source == "/tmp/root"
+    assert transported.submodule_source == ["projects/omo=/tmp/omo"]
 
 
 def test_bound_repository_slug_reenters_provenance_guard(tmp_path, monkeypatch):

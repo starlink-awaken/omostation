@@ -776,6 +776,10 @@ def cmd_onboard(args: argparse.Namespace) -> int:
         "--destination",
         str(dest),
     ]
+    if getattr(args, "transport_source", None):
+        cmd.extend(["--transport-source", args.transport_source])
+    for mapping in getattr(args, "submodule_source", None) or []:
+        cmd.extend(["--submodule-source", mapping])
     requested_submodules = list(getattr(args, "submodule", None) or [])
     requested_profile = getattr(args, "profile", None)
     effective_profile = requested_profile
@@ -922,6 +926,7 @@ def cmd_onboard(args: argparse.Namespace) -> int:
                     "initialized_submodules",
                     requested_submodules if not getattr(args, "all_submodules", False) else "all",
                 ),
+                "transport": create_payload.get("transport"),
             },
             indent=2,
         )
@@ -1442,6 +1447,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="single delivery attempt; generated when omitted",
     )
     sp.add_argument("--source", default=str(ROOT))
+    sp.add_argument("--transport-source", help="optional verified local root transport source")
+    sp.add_argument(
+        "--submodule-source",
+        action="append",
+        default=[],
+        help="repeatable root-gitlink=local-child-repository transport mapping",
+    )
     sp.add_argument(
         "--revision",
         default="origin/main",
