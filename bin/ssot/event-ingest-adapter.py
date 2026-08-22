@@ -77,7 +77,9 @@ def _read_events(events_jsonl: Path) -> list[dict[str, Any]]:
     return events
 
 
-def publish_events(*, dry_run: bool = False, events_jsonl: Path = EVENTS_JSONL, ledger: Path | None = None) -> dict[str, Any]:
+def publish_events(
+    *, dry_run: bool = False, events_jsonl: Path = EVENTS_JSONL, ledger: Path | None = None
+) -> dict[str, Any]:
     """Publish new events to the bus; optionally also ingest into the ledger."""
     last_id = _load_watermark()
     events = _read_events(events_jsonl)

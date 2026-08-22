@@ -32,6 +32,9 @@ PROJECTOR_ID = "resident-sub"
 # 主题路由: event_type → handler 名(硬编码主题级;规则级 = YAML 加载预留)
 # handler 实现在 WP3 接入(knowledge-sediment),当前为占位(记录日志)。
 _EVENT_HANDLERS: dict[str, Callable[[dict[str, Any]], None]] = {}
+_SAFE_HANDLERS: set[str] = set()
+# 人工批准门: 非 safe handler 需 --yes(防自主 agent 执行破坏性动作)。
+_APPROVAL_REQUIRED = True
 
 
 def _inject_paths() -> None:
@@ -46,9 +49,12 @@ def _handler_placeholder(event: dict[str, Any]) -> None:
     _log(f"handler_placeholder event_type={event.get('event_type')} run={event.get('workflow_run_id')}")
 
 
-def register_handler(event_type: str, fn: Callable[[dict[str, Any]], None]) -> None:
-    """Register a topic handler (e.g. knowledge-sediment for workflow:closed)."""
+def register_handler(event_type: str, fn: Callable[[dict[str, Any]], None], *, safe: bool = False) -> None:
+    """Register a topic handler. ``safe=True`` marks read-only/non-destructive
+    handlers (may run without approval); others require --yes."""
     _EVENT_HANDLERS[event_type] = fn
+    if safe:
+        _SAFE_HANDLERS.add(fn.__name__)
 
 
 def _log(msg: str) -> None:
@@ -63,6 +69,9 @@ def _log(msg: str) -> None:
 def _route(event: dict[str, Any]) -> None:
     event_type = str(event.get("event_type") or "")
     handler = _EVENT_HANDLERS.get(event_type, _handler_placeholder)
+    if _APPROVAL_REQUIRED and handler.__name__ not in _SAFE_HANDLERS:
+        _log(f"handler_blocked_awaiting_approval event_type={event_type} handler={handler.__name__}")
+        return
     try:
         handler(event)
     except Exception as exc:  # noqa: BLE001 - handler isolation
@@ -178,7 +187,11 @@ def main() -> int:
     parser.add_argument("--events-jsonl", type=Path, default=DEFAULT_EVENTS_JSONL)
     parser.add_argument("--interval", type=float, default=30.0)
     parser.add_argument("--once", action="store_true", help="run a single tick and exit")
+    parser.add_argument("--yes", action="store_true", help="bypass human-approval gate for non-safe handlers")
     args = parser.parse_args()
+    if args.yes:
+        global _APPROVAL_REQUIRED  # noqa: PLW0603
+        _APPROVAL_REQUIRED = False
     return run_daemon(ledger=args.ledger, events_jsonl=args.events_jsonl, interval=args.interval, once=args.once)
 
 

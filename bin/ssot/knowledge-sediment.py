@@ -81,11 +81,15 @@ def consume_event(event: dict[str, Any]) -> Path | None:
 
 
 def register_with_daemon(daemon_module: Any) -> None:
-    """Wire sediment handlers into resident-orchestrator-daemon."""
+    """Wire sediment handlers into resident-orchestrator-daemon.
+
+    Sediment handlers are read-only (write drafts under .omo/_knowledge/sediment)
+    so they are registered as ``safe`` (no human-approval gate required).
+    """
     for event_type in SUCCESS_EVENTS:
-        daemon_module.register_handler(event_type, _success_handler)
+        daemon_module.register_handler(event_type, _success_handler, safe=True)
     for event_type in FAILURE_EVENTS:
-        daemon_module.register_handler(event_type, _failure_handler)
+        daemon_module.register_handler(event_type, _failure_handler, safe=True)
 
 
 def _success_handler(event: dict[str, Any]) -> None:
