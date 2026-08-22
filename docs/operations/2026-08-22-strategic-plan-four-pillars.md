@@ -161,3 +161,22 @@
 顺带发现 pinned 部署（`~/aetherforge-final-ae3570f`）有两个文件的本地未提交修改（`aliases.yaml`/`gateway.py`）——核实后确认这不是需要保留的独立 hotfix，而是内容已经和 dev 最新代码完全一致（`mid-local` 死链修复等），只是 git HEAD 指针从未跟上。安全丢弃后切换到 `6c255ec`，`uv sync` 确认安全版本生效，`make test` 403 passed，重启网关服务。
 
 **端到端验证**：从 mac-mini 真实 tailnet 设备访问 `/v1/models`，200（0.88s）。一次真实推理请求撞上了用户当时正在使用 `qwythos-9b`（GENERATING）触发的容量保护（409/no_capacity），这是系统按预期工作，不是升级引入的问题——日志确认该请求实际推理耗时 34.8 秒，只是客户端 30 秒超时提前放弃，不是失败。
+
+## 十、场景化性能优化（务实收窄范围，两项已验证落地）
+
+### 根因诊断：coding-next 慢不是配置问题，是架构/框架成熟度问题
+
+`qwen3-coder-next`（`coding-next`/`coding-fast` 背后的模型）架构是 `qwen3_next`——512 专家超稀疏 MoE（每次仅激活 10 个）+ 混合线性注意力（`linear_num_key_heads`/`linear_num_value_heads`）。这类新颖架构的专家路由本身对内存访问模式要求高，**MLX 后端对这个新架构的推理 kernel 优化还不成熟**，这是今天多次尝试调参（`-c`/`--parallel`）都没用的根本原因——瓶颈不在参数，在底层框架实现。
+
+**关键发现**：`dev`/`coding` 这两个最常用场景预设，默认就指向了这个慢模型——不只是"某个 placement 慢"，是默认路径本身把慢模型设成了首选。
+
+### 已落地
+
+1. **场景预设修正**：`dev`/`coding` 改为默认用 `coding`（qwopus3.6-27b-coder-mlx，传统架构，今天已验证响应正常稳定）。`coding-next` 保留为独立可点名场景 `coding-batch`，定位为后台批处理/长上下文专用，不再是交互式默认候选。
+2. **coding 场景保活**（`scripts/scenario-warm-keep.py`，接入 watchdog）：填补了 `placement.resident` 机制的执行缺口——这个字段在类型系统里"活着"（`PlacementTarget` 引用它，`autonomy/runtime.py` 里有完整的 `_reconcile` 逻辑），但真正执行周期检查的循环从未被 `composition.py` 的 daemon 组装流程实例化启动，和 `remote_resident` 是同一类"写好了但没接入"的问题。用今天验证过的"外部脚本 + 现有接口"模式补齐，只覆盖 `coding` 一个最高频场景，内存红线比常规审计更保守（20GB），不做大范围预热。
+
+### 刻意不做的（超出今天能安全验证的范围）
+
+- **修复 `autonomy/runtime.py` 的 reconcile 循环真正接入 daemon**：这是更"正确"的修复方式，但改动面是 daemon 核心组装逻辑，风险和测试成本都更高，不适合在长会话尾声仓促做
+- **其他场景（chat/vision）的保活扩展**：`qwen-3.8-27b`/`vision` 暂不主动预热，只做了路由预设指向修正，避免多模型同时驻留的内存风险进一步扩大
+- **跨节点负载调度权重、探针取消机制**：细目文档已多次记录，仍需专门评估窗口，不是这次"性能优化"任务该碰的
