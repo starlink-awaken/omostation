@@ -180,3 +180,33 @@
 - **修复 `autonomy/runtime.py` 的 reconcile 循环真正接入 daemon**：这是更"正确"的修复方式，但改动面是 daemon 核心组装逻辑，风险和测试成本都更高，不适合在长会话尾声仓促做
 - **其他场景（chat/vision）的保活扩展**：`qwen-3.8-27b`/`vision` 暂不主动预热，只做了路由预设指向修正，避免多模型同时驻留的内存风险进一步扩大
 - **跨节点负载调度权重、探针取消机制**：细目文档已多次记录，仍需专门评估窗口，不是这次"性能优化"任务该碰的
+
+## 十一、daemon 核心真正接入 resident reconcile（补上 §十"刻意不做的"那一项）
+
+### 为什么回头做这个
+
+§十把"reconcile 循环真正接入 daemon"列为"刻意不做的"，理由是"改动面是 daemon 核心组装逻辑，风险和测试成本都更高"。但那个判断是在没有真正去读 `autonomy/runtime.py` 实现细节的情况下做出的——重新评估后发现风险被高估了：
+
+- `ReconciliationEngine`/`ReconcileLoop` 本身是完整、依赖注入、带异常隔离的既有代码（`_run()` 单轮失败不会打垮循环），不是要新写的核心逻辑
+- `ProductionPlacementOperator`（满足 `PlacementOperator` Protocol 的具体实现）早就在 `build_production_daemon()` 里构造好了，只是没人把它接进 `ReconciliationEngine`
+- `PlacementOperationCoordinator` 也是现成的，`ReconciliationEngine.__init__` 的 `coordinator` 参数设计本来就允许复用外部实例，不需要重复构造一套并发控制
+
+真正缺的只是"连接组织"：内存探测 callable、resident 目标筛选 callable、以及把 `ReconcileLoop.start()/stop()` 接进 daemon 生命周期——这些都是新写但边界很小的胶水代码，不是架构级改动。
+
+### 改动内容
+
+- `config/schema.py`：`DaemonConfig` 新增 `reconcile_interval_seconds`（默认 300s，与 `probe_interval_seconds` 同级但独立，reconcile 语义上不需要 probe 那么高频）
+- `daemon/runtime.py`：`DaemonRuntime` 新增可选第四个 `RuntimeComponent`（`reconcile`），追加在 `(config_runtime, recovery, event_runtime)` 之后——启动时最后起（此时依赖已就绪），关闭时最先停（LIFO，避免它在 adapters/bus 关闭后仍发起调用的竞态）。默认 `None`，完全向后兼容。
+- `daemon/composition.py`：新增 `_sample_memory_snapshot()`（vm_stat + sysctl，复用今天验证过的 `free+purgeable+inactive*0.7` 公式）、`ReconcileRuntime`（把 `ReconcileLoop` 的 `start()/stop()` 适配成 `RuntimeComponent` 的 `start()/close()`），`build_production_daemon()` 内接入 `ReconciliationEngine` + `targets_provider`（从 catalog 快照筛出 `resident=True` 的 `PlacementTarget`）+ `ReconcileLoop`，并把 `memory_probe` 开成可选注入参数方便测试。
+- `tests/integration/test_resident_reconcile_loop.py`：3 个新测试覆盖 resident 自动加载、非 resident 保持不动、内存压力下被正确拒绝。
+
+验证：全量测试套件 1070 passed（原 1067 + 新增 3），ruff 全绿。debug 过程中发现一个真实的接线细节——`ProductionPlacementOperator.load()` 生成的 idempotency_key 不是 `None` 而是 `placement:load:{id}` 格式，第一版测试断言写死了 `None` 导致假失败，用独立脚本手动单步跑通 `reconcile_engine.reconcile()` 才定位到是断言问题而非接入逻辑问题。
+
+### 有意推迟的部分：daemon restart + live 验证
+
+代码、测试、commit（`98c052d`）、push 全部完成，wheel 已构建并通过 `uv tool install` 装到本机 CLI（`omlxc v3.4.0`）。但触发实际重启的那一步——`omlxc daemon restart`——在执行前照例做了内存/GENERATING 检查，结果是：
+
+- 可用内存（校正公式）仅 9.5GB，低于 20GB 安全线
+- `qwythos-9b-claude-mythos-5-1m-mlx` 正处于 `status=generating`
+
+本会话内存安全是最高优先级纪律，两个条件任一触发都不该重启 daemon，所以主动推迟。**这意味着新代码目前还没有在生产 daemon 里真正跑起来**，只是完成了实现+测试+静态验证。待内存恢复且无生成中任务时需要补做：`omlxc daemon restart --yes --confirm-impact` → 观察 `resident=True` 的 placement 是否在无人工干预下被自动加载 → 确认 `scenario-warm-keep.py`/`remote-resident-maintain.py` 两个外部脚本 workaround 此时理论上已经冗余（daemon 原生机制接管了同样的职责），可以考虑后续从 `pipeline-watchdog.sh` 移除，但这一步要等 daemon 原生路径实测稳定运行一段时间后再做，不是今天就动。
