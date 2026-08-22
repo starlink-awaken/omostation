@@ -53,6 +53,7 @@ SCHEMA_READINESS_ATTEMPT = "clone-readiness/v2"
 SCHEMA_SUBMODULE_PROFILE = "clone-submodule-profile/v1"
 SCHEMA_PROVENANCE = "clone-provenance/v1"
 SCHEMA_PROVENANCE_ATTEMPT = "clone-provenance/v2"
+SCHEMA_TRANSFER = "clone-transfer/v1"
 IDENTITY_FILENAME = "agent-clone-identity.json"
 READINESS_FILENAME = "agent-clone-readiness.json"
 PROVENANCE_FILENAME = "agent-clone-provenance.json"
@@ -629,21 +630,8 @@ def provenance_path(repo_root: str) -> str:
     return os.path.join(git_common_dir(repo_root), PROVENANCE_FILENAME)
 
 
-def read_identity(repo_root: str, required: bool = True) -> dict | None:
-    path = identity_path(repo_root)
-    if not os.path.isfile(path):
-        if required:
-            raise ToolError(
-                "identity_missing",
-                f"clone identity not found at {path}",
-                EXIT_POLICY,
-            )
-        return None
-    try:
-        with open(path, encoding="utf-8") as fh:
-            data = json.load(fh)
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ToolError("identity_invalid", f"cannot read clone identity {path}: {exc}", EXIT_POLICY) from exc
+def validate_clone_identity(data: dict) -> dict:
+    """Validate legacy or attempt-qualified identity payload fields."""
     if data.get("schema") not in {SCHEMA_IDENTITY, SCHEMA_IDENTITY_ATTEMPT}:
         raise ToolError(
             "identity_invalid",
@@ -668,6 +656,24 @@ def read_identity(repo_root: str, required: bool = True) -> dict | None:
                 EXIT_POLICY,
             )
     return data
+
+
+def read_identity(repo_root: str, required: bool = True) -> dict | None:
+    path = identity_path(repo_root)
+    if not os.path.isfile(path):
+        if required:
+            raise ToolError(
+                "identity_missing",
+                f"clone identity not found at {path}",
+                EXIT_POLICY,
+            )
+        return None
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ToolError("identity_invalid", f"cannot read clone identity {path}: {exc}", EXIT_POLICY) from exc
+    return validate_clone_identity(data)
 
 
 def attempt_binding(identity: dict) -> dict[str, str]:
@@ -853,8 +859,14 @@ def atomic_publish_no_replace(source: str, destination: str) -> None:
     )
 
 
-def write_json_exclusive(output_path: str, payload: dict, failure_reason: str) -> None:
-    """Publish one generated JSON artifact without overwriting a racing writer."""
+def write_json_exclusive(
+    output_path: str,
+    payload: dict,
+    failure_reason: str,
+    *,
+    canonical: bool = False,
+) -> None:
+    """Publish one JSON artifact without overwriting a racing writer."""
     fd: int | None = None
     created = False
     try:
@@ -862,7 +874,10 @@ def write_json_exclusive(output_path: str, payload: dict, failure_reason: str) -
         created = True
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             fd = None
-            json.dump(payload, fh, indent=2, sort_keys=True)
+            if canonical:
+                fh.write(canonical_json(payload))
+            else:
+                json.dump(payload, fh, indent=2, sort_keys=True)
             fh.write("\n")
             fh.flush()
             os.fsync(fh.fileno())
@@ -1893,6 +1908,472 @@ def cmd_verify(args: argparse.Namespace) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# transfer (verification only)
+# ---------------------------------------------------------------------------
+
+
+def transfer_git(repo_root: str, *args: str) -> subprocess.CompletedProcess:
+    """Run a transfer probe with every caller-controlled repository scope removed."""
+    return git_isolated(repo_root, *args)
+
+
+def transfer_git_common_dir(repo_root: str) -> str:
+    proc = transfer_git(repo_root, "rev-parse", "--git-common-dir")
+    if proc.returncode != 0:
+        raise ToolError("transfer_not_a_repository", f"{repo_root} is not a repository")
+    common_dir = proc.stdout.strip()
+    if not os.path.isabs(common_dir):
+        common_dir = os.path.join(repo_root, common_dir)
+    return canonical(common_dir)
+
+
+def read_transfer_identity(repo_root: str) -> dict:
+    """Read identity via an isolated common-dir lookup, never ambient Git scope."""
+    path = os.path.join(transfer_git_common_dir(repo_root), IDENTITY_FILENAME)
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ToolError("identity_invalid", f"cannot read clone identity {path}: {exc}", EXIT_POLICY) from exc
+    return validate_clone_identity(data)
+
+
+def transfer_root_head(repo_root: str) -> str:
+    proc = transfer_git(repo_root, "rev-parse", "HEAD")
+    if proc.returncode != 0:
+        raise ToolError("transfer_not_a_repository", f"{repo_root} is not a repository")
+    return proc.stdout.strip()
+
+
+def transfer_branch_state(repo_root: str) -> tuple[str | None, bool]:
+    proc = transfer_git(repo_root, "symbolic-ref", "--short", "-q", "HEAD")
+    if proc.returncode == 0 and proc.stdout.strip():
+        return proc.stdout.strip(), False
+    return None, True
+
+
+def transfer_is_ancestor(repo_root: str, ancestor: str, descendant: str) -> bool:
+    return transfer_git(repo_root, "merge-base", "--is-ancestor", ancestor, descendant).returncode == 0
+
+
+def transfer_root_changed_paths(repo_root: str, base: str, candidate: str) -> list[str]:
+    """Enumerate transfer paths with an isolated index/object/config scope."""
+    proc = transfer_git(repo_root, "diff", "--name-status", "-z", "--no-renames", base, candidate, "--")
+    if proc.returncode != 0:
+        raise ToolError("transfer_root_diff_failed", f"cannot enumerate root changes: {proc.stderr.strip()}")
+    fields = [item for item in proc.stdout.split("\0") if item]
+    if len(fields) % 2 != 0:
+        raise ToolError("transfer_root_diff_malformed", "root diff emitted an incomplete name-status record")
+    paths: list[str] = []
+    for status, path in zip(fields[::2], fields[1::2]):
+        if not status or status[0] not in {"A", "C", "D", "M", "T", "U", "X", "B"}:
+            raise ToolError("transfer_root_diff_malformed", f"root diff emitted unsupported status {status!r}")
+        paths.append(path)
+    return sorted(paths)
+
+
+def transfer_live_author_identity(repo_root: str) -> dict[str, str | bool]:
+    """Read author provenance with isolated repository probes."""
+    def local_value(key: str) -> str | None:
+        proc = transfer_git(repo_root, "config", "--local", "--get", key)
+        return proc.stdout.strip() if proc.returncode == 0 and proc.stdout.strip() else None
+
+    name = local_value("user.name")
+    email = local_value("user.email")
+    use_config_only = local_value("user.useConfigOnly")
+    if not name or not email or (use_config_only or "").lower() != "true":
+        raise ToolError("transfer_author_identity_missing", "clone-local author identity is incomplete")
+    author_proc = transfer_git(repo_root, "var", "GIT_AUTHOR_IDENT")
+    committer_proc = transfer_git(repo_root, "var", "GIT_COMMITTER_IDENT")
+    if author_proc.returncode != 0 or committer_proc.returncode != 0:
+        raise ToolError("transfer_author_identity_invalid", "Git identity probe failed")
+    author = parse_git_ident(author_proc.stdout)
+    committer = parse_git_ident(committer_proc.stdout)
+    if author != (name, email) or committer != (name, email):
+        raise ToolError("transfer_author_identity_mismatch", "effective author differs from clone-local identity")
+    return {
+        "identity_digest": author_identity_digest(name, email),
+        "name_digest": hashlib.sha256(name.encode("utf-8")).hexdigest(),
+        "email_digest": hashlib.sha256(email.encode("utf-8")).hexdigest(),
+        "source": "clone-local",
+        "use_config_only": True,
+    }
+
+
+def transfer_commit_identities_match(repo_root: str, frozen_sha: str, expected_digest: str) -> bool:
+    commits = transfer_git(repo_root, "rev-list", f"{frozen_sha}..HEAD")
+    if commits.returncode != 0:
+        return False
+    for commit_sha in (line.strip() for line in commits.stdout.splitlines() if line.strip()):
+        ident = transfer_git(repo_root, "show", "-s", "--format=%an%x00%ae%x00%cn%x00%ce", commit_sha)
+        if ident.returncode != 0:
+            return False
+        fields = ident.stdout.rstrip("\n").split("\x00")
+        if len(fields) != 4:
+            return False
+        if (
+            author_identity_digest(fields[0], fields[1]) != expected_digest
+            or author_identity_digest(fields[2], fields[3]) != expected_digest
+        ):
+            return False
+    return True
+
+
+def verify_transfer_provenance(repo_root: str, identity: dict) -> dict:
+    """Transfer-only provenance verification using isolated Git probes throughout."""
+    try:
+        with open(os.path.join(transfer_git_common_dir(repo_root), PROVENANCE_FILENAME), encoding="utf-8") as fh:
+            receipt = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ToolError("transfer_provenance_missing", "clone provenance receipt is missing or unreadable") from exc
+    digest = canonical_digest(receipt, exclude_field="receipt_digest")
+    repository = receipt.get("repository") or {}
+    author = receipt.get("author") or {}
+    binding = attempt_binding(identity)
+    if (
+        receipt.get("schema") != SCHEMA_PROVENANCE_ATTEMPT
+        or receipt.get("receipt_digest") != digest
+        or identity.get("provenance_receipt_digest") != digest
+        or identity.get("provenance_status") != "ready"
+        or receipt.get("status") != "ready"
+        or receipt.get("agent_id") != identity.get("agent_id")
+        or receipt.get("clone_root") != canonical(repo_root)
+        or receipt.get("working_branch") != identity.get("working_branch")
+        or receipt.get("frozen_root_sha") != identity.get("frozen_root_sha")
+        or any(receipt.get(key) != value for key, value in binding.items())
+        or not repository.get("canonical_repository")
+        or not author.get("identity_digest")
+    ):
+        raise ToolError("transfer_provenance_mismatch", "clone provenance receipt does not match identity")
+    try:
+        live_repository = repository_provenance(repo_root, repository["canonical_repository"])
+        live_author = transfer_live_author_identity(repo_root)
+    except ToolError as exc:
+        raise ToolError("transfer_provenance_mismatch", "live repository or author provenance no longer matches") from exc
+    if (
+        live_repository != repository
+        or live_author != author
+        or not transfer_is_ancestor(repo_root, identity["frozen_root_sha"], "HEAD")
+        or not transfer_commit_identities_match(repo_root, identity["frozen_root_sha"], author["identity_digest"])
+    ):
+        raise ToolError("transfer_provenance_mismatch", "live provenance no longer matches identity")
+    return receipt
+
+
+def gitlinks_at_revision(repo_root: str, revision: str) -> dict[str, str]:
+    """Map root gitlinks at one committed revision without touching the index."""
+    proc = transfer_git(repo_root, "ls-tree", "-r", "-z", revision)
+    if proc.returncode != 0:
+        raise ToolError(
+            "transfer_gitlink_unavailable",
+            f"cannot inspect gitlinks at {revision}: {proc.stderr.strip()}",
+            EXIT_POLICY,
+        )
+    links: dict[str, str] = {}
+    for item in (item for item in proc.stdout.split("\0") if item):
+        try:
+            metadata, path = item.split("\t", 1)
+            mode, kind, sha = metadata.split(" ", 2)
+        except ValueError as exc:
+            raise ToolError("transfer_gitlink_malformed", "git ls-tree emitted malformed data") from exc
+        if mode == "160000":
+            if kind != "commit" or re.fullmatch(r"[0-9a-f]{40,64}", sha) is None:
+                raise ToolError("transfer_gitlink_malformed", "gitlink record is invalid")
+            links[path] = sha
+    return links
+
+
+def _transfer_clean_root(repo_root: str, role: str) -> None:
+    status = transfer_git(repo_root, "status", "--porcelain", "--untracked-files=all")
+    if status.returncode != 0:
+        raise ToolError("transfer_candidate_not_repository", f"{role} clone is not a repository")
+    if status.stdout.strip():
+        raise ToolError(
+            "transfer_clone_dirty",
+            f"{role} clone has uncommitted changes",
+            EXIT_POLICY,
+            {"role": role, "status": status.stdout.splitlines()[:20]},
+        )
+
+
+def _load_transfer_readiness(repo_root: str, identity: dict, baseline: dict, role: str) -> dict:
+    """Validate the immutable, v2 readiness binding needed for transfer proof."""
+    try:
+        with open(os.path.join(transfer_git_common_dir(repo_root), READINESS_FILENAME), encoding="utf-8") as fh:
+            receipt = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ToolError(
+            "transfer_readiness_missing",
+            f"{role} clone has no readable readiness receipt",
+            EXIT_POLICY,
+        ) from exc
+    digest = canonical_digest(receipt, exclude_field="receipt_digest")
+    binding = attempt_binding(identity)
+    if (
+        receipt.get("schema") != SCHEMA_READINESS_ATTEMPT
+        or receipt.get("receipt_digest") != digest
+        or identity.get("readiness_receipt_digest") != digest
+        or identity.get("readiness_status") != "ready"
+        or identity.get("ready") is not True
+        or receipt.get("status") != "ready"
+        or receipt.get("agent_id") != identity.get("agent_id")
+        or receipt.get("clone_root") != canonical(repo_root)
+        or receipt.get("profile") != identity.get("readiness_profile")
+        or receipt.get("source_url") != redact_remote(identity.get("source_url"))
+        or receipt.get("working_branch") != identity.get("working_branch")
+        or receipt.get("root_head_sha") != baseline.get("root_head_sha")
+        or any(receipt.get(key) != value for key, value in binding.items())
+        or receipt.get("checks", {}).get("clone_provenance", {}).get("receipt_digest")
+        != identity.get("provenance_receipt_digest")
+    ):
+        raise ToolError(
+            "transfer_readiness_mismatch",
+            f"{role} readiness receipt is not bound to its v2 identity and baseline",
+            EXIT_POLICY,
+        )
+    return receipt
+
+
+def _load_transfer_clone(role: str, clone: str, baseline_path: str) -> dict[str, Any]:
+    """Read and cross-bind one side of a transfer without modifying it."""
+    root = canonical(clone)
+    identity = read_transfer_identity(root)
+    if identity.get("schema") != SCHEMA_IDENTITY_ATTEMPT:
+        raise ToolError(
+            "transfer_v2_identity_required",
+            f"{role} clone must use agent-clone-identity/v2",
+            EXIT_POLICY,
+        )
+    binding = attempt_binding(identity)
+    baseline = load_baseline(baseline_path)
+    if (
+        baseline.get("schema") != SCHEMA_MANIFEST_ATTEMPT
+        or baseline.get("agent_id") != identity.get("agent_id")
+        or baseline.get("canonical_root") != root
+        or baseline.get("origin_url") != identity.get("source_url")
+        or baseline.get("branch") != identity.get("working_branch")
+        or baseline.get("detached") is not False
+        or baseline.get("root_head_sha") != identity.get("frozen_root_sha")
+        or any(baseline.get(key) != value for key, value in binding.items())
+    ):
+        raise ToolError(
+            "transfer_baseline_mismatch",
+            f"{role} baseline is not bound to its clone identity and frozen root",
+            EXIT_POLICY,
+        )
+    branch, detached = transfer_branch_state(root)
+    if detached or branch != identity.get("working_branch"):
+        raise ToolError(
+            "transfer_branch_mismatch",
+            f"{role} clone is not on its attempt-qualified branch",
+            EXIT_POLICY,
+        )
+    _transfer_clean_root(root, role)
+    provenance = verify_transfer_provenance(root, identity)
+    readiness = _load_transfer_readiness(root, identity, baseline, role)
+    head = transfer_root_head(root)
+    baseline_sha = baseline["root_head_sha"]
+    if not transfer_is_ancestor(root, baseline_sha, head):
+        raise ToolError(
+            "transfer_baseline_not_monotonic",
+            f"{role} HEAD does not descend from its frozen baseline",
+            EXIT_POLICY,
+        )
+    return {
+        "role": role,
+        "clone_root": root,
+        "identity": identity,
+        "identity_digest": canonical_digest(identity),
+        "baseline": baseline,
+        "baseline_manifest_digest": baseline["manifest_digest"],
+        "baseline_sha": baseline_sha,
+        "head_sha": head,
+        "provenance": provenance,
+        "readiness": readiness,
+        "repository": provenance["repository"]["canonical_repository"],
+    }
+
+
+def _transfer_patch(repo_root: str, base: str, head: str, paths: list[str]) -> str:
+    """Return a stable root-only net patch, including binary and mode changes."""
+    if not paths:
+        return ""
+    proc = transfer_git(
+        repo_root,
+        "diff",
+        "--binary",
+        "--full-index",
+        "--no-ext-diff",
+        "--no-renames",
+        "--no-color",
+        base,
+        head,
+        "--",
+        *paths,
+    )
+    if proc.returncode != 0:
+        raise ToolError(
+            "transfer_patch_unavailable",
+            f"cannot calculate root patch: {proc.stderr.strip()}",
+            EXIT_POLICY,
+        )
+    # Object ids in `index` headers describe unrelated baseline objects.  The
+    # net patch remains path/content/mode exact after removing only that noise.
+    return "\n".join(
+        line for line in proc.stdout.splitlines() if not line.startswith("index ")
+    )
+
+
+def _transfer_delta(side: dict[str, Any]) -> dict[str, Any]:
+    root = side["clone_root"]
+    base = side["baseline_sha"]
+    head = side["head_sha"]
+    base_links = gitlinks_at_revision(root, base)
+    head_links = gitlinks_at_revision(root, head)
+    changed_paths = transfer_root_changed_paths(root, base, head)
+    gitlink_paths = sorted(path for path in changed_paths if path in set(base_links) | set(head_links))
+    root_paths = sorted(path for path in changed_paths if path not in set(base_links) | set(head_links))
+    gitlinks = [
+        {
+            "path": path,
+            "base_sha": base_links.get(path),
+            "candidate_sha": head_links.get(path),
+        }
+        for path in gitlink_paths
+    ]
+    patch = _transfer_patch(root, base, head, root_paths)
+    return {
+        "root_paths": root_paths,
+        "root_patch": patch,
+        "root_patch_digest": hashlib.sha256(patch.encode("utf-8")).hexdigest(),
+        "gitlinks": gitlinks,
+    }
+
+
+def cmd_transfer(args: argparse.Namespace) -> dict:
+    """Prove a manually transferred root-only delta; this command never applies it."""
+    source = _load_transfer_clone("source", args.source_clone, args.source_baseline)
+    target = _load_transfer_clone("target", args.target_clone, args.target_baseline)
+    if getattr(args, "output", None):
+        output = canonical(args.output)
+        if path_within(output, source["clone_root"]) or path_within(output, target["clone_root"]):
+            raise ToolError(
+                "transfer_output_clone_scope",
+                "transfer receipts must be written outside source and target clone roots",
+                EXIT_POLICY,
+            )
+    source_identity = source["identity"]
+    target_identity = target["identity"]
+    if source["repository"] != target["repository"]:
+        raise ToolError(
+            "transfer_repository_mismatch",
+            "source and target are not bound to the same canonical repository",
+            EXIT_POLICY,
+        )
+    if source_identity["actor_id"] != target_identity["actor_id"]:
+        raise ToolError(
+            "transfer_actor_mismatch",
+            "v1 transfer is permitted only between attempts of the same actor",
+            EXIT_POLICY,
+        )
+    if source_identity["delivery_attempt_id"] == target_identity["delivery_attempt_id"]:
+        raise ToolError(
+            "transfer_attempt_mismatch",
+            "v1 transfer requires two distinct delivery attempts",
+            EXIT_POLICY,
+        )
+
+    source_delta = _transfer_delta(source)
+    target_delta = _transfer_delta(target)
+    if not (
+        source_delta["root_paths"]
+        or target_delta["root_paths"]
+        or source_delta["gitlinks"]
+        or target_delta["gitlinks"]
+    ):
+        raise ToolError(
+            "transfer_no_change",
+            "v1 transfer requires an actual source or target delta",
+            EXIT_POLICY,
+        )
+    if (
+        source_delta["root_paths"] != target_delta["root_paths"]
+        or source_delta["root_patch"] != target_delta["root_patch"]
+    ):
+        raise ToolError(
+            "transfer_unprovable_non_gitlink_delta",
+            "v1 cannot prove equivalence of different root-file net patches",
+            EXIT_POLICY,
+            {
+                "verdict": "UNPROVABLE",
+                "source_root_paths": source_delta["root_paths"],
+                "target_root_paths": target_delta["root_paths"],
+            },
+        )
+
+    transfer_key = {
+        "schema": SCHEMA_TRANSFER,
+        "mode": args.mode,
+        "source_identity_digest": source["identity_digest"],
+        "target_identity_digest": target["identity_digest"],
+        "source_baseline_sha": source["baseline_sha"],
+        "source_head_sha": source["head_sha"],
+        "target_baseline_sha": target["baseline_sha"],
+        "target_head_sha": target["head_sha"],
+    }
+    pending_gitlinks = bool(source_delta["gitlinks"] or target_delta["gitlinks"])
+    receipt = {
+        "schema": SCHEMA_TRANSFER,
+        "mode": args.mode,
+        "transfer_id": canonical_digest(transfer_key),
+        "canonical_repository": source["repository"],
+        "actor_id": source_identity["actor_id"],
+        "source": {
+            "clone_root": source["clone_root"],
+            "delivery_attempt_id": source_identity["delivery_attempt_id"],
+            "identity_digest": source["identity_digest"],
+            "baseline_manifest_digest": source["baseline_manifest_digest"],
+            "baseline_sha": source["baseline_sha"],
+            "head_sha": source["head_sha"],
+            "provenance_receipt_digest": source["provenance"]["receipt_digest"],
+            "readiness_receipt_digest": source["readiness"]["receipt_digest"],
+            "root_paths": source_delta["root_paths"],
+            "root_patch_digest": source_delta["root_patch_digest"],
+            "gitlinks": source_delta["gitlinks"],
+        },
+        "target": {
+            "clone_root": target["clone_root"],
+            "delivery_attempt_id": target_identity["delivery_attempt_id"],
+            "identity_digest": target["identity_digest"],
+            "baseline_manifest_digest": target["baseline_manifest_digest"],
+            "baseline_sha": target["baseline_sha"],
+            "head_sha": target["head_sha"],
+            "provenance_receipt_digest": target["provenance"]["receipt_digest"],
+            "readiness_receipt_digest": target["readiness"]["receipt_digest"],
+            "root_paths": target_delta["root_paths"],
+            "root_patch_digest": target_delta["root_patch_digest"],
+            "gitlinks": target_delta["gitlinks"],
+        },
+        "claims": {
+            "source_claims": "not_inherited",
+            "target_claims": "independent_authority_required",
+        },
+        "status": "unprovable" if pending_gitlinks else "content_verified",
+        "verdict": "UNPROVABLE" if pending_gitlinks else "PASS",
+        "content_verified": not pending_gitlinks,
+        "pending_strict_proof": pending_gitlinks,
+        "retire_eligible": False,
+        "lifecycle_verified": False,
+        "workspace_scope": "committed_tracked_content_only",
+        "ignored_files_out_of_scope": True,
+    }
+    receipt["receipt_digest"] = canonical_digest(receipt, exclude_field="receipt_digest")
+    if getattr(args, "output", None):
+        write_json_exclusive(args.output, receipt, "transfer_write_failed", canonical=True)
+    return receipt
+
+
+# ---------------------------------------------------------------------------
 # changeset
 # ---------------------------------------------------------------------------
 
@@ -2754,6 +3235,24 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--clone", required=True)
     p.add_argument("--manifest", required=True)
     p.set_defaults(func=cmd_verify)
+
+    p = sub.add_parser("transfer")
+    add_common(p)
+    p.add_argument("--source-clone", required=True)
+    p.add_argument("--source-baseline", required=True)
+    p.add_argument("--target-clone", required=True)
+    p.add_argument("--target-baseline", required=True)
+    p.add_argument(
+        "--mode",
+        choices=("verification-only",),
+        default="verification-only",
+        help="v1 only proves an already-manual root-only transfer; it never applies changes",
+    )
+    p.add_argument(
+        "--output",
+        help="optional canonical receipt path; exclusive-create only and never overwritten",
+    )
+    p.set_defaults(func=cmd_transfer)
 
     p = sub.add_parser("changeset")
     add_common(p)
