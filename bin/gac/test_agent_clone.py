@@ -21,6 +21,8 @@ import pytest
 TOOL = Path(__file__).resolve().parents[2] / "bin" / "gac" / "agent-clone.py"
 MANAGED_PYTHON = Path(__file__).resolve().parents[2] / "bin" / "gac" / "managed-python"
 PRE_COMMIT = Path(__file__).resolve().parents[2] / ".githooks" / "pre-commit"
+CANONICAL_REPOSITORY = "starlink-awaken/omostation"
+CANONICAL_REMOTE = "https://github.com/starlink-awaken/omostation.git"
 
 _GIT_ENV = {
     "GIT_CONFIG_NOSYSTEM": "1",
@@ -54,6 +56,7 @@ def run_cli(
     env: dict | None = None,
     check: bool = True,
     trusted_root: Path | None = None,
+    cwd: Path | None = None,
 ) -> subprocess.CompletedProcess:
     e = os.environ.copy()
     if env:
@@ -76,6 +79,7 @@ def run_cli(
         capture_output=True,
         text=True,
         env=e,
+        cwd=cwd,
         check=False,
     )
     if check and proc.returncode != 0:
@@ -277,6 +281,27 @@ def write_manifest(tmp: Path, clone: Path, name: str = "manifest.json") -> Path:
     return out
 
 
+def bind_provenance(tmp: Path, clone: Path, name: str = "provenance.json") -> Path:
+    """Bind one clone to the canonical root repository and local Git identity."""
+    git(clone, "config", "--local", "user.name", "Agent One")
+    git(clone, "config", "--local", "user.email", "agent-one@example.test")
+    git(clone, "remote", "set-url", "origin", CANONICAL_REMOTE)
+    output = tmp / name
+    proc = run_cli(
+        "provenance",
+        "--clone",
+        str(clone),
+        "--expected-repository",
+        CANONICAL_REPOSITORY,
+        "--output",
+        str(output),
+        "--json",
+        env={"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull},
+    )
+    assert parse_json(proc)["status"] == "ready"
+    return output
+
+
 def write_active_claim(authority: Path, *paths: str, actor: str = "agent-1", name: str = "active") -> Path:
     runs = authority / ".omo" / "_delivery" / "agent-workflows" / "runs"
     runs.mkdir(parents=True, exist_ok=True)
@@ -409,6 +434,247 @@ def test_readiness_remote_projection_redacts_credentials_and_query_tokens():
     assert tool.redact_remote("git@github.com:org/repo.git") == "github.com:org/repo.git"
 
 
+def test_root_remote_canonicalization_binds_transport_and_repository():
+    tool = load_tool_module()
+
+    https = tool.canonical_remote_descriptor(
+        "https://GitHub.com/StarLink-Awaken/OMOStation.git/"
+    )
+    ssh = tool.canonical_remote_descriptor(
+        "git@github.com:starlink-awaken/omostation.git"
+    )
+
+    assert https["canonical_repository"] == "github.com/starlink-awaken/omostation"
+    assert https["transport"] == "https"
+    assert ssh["canonical_repository"] == https["canonical_repository"]
+    assert ssh["transport"] == "ssh"
+
+    for invalid in (
+        "https://user:secret@github.com/starlink-awaken/omostation.git",
+        "https://github.com/starlink-awaken/omostation.git?token=secret",
+        "https://github.com/starlink-awaken/omostation.git#fragment",
+        "ssh://git@github.com:2222/starlink-awaken/omostation.git",
+        "https://example.test/starlink-awaken/omostation.git",
+    ):
+        with pytest.raises(tool.ToolError) as exc:
+            tool.canonical_remote_descriptor(invalid)
+        assert exc.value.reason == "repository_provenance_invalid"
+
+
+def test_provenance_rejects_fetch_push_repository_mismatch(tmp_path):
+    _src, _child, bare = make_source(tmp_path, with_hooks=True)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    git(dest, "config", "--local", "user.name", "Agent One")
+    git(dest, "config", "--local", "user.email", "agent-one@example.test")
+    git(dest, "remote", "set-url", "origin", CANONICAL_REMOTE)
+    git(dest, "remote", "set-url", "--push", "origin", "git@github.com:someone/fork.git")
+
+    proc = run_cli(
+        "provenance",
+        "--clone",
+        str(dest),
+        "--expected-repository",
+        CANONICAL_REPOSITORY,
+        "--output",
+        str(tmp_path / "mismatch.json"),
+        "--json",
+        env={"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull},
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "repository_provenance_mismatch"
+
+
+def test_provenance_rejects_ambiguous_multiple_fetch_urls(tmp_path):
+    _src, _child, bare = make_source(tmp_path, with_hooks=True)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    git(dest, "config", "--local", "user.name", "Agent One")
+    git(dest, "config", "--local", "user.email", "agent-one@example.test")
+    git(dest, "remote", "set-url", "origin", CANONICAL_REMOTE)
+    git(dest, "remote", "set-url", "--add", "origin", "git@github.com:starlink-awaken/omostation.git")
+
+    proc = run_cli(
+        "provenance",
+        "--clone",
+        str(dest),
+        "--expected-repository",
+        CANONICAL_REPOSITORY,
+        "--output",
+        str(tmp_path / "ambiguous.json"),
+        "--json",
+        env={"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull},
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "repository_provenance_invalid"
+
+
+def test_provenance_receipt_redacts_author_and_live_guard_revalidates(tmp_path):
+    _src, _child, bare = make_source(tmp_path, with_hooks=True)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    receipt_path = bind_provenance(tmp_path, dest)
+
+    receipt_text = receipt_path.read_text()
+    receipt = json.loads(receipt_text)
+    assert receipt["schema"] == "clone-provenance/v1"
+    assert receipt["repository"]["canonical_repository"] == (
+        "github.com/starlink-awaken/omostation"
+    )
+    assert receipt["repository"]["fetch_url_digest"]
+    assert receipt["repository"]["push_url_digest"]
+    assert receipt["author"]["identity_digest"]
+    assert "Agent One" not in receipt_text
+    assert "agent-one@example.test" not in receipt_text
+
+    admitted = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "agent-1", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull},
+    )
+    assert parse_json(admitted)["state"] == "verified_clone"
+
+    hook_env_admitted = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={
+            "AGENT_ID": "agent-1",
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_AUTHOR_NAME": "Agent One",
+            "GIT_AUTHOR_EMAIL": "agent-one@example.test",
+            "GIT_COMMITTER_NAME": "Agent One",
+            "GIT_COMMITTER_EMAIL": "agent-one@example.test",
+        },
+        cwd=dest,
+    )
+    assert parse_json(hook_env_admitted)["state"] == "verified_clone"
+
+    repository_env_admitted = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={
+            "AGENT_ID": "agent-1",
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_COUNT": "1",
+            "GIT_CONFIG_KEY_0": "remote.origin.url",
+            "GIT_CONFIG_VALUE_0": "https://github.com/someone/spoofed.git",
+            "GIT_INDEX_FILE": ".git/index",
+            "GIT_AUTHOR_NAME": "Agent One",
+            "GIT_AUTHOR_EMAIL": "agent-one@example.test",
+            "GIT_COMMITTER_NAME": "Agent One",
+            "GIT_COMMITTER_EMAIL": "agent-one@example.test",
+        },
+        cwd=dest,
+    )
+    assert parse_json(repository_env_admitted)["state"] == "verified_clone"
+
+    overridden = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={
+            "AGENT_ID": "agent-1",
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_AUTHOR_NAME": "Other",
+            "GIT_AUTHOR_EMAIL": "other@example.test",
+            "GIT_COMMITTER_NAME": "Other",
+            "GIT_COMMITTER_EMAIL": "other@example.test",
+        },
+        check=False,
+    )
+    assert overridden.returncode == 1
+    assert parse_json(overridden)["reason"] == "clone_provenance_mismatch"
+
+    git(dest, "remote", "set-url", "origin", "https://github.com/someone/fork.git")
+    drifted = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "agent-1", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull},
+        check=False,
+    )
+    assert drifted.returncode == 1
+    assert parse_json(drifted)["reason"] == "clone_provenance_mismatch"
+
+
+def test_provenance_binding_refuses_non_frozen_head(tmp_path):
+    _src, _child, bare = make_source(tmp_path, with_hooks=True)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    (dest / "README.md").write_text("post-create\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "post create")
+    git(dest, "config", "--local", "user.name", "Agent One")
+    git(dest, "config", "--local", "user.email", "agent-one@example.test")
+    git(dest, "remote", "set-url", "origin", CANONICAL_REMOTE)
+
+    proc = run_cli(
+        "provenance",
+        "--clone",
+        str(dest),
+        "--expected-repository",
+        CANONICAL_REPOSITORY,
+        "--output",
+        str(tmp_path / "late.json"),
+        "--json",
+        env={"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull},
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert parse_json(proc)["reason"] == "provenance_late_binding"
+
+
+def test_guard_rejects_committed_author_outside_bound_identity(tmp_path):
+    _src, _child, bare = make_source(tmp_path, with_hooks=True)
+    dest = create_clone(tmp_path, bare, no_submodules=True)
+    bind_provenance(tmp_path, dest)
+    (dest / "README.md").write_text("wrong author\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "wrong author")
+
+    rejected = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "agent-1", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull},
+        check=False,
+    )
+
+    assert rejected.returncode == 1
+    assert parse_json(rejected)["reason"] == "clone_provenance_mismatch"
+
+
 def test_expected_submodule_origin_uses_git_resolved_relative_url(tmp_path):
     tool = load_tool_module()
     repo = tmp_path / "repo"
@@ -447,6 +713,7 @@ def test_governance_profile_emits_verified_readiness_receipt(tmp_path):
         "--json",
     )
     assert parse_json(created)["profile"] == "governance"
+    provenance_path = bind_provenance(tmp_path, dest, "governance-provenance.json")
     manifest = write_manifest(tmp_path, dest, "governance-manifest.json")
     receipt_path = tmp_path / "governance-readiness.json"
 
@@ -477,6 +744,8 @@ def test_governance_profile_emits_verified_readiness_receipt(tmp_path):
     ]
     assert receipt["checks"]["managed_python_pyyaml"]["status"] == "pass"
     assert receipt["checks"]["workflow_entrypoint"]["status"] == "pass"
+    assert receipt["checks"]["clone_provenance"]["status"] == "pass"
+    assert json.loads(provenance_path.read_text())["status"] == "ready"
     assert receipt["receipt_digest"] == sha256_canonical(receipt, exclude="receipt_digest")
     identity = json.loads((dest / ".git" / "agent-clone-identity.json").read_text())
     assert identity["readiness_status"] == "ready"
@@ -504,6 +773,54 @@ def test_governance_profile_emits_verified_readiness_receipt(tmp_path):
         env={"AGENT_ID": "agent-1"},
     )
     assert parse_json(admitted)["state"] == "verified_clone"
+
+    hook_index_admitted = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={
+            "AGENT_ID": "agent-1",
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_INDEX_FILE": ".git/index",
+            "GIT_AUTHOR_NAME": "Agent One",
+            "GIT_AUTHOR_EMAIL": "agent-one@example.test",
+            "GIT_COMMITTER_NAME": "Agent One",
+            "GIT_COMMITTER_EMAIL": "agent-one@example.test",
+        },
+        cwd=dest,
+    )
+    assert parse_json(hook_index_admitted)["state"] == "verified_clone"
+
+    (dest / "README.md").write_text("next commit\n")
+    git(dest, "add", "README.md")
+    git(
+        dest,
+        "commit",
+        "-m",
+        "next commit",
+        env={
+            "GIT_AUTHOR_NAME": "Agent One",
+            "GIT_AUTHOR_EMAIL": "agent-one@example.test",
+            "GIT_COMMITTER_NAME": "Agent One",
+            "GIT_COMMITTER_EMAIL": "agent-one@example.test",
+        },
+    )
+    descendant = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "agent-1", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull},
+    )
+    assert parse_json(descendant)["state"] == "verified_clone"
 
     internal_receipt = dest / ".git" / "agent-clone-readiness.json"
     tampered = json.loads(internal_receipt.read_text())
@@ -684,6 +1001,7 @@ def test_readiness_rejects_profile_origin_drift_even_when_manifest_matches(tmp_p
         "governance",
         "--json",
     )
+    bind_provenance(tmp_path, dest, "origin-drift-provenance.json")
     git(dest / "projects" / "ecos", "remote", "set-url", "origin", "https://example.test/wrong.git")
     manifest = write_manifest(tmp_path, dest, "origin-drift-manifest.json")
 

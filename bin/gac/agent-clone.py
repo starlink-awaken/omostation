@@ -47,8 +47,10 @@ SCHEMA_CLAIM_SNAPSHOT = "agent-workflow-claim-snapshot/v1"
 SCHEMA_IDENTITY = "agent-clone-identity/v1"
 SCHEMA_READINESS = "clone-readiness/v1"
 SCHEMA_SUBMODULE_PROFILE = "clone-submodule-profile/v1"
+SCHEMA_PROVENANCE = "clone-provenance/v1"
 IDENTITY_FILENAME = "agent-clone-identity.json"
 READINESS_FILENAME = "agent-clone-readiness.json"
+PROVENANCE_FILENAME = "agent-clone-provenance.json"
 CLAIMS_AUTHORITY_POLICY = ".omo/_truth/registry/swarm-coordination.yaml"
 ACCOUNT_WORKSPACE_ROOT = Path(pwd.getpwuid(os.getuid()).pw_dir) / "Workspace"
 AGENT_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
@@ -61,6 +63,30 @@ GOVERNANCE_SUBMODULES = (
 )
 SUBMODULE_PROFILES = ("root-only", "governance", "full")
 READINESS_PROFILES = (*SUBMODULE_PROFILES, "custom")
+GITHUB_COMPONENT_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+AUTHOR_OVERRIDE_ENV = (
+    "GIT_AUTHOR_NAME",
+    "GIT_AUTHOR_EMAIL",
+    "GIT_COMMITTER_NAME",
+    "GIT_COMMITTER_EMAIL",
+)
+GIT_REPOSITORY_SCOPE_ENV = (
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_COMMON_DIR",
+    "GIT_CONFIG",
+    "GIT_CONFIG_COUNT",
+    "GIT_CONFIG_PARAMETERS",
+    "GIT_DIR",
+    "GIT_GRAFT_FILE",
+    "GIT_IMPLICIT_WORK_TREE",
+    "GIT_INDEX_FILE",
+    "GIT_NO_REPLACE_OBJECTS",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_PREFIX",
+    "GIT_REPLACE_REF_BASE",
+    "GIT_SHALLOW_FILE",
+    "GIT_WORK_TREE",
+)
 
 EXIT_OK = 0
 EXIT_POLICY = 1
@@ -97,6 +123,31 @@ def git(cwd: str | None, *args: str) -> subprocess.CompletedProcess:
     cmd += list(args)
     try:
         return subprocess.run(cmd, capture_output=True, text=True, check=False)
+    except OSError as exc:
+        raise ToolError("git_unavailable", f"cannot execute git: {exc}", EXIT_USAGE) from exc
+
+
+def git_isolated(cwd: str, *args: str) -> subprocess.CompletedProcess:
+    """Run an on-disk repository probe without caller repository scope.
+
+    Git hooks export values such as a relative ``GIT_INDEX_FILE`` for the
+    superproject.  Letting those values leak into ``git -C <submodule>`` makes
+    Git resolve the superproject's scope inside the child repository.  Config
+    and index command-line overrides can similarly spoof provenance probes.
+    Preserve ordinary process policy (for example global/system config
+    selection and author variables), but remove only repository-scoped state.
+    """
+    env = os.environ.copy()
+    for key in GIT_REPOSITORY_SCOPE_ENV:
+        env.pop(key, None)
+    try:
+        return subprocess.run(
+            ["git", "-C", cwd, *args],
+            capture_output=True,
+            text=True,
+            check=False,
+            env=env,
+        )
     except OSError as exc:
         raise ToolError("git_unavailable", f"cannot execute git: {exc}", EXIT_USAGE) from exc
 
@@ -164,14 +215,14 @@ def submodule_state(repo_root: str, rel_path: str) -> tuple[bool, str | None, st
     # an initialized one always carries its own .git marker at the root.
     if not os.path.exists(os.path.join(sub, ".git")):
         return False, None, None, True
-    probe = git(sub, "rev-parse", "--show-toplevel")
+    probe = git_isolated(sub, "rev-parse", "--show-toplevel")
     if probe.returncode != 0 or canonical(probe.stdout.strip()) != canonical(sub):
         return False, None, None, True
-    head_proc = git(sub, "rev-parse", "HEAD")
+    head_proc = git_isolated(sub, "rev-parse", "HEAD")
     head = head_proc.stdout.strip() if head_proc.returncode == 0 else None
-    origin_proc = git(sub, "config", "--get", "remote.origin.url")
+    origin_proc = git_isolated(sub, "config", "--get", "remote.origin.url")
     origin = origin_proc.stdout.strip() if origin_proc.returncode == 0 else None
-    status_proc = git(sub, "status", "--porcelain")
+    status_proc = git_isolated(sub, "status", "--porcelain")
     clean = status_proc.returncode == 0 and status_proc.stdout.strip() == ""
     return True, head, origin, clean
 
@@ -201,7 +252,7 @@ def resolve_submodule_profile(profile: str, links: dict[str, str]) -> list[str]:
 
 def expected_submodule_origins(repo_root: str) -> dict[str, str]:
     """Read path-to-origin bindings from the tracked .gitmodules file."""
-    proc = git(
+    proc = git_isolated(
         repo_root,
         "config",
         "--file",
@@ -225,7 +276,7 @@ def expected_submodule_origins(repo_root: str) -> dict[str, str]:
         # `git submodule init/update` resolves relative .gitmodules URLs using
         # the superproject remote and stores the result in local config.  Use
         # Git's resolved value rather than reimplementing those URL semantics.
-        configured = git(repo_root, "config", "--get", f"submodule.{section}.url")
+        configured = git_isolated(repo_root, "config", "--get", f"submodule.{section}.url")
         origins[fields["path"]] = (
             configured.stdout.strip()
             if configured.returncode == 0 and configured.stdout.strip()
@@ -247,6 +298,224 @@ def redact_remote(remote: str | None) -> str | None:
     if "@" in remote and ":" in remote.split("@", 1)[1]:
         return remote.split("@", 1)[1]
     return remote
+
+
+def canonical_repository_name(repository: str) -> str:
+    """Normalize one explicit GitHub owner/repository authority."""
+    value = repository.strip().removeprefix("github.com/").rstrip("/")
+    if value.endswith(".git"):
+        value = value[:-4]
+    parts = value.split("/")
+    if len(parts) != 2 or not all(GITHUB_COMPONENT_RE.fullmatch(part) for part in parts):
+        raise ToolError(
+            "repository_provenance_invalid",
+            "expected repository must be an exact GitHub owner/repository name",
+            EXIT_POLICY,
+        )
+    return f"github.com/{parts[0].lower()}/{parts[1].lower()}"
+
+
+def canonical_remote_descriptor(remote: str) -> dict[str, str]:
+    """Return a credential-free, transport-aware GitHub remote identity."""
+    value = remote.strip()
+    transport: str
+    owner: str
+    repository: str
+    scp = re.fullmatch(
+        r"git@github\.com:([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?",
+        value,
+        flags=re.IGNORECASE,
+    )
+    if scp:
+        transport = "ssh"
+        owner, repository = scp.groups()
+    else:
+        try:
+            parsed = urlsplit(value)
+            port = parsed.port
+        except ValueError as exc:
+            raise ToolError(
+                "repository_provenance_invalid",
+                "remote URL contains an invalid port",
+                EXIT_POLICY,
+            ) from exc
+        if parsed.query or parsed.fragment or "%" in parsed.path:
+            raise ToolError(
+                "repository_provenance_invalid",
+                "remote URL query, fragment, and encoded path forms are not admitted",
+                EXIT_POLICY,
+            )
+        if parsed.hostname is None or parsed.hostname.lower() != "github.com":
+            raise ToolError(
+                "repository_provenance_invalid",
+                "root repository must use an exact github.com remote",
+                EXIT_POLICY,
+            )
+        if parsed.scheme == "https":
+            if parsed.username is not None or parsed.password is not None or port is not None:
+                raise ToolError(
+                    "repository_provenance_invalid",
+                    "HTTPS root remotes cannot embed credentials or an explicit port",
+                    EXIT_POLICY,
+                )
+            transport = "https"
+        elif parsed.scheme == "ssh":
+            if parsed.username != "git" or parsed.password is not None or port not in (None, 22):
+                raise ToolError(
+                    "repository_provenance_invalid",
+                    "SSH root remotes must use git@github.com and the standard port",
+                    EXIT_POLICY,
+                )
+            transport = "ssh"
+        else:
+            raise ToolError(
+                "repository_provenance_invalid",
+                "root repository remote must use HTTPS or SSH",
+                EXIT_POLICY,
+            )
+        path = parsed.path.strip("/")
+        if path.endswith(".git"):
+            path = path[:-4]
+        parts = path.split("/")
+        if len(parts) != 2 or not all(GITHUB_COMPONENT_RE.fullmatch(part) for part in parts):
+            raise ToolError(
+                "repository_provenance_invalid",
+                "root repository remote must contain one owner and repository",
+                EXIT_POLICY,
+            )
+        owner, repository = parts
+    descriptor = {
+        "canonical_repository": f"github.com/{owner.lower()}/{repository.lower()}",
+        "transport": transport,
+    }
+    descriptor["remote_digest"] = hashlib.sha256(
+        json.dumps(descriptor, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return descriptor
+
+
+def remote_urls(repo_root: str, *, push: bool) -> list[str]:
+    args = ["remote", "get-url"]
+    if push:
+        args.append("--push")
+    args.extend(["--all", "origin"])
+    proc = git_isolated(repo_root, *args)
+    values = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+    if proc.returncode != 0 or len(values) != 1:
+        direction = "push" if push else "fetch"
+        raise ToolError(
+            "repository_provenance_invalid",
+            f"origin must expose exactly one {direction} URL",
+            EXIT_POLICY,
+        )
+    return values
+
+
+def repository_provenance(repo_root: str, expected_repository: str) -> dict[str, str]:
+    """Bind fetch and push transports to one explicit canonical repository."""
+    expected = canonical_repository_name(expected_repository)
+    fetch = canonical_remote_descriptor(remote_urls(repo_root, push=False)[0])
+    push = canonical_remote_descriptor(remote_urls(repo_root, push=True)[0])
+    if (
+        fetch["canonical_repository"] != expected
+        or push["canonical_repository"] != expected
+    ):
+        raise ToolError(
+            "repository_provenance_mismatch",
+            "origin fetch/push repositories do not match the expected canonical root",
+            EXIT_POLICY,
+        )
+    return {
+        "canonical_repository": expected,
+        "fetch_transport": fetch["transport"],
+        "push_transport": push["transport"],
+        "fetch_url_digest": fetch["remote_digest"],
+        "push_url_digest": push["remote_digest"],
+    }
+
+
+def author_identity_digest(name: str, email: str) -> str:
+    payload = {"email": email, "name": name}
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def parse_git_ident(value: str) -> tuple[str, str]:
+    match = re.fullmatch(r"(.+) <([^<>]+)> [0-9]+ [+-][0-9]{4}", value.strip())
+    if not match:
+        raise ToolError(
+            "author_identity_invalid",
+            "Git did not expose a parseable author or committer identity",
+            EXIT_POLICY,
+        )
+    return match.group(1), match.group(2)
+
+
+def git_local_value(repo_root: str, key: str) -> str | None:
+    proc = git(repo_root, "config", "--local", "--get", key)
+    return proc.stdout.strip() if proc.returncode == 0 and proc.stdout.strip() else None
+
+
+def bind_author_identity(repo_root: str) -> dict[str, str | bool]:
+    """Pin the current effective Git identity into clone-local config."""
+    overrides = sorted(key for key in AUTHOR_OVERRIDE_ENV if key in os.environ)
+    if overrides:
+        raise ToolError(
+            "author_identity_override",
+            "author provenance cannot be bound while Git author/committer overrides are present",
+            EXIT_POLICY,
+            {"override_keys": overrides},
+        )
+    values: dict[str, str] = {}
+    for key in ("user.name", "user.email"):
+        proc = git(repo_root, "config", "--get", key)
+        if proc.returncode != 0 or not proc.stdout.strip():
+            raise ToolError(
+                "author_identity_missing",
+                f"Git {key} must be configured before provenance binding",
+                EXIT_POLICY,
+            )
+        values[key] = proc.stdout.strip()
+        configured = git(repo_root, "config", "--local", key, values[key])
+        if configured.returncode != 0:
+            raise ToolError("author_identity_write_failed", configured.stderr.strip(), EXIT_POLICY)
+    configured = git(repo_root, "config", "--local", "user.useConfigOnly", "true")
+    if configured.returncode != 0:
+        raise ToolError("author_identity_write_failed", configured.stderr.strip(), EXIT_POLICY)
+    return live_author_identity(repo_root)
+
+
+def live_author_identity(repo_root: str) -> dict[str, str | bool]:
+    """Read clone-local and effective author/committer identity without exposing PII."""
+    name = git_local_value(repo_root, "user.name")
+    email = git_local_value(repo_root, "user.email")
+    use_config_only = git_local_value(repo_root, "user.useConfigOnly")
+    if not name or not email or (use_config_only or "").lower() != "true":
+        raise ToolError(
+            "author_identity_missing",
+            "clone-local user.name, user.email, and user.useConfigOnly=true are required",
+            EXIT_POLICY,
+        )
+    author_proc = git(repo_root, "var", "GIT_AUTHOR_IDENT")
+    committer_proc = git(repo_root, "var", "GIT_COMMITTER_IDENT")
+    if author_proc.returncode != 0 or committer_proc.returncode != 0:
+        raise ToolError("author_identity_invalid", "Git identity probe failed", EXIT_POLICY)
+    author = parse_git_ident(author_proc.stdout)
+    committer = parse_git_ident(committer_proc.stdout)
+    if author != (name, email) or committer != (name, email):
+        raise ToolError(
+            "author_identity_mismatch",
+            "effective Git author/committer differs from clone-local identity",
+            EXIT_POLICY,
+        )
+    return {
+        "identity_digest": author_identity_digest(name, email),
+        "name_digest": hashlib.sha256(name.encode("utf-8")).hexdigest(),
+        "email_digest": hashlib.sha256(email.encode("utf-8")).hexdigest(),
+        "source": "clone-local",
+        "use_config_only": True,
+    }
 
 
 def extract_uv_path_dependencies(repo_root: str) -> list[str]:
@@ -349,6 +618,10 @@ def identity_path(repo_root: str) -> str:
 
 def readiness_path(repo_root: str) -> str:
     return os.path.join(git_common_dir(repo_root), READINESS_FILENAME)
+
+
+def provenance_path(repo_root: str) -> str:
+    return os.path.join(git_common_dir(repo_root), PROVENANCE_FILENAME)
 
 
 def read_identity(repo_root: str, required: bool = True) -> dict | None:
@@ -603,6 +876,148 @@ def write_json_exclusive_or_match(output_path: str, payload: dict, failure_reaso
         )
 
 
+def commit_identities_match(repo_root: str, frozen_sha: str, expected_digest: str) -> bool:
+    commits = git(repo_root, "rev-list", f"{frozen_sha}..HEAD")
+    if commits.returncode != 0:
+        return False
+    for commit_sha in (line.strip() for line in commits.stdout.splitlines() if line.strip()):
+        ident = git(
+            repo_root,
+            "show",
+            "-s",
+            "--format=%an%x00%ae%x00%cn%x00%ce",
+            commit_sha,
+        )
+        if ident.returncode != 0:
+            return False
+        fields = ident.stdout.rstrip("\n").split("\x00")
+        if len(fields) != 4:
+            return False
+        author_digest = author_identity_digest(fields[0], fields[1])
+        committer_digest = author_identity_digest(fields[2], fields[3])
+        if author_digest != expected_digest or committer_digest != expected_digest:
+            return False
+    return True
+
+
+def verify_clone_provenance(repo_root: str, identity: dict) -> dict:
+    """Live-revalidate a bound root repository and Git author identity."""
+    try:
+        with open(provenance_path(repo_root), encoding="utf-8") as fh:
+            receipt = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ToolError(
+            "clone_provenance_missing",
+            "clone provenance receipt is missing or unreadable",
+            EXIT_POLICY,
+        ) from exc
+    digest = canonical_digest(receipt, exclude_field="receipt_digest")
+    repository = receipt.get("repository") or {}
+    author = receipt.get("author") or {}
+    if (
+        receipt.get("schema") != SCHEMA_PROVENANCE
+        or receipt.get("receipt_digest") != digest
+        or identity.get("provenance_receipt_digest") != digest
+        or identity.get("provenance_status") != "ready"
+        or receipt.get("status") != "ready"
+        or receipt.get("agent_id") != identity.get("agent_id")
+        or receipt.get("clone_root") != canonical(repo_root)
+        or receipt.get("working_branch") != identity.get("working_branch")
+        or receipt.get("frozen_root_sha") != identity.get("frozen_root_sha")
+        or not repository.get("canonical_repository")
+        or not author.get("identity_digest")
+    ):
+        raise ToolError(
+            "clone_provenance_mismatch",
+            "clone provenance receipt does not match the clone identity",
+            EXIT_POLICY,
+        )
+    try:
+        live_repository = repository_provenance(
+            repo_root,
+            repository["canonical_repository"],
+        )
+        live_author = live_author_identity(repo_root)
+    except ToolError as exc:
+        raise ToolError(
+            "clone_provenance_mismatch",
+            "live repository or author provenance no longer matches",
+            EXIT_POLICY,
+            {"cause": exc.reason},
+        ) from exc
+    ancestor = git(
+        repo_root,
+        "merge-base",
+        "--is-ancestor",
+        identity["frozen_root_sha"],
+        "HEAD",
+    )
+    if (
+        live_repository != repository
+        or live_author != author
+        or ancestor.returncode != 0
+        or not commit_identities_match(
+            repo_root,
+            identity["frozen_root_sha"],
+            author["identity_digest"],
+        )
+    ):
+        raise ToolError(
+            "clone_provenance_mismatch",
+            "live repository, author, or commit provenance no longer matches",
+            EXIT_POLICY,
+        )
+    return receipt
+
+
+def cmd_provenance(args: argparse.Namespace) -> dict:
+    """Bind one untouched clone to an explicit repository and author identity."""
+    identity = read_identity(args.clone)
+    if root_head(args.clone) != identity.get("frozen_root_sha"):
+        raise ToolError(
+            "provenance_late_binding",
+            "provenance must be bound before the clone creates new commits",
+            EXIT_POLICY,
+        )
+    branch, detached = branch_state(args.clone)
+    if detached or branch != identity.get("working_branch"):
+        raise ToolError(
+            "provenance_branch_mismatch",
+            "provenance must be bound on the clone identity branch",
+            EXIT_POLICY,
+        )
+    repository = repository_provenance(args.clone, args.expected_repository)
+    author = bind_author_identity(args.clone)
+    receipt = {
+        "schema": SCHEMA_PROVENANCE,
+        "agent_id": identity["agent_id"],
+        "clone_root": canonical(args.clone),
+        "repository": repository,
+        "author": author,
+        "frozen_root_sha": identity["frozen_root_sha"],
+        "working_branch": identity["working_branch"],
+        "status": "ready",
+        "generated_at": identity.get("created_at"),
+    }
+    receipt["receipt_digest"] = canonical_digest(receipt, exclude_field="receipt_digest")
+    write_json_exclusive_or_match(args.output, receipt, "provenance_write_failed")
+    write_json_replace(provenance_path(args.clone), receipt)
+    identity["source_url"] = remote_urls(args.clone, push=False)[0]
+    identity["provenance_required"] = True
+    identity["provenance_status"] = "ready"
+    identity["provenance_receipt_digest"] = receipt["receipt_digest"]
+    write_identity(args.clone, identity)
+    return {
+        "ok": True,
+        "reason": "provenance_bound",
+        "clone_root": canonical(args.clone),
+        "canonical_repository": repository["canonical_repository"],
+        "status": "ready",
+        "provenance_path": args.output,
+        "receipt_digest": receipt["receipt_digest"],
+    }
+
+
 def cmd_create(args: argparse.Namespace) -> dict:
     agent_id = args.agent_id
     if not agent_id or not AGENT_ID_RE.match(agent_id):
@@ -822,6 +1237,9 @@ def cmd_create(args: argparse.Namespace) -> dict:
         if identity_profile:
             identity["profile"] = identity_profile
             identity["required_submodules"] = initialize_paths
+        if identity_profile in {"governance", "full"}:
+            identity["provenance_required"] = True
+            identity["provenance_status"] = "unbound"
         write_identity(staging_clone, identity)
         atomic_publish_no_replace(staging_clone, dest)
         published = True
@@ -1027,6 +1445,10 @@ def cmd_readiness(args: argparse.Namespace) -> dict:
             EXIT_POLICY,
         )
 
+    provenance_receipt = None
+    if identity.get("provenance_required") is True:
+        provenance_receipt = verify_clone_provenance(args.clone, identity)
+
     checks: dict[str, dict] = {
         "root_repository": {"status": "pass", "required": True},
         "profile_submodules": {"status": "pass", "required": True},
@@ -1041,6 +1463,12 @@ def cmd_readiness(args: argparse.Namespace) -> dict:
             "detail": identity.get("dependency_reinstall_message", "dependency status missing"),
         },
     }
+    if provenance_receipt is not None:
+        checks["clone_provenance"] = {
+            "status": "pass",
+            "required": True,
+            "receipt_digest": provenance_receipt["receipt_digest"],
+        }
     managed_python: dict[str, dict] = {}
     stdlib_check, stdlib_receipt = managed_python_probe(args.clone, "stdlib")
     checks["managed_python_stdlib"] = stdlib_check
@@ -1991,6 +2419,8 @@ def cmd_guard(args: argparse.Namespace) -> dict:
         result["state"] = "legacy_isolated_worktree"
         result["reason"] = "legacy_isolated_worktree_allowed"
         return result
+    if identity.get("provenance_required") is True:
+        verify_clone_provenance(ws, identity)
     if identity.get("profile") is not None:
         profile = identity.get("profile")
         if profile not in {"governance", "full"}:
@@ -2010,6 +2440,13 @@ def cmd_guard(args: argparse.Namespace) -> dict:
                 EXIT_POLICY,
             ) from exc
         receipt_digest = canonical_digest(receipt, exclude_field="receipt_digest")
+        frozen_ancestor = git(
+            ws,
+            "merge-base",
+            "--is-ancestor",
+            identity.get("frozen_root_sha", ""),
+            "HEAD",
+        )
         if (
             receipt.get("schema") != SCHEMA_READINESS
             or receipt.get("receipt_digest") != receipt_digest
@@ -2020,8 +2457,9 @@ def cmd_guard(args: argparse.Namespace) -> dict:
             or receipt.get("agent_id") != identity.get("agent_id")
             or receipt.get("clone_root") != ws
             or receipt.get("source_url") != redact_remote(identity.get("source_url"))
-            or receipt.get("root_head_sha") != root_head(ws)
+            or receipt.get("root_head_sha") != identity.get("frozen_root_sha")
             or receipt.get("working_branch") != identity.get("working_branch")
+            or frozen_ancestor.returncode != 0
         ):
             raise ToolError(
                 "clone_readiness_mismatch",
@@ -2047,10 +2485,26 @@ def cmd_guard(args: argparse.Namespace) -> dict:
                 or normalize_source(child_origin or "")
                 != normalize_source(configured_origins.get(path, ""))
             ):
+                child_status = git_isolated(os.path.join(ws, path), "status", "--porcelain")
                 raise ToolError(
                     "clone_readiness_mismatch",
                     f"live submodule {path} no longer satisfies the named profile",
                     EXIT_POLICY,
+                    {
+                        "path": path,
+                        "initialized": initialized,
+                        "pinned_sha": live_links[path],
+                        "child_head": child_head,
+                        "clean": clean,
+                        "expected_origin": redact_remote(configured_origins.get(path)),
+                        "actual_origin": redact_remote(child_origin),
+                        "status_returncode": child_status.returncode,
+                        "status_sample": child_status.stdout.splitlines()[:5],
+                        "status_error": child_status.stderr.strip()[:240],
+                        "git_index_file": os.environ.get("GIT_INDEX_FILE"),
+                        "git_dir_env": os.environ.get("GIT_DIR"),
+                        "git_work_tree_env": os.environ.get("GIT_WORK_TREE"),
+                    },
                 )
     hooks_proc = git(ws, "config", "--get", "core.hooksPath")
     hooks_path = hooks_proc.stdout.strip() if hooks_proc.returncode == 0 else None
@@ -2105,6 +2559,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="initialize only this root gitlink; repeat for multiple paths",
     )
     p.set_defaults(func=cmd_create)
+
+    p = sub.add_parser("provenance")
+    add_common(p)
+    p.add_argument("--clone", required=True)
+    p.add_argument("--expected-repository", required=True)
+    p.add_argument("--output", required=True)
+    p.set_defaults(func=cmd_provenance)
 
     p = sub.add_parser("readiness")
     add_common(p)
