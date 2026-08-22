@@ -148,3 +148,7 @@ uv run ruff check .    # All checks passed
 **坑**: 远程 reasoning 模型 (qwythos) 的请求 max_tokens 需 ≥300, 小预算被思维链吃光 → content 空 → adapter 判 BAD_RESPONSE。这是行为特性非故障。
 
 **遗留**: y7000p 物理离线 (2h 前掉线, 需物理检查); Tailscale.app 的僵尸 extension 仍在 (建议下次重启后删除 VPN 配置或重装 app); brew tailscaled 是临时进程, 重启后需 `brew services start tailscale` 持久化 (或恢复 app 版)。
+
+### tailscaled 持久化完成 (16:10, 用户批准)
+
+LaunchDaemon (com.tailscale.brew, RunAtLoad+KeepAlive) 安装并验证: ①杀进程→launchd 秒拉自愈 ✅ ②登录态经 state 文件持久化 ✅ ③端到端远程推理 200 ✅。**关键坑**: launchd 环境无用户代理变量, tailscaled 直连控制面不通 — 临时进程当时是靠继承 ClashX 代理环境 (127.0.0.1:7890) 才通的。已在 plist 注入 HTTPS_PROXY 环境解决。重启 Mac 后链路自动恢复 (RunAtLoad), 无需任何手动步骤。
