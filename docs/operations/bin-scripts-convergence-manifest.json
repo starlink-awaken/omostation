@@ -1945,23 +1945,23 @@
     },
     {
       "name": "git_health_hook",
-      "bin": "bin/git-health-hook.py",
+      "bin": "bin/_archive/git-health-hook.py",
       "scripts": "scripts/bin/git-health-hook.py",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
+      "status": "archived",
+      "action": "archived (subtraction-quota BET-Y1Q3-T6-05)",
       "owner": "governance",
-      "note": "Execution report confirms retirement of the scripts duplicate; bin remains the single implementation.",
+      "note": "Archived to bin/_archive/ to bring bin/ back to baseline 420. Was never activated in .claude/settings.json, zero references.",
       "evidence": {
-        "active_files": [
-          "bin/git-health-hook.py"
-        ],
+        "active_files": [],
         "risk_score": 8,
         "decision_round": "round10",
         "due_date": "2026-09-22",
         "retired_files": [
-          "scripts/bin/git-health-hook.py"
+          "scripts/bin/git-health-hook.py",
+          "bin/git-health-hook.py"
         ],
-        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archived_to": "bin/_archive/git-health-hook.py"
       }
     },
     {
