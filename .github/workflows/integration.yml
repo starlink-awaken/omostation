@@ -26,6 +26,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Cache uv store
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
       - name: Set up uv
         uses: astral-sh/setup-uv@v4
         with:

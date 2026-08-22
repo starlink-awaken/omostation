@@ -30,6 +30,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - name: Cache uv store
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
       - name: install pyyaml
         run: pip install pyyaml
       - name: CR-L4-DOCUMENTS-MIGRATION-COVERAGE — Documents 迁移 registry 覆盖
