@@ -90,17 +90,18 @@ def tick_once(
     cp = broker.checkpoint_get(projector)
     last_index = int((cp or {}).get("last_sequence", 0))
     events = _read_events(events_jsonl)
-    new_events = events[last_index:]
+    scanned = events[last_index:]
+    # 每个 agent 完整扫描自己的水位之后的行, 但只处理属于自己 topic_filter 的事件。
+    # checkpoint 推进到"文件扫描末尾"而非"处理数量"——否则多 agent 分片时
+    # 各自推进不同行号会导致漏处理/重复处理。
+    new_events = scanned
     if topic_filter:
-        new_events = [ev for ev in new_events if (ev.get("event_type") or "") in topic_filter]
+        new_events = [ev for ev in scanned if (ev.get("event_type") or "") in topic_filter]
     processed = 0
     for event in new_events:
         _route(event)
         processed += 1
-    if new_events:
-        broker.checkpoint_set(projector, last_index + len(new_events))
-    else:
-        broker.checkpoint_set(projector, last_index)
+    broker.checkpoint_set(projector, last_index + len(scanned))
     return {"start_index": last_index, "processed": processed, "events_in_file": len(events)}
 
 
