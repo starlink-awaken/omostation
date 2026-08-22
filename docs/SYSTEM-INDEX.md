@@ -223,6 +223,7 @@
 → [运行验证证据](evidence/) — 可重放、脱敏的交付验证回执
 → [T1-18 Codex 人工确认 canary](evidence/t1-18-codex-dogfood-canary.md) — Orca 交互式 Codex 手动批准验证工件
 → [操作 SOP](operations/) — 运维手册、模板、清单
+→ [BET-Y1Q3-T4-01 交付证据](operations/value-evidence/BET-Y1Q3-T4-01/) — value-evidence/: [ACCEPTANCE](operations/value-evidence/BET-Y1Q3-T4-01/ACCEPTANCE.md) · [human_verdict](operations/value-evidence/BET-Y1Q3-T4-01/human_verdict.md) · [real_signal](operations/value-evidence/BET-Y1Q3-T4-01/real_signal.md) · [revision](operations/value-evidence/BET-Y1Q3-T4-01/revision.md) · [time_burden](operations/value-evidence/BET-Y1Q3-T4-01/time_burden.md) · [engineering/](operations/value-evidence/BET-Y1Q3-T4-01/engineering/) · [operational/](operations/value-evidence/BET-Y1Q3-T4-01/operational/)
 
 ## docs/ 专题子目录
 
