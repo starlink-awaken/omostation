@@ -126,3 +126,11 @@ uv run ruff check .    # All checks passed
 真实故障：tailscaled (macOS system extension, root 沙盒) 内部的 DNS 解析路径失败（用户态解析正常，沙盒内拿不到结果）——与任何代理软件无关。猎豹 VPN (utun244, 22.0.0.0/8) 接管路由但未阻断 Tailscale 控制面。
 
 **修复方案（待用户执行）**：`sudo cp /tmp/hosts.new /etc/hosts`（文件已备好，含 controlplane/login/log 三个域名的已验证真实 IP 与可逆性注释），随后 `tailscale up`（logged out 状态可能需要浏览器授权一次）。给 ClashX 加的白名单无害但无必要，可留可删。
+
+### Tailscale 推进实录 (12:25-12:35)
+
+用户授权后已完成: ①系统 DNS 22.0.0.2→8.8.8.8 (networksetup, 可逆); ②hosts 写入已验证真实 IP (osascript admin 授权)。**DNS 层已修好**——错误从 `failed to resolve` 前进到 `dial tcp 192.200.0.102: network is unreachable` (hosts 生效的铁证)。
+
+剩余卡点: tailscaled 状态机 `NoState`,VPN tunnel 显示 Connected、extension 已重启 (kill+系统拉起) 无效。**疑似 Sparkle 半更新状态错位**: extension 已升 1.102.3 但 app 组件可能仍是 1.102.2 时代 (更新发生在多次异常 kill 之间)。用户态到控制面的 HTTPS 全通 (302), 问题封闭在 extension 状态机内。
+
+**下一步 (需用户)**: 重启 Mac (清理 nesessionmanager 半更新状态, hosts/DNS 修复都已持久化不受影响) 或 Tailscale 菜单完成 app 更新/重装。重启后我方可继续验证远程节点贯通。
