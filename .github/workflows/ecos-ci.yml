@@ -43,3 +43,6 @@ jobs:
       - name: MOF M1 status compliance
         # 校验 1400 个 M1 实例 status 枚举合规
         run: cd projects/ecos && uv run python3 src/ecos/ssot/tools/mof-scan.py --check-status | tail -1
+      - name: MOF predictive governance loop
+        # 预测治理闭环: 约束合规 + M0 衰减 + M1 健康 → 统一预测报告
+        run: cd projects/ecos && WORKSPACE_ROOT=$GITHUB_WORKSPACE uv run python3 src/ecos/ssot/tools/mof-predictive-loop.py --enforce
