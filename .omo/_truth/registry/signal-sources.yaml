@@ -71,6 +71,23 @@ sources:
   last_signal_at: '2026-08-19T17:30:00Z'
   registered_at: '2026-08-09T00:00:00Z'
   bos_uri: bos://perception/folder/inbox
+- id: personal_signals
+  description: CodeBuddy 个人信号文件目录 — 个人低敏信号入口 (WP-D resident)
+  scene_binding: personal-steward
+  transport: local_filesystem
+  path: ~/.codebuddy/personal-signals/
+  probe_depth: 1
+  poll_interval: 60s
+  dedup_window: 24h
+  idempotency_key: content_digest
+  failure_policy:
+    max_retries: 3
+    backoff: exponential
+    on_failure: emit_unreachable
+  health: healthy
+  last_signal_at: null
+  registered_at: '2026-08-23T00:00:00Z'
+  bos_uri: bos://perception/personal/signals
 health_states:
 - healthy
 - degraded
