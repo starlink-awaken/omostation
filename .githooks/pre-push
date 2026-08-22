@@ -120,7 +120,7 @@ fi
 
 # ── Observe-then-skip (ADR-0422): always run preflight, then maybe skip ─
 # CI_LOCAL_SKIP=1 no longer skips the run; it only changes the exit policy.
-_FAILURES_JSON="$(mktemp "${TMPDIR:-/tmp}/ci-local-failures.XXXXXX.json")"
+_FAILURES_JSON="$(mktemp "${TMPDIR:-/tmp}/ci-local-failures.json.XXXXXX")"
 _CI_RC=0
 _DRIFT_RC=0
 if [ "$ALL_DELETIONS" != "true" ]; then
