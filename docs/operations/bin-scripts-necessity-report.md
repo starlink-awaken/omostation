@@ -1,10 +1,14 @@
 ---
-status: active
-lifecycle: contract
+status: SUPERSEDED
+lifecycle: ARCHIVED
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-22
 ---
+
 # scripts 兼容层与并行能力收敛清单（快照）
+
+> **已退役** (2026-08-21): `scripts/bin/` 工具已迁移到 `bin/`，scripts 仓库已 archive。
+> 本文档保留作为历史记录。
 
 - 生成时间: 2026-08-16T03:59:47.605263+00:00
 - 清单入口: `docs/operations/bin-scripts-convergence-manifest.json`
