@@ -42,6 +42,19 @@ concurrency:
 
 
 jobs:
+  meta-doctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: M2 引用活性巡检 (cron/launchd 登记目标存在性; CI 无本地心跳语境跳过 M1)
+        run: python3 bin/gac/meta-doctor.py --workspace "$GITHUB_WORKSPACE" --refs-only
+
   interface-check:
     runs-on: ubuntu-latest
     steps:
