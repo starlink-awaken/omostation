@@ -104,10 +104,20 @@
 - [x] 数据面受控加载补上默认 TTL（`composition.py` 加 `ttl_seconds` 注入，`bdf809e`）——端到端验证：`lms ps` 确认 `TTL: 30m/30m` 精确对应 `idle_ttl_seconds=1800` 配置，3 个回归测试固化
 
 **P1（本周内，需要你决策方向）**
-- [ ] `remote_resident`：实现周期性维护 job，或者删除声明改成运维 SOP——需要你选一个方向
+- [x] `remote_resident`：**已实现**（`scripts/remote-resident-maintain.py`，`c9eeb1b`/`d263c4c`，接入 watchdog 每 5 分钟跑一次，`7eddf58`）——见下方"P1 落地记录"
 - [ ] Ollama 收紧监听范围到 loopback（除非确认需要局域网直连）
 - [ ] sudoers 的 networksetup 免密授权：评估是否保留
-- [ ] **新发现**：验证 P0 修复时，mac-mini 的 `lms ps` 输出里混入了一条 `DEVICE: xia-y7000p` 的记录——暗示 mac-mini 自己的 LM Link 可能也处于 enabled 状态，能"看到"其他设备的模型。这和今天上午修复的"y7000p 被错误配对到 mac-mini"是同一类问题的反向版本，需要专门核实 mac-mini 上 `lms link status` 的现状
+
+### P1 落地记录：remote_resident 从死配置到真正生效
+
+**实现**：`scripts/remote-resident-maintain.py`，由 watchdog 每 5 分钟调用。`lm_studio`/`lm_link` 走 SSH `lms ps` 检查 + `lms load` 补齐（复用 backends 已声明的 `control_endpoint`，不新增信任面）；`ollama` 走纯 HTTP `/api/ps` 检查 + `/api/generate` 空请求 `keep_alive` 补齐（已验证 `keep_alive` 精确生效）。GENERATING 保护、SSH 超时静默容忍、加载成功判定统一用 `lms ps` 复核（不信任 stdout 字符串匹配）。
+
+**实测过程中揪出两个新问题（均已修复）**：
+
+1. **y7000p/mac-mini 的 LM Link 错配今天上午修过又复发了，这次是双向的**——上午只发现 y7000p 单向连到 mac-mini；这次验证时发现 mac-mini 也反向 "connected" 回了 y7000p（`lms link status` 两边互相可见对方 "connected"）。两边重新 `lms link disable` + `lms server` 重启（显式 `--bind 0.0.0.0` 避免重启后回退成仅本地监听，这个坑今天上午也踩过一次）。**这暗示 LM Link 的 enable 状态可能不是持久化关闭的**，需要观察是否会再次复发，如果反复出现，需要找 LM Studio 是否有自动重连机制或者版本更新触发重新配对。
+2. **脚本自身的 shell 引号 bug**：用 `repr(model_id)` 包裹传给远程 SSH 命令，`repr()` 是 Python 调试表示不是 shell 转义，在 y7000p（远程 shell 很可能是 Windows `cmd.exe`，不识别 POSIX 单引号）上把字面引号传给了 `lms load`，报 "No model found that matches model key `'qwen/qwen3.5-9b'`"。修复：当前所有 model_id 都不含空格，裸传是唯一对 macOS/Windows 两种远程 shell 都安全的写法；含空白字符时显式跳过并记录，不猜测转义规则。
+
+**端到端验证**：y7000p 的 `qwen/qwen3.5-9b` 首次被自动补齐成功（`context=8192/parallel=1/ttl=3600` 精确匹配声明），幂等性验证通过（已在线时 4 秒内静默完成，无新日志）。
 
 **P2（架构级，需要专门评估，不是这次的产物）**
 - [ ] MBP 常驻策略扩展
