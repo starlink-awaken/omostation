@@ -83,13 +83,20 @@ def consume_event(event: dict[str, Any]) -> Path | None:
 def register_with_daemon(daemon_module: Any) -> None:
     """Wire sediment handlers into resident-orchestrator-daemon.
 
+    Registers under the route action name ``knowledge_sediment``; the daemon's
+    rule table (resident-routes.yaml) maps event types → this action.
     Sediment handlers are read-only (write drafts under .omo/_knowledge/sediment)
     so they are registered as ``safe`` (no human-approval gate required).
     """
-    for event_type in SUCCESS_EVENTS:
-        daemon_module.register_handler(event_type, _success_handler, safe=True)
-    for event_type in FAILURE_EVENTS:
-        daemon_module.register_handler(event_type, _failure_handler, safe=True)
+    daemon_module.register_handler("knowledge_sediment", _sediment_dispatch, safe=True)
+
+
+def _sediment_dispatch(event: dict[str, Any]) -> None:
+    """Route one event to the correct sediment kind based on its type."""
+    if _event_type(event) in SUCCESS_EVENTS:
+        _success_handler(event)
+    elif _event_type(event) in FAILURE_EVENTS:
+        _failure_handler(event)
 
 
 def _success_handler(event: dict[str, Any]) -> None:

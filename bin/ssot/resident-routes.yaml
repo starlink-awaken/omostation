@@ -1,0 +1,31 @@
+# resident-routes — 规则级订阅路由表 (WP-C)
+# schema: resident-routes/v1
+# 每个规则: event_type(必) + condition(可选, 受限表达式) + action(handler 名) + safe(批准门) + topic
+# daemon 启动加载; 无匹配事件 → placeholder(仅记录)
+schema_version: resident-routes/v1
+routes:
+  - event_type: WorkflowClosed
+    topic: mesh:workflow:closed
+    action: knowledge_sediment
+    safe: true
+  - event_type: WorkflowSucceeded
+    topic: mesh:workflow:closed
+    action: knowledge_sediment
+    safe: true
+  - event_type: WorkflowFailed
+    topic: mesh:workflow:failed
+    action: knowledge_sediment
+    safe: true
+  - event_type: StepFailed
+    topic: mesh:step:failed
+    action: knowledge_sediment
+    safe: true
+  - event_type: StepTimeout
+    topic: mesh:step:failed
+    action: knowledge_sediment
+    safe: true
+  # 预留: 决策/告警/执行 agent 规则(WP-E/F/G 接入)
+  # - event_type: observability:critical
+  #   condition: "payload.severity in ('critical','degraded')"
+  #   action: alert_forwarder
+  #   safe: false
