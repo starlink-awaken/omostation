@@ -1,10 +1,14 @@
 ---
-status: active
+status: superseded
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-22
 ---
+
 # bin/ 与 scripts/ 收敛治理实施计划
+
+> **已退役** (2026-08-21): `scripts/bin/` 工具已迁移到 `bin/`，scripts 仓库已 archive。
+> 本计划保留作为历史记录。
 
 - 状态：Wave 2 已实施并固化基线（第一波非破坏性治理完成）
 - 日期：2026-08-16

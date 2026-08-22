@@ -1,10 +1,14 @@
 ---
-status: active
+status: superseded
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-22
 ---
+
 # bin/scripts 能力重叠扫描
+
+> **已退役** (2026-08-21): `scripts/bin/` 工具已迁移到 `bin/`，scripts 仓库已 archive。
+> 本文档保留作为历史记录。
 
 - 重叠脚本: 144
 - 仅 bin: 340

@@ -1,12 +1,15 @@
 ---
-status: active
+status: superseded
 lifecycle: contract
 owner: runtime-team
-last-reviewed: 2026-08-17
+last-reviewed: 2026-08-22
 review-state: metadata-only
 ---
 
 # bin/scripts 收敛审计
+
+> **已退役** (2026-08-21): `scripts/bin/` 工具已迁移到 `bin/`，scripts 仓库已 archive。
+> 本文档保留作为历史记录。
 
 本审计把三类事实分开：
 

@@ -1,8 +1,8 @@
 ---
 id: ADR-0394
 title: scripts/ 子模块镜像债治理 — 已退役并迁移到 root bin/
-status: SUPERSEDED
-lifecycle: ARCHIVED
+status: superseded
+lifecycle: pattern
 owner: governance-team
 last-reviewed: 2026-08-22
 superseded_by: 迁移已完成 (PR #1839 + scripts PR #27/#28)

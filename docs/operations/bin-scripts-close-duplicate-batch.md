@@ -1,10 +1,14 @@
 ---
-status: active
+status: superseded
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-22
 ---
+
 # scripts close-duplicate-gap-first 执行清单
+
+> **已退役** (2026-08-21): `scripts/bin/` 工具已迁移到 `bin/`，scripts 仓库已 archive。
+> 本文档保留作为历史记录。
 
 - 生成时间: 2026-08-16T12:23:12
 - 数据源: `docs/operations/bin-scripts-convergence-manifest.json`
