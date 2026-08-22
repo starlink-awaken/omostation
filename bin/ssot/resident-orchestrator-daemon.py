@@ -78,40 +78,42 @@ def _route(event: dict[str, Any]) -> None:
         _log(f"handler_error event_type={event_type} err={type(exc).__name__}: {exc}")
 
 
-def tick_once(
-    broker: Any, events_jsonl: Path, *, projector: str = PROJECTOR_ID, topic_filter: set[str] | None = None
-) -> dict[str, Any]:
-    """Read new events from the JSONL (after checkpoint), route each, advance watermark.
+def _wm_path(projector: str) -> Path:
+    return WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator" / "watermarks" / f"{projector}.json"
 
-    ``projector`` is this daemon's independent checkpoint name (multi-agent
-    parallelism: each agent daemon consumes its own event slice). ``topic_filter``
-    restricts which event types this daemon handles (e.g. only WorkflowClosed).
+
+def _load_byte_offset(projector: str) -> int:
+    try:
+        data = json.loads(_wm_path(projector).read_text(encoding="utf-8"))
+        return int(data.get("byte_offset", 0))
+    except (OSError, json.JSONDecodeError):
+        return 0
+
+
+def _save_byte_offset(projector: str, byte_offset: int) -> None:
+    path = _wm_path(projector)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"byte_offset": byte_offset}), encoding="utf-8")
+
+
+def _read_incremental(events_jsonl: Path, byte_offset: int) -> tuple[list[dict[str, Any]], int]:
+    """Seek-read only the bytes after ``byte_offset`` (incremental tail read).
+
+    If the file was truncated/rebuilt (size < offset) we fall back to a full
+    scan from byte 0. Returns (new_events, new_file_size).
     """
-    cp = broker.checkpoint_get(projector)
-    last_index = int((cp or {}).get("last_sequence", 0))
-    events = _read_events(events_jsonl)
-    scanned = events[last_index:]
-    # 每个 agent 完整扫描自己的水位之后的行, 但只处理属于自己 topic_filter 的事件。
-    # checkpoint 推进到"文件扫描末尾"而非"处理数量"——否则多 agent 分片时
-    # 各自推进不同行号会导致漏处理/重复处理。
-    new_events = scanned
-    if topic_filter:
-        new_events = [ev for ev in scanned if (ev.get("event_type") or "") in topic_filter]
-    processed = 0
-    for event in new_events:
-        _route(event)
-        processed += 1
-    broker.checkpoint_set(projector, last_index + len(scanned))
-    return {"start_index": last_index, "processed": processed, "events_in_file": len(events)}
-
-
-def _read_events(events_jsonl: Path) -> list[dict[str, Any]]:
-    import json  # noqa: PLC0415
-
     if not events_jsonl.is_file():
-        return []
+        return [], 0
+    file_size = events_jsonl.stat().st_size
+    if file_size < byte_offset:
+        byte_offset = 0  # truncate/recreate → full rescan
+    if byte_offset == file_size:
+        return [], file_size
     events: list[dict[str, Any]] = []
-    for line in events_jsonl.read_text(encoding="utf-8").splitlines():
+    with events_jsonl.open("rb") as fh:
+        fh.seek(byte_offset)
+        data = fh.read()
+    for line in data.decode("utf-8", "replace").splitlines():
         line = line.strip()
         if not line:
             continue
@@ -119,7 +121,32 @@ def _read_events(events_jsonl: Path) -> list[dict[str, Any]]:
             events.append(json.loads(line))
         except json.JSONDecodeError:
             continue
-    return events
+    return events, file_size
+
+
+def tick_once(
+    broker: Any, events_jsonl: Path, *, projector: str = PROJECTOR_ID, topic_filter: set[str] | None = None
+) -> dict[str, Any]:
+    """Read new events incrementally (byte-offset watermark), route, advance.
+
+    ``projector`` is this daemon's independent checkpoint name (multi-agent
+    parallelism). ``topic_filter`` restricts which event types this daemon
+    handles. The ledger checkpoint stores the row watermark (compat); the local
+    watermark file stores the byte offset for incremental tail reads.
+    """
+    cp = broker.checkpoint_get(projector)
+    last_index = int((cp or {}).get("last_sequence", 0))
+    byte_offset = _load_byte_offset(projector)
+    scanned, file_size = _read_incremental(events_jsonl, byte_offset)
+    # 每个 agent 扫描增量窗口, 但只处理属于自己 topic_filter 的事件。
+    new_events = scanned if not topic_filter else [ev for ev in scanned if (ev.get("event_type") or "") in topic_filter]
+    processed = 0
+    for event in new_events:
+        _route(event)
+        processed += 1
+    broker.checkpoint_set(projector, last_index + len(scanned))
+    _save_byte_offset(projector, file_size)
+    return {"start_index": last_index, "processed": processed, "events_in_file": last_index + len(scanned)}
 
 
 def _events_after(events: list[dict[str, Any]], last_event_id: str) -> list[dict[str, Any]]:
