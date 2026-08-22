@@ -134,3 +134,17 @@ uv run ruff check .    # All checks passed
 剩余卡点: tailscaled 状态机 `NoState`,VPN tunnel 显示 Connected、extension 已重启 (kill+系统拉起) 无效。**疑似 Sparkle 半更新状态错位**: extension 已升 1.102.3 但 app 组件可能仍是 1.102.2 时代 (更新发生在多次异常 kill 之间)。用户态到控制面的 HTTPS 全通 (302), 问题封闭在 extension 状态机内。
 
 **下一步 (需用户)**: 重启 Mac (清理 nesessionmanager 半更新状态, hosts/DNS 修复都已持久化不受影响) 或 Tailscale 菜单完成 app 更新/重装。重启后我方可继续验证远程节点贯通。
+
+### Tailscale 终局: brew tailscaled 绕过 + 远程链路贯通 (12:45-12:55)
+
+重启前找到了更优解: **不重启、不删配置**, 以独立进程跑 brew 版 tailscaled (1.102.3, 临时 nohup, 授权弹窗获用户知情), 独立 socket (/var/run/tailscale.brew.sock) 完全绕过僵尸 extension。/usr/local/bin/tailscale 替换为指向 brew socket 的 wrapper (root 授权), omlxc daemon 的 Tailscale 集成视野随之恢复。
+
+**贯通验证链** (全部实测):
+1. 浏览器授权后 tailnet 建立, mac-mini 在线 (ping 通, relay 延迟 ~1s)
+2. mac-mini 三层直连: LM Studio 11 模型 ✅ Ollama 2 模型 ✅
+3. omlxc mac-mini 4 placement 全绿, mythos-fast 全灭解除
+4. **端到端**: omlxc socket → 路由 mac-mini → 远程真实推理 → 200 + "贯通"
+
+**坑**: 远程 reasoning 模型 (qwythos) 的请求 max_tokens 需 ≥300, 小预算被思维链吃光 → content 空 → adapter 判 BAD_RESPONSE。这是行为特性非故障。
+
+**遗留**: y7000p 物理离线 (2h 前掉线, 需物理检查); Tailscale.app 的僵尸 extension 仍在 (建议下次重启后删除 VPN 配置或重装 app); brew tailscaled 是临时进程, 重启后需 `brew services start tailscale` 持久化 (或恢复 app 版)。
