@@ -101,12 +101,13 @@
 ## 六、总路线图
 
 **P0（建议立即做，改动面小、直接决定持久可用能否兑现）**
-- [ ] 数据面受控加载补上默认 TTL（`composition.py` 加 `ttl_seconds` 注入）
+- [x] 数据面受控加载补上默认 TTL（`composition.py` 加 `ttl_seconds` 注入，`bdf809e`）——端到端验证：`lms ps` 确认 `TTL: 30m/30m` 精确对应 `idle_ttl_seconds=1800` 配置，3 个回归测试固化
 
 **P1（本周内，需要你决策方向）**
 - [ ] `remote_resident`：实现周期性维护 job，或者删除声明改成运维 SOP——需要你选一个方向
 - [ ] Ollama 收紧监听范围到 loopback（除非确认需要局域网直连）
 - [ ] sudoers 的 networksetup 免密授权：评估是否保留
+- [ ] **新发现**：验证 P0 修复时，mac-mini 的 `lms ps` 输出里混入了一条 `DEVICE: xia-y7000p` 的记录——暗示 mac-mini 自己的 LM Link 可能也处于 enabled 状态，能"看到"其他设备的模型。这和今天上午修复的"y7000p 被错误配对到 mac-mini"是同一类问题的反向版本，需要专门核实 mac-mini 上 `lms link status` 的现状
 
 **P2（架构级，需要专门评估，不是这次的产物）**
 - [ ] MBP 常驻策略扩展
