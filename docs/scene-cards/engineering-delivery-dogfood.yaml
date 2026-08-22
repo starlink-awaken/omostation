@@ -113,3 +113,15 @@ checkpoints:
     require: human_review
     condition: "output.metrics.confidence < 0.8"
     timeout_hours: 24
+
+# T7-01 Phase A: decision_outcome 采集管线(2026-08-22 就绪)
+collection_pipeline:
+  status: ready
+  loop:
+    - "omo external-resources consume-engineering-delivery --workflow-run-id <id> --stdin   # 机器记录供给侧"
+    - "omo external-resources engineering-delivery-review-queue --workflow-run-id <id>      # 候选队列(只读)"
+    - "omo external-resources submit-engineering-delivery-review --workflow-run-id <id> --delivery-id <id> --decision <adopted|reviewed|rejected> --principal-ref operator://<reviewer> --evidence-ref <ref>  # 人类裁决(HMAC 凭证)"
+    - "omo external-resources engineering-delivery-shadow-observer --as-of <ts>            # 7 日窗口 qualified 计数"
+  qualified_outcome_log: ".omo/_knowledge/workflow-mesh/engineering-delivery-decision-outcomes.jsonl"
+  signing_key_env: COCKPIT_ENGINEERING_REVIEW_SIGNING_KEY
+  value_indicator_policy: "本场景产出永不计入价值指标 (BET-Y1Q2-T7-01 non_goals)"
