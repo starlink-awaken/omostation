@@ -1,0 +1,160 @@
+#!/bin/bash
+# Managed Python selector for Git hooks and clone lifecycle entrypoints.
+#
+# This file is intentionally a shell program: it must select a supported Python
+# before any Python code can run. Python scripts invoked through this entrypoint
+# receive the selected interpreter unchanged.
+
+set -euo pipefail
+
+MIN_MAJOR=3
+MIN_MINOR=11
+ROOT="$(cd "$(dirname "$0")/../.." && pwd -P)"
+
+usage() {
+  cat >&2 <<'EOF'
+usage:
+  managed-python probe --profile <stdlib|pyyaml> --json
+  managed-python run --profile <stdlib|pyyaml> -- <script> [args...]
+
+Environment:
+  OMO_MANAGED_PYTHON  Explicit interpreter path or command. It must satisfy
+                      Python 3.11+ and the requested profile.
+EOF
+}
+
+fail() {
+  echo "managed-python: $*" >&2
+  exit 2
+}
+
+ACTION="${1:-}"
+[ -n "$ACTION" ] || { usage; exit 2; }
+shift
+
+PROFILE=""
+JSON_MODE=false
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --profile)
+      [ "$#" -ge 2 ] || fail "--profile requires a value"
+      PROFILE="$2"
+      shift 2
+      ;;
+    --json)
+      JSON_MODE=true
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      fail "unknown argument: $1"
+      ;;
+  esac
+done
+
+case "$ACTION" in
+  probe|run) ;;
+  *) fail "unknown action: $ACTION" ;;
+esac
+case "$PROFILE" in
+  stdlib|pyyaml) ;;
+  *) fail "--profile must be stdlib or pyyaml" ;;
+esac
+if [ "$ACTION" = "probe" ]; then
+  [ "$JSON_MODE" = true ] || fail "probe requires --json"
+  [ "$#" -eq 0 ] || fail "probe does not accept a script"
+else
+  [ "$JSON_MODE" = false ] || fail "run does not accept --json"
+  [ "$#" -gt 0 ] || fail "run requires a script after --"
+fi
+
+SELECTED_PROVIDER=""
+SELECTED_EXECUTABLE=""
+SELECTED_VERSION=""
+SELECTED_CMD=()
+
+probe_candidate() {
+  local provider="$1"
+  shift
+  local output executable major minor patch has_yaml
+  output="$("$@" -c 'import importlib.util, pathlib, sys; print("|".join((str(pathlib.Path(sys.executable).resolve()), str(sys.version_info.major), str(sys.version_info.minor), str(sys.version_info.micro), "1" if importlib.util.find_spec("yaml") else "0")))' 2>/dev/null)" || return 1
+  IFS='|' read -r executable major minor patch has_yaml <<EOF
+$output
+EOF
+  case "$major:$minor:$patch:$has_yaml" in
+    *[!0-9:]*|::*|*::*) return 1 ;;
+  esac
+  if [ "$major" -lt "$MIN_MAJOR" ] || { [ "$major" -eq "$MIN_MAJOR" ] && [ "$minor" -lt "$MIN_MINOR" ]; }; then
+    return 1
+  fi
+  if [ "$PROFILE" = "pyyaml" ] && [ "$has_yaml" != "1" ]; then
+    return 1
+  fi
+  if [ "$PROFILE" = "pyyaml" ]; then
+    "$@" -c 'import yaml' >/dev/null 2>&1 || return 1
+  fi
+  SELECTED_PROVIDER="$provider"
+  SELECTED_EXECUTABLE="$executable"
+  SELECTED_VERSION="$major.$minor.$patch"
+  SELECTED_CMD=("$@")
+  return 0
+}
+
+resolve_command() {
+  local requested="$1"
+  if [ -x "$requested" ]; then
+    printf '%s\n' "$requested"
+    return 0
+  fi
+  command -v "$requested" 2>/dev/null
+}
+
+if [ -n "${OMO_MANAGED_PYTHON:-}" ]; then
+  explicit="$(resolve_command "$OMO_MANAGED_PYTHON")" || fail "explicit runtime is not executable: $OMO_MANAGED_PYTHON"
+  probe_candidate explicit "$explicit" || fail "explicit runtime must provide Python 3.11+ and profile $PROFILE"
+else
+  if [ -x "$ROOT/.venv/bin/python" ]; then
+    probe_candidate workspace-venv "$ROOT/.venv/bin/python" || true
+  fi
+  if [ -z "$SELECTED_PROVIDER" ]; then
+    for name in python3.14 python3.13 python3.12 python3.11 python3; do
+      candidate="$(command -v "$name" 2>/dev/null || true)"
+      [ -n "$candidate" ] || continue
+      if probe_candidate path "$candidate"; then
+        break
+      fi
+    done
+  fi
+  if [ -z "$SELECTED_PROVIDER" ] && [ "$PROFILE" = "pyyaml" ] && command -v uv >/dev/null 2>&1; then
+    probe_candidate uv uv run --quiet --no-project --with pyyaml python || true
+  fi
+  [ -n "$SELECTED_PROVIDER" ] || fail "no runtime provides Python 3.11+ and profile $PROFILE"
+fi
+
+if [ "$ACTION" = "probe" ]; then
+  capabilities='["stdlib"]'
+  if [ "$PROFILE" = "pyyaml" ]; then
+    capabilities='["stdlib","pyyaml"]'
+  fi
+  "${SELECTED_CMD[@]}" - "$PROFILE" "$SELECTED_PROVIDER" "$capabilities" <<'PY'
+import json
+import pathlib
+import sys
+
+profile, provider, capabilities = sys.argv[1:]
+print(json.dumps({
+    "schema": "managed-python-runtime-receipt/v1",
+    "profile": profile,
+    "provider": provider,
+    "executable": str(pathlib.Path(sys.executable).resolve()),
+    "python_version": list(sys.version_info[:3]),
+    "capabilities": json.loads(capabilities),
+}, sort_keys=True))
+PY
+  exit 0
+fi
+
+exec "${SELECTED_CMD[@]}" "$@"

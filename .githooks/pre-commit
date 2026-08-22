@@ -13,6 +13,15 @@
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
+PY_RUNTIME="$ROOT/bin/gac/managed-python"
+
+run_py() {
+  "$PY_RUNTIME" run --profile stdlib -- "$@"
+}
+
+run_py_with_yaml() {
+  "$PY_RUNTIME" run --profile pyyaml -- "$@"
+}
 
 # ── T1-05 D1: independent-clone identity guard ────────────────────
 # New agent clones activate this tracked hook through clone-local
@@ -21,9 +30,9 @@ ROOT="$(git rev-parse --show-toplevel)"
 # legacy linked worktrees remain available only to human migration/inspection.
 if [ -f "$ROOT/bin/gac/agent-clone.py" ]; then
   if [ -n "${AGENT_ID:-}" ]; then
-    _clone_guard_out="$(python3 "$ROOT/bin/gac/agent-clone.py" guard --workspace "$ROOT" --require-clone --json 2>&1)" || _clone_guard_rc=$?
+    _clone_guard_out="$(run_py "$ROOT/bin/gac/agent-clone.py" guard --workspace "$ROOT" --require-clone --json 2>&1)" || _clone_guard_rc=$?
   else
-    _clone_guard_out="$(python3 "$ROOT/bin/gac/agent-clone.py" guard --workspace "$ROOT" --json 2>&1)" || _clone_guard_rc=$?
+    _clone_guard_out="$(run_py "$ROOT/bin/gac/agent-clone.py" guard --workspace "$ROOT" --json 2>&1)" || _clone_guard_rc=$?
   fi
   _clone_guard_rc="${_clone_guard_rc:-0}"
   printf '%s\n' "$_clone_guard_out" | sed 's/^/[clone-guard] /' >&2
@@ -39,18 +48,8 @@ fi
 
 if [ -x "$ROOT/bin/gac-hygiene-check.py" ]; then
   # advisory: 输出到 stderr, 不阻断 commit (|| true)
-  python3 "$ROOT/bin/gac-hygiene-check.py" 2>&1 | sed 's/^/[hygiene] /' >&2 || true
+  run_py "$ROOT/bin/gac-hygiene-check.py" 2>&1 | sed 's/^/[hygiene] /' >&2 || true
 fi
-
-run_py_with_yaml() {
-  local script="$1"
-  shift
-  if command -v uv >/dev/null 2>&1; then
-    uv run --with pyyaml python "$script" "$@"
-  else
-    python3 "$script" "$@"
-  fi
-}
 
 if [ -f "$ROOT/bin/gac-local-gate.py" ]; then
   run_py_with_yaml "$ROOT/bin/gac-local-gate.py" 2>&1 | sed 's/^/[gac] /' >&2
@@ -62,7 +61,7 @@ fi
 
 if [ -f "$ROOT/bin/gac-audit-engine.py" ]; then
   # 调用中央 audit-engine 进行 atomic_write (debt) 的静态 AST 审计拦截
-  python3 "$ROOT/bin/gac-audit-engine.py" --staged 2>&1 | sed 's/^/[audit] /' >&2
+  run_py "$ROOT/bin/gac-audit-engine.py" --staged 2>&1 | sed 's/^/[audit] /' >&2
 fi
 
 # ── D5 升级: 跨仓子模块一致性校验 (2026-08-19) ─────────────────────
@@ -126,14 +125,14 @@ fi
 # commit+push 后远端整仓归零。这里在提交前拦一次量级异常。
 GATE="$(git rev-parse --show-toplevel)/bin/gac/mass-deletion-gate.py"
 if [ -f "$GATE" ]; then
-  python3 "$GATE" --staged || exit 1
+  run_py "$GATE" --staged || exit 1
 fi
 
 # --- conflict-marker gate (2026-08-08) ---
 # 未解决 git 冲突标记 (<<<<<<<) 被提交会污染 main 致 check-yaml/派生 CI 失败.
 CONFLICT_CHECK="$(git rev-parse --show-toplevel)/bin/ssot/conflict-marker-check.py"
 if [ -f "$CONFLICT_CHECK" ]; then
-  python3 "$CONFLICT_CHECK" || exit 1
+  run_py "$CONFLICT_CHECK" || exit 1
 fi
 
 exit 0

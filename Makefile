@@ -16,6 +16,7 @@
 	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll
 
 PY := uv run --with pyyaml python
+PY_STDLIB := bin/gac/managed-python run --profile stdlib --
 
 # ── 帮助大盘 ────────────────────────────────────────────────────────────────────
 
@@ -287,30 +288,30 @@ worktree-cleanup:  ## 回收 TTL 过期 worktree
 # ── 🧬 Clone Lifecycle (独立 clone 生命周期管道) ──────────────────────────────
 
 clone-onboard:  ## 为新 agent 创建 clone + 基线
-	python3 bin/gac/clone-lifecycle.py onboard --agent-id $(AGENT_ID) \
+	$(PY_STDLIB) bin/gac/clone-lifecycle.py onboard --agent-id $(AGENT_ID) \
 	  --destination "$(HOME)/agents/$(AGENT_ID)/ws"
 
 clone-snapshot:  ## 为当前 clone 生成基线 manifest
-	python3 bin/gac/clone-lifecycle.py snapshot --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
+	$(PY_STDLIB) bin/gac/clone-lifecycle.py snapshot --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
 	  --output "$(HOME)/agents/$(AGENT_ID)/baseline.json"
 
 clone-changeset:  ## 生成跨仓变更集 + claim 校验
-	python3 bin/gac/clone-lifecycle.py changeset --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
+	$(PY_STDLIB) bin/gac/clone-lifecycle.py changeset --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
 	  --baseline "$(HOME)/agents/$(AGENT_ID)/baseline.json" \
 	  --output "$(HOME)/agents/$(AGENT_ID)/changeset.json" --verify-claims
 
 clone-integrate:  ## 推送分支 + PR (dry-run)
-	python3 bin/gac/clone-lifecycle.py integrate --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
+	$(PY_STDLIB) bin/gac/clone-lifecycle.py integrate --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
 	  --agent-id $(AGENT_ID) --dry-run
 
 clone-retire:  ## 清理 clone
-	python3 bin/gac/clone-lifecycle.py retire --destination "$(HOME)/agents/$(AGENT_ID)/ws"
+	$(PY_STDLIB) bin/gac/clone-lifecycle.py retire --destination "$(HOME)/agents/$(AGENT_ID)/ws"
 
 clone-onboard:  ## D2: 为活跃 agent 自动创建 clone (dry-run)
-	python3 bin/gac/agent-clone-onboard.py
+	$(PY_STDLIB) bin/gac/agent-clone-onboard.py
 
 clone-onboard-apply:  ## D2: 真正创建 clone
-	python3 bin/gac/agent-clone-onboard.py --apply
+	$(PY_STDLIB) bin/gac/agent-clone-onboard.py --apply
 
 # ── 🧠 Memory OS (记忆中枢) ───────────────────────────────────────────────────
 
