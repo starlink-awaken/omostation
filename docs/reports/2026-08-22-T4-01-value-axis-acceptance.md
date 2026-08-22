@@ -1,82 +1,83 @@
-# BET-Y1Q3-T4-01 价值轴验收报告
+# BET-Y1Q3-T4-01 价值轴报告（非 ledger 真相）
 
 - 报告编号: VALUE-ACCEPTANCE-Y1Q3-T4-01
 - 生成时间: 2026-08-22
+- 纠偏时间: 2026-08-22
 - 验收对象: BET-Y1Q3-T4-01「真实个人价值证据脊柱」价值轴(value)
-- 验收结论: **ACCEPTED(通过)** —— credential-bound 人类价值证据链完整、可验证、自洽
+- 文件地位: **草稿 / 非权威诊断**。本文不推进 `completion-evidence-matrix`，
+  不把 value 轴写成 ACCEPTED，也不把 BET 标为 done。
+- 权威: `docs/plans/3y-bet-ledger.yaml` 的 completion-evidence-matrix/v1
 
-## 1. 验收范围
-
-本报告覆盖 T4-01 的 **value 轴**(AC-08 真实价值样本)验收。工程(engineering)与
-运行(operational)轴由推进方在 #1853-#1867 系列中评估, 不在本报告范围。
-
-验收依据:
-- spec: `docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md` §7.2
-- 完成标准: `#1832` completion-evidence-matrix/v1, value=ACCEPTED 需
-  real_signal + human_verdict + revision + time_burden + **credential-bound attestation**
-
-## 2. 验收证据链
-
-| 环节 | 证据文件 | 关键字段 | 验证结果 |
-|---|---|---|---|
-| 1. 真实信号 | `value-evidence/BET-Y1Q3-T4-01/real_signal.md` | content_sha256: `c2c072f2...` | ✅ 匹配 ledger SignalObserved |
-| 2. 人类裁决 | `value-evidence/.../human_verdict.md` | verdict=accept, credential 指纹 `OEfesj1+...` | ✅ 匹配公钥指纹 |
-| 3. 修订 | `value-evidence/.../revision.md` | revision_digest: `bf98089f...` | ✅ 匹配 evidence:// 引用 |
-| 4. 时间负担 | `value-evidence/.../time_burden.md` | review 30s < saved 120s | ✅ Phase 2 门有利 |
-| 5. 凭证绑定 | `human-attestations/BET-Y1Q3-T4-01-accept.yaml` | SSH 签名(ssh-keygen -Y verify) | ✅ **PASS** |
-
-`validate_completion_evidence` value 轴 errors = **NONE** ✓
-
-## 3. 事件链(ledger)
-
-episode `episode_088af4df0c0ed55f204e2bae`, 7 事件完整:
-
-```
-1. Episode.Decision.v1         — 信号→episode 决策
-2. Mandate.Granted.v1          — A2/R0 授权
-3. Decision.Policy.v1          — 执行策略
-4. Action.Started.v1           — 动作开始
-5. Action.Succeeded.v1         — never-send draft 生成
-6. Evidence.LocalDraft.v1      — evidence:// 引用(不含路径)
-7. Outcome.Human.v1            — accept + RevisionReceipt
-```
-
-链完整性: `verify_chain` ok(39 事件, 无坏序列)
-
-## 4. NorthStar 实证
-
-| 指标 | 值 |
+| 轴 | 台账权威（2026-08-22） |
 |---|---|
-| current_week_qualifying_outcomes | **1** |
-| four_week_value_gate | collecting |
-| verdict_distribution | {accept: 1} |
-| signal_to_verdict_latency_seconds | 91.5 |
-| truth_axes.operational_proof | proven |
-| truth_axes.personal_value | collecting |
+| engineering | `IN_PROGRESS` |
+| operational | `DEGRADED` |
+| value | `NOT_PROVEN` |
+| overall_state | `blocked` |
+| status | `in_progress`（`human_gate: true`） |
 
-## 5. 隐私合规(AC-08)
+PR #1876 曾把本文件写成 **ACCEPTED(通过)**。那是报告草稿，不是 ledger 真相。
+后续 agent 不得依据本文、`value-evidence/` 或 `human-attestations/` 单独把
+value 轴翻成 ACCEPTED，或把 T4-01 closeout 成 done。
 
-- 正文: 仅存 content_sha256 摘要, 无正文明文 ✓
-- 绝对路径: evidence:// 不透明引用, 无 file:// ✓
-- 凭证: 签名无密钥泄露, 公钥指纹仅用于身份绑定 ✓
+## 1. 范围
 
-## 6. 验证方法
+本文只说明：仓库里出现过一组价值样本文件，以及它们**不能**代替台账。
+工程轴与运行轴仍按矩阵取证，不在本文范围内推导为 VERIFIED / PROVEN。
 
-1. `validate_human_attestation` — SSH 签名验证(真实密钥) PASS
-2. `validate_completion_evidence` — value=ACCEPTED 矩阵 errors=NONE
-3. ledger `verify_chain` — 哈希链完整
-4. 交叉一致性 — episode_id / signal_id / content_sha256 / credential / digest
-   在证据文件与 ledger 间逐项比对一致
+依据:
 
-## 7. 结论
+- spec: `docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md`
+- 矩阵: `#1832` completion-evidence-matrix/v1
+- 纠偏先例: `#1831` 缺 credential-bound attestation 仍把 BET 标 done，已被 `#1832` 撤回
 
-T4-01 价值轴 **ACCEPTED**。真实低敏信号(跨仓耦合机制半删观察)走通
-`SignalReceipt → never-send candidate → 用户 accept → RevisionReceipt/OutcomeFeedback
-→ credential-bound attestation` 全链。这是系统首个**由真实人类裁决 + 凭证签名**
-共同推动的 value 轴证据, 满足 #1832 完成标准的 value 轴要求。
+value=ACCEPTED 需要矩阵字段 `real_signal` + `human_verdict` + `revision` +
+`time_burden`，且不得绕过 `human_gate`。单份 Markdown 或 YAML 声明不够。
 
-**遗留**: engineering(VERIFIED)+ operational(PROVEN)轴证据由推进方补齐后可整体 closeout。
+## 2. 仓库内相关文件（非权威）
+
+下列路径是样本/附件，不是 completion-evidence-matrix 的写入面：
+
+| 路径 | 作用 |
+|---|---|
+| `docs/operations/value-evidence/BET-Y1Q3-T4-01/` | 样本草稿 |
+| `docs/operations/human-attestations/BET-Y1Q3-T4-01-accept.yaml` | 人类签名附件（若存在） |
+| `docs/operations/human-attestations/BET-Y1Q3-T4-01-value-acceptance.yaml` | 绑定本报告的附件（若存在） |
+
+附件即使带 SSH 签名，也只证明「有人签过某段消息」。它们不能：
+
+- 改写台账 `value` / `overall_state`
+- 覆盖 NorthStar / compound-attribution 投影
+- 代替三轴同时满足的 closeout
+
+## 3. 运行投影（AC-07 / AC-09）
+
+本机只读投影在缺少 `principal_id` 或 bound live receipt 时必须 fail-closed：
+
+- `bin/bc-os/north_star_meter_v2.py` → `status: unprovable`（`principal_id_required`）
+- `bin/gac/compound-attribution-report.py` → `compound-attribution-report/v2`，
+  `personal_value` 与成本/加速等均为 `UNPROVABLE` / `unproven_claims`
+
+#1876 原文中的 `current_week_qualifying_outcomes = 1` **不是**当前投影权威。
+未知量保持 `unknown` / `unprovable` / `not_connected`，禁止用 PR、BET 数、
+测试数或自报 completed 填充。
+
+## 4. 隐私与样本（AC-08 提醒）
+
+若后续补真实低敏样本：不得持久化正文、绝对路径或凭证材料。
+本文不声称已经走通 `SignalReceipt → never-send → human verdict →
+RevisionReceipt/OutcomeFeedback` 全链。
+
+## 5. 结论
+
+T4-01 价值轴仍为 **NOT_PROVEN**。本文是对 #1876 假绿的纠偏，不是验收通过。
+
+整体 closeout 仍要求：
+
+1. engineering=`VERIFIED` 且带矩阵要求的直接证据
+2. operational=`PROVEN` 且带 live canary / fresh receipt / replay / cleanup
+3. value=`ACCEPTED` 且带矩阵直接证据 **加上** credential-bound human attestation
+4. `human_gate` 由本人完成，agent 不得代签、不得伪造 `ssh-keygen -Y`
 
 ---
-*验收人: principal:xiamingxing(凭证绑定)*
-*验签公钥: ssh-ed25519 SHA256:OEfesj1+Ll2UT1xCKWvbdo4xNNZvqQUnNsFtYLQfRKw*
+*纠偏说明: Markdown 报告不是 ledger。权威以 `3y-bet-ledger.yaml` 为准。*
