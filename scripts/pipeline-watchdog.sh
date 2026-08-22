@@ -72,6 +72,10 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 python3 "$SCRIPT_DIR/remote-resident-maintain.py" >>"$LOG" 2>&1
 
+# --- 高频场景模型保活 (2026-08-22: placement.resident 的调度循环从未
+#     接入 daemon, 用同样的"外部脚本 + 现有接口"模式补齐) ---
+python3 "$SCRIPT_DIR/scenario-warm-keep.py" >>"$LOG" 2>&1
+
 # --- 模型级可用性(读探测缓存，不发真实生成请求，代价很低) ---
 # 只能测出"探测都连不上"这一类(如 oMLX App 整体下线导致 placement 全灭)；
 # 输出乱码这类要真实生成才测得到的问题不在这一层，见 deep-registration-audit.sh。
