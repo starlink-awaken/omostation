@@ -127,6 +127,63 @@ def test_immutable_writer_allows_abort_and_read_only_recovery(
 
 
 @pytest.mark.parametrize("shim", [False, True], ids=["swarm-git", "git-shim-fallback"])
+def test_immutable_writer_allows_only_atomic_first_publication_lease(
+    tmp_path: Path,
+    shim: bool,
+) -> None:
+    script, env, log = _policy_fixture(tmp_path, shim=shim)
+    branch = "agent/actor-1--attempt-1"
+    env["FAKE_GIT_BRANCH"] = branch
+    head = "a" * 40
+
+    allowed = _run(
+        script,
+        env,
+        "push",
+        "--porcelain",
+        f"--force-with-lease=refs/heads/{branch}:",
+        "origin",
+        f"{head}:refs/heads/{branch}",
+    )
+    assert allowed.returncode == 0, (allowed.stdout, allowed.stderr)
+    assert f"--force-with-lease=refs/heads/{branch}:" in log.read_text(encoding="utf-8")
+
+    for argv in (
+        (
+            "push",
+            "--porcelain",
+            f"--force-with-lease=refs/heads/{branch}",
+            "origin",
+            f"{head}:refs/heads/{branch}",
+        ),
+        (
+            "push",
+            "--porcelain",
+            "--force-with-lease=refs/heads/agent/actor-1--other:",
+            "origin",
+            f"{head}:refs/heads/{branch}",
+        ),
+        (
+            "push",
+            "--porcelain",
+            f"--force-with-lease=refs/heads/{branch}:",
+            "origin",
+            f"{head}:refs/heads/agent/actor-1--other",
+        ),
+        (
+            "push",
+            "--porcelain",
+            f"--force-with-lease=refs/heads/{branch}:",
+            "fork",
+            f"{head}:refs/heads/{branch}",
+        ),
+    ):
+        blocked = _run(script, env, *argv)
+        assert blocked.returncode != 0, (argv, blocked.stdout, blocked.stderr)
+        assert "immutable" in blocked.stderr.lower()
+
+
+@pytest.mark.parametrize("shim", [False, True], ids=["swarm-git", "git-shim-fallback"])
 def test_legacy_work_branch_keeps_non_rewriting_merge_and_pull(
     tmp_path: Path,
     shim: bool,
