@@ -7,12 +7,15 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 
 import httpx
+import pytest
 
 from omlxc.adapters.lmstudio import (
+    LmsLoadOptions,
     LmsPlatform,
     LmStudioAdapter,
     ProcessOutput,
 )
+from omlxc.domain.protocols import ChatMessage, ChatRequest
 
 from .backend_adapter_contract import (
     BackendAdapterContract,
@@ -121,3 +124,57 @@ class TestLmStudioContract(BackendAdapterContract):
             transport=httpx.MockTransport(handler),
         )
         return ContractHarness(adapter=adapter)
+
+    @pytest.mark.asyncio
+    async def test_chat_loads_unloaded_model_via_controlled_lms_load_not_jit(self) -> None:
+        """stale-loaded 竞态回归: discover 过且模型未加载时, chat 必须先走
+        SSH 受控 lms load (带 -c), 禁止裸 HTTP 触发 LM Studio JIT (按全局
+        defaultContextLength 失控加载, 2026-08-22 实测打穿内存)。"""
+        calls: list[tuple[str, ...]] = []
+        load_state = {"loaded": False}
+
+        async def runner(argv: tuple[str, ...], timeout: float) -> ProcessOutput:
+            del timeout
+            calls.append(argv)
+            if "ps" in argv:  # lms ps --json
+                rows = [{"modelKey": "model-a", "identifier": "model-a"}] if load_state["loaded"] else []
+                return ProcessOutput(returncode=0, stdout=json.dumps(rows), stderr="")
+            if "load" in argv:  # 受控加载
+                load_state["loaded"] = True
+                return ProcessOutput(returncode=0, stdout="loaded", stderr="")
+            raise AssertionError(f"unexpected argv: {argv}")
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path == "/v1/models":
+                return httpx.Response(200, json={"data": [{"id": "model-a"}]})
+            if request.url.path == "/v1/chat/completions":
+                return httpx.Response(200, json={"choices": [{"message": {"content": "O"}, "finish_reason": "stop"}]})
+            raise AssertionError(f"unexpected request: {request.url.path}")
+
+        adapter = LmStudioAdapter(
+            backend_id="remote-lmstudio",
+            base_url="https://lmstudio.invalid",
+            ssh_target="node.invalid",
+            known_hosts_file=Path(__file__).resolve(),
+            platform=LmsPlatform.MACOS,
+            load_options=LmsLoadOptions(context_length=16384),
+            process_runner=runner,
+            transport=httpx.MockTransport(handler),
+        )
+        # 先 discover: 目录有模型、均未加载 → 缓存有效且 loaded 集为空
+        snapshot = await adapter.discover()
+        assert snapshot.model_available is True
+        assert adapter._loaded_cache_valid is True
+
+        result = await adapter.chat(
+            ChatRequest(
+                request_id="req-guard",
+                model="model-a",
+                messages=(ChatMessage(role="user", content="Reply O only"),),
+            )
+        )
+        assert result.success is True
+        load_calls = [c for c in calls if "load" in c]
+        assert len(load_calls) == 1, "chat 前必须恰好触发一次受控 lms load"
+        argv = load_calls[0]
+        assert "-c" in argv and "16384" in argv, f"受控加载必须带 -c 16384: {argv}"

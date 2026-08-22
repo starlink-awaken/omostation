@@ -206,6 +206,14 @@ class LmStudioAdapter:
         self._runner = process_runner or _DefaultProcessRunner(process_output_limit)
         self._control_authorizer = control_authorizer
         self._load_options = load_options or LmsLoadOptions()
+        # discover() 每轮刷新的"当前已加载模型"缓存。chat/stream_chat 据此
+        # 在发送前对未加载模型内联受控加载, 消灭"裸 HTTP 直接触发 LM Studio
+        # JIT (按全局 defaultContextLength, 本机曾被观察到 262144) 打穿内存"
+        # 的竞态窗口 (2026-08-22 实测打到 1.5GB free)。
+        # _loaded_cache_valid 区分"从未探测过"(无信息, 放行) 与
+        # "探测过且当前无任何模型加载"(必须拦截), 空集本身有歧义。
+        self._known_loaded_ids: frozenset[str] = frozenset()
+        self._loaded_cache_valid = False
         self._clock = clock or (lambda: datetime.now(UTC))
         self._owns_client = client is None
         self._client = client or httpx.AsyncClient(transport=transport, trust_env=False)
@@ -548,6 +556,11 @@ class LmStudioAdapter:
         if probe_id is None:
             probe_id = next((model.id for model in models if model.loaded is True), None)
         loaded_ids = {model.id for model in models if model.loaded is True}
+        # 仅在控制通道可用(loaded 状态确定)时刷新缓存, 失败时保留上一轮快照
+        # —— 静默清空会让所有 chat 都走一遍 SSH 加载。
+        if control_error is None:
+            self._known_loaded_ids = frozenset(loaded_ids)
+            self._loaded_cache_valid = True
         generation_ready = False
         if probe_id is not None and probe_id in loaded_ids:
             probe = await self.chat(
@@ -984,7 +997,31 @@ class LmStudioAdapter:
             **tools_payload(request),
         }
 
+    async def _ensure_loaded_before_http(self, model_id: str) -> AdapterError | None:
+        """未加载的模型禁止裸 HTTP 直发 — 那会触发 LM Studio JIT 按全局
+        defaultContextLength (本机为 "max") 失控加载。先走 SSH 受控
+        lms load (幂等, 带 -c), 成功后更新缓存放行。"""
+        # 缓存无效 = 尚未跑过 discover (daemon 冷启动/首轮探测前), 无信息
+        # 不拦截, 保留既有行为。
+        if not self._loaded_cache_valid or model_id in self._known_loaded_ids:
+            return None
+        if self._ssh_target is None:
+            # 无控制通道时无从受控加载; 放行是既有行为 (JIT 风险由 LM Studio
+            # 全局设置兜底), 不在本修复范围内改变无 SSH 后端的语义。
+            return None
+        result = await self.load_model(model_id)
+        if result.status in (OperationStatus.SUCCEEDED, OperationStatus.UNCHANGED):
+            self._known_loaded_ids = self._known_loaded_ids | {model_id}
+            return None
+        return result.error or AdapterError(
+            code=AdapterErrorCode.MODEL_UNAVAILABLE,
+            message="LM Studio guarded load before chat failed",
+        )
+
     async def chat(self, request: ChatRequest) -> ChatResult:
+        guard_failure = await self._ensure_loaded_before_http(request.model)
+        if guard_failure is not None:
+            return ChatResult(request_id=request.request_id, success=False, error=guard_failure)
         endpoint = "/v1/chat/completions"
         try:
             response = await self._send("POST", endpoint, payload=self._chat_payload(request, stream=False))
@@ -1126,6 +1163,10 @@ class LmStudioAdapter:
 
     async def stream_chat(self, request: ChatRequest) -> AsyncIterator[StreamEvent]:
         endpoint = "/v1/chat/completions"
+        guard_failure = await self._ensure_loaded_before_http(request.model)
+        if guard_failure is not None:
+            yield self._stream_error(request.request_id, guard_failure, emitted_content=False)
+            return
         emitted_content = False
         saw_data = False
         finish_reason: str | None = None
