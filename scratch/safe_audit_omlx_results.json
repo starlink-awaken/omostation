@@ -1,0 +1,93 @@
+[
+  {
+    "placement": "vision-local",
+    "model": "vision",
+    "status": "OK",
+    "ttft_ms": 8273.6,
+    "note": "量子计算是一种利用量子叠加和纠缠等原理进行信息处理的新型计算范式，有望在特定问题上远超经典计算机性能。"
+  },
+  {
+    "placement": "ornith-9b-local",
+    "model": "ornith-9b",
+    "status": "OK",
+    "ttft_ms": 10106.3,
+    "note": "量子计算是一种利用量子比特（qubit）的叠加态和纠缠态，通过量子并行性在特定问题上实现远超经典计算效率的新型计算范式。"
+  },
+  {
+    "placement": "gemma-4-e2b-it-mlx-8bit-local",
+    "model": "gemma-4-e2b-it-mlx-8bit",
+    "status": "OK",
+    "ttft_ms": 12656.2,
+    "note": "量子计算是一种利用量子力学原理（如叠加和纠缠）进行信息处理的新型计算范式，有望解决传统计算机无法处理的复杂问题。"
+  },
+  {
+    "placement": "reasoning-local",
+    "model": "reasoning",
+    "status": "OK",
+    "ttft_ms": 35800.2,
+    "note": "量子计算是一种利用量子力学原理（如叠加和纠缠）来执行计算任务，相比传统计算机，它能在处理特定问题时展现出指数级的计算优势"
+  },
+  {
+    "placement": "mythos-local",
+    "model": "mythos",
+    "status": "OK",
+    "ttft_ms": 58478.4,
+    "note": "量子计算是一种利用量子比特（qubit）的叠加态和纠缠态等量子力学特性，通过量子并行性同时处理海量信息，从而在特定问题上"
+  },
+  {
+    "placement": "qwen-3.8-27b-local",
+    "model": "qwen-3.8-27b",
+    "status": "SKIP-MEM",
+    "ttft_ms": null,
+    "note": ""
+  },
+  {
+    "placement": "nemotron-omni-local",
+    "model": "nemotron-omni",
+    "status": "SKIP-MEM",
+    "ttft_ms": null,
+    "note": ""
+  },
+  {
+    "placement": "coding-local",
+    "model": "coding",
+    "status": "OK",
+    "ttft_ms": 30209.5,
+    "note": "量子计算利用量子比特（qubit）的叠加和纠缠特性，实现比经典计算机更快的并行处理和复杂问题求解。"
+  },
+  {
+    "placement": "ornith-35b-local",
+    "model": "ornith-35b",
+    "status": "OK",
+    "ttft_ms": 23422.5,
+    "note": "量子计算是一种利用量子力学原理（如叠加和纠缠），通过量子比特同时处理多种可能性，从而在特定问题上实现远超经典计算机算力的"
+  },
+  {
+    "placement": "coder-precise-local",
+    "model": "coder-precise",
+    "status": "OK",
+    "ttft_ms": 1490.7,
+    "note": "量子计算是一种利用量子力学原理（如叠加和纠缠）进行信息处理，从而在特定问题上实现远超经典计算机计算速度的新型计算方式。"
+  },
+  {
+    "placement": "gemma-4-31b-it-mlx-8bit-local",
+    "model": "gemma-4-31b-it-mlx-8bit",
+    "status": "OK",
+    "ttft_ms": 41943.3,
+    "note": "量子计算是一种利用量子力学的叠加和纠缠特性，通过量子比特实现指数级并行计算，从而在特定问题上远超传统计算机的计算模式。"
+  },
+  {
+    "placement": "coding-next-local",
+    "model": "coding-next",
+    "status": "SKIP-MEM",
+    "ttft_ms": null,
+    "note": ""
+  },
+  {
+    "placement": "mistral-medium-128b-local",
+    "model": "mistral-medium-128b",
+    "status": "SKIP-MEM",
+    "ttft_ms": null,
+    "note": ""
+  }
+]

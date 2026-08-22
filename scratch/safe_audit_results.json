@@ -1,0 +1,93 @@
+[
+  {
+    "placement": "ornith-9b-lm_studio",
+    "model": "ornith-1.0-9b",
+    "status": "OK",
+    "ttft_ms": 528.0,
+    "note": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Topi"
+  },
+  {
+    "placement": "gemma-4-e2b-lm_studio",
+    "model": "google/gemma-4-e2b",
+    "status": "OK",
+    "ttft_ms": 106.6,
+    "note": "\nThinking Process:\n\n1.  **Analyze the Request:** The user wa"
+  },
+  {
+    "placement": "vision-lm_studio",
+    "model": "qwen3-vl-8b-instruct-mlx",
+    "status": "OK",
+    "ttft_ms": 133.9,
+    "note": "量子计算是一种利用量子叠加和纠缠等原理进行信息处理的新型计算范式，有望在特定问题上远超经典计算机。"
+  },
+  {
+    "placement": "reasoning-lm_studio",
+    "model": "zai-org/glm-4.7-flash",
+    "status": "OK",
+    "ttft_ms": 3323.6,
+    "note": "1. **分析请求：**\n    *   **主题：** Quantum Computing (量子计算)。\n    *"
+  },
+  {
+    "placement": "ornith-35b-lm_studio",
+    "model": "ornith-1.5-35b-a3b-mlx",
+    "status": "OK",
+    "ttft_ms": 817.6,
+    "note": "The user is asking me to introduce quantum computing in one "
+  },
+  {
+    "placement": "nemotron-omni-lm_studio",
+    "model": "nemotron-cascade-2-30b-a3b",
+    "status": "OK",
+    "ttft_ms": 4734.5,
+    "note": "The user asks: \"用一句话介绍量子计算，直接回答。\" Means: \"Introduce quantum "
+  },
+  {
+    "placement": "qwen-3.8-27b-lm_studio",
+    "model": "qwen3.8-27b-mlx",
+    "status": "OK",
+    "ttft_ms": 813.7,
+    "note": "用户要求用一句话介绍量子计算，并且要直接回答。需要用中文。需要简洁。\n\n\n量子计算是利用量子比特的叠加、纠缠等量子力学特"
+  },
+  {
+    "placement": "coding-lm_studio",
+    "model": "qwopus3.6-27b-coder-mlx",
+    "status": "OK",
+    "ttft_ms": 1715.0,
+    "note": "\n1.  **Analyze the Request:**\n    *   Topic: Quantum computi"
+  },
+  {
+    "placement": "coder-precise-lm_studio",
+    "model": "qwopus3.6-27b-coder-mlx",
+    "status": "OK",
+    "ttft_ms": 1246.9,
+    "note": "\n1.  **Analyze the Request:**\n    *   Topic: Quantum computi"
+  },
+  {
+    "placement": "gemma-4-31b-lm_studio",
+    "model": "gemma-4-31b-it-mlx",
+    "status": "OK",
+    "ttft_ms": 941.1,
+    "note": "量子计算是一种利用量子力学的叠加和纠缠特性，通过量子比特实现指数级并行计算，从而在特定问题上远超传统计算机的计算模式。"
+  },
+  {
+    "placement": "coding-fast-lm_studio",
+    "model": "qwen3-coder-next",
+    "status": "SKIP-MEM",
+    "ttft_ms": null,
+    "note": ""
+  },
+  {
+    "placement": "coding-next-lm_studio",
+    "model": "qwen3-coder-next",
+    "status": "SKIP-MEM",
+    "ttft_ms": null,
+    "note": ""
+  },
+  {
+    "placement": "mistral-medium-lm_studio",
+    "model": "mistral-medium-3.5-128b",
+    "status": "SKIP-MEM",
+    "ttft_ms": null,
+    "note": ""
+  }
+]
