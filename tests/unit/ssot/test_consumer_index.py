@@ -1,12 +1,15 @@
-# bin/ssot/test_consumer_index.py
-import os
-import sys
+from __future__ import annotations
 
-sys.path.insert(0, os.path.dirname(__file__))
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "bin" / "ssot"))
+
 from consumer_index import consumer_index
 
 
-def test_basic_index():
+def test_basic_index() -> None:
     derived = {
         "constraints": [
             {
@@ -22,21 +25,18 @@ def test_basic_index():
         "安全": {"constraints": ["QG-C04"], "rules": ["CR-SEC-01"]},
     }
     idx = consumer_index(derived, families)
-    assert "X1-C04" in idx
     assert idx["X1-C04"] == ["分层边界", "CR-LAYER-01"]
 
 
-def test_dimension_matching():
-    """维度匹配：dimension 相同的约束归入对应族。"""
+def test_dimension_matching() -> None:
     derived = {
         "constraints": [
             {"id": "X2-C06", "dimension": "X2", "name": "health-score-gate"},
         ]
     }
     idx = consumer_index(derived)
-    assert "X2-C06" in idx
     assert "健康度/可观测" in idx["X2-C06"]
 
 
-def test_empty_derived():
+def test_empty_derived() -> None:
     assert consumer_index({"constraints": []}) == {}
