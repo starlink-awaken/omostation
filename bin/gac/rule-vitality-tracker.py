@@ -46,6 +46,36 @@ def record_vitality(
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, sort_keys=True) + "\n")
+    enforce_retention(target)
+
+
+RETENTION_MAX_LINES = 10_000
+_RETENTION_TRIGGER_BYTES = 8 * 1024 * 1024  # 仅超阈值才重写, 摊薄每次 gate 的成本
+
+
+def enforce_retention(
+    path: Path | None = None,
+    max_lines: int = RETENTION_MAX_LINES,
+    trigger_bytes: int = _RETENTION_TRIGGER_BYTES,
+) -> int:
+    """Keep the JSONL bounded — retain only the most recent max_lines entries.
+
+    Returns number of dropped lines (0 = no rewrite happened).
+    """
+    target = path or VITALITY_PATH
+    try:
+        if not target.exists() or target.stat().st_size < trigger_bytes:
+            return 0
+        lines = target.read_text(encoding="utf-8").splitlines(keepends=True)
+        if len(lines) <= max_lines:
+            return 0
+        removed = len(lines) - max_lines
+        tmp = target.with_suffix(".jsonl.tmp")
+        tmp.write_text("".join(lines[-max_lines:]), encoding="utf-8")
+        tmp.replace(target)
+        return removed
+    except OSError:
+        return 0
 
 
 def read_vitality(path: Path | None = None) -> list[dict[str, Any]]:
