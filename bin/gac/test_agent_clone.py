@@ -626,6 +626,451 @@ def test_attempt_changeset_keeps_stable_claim_actor_and_rejects_attempt_mismatch
     assert parse_json(rejected)["reason"] == "changeset_attempt_mismatch"
 
 
+def _ready_transfer_clone(
+    tmp_path: Path,
+    bare: Path,
+    *,
+    destination_name: str,
+    attempt_id: str,
+    actor_id: str = "actor-1",
+) -> tuple[Path, Path]:
+    """Create a provenance-bound v2 writer clone and return its frozen manifest."""
+    clone = tmp_path / destination_name
+    created = run_cli(
+        "create",
+        "--agent-id",
+        actor_id,
+        "--delivery-attempt-id",
+        attempt_id,
+        "--source",
+        str(bare),
+        "--destination",
+        str(clone),
+        "--profile",
+        "governance",
+        "--json",
+        check=False,
+    )
+    assert created.returncode == 0, created.stderr
+    bind_provenance(tmp_path, clone, f"{destination_name}-provenance.json")
+    baseline = write_manifest(tmp_path, clone, f"{destination_name}-baseline.json")
+    ready = run_cli(
+        "readiness",
+        "--clone",
+        str(clone),
+        "--manifest",
+        str(baseline),
+        "--output",
+        str(tmp_path / f"{destination_name}-readiness.json"),
+        "--json",
+        env={"OMO_MANAGED_PYTHON": sys.executable},
+        check=False,
+    )
+    assert ready.returncode == 0, ready.stderr
+    assert parse_json(ready)["status"] == "ready"
+    return clone, baseline
+
+
+def _commit_transfer_delta(clone: Path) -> None:
+    """Make the same root-only, provenance-compatible net delta in each clone."""
+    (clone / "README.md").write_text("transfer delta\n")
+    git(clone, "add", "README.md")
+    git(
+        clone,
+        "commit",
+        "-m",
+        "transfer delta",
+        env={
+            "GIT_AUTHOR_NAME": "Agent One",
+            "GIT_AUTHOR_EMAIL": "agent-one@example.test",
+            "GIT_COMMITTER_NAME": "Agent One",
+            "GIT_COMMITTER_EMAIL": "agent-one@example.test",
+        },
+    )
+
+
+def test_transfer_v1_proves_same_actor_attempt_patch_without_mutation(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    _commit_transfer_delta(source)
+    _commit_transfer_delta(target)
+    source_head = git(source, "rev-parse", "HEAD").stdout.strip()
+    target_head = git(target, "rev-parse", "HEAD").stdout.strip()
+    output = tmp_path / "transfer.json"
+
+    verified = run_cli(
+        "transfer",
+        "--source-clone",
+        str(source),
+        "--source-baseline",
+        str(source_baseline),
+        "--target-clone",
+        str(target),
+        "--target-baseline",
+        str(target_baseline),
+        "--output",
+        str(output),
+        "--json",
+        check=False,
+    )
+
+    assert verified.returncode == 0, verified.stderr
+    receipt = parse_json(verified)
+    persisted = json.loads(output.read_text())
+    assert receipt == persisted
+    assert output.read_text() == json.dumps(receipt, sort_keys=True, separators=(",", ":")) + "\n"
+    assert receipt["schema"] == "clone-transfer/v1"
+    assert receipt["mode"] == "verification-only"
+    assert receipt["verdict"] == "PASS"
+    assert receipt["content_verified"] is True
+    assert receipt["claims"] == {
+        "source_claims": "not_inherited",
+        "target_claims": "independent_authority_required",
+    }
+    assert receipt["source"]["head_sha"] == source_head
+    assert receipt["target"]["head_sha"] == target_head
+    assert receipt["transfer_id"] == sha256_canonical(
+        {
+            "schema": "clone-transfer/v1",
+            "mode": "verification-only",
+            "source_identity_digest": receipt["source"]["identity_digest"],
+            "target_identity_digest": receipt["target"]["identity_digest"],
+            "source_baseline_sha": receipt["source"]["baseline_sha"],
+            "source_head_sha": receipt["source"]["head_sha"],
+            "target_baseline_sha": receipt["target"]["baseline_sha"],
+            "target_head_sha": receipt["target"]["head_sha"],
+        }
+    )
+    # transfer is a read-only proof: it must not alter either worktree, ref, or receipt.
+    assert git(source, "rev-parse", "HEAD").stdout.strip() == source_head
+    assert git(target, "rev-parse", "HEAD").stdout.strip() == target_head
+    assert git(source, "status", "--porcelain").stdout == ""
+    assert git(target, "status", "--porcelain").stdout == ""
+
+    collision = run_cli(
+        "transfer",
+        "--source-clone",
+        str(source),
+        "--source-baseline",
+        str(source_baseline),
+        "--target-clone",
+        str(target),
+        "--target-baseline",
+        str(target_baseline),
+        "--output",
+        str(output),
+        "--json",
+        check=False,
+    )
+    assert collision.returncode == 1
+    assert parse_json(collision)["reason"] == "output_collision"
+
+
+def test_transfer_v1_fails_closed_for_non_gitlink_patch_mismatch(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    _commit_transfer_delta(source)
+    (target / "README.md").write_text("different delta\n")
+    git(target, "add", "README.md")
+    git(
+        target,
+        "commit",
+        "-m",
+        "different delta",
+        env={
+            "GIT_AUTHOR_NAME": "Agent One",
+            "GIT_AUTHOR_EMAIL": "agent-one@example.test",
+            "GIT_COMMITTER_NAME": "Agent One",
+            "GIT_COMMITTER_EMAIL": "agent-one@example.test",
+        },
+    )
+
+    rejected = run_cli(
+        "transfer",
+        "--source-clone",
+        str(source),
+        "--source-baseline",
+        str(source_baseline),
+        "--target-clone",
+        str(target),
+        "--target-baseline",
+        str(target_baseline),
+        "--json",
+        check=False,
+    )
+    assert rejected.returncode == 1
+    assert parse_json(rejected)["reason"] == "transfer_unprovable_non_gitlink_delta"
+
+
+def test_transfer_v1_rejects_cross_actor_attempts(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path,
+        bare,
+        destination_name="target",
+        attempt_id="attempt-target",
+        actor_id="actor-2",
+    )
+
+    rejected = run_cli(
+        "transfer",
+        "--source-clone",
+        str(source),
+        "--source-baseline",
+        str(source_baseline),
+        "--target-clone",
+        str(target),
+        "--target-baseline",
+        str(target_baseline),
+        "--json",
+        check=False,
+    )
+    assert rejected.returncode == 1
+    assert parse_json(rejected)["reason"] == "transfer_actor_mismatch"
+
+
+def test_transfer_v1_partitions_gitlink_delta_as_pending_strict_proof(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    child = tmp_path / "governance-child"
+    (child / "payload.txt").write_text("advanced child\n")
+    git(child, "add", "payload.txt")
+    git(child, "commit", "-m", "advance child")
+    child_head = git(child, "rev-parse", "HEAD").stdout.strip()
+    for clone in (source, target):
+        submodule = clone / "projects" / "omo"
+        git(submodule, "fetch", "origin")
+        git(submodule, "checkout", child_head)
+        git(clone, "add", "projects/omo")
+        git(
+            clone,
+            "commit",
+            "-m",
+            "advance gitlink",
+            env={
+                "GIT_AUTHOR_NAME": "Agent One",
+                "GIT_AUTHOR_EMAIL": "agent-one@example.test",
+                "GIT_COMMITTER_NAME": "Agent One",
+                "GIT_COMMITTER_EMAIL": "agent-one@example.test",
+            },
+        )
+
+    verified = run_cli(
+        "transfer",
+        "--source-clone",
+        str(source),
+        "--source-baseline",
+        str(source_baseline),
+        "--target-clone",
+        str(target),
+        "--target-baseline",
+        str(target_baseline),
+        "--json",
+        check=False,
+    )
+
+    assert verified.returncode == 0, verified.stderr
+    receipt = parse_json(verified)
+    assert receipt["status"] == "unprovable"
+    assert receipt["verdict"] == "UNPROVABLE"
+    assert receipt["content_verified"] is False
+    assert receipt["pending_strict_proof"] is True
+    assert receipt["retire_eligible"] is False
+    assert receipt["source"]["gitlinks"] == [
+        {
+            "path": "projects/omo",
+            "base_sha": receipt["source"]["gitlinks"][0]["base_sha"],
+            "candidate_sha": child_head,
+        }
+    ]
+
+
+def test_transfer_v1_normalizes_rename_binary_and_mode_delta(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    for clone in (source, target):
+        git(clone, "mv", "README.md", "RENAMED.md")
+        (clone / "binary.dat").write_bytes(b"\x00transfer\xff\n")
+        (clone / "RENAMED.md").chmod(0o755)
+        git(clone, "add", "RENAMED.md", "binary.dat")
+        git(
+            clone,
+            "commit",
+            "-m",
+            "rename binary mode delta",
+            env={
+                "GIT_AUTHOR_NAME": "Agent One",
+                "GIT_AUTHOR_EMAIL": "agent-one@example.test",
+                "GIT_COMMITTER_NAME": "Agent One",
+                "GIT_COMMITTER_EMAIL": "agent-one@example.test",
+            },
+        )
+
+    verified = run_cli(
+        "transfer",
+        "--source-clone",
+        str(source),
+        "--source-baseline",
+        str(source_baseline),
+        "--target-clone",
+        str(target),
+        "--target-baseline",
+        str(target_baseline),
+        "--json",
+        check=False,
+    )
+
+    assert verified.returncode == 0, verified.stderr
+    receipt = parse_json(verified)
+    assert receipt["verdict"] == "PASS"
+    assert receipt["content_verified"] is True
+    assert receipt["source"]["root_paths"] == ["README.md", "RENAMED.md", "binary.dat"]
+
+
+def test_transfer_v1_rejects_same_head_independent_attempts(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+
+    rejected = run_cli(
+        "transfer",
+        "--source-clone",
+        str(source),
+        "--source-baseline",
+        str(source_baseline),
+        "--target-clone",
+        str(target),
+        "--target-baseline",
+        str(target_baseline),
+        "--json",
+        check=False,
+    )
+    assert rejected.returncode == 1
+    assert parse_json(rejected)["reason"] == "transfer_no_change"
+
+
+def test_transfer_v1_rejects_nested_untracked_and_clone_local_output(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    _commit_transfer_delta(source)
+    _commit_transfer_delta(target)
+    output = source / "transfer-receipt.json"
+
+    clone_local = run_cli(
+        "transfer",
+        "--source-clone",
+        str(source),
+        "--source-baseline",
+        str(source_baseline),
+        "--target-clone",
+        str(target),
+        "--target-baseline",
+        str(target_baseline),
+        "--output",
+        str(output),
+        "--json",
+        check=False,
+    )
+    assert clone_local.returncode == 1
+    assert parse_json(clone_local)["reason"] == "transfer_output_clone_scope"
+    assert not output.exists()
+
+    nested = source / "nested" / "untracked.txt"
+    nested.parent.mkdir()
+    nested.write_text("must be detected\n")
+    dirty = run_cli(
+        "transfer",
+        "--source-clone",
+        str(source),
+        "--source-baseline",
+        str(source_baseline),
+        "--target-clone",
+        str(target),
+        "--target-baseline",
+        str(target_baseline),
+        "--json",
+        check=False,
+    )
+    assert dirty.returncode == 1
+    assert parse_json(dirty)["reason"] == "transfer_clone_dirty"
+
+
+def test_transfer_v1_isolates_all_repository_scope_environment_probes(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    source, source_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="source", attempt_id="attempt-source"
+    )
+    target, target_baseline = _ready_transfer_clone(
+        tmp_path, bare, destination_name="target", attempt_id="attempt-target"
+    )
+    _commit_transfer_delta(source)
+    _commit_transfer_delta(target)
+    poisoned = {
+        "GIT_DIR": str(source / ".git"),
+        "GIT_WORK_TREE": str(source),
+        "GIT_INDEX_FILE": str(source / ".git" / "index"),
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "remote.origin.url",
+        "GIT_CONFIG_VALUE_0": "https://github.com/attacker/spoofed.git",
+        "GIT_OBJECT_DIRECTORY": str(source / ".git" / "objects"),
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES": str(source / ".git" / "objects"),
+    }
+
+    verified = run_cli(
+        "transfer",
+        "--source-clone",
+        str(source),
+        "--source-baseline",
+        str(source_baseline),
+        "--target-clone",
+        str(target),
+        "--target-baseline",
+        str(target_baseline),
+        "--json",
+        env=poisoned,
+        check=False,
+    )
+    assert verified.returncode == 0, verified.stderr
+    receipt = parse_json(verified)
+    assert receipt["status"] == "content_verified"
+    assert receipt["retire_eligible"] is False
+    assert receipt["lifecycle_verified"] is False
+    assert receipt["workspace_scope"] == "committed_tracked_content_only"
+    assert receipt["ignored_files_out_of_scope"] is True
+
+
 def test_create_initializes_only_root_gitlinks(tmp_path):
     bare, _nested = make_nested_source(tmp_path)
     dest = create_clone(tmp_path, bare)
