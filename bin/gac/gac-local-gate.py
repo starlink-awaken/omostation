@@ -48,6 +48,7 @@ DEFAULT_POLICY = {
             "id": "install-watch-agent",
             "command": ["bin/gac/install-watch-agent.py"],
             "ci_skip": True,
+            "ops_only": True,
         },
         {"id": "test-mcp-kos", "command": ["bin/ssot/test-mcp-kos.py"]},
         {
@@ -371,9 +372,20 @@ for _g in GATES_LIST:
     if _g["id"] in _CI_ONLY_OVERRIDE_MAIN:
         _g["ci_only"] = True
 
+# Machine/runtime mutation must never be reached through a command named
+# validate/check/gate.  The live ECOS policy predates the ops_only field, so
+# keep a root-owned fail-safe until that projection is migrated.  Operators can
+# still invoke the installer directly when they explicitly intend to mutate
+# LaunchAgents and launchd state.
+_OPS_ONLY_OVERRIDE_MAIN = {"install-watch-agent"}
+for _g in GATES_LIST:
+    if _g["id"] in _OPS_ONLY_OVERRIDE_MAIN:
+        _g["ops_only"] = True
+
 CHECKS = tuple((g["id"], g["command"]) for g in GATES_LIST)
 CI_ONLY_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_only")}
 CI_SKIP_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_skip")}
+OPS_ONLY_CHECKS = {g["id"] for g in GATES_LIST if g.get("ops_only")}
 AGENT_WORKFLOW_GATE_CHECKS = {g["id"] for g in GATES_LIST if g.get("agent_workflow_only")}
 BROKEN_CHECKS = {g["id"] for g in GATES_LIST if g.get("broken")}
 # Live sgf-policy.yaml often omits timeout; semantic-gate runs several
@@ -427,6 +439,8 @@ def gate_checks(
     touch_aw = strict or staged_touches_agent_workflow()
     result: list[tuple[str, list[str]]] = []
     for name, command in CHECKS:
+        if name in OPS_ONLY_CHECKS:
+            continue  # explicit operator action; automatic verification is read-only
         if name in AGENT_WORKFLOW_GATE_CHECKS and not touch_aw:
             continue  # staged 不涉 agent-workflow → skip, 隔离并发 dirty
         if name in CI_ONLY_CHECKS and not strict:
@@ -866,7 +880,11 @@ def run_agt_policy_engine() -> list[dict[str, object]]:
     return results
 
 
-def print_human(report: dict[str, object], verbose: bool = False) -> None:
+def print_human(
+    report: dict[str, object],
+    verbose: bool = False,
+    emit_events: bool = False,
+) -> None:
     output_cfg = POLICY.get("settings", {}).get("output", {})
     terminal_mode = output_cfg.get("terminal_mode", "slim")
 
@@ -881,7 +899,8 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
         print(f"GaC local gate: PASS ({checks_count} checks executed, ALL GREEN)")
         if BROKEN_CHECKS:
             print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
-        _emit_gate_events(is_ok, report.get("hard_fails"), report.get("soft_warns"))
+        if emit_events:
+            _emit_gate_events(is_ok, report.get("hard_fails"), report.get("soft_warns"))
         return
 
     print("═══ GaC local gate ═══")
@@ -920,7 +939,8 @@ def print_human(report: dict[str, object], verbose: bool = False) -> None:
     if soft_count:
         parts.append(f"{soft_count} SOFT WARN")
     print("GaC local gate: " + " | ".join(parts))
-    _emit_gate_events(is_ok, hard_raw, soft_raw)
+    if emit_events:
+        _emit_gate_events(is_ok, hard_raw, soft_raw)
 
 
 def _emit_gate_events(is_ok: bool, hard_raw: Any, soft_raw: Any) -> None:
@@ -1083,6 +1103,11 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     parser.add_argument("--strict", action="store_true", help="跑全套 (CI 用)")
     parser.add_argument(
+        "--emit-events",
+        action="store_true",
+        help="Explicitly append gate results to the shared observability event log",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Print passing gate details under slim mode",
@@ -1178,6 +1203,13 @@ def main() -> int:
                 print(f"[WARN] anomaly detector failed: {proc.stderr}", file=sys.stderr)
         except Exception as exc:
             print(f"[WARN] alert run failed: {exc}", file=sys.stderr)
+
+    if args.emit_events:
+        _emit_gate_events(
+            bool(report["ok"]),
+            report.get("hard_fails"),
+            report.get("soft_warns"),
+        )
 
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
