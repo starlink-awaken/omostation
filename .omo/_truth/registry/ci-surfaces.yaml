@@ -177,6 +177,12 @@ surfaces:
   gate: true
   triggers: []
   status: active
+- id: bin-gac-check-silent-workflows-py
+  tool: bin/gac/check-silent-workflows.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
 - id: bin-gac-check-submodule-pointer-integrity-py
   tool: bin/gac/check-submodule-pointer-integrity.py
   workflow: gac-gate.yml
