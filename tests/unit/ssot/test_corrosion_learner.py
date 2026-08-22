@@ -1,11 +1,15 @@
-import os
-import sys
+from __future__ import annotations
 
-sys.path.insert(0, os.path.dirname(__file__))
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "bin" / "ssot"))
+
 from corrosion_learner import analyze_drifts, rank_corrections
 
 
-def test_analyze_drifts_classifies():
+def test_analyze_drifts_classifies() -> None:
     drifts = [
         {"type": "stage_missing", "constraint": "stage7", "detail": "M0 缺 stage7"},
         {
@@ -20,7 +24,7 @@ def test_analyze_drifts_classifies():
     assert result["total"] == 2
 
 
-def test_rank_corrections_prioritizes():
+def test_rank_corrections_prioritizes() -> None:
     drifts = [
         {
             "type": "constraint_count_mismatch",
@@ -32,8 +36,8 @@ def test_rank_corrections_prioritizes():
     ]
     corrections = rank_corrections(drifts)
     assert corrections[0]["priority"] == "high"
-    assert any("重新生成派生面" in c["action"] for c in corrections)
+    assert any("重新生成派生面" in correction["action"] for correction in corrections)
 
 
-def test_no_drifts_no_corrections():
+def test_no_drifts_no_corrections() -> None:
     assert rank_corrections([]) == []
