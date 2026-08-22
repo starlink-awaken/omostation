@@ -23,6 +23,10 @@ on:
       - 'projects/aetherforge/src/**'
       - '.pre-commit-config.yaml'
       - '.github/workflows/quality.yml'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   ruff-lint:

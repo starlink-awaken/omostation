@@ -40,6 +40,10 @@ on:
     # 周一 06:00 UTC ≈ 北京时间 14:00, 早于 omostation-governance (UTC 07:00+)
     # 抢在治理扫描前发现 drift
     - cron: "0 6 * * 1"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   # ── 1. actionlint — GitHub Actions 工作流静态检查 ─────────────────

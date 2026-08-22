@@ -8,6 +8,10 @@ on:
     # 每日 8:00 UTC (北京时间 16:00, 工作日下午心跳)
     - cron: '0 8 * * *'
   workflow_dispatch:  # 支持手动触发
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 permissions:
   contents: write

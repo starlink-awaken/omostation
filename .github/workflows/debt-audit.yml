@@ -8,6 +8,10 @@ on:
   schedule:
     # 每周一早上 9 点运行
     - cron: '0 9 * * 1'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 permissions:
   contents: read

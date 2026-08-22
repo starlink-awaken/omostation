@@ -11,6 +11,10 @@ on:
   # GitHub ORs events — main already covered; keep paths for non-main pushes:
   # Use second workflow trigger only via paths on push without branch limit would
   # double-run on main. So: main always + PR always is enough.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   evidence-gate:

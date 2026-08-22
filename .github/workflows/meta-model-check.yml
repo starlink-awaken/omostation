@@ -10,6 +10,10 @@ on:
     paths:
       - 'projects/runtime/protocols/*.yaml'
       - 'projects/runtime/protocols/*.md'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   validate:

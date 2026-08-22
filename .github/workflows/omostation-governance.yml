@@ -12,6 +12,10 @@ on:
   workflow_dispatch:  # 手动触发 (P37-W0)
   schedule:
     - cron: '0 9 * * 1'  # 每周一 9:00 UTC 跑 (P37-W0)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   audit:
