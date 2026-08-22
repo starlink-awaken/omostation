@@ -680,16 +680,33 @@ def _observability_event_anomalies(ws_root: Path) -> tuple[int, dict[str, Any]]:
 
     读 .omo/_delivery/observability/events.jsonl, 统计 severity ∈ {critical, degraded}
     且 ts 在 24h 内的事件数. 缺失/损坏 → (0, {}) 不惩罚.
+
+    去重规则 (P79 治本):
+      - 同一 (type, payload.check) 在 1h 窗口内只计 1 次
+      - 这样 gac-gate 反复失败同一检查不会因重试把 anomaly_count 拉满
     """
     events_file = ws_root / ".omo" / "_delivery" / "observability" / "events.jsonl"
     if not events_file.exists():
         return (0, {})
     try:
-        from datetime import timedelta
+        from datetime import datetime, timedelta
 
-        cutoff = (datetime.now(UTC) - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
+        now = datetime.now(UTC)
+        cutoff_24h = (now - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
+        dedup_window = timedelta(hours=1)
         count = 0
         by_type: dict[str, int] = {}
+        # dedup_key -> (ts, type) 记录最近一次触发
+        dedup: dict[tuple[str, str], datetime] = {}
+
+        def _parse(ts_str: str) -> datetime | None:
+            try:
+                if ts_str.endswith("Z"):
+                    ts_str = ts_str[:-1] + "+00:00"
+                return datetime.fromisoformat(ts_str)
+            except (ValueError, TypeError):
+                return None
+
         with open(events_file, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
@@ -701,13 +718,26 @@ def _observability_event_anomalies(ws_root: Path) -> tuple[int, dict[str, Any]]:
                     e = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                if e.get("ts", "") < cutoff:
+                if e.get("ts", "") < cutoff_24h:
                     continue
-                if e.get("severity") in {"critical", "degraded"}:
+                if e.get("severity") not in {"critical", "degraded"}:
+                    continue
+                t = str(e.get("type", "unknown"))
+                check = str(e.get("payload", {}).get("check", ""))
+                key = (t, check)
+                ev_ts = _parse(e.get("ts", ""))
+                if ev_ts is None:
+                    # 不能解析时间戳的事件也计入 (避免 silently drop)
                     count += 1
-                    t = str(e.get("type", "unknown"))
                     by_type[t] = by_type.get(t, 0) + 1
-        return (count, {"window_24h": count, "by_type": by_type})
+                    continue
+                # 去重: 同 key 在 1h 窗口内已记录则 skip
+                if key in dedup and (ev_ts - dedup[key]) < dedup_window:
+                    continue
+                dedup[key] = ev_ts
+                count += 1
+                by_type[t] = by_type.get(t, 0) + 1
+        return (count, {"window_24h": count, "by_type": by_type, "dedup_window_hours": 1})
     except Exception:  # 非阻断
         return (0, {})
 
