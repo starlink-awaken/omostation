@@ -109,6 +109,9 @@ def make_retirable_clone(tmp_path: Path) -> tuple[Path, Path, str]:
 
 
 def make_verified_changeset(tmp_path: Path, clone: Path) -> tuple[Path, Path, Path, str]:
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    if json.loads(identity_path.read_text()).get("schema") == "agent-clone-identity/v1":
+        qualify_clone_attempt(clone)
     baseline = tmp_path / "baseline.json"
     manifest = subprocess.run(
         [
@@ -160,6 +163,24 @@ def make_verified_changeset(tmp_path: Path, clone: Path) -> tuple[Path, Path, Pa
     )
     assert generated.returncode == 0, generated.stderr
     return baseline, changeset, authority, head
+
+
+def qualify_clone_attempt(clone: Path, attempt_id: str = "attempt-001") -> str:
+    """Upgrade a fixture clone to the new actor/attempt identity contract."""
+    branch = f"agent/agent-1--{attempt_id}"
+    git(clone, "branch", "-m", branch)
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity.update(
+        {
+            "schema": "agent-clone-identity/v2",
+            "actor_id": "agent-1",
+            "delivery_attempt_id": attempt_id,
+            "working_branch": branch,
+        }
+    )
+    identity_path.write_text(json.dumps(identity))
+    return branch
 
 
 def merged_pr_runner(head: str, calls: list[list[str]] | None = None):
@@ -253,6 +274,49 @@ def test_onboard_defaults_to_governance_profile_and_emits_readiness(tmp_path, mo
     assert calls[1][-2:] == ["--output", str(tmp_path / "provenance.json")]
     assert calls[4][2] == "readiness"
     assert calls[4][-2:] == ["--output", str(tmp_path / "readiness.json")]
+
+
+def test_onboard_passes_attempt_and_qualifies_default_receipt_paths(tmp_path, monkeypatch):
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **_kwargs) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, "{}", "")
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    dest = tmp_path / "actor-1" / "attempts" / "attempt-001" / "ws"
+    rc = lc.cmd_onboard(
+        argparse.Namespace(
+            agent_id="actor-1",
+            delivery_attempt_id="attempt-001",
+            source="source",
+            revision="origin/main",
+            destination=str(dest),
+            manifest=None,
+            readiness=None,
+            provenance=None,
+            expected_repository="starlink-awaken/omostation",
+            profile=None,
+            submodule=[],
+            all_submodules=False,
+        )
+    )
+
+    assert rc == lc.EXIT_OK
+    create = calls[0]
+    assert create[create.index("--delivery-attempt-id") + 1] == "attempt-001"
+    manifest = calls[2]
+    provenance = calls[1]
+    readiness = calls[4]
+    assert manifest[manifest.index("--output") + 1].endswith(
+        "actor-1-attempt-001-baseline.json"
+    )
+    assert provenance[provenance.index("--output") + 1].endswith(
+        "actor-1-attempt-001-provenance.json"
+    )
+    assert readiness[readiness.index("--output") + 1].endswith(
+        "actor-1-attempt-001-readiness.json"
+    )
 
 
 def test_onboard_all_submodules_maps_to_full_named_profile(tmp_path, monkeypatch):
@@ -349,6 +413,11 @@ def test_makefile_has_one_clone_onboard_target_and_separate_scan_target():
     target_lines = [line for line in makefile.splitlines() if line.startswith("clone-onboard:")]
     assert len(target_lines) == 1
     assert "clone-onboard-scan:" in makefile
+    assert makefile.count('test -n "$(DELIVERY_ATTEMPT_ID)"') == 5
+    assert makefile.count("agents/$(AGENT_ID)/attempts/$(DELIVERY_ATTEMPT_ID)") >= 5
+    assert "--delivery-attempt-id $(DELIVERY_ATTEMPT_ID)" in makefile
+    assert 'test -n "$(CLAIMS_ROOT)"' in makefile
+    assert '--claims-root "$(CLAIMS_ROOT)"' in makefile
 
 
 def test_snapshot_creates_valid_manifest(tmp_path):
@@ -527,16 +596,35 @@ def test_changeset_audit_reports_persisted_change_count(tmp_path, monkeypatch, c
 
 def test_integrate_dry_run(tmp_path, capsys):
     """integrate dry-run 不实际推送."""
+    clone, _remote, _head = make_retirable_clone(tmp_path)
+    qualify_clone_attempt(clone)
     rc = lc.cmd_integrate(
         argparse.Namespace(
-            clone=str(tmp_path / "not-created"),
-            agent_id="pilot",
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
             dry_run=True,
         )
     )
     assert rc == 0
     out = capsys.readouterr()
     assert "dry_run" in out.out
+
+
+def test_integrate_dry_run_rejects_legacy_v1_clone(tmp_path, capsys):
+    clone, _remote, _head = make_retirable_clone(tmp_path)
+
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
+            dry_run=True,
+        )
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert "identity" in capsys.readouterr().err
 
 
 def test_integrate_apply_is_reachable_and_creates_pr(tmp_path, monkeypatch, capsys):
@@ -560,10 +648,28 @@ def test_integrate_apply_is_reachable_and_creates_pr(tmp_path, monkeypatch, caps
         return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
 
     monkeypatch.setattr(lc, "run", fake_run)
+    wrong_attempt = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-002",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+    assert wrong_attempt == lc.EXIT_POLICY
+    assert not any(cmd[:4] == ["git", "-C", str(clone), "push"] for cmd in calls)
+    calls.clear()
+    capsys.readouterr()
+
     rc = lc.cmd_integrate(
         argparse.Namespace(
             clone=str(clone),
             agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
             dry_run=False,
             base="main",
             baseline=str(baseline),
@@ -578,7 +684,192 @@ def test_integrate_apply_is_reachable_and_creates_pr(tmp_path, monkeypatch, caps
     assert result["pr_url"] == "https://example.test/pr/8"
     assert any(cmd[:3] == ["gh", "pr", "create"] for cmd in calls)
     assert all("owner/repository" in cmd for cmd in calls if cmd[:3] in (["gh", "pr", "list"], ["gh", "pr", "create"]))
-    assert any("agent/agent-1" in cmd for cmd in calls if cmd[:3] == ["gh", "pr", "list"])
+    assert any(
+        "agent/agent-1--attempt-001" in cmd
+        for cmd in calls
+        if cmd[:3] == ["gh", "pr", "list"]
+    )
+
+
+def test_attempt_changeset_and_integrate_bind_exact_pr_head(tmp_path, monkeypatch, capsys):
+    clone, _remote, _initial_head = make_retirable_clone(tmp_path)
+    branch = qualify_clone_attempt(clone)
+    baseline, changeset, authority, head = make_verified_changeset(tmp_path, clone)
+
+    stored = json.loads(changeset.read_text())
+    assert stored["schema"] == "cross-repo-changeset/v3"
+    assert stored["actor_id"] == "agent-1"
+    assert stored["delivery_attempt_id"] == "attempt-001"
+
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:6] == [
+            "remote",
+            "get-url",
+            "origin",
+        ]:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                "git@github.com:owner/repository.git\n",
+                "",
+            )
+        if cmd[:3] == ["gh", "pr", "list"]:
+            return subprocess.CompletedProcess(cmd, 0, "[]", "")
+        if cmd[:3] == ["gh", "pr", "create"]:
+            return subprocess.CompletedProcess(cmd, 0, "https://example.test/pr/9\n", "")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    wrong_attempt = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-002",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+    assert wrong_attempt == lc.EXIT_POLICY
+    assert not any(cmd[:4] == ["git", "-C", str(clone), "push"] for cmd in calls)
+    calls.clear()
+    capsys.readouterr()
+
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+
+    assert rc == lc.EXIT_OK
+    result = json.loads(capsys.readouterr().out)
+    assert result["branch"] == branch
+    assert result["actor_id"] == "agent-1"
+    assert result["delivery_attempt_id"] == "attempt-001"
+    assert result["head_sha"] == head
+    pr_list = next(cmd for cmd in calls if cmd[:3] == ["gh", "pr", "list"])
+    pr_create = next(cmd for cmd in calls if cmd[:3] == ["gh", "pr", "create"])
+    push = next(cmd for cmd in calls if cmd[:4] == ["git", "-C", str(clone), "push"])
+    assert push[4:] == [
+        "--porcelain",
+        f"--force-with-lease=refs/heads/{branch}:",
+        "origin",
+        f"{head}:refs/heads/{branch}",
+    ]
+    assert pr_list[pr_list.index("--head") + 1] == branch
+    assert pr_create[pr_create.index("--head") + 1] == f"owner:{branch}"
+
+
+def test_integrate_rejects_atomic_attempt_branch_race_before_pr(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    clone, _remote, _initial_head = make_retirable_clone(tmp_path)
+    baseline, changeset, authority, _head = make_verified_changeset(tmp_path, clone)
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:6] == [
+            "remote",
+            "get-url",
+            "origin",
+        ]:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                "git@github.com:owner/repository.git\n",
+                "",
+            )
+        if cmd[:4] == ["git", "-C", str(clone), "push"]:
+            if any(arg.startswith("--force-with-lease=") for arg in cmd):
+                return subprocess.CompletedProcess(cmd, 1, "", "stale info")
+            return subprocess.CompletedProcess(cmd, 0, "", "")
+        if cmd[:2] == ["gh", "pr"]:
+            return subprocess.CompletedProcess(cmd, 0, "[]", "")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert not any(cmd[:2] == ["gh", "pr"] for cmd in calls)
+    assert "push" in capsys.readouterr().err
+
+
+def test_integrate_rejects_same_head_remote_attempt_as_reuse(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    clone, _remote, _initial_head = make_retirable_clone(tmp_path)
+    baseline, changeset, authority, _head = make_verified_changeset(tmp_path, clone)
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:6] == [
+            "remote",
+            "get-url",
+            "origin",
+        ]:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                "git@github.com:owner/repository.git\n",
+                "",
+            )
+        if cmd[:4] == ["git", "-C", str(clone), "push"]:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                "To origin\n=\tHEAD:refs/heads/agent/agent-1--attempt-001\t[up to date]\nDone\n",
+                "",
+            )
+        if cmd[:2] == ["gh", "pr"]:
+            raise AssertionError("reused attempt must stop before PR lookup")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert "delivery_attempt_reused" in capsys.readouterr().err
 
 
 def test_integrate_reuses_only_exact_owner_branch_and_head_pr(tmp_path, monkeypatch, capsys):
@@ -594,7 +885,7 @@ def test_integrate_reuses_only_exact_owner_branch_and_head_pr(tmp_path, monkeypa
             payload = [
                 {
                     "url": "https://example.test/pr/8",
-                    "headRefName": "agent/agent-1",
+                    "headRefName": "agent/agent-1--attempt-001",
                     "headRefOid": head,
                     "headRepositoryOwner": {"login": "owner"},
                 }
@@ -609,6 +900,7 @@ def test_integrate_reuses_only_exact_owner_branch_and_head_pr(tmp_path, monkeypa
         argparse.Namespace(
             clone=str(clone),
             agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
             dry_run=False,
             base="main",
             baseline=str(baseline),
@@ -620,7 +912,7 @@ def test_integrate_reuses_only_exact_owner_branch_and_head_pr(tmp_path, monkeypa
     assert rc == lc.EXIT_OK
     assert json.loads(capsys.readouterr().out)["pr_url"] == "https://example.test/pr/8"
     pr_call = next(cmd for cmd in calls if cmd[:3] == ["gh", "pr", "list"])
-    assert pr_call[pr_call.index("--head") + 1] == "agent/agent-1"
+    assert pr_call[pr_call.index("--head") + 1] == "agent/agent-1--attempt-001"
 
 
 def test_integrate_apply_requires_claims_root_before_push(tmp_path, monkeypatch):
@@ -641,6 +933,7 @@ def test_integrate_apply_requires_claims_root_before_push(tmp_path, monkeypatch)
         argparse.Namespace(
             clone=str(clone),
             agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
             dry_run=False,
             base="main",
             baseline=str(baseline),
@@ -671,6 +964,7 @@ def test_integrate_apply_rejects_stale_or_unclaimed_receipt_before_push(tmp_path
         argparse.Namespace(
             clone=str(clone),
             agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
             dry_run=False,
             base="main",
             baseline=str(baseline),
@@ -699,6 +993,7 @@ def test_integrate_apply_rejects_stale_or_unclaimed_receipt_before_push(tmp_path
         argparse.Namespace(
             clone=str(clone),
             agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
             dry_run=False,
             base="main",
             baseline=str(baseline),
@@ -737,6 +1032,7 @@ def test_integrate_rechecks_claims_immediately_before_push(tmp_path, monkeypatch
         argparse.Namespace(
             clone=str(clone),
             agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
             dry_run=False,
             base="main",
             baseline=str(baseline),
@@ -773,6 +1069,7 @@ def test_integrate_apply_rejects_repository_without_clone_identity(tmp_path, mon
         argparse.Namespace(
             clone=str(clone),
             agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
             dry_run=False,
             base="main",
             baseline=str(tmp_path / "baseline.json"),
@@ -786,8 +1083,17 @@ def test_integrate_apply_rejects_repository_without_clone_identity(tmp_path, mon
 
 def test_integrate_parser_defaults_dry_run_and_exposes_apply():
     parser = lc.build_parser()
-    dry = parser.parse_args(["integrate", "--clone", "/tmp/c", "--agent-id", "agent-1"])
-    apply = parser.parse_args(["integrate", "--clone", "/tmp/c", "--agent-id", "agent-1", "--apply"])
+    base_args = [
+        "integrate",
+        "--clone",
+        "/tmp/c",
+        "--agent-id",
+        "agent-1",
+        "--delivery-attempt-id",
+        "attempt-001",
+    ]
+    dry = parser.parse_args(base_args)
+    apply = parser.parse_args([*base_args, "--apply"])
 
     assert dry.dry_run is True
     assert apply.dry_run is False

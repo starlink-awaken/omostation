@@ -41,13 +41,18 @@ from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 SCHEMA_MANIFEST = "agent-clone-manifest/v1"
+SCHEMA_MANIFEST_ATTEMPT = "agent-clone-manifest/v2"
 SCHEMA_CHANGESET = "cross-repo-changeset/v1"
 SCHEMA_CHANGESET_CLAIMS = "cross-repo-changeset/v2"
+SCHEMA_CHANGESET_ATTEMPT = "cross-repo-changeset/v3"
 SCHEMA_CLAIM_SNAPSHOT = "agent-workflow-claim-snapshot/v1"
 SCHEMA_IDENTITY = "agent-clone-identity/v1"
+SCHEMA_IDENTITY_ATTEMPT = "agent-clone-identity/v2"
 SCHEMA_READINESS = "clone-readiness/v1"
+SCHEMA_READINESS_ATTEMPT = "clone-readiness/v2"
 SCHEMA_SUBMODULE_PROFILE = "clone-submodule-profile/v1"
 SCHEMA_PROVENANCE = "clone-provenance/v1"
+SCHEMA_PROVENANCE_ATTEMPT = "clone-provenance/v2"
 IDENTITY_FILENAME = "agent-clone-identity.json"
 READINESS_FILENAME = "agent-clone-readiness.json"
 PROVENANCE_FILENAME = "agent-clone-provenance.json"
@@ -639,13 +644,44 @@ def read_identity(repo_root: str, required: bool = True) -> dict | None:
             data = json.load(fh)
     except (OSError, json.JSONDecodeError) as exc:
         raise ToolError("identity_invalid", f"cannot read clone identity {path}: {exc}", EXIT_POLICY) from exc
-    if data.get("schema") != SCHEMA_IDENTITY:
+    if data.get("schema") not in {SCHEMA_IDENTITY, SCHEMA_IDENTITY_ATTEMPT}:
         raise ToolError(
             "identity_invalid",
             f"unexpected identity schema {data.get('schema')!r}",
             EXIT_POLICY,
         )
+    if data.get("schema") == SCHEMA_IDENTITY_ATTEMPT:
+        actor_id = data.get("actor_id")
+        attempt_id = data.get("delivery_attempt_id")
+        expected_branch = f"agent/{actor_id}--{attempt_id}"
+        if (
+            not isinstance(actor_id, str)
+            or not AGENT_ID_RE.fullmatch(actor_id)
+            or data.get("agent_id") != actor_id
+            or not isinstance(attempt_id, str)
+            or not AGENT_ID_RE.fullmatch(attempt_id)
+            or data.get("working_branch") != expected_branch
+        ):
+            raise ToolError(
+                "identity_invalid",
+                "attempt-qualified clone identity fields are missing or inconsistent",
+                EXIT_POLICY,
+            )
     return data
+
+
+def attempt_binding(identity: dict) -> dict[str, str]:
+    """Return digest-bound actor/attempt fields for a v2 clone identity."""
+    if identity.get("schema") != SCHEMA_IDENTITY_ATTEMPT:
+        return {}
+    return {
+        "actor_id": identity["actor_id"],
+        "delivery_attempt_id": identity["delivery_attempt_id"],
+    }
+
+
+def expected_artifact_schema(identity: dict, legacy: str, attempt: str) -> str:
+    return attempt if identity.get("schema") == SCHEMA_IDENTITY_ATTEMPT else legacy
 
 
 def write_identity(repo_root: str, identity: dict) -> str:
@@ -914,8 +950,14 @@ def verify_clone_provenance(repo_root: str, identity: dict) -> dict:
     digest = canonical_digest(receipt, exclude_field="receipt_digest")
     repository = receipt.get("repository") or {}
     author = receipt.get("author") or {}
+    expected_schema = expected_artifact_schema(
+        identity,
+        SCHEMA_PROVENANCE,
+        SCHEMA_PROVENANCE_ATTEMPT,
+    )
+    binding = attempt_binding(identity)
     if (
-        receipt.get("schema") != SCHEMA_PROVENANCE
+        receipt.get("schema") != expected_schema
         or receipt.get("receipt_digest") != digest
         or identity.get("provenance_receipt_digest") != digest
         or identity.get("provenance_status") != "ready"
@@ -924,6 +966,7 @@ def verify_clone_provenance(repo_root: str, identity: dict) -> dict:
         or receipt.get("clone_root") != canonical(repo_root)
         or receipt.get("working_branch") != identity.get("working_branch")
         or receipt.get("frozen_root_sha") != identity.get("frozen_root_sha")
+        or any(receipt.get(key) != value for key, value in binding.items())
         or not repository.get("canonical_repository")
         or not author.get("identity_digest")
     ):
@@ -989,7 +1032,11 @@ def cmd_provenance(args: argparse.Namespace) -> dict:
     repository = repository_provenance(args.clone, args.expected_repository)
     author = bind_author_identity(args.clone)
     receipt = {
-        "schema": SCHEMA_PROVENANCE,
+        "schema": expected_artifact_schema(
+            identity,
+            SCHEMA_PROVENANCE,
+            SCHEMA_PROVENANCE_ATTEMPT,
+        ),
         "agent_id": identity["agent_id"],
         "clone_root": canonical(args.clone),
         "repository": repository,
@@ -999,6 +1046,7 @@ def cmd_provenance(args: argparse.Namespace) -> dict:
         "status": "ready",
         "generated_at": identity.get("created_at"),
     }
+    receipt.update(attempt_binding(identity))
     receipt["receipt_digest"] = canonical_digest(receipt, exclude_field="receipt_digest")
     write_json_exclusive_or_match(args.output, receipt, "provenance_write_failed")
     write_json_replace(provenance_path(args.clone), receipt)
@@ -1026,7 +1074,20 @@ def cmd_create(args: argparse.Namespace) -> dict:
             f"agent id {agent_id!r} must match {AGENT_ID_RE.pattern}",
             EXIT_USAGE,
         )
-    working_branch = f"agent/{agent_id}"
+    delivery_attempt_id = getattr(args, "delivery_attempt_id", None)
+    if not delivery_attempt_id:
+        raise ToolError(
+            "delivery_attempt_id_required",
+            "new clones require a delivery attempt; v1 identities are compatibility-only",
+            EXIT_USAGE,
+        )
+    if not AGENT_ID_RE.fullmatch(delivery_attempt_id):
+        raise ToolError(
+            "delivery_attempt_id_invalid",
+            f"delivery attempt id {delivery_attempt_id!r} must match {AGENT_ID_RE.pattern}",
+            EXIT_USAGE,
+        )
+    working_branch = f"agent/{agent_id}--{delivery_attempt_id}"
     branch_check = git(None, "check-ref-format", "--branch", working_branch)
     if branch_check.returncode != 0:
         raise ToolError(
@@ -1069,6 +1130,28 @@ def cmd_create(args: argparse.Namespace) -> dict:
                 symbolic = git(source, "rev-parse", "--symbolic-full-name", source_revision_ref)
                 if symbolic.returncode == 0 and symbolic.stdout.strip():
                     source_revision_ref = symbolic.stdout.strip()
+
+    remote_ref = f"refs/heads/{working_branch}"
+    attempt_probe = git(
+        None,
+        "ls-remote",
+        "--exit-code",
+        "--heads",
+        source_url,
+        remote_ref,
+    )
+    if attempt_probe.returncode == 0:
+        raise ToolError(
+            "delivery_attempt_reused",
+            f"delivery attempt branch already exists: {remote_ref}",
+            EXIT_POLICY,
+        )
+    if attempt_probe.returncode != 2:
+        raise ToolError(
+            "delivery_attempt_lookup_failed",
+            f"cannot prove delivery attempt uniqueness: {attempt_probe.stderr.strip()}",
+            EXIT_POLICY,
+        )
 
     destination_parent = os.path.dirname(os.path.abspath(dest)) or os.curdir
     if not os.path.isdir(destination_parent):
@@ -1222,7 +1305,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
         if not reinstall_ok:
             warnings.warn(f"uv sync --reinstall-package warning: {reinstall_msg}")
         identity = {
-            "schema": SCHEMA_IDENTITY,
+            "schema": SCHEMA_IDENTITY_ATTEMPT if delivery_attempt_id else SCHEMA_IDENTITY,
             "agent_id": agent_id,
             "canonical_root": canonical(dest),
             "source_url": source_url,
@@ -1234,6 +1317,9 @@ def cmd_create(args: argparse.Namespace) -> dict:
             "dependency_reinstall_message": reinstall_msg,
             "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
+        if delivery_attempt_id is not None:
+            identity["actor_id"] = agent_id
+            identity["delivery_attempt_id"] = delivery_attempt_id
         if identity_profile:
             identity["profile"] = identity_profile
             identity["required_submodules"] = initialize_paths
@@ -1283,7 +1369,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
         raise ToolError("clone_failed", "clone was not published", EXIT_POLICY)
     identity_file = identity_path(dest)
 
-    return {
+    result = {
         "ok": True,
         "reason": "clone_created",
         "agent_id": agent_id,
@@ -1298,6 +1384,10 @@ def cmd_create(args: argparse.Namespace) -> dict:
         "reinstall_status": "ok" if reinstall_ok else "warning",
         "reinstall_message": reinstall_msg,
     }
+    if delivery_attempt_id is not None:
+        result["actor_id"] = agent_id
+        result["delivery_attempt_id"] = delivery_attempt_id
+    return result
 
 
 def managed_python_probe(repo_root: str, profile: str) -> tuple[dict, dict | None]:
@@ -1495,7 +1585,11 @@ def cmd_readiness(args: argparse.Namespace) -> dict:
     )
     status = "ready" if not degraded else "degraded"
     receipt = {
-        "schema": SCHEMA_READINESS,
+        "schema": expected_artifact_schema(
+            identity,
+            SCHEMA_READINESS,
+            SCHEMA_READINESS_ATTEMPT,
+        ),
         "profile_schema": SCHEMA_SUBMODULE_PROFILE,
         "profile_version": 1,
         "profile": profile,
@@ -1513,6 +1607,7 @@ def cmd_readiness(args: argparse.Namespace) -> dict:
         "status": status,
         "generated_at": identity["created_at"],
     }
+    receipt.update(attempt_binding(identity))
     receipt["receipt_digest"] = canonical_digest(receipt, exclude_field="receipt_digest")
     write_json_exclusive_or_match(args.output, receipt, "readiness_write_failed")
     write_json_replace(readiness_path(args.clone), receipt)
@@ -1593,7 +1688,11 @@ def build_manifest(repo_root: str) -> dict:
     hooks_proc = git(repo_root, "config", "--get", "core.hooksPath")
     hooks_path = hooks_proc.stdout.strip() if hooks_proc.returncode == 0 else None
     manifest = {
-        "schema": SCHEMA_MANIFEST,
+        "schema": expected_artifact_schema(
+            identity,
+            SCHEMA_MANIFEST,
+            SCHEMA_MANIFEST_ATTEMPT,
+        ),
         "agent_id": identity["agent_id"],
         "canonical_root": expected_root,
         "origin_url": identity["source_url"],
@@ -1603,6 +1702,7 @@ def build_manifest(repo_root: str) -> dict:
         "hooks_path": hooks_path,
         "repositories": entries,
     }
+    manifest.update(attempt_binding(identity))
     manifest["manifest_digest"] = canonical_digest(manifest, exclude_field="manifest_digest")
     return manifest
 
@@ -1630,7 +1730,7 @@ def cmd_verify(args: argparse.Namespace) -> dict:
             f"cannot read manifest {args.manifest}: {exc}",
             EXIT_POLICY,
         ) from exc
-    if manifest.get("schema") != SCHEMA_MANIFEST:
+    if manifest.get("schema") not in {SCHEMA_MANIFEST, SCHEMA_MANIFEST_ATTEMPT}:
         raise ToolError(
             "manifest_schema_mismatch",
             f"unexpected manifest schema {manifest.get('schema')!r}",
@@ -1646,8 +1746,21 @@ def cmd_verify(args: argparse.Namespace) -> dict:
         )
 
     identity = read_identity(args.clone)
+    expected_manifest_schema = expected_artifact_schema(
+        identity,
+        SCHEMA_MANIFEST,
+        SCHEMA_MANIFEST_ATTEMPT,
+    )
     if identity.get("ready") is not True:
         raise ToolError("identity_mismatch", "stored identity is not marked ready", EXIT_POLICY)
+    if manifest.get("schema") != expected_manifest_schema or any(
+        manifest.get(key) != value for key, value in attempt_binding(identity).items()
+    ):
+        raise ToolError(
+            "identity_mismatch",
+            "manifest delivery attempt does not match clone identity",
+            EXIT_POLICY,
+        )
     if identity["agent_id"] != manifest.get("agent_id"):
         raise ToolError(
             "identity_mismatch",
@@ -1794,7 +1907,7 @@ def load_baseline(baseline_path: str) -> dict:
             f"cannot read baseline manifest {baseline_path}: {exc}",
             EXIT_POLICY,
         ) from exc
-    if manifest.get("schema") != SCHEMA_MANIFEST:
+    if manifest.get("schema") not in {SCHEMA_MANIFEST, SCHEMA_MANIFEST_ATTEMPT}:
         raise ToolError(
             "baseline_schema_mismatch",
             f"unexpected baseline schema {manifest.get('schema')!r}",
@@ -2195,8 +2308,9 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         authority_binding = trusted_claims_authority(
             args.clone, root_base, claims_root
         )
+        claim_actor_id = identity.get("actor_id", identity["agent_id"])
         claim_verification = _verify_changeset_claims(
-            authority_binding["claims_root"], identity["agent_id"], changes
+            authority_binding["claims_root"], claim_actor_id, changes
         )
         claim_verification["authority_binding"] = authority_binding
         claim_verification["consistency"] = {
@@ -2205,8 +2319,15 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         }
 
     no_change = root_base == root_candidate and not changes
+    attempt_identity = attempt_binding(identity) if identity else {}
     changeset = {
-        "schema": SCHEMA_CHANGESET_CLAIMS if claim_verification is not None else SCHEMA_CHANGESET,
+        "schema": (
+            SCHEMA_CHANGESET_ATTEMPT
+            if attempt_identity
+            else SCHEMA_CHANGESET_CLAIMS
+            if claim_verification is not None
+            else SCHEMA_CHANGESET
+        ),
         "agent_id": identity["agent_id"] if identity else None,
         "clone_root": canonical(args.clone),
         "baseline_manifest_digest": baseline["manifest_digest"],
@@ -2216,6 +2337,7 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         "no_change": no_change,
         "claim_verification": claim_verification,
     }
+    changeset.update(attempt_identity)
     changeset["change_id"] = canonical_digest(changeset, exclude_field="change_id")
 
     write_json_exclusive(args.output, changeset, "changeset_write_failed")
@@ -2257,7 +2379,10 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
             f"cannot read changeset {args.changeset}: {exc}",
             EXIT_POLICY,
         ) from exc
-    if stored.get("schema") != SCHEMA_CHANGESET_CLAIMS:
+    if stored.get("schema") not in {
+        SCHEMA_CHANGESET_CLAIMS,
+        SCHEMA_CHANGESET_ATTEMPT,
+    }:
         raise ToolError(
             "changeset_schema_mismatch",
             f"unexpected changeset schema {stored.get('schema')!r}",
@@ -2293,6 +2418,16 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
         raise ToolError("claims_root_mismatch", "changeset was generated from a different claims root")
     clone_root = canonical(args.clone)
     identity = read_identity(args.clone)
+    binding = attempt_binding(identity)
+    requested_attempt = getattr(args, "delivery_attempt_id", None)
+    if requested_attempt is not None and requested_attempt != binding.get(
+        "delivery_attempt_id"
+    ):
+        raise ToolError(
+            "changeset_attempt_mismatch",
+            "requested delivery attempt does not match clone identity",
+            EXIT_POLICY,
+        )
     if (
         identity.get("ready") is not True
         or identity.get("canonical_root") != clone_root
@@ -2303,8 +2438,23 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
             "ready clone identity does not match requested clone and agent",
             EXIT_POLICY,
         )
+    expected_changeset_schema = (
+        SCHEMA_CHANGESET_ATTEMPT if binding else SCHEMA_CHANGESET_CLAIMS
+    )
+    if stored.get("schema") != expected_changeset_schema or any(
+        stored.get(key) != value for key, value in binding.items()
+    ):
+        raise ToolError(
+            "changeset_attempt_mismatch",
+            "changeset delivery attempt does not match clone identity",
+            EXIT_POLICY,
+        )
     baseline = load_baseline(args.baseline)
-    if baseline.get("agent_id") != args.agent_id or baseline.get("canonical_root") != clone_root:
+    if (
+        baseline.get("agent_id") != args.agent_id
+        or baseline.get("canonical_root") != clone_root
+        or any(baseline.get(key) != value for key, value in binding.items())
+    ):
         raise ToolError(
             "changeset_baseline_mismatch",
             "baseline is not bound to this clone and agent",
@@ -2321,7 +2471,11 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
             "changeset authority binding does not match baseline topology policy",
             EXIT_POLICY,
         )
-    if stored.get("agent_id") != args.agent_id or stored.get("clone_root") != clone_root:
+    if (
+        stored.get("agent_id") != args.agent_id
+        or stored.get("clone_root") != clone_root
+        or any(stored.get(key) != value for key, value in binding.items())
+    ):
         raise ToolError(
             "changeset_clone_mismatch",
             "changeset is not bound to this clone and agent",
@@ -2448,7 +2602,12 @@ def cmd_guard(args: argparse.Namespace) -> dict:
             "HEAD",
         )
         if (
-            receipt.get("schema") != SCHEMA_READINESS
+            receipt.get("schema")
+            != expected_artifact_schema(
+                identity,
+                SCHEMA_READINESS,
+                SCHEMA_READINESS_ATTEMPT,
+            )
             or receipt.get("receipt_digest") != receipt_digest
             or identity.get("readiness_receipt_digest") != receipt_digest
             or identity.get("readiness_status") != "ready"
@@ -2459,6 +2618,10 @@ def cmd_guard(args: argparse.Namespace) -> dict:
             or receipt.get("source_url") != redact_remote(identity.get("source_url"))
             or receipt.get("root_head_sha") != identity.get("frozen_root_sha")
             or receipt.get("working_branch") != identity.get("working_branch")
+            or any(
+                receipt.get(key) != value
+                for key, value in attempt_binding(identity).items()
+            )
             or frozen_ancestor.returncode != 0
         ):
             raise ToolError(
@@ -2519,6 +2682,7 @@ def cmd_guard(args: argparse.Namespace) -> dict:
         result["state"] = "verified_clone"
         result["reason"] = "clone_identity_matched"
         result["clone_root"] = identity["canonical_root"]
+        result.update(attempt_binding(identity))
         return result
     raise ToolError(
         "clone_identity_mismatch",
@@ -2546,6 +2710,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("create")
     add_common(p)
     p.add_argument("--agent-id", required=True)
+    p.add_argument(
+        "--delivery-attempt-id",
+        required=True,
+        help="single delivery-attempt identity; creates agent/<actor>--<attempt>",
+    )
     p.add_argument("--source", required=True)
     p.add_argument("--destination", required=True)
     p.add_argument("--revision")
@@ -2605,6 +2774,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--baseline", required=True)
     p.add_argument("--changeset", required=True)
     p.add_argument("--agent-id", required=True)
+    p.add_argument("--delivery-attempt-id")
     p.add_argument("--claims-root", help="same authoritative claims root used to generate changeset")
     p.set_defaults(func=cmd_verify_changeset)
 
