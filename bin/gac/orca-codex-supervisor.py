@@ -632,6 +632,70 @@ def _response(
     return result, None
 
 
+def _runtime_ready(status: dict[str, Any]) -> bool:
+    app = status.get("app")
+    runtime = status.get("runtime")
+    graph = status.get("graph")
+    return (
+        isinstance(app, dict)
+        and app.get("running") is True
+        and app.get("desktopWindowStatus") == "available"
+        and isinstance(runtime, dict)
+        and runtime.get("state") == "ready"
+        and runtime.get("reachable") is True
+        and isinstance(graph, dict)
+        and graph.get("state") == "ready"
+    )
+
+
+def _ensure_orca_runtime(
+    *,
+    runner: Runner,
+    binding: dict[str, str],
+    recover: bool,
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    status, failure = _response(
+        runner,
+        ("orca", "status", "--json"),
+        timeout_seconds=10.0,
+        binding=binding,
+        stage="status",
+        reason="orca_runtime_not_ready",
+    )
+    if failure:
+        return None, failure
+    assert status is not None
+    if _runtime_ready(status):
+        return {"attempted": False, "recovered": False, "final_state": "ready"}, None
+    if not recover:
+        return None, _failure(binding=binding, stage="status", reason="orca_runtime_not_ready")
+
+    _opened, failure = _response(
+        runner,
+        ("orca", "open", "--json"),
+        timeout_seconds=30.0,
+        binding=binding,
+        stage="runtime_open",
+        reason="orca_runtime_open_failed",
+    )
+    if failure:
+        return None, failure
+    rechecked, failure = _response(
+        runner,
+        ("orca", "status", "--json"),
+        timeout_seconds=10.0,
+        binding=binding,
+        stage="status",
+        reason="orca_runtime_not_ready",
+    )
+    if failure:
+        return None, failure
+    assert rechecked is not None
+    if not _runtime_ready(rechecked):
+        return None, _failure(binding=binding, stage="status", reason="orca_runtime_not_ready")
+    return {"attempted": True, "recovered": True, "final_state": "ready"}, None
+
+
 def start_supervised_codex(
     *,
     workflow_run_id: str,
@@ -646,6 +710,7 @@ def start_supervised_codex(
     idempotency_key: str | None = None,
     codex_executable: str | None = None,
     timeout_ms: int = 60_000,
+    runtime_recovery: bool = True,
     instruction_binding: dict[str, Any] | None = None,
     runner: Runner = _subprocess_runner,
     guard_runner: GuardRunner | None = None,
@@ -721,6 +786,14 @@ def start_supervised_codex(
     trust_override = _codex_trust_override(resolved_workspace)
     if trust_override is None:
         return _failure(binding=binding, stage="input", reason="workspace_root_unsafe")
+    runtime_observation, failure = _ensure_orca_runtime(
+        runner=runner,
+        binding=binding,
+        recover=runtime_recovery,
+    )
+    if failure:
+        return failure
+    assert runtime_observation is not None
     retry_requests: dict[str, str] = {}
     if idempotency_key is not None:
         for stage in ("run-create", "task-create", "worker-start"):
@@ -752,27 +825,6 @@ def start_supervised_codex(
     if orca_worktree_id is None:
         return _failure(binding=binding, stage="worktree_show", reason="orca_worktree_unavailable")
     binding["orca_worktree_id"] = orca_worktree_id
-
-    status, failure = _response(
-        runner,
-        ("orca", "status", "--json"),
-        timeout_seconds=10.0,
-        binding=binding,
-        stage="status",
-        reason="orca_runtime_not_ready",
-    )
-    if failure:
-        return failure
-    assert status is not None
-    app = status.get("app")
-    runtime = status.get("runtime")
-    if (
-        not isinstance(app, dict)
-        or app.get("running") is not True
-        or not isinstance(runtime, dict)
-        or runtime.get("state") != "ready"
-    ):
-        return _failure(binding=binding, stage="status", reason="orca_runtime_not_ready")
 
     def coordinator_failure_context(
         result: dict[str, Any],
@@ -971,12 +1023,24 @@ def start_supervised_codex(
     assert created_terminal is not None
     terminal = created_terminal.get("terminal")
     terminal_handle = terminal.get("handle") if isinstance(terminal, dict) else None
-    if not isinstance(terminal_handle, str) or not _valid_identity(terminal_handle):
+    if (
+        not isinstance(terminal_handle, str)
+        or not _valid_identity(terminal_handle)
+        or terminal.get("worktreeId") != orca_worktree_id
+    ):
+        created_terminal_residuals = [
+            *run_task_residuals,
+            *(
+                [f"orca:terminal:{terminal_handle}"]
+                if isinstance(terminal_handle, str) and _valid_identity(terminal_handle)
+                else []
+            ),
+        ]
         return _failure(
             binding=binding,
             stage="terminal_create",
             reason="orca_response_invalid",
-            residual_resources=run_task_residuals,
+            residual_resources=created_terminal_residuals,
         )
     terminal_residuals = [
         *run_task_residuals,
@@ -997,7 +1061,7 @@ def start_supervised_codex(
             str(timeout_ms),
             "--json",
         ),
-        timeout_seconds=max(30.0, timeout_ms / 1000.0),
+        timeout_seconds=max(30.0, timeout_ms / 1000.0 + 5.0),
         binding=binding,
         stage="terminal_wait",
         reason="codex_tui_not_idle",
@@ -1040,6 +1104,7 @@ def start_supervised_codex(
     if (
         not isinstance(shown_terminal, dict)
         or shown_terminal.get("handle") != terminal_handle
+        or shown_terminal.get("worktreeId") != orca_worktree_id
         or shown_terminal.get("worktreePath") != resolved_workspace
         or shown_terminal.get("connected") is not True
         or shown_terminal.get("writable") is not True
@@ -1110,6 +1175,7 @@ def start_supervised_codex(
         "state": "awaiting_human_action",
         "binding": binding,
         "orca": orca,
+        "runtime_recovery": runtime_observation,
         "human_action_required": True,
         "approval": {
             "mode": "manual_click",
@@ -1543,6 +1609,7 @@ def _parser() -> argparse.ArgumentParser:
     start.add_argument("--agent-id", required=True)
     start.add_argument("--idempotency-key")
     start.add_argument("--timeout-ms", type=int, default=60_000)
+    start.add_argument("--no-runtime-recovery", action="store_true")
     collect = commands.choices["collect"]
     collect.add_argument("--agent-id", required=True)
     collect.add_argument("--canonical-root-digest", required=True)
@@ -1580,6 +1647,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             agent_id=args.agent_id,
             idempotency_key=args.idempotency_key,
             timeout_ms=args.timeout_ms,
+            runtime_recovery=not args.no_runtime_recovery,
         )
     else:
         try:
