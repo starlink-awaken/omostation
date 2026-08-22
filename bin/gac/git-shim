@@ -176,10 +176,27 @@ if [ "$IMMUTABLE_WRITER" -eq 1 ]; then
         "Start a fresh delivery attempt instead of mutating lineage."
       ;;
     push)
+      # Exact create-if-absent lease: the empty expected remote OID makes a
+      # concurrent or reused attempt fail atomically without rewriting history.
+      _atomic_create_lease=0
+      if [ "${#GIT_COMMAND_ARGS[@]}" -eq 4 ] \
+        && [ "${GIT_COMMAND_ARGS[0]}" = "--porcelain" ] \
+        && [ "${GIT_COMMAND_ARGS[1]}" = "--force-with-lease=refs/heads/$BRANCH:" ] \
+        && [ "${GIT_COMMAND_ARGS[2]}" = "origin" ] \
+        && [ "${GIT_COMMAND_ARGS[3]#*:}" = "refs/heads/$BRANCH" ]; then
+        _create_source="${GIT_COMMAND_ARGS[3]%%:*}"
+        if printf '%s' "$_create_source" | grep -qE '^[0-9a-f]{40}([0-9a-f]{24})?$'; then
+          _atomic_create_lease=1
+        fi
+      fi
       if [ "${#GIT_COMMAND_ARGS[@]}" -gt 0 ]; then
         for _arg in "${GIT_COMMAND_ARGS[@]}"; do
           case "$_arg" in
             -f|--force|--force=*|--force-with-lease|--force-with-lease=*)
+              if [ "$_atomic_create_lease" -eq 1 ] \
+                && [ "$_arg" = "--force-with-lease=refs/heads/$BRANCH:" ]; then
+                continue
+              fi
               _danger_block \
                 "immutable writer branch '$BRANCH' cannot force-push history" \
                 "Publish additive commits only."

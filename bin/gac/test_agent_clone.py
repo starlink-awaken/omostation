@@ -57,6 +57,7 @@ def run_cli(
     check: bool = True,
     trusted_root: Path | None = None,
     cwd: Path | None = None,
+    auto_attempt: bool = True,
 ) -> subprocess.CompletedProcess:
     e = os.environ.copy()
     if env:
@@ -64,6 +65,14 @@ def run_cli(
     else:
         # never leak an ambient AGENT_ID from the host into guard tests
         e.pop("AGENT_ID", None)
+    effective_argv = list(argv)
+    if (
+        auto_attempt
+        and effective_argv[:1] == ["create"]
+        and "--delivery-attempt-id" not in effective_argv
+    ):
+        effective_argv.extend(["--delivery-attempt-id", "attempt-test"])
+    argv = tuple(effective_argv)
     command = [sys.executable, str(TOOL), *argv]
     if "--claims-root" in argv:
         root = trusted_root or Path(argv[argv.index("--claims-root") + 1])
@@ -249,6 +258,8 @@ def create_clone(tmp: Path, bare: Path, name: str = "clone", **extra: object) ->
         "--json",
         "--agent-id",
         "agent-1",
+        "--delivery-attempt-id",
+        "attempt-helper",
         "--source",
         str(bare),
         "--destination",
@@ -327,6 +338,24 @@ def tamper_manifest(path: Path, mutate, recompute: bool = True) -> None:
 # ---------------------------------------------------------------------------
 
 
+def test_create_requires_delivery_attempt_id(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    proc = run_cli(
+        "create",
+        "--agent-id",
+        "agent-1",
+        "--source",
+        str(bare),
+        "--destination",
+        str(tmp_path / "missing-attempt"),
+        check=False,
+        auto_attempt=False,
+    )
+
+    assert proc.returncode != 0
+    assert "--delivery-attempt-id" in proc.stderr
+
+
 def test_create_clone_with_submodule_and_no_alternates(tmp_path):
     _src, _child, bare = make_source(tmp_path)
     dest = create_clone(tmp_path, bare)
@@ -341,8 +370,10 @@ def test_create_clone_with_submodule_and_no_alternates(tmp_path):
     assert identity["agent_id"] == "agent-1"
     assert identity["canonical_root"] == str(dest.resolve())
     assert identity["frozen_root_sha"] == git(dest, "rev-parse", "HEAD").stdout.strip()
-    assert identity["working_branch"] == "agent/agent-1"
-    assert git(dest, "branch", "--show-current").stdout.strip() == "agent/agent-1"
+    assert identity["schema"] == "agent-clone-identity/v2"
+    assert identity["delivery_attempt_id"] == "attempt-helper"
+    assert identity["working_branch"] == "agent/agent-1--attempt-helper"
+    assert git(dest, "branch", "--show-current").stdout.strip() == identity["working_branch"]
 
     # no persistent alternates anywhere in the clone
     assert not (dest / ".git" / "objects" / "info" / "alternates").exists()
@@ -352,6 +383,247 @@ def test_create_clone_with_submodule_and_no_alternates(tmp_path):
     bare_contents = git(tmp_path / "source-bare.git", "rev-parse", "HEAD").stdout.strip()
     shutil.rmtree(tmp_path / "source-bare.git")
     assert git(dest, "rev-parse", "HEAD").stdout.strip() == bare_contents
+
+
+def test_attempt_qualified_identity_binds_manifest_provenance_readiness_and_guard(tmp_path):
+    _src, bare = make_governance_profile_source(tmp_path)
+    dest = tmp_path / "attempt-clone"
+    created = run_cli(
+        "create",
+        "--agent-id",
+        "actor-1",
+        "--delivery-attempt-id",
+        "attempt-001",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--profile",
+        "governance",
+        "--json",
+        check=False,
+    )
+    assert created.returncode == 0, created.stderr
+    payload = parse_json(created)
+    assert payload["actor_id"] == "actor-1"
+    assert payload["delivery_attempt_id"] == "attempt-001"
+    assert payload["working_branch"] == "agent/actor-1--attempt-001"
+
+    identity_path = dest / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    assert identity["schema"] == "agent-clone-identity/v2"
+    assert identity["agent_id"] == identity["actor_id"] == "actor-1"
+    assert identity["delivery_attempt_id"] == "attempt-001"
+    assert git(dest, "branch", "--show-current").stdout.strip() == identity["working_branch"]
+
+    provenance_path = bind_provenance(tmp_path, dest, "attempt-provenance.json")
+    manifest_path = write_manifest(tmp_path, dest, "attempt-manifest.json")
+    readiness_path = tmp_path / "attempt-readiness.json"
+    ready = run_cli(
+        "readiness",
+        "--clone",
+        str(dest),
+        "--manifest",
+        str(manifest_path),
+        "--output",
+        str(readiness_path),
+        "--json",
+        env={"OMO_MANAGED_PYTHON": sys.executable},
+    )
+    assert parse_json(ready)["status"] == "ready"
+
+    manifest = json.loads(manifest_path.read_text())
+    provenance = json.loads(provenance_path.read_text())
+    readiness = json.loads(readiness_path.read_text())
+    for receipt, schema in (
+        (manifest, "agent-clone-manifest/v2"),
+        (provenance, "clone-provenance/v2"),
+        (readiness, "clone-readiness/v2"),
+    ):
+        assert receipt["schema"] == schema
+        assert receipt["actor_id"] == "actor-1"
+        assert receipt["delivery_attempt_id"] == "attempt-001"
+
+    admitted = run_cli(
+        "guard",
+        "--workspace",
+        str(dest),
+        "--integration-root",
+        str(tmp_path / "integration"),
+        "--require-clone",
+        "--json",
+        env={"AGENT_ID": "actor-1"},
+    )
+    admission = parse_json(admitted)
+    assert admission["state"] == "verified_clone"
+    assert admission["actor_id"] == "actor-1"
+    assert admission["delivery_attempt_id"] == "attempt-001"
+
+
+def test_attempt_id_cannot_reuse_an_existing_remote_branch(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    first = tmp_path / "first-attempt"
+    created = run_cli(
+        "create",
+        "--agent-id",
+        "actor-1",
+        "--delivery-attempt-id",
+        "attempt-001",
+        "--source",
+        str(bare),
+        "--destination",
+        str(first),
+        "--no-submodules",
+        "--json",
+    )
+    branch = parse_json(created)["working_branch"]
+    git(first, "push", "origin", branch)
+
+    second = run_cli(
+        "create",
+        "--agent-id",
+        "actor-1",
+        "--delivery-attempt-id",
+        "attempt-001",
+        "--source",
+        str(bare),
+        "--destination",
+        str(tmp_path / "second-attempt"),
+        "--no-submodules",
+        "--json",
+        check=False,
+    )
+    assert second.returncode != 0
+    assert parse_json(second)["reason"] == "delivery_attempt_reused"
+    assert not (tmp_path / "second-attempt").exists()
+
+
+def test_attempt_manifest_mismatch_is_rejected_after_digest_recompute(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = tmp_path / "attempt-clone"
+    run_cli(
+        "create",
+        "--agent-id",
+        "actor-1",
+        "--delivery-attempt-id",
+        "attempt-001",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--no-submodules",
+        "--json",
+    )
+    manifest = write_manifest(tmp_path, dest, "attempt-manifest.json")
+    tamper_manifest(
+        manifest,
+        lambda data: data.update(delivery_attempt_id="attempt-002"),
+    )
+
+    rejected = run_cli(
+        "verify",
+        "--clone",
+        str(dest),
+        "--manifest",
+        str(manifest),
+        "--json",
+        check=False,
+    )
+    assert rejected.returncode != 0
+    assert parse_json(rejected)["reason"] == "identity_mismatch"
+
+
+def test_attempt_changeset_keeps_stable_claim_actor_and_rejects_attempt_mismatch(tmp_path):
+    _src, _child, bare = make_source(tmp_path)
+    dest = tmp_path / "attempt-clone"
+    run_cli(
+        "create",
+        "--agent-id",
+        "actor-1",
+        "--delivery-attempt-id",
+        "attempt-001",
+        "--source",
+        str(bare),
+        "--destination",
+        str(dest),
+        "--no-submodules",
+        "--json",
+    )
+    baseline = write_manifest(tmp_path, dest, "attempt-baseline.json")
+    authority = tmp_path / "authority"
+    cloned = subprocess.run(
+        ["git", "clone", "--no-recurse-submodules", str(bare), str(authority)],
+        capture_output=True,
+        text=True,
+        env={**os.environ, **_GIT_ENV},
+        check=False,
+    )
+    assert cloned.returncode == 0, cloned.stderr
+    write_active_claim(authority, "README.md", actor="actor-1")
+    (dest / "README.md").write_text("attempt delivery\n")
+    git(dest, "add", "README.md")
+    git(dest, "commit", "-m", "attempt delivery")
+    changeset = tmp_path / "attempt-changeset.json"
+    generated = run_cli(
+        "changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--output",
+        str(changeset),
+        "--verify-claims",
+        "--claims-root",
+        str(authority),
+        "--json",
+        trusted_root=authority,
+    )
+    assert parse_json(generated)["changes_count"] == 1
+    receipt = json.loads(changeset.read_text())
+    assert receipt["schema"] == "cross-repo-changeset/v3"
+    assert receipt["actor_id"] == "actor-1"
+    assert receipt["delivery_attempt_id"] == "attempt-001"
+    assert receipt["claim_verification"]["snapshot"]["agent_id"] == "actor-1"
+
+    verified = run_cli(
+        "verify-changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--changeset",
+        str(changeset),
+        "--agent-id",
+        "actor-1",
+        "--delivery-attempt-id",
+        "attempt-001",
+        "--claims-root",
+        str(authority),
+        "--json",
+        trusted_root=authority,
+    )
+    assert parse_json(verified)["ok"] is True
+
+    rejected = run_cli(
+        "verify-changeset",
+        "--clone",
+        str(dest),
+        "--baseline",
+        str(baseline),
+        "--changeset",
+        str(changeset),
+        "--agent-id",
+        "actor-1",
+        "--delivery-attempt-id",
+        "attempt-002",
+        "--claims-root",
+        str(authority),
+        "--json",
+        trusted_root=authority,
+        check=False,
+    )
+    assert rejected.returncode != 0
+    assert parse_json(rejected)["reason"] == "changeset_attempt_mismatch"
 
 
 def test_create_initializes_only_root_gitlinks(tmp_path):
@@ -518,7 +790,7 @@ def test_provenance_receipt_redacts_author_and_live_guard_revalidates(tmp_path):
 
     receipt_text = receipt_path.read_text()
     receipt = json.loads(receipt_text)
-    assert receipt["schema"] == "clone-provenance/v1"
+    assert receipt["schema"] == "clone-provenance/v2"
     assert receipt["repository"]["canonical_repository"] == (
         "github.com/starlink-awaken/omostation"
     )
@@ -732,7 +1004,7 @@ def test_governance_profile_emits_verified_readiness_receipt(tmp_path):
     result = parse_json(ready)
     receipt = json.loads(receipt_path.read_text())
     assert result["status"] == "ready"
-    assert receipt["schema"] == "clone-readiness/v1"
+    assert receipt["schema"] == "clone-readiness/v2"
     assert receipt["profile_schema"] == "clone-submodule-profile/v1"
     assert receipt["profile"] == "governance"
     assert [item["path"] for item in receipt["required_submodules"]] == [
@@ -1084,7 +1356,7 @@ def test_create_with_revision(tmp_path):
     assert git(dest, "rev-parse", "HEAD").stdout.strip() == m1_sha
     identity = json.loads((dest / ".git" / "agent-clone-identity.json").read_text())
     assert identity["frozen_root_sha"] == m1_sha
-    assert git(dest, "branch", "--show-current").stdout.strip() == "agent/agent-1"
+    assert git(dest, "branch", "--show-current").stdout.strip() == "agent/agent-1--attempt-test"
 
 
 def test_create_resolves_local_source_revision_before_clone(tmp_path):
@@ -1258,6 +1530,7 @@ def test_create_reports_published_clone_when_staging_cleanup_fails(tmp_path, mon
     monkeypatch.setattr(tool.shutil, "rmtree", fail_cleanup)
     args = tool.argparse.Namespace(
         agent_id="agent-1",
+        delivery_attempt_id="attempt-001",
         source=str(bare),
         destination=str(destination),
         revision=None,
@@ -1292,6 +1565,7 @@ def test_create_preserves_cleanup_evidence_for_unexpected_primary_error(tmp_path
     monkeypatch.setattr(tool.shutil, "rmtree", fail_cleanup)
     args = tool.argparse.Namespace(
         agent_id="agent-1",
+        delivery_attempt_id="attempt-001",
         source=str(bare),
         destination=str(destination),
         revision=None,
@@ -1406,7 +1680,7 @@ def test_manifest_deterministic_digest_and_verify(tmp_path):
     assert m1.read_text() == m2.read_text()  # deterministic: no timestamps
 
     data = json.loads(m1.read_text())
-    assert data["schema"] == "agent-clone-manifest/v1"
+    assert data["schema"] == "agent-clone-manifest/v2"
     assert data["agent_id"] == "agent-1"
     assert data["detached"] is False
     assert len(data["repositories"]) == 1
@@ -1617,7 +1891,7 @@ def test_changeset_no_change_explicit(tmp_path):
     )
     assert parse_json(proc)["reason"] == "changeset_generated"
     data = json.loads(out.read_text())
-    assert data["schema"] == "cross-repo-changeset/v1"
+    assert data["schema"] == "cross-repo-changeset/v3"
     assert data["no_change"] is True
     assert data["changes"] == []
     assert data["root_base_sha"] == data["root_candidate_sha"]
@@ -1796,7 +2070,7 @@ def test_verify_changeset_binds_current_clone_baseline_head_paths_and_digest(tmp
     assert generated.returncode == 0, generated.stderr
     receipt = json.loads(output.read_text())
     assert receipt["clone_root"] == str(dest.resolve())
-    assert receipt["schema"] == "cross-repo-changeset/v2"
+    assert receipt["schema"] == "cross-repo-changeset/v3"
     snapshot = receipt["claim_verification"]["snapshot"]
     assert snapshot["claims_root"] == str(authority.resolve())
     assert snapshot["source_root"].endswith("/.omo/_delivery/agent-workflows/runs")
@@ -2454,7 +2728,7 @@ def test_destination_collision_and_clone_failure(tmp_path):
         check=False,
     )
     assert proc.returncode == 1
-    assert parse_json(proc)["reason"] == "clone_failed"
+    assert parse_json(proc)["reason"] == "delivery_attempt_lookup_failed"
     assert not (tmp_path / "bad").exists()
 
 

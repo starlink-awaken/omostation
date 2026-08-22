@@ -288,24 +288,42 @@ worktree-cleanup:  ## 回收 TTL 过期 worktree
 # ── 🧬 Clone Lifecycle (独立 clone 生命周期管道) ──────────────────────────────
 
 clone-onboard:  ## 为新 agent 创建 clone + 基线
+	@test -n "$(AGENT_ID)" || (echo "AGENT_ID is required" >&2; exit 2)
+	@test -n "$(DELIVERY_ATTEMPT_ID)" || (echo "DELIVERY_ATTEMPT_ID is required" >&2; exit 2)
 	$(PY_STDLIB) bin/gac/clone-lifecycle.py onboard --agent-id $(AGENT_ID) \
-	  --destination "$(HOME)/agents/$(AGENT_ID)/ws" --profile governance
+	  --delivery-attempt-id $(DELIVERY_ATTEMPT_ID) \
+	  --destination "$(HOME)/agents/$(AGENT_ID)/attempts/$(DELIVERY_ATTEMPT_ID)/ws" \
+	  --profile governance
 
 clone-snapshot:  ## 为当前 clone 生成基线 manifest
-	$(PY_STDLIB) bin/gac/clone-lifecycle.py snapshot --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
-	  --output "$(HOME)/agents/$(AGENT_ID)/baseline.json"
+	@test -n "$(AGENT_ID)" || (echo "AGENT_ID is required" >&2; exit 2)
+	@test -n "$(DELIVERY_ATTEMPT_ID)" || (echo "DELIVERY_ATTEMPT_ID is required" >&2; exit 2)
+	$(PY_STDLIB) bin/gac/clone-lifecycle.py snapshot \
+	  --clone "$(HOME)/agents/$(AGENT_ID)/attempts/$(DELIVERY_ATTEMPT_ID)/ws" \
+	  --output "$(HOME)/agents/$(AGENT_ID)/attempts/$(DELIVERY_ATTEMPT_ID)/baseline.json"
 
 clone-changeset:  ## 生成跨仓变更集 + claim 校验
-	$(PY_STDLIB) bin/gac/clone-lifecycle.py changeset --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
-	  --baseline "$(HOME)/agents/$(AGENT_ID)/baseline.json" \
-	  --output "$(HOME)/agents/$(AGENT_ID)/changeset.json" --verify-claims
+	@test -n "$(AGENT_ID)" || (echo "AGENT_ID is required" >&2; exit 2)
+	@test -n "$(DELIVERY_ATTEMPT_ID)" || (echo "DELIVERY_ATTEMPT_ID is required" >&2; exit 2)
+	@test -n "$(CLAIMS_ROOT)" || (echo "CLAIMS_ROOT is required" >&2; exit 2)
+	$(PY_STDLIB) bin/gac/clone-lifecycle.py changeset \
+	  --clone "$(HOME)/agents/$(AGENT_ID)/attempts/$(DELIVERY_ATTEMPT_ID)/ws" \
+	  --baseline "$(HOME)/agents/$(AGENT_ID)/attempts/$(DELIVERY_ATTEMPT_ID)/baseline.json" \
+	  --output "$(HOME)/agents/$(AGENT_ID)/attempts/$(DELIVERY_ATTEMPT_ID)/changeset.json" \
+	  --verify-claims --claims-root "$(CLAIMS_ROOT)"
 
 clone-integrate:  ## 推送分支 + PR (dry-run)
-	$(PY_STDLIB) bin/gac/clone-lifecycle.py integrate --clone "$(HOME)/agents/$(AGENT_ID)/ws" \
-	  --agent-id $(AGENT_ID) --dry-run
+	@test -n "$(AGENT_ID)" || (echo "AGENT_ID is required" >&2; exit 2)
+	@test -n "$(DELIVERY_ATTEMPT_ID)" || (echo "DELIVERY_ATTEMPT_ID is required" >&2; exit 2)
+	$(PY_STDLIB) bin/gac/clone-lifecycle.py integrate \
+	  --clone "$(HOME)/agents/$(AGENT_ID)/attempts/$(DELIVERY_ATTEMPT_ID)/ws" \
+	  --agent-id $(AGENT_ID) --delivery-attempt-id $(DELIVERY_ATTEMPT_ID) --dry-run
 
 clone-retire:  ## 清理 clone
-	$(PY_STDLIB) bin/gac/clone-lifecycle.py retire --destination "$(HOME)/agents/$(AGENT_ID)/ws"
+	@test -n "$(AGENT_ID)" || (echo "AGENT_ID is required" >&2; exit 2)
+	@test -n "$(DELIVERY_ATTEMPT_ID)" || (echo "DELIVERY_ATTEMPT_ID is required" >&2; exit 2)
+	$(PY_STDLIB) bin/gac/clone-lifecycle.py retire \
+	  --destination "$(HOME)/agents/$(AGENT_ID)/attempts/$(DELIVERY_ATTEMPT_ID)/ws"
 
 clone-onboard-scan:  ## D2: 为活跃 agent 自动创建 clone (dry-run)
 	$(PY_STDLIB) bin/gac/agent-clone-onboard.py

@@ -28,6 +28,7 @@ RECEIPT_SCHEMA = "codex-worker-execution/v1"
 MIN_CODEX_VERSION = (0, 147, 0)
 MAX_TIMEOUT_SECONDS = 3600
 VERSION_RE = re.compile(r"^codex-cli (\d+)\.(\d+)\.(\d+)(?:[-+][0-9A-Za-z.-]+)?$")
+IDENTITY_COMPONENT_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 PROVIDER_QUOTA_RE = re.compile(
     r"(?:insufficient_quota|quota[_ -](?:exceeded|exhausted)|(?:usage|spending) limit(?: has been)? reached)",
     re.IGNORECASE,
@@ -251,7 +252,23 @@ def validate_workspace(value: Union[Path, str]) -> Path:
         canonical = Path(identity["canonical_root"]).expanduser().resolve(strict=True)
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         raise AdapterError("workspace_not_independent_clone") from exc
-    if identity.get("schema") != "agent-clone-identity/v1" or identity.get("ready") is not True or canonical != root:
+    schema = identity.get("schema")
+    if schema not in {"agent-clone-identity/v1", "agent-clone-identity/v2"}:
+        raise AdapterError("workspace_not_independent_clone")
+    if schema == "agent-clone-identity/v2":
+        actor_id = identity.get("actor_id")
+        attempt_id = identity.get("delivery_attempt_id")
+        if (
+            not isinstance(actor_id, str)
+            or not IDENTITY_COMPONENT_RE.fullmatch(actor_id)
+            or identity.get("agent_id") != actor_id
+            or not isinstance(attempt_id, str)
+            or not IDENTITY_COMPONENT_RE.fullmatch(attempt_id)
+            or identity.get("working_branch")
+            != f"agent/{actor_id}--{attempt_id}"
+        ):
+            raise AdapterError("workspace_not_independent_clone")
+    if identity.get("ready") is not True or canonical != root:
         raise AdapterError("workspace_not_independent_clone")
     return root
 

@@ -23,6 +23,7 @@ import argparse
 import json
 import os
 import re
+import secrets
 import shutil
 import stat
 import subprocess
@@ -245,17 +246,31 @@ def quarantine_remove_verified(
 def cmd_onboard(args: argparse.Namespace) -> int:
     """为新 agent 创建 clone + 生成基线 manifest."""
     agent_id = args.agent_id
+    delivery_attempt_id = getattr(args, "delivery_attempt_id", None)
+    if not delivery_attempt_id:
+        timestamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+        delivery_attempt_id = f"a{timestamp}-{secrets.token_hex(4)}"
     dest = Path(args.destination)
-    manifest_path = Path(args.manifest) if args.manifest else dest.parent / f"{agent_id}-baseline.json"
+    artifact_stem = f"{agent_id}-{delivery_attempt_id}"
+    manifest_path = (
+        Path(args.manifest)
+        if args.manifest
+        else dest.parent / f"{artifact_stem}-baseline.json"
+    )
     readiness_path = (
-        Path(args.readiness) if getattr(args, "readiness", None) else dest.parent / f"{agent_id}-readiness.json"
+        Path(args.readiness)
+        if getattr(args, "readiness", None)
+        else dest.parent / f"{artifact_stem}-readiness.json"
     )
     provenance_path = (
         Path(args.provenance)
         if getattr(args, "provenance", None)
-        else dest.parent / f"{agent_id}-provenance.json"
+        else dest.parent / f"{artifact_stem}-provenance.json"
     )
-    audit("onboard_start", f"agent={agent_id} dest={dest}")
+    audit(
+        "onboard_start",
+        f"agent={agent_id} attempt={delivery_attempt_id} dest={dest}",
+    )
     if os.path.lexists(manifest_path):
         return reject(
             "onboard",
@@ -285,6 +300,8 @@ def cmd_onboard(args: argparse.Namespace) -> int:
         "create",
         "--agent-id",
         agent_id,
+        "--delivery-attempt-id",
+        delivery_attempt_id,
         "--source",
         args.source,
         "--revision",
@@ -417,6 +434,8 @@ def cmd_onboard(args: argparse.Namespace) -> int:
             {
                 "ok": True,
                 "agent_id": agent_id,
+                "actor_id": agent_id,
+                "delivery_attempt_id": delivery_attempt_id,
                 "clone": str(dest),
                 "manifest": str(manifest_path),
                 "verification": "verified",
@@ -564,12 +583,13 @@ def cmd_integrate(args: argparse.Namespace) -> int:
     """推送分支 + 创建 PR (dry-run 默认)."""
     clone = Path(args.clone)
     agent_id = args.agent_id
-    branch = f"agent/{agent_id}"
+    requested_attempt = getattr(args, "delivery_attempt_id", None)
+    branch = (
+        f"agent/{agent_id}--{requested_attempt}"
+        if requested_attempt
+        else f"agent/{agent_id}"
+    )
     audit("integrate_start", f"agent={agent_id} branch={branch}")
-    if args.dry_run:
-        audit("integrate_dry_run", f"would push {branch} and create PR")
-        print(json.dumps({"ok": True, "dry_run": True, "branch": branch}))
-        return EXIT_OK
     if clone.is_symlink() or not (clone / ".git").is_dir():
         return reject(
             "integrate",
@@ -584,13 +604,38 @@ def cmd_integrate(args: argparse.Namespace) -> int:
     except (OSError, json.JSONDecodeError) as exc:
         return reject("integrate", "identity_unreadable", str(exc))
     if (
-        identity.get("schema") != "agent-clone-identity/v1"
+        identity.get("schema") != "agent-clone-identity/v2"
         or identity.get("ready") is not True
         or identity.get("canonical_root") != str(clone.resolve())
         or identity.get("agent_id") != agent_id
-        or identity.get("working_branch") != branch
     ):
         return reject("integrate", "identity_mismatch", "clone identity does not match integration request")
+    identity_attempt = identity.get("delivery_attempt_id")
+    if (
+        identity.get("actor_id") != agent_id
+        or not identity_attempt
+        or requested_attempt != identity_attempt
+    ):
+        return reject(
+            "integrate",
+            "delivery_attempt_mismatch",
+            "requested actor/attempt does not match clone identity",
+        )
+    branch = identity.get("working_branch", "")
+    if args.dry_run:
+        audit("integrate_dry_run", f"would publish new {branch} and create PR")
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "dry_run": True,
+                    "branch": branch,
+                    "actor_id": agent_id,
+                    "delivery_attempt_id": identity_attempt,
+                }
+            )
+        )
+        return EXIT_OK
     baseline = getattr(args, "baseline", None)
     changeset = getattr(args, "changeset", None)
     claims_root = getattr(args, "claims_root", None)
@@ -626,6 +671,8 @@ def cmd_integrate(args: argparse.Namespace) -> int:
         str(claims_root),
         "--json",
     ]
+    if identity_attempt:
+        verify_cmd.extend(["--delivery-attempt-id", identity_attempt])
     verified = run(verify_cmd)
     if verified.returncode != 0:
         return reject(
@@ -669,6 +716,8 @@ def cmd_integrate(args: argparse.Namespace) -> int:
             "-C",
             str(clone),
             "push",
+            "--porcelain",
+            f"--force-with-lease=refs/heads/{branch}:",
             "origin",
             f"{head_sha}:refs/heads/{branch}",
         ]
@@ -676,6 +725,16 @@ def cmd_integrate(args: argparse.Namespace) -> int:
     if r.returncode != 0:
         audit("integrate_failed", f"push rc={r.returncode}")
         return EXIT_POLICY
+    new_branch_marker = f":refs/heads/{branch}\t[new branch]"
+    if not any(
+        line.startswith("*\t") and line.endswith(new_branch_marker)
+        for line in r.stdout.splitlines()
+    ):
+        return reject(
+            "integrate",
+            "delivery_attempt_reused",
+            "remote attempt ref was not newly created by this integration",
+        )
     base = getattr(args, "base", "main")
     existing = run(
         [
@@ -731,7 +790,7 @@ def cmd_integrate(args: argparse.Namespace) -> int:
                 "--head",
                 f"{owner}:{branch}",
                 "--title",
-                f"fix(gac): harden {agent_id} clone lifecycle",
+                f"fix(gac): deliver {agent_id} attempt {identity_attempt or 'legacy'}",
                 "--body",
                 "Automated independent-clone lifecycle integration.",
             ],
@@ -741,19 +800,23 @@ def cmd_integrate(args: argparse.Namespace) -> int:
             return reject("integrate", "pr_create_failed", created.stderr.strip() or "gh pr create failed")
         pr_url = created.stdout.strip()
     audit("integrate_ok", f"pushed {branch} pr={pr_url}")
-    print(
-        json.dumps(
+    result = {
+        "ok": True,
+        "branch": branch,
+        "head_sha": head_sha,
+        "change_id": verification["change_id"],
+        "repository": repo_slug,
+        "pushed": True,
+        "pr_url": pr_url,
+    }
+    if identity_attempt:
+        result.update(
             {
-                "ok": True,
-                "branch": branch,
-                "head_sha": head_sha,
-                "change_id": verification["change_id"],
-                "repository": repo_slug,
-                "pushed": True,
-                "pr_url": pr_url,
+                "actor_id": identity["actor_id"],
+                "delivery_attempt_id": identity_attempt,
             }
         )
-    )
+    print(json.dumps(result))
     return EXIT_OK
 
 
@@ -791,7 +854,8 @@ def cmd_retire(args: argparse.Namespace) -> int:
     except (OSError, json.JSONDecodeError) as exc:
         return reject("retire", "identity_unreadable", str(exc))
     if (
-        identity.get("schema") != "agent-clone-identity/v1"
+        identity.get("schema")
+        not in {"agent-clone-identity/v1", "agent-clone-identity/v2"}
         or identity.get("ready") is not True
         or identity.get("canonical_root") != str(resolved)
     ):
@@ -906,6 +970,10 @@ def build_parser() -> argparse.ArgumentParser:
     # onboard
     sp = sub.add_parser("onboard", help="创建 clone + 生成 manifest")
     sp.add_argument("--agent-id", required=True)
+    sp.add_argument(
+        "--delivery-attempt-id",
+        help="single delivery attempt; generated when omitted",
+    )
     sp.add_argument("--source", default=str(ROOT))
     sp.add_argument(
         "--revision",
@@ -967,6 +1035,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("integrate", help="推送 + PR")
     sp.add_argument("--clone", required=True)
     sp.add_argument("--agent-id", required=True)
+    sp.add_argument("--delivery-attempt-id", required=True)
     sp.add_argument("--base", default="main")
     sp.add_argument("--baseline", help="baseline manifest bound to the verified changeset")
     sp.add_argument("--changeset", help="current changeset created with --verify-claims")

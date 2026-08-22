@@ -53,6 +53,32 @@ def clone_root(tmp_path: Path) -> Path:
     return root
 
 
+def test_validate_workspace_accepts_attempt_qualified_clone_identity(tmp_path: Path) -> None:
+    root = clone_root(tmp_path)
+    (root / ".git" / "agent-clone-identity.json").write_text(
+        json.dumps(
+            {
+                "schema": "agent-clone-identity/v2",
+                "agent_id": "actor-1",
+                "actor_id": "actor-1",
+                "delivery_attempt_id": "attempt-001",
+                "working_branch": "agent/actor-1--attempt-001",
+                "canonical_root": str(root),
+                "ready": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert adapter.validate_workspace(root) == root.resolve()
+
+    identity = json.loads((root / ".git" / "agent-clone-identity.json").read_text())
+    identity["delivery_attempt_id"] = "attempt-002"
+    (root / ".git" / "agent-clone-identity.json").write_text(json.dumps(identity))
+    with pytest.raises(adapter.AdapterError, match="workspace_not_independent_clone"):
+        adapter.validate_workspace(root)
+
+
 def real_clone_root(tmp_path: Path) -> Path:
     root = tmp_path / "real-clone"
     root.mkdir(parents=True)
