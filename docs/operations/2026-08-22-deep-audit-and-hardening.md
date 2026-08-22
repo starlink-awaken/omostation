@@ -50,7 +50,15 @@ omlxc 内建的 `models reconcile` 命令看起来正是为解决这个问题设
 
 **根因定位到底**：`~/.lmstudio/settings.json` 里 `.defaultContextLength = {"type": "max", "value": 8192}`。`type: "max"` 表示**所有** JIT 自动加载的模型都会用模型自身支持的最大上下文，而不是这个 `value` 字段——852736 正是 qwythos-9b 自己支持的最大值。这是全局设置，不分模型，今晚每一次"意外触发大上下文加载"最终都能归到这一项。`~/.lmstudio/.internal/historical-version-info.json` 里有条迁移记录 `v0_4_16_b2_defaultContextLength8192`，说明固定 8192 曾是 LM Studio 的出厂默认值，当前的 `"max"` 是后来被改掉的。
 
-未直接编辑此文件：反编译后的 LM Studio 主进程代码高度混淆，拿不到 `type` 字段的合法枚举值，盲改 JSON 有把这个设置写成 LM Studio 读不懂的值的风险。**需要人工在 LM Studio 设置界面里改**（大概率在 Developer 分区，和同一 JSON 节点下的 `jitModelTTL`/`unloadPreviousJITModelOnLoad` 相邻），把类型从"跟随模型最大值"改成固定数值。这一步做完后，本节和第三节 3.1 记录的问题会从根上解决，不需要再逐个 placement 打补丁。
+**代码侧已根治 (`6c91a8c`)**：数据面 `ensure_loaded` 现在会注入该后端全部 placement 的最小 `context_limit` 作为 `lms load -c`，不再裸加载。即使 LM Studio 全局设置仍是 "max"，omlxc 触发的加载也受控。GUI 侧改 `defaultContextLength` 降级为纵深防御（仍建议做，覆盖非 omlxc 触发的加载）。
+
+## 四点五、探测层三连修 (2026-08-22 下午追加)
+
+审计后连续定位并修复了三个探测层缺陷，全部已提交：
+
+1. **probe 预算 1→100 (`8f64b71`)** — reasoning 模型思维链吃光 1 token 预算致 content 恒空、后端被永判不可用。该修复 08-20 曾做过但未提交，被并发 checkout 重置抹掉并被后续 wheel 构建覆盖回 bug 版（比对已安装包与 git 历史坐实）。教训：**修复必须立即 commit**。
+2. **数据面加载注入受控上下文 (`6c91a8c`)** — 见上文根因定位。
+3. **繁忙模型阻塞探针（未修，自愈型，已定位）** — 探测从"已加载模型"中选探针目标；当唯一已加载模型正处于长生成时，probe 请求排在后面 10s 超时 → 整个后端被判不可用（实测 0/15）。生成结束后 60s 内自动恢复（实测 14/15）。修复需要探测设计层面的改动（probe 超时不判死后端/挑非忙碌探针），留作后续。
 
 ## 五、AetherForge 全链路验证
 
