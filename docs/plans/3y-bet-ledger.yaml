@@ -3123,6 +3123,7 @@ bets:
   status: done
   blocked_reentry_policy: human_approval_required
   blocked_at: 2026-08-22
+  unblocked_at: 2026-08-22
   blocked_by:
   - 权威 query-only observer 对完整窗口 2026-08-12T12:16:45Z..2026-08-19T12:16:45Z
     的直接读回为 0/20、FAIL、human_gate=not_ready
