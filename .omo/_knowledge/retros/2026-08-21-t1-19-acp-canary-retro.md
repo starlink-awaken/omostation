@@ -1,5 +1,9 @@
 ---
 type: bet-retro
+status: active
+lifecycle: history
+owner: laowang-agent
+last-reviewed: 2026-08-21
 bet: BET-Y1Q2-T1-19
 date: 2026-08-21
 operator: laowang (claude-code)
