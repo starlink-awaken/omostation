@@ -109,12 +109,27 @@ def _expected_binding(module, identity: dict[str, str]) -> dict[str, str]:
     }
 
 
-def _collect_clone_args(module, identity: dict[str, str]) -> dict[str, str]:
+def _collect_clone_args(module, identity: dict[str, str]) -> dict[str, object]:
     workspace = identity["workspace_root"]
+    binding_receipt = {
+        "run_id": "run-1",
+        "packet_id": "WP-1",
+        "packet_hash": "sha256:" + "a" * 64,
+        "instruction_digest": "sha256:" + "b" * 64,
+    }
     return {
         "canonical_root_digest": module._path_digest(workspace),
         "guard_receipt_digest": module._digest_payload(_guard_receipt(workspace, identity["agent_id"])),
         "orca_worktree_id": _orca_worktree_id(Path(workspace)),
+        "previous_provider_attempt": module._build_orca_provider_attempt(
+            binding_receipt=binding_receipt,
+            omo_dispatch_id=identity["omo_dispatch_id"],
+            state="awaiting_human_action",
+            evidence_digest=module._initial_provider_evidence_digest(
+                binding_receipt,
+                identity["omo_dispatch_id"],
+            ),
+        ),
     }
 
 
@@ -417,6 +432,12 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
         codex_executable="/opt/homebrew/bin/codex",
         runner=runner,
     )
+    binding_receipt = {
+        "run_id": "run-1",
+        "packet_id": "WP-1",
+        "packet_hash": "sha256:" + "a" * 64,
+        "instruction_digest": "sha256:" + "b" * 64,
+    }
 
     assert receipt == {
         "schema": "orca-codex-supervisor/v1",
@@ -441,6 +462,15 @@ def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completio
         "launch_request": _launch_request(_trusted_codex_argv(tmp_path)),
         "input_accepted": "unproven",
         "model_completion": "unproven",
+        "provider_attempt": module._build_orca_provider_attempt(
+            binding_receipt=binding_receipt,
+            omo_dispatch_id=identity["omo_dispatch_id"],
+            state="awaiting_human_action",
+            evidence_digest=module._initial_provider_evidence_digest(
+                binding_receipt,
+                identity["omo_dispatch_id"],
+            ),
+        ),
     }
     assert runner.calls == [
         (
@@ -1015,6 +1045,13 @@ def test_collect_returns_only_digest_after_succeeded_worker_done_and_transcript(
     assert receipt["state"] == "settled"
     assert receipt["model_completion"] == "observed"
     assert receipt["transcript_digest"].startswith("sha256:")
+    assert receipt["provider_attempt"]["state"] == "settled_observed"
+    assert receipt["provider_attempt"]["outcome"] == "observed_not_adjudicated"
+    assert receipt["provider_attempt"]["revision"] == 2
+    assert receipt["provider_attempt"]["human_action_required"] is True
+    assert receipt["provider_attempt"]["previous_receipt_digest"] == _collect_clone_args(
+        module, identity
+    )["previous_provider_attempt"]["receipt_digest"]
     assert "private result" not in json.dumps(receipt)
     assert runner.calls == [
         ("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json"),
@@ -1094,6 +1131,12 @@ def test_collect_uses_bounded_terminal_evidence_when_session_was_not_reported(
     assert receipt["model_output_digest"].startswith("sha256:")
     assert receipt["completion_receipt_digest"].startswith("sha256:")
     assert receipt["source_identity_digest"].startswith("sha256:")
+    assert receipt["provider_attempt"]["state"] == "settled_observed"
+    assert receipt["provider_attempt"]["outcome"] == "observed_not_adjudicated"
+    assert receipt["provider_attempt"]["revision"] == 2
+    assert receipt["provider_attempt"]["previous_receipt_digest"] == _collect_clone_args(
+        module, identity
+    )["previous_provider_attempt"]["receipt_digest"]
     serialized = json.dumps(receipt)
     assert "Completed the declared documentation update" not in serialized
     assert "terminal-source-001" not in serialized

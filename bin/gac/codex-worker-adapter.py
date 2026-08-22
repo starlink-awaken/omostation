@@ -28,6 +28,10 @@ RECEIPT_SCHEMA = "codex-worker-execution/v1"
 MIN_CODEX_VERSION = (0, 147, 0)
 MAX_TIMEOUT_SECONDS = 3600
 VERSION_RE = re.compile(r"^codex-cli (\d+)\.(\d+)\.(\d+)(?:[-+][0-9A-Za-z.-]+)?$")
+PROVIDER_QUOTA_RE = re.compile(
+    r"(?:insufficient_quota|quota[_ -](?:exceeded|exhausted)|(?:usage|spending) limit(?: has been)? reached)",
+    re.IGNORECASE,
+)
 SECRET_ENV_PARTS = (
     "TOKEN",
     "KEY",
@@ -68,10 +72,17 @@ KNOWN_JSONL_EVENT_TYPES = {
 class AdapterError(RuntimeError):
     """Expose only stable bounded-adapter failure codes."""
 
-    def __init__(self, code: str, *, provider_review: str = "unknown") -> None:
+    def __init__(
+        self,
+        code: str,
+        *,
+        provider_review: str = "unknown",
+        provider_attempt: Optional[dict[str, Any]] = None,
+    ) -> None:
         super().__init__(code)
         self.code = code
         self.provider_review = provider_review
+        self.provider_attempt = provider_attempt
 
 
 def _binding_contract() -> Any:
@@ -138,6 +149,44 @@ def _canonical_json(payload: dict[str, Any]) -> str:
 def receipt_digest(payload: dict[str, Any]) -> str:
     projected = {key: value for key, value in payload.items() if key != "receipt_sha256"}
     return digest_text(_canonical_json(projected))
+
+
+def _provider_failure_code(stderr: str) -> str:
+    return "provider_quota_exhausted" if PROVIDER_QUOTA_RE.search(stderr) else "worker_nonzero"
+
+
+def _provider_failure_evidence_digest(error_code: str, provider_review: str) -> str:
+    safe_failure = {
+        "error_code": error_code,
+        "provider_review": provider_review,
+    }
+    return "sha256:" + digest_text(_canonical_json(safe_failure))
+
+
+def _build_provider_attempt(
+    *,
+    binding_receipt: dict[str, str],
+    attempt_key: str,
+    state: str,
+    evidence_digest: str,
+    error_code: str | None = None,
+) -> dict[str, Any]:
+    try:
+        return _binding_contract().build_provider_attempt_receipt(
+            provider_id="codex",
+            transport="codex_exec",
+            route_ref=None,
+            binding_receipt=binding_receipt,
+            attempt_key=attempt_key,
+            state=state,
+            error_code=error_code,
+            evidence_digest=evidence_digest,
+            workspace_admission="verified_independent_clone",
+        )
+    except Exception as exc:  # noqa: BLE001 - conformance projection fails closed.
+        if isinstance(exc, AdapterError):
+            raise
+        raise AdapterError("provider_conformance_rejected") from exc
 
 
 def fixed_argv(binary: Union[Path, str], workspace_root: Union[Path, str], prompt: str) -> list[str]:
@@ -718,6 +767,7 @@ def run_worker(
             delivery_binding=delivery_binding,
             binding_receipt=binding_receipt,
         )
+    attempt_key = uuid.uuid4().hex
     root = validate_workspace(workspace_root)
     receipt_file = validate_receipt_path(receipt_path) if receipt_path is not None else None
     binary = codex_resolver()
@@ -744,22 +794,56 @@ def run_worker(
         except OSError as exc:
             raise AdapterError("codex_unavailable") from exc
         try:
-            stdout, _stderr = process.communicate(timeout=timeout_seconds)
+            stdout, stderr = process.communicate(timeout=timeout_seconds)
         except subprocess.TimeoutExpired as exc:
             provider_review = _provider_review(_timeout_output(exc), timed_out=True)
             if not _terminate_timed_out_process(process, group_probe, group_terminator):
                 raise AdapterError("cleanup_unconfirmed") from exc
-            raise AdapterError("worker_timeout", provider_review=provider_review) from exc
+            error_code = "worker_timeout"
+            raise AdapterError(
+                error_code,
+                provider_review=provider_review,
+                provider_attempt=_build_provider_attempt(
+                    binding_receipt=binding_receipt,
+                    attempt_key=attempt_key,
+                    state="failed",
+                    error_code=error_code,
+                    evidence_digest=_provider_failure_evidence_digest(error_code, provider_review),
+                ),
+            ) from exc
         if group_probe(process.pid):
             if not _terminate_surviving_group(process.pid, group_probe, group_terminator):
                 raise AdapterError("cleanup_unconfirmed")
             raise AdapterError("process_leaked")
         if process.returncode != 0:
-            raise AdapterError("worker_nonzero")
+            error_code = _provider_failure_code(stderr)
+            provider_review = "unknown"
+            raise AdapterError(
+                error_code,
+                provider_review=provider_review,
+                provider_attempt=_build_provider_attempt(
+                    binding_receipt=binding_receipt,
+                    attempt_key=attempt_key,
+                    state="failed",
+                    error_code=error_code,
+                    evidence_digest=_provider_failure_evidence_digest(error_code, provider_review),
+                ),
+            )
         output = _final_assistant_message(stdout)
         provider_review = _provider_review(stdout)
         if provider_review == "human_required":
-            raise AdapterError("human_approval_required", provider_review=provider_review)
+            error_code = "human_approval_required"
+            raise AdapterError(
+                error_code,
+                provider_review=provider_review,
+                provider_attempt=_build_provider_attempt(
+                    binding_receipt=binding_receipt,
+                    attempt_key=attempt_key,
+                    state="failed",
+                    error_code=error_code,
+                    evidence_digest=_provider_failure_evidence_digest(error_code, provider_review),
+                ),
+            )
         if expect_exact is not None and output != expect_exact:
             raise AdapterError("marker_mismatch")
         changed_paths, patch, worker_states = _execution_delta(
@@ -801,6 +885,12 @@ def run_worker(
             },
             "worker": "codex",
         }
+        receipt["provider_attempt"] = _build_provider_attempt(
+            binding_receipt=binding_receipt,
+            attempt_key=attempt_key,
+            state="succeeded",
+            evidence_digest="sha256:" + receipt["output_sha256"],
+        )
         receipt["receipt_sha256"] = receipt_digest(receipt)
         try:
             staged_receipt = _stage_receipt(receipt_file, receipt)
@@ -888,16 +978,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     except (AdapterError, json.JSONDecodeError) as exc:
         if isinstance(exc, json.JSONDecodeError):
             exc = AdapterError("instruction_binding_rejected")
-        print(
-            _canonical_json(
-                {
-                    "error_code": exc.code,
-                    "provider_review": exc.provider_review,
-                    "status": "failed",
-                }
-            ),
-            file=sys.stderr,
-        )
+        failure = {
+            "error_code": exc.code,
+            "provider_review": exc.provider_review,
+            "status": "failed",
+        }
+        if exc.provider_attempt is not None:
+            failure["provider_attempt"] = exc.provider_attempt
+        print(_canonical_json(failure), file=sys.stderr)
         return 2
     if args.execute:
         sys.stdout.write(result["output"])

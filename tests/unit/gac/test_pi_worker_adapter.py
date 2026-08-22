@@ -149,6 +149,15 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
                 '--timeout-seconds 120 --prompt "{prompt}"'
             ),
             "worker_ack_protocol": "omo-worker-origin-ack/v1",
+            "provider_conformance": {
+                "transport_id": "pi_cli",
+                "backend_ref": "omlxc",
+                "route_ref": "bos://compute/aetherforge/infer",
+                "operation_level": "L0",
+                "write_scope": "none",
+                "workspace_admission": "not_required_read_only",
+                "states": ["succeeded", "failed"],
+            },
         }
     }
     assert omp["transports"] == {
@@ -162,6 +171,15 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
                 '--timeout-seconds 120 --prompt "{prompt}"'
             ),
             "worker_ack_protocol": "omo-worker-origin-ack/v1",
+            "provider_conformance": {
+                "transport_id": "omp_cli",
+                "backend_ref": "omlxc",
+                "route_ref": "bos://compute/aetherforge/infer",
+                "operation_level": "L0",
+                "write_scope": "none",
+                "workspace_admission": "not_required_read_only",
+                "states": ["succeeded", "failed"],
+            },
         }
     }
 
@@ -394,6 +412,8 @@ def test_health_identity_mismatch_fails_closed_without_starting_process(tmp_path
     assert called is False
     payload = json.loads(receipt.read_text(encoding="utf-8"))
     assert payload["error_code"] == "health_rejected"
+    assert payload["provider_attempt"]["state"] == "failed"
+    assert payload["provider_attempt"]["error_code"] == "health_rejected"
 
 
 def test_success_writes_model_text_only_to_stdout_and_keeps_receipt_redacted(
@@ -415,6 +435,11 @@ def test_success_writes_model_text_only_to_stdout_and_keeps_receipt_redacted(
     payload = json.loads(receipt.read_text(encoding="utf-8"))
     assert result["output"] == model_text
     assert payload["outcome"] == "succeeded"
+    assert payload["provider_attempt"]["provider_id"] == "omlxc"
+    assert payload["provider_attempt"]["transport"] == "pi_cli"
+    assert payload["provider_attempt"]["route_ref"] == "bos://compute/aetherforge/infer"
+    assert payload["provider_attempt"]["state"] == "succeeded"
+    assert payload["provider_attempt"]["authority"]["write_scope"] == "none"
     assert payload["output_digest"] == adapter.digest_bytes(model_text.encode())
     assert model_text not in json.dumps(payload)
     assert "private input" not in json.dumps(payload)
@@ -438,6 +463,32 @@ def test_transport_can_run_without_persisting_an_adapter_receipt(tmp_path: Path)
 
     assert result["output"] == "transport result\n"
     assert result["receipt"] is None
+
+
+def test_provider_conformance_failure_never_publishes_legacy_receipt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    receipt = safe_receipt(tmp_path)
+
+    def reject_projection(**_kwargs):
+        raise adapter.AdapterError("provider_conformance_rejected")
+
+    monkeypatch.setattr(adapter, "_build_provider_attempt", reject_projection)
+
+    with pytest.raises(adapter.AdapterError, match="provider_conformance_rejected"):
+        adapter.run_worker(
+            prompt="transport task",
+            execute=True,
+            receipt_path=receipt,
+            user_home=user_pi_home(tmp_path),
+            popen_factory=lambda *_args, **_kwargs: FakeProcess(stdout="transport result\n"),
+            health_probe=healthy,
+            marker_probe=no_marker,
+            version_reader=lambda: "0.84.1",
+        )
+
+    assert not receipt.exists()
 
 
 def test_cli_forwards_successful_model_text_to_stdout(

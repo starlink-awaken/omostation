@@ -89,6 +89,74 @@ def _complete_worker_origin_ack(
         raise ValueError("worker_ack_rejected") from exc
 
 
+def _provider_contract() -> Any:
+    contract_path = Path(__file__).resolve().parents[1] / "plan" / "bet-ledger.py"
+    spec = importlib.util.spec_from_file_location("_orca_provider_conformance_contract", contract_path)
+    if spec is None or spec.loader is None:
+        raise ValueError("provider_conformance_unavailable")
+    contract = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(contract)
+    except Exception as exc:  # noqa: BLE001 - conformance projection fails closed.
+        raise ValueError("provider_conformance_rejected") from exc
+    return contract
+
+
+def _initial_provider_evidence_digest(
+    binding_receipt: dict[str, str], omo_dispatch_id: str
+) -> str:
+    return _digest_payload(
+        {
+            "binding": {
+                key: binding_receipt[key]
+                for key in ("instruction_digest", "packet_hash", "packet_id", "run_id")
+            },
+            "omo_dispatch_id": omo_dispatch_id,
+            "state": "awaiting_human_action",
+        }
+    )
+
+
+def _build_orca_provider_attempt(
+    *,
+    binding_receipt: dict[str, str],
+    omo_dispatch_id: str,
+    state: str,
+    evidence_digest: str,
+    previous_attempt: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    try:
+        return _provider_contract().build_provider_attempt_receipt(
+            provider_id="codex",
+            transport="orca_manual_break_glass",
+            route_ref=None,
+            binding_receipt=binding_receipt,
+            attempt_key=omo_dispatch_id,
+            state=state,
+            evidence_digest=evidence_digest,
+            workspace_admission="verified_independent_clone",
+            previous_attempt=previous_attempt,
+        )
+    except Exception as exc:  # noqa: BLE001 - conformance projection fails closed.
+        raise ValueError("provider_conformance_rejected") from exc
+
+
+def _settled_orca_provider_attempt(
+    *,
+    binding_receipt: dict[str, str],
+    omo_dispatch_id: str,
+    evidence_digest: str,
+    previous_attempt: dict[str, Any],
+) -> dict[str, Any]:
+    return _build_orca_provider_attempt(
+        binding_receipt=binding_receipt,
+        omo_dispatch_id=omo_dispatch_id,
+        state="settled_observed",
+        evidence_digest=evidence_digest,
+        previous_attempt=previous_attempt,
+    )
+
+
 def _subprocess_runner(command: Command, timeout_seconds: float) -> tuple[int, str, str]:
     try:
         completed = subprocess.run(
@@ -1057,6 +1125,20 @@ def start_supervised_codex(
         "input_accepted": "unproven",
         "model_completion": "unproven",
     }
+    try:
+        receipt["provider_attempt"] = _build_orca_provider_attempt(
+            binding_receipt=binding_receipt,
+            omo_dispatch_id=omo_dispatch_id,
+            state="awaiting_human_action",
+            evidence_digest=_initial_provider_evidence_digest(binding_receipt, omo_dispatch_id),
+        )
+    except ValueError:
+        return _failure(
+            binding=binding,
+            stage="provider_conformance",
+            reason="provider_conformance_rejected",
+            orca=orca,
+        )
     if idempotency_key is not None:
         receipt["idempotency"] = {
             "transaction_key_digest": "sha256:" + hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest(),
@@ -1083,6 +1165,7 @@ def collect_supervised_codex(
     orca_task_id: str,
     orca_dispatch_id: str,
     terminal_handle: str,
+    previous_provider_attempt: dict[str, Any],
     runner: Runner = _subprocess_runner,
     guard_runner: GuardRunner | None = None,
     instruction_binding: dict[str, Any] | None = None,
@@ -1296,7 +1379,7 @@ def collect_supervised_codex(
                 orca=orca,
             )
         output_digest = _digest_payload(transcript)
-        return {
+        receipt = {
             "schema": SCHEMA,
             "ok": True,
             "state": "settled",
@@ -1309,6 +1392,21 @@ def collect_supervised_codex(
             "model_output_digest": output_digest,
             "transcript_digest": output_digest,
         }
+        try:
+            receipt["provider_attempt"] = _settled_orca_provider_attempt(
+                binding_receipt=binding_receipt,
+                omo_dispatch_id=omo_dispatch_id,
+                evidence_digest=output_digest,
+                previous_attempt=previous_provider_attempt,
+            )
+        except ValueError:
+            return _failure(
+                binding=binding,
+                stage="provider_conformance",
+                reason="provider_conformance_rejected",
+                orca=orca,
+            )
+        return receipt
     if not _session_not_reported(transcript_payload_raw):
         return _failure(
             binding=binding,
@@ -1395,7 +1493,7 @@ def collect_supervised_codex(
             reason="model_output_unproven",
             orca=orca,
         )
-    return {
+    receipt = {
         "schema": SCHEMA,
         "ok": True,
         "state": "settled",
@@ -1410,6 +1508,21 @@ def collect_supervised_codex(
         "completion_receipt_digest": _digest_payload(completion),
         "source_identity_digest": "sha256:" + hashlib.sha256(source_identity.encode("utf-8")).hexdigest(),
     }
+    try:
+        receipt["provider_attempt"] = _settled_orca_provider_attempt(
+            binding_receipt=binding_receipt,
+            omo_dispatch_id=omo_dispatch_id,
+            evidence_digest=receipt["model_output_digest"],
+            previous_attempt=previous_provider_attempt,
+        )
+    except ValueError:
+        return _failure(
+            binding=binding,
+            stage="provider_conformance",
+            reason="provider_conformance_rejected",
+            orca=orca,
+        )
+    return receipt
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -1439,6 +1552,7 @@ def _parser() -> argparse.ArgumentParser:
     collect.add_argument("--orca-task-id", required=True)
     collect.add_argument("--orca-dispatch-id", required=True)
     collect.add_argument("--terminal-handle", required=True)
+    collect.add_argument("--previous-provider-attempt-json", required=True)
     return parser
 
 
@@ -1468,6 +1582,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             timeout_ms=args.timeout_ms,
         )
     else:
+        try:
+            previous_provider_attempt = json.loads(args.previous_provider_attempt_json)
+        except json.JSONDecodeError:
+            print(_canonical_json(_failure(binding=None, stage="provider_conformance", reason="provider_conformance_rejected")))
+            return 1
+        if not isinstance(previous_provider_attempt, dict):
+            print(_canonical_json(_failure(binding=None, stage="provider_conformance", reason="provider_conformance_rejected")))
+            return 1
         receipt = collect_supervised_codex(
             **values,
             agent_id=args.agent_id,
@@ -1478,6 +1600,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             orca_task_id=args.orca_task_id,
             orca_dispatch_id=args.orca_dispatch_id,
             terminal_handle=args.terminal_handle,
+            previous_provider_attempt=previous_provider_attempt,
         )
     print(_canonical_json(receipt))
     return 0 if receipt["ok"] else 1

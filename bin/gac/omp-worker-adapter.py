@@ -103,6 +103,43 @@ def digest_bytes(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
+def _provider_evidence_digest(receipt: dict[str, Any], error_code: str | None) -> str:
+    output_digest = receipt.get("output_digest")
+    if isinstance(output_digest, str) and re.fullmatch(r"[0-9a-f]{64}", output_digest):
+        return "sha256:" + output_digest
+    safe_failure = {
+        "checks": receipt.get("checks"),
+        "error_code": error_code or "adapter_failed",
+    }
+    canonical = json.dumps(safe_failure, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return "sha256:" + digest_bytes(canonical.encode("utf-8"))
+
+
+def _build_provider_attempt(
+    *,
+    binding_receipt: dict[str, str],
+    attempt_key: str,
+    receipt: dict[str, Any],
+    error_code: str | None,
+) -> dict[str, Any]:
+    try:
+        return _binding_contract().build_provider_attempt_receipt(
+            provider_id=PROVIDER,
+            transport="omp_cli",
+            route_ref=ROUTE_REF,
+            binding_receipt=binding_receipt,
+            attempt_key=attempt_key,
+            state="failed" if error_code is not None else "succeeded",
+            error_code=error_code,
+            evidence_digest=_provider_evidence_digest(receipt, error_code),
+            workspace_admission="not_required_read_only",
+        )
+    except Exception as exc:  # noqa: BLE001 - conformance projection fails closed.
+        if isinstance(exc, AdapterError):
+            raise
+        raise AdapterError("provider_conformance_rejected") from exc
+
+
 def _utc_now() -> str:
     return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
@@ -706,7 +743,20 @@ def run_worker(
             receipt["error_code"] = error_code
         receipt["completed_at"] = _utc_now()
         receipt["duration_seconds"] = round(max(0.0, time.monotonic() - started), 3)
-        if receipt_file is not None:
+        provider_attempt_ready = False
+        try:
+            receipt["provider_attempt"] = _build_provider_attempt(
+                binding_receipt=binding_receipt,
+                attempt_key=marker.split("=", 1)[1],
+                receipt=receipt,
+                error_code=error_code,
+            )
+            provider_attempt_ready = True
+        except AdapterError:
+            error_code = "provider_conformance_rejected"
+            receipt["outcome"] = "failed"
+            receipt["error_code"] = error_code
+        if receipt_file is not None and provider_attempt_ready:
             try:
                 _write_receipt(receipt_file, receipt)
             except OSError:

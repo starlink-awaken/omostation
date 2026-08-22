@@ -565,6 +565,11 @@ def test_success_returns_model_text_but_receipt_contains_only_digest(
     assert payload["model"] == "coding"
     assert payload["route_ref"] == "bos://compute/aetherforge/infer"
     assert payload["output_digest"] == adapter.digest_bytes(model_text.encode())
+    assert payload["provider_attempt"]["provider_id"] == "omlxc"
+    assert payload["provider_attempt"]["transport"] == "omp_cli"
+    assert payload["provider_attempt"]["route_ref"] == "bos://compute/aetherforge/infer"
+    assert payload["provider_attempt"]["state"] == "succeeded"
+    assert payload["provider_attempt"]["authority"]["write_scope"] == "none"
     assert model_text not in json.dumps(payload)
     assert "private prompt" not in json.dumps(payload)
     serialized = json.dumps(payload)
@@ -600,6 +605,33 @@ def test_transport_can_run_without_adapter_receipt(tmp_path: Path) -> None:
     )
 
     assert result == {"output": "transport result\n", "receipt": None}
+
+
+def test_provider_conformance_failure_never_publishes_legacy_receipt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    receipt = safe_receipt(tmp_path)
+
+    def reject_projection(**_kwargs):
+        raise adapter.AdapterError("provider_conformance_rejected")
+
+    monkeypatch.setattr(adapter, "_build_provider_attempt", reject_projection)
+
+    with pytest.raises(adapter.AdapterError, match="provider_conformance_rejected"):
+        adapter.run_worker(
+            prompt="transport",
+            execute=True,
+            receipt_path=receipt,
+            user_home=user_omp_home(tmp_path),
+            popen_factory=lambda *_args, **_kwargs: FakeProcess(stdout="transport result\n"),
+            health_probe=healthy,
+            marker_probe=no_marker,
+            version_reader=lambda: "16.1.16",
+            api_key_resolver=lambda _command: "temporary-api-key",
+        )
+
+    assert not receipt.exists()
 
 
 def test_timeout_reaps_process_and_fails_closed(tmp_path: Path) -> None:
