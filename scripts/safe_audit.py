@@ -70,7 +70,12 @@ def lms_load(ssh_target: str | None, model_id: str, context: int, ttl: int) -> t
     else:
         argv = [LMS_LOCAL, "load", model_id, "-c", str(context), "--parallel", "1", "--ttl", str(ttl), "-y"]
     result = subprocess.run(argv, capture_output=True, text=True, timeout=180)
-    ok = result.returncode == 0 and "loaded successfully" in result.stdout.lower()
+    # 字符串匹配 "loaded successfully" 曾经不可靠: 进度条 spinner 的 ANSI
+    # 控制序列有时会把确认文字挤出/打断输出流, 即便模型其实已加载成功
+    # (2026-08-22 实测: gemma-4-e2b/ornith-9b/vision 三个都误判 FAIL,
+    # 但 lms ps 显示它们其实是 IDLE 已加载)。改为直接查 lms ps 确认真相,
+    # 不再信任子进程 stdout 里的文字匹配。
+    ok = already_loaded(ssh_target, model_id)
     return ok, (result.stdout[-300:] if result.stdout else result.stderr[-300:])
 
 
