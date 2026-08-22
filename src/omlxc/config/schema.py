@@ -27,6 +27,7 @@ class DaemonConfig(ConfigModel):
     socket_path: Path
     autostart: bool = False
     probe_interval_seconds: float = Field(default=10.0, gt=0)
+    reconcile_interval_seconds: float = Field(default=300.0, gt=0)
 
     @field_validator("socket_path", mode="before")
     @classmethod

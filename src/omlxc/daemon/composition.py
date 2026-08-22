@@ -6,6 +6,8 @@ import asyncio
 import hashlib
 import ipaddress
 import json
+import logging
+import subprocess
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from contextlib import asynccontextmanager, suppress
@@ -30,6 +32,8 @@ from omlxc.adapters import (
 )
 from omlxc.api import create_app
 from omlxc.autonomy import (
+    MemoryAdmissionPolicy,
+    MemorySnapshot,
     OperationTimeouts,
     PlacementOperationCoordinator,
     PlacementOperationOutcome,
@@ -37,6 +41,8 @@ from omlxc.autonomy import (
     PlacementProbeReason,
     PlacementTarget,
     PlacementWriteAction,
+    ReconcileLoop,
+    ReconciliationEngine,
 )
 from omlxc.config import (
     AppConfig,
@@ -1154,6 +1160,65 @@ class ResourceComponent:
                 await close()
 
 
+_logger = logging.getLogger(__name__)
+
+
+async def _sample_memory_snapshot() -> MemorySnapshot | None:
+    """本机真实可用内存快照 (vm_stat 口径: free + purgeable + inactive*0.7,
+    比 naive 的 Pages free 更贴近实际可分配量 —— 2026-08-22 生产验证过的公式)。
+    子进程调用经 asyncio.to_thread 隔离，不阻塞事件循环。"""
+    try:
+        vm = await asyncio.to_thread(
+            subprocess.run, ["vm_stat"], capture_output=True, text=True, timeout=10, check=True
+        )
+        mem = await asyncio.to_thread(
+            subprocess.run,
+            ["sysctl", "-n", "hw.memsize"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=True,
+        )
+    except Exception:
+        return None
+    pages: dict[str, int] = {}
+    for line in vm.stdout.splitlines():
+        for key in ("Pages free", "Pages purgeable", "Pages inactive"):
+            if line.startswith(key):
+                try:
+                    pages[key] = int(line.split(":")[1].strip().rstrip(".").replace(",", ""))
+                except ValueError:
+                    return None
+    if len(pages) != 3:
+        return None
+    try:
+        total_bytes = int(mem.stdout.strip())
+    except ValueError:
+        return None
+    page_size = 16384
+    available_bytes = (pages["Pages free"] + pages["Pages purgeable"] + pages["Pages inactive"] * 0.7) * page_size
+    if total_bytes <= 0:
+        return None
+    return MemorySnapshot(
+        total_gb=total_bytes / 1024**3,
+        available_gb=available_bytes / 1024**3,
+        observed_monotonic=time.monotonic(),
+    )
+
+
+class ReconcileRuntime:
+    """Adapts ReconcileLoop's start/stop to the RuntimeComponent start/close contract."""
+
+    def __init__(self, loop: ReconcileLoop) -> None:
+        self._loop = loop
+
+    async def start(self) -> None:
+        await self._loop.start()
+
+    async def close(self) -> None:
+        await self._loop.stop()
+
+
 @dataclass(frozen=True, slots=True)
 class ProductionComposition:
     app: FastAPI
@@ -1174,6 +1239,7 @@ def build_production_daemon(
     now: Callable[[], datetime] | None = None,
     metric_flush_interval_seconds: float = 0.25,
     config_path: Path | None = None,
+    memory_probe: Callable[[], Awaitable[MemorySnapshot | None]] | None = None,
 ) -> ProductionComposition:
     """Build the real daemon graph without starting network or model operations."""
     clock = now or (lambda: datetime.now(UTC))
@@ -1206,6 +1272,37 @@ def build_production_daemon(
         timeouts=OperationTimeouts.uniform(120.0),
         global_limit=4,
         per_node_limit=2,
+    )
+    reconcile_engine = ReconciliationEngine(
+        placement_operator,
+        memory_policy=MemoryAdmissionPolicy(stale_seconds=60.0, safety_margin_gb=8.0),
+        global_limit=4,
+        per_node_limit=2,
+        coordinator=coordinator,
+        operation_timeouts=OperationTimeouts.uniform(120.0),
+    )
+
+    async def _resident_targets() -> tuple[PlacementTarget, ...]:
+        targets: list[PlacementTarget] = []
+        for snapshot in catalog.get():
+            try:
+                target = target_factory(snapshot)
+            except (KeyError, ValueError):
+                continue
+            if target.resident:
+                targets.append(target)
+        return tuple(targets)
+
+    reconcile_runtime = ReconcileRuntime(
+        ReconcileLoop(
+            reconcile_engine,
+            targets_provider=_resident_targets,
+            memory_probe=memory_probe or _sample_memory_snapshot,
+            monotonic_clock=time.monotonic,
+            interval_seconds=config.daemon.reconcile_interval_seconds,
+            wait_next=asyncio.sleep,
+            error_sink=lambda name: _logger.warning("resident reconcile loop iteration failed: %s", name),
+        )
     )
     control = ProductionControlService(
         config=config,
@@ -1244,6 +1341,7 @@ def build_production_daemon(
         config_runtime=storage,
         recovery=control,
         event_runtime=resources,
+        reconcile=reconcile_runtime,
     )
 
     @asynccontextmanager

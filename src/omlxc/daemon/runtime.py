@@ -20,8 +20,12 @@ class DaemonRuntime:
         config_runtime: RuntimeComponent,
         recovery: RuntimeComponent,
         event_runtime: RuntimeComponent,
+        reconcile: RuntimeComponent | None = None,
     ) -> None:
-        self._components = (config_runtime, recovery, event_runtime)
+        components = [config_runtime, recovery, event_runtime]
+        if reconcile is not None:
+            components.append(reconcile)
+        self._components = tuple(components)
         self._started: list[RuntimeComponent] = []
         self._ready = False
         self._diagnostic = "not_started"
