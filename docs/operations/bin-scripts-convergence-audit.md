@@ -1,6 +1,6 @@
 ---
-status: SUPERSEDED
-lifecycle: ARCHIVED
+status: superseded
+lifecycle: history
 owner: runtime-team
 last-reviewed: 2026-08-22
 review-state: metadata-only
