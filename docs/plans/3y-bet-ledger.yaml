@@ -3152,7 +3152,7 @@ bets:
             ref: "git://origin/main@b357690a9f5883441aa86c638758f46d0247d7e9"
           tests:
             ref: "receipt://projects/omo/tests/test_engineering_delivery_consumer.py"
-            sha256: "sha256:c1880dbfd375be35987dd4726a914b466e48ff50e012f5888404782cfb540b20"
+            sha256: "sha256:173d1eca2d65d7d254a19566db25cb0dd2f0c991f48e3d76efede60c29fc2c02"
           diff:
             ref: "receipt://bin/ssot/engineering-delivery-candidate-importer.py"
             sha256: "sha256:3133ef83fadc11479ba7124d2af510c84b1d9a95a1122dca9287bcebd0b18f7b"
