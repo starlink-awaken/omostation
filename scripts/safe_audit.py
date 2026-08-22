@@ -9,12 +9,19 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import time
 import tomllib
 
 import httpx
+
+# 清理代理环境变量: httpx 继承 shell 的 SOCKS/HTTP 代理变量会导致对内网
+# tailscale IP 的请求被错误地经代理转发 (且 SOCKS 需要额外的 socksio 包,
+# 未装则直接报错) —— 2026-08-22 实测 mythos--mac-mini 因此假性 FAIL。
+for _proxy_var in ("all_proxy", "ALL_PROXY", "http_proxy", "HTTP_PROXY", "https_proxy", "HTTPS_PROXY"):
+    os.environ.pop(_proxy_var, None)
 
 CONFIG_PATH = "/Users/xiamingxing/.config/omlxc/config.toml"
 MIN_FREE_GB = 12.0
@@ -47,6 +54,12 @@ def lms_ps(ssh_target: str | None) -> list[dict]:
 
 
 def any_generating(ssh_target: str | None) -> bool:
+    # omlxc daemon 自己的探测循环(每 probe_interval_seconds 一次)会触发一次
+    # 真实短推理, 可能被单次查询误判为"busy"。连续两次(间隔 3s)都 generating
+    # 才判定为真忙, 避免撞上探测窗口的假阳性。
+    if not any(m.get("status") == "generating" for m in lms_ps(ssh_target)):
+        return False
+    time.sleep(3)
     return any(m.get("status") == "generating" for m in lms_ps(ssh_target))
 
 
@@ -114,6 +127,9 @@ def main() -> int:
     }
 
     placements = [p for p in cfg["placements"] if p["backend_id"] in targets]
+    if len(sys.argv) > 1:
+        wanted = set(sys.argv[1:])
+        placements = [p for p in placements if p["id"] in wanted]
     placements.sort(key=lambda p: p.get("memory_gb", 0))
 
     results = []
