@@ -1325,13 +1325,25 @@ def cmd_retire(args: argparse.Namespace) -> int:
         identity = json.loads(identity_path.read_text())
     except (OSError, json.JSONDecodeError) as exc:
         return reject("retire", "identity_unreadable", str(exc))
+    schema = identity.get("schema")
     if (
-        identity.get("schema")
-        not in {"agent-clone-identity/v1", "agent-clone-identity/v2"}
+        schema not in {"agent-clone-identity/v1", "agent-clone-identity/v2"}
         or identity.get("ready") is not True
         or identity.get("canonical_root") != str(resolved)
     ):
         return reject("retire", "identity_mismatch", "clone identity does not match destination")
+    if schema == "agent-clone-identity/v2":
+        actor_id = identity.get("actor_id")
+        delivery_attempt_id = identity.get("delivery_attempt_id")
+        if (
+            identity.get("agent_id") != actor_id
+            or not isinstance(actor_id, str)
+            or not actor_id
+            or not isinstance(delivery_attempt_id, str)
+            or not delivery_attempt_id
+            or identity.get("working_branch") != f"agent/{actor_id}--{delivery_attempt_id}"
+        ):
+            return reject("retire", "identity_mismatch", "v2 clone identity is not bound to one actor and delivery attempt")
     branch_probe = run(["git", "-C", str(dest), "branch", "--show-current"])
     branch = branch_probe.stdout.strip()
     if branch_probe.returncode != 0 or branch != identity.get("working_branch"):
