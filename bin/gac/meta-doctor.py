@@ -202,6 +202,33 @@ def main(argv: list[str] | None = None) -> int:
         "references": refs,
         "summary": {"stale_beats": len(stale_beats), "dead_refs": len(dead_refs)},
     }
+
+    # T1 broker 开债: dead_refs 非零时自动创建债务项 (M3 三级处置)
+    if dead_refs:
+        try:
+            debt_dir = ws_root / ".omo" / "debt" / "items"
+            debt_dir.mkdir(parents=True, exist_ok=True)
+            for ref in dead_refs:
+                stem = Path(ref["target"]).stem[:20]
+                debt_id = f"MDEAD-{ref.get('line', 0)}-{stem}"
+                debt_file = debt_dir / f"{debt_id}.yaml"
+                if not debt_file.exists():
+                    tgt = ref["target"].replace('"', "'")
+                    debt_file.write_text(
+                        f'id: "{debt_id}"\n'
+                        f'title: "引用断链: {tgt}"\n'
+                        f'dimension: governance\n'
+                        f'subdimension: reference\n'
+                        f'severity: medium\n'
+                        f'lifecycle_state: registered\n'
+                        f'owner: governance-team\n'
+                        f'source_ref: "{ref["source"]}:{ref.get("line", 0)}"\n'
+                        f'auto_created_by: meta-doctor-t1-broker\n',
+                        encoding="utf-8")
+        except OSError:
+            pass
+
+
     print(json.dumps(report, ensure_ascii=False))
     return 0 if report["ok"] else 1
 
