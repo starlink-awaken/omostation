@@ -1022,6 +1022,16 @@ surfaces:
   triggers:
   - push
   status: active
+- id: bin-gac-alert-check-py
+  tool: bin/gac/alert-check.py
+  workflow: ecos-ci.yml
+  also_in: []
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: Alert routing check for observability pipeline
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:
