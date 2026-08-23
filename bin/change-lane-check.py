@@ -78,6 +78,8 @@ def classify(path: str, submodules: set[str]) -> str:
         return "submodule_pointer"
     if path.startswith(".omo/_truth/registry/agent-workflows/"):
         return "governance_code"
+    if path.startswith("tests/unit/gac/"):
+        return "governance_code"
     if path in {
         ".omo/_truth/registry/governance-checks.yaml",
         ".omo/_truth/registry/agent-clis.yaml",
@@ -118,6 +120,7 @@ def classify(path: str, submodules: set[str]) -> str:
         "tests/test_capability_federation_audit.py",
         "tests/test_change_lane_check.py",
         "tests/test_governance_evolution.py",
+        "tests/test_heartbeat_wrapper.py",
     }:
         return "governance_code"
     if (

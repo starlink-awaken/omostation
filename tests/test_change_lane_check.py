@@ -51,3 +51,17 @@ def test_allowed_for_single_lane_always_passes():
     """单 lane 永远 PASS."""
     assert clc.allowed_for({"runtime_snapshot"}, allowed_lanes=set()) is True
     assert clc.allowed_for({"governance_state"}, allowed_lanes=set()) is True
+
+
+def test_classify_gac_unit_tests_with_governance_implementation():
+    assert (
+        clc.classify("tests/unit/gac/test_meta_doctor.py", submodules=set())
+        == "governance_code"
+    )
+
+
+def test_classify_heartbeat_wrapper_test_with_governance_implementation():
+    assert (
+        clc.classify("tests/test_heartbeat_wrapper.py", submodules=set())
+        == "governance_code"
+    )
