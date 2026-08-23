@@ -5,8 +5,7 @@
 ``signal-poller → journey-runner → scene-outcome-recorder`` 执行链重复。
 重新启用前必须补齐持久去重、准入/审批、清理证明、测试与减法配额。
 
-用法:
-    python3 bin/_archive/2026-08-scene-daemon-unwired/scene-daemon.py --status
+本文件仅保留为历史快照，不是可执行入口。
 """
 
 import argparse
