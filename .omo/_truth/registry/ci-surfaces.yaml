@@ -1022,6 +1022,14 @@ surfaces:
   triggers:
   - push
   status: active
+- id: bin-gac-alert-check-py
+  tool: bin/gac/alert-check.py
+  workflow: ecos-ci.yml
+  also_in: []
+  gate: false
+  triggers:
+  - push
+  status: active
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:
