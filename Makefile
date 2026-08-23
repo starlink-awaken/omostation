@@ -491,6 +491,15 @@ state-sync:
 state-sync-dry:
 	uv run --project projects/omo omo state sync --dry-run --json
 
+cockpit-dashboard-start:  ## 后台启动 cockpit Web 控制台 (port 8090, 默认) — 单实例, 状态在 runtime/cockpit-dashboard.{pid,log}
+	bash bin/runtime/start-cockpit-dashboard.sh
+
+cockpit-dashboard-stop:  ## 停止后台 cockpit Web 控制台
+	bash bin/runtime/start-cockpit-dashboard.sh stop
+
+cockpit-dashboard-status:  ## 查看 cockpit Web 控制台状态 (running / not running)
+	bash bin/runtime/start-cockpit-dashboard.sh status
+
 doc-ssot-lint:
 	$(PY) bin/ssot/doc-ssot-lint.py --json
 
