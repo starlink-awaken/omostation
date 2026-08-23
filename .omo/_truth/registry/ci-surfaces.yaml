@@ -1028,6 +1028,24 @@ surfaces:
   also_in: []
   gate: false
   triggers: null
+- id: bin-scheduler-compile-py
+  tool: bin/scheduler-compile.py
+  workflow: operating-rhythm-crontab
+  also_in: []
+  gate: true
+  triggers:
+  - scheduled
+  status: active
+  note: 'ADR-A 调度编译器: 登记↔安装一致性校验'
+- id: bin-gac-session-handoff-py
+  tool: bin/gac/session-handoff.py
+  workflow: manual
+  also_in: []
+  gate: false
+  triggers:
+  - manual
+  status: active
+  note: 'R6 会话交接协议: agent closeout 时产出机器可读 handoff.json'
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:

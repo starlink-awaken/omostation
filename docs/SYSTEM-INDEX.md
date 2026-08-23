@@ -240,3 +240,14 @@
 按文件名检索: ARCHITECTURE-*.md, STRATEGY-*.md, GOVERNANCE-*.md,
 G-DEL-*.md, INDEX-MCP.md, CLI-REFERENCE.md, M4-*.md, KEMS-*.md,
 KOS-*.md, SOP-*.md, VISION-ROADMAP.md 等。
+
+
+## 治理自进化工具集 (2026-08-22)
+
+| 工具 | 职责 | 入口 |
+|------|------|------|
+| meta-doctor | M1+M2 活性巡检 | `python3 bin/gac/meta-doctor.py --workspace . --json` |
+| scheduler-compile | 调度编译器 ADR-A | `python3 bin/scheduler-compile.py --check` |
+| session-handoff | 会话交接协议 R6 | `python3 bin/gac/session-handoff.py --session <id> ...` |
+| heartbeat-wrapper | cron 心跳包装器 ADR-D | `bash bin/gac/heartbeat-wrapper.sh <job> <cmd>` |
+| vocabulary.yaml | 词汇契约 SSOT | `.omo/_truth/vocabulary.yaml` |

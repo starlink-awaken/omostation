@@ -210,6 +210,19 @@ SSOT: `docs/operations/bin-scripts-convergence-manifest.json` (entries: name/bin
    - God Module: 统一 `god-module-` (`check-god-module` → `god-module-check`)
    - 健康/卫生区分: `gac-healthcheck` (体系) vs `gac-hygiene-check` (工作区), 不混
 
+
+## 治理自进化工具集 (2026-08-22)
+
+| 工具 | 职责 | 用法 |
+|------|------|------|
+| `gac/meta-doctor.py` | 治理机制活性巡检 (M1 心跳 SLA + M2 引用活性 + scheduler-drift) | `python3 bin/gac/meta-doctor.py --workspace . --json` |
+| `scheduler-compile.py` | 调度编译器: 登记↔安装一致性校验 (ADR-A) | `python3 bin/scheduler-compile.py --check` |
+| `session-handoff.py` | 会话交接协议: 机器可读 handoff.json (R6) | `python3 bin/gac/session-handoff.py --session <id> --agent <name> --summary "..."` |
+| `heartbeat-wrapper.sh` | cron job 心跳包装器: 运行后写 heartbeats/<job>.json (ADR-D) | `bash bin/gac/heartbeat-wrapper.sh <job_name> <command...>` |
+
+> SSOT 契约: [`.omo/_truth/vocabulary.yaml`](../.omo/_truth/vocabulary.yaml) (lifecycle 终结态/活跃态枚举)
+
+
 ---
 
 ## 域边界说明
