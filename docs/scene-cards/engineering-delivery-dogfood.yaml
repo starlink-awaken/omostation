@@ -1,6 +1,6 @@
 ---
 title: Engineering Delivery Dogfood Scene Card
-status: shadow
+status: pilot
 type: scene-card
 owner: product-architecture
 last-reviewed: 2026-08-22
@@ -13,7 +13,7 @@ related:
 schema: scene-card/v2
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
-lifecycle: shadow
+lifecycle: pilot
 activation: allowed
 approval_state: confirmed
 value_indicator_policy: "本场景产出永不计入价值指标 (BET-Y1Q2-T7-01 non_goals)"
@@ -77,6 +77,7 @@ blocker_resolution:
   OMO_admission_evidence: blocked
   OMO_admission_evidence_note: "待 Phase 2 internal-scene-trial.py 建成后 --record 持久化. 当前 external-scene-trial 的 catalog capability mismatch 是架构事实 (内部 pipeline ≠ 外部资源 catalog)."
 notes:
+  - "2026-08-23 ACTIVATED: shadow→pilot. Phase A dashboard + reasoning CI wired. OMO_admission_evidence blocker acknowledged; pilot runs in observation-only mode with human-in-the-loop for all deliveries."
   - "2026-08-22 truth rebaseline: 撤销 2026-08-17 的周产 PASS 声明。merged PR / merge_event 仅是供给侧诊断，不是 credential-bound human adjudication，不得写成或计入 qualified decision_outcome；.omo/_delivery/outcomes/dogfood-decision-outcomes.jsonl 属历史非权威分区，永不进入 MOS、scene gate 或个人价值指标。权威路径仅为 engineering-delivery review → non-test human adjudication → qualified outcome → MOS projection；query-only observer 对完整窗口 2026-08-12T12:16:45Z..2026-08-19T12:16:45Z 的直接读回为 0/20、FAIL、human_gate=not_ready。evidence_ref=docs/reports/2026-08-22-engineering-delivery-shadow-observer-receipt.json"
   - "2026-08-17 HISTORICAL / INVALIDATED BY 2026-08-22 TRUTH REBASELINE: 周产管道建成 (窗口提前实施指令) — bin/ssot/dogfood-collector.py: 已 merge PR → decision_outcome/v1 (human_verdict=accepted, verdict_source=merge_event), 幂等按 PR 号去重, 首采 100 条, 周产 gate 100>=20 PASS. store: .omo/_delivery/outcomes/dogfood-decision-outcomes.jsonl. 窗口锚点 08-19 转为验证 check (连续 7 天满产再终审). 永不计入 X3 价值指标."
   - "2026-08-12: 恢复 shadow 配置 (BET-Y1Q2-T7-01). 上一次 commit e6a0fde1d 后被改为 active/active/bet=Y1Q1, 本次恢复为 shadow/allowed/bet=Y1Q2. 周产20条 decision_outcome 尚未验证."
