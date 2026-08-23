@@ -259,7 +259,7 @@ def main(argv: list[str] | None = None) -> int:
 
     stale_beats = [b for b in beats if not b["ok"]]
     dead_refs = [r for r in refs if r.get("status") == "dead"]
-    scheduler_drift = check_scheduler_drift(ws_root)
+    scheduler_drift = [] if args.refs_only else check_scheduler_drift(ws_root)
     report = {
         "generated_at": _now().isoformat(timespec="seconds"),
         "workspace": str(ws_root),
