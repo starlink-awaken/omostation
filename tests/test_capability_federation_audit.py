@@ -11,13 +11,25 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / "lib" / "capability_federation_audit.py"
+PROJECTION_MODULE = ROOT / "lib" / "agent_workflow_projection.py"
 SCRIPT = ROOT / "bin" / "capability-sync.py"
 
 
 def _load_module() -> ModuleType:
     spec = importlib.util.spec_from_file_location("capability_federation_audit", MODULE)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_projection_module() -> ModuleType:
+    spec = importlib.util.spec_from_file_location("agent_workflow_projection_fixture", PROJECTION_MODULE)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -66,15 +78,30 @@ def _workspace(tmp_path: Path) -> Path:
     )
     _write(
         tmp_path / ".omo/_truth/registry/agent-workflows/_root.yaml",
-        "version: 1\nworkflows:\n  project-code-change:\n    title: Project code change\n",
+        "version: 1\ndescription: Canonical workflow registry\n",
     )
     _write(
         tmp_path / ".omo/_truth/registry/agent-workflows/workflows/project-code-change.yaml",
-        "id: project-code-change\ntitle: Project code change\n",
+        "id: project-code-change\nrun_frequency: on_demand\ntitle: Project code change\n",
     )
-    _write(
+    projection_module = _load_projection_module()
+    workflow_registry = tmp_path / ".omo/_truth/registry/agent-workflows"
+    registry_payload = {
+            "version": 1,
+            "description": "Canonical workflow registry",
+            "workflows": [
+                {
+                    "id": "project-code-change",
+                    "run_frequency": "on_demand",
+                    "title": "Project code change",
+                }
+            ],
+        }
+    projection_module.sync_projection(
+        registry_payload,
+        workflow_registry,
         tmp_path / ".omo/_truth/registry/agent-workflows.yaml",
-        "version: 1\nworkflows:\n  project-code-change:\n    title: Project code change\n",
+        source_digest_bound=projection_module.source_digest(workflow_registry),
     )
     _write(
         tmp_path / "projects/omo/src/omo/mcp_server.py",
@@ -114,7 +141,8 @@ def test_golden_graph_is_deterministic_and_keeps_projection_non_authoritative(tm
     assert first["state_model"]["evidenced"] == "eligible evidence recorded; not independent verification"
     assert first["workers"][0]["state"] == "admitted"
     assert first["projection"]["projected_entries"] == 1
-    assert "CAP_FED_WORKFLOW_DUAL_AUTHORITY" in _codes(first)
+    assert "CAP_FED_WORKFLOW_DUAL_AUTHORITY" not in _codes(first)
+    assert "CAP_FED_WORKFLOW_REGISTRY_DIVERGENCE" not in _codes(first)
     rendered = json.dumps(first, ensure_ascii=False, sort_keys=True)
     assert str(workspace) not in rendered
 
@@ -308,6 +336,7 @@ def test_negated_projection_header_is_not_an_authority_claim(tmp_path: Path) -> 
 
 def test_strict_turns_existing_warning_into_non_zero_without_changing_default(tmp_path: Path) -> None:
     workspace = _workspace(tmp_path)
+    (workspace / ".omo/_truth/registry/agent-workflows.yaml").unlink()
     default = subprocess.run(
         ["python3", str(SCRIPT), "federation-audit", "--workspace-root", str(workspace), "--json"],
         capture_output=True,
@@ -336,6 +365,55 @@ def test_strict_turns_existing_warning_into_non_zero_without_changing_default(tm
     assert json.loads(strict.stdout)["verdict"] == "WARN"
     assert json.loads(strict.stdout)["strict"] is True
     assert json.loads(strict.stdout)["exit_code"] == 1
+
+
+def test_workflow_projection_drift_and_wrong_authority_are_reported(tmp_path: Path) -> None:
+    module = _load_module()
+    workspace = _workspace(tmp_path)
+    projection = workspace / ".omo/_truth/registry/agent-workflows.yaml"
+    projection.write_text(
+        projection.read_text(encoding="utf-8")
+        .replace("authority: projection", "authority: ssot")
+        .replace("id: project-code-change", "id: stale-workflow"),
+        encoding="utf-8",
+    )
+
+    report = module.audit_workspace(workspace)
+
+    codes = _codes(report)
+    assert "CAP_FED_WORKFLOW_DUAL_AUTHORITY" in codes
+    assert "CAP_FED_WORKFLOW_REGISTRY_DIVERGENCE" in codes
+
+
+def test_workflow_projection_definition_drift_is_reported_with_id_parity(tmp_path: Path) -> None:
+    module = _load_module()
+    workspace = _workspace(tmp_path)
+    projection = workspace / ".omo/_truth/registry/agent-workflows.yaml"
+    projection.write_text(
+        projection.read_text(encoding="utf-8").replace(
+            "title: Project code change", "title: Stale compatibility title"
+        ),
+        encoding="utf-8",
+    )
+
+    report = module.audit_workspace(workspace)
+
+    assert "CAP_FED_WORKFLOW_DUAL_AUTHORITY" not in _codes(report)
+    assert "CAP_FED_WORKFLOW_REGISTRY_DIVERGENCE" in _codes(report)
+
+
+def test_workflow_projection_cannot_drop_all_canonical_ids(tmp_path: Path) -> None:
+    module = _load_module()
+    workspace = _workspace(tmp_path)
+    projection = workspace / ".omo/_truth/registry/agent-workflows.yaml"
+    payload = yaml.safe_load(projection.read_text(encoding="utf-8"))
+    payload["workflows"] = []
+    projection.write_text(yaml.safe_dump(payload, sort_keys=True), encoding="utf-8")
+
+    report = module.audit_workspace(workspace)
+
+    assert "CAP_FED_WORKFLOW_DUAL_AUTHORITY" not in _codes(report)
+    assert "CAP_FED_WORKFLOW_REGISTRY_DIVERGENCE" in _codes(report)
 
 
 def test_script_parses_with_python_39_grammar() -> None:

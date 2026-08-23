@@ -7,7 +7,7 @@ description: Use when an agent changes this workspace or a child project and nee
 
 This skill is a thin bootloader. The source of truth is:
 
-- Registry: `.omo/_truth/registry/agent-workflows.yaml`
+- Registry: `.omo/_truth/registry/agent-workflows/`
 - Runner: `bin/agent-workflow.py`
 - Contract: `.omo/standards/agent-workflow-contract.md` (§3.1 mandatory requirement iterations)
 - ADR-0203: `.omo/_knowledge/decisions/0203-requirement-iteration-workflow-mandatory.md`
@@ -79,7 +79,7 @@ Common routes:
 | Read-only run/lock/ledger audit | `observer-audit` |
 | Runtime projection refresh | `state-sync` |
 
-The registered agent profiles are in `.omo/_truth/registry/agent-workflows.yaml::agent_profiles`.
+The registered agent profiles are in `.omo/_truth/registry/agent-workflows/profiles/`.
 Use them as role boundaries. If a workflow references an unregistered role, `agent-workflow lint`
 must fail.
 
@@ -146,7 +146,7 @@ uv run --with pyyaml python bin/agent-workflow.py claim "<run-id>" \
   --path "<path-or-directory>"
 ```
 
-`claim_policy` is owned by `.omo/_truth/registry/agent-workflows.yaml`. It is tiered:
+`claim_policy` is owned by `.omo/_truth/registry/agent-workflows/_root.yaml`. It is tiered:
 core governance paths can be `required`, while broader docs and entrypoint paths remain
 `advisory`. `verify`, `closeout`, and `status` report claim coverage; required misses block
 the run until the current run claims the file.

@@ -33,7 +33,7 @@
 | `aetherforge-mesh` | X | 6 | stdio | — | `projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py` |
 | `family-hub` | X | 6 | stdio | — | `projects/family-hub/mcp_server.py` |
 | `aetherforge-gateway` | X | 3 | stdio | — | `projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py` |
-| `c2g` | X | 3 | stdio | — | `projects/c2g/src/c2g/mcp_server.py` |
+| `c2g` | X | 3 | stdio | — | `projects/omo/src/omo/_vendored/c2g/mcp_server.py` |
 
 ## 工具清单
 

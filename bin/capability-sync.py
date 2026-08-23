@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Compatibility CLI for the canonical capability registry.
+"""Compatibility CLI for the generated capability discovery projection.
 
-The sole registry writer is ``bin/cockpit/gen-capability-registry.py``.  This
-module delegates sync/check to that writer, provides read-only discovery, and
-exposes the narrow public boundary for governed BOS loading/invocation.  Only
-exact canonical IDs may reach Agora's native gateway; caller supplied commands,
+``bin/cockpit/gen-capability-registry.py`` is the sole projection writer. This
+module delegates sync/check to it, provides read-only discovery, and exposes
+the narrow public boundary for governed BOS loading/invocation. Native provider,
+BOS, and workflow registries remain the authorities. Only exact canonical IDs
+may reach Agora's native gateway; caller supplied commands,
 argv, module paths, targets, and transport overrides are never accepted.
 """
 
@@ -59,7 +60,7 @@ class Resolution:
 
 
 def load_registry(path: Path) -> dict[str, Any]:
-    """Load canonical v1 and pre-metadata v1 registries."""
+    """Load generated v1 and pre-metadata v1 discovery projections."""
     if yaml is None:
         raise RegistryError("pyyaml_not_installed")
     if not path.is_file():
@@ -431,7 +432,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Capability registry compatibility and discovery CLI")
     commands = parser.add_subparsers(dest="command", required=True)
 
-    sync_parser = commands.add_parser("sync", help="delegate generation to the canonical writer")
+    sync_parser = commands.add_parser("sync", help="delegate generation to the projection writer")
     sync_parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
 
     check_parser = commands.add_parser("check", help="delegate read-only drift check")

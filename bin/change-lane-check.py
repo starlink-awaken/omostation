@@ -76,6 +76,8 @@ def classify(path: str, submodules: set[str]) -> str:
         return gov_mappings[path]
     if path in submodules:
         return "submodule_pointer"
+    if path.startswith(".omo/_truth/registry/agent-workflows/"):
+        return "governance_code"
     if path in {
         ".omo/_truth/registry/governance-checks.yaml",
         ".omo/_truth/registry/agent-clis.yaml",
@@ -85,6 +87,9 @@ def classify(path: str, submodules: set[str]) -> str:
         ".agents/skills/project-governance/SKILL.md",
         ".agents/skills/workflow-silence-detection/SKILL.md",
         "bin/agent-workflow.py",
+        "bin/ssot-watcher.py",
+        "lib/agent_workflow_projection.py",
+        "lib/capability_federation_audit.py",
         "bin/compass_radar.py",
         "bin/omo-status",
         "bin/omo-top",
@@ -109,6 +114,8 @@ def classify(path: str, submodules: set[str]) -> str:
         "projects/cockpit/src/cockpit/commands/governance.py",
         "projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py",
         "tests/test_agent_workflow.py",
+        "tests/test_agent_workflow_projection.py",
+        "tests/test_capability_federation_audit.py",
         "tests/test_change_lane_check.py",
         "tests/test_governance_evolution.py",
     }:

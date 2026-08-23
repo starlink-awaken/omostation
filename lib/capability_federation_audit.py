@@ -13,6 +13,7 @@ federation-audit`` so the federation observer does not create another active
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -28,6 +29,9 @@ WORKERS_PATH = Path(".omo/_truth/registry/workers.yaml")
 WORKFLOW_ROOT_PATH = Path(".omo/_truth/registry/agent-workflows/_root.yaml")
 WORKFLOW_DIRECTORY = Path(".omo/_truth/registry/agent-workflows/workflows")
 WORKFLOW_LEGACY_PATH = Path(".omo/_truth/registry/agent-workflows.yaml")
+WORKFLOW_PROJECTION_SCHEMA = "agent-workflow-compat-projection/v1"
+WORKFLOW_PROJECTION_SOURCE = ".omo/_truth/registry/agent-workflows"
+WORKFLOW_PROJECTION_WRITER = "bin/agent-workflow.py projection-sync"
 PROJECTION_PATH = Path("docs/generated/capability-registry.yaml")
 CONFORMANCE_FIELDS = (
     "transport_id",
@@ -194,6 +198,75 @@ def _directory_workflow_ids(workspace: Path, diagnostics: list[dict[str, str]]) 
         if isinstance(identity, str) and identity:
             ids.append(identity)
     return sorted(ids)
+
+
+def _workflow_source_digest(workspace: Path) -> str | None:
+    source_directory = workspace / WORKFLOW_ROOT_PATH.parent
+    if not source_directory.is_dir():
+        return None
+    files = sorted(path for path in source_directory.rglob("*.yaml") if path.is_file())
+    if not files:
+        return None
+    digest = hashlib.sha256()
+    try:
+        for path in files:
+            relative = path.relative_to(source_directory).as_posix().encode("utf-8")
+            content = path.read_bytes()
+            digest.update(len(relative).to_bytes(8, "big"))
+            digest.update(relative)
+            digest.update(len(content).to_bytes(8, "big"))
+            digest.update(content)
+    except OSError:
+        return None
+    return f"sha256:{digest.hexdigest()}"
+
+
+def _workflow_projection_metadata_is_valid(workspace: Path, payload: dict[str, Any]) -> bool:
+    metadata = payload.get("projection")
+    digest = _workflow_source_digest(workspace)
+    return digest is not None and isinstance(metadata, dict) and metadata == {
+        "schema": WORKFLOW_PROJECTION_SCHEMA,
+        "authority": "projection",
+        "lifecycle": "read_only_generated_compatibility",
+        "source": WORKFLOW_PROJECTION_SOURCE,
+        "source_digest": digest,
+        "writer": WORKFLOW_PROJECTION_WRITER,
+    }
+
+
+def _workflow_definitions(payload: dict[str, Any]) -> dict[str, dict[str, Any]] | None:
+    workflows = payload.get("workflows")
+    if not isinstance(workflows, list):
+        return None
+    definitions: dict[str, dict[str, Any]] = {}
+    for item in workflows:
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+            return None
+        workflow_id = item["id"]
+        if workflow_id in definitions:
+            return None
+        definitions[workflow_id] = item
+    return definitions
+
+
+def _directory_workflow_definitions(workspace: Path) -> dict[str, dict[str, Any]] | None:
+    directory = workspace / WORKFLOW_DIRECTORY
+    definitions: dict[str, dict[str, Any]] = {}
+    try:
+        for path in sorted(directory.glob("*.yaml")):
+            documents = [
+                item for item in yaml.safe_load_all(path.read_text(encoding="utf-8")) if item is not None
+            ]
+            if not documents or not isinstance(documents[-1], dict):
+                return None
+            item = documents[-1]
+            workflow_id = item.get("id")
+            if not isinstance(workflow_id, str) or not workflow_id or workflow_id in definitions:
+                return None
+            definitions[workflow_id] = item
+    except (OSError, UnicodeError, yaml.YAMLError):
+        return None
+    return definitions or None
 
 
 def _projection_files(value: Any) -> Iterable[str]:
@@ -477,25 +550,33 @@ def audit_workspace(workspace_root: Path) -> dict[str, Any]:
     legacy_path = workspace / WORKFLOW_LEGACY_PATH
     if legacy_path.is_file():
         legacy_payload = _load_yaml(workspace, WORKFLOW_LEGACY_PATH, diagnostics)
-        diagnostics.append(
-            _diagnostic(
-                "CAP_FED_WORKFLOW_DUAL_AUTHORITY",
-                "warning",
-                "agent-workflows",
-                WORKFLOW_LEGACY_PATH,
-                "canonical workflow directory and legacy monolith coexist; legacy view must not become a second authority",
+        if not _workflow_projection_metadata_is_valid(workspace, legacy_payload):
+            diagnostics.append(
+                _diagnostic(
+                    "CAP_FED_WORKFLOW_DUAL_AUTHORITY",
+                    "warning",
+                    "agent-workflows",
+                    WORKFLOW_LEGACY_PATH,
+                    "legacy workflow view lacks valid read-only projection provenance; it must not become a second authority",
+                )
             )
-        )
         canonical_ids = sorted(set(_workflow_ids(workflow_root)) | set(directory_ids))
         legacy_ids = _workflow_ids(legacy_payload)
-        if canonical_ids and legacy_ids and canonical_ids != legacy_ids:
+        canonical_definitions = _directory_workflow_definitions(workspace)
+        legacy_definitions = _workflow_definitions(legacy_payload)
+        content_diverged = (
+            canonical_definitions is not None
+            and legacy_definitions is not None
+            and canonical_definitions != legacy_definitions
+        )
+        if canonical_ids and (canonical_ids != legacy_ids or content_diverged):
             diagnostics.append(
                 _diagnostic(
                     "CAP_FED_WORKFLOW_REGISTRY_DIVERGENCE",
                     "warning",
                     "agent-workflows",
                     WORKFLOW_LEGACY_PATH,
-                    "canonical and legacy workflow identifiers diverge; legacy data is not used as an authority",
+                    "canonical and legacy workflow identifiers or definitions diverge; legacy data is not used as an authority",
                 )
             )
     else:

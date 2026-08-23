@@ -41,6 +41,7 @@ _ORIG_PRINT_STATUS = _wf_diag.print_status_report
 _ORIG_MAIN = main
 
 _BET_LEDGER_MODULE: ModuleType | None = None
+_PROJECTION_MODULE: ModuleType | None = None
 
 
 def _load_bet_ledger_module() -> ModuleType:
@@ -56,6 +57,22 @@ def _load_bet_ledger_module() -> ModuleType:
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     _BET_LEDGER_MODULE = module
+    return module
+
+
+def _load_projection_module() -> ModuleType:
+    """Load the optional projection writer only for its explicit CLI commands."""
+    global _PROJECTION_MODULE
+    if _PROJECTION_MODULE is not None:
+        return _PROJECTION_MODULE
+    path = WORKSPACE / "lib/agent_workflow_projection.py"
+    spec = importlib.util.spec_from_file_location("_agent_workflow_projection", path)
+    if spec is None or spec.loader is None:
+        raise WorkflowError(f"WORKFLOW_PROJECTION_UNAVAILABLE: cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    _PROJECTION_MODULE = module
     return module
 
 
@@ -132,6 +149,8 @@ def _find_command(argv: list[str]) -> tuple[str, int]:
         "trace",
         "lint",
         "refresh-packet",
+        "projection-sync",
+        "projection-check",
     }
     index = 0
     while index < len(argv):
@@ -411,6 +430,50 @@ def wrapped_main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     _install_patches()
     command, cmd_at = _find_command(argv)
+    if command in {"projection-sync", "projection-check"}:
+        if "--help" in argv or "-h" in argv:
+            print(
+                f"usage: agent-workflow.py {command} "
+                "[--registry DIRECTORY] [--projection FILE] [--json]"
+            )
+            return 0
+        registry_arg = _flag(argv, "--registry")
+        projection_arg = _flag(argv, "--projection")
+        registry_path = Path(registry_arg) if registry_arg else WORKSPACE / ".omo/_truth/registry/agent-workflows"
+        projection_path = (
+            Path(projection_arg)
+            if projection_arg
+            else WORKSPACE / ".omo/_truth/registry/agent-workflows.yaml"
+        )
+        try:
+            projection_module = _load_projection_module()
+        except WorkflowError as exc:
+            print(f"agent-workflow: {exc}", file=sys.stderr)
+            return 1
+        try:
+            registry, registry_digest = projection_module.load_registry_snapshot(
+                load_registry,
+                registry_path,
+            )
+            operation = (
+                projection_module.sync_projection
+                if command == "projection-sync"
+                else projection_module.check_projection
+            )
+            result = operation(
+                registry,
+                registry_path,
+                projection_path,
+                source_digest_bound=registry_digest,
+            )
+        except (projection_module.ProjectionError, WorkflowError) as exc:
+            print(f"agent-workflow: {exc}", file=sys.stderr)
+            return 1
+        if "--json" in argv:
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+        else:
+            print(f"{result['reason']}: {result['source_digest']}")
+        return 0
     if command == "refresh-packet":
         if "--help" in argv or "-h" in argv:
             print("usage: agent-workflow.py refresh-packet RUN_ID [--registry PATH] [--json]")

@@ -156,7 +156,8 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run-id> \
 3. **verify 不带 run_id 时**，lifecycle 会把 argv 串拼进锁文件名——多文件场景直接撞
    `Errno 63 File name too long`。**带 run_id 或用 `--from-diff`**。
 4. **跨 lane 的基础设施 bet**——`make gac-local-gate` 的 change-lane-check 若报 mixed
-   lanes，先查 `agent-workflows.yaml` 里对应 diff check 的 `allowed_lanes` 是否覆盖你的
+   lanes，先查 `.omo/_truth/registry/agent-workflows/_root.yaml` 里对应 diff check 的
+   `allowed_lanes` 是否覆盖你的
    lane 组合（ADR-0129 §11.3.2: workflow 显式授权优先于硬编码隔离）；修复通道是补
    check 的 `allowed_lanes`，不是手动 env 伪造。
 

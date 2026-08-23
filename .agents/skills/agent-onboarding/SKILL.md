@@ -21,7 +21,7 @@ The guided onboarding path for any AI agent joining the omostation workspace. Wa
 
 ## Phase 1: Identity Registration
 
-Register the agent in `agent-workflows.yaml::agent_profiles`.
+Register the agent in `.omo/_truth/registry/agent-workflows/profiles/_base.yaml::agent_profiles`.
 
 ### 1.1 Choose or Create a Profile
 
@@ -213,7 +213,7 @@ make agent-workflow-compliance
 
 ## Onboarding Checklist
 
-- [ ] Agent profile registered in `agent-workflows.yaml`
+- [ ] Agent profile registered under `.omo/_truth/registry/agent-workflows/profiles/`
 - [ ] `agent-workflow.py agents` lists the new profile
 - [ ] `agent-workflow.py lint` passes
 - [ ] Agora MCP server starts and responds
@@ -226,7 +226,7 @@ make agent-workflow-compliance
 ## Related
 
 - Skills: `bos-service-discovery`, `a2a-coordination`, `project-governance`, `external-agent-attach`
-- Registry: `.omo/_truth/registry/agent-workflows.yaml`
+- Registry: `.omo/_truth/registry/agent-workflows/`
 - Contract: `.omo/standards/agent-workflow-contract.md`
 - ADR-0203: Mandatory requirement iteration workflow
 - Cockpit: `projects/cockpit/README.md`

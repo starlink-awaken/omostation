@@ -2,8 +2,8 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
+last-reviewed: 2026-08-23
+review-state: contract-reviewed
 metadata-migrated-at: 2026-07-31
 ---
 # MCPTOOL M1 实例 Adder Guide (Round 5b)
@@ -16,8 +16,8 @@ metadata-migrated-at: 2026-07-31
 
 ## 0. TL;DR
 
-本文档描述如何**正确**新加 1 个 single-tool MCPTOOL 节点 (与 collection
-MCPTOOL 区分,见 ADR-0145)。Adder pipeline:
+本文档描述如何**正确**新加 1 个 single-tool MCPTOOL 节点。一个 M1 `MCPTool`
+只表示一个可调用端点；历史 collection 占位只作迁移兼容，不得作为新增模板。Adder pipeline:
 
 1. 写 yaml
 2. 复核对齐 3 个 schema (m3.yaml MCPTool / m2 type MCPTool / m1 yaml)
@@ -25,8 +25,8 @@ MCPTOOL 区分,见 ADR-0145)。Adder pipeline:
 4. 跑 `bin/mof/mof-bootstrap.py all` + `bin/mof/m4-health-score.py` 验证
 5. commit + push
 
-**no-op 守门**: `bin/gac/mcp-tool-data-complete.py` 自动跳过 collection yaml,
-不误报 single-tool 不合规情况。
+**兼容边界**: `bin/gac/mcp-tool-data-complete.py` 仍会跳过历史 collection yaml；
+这不代表 collection 符合当前 M2 `MCPTool` 契约。新 MCP server 必须拆成逐工具节点。
 
 ---
 
@@ -37,11 +37,11 @@ MCPTOOL 区分,见 ADR-0145)。Adder pipeline:
 | 模式 | 判定 | yaml 示例 | 处理 |
 |------|------|----------|------|
 | **Single-tool** | 1 yaml 表示 1 个 MCP tool endpoint | MCPTOOL-COCKPIT-cards_check.yaml | **应当** + mof-validate 校验 |
-| **Collection** | 1 yaml 表示 1 个 MCP server (含 N 个 tools) | MCPTOOL-C2G.yaml + `tool_count: 7` | **跳过校验** (ADR-0145) |
+| **Legacy collection** | 1 yaml 表示 1 个 MCP server (含 N 个 tools) | 历史 `tool_count: N` 占位 | **只迁移兼容；禁止新增** |
 
 ### 1.2 判定标准
 
-文件**有**以下任一特征 → **collection** (skip):
+文件**有**以下任一特征 → **legacy collection**（需拆分，不能作为新增交付）:
 - `tool_count: N` 字段 (N > 1)
 - `tools: [name1, name2, ...]` 列表字段
 
@@ -56,7 +56,7 @@ MCPTOOL 区分,见 ADR-0145)。Adder pipeline:
 ```yaml
 id: MCPTOOL-{SERVER}-{tool_name}        # PascalCase ID
 type: MCPTool                           # m2 type enum
-m3_parent: StructuralElement.Component  # m3 anchor (fixed)
+m3_parent: BehavioralElement.Protocol   # MCP 可调用端点的 M3 anchor
 name: {短描述}                          # e.g. "cards_check"
 description: |
   {工具描述, 一个自然段}
@@ -75,7 +75,7 @@ created: '2026-07-06T08:00:00'           # ISO-8601 datetime
 |------|------|----------|
 | `id` | MCPTOOL 全局唯一 ID | PascalCase: `MCPTOOL-{SERVER_UPPER}-{tool_name}` |
 | `type: MCPTool` | 强制 | m2 schema 固定 |
-| `m3_parent` | m3 anchor, "StructuralElement.Component" 固定 | 不要改 |
+| `m3_parent` | MCP protocol endpoint 的 m3 anchor | 固定为 `BehavioralElement.Protocol` |
 | `name` | 短人类可读名 | 推荐与 `tool_name` 同 |
 | `description` | 1 段描述 | min 20 字 |
 | `tool_name` | MCP 工具端点名 | MCP protocol method_name |
@@ -104,7 +104,7 @@ PROJECT_DIR=projects/$SERVER
 cat > projects/ecos/src/ecos/ssot/mof/m1/mcptool/MCPTOOL-${SERVER^^}-$TOOL.yaml <<YAML
 id: MCPTOOL-${SERVER^^}-$TOOL
 type: MCPTool
-m3_parent: StructuralElement.Component
+m3_parent: BehavioralElement.Protocol
 name: $TOOL
 description: |
   Brief description of what $TOOL does (≥ 20 chars).
@@ -137,12 +137,12 @@ uv run --with pyyaml python bin/gac/mcp-tool-data-complete.py
 #       或 "{new-tool}: tool_name: ..., server: ..."
 ```
 
-如果 mcp-tool-data-complete **没**列出 new-tool, 它**跳过了**:
+如果 mcp-tool-data-complete **没**列出 new-tool, 它可能把文件当成了历史 collection:
 - 检查 new-tool yaml 是否有 `tool_count: 1` 或 `tools: [...]` 字段误带
 - 如果是, 改为真正的 single-tool yaml (删除这两个字段)
 
 如果 mof-bootstrap check_2 **报 new-tool 缺字段**:
-- 检查 m3_parent 写错 (应为 "StructuralElement.Component")
+- 检查 m3_parent 写错 (应为 `BehavioralElement.Protocol`)
 - 检查 type 不是 "MCPTool"
 
 ---
@@ -204,7 +204,8 @@ skip 逻辑,**所有校验都跳过**, yaml 看似"valid" 但实际是 collectio
 
 **根因**: 误以为 m3_parent 完整路径。
 
-**修法**: m3_parent 写 `StructuralElement.Component` (m3.yaml root 类目)。
+**修法**: m3_parent 写 `BehavioralElement.Protocol`，与
+`projects/ecos/src/ecos/ssot/mof/m2/mcptool.yaml` 的 MCPTool 契约一致。
 
 ---
 

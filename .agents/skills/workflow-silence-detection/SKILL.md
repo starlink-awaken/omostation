@@ -1,6 +1,6 @@
 ---
 name: workflow-silence-detection
-description: "Detect silent agent workflows (registered in agent-workflows.yaml but with no recent activity). Use when running governance audits, seeing P74 warnings in compliance output, or planning workflow consolidation. Triggers on: silent workflow, workflow solidification, P74, p74_solidification, compliance warn, governance drift."
+description: "Use when governance audits report silent workflows, P74 or p74_solidification warnings, compliance drift, or when planning workflow consolidation in the canonical split registry."
 ---
 
 # Workflow Silence Detection — P74 Solidification
@@ -11,7 +11,7 @@ The skill for diagnosing and resolving silent workflows per ADR-0130.
 
 - `agent-workflow compliance --json` reports `p74_solidification.warn_count > 0`
 - `make gac-local-gate` shows CR-P74-* check failures
-- You're reviewing `agent-workflows.yaml::workflows` and wondering which entries are actually used
+- You're reviewing `.omo/_truth/registry/agent-workflows/workflows/` and wondering which entries are actually used
 - You see `bin/agent-workflow.py suggest` reporting `uncovered_files`
 - You're consolidating or retiring workflows
 
@@ -41,7 +41,7 @@ For each warn workflow, run:
 
 ```bash
 # Look at workflow definition
-rg -A 20 "id: <workflow_id>" .omo/_truth/registry/agent-workflows.yaml
+rg -A 20 "id: <workflow_id>" .omo/_truth/registry/agent-workflows/workflows
 ```
 
 Determine:
@@ -56,9 +56,9 @@ Summary:
 
 | Type | Action |
 |------|--------|
-| A1 (no check coverage) | Add a `diff_checks` rule covering its surfaces, OR mark `excluded_workflows`, OR delete the workflow entry |
+| A1 (no check coverage) | Add a real `diff_checks` rule covering its surfaces, or delete the workflow entry if it is obsolete |
 | A2 (check coverage only) | Document why it's A2, OR remove it if no longer relevant |
-| Genuinely needed but unused | Trigger via `agent-workflow start` for a real scenario, OR add to `excluded_workflows` with rationale |
+| Genuinely needed but unused | Trigger via `agent-workflow start` only for a real scenario, or add executable check coverage |
 
 ### Step 4: Verify the fix
 
@@ -76,7 +76,7 @@ make gac-local-gate  # confirm 26+ checks still PASS
 ## Common Pitfalls
 
 - **Don't** force `start` for a workflow that has no real use case. A2 silence is often correct.
-- **Don't** add to `excluded_workflows` without understanding why it's silent. Excluded is for "intentionally not triggered by humans" workflows like `handoff-resume`.
+- **Don't** recreate the removed exclusion mechanism. A workflow needs real run evidence, executable check coverage, or retirement.
 - **Don't** delete a workflow entry without first checking what gate checks depend on it. Removing `mof-state-bridge-audit` would break the `mof-state-bridge` check.
 - **Don't** change `silent_workflow_policy.warn_after_days` to silence the warnings. The threshold is a forcing function.
 
@@ -85,7 +85,7 @@ make gac-local-gate  # confirm 26+ checks still PASS
 - ADR: `.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`
 - Pattern: `.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md`
 - Standard: `.omo/standards/p74-solidification-contract.md`
-- SSOT: `.omo/_truth/registry/agent-workflows.yaml::silent_workflow_policy`
+- SSOT: `.omo/_truth/registry/agent-workflows/_root.yaml::silent_workflow_policy`
 - GaC rules: `CR-P74-WORKFLOW-SILENCE`, `CR-P74-STATE-PROJECTION-GUARD`, `CR-P74-RUNTIME-STAMP-POLICY`
 - Companion skills: `project-governance`, `governance-ssot-edit`, `governance-phase-orchestrator`
 
@@ -98,14 +98,14 @@ P74 ok: False warn: 1 / 12
   - c2g-spec-ingress: warn (run=False, check=False)
 
 # Diagnose: A1 silence
-$ rg -A 10 "id: c2g-spec-ingress" .omo/_truth/registry/agent-workflows.yaml
+$ rg -A 10 "id: c2g-spec-ingress" .omo/_truth/registry/agent-workflows/workflows
 # ... no diff_check or doctor_check covers projects/c2g/**
 
 # Apply: add diff_check
-$ # edit agent-workflows.yaml::diff_checks to include:
+$ # edit agent-workflows/_root.yaml::diff_checks to include:
 $ # - id: c2g-bet-help-coverage
-$ #   paths: [projects/c2g/**]
-$ #   command: [uv, run, --project, projects/c2g, c2g, bet, --help]
+$ #   paths: [projects/omo/src/omo/_vendored/c2g/**]
+$ #   command: [uv, run, --project, projects/omo, c2g, bet, --help]
 
 # Verify
 $ make gac-local-gate

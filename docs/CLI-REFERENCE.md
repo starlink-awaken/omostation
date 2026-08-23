@@ -151,7 +151,7 @@
 | `cockpit index` | 刷新 data/_index 元数据 |
 | `cockpit inspect` | 查看算力网格健康度与节点状态 |
 | `cockpit intent` | 🧠 自然语言意图解构与工程规格编译器 (ADR-0195) |
-| `cockpit invoke` | 调用 capability 服务（执行 BOS YAML command） |
+| `cockpit invoke` | 通过治理网关调用 exact native BOS capability |
 | `cockpit journey` | 🗺️ Journey State Graph 状态表达校验器 |
 | `cockpit kems` | 🧬 KEMS 域治理 (domains/status/scan) |
 | `cockpit knowledge` | 📚 KOS 知识检索 (search/status/stats) |
