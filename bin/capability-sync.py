@@ -31,6 +31,12 @@ LIB = ROOT / "lib"
 if str(LIB) not in sys.path:
     sys.path.insert(0, str(LIB))
 
+from capability_native_inspection import (  # noqa: E402 -- static native source proof only
+    NativeInspectionError,
+    inspect_native_capability,
+    inspection_error_receipt,
+    native_kind_requires_projection,
+)
 from capability_trace_binding import (  # noqa: E402 -- CLI locates the local pure library first
     CANONICAL_REGISTRY_METADATA,
     CAPABILITY_SEMANTICS,
@@ -518,6 +524,24 @@ def _parser() -> argparse.ArgumentParser:
         help="read-only B4-B causal binding JSON; requires --id and never authorizes invocation",
     )
 
+    inspect_parser = commands.add_parser(
+        "inspect",
+        help="statically prove one exact native declaration without loading or invoking it",
+    )
+    inspect_parser.add_argument("--id", dest="capability_id", required=True, help="exact native capability ID")
+    inspect_upstream = inspect_parser.add_mutually_exclusive_group(required=True)
+    inspect_upstream.add_argument(
+        "--binding-json",
+        type=Path,
+        help="B4-B causal binding for Skill/Workflow kinds outside the generated projection",
+    )
+    inspect_upstream.add_argument(
+        "--resolution-receipt-json",
+        type=Path,
+        help="B4-B resolution receipt required for MCP/BOS native inspection",
+    )
+    inspect_parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
+
     load_parser = commands.add_parser("load", help="admit and probe one exact native BOS capability")
     load_parser.add_argument("--id", dest="capability_id", required=True, help="exact BOS capability ID")
     load_parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
@@ -536,6 +560,45 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
 
     if args.command == "federation-audit":
         return _delegate_to_federation_auditor(args.workspace_root, strict=args.strict)
+
+    if args.command == "inspect":
+        try:
+            if native_kind_requires_projection(args.capability_id):
+                before = args.registry.stat()
+                registry_content = args.registry.read_bytes()
+                registry = load_registry(args.registry)
+                after = args.registry.stat()
+                if (
+                    (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
+                    != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
+                    or len(registry_content) != before.st_size
+                ):
+                    raise NativeInspectionError("source_digest_mismatch")
+            else:
+                registry_content = b""
+                registry = {}
+            binding = _read_json_payload(args.binding_json) if args.binding_json is not None else None
+            resolution_receipt = (
+                _read_json_payload(args.resolution_receipt_json)
+                if args.resolution_receipt_json is not None
+                else None
+            )
+            receipt = inspect_native_capability(
+                root=ROOT,
+                capability_id=args.capability_id,
+                registry=registry,
+                registry_content=registry_content,
+                binding=binding,
+                resolution_receipt=resolution_receipt,
+            )
+        except NativeInspectionError as exc:
+            receipt = inspection_error_receipt(args.capability_id, str(exc))
+        except GatewayError:
+            receipt = inspection_error_receipt(args.capability_id, "upstream_resolution_invalid")
+        except (OSError, RegistryError):
+            receipt = inspection_error_receipt(args.capability_id, "source_unprovable")
+        print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+        return 0 if receipt.get("status") == "inspected" else 4
 
     if args.command in {"load", "invoke"}:
         selector = {"capability_id": args.capability_id}
