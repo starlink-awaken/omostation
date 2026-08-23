@@ -48,6 +48,7 @@ spaces/*.db
 # ---------------------------------------------------------------------------
 runtime/**/*.log
 runtime/**/*.jsonl
+runtime/**/*.pid
 runtime/data/
 runtime/run-continuation/*.json
 runtime/server.log
