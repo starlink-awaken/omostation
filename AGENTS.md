@@ -286,6 +286,11 @@ Prefer targeted checks for narrow edits. Broaden verification when the change to
 - **Submodule pointer update**: prefer `bash bin/ssot/submodule-pointer-transaction.sh --message "..."` (pushes submodules + verifies reachability + stages). If using `git update-index --cacheinfo` manually, always get the hash from `git -C <submodule> rev-parse HEAD` and verify with `git ls-tree HEAD <submodule>` before committing. Never copy-paste hashes from `git log` output (abbreviated hashes cause silent mismatches).
 - Never revert unrelated dirty files. Treat them as user or concurrent-agent work.
 
+#### 高危 git 操作守门（2026-08-23 复盘固化，详见 `2026-08-23-agent-session-deep-retrospective.md`）
+
+- **`reset --hard` 前三确认**：① 当前分支（并行工作区会被并发 agent 随时 `checkout` 切走——曾因未确认把并发 agent 的 main 误回退，靠 reflog 恢复）② reset 目标 = 该分支的 origin 状态 ③ 工作树干净。高危操作优先在独立 clone（T1-05 拓扑）里执行。
+- **改"看起来是子项目"的代码前确认仓库边界**：先 `ls -d <path>/.git` + `git -C <path> remote -v`。`git -C` 在无独立仓库的目录会 fallback 到父仓库，造成"我在子项目里"的假象（P73-D1 曾因此把 root 跟踪的 gbrain 残留副本当成 gbrain 仓库改）。
+
 ### 6.1 PR 工作流
 
 主仓 main 变更走 **per-session worktree + PR**。工具:`bin/gac/gac-worktree.sh`。
@@ -331,6 +336,7 @@ Historical closeout details are useful evidence. Each pattern links to its full 
 - [Executable agent workflows](.omo/standards/agent-workflow-contract.md) · [AGCP status/scoped gate/claim](.omo/standards/agent-workflow-contract.md) · [Governance evolution roadmap](docs/GOVERNANCE-EVOLUTION-ROADMAP.md)
 - [State generation convergence](.omo/_knowledge/decisions/0128-state-generation-concurrency.md) · [3 类声明/执行鸿沟 (P71 §1)](.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md)
 - [P78 triple-axis diagnostic](.omo/_knowledge/patterns/p78-triple-axis-diagnostic-pattern.md) · [Phase 45 治理可观测性](projects/agora/src/agora/server/tools_health.py)
+- **分支等价性判据（2026-08-23 固化）**：判断"分支内容是否已合入 main"只用 **内容 diff**（`git diff origin/main...<branch>`）。git cherry 的 `+` 会因 squash/重构假阳性；subject grep 会因 grep 到分支自身假阳性。曾因误判把 6 个"内容已被 main 吸收"的分支反复归类。
 - [agora P1 深化](docs/reports/2026-08-06-agora-p1p2-deepening-retrospective.md) · [agora P2 深化](docs/reports/2026-08-06-agora-p1p2-deepening-retrospective.md)
 
 ## 9. Closeout Checklist
