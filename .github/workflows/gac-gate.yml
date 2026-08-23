@@ -143,7 +143,7 @@ jobs:
         run: python3 bin/gac/gac-drift.py
       - name: CR-M4-HEALTH-SCORE — M4 Health Score 量化 (advisory)
         continue-on-error: true
-        run: python3 bin/mof/m4-health-score.py --check
+        run: python3 bin/mof/m4-health-score.py --json
       - name: CR-L0-ENFORCE — L0 协议约束 CI 校验 (required)
         # 校验 X1-C01/CS-10/X2-C01/X2-C03/X4-C01, 任一 FAIL 则 CI 红
         run: python3 bin/gac/check-l0-constraints.py

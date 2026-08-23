@@ -1008,7 +1008,7 @@ gac:
     name: omo-debt 评分覆盖率
     description: omo-debt 评分覆盖所有 L2 项目 (债务可量化 = 投入可决策, X3 价值)
     check_type: value_roi
-    target: projects/omo-debt (评分覆盖)
+    target: projects/omo/debt (评分覆盖)
     executor:
     - omo_audit
     - ci_gate
