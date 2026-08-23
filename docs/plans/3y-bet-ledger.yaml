@@ -5303,6 +5303,7 @@ bets:
   - CLAUDE.md
   - docs/architecture/resident-agent-system-v1.md
   - docs/plans/3y-bet-ledger.yaml
+  - projects/agora/src/agora/mcp/tools/resident_*
   pasw_required: false
   depends_on:
   - BET-Y1Q1-T1-07
