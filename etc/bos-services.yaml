@@ -3156,6 +3156,41 @@ services:
   - -m
   - runtime.mcp_server
   description: 领域治理卡带列表 (ADR-0198)
+- action: check
+  command:
+  - python3
+  - bin/gac/meta-doctor.py
+  - --workspace
+  - .
+  - --json
+  description: 治理自进化巡检 M1 心跳 SLA + M2 引用活性 + 调度漂移
+  domain: governance
+  package: meta-doctor
+  status: active
+  transport: stdio
+  uri: bos://governance/meta-doctor/check
+- action: check
+  command:
+  - python3
+  - bin/scheduler-compile.py
+  - --check
+  description: 调度编译器一致性校验 registry↔crontab 漂移检测 (ADR-A)
+  domain: governance
+  package: scheduler-compile
+  status: active
+  transport: stdio
+  uri: bos://governance/scheduler-compile/check
+- action: emit
+  command:
+  - python3
+  - bin/gac/session-handoff.py
+  - --help
+  description: 会话交接协议 机器可读 handoff.json (需 --session/--agent/--summary)
+  domain: governance
+  package: session-handoff
+  status: active
+  transport: stdio
+  uri: bos://governance/session-handoff/emit
 - domain: fabric
   package: omlxc-fabric
   action: snapshot
