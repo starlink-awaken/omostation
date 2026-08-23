@@ -63,9 +63,14 @@ jobs:
       - name: Anti-corruption audit (advisory)
         continue-on-error: true
         run: python3 bin/gac/anti-corruption.py 2>/dev/null || true
-      - name: Unified alert check (observe)
-        continue-on-error: true
-        run: python3 bin/gac/alert-check.py 2>/dev/null || true
+      - name: Unified alert check (P0/P1 enforce)
+        # P0 (constraint/M1 failure) and P1 (reasoning engine fail) → CI red
+        # P2 (scene activation <80%) → advisory only
+        run: |
+          cd projects/ecos && uv run python3 ../../bin/gac/alert-check.py --enforce || {
+            echo "::error::Alert check failed — P0/P1 violation detected"
+            exit 1
+          }
       - name: Observability metrics + health
         run: 'cd projects/ecos && uv run python3 -c "
 import sys; sys.path.insert(0, ''src'')
