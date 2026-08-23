@@ -22,6 +22,9 @@
 [submodule "projects/model-driven"]
 	path = projects/model-driven
 	url = https://github.com/starlink-awaken/omostation-model-driven.git
+[submodule "projects/knowledge/gbrain"]
+	path = projects/knowledge/gbrain
+	url = https://github.com/starlink-awaken/omostation-gbrain.git
 [submodule "projects/omo"]
 	path = projects/omo
 	url = https://github.com/starlink-awaken/omostation-omo.git
