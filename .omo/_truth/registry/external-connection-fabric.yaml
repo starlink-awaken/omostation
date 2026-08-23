@@ -392,7 +392,7 @@ resources:
     version: "1.0"
     permission_ref: permission://internal/knowledge
     bos_uri: bos://memory/mos/knowledge-ref
-    domain: system
+    domain: knowledge
     visibility: public
   - id: resident-memory
     kind: resource_provider
@@ -422,7 +422,7 @@ resources:
     version: "1.0"
     permission_ref: permission://internal/knowledge
     bos_uri: bos://knowledge/sediment
-    domain: system
+    domain: knowledge
     visibility: public
   - id: resident-retros
     kind: asset_source
@@ -437,7 +437,7 @@ resources:
     version: "1.0"
     permission_ref: permission://internal/knowledge
     bos_uri: bos://knowledge/retros
-    domain: system
+    domain: knowledge
     visibility: public
   - id: resident-alert-channel
     kind: channel
@@ -466,7 +466,7 @@ resources:
     version: "1.0"
     permission_ref: permission://internal/methods
     bos_uri: bos://capability/method-pack
-    domain: system
+    domain: knowledge
     visibility: public
   - id: resident-tools
     kind: tool_capability
