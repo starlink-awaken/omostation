@@ -470,10 +470,11 @@ class TestUsageCallbackIntegration:
         proxy.services["svc1"] = {"name": "svc1"}
 
         # Manually set old timestamp and invoke callback
-        manager._last_used["svc1"] = 100.0
+        manager._last_used["svc1"] = time.monotonic() - 100.0
+        before = manager._last_used["svc1"]
         await manager._record_usage_from_proxy("svc1", "some_tool", {})
 
-        assert manager._last_used["svc1"] > 100.0
+        assert manager._last_used["svc1"] > before
 
     async def test_callback_records_usage_in_catalog(self, catalog, proxy, manager):
         """The usage callback should also record usage in the catalog."""
@@ -779,7 +780,8 @@ class TestConcurrencySafety:
     async def test_concurrent_record_usage_safe(self, catalog, manager):
         """Multiple concurrent record_usage calls should not corrupt _last_used."""
         catalog.tools["shared"] = _make_tool("shared", status="loaded")
-        manager._last_used["shared"] = 100.0
+        manager._last_used["shared"] = time.monotonic() - 100.0
+        before = manager._last_used["shared"]
 
         async def record_many(n: int):
             for _ in range(n):
@@ -793,7 +795,7 @@ class TestConcurrencySafety:
 
         # _last_used should still have the entry and be recent
         assert "shared" in manager._last_used
-        assert manager._last_used["shared"] > 100.0
+        assert manager._last_used["shared"] > before
 
     async def test_concurrent_load_and_watch(self, catalog, proxy):
         """load_tool while idle watch is running should not raise."""
