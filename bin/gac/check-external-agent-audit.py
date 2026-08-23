@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # 外部 agent 注册文件
 AGENT_REGISTRIES = [
-    REPO_ROOT / ".omo" / "_truth" / "registry" / "agent-workflows.yaml",
+    REPO_ROOT / ".omo" / "_truth" / "registry" / "agent-workflows",
     REPO_ROOT / ".omo" / "standards",
 ]
 

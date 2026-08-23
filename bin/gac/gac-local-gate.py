@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-REGISTRY_PATH = WORKSPACE / ".omo/_truth/registry/agent-workflows.yaml"
 SGF_POLICY_YAML = (
     WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
 )
@@ -503,7 +502,14 @@ def staged_files_git() -> list[str]:
 def staged_touches_agent_workflow() -> bool:
     """staged 是否涉 agent-workflow (doctor/compliance/verify 只在涉时跑)."""
     return any(
-        "bin/agent-workflow.py" in f or "tests/test_agent-workflow.py" in f or "agent-workflows.yaml" in f
+        f in {
+            "bin/agent-workflow.py",
+            "lib/agent_workflow_projection.py",
+            "tests/test_agent-workflow.py",
+            "tests/test_agent_workflow_projection.py",
+        }
+        or f == ".omo/_truth/registry/agent-workflows.yaml"
+        or f.startswith(".omo/_truth/registry/agent-workflows/")
         for f in staged_files_git()
     )
 

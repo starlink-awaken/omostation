@@ -7,7 +7,8 @@ last-reviewed: 2026-08-18
 # External Agent Attach Card — Minimum Path
 
 > **Purpose**: one-page attach guide for Claude Code / Codex / Cursor / custom MCP hosts.  
-> **SSOT pointers**: `projects/agora/etc/bos-services.yaml` · `.omo/_truth/registry/agent-workflows.yaml` · `docs/generated/capability-registry.yaml`  
+> **Authority pointers**: `projects/agora/etc/bos-services.yaml` · `.omo/_truth/registry/agent-workflows/`
+> **Discovery projection**: `docs/generated/capability-registry.yaml` (generated, read-only, not SSOT)
 > **Smoke**: `python3 bin/ssot/mcp-attach-smoke.py`
 
 ---
@@ -94,7 +95,7 @@ uv run --project projects/cockpit cockpit kems status
 make agent-workflow-bootstrap
 uv run --with pyyaml python bin/agent-workflow.py start project-code-change \
   --profile external-contributor-agent --objective "<summary>"
-# if profile not yet merged into agent-workflows.yaml, use engineering-agent
+# if profile is not yet merged under agent-workflows/profiles/, use engineering-agent
 uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <path>
 # …edit…
 uv run --with pyyaml python bin/agent-workflow.py verify <run-id> --from-diff --execute
@@ -109,7 +110,7 @@ make agent-workflow-closeout RUN_ID=<run-id>
 |---------|--------|-------------------|
 | `external-readonly-agent` | Observe only | `observer-audit`, `handoff-resume` |
 | `external-contributor-agent` | Code/docs under claim | `project-code-change`, `project-doc-change` |
-| `engineering-agent` / `governance-agent` | Full workspace roles | see agent-workflows.yaml |
+| `engineering-agent` / `governance-agent` | Full workspace roles | see `.omo/_truth/registry/agent-workflows/profiles/` |
 
 If profiles are missing from the live registry, fall back to `observer-agent` / `engineering-agent` and open a `project-doc-change` to merge `.agents/profiles/external-agent-profiles.fragment.yaml`.
 
@@ -130,4 +131,4 @@ If profiles are missing from the live registry, fall back to `observer-agent` / 
 - Onboarding: `.agents/skills/agent-onboarding/SKILL.md`
 - BOS discovery: `.agents/skills/bos-service-discovery/SKILL.md`
 - Callchain: `docs/I0-AGORA-CALLCHAIN.md`
-- Capability registry: `docs/generated/capability-registry.yaml` (`python3 bin/cockpit/gen-capability-registry.py`)
+- Capability projection: `docs/generated/capability-registry.yaml` (`python3 bin/cockpit/gen-capability-registry.py`)

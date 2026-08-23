@@ -8,7 +8,8 @@ last-reviewed: 2026-07-15
 # Agent Workflow Contract
 
 > Scope: executable project-level workflows for human-operated and autonomous agents.
-> SSOT: `.omo/_truth/registry/agent-workflows.yaml`.
+> SSOT: `.omo/_truth/registry/agent-workflows/`.
+> Compatibility only: `.omo/_truth/registry/agent-workflows.yaml` is a generated read-only projection.
 > Mandatory delivery rule: **ADR-0203** / `requirement_iteration_policy` (mode: required).
 
 ## 1. Purpose
@@ -27,9 +28,10 @@ The durable contract is:
 
 | Layer | Artifact | Role |
 |-------|----------|------|
-| SSOT | `.omo/_truth/registry/agent-workflows.yaml` | Workflow definitions, lanes, locks, stages, external adapters |
-| Agent Profiles | `.omo/_truth/registry/agent-workflows.yaml::agent_profiles` | Machine-readable agent roles, workflow allowlists, lane boundaries |
-| Internal Integrations | `.omo/_truth/registry/agent-workflows.yaml::internal_integrations` | Machine-readable contracts for GaC, OMO, C2G, Cockpit, and MOF |
+| SSOT | `.omo/_truth/registry/agent-workflows/` | Canonical workflow definitions, lanes, locks, stages, profiles, and adapters |
+| Agent Profiles | `.omo/_truth/registry/agent-workflows/profiles/` | Machine-readable agent roles, workflow allowlists, lane boundaries |
+| Internal Integrations | `.omo/_truth/registry/agent-workflows/_root.yaml::internal_integrations` | Machine-readable contracts for GaC, OMO, C2G, Cockpit, and MOF |
+| Legacy projection | `.omo/_truth/registry/agent-workflows.yaml` | Generated read-only compatibility view; never a writer authority |
 | Runner | `bin/agent-workflow.py` | Lint, status, plan, claim, verify, closeout, compliance, and run state |
 | Skill | `.agents/skills/project-governance/SKILL.md` | Thin bootloader for agent runtimes |
 | Gate | `make gac-local-gate` | Local enforcement through GAC, adapter, MOF, and SSOT checks |
@@ -41,7 +43,7 @@ The durable contract is:
 
 ### 3.1 Requirement iteration is mandatory (ADR-0203)
 
-SSOT: `agent-workflows.yaml::requirement_iteration_policy` (`mode: required`).
+SSOT: `agent-workflows/_root.yaml::requirement_iteration_policy` (`mode: required`).
 
 **Definition — requirement iteration** includes any delivery that changes the workspace for a
 feature, bugfix, ops landing, governance/SSOT/ADR/contract edit, or submodule pointer closeout
@@ -175,7 +177,7 @@ Recommended lock scopes:
 
 ## 5. Diff-Aware Verification And Evidence
 
-`diff_checks` in `.omo/_truth/registry/agent-workflows.yaml` maps file patterns to required
+`diff_checks` in `.omo/_truth/registry/agent-workflows/_root.yaml` maps file patterns to required
 verification commands. Agents can inspect the selected checks without side effects:
 
 ```bash
@@ -226,8 +228,8 @@ External systems are patterns, not new authorities:
 | GStack | Memory/learnings/handoff evidence may enrich resume state when installed. |
 | beads | Dependency-tracked work items may be imported as OMO planned tasks when installed. |
 
-Every external adapter must declare `authority`, `ssot_rule`, and `ingress_workflow` in
-`.omo/_truth/registry/agent-workflows.yaml`. `agent-workflow lint` enforces these fields, and
+Every external adapter must declare `authority`, `ssot_rule`, and `ingress_workflow` under
+`.omo/_truth/registry/agent-workflows/adapters/`. `agent-workflow lint` enforces these fields, and
 `agent-workflow adapters` exposes them for agents that cannot retain prompt context.
 `make gac-local-gate` runs both the adapter contract view and adapter health doctor.
 

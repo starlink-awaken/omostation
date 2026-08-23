@@ -183,15 +183,15 @@ kairon-lint:
 
 # ── 📚 SSOT 注册表与文档同步 (SSOT & Registry) ──────────────────────────────────
 
-sync-capability-registry:  ## 生成能力注册表 SSOT (扫描 MCP/BOS/CLI)
-	@echo "── 生成能力注册表 ────────────────────────────────────"
+sync-capability-registry:  ## 生成只读能力投影 (扫描 MCP/BOS/CLI；非 SSOT)
+	@echo "── 生成只读能力投影 ──────────────────────────────────"
 	$(PY) bin/cockpit/gen-capability-registry.py
 
-check-capability-registry:  ## 只读检查能力注册表漂移（与 CI 同一实现）
-	@echo "── 检查能力注册表漂移 ────────────────────────────────"
+check-capability-registry:  ## 只读检查能力投影漂移（与 CI 同一实现）
+	@echo "── 检查能力投影漂移 ──────────────────────────────────"
 	@$(PY) bin/cockpit/gen-capability-registry.py --check --quiet
 
-capability-sync: sync-capability-registry  ## 兼容入口：薄委托到唯一 registry writer
+capability-sync: sync-capability-registry  ## 兼容入口：薄委托到唯一 projection writer
 
 capability-check: check-capability-registry  ## 兼容入口：薄委托到唯一 drift checker
 

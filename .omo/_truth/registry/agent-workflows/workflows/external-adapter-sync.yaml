@@ -20,12 +20,12 @@ lock_scopes:
 - agent-skills
 surfaces:
   read:
-  - .omo/_truth/registry/agent-workflows.yaml
+  - .omo/_truth/registry/agent-workflows/**
   - .agents/skills/**
   - projects/c2g/**
   - projects/omo/**
   write:
-  - .omo/_truth/registry/agent-workflows.yaml
+  - .omo/_truth/registry/agent-workflows/adapters/**
   - .agents/skills/**
   - docs/**
 phases:

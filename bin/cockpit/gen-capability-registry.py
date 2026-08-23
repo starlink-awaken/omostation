@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """能力注册表生成器 — 扫描全生态 MCP/BOS/CLI，输出 capability-registry.yaml.
 
-这是「能力全景覆盖」方案的 SSOT 生成器。所有 help 文档、能力地图、
-CLI 参考均从本生成器输出的 YAML 派生。
+这是「能力全景覆盖」方案的生成器。输出是只读能力投影；所有 help 文档、
+能力地图、CLI 参考均可从该投影派生，但原生 provider/workflow 注册表仍各自保有权威。
 
 扫描源:
   - projects/*/src/**/mcp_server.py  → Python MCP 工具
@@ -158,7 +158,7 @@ _KNOWN_MCP_SERVERS: list[dict] = [
         "id": "c2g",
         "name": "C2G Strategy Compass",
         "layer": "X",
-        "file": "projects/c2g/src/c2g/mcp_server.py",
+        "file": "projects/omo/src/omo/_vendored/c2g/mcp_server.py",
         "transport": "stdio",
     },
     {
@@ -542,7 +542,7 @@ def build_registry() -> dict:
 def render_yaml(registry: dict) -> str:
     """Render the canonical deterministic registry representation."""
     header = (
-        "# docs/generated/capability-registry.yaml — 全生态能力注册表 SSOT\n"
+        "# docs/generated/capability-registry.yaml — generated projection, not SSOT / 不是 SSOT\n"
         "# 自动生成，请勿手动编辑\n"
         f"# 生成器: {REGISTRY_WRITER}\n"
         f"# 生成时间: {registry['generated_at']}\n\n"

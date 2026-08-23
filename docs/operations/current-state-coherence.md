@@ -6,7 +6,7 @@ owner: governance-team
 last-reviewed: 2026-08-02
 related:
   - ../../bin/ssot/current-state-coherence.py
-  - ../../.omo/_truth/registry/agent-workflows.yaml
+  - ../../.omo/_truth/registry/agent-workflows/_root.yaml
   - ../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
 lifecycle: contract
 ---

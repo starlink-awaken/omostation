@@ -94,6 +94,18 @@ def test_canonical_generator_declares_registry_contract(cap_sync, generator) -> 
     }
 
 
+def test_generated_projection_is_explicitly_non_authoritative_and_uses_vendored_c2g_source(generator) -> None:
+    """The generated catalog remains a projection, not an authority or a C2G fallback."""
+    registry = generator.build_registry()
+    rendered = generator.render_yaml(registry)
+    c2g = next(server for server in registry["mcp_servers"] if server["id"] == "c2g")
+
+    assert "generated projection, not SSOT / 不是 SSOT" in rendered
+    assert "全生态能力注册表 SSOT" not in rendered
+    assert c2g["file"] == "projects/omo/src/omo/_vendored/c2g/mcp_server.py"
+    assert c2g["exists"] == (generator.WORKSPACE / c2g["file"]).is_file()
+
+
 def test_sync_and_check_follow_canonical_writer_behavior(cap_sync, generator, tmp_path: Path) -> None:
     output = tmp_path / "capability-registry.yaml"
 

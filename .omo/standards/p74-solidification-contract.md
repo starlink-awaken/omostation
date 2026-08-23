@@ -6,7 +6,7 @@ last-reviewed: 2026-07-03
 related:
   - ../_knowledge/decisions/0130-p74-workflow-solidification.md
   - ../_knowledge/patterns/p74-workflow-solidification-pattern.md
-  - ../_truth/registry/agent-workflows.yaml
+  - ../_truth/registry/agent-workflows/_root.yaml
   - ../_truth/registry/governance-checks.yaml
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
@@ -74,9 +74,9 @@ make gac-local-gate
 
 ### 3.2 silent_health == excluded (已废弃, ADR-0211 §D1)
 
-字段 `silent_workflow_policy.excluded_workflows` 已在 ADR-0211 §D1 移除。
-如需豁免某 workflow,改用 `agent-workflows.yaml::diff_checks` 加覆盖 (治本) 或
-`agent-workflows.yaml::workflows.<id>.run_frequency: continuous` 让 1d 阈值易通过。
+旧的 workflow 排除字段已在 ADR-0211 §D1 移除。
+如需覆盖某 workflow,改用 `agent-workflows/_root.yaml::diff_checks` 加真实检查 (治本)；
+运行频率在 `agent-workflows/workflows/<id>.yaml::run_frequency` 中按实际语义声明，不能用来伪造健康。
 详见 ADR-0214 §D1 diff_checks 覆盖提议。
 
 ### 3.3 silent_health == warn — 处置流程
@@ -86,9 +86,9 @@ make gac-local-gate
    - `has_check_coverage == false` → A1(连 gate 都没触发)
 
 2. **A1(检查层沉默) 处置**:
-   - 在 `agent-workflows.yaml::diff_checks` 或 `doctor_checks` 加一条路径覆盖
+   - 在 `agent-workflows/_root.yaml::diff_checks` 或 `doctor_checks` 加一条路径覆盖
    - **OR** 删除该 workflow 登记(如果已经废弃)
-   - 注: `silent_workflow_policy.excluded_workflows` 字段已移除 (ADR-0211 §D1),不再支持加排除
+   - 注: 旧排除字段已移除 (ADR-0211 §D1),不再支持加排除
 
 3. **A2(运行层沉默) 处置**:
    - 如果 workflow 设计就是只在特定场景触发 → 通过 `agent-workflow suggest --from-diff` 引导
@@ -137,7 +137,7 @@ P74 报告通过 omo state sync 派生进 tracked legacy mirror `.omo/state/heal
 
 ## 5. 防复发机制
 
-- 任何改动 `agent-workflows.yaml` 触发 `gac-local-gate` 中的相关 check
+- 任何改动 canonical `agent-workflows/**` 或其 generated compatibility projection 都触发 `gac-local-gate` 中的相关 check
 - 任何改动 `bin/agent-workflow.py` 触发 P74 报告路径上的检查
 - 任何改动 `runtime-projections.yaml` 触发 `omo-state-projection-guard`
 - 任何改动 `runtime/` 或 `.gitignore` 触发 `omo-runtime-stamp-policy`

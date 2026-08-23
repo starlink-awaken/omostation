@@ -658,7 +658,7 @@ diff_checks:
   required: true
   paths:
   - bin/agent-workflow.py
-  - .omo/_truth/registry/agent-workflows.yaml
+  - .omo/_truth/registry/agent-workflows/**
   - .agents/skills/project-governance/SKILL.md
   - .omo/standards/agent-workflow-contract.md
   - .omo/_delivery/agent-workflows/runs/**
@@ -672,6 +672,22 @@ diff_checks:
   - python
   - bin/agent-workflow.py
   - lint
+- id: agent-workflow-projection-check
+  description: Legacy monolith is a deterministic read-only projection of the canonical directory.
+  required: true
+  paths:
+  - bin/agent-workflow.py
+  - lib/agent_workflow_projection.py
+  - .omo/_truth/registry/agent-workflows/**
+  - .omo/_truth/registry/agent-workflows.yaml
+  command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - projection-check
 - id: c2g-spec-consistency
   description: c2g pitch→planned→active ingress surface consistency (ADR-0211 §D1
     P74 覆盖 c2g-spec-ingress surfaces).
@@ -698,8 +714,11 @@ diff_checks:
   - bin/agent-workflow.py
   - bin/change-lane-check.py
   - bin/gac/gac-local-gate.py
+  - lib/agent_workflow_projection.py
+  - .omo/_truth/registry/agent-workflows/**
   - .omo/_truth/registry/agent-workflows.yaml
   - tests/test_agent_workflow.py
+  - tests/test_agent_workflow_projection.py
   command:
   - uv
   - run
@@ -711,6 +730,7 @@ diff_checks:
   - -m
   - pytest
   - tests/test_agent_workflow.py
+  - tests/test_agent_workflow_projection.py
   - -q
 - id: governance-evolution-validate
   description: Governance evolution roadmap structure and traceability validation.

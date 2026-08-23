@@ -12,7 +12,8 @@ SSOT 文件列表：
   - projects/ecos/src/ecos/ssot/mof/m1/ (M1 实例)
   - .omo/state/system.yaml
   - .omo/_truth/registry/governance-checks.yaml
-  - .omo/_truth/registry/agent-workflows.yaml
+  - .omo/_truth/registry/agent-workflows/ (canonical)
+  - .omo/_truth/registry/agent-workflows.yaml (generated compatibility projection)
   - .omo/_truth/registry/runtime-projections.yaml
 
 使用方法：
@@ -58,7 +59,8 @@ SSOT_FILES = [
     ("system_state", ".omo/state/system.yaml"),
     # 治理
     ("governance_checks", ".omo/_truth/registry/governance-checks.yaml"),
-    ("agent_workflows", ".omo/_truth/registry/agent-workflows.yaml"),
+    ("agent_workflows", ".omo/_truth/registry/agent-workflows/"),
+    ("agent_workflow_projection", ".omo/_truth/registry/agent-workflows.yaml"),
     ("runtime_projections", ".omo/_truth/registry/runtime-projections.yaml"),
 ]
 

@@ -21,11 +21,11 @@ surfaces:
   - ARCHITECTURE.md
   - docs/SYSTEM-INDEX.md
   - docs/INDEX-AGENTS.md
-  - .omo/_truth/registry/agent-workflows.yaml
+  - .omo/_truth/registry/agent-workflows/**
   - projects/agora/etc/bos-services.yaml
   - projects/cockpit/README.md
   write:
-  - .omo/_truth/registry/agent-workflows.yaml
+  - .omo/_truth/registry/agent-workflows/profiles/**
   - .agents/skills/**
 phases:
   preflight:
@@ -51,7 +51,7 @@ phases:
     command:
     - agent
     - edit
-    - agent-workflows.yaml::agent_profiles
+    - agent-workflows/profiles/::agent_profiles
   - id: create-skill
     mode: manual
     command:

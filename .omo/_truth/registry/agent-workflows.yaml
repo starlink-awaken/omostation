@@ -1,1433 +1,2910 @@
----
-status: active
-lifecycle: ssot
-owner: governance-team
-last-reviewed: 2026-06-29
----
-
-version: 1
-description: Project-level executable workflows for AI agents working in omostation.
-ssot:
-  governance_rules: .omo/_truth/registry/governance-checks.yaml
-  agent_protocol: .omo/standards/agent-mutation-protocol.md
-  omo_surfaces: .omo/standards/omo-governance-surfaces.md
-  doc_contract: .omo/standards/doc-ssot-contract.md
-internal_integrations:
-  gac:
-    status: integrated
-    authority: governance_gate
-    owner: governance-team
-    ssot_rule: Governance rules are canonical in .omo/_truth/registry/governance-checks.yaml; Markdown may only point to generated summaries.
-    gate: make gac-local-gate
-    gate_binding: make gac-local-gate
-    runner_lint_binding: bin/gac/gac-local-gate.py::agent-workflow-lint
-    health_command: [bin/gac/gac-validate.py, --gate]
-    health_required: true
-  omo:
-    status: integrated
-    authority: state_broker
-    owner: omo-team
-    ssot_rule: OMO owns governed state mutation; direct .omo writes are exceptional and must be called out.
-    bridge_compat: uv run --project projects/omo omo bridge --format <format> <source-file>
-    state_broker: projects/omo
-    gate_binding: omo-bridge-help
-    health_command: [uv, run, --project, projects/omo, omo, bridge, --help]
-    health_required: true
-  c2g:
-    status: integrated
-    authority: strategy_ingress
-    owner: strategy-team
-    ssot_rule: Strategy and external specs enter governed work through C2G/OMO planned task materialization.
-    pitch_bet: uv run --project projects/omo python -m omo._vendored.c2g.cli bet <pitch.md>  # ADR-0412 内包
-    cockpit_entry: uv run --project projects/cockpit cockpit compass bet <pitch.md>
-    gate_binding: c2g-bet-help
-    health_command: [uv, run, --project, projects/omo, python, -m, omo._vendored.c2g.cli, bet, --help]  # ADR-0412 内包
-    health_required: true
-  cockpit:
-    status: integrated
-    authority: entrypoint
-    owner: cockpit-team
-    ssot_rule: Cockpit is the L3 human entrypoint and delegates governance behavior to registered lower-layer tools.
-    compass: uv run --project projects/cockpit cockpit compass --help
-    agent: uv run --project projects/cockpit cockpit agent
-    workflow: uv run --project projects/cockpit cockpit agent-workflow --help
-    gate_binding: cockpit-agent-workflow-list
-    health_command: [uv, run, --project, projects/cockpit, cockpit, agent-workflow, list]
-    health_required: true
-  mof:
-    status: integrated
-    authority: model_registry
-    owner: ecos-team
-    ssot_rule: MOF M1/M2/M3 model facts and capability tools are canonical under ecos/mof registries.
-    capabilities: .omo/_truth/registry/mof-capabilities.yaml
-    schema_validate: python3 projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py --json
-    state_bridge: python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json
-    drift: bin/mof-drift
-    gate_binding: mof-schema-validate
-    health_command: [python3, projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py, --json]
-    health_required: true
-runner:
-  entrypoint: bin/agent-workflow.py
-  generated_skill: .agents/skills/project-governance/SKILL.md
-  run_state_dir: .omo/_delivery/agent-workflows/runs
-  lock_state_dir: .omo/_delivery/agent-workflows/locks
-  ledger_path: .omo/_delivery/agent-workflows/events.jsonl
-  lock_ttl_hours: 24
-silent_workflow_policy:
-  description: >
-    Registry-level policy for workflows that have no recent agent_workflow_start
-    events (ADR-0130 / P74). P74 §4.4 distinguishes A1 (check-layer silent,
-    addressed via doctor_checks / diff_checks) from A2 (run-layer silent,
-    intentionally not force-triggered because gate coverage already exercises
-    them). A workflow is considered silently healthy when its path appears
-    in at least one diff_checks or doctor_checks rule, or when it is in the
-    excluded_workflows list. Workflows with neither coverage AND no recent
-    run events trigger a [warn] in agent-workflow compliance (p74_solidification).
-  warn_after_days: 30
-# ADR-0211: excluded_workflows field removed; rationale in 0211 §D1 (no double SSOT)
-# ADR-0203: every requirement iteration MUST run through agent-workflow lifecycle.
-# Complements P74 (silence of registered workflows) by forbidding bypass on delivery work.
-requirement_iteration_policy:
-  mode: required
-  adr: ADR-0203
-  enforcement: ADR-0204
-  description: >
-    All requirement iterations (feature, bugfix, ops landing, governance/SSOT/ADR
-    changes, submodule pointer closeout tied to delivery) MUST execute via
-    bin/agent-workflow.py: bootstrap → start → claim → verify → closeout.
-    Prompt memory alone is non-compliant. claim_policy tiers still enforce path claims;
-    this policy is the agent-facing mandatory rule for starting a run before edits.
-    Executable gate (ADR-0204): staged in-scope files without an active run → compliance halt.
-    Unstaged dirty in-scope files → warn only (multi-agent worktree safe).
-    Bypass: AGCP_REQUIREMENT_ITERATION_GATE=0
-  required_lifecycle:
-    - bootstrap
-    - start
-    - claim
-    - verify
-    - closeout
-  in_scope:
-    - feature_or_bugfix_code_change
-    - governance_ssot_or_adr_change
-    - ops_landing_with_repo_diff
-    - delivery_closeout_with_product_or_governance_change
-    - submodule_pointer_closeout
-  in_scope_paths:
-    - "projects/**"
-    - ".omo/_truth/**"
-    - ".omo/standards/**"
-    - ".omo/_knowledge/decisions/**"
-    - ".omo/_knowledge/patterns/**"
-    - ".agents/**"
-    - "bin/**"
-    - "docs/**"
-    - "tests/**"
-    - "AGENTS.md"
-    - "CLAUDE.md"
-    - "ARCHITECTURE.md"
-    - "README.md"
-  exclude_paths:
-    - ".omo/state/**"
-    - ".omo/_delivery/**"
-    - ".omo/_control/**"
-    - "runtime/**"
-    - "**/__pycache__/**"
-  exempt_classes:
-    - pure_readonly_qa_or_explore
-    - observer_audit_readonly
-    - explicit_user_waiver_recorded_in_closeout
-  exempt_workflows:
+# GENERATED READ-ONLY COMPATIBILITY PROJECTION; NOT SSOT. DO NOT EDIT.
+agent_profiles:
+  adapter-agent:
+    allowed_workflows:
+    - external-adapter-sync
+    - agent-onboarding
+    - bet-execution
+    can_write_lanes:
+    - docs
+    - governance_code
+    - governance_state
+    closeout_required:
+    - adapter-doctor
+    - integration-map-review
+    purpose: Inspect and synchronize optional external tools without making them new governance authorities.
+  any-agent:
+    allowed_workflows:
+    - handoff-resume
+    can_write_lanes:
+    - docs
+    - code
+    - governance_code
+    - governance_state
+    - config
+    - submodule_pointer
+    closeout_required:
+    - run-record
+    purpose: Resume or hand off a compressed session through persisted run state.
+  builder-agent:
+    allowed_workflows:
+    - '*'
+    can_write_lanes:
+    - docs
+    - code
+    - governance_code
+    - compute_fabric
+    purpose: 主权算力投机生成与代码/公文起草 (ADR-0197)
+  c2g-agent:
+    allowed_workflows:
+    - governance-state-mutation
+    - c2g-spec-ingress
+    - external-adapter-sync
+    can_write_lanes:
+    - governance_state
+    - docs
+    closeout_required:
+    - ssot-guardian
+    - gac-local-gate
+    purpose: Convert strategy inputs, pitches, BMAD, or OpenSpec material into governed planned tasks.
+  devil-challenger:
+    allowed_workflows:
+    - '*'
+    can_write_lanes:
+    - docs
+    - governance_code
+    - governance_state
+    purpose: 审计/等保/法务影子对抗审查与 Auto-Patch (ADR-0196)
+  docs-agent:
+    allowed_workflows:
+    - project-doc-change
+    - bet-execution
+    can_write_lanes:
+    - docs
+    closeout_required:
+    - doc-ssot-lint
+    - ssot-guardian
+    - gac-local-gate
+    purpose: Maintain Markdown and project docs without duplicating SSOT facts.
+  engineering-agent:
+    allowed_workflows:
+    - project-code-change
+    - pyright-sweep
+    - bet-execution
+    can_write_lanes:
+    - code
+    - config
+    closeout_required:
+    - project-tests
+    - gac-local-gate
+    purpose: Implement project-local code changes with project tests and workspace gates.
+  external-contributor-agent:
+    allowed_workflows:
+    - project-doc-change
+    - project-code-change
+    - handoff-resume
     - observer-audit
-  non_exempt_note: >
-    handoff-resume is recovery of an existing run, not a license to edit without a run-id.
+    can_write_lanes:
+    - docs
+    - code
+    - config
+    closeout_required:
+    - verify
+    notes: Must start+claim before edits (ADR-0203). No direct .omo governance_state.
+    purpose: External MCP host allowed to deliver docs/code under claim
+  external-readonly-agent:
+    allowed_workflows:
+    - observer-audit
+    - handoff-resume
+    - mof-state-bridge-audit
+    can_write_lanes: []
+    closeout_required: []
+    notes: Prefer for Cursor/Codex sessions that only inspect health/BOS/audit.
+    purpose: External MCP host with read-only oversight (no requirement writes)
+  governance-agent:
+    allowed_workflows:
+    - project-doc-change
+    - project-code-change
+    - pyright-sweep
+    - governance-state-mutation
+    - c2g-spec-ingress
+    - mof-model-change
+    - mof-state-bridge-audit
+    - external-adapter-sync
+    - submodule-pointer-close
+    - observer-audit
+    - governance-audit
+    - state-sync
+    - agent-onboarding
+    - bet-execution
+    can_write_lanes:
+    - docs
+    - governance_code
+    - governance_state
+    - config
+    - submodule_pointer
+    closeout_required:
+    - agent-workflow-lint
+    - agent-workflow-observe
+    - gac-local-gate
+    purpose: Route governance-sensitive edits through GAC, OMO, C2G, and SSOT checks.
+  keeper-cartridge:
+    allowed_workflows:
+    - '*'
+    can_write_lanes:
+    - docs
+    - governance_code
+    - governance_state
+    purpose: 领域卡带与 SOP 资产装配 (ADR-0198)
+  mof-agent:
+    allowed_workflows:
+    - mof-model-change
+    - mof-state-bridge-audit
+    can_write_lanes:
+    - governance_code
+    - governance_state
+    - docs
+    closeout_required:
+    - mof-schema-validate
+    - mof-state-bridge
+    - mof-drift
+    - gac-local-gate
+    purpose: Maintain MOF M1/M2/M3 model changes, schema validation, state bridge alignment, and MOF version evidence.
+  observer-agent:
+    allowed_workflows:
+    - observer-audit
+    - mof-state-bridge-audit
+    can_write_lanes: []
+    closeout_required:
+    - observe-json
+    - doctor
+    purpose: Run read-only oversight for locks, run records, ledger events, and handoff evidence.
+  qa-agent:
+    allowed_workflows:
+    - project-code-change
+    - pyright-sweep
+    can_write_lanes:
+    - code
+    closeout_required:
+    - project-tests
+    purpose: Verify code behavior and report failures without owning broad implementation changes.
+  release-agent:
+    allowed_workflows:
+    - submodule-pointer-close
+    can_write_lanes:
+    - submodule_pointer
+    - config
+    closeout_required:
+    - reachability
+    - gac-local-gate
+    purpose: Close submodule pointer and release-gate work without dangling SHAs.
+  sage-planner:
+    allowed_workflows:
+    - '*'
+    can_write_lanes:
+    - docs
+    - governance_code
+    purpose: 意图解构与工程规格反编译 (ADR-0195, cognitive-governance-delivery)
+  state-sync-agent:
+    allowed_workflows:
+    - state-sync
+    can_write_lanes:
+    - governance_state
+    - runtime_snapshot
+    closeout_required:
+    - state-sync
+    - state-sync-dry-run
+    - agent-workflow-observe
+    purpose: Refresh high-churn runtime projections through the OMO state-sync broker.
+  strategy-agent:
+    allowed_workflows:
+    - c2g-spec-ingress
+    - external-adapter-sync
+    can_write_lanes:
+    - docs
+    - governance_state
+    closeout_required:
+    - planned-task-review
+    purpose: Shape upstream intent before it is materialized into C2G or OMO task state.
 claim_policy:
   mode: advisory
   required_paths:
+  - AGENTS.md
+  - CLAUDE.md
+  - README.md
+  - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+  - projects/AGENTS.md
+  tiers:
+  - id: core-governance-required
+    mode: required
+    paths:
+    - .agents/skills/**
+    - .omo/_truth/registry/**
+    - .omo/standards/**
+    - bin/agent-workflow.py
+    - bin/change-lane-check.py
+    - bin/gac/gac-local-gate.py
+    - bin/gac/governance-evolution.py
+    - bin/gac/omo-state-projection-guard.py
+    - bin/gac/omo-runtime-stamp-policy.py
+    - projects/agora/etc/bos-services.yaml
+    - projects/cockpit/src/cockpit/cli.py
+    - projects/cockpit/src/cockpit/commands/agent_workflow.py
+    - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
+    - projects/ecos/src/ecos/ssot/mof/**
+    - tests/test_agent_workflow.py
+  - id: runtime-projection-snapshot
+    mode: required
+    note: 'Runtime projections refreshed by the omo state sync broker (ADR-0129, P74 §3.2). Derived artifacts; required so that omo state sync workflows must claim them, keeping broker regeneration auditable.
+
+      '
+    paths:
+    - .omo/_truth/registry/runtime-projections.yaml
+    - .omo/state/runtime/**
+    - .omo/_control/**
+    - BRIEF.md
+  - id: agent-entrypoint-advisory
+    mode: advisory
+    paths:
     - AGENTS.md
     - CLAUDE.md
     - README.md
     - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
     - projects/AGENTS.md
-  tiers:
-    - id: core-governance-required
-      mode: required
-      paths:
-        - .agents/skills/**
-        - .omo/_truth/registry/**
-        - .omo/standards/**
-        - bin/agent-workflow.py
-        - bin/change-lane-check.py
-        - bin/gac/gac-local-gate.py
-        - bin/gac/governance-evolution.py
-        - bin/gac/omo-state-projection-guard.py
-        - bin/gac/omo-runtime-stamp-policy.py
-        - projects/agora/etc/bos-services.yaml
-        - projects/cockpit/src/cockpit/cli.py
-        - projects/cockpit/src/cockpit/commands/agent_workflow.py
-        - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
-        - projects/ecos/src/ecos/ssot/mof/**
-        - tests/test_agent_workflow.py
-    - id: runtime-projection-snapshot
-      mode: required
-      paths:
-        - .omo/_truth/registry/runtime-projections.yaml
-        - .omo/state/runtime/**
-        - .omo/_control/**
-        - BRIEF.md
-      note: >
-        Runtime projections refreshed by the omo state sync broker (ADR-0129,
-        P74 §3.2). Derived artifacts; required so that omo state sync
-        workflows must claim them, keeping broker regeneration auditable.
-    - id: agent-entrypoint-advisory
-      mode: advisory
-      paths:
-        - AGENTS.md
-        - CLAUDE.md
-        - README.md
-        - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
-        - projects/AGENTS.md
-evidence_schema:
-  version: 1
-  required_event_fields: [ts, event, run_id]
-  command_result_fields: [id, command, returncode, duration_s, ok]
-  closeout_required_events:
-    - agent_workflow_verify
-    - agent_workflow_closeout
-    - agent_workflow_close
+commands:
+  adapters:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - adapters
+  bootstrap:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - bootstrap
+  claim:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - claim
+  closeout:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - closeout
+  compliance:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - compliance
+  doctor:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - doctor
+  governance_evolution:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - status
+  integrations:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - integrations
+  lint:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - lint
+  observe:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - observe
+  status:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - status
+  verify_from_diff:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - verify
+  - --from-diff
 compliance_slo:
-  stale_locks: 0
   closed_ok_without_evidence: 0
-  required_integration_health: 100%
   doc_ssot_conflicts: 0
   generated_digest_drift: 0
-agent_profiles:
-  docs-agent:
-    purpose: Maintain Markdown and project docs without duplicating SSOT facts.
-    allowed_workflows: [project-doc-change]
-    can_write_lanes: [docs]
-    closeout_required: [doc-ssot-lint, ssot-guardian, gac-local-gate]
-  engineering-agent:
-    purpose: Implement project-local code changes with project tests and workspace gates.
-    allowed_workflows: [project-code-change]
-    can_write_lanes: [code, config]
-    closeout_required: [project-tests, gac-local-gate]
-  qa-agent:
-    purpose: Verify code behavior and report failures without owning broad implementation changes.
-    allowed_workflows: [project-code-change]
-    can_write_lanes: [code]
-    closeout_required: [project-tests]
-  governance-agent:
-    purpose: Route governance-sensitive edits through GAC, OMO, C2G, and SSOT checks.
-    allowed_workflows:
-      - project-doc-change
-      - project-code-change
-      - governance-state-mutation
-      - c2g-spec-ingress
-      - mof-model-change
-      - mof-state-bridge-audit
-      - external-adapter-sync
-      - submodule-pointer-close
-      - observer-audit
-      - governance-audit
-      - state-sync
-      - agent-onboarding
-    can_write_lanes: [docs, governance_code, governance_state, config, submodule_pointer]
-    closeout_required: [agent-workflow-lint, agent-workflow-observe, gac-local-gate]
-  state-sync-agent:
-    purpose: Refresh high-churn runtime projections through the OMO state-sync broker.
-    allowed_workflows: [state-sync]
-    can_write_lanes: [governance_state, runtime_snapshot]
-    closeout_required: [state-sync, state-sync-dry-run, agent-workflow-observe]
-  mof-agent:
-    purpose: Maintain MOF M1/M2/M3 model changes, schema validation, state bridge alignment, and MOF version evidence.
-    allowed_workflows: [mof-model-change, mof-state-bridge-audit]
-    can_write_lanes: [governance_code, governance_state, docs]
-    closeout_required: [mof-schema-validate, mof-state-bridge, mof-drift, gac-local-gate]
-  c2g-agent:
-    purpose: Convert strategy inputs, pitches, BMAD, or OpenSpec material into governed planned tasks.
-    allowed_workflows: [governance-state-mutation, c2g-spec-ingress, external-adapter-sync]
-    can_write_lanes: [governance_state, docs]
-    closeout_required: [ssot-guardian, gac-local-gate]
-  strategy-agent:
-    purpose: Shape upstream intent before it is materialized into C2G or OMO task state.
-    allowed_workflows: [c2g-spec-ingress, external-adapter-sync]
-    can_write_lanes: [docs, governance_state]
-    closeout_required: [planned-task-review]
-  adapter-agent:
-    purpose: Inspect and synchronize optional external tools without making them new governance authorities.
-    allowed_workflows: [external-adapter-sync, agent-onboarding]
-    can_write_lanes: [docs, governance_code, governance_state]
-    closeout_required: [adapter-doctor, integration-map-review]
-  release-agent:
-    purpose: Close submodule pointer and release-gate work without dangling SHAs.
-    allowed_workflows: [submodule-pointer-close]
-    can_write_lanes: [submodule_pointer, config]
-    closeout_required: [reachability, gac-local-gate]
-  observer-agent:
-    purpose: Run read-only oversight for locks, run records, ledger events, and handoff evidence.
-    allowed_workflows: [observer-audit, mof-state-bridge-audit]
-    can_write_lanes: []
-    closeout_required: [observe-json, doctor]
-  any-agent:
-    purpose: Resume or hand off a compressed session through persisted run state.
-    allowed_workflows: [handoff-resume]
-    can_write_lanes: [docs, code, governance_code, governance_state, config, submodule_pointer]
-    closeout_required: [run-record]
+  required_integration_health: 100%
+  stale_locks: 0
+description: Project-level executable workflows for AI agents working in omostation.
+diff_checks:
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/current-state-coherence.py
+  - --json
+  description: 'Read-only coherence projection for current phase, goals, task counts, execution mode and Scene Card activation boundary. Waiting for a real scenario is valid; contradictory state or stale counts are blocking.
+
+    '
+  id: current-state-coherence
+  paths:
+  - bin/ssot/current-state-coherence.py
+  - .omo/state/system.yaml
+  - .omo/goals/current.yaml
+  - .omo/tasks/**
+  - docs/scene-card-candidate-seeds.yaml
+  - docs/scene-cards/**
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - --with
+  - pytest
+  - python
+  - -m
+  - pytest
+  - tests/test_sweep_tools.py
+  - tests/test_gac_worktree_lifecycle.py
+  - -q
+  description: P91 pyright and ruff sweep tooling plus Python project type surfaces.
+  id: pyright-sweep-check
+  paths:
+  - bin/sweep/**
+  - tests/test_sweep_tools.py
+  - bin/gac/gac-worktree.sh
+  - bin/gac/gac-worktree-cleanup.sh
+  - tests/test_gac_worktree_lifecycle.py
+  - projects/*/src/**/*.py
+  - projects/*/tests/**/*.py
+  - projects/*/pyproject.toml
+  - projects/*/pyrightconfig.json
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/check-submodule-hygiene.py
+  - --strict
+  description: Submodule pointer hygiene and shared-worktree isolation checks (P72/PASW/ADR-0220 D5).
+  id: submodule-hygiene
+  paths:
+  - bin/ssot/check-submodule-hygiene.py
+  - .omo/_delivery/branch-claims/**
+  - .omo/_delivery/adr-claims/**
+  - .subtrees/**
+  - projects/*/
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - lint
+  description: Workflow runner and registry contract validation.
+  id: agent-workflow-lint
+  paths:
+  - bin/agent-workflow.py
+  - .omo/_truth/registry/agent-workflows/**
+  - .agents/skills/project-governance/SKILL.md
+  - .omo/standards/agent-workflow-contract.md
+  - .omo/_delivery/agent-workflows/runs/**
+  - .omo/_delivery/agent-workflows/locks/**
+  - .omo/_delivery/agent-workflows/events.jsonl
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - projection-check
+  description: Legacy monolith is a deterministic read-only projection of the canonical directory.
+  id: agent-workflow-projection-check
+  paths:
+  - bin/agent-workflow.py
+  - lib/agent_workflow_projection.py
+  - .omo/_truth/registry/agent-workflows/**
+  - .omo/_truth/registry/agent-workflows.yaml
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/gac-validate.py
+  - --gate
+  description: c2g pitch→planned→active ingress surface consistency (ADR-0211 §D1 P74 覆盖 c2g-spec-ingress surfaces).
+  id: c2g-spec-consistency
+  paths:
+  - .omo/pitches/**
+  - .omo/tasks/planned/**
+  - runtime/omo/_delivery/ingress/**
+  - projects/c2g/**
+  - projects/omo/**
+  - runtime/sandbox/**
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - --with
+  - pytest
+  - python
+  - -m
+  - pytest
+  - tests/test_agent_workflow.py
+  - tests/test_agent_workflow_projection.py
+  - -q
+  description: Focused tests for executable agent workflow control plane.
+  id: agent-workflow-tests
+  paths:
+  - bin/agent-workflow.py
+  - bin/change-lane-check.py
+  - bin/gac/gac-local-gate.py
+  - lib/agent_workflow_projection.py
+  - .omo/_truth/registry/agent-workflows/**
+  - .omo/_truth/registry/agent-workflows.yaml
+  - tests/test_agent_workflow.py
+  - tests/test_agent_workflow_projection.py
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - validate
+  - --json
+  description: Governance evolution roadmap structure and traceability validation.
+  id: governance-evolution-validate
+  paths:
+  - .omo/_truth/registry/governance-evolution-roadmap.yaml
+  - bin/gac/governance-evolution.py
+  - tests/test_governance_evolution.py
+  - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+  - README.md
+  - AGENTS.md
+  required: true
+- command:
+  - uv
+  - run
+  - pytest
+  - tests/test_governance_evolution.py
+  - -q
+  description: Focused tests for governance evolution roadmap and CLI.
+  id: governance-evolution-tests
+  paths:
+  - .omo/_truth/registry/governance-evolution-roadmap.yaml
+  - bin/gac/governance-evolution.py
+  - tests/test_governance_evolution.py
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/check-mof-capabilities-drift.py
+  description: MOF 能力注册表 drift 守门 (CR-X4-MOF-CAPABILITIES-DRIFT, ADR-0238 P0-2) — path/stats/mcptool_count 三类漂移.
+  id: mof-capabilities-drift
+  paths:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - bin/mof/check-mof-capabilities-drift.py
+  - projects/ecos/src/ecos/ssot/mof/m1/mcptool/MCPTOOL-MODEL-DRIVEN.yaml
+  - projects/model-driven/src/model_driven/mcp_server.py
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - --with
+  - pytest
+  - python
+  - -m
+  - pytest
+  - tests/test_mof_capabilities_drift.py
+  - -q
+  description: MOF 能力注册表 drift 检出测试 (注入漂移验证, ADR-0238 P0-2).
+  id: mof-capabilities-drift-tests
+  paths:
+  - bin/mof/check-mof-capabilities-drift.py
+  - tests/test_mof_capabilities_drift.py
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/check-mof-capabilities-drift.py
+  - --scope
+  - metaos
+  description: metaos registry drift 守门 (CR-X4-METAOS-REGISTRY-DRIFT, §J1) — projects-capabilities 死条目 + INTERFACE entrypoint 可达性 + submodule 目录. 扩展 check-mof-capabilities-drift 同一扇门, 不新建门禁框架.
+  id: metaos-registry-drift
+  paths:
+  - bin/mof/check-mof-capabilities-drift.py
+  - .omo/_truth/registry/projects-capabilities.yaml
+  - projects/metaos/INTERFACE.yaml
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - --with
+  - pytest
+  - python
+  - -m
+  - pytest
+  - tests/test_mof_capabilities_drift.py
+  - -q
+  description: metaos registry drift 检出测试 (§J1 注入 + 现实 kairon.metaos 活体验收).
+  id: metaos-registry-drift-tests
+  paths:
+  - bin/mof/check-mof-capabilities-drift.py
+  - tests/test_mof_capabilities_drift.py
+  required: false
+- command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - pytest
+  - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
+  - -q
+  description: Cockpit L3 entry tests for agent workflow delegation.
+  id: cockpit-agent-entry-tests
+  paths:
+  - projects/cockpit/src/cockpit/cli.py
+  - projects/cockpit/src/cockpit/commands/agent_workflow.py
+  - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
+  required: true
+- command:
+  - uv
+  - run
+  - --project
+  - projects/agora
+  - pytest
+  - projects/agora/tests/unit/test_bos_registry.py
+  - -q
+  description: Agora BOS registry tests for agent workflow governance routes.
+  id: agora-bos-registry-tests
+  paths:
+  - projects/agora/etc/bos-services.yaml
+  - projects/agora/tests/unit/test_bos_registry.py
+  required: true
+- command:
+  - python3
+  - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+  - --json
+  description: MOF M1/M2 schema validation for model edits.
+  id: mof-schema-validate
+  paths:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - .omo/_truth/mof-version.yaml
+  - projects/ecos/src/ecos/ssot/mof/**
+  - projects/ecos/src/ecos/ssot/tools/mof-*.py
+  required: true
+- command:
+  - python3
+  - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py
+  - --json
+  description: MOF to OMO state bridge alignment report for model edits.
+  id: mof-state-bridge
+  paths:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - .omo/_truth/mof-version.yaml
+  - projects/ecos/src/ecos/ssot/mof/**
+  - projects/ecos/src/ecos/ssot/tools/mof-*.py
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/mof-drift
+  description: MOF architecture drift detector for model edits.
+  id: mof-drift
+  paths:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - .omo/_truth/mof-version.yaml
+  - projects/ecos/src/ecos/ssot/mof/**
+  - projects/ecos/src/ecos/ssot/tools/mof-*.py
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/state-stale-consume.py
+  - --within
+  - '300'
+  - --quiet
+  description: state_stale 事件消费端 (ADR-0227 原则4 闭环; ADR-0128 Phase 2).
+  id: state-stale-consume
+  paths:
+  - .omo/_knowledge/omo-events.jsonl
+  - bin/gac/state-stale-consume.py
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/doc-ssot-lint.py
+  - --json
+  description: Documentation SSOT semantic contract.
+  id: doc-ssot-lint
+  paths:
+  - '*.md'
+  - docs/**/*.md
+  - docs/generated/**
+  - .omo/standards/**/*.md
+  - projects/*/AGENTS.md
+  - projects/*/CLAUDE.md
+  - projects/*/README.md
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/project-layer-index.py
+  - --check
+  description: Generated project layer digest freshness.
+  id: project-layer-index
+  paths:
+  - docs/project-registry.yaml
+  - docs/generated/project-layer-index.md
+  - bin/mof/project-layer-index.py
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/ssot-guardian.py
+  description: State-plane and generated artifact SSOT guard.
+  id: ssot-guardian
+  paths:
+  - .omo/**
+  - spaces/**
+  - AGENTS.md
+  - CLAUDE.md
+  - README.md
+  - ARCHITECTURE.md
+  - LAYER-INDEX.md
+  - docs/generated/**
+  required: true
+- allowed_lanes:
+  - code
+  - docs
+  - docs_data
+  - governance_code
+  - governance_state
+  - config
+  command:
+  - make
+  - gac-local-gate
+  description: Full local governance gate for broad contract changes.
+  id: gac-local-gate
+  paths:
+  - Makefile
+  - bin/**
+  - .omo/_truth/registry/**
+  - .omo/standards/**
+  - docs/**
+  - AGENTS.md
+  - CLAUDE.md
+  - README.md
+  - ARCHITECTURE.md
+  - LAYER-INDEX.md
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/gen-service-configs.py
+  - --validate
+  description: 'Validates gen-service-configs output is consistent with the services.yaml registry and that all generated GitHub Actions workflows carry an executable `schedule_ref` reference (P4 元递归全覆盖 复发拦截, P74 §3).
+
+    '
+  id: gen-service-configs-validate
+  paths:
+  - bin/mof/gen-service-configs.py
+  - projects/agora/etc/services.yaml
+  - .github/workflows/**
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/omo-state-projection-guard.py
+  description: 'Validates that .omo/state/runtime/* projections referenced from runtime-projections.yaml are present, parse as YAML/JSON, and have a canonical-path entry (CR-P74-STATE-PROJECTION-GUARD; prevents P71 class A "path drift" recurrence).
+
+    '
+  id: omo-state-projection-guard
+  paths:
+  - .omo/_truth/registry/runtime-projections.yaml
+  - .omo/state/runtime/**
+  - .omo/_control/**
+  - BRIEF.md
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/omo-runtime-stamp-policy.py
+  description: 'Confirms runtime stamp files (e.g. .watch-dispatch-stamps.json) are either gitignored, tracked, or registered in the runtime surface registry, so untracked runtime artifacts do not silently accumulate (CR-P74-RUNTIME-STAMP-POLICY; prevents P71 class B recurrence).
+
+    '
+  id: omo-runtime-stamp-policy
+  paths:
+  - runtime/**
+  - .omo/_truth/registry/runtime-projections.yaml
+  - .gitignore
+  required: true
+- command:
+  - python3
+  - bin/gac/gac-consensus-inject.py
+  description: 'KOS RAG Epigenetic Memory Injection (eCOS v6 Phase A). Reads Consensus entities from KOS SQLite, uses TF-IDF cosine similarity to select Top-2 most relevant genes for the current task context, and injects them into CLAUDE.md. Saves ~66% Context Window Tokens vs full-dump.
+
+    '
+  id: gac-consensus-inject
+  paths:
+  - bin/gac/gac-consensus-inject.py
+  - CLAUDE.md
+  required: false
+- command:
+  - python3
+  - bin/gac/gac-ingress-check.py
+  description: 'C2G Self-Correcting Ingress Pre-Checker (eCOS v6 Phase B). Detects port conflicts, service name collisions, and runs mini-9b LLM semantic analysis on Pitch documents before task materialization. Moves conflict detection from commit-time to planning-time.
+
+    '
+  id: gac-ingress-check
+  paths:
+  - bin/gac/gac-ingress-check.py
+  - protocols/port-registry.yaml
+  - docs/project-registry.yaml
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/check-mof-capabilities-drift.py
+  description: MOF capabilities registry drift (declared entrypoint vs actual).
+  id: mof-capabilities-drift-check
+  paths:
+  - .omo/capabilities/**
+  - bin/mof/**
+  - projects/*/src/**
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/check-doc-claims.py
+  description: Document claims vs implementation consistency (CR-X4-DOC-CLAIMS).
+  id: doc-claims-check
+  paths:
+  - docs/**
+  - projects/*/CLAUDE.md
+  - projects/*/AGENTS.md
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/ssot/check-layer-call-direction.py
+  description: Cross-layer call direction (L0-L3 + X) violations. 存量 11 条 grace (检查器 exit=0 只报告); new-violation blocking 待加 baseline 机制.
+  id: layer-call-direction-check
+  paths:
+  - projects/*/src/**
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - lint
+  description: P74 A1 check-layer coverage (ADR-0130 §3.3 / ADR-0214 §D1) — mirrors surfaces.write of project-code-change (projects/{project}/**) and submodule-pointer-close (projects/*) so these on_demand workflows register diff_checks coverage instead of silent warn. projects/** also enables real gate trigger on project file/gilink changes.
+  id: project-code-and-submodule-coverage
+  paths:
+  - projects/{project}/**
+  - projects/*
+  - projects/**
+  required: false
+doctor_checks:
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - list
+  description: Root runner can list workflows.
+  id: root-agent-workflow-list
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - agents
+  description: Root runner can list registered agent profiles.
+  id: root-agent-workflow-agents
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - adapters
+  description: Root runner can list external adapter contracts.
+  id: root-agent-workflow-adapters
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - integrations
+  description: Root runner can list internal integration contracts.
+  id: root-agent-workflow-integrations
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - observe
+  description: Observer audit can inspect run, lock, and ledger consistency.
+  id: root-agent-workflow-observe
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - verify
+  - --file
+  - bin/agent-workflow.py
+  description: Root runner can select diff-aware verification checks.
+  id: root-agent-workflow-verify-plan
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - compliance
+  description: Root runner can audit run, lock, ledger, and evidence compliance.
+  id: root-agent-workflow-compliance
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/agent-workflow.py
+  - status
+  - --json
+  description: Root runner can summarize AGCP run, lock, claim, compliance, and lane status.
+  id: root-agent-workflow-status
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/governance-evolution.py
+  - status
+  - --json
+  description: Root runner can summarize systemic governance evolution roadmap status.
+  id: root-governance-evolution-status
+  required: true
+- command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - cockpit
+  - agent-workflow
+  - list
+  description: Cockpit L3 entry can delegate to the root runner.
+  id: cockpit-agent-workflow-list
+  required: true
+- command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - cockpit
+  - agent
+  - bootstrap
+  - --skip-health
+  description: Cockpit L3 agent entry can show startup context.
+  id: cockpit-agent-bootstrap
+  required: true
+- command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - cockpit
+  - agent
+  - status
+  - --json
+  description: Cockpit L3 agent entry can show AGCP status.
+  id: cockpit-agent-status
+  required: true
+- command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - cockpit
+  - agent-workflow
+  - agents
+  description: Cockpit L3 entry can expose registered agent profiles.
+  id: cockpit-agent-workflow-agents
+  required: true
+- command:
+  - uv
+  - run
+  - --project
+  - projects/cockpit
+  - cockpit
+  - compass
+  - --help
+  description: Cockpit C2G compass entry is available.
+  id: cockpit-compass-help
+  required: true
+- command:
+  - uv
+  - run
+  - --project
+  - projects/omo
+  - python
+  - -m
+  - omo._vendored.c2g.cli
+  - bet
+  - --help
+  description: C2G pitch-to-task ingress command is available.
+  id: c2g-bet-help
+  required: true
+- command:
+  - uv
+  - run
+  - --project
+  - projects/omo
+  - omo
+  - bridge
+  - --help
+  description: OMO bridge compatibility path for BMAD/OpenSpec is available.
+  id: omo-bridge-help
+  required: true
+- command:
+  - test
+  - -f
+  - .omo/_truth/registry/mof-capabilities.yaml
+  description: MOF capability registry is present as the MOF SSOT.
+  id: mof-capabilities-registry
+  required: true
+- command:
+  - python3
+  - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+  - --json
+  description: MOF M1/M2 schema validation is runnable.
+  id: mof-schema-validate
+  required: true
+- command:
+  - python3
+  - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py
+  - --json
+  description: MOF state bridge can report OMO task alignment.
+  id: mof-state-bridge
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/mof-drift
+  description: MOF architecture drift detector is runnable.
+  id: mof-drift
+  required: true
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/mof-bootstrap.py
+  - all
+  description: M4 5-check 自反校验器 (M4→GaC, ADR-0152/0153/0154)
+  id: mof-bootstrap
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/mof/m4-health-score.py
+  - --emit
+  description: M4 Health Score 量化 (派生面引擎)
+  id: m4-health-score
+  required: false
+- command:
+  - uv
+  - run
+  - --with
+  - pyyaml
+  - python
+  - bin/gac/mcp-tool-data-complete.py
+  description: MCPTOOL 数据完整性守门
+  id: mcp-tool-data-complete
+  required: false
+evidence_schema:
+  closeout_required_events:
+  - agent_workflow_verify
+  - agent_workflow_closeout
+  - agent_workflow_close
+  command_result_fields:
+  - id
+  - command
+  - returncode
+  - duration_s
+  - ok
+  required_event_fields:
+  - ts
+  - event
+  - run_id
+  version: 1
 external_patterns:
-  superpowers:
-    status: integrated
-    skill: using-superpowers
-    authority: discipline_layer
-    ssot_rule: Delegates project-specific truth to this registry, GAC, OMO/C2G, and MOF registries.
-    ingress_workflow: project-governance-skill
-    pattern: skill-first execution with explicit checklist and verification before closeout
-    adapter: project-governance skill points back to this registry and runner
-    health_command: [test, -f, .agents/skills/project-governance/SKILL.md]
-    health_required: true
-  bmad:
-    status: optional_adapter
-    command: bmad
-    authority: input_adapter
-    ssot_rule: BMAD specs may seed governed work but OMO/C2G planned tasks remain canonical.
-    ingress_workflow: c2g-spec-ingress
-    bridge: uv run --project projects/omo omo bridge --format bmad <source-file>
-    pattern: structured product/agent specs become governed OMO planned tasks through the OMO bridge compatibility path
-    health_command: [bmad, status]
-    health_required: false
-  openspec:
-    status: optional_adapter
-    command: openspec
-    authority: input_adapter
-    ssot_rule: OpenSpec changes may seed governed work but OMO/C2G planned tasks remain canonical.
-    ingress_workflow: c2g-spec-ingress
-    bridge: uv run --project projects/omo omo bridge --format openspec <source-file>
-    pattern: specs become contracts before implementation and then enter OMO through the bridge compatibility path
-    health_command: [openspec, list]
-    health_required: false
-  gstack:
-    status: optional_adapter
-    command: gstack
-    authority: memory_adapter
-    ssot_rule: GStack memory may enrich handoff evidence but agent-workflow run records remain canonical.
-    ingress_workflow: handoff-resume
-    pattern: per-worktree memory, learnings, and handoff logs can feed workflow resume evidence
-    health_command: [gstack, --help]
-    health_required: false
-    degrade_to: bin/agent-workflow.py handoff <run-id>
   beads:
-    status: optional_adapter
-    command: beads
     authority: input_adapter
-    ssot_rule: beads items may seed governed work but OMO/C2G planned tasks remain canonical.
+    command: beads
+    degrade_to: c2g-spec-ingress plus OMO planned tasks
+    health_command:
+    - beads
+    - version
+    health_required: false
     ingress_workflow: external-adapter-sync
     pattern: small dependency-tracked work items can be imported as OMO planned tasks when available
-    health_command: [beads, version]
+    ssot_rule: beads items may seed governed work but OMO/C2G planned tasks remain canonical.
+    status: optional_adapter
+  bmad:
+    authority: input_adapter
+    bridge: uv run --project projects/omo omo bridge --format bmad <source-file>
+    command: bmad
+    health_command:
+    - bmad
+    - status
     health_required: false
-    degrade_to: c2g-spec-ingress plus OMO planned tasks
-commands:
-  lint:
+    ingress_workflow: c2g-spec-ingress
+    pattern: structured product/agent specs become governed OMO planned tasks through the OMO bridge compatibility path
+    ssot_rule: BMAD specs may seed governed work but OMO/C2G planned tasks remain canonical.
+    status: optional_adapter
+  gstack:
+    authority: memory_adapter
+    command: gstack
+    degrade_to: bin/agent-workflow.py handoff <run-id>
+    health_command:
+    - gstack
+    - --help
+    health_required: false
+    ingress_workflow: handoff-resume
+    pattern: per-worktree memory, learnings, and handoff logs can feed workflow resume evidence
+    ssot_rule: GStack memory may enrich handoff evidence but agent-workflow run records remain canonical.
+    status: optional_adapter
+  openspec:
+    authority: input_adapter
+    bridge: uv run --project projects/omo omo bridge --format openspec <source-file>
+    command: openspec
+    health_command:
+    - openspec
+    - list
+    health_required: false
+    ingress_workflow: c2g-spec-ingress
+    pattern: specs become contracts before implementation and then enter OMO through the bridge compatibility path
+    ssot_rule: OpenSpec changes may seed governed work but OMO/C2G planned tasks remain canonical.
+    status: optional_adapter
+  superpowers:
+    adapter: project-governance skill points back to this registry and runner
+    authority: discipline_layer
+    health_command:
+    - test
+    - -f
+    - .agents/skills/project-governance/SKILL.md
+    health_required: true
+    ingress_workflow: project-governance-skill
+    pattern: skill-first execution with explicit checklist and verification before closeout
+    skill: using-superpowers
+    ssot_rule: Delegates project-specific truth to this registry, GAC, OMO/C2G, and MOF registries.
+    status: integrated
+internal_integrations:
+  c2g:
+    authority: strategy_ingress
+    cockpit_entry: uv run --project projects/cockpit cockpit compass bet <pitch.md>
+    gate_binding: c2g-bet-help
+    health_command:
     - uv
     - run
-    - --with
-    - pyyaml
+    - --project
+    - projects/omo
     - python
-    - bin/agent-workflow.py
-    - lint
-  doctor:
+    - -m
+    - omo._vendored.c2g.cli
+    - bet
+    - --help
+    health_required: true
+    owner: strategy-team
+    pitch_bet: uv run --project projects/omo python -m omo._vendored.c2g.cli bet <pitch.md>
+    ssot_rule: Strategy and external specs enter governed work through C2G/OMO planned task materialization.
+    status: integrated
+  cockpit:
+    agent: uv run --project projects/cockpit cockpit agent
+    authority: entrypoint
+    compass: uv run --project projects/cockpit cockpit compass --help
+    gate_binding: cockpit-agent-workflow-list
+    health_command:
     - uv
     - run
-    - --with
-    - pyyaml
-    - python
-    - bin/agent-workflow.py
-    - doctor
-  observe:
+    - --project
+    - projects/cockpit
+    - cockpit
+    - agent-workflow
+    - list
+    health_required: true
+    owner: cockpit-team
+    ssot_rule: Cockpit is the L3 human entrypoint and delegates governance behavior to registered lower-layer tools.
+    status: integrated
+    workflow: uv run --project projects/cockpit cockpit agent-workflow --help
+  gac:
+    authority: governance_gate
+    gate: make gac-local-gate
+    gate_binding: make gac-local-gate
+    health_command:
+    - bin/gac/gac-validate.py
+    - --gate
+    health_required: true
+    owner: governance-team
+    runner_lint_binding: bin/gac/gac-local-gate.py::agent-workflow-lint
+    ssot_rule: Governance rules are canonical in .omo/_truth/registry/governance-checks.yaml; Markdown may only point to generated summaries.
+    status: integrated
+  mof:
+    authority: model_registry
+    capabilities: .omo/_truth/registry/mof-capabilities.yaml
+    drift: bin/mof-drift
+    gate_binding: mof-schema-validate
+    health_command:
+    - python3
+    - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+    - --json
+    health_required: true
+    owner: ecos-team
+    schema_validate: python3 projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py --json
+    ssot_rule: MOF M1/M2/M3 model facts and capability tools are canonical under ecos/mof registries.
+    state_bridge: python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json
+    status: integrated
+  omo:
+    authority: state_broker
+    bridge_compat: uv run --project projects/omo omo bridge --format <format> <source-file>
+    gate_binding: omo-bridge-help
+    health_command:
     - uv
     - run
-    - --with
-    - pyyaml
-    - python
-    - bin/agent-workflow.py
-    - observe
-  adapters:
-    - uv
-    - run
-    - --with
-    - pyyaml
-    - python
-    - bin/agent-workflow.py
-    - adapters
-  integrations:
-    - uv
-    - run
-    - --with
-    - pyyaml
-    - python
-    - bin/agent-workflow.py
-    - integrations
-  bootstrap:
-    - uv
-    - run
-    - --with
-    - pyyaml
-    - python
-    - bin/agent-workflow.py
-    - bootstrap
-  status:
-    - uv
-    - run
-    - --with
-    - pyyaml
-    - python
-    - bin/agent-workflow.py
-    - status
-  claim:
-    - uv
-    - run
-    - --with
-    - pyyaml
-    - python
-    - bin/agent-workflow.py
-    - claim
-  verify_from_diff:
-    - uv
-    - run
-    - --with
-    - pyyaml
-    - python
-    - bin/agent-workflow.py
-    - verify
-    - --from-diff
-  closeout:
-    - uv
-    - run
-    - --with
-    - pyyaml
-    - python
-    - bin/agent-workflow.py
-    - closeout
-  compliance:
-    - uv
-    - run
-    - --with
-    - pyyaml
-    - python
-    - bin/agent-workflow.py
-    - compliance
-  governance_evolution:
-    - uv
-    - run
-    - --with
-    - pyyaml
-    - python
-    - bin/gac/governance-evolution.py
-    - status
-doctor_checks:
-  - id: root-agent-workflow-list
-    description: Root runner can list workflows.
-    required: true
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, list]
-  - id: root-agent-workflow-agents
-    description: Root runner can list registered agent profiles.
-    required: true
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, agents]
-  - id: root-agent-workflow-adapters
-    description: Root runner can list external adapter contracts.
-    required: true
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, adapters]
-  - id: root-agent-workflow-integrations
-    description: Root runner can list internal integration contracts.
-    required: true
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, integrations]
-  - id: root-agent-workflow-observe
-    description: Observer audit can inspect run, lock, and ledger consistency.
-    required: true
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, observe]
-  - id: root-agent-workflow-verify-plan
-    description: Root runner can select diff-aware verification checks.
-    required: true
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, verify, --file, bin/agent-workflow.py]
-  - id: root-agent-workflow-compliance
-    description: Root runner can audit run, lock, ledger, and evidence compliance.
-    required: true
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, compliance]
-  - id: root-agent-workflow-status
-    description: Root runner can summarize AGCP run, lock, claim, compliance, and lane status.
-    required: true
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, status, --json]
-  - id: root-governance-evolution-status
-    description: Root runner can summarize systemic governance evolution roadmap status.
-    required: true
-    command: [uv, run, --with, pyyaml, python, bin/gac/governance-evolution.py, status, --json]
-  - id: cockpit-agent-workflow-list
-    description: Cockpit L3 entry can delegate to the root runner.
-    required: true
-    command: [uv, run, --project, projects/cockpit, cockpit, agent-workflow, list]
-  - id: cockpit-agent-bootstrap
-    description: Cockpit L3 agent entry can show startup context.
-    required: true
-    command: [uv, run, --project, projects/cockpit, cockpit, agent, bootstrap, --skip-health]
-  - id: cockpit-agent-status
-    description: Cockpit L3 agent entry can show AGCP status.
-    required: true
-    command: [uv, run, --project, projects/cockpit, cockpit, agent, status, --json]
-  - id: cockpit-agent-workflow-agents
-    description: Cockpit L3 entry can expose registered agent profiles.
-    required: true
-    command: [uv, run, --project, projects/cockpit, cockpit, agent-workflow, agents]
-  - id: cockpit-compass-help
-    description: Cockpit C2G compass entry is available.
-    required: true
-    command: [uv, run, --project, projects/cockpit, cockpit, compass, --help]
-  - id: c2g-bet-help
-    description: C2G pitch-to-task ingress command is available.
-    required: true
-    command: [uv, run, --project, projects/omo, python, -m, omo._vendored.c2g.cli, bet, --help]  # ADR-0412 内包
-  - id: omo-bridge-help
-    description: OMO bridge compatibility path for BMAD/OpenSpec is available.
-    required: true
-    command: [uv, run, --project, projects/omo, omo, bridge, --help]
-  - id: mof-capabilities-registry
-    description: MOF capability registry is present as the MOF SSOT.
-    required: true
-    command: [test, -f, .omo/_truth/registry/mof-capabilities.yaml]
-  - id: mof-schema-validate
-    description: MOF M1/M2 schema validation is runnable.
-    required: true
-    command: [python3, projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py, --json]
-  - id: mof-state-bridge
-    description: MOF state bridge can report OMO task alignment.
-    required: true
-    command: [python3, projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py, --json]
-  - id: mof-drift
-    description: MOF architecture drift detector is runnable.
-    required: true
-    command: [uv, run, --with, pyyaml, python, bin/mof/mof-drift]
-  - id: mof-bootstrap
-    description: "M4 5-check 自反校验器 (M4→GaC, ADR-0152/0153/0154)"
-    required: false
-    command: [uv, run, --with, pyyaml, python, bin/mof/mof-bootstrap.py, all]
-  - id: m4-health-score
-    description: "M4 Health Score 量化 (派生面引擎)"
-    required: false
-    command: [uv, run, --with, pyyaml, python, bin/mof/m4-health-score.py, --emit]
-  - id: check-submodule-hygiene
-    description: "子模块卫生守门 (3类检查)"
-    required: false
-    command: [uv, run, --with, pyyaml, python, bin/ssot/check-submodule-hygiene.py, --strict]
-  - id: mcp-tool-data-complete
-    description: "MCPTOOL 数据完整性守门"
-    required: false
-    command: [uv, run, --with, pyyaml, python, bin/gac/mcp-tool-data-complete.py]
-diff_checks:
-  - id: current-state-coherence
-    description: >
-      Read-only coherence projection for current phase, goals, task counts,
-      execution mode and Scene Card activation boundary. Waiting for a real
-      scenario is valid; contradictory state or stale counts are blocking.
-    required: true
-    paths:
-      - bin/ssot/current-state-coherence.py
-      - .omo/state/system.yaml
-      - .omo/goals/current.yaml
-      - .omo/tasks/**
-      - docs/scene-card-candidate-seeds.yaml
-      - docs/scene-cards/**
-    command: [uv, run, --with, pyyaml, python, bin/ssot/current-state-coherence.py, --json]
-  - id: agent-workflow-lint
-    description: Workflow runner and registry contract validation.
-    required: true
-    paths:
+    - --project
+    - projects/omo
+    - omo
+    - bridge
+    - --help
+    health_required: true
+    owner: omo-team
+    ssot_rule: OMO owns governed state mutation; direct .omo writes are exceptional and must be called out.
+    state_broker: projects/omo
+    status: integrated
+projection:
+  authority: projection
+  lifecycle: read_only_generated_compatibility
+  schema: agent-workflow-compat-projection/v1
+  source: .omo/_truth/registry/agent-workflows
+  source_digest: sha256:4560c67f8ef1fb2de551385cf5e63df89010fcaf23020a20e56c0f153c7f07b7
+  writer: bin/agent-workflow.py projection-sync
+requirement_iteration_policy:
+  adr: ADR-0203
+  description: 'All requirement iterations (feature, bugfix, ops landing, governance/SSOT/ADR changes, submodule pointer closeout tied to delivery) MUST execute via bin/agent-workflow.py: bootstrap → start → claim → verify → closeout. Prompt memory alone is non-compliant. claim_policy tiers still enforce path claims; this policy is the agent-facing mandatory rule for starting a run before edits. Executable gate (ADR-0204): staged in-scope files without an active run → compliance halt. Unstaged dirty in-scope files → warn only (multi-agent worktree safe). Bypass: AGCP_REQUIREMENT_ITERATION_GATE=0
+
+    '
+  enforcement: ADR-0204
+  exclude_paths:
+  - .omo/state/**
+  - .omo/_delivery/**
+  - .omo/_control/**
+  - runtime/**
+  - '**/__pycache__/**'
+  exempt_classes:
+  - pure_readonly_qa_or_explore
+  - observer_audit_readonly
+  - explicit_user_waiver_recorded_in_closeout
+  exempt_workflows:
+  - observer-audit
+  in_scope:
+  - feature_or_bugfix_code_change
+  - governance_ssot_or_adr_change
+  - ops_landing_with_repo_diff
+  - delivery_closeout_with_product_or_governance_change
+  - submodule_pointer_closeout
+  in_scope_paths:
+  - projects/**
+  - .omo/_truth/**
+  - .omo/standards/**
+  - .omo/_knowledge/decisions/**
+  - .omo/_knowledge/patterns/**
+  - .agents/**
+  - bin/**
+  - docs/**
+  - tests/**
+  - AGENTS.md
+  - CLAUDE.md
+  - ARCHITECTURE.md
+  - README.md
+  mode: required
+  non_exempt_note: 'handoff-resume is recovery of an existing run, not a license to edit without a run-id.
+
+    '
+  required_lifecycle:
+  - bootstrap
+  - start
+  - claim
+  - verify
+  - closeout
+runner:
+  entrypoint: bin/agent-workflow.py
+  generated_skill: .agents/skills/project-governance/SKILL.md
+  ledger_path: .omo/_delivery/agent-workflows/events.jsonl
+  lock_state_dir: .omo/_delivery/agent-workflows/locks
+  lock_ttl_hours: 24
+  run_state_dir: .omo/_delivery/agent-workflows/runs
+silent_workflow_policy:
+  description: 'Registry-level policy for workflows that have no recent agent_workflow_start events (ADR-0130 / P74). P74 §4.4 distinguishes A1 (check-layer silent, addressed via doctor_checks / diff_checks) from A2 (run-layer silent, intentionally not force-triggered because gate coverage already exercises them). A workflow is considered silently healthy when its path appears in at least one diff_checks or doctor_checks rule. Workflows with neither coverage AND no recent run events trigger a [warn] in agent-workflow compliance (p74_solidification).
+
+    '
+  warn_after_days: 30
+  warn_after_days_by_frequency:
+    continuous: 1
+    on_demand: 30
+    periodic: 7
+ssot:
+  agent_protocol: .omo/standards/agent-mutation-protocol.md
+  doc_contract: .omo/standards/doc-ssot-contract.md
+  governance_rules: .omo/_truth/registry/governance-checks.yaml
+  omo_surfaces: .omo/standards/omo-governance-surfaces.md
+version: 1
+workflows:
+- agents:
+    observer_policy: optional
+    roles:
+    - governance-agent
+    - adapter-agent
+  allowed_lanes:
+  - docs
+  - governance_code
+  - governance_state
+  id: agent-onboarding
+  lock_scopes:
+  - agent-onboarding
+  phases:
+    closeout:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
       - bin/agent-workflow.py
-      - .omo/_truth/registry/agent-workflows.yaml
-      - .agents/skills/project-governance/SKILL.md
-      - .omo/standards/agent-workflow-contract.md
-      - .omo/_delivery/agent-workflows/runs/**  # ADR-0211 §D1 P74 覆盖: handoff-resume write/read
-      - .omo/_delivery/agent-workflows/locks/**  # ADR-0211 §D1 P74 覆盖: observer-audit read
-      - .omo/_delivery/agent-workflows/events.jsonl  # ADR-0211 §D1 P74 覆盖: observer-audit read
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-  - id: c2g-spec-consistency
-    description: c2g pitch→planned→active ingress surface consistency (ADR-0211 §D1 P74 覆盖 c2g-spec-ingress surfaces).
-    required: false
-    paths:
-      - .omo/pitches/**
-      - .omo/tasks/planned/**
-      - runtime/omo/_delivery/ingress/**
-      - projects/omo/**
-      - projects/omo/src/omo/_vendored/c2g/**
-      - runtime/sandbox/**
-    command: [uv, run, --with, pyyaml, python, bin/gac/gac-validate.py, --gate]
-  - id: agent-workflow-tests
-    description: Focused tests for executable agent workflow control plane.
-    required: true
-    paths:
+      - observe
+      id: observe
+      mode: required
+    - command:
+      - git
+      - diff
+      - --stat
+      id: diff-stat
+      mode: required
+    execute:
+    - command:
+      - agent
+      - edit
+      - agent-workflows/profiles/::agent_profiles
+      id: register-profile
+      mode: manual
+    - command:
+      - agent
+      - create
+      - .agents/skills/<skill>/SKILL.md
+      id: create-skill
+      mode: manual
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: status
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
       - bin/agent-workflow.py
-      - bin/change-lane-check.py
-      - bin/gac/gac-local-gate.py
-      - .omo/_truth/registry/agent-workflows.yaml
-      - tests/test_agent_workflow.py
-    command: [uv, run, --with, pyyaml, --with, pytest, python, -m, pytest, tests/test_agent_workflow.py, -q]
-  - id: governance-evolution-validate
-    description: Governance evolution roadmap structure and traceability validation.
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint-verify
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - agents
+      id: agents-list-verify
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Register a new AI agent in the workspace, including profile registration, MCP connection setup, BOS URI discovery, and first workflow lifecycle run.
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - AGENTS.md
+    - CLAUDE.md
+    - ARCHITECTURE.md
+    - docs/SYSTEM-INDEX.md
+    - docs/INDEX-AGENTS.md
+    - .omo/_truth/registry/agent-workflows/**
+    - projects/agora/etc/bos-services.yaml
+    - projects/cockpit/README.md
+    write:
+    - .omo/_truth/registry/agent-workflows/profiles/**
+    - .agents/skills/**
+  title: Agent Onboarding
+- agents:
+    observer_policy: optional
+    roles:
+    - engineering-agent
+    - governance-agent
+  allowed_lanes:
+  - docs
+  - code
+  - governance_code
+  - governance_state
+  - config
+  diff_checks:
+  - check: bet-ledger-lint
+    path_glob: docs/plans/3y-bet-ledger.yaml
     required: true
-    paths:
-      - .omo/_truth/registry/governance-evolution-roadmap.yaml
-      - bin/gac/governance-evolution.py
-      - tests/test_governance_evolution.py
-      - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
-      - README.md
-      - AGENTS.md
-    command: [uv, run, --with, pyyaml, python, bin/gac/governance-evolution.py, validate, --json]
-  - id: governance-evolution-tests
-    description: Focused tests for governance evolution roadmap and CLI.
-    required: true
-    paths:
-      - .omo/_truth/registry/governance-evolution-roadmap.yaml
-      - bin/gac/governance-evolution.py
-      - tests/test_governance_evolution.py
-    command: [uv, run, pytest, tests/test_governance_evolution.py, -q]
-  - id: mof-capabilities-drift
-    description: MOF 能力注册表 drift 守门 (CR-X4-MOF-CAPABILITIES-DRIFT, ADR-0238 P0-2) — path/stats/mcptool_count 三类漂移.
+  - check: retro-five-questions
+    path_glob: .omo/_knowledge/retros/**
     required: false
-    paths:
-      - .omo/_truth/registry/mof-capabilities.yaml
-      - bin/mof/check-mof-capabilities-drift.py
-      - projects/ecos/src/ecos/ssot/mof/m1/mcptool/MCPTOOL-MODEL-DRIVEN.yaml
-      - projects/model-driven/src/model_driven/mcp_server.py
-    command: [uv, run, --with, pyyaml, python, bin/mof/check-mof-capabilities-drift.py]
-  - id: mof-capabilities-drift-tests
-    description: MOF 能力注册表 drift 检出测试 (注入漂移验证, ADR-0238 P0-2).
-    required: false
-    paths:
-      - bin/mof/check-mof-capabilities-drift.py
-      - tests/test_mof_capabilities_drift.py
-    command: [uv, run, --with, pyyaml, --with, pytest, python, -m, pytest, tests/test_mof_capabilities_drift.py, -q]
-  - id: metaos-registry-drift
-    description: metaos registry drift 守门 (CR-X4-METAOS-REGISTRY-DRIFT, §J1) — projects-capabilities 死条目 + INTERFACE entrypoint 可达性 + submodule 目录. 扩展 check-mof-capabilities-drift 同一扇门, 不新建门禁框架.
-    required: false
-    paths:
-      - bin/mof/check-mof-capabilities-drift.py
-      - .omo/_truth/registry/projects-capabilities.yaml
-      - projects/metaos/INTERFACE.yaml
-    command: [uv, run, --with, pyyaml, python, bin/mof/check-mof-capabilities-drift.py, --scope, metaos]
-  - id: metaos-registry-drift-tests
-    description: metaos registry drift 检出测试 (§J1 注入 + 现实 kairon.metaos 活体验收).
-    required: false
-    paths:
-      - bin/mof/check-mof-capabilities-drift.py
-      - tests/test_mof_capabilities_drift.py
-    command: [uv, run, --with, pyyaml, --with, pytest, python, -m, pytest, tests/test_mof_capabilities_drift.py, -q]
-  - id: cockpit-agent-entry-tests
-    description: Cockpit L3 entry tests for agent workflow delegation.
-    required: true
-    paths:
-      - projects/cockpit/src/cockpit/cli.py
-      - projects/cockpit/src/cockpit/commands/agent_workflow.py
-      - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
-    command:
+  id: bet-execution
+  lock_scopes:
+  - bet:{bet_id}
+  - root-gate
+  notes:
+  - 本 workflow 存在的理由(P74): 执行 bet 是高频重复动作, 挂通用 project-code-change 属于错位。
+  - 单个 bet 的实际写面由 bet.write_surfaces 限定, 必须逐条 agent-workflow claim。
+  - 跨 lane 的 bet(既改 .md 又改 .yaml/.py)需拆成两次提交, 见 skill git-discipline §5。
+  - 六条铁律 D0-D5 见 docs/plans/AGENT-BRIEF.md, closeout 逐条必检。
+  phases:
+    closeout:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - retro-due
+      id: retro-written
+      mode: required
+      note: D5 — 本 bet 的 .omo/_knowledge/retros/{bet_id}.md 必须存在且五问齐全
+    - command:
+      - agent
+      - run
+      - git tag -a bet/{bet_id}-$(date -u +%Y%m%dT%H%M%SZ) -m "{bet_id} deliverable"
+      id: pin-tag
+      mode: required
+      note: D0 — commit 只是暂时安全, 共享分支 rebase 会挤掉提交; tag ref 不会
+    - command:
+      - git
+      - diff
+      - --stat
+      id: diff-stat
+      mode: required
+    - command:
+      - bash
+      - bin/gac/gac-worktree.sh
+      - submit
+      - '{bet_id}'
+      id: worktree-submit
+      mode: manual
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - complete
+      - '{bet_id}'
+      id: bet-complete
+      mode: required
+      note: 'P1: 台账回写 — retro 通过后置 done (防 done 状态滞后)'
+    execute:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - show
+      - '{bet_id}'
+      id: read-bet
+      mode: required
+    - command:
+      - agent
+      - edit
+      - bet-write-surfaces-only
+      id: implement
+      mode: manual
+      note: 只改 bet.write_surfaces 列出的路径; non_goals 是硬边界; 每写完一个文件立刻 git add (D0)
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: status
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - lint
+      id: ledger-lint
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - claim-check
+      - '{bet_id}'
+      id: claim-check
+      mode: required
+    - command:
+      - bash
+      - bin/gac/gac-worktree.sh
+      - claim
+      - '{bet_id}'
+      id: worktree-claim
+      mode: required
+    verification:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - verify
+      - '{bet_id}'
+      - --execute
+      id: bet-verify
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - surface
+      id: surface-accounting
+      mode: required
+      note: D2 — 必须把净增减写进复盘 Q4
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+    - command:
+      - make
+      - ssot-guardian
+      id: ssot-guardian
+      mode: required
+    - command:
+      - python3
+      - bin/ssot/post-commit-sync-check.py
+      id: sync-check
+      mode: required
+      note: 迭代后派生文档同步检查 (子模块指针变更 → sync-all-docs + 提示提交)
+  purpose: '执行三年规划台账(docs/plans/3y-bet-ledger.yaml)里的单个 bet。 把 claim / 执行 / 验收 / 表面积记账 / 复盘 / 钉死 六段固化为可复核的 phases, 避免每个 agent 各自记流程, 也避免继续错位挂在通用 project-code-change 上(P74)。
+
+    '
+  run_frequency: periodic
+  surfaces:
+    read:
+    - docs/plans/3y-bet-ledger.yaml
+    - docs/plans/3Y-BET-LEDGER.md
+    - docs/plans/AGENT-BRIEF.md
+    - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+    - docs/reports/2026-08-06-deep-review-proactive-agent-and-scenario-orchestration.md
+    - docs/reports/2026-08-06-multi-agent-git-topology.md
+    - .agents/skills/bet-execution/SKILL.md
+    - .agents/skills/git-discipline/SKILL.md
+    - AGENTS.md
+    - CLAUDE.md
+    write:
+    - docs/plans/3y-bet-ledger.yaml
+    - .omo/_knowledge/retros/**
+  title: 3Y bet execution
+- agents:
+    observer_policy: optional
+    roles:
+    - strategy-agent
+    - c2g-agent
+    - governance-agent
+  allowed_lanes:
+  - governance_state
+  - docs
+  id: c2g-spec-ingress
+  lock_scopes:
+  - c2g-ingress
+  - .omo/tasks/planned
+  phases:
+    closeout:
+    - command:
+      - agent
+      - inspect
+      - .omo/tasks/planned
+      id: planned-task-review
+      mode: manual
+    execute:
+    - command:
+      - uv
+      - run
+      - --project
+      - projects/omo
+      - omo
+      - bridge
+      - --format
+      - '{format}'
+      - '{source_file}'
+      id: import-spec
+      mode: manual
+    - command:
       - uv
       - run
       - --project
       - projects/cockpit
-      - pytest
-      - projects/cockpit/src/cockpit/tests/test_agent_workflow_command.py
-      - -q
-  - id: agora-bos-registry-tests
-    description: Agora BOS registry tests for agent workflow governance routes.
-    required: true
-    paths:
-      - projects/agora/etc/bos-services.yaml
-      - projects/agora/tests/unit/test_bos_registry.py
-    command:
+      - cockpit
+      - compass
+      - bet
+      - '{source_file}'
+      id: pitch-bet
+      mode: manual
+    preflight:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - doctor
+      id: adapter-doctor
+      mode: advisory
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+      id: ssot-guardian
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Convert BMAD/OpenSpec/Pitch inputs into governed OMO planned tasks.
+  run_frequency: periodic
+  surfaces:
+    read:
+    - runtime/sandbox/**
+    - .omo/pitches/**
+    - projects/c2g/**
+    - projects/omo/**
+    write:
+    - .omo/tasks/planned/**
+    - runtime/omo/_delivery/ingress/**
+  title: C2G external spec ingress
+- agents:
+    observer_policy: required
+    roles:
+    - sage-planner
+    - builder-agent
+    - keeper-cartridge
+    - devil-challenger
+  allowed_lanes:
+  - docs
+  - code
+  - governance_code
+  - governance_state
+  - config
+  id: cognitive-governance-delivery
+  lock_scopes:
+  - governance:cognitive-delivery
+  - root-gate
+  phases:
+    closeout:
+    - command:
+      - echo
+      id: done
+      mode: required
+    execute:
+    - agent: sage-planner
+      command:
+      - ecos-constraint
+      - intent
+      - compile
+      - ${PROMPT}
+      id: phase-1-intent-spec
+      mode: required
+      title: 意图解构与规格编译 (Intent-to-Spec)
+    - agent: builder-agent
+      command:
+      - omlxc
+      - fabric
+      - snapshot
+      - warm
+      - --name
+      - mof-governance-v3
+      id: phase-2-compute-triage
+      mode: required
+      title: 主权算力分诊与 0ms TTFT 快照预热
+    - agent: keeper-cartridge
+      command:
+      - ecos-constraint
+      - cartridge
+      - export
+      - ${CARTRIDGE_ID:-cartridge-weijian-v1}
+      id: phase-3-cartridge-mount
+      mode: required
+      title: 长尾领域标准卡带与 SOP 装配
+    - agent: builder-agent
+      command:
+      - ecos-constraint
+      - draft
+      - ${DRAFT_PATH}
+      id: phase-4-dual-plane-draft
+      mode: required
+      target_plane: Documents
+      title: 双平面物理隔离初稿起草
+    - agent: devil-challenger
+      command:
+      - ecos-constraint
+      - challenge
+      - ${DRAFT_PATH}
+      - --auto-patch
+      - --strict
+      id: phase-5-shadow-challenge
+      mode: required
+      title: 影子红蓝对抗审查与自动打补丁 (Auto-Patch)
+    - agent: keeper-cartridge
+      command:
+      - ecos-constraint
+      - facts
+      - validate
+      - --strict
+      id: phase-6-facts-closeout
+      mode: required
+      title: 事实真源回写与 14 天保鲜封板
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: status
+      mode: required
+    - command:
+      - python3
+      - -m
+      - ecos.cli.constraint
+      - intent
+      - --help
+      id: intent-compiler-check
+      mode: required
+    - command:
+      - omlxc
+      - fabric
+      - inspect
+      id: compute-fabric-check
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/ssot/weekly-hygiene-patrol.py
+      - --strict
+      id: hygiene-patrol
+      mode: required
+    - command:
+      - python3
+      - bin/ssot/chaos-governance-drill.py
+      - --strict
+      id: chaos-drill
+      mode: required
+  purpose: 'V2.0 认知操作系统全链路交付工作流： 从人类自然语言模糊意图出发，经意图规格编译(IntentSpec)、主权算力投机分诊与KV快照预热(0ms TTFT)、 长尾领域治理卡带装载、多角色DAG初稿起草、影子红蓝对抗审查与自动打补丁， 到最终双平面物理隔离归档与事实真源14天保鲜闭环。
+
+    '
+  run_frequency: on-demand
+  surfaces:
+    read:
+    - docs/adr/ADR-0195-*.md
+    - docs/adr/ADR-0196-*.md
+    - docs/adr/ADR-0197-*.md
+    - docs/adr/ADR-0198-*.md
+    - docs/adr/ADR-0199-*.md
+    - .omo/_truth/registry/agent-workflows/**
+    - AGENTS.md
+    - CLAUDE.md
+    write:
+    - ~/Documents/**
+    - .omo/state/**
+    - docs/adr/**
+    - docs/governance/**
+  title: Cognitive Governance Intent-to-Delivery Lifecycle (ADR-0199)
+- agents:
+    observer_policy: optional
+    roles:
+    - adapter-agent
+    - strategy-agent
+    - c2g-agent
+    - governance-agent
+  allowed_lanes:
+  - docs
+  - governance_code
+  - governance_state
+  id: external-adapter-sync
+  lock_scopes:
+  - external-adapters
+  - c2g-ingress
+  - agent-skills
+  phases:
+    closeout:
+    - command:
+      - agent
+      - inspect
+      - external-adapter-health
+      id: integration-map-review
+      mode: manual
+    execute:
+    - command:
       - uv
       - run
       - --project
-      - projects/agora
-      - pytest
-      - projects/agora/tests/unit/test_bos_registry.py
-      - -q
-  - id: mof-schema-validate
-    description: MOF M1/M2 schema validation for model edits.
-    required: true
-    paths:
-      - .omo/_truth/registry/mof-capabilities.yaml
-      - .omo/_truth/mof-version.yaml
-      - projects/ecos/src/ecos/ssot/mof/**
-      - projects/ecos/src/ecos/ssot/tools/mof-*.py
-    command: [python3, projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py, --json]
-  - id: mof-state-bridge
-    description: MOF to OMO state bridge alignment report for model edits.
-    required: true
-    paths:
-      - .omo/_truth/registry/mof-capabilities.yaml
-      - .omo/_truth/mof-version.yaml
-      - projects/ecos/src/ecos/ssot/mof/**
-      - projects/ecos/src/ecos/ssot/tools/mof-*.py
-    command: [python3, projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py, --json]
-  - id: mof-drift
-    description: MOF architecture drift detector for model edits.
-    required: true
-    paths:
-      - .omo/_truth/registry/mof-capabilities.yaml
-      - .omo/_truth/mof-version.yaml
-      - projects/ecos/src/ecos/ssot/mof/**
-      - projects/ecos/src/ecos/ssot/tools/mof-*.py
-    command: [uv, run, --with, pyyaml, python, bin/mof/mof-drift]
-  - id: state-stale-consume
-    description: state_stale 事件消费端 (ADR-0227 原则4 闭环; ADR-0128 Phase 2).
-    required: false
-    paths:
-      - .omo/_knowledge/omo-events.jsonl
-      - bin/gac/state-stale-consume.py
-    command: [uv, run, --with, pyyaml, python, bin/gac/state-stale-consume.py, --within, "300", --quiet]
-  - id: doc-ssot-lint
-    description: Documentation SSOT semantic contract.
-    required: true
-    paths:
-      - "*.md"
-      - docs/**/*.md
-      - docs/generated/**
-      - .omo/standards/**/*.md
-      - projects/*/AGENTS.md
-      - projects/*/CLAUDE.md
-      - projects/*/README.md
-    command: [uv, run, --with, pyyaml, python, bin/ssot/doc-ssot-lint.py, --json]
-  - id: project-layer-index
-    description: Generated project layer digest freshness.
-    required: true
-    paths:
-      - docs/project-registry.yaml
-      - docs/generated/project-layer-index.md
-      - bin/mof/project-layer-index.py
-    command: [uv, run, --with, pyyaml, python, bin/mof/project-layer-index.py, --check]
-  - id: ssot-guardian
-    description: State-plane and generated artifact SSOT guard.
-    required: true
-    paths:
-      - .omo/**
-      - spaces/**
-      - AGENTS.md
-      - CLAUDE.md
-      - README.md
-      - ARCHITECTURE.md
-      - LAYER-INDEX.md
-      - docs/generated/**
-    command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
-  - id: gac-local-gate
-    description: Full local governance gate for broad contract changes.
-    required: true
-    allowed_lanes: [code, docs, docs_data, governance_code, governance_state, config]
-    paths:
-      - Makefile
-      - bin/**
-      - .omo/_truth/registry/**
-      - .omo/standards/**
-      - docs/**
-      - AGENTS.md
-      - CLAUDE.md
-      - README.md
-      - ARCHITECTURE.md
-      - LAYER-INDEX.md
-    command: [make, gac-local-gate]
-  - id: gen-service-configs-validate
-    description: >
-      Validates gen-service-configs output is consistent with the services.yaml
-      registry and that all generated GitHub Actions workflows carry an
-      executable `schedule_ref` reference (P4 元递归全覆盖 复发拦截, P74 §3).
-    required: true
-    paths:
-      - bin/mof/gen-service-configs.py
-      - projects/agora/etc/services.yaml
-      - .github/workflows/**
-    command: [uv, run, --with, pyyaml, python, bin/mof/gen-service-configs.py, --validate]
-  - id: omo-state-projection-guard
-    description: >
-      Validates that .omo/state/runtime/* projections referenced from
-      runtime-projections.yaml are present, parse as YAML/JSON, and have a
-      canonical-path entry (CR-P74-STATE-PROJECTION-GUARD; prevents P71
-      class A "path drift" recurrence).
-    required: true
-    paths:
-      - .omo/_truth/registry/runtime-projections.yaml
-      - .omo/state/runtime/**
-      - .omo/_control/**
-      - BRIEF.md
-    # Root-runnable bin wrapper (not `python -m omo.cli`): worktree partial
-    # init often lacks omo venv + aetherforge; bin path is the SSOT guard entry.
-    command: [uv, run, --with, pyyaml, python, bin/gac/omo-state-projection-guard.py]
-  - id: omo-runtime-stamp-policy
-    description: >
-      Confirms runtime stamp files (e.g. .watch-dispatch-stamps.json) are
-      either gitignored, tracked, or registered in the runtime surface
-      registry, so untracked runtime artifacts do not silently accumulate
-      (CR-P74-RUNTIME-STAMP-POLICY; prevents P71 class B recurrence).
-    required: true
-    paths:
-      - runtime/**
-      - .omo/_truth/registry/runtime-projections.yaml
-      - .gitignore
-    # Same root-runnable pattern as omo-state-projection-guard (ADR-0209 A3)
-    command: [uv, run, --with, pyyaml, python, bin/gac/omo-runtime-stamp-policy.py]
-  - id: gac-consensus-inject
-    description: >
-      KOS RAG Epigenetic Memory Injection (eCOS v6 Phase A).
-      Reads Consensus entities from KOS SQLite, uses TF-IDF cosine similarity
-      to select Top-2 most relevant genes for the current task context, and
-      injects them into CLAUDE.md. Saves ~66% Context Window Tokens vs full-dump.
-    required: false
-    paths:
-      - bin/gac/gac-consensus-inject.py
-      - CLAUDE.md
-    command: [python3, bin/gac/gac-consensus-inject.py]
-  - id: gac-ingress-check
-    description: >
-      C2G Self-Correcting Ingress Pre-Checker (eCOS v6 Phase B).
-      Detects port conflicts, service name collisions, and runs mini-9b LLM
-      semantic analysis on Pitch documents before task materialization.
-      Moves conflict detection from commit-time to planning-time.
-    required: false
-    paths:
-      - bin/gac/gac-ingress-check.py
-      - protocols/port-registry.yaml
-      - docs/project-registry.yaml
-    command: [python3, bin/gac/gac-ingress-check.py]
-  # P0-A (integrated-governance §P0): 三把已存在检查器注册 diff_checks.
-  - id: mof-capabilities-drift-check
-    description: MOF capabilities registry drift (declared entrypoint vs actual).
-    required: false
-    paths:
-      - .omo/capabilities/**
-      - bin/mof/**
-      - projects/*/src/**
-    command: [uv, run, --with, pyyaml, python, bin/mof/check-mof-capabilities-drift.py]
-  - id: doc-claims-check
-    description: Document claims vs implementation consistency (CR-X4-DOC-CLAIMS).
-    required: false
-    paths:
-      - docs/**
-      - projects/*/CLAUDE.md
-      - projects/*/AGENTS.md
-    command: [uv, run, --with, pyyaml, python, bin/mof/check-doc-claims.py]
-  - id: layer-call-direction-check
-    description: Cross-layer call direction (L0-L3 + X) violations. 存量 11 条 grace (检查器 exit=0 只报告); new-violation blocking 待加 baseline 机制.
-    required: false
-    paths:
-      - projects/*/src/**
-    command: [uv, run, --with, pyyaml, python, bin/ssot/check-layer-call-direction.py]
-  - id: project-code-and-submodule-coverage
-    description: P74 A1 check-layer coverage (ADR-0130 §3.3 / ADR-0214 §D1) — mirrors surfaces.write of project-code-change (projects/{project}/**) and submodule-pointer-close (projects/*) so these on_demand workflows register diff_checks coverage instead of silent warn. projects/** also enables real gate trigger on project file/gilink changes.
-    required: false
-    paths:
-      - projects/{project}/**   # mirrors project-code-change.surfaces.write (P74 coverage declaration)
-      - projects/*              # mirrors submodule-pointer-close.surfaces.write (P74 coverage declaration)
-      - projects/**             # real trigger surface (path_matches supports /** recursion)
-    command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-workflows:
-  - id: project-doc-change
-    run_frequency: on_demand
-    title: Project documentation change
-    purpose: Keep documentation changes executable, SSOT-safe, and verifiable.
-    agents:
-      roles: [docs-agent, governance-agent]
-      observer_policy: optional_for_broad_doc_rewrites
-    allowed_lanes: [docs, governance_code, config]
-    lock_scopes: [docs, doc-ssot]
-    surfaces:
-      read:
-        - AGENTS.md
-        - ARCHITECTURE.md
-        - CLAUDE.md
-        - LAYER-INDEX.md
-        - README.md
-        - .omo/standards/**
-        - .agents/skills/project-governance/SKILL.md
-        - bin/ssot/doc-ssot-lint.py
-        - bin/gac/gac-export-agents.py
-        - bin/mof/project-layer-index.py
-        - docs/**
-        - docs/generated/**
-        - projects/*/AGENTS.md
-        - projects/*/CLAUDE.md
-        - projects/*/README.md
-      write:
-        - AGENTS.md
-        - ARCHITECTURE.md
-        - CLAUDE.md
-        - LAYER-INDEX.md
-        - README.md
-        - .omo/standards/**
-        - .agents/skills/project-governance/SKILL.md
-        - bin/ssot/doc-ssot-lint.py
-        - bin/gac/gac-export-agents.py
-        - bin/mof/project-layer-index.py
-        - docs/**
-        - docs/generated/**
-        - projects/*/AGENTS.md
-        - projects/*/CLAUDE.md
-        - projects/*/README.md
-    phases:
-      preflight:
-        - id: status
-          mode: required
-          command: [git, status, --short]
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: edit-docs
-          mode: manual
-          command: [agent, edit, docs-with-ssot-pointers]
-      verification:
-        - id: doc-ssot-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot/doc-ssot-lint.py, --json]
-        - id: ssot-guardian
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
-        - id: gac-local-gate
-          mode: required
-          command: [make, gac-local-gate]
-      closeout:
-        - id: diff-stat
-          mode: required
-          command: [git, diff, --stat]
-
-  - id: project-code-change
-    run_frequency: on_demand
-    title: Project code change
-    purpose: Route code changes through project-local verification and workspace governance gates.
-    agents:
-      roles: [engineering-agent, qa-agent, governance-agent]
-      observer_policy: use_for_high_blast_radius_or_unattended_runs
-    allowed_lanes: [code, governance_code, config]
-    lock_scopes: ["project:{project}", root-gate]
-    surfaces:
-      read:
-        - projects/{project}/**
-        - docs/project-registry.yaml
-        - .omo/_truth/registry/governance-checks.yaml
-      write:
-        - projects/{project}/**
-    phases:
-      preflight:
-        - id: root-status
-          mode: required
-          command: [git, status, --short]
-        - id: project-status
-          mode: advisory
-          cwd: projects/{project}
-          command: [git, status, --short]
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: implement
-          mode: manual
-          command: [agent, edit, project-code]
-      verification:
-        - id: project-tests
-          mode: manual
-          cwd: projects/{project}
-          command: [project-local, test-command]
-        - id: gac-local-gate
-          mode: required
-          command: [make, gac-local-gate]
-      closeout:
-        - id: diff-stat
-          mode: required
-          command: [git, diff, --stat]
-
-  - id: governance-state-mutation
-    run_frequency: on_demand
-    title: Governed OMO or spaces mutation
-    purpose: Force state-plane changes through OMO/C2G broker paths instead of ad-hoc file writes.
-    agents:
-      roles: [governance-agent, c2g-agent]
-      observer_policy: recommended
-    allowed_lanes: [governance_state, docs, runtime_snapshot]
-    lock_scopes: [.omo, spaces, omo-broker]
-    surfaces:
-      read:
-        - .omo/**
-        - spaces/**
-        - projects/omo/**
-        - projects/omo/src/omo/_vendored/c2g/**
-      write:
-        - .omo/**
-        - spaces/**
-    phases:
-      preflight:
-        - id: status
-          mode: required
-          command: [git, status, --short]
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: broker-write
-          mode: manual
-          command: [omo-or-c2g, broker, mutate-state]
-      verification:
-        - id: ssot-guardian
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
-        - id: gac-local-gate
-          mode: required
-          command: [make, gac-local-gate]
-      closeout:
-        - id: mutation-ledger
-          mode: manual
-          command: [omo, event, emit, agent_mutation_complete]
-
-  - id: c2g-spec-ingress
-    run_frequency: periodic
-    title: C2G external spec ingress
-    purpose: Convert BMAD/OpenSpec/Pitch inputs into governed OMO planned tasks.
-    agents:
-      roles: [strategy-agent, c2g-agent, governance-agent]
-      observer_policy: optional
-    allowed_lanes: [governance_state, docs]
-    lock_scopes: [c2g-ingress, .omo/tasks/planned]
-    surfaces:
-      read:
-        - runtime/sandbox/**
-        - .omo/pitches/**
-        - projects/c2g/**
-        - projects/omo/**
-      write:
-        - .omo/tasks/planned/**
-        - runtime/omo/_delivery/ingress/**
-    phases:
-      preflight:
-        - id: adapter-doctor
-          mode: advisory
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, doctor]
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: import-spec
-          mode: manual
-          command: [uv, run, --project, projects/omo, omo, bridge, --format, "{format}", "{source_file}"]
-        - id: pitch-bet
-          mode: manual
-          command: [uv, run, --project, projects/cockpit, cockpit, compass, bet, "{source_file}"]
-      verification:
-        - id: ssot-guardian
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
-        - id: gac-local-gate
-          mode: required
-          command: [make, gac-local-gate]
-      closeout:
-        - id: planned-task-review
-          mode: manual
-          command: [agent, inspect, .omo/tasks/planned]
-
-  - id: mof-model-change
-    run_frequency: on_demand
-    title: MOF model change
-    purpose: Route M1/M2/M3 model edits through schema validation, state bridge audit, drift checks, and MOF version evidence.
-    agents:
-      roles: [mof-agent, governance-agent]
-      observer_policy: recommended
-    allowed_lanes: [governance_code, governance_state, docs]
-    lock_scopes: [mof-model, mof-capabilities, omo-state-bridge]
-    surfaces:
-      read:
-        - .omo/_truth/registry/mof-capabilities.yaml
-        - .omo/_truth/mof-version.yaml
-        - projects/ecos/src/ecos/ssot/mof/**
-        - projects/ecos/src/ecos/ssot/tools/mof-*.py
-      write:
-        - .omo/_truth/registry/mof-capabilities.yaml
-        - .omo/_truth/mof-version.yaml
-        - projects/ecos/src/ecos/ssot/mof/**
-    phases:
-      preflight:
-        - id: status
-          mode: required
-          command: [git, status, --short]
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-        - id: mof-schema-validate
-          mode: required
-          command: [python3, projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py, --json]
-      execute:
-        - id: edit-mof-model
-          mode: manual
-          command: [agent, edit, mof-m1-m2-m3]
-        - id: mof-version-record
-          mode: manual
-          command: [bin/mof-version, record, "<description>"]
-      verification:
-        - id: mof-schema-validate
-          mode: required
-          command: [python3, projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py, --json]
-        - id: mof-state-bridge
-          mode: required
-          command: [python3, projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py, --json]
-        - id: mof-drift
-          mode: required
-          command: [bin/mof-drift]
-        - id: gac-local-gate
-          mode: required
-          command: [make, gac-local-gate]
-      closeout:
-        - id: diff-stat
-          mode: required
-          command: [git, diff, --stat]
-
-  - id: mof-state-bridge-audit
-    run_frequency: periodic
-    title: MOF state bridge audit
-    purpose: Read-only audit of MOF schema health, M1/M2 coverage, and OMO task bridge alignment.
-    agents:
-      roles: [mof-agent, observer-agent, governance-agent]
-      observer_policy: read_only_required
-    allowed_lanes: [governance_code, governance_state]
-    lock_scopes: [mof-state-bridge-readonly]
-    surfaces:
-      read:
-        - .omo/_truth/registry/mof-capabilities.yaml
-        - .omo/_truth/mof-version.yaml
-        - .omo/tasks/**
-        - projects/ecos/src/ecos/ssot/mof/**
-      write: []
-    phases:
-      preflight:
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: mof-schema-validate
-          mode: required
-          command: [python3, projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py, --json]
-        - id: mof-state-bridge
-          mode: required
-          command: [python3, projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py, --json]
-      verification:
-        - id: mof-drift
-          mode: required
-          command: [bin/mof-drift]
-        - id: agent-workflow-doctor
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, doctor]
-      closeout:
-        - id: handoff
-          mode: manual
-          command: [agent, report, mof-state-bridge-findings]
-
-  - id: external-adapter-sync
-    run_frequency: periodic
-    title: External adapter integration sync
-    purpose: Keep BMAD, OpenSpec, beads, gstack, and Superpowers wired as optional inputs or discipline layers without making them SSOT authorities.
-    agents:
-      roles: [adapter-agent, strategy-agent, c2g-agent, governance-agent]
-      observer_policy: optional
-    allowed_lanes: [docs, governance_code, governance_state]
-    lock_scopes: [external-adapters, c2g-ingress, agent-skills]
-    surfaces:
-      read:
-        - .omo/_truth/registry/agent-workflows.yaml
-        - .agents/skills/**
-        - projects/c2g/**
-        - projects/omo/**
-      write:
-        - .omo/_truth/registry/agent-workflows.yaml
-        - .agents/skills/**
-        - docs/**
-    phases:
-      preflight:
-        - id: adapter-doctor
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, doctor]
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: bmad-import
-          mode: manual
-          command: [uv, run, --project, projects/omo, omo, bridge, --format, bmad, "<source-file>"]
-        - id: openspec-import
-          mode: manual
-          command: [uv, run, --project, projects/omo, omo, bridge, --format, openspec, "<source-file>"]
-        - id: beads-import
-          mode: manual
-          command: [agent, import, beads-items-to-c2g-or-omo]
-        - id: gstack-handoff
-          mode: manual
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, handoff, "<run-id>"]
-      verification:
-        - id: adapter-doctor
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, doctor]
-        - id: ssot-guardian
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
-        - id: gac-local-gate
-          mode: required
-          command: [make, gac-local-gate]
-      closeout:
-        - id: integration-map-review
-          mode: manual
-          command: [agent, inspect, external-adapter-health]
-
-  - id: submodule-pointer-close
-    run_frequency: on_demand
-    title: Submodule pointer closeout
-    purpose: Close project submodule work without dangling root pointers or unreachable SHAs.
-    agents:
-      roles: [release-agent, governance-agent]
-      observer_policy: recommended_for_multi_submodule_updates
-    allowed_lanes: [submodule_pointer, config]
-    lock_scopes: [root-gitlinks, submodules]
-    surfaces:
-      read:
-        - .gitmodules
-        - projects/**
-      write:
-        - projects/*
-    phases:
-      preflight:
-        - id: status
-          mode: required
-          command: [git, status, --short]
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: pointer-transaction
-          mode: required
-          command: [bash, bin/ssot/submodule-pointer-transaction.sh, --dry-run]
-      verification:
-        - id: reachability
-          mode: required
-          command: [make, governance-release-gate]
-        - id: gac-local-gate
-          mode: required
-          command: [make, gac-local-gate]
-      closeout:
-        - id: diff-stat
-          mode: required
-          command: [git, diff, --stat]
-
-  - id: handoff-resume
-    run_frequency: on_demand
-    title: Compression-safe handoff and resume
-    purpose: Persist enough workflow state that another agent or a compressed session can continue.
-    agents:
-      roles: [any-agent]
-      observer_policy: optional
-    allowed_lanes: [docs, code, governance_code, governance_state, config, submodule_pointer]
-    lock_scopes: ["agent-run:{run_id}"]
-    surfaces:
-      read:
-        - .omo/_delivery/agent-workflows/runs/**
-        - .agents/**
-      write:
-        - .omo/_delivery/agent-workflows/runs/**
-    phases:
-      preflight:
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: resume
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, resume, "{run_id}"]
-      verification:
-        - id: run-record
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, show-run, "{run_id}"]
-      closeout:
-        - id: close-run
-          mode: manual
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, close, "{run_id}", --status, ok]
-
-  - id: observer-audit
-    run_frequency: continuous
-    title: Agent workflow observer audit
-    purpose: Read-only oversight for workflow runs, locks, ledger events, and handoff evidence.
-    agents:
-      roles: [observer-agent, governance-agent]
-      observer_policy: read_only_required
-    allowed_lanes: [governance_code, governance_state]
-    lock_scopes: [observer-readonly]
-    surfaces:
-      read:
-        - .omo/_delivery/agent-workflows/runs/**
-        - .omo/_delivery/agent-workflows/locks/**
-        - .omo/_delivery/agent-workflows/events.jsonl
-      write: []
-    phases:
-      preflight:
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: observe
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, observe]
-      verification:
-        - id: observe-json
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, observe, --json]
-      closeout:
-        - id: doctor
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, doctor]
-
-  - id: state-sync
-    run_frequency: continuous
-    title: Runtime state projection sync
-    purpose: Refresh high-churn runtime projections through the OMO state-sync broker instead of ad-hoc agent writes.
-    agents:
-      roles: [state-sync-agent, governance-agent]
-      observer_policy: recommended_for_unattended_runs
-    allowed_lanes: [governance_state, docs, runtime_snapshot]
-    lock_scopes: [surface:omo-state-sync-projection, .omo/state]
-    surfaces:
-      read:
-        - .omo/_truth/registry/**
-        - .omo/state/system_health.yaml
-        - .omo/state/system.yaml
-        - .omo/_control/debt-dashboard/current.yaml
-        - .omo/tasks/**
-        - spaces/**
-        - projects/c2g/**
-        - projects/omo/**
-        - bin/compass_radar.py
-        - bin/mof/generate-brief.py
-      write:
-        - .omo/state/health.yaml
-        - .omo/state/system.yaml
-        - .omo/_control/governance-data.json
-        - BRIEF.md
-        - runtime/omo/_delivery/ingress/state/**
-    phases:
-      preflight:
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-        - id: state-sync-dry-run
-          mode: required
-          command: [uv, run, --project, projects/omo, omo, state, sync, --dry-run, --json]
-      execute:
-        - id: state-sync
-          mode: required
-          command: [uv, run, --project, projects/omo, omo, state, sync, --json]
-      verification:
-        - id: state-freshness
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/gac/state-freshness-check.py, --json]
-        - id: ssot-guardian
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
-      closeout:
-        - id: observe
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, observe]
-
-  - id: governance-audit
-    run_frequency: periodic
-    title: Workspace Systemic Governance Audit
-    purpose: Execute systemic governance health scan, write-ownership check, brief generation, and SSOT alignment.
-    agents:
-      roles: [governance-agent]
-      observer_policy: optional
-    allowed_lanes: [docs, governance_code, governance_state]
-    lock_scopes: [governance-audit-run]
-    surfaces:
-      read:
-        - .omo/_truth/registry/**
-        - bin/**
-        - BRIEF.md
-      write:
-        - .omo/state/**
-        - BRIEF.md
-    phases:
-      preflight:
-        - id: status
-          mode: required
-          command: [git, status, --short]
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: audit-health
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/compass_radar.py]
-        - id: audit-brief
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/mof/generate-brief.py, --write]
-      verification:
-        - id: write-owner-audit
-          mode: required
-          command: [python3, bin/ssot/write-owner-audit.py, --staged]
-        - id: ssot-guardian
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/ssot/ssot-guardian.py]
-        - id: gac-local-gate
-          mode: required
-          command: [make, gac-local-gate]
-      closeout:
-        - id: diff-stat
-          mode: required
-          command: [git, diff, --stat]
-
-  - id: agent-onboarding
-    run_frequency: on_demand
-    title: Agent Onboarding
-    purpose: Register a new AI agent in the workspace, including profile registration, MCP connection setup, BOS URI discovery, and first workflow lifecycle run.
-    agents:
-      roles: [governance-agent, adapter-agent]
-      observer_policy: optional
-    allowed_lanes: [docs, governance_code, governance_state]
-    lock_scopes: [agent-onboarding]
-    surfaces:
-      read:
-        - AGENTS.md
-        - CLAUDE.md
-        - ARCHITECTURE.md
-        - docs/SYSTEM-INDEX.md
-        - docs/INDEX-AGENTS.md
-        - .omo/_truth/registry/agent-workflows.yaml
-        - projects/agora/etc/bos-services.yaml
-        - projects/cockpit/README.md
-      write:
-        - .omo/_truth/registry/agent-workflows.yaml
-        - .agents/skills/**
-    phases:
-      preflight:
-        - id: status
-          mode: required
-          command: [git, status, --short]
-        - id: workflow-lint
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-      execute:
-        - id: register-profile
-          mode: manual
-          command: [agent, edit, agent-workflows.yaml::agent_profiles]
-        - id: create-skill
-          mode: manual
-          command: [agent, create, .agents/skills/<skill>/SKILL.md]
-      verification:
-        - id: workflow-lint-verify
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, lint]
-        - id: agents-list-verify
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, agents]
-        - id: gac-local-gate
-          mode: required
-          command: [make, gac-local-gate]
-      closeout:
-        - id: observe
-          mode: required
-          command: [uv, run, --with, pyyaml, python, bin/agent-workflow.py, observe]
-        - id: diff-stat
-          mode: required
-          command: [git, diff, --stat]
+      - projects/omo
+      - omo
+      - bridge
+      - --format
+      - bmad
+      - <source-file>
+      id: bmad-import
+      mode: manual
+    - command:
+      - uv
+      - run
+      - --project
+      - projects/omo
+      - omo
+      - bridge
+      - --format
+      - openspec
+      - <source-file>
+      id: openspec-import
+      mode: manual
+    - command:
+      - agent
+      - import
+      - beads-items-to-c2g-or-omo
+      id: beads-import
+      mode: manual
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - handoff
+      - <run-id>
+      id: gstack-handoff
+      mode: manual
+    preflight:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - doctor
+      id: adapter-doctor
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - doctor
+      id: adapter-doctor
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+      id: ssot-guardian
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Keep BMAD, OpenSpec, beads, gstack, and Superpowers wired as optional inputs or discipline layers without making them SSOT authorities.
+  run_frequency: periodic
+  surfaces:
+    read:
+    - .omo/_truth/registry/agent-workflows/**
+    - .agents/skills/**
+    - projects/c2g/**
+    - projects/omo/**
+    write:
+    - .omo/_truth/registry/agent-workflows/adapters/**
+    - .agents/skills/**
+    - docs/**
+  title: External adapter integration sync
+- agents:
+    observer_policy: optional
+    roles:
+    - governance-agent
+  allowed_lanes:
+  - docs
+  - governance_code
+  - governance_state
+  id: governance-audit
+  lock_scopes:
+  - governance-audit-run
+  phases:
+    closeout:
+    - command:
+      - git
+      - diff
+      - --stat
+      id: diff-stat
+      mode: required
+    execute:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/compass_radar.py
+      id: audit-health
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/mof/generate-brief.py
+      - --write
+      id: audit-brief
+      mode: required
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: status
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/ssot/write-owner-audit.py
+      - --staged
+      id: write-owner-audit
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+      id: ssot-guardian
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Execute systemic governance health scan, write-ownership check, brief generation, and SSOT alignment.
+  run_frequency: periodic
+  surfaces:
+    read:
+    - .omo/_truth/registry/**
+    - bin/**
+    - BRIEF.md
+    write:
+    - .omo/state/**
+    - BRIEF.md
+  title: Workspace Systemic Governance Audit
+- agents:
+    observer_policy: recommended
+    roles:
+    - governance-agent
+    - c2g-agent
+  allowed_lanes:
+  - governance_state
+  - docs
+  - runtime_snapshot
+  id: governance-state-mutation
+  lock_scopes:
+  - .omo
+  - spaces
+  - omo-broker
+  phases:
+    closeout:
+    - command:
+      - omo
+      - event
+      - emit
+      - agent_mutation_complete
+      id: mutation-ledger
+      mode: manual
+    execute:
+    - command:
+      - omo-or-c2g
+      - broker
+      - mutate-state
+      id: broker-write
+      mode: manual
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: status
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+      id: ssot-guardian
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Force state-plane changes through OMO/C2G broker paths instead of ad-hoc file writes.
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .omo/**
+    - spaces/**
+    - projects/omo/**
+    - projects/c2g/**
+    write:
+    - .omo/**
+    - spaces/**
+  title: Governed OMO or spaces mutation
+- agents:
+    observer_policy: optional
+    roles:
+    - any-agent
+  allowed_lanes:
+  - docs
+  - code
+  - governance_code
+  - governance_state
+  - config
+  - submodule_pointer
+  id: handoff-resume
+  lock_scopes:
+  - agent-run:{run_id}
+  phases:
+    closeout:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - close
+      - '{run_id}'
+      - --status
+      - ok
+      id: close-run
+      mode: manual
+    execute:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - resume
+      - '{run_id}'
+      id: resume
+      mode: required
+    preflight:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - show-run
+      - '{run_id}'
+      id: run-record
+      mode: required
+  purpose: Persist enough workflow state that another agent or a compressed session can continue.
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .omo/_delivery/agent-workflows/runs/**
+    - .agents/**
+    write:
+    - .omo/_delivery/agent-workflows/runs/**
+  title: Compression-safe handoff and resume
+- agents:
+    observer_policy: recommended
+    roles:
+    - mof-agent
+    - governance-agent
+  allowed_lanes:
+  - governance_code
+  - governance_state
+  - docs
+  id: mof-model-change
+  lock_scopes:
+  - mof-model
+  - mof-capabilities
+  - omo-state-bridge
+  phases:
+    closeout:
+    - command:
+      - git
+      - diff
+      - --stat
+      id: diff-stat
+      mode: required
+    execute:
+    - command:
+      - agent
+      - edit
+      - mof-m1-m2-m3
+      id: edit-mof-model
+      mode: manual
+    - command:
+      - bin/mof-version
+      - record
+      - <description>
+      id: mof-version-record
+      mode: manual
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: status
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    - command:
+      - python3
+      - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+      - --json
+      id: mof-schema-validate
+      mode: required
+    verification:
+    - command:
+      - python3
+      - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+      - --json
+      id: mof-schema-validate
+      mode: required
+    - command:
+      - python3
+      - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py
+      - --json
+      id: mof-state-bridge
+      mode: required
+    - command:
+      - bin/mof-drift
+      id: mof-drift
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Route M1/M2/M3 model edits through schema validation, state bridge audit, drift checks, and MOF version evidence.
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .omo/_truth/registry/mof-capabilities.yaml
+    - .omo/_truth/mof-version.yaml
+    - projects/ecos/src/ecos/ssot/mof/**
+    - projects/ecos/src/ecos/ssot/tools/mof-*.py
+    write:
+    - .omo/_truth/registry/mof-capabilities.yaml
+    - .omo/_truth/mof-version.yaml
+    - projects/ecos/src/ecos/ssot/mof/**
+  title: MOF model change
+- agents:
+    observer_policy: read_only_required
+    roles:
+    - mof-agent
+    - observer-agent
+    - governance-agent
+  allowed_lanes:
+  - governance_code
+  - governance_state
+  id: mof-state-bridge-audit
+  lock_scopes:
+  - mof-state-bridge-readonly
+  phases:
+    closeout:
+    - command:
+      - agent
+      - report
+      - mof-state-bridge-findings
+      id: handoff
+      mode: manual
+    execute:
+    - command:
+      - python3
+      - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+      - --json
+      id: mof-schema-validate
+      mode: required
+    - command:
+      - python3
+      - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py
+      - --json
+      id: mof-state-bridge
+      mode: required
+    preflight:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - bin/mof-drift
+      id: mof-drift
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - doctor
+      id: agent-workflow-doctor
+      mode: required
+  purpose: Read-only audit of MOF schema health, M1/M2 coverage, and OMO task bridge alignment.
+  run_frequency: periodic
+  surfaces:
+    read:
+    - .omo/_truth/registry/mof-capabilities.yaml
+    - .omo/_truth/mof-version.yaml
+    - .omo/tasks/**
+    - projects/ecos/src/ecos/ssot/mof/**
+    write: []
+  title: MOF state bridge audit
+- agents:
+    observer_policy: read_only_required
+    roles:
+    - observer-agent
+    - governance-agent
+  allowed_lanes:
+  - governance_code
+  - governance_state
+  id: observer-audit
+  lock_scopes:
+  - observer-readonly
+  phases:
+    closeout:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - doctor
+      id: doctor
+      mode: required
+    execute:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - observe
+      id: observe
+      mode: required
+    preflight:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - observe
+      - --json
+      id: observe-json
+      mode: required
+  purpose: Read-only oversight for workflow runs, locks, ledger events, and handoff evidence.
+  run_frequency: continuous
+  surfaces:
+    read:
+    - .omo/_delivery/agent-workflows/runs/**
+    - .omo/_delivery/agent-workflows/locks/**
+    - .omo/_delivery/agent-workflows/events.jsonl
+    write: []
+  title: Agent workflow observer audit
+- agents:
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+  allowed_lanes:
+  - code
+  - governance_code
+  - config
+  id: project-code-change
+  lock_scopes:
+  - project:{project}
+  - root-gate
+  phases:
+    closeout:
+    - command:
+      - git
+      - diff
+      - --stat
+      id: diff-stat
+      mode: required
+    execute:
+    - command:
+      - agent
+      - edit
+      - project-code
+      id: implement
+      mode: manual
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: root-status
+      mode: required
+    - command:
+      - git
+      - status
+      - --short
+      cwd: projects/{project}
+      id: project-status
+      mode: advisory
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - project-local
+      - test-command
+      cwd: projects/{project}
+      id: project-tests
+      mode: manual
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Route code changes through project-local verification and workspace governance gates.
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - projects/{project}/**
+    - docs/project-registry.yaml
+    - .omo/_truth/registry/governance-checks.yaml
+    write:
+    - projects/{project}/**
+  title: Project code change
+- agents:
+    observer_policy: optional_for_broad_doc_rewrites
+    roles:
+    - docs-agent
+    - governance-agent
+  allowed_lanes:
+  - docs
+  - governance_code
+  - config
+  id: project-doc-change
+  lock_scopes:
+  - docs
+  - doc-ssot
+  phases:
+    closeout:
+    - command:
+      - git
+      - diff
+      - --stat
+      id: diff-stat
+      mode: required
+    execute:
+    - command:
+      - agent
+      - edit
+      - docs-with-ssot-pointers
+      id: edit-docs
+      mode: manual
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: status
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/doc-ssot-lint.py
+      - --json
+      id: doc-ssot-lint
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+      id: ssot-guardian
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Keep documentation changes executable, SSOT-safe, and verifiable.
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - AGENTS.md
+    - ARCHITECTURE.md
+    - CLAUDE.md
+    - LAYER-INDEX.md
+    - README.md
+    - .omo/standards/**
+    - .agents/skills/project-governance/SKILL.md
+    - bin/ssot/doc-ssot-lint.py
+    - bin/gac/gac-export-agents.py
+    - bin/mof/project-layer-index.py
+    - docs/**
+    - docs/generated/**
+    - projects/*/AGENTS.md
+    - projects/*/CLAUDE.md
+    - projects/*/README.md
+    write:
+    - AGENTS.md
+    - ARCHITECTURE.md
+    - CLAUDE.md
+    - LAYER-INDEX.md
+    - README.md
+    - .omo/standards/**
+    - .agents/skills/project-governance/SKILL.md
+    - bin/ssot/doc-ssot-lint.py
+    - bin/gac/gac-export-agents.py
+    - bin/mof/project-layer-index.py
+    - docs/**
+    - docs/generated/**
+    - projects/*/AGENTS.md
+    - projects/*/CLAUDE.md
+    - projects/*/README.md
+  title: Project documentation change
+- agents:
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+  allowed_lanes:
+  - code
+  - governance_code
+  - config
+  - docs
+  id: pyright-sweep
+  lock_scopes:
+  - python-type-sweep
+  - root-gate
+  phases:
+    closeout:
+    - command:
+      - git
+      - diff
+      - --stat
+      id: diff-stat
+      mode: required
+    execute:
+    - command:
+      - agent
+      - edit
+      - python-type-and-style-debt
+      id: sweep
+      mode: manual
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: root-status
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - project-local
+      - pyright-command
+      id: project-pyright
+      mode: manual
+    - command:
+      - project-local
+      - ruff-command
+      id: project-ruff
+      mode: manual
+    - command:
+      - project-local
+      - test-command
+      id: project-tests
+      mode: manual
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Route cross-package pyright and ruff debt cleanup through a bounded, test-backed convergence loop.
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - projects/*/src/**/*.py
+    - projects/*/tests/**/*.py
+    - projects/*/pyproject.toml
+    - projects/*/pyrightconfig.json
+    - bin/sweep/**
+    write:
+    - projects/*/src/**/*.py
+    - projects/*/tests/**/*.py
+    - projects/*/pyproject.toml
+    - projects/*/pyrightconfig.json
+    - bin/sweep/**
+    - .omo/_knowledge/decisions/**
+    - .omo/_knowledge/patterns/**
+  title: Python type and style sweep
+- agents:
+    observer_policy: recommended_for_unattended_runs
+    roles:
+    - state-sync-agent
+    - governance-agent
+  allowed_lanes:
+  - governance_state
+  - docs
+  - runtime_snapshot
+  id: state-sync
+  lock_scopes:
+  - surface:omo-state-sync-projection
+  - .omo/state
+  phases:
+    closeout:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - observe
+      id: observe
+      mode: required
+    execute:
+    - command:
+      - uv
+      - run
+      - --project
+      - projects/omo
+      - omo
+      - state
+      - sync
+      - --json
+      id: state-sync
+      mode: required
+    preflight:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    - command:
+      - uv
+      - run
+      - --project
+      - projects/omo
+      - omo
+      - state
+      - sync
+      - --dry-run
+      - --json
+      id: state-sync-dry-run
+      mode: required
+    verification:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/gac/state-freshness-check.py
+      - --json
+      id: state-freshness
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+      id: ssot-guardian
+      mode: required
+  purpose: Refresh high-churn runtime projections through the OMO state-sync broker instead of ad-hoc agent writes.
+  run_frequency: continuous
+  surfaces:
+    read:
+    - .omo/_truth/registry/**
+    - .omo/state/system_health.yaml
+    - .omo/state/system.yaml
+    - .omo/_control/debt-dashboard/current.yaml
+    - .omo/tasks/**
+    - spaces/**
+    - projects/c2g/**
+    - projects/omo/**
+    - bin/compass_radar.py
+    - bin/mof/generate-brief.py
+    write:
+    - .omo/state/health.yaml
+    - .omo/state/system.yaml
+    - .omo/_control/governance-data.json
+    - BRIEF.md
+    - runtime/omo/_delivery/ingress/state/**
+  title: Runtime state projection sync
+- agents:
+    observer_policy: recommended_for_multi_submodule_updates
+    roles:
+    - release-agent
+    - governance-agent
+  allowed_lanes:
+  - submodule_pointer
+  - config
+  id: submodule-pointer-close
+  lock_scopes:
+  - root-gitlinks
+  - submodules
+  phases:
+    closeout:
+    - command:
+      - git
+      - diff
+      - --stat
+      id: diff-stat
+      mode: required
+    execute:
+    - command:
+      - bash
+      - bin/ssot/submodule-pointer-transaction.sh
+      - --dry-run
+      id: pointer-transaction
+      mode: required
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: status
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - make
+      - governance-release-gate
+      id: reachability
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Close project submodule work without dangling root pointers or unreachable SHAs.
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .gitmodules
+    - projects/**
+    write:
+    - projects/*
+  title: Submodule pointer closeout
