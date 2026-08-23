@@ -40,10 +40,7 @@
 | Journey specs (state machines) | [`docs/journey-specs/`](docs/journey-specs/) · validate: `make journey-check` |
 | Dual-track scene admission (ADR-0387) | [`.omo/_knowledge/decisions/0387-dual-track-scene-admission.md`](.omo/_knowledge/decisions/0387-dual-track-scene-admission.md) |
 | Scene execution engine | `bin/ssot/journey-runner.py` (rebuild) · `signal-poller.py` (感知面) · `scene-outcome-recorder.py` (结果面) |
-| L1 Runtime | [`projects/ecos/src/ecos/l1/runtime/`](projects/ecos/src/ecos/l1/runtime/) · scheduler · L0 bus events |
-| L2 Engine | [`projects/ecos/src/ecos/l2/engine/`](projects/ecos/src/ecos/l2/engine/) · knowledge engine · M1/M2 query |
-| L3 Entry | [`projects/ecos/src/ecos/l3/entry/`](projects/ecos/src/ecos/l3/entry/) · unified API |
-| Observability | [`projects/ecos/src/ecos/observability/`](projects/ecos/src/ecos/observability/) · health · metrics |
+| L1-L3 + Observability | See [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md) (auto-generated from `docs/project-registry.yaml`) |
 | Permission scope vocabulary | [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) |
 | Signal sources registry | [`.omo/_truth/registry/signal-sources.yaml`](.omo/_truth/registry/signal-sources.yaml) |
 
