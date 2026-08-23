@@ -199,6 +199,9 @@
 | alert-forwarder.py | resident 告警转发 (WP-E) | `python3 bin/ssot/alert-forwarder.py` |
 | system-health-check.py | resident 系统健康检查 | `python3 bin/ssot/system-health-check.py` |
 | install-resident-cron.sh | resident cron 安装 (M3.1/M4.3) | `bash bin/ssot/install-resident-cron.sh` |
+| evolution_engine.py | BCOS 进化引擎四阶段 | `python3 bin/bc-os/evolution_engine.py [--apply] [--json]` |
+| signal_router.py | BCOS 统一信号路由 (W1-D2) | `python3 bin/bc-os/signal_router.py --inbox <dir> [--json]` |
+| north_star_meter_v2.py | BCOS 北极星价值度量 v2 | `python3 bin/bc-os/north_star_meter_v2.py --json` |
 
 ### 3.1 场景卡工具族 (bin/ssot/scene-*)
 

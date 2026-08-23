@@ -322,6 +322,25 @@ uv run --directory projects/omo python -m omo.cli resident status --json
 - 兼容脚本: `bin/ssot/resident-orchestrator-daemon.py`、`decision-agent.py`、`event-ingest-adapter.py`、`personal-signals-adapter.py`、`alert-forwarder.py`、`system-health-check.py`
 - cron: `bash bin/ssot/install-resident-cron.sh`（每 2min 五类 daemon --once --role；M3.1 signals；M4.3 角色化）
 
+### BCOS 业务域系统 (2026-08-23, W1~W4)
+
+业务闭环系统（信号路由 → 进化引擎 → 北极星价值度量），规格见 [`docs/architecture/bcos-system-v1.md`](docs/architecture/bcos-system-v1.md)。
+
+```bash
+make bcos-evolve       # 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)
+make bcos-signals      # 统一信号路由 (W1-D2)
+make bcos-north-star   # 北极星价值度量 v2
+python3 bin/bc-os/evolution_engine.py --json     # 四阶段 JSON 输出
+python3 bin/bc-os/signal_router.py --inbox <dir> # 扫描路由信号
+python3 bin/bc-os/north_star_meter_v2.py --json  # 价值真值快照
+```
+
+- 进化引擎: `bin/bc-os/evolution_engine.py`（EvolutionEngine: observe/propose/evaluate/approve/rollback）
+- 信号路由: `bin/bc-os/signal_router.py`（W1-D2: doc/meeting/research/code 路由规则）
+- 北极星: `bin/bc-os/north_star_meter_v2.py`（排除 self-data, W3 真实价值闭环）
+- MOF: `mof/m2/bcos_system.yaml`（BCOSystem extends System）· BOS: `bos://bcos/*`
+- 背景: evolution_engine/signal_router 曾被误归档, 依台账 + T6-13 恢复 (PR #2050)
+
 
 
 ### 6.1 PR 工作流
