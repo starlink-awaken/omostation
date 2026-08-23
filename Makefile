@@ -491,6 +491,12 @@ state-sync:
 state-sync-dry:
 	uv run --project projects/omo omo state sync --dry-run --json
 
+health-trend:  ## 终端 ASCII 健康趋势图 (compass_radar history)
+	uv run --with pyyaml python bin/gac/health-trend-chart.py
+
+health-trend-json:  ## 输出 health trend JSON (供其他工具消费)
+	uv run --with pyyaml python bin/gac/health-trend-chart.py --json
+
 cockpit-dashboard-start:  ## 后台启动 cockpit Web 控制台 (port 8090, 默认) — 单实例, 状态在 runtime/cockpit-dashboard.{pid,log}
 	bash bin/runtime/start-cockpit-dashboard.sh
 
