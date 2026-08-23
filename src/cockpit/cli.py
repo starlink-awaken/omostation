@@ -524,11 +524,21 @@ def main() -> int:
     def dispatch_compass(a):
         import subprocess
 
-        c2g_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "c2g").resolve())
-        cmd = ["uv", "run", "--project", c2g_project, "c2g"] + getattr(a, "compass_args", [])
+        workspace_root = _SCRIPT_DIR.parents[4].resolve()
+        omo_project_path = (workspace_root / "projects" / "omo").resolve()
+        cmd = [
+            "uv",
+            "run",
+            "--project",
+            str(omo_project_path),
+            "c2g",
+            "--adapter",
+            "ecos",
+            *getattr(a, "compass_args", []),
+        ]
         # 清 VIRTUAL_ENV 避免 uv venv 冲突 (cockpit → c2g subprocess 继承父环境)
         env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
-        return subprocess.call(cmd, env=env)
+        return subprocess.call(cmd, cwd=str(workspace_root), env=env)
 
     def dispatch_bdsk(a):
         subcmd = getattr(a, "bdsk_subcmd", "debate")

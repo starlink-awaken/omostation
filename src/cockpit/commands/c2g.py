@@ -7,7 +7,7 @@ C2G (Creative-to-Governance) 双擎流已有 compass/iterate/wave2 三个命令�
   status   — C2G 全局状态 (pitch/bet/radar 统计)
   pipeline — pipeline 可视化
 
-设计: DRY — 复用 projects/c2g CLI 的 radar/status 子命令, 不重写逻辑.
+设计: DRY — 复用 projects/omo 注册的 vendored C2G console, 不重写逻辑.
 """
 
 from __future__ import annotations
@@ -20,12 +20,12 @@ from pathlib import Path
 from .base import _get_console, _get_err, _panel
 
 _WORKSPACE = Path(__file__).resolve().parents[5]
-_C2G_PROJECT = str((_WORKSPACE / "projects" / "c2g").resolve())
+_OMO_PROJECT = str((_WORKSPACE / "projects" / "omo").resolve())
 
 
 def _run_c2g(*args: str) -> int:
-    """调用 c2g CLI."""
-    cmd = ["uv", "run", "--project", _C2G_PROJECT, "c2g", "--adapter", "ecos", *args]
+    """Call OMO's registered vendored C2G console."""
+    cmd = ["uv", "run", "--project", _OMO_PROJECT, "c2g", "--adapter", "ecos", *args]
     env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
     return subprocess.run(cmd, cwd=str(_WORKSPACE), env=env).returncode
 

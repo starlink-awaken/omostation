@@ -1,6 +1,6 @@
 """cockpit wave2 — L3 entry for Wave2 dashboard / proposals (ADR-0190).
 
-Delegates to c2g dashboard_export / governance_feedback / predictive_report
+Delegates to OMO-vendored C2G dashboard_export / governance_feedback / predictive_report
 via subprocess — no business logic duplication.
 """
 
@@ -15,16 +15,26 @@ from pathlib import Path
 _SCRIPT_DIR = Path(__file__).resolve().parent
 # commands → cockpit → src → project root (projects/cockpit)
 _COCKPIT_ROOT = _SCRIPT_DIR.parent.parent.parent
-_C2G_PROJECT = str((_COCKPIT_ROOT.parent / "c2g").resolve())
+_OMO_PROJECT = str((_COCKPIT_ROOT.parent / "omo").resolve())
 _WORKSPACE = _COCKPIT_ROOT.parent.parent  # projects/ → workspace
+_C2G_MODULES = frozenset(
+    {
+        "omo._vendored.c2g.dashboard_export",
+        "omo._vendored.c2g.governance_feedback",
+        "omo._vendored.c2g.predictive_report",
+    }
+)
 
 
 def _run_c2g_module(module: str, extra: list[str] | None = None) -> int:
+    if module not in _C2G_MODULES:
+        print(f"unregistered Wave2 C2G module: {module}", file=sys.stderr)
+        return 2
     cmd = [
         "uv",
         "run",
         "--project",
-        _C2G_PROJECT,
+        _OMO_PROJECT,
         "python",
         "-m",
         module,
@@ -47,11 +57,11 @@ def cmd_wave2(args: argparse.Namespace) -> int:
     if sub in ("dashboard", "dash", "export"):
         extra = ["--pretty"] if getattr(args, "pretty", False) else []
         extra.extend(rest)
-        return _run_c2g_module("c2g.dashboard_export", extra)
+        return _run_c2g_module("omo._vendored.c2g.dashboard_export", extra)
     if sub in ("proposals", "feedback"):
-        return _run_c2g_module("c2g.governance_feedback", rest)
+        return _run_c2g_module("omo._vendored.c2g.governance_feedback", rest)
     if sub in ("predictive", "forecast"):
-        return _run_c2g_module("c2g.predictive_report", rest)
+        return _run_c2g_module("omo._vendored.c2g.predictive_report", rest)
     if sub == "help":
         print(
             "cockpit wave2 [dashboard|proposals|predictive] [-- ...]\n"

@@ -23,6 +23,8 @@ def test_load_wave2_never_raises(tmp_path, monkeypatch):
     payload = load_wave2_dashboard(tmp_path / "missing")
     assert payload["schema"] == "c2g.wave2.dashboard.v1"
     assert "cards" in payload
+    assert payload["status"] == "ok"
+    assert payload["source"] == "omo._vendored.c2g.dashboard_export"
 
 
 def test_enrich_proposals_handoff():
@@ -50,6 +52,7 @@ def test_proposal_plan_dry_run_shape(tmp_path, monkeypatch):
     assert plan["dry_run"] is True
     assert plan["mutation"] is False
     assert plan["auto_mutate_rules"] is False
+    assert plan["status"] == "ok"
 
 
 def test_demo_seed_refuses_omo(tmp_path, monkeypatch):
@@ -62,15 +65,14 @@ def test_demo_seed_refuses_omo(tmp_path, monkeypatch):
     assert r.get("mutation") is False
 
 
-def test_demo_seed_ok(tmp_path, monkeypatch):
+def test_demo_seed_uses_vendored_c2g_authority(tmp_path, monkeypatch):
     from cockpit.dashboard.helpers_wave2 import run_wave2_demo_seed
 
-    # Prefer real c2g if available; else accept degraded error
     r = run_wave2_demo_seed(tmp_path / "outcomes", reset=True)
-    assert r.get("adr") in ("0193", "0197") or r.get("schema") == "c2g.wave2.demo_seed.v1"
-    if r.get("status") == "ok":
-        assert r.get("pitch_count", 0) >= 1
-        assert r.get("mutation") is True
+    assert r["status"] == "ok"
+    assert r["source"] == "omo._vendored.c2g.demo_seed"
+    assert r["pitch_count"] >= 1
+    assert r["mutation"] is True
 
 
 def test_api_wave2_dashboard_route(monkeypatch):

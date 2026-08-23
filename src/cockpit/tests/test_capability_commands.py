@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -135,15 +136,34 @@ class TestC2GCommand:
         assert "AGC" in out
         assert "compass" in out
 
-    @patch("cockpit.commands.c2g.subprocess.run")
-    def test_status_delegates_to_c2g_radar(self, mock_run):
-        """status 委派到 c2g radar 子命令."""
-        mock_run.return_value = argparse.Namespace(returncode=0)
+    def test_status_delegates_to_vendored_c2g_radar(self, monkeypatch):
+        """status 以 OMO 的已注册 C2G console authority 委派 radar."""
+        seen: dict[str, object] = {}
+
+        def fake_run(command, **kwargs):
+            seen["command"] = command
+            seen["kwargs"] = kwargs
+            return SimpleNamespace(returncode=7)
+
+        monkeypatch.setenv("VIRTUAL_ENV", "/unsafe/parent-env")
+        monkeypatch.setenv("PYTHONHOME", "/unsafe/python-home")
+        monkeypatch.setattr(c2g.subprocess, "run", fake_run)
         args = argparse.Namespace(c2g_command="status")
         rc = c2g.cmd_c2g_status(args)
-        assert rc == 0
-        # 确认调了 subprocess
-        assert mock_run.called
+        assert rc == 7
+        assert seen["command"] == [
+            "uv",
+            "run",
+            "--project",
+            c2g._OMO_PROJECT,
+            "c2g",
+            "--adapter",
+            "ecos",
+            "radar",
+        ]
+        assert seen["kwargs"]["cwd"] == str(c2g._WORKSPACE)
+        assert "VIRTUAL_ENV" not in seen["kwargs"]["env"]
+        assert "PYTHONHOME" not in seen["kwargs"]["env"]
 
 
 # ── debt 路由 (PR #784 修复) ────────────────────────────────────

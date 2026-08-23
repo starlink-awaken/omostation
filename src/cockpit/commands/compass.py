@@ -1,7 +1,7 @@
 """cockpit.commands.compass — L3 入口暴露 c2g 5 机制 (subprocess 复用, 不重写逻辑).
 
 L0 约束: CLI 命名规范 kebab-case (governance-charter §1.1)
-DRY: 复用 projects/c2g/ CLI, 不重复造轮子
+DRY: 复用 projects/omo 注册的 vendored C2G console, 不重复造轮子
 """
 
 from __future__ import annotations
@@ -13,10 +13,11 @@ import sys
 from pathlib import Path
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_WORKSPACE_ROOT = (
+_COCKPIT_PROJECT = (
     _SCRIPT_DIR.parent.parent.parent
-)  # cockpit/src/cockpit/commands → cockpit/src/cockpit → cockpit/src → cockpit/ → projects/
-_C2G_PROJECT = str((_WORKSPACE_ROOT.parent / "c2g").resolve())
+)  # cockpit/src/cockpit/commands → cockpit/src/cockpit → cockpit/src → projects/cockpit
+_WORKSPACE_ROOT = _COCKPIT_PROJECT.parent.parent
+_OMO_PROJECT = str((_WORKSPACE_ROOT / "projects" / "omo").resolve())
 
 
 def main() -> int:
@@ -68,8 +69,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.command == "trace":
-        omo_proj = str((_WORKSPACE_ROOT.parent / "omo").resolve())
-        cmd = ["uv", "run", "--project", omo_proj, "python", "-m", "omo.cli", "compass", "trace"]
+        cmd = ["uv", "run", "--project", _OMO_PROJECT, "python", "-m", "omo.cli", "compass", "trace"]
         if getattr(args, "goal_id", ""):
             cmd.append(args.goal_id)
     else:
@@ -77,7 +77,7 @@ def main() -> int:
             "uv",
             "run",
             "--project",
-            _C2G_PROJECT,
+            _OMO_PROJECT,
             "c2g",
             "--adapter",
             "ecos",

@@ -1,7 +1,7 @@
 """Wave2 dashboard payload for cockpit API (ADR-0191).
 
-Builds c2g.wave2.dashboard.v1 without requiring a live c2g install when
-possible; falls back to empty baseline so the UI never hard-crashes.
+Builds c2g.wave2.dashboard.v1 with OMO's vendored C2G authority when
+available; falls back to an empty baseline so the UI never hard-crashes.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ def _workspace_root() -> Path:
     # helpers_wave2.py → dashboard → cockpit pkg → src → project → projects → workspace
     here = Path(__file__).resolve()
     for parent in here.parents:
-        if (parent / ".omo").exists() or (parent / "projects" / "c2g").exists():
+        if (parent / ".omo").exists() or (parent / "projects" / "omo").exists():
             return parent
     return here.parents[5]
 
@@ -88,11 +88,10 @@ def load_wave2_dashboard(
     root = _workspace_root()
     ddir = data_dir or _default_data_dir(root)
     try:
-        # Prefer in-process c2g when importable (workspace / uv path)
-        from c2g.dashboard_export import build_dashboard  # type: ignore
+        from omo._vendored.c2g.dashboard_export import build_dashboard
 
         payload = build_dashboard(ddir, horizon=horizon)
-        payload["source"] = "c2g.dashboard_export"
+        payload["source"] = "omo._vendored.c2g.dashboard_export"
         payload["data_dir"] = str(ddir)
         # Enrich proposals with TaskCenter handoff hints (ADR-0192)
         payload["proposals"] = enrich_proposals_for_handoff(payload.get("proposals") or [])
@@ -150,12 +149,12 @@ def run_wave2_demo_seed(
             "adr": "0197",
         }
     try:
-        from c2g.demo_seed import seed_demo_outcomes  # type: ignore
+        from omo._vendored.c2g.demo_seed import seed_demo_outcomes
 
         summary = seed_demo_outcomes(Path(ddir), reset=reset)
         summary["mutation"] = True  # outcomes store only
         summary["surface"] = "runtime/c2g/outcomes"
-        summary["source"] = "c2g.demo_seed"
+        summary["source"] = "omo._vendored.c2g.demo_seed"
         return summary
     except Exception as e:
         return {
@@ -178,11 +177,11 @@ def load_wave2_proposal_plan(
     ddir = data_dir or _default_data_dir(root)
     omo_dir = root / ".omo"
     try:
-        from c2g.governance_feedback import (  # type: ignore
+        from omo._vendored.c2g.governance_feedback import (
             apply_proposals_as_tasks,
             build_proposals,
         )
-        from c2g.outcome_tracker import OutcomeTracker  # type: ignore
+        from omo._vendored.c2g.outcome_tracker import OutcomeTracker
 
         tracker = OutcomeTracker(ddir)
         proposals = build_proposals(tracker._outcomes, horizon=horizon)

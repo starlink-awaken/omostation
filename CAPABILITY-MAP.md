@@ -8,7 +8,7 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 144 |
+| CLI 命令 (含子命令) | 147 |
 | MCP 工具 | 595 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 227 |
@@ -43,7 +43,7 @@
 | `family-hub` | X | 6 | stdio | `projects/family-hub/mcp_server.py` |
 | `toolforge` | L2 | 5 | stdio | `projects/knowledge/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py` |
 | `aetherforge-gateway` | X | 3 | stdio | `projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py` |
-| `c2g` | X | 3 | stdio | `projects/c2g/src/c2g/mcp_server.py` |
+| `c2g` | X | 3 | stdio | `projects/omo/src/omo/_vendored/c2g/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | `projects/model-driven/src/model_driven/fastmcp_server.py` |
 
 ## BOS 服务域分布
@@ -86,6 +86,7 @@
 | `cockpit archive` | 归档已处理完毕的 Inbox 待办文件 |
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
 | `cockpit audit` | 🔍 6 维度全方位审计 (调 bin/workspace-audit) |
+| `cockpit audit-ledger` | 密码学级 Merkle 审计账本 (ADR-0201) |
 | `cockpit backends` | 列出 BOS 后端 |
 | `cockpit bdsk` | 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演) |
 | `cockpit bos` | BOS URI 查询与管理 |
@@ -123,6 +124,7 @@
 | `cockpit export` | 导出契约封套 |
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
 | `cockpit fabric` | 检查 omlxc 智能算力织网 (温控/分诊/显存/缓存) |
+| `cockpit fabric-mesh` | 局域网边缘算力漫游网格 (ADR-0202) |
 | `cockpit facts-audit` | 审计 Documents 文档域 facts 文件 |
 | `cockpit facts-validation` | 读取 Runtime Facts 审计回执 |
 | `cockpit family-hub` | 家庭数字枢纽入口 |
@@ -146,7 +148,7 @@
 | `cockpit init` | 🚀 初始化向导（同 quickstart） |
 | `cockpit inspect` | 查看算力网格健康度与节点状态 |
 | `cockpit intent` | 🧠 自然语言意图解构与工程规格编译器 (ADR-0195) |
-| `cockpit invoke` | 调用 capability 服务（执行 BOS YAML command） |
+| `cockpit invoke` | 通过治理网关调用 exact native BOS capability |
 | `cockpit iterate` | ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行) |
 | `cockpit journey` | 🗺️ Journey State Graph 状态表达校验器 |
 | `cockpit kairon` | kairon 知识引擎 monorepo 聚合入口 |
@@ -156,6 +158,7 @@
 | `cockpit logs` | 查看日志 |
 | `cockpit mcp` | 启动 MCP server 或列出工具 |
 | `cockpit memory` | 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref) |
+| `cockpit memory-distill` | 记忆自蒸馏与冲突自愈 (ADR-0200) |
 | `cockpit mesh` | omlx 算力网格路由入口 |
 | `cockpit metrics` | 查看 bus metrics 快照 |
 | `cockpit model-driven` | [DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行 |

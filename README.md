@@ -60,7 +60,7 @@ uv run ruff check "src/"
     - **Capability map**: [`CAPABILITY-MAP.md`](CAPABILITY-MAP.md) — 能力全景 (自动生成)
     - **CLI reference**: [`../../docs/CLI-REFERENCE.md`](../../docs/CLI-REFERENCE.md) — 命令参考 (自动生成)
     - **MCP index**: [`../../docs/INDEX-MCP.md`](../../docs/INDEX-MCP.md) — 24 MCP 服务器 / 541 工具
-    - **Capability registry**: [`../../docs/generated/capability-registry.yaml`](../../docs/generated/capability-registry.yaml) — SSOT
+    - **Capability projection**: [`../../docs/generated/capability-registry.yaml`](../../docs/generated/capability-registry.yaml) — generated read-only discovery view, not SSOT
     - Workspace architecture: [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md)
     - Layer placement: [`../../LAYER-INDEX.md`](../../LAYER-INDEX.md)
     - System index: [`../../docs/SYSTEM-INDEX.md`](../../docs/SYSTEM-INDEX.md) — 统一导航入口
