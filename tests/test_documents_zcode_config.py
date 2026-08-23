@@ -144,7 +144,7 @@ def test_render_derives_native_zcode_cockpit_projection(tmp_path: Path) -> None:
                     "command": str(cockpit),
                     "env": {
                         "WORKSPACE_ROOT": str(registry.parents[3]),
-                        "L4_DOCUMENTS_ROOT": str(domain_registry.parents[2]),
+                        "L4_DOCUMENTS_ROOT": str(domain_registry.parents[1]),
                         "L4_DOMAIN_REGISTRY": str(domain_registry),
                     },
                 }
@@ -202,7 +202,7 @@ def test_install_refuses_settings_symlink(tmp_path: Path) -> None:
 def test_missing_workspace_agents_gateway_fails_closed(tmp_path: Path) -> None:
     registry, _ = _project_registry(tmp_path)
     domain_registry = _domain_registry(tmp_path)
-    (domain_registry.parents[2] / "AGENTS.md").unlink()
+    (domain_registry.parents[1] / "AGENTS.md").unlink()
 
     result = subprocess.run(
         [
@@ -222,7 +222,7 @@ def test_missing_workspace_agents_gateway_fails_closed(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert json.loads(result.stdout)["errors"] == [
-        f"Documents gateway unavailable: {domain_registry.parents[2] / 'AGENTS.md'}"
+        f"Documents gateway unavailable: {domain_registry.parents[1] / 'AGENTS.md'}"
     ]
 
 

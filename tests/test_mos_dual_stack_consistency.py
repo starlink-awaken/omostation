@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-_SCRIPT = Path(__file__).resolve().parents[2] / "bin" / "ssot" / "mos-dual-stack-consistency.py"
+_SCRIPT = Path(__file__).resolve().parents[1] / "bin" / "ssot" / "mos-dual-stack-consistency.py"
 _spec = importlib.util.spec_from_file_location("mos_dual_stack_consistency", _SCRIPT)
 mdc = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(mdc)

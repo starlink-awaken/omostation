@@ -167,8 +167,28 @@ jobs:
         run: pip install pyyaml pydantic pytest
       - name: Run full governance verification
         run: make governance-verify
+      - name: Ruff config drift check
+        run: python3 bin/gac/ruff-config-drift.py --json > /tmp/ruff-config-drift.json || echo "⚠️ ruff-config-drift.py failed (non-blocking)"
+      - name: Upload ruff config drift report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruff-config-drift-${{ github.run_id }}
+          path: /tmp/ruff-config-drift.json
+          if-no-files-found: warn
+          retention-days: 14
       - name: GaC local gate
         run: python3 bin/gac/gac-local-gate.py --strict
+      - name: Governance audit
+        run: python3 bin/gac/governance-audit.py --json > /tmp/governance-audit.json || echo "⚠️ governance-audit.py failed (non-blocking)"
+      - name: Upload governance audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-audit-${{ github.run_id }}
+          path: /tmp/governance-audit.json
+          if-no-files-found: warn
+          retention-days: 14
       - name: Submodule pointer drift check
         run: |
           python3 bin/gac/check-submodule-pointer-drift.py --strict || {

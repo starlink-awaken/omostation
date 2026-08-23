@@ -18,7 +18,7 @@ def _load_generate_brief():
     mod = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     sys.modules[name] = mod
-    # script uses WORKSPACE = parents[2] from bin/mof → Workspace
+    # script uses WORKSPACE = parents[1] from bin/mof → Workspace
     spec.loader.exec_module(mod)
     return mod
 

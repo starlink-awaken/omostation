@@ -144,7 +144,7 @@ def test_render_derives_claude_cockpit_projection(tmp_path: Path) -> None:
                 "args": [],
                 "env": {
                     "WORKSPACE_ROOT": str(registry.parents[3]),
-                    "L4_DOCUMENTS_ROOT": str(domain_registry.parents[2]),
+                    "L4_DOCUMENTS_ROOT": str(domain_registry.parents[1]),
                     "L4_DOMAIN_REGISTRY": str(domain_registry),
                 },
             }

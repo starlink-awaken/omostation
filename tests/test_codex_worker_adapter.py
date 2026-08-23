@@ -1331,7 +1331,7 @@ def test_adapter_accepts_one_real_persisted_governed_run(tmp_path: Path) -> None
     )
     instruction_path.write_text("# Canonical worker instructions\n", encoding="utf-8")
     (workspace / "projects").mkdir()
-    (workspace / "projects/ecos").symlink_to(SCRIPT.parents[2] / "projects/ecos")
+    (workspace / "projects/ecos").symlink_to(SCRIPT.parents[1] / "projects/ecos")
 
     spec_digest = __import__("hashlib").sha256(spec_path.read_bytes()).hexdigest()
     ledger_path = workspace / "docs/plans/3y-bet-ledger.yaml"
@@ -1428,8 +1428,8 @@ def test_worker_adapter_reconciles_both_planes_and_appends_real_origin_ack(
     )
     instruction_path.write_text("# Canonical worker instructions\n", encoding="utf-8")
     (workspace / "projects").mkdir()
-    (workspace / "projects/ecos").symlink_to(SCRIPT.parents[2] / "projects/ecos")
-    (workspace / "projects/omo").symlink_to(SCRIPT.parents[2] / "projects/omo")
+    (workspace / "projects/ecos").symlink_to(SCRIPT.parents[1] / "projects/ecos")
+    (workspace / "projects/omo").symlink_to(SCRIPT.parents[1] / "projects/omo")
     spec_digest = __import__("hashlib").sha256(spec_path.read_bytes()).hexdigest()
     ledger_path = workspace / "docs/plans/3y-bet-ledger.yaml"
     ledger_path.parent.mkdir(parents=True)
@@ -1469,7 +1469,7 @@ def test_worker_adapter_reconciles_both_planes_and_appends_real_origin_ack(
     prepared = contract.prepare_bet_execution("BET-REAL-MESH-ACK", workspace=workspace)
     packet = prepared["work_packet"]
 
-    omo_src = str(SCRIPT.parents[2] / "projects/omo/src")
+    omo_src = str(SCRIPT.parents[1] / "projects/omo/src")
     if omo_src not in sys.path:
         sys.path.insert(0, omo_src)
     from omo.worker_lifecycle import new_worker_ack_origin_proof, record_step_dispatch

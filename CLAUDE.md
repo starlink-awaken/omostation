@@ -101,7 +101,17 @@ uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-pre
 uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-bridge-match.py
 ```
 
-## 1.6 P74 Workflow Solidification Check (ADR-0130)
+## 1.6 Runbook 索引
+
+| 故障 | Runbook |
+|------|---------|
+| 推理引擎异常 | [runbook-reasoning-engine.md](operations/runbook-reasoning-engine.md) |
+| 约束违规 | [runbook-constraint-violation.md](operations/runbook-constraint-violation.md) |
+| Agent 静默 | [runbook-agent-silent.md](operations/runbook-agent-silent.md) |
+| CI 红了 | [runbook-ci-red.md](operations/runbook-ci-red.md) |
+| 场景失败 | [runbook-scenario-failure.md](operations/runbook-scenario-failure.md) |
+
+## 1.7 P74 Workflow Solidification Check (ADR-0130)
 
 After bootstrap, every agent MUST verify P74 health. P74 is the常态化 mechanism
 (常态化机制) for agent-workflow silence detection — see `.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`.

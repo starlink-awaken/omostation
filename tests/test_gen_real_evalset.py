@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-_SCRIPT = Path(__file__).resolve().parents[2] / "bin" / "ssot" / "gen-real-evalset.py"
+_SCRIPT = Path(__file__).resolve().parents[1] / "bin" / "ssot" / "gen-real-evalset.py"
 _spec = importlib.util.spec_from_file_location("gen_real_evalset", _SCRIPT)
 gen = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(gen)

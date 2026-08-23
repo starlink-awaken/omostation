@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "projects" / "omo" / "src"))
 
 from omo.engineering_delivery_consumer import build_engineering_delivery_shadow_observer  # noqa: E402

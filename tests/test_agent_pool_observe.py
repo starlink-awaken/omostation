@@ -341,7 +341,7 @@ def test_each_candidate_version_probe_runs_once_without_retries(tmp_path):
 
 
 def test_real_registry_only_uses_observation_contract_and_never_admits_candidates():
-    root = TOOL.parents[2]
+    root = TOOL.parents[1]
     providers_path = root / ".omo/_truth/registry/capability-providers.yaml"
     workers_path = root / ".omo/_truth/registry/workers.yaml"
     providers_document = yaml.safe_load(providers_path.read_text(encoding="utf-8"))

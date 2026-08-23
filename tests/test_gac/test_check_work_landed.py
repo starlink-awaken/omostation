@@ -7,7 +7,7 @@ import sys
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
-_SCRIPT_PATH = Path(__file__).resolve().parents[2] / "bin" / "gac" / "check-work-landed.py"
+_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "bin" / "gac" / "check-work-landed.py"
 _MODULE_NAME = "bin.check_work_landed"
 _SPEC = importlib.util.spec_from_file_location(_MODULE_NAME, _SCRIPT_PATH)
 _module = importlib.util.module_from_spec(_SPEC)

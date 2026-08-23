@@ -125,7 +125,7 @@ def test_controller_facing_ack_subcommand_is_not_exposed() -> None:
 
 
 def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
-    registry_path = SCRIPT.parents[2] / ".omo" / "_truth" / "registry" / "workers.yaml"
+    registry_path = SCRIPT.parents[1] / ".omo" / "_truth" / "registry" / "workers.yaml"
     documents = list(yaml.safe_load_all(registry_path.read_text(encoding="utf-8")))
     registry = next(document for document in documents if isinstance(document, dict) and "workers" in document)
     workers = {worker["id"]: worker for worker in registry["workers"]}
@@ -200,12 +200,12 @@ def test_workers_registry_admits_only_bounded_l0_pi_transport() -> None:
 def test_declared_worker_is_rejected_before_command_construction(
     worker_id: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    omo_src = str(SCRIPT.parents[2] / "projects" / "omo" / "src")
+    omo_src = str(SCRIPT.parents[1] / "projects" / "omo" / "src")
     if omo_src not in sys.path:
         sys.path.insert(0, omo_src)
     from omo import omo_worker_core
 
-    registry_path = SCRIPT.parents[2] / ".omo" / "_truth" / "registry" / "workers.yaml"
+    registry_path = SCRIPT.parents[1] / ".omo" / "_truth" / "registry" / "workers.yaml"
     registry_bytes = registry_path.read_bytes()
     registry = list(yaml.safe_load_all(registry_bytes))[-1]
     worker = next(item for item in registry["workers"] if item["id"] == worker_id)
@@ -224,7 +224,7 @@ def test_declared_worker_is_rejected_before_command_construction(
             worker_id,
             "cli_prompt",
             "bounded prompt",
-            workspace_root=SCRIPT.parents[2],
+            workspace_root=SCRIPT.parents[1],
             run_id="run-declared-worker",
             packet_id="WP-DECLARED-WORKER",
             packet_hash="sha256:" + "a" * 64,
@@ -237,7 +237,7 @@ def test_declared_worker_is_rejected_before_command_construction(
 
 @pytest.mark.parametrize("worker_id", ["pi", "oh-my-pi", "codex"])
 def test_registry_requires_worker_origin_ack_protocol(worker_id: str) -> None:
-    registry_path = SCRIPT.parents[2] / ".omo" / "_truth" / "registry" / "workers.yaml"
+    registry_path = SCRIPT.parents[1] / ".omo" / "_truth" / "registry" / "workers.yaml"
     documents = list(yaml.safe_load_all(registry_path.read_text(encoding="utf-8")))
     registry = next(document for document in documents if isinstance(document, dict) and "workers" in document)
     worker = next(item for item in registry["workers"] if item["id"] == worker_id)

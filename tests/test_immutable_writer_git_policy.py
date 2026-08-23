@@ -68,7 +68,7 @@ def _policy_fixture(tmp_path: Path, *, shim: bool) -> tuple[Path, dict[str, str]
 def _run(script: Path, env: dict[str, str], *argv: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["bash", str(script), *argv],
-        cwd=script.parents[2],
+        cwd=script.parents[1],
         env=env,
         capture_output=True,
         text=True,
