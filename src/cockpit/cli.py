@@ -811,6 +811,7 @@ def main() -> int:
         "gac": cmd_gac,
         "omo": lambda a: __import__("cockpit.commands.omo", fromlist=["cmd_omo"]).cmd_omo(a),
         "resident": lambda a: __import__("cockpit.commands.resident", fromlist=["cmd_resident"]).cmd_resident(a),
+        "bcos": lambda a: __import__("cockpit.commands.bcos", fromlist=["cmd_bcos"]).cmd_bcos(a),
         "runtime": lambda a: __import__("cockpit.commands.runtime", fromlist=["cmd_runtime"]).cmd_runtime(a),
         "help": cmd_help,
         "quickstart": lambda a: __import__("cockpit.commands.quickstart", fromlist=["cmd_quickstart"]).cmd_quickstart(
