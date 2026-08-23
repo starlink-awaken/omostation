@@ -178,3 +178,10 @@ Run broader tests only when the edited surface warrants them. Documentation-only
 
 - **P73 Truth-Driven Engineering Pattern — eCOS 多迁移/并发/声明执行鸿沟下的工程纪律** ([p73-truth-driven-engineering-pattern.md](.omo/_knowledge/patterns/p73-truth-driven-engineering-pattern.md))
   > | 陷阱 | 症状 | 本轮案例 | |------|------|---------| | **D1** 凭路径直觉判存在性 | 报"X 零实现/不存在/悬空" 其实文件已迁移或运行时写面未创建 | 连续 3 轮把 debt(空=运行时写面正常) / task(卡 ingress delivery) / GaC(3 drift 非 129) 判错 |
+
+## 治理活性自检 (2026-08-22 自进化框架)
+
+```bash
+python3 bin/gac/meta-doctor.py --workspace . --json   # 治理活性巡检
+python3 bin/scheduler-compile.py --check               # 调度一致性
+```

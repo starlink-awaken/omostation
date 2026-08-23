@@ -290,6 +290,23 @@ Prefer targeted checks for narrow edits. Broaden verification when the change to
 
 - **`reset --hard` 前三确认**：① 当前分支（并行工作区会被并发 agent 随时 `checkout` 切走——曾因未确认把并发 agent 的 main 误回退，靠 reflog 恢复）② reset 目标 = 该分支的 origin 状态 ③ 工作树干净。高危操作优先在独立 clone（T1-05 拓扑）里执行。
 - **改"看起来是子项目"的代码前确认仓库边界**：先 `ls -d <path>/.git` + `git -C <path> remote -v`。`git -C` 在无独立仓库的目录会 fallback 到父仓库，造成"我在子项目里"的假象（P73-D1 曾因此把 root 跟踪的 gbrain 残留副本当成 gbrain 仓库改）。
+### 治理活性自检 (自进化框架)
+
+```bash
+# 治理机制活性巡检 (M1 心跳 + M2 引用活性 + scheduler-drift)
+python3 bin/gac/meta-doctor.py --workspace . --json
+
+# 调度编译器: 登记↔安装一致性校验
+python3 bin/scheduler-compile.py --check
+
+# 会话交接协议: 产出机器可读 handoff.json
+python3 bin/gac/session-handoff.py --session <id> --agent <name> --summary "..."
+
+# cron job 心跳包装器
+bash bin/gac/heartbeat-wrapper.sh <job_name> <command...>
+```
+
+
 
 ### 6.1 PR 工作流
 
