@@ -321,6 +321,8 @@ uv run --directory projects/omo python -m omo.cli resident status --json
 - 角色 SSOT: `projects/omo/src/omo/resident/roles.py`（sediment/decision/execute/monitor/heartbeat）
 - 兼容脚本: `bin/ssot/resident-orchestrator-daemon.py`、`decision-agent.py`、`event-ingest-adapter.py`、`personal-signals-adapter.py`、`alert-forwarder.py`、`system-health-check.py`
 - cron: `bash bin/ssot/install-resident-cron.sh`（每 2min 五类 daemon --once --role；M3.1 signals；M4.3 角色化）
+- agora MCP: `resident_status` / `resident_roles`（`projects/agora/src/agora/server/tools_resident.py`，委派 `omo resident status/roles`）
+- BOS: `bos://resident/*`（resident 常驻体系 URI 命名空间）
 
 ### BCOS 业务域系统 (2026-08-23, W1~W4)
 

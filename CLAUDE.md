@@ -199,6 +199,7 @@ make resident-daemon       # 单次 tick 调试
 - 路由表 SSOT: `projects/omo/src/omo/resident/resident-routes.yaml`
 - 角色 SSOT: `omo resident roles`（`projects/omo/src/omo/resident/roles.py`）
 - MOF: `mof/m2/digital_agent.yaml`（DigitalAgent, tier=resident）· BOS: `bos://resident/*`
+- agora MCP: `resident_status` / `resident_roles`（`projects/agora/src/agora/server/tools_resident.py`，委派 `omo resident status/roles`）
 
 ## BCOS 业务域系统 (2026-08-23, W1~W4)
 
