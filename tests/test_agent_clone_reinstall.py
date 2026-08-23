@@ -178,5 +178,56 @@ agora = { path = "../agora" }
             assert "agora" in msg
 
 
+class TestSubmoduleProfiles:
+    """Named writer profiles must match the live root topology exactly."""
+
+    ACTIVE_GOVERNANCE_PATHS = (
+        "projects/agora",
+        "projects/cockpit",
+        "projects/ecos",
+        "projects/omo",
+    )
+
+    @staticmethod
+    def _links(*paths):
+        return {path: f"sha-{index}" for index, path in enumerate(paths)}
+
+    def test_governance_profile_accepts_current_topology_without_cockpit_ui(self):
+        links = self._links(*self.ACTIVE_GOVERNANCE_PATHS)
+
+        assert agent_clone.resolve_submodule_profile("governance", links) == list(
+            self.ACTIVE_GOVERNANCE_PATHS
+        )
+
+    def test_governance_profile_still_fails_closed_when_active_path_is_missing(self):
+        links = self._links(
+            *(
+                path
+                for path in self.ACTIVE_GOVERNANCE_PATHS
+                if path != "projects/omo"
+            )
+        )
+
+        with pytest.raises(agent_clone.ToolError) as caught:
+            agent_clone.resolve_submodule_profile("governance", links)
+
+        assert caught.value.reason == "profile_gitlink_missing"
+        assert caught.value.details["missing_gitlinks"] == ["projects/omo"]
+
+    def test_full_profile_remains_derived_from_all_live_gitlinks(self):
+        links = self._links(
+            "projects/new-capability",
+            *self.ACTIVE_GOVERNANCE_PATHS,
+        )
+
+        assert agent_clone.resolve_submodule_profile("full", links) == sorted(links)
+
+    def test_governance_profile_has_no_stale_requirement_in_current_head(self):
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        live_links = agent_clone.gitlinks(repo_root)
+
+        assert set(agent_clone.GOVERNANCE_SUBMODULES) <= set(live_links)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
