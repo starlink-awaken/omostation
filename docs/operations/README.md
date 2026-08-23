@@ -46,7 +46,7 @@ Start here when `bin/compass_radar.py` reports health < 60:
 | Concurrent drift topic in gate | re-run; if persistent, see cleanup-rounds.md | drift detection is soft-warning only |
 | Stale lock / zombie run | `bin/agent-workflow.py prune-locks` then compliance | PRUNE stale locks, CLOSE zombie runs |
 | Check baseline violation | `bin/gac/gac-validate.py --gate` | Find bin/ scripts added without baseline bump |
-| Submodule pointer drift | `git submodule update --init --recursive` then `bin/ssot/check-submodule-pointer-drift.py` | Sync + verify |
+| Submodule pointer drift | `git submodule update --init --recursive` then `bin/gac/check-submodule-pointer-drift.py` | Sync + verify |
 
 ## Pre-push checklist
 
