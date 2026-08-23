@@ -306,6 +306,22 @@ python3 bin/gac/session-handoff.py --session <id> --agent <name> --summary "..."
 bash bin/gac/heartbeat-wrapper.sh <job_name> <command...>
 ```
 
+### Resident Agent 体系 (2026-08-23, WP-A~I / ADR-0396)
+
+事件驱动常驻 agent 运行时（五类角色 + 规则级路由订阅），规格见 [`docs/architecture/resident-agent-system-v1.md`](docs/architecture/resident-agent-system-v1.md)。
+
+```bash
+make resident-status       # 运行状态快照 (daemon/events/sediment/alert/ledger)
+make resident-roles        # 五类角色配置
+make resident-daemon       # 单次 tick 调试
+uv run --directory projects/omo python -m omo.cli resident status --json
+```
+
+- 路由表 SSOT: `projects/omo/src/omo/resident/resident-routes.yaml`（schema `resident-routes/v1`）
+- 角色 SSOT: `projects/omo/src/omo/resident/roles.py`（sediment/decision/execute/monitor/heartbeat）
+- 兼容脚本: `bin/ssot/resident-orchestrator-daemon.py`、`decision-agent.py`、`event-ingest-adapter.py`、`personal-signals-adapter.py`、`alert-forwarder.py`、`system-health-check.py`
+- cron: `bash bin/ssot/install-resident-cron.sh`（每 2min 五类 daemon --once --role；M3.1 signals；M4.3 角色化）
+
 
 
 ### 6.1 PR 工作流

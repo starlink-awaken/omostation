@@ -192,6 +192,13 @@
 | mcp-attach-smoke.py | 外部 agent 接入烟测 | `python3 bin/ssot/mcp-attach-smoke.py` |
 | gen-external-channels-inventory.py | ECCP 外通道 inventory | `python3 bin/ssot/gen-external-channels-inventory.py` |
 | check-index-drift.py | 索引漂移检测 | `python3 bin/ssot/check-index-drift.py` |
+| resident-orchestrator-daemon.py | resident 订阅→执行桥 (M1) | `python3 bin/ssot/resident-orchestrator-daemon.py` |
+| decision-agent.py | resident 决策提案 (WP-F) | `python3 bin/ssot/decision-agent.py` |
+| event-ingest-adapter.py | resident 事件摄入 (WP-A) | `python3 bin/ssot/event-ingest-adapter.py` |
+| personal-signals-adapter.py | resident 个人信号输入 (WP-D) | `python3 bin/ssot/personal-signals-adapter.py` |
+| alert-forwarder.py | resident 告警转发 (WP-E) | `python3 bin/ssot/alert-forwarder.py` |
+| system-health-check.py | resident 系统健康检查 | `python3 bin/ssot/system-health-check.py` |
+| install-resident-cron.sh | resident cron 安装 (M3.1/M4.3) | `bash bin/ssot/install-resident-cron.sh` |
 
 ### 3.1 场景卡工具族 (bin/ssot/scene-*)
 

@@ -13,7 +13,8 @@
 	omo-status omo-top swarm-activity observability-events observability-adapters observability-trace log-rotate \
 	agent-workflows agent-workflow-bootstrap agent-workflow-lint agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-integrations agent-workflow-adapters agent-workflow-status \
 	mof-bootstrap m4-health m4-health-compare registry-drift gac-healthcheck gac-drift gac-validate \
-	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll
+	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
+	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest
 
 PY := uv run --with pyyaml python
 PY_STDLIB := bin/gac/managed-python run --profile stdlib --
@@ -531,3 +532,47 @@ chaos-drill-strict:  ## 严格模式运行全域混沌演练 (发现未通过项
 
 canvas-serve:  ## 启动 Dual-Plane Truth Canvas Web 事实大盘 (ADR-0194)
 	uv run --project projects/ecos ecos-constraint facts serve --port 8765
+
+# ==============================================================================
+# Resident Agent System (2026-08-23, WP-A~I / ADR-0396)
+# 常驻智能体体系 — 事件驱动 5 类角色 + 规则级路由订阅
+# 规格: docs/architecture/resident-agent-system-v1.md
+# ==============================================================================
+
+OMO_RESIDENT := uv run --directory projects/omo python -m omo.cli resident
+
+resident-status:  ## resident 运行状态快照 (daemon/events/sediment/alert/ledger)
+	$(OMO_RESIDENT) status
+
+resident-roles:  ## resident 五类角色配置 (sediment/decision/execute/monitor/heartbeat)
+	$(OMO_RESIDENT) roles
+
+resident-daemon:  ## resident daemon 单次 tick (调试)
+	$(OMO_RESIDENT) daemon --once
+
+resident-signals:  ## resident 个人信号输入 (WP-D)
+	$(OMO_RESIDENT) signals
+
+resident-alert:  ## resident 告警转发 (WP-E)
+	$(OMO_RESIDENT) alert
+
+resident-decision:  ## resident 决策提案 (WP-F)
+	$(OMO_RESIDENT) decision
+
+resident-execute:  ## resident 执行 worker (WP-G, 批准门)
+	$(OMO_RESIDENT) execute
+
+resident-sediment:  ## resident 知识沉淀 (WP-A)
+	$(OMO_RESIDENT) sediment
+
+resident-memory:  ## resident 记忆 (WP-H/I)
+	$(OMO_RESIDENT) memory
+
+resident-promote:  ## resident 场景升迁
+	$(OMO_RESIDENT) promote
+
+resident-resources:  ## resident 资源领域隔离 (M4.2)
+	$(OMO_RESIDENT) resources
+
+resident-ingest:  ## resident 事件摄入 (WP-A)
+	$(OMO_RESIDENT) ingest

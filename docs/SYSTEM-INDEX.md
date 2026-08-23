@@ -187,6 +187,7 @@
 | 场景执行 | journey-runner, signal-poller, scene-reflection, scene-outcome-recorder, capability-token | bin/ssot/ |
 | 场景准入 | internal/external-scene-trial, internal/external-activation-preflight, scene-card-lifecycle | bin/ssot/ |
 | 场景验证 | scene-chain-validator, journey-validator, adr-number-check | bin/ssot/ |
+| Resident 常驻 Agent | resident-status resident-roles resident-daemon | Makefile (`omo resident`) |
 
 详见 `INDEX-TOOLS.md` 获取完整工具目录。
 
@@ -251,3 +252,13 @@ KOS-*.md, SOP-*.md, VISION-ROADMAP.md 等。
 | session-handoff | 会话交接协议 R6 | `python3 bin/gac/session-handoff.py --session <id> ...` |
 | heartbeat-wrapper | cron 心跳包装器 ADR-D | `bash bin/gac/heartbeat-wrapper.sh <job> <cmd>` |
 | vocabulary.yaml | 词汇契约 SSOT | `.omo/_truth/vocabulary.yaml` |
+
+## Resident 常驻 Agent 体系 (2026-08-23, WP-A~I / ADR-0396)
+
+| 面 | 入口 |
+|----|------|
+| 功能规格 | [`docs/architecture/resident-agent-system-v1.md`](architecture/resident-agent-system-v1.md) |
+| 状态/角色 | `make resident-status` / `make resident-roles`（`omo resident status/roles`） |
+| 路由表 SSOT | `projects/omo/src/omo/resident/resident-routes.yaml`（schema `resident-routes/v1`） |
+| MOF 元模型 | `projects/ecos/src/ecos/ssot/mof/m2/digital_agent.yaml`（DigitalAgent, tier=resident） |
+| BOS URI | `bos://resident/core/status|roles`、`bos://resident/daemon/once`、`bos://resident/decision/run` |
