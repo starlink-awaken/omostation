@@ -173,7 +173,7 @@ gac:
   subtraction_quota:
     rule_baseline: 136    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail)
     adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
-    script_baseline: 435  # bin/ 活跃脚本基线 (2026-08-23 实测活跃数 435; 434→435: health-trend-chart.py + heartbeat-wrapper.sh 落地. BET-Y1Q3-T6-05 配额制继续.)
+    script_baseline: 436  # bin/ 活跃脚本基线 (2026-08-23 实测活跃数 435; 434→435: health-trend-chart.py + heartbeat-wrapper.sh 落地. BET-Y1Q3-T6-05 配额制继续.)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
