@@ -11,10 +11,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 595
-  bos_services: 227
-  bos_domains: 18
-  cli_commands: 147
+  mcp_tools: 597
+  bos_services: 231
+  bos_domains: 19
+  cli_commands: 148
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -266,6 +266,8 @@ mcp_servers:
   - repo_search
   - repo_status
   - repo_unload
+  - resident_roles
+  - resident_status
   - revoke_api_key
   - route_call
   - subscribe_event
@@ -280,7 +282,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 65
+  tool_count: 67
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -847,6 +849,7 @@ bos_services:
     omo: 4
     perception: 2
     persona: 10
+    resident: 4
     runtime: 1
     swarm: 1
     system: 11
@@ -1722,6 +1725,23 @@ bos_services:
       description: B.D.S.K. 虚拟董事会评审网关；唯一推理链为 bos://compute/aetherforge/infer，失败返回 not_proven，禁止自动 ADR
       transport: internal
       status: active
+    resident:
+    - uri: bos://resident/core/status
+      description: Resident 常驻 Agent 体系运行状态快照 (WP-A~I / ADR-0396)
+      transport: stdio
+      status: active
+    - uri: bos://resident/core/roles
+      description: Resident 五类常驻角色配置 (M4.3)
+      transport: stdio
+      status: active
+    - uri: bos://resident/daemon/once
+      description: Resident daemon 单次 tick (M1 事件驱动)
+      transport: stdio
+      status: active
+    - uri: bos://resident/decision/run
+      description: Resident 决策提案处理 (WP-F)
+      transport: stdio
+      status: active
     runtime:
     - uri: bos://runtime/health
       description: Runtime MCP (短路径别名)
@@ -2006,6 +2026,8 @@ cli_commands:
   description: 手动存入偏好/事实
 - name: research
   description: 深度研究
+- name: resident
+  description: Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)
 - name: resolve
   description: 统一 BOS URI 路由解析与目标元数据提取
 - name: route

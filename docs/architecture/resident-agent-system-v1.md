@@ -76,7 +76,7 @@ uv run --directory projects/omo python -m omo.cli resident ingest      # 事件�
 | MOF 元模型 | `mof/m2/digital_agent.yaml` (DigitalAgent, extends Agent, tier=resident) | 已注册 |
 | L0 约束 | `L0-constraints.yaml` CR-RESIDENT-* | 已注册 |
 | Cockpit CLI | `cockpit resident status/roles/daemon` | 已接线 |
-| Agora MCP | `resident_status` / `resident_roles` 工具 | 已接线 |
+| Agora MCP | 待接线（当前由 CR-RESIDENT check 工具覆盖：`check-resident-status` / `check-resident-mof-sync` / `check-resident-bos`） | governance-checks 已登记 |
 | BOS URI | `bos://resident/core/status` / `bos://resident/core/roles` / `bos://resident/daemon/once` / `bos://resident/decision/run` | 已注册 |
 | Makefile | `make resident-status` / `make resident-roles` | 已添加 |
 
