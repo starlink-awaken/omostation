@@ -80,7 +80,63 @@ make omo-top           # 或 bin/omo-top：Textual 实时 4 象限互动大盘
 
 共享主树上并行的 agent 会互相删除产物。详见 [`AGENTS.md` §1.3](AGENTS.md) · skill `git-discipline`。
 
-## 1.5 P74 Workflow Solidification Check (ADR-0130)
+## 1.5 MOF Reasoning & Prediction (L0/MOF)
+
+当需要做影响分析、合规推演或预测性治理时:
+
+```bash
+# 影响分析 (节点变更影响链)
+uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-reason.py impact <node_id>
+
+# 跨仓本体推理 (7阶段/4门禁/3Phase)
+uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-derive.py
+
+# L0 绕过检测 (资产变更未同步L0)
+uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-gate.py
+
+# 预测治理闭环 (约束+M0+M1 统一报告)
+uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-predictive-loop.py
+
+# 内容匹配 (M1 ↔ .omo/tasks 桥接)
+uv run --project projects/ecos python3 projects/ecos/src/ecos/ssot/tools/mof-bridge-match.py
+```
+
+## 1.6 MOF Reasoning & Prediction
+
+影响分析、合规推演、预测性治理:
+```bash
+# 影响分析 (节点变更影响链)
+cd projects/ecos && uv run python3 src/ecos/ssot/tools/mof-reason.py impact <node_id>
+# 跨仓本体推理 (7阶段/4门禁/3Phase)
+uv run python3 src/ecos/ssot/tools/mof-derive.py --stages
+# L0 绕过检测 (资产变更未同步L0)
+uv run python3 src/ecos/ssot/tools/mof-gate.py
+# 预测治理闭环 (约束+M0+M1 统一报告)
+uv run python3 src/ecos/ssot/tools/mof-predictive-loop.py
+# 健康面板 (Agent + Governance + Execute)
+uv run python3 src/ecos/observability/dashboard.py
+```
+
+## 1.7 Observability & Runbooks
+
+```bash
+# 全量健康检查
+cd projects/ecos && uv run python3 src/ecos/observability/dashboard.py --check
+# 场景指标
+python3 -c "from ecos.observability.scenario_metrics import scenario_summary; print(scenario_summary())"
+# 防腐审计 (工具+文档)
+python3 bin/gac/anti-corruption.py
+```
+
+| 故障 | Runbook |
+|------|---------|
+| 推理引擎异常 | [runbook-reasoning-engine](operations/runbook-reasoning-engine.md) |
+| 约束违规 | [runbook-constraint-violation](operations/runbook-constraint-violation.md) |
+| Agent 静默 | [runbook-agent-silent](operations/runbook-agent-silent.md) |
+| CI 红了 | [runbook-ci-red](operations/runbook-ci-red.md) |
+| 场景失败 | [runbook-scenario-failure](operations/runbook-scenario-failure.md) |
+
+## 1.8 P74 Workflow Solidification Check (ADR-0130)
 
 After bootstrap, every agent MUST verify P74 health. P74 is the常态化 mechanism
 (常态化机制) for agent-workflow silence detection — see `.omo/_knowledge/decisions/0130-p74-workflow-solidification.md`.
