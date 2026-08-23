@@ -3245,3 +3245,36 @@ services:
   - resident
   - decision
   description: Resident 决策提案处理 (WP-F)
+- domain: bcos
+  package: bcos-evolution
+  action: evolve
+  uri: bos://bcos/evolution/run
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - bin/bc-os/evolution_engine.py
+  - --json
+  description: BCOS 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)
+- domain: bcos
+  package: bcos-signals
+  action: route
+  uri: bos://bcos/signals/route
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - bin/bc-os/signal_router.py
+  - --json
+  description: BCOS 统一信号路由 (W1-D2, doc/meeting/research/code)
+- domain: bcos
+  package: bcos-north-star
+  action: measure
+  uri: bos://bcos/north-star/measure
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - bin/bc-os/north_star_meter_v2.py
+  - --json
+  description: BCOS 北极星价值度量 v2 (排除 self-data, W3)
