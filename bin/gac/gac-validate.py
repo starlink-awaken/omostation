@@ -361,6 +361,12 @@ def main() -> int:
             print(f"  - {e}")
 
     # BET-Y1Q3-T6-05: bin/ 脚本减法配额 (新增脚本须归档/删除一个)
+    # M4 日落条款: review_by 过期检查
+    review_expired = _check_review_by_expiry(REGISTRY)
+    if review_expired:
+        for w in review_expired:
+            print(f"  ⚠️  {w}")
+
     script_quota_errors = _check_script_quota(REGISTRY)
     if script_quota_errors:
         errors = list(errors) + script_quota_errors
