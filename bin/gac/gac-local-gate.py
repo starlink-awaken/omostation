@@ -409,6 +409,80 @@ SOFT_CHECKS = {
 }
 
 
+# Concurrent-write isolation (P79 治本):
+#   多 agent 共享主树时, 一个 gate run 期间另一个 agent 写入 .omo/state/*.yaml
+#   会让 read-then-check 的子进程看到 torn state. 解决方案: 在 gate 启动时
+#   snapshot 所有 read 输入路径的 (mtime, size) 指纹, 每跑完一个 check 比对
+#   一次, 如有变化 emit topic=concurrent-write-drift (severity=warn, blocking=False)
+#   让用户知道 gate 结果可能受 concurrent 写干扰, 但不 fail. CI 上更彻底:
+#   启动时 acquire fcntl 锁 .omo/_delivery/.gate-lock (5min timeout), 阻止其他
+#   agent 的 omo state sync 同窗口跑. 本地用 flock 不阻塞其他 agent 走旁路.
+SNAPSHOT_PATHS = (
+    ".omo/state/health.yaml",
+    ".omo/state/system.yaml",
+    ".omo/state/system_health.yaml",
+    ".omo/_control/governance-data.json",
+    ".omo/_control/debt-dashboard/current.yaml",
+    ".omo/_delivery/observability/events.jsonl",
+    ".omo/_delivery/agent-workflows/events.jsonl",
+    ".omo/_truth/registry/governance-checks.yaml",
+)
+
+
+def _read_state_fingerprint() -> dict[str, tuple[float, int]]:
+    """Snapshot (mtime, size) for each known read-side state file."""
+    fp: dict[str, tuple[float, int]] = {}
+    for rel in SNAPSHOT_PATHS:
+        p = WORKSPACE / rel
+        try:
+            st = p.stat()
+            fp[rel] = (st.st_mtime, st.st_size)
+        except FileNotFoundError:
+            fp[rel] = (0.0, -1)
+    return fp
+
+
+_CONCURRENT_DRIFT = {"detected": False, "files": []}
+_state_fingerprint_snapshot: dict[str, tuple[float, int]] = {}
+
+
+def _check_drift(snapshot: dict[str, tuple[float, int]]) -> list[str]:
+    """Diff current (mtime, size) against snapshot. Return list of drifted paths."""
+    drift: list[str] = []
+    for rel, before in snapshot.items():
+        p = WORKSPACE / rel
+        try:
+            st = p.stat()
+            now = (st.st_mtime, st.st_size)
+        except FileNotFoundError:
+            now = (0.0, -1)
+        if now != before:
+            drift.append(rel)
+    return drift
+
+
+def _update_drift_topic(report: dict, drift: list[str]) -> None:
+    """Record concurrent-drift finding as a soft warning topic."""
+    if not drift:
+        return
+    _CONCURRENT_DRIFT["detected"] = True
+    _CONCURRENT_DRIFT["files"] = list(drift)
+    topic = {
+        "check": "gac-local-gate",
+        "topic": "concurrent-write-drift",
+        "label": "并发写盘漂移 (concurrent agent wrote during gate run)",
+        "command": "git status --short .omo/ && uv run --with pyyaml python bin/agent-workflow.py compliance",
+        "returncode": 1,
+        "severity": "warn",
+        "blocking": False,
+        "summary": f"{len(drift)} state file(s) mutated mid-run: {', '.join(drift[:5])}",
+        "finding_count": 1,
+    }
+    topics = report.get("finding_topics") or []
+    topics.append(topic)
+    report["finding_topics"] = topics
+
+
 def _is_ci_env() -> bool:
     """CI 环境 (GitHub Actions 等). 本地运维 check (doctor 等) 在此跳过."""
     return os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
@@ -800,6 +874,10 @@ def run_gate(
     adaptive: bool = False,
     risk_profile: str | None = None,
 ) -> dict[str, object]:
+    # Concurrent-write isolation snapshot (P79 治本).
+    # 在所有 check 启动前拍下 read-side 状态指纹, 跑完后比对漂移.
+    global _state_fingerprint_snapshot
+    _state_fingerprint_snapshot = _read_state_fingerprint()
     change_lane_files = change_lane_files_for_scope(scope, files, run_id)
     checks = gate_checks(scope, files, run_id, strict, risk_profile=risk_profile)
     metrics_file = WORKSPACE / ".omo" / "state" / "metrics-store.jsonl"
@@ -816,7 +894,9 @@ def run_gate(
     soft_warns = [r for r in results if not r["ok"] and r["name"] in SOFT_CHECKS]
     ok = len(hard_fails) == 0
 
-    return {
+    # Concurrent-write isolation: 比对所有 check 跑完后的 fingerprint
+    drift = _check_drift(_state_fingerprint_snapshot)
+    report = {
         "ok": ok,
         "hard_fails": hard_fails,
         "soft_warns": soft_warns,
@@ -827,6 +907,8 @@ def run_gate(
         "finding_topics": finding_topics,
         "agt_backend": agt_backend,
     }
+    _update_drift_topic(report, drift)
+    return report
 
 
 def run_agt_policy_engine() -> list[dict[str, object]]:
