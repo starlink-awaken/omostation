@@ -185,3 +185,17 @@ Run broader tests only when the edited surface warrants them. Documentation-only
 python3 bin/gac/meta-doctor.py --workspace . --json   # 治理活性巡检
 python3 bin/scheduler-compile.py --check               # 调度一致性
 ```
+
+## Resident Agent 体系 (2026-08-23, WP-A~I / ADR-0396)
+
+事件驱动常驻 agent 运行时：五类角色（sediment/decision/execute/monitor/heartbeat）+ 规则级路由订阅。详见 [`docs/architecture/resident-agent-system-v1.md`](docs/architecture/resident-agent-system-v1.md)。
+
+```bash
+make resident-status       # 运行状态快照 (daemon/events/sediment/alert/ledger)
+make resident-roles        # 五类角色配置
+make resident-daemon       # 单次 tick 调试
+```
+
+- 路由表 SSOT: `projects/omo/src/omo/resident/resident-routes.yaml`
+- 角色 SSOT: `omo resident roles`（`projects/omo/src/omo/resident/roles.py`）
+- MOF: `mof/m2/digital_agent.yaml`（DigitalAgent, tier=resident）· BOS: `bos://resident/*`

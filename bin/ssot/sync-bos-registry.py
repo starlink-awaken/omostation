@@ -23,11 +23,11 @@ import yaml
 WORKSPACE = Path(__file__).resolve().parents[2]
 BOS_YAML = WORKSPACE / "projects/agora/etc/bos-services.yaml"
 REGISTRY = WORKSPACE / ".omo/_knowledge/bos-registry.json"
-CLASSIC_DOMAINS = frozenset({"memory", "governance", "analysis", "persona", "capability"})
+CLASSIC_DOMAINS = frozenset({"memory", "governance", "analysis", "persona", "capability", "resident"})
 KEEP_STATUS = frozenset({"active", "unimplemented"})
 # omo smoke / BOS CLI validate 4-segment kebab (package) + optional underscore action
 _OMO_URI = re.compile(
-    r"^bos://(memory|governance|analysis|persona|capability)/"
+    r"^bos://(memory|governance|analysis|persona|capability|resident)/"
     r"[a-z][a-z0-9-]*"
     r"/[a-z][a-z0-9_-]*$"
 )
