@@ -404,3 +404,55 @@ Do not paste the full rule inventory into `AGENTS.md`; keep this file as an oper
 
 - agora-dashboard 独立入口已收敛 (历史快照, 能力并入 cockpit/agora)
 - (归档) hermes-console 与 dashboard_server 作为子应用挂载 (历史, L3 入口能力收敛到 cockpit/agora)
+
+## 11. 文件/目录移动纪律（P87 复盘固化）
+
+> SSOT: `.omo/_knowledge/patterns/p87-systemic-optimization-retro.md`
+> 触发场景：`tests/` 分层、目录重构、批量文件重命名
+
+### 11.1 零侵入优先原则
+
+1. **物理分层前先评估零侵入方案**
+   - pytest markers / conftest.py 可解决 domain 过滤 → 不移动文件
+   - symlink 可解决多入口需求 → 不复制文件
+   - 配置扩展可解决参数差异 → 不改动目录结构
+
+2. **影响面量化**
+   ```bash
+   # 移动前必须统计
+   grep -r "old_path_pattern" . --include="*.py" | wc -l
+   find . -name "moved_file*" | wc -l
+   ```
+
+3. **PoC 验证阶梯**
+   - Step 1: 5 文件 PoC，验证路径无断裂
+   - Step 2: 5% 随机抽样，验证模块导入
+   - Step 3: 全量 dry-run（仅扫描，不移动）
+
+### 11.2 路径依赖检查清单
+
+- [ ] `grep -r "parents\[" tests/` 统计路径计算
+- [ ] `grep -r "sys.path.insert" tests/` 统计路径注入
+- [ ] `grep -r "importlib.util.spec_from_file_location" tests/` 统计动态导入
+- [ ] 确认所有 `parents[1]` 在移动后仍指向正确根目录
+- [ ] 确认子模块/外部依赖的 `__init__.py` 不受影响
+
+### 11.3 回滚预案
+
+- 移动前 `git add -A && git commit -m "chore: pre-restructure checkpoint"`
+- 或 `git stash push -m "pre-restructure"`
+- 确保 `git checkout -- .` 可一键回滚
+
+### 11.4 禁止行为
+
+- ❌ 批量移动 >10 文件未做 PoC
+- ❌ 移动后修改 `parents[N]` 而非评估移动必要性
+- ❌ 忽略测试 collection errors，继续扩大移动范围
+- ❌ 为"整洁"破坏 working 约定（如 tests/ 根目录聚合）
+
+### 11.5 正确模式
+
+- ✅ pytest markers（零文件移动）
+- ✅ conftest.py 自动注册（零配置）
+- ✅ `_archive/` 归档（零 baseline 通胀）
+- ✅ ci-surfaces.yaml 登记（零工作流修改）
