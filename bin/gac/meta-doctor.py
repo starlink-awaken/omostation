@@ -13,6 +13,7 @@ M2 引用活性   — cron / launchd 登记中的可执行目标路径是否存�
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import plistlib
@@ -21,6 +22,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TypedDict
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 
@@ -36,7 +38,22 @@ LAUNCHD_PREFIXES = ("com.omostation.", "com.opencode.", "com.l4.", "com.aetherfo
 _LA = Path.home() / "Library" / "LaunchAgents"
 
 SYSTEM_PREFIXES = ("/usr/", "/bin/", "/opt/", "/tmp/", "/private/", "/Applications/", "/Library/", "/System/")
-_ANCHOR_RE = re.compile(r"\$HOME/Workspace|/Users/\w+/Workspace")
+_ANCHOR_RE = re.compile(r"\$OMO_WORKSPACE_ROOT|\$HOME/Workspace|/Users/\w+/Workspace")
+DEBT_PROPOSAL_SCHEMA = "meta-doctor-debt-proposal/v1"
+
+
+class DebtProposal(TypedDict):
+    schema: str
+    id: str
+    title: str
+    dimension: str
+    subdimension: str
+    severity: str
+    lifecycle_state: str
+    owner: str
+    source_ref: str
+    target_ref: str
+    proposed_by: str
 
 
 def tokenize(line: str) -> list[str]:
@@ -54,14 +71,16 @@ def candidates_from(tokens: list[str]) -> list[str]:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc)  # noqa: UP017 - cron uses macOS Python 3.9
 
 
 def _parse_stamp(raw: str) -> datetime | None:
     raw = raw.strip().strip('"').strip("'")
     try:
         if re.fullmatch(r"\d+(\.\d+)?", raw):
-            return datetime.fromtimestamp(float(raw), tz=timezone.utc)
+            return datetime.fromtimestamp(
+                float(raw), tz=timezone.utc  # noqa: UP017 - macOS Python 3.9
+            )
         return datetime.fromisoformat(raw.replace("Z", "+00:00"))
     except Exception:
         return None
@@ -89,16 +108,6 @@ def check_heartbeats(ws_root: Path, now: datetime | None = None) -> list[dict]:
                 entry["ok"] = age <= sla_h
         out.append(entry)
     return out
-
-
-def extract_candidates(line: str) -> list[str]:
-    cands = []
-    for groups in _CAND_RE.findall(line):
-        tok = next(g for g in groups if g)
-        if tok.startswith("-"):
-            continue
-        cands.append(tok.strip("'\""))
-    return cands
 
 
 def resolve_candidate(tok: str, ws_root: Path) -> Path:
@@ -180,6 +189,58 @@ def collect_references(ws_root: Path) -> list[dict]:
     return dedup
 
 
+def _proposal_digest(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8", errors="surrogatepass")).hexdigest()
+
+
+def _safe_target_label(target: str) -> str:
+    basename = Path(target.replace("\\", "/")).name
+    label = re.sub(r"[^A-Za-z0-9._-]+", "-", basename).strip("-._")
+    return (label or "unavailable")[:64]
+
+
+def build_debt_proposals(dead_refs: list[dict]) -> list[DebtProposal]:
+    """Project dead references for an authorized broker without mutating `.omo`."""
+    proposals: list[DebtProposal] = []
+    for ref in dead_refs:
+        target = str(ref.get("target", ""))
+        source = str(ref.get("source", "unknown"))
+        raw_line = ref.get("line", 0)
+        line = raw_line if isinstance(raw_line, int) and not isinstance(raw_line, bool) else 0
+        material = json.dumps(
+            {
+                "schema": DEBT_PROPOSAL_SCHEMA,
+                "source": source,
+                "line": line,
+                "target": target,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        proposal_digest = _proposal_digest(material)
+        proposals.append(
+            {
+                "schema": DEBT_PROPOSAL_SCHEMA,
+                "id": f"MDEAD-{proposal_digest[:20]}",
+                "title": f"引用断链: {_safe_target_label(target)}",
+                "dimension": "governance",
+                "subdimension": "reference",
+                "severity": "medium",
+                "lifecycle_state": "proposed",
+                "owner": "governance-team",
+                "source_ref": (
+                    f"meta-doctor-source://sha256/{_proposal_digest(source)}#L{line}"
+                ),
+                "target_ref": (
+                    f"meta-doctor-target://sha256/{_proposal_digest(target)}"
+                ),
+                "proposed_by": "meta-doctor",
+            }
+        )
+    return proposals
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--workspace", type=Path, default=WORKSPACE,
@@ -201,52 +262,8 @@ def main(argv: list[str] | None = None) -> int:
         "heartbeat": beats,
         "references": refs,
         "summary": {"stale_beats": len(stale_beats), "dead_refs": len(dead_refs)},
+        "debt_proposals": build_debt_proposals(dead_refs),
     }
-
-    # T1 broker 开债: dead_refs 非零时自动创建债务项 (M3 三级处置)
-    if dead_refs:
-        try:
-            debt_dir = ws_root / ".omo" / "debt" / "items"
-            debt_dir.mkdir(parents=True, exist_ok=True)
-            for ref in dead_refs:
-                stem = Path(ref["target"]).stem[:20]
-                debt_id = f"MDEAD-{ref.get('line', 0)}-{stem}"
-                debt_file = debt_dir / f"{debt_id}.yaml"
-                if not debt_file.exists():
-                    tgt = ref["target"].replace('"', "'")
-                    debt_file.write_text(
-                        f'id: "{debt_id}"\n'
-                        f'title: "引用断链: {tgt}"\n'
-                        f'dimension: governance\n'
-                        f'subdimension: reference\n'
-                        f'severity: medium\n'
-                        f'lifecycle_state: registered\n'
-                        f'owner: governance-team\n'
-                        f'source_ref: "{ref["source"]}:{ref.get("line", 0)}"\n'
-                        f'auto_created_by: meta-doctor-t1-broker\n',
-                        encoding="utf-8")
-        except OSError:
-            pass
-
-
-    # M1 自心跳 + T2 cockpit 收件箱
-    try:
-        hb_dir = ws_root / ".omo" / "state" / "heartbeats"
-        hb_dir.mkdir(parents=True, exist_ok=True)
-        hb = {"job": "meta-doctor", "last_run": report["generated_at"],
-              "ok": report["ok"], "summary": report["summary"]}
-        (hb_dir / "meta-doctor.json").write_text(json.dumps(hb, indent=2), encoding="utf-8")
-
-        inbox_dir = ws_root / ".omo" / "_control" / "cockpit-inbox"
-        inbox_dir.mkdir(parents=True, exist_ok=True)
-        alert = {"source": "meta-doctor", "timestamp": report["generated_at"],
-                 "severity": "warning" if not report["ok"] else "info",
-                 "message": f"meta-doctor: {report['summary']}"}
-        (inbox_dir / "meta-doctor-latest.json").write_text(
-            json.dumps(alert, ensure_ascii=False, indent=2), encoding="utf-8")
-    except OSError:
-        pass
-
     print(json.dumps(report, ensure_ascii=False))
     return 0 if report["ok"] else 1
 

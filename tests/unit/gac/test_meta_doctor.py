@@ -1,5 +1,7 @@
 """meta-doctor 单测 — M1 心跳新鲜度 + M2 引用活性 (v1.1 状态分类)."""
 import importlib.util
+import json
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -39,7 +41,7 @@ def test_resolve_candidate_modes(tmp_path):
 
 def test_heartbeat_fresh_vs_stale(tmp_path):
     mod = _load()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)  # noqa: UP017 - match macOS Python 3.9 runtime
 
     fresh = tmp_path / ".omo/state/system_health.yaml"
     fresh.parent.mkdir(parents=True)
@@ -75,3 +77,90 @@ def test_scan_status_classification(tmp_path):
     assert by[str(live_target)]["status"] == "ok" and by[str(live_target)]["ok"] is True
     assert by["_runtime/task.py"]["status"] == "skip_unanchored"
     assert by["/usr/local/libexec/maintenance.sh"]["status"] == "skip_system"
+
+
+def test_dead_refs_emit_broker_proposals_without_direct_debt_write(
+    tmp_path, monkeypatch, capsys
+):
+    mod = _load()
+    dead_ref = {
+        "source": ".omo/cron/operating-rhythm-crontab",
+        "line": 17,
+        "target": "bin/gac/missing-wrapper.sh",
+        "resolved": str(tmp_path / "bin/gac/missing-wrapper.sh"),
+        "exists": False,
+        "ok": False,
+        "status": "dead",
+    }
+    monkeypatch.setattr(mod, "collect_references", lambda _root: [dead_ref])
+
+    result = mod.main(["--workspace", str(tmp_path), "--refs-only"])
+
+    assert result == 1
+    report = json.loads(capsys.readouterr().out)
+    proposal = report["debt_proposals"][0]
+    assert proposal["schema"] == "meta-doctor-debt-proposal/v1"
+    assert re.fullmatch(r"MDEAD-[0-9a-f]{20}", proposal["id"])
+    assert proposal["title"] == "引用断链: missing-wrapper.sh"
+    assert proposal["lifecycle_state"] == "proposed"
+    assert re.fullmatch(
+        r"meta-doctor-source://sha256/[0-9a-f]{64}#L17",
+        proposal["source_ref"],
+    )
+    assert re.fullmatch(
+        r"meta-doctor-target://sha256/[0-9a-f]{64}", proposal["target_ref"]
+    )
+    assert "operating-rhythm-crontab" not in json.dumps(proposal)
+    assert "bin/gac" not in json.dumps(proposal)
+    assert not (tmp_path / ".omo" / "debt").exists()
+
+
+def test_debt_proposal_identity_is_stable_unique_and_control_character_safe():
+    mod = _load()
+    common = {
+        "line": 17,
+        "target": "/Users/alice/private/secret\nkey.py",
+        "status": "dead",
+    }
+    first = mod.build_debt_proposals([{**common, "source": "cron-a"}])[0]
+    replay = mod.build_debt_proposals([{**common, "source": "cron-a"}])[0]
+    second = mod.build_debt_proposals([{**common, "source": "cron-b"}])[0]
+
+    assert first == replay
+    assert first["id"] != second["id"]
+    assert re.fullmatch(r"MDEAD-[0-9a-f]{20}", first["id"])
+    serialized = json.dumps(first, ensure_ascii=False)
+    assert "/Users/alice" not in serialized
+    assert "private" not in serialized
+    assert "\n" not in first["id"]
+    assert "\n" not in first["title"]
+    assert len(first["title"]) <= 70
+
+
+def test_omo_workspace_root_cron_anchor_is_checked(tmp_path, monkeypatch):
+    mod = _load()
+    monkeypatch.setattr(mod, "SYSTEM_PREFIXES", ("/usr/", "/bin/", "/opt/"))
+    target = tmp_path / "bin/gac/tool.py"
+    target.parent.mkdir(parents=True)
+    target.write_text("", encoding="utf-8")
+
+    refs = mod.scan_crontab_lines(
+        [
+            '0 9 * * * test -n "$OMO_WORKSPACE_ROOT" && '
+            'cd "$OMO_WORKSPACE_ROOT" && python3 bin/gac/tool.py'
+        ],
+        "cron-template",
+        tmp_path,
+    )
+
+    assert refs == [
+        {
+            "source": "cron-template",
+            "line": 1,
+            "target": "bin/gac/tool.py",
+            "resolved": str(target),
+            "exists": True,
+            "ok": True,
+            "status": "ok",
+        }
+    ]
