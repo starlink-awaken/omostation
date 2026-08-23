@@ -1027,9 +1027,7 @@ surfaces:
   workflow: ecos-ci.yml
   also_in: []
   gate: false
-  triggers:
-  - push
-  status: active
+  triggers: null
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:
