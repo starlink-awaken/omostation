@@ -183,6 +183,18 @@ SSOT: `docs/operations/bin-scripts-convergence-manifest.json` (entries: name/bin
 根目录分类契约: `docs/operations/root-directory-governance-contract.md`。扫描器会识别有效 linked worktree 为 `active-worktree`，本机客户端目录必须通过策略 `local_surfaces` 显式登记；未知 ignored/untracked 目录仍然阻断。
 两项审计已接入 `gac-local-gate` 与 `ci-surfaces.yaml`，不再依赖人工记忆或单次报告。
 
+### 15. Capability Federation（只读联合审计）
+
+| 入口 | 功能 |
+|:-----|:-----|
+| `make capability-federation-audit` | 读取原生 registry 与能力投影，审计 provider/worker/workflow 的悬挂引用、重复权威、部分 clone 与准入矛盾 |
+| `python3 bin/capability-sync.py federation-audit --json` | 通过既有 capability 入口输出确定性、脱敏的 `capability-federation-audit/v1` 报告 |
+
+审计实现是 `lib/capability_federation_audit.py` 共享库，不新增活动脚本入口。
+该工具不生成新的能力注册表，不执行 registry 中的 command/argv/entrypoint，
+也不把 discovery、`exists` 或 runtime online 推断为 admission/completion。
+架构合同见 [`../docs/architecture/capability-federation-contract-v1.md`](../docs/architecture/capability-federation-contract-v1.md)。
+
 > **并行 gap 语义** (2026-08-16 固化): `missing_manifest_entry` = bin/scripts 同名镜像未登记; 内部模块 (`__init__.py` / `_lib.py` / `_*.py`) 由 `_is_internal_module()` 排除, 非命令不计 gap. 5 个多文件条目 (control_experiment / git_health_hook / physical_recovery / submodule_reachability_gate / sync_submodules_push) 是 root-wrapper→ssot 合法模式, 登记 bin 取 ssot 主路径.
 > **并发风险** (2026-08-16): 该域是多 agent 高频并行域, 并发 agent 会把共享 checkout 上 staged 改动直接 commit 成混合 commit (见 memory `feedback_shared_checkout_concurrent_absorb_20260816.md`); 动工前查 `git worktree list` + `agent-workflow status`.
 
