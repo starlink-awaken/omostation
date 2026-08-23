@@ -32,6 +32,10 @@ HEARTBEATS: dict[str, tuple[str, int]] = {
     ".omo/_control/debt-dashboard/current.yaml": ("generated_at", 24 * 14),
 }
 
+# 动态心跳目录: 每个调度机制运行后写 <job>.json {last_run, ok}
+_HEARTBEATS_DIR = ".omo/state/heartbeats"
+_HB_SLA_HOURS = 48
+
 LAUNCHD_PREFIXES = ("com.omostation.", "com.opencode.", "com.l4.", "com.aetherforge.", "com.omlxc.")
 _LA = Path.home() / "Library" / "LaunchAgents"
 
@@ -88,6 +92,23 @@ def check_heartbeats(ws_root: Path, now: datetime | None = None) -> list[dict]:
                 entry["age_hours"] = round(age, 1)
                 entry["ok"] = age <= sla_h
         out.append(entry)
+
+    # 动态心跳: heartbeats 目录下自注册 job
+    hb_dir = ws_root / _HEARTBEATS_DIR
+    if hb_dir.is_dir():
+        for hf in sorted(hb_dir.glob("*.json")):
+            try:
+                hd = json.loads(hf.read_text(encoding="utf-8"))
+                lr = _parse_stamp(str(hd.get("last_run", "")))
+                age = round((now - lr).total_seconds() / 3600.0, 1) if lr else None
+                ok = age is not None and age <= _HB_SLA_HOURS and hd.get("ok") is not False
+            except Exception:
+                age, ok = None, False
+            out.append({
+                "file": f"{_HEARTBEATS_DIR}/{hf.name}", "field": "last_run",
+                "sla_hours": _HB_SLA_HOURS, "exists": True,
+                "age_hours": age, "ok": ok,
+            })
     return out
 
 
@@ -180,6 +201,50 @@ def collect_references(ws_root: Path) -> list[dict]:
     return dedup
 
 
+def check_scheduler_drift(ws_root: Path) -> list[dict]:
+    """M2 延伸: 比对 .omo/cron/*-crontab 登记行 vs crontab -l 安装态差异.
+
+    登记源有但安装态没有 → unregistered_drift (登记了但没装)
+    安装态有但登记源没有 → orphan_install (装了但没登记, 可能来自旧版登记)
+    """
+    registered_jobs: set[str] = set()
+    cron_dir = ws_root / ".omo" / "cron"
+    if cron_dir.is_dir():
+        for f in sorted(cron_dir.glob("*-crontab")):
+            if f.name.startswith("_archived"):
+                continue
+            for line in f.read_text(encoding="utf-8", errors="replace").splitlines():
+                s = line.strip()
+                if not s or s.startswith("#") or "SHELL=" in s or "PATH=" in s:
+                    continue
+                # 用调度字段+命令特征作为 job 指纹（取 cron 时间段后的核心命令）
+                parts = s.split(None, 5)  # min hour dom month dow + rest
+                if len(parts) >= 6:
+                    registered_jobs.add(parts[5].strip())
+
+    try:
+        r = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=10)
+        installed_lines = r.stdout.splitlines() if r.returncode == 0 else []
+    except Exception:
+        installed_lines = []
+
+    installed_jobs: set[str] = set()
+    for line in installed_lines:
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        parts = s.split(None, 5)
+        if len(parts) >= 6:
+            installed_jobs.add(parts[5].strip())
+
+    results = []
+    for job in sorted(registered_jobs - installed_jobs):
+        results.append({"type": "unregistered_drift", "command_snippet": job[:120]})
+    for job in sorted(installed_jobs - registered_jobs):
+        results.append({"type": "orphan_install", "command_snippet": job[:120]})
+    return results
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--workspace", type=Path, default=WORKSPACE,
@@ -194,14 +259,30 @@ def main(argv: list[str] | None = None) -> int:
 
     stale_beats = [b for b in beats if not b["ok"]]
     dead_refs = [r for r in refs if r.get("status") == "dead"]
+    scheduler_drift = check_scheduler_drift(ws_root)
     report = {
         "generated_at": _now().isoformat(timespec="seconds"),
         "workspace": str(ws_root),
-        "ok": not stale_beats and not dead_refs,
+        "ok": not stale_beats and not dead_refs and not scheduler_drift,
         "heartbeat": beats,
         "references": refs,
-        "summary": {"stale_beats": len(stale_beats), "dead_refs": len(dead_refs)},
+        "scheduler_drift": scheduler_drift,
+        "summary": {
+            "stale_beats": len(stale_beats),
+            "dead_refs": len(dead_refs),
+            "scheduler_drift": len(scheduler_drift),
+        },
     }
+    # M1 自心跳: 吃自己狗粮, 让 meta-doctor 自身进入被监控集
+    try:
+        hb_dir = ws_root / _HEARTBEATS_DIR
+        hb_dir.mkdir(parents=True, exist_ok=True)
+        hb = {"job": "meta-doctor", "last_run": report["generated_at"],
+              "ok": report["ok"], "summary": report["summary"]}
+        (hb_dir / "meta-doctor.json").write_text(json.dumps(hb, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
     print(json.dumps(report, ensure_ascii=False))
     return 0 if report["ok"] else 1
 

@@ -1,0 +1,24 @@
+# 跨系统状态词汇契约 SSOT
+# 来源: 2026-08-22 运行时治理深度分析 (#1932) — 三层同构词汇分裂的根因修复
+# 消费方: debt metrics / close-reopen / velocity / 未来工具
+# 规则: 新增脚本/工具时必须引用本文件枚举而非硬编码字面量
+
+lifecycle:
+  terminal: [closed, resolved]
+  active: [registered, open, candidate, scheduled, in_progress, mitigated]
+
+fields:
+  canonical_state_field: lifecycle_state
+  legacy_aliases:
+    status: lifecycle_state
+
+evidence:
+  resolution_fields: [resolution_evidence, evidence_refs]
+  mitigation_fields: [mitigation_refs]
+  review_field: last_reviewed_at
+
+# 引用方索引 (2026-08-22 快照)
+consumers:
+  - projects/omo/src/omo/omo_debt_metrics.py   # TERMINAL_STATES
+  - projects/omo/src/omo/omo_debt_registry.py  # _parse_debt_item
+  - bin/gac/debt-closed-per-feature.py         # lifecycle_state or status

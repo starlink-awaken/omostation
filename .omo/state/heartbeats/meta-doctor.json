@@ -1,0 +1,10 @@
+{
+  "job": "meta-doctor",
+  "last_run": "2026-08-23T00:21:03+00:00",
+  "ok": false,
+  "summary": {
+    "stale_beats": 1,
+    "dead_refs": 0,
+    "scheduler_drift": 23
+  }
+}
