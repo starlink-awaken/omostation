@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-"""Scene Daemon — 信号轮询 → 场景匹配 → 旅程执行.
+"""Archived unwired Scene Daemon prototype.
 
-持续运行的守护进程, 轮询信号源, 匹配场景, 自动执行绑定旅程.
+归档原因: 未接入 CI/Make/cron/LaunchAgent/registry/test，且与权威
+``signal-poller → journey-runner → scene-outcome-recorder`` 执行链重复。
+重新启用前必须补齐持久去重、准入/审批、清理证明、测试与减法配额。
 
-用法:
-    python3 bin/ssot/scene-daemon.py              # 持续运行
-    python3 bin/ssot/scene-daemon.py --once       # 单次轮询
-    python3 bin/ssot/scene-daemon.py --dry-run    # 模拟
-    python3 bin/ssot/scene-daemon.py --status     # 状态报告
+本文件仅保留为历史快照，不是可执行入口。
 """
 
 import argparse
