@@ -134,6 +134,8 @@ def score_scenes() -> float:
 
 def score_docs() -> float:
     """文档保鲜率 (0-100)."""
+    from datetime import date as date_type
+
     docs_dir = REPO / "docs"
     if not docs_dir.exists():
         return 0.0
@@ -154,12 +156,11 @@ def score_docs() -> float:
                         total += 1
                         lr = fm["last-reviewed"]
                         if isinstance(lr, str):
-                            from datetime import date
-                            lr = date.fromisoformat(lr)
+                            lr = date_type.fromisoformat(lr)
                         if isinstance(lr, datetime):
                             if lr >= stale_threshold:
                                 fresh += 1
-                        elif isinstance(lr, date):
+                        elif isinstance(lr, date_type):
                             if lr >= stale_threshold.date():
                                 fresh += 1
         except Exception:

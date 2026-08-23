@@ -9,6 +9,8 @@ test_files:
   - tests/test_spec_binding_lint.py          # spec binding + completion-evidence + attestation (30 tests)
 ci_status: all_green
 verified_at: 2026-08-22
+
+last-reviewed: 2026-08-24
 ---
 
 工程测试证据:

@@ -13,6 +13,8 @@ note: >
 related:
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
   - docs/plans/3Y-BET-LEDGER.md
+
+last-reviewed: 2026-08-24
 ---
 
 # 织星 / eCOS v6 深度 Review

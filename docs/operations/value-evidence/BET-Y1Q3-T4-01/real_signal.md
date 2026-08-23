@@ -7,6 +7,8 @@ episode_id: episode_088af4df0c0ed55f204e2bae
 observed_at: 2026-08-21T12:48:23Z
 content_sha256: sha256:c2c072f23357e3a1c638c93ad8e05ac14a3dd46b7a40980eaf71ac46ec0f453e
 title: 跨仓耦合机制半删的观察
+
+last-reviewed: 2026-08-24
 ---
 
 真实低敏信号: 跨仓耦合机制(WorkPacket instruction binding)清理时只删生成侧、

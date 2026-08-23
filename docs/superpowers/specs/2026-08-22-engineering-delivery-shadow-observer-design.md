@@ -6,6 +6,8 @@ bet_id: BET-Y1Q2-T7-01
 owner: human-principal
 risk_level: L1
 human_gate: false
+
+last-reviewed: 2026-08-24
 ---
 
 # 工程交付 dogfood shadow 决策样本观测

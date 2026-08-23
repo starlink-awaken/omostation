@@ -10,6 +10,8 @@ revertible_commits:
   - ad33183ee                                 # #1849 attestation verifier
 rollback_verification: git revert --no-commit <sha> 可干净回退(无冲突)
 verified_at: 2026-08-22
+
+last-reviewed: 2026-08-24
 ---
 
 回滚能力:

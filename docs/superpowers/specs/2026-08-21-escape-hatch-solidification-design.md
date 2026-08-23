@@ -3,6 +3,8 @@ schema_version: specification/v1
 spec_version: 1.0.0
 status: accepted
 bet_id: BET-Y1Q3-T1-09
+
+last-reviewed: 2026-08-24
 ---
 
 # Escape-hatch solidification — permission class vs fingerprint debt
