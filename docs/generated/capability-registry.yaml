@@ -11,9 +11,9 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 576
-  bos_services: 237
-  bos_domains: 20
+  mcp_tools: 595
+  bos_services: 227
+  bos_domains: 18
   cli_commands: 149
 mcp_servers:
 - id: omo
@@ -224,9 +224,6 @@ mcp_servers:
   - agora_execute
   - audit_query
   - audit_stats
-  - bcos_evolve
-  - bcos_north_star
-  - bcos_signals
   - bos_reload_routes
   - create_api_key
   - debt_auto_seed_tool
@@ -269,8 +266,6 @@ mcp_servers:
   - repo_search
   - repo_status
   - repo_unload
-  - resident_roles
-  - resident_status
   - revoke_api_key
   - route_call
   - subscribe_event
@@ -285,7 +280,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 70
+  tool_count: 65
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -410,25 +405,49 @@ mcp_servers:
   layer: X
   file: projects/aetherforge/src/aetherforge/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - forge_cost_report
+  - forge_fabric_compact
+  - forge_fabric_inspect
+  - forge_fabric_vram
+  - forge_fabric_warm
+  - forge_generate
+  - forge_generate_mesh
+  - forge_health_check
+  - forge_list_nodes
+  - forge_mesh_status
+  - forge_swarm_run
+  - forge_triage
+  - forge_triage_batch
+  - forge_triage_consensus
+  - forge_triage_status
+  tool_count: 15
 - id: aetherforge-gateway
   name: AetherForge LLM Gateway
   layer: X
   file: projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - gateway_generate
+  - gateway_health
+  - llm_generate
+  tool_count: 3
 - id: aetherforge-mesh
   name: AetherForge Compute Mesh
   layer: X
   file: projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - mesh_cost_report
+  - mesh_generate
+  - mesh_health_check
+  - mesh_list_nodes
+  - mesh_status
+  - mesh_wakeup
+  tool_count: 6
 - id: model-driven
   name: Model-Driven Lifecycle
   layer: M0
@@ -815,21 +834,19 @@ bos_services:
   _domain_counts:
     agora: 3
     analysis: 28
-    bcos: 3
     capability: 44
     cockpit: 2
     compute: 3
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 60
+    governance: 57
     l4-kernel: 1
     memory: 47
     meta: 1
     omo: 4
     perception: 2
     persona: 10
-    resident: 4
     runtime: 1
     swarm: 1
     system: 11
@@ -959,19 +976,6 @@ bos_services:
     - uri: bos://analysis/kems/forecast
       description: KEMS 知识推断与影子评估推演分析 (ADR-0300)
       transport: http
-      status: active
-    bcos:
-    - uri: bos://bcos/evolution/run
-      description: BCOS 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)
-      transport: stdio
-      status: active
-    - uri: bos://bcos/signals/route
-      description: BCOS 统一信号路由 (W1-D2, doc/meeting/research/code)
-      transport: stdio
-      status: active
-    - uri: bos://bcos/north-star/measure
-      description: BCOS 北极星价值度量 v2 (排除 self-data, W3)
-      transport: stdio
       status: active
     capability:
     - uri: bos://capability/cockpit/mcp-server
@@ -1452,18 +1456,6 @@ bos_services:
       description: 领域治理卡带列表 (ADR-0198)
       transport: stdio
       status: active
-    - uri: bos://governance/meta-doctor/check
-      description: 治理自进化巡检 M1 心跳 SLA + M2 引用活性 + 调度漂移
-      transport: stdio
-      status: active
-    - uri: bos://governance/scheduler-compile/check
-      description: 调度编译器一致性校验 registry↔crontab 漂移检测 (ADR-A)
-      transport: stdio
-      status: active
-    - uri: bos://governance/session-handoff/emit
-      description: 会话交接协议 机器可读 handoff.json (需 --session/--agent/--summary)
-      transport: stdio
-      status: active
     l4-kernel:
     - uri: bos://l4-kernel/domains
       description: L4 Kernel MCP (短路径别名)
@@ -1729,23 +1721,6 @@ bos_services:
     - uri: bos://persona/bdsk/evaluate
       description: B.D.S.K. 虚拟董事会评审网关；唯一推理链为 bos://compute/aetherforge/infer，失败返回 not_proven，禁止自动 ADR
       transport: internal
-      status: active
-    resident:
-    - uri: bos://resident/core/status
-      description: Resident 常驻 Agent 体系运行状态快照 (WP-A~I / ADR-0396)
-      transport: stdio
-      status: active
-    - uri: bos://resident/core/roles
-      description: Resident 五类常驻角色配置 (M4.3)
-      transport: stdio
-      status: active
-    - uri: bos://resident/daemon/once
-      description: Resident daemon 单次 tick (M1 事件驱动)
-      transport: stdio
-      status: active
-    - uri: bos://resident/decision/run
-      description: Resident 决策提案处理 (WP-F)
-      transport: stdio
       status: active
     runtime:
     - uri: bos://runtime/health
