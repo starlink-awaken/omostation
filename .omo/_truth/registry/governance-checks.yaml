@@ -171,9 +171,9 @@ gac:
     - sweep_index_cli
   # T6-05 减法配额制 (BET-Y1Q2-T6-05): 增 1 删 1 — 用机制维持表面积不反弹
   subtraction_quota:
-    rule_baseline: 136    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail)
+    rule_baseline: 139    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail). 136→139: CR-RESIDENT-{STATUS,MOF-SYNC,BOS}-01 三条实体化 L0 enforcement (BET-Y1Q3-T1-10, ADR-0396)
     adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
-    script_baseline: 440  # bin/ 活跃脚本基线 (2026-08-23 实测活跃数 440; 436→440: BCOS evolution_engine/signal_router + 2 tests 误归档恢复, 依台账 3y-bet-ledger.yaml:6033 + T6-13 retro. BET-Y1Q3-T6-05 配额制继续.)
+    script_baseline: 443  # bin/ 活跃脚本基线 (2026-08-23 实测活跃数 443; 440→443: CR-RESIDENT 3 check 工具落地 (BET-Y1Q3-T1-10). 436→440: bc-os 恢复 + gac rotate-history 落地. BET-Y1Q3-T6-05 配额制继续.)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -2727,6 +2727,57 @@ gac:
     created_at: '2026-08-12'
     adr: ADR-0106
     source_type: native
+    enforcement: required
+  - id: CR-RESIDENT-STATUS-01
+    dimension: X2
+    layer: meta
+    name: resident daemon 水位活性
+    description: 'resident 体系活性以 daemon 角色水位判断 (cron --once 下无常驻进程, 进程退出正常). 水位新鲜 ≤30min, 超阈值 → degraded. 排除订阅层 resident-sub.json 防误判. 对齐 L0 CR-RESIDENT-STATUS-01.'
+    check_type: freshness
+    target: .omo/_delivery/resident-orchestrator/watermarks/resident-*.json
+    source_ref: bin/gac/check-resident-status.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    - omo_audit
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-23'
+    adr: ADR-0396
+    enforcement: required
+  - id: CR-RESIDENT-MOF-SYNC-01
+    dimension: X4
+    layer: L0
+    name: resident 角色双份对齐
+    description: 'resident 五类角色 (sediment/decision/execute/monitor/heartbeat) 必须同时注册在 roles.py (SSOT) 与 MOF m1 DigitalAgent (AGENT-RESIDENT-*), 零漂移. 对齐 L0 CR-RESIDENT-MOF-SYNC-01.'
+    check_type: drift_audit
+    target: projects/omo/src/omo/resident/roles.py vs projects/ecos/src/ecos/ssot/mof/m1/agent/AGENT-RESIDENT-ROLES.yaml
+    source_ref: bin/gac/check-resident-mof-sync.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    - mof_validate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-23'
+    adr: ADR-0396
+    enforcement: required
+  - id: CR-RESIDENT-BOS-01
+    dimension: X1
+    layer: L2
+    name: resident 接口 BOS 路由
+    description: 'resident 接口 (status/roles/daemon/decision/execute) 必须经 bos://resident/* 暴露, 禁止绕过 BOS 直连 resident 内部数据面 (events.jsonl / sediment / ledger). 对齐 L0 CR-RESIDENT-BOS-01.'
+    check_type: bos_resolve
+    target: projects/agora/etc/bos-services.yaml::bos://resident/*
+    source_ref: bin/gac/check-resident-bos.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    - evidence_smoke
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-23'
+    adr: ADR-0396
     enforcement: required
   drift:
     schedule: daily

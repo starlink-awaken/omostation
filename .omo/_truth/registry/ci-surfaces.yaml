@@ -1046,6 +1046,30 @@ surfaces:
   - manual
   status: active
   note: 'R6 会话交接协议: agent closeout 时产出机器可读 handoff.json'
+- id: bin-gac-check-resident-status-py
+  tool: bin/gac/check-resident-status.py
+  workflow: (none)
+  also_in: []
+  gate: false
+  triggers: []
+  status: active
+  note: 'CR-RESIDENT-STATUS-01 (L0 enforcement): resident daemon 水位活性 — cron --once 下以 watermark mtime 判定 (排除订阅层 resident-sub.json); 经 governance-checks.yaml source_ref 引用 (executor: ci_gate/gac_local_gate/omo_audit)'
+- id: bin-gac-check-resident-mof-sync-py
+  tool: bin/gac/check-resident-mof-sync.py
+  workflow: (none)
+  also_in: []
+  gate: false
+  triggers: []
+  status: active
+  note: 'CR-RESIDENT-MOF-SYNC-01 (L0 enforcement): roles.py vs MOF m1 AGENT-RESIDENT-ROLES.yaml 双份角色零漂移; 经 governance-checks.yaml source_ref 引用'
+- id: bin-gac-check-resident-bos-py
+  tool: bin/gac/check-resident-bos.py
+  workflow: (none)
+  also_in: []
+  gate: false
+  triggers: []
+  status: active
+  note: 'CR-RESIDENT-BOS-01 (L0 enforcement): resident 接口经 bos://resident/* 三源路由一致性 (bos-services.yaml/bos-registry.json/BOS_URI_DOMAINS); 经 governance-checks.yaml source_ref 引用'
 - id: bin-gac-heartbeat-wrapper-sh
   tool: bin/gac/heartbeat-wrapper.sh
   description: 'cron 心跳包装器 — operating-rhythm 组 cron job 经此写入 heartbeats/*.json'

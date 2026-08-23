@@ -93,6 +93,19 @@ internal_integrations:
     - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
     - --json
     health_required: true
+  resident:
+    status: integrated
+    authority: state_broker
+    owner: resident-team
+    ssot_rule: 'resident 常驻 agent 运行时 (ADR-0396, WP-A~I): 角色 SSOT = projects/omo/src/omo/resident/roles.py,
+      路由 SSOT = resident-routes.yaml (schema resident-routes/v1), 运行时事实经 omo resident
+      status 读取; 不绕过 BOS 直连内部数据面 (CR-RESIDENT-BOS-01).'
+    cli: uv run --project projects/omo python -m omo.cli resident
+    gate_binding: resident-status
+    health_command:
+    - python3
+    - bin/gac/check-resident-status.py
+    health_required: true
 runner:
   entrypoint: bin/agent-workflow.py
   generated_skill: .agents/skills/project-governance/SKILL.md
