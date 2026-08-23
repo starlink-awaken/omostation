@@ -14,7 +14,7 @@ totals:
   mcp_tools: 600
   bos_services: 237
   bos_domains: 20
-  cli_commands: 147
+  cli_commands: 149
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -1853,6 +1853,8 @@ cli_commands:
   description: 密码学级 Merkle 审计账本 (ADR-0201)
 - name: backends
   description: 列出 BOS 后端
+- name: bcos
+  description: BCOS 业务域系统 (evolve/signals/north-star)
 - name: bdsk
   description: 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演)
 - name: bos
@@ -2055,6 +2057,8 @@ cli_commands:
   description: 手动存入偏好/事实
 - name: research
   description: 深度研究
+- name: resident
+  description: Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)
 - name: resolve
   description: 统一 BOS URI 路由解析与目标元数据提取
 - name: route

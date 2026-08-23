@@ -117,6 +117,7 @@ agent_profiles:
     - state-sync
     - agent-onboarding
     - bet-execution
+    - resident-runtime-observe
     can_write_lanes:
     - docs
     - governance_code
@@ -154,6 +155,7 @@ agent_profiles:
     allowed_workflows:
     - observer-audit
     - mof-state-bridge-audit
+    - resident-runtime-observe
     can_write_lanes: []
     closeout_required:
     - observe-json
@@ -1294,12 +1296,23 @@ internal_integrations:
     ssot_rule: OMO owns governed state mutation; direct .omo writes are exceptional and must be called out.
     state_broker: projects/omo
     status: integrated
+  resident:
+    authority: state_broker
+    cli: uv run --project projects/omo python -m omo.cli resident
+    gate_binding: resident-status
+    health_command:
+    - python3
+    - bin/gac/check-resident-status.py
+    health_required: true
+    owner: resident-team
+    ssot_rule: 'resident 常驻 agent 运行时 (ADR-0396, WP-A~I): 角色 SSOT = projects/omo/src/omo/resident/roles.py, 路由 SSOT = resident-routes.yaml (schema resident-routes/v1), 运行时事实经 omo resident status 读取; 不绕过 BOS 直连内部数据面 (CR-RESIDENT-BOS-01).'
+    status: integrated
 projection:
   authority: projection
   lifecycle: read_only_generated_compatibility
   schema: agent-workflow-compat-projection/v1
   source: .omo/_truth/registry/agent-workflows
-  source_digest: sha256:4560c67f8ef1fb2de551385cf5e63df89010fcaf23020a20e56c0f153c7f07b7
+  source_digest: sha256:e41183d127abed1bb83b20c9e1931b45e7612bbc8beed4f023843423d19997c6
   writer: bin/agent-workflow.py projection-sync
 requirement_iteration_policy:
   adr: ADR-0203
@@ -2743,6 +2756,84 @@ workflows:
     - .omo/_knowledge/decisions/**
     - .omo/_knowledge/patterns/**
   title: Python type and style sweep
+- agents:
+    observer_policy: read_only_required
+    roles:
+    - governance-agent
+    - observer-agent
+  allowed_lanes:
+  - governance_code
+  - governance_state
+  id: resident-runtime-observe
+  lock_scopes:
+  - resident-observe
+  notes:
+  - 本 workflow 存在的理由(P74): resident 感知面是高频检查项，挂通用 observer-audit 属于错位。
+  - 三个 check 工具独立可跑，也被 gac-local-gate 聚合；本 workflow 提供 agent 层单一入口。
+  - 不修改 resident 运行时；只读 watermark / roles / BOS 路由。
+  phases:
+    closeout:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - doctor
+      id: doctor
+      mode: required
+    execute:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - observe
+      id: observe
+      mode: required
+    preflight:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/gac/check-resident-status.py
+      id: resident-status
+      mode: required
+    - command:
+      - python3
+      - bin/gac/check-resident-mof-sync.py
+      id: resident-mof-sync
+      mode: required
+    - command:
+      - python3
+      - bin/gac/check-resident-bos.py
+      id: resident-bos
+      mode: required
+  purpose: '让 agent 从 workflow 层感知 resident 常驻 agent 体系 (WP-A~I / ADR-0396) 活性。 不新增运行时能力，只补治理感知面：水位新鲜度、角色对齐、BOS 路由。
+
+    '
+  run_frequency: continuous
+  surfaces:
+    read:
+    - .omo/_delivery/resident-orchestrator/watermarks/**
+    - projects/omo/src/omo/resident/roles.py
+    - projects/ecos/src/ecos/ssot/mof/m1/agent/AGENT-RESIDENT-ROLES.yaml
+    - projects/agora/etc/bos-services.yaml
+    - projects/agora/etc/bos-registry.json
+    write: []
+  title: Resident runtime observe
 - agents:
     observer_policy: recommended_for_unattended_runs
     roles:
