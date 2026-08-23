@@ -188,6 +188,7 @@
 | 场景准入 | internal/external-scene-trial, internal/external-activation-preflight, scene-card-lifecycle | bin/ssot/ |
 | 场景验证 | scene-chain-validator, journey-validator, adr-number-check | bin/ssot/ |
 | Resident 常驻 Agent | resident-status resident-roles resident-daemon | Makefile (`omo resident`) |
+| BCOS 业务域 | bcos-evolve bcos-signals bcos-north-star | Makefile (`bin/bc-os/`) |
 
 详见 `INDEX-TOOLS.md` 获取完整工具目录。
 
@@ -262,3 +263,14 @@ KOS-*.md, SOP-*.md, VISION-ROADMAP.md 等。
 | 路由表 SSOT | `projects/omo/src/omo/resident/resident-routes.yaml`（schema `resident-routes/v1`） |
 | MOF 元模型 | `projects/ecos/src/ecos/ssot/mof/m2/digital_agent.yaml`（DigitalAgent, tier=resident） |
 | BOS URI | `bos://resident/core/status|roles`、`bos://resident/daemon/once`、`bos://resident/decision/run` |
+
+## BCOS 业务域系统 (2026-08-23, W1~W4)
+
+| 面 | 入口 |
+|----|------|
+| 功能规格 | [`docs/architecture/bcos-system-v1.md`](architecture/bcos-system-v1.md) |
+| 进化引擎 | `make bcos-evolve`（`bin/bc-os/evolution_engine.py`, 四阶段） |
+| 信号路由 | `make bcos-signals`（`bin/bc-os/signal_router.py`, W1-D2） |
+| 北极星度量 | `make bcos-north-star`（`bin/bc-os/north_star_meter_v2.py`, 排除 self-data） |
+| MOF 元模型 | `projects/ecos/src/ecos/ssot/mof/m2/bcos_system.yaml`（BCOSystem） |
+| BOS URI | `bos://bcos/evolution/*`、`bos://bcos/signals/*`、`bos://bcos/north-star/*` |
