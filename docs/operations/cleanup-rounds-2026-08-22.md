@@ -1,6 +1,6 @@
 # Cleanup Rounds 2026-08-22 — Retrospective & How to Recover from Drift
 
-> **Status**: closed (2026-08-23) — 7 PRs merged, 5 health-anomaly classes cleared, 3 structural gates added
+> **Status**: closed (2026-08-23) — 10 PRs merged, 5 health-anomaly classes cleared, 4 structural gates added
 > **Audience**: future operators / agents encountering the same drift patterns
 > **Tone**: clinical — what was wrong, what fixed it, what to re-check next time
 
@@ -16,7 +16,7 @@ fastest path to root cause.
 
 ---
 
-## TL;DR — 7 PRs, 5 rounds
+## TL;DR — 10 PRs, 7 rounds
 
 | # | PR | Title | Round |
 |---|---|---|---|
@@ -27,6 +27,9 @@ fastest path to root cause.
 | 1936 | fix(debt) | mirror dashboard to .omo/_control/debt-dashboard/ | 3 |
 | 1957 | fix(radar) | dedup observability events in 1h window, health 75→84 | 4 |
 | 1971 | feat(gac) | add P74 silent-workflows gate | 5 |
+| 1989 | fix(gate) | detect concurrent-write drift during gate run (P79 partial) | 6 |
+| 1990 | feat(radar) | persist health history to JSONL for trend analysis | 7 |
+| 2002 | feat(runtime) | cockpit-dashboard launcher + Makefile targets | 7 |
 
 ---
 
@@ -198,13 +201,60 @@ uv run --with pyyaml python bin/agent-workflow.py compliance | grep -E "P74|stal
 
 ---
 
+## Round 6 — Concurrent-write drift detection
+
+**Symptom**: Even after structural fixes, gate runs occasionally
+flake with different checks failing each invocation. Concurrent
+agents writing to `.omo/state/*.yaml` or observability events mid-run
+left gates seeing torn state.
+
+**Cause**: Multi-agent shared worktree + no read-side isolation. ~10
+tools write `.omo/` directly without going through a broker.
+
+**Action** (PR #1989): added fingerprint snapshot at gate start.
+`bin/gac/gac-local-gate.py` now records `(mtime, size)` for 8 known
+read-side state paths, runs all checks, then diffs against the
+snapshot. Drift detected → soft topic `concurrent-write-drift`
+listing the changed files. Gate still PASSES (severity=warn,
+blocking=False) so it surfaces the issue without making noise.
+
+**Result**: flake mode → visible-but-non-blocking mode. Operators
+who see the topic know their gate results may be unreliable and can
+re-run.
+
+---
+
+## Round 7 — Health-history JSONL + Cockpit launcher
+
+**Symptom**: Two operator-pain points. (a) "What was health last
+week?" required `git log` of `health.yaml`. (b) Starting the cockpit
+Web console required remembering `uv run cockpit-dashboard` and
+the port.
+
+**Cause**: `health.yaml` is regenerated on every radar run; current
+state overwrites history. No launcher script existed.
+
+**Action A** (PR #1990): `compass_radar._append_health_history` writes
+one JSONL record per run to `.omo/state/history/health.jsonl`
+(gitignored). Fields: ts, health_score, governance_anomaly_score,
+anomaly_count, service_online_ratio, freshness_score, total_tasks,
+source.
+
+**Action B** (PR #2002): `bin/runtime/start-cockpit-dashboard.sh`
+with `start | stop | status` subcommands + 3 Makefile targets.
+Idempotent (refuses to double-start), PID-tracked, port-in-use
+detection via lsof, macOS-friendly (no `setsid` required).
+
+**Result**: trend data now persistent; one-line `make cockpit-dashboard-start`.
+
+---
+
 ## Things I did NOT do (intentional)
 
-1. **Concurrent-agent write contention** — root cause is `omo state
-   sync` broker exists but isn't enforced; ~10 tools write `.omo/`
-   directly. Fixing requires new ADR + multi-tool refactor. Documented
-   as a known issue; tolerate with `--strict` CI gate and
-   `git restore --staged` discipline.
+1. **Concurrent-agent write contention** (Round 6 partial fix): full
+   broker or fcntl-level blocking writes during gate runs deferred
+   to a future ADR. Current state is "detect + warn + tolerate" via
+   PR #1989.
 
 2. **Cleanup 55 historical stashes** — they belong to other sessions
    (autostash from concurrent worktrees). Cleaning risks breaking
@@ -233,6 +283,7 @@ When you see health < 60:
 | "service_online_ratio: 0%" | `cockpit status` to see which service |
 | "governance_anomaly_score: 25 (熔断)" | `compass_radar` → find which check class |
 | P74 silent workflows | `bin/gac/check-silent-workflows.py --list-silent` |
+| Gate flake (different check each run) | re-run; topic `concurrent-write-drift` lists drifted files |
 
 If a row above doesn't fix the symptom in one tool call, escalate —
 it's a deeper drift, not a stale state.
