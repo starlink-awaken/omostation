@@ -603,6 +603,10 @@ from agora.server.tools_health import register_health_tools
 
 register_health_tools(mcp)  # Phase 45: 健康自检 + 熵清理 + 债务自动种子
 
+from agora.server.tools_resident import register_resident_tools
+
+register_resident_tools(mcp)  # 2026-08-23: Resident 常驻 Agent 体系 (WP-A~I / ADR-0396)
+
 from agora.server.tools_registry_mcp import register_registry_mcp_tools
 
 register_registry_mcp_tools(mcp)  # Phase 46: Agent Registry 暴露为 MCP 工具

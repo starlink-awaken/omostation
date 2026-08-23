@@ -35,6 +35,7 @@ BOS_URI_DOMAINS = (
     "perception",
     "mof",
     "fabric",
+    "resident",
 )
 BOS_URI_DOMAIN_PATTERN = "|".join(BOS_URI_DOMAINS)
 

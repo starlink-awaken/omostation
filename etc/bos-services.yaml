@@ -3167,3 +3167,81 @@ services:
   - fabric
   - snapshot
   description: 主权算力 KV 缓存二进制快照预热 (ADR-0197)
+- domain: resident
+  package: omo-resident
+  action: status
+  uri: bos://resident/core/status
+  transport: stdio
+  status: active
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/omo
+  - python
+  - -W
+  - ignore::DeprecationWarning
+  - -m
+  - omo.cli
+  - resident
+  - status
+  description: Resident 常驻 Agent 体系运行状态快照 (WP-A~I / ADR-0396)
+- domain: resident
+  package: omo-resident
+  action: roles
+  uri: bos://resident/core/roles
+  transport: stdio
+  status: active
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/omo
+  - python
+  - -W
+  - ignore::DeprecationWarning
+  - -m
+  - omo.cli
+  - resident
+  - roles
+  - --json
+  description: Resident 五类常驻角色配置 (M4.3)
+- domain: resident
+  package: omo-resident
+  action: daemon
+  uri: bos://resident/daemon/once
+  transport: stdio
+  status: active
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/omo
+  - python
+  - -W
+  - ignore::DeprecationWarning
+  - -m
+  - omo.cli
+  - resident
+  - daemon
+  - --once
+  description: Resident daemon 单次 tick (M1 事件驱动)
+- domain: resident
+  package: omo-resident
+  action: decision
+  uri: bos://resident/decision/run
+  transport: stdio
+  status: active
+  command:
+  - uv
+  - run
+  - --directory
+  - projects/omo
+  - python
+  - -W
+  - ignore::DeprecationWarning
+  - -m
+  - omo.cli
+  - resident
+  - decision
+  description: Resident 决策提案处理 (WP-F)
