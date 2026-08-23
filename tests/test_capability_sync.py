@@ -94,6 +94,20 @@ def test_canonical_generator_declares_registry_contract(cap_sync, generator) -> 
     }
 
 
+def test_trace_binding_compatibility_symbols_remain_available(cap_sync) -> None:
+    for name in (
+        "TraceBindingError",
+        "_digest",
+        "_canonical_json",
+        "validate_trace_binding",
+        "validate_trace_bound_resolution_receipt",
+        "_native_owner",
+        "_validate_capability_binding",
+        "_trace_projection",
+    ):
+        assert callable(getattr(cap_sync, name))
+
+
 def test_generated_projection_is_explicitly_non_authoritative_and_uses_vendored_c2g_source(generator) -> None:
     """The generated catalog remains a projection, not an authority or a C2G fallback."""
     registry = generator.build_registry()
@@ -322,6 +336,142 @@ def test_find_cli_returns_receipt_and_distinct_fail_closed_codes(
 
     assert cap_sync.main(["find", "--query", "shared", "--registry", str(path)]) == 3
     assert json.loads(capsys.readouterr().out)["status"] == "ambiguous"
+
+
+def _trace_binding() -> dict[str, str]:
+    return {
+        "correlation_id": "corr-b4b-001",
+        "workflow_run_id": "run-b4b-001",
+        "packet_id": "packet-b4b-001",
+        "packet_hash": "sha256:" + "a" * 64,
+        "assignment_id": "assignment-b4b-001",
+        "dispatch_id": "dispatch-b4b-001",
+        "actor_id": "blueprint-trace-binding",
+        "delivery_attempt_id": "b4-b-20260823-01",
+    }
+
+
+def _canonical_trace_registry(registry: dict) -> dict:
+    result = copy.deepcopy(registry)
+    result.update(
+        {
+            "schema": "capability-registry/v1",
+            "owner": "workspace-capability-governance",
+            "writer": "bin/cockpit/gen-capability-registry.py",
+        }
+    )
+    return result
+
+
+def test_find_binding_json_is_read_only_and_rejects_query_selector(registry: dict, tmp_path: Path) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_canonical_trace_registry(registry), sort_keys=True), encoding="utf-8")
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(_trace_binding(), sort_keys=True), encoding="utf-8")
+    before = {path: (path.stat().st_mtime_ns, path.read_bytes()) for path in tmp_path.iterdir()}
+
+    run = subprocess.run(
+        [
+            sys.executable,
+            str(SYNC_PATH),
+            "find",
+            "--id",
+            "mcp-tool:omo:status",
+            "--binding-json",
+            str(binding_path),
+            "--registry",
+            str(registry_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    query = subprocess.run(
+        [
+            sys.executable,
+            str(SYNC_PATH),
+            "find",
+            "--query",
+            "status",
+            "--binding-json",
+            str(binding_path),
+            "--registry",
+            str(registry_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert run.returncode == 0
+    assert json.loads(run.stdout)["trace_id"].startswith("sha256:")
+    assert query.returncode == 4
+    assert json.loads(query.stdout)["failure_code"] == "binding_requires_exact_id"
+    after = {path: (path.stat().st_mtime_ns, path.read_bytes()) for path in tmp_path.iterdir()}
+    assert after == before
+
+
+def test_find_without_binding_preserves_legacy_receipt_contract(registry: dict, tmp_path: Path) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_canonical_trace_registry(registry), sort_keys=True), encoding="utf-8")
+
+    run = subprocess.run(
+        [sys.executable, str(SYNC_PATH), "find", "--id", "mcp-tool:omo:status", "--registry", str(registry_path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    receipt = json.loads(run.stdout)
+
+    assert run.returncode == 0
+    assert receipt["status"] == "resolved"
+    assert receipt["capability_id"] == "mcp-tool:omo:status"
+    assert receipt["adapter"] == {"kind": "mcp_native", "target": "omo/status"}
+    assert "binding" not in receipt
+    assert "trace_id" not in receipt
+    assert "receipt_digest" not in receipt
+
+
+def test_bound_find_fails_closed_for_unproved_or_ambiguous_sources(
+    cap_sync, registry: dict, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(_trace_binding(), sort_keys=True), encoding="utf-8")
+
+    assert cap_sync.main(
+        [
+            "find",
+            "--id",
+            "mcp-tool:omo:status",
+            "--binding-json",
+            str(binding_path),
+            "--registry",
+            str(tmp_path / "missing-registry.yaml"),
+        ]
+    ) == 4
+    assert json.loads(capsys.readouterr().out)["failure_code"] == "source_unprovable"
+
+    registry_path = tmp_path / "legacy-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=True), encoding="utf-8")
+    assert cap_sync.main(
+        ["find", "--id", "mcp-tool:omo:status", "--binding-json", str(binding_path), "--registry", str(registry_path)]
+    ) == 4
+    assert json.loads(capsys.readouterr().out)["failure_code"] == "source_unprovable"
+
+    proved = _canonical_trace_registry(registry)
+    registry_path.write_text(yaml.safe_dump(proved, sort_keys=True), encoding="utf-8")
+    assert cap_sync.main(
+        ["find", "--id", "mcp-tool:omo:missing", "--binding-json", str(binding_path), "--registry", str(registry_path)]
+    ) == 4
+    assert json.loads(capsys.readouterr().out)["failure_code"] == "resolution_not_found"
+
+    duplicate = _canonical_trace_registry(registry)
+    duplicate["mcp_servers"].append(dict(duplicate["mcp_servers"][0]))
+    registry_path.write_text(yaml.safe_dump(duplicate, sort_keys=True), encoding="utf-8")
+    assert cap_sync.main(
+        ["find", "--id", "mcp-tool:omo:status", "--binding-json", str(binding_path), "--registry", str(registry_path)]
+    ) == 4
+    assert json.loads(capsys.readouterr().out)["failure_code"] == "resolution_ambiguous"
 
 
 class _FakeGateway:
