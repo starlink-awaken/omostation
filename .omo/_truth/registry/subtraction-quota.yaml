@@ -1,0 +1,59 @@
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-08-24
+---
+# 减法配额 (Subtraction Quota)
+# 防止工具/文档/场景无限堆积的硬性约束
+
+schema: subtraction-quota/v1
+version: 1.0
+
+# 减法配额规则
+quota:
+  tools:
+    max_total: 300                    # 工具总数上限
+    archive_per_quarter: 15           # 每季度至少归档数
+    deprecated_threshold_days: 90      # 90天无调用 → deprecated
+    auto_archive_enabled: true        # 自动归档已启用
+    description: "工具总数超过上限或存在 deprecated 工具时，必须归档"
+
+  docs:
+    max_stale_ratio: 0.1              # 过期文档比例上限 (10%)
+    stale_threshold_days: 30          # 30天未更新视为过期
+    auto_refresh_frontmatter: true    # 自动刷新 last-reviewed
+    description: "过期文档比例超过上限时，触发自动保鲜"
+
+  scenes:
+    max_shadow_days: 30               # shadow 状态最大天数
+    auto_escalate: true               # 超期自动升级提醒
+    description: "场景 shadow 超期时，自动发送激活提醒"
+
+  governance_rules:
+    max_total: 200                    # 治理规则总数上限
+    draft_max_age_days: 90            # draft 状态最大存活天数
+    description: "规则总数超过上限或 draft 超期时，触发清理"
+
+# 执行策略
+enforcement:
+  check_frequency: weekly            # 检查频率
+  auto_remediate: true               # 自动修复
+  notify_on_violation: true          # 违规通知
+  escalation:
+    - after_days: 7
+      action: notify_owner
+    - after_days: 14
+      action: create_issue
+    - after_days: 30
+      action: escalate_to_lead
+
+# 当前状态 (运行时更新)
+current_state:
+  tools_total: 42
+  tools_deprecated: 19
+  tools_need_archive: 19
+  docs_total: 246
+  docs_stale: 5
+  scenes_shadow_stale: 3
+  governance_rules_total: 139
+  governance_rules_draft: 3
