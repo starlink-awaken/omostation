@@ -46,3 +46,14 @@ jobs:
       - name: MOF predictive governance loop
         # 预测治理闭环: 约束合规 + M0 衰减 + M1 健康 → 统一预测报告
         run: cd projects/ecos && WORKSPACE_ROOT=$GITHUB_WORKSPACE uv run python3 src/ecos/ssot/tools/mof-predictive-loop.py --enforce
+      - name: MOF reasoning — impact analysis
+        run: cd projects/ecos && uv run python3 src/ecos/ssot/tools/mof-reason.py impact ACTION-ACP-IMPLEMENT > /dev/null
+      - name: MOF reasoning — cross-repo derive
+        run: cd projects/ecos && uv run python3 src/ecos/ssot/tools/mof-derive.py --stages > /dev/null
+      - name: MOF reasoning — L0 bypass gate
+        run: cd projects/ecos && uv run python3 src/ecos/ssot/tools/mof-gate.py > /dev/null
+      - name: MOF reasoning — layer enforce (advisory)
+        continue-on-error: true
+        run: cd projects/ecos && uv run python3 src/ecos/ssot/tools/mof-enforce.py > /dev/null 2>&1 || true
+      - name: eCOS unified dashboard
+        run: cd projects/ecos && uv run python3 src/ecos/observability/dashboard.py --json > /dev/null
