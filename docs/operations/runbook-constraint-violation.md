@@ -3,6 +3,7 @@ title: "runbook-constraint-violation"
 status: active
 type: runbook
 owner: governance-team
+lifecycle: history
 last-reviewed: 2026-08-23
 ---
 # Runbook: 约束违规响应
