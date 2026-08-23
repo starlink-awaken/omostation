@@ -1046,6 +1046,14 @@ surfaces:
   - manual
   status: active
   note: 'R6 会话交接协议: agent closeout 时产出机器可读 handoff.json'
+- id: bin-gac-heartbeat-wrapper-sh
+  tool: bin/gac/heartbeat-wrapper.sh
+  description: 'cron 心跳包装器 — operating-rhythm 组 cron job 经此写入 heartbeats/*.json'
+  gate: operating-rhythm
+  triggers:
+  - push
+  status: active
+  owner: governance-agent
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:
