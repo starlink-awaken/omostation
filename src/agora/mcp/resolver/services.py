@@ -1412,6 +1412,34 @@ _FALLBACK_SERVICES: list[BosService] = [
         ],
         description="omlxc System Prefix Warmer 系统前缀缓存预热端点",
     ),
+    # ── KOS 非 stdio 服务 (YAML 加载失败时 fallback 仍保持正确 transport) ──
+    BosService(
+        uri="bos://memory/kos/rest-api",
+        domain="memory",
+        package="kos",
+        action="rest-api",
+        transport="http",
+        http_url="http://localhost:8766/api/v1",
+        description="KOS REST API v1 (9 endpoints)",
+    ),
+    BosService(
+        uri="bos://memory/kos/graphrag",
+        domain="memory",
+        package="kos",
+        action="graphrag",
+        transport="mcp_proxy",
+        mcp_tool="knowledge_ask",
+        description="KOS GraphRAG: 实体+BFS+证据+LLM",
+    ),
+    BosService(
+        uri="bos://memory/kos/mcp-v2",
+        domain="memory",
+        package="kos",
+        action="mcp-v2",
+        transport="mcp_proxy",
+        tools=["graph_search", "entity_explore", "knowledge_ask", "subscribe_topic", "build_context", "verify_claim"],
+        description="KOS MCP v2.0 (25 tools)",
+    ),
 ]
 
 # ── POC_SERVICES: YAML 驱动加载器 ──────────────────────────
