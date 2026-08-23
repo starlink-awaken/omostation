@@ -22,8 +22,10 @@ Start here when `bin/compass_radar.py` reports health < 60:
 - [`runbook-agent-silent.md`](runbook-agent-silent.md) — agent dashboard silent
 - [`runbook-ci-red.md`](runbook-ci-red.md) — CI gate red
 - [`runbook-constraint-violation.md`](runbook-constraint-violation.md) — P79 violation
+- [`runbook-p74-silent-workflow.md`](runbook-p74-silent-workflow.md) — P74 silent workflow (ADR-0130)
 - [`runbook-reasoning-engine.md`](runbook-reasoning-engine.md) — reasoning engine issues
 - [`runbook-scenario-failure.md`](runbook-scenario-failure.md) — scenario not firing
+- [`runbook-state-freshness.md`](runbook-state-freshness.md) — state file stale > 24h
 
 ## Standard operations (other docs)
 
