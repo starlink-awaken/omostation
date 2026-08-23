@@ -24,8 +24,24 @@ routes:
     topic: mesh:step:failed
     action: knowledge_sediment
     safe: true
-  # 预留: 决策/告警/执行 agent 规则(WP-E/F/G 接入)
-  # - event_type: observability:critical
-  #   condition: "payload.severity in ('critical','degraded')"
-  #   action: alert_forwarder
-  #   safe: false
+  # 决策/执行 agent 规则(收尾验证激活)
+  - event_type: WorkflowFailed
+    topic: mesh:workflow:failed
+    action: decision_agent
+    safe: true
+  - event_type: StepFailed
+    topic: mesh:step:failed
+    action: decision_agent
+    safe: true
+  - event_type: StepTimeout
+    topic: mesh:step:failed
+    action: decision_agent
+    safe: true
+  - event_type: ExecutionRequested
+    topic: mesh:workflow:execution
+    action: execution_agent
+    safe: false
+  - event_type: WorkPacketDispatched
+    topic: mesh:workflow:execution
+    action: execution_agent
+    safe: false
