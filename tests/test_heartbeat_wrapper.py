@@ -7,6 +7,14 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 WRAPPER = REPO_ROOT / "bin" / "gac" / "heartbeat-wrapper.sh"
+OPERATING_RHYTHM = REPO_ROOT / ".omo" / "cron" / "operating-rhythm-crontab"
+ROOT_GUARD_PREFIX = (
+    'test -n "$OMO_WORKSPACE_ROOT" '
+    '&& test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" '
+    '&& test -d "$OMO_WORKSPACE_ROOT/.omo" '
+    '&& cd "$OMO_WORKSPACE_ROOT" '
+    "&& "
+)
 
 
 def _run_wrapper(
@@ -220,3 +228,60 @@ def test_concurrent_writers_leave_one_complete_atomic_receipt(tmp_path: Path) ->
     assert payload["exit_code"] == 0
     heartbeat_dir = tmp_path / ".omo" / "state" / "heartbeats"
     assert [item.name for item in heartbeat_dir.iterdir()] == ["concurrent-job.json"]
+
+
+def _operating_rhythm_jobs() -> list[str]:
+    return [
+        line
+        for line in OPERATING_RHYTHM.read_text(encoding="utf-8").splitlines()
+        if line
+        and not line.startswith("#")
+        and not line.startswith(("SHELL=", "PATH=", "OMO_WORKSPACE_ROOT="))
+    ]
+
+
+def _operating_rhythm_commands() -> list[str]:
+    return [job.split(maxsplit=5)[5] for job in _operating_rhythm_jobs()]
+
+
+def test_operating_rhythm_template_binds_every_job_to_explicit_root() -> None:
+    content = OPERATING_RHYTHM.read_text(encoding="utf-8")
+    jobs = _operating_rhythm_jobs()
+    commands = _operating_rhythm_commands()
+
+    assert "OMO_WORKSPACE_ROOT=" in content.splitlines()
+    assert "$HOME/Workspace" not in content
+    assert len(jobs) == 12
+    assert all(command.startswith(ROOT_GUARD_PREFIX) for command in commands)
+    assert sum("heartbeat-wrapper.sh agent-workflow-status" in job for job in jobs) == 1
+    assert all(not ("meta-doctor.py" in job and "--json" in job) for job in jobs)
+
+
+def test_operating_rhythm_root_guard_rejects_ambiguous_roots(tmp_path: Path) -> None:
+    relative_decoy = tmp_path / "relative-decoy"
+    valid_root = tmp_path / "valid-root"
+    (relative_decoy / ".omo").mkdir(parents=True)
+    (valid_root / ".omo").mkdir(parents=True)
+    actual_prefix = _operating_rhythm_commands()[0][: len(ROOT_GUARD_PREFIX)]
+    assert actual_prefix == ROOT_GUARD_PREFIX
+    command = f"{actual_prefix}/bin/pwd"
+    cases = (
+        ("", False),
+        (".", False),
+        (str(tmp_path / "absolute-missing"), False),
+        (str(valid_root), True),
+    )
+
+    for root, expected_ok in cases:
+        result = subprocess.run(
+            ["/bin/bash", "-c", command],
+            cwd=relative_decoy,
+            env={**os.environ, "OMO_WORKSPACE_ROOT": root},
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        assert (result.returncode == 0) is expected_ok, (root, result)
+        if expected_ok:
+            assert Path(result.stdout.strip()).resolve() == valid_root.resolve()
