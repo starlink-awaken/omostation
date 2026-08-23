@@ -273,6 +273,45 @@
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
+    "uri": "bos://bcos/evolution/run",
+    "domain": "bcos",
+    "package": "bcos-evolution",
+    "action": "evolve",
+    "endpoint": "python3 bin/bc-os/evolution_engine.py --json",
+    "protocol": "stdio",
+    "transport": "stdio",
+    "status": "active",
+    "description": "BCOS 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)",
+    "registered_at": "2026-08-23T22:14:39.864795+00:00",
+    "registered_by": "bin/ssot/sync-bos-registry.py"
+  },
+  {
+    "uri": "bos://bcos/north-star/measure",
+    "domain": "bcos",
+    "package": "bcos-north-star",
+    "action": "measure",
+    "endpoint": "python3 bin/bc-os/north_star_meter_v2.py --json",
+    "protocol": "stdio",
+    "transport": "stdio",
+    "status": "active",
+    "description": "BCOS 北极星价值度量 v2 (排除 self-data, W3)",
+    "registered_at": "2026-08-23T22:14:39.864795+00:00",
+    "registered_by": "bin/ssot/sync-bos-registry.py"
+  },
+  {
+    "uri": "bos://bcos/signals/route",
+    "domain": "bcos",
+    "package": "bcos-signals",
+    "action": "route",
+    "endpoint": "python3 bin/bc-os/signal_router.py --json",
+    "protocol": "stdio",
+    "transport": "stdio",
+    "status": "active",
+    "description": "BCOS 统一信号路由 (W1-D2, doc/meeting/research/code)",
+    "registered_at": "2026-08-23T22:14:39.864795+00:00",
+    "registered_by": "bin/ssot/sync-bos-registry.py"
+  },
+  {
     "uri": "bos://capability/agent-runtime/agent-list",
     "domain": "capability",
     "package": "agent-runtime",
@@ -910,6 +949,19 @@
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
+    "uri": "bos://governance/meta-doctor/check",
+    "domain": "governance",
+    "package": "meta-doctor",
+    "action": "check",
+    "endpoint": "python3 bin/gac/meta-doctor.py --workspace . --json",
+    "protocol": "stdio",
+    "transport": "stdio",
+    "status": "active",
+    "description": "治理自进化巡检 M1 心跳 SLA + M2 引用活性 + 调度漂移",
+    "registered_at": "2026-08-23T22:14:55.701222+00:00",
+    "registered_by": "bin/ssot/sync-bos-registry.py"
+  },
+  {
     "uri": "bos://governance/metaos/decide",
     "domain": "governance",
     "package": "metaos",
@@ -1141,6 +1193,32 @@
     "status": "active",
     "description": "governance roles list 端点 (mcp_protocol registry 端点)",
     "registered_at": "2026-08-23T19:16:38.485792+00:00",
+    "registered_by": "bin/ssot/sync-bos-registry.py"
+  },
+  {
+    "uri": "bos://governance/scheduler-compile/check",
+    "domain": "governance",
+    "package": "scheduler-compile",
+    "action": "check",
+    "endpoint": "python3 bin/scheduler-compile.py --check",
+    "protocol": "stdio",
+    "transport": "stdio",
+    "status": "active",
+    "description": "调度编译器一致性校验 registry↔crontab 漂移检测 (ADR-A)",
+    "registered_at": "2026-08-23T22:14:55.701222+00:00",
+    "registered_by": "bin/ssot/sync-bos-registry.py"
+  },
+  {
+    "uri": "bos://governance/session-handoff/emit",
+    "domain": "governance",
+    "package": "session-handoff",
+    "action": "emit",
+    "endpoint": "python3 bin/gac/session-handoff.py --help",
+    "protocol": "stdio",
+    "transport": "stdio",
+    "status": "active",
+    "description": "会话交接协议 机器可读 handoff.json (需 --session/--agent/--summary)",
+    "registered_at": "2026-08-23T22:14:55.701222+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1891,6 +1969,58 @@
     "status": "active",
     "description": "SharedBrain Bridge 实体召回 (P36-W1 GAP 补全, canonical URI)",
     "registered_at": "2026-08-23T19:16:38.485792+00:00",
+    "registered_by": "bin/ssot/sync-bos-registry.py"
+  },
+  {
+    "uri": "bos://resident/core/roles",
+    "domain": "resident",
+    "package": "omo-resident",
+    "action": "roles",
+    "endpoint": "uv run --directory projects/omo python -W",
+    "protocol": "stdio",
+    "transport": "stdio",
+    "status": "active",
+    "description": "Resident 五类常驻角色配置 (M4.3)",
+    "registered_at": "2026-08-23T22:14:39.864795+00:00",
+    "registered_by": "bin/ssot/sync-bos-registry.py"
+  },
+  {
+    "uri": "bos://resident/core/status",
+    "domain": "resident",
+    "package": "omo-resident",
+    "action": "status",
+    "endpoint": "uv run --directory projects/omo python -W",
+    "protocol": "stdio",
+    "transport": "stdio",
+    "status": "active",
+    "description": "Resident 常驻 Agent 体系运行状态快照 (WP-A~I / ADR-0396)",
+    "registered_at": "2026-08-23T22:14:39.864795+00:00",
+    "registered_by": "bin/ssot/sync-bos-registry.py"
+  },
+  {
+    "uri": "bos://resident/daemon/once",
+    "domain": "resident",
+    "package": "omo-resident",
+    "action": "daemon",
+    "endpoint": "uv run --directory projects/omo python -W",
+    "protocol": "stdio",
+    "transport": "stdio",
+    "status": "active",
+    "description": "Resident daemon 单次 tick (M1 事件驱动)",
+    "registered_at": "2026-08-23T22:14:39.864795+00:00",
+    "registered_by": "bin/ssot/sync-bos-registry.py"
+  },
+  {
+    "uri": "bos://resident/decision/run",
+    "domain": "resident",
+    "package": "omo-resident",
+    "action": "decision",
+    "endpoint": "uv run --directory projects/omo python -W",
+    "protocol": "stdio",
+    "transport": "stdio",
+    "status": "active",
+    "description": "Resident 决策提案处理 (WP-F)",
+    "registered_at": "2026-08-23T22:14:39.864795+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   }
 ]
