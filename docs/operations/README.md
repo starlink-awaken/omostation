@@ -6,9 +6,11 @@
 
 ## Onboarding (read these in order)
 
+0. **5-minute quickstart for AI agents**: `.agents/skills/agent-quickstart/SKILL.md`
 1. [`../PROJECT-COMPLETE-GUIDE.md`](../PROJECT-COMPLETE-GUIDE.md) — full project tour
 2. [`../../CLAUDE.md`](../../CLAUDE.md) — session startup protocol for AI agents
 3. [`../../AGENTS.md`](../../AGENTS.md) — workspace operating rules
+4. Full onboarding (MCP/BOS/cockpit setup): `.agents/skills/agent-onboarding/SKILL.md`
 
 ## When health drops (diagnostic recipes)
 
