@@ -1,7 +1,7 @@
 #!/bin/bash
-# heartbeat-wrapper.sh — cron job 心跳包装器 (ADR-D)
-# 用法: bash bin/gac/heartbeat-wrapper.sh <job_name> <command...>
-# 效果: 运行 command 后在 .omo/state/heartbeats/<job_name>.json 写心跳
+# Archived unwired cron heartbeat prototype (ADR-D).
+# Re-enable only after runtime-root parameterization, tests, governed wiring,
+# and subtraction-quota evidence are supplied.
 
 JOB_NAME="$1"; shift
 HB_DIR="$HOME/Workspace/.omo/state/heartbeats"

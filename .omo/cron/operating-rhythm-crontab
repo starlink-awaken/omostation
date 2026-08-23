@@ -14,7 +14,7 @@
 SHELL=/bin/bash
 PATH=/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin
 # ── daily 09:00 (status 节奏, ADR-0121 维度 3 Loop Convergence) ──
-0 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/agent-workflow.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1
+0 9 * * * cd "$HOME/Workspace" && bash bin/gac/heartbeat-wrapper.sh agent-workflow-status uv run --with pyyaml python bin/agent-workflow.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1
 5 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/gac/governance-evolution.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1
 10 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/gac/governance-evolution.py packages --json >> runtime/cron/operating-rhythm-daily.log 2>&1
 15 9 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/mof/m4-health-score.py --emit >> runtime/cron/operating-rhythm-daily.log 2>&1
