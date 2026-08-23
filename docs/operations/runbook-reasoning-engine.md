@@ -1,3 +1,10 @@
+---
+title: "runbook-reasoning-engine"
+status: active
+type: runbook
+owner: governance-team
+last-reviewed: 2026-08-23
+---
 # Runbook: 推理引擎异常排查
 
 ## 症状

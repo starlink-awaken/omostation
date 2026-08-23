@@ -1,3 +1,10 @@
+---
+title: "runbook-scenario-failure"
+status: active
+type: runbook
+owner: governance-team
+last-reviewed: 2026-08-23
+---
 # Runbook: 场景执行失败
 
 ## 症状

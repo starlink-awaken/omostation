@@ -1,3 +1,10 @@
+---
+title: "runbook-agent-silent"
+status: active
+type: runbook
+owner: governance-team
+last-reviewed: 2026-08-23
+---
 # Runbook: Agent 静默排查
 
 ## 症状
