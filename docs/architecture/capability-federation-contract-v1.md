@@ -177,8 +177,11 @@ actor_id: <stable actor id>
 delivery_attempt_id: <one delivery attempt id>
 ```
 
-Use the existing public command; the input file is read, never copied into a
-registry, Workflow Mesh or runtime store:
+Use the existing public command; its CLI owns bounded input-file reading and
+redacted error-receipt orchestration, while the standard-library-only
+`lib/capability_trace_binding.py` owns deterministic canonicalization,
+validation, binding construction and replay checking. The input file is read,
+never copied into a registry, Workflow Mesh or runtime store:
 
 ```bash
 uv run --with pyyaml python bin/capability-sync.py find \
@@ -225,11 +228,13 @@ selectors are respectively `resolution_not_found` and `resolution_ambiguous`.
 Neither result is evidence of absence, retirement, successful dispatch or
 completion.
 
-**Boundary:** B4-B resolves and binds a generated projection only. B4-C is
-responsible for native inspect/load and native source/version/digest proof.
-B4-D is responsible for kind-specific execution receipts, cleanup and the OMO
-evidence handoff. Neither B4-B nor B4-C may invoke a capability, write Workflow
-Mesh evidence, or create a value/human outcome.
+**Boundary:** B4-B resolves and binds a generated projection only. The B4-B
+library remains pure; `capability-sync.py` retains registry I/O and CLI
+compatibility. B4-C is responsible for native inspect/load and native
+source/version/digest proof. B4-D is responsible for kind-specific execution
+receipts, cleanup and the OMO evidence handoff. Neither B4-B nor B4-C may
+invoke a capability, write Workflow Mesh evidence, or create a value/human
+outcome.
 
 ## 6. Availability and fallback
 
