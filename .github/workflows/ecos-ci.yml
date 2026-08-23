@@ -63,3 +63,5 @@ jobs:
       - name: Anti-corruption audit (advisory)
         continue-on-error: true
         run: python3 bin/gac/anti-corruption.py 2>/dev/null || true
+      - name: P0/P1 tools smoke test
+        run: cd projects/ecos && uv run pytest tests/test_tool_smoke.py -q

@@ -1006,6 +1006,22 @@ surfaces:
   - scheduled
   status: active
   note: 'M2 引用活性巡检 (--refs-only): cron/launchd 登记目标存在性. M1 心跳仅本地语境.'
+- id: bin-gac-anti-corruption-py
+  tool: bin/gac/anti-corruption.py
+  workflow: ecos-ci.yml
+  also_in: []
+  gate: false
+  triggers:
+  - push
+  status: active
+- id: bin-gac-governance-alert-dispatch-py
+  tool: bin/gac/governance-alert-dispatch.py
+  workflow: ecos-ci.yml
+  also_in: []
+  gate: false
+  triggers:
+  - push
+  status: active
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:
