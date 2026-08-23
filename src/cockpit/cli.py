@@ -810,6 +810,7 @@ def main() -> int:
         "fabric": lambda a: __import__("cockpit.commands.fabric", fromlist=["cmd_fabric"]).cmd_fabric(a),
         "gac": cmd_gac,
         "omo": lambda a: __import__("cockpit.commands.omo", fromlist=["cmd_omo"]).cmd_omo(a),
+        "resident": lambda a: __import__("cockpit.commands.resident", fromlist=["cmd_resident"]).cmd_resident(a),
         "runtime": lambda a: __import__("cockpit.commands.runtime", fromlist=["cmd_runtime"]).cmd_runtime(a),
         "help": cmd_help,
         "quickstart": lambda a: __import__("cockpit.commands.quickstart", fromlist=["cmd_quickstart"]).cmd_quickstart(

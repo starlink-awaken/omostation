@@ -111,6 +111,18 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         help="传给 omo CLI 的参数 (如 'debt list', 'state sync --dry-run')",
     )
 
+    # resident — 常驻 Agent 体系 (WP-A~I / ADR-0396)
+    # 委派 omo.cli resident (SSOT: docs/architecture/resident-agent-system-v1.md)
+    resident_p = sub.add_parser(
+        "resident",
+        help="Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)",
+    )
+    resident_p.add_argument(
+        "resident_args",
+        nargs=argparse.REMAINDER,
+        help="传给 omo resident 的参数 (如 'status', 'roles', 'daemon --once')",
+    )
+
     # debt — omo-debt 收编入口 (直接调用 omo-debt 评分算法, ADR-0122 F-13)
     from cockpit.commands import debt_scoring as _debt_mod
 
