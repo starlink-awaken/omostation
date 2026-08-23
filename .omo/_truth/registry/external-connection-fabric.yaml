@@ -421,6 +421,36 @@ resources:
     owner: architecture-governance
     version: "1.0"
     permission_ref: permission://internal/knowledge
+    bos_uri: bos://knowledge/sediment
+    domain: system
+    visibility: public
+  - id: resident-retros
+    kind: asset_source
+    provider: omo
+    protocol: local_fs
+    capabilities: [read, snapshot, resolve]
+    data_classification: internal
+    provenance: .omo/_knowledge/retros
+    lifecycle: active
+    health: operational
+    owner: architecture-governance
+    version: "1.0"
+    permission_ref: permission://internal/knowledge
+    bos_uri: bos://knowledge/retros
+    domain: system
+    visibility: public
+  - id: resident-alert-channel
+    kind: channel
+    provider: runtime
+    protocol: https-webhook
+    capabilities: [deliver, receipt]
+    data_classification: internal
+    provenance: .omo/_truth/registry/alert-channels.yaml
+    lifecycle: active
+    health: operational
+    owner: governance-team
+    version: "1.0"
+    permission_ref: credential://alert/alert-slack
     domain: system
     visibility: public
   - id: resident-method-pack
