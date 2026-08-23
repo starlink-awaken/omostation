@@ -66,5 +66,11 @@ jobs:
       - name: Unified alert check (observe)
         continue-on-error: true
         run: python3 bin/gac/alert-check.py 2>/dev/null || true
+      - name: Observability metrics + health
+        run: 'cd projects/ecos && uv run python3 -c "
+import sys; sys.path.insert(0, ''src'')
+from ecos.observability.metrics import report
+print(report())
+"'
       - name: P0/P1 tools smoke test
         run: cd projects/ecos && uv run pytest tests/test_tool_smoke.py -q
