@@ -11,7 +11,7 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 576
+  mcp_tools: 600
   bos_services: 237
   bos_domains: 20
   cli_commands: 149
@@ -410,25 +410,49 @@ mcp_servers:
   layer: X
   file: projects/aetherforge/src/aetherforge/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - forge_cost_report
+  - forge_fabric_compact
+  - forge_fabric_inspect
+  - forge_fabric_vram
+  - forge_fabric_warm
+  - forge_generate
+  - forge_generate_mesh
+  - forge_health_check
+  - forge_list_nodes
+  - forge_mesh_status
+  - forge_swarm_run
+  - forge_triage
+  - forge_triage_batch
+  - forge_triage_consensus
+  - forge_triage_status
+  tool_count: 15
 - id: aetherforge-gateway
   name: AetherForge LLM Gateway
   layer: X
   file: projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - gateway_generate
+  - gateway_health
+  - llm_generate
+  tool_count: 3
 - id: aetherforge-mesh
   name: AetherForge Compute Mesh
   layer: X
   file: projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - mesh_cost_report
+  - mesh_generate
+  - mesh_health_check
+  - mesh_list_nodes
+  - mesh_status
+  - mesh_wakeup
+  tool_count: 6
 - id: model-driven
   name: Model-Driven Lifecycle
   layer: M0

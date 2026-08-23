@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-全生态共 **27** 个 MCP 服务器, **576** 个工具。
+全生态共 **27** 个 MCP 服务器, **600** 个工具。
 
 | 服务器 | 层 | 工具数 | 传输 | 端口 | 源文件 |
 |--------|-----|--------|------|------|--------|
@@ -29,11 +29,11 @@
 | `l4-kernel` | L4 | 47 | stdio/http/sse | http:7455, sse:7456 | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `model-driven` | M0 | 28 | stdio | — | `projects/model-driven/src/model_driven/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | — | `projects/model-driven/src/model_driven/fastmcp_server.py` |
+| `aetherforge` | X | 15 | stdio | — | `projects/aetherforge/src/aetherforge/mcp_server.py` |
+| `aetherforge-mesh` | X | 6 | stdio | — | `projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py` |
 | `family-hub` | X | 6 | stdio | — | `projects/family-hub/mcp_server.py` |
+| `aetherforge-gateway` | X | 3 | stdio | — | `projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py` |
 | `c2g` | X | 3 | stdio | — | `projects/omo/src/omo/_vendored/c2g/mcp_server.py` |
-| `aetherforge` | X | 0 | stdio | — | `projects/aetherforge/src/aetherforge/mcp_server.py` |
-| `aetherforge-gateway` | X | 0 | stdio | — | `projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py` |
-| `aetherforge-mesh` | X | 0 | stdio | — | `projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py` |
 
 ## 工具清单
 
@@ -89,6 +89,10 @@
 
 `cloakbrowser`, `eidos`, `kos`, `kronos`, `kronos_browser_fetch`, `kronos_extract`, `kronos_fetch`, `kronos_insight`, `kronos_pipelines`, `kronos_plan`, `kronos_route`, `kronos_status`, `kronos_tools`, `ollama`, `vault`, `wps_note`
 
+### aetherforge (15 tools)
+
+`forge_cost_report`, `forge_fabric_compact`, `forge_fabric_inspect`, `forge_fabric_vram`, `forge_fabric_warm`, `forge_generate`, `forge_generate_mesh`, `forge_health_check`, `forge_list_nodes`, `forge_mesh_status`, `forge_swarm_run`, `forge_triage`, `forge_triage_batch`, `forge_triage_consensus`, `forge_triage_status`
+
 ### agent-runtime (14 tools)
 
 `cards_check`, `cards_status`, `chat`, `domain_context`, `domain_controller_shadow_status`, `domain_facts_audit`, `domain_facts_validation_status`, `domain_model_freshness_status`, `domain_project_status`, `domain_sanyi_status_consistency_status`, `domains_list`, `kems_status`, `run_task`, `workspace_context`
@@ -117,6 +121,10 @@
 
 `derive`, `handle_mcp_request`, `list_entities`, `ontoderive`, `pipeline_status`, `trace`, `validate`
 
+### aetherforge-mesh (6 tools)
+
+`mesh_cost_report`, `mesh_generate`, `mesh_health_check`, `mesh_list_nodes`, `mesh_status`, `mesh_wakeup`
+
 ### family-hub (6 tools)
 
 `complete_quest`, `create_quest`, `generate_smart_quests`, `get_active_quests`, `get_health`, `get_profiles`
@@ -124,6 +132,10 @@
 ### toolforge (5 tools)
 
 `handle_request`, `ontoderive-toolforge`, `toolforge_guide`, `toolforge_match`, `toolforge_select`
+
+### aetherforge-gateway (3 tools)
+
+`gateway_generate`, `gateway_health`, `llm_generate`
 
 ### c2g (3 tools)
 
