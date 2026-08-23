@@ -170,3 +170,15 @@ R4c/R4d/R4a 顺序执行。
 
 更新速查表: 任何 M4 ADR 增删必同步更新本文件。
 本文件**不是** SSOT, 不写权威状态(权威状态在 ADR 自身的 status 字段 + INDEX.md)。
+
+---
+
+## Round 收尾状态 (2026-08-23)
+
+| 收尾项 | 结果 | 备注 |
+|--------|------|------|
+| G-Tests | 54/59 PASS | T50 MCPTOOL placeholders 1373/1377, T51 Health Score 99.83/100, T59 submodule hygiene gate PASS |
+| G-Reflex | 5-check strict 0 err | mof-bootstrap.py all PASS |
+| G-Health | 99.83 → 99.83 (= +0.00) | delta ≥ 0, 无回退 |
+| 复盘固化 | 已完成 | P87 retro + AGENTS.md §11 + path-dependency-scan.py |
+| CI 状态 | ✅ 全部 blocking checks 通过 | ci-local-fast + gac-local-gate PASS |
