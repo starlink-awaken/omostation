@@ -1292,6 +1292,156 @@ def cmd_integrate(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+PLATFORM_PR_FIELDS = {
+    "base_ref_name",
+    "base_ref_oid",
+    "branch",
+    "head_ref_oid",
+    "number",
+    "owner",
+    "repository",
+    "state",
+    "url",
+}
+
+
+def query_platform_rebased_pr(repo_slug: str, pr_number: int) -> tuple[dict | None, str | None]:
+    """Read one exact PR through a scalar, strict-schema GitHub projection."""
+    query = run(
+        [
+            "gh",
+            "pr",
+            "view",
+            str(pr_number),
+            "--repo",
+            repo_slug,
+            "--json",
+            "number,url,state,baseRefName,baseRefOid,headRefOid,headRefName,headRepository,headRepositoryOwner",
+            "--jq",
+            (
+                "{number:.number,url:.url,state:.state,base_ref_name:.baseRefName,"
+                "base_ref_oid:.baseRefOid,head_ref_oid:.headRefOid,branch:.headRefName,"
+                "repository:.headRepository.nameWithOwner,owner:.headRepositoryOwner.login}"
+            ),
+        ]
+    )
+    if query.returncode != 0:
+        return None, query.stderr.strip() or "gh pr view failed"
+    try:
+        payload = json.loads(query.stdout)
+    except json.JSONDecodeError as exc:
+        return None, f"gh pr view returned invalid JSON: {exc}"
+    if not isinstance(payload, dict) or set(payload) != PLATFORM_PR_FIELDS:
+        return None, "gh pr view returned a missing or extra field"
+    scalar_string_fields = PLATFORM_PR_FIELDS - {"number"}
+    if (
+        isinstance(payload["number"], bool)
+        or not isinstance(payload["number"], int)
+        or any(not isinstance(payload[field], str) or not payload[field] for field in scalar_string_fields)
+        or not re.fullmatch(r"[0-9a-f]{40}", payload["base_ref_oid"])
+        or not re.fullmatch(r"[0-9a-f]{40}", payload["head_ref_oid"])
+    ):
+        return None, "gh pr view returned invalid field types or values"
+    return payload, None
+
+
+def build_platform_rebased_source_proof(
+    clone: Path,
+    repo_slug: str,
+    branch: str,
+    original_head: str,
+    pr: dict,
+) -> tuple[dict | None, str | None, str | None]:
+    """Prove that GitHub's rewritten PR head has exactly the original delivery tree."""
+    platform_head = pr["head_ref_oid"]
+    platform_base = pr["base_ref_oid"]
+    for label, sha in (("head", platform_head), ("base", platform_base)):
+        present = run(["git", "-C", str(clone), "cat-file", "-e", f"{sha}^{{commit}}"])
+        if present.returncode != 0:
+            return None, "platform_object_missing", f"platform {label} commit is not in the local object database"
+
+    merge_base = run(["git", "-C", str(clone), "merge-base", original_head, platform_base])
+    original_base = merge_base.stdout.strip()
+    if merge_base.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", original_base):
+        return None, "platform_original_base_unavailable", "cannot resolve original delivery base"
+
+    patch = run(
+        [
+            "git",
+            "-C",
+            str(clone),
+            "diff",
+            "--binary",
+            "--full-index",
+            original_base,
+            original_head,
+            "--",
+        ]
+    )
+    if patch.returncode != 0:
+        return None, "platform_patch_unavailable", patch.stderr.strip() or "cannot create full-index patch"
+    changed = run(
+        [
+            "git",
+            "-C",
+            str(clone),
+            "diff",
+            "--name-only",
+            "-z",
+            original_base,
+            original_head,
+            "--",
+        ]
+    )
+    if changed.returncode != 0:
+        return None, "platform_patch_unavailable", changed.stderr.strip() or "cannot enumerate changed paths"
+    changed_paths = [path for path in changed.stdout.split("\0") if path]
+
+    with tempfile.TemporaryDirectory(prefix="clone-platform-rebase-proof-") as temp_dir:
+        env = os.environ.copy()
+        env["GIT_INDEX_FILE"] = str(Path(temp_dir) / "index")
+        read_tree = run(["git", "-C", str(clone), "read-tree", platform_base], env=env)
+        if read_tree.returncode != 0:
+            return None, "platform_patch_apply_failed", read_tree.stderr.strip() or "cannot seed temporary index"
+        applied = run(
+            ["git", "-C", str(clone), "apply", "--cached", "--binary", "--index", "-"],
+            env=env,
+            input=patch.stdout,
+        )
+        if applied.returncode != 0:
+            return None, "platform_patch_apply_failed", applied.stderr.strip() or "cannot apply original delivery patch"
+        written = run(["git", "-C", str(clone), "write-tree"], env=env)
+        if written.returncode != 0:
+            return None, "platform_patch_apply_failed", written.stderr.strip() or "cannot write proof tree"
+        reproduced_tree = written.stdout.strip()
+
+    platform_tree_probe = run(["git", "-C", str(clone), "rev-parse", f"{platform_head}^{{tree}}"])
+    platform_tree = platform_tree_probe.stdout.strip()
+    if platform_tree_probe.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", platform_tree):
+        return None, "platform_object_missing", "cannot resolve platform head tree"
+    if reproduced_tree != platform_tree:
+        return None, "platform_tree_mismatch", "original delivery patch does not reproduce platform head tree"
+
+    proof = {
+        "schema": "platform-rebased-source-proof/v1",
+        "repository": repo_slug,
+        "pr_number": pr["number"],
+        "pr_url": pr["url"],
+        "branch": branch,
+        "original_head_sha": original_head,
+        "platform_head_sha": platform_head,
+        "platform_base_sha": platform_base,
+        "original_base_sha": original_base,
+        "platform_tree_sha": platform_tree,
+        "changed_paths": changed_paths,
+        "changed_paths_digest": hashlib.sha256(
+            ("\n".join(changed_paths) + ("\n" if changed_paths else "")).encode("utf-8")
+        ).hexdigest(),
+    }
+    proof["receipt_digest"] = _canonical_json_digest(proof)
+    return proof, None, None
+
+
 def cmd_retire(args: argparse.Namespace) -> int:
     """清理 clone + 释放资源."""
     raw_dest = Path(args.destination).expanduser().absolute()
@@ -1375,53 +1525,102 @@ def cmd_retire(args: argparse.Namespace) -> int:
             provenance_error or "repository provenance is unavailable",
         )
     owner = repo_slug.split("/", 1)[0]
+    platform_pr_number = getattr(args, "platform_rebased_pr", None)
+    if platform_pr_number is not None and (
+        isinstance(platform_pr_number, bool)
+        or not isinstance(platform_pr_number, int)
+        or platform_pr_number <= 0
+    ):
+        return reject("retire", "platform_pr_invalid", "platform-rebased PR must be a positive integer")
+
+    platform_pr: dict | None = None
+    platform_proof: dict | None = None
+    expected_remote_head = head_sha
+    if platform_pr_number is not None:
+        platform_pr, query_error = query_platform_rebased_pr(repo_slug, platform_pr_number)
+        if platform_pr is None:
+            return reject("retire", "platform_pr_query_invalid", query_error or "cannot query exact PR")
+        if platform_pr["state"] != "MERGED":
+            return reject("retire", "platform_pr_not_merged", "platform-rebased PR is not merged")
+        if (
+            platform_pr["number"] != platform_pr_number
+            or platform_pr["repository"] != repo_slug
+            or platform_pr["owner"] != owner
+            or platform_pr["branch"] != branch
+            or platform_pr["base_ref_name"] != "main"
+        ):
+            return reject(
+                "retire",
+                "platform_pr_identity_mismatch",
+                "platform-rebased PR does not match repository, owner, branch, number, and base",
+            )
+        expected_remote_head = platform_pr["head_ref_oid"]
+        if expected_remote_head != head_sha:
+            platform_proof, proof_reason, proof_error = build_platform_rebased_source_proof(
+                dest,
+                repo_slug,
+                branch,
+                head_sha,
+                platform_pr,
+            )
+            if platform_proof is None:
+                return reject(
+                    "retire",
+                    proof_reason or "platform_proof_invalid",
+                    proof_error or "platform-rebased source proof failed",
+                )
+
     remote_ref = f"refs/heads/{branch}"
     remote = run(["git", "-C", str(dest), "ls-remote", "--exit-code", "--heads", "origin", remote_ref])
     remote_lines = [line.split() for line in remote.stdout.splitlines() if line.strip()]
     if remote.returncode == 0:
         if len(remote_lines) != 1 or len(remote_lines[0]) != 2 or remote_lines[0][1] != remote_ref:
             return reject("retire", "remote_ref_invalid", "remote branch query returned an ambiguous result")
-        if remote_lines[0][0] != head_sha:
+        if remote_lines[0][0] != expected_remote_head:
             return reject(
                 "retire",
                 "head_not_pushed",
-                f"surviving remote branch contradicts clone HEAD {head_sha}",
+                f"surviving remote branch contradicts expected source {expected_remote_head}",
             )
     elif remote.returncode != 2 or remote_lines:
         return reject("retire", "remote_query_failed", remote.stderr.strip() or "cannot query remote branch")
-    pr_query = run(
-        [
-            "gh",
-            "pr",
-            "list",
-            "--repo",
-            repo_slug,
-            "--head",
-            branch,
-            "--state",
-            "merged",
-            "--json",
-            "number,url,headRefOid,headRefName,headRepositoryOwner",
-            "--limit",
-            "100",
-        ],
-        cwd=str(dest),
-    )
-    if pr_query.returncode != 0:
-        return reject("retire", "pr_query_failed", pr_query.stderr.strip() or "gh pr list failed")
-    try:
-        merged_prs = json.loads(pr_query.stdout or "[]")
-    except json.JSONDecodeError:
-        return reject("retire", "pr_query_invalid", "gh pr list returned invalid JSON")
-    matching_prs = [
-        pr
-        for pr in merged_prs
-        if pr.get("headRefOid") == head_sha
-        and pr.get("headRefName") == branch
-        and (pr.get("headRepositoryOwner") or {}).get("login") == owner
-    ]
-    if not matching_prs:
-        return reject("retire", "pr_not_merged", "no merged PR matches clone HEAD")
+    if platform_pr is None:
+        pr_query = run(
+            [
+                "gh",
+                "pr",
+                "list",
+                "--repo",
+                repo_slug,
+                "--head",
+                branch,
+                "--state",
+                "merged",
+                "--json",
+                "number,url,headRefOid,headRefName,headRepositoryOwner",
+                "--limit",
+                "100",
+            ],
+            cwd=str(dest),
+        )
+        if pr_query.returncode != 0:
+            return reject("retire", "pr_query_failed", pr_query.stderr.strip() or "gh pr list failed")
+        try:
+            merged_prs = json.loads(pr_query.stdout or "[]")
+        except json.JSONDecodeError:
+            return reject("retire", "pr_query_invalid", "gh pr list returned invalid JSON")
+        matching_prs = [
+            pr
+            for pr in merged_prs
+            if pr.get("headRefOid") == head_sha
+            and pr.get("headRefName") == branch
+            and (pr.get("headRepositoryOwner") or {}).get("login") == owner
+        ]
+        if not matching_prs:
+            return reject("retire", "pr_not_merged", "no merged PR matches clone HEAD")
+        merged_pr_url = matching_prs[0].get("url", "")
+    else:
+        merged_pr_url = platform_pr["url"]
 
     if dest.is_symlink() or not os.path.samestat(initial_stat, dest.lstat()):
         return reject("retire", "destination_raced", "destination changed during retirement checks")
@@ -1431,7 +1630,25 @@ def cmd_retire(args: argparse.Namespace) -> int:
     final_status = run(["git", "-C", str(dest), "status", "--porcelain", "--ignore-submodules=none"])
     if final_status.returncode != 0 or final_status.stdout.strip():
         return reject("retire", "clone_raced_dirty", "clone changed during retirement checks")
-    removed, removal_detail = quarantine_remove_verified(dest, initial_stat, head_sha)
+    if platform_pr is not None:
+        live_pr, live_error = query_platform_rebased_pr(repo_slug, platform_pr_number)
+        if live_pr is None:
+            return reject("retire", "platform_proof_raced", live_error or "cannot re-read exact PR")
+        if live_pr != platform_pr:
+            return reject("retire", "platform_proof_raced", "platform-rebased PR changed during retirement checks")
+
+    def verify_platform_at_quarantine(_payload: Path) -> bool:
+        if platform_pr is None:
+            return True
+        quarantine_pr, _error = query_platform_rebased_pr(repo_slug, platform_pr_number)
+        return quarantine_pr == platform_pr
+
+    removed, removal_detail = quarantine_remove_verified(
+        dest,
+        initial_stat,
+        head_sha,
+        verify_platform_at_quarantine if platform_pr is not None else None,
+    )
     if not removed:
         return reject("retire", "destination_raced", removal_detail)
     audit("retire_ok", f"removed {dest}")
@@ -1441,7 +1658,12 @@ def cmd_retire(args: argparse.Namespace) -> int:
                 "ok": True,
                 "removed": str(dest),
                 "head_sha": head_sha,
-                "merged_pr": matching_prs[0].get("url", ""),
+                "merged_pr": merged_pr_url,
+                **(
+                    {"platform_rebased_source_proof": platform_proof}
+                    if platform_proof is not None
+                    else {}
+                ),
             }
         )
     )
@@ -1539,6 +1761,11 @@ def build_parser() -> argparse.ArgumentParser:
     # retire
     sp = sub.add_parser("retire", help="清理 clone")
     sp.add_argument("--destination", required=True)
+    sp.add_argument(
+        "--platform-rebased-pr",
+        type=int,
+        help="exact merged PR number whose server-side rebase rewrote the source commit",
+    )
     sp.set_defaults(func=cmd_retire)
     # abort-unready -- intentionally separate from ready-clone retirement.
     sp = sub.add_parser("abort-unready", help="双读清理从未获 writer admission 的降级 clone")

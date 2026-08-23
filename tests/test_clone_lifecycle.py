@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-_BIN_GAC = Path(__file__).resolve().parent
+_BIN_GAC = Path(__file__).resolve().parents[1] / "bin" / "gac"
 sys.path.insert(0, str(_BIN_GAC))
 sys.path.insert(0, str(_BIN_GAC.parents[1]))
 
@@ -189,6 +189,12 @@ def merged_pr_runner(
     *,
     branch: str = "agent/agent-1",
     provenance_guard_ok: bool = False,
+    platform_head: str | None = None,
+    platform_base: str | None = None,
+    platform_pr: int = 7,
+    platform_repo: str = "owner/repository",
+    platform_owner: str = "owner",
+    platform_state: str = "MERGED",
 ):
     def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
         if calls is not None:
@@ -219,9 +225,45 @@ def merged_pr_runner(
                 }
             ]
             return subprocess.CompletedProcess(cmd, 0, json.dumps(payload), "")
+        if cmd[:3] == ["gh", "pr", "view"]:
+            payload = {
+                "base_ref_name": "main",
+                "base_ref_oid": platform_base,
+                "branch": branch,
+                "head_ref_oid": platform_head,
+                "number": platform_pr,
+                "owner": platform_owner,
+                "repository": platform_repo,
+                "state": platform_state,
+                "url": f"https://example.test/pr/{platform_pr}",
+            }
+            return subprocess.CompletedProcess(cmd, 0, json.dumps(payload), "")
         return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
 
     return _run
+
+
+def make_platform_rebased_clone(tmp_path: Path) -> tuple[Path, str, str, str, str]:
+    """Build local-original and platform-rebased commits with identical delivery changes."""
+    clone, _remote, initial = make_retirable_clone(tmp_path)
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    (clone / "README.md").write_text("delivered\n")
+    git(clone, "add", "README.md")
+    git(clone, "commit", "-m", "delivery")
+    original = git(clone, "rev-parse", "HEAD").stdout.strip()
+
+    git(clone, "switch", "-c", "platform-base", initial)
+    (clone / "BASE.md").write_text("new base\n")
+    git(clone, "add", "BASE.md")
+    git(clone, "commit", "-m", "platform base")
+    platform_base = git(clone, "rev-parse", "HEAD").stdout.strip()
+    git(clone, "switch", "-c", "platform-head")
+    git(clone, "cherry-pick", original)
+    platform_head = git(clone, "rev-parse", "HEAD").stdout.strip()
+    git(clone, "push", "--force", "origin", f"{platform_head}:refs/heads/{branch}")
+    git(clone, "switch", branch)
+    assert git(clone, "rev-parse", "HEAD").stdout.strip() == original
+    return clone, original, platform_head, platform_base, initial
 
 
 def make_abortable_clone(tmp_path: Path) -> tuple[Path, Path, Path, str]:
@@ -1500,6 +1542,305 @@ def test_retire_allows_exact_merged_pr_after_remote_branch_deleted(tmp_path, mon
     assert rc == lc.EXIT_OK
     assert not clone.exists()
     assert any(cmd[:3] == ["gh", "pr", "list"] for cmd in calls)
+
+
+def test_retire_platform_rebase_requires_explicit_pr_flag(tmp_path, monkeypatch, capsys):
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    git(clone, "push", "origin", "--delete", branch)
+    monkeypatch.setattr(
+        lc,
+        "run",
+        merged_pr_runner(
+            platform_head,
+            branch=branch,
+            platform_head=platform_head,
+            platform_base=platform_base,
+        ),
+    )
+
+    rc = lc.cmd_retire(argparse.Namespace(destination=str(clone)))
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert git(clone, "rev-parse", "HEAD").stdout.strip() == original
+    assert '"reason": "pr_not_merged"' in capsys.readouterr().err
+
+
+def test_retire_accepts_exact_platform_rebase_source_proof(tmp_path, monkeypatch, capsys):
+    clone, original, platform_head, platform_base, original_base = make_platform_rebased_clone(tmp_path)
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    calls: list[list[str]] = []
+    monkeypatch.setattr(
+        lc,
+        "run",
+        merged_pr_runner(
+            original,
+            calls,
+            branch=branch,
+            platform_head=platform_head,
+            platform_base=platform_base,
+        ),
+    )
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_OK
+    assert not clone.exists()
+    result = json.loads(capsys.readouterr().out)
+    proof = result["platform_rebased_source_proof"]
+    assert proof == {
+        "schema": "platform-rebased-source-proof/v1",
+        "repository": "owner/repository",
+        "pr_number": 7,
+        "pr_url": "https://example.test/pr/7",
+        "branch": branch,
+        "original_head_sha": original,
+        "platform_head_sha": platform_head,
+        "platform_base_sha": platform_base,
+        "original_base_sha": original_base,
+        "platform_tree_sha": git(tmp_path / "remote.git", "rev-parse", f"{platform_head}^{{tree}}").stdout.strip(),
+        "changed_paths": ["README.md"],
+        "changed_paths_digest": hashlib.sha256(b"README.md\n").hexdigest(),
+        "receipt_digest": proof["receipt_digest"],
+    }
+    assert proof["receipt_digest"] == lc._canonical_json_digest(proof, "receipt_digest")
+    assert len([cmd for cmd in calls if cmd[:3] == ["gh", "pr", "view"]]) >= 2
+    assert not any("fetch" in cmd or "reset" in cmd for cmd in calls)
+
+
+@pytest.mark.parametrize(
+    ("runner_overrides", "reason"),
+    [
+        ({"platform_pr": 8}, "platform_pr_identity_mismatch"),
+        ({"branch": "agent/other"}, "platform_pr_identity_mismatch"),
+        ({"platform_owner": "other"}, "platform_pr_identity_mismatch"),
+        ({"platform_repo": "other/repository"}, "platform_pr_identity_mismatch"),
+        ({"platform_state": "OPEN"}, "platform_pr_not_merged"),
+    ],
+)
+def test_retire_rejects_wrong_platform_pr_identity(
+    tmp_path, monkeypatch, capsys, runner_overrides, reason
+):
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    kwargs = {
+        "branch": branch,
+        "platform_head": platform_head,
+        "platform_base": platform_base,
+        **runner_overrides,
+    }
+    monkeypatch.setattr(lc, "run", merged_pr_runner(original, **kwargs))
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert f'"reason": "{reason}"' in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("missing", ["head", "base"])
+def test_retire_platform_rebase_requires_local_objects(
+    tmp_path, monkeypatch, capsys, missing
+):
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    git(clone, "push", "origin", "--delete", branch)
+    fake = "f" * 40
+    monkeypatch.setattr(
+        lc,
+        "run",
+        merged_pr_runner(
+            original,
+            branch=branch,
+            platform_head=fake if missing == "head" else platform_head,
+            platform_base=fake if missing == "base" else platform_base,
+        ),
+    )
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert '"reason": "platform_object_missing"' in capsys.readouterr().err
+
+
+def test_retire_platform_rebase_rejects_non_equivalent_tree(tmp_path, monkeypatch, capsys):
+    clone, original, _platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    git(clone, "switch", "platform-head")
+    (clone / "EXTRA.md").write_text("not delivery\n")
+    git(clone, "add", "EXTRA.md")
+    git(clone, "commit", "-m", "different platform result")
+    different_head = git(clone, "rev-parse", "HEAD").stdout.strip()
+    git(clone, "push", "--force", "origin", f"{different_head}:refs/heads/{branch}")
+    git(clone, "switch", branch)
+    monkeypatch.setattr(
+        lc,
+        "run",
+        merged_pr_runner(
+            original,
+            branch=branch,
+            platform_head=different_head,
+            platform_base=platform_base,
+        ),
+    )
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert '"reason": "platform_tree_mismatch"' in capsys.readouterr().err
+
+
+def test_retire_platform_rebase_rechecks_live_proof_before_quarantine(
+    tmp_path, monkeypatch, capsys
+):
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    stable = merged_pr_runner(
+        original,
+        branch=branch,
+        platform_head=platform_head,
+        platform_base=platform_base,
+    )
+    views = 0
+
+    def drifting_runner(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        nonlocal views
+        result = stable(cmd, **kwargs)
+        if cmd[:3] == ["gh", "pr", "view"]:
+            views += 1
+            if views == 2:
+                payload = json.loads(result.stdout)
+                payload["head_ref_oid"] = "e" * 40
+                return subprocess.CompletedProcess(cmd, 0, json.dumps(payload), "")
+        return result
+
+    monkeypatch.setattr(lc, "run", drifting_runner)
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert views == 2
+    assert '"reason": "platform_proof_raced"' in capsys.readouterr().err
+
+
+def test_retire_platform_rebase_restores_clone_on_quarantine_live_drift(
+    tmp_path, monkeypatch, capsys
+):
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    stable = merged_pr_runner(
+        original,
+        branch=branch,
+        platform_head=platform_head,
+        platform_base=platform_base,
+    )
+    views = 0
+
+    def drifting_runner(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        nonlocal views
+        result = stable(cmd, **kwargs)
+        if cmd[:3] == ["gh", "pr", "view"]:
+            views += 1
+            if views == 3:
+                payload = json.loads(result.stdout)
+                payload["base_ref_oid"] = "e" * 40
+                return subprocess.CompletedProcess(cmd, 0, json.dumps(payload), "")
+        return result
+
+    monkeypatch.setattr(lc, "run", drifting_runner)
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert git(clone, "rev-parse", "HEAD").stdout.strip() == original
+    assert views == 3
+    assert "post-quarantine verification changed; original path restored" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("mutation", ["missing", "extra"])
+def test_retire_platform_rebase_rejects_non_exact_live_schema(
+    tmp_path, monkeypatch, capsys, mutation
+):
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    stable = merged_pr_runner(
+        original,
+        branch=branch,
+        platform_head=platform_head,
+        platform_base=platform_base,
+    )
+
+    def schema_runner(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        result = stable(cmd, **kwargs)
+        if cmd[:3] == ["gh", "pr", "view"]:
+            payload = json.loads(result.stdout)
+            if mutation == "missing":
+                del payload["base_ref_oid"]
+            else:
+                payload["unexpected"] = "field"
+            return subprocess.CompletedProcess(cmd, 0, json.dumps(payload), "")
+        return result
+
+    monkeypatch.setattr(lc, "run", schema_runner)
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert '"reason": "platform_pr_query_invalid"' in capsys.readouterr().err
+
+
+def test_retire_platform_rebase_requires_surviving_branch_at_platform_head(
+    tmp_path, monkeypatch, capsys
+):
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    git(clone, "push", "--force", "origin", f"{platform_base}:refs/heads/{branch}")
+    monkeypatch.setattr(
+        lc,
+        "run",
+        merged_pr_runner(
+            original,
+            branch=branch,
+            platform_head=platform_head,
+            platform_base=platform_base,
+        ),
+    )
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert '"reason": "head_not_pushed"' in capsys.readouterr().err
+
+
+def test_retire_parser_exposes_platform_rebased_pr():
+    args = lc.build_parser().parse_args(
+        ["retire", "--destination", "/tmp/agent/ws", "--platform-rebased-pr", "2004"]
+    )
+
+    assert args.platform_rebased_pr == 2004
 
 
 def test_retire_removes_ready_attempt_qualified_v2_clone(tmp_path, monkeypatch):
