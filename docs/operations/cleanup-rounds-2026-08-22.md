@@ -30,6 +30,7 @@ fastest path to root cause.
 | 1989 | fix(gate) | detect concurrent-write drift during gate run (P79 partial) | 6 |
 | 1990 | feat(radar) | persist health history to JSONL for trend analysis | 7 |
 | 2002 | feat(runtime) | cockpit-dashboard launcher + Makefile targets | 7 |
+| 2043 | feat(gac) | add health history retention + trend chart tools | 8 |
 
 ---
 
@@ -241,6 +242,7 @@ anomaly_count, service_online_ratio, freshness_score, total_tasks,
 source.
 
 **Action B** (PR #2002): `bin/runtime/start-cockpit-dashboard.sh`
+| 2043 | feat(gac) | add health history retention + trend chart tools | 8 |
 with `start | stop | status` subcommands + 3 Makefile targets.
 Idempotent (refuses to double-start), PID-tracked, port-in-use
 detection via lsof, macOS-friendly (no `setsid` required).
