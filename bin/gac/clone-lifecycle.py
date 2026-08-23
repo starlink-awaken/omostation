@@ -79,42 +79,99 @@ def github_repo_slug(remote_url: str) -> str | None:
     return f"{match.group(1)}/{match.group(2)}" if match else None
 
 
-def bound_repository_slug(clone: Path, identity: dict) -> tuple[str | None, str | None]:
-    """Resolve a lifecycle repository, live-verifying new provenance identities."""
-    if identity.get("provenance_required") is True:
-        env = os.environ.copy()
-        env["AGENT_ID"] = str(identity.get("agent_id", ""))
-        guarded = run(
+def run_provenance_guard(
+    clone: Path,
+    identity: dict,
+    *,
+    platform_base: str | None = None,
+    platform_head: str | None = None,
+) -> tuple[bool, str | None]:
+    """Re-enter the canonical clone guard, optionally narrowing delivery authors."""
+    env = os.environ.copy()
+    env["AGENT_ID"] = str(identity.get("agent_id", ""))
+    command = [sys.executable, str(AGENT_CLONE)]
+    if platform_base is not None or platform_head is not None:
+        if platform_base is None or platform_head is None:
+            return False, "platform provenance requires both base and head"
+        command.extend(
             [
-                sys.executable,
-                str(AGENT_CLONE),
-                "guard",
-                "--workspace",
+                "retirement-provenance",
+                "--clone",
                 str(clone),
-                "--require-clone",
+                "--platform-base",
+                platform_base,
+                "--platform-head",
+                platform_head,
                 "--json",
-            ],
-            env=env,
+            ]
         )
-        if guarded.returncode != 0:
-            return None, guarded.stdout.strip() or guarded.stderr.strip() or "provenance guard failed"
-        try:
-            receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
-        except (OSError, json.JSONDecodeError) as exc:
-            return None, f"provenance receipt unreadable: {exc}"
-        canonical_repository = (receipt.get("repository") or {}).get("canonical_repository", "")
-        match = re.fullmatch(
-            r"github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)",
-            canonical_repository,
+    else:
+        command.extend(
+            ["guard", "--workspace", str(clone), "--require-clone", "--json"]
         )
-        if not match:
-            return None, "provenance receipt repository is invalid"
-        return f"{match.group(1)}/{match.group(2)}", None
+    guarded = run(command, env=env)
+    if guarded.returncode != 0:
+        return False, guarded.stdout.strip() or guarded.stderr.strip() or "provenance guard failed"
+    return True, None
+
+
+def live_origin_repository_slug(clone: Path) -> tuple[str | None, str | None]:
+    """Resolve the exact live origin repository without weakening later provenance checks."""
     remote_probe = run(["git", "-C", str(clone), "remote", "get-url", "origin"])
     if remote_probe.returncode != 0:
         return None, "cannot resolve origin remote"
     slug = github_repo_slug(remote_probe.stdout)
     return (slug, None) if slug else (None, "origin is not an exact GitHub repository URL")
+
+
+def live_origin_fetch_push_repository_slug(clone: Path) -> tuple[str | None, str | None]:
+    """Require one exact fetch and push origin bound to the same GitHub repository."""
+    slugs: list[str] = []
+    for direction, options in (
+        ("fetch", ["--all"]),
+        ("push", ["--push", "--all"]),
+    ):
+        probe = run(
+            ["git", "-C", str(clone), "remote", "get-url", *options, "origin"]
+        )
+        remotes = [line.strip() for line in probe.stdout.splitlines() if line.strip()]
+        if probe.returncode != 0 or len(remotes) != 1:
+            return None, f"origin must expose exactly one {direction} URL"
+        slug = github_repo_slug(remotes[0])
+        if slug is None:
+            return None, f"origin {direction} is not an exact GitHub repository URL"
+        slugs.append(slug)
+    if slugs[0] != slugs[1]:
+        return None, "origin fetch and push repositories differ"
+    return slugs[0], None
+
+
+def provenance_receipt_repository_slug(clone: Path) -> tuple[str | None, str | None]:
+    """Read the canonical repository from a receipt after its guard succeeded."""
+    try:
+        receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        return None, f"provenance receipt unreadable: {exc}"
+    canonical_repository = (receipt.get("repository") or {}).get(
+        "canonical_repository", ""
+    )
+    match = re.fullmatch(
+        r"github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)",
+        canonical_repository,
+    )
+    if not match:
+        return None, "provenance receipt repository is invalid"
+    return f"{match.group(1)}/{match.group(2)}", None
+
+
+def bound_repository_slug(clone: Path, identity: dict) -> tuple[str | None, str | None]:
+    """Resolve a lifecycle repository, live-verifying new provenance identities."""
+    if identity.get("provenance_required") is True:
+        guarded, guard_error = run_provenance_guard(clone, identity)
+        if not guarded:
+            return None, guard_error
+        return provenance_receipt_repository_slug(clone)
+    return live_origin_repository_slug(clone)
 
 
 def workflow_activity(root: Path) -> tuple[list[str], list[str], list[str]]:
@@ -1517,14 +1574,6 @@ def cmd_retire(args: argparse.Namespace) -> int:
             unreadable=state_errors,
         )
 
-    repo_slug, provenance_error = bound_repository_slug(dest, identity)
-    if repo_slug is None:
-        return reject(
-            "retire",
-            "github_repository_unbound",
-            provenance_error or "repository provenance is unavailable",
-        )
-    owner = repo_slug.split("/", 1)[0]
     platform_pr_number = getattr(args, "platform_rebased_pr", None)
     if platform_pr_number is not None and (
         isinstance(platform_pr_number, bool)
@@ -1532,6 +1581,21 @@ def cmd_retire(args: argparse.Namespace) -> int:
         or platform_pr_number <= 0
     ):
         return reject("retire", "platform_pr_invalid", "platform-rebased PR must be a positive integer")
+
+    if platform_pr_number is None:
+        repo_slug, provenance_error = bound_repository_slug(dest, identity)
+    else:
+        # The exact PR base is needed before provenance can distinguish imported
+        # platform commits from this clone's delivery commits.  Resolve only the
+        # live GitHub origin here; the full receipt/origin/author guard runs below.
+        repo_slug, provenance_error = live_origin_repository_slug(dest)
+    if repo_slug is None:
+        return reject(
+            "retire",
+            "github_repository_unbound",
+            provenance_error or "repository provenance is unavailable",
+        )
+    owner = repo_slug.split("/", 1)[0]
 
     platform_pr: dict | None = None
     platform_proof: dict | None = None
@@ -1555,20 +1619,45 @@ def cmd_retire(args: argparse.Namespace) -> int:
                 "platform-rebased PR does not match repository, owner, branch, number, and base",
             )
         expected_remote_head = platform_pr["head_ref_oid"]
-        if expected_remote_head != head_sha:
-            platform_proof, proof_reason, proof_error = build_platform_rebased_source_proof(
-                dest,
-                repo_slug,
-                branch,
-                head_sha,
-                platform_pr,
+        if identity.get("provenance_required") is True:
+            guard_kwargs = (
+                {
+                    "platform_base": platform_pr["base_ref_oid"],
+                    "platform_head": expected_remote_head,
+                }
+                if expected_remote_head == head_sha
+                else {}
             )
-            if platform_proof is None:
+            guarded, guard_error = run_provenance_guard(dest, identity, **guard_kwargs)
+            if not guarded:
                 return reject(
                     "retire",
-                    proof_reason or "platform_proof_invalid",
-                    proof_error or "platform-rebased source proof failed",
+                    "clone_provenance_mismatch",
+                    guard_error or "platform-aware provenance guard failed",
                 )
+            verified_repo_slug, verified_repo_error = provenance_receipt_repository_slug(
+                dest
+            )
+            if verified_repo_slug != repo_slug:
+                return reject(
+                    "retire",
+                    "platform_repository_binding_mismatch",
+                    verified_repo_error
+                    or "verified provenance repository differs from the queried PR repository",
+                )
+        platform_proof, proof_reason, proof_error = build_platform_rebased_source_proof(
+            dest,
+            repo_slug,
+            branch,
+            head_sha,
+            platform_pr,
+        )
+        if platform_proof is None:
+            return reject(
+                "retire",
+                proof_reason or "platform_proof_invalid",
+                proof_error or "platform-rebased source proof failed",
+            )
 
     remote_ref = f"refs/heads/{branch}"
     remote = run(["git", "-C", str(dest), "ls-remote", "--exit-code", "--heads", "origin", remote_ref])
@@ -1631,6 +1720,14 @@ def cmd_retire(args: argparse.Namespace) -> int:
     if final_status.returncode != 0 or final_status.stdout.strip():
         return reject("retire", "clone_raced_dirty", "clone changed during retirement checks")
     if platform_pr is not None:
+        live_repo_slug, live_repo_error = live_origin_fetch_push_repository_slug(dest)
+        if live_repo_slug != repo_slug:
+            return reject(
+                "retire",
+                "platform_origin_raced",
+                live_repo_error
+                or "origin fetch/push repository changed after platform provenance verification",
+            )
         live_pr, live_error = query_platform_rebased_pr(repo_slug, platform_pr_number)
         if live_pr is None:
             return reject("retire", "platform_proof_raced", live_error or "cannot re-read exact PR")
@@ -1641,7 +1738,10 @@ def cmd_retire(args: argparse.Namespace) -> int:
         if platform_pr is None:
             return True
         quarantine_pr, _error = query_platform_rebased_pr(repo_slug, platform_pr_number)
-        return quarantine_pr == platform_pr
+        quarantine_repo_slug, _repo_error = live_origin_fetch_push_repository_slug(
+            _payload
+        )
+        return quarantine_pr == platform_pr and quarantine_repo_slug == repo_slug
 
     removed, removal_detail = quarantine_remove_verified(
         dest,
