@@ -14,7 +14,8 @@
 	agent-workflows agent-workflow-bootstrap agent-workflow-lint agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-integrations agent-workflow-adapters agent-workflow-status \
 	mof-bootstrap m4-health m4-health-compare registry-drift gac-healthcheck gac-drift gac-validate \
 	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
-	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest
+	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest \
+	bcos-evolve bcos-signals bcos-north-star
 
 PY := uv run --with pyyaml python
 PY_STDLIB := bin/gac/managed-python run --profile stdlib --
@@ -576,3 +577,18 @@ resident-resources:  ## resident 资源领域隔离 (M4.2)
 
 resident-ingest:  ## resident 事件摄入 (WP-A)
 	$(OMO_RESIDENT) ingest
+
+# ==============================================================================
+# BCOS 业务域系统 (2026-08-23, W1~W4)
+# 业务闭环: 信号路由 → 进化引擎 → 北极星价值度量
+# 规格: docs/architecture/bcos-system-v1.md
+# ==============================================================================
+
+bcos-evolve:  ## BCOS 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)
+	python3 bin/bc-os/evolution_engine.py
+
+bcos-signals:  ## BCOS 统一信号路由 (W1-D2, 公文/会议/调研/代码)
+	python3 bin/bc-os/signal_router.py --inbox "$$HOME/Documents/@感知信号" || true
+
+bcos-north-star:  ## BCOS 北极星价值度量 v2 (排除 self-data)
+	python3 bin/bc-os/north_star_meter_v2.py --json

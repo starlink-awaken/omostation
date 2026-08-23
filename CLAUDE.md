@@ -199,3 +199,18 @@ make resident-daemon       # 单次 tick 调试
 - 路由表 SSOT: `projects/omo/src/omo/resident/resident-routes.yaml`
 - 角色 SSOT: `omo resident roles`（`projects/omo/src/omo/resident/roles.py`）
 - MOF: `mof/m2/digital_agent.yaml`（DigitalAgent, tier=resident）· BOS: `bos://resident/*`
+
+## BCOS 业务域系统 (2026-08-23, W1~W4)
+
+业务闭环系统：信号路由 → 进化引擎 → 北极星价值度量。详见 [`docs/architecture/bcos-system-v1.md`](docs/architecture/bcos-system-v1.md)。
+
+```bash
+make bcos-evolve       # 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)
+make bcos-signals      # 统一信号路由 (W1-D2)
+make bcos-north-star   # 北极星价值度量 v2
+```
+
+- 进化引擎: `bin/bc-os/evolution_engine.py`（EvolutionEngine 四阶段）
+- 信号路由: `bin/bc-os/signal_router.py`（W1-D2, 公文/会议/调研/代码）
+- 北极星: `bin/bc-os/north_star_meter_v2.py`（排除 self-data）
+- MOF: `mof/m2/bcos_system.yaml`（BCOSystem）· BOS: `bos://bcos/*`

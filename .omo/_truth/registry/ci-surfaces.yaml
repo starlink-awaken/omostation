@@ -1070,6 +1070,14 @@ surfaces:
   triggers: []
   status: active
   note: 'CR-RESIDENT-BOS-01 (L0 enforcement): resident 接口经 bos://resident/* 三源路由一致性 (bos-services.yaml/bos-registry.json/BOS_URI_DOMAINS); 经 governance-checks.yaml source_ref 引用'
+- id: bin-gac-heartbeat-wrapper-sh
+  tool: bin/gac/heartbeat-wrapper.sh
+  description: 'cron 心跳包装器 — operating-rhythm 组 cron job 经此写入 heartbeats/*.json'
+  gate: operating-rhythm
+  triggers:
+  - push
+  status: active
+  owner: governance-agent
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:
