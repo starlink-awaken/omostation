@@ -229,6 +229,24 @@ def main(argv: list[str] | None = None) -> int:
             pass
 
 
+    # M1 自心跳 + T2 cockpit 收件箱
+    try:
+        hb_dir = ws_root / ".omo" / "state" / "heartbeats"
+        hb_dir.mkdir(parents=True, exist_ok=True)
+        hb = {"job": "meta-doctor", "last_run": report["generated_at"],
+              "ok": report["ok"], "summary": report["summary"]}
+        (hb_dir / "meta-doctor.json").write_text(json.dumps(hb, indent=2), encoding="utf-8")
+
+        inbox_dir = ws_root / ".omo" / "_control" / "cockpit-inbox"
+        inbox_dir.mkdir(parents=True, exist_ok=True)
+        alert = {"source": "meta-doctor", "timestamp": report["generated_at"],
+                 "severity": "warning" if not report["ok"] else "info",
+                 "message": f"meta-doctor: {report['summary']}"}
+        (inbox_dir / "meta-doctor-latest.json").write_text(
+            json.dumps(alert, ensure_ascii=False, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
     print(json.dumps(report, ensure_ascii=False))
     return 0 if report["ok"] else 1
 
