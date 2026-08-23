@@ -432,6 +432,123 @@ def test_find_without_binding_preserves_legacy_receipt_contract(registry: dict, 
     assert "receipt_digest" not in receipt
 
 
+def test_inspect_cli_is_static_read_only_and_does_not_delegate_or_load_provider(
+    cap_sync, registry: dict, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    skill = tmp_path / ".agents/skills/demo/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("---\nname: demo\ndescription: static proof\n---\nprivate instructions\n", encoding="utf-8")
+    registry_path = tmp_path / "projection-not-applicable.yaml"
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(_trace_binding(), sort_keys=True), encoding="utf-8")
+    before = {path: (path.stat().st_mtime_ns, path.read_bytes()) for path in (skill, binding_path)}
+
+    monkeypatch.setattr(cap_sync, "ROOT", tmp_path)
+
+    def forbidden_process(*_args, **_kwargs):
+        raise AssertionError("inspect must not start a process")
+
+    monkeypatch.setattr(cap_sync.subprocess, "run", forbidden_process)
+    assert cap_sync.main(
+        [
+            "inspect",
+            "--id",
+            "skill:demo",
+            "--binding-json",
+            str(binding_path),
+            "--registry",
+            str(registry_path),
+        ]
+    ) == 0
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert receipt["status"] == "inspected"
+    assert receipt["read_only"] is True
+    assert receipt["executed"] is False
+    assert receipt["provider_called"] is False
+    assert receipt["invoked"] is False
+    assert receipt["value_indicator_policy"] is False
+    assert "private instructions" not in json.dumps(receipt, sort_keys=True)
+    assert receipt["upstream_resolution"]["status"] == "not_applicable"
+    after = {path: (path.stat().st_mtime_ns, path.read_bytes()) for path in (skill, binding_path)}
+    assert after == before
+
+
+def test_inspect_cli_returns_stable_upstream_failure_code(
+    cap_sync, registry: dict, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_canonical_trace_registry(registry), sort_keys=True), encoding="utf-8")
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(_trace_binding(), sort_keys=True), encoding="utf-8")
+    monkeypatch.setattr(cap_sync, "ROOT", tmp_path)
+
+    assert cap_sync.main(
+        [
+            "inspect",
+            "--id",
+            "mcp-tool:omo:status",
+            "--binding-json",
+            str(binding_path),
+            "--registry",
+            str(registry_path),
+        ]
+    ) == 4
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["failure_code"] == "upstream_resolution_required"
+    assert receipt["executed"] is False
+
+
+def test_inspect_cli_replays_resolution_and_statically_proves_mcp_source(
+    cap_sync, registry: dict, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "projects/omo/src/omo/mcp_server.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "from fastmcp import FastMCP\n"
+        "mcp = FastMCP('omo')\n"
+        "@mcp.tool()\n"
+        "async def status() -> str:\n"
+        "    return 'ok'\n"
+        "@mcp.tool()\n"
+        "async def shared() -> str:\n"
+        "    return 'ok'\n",
+        encoding="utf-8",
+    )
+    proved = _canonical_trace_registry(registry)
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_content = yaml.safe_dump(proved, sort_keys=True).encode("utf-8")
+    registry_path.write_bytes(registry_content)
+    selector = {"capability_id": "mcp-tool:omo:status"}
+    resolution = cap_sync.build_resolution_receipt(
+        cap_sync.resolve_capability(proved, **selector),
+        registry_content,
+        selector,
+        binding=_trace_binding(),
+        projection_metadata=proved,
+    )
+    resolution_path = tmp_path / "resolution.json"
+    resolution_path.write_text(json.dumps(resolution, sort_keys=True), encoding="utf-8")
+    monkeypatch.setattr(cap_sync, "ROOT", tmp_path)
+
+    assert cap_sync.main(
+        [
+            "inspect",
+            "--id",
+            "mcp-tool:omo:status",
+            "--resolution-receipt-json",
+            str(resolution_path),
+            "--registry",
+            str(registry_path),
+        ]
+    ) == 0
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["status"] == "inspected"
+    assert receipt["proof"] == {"method": "python_ast_static_declaration", "strength": "strong"}
+    assert receipt["upstream_resolution"]["receipt_digest"] == resolution["receipt_digest"]
+    assert receipt["provider_called"] is False
+
+
 def test_bound_find_fails_closed_for_unproved_or_ambiguous_sources(
     cap_sync, registry: dict, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

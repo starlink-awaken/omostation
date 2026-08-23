@@ -236,6 +236,62 @@ receipts, cleanup and the OMO evidence handoff. Neither B4-B nor B4-C may
 invoke a capability, write Workflow Mesh evidence, or create a value/human
 outcome.
 
+### 5.2 B4-C static native inspection
+
+B4-C adds one non-executing public operation for exact Skill, Workflow, MCP and
+BOS IDs:
+
+```bash
+uv run --with pyyaml python bin/capability-sync.py inspect \
+  --id skill:example \
+  --binding-json /path/to/causal-binding.json
+
+uv run --with pyyaml python bin/capability-sync.py inspect \
+  --id mcp-tool:example:inspect \
+  --resolution-receipt-json /path/to/b4-b-resolution-receipt.json
+```
+
+Skill and Workflow are not represented by the generated capability projection,
+so they bind the B4-B causal identity directly and record
+`upstream_resolution.status=not_applicable` with reason
+`native_kind_not_in_projection`. MCP and BOS require a replay-valid B4-B
+resolution receipt whose registry digest exactly matches the projection bytes
+used for inspection. The projection is only a locator: MCP proof requires an
+exact static FastMCP declaration in the repository-relative Python source, and
+BOS proof requires one unique URI in `projects/agora/etc/bos-services.yaml`.
+FastMCP proof additionally requires the exact `fastmcp.FastMCP` import, one
+top-level authority binding and a literal native server name equal to the
+registry ID. An explicit safe literal `version=` is proved from that same call;
+an absent or dynamic version remains unprovable. Workflow proof compares two
+full canonical-directory snapshots (sorted names plus complete YAML bytes)
+around validation and requires exactly one matching ID. Dynamic MCP
+registration, display-name/ID mismatch, unreadable competitors and non-unique
+claims fail closed.
+
+`native-capability-inspection-receipt/v1` records only the causal binding,
+exact kind/ID, repository-relative source reference, source digest/schema,
+static proof method/strength, upstream relation and a bounded native version.
+When the authority has no explicit version, `native_version` is null and
+`native_version_status=unprovable`; no version is inferred. The receipt never
+contains source content, Skill instructions, command/argv, module/function
+names, provider fields, prompts, environment data or absolute paths. Stable
+FD-bound component-by-component no-follow reads reject parent/final symlinks,
+replacement, concurrent same-size changes and source replay mismatch. Every
+source is reread through the same descriptor and its final directory entry must
+still name the original inode.
+
+Receipt replay validates semantics in addition to its self-digest: kind-specific
+source schema and proof method, deterministic Skill/Workflow/BOS source refs,
+bounded control-free native versions, and every upstream/receipt SHA-256 field
+are fixed contracts. Recomputing `receipt_digest` cannot legitimize a changed
+proof method, source kind/reference, version or upstream digest.
+
+Every successful or rejected inspection fixes `read_only=true` and
+`executed=false`, `provider_called=false`, `invoked=false`,
+`value_indicator_policy=false`. Admission, authorization, evidence and
+verification remain explicitly `not_evaluated`/false. Static inspection is not
+client loading, availability, provider health, admission or execution evidence.
+
 ## 6. Availability and fallback
 
 “Available” is never a single boolean. Operators must be able to distinguish:
@@ -272,6 +328,8 @@ messages:
 | `admission_contradiction` | admission state and required transport contract disagree |
 | `resolution_not_found` | exact native ID does not exist in a proved source |
 | `resolution_ambiguous` | selector has more than one candidate |
+| `upstream_resolution_required` | the kind-specific B4-B binding or resolution receipt is missing |
+| `upstream_resolution_invalid` | the supplied upstream binding/receipt cannot be replay-validated for the exact native ID |
 | `observation_stale` | runtime observation is outside its declared freshness window |
 | `authorization_required` | a distinct controller/provider/human decision is missing |
 | `transport_uncertain` | request outcome cannot be proved after interruption |
@@ -348,9 +406,9 @@ The capability foundation evolves in bounded steps:
 2. **B4-B — trace binding**: bind intent/spec resolution, Workflow run and
    exact generated-capability resolution receipts without changing execution;
    the receipt is replay-verifiable and value-isolated.
-3. **B4-C — native inspect/load adapters**: skill, workflow and MCP bounded
-   inspection with native version/source-digest evidence; it does not infer
-   those facts from a B4-B projection receipt.
+3. **B4-C — static native inspect adapter**: Skill, Workflow, MCP and BOS
+   bounded source/version proof; it neither loads clients/providers nor infers
+   native proof from a B4-B projection receipt.
 4. **B4-D — execution receipts**: kind-specific execution binding, cleanup and
    OMO evidence handoff; only its native owner may request execution.
 5. **B5 — canary and resilience**: real single-path canaries, explicit recovery,

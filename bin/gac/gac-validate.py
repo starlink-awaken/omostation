@@ -173,6 +173,35 @@ def _check_subtraction_quota(path: Path, current_rules: int) -> list[str]:
     return []
 
 
+
+
+def _check_review_by_expiry(path: Path = REGISTRY) -> list[str]:
+    """M4 日落条款: governance-checks.yaml 规则带 review_by 过期即 warn."""
+    try:
+        import yaml
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        warns = []
+        for doc in yaml.safe_load_all(path.read_text(encoding="utf-8")):
+            if not doc:
+                continue
+            for rule in doc.get("checks", []):
+                rb = rule.get("review_by")
+                if not rb:
+                    continue
+                try:
+                    exp = datetime.fromisoformat(rb.replace("Z", "+00:00"))
+                    if exp < now:
+                        warns.append(
+                            f"review-expired: {rule.get('id','?')} review_by={rb} 已过期"
+                        )
+                except (ValueError, TypeError):
+                    pass
+        return warns
+    except Exception:
+        return []
+
+
 def _check_script_quota(path: Path = REGISTRY) -> list[str]:
     """BET-Y1Q3-T6-05: bin/ 活跃脚本减法配额 — 新增脚本须同时归档/删除一个."""
     try:
