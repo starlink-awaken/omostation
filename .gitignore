@@ -23,6 +23,9 @@
 # items/ 例外: canonical SSOT (跟 .omo/tasks/ 同类 lifecycle 数据), 入仓 (修正 c82cbd23 误判).
 .omo/debt/*
 !.omo/debt/items/
+# health trend history (compass_radar JSONL append-only 时间序列)
+# 高 churn, 由 compass_radar 自动生成, 不入仓 (防 working tree 噪声).
+.omo/state/history/
 .omo/evidence
 .omo/plans/
 .omo/run-continuation/

@@ -675,6 +675,52 @@ def _write_text_if_changed(path: Path, payload: str, *, normalize=None) -> bool:
     return True
 
 
+def _append_health_history(health_yaml_path: Path, report: dict[str, Any]) -> None:
+    """Append a compact snapshot to .omo/state/history/health.jsonl.
+
+    The current health.yaml is regenerated on every radar run, so its
+    content is overwritten without history. Operators asking "what was
+    the health score last week?" need a JSONL append-only history to
+    answer that. Each line is a single JSON record with:
+      - ts (UTC ISO8601)
+      - health_score (composite)
+      - governance_anomaly_score
+      - anomaly_count
+      - service_online_ratio
+      - freshness_score
+      - total_tasks
+      - source (run_radar source marker)
+
+    Retention is unbounded for now; a downstream cron (e.g.
+    omo state prune-history --keep-days=90) can rotate.
+
+    Failures are silent: this is a best-effort observability feature,
+    not a core invariant. If the JSONL write fails, radar still
+    succeeds.
+    """
+    import json as _json
+    try:
+        history_dir = health_yaml_path.parent.parent / "state" / "history"
+        history_dir.mkdir(parents=True, exist_ok=True)
+        history_file = history_dir / "health.jsonl"
+        snapshot = {
+            "ts": _utc_now(),
+            "health_score": report.get("health_score"),
+            "governance_anomaly_score": report.get("governance_anomaly_score"),
+            "anomaly_count": report.get("anomaly_count"),
+            "service_online_ratio": report.get("service_online_ratio"),
+            "freshness_score": report.get("freshness_score"),
+            "total_tasks": report.get("total_tasks"),
+            "source": report.get("source"),
+        }
+        # append-only, atomic per-line (write+fsync then continue)
+        with open(history_file, "a", encoding="utf-8") as f:
+            f.write(_json.dumps(snapshot, ensure_ascii=False, separators=(",", ":")))
+            f.write("\n")
+    except Exception as exc:
+        print(f"⚠ history append failed (non-fatal): {exc}", file=sys.stderr)
+
+
 def _observability_event_anomalies(ws_root: Path) -> tuple[int, dict[str, Any]]:
     """统一事件面近 24h 异常统计 (design: docs/observability-unified-architecture.md).
 
@@ -935,6 +981,10 @@ def main() -> int:
         print(f"✅ health.yaml 已刷新: {output}")
     else:
         print(f"ℹ health.yaml 语义未变化, 跳过写入: {output}")
+
+    # 历史快照: append 一个轻量记录到 .omo/state/history/health.jsonl
+    # (P79 治本 — 让 trend 文档和未来 dashboard 有真实时间序列)
+    _append_health_history(output, report)
 
     # 同步刷新 system.yaml 的健康分相关字段 (避免 SSOT 偏差告警)
     sync_system_yaml(
