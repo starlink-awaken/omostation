@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""scheduler-compile.py — 调度编译器: 单一登记源 → 校验三格式一致性 (ADR-A).
+"""Archived, unwired scheduler compiler prototype (ADR-A).
 
 读取 .omo/cron/registry.yaml 登记源, 校验 crontab -l 安装态是否与登记一致.
 发现漂移即报告 (unregistered/orphan), exit 1 = 存在漂移.
 
-用法:
-  python3 bin/scheduler-compile.py --check    # 校验模式 (CI/cron)
-  python3 bin/scheduler-compile.py --report   # 报告模式 (人类审阅)
+归档原因: 未接入 CI/Make/cron/测试；重新启用前须补 runtime/observer 契约与减法配额。
 """
 from __future__ import annotations
 import argparse, json, subprocess, sys
