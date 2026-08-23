@@ -1,1 +1,0 @@
-../ssot/PACKS/dormant-adapter/src/Tests/test_dormant_adapter.py

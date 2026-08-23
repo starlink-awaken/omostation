@@ -1027,11 +1027,7 @@ surfaces:
   workflow: ecos-ci.yml
   also_in: []
   gate: false
-  triggers:
-  - per_pr
-  - push
-  status: active
-  note: Alert routing check for observability pipeline
+  triggers: null
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:
