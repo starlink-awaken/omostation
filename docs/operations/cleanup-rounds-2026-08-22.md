@@ -1,10 +1,10 @@
 # Cleanup Rounds 2026-08-22 — Retrospective & How to Recover from Drift
 
-> **Status**: closed (2026-08-23) — 10 PRs merged, 5 health-anomaly classes cleared, 4 structural gates added
+> **Status**: closed (2026-08-23) — 11 PRs merged, 5 health-anomaly classes cleared, 4 structural gates added
 > **Audience**: future operators / agents encountering the same drift patterns
 > **Tone**: clinical — what was wrong, what fixed it, what to re-check next time
 
-This document captures **the 5 rounds of optimization** that lifted composite
+This document captures **the 8 rounds of optimization** that lifted composite
 health from 28/100 → 78/100 (peak 89/100), closed 61 stale planned tasks, 6
 zombie agent-workflow runs, 45 stale locks, 3GB of orphan projects, and
 shipped three structural gates so the same drift cannot recur without
