@@ -4,7 +4,7 @@
 # 安装 crontab 条目使 resident 体系持续运行 (M4.3: 五类角色独立 projector 并行):
 #   - 每 2min: 五类角色 daemon --once (sediment/decision/execute/monitor/heartbeat,
 #     各自独立 checkpoint + topic_filter 分片消费, 互不干扰)
-#   - 每 5min: omo resident signals(personal-signals 轮询)
+#   - 每 5min: omo resident signals(personal-signals 轮询, 实际发布到事件流)
 #   - 每 5min: omo resident alert(告警转发)
 #   - 每天 02:10: system-health-check --emit(体系健康探针)
 #
@@ -14,7 +14,8 @@ set -euo pipefail
 
 WORKSPACE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
-PYTHONPATH="${WORKSPACE}/projects/omo/src:${PYTHONPATH:-}"
+# signals 发布依赖 bus-foundation (bus_foundation.facade.event)
+PYTHONPATH="${WORKSPACE}/projects/omo/src:${WORKSPACE}/projects/bus-foundation/src:${PYTHONPATH:-}"
 
 # cron 环境 PATH 受限, /usr/bin/python3 (3.9) 无 datetime.UTC → omo ledger
 # import 失败。探测支持 datetime.UTC 的 python3 (3.11+), 优先 homebrew。
@@ -36,8 +37,8 @@ for role in sediment decision execute monitor heartbeat; do
 */2 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident daemon --once --role ${role} --ledger ${WORKSPACE}/runtime/omo/event-ledger.sqlite3 >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/cron-${role}.log 2>&1"
 done
 
-# 构造 cron 条目
-CRON_SIGNALS="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident signals --dry-run >> ${WORKSPACE}/.omo/_delivery/personal-signals/cron.log 2>&1"
+# 构造 cron 条目 (signals 实际发布, 不 dry-run)
+CRON_SIGNALS="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident signals >> ${WORKSPACE}/.omo/_delivery/personal-signals/cron.log 2>&1"
 CRON_ALERT="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident alert --dry-run >> ${WORKSPACE}/.omo/_delivery/alert-forwarder/cron.log 2>&1"
 CRON_HEALTH="10 2 * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} bin/ssot/system-health-check.py --emit >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/health.log 2>&1"
 
