@@ -15,6 +15,17 @@ WORKSPACE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 PYTHONPATH="${WORKSPACE}/projects/omo/src:${PYTHONPATH:-}"
 
+# cron 环境 PATH 受限, /usr/bin/python3 (3.9) 无 datetime.UTC → omo ledger
+# import 失败。探测支持 datetime.UTC 的 python3 (3.11+), 优先 homebrew。
+if ! "${PYTHON_BIN}" -c "from datetime import UTC" 2>/dev/null; then
+  for cand in /opt/homebrew/bin/python3 /usr/local/bin/python3 python3.13 python3.12 python3.11; do
+    if command -v "${cand}" >/dev/null 2>&1 && "${cand}" -c "from datetime import UTC" 2>/dev/null; then
+      PYTHON_BIN="${cand}"
+      break
+    fi
+  done
+fi
+
 CRON_MARKER="# resident-agent-schedule (managed by install-resident-cron.sh)"
 
 # 构造 cron 条目
