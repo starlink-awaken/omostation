@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import time
 from datetime import UTC, datetime
@@ -23,9 +22,7 @@ from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 DELIVERY = WORKSPACE / ".omo" / "_delivery"
-DAEMON_PID = DELIVERY / "resident-orchestrator" / "daemon.pid"
 DAEMON_WATERMARKS = DELIVERY / "resident-orchestrator" / "watermarks"
-INGEST_WATERMARK = DELIVERY / "event-ingest" / "watermark.json"
 EVENTS_JSONL = WORKSPACE / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
 LEDGER = WORKSPACE / "runtime" / "omo" / "event-ledger.sqlite3"
 # 阈值: 组件状态文件超过该时长视为 stale
@@ -43,19 +40,24 @@ def _file_age(path: Path) -> float | None:
 
 
 def _check_daemon_alive() -> tuple[bool, str]:
-    if not DAEMON_PID.is_file():
-        return False, "daemon.pid missing (daemon not running)"
-    try:
-        pid = int(DAEMON_PID.read_text().strip())
-        os.kill(pid, 0)
-        return True, f"daemon alive (pid={pid})"
-    except (ValueError, ProcessLookupError):
-        return False, f"daemon pid {DAEMON_PID.read_text().strip()[:8]} not alive"
+    """daemon 以 cron --once 调度运行, 进程退出是正常行为。
+
+    以最近一次 tick 写入的字节偏移水位文件的新鲜度判定存活:
+    水位文件在 STALE_THRESHOLD 内有更新 → daemon 正常轮转。
+    """
+    watermarks = list(DAEMON_WATERMARKS.glob("*.json"))
+    if not watermarks:
+        return False, "no daemon watermark files (daemon never ticked)"
+    newest = min(watermarks, key=lambda p: p.stat().st_mtime)
+    age = time.time() - newest.stat().st_mtime
+    ok = age <= STALE_THRESHOLD_SECONDS
+    detail = f"last daemon tick {age:.0f}s ago"
+    return ok, ("daemon active (" + detail + ")" if ok else "daemon stale (" + detail + ")")
 
 
 def _check_watermarks() -> tuple[bool, str]:
     ages = []
-    for path in list(DAEMON_WATERMARKS.glob("*.json")) + [INGEST_WATERMARK]:
+    for path in list(DAEMON_WATERMARKS.glob("*.json")):
         age = _file_age(path)
         if age is not None:
             ages.append((path.name, age))
@@ -68,11 +70,12 @@ def _check_watermarks() -> tuple[bool, str]:
 
 
 def _check_events_active() -> tuple[bool, str]:
+    """workflow-mesh 输入流静止是正常状态(无新 workflow 事件), 仅记录不降级。"""
     age = _file_age(EVENTS_JSONL)
     if age is None:
-        return False, "events.jsonl missing"
+        return True, "events.jsonl missing (no input stream yet)"
     if age > STALE_THRESHOLD_SECONDS:
-        return False, f"events.jsonl stale ({age:.0f}s)"
+        return True, f"events.jsonl idle ({age:.0f}s, 输入流静止属正常)"
     return True, f"events active (age={age:.0f}s)"
 
 
@@ -126,8 +129,14 @@ def main() -> int:
         return 0 if report["severity"] == "recovered" else 2
 
     try:
-        sys.path.insert(0, str(Path(__file__).resolve().parent))
-        from observability_events import append_event  # noqa: PLC0415
+        import importlib.util
+
+        events_file = Path(__file__).resolve().parent / "observability-events.py"
+        spec = importlib.util.spec_from_file_location("observability_events", events_file)
+        assert spec is not None and spec.loader is not None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        append_event = module.append_event
 
         append_event(report)
         print(json.dumps({"emitted": True, "severity": report["severity"]}))
