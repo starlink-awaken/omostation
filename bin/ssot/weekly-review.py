@@ -57,7 +57,7 @@ def fetch_health(ws: Path) -> dict:
         )
         if r.returncode == 0:
             data = json.loads(r.stdout)
-            return {"score": data.get("score", data.get("health_score", "n/a"))}
+            return {"score": data.get("uhs", data.get("score", data.get("health_score", "n/a")))}
     except Exception:
         pass
     return {"score": "n/a"}
@@ -67,25 +67,44 @@ def fetch_health(ws: Path) -> dict:
 
 def fetch_value(ws: Path) -> dict:
     """Fetch North Star weekly value metrics via subprocess."""
+    meter_path = ws / "bin" / "bc-os" / "north_star_meter_v2.py"
     ns_path = ws / "bin" / "ssot" / "north-star-weekly.py"
-    if not ns_path.is_file():
-        return {"trend": [], "readiness": "unknown", "error": "script not found"}
-    try:
-        r = subprocess.run(
-            ["python3", str(ns_path), "--json"],
-            cwd=ws, capture_output=True, text=True, timeout=60,
-        )
-        if r.returncode == 0:
-            data = json.loads(r.stdout)
-            return {
-                "readiness": data.get("readiness", "unknown"),
-                "total_episodes": data.get("total_episodes", 0),
-                "progress_pct": data.get("progress_pct", 0),
-                "four_week_value_gate": data.get("four_week_value_gate", "unknown"),
-            }
-    except Exception:
-        pass
-    return {"readiness": "unknown", "error": "fetch failed"}
+    if meter_path.is_file():
+        import os
+        principal = os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        try:
+            r = subprocess.run(
+                ["python3", str(meter_path), "--json", "--principal-id", principal],
+                cwd=ws, capture_output=True, text=True, timeout=60,
+            )
+            if r.returncode == 0:
+                data = json.loads(r.stdout)
+                return {
+                    "readiness": data.get("status") or data.get("readiness", "unknown"),
+                    "total_episodes": data.get("total_episodes", 0),
+                    "progress_pct": data.get("progress_pct", 0),
+                    "four_week_value_gate": data.get("four_week_value_gate", "unknown"),
+                }
+        except Exception:
+            pass
+    # fallback to north-star-weekly
+    ns_path = ws / "bin" / "ssot" / "north-star-weekly.py"
+    if ns_path.is_file():
+        try:
+            r = subprocess.run(
+                ["python3", str(ns_path), "--json"],
+                cwd=ws, capture_output=True, text=True, timeout=30,
+            )
+            if r.returncode == 0:
+                data = json.loads(r.stdout)
+                return {
+                    "readiness": data.get("readiness", "unknown"),
+                    "total_episodes": data.get("total_episodes", 0),
+                    "progress_pct": data.get("progress_pct", 0),
+                }
+        except Exception:
+            pass
+    return {"readiness": "unknown", "error": "no source available"}
 
 
 # ── Source 3: Debt ────────────────────────────────────────────────────────────
