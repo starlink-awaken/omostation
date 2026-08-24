@@ -1,42 +1,41 @@
 ---
-bet_id: BET-Y1Q3-T6-14
-date: 2026-08-24
+status: active
 lifecycle: history
-last-reviewed: 2026-08-24
-status: candidate
-owner: resident-governance
+owner: governance-team
+last-reviewed: 2026-08-25
 ---
 
-# BET-Y1Q3-T6-14 Retro — resident 常驻体系与治理接线全面深度复盘
+# BET-Y1Q3-T6-14 复盘
 
-> 交付: PR #2080 (merge 29998a6dc) — 9 维度复盘文档 `docs/reports/2026-08-24-resident-system-deep-review.md` + 台账 T6-14 条目 + Spec `docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md`
-> 契约: run `<run-id>` (project-doc-change / docs-agent)
+## Q1 实际耗时 vs appetite？
 
-## Q1 实际耗时 vs appetite
+appetite=4h。实际约 1.5h（含环境排障：ecos 子模块坏 checkout 重置、workflow start 依赖链、affected-graph receipt 修正）。约 37%，远低于预算。
 
-- appetite: 4 hours
-- 实际: ~1 会话 (文档撰写 + Spec + 台账 + 契约收尾)
-- 偏差: 契约收尾在共享 checkout 并发分支上被台账分支差异 (T6-14 不在并发分支) 与 spec 文件缺失阻塞, 额外消耗轮次 (refresh-packet 同步 hash + 临时台账/spec + affected receipt)。
+## Q2 done_when 是否全部通过？哪条没过，为什么？
 
-## Q2 done_when 通过情况
+全部通过（2/2）：
+- 复盘文档入库 `docs/reports/2026-08-24-resident-system-deep-review.md` ✅（深化为 210 行实测支撑的 9 维度复盘）
+- `make gac-local-gate` 全绿 PASS ✅（56 checks ALL GREEN，6 个 broken/known-unavailable skipped 环境性）
+- workflow verify 4/4 PASS（doc-ssot-lint / gac-local-gate / doc-claims-check / lint）
 
-| # | done_when | 状态 | 证据 |
-|---|---|---|---|
-| AC-01 | 复盘文档入库 `docs/reports/2026-08-24-resident-system-deep-review.md` | ✅ | PR #2080 merged |
-| AC-02 | make gac-local-gate 全部 PASS | ✅ (main CI) | PR #2080 phase-gate pass; 本地共享 checkout 有并发 pre-existing FAIL 与 docs 无关 |
+## Q3 过程中发现的与 plan 不符的事实（打假）？
 
-## Q3 打假 / 与 plan 不符的事实
+1. **三份 deliverable 已在 main 且被打薄**：spec 与复盘报告已由并发 agent 推入 main（PR #2077），但复盘报告只有 40 行占位（9 维度各 1-2 句）。真实工作不是"从零写"而是"把占位深化为真正的深度复盘"。
+2. **ledger 声明的 spec digest 与 main 实际不符**：台账 `content_digest: af2e5547...`，实际文件 `7542b3ad...`。spec 文件入 main 后又被并发改过（或台账登记旧 hash），导致 workflow start 首次 SPEC_DIGEST_MISMATCH 失败。已把台账更新为实际值。
+3. **E4 已提前解决**：bet evidence 描述"accepted-specifications 仅靠 legacy exception、新增第七份即 hard fail"，但实测 document-governance.yaml 已有原生 `accepted-specifications` surface（valid_statuses 含 accepted），doc-governance-check.py 支持它，25 份 spec 全过校验——E4 无需改动，仅验证。
+4. **resident 运行时"接线完整、价值未兑现"**：health=recovered 但事件流 idle 9.25h、sediment 405 条产出 100% 为模板占位（"待补充五问"空复选框）、execute 角色全流仅 1 条 ExecutionRequested。系统管道建好但无真实事件与知识在流。
 
-- 复盘前传闻"resident 接线缺 MOF/SGF/BOS/agent-workflow 感知", 深度核查后发现 `bos-services.yaml` 实际已含 resident 4 条服务 (声明式加载), cockpit resident 已接线 (`_subcommands` + `cli.py:813` + `commands/resident.py`), agora BOS_URI_DOMAINS 已含 resident —— 真实缺口收敛为 5 项 (check 工具缺失 / governance-checks 未登记 / ci-surfaces 未登记 / agent-workflows registry 无 resident / 文档漂移)。
-- `bin/ssot/resident-*` 兼容脚本在文档中被宣称存在, 实际已随 omo/resident 迁移删除 —— 文档漂移, 已在复盘中标出。
+## Q4 净增减：代码行 / 文件 / GaC 规则 / ADR / 脚本？（贴 surface 输出）
 
-## Q4 净增减
+本 bet 仅 2 个文件净变更（其余 5 个写面文件已在 main，未改）：
+- `docs/reports/2026-08-24-resident-system-deep-review.md`：40 → 210 行（+170）
+- `docs/plans/3y-bet-ledger.yaml`：1 行 digest 修正（af2e5547 → 7542b3ad）
 
-- 新增 docs: 1 份 9 维度深度复盘报告 (docs/reports/)
-- 新增治理数据: 台账 BET-Y1Q3-T6-14 条目 (candidate) + 1 份 Spec (docs/superpowers/specs/)
-- 无运行时代码改动 (BET 定位为纯分析沉淀, non_goals 明确不改 resident 行为)
+无新增文件、无新增 GaC 规则、无新增 ADR、无新增脚本。符合 Y1"做减法/不增表面积"主目标——本 bet 纯沉淀分析结论（non_goals 明确不改运行时），唯一"新增"是复盘报告本身的深化行数，属交付物内容而非表面积扩张。
 
-## Q5 下一个认领本 track 的 agent 需要知道什么
+## Q5 下一个认领本 track 的 agent 需要知道什么？
 
-- resident 治理接线的真实缺口 (F1-F7 已完成, 详见复盘文档) 已全部闭环; 台账 T6-14 从 candidate 推进 done 需在 main 分支独立 PR 提交 retro 关联。
-- 契约收尾陷阱: 共享 checkout 并发分支台账不含 main 新增 BET → claim 前先确认台账版本; run hash 随台账演化须 `refresh-packet` 同步; claim 的 affected receipt 用 `bin/gac/affected-graph.py --changed-projects workspace-root --output <path> --json` 生成。
+1. **resident 体系治理接线已全部实测确认**：MOF digital_agent（tier=resident）、L0 CR-RESIDENT-STATUS-01/MOF-SYNC-01、Agora MCP resident_status/roles、cron 2min/5min、Makefile 12 目标、signal-sources personal-steward。做 resident 相关任务直接引用复盘报告 §0/§6 的实测基线。
+2. **两大待办 follow-up（需另开 bet）**：① sediment 模板→完整知识晋升管线（promote 场景升迁落地，解决 405 条占位）；② 事件源自动接入 workflow 生命周期（解决 idle 空转）。decision 提案可观测出口也是候选。
+3. **隔离 worktree 环境排障**：`gac-worktree.sh claim` 后 ecos 子模块常是坏 checkout（2110 个 D 状态），需 `git submodule deinit -f projects/ecos && git submodule update --init projects/ecos` 才能跑 work-packet compiler。workflow start 依赖 ledger 的 spec digest 与 main 实际一致，改了 spec 文件后必须同步更新 ledger。
+4. **affected-graph receipt**：claim 写面需 `affected-graph.py --changed-projects <proj> workspace-root --output .omo/_delivery/affected-graph/<id>.json`（文档路径映射到 workspace-root 项目，必须包含它），receipt 是运行时文件不进 git。
