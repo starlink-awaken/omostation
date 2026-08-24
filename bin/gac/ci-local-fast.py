@@ -364,7 +364,38 @@ def build_checks(*, root: Path = WORKSPACE) -> tuple[Check, ...]:
     )
 
 
+def _agent_collision_check() -> None:
+    """BET-Y1Q3-T10-09 后续: push 前检查其他 agent 是否锁定了相同文件."""
+    import subprocess as _sp
+    try:
+        changed = _sp.run(
+            ["git", "diff", "--name-only", "--diff-filter=M", "origin/main", "HEAD"],
+            capture_output=True, text=True, timeout=10,
+        ).stdout.splitlines()
+        if not changed:
+            return
+        presence = WORKSPACE / "runtime" / "agents"
+        if not presence.is_dir():
+            return
+        import time as _t
+        now = _t.time()
+        for p in sorted(presence.glob("*.json")):
+            if now - p.stat().st_mtime > 300:
+                continue
+            d = json.loads(p.read_text())
+            their = set(d.get("locked_files", []))
+            my = set(changed)
+            import fnmatch as _fm
+            overlap = {mf for mf in my for tf in their if _fm.fnmatch(mf, tf)}
+            if overlap:
+                print(f"⚠️ agent-collision: {p.stem} (branch={d.get('branch','?')}) "
+                      f"锁定重叠文件: {sorted(overlap)[:5]}", file=sys.stderr)
+    except Exception:
+        pass  # 碰撞检测失败不阻断
+
+
 def main(argv: list[str] | None = None) -> int:
+    _agent_collision_check()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ruff-gate", action="store_true")
     parser.add_argument("--ruff-debt", action="store_true")
