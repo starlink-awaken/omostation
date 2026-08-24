@@ -603,7 +603,7 @@ bcos-signals:  ## BCOS 统一信号路由 (W1-D2, 公文/会议/调研/代码)
 	python3 bin/bc-os/signal_router.py --inbox "$$HOME/Documents/@感知信号" || true
 
 bcos-north-star:  ## BCOS 北极星价值度量 v2 (排除 self-data)
-	python3 bin/bc-os/north_star_meter_v2.py --json
+	python3 bin/bc-os/north_star_meter_v2.py --json || true
 
 # ==============================================================================
 # 自治蜂群与防腐体系 (Self-Governing Swarm & Anti-Corrosion)

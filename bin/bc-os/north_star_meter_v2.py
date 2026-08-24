@@ -506,7 +506,7 @@ def main() -> int:
     parser.add_argument("--action")
     parser.add_argument("--consumer", default="human")
     parser.add_argument("--journey-id")
-    parser.add_argument("--principal-id", default=os.environ.get("OMO_PRINCIPAL_ID", ""))
+    parser.add_argument("--principal-id", default=os.environ.get("OMO_PRINCIPAL_ID", "personal-space-owner"))
     parser.add_argument("--db-path", type=Path, default=DEFAULT_LEDGER)
     parser.add_argument("--observed-at")
     args = parser.parse_args()

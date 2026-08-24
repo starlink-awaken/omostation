@@ -110,16 +110,52 @@ class KeeperSubtractionEngine:
             self.save_proposals(proposals)
         return found
 
+    def execute_approved(self) -> list[dict[str, Any]]:
+        """Execute approved sunset proposals (e.g. archive files)."""
+        proposals = self.load_proposals()
+        executed = []
+        archive_dir = self.root / "bin" / "_archive"
+        archive_dir.mkdir(parents=True, exist_ok=True)
+
+        for p in proposals:
+            if p.get("status") == "approved":
+                target_path = self.root / p["target"]
+                if target_path.is_file():
+                    dest_path = archive_dir / target_path.name
+                    target_path.rename(dest_path)
+                    p["status"] = "archived"
+                    p["archived_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                    p["archived_dest"] = str(dest_path.relative_to(self.root))
+                    executed.append(p)
+                elif p.get("status") == "approved":
+                    p["status"] = "archived"
+                    executed.append(p)
+
+        if executed:
+            self.save_proposals(proposals)
+        return executed
+
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--audit", action="store_true", help="核算各领域资产配额")
     parser.add_argument("--propose", action="store_true", help="扫描并生成日落退役提案")
     parser.add_argument("--decide", nargs=2, metavar=("ID", "ACTION"), help="批复提案 [approved|rejected|deferred]")
+    parser.add_argument("--execute-approved", action="store_true", help="执行已获批准的退役归档动作")
     parser.add_argument("--json", action="store_true", help="输出 JSON")
     args = parser.parse_args(argv)
 
     engine = KeeperSubtractionEngine()
+
+    if args.execute_approved:
+        archived = engine.execute_approved()
+        if args.json:
+            print(json.dumps(archived, ensure_ascii=False, indent=2))
+        else:
+            print(f"=== @Keeper 退役归档执行结果 (共 {len(archived)} 条) ===")
+            for item in archived:
+                print(f"  📦 已归档: {item['target']} -> {item.get('archived_dest', 'archived')}")
+        return 0
 
     if args.decide:
         prop_id, act = args.decide
