@@ -59,13 +59,6 @@ tools:
   # --- 知识层 ---
     generatable: false
     verifiable: true
-  mof-reason:
-    path: projects/ecos/src/ecos/ssot/tools/mof-reason.py
-    description: 三维推理引擎 (impact/state/value)
-    commands: [impact, state, value]
-    usage: "python3 mof-reason.py impact <node_id>"
-    generatable: false
-    verifiable: true
   mof-decide:
     path: bin/mof/mof-decide
     description: 智能决策支持
@@ -285,24 +278,6 @@ model_stats:
 # OMO 管理工具
 # ═══════════════════════════════════════════════════════════
 omo_tools:
-  omo-manage:
-    path: projects/omo/src/omo/omo_manage.py
-    cli: "omo manage"
-    description: OMO 目录管理工具
-    commands: [status, health, tasks]
-    usage: "uv run python -m omo.cli manage status"
-
-    generatable: false
-    verifiable: true
-  omo-audit-cards:
-    path: projects/omo/src/omo/omo_audit_cards.py
-    cli: "omo audit cards"
-    description: CARDS X3 value metrics (SQLite 聚合)
-    commands: [--db, --json, --output]
-    usage: "uv run python -m omo.cli audit cards --json"
-
-    generatable: false
-    verifiable: true
   omo-audit-vault:
     path: projects/omo/src/omo/omo_audit_vault.py
     cli: "omo audit vault"
