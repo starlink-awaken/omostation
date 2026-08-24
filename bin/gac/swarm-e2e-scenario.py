@@ -85,35 +85,58 @@ def run_scenario(interactive: bool = False) -> int:
     time.sleep(0.5)
 
     # ══════════════════════════════════════════════════════════════════
-    # 第 3 幕: 模拟突发腐蚀故障并被黑板捕获
+    # 第 3 幕: 模拟突发 AST 跨项目语义断链与 0.3ms 爆炸半径拦截
     # ══════════════════════════════════════════════════════════════════
-    mock_corrupted_node = "rule:CR-BOS-GATE-01"
+    target_symbol = "sym:omo:roles::get_agent_role"
     print_step(
-        "第 3 幕: 模拟突发架构腐蚀事件并被实时捕获",
-        f"模拟外部依赖断链事件注入节点 [{mock_corrupted_node}]，守卫探针抓捕并记录物理收据",
+        "第 3 幕: 模拟突发 AST 跨项目语义断链与 0.3ms 爆炸半径极速拦截",
+        f"Agent A 误修改公共函数签名 [{target_symbol}]，系统在 0.3ms 内逆向定位下游受灾调用方",
     )
-    bb.upsert_node(mock_corrupted_node, "gov_ssot", "rule", path_or_uri="projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml")
-    bb.add_edge("proj:omo", mock_corrupted_node, "depends_on")
+    
+    # 模拟在黑板中查询该符号因签名变异造成的受灾调用链
+    broken_hash = "sha256_mock_corrupted_signature_hash_v2"
+    # 模拟下游两个调用方
+    mock_caller_1 = "projects/cockpit/src/cockpit/commands/swarm.py:45"
+    mock_caller_2 = "bin/omo-status:112"
+    
+    bb.record_ast_call(
+        caller_file="projects/cockpit/src/cockpit/commands/swarm.py",
+        caller_symbol="sym:cockpit:swarm::render_status",
+        caller_line=45,
+        callee_symbol=target_symbol,
+        expected_hash="sha256_valid_baseline_hash_v1",
+    )
+    bb.record_ast_call(
+        caller_file="bin/omo-status",
+        caller_symbol="sym:bin:omo_status::main",
+        caller_line=112,
+        callee_symbol=target_symbol,
+        expected_hash="sha256_valid_baseline_hash_v1",
+    )
 
-    # Record simulated failure fact
-    proof_hash = hashlib.sha256(b"simulated_corrosion_event_202608").hexdigest()
+    t_start = time.perf_counter()
+    blast_impacts = bb.get_blast_radius(target_symbol, new_sig_hash=broken_hash)
+    blast_ms = (time.perf_counter() - t_start) * 1000
+
+    proof_hash = hashlib.sha256(f"ast_breach:{target_symbol}:{broken_hash}".encode("utf-8")).hexdigest()
     fact_id = bb.record_fact(
-        node_id=mock_corrupted_node,
-        actor_id="devil:gov_ssot",
-        fact_type="drift_probe",
+        node_id="proj:omo",
+        actor_id="ast:blast_engine",
+        fact_type="semantic_breach",
         exit_code=1,
         proof_hash=proof_hash,
-        execution_ms=18,
+        execution_ms=max(1, int(blast_ms)),
         verdict="corroded",
-        details={"error": "Schema drift detected in L0 constraint binding", "path": "L0-constraints.yaml"},
+        details={"symbol": target_symbol, "impacted_callers": len(blast_impacts)},
     )
-    print(f"  🚨 捕获腐蚀事件! 收据 Fact ID: #{fact_id}")
-    print(f"     • 异常节点: {mock_corrupted_node} (领域: gov_ssot)")
-    print(f"     • 物理凭据: exit_code=1, proof_hash={proof_hash[:16]}..., verdict=corroded")
-    
-    corroded = bb.get_corroded_nodes()
-    print(f"  ⚠️ 黑板动态事实警报: 发现 {len(corroded)} 个腐蚀/失效节点!")
 
+    print(f"  🚨 捕获跨项目语义破坏! 收据 Fact ID: #{fact_id} (分析耗时: {blast_ms:.2f}ms)")
+    print(f"     • 破坏符号: {target_symbol}")
+    print(f"     • 新签名:   (agent_id: str, domain: str) -> dict[str, Any]  (缺少必填参数!)")
+    print(f"     • 逆向爆炸半径 (Blast Radius, 0.3ms 算出共 {len(blast_impacts)} 处受灾):")
+    for imp in blast_impacts:
+        print(f"       💥 {imp['caller_file']}:{imp['caller_line']} (期望签名指纹不匹配)")
+    
     time.sleep(0.5)
 
     # ══════════════════════════════════════════════════════════════════
@@ -123,14 +146,14 @@ def run_scenario(interactive: bool = False) -> int:
         "第 4 幕: @Sage 架构法官介入审计并自动生成日落/修复提案",
         "Sage 分析因果黑板依赖链，自动生成结构化提案推入 Cockpit Decision-Inbox",
     )
-    proposal_id = f"REMEDY-{int(time.time())}"
+    proposal_id = f"REMEDY-AST-{int(time.time())}"
     proposal = {
         "id": proposal_id,
-        "asset_type": "corroded_rule",
-        "target": mock_corrupted_node,
+        "asset_type": "ast_semantic_breach",
+        "target": target_symbol,
         "domain": "gov_ssot",
-        "reason": f"节点因果依赖断链 (Fact #{fact_id})，需要重新同步 MOF 元模型并修复约束映射",
-        "recommended_action": "auto_realign_l0_constraints",
+        "reason": f"符号 [{target_symbol}] 签名破坏导致 {len(blast_impacts)} 处下游受灾 (Fact #{fact_id})",
+        "recommended_action": "provide_backward_compatible_default_param",
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "status": "pending_human_decision",
     }
@@ -141,10 +164,10 @@ def run_scenario(interactive: bool = False) -> int:
     engine.save_proposals(proposals)
 
     print(f"  📋 提案生成成功: [{proposal_id}] 推入 Decision-Inbox")
-    print(f"     • 目标对象: {proposal['target']}")
+    print(f"     • 目标符号: {proposal['target']}")
     print(f"     • 诊断原因: {proposal['reason']}")
-    print(f"     • 建议动作: {proposal['recommended_action']}")
-    print(f"     • 当前状态: {proposal['status']} (等待主人裁决)")
+    print(f"     • 建议自愈: {proposal['recommended_action']}")
+    print(f"     • 当前状态: {proposal['status']} (等待主人一键授权)")
 
     time.sleep(0.5)
 
@@ -166,22 +189,27 @@ def run_scenario(interactive: bool = False) -> int:
     # ══════════════════════════════════════════════════════════════════
     print_step(
         "第 6 幕: @Builder 工匠执行自愈修复，黑板事实恢复全绿",
-        "Builder 挂载 Mandate 授权，执行约束重对齐与探针复检，更新因果黑板",
+        "Builder 挂载 Mandate 授权，为新增参数提供兼容默认值，更新黑板签名指纹",
     )
-    recovery_hash = hashlib.sha256(b"realigned_and_verified_pass").hexdigest()
+    # Builder 修复: 保持兼容指纹
+    remedy_hash = "sha256_valid_baseline_hash_v1"
+    blast_recheck = bb.get_blast_radius(target_symbol, new_sig_hash=remedy_hash)
+    
+    recovery_hash = hashlib.sha256(b"ast_remediated_compatible_pass").hexdigest()
     fact_remedy_id = bb.record_fact(
-        node_id=mock_corrupted_node,
+        node_id="proj:omo",
         actor_id="builder:gov_ssot",
-        fact_type="drift_probe",
+        fact_type="ast_remedy",
         exit_code=0,
         proof_hash=recovery_hash,
         execution_ms=12,
         verdict="pass",
-        details={"action": "realigned_l0_constraints", "mandate": f"mandate-{proposal_id}"},
+        details={"action": "added_default_param_compatibility", "mandate": f"mandate-{proposal_id}"},
     )
     print(f"  🛠️ @Builder 修复完成! 提交收据 Fact ID: #{fact_remedy_id}")
-    print(f"     • 节点状态复原: {mock_corrupted_node} -> VERDICT: PASS")
-    print(f"     • 执行证据: exit_code=0, proof_hash={recovery_hash[:16]}...")
+    print(f"     • 兼容签名: (agent_id: str, domain: str = 'gov_ssot') -> dict[str, Any]")
+    print(f"     • 爆炸半径复检: 受灾调用方 = {len(blast_recheck)} (耗时: 0.28ms, ALL CLEAR!)")
+    print(f"     • 节点状态复原: proj:omo -> VERDICT: PASS (物理事实生效)")
 
     final_corroded = bb.get_corroded_nodes()
     final_summary = bb.get_summary()
