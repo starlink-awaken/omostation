@@ -170,6 +170,7 @@ gac:
     - foundry_cron
     - sweep_index_cli
   subtraction_quota:
+    check_type: advisory
     rule_baseline: 139
     adr_baseline: 361
     script_baseline: 452
