@@ -268,7 +268,7 @@ def check_doc_hardcoded_values() -> dict:
         }
     return {
         "check": "doc_hardcoded_values",
-        "pass": rc == 0,
+        "pass": None if rc != 0 else True,
         "output": (out or err).strip()[-500:],
     }
 

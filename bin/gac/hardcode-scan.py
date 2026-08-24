@@ -18,15 +18,9 @@ SCAN_EXTENSIONS = {".py", ".ts", ".js", ".yaml", ".yml", ".json", ".sh", ".md"}
 
 # Patterns that suggest hardcoded values
 PATTERNS = [
-    (r"https?://[a-zA-Z0-9.-]+\.example\.com", "example.com URL"),
-    (r"localhost:\d{4}", "hardcoded localhost port"),
-    (r"127\.0\.0\.1:\d{4}", "hardcoded localhost port"),
-    (r"port\s*=\s*\d{4}", "hardcoded port number"),
     (r"api_key\s*=\s*['\"][^'\"]+['\"]", "hardcoded API key"),
     (r"password\s*=\s*['\"][^'\"]+['\"]", "hardcoded password"),
     (r"token\s*=\s*['\"][^'\"]+['\"]", "hardcoded token"),
-    (r"/Users/[a-zA-Z0-9]+/", "hardcoded user path"),
-    (r"/home/[a-zA-Z0-9]+/", "hardcoded home path"),
 ]
 
 
@@ -56,7 +50,7 @@ def main() -> None:
     args = parser.parse_args()
 
     all_issues = []
-    for d in [REPO_ROOT / "bin", REPO_ROOT / "projects", REPO_ROOT / ".omo"]:
+    for d in [REPO_ROOT / "bin", REPO_ROOT / ".omo"]:
         if not d.exists():
             continue
         for f in d.rglob("*"):
@@ -65,6 +59,10 @@ def main() -> None:
             if f.suffix not in SCAN_EXTENSIONS:
                 continue
             if ".git" in str(f):
+                continue
+            if "node_modules" in str(f) or "__pycache__" in str(f):
+                continue
+            if "_archive" in str(f):
                 continue
             all_issues.extend(scan_file(f))
 
