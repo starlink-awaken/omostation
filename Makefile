@@ -132,6 +132,9 @@ gac-drift:  ## GaC 规则漂移检测
 gac-validate:  ## GaC 规则验证 (--gate)
 	$(PY) bin/gac/gac-validate.py --gate
 
+script-registry-validate:  ## 验证全域脚本 444 是否悉数挂号
+	$(PY) bin/ssot/script-registry.py validate
+
 m4-health:  ## M4 health score
 	$(PY) bin/mof/m4-health-score.py --emit
 
