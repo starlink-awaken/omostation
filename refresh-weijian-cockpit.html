@@ -1,0 +1,527 @@
+<!DOCTYPE html><script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Weijian Cockpit Dashboard",
+  "schemaVersion": 1,
+  "description": "房山区卫健委综合驾驶舱：三 Tab（在管项目·信息化总板 / 政策情报 / 周工作与健康）。Tab1 含「电子病历数据质量专项」（EMR-DQ v1.0：8家6月得分、6重点字段规范率、风险与整改动作）。年底目标口径：数据质量评分 90 分以上（已按市级要求统一，不再含\"力争95\"表述）。数据快照 2026-08-24（源数据最新 2026-08-15）。"
+}
+</script>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>卫健委综合驾驶舱 · 房山区卫健委</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{color-scheme:light;--blue:#1a4d8f;--blue-l:#e8f0fe;--red:#c0392b;--red-l:#fdecea;--yellow:#b7950b;--yellow-l:#fef6e3;--green:#1e8e5a;--green-l:#e6f6ee;--purple:#6d28d9;--purple-l:#ede9fe;--sl8:#1f2937;--sl5:#6b7280;--sl4:#9ca3af;--sl2:#e5e7eb;--sl1:#f3f4f6;--bg:#f5f7fa;--card:#fff;--border:#e2e8f0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--sl8);padding:24px;max-width:1180px;margin:0 auto;line-height:1.6}
+.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+h1{font-size:22px;color:var(--blue);font-weight:700}
+.date{color:var(--sl5);font-size:13px}
+.pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:12px;font-weight:600;white-space:nowrap}
+.pill-red{background:var(--red-l);color:var(--red)}.pill-yellow{background:var(--yellow-l);color:var(--yellow)}.pill-green{background:var(--green-l);color:var(--green)}.pill-blue{background:var(--blue-l);color:var(--blue)}.pill-p0{background:var(--red-l);color:var(--red)}.pill-p1{background:var(--yellow-l);color:var(--yellow)}.pill-p2{background:var(--blue-l);color:var(--blue)}.pill-act{background:var(--green-l);color:var(--green)}.pill-watch{background:var(--yellow-l);color:var(--yellow)}.pill-done{background:var(--sl1);color:var(--sl5)}
+.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tab-btn{border:1px solid var(--border);background:var(--card);color:var(--sl5);padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.tab-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:18px}
+.section h2{font-size:15px;font-weight:600;color:var(--blue);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--blue-l)}
+.status-banner{display:flex;align-items:center;gap:10px;background:#fff3cd;border:1px solid #f0d27a;color:#7a5c00;border-radius:10px;padding:10px 16px;font-size:13px;margin-bottom:18px}
+.status-banner .dot{width:10px;height:10px;border-radius:50%;background:var(--yellow);flex-shrink:0}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.kpi .lbl{font-size:12px;color:var(--sl5)}
+.kpi .num{font-size:26px;font-weight:700;color:var(--sl8);margin-top:2px}
+.kpi .num small{font-size:14px;font-weight:400;color:var(--sl5)}
+.kpi .sub{font-size:11px;color:var(--sl4);margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;background:var(--sl1);color:var(--sl5);font-size:12px;padding:9px 10px;border-bottom:2px solid var(--sl2);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--sl1);vertical-align:top}
+tr:hover td{background:#fafbfc}
+.mile{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.mile-card{background:var(--sl1);border-radius:10px;padding:12px 14px;border-left:4px solid var(--sl2)}
+.mile-card.red{border-left-color:var(--red)}.mile-card.yellow{border-left-color:var(--yellow)}.mile-card.green{border-left-color:var(--green)}
+.mile-card .m-date{font-size:12px;color:var(--sl5)}
+.mile-card .m-title{font-size:13px;font-weight:600;margin:3px 0}
+.mile-card .m-days{font-size:20px;font-weight:700;color:var(--sl8)}
+.mile-card .m-days.urgent{color:var(--red)}
+.mile-card .m-days .u{font-size:11px;font-weight:400;color:var(--sl5)}
+.mile-card .note{font-size:11px;color:var(--sl5);margin-top:4px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
+.org-bar{display:flex;flex-direction:column;gap:8px}
+.org-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.org-row .o-name{width:110px;color:var(--sl5);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.org-row .bar{flex:1;height:14px;background:var(--sl1);border-radius:7px;overflow:hidden}
+.org-row .bar i{display:block;height:100%;border-radius:7px}
+.org-row .o-pct{width:64px;text-align:right;color:var(--sl8);font-weight:600;flex-shrink:0}
+.legend{font-size:12px;color:var(--sl5);margin-top:10px}
+.chart-wrap{height:220px;position:relative}
+.week{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.day{background:var(--sl1);border-radius:10px;padding:12px;border-top:3px solid var(--sl2)}
+.day.today{border-top-color:var(--blue);background:var(--blue-l)}
+.day .d-name{font-size:13px;font-weight:600;color:var(--sl8)}
+.day .d-date{font-size:11px;color:var(--sl4)}
+.day .tasks{font-size:12px;color:var(--sl5);margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.day .tasks .t{line-height:1.5}
+.day .tasks .t b{color:var(--blue);font-weight:600}
+.todo-list{display:flex;flex-direction:column;gap:8px}
+.todo{display:flex;align-items:flex-start;gap:10px;font-size:13px;padding:9px 12px;border-radius:8px;background:var(--sl1)}
+.todo .p{font-size:11px;font-weight:700;padding:2px 7px;border-radius:8px;flex-shrink:0;margin-top:1px}
+.p-p0{background:var(--red-l);color:var(--red)}.p-p1{background:var(--yellow-l);color:var(--yellow)}.p-p2{background:var(--blue-l);color:var(--blue)}
+.todo .txt{color:var(--sl8)}
+.todo .tag{font-size:11px;color:var(--sl4);margin-left:auto;flex-shrink:0;white-space:nowrap}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.stat{background:var(--sl1);border-radius:10px;padding:12px 14px;text-align:center}
+.stat .n{font-size:22px;font-weight:700;color:var(--blue)}
+.stat .l{font-size:11px;color:var(--sl5);margin-top:2px}
+.health-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.health-card{border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.health-card h3{font-size:13px;font-weight:600;margin-bottom:6px}
+.health-card li{font-size:12px;color:var(--sl5);margin:4px 0 4px 16px}
+.tl{position:relative;padding-left:24px}
+.tl::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--sl2)}
+.tl-item{position:relative;padding:0 0 16px 8px}
+.tl-item::before{content:'';position:absolute;left:-21px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--blue);border:2px solid #fff;box-shadow:0 0 0 2px var(--blue-l)}
+.tl-item.sec::before{background:var(--red)}.tl-item.pol::before{background:var(--purple)}
+.tl-item .tl-q{font-size:11px;font-weight:700;color:var(--sl4);letter-spacing:.5px}
+.tl-item .tl-main{font-size:13px;margin-top:2px}
+.tl-item .tl-main b{color:var(--sl8)}
+.tl-item .tl-main .t-policy{color:var(--purple)}
+.tl-item .tl-main .t-sec{color:var(--red)}
+.tl-item .tl-sub{font-size:12px;color:var(--sl5);margin-top:3px}
+.rule-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.rule-card{background:var(--sl1);border-radius:10px;padding:14px 16px;border-left:4px solid var(--blue)}
+.rule-card h3{font-size:13px;font-weight:600;margin-bottom:5px}
+.rule-card p{font-size:12px;color:var(--sl5)}
+.track-wrap{padding:0 0 40px}
+.track{position:relative;height:8px;background:#edf2f7;border-radius:4px}
+.marks{position:relative;height:46px;margin-top:6px}
+.mark{position:absolute;transform:translateX(-50%);text-align:center;font-size:11px;color:#4a5568}
+.mark .dot{width:12px;height:12px;border-radius:50%;margin:0 auto 4px}
+.dot-red{background:var(--red)}.dot-yellow{background:var(--yellow)}.dot-green{background:var(--green)}
+.footer{margin-top:6px;font-size:11px;color:var(--sl4);text-align:center}
+.note{font-size:12px;color:var(--sl4);margin-top:8px}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
+.badge-red{background:var(--red-l);color:var(--red)}.badge-yellow{background:var(--yellow-l);color:var(--yellow)}.badge-green{background:var(--green-l);color:var(--green)}
+@media(max-width:640px){body{padding:14px}.org-row .o-name{width:86px}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>卫健委 · 综合驾驶舱</h1>
+    <div class="date" id="today">—</div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <span class="pill pill-green">✅ 8/12 挂号统计表（08-13 报市）</span>
+    <span class="pill pill-done">⚪ 8/20 专家论证（已到期·待核实）</span>
+    <span class="pill pill-done">⚪ 8/22 经信局齐报13项（已到期·待核实）</span>
+    <span class="pill pill-red">🔴 8/25 财政评审（剩1天）</span>
+    <span class="pill pill-red">🔴 8/31 初设（硬时限·剩7天）</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="tab-proj">① 在管项目 · 信息化总板</button>
+  <button class="tab-btn" data-tab="tab-policy">② 政策情报</button>
+  <button class="tab-btn" data-tab="tab-week">③ 周工作与健康</button>
+</div>
+
+<!-- ============ Tab 1 项目总板 ============ -->
+<div class="tab-pane active" id="tab-proj">
+
+  <div class="status-banner"><span class="dot"></span>
+    当前焦点：<b>8/25 财政评审 + 初设配套 5 项清零</b>（剩1天）→ <b>8/31 初设报送经信局（硬时限·剩7天）</b> · ⚠️ <b>8/20 专家论证、8/22 经信局齐报 13 项已到期</b>，源数据（最新 08-15）未含闭环结果，<b>需人工核实</b> · 挂号统计表已闭环（08-13 报市 ✅）· 精保院互认市级验收通过（08-13）· <b>电子病历数据质量专项（EMR-DQ v1.0 ↓）</b>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="lbl">三项目总预算</div><div class="num">918<small>万</small></div><div class="sub">归集 300 / 家医 544 / LIS 74 · 另有公卫示范 2832 万（独立路径）</div></div>
+    <div class="kpi"><div class="lbl">归集申报材料</div><div class="num">12<small>/13</small></div><div class="sub">⑧资源目录 · ⑩初设 · ⑬论证 待闭环</div></div>
+    <div class="kpi"><div class="lbl">并行申报事项</div><div class="num">3</div><div class="sub">经信局（已到期待核实）· 财政 8/25 · 采购意向 9/15</div></div>
+    <div class="kpi"><div class="lbl">三医任务完成率</div><div class="num">97.1<small>%</small></div><div class="sub">134/138 · 机构口径 72.7%（8/11 家）</div></div>
+    <div class="kpi"><div class="lbl">电子病历数据质量（6月）</div><div class="num">93.28</div><div class="sub">8家均值 · 区属第2 · 妇幼88.55⚠️ 北儿89.00⚠️</div></div>
+  </div>
+
+  <div class="section">
+    <h2>⏰ 关键节点倒计时</h2>
+    <div class="mile" id="milestones"></div>
+    <div class="note">※ M01 AI 调查（8/3）✅ 已上报市卫健委（最严口径：无大模型应用接入）· M02 P0 确认（8/10）归集/家医负责人已定（孟帅/贾颖），剩家医/LIS 方案方（A1/A3 · 08-14 已逾）。经信局申报按决策 08-12 改为<b>等论证通过后齐报（8/22）</b>；专家论证为线上会：东软 8/13 报专家名单 → 委 8/14 审核 → 材料 8/17 前加密送达。⚠️ <b>截至快照 08-24，M03 专家论证（8/20）、M04 经信局齐报（8/22）已到期但源数据无闭环记录，结果待人工核实。</b>预约挂号为独立专项：8/12 统计表回收 ✅ → 8/14 报市 ✅（08-13 报送）→ 9/30 入口统一。</div>
+  </div>
+
+  <div class="section">
+    <h2>🏗️ 在管项目明细（三新建 918 万 · 数据汇聚→互通→应用链）</h2>
+    <table>
+      <thead><tr><th>项目</th><th>预算</th><th>资金来源</th><th>阶段</th><th>负责人/联络</th><th>当前状态</th></tr></thead>
+      <tbody id="proj-rows"></tbody>
+    </table>
+    <div class="note">※ 另有区域公共卫生体系示范性项目（GGWS-DEMO）独立资金路径：市转移支付 2000 万 + 其他 832 万 = 2832 万，已通过市级专家评审立项，待联合行文报市（京房卫请〔2026〕29 号 08-11 归档）。</div>
+  </div>
+
+  <div class="section">
+    <h2>📄 归集平台 13 项申报材料 + 并行申报 12 项任务</h2>
+    <div class="grid2">
+      <div>
+        <table>
+          <thead><tr><th>材料</th><th>状态</th></tr></thead>
+          <tbody id="mat-rows"></tbody>
+        </table>
+      </div>
+      <div>
+        <table>
+          <thead><tr><th>#</th><th>项目</th><th>任务</th><th>截止</th><th>状态</th></tr></thead>
+          <tbody id="task-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🗓️ 8–9 月申报时间轴</h2>
+    <div class="track-wrap">
+      <div class="track" id="track"></div>
+      <div class="marks" id="marks"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🏥 三医联动 · 机构完成进度（10 家口径）</h2>
+    <div class="org-bar" id="orgs"></div>
+    <div class="legend">🟢 100%（7 家）：中医院 / 妇幼 / 燕化 / 北亚 / 第一医院 / 核工业 / 中能建 ｜ 🟡 推进中：良乡 33% / 窦店 67% ｜ 🔴 未启动：精保院 0%（检查检验互认 ✅ 08-12 闭环 → 08-13 市级验收通过 · 门急诊/住院病历线逾期跟进中）</div>
+  </div>
+
+  <div class="section">
+    <h2>📊 电子病历数据质量专项（2026-06 · EMR-DQ v1.0 深度分析）</h2>
+    <div class="status-banner" style="background:#fdecea;border-color:#f0b4ac;color:#7a1f17"><span class="dot" style="background:var(--red)"></span>
+      风险：<b>妇幼 88.55 / 北儿窦店 89.00 跌破 90</b> · 药品编码规范率 <b>85.61%</b>（距98%差12.4pct，头号短板）· 612 条问题 <b>98.7% 未排整改期</b> · 完整性五维唯一持续下降（字段饱和度&lt;90%）· 机制接续方案 08-13 落地（周报模版 V3 重启 / 问题清单补排期 / 3-6 月月报追补）
+    </div>
+    <div class="grid2">
+      <div>
+        <h3 style="font-size:13px;color:var(--sl5);margin-bottom:8px">机构 6 月得分（目标 ≥90）</h3>
+        <div class="org-bar" id="emr-orgs"></div>
+      </div>
+      <div>
+        <h3 style="font-size:13px;color:var(--sl5);margin-bottom:8px">重点字段规范率（目标 ≥98%）</h3>
+        <div class="org-bar" id="emr-fields"></div>
+      </div>
+    </div>
+    <div class="legend">🟢 达标 ｜ 🟡 90-98 待提升 ｜ 🔴 不达标（&lt;90 或 &lt;98%）</div>
+    <div class="note">整改动作：①问题清单强制补排期（604/612 未排）②字段饱和度攻坚（检验报告82-90%最低）③药品编码字典对齐 P0 ④妇幼/北儿月度督办 ⑤完整性专项（中能建规范性40.27全区最低）· 模型见 <code>_entities/models/模型-电子病历数据质量抽象模型-EMR-DQ-20260811.md</code> · 分析见 <code>_inbox/2026-08-11-房山区电子病历数据上传质量深度分析报告.md</code> · 机制接续见 <code>_inbox/2026-08-13-电子病历数据质量整改工作机制接续方案.md</code></div>
+  </div>
+
+  <div class="section">
+    <h2>📈 完成率时间线（2026 年度 · 任务口径）</h2>
+    <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+    <div class="note">※ 07-30 起周报改用「已完成机构」口径（72.7%），与任务口径并存；看板默认任务口径。</div>
+  </div>
+</div>
+
+<!-- ============ Tab 2 政策情报 ============ -->
+<div class="tab-pane" id="tab-policy">
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="lbl">活跃政策信号</div><div class="num">11</div><div class="sub">P0 2 · P1 5 · P2 4</div></div>
+    <div class="kpi"><div class="lbl">直接对接项目</div><div class="num">13</div><div class="sub">三医/新建/数据上报/预约挂号等</div></div>
+    <div class="kpi"><div class="lbl">需主动跟进</div><div class="num" style="color:var(--red)">3</div><div class="sub">AI 法影响 · 月报恢复 · 十五五</div></div>
+    <div class="kpi"><div class="lbl">考核压力源</div><div class="num">11</div><div class="sub">主体 · 审计督查最高</div></div>
+  </div>
+
+  <div class="section">
+    <h2>📡 当前政策信号（按级别）</h2>
+    <table>
+      <thead><tr><th>级别</th><th>政策 / 信号</th><th>时间</th><th>影响面</th><th>跟进状态</th></tr></thead>
+      <tbody id="policy-rows"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>🗓️ 政策 × 项目 × 安全 时间线</h2>
+    <div class="tl" id="tl"></div>
+  </div>
+
+  <div class="section">
+    <h2>🧭 年度节奏规律</h2>
+    <div class="rule-grid">
+      <div class="rule-card"><h3>Q1–Q2 · 安全高压期</h3><p>两会保障 + 等保检查 + 专项排查集中部署，安全事件高风险窗口。</p></div>
+      <div class="rule-card"><h3>Q2–Q3 · 项目密集期</h3><p>调度推进 + 新项目申报 + 行业会议，节点压力集中在 6–9 月。</p></div>
+      <div class="rule-card"><h3>Q4 · 考核冲刺期</h3><p>年度总结 + 绩效评价 + 来年预算编制，11 月冲刺窗口（提前 10 月初预案）。</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Tab 3 周工作与健康 ============ -->
+<div class="tab-pane" id="tab-week">
+
+  <div class="section">
+    <h2>📅 本周节奏</h2>
+    <div class="week" id="week"></div>
+  </div>
+
+  <div class="section">
+    <h2>📋 当前待办（P0-P2）</h2>
+    <div class="todo-list" id="todos"></div>
+  </div>
+
+  <div class="section">
+    <h2>🧠 知识资产</h2>
+    <div class="stats-row">
+      <div class="stat"><div class="n">271</div><div class="l">事实（Facts）</div></div>
+      <div class="stat"><div class="n">46</div><div class="l">推论（Inferences）</div></div>
+      <div class="stat"><div class="n">31</div><div class="l">模型</div></div>
+      <div class="stat"><div class="n">11</div><div class="l">实体</div></div>
+      <div class="stat"><div class="n">0</div><div class="l">语料条目 · 772万字</div></div>
+      <div class="stat"><div class="n">31</div><div class="l">技能</div></div>
+      <div class="stat"><div class="n">2</div><div class="l">交付报告（另 9 分类归档 53 项）</div></div>
+    </div>
+    <div class="note">※ 语料 0 条目/772万字、交付报告 2 份为 gen-dashboard（08-13）口径；交付区 9 分类归档 53 项为 08-03 归置口径，两口径统计维度不同，已记录待核对。</div>
+  </div>
+
+  <div class="section">
+    <h2>🩺 系统健康与巡检关注</h2>
+    <div class="health-row">
+      <div class="health-card">
+        <h3>✅ 正常</h3>
+        <ul>
+          <li>KEMS 基线已建 · 巡检定时在跑 · 系统状态 🟡（预警 13 · 正常 52 · 紧急 0）</li>
+          <li>第三轮审计整改 40 项验证全通过（8/12）</li>
+          <li>电子病历数据质量 93.28 分（8 家均值 · 6月 · 区属第2）</li>
+          <li>精保院检查检验互认市级验收通过（07-31 进验收 → 08-12 闭环 → 08-13 验证单归档）</li>
+          <li>预约挂号统计表已报送市卫健委信息处（08-13）</li>
+        </ul>
+      </div>
+      <div class="health-card">
+        <h3>⚠️ 预警</h3>
+        <ul>
+          <li>电子病历月报流程中断，需恢复（每月 20 日 · 3-6 月追溯补编）</li>
+          <li>电子病历问题清单 612 条 98.7% 未排期（整改闭环缺失 · CR31）</li>
+          <li>药品编码规范率 85.61% 未达 98%（P0 · CR33）</li>
+          <li>中能建规范性 40.27（全区最低）· 妇幼及时性 5.60（全区最低）</li>
+          <li>北儿窦店一致性 7.49 / 连续性 2.50（全区唯一严重失分）</li>
+          <li>中能建 EMR 79.3 分（2025-11）待核实当前达标状态 · 良乡/北亚及时性短板（CR21）</li>
+          <li>语料 / 交付计数口径待核对（gen-dashboard 显示 0/2）</li>
+        </ul>
+      </div>
+      <div class="health-card">
+        <h3>🔴 紧急（盯防中）</h3>
+        <ul>
+          <li>8/20 专家论证会组织（已到期，结果待核实）</li>
+          <li>8/22 经信局齐报 13 项（已到期，结果待核实）</li>
+          <li>8/25 财政评审 + 初设配套 5 项（仅数据安全承诺书到位）</li>
+          <li>8/31 初设报送经信局（硬时限）</li>
+          <li>电子病历督导：妇幼/北儿月度督办 + 问题清单补排期（8 月启动）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">数据快照：2026-08-24（源数据最新 2026-08-15；本周五三医周报与政策简报未生成，8/20 专家论证 / 8/22 经信局齐报 13 项结果待人工核实）· 三医态势仪表盘 + 信息中心项目仪表盘 + key-milestones.yaml + DASHBOARD + signals.md + 电子病历数据质量 EMR-DQ 深度分析 · 倒计时动态计算 · 建议每周五周报后刷新</div>
+
+<script>
+/* ============ 通用 ============ */
+const T=new Date(); T.setHours(0,0,0,0);
+document.getElementById("today").textContent="今日："+new Date().toLocaleDateString("zh-CN",{year:"numeric",month:"long",day:"numeric",weekday:"long"})+" · 快照 2026-08-24";
+function daysTo(iso){const d=new Date(iso);d.setHours(0,0,0,0);return Math.round((d-T)/86400000);}
+function fmt(d){return d<0?"已过":d===0?"今天":d+" 天";}
+const pillCls=c=>c==="red"?"pill-red":c==="yellow"?"pill-yellow":"pill-green";
+
+/* ============ Tab 切换 ============ */
+document.querySelectorAll(".tab-btn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".tab-pane").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    document.getElementById(b.dataset.tab).classList.add("active");
+    if(b.dataset.tab==="tab-proj" && window.trendChart) setTimeout(()=>{window.trendChart.resize();},60);
+  });
+});
+
+/* ============ Tab1 节点倒计时（key-milestones.yaml M01-M05 对齐） ============ */
+const MILES=[
+ {d:"2026-08-03",t:"M01 AI应用调查报送",sev:"green",detail:"✅ 8/4 已上报市卫健委（最严口径：无大模型应用接入）"},
+ {d:"2026-08-10",t:"M02 三项目 P0 确认",sev:"green",detail:"负责人已定（归集 孟帅 / 家医 贾颖）· 剩 A1/A3 方案方（08-14 已逾）"},
+ {d:"2026-08-14",t:"挂号统计表报市卫健委",sev:"green",detail:"✅ 08-13 已报送市卫健委信息处 · 9/30 入口统一"},
+ {d:"2026-08-20",t:"M03 专家论证会（3-5名专家）",sev:"red",detail:"东软 8/13 报名单 → 委 8/14 审 · 材料 8/17 前加密送达（已到期，结果待核实）"},
+ {d:"2026-08-22",t:"M04 经信局申报（等论证后齐报）",sev:"red",detail:"决策 08-12：论证通过后齐报 13 项 · 随后启动财政评审（已到期，结果待核实）"},
+ {d:"2026-08-25",t:"财政评审申报 + 初设配套清零",sev:"red",detail:"入云/密码/交钥匙/信用代码证/数据安全承诺 5 项"},
+ {d:"2026-08-31",t:"M05 初设报送经信局（硬时限）",sev:"red",detail:"经信局技术评审主要依据 · V1.0 修订版"},
+ {d:"2026-09-15",t:"采购意向公开（≥30日）",sev:"yellow",detail:"草稿已填 · 原 docx 宿主锁定待覆盖"},
+];
+document.getElementById("milestones").innerHTML=MILES.map(m=>{
+  const d=daysTo(m.d); const urgent=d<=3&&d>=0;
+  return `<div class="mile-card ${m.sev}"><div class="m-date">${m.d.slice(5)}</div><div class="m-title">${m.t}</div><div class="m-days ${urgent?"urgent":""}">${fmt(d)}<span class="u"> 剩余</span></div><div class="note">${m.detail}</div></div>`;
+}).join("");
+
+/* ============ Tab1 在管项目明细 ============ */
+const PROJECTS=[
+ {n:"房山区基层信息系统升级——「三医」诊疗数据归集模块项目",b:"300 万",s:"市级资金（2025 卫生健康能力提升示范性项目）",ph:"S1-S2 冲刺 · 并行申报",o:"孟帅 / 夏明星",st:"13项定稿12项 · 等论证后齐报",c:"red"},
+ {n:"房山区基层信息系统升级——家医健康管理中心建设项目",b:"544 万",s:"市级资金（同上）",ph:"S1 立项申报",o:"孟帅 / 贾颖",st:"方案方待确认（A1 · 已逾）",c:"yellow"},
+ {n:"房山区基层信息系统升级——LIS升级改造、信创适配及检验数据互认项目",b:"74 万",s:"市级资金（同上）",ph:"S1 立项申报",o:"贾颖 / 贾颖",st:"方案方待确认（A3 · 已逾）",c:"yellow"},
+ {n:"区域公共卫生体系建设示范性项目",b:"2832 万",s:"市转移支付 2000 + 其他 832 · 独立资金路径",ph:"S2 立项审批",o:"信息科",st:"待联合行文报市",c:"yellow"},
+];
+document.getElementById("proj-rows").innerHTML=PROJECTS.map(p=>
+ `<tr><td style="max-width:270px">${p.n}</td><td><b>${p.b}</b></td><td>${p.s}</td><td>${p.ph}</td><td>${p.o}</td><td><span class="badge badge-${p.c}">${p.st}</span></td></tr>`).join("");
+
+/* ============ Tab1 材料 + 任务 ============ */
+const MATS=[
+ ["① 项目建议书","done"],["② 可行性研究报告","done"],["③ 信息化建设项目申报表","done"],["④ 数据资源梳理报表","done"],["⑤ 申报函","done"],
+ ["⑥ 库表目录表","done"],["⑦ 数据目录表","done"],["⑧ 资源目录","warn"],["⑨ 预算测算明细表","done"],["⑩ 项目初步设计方案","warn"],
+ ["⑪ 绩效目标申报表","done"],["⑫ 区政府批示件","done"],["⑬ 专家评审意见","warn"],
+];
+document.getElementById("mat-rows").innerHTML=MATS.map(m=>
+ `<tr><td>${m[0]}</td><td>${m[1]==="done"?'<span class="badge badge-green">定稿</span>':'<span class="badge badge-yellow">待闭环</span>'}</td></tr>`).join("");
+
+const TASKS=[
+ ["1","归集","专家论证会（线上组织）","08-20","已到期待核实","red"],
+ ["2","归集","经信局申报（等论证后齐报13项）","08-22","已到期待核实","red"],
+ ["3","归集","财政评审申报","08-25","准备中","red"],
+ ["4","归集","初设配套 5 项（1/5 到位）","08-25","待启动","red"],
+ ["5","归集","初设报送经信局","08-31","进行中","red"],
+ ["6","归集","采购意向公开","09-15","草稿已填","yellow"],
+ ["7","归集","⑧资源目录补全（现 6 条）","08-15","待办","yellow"],
+ ["8","家医","方案方确认（A1 · 08-14 已逾）","—","逾期","red"],
+ ["9","家医","申报材料返工（A类7项）","08-20","返工中","yellow"],
+ ["10","LIS","方案方确认（A3 · 08-14 已逾）","—","逾期","red"],
+ ["11","LIS","申报材料返工（A类8项）","08-20","返工中","yellow"],
+ ["12","三项目","领导批示件（家医/LIS 待确认）","08-15","归集✅","yellow"],
+];
+document.getElementById("task-rows").innerHTML=TASKS.map(t=>
+ `<tr><td>${t[0]}</td><td>${t[1]}</td><td style="font-weight:500">${t[2]}</td><td>${t[3]}</td><td><span class="badge ${t[5]==="red"?"badge-red":"badge-yellow"}">${t[4]}</span></td></tr>`).join("");
+
+/* ============ Tab1 8-9月时间轴 ============ */
+const MARKS=[
+ {day:3,label:"M01 AI调查",sev:"green",date:"08-03"},
+ {day:10,label:"M02 P0确认",sev:"green",date:"08-10"},
+ {day:12,label:"挂号统计表",sev:"green",date:"08-12"},
+ {day:20,label:"专家论证",sev:"red",date:"08-20"},
+ {day:22,label:"经信局申报",sev:"red",date:"08-22"},
+ {day:25,label:"财政评审",sev:"red",date:"08-25"},
+ {day:31,label:"初设报送",sev:"red",date:"08-31"},
+ {day:44,label:"采购意向",sev:"yellow",date:"09-15"},
+];
+const pos=d=>((d-1)/(44-1))*100;
+document.getElementById("marks").innerHTML=MARKS.map(m=>
+ `<div class="mark" style="left:${pos(m.day)}%"><div class="dot dot-${m.sev}"></div>${m.label}<br>${m.date}</div>`).join("");
+
+/* ============ Tab1 机构进度 + 完成率 ============ */
+const ORGS=[
+ {n:"中医院",p:100},{n:"妇幼",p:100},{n:"燕化",p:100},{n:"北亚",p:100},
+ {n:"第一医院",p:100},{n:"核工业",p:100},{n:"中能建",p:100},
+ {n:"窦店",p:67,c:"#b7950b"},{n:"良乡",p:33,c:"#b7950b"},{n:"精保院",p:0,c:"#c0392b"},
+];
+document.getElementById("orgs").innerHTML=ORGS.map(o=>{
+  const c=o.c||(o.p>=100?"#1e8e5a":"#1a4d8f");
+  return `<div class="org-row"><span class="o-name">${o.n}</span><div class="bar"><i style="width:${o.p}%;background:${c}"></i></div><span class="o-pct">${o.p>=100?"100%":o.p+"%"}</span></div>`;
+}).join("");
+
+const dates=["03-19","04-09","05-29","06-04","06-08","06-13","06-26","07-03","07-18","07-30"];
+const rates=[0,0,25,30,96.3,95.7,95.7,97.1,97.1,72.7];
+window.trendChart=new Chart(document.getElementById("trendChart"),{
+  type:"line",
+  data:{labels:dates,datasets:[{label:"完成率 %",data:rates,borderColor:"#1a4d8f",backgroundColor:"rgba(26,77,143,.08)",fill:true,tension:.3,pointRadius:3,pointBackgroundColor:"#1a4d8f"}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{afterLabel:i=>i.dataIndex===9?"※机构口径":""}}},
+   scales:{y:{min:0,max:105,ticks:{callback:v=>v+"%"}},x:{grid:{display:false}}}}
+});
+
+/* ============ Tab1 电子病历数据质量专项 ============ */
+const EMR_ORGS=[
+ {n:"第一医院",p:98.14},{n:"良乡",p:96.81},{n:"燕化",p:94.51},{n:"中能建",p:93.23},
+ {n:"中医",p:93.10},{n:"北亚",p:92.91},{n:"窦店",p:89.00,c:"#c0392b"},{n:"妇幼",p:88.55,c:"#c0392b"},
+];
+document.getElementById("emr-orgs").innerHTML=EMR_ORGS.map(o=>{
+  const c=o.c||(o.p>=90?"#1e8e5a":"#c0392b");
+  return `<div class="org-row"><span class="o-name">${o.n}</span><div class="bar"><i style="width:${o.p}%;background:${c}"></i></div><span class="o-pct">${o.p}</span></div>`;
+}).join("");
+
+const EMR_FIELDS=[
+ {n:"药品编码",p:85.61,c:"#c0392b"},{n:"诊疗项目",p:97.02,c:"#b7950b"},{n:"耗材编码",p:96.61,c:"#b7950b"},
+ {n:"就诊唯一",p:96.16,c:"#b7950b"},{n:"执业医师",p:99.69,c:"#1e8e5a"},{n:"检验编码",p:100.00,c:"#1e8e5a"},
+];
+document.getElementById("emr-fields").innerHTML=EMR_FIELDS.map(o=>{
+  const c=o.c||(o.p>=98?"#1e8e5a":"#c0392b");
+  return `<div class="org-row"><span class="o-name">${o.n}</span><div class="bar"><i style="width:${o.p}%;background:${c}"></i></div><span class="o-pct">${o.p}%</span></div>`;
+}).join("");
+
+/* ============ Tab2 政策信号 ============ */
+const POLICIES=[
+ ["P0","人工智能法草案提请审议","2026-07-15","AI 应用调查 / 眼科AI / 数据合规","AI 摸底 8/4 已上报（无大模型应用接入）"],
+ ["P0","市级统筹三医 144 号","持续","归集平台论证对齐段（8/20 论证材料含）","论证段筹备中"],
+ ["P1","预约挂号统一平台通知","2026-08-05","区属3院统计表 8/12 ✅ → 08-13 报市 ✅ · 9/30 入口统一","已闭环（08-13 报送）"],
+ ["P1","医改资金批示（区里 08-01）","2026-08-01","三新建项目 918 万资金定版","已办结 · 口径更新市级示范性项目"],
+ ["P1","电子病历数据质控评价指标体系","2026 Q2","6月数据质量 93.28（区属第2）· 药品编码 85.61% P0","专项督导 8 月启动（机制接续 08-13）"],
+ ["P1","传染病智能监测预警前置软件通知","2024 Q2 起","二级以下机构部署（待确认时限）","部署推进"],
+ ["P1","政府投资信息化项目管理办法","2024 Q4","新建项目申报 / 初设报送合规","8/31 初设对齐"],
+ ["P2","更高水平医疗卫生服务行动计划 2026","2026-06-08","心脑血管+五癌筛查（房山试点）· 家医中心/影像平台","行动对齐"],
+ ["P2","十五五数智房山规划 v5.3","2025 Q4","数据管理 / 信息化中长期方向","基线已用"],
+ ["P2","数据管理能力成熟度评估","2025 Q3","数据上报 / 资源底座","模型已建"],
+ ["P2","基层卫生健康工作会 · AI+医疗信息报送","2026 Q1","AI 应用摸底（专项源头）","8/4 已上报市卫健委"],
+];
+document.getElementById("policy-rows").innerHTML=POLICIES.map(p=>
+ `<tr><td><span class="pill pill-${p[0].toLowerCase()}">${p[0]}</span></td><td><b>${p[1]}</b></td><td>${p[2]}</td><td>${p[3]}</td><td><span class="pill ${p[4].includes("已")||p[4].includes("办结")||p[4].includes("闭环")?"pill-act":"pill-watch"}">${p[4]}</span></td></tr>`).join("");
+
+/* ============ Tab2 政策时间线 ============ */
+const TL=[
+ {q:"2026 Q3",t:'<b class="t-policy">人工智能法草案提请审议（07-15）</b> · 预约挂号统一平台接入启动（08-05）',sub:"AI 摸底 8/4 已上报 · 挂号统计表 8/12 回收 → 08-13 报市 ✅ · 论证 8/20 · 经信局齐报 8/22 · 初设 8/31 · 三医周报 97.1%",k:"pol"},
+ {q:"2026 Q3",t:"<b>精保院督办闭环里程碑</b>：07-31 互认进验收 → 08-12 互认完成 → 08-13 市级验收通过（验证单归档）",sub:"剩余项（门急诊/住院病历）转跟进 + 技术注入 · GGWS-DEMO 批示归档（京房卫请〔2026〕29号）",k:"pol"},
+ {q:"2026 Q3",t:"<b>电子病历数据质量机制接续（08-13）</b>：周报模版 V3 重启 · 6 月问题清单补排期 · 3-6 月月报追补 · 进度表得分下沉改造",sub:"EMR-DQ v1.0（6月 93.28 分区属第2 · 药品编码 85.61% P0 · 612 条 98.7% 未排期）· 妇幼/北儿月度督办",k:"pol"},
+ {q:"2026 Q3",t:"<b>电子病历数据质量深度分析（EMR-DQ v1.0）</b>：6月 93.28 分区属第2 · 药品编码 85.61% P0 · 612 条问题 98.7% 未排期",sub:"分析+模型落 _inbox / 模型面 · facts+10/inferences+6/CR31-33",k:"pol"},
+ {q:"2026 Q2",t:'<b>电子病历数据质控评价指标体系发布</b> · 京津冀半年进展函（06-09）',sub:"精保院督办 · V3 接口升级完成",k:"pol"},
+ {q:"2026 Q1",t:"基层卫生健康工作会 · <b>AI+医疗健康信息报送（3 月底）</b>",sub:"→ 8/3 AI 应用摸底专项源头",k:"pol"},
+ {q:"2025 Q4",t:'<b class="t-policy">十五五数智房山规划 v5.3</b>',sub:"妇幼风险排查复核 · 供应链自查",k:"pol"},
+ {q:"2025 Q3",t:'<b class="t-policy">数据管理能力成熟度评估 / 医改方案</b>',sub:"应急演练 · 密码应用调查",k:"pol"},
+ {q:"2025 Q2",t:"<b>健康北京规划评估</b>",sub:"安全培训 · 排查整治专项行动",k:"pol"},
+ {q:"2025 Q1",t:"智慧中医医院试点申报",sub:"两会安全保障 · Ollama 排查",k:"pol"},
+ {q:"2024 Q4",t:'<b class="t-policy">政府投资信息化项目管理办法</b> · LIS 申报资料整理',sub:"风险排查报告 · 奇安信交流",k:"pol"},
+ {q:"2024 Q2",t:'<b class="t-policy">传染病监测预警前置软件通知</b>',sub:"三医调度部署推进 · 等保检查",k:"pol"},
+ {q:"2024 Q1",t:"首都公共卫生应急管理体系重点任务",sub:'<span class="t-sec">⚠️ 妇幼保健院勒索病毒事件</span>',k:"pol"},
+ {q:"2023 Q4",t:'<b class="t-policy">优质服务基层行三年行动（征求意见）</b>',sub:"网络和数据安全监督检查",k:"pol"},
+ {q:"2023 Q3",t:"三医联动专项启动",sub:"渗透演练 · 美光审查",k:"sec"},
+];
+document.getElementById("tl").innerHTML=TL.map(x=>
+ `<div class="tl-item ${x.k}"><div class="tl-q">${x.q}</div><div class="tl-main">${x.t}</div><div class="tl-sub">${x.sub}</div></div>`).join("");
+
+/* ============ Tab3 周节奏 ============ */
+const now=new Date();
+const dow=now.getDay();
+const monday=new Date(now); monday.setDate(now.getDate()-(dow===0?6:dow-1));
+const DAYS=["周一","周二","周三","周四","周五","周六","周日"];
+const RHYTHM={
+ "周一":["<b>09:03</b> 三医进度表取数校验","<b>11:05</b> 内容采集周报（RSS+公众号）"],
+ "周二":["<b>日常</b> 材料/公文推进","项目节点巡检（CR03）"],
+ "周三":["<b>09:00</b> 知识库维护（STATE/时间线/索引）","<b>12:02</b> 政策简报（一/三/五）"],
+ "周四":["<b>09:00</b> 三医联动进度表模板（下周周报前置）","<b>12:02</b> 政策简报"],
+ "周五":["<b>15:00</b> 三医·周五综合周报（docx → 公文）","<b>15:30</b> 追加 facts + 更新三医时间线","周末检查：上报追踪/滞留草稿"],
+ "周六":["<b>09:00</b> INDEX 索引同步","L4 治理周检（l4-governance-weekly）"],
+ "周日":["本周复盘 / 下周节点准备"]
+};
+let weekHtml="";
+for(let i=0;i<7;i++){
+  const d=new Date(monday); d.setDate(monday.getDate()+i);
+  const name=DAYS[i];
+  const isToday=d.toDateString()===now.toDateString();
+  const tasks=(RHYTHM[name]||[]).map(t=>`<span class="t">${t}</span>`).join("");
+  weekHtml+=`<div class="day ${isToday?"today":""}"><div class="d-name">${name}${isToday?" · 今天":""}</div><div class="d-date">${d.getMonth()+1}/${d.getDate()}</div><div class="tasks">${tasks}</div></div>`;
+}
+document.getElementById("week").innerHTML=weekHtml;
+
+/* ============ Tab3 待办 ============ */
+const TODOS=[
+ {p:"P0",t:"8/12 区属3院挂号统计表回收 ✅ → 08-13 已报送市卫健委信息处",tag:"已闭环"},
+ {p:"P0",t:"8/20 专家论证会组织（东软 8/13 报名单 → 委 8/14 审 · 时间/平台/专家费待定）——已到期，结果待核实",tag:"已到期"},
+ {p:"P0",t:"8/22 经信局齐报 13 项（等论证通过 · 决策 08-12）——已到期，结果待核实",tag:"已到期"},
+ {p:"P0",t:"8/25 财政评审申报 + 初设配套 5 项清零（入云/密码/交钥匙/信用代码证/数据安全承诺）",tag:"8/25"},
+ {p:"P0",t:"8/31 初设报送经信局（硬时限）",tag:"硬时限"},
+ {p:"P1",t:"电子病历数据质量督导：问题清单补排期（612条98.7%未排）+ 妇幼/北儿月度督办 + 药品编码 P0 + 周报模版V3重启 + 3-6月月报追补",tag:"EMR-DQ"},
+ {p:"P1",t:"家医/LIS 方案方确认（A1/A3 · 08-14 已逾，需决策）",tag:"逾期"},
+ {p:"P1",t:"精保院剩余项跟进 + 技术注入（互认 08-13 市级验收通过）",tag:"精保院"},
+ {p:"P1",t:"区域公卫示范项目（2832 万）联合行文报市",tag:"GGWS"},
+ {p:"P1",t:"采购意向公开（草稿已填 · 原 docx 宿主锁定待覆盖 · 李爽答复回填）",tag:"9/15"},
+ {p:"P1",t:"电子病历月报恢复（3-6 月追溯补编定稿）",tag:"月报"},
+ {p:"P2",t:"每周五更新周报 → 追加 facts → 更新时间线",tag:"周五"},
+ {p:"P2",t:"10 月初启动年底冲刺预案",tag:"Q4"},
+];
+document.getElementById("todos").innerHTML=TODOS.map(t=>
+ `<div class="todo"><span class="p ${t.p==="P0"?"p-p0":t.p==="P1"?"p-p1":"p-p2"}">${t.p}</span><span class="txt">${t.t}</span><span class="tag">${t.tag}</span></div>`).join("");
+</script>
+</body>
+</html>
