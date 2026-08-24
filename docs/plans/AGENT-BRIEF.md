@@ -233,6 +233,21 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run-id> \
 
 > **违例后果**：停工前未填写 → 后续审计追溯时记入「治理违约」，对应 bet 不予 done。
 
+### 3.5 治理演进工作必须先登记治理 bet（G8 — 2026-08-24 补充）
+
+**触发**：任何"改进治理机制本身"的工作 —— 治理文档 / GaC 规则 / 检查器 / scorecard
+升级 / SSOT 口径对齐，且非 observer-audit 只读任务。
+
+**规则**（防止 S1/S5/CONV-3 三次 blocked 复发）：
+
+1. **先登记治理 bet**：在 `docs/plans/3y-bet-ledger.yaml` 登记一个 `T10-MATURITY` 或
+   governance 类 bet（如 T10-07/08/09/10），或复用现有治理 bet
+2. **用 bet 绑定 run**：`start <workflow> --bet <治理-bet-id>`，不要走无 bet 的 waiver run
+3. **closeout 走治理 bet 闭环**：治理演进由 bet 承载 vision→run→retro 链，无需业务 bet
+   （chain-bind-check 对治理 workflow + 治理 bet 豁免业务 bet 绑定）
+
+**豁免**：仅 observer-audit（只读审计）可无 bet；业务功能改动必须绑定业务 bet。
+
 ---
 
 ## 4. 收尾流程（照抄命令）
