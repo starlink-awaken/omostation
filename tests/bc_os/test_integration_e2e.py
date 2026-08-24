@@ -10,14 +10,21 @@ import importlib
 import sys
 from pathlib import Path
 
-_BIN_GAC = Path(__file__).resolve().parent
+import pytest
+
+_BIN_GAC = Path(__file__).resolve().parents[2] / "bin" / "bc-os"
 sys.path.insert(0, str(_BIN_GAC))
 sys.path.insert(0, str(_BIN_GAC.parents[1]))
 
 router = importlib.import_module("signal_router")
 
 
-def test_route_doc_review_signal(tmp_path, monkeypatch):
+@pytest.fixture(autouse=True)
+def _isolate_signals_log(tmp_path, monkeypatch):
+    monkeypatch.setattr(router, "SIGNALS_LOG", tmp_path / "routed-signals.json")
+
+
+def test_route_doc_review_signal(tmp_path):
     """公文信号路由到 document-review."""
     inbox = tmp_path / "inbox"
     inbox.mkdir()
@@ -80,5 +87,4 @@ def test_route_mixed_signals(tmp_path):
 
 
 if __name__ == "__main__":
-    import pytest
     sys.exit(pytest.main([__file__, "-v"]))
