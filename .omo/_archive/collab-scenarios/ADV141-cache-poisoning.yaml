@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV141-cache-poisoning
+category: A_conflict
+adversarial: true
+seed: 241
+description: >
+  [对抗·red-team wave25] 缓存投毒: 污染 CDN/HTTP 缓存键返回恶意响应,
+  管线已有 cache_poisoning_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: cache_key, value: "GET /index", writers: [cdn]}
+  roles: [attacker, cdn, victim]
+inject:
+  - {type: write_conflict, role: attacker, target: cache_key, value: "GET /index X-Forwarded-Host:evil"}
+  - {type: write_conflict, role: cdn, target: cached_body, value: "malicious_script_payload"}
+  - {type: write_conflict, role: victim, target: page_render, value: "served_poisoned_cache"}
+  - {type: write_conflict, role: attacker, target: session_hijack, value: "cookie_stolen"}
+expected:
+  behavior: cache_poisoning_detected
+  silent_loss: 0
+verdict:
+  - criterion: cache_poisoning_detected
+    check: events_contain
+    args: {kind: cache_poisoning_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

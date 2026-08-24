@@ -104,7 +104,7 @@ ADR 战略诊断 6 大矛盾之首: **L2 引擎"双向耦合岛"** — runtime �
 
 ## 2. 设计 — gbrain 三栈拆分
 
-完整设计文档: [`docs/architecture/gbrain-three-stack-split.md`](../architecture/gbrain-three-stack-split.md)。
+完整设计文档: [`docs/architecture/gbrain-three-stack-split.md`](../../../docs/architecture/gbrain-three-stack-split.md)。
 
 ### 2.1 现状
 

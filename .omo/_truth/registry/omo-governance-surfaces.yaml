@@ -544,6 +544,22 @@ assets:
       - humans
       - agents
     status: active
+  - id: OMO-CONSTITUTION
+    ref: .omo/constitution.yaml
+    plane: state_plane
+    asset_type: principal_constitution
+    persistence_mode: authoritative
+    retention_mode: until_replaced
+    truth_owner: human-principal
+    write_via:
+      - human_review
+      - governance
+    consumed_by:
+      - agents
+      - cockpit
+      - projects/omo
+    notes: personal governance constitution for principal identity, roles, decision preferences, and value-measurement boundaries
+    status: active
   - id: OMO-BETS-INDEX
     ref: .omo/bets.json
     plane: state_plane

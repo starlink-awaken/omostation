@@ -18,7 +18,7 @@ related:
 
 ## Context
 
-按 [BET-Y3H2-T1-01](../../docs/plans/3y-bet-ledger.yaml) 要求，在三年数据基础上对"是否服务他人"做一次明确决策。
+按 [BET-Y3H2-T1-01](../../../docs/plans/3y-bet-ledger.yaml) 要求，在三年数据基础上对"是否服务他人"做一次明确决策。
 
 ## 源材料：三年规划 §2.1 边界（不做什么）
 
@@ -66,6 +66,6 @@ related:
 
 ## References
 
-- [三年规划 §2.1 边界](../STRATEGY-3YEAR-PLAN-2026H2-2029.md)
+- [三年规划 §2.1 边界](../../../docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md)
 - [ADR-0416 Y2 门](./0416-y2-gate-vision-falsification.md)
 - [ADR-0417 Y3 终局门](./0417-y3-final-gate.md)

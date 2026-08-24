@@ -19,7 +19,7 @@ related:
 
 ## Context
 
-按 [BET-Y2Q4-T1-01](../../docs/plans/3y-bet-ledger.yaml) 要求，对愿景做一次不可回避的证伪判定。源材料：[三年规划 §0.3 愿景（收窄版）](../STRATEGY-3YEAR-PLAN-2026H2-2029.md) 与 §2.2 三年后可验收状态。
+按 [BET-Y2Q4-T1-01](../../../docs/plans/3y-bet-ledger.yaml) 要求，对愿景做一次不可回避的证伪判定。源材料：[三年规划 §0.3 愿景（收窄版）](../../../docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md) 与 §2.2 三年后可验收状态。
 
 ## 愿景陈述
 
@@ -58,5 +58,5 @@ related:
 
 ## References
 
-- [三年规划 §0.3 愿景](../STRATEGY-3YEAR-PLAN-2026H2-2029.md)
-- [BET-Y2Q4-T1-01 goal](../../docs/plans/3y-bet-ledger.yaml)
+- [三年规划 §0.3 愿景](../../../docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md)
+- [BET-Y2Q4-T1-01 goal](../../../docs/plans/3y-bet-ledger.yaml)

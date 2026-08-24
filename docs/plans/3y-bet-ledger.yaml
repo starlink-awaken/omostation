@@ -6569,7 +6569,16 @@ bets:
   - docs/operations/bin-scripts-convergence-manifest.json
   - .omo/_truth/registry/governance-checks.yaml
   - bin/ssot/script-registry.py
+  - bin/gac/maturity-scorecard.py
+  - bin/_registry/scripts
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g1-script-registry-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g1-script-registry-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:d9843ba84c6c9cfe7b7e5b386cc60fb19b6ce972d054a750b2dd4f9ae71ff4ef"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-01
   depends_on: []
 
 - id: BET-Y1Q3-T10-02
@@ -6606,7 +6615,14 @@ bets:
   write_surfaces:
   - .omo/_knowledge/decisions/
   - bin/gac/adr-link-validator.py
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g3-adr-link-fix-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g3-adr-link-fix-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:4b67338fcc7cb8191acfdaa7e830eead8c22d726d4c757670e602536c4cceac4"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-03
   depends_on: []
 
 - id: BET-Y1Q3-T10-04
@@ -6625,7 +6641,15 @@ bets:
   write_surfaces:
   - bin/ssot/governance-migration.py
   - .omo/_truth/registry/governance-checks.yaml
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g4-governance-owner-migration-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/governance-checks.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g4-governance-owner-migration-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:9ad6fa32e0e542d9b234af6847c8d123b6bb128a4bb9e1603770acb33792be43"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-04
   depends_on: []
 
 - id: BET-Y1Q3-T10-05

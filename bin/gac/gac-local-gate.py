@@ -824,7 +824,18 @@ def _adaptive_threshold(metrics_file: Path, check: str, window: int = 50) -> int
 
 
 def run_check(name: str, command: list[str]) -> dict[str, object]:
-    cmd = [sys.executable, *command]
+    # Gate commands are either bare script paths (legacy) or carry an explicit
+    # interpreter token (new ecos sgf-policy gates, e.g. ["python3", "bin/..."]).
+    # Strip a leading interpreter token so we don't double-invoke the interpreter
+    # (sys.executable + "python3" -> python3: can't open file 'python3').
+    cmd = list(command)
+    if cmd and cmd[0] in {"python3", "python"}:
+        cmd = cmd[1:]
+        cmd = [sys.executable, *cmd] if cmd else [sys.executable]
+    elif cmd and cmd[0] in {"bash", "sh"}:
+        cmd = cmd[1:] or ["true"]
+    else:
+        cmd = [sys.executable, *cmd] if cmd else [sys.executable]
     timeout = _CHECK_TIMEOUTS.get(name, 15)
     started_ns = time.time_ns()
     try:
