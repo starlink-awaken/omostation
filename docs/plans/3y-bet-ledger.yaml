@@ -6765,15 +6765,32 @@ bets:
   title: 成熟度口径三方对齐 (health/scorecard/台账)
   appetite: 0.5 day
   priority: P1
-  status: candidate
-  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证)'
+  status: done
+  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证) — 闭合 via #2129'
   goal: '统一 health 报告 / maturity-scorecard / bet-ledger 验证态三方口径, 建单一 SSOT。'
   non_goals: []
-  done_when: []
+  done_when:
+  - 引入 maturity-align.py 三方对齐工具
+  - compass_radar composite 集成 alignment_score (reconciliation 0-100)
+  - reconciliation 跑通, 三大系统口径一致 (drift < 30)
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
-  - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
-  - bin/gac/maturity-scorecard.py
+  - bin/gac/maturity-align.py
+  - bin/compass_radar.py
+  - tests/test_compass_radar_t1005.py
+  - tests/test_maturity_align.py
   pasw_required: false
   depends_on: []
+  completion_evidence:
+    axes:
+      engineering:
+        status: VERIFIED
+        direct_evidence: [merged_reachable_commit, tests]
+      operational:
+        status: PROVEN
+        direct_evidence: [live_canary, fresh_receipt]
+      value:
+        status: ACCEPTED
+        direct_evidence: [replay]
+    schema_version: completion-evidence-matrix/v1
