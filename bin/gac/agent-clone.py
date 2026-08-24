@@ -1326,11 +1326,47 @@ def verify_clone_provenance(
         )
         parent_shas = parents.stdout.strip().split() if parents.returncode == 0 else []
         if len(parent_shas) == 2 and parent_shas[1] == platform_base_sha:
-            # GitHub update-branch wraps the unchanged source head in a
-            # GitHub-authored merge commit.  Exclude only that exact wrapper:
-            # the clone must still be parked on its first-parent source head,
-            # and every source delivery commit remains identity-checked.
+            # Each GitHub update-branch merges the then-current main into the
+            # PR branch. Repeated updates therefore form a first-parent chain
+            # of GitHub-authored wrappers. Exclude only a bounded exact chain:
+            # every side parent must be a mainline ancestor of the final base,
+            # and the chain must end at the untouched local source HEAD.
+            local_source_head = root_head(repo_root)
             source_head = parent_shas[0]
+            wrapper_depth = 1
+            while source_head != local_source_head and wrapper_depth < 16:
+                nested = git(
+                    repo_root,
+                    "show",
+                    "-s",
+                    "--format=%P",
+                    source_head,
+                )
+                nested_parents = (
+                    nested.stdout.strip().split() if nested.returncode == 0 else []
+                )
+                if len(nested_parents) != 2:
+                    platform_binding_ok = False
+                    break
+                side_to_final_base = git(
+                    repo_root,
+                    "merge-base",
+                    "--is-ancestor",
+                    nested_parents[1],
+                    platform_base_sha,
+                )
+                frozen_to_side = git(
+                    repo_root,
+                    "merge-base",
+                    "--is-ancestor",
+                    frozen_sha,
+                    nested_parents[1],
+                )
+                if side_to_final_base.returncode != 0 or frozen_to_side.returncode != 0:
+                    platform_binding_ok = False
+                    break
+                source_head = nested_parents[0]
+                wrapper_depth += 1
             frozen_to_source = git(
                 repo_root,
                 "merge-base",
@@ -1340,7 +1376,7 @@ def verify_clone_provenance(
             )
             platform_binding_ok = (
                 platform_binding_ok
-                and root_head(repo_root) == source_head
+                and local_source_head == source_head
                 and frozen_to_source.returncode == 0
             )
             identity_head = source_head
