@@ -292,6 +292,84 @@ Every successful or rejected inspection fixes `read_only=true` and
 verification remain explicitly `not_evaluated`/false. Static inspection is not
 client loading, availability, provider health, admission or execution evidence.
 
+### 5.3 B4-D1 native execution receipt and replay contract
+
+B4-D1 defines standard-library-only model, cleanup and facade boundaries in
+`lib/capability_native_execution_model.py`,
+`lib/capability_native_cleanup.py` and
+`lib/capability_native_execution_receipt.py`. They do not connect a provider,
+invoke a native capability, persist a marker, write OMO evidence or authorize a
+route. `native-execution-material/v1` embeds the complete replay-valid B4-B
+binding and these exact native inputs:
+
+```yaml
+binding: <canonical capability-trace-binding/v1 identities>
+capability: {kind: workflow|mcp_tool|bos_service, id: <exact native selector>}
+inspection:
+  receipt_digest: sha256:<64 lowercase hex characters>
+  source_digest: sha256:<64 lowercase hex characters>
+operation_id: <bounded opaque operation id>
+request_digest: sha256:<64 lowercase hex characters>
+admission:
+  receipt_digest: sha256:<64 lowercase hex characters>
+  admission_id: <bounded opaque id>
+  step_run_id: <bounded opaque id>
+  worker: {status: bound|not_applicable, id: <bounded id|null>}
+authorization_source: <workflow-controller|mcp-pep|bos-pep, exactly bound to kind>
+effect_classification: read_only|effectful
+execution_attempt: <positive bounded integer>
+```
+
+The material validator directly calls the B4-B trace-binding validator and the
+B4-C native selector parser. Kind and ID must agree; Skill and MCP-server IDs
+remain inspection-only and deterministically reject execution. `invocation_id`
+is the canonical SHA-256 digest of the complete material object, so changing
+any causal, inspection, operation, admission, authorization, effect or attempt
+field changes the identity.
+
+`native-cleanup-proof/v1` binds capability kind, invocation ID and its closed
+ownership scope (`workflow_child_run`, `mcp_proxy_entry` or
+`bos_action_lease`). It records baseline/terminal digests and exactly five
+measurements: owned locks, reference-count delta, connection created,
+connection disconnected and owned residue. Integers are bounded and never
+accept booleans. `proved` requires identical state digests, zero owned
+lock/reference/residue and complete teardown of any owned connection;
+`unproven` fixes `failure_code=cleanup_unproven`. The proof has its own
+`receipt_digest`.
+
+`native-execution-receipt/v1` binds `transport_state` (`confirmed`, `failed` or
+`uncertain`), a phase-limited native outcome, an ActionReceipt projection, the
+nested cleanup proof and its independent `cleanup_digest`. Effectful confirmed
+or failed execution requires a terminal ActionReceipt; read-only confirmed or
+failed execution fixes it to `not_applicable`; uncertain transport fixes it to
+`missing`. Confirmed/failed transport requires proved cleanup. Uncertain
+transport can preserve unproven cleanup but can never become evidence. Result
+content and provider error text are never stored—only a digest for confirmed or
+terminally failed native invocation. The only terminal native failure code in
+the completed outcome is `native_invocation_failed`; admission, replay,
+cleanup, evidence and policy codes belong to their own validators.
+
+`native-execution-marker/v1` is a separate pre-call schema. Pure replay with no
+existing record returns `needs_durable_start` and `call_allowed=false`; it does
+not grant a pre-CAS call. Only the exact canonical `started` marker for the
+current material is `transport_uncertain`; a valid foreign marker with another
+invocation/material digest is `execution_conflict`. An identical completed
+receipt returns `existing` with `call_allowed=false`; changed completed material
+is `execution_conflict`.
+Automatic fallback is forbidden. The facade only constructs the marker shape;
+a future broker remains responsible for durable CAS persistence and atomic
+completion.
+
+Unknown or raw request/result, prompt, transcript, credential, environment,
+absolute-path, command/argv, module, provider or transport-override fields are
+rejected. Receipt replay also rejects snake-case or camel-case forms of
+`human_verdict`, `decision_outcome`, personal/value metrics, fallback
+promotion, evidence promotion and independent-verification promotion even when
+an attacker recomputes every self-digest. Cleanup and execution receipts fix
+`value_indicator_policy=false`; execution states fix exact boolean
+`invoked=true`, `evidenced=false` and `independently_verified=false`. OMO
+evidence handoff and independent verification are later, distinct phases.
+
 ## 6. Availability and fallback
 
 “Available” is never a single boolean. Operators must be able to distinguish:
@@ -315,27 +393,45 @@ recovery—not silent substitution.
 
 ## 7. Stable failure vocabulary
 
-The federation audit and future resolvers use stable codes rather than provider
-messages:
+The federation audit and public validators use stable codes rather than
+provider messages. The phase column is normative: a validator rejection is not
+automatically a completed native outcome.
 
-| Code | Meaning |
-|---|---|
-| `source_unprovable` | authority source is missing, uninitialized or unreadable |
-| `source_schema_unsupported` | native schema/version is not supported |
-| `source_digest_mismatch` | source bytes changed after binding |
-| `duplicate_authority_claim` | more than one surface claims canonical ownership |
-| `dangling_reference` | a native cross-reference has no target |
-| `admission_contradiction` | admission state and required transport contract disagree |
-| `resolution_not_found` | exact native ID does not exist in a proved source |
-| `resolution_ambiguous` | selector has more than one candidate |
-| `upstream_resolution_required` | the kind-specific B4-B binding or resolution receipt is missing |
-| `upstream_resolution_invalid` | the supplied upstream binding/receipt cannot be replay-validated for the exact native ID |
-| `observation_stale` | runtime observation is outside its declared freshness window |
-| `authorization_required` | a distinct controller/provider/human decision is missing |
-| `transport_uncertain` | request outcome cannot be proved after interruption |
-| `cleanup_unproven` | process, session, terminal or lease residue was not measured |
-| `execution_evidence_missing` | native success cannot be bound to an evidence receipt |
-| `value_promotion_forbidden` | engineering evidence attempted to create a human/value outcome |
+| Code | Phase | Meaning |
+|---|---|---|
+| `source_unprovable` | discovery/inspection | authority source is missing, uninitialized or unreadable |
+| `source_schema_unsupported` | inspection | native schema/version is not supported |
+| `source_digest_mismatch` | inspection/replay | source bytes changed after binding |
+| `duplicate_authority_claim` | discovery | more than one surface claims canonical ownership |
+| `dangling_reference` | discovery/inspection | a native cross-reference has no target |
+| `resolution_not_found` | resolution | exact native ID does not exist in a proved source |
+| `resolution_ambiguous` | resolution | selector has more than one candidate |
+| `upstream_resolution_required` | inspection | the kind-specific B4-B binding or resolution receipt is missing |
+| `upstream_resolution_invalid` | inspection | the supplied upstream binding/receipt cannot be replay-validated for the exact native ID |
+| `inspection_receipt_invalid` | execution material | the B4-C receipt/source-digest projection is incomplete or malformed |
+| `observation_stale` | observation/admission | runtime observation is outside its declared freshness window |
+| `admission_contradiction` | admission | admission state and required transport contract disagree |
+| `admission_receipt_invalid` | execution material/admission | the admission receipt, step or worker binding is incomplete or malformed |
+| `admission_expired` | admission | an otherwise valid admission is outside its bounded validity window |
+| `authorization_required` | authorization/material | the exact kind-bound authorization source is missing or mismatched |
+| `native_execution_unprovable` | material/execution receipt/marker | the capability is inspection-only or the execution/marker receipt cannot be replay-proved |
+| `native_route_unprovable` | execution material | selector, B4-B binding, operation, request, effect or attempt material is invalid |
+| `execution_conflict` | replay | current material conflicts with an existing completed receipt or foreign marker |
+| `transport_uncertain` | marker/transport | the exact durable started marker exists or transport completion cannot be proved |
+| `native_invocation_failed` | terminal native outcome | the invoked native operation reached a confirmed terminal failure |
+| `cleanup_unproven` | cleanup | owned locks, references, connections, residue or baseline restoration cannot be proved |
+| `execution_evidence_missing` | action receipt | the required terminal/missing/not-applicable ActionReceipt state is invalid |
+| `verification_unprovable` | independent verification | downstream verification cannot prove the eligible engineering evidence |
+| `value_promotion_forbidden` | value firewall | engineering evidence attempted to create a human or personal-value outcome |
+| `fallback_forbidden` | fallback policy | receipt or replay state attempted automatic fallback |
+
+Only `native_invocation_failed` may appear as the failure code inside a
+completed `native-execution-receipt/v1` terminal native outcome. Admission,
+material, replay, marker, cleanup, ActionReceipt, verification, fallback and
+value-policy codes are emitted by their owning validators and must not be
+copied into that terminal outcome. An uncertain transport uses
+`transport_state=uncertain` with an `unknown` outcome and no native failure
+code.
 
 Provider error text, stack traces and raw output stay in bounded local logs and
 are not copied into federation receipts.
