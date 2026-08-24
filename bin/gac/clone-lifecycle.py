@@ -1620,15 +1620,12 @@ def cmd_retire(args: argparse.Namespace) -> int:
             )
         expected_remote_head = platform_pr["head_ref_oid"]
         if identity.get("provenance_required") is True:
-            guard_kwargs = (
-                {
-                    "platform_base": platform_pr["base_ref_oid"],
-                    "platform_head": expected_remote_head,
-                }
-                if expected_remote_head == head_sha
-                else {}
+            guarded, guard_error = run_provenance_guard(
+                dest,
+                identity,
+                platform_base=platform_pr["base_ref_oid"],
+                platform_head=expected_remote_head,
             )
-            guarded, guard_error = run_provenance_guard(dest, identity, **guard_kwargs)
             if not guarded:
                 return reject(
                     "retire",
