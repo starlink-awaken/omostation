@@ -185,7 +185,7 @@ R5: 0146 (1, 本 ADR)
 - [ADR-0117](./0117-p52-undo-p60-stage-8.md) (撤销历史, P52 守门)
 - [ADR-0140](./0140-m4-health-score.md) (Health 100/100 量化)
 - [ADR-0145](./0145-mcptool-collection-skip.md) (MCPTOOL 集合治本)
-- [.omo/_knowledge/standards/adr-process.md](./../../../.omo/_knowledge/standards/adr-process.md) (未来 ADR review 流程)
+- [.omo/_knowledge/standards/adr-process.md](../../standards/adr-process.md) (未来 ADR review 流程)
 
 ---
 

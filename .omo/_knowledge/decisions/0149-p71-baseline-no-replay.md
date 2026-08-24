@@ -7,8 +7,8 @@ last-reviewed: 2026-07-06
 related:
   - 0146-8stage-stability-declaration.md
   - 0148-round-trip-playbook.md
-  - ../../patterns/p71-baseline-recovery-pattern.md
-  - ../../audits/2026-07-02-p0-baseline-recovery-closeout.md
+  - ../../../.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md
+  - ../../../.omo/_knowledge/audits/2026-07-02-p0-baseline-recovery-closeout.md
 supersedes: []
 ---
 
@@ -117,10 +117,10 @@ P71 治本后 4 个 GaC 规则永久在线:
 
 ## 5. 关联
 
-- [.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md](../../patterns/p71-baseline-recovery-pattern.md) (pattern SSOT)
-- [.omo/_knowledge/audits/2026-07-02-p0-baseline-recovery-closeout.md](../../audits/2026-07-02-p0-baseline-recovery-closeout.md) (P71 实证 closeout)
+- [.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md](../../../.omo/_knowledge/patterns/p71-baseline-recovery-pattern.md) (pattern SSOT)
+- [.omo/_knowledge/audits/2026-07-02-p0-baseline-recovery-closeout.md](../../../.omo/_knowledge/audits/2026-07-02-p0-baseline-recovery-closeout.md) (P71 实证 closeout)
 - [ADR-0148](./0148-round-trip-playbook.md) (Round 7 步嵌入 P71 守门)
-- [.omo/_knowledge/standards/adr-process.md](./../../../.omo/_knowledge/standards/adr-process.md) (通用 ADR 流程)
+- [.omo/_knowledge/standards/adr-process.md](../../standards/adr-process.md) (通用 ADR 流程)
 
 ---
 
