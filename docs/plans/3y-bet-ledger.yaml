@@ -6530,7 +6530,8 @@ bets:
   - 复盘文档入库 docs/reports/2026-08-24-resident-system-deep-review.md
   - make gac-local-gate 全部检查 PASS
   progress:
-    done_when_met: []
+    done_when_met:
+    - 复盘文档入库 docs/reports/2026-08-24-resident-system-deep-review.md (E1 已实测数据更新 - status.py 修复闭环 omo #95 / events 2146 / sediment 403 草稿 / E3/E4 治理接线发现入库)
     pending_when: []
   verify:
   - cmd: test -f docs/reports/2026-08-24-resident-system-deep-review.md

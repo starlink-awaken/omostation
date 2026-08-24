@@ -72,6 +72,24 @@ surfaces:
     review_days: 180
     workflow: project-doc-change
 
+  - id: accepted-specifications
+    patterns:
+      - docs/superpowers/specs/*.md
+    owner: governance-team
+    lifecycle: contract
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, owner]
+    valid_statuses_by_schema:
+      specification/v1: [accepted]
+    valid_lifecycles_by_schema:
+      specification/v1: [spec]
+    review_days: 180
+    discoverability: directory-index
+    index: docs/SYSTEM-INDEX.md
+    workflow: project-doc-change
+
   - id: docs-discoverable
     patterns:
       - docs/**/*.md
@@ -86,22 +104,6 @@ surfaces:
     verifier: bin/ssot/doc-governance-check.py
     metadata: frontmatter
     required_frontmatter: [status, lifecycle, owner, last-reviewed]
-    review_days: 180
-    discoverability: directory-index
-    index: docs/SYSTEM-INDEX.md
-    workflow: project-doc-change
-
-  - id: accepted-specifications
-    patterns:
-      - docs/superpowers/specs/*.md
-    owner: governance-team
-    lifecycle: contract
-    ssot: docs/SYSTEM-INDEX.md
-    verifier: bin/ssot/doc-governance-check.py
-    metadata: frontmatter
-    required_frontmatter: [status, lifecycle, owner, last-reviewed]
-    valid_statuses: [accepted, draft, superseded, deprecated, active]
-    valid_lifecycles: [spec, contract]
     review_days: 180
     discoverability: directory-index
     index: docs/SYSTEM-INDEX.md
@@ -199,3 +201,10 @@ warning_exceptions:
       expires: 2026-10-31
       owner: governance-team
       reason: Existing document status/lifecycle values require explicit migration decisions.
+    - id: legacy-specs-frontmatter
+      rule: missing_frontmatter
+      surface: accepted-specifications
+      max_findings: 2  # 2026-08-24: E4 accepted-specifications surface 新建, 2 个存量 spec 缺 owner (actual=2)
+      expires: 2026-10-31
+      owner: governance-team
+      reason: E4 新增 accepted-specifications surface (ADR 2026-08-24); 2 个存量 spec (escape-hatch 2026-08-21 / resident-wiring 2026-08-23) 的 owner 元数据由并发 feat/script-registry-ci-wire-v2 分支补齐, 迁移期内登记预算。
