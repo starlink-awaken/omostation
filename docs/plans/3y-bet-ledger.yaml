@@ -5271,7 +5271,8 @@ bets:
   title: resident 体系全面接线 — 配置/文档/治理/CI/MCP/BOS URI 感知
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  completed_at: '2026-08-24T16:30:00+08:00'
   goal: 让 resident 常驻 agent 体系 (WP-A~I / ADR-0396) 被 agent 全面感知 — 补齐 CR-RESIDENT check
     工具与治理检查登记、CI 平面登记、agent-workflows 注册、agora MCP 工具与 bos://resident/* URI 引用，并修正
     AGENTS.md/CLAUDE.md 与实际的兼容脚本路径漂移

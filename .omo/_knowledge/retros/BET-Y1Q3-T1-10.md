@@ -22,3 +22,13 @@
 5. **What should we do next?**  
    - 如需 Agora MCP resident 工具，新建 bet（运行时能力扩展）
    - 监控 CR-RESIDENT check 工具的 CI 执行率
+
+## 补充复盘 (2026-08-24 回退纠偏后重新 done)
+
+- **回退原因**: done_when 第 5 条 "docs/architecture/resident-agent-system-v1.md 的已接线声明与实际代码一致" 存在漂移 — 文档曾声明 Agora MCP 待接线, 与 tools_resident.py 已实现不符。
+- **本次修复 (omo PR #95 + 主仓 PR #2100/#2102)**:
+  - status.py `_daemon_snapshot` 只统计五类角色水位, 排除订阅层 `resident-sub.json` — 修复 sub 水位陈旧导致健康体系误判 degraded (status.py:57-71 min(mtime) 缺陷)
+  - 新增回归测试 `test_snapshot_daemon_sub_stale_role_fresh_is_recovered`
+  - `docs/architecture/resident-agent-system-v1.md` 第 79 行 Agora MCP 状态 "待接线"→"已接线"
+  - T1-10 台账 done→candidate→done 全链路 (start run 绑定 + verify + closeout)
+- **经验**: 接线类 done_when 的"文档声明与代码一致"必须实测 (tools_resident.py 实现存在 + 注册表登记 + 文档三处对齐), 不能只信文档或只信代码单侧。
