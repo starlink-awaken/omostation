@@ -105,7 +105,7 @@ linter 维度阈值:
 ```
 
 **禁止**: 当 linter ≥ 15 时新增子命令。
-**替代**: (placeholder — replace with actual tool name; P58 check-cross-refs + doc-governance-check as templates)。
+**替代**: (placeholder — replace with actual tool name)
 
 ## 治理债务识别 (3 类)
 

@@ -1559,21 +1559,20 @@
     },
     {
       "name": "gac_mesh_router",
-      "bin": "bin/gac/gac-mesh-router.py",
+      "bin": "bin/_archive/2026-08-conv3/gac-mesh-router.py",
       "scripts": "scripts/bin/gac/gac-mesh-router.py",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
+      "status": "archived",
+      "action": "archived (CONV-3, 2026-08-24, user-authorized)",
       "owner": "governance",
-      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "note": "Archived to bin/_archive/2026-08-conv3/ per CONV-3 decision (mesh-router deprecated, owner converged to aetherforge). Zero code/CI/test refs; gac-mesh-router-check gate removed.",
       "evidence": {
-        "active_files": [
+        "active_files": [],
+        "risk_score": 8,
+        "decision_round": "CONV-3-2026-08-24",
+        "retired_files": [
           "bin/gac/gac-mesh-router.py"
         ],
-        "retired_files": [
-          "scripts/bin/gac/gac-mesh-router.py"
-        ],
-        "risk_score": 15,
-        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
+        "archived_to": "bin/_archive/2026-08-conv3/gac-mesh-router.py"
       }
     },
     {

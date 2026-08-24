@@ -92,7 +92,7 @@ An uncommitted or unpushed change WILL be silently reverted by the next concurre
 ```bash
 git diff --stat <branch>~1 <branch>             # confirm commit still has target files
 python3 bin/gac/gac-drift.py                        # 0 drift
-python3 bin/gac/gac-bootstrap.py                    # 层5 ✅
+python3 bin/gac-bootstrap.py                    # 层5 ✅
 python3 bin/gac/gac-executor.py                     # all executors present
 ```
 **If working-tree change vanished** (git status empty but shouldn't be): a concurrent op reverted you. Re-apply Step 4-6.
