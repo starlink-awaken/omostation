@@ -1397,3 +1397,12 @@ workflow_triggers:
   - bin/gac/worktree-hygiene-audit.py
   - tests/unit/gac/test_worktree_hygiene_audit.py
 # Mon Aug 24 06:33:08 CST 2026
+- id: bin-ssot-script-registry-py
+  tool: bin/ssot/script-registry.py
+  workflow: gac-gate.yml
+  gate: true
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: sgf-policy gate script-registry-validate
