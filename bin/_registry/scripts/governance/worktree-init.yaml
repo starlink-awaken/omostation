@@ -1,0 +1,19 @@
+schema: script-registry/v1
+id: bin/gac/worktree-init.sh
+name: Worktree Init
+category: governance
+owner: governance-team
+description: "新 worktree 一键初始化关键子模块 (BET-Y1Q3-T10-09): --minimal (ruff scope 四子模块 omo/ecos/agora/cockpit, ~30s) 或 --full (全部子模块)。"
+inputs:
+  - name: mode
+    type: string
+    description: "--minimal (默认, ruff scope 四子模块) | --full (全部子模块)"
+outputs:
+  - type: exit_code
+dependencies: []
+triggers:
+  - 新 worktree 初始化子模块
+related:
+  - bin/gac/gac-worktree.sh
+maturity: draft
+last_reviewed: "2026-08-24"
