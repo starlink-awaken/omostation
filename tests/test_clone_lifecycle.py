@@ -455,6 +455,38 @@ def make_platform_merge_wrapper(
     return created.stdout.strip()
 
 
+def make_platform_base_advance(clone: Path, platform_base: str) -> str:
+    """Create one platform-authored empty mainline advance without moving HEAD."""
+    tree = git(clone, "rev-parse", f"{platform_base}^{{tree}}").stdout.strip()
+    platform_env = {
+        **os.environ,
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_AUTHOR_NAME": "platform",
+        "GIT_AUTHOR_EMAIL": "platform@example.com",
+        "GIT_COMMITTER_NAME": "platform",
+        "GIT_COMMITTER_EMAIL": "platform@example.com",
+    }
+    created = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(clone),
+            "commit-tree",
+            tree,
+            "-p",
+            platform_base,
+        ],
+        input="advance platform base\n",
+        capture_output=True,
+        text=True,
+        env=platform_env,
+        check=False,
+    )
+    assert created.returncode == 0, created.stderr
+    return created.stdout.strip()
+
+
 def provenance_platform_runner(
     clone: Path,
     platform_head: str,
@@ -2009,6 +2041,61 @@ def test_platform_provenance_accepts_exact_github_merge_wrapper(
 
     assert verified == receipt
     assert git(clone, "rev-parse", "HEAD").stdout.strip() == source_head
+
+
+def test_platform_provenance_accepts_repeated_github_merge_wrappers(
+    tmp_path, monkeypatch
+):
+    clone, _frozen, first_base, source_head = (
+        make_advanced_platform_provenance_clone(tmp_path)
+    )
+    first_wrapper = make_platform_merge_wrapper(clone, first_base, source_head)
+    final_base = make_platform_base_advance(clone, first_base)
+    final_wrapper = make_platform_merge_wrapper(clone, final_base, first_wrapper)
+    receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
+    identity = json.loads((clone / ".git" / "agent-clone-identity.json").read_text())
+    monkeypatch.setattr(ac, "repository_provenance", lambda *_args: receipt["repository"])
+    monkeypatch.setattr(ac, "live_author_identity", lambda *_args: receipt["author"])
+
+    verified = ac.verify_clone_provenance(
+        str(clone),
+        identity,
+        platform_base_sha=final_base,
+        platform_head_sha=final_wrapper,
+    )
+
+    assert verified == receipt
+    assert git(clone, "rev-parse", "HEAD").stdout.strip() == source_head
+
+
+def test_repeated_platform_wrapper_rejects_non_ancestor_side_parent(
+    tmp_path, monkeypatch
+):
+    clone, frozen, first_base, source_head = (
+        make_advanced_platform_provenance_clone(tmp_path)
+    )
+    unrelated_side = make_platform_base_advance(clone, frozen)
+    first_wrapper = make_platform_merge_wrapper(
+        clone,
+        unrelated_side,
+        source_head,
+    )
+    final_base = make_platform_base_advance(clone, first_base)
+    final_wrapper = make_platform_merge_wrapper(clone, final_base, first_wrapper)
+    receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
+    identity = json.loads((clone / ".git" / "agent-clone-identity.json").read_text())
+    monkeypatch.setattr(ac, "repository_provenance", lambda *_args: receipt["repository"])
+    monkeypatch.setattr(ac, "live_author_identity", lambda *_args: receipt["author"])
+
+    with pytest.raises(ac.ToolError) as exc_info:
+        ac.verify_clone_provenance(
+            str(clone),
+            identity,
+            platform_base_sha=final_base,
+            platform_head_sha=final_wrapper,
+        )
+
+    assert exc_info.value.reason == "clone_provenance_mismatch"
 
 
 def test_platform_merge_wrapper_still_rejects_wrong_delivery_author(
