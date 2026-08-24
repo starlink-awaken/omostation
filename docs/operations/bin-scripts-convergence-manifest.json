@@ -3133,25 +3133,6 @@
       }
     },
     {
-      "name": "port_governance_deck",
-      "bin": "bin/decks/port-governance-deck.py",
-      "scripts": "scripts/bin/decks/port-governance-deck.py",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
-      "owner": "governance",
-      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
-      "evidence": {
-        "active_files": [
-          "bin/decks/port-governance-deck.py"
-        ],
-        "retired_files": [
-          "scripts/bin/decks/port-governance-deck.py"
-        ],
-        "risk_score": 15,
-        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
-      }
-    },
-    {
       "name": "project_layer_index",
       "bin": "bin/mof/project-layer-index.py",
       "scripts": "scripts/bin/mof/project-layer-index.py",
@@ -3751,25 +3732,6 @@
       }
     },
     {
-      "name": "test_bus_e2e_harness",
-      "bin": "bin/tests/test_bus-e2e-harness.py",
-      "scripts": "scripts/bin/tests/test_bus-e2e-harness.py",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
-      "owner": "governance",
-      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
-      "evidence": {
-        "active_files": [
-          "bin/tests/test_bus-e2e-harness.py"
-        ],
-        "retired_files": [
-          "scripts/bin/tests/test_bus-e2e-harness.py"
-        ],
-        "risk_score": 15,
-        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
-      }
-    },
-    {
       "name": "test_coverage_check",
       "bin": "bin/gac/test-coverage-check.py",
       "scripts": "scripts/bin/gac/test-coverage-check.py",
@@ -3821,25 +3783,6 @@
         ],
         "retired_files": [
           "scripts/bin/ssot/test-mcp-kos.py"
-        ],
-        "risk_score": 15,
-        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
-      }
-    },
-    {
-      "name": "test_zones_check",
-      "bin": "bin/tests/test_zones_check.py",
-      "scripts": "scripts/bin/tests/test_zones_check.py",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
-      "owner": "governance",
-      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
-      "evidence": {
-        "active_files": [
-          "bin/tests/test_zones_check.py"
-        ],
-        "retired_files": [
-          "scripts/bin/tests/test_zones_check.py"
         ],
         "risk_score": 15,
         "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
