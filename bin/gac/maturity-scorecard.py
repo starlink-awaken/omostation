@@ -9,6 +9,7 @@ Usage:
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -28,56 +29,142 @@ def run(cmd: str, cwd=None, timeout=120) -> tuple[int, str, str]:
 
 def score_evolvable() -> dict:
     rc, out, err = run("uv run --with pyyaml python3 bin/ssot/script-registry.py validate 2>&1")
-    registered = "VALIDATION PASSED" in (out or err)
+    combined = (out or err) or ""
+    registered = "VALIDATION PASSED" in combined
+    # 9 分档: registry 全量登记且无缺失/gap (validate 不报 missing/MISSING)
+    no_gaps = registered and "missing" not in combined.lower() and "gap" not in combined.lower()
+    score = 9 if no_gaps else (8 if registered else 6)
+    if score == 9:
+        evidence = "script registry validated with 0 gaps"
+    elif score == 8:
+        evidence = "script registry validated (has warnings/gaps)"
+    else:
+        evidence = "script registry has gaps"
     return {
         "dimension": "evolvable",
-        "score": 8 if registered else 6,
-        "evidence": "script registry validated" if registered else "script registry has gaps",
-        "improvement": "Register all 444 scripts",
+        "score": score,
+        "evidence": evidence,
+        "improvement": "Register all scripts and close registry gaps",
     }
 
 
 def score_iterable() -> dict:
     design_doc = REPO_ROOT / "docs" / "operations" / "90pct-maturity-design.md"
-    has_phases = design_doc.exists()
+    if not design_doc.exists():
+        return {
+            "dimension": "iterable",
+            "score": 6,
+            "evidence": "No phased plan found",
+            "improvement": "Create 90pct-maturity-design.md",
+        }
+    text = design_doc.read_text()
+    # 9 分档: 5 阶段路线图完整. 兼容 "Phase 1-2" 合并标记 (含 1 和 2),
+    # 也接受独立 "Phase N" 标记.
+    def phase_present(n: int) -> bool:
+        # 匹配 "Phase N" 或 "Phase N-M" (N <= n <= M)
+        return bool(
+            re.search(rf"Phase {n}(?!\d)", text)
+            or re.search(rf"Phase \d+-{n}\b", text)
+        )
+    has_all_phases = all(phase_present(i) for i in range(1, 6))
     return {
         "dimension": "iterable",
-        "score": 8 if has_phases else 6,
-        "evidence": "90pct-maturity-design.md exists with 5 phases" if has_phases else "No phased plan found",
+        "score": 9 if has_all_phases else 8,
+        "evidence": "90pct-maturity-design.md exists with 5 phases" if has_all_phases else "90pct-maturity-design.md exists (phases incomplete)",
         "improvement": "Execute Phase 1-5 per design doc",
     }
 
 
 def score_observable() -> dict:
-    rc, out, err = run("uv run --with pyyaml python3 bin/compass_radar.py 2>&1 | head -20")
-    has_output = rc == 0 and len((out or "").strip()) > 0
+    rc, out, err = run("uv run --with pyyaml python3 bin/compass_radar.py 2>&1 | head -40")
+    output = (out or "") or ""
+    has_output = rc == 0 and len(output.strip()) > 0
+    if not has_output:
+        return {
+            "dimension": "observable",
+            "score": 7,
+            "evidence": "compass_radar.py output unclear",
+            "improvement": "Integrate new metrics into compass_radar.py",
+        }
+    # 9 分档: 雷达盘含 ≥6 个独立分布维度 (Priority/Risk/Owner/Phase/Status/...)
+    axes = re.findall(r"Distribution:", output)
+    has_six_axes = len(axes) >= 6
     return {
         "dimension": "observable",
-        "score": 8 if has_output else 7,
-        "evidence": "compass_radar.py produces output" if has_output else "compass_radar.py output unclear",
-        "improvement": "Integrate new metrics into compass_radar.py",
+        "score": 9 if has_six_axes else 8,
+        "evidence": f"compass_radar.py radar with {len(axes)}+ axes" if has_six_axes else f"compass_radar.py produces output ({len(axes)} axes)",
+        "improvement": "Expand compass_radar to 6+ axes",
     }
 
 
 def score_traceable() -> dict:
     rc, out, err = run("uv run --with pyyaml python3 bin/gac/adr-link-validator.py 2>&1")
     valid_links = rc == 0
+    if not valid_links:
+        return {
+            "dimension": "traceable",
+            "score": 6,
+            "evidence": "Some ADR links broken",
+            "improvement": "Fix broken ADR links",
+        }
+    # 9 分档: links valid 且 ADR 决策文档数 ≥ 30 (决策覆盖充足)
+    adr_dir = REPO_ROOT / ".omo" / "_knowledge" / "decisions"
+    adr_count = len(list(adr_dir.glob("*.md"))) if adr_dir.exists() else 0
+    deep_coverage = adr_count >= 30
     return {
         "dimension": "traceable",
-        "score": 8 if valid_links else 6,
-        "evidence": "All ADR links valid" if valid_links else "Some ADR links broken",
-        "improvement": "Fix broken ADR links",
+        "score": 9 if deep_coverage else 8,
+        "evidence": f"All ADR links valid, {adr_count} decisions" if deep_coverage else "All ADR links valid",
+        "improvement": "Add more ADR decisions",
     }
 
 
 def score_troubleshootable() -> dict:
     rc, out, err = run("uv run --with pyyaml python3 bin/ssot/governance-migration.py --dry-run 2>&1")
-    has_owner = "No changes needed" in (out or err)
+    combined = (out or err) or ""
+    has_owner = "No changes needed" in combined
+    if not has_owner:
+        return {
+            "dimension": "troubleshootable",
+            "score": 6,
+            "evidence": "Some checks missing owner fields",
+            "improvement": "Complete owner field migration",
+        }
+    # 9 分档: owner + expected + remediation 全覆盖 (直接查 governance-checks.yaml)
+    checks_yaml = REPO_ROOT / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
+    if not checks_yaml.exists():
+        return {
+            "dimension": "troubleshootable",
+            "score": 8,
+            "evidence": "All governance checks have owner fields",
+            "improvement": "Complete owner field migration",
+        }
+    try:
+        import yaml
+        # governance-checks.yaml 是 multi-document. G4 迁移回填的 139 个条目在
+        # gac.rules (X1-X4 + GaC 检查器), 另有 checkers/checks 别名兜底.
+        checks: list = []
+        for doc in yaml.safe_load_all(checks_yaml.read_text()):
+            if not doc:
+                continue
+            if isinstance(doc, list):
+                checks.extend(doc)
+            elif isinstance(doc, dict):
+                checks.extend(doc.get("gac", {}).get("rules", []))
+                checks.extend(doc.get("checkers") or doc.get("checks") or [])
+        total = len(checks)
+        full = sum(
+            1 for c in checks
+            if c.get("owner") and c.get("expected") and c.get("remediation")
+        )
+        complete = total > 0 and full == total
+    except Exception:
+        complete = False
     return {
         "dimension": "troubleshootable",
-        "score": 8 if has_owner else 6,
-        "evidence": "All governance checks have owner fields" if has_owner else "Some checks missing owner fields",
-        "improvement": "Complete owner field migration",
+        "score": 9 if complete else 8,
+        "evidence": "All governance checks have owner/expected/remediation fields" if complete else "All governance checks have owner fields",
+        "improvement": "Complete remediation field migration",
     }
 
 
