@@ -5347,7 +5347,7 @@ bets:
   title: platform-rebase 独立 clone 退役 provenance 收敛
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
   started_at: 2026-08-24
   goal: 将已验证的 platform-rebase retirement provenance 补丁重放到 current main，使 GitHub
     update-branch/rebase 引入的平台提交不再被误计为 delivery author，同时锁定精确 PR/base/head、origin
@@ -5441,7 +5441,7 @@ bets:
   title: Exact Capability Binding 与 native asset receipt 消费收敛
   appetite: 5 days
   priority: P0
-  status: candidate
+  status: done
   started_at: 2026-08-24
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact find-load、OMO admission/dispatch
     与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误 admission、平行 dispatch 和执行回执冒充个人价值。
