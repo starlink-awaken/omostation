@@ -173,7 +173,7 @@ gac:
     check_type: advisory
     rule_baseline: 139
     adr_baseline: 361
-    script_baseline: 476
+    script_baseline: 477    # 2026-08-24: #2113 restore anti-corrosion-check, 477 active
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
