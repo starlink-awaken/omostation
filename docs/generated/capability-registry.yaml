@@ -12,9 +12,9 @@ generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 600
-  bos_services: 238
+  bos_services: 237
   bos_domains: 20
-  cli_commands: 150
+  cli_commands: 149
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -842,7 +842,7 @@ bos_services:
     bcos: 3
     capability: 44
     cockpit: 2
-    compute: 4
+    compute: 3
     ecos: 10
     fabric: 1
     forge: 1
@@ -1194,10 +1194,6 @@ bos_services:
       status: active
     - uri: bos://compute/aetherforge/swarm
       description: AetherForge 多智能体群体算力与复杂决策任务并发编排引擎
-      transport: stdio
-      status: active
-    - uri: bos://compute/aetherforge/warm
-      description: AetherForge/omlxc KV Cache prefix static daemon warming (0ms TTFT)
       transport: stdio
       status: active
     ecos:
@@ -1909,8 +1905,6 @@ cli_commands:
   description: 数据目录索引 / 类型注册 / TTL 清理
 - name: debt
   description: 债务评分 (omo-debt Pattern 09 v2.1)
-- name: decide
-  description: ⚖️ 人类 Decision-Inbox 架构与日落退役裁决工作台
 - name: demo
   description: 快速演示
 - name: discover
@@ -2100,7 +2094,7 @@ cli_commands:
 - name: summary
   description: 债务摘要 (委派 omo debt)
 - name: swarm
-  description: 🤖 多 agent 实时活动监控与 4 域 4 角守护态势
+  description: 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突)
 - name: topics
   description: 列出已注册 topic
 - name: triage
