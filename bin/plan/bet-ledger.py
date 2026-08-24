@@ -44,7 +44,8 @@ except ImportError:  # pragma: no cover
     raise SystemExit(2)
 
 WS = Path(__file__).resolve().parents[2]
-LEDGER = WS / "docs" / "plans" / "3y-bet-ledger.yaml"
+LEDGER_RELATIVE_PATH = "docs/plans/3y-bet-ledger.yaml"
+LEDGER = WS / LEDGER_RELATIVE_PATH
 RETRO_DIR = WS / ".omo" / "_knowledge" / "retros"
 
 # 2026-08-06 实测基线 — git tracked 口径（含子模块）
@@ -1201,6 +1202,76 @@ def _yaml_mapping(text: str) -> dict[str, Any]:
     return data
 
 
+def _resolve_ledger_base_ref(*, workspace: Path = WS) -> str | None:
+    """Resolve the base revision for done-transition detection.
+
+    Resolution order (no new store or service): explicit ``BET_LEDGER_BASE_REF``
+    override, GitHub PR ``pull_request.base.sha`` / push ``before`` from
+    ``GITHUB_EVENT_PATH``, then a locally dirty/staged ledger against ``HEAD``.
+    A clean checkout with no detectable ledger change resolves to ``None``,
+    which keeps the done-evidence guard off (zero new baseline findings).
+    """
+    explicit = os.environ.get("BET_LEDGER_BASE_REF", "").strip()
+    if explicit:
+        return explicit
+    event_path = os.environ.get("GITHUB_EVENT_PATH", "").strip()
+    if event_path:
+        try:
+            event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            event = None
+        if isinstance(event, dict):
+            pull_request = event.get("pull_request")
+            candidates: list[Any] = [event.get("before")]
+            if isinstance(pull_request, dict) and isinstance(pull_request.get("base"), dict):
+                candidates.insert(0, pull_request["base"].get("sha"))
+            for sha in candidates:
+                if (
+                    isinstance(sha, str)
+                    and re.fullmatch(r"[0-9a-f]{40}", sha)
+                    and sha != "0" * 40
+                ):
+                    return sha
+    diff = subprocess.run(
+        ["git", "diff", "--quiet", "HEAD", "--", LEDGER_RELATIVE_PATH],
+        cwd=workspace,
+        capture_output=True,
+        check=False,
+    )
+    if diff.returncode == 0:
+        return None
+    inside = subprocess.run(
+        ["git", "rev-parse", "--is-inside-work-tree"],
+        cwd=workspace,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if inside.returncode != 0 or inside.stdout.strip() != "true":
+        return None  # 非 git 工作区：无可检测 transition，守卫保持关闭
+    return "HEAD"
+
+
+def _ledger_base_statuses(ref: str, *, workspace: Path = WS) -> dict[str, str] | None:
+    """Project {bet_id: status} from the ledger at one git revision."""
+    result = subprocess.run(
+        ["git", "-C", str(workspace), "show", f"{ref}:{LEDGER_RELATIVE_PATH}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    bets = _yaml_mapping(result.stdout).get("bets")
+    if not isinstance(bets, list):
+        return None
+    statuses: dict[str, str] = {}
+    for item in bets:
+        if isinstance(item, dict) and isinstance(item.get("id"), str):
+            statuses[item["id"]] = str(item.get("status") or "")
+    return statuses
+
+
 def _is_historical_spec_grandfathered(
     bet: dict,
     *,
@@ -2208,6 +2279,14 @@ def complete_worker_origin_ack(
 def cmd_lint(data: dict, args) -> int:
     """台账自检：ID 唯一、依赖存在、轨道/窗口/状态合法、必填字段。"""
     errs: list[str] = []
+    # done 证据守卫只对「base 非 done → 当前 done」的 transition 生效；
+    # base 不可解析时守卫关闭（零新增 findings），声明了 base 却读不出才 fail closed
+    base_ref = _resolve_ledger_base_ref(workspace=WS)
+    base_statuses: dict[str, str] | None = None
+    if base_ref is not None:
+        base_statuses = _ledger_base_statuses(base_ref, workspace=WS)
+        if base_statuses is None:
+            errs.append(f"BASE_LEDGER_UNREADABLE: {base_ref}")
     ids = [b["id"] for b in data["bets"]]
     for i in sorted(set(ids)):
         if ids.count(i) > 1:
@@ -2253,9 +2332,15 @@ def cmd_lint(data: dict, args) -> int:
             _binding, binding_errors = validate_accepted_specification(b, workspace=WS)
             errs.extend(f"{b['id']}.accepted_specifications: {error}" for error in binding_errors)
         completion_matrix = b.get("completion_evidence")
-        # done 必须由完整完成证据支撑，防止直接 YAML/API 提交绕过 cmd_complete 的状态闸
+        # done 必须由完整完成证据支撑，防止直接 YAML/API 提交绕过 cmd_complete 的状态闸；
+        # 但只对 transition 到 done 的 BET 生效，未变更的历史 done 保持基线 lint 行为
         done_needs_evidence = b.get("status") == "done" and not _is_completion_evidence_grandfathered(
             b, workspace=WS
+        )
+        transitioned_to_done = (
+            done_needs_evidence
+            and base_statuses is not None
+            and base_statuses.get(str(b.get("id") or "")) != "done"
         )
         matrix_required = b.get("status") in COMPLETION_MATRIX_REQUIRED_STATUSES or done_needs_evidence
         if matrix_required and completion_matrix is None:
@@ -2267,9 +2352,9 @@ def cmd_lint(data: dict, args) -> int:
             )
             errs.extend(f"{b['id']}.completion_evidence: {error}" for error in completion_errors)
             # validate_completion_evidence 有错时强制 blocked，state==outcome_accepted 即无错
-            if done_needs_evidence and state != "outcome_accepted":
+            if transitioned_to_done and state != "outcome_accepted":
                 errs.append(f"{b['id']}.completion_evidence: BET_DONE_REQUIRES_OUTCOME_ACCEPTED")
-        if done_needs_evidence and not b.get("done_at"):
+        if transitioned_to_done and not b.get("done_at"):
             errs.append(f"{b['id']}.done_at: BET_DONE_AT_REQUIRED")
     if errs:
         for e in errs:
