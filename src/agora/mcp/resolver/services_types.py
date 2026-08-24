@@ -15,6 +15,7 @@ Transport = Literal["stdio", "internal", "http", "mcp_stdio", "mcp_proxy", "inli
 
 # ── BOS URI 模式 ─────────────────────────────────────
 BOS_URI_DOMAINS = (
+    "agent-cell",
     "memory",
     "governance",
     "omo",
