@@ -483,6 +483,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0342: Workflow Mesh Bridge 四阶段桥接策略 - **ACCEPTED** | 2026-08-02 | Workflow Mesh bridge | 0342-workflow-mesh-bridge-strategy.md
 ---
 
+- ADR-0423: CONV-3 项目收敛 — family-hub / metaos / mesh-router 三态定案 — **ACCEPTED** | 2026-08-24 | convergence | 0423-conv3-project-convergence.md
 ## 相关文件
 
 - 模板与规则: [`README.md`](./README.md)

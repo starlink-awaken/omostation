@@ -1,4 +1,6 @@
 ---
+id: ADR-0422
+
 title: "ADR-0422: D4 逃生口固化 — 权限类 vs fingerprint 债"
 status: accepted
 lifecycle: decision

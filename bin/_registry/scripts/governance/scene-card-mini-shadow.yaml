@@ -1,0 +1,17 @@
+schema: script-registry/v1
+id: bin/gac/scene-card-mini-shadow.py
+name: Scene Card Mini Shadow
+category: governance
+owner: governance-team
+description: "Mini-shadow 模式: 3-sample 主人手勾升级 shadow 场景卡, 替代 30-sample 校准门 (project-strategy-v1 §1 落地)"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: yaml_file_edit
+dependencies: []
+triggers: []
+related:
+  - bin/ssot/scene-card-lifecycle.py
+  - bin/ssot/internal-scene-preflight.py
+maturity: draft
+last_reviewed: "2026-08-24"
