@@ -1,4 +1,5 @@
 ---
+id: ADR-0421
 title: "ADR-0421: BCOS 2 周落地复盘 (W1 执行+知识, W2 治理+进化)"
 status: accepted
 lifecycle: retrospective

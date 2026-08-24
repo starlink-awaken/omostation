@@ -1,4 +1,5 @@
 ---
+id: ADR-0423
 title: "ADR-0423: CONV-3 项目收敛 — family-hub / metaos / mesh-router 三态定案"
 status: accepted
 lifecycle: decision

@@ -1,5 +1,4 @@
 ---
-id: ADR-0401
 status: ACCEPTED
 lifecycle: decision
 owner: architecture-governance
