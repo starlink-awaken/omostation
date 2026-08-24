@@ -29,17 +29,18 @@ layers:
 projects:
   # mesh-router 不是独立 git 仓 — 实现 = bin/gac/gac-mesh-router.py (HTTP server on port 7437)
   # P76 Phase 7.4 决议: 标 implemented-in-bin, 移除 submodule init 期望
+  # CONV-3 (2026-08-24, 用户授权): 正式归档 → bin/_archive/2026-08-conv3/
   mesh-router:
     layer: "L0"
     stack: "Python (http/urllib)"
     python: ">=3.13"
-    role: "omlx 算力网格智能路由代理 (deprecated — owner 已收敛至 aetherforge, 见 BET-Y1Q4-T6-01 aetherforge 已并入 runtime)"
+    role: "omlx 算力网格智能路由代理 (archived — owner 已收敛至 aetherforge, 见 BET-Y1Q4-T6-01 aetherforge 已并入 runtime)"
     version: "1.0.0"
     port: 7437
-    status: "deprecated"
-    physical_location: "bin/gac/gac-mesh-router.py"
+    status: "archived"
+    physical_location: "bin/_archive/2026-08-conv3/gac-mesh-router.py"
     port_registry_ref: "protocols/port-registry.yaml::7437"
-    note: "无独立仓. BET-Y1Q3-T1-06 (2026-08-16) 双 owner 收敛决策: 算力路由单一 owner = aetherforge (2026-08-18 已并入 projects/runtime/aetherforge/) (BOS 已登记 bos://memory/aetherforge/mcp-server + forge_* tools, 主仓 9 处引用, 活跃), gac-mesh-router 主仓零引用/未接线 → 标 deprecated 保留文件待归档评估, 不删除. 历史 .gitmodules 期望已废弃 (Phase 7.4 决议). 见 ADR-0162 P76 Phase 7."
+    note: "无独立仓. BET-Y1Q3-T1-06 (2026-08-16) 双 owner 收敛决策: 算力路由单一 owner = aetherforge (2026-08-18 已并入 projects/runtime/aetherforge/) (BOS 已登记 bos://memory/aetherforge/mcp-server + forge_* tools, 主仓 9 处引用, 活跃). CONV-3 (2026-08-24, 用户授权决策): deprecated → 正式归档 bin/_archive/2026-08-conv3/ (完成'半吊子归档', 历史决策可追溯, 移出活跃面; 对应 gac-mesh-router-check gate 已移除). 见 ADR-0162 P76 Phase 7 + CONV-3 ADR."
 
   # ── Python projects ──
   agora:
@@ -224,6 +225,8 @@ projects:
     build_backend: "uv_build"
     version: "0.1.0"
     role: "家庭数字枢纽"
+    status: "paused"
+    status_note: "CONV-3 (2026-08-24, 用户授权): 归档观察 — 6 py 极小 + v0.1.0 + 无专属 bet (仅影响范围提及), 愿景占位性质. 代码/gitlink 保留不删除, 未来家庭场景成为真实交付目标 (Phase 49+) 可复活."
     src_dir: "src/"
 
   cockpit-ui:

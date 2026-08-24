@@ -202,10 +202,6 @@ DEFAULT_POLICY = {
         },
         {"id": "bdsk-shadow-sandbox", "command": ["bin/gac/bdsk-shadow-sandbox.py"]},
         {
-            "id": "gac-mesh-router-check",
-            "command": ["bin/gac/gac-mesh-router.py", "--check"],
-        },
-        {
             "id": "gac-consensus-inject-check",
             "command": ["bin/gac/gac-consensus-inject.py", "--check"],
         },
@@ -788,7 +784,6 @@ RISK_AWARE_CHECKS: set[str] = {
     "test-gac-engine",
     "service-config-validate",
     "service-config-drift",
-    "gac-mesh-router-check",
     "gac-consensus-inject-check",
     "gac-compute-onboard-check",
     "test-coverage-check",
