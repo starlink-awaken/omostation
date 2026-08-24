@@ -39,12 +39,17 @@ run_py_with_yaml() {
 PUSH_REFS=""
 ALL_DELETIONS="true"
 PUSH_REMOTE_SHA=""
+PUSH_LOCAL_SHA=""
 while read -r _lref _lsha _rref _rsha; do
   PUSH_REFS="${PUSH_REFS}${_rref}
 "
   # 捕获首个 push 目标的 remote_sha (push 前远程真实状态) → 增量 reachability base
   if [ -z "$PUSH_REMOTE_SHA" ] && [ "$_rsha" != "0000000000000000000000000000000000000000" ]; then
     PUSH_REMOTE_SHA="$_rsha"
+  fi
+  # 捕获首个非删除 push 的 local_sha → gitlink ancestry gate 的 head 基准
+  if [ -z "$PUSH_LOCAL_SHA" ] && [ "$_lsha" != "0000000000000000000000000000000000000000" ]; then
+    PUSH_LOCAL_SHA="$_lsha"
   fi
   # local-sha 为全 0 表示删除远端 ref
   if [ "$_lsha" != "0000000000000000000000000000000000000000" ]; then
@@ -206,6 +211,18 @@ rm -f "$_FAILURES_JSON"
 GATE="$(git rev-parse --show-toplevel)/bin/gac/mass-deletion-gate.py"
 if [ -f "$GATE" ] && git rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
   run_py "$GATE" --range origin/main HEAD --submodules || exit 1
+fi
+
+# --- gitlink ancestry gate (D5 双重阻断, 2026-08-24): 拦截子模块指针回退 ---
+# 病根: 并发合并把子模块 gitlink 带回旧 SHA → 后续合入者看到"指针退回",
+# 配额拉锯的根因之一. 本地 pre-push blocking 是核心价值 (CI 侧首周 advisory).
+# 豁免: base..head 区间 commit body 含 [gitlink-regress: <理由>] → 降级 warning
+#   + 指纹记入 .omo/_truth/registry/gate-known-debt.yaml (shrink_only, 只追加).
+ANCESTRY_GATE="$(git rev-parse --show-toplevel)/bin/gac/check-submodule-rewind.py"
+if [ "$ALL_DELETIONS" != "true" ] && [ -f "$ANCESTRY_GATE" ] && git rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
+  # 先 fetch 使 origin/main 新鲜 (同 reachability 段先例), 离线时回退现有 ref
+  git fetch --quiet origin main >/dev/null 2>&1 || true
+  run_py_with_yaml "$ANCESTRY_GATE" --range origin/main "${PUSH_LOCAL_SHA:-HEAD}" 2>&1 | sed 's/^/[gitlink-ancestry] /' >&2 || exit 1
 fi
 
 # --- remote-hygiene gate (2026-08-08) ---
