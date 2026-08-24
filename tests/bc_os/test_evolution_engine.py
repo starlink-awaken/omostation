@@ -8,7 +8,7 @@ import json
 import sys
 from pathlib import Path
 
-_BIN_GAC = Path(__file__).resolve().parent
+_BIN_GAC = Path(__file__).resolve().parents[2] / "bin" / "bc-os"
 sys.path.insert(0, str(_BIN_GAC))
 sys.path.insert(0, str(_BIN_GAC.parents[1]))
 

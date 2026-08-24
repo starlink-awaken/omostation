@@ -262,7 +262,7 @@ detection via lsof, macOS-friendly (no `setsid` required).
    (autostash from concurrent worktrees). Cleaning risks breaking
    someone else's workflow.
 
-3. **Submodule pointer automation** — `bash bin/gac/submodule-pointer-transaction.sh`
+3. **Submodule pointer automation** — `bash bin/ssot/submodule-pointer-transaction.sh`
    exists but the worktree + submission pipeline handles pointer bumps
    correctly via `gac-worktree.sh bump-pointer`. Manual is fine.
 
@@ -297,7 +297,7 @@ it's a deeper drift, not a stale state.
 These are **未做** by design, with context for the next operator:
 
 1. **Concurrent write broker enforcement** — gate, not fix. New ADR.
-2. **Stash audit tool** — `bin/git/stash-inspect.py` to identify owner/age/branch-context.
+2. **Stash audit tool** — a future `bin/git/stash-inspect.py` (not yet implemented) to identify owner/age/branch-context.
 3. **Health score history** — currently only current snapshot exists;
    trend analysis requires persistent history in `.omo/state/history/`.
 4. **Cockpit auto-start** — add `nohup` launcher or launchd plist.

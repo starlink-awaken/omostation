@@ -197,6 +197,20 @@ make gac-validate
 make gac-drift
 ```
 
+### 能力防腐 & 投影强制 (差距治理 S1, 2026-08-24)
+
+```bash
+python3 bin/gac/check-capability-ownership.py          # CAP-OWN: 能力所有权 + 删除防腐
+python3 bin/gac/check-capability-ownership.py --json   # JSON 输出
+```
+
+- **CAP-OWN**: 注册能力实现缺失 (IMPL-EXISTS) → gate 阻断; owner 缺失 / 孤儿能力 → info。
+  删除能力前必须同步注册表 + 证明消费引用归零 (类比 submodule-guard 保护 gitlink)。
+- **PROJ-FORCE**: post-commit 检测 SSOT 源变更 (agent-workflows/profiles, mof-capabilities)
+  → 自动投影生成。改 SSOT 后派生文档随 commit 同步, 残缺生成物自动 revert。
+- **GEN-FORCE**: `docs/generated/` 5 个已跟踪生成物不再被 gitignore (契约保护), git add 直接可见。
+- 工程铁律 (TP-RELATIVE 时序相对断言 / PATH-ANCHOR 路径代码锚定): [`docs/operations/engineering-golden-rules.md`](docs/operations/engineering-golden-rules.md)
+
 `make gac-local-gate` runs the default (non-strict) GaC gate — GaC validate/drift, agent-workflow lint/integrations/adapters/bootstrap/observe, MOF schema/state-bridge/drift, documentation SSOT, doc link/snapshot, and staged change-lane checks. Two skip rules apply in default mode, both isolating concurrent-agent dirty in a shared worktree: `verify-plan`/`compliance`/`doctor` run only when staged touches agent-workflow (`896e60ba`); `project-layer-index` (generated layer digest) is CI-only — pre-commit/`make` skip it, `--strict`/CI runs it (`d33af25c`). For run/file-scoped AGCP verification use `bin/gac/gac-local-gate.py --scope ...`. Authoritative check list + skip rules live in `bin/gac/gac-local-gate.py` (`CHECKS`, `AGENT_WORKFLOW_GATE_CHECKS`, `CI_ONLY_CHECKS`) — do not duplicate here.
 
 ### SSOT 变更追踪
@@ -321,6 +335,8 @@ uv run --directory projects/omo python -m omo.cli resident status --json
 - 角色 SSOT: `projects/omo/src/omo/resident/roles.py`（sediment/decision/execute/monitor/heartbeat）
 - 兼容脚本: `bin/ssot/resident-orchestrator-daemon.py`、`decision-agent.py`、`event-ingest-adapter.py`、`personal-signals-adapter.py`、`alert-forwarder.py`、`system-health-check.py`
 - cron: `bash bin/ssot/install-resident-cron.sh`（每 2min 五类 daemon --once --role；M3.1 signals；M4.3 角色化）
+- agora MCP: `resident_status` / `resident_roles`（`projects/agora/src/agora/server/tools_resident.py`，委派 `omo resident status/roles`）
+- BOS: `bos://resident/*`（resident 常驻体系 URI 命名空间）
 
 ### BCOS 业务域系统 (2026-08-23, W1~W4)
 

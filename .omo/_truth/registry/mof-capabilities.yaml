@@ -326,7 +326,7 @@ omo_tools:
     verifiable: true
 p74_tools:
   omo-state-projection-guard:
-    path: projects/omo/src/omo/omo_lint_projection.py
+    path: projects/omo/src/omo/omo_lint.py::cmd_projection_guard
     cli: "omo lint projection-guard"
     description: >
       P74 §2 鸿沟回收: 治 P71 类 A 复发. 验证 runtime-projections.yaml
@@ -340,7 +340,7 @@ p74_tools:
     generatable: false
     verifiable: true
   omo-runtime-stamp-policy:
-    path: projects/omo/src/omo/omo_lint_stamp.py
+    path: projects/omo/src/omo/omo_lint.py::cmd_stamp_policy
     cli: "omo lint stamp-policy"
     description: >
       P74 §2: 治 runtime 孤儿文件累积. runtime/ 下文件必须 gitignored 或
@@ -379,3 +379,35 @@ p74_tools:
     m3_parent: GovernanceElement.GacRule
     generatable: false
     verifiable: true
+
+# ═══════════════════════════════════════════════════════════
+# 能力所有权 (CAP-OWN, 差距治理 S1) — 显式能力所有权 + 删除防腐
+# ═══════════════════════════════════════════════════════════
+# 每个显式能力声明 owner (删除/变更审批主体), implements (实现入口),
+# consumers (消费方引用), deletion_guard (删除需证明引用归零).
+# 由 bin/gac/check-capability-ownership.py 守护 (CAP-OWN 三层断言).
+capability_ownership:
+  bcos_evolve:
+    owner: "bcos-team"
+    bos_uri: "bos://bcos/evolve"
+    implements: "bin/bc-os/evolution_engine.py"
+    consumers: ["cockpit bcos", "agora tools_bcos"]
+    deletion_guard: true
+    last_reviewed: "2026-08-24"
+    review_period_days: 30
+  bcos_signals:
+    owner: "bcos-team"
+    bos_uri: "bos://bcos/signals"
+    implements: "bin/bc-os/signal_router.py"
+    consumers: ["cockpit bcos", "agora tools_bcos"]
+    deletion_guard: true
+    last_reviewed: "2026-08-24"
+    review_period_days: 30
+  bcos_north_star:
+    owner: "bcos-team"
+    bos_uri: "bos://bcos/north-star"
+    implements: "bin/bc-os/north_star_meter_v2.py"
+    consumers: ["cockpit bcos", "agora tools_bcos"]
+    deletion_guard: true
+    last_reviewed: "2026-08-24"
+    review_period_days: 30
