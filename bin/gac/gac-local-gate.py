@@ -236,6 +236,17 @@ DEFAULT_POLICY = {
             "command": ["bin/gac/check-submodule-rewind.py"],
         },
         {
+            "id": "submodule-ancestry-gate",
+            "command": [
+                "bin/gac/check-submodule-rewind.py",
+                "--range",
+                "origin/main",
+                "HEAD",
+                "--no-write-debt",
+            ],
+            "timeout": 60,
+        },
+        {
             "id": "check-work-landed",
             "command": ["bin/gac/check-work-landed.py"],
             "timeout": 45,
@@ -731,6 +742,7 @@ RISK_AWARE_CHECKS: set[str] = {
     "mof-capabilities-drift-check",
     "change-lane-check",
     "check-submodule-rewind",
+    "submodule-ancestry-gate",
     "check-work-landed",
     "check-governance-ratio",
     "check-redline-coverage",
