@@ -6403,6 +6403,9 @@ bets:
       - docs/reports/2026-08-24-resident-system-deep-review.md
     E2_gac_local_gate:
       description: make gac-local-gate 全绿 PASS
+    E3_platform_rebase_followup:
+      description: 复盘后确认 current main 尚缺 platform-rebase clone retirement provenance 收敛；先补 canonical spec，再登记独立 T1 follow-up，禁止无 spec 直接实施
+      spec_surface: docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md
   done_when:
   - 复盘文档入库 docs/reports/2026-08-24-resident-system-deep-review.md
   - make gac-local-gate 全部检查 PASS
@@ -6438,6 +6441,7 @@ bets:
   - docs/reports/2026-08-24-resident-system-deep-review.md
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md
+  - docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md
   pasw_required: false
   depends_on: []
   risk_level: L1
