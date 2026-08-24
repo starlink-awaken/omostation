@@ -186,3 +186,63 @@ def register_agent_cell_tools(mcp: FastMCP) -> None:
             return _ok(result)
         except Exception as e:
             return _error(f"Cell eval failed: {e}")
+
+    @mcp.tool()
+    async def cell_pool_status() -> dict:
+        """Cell Pool 状态 — 查看多 Cell 并行状态."""
+        try:
+            result = _run_cell_tool(
+                "projects/omo/src/omo/resident/cell_pool.py",
+                ["--status", "--json"],
+            )
+            return _ok(result)
+        except Exception as e:
+            return _error(f"Cell pool status failed: {e}")
+
+    @mcp.tool()
+    async def cell_pool_submit(intent: str) -> dict:
+        """Cell Pool 提交 — 提交 Episode 到 Cell Pool."""
+        try:
+            result = _run_cell_tool(
+                "projects/omo/src/omo/resident/cell_pool.py",
+                ["--submit", intent, "--json"],
+            )
+            return _ok(result)
+        except Exception as e:
+            return _error(f"Cell pool submit failed: {e}")
+
+    @mcp.tool()
+    async def cell_pool_scale(target: int) -> dict:
+        """Cell Pool 扩缩容 — 调整 Cell 数量."""
+        try:
+            result = _run_cell_tool(
+                "projects/omo/src/omo/resident/cell_pool.py",
+                ["--scale", str(target), "--json"],
+            )
+            return _ok(result)
+        except Exception as e:
+            return _error(f"Cell pool scale failed: {e}")
+
+    @mcp.tool()
+    async def cell_config_list() -> dict:
+        """Cell Config 列表 — 列出所有预设配置."""
+        try:
+            result = _run_cell_tool(
+                "projects/omo/src/omo/resident/cell_config.py",
+                ["--list", "--json"],
+            )
+            return _ok(result)
+        except Exception as e:
+            return _error(f"Cell config list failed: {e}")
+
+    @mcp.tool()
+    async def cell_config_create(cell_type: str) -> dict:
+        """Cell Config 创建 — 从预设创建 Cell."""
+        try:
+            result = _run_cell_tool(
+                "projects/omo/src/omo/resident/cell_config.py",
+                ["--create", cell_type, "--json"],
+            )
+            return _ok(result)
+        except Exception as e:
+            return _error(f"Cell config create failed: {e}")
