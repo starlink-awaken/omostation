@@ -1,3 +1,8 @@
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-28
+---
 version: 1.0
 description: X1-X4 治理检查器注册表
 checkers:
