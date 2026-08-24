@@ -275,10 +275,11 @@ def check_doc_hardcoded_values() -> dict:
 
 def check_governance_check_coverage() -> dict:
     rc, out, err = run("uv run python3 bin/ssot/governance-migration.py --dry-run 2>&1 | tail -5")
+    output = (out or err).strip()[-500:]
     return {
         "check": "governance_check_coverage",
-        "pass": "No changes needed" in (out or err),
-        "output": (out or err).strip()[-500:],
+        "pass": rc == 0 and "No files written" in output,
+        "output": output,
     }
 
 
