@@ -6558,7 +6558,7 @@ bets:
   title: script registry 444 全登记 (evolvable 6→8)
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
   note: 'G1: maturity-scorecard evolvable 验证开关'
   goal: '登记全部 444 bin 脚本到 script registry, 使 script-registry.py validate 返回 VALIDATION PASSED, evolvable 6→8。'
   non_goals: []
@@ -6587,7 +6587,7 @@ bets:
   title: 90pct-maturity-design.md 落盘 (iterable 6→8)
   appetite: 0.25 day
   priority: P1
-  status: candidate
+  status: done
   note: 'G2: iterable 验证开关 = 本设计文档存在'
   goal: '落盘 docs/operations/90pct-maturity-design.md (已含 Phase 1-5), 使 score_iterable 检测通过, iterable 6→8。'
   non_goals: []
