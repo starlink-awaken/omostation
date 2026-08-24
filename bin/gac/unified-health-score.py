@@ -78,21 +78,17 @@ def score_governance() -> float:
     try:
         import yaml
         content = checks_file.read_text()
-        # 结构: 前4行是 frontmatter, 第5行是 ---, 之后是数据
-        lines = content.splitlines()
-        for i, line in enumerate(lines):
-            if line.strip() == "---":
-                data_str = "\n".join(lines[i + 1:])
-                data = yaml.safe_load(data_str)
-                # 使用 gac.rules (139 条规则)
-                if data and "gac" in data and isinstance(data["gac"], dict):
-                    rules = data["gac"].get("rules", [])
+        # 文件可能包含多个 YAML 文档, 用 safe_load_all 遍历
+        for data in yaml.safe_load_all(content):
+            if data and isinstance(data, dict) and "gac" in data:
+                gac = data["gac"]
+                if isinstance(gac, dict) and "rules" in gac:
+                    rules = gac["rules"]
                     total = len(rules)
                     active = sum(1 for r in rules if r.get("lifecycle") == "active")
                     if total == 0:
                         return 100.0
                     return round(active / total * 100, 1)
-                break
     except Exception:
         pass
     return 0.0
@@ -172,24 +168,43 @@ def score_docs() -> float:
 
 
 def score_value() -> float:
-    """价值可证度 (0-100)."""
-    north_star = REPO / ".omo/state/north-star-latest.json"
-    if not north_star.exists():
-        return 0.0
+    """价值可证度 (0-100).
 
+    优先读 north-star-latest.json 快照; 快照缺失/过期时活体调用
+    north_star_meter_v2 (meter --record 已退役, broker 未建 — 见
+    sustainable-value-loop-v1 §4). 活体投影只读、不落盘.
+    """
+    import os
+    import subprocess
+    import time
+
+    north_star = REPO / ".omo/state/north-star-latest.json"
     try:
-        data = json.loads(north_star.read_text())
-        status = data.get("status", "")
-        if status == "proven":
-            return 100.0
-        elif status == "collecting":
-            return 50.0
-        elif status == "not_ready":
-            return 25.0
-        else:  # unprovable
-            return 0.0
+        if north_star.exists() and time.time() - north_star.stat().st_mtime < 86400:
+            data = json.loads(north_star.read_text())
+            status = str(data.get("status") or "")
+        else:
+            meter = REPO / "bin/bc-os/north_star_meter_v2.py"
+            principal = os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+            proc = subprocess.run(
+                ["python3", str(meter), "--json", "--principal-id", principal],
+                cwd=REPO, capture_output=True, text=True, timeout=60,
+            )
+            payload = json.loads(proc.stdout)
+            # meter 投影: readiness(passed/collecting/not_ready) 经 status 字段透出
+            raw_status = str(payload.get("status") or "")
+            readiness = str(payload.get("readiness") or raw_status)
+            status = readiness if readiness in {"passed", "collecting", "not_ready"} else raw_status
     except Exception:
         return 0.0
+
+    if status == "proven":
+        return 100.0
+    elif status == "collecting":
+        return 50.0
+    elif status == "not_ready":
+        return 25.0
+    return 0.0
 
 
 def score_runtime() -> float:
