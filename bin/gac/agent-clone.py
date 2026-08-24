@@ -1317,6 +1317,33 @@ def verify_clone_provenance(
         )
         identity_base = platform_base_sha
         identity_head = platform_head_sha
+        parents = git(
+            repo_root,
+            "show",
+            "-s",
+            "--format=%P",
+            platform_head_sha,
+        )
+        parent_shas = parents.stdout.strip().split() if parents.returncode == 0 else []
+        if len(parent_shas) == 2 and parent_shas[1] == platform_base_sha:
+            # GitHub update-branch wraps the unchanged source head in a
+            # GitHub-authored merge commit.  Exclude only that exact wrapper:
+            # the clone must still be parked on its first-parent source head,
+            # and every source delivery commit remains identity-checked.
+            source_head = parent_shas[0]
+            frozen_to_source = git(
+                repo_root,
+                "merge-base",
+                "--is-ancestor",
+                frozen_sha,
+                source_head,
+            )
+            platform_binding_ok = (
+                platform_binding_ok
+                and root_head(repo_root) == source_head
+                and frozen_to_source.returncode == 0
+            )
+            identity_head = source_head
     if (
         live_repository != repository
         or live_author != author
