@@ -6437,6 +6437,7 @@ bets:
   write_surfaces:
   - docs/reports/2026-08-24-resident-system-deep-review.md
   - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md
   pasw_required: false
   depends_on: []
   risk_level: L1
