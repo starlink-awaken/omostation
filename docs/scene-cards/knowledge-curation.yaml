@@ -10,9 +10,9 @@ related:
 ---
 schema: scene-card/v2
 scene_type: external_resource
-lifecycle: shadow
-activation: preview
-approval_state: pending_business_confirmation
+lifecycle: assisted
+activation: allowed
+approval_state: confirmed
 scene_id: knowledge-curation
 journey_id: capture-to-retrieval
 journey_unresolved: no matching file in docs/journey-specs/

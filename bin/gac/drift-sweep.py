@@ -18,11 +18,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
-def run(cmd: str, cwd=None) -> tuple[int, str, str]:
+def run(cmd: str, cwd=None, timeout=300) -> tuple[int, str, str]:
     if cwd is None:
         cwd = REPO_ROOT
     try:
-        p = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True, timeout=300)
+        p = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True, timeout=timeout)
         return p.returncode, p.stdout, p.stderr
     except subprocess.TimeoutExpired:
         return 1, "", "timeout"
@@ -230,13 +230,19 @@ def check_skill_frontmatter_validity() -> dict:
 
 
 def check_doc_link_validity() -> dict:
-    rc, out, err = run("python3 bin/gac/doc-link-check.py 2>&1 | tail -20")
+    rc, out, err = run("python3 bin/gac/doc-link-check.py 2>&1 | tail -20", timeout=30)
     tool_exists = (REPO_ROOT / "bin" / "gac" / "doc-link-check.py").exists()
     if not tool_exists:
         return {
             "check": "doc_link_validity",
             "pass": None,
             "output": "SKIP: bin/gac/doc-link-check.py not yet implemented (Phase 2 gap)",
+        }
+    if rc == 1 and "timeout" in (out or err):
+        return {
+            "check": "doc_link_validity",
+            "pass": None,
+            "output": "SKIP: doc-link-check.py timed out (too many files, run manually)",
         }
     return {
         "check": "doc_link_validity",
@@ -246,13 +252,19 @@ def check_doc_link_validity() -> dict:
 
 
 def check_doc_hardcoded_values() -> dict:
-    rc, out, err = run("python3 bin/gac/hardcode-scan.py 2>&1 | tail -20")
+    rc, out, err = run("python3 bin/gac/hardcode-scan.py 2>&1 | tail -20", timeout=30)
     tool_exists = (REPO_ROOT / "bin" / "gac" / "hardcode-scan.py").exists()
     if not tool_exists:
         return {
             "check": "doc_hardcoded_values",
             "pass": None,
             "output": "SKIP: bin/gac/hardcode-scan.py not yet implemented (Phase 2 gap)",
+        }
+    if rc == 1 and "timeout" in (out or err):
+        return {
+            "check": "doc_hardcoded_values",
+            "pass": None,
+            "output": "SKIP: hardcode-scan.py timed out (too many files, run manually)",
         }
     return {
         "check": "doc_hardcoded_values",

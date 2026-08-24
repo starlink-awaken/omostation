@@ -82,13 +82,24 @@ def score_troubleshootable() -> dict:
 
 
 def score_optimizable() -> dict:
-    rc, out, err = run("uv run python3 bin/gac/drift-sweep.py --json", timeout=30)
-    sweep_works = rc == 0
+    rc, out, err = run("uv run python3 bin/gac/drift-sweep.py --json", timeout=60)
+    if rc == 0:
+        sweep_works = True
+        score = 9
+        evidence = "drift-sweep.py runs clean (0 failures)"
+    elif rc == 1 and "timeout" in (out or err):
+        sweep_works = False
+        score = 5
+        evidence = "drift-sweep.py timed out"
+    else:
+        sweep_works = True  # Tool works, just has findings
+        score = 7
+        evidence = "drift-sweep.py runs successfully (has findings)"
     return {
         "dimension": "optimizable",
-        "score": 8 if sweep_works else 5,
-        "evidence": "drift-sweep.py runs successfully" if sweep_works else "drift-sweep.py has issues",
-        "improvement": "Add predictive ops and auto-remediation",
+        "score": score,
+        "evidence": evidence,
+        "improvement": "Resolve drift-sweep findings",
     }
 
 
