@@ -331,9 +331,7 @@ class CapabilityInvocationGateway:
                 admission=admission,
             )
         health_raw, probe_error = _bounded_call(
-            lambda: self._adapter.probe(
-                dict(valid), timeout=self._readiness_timeout
-            ),
+            lambda: self._adapter.probe(dict(valid), timeout=self._readiness_timeout),
             self._readiness_timeout,
         )
         if probe_error is not None:

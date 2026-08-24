@@ -1437,7 +1437,14 @@ _FALLBACK_SERVICES: list[BosService] = [
         package="kos",
         action="mcp-v2",
         transport="mcp_proxy",
-        tools=["graph_search", "entity_explore", "knowledge_ask", "subscribe_topic", "build_context", "verify_claim"],
+        tools=[
+            "graph_search",
+            "entity_explore",
+            "knowledge_ask",
+            "subscribe_topic",
+            "build_context",
+            "verify_claim",
+        ],
         description="KOS MCP v2.0 (25 tools)",
     ),
 ]

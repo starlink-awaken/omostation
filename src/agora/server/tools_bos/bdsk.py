@@ -185,7 +185,7 @@ def _prompt(topic: str, mode: str, context: str) -> str:
     return f"""Evaluate this proposal as the B.D.S.K. four-corner board.
 Mode: {mode}
 Topic: {topic}
-Context: {context or '[not provided]'}
+Context: {context or "[not provided]"}
 
 Return JSON only with exactly these decision fields:
 {{

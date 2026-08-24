@@ -9,4 +9,11 @@ produces a ranked priority list with rationale.
 from agora.intent.model import IntentModel, IntentResult
 from agora.intent.prioritizer import Prioritizer, ScoredItem, ScoreWeights, Priority
 
-__all__ = ["IntentModel", "IntentResult", "Prioritizer", "Priority", "ScoreWeights", "ScoredItem"]
+__all__ = [
+    "IntentModel",
+    "IntentResult",
+    "Prioritizer",
+    "Priority",
+    "ScoreWeights",
+    "ScoredItem",
+]

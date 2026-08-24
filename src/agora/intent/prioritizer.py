@@ -42,6 +42,7 @@ class ScoreWeights:
     before scoring. Default weights favour deadline proximity and
     goal alignment.
     """
+
     deadline: float = 0.30
     goal_alignment: float = 0.25
     dependency: float = 0.20
@@ -49,10 +50,20 @@ class ScoreWeights:
     effort: float = 0.10
 
     def normalized(self) -> dict[str, float]:
-        total = self.deadline + self.goal_alignment + self.dependency + self.recency + self.effort
+        total = (
+            self.deadline
+            + self.goal_alignment
+            + self.dependency
+            + self.recency
+            + self.effort
+        )
         if total <= 0:
             return dict(
-                deadline=0.2, goal_alignment=0.2, dependency=0.2, recency=0.2, effort=0.2
+                deadline=0.2,
+                goal_alignment=0.2,
+                dependency=0.2,
+                recency=0.2,
+                effort=0.2,
             )
         k = 1.0 / total
         return dict(
@@ -137,7 +148,9 @@ class Prioritizer:
 
 def _rationale(bd: dict[str, float], weights: dict[str, float]) -> str:
     """Human-readable explanation of why an item scored as it did."""
-    top = sorted(bd.items(), key=lambda kv: weights.get(kv[0], 0) * kv[1], reverse=True)[:2]
+    top = sorted(
+        bd.items(), key=lambda kv: weights.get(kv[0], 0) * kv[1], reverse=True
+    )[:2]
     parts = []
     for k, v in top:
         if k == "deadline":
@@ -145,7 +158,9 @@ def _rationale(bd: dict[str, float], weights: dict[str, float]) -> str:
         elif k == "goal_alignment":
             parts.append("goal-aligned" if v > 50 else "no goal link")
         elif k == "dependency":
-            parts.append("unblocks others" if v > 50 else "blocked" if v < 40 else "neutral")
+            parts.append(
+                "unblocks others" if v > 50 else "blocked" if v < 40 else "neutral"
+            )
         elif k == "recency":
             parts.append("recently active" if v > 60 else "stale")
         elif k == "effort":

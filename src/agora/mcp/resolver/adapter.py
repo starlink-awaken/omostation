@@ -41,6 +41,8 @@ def _workspace_root() -> str | None:
         ).is_dir():
             return str(parent)
     return None
+
+
 _MAX_STRUCTURED_ITEMS = 100
 _MAX_STRUCTURED_DEPTH = 8
 _SENSITIVE_KEY_PARTS = (
@@ -131,9 +133,7 @@ def _parse_structured_stdout(stdout: str) -> Any | None:
                 depth -= 1
                 if depth == 0:
                     try:
-                        return _redact_structured_value(
-                            json.loads(raw[start : i + 1])
-                        )
+                        return _redact_structured_value(json.loads(raw[start : i + 1]))
                     except (json.JSONDecodeError, RecursionError):
                         break  # 此起点无有效块, 换下一个 '{[' 起点
     return None

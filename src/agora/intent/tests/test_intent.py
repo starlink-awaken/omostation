@@ -44,7 +44,9 @@ class TestPrioritizer:
         now = int(time.time() * 1000)
         p = Prioritizer()
         items = [
-            p.score_task({"id": "a", "title": "Low", "deadline_ms": now + 86_400_000 * 7}),
+            p.score_task(
+                {"id": "a", "title": "Low", "deadline_ms": now + 86_400_000 * 7}
+            ),
             p.score_task({"id": "b", "title": "High", "deadline_ms": now + 3_600_000}),
         ]
         ranked = p.rank(items)
@@ -59,11 +61,17 @@ class TestPrioritizer:
         assert Priority.from_score(5) == Priority.BACKLOG
 
     def test_custom_weights(self):
-        w = ScoreWeights(deadline=1.0, goal_alignment=0, dependency=0, recency=0, effort=0)
+        w = ScoreWeights(
+            deadline=1.0, goal_alignment=0, dependency=0, recency=0, effort=0
+        )
         p = Prioritizer(w)
         now = int(time.time() * 1000)
-        soon = p.score_task({"id": "x", "title": "Soon", "deadline_ms": now + 3_600_000})
-        later = p.score_task({"id": "y", "title": "Later", "deadline_ms": now + 86_400_000 * 7})
+        soon = p.score_task(
+            {"id": "x", "title": "Soon", "deadline_ms": now + 3_600_000}
+        )
+        later = p.score_task(
+            {"id": "y", "title": "Later", "deadline_ms": now + 86_400_000 * 7}
+        )
         assert soon.score > later.score
 
 
@@ -78,8 +86,19 @@ class TestIntentModel:
     def test_whats_most_important_ranks(self):
         now = int(time.time() * 1000)
         tasks = [
-            {"id": "t1", "title": "Old low", "deadline_ms": now + 86_400_000 * 7, "updated_ms": now - 86_400_000 * 3},
-            {"id": "t2", "title": "Urgent", "deadline_ms": now + 3_600_000, "updated_ms": now, "blocks": ["t3"]},
+            {
+                "id": "t1",
+                "title": "Old low",
+                "deadline_ms": now + 86_400_000 * 7,
+                "updated_ms": now - 86_400_000 * 3,
+            },
+            {
+                "id": "t2",
+                "title": "Urgent",
+                "deadline_ms": now + 3_600_000,
+                "updated_ms": now,
+                "blocks": ["t3"],
+            },
         ]
         model = IntentModel(task_source=_FakeTaskSource(tasks))
         result = model.whats_most_important(top_n=5)
@@ -89,15 +108,25 @@ class TestIntentModel:
 
     def test_to_dict_shape(self):
         now = int(time.time() * 1000)
-        model = IntentModel(task_source=[{"id": "t1", "title": "Test", "updated_ms": now}])
+        model = IntentModel(
+            task_source=[{"id": "t1", "title": "Test", "updated_ms": now}]
+        )
         d = model.whats_most_important().to_dict()
         assert "generated_at" in d
         assert "items" in d
-        assert d["items"][0]["priority"] in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "BACKLOG")
+        assert d["items"][0]["priority"] in (
+            "CRITICAL",
+            "HIGH",
+            "MEDIUM",
+            "LOW",
+            "BACKLOG",
+        )
 
     def test_top_n_limit(self):
         now = int(time.time() * 1000)
-        tasks = [{"id": f"t{i}", "title": f"Task {i}", "updated_ms": now} for i in range(10)]
+        tasks = [
+            {"id": f"t{i}", "title": f"Task {i}", "updated_ms": now} for i in range(10)
+        ]
         model = IntentModel(task_source=tasks)
         result = model.whats_most_important(top_n=3)
         assert len(result.items) == 3
