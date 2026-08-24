@@ -173,7 +173,7 @@ gac:
     check_type: advisory
     rule_baseline: 142    # 2026-08-24: 2b0ad8cae AGE-v2 adds 3 rules (CR-AGE-MEMORY/REPLAY/EVENT-01); 142 active
     adr_baseline: 361
-    script_baseline: 482    # 2026-08-24: T10-08 closeout-audit.py + G8 自进化债 closeout 工具; 480 active
+    script_baseline: 484    # 2026-08-25: +fix-orphan-locks.py +task-inventory.py; 484 active
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
