@@ -56,6 +56,11 @@ DEFAULT_POLICY = {
         },
         {"id": "agent-workflow-lint", "command": ["bin/agent-workflow.py", "lint"]},
         {
+            "id": "capability-ownership",
+            "command": ["bin/gac/check-capability-ownership.py"],
+            "note": "CAP-OWN: 能力所有权 + 删除防腐 (差距治理 S1). 注册能力实现缺失(IMPL-EXISTS) → 阻断; owner 缺失/孤儿能力 → info",
+        },
+        {
             "id": "agent-workflow-integrations",
             "command": ["bin/agent-workflow.py", "integrations"],
         },

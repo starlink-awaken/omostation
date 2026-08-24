@@ -100,6 +100,14 @@ data/驾驶舱/documents.db
 # 5. 生成文档与缓存
 # ---------------------------------------------------------------------------
 docs/generated/
+# GEN-FORCE (差距治理 S1): 已跟踪生成物是"受保护生成物契约" —
+# CI check-docs-drift 依赖它们随 commit 同步提交. 从忽略中排除,
+# 使 git add/status 直接可见, 无需 -f 强制提交.
+!docs/generated/agent-gac-rules.md
+!docs/generated/architecture-deep-analysis.md
+!docs/generated/capability-registry.yaml
+!docs/generated/kos-ontology-graph.md
+!docs/generated/project-layer-index.md
 graphify-out/
 agent-runtime/
 _derivation_logs/
