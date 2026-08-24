@@ -5451,6 +5451,19 @@ bets:
   - 不把 maturity score、PR、测试、Agent 自评、估算节省时长或 synthetic 样本计入个人价值
   - 不自动外发、不提高自治等级、不引入工业级重型密码学或多租户平台
   - 不让 AGE-v2 Agent Cell、Cockpit agent-runtime 或 runtime registry 绕过 WorkPacket/OMO admission
+  capability_requirements:
+  - capability_id: skill:git-discipline
+    operation: load
+    effect: read_only
+  - capability_id: workflow:bet-execution
+    operation: load
+    effect: read_only
+  - capability_id: mcp-server:agora
+    operation: load
+    effect: read_only
+  - capability_id: bos-service:bos://governance/omo/state
+    operation: invoke
+    effect: read_only
   evidence:
     E0_self_bootstrap_waiver:
       waiver: user-explicit
@@ -5547,8 +5560,10 @@ bets:
   - docs/generated/capability-registry.yaml
   - docs/project-registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+  - bin/agent-workflow.py
   - bin/capability-sync.py
   - bin/cockpit/gen-capability-registry.py
+  - bin/plan/bet-ledger.py
   - lib/capability_trace_binding.py
   - lib/capability_native_receipt.py
   - lib/capability_native_inspection.py
@@ -5561,9 +5576,25 @@ bets:
   - tests/test_capability_native_execution_receipt.py
   - tests/test_agent_workflow.py
   - tests/test_spec_binding_lint.py
+  - projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml
+  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.schema.json
+  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control-schemas.ts
+  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.manifest.json
+  - projects/ecos/src/ecos/ssot/mof/generated/control/mof_control_models.py
+  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.sql
+  - projects/ecos/tests/test_mof_compiler.py
+  - projects/ecos/tests/test_work_packet_compiler.py
+  - projects/ecos
+  - projects/omo/src/omo/blueprint_control.py
+  - projects/omo/src/omo/orchestration_contract.py
+  - projects/omo/src/omo/workflow/lifecycle.py
+  - projects/omo/src/omo/workflow_dispatch.py
+  - projects/omo/src/omo/omo_worker_core.py
   - projects/omo/src/omo/worker_lifecycle.py
   - projects/omo/src/omo/workflow_mesh.py
   - projects/omo/src/omo/omo_worker_dispatch.py
+  - projects/omo/tests/test_blueprint_control.py
+  - projects/omo/tests/test_orchestration_contract.py
   - projects/omo/tests/test_omo_worker_admission_gate.py
   - projects/omo/tests/test_worker_lifecycle_mesh.py
   - projects/omo/tests/test_workflow_mesh.py
