@@ -6406,6 +6406,12 @@ bets:
     E3_platform_rebase_followup:
       description: 复盘后确认 current main 尚缺 platform-rebase clone retirement provenance 收敛；先补 canonical spec，再登记独立 T1 follow-up，禁止无 spec 直接实施
       spec_surface: docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md
+    E4_spec_status_schema_conflict:
+      description: canonical spec binding 强制 status=accepted，但 document-governance 全局 valid_statuses 不含 accepted；现有六份 spec 仅靠 legacy exception，新增第七份即 warning budget hard fail，必须建立原生 accepted-specifications surface 而非扩大例外
+      governance_surfaces:
+      - .omo/_truth/registry/document-governance.yaml
+      - bin/ssot/doc-governance-check.py
+      - tests/test_doc_governance_check.py
   done_when:
   - 复盘文档入库 docs/reports/2026-08-24-resident-system-deep-review.md
   - make gac-local-gate 全部检查 PASS
@@ -6442,6 +6448,9 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md
   - docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md
+  - .omo/_truth/registry/document-governance.yaml
+  - bin/ssot/doc-governance-check.py
+  - tests/test_doc_governance_check.py
   pasw_required: false
   depends_on: []
   risk_level: L1
