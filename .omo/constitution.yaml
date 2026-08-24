@@ -1,0 +1,63 @@
+status: active
+lifecycle: ssot
+owner: xiamingxing
+last-reviewed: 2026-08-24
+---
+# Constitution — 个人治理宪法
+# 定义个人身份、角色、信念, 为价值度量提供 principal_id
+
+schema: constitution/v1
+version: 1.0
+
+# 个人身份标识 (North Star 价值度量的关键)
+principal_id: "xiamingxing"
+
+# 角色组合
+roles:
+  - id: architecture-governance
+    name: "架构治理"
+    beliefs:
+      - "framework-first: 先建框架后执行"
+      - "measure-what-matters: 度量驱动决策"
+      - "anti-corrosion: 防腐优于修复"
+    responsibilities:
+      - "治理框架设计与维护"
+      - "工具生命周期管理"
+      - "场景激活与监督"
+
+  - id: engineering-lead
+    name: "工程负责人"
+    beliefs:
+      - "automation-over-manual: 能自动化的不手动"
+      - "visibility: 状态可观测可追溯"
+    responsibilities:
+      - "ECOS/MOF 工具链维护"
+      - "CI/CD 管道健康"
+
+  - id: product-strategist
+    name: "产品策略"
+    beliefs:
+      - "value-provable: 价值必须可证明"
+      - "user-journey: 用户体验优先"
+    responsibilities:
+      - "North Star 价值度量"
+      - "场景价值验证"
+
+# 决策偏好
+decision_preferences:
+  risk_tolerance: moderate
+  automation_bias: high
+  evidence_required: true
+
+# 时间追踪配置
+time_tracking:
+  enabled: true
+  track_review_duration: true
+  track_estimated_saved: true
+  minimum_qualifying_seconds: 60
+
+# 关联的 North Star 配置
+north_star:
+  meter_version: v2
+  readiness_gate: "4_consecutive_weeks"
+  qualifying_episodes_per_week: 3

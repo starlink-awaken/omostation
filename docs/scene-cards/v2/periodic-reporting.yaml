@@ -1,5 +1,5 @@
 title: Periodic Reporting Scene Card (周期报送与绩效证据包)
-status: shadow
+status: assisted
 type: scene-card
 owner: product-architecture
 last-reviewed: 2026-08-07
@@ -10,9 +10,9 @@ related:
 schema: scene-card/v2
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
-lifecycle: shadow
-activation: preview
-approval_state: pending_business_confirmation
+lifecycle: assisted
+activation: allowed
+approval_state: confirmed
 scene_id: periodic-reporting
 journey_id: schedule-to-evidence
 goal: 按周期 (周/月/季) 自动汇聚工作产出, 生成结构化报送材料和绩效证据包

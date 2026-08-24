@@ -72,7 +72,31 @@ def check_health(subproject: dict) -> dict:
     # Determine health
     health = "green"
     if result["branch"] == "detached":
-        health = "red"
+        # Detached HEAD is expected for worktree --init sub-projects
+        # Health depends on last commit recency, not branch name
+        if "day" in result["last_commit"].lower() or "week" in result["last_commit"].lower() or "month" in result["last_commit"].lower() or "minute" in result["last_commit"].lower() or "hour" in result["last_commit"].lower():
+            try:
+                num = int(''.join(filter(str.isdigit, result["last_commit"])))
+                if "minute" in result["last_commit"].lower() or "hour" in result["last_commit"].lower():
+                    health = "green"
+                elif "day" in result["last_commit"].lower():
+                    if num > 7:
+                        health = "yellow"
+                    else:
+                        health = "green"
+                elif "week" in result["last_commit"].lower():
+                    if num > 4:
+                        health = "red"
+                    else:
+                        health = "green"
+                elif "month" in result["last_commit"].lower():
+                    health = "yellow"
+            except Exception:
+                pass
+        elif "year" in result["last_commit"].lower():
+            health = "red"
+        else:
+            health = "yellow"
     elif "day" in result["last_commit"].lower() or "week" in result["last_commit"].lower() or "month" in result["last_commit"].lower():
         try:
             num = int(''.join(filter(str.isdigit, result["last_commit"])))

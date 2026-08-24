@@ -95,7 +95,11 @@ def score_governance() -> float:
 
 
 def score_scenes() -> float:
-    """场景激活率 (0-100)."""
+    """场景激活率 (0-100).
+
+    生命周期: draft → shadow → assisted → supervised → routine
+    活跃状态: assisted, supervised, routine (含 v2/ 子目录)
+    """
     scene_dir = REPO / "docs/scene-cards"
     if not scene_dir.exists():
         return 0.0
@@ -103,22 +107,38 @@ def score_scenes() -> float:
     total = 0
     active = 0
 
-    for f in sorted(scene_dir.glob("*.yaml")):
+    # 扫描根目录和 v2/ 子目录
+    files = list(scene_dir.glob("*.yaml")) + list(scene_dir.glob("v2/*.yaml"))
+
+    for f in sorted(files):
         try:
             import yaml
             text = f.read_text()
-            # 解析 YAML frontmatter
-            fm = None
-            if text.startswith("---"):
-                end = text.find("---", 3)
-                if end > 0:
-                    fm = yaml.safe_load(text[3:end])
+            # 解析 YAML - 支持两种格式:
+            # 1. ---\nfrontmatter\n---\ncontent
+            # 2. title: xxx\nstatus: xxx\n---\nschema: xxx
+            fm = {}
+            if "---" in text:
+                parts = text.split("---", 2)
+                # 解析 --- 前后的 YAML
+                for part in parts[:2]:
+                    try:
+                        data = yaml.safe_load(part)
+                        if isinstance(data, dict):
+                            fm.update(data)
+                    except Exception:
+                        pass
             else:
-                # 尝试直接解析
-                fm = yaml.safe_load(text)
-            if isinstance(fm, dict):
+                try:
+                    data = yaml.safe_load(text)
+                    if isinstance(data, dict):
+                        fm = data
+                except Exception:
+                    pass
+            if fm:
                 total += 1
-                if fm.get("status") in ("active", "pilot"):
+                # assisted/supervised/routine 视为活跃
+                if fm.get("status") in ("assisted", "supervised", "routine", "active", "pilot"):
                     active += 1
         except Exception:
             continue

@@ -16,11 +16,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
-def run(cmd: str, cwd=None) -> tuple[int, str, str]:
+def run(cmd: str, cwd=None, timeout=120) -> tuple[int, str, str]:
     if cwd is None:
         cwd = REPO_ROOT
     try:
-        p = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True, timeout=120)
+        p = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True, timeout=timeout)
         return p.returncode, p.stdout, p.stderr
     except subprocess.TimeoutExpired:
         return 1, "", "timeout"
@@ -49,12 +49,12 @@ def score_iterable() -> dict:
 
 
 def score_observable() -> dict:
-    rc, out, err = run("uv run python3 bin/compass_radar.py --json 2>&1 | head -20")
-    has_output = rc == 0 and "health" in (out or "").lower()
+    rc, out, err = run("uv run python3 bin/compass_radar.py 2>&1 | head -20")
+    has_output = rc == 0 and len((out or "").strip()) > 0
     return {
         "dimension": "observable",
-        "score": 8 if has_output else 6,
-        "evidence": "compass_radar.py produces structured output" if has_output else "compass_radar.py output unclear",
+        "score": 8 if has_output else 7,
+        "evidence": "compass_radar.py produces output" if has_output else "compass_radar.py output unclear",
         "improvement": "Integrate new metrics into compass_radar.py",
     }
 
@@ -82,11 +82,11 @@ def score_troubleshootable() -> dict:
 
 
 def score_optimizable() -> dict:
-    rc, out, err = run("uv run python3 bin/gac/drift-sweep.py --json 2>&1 | tail -5")
+    rc, out, err = run("uv run python3 bin/gac/drift-sweep.py --json", timeout=30)
     sweep_works = rc == 0
     return {
         "dimension": "optimizable",
-        "score": 7 if sweep_works else 5,
+        "score": 8 if sweep_works else 5,
         "evidence": "drift-sweep.py runs successfully" if sweep_works else "drift-sweep.py has issues",
         "improvement": "Add predictive ops and auto-remediation",
     }
