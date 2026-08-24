@@ -225,3 +225,30 @@ SLA 边界**。第一反应是"main 也红过 interface-check"→ 直接下"环�
 ```
 
 **验收**: 所有环境性 closeout 都附时间戳计算证据, 无凭印象归类。
+
+
+## SCRIPT-BASELINE-SYNC: 新增 bin/ 脚本必须同步 subtraction_quota 铁律 (2026-08-25)
+
+**触发**: 任何 PR 新增/修改 `bin/` 下 `.py`/`.sh` 脚本, 或 CI 报 `subtraction-quota`。
+
+**根因实证** (2026-08-25, main 连续 3 次红): 并发 agent 在 PR 里新增 bin/ 脚本
+(closeout-audit / worktree-init / gh-api-push → #2143, north_star_meter_v3 → #2145,
+agent-presence → #2148, fix-frontmatter → #2146), 但**没在同一个 PR 里同步**
+`governance-checks.yaml` 的 `gac.subtraction_quota.script_baseline`。合入后 main 立即红
+(`bin/ 活跃脚本 N 超基线 M`), 只能事后补 baseline (如 #2154 486→487 这类跟随修复),
+形成"加脚本 → main 红 → 补 baseline"的重复事故循环。根因是减法配额 (BET-Y1Q3-T6-05)
+**只做全量计数, 不做 diff 感知**, 新增脚本无法在 PR 阶段被提前拦截。
+
+**规则**:
+```markdown
+## 新增脚本同步铁律
+- 在 PR 里新增 bin/ 下 .py/.sh → 必须同时改 governance-checks.yaml
+  subtraction_quota.script_baseline = 当前 active 数 + 新增数
+- CI 报 subtraction-quota 超限时, 错误消息带建议值 (script_baseline → N),
+  照抄更新即可; 不要删/归档他人脚本去压数 (会误伤并发交付)
+- 若只是改已有脚本/加 registry yaml (非 .py/.sh), 不需要动 baseline
+- 触发: 任何新增 bin/ 脚本的 PR / subtraction-quota CI 失败
+```
+
+**验收**: 新增 bin/ 脚本的 PR 在合并前 gac-validate 通过 (baseline 已在同 PR 同步),
+无事后 baseline 跟随修复。
