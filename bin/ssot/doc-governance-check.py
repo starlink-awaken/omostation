@@ -768,9 +768,10 @@ def check_file(
         valid_statuses_by_schema = surface.get("valid_statuses_by_schema") or {}
         valid_statuses = set(
             valid_statuses_by_schema.get(str(metadata.get("schema_version", "")))
+            or surface.get("valid_statuses")
             or registry.get("metadata", {}).get("valid_statuses", [])
         )
-        valid_lifecycles = set(registry.get("metadata", {}).get("valid_lifecycles", []))
+        valid_lifecycles = set(surface.get("valid_lifecycles") or registry.get("metadata", {}).get("valid_lifecycles", []))
         valid_review_states = set(registry.get("metadata", {}).get("valid_review_states", []))
         if "status" in metadata and metadata.get("status") not in valid_statuses:
             findings.append(

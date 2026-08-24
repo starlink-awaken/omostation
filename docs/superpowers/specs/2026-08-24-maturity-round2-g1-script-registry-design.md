@@ -1,6 +1,6 @@
 ---
 status: accepted
-lifecycle: spec
+lifecycle: contract
 owner: governance-team
 created: 2026-08-24
 last-reviewed: 2026-08-24

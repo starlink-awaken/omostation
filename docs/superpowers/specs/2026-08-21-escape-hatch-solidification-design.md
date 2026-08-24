@@ -2,6 +2,12 @@
 schema_version: specification/v1
 spec_version: 1.0.0
 status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-24
+
+
+
 bet_id: BET-Y1Q3-T1-09
 ---
 

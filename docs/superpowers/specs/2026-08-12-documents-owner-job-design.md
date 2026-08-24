@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: entry
+lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-18
 ---
