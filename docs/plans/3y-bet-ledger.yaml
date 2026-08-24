@@ -6667,7 +6667,14 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - bin/compass_radar.py
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g5-compass-radar-sixth-axis-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g5-compass-radar-sixth-axis-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:ab16680a711eb14174f8a720ab0f59ab910430386a2c6cc1fad51d3a5e42023e"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-05
   depends_on: []
 
 - id: BET-Y1Q3-T10-06
@@ -6685,7 +6692,14 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - bin/gac/maturity-scorecard.py
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g6-scorecard-granularity-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g6-scorecard-granularity-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:faa8cb89bf46f7dba28c00d46d0d4c11b8aa9ece9b207c161f582e0905400e0f"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-06
   depends_on: BET-Y1Q3-T10-01, BET-Y1Q3-T10-02, BET-Y1Q3-T10-03, BET-Y1Q3-T10-04, BET-Y1Q3-T10-05
 
 - id: BET-Y1Q3-T10-07
