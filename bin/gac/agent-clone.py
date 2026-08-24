@@ -1295,7 +1295,6 @@ def verify_clone_provenance(
     identity_head = "HEAD"
     platform_binding_ok = True
     if platform_base_sha is not None and platform_head_sha is not None:
-        current_head = root_head(repo_root)
         frozen_to_base = git(
             repo_root,
             "merge-base",
@@ -1313,7 +1312,6 @@ def verify_clone_provenance(
         platform_binding_ok = (
             bool(re.fullmatch(r"[0-9a-f]{40}", platform_base_sha))
             and bool(re.fullmatch(r"[0-9a-f]{40}", platform_head_sha))
-            and current_head == platform_head_sha
             and frozen_to_base.returncode == 0
             and base_to_head.returncode == 0
         )

@@ -1754,6 +1754,102 @@ def test_retire_accepts_exact_platform_rebase_source_proof(tmp_path, monkeypatch
     assert not any("fetch" in cmd or "reset" in cmd for cmd in calls)
 
 
+def test_retire_rejects_wrong_author_in_rewritten_platform_head_when_local_head_differs(
+    tmp_path, monkeypatch, capsys
+):
+    clone, original, platform_head, platform_base, _original_base = (
+        make_platform_rebased_clone(tmp_path)
+    )
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity["provenance_required"] = True
+    identity_path.write_text(json.dumps(identity))
+    (clone / ".git" / "agent-clone-provenance.json").write_text(
+        json.dumps(
+            {
+                "repository": {
+                    "canonical_repository": "github.com/owner/repository"
+                }
+            }
+        )
+    )
+    base_runner = merged_pr_runner(
+        original,
+        branch=branch,
+        platform_head=platform_head,
+        platform_base=platform_base,
+    )
+    calls: list[list[str]] = []
+
+    def wrong_platform_author_runner(
+        cmd: list[str], **kwargs
+    ) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        if (
+            len(cmd) >= 3
+            and cmd[0] == sys.executable
+            and cmd[1] == str(lc.AGENT_CLONE)
+        ):
+            if cmd[2] == "guard":
+                return subprocess.CompletedProcess(cmd, 0, '{"ok":true}\n', "")
+            if cmd[2] == "retirement-provenance":
+                return subprocess.CompletedProcess(
+                    cmd,
+                    lc.EXIT_POLICY,
+                    "",
+                    "platform delivery author differs from clone author",
+                )
+        return base_runner(cmd, **kwargs)
+
+    monkeypatch.setattr(lc, "run", wrong_platform_author_runner)
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert any(
+        len(cmd) >= 3
+        and cmd[0] == sys.executable
+        and cmd[1] == str(lc.AGENT_CLONE)
+        and cmd[2] == "retirement-provenance"
+        for cmd in calls
+    )
+    assert '"reason": "clone_provenance_mismatch"' in capsys.readouterr().err
+
+
+def test_platform_provenance_verifies_exact_pr_range_when_local_head_differs(
+    tmp_path, monkeypatch
+):
+    clone, frozen, platform_base, platform_head = make_advanced_platform_provenance_clone(
+        tmp_path
+    )
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    git(clone, "switch", "-c", "original-source", frozen)
+    (clone / "README.md").write_text("delivered on platform base\n")
+    git(clone, "add", "README.md")
+    git(clone, "commit", "-m", "original delivery")
+    original_head = git(clone, "rev-parse", "HEAD").stdout.strip()
+    git(clone, "branch", "-f", branch, original_head)
+    git(clone, "switch", branch)
+    receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
+    identity = json.loads((clone / ".git" / "agent-clone-identity.json").read_text())
+    monkeypatch.setattr(ac, "repository_provenance", lambda *_args: receipt["repository"])
+    monkeypatch.setattr(ac, "live_author_identity", lambda *_args: receipt["author"])
+
+    verified = ac.verify_clone_provenance(
+        str(clone),
+        identity,
+        platform_base_sha=platform_base,
+        platform_head_sha=platform_head,
+    )
+
+    assert verified == receipt
+    assert original_head != platform_head
+
+
 def test_retire_accepts_provenance_clone_on_advanced_platform_base(
     tmp_path, monkeypatch, capsys
 ):
