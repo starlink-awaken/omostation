@@ -13,7 +13,7 @@ Validated by PR #60 (2026-07-03, GaC executor enum 5-source align after PR #59 r
 
 ## When To Use
 
-- Changing GaC rules / executor enum / checker registration (`governance-checks.yaml`, `bin/gac/*.py` (glob pattern))
+- Changing GaC rules / executor enum / checker registration (`governance-checks.yaml`, the bin/gac/ directory)
 - Changing `write-owners.yaml` / `mutation-surfaces.yaml` / `x1-x4-rules.yaml`
 - Changing any governance registry field that exists in **multiple sources**
 - Editing `.omo/_truth/registry/*` during concurrent agent activity
