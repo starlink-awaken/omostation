@@ -169,11 +169,14 @@ gac:
     - gac_local_gate
     - foundry_cron
     - sweep_index_cli
+  # T6-05 减法配额制 (BET-Y1Q2-T6-05): 增 1 删 1 — 用机制维持表面积不反弹
+  # 2026-08-24: 全局计数降级 advisory — 并发 agent 各自 base 陈旧无法归因, 改由
+  # bin-quota-diff (变更侧问责) 每次变更自己负责守恒. 本块保留供 owner 流参考.
   subtraction_quota:
     check_type: advisory
-    rule_baseline: 139
-    adr_baseline: 361
-    script_baseline: 452
+    rule_baseline: 139    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail). 136→139: CR-RESIDENT-{STATUS,MOF-SYNC,BOS}-01 三条实体化 L0 enforcement (BET-Y1Q3-T1-10, ADR-0396)
+    adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
+    script_baseline: 441  # 2026-08-24: 439→441, +1 pre-existing drift (bin-scripts-convergence-audit re-count) +1 est-minutes-coefficient.py (BET-Y1Q3-T6-05, 时间账本系数表 SSOT). 本 PR 增1归档1 守恒.
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -196,11 +199,6 @@ gac:
     adr: ADR-0053
     enforcement: required
     source_ref: bin/mof/m4-health-score.py
-    owner: governance-team
-    expected: .omo/state/system.yaml::health_score is the unique source of truth;
-      no markdown or other file may duplicate this value
-    remediation: Remove duplicated value from markdown; reference the SSOT file instead
-    related_runbooks: []
   - id: CR-M0-STAGE-GATE
     dimension: X4
     layer: M0
@@ -218,10 +216,6 @@ gac:
     adr: ADR-0156
     enforcement: required
     source_ref: bin/mof/mof-bootstrap.py::all
-    owner: ecos-team
-    expected: Check CR-M0-STAGE-GATE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-L0-BOS-RESOLVE
     dimension: X1
     layer: L0
@@ -239,10 +233,6 @@ gac:
     adr: ADR-0105
     enforcement: required
     source_ref: projects/agora/etc/bos-services.yaml
-    owner: ecos-team
-    expected: Check CR-L0-BOS-RESOLVE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-L2-TASK-DELIVERABLE
     dimension: X4
     layer: L2
@@ -259,10 +249,6 @@ gac:
     adr: ADR-0106
     enforcement: advisory
     source_ref: .omo/_truth/tasks/
-    owner: omo-team
-    expected: Check CR-L2-TASK-DELIVERABLE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X2-GAC-DRIFT
     dimension: X2
     layer: meta
@@ -279,10 +265,6 @@ gac:
     adr: ADR-0121
     enforcement: advisory
     source_ref: bin/gac/gac-drift.py
-    owner: governance-team
-    expected: Check CR-X2-GAC-DRIFT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X1-AGENT-AUDIT
     dimension: X1
     layer: meta
@@ -301,10 +283,6 @@ gac:
     adr: ADR-0121
     enforcement: advisory
     source_ref: bin/gac/check-external-agent-audit.py
-    owner: governance-team
-    expected: Check CR-X1-AGENT-AUDIT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-DEBT-TIER
     dimension: X3
     layer: L2
@@ -321,10 +299,6 @@ gac:
     adr: ADR-0106
     enforcement: advisory
     source_ref: .omo/debt/items/
-    owner: governance-team
-    expected: Check CR-X3-DEBT-TIER must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-L1-RUNTIME-HEALTH
     dimension: X2
     layer: L1
@@ -341,10 +315,6 @@ gac:
     adr: ADR-0078
     enforcement: advisory
     source_ref: projects/runtime/
-    owner: governance-team
-    expected: Check CR-L1-RUNTIME-HEALTH must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-L3-COCKPIT-ENTRY
     dimension: X4
     layer: L3
@@ -361,11 +331,6 @@ gac:
     adr: ADR-0156
     enforcement: advisory
     source_ref: projects/cockpit/
-    owner: cockpit-team
-    expected: projects/cockpit (唯一入口) is the unique source of truth; no markdown or
-      other file may duplicate this value
-    remediation: Remove duplicated value from markdown; reference the SSOT file instead
-    related_runbooks: []
   - id: CR-L2-DIRECT-IO
     dimension: X1
     layer: L2
@@ -382,10 +347,6 @@ gac:
     adr: ADR-0155
     enforcement: advisory
     source_ref: .omo/
-    owner: omo-team
-    expected: Check CR-L2-DIRECT-IO must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-HYG-01
     dimension: X4
     layer: meta
@@ -401,10 +362,6 @@ gac:
     adr: ADR-0151
     enforcement: advisory
     source_ref: bin/gac/gac-hygiene-check.py
-    owner: governance-team
-    expected: Check CR-HYG-01 must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-HYG-02
     dimension: X4
     layer: meta
@@ -420,10 +377,6 @@ gac:
     adr: ADR-0151
     enforcement: advisory
     source_ref: bin/gac/gac-hygiene-check.py
-    owner: governance-team
-    expected: Check CR-HYG-02 must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X4-DOC-SSOT
     dimension: X4
     layer: meta
@@ -445,11 +398,6 @@ gac:
     adr: ADR-0053
     enforcement: advisory
     source_ref: .omo/standards/doc-ssot-contract.md
-    owner: governance-team
-    expected: docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py 扫描范围 is the unique
-      source of truth; no markdown or other file may duplicate this value
-    remediation: Remove duplicated value from markdown; reference the SSOT file instead
-    related_runbooks: []
   - id: CR-L2-SURFACES-INTEGRITY
     dimension: X4
     layer: L2
@@ -467,12 +415,6 @@ gac:
     adr: ADR-0156
     enforcement: advisory
     source_ref: .omo/_truth/registry/omo-governance-surfaces.yaml
-    owner: omo-team
-    expected: .omo/_truth/registry/omo-governance-surfaces.yaml::governance_stack
-      is the unique source of truth; no markdown or other file may duplicate this
-      value
-    remediation: Remove duplicated value from markdown; reference the SSOT file instead
-    related_runbooks: []
   - id: CR-L2-MUTATION-BROKER
     dimension: X1
     layer: L2
@@ -491,10 +433,6 @@ gac:
     adr: ADR-0155
     enforcement: advisory
     source_ref: bin/ssot/check-boundary.py
-    owner: governance-team
-    expected: Check CR-L2-MUTATION-BROKER must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-L0-PROTOCOLS-SSOT
     dimension: X4
     layer: L0
@@ -515,12 +453,6 @@ gac:
     adr: ADR-0053
     enforcement: required
     source_ref: protocols/
-    owner: ecos-team
-    expected: protocols/port-registry.yaml + vault-paths.yaml + x-axis-registry.yaml
-      is the unique source of truth; no markdown or other file may duplicate this
-      value
-    remediation: Remove duplicated value from markdown; reference the SSOT file instead
-    related_runbooks: []
   - id: CR-X2-GAC-BOOTSTRAP
     dimension: X2
     layer: meta
@@ -538,10 +470,6 @@ gac:
     adr: ADR-0121
     enforcement: advisory
     source_ref: bin/gac/gac-bootstrap.py
-    owner: governance-team
-    expected: Check CR-X2-GAC-BOOTSTRAP must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X2-GAC-EXEC-DRIFT
     dimension: X2
     layer: meta
@@ -559,10 +487,6 @@ gac:
     adr: ADR-0121
     enforcement: advisory
     source_ref: bin/gac/gac-executor.py
-    owner: governance-team
-    expected: Check CR-X2-GAC-EXEC-DRIFT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X2-GOVERNANCE-SEMANTIC-GATE
     dimension: X2
     layer: meta
@@ -581,10 +505,6 @@ gac:
     adr: ADR-0121
     enforcement: advisory
     source_ref: bin/gac/governance-semantic-gate.py
-    owner: ecos-team
-    expected: Check CR-X2-GOVERNANCE-SEMANTIC-GATE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X1-EVIDENCE-RUNNABLE
     dimension: X1
     layer: meta
@@ -606,10 +526,6 @@ gac:
     adr: ADR-0121
     enforcement: advisory
     source_ref: .omo/standards/evidence-runnable.md
-    owner: governance-team
-    expected: Check CR-X1-EVIDENCE-RUNNABLE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-L0-BOS-DOMAIN-NORM
     dimension: X4
     layer: L0
@@ -629,10 +545,6 @@ gac:
     adr: ADR-0107
     enforcement: required
     source_ref: projects/agora/etc/bos-services.yaml
-    owner: ecos-team
-    expected: Check CR-L0-BOS-DOMAIN-NORM must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-META-BIN-NAMING
     dimension: X4
     layer: meta
@@ -651,10 +563,6 @@ gac:
     adr: ADR-0121
     enforcement: advisory
     source_ref: .omo/standards/bin-naming-convention.md
-    owner: governance-team
-    expected: Registry files must be valid YAML and match schema
-    remediation: Fix YAML syntax or update registry entry to match schema
-    related_runbooks: []
   - id: CR-META-BIN-ORPHAN
     dimension: X2
     layer: meta
@@ -674,10 +582,6 @@ gac:
     adr: ADR-0123
     enforcement: advisory
     source_ref: .omo/standards/bin-orphan-policy.md
-    owner: governance-team
-    expected: Check CR-META-BIN-ORPHAN must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P74-STATE-PROJECTION-GUARD
     dimension: X4
     layer: meta
@@ -696,10 +600,6 @@ gac:
     adr: ADR-0130
     enforcement: advisory
     source_ref: .omo/standards/p74-solidification-contract.md
-    owner: governance-team
-    expected: Registry files must be valid YAML and match schema
-    remediation: Fix YAML syntax or update registry entry to match schema
-    related_runbooks: []
   - id: CR-P74-RUNTIME-STAMP-POLICY
     dimension: X2
     layer: meta
@@ -718,10 +618,6 @@ gac:
     adr: ADR-0130
     enforcement: advisory
     source_ref: .omo/standards/p74-solidification-contract.md
-    owner: runtime-team
-    expected: Check CR-P74-RUNTIME-STAMP-POLICY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P74-WORKFLOW-SILENCE
     dimension: X1
     layer: meta
@@ -739,10 +635,6 @@ gac:
     adr: ADR-0130
     enforcement: advisory
     source_ref: .omo/standards/p74-solidification-contract.md
-    owner: governance-team
-    expected: Check CR-P74-WORKFLOW-SILENCE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P74-WORKFLOW-SUGGEST
     dimension: X3
     layer: meta
@@ -760,10 +652,6 @@ gac:
     adr: ADR-0130
     enforcement: advisory
     source_ref: .omo/standards/p74-solidification-contract.md
-    owner: governance-team
-    expected: Registry files must be valid YAML and match schema
-    remediation: Fix YAML syntax or update registry entry to match schema
-    related_runbooks: []
   - id: CR-X1-GOD-MODULE-LIMIT
     dimension: X1
     layer: L2
@@ -783,10 +671,6 @@ gac:
     adr: ADR-0171
     enforcement: advisory
     source_ref: bin/gac/check-god-module.py
-    owner: governance-team
-    expected: Check CR-X1-GOD-MODULE-LIMIT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-DOC-NO-LAST-UPDATED
     dimension: X4
     layer: meta
@@ -807,10 +691,6 @@ gac:
     adr: ADR-0053
     enforcement: advisory
     source_ref: .omo/standards/doc-ssot-contract.md
-    owner: governance-team
-    expected: Documents must have valid frontmatter and lifecycle metadata
-    remediation: 'Add or fix frontmatter: status, type, owner, lifecycle, last-reviewed'
-    related_runbooks: []
   - id: CR-X1-FRESHNESS-SEMANTIC
     dimension: X1
     layer: meta
@@ -830,10 +710,6 @@ gac:
     adr: ADR-0120
     enforcement: advisory
     source_ref: bin/gac/x2-freshness-check.py
-    owner: governance-team
-    expected: Check CR-X1-FRESHNESS-SEMANTIC must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-L0-MATRIX-PORT-CONSISTENCY
     dimension: X4
     layer: meta
@@ -852,10 +728,6 @@ gac:
     adr: ADR-0120
     enforcement: advisory
     source_ref: protocols/port-registry.yaml
-    owner: governance-team
-    expected: SSOT references in markdown must point to valid files
-    remediation: Fix or remove broken SSOT reference
-    related_runbooks: []
   - id: CR-L0-MATRIX-LAUNCHD-COVERAGE
     dimension: X4
     layer: meta
@@ -873,10 +745,6 @@ gac:
     adr: ADR-0120
     enforcement: advisory
     source_ref: protocols/port-registry.yaml
-    owner: ecos-team
-    expected: SSOT references in markdown must point to valid files
-    remediation: Fix or remove broken SSOT reference
-    related_runbooks: []
   - id: CR-L0-SSOT-PATH-NORM
     dimension: X4
     layer: meta
@@ -895,10 +763,6 @@ gac:
     adr: ADR-0121
     enforcement: advisory
     source_ref: .omo/standards/ssot-path-norm.md
-    owner: ecos-team
-    expected: SSOT references in markdown must point to valid files
-    remediation: Fix or remove broken SSOT reference
-    related_runbooks: []
   - id: CR-META-CI-SKIP-MATRIX
     dimension: X4
     layer: meta
@@ -917,10 +781,6 @@ gac:
     adr: ADR-0121
     enforcement: advisory
     source_ref: .omo/_truth/registry/ci-skip-matrix.yaml
-    owner: metaos-team
-    expected: Registry files must be valid YAML and match schema
-    remediation: Fix YAML syntax or update registry entry to match schema
-    related_runbooks: []
   - id: CR-X4-TEST-COVERAGE
     dimension: X3
     layer: L2
@@ -937,10 +797,6 @@ gac:
     adr: ADR-0171
     enforcement: advisory
     source_ref: tests/
-    owner: governance-team
-    expected: Test coverage must meet project thresholds
-    remediation: Add tests for uncovered code or adjust coverage threshold
-    related_runbooks: []
   - id: CR-X4-ADR-LINKS
     dimension: X3
     layer: L2
@@ -957,10 +813,6 @@ gac:
     adr: ADR-0053
     enforcement: advisory
     source_ref: .omo/_knowledge/decisions/INDEX.md
-    owner: governance-team
-    expected: Documents must have valid frontmatter and lifecycle metadata
-    remediation: 'Add or fix frontmatter: status, type, owner, lifecycle, last-reviewed'
-    related_runbooks: []
   - id: CR-X3-L1-HEALTH-COST
     dimension: X3
     layer: L1
@@ -977,10 +829,6 @@ gac:
     adr: ADR-0157
     enforcement: advisory
     source_ref: docs/plans/health-cost-analysis.md
-    owner: governance-team
-    expected: Check CR-X3-L1-HEALTH-COST must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-L1-PORT-CONSOLIDATION
     dimension: X3
     layer: L1
@@ -997,10 +845,6 @@ gac:
     adr: ADR-0157
     enforcement: advisory
     source_ref: docs/plans/port-consolidation.md
-    owner: runtime-team
-    expected: Check CR-X3-L1-PORT-CONSOLIDATION must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-L3-COCKPIT-LATENCY
     dimension: X3
     layer: L3
@@ -1017,10 +861,6 @@ gac:
     adr: ADR-0157
     enforcement: advisory
     source_ref: docs/plans/cockpit-latency.md
-    owner: cockpit-team
-    expected: Check CR-X3-L3-COCKPIT-LATENCY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-L3-COCKPIT-COVERAGE
     dimension: X3
     layer: L3
@@ -1037,10 +877,6 @@ gac:
     adr: ADR-0157
     enforcement: advisory
     source_ref: docs/plans/cockpit-coverage.md
-    owner: cockpit-team
-    expected: Check CR-X3-L3-COCKPIT-COVERAGE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-L2-TEST-ROI
     dimension: X3
     layer: L2
@@ -1057,10 +893,6 @@ gac:
     adr: ADR-0171
     enforcement: advisory
     source_ref: docs/plans/test-roi.md
-    owner: governance-team
-    expected: Check CR-X3-L2-TEST-ROI must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-L2-DEBT-VELOCITY
     dimension: X3
     layer: L2
@@ -1077,10 +909,6 @@ gac:
     adr: ADR-0106
     enforcement: advisory
     source_ref: docs/plans/debt-velocity.md
-    owner: governance-team
-    expected: Check CR-X3-L2-DEBT-VELOCITY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-L2-MYPY-CLEAN
     dimension: X3
     layer: L2
@@ -1097,10 +925,6 @@ gac:
     adr: ADR-0171
     enforcement: advisory
     source_ref: docs/plans/mypy-clean.md
-    owner: governance-team
-    expected: Check CR-X3-L2-MYPY-CLEAN must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-L2-LINT-CLEAN
     dimension: X3
     layer: L2
@@ -1117,10 +941,6 @@ gac:
     adr: ADR-0171
     enforcement: advisory
     source_ref: docs/plans/lint-clean.md
-    owner: governance-team
-    expected: Check CR-X3-L2-LINT-CLEAN must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-I0-AGORA-UPTIME
     dimension: X3
     layer: I0
@@ -1137,10 +957,6 @@ gac:
     adr: ADR-0157
     enforcement: advisory
     source_ref: docs/plans/agora-uptime.md
-    owner: agora-team
-    expected: Check CR-X3-I0-AGORA-UPTIME must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-I0-MCP-COVERAGE
     dimension: X3
     layer: I0
@@ -1157,10 +973,6 @@ gac:
     adr: ADR-0157
     enforcement: advisory
     source_ref: docs/plans/mcp-coverage.md
-    owner: agora-team
-    expected: Check CR-X3-I0-MCP-COVERAGE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-L0-DOC-SSOT
     dimension: X3
     layer: L0
@@ -1177,10 +989,6 @@ gac:
     adr: ADR-0053
     enforcement: advisory
     source_ref: .omo/standards/doc-ssot-contract.md
-    owner: ecos-team
-    expected: Check CR-X3-L0-DOC-SSOT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-L0-GAC-COVERAGE
     dimension: X3
     layer: L0
@@ -1197,10 +1005,6 @@ gac:
     adr: ADR-0121
     enforcement: advisory
     source_ref: bin/gac/gac-drift.py
-    owner: governance-team
-    expected: Check CR-X3-L0-GAC-COVERAGE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-X-DEBT-SCORING
     dimension: X3
     layer: X
@@ -1217,10 +1021,6 @@ gac:
     adr: ADR-0157
     enforcement: advisory
     source_ref: docs/plans/debt-scoring.md
-    owner: omo-team
-    expected: Check CR-X3-X-DEBT-SCORING must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-X-OBSERVABILITY
     dimension: X3
     layer: X
@@ -1237,10 +1037,6 @@ gac:
     adr: ADR-0157
     enforcement: advisory
     source_ref: docs/plans/observability.md
-    owner: observability-team
-    expected: Check CR-X3-X-OBSERVABILITY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-X-SUBMODULE-FRESH
     dimension: X3
     layer: X
@@ -1257,10 +1053,6 @@ gac:
     adr: ADR-0151
     enforcement: advisory
     source_ref: docs/plans/submodule-fresh.md
-    owner: governance-team
-    expected: Check CR-X3-X-SUBMODULE-FRESH must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-L4-DOMAIN-REGISTRY-FRESHNESS
     dimension: X2
     layer: L4
@@ -1277,18 +1069,8 @@ gac:
     adr: ADR-0114
     enforcement: advisory
     source_ref: protocols/port-registry.yaml
-    owner: governance-team
-    expected: Check CR-L4-DOMAIN-REGISTRY-FRESHNESS must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X4-MOF-CAPABILITIES-DRIFT
-    relates_to:
-    - CR-X4-METAOS-REGISTRY-DRIFT
-    - CR-X4-DOC-CLAIMS
-    - CR-LAYER-CALL-DIRECTION
-    - CR-P77-3-2-PREFIX-PATTERN
-    - CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
-    - CR-X4-MCPTOOL-IMPL-DRIFT
+    relates_to: ['CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     source_type: native
     source_ref: bin/mof/check-mof-capabilities-drift.py
     dimension: X4
@@ -1302,18 +1084,8 @@ gac:
     created_at: '2026-07-25'
     adr: ADR-0238
     target: projects/*/src/**
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-X4-METAOS-REGISTRY-DRIFT
-    relates_to:
-    - CR-X4-MOF-CAPABILITIES-DRIFT
-    - CR-X4-DOC-CLAIMS
-    - CR-LAYER-CALL-DIRECTION
-    - CR-P77-3-2-PREFIX-PATTERN
-    - CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
-    - CR-X4-MCPTOOL-IMPL-DRIFT
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     source_type: native
     source_ref: bin/mof/check-mof-capabilities-drift.py
     dimension: X4
@@ -1327,18 +1099,8 @@ gac:
     created_at: '2026-07-26'
     adr: ADR-0242
     target: projects/*/src/**
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-X4-DOC-CLAIMS
-    relates_to:
-    - CR-X4-MOF-CAPABILITIES-DRIFT
-    - CR-X4-METAOS-REGISTRY-DRIFT
-    - CR-LAYER-CALL-DIRECTION
-    - CR-P77-3-2-PREFIX-PATTERN
-    - CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
-    - CR-X4-MCPTOOL-IMPL-DRIFT
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     source_type: native
     source_ref: bin/mof/check-doc-claims.py
     dimension: X4
@@ -1352,10 +1114,6 @@ gac:
     created_at: '2026-07-26'
     adr: ADR-0242
     target: projects/*/src/**
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-M4-BOOTSTRAP-REFLEX
     dimension: X1
     layer: meta
@@ -1373,10 +1131,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-06'
     adr: ADR-0152
-    owner: ecos-team
-    expected: Check CR-M4-BOOTSTRAP-REFLEX must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-M4-HEALTH-SCORE
     dimension: X2
     layer: meta
@@ -1394,10 +1148,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-06'
     adr: ADR-0152
-    owner: governance-team
-    expected: Check CR-M4-HEALTH-SCORE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-M4-SUBMODULE-HYGIENE
     dimension: X1
     layer: meta
@@ -1415,10 +1165,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-06'
     adr: ADR-0152
-    owner: governance-team
-    expected: Check CR-M4-SUBMODULE-HYGIENE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-M4-MCPTOOL-INTEGRITY
     dimension: X4
     layer: L0
@@ -1435,10 +1181,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-06'
     adr: ADR-0152
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-M4-DERIVED-PLANE-AUDIT
     dimension: X1
     layer: meta
@@ -1456,19 +1198,8 @@ gac:
     version: 1.0.0
     created_at: '2026-07-06'
     adr: ADR-0152
-    owner: governance-team
-    expected: projects/ecos/.omo/_derived/ is the unique source of truth; no markdown
-      or other file may duplicate this value
-    remediation: Remove duplicated value from markdown; reference the SSOT file instead
-    related_runbooks: []
   - id: CR-LAYER-CALL-DIRECTION
-    relates_to:
-    - CR-X4-MOF-CAPABILITIES-DRIFT
-    - CR-X4-METAOS-REGISTRY-DRIFT
-    - CR-X4-DOC-CLAIMS
-    - CR-P77-3-2-PREFIX-PATTERN
-    - CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
-    - CR-X4-MCPTOOL-IMPL-DRIFT
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     dimension: X4
     layer: meta
     name: 分层调用方向契约
@@ -1488,10 +1219,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0156
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-META-METRIC-DEBT-FEATURE
     dimension: X2
     layer: meta
@@ -1510,10 +1237,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0157
-    owner: metaos-team
-    expected: Check CR-META-METRIC-DEBT-FEATURE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-SUBMODULE-BUMP-AUTO
     dimension: X2
     layer: meta
@@ -1537,10 +1260,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0158
-    owner: governance-team
-    expected: Check CR-SUBMODULE-BUMP-AUTO must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X-PROMOTION-LIFECYCLE
     dimension: X2
     layer: X
@@ -1565,10 +1284,6 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0158
     source_ref: .omo/_truth/registry/governance-checks.yaml
-    owner: governance-team
-    expected: Check CR-X-PROMOTION-LIFECYCLE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-FOUNDRY-MONITOR
     dimension: X2
     layer: meta
@@ -1593,10 +1308,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0160
-    owner: runtime-team
-    expected: Check CR-FOUNDRY-MONITOR must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-COMMIT-LLM-ASSIST
     dimension: X2
     layer: meta
@@ -1623,10 +1334,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0161
-    owner: aetherforge-team
-    expected: Check CR-COMMIT-LLM-ASSIST must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-CROSS-REPO-CONSISTENT
     dimension: X4
     layer: meta
@@ -1654,10 +1361,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0164
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-PRINCIPLE-FOLLOWED
     dimension: X1
     layer: meta
@@ -1681,11 +1384,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0165
-    owner: omo-team
-    expected: .omo/standards/p76-principles.md is the unique source of truth; no markdown
-      or other file may duplicate this value
-    remediation: Remove duplicated value from markdown; reference the SSOT file instead
-    related_runbooks: []
   - id: CR-EVIDENCE-DECLARED
     dimension: X2
     layer: meta
@@ -1706,10 +1404,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0165
-    owner: governance-team
-    expected: Check CR-EVIDENCE-DECLARED must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-PR-CHECKLIST-COMPLETE
     dimension: X2
     layer: meta
@@ -1730,10 +1424,6 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0165
     source_ref: bin/gac/check-pr-description.py
-    owner: governance-team
-    expected: Check CR-PR-CHECKLIST-COMPLETE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-CROSS-REPO-CHECK
     dimension: X4
     layer: meta
@@ -1764,10 +1454,6 @@ gac:
     - CR-CROSS-REPO-CONSISTENT
     - .omo/_knowledge/decisions/0165-p77-phase2-evolution-guardrails.md
     - .omo/_knowledge/decisions/0166-p77-phase3-cross-repo-remediation.md
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-BASELINE-REPLAYED
     dimension: X2
     layer: meta
@@ -1789,10 +1475,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0165
-    owner: omo-team
-    expected: Check CR-BASELINE-REPLAYED must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-HARDCODED-PORT
     dimension: X4
     layer: meta
@@ -1835,10 +1517,6 @@ gac:
     - .omo/_knowledge/decisions/0167-p77-phase4-port-registry-consistency.md
     - .omo/_knowledge/decisions/0166-p77-phase3-cross-repo-remediation.md
     - CR-ENV-VAR-PORT
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-COMMIT-ASSIST-E2E
     dimension: X4
     layer: meta
@@ -1867,10 +1545,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0169
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-ENV-VAR-PORT
     dimension: X4
     layer: meta
@@ -1895,10 +1569,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-07'
     adr: ADR-0170
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-DEPRECATED-PORT
     dimension: X4
     layer: meta
@@ -1921,10 +1591,6 @@ gac:
     version: 1.0.0
     created_at: '2026-07-08'
     adr: ADR-0172
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-SEC-YAML-BYPASS
     dimension: X1
     layer: L2
@@ -1942,10 +1608,6 @@ gac:
     source_type: native
     enforcement: required
     source_ref: bin/ssot/check-yaml-bypass.py
-    owner: omo-team
-    expected: Check CR-SEC-YAML-BYPASS must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-SEC-SENSITIVE-WRITE
     dimension: X1
     layer: L2
@@ -1963,10 +1625,6 @@ gac:
     source_type: native
     enforcement: required
     source_ref: bin/ssot/check-sensitive-write.py
-    owner: governance-team
-    expected: Check CR-SEC-SENSITIVE-WRITE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X2-GOD-MODULE-EDIT
     dimension: X1
     layer: L2
@@ -1984,10 +1642,6 @@ gac:
     source_type: native
     enforcement: required
     source_ref: bin/gac/check-god-module.py
-    owner: omo-team
-    expected: Check CR-X2-GOD-MODULE-EDIT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-SEC-EVAL-EXEC
     dimension: X1
     layer: L2
@@ -2005,10 +1659,6 @@ gac:
     source_type: native
     enforcement: required
     source_ref: bin/ssot/check-eval-exec.py
-    owner: governance-team
-    expected: Check CR-SEC-EVAL-EXEC must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-PY-MUTABLE-DEFAULT
     dimension: X1
     layer: L2
@@ -2026,18 +1676,8 @@ gac:
     source_type: native
     enforcement: required
     source_ref: bin/ssot/check-mutable-default.py
-    owner: governance-team
-    expected: Check CR-PY-MUTABLE-DEFAULT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-PR-DESCRIPTION-NON-EMPTY
-    relates_to:
-    - CR-PRINCIPLE-ENFORCEMENT
-    - CR-P79-3-FOUNDRY-DECK
-    - CR-P79-4-CATALOG-HEALTH-METRIC
-    - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
-    - CR-P76-7-5-RESOLVE-NOT-STUB
-    - CR-X1-EXTERNAL-AGENT-AUDIT
+    relates_to: ['CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-3-FOUNDRY-DECK', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-P76-7-5-RESOLVE-NOT-STUB', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: PR 描述非空
@@ -2056,18 +1696,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-pr-description.py
     target: .omo/_truth/registry/**
-    owner: governance-team
-    expected: Check CR-PR-DESCRIPTION-NON-EMPTY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-PRINCIPLE-ENFORCEMENT
-    relates_to:
-    - CR-PR-DESCRIPTION-NON-EMPTY
-    - CR-P79-3-FOUNDRY-DECK
-    - CR-P79-4-CATALOG-HEALTH-METRIC
-    - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
-    - CR-P76-7-5-RESOLVE-NOT-STUB
-    - CR-X1-EXTERNAL-AGENT-AUDIT
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-P79-3-FOUNDRY-DECK', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-P76-7-5-RESOLVE-NOT-STUB', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: 原则执行化
@@ -2087,10 +1717,6 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-principle-enforcement.py
     target: .omo/_truth/registry/**
-    owner: governance-team
-    expected: Check CR-PRINCIPLE-ENFORCEMENT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-SUBMODULE-REWIND
     dimension: X1
     layer: meta
@@ -2108,10 +1734,6 @@ gac:
     version: 1.0.0
     created_at: '2026-08-06'
     adr: ADR-0380
-    owner: governance-team
-    expected: Check CR-SUBMODULE-REWIND must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P76-6-5-LLM-DEFERRAL
     dimension: X1
     layer: meta
@@ -2128,10 +1750,6 @@ gac:
     created_at: 2026-07-08
     adr: ADR-0158
     source_type: native
-    owner: governance-team
-    expected: Check CR-P76-6-5-LLM-DEFERRAL must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P77-2-1-PRINCIPLE-FORMALIZATION
     dimension: X1
     layer: meta
@@ -2149,10 +1767,6 @@ gac:
     created_at: 2026-07-08
     adr: ADR-0165
     source_type: native
-    owner: governance-team
-    expected: Check CR-P77-2-1-PRINCIPLE-FORMALIZATION must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P77-2-2-CATALOG-SSOT
     dimension: X1
     layer: meta
@@ -2170,18 +1784,8 @@ gac:
     created_at: 2026-07-08
     adr: ADR-0165
     source_type: native
-    owner: governance-team
-    expected: Check CR-P77-2-2-CATALOG-SSOT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P77-3-2-PREFIX-PATTERN
-    relates_to:
-    - CR-X4-MOF-CAPABILITIES-DRIFT
-    - CR-X4-METAOS-REGISTRY-DRIFT
-    - CR-X4-DOC-CLAIMS
-    - CR-LAYER-CALL-DIRECTION
-    - CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
-    - CR-X4-MCPTOOL-IMPL-DRIFT
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     dimension: X4
     layer: X
     name: URI 前缀模式
@@ -2200,14 +1804,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-uri-prefix-pattern.py
     target: projects/*/src/**
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-P77-6-2-TIER-FALLBACK-TEST
-    relates_to:
-    - CR-P77-6-3-GATEWAY-STATUS-DOC
-    - CR-WORKORDER-SCHEMA
+    relates_to: ['CR-P77-6-3-GATEWAY-STATUS-DOC', 'CR-WORKORDER-SCHEMA']
     dimension: X2
     layer: meta
     name: 层级 fallback 测试
@@ -2226,14 +1824,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-fallback-test-coverage.py
     target: .omo/**/*.yaml
-    owner: governance-team
-    expected: Check CR-P77-6-2-TIER-FALLBACK-TEST must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P77-6-3-GATEWAY-STATUS-DOC
-    relates_to:
-    - CR-P77-6-2-TIER-FALLBACK-TEST
-    - CR-WORKORDER-SCHEMA
+    relates_to: ['CR-P77-6-2-TIER-FALLBACK-TEST', 'CR-WORKORDER-SCHEMA']
     dimension: X2
     layer: meta
     name: Gateway 状态文档化
@@ -2252,18 +1844,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-gateway-status-doc.py
     target: .omo/**/*.yaml
-    owner: governance-team
-    expected: Check CR-P77-6-3-GATEWAY-STATUS-DOC must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P79-3-FOUNDRY-DECK
-    relates_to:
-    - CR-PR-DESCRIPTION-NON-EMPTY
-    - CR-PRINCIPLE-ENFORCEMENT
-    - CR-P79-4-CATALOG-HEALTH-METRIC
-    - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
-    - CR-P76-7-5-RESOLVE-NOT-STUB
-    - CR-X1-EXTERNAL-AGENT-AUDIT
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-P76-7-5-RESOLVE-NOT-STUB', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: 治理轴 Foundry Deck
@@ -2283,18 +1865,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-foundry-deck-coverage.py
     target: .omo/_truth/registry/**
-    owner: governance-team
-    expected: Check CR-P79-3-FOUNDRY-DECK must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P79-4-CATALOG-HEALTH-METRIC
-    relates_to:
-    - CR-PR-DESCRIPTION-NON-EMPTY
-    - CR-PRINCIPLE-ENFORCEMENT
-    - CR-P79-3-FOUNDRY-DECK
-    - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
-    - CR-P76-7-5-RESOLVE-NOT-STUB
-    - CR-X1-EXTERNAL-AGENT-AUDIT
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-3-FOUNDRY-DECK', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-P76-7-5-RESOLVE-NOT-STUB', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: Catalog 健康指标
@@ -2314,24 +1886,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-catalog-health.py
     target: .omo/_truth/registry/**
-    owner: governance-team
-    expected: Check CR-P79-4-CATALOG-HEALTH-METRIC must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P76-7-1-LLM-ADVISORY-ONLY
-    relates_to:
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: LLM 建议不自动
@@ -2350,10 +1906,6 @@ gac:
     enforcement: required
     source_ref: bin/gac/check-llm-advisory-only.py
     target: projects/*/**
-    owner: governance-team
-    expected: Check CR-P76-7-1-LLM-ADVISORY-ONLY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P76-7-2-TIER-GRACEFUL-FALLBACK
     dimension: X1
     layer: meta
@@ -2372,18 +1924,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-llm-tier-fallback.py
     target: .omo/**/*.yaml
-    owner: aetherforge-team
-    expected: Check CR-P76-7-2-TIER-GRACEFUL-FALLBACK must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
-    relates_to:
-    - CR-PR-DESCRIPTION-NON-EMPTY
-    - CR-PRINCIPLE-ENFORCEMENT
-    - CR-P79-3-FOUNDRY-DECK
-    - CR-P79-4-CATALOG-HEALTH-METRIC
-    - CR-P76-7-5-RESOLVE-NOT-STUB
-    - CR-X1-EXTERNAL-AGENT-AUDIT
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-3-FOUNDRY-DECK', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-5-RESOLVE-NOT-STUB', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: 任务关闭需真证据
@@ -2403,18 +1945,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-evidence-honest-closure.py
     target: .omo/_truth/registry/**
-    owner: governance-team
-    expected: Check CR-P76-7-4-EVIDENCE-HONEST-CLOSURE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P76-7-5-RESOLVE-NOT-STUB
-    relates_to:
-    - CR-PR-DESCRIPTION-NON-EMPTY
-    - CR-PRINCIPLE-ENFORCEMENT
-    - CR-P79-3-FOUNDRY-DECK
-    - CR-P79-4-CATALOG-HEALTH-METRIC
-    - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
-    - CR-X1-EXTERNAL-AGENT-AUDIT
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-3-FOUNDRY-DECK', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-X1-EXTERNAL-AGENT-AUDIT']
     dimension: X1
     layer: meta
     name: 物理实现不占位
@@ -2433,24 +1965,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-resolve-not-stub.py
     target: .omo/_truth/registry/**
-    owner: governance-team
-    expected: Check CR-P76-7-5-RESOLVE-NOT-STUB must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 子模块 PR 独立
@@ -2469,18 +1985,8 @@ gac:
     enforcement: required
     source_ref: bin/gac/check-submodule-pr-independent.py
     target: projects/*/**
-    owner: governance-team
-    expected: Check CR-P76-8-1-SUBMODULE-PR-INDEPENDENT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
-    relates_to:
-    - CR-X4-MOF-CAPABILITIES-DRIFT
-    - CR-X4-METAOS-REGISTRY-DRIFT
-    - CR-X4-DOC-CLAIMS
-    - CR-LAYER-CALL-DIRECTION
-    - CR-P77-3-2-PREFIX-PATTERN
-    - CR-X4-MCPTOOL-IMPL-DRIFT
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-X4-MCPTOOL-IMPL-DRIFT']
     dimension: X4
     layer: meta
     name: 工具双路 fallback
@@ -2498,24 +2004,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-dead-path-tool-fallback.py
     target: projects/*/src/**
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-P76-8-4-INCREMENTAL-COMMIT
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 增量提交防丢失
@@ -2534,24 +2024,8 @@ gac:
     enforcement: required
     source_ref: bin/gac/check-incremental-commit.py
     target: projects/*/**
-    owner: governance-team
-    expected: Check CR-P76-8-4-INCREMENTAL-COMMIT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-P76-9A-4-HEURISTIC-DEFAULT
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 本地启发式默认
@@ -2570,10 +2044,6 @@ gac:
     enforcement: required
     source_ref: bin/gac/check-heuristic-default.py
     target: projects/*/**
-    owner: governance-team
-    expected: Check CR-P76-9A-4-HEURISTIC-DEFAULT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-RUFF-SCOPE-STABLE
     dimension: X4
     layer: X
@@ -2592,24 +2062,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-ruff-scope-stable.py
     target: .omo/**/*.yaml
-    owner: governance-team
-    expected: Check CR-RUFF-SCOPE-STABLE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-WORKTREE-CLEAN-BEFORE-PR
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: Worktree 清理
@@ -2627,13 +2081,8 @@ gac:
     enforcement: advisory
     target: projects/*/**
     source_ref: bin/gac/gac-worktree-guard.sh
-    owner: governance-team
-    expected: Check CR-WORKTREE-CLEAN-BEFORE-PR must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-L0-CONSTRAINTS-SSOT
-    relates_to:
-    - CR-X4-CONSISTENCY-SSOT
+    relates_to: ['CR-X4-CONSISTENCY-SSOT']
     source_type: indexed
     source_ref: projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
     dimension: X4
@@ -2654,13 +2103,8 @@ gac:
     adr: ADR-0106
     enforcement: required
     target: docs/**
-    owner: ecos-team
-    expected: Check CR-L0-CONSTRAINTS-SSOT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X1-POLICIES-SSOT
-    relates_to:
-    - CR-CI-SURFACE-SSOT
+    relates_to: ['CR-CI-SURFACE-SSOT']
     source_type: indexed
     source_ref: .omo/_truth/x1-governance-policies.yaml::policies
     dimension: X1
@@ -2679,10 +2123,6 @@ gac:
     adr: ADR-0106
     enforcement: advisory
     target: docs/**
-    owner: governance-team
-    expected: Check CR-X1-POLICIES-SSOT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X2-FRESHNESS-SSOT
     source_type: indexed
     source_ref: .omo/_truth/x2-freshness-rules.yaml::rules
@@ -2703,13 +2143,8 @@ gac:
     adr: ADR-0106
     enforcement: advisory
     target: docs/**
-    owner: governance-team
-    expected: Check CR-X2-FRESHNESS-SSOT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X4-CONSISTENCY-SSOT
-    relates_to:
-    - CR-L0-CONSTRAINTS-SSOT
+    relates_to: ['CR-L0-CONSTRAINTS-SSOT']
     source_type: indexed
     source_ref: .omo/_truth/x4-consistency-rules.yaml::rules
     dimension: X4
@@ -2729,18 +2164,8 @@ gac:
     adr: ADR-0106
     enforcement: required
     target: docs/**
-    owner: governance-team
-    expected: Check CR-X4-CONSISTENCY-SSOT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X4-MCPTOOL-IMPL-DRIFT
-    relates_to:
-    - CR-X4-MOF-CAPABILITIES-DRIFT
-    - CR-X4-METAOS-REGISTRY-DRIFT
-    - CR-X4-DOC-CLAIMS
-    - CR-LAYER-CALL-DIRECTION
-    - CR-P77-3-2-PREFIX-PATTERN
-    - CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
+    relates_to: ['CR-X4-MOF-CAPABILITIES-DRIFT', 'CR-X4-METAOS-REGISTRY-DRIFT', 'CR-X4-DOC-CLAIMS', 'CR-LAYER-CALL-DIRECTION', 'CR-P77-3-2-PREFIX-PATTERN', 'CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK']
     source_type: indexed
     source_ref: bin/ssot/check-mcptool-impl-drift.py
     dimension: X4
@@ -2755,24 +2180,8 @@ gac:
     created_at: '2026-07-06'
     adr: ADR-0106
     target: projects/*/src/**
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-X4-SUBMODULE-POINTER-INTEGRITY
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 子模块指针完整性
@@ -2791,24 +2200,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-submodule-pointer-integrity.py
     target: projects/*/**
-    owner: governance-team
-    expected: Check CR-X4-SUBMODULE-POINTER-INTEGRITY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X4-MESH-EXECUTOR-RELIABILITY
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: Mesh executor 可靠性
@@ -2827,24 +2220,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-mesh-executor-reliability.py
     target: projects/*/**
-    owner: governance-team
-    expected: Check CR-X4-MESH-EXECUTOR-RELIABILITY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: Memory-OS surface 一致性
@@ -2863,18 +2240,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-memory-os-surfaces.py
     target: projects/*/**
-    owner: governance-team
-    expected: Check CR-X4-MEMORY-OS-SURFACE-INTEGRITY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X1-EXTERNAL-AGENT-AUDIT
-    relates_to:
-    - CR-PR-DESCRIPTION-NON-EMPTY
-    - CR-PRINCIPLE-ENFORCEMENT
-    - CR-P79-3-FOUNDRY-DECK
-    - CR-P79-4-CATALOG-HEALTH-METRIC
-    - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
-    - CR-P76-7-5-RESOLVE-NOT-STUB
+    relates_to: ['CR-PR-DESCRIPTION-NON-EMPTY', 'CR-PRINCIPLE-ENFORCEMENT', 'CR-P79-3-FOUNDRY-DECK', 'CR-P79-4-CATALOG-HEALTH-METRIC', 'CR-P76-7-4-EVIDENCE-HONEST-CLOSURE', 'CR-P76-7-5-RESOLVE-NOT-STUB']
     dimension: X1
     layer: meta
     name: 外部 agent 接入审计
@@ -2894,24 +2261,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-external-agent-audit.py
     target: .omo/_truth/registry/**
-    owner: governance-team
-    expected: Check CR-X1-EXTERNAL-AGENT-AUDIT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X4-SWEEP-TOOL-INTEGRITY
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: Sweep 工具完整性
@@ -2929,10 +2280,6 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-sweep-tool-integrity.py
     target: projects/*/**
-    owner: governance-team
-    expected: Check CR-X4-SWEEP-TOOL-INTEGRITY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X4-MESH-ROUTING-CONSISTENCY
     dimension: X4
     layer: meta
@@ -2951,17 +2298,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-mesh-routing-consistency.py
     target: projects/agora/etc/**
-    owner: governance-team
-    expected: Check CR-X4-MESH-ROUTING-CONSISTENCY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X2-PROJECT-HEALTH-FRESHNESS
-    relates_to:
-    - CR-X2-DOC-FRESHNESS-GATE
-    - CR-X2-METRIC-TREND
-    - CR-GOVERNANCE-RATIO
-    - CR-X2-EVIDENCE-FRESHNESS
-    - CR-X2-GOVERNANCE-TREND
+    relates_to: ['CR-X2-DOC-FRESHNESS-GATE', 'CR-X2-METRIC-TREND', 'CR-GOVERNANCE-RATIO', 'CR-X2-EVIDENCE-FRESHNESS', 'CR-X2-GOVERNANCE-TREND']
     dimension: X2
     layer: meta
     name: 项目健康分新鲜度
@@ -2979,16 +2317,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-project-health-freshness.py
     target: docs/**/*.md
-    owner: governance-team
-    expected: Check CR-X2-PROJECT-HEALTH-FRESHNESS must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-DELIVERY-VALUE-GATE
-    relates_to:
-    - CR-X3-DELIVERY-CADENCE
-    - CR-X3-L2-DELIVERY-VALUE
-    - CR-X3-X-SLA-ACHIEVEMENT
-    - CR-X3-M4-HEALTH-TREND
+    relates_to: ['CR-X3-DELIVERY-CADENCE', 'CR-X3-L2-DELIVERY-VALUE', 'CR-X3-X-SLA-ACHIEVEMENT', 'CR-X3-M4-HEALTH-TREND']
     dimension: X3
     layer: meta
     name: 交付 X3 价值门禁
@@ -3006,10 +2336,6 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-delivery-value-gate.py
     target: docs/plans/**
-    owner: governance-team
-    expected: Check CR-X3-DELIVERY-VALUE-GATE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-SWEEP-INDEX-AUTO
     dimension: X4
     layer: meta
@@ -3033,16 +2359,8 @@ gac:
     version: 1.0.0
     created_at: '2026-08-05'
     adr: ADR-0373
-    owner: governance-team
-    expected: No unexplained drift between declared and actual state
-    remediation: Align declared state with actual state; update SSOT or code
-    related_runbooks: []
   - id: CR-X3-DELIVERY-CADENCE
-    relates_to:
-    - CR-X3-DELIVERY-VALUE-GATE
-    - CR-X3-L2-DELIVERY-VALUE
-    - CR-X3-X-SLA-ACHIEVEMENT
-    - CR-X3-M4-HEALTH-TREND
+    relates_to: ['CR-X3-DELIVERY-VALUE-GATE', 'CR-X3-L2-DELIVERY-VALUE', 'CR-X3-X-SLA-ACHIEVEMENT', 'CR-X3-M4-HEALTH-TREND']
     dimension: X3
     layer: meta
     name: PR 交付节奏
@@ -3060,24 +2378,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-delivery-cadence.py
     target: docs/plans/**
-    owner: governance-team
-    expected: Check CR-X3-DELIVERY-CADENCE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X-META-HEALTH
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: GaC 治理系统自检
@@ -3095,17 +2397,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-meta-health.py
     target: projects/*/**
-    owner: governance-team
-    expected: Check CR-X-META-HEALTH must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X2-DOC-FRESHNESS-GATE
-    relates_to:
-    - CR-X2-PROJECT-HEALTH-FRESHNESS
-    - CR-X2-METRIC-TREND
-    - CR-GOVERNANCE-RATIO
-    - CR-X2-EVIDENCE-FRESHNESS
-    - CR-X2-GOVERNANCE-TREND
+    relates_to: ['CR-X2-PROJECT-HEALTH-FRESHNESS', 'CR-X2-METRIC-TREND', 'CR-GOVERNANCE-RATIO', 'CR-X2-EVIDENCE-FRESHNESS', 'CR-X2-GOVERNANCE-TREND']
     dimension: X2
     layer: meta
     name: 文档新鲜度门禁
@@ -3123,17 +2416,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-doc-freshness-gate.py
     target: docs/**/*.md
-    owner: governance-team
-    expected: Check CR-X2-DOC-FRESHNESS-GATE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X2-METRIC-TREND
-    relates_to:
-    - CR-X2-PROJECT-HEALTH-FRESHNESS
-    - CR-X2-DOC-FRESHNESS-GATE
-    - CR-GOVERNANCE-RATIO
-    - CR-X2-EVIDENCE-FRESHNESS
-    - CR-X2-GOVERNANCE-TREND
+    relates_to: ['CR-X2-PROJECT-HEALTH-FRESHNESS', 'CR-X2-DOC-FRESHNESS-GATE', 'CR-GOVERNANCE-RATIO', 'CR-X2-EVIDENCE-FRESHNESS', 'CR-X2-GOVERNANCE-TREND']
     dimension: X2
     layer: meta
     name: 治理指标趋势
@@ -3151,13 +2435,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-metric-trend.py
     target: docs/**/*.md
-    owner: governance-team
-    expected: Check CR-X2-METRIC-TREND must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-CI-SURFACE-SSOT
-    relates_to:
-    - CR-X1-POLICIES-SSOT
+    relates_to: ['CR-X1-POLICIES-SSOT']
     source_type: indexed
     source_ref: .omo/_truth/registry/ci-surfaces.yaml::surfaces
     dimension: X1
@@ -3177,10 +2456,6 @@ gac:
     adr: ADR-0379
     enforcement: advisory
     target: docs/**
-    owner: governance-team
-    expected: Check CR-CI-SURFACE-SSOT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-SEVERITY-REGISTRY
     dimension: X2
     layer: meta
@@ -3199,13 +2474,8 @@ gac:
     enforcement: advisory
     target: .omo/_truth/registry/**
     source_ref: bin/gac/check-severity-registry.py
-    owner: governance-team
-    expected: Registry files must be valid YAML and match schema
-    remediation: Fix YAML syntax or update registry entry to match schema
-    related_runbooks: []
   - id: CR-WORK-LANDED
-    relates_to:
-    - CR-SILENT-LOSS
+    relates_to: ['CR-SILENT-LOSS']
     dimension: X2
     layer: meta
     name: 工作落地验证
@@ -3223,17 +2493,8 @@ gac:
     enforcement: advisory
     target: .omo/_truth/registry/governance-checks.yaml
     source_ref: bin/gac/check-work-landed.py
-    owner: governance-team
-    expected: Check CR-WORK-LANDED must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-GOVERNANCE-RATIO
-    relates_to:
-    - CR-X2-PROJECT-HEALTH-FRESHNESS
-    - CR-X2-DOC-FRESHNESS-GATE
-    - CR-X2-METRIC-TREND
-    - CR-X2-EVIDENCE-FRESHNESS
-    - CR-X2-GOVERNANCE-TREND
+    relates_to: ['CR-X2-PROJECT-HEALTH-FRESHNESS', 'CR-X2-DOC-FRESHNESS-GATE', 'CR-X2-METRIC-TREND', 'CR-X2-EVIDENCE-FRESHNESS', 'CR-X2-GOVERNANCE-TREND']
     dimension: X2
     layer: meta
     name: 治理比率监控
@@ -3251,24 +2512,8 @@ gac:
     enforcement: advisory
     target: docs/**/*.md
     source_ref: bin/gac/check-governance-ratio.py
-    owner: governance-team
-    expected: Check CR-GOVERNANCE-RATIO must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-REDLINE-COVERAGE
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-DUAL-TRACK-PURITY
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-DUAL-TRACK-PURITY', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 红线覆盖率
@@ -3286,14 +2531,8 @@ gac:
     enforcement: advisory
     target: projects/*/**
     source_ref: bin/gac/check-redline-coverage.py
-    owner: governance-team
-    expected: Check CR-REDLINE-COVERAGE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-WORKORDER-SCHEMA
-    relates_to:
-    - CR-P77-6-2-TIER-FALLBACK-TEST
-    - CR-P77-6-3-GATEWAY-STATUS-DOC
+    relates_to: ['CR-P77-6-2-TIER-FALLBACK-TEST', 'CR-P77-6-3-GATEWAY-STATUS-DOC']
     dimension: X2
     layer: meta
     name: 工单模式校验
@@ -3311,24 +2550,8 @@ gac:
     enforcement: advisory
     target: .omo/**/*.yaml
     source_ref: bin/gac/check-workorder-schema.py
-    owner: governance-team
-    expected: Check CR-WORKORDER-SCHEMA must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-DUAL-TRACK-PURITY
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-ADVERSARIAL-EFFECTIVENESS
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-ADVERSARIAL-EFFECTIVENESS']
     dimension: X4
     layer: meta
     name: 双轨纯度
@@ -3346,13 +2569,8 @@ gac:
     enforcement: advisory
     target: projects/*/**
     source_ref: bin/gac/check-dual-track-purity.py
-    owner: governance-team
-    expected: Check CR-DUAL-TRACK-PURITY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-SILENT-LOSS
-    relates_to:
-    - CR-WORK-LANDED
+    relates_to: ['CR-WORK-LANDED']
     dimension: X2
     layer: meta
     name: 静默丢失检测
@@ -3370,24 +2588,8 @@ gac:
     enforcement: advisory
     target: .omo/_truth/registry/governance-checks.yaml
     source_ref: bin/gac/check-silent-loss.py
-    owner: governance-team
-    expected: Check CR-SILENT-LOSS must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-ADVERSARIAL-EFFECTIVENESS
-    relates_to:
-    - CR-P76-7-1-LLM-ADVISORY-ONLY
-    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
-    - CR-P76-8-4-INCREMENTAL-COMMIT
-    - CR-P76-9A-4-HEURISTIC-DEFAULT
-    - CR-WORKTREE-CLEAN-BEFORE-PR
-    - CR-X4-SUBMODULE-POINTER-INTEGRITY
-    - CR-X4-MESH-EXECUTOR-RELIABILITY
-    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
-    - CR-X4-SWEEP-TOOL-INTEGRITY
-    - CR-X-META-HEALTH
-    - CR-REDLINE-COVERAGE
-    - CR-DUAL-TRACK-PURITY
+    relates_to: ['CR-P76-7-1-LLM-ADVISORY-ONLY', 'CR-P76-8-1-SUBMODULE-PR-INDEPENDENT', 'CR-P76-8-4-INCREMENTAL-COMMIT', 'CR-P76-9A-4-HEURISTIC-DEFAULT', 'CR-WORKTREE-CLEAN-BEFORE-PR', 'CR-X4-SUBMODULE-POINTER-INTEGRITY', 'CR-X4-MESH-EXECUTOR-RELIABILITY', 'CR-X4-MEMORY-OS-SURFACE-INTEGRITY', 'CR-X4-SWEEP-TOOL-INTEGRITY', 'CR-X-META-HEALTH', 'CR-REDLINE-COVERAGE', 'CR-DUAL-TRACK-PURITY']
     dimension: X4
     layer: meta
     name: 对抗有效性
@@ -3405,17 +2607,8 @@ gac:
     enforcement: advisory
     target: projects/*/**
     source_ref: bin/gac/check-adversarial-effectiveness.py
-    owner: governance-team
-    expected: Check CR-ADVERSARIAL-EFFECTIVENESS must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X2-EVIDENCE-FRESHNESS
-    relates_to:
-    - CR-X2-PROJECT-HEALTH-FRESHNESS
-    - CR-X2-DOC-FRESHNESS-GATE
-    - CR-X2-METRIC-TREND
-    - CR-GOVERNANCE-RATIO
-    - CR-X2-GOVERNANCE-TREND
+    relates_to: ['CR-X2-PROJECT-HEALTH-FRESHNESS', 'CR-X2-DOC-FRESHNESS-GATE', 'CR-X2-METRIC-TREND', 'CR-GOVERNANCE-RATIO', 'CR-X2-GOVERNANCE-TREND']
     dimension: X2
     layer: meta
     name: 证据新鲜度检查
@@ -3433,17 +2626,8 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-evidence-freshness.py
     target: docs/**/*.md
-    owner: governance-team
-    expected: Check CR-X2-EVIDENCE-FRESHNESS must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X2-GOVERNANCE-TREND
-    relates_to:
-    - CR-X2-PROJECT-HEALTH-FRESHNESS
-    - CR-X2-DOC-FRESHNESS-GATE
-    - CR-X2-METRIC-TREND
-    - CR-GOVERNANCE-RATIO
-    - CR-X2-EVIDENCE-FRESHNESS
+    relates_to: ['CR-X2-PROJECT-HEALTH-FRESHNESS', 'CR-X2-DOC-FRESHNESS-GATE', 'CR-X2-METRIC-TREND', 'CR-GOVERNANCE-RATIO', 'CR-X2-EVIDENCE-FRESHNESS']
     dimension: X2
     layer: meta
     name: 治理指标趋势检查
@@ -3461,10 +2645,6 @@ gac:
     enforcement: advisory
     source_ref: bin/gac/check-governance-trend.py
     target: docs/**/*.md
-    owner: governance-team
-    expected: Check CR-X2-GOVERNANCE-TREND must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-LLM-GATEWAY-ONLY
     source_type: native
     dimension: X2
@@ -3483,16 +2663,8 @@ gac:
     activated_at: '2026-08-06'
     adr: ADR-0380
     enforcement: advisory
-    owner: aetherforge-team
-    expected: Check CR-LLM-GATEWAY-ONLY must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-L2-DELIVERY-VALUE
-    relates_to:
-    - CR-X3-DELIVERY-VALUE-GATE
-    - CR-X3-DELIVERY-CADENCE
-    - CR-X3-X-SLA-ACHIEVEMENT
-    - CR-X3-M4-HEALTH-TREND
+    relates_to: ['CR-X3-DELIVERY-VALUE-GATE', 'CR-X3-DELIVERY-CADENCE', 'CR-X3-X-SLA-ACHIEVEMENT', 'CR-X3-M4-HEALTH-TREND']
     dimension: X3
     layer: L2
     name: 交付价值跟踪
@@ -3508,16 +2680,8 @@ gac:
     version: 1.0.0
     created_at: '2026-08-06'
     adr: ADR-0106
-    owner: governance-team
-    expected: Check CR-X3-L2-DELIVERY-VALUE must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-X-SLA-ACHIEVEMENT
-    relates_to:
-    - CR-X3-DELIVERY-VALUE-GATE
-    - CR-X3-DELIVERY-CADENCE
-    - CR-X3-L2-DELIVERY-VALUE
-    - CR-X3-M4-HEALTH-TREND
+    relates_to: ['CR-X3-DELIVERY-VALUE-GATE', 'CR-X3-DELIVERY-CADENCE', 'CR-X3-L2-DELIVERY-VALUE', 'CR-X3-M4-HEALTH-TREND']
     dimension: X3
     layer: X
     name: SLA 达成率监控
@@ -3533,16 +2697,8 @@ gac:
     version: 1.0.0
     created_at: '2026-08-06'
     adr: ADR-0106
-    owner: governance-team
-    expected: Check CR-X3-X-SLA-ACHIEVEMENT must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-X3-M4-HEALTH-TREND
-    relates_to:
-    - CR-X3-DELIVERY-VALUE-GATE
-    - CR-X3-DELIVERY-CADENCE
-    - CR-X3-L2-DELIVERY-VALUE
-    - CR-X3-X-SLA-ACHIEVEMENT
+    relates_to: ['CR-X3-DELIVERY-VALUE-GATE', 'CR-X3-DELIVERY-CADENCE', 'CR-X3-L2-DELIVERY-VALUE', 'CR-X3-X-SLA-ACHIEVEMENT']
     dimension: X3
     layer: meta
     name: M4 健康分趋势
@@ -3559,10 +2715,6 @@ gac:
     version: 1.0.0
     created_at: '2026-08-06'
     adr: ADR-0106
-    owner: governance-team
-    expected: Check CR-X3-M4-HEALTH-TREND must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-L4-DOCUMENTS-MIGRATION-COVERAGE
     dimension: X4
     layer: L4
@@ -3579,16 +2731,11 @@ gac:
     adr: ADR-0106
     source_type: native
     enforcement: required
-    owner: governance-team
-    expected: Registry files must be valid YAML and match schema
-    remediation: Fix YAML syntax or update registry entry to match schema
-    related_runbooks: []
   - id: CR-RESIDENT-STATUS-01
     dimension: X2
     layer: meta
     name: resident daemon 水位活性
-    description: resident 体系活性以 daemon 角色水位判断 (cron --once 下无常驻进程, 进程退出正常). 水位新鲜 ≤30min,
-      超阈值 → degraded. 排除订阅层 resident-sub.json 防误判. 对齐 L0 CR-RESIDENT-STATUS-01.
+    description: 'resident 体系活性以 daemon 角色水位判断 (cron --once 下无常驻进程, 进程退出正常). 水位新鲜 ≤30min, 超阈值 → degraded. 排除订阅层 resident-sub.json 防误判. 对齐 L0 CR-RESIDENT-STATUS-01.'
     check_type: freshness
     target: .omo/_delivery/resident-orchestrator/watermarks/resident-*.json
     source_ref: bin/gac/check-resident-status.py
@@ -3601,16 +2748,11 @@ gac:
     created_at: '2026-08-23'
     adr: ADR-0396
     enforcement: required
-    owner: ecos-team
-    expected: Check CR-RESIDENT-STATUS-01 must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-RESIDENT-MOF-SYNC-01
     dimension: X4
     layer: L0
     name: resident 角色双份对齐
-    description: resident 五类角色 (sediment/decision/execute/monitor/heartbeat) 必须同时注册在
-      roles.py (SSOT) 与 MOF m1 DigitalAgent (AGENT-RESIDENT-*), 零漂移. 对齐 L0 CR-RESIDENT-MOF-SYNC-01.
+    description: 'resident 五类角色 (sediment/decision/execute/monitor/heartbeat) 必须同时注册在 roles.py (SSOT) 与 MOF m1 DigitalAgent (AGENT-RESIDENT-*), 零漂移. 对齐 L0 CR-RESIDENT-MOF-SYNC-01.'
     check_type: drift_audit
     target: projects/omo/src/omo/resident/roles.py vs projects/ecos/src/ecos/ssot/mof/m1/agent/AGENT-RESIDENT-ROLES.yaml
     source_ref: bin/gac/check-resident-mof-sync.py
@@ -3623,16 +2765,11 @@ gac:
     created_at: '2026-08-23'
     adr: ADR-0396
     enforcement: required
-    owner: ecos-team
-    expected: Check CR-RESIDENT-MOF-SYNC-01 must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   - id: CR-RESIDENT-BOS-01
     dimension: X1
     layer: L2
     name: resident 接口 BOS 路由
-    description: resident 接口 (status/roles/daemon/decision/execute) 必须经 bos://resident/*
-      暴露, 禁止绕过 BOS 直连 resident 内部数据面 (events.jsonl / sediment / ledger). 对齐 L0 CR-RESIDENT-BOS-01.
+    description: 'resident 接口 (status/roles/daemon/decision/execute) 必须经 bos://resident/* 暴露, 禁止绕过 BOS 直连 resident 内部数据面 (events.jsonl / sediment / ledger). 对齐 L0 CR-RESIDENT-BOS-01.'
     check_type: bos_resolve
     target: projects/agora/etc/bos-services.yaml::bos://resident/*
     source_ref: bin/gac/check-resident-bos.py
@@ -3645,10 +2782,6 @@ gac:
     created_at: '2026-08-23'
     adr: ADR-0396
     enforcement: required
-    owner: ecos-team
-    expected: Check CR-RESIDENT-BOS-01 must pass without violations
-    remediation: Investigate check failure and apply targeted fix
-    related_runbooks: []
   drift:
     schedule: daily
     auto_heal: false
