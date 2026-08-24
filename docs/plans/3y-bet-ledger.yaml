@@ -7281,11 +7281,18 @@ bets:
   appetite: 0.5 day
   priority: P1
   status: done
+  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证) — 闭合 via #2129'
+  status: candidate
+  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证)'
+
   done_at: 2026-08-24
   note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证)'
   goal: '统一 health 报告 / maturity-scorecard / bet-ledger 验证态三方口径, 建单一 SSOT。'
   non_goals: []
-  done_when: []
+  done_when:
+  - 引入 maturity-align.py 三方对齐工具
+  - compass_radar composite 集成 alignment_score (reconciliation 0-100)
+  - reconciliation 跑通, 三大系统口径一致 (drift < 30)
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -7351,3 +7358,15 @@ bets:
             sha256: sha256:cc0d57e5cbcf7176420122aa17a3f92e747fae8c5dece6951bd7b72a3691b80c
     overall_state: outcome_accepted
   depends_on: []
+  completion_evidence:
+    axes:
+      engineering:
+        status: VERIFIED
+        direct_evidence: [merged_reachable_commit, tests]
+      operational:
+        status: PROVEN
+        direct_evidence: [live_canary, fresh_receipt]
+      value:
+        status: ACCEPTED
+        direct_evidence: [replay]
+    schema_version: completion-evidence-matrix/v1
