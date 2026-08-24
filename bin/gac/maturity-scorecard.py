@@ -214,6 +214,11 @@ def main() -> None:
             "scores": scores,
             "target": 9.0,
             "gap": round(9.0 - overall, 1),
+            "calibration": {
+                "ssot": "maturity-scorecard",
+                "health_map": "health_score 70+ ≈ scorecard 8+, 85+ ≈ scorecard 9+",
+                "ledger_map": "scorecard ≥9.0 ↔ T10-MATURITY bets all done",
+            },
         }
         print(json.dumps(result, indent=2, ensure_ascii=False))
         sys.exit(0)

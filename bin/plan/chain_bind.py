@@ -17,6 +17,11 @@ NORTH_STAR_SENTENCE = (
     "它的唯一职责是：把外部进来的信号，变成他愿意署名发出去的东西，并且记住他每次改了什么。"
 )
 EXEMPT_WORKFLOWS = frozenset({"observer-audit"})
+# G8 (T10-08): 治理演进类 workflow — 自进化改进治理机制本身, 由治理 bet (T10-MATURITY)
+# 承载 vision→run→retro 闭环, closeout 无需业务 bet 绑定.
+GOVERNANCE_EVOLVE_WORKFLOWS = frozenset(
+    {"governance-audit", "governance-state-mutation", "governance-phase-closeout"}
+)
 GATE_ENV = "AGCP_REQUIREMENT_ITERATION_GATE"
 RETRO_REL = ".omo/_knowledge/retros"
 RUNS_REL = ".omo/_delivery/agent-workflows/runs"
@@ -176,6 +181,10 @@ def evaluate_closeout(
         return BindVerdict(True, [])
     bet_id = str(run.get("bet_id") or "").strip()
     if not bet_id:
+        # G8 (T10-08): 治理演进 workflow 无业务 bet 不 halt — 治理自进化闭环由
+        # 治理 bet (T10-MATURITY) 承载, 不强制绑定业务 bet.
+        if wf in GOVERNANCE_EVOLVE_WORKFLOWS and _has_governance_bet(workspace):
+            return BindVerdict(True, [])
         if gate_disabled(env):
             return BindVerdict(True, [])
         return BindVerdict(False, ["missing_bet_binding"])
@@ -189,6 +198,19 @@ def evaluate_closeout(
         retro_required=bool(retro_req),
         retro_present=retro_path_for(workspace, bet_id).is_file(),
     )
+
+
+def _has_governance_bet(workspace: Path) -> bool:
+    """Ledger 存在治理演进 bet (track=T10-MATURITY 或 BET-Y1Q*-T10-*)."""
+    ledger = load_ledger(workspace)
+    for item in ledger.get("bets") or []:
+        if not isinstance(item, dict):
+            continue
+        bid = str(item.get("id") or "")
+        track = str(item.get("track") or "")
+        if track == "T10-MATURITY" or "-T10-" in bid:
+            return True
+    return False
 
 
 def evaluate_complete(

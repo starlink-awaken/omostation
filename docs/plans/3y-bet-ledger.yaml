@@ -6717,7 +6717,14 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - docs/operations/engineering-golden-rules.md
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g7-runid-placeholder-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g7-runid-placeholder-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:dda663fe978b24bdf1e2ce93a07c9264521ac70cf6bfbec4f997dadaad6d14e3"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-07
   depends_on: []
 
 - id: BET-Y1Q3-T10-08
@@ -6736,7 +6743,14 @@ bets:
   write_surfaces:
   - docs/plans/AGENT-BRIEF.md
   - bin/plan/chain-bind-check.py
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g8-governance-bet-binding-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g8-governance-bet-binding-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:074a1102ab9bb98cc31420b2a26ce138881769bedbf75f050c2e76830d26a878"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-08
   depends_on: []
 
 - id: BET-Y1Q3-T10-09
@@ -6755,7 +6769,14 @@ bets:
   write_surfaces:
   - bin/gac/gac-worktree.sh
   - docs/operations/worktree-hygiene.md
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g9-worktree-submodule-env-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g9-worktree-submodule-env-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:16f93328ada17a72fb00eb79301fcecbe70175bd371081cbc5d01905b67b66fb"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-09
   depends_on: []
 
 - id: BET-Y1Q3-T10-10
@@ -6774,5 +6795,12 @@ bets:
   write_surfaces:
   - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
   - bin/gac/maturity-scorecard.py
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g10-calibration-alignment-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g10-calibration-alignment-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:88fd6cf690ab478480a69e168fc3a48528925bfd7eefba43832b5c8304262bf6"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-10
   depends_on: []

@@ -229,6 +229,12 @@ case "$cmd" in
       if [ "$init_rc" -ne 0 ]; then
         echo "❌ 全部子模块 init 失败 (rc=$init_rc, $((t1-t0))s); 拒绝 PASW claim" >&2
         echo "$init_out" | tail -3 >&2
+        # G9 (T10-09): 环境感知 — 未 checkout 的子模块会导致本地 gate 环境性失败
+        # (CR-RESIDENT-BOS-01 缺 bos-services.yaml / omo-state-projection-guard 缺投影),
+        # 应 init 后重跑, 不是真实缺陷.
+        echo "  ℹ️ [环境感知] 子模块未 checkout → gate 环境性失败 (CR-RESIDENT-BOS-01 /" >&2
+        echo "    omo-state-projection-guard). 修复: cd $wt && git submodule update --init <sub>;" >&2
+        echo "    或完整 init: cd $wt && git submodule update --init" >&2
         exit 1
       fi
       echo "   ✅ 全部 init (${init_cnt} 子模块, $((t1-t0))s)"
