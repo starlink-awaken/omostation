@@ -85,6 +85,8 @@ surfaces:
     verifier: bin/ssot/doc-governance-check.py
     metadata: frontmatter
     required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    valid_statuses_by_schema:
+      specification/v1: [accepted]
     review_days: 180
     discoverability: directory-index
     index: docs/SYSTEM-INDEX.md
