@@ -241,6 +241,60 @@ def build_debt_proposals(dead_refs: list[dict]) -> list[DebtProposal]:
     return proposals
 
 
+# ── M3 仪式检查: 主人周检视心跳 ──────────────────────────────────────────────
+
+_RITUAL_HB_REL = ".omo/state/heartbeats/weekly-review.json"
+_RITUAL_SLA_HOURS = 336  # 14 days
+
+
+def check_ritual(ws_root: Path, now: datetime | None = None) -> list[DebtProposal]:
+    """Check weekly-review heartbeat freshness (M3 ritual).
+
+    Returns a T1 debt proposal if the heartbeat is missing or older than 14 days.
+    """
+    now = now or _now()
+    hb_path = ws_root / _RITUAL_HB_REL
+
+    if not hb_path.is_file():
+        return [_make_ritual_proposal()]
+
+    try:
+        data = json.loads(hb_path.read_text(encoding="utf-8"))
+    except Exception:
+        return [_make_ritual_proposal()]
+
+    ts_str = data.get("generated_at")
+    if not ts_str:
+        return [_make_ritual_proposal()]
+
+    ts = _parse_stamp(str(ts_str))
+    if ts is None:
+        return [_make_ritual_proposal()]
+
+    age_hours = (now - ts).total_seconds() / 3600.0
+    if age_hours > _RITUAL_SLA_HOURS:
+        return [_make_ritual_proposal()]
+
+    return []
+
+
+def _make_ritual_proposal() -> DebtProposal:
+    """Build the M3 owner-review-lapsed debt proposal."""
+    return {
+        "schema": DEBT_PROPOSAL_SCHEMA,
+        "id": "M3-owner-review-lapsed",
+        "title": "主人周检视断供>14天",
+        "dimension": "governance",
+        "subdimension": "ritual",
+        "severity": "medium",
+        "lifecycle_state": "proposed",
+        "owner": "governance-team",
+        "source_ref": f"meta-doctor-ritual://{_RITUAL_HB_REL}",
+        "target_ref": "meta-doctor-ritual://weekly-review-heartbeat",
+        "proposed_by": "meta-doctor",
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--workspace", type=Path, default=WORKSPACE,
@@ -255,14 +309,20 @@ def main(argv: list[str] | None = None) -> int:
 
     stale_beats = [b for b in beats if not b["ok"]]
     dead_refs = [r for r in refs if r.get("status") == "dead"]
+    ritual_proposals = [] if args.refs_only else check_ritual(ws_root)
+    all_proposals = build_debt_proposals(dead_refs) + ritual_proposals
     report = {
         "generated_at": _now().isoformat(timespec="seconds"),
         "workspace": str(ws_root),
-        "ok": not stale_beats and not dead_refs,
+        "ok": not stale_beats and not dead_refs and not ritual_proposals,
         "heartbeat": beats,
         "references": refs,
-        "summary": {"stale_beats": len(stale_beats), "dead_refs": len(dead_refs)},
-        "debt_proposals": build_debt_proposals(dead_refs),
+        "summary": {
+            "stale_beats": len(stale_beats),
+            "dead_refs": len(dead_refs),
+            "ritual_lapsed": len(ritual_proposals),
+        },
+        "debt_proposals": all_proposals,
     }
     print(json.dumps(report, ensure_ascii=False))
     return 0 if report["ok"] else 1

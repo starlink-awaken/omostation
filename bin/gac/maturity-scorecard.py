@@ -3,8 +3,8 @@
 maturity-scorecard.py — Calculate 6-dimension maturity score.
 
 Usage:
-  uv run python3 bin/gac/maturity-scorecard.py
-  uv run python3 bin/gac/maturity-scorecard.py --json
+  uv run --with pyyaml python3 bin/gac/maturity-scorecard.py
+  uv run --with pyyaml python3 bin/gac/maturity-scorecard.py --json
 """
 
 import argparse
@@ -27,7 +27,7 @@ def run(cmd: str, cwd=None, timeout=120) -> tuple[int, str, str]:
 
 
 def score_evolvable() -> dict:
-    rc, out, err = run("uv run python3 bin/ssot/script-registry.py validate 2>&1")
+    rc, out, err = run("uv run --with pyyaml python3 bin/ssot/script-registry.py validate 2>&1")
     registered = "VALIDATION PASSED" in (out or err)
     return {
         "dimension": "evolvable",
@@ -49,7 +49,7 @@ def score_iterable() -> dict:
 
 
 def score_observable() -> dict:
-    rc, out, err = run("uv run python3 bin/compass_radar.py 2>&1 | head -20")
+    rc, out, err = run("uv run --with pyyaml python3 bin/compass_radar.py 2>&1 | head -20")
     has_output = rc == 0 and len((out or "").strip()) > 0
     return {
         "dimension": "observable",
@@ -60,7 +60,7 @@ def score_observable() -> dict:
 
 
 def score_traceable() -> dict:
-    rc, out, err = run("uv run python3 bin/gac/adr-link-validator.py 2>&1")
+    rc, out, err = run("uv run --with pyyaml python3 bin/gac/adr-link-validator.py 2>&1")
     valid_links = rc == 0
     return {
         "dimension": "traceable",
@@ -71,7 +71,7 @@ def score_traceable() -> dict:
 
 
 def score_troubleshootable() -> dict:
-    rc, out, err = run("uv run python3 bin/ssot/governance-migration.py --dry-run 2>&1")
+    rc, out, err = run("uv run --with pyyaml python3 bin/ssot/governance-migration.py --dry-run 2>&1")
     has_owner = "No changes needed" in (out or err)
     return {
         "dimension": "troubleshootable",
@@ -82,7 +82,7 @@ def score_troubleshootable() -> dict:
 
 
 def score_optimizable() -> dict:
-    rc, out, err = run("uv run python3 bin/gac/drift-sweep.py --json", timeout=60)
+    rc, out, err = run("uv run --with pyyaml python3 bin/gac/drift-sweep.py --json", timeout=60)
     if rc == 0:
         sweep_works = True
         score = 9

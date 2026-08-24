@@ -72,6 +72,16 @@ def register(script_path: str, dry_run: bool = False) -> None:
     owner = guess_owner(str(rel))
     stem = rel.stem
     out = REGISTRY_DIR / category / f"{stem}.yaml"
+    # Same-stem scripts in different directories would collide on the same file.
+    # If the canonical file exists with a different id, disambiguate by parent dir.
+    if out.exists():
+        try:
+            existing = yaml.safe_load(out.read_text()) if out.suffix == ".yaml" else None
+            if existing and existing.get("id") != str(rel):
+                out = REGISTRY_DIR / category / f"{stem}-{rel.parent.name}.yaml"
+        except Exception:
+            out = REGISTRY_DIR / category / f"{stem}-{rel.parent.name}.yaml"
+
 
     content = f"""schema: script-registry/v1
 id: {rel}
