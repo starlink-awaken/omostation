@@ -6658,7 +6658,7 @@ bets:
   title: compass_radar 集成新指标 (observable 8→9+)
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
   note: 'G5: observable 加新指标'
   goal: '在 compass_radar.py 集成新治理指标 (如成熟度分项/台账验证态), 提升 observable 到 9+。'
   non_goals: []
