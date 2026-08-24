@@ -77,7 +77,7 @@ If a file hasn't been refreshed in > 7d AND no cron job exists for it,
 the writer has been deprecated. Check `git log -- bin/...` for the
 file's producer. Either:
 - Restore the writer (`git revert` the deprecation)
-- Archive the SSOT (`git revert` to restore the writer, or `bin/ssot/archive-ssot.py` once it is implemented)
+- Archive the SSOT (`git revert` to restore the writer, or archive-ssot.py once implemented (not yet in bin/))
 
 ## Prevention
 

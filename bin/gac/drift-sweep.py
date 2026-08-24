@@ -101,7 +101,7 @@ def check_scene_card_validity() -> dict:
     for f in scene_dir.glob("*.yaml"):
         try:
             import yaml
-            yaml.safe_load(f.read_text())
+            list(yaml.safe_load_all(f.read_text()))
         except Exception as e:
             issues.append(f"{f.name}: {e}")
     return {

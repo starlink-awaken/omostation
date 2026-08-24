@@ -13,7 +13,7 @@ next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面�
 health_score_ref: .omo/state/health.yaml
 health_score: 70
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-08-24T02:48:46Z'
+health_score_generated_at: '2026-08-24T03:06:09Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -202,7 +202,7 @@ runtime_health_summary:
   total_services: 4
   ratio: 1.0
   health_score: 70
-  last_scan: '2026-08-24T02:48:46Z'
+  last_scan: '2026-08-24T03:06:09Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
 phase42_status: completed
@@ -225,7 +225,7 @@ divergence_triage_summary: {}
 governance_feedback_last_run: '2026-08-23T03:03:52Z'
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-24T02:48:49.569334+00:00'
+health_score_evidence_generated_at: '2026-08-24T03:06:12.387824+00:00'
 workflow_mesh_health:
   status: healthy
   event_count: 2106

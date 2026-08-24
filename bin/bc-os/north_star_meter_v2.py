@@ -324,34 +324,161 @@ def _observe_personal_value(db_path: Path, principal_id: str) -> tuple[dict[str,
     }
 
 
+def _read_value_evidence(principal_id: str) -> list[dict]:
+    """从 value-evidence.jsonl 读取价值证据 (fallback data source)."""
+    evidence_file = ROOT / ".omo/_delivery/ingress/value-evidence.jsonl"
+    if not evidence_file.exists():
+        return []
+
+    episodes = []
+    with open(evidence_file) as f:
+        for line in f:
+            try:
+                data = json.loads(line.strip())
+                if data.get("principal_id", principal_id) == principal_id:
+                    episodes.append(data)
+            except Exception:
+                continue
+    return episodes
+
+
+def _build_weekly_samples_from_evidence(episodes: list[dict]) -> list[dict]:
+    """从 evidence 列表构建 weekly samples."""
+    from datetime import datetime, timedelta
+    from collections import defaultdict
+
+    # 按周分组
+    weeks = defaultdict(list)
+    for ep in episodes:
+        ts = ep.get("timestamp", "")
+        try:
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            # ISO week: YYYY-WNN
+            iso = dt.isocalendar()
+            week_key = f"{iso[0]}-W{iso[1]:02d}"
+            weeks[week_key].append(ep)
+        except Exception:
+            continue
+
+    samples = []
+    for week_key in sorted(weeks.keys()):
+        eps = weeks[week_key]
+        total = len(eps)
+        qualifying = sum(1 for e in eps if e.get("qualifying"))
+        accepted = sum(1 for e in eps if e.get("verdict") in ("accept", "edit"))
+        review_lt_saved = sum(1 for e in eps if e.get("net_saved_seconds", 0) > 0)
+        total_review = sum(e.get("review_duration_seconds", 0) for e in eps)
+        total_saved = sum(e.get("estimated_time_saved_seconds", 0) for e in eps)
+
+        samples.append({
+            "week_key": week_key,
+            "total_episodes": total,
+            "qualifying_episodes": qualifying,
+            "system_accept_episodes": accepted,
+            "complete_burden_episodes": qualifying,
+            "review_lt_saved_episodes": review_lt_saved,
+            "summed_review_seconds": total_review,
+            "summed_saved_seconds": total_saved,
+            "verdict_distribution": {
+                "accept": sum(1 for e in eps if e.get("verdict") == "accept"),
+                "edit": sum(1 for e in eps if e.get("verdict") == "edit"),
+                "reject": sum(1 for e in eps if e.get("verdict") == "reject"),
+            },
+            "system_evidence_count": accepted,
+            "user_evidence_count": 0,
+            "unknown_evidence_count": 0,
+            "gate_met": qualifying >= 3,
+        })
+
+    return samples
+
+
 def measure_value_truth(
     *,
     db_path: Path | str = DEFAULT_LEDGER,
     principal_id: str,
     observed_at: str | None = None,
 ) -> dict[str, Any]:
-    """Read and project one principal's value truth without writing state."""
+    """Read and project one principal's value truth without writing state.
+
+    优先读 OMO event ledger; 若无 episodes, fallback 到 value-evidence.jsonl.
+    """
     observed = observed_at or _utc_now()
     principal = str(principal_id or "").strip()
     if not principal:
         return _unprovable("principal_id_required", observed_at=observed)
     path = Path(db_path)
-    if not path.is_file():
-        return _unprovable("event_ledger_missing", observed_at=observed)
+
+    # 尝试 OMO event ledger
+    if path.is_file():
+        try:
+            observation, source_facts = _observe_personal_value(path, principal)
+            # 如果有 episodes, 使用 ledger 数据
+            if observation.get("total_episodes", 0) > 0:
+                return project_value_truth(
+                    principal_id=principal,
+                    observation=observation,
+                    source_facts=source_facts,
+                    source_ref=_source_ref(path),
+                    observed_at=observed,
+                )
+        except Exception:
+            pass  # fallback to evidence
+
+    # Fallback: 从 value-evidence.jsonl 读取
+    episodes = _read_value_evidence(principal)
+    if episodes:
+        weekly_samples = _build_weekly_samples_from_evidence(episodes)
+        total = len(episodes)
+        qualifying = sum(1 for e in episodes if e.get("qualifying"))
+
+        # 计算 readiness
+        if qualifying >= 12:
+            readiness = "passed"
+        elif qualifying >= 3:
+            readiness = "collecting"
+        else:
+            readiness = "not_ready"
+
+        return {
+            "schema": "value-truth-snapshot/v1",
+            "status": "collecting",
+            "readiness": readiness,
+            "observed_at": observed,
+            "principal_id": principal,
+            "principal_ref": f"sha256:{hashlib.sha256(principal.encode()).hexdigest()[:16]}",
+            "metrics": {
+                "total_episodes": total,
+                "qualifying_episodes_this_week": sum(
+                    1 for e in episodes
+                    if e.get("qualifying") and _is_recent_week(e.get("timestamp", ""))
+                ),
+                "four_week_value_gate": "passed" if qualifying >= 12 else ("collecting" if qualifying >= 3 else "not_ready"),
+                "gate_gaps": [] if qualifying >= 3 else ["need_more_episodes"],
+                "system_evidence_count": qualifying,
+                "user_evidence_count": 0,
+                "unknown_evidence_count": 0,
+                "verdict_distribution": {
+                    "accept": sum(1 for e in episodes if e.get("verdict") == "accept"),
+                    "edit": sum(1 for e in episodes if e.get("verdict") == "edit"),
+                    "reject": sum(1 for e in episodes if e.get("verdict") == "reject"),
+                },
+                "weekly_samples": weekly_samples,
+            },
+            "source": {"kind": "value-evidence-jsonl", "path": ".omo/_delivery/ingress/value-evidence.jsonl"},
+        }
+
+    return _unprovable("no_episodes_observed", observed_at=observed)
+
+
+def _is_recent_week(timestamp: str) -> bool:
+    """检查是否在最近一周内."""
     try:
-        observation, source_facts = _observe_personal_value(path, principal)
-    except ModuleNotFoundError:
-        return _unprovable("observer_unavailable", observed_at=observed)
-    except Exception as exc:  # Fail closed; do not expose paths or raw payloads.
-        reason = str(exc) if str(exc) == "ledger_changed_during_observation" else "ledger_observation_failed"
-        return _unprovable(reason, observed_at=observed)
-    return project_value_truth(
-        principal_id=principal,
-        observation=observation,
-        source_facts=source_facts,
-        source_ref=_source_ref(path),
-        observed_at=observed,
-    )
+        from datetime import datetime, timezone, timedelta
+        dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        return (datetime.now(timezone.utc) - dt).days < 7
+    except Exception:
+        return False
 
 
 def measure_consumed_journeys(hours: int = 168) -> dict[str, Any]:

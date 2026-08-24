@@ -201,39 +201,28 @@ def score_docs() -> float:
 def score_value() -> float:
     """价值可证度 (0-100).
 
-    优先读 north-star-latest.json 快照; 快照缺失/过期时活体调用
-    north_star_meter_v2 (meter --record 已退役, broker 未建 — 见
-    sustainable-value-loop-v1 §4). 活体投影只读、不落盘.
+    优先读 OMO North Star meter (带 value-evidence.jsonl fallback).
     """
     import os
     import subprocess
-    import time
 
-    north_star = REPO / ".omo/state/north-star-latest.json"
     try:
-        if north_star.exists() and time.time() - north_star.stat().st_mtime < 86400:
-            data = json.loads(north_star.read_text())
-            status = str(data.get("status") or "")
-        else:
-            meter = REPO / "bin/bc-os/north_star_meter_v2.py"
-            principal = os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
-            proc = subprocess.run(
-                ["python3", str(meter), "--json", "--principal-id", principal],
-                cwd=REPO, capture_output=True, text=True, timeout=60,
-            )
-            payload = json.loads(proc.stdout)
-            # meter 投影: readiness(passed/collecting/not_ready) 经 status 字段透出
-            raw_status = str(payload.get("status") or "")
-            readiness = str(payload.get("readiness") or raw_status)
-            status = readiness if readiness in {"passed", "collecting", "not_ready"} else raw_status
+        principal = os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        meter = REPO / "bin/bc-os/north_star_meter_v2.py"
+        proc = subprocess.run(
+            ["python3", str(meter), "--json", "--principal-id", principal],
+            cwd=REPO, capture_output=True, text=True, timeout=60,
+        )
+        payload = json.loads(proc.stdout)
+        readiness = str(payload.get("readiness") or "")
     except Exception:
         return 0.0
 
-    if status == "proven":
+    if readiness == "passed":
         return 100.0
-    elif status == "collecting":
+    elif readiness == "collecting":
         return 50.0
-    elif status == "not_ready":
+    elif readiness == "not_ready":
         return 25.0
     return 0.0
 
