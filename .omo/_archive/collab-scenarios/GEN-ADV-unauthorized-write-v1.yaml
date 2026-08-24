@@ -1,0 +1,35 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: ADV-unauthorized-write-v1
+category: A_conflict
+adversarial: true
+seed: 9017
+description: '[W2.1 red-team] 未授权角色写入 (对抗变体1)'
+setup:
+  blackboard:
+  - key: adv_target_17
+    value: null
+  roles:
+  - r_a_0
+  - r_b_0
+inject:
+- type: write_conflict
+  role: r_intruder_0
+  target: adv_target_17
+  value: v_intrude_0
+expected:
+  behavior: unauthorized_detected
+  silent_loss: 0
+verdict:
+- criterion: unauthorized_detected
+  check: events_contain
+  args:
+    kind: unauthorized_detected
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

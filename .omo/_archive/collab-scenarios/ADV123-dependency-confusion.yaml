@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV123-dependency-confusion
+category: B_failure_injection
+adversarial: true
+seed: 223
+description: >
+  [对抗·red-team wave22] 依赖混淆: 同名恶意包抢先解析替换内部依赖,
+  管线已有 dependency_confusion_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: package_lock, value: "internal/lib-core@1.2.0", writers: [ci]}
+  roles: [ci, attacker, registry]
+inject:
+  - {type: write_conflict, role: attacker, target: public_registry, value: "publish_lib-core@9.9.9"}
+  - {type: write_conflict, role: ci, target: package_lock, value: "resolved_public_malicious"}
+  - {type: write_conflict, role: registry, target: install_hook, value: "exfil_env_on_postinstall"}
+  - {type: write_conflict, role: ci, target: build_artifact, value: "backdoored_binary"}
+expected:
+  behavior: dependency_confusion_detected
+  silent_loss: 0
+verdict:
+  - criterion: dependency_confusion_detected
+    check: events_contain
+    args: {kind: dependency_confusion_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

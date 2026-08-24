@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: B06-network-partition-v1
+category: B_failure_injection
+adversarial: false
+seed: 2060
+description: '[W2.1 批量] 网络分区 (角色隔离) (失败注入06 实例1)'
+setup:
+  blackboard: []
+  roles:
+  - research
+  - delivery
+  - audit
+inject:
+- type: role_timeout
+  role: research
+expected:
+  behavior: failure_handled
+  silent_loss: 0
+verdict:
+- criterion: timeout_detected
+  check: events_contain
+  args:
+    kind: role_timeout
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

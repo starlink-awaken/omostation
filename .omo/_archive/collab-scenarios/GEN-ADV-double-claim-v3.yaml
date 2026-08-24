@@ -1,0 +1,39 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: ADV-double-claim-v3
+category: A_conflict
+adversarial: true
+seed: 9003
+description: '[W2.1 red-team] 两角色同时认领同任务 (对抗变体3)'
+setup:
+  blackboard:
+  - key: adv_target_3
+    value: null
+  roles:
+  - r_a_2
+  - r_b_2
+inject:
+- type: write_conflict
+  role: r_a_2
+  target: adv_target_3
+  value: v_a_2
+- type: write_conflict
+  role: r_b_2
+  target: adv_target_3
+  value: v_b_2
+expected:
+  behavior: double_claim_detected
+  silent_loss: 0
+verdict:
+- criterion: double_claim_detected
+  check: events_contain
+  args:
+    kind: double_claim_detected
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

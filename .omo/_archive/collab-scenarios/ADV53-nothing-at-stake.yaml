@@ -1,0 +1,29 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV53-nothing-at-stake
+category: A_conflict
+adversarial: true
+seed: 153
+description: >
+  [对抗·red-team wave9] 无利害: 验证者在两条分叉上同时背书,
+  管线尚无 nothing_at_stake_detected → 预期 FAIL
+setup:
+  blackboard: []
+  roles: [validator]
+inject:
+  - {type: write_conflict, role: validator, target: fork_a_vote, value: "attest"}
+  - {type: write_conflict, role: validator, target: fork_b_vote, value: "attest"}
+expected:
+  behavior: nothing_at_stake_detected
+  silent_loss: 0
+verdict:
+  - criterion: nothing_at_stake_detected
+    check: events_contain
+    args: {kind: nothing_at_stake_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

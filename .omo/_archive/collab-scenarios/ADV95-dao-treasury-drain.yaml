@@ -1,0 +1,33 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV95-dao-treasury-drain
+category: A_conflict
+adversarial: true
+seed: 195
+description: >
+  [对抗·red-team wave17] DAO 金库抽干: 恶意提案短时窗通过后转走 treasury,
+  管线已有 dao_treasury_drain_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: dao_treasury, value: "5000000", writers: [timelock]}
+  roles: [proposer, voter, timelock, attacker]
+inject:
+  - {type: write_conflict, role: proposer, target: proposal, value: "emergency_grant_attacker"}
+  - {type: write_conflict, role: voter, target: vote_tally, value: "pass_snap_vote"}
+  - {type: write_conflict, role: timelock, target: timelock_delay, value: "bypass_0"}
+  - {type: write_conflict, role: attacker, target: dao_treasury, value: "0"}
+  - {type: write_conflict, role: attacker, target: attacker_wallet, value: "drained_5000000"}
+expected:
+  behavior: dao_treasury_drain_detected
+  silent_loss: 0
+verdict:
+  - criterion: dao_treasury_drain_detected
+    check: events_contain
+    args: {kind: dao_treasury_drain_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

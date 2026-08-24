@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV137-jwt-alg-none
+category: B_failure_injection
+adversarial: true
+seed: 237
+description: >
+  [对抗·red-team wave24] JWT alg=none: 伪造无签名 token 提升为 admin,
+  管线已有 jwt_alg_none_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: auth_token, value: "rs256_valid", writers: [auth]}
+  roles: [attacker, auth, api]
+inject:
+  - {type: write_conflict, role: attacker, target: auth_token, value: "alg_none_admin_claim"}
+  - {type: write_conflict, role: api, target: token_verify, value: "accept_without_sig"}
+  - {type: write_conflict, role: attacker, target: admin_action, value: "delete_all_users"}
+  - {type: write_conflict, role: auth, target: audit_log, value: "privilege_escalation"}
+expected:
+  behavior: jwt_alg_none_detected
+  silent_loss: 0
+verdict:
+  - criterion: jwt_alg_none_detected
+    check: events_contain
+    args: {kind: jwt_alg_none_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

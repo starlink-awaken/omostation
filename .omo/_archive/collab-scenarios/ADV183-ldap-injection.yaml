@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV183-ldap-injection
+category: B_failure_injection
+adversarial: true
+seed: 283
+description: >
+  [对抗·red-team wave31] LDAP 注入: 登录 filter 拼接绕过认证,
+  管线尚无 ldap_injection_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: auth_backend, value: "ldap_bind", writers: [auth]}
+  roles: [attacker, auth, directory]
+inject:
+  - {type: write_conflict, role: attacker, target: username, value: "admin)(|(uid=*))"}
+  - {type: write_conflict, role: auth, target: ldap_filter, value: "(uid={user})(userPassword={pass})_concat"}
+  - {type: write_conflict, role: directory, target: bind_result, value: "true_via_filter_injection"}
+  - {type: write_conflict, role: attacker, target: session, value: "auth_bypass_ldap"}
+expected:
+  behavior: ldap_injection_detected
+  silent_loss: 0
+verdict:
+  - criterion: ldap_injection_detected
+    check: events_contain
+    args: {kind: ldap_injection_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV105-liquidity-migration-trap
+category: A_conflict
+adversarial: true
+seed: 205
+description: >
+  [对抗·red-team wave19] 流动性迁移陷阱: 诱导 LP 迁入恶意池后抽干,
+  管线已有 liquidity_migration_trap_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: old_pool, value: "liq_5000", writers: [lp]}
+  roles: [lp, migrator, attacker]
+inject:
+  - {type: write_conflict, role: migrator, target: migrate_notice, value: "urgent_migrate_v2"}
+  - {type: write_conflict, role: lp, target: old_pool, value: "liq_0"}
+  - {type: write_conflict, role: lp, target: new_pool, value: "liq_5000_malicious"}
+  - {type: write_conflict, role: attacker, target: new_pool, value: "rug_after_migrate"}
+expected:
+  behavior: liquidity_migration_trap_detected
+  silent_loss: 0
+verdict:
+  - criterion: liquidity_migration_trap_detected
+    check: events_contain
+    args: {kind: liquidity_migration_trap_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}
