@@ -79,12 +79,20 @@ print(report())
 "'
       - name: P0/P1 tools smoke test
         run: cd projects/ecos && uv run pytest tests/test_tool_smoke.py -q
+      - name: P1.5 tools with dedicated tests (batch wiring)
+        run: cd projects/ecos && uv run pytest tests/test_partition_import_lint.py tests/test_sr06_rehearsal.py tests/test_work_packet_compiler.py -q
       - name: P2 tools batch CI
         run: |
           cd projects/ecos
           OK=0; FAIL=0
-          for tool in mof-bootstrap mof-compile mof-bos mof-bos-watch mof-entity mof-generate mof-skills mof-trail mof-audit mof-doc-governance mof-gen-l0 mof-m2-coverage mof-mof-validate mof-owl-adapter mof-reason mof-workflow; do
+          # 活跃工具 (排除已归档的死引用: mof-doc-governance/mof-gen-l0/mof-m2-coverage/mof-mof-validate/mof-owl-adapter)
+          for tool in mof-bootstrap mof-compile mof-bos mof-bos-watch mof-entity mof-generate mof-skills mof-trail mof-audit mof-reason mof-workflow ecos-constraint-validator mof-validate omo-fields-completeness-check auto-backfill-omotask-fields-v2 mof-bridge-sync; do
             if uv run python3 src/ecos/ssot/tools/$tool.py --help > /dev/null 2>&1; then OK=$((OK+1)); else FAIL=$((FAIL+1)); echo "FAIL: $tool"; fi
           done
           echo "P2 tools: OK=$OK FAIL=$FAIL"
           [ $FAIL -eq 0 ]
+      - name: P0 contract + hygiene enforcement
+        run: |
+          cd projects/ecos
+          uv run python3 src/ecos/ssot/tools/ecos-constraint-validator --enforce
+          uv run python3 src/ecos/ssot/tools/omo-fields-completeness-check --json > /dev/null
