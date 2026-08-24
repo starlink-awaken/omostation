@@ -78,3 +78,24 @@ uv run --with pyyaml python bin/gac/governance-evolution.py validate --json
 
 Any change to this roadmap must update the registry first. Markdown should explain and point;
 the registry owns current initiatives, owners, entrypoints, verifiers, and operating rhythm.
+
+## 成熟度口径对齐 (G10, 2026-08-24)
+
+**maturity-scorecard (0-10, target 9.0) 是成熟度唯一 SSOT**。三方口径映射：
+
+| 口径 | 工具 | 语义 | 映射 |
+|------|------|------|------|
+| 成熟度主口径 | `bin/gac/maturity-scorecard.py --json` | 六维 (evolvable/iterable/observable/traceable/troubleshootable/optimizable) 0-10 | target 9.0, gap 可算 |
+| 运行时健康子视图 | `bin/compass_radar.py` → `health_score` (0-100) | 治理健康复合分 (governance/runtime/freshness) | health 70+ ≈ scorecard 8+, health 85+ ≈ scorecard 9+ |
+| bet 交付验证态 | `docs/plans/3y-bet-ledger.yaml` → `bet-ledger.py status` | bet 交付状态 (candidate/active/done) | scorecard ≥9.0 ↔ T10-MATURITY bets 全 done |
+
+报告"系统多成熟"一律引用 scorecard (唯一 SSOT)；health 是运行时健康子视图（可短时波动，
+不代表成熟度回退）；台账验证态是 bet 交付进度（单个 bet 的 done 不等于整体 9.0）。
+
+校验命令：
+
+```bash
+python3 bin/gac/maturity-scorecard.py --json   # 主口径
+uv run --with pyyaml python bin/compass_radar.py --dry-run  # health 子视图
+uv run --with pyyaml python bin/plan/bet-ledger.py status    # 台账验证态
+```

@@ -150,6 +150,34 @@ def cmd_self_check(_args: argparse.Namespace) -> int:
             ),
             False,
         ),
+        # G8: 治理演进 workflow 无业务 bet, ledger 有治理 bet → 豁免
+        (
+            "closeout-governance-evolve-no-bet",
+            chain_bind.evaluate_closeout(
+                {"workflow_id": "governance-audit", "bet_id": ""},
+                _workspace(),
+                status="ok",
+            ),
+            True,
+        ),
+        (
+            "closeout-governance-evolve-no-bet-no-ldg",
+            chain_bind.evaluate_closeout(
+                {"workflow_id": "governance-audit", "bet_id": ""},
+                Path("/nonexistent-workspace"),
+                status="ok",
+            ),
+            False,
+        ),
+        (
+            "closeout-business-no-bet-still-halts",
+            chain_bind.evaluate_closeout(
+                {"workflow_id": "project-code-change", "bet_id": ""},
+                _workspace(),
+                status="ok",
+            ),
+            False,
+        ),
     ]
     failed: list[str] = []
     for name, verdict, expect_ok in cases:
