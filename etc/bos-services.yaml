@@ -3280,6 +3280,66 @@ services:
   - resident
   - decision
   description: Resident 决策提案处理 (WP-F)
+- domain: agent-cell
+  package: cell-pool
+  action: status
+  uri: bos://agent-cell/pool/status
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/omo/src/omo/resident/cell_pool.py
+  - --status
+  - --json
+  description: Cell Pool 状态 — 多 Cell 并行运行状态
+- domain: agent-cell
+  package: cell-pool
+  action: submit
+  uri: bos://agent-cell/pool/submit
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/omo/src/omo/resident/cell_pool.py
+  - --submit
+  - --json
+  description: Cell Pool 提交 — 提交 Episode 到 Cell Pool
+- domain: agent-cell
+  package: cell-pool
+  action: scale
+  uri: bos://agent-cell/pool/scale
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/omo/src/omo/resident/cell_pool.py
+  - --scale
+  - --json
+  description: Cell Pool 扩缩容 — 调整 Cell 数量
+- domain: agent-cell
+  package: cell-config
+  action: list
+  uri: bos://agent-cell/config/list
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/omo/src/omo/resident/cell_config.py
+  - --list
+  - --json
+  description: Cell Config 列表 — 列出预设配置
+- domain: agent-cell
+  package: cell-config
+  action: create
+  uri: bos://agent-cell/config/create
+  transport: stdio
+  status: active
+  command:
+  - python3
+  - projects/omo/src/omo/resident/cell_config.py
+  - --create
+  - --json
+  description: Cell Config 创建 — 从预设创建 Cell
 - domain: bcos
   package: bcos-evolution
   action: evolve
