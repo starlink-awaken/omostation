@@ -6569,7 +6569,16 @@ bets:
   - docs/operations/bin-scripts-convergence-manifest.json
   - .omo/_truth/registry/governance-checks.yaml
   - bin/ssot/script-registry.py
+  - bin/gac/maturity-scorecard.py
+  - bin/_registry/scripts
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g1-script-registry-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g1-script-registry-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:d9843ba84c6c9cfe7b7e5b386cc60fb19b6ce972d054a750b2dd4f9ae71ff4ef"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-01
   depends_on: []
 
 - id: BET-Y1Q3-T10-02
