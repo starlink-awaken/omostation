@@ -170,7 +170,10 @@ gac:
     - foundry_cron
     - sweep_index_cli
   # T6-05 减法配额制 (BET-Y1Q2-T6-05): 增 1 删 1 — 用机制维持表面积不反弹
+  # 2026-08-24: 全局计数降级 advisory — 并发 agent 各自 base 陈旧无法归因, 改由
+  # bin-quota-diff (变更侧问责) 每次变更自己负责守恒. 本块保留供 owner 流参考.
   subtraction_quota:
+    check_type: advisory
     rule_baseline: 139    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail). 136→139: CR-RESIDENT-{STATUS,MOF-SYNC,BOS}-01 三条实体化 L0 enforcement (BET-Y1Q3-T1-10, ADR-0396)
     adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
     script_baseline: 444  # 2026-08-24: 并发校准 441 (bin-scripts-convergence-audit re-count + est-minutes-coefficient.py #2075) + S5 增 3 工具 (check-derived-only-fast-track/auto-fix-loop/command-discovery, 均 gate 接线 + 测试覆盖). 实际 444. 后续继续执行增 1 删 1 (BET-Y1Q3-T6-05).

@@ -415,6 +415,18 @@ for _gap_gate in (
     if not any(gate.get("id") == _gap_gate["id"] for gate in GATES_LIST):
         GATES_LIST.append(_gap_gate)
 
+# Root-owned bin 配额"变更侧问责" (2026-08-24, 并发 #2076): 每次变更自己负责守恒.
+# 检查 <base>..HEAD 中 bin/ 下 .py/.sh 新增 vs 删除, 净增 → FAIL.
+# 全局计数 (gac-validate subtraction-quota) 降级 advisory, 本 check 为增量问责.
+# 放 root-owned 段, 防 ecos 子模块 policy 移除.
+if not any(gate.get("id") == "bin-quota-diff" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "bin-quota-diff",
+            "command": ["bin/gac/check-bin-quota-diff.py", "--base", "origin/main"],
+        }
+    )
+
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
