@@ -100,7 +100,12 @@ A 轴数据满 4 周后转全量 provable。**
 3. 输出自带 raw/mirror 计数与过滤语义(防误读)
 4. CI 侧 `--check` 只读复检纳入 ci-surfaces 登记
 
-进度: bos-registry ✅(#2061) → capability-registry → INDEX-MCP/CLI-REFERENCE(sync-all-docs) → mof-capabilities。
+进度: bos-registry preflight ✅(#2061) · 配额清偿 448→442 ✅(#2066) · capability-registry → INDEX-MCP/CLI-REFERENCE(sync-all-docs) → mof-capabilities 待推广。
+
+**勘误 (2026-08-24)**: 前报 "BOS split-brain / #2055 注册被 clobber" 系测量方法错误 —
+`git show origin/main:projects/agora/...` 无法读子模块内容(静默返回空), 实测 canonical
+yaml 含全部注册且三源一致(sync drift=no)。同日 UHS governance 归零亦为
+多文档 yaml 解析缺陷(已修)。教训: 子模块内省必须在子模块检出内进行。
 
 **新增配套门禁(提案)**: gitlink bump 必须满足 `new_sha 是 old_sha 后代 或 PR 描述含 regress 理由`
 —— 防 #2055 注册被并发回退类事故复发。挂点: pre-push hook 的 pointer-drift 检查处。
@@ -141,4 +146,7 @@ A 轴数据满 4 周后转全量 provable。**
 
 1. est_minutes 估算规则的公平性(防 agent 高估工时刷分) → 初版用固定任务类型系数表
 2. 多工作区/多主人扩展 → value-profile 按 space 隔离, schema 预留 namespace 字段
-3. agora gitlink 回退事故的全量损失盘点(cf137b1ef vs f7739fa53 谱系差) → 待专项审计
+3. ~~agora gitlink 回退损失盘点~~ → 已证伪(见 §6 勘误), 无损失。
+4. **gitlink ancestry gate 设计**(真实风险: 并发 PR 自陈旧 base 合并会回退指针,
+   本周观测多次 SHA 抖动): pre-push 的 pointer-drift 处追加 `merge-base --is-ancestor
+   old_sha new_sha` 校验, 非后代须 PR 描述含 regress 理由; 落点待 owner 排期。
