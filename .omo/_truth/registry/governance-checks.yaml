@@ -176,7 +176,7 @@ gac:
     check_type: advisory
     rule_baseline: 139    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail). 136→139: CR-RESIDENT-{STATUS,MOF-SYNC,BOS}-01 三条实体化 L0 enforcement (BET-Y1Q3-T1-10, ADR-0396)
     adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
-    script_baseline: 461  # 2026-08-24: Phase 2-5 integration + origin/main merge brings active count to 461 (drift-sweep, pre-pr-check, skill-registry-verify, health-trend-predictor, auto-remediate, root-cause-collector, knowledge-closing-loop, session-recovery, silent-workflow-dashboard, maturity-scorecard, subtraction-quota-enforcer, sub-project-health, governance-migration, script-registry, etc.). Baseline updated to reflect new active script count.
+    script_baseline: 476  # 2026-08-24: Phase 3 AetherForge & AST Blackboard integration brings active count to 476.
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

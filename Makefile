@@ -451,7 +451,7 @@ debt-audit:
 agent-workflows:
 	$(PY) bin/agent-workflow.py list
 
-agent-workflow-bootstrap:
+agent-workflow-bootstrap: fabric-warm
 	$(PY) bin/agent-workflow.py bootstrap
 
 agent-workflow-lint:
