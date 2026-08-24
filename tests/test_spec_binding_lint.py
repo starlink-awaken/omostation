@@ -444,6 +444,80 @@ def test_lint_requires_matrix_for_new_done_bet(
     assert "COMPLETION_EVIDENCE_REQUIRED" in capsys.readouterr().out
 
 
+def test_lint_rejects_done_bet_whose_matrix_derives_evaluating(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-25"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="IN_PROGRESS",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="evaluating",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "BET_DONE_REQUIRES_OUTCOME_ACCEPTED" in capsys.readouterr().out
+
+
+def test_lint_requires_done_at_for_new_done_bet_with_outcome_accepted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="done")
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    monkeypatch.setattr(
+        bl,
+        "validate_completion_evidence",
+        lambda matrix, *, workspace: ("outcome_accepted", []),
+    )
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "BET_DONE_AT_REQUIRED" in capsys.readouterr().out
+
+
+def test_lint_accepts_new_done_bet_with_outcome_accepted_and_done_at(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-25"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    monkeypatch.setattr(
+        bl,
+        "validate_completion_evidence",
+        lambda matrix, *, workspace: ("outcome_accepted", []),
+    )
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 0
+
+
 def test_arbitrary_string_cannot_prove_human_verdict(tmp_path: Path) -> None:
     evidence = _direct_evidence(tmp_path)
     evidence["value"]["human_verdict"] = "decision://human/placeholder"

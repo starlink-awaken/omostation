@@ -2253,17 +2253,24 @@ def cmd_lint(data: dict, args) -> int:
             _binding, binding_errors = validate_accepted_specification(b, workspace=WS)
             errs.extend(f"{b['id']}.accepted_specifications: {error}" for error in binding_errors)
         completion_matrix = b.get("completion_evidence")
-        matrix_required = b.get("status") in COMPLETION_MATRIX_REQUIRED_STATUSES or (
-            b.get("status") == "done" and not _is_completion_evidence_grandfathered(b, workspace=WS)
+        # done 必须由完整完成证据支撑，防止直接 YAML/API 提交绕过 cmd_complete 的状态闸
+        done_needs_evidence = b.get("status") == "done" and not _is_completion_evidence_grandfathered(
+            b, workspace=WS
         )
+        matrix_required = b.get("status") in COMPLETION_MATRIX_REQUIRED_STATUSES or done_needs_evidence
         if matrix_required and completion_matrix is None:
             errs.append(f"{b['id']}.completion_evidence: COMPLETION_EVIDENCE_REQUIRED")
         elif completion_matrix is not None:
-            _state, completion_errors = validate_completion_evidence(
+            state, completion_errors = validate_completion_evidence(
                 completion_matrix,
                 workspace=WS,
             )
             errs.extend(f"{b['id']}.completion_evidence: {error}" for error in completion_errors)
+            # validate_completion_evidence 有错时强制 blocked，state==outcome_accepted 即无错
+            if done_needs_evidence and state != "outcome_accepted":
+                errs.append(f"{b['id']}.completion_evidence: BET_DONE_REQUIRES_OUTCOME_ACCEPTED")
+        if done_needs_evidence and not b.get("done_at"):
+            errs.append(f"{b['id']}.done_at: BET_DONE_AT_REQUIRED")
     if errs:
         for e in errs:
             print(f"ERROR {e}")
