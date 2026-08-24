@@ -5,9 +5,12 @@
 (capability-registry.yaml / CAPABILITY-MAP / CLI-REFERENCE / INDEX-MCP)
 需要重新生成, 否则 CI check-docs-drift 失败. 用户每次需手动提醒.
 
-本脚本: post-commit hook 调用, 检测本次 commit 是否变更子模块 gitlink,
-若是则自动跑 sync-all-docs 生成派生文档到工作区 (不自动 commit —
-由 agent/开发者随下次 commit 提交, 避免残缺生成入库).
+本脚本: post-commit hook 调用, 检测本次 commit 是否:
+  1. 变更子模块 gitlink → 自动 sync-all-docs (既有)
+  2. 触碰 SSOT 源 (agent-workflows/profiles, mof-capabilities 等) →
+     自动 projection-sync / 对应投影生成器 (PROJ-FORCE, 差距治理 S1)
+
+生成到工作区 (不自动 commit — 由 agent/开发者随下次 commit 提交).
 
 用法 (post-commit hook):
     python3 bin/ssot/post-commit-sync-check.py
@@ -26,6 +29,21 @@ ROOT = Path(__file__).resolve().parents[2]
 # 迭代敏感的 PASW 子模块 (bump 后需派生文档同步)
 SYNC_SUBMODULES = ("projects/agora",)
 
+# SSOT 源 → 投影生成器映射 (PROJ-FORCE)
+# commit 触碰 SSOT 源 → 自动跑对应生成器, 消除"改 SSOT 忘投影"漂移
+SSOT_GENERATORS: list[tuple[tuple[str, ...], list[str]]] = [
+    # agent-workflows SSOT (_base.yaml 等 profiles) → projection-sync
+    (
+        (".omo/_truth/registry/agent-workflows/profiles/",),
+        ["uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py", "projection-sync"],
+    ),
+    # mof-capabilities SSOT → capability-registry 重生成
+    (
+        (".omo/_truth/registry/mof-capabilities.yaml",),
+        ["uv", "run", "--with", "pyyaml", "python", "bin/cockpit/gen-capability-registry.py"],
+    ),
+]
+
 
 def _changed_gitlinks() -> list[str]:
     """检测本次 commit (HEAD) 相对上一 commit (HEAD~1) 的 gitlink 变更."""
@@ -42,6 +60,28 @@ def _changed_gitlinks() -> list[str]:
         return [s for s in SYNC_SUBMODULES if s in changed]
     except Exception:
         return []
+
+
+def _changed_ssot_sources() -> list[list[str]]:
+    """检测本次 commit 触碰的 SSOT 源, 返回需运行的生成器命令列表."""
+    try:
+        r = subprocess.run(
+            ["git", "diff", "HEAD~1", "HEAD", "--name-only"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        changed = r.stdout.splitlines()
+    except Exception:
+        return []
+    triggered: list[list[str]] = []
+    for prefixes, cmd in SSOT_GENERATORS:
+        if any(c.startswith(prefix) for prefix in prefixes for c in changed):
+            if cmd not in triggered:
+                triggered.append(cmd)
+    return triggered
 
 
 def _run_sync_all_docs() -> tuple[bool, str]:
@@ -104,9 +144,33 @@ def _validate_generation() -> bool:
 
 
 def main() -> int:
+    rc = 0
+    # 1. SSOT-touch → 自动投影生成 (PROJ-FORCE)
+    triggered = _changed_ssot_sources()
+    for cmd in triggered:
+        gen = " ".join(cmd[3:]) if cmd[:2] == ["uv", "run"] else " ".join(cmd)
+        print(f"[sync-check] SSOT 源变更 → 自动运行 {gen} ...")
+        try:
+            r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=180, check=False)
+            if r.returncode == 0:
+                print(f"[sync-check] ✅ {gen} 完成")
+            else:
+                print(f"[sync-check] ⚠️ {gen} 失败 (exit {r.returncode}):\n{(r.stdout or r.stderr)[-300:]}")
+        except Exception as exc:
+            print(f"[sync-check] ⚠️ {gen} 执行异常: {exc}")
+        # 残缺防护: capability-registry 生成若本地 submodule 不全产出残缺 (totals=0),
+        # 自动 revert, 避免残缺生成物被提交污染 main (CI 完整环境会重新生成).
+        if not _validate_generation():
+            print("[sync-check] ⚠️ 生成不完整 (本地 submodule 不全?) — 已自动 revert 残缺生成物")
+            _revert_incomplete_generation()
+            return 0
+        # 投影生成可能产生派生文档 diff, 并入下方 drift 提示
+        rc = 1 if _has_doc_drift() else rc
+
+    # 2. 子模块指针变更 → sync-all-docs (既有)
     changed = _changed_gitlinks()
     if not changed:
-        return 0  # 无子模块指针变更, 无需同步
+        return rc  # 无子模块指针变更; SSOT-touch 产生的 drift 已提示
 
     print(f"[sync-check] 检测到子模块指针变更: {', '.join(changed)}")
     print("[sync-check] 自动运行 make sync-all-docs ...")
@@ -127,6 +191,22 @@ def main() -> int:
         return 1
     print("[sync-check] ✅ 派生文档无漂移")
     return 0
+
+
+def _revert_incomplete_generation() -> None:
+    """revert 残缺生成的 capability-registry 到 HEAD (保持工作树干净)."""
+    target = "docs/generated/capability-registry.yaml"
+    try:
+        subprocess.run(
+            ["git", "checkout", "HEAD", "--", target],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":
