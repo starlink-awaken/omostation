@@ -9,17 +9,17 @@
 | 通道 | 数量 |
 |------|------|
 | CLI 命令 (含子命令) | 149 |
-| MCP 工具 | 600 |
+| MCP 工具 | 616 |
 | MCP 服务器 | 27 |
-| BOS 服务 | 237 |
-| BOS 域 | 20 |
+| BOS 服务 | 242 |
+| BOS 域 | 21 |
 
 ## MCP 服务器清单
 
 | 服务器 | 层 | 工具数 | 传输 | 文件 |
 |--------|-----|--------|------|------|
+| `agora` | I0 | 86 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
 | `gbrain` | L2 | 75 | stdio | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
-| `agora` | I0 | 70 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
 | `runtime` | L1 | 50 | stdio | `projects/runtime/src/runtime/mcp_server.py` |
 | `l4-kernel` | L4 | 47 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `kos` | L2 | 44 | stdio | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
@@ -50,6 +50,7 @@
 
 | 域 | 服务数 |
 |-----|--------|
+| `agent-cell` | 5 |
 | `agora` | 3 |
 | `analysis` | 28 |
 | `bcos` | 3 |
