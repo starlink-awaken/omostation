@@ -22,7 +22,7 @@ class Priority(IntEnum):
     BACKLOG = 1  # < 20
 
     @classmethod
-    def from_score(cls, score: float) -> "Priority":
+    def from_score(cls, score: float) -> Priority:
         if score >= 80:
             return cls.CRITICAL
         if score >= 60:
