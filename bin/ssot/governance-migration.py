@@ -235,21 +235,10 @@ def migrate(dry_run: bool = False) -> None:
         print("\n[dry-run] No files written.")
         return
 
-    # Preserve frontmatter by rewriting full document
-    frontmatter = {}
-    for doc in yaml.safe_load_all(text):
-        if isinstance(doc, dict):
-            if "rules" not in doc:
-                frontmatter = doc
-            else:
-                break
-
-    output = ""
-    if frontmatter:
-        output += "---\n"
-        output += yaml.dump(frontmatter, default_flow_style=False, sort_keys=False, allow_unicode=True)
-        output += "---\n"
-    output += yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
+    # Preserve original file format: frontmatter without ---, then --- separator, then data
+    frontmatter_text = yaml.dump(frontmatter, default_flow_style=False, sort_keys=False, allow_unicode=True)
+    data_text = yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
+    output = f"{frontmatter_text}---\n{data_text}"
 
     GOVERNANCE_CHECKS.write_text(output)
     print(f"\nApplied: {GOVERNANCE_CHECKS}")

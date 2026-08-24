@@ -86,7 +86,7 @@ print(report())
           cd projects/ecos
           OK=0; FAIL=0
           # 活跃工具 (排除已归档的死引用: mof-doc-governance/mof-gen-l0/mof-m2-coverage/mof-mof-validate/mof-owl-adapter)
-          for tool in mof-bootstrap mof-compile mof-bos mof-bos-watch mof-entity mof-generate mof-skills mof-trail mof-audit mof-reason mof-workflow ecos-constraint-validator mof-validate omo-fields-completeness-check auto-backfill-omotask-fields-v2 mof-bridge-sync; do
+          for tool in mof-bootstrap mof-compile mof-bos mof-bos-watch mof-entity mof-generate mof-skills mof-trail mof-audit mof-reason mof-workflow ecos-constraint-validator mof-validate omo-fields-completeness-check auto-backfill-omotask-fields-v2 mof-bridge-sync mof-state-bridge mof-schema-validate mof-relation-builder mof-bridge-match mof-sla mof-extract mof-events mof-model mof-verify mof-view; do
             if uv run python3 src/ecos/ssot/tools/$tool.py --help > /dev/null 2>&1; then OK=$((OK+1)); else FAIL=$((FAIL+1)); echo "FAIL: $tool"; fi
           done
           echo "P2 tools: OK=$OK FAIL=$FAIL"
