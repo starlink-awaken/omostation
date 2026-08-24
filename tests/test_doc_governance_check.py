@@ -121,6 +121,35 @@ def test_surface_specific_statuses_accept_canonical_spec_state(tmp_path: Path) -
     assert not [finding for finding in result if finding["rule"] == "invalid_metadata"]
 
 
+def test_surface_specific_lifecycles_accept_spec_lifecycle(tmp_path: Path) -> None:
+    registry = _registry()
+    registry["surfaces"][0]["valid_statuses_by_schema"] = {
+        "specification/v1": ["accepted"]
+    }
+    registry["surfaces"][0]["valid_lifecycles_by_schema"] = {
+        "specification/v1": ["spec"]
+    }
+    spec = tmp_path / "docs/superpowers/specs/accepted.md"
+    spec.parent.mkdir(parents=True)
+    spec.write_text(
+        "---\n"
+        "schema_version: specification/v1\n"
+        "spec_version: 1.0.0\n"
+        "status: accepted\n"
+        "lifecycle: spec\n"
+        "bet_id: BET-TEST\n"
+        "owner: governance-team\n"
+        "last-reviewed: 2026-08-24\n"
+        "---\n"
+        "# Accepted spec\n",
+        encoding="utf-8",
+    )
+
+    result = CHECKER.check_file(spec, tmp_path, registry, {}, date(2026, 8, 24))
+
+    assert not [finding for finding in result if finding["rule"] == "invalid_metadata"]
+
+
 def test_metadata_only_review_state_records_migration_without_content_review(
     tmp_path: Path,
 ) -> None:
