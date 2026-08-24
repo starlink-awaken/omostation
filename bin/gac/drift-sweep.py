@@ -252,7 +252,7 @@ def check_doc_link_validity() -> dict:
 
 
 def check_doc_hardcoded_values() -> dict:
-    rc, out, err = run("python3 bin/gac/hardcode-scan.py 2>&1 | tail -20", timeout=30)
+    rc, out, err = run("python3 bin/gac/hardcode-scan.py 2>&1 | tail -20", timeout=120)
     tool_exists = (REPO_ROOT / "bin" / "gac" / "hardcode-scan.py").exists()
     if not tool_exists:
         return {
