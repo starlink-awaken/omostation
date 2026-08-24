@@ -582,6 +582,13 @@ surfaces:
   gate: true
   triggers: []
   status: active
+- id: bin-ssot-script-registry-py
+  tool: bin/ssot/script-registry.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
+  note: sgf-policy gate script-registry-validate (ecos d331ad4c)
 - id: bin-sweep-scan-py
   tool: bin/sweep/scan.py
   workflow: pyright-sweep.yml

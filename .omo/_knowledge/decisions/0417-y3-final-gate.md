@@ -19,7 +19,7 @@ related:
 
 ## Context
 
-按 [BET-Y3H2-T1-02](../../docs/plans/3y-bet-ledger.yaml) 要求，对三年规划三条验收标准做最终判定。源材料：[三年规划 §2.2 三年后可验收状态](../STRATEGY-3YEAR-PLAN-2026H2-2029.md)。
+按 [BET-Y3H2-T1-02](../../../docs/plans/3y-bet-ledger.yaml) 要求，对三年规划三条验收标准做最终判定。源材料：[三年规划 §2.2 三年后可验收状态](../../../docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md)。
 
 ## 三条验收标准（原文）
 
@@ -54,6 +54,6 @@ related:
 
 ## References
 
-- [三年规划 §2.2](../STRATEGY-3YEAR-PLAN-2026H2-2029.md)
+- [三年规划 §2.2](../../../docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md)
 - [ADR-0416 Y2 门](./0416-y2-gate-vision-falsification.md)
-- [BET-Y3H2-T1-02 goal](../../docs/plans/3y-bet-ledger.yaml)
+- [BET-Y3H2-T1-02 goal](../../../docs/plans/3y-bet-ledger.yaml)

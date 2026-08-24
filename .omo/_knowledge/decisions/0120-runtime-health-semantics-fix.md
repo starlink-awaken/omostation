@@ -504,8 +504,8 @@ Layer 3 (P2, 防御)
 ## References
 
 - [ADR-0119: 系统性优化 Roadmap](0119-systemic-optimization-roadmap-2026h2.md) (S2-5/S2-6 状态监控闭环)
-- [scheduler.py](../../projects/runtime/src/runtime/scheduler.py) (L333-370 freshness 逻辑)
-- [omo_state_schema.py](../../projects/omo/src/omo/omo_state_schema.py) (L70-108 summarize 逻辑)
-- [matrix.yaml](../../../runtime/matrix.yaml) (服务注册 SSOT)
+- [scheduler.py](../../../projects/runtime/src/runtime/scheduler.py) (L333-370 freshness 逻辑)
+- [omo_state_schema.py](../../../projects/omo/src/omo/omo_state.py) (L70-108 summarize 逻辑)
+- `runtime/matrix.yaml` (服务注册 SSOT)
 - [port-registry.yaml](../../../protocols/port-registry.yaml) (端口注册 SSOT)
-- [scheduler_state.json](../../../runtime/scheduler_state.json) (持久化状态)
+- `runtime/scheduler_state.json` (持久化状态)
