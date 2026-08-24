@@ -5331,6 +5331,100 @@ bets:
   retro: required
   started_at: '2026-08-23T21:40:00+08:00'
   completed_at: '2026-08-23T22:45:00+08:00'
+- id: BET-Y1Q3-T1-11
+  track: T1-TRUTH
+  window: Y1Q3
+  title: platform-rebase 独立 clone 退役 provenance 收敛
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  started_at: 2026-08-24
+  goal: 将已验证的 platform-rebase retirement provenance 补丁重放到 current main，使 GitHub
+    update-branch/rebase 引入的平台提交不再被误计为 delivery author，同时锁定精确 PR/base/head、origin
+    fetch/push 仓库、delivery author 范围与 quarantine 后竞态；归档一个零消费者旧 loader 恢复脚本减法配额，最后仅通过 clone lifecycle 退役旧 attempt
+  non_goals:
+  - 不放宽默认 clone guard、writer independent-clone 准入或 delivery author 校验
+  - 不把 imported platform commits 归属于当前 delivery attempt
+  - 不手工删除 clone、worktree 或远程分支来替代 retirement receipt
+  - 不提高 script_baseline，不修改 plist、crontab、服务、运行数据库或用户配置
+  evidence:
+    E1_current_main_gap:
+      description: current main 缺少 retirement-provenance 子命令、platform-aware guard、origin fetch/push 双向复核与 quarantine origin race 恢复
+      current_main: a327aeeab9a62481e1c05e57096889d2c4c51bae
+      source_commit: e3848f5f6a6801d28da7baef2d23ef78818c920a
+      source_files:
+      - bin/gac/agent-clone.py
+      - bin/gac/clone-lifecycle.py
+      - tests/test_clone_lifecycle.py
+    E2_source_verification:
+      description: 隔离旧 attempt 的 focused tests、Ruff、Python 3.9 AST 与独立 review 已通过；必须在 current main 新 attempt 重放后重新验证
+    E3_downstream_need:
+      description: 'B4-D native execution receipt PR #2051 已合并；旧 platform-rebased clone 的合规退役仍依赖本 BET'
+      merged_pr: 2051
+      merge_sha: bd3d64cd88ff9c582e373eb5ff91cf44d969f82f
+    E4_script_quota:
+      description: 'PR #2085 新增 attest-review.py 后活动脚本 443 超基线 442；vocabulary_loader.py 除自身外无路径、import、函数或入口消费者，可归档而不提高基线'
+      active_scripts: 443
+      script_baseline: 442
+      archive_source: bin/meta/vocabulary_loader.py
+      archive_destination: bin/_archive/2026-08-t1-11/vocabulary_loader.py
+  done_when:
+  - current main 新 attempt 仅在五个 write surfaces 重放 source commit e3848f5f6 的最小语义补丁并归档零消费者 loader，保留 current-main 新行为
+  - default guard 不接受 platform author；仅 retirement-provenance 对精确 platform base..head 范围排除 imported commits
+  - 错误 delivery author、receipt/PR repository 不一致、非 main base、origin fetch/push 漂移与 quarantine 后竞态全部 fail-closed
+  - vocabulary_loader.py 只移动到 archive，活动脚本数不高于 442，script_baseline 不变
+  - clone lifecycle focused tests、Ruff、Python 3.9 AST、GaC 与独立 review 全绿
+  - PR 合并且 source commit 有 origin tag；旧 attempt 仅凭 merged PR + retirement receipt 退役
+  progress:
+    done_when_met: []
+    pending_when: []
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_clone_lifecycle.py -q
+    expect: exit 0
+  - cmd: uv run ruff check bin/gac/agent-clone.py bin/gac/clone-lifecycle.py tests/test_clone_lifecycle.py
+    expect: exit 0
+  - cmd: python3 bin/gac/agent-clone.py --help | grep -q retirement-provenance
+    expect: exit 0
+  - cmd: python3 bin/gac/gac-validate.py --gate
+    expect: exit 0
+  - cmd: test ! -f bin/meta/vocabulary_loader.py && test -f bin/_archive/2026-08-t1-11/vocabulary_loader.py
+    expect: exit 0
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:31bf674468979c4fb862b7aaa92828a0291ff6c5917ab91fe65b115da897dff0
+    decision_ref: decision://accepted/BET-Y1Q3-T1-11
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/agent-clone.py
+  - bin/gac/clone-lifecycle.py
+  - tests/test_clone_lifecycle.py
+  - bin/meta/vocabulary_loader.py
+  - bin/_archive/2026-08-t1-11/vocabulary_loader.py
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q1-T1-05
+  - BET-Y1Q3-T1-07
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 重放需要超出五个 write surfaces、放宽 default guard、发现 vocabulary_loader 真实消费者或无法保留 fail-closed negative tests 时停止实施并重新审查
+  subtraction:
+  - 不新增活动脚本、规则或 ADR；归档一个零消费者旧 loader 并在退役后清理旧 attempt
+  retro: required
 - id: BET-Y1Q1-T6-07
   track: T6-SUBTRACT
   window: Y1Q3
