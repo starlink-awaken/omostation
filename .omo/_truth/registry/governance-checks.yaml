@@ -171,7 +171,7 @@ gac:
     - sweep_index_cli
   subtraction_quota:
     check_type: advisory
-    rule_baseline: 139
+    rule_baseline: 142    # 2026-08-24: 2b0ad8cae AGE-v2 adds 3 rules (CR-AGE-MEMORY/REPLAY/EVENT-01); 142 active
     adr_baseline: 361
     script_baseline: 478    # 2026-08-24: #2129 T10-10 maturity-align.py adds third reconciliation dimension; 478 active
   rules:
