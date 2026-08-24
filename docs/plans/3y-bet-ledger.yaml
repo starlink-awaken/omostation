@@ -6551,3 +6551,190 @@ bets:
   human_gate: false
   circuit_breaker: 复盘结论与实测数据严重不符（如 resident 运行时不可用）时，标注复盘为 provisional 并补充反证，不强行落定论
   retro: required
+
+- id: BET-Y1Q3-T10-01
+  track: T10-MATURITY
+  window: Y1Q3
+  title: script registry 444 全登记 (evolvable 6→8)
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  note: 'G1: maturity-scorecard evolvable 验证开关'
+  goal: '登记全部 444 bin 脚本到 script registry, 使 script-registry.py validate 返回 VALIDATION PASSED, evolvable 6→8。'
+  non_goals: []
+  done_when: []
+  workflow: governance-audit
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/operations/bin-scripts-convergence-manifest.json
+  - .omo/_truth/registry/governance-checks.yaml
+  - bin/ssot/script-registry.py
+  pasw_required: false
+  depends_on: []
+
+- id: BET-Y1Q3-T10-02
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 90pct-maturity-design.md 落盘 (iterable 6→8)
+  appetite: 0.25 day
+  priority: P1
+  status: candidate
+  note: 'G2: iterable 验证开关 = 本设计文档存在'
+  goal: '落盘 docs/operations/90pct-maturity-design.md (已含 Phase 1-5), 使 score_iterable 检测通过, iterable 6→8。'
+  non_goals: []
+  done_when: []
+  workflow: governance-audit
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/operations/90pct-maturity-design.md
+  pasw_required: false
+  depends_on: []
+
+- id: BET-Y1Q3-T10-03
+  track: T10-MATURITY
+  window: Y1Q3
+  title: ADR 链接修复 (traceable 6→8)
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  note: 'G3: adr-link-validator 检测'
+  goal: '修复 .omo/_knowledge/decisions/ 中 broken ADR links, 使 adr-link-validator.py rc=0, traceable 6→8。'
+  non_goals: []
+  done_when: []
+  workflow: governance-audit
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - .omo/_knowledge/decisions/
+  - bin/gac/adr-link-validator.py
+  pasw_required: false
+  depends_on: []
+
+- id: BET-Y1Q3-T10-04
+  track: T10-MATURITY
+  window: Y1Q3
+  title: governance owner 字段迁移 (troubleshootable 6→8)
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  note: 'G4: governance-migration dry-run 检测'
+  goal: '完成 governance checks owner 字段迁移, 使 governance-migration.py --dry-run 返回 No changes needed, troubleshootable 6→8。'
+  non_goals: []
+  done_when: []
+  workflow: governance-audit
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ssot/governance-migration.py
+  - .omo/_truth/registry/governance-checks.yaml
+  pasw_required: false
+  depends_on: []
+
+- id: BET-Y1Q3-T10-05
+  track: T10-MATURITY
+  window: Y1Q3
+  title: compass_radar 集成新指标 (observable 8→9+)
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  note: 'G5: observable 加新指标'
+  goal: '在 compass_radar.py 集成新治理指标 (如成熟度分项/台账验证态), 提升 observable 到 9+。'
+  non_goals: []
+  done_when: []
+  workflow: governance-audit
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/compass_radar.py
+  pasw_required: false
+  depends_on: []
+
+- id: BET-Y1Q3-T10-06
+  track: T10-MATURITY
+  window: Y1Q3
+  title: scorecard 检测粒度升级 9/10 档 (9.0 可达)
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  note: 'G6: 核心 — scorecard 封顶 8/9, 9.0 数学不可达'
+  goal: '升级 maturity-scorecard.py 检测粒度, 加 9/10 分档验证标准 (连续/深度指标), 使 overall 9.0 可达。本轮关键自进化。'
+  non_goals: []
+  done_when: []
+  workflow: governance-audit
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/maturity-scorecard.py
+  pasw_required: false
+  depends_on: BET-Y1Q3-T10-01, BET-Y1Q3-T10-02, BET-Y1Q3-T10-03, BET-Y1Q3-T10-04, BET-Y1Q3-T10-05
+
+- id: BET-Y1Q3-T10-07
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Droid-Shield run-id 误报治理
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  note: 'G7: 自进化债 (CONV-3 被堵实证)'
+  goal: 'run-id 格式占位符化规范入 engineering-golden-rules, 治理文档避免 workspace 级误报拦截。'
+  non_goals: []
+  done_when: []
+  workflow: governance-audit
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/operations/engineering-golden-rules.md
+  pasw_required: false
+  depends_on: []
+
+- id: BET-Y1Q3-T10-08
+  track: T10-MATURITY
+  window: Y1Q3
+  title: closeout 硬门/bet 绑定缺失治理
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  note: 'G8: 自进化债 (S1/S5/CONV-3 三次 blocked 实证)'
+  goal: '为治理演进登记专属 bet 机制, 消除 waiver run 无 bet 绑定导致的 vision→retro closeout 硬门拦截。'
+  non_goals: []
+  done_when: []
+  workflow: governance-audit
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/AGENT-BRIEF.md
+  - bin/plan/chain-bind-check.py
+  pasw_required: false
+  depends_on: []
+
+- id: BET-Y1Q3-T10-09
+  track: T10-MATURITY
+  window: Y1Q3
+  title: worktree submodule init 策略 (gate 环境性失败)
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  note: 'G9: 自进化债 (12 submodule 未 checkout 实证)'
+  goal: 'worktree init 策略 + gate 环境感知, 减少 submodule 未 checkout 导致的本地 gate 环境性失败。'
+  non_goals: []
+  done_when: []
+  workflow: governance-audit
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/gac-worktree.sh
+  - docs/operations/worktree-hygiene.md
+  pasw_required: false
+  depends_on: []
+
+- id: BET-Y1Q3-T10-10
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 成熟度口径三方对齐 (health/scorecard/台账)
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证)'
+  goal: '统一 health 报告 / maturity-scorecard / bet-ledger 验证态三方口径, 建单一 SSOT。'
+  non_goals: []
+  done_when: []
+  workflow: governance-audit
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+  - bin/gac/maturity-scorecard.py
+  pasw_required: false
+  depends_on: []
