@@ -15,7 +15,8 @@
 	mof-bootstrap m4-health m4-health-compare registry-drift gac-healthcheck gac-drift gac-validate \
 	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
 	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest \
-	bcos-evolve bcos-signals bcos-north-star
+	bcos-evolve bcos-signals bcos-north-star \
+	swarm-status swarm-chaos swarm-decide swarm-audit swarm-demo
 
 PY := uv run --with pyyaml python
 PY_STDLIB := bin/gac/managed-python run --profile stdlib --
@@ -602,4 +603,24 @@ bcos-signals:  ## BCOS 统一信号路由 (W1-D2, 公文/会议/调研/代码)
 	python3 bin/bc-os/signal_router.py --inbox "$$HOME/Documents/@感知信号" || true
 
 bcos-north-star:  ## BCOS 北极星价值度量 v2 (排除 self-data)
-	python3 bin/bc-os/north_star_meter_v2.py --json
+	python3 bin/bc-os/north_star_meter_v2.py --json || true
+
+# ==============================================================================
+# 自治蜂群与防腐体系 (Self-Governing Swarm & Anti-Corrosion)
+# 4 域守卫 + B.D.S.K. 4 角制衡 + 因果黑板 + Devil 变异注入 + Keeper 减法
+# ==============================================================================
+
+swarm-status:  ## 蜂群 4 域守卫态势与因果黑板概览
+	@uv run --directory projects/cockpit python -m cockpit.cli swarm status
+
+swarm-chaos:  ## @Devil 红队混沌变异注入攻击测试
+	@python3 bin/gac/devil-chaos-runner.py --inject all
+
+swarm-decide:  ## @Sage & @Keeper Decision-Inbox 架构裁决工作台
+	@uv run --directory projects/cockpit python -m cockpit.cli decide
+
+swarm-audit:  ## @Keeper 减法配额与资产健康度核算
+	@python3 bin/gac/keeper-subtraction-engine.py --audit
+
+swarm-demo:   ## 蜂群自治全链路真实场景演练 (6 幕闭环)
+	@python3 bin/gac/swarm-e2e-scenario.py
