@@ -1,0 +1,54 @@
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-08-24
+---
+# 减法配额 (Subtraction Quota)
+schema: subtraction-quota/v1
+version: 1.0
+
+quota:
+  tools:
+    max_total: 300
+    archive_per_quarter: 15
+    deprecated_threshold_days: 90
+    auto_archive_enabled: true
+    description: "工具总数超过上限或存在 deprecated 工具时，必须归档"
+
+  docs:
+    max_stale_ratio: 0.1
+    stale_threshold_days: 30
+    auto_refresh_frontmatter: true
+    description: "过期文档比例超过上限时，触发自动保鲜"
+
+  scenes:
+    max_shadow_days: 30
+    auto_escalate: true
+    description: "场景 shadow 超期时，自动发送激活提醒"
+
+  governance_rules:
+    max_total: 200
+    draft_max_age_days: 90
+    description: "规则总数超过上限或 draft 超期时，触发清理"
+
+enforcement:
+  check_frequency: weekly
+  auto_remediate: true
+  notify_on_violation: true
+  escalation:
+    - after_days: 7
+      action: notify_owner
+    - after_days: 14
+      action: create_issue
+    - after_days: 30
+      action: escalate_to_lead
+
+current_state:
+  tools_total: 42
+  tools_deprecated: 0
+  tools_need_archive: 0
+  docs_total: 246
+  docs_stale: 0
+  scenes_shadow_stale: 0
+  governance_rules_total: 139
+  governance_rules_draft: 0
