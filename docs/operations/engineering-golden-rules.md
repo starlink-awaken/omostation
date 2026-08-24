@@ -72,3 +72,57 @@ CI 冷启动 runner 的 monotonic 时钟 <100s (实测 83.75/86.51) → 必然 f
 ```
 
 **验收**: 改 SSOT 后 commit, 派生文档随 commit 同步 (无 check-docs-drift fail)。
+
+## GOV-REBAL: 派生文档-only fast-track 铁律 (S5)
+
+**触发**: 变更面全部为派生文档 (docs/generated/*、CLI-REFERENCE、CAPABILITY-MAP、INDEX-MCP)。
+
+**根因实证**: 治理密度已达规模不经济拐点 — 纯派生文档变更 (投影重生成, 无真实语义变更)
+也走全量 ADR 占号 + workflow 仪式, 治理成本与变更语义不成比例。
+
+**规则**:
+```markdown
+## 派生文档 fast-track 铁律
+- 纯派生文档变更 (derived-only) → 走 project-doc-change/state-sync 轻量 workflow, 不需 ADR 占号
+- 判定工具: bin/gac/check-derived-only-fast-track.py (gate: derived-only-fast-track, 软信号)
+- 混入源码/SSOT/治理代码 → 常规 gate, 无 fast-track
+- 目的: 把治理仪式花在真实语义变更上, 不为投影重生成付费
+```
+
+**验收**: `python3 bin/gac/check-derived-only-fast-track.py --file docs/CLI-REFERENCE.md` 输出 fast-track 建议。
+
+## AUTO-FIX: 漂移检测→分类→修复闭环铁律 (S5)
+
+**触发**: 检测到漂移 (SSOT 变更未同步派生文档 / 注册表 path 缺失 / 新脚本未登记)。
+
+**根因实证**: 治理闭环 E-D-P-C 缺 F (修复环) — 检测只报告不修复, agent 手动补派生文档,
+周而复始。post-commit-sync-check 只覆盖"子模块指针变更"一种触发。
+
+**规则**:
+```markdown
+## 漂移修复闭环铁律
+- 检测→分类→修复闭环: bin/gac/auto-fix-loop.py (gate: auto-fix-loop)
+- DERIVED-STALE/ORPHAN-SCRIPT → 可自动修复 (--apply 应用 make sync-all-docs / script-registry register)
+- PATH-DRIFT → error 级阻断, 需人工判断 (删除 vs 迁移, 类比 S1 omo_lint 案例)
+- 能自动修复的漂移不许只报告不修 (防 E-D-P-C 缺 F 复发)
+```
+
+**验收**: `python3 bin/gac/auto-fix-loop.py` exit 0 且无 error 级漂移。
+
+## UX-NOISE: 命令密度可观测铁律 (S5)
+
+**触发**: 新增 cockpit/CLI 命令 / 命令密度增长。
+
+**根因实证**: cockpit CLI 命令 149+ (含子命令 157), 兜底组 "其他" 承载 100 命令 (63%),
+机制密度超过心智带宽 — 命令发现依赖 grep, 无密度可观测性。
+
+**规则**:
+```markdown
+## 命令密度铁律
+- 命令密度/重复/易混淆定位: bin/gac/command-discovery.py (gate: command-discovery, 软信号)
+- 单场景组命令 ≥ 25 → 密度超阈值信号 (建议收敛/拆组)
+- 新命令应先想"放哪个场景组", 避免膨胀兜底组 ("其他")
+- 发现层: `cockpit help <关键词>` 模糊搜命令
+```
+
+**验收**: `python3 bin/gac/command-discovery.py` 输出密度分布 + 超阈值组信号。

@@ -173,7 +173,7 @@ gac:
   subtraction_quota:
     rule_baseline: 139    # 规则数基线 (增 1 必须删 1, 超基线 gac-validate fail). 136→139: CR-RESIDENT-{STATUS,MOF-SYNC,BOS}-01 三条实体化 L0 enforcement (BET-Y1Q3-T1-10, ADR-0396)
     adr_baseline: 361     # ADR 基线 (新增 ADR 须归档一份)
-    script_baseline: 441  # 2026-08-24: 439→441, +1 pre-existing drift (bin-scripts-convergence-audit re-count) +1 est-minutes-coefficient.py (BET-Y1Q3-T6-05, 时间账本系数表 SSOT).
+    script_baseline: 444  # 2026-08-24: 并发校准 441 (bin-scripts-convergence-audit re-count + est-minutes-coefficient.py #2075) + S5 增 3 工具 (check-derived-only-fast-track/auto-fix-loop/command-discovery, 均 gate 接线 + 测试覆盖). 实际 444. 后续继续执行增 1 删 1 (BET-Y1Q3-T6-05).
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
