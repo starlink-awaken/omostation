@@ -52,22 +52,8 @@ SKIP_PATTERNS = (
     "tbd",
     "future",
     "todo",
+    "— ",
 )
-
-# Known-historical docs where bin/ references describe REMOVED scripts
-# or future plans. These are audit trails, not runbooks; their broken
-# refs are expected and should not fail the gate.
-KNOWN_HISTORICAL_FILES = {
-    "bin-scripts-necessity-report.md",
-    "bin-scripts-close-duplicate-batch.md",
-    "bin-scripts-close-duplicate-exec.md",
-    "bin-scripts-convergence-audit.md",
-    "REPO-AUDIT-IMPLEMENTATION-PLAN.md",
-    "ARCHITECTURAL-REVIEW-2026-08-24.md",
-    "omo-bootstrap-checklist.md",
-    "omo-path-acl-runbook.md",
-    "submodule-bump-bot-pilot-notes.md",
-}
 
 
 def _is_archived(path: Path) -> bool:
@@ -92,9 +78,6 @@ def collect_refs(roots: list[Path]) -> dict[str, set[str]]:
             continue
         for md in sorted(root.rglob("*.md")):
             if _is_archived(md):
-                continue
-            # Skip known-historical files (audit trails, not runbooks)
-            if md.name in KNOWN_HISTORICAL_FILES:
                 continue
             for line in md.read_text(encoding="utf-8", errors="replace").splitlines():
                 if _is_skippable_line(line):
