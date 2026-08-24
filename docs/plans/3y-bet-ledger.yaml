@@ -6724,21 +6724,59 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md
     spec_version: 1.0.0
-    content_digest: sha256:af2e55478f92df2833659a71814935d8f70d6bf49bb55f36db0ec93a7aa0a6f5
+    content_digest: sha256:7542b3ad403a35fa350b11f99cb06987e33dfe122c2950e9172cc2ad6cc3180f
     decision_ref: decision://accepted/BET-Y1Q3-T6-14
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@fe26d63e96a0e45a782b120014634a0ee5c1c33a
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          rollback:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T6-14-accept.yaml
+            sha256: sha256:fd846e276234494b7c21ab2ba546b045ba0933e8f71783ca51e1ffdb2dda96cd
+          live_canary:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T6-14-accept.yaml
+            sha256: sha256:fd846e276234494b7c21ab2ba546b045ba0933e8f71783ca51e1ffdb2dda96cd
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T6-14-accept.yaml
+            sha256: sha256:fd846e276234494b7c21ab2ba546b045ba0933e8f71783ca51e1ffdb2dda96cd
+          real_signal:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T6-14.md
+            sha256: sha256:1c6de4c24c8380a1fa9bdf2cd6eecab6be23d9436783fc7c0745f4abe545ca4d
+          revision:
+            ref: receipt://docs/reports/2026-08-24-resident-system-deep-review.md
+            sha256: sha256:d7fc25715656de84291c7db782ebcadc8bacb3d6f33a185d7d37f9fc8dacc98f
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T6-14.md
+            sha256: sha256:1c6de4c24c8380a1fa9bdf2cd6eecab6be23d9436783fc7c0745f4abe545ca4d
+    overall_state: outcome_accepted
   workflow: project-doc-change
   underlying_workflow: project-doc-change
   write_surfaces:
