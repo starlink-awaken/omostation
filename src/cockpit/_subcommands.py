@@ -948,14 +948,20 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     chall_p.add_argument("--json", action="store_true", help="以 JSON 格式输出")
 
     # ── V2 长尾领域治理卡带工坊 (ADR-0198) ─────────────────────────
-    cart_p = sub.add_parser("cartridge", help="👁️ 长尾领域治理卡带工坊 (ADR-0198)")
+    cart_p = sub.add_parser("cartridge", help="👁️ 长尾领域治理卡带工坊 (ADR-0198/0203)")
     cart_sub = cart_p.add_subparsers(dest="action")
     cart_sub.add_parser("list", help="列出已注册卡带")
     cart_exp = cart_sub.add_parser("export", help="导出指定卡带")
     cart_exp.add_argument("cartridge_id", help="卡带ID (e.g. cartridge-weijian-v1)")
     cart_exp.add_argument("--output", help="导出文件路径")
     cart_val = cart_sub.add_parser("validate", help="校验卡带文件规范")
-    cart_val.add_argument("file_path", help="卡带 YAML 文件路径")
+    cart_val.add_argument("file_path", help="卡带 YAML/ZIP 文件路径")
+    cart_pack = cart_sub.add_parser("pack", help="打包源码目录为签名胶囊 (.cartridge)")
+    cart_pack.add_argument("source_dir", help="领域源码目录")
+    cart_pack.add_argument("--output", required=True, help="输出卡带路径 (e.g. out.cartridge)")
+    cart_run = cart_sub.add_parser("run", help="在隔离沙箱中挂载卡带并执行领域意图")
+    cart_run.add_argument("cartridge_file", help="卡带文件 (.cartridge)")
+    cart_run.add_argument("--intent", required=True, help="领域执行意图")
 
     # ── V2 主权算力网络与 0ms TTFT 快照 (ADR-0197) ─────────────────
     fab_p = sub.add_parser("fabric", help="🧑‍💻 主权混合算力与 KV 缓存快照 (ADR-0197)")
