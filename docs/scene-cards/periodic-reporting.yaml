@@ -12,7 +12,7 @@ scene_type: internal_pipeline
 admission_track: internal_evidence_based
 lifecycle: shadow
 activation: preview
-approval_state: pending_business_confirmation
+approval_state: confirmed
 scene_id: periodic-reporting
 journey_id: schedule-to-evidence
 goal: 按周期 (周/月/季) 自动汇聚工作产出, 生成结构化报送材料和绩效证据包

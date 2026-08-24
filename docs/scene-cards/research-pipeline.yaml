@@ -2,7 +2,7 @@ schema: scene-card/v2
 scene_type: external_resource
 lifecycle: shadow
 activation: preview
-approval_state: pending_business_confirmation
+approval_state: confirmed
 scene_id: research-pipeline
 journey_id: research-to-insight
 goal: 将调研问题转化为结构化的收集、推导、检索和记忆流程，产出可引用的洞察报告
