@@ -185,7 +185,7 @@ gac:
     check_type: advisory
     rule_baseline: 139
     adr_baseline: 361
-    script_baseline: 478    # 2026-08-24: gh-api-push.sh 工具层防护 (BASE-TREE-SNAPSHOT), 478 active
+    script_baseline: 482    # 2026-08-24: main 实际 481 active (并发 #2134/#2136 遗留) + gh-api-push.sh + worktree-init.sh 登记, 482 active
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
