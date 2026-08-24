@@ -11,9 +11,9 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 600
-  bos_services: 237
-  bos_domains: 20
+  mcp_tools: 616
+  bos_services: 242
+  bos_domains: 21
   cli_commands: 149
 mcp_servers:
 - id: omo
@@ -228,6 +228,22 @@ mcp_servers:
   - bcos_north_star
   - bcos_signals
   - bos_reload_routes
+  - cell_config_create
+  - cell_config_list
+  - cell_eval
+  - cell_execute
+  - cell_govern
+  - cell_memory_consolidate
+  - cell_memory_process
+  - cell_pdp_evaluate
+  - cell_pep_enforce
+  - cell_plan
+  - cell_pool_scale
+  - cell_pool_status
+  - cell_pool_submit
+  - cell_replay
+  - cell_shadow
+  - cell_verify
   - create_api_key
   - debt_auto_seed_tool
   - entropy_cleanup_tool
@@ -285,7 +301,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 70
+  tool_count: 86
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -837,6 +853,7 @@ mcp_servers:
   tool_count: 75
 bos_services:
   _domain_counts:
+    agent-cell: 5
     agora: 3
     analysis: 28
     bcos: 3
@@ -858,6 +875,27 @@ bos_services:
     swarm: 1
     system: 11
   domains:
+    agent-cell:
+    - uri: bos://agent-cell/memory/process
+      description: Agent Cell Memory — 从 Episode 生成候选记忆
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/memory/consolidate
+      description: Agent Cell Memory — 合并相关记忆
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/replay/run
+      description: Agent Cell Replay — 历史 Episode 回放
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/replay/shadow
+      description: Agent Cell Shadow — 影子运行 (无副作用)
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/replay/eval
+      description: Agent Cell Eval — 评估 Cell 性能
+      transport: stdio
+      status: active
     agora:
     - uri: bos://agora/metrics
       description: agora 内部指标源 self-identifier (metrics collector source_uri)
