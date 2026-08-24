@@ -67,7 +67,7 @@ def _journey_status_counts() -> dict[str, int]:
 
 
 def _bcos_north_star_status() -> str:
-    rc, out, _ = _run([sys.executable, str(WS_ROOT / "bin" / "bc-os" / "north_star_meter_v2.py"), "--json"])
+    rc, out, _ = _run([sys.executable, str(WS_ROOT / "bin" / "bc-os" / "north_star_meter_v3.py"), "--json"])
     if rc != 0:
         return "unavailable"
     try:
