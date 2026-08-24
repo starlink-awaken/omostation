@@ -6605,7 +6605,7 @@ bets:
   title: ADR 链接修复 (traceable 6→8)
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
   note: 'G3: adr-link-validator 检测'
   goal: '修复 .omo/_knowledge/decisions/ 中 broken ADR links, 使 adr-link-validator.py rc=0, traceable 6→8。'
   non_goals: []
@@ -6624,7 +6624,7 @@ bets:
   title: governance owner 字段迁移 (troubleshootable 6→8)
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
   note: 'G4: governance-migration dry-run 检测'
   goal: '完成 governance checks owner 字段迁移, 使 governance-migration.py --dry-run 返回 No changes needed, troubleshootable 6→8。'
   non_goals: []

@@ -73,7 +73,7 @@ supersedes: []
 - [ADR-0140](./0140-m4-health-score.md) (Health Score 量化)
 - [ADR-0151](./0151-submodule-hygiene-gate.md) (子模块卫生守门)
 - [ADR-0144](./0144-m4-cron-hook.md) (M4 OMO 桥接, 事前)
-- [docs/M4-GAC-INTEGRATION-PLAN.md](./../../../../docs/M4-GAC-INTEGRATION-PLAN.md)
+- [docs/M4-GAC-INTEGRATION-PLAN.md](../../../docs/M4-GAC-INTEGRATION-PLAN.md)
 
 ---
 

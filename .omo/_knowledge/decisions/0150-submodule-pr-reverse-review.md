@@ -92,7 +92,7 @@ close 评论必须含:
 - [ADR-0147](./0147-mcptool-adder-guide.md)
 - [ADR-0148](./0148-round-trip-playbook.md)
 - [ADR-0149](./0149-p71-baseline-no-replay.md)
-- [docs/SUBMODULE-PR-REVIEW-GUIDE.md](./../../../../docs/SUBMODULE-PR-REVIEW-GUIDE.md)
+- [docs/SUBMODULE-PR-REVIEW-GUIDE.md](../../../docs/SUBMODULE-PR-REVIEW-GUIDE.md)
 
 ---
 
