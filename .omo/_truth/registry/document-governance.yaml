@@ -10,7 +10,7 @@ description: Document ownership, lifecycle, freshness, and discoverability polic
 
 metadata:
   valid_statuses: [draft, active, stale, superseded, archived, deprecated, experimental, planned]
-  valid_lifecycles: [ssot, entry, contract, pattern, plan, history, generated]
+  valid_lifecycles: [ssot, entry, contract, pattern, plan, history, generated, spec]
   required_frontmatter: [status, lifecycle, owner, last-reviewed]
   date_format: YYYY-MM-DD
 
