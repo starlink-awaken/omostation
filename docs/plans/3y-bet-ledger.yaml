@@ -6504,7 +6504,7 @@ bets:
   title: resident 常驻体系与治理接线全面深度复盘
   appetite: 4 hours
   priority: P2
-  status: done
+  status: candidate
   started_at: 2026-08-24
   goal: 对 resident 常驻 agent 体系（五类角色/事件驱动/规则订阅/多载体执行）与治理接线（MOF/SGF/BOS、agent-workflow 契约、gac-local-gate、PR 工作流、MCP 工具）从场景/功能/用户旅程/体验/目标愿景/长期运营/运维/防腐/约束 9 维度产出一份项目粒度深度复盘文档并入库
   non_goals:
@@ -6530,8 +6530,7 @@ bets:
   - 复盘文档入库 docs/reports/2026-08-24-resident-system-deep-review.md
   - make gac-local-gate 全部检查 PASS
   progress:
-    done_when_met:
-    - 复盘文档入库 docs/reports/2026-08-24-resident-system-deep-review.md (E1 已实测数据更新 - status.py 修复闭环 omo #95 / events 2146 / sediment 403 草稿 / E3/E4 治理接线发现入库)
+    done_when_met: []
     pending_when: []
   verify:
   - cmd: test -f docs/reports/2026-08-24-resident-system-deep-review.md
@@ -6580,6 +6579,7 @@ bets:
   appetite: 1 day
   priority: P1
   status: done
+  done_at: 2026-08-24
   note: 'G1: maturity-scorecard evolvable 验证开关'
   goal: '登记全部 444 bin 脚本到 script registry, 使 script-registry.py validate 返回 VALIDATION PASSED, evolvable 6→8。'
   non_goals: []
@@ -6606,36 +6606,51 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          diff:
-            ref: git://origin/main@5819a3e73
           merged_reachable_commit:
-            ref: git://origin/main@5819a3e73
-          rollback:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@5819a3e7370f1478645c9c0f554b18a853062ddd
           tests:
             ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          rollback:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       operational:
         status: PROVEN
         evidence:
           cleanup:
-            ref: git://origin/main@HEAD
-          fresh_receipt:
-            ref: git://origin/main@5819a3e73
-          live_canary:
-            ref: receipt://bin/gac/maturity-scorecard.py
-          replay:
             ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-01-accept.yaml
+            sha256: sha256:639d9623c40bde722cbf71a2d1ed14e31b1caf878fbd5021b75693cfade7b304
+          live_canary:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
         status: ACCEPTED
         evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-01-accept.yaml
+            sha256: sha256:639d9623c40bde722cbf71a2d1ed14e31b1caf878fbd5021b75693cfade7b304
           human_verdict:
-            ref: receipt://docs/plans/3y-bet-ledger.yaml
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-01-accept.yaml
+            sha256: sha256:639d9623c40bde722cbf71a2d1ed14e31b1caf878fbd5021b75693cfade7b304
           real_signal:
-            ref: git://origin/main@5819a3e73
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           revision:
-            ref: receipt://docs/superpowers/specs/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-01.md
+            sha256: sha256:a7a617b5b45922176b8398571995c1beab07d864e009bc632b0c17980f69693c
           time_burden:
-            ref: receipt://.omo/_knowledge/retros/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-01.md
+            sha256: sha256:a7a617b5b45922176b8398571995c1beab07d864e009bc632b0c17980f69693c
+    overall_state: outcome_accepted
   depends_on: []
 
 - id: BET-Y1Q3-T10-02
@@ -6645,6 +6660,7 @@ bets:
   appetite: 0.25 day
   priority: P1
   status: done
+  done_at: 2026-08-24
   note: 'G2: iterable 验证开关 = 本设计文档存在'
   goal: '落盘 docs/operations/90pct-maturity-design.md (已含 Phase 1-5), 使 score_iterable 检测通过, iterable 6→8。'
   non_goals: []
@@ -6667,36 +6683,51 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          diff:
-            ref: git://origin/main@6404d0c46
           merged_reachable_commit:
-            ref: git://origin/main@6404d0c46
-          rollback:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@6404d0c46b3f73509cb7b4ca58d229d5dc64e6c9
           tests:
             ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://bin/gac/maturity-scorecard.py
+            sha256: sha256:7a75de8ae0114794696b54456835f0672b47ca64b2cb6368bc18b7d117838bb4
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+            sha256: sha256:7a75de8ae0114794696b54456835f0672b47ca64b2cb6368bc18b7d117838bb4
       operational:
         status: PROVEN
         evidence:
           cleanup:
-            ref: git://origin/main@HEAD
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
           fresh_receipt:
-            ref: git://origin/main@6404d0c46
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-02-accept.yaml
+            sha256: sha256:8841b7bb781e7d625de0a08d3163f999d6b0de4a597b0932ef0e4ee94b1376b8
           live_canary:
             ref: receipt://bin/gac/maturity-scorecard.py
+            sha256: sha256:7a75de8ae0114794696b54456835f0672b47ca64b2cb6368bc18b7d117838bb4
           replay:
-            ref: receipt://bin/plan/bet-ledger.py
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
         status: ACCEPTED
         evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-02-accept.yaml
+            sha256: sha256:8841b7bb781e7d625de0a08d3163f999d6b0de4a597b0932ef0e4ee94b1376b8
           human_verdict:
-            ref: receipt://docs/plans/3y-bet-ledger.yaml
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-02-accept.yaml
+            sha256: sha256:8841b7bb781e7d625de0a08d3163f999d6b0de4a597b0932ef0e4ee94b1376b8
           real_signal:
-            ref: git://origin/main@6404d0c46
+            ref: receipt://bin/gac/maturity-scorecard.py
+            sha256: sha256:7a75de8ae0114794696b54456835f0672b47ca64b2cb6368bc18b7d117838bb4
           revision:
-            ref: receipt://docs/superpowers/specs/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-02.md
+            sha256: sha256:ccd4fee09e0ad0a51639133d9141d9666b62fdca7a1ff8f18fea654abd7d56f7
           time_burden:
-            ref: receipt://.omo/_knowledge/retros/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-02.md
+            sha256: sha256:ccd4fee09e0ad0a51639133d9141d9666b62fdca7a1ff8f18fea654abd7d56f7
+    overall_state: outcome_accepted
   depends_on: []
 
 - id: BET-Y1Q3-T10-03
@@ -6706,6 +6737,7 @@ bets:
   appetite: 0.5 day
   priority: P1
   status: done
+  done_at: 2026-08-24
   note: 'G3: adr-link-validator 检测'
   goal: '修复 .omo/_knowledge/decisions/ 中 broken ADR links, 使 adr-link-validator.py rc=0, traceable 6→8。'
   non_goals: []
@@ -6729,36 +6761,51 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          diff:
-            ref: git://origin/main@0375b44bb
           merged_reachable_commit:
-            ref: git://origin/main@0375b44bb
-          rollback:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@0375b44bb290dea1489ce5590e5cd49e91b681f3
           tests:
             ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          rollback:
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
       operational:
         status: PROVEN
         evidence:
           cleanup:
-            ref: git://origin/main@HEAD
-          fresh_receipt:
-            ref: git://origin/main@0375b44bb
-          live_canary:
-            ref: receipt://bin/gac/maturity-scorecard.py
-          replay:
             ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-03-accept.yaml
+            sha256: sha256:92b06bad8d0636758e2c9809fea6dbdc0d6599ee0b80517091fba69543239122
+          live_canary:
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
         status: ACCEPTED
         evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-03-accept.yaml
+            sha256: sha256:92b06bad8d0636758e2c9809fea6dbdc0d6599ee0b80517091fba69543239122
           human_verdict:
-            ref: receipt://docs/plans/3y-bet-ledger.yaml
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-03-accept.yaml
+            sha256: sha256:92b06bad8d0636758e2c9809fea6dbdc0d6599ee0b80517091fba69543239122
           real_signal:
-            ref: git://origin/main@0375b44bb
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
           revision:
-            ref: receipt://docs/superpowers/specs/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-03.md
+            sha256: sha256:2b08ecade8ff1fae0f2ead2a859593baba6ba4664966c9752bc3bd9edc80a576
           time_burden:
-            ref: receipt://.omo/_knowledge/retros/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-03.md
+            sha256: sha256:2b08ecade8ff1fae0f2ead2a859593baba6ba4664966c9752bc3bd9edc80a576
+    overall_state: outcome_accepted
   depends_on: []
 
 - id: BET-Y1Q3-T10-04
@@ -6768,6 +6815,7 @@ bets:
   appetite: 0.5 day
   priority: P1
   status: done
+  done_at: 2026-08-24
   note: 'G4: governance-migration dry-run 检测'
   goal: '完成 governance checks owner 字段迁移, 使 governance-migration.py --dry-run 返回 No changes needed, troubleshootable 6→8。'
   non_goals: []
@@ -6792,36 +6840,51 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          diff:
-            ref: git://origin/main@0375b44bb
           merged_reachable_commit:
-            ref: git://origin/main@0375b44bb
-          rollback:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@0375b44bb290dea1489ce5590e5cd49e91b681f3
           tests:
             ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          rollback:
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
       operational:
         status: PROVEN
         evidence:
           cleanup:
-            ref: git://origin/main@HEAD
-          fresh_receipt:
-            ref: git://origin/main@0375b44bb
-          live_canary:
-            ref: receipt://bin/gac/maturity-scorecard.py
-          replay:
             ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-04-accept.yaml
+            sha256: sha256:463c8e32922a7465d0cafb920abec3645aaac86962efeb6e4cd34a983e7a1e46
+          live_canary:
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
         status: ACCEPTED
         evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-04-accept.yaml
+            sha256: sha256:463c8e32922a7465d0cafb920abec3645aaac86962efeb6e4cd34a983e7a1e46
           human_verdict:
-            ref: receipt://docs/plans/3y-bet-ledger.yaml
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-04-accept.yaml
+            sha256: sha256:463c8e32922a7465d0cafb920abec3645aaac86962efeb6e4cd34a983e7a1e46
           real_signal:
-            ref: git://origin/main@0375b44bb
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
           revision:
-            ref: receipt://docs/superpowers/specs/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-04.md
+            sha256: sha256:a8b803d40b084fa2bb40a65b9b36d5f9c86ea0e6e28ba7dc50c67fef38ed2ece
           time_burden:
-            ref: receipt://.omo/_knowledge/retros/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-04.md
+            sha256: sha256:a8b803d40b084fa2bb40a65b9b36d5f9c86ea0e6e28ba7dc50c67fef38ed2ece
+    overall_state: outcome_accepted
   depends_on: []
 
 - id: BET-Y1Q3-T10-05
@@ -6831,6 +6894,7 @@ bets:
   appetite: 0.5 day
   priority: P1
   status: done
+  done_at: 2026-08-24
   note: 'G5: observable 加新指标'
   goal: '在 compass_radar.py 集成新治理指标 (如成熟度分项/台账验证态), 提升 observable 到 9+。'
   non_goals: []
@@ -6853,36 +6917,51 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          diff:
-            ref: git://origin/main@6404d0c46
           merged_reachable_commit:
-            ref: git://origin/main@6404d0c46
-          rollback:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@6404d0c46b3f73509cb7b4ca58d229d5dc64e6c9
           tests:
             ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://bin/compass_radar.py
+            sha256: sha256:3717ebe27c137c76368d4f4300b57f84063a15351177646660aca3db97ad4302
+          rollback:
+            ref: receipt://bin/compass_radar.py
+            sha256: sha256:3717ebe27c137c76368d4f4300b57f84063a15351177646660aca3db97ad4302
       operational:
         status: PROVEN
         evidence:
           cleanup:
-            ref: git://origin/main@HEAD
-          fresh_receipt:
-            ref: git://origin/main@6404d0c46
-          live_canary:
-            ref: receipt://bin/gac/maturity-scorecard.py
-          replay:
             ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-05-accept.yaml
+            sha256: sha256:dd729bebae2288b6ca994d8256e52e8c6a17b53bac944b261494403207c244ce
+          live_canary:
+            ref: receipt://bin/compass_radar.py
+            sha256: sha256:3717ebe27c137c76368d4f4300b57f84063a15351177646660aca3db97ad4302
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
         status: ACCEPTED
         evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-05-accept.yaml
+            sha256: sha256:dd729bebae2288b6ca994d8256e52e8c6a17b53bac944b261494403207c244ce
           human_verdict:
-            ref: receipt://docs/plans/3y-bet-ledger.yaml
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-05-accept.yaml
+            sha256: sha256:dd729bebae2288b6ca994d8256e52e8c6a17b53bac944b261494403207c244ce
           real_signal:
-            ref: git://origin/main@6404d0c46
+            ref: receipt://bin/compass_radar.py
+            sha256: sha256:3717ebe27c137c76368d4f4300b57f84063a15351177646660aca3db97ad4302
           revision:
-            ref: receipt://docs/superpowers/specs/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-05.md
+            sha256: sha256:22b52a18411644c2276ef982ecf8c64fcdc595080335edcfcace5aa73c0adf59
           time_burden:
-            ref: receipt://.omo/_knowledge/retros/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-05.md
+            sha256: sha256:22b52a18411644c2276ef982ecf8c64fcdc595080335edcfcace5aa73c0adf59
+    overall_state: outcome_accepted
   depends_on: []
 
 - id: BET-Y1Q3-T10-06
@@ -6891,7 +6970,8 @@ bets:
   title: scorecard 检测粒度升级 9/10 档 (9.0 可达)
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-24
   note: 'G6: 核心 — scorecard 封顶 8/9, 9.0 数学不可达'
   goal: '升级 maturity-scorecard.py 检测粒度, 加 9/10 分档验证标准 (连续/深度指标), 使 overall 9.0 可达。本轮关键自进化。'
   non_goals: []
@@ -6914,36 +6994,51 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          diff:
-            ref: git://origin/main@6404d0c46
           merged_reachable_commit:
-            ref: git://origin/main@6404d0c46
-          rollback:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@6404d0c46b3f73509cb7b4ca58d229d5dc64e6c9
           tests:
             ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://bin/gac/maturity-scorecard.py
+            sha256: sha256:7a75de8ae0114794696b54456835f0672b47ca64b2cb6368bc18b7d117838bb4
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+            sha256: sha256:7a75de8ae0114794696b54456835f0672b47ca64b2cb6368bc18b7d117838bb4
       operational:
         status: PROVEN
         evidence:
           cleanup:
-            ref: git://origin/main@HEAD
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
           fresh_receipt:
-            ref: git://origin/main@6404d0c46
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-06-accept.yaml
+            sha256: sha256:98d71a68c08058231d324934412e8c80126774c26ea98839819bdbfaec6439e0
           live_canary:
             ref: receipt://bin/gac/maturity-scorecard.py
+            sha256: sha256:7a75de8ae0114794696b54456835f0672b47ca64b2cb6368bc18b7d117838bb4
           replay:
-            ref: receipt://bin/plan/bet-ledger.py
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
         status: ACCEPTED
         evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-06-accept.yaml
+            sha256: sha256:98d71a68c08058231d324934412e8c80126774c26ea98839819bdbfaec6439e0
           human_verdict:
-            ref: receipt://docs/plans/3y-bet-ledger.yaml
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-06-accept.yaml
+            sha256: sha256:98d71a68c08058231d324934412e8c80126774c26ea98839819bdbfaec6439e0
           real_signal:
-            ref: git://origin/main@6404d0c46
+            ref: receipt://bin/gac/maturity-scorecard.py
+            sha256: sha256:7a75de8ae0114794696b54456835f0672b47ca64b2cb6368bc18b7d117838bb4
           revision:
-            ref: receipt://docs/superpowers/specs/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-06.md
+            sha256: sha256:73636ea85b99d3b494997a503be0403142b276525277e9af4eeac510b64d3b6d
           time_burden:
-            ref: receipt://.omo/_knowledge/retros/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-06.md
+            sha256: sha256:73636ea85b99d3b494997a503be0403142b276525277e9af4eeac510b64d3b6d
+    overall_state: outcome_accepted
   depends_on: BET-Y1Q3-T10-01, BET-Y1Q3-T10-02, BET-Y1Q3-T10-03, BET-Y1Q3-T10-04, BET-Y1Q3-T10-05
 
 - id: BET-Y1Q3-T10-07
@@ -6952,7 +7047,8 @@ bets:
   title: Droid-Shield run-id 误报治理
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-24
   note: 'G7: 自进化债 (CONV-3 被堵实证)'
   goal: 'run-id 格式占位符化规范入 engineering-golden-rules, 治理文档避免 workspace 级误报拦截。'
   non_goals: []
@@ -6975,36 +7071,51 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          diff:
-            ref: git://origin/main@f61cfd77
           merged_reachable_commit:
-            ref: git://origin/main@f61cfd77
-          rollback:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@69c6be8393ea28957ddb530fca7f3a150c53919d
           tests:
             ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://docs/operations/engineering-golden-rules.md
+            sha256: sha256:eeffbdcc8ac09c97d67dbc69325cf9c32f842f77a5d2f32293ec561c6f3bc76d
+          rollback:
+            ref: receipt://docs/operations/engineering-golden-rules.md
+            sha256: sha256:eeffbdcc8ac09c97d67dbc69325cf9c32f842f77a5d2f32293ec561c6f3bc76d
       operational:
         status: PROVEN
         evidence:
           cleanup:
-            ref: git://origin/main@HEAD
-          fresh_receipt:
-            ref: git://origin/main@f61cfd77
-          live_canary:
-            ref: receipt://bin/gac/maturity-scorecard.py
-          replay:
             ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-07-accept.yaml
+            sha256: sha256:75b937e24cd18e674cd2dfedcbf612cc2735b79f1da97d86d0f780d70f89044e
+          live_canary:
+            ref: receipt://docs/operations/engineering-golden-rules.md
+            sha256: sha256:eeffbdcc8ac09c97d67dbc69325cf9c32f842f77a5d2f32293ec561c6f3bc76d
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
         status: ACCEPTED
         evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-07-accept.yaml
+            sha256: sha256:75b937e24cd18e674cd2dfedcbf612cc2735b79f1da97d86d0f780d70f89044e
           human_verdict:
-            ref: receipt://docs/plans/3y-bet-ledger.yaml
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-07-accept.yaml
+            sha256: sha256:75b937e24cd18e674cd2dfedcbf612cc2735b79f1da97d86d0f780d70f89044e
           real_signal:
-            ref: git://origin/main@f61cfd77
+            ref: receipt://docs/operations/engineering-golden-rules.md
+            sha256: sha256:eeffbdcc8ac09c97d67dbc69325cf9c32f842f77a5d2f32293ec561c6f3bc76d
           revision:
-            ref: receipt://docs/superpowers/specs/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-07.md
+            sha256: sha256:193638edb131dbafaa5fafcec008bb5231fae0fb933449c87706d5167194da3d
           time_burden:
-            ref: receipt://.omo/_knowledge/retros/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-07.md
+            sha256: sha256:193638edb131dbafaa5fafcec008bb5231fae0fb933449c87706d5167194da3d
+    overall_state: outcome_accepted
   depends_on: []
 
 - id: BET-Y1Q3-T10-08
@@ -7013,7 +7124,8 @@ bets:
   title: closeout 硬门/bet 绑定缺失治理
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-24
   note: 'G8: 自进化债 (S1/S5/CONV-3 三次 blocked 实证)'
   goal: '为治理演进登记专属 bet 机制, 消除 waiver run 无 bet 绑定导致的 vision→retro closeout 硬门拦截。'
   non_goals: []
@@ -7037,36 +7149,51 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          diff:
-            ref: git://origin/main@f61cfd77
           merged_reachable_commit:
-            ref: git://origin/main@f61cfd77
-          rollback:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@69c6be8393ea28957ddb530fca7f3a150c53919d
           tests:
             ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://bin/plan/chain_bind.py
+            sha256: sha256:e0240ffc8ee76fda6d2cf8e0395a68345f00ad42ba70a3670269df82624f63c5
+          rollback:
+            ref: receipt://bin/plan/chain_bind.py
+            sha256: sha256:e0240ffc8ee76fda6d2cf8e0395a68345f00ad42ba70a3670269df82624f63c5
       operational:
         status: PROVEN
         evidence:
           cleanup:
-            ref: git://origin/main@HEAD
-          fresh_receipt:
-            ref: git://origin/main@f61cfd77
-          live_canary:
-            ref: receipt://bin/gac/maturity-scorecard.py
-          replay:
             ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-08-accept.yaml
+            sha256: sha256:d909eebb296334602516c3531d7844ba6d815660d248777829bea91da61a63ff
+          live_canary:
+            ref: receipt://bin/plan/chain_bind.py
+            sha256: sha256:e0240ffc8ee76fda6d2cf8e0395a68345f00ad42ba70a3670269df82624f63c5
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
         status: ACCEPTED
         evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-08-accept.yaml
+            sha256: sha256:d909eebb296334602516c3531d7844ba6d815660d248777829bea91da61a63ff
           human_verdict:
-            ref: receipt://docs/plans/3y-bet-ledger.yaml
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-08-accept.yaml
+            sha256: sha256:d909eebb296334602516c3531d7844ba6d815660d248777829bea91da61a63ff
           real_signal:
-            ref: git://origin/main@f61cfd77
+            ref: receipt://bin/plan/chain_bind.py
+            sha256: sha256:e0240ffc8ee76fda6d2cf8e0395a68345f00ad42ba70a3670269df82624f63c5
           revision:
-            ref: receipt://docs/superpowers/specs/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-08.md
+            sha256: sha256:0fd4520d2b3cfec78e940d26ee113580fb6b8c16f93aaddc301554251c9e1233
           time_burden:
-            ref: receipt://.omo/_knowledge/retros/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-08.md
+            sha256: sha256:0fd4520d2b3cfec78e940d26ee113580fb6b8c16f93aaddc301554251c9e1233
+    overall_state: outcome_accepted
   depends_on: []
 
 - id: BET-Y1Q3-T10-09
@@ -7075,7 +7202,8 @@ bets:
   title: worktree submodule init 策略 (gate 环境性失败)
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-24
   note: 'G9: 自进化债 (12 submodule 未 checkout 实证)'
   goal: 'worktree init 策略 + gate 环境感知, 减少 submodule 未 checkout 导致的本地 gate 环境性失败。'
   non_goals: []
@@ -7099,36 +7227,51 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          diff:
-            ref: git://origin/main@f61cfd77
           merged_reachable_commit:
-            ref: git://origin/main@f61cfd77
-          rollback:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@69c6be8393ea28957ddb530fca7f3a150c53919d
           tests:
             ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://bin/gac/gac-worktree.sh
+            sha256: sha256:496a4b6fc997aff34d3eb2186280c7dcf700acadf8e9b0257ff21b3770d818f4
+          rollback:
+            ref: receipt://bin/gac/gac-worktree.sh
+            sha256: sha256:496a4b6fc997aff34d3eb2186280c7dcf700acadf8e9b0257ff21b3770d818f4
       operational:
         status: PROVEN
         evidence:
           cleanup:
-            ref: git://origin/main@HEAD
-          fresh_receipt:
-            ref: git://origin/main@f61cfd77
-          live_canary:
-            ref: receipt://bin/gac/maturity-scorecard.py
-          replay:
             ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-09-accept.yaml
+            sha256: sha256:f1b924f15c5bec717c3efad40a2b1d7d14f68195dcd5c572987a93e08864f181
+          live_canary:
+            ref: receipt://bin/gac/gac-worktree.sh
+            sha256: sha256:496a4b6fc997aff34d3eb2186280c7dcf700acadf8e9b0257ff21b3770d818f4
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
         status: ACCEPTED
         evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-09-accept.yaml
+            sha256: sha256:f1b924f15c5bec717c3efad40a2b1d7d14f68195dcd5c572987a93e08864f181
           human_verdict:
-            ref: receipt://docs/plans/3y-bet-ledger.yaml
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-09-accept.yaml
+            sha256: sha256:f1b924f15c5bec717c3efad40a2b1d7d14f68195dcd5c572987a93e08864f181
           real_signal:
-            ref: git://origin/main@f61cfd77
+            ref: receipt://bin/gac/gac-worktree.sh
+            sha256: sha256:496a4b6fc997aff34d3eb2186280c7dcf700acadf8e9b0257ff21b3770d818f4
           revision:
-            ref: receipt://docs/superpowers/specs/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-09.md
+            sha256: sha256:e9c5192f30ebfff6c800dc28d1ee6578e8205c55b4dfdb337d9124bf2eade3dd
           time_burden:
-            ref: receipt://.omo/_knowledge/retros/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-09.md
+            sha256: sha256:e9c5192f30ebfff6c800dc28d1ee6578e8205c55b4dfdb337d9124bf2eade3dd
+    overall_state: outcome_accepted
   depends_on: []
 
 - id: BET-Y1Q3-T10-10
@@ -7138,13 +7281,11 @@ bets:
   appetite: 0.5 day
   priority: P1
   status: done
-  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证) — 闭合 via #2129'
+  done_at: 2026-08-24
+  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证)'
   goal: '统一 health 报告 / maturity-scorecard / bet-ledger 验证态三方口径, 建单一 SSOT。'
   non_goals: []
-  done_when:
-  - 引入 maturity-align.py 三方对齐工具
-  - compass_radar composite 集成 alignment_score (reconciliation 0-100)
-  - reconciliation 跑通, 三大系统口径一致 (drift < 30)
+  done_when: []
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -7164,46 +7305,49 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          diff:
-            ref: git://origin/main@f61cfd77
           merged_reachable_commit:
-            ref: git://origin/main@f61cfd77
-          rollback:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@69c6be8393ea28957ddb530fca7f3a150c53919d
           tests:
             ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          diff:
+            ref: receipt://docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+            sha256: sha256:ee45925d2dffc0f25b184041e3fe423f8232d871a763893e62f8ca8882f5dea5
+          rollback:
+            ref: receipt://docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+            sha256: sha256:ee45925d2dffc0f25b184041e3fe423f8232d871a763893e62f8ca8882f5dea5
       operational:
         status: PROVEN
         evidence:
           cleanup:
-            ref: git://origin/main@HEAD
-          fresh_receipt:
-            ref: git://origin/main@f61cfd77
-          live_canary:
-            ref: receipt://bin/gac/maturity-scorecard.py
-          replay:
             ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:cc45529e880b7a0c41d2f2a5319128f812257cb99cfd7865d92f788d2412a3cf
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-10-accept.yaml
+            sha256: sha256:6a1c8708ef765d46d89bd91eabc6485d034196dbf190f8fc92855650f72c7b24
+          live_canary:
+            ref: receipt://docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+            sha256: sha256:ee45925d2dffc0f25b184041e3fe423f8232d871a763893e62f8ca8882f5dea5
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
         status: ACCEPTED
         evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-10-accept.yaml
+            sha256: sha256:6a1c8708ef765d46d89bd91eabc6485d034196dbf190f8fc92855650f72c7b24
           human_verdict:
-            ref: receipt://docs/plans/3y-bet-ledger.yaml
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-10-accept.yaml
+            sha256: sha256:6a1c8708ef765d46d89bd91eabc6485d034196dbf190f8fc92855650f72c7b24
           real_signal:
-            ref: git://origin/main@f61cfd77
+            ref: receipt://docs/GOVERNANCE-EVOLUTION-ROADMAP.md
+            sha256: sha256:ee45925d2dffc0f25b184041e3fe423f8232d871a763893e62f8ca8882f5dea5
           revision:
-            ref: receipt://docs/superpowers/specs/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-10.md
+            sha256: sha256:cc0d57e5cbcf7176420122aa17a3f92e747fae8c5dece6951bd7b72a3691b80c
           time_burden:
-            ref: receipt://.omo/_knowledge/retros/
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-10.md
+            sha256: sha256:cc0d57e5cbcf7176420122aa17a3f92e747fae8c5dece6951bd7b72a3691b80c
+    overall_state: outcome_accepted
   depends_on: []
-  completion_evidence:
-    axes:
-      engineering:
-        status: VERIFIED
-        direct_evidence: [merged_reachable_commit, tests]
-      operational:
-        status: PROVEN
-        direct_evidence: [live_canary, fresh_receipt]
-      value:
-        status: ACCEPTED
-        direct_evidence: [replay]
-    schema_version: completion-evidence-matrix/v1

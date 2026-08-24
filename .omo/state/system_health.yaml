@@ -1,4 +1,4 @@
-last_scan: 1787401908.842131
+last_scan: 1787575450.139822
 services:
   agora-gateway:
     health_check: healthy
@@ -8,8 +8,8 @@ services:
       freshness_seconds: 0
       port: null
       status: running
-      timestamp: 1787401908.842131
-    timestamp: 1787127179.418313
+      timestamp: 1787575450.139822
+    timestamp: 1787575450.139822
     type: daemon
   agora-sse:
     health_check: healthy
@@ -19,8 +19,8 @@ services:
       freshness_seconds: 0
       port: 7431
       status: running
-      timestamp: 1787401908.842131
-    timestamp: 1787127179.418313
+      timestamp: 1787575450.139822
+    timestamp: 1787575450.139822
     type: daemon
   cron-service:
     health_check: healthy
@@ -30,8 +30,8 @@ services:
       freshness_seconds: 0
       port: 7450
       status: running
-      timestamp: 1787401908.842131
-    timestamp: 1787127179.418313
+      timestamp: 1787575450.139822
+    timestamp: 1787575450.139822
     type: daemon
   gbrain:
     health_check: healthy
@@ -41,8 +41,8 @@ services:
       freshness_seconds: 0
       port: null
       status: running
-      timestamp: 1787401908.842131
-    timestamp: 1787127179.418313
+      timestamp: 1787575450.139822
+    timestamp: 1787575450.139822
     type: cli
   gbrain-index:
     health_check: scheduled
@@ -51,8 +51,8 @@ services:
       freshness_seconds: 0
       port: null
       status: configured
-      timestamp: 1787401908.842131
-    timestamp: 1787127179.418313
+      timestamp: 1787575450.139822
+    timestamp: 1787575450.139822
     type: scheduled
   kos:
     health_check: healthy
@@ -62,8 +62,8 @@ services:
       freshness_seconds: 0
       port: null
       status: active
-      timestamp: 1787401908.842131
-    timestamp: 1787127179.418313
+      timestamp: 1787575450.139822
+    timestamp: 1787575450.139822
     type: integrated
   ollama:
     health_check: healthy
@@ -73,8 +73,8 @@ services:
       freshness_seconds: 0
       port: 11434
       status: idle
-      timestamp: 1787401908.842131
-    timestamp: 1787127179.418313
+      timestamp: 1787575450.139822
+    timestamp: 1787575450.139822
     type: daemon
   runtime-mcp:
     health_check: healthy
@@ -84,6 +84,6 @@ services:
       freshness_seconds: 0
       port: null
       status: active
-      timestamp: 1787401908.842131
-    timestamp: 1787127179.418313
+      timestamp: 1787575450.139822
+    timestamp: 1787575450.139822
     type: mcp
