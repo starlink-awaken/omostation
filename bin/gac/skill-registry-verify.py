@@ -38,6 +38,21 @@ def check_skill_registry() -> dict:
         # Check for broken references to bin/ commands
         for m in re.finditer(r"`(bin/[^`]+)`", text):
             cmd_path = m.group(1).split()[0]
+            # Skip placeholders like bin/ssot/<tool-name>.py
+            if "<" in cmd_path or ">" in cmd_path:
+                continue
+            # Skip wildcard patterns like bin/gac-*.py
+            if "*" in cmd_path:
+                continue
+            # Skip module/constant references like bin/gac-drift.py::EXECUTOR_ENUM
+            if "::" in cmd_path:
+                continue
+            # Skip documentation examples with explanatory comments
+            if "#" in m.group(1) and ("example" in m.group(1).lower() or "e.g." in m.group(1).lower() or "替代" in m.group(1)):
+                continue
+            # Skip project-local tools (e.g. projects/agora/bin/evidence-smoke.py)
+            if cmd_path.startswith("projects/") or "/projects/" in cmd_path:
+                continue
             if not (REPO_ROOT / cmd_path).exists():
                 orphaned.append(f"{skill_dir.name}: references missing {cmd_path}")
 

@@ -156,6 +156,36 @@ surfaces:
   - per_pr
   - push
   status: active
+- id: bin-gac-check-resident-bos-py
+  tool: bin/gac/check-resident-bos.py
+  workflow: governance-check.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: Resident BOS health check
+- id: bin-gac-check-resident-mof-sync-py
+  tool: bin/gac/check-resident-mof-sync.py
+  workflow: governance-check.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: Resident MOF sync check
+- id: bin-gac-check-resident-status-py
+  tool: bin/gac/check-resident-status.py
+  workflow: governance-check.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: Resident status check
 - id: bin-gac-check-ruff-scope-stable-py
   tool: bin/gac/check-ruff-scope-stable.py
   workflow: gac-gate.yml
