@@ -244,6 +244,14 @@ def _ruff_json(policy: dict[str, Any], *, root: Path, debt: bool) -> list[dict[s
         raise RuntimeError(f"Ruff policy has no {scope_key}")
     missing = [scope for scope in scopes if not (root / scope).exists()]
     if missing:
+        # BET-Y1Q3-T10-09: worktree 环境感知 — 未 init 子模块时降级 skip 非 fail.
+        # 判据: .git 指向 worktrees/ 子目录 = fresh worktree, 非主仓遗漏.
+        git_dir = (root / ".git")
+        is_worktree = git_dir.is_file() and "worktrees" in git_dir.read_text()
+        if is_worktree:
+            print(f"SKIP: ruff (worktree scope dirs not initialized: {', '.join(missing)}). "
+                  f"Run: bash bin/gac/worktree-init.sh --minimal")
+            return 0
         raise RuntimeError(f"Ruff scope is not initialized: {', '.join(missing)}")
 
     command = ["ruff", "check", *scopes]
