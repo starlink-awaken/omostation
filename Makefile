@@ -16,7 +16,7 @@
 	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
 	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest \
 	bcos-evolve bcos-signals bcos-north-star \
-	swarm-status swarm-chaos swarm-decide swarm-audit
+	swarm-status swarm-chaos swarm-decide swarm-audit swarm-demo
 
 PY := uv run --with pyyaml python
 PY_STDLIB := bin/gac/managed-python run --profile stdlib --
@@ -621,3 +621,6 @@ swarm-decide:  ## @Sage & @Keeper Decision-Inbox 架构裁决工作台
 
 swarm-audit:  ## @Keeper 减法配额与资产健康度核算
 	@python3 bin/gac/keeper-subtraction-engine.py --audit
+
+swarm-demo:   ## 蜂群自治全链路真实场景演练 (6 幕闭环)
+	@python3 bin/gac/swarm-e2e-scenario.py
