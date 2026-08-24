@@ -278,28 +278,6 @@ model_stats:
 # OMO 管理工具
 # ═══════════════════════════════════════════════════════════
 omo_tools:
-  omo-audit-vault:
-    path: projects/omo/src/omo/omo_audit_vault.py
-    cli: "omo audit vault"
-    description: Vault X1 audit (Markdown content hash + author tracking)
-    commands: [--days, --root, --json, --output]
-    usage: "uv run python -m omo.cli audit vault --days 90 --json"
-
-    generatable: false
-    verifiable: true
-  omo-audit-freshness:
-    path: projects/omo/src/omo/omo_audit_freshness.py
-    cli: "omo audit freshness"
-    description: X2 freshness audit (3 条 P43 巡检规则)
-    commands: [--dry-run, --only, --json]
-    usage: "uv run python -m omo.cli audit freshness --dry-run --json"
-
-# ═══════════════════════════════════════════════════════════
-# P74 / ADR-0130 治理工具 — 常态化工作流沉默检测
-# ═══════════════════════════════════════════════════════════
-    generatable: false
-    verifiable: true
-p74_tools:
   omo-state-projection-guard:
     path: projects/omo/src/omo/omo_lint.py::cmd_projection_guard
     cli: "omo lint projection-guard"
