@@ -61,6 +61,21 @@ DEFAULT_POLICY = {
             "note": "CAP-OWN: 能力所有权 + 删除防腐 (差距治理 S1). 注册能力实现缺失(IMPL-EXISTS) → 阻断; owner 缺失/孤儿能力 → info",
         },
         {
+            "id": "derived-only-fast-track",
+            "command": ["bin/gac/check-derived-only-fast-track.py"],
+            "note": "GOV-REBAL: 派生文档-only fast-track 判定 (差距治理 S5). 纯派生文档变更 → 建议轻量 workflow; 混入源码 → 常规 gate. 软信号, 不阻断",
+        },
+        {
+            "id": "auto-fix-loop",
+            "command": ["bin/gac/auto-fix-loop.py"],
+            "note": "AUTO-FIX: 漂移检测→分类→修复闭环 (差距治理 S5). PATH-DRIFT error 级阻断; DERIVED-STALE/ORPHAN-SCRIPT 报告 + --apply 自动修复",
+        },
+        {
+            "id": "command-discovery",
+            "command": ["bin/gac/command-discovery.py"],
+            "note": "UX-NOISE: 命令发现层 (差距治理 S5). 密度/重复/易混淆定位, 软信号不阻断",
+        },
+        {
             "id": "agent-workflow-integrations",
             "command": ["bin/agent-workflow.py", "integrations"],
         },
@@ -372,7 +387,35 @@ if not any(gate.get("id") == "check-swarm-collision" for gate in GATES_LIST):
         }
     )
 
-# Root-owned bin 配额"变更侧问责" (2026-08-24): 每次变更自己负责守恒.
+# Root-owned 差距治理 gate (S1 CAP-OWN + S5 GOV-REBAL/AUTO-FIX/UX-NOISE):
+# 放 root-owned 段防 ecos 子模块 sgf-policy 覆盖丢失 (S1 capability-ownership 曾被
+# sgf-policy 覆盖, 未真正进 gate — 本段修复该盲区). 语义:
+#   capability-ownership      CAP-OWN    能力删除防腐 (error 阻断)
+#   derived-only-fast-track   GOV-REBAL  派生文档-only fast-track 判定 (软信号)
+#   auto-fix-loop             AUTO-FIX   漂移检测→分类→修复闭环 (PATH-DRIFT error 阻断)
+#   command-discovery         UX-NOISE   命令密度/重复/易混淆定位 (软信号)
+for _gap_gate in (
+    {
+        "id": "capability-ownership",
+        "command": ["bin/gac/check-capability-ownership.py"],
+    },
+    {
+        "id": "derived-only-fast-track",
+        "command": ["bin/gac/check-derived-only-fast-track.py"],
+    },
+    {
+        "id": "auto-fix-loop",
+        "command": ["bin/gac/auto-fix-loop.py"],
+    },
+    {
+        "id": "command-discovery",
+        "command": ["bin/gac/command-discovery.py"],
+    },
+):
+    if not any(gate.get("id") == _gap_gate["id"] for gate in GATES_LIST):
+        GATES_LIST.append(_gap_gate)
+
+# Root-owned bin 配额"变更侧问责" (2026-08-24, 并发 #2076): 每次变更自己负责守恒.
 # 检查 <base>..HEAD 中 bin/ 下 .py/.sh 新增 vs 删除, 净增 → FAIL.
 # 全局计数 (gac-validate subtraction-quota) 降级 advisory, 本 check 为增量问责.
 # 放 root-owned 段, 防 ecos 子模块 policy 移除.
@@ -422,6 +465,8 @@ SOFT_CHECKS = {
     "brief-protect",  # BRIEF.md protect 提示手工修改, 非门禁阻断
     "current-state-coherence",  # 运行态动态推导软信号
     "ci-surfaces-check",  # CI Surface 重叠软警告
+    "derived-only-fast-track",  # GOV-REBAL (S5): 纯派生文档 fast-track 建议, 非阻断
+    "command-discovery",  # UX-NOISE (S5): 命令密度/重复定位, 非阻断
 }
 
 
@@ -739,6 +784,9 @@ RISK_AWARE_CHECKS: set[str] = {
     "omo-state-write-guard",
     "brief-protect",
     "check-severity-registry",
+    "derived-only-fast-track",
+    "auto-fix-loop",
+    "command-discovery",
 }
 
 
