@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # OMOStation 90% 成熟度与机器自治自愈总纲 (Phase 4)
 
 ## 1. 北极星愿景：90% 机器自治自愈率
