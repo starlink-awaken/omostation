@@ -100,7 +100,7 @@ YAML
 - [ADR-0145](./0145-mcptool-collection-skip.md) (single-vs-collection 区分基础)
 - [ADR-0140](./0140-m4-health-score.md) (adder 后量化)
 - [ADR-0146](./0146-8stage-stability-declaration.md) (Round 5a 同期)
-- [docs/MCPTOOL-ADDER-GUIDE.md](./../../../docs/MCPTOOL-ADDER-GUIDE.md) (本文档产出)
+- [docs/MCPTOOL-ADDER-GUIDE.md](../../../docs/MCPTOOL-ADDER-GUIDE.md) (本文档产出)
 
 ---
 
