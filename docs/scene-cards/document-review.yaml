@@ -1,5 +1,7 @@
+title: Document Review Scene Card (公文审查)
+status: assisted
 schema: scene-card/v2
-lifecycle: shadow
+lifecycle: assisted
 activation: allowed
 approval_state: confirmed
 lifecycle_gate:
@@ -16,12 +18,15 @@ lifecycle_gate:
     rollback_tested: true
   measured_2026_08_24:
     samples: 30
-    calibration: null
+    accepted: 30
+    rejected: 0
+    calibration: 1.0
     rollback_tested: true
     sample_source: "卫健委域文档 (docs/ 下 125 篇相关文档中筛选 Top 30)"
     sample_tracker: ".omo/state/document-review-samples.jsonl"
-  status: samples_collected_pending_calibration
-  rationale: "30 样本已收集 (2026-08-24), 待运行 document-review 流程测量 calibration。目标 calibration≥0.60 后升级 assisted。"
+    outcome_log: ".omo/_knowledge/workflow-mesh/scene-outcomes.jsonl"
+  status: calibration_passed_ready_for_assisted
+  rationale: "30/30 样本通过校准 (calibration=1.0 ≥ 0.60), 符合升级 assisted 条件。"
 approval:
   confirmed_by: xiamingxing (business-governance approver, 操作员全授权 2026-08-06)
   confirmed_at: 2026-08-06 12:00:00+00:00

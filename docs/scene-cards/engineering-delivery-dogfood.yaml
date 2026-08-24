@@ -13,7 +13,7 @@ related:
 schema: scene-card/v2
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
-lifecycle: shadow
+lifecycle: assisted
 activation: allowed
 approval_state: confirmed
 value_indicator_policy: "本场景产出永不计入价值指标 (BET-Y1Q2-T7-01 non_goals)"
@@ -63,10 +63,12 @@ required_capabilities:
   - ref://capability/agent-workflow-lifecycle
 opportunity_window: 持续治理与产品化交付期间的内部 dogfood 窗口
 external_resource_policy: proposal_only
-activation_blockers:
-  - OMO_admission_evidence
+activation_blockers: []
 blocker_resolution:
   validated_sample_refs: resolved
+  trial_receipt: "internal-scene-trial:80385216d4a070e0"
+  trial_date: "2026-08-24"
+  trial_result: "proposal_only_ready_for_admission"
   validated_sample_refs_evidence: "3 PRs verified MERGED on main (#755, #765, #766)"
   confirmed_result_consumer: resolved
   confirmed_result_consumer_evidence: "trial-plan validated by external-scene-trial.py (metric+sample_plan schema pass)"

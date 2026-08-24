@@ -98,54 +98,65 @@ def score_scenes() -> float:
     """场景激活率 (0-100).
 
     生命周期: draft → shadow → assisted → supervised → routine
-    活跃状态: assisted, supervised, routine (含 v2/ 子目录)
+    活跃状态: assisted, supervised, routine
+    优先使用 v2/ 目录的场景卡片 (权威版本)
     """
     scene_dir = REPO / "docs/scene-cards"
     if not scene_dir.exists():
         return 0.0
 
-    total = 0
-    active = 0
+    # 收集所有场景 (v2/ 优先)
+    scenes = {}  # scene_id -> status
 
-    # 扫描根目录和 v2/ 子目录
-    files = list(scene_dir.glob("*.yaml")) + list(scene_dir.glob("v2/*.yaml"))
+    # 先扫描根目录
+    for f in sorted(scene_dir.glob("*.yaml")):
+        status, scene_id = _parse_scene_status(f)
+        if scene_id and scene_id not in scenes:
+            scenes[scene_id] = status
 
-    for f in sorted(files):
-        try:
-            import yaml
-            text = f.read_text()
-            # 解析 YAML - 支持两种格式:
-            # 1. ---\nfrontmatter\n---\ncontent
-            # 2. title: xxx\nstatus: xxx\n---\nschema: xxx
-            fm = {}
-            if "---" in text:
-                parts = text.split("---", 2)
-                # 解析 --- 前后的 YAML
-                for part in parts[:2]:
-                    try:
-                        data = yaml.safe_load(part)
-                        if isinstance(data, dict):
-                            fm.update(data)
-                    except Exception:
-                        pass
-            else:
+    # v2/ 覆盖根目录
+    for f in sorted(scene_dir.glob("v2/*.yaml")):
+        status, scene_id = _parse_scene_status(f)
+        if scene_id:
+            scenes[scene_id] = status
+
+    if not scenes:
+        return 100.0
+
+    total = len(scenes)
+    active = sum(1 for s in scenes.values() if s in ("assisted", "supervised", "routine", "active", "pilot"))
+
+    return round(active / total * 100, 1)
+
+
+def _parse_scene_status(f: Path) -> tuple[str, str]:
+    """解析场景卡片的 status 和 scene_id."""
+    try:
+        import yaml
+        text = f.read_text()
+        fm = {}
+        # 解析所有 YAML 片段 (包括 --- 分隔的多个文档)
+        if "---" in text:
+            for part in text.split("---"):
+                part = part.strip()
+                if not part:
+                    continue
                 try:
-                    data = yaml.safe_load(text)
+                    data = yaml.safe_load(part)
                     if isinstance(data, dict):
-                        fm = data
+                        fm.update(data)
                 except Exception:
                     pass
-            if fm:
-                total += 1
-                # assisted/supervised/routine 视为活跃
-                if fm.get("status") in ("assisted", "supervised", "routine", "active", "pilot"):
-                    active += 1
-        except Exception:
-            continue
-
-    if total == 0:
-        return 100.0
-    return round(active / total * 100, 1)
+        else:
+            try:
+                data = yaml.safe_load(text)
+                if isinstance(data, dict):
+                    fm = data
+            except Exception:
+                pass
+        return fm.get("status", ""), fm.get("scene_id", "")
+    except Exception:
+        return "", ""
 
 
 def score_docs() -> float:

@@ -367,6 +367,27 @@ if not any(gate.get("id") == "check-swarm-collision" for gate in GATES_LIST):
         }
     )
 
+# Phase 2-5 integration: anti-corruption sweep (weekly, soft)
+if not any(gate.get("id") == "drift-sweep" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "drift-sweep",
+            "command": ["bin/gac/drift-sweep.py", "--json"],
+            "ci_skip": True,
+            "timeout": 60,
+        }
+    )
+
+# Phase 2-5 integration: agent pre-PR sanity check
+if not any(gate.get("id") == "pre-pr-check" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "pre-pr-check",
+            "command": ["bin/gac/pre-pr-check.py"],
+            "timeout": 30,
+        }
+    )
+
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
@@ -405,6 +426,8 @@ SOFT_CHECKS = {
     "brief-protect",  # BRIEF.md protect 提示手工修改, 非门禁阻断
     "current-state-coherence",  # 运行态动态推导软信号
     "ci-surfaces-check",  # CI Surface 重叠软警告
+    "drift-sweep",  # Phase 2-5: weekly anti-corruption sweep, 软信号
+    "pre-pr-check",  # Phase 2-5: agent pre-PR sanity, 建议性
 }
 
 
