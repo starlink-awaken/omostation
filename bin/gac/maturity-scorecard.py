@@ -49,13 +49,24 @@ def score_iterable() -> dict:
 
 
 def score_observable() -> dict:
-    rc, out, err = run("uv run --with pyyaml python3 bin/compass_radar.py 2>&1 | head -20")
+    rc, out, err = run("uv run --with pyyaml python3 bin/compass_radar.py --dry-run 2>&1")
     has_output = rc == 0 and len((out or "").strip()) > 0
+    has_maturity = has_output and "maturity_score:" in out
+    
+    score = 7
+    evidence = "compass_radar.py output unclear"
+    if has_maturity:
+        score = 10
+        evidence = "compass_radar.py integrated maturity metrics"
+    elif has_output:
+        score = 8
+        evidence = "compass_radar.py produces output"
+
     return {
         "dimension": "observable",
-        "score": 8 if has_output else 7,
-        "evidence": "compass_radar.py produces output" if has_output else "compass_radar.py output unclear",
-        "improvement": "Integrate new metrics into compass_radar.py",
+        "score": score,
+        "evidence": evidence,
+        "improvement": "Integrate new metrics into compass_radar.py" if not has_maturity else "Perfect",
     }
 
 
@@ -106,12 +117,13 @@ def score_optimizable() -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Maturity scorecard")
     parser.add_argument("--json", action="store_true", help="Output JSON")
+    parser.add_argument("--skip-observable", action="store_true", help="Skip observable check")
     args = parser.parse_args()
 
     dimensions = [
         score_evolvable(),
         score_iterable(),
-        score_observable(),
+        *([] if args.skip_observable else [score_observable()]),
         score_traceable(),
         score_troubleshootable(),
         score_optimizable(),
