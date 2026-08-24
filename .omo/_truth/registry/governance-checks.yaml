@@ -185,7 +185,7 @@ gac:
     check_type: advisory
     rule_baseline: 139
     adr_baseline: 361
-    script_baseline: 482    # 2026-08-24: main 实际 481 active (并发 #2134/#2136 遗留) + gh-api-push.sh + worktree-init.sh 登记, 482 active
+    script_baseline: 483    # 2026-08-24: main 实际 482 active (并发合并遗留, closeout-audit/worktree-init 未登记) + gh-api-push.sh, 483 active
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
