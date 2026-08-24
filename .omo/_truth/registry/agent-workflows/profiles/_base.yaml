@@ -73,6 +73,7 @@ agent_profiles:
     - state-sync
     - agent-onboarding
     - bet-execution
+    - resident-runtime-observe
     can_write_lanes:
     - docs
     - governance_code
@@ -163,6 +164,7 @@ agent_profiles:
     allowed_workflows:
     - observer-audit
     - mof-state-bridge-audit
+    - resident-runtime-observe
     can_write_lanes: []
     closeout_required:
     - observe-json

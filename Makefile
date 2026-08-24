@@ -13,7 +13,9 @@
 	omo-status omo-top swarm-activity observability-events observability-adapters observability-trace log-rotate \
 	agent-workflows agent-workflow-bootstrap agent-workflow-lint agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-integrations agent-workflow-adapters agent-workflow-status \
 	mof-bootstrap m4-health m4-health-compare registry-drift gac-healthcheck gac-drift gac-validate \
-	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll
+	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
+	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest \
+	bcos-evolve bcos-signals bcos-north-star
 
 PY := uv run --with pyyaml python
 PY_STDLIB := bin/gac/managed-python run --profile stdlib --
@@ -395,6 +397,17 @@ scene-feedback:  ## 列出最近的 scene feedback
 scene-outcome:  ## 列出最近的 scene outcome
 	@python3 bin/ssot/scene-outcome-recorder.py list --limit 10
 
+journey-validate:  ## 校验全部旅程 spec (states/transitions/deadlocks) — AGENTS.md §1.8
+	@python3 bin/ssot/journey-validator.py
+
+scene-card-check:  ## 场景卡就绪度报告 — blockers 为信息非门禁 (docs/scene-cards/*.yaml)
+	@ready=0; blocked=0; for f in docs/scene-cards/*.yaml; do \
+		[ -e "$$f" ] || continue; \
+		if python3 bin/ssot/scene-card-lifecycle.py check --scene-card "$$f" >/dev/null 2>&1; then \
+			ready=$$((ready+1)); else blocked=$$((blocked+1)); fi; \
+	done; echo "scene-cards: ready=$$ready with-blockers=$$blocked"; \
+	echo "单卡详情: python3 bin/ssot/scene-card-lifecycle.py check --scene-card <file>"
+
 signal-poll:  ## 手动执行感知面信号轮询
 	@python3 bin/ssot/signal-poller.py
 
@@ -531,3 +544,62 @@ chaos-drill-strict:  ## 严格模式运行全域混沌演练 (发现未通过项
 
 canvas-serve:  ## 启动 Dual-Plane Truth Canvas Web 事实大盘 (ADR-0194)
 	uv run --project projects/ecos ecos-constraint facts serve --port 8765
+
+# ==============================================================================
+# Resident Agent System (2026-08-23, WP-A~I / ADR-0396)
+# 常驻智能体体系 — 事件驱动 5 类角色 + 规则级路由订阅
+# 规格: docs/architecture/resident-agent-system-v1.md
+# ==============================================================================
+
+OMO_RESIDENT := uv run --directory projects/omo python -m omo.cli resident
+
+resident-status:  ## resident 运行状态快照 (daemon/events/sediment/alert/ledger)
+	$(OMO_RESIDENT) status
+
+resident-roles:  ## resident 五类角色配置 (sediment/decision/execute/monitor/heartbeat)
+	$(OMO_RESIDENT) roles
+
+resident-daemon:  ## resident daemon 单次 tick (调试)
+	$(OMO_RESIDENT) daemon --once
+
+resident-signals:  ## resident 个人信号输入 (WP-D)
+	$(OMO_RESIDENT) signals
+
+resident-alert:  ## resident 告警转发 (WP-E)
+	$(OMO_RESIDENT) alert
+
+resident-decision:  ## resident 决策提案 (WP-F)
+	$(OMO_RESIDENT) decision
+
+resident-execute:  ## resident 执行 worker (WP-G, 批准门)
+	$(OMO_RESIDENT) execute
+
+resident-sediment:  ## resident 知识沉淀 (WP-A)
+	$(OMO_RESIDENT) sediment
+
+resident-memory:  ## resident 记忆 (WP-H/I)
+	$(OMO_RESIDENT) memory
+
+resident-promote:  ## resident 场景升迁
+	$(OMO_RESIDENT) promote
+
+resident-resources:  ## resident 资源领域隔离 (M4.2)
+	$(OMO_RESIDENT) resources
+
+resident-ingest:  ## resident 事件摄入 (WP-A)
+	$(OMO_RESIDENT) ingest
+
+# ==============================================================================
+# BCOS 业务域系统 (2026-08-23, W1~W4)
+# 业务闭环: 信号路由 → 进化引擎 → 北极星价值度量
+# 规格: docs/architecture/bcos-system-v1.md
+# ==============================================================================
+
+bcos-evolve:  ## BCOS 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)
+	python3 bin/bc-os/evolution_engine.py
+
+bcos-signals:  ## BCOS 统一信号路由 (W1-D2, 公文/会议/调研/代码)
+	python3 bin/bc-os/signal_router.py --inbox "$$HOME/Documents/@感知信号" || true
+
+bcos-north-star:  ## BCOS 北极星价值度量 v2 (排除 self-data)
+	python3 bin/bc-os/north_star_meter_v2.py --json

@@ -11,10 +11,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 595
-  bos_services: 227
-  bos_domains: 18
-  cli_commands: 147
+  mcp_tools: 600
+  bos_services: 237
+  bos_domains: 20
+  cli_commands: 149
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -224,6 +224,9 @@ mcp_servers:
   - agora_execute
   - audit_query
   - audit_stats
+  - bcos_evolve
+  - bcos_north_star
+  - bcos_signals
   - bos_reload_routes
   - create_api_key
   - debt_auto_seed_tool
@@ -266,6 +269,8 @@ mcp_servers:
   - repo_search
   - repo_status
   - repo_unload
+  - resident_roles
+  - resident_status
   - revoke_api_key
   - route_call
   - subscribe_event
@@ -280,7 +285,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 65
+  tool_count: 70
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -834,19 +839,21 @@ bos_services:
   _domain_counts:
     agora: 3
     analysis: 28
+    bcos: 3
     capability: 44
     cockpit: 2
     compute: 3
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 57
+    governance: 60
     l4-kernel: 1
     memory: 47
     meta: 1
     omo: 4
     perception: 2
     persona: 10
+    resident: 4
     runtime: 1
     swarm: 1
     system: 11
@@ -976,6 +983,19 @@ bos_services:
     - uri: bos://analysis/kems/forecast
       description: KEMS 知识推断与影子评估推演分析 (ADR-0300)
       transport: http
+      status: active
+    bcos:
+    - uri: bos://bcos/evolution/run
+      description: BCOS 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)
+      transport: stdio
+      status: active
+    - uri: bos://bcos/signals/route
+      description: BCOS 统一信号路由 (W1-D2, doc/meeting/research/code)
+      transport: stdio
+      status: active
+    - uri: bos://bcos/north-star/measure
+      description: BCOS 北极星价值度量 v2 (排除 self-data, W3)
+      transport: stdio
       status: active
     capability:
     - uri: bos://capability/cockpit/mcp-server
@@ -1456,6 +1476,18 @@ bos_services:
       description: 领域治理卡带列表 (ADR-0198)
       transport: stdio
       status: active
+    - uri: bos://governance/meta-doctor/check
+      description: 治理自进化巡检 M1 心跳 SLA + M2 引用活性 + 调度漂移
+      transport: stdio
+      status: active
+    - uri: bos://governance/scheduler-compile/check
+      description: 调度编译器一致性校验 registry↔crontab 漂移检测 (ADR-A)
+      transport: stdio
+      status: active
+    - uri: bos://governance/session-handoff/emit
+      description: 会话交接协议 机器可读 handoff.json (需 --session/--agent/--summary)
+      transport: stdio
+      status: active
     l4-kernel:
     - uri: bos://l4-kernel/domains
       description: L4 Kernel MCP (短路径别名)
@@ -1722,6 +1754,23 @@ bos_services:
       description: B.D.S.K. 虚拟董事会评审网关；唯一推理链为 bos://compute/aetherforge/infer，失败返回 not_proven，禁止自动 ADR
       transport: internal
       status: active
+    resident:
+    - uri: bos://resident/core/status
+      description: Resident 常驻 Agent 体系运行状态快照 (WP-A~I / ADR-0396)
+      transport: stdio
+      status: active
+    - uri: bos://resident/core/roles
+      description: Resident 五类常驻角色配置 (M4.3)
+      transport: stdio
+      status: active
+    - uri: bos://resident/daemon/once
+      description: Resident daemon 单次 tick (M1 事件驱动)
+      transport: stdio
+      status: active
+    - uri: bos://resident/decision/run
+      description: Resident 决策提案处理 (WP-F)
+      transport: stdio
+      status: active
     runtime:
     - uri: bos://runtime/health
       description: Runtime MCP (短路径别名)
@@ -1804,6 +1853,8 @@ cli_commands:
   description: 密码学级 Merkle 审计账本 (ADR-0201)
 - name: backends
   description: 列出 BOS 后端
+- name: bcos
+  description: BCOS 业务域系统 (evolve/signals/north-star)
 - name: bdsk
   description: 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演)
 - name: bos
@@ -2006,6 +2057,8 @@ cli_commands:
   description: 手动存入偏好/事实
 - name: research
   description: 深度研究
+- name: resident
+  description: Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)
 - name: resolve
   description: 统一 BOS URI 路由解析与目标元数据提取
 - name: route

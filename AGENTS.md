@@ -197,6 +197,20 @@ make gac-validate
 make gac-drift
 ```
 
+### 能力防腐 & 投影强制 (差距治理 S1, 2026-08-24)
+
+```bash
+python3 bin/gac/check-capability-ownership.py          # CAP-OWN: 能力所有权 + 删除防腐
+python3 bin/gac/check-capability-ownership.py --json   # JSON 输出
+```
+
+- **CAP-OWN**: 注册能力实现缺失 (IMPL-EXISTS) → gate 阻断; owner 缺失 / 孤儿能力 → info。
+  删除能力前必须同步注册表 + 证明消费引用归零 (类比 submodule-guard 保护 gitlink)。
+- **PROJ-FORCE**: post-commit 检测 SSOT 源变更 (agent-workflows/profiles, mof-capabilities)
+  → 自动投影生成。改 SSOT 后派生文档随 commit 同步, 残缺生成物自动 revert。
+- **GEN-FORCE**: `docs/generated/` 5 个已跟踪生成物不再被 gitignore (契约保护), git add 直接可见。
+- 工程铁律 (TP-RELATIVE 时序相对断言 / PATH-ANCHOR 路径代码锚定): [`docs/operations/engineering-golden-rules.md`](docs/operations/engineering-golden-rules.md)
+
 `make gac-local-gate` runs the default (non-strict) GaC gate — GaC validate/drift, agent-workflow lint/integrations/adapters/bootstrap/observe, MOF schema/state-bridge/drift, documentation SSOT, doc link/snapshot, and staged change-lane checks. Two skip rules apply in default mode, both isolating concurrent-agent dirty in a shared worktree: `verify-plan`/`compliance`/`doctor` run only when staged touches agent-workflow (`896e60ba`); `project-layer-index` (generated layer digest) is CI-only — pre-commit/`make` skip it, `--strict`/CI runs it (`d33af25c`). For run/file-scoped AGCP verification use `bin/gac/gac-local-gate.py --scope ...`. Authoritative check list + skip rules live in `bin/gac/gac-local-gate.py` (`CHECKS`, `AGENT_WORKFLOW_GATE_CHECKS`, `CI_ONLY_CHECKS`) — do not duplicate here.
 
 ### SSOT 变更追踪
@@ -305,6 +319,43 @@ python3 bin/gac/session-handoff.py --session <id> --agent <name> --summary "..."
 # cron job 心跳包装器
 bash bin/gac/heartbeat-wrapper.sh <job_name> <command...>
 ```
+
+### Resident Agent 体系 (2026-08-23, WP-A~I / ADR-0396)
+
+事件驱动常驻 agent 运行时（五类角色 + 规则级路由订阅），规格见 [`docs/architecture/resident-agent-system-v1.md`](docs/architecture/resident-agent-system-v1.md)。
+
+```bash
+make resident-status       # 运行状态快照 (daemon/events/sediment/alert/ledger)
+make resident-roles        # 五类角色配置
+make resident-daemon       # 单次 tick 调试
+uv run --directory projects/omo python -m omo.cli resident status --json
+```
+
+- 路由表 SSOT: `projects/omo/src/omo/resident/resident-routes.yaml`（schema `resident-routes/v1`）
+- 角色 SSOT: `projects/omo/src/omo/resident/roles.py`（sediment/decision/execute/monitor/heartbeat）
+- 兼容脚本: `bin/ssot/resident-orchestrator-daemon.py`、`decision-agent.py`、`event-ingest-adapter.py`、`personal-signals-adapter.py`、`alert-forwarder.py`、`system-health-check.py`
+- cron: `bash bin/ssot/install-resident-cron.sh`（每 2min 五类 daemon --once --role；M3.1 signals；M4.3 角色化）
+- agora MCP: `resident_status` / `resident_roles`（`projects/agora/src/agora/server/tools_resident.py`，委派 `omo resident status/roles`）
+- BOS: `bos://resident/*`（resident 常驻体系 URI 命名空间）
+
+### BCOS 业务域系统 (2026-08-23, W1~W4)
+
+业务闭环系统（信号路由 → 进化引擎 → 北极星价值度量），规格见 [`docs/architecture/bcos-system-v1.md`](docs/architecture/bcos-system-v1.md)。
+
+```bash
+make bcos-evolve       # 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)
+make bcos-signals      # 统一信号路由 (W1-D2)
+make bcos-north-star   # 北极星价值度量 v2
+python3 bin/bc-os/evolution_engine.py --json     # 四阶段 JSON 输出
+python3 bin/bc-os/signal_router.py --inbox <dir> # 扫描路由信号
+python3 bin/bc-os/north_star_meter_v2.py --json  # 价值真值快照
+```
+
+- 进化引擎: `bin/bc-os/evolution_engine.py`（EvolutionEngine: observe/propose/evaluate/approve/rollback）
+- 信号路由: `bin/bc-os/signal_router.py`（W1-D2: doc/meeting/research/code 路由规则）
+- 北极星: `bin/bc-os/north_star_meter_v2.py`（排除 self-data, W3 真实价值闭环）
+- MOF: `mof/m2/bcos_system.yaml`（BCOSystem extends System）· BOS: `bos://bcos/*`
+- 背景: evolution_engine/signal_router 曾被误归档, 依台账 + T6-13 恢复 (PR #2050)
 
 
 

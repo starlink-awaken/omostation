@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **147** 个命令 (含子命令)。按场景分组如下。
+共 **149** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -119,6 +119,7 @@
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
 | `cockpit audit-ledger` | 密码学级 Merkle 审计账本 (ADR-0201) |
 | `cockpit backends` | 列出 BOS 后端 |
+| `cockpit bcos` | BCOS 业务域系统 (evolve/signals/north-star) |
 | `cockpit bdsk` | 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演) |
 | `cockpit bos-capability` | BOS capability / toolbox 外部能力 |
 | `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
@@ -178,6 +179,7 @@
 | `cockpit register` | 注册 BOS 服务 |
 | `cockpit reload` | 重载 BOS 配置/M1 |
 | `cockpit remember` | 手动存入偏好/事实 |
+| `cockpit resident` | Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...) |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
 | `cockpit sanyi-status` | 读取 Runtime 三医状态一致性回执 |
@@ -214,7 +216,7 @@
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
-| `cockpit agora` | `agora` | 65 |
+| `cockpit agora` | `agora` | 70 |
 | `cockpit family-hub` | `family-hub` | 6 |
 | `cockpit mesh` | `aetherforge` | 15 |
 | `cockpit compute` | `aetherforge` | 15 |

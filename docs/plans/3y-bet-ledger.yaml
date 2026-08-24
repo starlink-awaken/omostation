@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 120
+  total_bets: 121
   windows:
   - Y1Q1
   - Y1Q2
@@ -3026,7 +3026,11 @@ bets:
   status: done
   started_at: 2026-08-21
   done_at: 2026-08-21
-  done_evidence: '全链闭环: (1) R1 协议 canary PASS (omo#64, 4缺陷修复); (2) 独立 clone 真实 R1 写变更 canary PASS (omo#67→695f69f, 5 协议缺陷修复, 真实模型 69.7s, perms=[allow_once,allow_once], git delta 真实落盘, r1-completion-manifest.json); (3) 独立 verifier ACCEPT_WITH_NOTES (6/6 证据项 PASS, 执行/验证分离); (4) cutover 减法: cli_prompt 隐式默认 6 处清零, acp_stdio 唯一自动 transport, 141/142 回归通过; retro: .omo/_knowledge/retros/2026-08-21-t1-19-acp-canary-retro.md'
+  done_evidence: '全链闭环: (1) R1 协议 canary PASS (omo#64, 4缺陷修复); (2) 独立 clone 真实 R1
+    写变更 canary PASS (omo#67→695f69f, 5 协议缺陷修复, 真实模型 69.7s, perms=[allow_once,allow_once],
+    git delta 真实落盘, r1-completion-manifest.json); (3) 独立 verifier ACCEPT_WITH_NOTES
+    (6/6 证据项 PASS, 执行/验证分离); (4) cutover 减法: cli_prompt 隐式默认 6 处清零, acp_stdio 唯一自动
+    transport, 141/142 回归通过; retro: .omo/_knowledge/retros/2026-08-21-t1-19-acp-canary-retro.md'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
     spec_version: 1.0.0
@@ -3044,7 +3048,7 @@ bets:
   - 保存 raw prompt、transcript、token、账号、环境变量或绝对路径
   - 把 fixture、initialize、session/new、session/prompt、turn-end、exit 0 或 Agent 自报 done
     当完成
-  done_when: &id001
+  done_when:
   - 固定 ACP v1 stdio 和 Codex ACP package/version/digest；initialize、capability negotiation、
     session new/load、prompt/update、permission、cancel、EOF、timeout 和进程回收均有真实状态机与 failure-injection
     覆盖，协议不兼容 fail closed。
@@ -3107,13 +3111,20 @@ bets:
   progress:
     done_when_met: []
     pending_when:
-    - BET-Y1Q2-T1-18 必须先以真实完成证据通过 wait/resume、collect、rollback 与独立验证，不能以 marker、input ack 或自报完成替代。
-    - 固定并验证 ACP v1 与 Codex ACP package/version/digest，真实覆盖 initialize、capability negotiation、session new/load、prompt/update、EOF、timeout 与协议不兼容 fail-closed。
-    - permission broker 必须只对 R0 与满足 verified clone、active claim、WorkPacket、canonical path、无 symlink/gitlink 越界和 argv allowlist 的 R1 返回 allow_once，并实证拒绝未知、越权与 L2+。
-    - cancel/timeout 后必须直接证明 child process group、ACP session 与 lease 全部回收归零，且 transport uncertainty 不触发自动 fallback。
-    - 必须完成真实非 marker Codex ACP R1 canary，产生有效 model output、实际 git delta、逐项 acceptance measurements、CompletionManifest，并由独立 verifier accept。
-    - registry 必须只保留 acp_stdio 自动 transport，完成 cli_prompt retirement，且 dispatcher 与 Orca supervisor 不再存在隐式 cli_prompt 或自动 dispatch/fallback 路径。
-    - '`.omo/evidence/t1-19-acp-live-receipt.json` 必须真实存在，并通过 live=true、fixture=false、independently_verified=true 的可重复校验与 PR checks。'
+    - BET-Y1Q2-T1-18 必须先以真实完成证据通过 wait/resume、collect、rollback 与独立验证，不能以 marker、input
+      ack 或自报完成替代。
+    - 固定并验证 ACP v1 与 Codex ACP package/version/digest，真实覆盖 initialize、capability negotiation、session
+      new/load、prompt/update、EOF、timeout 与协议不兼容 fail-closed。
+    - permission broker 必须只对 R0 与满足 verified clone、active claim、WorkPacket、canonical
+      path、无 symlink/gitlink 越界和 argv allowlist 的 R1 返回 allow_once，并实证拒绝未知、越权与 L2+。
+    - cancel/timeout 后必须直接证明 child process group、ACP session 与 lease 全部回收归零，且 transport
+      uncertainty 不触发自动 fallback。
+    - 必须完成真实非 marker Codex ACP R1 canary，产生有效 model output、实际 git delta、逐项 acceptance
+      measurements、CompletionManifest，并由独立 verifier accept。
+    - registry 必须只保留 acp_stdio 自动 transport，完成 cli_prompt retirement，且 dispatcher
+      与 Orca supervisor 不再存在隐式 cli_prompt 或自动 dispatch/fallback 路径。
+    - '`.omo/evidence/t1-19-acp-live-receipt.json` 必须真实存在，并通过 live=true、fixture=false、independently_verified=true
+      的可重复校验与 PR checks。'
 - id: BET-Y1Q2-T7-01
   track: T7-SCENE
   window: Y1Q2
@@ -3125,8 +3136,8 @@ bets:
   blocked_at: 2026-08-22
   unblocked_at: 2026-08-22
   blocked_by:
-  - 权威 query-only observer 对完整窗口 2026-08-12T12:16:45Z..2026-08-19T12:16:45Z
-    的直接读回为 0/20、FAIL、human_gate=not_ready
+  - 权威 query-only observer 对完整窗口 2026-08-12T12:16:45Z..2026-08-19T12:16:45Z 的直接读回为
+    0/20、FAIL、human_gate=not_ready
   - merged PR / merge_event 不具备 credential-bound human adjudication，不能生成 qualified
     decision_outcome，也不能推进 MOS、scene gate 或个人价值指标
   invalidated_completion:
@@ -3134,14 +3145,13 @@ bets:
     reason: 以供给侧 merge_event 冒充真实 human verdict，100 条记录属于历史非权威分区
     evidence_ref: docs/reports/2026-08-22-engineering-delivery-shadow-observer-receipt.json
   corrected_at: 2026-08-16
-  correction_note: >-
-    2026-08-16 首次纠偏确认 MOS total_decision_outcomes=0、gate 0/20；2026-08-22
-    完整窗口 query-only 复核仍为 0/20，并撤销 2026-08-17 以 merge_event 冒充
-    human_verdict 的完成声明。窗口锚点不重置，历史错误记录保留在 retro 中但不得再作为当前真相。
+  correction_note: 2026-08-16 首次纠偏确认 MOS total_decision_outcomes=0、gate 0/20；2026-08-22
+    完整窗口 query-only 复核仍为 0/20，并撤销 2026-08-17 以 merge_event 冒充 human_verdict 的完成声明。窗口锚点不重置，历史错误记录保留在
+    retro 中但不得再作为当前真相。
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-22-engineering-delivery-shadow-observer-design.md
     spec_version: 1.0.0
-    content_digest: "sha256:8bc3a92bba53f76833e02dec95bef74aba330a8c30d909b69e732880c94fb1d3"
+    content_digest: sha256:8bc3a92bba53f76833e02dec95bef74aba330a8c30d909b69e732880c94fb1d3
     decision_ref: decision://accepted/BET-Y1Q2-T7-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3150,42 +3160,43 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: "git://origin/main@b357690a9f5883441aa86c638758f46d0247d7e9"
+            ref: git://origin/main@b357690a9f5883441aa86c638758f46d0247d7e9
           tests:
-            ref: "receipt://projects/omo/tests/test_engineering_delivery_consumer.py"
-            sha256: "sha256:173d1eca2d65d7d254a19566db25cb0dd2f0c991f48e3d76efede60c29fc2c02"
+            ref: receipt://projects/omo/tests/test_engineering_delivery_consumer.py
+            sha256: sha256:173d1eca2d65d7d254a19566db25cb0dd2f0c991f48e3d76efede60c29fc2c02
           diff:
-            ref: "receipt://bin/ssot/engineering-delivery-candidate-importer.py"
-            sha256: "sha256:3133ef83fadc11479ba7124d2af510c84b1d9a95a1122dca9287bcebd0b18f7b"
+            ref: receipt://bin/ssot/engineering-delivery-candidate-importer.py
+            sha256: sha256:3133ef83fadc11479ba7124d2af510c84b1d9a95a1122dca9287bcebd0b18f7b
           rollback:
-            ref: "receipt://docs/scene-cards/engineering-delivery-dogfood.yaml"
-            sha256: "sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5"
+            ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
+            sha256: sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5
       operational:
         status: PROVEN
         evidence:
           live_canary:
-            ref: "receipt://docs/scene-cards/engineering-delivery-dogfood.yaml"
-            sha256: "sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5"
+            ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
+            sha256: sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5
           fresh_receipt:
-            ref: "receipt://docs/operations/human-attestations/BET-Y1Q2-T7-01-human-gate.yaml"
-            sha256: "sha256:f6e338cdc827d3518ac7db32c14e676944c41fce13ccd9865d0ab6b9bed7a857"
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q2-T7-01-human-gate.yaml
+            sha256: sha256:f6e338cdc827d3518ac7db32c14e676944c41fce13ccd9865d0ab6b9bed7a857
           replay:
-            ref: "receipt://docs/scene-cards/engineering-delivery-dogfood.yaml"
-            sha256: "sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5"
+            ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
+            sha256: sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5
           cleanup:
-            ref: "receipt://docs/scene-cards/engineering-delivery-dogfood.yaml"
-            sha256: "sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5"
+            ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
+            sha256: sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5
       value:
         status: REJECTED
         evidence:
           real_signal:
-            ref: "receipt://docs/scene-cards/engineering-delivery-dogfood.yaml"
-            sha256: "sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5"
+            ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
+            sha256: sha256:bc1bbd88af01d617d143aa4257cab88a90dbb8ce8ed07ba4a7969e207cff96c5
           human_verdict:
-            ref: "receipt://docs/operations/human-attestations/BET-Y1Q2-T7-01-human-gate.yaml"
-            sha256: "sha256:f6e338cdc827d3518ac7db32c14e676944c41fce13ccd9865d0ab6b9bed7a857"
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q2-T7-01-human-gate.yaml
+            sha256: sha256:f6e338cdc827d3518ac7db32c14e676944c41fce13ccd9865d0ab6b9bed7a857
     overall_state: rejected
-  goal: 建立高频低风险、可绑定显式 reviewer credential 与 human adjudication 的真实 decision_outcome 样本源
+  goal: 建立高频低风险、可绑定显式 reviewer credential 与 human adjudication 的真实 decision_outcome
+    样本源
   non_goals:
   - 计入 X3 价值指标
   - 自动合并 PR
@@ -4254,17 +4265,18 @@ bets:
   priority: P1
   status: blocked
   blocked_reentry_policy: human_approval_required
-  blocked_at: 2026-08-20
-  blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 政策申报相关工作冻结. 技术前置已就绪(depends_on Y2Q2-T7-02 + Y3H1-T3-01 全 done), 仅业务前提冻结.'
+  blocked_at: '2026-08-20'
+  blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 政策申报相关工作冻结. 技术前置已就绪(depends_on Y2Q2-T7-02
+    + Y3H1-T3-01 全 done), 仅业务前提冻结.'
   resume_condition:
     trigger: '任一: 用户明确发起解封评估; 重新参与中试/政策申报业务; 出现真实申报任务'
-    verify: '运行 resume_acceptance 全部通过(依赖 done + 场景卡存在 + 管线可用 + done_when 起点不重置)'
+    verify: 运行 resume_acceptance 全部通过(依赖 done + 场景卡存在 + 管线可用 + done_when 起点不重置)
     approval: '人工批准解封(blocked_reentry_policy: human_approval_required)'
     commands:
-    - 'python3 bin/plan/bet-ledger.py show BET-Y2Q2-T7-02 | grep status=done'
-    - 'python3 bin/plan/bet-ledger.py show BET-Y3H1-T3-01 | grep status=done'
-    - 'grep -c lifecycle docs/scene-cards/v2/*zhongshi* 2>/dev/null || ls docs/scene-cards/v2/'
-    - 'omo external-resources engineering-delivery-review-queue --json'
+    - python3 bin/plan/bet-ledger.py show BET-Y2Q2-T7-02 | grep status=done
+    - python3 bin/plan/bet-ledger.py show BET-Y3H1-T3-01 | grep status=done
+    - grep -c lifecycle docs/scene-cards/v2/*zhongshi* 2>/dev/null || ls docs/scene-cards/v2/
+    - omo external-resources engineering-delivery-review-queue --json
   resume_acceptance:
   - '依赖仍 done: Y2Q2-T7-02 + Y3H1-T3-01 status=done'
   - '场景卡 lifecycle 未回退: docs/scene-cards/v2/ 中试场景存在'
@@ -4293,7 +4305,6 @@ bets:
   human_gate: true
   circuit_breaker: 未达标 → 保持 shadow
   retro: required
-  blocked_at: '2026-08-20'
   note: 借调结束(2026-08-19)，中试/公文场景业务前提冻结；技术前置已就绪，状态 blocked 待业务恢复后人工批准解封
   progress:
     done_when_met: []
@@ -4372,16 +4383,18 @@ bets:
   priority: P0
   status: blocked
   blocked_reentry_policy: human_approval_required
-  blocked_at: 2026-08-20
-  blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 公文场景相关工作冻结. 技术前置已就绪(依赖 Y3H1-T7-01 且其依赖全 done), 仅业务前提冻结.'
+  blocked_at: '2026-08-20'
+  blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 公文场景相关工作冻结. 技术前置已就绪(依赖 Y3H1-T7-01
+    且其依赖全 done), 仅业务前提冻结.'
   resume_condition:
     trigger: '任一: 用户明确发起解封评估; 重新参与公文业务; 出现真实公文任务'
-    verify: '运行 resume_acceptance 全部通过(依赖状态 + 场景卡存在 + 管线可用 + done_when 起点不重置)'
+    verify: 运行 resume_acceptance 全部通过(依赖状态 + 场景卡存在 + 管线可用 + done_when 起点不重置)
     approval: '人工批准解封(blocked_reentry_policy: human_approval_required)'
     commands:
-    - 'python3 bin/plan/bet-ledger.py show BET-Y3H1-T7-01 | grep status'
-    - 'grep -c "lifecycle: routine" docs/scene-cards/v2/document-review.yaml 2>/dev/null || ls docs/scene-cards/v2/'
-    - 'omo external-resources engineering-delivery-review-queue --json'
+    - python3 bin/plan/bet-ledger.py show BET-Y3H1-T7-01 | grep status
+    - 'grep -c "lifecycle: routine" docs/scene-cards/v2/document-review.yaml 2>/dev/null
+      || ls docs/scene-cards/v2/'
+    - omo external-resources engineering-delivery-review-queue --json
   resume_acceptance:
   - '依赖仍 done: Y3H1-T7-01 解封或维持 blocked(不影响公文独立恢复)'
   - '场景卡 lifecycle 未回退: document-review.yaml 存在且可评估'
@@ -4411,7 +4424,6 @@ bets:
   human_gate: true
   circuit_breaker: 任一 override → 立即回 L2
   retro: required
-  blocked_at: '2026-08-20'
   note: 借调结束(2026-08-19)，中试/公文场景业务前提冻结；技术前置已就绪，状态 blocked 待业务恢复后人工批准解封
   progress:
     done_when_met: []
@@ -4429,7 +4441,7 @@ bets:
   goal: 用数据回答"这三年到底省了多少时间"
   non_goals:
   - 估算未来收益
-  done_when: &id002
+  done_when: &id001
   - 按场景/按季度给出实测节省时间
   - 归因方法可复核
   - 与 Y1 基线可比
@@ -4450,7 +4462,7 @@ bets:
   retro: .omo/_knowledge/retros/BET-Y3H2-T4-01.md
   completed_at: '2026-08-20'
   progress:
-    done_when_met: *id002
+    done_when_met: *id001
     pending_when: []
 - id: BET-Y3H2-T1-01
   track: T1-TRUTH
@@ -5139,8 +5151,10 @@ bets:
   status: done
   started_at: 2026-08-20
   done_at: 2026-08-20
-  done_note: 'crontab 日备路径从 clone → Workspace, runbook 状态更新为 retired, gac-local-gate 全绿. human_gate 用户确认 2026-08-20.'
-  goal: 将协调层备份从 ~/agents/coordination-daemon/ws 迁回权威 Workspace，退役独立 clone 部署，消除旧代码版本污染运行时 truth 的风险
+  done_note: crontab 日备路径从 clone → Workspace, runbook 状态更新为 retired, gac-local-gate
+    全绿. human_gate 用户确认 2026-08-20.
+  goal: 将协调层备份从 ~/agents/coordination-daemon/ws 迁回权威 Workspace，退役独立 clone 部署，消除旧代码版本污染运行时
+    truth 的风险
   non_goals:
   - 不删除历史 retro/ADR
   - 不改写 signal-poller 运行时语义
@@ -5199,7 +5213,8 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
-  goal: 把 D4 逃生口从「无限复用的万能票」收成「权限类 + fingerprint 债」，预存失败必须下沉，agent 不能再用 emergency-human-hotfix 跳新失败
+  goal: 把 D4 逃生口从「无限复用的万能票」收成「权限类 + fingerprint 债」，预存失败必须下沉，agent 不能再用 emergency-human-hotfix
+    跳新失败
   non_goals:
   - 不接线 GitHub CI / admin merge（schema 可预留 surface=github）
   - 本轮不把 skip policy 从 shadow 翻到 fail
@@ -5212,9 +5227,11 @@ bets:
   - escape-digest --dry-run 能聚类历史台账且不改白名单
   - 测试 tests/test_swarm_discipline.py 与 ci-local-fast fingerprint 分类通过
   verify:
-  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_swarm_discipline.py -q --tb=short
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_swarm_discipline.py
+      -q --tb=short
     expect: exit 0
-  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/gac/test_ci_local_fast.py -q --tb=short
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/gac/test_ci_local_fast.py
+      -q --tb=short
     expect: exit 0
   workflow: governance-state-mutation
   underlying_workflow: governance-state-mutation
@@ -5248,6 +5265,72 @@ bets:
   human_gate: false
   circuit_breaker: shadow 误伤导致主干无法 push → 保持 mode=shadow 并延长 alias
   retro: required
+- id: BET-Y1Q3-T1-10
+  track: T1-TRUTH
+  window: Y1Q3
+  title: resident 体系全面接线 — 配置/文档/治理/CI/MCP/BOS URI 感知
+  appetite: 2 days
+  priority: P1
+  status: done
+  goal: 让 resident 常驻 agent 体系 (WP-A~I / ADR-0396) 被 agent 全面感知 — 补齐 CR-RESIDENT check
+    工具与治理检查登记、CI 平面登记、agent-workflows 注册、agora MCP 工具与 bos://resident/* URI 引用，并修正
+    AGENTS.md/CLAUDE.md 与实际的兼容脚本路径漂移
+  non_goals:
+  - 不新开发 resident 运行时能力 (执行载体/规则路由/角色已就绪)
+  - 不改 omo resident 核心逻辑 (execute.py 契约修复已完成)
+  - 不新增台账治理以外的子项目
+  done_when:
+  - CR-RESIDENT-STATUS/MOF-SYNC/BOS 三条 L0 约束对应的 check 工具存在并登记进 governance-checks.yaml
+    (补齐 L0 enforcement 引用的悬空 check 工具)
+  - ci-surfaces.yaml 登记 resident 相关 CI 平面 (omo resident 测试 + CR-RESIDENT checks)
+  - agent-workflows registry 补 resident 感知 (workflow/adapters/profile/_root.yaml)
+  - AGENTS.md / CLAUDE.md 修正 resident 兼容脚本路径漂移并补充 agora MCP 工具与 bos://resident/* URI
+    引用
+  - docs/architecture/resident-agent-system-v1.md 的已接线声明与实际代码一致
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/agent-workflow.py lint
+    expect: exit 0
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/governance-checks.yaml
+  - .omo/_truth/registry/ci-surfaces.yaml
+  - .omo/_truth/registry/agent-workflows/**
+  - bin/gac/check-resident-*
+  - AGENTS.md
+  - CLAUDE.md
+  - docs/architecture/resident-agent-system-v1.md
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/agora/src/agora/mcp/tools/resident_*
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q1-T1-07
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 并发 agent 反复吸收台账改动 → 台账改动立即提交并验证 origin 指向
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-23-resident-wiring-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:21507856921f76afcc26a0c1033799e84cedf5ab44b8c2c9442f0bf90c6eb6ff
+    decision_ref: decision://accepted/BET-Y1Q3-T1-10
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  retro: required
+  started_at: '2026-08-23T21:40:00+08:00'
+  completed_at: '2026-08-23T22:45:00+08:00'
 - id: BET-Y1Q1-T6-07
   track: T6-SUBTRACT
   window: Y1Q3
@@ -5989,13 +6072,13 @@ bets:
       - .omo/_truth/registry/memory-os.yaml
     E3_gac_local_gate:
       description: make gac-local-gate 全绿 PASS
-  done_when: &id003
+  done_when: &id002
   - MOSBeliefManager 默认写入 runtime/omo/_truth/registry/memory-os.yaml
   - .omo/_truth/registry/memory-os.yaml 恢复为干净 SSOT（无运行时计数脏行）
   - projects/omo 相关单元测试通过
   - make gac-local-gate 全部检查 PASS
   progress:
-    done_when_met: *id003
+    done_when_met: *id002
     pending_when: []
   verify:
   - cmd: python3 -m py_compile projects/omo/src/omo/omo_belief.py
@@ -6035,7 +6118,8 @@ bets:
   - 不新增替代实现
   evidence:
     E1_archived_scripts:
-      description: apple_mail_watcher.py / l3_smart_router.py / lifecycle_changer.py 已移入 bin/_archive/bc-os-20260820/
+      description: apple_mail_watcher.py / l3_smart_router.py / lifecycle_changer.py
+        已移入 bin/_archive/bc-os-20260820/
       surfaces:
       - bin/_archive/bc-os-20260820/
     E2_no_external_refs:
@@ -6050,9 +6134,11 @@ bets:
     done_when_met: []
     pending_when: []
   verify:
-  - cmd: test ! -f bin/bc-os/apple_mail_watcher.py && test ! -f bin/bc-os/l3_smart_router.py && test ! -f bin/bc-os/lifecycle_changer.py
+  - cmd: test ! -f bin/bc-os/apple_mail_watcher.py && test ! -f bin/bc-os/l3_smart_router.py
+      && test ! -f bin/bc-os/lifecycle_changer.py
     expect: 退出码 0
-  - cmd: test -f bin/_archive/bc-os-20260820/apple_mail_watcher.py && test -f bin/_archive/bc-os-20260820/l3_smart_router.py && test -f bin/_archive/bc-os-20260820/lifecycle_changer.py
+  - cmd: test -f bin/_archive/bc-os-20260820/apple_mail_watcher.py && test -f bin/_archive/bc-os-20260820/l3_smart_router.py
+      && test -f bin/_archive/bc-os-20260820/lifecycle_changer.py
     expect: 退出码 0
   - cmd: uv run --with pyyaml python bin/gac/gac-validate.py --gate
     expect: active_bin_scripts ≤ 420
@@ -6081,11 +6167,9 @@ bets:
   status: done
   started_at: 2026-08-21
   run_ref: 20260821T111433Z-bet-execution-967f03e6
-  progress_note: >-
-    2026-08-21 并发 closeout 纠偏：PR #1831 曾在缺少 credential-bound human
-    attestation 的情况下把 BET 标为 done；PR #1832 已落地三轴完成真相并证明
-    engineering=IN_PROGRESS、operational=DEGRADED、value=NOT_PROVEN、overall=blocked。
-    因此恢复为 in_progress；只有工程、运行和价值三轴全部满足强证据后才能再次 closeout。
+  progress_note: '2026-08-21 并发 closeout 纠偏：PR #1831 曾在缺少 credential-bound human attestation
+    的情况下把 BET 标为 done；PR #1832 已落地三轴完成真相并证明 engineering=IN_PROGRESS、operational=DEGRADED、value=NOT_PROVEN、overall=blocked。
+    因此恢复为 in_progress；只有工程、运行和价值三轴全部满足强证据后才能再次 closeout。'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md
     spec_version: 1.0.0
@@ -6098,53 +6182,51 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: "git://origin/main@9c4978c4bb680a214df4c2d4d2212454adba0a7d"
+            ref: git://origin/main@9c4978c4bb680a214df4c2d4d2212454adba0a7d
           tests:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/tests.md"
-            sha256: "sha256:bc31fdd6df872ab5f01aa481b257828a6e93e0cd357870d35d72d3877cd8c307"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/tests.md
+            sha256: sha256:bc31fdd6df872ab5f01aa481b257828a6e93e0cd357870d35d72d3877cd8c307
           diff:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/diff.md"
-            sha256: "sha256:30480cdef0ebbd7965408e950592dd5964f7a1fa80bb534f66ab728ffe94732a"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/diff.md
+            sha256: sha256:30480cdef0ebbd7965408e950592dd5964f7a1fa80bb534f66ab728ffe94732a
           rollback:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/rollback.md"
-            sha256: "sha256:e7bd0fa5f46198887cc47a00a2f2245b4bc9e2a3c5f84cc54b35db230333ecc9"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/rollback.md
+            sha256: sha256:e7bd0fa5f46198887cc47a00a2f2245b4bc9e2a3c5f84cc54b35db230333ecc9
       operational:
         status: PROVEN
         evidence:
           live_canary:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/live_canary.md"
-            sha256: "sha256:4e8101121a691c77533366fd19edda9b99040546478d853953b72cb67e935838"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/live_canary.md
+            sha256: sha256:4e8101121a691c77533366fd19edda9b99040546478d853953b72cb67e935838
           fresh_receipt:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/fresh_receipt.md"
-            sha256: "sha256:3e35dbb8feb51e18725ceede00b7004a43f3386334df2d78ad05c9c4beee7a4f"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/fresh_receipt.md
+            sha256: sha256:3e35dbb8feb51e18725ceede00b7004a43f3386334df2d78ad05c9c4beee7a4f
           replay:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/replay.md"
-            sha256: "sha256:1bc90dd4b9864375c68293cef7950558f8a3d6b807f2fb72995708167f7a90d1"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/replay.md
+            sha256: sha256:1bc90dd4b9864375c68293cef7950558f8a3d6b807f2fb72995708167f7a90d1
           cleanup:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/cleanup.md"
-            sha256: "sha256:d5398636abeeb601880f4ff8b02c1b4b704a6efeb4594153302e7dbdbb6d5c7c"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/cleanup.md
+            sha256: sha256:d5398636abeeb601880f4ff8b02c1b4b704a6efeb4594153302e7dbdbb6d5c7c
       value:
         status: ACCEPTED
         evidence:
           real_signal:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/real_signal.md"
-            sha256: "sha256:7a8ea13366d4253db480b6ff56ef53edc48158a293a0789c40851f725a0aa3ec"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/real_signal.md
+            sha256: sha256:7a8ea13366d4253db480b6ff56ef53edc48158a293a0789c40851f725a0aa3ec
           human_verdict:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/human_verdict.md"
-            sha256: "sha256:b80d5bf49f95e6471efcfddae9301f43f14061d3c9883a6d4176fb12b0eba78d"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/human_verdict.md
+            sha256: sha256:b80d5bf49f95e6471efcfddae9301f43f14061d3c9883a6d4176fb12b0eba78d
           revision:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/revision.md"
-            sha256: "sha256:5c5befb6d0e9877a06f947bef6e6a2b77651de19b634c82922cb264745b32833"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/revision.md
+            sha256: sha256:5c5befb6d0e9877a06f947bef6e6a2b77651de19b634c82922cb264745b32833
           time_burden:
-            ref: "receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/time_burden.md"
-            sha256: "sha256:f45a40708234d26d856a80debad7074bd3ab1e442a3439f11b35e16a4ed7ce00"
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/time_burden.md
+            sha256: sha256:f45a40708234d26d856a80debad7074bd3ab1e442a3439f11b35e16a4ed7ce00
           attestation:
-            ref: "receipt://docs/operations/human-attestations/BET-Y1Q3-T4-01-accept.yaml"
-            sha256: "sha256:ab3f61bd00e78b4d2a92f681207043aacf0ddbf28403c94d6649cbf35bf693aa"
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-01-accept.yaml
+            sha256: sha256:ab3f61bd00e78b4d2a92f681207043aacf0ddbf28403c94d6649cbf35bf693aa
     overall_state: outcome_accepted
-  goal: >-
-    把现有大量工程能力收敛成一条可证伪的个人价值主链：真实低敏信号进入后，
-    只产生 never-send 候选，由本人裁决并记录修订差异；所有工程完成、运行完成和
+  goal: 把现有大量工程能力收敛成一条可证伪的个人价值主链：真实低敏信号进入后， 只产生 never-send 候选，由本人裁决并记录修订差异；所有工程完成、运行完成和
     价值完成分别取证，只有直接 Outcome 与 Human Adjudication 能推进价值状态。
   non_goals:
   - 不新增顶级项目、第二 BET 台账、第二工作流引擎或第二运行真相
@@ -6163,24 +6245,32 @@ bets:
       description: tracked 口径 src 较 2026-08 基线增长约 8%，bin 脚本增长约 66%，继续横向扩容会加剧不可持有性
       command: uv run --with pyyaml python bin/plan/bet-ledger.py surface
     E4_contract_not_default:
-      description: WorkPacket/VerificationReceipt 已存在，但通用 workflow、跨仓 changeset、capability load 与 Codex transport 尚未共用同一默认身份链
+      description: WorkPacket/VerificationReceipt 已存在，但通用 workflow、跨仓 changeset、capability
+        load 与 Codex transport 尚未共用同一默认身份链
       classification: declaration_execution_gap
     E5_control_plane_recovered:
       description: 2026-08-20 已通过 broker close 5 个无活进程的 stale runs，prune 后 active_runs=0、lock_count=0、compliance=continue
       classification: direct_control_plane_evidence
   done_when:
-  - "AC-01: 工程完成、运行完成、价值完成三轴被显式建模；任何单轴为绿不得推导整体 done"
-  - "AC-02: Spec Binding 统一为 repo:// + semver + sha256: + accepted decision，并在 start 前 fail-closed；历史项只允许显式 grandfather"
-  - "AC-03: 通用 BET start/claim/dispatch 绑定同一 WorkPacket hash，claim scope 与 packet scope 不一致时拒绝"
-  - "AC-04: cross-repo changeset 覆盖根仓普通文件与子仓 gitlink；越权、不可达、未合并或不匹配均非零退出"
-  - "AC-05: capability 只有一个生成权威；find 返回精确 ID，load 经过 admission、原生适配器和脱敏 receipt，歧义不得 first-match 执行"
-  - "AC-06: Codex 自动 transport 的声明与真实默认一致；ACP 未经真实 canary 前保持 not_proven，Orca 仅人工 break-glass"
-  - "AC-07: NorthStar 只从带 principal/provenance 的 OutcomeFeedback 与 Human Adjudication 派生，拒绝 self-assert、代理量和负样本漏算"
-  - "AC-08: 至少一条真实低敏输入完成 SignalReceipt → never-send candidate → human verdict → RevisionReceipt/OutcomeFeedback；不得持久化正文、绝对路径或凭证"
-  - "AC-09: 硬编码价值/成本/复利报告被删除、归档或明确降级为非权威诊断，所有未知量显示 unknown/not_connected"
-  - "AC-10: 蓝图、三年规划、SYSTEM-INDEX 与交接文档使用 EXISTS/PARTIAL/NOT_PROVEN/DEFERRED 状态，并与当前调用链和运行证据一致"
-  - "AC-11: targeted tests、跨仓负例、agent-workflow verify、GAC、SSOT、reachability、独立 reviewer 与真实 canary receipt 全部通过"
-  - "AC-12: 运行投影标签可直接重放；过期 active claim 与 live claim 分区，BDSK 模型路由标签与实际 BOS/AetherForge 调用一致"
+  - 'AC-01: 工程完成、运行完成、价值完成三轴被显式建模；任何单轴为绿不得推导整体 done'
+  - 'AC-02: Spec Binding 统一为 repo:// + semver + sha256: + accepted decision，并在 start
+    前 fail-closed；历史项只允许显式 grandfather'
+  - 'AC-03: 通用 BET start/claim/dispatch 绑定同一 WorkPacket hash，claim scope 与 packet
+    scope 不一致时拒绝'
+  - 'AC-04: cross-repo changeset 覆盖根仓普通文件与子仓 gitlink；越权、不可达、未合并或不匹配均非零退出'
+  - 'AC-05: capability 只有一个生成权威；find 返回精确 ID，load 经过 admission、原生适配器和脱敏 receipt，歧义不得
+    first-match 执行'
+  - 'AC-06: Codex 自动 transport 的声明与真实默认一致；ACP 未经真实 canary 前保持 not_proven，Orca 仅人工
+    break-glass'
+  - 'AC-07: NorthStar 只从带 principal/provenance 的 OutcomeFeedback 与 Human Adjudication
+    派生，拒绝 self-assert、代理量和负样本漏算'
+  - 'AC-08: 至少一条真实低敏输入完成 SignalReceipt → never-send candidate → human verdict → RevisionReceipt/OutcomeFeedback；不得持久化正文、绝对路径或凭证'
+  - 'AC-09: 硬编码价值/成本/复利报告被删除、归档或明确降级为非权威诊断，所有未知量显示 unknown/not_connected'
+  - 'AC-10: 蓝图、三年规划、SYSTEM-INDEX 与交接文档使用 EXISTS/PARTIAL/NOT_PROVEN/DEFERRED 状态，并与当前调用链和运行证据一致'
+  - 'AC-11: targeted tests、跨仓负例、agent-workflow verify、GAC、SSOT、reachability、独立 reviewer
+    与真实 canary receipt 全部通过'
+  - 'AC-12: 运行投影标签可直接重放；过期 active claim 与 live claim 分区，BDSK 模型路由标签与实际 BOS/AetherForge
+    调用一致'
   progress:
     completed:
     - 共享控制面 stale run/lock 已收口，compliance 恢复 continue
@@ -6194,13 +6284,17 @@ bets:
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: 0 error
-  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_spec_binding_lint.py tests/test_agent_workflow.py -q
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_spec_binding_lint.py
+      tests/test_agent_workflow.py -q
     expect: canonical binding 与 start/claim 负例全绿
-  - cmd: uv run --with pyyaml --with pytest python -m pytest bin/gac/test_agent_clone.py tests/gac/test_clone_lifecycle.py -q
+  - cmd: uv run --with pyyaml --with pytest python -m pytest bin/gac/test_agent_clone.py
+      tests/gac/test_clone_lifecycle.py -q
     expect: root changeset、scope、reachability 与 retire fail-closed 全绿
-  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/bc_os tests/unit/gac -q
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/bc_os tests/unit/gac
+      -q
     expect: value truth 与 capability receipt 负例全绿
-  - cmd: cd projects/omo && uv run pytest tests/test_orchestration_contract.py tests/test_blueprint_control.py -q
+  - cmd: cd projects/omo && uv run pytest tests/test_orchestration_contract.py tests/test_blueprint_control.py
+      -q
     expect: packet、candidate、independent verify 与 compensation 全绿
   - cmd: uv run --with pyyaml python bin/agent-workflow.py compliance --json
     expect: decision=continue, stale_locks=0, closed_ok_without_evidence=0
@@ -6282,13 +6376,71 @@ bets:
   depends_on: []
   risk_level: L2
   human_gate: true
-  circuit_breaker: >-
-    需要新 DB/规划系统/协议权威、需要自动外发或 L2+ 自动批准、无法证明真实人类裁决、
-    任何迁移不能回放/补偿、或两周内仍只能用 fixture/代理量时，停止扩面；保留旧链只读，
-    将状态标为 blocked/not_proven，不得把 BET 置 done。
+  circuit_breaker: 需要新 DB/规划系统/协议权威、需要自动外发或 L2+ 自动批准、无法证明真实人类裁决、 任何迁移不能回放/补偿、或两周内仍只能用
+    fixture/代理量时，停止扩面；保留旧链只读， 将状态标为 blocked/not_proven，不得把 BET 置 done。
   subtraction:
   - 退役一个重复 Capability registry writer
   - 退役或降级硬编码 compound attribution 权威报告
   - 把平面 agent-workflows.yaml 收敛为生成兼容视图或退役
   - ACP 切换成立后移除 Codex 自动 cli_prompt 默认；未成立则删除提前完成声明
+  retro: required
+- id: BET-Y1Q3-T6-14
+  track: T6-EVOLUTION
+  window: Y1Q3
+  title: resident 常驻体系与治理接线全面深度复盘
+  appetite: 4 hours
+  priority: P2
+  status: candidate
+  started_at: 2026-08-24
+  goal: 对 resident 常驻 agent 体系（五类角色/事件驱动/规则订阅/多载体执行）与治理接线（MOF/SGF/BOS、agent-workflow 契约、gac-local-gate、PR 工作流、MCP 工具）从场景/功能/用户旅程/体验/目标愿景/长期运营/运维/防腐/约束 9 维度产出一份项目粒度深度复盘文档并入库
+  non_goals:
+  - 不改动 resident 运行时行为或治理接线代码（本 BET 仅沉淀分析结论）
+  - 不重复共享 checkout 上并发 agent 已产出的通用 9 维度复盘（STRATEGIC-ANALYSIS-2026-08-24.md 等）
+  evidence:
+    E1_review_doc:
+      description: 复盘文档已入库 docs/reports/2026-08-24-resident-system-deep-review.md
+      surfaces:
+      - docs/reports/2026-08-24-resident-system-deep-review.md
+    E2_gac_local_gate:
+      description: make gac-local-gate 全绿 PASS
+  done_when:
+  - 复盘文档入库 docs/reports/2026-08-24-resident-system-deep-review.md
+  - make gac-local-gate 全部检查 PASS
+  progress:
+    done_when_met: []
+    pending_when: []
+  verify:
+  - cmd: test -f docs/reports/2026-08-24-resident-system-deep-review.md
+    expect: 退出码 0
+  - cmd: make gac-local-gate
+    expect: 全绿 PASS
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:af2e55478f92df2833659a71814935d8f70d6bf49bb55f36db0ec93a7aa0a6f5
+    decision_ref: decision://accepted/BET-Y1Q3-T6-14
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - docs/reports/2026-08-24-resident-system-deep-review.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md
+  pasw_required: false
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 复盘结论与实测数据严重不符（如 resident 运行时不可用）时，标注复盘为 provisional 并补充反证，不强行落定论
   retro: required

@@ -78,3 +78,14 @@ last-reviewed: 2026-08-22
 | x2_freshness_check         | gac        | round9  | managed | removed | identical | bin/gac/x2-freshness-check.py         | scripts/bin/gac/x2-freshness-check.py         |
 | x2_rule_add                | gac        | round9  | managed | removed | identical | bin/gac/x2-rule-add.py                | scripts/bin/gac/x2-rule-add.py                |
 | x2_rule_lint               | gac        | round9  | managed | removed | identical | bin/gac/x2-rule-lint.py               | scripts/bin/gac/x2-rule-lint.py               |
+
+
+## 2026-08-24 配额清偿归档 (BET-Y1Q3-T6-05)
+
+| name | 归档位置 | 依据 |
+|------|---------|------|
+| test_zones_check | bin/_archive/quota-clearance-2026-08-24/ | git grep 零引用 |
+| test_bus_e2e_harness | bin/_archive/quota-clearance-2026-08-24/ | git grep 零引用 |
+| port_governance_deck | bin/_archive/quota-clearance-2026-08-24/ | git grep 零引用 |
+| dormant_adapter(+test) | bin/_archive/quota-clearance-2026-08-24/ | PACKS 域休眠, 不在 manifest |
+| memory_os_consolidate_deck | bin/_archive/quota-clearance-2026-08-24/ | 零引用, 不在 manifest |

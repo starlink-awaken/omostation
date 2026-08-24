@@ -1,10 +1,10 @@
 # Cleanup Rounds 2026-08-22 — Retrospective & How to Recover from Drift
 
-> **Status**: closed (2026-08-23) — 10 PRs merged, 5 health-anomaly classes cleared, 4 structural gates added
+> **Status**: closed (2026-08-23) — 11 PRs merged, 5 health-anomaly classes cleared, 4 structural gates added
 > **Audience**: future operators / agents encountering the same drift patterns
 > **Tone**: clinical — what was wrong, what fixed it, what to re-check next time
 
-This document captures **the 5 rounds of optimization** that lifted composite
+This document captures **the 8 rounds of optimization** that lifted composite
 health from 28/100 → 78/100 (peak 89/100), closed 61 stale planned tasks, 6
 zombie agent-workflow runs, 45 stale locks, 3GB of orphan projects, and
 shipped three structural gates so the same drift cannot recur without
@@ -30,6 +30,7 @@ fastest path to root cause.
 | 1989 | fix(gate) | detect concurrent-write drift during gate run (P79 partial) | 6 |
 | 1990 | feat(radar) | persist health history to JSONL for trend analysis | 7 |
 | 2002 | feat(runtime) | cockpit-dashboard launcher + Makefile targets | 7 |
+| 2043 | feat(gac) | add health history retention + trend chart tools | 8 |
 
 ---
 
@@ -241,6 +242,7 @@ anomaly_count, service_online_ratio, freshness_score, total_tasks,
 source.
 
 **Action B** (PR #2002): `bin/runtime/start-cockpit-dashboard.sh`
+| 2043 | feat(gac) | add health history retention + trend chart tools | 8 |
 with `start | stop | status` subcommands + 3 Makefile targets.
 Idempotent (refuses to double-start), PID-tracked, port-in-use
 detection via lsof, macOS-friendly (no `setsid` required).
@@ -260,7 +262,7 @@ detection via lsof, macOS-friendly (no `setsid` required).
    (autostash from concurrent worktrees). Cleaning risks breaking
    someone else's workflow.
 
-3. **Submodule pointer automation** — `bash bin/gac/submodule-pointer-transaction.sh`
+3. **Submodule pointer automation** — `bash bin/ssot/submodule-pointer-transaction.sh`
    exists but the worktree + submission pipeline handles pointer bumps
    correctly via `gac-worktree.sh bump-pointer`. Manual is fine.
 
@@ -295,7 +297,7 @@ it's a deeper drift, not a stale state.
 These are **未做** by design, with context for the next operator:
 
 1. **Concurrent write broker enforcement** — gate, not fix. New ADR.
-2. **Stash audit tool** — `bin/git/stash-inspect.py` to identify owner/age/branch-context.
+2. **Stash audit tool** — a future `bin/git/stash-inspect.py` (not yet implemented) to identify owner/age/branch-context.
 3. **Health score history** — currently only current snapshot exists;
    trend analysis requires persistent history in `.omo/state/history/`.
 4. **Cockpit auto-start** — add `nohup` launcher or launchd plist.
