@@ -1,0 +1,19 @@
+schema: script-registry/v1
+id: bin/gac/strategy-check.py
+name: Strategy Check
+category: governance
+owner: governance-team
+description: "9 维战略一致性矩阵验证器 (project-strategy-v1 §10 落地): 9 维 GREEN/YELLOW/RED/GREY 状态机"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - bin/compass_radar.py
+  - bin/gac/maturity-scorecard.py
+  - bin/bc-os/north_star_meter_v2.py
+  - bin/plan/bet-ledger.py
+maturity: draft
+last_reviewed: "2026-08-24"
