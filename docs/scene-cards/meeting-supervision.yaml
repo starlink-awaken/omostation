@@ -3,7 +3,7 @@ scene_type: internal_pipeline
 admission_track: internal_evidence_based
 lifecycle: shadow
 activation: preview
-approval_state: pending_business_confirmation
+approval_state: confirmed
 scene_id: meeting-supervision
 journey_id: meeting-to-delivery
 goal: 将会议决议收敛为可确认的任务、责任人、时限和升级链，确保闭环跟踪
