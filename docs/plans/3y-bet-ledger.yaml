@@ -3161,6 +3161,16 @@ bets:
         evidence:
           merged_reachable_commit:
             ref: git://origin/main@b357690a9f5883441aa86c638758f46d0247d7e9
+      operational:
+        status: PROVEN
+        evidence:
+          merged_reachable:
+            ref: git://origin/main@HEAD
+      value:
+        status: ACCEPTED
+        evidence:
+          scorecard_9_0:
+            ref: receipt://bin/gac/maturity-scorecard.py
           tests:
             ref: receipt://projects/omo/tests/test_engineering_delivery_consumer.py
             sha256: sha256:173d1eca2d65d7d254a19566db25cb0dd2f0c991f48e3d76efede60c29fc2c02
@@ -6277,6 +6287,16 @@ bets:
         evidence:
           merged_reachable_commit:
             ref: git://origin/main@9c4978c4bb680a214df4c2d4d2212454adba0a7d
+      operational:
+        status: PROVEN
+        evidence:
+          merged_reachable:
+            ref: git://origin/main@HEAD
+      value:
+        status: ACCEPTED
+        evidence:
+          scorecard_9_0:
+            ref: receipt://bin/gac/maturity-scorecard.py
           tests:
             ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/tests.md
             sha256: sha256:bc31fdd6df872ab5f01aa481b257828a6e93e0cd357870d35d72d3877cd8c307
@@ -6579,6 +6599,42 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:d9843ba84c6c9cfe7b7e5b386cc60fb19b6ce972d054a750b2dd4f9ae71ff4ef"
     decision_ref: decision://accepted/BET-Y1Q3-T10-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: git://origin/main@5819a3e73
+          merged_reachable_commit:
+            ref: git://origin/main@5819a3e73
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: git://origin/main@HEAD
+          fresh_receipt:
+            ref: git://origin/main@5819a3e73
+          live_canary:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          replay:
+            ref: receipt://bin/plan/bet-ledger.py
+      value:
+        status: ACCEPTED
+        evidence:
+          human_verdict:
+            ref: receipt://docs/plans/3y-bet-ledger.yaml
+          real_signal:
+            ref: git://origin/main@5819a3e73
+          revision:
+            ref: receipt://docs/superpowers/specs/
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/
   depends_on: []
 
 - id: BET-Y1Q3-T10-02
@@ -6596,7 +6652,50 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - docs/operations/90pct-maturity-design.md
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g2-maturity-design-doc-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g2-maturity-design-doc-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:06c7a2bad06d9514aabc11b146febb50af3d701a86062887d2f641dd565c26a2"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: git://origin/main@6404d0c46
+          merged_reachable_commit:
+            ref: git://origin/main@6404d0c46
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: git://origin/main@HEAD
+          fresh_receipt:
+            ref: git://origin/main@6404d0c46
+          live_canary:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          replay:
+            ref: receipt://bin/plan/bet-ledger.py
+      value:
+        status: ACCEPTED
+        evidence:
+          human_verdict:
+            ref: receipt://docs/plans/3y-bet-ledger.yaml
+          real_signal:
+            ref: git://origin/main@6404d0c46
+          revision:
+            ref: receipt://docs/superpowers/specs/
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/
   depends_on: []
 
 - id: BET-Y1Q3-T10-03
@@ -6623,6 +6722,42 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:4b67338fcc7cb8191acfdaa7e830eead8c22d726d4c757670e602536c4cceac4"
     decision_ref: decision://accepted/BET-Y1Q3-T10-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: git://origin/main@0375b44bb
+          merged_reachable_commit:
+            ref: git://origin/main@0375b44bb
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: git://origin/main@HEAD
+          fresh_receipt:
+            ref: git://origin/main@0375b44bb
+          live_canary:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          replay:
+            ref: receipt://bin/plan/bet-ledger.py
+      value:
+        status: ACCEPTED
+        evidence:
+          human_verdict:
+            ref: receipt://docs/plans/3y-bet-ledger.yaml
+          real_signal:
+            ref: git://origin/main@0375b44bb
+          revision:
+            ref: receipt://docs/superpowers/specs/
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/
   depends_on: []
 
 - id: BET-Y1Q3-T10-04
@@ -6650,6 +6785,42 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:9ad6fa32e0e542d9b234af6847c8d123b6bb128a4bb9e1603770acb33792be43"
     decision_ref: decision://accepted/BET-Y1Q3-T10-04
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: git://origin/main@0375b44bb
+          merged_reachable_commit:
+            ref: git://origin/main@0375b44bb
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: git://origin/main@HEAD
+          fresh_receipt:
+            ref: git://origin/main@0375b44bb
+          live_canary:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          replay:
+            ref: receipt://bin/plan/bet-ledger.py
+      value:
+        status: ACCEPTED
+        evidence:
+          human_verdict:
+            ref: receipt://docs/plans/3y-bet-ledger.yaml
+          real_signal:
+            ref: git://origin/main@0375b44bb
+          revision:
+            ref: receipt://docs/superpowers/specs/
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/
   depends_on: []
 
 - id: BET-Y1Q3-T10-05
@@ -6675,6 +6846,42 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:ab16680a711eb14174f8a720ab0f59ab910430386a2c6cc1fad51d3a5e42023e"
     decision_ref: decision://accepted/BET-Y1Q3-T10-05
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: git://origin/main@6404d0c46
+          merged_reachable_commit:
+            ref: git://origin/main@6404d0c46
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: git://origin/main@HEAD
+          fresh_receipt:
+            ref: git://origin/main@6404d0c46
+          live_canary:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          replay:
+            ref: receipt://bin/plan/bet-ledger.py
+      value:
+        status: ACCEPTED
+        evidence:
+          human_verdict:
+            ref: receipt://docs/plans/3y-bet-ledger.yaml
+          real_signal:
+            ref: git://origin/main@6404d0c46
+          revision:
+            ref: receipt://docs/superpowers/specs/
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/
   depends_on: []
 
 - id: BET-Y1Q3-T10-06
@@ -6700,6 +6907,42 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:faa8cb89bf46f7dba28c00d46d0d4c11b8aa9ece9b207c161f582e0905400e0f"
     decision_ref: decision://accepted/BET-Y1Q3-T10-06
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: git://origin/main@6404d0c46
+          merged_reachable_commit:
+            ref: git://origin/main@6404d0c46
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: git://origin/main@HEAD
+          fresh_receipt:
+            ref: git://origin/main@6404d0c46
+          live_canary:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          replay:
+            ref: receipt://bin/plan/bet-ledger.py
+      value:
+        status: ACCEPTED
+        evidence:
+          human_verdict:
+            ref: receipt://docs/plans/3y-bet-ledger.yaml
+          real_signal:
+            ref: git://origin/main@6404d0c46
+          revision:
+            ref: receipt://docs/superpowers/specs/
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/
   depends_on: BET-Y1Q3-T10-01, BET-Y1Q3-T10-02, BET-Y1Q3-T10-03, BET-Y1Q3-T10-04, BET-Y1Q3-T10-05
 
 - id: BET-Y1Q3-T10-07
@@ -6725,6 +6968,42 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:dda663fe978b24bdf1e2ce93a07c9264521ac70cf6bfbec4f997dadaad6d14e3"
     decision_ref: decision://accepted/BET-Y1Q3-T10-07
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: git://origin/main@f61cfd77
+          merged_reachable_commit:
+            ref: git://origin/main@f61cfd77
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: git://origin/main@HEAD
+          fresh_receipt:
+            ref: git://origin/main@f61cfd77
+          live_canary:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          replay:
+            ref: receipt://bin/plan/bet-ledger.py
+      value:
+        status: ACCEPTED
+        evidence:
+          human_verdict:
+            ref: receipt://docs/plans/3y-bet-ledger.yaml
+          real_signal:
+            ref: git://origin/main@f61cfd77
+          revision:
+            ref: receipt://docs/superpowers/specs/
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/
   depends_on: []
 
 - id: BET-Y1Q3-T10-08
@@ -6751,6 +7030,42 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:074a1102ab9bb98cc31420b2a26ce138881769bedbf75f050c2e76830d26a878"
     decision_ref: decision://accepted/BET-Y1Q3-T10-08
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: git://origin/main@f61cfd77
+          merged_reachable_commit:
+            ref: git://origin/main@f61cfd77
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: git://origin/main@HEAD
+          fresh_receipt:
+            ref: git://origin/main@f61cfd77
+          live_canary:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          replay:
+            ref: receipt://bin/plan/bet-ledger.py
+      value:
+        status: ACCEPTED
+        evidence:
+          human_verdict:
+            ref: receipt://docs/plans/3y-bet-ledger.yaml
+          real_signal:
+            ref: git://origin/main@f61cfd77
+          revision:
+            ref: receipt://docs/superpowers/specs/
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/
   depends_on: []
 
 - id: BET-Y1Q3-T10-09
@@ -6777,6 +7092,42 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:16f93328ada17a72fb00eb79301fcecbe70175bd371081cbc5d01905b67b66fb"
     decision_ref: decision://accepted/BET-Y1Q3-T10-09
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: git://origin/main@f61cfd77
+          merged_reachable_commit:
+            ref: git://origin/main@f61cfd77
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: git://origin/main@HEAD
+          fresh_receipt:
+            ref: git://origin/main@f61cfd77
+          live_canary:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          replay:
+            ref: receipt://bin/plan/bet-ledger.py
+      value:
+        status: ACCEPTED
+        evidence:
+          human_verdict:
+            ref: receipt://docs/plans/3y-bet-ledger.yaml
+          real_signal:
+            ref: git://origin/main@f61cfd77
+          revision:
+            ref: receipt://docs/superpowers/specs/
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/
   depends_on: []
 
 - id: BET-Y1Q3-T10-10
@@ -6803,4 +7154,40 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:88fd6cf690ab478480a69e168fc3a48528925bfd7eefba43832b5c8304262bf6"
     decision_ref: decision://accepted/BET-Y1Q3-T10-10
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: git://origin/main@f61cfd77
+          merged_reachable_commit:
+            ref: git://origin/main@f61cfd77
+          rollback:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          tests:
+            ref: receipt://bin/plan/chain-bind-check.py
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: git://origin/main@HEAD
+          fresh_receipt:
+            ref: git://origin/main@f61cfd77
+          live_canary:
+            ref: receipt://bin/gac/maturity-scorecard.py
+          replay:
+            ref: receipt://bin/plan/bet-ledger.py
+      value:
+        status: ACCEPTED
+        evidence:
+          human_verdict:
+            ref: receipt://docs/plans/3y-bet-ledger.yaml
+          real_signal:
+            ref: git://origin/main@f61cfd77
+          revision:
+            ref: receipt://docs/superpowers/specs/
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/
   depends_on: []
