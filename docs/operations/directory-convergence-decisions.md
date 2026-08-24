@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # Directory Convergence Decisions
 
 > 2026-08-22 决策：5 个未注册目录收敛方案

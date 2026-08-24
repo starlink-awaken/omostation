@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # 场景卡三分处置表 — 2026-08-24
 
 > 依据: bin/ssot/scene-card-lifecycle.py readiness(generic gate) + scene-activation-sweeper.py 分类(50-87) + agora runtime 组件溯源

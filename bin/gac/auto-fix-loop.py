@@ -159,7 +159,7 @@ def detect_drifts() -> list[Drift]:
         reg_script = WORKSPACE / "bin" / "ssot" / "script-registry.py"
         if reg_script.exists():
             r = subprocess.run(
-                [sys.executable, str(reg_script), "check"],
+                [sys.executable, str(reg_script), "validate"],
                 cwd=WORKSPACE,
                 capture_output=True,
                 text=True,
@@ -168,13 +168,44 @@ def detect_drifts() -> list[Drift]:
             )
             if r.returncode != 0:
                 # 提取未登记脚本列表 (从输出)
-                orphans = [line.strip() for line in r.stdout.splitlines() if line.strip() and "missing" in line.lower()]
+                orphans = [line.strip().replace("- ", "") for line in r.stdout.splitlines() if line.strip().startswith("- ")]
+                if orphans:
+                    drifts.append(
+                        Drift(
+                            "ORPHAN-SCRIPT",
+                            "warning",
+                            f"bin/ 新脚本未登记 ({len(orphans)}): {'; '.join(orphans[:5])}",
+                            f"python3 bin/ssot/script-registry.py register {' '.join(orphans)}",
+                            auto_fixable=True,
+                        )
+                    )
+    except Exception:
+        pass
+
+    # 4. FRONTMATTER-MISSING: 探测 Markdown 缺失 frontmatter
+    try:
+        doc_check = WORKSPACE / "bin" / "ssot" / "doc-governance-check.py"
+        if doc_check.exists():
+            r = subprocess.run(
+                [sys.executable, str(doc_check), "--strict"],
+                cwd=WORKSPACE,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+            missing_files = set()
+            for line in r.stdout.splitlines():
+                if "missing_frontmatter" in line and "does not start with YAML" in line:
+                    missing_files.add(line.split(":")[0])
+            if missing_files:
+                files_str = " ".join(list(missing_files)[:10]) # fix up to 10 at a time
                 drifts.append(
                     Drift(
-                        "ORPHAN-SCRIPT",
+                        "FRONTMATTER-MISSING",
                         "warning",
-                        f"bin/ 新脚本未登记: {'; '.join(orphans[:5]) if orphans else 'script-registry check failed'}",
-                        "python3 bin/ssot/script-registry.py register --auto",
+                        f"检测到 {len(missing_files)} 个文档缺失 Frontmatter (如: {list(missing_files)[0]})",
+                        f"python3 bin/gac/fix-frontmatter.py {files_str}",
                         auto_fixable=True,
                     )
                 )
@@ -199,7 +230,7 @@ def apply_fix(drift: Drift) -> tuple[bool, str]:
                 check=False,
             )
             return r.returncode == 0, (r.stdout or r.stderr)[-300:]
-        if drift.kind == "ORPHAN-SCRIPT":
+        if drift.kind in ("ORPHAN-SCRIPT", "FRONTMATTER-MISSING"):
             cmd = drift.fix_cmd.split()
             r = subprocess.run(cmd, cwd=WORKSPACE, capture_output=True, text=True, timeout=60, check=False)
             return r.returncode == 0, (r.stdout or r.stderr)[-300:]

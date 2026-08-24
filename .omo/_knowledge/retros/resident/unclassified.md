@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # unclassified 运行复盘聚合 (resident 事件驱动)
 
 - generated_at: 2026-08-23T06:07:00Z

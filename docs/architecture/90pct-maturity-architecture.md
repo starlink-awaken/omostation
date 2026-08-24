@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # 90% 架构成熟度设计方案
 
 > 从当前状态全面提升至 90%+ 的完整架构设计。
