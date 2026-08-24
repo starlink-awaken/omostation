@@ -372,6 +372,18 @@ if not any(gate.get("id") == "check-swarm-collision" for gate in GATES_LIST):
         }
     )
 
+# Root-owned bin 配额"变更侧问责" (2026-08-24): 每次变更自己负责守恒.
+# 检查 <base>..HEAD 中 bin/ 下 .py/.sh 新增 vs 删除, 净增 → FAIL.
+# 全局计数 (gac-validate subtraction-quota) 降级 advisory, 本 check 为增量问责.
+# 放 root-owned 段, 防 ecos 子模块 policy 移除.
+if not any(gate.get("id") == "bin-quota-diff" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "bin-quota-diff",
+            "command": ["bin/gac/check-bin-quota-diff.py", "--base", "origin/main"],
+        }
+    )
+
 # Phase 2-5 integration: anti-corruption sweep (weekly, soft)
 if not any(gate.get("id") == "drift-sweep" for gate in GATES_LIST):
     GATES_LIST.append(
