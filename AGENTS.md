@@ -209,6 +209,18 @@ python3 bin/gac/check-capability-ownership.py --json   # JSON 输出
 - **PROJ-FORCE**: post-commit 检测 SSOT 源变更 (agent-workflows/profiles, mof-capabilities)
   → 自动投影生成。改 SSOT 后派生文档随 commit 同步, 残缺生成物自动 revert。
 - **GEN-FORCE**: `docs/generated/` 5 个已跟踪生成物不再被 gitignore (契约保护), git add 直接可见。
+### 差距治理 S5: 约束重平衡 + 修复闭环 + 命令发现 (2026-08-24)
+```bash
+python3 bin/gac/check-derived-only-fast-track.py       # GOV-REBAL: 派生文档-only fast-track 判定
+python3 bin/gac/auto-fix-loop.py                       # AUTO-FIX: 漂移检测→分类→修复闭环 (--apply 应用)
+python3 bin/gac/command-discovery.py                   # UX-NOISE: 命令密度/重复/易混淆定位
+```
+- **GOV-REBAL**: 纯派生文档变更 (docs/generated/CLI-REFERENCE 等投影) → fast-track 建议,
+  走轻量 workflow 不需 ADR 占号; 混入源码 → 常规 gate。治理仪式花在真实语义变更上。
+- **AUTO-FIX**: 补治理闭环缺失的 F (修复环)。DERIVED-STALE/ORPHAN-SCRIPT 可自动修复
+  (--apply); PATH-DRIFT error 级阻断需人工判断 (删除 vs 迁移)。
+- **UX-NOISE**: 命令密度 ≥ 25/组 → 超阈值信号 (建议收敛/拆组), 兜底组 "其他" 膨胀预警;
+  发现层 `cockpit help <关键词>`。
 - 工程铁律 (TP-RELATIVE 时序相对断言 / PATH-ANCHOR 路径代码锚定): [`docs/operations/engineering-golden-rules.md`](docs/operations/engineering-golden-rules.md)
 
 `make gac-local-gate` runs the default (non-strict) GaC gate — GaC validate/drift, agent-workflow lint/integrations/adapters/bootstrap/observe, MOF schema/state-bridge/drift, documentation SSOT, doc link/snapshot, and staged change-lane checks. Two skip rules apply in default mode, both isolating concurrent-agent dirty in a shared worktree: `verify-plan`/`compliance`/`doctor` run only when staged touches agent-workflow (`896e60ba`); `project-layer-index` (generated layer digest) is CI-only — pre-commit/`make` skip it, `--strict`/CI runs it (`d33af25c`). For run/file-scoped AGCP verification use `bin/gac/gac-local-gate.py --scope ...`. Authoritative check list + skip rules live in `bin/gac/gac-local-gate.py` (`CHECKS`, `AGENT_WORKFLOW_GATE_CHECKS`, `CI_ONLY_CHECKS`) — do not duplicate here.
