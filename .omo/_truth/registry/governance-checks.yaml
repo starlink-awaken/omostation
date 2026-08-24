@@ -16,6 +16,9 @@ checkers:
   severity: high
   enabled: true
   schedule: daily
+  owner: governance-team
+  expected: All operations pass debt audit + operation audit (X1 audit chain)
+  remediation: Investigate audit failure and apply targeted fix; re-run x1-audit-chain
 - id: x2-staleness
   dimension: X2
   name: 抗熵检查器
@@ -26,6 +29,9 @@ checkers:
   severity: medium
   enabled: true
   schedule: daily
+  owner: governance-team
+  expected: All facts stay fresh per X2 freshness rules (debt freshness + health trend)
+  remediation: Refresh stale facts via state sync; verify against x2-freshness-rules
 - id: x3-value
   dimension: X3
   name: 价值栈检查器
@@ -36,6 +42,9 @@ checkers:
   severity: medium
   enabled: true
   schedule: weekly
+  owner: governance-team
+  expected: Debt prioritized by value stack; SLA targets met (X3 value stack)
+  remediation: Rebalance debt priorities against x3-value-stack; escalate SLA misses
 - id: x4-consistency
   dimension: X4
   name: 一致性检查器
@@ -45,6 +54,9 @@ checkers:
   type: python
   severity: high
   enabled: true
+  owner: governance-team
+  expected: All rules enforced by CI + pre-commit + doc checks (X4 consistency)
+  remediation: Apply consistency rules via x4-consistency-rules; fix violation source
   schedule: daily
 execution:
   parallel: true

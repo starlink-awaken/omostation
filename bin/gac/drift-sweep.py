@@ -274,17 +274,20 @@ def check_doc_hardcoded_values() -> dict:
 
 
 def check_governance_check_coverage() -> dict:
-    rc, out, err = run("uv run python3 bin/ssot/governance-migration.py --dry-run 2>&1 | tail -5")
+    rc, out, err = run("uv run --with pyyaml python3 bin/ssot/governance-migration.py --dry-run 2>&1 | tail -5")
     output = (out or err).strip()[-500:]
+    # governance-migration emits "No changes needed" when all checks are
+    # already complete; earlier versions said "No files written".
+    clean = ("No changes needed" in output) or ("No files written" in output)
     return {
         "check": "governance_check_coverage",
-        "pass": rc == 0 and "No files written" in output,
+        "pass": rc == 0 and clean,
         "output": output,
     }
 
 
 def check_script_registry_coverage() -> dict:
-    rc, out, err = run("uv run python3 bin/ssot/script-registry.py validate 2>&1 | tail -10")
+    rc, out, err = run("uv run --with pyyaml python3 bin/ssot/script-registry.py validate 2>&1 | tail -10")
     return {
         "check": "script_registry_coverage",
         "pass": rc == 0,
