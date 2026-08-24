@@ -4001,6 +4001,15 @@
         "risk_score": 15,
         "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
       }
+    },
+    {
+      "name": "worktree_init",
+      "bin": "bin/gac/worktree-init.sh",
+      "scripts": "",
+      "status": "managed",
+      "action": "bin-only",
+      "owner": "governance",
+      "note": "BET-Y1Q3-T10-09: worktree submodule init 自动化"
     }
   ],
   "reconciliation": {
