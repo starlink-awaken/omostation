@@ -5,22 +5,37 @@
 本检查通过对比 index 当前指针与上一次 commit 的指针, 检测是否存在 rewind.
 
 Rewind 判定: 当前指针 NOT ancestor of 上一次指针 (即指针历史被改写/回退).
+
+--range 模式 (gitlink ancestry gate, 2026-08-24): 对比 base..head 两端的
+gitlink 指针, 拦截并发合并把子模块指针带回旧 SHA 的回退。豁免: base..head
+区间 commit body 含 `[gitlink-regress: <理由>]` → 降级 warning + 指纹写入
+gate-known-debt.yaml (shrink_only, 只追加)。
 """
 
+from __future__ import annotations
+
 import argparse
+import hashlib
 import json
+import os
+import re
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+# hook 环境下 git 会设这些, 泄漏到 subprocess 会让 `git -C <submodule>` 读错仓
+for _env in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_QUARANTINE_PATH"):
+    os.environ.pop(_env, None)
 
-def _git(*args: str) -> str:
+
+def _git(*args: str, cwd: Path | None = None) -> str:
     """Run a git command and return stdout, or empty string on failure."""
     result = subprocess.run(
         ["git", *args],
-        cwd=REPO_ROOT,
+        cwd=cwd or REPO_ROOT,
         capture_output=True,
         text=True,
         check=False,
@@ -45,14 +60,14 @@ def get_current_gitlinks() -> dict[str, str]:
     return gitlinks
 
 
-def _gitlink_pointer_at(commit: str, path: str) -> str | None:
+def _gitlink_pointer_at(commit: str, path: str, cwd: Path | None = None) -> str | None:
     """Extract the submodule gitlink pointer value recorded at a given commit.
 
     Parses `git ls-tree <commit> -- <path>` for the `160000 commit <sha>` line.
     Returns the pointer SHA, or None if the commit does not record a gitlink for
     the path (e.g. the path was absent or not a submodule at that commit).
     """
-    line = _git("ls-tree", commit, "--", path)
+    line = _git("ls-tree", commit, "--", path, cwd=cwd)
     parts = line.split()
     if len(parts) >= 3 and parts[0] == "160000" and parts[1] == "commit":
         return parts[2]
@@ -228,6 +243,232 @@ def format_violation(path: str, current_sha: str, previous_sha: str, reason: str
     )
 
 
+# ── --range 模式: gitlink ancestry gate (base..head 指针回退检测) ──────────
+
+EXEMPT_TAG_RE = re.compile(r"\[gitlink-regress:\s*([^\]]+)\]")
+DEBT_SURFACE = "gitlink-ancestry"
+DEBT_CHECK_ID = "submodule-ancestry-gate"
+
+
+def _run_in(subdir: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", *args],
+        cwd=subdir,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def declared_submodules(root: Path) -> list[str]:
+    cfg = root / ".gitmodules"
+    if not cfg.is_file():
+        return []
+    out = subprocess.run(
+        ["git", "config", "--file", str(cfg), "--get-regexp", r"^submodule\..*\.path$"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout
+    paths = []
+    for line in out.splitlines():
+        parts = line.split(" ", 1)
+        if len(parts) == 2 and parts[1]:
+            paths.append(parts[1])
+    return sorted(set(paths))
+
+
+def is_submodule_initialized(subdir: Path) -> bool:
+    if not (subdir / ".git").exists():
+        return False
+    for entry in subdir.iterdir():
+        if entry.name != ".git":
+            return True
+    return False
+
+
+def submodule_has_object(subdir: Path, sha: str) -> bool:
+    return _run_in(subdir, "cat-file", "-e", f"{sha}^{{commit}}").returncode == 0
+
+
+def scan_exemption_tags(base: str, head: str, root: Path) -> list[str]:
+    out = _git("log", "--format=%B", f"{base}..{head}", cwd=root)
+    return [match.strip() for match in EXEMPT_TAG_RE.findall(out)]
+
+
+def record_known_debt(root: Path, findings: list[dict], base: str, head: str) -> list[str]:
+    """Append gitlink-regress fingerprints to gate-known-debt.yaml.
+
+    growth_policy=shrink_only: 只追加本次指纹条目, 不清除他人已有条目。
+    复用 swarm_discipline 的 fingerprint_key/load_known_debt (import, 非复制)。
+    """
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from swarm_discipline import KNOWN_DEBT_REL, fingerprint_key, load_known_debt
+
+        import yaml
+    except ImportError:
+        return []
+
+    debt_path = root / KNOWN_DEBT_REL
+    existing = load_known_debt(root)
+    existing_keys = {e.get("fingerprint") or fingerprint_key(e) for e in existing}
+    now = datetime.now(timezone.utc).isoformat()
+    added: list[str] = []
+    for finding in findings:
+        signature = hashlib.sha256(
+            f"{finding['path']}\n{finding['old_sha']}\n{finding['new_sha']}".encode("utf-8")
+        ).hexdigest()[:16]
+        fp = {
+            "surface": DEBT_SURFACE,
+            "check_id": DEBT_CHECK_ID,
+            "signature": signature,
+        }
+        key = fingerprint_key(fp)
+        if key in existing_keys:
+            continue
+        existing.append(
+            {
+                "fingerprint": key,
+                "surface": fp["surface"],
+                "check_id": fp["check_id"],
+                "signature": signature,
+                "kind": "gitlink-regress",
+                "reason": (
+                    f"submodule {finding['path']} pointer {finding['new_sha'][:12]} "
+                    f"rewinds {finding['old_sha'][:12]}"
+                ),
+                "range": f"{base[:12]}..{head[:12]}",
+                "recorded_at": now,
+                "active": True,
+            }
+        )
+        existing_keys.add(key)
+        added.append(key)
+    if not added:
+        return []
+
+    debt_path.parent.mkdir(parents=True, exist_ok=True)
+    header = ""
+    doc: dict = {}
+    if debt_path.is_file():
+        text = debt_path.read_text(encoding="utf-8")
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                header += line + "\n"
+            else:
+                break
+        loaded = yaml.safe_load(text)
+        if isinstance(loaded, dict):
+            doc = loaded
+    doc["entries"] = existing
+    doc["version"] = doc.get("version", 1)
+    doc.setdefault("growth_policy", "shrink_only")
+    debt_path.write_text(
+        header + yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, default_flow_style=False),
+        encoding="utf-8",
+    )
+    return added
+
+
+def _format_rewind_block(base: str, head: str, findings: list[dict]) -> str:
+    lines = [f"FAIL 检测到 {len(findings)} 个子模块指针回退 ({base[:12]}..{head[:12]}):"]
+    for f in findings:
+        lines.append(f"  {f['path']} — 指针由 {f['old_sha'][:12]} 回退至 {f['new_sha'][:12]} (非前进)")
+    lines.append("修复指引:")
+    lines.append("  1. 误回退 (并发合并覆盖): 恢复子模块前进指针并重新 commit 主仓 gitlink")
+    lines.append(f"     git -C <submodule> checkout {findings[0]['old_sha'][:12]} && git add <submodule> && git commit")
+    lines.append("  2. 有意回退: 在本次 push 区间 (base..head) 任一 commit body 加豁免标签")
+    lines.append("     [gitlink-regress: <理由>]")
+    lines.append("     该回退降级为 warning, 指纹记入 .omo/_truth/registry/gate-known-debt.yaml")
+    lines.append("     (growth_policy=shrink_only, 只追加本次条目); 豁免指纹需随本次交付提交")
+    return "\n".join(lines)
+
+
+def _format_rewind_exempt(findings: list[dict], tags: list[str], debt_keys: list[str]) -> str:
+    reason = tags[0] if tags else ""
+    lines = [f"WARN 子模块指针回退已豁免 (commit body 含 [gitlink-regress: {reason}], base..head 区间):"]
+    for f in findings:
+        lines.append(f"  {f['path']} — {f['old_sha'][:12]} → {f['new_sha'][:12]}")
+    if debt_keys:
+        lines.append(f"  已写入 known-debt 指纹 ({len(debt_keys)} 条): " + ", ".join(debt_keys))
+        lines.append("  注意: gate-known-debt.yaml 为受治 SSOT, 请随本次交付提交")
+    else:
+        lines.append("  known-debt 指纹写入跳过 (--no-write-debt 或 pyyaml 不可用)")
+    return "\n".join(lines)
+
+
+def run_ancestry_gate(base: str, head: str, root: Path, *, write_debt: bool, json_out: bool) -> int:
+    warnings: list[str] = []
+
+    if not _git("rev-parse", "--verify", "--quiet", f"{base}^{{commit}}", cwd=root):
+        warnings.append(f"[WARN] base '{base}' 无法解析, 跳过 ancestry gate (浅检出/无该 ref 属预期)")
+    elif not _git("rev-parse", "--verify", "--quiet", f"{head}^{{commit}}", cwd=root):
+        warnings.append(f"[WARN] head '{head}' 无法解析, 跳过 ancestry gate")
+
+    violations: list[dict] = []
+    if not warnings:
+        for path in declared_submodules(root):
+            old = _gitlink_pointer_at(base, path, cwd=root)
+            new = _gitlink_pointer_at(head, path, cwd=root)
+            if new is None or old is None or old == new:
+                continue
+            subdir = root / path
+            if not is_submodule_initialized(subdir):
+                warnings.append(f"[WARN] {path}: 子模块未初始化 (工作树无文件), 跳过 ancestry 校验")
+                continue
+            missing = [sha for sha in (old, new) if not submodule_has_object(subdir, sha)]
+            if missing:
+                warnings.append(
+                    f"[WARN] {path}: 子模块缺对象 {missing[0][:12]}, 无法判定 ancestry, 跳过"
+                )
+                continue
+            if _run_in(subdir, "merge-base", "--is-ancestor", old, new).returncode == 0:
+                continue
+            violations.append({"path": path, "old_sha": old, "new_sha": new})
+
+    tags = scan_exemption_tags(base, head, root) if not warnings else []
+    exempted = bool(violations) and bool(tags)
+    debt_keys: list[str] = []
+    if exempted and write_debt:
+        debt_keys = record_known_debt(root, violations, base, head)
+
+    ok = not violations or exempted
+    if json_out:
+        print(
+            json.dumps(
+                {
+                    "ok": ok,
+                    "mode": "range",
+                    "base": base,
+                    "head": head,
+                    "violations": violations,
+                    "warns": warnings,
+                    "exempted": exempted,
+                    "exempt_tags": tags,
+                    "debt_written": debt_keys,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0 if ok else 1
+
+    for w in warnings:
+        print(w)
+    if violations and not tags:
+        print(_format_rewind_block(base, head, violations))
+        return 1
+    if exempted:
+        print(_format_rewind_exempt(violations, tags, debt_keys))
+        return 0
+
+    print(f"OK 区间 {base[:12]}..{head[:12]} 未检测到子模块指针回退")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="CR-SUBMODULE-REWIND check")
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
@@ -238,7 +479,27 @@ def main() -> int:
         default=3,
         help="WARN if same tolerance layer triggers N+ times (default: 3)",
     )
+    parser.add_argument(
+        "--range",
+        nargs="+",
+        metavar="RANGE",
+        help="base [head] — ancestry gate over a commit range (pre-push/CI). head 默认 HEAD",
+    )
+    parser.add_argument("--cwd", default=None, help="repo root override (default: script repo)")
+    parser.add_argument(
+        "--no-write-debt",
+        action="store_true",
+        help="豁免时不写 gate-known-debt.yaml 指纹 (CI 只读场景)",
+    )
     args = parser.parse_args()
+
+    if args.range:
+        if not 1 <= len(args.range) <= 2:
+            parser.error("--range 接受 1-2 个参数: base [head]")
+        base = args.range[0]
+        head = args.range[1] if len(args.range) == 2 else "HEAD"
+        root = Path(args.cwd).resolve() if args.cwd else REPO_ROOT
+        return run_ancestry_gate(base, head, root, write_debt=not args.no_write_debt, json_out=args.json)
 
     violations: list[dict] = []
     details: list[dict] = []
