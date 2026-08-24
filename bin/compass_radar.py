@@ -5,8 +5,12 @@
 (strategy_audit/_check_anomalies/_collect_metrics),
 捕获 print 输出 + 解析异常数量,算 health_score,落 .omo/state/health.yaml.
 
-health_score (复合, ISC-3 执行面主导 — G-CONV.3 / ADR-0210):
-  复合分 = 0.3 * governance_anomaly_score + 0.5 * runtime_health_score + 0.2 * freshness_score
+health_score (复合, ISC-3 执行面主导 — G-CONV.3 / ADR-0210 + BET-Y1Q3-T10-05 + BET-Y1Q3-T10-10):
+  复合分 = Σ(score_i × weight_i) / Σ(weight_i)
+  默认权重: governance 0.3 + runtime 0.5 + freshness 0.2 = 1.0
+  T10-05 扩展: +drift 0.10 + staleness 0.10 (drift-sweep + kb-staleness-check)
+  T10-10 扩展: +alignment 0.10 (maturity-align 三方口径对齐)
+  总和 1.30; 缺失维度 (subprocess 失败/tool missing) 权重回流给 governance (不惩罚分)
 
   governance_anomaly_score (原 health_score, ISC-3 语义重命名保留):
     0 异常 → 100, 1 → 85, 2 → 70, 3 → 55, 4 → 40, ≥5 → 25 (熔断)
@@ -15,6 +19,14 @@ health_score (复合, ISC-3 执行面主导 — G-CONV.3 / ADR-0210):
     依赖 G-CONV.2 去假阳性 (stdio transient 不计入 dead)
   freshness_score:
     health.yaml generated_at 距今 ≤1h → 100, ≤24h → 80, ≤7d → 50, 否则 0
+  drift_score (T10-05):
+    drift-sweep.py summary.{pass,fail,skip,total} → 100 - 15*fail - 2*skip
+  staleness_score (T10-05):
+    kb/staleness-check.py {checked, clean, stale, total_issues}
+    → 100 - 50*(stale/checked) - 100*(total_issues/checked), clamped [0, 100]
+  alignment_score (T10-10):
+    maturity-align.py alignment.reconciliation_score (0-100, 三方是否讲同一个故事)
+    → 直接采用 reconciliation_score (meta-signal — 不需要再变换)
 
   治本动机: ISC-1 权重偏声明面 (gov 0.5); ISC-2/3 把 runtime 提到 0.5 执行面主导.
   复合化后 service_online_ratio 直接拉低 health_score, 触发 X1 critical 告警 (ISC-4 dispatcher).
@@ -334,11 +346,22 @@ def _composite_health_score(
     service_online_ratio: float | None,
     freshness_score: int,
     feedback_alive: bool = True,
+    drift_score: int | None = None,
+    staleness_score: int | None = None,
+    alignment_score: int | None = None,
 ) -> tuple[int, dict]:
     """复合健康分 (ISC-3 执行面主导) + feedback 回路硬门槛 (理想态 evidence-driven).
 
-    权重 (G-CONV.3): governance 0.3 + runtime 0.5 + freshness 0.2.
-    runtime 维度缺失时, 权重重分配到 governance (不因数据缺失惩罚分).
+    权重 (G-CONV.3 + BET-Y1Q3-T10-05 + BET-Y1Q3-T10-10):
+      - governance 0.3, runtime 0.5, freshness 0.2 (baseline)
+      - +drift 0.10, +staleness 0.10 (T10-05 集成新指标 → observable 8→9+)
+      - +alignment 0.10 (T10-10 三方口径对齐 — meta-signal)
+      - 总和 1.30; runtime/drift/staleness/alignment 缺失时按比例回流给 governance.
+
+    runtime 维度缺失时, runtime 0.5 权重还回 governance (0.3 → 0.8); 同理
+    drift/staleness/alignment 缺失时 (工具不在/JSONL 解析失败) 权重回流,
+    不因缺失惩罚分.
+
     feedback 回路断 (alive=False) → health 硬封顶 50 (防假绿: 回路断 governance 无活动
     却报满分, 见 evidence-smoke 多源 OR + PR#77).
     """
@@ -355,6 +378,20 @@ def _composite_health_score(
         # runtime 缺失: 把 0.5 权重还回 governance (0.3 → 0.8)
         weights["governance"] = 0.8
         contributions["governance"] = governance_anomaly_score * 0.8
+
+    # T10-05 集成新指标: drift + staleness 各 0.10; 缺失则不计入贡献也不计入权重
+    # (确保历史调用 _composite_health_score(gov, ratio, fresh, fb) 行为不变)
+    if drift_score is not None:
+        weights["drift"] = 0.10
+        contributions["drift"] = drift_score * 0.10
+    if staleness_score is not None:
+        weights["staleness"] = 0.10
+        contributions["staleness"] = staleness_score * 0.10
+
+    # T10-10 三方成熟度口径对齐 — meta-signal (三方是否讲同一个故事)
+    if alignment_score is not None:
+        weights["alignment"] = 0.10
+        contributions["alignment"] = alignment_score * 0.10
 
     total_weight = sum(weights.values())
     raw = sum(contributions.values()) / total_weight if total_weight else 0
@@ -469,6 +506,177 @@ def _collect_feedback_liveness(ws_root: Path) -> tuple[bool, dict]:
         return (alive, fb)
 
 
+def _collect_drift_health(ws_root: Path) -> tuple[int | None, dict]:
+    """Drift sweep signal — weekly governance drift health (BET-Y1Q3-T10-05).
+
+    Subprocess `bin/gac/drift-sweep.py --json` and parses the `summary` block:
+    `{pass, fail, skip, total}`. Returns (score 0-100, detail). Missing
+    tool / non-JSON / non-zero exit → (None, {}) so the composite caller
+    redistributes the slot's weight (governance gets it back).
+
+    Scoring (simple linear): `score = 100 - 15*fail - 2*skip` clamped to [0, 100].
+    A 16/16 PASS workspace scores 100; first fail drops 15; full collapse drops
+    to 0 (fail=7 ≈ score 0). `skip` is informational not blocking.
+    """
+    drift_script = ws_root / "bin" / "gac" / "drift-sweep.py"
+    if not drift_script.is_file():
+        return (None, {})
+    try:
+        res = subprocess.run(
+            [sys.executable, str(drift_script), "--json"],
+            cwd=ws_root,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=180,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return (None, {"error": f"subprocess: {str(exc)[:120]}"})
+    stdout = (res.stdout or "").strip()
+    if not stdout.startswith("{"):
+        return (None, {"error": f"exit={res.returncode} empty-stdout"})
+    try:
+        import json as _json
+
+        data = _json.loads(stdout)
+    except Exception as exc:
+        return (None, {"error": f"json: {str(exc)[:120]}"})
+    summary = data.get("summary") or {}
+    total = int(summary.get("total") or 0)
+    passed = int(summary.get("pass") or 0)
+    failed = int(summary.get("fail") or 0)
+    skipped = int(summary.get("skip") or 0)
+    if total <= 0:
+        return (None, {"error": "empty-summary"})
+    score = max(0, min(100, 100 - 15 * failed - 2 * skipped))
+    return (
+        score,
+        {
+            "source": "drift-sweep",
+            "total": total,
+            "pass": passed,
+            "fail": failed,
+            "skip": skipped,
+            "score": score,
+        },
+    )
+
+
+def _collect_kb_staleness(ws_root: Path) -> tuple[int | None, dict]:
+    """Knowledge base staleness signal (BET-Y1Q3-T10-05).
+
+    Subprocess `bin/kb/staleness-check.py --json` and parses
+    `{checked, clean, stale, total_issues}`. Returns (score 0-100, detail).
+
+    Scoring: penalize by *stale ratio* AND *issues density*. A workspace where
+    80% of assets are clean and <50 issues/100 files scores 100. Each 1% stale
+    ratio drops 0.5; each 100 total_issues/checked drops 5. Floor 0.
+    """
+    kb_script = ws_root / "bin" / "kb" / "staleness-check.py"
+    if not kb_script.is_file():
+        return (None, {})
+    try:
+        res = subprocess.run(
+            [sys.executable, str(kb_script), "--json"],
+            cwd=ws_root,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=180,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return (None, {"error": f"subprocess: {str(exc)[:120]}"})
+    stdout = (res.stdout or "").strip()
+    if not stdout.startswith("{"):
+        return (None, {"error": f"exit={res.returncode} empty-stdout"})
+    try:
+        import json as _json
+
+        data = _json.loads(stdout)
+    except Exception as exc:
+        return (None, {"error": f"json: {str(exc)[:120]}"})
+    checked = int(data.get("checked") or 0)
+    clean = int(data.get("clean") or 0)
+    stale = int(data.get("stale") or 0)
+    total_issues = int(data.get("total_issues") or 0)
+    if checked <= 0:
+        return (None, {"error": "empty-checked"})
+    stale_ratio = stale / checked
+    issue_density = total_issues / checked  # issues per file
+    penalty = 50 * stale_ratio + 100 * issue_density
+    score = max(0, min(100, round(100 - penalty)))
+    return (
+        score,
+        {
+            "source": "staleness-check",
+            "checked": checked,
+            "clean": clean,
+            "stale": stale,
+            "total_issues": total_issues,
+            "stale_ratio": round(stale_ratio, 4),
+            "issue_density": round(issue_density, 4),
+            "score": score,
+        },
+    )
+
+
+def _collect_alignment_score(ws_root: Path) -> tuple[int | None, dict]:
+    """三方成熟度口径对齐信号 (BET-Y1Q3-T10-10).
+
+    Subprocess `bin/gac/maturity-align.py --json` and parses
+    `alignment.reconciliation_score` (0-100). A high score means the three
+    maturity systems (compass_radar / maturity-scorecard / bet-ledger) agree;
+    a low score means they tell inconsistent stories.
+
+    Returns (score 0-100, detail). Missing tool / non-JSON / non-zero exit →
+    (None, {}) so the composite caller redistributes the slot's weight to
+    governance.
+
+    Note: alignment is a meta-signal — it inspects health.yaml + scorecard +
+    ledger and reports how aligned the three are. Score is the reconciliation
+    score directly; no transformation needed.
+    """
+    align_script = ws_root / "bin" / "gac" / "maturity-align.py"
+    if not align_script.is_file():
+        return (None, {})
+    try:
+        res = subprocess.run(
+            [sys.executable, str(align_script), "--json"],
+            cwd=ws_root,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=180,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return (None, {"error": f"subprocess: {str(exc)[:120]}"})
+    stdout = (res.stdout or "").strip()
+    if not stdout.startswith("{"):
+        return (None, {"error": f"exit={res.returncode} empty-stdout"})
+    try:
+        import json as _json
+
+        data = _json.loads(stdout)
+    except Exception as exc:
+        return (None, {"error": f"json: {str(exc)[:120]}"})
+    alignment = data.get("alignment") or {}
+    raw = alignment.get("reconciliation_score")
+    if not isinstance(raw, (int, float)):
+        return (None, {"error": "missing-reconciliation-score"})
+    score = int(round(raw))
+    detail = {
+        "source": "maturity-align",
+        "reconciliation_score": score,
+        "drift_detected": bool(alignment.get("drift_detected")),
+        "normalised": alignment.get("normalised") or {},
+        "high_dimension": alignment.get("high_dimension"),
+        "low_dimension": alignment.get("low_dimension"),
+        "warnings": alignment.get("warnings") or [],
+        "score": score,
+    }
+    return score, detail
+
+
 def run_radar(omo_dir: Path) -> dict:
     """调 c2g.strategy 真审计,返回 metrics 字典."""
     # 治本 (N1, 2026-07-28): 清 orphan worktree, 防 wt_pressure 累积 (concurrent_conflicts 系统性副产品)
@@ -562,6 +770,23 @@ def render_yaml(report: dict) -> str:
     lines.append("anomaly_count: " + str(report["anomaly_count"]))
     lines.append("service_online_ratio: " + _format_ratio(report.get("service_online_ratio")))
     lines.append("freshness_score: " + str(report["freshness_score"]))
+    # T10-05: 新指标 drift + staleness (subprocess 失败时为 unavailable)
+    drift_score = report.get("drift_score")
+    if drift_score is None:
+        lines.append("drift_score: " + _yaml_str("unavailable"))
+    else:
+        lines.append("drift_score: " + str(int(drift_score)))
+    staleness_score = report.get("staleness_score")
+    if staleness_score is None:
+        lines.append("staleness_score: " + _yaml_str("unavailable"))
+    else:
+        lines.append("staleness_score: " + str(int(staleness_score)))
+    # T10-10: 三方成熟度口径对齐 (reconciliation_score 0-100)
+    alignment_score = report.get("alignment_score")
+    if alignment_score is None:
+        lines.append("alignment_score: " + _yaml_str("unavailable"))
+    else:
+        lines.append("alignment_score: " + str(int(alignment_score)))
     # feedback 回路存活 (理想态 evidence-driven, 防假绿, 见 _composite_health_score 硬门槛)
     fb = report.get("feedback_liveness") or {}
     lines.append("feedback_alive: " + str(fb.get("alive", False)))
@@ -609,6 +834,19 @@ def render_yaml(report: dict) -> str:
     else:
         lines.append("  []")
     lines.append("")
+    # T10-05: drift + staleness detail blocks (让 SSOT traceable, 见 _composite_health_score)
+    for label, key in (
+        ("drift_detail", "drift_detail"),
+        ("staleness_detail", "staleness_detail"),
+        ("alignment_detail", "alignment_detail"),
+    ):
+        detail = report.get(key)
+        if not detail:
+            continue
+        lines.append(f"{label}:")
+        for dk, dv in detail.items():
+            lines.append(f"  {dk}: {_yaml_str(str(dv))}")
+        lines.append("")
     lines.append("distributions:")
     for dim in (
         "priority_dist",
@@ -711,6 +949,9 @@ def _append_health_history(health_yaml_path: Path, report: dict[str, Any]) -> No
             "anomaly_count": report.get("anomaly_count"),
             "service_online_ratio": report.get("service_online_ratio"),
             "freshness_score": report.get("freshness_score"),
+            "drift_score": report.get("drift_score"),
+            "staleness_score": report.get("staleness_score"),
+            "alignment_score": report.get("alignment_score"),
             "total_tasks": report.get("total_tasks"),
             "source": report.get("source"),
         }
@@ -815,6 +1056,23 @@ def build_health_projection(omo_dir: Path, output: Path) -> tuple[dict[str, Any]
     report["service_online_ratio"] = service_online_ratio
     report["runtime_summary"] = runtime_summary
 
+    # BET-Y1Q3-T10-05: 集成 drift-sweep + kb-staleness 新指标
+    drift_score, drift_detail = _collect_drift_health(ws_root)
+    report["drift_score"] = drift_score
+    report["drift_detail"] = drift_detail
+    staleness_score, staleness_detail = _collect_kb_staleness(ws_root)
+    report["staleness_score"] = staleness_score
+    report["staleness_detail"] = staleness_detail
+
+    # BET-Y1Q3-T10-10: 三方成熟度口径对齐 (meta-signal — 三方是否讲同一个故事)
+    alignment_score, alignment_detail = _collect_alignment_score(ws_root)
+    report["alignment_score"] = alignment_score
+    report["alignment_detail"] = alignment_detail
+
+    maturity_overall, maturity_scores = _collect_maturity_health(ws_root)
+    report["maturity_overall"] = maturity_overall
+    report["maturity_scores"] = maturity_scores
+
     prior_fresh_score, prior_age_desc = _freshness_score(output, now_iso)
     # ADR-0216: this run writes generated_at=now → freshness for composite is 100.
     # Still record prior_* for diagnostics (how stale the previous projection was).
@@ -827,7 +1085,9 @@ def build_health_projection(omo_dir: Path, output: Path) -> tuple[dict[str, Any]
     report["feedback_liveness"] = feedback_summary
 
     composite, breakdown = _composite_health_score(
-        governance_anomaly_score, service_online_ratio, fresh_score, feedback_alive
+        governance_anomaly_score, service_online_ratio, fresh_score, feedback_alive,
+        drift_score=drift_score, staleness_score=staleness_score,
+        alignment_score=alignment_score,
     )
     report["health_score"] = composite
     report["health_composite_breakdown"] = breakdown
@@ -887,6 +1147,19 @@ def build_system_projection_updates(workspace_root: Path, report: dict[str, Any]
         updates["workflow_mesh_health"] = mesh_health
     return updates
 
+
+
+def _collect_maturity_health(ws_root):
+    try:
+        import subprocess, json
+        res = subprocess.run(
+            ["uv", "run", "--with", "pyyaml", "python3", "bin/gac/maturity-scorecard.py", "--json", "--skip-observable"],
+            cwd=ws_root, capture_output=True, text=True, check=True
+        )
+        data = json.loads(res.stdout)
+        return data.get("overall"), data.get("scores")
+    except Exception as e:
+        return None, None
 
 def _collect_mesh_health(workspace_root: Path) -> dict[str, Any] | None:
     """Collect Workflow Mesh health snapshot via protocol-based discovery."""
@@ -972,6 +1245,39 @@ def main() -> int:
         f"   service_online_ratio:     {ratio_str}  (online={runtime_summary.get('online_services')}/{runtime_summary.get('total_services')})"
     )
     print(f"   freshness_score:          {fresh_score}/100 ({age_desc})")
+    # T10-05: 新指标 — drift (drift-sweep) + staleness (kb/staleness-check)
+    drift_score = report.get("drift_score")
+    if drift_score is None:
+        print("   drift_score:              unavailable (tool missing or subprocess failed)")
+    else:
+        dd = report.get("drift_detail") or {}
+        print(
+            f"   drift_score:              {drift_score}/100 (drift-sweep {dd.get('pass', '?')}/{dd.get('total', '?')} pass, {dd.get('fail', 0)} fail, {dd.get('skip', 0)} skip)"
+        )
+    staleness_score = report.get("staleness_score")
+    if staleness_score is None:
+        print("   staleness_score:          unavailable (tool missing or subprocess failed)")
+    else:
+        sd = report.get("staleness_detail") or {}
+        print(
+            f"   staleness_score:          {staleness_score}/100 (kb staleness {sd.get('stale', 0)}/{sd.get('checked', '?')} stale, {sd.get('total_issues', 0)} issues)"
+        )
+    # T10-10: 三方成熟度口径对齐 (maturity-align)
+    alignment_score = report.get("alignment_score")
+    if alignment_score is None:
+        print("   alignment_score:          unavailable (maturity-align tool missing or subprocess failed)")
+    else:
+        ad = report.get("alignment_detail") or {}
+        n = ad.get("normalised") or {}
+        norm_str = ", ".join(f"{k}={v:.0f}" for k, v in n.items() if isinstance(v, (int, float)))
+        print(
+            f"   alignment_score:          {alignment_score}/100 (reconciliation, drift={ad.get('drift_detected', False)}) [{norm_str}]"
+        )
+    maturity_overall = report.get("maturity_overall")
+    if maturity_overall is not None:
+        print(f"   maturity_score:           {maturity_overall}/10.0 (overall maturity)")
+    else:
+        print("   maturity_score:           unavailable")
     print(f"   total:                    {report['total_tasks']} ({report['done']} done + {report['planned']} planned)")
     if report["anomalies"]:
         print("🚨 异常告警:")

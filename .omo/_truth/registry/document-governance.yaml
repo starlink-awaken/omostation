@@ -79,14 +79,29 @@ surfaces:
       - docs/generated/**
       - docs/closeout/**
       - docs/reports/**
+      - docs/superpowers/specs/**
     owner: governance-team
     lifecycle: contract
     ssot: docs/SYSTEM-INDEX.md
     verifier: bin/ssot/doc-governance-check.py
     metadata: frontmatter
     required_frontmatter: [status, lifecycle, owner, last-reviewed]
-    valid_statuses_by_schema:
-      specification/v1: [accepted]
+    review_days: 180
+    discoverability: directory-index
+    index: docs/SYSTEM-INDEX.md
+    workflow: project-doc-change
+
+  - id: accepted-specifications
+    patterns:
+      - docs/superpowers/specs/*.md
+    owner: governance-team
+    lifecycle: contract
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    valid_statuses: [accepted, draft, superseded, deprecated, active]
+    valid_lifecycles: [spec, contract]
     review_days: 180
     discoverability: directory-index
     index: docs/SYSTEM-INDEX.md

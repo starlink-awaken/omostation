@@ -6484,7 +6484,7 @@ bets:
   title: resident 常驻体系与治理接线全面深度复盘
   appetite: 4 hours
   priority: P2
-  status: candidate
+  status: done
   started_at: 2026-08-24
   goal: 对 resident 常驻 agent 体系（五类角色/事件驱动/规则订阅/多载体执行）与治理接线（MOF/SGF/BOS、agent-workflow 契约、gac-local-gate、PR 工作流、MCP 工具）从场景/功能/用户旅程/体验/目标愿景/长期运营/运维/防腐/约束 9 维度产出一份项目粒度深度复盘文档并入库
   non_goals:
@@ -6510,7 +6510,8 @@ bets:
   - 复盘文档入库 docs/reports/2026-08-24-resident-system-deep-review.md
   - make gac-local-gate 全部检查 PASS
   progress:
-    done_when_met: []
+    done_when_met:
+    - 复盘文档入库 docs/reports/2026-08-24-resident-system-deep-review.md (E1 已实测数据更新 - status.py 修复闭环 omo #95 / events 2146 / sediment 403 草稿 / E3/E4 治理接线发现入库)
     pending_when: []
   verify:
   - cmd: test -f docs/reports/2026-08-24-resident-system-deep-review.md
@@ -6558,7 +6559,7 @@ bets:
   title: script registry 444 全登记 (evolvable 6→8)
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
   note: 'G1: maturity-scorecard evolvable 验证开关'
   goal: '登记全部 444 bin 脚本到 script registry, 使 script-registry.py validate 返回 VALIDATION PASSED, evolvable 6→8。'
   non_goals: []
@@ -6587,7 +6588,7 @@ bets:
   title: 90pct-maturity-design.md 落盘 (iterable 6→8)
   appetite: 0.25 day
   priority: P1
-  status: candidate
+  status: done
   note: 'G2: iterable 验证开关 = 本设计文档存在'
   goal: '落盘 docs/operations/90pct-maturity-design.md (已含 Phase 1-5), 使 score_iterable 检测通过, iterable 6→8。'
   non_goals: []
@@ -6605,7 +6606,7 @@ bets:
   title: ADR 链接修复 (traceable 6→8)
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
   note: 'G3: adr-link-validator 检测'
   goal: '修复 .omo/_knowledge/decisions/ 中 broken ADR links, 使 adr-link-validator.py rc=0, traceable 6→8。'
   non_goals: []
@@ -6631,7 +6632,7 @@ bets:
   title: governance owner 字段迁移 (troubleshootable 6→8)
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
   note: 'G4: governance-migration dry-run 检测'
   goal: '完成 governance checks owner 字段迁移, 使 governance-migration.py --dry-run 返回 No changes needed, troubleshootable 6→8。'
   non_goals: []
@@ -6658,7 +6659,7 @@ bets:
   title: compass_radar 集成新指标 (observable 8→9+)
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
   note: 'G5: observable 加新指标'
   goal: '在 compass_radar.py 集成新治理指标 (如成熟度分项/台账验证态), 提升 observable 到 9+。'
   non_goals: []

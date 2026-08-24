@@ -2,8 +2,12 @@
 schema_version: specification/v1
 spec_version: 1.0.0
 status: accepted
+lifecycle: contract
+
 bet_id: BET-Y1Q3-T4-01
 owner: human-principal
+last-reviewed: 2026-08-24
+
 risk_level: L2
 human_gate: true
 accepted_at: 2026-08-20T04:10:00Z

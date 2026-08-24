@@ -1,5 +1,5 @@
 ---
-status: planned
+status: accepted
 lifecycle: contract
 owner: governance-team
 version: 1.0.0
