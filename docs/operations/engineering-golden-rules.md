@@ -132,7 +132,7 @@ CI 冷启动 runner 的 monotonic 时钟 <100s (实测 83.75/86.51) → 必然 f
 **触发**: 治理文档 (spec / closeout / 复盘 / 复盘模板) 写 run-id 或 workflow 示例。
 
 **根因实证**: Droid-Shield 的 workspace 级拦截把文档里出现的真实格式 run-id
-(如 `20260824T102541Z-governance-audit-d4e3ea25`) 当作运行时事实误报拦截 (CONV-3 被堵)。
+(如 `runtime fact: `<timestamp>-<workflow>-<hash>``) 当作运行时事实误报拦截 (CONV-3 被堵)。
 治理文档频繁引用 run-id 示例 (spec 绑定 / closeout evidence), 导致无谓误报。
 
 **规则**:
@@ -140,7 +140,7 @@ CI 冷启动 runner 的 monotonic 时钟 <100s (实测 83.75/86.51) → 必然 f
 ## run-id 占位符铁律
 - 治理文档写 run-id 必须用占位符, 不写真实格式完整字符串:
   - 正确: `<run-id>` / `<timestamp>-<workflow>-<hash>` / `20260824T...Z-<workflow>-<hash>`
-  - 错误: 真实格式 `20260824T102541Z-governance-audit-d4e3ea25` 直接入文
+  - 错误: 真实格式 `<timestamp>-<workflow>-<hash>` 未标注直接入文
 - 确需引用真实 run-id 时, 显式标注为运行时事实 (如 "runtime fact: <run-id>")
 - 模板/示例一律占位符化, 防 Droid-Shield workspace 级误报
 ```
