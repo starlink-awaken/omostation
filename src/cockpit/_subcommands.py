@@ -135,7 +135,6 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         help="传给 bin/bc-os 脚本的参数 (如 'evolve --json', 'signals', 'north-star --json')",
     )
 
-
     # debt — omo-debt 收编入口 (直接调用 omo-debt 评分算法, ADR-0122 F-13)
     from cockpit.commands import debt_scoring as _debt_mod
 

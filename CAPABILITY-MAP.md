@@ -8,18 +8,18 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 147 |
-| MCP 工具 | 595 |
+| CLI 命令 (含子命令) | 149 |
+| MCP 工具 | 600 |
 | MCP 服务器 | 27 |
-| BOS 服务 | 227 |
-| BOS 域 | 18 |
+| BOS 服务 | 237 |
+| BOS 域 | 20 |
 
 ## MCP 服务器清单
 
 | 服务器 | 层 | 工具数 | 传输 | 文件 |
 |--------|-----|--------|------|------|
 | `gbrain` | L2 | 75 | stdio | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
-| `agora` | I0 | 65 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
+| `agora` | I0 | 70 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
 | `runtime` | L1 | 50 | stdio | `projects/runtime/src/runtime/mcp_server.py` |
 | `l4-kernel` | L4 | 47 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `kos` | L2 | 44 | stdio | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
@@ -52,19 +52,21 @@
 |-----|--------|
 | `agora` | 3 |
 | `analysis` | 28 |
+| `bcos` | 3 |
 | `capability` | 44 |
 | `cockpit` | 2 |
 | `compute` | 3 |
 | `ecos` | 10 |
 | `fabric` | 1 |
 | `forge` | 1 |
-| `governance` | 57 |
+| `governance` | 60 |
 | `l4-kernel` | 1 |
 | `memory` | 47 |
 | `meta` | 1 |
 | `omo` | 4 |
 | `perception` | 2 |
 | `persona` | 10 |
+| `resident` | 4 |
 | `runtime` | 1 |
 | `swarm` | 1 |
 | `system` | 11 |
@@ -88,6 +90,7 @@
 | `cockpit audit` | 🔍 6 维度全方位审计 (调 bin/workspace-audit) |
 | `cockpit audit-ledger` | 密码学级 Merkle 审计账本 (ADR-0201) |
 | `cockpit backends` | 列出 BOS 后端 |
+| `cockpit bcos` | BCOS 业务域系统 (evolve/signals/north-star) |
 | `cockpit bdsk` | 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演) |
 | `cockpit bos` | BOS URI 查询与管理 |
 | `cockpit bos-capability` | BOS capability / toolbox 外部能力 |
@@ -189,6 +192,7 @@
 | `cockpit reload` | 重载 BOS 配置/M1 |
 | `cockpit remember` | 手动存入偏好/事实 |
 | `cockpit research` | 深度研究 |
+| `cockpit resident` | Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...) |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
 | `cockpit runtime` | runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱) |

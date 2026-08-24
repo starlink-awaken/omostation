@@ -807,6 +807,7 @@ def main() -> int:
         "intent": lambda a: __import__("cockpit.commands.intent", fromlist=["cmd_intent"]).cmd_intent(a),
         "challenge": lambda a: __import__("cockpit.commands.challenge", fromlist=["cmd_challenge"]).cmd_challenge(a),
         "cartridge": lambda a: __import__("cockpit.commands.cartridge", fromlist=["cmd_cartridge"]).cmd_cartridge(a),
+        "cell": lambda a: __import__("cockpit.commands.cell", fromlist=["cmd_cell"]).cmd_cell(a),
         "fabric": lambda a: __import__("cockpit.commands.fabric", fromlist=["cmd_fabric"]).cmd_fabric(a),
         "gac": cmd_gac,
         "omo": lambda a: __import__("cockpit.commands.omo", fromlist=["cmd_omo"]).cmd_omo(a),
