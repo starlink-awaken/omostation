@@ -72,6 +72,80 @@ class TestBasicFunctionality:
         assert params[1] == "ancestor_candidate"
 
 
+class TestGetPreviousPointer:
+    """get_previous_pointer must return the submodule gitlink pointer value at the
+    last commit that touched the path — NOT the main-repo commit SHA.
+
+    Regression: the old implementation returned `git log -1 --format=%H -- <path>`
+    (the main-repo commit SHA), which never exists in the submodule's object store.
+    That forced is_descendant_or_equal into the sha-missing tolerance layer and
+    masked every real rewind.
+    """
+
+    def _load_module(self):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "check_submodule_rewind",
+            REPO_ROOT / "bin" / "gac" / "check-submodule-rewind.py",
+        )
+        mod = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _last_touching_commit(self, path: str) -> str:
+        out = subprocess.run(
+            ["git", "log", "--first-parent", "-1", "--format=%H", "--", path],
+            capture_output=True,
+            text=True,
+            cwd=REPO_ROOT,
+        ).stdout.strip()
+        assert out, f"no commit touches {path}"
+        return out
+
+    def _gitlink_at(self, commit: str, path: str) -> str:
+        out = subprocess.run(
+            ["git", "ls-tree", commit, "--", path],
+            capture_output=True,
+            text=True,
+            cwd=REPO_ROOT,
+        ).stdout.strip()
+        # format: 160000 commit <sha>\t<path>
+        parts = out.split()
+        assert len(parts) >= 3 and parts[0] == "160000" and parts[1] == "commit", (
+            f"expected gitlink line, got: {out!r}"
+        )
+        return parts[2]
+
+    def test_returns_gitlink_pointer_not_commit_sha(self):
+        mod = self._load_module()
+        path = "projects/ecos"
+        commit = self._last_touching_commit(path)
+        expected_pointer = self._gitlink_at(commit, path)
+
+        result = mod.get_previous_pointer(path)
+
+        assert result is not None
+        # The returned value MUST be the gitlink pointer, not the main-repo commit SHA.
+        assert result == expected_pointer, (
+            f"get_previous_pointer returned {result!r} but expected gitlink pointer "
+            f"{expected_pointer!r} at commit {commit}"
+        )
+        assert result != commit, (
+            f"get_previous_pointer returned the main-repo commit SHA {result!r}; "
+            "it must return the submodule pointer value instead"
+        )
+
+    def test_returns_40_hex_sha(self):
+        import re
+
+        mod = self._load_module()
+        result = mod.get_previous_pointer("projects/ecos")
+        assert result is not None
+        assert re.fullmatch(r"[0-9a-f]{40}", result), f"not a 40-hex SHA: {result!r}"
+
+
 class TestToleranceLayerDetection:
     """Verify tolerance layer reasons are populated in JSON output."""
 

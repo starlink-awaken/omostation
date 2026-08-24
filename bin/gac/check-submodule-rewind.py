@@ -45,10 +45,33 @@ def get_current_gitlinks() -> dict[str, str]:
     return gitlinks
 
 
+def _gitlink_pointer_at(commit: str, path: str) -> str | None:
+    """Extract the submodule gitlink pointer value recorded at a given commit.
+
+    Parses `git ls-tree <commit> -- <path>` for the `160000 commit <sha>` line.
+    Returns the pointer SHA, or None if the commit does not record a gitlink for
+    the path (e.g. the path was absent or not a submodule at that commit).
+    """
+    line = _git("ls-tree", commit, "--", path)
+    parts = line.split()
+    if len(parts) >= 3 and parts[0] == "160000" and parts[1] == "commit":
+        return parts[2]
+    return None
+
+
 def get_previous_pointer(path: str) -> str | None:
-    """Get the submodule pointer from the last commit that touched it."""
-    sha = _git("log", "-1", "--format=%H", "--", path)
-    return sha if sha else None
+    """Get the submodule pointer value from the last commit that touched it.
+
+    Walks the first-parent history of the path and returns the gitlink pointer
+    recorded by the most recent commit that actually carries a submodule entry.
+    Returns None if no commit in history records a gitlink for the path.
+    """
+    commits = _git("log", "--first-parent", "--format=%H", "--", path)
+    for commit in commits.splitlines():
+        pointer = _gitlink_pointer_at(commit, path)
+        if pointer is not None:
+            return pointer
+    return None
 
 
 def _git_in_submodule(*args: str, submodule_dir: Path) -> str:
