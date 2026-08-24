@@ -1,5 +1,0 @@
-version: "3.8"
-# Note: agora-web and agora-sse have been removed to prevent I0-AGORA_DUAL_INSTANCE.
-# They are now launched natively via ~/.hermes/scripts/agora-startup.sh
-# agentmesh-gateway has been archived.
-services: {}

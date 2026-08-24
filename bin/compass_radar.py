@@ -616,6 +616,7 @@ def render_yaml(report: dict) -> str:
         "owner_dist",
         "phase_dist",
         "status_dist",
+        "governance_dist",
     ):
         lines.append(f"  {dim}:")
         dist = report.get(dim) or {}
@@ -830,6 +831,18 @@ def build_health_projection(omo_dir: Path, output: Path) -> tuple[dict[str, Any]
     )
     report["health_score"] = composite
     report["health_composite_breakdown"] = breakdown
+
+    # G5/T10-05: 第 6 个可观测轴 — governance 健康分项分布 (composite 三权重贡献).
+    # 反映"治理健康可观测性"维度, 数据来自真实 composite 计算 (非 mock).
+    gov_dist = {
+        "governance": round(breakdown["contributions"].get("governance", 0)),
+        "freshness": round(breakdown["contributions"].get("freshness", 0)),
+        "runtime": round(breakdown["contributions"].get("runtime", 0)),
+    }
+    report["governance_dist"] = gov_dist
+    print("📊 Governance Distribution:")
+    for k, v in sorted(gov_dist.items(), key=lambda x: (-x[1], x[0])):
+        print(f"   {k:<24} {v:>3}")
     return report, runtime_summary, age_desc
 
 
