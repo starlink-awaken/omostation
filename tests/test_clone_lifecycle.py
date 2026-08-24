@@ -19,6 +19,7 @@ sys.path.insert(0, str(_BIN_GAC))
 sys.path.insert(0, str(_BIN_GAC.parents[1]))
 
 lc = importlib.import_module("clone-lifecycle")
+ac = importlib.import_module("agent-clone")
 REAL_AGENT_CLONE = lc.AGENT_CLONE
 
 _GIT_ENV = {
@@ -195,6 +196,7 @@ def merged_pr_runner(
     platform_repo: str = "owner/repository",
     platform_owner: str = "owner",
     platform_state: str = "MERGED",
+    platform_base_name: str = "main",
 ):
     def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
         if calls is not None:
@@ -204,7 +206,7 @@ def merged_pr_runner(
             and len(cmd) >= 3
             and cmd[0] == sys.executable
             and cmd[1] == str(lc.AGENT_CLONE)
-            and cmd[2] == "guard"
+            and cmd[2] in {"guard", "retirement-provenance"}
         ):
             return subprocess.CompletedProcess(cmd, 0, '{"ok":true}\n', "")
         if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:5] == ["remote", "get-url"] and cmd[-1] == "origin":
@@ -227,7 +229,7 @@ def merged_pr_runner(
             return subprocess.CompletedProcess(cmd, 0, json.dumps(payload), "")
         if cmd[:3] == ["gh", "pr", "view"]:
             payload = {
-                "base_ref_name": "main",
+                "base_ref_name": platform_base_name,
                 "base_ref_oid": platform_base,
                 "branch": branch,
                 "head_ref_oid": platform_head,
@@ -243,7 +245,61 @@ def merged_pr_runner(
     return _run
 
 
-def make_platform_rebased_clone(tmp_path: Path) -> tuple[Path, str, str, str, str]:
+def bind_fixture_provenance(clone: Path, attempt_id: str = "platform-fixture") -> str:
+    """Bind a legacy fixture to the minimum valid v2 provenance contract."""
+    branch = qualify_clone_attempt(clone, attempt_id)
+    git(clone, "config", "--local", "user.name", "test")
+    git(clone, "config", "--local", "user.email", "t@example.com")
+    git(clone, "config", "--local", "user.useConfigOnly", "true")
+    author = {
+        "email_digest": hashlib.sha256(b"t@example.com").hexdigest(),
+        "identity_digest": ac.author_identity_digest("test", "t@example.com"),
+        "name_digest": hashlib.sha256(b"test").hexdigest(),
+        "source": "clone-local",
+        "use_config_only": True,
+    }
+    repository = {
+        "canonical_repository": "github.com/owner/repository",
+        "fetch_transport": "https",
+        "fetch_url_digest": "1" * 64,
+        "push_transport": "https",
+        "push_url_digest": "1" * 64,
+    }
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    receipt = {
+        "schema": "clone-provenance/v2",
+        "agent_id": "agent-1",
+        "actor_id": "agent-1",
+        "delivery_attempt_id": attempt_id,
+        "clone_root": str(clone.resolve()),
+        "repository": repository,
+        "author": author,
+        "frozen_root_sha": identity["frozen_root_sha"],
+        "working_branch": branch,
+        "status": "ready",
+        "generated_at": None,
+    }
+    receipt["receipt_digest"] = ac.canonical_digest(
+        receipt, exclude_field="receipt_digest"
+    )
+    (clone / ".git" / "agent-clone-provenance.json").write_text(
+        json.dumps(receipt)
+    )
+    identity.update(
+        {
+            "provenance_required": True,
+            "provenance_status": "ready",
+            "provenance_receipt_digest": receipt["receipt_digest"],
+        }
+    )
+    identity_path.write_text(json.dumps(identity))
+    return branch
+
+
+def make_platform_rebased_clone(
+    tmp_path: Path, *, provenance: bool = False
+) -> tuple[Path, str, str, str, str]:
     """Build local-original and platform-rebased commits with identical delivery changes."""
     clone, _remote, initial = make_retirable_clone(tmp_path)
     branch = git(clone, "branch", "--show-current").stdout.strip()
@@ -263,7 +319,150 @@ def make_platform_rebased_clone(tmp_path: Path) -> tuple[Path, str, str, str, st
     git(clone, "push", "--force", "origin", f"{platform_head}:refs/heads/{branch}")
     git(clone, "switch", branch)
     assert git(clone, "rev-parse", "HEAD").stdout.strip() == original
+    if provenance:
+        bind_fixture_provenance(clone)
     return clone, original, platform_head, platform_base, initial
+
+
+def make_advanced_platform_provenance_clone(
+    tmp_path: Path,
+    *,
+    delivery_identity: tuple[str, str] = ("test", "t@example.com"),
+) -> tuple[Path, str, str, str]:
+    """Build a provenance-bound clone whose platform base imports another author."""
+    clone, _remote, frozen = make_retirable_clone(tmp_path)
+    branch = qualify_clone_attempt(clone, "platform-attempt")
+    git(clone, "config", "--local", "user.name", "test")
+    git(clone, "config", "--local", "user.email", "t@example.com")
+    git(clone, "config", "--local", "user.useConfigOnly", "true")
+    author = {
+        "email_digest": hashlib.sha256(b"t@example.com").hexdigest(),
+        "identity_digest": ac.author_identity_digest("test", "t@example.com"),
+        "name_digest": hashlib.sha256(b"test").hexdigest(),
+        "source": "clone-local",
+        "use_config_only": True,
+    }
+    repository = {
+        "canonical_repository": "github.com/owner/repository",
+        "fetch_transport": "https",
+        "fetch_url_digest": "1" * 64,
+        "push_transport": "https",
+        "push_url_digest": "1" * 64,
+    }
+    receipt = {
+        "schema": "clone-provenance/v2",
+        "agent_id": "agent-1",
+        "actor_id": "agent-1",
+        "delivery_attempt_id": "platform-attempt",
+        "clone_root": str(clone.resolve()),
+        "repository": repository,
+        "author": author,
+        "frozen_root_sha": frozen,
+        "working_branch": branch,
+        "status": "ready",
+        "generated_at": None,
+    }
+    receipt["receipt_digest"] = ac.canonical_digest(receipt, exclude_field="receipt_digest")
+    (clone / ".git" / "agent-clone-provenance.json").write_text(json.dumps(receipt))
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity.update(
+        {
+            "provenance_required": True,
+            "provenance_status": "ready",
+            "provenance_receipt_digest": receipt["receipt_digest"],
+        }
+    )
+    identity_path.write_text(json.dumps(identity))
+
+    git(clone, "switch", "-c", "platform-base", frozen)
+    (clone / "BASE.md").write_text("platform base\n")
+    git(clone, "add", "BASE.md")
+    imported_env = {
+        **os.environ,
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_AUTHOR_NAME": "platform",
+        "GIT_AUTHOR_EMAIL": "platform@example.com",
+        "GIT_COMMITTER_NAME": "platform",
+        "GIT_COMMITTER_EMAIL": "platform@example.com",
+    }
+    imported = subprocess.run(
+        ["git", "-C", str(clone), "commit", "-m", "platform base"],
+        capture_output=True,
+        text=True,
+        env=imported_env,
+        check=False,
+    )
+    assert imported.returncode == 0, imported.stderr
+    platform_base = git(clone, "rev-parse", "HEAD").stdout.strip()
+    git(clone, "branch", "-f", branch, platform_base)
+    git(clone, "switch", branch)
+    (clone / "README.md").write_text("delivered on platform base\n")
+    git(clone, "add", "README.md")
+    delivery_env = {
+        **os.environ,
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_AUTHOR_NAME": delivery_identity[0],
+        "GIT_AUTHOR_EMAIL": delivery_identity[1],
+        "GIT_COMMITTER_NAME": delivery_identity[0],
+        "GIT_COMMITTER_EMAIL": delivery_identity[1],
+    }
+    delivered = subprocess.run(
+        ["git", "-C", str(clone), "commit", "-m", "delivery"],
+        capture_output=True,
+        text=True,
+        env=delivery_env,
+        check=False,
+    )
+    assert delivered.returncode == 0, delivered.stderr
+    platform_head = git(clone, "rev-parse", "HEAD").stdout.strip()
+    git(clone, "push", "--force", "origin", f"HEAD:refs/heads/{branch}")
+    return clone, frozen, platform_base, platform_head
+
+
+def provenance_platform_runner(
+    clone: Path,
+    platform_head: str,
+    platform_base: str,
+    *,
+    branch: str,
+    calls: list[list[str]] | None = None,
+):
+    """Run real selective provenance verification while faking only GitHub PR I/O."""
+    base_runner = merged_pr_runner(
+        platform_head,
+        calls,
+        branch=branch,
+        platform_head=platform_head,
+        platform_base=platform_base,
+    )
+
+    def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        if (
+            len(cmd) >= 3
+            and cmd[0] == sys.executable
+            and cmd[2] == "retirement-provenance"
+        ):
+            if calls is not None:
+                calls.append(cmd)
+            identity = json.loads((clone / ".git" / "agent-clone-identity.json").read_text())
+            try:
+                base_sha = cmd[cmd.index("--platform-base") + 1]
+                head_sha = cmd[cmd.index("--platform-head") + 1]
+                ac.verify_clone_provenance(
+                    str(clone),
+                    identity,
+                    platform_base_sha=base_sha,
+                    platform_head_sha=head_sha,
+                )
+            except (ValueError, TypeError, ac.ToolError) as exc:
+                return subprocess.CompletedProcess(cmd, 1, "", str(exc))
+            return subprocess.CompletedProcess(cmd, 0, '{"ok":true}\n', "")
+        return base_runner(cmd, **kwargs)
+
+    return _run
 
 
 def make_abortable_clone(tmp_path: Path) -> tuple[Path, Path, Path, str]:
@@ -1545,7 +1744,9 @@ def test_retire_allows_exact_merged_pr_after_remote_branch_deleted(tmp_path, mon
 
 
 def test_retire_platform_rebase_requires_explicit_pr_flag(tmp_path, monkeypatch, capsys):
-    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(
+        tmp_path
+    )
     branch = git(clone, "branch", "--show-current").stdout.strip()
     git(clone, "push", "origin", "--delete", branch)
     monkeypatch.setattr(
@@ -1567,8 +1768,12 @@ def test_retire_platform_rebase_requires_explicit_pr_flag(tmp_path, monkeypatch,
     assert '"reason": "pr_not_merged"' in capsys.readouterr().err
 
 
-def test_retire_accepts_exact_platform_rebase_source_proof(tmp_path, monkeypatch, capsys):
-    clone, original, platform_head, platform_base, original_base = make_platform_rebased_clone(tmp_path)
+def test_retire_rejects_legacy_platform_rebase_without_provenance(
+    tmp_path, monkeypatch, capsys
+):
+    clone, original, platform_head, platform_base, _original_base = (
+        make_platform_rebased_clone(tmp_path)
+    )
     branch = git(clone, "branch", "--show-current").stdout.strip()
     calls: list[list[str]] = []
     monkeypatch.setattr(
@@ -1587,28 +1792,327 @@ def test_retire_accepts_exact_platform_rebase_source_proof(tmp_path, monkeypatch
         argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
     )
 
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert git(clone, "rev-parse", "HEAD").stdout.strip() == original
+    assert '"reason": "platform_provenance_required"' in capsys.readouterr().err
+    assert not any(
+        len(cmd) >= 3
+        and cmd[0] == sys.executable
+        and cmd[1] == str(lc.AGENT_CLONE)
+        and cmd[2] == "retirement-provenance"
+        for cmd in calls
+    )
+
+
+def test_retire_accepts_exact_platform_rebase_source_proof_for_provenance_clone(
+    tmp_path, monkeypatch, capsys
+):
+    clone, frozen, platform_base, platform_head = make_advanced_platform_provenance_clone(
+        tmp_path
+    )
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    git(clone, "switch", "-c", "original-source", frozen)
+    (clone / "README.md").write_text("delivered on platform base\n")
+    git(clone, "add", "README.md")
+    git(clone, "commit", "-m", "original delivery")
+    original_head = git(clone, "rev-parse", "HEAD").stdout.strip()
+    git(clone, "branch", "-f", branch, original_head)
+    git(clone, "switch", branch)
+    receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
+    monkeypatch.setattr(ac, "repository_provenance", lambda *_args: receipt["repository"])
+    monkeypatch.setattr(ac, "live_author_identity", lambda *_args: receipt["author"])
+    calls: list[list[str]] = []
+    monkeypatch.setattr(
+        lc,
+        "run",
+        provenance_platform_runner(
+            clone,
+            platform_head,
+            platform_base,
+            branch=branch,
+            calls=calls,
+        ),
+    )
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_OK
+    assert not clone.exists()
+    proof = json.loads(capsys.readouterr().out)["platform_rebased_source_proof"]
+    assert proof["original_head_sha"] == original_head
+    assert proof["platform_head_sha"] == platform_head
+    assert proof["platform_base_sha"] == platform_base
+    assert proof["original_base_sha"] == frozen
+    assert proof["changed_paths"] == ["README.md"]
+    assert proof["receipt_digest"] == lc._canonical_json_digest(
+        proof, "receipt_digest"
+    )
+    assert any(
+        len(cmd) >= 3
+        and cmd[0] == sys.executable
+        and cmd[1] == str(lc.AGENT_CLONE)
+        and cmd[2] == "retirement-provenance"
+        for cmd in calls
+    )
+
+
+def test_retire_rejects_wrong_author_in_rewritten_platform_head_when_local_head_differs(
+    tmp_path, monkeypatch, capsys
+):
+    clone, original, platform_head, platform_base, _original_base = (
+        make_platform_rebased_clone(tmp_path)
+    )
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity["provenance_required"] = True
+    identity_path.write_text(json.dumps(identity))
+    (clone / ".git" / "agent-clone-provenance.json").write_text(
+        json.dumps(
+            {
+                "repository": {
+                    "canonical_repository": "github.com/owner/repository"
+                }
+            }
+        )
+    )
+    base_runner = merged_pr_runner(
+        original,
+        branch=branch,
+        platform_head=platform_head,
+        platform_base=platform_base,
+    )
+    calls: list[list[str]] = []
+
+    def wrong_platform_author_runner(
+        cmd: list[str], **kwargs
+    ) -> subprocess.CompletedProcess:
+        calls.append(cmd)
+        if (
+            len(cmd) >= 3
+            and cmd[0] == sys.executable
+            and cmd[1] == str(lc.AGENT_CLONE)
+        ):
+            if cmd[2] == "guard":
+                return subprocess.CompletedProcess(cmd, 0, '{"ok":true}\n', "")
+            if cmd[2] == "retirement-provenance":
+                return subprocess.CompletedProcess(
+                    cmd,
+                    lc.EXIT_POLICY,
+                    "",
+                    "platform delivery author differs from clone author",
+                )
+        return base_runner(cmd, **kwargs)
+
+    monkeypatch.setattr(lc, "run", wrong_platform_author_runner)
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert any(
+        len(cmd) >= 3
+        and cmd[0] == sys.executable
+        and cmd[1] == str(lc.AGENT_CLONE)
+        and cmd[2] == "retirement-provenance"
+        for cmd in calls
+    )
+    assert '"reason": "clone_provenance_mismatch"' in capsys.readouterr().err
+
+
+def test_platform_provenance_verifies_exact_pr_range_when_local_head_differs(
+    tmp_path, monkeypatch
+):
+    clone, frozen, platform_base, platform_head = make_advanced_platform_provenance_clone(
+        tmp_path
+    )
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    git(clone, "switch", "-c", "original-source", frozen)
+    (clone / "README.md").write_text("delivered on platform base\n")
+    git(clone, "add", "README.md")
+    git(clone, "commit", "-m", "original delivery")
+    original_head = git(clone, "rev-parse", "HEAD").stdout.strip()
+    git(clone, "branch", "-f", branch, original_head)
+    git(clone, "switch", branch)
+    receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
+    identity = json.loads((clone / ".git" / "agent-clone-identity.json").read_text())
+    monkeypatch.setattr(ac, "repository_provenance", lambda *_args: receipt["repository"])
+    monkeypatch.setattr(ac, "live_author_identity", lambda *_args: receipt["author"])
+
+    verified = ac.verify_clone_provenance(
+        str(clone),
+        identity,
+        platform_base_sha=platform_base,
+        platform_head_sha=platform_head,
+    )
+
+    assert verified == receipt
+    assert original_head != platform_head
+
+
+def test_retire_accepts_provenance_clone_on_advanced_platform_base(
+    tmp_path, monkeypatch, capsys
+):
+    clone, frozen, platform_base, platform_head = make_advanced_platform_provenance_clone(
+        tmp_path
+    )
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    calls: list[list[str]] = []
+    receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
+    monkeypatch.setattr(ac, "repository_provenance", lambda *_args: receipt["repository"])
+    monkeypatch.setattr(ac, "live_author_identity", lambda *_args: receipt["author"])
+    monkeypatch.setattr(
+        lc,
+        "run",
+        provenance_platform_runner(
+            clone,
+            platform_head,
+            platform_base,
+            branch=branch,
+            calls=calls,
+        ),
+    )
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
     assert rc == lc.EXIT_OK
     assert not clone.exists()
     result = json.loads(capsys.readouterr().out)
     proof = result["platform_rebased_source_proof"]
-    assert proof == {
-        "schema": "platform-rebased-source-proof/v1",
-        "repository": "owner/repository",
-        "pr_number": 7,
-        "pr_url": "https://example.test/pr/7",
-        "branch": branch,
-        "original_head_sha": original,
-        "platform_head_sha": platform_head,
-        "platform_base_sha": platform_base,
-        "original_base_sha": original_base,
-        "platform_tree_sha": git(tmp_path / "remote.git", "rev-parse", f"{platform_head}^{{tree}}").stdout.strip(),
-        "changed_paths": ["README.md"],
-        "changed_paths_digest": hashlib.sha256(b"README.md\n").hexdigest(),
-        "receipt_digest": proof["receipt_digest"],
-    }
-    assert proof["receipt_digest"] == lc._canonical_json_digest(proof, "receipt_digest")
-    assert len([cmd for cmd in calls if cmd[:3] == ["gh", "pr", "view"]]) >= 2
-    assert not any("fetch" in cmd or "reset" in cmd for cmd in calls)
+    assert proof["original_base_sha"] == platform_base
+    assert proof["platform_head_sha"] == platform_head
+    assert proof["original_head_sha"] == platform_head
+    assert proof["changed_paths"] == ["README.md"]
+    guard_call = next(
+        cmd
+        for cmd in calls
+        if len(cmd) >= 3
+        and cmd[0] == sys.executable
+        and cmd[1] == str(lc.AGENT_CLONE)
+        and cmd[2] == "retirement-provenance"
+    )
+    assert guard_call[guard_call.index("--platform-base") + 1] == platform_base
+    assert guard_call[guard_call.index("--platform-head") + 1] == platform_head
+    assert frozen != platform_base
+
+
+def test_retire_rejects_wrong_author_in_platform_delivery_range(
+    tmp_path, monkeypatch, capsys
+):
+    clone, _frozen, platform_base, platform_head = make_advanced_platform_provenance_clone(
+        tmp_path,
+        delivery_identity=("intruder", "intruder@example.com"),
+    )
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
+    monkeypatch.setattr(ac, "repository_provenance", lambda *_args: receipt["repository"])
+    monkeypatch.setattr(ac, "live_author_identity", lambda *_args: receipt["author"])
+    monkeypatch.setattr(
+        lc,
+        "run",
+        provenance_platform_runner(
+            clone,
+            platform_head,
+            platform_base,
+            branch=branch,
+        ),
+    )
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert '"reason": "clone_provenance_mismatch"' in capsys.readouterr().err
+
+
+def test_retire_rejects_verified_receipt_repository_different_from_pr_query(
+    tmp_path, monkeypatch, capsys
+):
+    clone, _frozen, platform_base, platform_head = make_advanced_platform_provenance_clone(
+        tmp_path
+    )
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    receipt_path = clone / ".git" / "agent-clone-provenance.json"
+    receipt = json.loads(receipt_path.read_text())
+    receipt["repository"]["canonical_repository"] = "github.com/other/repository"
+    receipt["receipt_digest"] = ac.canonical_digest(receipt, exclude_field="receipt_digest")
+    receipt_path.write_text(json.dumps(receipt))
+    identity_path = clone / ".git" / "agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity["provenance_receipt_digest"] = receipt["receipt_digest"]
+    identity_path.write_text(json.dumps(identity))
+    monkeypatch.setattr(ac, "repository_provenance", lambda *_args: receipt["repository"])
+    monkeypatch.setattr(ac, "live_author_identity", lambda *_args: receipt["author"])
+    monkeypatch.setattr(
+        lc,
+        "run",
+        provenance_platform_runner(
+            clone,
+            platform_head,
+            platform_base,
+            branch=branch,
+        ),
+    )
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert '"reason": "platform_repository_binding_mismatch"' in capsys.readouterr().err
+
+
+def test_retire_rejects_origin_change_after_platform_guard(
+    tmp_path, monkeypatch, capsys
+):
+    clone, _frozen, platform_base, platform_head = make_advanced_platform_provenance_clone(
+        tmp_path
+    )
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    receipt = json.loads((clone / ".git" / "agent-clone-provenance.json").read_text())
+    monkeypatch.setattr(ac, "repository_provenance", lambda *_args: receipt["repository"])
+    monkeypatch.setattr(ac, "live_author_identity", lambda *_args: receipt["author"])
+    stable = provenance_platform_runner(
+        clone,
+        platform_head,
+        platform_base,
+        branch=branch,
+    )
+    origin_reads = 0
+
+    def changed_origin_runner(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        nonlocal origin_reads
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:5] == ["remote", "get-url"]:
+            origin_reads += 1
+            if origin_reads > 1:
+                return subprocess.CompletedProcess(
+                    cmd,
+                    0,
+                    "git@github.com:other/repository.git\n",
+                    "",
+                )
+        return stable(cmd, **kwargs)
+
+    monkeypatch.setattr(lc, "run", changed_origin_runner)
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert origin_reads >= 2
+    assert '"reason": "platform_origin_raced"' in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
@@ -1618,18 +2122,22 @@ def test_retire_accepts_exact_platform_rebase_source_proof(tmp_path, monkeypatch
         ({"branch": "agent/other"}, "platform_pr_identity_mismatch"),
         ({"platform_owner": "other"}, "platform_pr_identity_mismatch"),
         ({"platform_repo": "other/repository"}, "platform_pr_identity_mismatch"),
+        ({"platform_base_name": "release"}, "platform_pr_identity_mismatch"),
         ({"platform_state": "OPEN"}, "platform_pr_not_merged"),
     ],
 )
 def test_retire_rejects_wrong_platform_pr_identity(
     tmp_path, monkeypatch, capsys, runner_overrides, reason
 ):
-    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(
+        tmp_path, provenance=True
+    )
     branch = git(clone, "branch", "--show-current").stdout.strip()
     kwargs = {
         "branch": branch,
         "platform_head": platform_head,
         "platform_base": platform_base,
+        "provenance_guard_ok": True,
         **runner_overrides,
     }
     monkeypatch.setattr(lc, "run", merged_pr_runner(original, **kwargs))
@@ -1647,9 +2155,11 @@ def test_retire_rejects_wrong_platform_pr_identity(
 def test_retire_platform_rebase_requires_local_objects(
     tmp_path, monkeypatch, capsys, missing
 ):
-    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(
+        tmp_path, provenance=True
+    )
     branch = git(clone, "branch", "--show-current").stdout.strip()
-    git(clone, "push", "origin", "--delete", branch)
+    git(clone, "push", "origin", "--delete", branch, check=False)
     fake = "f" * 40
     monkeypatch.setattr(
         lc,
@@ -1659,6 +2169,7 @@ def test_retire_platform_rebase_requires_local_objects(
             branch=branch,
             platform_head=fake if missing == "head" else platform_head,
             platform_base=fake if missing == "base" else platform_base,
+            provenance_guard_ok=True,
         ),
     )
 
@@ -1672,7 +2183,9 @@ def test_retire_platform_rebase_requires_local_objects(
 
 
 def test_retire_platform_rebase_rejects_non_equivalent_tree(tmp_path, monkeypatch, capsys):
-    clone, original, _platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    clone, original, _platform_head, platform_base, _initial = make_platform_rebased_clone(
+        tmp_path, provenance=True
+    )
     branch = git(clone, "branch", "--show-current").stdout.strip()
     git(clone, "switch", "platform-head")
     (clone / "EXTRA.md").write_text("not delivery\n")
@@ -1689,6 +2202,7 @@ def test_retire_platform_rebase_rejects_non_equivalent_tree(tmp_path, monkeypatc
             branch=branch,
             platform_head=different_head,
             platform_base=platform_base,
+            provenance_guard_ok=True,
         ),
     )
 
@@ -1704,13 +2218,16 @@ def test_retire_platform_rebase_rejects_non_equivalent_tree(tmp_path, monkeypatc
 def test_retire_platform_rebase_rechecks_live_proof_before_quarantine(
     tmp_path, monkeypatch, capsys
 ):
-    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(
+        tmp_path, provenance=True
+    )
     branch = git(clone, "branch", "--show-current").stdout.strip()
     stable = merged_pr_runner(
         original,
         branch=branch,
         platform_head=platform_head,
         platform_base=platform_base,
+        provenance_guard_ok=True,
     )
     views = 0
 
@@ -1740,13 +2257,16 @@ def test_retire_platform_rebase_rechecks_live_proof_before_quarantine(
 def test_retire_platform_rebase_restores_clone_on_quarantine_live_drift(
     tmp_path, monkeypatch, capsys
 ):
-    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(
+        tmp_path, provenance=True
+    )
     branch = git(clone, "branch", "--show-current").stdout.strip()
     stable = merged_pr_runner(
         original,
         branch=branch,
         platform_head=platform_head,
         platform_base=platform_base,
+        provenance_guard_ok=True,
     )
     views = 0
 
@@ -1774,17 +2294,65 @@ def test_retire_platform_rebase_restores_clone_on_quarantine_live_drift(
     assert "post-quarantine verification changed; original path restored" in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("mutation", ["missing", "extra"])
-def test_retire_platform_rebase_rejects_non_exact_live_schema(
-    tmp_path, monkeypatch, capsys, mutation
+def test_retire_platform_rebase_restores_clone_on_quarantine_origin_drift(
+    tmp_path, monkeypatch, capsys
 ):
-    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(
+        tmp_path, provenance=True
+    )
     branch = git(clone, "branch", "--show-current").stdout.strip()
     stable = merged_pr_runner(
         original,
         branch=branch,
         platform_head=platform_head,
         platform_base=platform_base,
+        provenance_guard_ok=True,
+    )
+    origin_reads = 0
+
+    def drifting_origin_runner(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        nonlocal origin_reads
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:5] == ["remote", "get-url"]:
+            origin_reads += 1
+            if origin_reads >= 4:
+                return subprocess.CompletedProcess(
+                    cmd,
+                    0,
+                    "git@github.com:other/repository.git\n",
+                    "",
+                )
+        return stable(cmd, **kwargs)
+
+    monkeypatch.setattr(lc, "run", drifting_origin_runner)
+
+    rc = lc.cmd_retire(
+        argparse.Namespace(destination=str(clone), platform_rebased_pr=7)
+    )
+
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+    assert git(clone, "rev-parse", "HEAD").stdout.strip() == original
+    assert origin_reads >= 4
+    assert not list(clone.parent.glob(".ws.retire-quarantine-*"))
+    stderr = capsys.readouterr().err
+    assert '"reason": "destination_raced"' in stderr
+    assert "post-quarantine verification changed; original path restored" in stderr
+
+
+@pytest.mark.parametrize("mutation", ["missing", "extra"])
+def test_retire_platform_rebase_rejects_non_exact_live_schema(
+    tmp_path, monkeypatch, capsys, mutation
+):
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(
+        tmp_path, provenance=True
+    )
+    branch = git(clone, "branch", "--show-current").stdout.strip()
+    stable = merged_pr_runner(
+        original,
+        branch=branch,
+        platform_head=platform_head,
+        platform_base=platform_base,
+        provenance_guard_ok=True,
     )
 
     def schema_runner(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
@@ -1812,7 +2380,9 @@ def test_retire_platform_rebase_rejects_non_exact_live_schema(
 def test_retire_platform_rebase_requires_surviving_branch_at_platform_head(
     tmp_path, monkeypatch, capsys
 ):
-    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(tmp_path)
+    clone, original, platform_head, platform_base, _initial = make_platform_rebased_clone(
+        tmp_path, provenance=True
+    )
     branch = git(clone, "branch", "--show-current").stdout.strip()
     git(clone, "push", "--force", "origin", f"{platform_base}:refs/heads/{branch}")
     monkeypatch.setattr(
@@ -1823,6 +2393,7 @@ def test_retire_platform_rebase_requires_surviving_branch_at_platform_head(
             branch=branch,
             platform_head=platform_head,
             platform_base=platform_base,
+            provenance_guard_ok=True,
         ),
     )
 
@@ -1841,6 +2412,35 @@ def test_retire_parser_exposes_platform_rebased_pr():
     )
 
     assert args.platform_rebased_pr == 2004
+
+
+def test_agent_clone_keeps_platform_author_scope_out_of_default_guard():
+    parser = ac.build_parser()
+    retirement = parser.parse_args(
+        [
+            "retirement-provenance",
+            "--clone",
+            "/tmp/agent/ws",
+            "--platform-base",
+            "a" * 40,
+            "--platform-head",
+            "b" * 40,
+        ]
+    )
+
+    assert retirement.func is ac.cmd_retirement_provenance
+    with pytest.raises(SystemExit):
+        parser.parse_args(
+            [
+                "guard",
+                "--workspace",
+                "/tmp/agent/ws",
+                "--platform-base",
+                "a" * 40,
+                "--platform-head",
+                "b" * 40,
+            ]
+        )
 
 
 def test_retire_removes_ready_attempt_qualified_v2_clone(tmp_path, monkeypatch):

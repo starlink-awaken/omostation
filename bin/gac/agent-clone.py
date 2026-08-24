@@ -1190,8 +1190,13 @@ def write_json_exclusive_or_match(output_path: str, payload: dict, failure_reaso
         )
 
 
-def commit_identities_match(repo_root: str, frozen_sha: str, expected_digest: str) -> bool:
-    commits = git(repo_root, "rev-list", f"{frozen_sha}..HEAD")
+def commit_identities_match(
+    repo_root: str,
+    base_sha: str,
+    expected_digest: str,
+    head_sha: str = "HEAD",
+) -> bool:
+    commits = git(repo_root, "rev-list", f"{base_sha}..{head_sha}")
     if commits.returncode != 0:
         return False
     for commit_sha in (line.strip() for line in commits.stdout.splitlines() if line.strip()):
@@ -1214,8 +1219,20 @@ def commit_identities_match(repo_root: str, frozen_sha: str, expected_digest: st
     return True
 
 
-def verify_clone_provenance(repo_root: str, identity: dict) -> dict:
+def verify_clone_provenance(
+    repo_root: str,
+    identity: dict,
+    *,
+    platform_base_sha: str | None = None,
+    platform_head_sha: str | None = None,
+) -> dict:
     """Live-revalidate a bound root repository and Git author identity."""
+    if (platform_base_sha is None) != (platform_head_sha is None):
+        raise ToolError(
+            "clone_provenance_mismatch",
+            "platform provenance requires both base and head commits",
+            EXIT_POLICY,
+        )
     try:
         with open(provenance_path(repo_root), encoding="utf-8") as fh:
             receipt = json.load(fh)
@@ -1266,21 +1283,50 @@ def verify_clone_provenance(repo_root: str, identity: dict) -> dict:
             EXIT_POLICY,
             {"cause": exc.reason},
         ) from exc
+    frozen_sha = identity["frozen_root_sha"]
     ancestor = git(
         repo_root,
         "merge-base",
         "--is-ancestor",
-        identity["frozen_root_sha"],
+        frozen_sha,
         "HEAD",
     )
+    identity_base = frozen_sha
+    identity_head = "HEAD"
+    platform_binding_ok = True
+    if platform_base_sha is not None and platform_head_sha is not None:
+        frozen_to_base = git(
+            repo_root,
+            "merge-base",
+            "--is-ancestor",
+            frozen_sha,
+            platform_base_sha,
+        )
+        base_to_head = git(
+            repo_root,
+            "merge-base",
+            "--is-ancestor",
+            platform_base_sha,
+            platform_head_sha,
+        )
+        platform_binding_ok = (
+            bool(re.fullmatch(r"[0-9a-f]{40}", platform_base_sha))
+            and bool(re.fullmatch(r"[0-9a-f]{40}", platform_head_sha))
+            and frozen_to_base.returncode == 0
+            and base_to_head.returncode == 0
+        )
+        identity_base = platform_base_sha
+        identity_head = platform_head_sha
     if (
         live_repository != repository
         or live_author != author
         or ancestor.returncode != 0
+        or not platform_binding_ok
         or not commit_identities_match(
             repo_root,
-            identity["frozen_root_sha"],
+            identity_base,
             author["identity_digest"],
+            identity_head,
         )
     ):
         raise ToolError(
@@ -3606,6 +3652,39 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
 # ---------------------------------------------------------------------------
 
 
+def cmd_retirement_provenance(args: argparse.Namespace) -> dict:
+    """Verify only the delivery commits above one already-authenticated PR base."""
+    clone_root = canonical(args.clone)
+    identity = read_identity(clone_root)
+    agent_id = os.environ.get("AGENT_ID")
+    if not agent_id or agent_id != identity.get("agent_id"):
+        raise ToolError(
+            "clone_identity_mismatch",
+            "retirement provenance requires the clone-bound agent identity",
+            EXIT_POLICY,
+        )
+    branch, detached = branch_state(clone_root)
+    if detached or branch != identity.get("working_branch"):
+        raise ToolError(
+            "clone_branch_mismatch",
+            "retirement provenance requires the clone identity branch",
+            EXIT_POLICY,
+        )
+    verify_clone_provenance(
+        clone_root,
+        identity,
+        platform_base_sha=args.platform_base,
+        platform_head_sha=args.platform_head,
+    )
+    return {
+        "ok": True,
+        "reason": "retirement_provenance_verified",
+        "clone_root": clone_root,
+        "platform_base_sha": args.platform_base,
+        "platform_head_sha": args.platform_head,
+    }
+
+
 def path_within(path: str, root: str) -> bool:
     """True when path equals or is contained within root (canonicalized)."""
     try:
@@ -3892,6 +3971,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--delivery-attempt-id")
     p.add_argument("--claims-root", help="same authoritative claims root used to generate changeset")
     p.set_defaults(func=cmd_verify_changeset)
+
+    p = sub.add_parser("retirement-provenance")
+    add_common(p)
+    p.add_argument("--clone", required=True)
+    p.add_argument("--platform-base", required=True)
+    p.add_argument("--platform-head", required=True)
+    p.set_defaults(func=cmd_retirement_provenance)
 
     p = sub.add_parser("guard")
     add_common(p)
