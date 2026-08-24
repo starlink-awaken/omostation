@@ -87,11 +87,11 @@ runtime/.watch-dispatch-stamps.json
 
 - [ADR-0150](./0150-submodule-pr-reverse-review.md) (reviewer 6 步守门)
 - [ADR-0149](./0149-p71-baseline-no-replay.md) (防重做)
-- [ADR-0129](./0129-state-projection-plane-phase3.md) (派生面范式)
+- [ADR-0129](../../../.omo/_knowledge/decisions/0129-state-projection-plane-phase3.md) (派生面范式)
 - [ADR-0141](./0141-m2-base-schema.md) (m2 模式一致性)
 - [ADR-0148](./0148-round-trip-playbook.md) (round workflow §10)
-- [bin/ssot/check-submodule-hygiene.py](../../../bin/ssot/check-submodule-hygiene.py)
-- [.gitignore](../../../.gitignore)
+- [bin/ssot/check-submodule-hygiene.py](./../../../bin/ssot/check-submodule-hygiene.py)
+- [.gitignore](./../../../.gitignore)
 
 ---
 

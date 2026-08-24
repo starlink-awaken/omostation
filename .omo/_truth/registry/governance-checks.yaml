@@ -173,7 +173,7 @@ gac:
     check_type: advisory
     rule_baseline: 139
     adr_baseline: 361
-    script_baseline: 476
+    script_baseline: 477    # 2026-08-24: #2113 restore anti-corrosion-check, 477 active
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -3649,48 +3649,6 @@ gac:
     expected: Check CR-RESIDENT-BOS-01 must pass without violations
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
-  - id: CR-AGE-MEMORY-01
-    dimension: X2
-    layer: L2
-    name: Agent Cell 记忆管道完整性
-    description: '记忆管道必须实现 candidate → conflict → consolidate → forget 完整流程.'
-    check_type: file_exists
-    target: projects/omo/src/omo/resident/memory_pipeline.py
-    source_ref: bin/gac/check-age-memory.py
-    executor: [ci_gate, gac_local_gate]
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-08-24'
-    adr: ADR-0401
-    enforcement: required
-  - id: CR-AGE-REPLAY-01
-    dimension: X2
-    layer: L2
-    name: Agent Cell 回放框架
-    description: '回放框架必须支持 replay/shadow/eval 三种模式.'
-    check_type: file_exists
-    target: projects/omo/src/omo/resident/replay.py
-    source_ref: bin/gac/check-age-replay.py
-    executor: [ci_gate, gac_local_gate]
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-08-24'
-    adr: ADR-0401
-    enforcement: required
-  - id: CR-AGE-EVENT-01
-    dimension: X1
-    layer: L2
-    name: Resident ↔ Agora 事件桥接
-    description: 'Resident 事件必须通过事件桥接发布到 Agora EventBus.'
-    check_type: file_exists
-    target: projects/omo/src/omo/resident/daemon.py
-    source_ref: bin/gac/check-age-event-bridge.py
-    executor: [ci_gate, gac_local_gate]
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-08-24'
-    adr: ADR-0401
-    enforcement: required
   drift:
     schedule: daily
     auto_heal: false

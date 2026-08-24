@@ -6616,7 +6616,14 @@ bets:
   write_surfaces:
   - .omo/_knowledge/decisions/
   - bin/gac/adr-link-validator.py
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g3-adr-link-fix-design.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g3-adr-link-fix-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:4b67338fcc7cb8191acfdaa7e830eead8c22d726d4c757670e602536c4cceac4"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-03
   depends_on: []
 
 - id: BET-Y1Q3-T10-04
@@ -6635,7 +6642,15 @@ bets:
   write_surfaces:
   - bin/ssot/governance-migration.py
   - .omo/_truth/registry/governance-checks.yaml
+  - docs/superpowers/specs/2026-08-24-maturity-round2-g4-governance-owner-migration-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/governance-checks.yaml
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g4-governance-owner-migration-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:9ad6fa32e0e542d9b234af6847c8d123b6bb128a4bb9e1603770acb33792be43"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-04
   depends_on: []
 
 - id: BET-Y1Q3-T10-05
@@ -6747,80 +6762,4 @@ bets:
   - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
   - bin/gac/maturity-scorecard.py
   pasw_required: false
-  depends_on: []
-
-# ── Y3H1 价值闭环五票 (sustainable-value-loop-v1 §9, 主人拍板 D5) ──
-- id: BET-Y3H1-V1-01
-  track: T10-MATURITY
-  window: Y3H1
-  title: value-profile + north-star meter v3 (B/C轴先亮)
-  appetite: 3 days
-  priority: P0
-  status: candidate
-  goal: 解除 principal_id_required, 北极星从 unprovable→collecting(50分)
-  done_when:
-  - spaces/value-profile.yaml 存在且被 meter 读取
-  - north_star_meter 输出 status ∈ {collecting, not_ready}
-  - UHS value ≥ 25
-  verify:
-  - cmd: python3 bin/bc-os/north_star_meter_v2.py --json | grep -v unprovable
-  depends_on: []
-
-- id: BET-Y3H1-V2-01
-  track: T10-MATURITY
-  window: Y3H1
-  title: 时间账本采集 + confirm-inbox 落地
-  appetite: 1 week
-  priority: P0
-  status: candidate
-  goal: attest-review 从工具变为日常仪式, 四周倒计时可视化
-  done_when:
-  - attestations/*.json 连续产出 ≥1周
-  - cockpit-inbox 首位展示签核待办
-  verify:
-  - cmd: ls .omo/state/attestations/*.json | wc -l
-  depends_on: [BET-Y3H1-V1-01]
-
-- id: BET-Y3H1-V3-01
-  track: T10-MATURITY
-  window: Y3H1
-  title: cockpit decide 子命令 — 决策收件箱产品化
-  appetite: 3 days
-  priority: P1
-  status: candidate
-  goal: 决策积压从中位数>7天降至<3天
-  done_when:
-  - cockpit decide 可交互处理收件箱全部卡片
-  - SLA >7d 自动升级机制生效
-  verify:
-  - cmd: cockpit decide --list
-  depends_on: []
-
-- id: BET-Y3H1-V4-01
-  track: T10-MATURITY
-  window: Y3H1
-  title: 生成器防腐契约推广至剩余 sync 点
-  appetite: 2 days
-  priority: P1
-  status: candidate
-  goal: 全部 sync 类生成器实现 preflight 双重阻断
-  done_when:
-  - capability-registry · INDEX-MCP · CLI-REFERENCE · mof-capabilities 均 preflight
-  verify:
-  - cmd: grep -l "_preflight_submodule_sync" bin/ssot/*.py bin/gac/*.py | wc -l
-  depends_on: []
-
-- id: BET-Y3H1-V5-01
-  track: T10-MATURITY
-  window: Y3H1
-  title: gitlink ancestry gate GaC 规则正式化
-  appetite: 1 day
-  priority: P1
-  status: candidate
-  goal: 子模块指针回退在 push 时物理拦截(双落点已建, 规则入档)
-  done_when:
-  - governance-checks.yaml 含 submodule-ancestry-gate blocking 规则
-  - ci-surfaces.yaml 登记
-  verify:
-  - cmd: python3 bin/gac/gac-validate.py --gate | grep ancestry
   depends_on: []

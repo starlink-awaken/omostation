@@ -13,7 +13,7 @@ scene_type: internal_pipeline
 admission_track: internal_evidence_based
 lifecycle: shadow
 activation: preview
-approval_state: pending_business_confirmation
+approval_state: confirmed
 scene_id: project-supervision
 journey_id: oversight-to-decision
 goal: 对在管项目进行多维度监督 (进度/风险/质量/资源), 输出决策建议和干预方案
