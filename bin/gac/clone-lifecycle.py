@@ -1581,6 +1581,15 @@ def cmd_retire(args: argparse.Namespace) -> int:
         or platform_pr_number <= 0
     ):
         return reject("retire", "platform_pr_invalid", "platform-rebased PR must be a positive integer")
+    if (
+        platform_pr_number is not None
+        and identity.get("provenance_required") is not True
+    ):
+        return reject(
+            "retire",
+            "platform_provenance_required",
+            "platform-rebased retirement requires a provenance-bound clone",
+        )
 
     if platform_pr_number is None:
         repo_slug, provenance_error = bound_repository_slug(dest, identity)
