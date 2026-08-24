@@ -321,3 +321,114 @@ def test_append_history_includes_drift_and_staleness(radar, tmp_path):
     record = _json.loads(history_file.read_text().strip())
     assert record["drift_score"] == 85
     assert record["staleness_score"] == 50
+
+
+# ---------------------------------------------------------------------------
+# T10-10: alignment_score (三方成熟度口径对齐)
+# ---------------------------------------------------------------------------
+
+
+def test_composite_with_alignment_score(radar):
+    """alignment_score 0.10 权重集成, 不破坏其他维度."""
+    score, bd = radar._composite_health_score(
+        100, 1.0, 100, True,
+        drift_score=100, staleness_score=100, alignment_score=80,
+    )
+    assert bd["weights"]["alignment"] == 0.10
+    assert bd["contributions"]["alignment"] == 80 * 0.10
+    # total_weight = 1.30; raw = (30+50+20+10+10+8)/1.30 = 128/1.30 ≈ 98
+    assert 95 <= score <= 99
+
+
+def test_composite_alignment_alone_misses_other_dims(radar):
+    """Only alignment passed; drift/staleness omitted → still integrates."""
+    score, bd = radar._composite_health_score(
+        80, 1.0, 80, True,
+        alignment_score=80, drift_score=None, staleness_score=None,
+    )
+    assert "alignment" in bd["weights"]
+    assert "drift" not in bd["weights"]
+    assert "staleness" not in bd["weights"]
+
+
+def test_collect_alignment_score_returns_none_when_tool_missing(radar, tmp_path):
+    """Tool path absent → (None, {}); graceful no-op."""
+    fake_root = tmp_path / "no_align_tool"
+    fake_root.mkdir()
+    score, detail = radar._collect_alignment_score(fake_root)
+    assert score is None
+    assert detail == {}
+
+
+def test_collect_alignment_score_parses_reconciliation(radar, tmp_path, monkeypatch):
+    """Mock maturity-align.py to emit JSON; verify reconciliation_score parsed."""
+    fake_root = tmp_path
+    align_dir = fake_root / "bin" / "gac"
+    align_dir.mkdir(parents=True)
+    (align_dir / "maturity-align.py").write_text("# stub")
+
+    fake_result = {
+        "alignment": {
+            "drift_detected": False,
+            "reconciliation_score": 85.0,
+            "normalised": {"compass_radar": 70, "maturity_scorecard": 75, "bet_ledger": 90},
+            "high_dimension": "bet_ledger",
+            "low_dimension": "compass_radar",
+            "warnings": [],
+        }
+    }
+
+    class _FakeCompleted:
+        returncode = 0
+        stdout = _json.dumps(fake_result)
+
+    monkeypatch.setattr("subprocess.run", lambda *a, **kw: _FakeCompleted())
+
+    score, detail = radar._collect_alignment_score(fake_root)
+    assert score == 85
+    assert detail["source"] == "maturity-align"
+    assert detail["drift_detected"] is False
+    assert detail["high_dimension"] == "bet_ledger"
+
+
+def test_collect_alignment_score_handles_missing_alignment_block(radar, tmp_path, monkeypatch):
+    """JSON missing 'alignment' → (None, error)."""
+    fake_root = tmp_path
+    align_dir = fake_root / "bin" / "gac"
+    align_dir.mkdir(parents=True)
+    (align_dir / "maturity-align.py").write_text("# stub")
+
+    class _FakeCompleted:
+        returncode = 0
+        stdout = _json.dumps({"compass_radar": {}, "bet_ledger": {}, "maturity_scorecard": {}})
+
+    monkeypatch.setattr("subprocess.run", lambda *a, **kw: _FakeCompleted())
+
+    score, detail = radar._collect_alignment_score(fake_root)
+    assert score is None
+    assert "missing" in detail.get("error", "") or "json" in detail.get("error", "")
+
+
+def test_append_history_includes_alignment_score(radar, tmp_path):
+    """history.jsonl snapshot now carries alignment_score."""
+    health_yaml = tmp_path / "state/health.yaml"
+    health_yaml.parent.mkdir(parents=True)
+    health_yaml.write_text("generated_at: now\n")
+
+    report = {
+        "health_score": 90,
+        "governance_anomaly_score": 100,
+        "anomaly_count": 0,
+        "service_online_ratio": 1.0,
+        "freshness_score": 100,
+        "drift_score": 85,
+        "staleness_score": 50,
+        "alignment_score": 80,
+        "total_tasks": 6,
+        "source": "test",
+    }
+    radar._append_health_history(health_yaml, report)
+
+    history_file = tmp_path / "state/history/health.jsonl"
+    record = _json.loads(history_file.read_text().strip())
+    assert record["alignment_score"] == 80
