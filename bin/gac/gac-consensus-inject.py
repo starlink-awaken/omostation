@@ -6,6 +6,7 @@
 import datetime
 import json
 import math
+import os
 import re
 import sqlite3
 import sys
@@ -20,7 +21,7 @@ claude_md_path = WORKSPACE / "CLAUDE.md"
 # omlx 统一网关 (Tailscale MBP)
 OMLX_GATEWAY = "http://100.96.126.35:4000"
 EMBED_MODEL = "embed-bge"  # omlx embed-bge 模型 (MBP 本机)
-OMLX_API_KEY = "sk-omlx-admin"
+OMLX_API_KEY = os.environ.get("OMLX_API_KEY", "")
 TOP_K = 2  # 每次只注入最相关的 Top-2 Consensus，极限节省 Token
 
 

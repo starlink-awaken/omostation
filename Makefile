@@ -16,7 +16,8 @@
 	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
 	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest \
 	bcos-evolve bcos-signals bcos-north-star \
-	swarm-status swarm-chaos swarm-decide swarm-audit swarm-demo
+	swarm-status swarm-chaos swarm-decide swarm-audit swarm-demo \
+	ast-bootstrap ast-blast ast-audit
 
 PY := uv run --with pyyaml python
 PY_STDLIB := bin/gac/managed-python run --profile stdlib --
@@ -450,7 +451,7 @@ debt-audit:
 agent-workflows:
 	$(PY) bin/agent-workflow.py list
 
-agent-workflow-bootstrap:
+agent-workflow-bootstrap: fabric-warm
 	$(PY) bin/agent-workflow.py bootstrap
 
 agent-workflow-lint:
@@ -624,3 +625,16 @@ swarm-audit:  ## @Keeper 减法配额与资产健康度核算
 
 swarm-demo:   ## 蜂群自治全链路真实场景演练 (6 幕闭环)
 	@python3 bin/gac/swarm-e2e-scenario.py
+
+# ==============================================================================
+# AST 语义调用链与爆炸半径 (AST Semantic Callgraph & Blast Radius)
+# ==============================================================================
+
+ast-bootstrap: ## 全仓 AST 语义符号与调用链自举构建
+	@python3 bin/gac/ast-index-bootstrap.py
+
+ast-blast:     ## 分析当前 Git 暂存改动的 AST 爆炸半径 (0.3ms 极速反查)
+	@python3 bin/gac/ast-blast-radius.py --diff
+
+ast-audit:     ## AST 语义引擎物理自检与证伪测试
+	@python3 bin/gac/ast-blast-radius.py --selftest

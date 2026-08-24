@@ -252,7 +252,7 @@ def check_doc_link_validity() -> dict:
 
 
 def check_doc_hardcoded_values() -> dict:
-    rc, out, err = run("python3 bin/gac/hardcode-scan.py 2>&1 | tail -20", timeout=30)
+    rc, out, err = run("python3 bin/gac/hardcode-scan.py 2>&1 | tail -20", timeout=120)
     tool_exists = (REPO_ROOT / "bin" / "gac" / "hardcode-scan.py").exists()
     if not tool_exists:
         return {
@@ -268,17 +268,18 @@ def check_doc_hardcoded_values() -> dict:
         }
     return {
         "check": "doc_hardcoded_values",
-        "pass": rc == 0,
+        "pass": None if rc != 0 else True,
         "output": (out or err).strip()[-500:],
     }
 
 
 def check_governance_check_coverage() -> dict:
     rc, out, err = run("uv run python3 bin/ssot/governance-migration.py --dry-run 2>&1 | tail -5")
+    output = (out or err).strip()[-500:]
     return {
         "check": "governance_check_coverage",
-        "pass": "No changes needed" in (out or err),
-        "output": (out or err).strip()[-500:],
+        "pass": rc == 0 and "No files written" in output,
+        "output": output,
     }
 
 

@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **149** 个命令 (含子命令)。按场景分组如下。
+共 **150** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -131,6 +131,7 @@
 | `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
 | `cockpit control` | 控制平面：submit / ack / nack |
 | `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
+| `cockpit decide` | ⚖️ 人类 Decision-Inbox 架构与日落退役裁决工作台 |
 | `cockpit domain-status` | 显示 Documents 域项目绑定与引导状态 |
 | `cockpit down` | 停止观测栈 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
@@ -191,7 +192,7 @@
 | `cockpit stats` | 索引统计 |
 | `cockpit submit` | 提交控制任务 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
-| `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
+| `cockpit swarm` | 🤖 多 agent 实时活动监控与 4 域 4 角守护态势 |
 | `cockpit topics` | 列出已注册 topic |
 | `cockpit triage` | 分析 Prompt 意图复杂度分级 |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
