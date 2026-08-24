@@ -56,6 +56,15 @@ def make_fixture(tmp_path: Path) -> dict[str, Path | str]:
     (s / "f2.txt").write_text("two\n", encoding="utf-8")
     c2 = _commit(s, "sub c2")
 
+    # --- second submodule (pointer stable, used for skip-warning scenarios) ---
+    s2 = tmp_path / "sub2-repo"
+    s2.mkdir()
+    _git_ok(s2, "init", "-b", "main")
+    _git_ok(s2, "config", "user.email", "test@example.com")
+    _git_ok(s2, "config", "user.name", "fixture")
+    (s2 / "g1.txt").write_text("one\n", encoding="utf-8")
+    _commit(s2, "sub2 c1")
+
     # --- main repo ---
     m = tmp_path / "main-repo"
     m.mkdir()
@@ -64,6 +73,7 @@ def make_fixture(tmp_path: Path) -> dict[str, Path | str]:
     _git_ok(m, "config", "user.name", "fixture")
     # submodule add 检出的是 sub 的 main tip (c2); 显式 pin c1 作为 commit_a 的指针
     _git_ok(m, "-c", "protocol.file.allow=always", "submodule", "add", str(s), "sub")
+    _git_ok(m, "-c", "protocol.file.allow=always", "submodule", "add", str(s2), "sub2")
     _git_ok(m / "sub", "checkout", c1)
     commit_a = _commit(m, "add submodule at c1")
 
@@ -179,6 +189,15 @@ class TestExemptionTag:
         assert "other-surface|other-check|ab12cd34" in keys, "existing entry must survive"
         assert any(k.startswith("gitlink-ancestry|") for k in keys), "new fingerprint must be appended"
         assert data["growth_policy"] == "shrink_only"
+
+    def test_exemption_survives_unrelated_uninit_warning(self, tmp_path):
+        fx = make_fixture(tmp_path)
+        shutil.rmtree(fx["m"] / "sub2")
+        result = run_gate(fx["m"], "--range", fx["commit_b"], fx["commit_d"], "--cwd", str(fx["m"]))
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "WARN" in result.stdout
+        debt_file = fx["m"] / ".omo" / "_truth" / "registry" / "gate-known-debt.yaml"
+        assert debt_file.is_file()
 
     def test_exempt_rewind_is_idempotent(self, tmp_path):
         import yaml

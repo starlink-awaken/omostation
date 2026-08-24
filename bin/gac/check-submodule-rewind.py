@@ -415,14 +415,17 @@ def _format_rewind_exempt(findings: list[dict], tags: list[str], debt_keys: list
 
 def run_ancestry_gate(base: str, head: str, root: Path, *, write_debt: bool, json_out: bool) -> int:
     warnings: list[str] = []
+    unresolvable = False
 
     if not _git("rev-parse", "--verify", "--quiet", f"{base}^{{commit}}", cwd=root):
         warnings.append(f"[WARN] base '{base}' 无法解析, 跳过 ancestry gate (浅检出/无该 ref 属预期)")
+        unresolvable = True
     elif not _git("rev-parse", "--verify", "--quiet", f"{head}^{{commit}}", cwd=root):
         warnings.append(f"[WARN] head '{head}' 无法解析, 跳过 ancestry gate")
+        unresolvable = True
 
     violations: list[dict] = []
-    if not warnings:
+    if not unresolvable:
         for path in declared_submodules(root):
             old = _gitlink_pointer_at(base, path, cwd=root)
             new = _gitlink_pointer_at(head, path, cwd=root)
@@ -442,7 +445,7 @@ def run_ancestry_gate(base: str, head: str, root: Path, *, write_debt: bool, jso
                 continue
             violations.append({"path": path, "old_sha": old, "new_sha": new})
 
-    tags = scan_exemption_tags(base, head, root) if not warnings else []
+    tags = scan_exemption_tags(base, head, root) if not unresolvable else []
     exempted = bool(violations) and bool(tags)
     debt_keys: list[str] = []
     debt_skipped = 0
