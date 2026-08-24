@@ -5402,7 +5402,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md
     spec_version: 1.0.0
-    content_digest: sha256:72c117a98dd1a9a43d5b21699a9e07373904ad90adbcb99ed8ad0eadfeaf2697
+    content_digest: sha256:7539bc8a4ae7ec664f1d94e742559f4412f438911fa6d2e2ee67b09e193d82a6
     decision_ref: decision://accepted/BET-Y1Q3-T1-11
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
