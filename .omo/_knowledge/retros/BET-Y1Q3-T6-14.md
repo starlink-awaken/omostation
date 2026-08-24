@@ -10,7 +10,7 @@ owner: resident-governance
 # BET-Y1Q3-T6-14 Retro — resident 常驻体系与治理接线全面深度复盘
 
 > 交付: PR #2080 (merge 29998a6dc) — 9 维度复盘文档 `docs/reports/2026-08-24-resident-system-deep-review.md` + 台账 T6-14 条目 + Spec `docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md`
-> 契约: run `20260824T013845Z-project-doc-change-3a0ec522` (project-doc-change / docs-agent)
+> 契约: run `<run-id>` (project-doc-change / docs-agent)
 
 ## Q1 实际耗时 vs appetite
 

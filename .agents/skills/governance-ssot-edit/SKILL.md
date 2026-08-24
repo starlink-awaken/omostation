@@ -13,7 +13,7 @@ Validated by PR #60 (2026-07-03, GaC executor enum 5-source align after PR #59 r
 
 ## When To Use
 
-- Changing GaC rules / executor enum / checker registration (`governance-checks.yaml`, `bin/gac-*.py`)
+- Changing GaC rules / executor enum / checker registration (`governance-checks.yaml`, the bin/gac/ directory)
 - Changing `write-owners.yaml` / `mutation-surfaces.yaml` / `x1-x4-rules.yaml`
 - Changing any governance registry field that exists in **multiple sources**
 - Editing `.omo/_truth/registry/*` during concurrent agent activity
@@ -29,9 +29,9 @@ Before editing, list every source holding the field. For GaC executor — **5 so
 |---|--------|-------|
 | ① | `.omo/_truth/registry/governance-checks.yaml::gac.rules` (rule SSOT) | direct |
 | ② | `.omo/_truth/registry/governance-checks.yaml::gac.schema.executor_enum` | direct |
-| ③ | `bin/gac-drift.py::EXECUTOR_ENUM` | direct |
+| ③ | the EXECUTOR_ENUM field in bin/gac/gac-drift.py | direct |
 | ④ | MOF M1 `projects/ecos/.../m1/governance/GAC-RULE-CR-*.yaml` | **派生** — `gac-m1-sync.py --sync` |
-| ⑤ | `bin/gac-executor.py::EXECUTOR_PRESENCE` | direct |
+| ⑤ | the EXECUTOR_PRESENCE field in bin/gac/gac-executor.py | direct |
 
 For other SSOT fields:
 ```bash
@@ -91,9 +91,9 @@ An uncommitted or unpushed change WILL be silently reverted by the next concurre
 
 ```bash
 git diff --stat <branch>~1 <branch>             # confirm commit still has target files
-python3 bin/gac-drift.py                        # 0 drift
+python3 bin/gac/gac-drift.py                        # 0 drift
 python3 bin/gac-bootstrap.py                    # 层5 ✅
-python3 bin/gac-executor.py                     # all executors present
+python3 bin/gac/gac-executor.py                     # all executors present
 ```
 **If working-tree change vanished** (git status empty but shouldn't be): a concurrent op reverted you. Re-apply Step 4-6.
 
@@ -138,7 +138,7 @@ gh pr merge <PR> --squash --delete-branch
 - **DON'T** claim "zero implementation" without checking the 5 migration locations
 - **DON'T** leave governance edits uncommitted in a shared working tree
 - **DON'T** merge a PR without triaging whether fails are yours or pre-existing
-- **DON'T** trust a single `health_score=100` — cross-check `bin/evidence-smoke.py`
+- **DON'T** trust a single `health_score=100` — cross-check `bin/gac/evidence-smoke.py`
 - **DON'T** survey skill/workflow sinks by looking only at `.omo/_knowledge/` — `.agents/skills/` is the project-level agent skill home
 
 ## Integration
