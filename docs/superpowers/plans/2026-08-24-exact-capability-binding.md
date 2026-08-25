@@ -2,7 +2,7 @@
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last-reviewed: 2026-08-25
 ---
 
 # Wave B Exact Capability Binding Implementation Plan
@@ -17,7 +17,7 @@ last-reviewed: 2026-08-24
 
 ## Global Constraints
 
-- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.0.0`, digest `sha256:0af2a02ee52b3cdf7326f91701dd0c78e5a48a41c091adf7619df3301154a9a8`.
+- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.1.0`, digest `sha256:657044b66de9748de636b5a8d78f7af9081daa6c3068b9cc4f257008b11d1c9b`. The 1.1.0 scope amendment records the Phase8 root bypass facts behind merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) and adds Wave E (§7) with the child-first/root-follow-up ordering.
 - BET: `BET-Y1Q3-T1-12`; every edit must be covered by its WorkPacket and a current claim.
 - No new capability registry writer, scheduler, broker, database, workflow, or dispatch truth.
 - No automatic Human Verdict, decision outcome, time-saved estimate, or personal value promotion; all execution receipts keep `value_indicator_policy=false`.
@@ -1192,3 +1192,113 @@ The retro must include actual elapsed time, every failed or unproven done_when, 
 Root source tag: `delivery/exact-capability-binding-root-integration-20260824-v1`.
 
 Wait for every required PR-context check. Merge by standard squash only. Retire every writer clone through `clone-lifecycle retire`; use `--platform-rebased-pr` whenever GitHub update-branch changed the PR head. Preserve every JSON retirement receipt.
+
+---
+
+### Task 8: Phase8 root recovery — retire root wrapper bypass commands (scope amendment 1.1.0)
+
+Bounded TDD task implementing Spec §2.3 / §5.5.5 / Wave E. It only retires the root-side
+Phase8 bypass surface; it must not re-implement any retired child entrypoint, must not
+add new capability surfaces, and must not touch files owned by other BETs.
+
+**Files:**
+- Modify: `bin/omostation`
+- Modify: `bin/gac/daemon-watchdog.py`
+- Modify: `bin/ssot/real-scenario-runner.py`
+- Modify: `bin/_registry/scripts/governance/daemon-watchdog.yaml`
+- Modify: `bin/_registry/scripts/governance/real-scenario-runner.yaml`
+- Test: `tests/unit/test_phase8_unified_ecosystem.py`
+- Modify: `docs/CLI-REFERENCE.md`
+- Modify: `docs/INDEX-MCP.md`
+- Modify: `docs/generated/capability-registry.yaml`
+
+**Interfaces:**
+- Consumes: merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) entrypoint retirement; existing value-firewall and no-write test patterns.
+- Produces: compatibility-only root wrapper with `daemon`/`watchdog`/`scenario`/arbitrary `run` retired until Mesh-bound; retired active registry entries; synchronized docs and capability projection.
+
+- [ ] **Step 1: Write RED negative no-write / value-firewall tests**
+
+Extend `tests/unit/test_phase8_unified_ecosystem.py` (do not remove the existing
+resolver/scenario unit tests) with retired-command coverage:
+
+```python
+def _snapshot(root: Path) -> dict[str, bytes]:
+    return {
+        str(p.relative_to(root)): p.read_bytes()
+        for p in sorted(root.rglob("*"))
+        if p.is_file() and ".git" not in p.parts
+    }
+
+RETIRED_COMMANDS = ["daemon", "watchdog", "scenario"]
+
+def test_retired_bypass_commands_exit_nonzero_with_zero_writes(tmp_path, monkeypatch, capsys):
+    before = _snapshot(WORKSPACE)
+    for cmd in RETIRED_COMMANDS + ["run"]:
+        argv = ["omostation", cmd] + (["some.module"] if cmd == "run" else [])
+        monkeypatch.setattr(sys, "argv", argv)
+        with pytest.raises(SystemExit) as exc:
+            omostation_main.main()
+        assert exc.value.code != 0
+        out = capsys.readouterr()
+        assert "retired" in (out.out + out.err).lower()
+    assert _snapshot(WORKSPACE) == before  # no-write: nothing changed on disk
+
+def test_retired_bypass_receipts_contain_no_value_fields(tmp_path, capsys):
+    # value firewall: retirement messages must not carry verdict/outcome/value fields
+    ...
+```
+
+Every retired command must: exit non-zero, print a retirement notice naming the
+Mesh-bound successor path, leave every file untouched (byte-identical snapshot),
+perform zero provider/router/gateway calls, and emit no human verdict, decision
+outcome, or personal value field.
+
+- [ ] **Step 2: Make `bin/omostation` compatibility-only (GREEN)**
+
+Remove the `daemon`, `watchdog`, `scenario`, and arbitrary `run <module>` dispatch
+branches (including the ghost imports `cockpit.commands.daemon.daemon_cli` and
+`cockpit.tui.swarm_dashboard`). Keep status/top/policy/resident/distill/gate
+transit only where the target still exists on child main. Retired commands hit a
+shared refusal helper that exits 1 before any import, subprocess, or file write.
+
+- [ ] **Step 3: Retire the two governance scripts and their registry entries**
+
+Neutralize the unbound execution surfaces in `bin/gac/daemon-watchdog.py`
+(`restart_daemon()` ghost import of `cockpit.commands.daemon.restart_daemon_service`)
+and `bin/ssot/real-scenario-runner.py` (direct A2A bus publish + resident decision
+write without WorkPacket/admission): refuse with a non-zero, no-write exit until
+Mesh-bound. Flip both `bin/_registry/scripts/governance/*.yaml` entries from active
+registration to explicitly retired (`maturity: retired`, retirement note referencing
+Spec §5.5.5 and PR #78), keeping the files append-only honest history.
+
+- [ ] **Step 4: Enforce child main → root pointer → projection ordering**
+
+Before touching any root file, prove ordering per Spec Wave E:
+`git -C projects/cockpit merge-base --is-ancestor 43dbf115 <child-main>` and the
+merge SHA `82dddbc9` must already be reachable on child main; only then move the
+root gitlink forward, and only then regenerate `docs/generated/capability-registry.yaml`.
+Never regenerate the projection while the wrapper still exposes retired commands.
+
+- [ ] **Step 5: Sync docs projection**
+
+Update `docs/CLI-REFERENCE.md` and `docs/INDEX-MCP.md` so the retired commands are
+gone from the available-surface listing (or explicitly marked retired with the
+Mesh-bound successor reference); regenerate the capability projection in the same
+commit so registry, docs, and wrapper agree.
+
+- [ ] **Step 6: Host LaunchAgent cleanup only after code merge**
+
+Unload/remove the host LaunchAgent plist entries that auto-spawn the daemon,
+watchdog, or scenario runner only after the retirement code is merged to root main.
+Never clean up host services while a half-retired binary can still self-resurrect.
+
+- [ ] **Step 7: Run GREEN tests and deliver**
+
+```bash
+uv run --with pyyaml --with pytest python -m pytest tests/unit/test_phase8_unified_ecosystem.py -q
+python3 bin/cockpit/gen-capability-registry.py --check --quiet
+```
+
+Commit: `fix(phase8): retire root wrapper bypass commands`.
+
+Tag: `delivery/t1-12-phase8-root-recovery-v1`.
