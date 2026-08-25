@@ -1,0 +1,18 @@
+schema: agent-error/v1
+id: PITFALL-CRO-002
+category: cron
+severity: medium
+title: cron job 无心跳包装 → 死了没人知道
+symptom: cron job 长期失败但 dashboard 全绿
+root_cause: operating-rhythm-crontab 中部分条目没用 heartbeat-wrapper.sh 包装
+solution: 统一用 bash bin/gac/heartbeat-wrapper.sh <name> <cmd> 包装所有 cron 命令
+prevention: '#2156 补齐了 drift-sweep 和 capability-ownership 的 cron 接线'
+tags:
+- cron
+- heartbeat
+- monitoring
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active

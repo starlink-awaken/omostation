@@ -1,0 +1,16 @@
+schema: agent-error/v1
+id: PITFALL-COO-001
+category: coordination
+severity: medium
+title: 共享 checkout 被并发 agent 切分支 → 未提交工作消失
+symptom: 正在编辑的文件突然变成另一个分支的内容
+root_cause: 多 agent 共用 /Users/xiamingxing/Workspace, 任一 agent 可切分支
+solution: 写入型 agent 必须用独立 worktree(T1-05拓扑); agent-presence.py 注册碰撞检测
+prevention: 399 次 checkout 切换记录
+tags:
+- coordination
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active

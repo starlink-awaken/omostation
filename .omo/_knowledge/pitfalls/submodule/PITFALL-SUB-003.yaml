@@ -1,0 +1,18 @@
+schema: agent-error/v1
+id: PITFALL-SUB-003
+category: submodule
+severity: medium
+title: 子模块指针回退 — 并发合并从陈旧base拉回旧指针
+symptom: root gitlink 指向子模块的旧 commit, 新功能消失
+root_cause: 并发 agent 从旧 base 分支创建 PR, merge 时覆盖了更新的指针
+solution: 'ancestry gate (#2084): pre-push 校验 merge-base --is-ancestor old new'
+prevention: '#2055 注册被 clobber 后需重放'
+tags:
+- submodule
+- regression
+- ancestry
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active
