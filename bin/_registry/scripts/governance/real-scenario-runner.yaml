@@ -3,7 +3,7 @@ id: bin/ssot/real-scenario-runner.py
 name: Real Scenario Runner
 category: governance
 owner: governance-team
-description: ""
+description: "Retired Phase8 bypass surface; Mesh-bound capability admission is pending. Cockpit PR #78 is retirement evidence only, never the delivered successor."
 inputs: []
 outputs:
   - type: exit_code
@@ -11,5 +11,5 @@ outputs:
 dependencies: []
 triggers: []
 related: []
-maturity: draft
-last_reviewed: "2026-08-24"
+maturity: deprecated
+last_reviewed: "2026-08-26"
