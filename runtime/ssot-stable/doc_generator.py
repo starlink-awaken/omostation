@@ -29,10 +29,16 @@ TEMPLATES = {
 
 def generate_doc(template: str, context: dict) -> str:
     desc = TEMPLATES.get(template, template)
-    response = llm_ask(
-        f"你是卫健委公文写作助手。根据以下信息生成{desc}草稿(Markdown格式,含标题/主送/正文/落款):\n{json.dumps(context, ensure_ascii=False)[:500]}",
-        timeout=60.0,
+    # 2026-08-25 修复: 不给日期 LLM 会幻觉年份(实测产出"2024 年 X 月"),
+    # 明示今天 + 要求未知留空 — 数据诚实红线。
+    prompt = (
+        f"你是卫健委公文写作助手。今天是 {utc_now()[:10]}。"
+        f"根据以下信息生成{desc}草稿(Markdown格式,含标题/主送/正文/落款)。\n"
+        f"日期不确定时用下划线留空待填, 禁止编造年份或数据:\n"
+        f"{json.dumps(context, ensure_ascii=False)[:500]}"
     )
+    # 失败重试一次(本地容量不足 409 时 LM Link 兜底也偶发超时, 单发失败实测存在)
+    response = llm_ask(prompt, timeout=60.0) or llm_ask(prompt, timeout=60.0)
     return response or f"# {desc} (生成失败)"
 
 
