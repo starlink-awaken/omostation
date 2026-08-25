@@ -17,7 +17,7 @@ last-reviewed: 2026-08-25
 
 ## Global Constraints
 
-- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.1.0`, digest `sha256:657044b66de9748de636b5a8d78f7af9081daa6c3068b9cc4f257008b11d1c9b`. The 1.1.0 scope amendment records the Phase8 root bypass facts behind merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) and adds Wave E (§7) with the child-first/root-follow-up ordering.
+- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.1.0`, digest `sha256:64b6bb07a7e613512a9c9e76480af8d3ef2498192859b88a34d23ed7360e6790`. The 1.1.0 scope amendment records the Phase8 root bypass facts behind merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) and adds Wave E (§7) with the child-first/root-follow-up ordering; the 2026-08-25 consistency correction lists `top` as the fifth retired bypass command (`swarm_dashboard` never existed on child main).
 - BET: `BET-Y1Q3-T1-12`; every edit must be covered by its WorkPacket and a current claim.
 - No new capability registry writer, scheduler, broker, database, workflow, or dispatch truth.
 - No automatic Human Verdict, decision outcome, time-saved estimate, or personal value promotion; all execution receipts keep `value_indicator_policy=false`.
@@ -1214,7 +1214,7 @@ add new capability surfaces, and must not touch files owned by other BETs.
 
 **Interfaces:**
 - Consumes: merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) entrypoint retirement; existing value-firewall and no-write test patterns.
-- Produces: compatibility-only root wrapper with `daemon`/`watchdog`/`scenario`/arbitrary `run` retired until Mesh-bound; retired active registry entries; synchronized docs and capability projection.
+- Produces: compatibility-only root wrapper with `daemon`/`watchdog`/`scenario`/`top`/arbitrary `run` — five retired bypass commands — until Mesh-bound; retired active registry entries; synchronized docs and capability projection.
 
 - [ ] **Step 1: Write RED negative no-write / value-firewall tests**
 
@@ -1229,7 +1229,7 @@ def _snapshot(root: Path) -> dict[str, bytes]:
         if p.is_file() and ".git" not in p.parts
     }
 
-RETIRED_COMMANDS = ["daemon", "watchdog", "scenario"]
+RETIRED_COMMANDS = ["daemon", "watchdog", "scenario", "top"]
 
 def test_retired_bypass_commands_exit_nonzero_with_zero_writes(tmp_path, monkeypatch, capsys):
     before = _snapshot(WORKSPACE)
@@ -1255,11 +1255,13 @@ outcome, or personal value field.
 
 - [ ] **Step 2: Make `bin/omostation` compatibility-only (GREEN)**
 
-Remove the `daemon`, `watchdog`, `scenario`, and arbitrary `run <module>` dispatch
-branches (including the ghost imports `cockpit.commands.daemon.daemon_cli` and
-`cockpit.tui.swarm_dashboard`). Keep status/top/policy/resident/distill/gate
-transit only where the target still exists on child main. Retired commands hit a
-shared refusal helper that exits 1 before any import, subprocess, or file write.
+Remove the `daemon`, `watchdog`, `scenario`, `top`, and arbitrary `run <module>`
+dispatch branches (including the ghost imports `cockpit.commands.daemon.daemon_cli`
+and `cockpit.tui.swarm_dashboard` — the latter never existed on child main, so
+`top` is retired with the other four bypass commands, not kept in transit). Keep
+status/policy/resident/distill/gate transit only where the target still exists
+on child main. Retired commands hit a shared refusal helper that exits 1 before
+any import, subprocess, or file write.
 
 - [ ] **Step 3: Retire the two governance scripts and their registry entries**
 
