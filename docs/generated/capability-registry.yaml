@@ -14,7 +14,7 @@ totals:
   mcp_tools: 616
   bos_services: 242
   bos_domains: 21
-  cli_commands: 150
+  cli_commands: 152
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -1919,6 +1919,8 @@ cli_commands:
   description: ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196)
 - name: channels
   description: 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml
+- name: client
+  description: 以 REPL 模式连接到 MCP server
 - name: code
   description: 代码库分析与审查 (基于 codeanalyze)
 - name: compass
@@ -1935,6 +1937,8 @@ cli_commands:
   description: 控制平面：submit / ack / nack
 - name: controller-shadow
   description: 读取 Runtime 旧控制器影子迁移回执
+- name: daemon
+  description: 启动 Agora 2.0 后台常驻守护进程 (Agent-to-Agent Bus)
 - name: daily
   description: 每日研究简报
 - name: dashboard

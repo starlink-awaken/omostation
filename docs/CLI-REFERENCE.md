@@ -1,16 +1,9 @@
----
-status: active
-lifecycle: entry
-owner: auto-fix-loop
-last-reviewed: 2026-08-24
----
-
 # Cockpit CLI 命令参考
 
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **150** 个命令 (含子命令)。按场景分组如下。
+共 **152** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -135,9 +128,11 @@ last-reviewed: 2026-08-24
 | `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198/0203) |
 | `cockpit challenge` | ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196) |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
+| `cockpit client` | 以 REPL 模式连接到 MCP server |
 | `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
 | `cockpit control` | 控制平面：submit / ack / nack |
 | `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
+| `cockpit daemon` | 启动 Agora 2.0 后台常驻守护进程 (Agent-to-Agent Bus) |
 | `cockpit domain-status` | 显示 Documents 域项目绑定与引导状态 |
 | `cockpit down` | 停止观测栈 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
