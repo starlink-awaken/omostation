@@ -7,6 +7,8 @@ last-reviewed: 2026-08-24
 
 # Resident Agent System v1 (ADR-0396 DigitalAgent / WP-A~I)
 
+> 槽位：SFOP/v1 槽 J（事件投影）。订阅 Mesh 事件，不作为第二派工面；`execute` 只能 ack 已入院步骤。
+> 运行时语法：[`os-operating-pattern-v1.md`](os-operating-pattern-v1.md)。
 > 文档 SSOT: 本文档是 resident 体系的**功能规格文档**（stable architecture contract）。
 > 运行时事实（水位/事件数/角色投影）→ SSOT: `omo resident status`（`.omo/_delivery/resident-orchestrator/`）。
 > 路由表（事件→action）→ `projects/omo/src/omo/resident/resident-routes.yaml`（schema `resident-routes/v1`）。

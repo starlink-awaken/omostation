@@ -2,12 +2,16 @@
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last-reviewed: 2026-08-25
+constrained-by: docs/architecture/os-operating-pattern-v1.md
+sfop_slot: B
 ---
 
 # AGE-v2 长期演进规划 (2026 Q4 - 2027 Q2)
 
-> 从"单 Cell 运行"到"多 Cell 自治生态"
+> 槽位：脊柱后端（SFOP/v1 槽 B），不是第二操作系统，也不是第二 dispatcher。
+> Y1 总门（2027-07）前不实施「多 Cell 自治生态 / Cell 市场」。Cell 进入生产路径必须带 Mesh admission / WorkPacket。
+> 从"单 Cell 运行"到"多 Cell 自治生态"（后者是 Y2 愿望，不是当前主线）
 
 ---
 

@@ -8,6 +8,8 @@ last-reviewed: 2026-08-24
 # BCOS 业务域系统 v1 — 功能规格 SSOT
 
 > 最后更新: 2026-08-23
+> 槽位：`signal_router` → SFOP/v1 槽 P；`north_star_*` → 槽 O 仪表；`evolution_engine` 提案可留在槽 J，Y1 内 `--apply` 不是主路径。
+> 运行时语法：[`os-operating-pattern-v1.md`](os-operating-pattern-v1.md)。
 > 定位: BCOS (Business Operating System) 业务域系统的功能规格单一事实源 (SSOT)。
 > 边界: 本文件描述 **能力契约**（是什么/怎么调/验证），不复制运行时计数（见 doc-ssot-contract）。
 

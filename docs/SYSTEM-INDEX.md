@@ -68,6 +68,7 @@
 
 ### 场景执行架构 (四面一脊)
 
+→ [脊面运行模式 SFOP/v1](architecture/os-operating-pattern-v1.md) — 把分层 / 四面 / 8D / AGE-v2 / resident / BCOS 收成一套槽位语法，并给出金线落地
 → [Scene Cards](scene-cards/) — 9 个场景卡 (external + internal_pipeline, 双轨准入)
 → [Journey Specs](journey-specs/) — 3 个 journey 状态机 (inbox-to-decision, meeting-to-delivery, research-to-insight)
 → [External Connection Fabric](../.omo/standards/external-connection-fabric.md) — §7: dual-track admission standard

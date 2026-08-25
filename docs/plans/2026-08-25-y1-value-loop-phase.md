@@ -14,6 +14,7 @@ does_not_supersede:
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/decisions/0410-strategy-mainline-plan-supersedes-panorama.md
 related:
+  - docs/architecture/os-operating-pattern-v1.md
   - ARCHITECTURE.md
   - docs/architecture/project-strategy-v1.md
   - docs/architecture/memory-os.md
@@ -399,8 +400,9 @@ S1 以后按月复盘，不再按周开新平台。每月只回答 Plan §10 的
 | 文档 | 关系 |
 |---|---|
 | `STRATEGY-3YEAR-PLAN-2026H2-2029.md` | 愿景与 Y1–Y3 总门 SSOT |
+| `os-operating-pattern-v1.md` | **运行时语法 / 槽位 / 金线落地**。与本文冲突时，日历听本文，接线听模式 |
 | `3y-bet-ledger.yaml` | 执行拆分 SSOT。与日历冲突时，**以 Plan 日历与本文验收问题为准** 补 bet，而不是把 done 当事实 |
-| `ARCHITECTURE.md` | 分层与路由契约，不改 |
+| `ARCHITECTURE.md` | 分层与路由契约；信息流槽位指向模式文 |
 | `project-strategy-v1.md` | 九维诊断仍有效；其「12 个月放权 / 3 张卡升档」推迟到 Y1 总门之后 |
 | `digital-twin-blueprint-v1.md` | 数字分身是 Y2+ 形态；Cell 在 Y1 只作 backend |
 | 前短版 VL-1 | **降为 S0 打开波次**，不再单独作为阶段契约 |
@@ -416,3 +418,7 @@ S1 以后按月复盘，不再按周开新平台。每月只回答 Plan §10 的
 4. **S0（到 2026-10）是否愿意每周打开 inbox？** 长周期的最小人因。不愿意，就不要让 agent 用 PR 把 Y1Q1 再标一次 done。
 
 拍板前不把本文写入台账 done，不派生 12 条新 bet。若开 bet，只开「信号>0 / inbox 习惯 / 调度入口收敛 / 零调用归档 / MOS 默认路径」这类能对上日历验收问题的项，总数仍宜 ≤ 5。
+
+运行时语法（槽位、八律、金线命令、平行入口怎么关）见
+[`docs/architecture/os-operating-pattern-v1.md`](../architecture/os-operating-pattern-v1.md)。
+本文只保留日历与总门；接线细节以模式为准，避免两套落地清单。
