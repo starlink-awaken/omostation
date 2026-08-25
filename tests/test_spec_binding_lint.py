@@ -750,6 +750,13 @@ def _governance_verify_steps() -> list[dict]:
     return _governance_workflow()["jobs"]["governance-verify"]["steps"]
 
 
+def test_governance_verify_job_skips_non_authoritative_push_refs() -> None:
+    job = _governance_workflow()["jobs"]["governance-verify"]
+    assert job.get("if") == (
+        "github.event_name != 'push' || github.ref == 'refs/heads/main'"
+    )
+
+
 def test_governance_workflow_triggers_on_ledger_pull_requests() -> None:
     workflow = _governance_workflow()
     triggers = workflow.get("on", workflow.get(True))  # PyYAML 1.1 treats ``on`` as bool.
