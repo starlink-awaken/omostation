@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # CONV-3 项目收敛决策卡 (差距治理 S3)
 
 > 生成: 2026-08-24 · 状态: ✅ 已决策 (用户授权 agent 定案, 2026-08-24T05:48Z)

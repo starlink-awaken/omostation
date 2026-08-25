@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # Cleanup Rounds 2026-08-22 — Retrospective & How to Recover from Drift
 
 > **Status**: closed (2026-08-23) — 11 PRs merged, 5 health-anomaly classes cleared, 4 structural gates added

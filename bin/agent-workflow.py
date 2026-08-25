@@ -531,6 +531,25 @@ def wrapped_main(argv: list[str] | None = None) -> int:
             except WorkflowError as exc:
                 print(f"agent-workflow: {exc}", file=sys.stderr)
                 return 1
+
+        # Optimization 4: Edge-First Triage via AetherForge
+        objective = _flag(argv, "--objective")
+        if objective:
+            print("\n[Edge-First] 🧠 正在通过本地 AetherForge (omlxc) 评估意图复杂度与预热上下文...", file=sys.stderr)
+            try:
+                triage_res = subprocess.run(
+                    ["uv", "run", "omlxc", "fabric", "triage", objective],
+                    cwd=str(WORKSPACE / "projects" / "omlxc"),
+                    capture_output=True,
+                    text=True
+                )
+                if triage_res.returncode == 0:
+                    print(triage_res.stdout, file=sys.stderr)
+                else:
+                    print(f"  [WARN] 本地分诊引擎未就绪，降级到标准流程。({triage_res.stderr.strip()})", file=sys.stderr)
+            except Exception as e:
+                print(f"  [WARN] Triage skipped: {e}", file=sys.stderr)
+
     elif command == "closeout":
         run_id = _positional_after(argv, cmd_at)
         status = _flag(argv, "--status") or "ok"

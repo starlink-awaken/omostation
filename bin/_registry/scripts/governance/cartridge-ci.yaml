@@ -1,0 +1,10 @@
+schema: script-registry/v1
+id: bin/ssot/cartridge-ci.py
+name: Cartridge CI
+category: governance
+owner: governance-team
+description: "Domain Cartridge automated hot-compilation and signing pipeline."
+inputs: []
+outputs:
+  - type: exit_code
+dependencies: []
