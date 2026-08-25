@@ -145,4 +145,4 @@
 
 `model_tool_execute`, `model_tools_list`
 
-*由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*
+*由 `bin/ssot/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*

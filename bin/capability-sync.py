@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compatibility CLI for the generated capability discovery projection.
 
-``bin/cockpit/gen-capability-registry.py`` is the sole projection writer. This
+``bin/ssot/gen-capability-registry.py`` is the sole projection writer. This
 module delegates sync/check to it, provides read-only discovery, and exposes
 the narrow public boundary for governed BOS loading/invocation. Native provider,
 BOS, and workflow registries remain the authorities. Only exact canonical IDs
@@ -57,7 +57,7 @@ from capability_trace_binding import (  # noqa: E402 -- CLI locates the local pu
 )
 
 DEFAULT_REGISTRY = ROOT / "docs" / "generated" / "capability-registry.yaml"
-CANONICAL_GENERATOR = ROOT / "bin" / "cockpit" / "gen-capability-registry.py"
+CANONICAL_GENERATOR = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
 FEDERATION_AUDITOR = ROOT / "lib" / "capability_federation_audit.py"
 AGORA_SRC = ROOT / "projects" / "agora" / "src"
 SUPPORTED_SCHEMA_MAJOR = 1

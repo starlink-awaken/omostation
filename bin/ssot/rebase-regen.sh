@@ -37,7 +37,7 @@ m1_created=$(python3 -c "import json,sys;d=json.load(open('/tmp/rebase-regen-m1.
 log "  created=$m1_created M1 instances"
 
 log "▶ Step 2/7: gen-capability-registry"
-uv run --with pyyaml python bin/cockpit/gen-capability-registry.py --quiet
+uv run --with pyyaml python bin/ssot/gen-capability-registry.py --quiet
 log "  gen-capability-registry ok"
 
 log "▶ Step 2b/7: gen-ci-surfaces-triggers (workflow_triggers 登记对齐)"
@@ -51,7 +51,7 @@ uv run --with pyyaml python bin/ssot/sync-bos-registry.py --write > /tmp/rebase-
 log "  bos-registry synced"
 
 log "▶ Step 4/7: gen-help-docs"
-uv run --with pyyaml python bin/cockpit/gen-help-docs.py > /dev/null 2>&1 || true
+uv run --with pyyaml python bin/ssot/gen-help-docs.py > /dev/null 2>&1 || true
 log "  gen-help-docs ok"
 
 log "▶ Step 5/7: ruff --fix on bin/ scripts/"

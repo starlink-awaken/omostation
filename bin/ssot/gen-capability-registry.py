@@ -20,9 +20,9 @@
   用运行时结果校正静态扫描。当前数字作为"能力规模近似"已足够驱动 help/文档/UI。
 
 Usage:
-    uv run --with pyyaml python bin/cockpit/gen-capability-registry.py
-    uv run --with pyyaml python bin/cockpit/gen-capability-registry.py --check
-    uv run --with pyyaml python bin/cockpit/gen-capability-registry.py --json
+    uv run --with pyyaml python bin/ssot/gen-capability-registry.py
+    uv run --with pyyaml python bin/ssot/gen-capability-registry.py --check
+    uv run --with pyyaml python bin/ssot/gen-capability-registry.py --json
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 OUTPUT_YAML = WORKSPACE / "docs" / "generated" / "capability-registry.yaml"
 REGISTRY_SCHEMA = "capability-registry/v1"
 REGISTRY_OWNER = "workspace-capability-governance"
-REGISTRY_WRITER = "bin/cockpit/gen-capability-registry.py"
+REGISTRY_WRITER = "bin/ssot/gen-capability-registry.py"
 
 # ── MCP server 探测 ──────────────────────────────────────────
 
