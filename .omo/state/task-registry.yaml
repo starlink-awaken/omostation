@@ -1,0 +1,48 @@
+# 全谱任务台账 SSOT (task-registry.yaml)
+# 源起: 2026-08-25 五层任务全景图谱探查 (omlxc docs/operations/2026-08-25-task-landscape-five-layers.md)
+# 判活规则与审计器: bin/gac/task-inventory.py
+# 哲学: 扩展现有 SSOT, 不建平行体系 (P74 同级)
+#
+# 字段:
+#   id        稳定标识 (kebab)
+#   layer     compute|governance|life|agent|thirdparty (五层)
+#   carrier   launchd|cron|resident|hook|mcp|login-item
+#   ref       载体定位: launchd label / crontab 关键词 / 进程关键词
+#   freq      resident|1min|2min|5min|30min|hourly|daily|weekly|event
+#   intent    一句话意义
+#   evidence  心跳/产物路径 (可选; 无则只查载体登记)
+#   dormant_since  显式休眠标注 (历史活跃, 现停摆, 待人工裁决)
+schema_version: 1
+generated: "2026-08-25"
+tasks:
+  # ── 第一层 · 算力底座 (6) ──
+  - {id: omlxc-daemon, layer: compute, carrier: launchd, ref: com.omlxc.daemon, freq: resident, intent: 算力控制面 daemon, evidence: ~/.config/omlxc/state.db-wal}
+  - {id: omlxc-watchdog, layer: compute, carrier: launchd, ref: com.omlxc.watchdog, freq: 5min, intent: 算力看门狗(保活/告警/节点检测), evidence: ~/.config/omlxc/watchdog.log}
+  - {id: aetherforge-gateway, layer: compute, carrier: launchd, ref: com.aetherforge.gateway, freq: resident, intent: LLM 网关门面(本地+免费池), evidence: ~/.aetherforge/state/free_pool_last_seen.json}
+  - {id: lmstudio-server, layer: compute, carrier: launchd, ref: com.lmstudio.server, freq: resident, intent: LM Studio 本地推理}
+  - {id: omlx-app, layer: compute, carrier: launchd, ref: application.app.omlx, freq: resident, intent: oMLX App 本地推理}
+  - {id: ollama-env, layer: compute, carrier: launchd, ref: com.omlxc.ollama-env, freq: resident, intent: Ollama 环境守护}
+  # ── 第二层 · omostation 治理 (cron 系) ──
+  - {id: resident-decision, layer: governance, carrier: cron, ref: "resident daemon --once --role decision", freq: 2min, intent: 常驻五角色·决策, evidence: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-decision.log}
+  - {id: resident-execute, layer: governance, carrier: cron, ref: "resident daemon --once --role execute", freq: 2min, intent: 常驻五角色·执行, evidence: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-execute.log}
+  - {id: resident-monitor, layer: governance, carrier: cron, ref: "resident daemon --once --role monitor", freq: 2min, intent: 常驻五角色·监控, evidence: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-monitor.log}
+  - {id: resident-heartbeat, layer: governance, carrier: cron, ref: "resident daemon --once --role heartbeat", freq: 2min, intent: 常驻五角色·心跳, evidence: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-heartbeat.log}
+  - {id: resident-sediment, layer: governance, carrier: cron, ref: "resident daemon --once --role sediment", freq: 2min, intent: 常驻五角色·沉淀, evidence: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-sediment.log}
+  - {id: alert-forwarder, layer: governance, carrier: cron, ref: "resident alert --dry-run", freq: 5min, intent: 告警转发, evidence: ~/Workspace/.omo/_delivery/alert-forwarder/cron.log}
+  - {id: personal-signals, layer: governance, carrier: cron, ref: "resident signals", freq: 5min, intent: 个人信号路由, evidence: ~/Workspace/.omo/_delivery/personal-signals/cron.log}
+  - {id: watch-dispatch, layer: governance, carrier: cron, ref: watch-dispatch.py, freq: 1min, intent: 文件变更事件驱动(FDA 绕行), evidence: ~/Documents/@驾驶舱/_generated/governance-cron.log}
+  - {id: remediation-engine, layer: governance, carrier: cron, ref: remediation-engine.py, freq: 30min, intent: GaC 自动修复(docs_stale), evidence: ~/Workspace/.omo/logs/remediation.log}
+  - {id: anti-corrosion, layer: governance, carrier: cron, ref: anti-corrosion-check.py, freq: hourly, intent: GaC 防腐扫描, evidence: ~/Workspace/.omo/logs/anti-corrosion.log}
+  - {id: meta-doctor, layer: governance, carrier: cron, ref: meta-doctor.py, freq: daily, intent: 治理机制自身活性巡检(M1心跳/M2引用), evidence: ~/Workspace/runtime/cron/operating-rhythm-daily.log}
+  - {id: governance-evolution-packages, layer: governance, carrier: cron, ref: "governance-evolution.py packages", freq: daily, intent: 治理演化·包扫描, evidence: ~/Workspace/runtime/cron/operating-rhythm-daily.log}
+  - {id: governance-evolution-status, layer: governance, carrier: cron, ref: "governance-evolution.py status", freq: daily, intent: 治理演化·状态}
+  - {id: governance-scanner, layer: governance, carrier: launchd, ref: com.omostation.governance-scanner, freq: 30min, intent: GaC 治理扫描器}
+  - {id: signal-poller, layer: governance, carrier: launchd, ref: com.omostation.signal-poller, freq: resident, intent: 生活原始信号采集→事件化}
+  - {id: l4-governance-watch, layer: governance, carrier: launchd, ref: com.l4.governance.watch, freq: hourly, intent: L4 治理盯防}
+  # ── 第三层 · 生活域 (代表) ──
+  - {id: domain-sync, layer: life, carrier: cron, ref: domain-sync.py, freq: daily, intent: 驾驶舱域同步, evidence: ~/Documents/@驾驶舱/_generated/governance-cron.log}
+  - {id: session-brief, layer: life, carrier: cron, ref: session-brief.py, freq: daily, intent: 会话简报, evidence: ~/Documents/@驾驶舱/_generated/governance-cron.log}
+  - {id: kos-ingest-weekly, layer: life, carrier: cron, ref: "kos ingest", freq: weekly, intent: 文档域 KOS 周摄取, evidence: ~/Documents/@驾驶舱/_generated/governance-cron.log}
+  # ── 第四层 · Agent 工具层 (已知半死/休眠) ──
+  - {id: opencode-mcp-health, layer: agent, carrier: cron, ref: mcp-health, freq: hourly, intent: opencode MCP 健康检查, dormant_since: "2026-05-15"}
+  - {id: hermes-event-watcher, layer: agent, carrier: cron, ref: hermes, freq: hourly, intent: agent 网关事件监听(退役裁决待定), dormant_since: "2026-05-29"}
