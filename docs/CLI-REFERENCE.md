@@ -1,10 +1,3 @@
----
-status: active
-lifecycle: entry
-owner: auto-fix-loop
-last-reviewed: 2026-08-24
----
-
 # Cockpit CLI 命令参考
 
 > 自动生成于 1970-01-01T00:00:00Z
@@ -105,7 +98,7 @@ last-reviewed: 2026-08-24
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit control` | 控制平面：submit / ack / nack |
 | `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
-| `cockpit daemon` | 启动 Agora 2.0 后台常驻守护进程 (Agent-to-Agent Bus) |
+| `cockpit daemon` | Agora 2.0 后台常驻守护进程管理 (Agent-to-Agent Bus) |
 | `cockpit nack` | 否定确认任务 |
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit publish` | 发布事件 |
