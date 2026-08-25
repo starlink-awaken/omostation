@@ -1,0 +1,16 @@
+schema: agent-error/v1
+id: PITFALL-SCO-001
+category: scoring
+severity: medium
+title: UHS 输出键名是 uhs 非 score — 集成时键名不匹配
+symptom: weekly-review 卡片 health 显示 n/a
+root_cause: unified-health-score.py JSON 输出用 uhs 作键名, 消费方假设是 score
+solution: '消费方 fallback chain: data.get(''uhs'', data.get(''score'', ...))'
+prevention: '#2128 修复'
+tags:
+- scoring
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active

@@ -1,0 +1,16 @@
+schema: agent-error/v1
+id: PITFALL-SUB-001
+category: submodule
+severity: medium
+title: 子模块空检出 — git dir在但文件未物化
+symptom: ls projects/<sub>/ 显示空目录但 .git 文件存在; gate报missing files
+root_cause: git submodule update --init 中断或网络超时导致 checkout 未完成
+solution: git -C projects/<sub> reset --hard HEAD 强制重新物化文件
+prevention: 本周撞了3+次(ws-discover/ws-final/ws-rotpipe)
+tags:
+- submodule
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active
