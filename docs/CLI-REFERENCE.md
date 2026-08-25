@@ -10,7 +10,7 @@ last-reviewed: 2026-08-24
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **152** 个命令 (含子命令)。按场景分组如下。
+共 **151** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -105,7 +105,6 @@ last-reviewed: 2026-08-24
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit control` | 控制平面：submit / ack / nack |
 | `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
-| `cockpit daemon` | Agora 2.0 后台常驻守护进程管理 (Agent-to-Agent Bus) |
 | `cockpit nack` | 否定确认任务 |
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit publish` | 发布事件 |
