@@ -485,6 +485,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 
 - ADR-0423: CONV-3 项目收敛 — family-hub / metaos / mesh-router 三态定案 — **ACCEPTED** | 2026-08-24 | convergence | 0423-conv3-project-convergence.md
 - ADR-0424: 防腐流水线与价值起搏器 — 48 小时全弧线架构决策沉淀 — **ACCEPTED** | 2026-08-24 | anti-corruption | 0424-anti-corruption-pipeline-and-value-pacemaker.md
+- ADR-0425: Agent LSP 潜意识护航与 Agora 2.0 内存总线架构 — **ACCEPTED** | 2026-08-25 | multi-agent runtime | 0425-agent-lsp-and-in-memory-bus-architecture.md
 ## 相关文件
 
 - 模板与规则: [`README.md`](./README.md)
