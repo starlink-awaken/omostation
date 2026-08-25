@@ -8,6 +8,7 @@ bet: BET-Y1Q1-T6-08
 related:
   - docs/OPS-INFRA-GOVERNANCE-LONGTERM-BLUEPRINT-2026-08.md
   - docs/operations/hermes-governance-boundary.md
+last-reviewed: 2026-08-25
 ---
 
 # 单机灾难恢复清单（"这台 Mac 明天全损会丢什么"）

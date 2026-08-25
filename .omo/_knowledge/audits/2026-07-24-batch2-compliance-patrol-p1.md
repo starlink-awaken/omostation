@@ -4,6 +4,7 @@ date: 2026-07-24
 type: audit
 batch: 2
 period: P1
+last-reviewed: 2026-08-25
 ---
 
 # Governance weekly patrol — P1

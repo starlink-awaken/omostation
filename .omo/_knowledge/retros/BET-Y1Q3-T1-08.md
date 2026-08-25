@@ -1,6 +1,7 @@
 ---
 bet_id: BET-Y1Q3-T1-08
 date: 2026-08-20
+last-reviewed: 2026-08-25
 ---
 
 # BET-Y1Q3-T1-08 Retro — 退役 coordination-daemon 独立 clone 部署

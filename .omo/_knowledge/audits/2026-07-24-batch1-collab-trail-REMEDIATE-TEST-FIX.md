@@ -5,6 +5,7 @@ type: collab-trail
 backlog: true
 task_id: REMEDIATE-TEST-FIX
 task_path: .omo/tasks/remediation/REMEDIATE-TEST-FIX.yaml
+last-reviewed: 2026-08-25
 ---
 
 # Real backlog collab: `REMEDIATE-TEST-FIX`

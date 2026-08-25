@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-25
+---
+
 # BOS Deprecated 声明 D 调研 — agent-runtime 部分
 
 > **TASK**: TASK-AB15691F (28 deprecated BOS 声明对齐, expires 2026-07-25)

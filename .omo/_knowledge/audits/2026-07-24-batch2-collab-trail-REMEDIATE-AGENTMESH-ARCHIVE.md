@@ -5,6 +5,7 @@ type: collab-trail
 batch: 2
 task_id: REMEDIATE-AGENTMESH-ARCHIVE
 task_path: .omo/tasks/remediation/REMEDIATE-AGENTMESH-ARCHIVE.yaml
+last-reviewed: 2026-08-25
 ---
 
 # `REMEDIATE-AGENTMESH-ARCHIVE`
