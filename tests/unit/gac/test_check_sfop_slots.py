@@ -179,7 +179,7 @@ class TestHbAdjacency:
         caller = tmp_path / "projects" / "cockpit" / "src" / "hit.py"
         caller.parent.mkdir(parents=True)
         caller.write_text("from aetherforge.bridge import llm_generate\n", encoding="utf-8")
-        key = "projects/cockpit/src/hit.py:1:H->B:cockpit->aetherforge"
+        key = "projects/cockpit/src/hit.py:H->B:cockpit->aetherforge"
         baseline = tmp_path / "baseline.txt"
         baseline.write_text(key + "\n", encoding="utf-8")
         mod = _load_mod()
@@ -193,6 +193,44 @@ class TestHbAdjacency:
         )
         assert result["ok"] is True
         assert any("CR-SFOP-05" in w and "[baseline]" in w for w in result["warnings"])
+
+    def test_legacy_line_numbered_baseline_still_matches(self, tmp_path: Path) -> None:
+        nodes = tmp_path / "nodes"
+        _node(nodes, "omo", "S", "shu")
+        caller = tmp_path / "projects" / "cockpit" / "src" / "hit.py"
+        caller.parent.mkdir(parents=True)
+        caller.write_text("from aetherforge.bridge import llm_generate\n", encoding="utf-8")
+        baseline = tmp_path / "baseline.txt"
+        baseline.write_text("projects/cockpit/src/hit.py:1:H->B:cockpit->aetherforge\n", encoding="utf-8")
+        mod = _load_mod()
+        result = mod.check(
+            nodes_dir=nodes,
+            registry_path=tmp_path / "missing.yaml",
+            cron_registry_path=tmp_path / "cron.yaml",
+            projects_root=tmp_path / "projects",
+            baseline_path=baseline,
+            repo_root=tmp_path,
+        )
+        assert result["ok"] is True
+
+    def test_adapter_seam_does_not_fail(self, tmp_path: Path) -> None:
+        nodes = tmp_path / "nodes"
+        _node(nodes, "omo", "S", "shu")
+        caller = tmp_path / "projects" / "cockpit" / "src" / "cockpit" / "adapters" / "runtime.py"
+        caller.parent.mkdir(parents=True)
+        caller.write_text("from runtime.executor.engine import AgentRuntime\n", encoding="utf-8")
+        mod = _load_mod()
+        result = mod.check(
+            nodes_dir=nodes,
+            registry_path=tmp_path / "missing.yaml",
+            cron_registry_path=tmp_path / "cron.yaml",
+            projects_root=tmp_path / "projects",
+            baseline_path=tmp_path / "empty.txt",
+            repo_root=tmp_path,
+        )
+        assert result["ok"] is True
+        assert any("adapter seam" in w for w in result["warnings"])
+        assert result["hb_seam_files"]
 
 
 class TestGateInventory:
