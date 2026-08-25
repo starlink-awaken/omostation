@@ -9,14 +9,14 @@ publishes structured A2A events to Agora Bus, and writes real resident decision 
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import sys
 import time
 import urllib.request
-import importlib.util
 from pathlib import Path
-from typing import Any
+from typing import Any, NoReturn
 
 # Add workspace environment via env-resolver
 _BIN_DIR = Path(__file__).resolve().parents[1]
@@ -26,13 +26,36 @@ _env_resolver = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_env_resolver)
 _ROOT = _env_resolver.setup_workspace_paths()
 
-import yaml
-
 BUS_URL = "http://127.0.0.1:7432/publish"
+_REFUSAL_MESSAGE = (
+    "Mesh successor is pending; Cockpit PR #78 is retirement evidence only, "
+    "never the delivered successor."
+)
+
+
+def _refuse_retired_surface(command: str) -> NoReturn:
+    print(
+        json.dumps(
+            {
+                "ok": False,
+                "status": "retired",
+                "successor": "Mesh-bound capability admission",
+                "successor_status": "pending",
+                "retirement_evidence": "Cockpit PR #78",
+                "value_indicator_policy": False,
+                "command": command,
+                "message": _REFUSAL_MESSAGE,
+            },
+            ensure_ascii=False,
+        )
+    )
+    raise SystemExit(2)
 
 
 def load_scenario(scenario_file: Path) -> dict[str, Any]:
-    with open(scenario_file, "r", encoding="utf-8") as f:
+    import yaml
+
+    with open(scenario_file, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -147,6 +170,7 @@ def evaluate_transfer_scenario(manifest: dict[str, Any]) -> dict[str, Any]:
 
 def publish_to_bus(event_payload: dict[str, Any]):
     """Attempts to publish scenario evaluation event to Agora 2.0 Bus."""
+    _refuse_retired_surface("real-scenario-runner.publish_to_bus")
     try:
         req = urllib.request.Request(
             BUS_URL,
@@ -161,6 +185,7 @@ def publish_to_bus(event_payload: dict[str, Any]):
 
 def record_resident_decision(scenario_eval: dict[str, Any]) -> tuple[Path, Path]:
     """Generates both JSON evolution proposal and Markdown decision proposal."""
+    _refuse_retired_surface("real-scenario-runner.record_resident_decision")
     ts_compact = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
     ts_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     sc_id = scenario_eval["scenario_id"]
@@ -247,6 +272,7 @@ verdict: {scenario_eval['status']}
 
 
 def run_all_scenarios(scenario_dir: Path) -> int:
+    _refuse_retired_surface("real-scenario-runner.run_all_scenarios")
     scenario_files = list(scenario_dir.glob("*.yaml")) + list(scenario_dir.glob("*.yml"))
     if not scenario_files:
         print(f"No scenario files found in {scenario_dir}")
@@ -287,12 +313,13 @@ def run_all_scenarios(scenario_dir: Path) -> int:
             icon = "✅" if e["verdict"] == "PASS" else ("⚠️" if e["verdict"] == "WARN" else "❌")
             print(f"│   {icon} [{e['rule_id']}] {e['name']}: {e['detail']}")
         print(f"│ 决策落盘: {md_p.relative_to(_ROOT)}")
-        print(f"╰─────────────────────────────────────────────────────────────────\n")
+        print("╰─────────────────────────────────────────────────────────────────\n")
 
     return 0
 
 
 def main():
+    _refuse_retired_surface("real-scenario-runner")
     parser = argparse.ArgumentParser(description="Real-World Domain Scenario Runner (ADR-0427)")
     parser.add_argument(
         "--dir",
