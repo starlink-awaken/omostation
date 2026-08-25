@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 import sys
-from typing import Dict, Set
+from typing import TYPE_CHECKING
 
 # Optional fastapi, fallback to basic if not present
 try:
