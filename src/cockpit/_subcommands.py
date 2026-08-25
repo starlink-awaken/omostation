@@ -288,6 +288,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         "subcommand",
         nargs="?",
         choices=[
+            "auto-fix",
             "calibrate",
             "rechain",
             "evolve",
@@ -524,6 +525,10 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     family_hub_sub.add_parser("status", help="API/MCP server 状态")
     family_hub_sub.add_parser("api", help="启动 API server")
     family_hub_sub.add_parser("mcp", help="启动 MCP server")
+    family_hub_sub.add_parser("client", help="以 REPL 模式连接到 MCP server")
+
+    daemon_p = sub.add_parser("daemon", help="启动 Agora 2.0 后台常驻守护进程 (Agent-to-Agent Bus)")
+    daemon_p.add_argument("--port", type=int, default=7432, help="监听端口 (默认 7432)")
 
     mesh_p = sub.add_parser("mesh", help="omlx 算力网格路由入口")
     mesh_sub = mesh_p.add_subparsers(dest="mesh_command", parser_class=workspace_parser)
