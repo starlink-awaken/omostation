@@ -1,19 +1,4 @@
 # SFOP H→B call baseline (CR-SFOP-05).
-# Existing inventory: warn. New keys not in this file: fail-closed.
-# F (agora) is the only legal H↔B bridge. Do not add new lines to hide new calls.
-
-projects/cockpit/src/cockpit/agent_runtime_mcp_server.py:37:H->B:cockpit->runtime
-projects/cockpit/src/cockpit/agent_runtime_server.py:8:H->B:cockpit->runtime
-projects/cockpit/src/cockpit/agent_runtime_server.py:9:H->B:cockpit->runtime
-projects/cockpit/src/cockpit/llm_router.py:33:H->B:cockpit->aetherforge
-projects/cockpit/src/cockpit/agent_runtime_cli.py:9:H->B:cockpit->runtime
-projects/cockpit/src/cockpit/agent_runtime_cli.py:15:H->B:cockpit->runtime
-projects/cockpit/src/cockpit/agent_runtime_cli.py:49:H->B:cockpit->runtime
-projects/cockpit/src/cockpit/web/api_sandbox.py:25:H->B:cockpit->runtime
-projects/cockpit/src/cockpit/adapters/metaos.py:5:H->B:cockpit->metaos
-projects/cockpit/src/cockpit/adapters/metaos.py:7:H->B:cockpit->metaos
-projects/cockpit/src/cockpit/adapters/metaos.py:8:H->B:cockpit->metaos
-projects/cockpit/src/cockpit/adapters/runtime.py:14:H->B:cockpit->runtime
-projects/cockpit/src/cockpit/adapters/runtime.py:15:H->B:cockpit->runtime
-projects/cockpit/src/cockpit/adapters/runtime.py:23:H->B:cockpit->runtime
-projects/cockpit/src/cockpit/adapters/runtime.py:28:H->B:cockpit->runtime
+# Stable keys: file:H->B:caller->callee (no line numbers).
+# Adapter seam files are allowed and omitted. Do not add keys to hide new calls.
+# Emptied 2026-08-26 after cockpit #80 moved non-adapter imports into adapters/.
