@@ -160,6 +160,20 @@ tracks:
     pasw_required: false
     default_workflow: governance-state-mutation
     agent_profile_hint: governance-agent
+  T10-MATURITY:
+    title: 成熟度收官 (scorecard 0-10, target 9.0)
+    scope: 'maturity-scorecard 口径对齐 / 治理 bet 绑定 / resident promote + 事件源管线 / gaC 机制自进化 (G10 三方口径: scorecard/health/台账)'
+    primary_write_surfaces:
+    - bin/gac/maturity-scorecard.py
+    - bin/plan/bet-ledger.py
+    - bin/plan/chain_bind.py
+    - bin/gac/check-*
+    - bin/ssot/install-resident-cron.sh
+    - docs/plans/3y-bet-ledger.yaml
+    - projects/omo/src/omo/resident/**
+    pasw_required: false
+    default_workflow: governance-audit
+    agent_profile_hint: governance-agent
 concurrency:
   max_parallel_bets: 4
   exclusive_tracks:
@@ -7283,7 +7297,12 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-06.md
             sha256: sha256:73636ea85b99d3b494997a503be0403142b276525277e9af4eeac510b64d3b6d
     overall_state: outcome_accepted
-  depends_on: BET-Y1Q3-T10-01, BET-Y1Q3-T10-02, BET-Y1Q3-T10-03, BET-Y1Q3-T10-04, BET-Y1Q3-T10-05
+  depends_on:
+  - BET-Y1Q3-T10-01
+  - BET-Y1Q3-T10-02
+  - BET-Y1Q3-T10-03
+  - BET-Y1Q3-T10-04
+  - BET-Y1Q3-T10-05
 
 - id: BET-Y1Q3-T10-07
   track: T10-MATURITY
@@ -7676,8 +7695,11 @@ bets:
   title: resident 事件源接入 workflow 生命周期 (消费端补全 + 重放)
   appetite: 0.5 day
   priority: P1
-  status: candidate
-  started_at: ''
+  status: done
+  started_at: '2026-08-25'
+  done_at: '2026-08-25'
+  completed_at: '2026-08-25'
+  done_note: '5 条生命周期路由接入 sediment + LIFECYCLE/EVIDENCE 事件集(按 run 幂等) + roles topic_filter 8 事件 + cron ingest 行; 53 resident 单测全绿; 真实重放 2214 事件 processed=2090, 753 草稿落盘, 0 placeholder, 0 handler_error; retro 入库 .omo/_knowledge/retros/BET-Y1Q3-T10-12.md'
   goal: '让 workflow 生命周期事件被 resident 消费端真正消化(不再 placeholder) + 事件源接 cron 自动化: 补全 5 种未路由事件路由 + sediment 事件集合扩展(按 run 聚合去重) + roles 分片同步 + ingest 接 cron + 回退水位重放 2208 事件验证。'
   non_goals:
   - 不引入 LLM 调用(草稿仍模板占位, 五问提炼留运营 agent/人工)
@@ -7689,7 +7711,7 @@ bets:
   - sediment.py 含 LIFECYCLE_EVENTS/EVIDENCE_EVENTS, dispatch 覆盖 5 类事件且按 run 幂等(同 run 多事件只写一次)
   - roles.py sediment topic_filter 含 8 种事件
   - install-resident-cron.sh 含 ingest 行且语法校验通过
-  - 新增单元测试全绿 + 重放验证: 回退水位重放 2208 条, processed=2208, 无 placeholder 落盘
+  - '新增单元测试全绿 + 重放验证: 回退水位重放 2208 条, processed=2208, 无 placeholder 落盘'
   verify:
   - cmd: grep -q "WorkflowRequested" projects/omo/src/omo/resident/resident-routes.yaml
     expect: exit 0
@@ -7709,6 +7731,7 @@ bets:
   - bin/ssot/install-resident-cron.sh
   - docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md
   - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/governance-checks.yaml
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md
@@ -7719,13 +7742,51 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c10893fd687bfe6c7a7205bdc1e4b8a24cb8e695
+          tests:
+            ref: receipt://projects/omo/tests/unit/test_resident_sediment.py
+            sha256: sha256:af8f250d581e6fe0e10c60d12eaee095b5dead8f6b853c3ff6047a4ea21b701c
+          diff:
+            ref: receipt://projects/omo/src/omo/resident/resident-routes.yaml
+            sha256: sha256:1db58f2f064d61453dba019f6b7b2194f97c733980441ef73db4f1402d028a7f
+          rollback:
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:3c7cef4d20a3b5e25b8bea85ee2fff1acbf93ba4cd9ee38789b1db325cd88b2e
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:08a3631604cab32e09a77aa0b13b65369d12ee34caa09b93d9429513511d0fb4
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-12-accept.yaml
+            sha256: sha256:64132d70d7dfda8cf5e26db2a63808ece51fec10d6bc7cd8c5efc0548e999eda
+          live_canary:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-12-accept.yaml
+            sha256: sha256:64132d70d7dfda8cf5e26db2a63808ece51fec10d6bc7cd8c5efc0548e999eda
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-12-accept.yaml
+            sha256: sha256:64132d70d7dfda8cf5e26db2a63808ece51fec10d6bc7cd8c5efc0548e999eda
+          real_signal:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-12.md
+            sha256: sha256:2e9bbb2ac6eb30fd739af0f512eb62c650e37638dbd1e0614fcd8cc41ca58c7b
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-12.md
+            sha256: sha256:2e9bbb2ac6eb30fd739af0f512eb62c650e37638dbd1e0614fcd8cc41ca58c7b
+    overall_state: outcome_accepted
   depends_on: []
