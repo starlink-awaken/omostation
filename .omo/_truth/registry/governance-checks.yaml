@@ -184,7 +184,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 139
-    script_baseline: 494    # 2026-08-25: #2170 / #2187 / #2189 新增脚本后同步实际计数, 494 active → SCRIPT-BASELINE-SYNC
+    script_baseline: 498    # 2026-08-25: #2170 / #2187 / #2189 新增脚本后同步实际计数, 494 active → SCRIPT-BASELINE-SYNC
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
