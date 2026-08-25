@@ -132,7 +132,7 @@ Phase 2-5 of the 90% architecture maturity design has been implemented. All core
 ### Completed
 - ✅ 139 governance checks backfilled with `owner`, `expected`, `remediation`, `related_runbooks`
 - ✅ `bin/ssot/governance-migration.py` created and applied
-- ✅ `bin/gac/subtraction-quota-enforcer.py` created
+- ✅ `bin/_archive/2026-08-25-dfsq-quota/subtraction-quota-enforcer.py` created
 - ✅ Pre-PR checklist integrated into `gac-local-gate`
 
 ### Pending

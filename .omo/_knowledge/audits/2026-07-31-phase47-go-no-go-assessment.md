@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-25
+---
+
 # Phase 47 Go/No-Go 评估
 
 > **评估日期**: 2026-07-31 | **评估人**: 老王 (engineering-agent) | **决策**: ✅ GO

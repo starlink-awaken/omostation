@@ -43,7 +43,7 @@ def _mtime_age_days(path: Path) -> float:
 
 def _last_reviewed_age_days(text: str) -> float | None:
     for line in text.splitlines()[:20]:
-        match = re.search(r"last-reviewed:\s*(\d{4}-\d{2}-\d{2})", line)
+        match = re.search(r"last-reviewed:\s*['\"]?(\d{4}-\d{2}-\d{2})", line)
         if match:
             from datetime import datetime, UTC
             reviewed = datetime.strptime(match.group(1), "%Y-%m-%d").replace(tzinfo=UTC)

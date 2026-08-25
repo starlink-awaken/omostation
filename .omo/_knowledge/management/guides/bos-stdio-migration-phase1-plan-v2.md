@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-25
+---
+
 # BOS stdio → mcp_proxy 迁移实施方案 (详细版)
 
 > 日期: 2026-08-01

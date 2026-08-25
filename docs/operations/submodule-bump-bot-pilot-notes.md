@@ -81,5 +81,5 @@ jobs:
 
 如需对全量子模块的工作流进行批量更新或增加新子模块，可在主仓执行：
 ```bash
-bash bin/gac/distribute-submodule-workflows.sh
+bash bin/_archive/2026-08-t6-05/distribute-submodule-workflows.sh
 ```

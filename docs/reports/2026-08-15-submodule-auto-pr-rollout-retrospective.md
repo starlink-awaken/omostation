@@ -27,7 +27,7 @@
   - 自动注入 `submodule-bump` 标签，触发全量 CI 门禁（`ci-local-fast`, `gac-gate`, `phase-gate`）。
 
 ### 2.2 19 个子模块自动化覆盖
-* **分发脚本**：[`bin/gac/distribute-submodule-workflows.sh`](file:///Users/xiamingxing/workspace/bin/gac/distribute-submodule-workflows.sh)
+* **分发脚本**：[`bin/_archive/2026-08-t6-05/distribute-submodule-workflows.sh`](file:///Users/xiamingxing/workspace/bin/_archive/2026-08-t6-05/distribute-submodule-workflows.sh)
 * **各子仓薄工作流**：`.github/workflows/bump-main-pr.yml`，统一 `uses: starlink-awaken/omostation/.github/workflows/reusable-submodule-bump-pr.yml@main`。
 * **密钥安全分发**：通过 GitHub API 为 19 个子仓批量注入具备最小权限（`repo`, `workflow`）的 `OMOSTATION_BOT_TOKEN`。
 

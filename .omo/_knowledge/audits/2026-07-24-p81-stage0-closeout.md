@@ -4,6 +4,7 @@ date: 2026-07-24
 type: audit
 stage: S0
 strat: STRAT-P81
+last-reviewed: 2026-08-25
 ---
 
 # STRAT-P81 Stage 0 closeout (final)

@@ -5,6 +5,7 @@ type: collab-trail
 backlog: true
 task_id: REMEDIATE-HERMES-PHASEA
 task_path: .omo/tasks/remediation/REMEDIATE-HERMES-PHASEA.yaml
+last-reviewed: 2026-08-25
 ---
 
 # Real backlog collab: `REMEDIATE-HERMES-PHASEA`

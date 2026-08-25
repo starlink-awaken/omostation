@@ -15,7 +15,7 @@ metadata-migrated-at: 2026-07-31
 
 | Tier | 工具 | 新命令 | PR |
 |------|------|--------|-----|
-| 1 | bin/gac/omo-health.py | `omo health dashboard` | #144 |
+| 1 | bin/_archive/2026-08-conv3/omo-health.py | `omo health dashboard` | #144 |
 | 2 | bin/gac/omo-state-projection-guard.py | `omo lint projection-guard` | #144 |
 | 2 | bin/gac/omo-runtime-stamp-policy.py | `omo lint stamp-policy` | #144 |
 | 3 | bin/omo-manage | `omo manage` | #144 |
