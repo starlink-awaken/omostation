@@ -43,6 +43,15 @@ _CALLER_CONTROLLED_FIELDS = frozenset(
         "http_url",
         "module_path",
         "target",
+        # Identity fields are owned by capability-sync's validated binding;
+        # the gateway must never mint or accept them from a caller.
+        "correlation_id",
+        "workflow_run_id",
+        "packet_id",
+        "assignment_id",
+        "dispatch_id",
+        "actor_id",
+        "delivery_attempt_id",
     }
 )
 _FORBIDDEN_RECORD_FIELDS = _CALLER_CONTROLLED_FIELDS - {"adapter"}
@@ -137,6 +146,7 @@ class CapabilityInvocationGateway:
         record: Mapping[str, Any],
         *,
         selector: Mapping[str, Any] | None = None,
+        binding: Mapping[str, Any] | None = None,
         **caller_options: Any,
     ) -> dict[str, Any]:
         """Check admission, route, and bounded readiness without invoking."""
@@ -155,6 +165,7 @@ class CapabilityInvocationGateway:
             input_value=None,
             result_value=None,
             status="ready",
+            binding_digest=_digest(binding) if binding is not None else "",
         )
 
     def invoke(
@@ -163,6 +174,7 @@ class CapabilityInvocationGateway:
         payload: Any,
         *,
         selector: Mapping[str, Any] | None = None,
+        binding: Mapping[str, Any] | None = None,
         **caller_options: Any,
     ) -> dict[str, Any]:
         """Invoke exactly one declared native operation after readiness."""
@@ -195,6 +207,7 @@ class CapabilityInvocationGateway:
                     error_code="INVOCATION_FAILURE",
                     error_detail=result.get("error", "adapter returned failure"),
                     exit_code=_exit_code(result),
+                    binding_digest=_digest(binding) if binding is not None else "",
                 )
             return self._receipt(
                 operation="invoke",
@@ -208,6 +221,7 @@ class CapabilityInvocationGateway:
                 result_value=result,
                 status="succeeded",
                 exit_code=_exit_code(result),
+                binding_digest=_digest(binding) if binding is not None else "",
             )
         except Exception as exc:  # noqa: BLE001 - gateway must fail closed
             return self._receipt(
@@ -223,6 +237,7 @@ class CapabilityInvocationGateway:
                 status="failed",
                 error_code="INVOCATION_FAILURE",
                 error_detail=type(exc).__name__,
+                binding_digest=_digest(binding) if binding is not None else "",
             )
 
     def _prepare(
@@ -464,6 +479,7 @@ class CapabilityInvocationGateway:
         error_code: str = "",
         error_detail: Any = "",
         exit_code: int | None = None,
+        binding_digest: str = "",
     ) -> dict[str, Any]:
         receipt = {
             "schema": RECEIPT_SCHEMA,
@@ -485,13 +501,23 @@ class CapabilityInvocationGateway:
             "exit_code": exit_code,
             "error_code": error_code,
             "error_detail_digest": _digest(error_detail),
+            "binding_digest": binding_digest,
         }
         return serialize_receipt(receipt)
 
 
 def serialize_receipt(receipt: Mapping[str, Any]) -> dict[str, Any]:
-    """Serialize only the fixed privacy-safe receipt envelope fields."""
-    return {key: receipt.get(key) for key in _RECEIPT_FIELDS}
+    """Serialize only the fixed privacy-safe receipt envelope fields.
+
+    ``None``/empty fields (e.g. ``binding_digest`` when no validated binding
+    was supplied) are omitted so the envelope stays backward compatible with
+    consumers that predate the exact-binding rollout.
+    """
+    return {
+        key: value
+        for key, value in ((key, receipt.get(key)) for key in _RECEIPT_FIELDS)
+        if value is not None and value != ""
+    }
 
 
 _RECEIPT_FIELDS = (
@@ -514,6 +540,7 @@ _RECEIPT_FIELDS = (
     "exit_code",
     "error_code",
     "error_detail_digest",
+    "binding_digest",
 )
 
 

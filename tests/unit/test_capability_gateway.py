@@ -345,3 +345,112 @@ def test_receipt_serialization_is_privacy_safe() -> None:
     assert receipt["result_digest"]
     assert receipt["admission_decision_digest"]
     assert receipt["health_evidence_digest"]
+
+
+# ── Task 6: Agora carries a validated capability binding digest, never mints identity ──
+
+_IDENTITY_FIELDS = (
+    "correlation_id",
+    "workflow_run_id",
+    "packet_id",
+    "assignment_id",
+    "dispatch_id",
+    "actor_id",
+    "delivery_attempt_id",
+)
+
+
+def _binding(**overrides: Any) -> dict[str, Any]:
+    binding = {
+        "correlation_id": "corr-task6",
+        "workflow_run_id": "run-task6",
+        "packet_id": "WP-TASK6",
+        "assignment_id": "assignment-task6",
+        "dispatch_id": "dispatch-task6",
+        "actor_id": "actor-task6",
+        "delivery_attempt_id": "attempt-task6",
+    }
+    binding.update(overrides)
+    return binding
+
+
+def test_invoke_with_binding_emits_binding_digest() -> None:
+    gateway, adapter = _gateway()
+    binding = _binding()
+
+    receipt = gateway.invoke(_record(), {}, binding=binding)
+
+    assert receipt["status"] == "succeeded"
+    assert receipt["binding_digest"]
+    assert len(receipt["binding_digest"]) == 64
+    assert (
+        receipt["binding_digest"]
+        == gateway.invoke(_record(), {}, binding=binding)["binding_digest"]
+    )
+    assert adapter.invoke_calls  # adapter still invoked normally
+
+
+def test_binding_digest_is_deterministic_over_binding_content() -> None:
+    gateway, _adapter = _gateway()
+
+    first = gateway.invoke(_record(), {}, binding=_binding())["binding_digest"]
+    second = gateway.invoke(_record(), {}, binding=_binding())["binding_digest"]
+    different = gateway.invoke(_record(), {}, binding=_binding(actor_id="actor-other"))[
+        "binding_digest"
+    ]
+
+    assert first == second
+    assert first != different
+
+
+def test_load_without_binding_has_no_binding_digest() -> None:
+    gateway, _adapter = _gateway()
+
+    receipt = gateway.load(_record())
+
+    assert receipt["status"] == "ready"
+    assert "binding_digest" not in receipt
+
+
+def test_invoke_without_binding_has_no_binding_digest() -> None:
+    gateway, _adapter = _gateway()
+
+    receipt = gateway.invoke(_record(), {})
+
+    assert receipt["status"] == "succeeded"
+    assert "binding_digest" not in receipt
+
+
+def test_caller_options_identity_fields_rejected() -> None:
+    gateway, adapter = _gateway()
+
+    receipt = gateway.invoke(
+        _record(), {}, actor_id="spoofed-actor", packet_id="spoofed-packet"
+    )
+
+    assert receipt["status"] == "rejected"
+    assert receipt["error_code"] == "INVALID_RECORD"
+    assert adapter.probe_calls == []
+    assert adapter.invoke_calls == []
+
+
+@pytest.mark.parametrize("field", _IDENTITY_FIELDS)
+def test_each_identity_field_as_caller_option_is_rejected(field: str) -> None:
+    gateway, adapter = _gateway()
+
+    receipt = gateway.invoke(_record(), {}, **{field: "spoofed"})
+
+    assert receipt["status"] == "rejected"
+    assert receipt["error_code"] == "INVALID_RECORD"
+    assert adapter.invoke_calls == []
+
+
+def test_gateway_never_mints_identity() -> None:
+    gateway, _adapter = _gateway()
+
+    receipt = gateway.invoke(_record(), {}, binding=_binding())
+
+    assert receipt["status"] == "succeeded"
+    assert receipt["binding_digest"]
+    for field in _IDENTITY_FIELDS:
+        assert field not in receipt
