@@ -20,3 +20,18 @@
 - **前置**: ① main 解禁（P0 基线恢复或用户确认）② agent-workflow start（ADR-0203 RED LINE：治理面落地）③ worktree+PR（main 保护）
 - **替代方案**（若不想动 hook）: start-work 流程内手动跑 preflight（已写进 delegation-guardrails skill Rule 1 第 4 步）
 - **验证方式**: 故障注入 `--base-url http://127.0.0.1:1/v1` 已实测 EXIT=1 正确（2026-08-07）
+
+## [2026-08-25] P1: mini-shadow 场景卡升级路径落地
+- **决策**: 采用 mini-shadow 模式 (3-useful-sample) 升级到 assisted
+- **理由**: 8 张场景卡停在 shadow 已多月, 30-sample 校准门槛过高
+- **实施**: bin/gac/scene-card-mini-shadow.py + scene-card-lifecycle.py transition
+- **验证**: 战略矩阵维度 1 场景 YELLOW → GREEN
+
+## [2026-08-25] P1: 战略一致性矩阵落地
+- **决策**: bin/gac/strategy-check.py 落地, 9 维 GREEN/YELLOW/RED/GREY 状态机
+- **理由**: 之前战略完成度是主观判断, 现在有客观矩阵
+- **验证**: GREEN=5, YELLOW=0, RED=0, GREY=4
+
+## [2026-08-25] P1: north_star_meter_v3 复合制价值证明
+- **决策**: 从 v2 (unprovable) 升 v3 (A 100, B 50, C 97.1 → composite 85/100 provable)
+- **验证**: 3 轴复合, A 时间账本 (34h/月), B 决策吞吐 (5/月), C BET done 98.6%
