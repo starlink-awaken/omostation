@@ -114,12 +114,6 @@
 | `cockpit contracts` | 契约验证 |
 | `cockpit control` | 控制平面：submit / ack / nack |
 | `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
-<<<<<<< HEAD
-| `cockpit daemon` | Agora 2.0 后台常驻守护进程管理 (Agent-to-Agent Bus) |
-||||||| 0ee48f37
-=======
-| `cockpit daemon` | 启动 Agora 2.0 后台常驻守护进程 (Agent-to-Agent Bus) |
->>>>>>> fd1c2d88
 | `cockpit daily` | 每日研究简报 |
 | `cockpit dashboard` | 打开 Web Dashboard |
 | `cockpit data` | 数据目录索引 / 类型注册 / TTL 清理 |
