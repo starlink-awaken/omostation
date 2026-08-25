@@ -1,0 +1,18 @@
+2026-08-25 16:22:16,014 - agora.daemon - INFO - Starting Agora 2.0 Daemon on port 7432
+INFO:     Started server process [39338]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:7432 (Press CTRL+C to quit)
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [39338]
+2026-08-25 16:22:53,496 - agora.daemon - INFO - Starting Agora 2.0 Daemon on port 7432
+INFO:     Started server process [49368]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:7432 (Press CTRL+C to quit)
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [49368]

@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # AGE-v2 长期演进规划 (2026 Q4 - 2027 Q2)
 
 > 从"单 Cell 运行"到"多 Cell 自治生态"

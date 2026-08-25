@@ -1,0 +1,10 @@
+schema: script-registry/v1
+id: bin/gac/ast-merge-mesh.py
+name: AST Merge Mesh
+category: governance
+owner: governance-team
+description: "AST-Level semantic merge router for multi-agent collisionless fusion."
+inputs: []
+outputs:
+  - type: exit_code
+dependencies: []
