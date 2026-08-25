@@ -5577,6 +5577,7 @@ bets:
   - docs/generated/capability-registry.yaml
   - docs/project-registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+  - .github/workflows/governance-check.yml
   - bin/agent-workflow.py
   - bin/capability-sync.py
   - bin/cockpit/gen-capability-registry.py

@@ -42,3 +42,6 @@ T0 自动修复（投影重生成/服务重启）→ T1 自动开债（broker）
 - rule-vitality retention #1922（36k→10k 行）+ 首次收敛 6.8→1.9MB
 - system_health 重扫 8/8 healthy（ollama 假阴性修复）
 - health SSOT 真实刷新：28 分含 67 任务真审计（非空壳）
+
+---
+> 架构决策详见 ADR-0424 (.omo/_knowledge/decisions/0424-anti-corruption-pipeline-and-value-pacemaker.md)

@@ -11,7 +11,7 @@ phase_status: active
 current_wave: W5
 next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面落地)
 health_score_ref: .omo/state/health.yaml
-health_score: 70
+health_score: 45
 health_score_source: compass_radar_composite_isc3
 health_score_generated_at: '2026-08-24T11:11:42Z'
 active_agents: 0

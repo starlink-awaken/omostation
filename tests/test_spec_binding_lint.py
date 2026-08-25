@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import importlib.util
+import json
 import subprocess
 import sys
 from argparse import Namespace
@@ -442,6 +443,295 @@ def test_lint_requires_matrix_for_new_done_bet(
 
     assert rc == 1
     assert "COMPLETION_EVIDENCE_REQUIRED" in capsys.readouterr().out
+
+
+def _transition_base(monkeypatch: pytest.MonkeyPatch, *, base_status: str | None) -> None:
+    """Inject a resolved base ledger so cmd_lint can classify done transitions.
+
+    ``base_status`` is the BET-TEST status in the base revision; ``None`` means
+    the BET does not exist in the base at all (a newly added done BET is a
+    transition too).
+    """
+    monkeypatch.setenv("BET_LEDGER_BASE_REF", "HEAD")
+    base: dict[str, str] = {}
+    if base_status is not None:
+        base["BET-TEST"] = base_status
+    monkeypatch.setattr(
+        bl,
+        "_ledger_base_statuses",
+        lambda ref, *, workspace: dict(base),
+    )
+
+
+def test_lint_rejects_transitioned_done_bet_whose_matrix_derives_evaluating(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-25"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="IN_PROGRESS",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="evaluating",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status="candidate")
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "BET_DONE_REQUIRES_OUTCOME_ACCEPTED" in capsys.readouterr().out
+
+
+def test_lint_requires_done_at_for_transitioned_done_bet_with_outcome_accepted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="done")
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status="candidate")
+    monkeypatch.setattr(
+        bl,
+        "validate_completion_evidence",
+        lambda matrix, *, workspace: ("outcome_accepted", []),
+    )
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "BET_DONE_AT_REQUIRED" in capsys.readouterr().out
+
+
+def test_lint_accepts_transitioned_done_bet_with_outcome_accepted_and_done_at(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-25"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status="candidate")
+    monkeypatch.setattr(
+        bl,
+        "validate_completion_evidence",
+        lambda matrix, *, workspace: ("outcome_accepted", []),
+    )
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 0
+
+
+def test_lint_unchanged_done_bet_keeps_baseline_without_done_findings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    """Historical done BET with an internally-valid evaluating matrix is baseline-clean."""
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-24"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="IN_PROGRESS",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="evaluating",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status="done")
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "BET_DONE_REQUIRES_OUTCOME_ACCEPTED" not in out
+    assert "BET_DONE_AT_REQUIRED" not in out
+
+
+def test_lint_new_bet_marked_done_counts_as_transition(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    """A BET absent from the base has no done baseline, so done is a transition."""
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-25"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="IN_PROGRESS",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="evaluating",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status=None)
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "BET_DONE_REQUIRES_OUTCOME_ACCEPTED" in capsys.readouterr().out
+
+
+def test_lint_without_resolved_base_produces_no_done_findings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    """Clean checkout / undetectable ledger transition keeps the guard off."""
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-24"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="IN_PROGRESS",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="evaluating",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    monkeypatch.delenv("BET_LEDGER_BASE_REF", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "BET_DONE_" not in out
+
+
+def test_lint_fails_closed_when_declared_base_is_unreadable(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    """A declared-but-unreadable base fails lint without inventing BET_DONE_ findings."""
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-25"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    monkeypatch.setenv("BET_LEDGER_BASE_REF", "deadbeef")
+    monkeypatch.setattr(
+        bl,
+        "validate_completion_evidence",
+        lambda matrix, *, workspace: ("outcome_accepted", []),
+    )
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "BASE_LEDGER_UNREADABLE" in out
+    assert "BET_DONE_" not in out
+
+
+def _base_ref_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.email", "tests@example.invalid"], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.name", "Tests"], check=True)
+    ledger = repo / "docs" / "plans" / "3y-bet-ledger.yaml"
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    ledger.write_text(
+        "meta: {}\nbets:\n- id: BET-A\n  status: candidate\n",
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "-C", str(repo), "add", "docs/plans/3y-bet-ledger.yaml"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "seed ledger"], check=True)
+    return repo
+
+
+def test_base_ref_resolver_prefers_explicit_override(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("BET_LEDGER_BASE_REF", "refs/heads/baseline")
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+
+    assert bl._resolve_ledger_base_ref(workspace=tmp_path) == "refs/heads/baseline"
+
+
+def test_base_ref_resolver_reads_github_event_payload(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("BET_LEDGER_BASE_REF", raising=False)
+    sha = "b" * 40
+    event_path = tmp_path / "event.json"
+    monkeypatch.setenv("GITHUB_EVENT_PATH", str(event_path))
+
+    event_path.write_text(
+        json.dumps({"pull_request": {"base": {"sha": sha}}}),
+        encoding="utf-8",
+    )
+    assert bl._resolve_ledger_base_ref(workspace=tmp_path) == sha
+
+    event_path.write_text(json.dumps({"before": sha}), encoding="utf-8")
+    assert bl._resolve_ledger_base_ref(workspace=tmp_path) == sha
+
+    # An all-zero push "before" (new-branch push) is not a usable base; with no
+    # local ledger change either, the resolver must yield None.
+    event_path.write_text(json.dumps({"before": "0" * 40}), encoding="utf-8")
+    assert bl._resolve_ledger_base_ref(workspace=tmp_path) is None
+
+
+def test_base_ref_resolver_compares_local_ledger_against_head(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("BET_LEDGER_BASE_REF", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+    repo = _base_ref_repo(tmp_path)
+
+    assert bl._resolve_ledger_base_ref(workspace=repo) is None
+
+    ledger = repo / "docs" / "plans" / "3y-bet-ledger.yaml"
+    ledger.write_text(
+        "meta: {}\nbets:\n- id: BET-A\n  status: done\n",
+        encoding="utf-8",
+    )
+    assert bl._resolve_ledger_base_ref(workspace=repo) == "HEAD"
+
+
+def test_real_ledger_lint_adds_zero_done_findings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The repository ledger under a clean base comparison adds no BET_DONE_ lines."""
+    monkeypatch.delenv("BET_LEDGER_BASE_REF", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "bin/plan/bet-ledger.py"), "lint"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    combined = result.stdout + result.stderr
+
+    assert "BET_DONE_" not in combined
 
 
 def test_arbitrary_string_cannot_prove_human_verdict(tmp_path: Path) -> None:

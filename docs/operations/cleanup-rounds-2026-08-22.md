@@ -310,3 +310,6 @@ These are **未做** by design, with context for the next operator:
 **Document version**: 2026-08-23
 **Author**: cleanup-rounds session agent (Crush:MiniMax-M3)
 **Validation**: composite health 50/100 at doc-write time (concurrent-agent drift, not the documented fixes); all 5 structural fixes persist
+
+---
+> 架构决策详见 ADR-0424 (.omo/_knowledge/decisions/0424-anti-corruption-pipeline-and-value-pacemaker.md)
