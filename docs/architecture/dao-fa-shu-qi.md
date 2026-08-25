@@ -4,7 +4,7 @@ status: active
 lifecycle: contract
 owner: 夏明星
 created: 2026-08-25
-last-reviewed: 2026-08-25
+last-reviewed: 2026-08-26
 type: theoretical-system
 id: DFSQ/v1
 does_not_supersede:
@@ -31,12 +31,19 @@ note: >
 
 运行时槽位语法：[`os-operating-pattern-v1.md`](os-operating-pattern-v1.md)。
 
-**法的两条阻断律**
+**法的阻断律**
 
 - CR-SFOP-01：每个 `COMP-WS-*` 必须声明合法 `sfop_slot` 与 `dao_layer`。
 - CR-SFOP-02：活跃 Project 中 `sfop_slot=S` 至多一个，且为 `COMP-WS-omo`。
+- CR-SFOP-04：P（感知）/ O（结果）允许空槽。空不是缺口。
+- CR-SFOP-05：H 不得直接 import B；H↔B 唯一通道是 F（agora）。存量进 baseline 只 warn，新调用 fail-closed。
+- CR-DFSQ-01：`dao_layer=dao` 不得出现在 cron 执行账本。
+- CR-DFSQ-02：`dao_layer=qi` 的项目树不得编写 L0 `type: required`。
+- CR-X3-NS-001：北极星分子不得是治理自指量（已迁出 SFOP 编号；原 CR-SFOP-03）。
 - CR-EXEC-CHAIN-01：声称活跃却不在 script-registry / ci-surfaces / cron 任一本账里 → fail-closed；现网未接线的登记项只 warn。
 
-新工作区项目加入方式：新增 `COMP-WS-<name>.yaml`，从既有枚举声明槽位，而不是发明新运行时。registry 有项目、无对应节点 → 检查器 warning（可成长：补节点即可）。缺槽或双 dispatcher → fail-closed（自我纠错：修复声明，不能绕过）。
+`toolbox` 是仓外能力平面（`build_backend: external-capability-runtime`），不要求 `COMP-WS-toolbox.yaml`。
+
+新工作区项目加入方式：新增 `COMP-WS-<name>.yaml`，从既有枚举声明槽位，而不是发明新运行时。registry 有项目、无对应节点 → 检查器 warning（可成长：补节点即可）。缺槽或双 dispatcher → fail-closed。H→B 新调用不得写入 baseline 藏违例。
 
 禁止：第二 dispatcher、第五套本体、把 AGE-v2 / resident / BCOS 当成第二控制面。

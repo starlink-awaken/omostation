@@ -171,7 +171,7 @@ The full documentation contract is [`.omo/standards/doc-ssot-contract.md`](.omo/
 
 Stable architecture contracts live in [`ARCHITECTURE.md`](ARCHITECTURE.md). Project layer placement is generated from [`docs/project-registry.yaml`](docs/project-registry.yaml) into [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md).
 
-**道法术器 (DFSQ/v1)** nests on MOF; it is not a fifth ontology. Slot grammar + unique Mesh dispatcher (`COMP-WS-omo` = S): `python3 bin/gac/check-sfop-slots.py --json` (CR-SFOP-01/02). Constitution stack (skills × workflow × MCP × CLI × scripts × githooks × CI × cron) fuses into one execution-chain check: `python3 bin/gac/check-execution-chain.py --json` (CR-EXEC-CHAIN-01; live uncovered = warn, claimed-active orphan = fail-closed). Spec: [`docs/architecture/dao-fa-shu-qi.md`](docs/architecture/dao-fa-shu-qi.md). Do not invent a parallel OS or a second dispatcher.
+**道法术器 (DFSQ/v1)** nests on MOF; it is not a fifth ontology. Slot grammar + unique Mesh dispatcher (`COMP-WS-omo` = S): `python3 bin/gac/check-sfop-slots.py --json` (CR-SFOP-01/02/04/05, CR-DFSQ-01/02). Constitution stack (skills × workflow × MCP × CLI × scripts × githooks × CI × cron) fuses into one execution-chain check: `python3 bin/gac/check-execution-chain.py --json` (CR-EXEC-CHAIN-01; live uncovered = warn, claimed-active orphan = fail-closed). Spec: [`docs/architecture/dao-fa-shu-qi.md`](docs/architecture/dao-fa-shu-qi.md). Do not invent a parallel OS or a second dispatcher.
 
 ## 4. Governance Boundaries
 
@@ -212,11 +212,11 @@ make gac-drift
 ### 道法术器槽位 & 执行链覆盖 (DFSQ/v1)
 
 ```bash
-python3 bin/gac/check-sfop-slots.py --json             # CR-SFOP-01/02: COMP-WS slot + unique S=omo
+python3 bin/gac/check-sfop-slots.py --json             # CR-SFOP-01/02/04/05 + CR-DFSQ-01/02
 python3 bin/gac/check-execution-chain.py --json        # CR-EXEC-CHAIN-01: constitution stack inventories
 ```
 
-- **sfop-slots**: `COMP-WS-*` 必须自报合法 `sfop_slot` / `dao_layer`；活跃 Project 中 `S` 槽恰好一个且为 `COMP-WS-omo`（CR-SFOP-01/02 fail-closed）。
+- **sfop-slots**: `COMP-WS-*` 必须自报合法 `sfop_slot` / `dao_layer`；活跃 Project 中 `S` 槽恰好一个且为 `COMP-WS-omo`（CR-SFOP-01/02 fail-closed）。P/O 允许空槽。H↛B 须经 F（存量 baseline warn，新增 fail-closed）。dao 不入 cron；qi 不写 L0 required。`toolbox` 为仓外能力，不要求 COMP-WS。
 - **execution-chain**: 融合 script-registry × ci-surfaces × cron × capability-registry (MCP/CLI) × agent-workflows × `.agents/skills` × `.githooks`。现网未接线 = warn；`extra_active` 声称活跃却不在任一本账 = fail-closed。
 - 两检查均为 root-owned blocking（不在 `SOFT_CHECKS`），防 ecos `sgf-policy.yaml` 覆盖丢失。不新建第五套本体或平行 GaC。
 
