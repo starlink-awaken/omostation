@@ -27,3 +27,4 @@ required_capabilities:
 notes:
 - '实现: bin/ssot/admin_scenes.py dispatch_admin_inbox (读网易工作邮箱, LLM 分类前 3 封)'
 - '2026-08-25 --live 实测: 真实读取并判出 has_task=true (房山区医院统计表), 验证通过'
+- '2026-08-26: classify_mail 积累回路 — 分类历史落库 mail-classification-history.jsonl, 同发件人最近 3 条注入 prompt 保持一致性(P0 积累红线)'
