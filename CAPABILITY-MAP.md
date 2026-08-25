@@ -9,7 +9,7 @@
 | 通道 | 数量 |
 |------|------|
 | CLI 命令 (含子命令) | 152 |
-| MCP 工具 | 616 |
+| MCP 工具 | 619 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 242 |
 | BOS 域 | 21 |
@@ -18,7 +18,7 @@
 
 | 服务器 | 层 | 工具数 | 传输 | 文件 |
 |--------|-----|--------|------|------|
-| `agora` | I0 | 86 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
+| `agora` | I0 | 89 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
 | `gbrain` | L2 | 75 | stdio | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
 | `runtime` | L1 | 50 | stdio | `projects/runtime/src/runtime/mcp_server.py` |
 | `l4-kernel` | L4 | 47 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
@@ -114,7 +114,7 @@
 | `cockpit contracts` | 契约验证 |
 | `cockpit control` | 控制平面：submit / ack / nack |
 | `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
-| `cockpit daemon` | 启动 Agora 2.0 后台常驻守护进程 (Agent-to-Agent Bus) |
+| `cockpit daemon` | Agora 2.0 后台常驻守护进程管理 (Agent-to-Agent Bus) |
 | `cockpit daily` | 每日研究简报 |
 | `cockpit dashboard` | 打开 Web Dashboard |
 | `cockpit data` | 数据目录索引 / 类型注册 / TTL 清理 |
