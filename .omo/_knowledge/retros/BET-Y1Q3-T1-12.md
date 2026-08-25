@@ -39,3 +39,10 @@ appetite 5 days；实现尚未开始，无法填写实际实施耗时或超出�
 - Golden Slice、Human Verdict、principal-bound decision_outcome、连续价值观测仍是 non-goals，留给后续 Wave C/D。
 - 相关设计：docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md；wave gate map 对照 wave-gate-bet-map.md。
 - 本文件不是最终复盘；最终 retro 必须在所有 done_when 直接证据齐全后由正式 workflow 写入或替换。
+
+## 2026-08-25T10:17:29Z post-merge regression invalidation (#2185)
+
+- Direct evidence: PR #2185 merged at `2026-08-25T08:34:58Z` after its `governance-verify` had already emitted `BET-Y1Q3-T1-12.completion_evidence: BET_DONE_REQUIRES_OUTCOME_ACCEPTED` and `BET_DONE_AT_REQUIRED`.
+- Regression source: merge-resolution commit `5c9b7b85b8d8af8a353017cf67e79d7724bc57e9` retained the stale first-parent `status: done` over the then-current main `status: candidate`; later 100% rollup commits treated the bad state as baseline.
+- Governed recovery: run `20260825T100848Z-bet-execution-4b4b3003` restores only this BET status to `candidate`; `completion_evidence` remains byte-semantically unchanged at `sha256:ca23452476a2d3b77c01abc80abfec79f2c2ac2b6a0ce89bd107de791678c874` and no other BET is modified.
+- This recovery is not completion evidence and proves none of the 11 `done_when` items; implementation continues through the formal T1-12 WorkPacket.
