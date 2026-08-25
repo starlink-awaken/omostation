@@ -8,7 +8,7 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 150 |
+| CLI 命令 (含子命令) | 152 |
 | MCP 工具 | 616 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 242 |
@@ -105,6 +105,7 @@
 | `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198/0203) |
 | `cockpit challenge` | ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196) |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
+| `cockpit client` | 以 REPL 模式连接到 MCP server |
 | `cockpit code` | 代码库分析与审查 (基于 codeanalyze) |
 | `cockpit compass` | 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理) |
 | `cockpit compute` | 算力与 LLM 网关操作 (委派 aetherforge) |
@@ -113,6 +114,7 @@
 | `cockpit contracts` | 契约验证 |
 | `cockpit control` | 控制平面：submit / ack / nack |
 | `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
+| `cockpit daemon` | 启动 Agora 2.0 后台常驻守护进程 (Agent-to-Agent Bus) |
 | `cockpit daily` | 每日研究简报 |
 | `cockpit dashboard` | 打开 Web Dashboard |
 | `cockpit data` | 数据目录索引 / 类型注册 / TTL 清理 |
