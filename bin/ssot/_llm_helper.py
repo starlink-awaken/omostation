@@ -29,16 +29,30 @@ def _get_gateway():
         return _GATEWAY
     try:
         ws = Path(os.environ.get("WORKSPACE_ROOT", str(_ROOT)))
+        # insert(0) 倒序生效: 列表末尾的最优先。final-ae3570f 是 launchd
+        # com.aetherforge.gateway 正在运行的同一份代码, 一致性优先, 避免
+        # 主仓子仓副本行为漂移; 主仓路径保留兜底。
         for p in [
-            str(ws / "projects" / "aetherforge" / "packages" / "gateway" / "src"),
-            str(ws / "projects" / "aetherforge" / "src"),
             str(ws / "projects" / "aetherforge"),
+            str(ws / "projects" / "aetherforge" / "src"),
+            str(ws / "projects" / "aetherforge" / "packages" / "gateway" / "src"),
+            "/Users/xiamingxing/aetherforge-final-ae3570f",
+            "/Users/xiamingxing/aetherforge-final-ae3570f/src",
+            "/Users/xiamingxing/aetherforge-final-ae3570f/packages/gateway/src",
         ]:
             if p not in sys.path:
                 sys.path.insert(0, p)
         from llm_gateway import ModelGateway
 
-        _GATEWAY = ModelGateway.create()
+        gw = ModelGateway.create()
+        # 2026-08-25 总闸修复: create() 只把 provider register 进 _providers,
+        # _models 缓存必须 refresh() 填充 —— cli.py(launchd 版装配)显式跑过
+        # 这步, 进程内实例此前没跑 → registry 恒空 → 一切模型解析失败 →
+        # llm_ask 46s 慢死。refresh 一次性 ~7s, 单例进程终身复用。
+        import asyncio
+
+        asyncio.run(gw._registry.refresh())
+        _GATEWAY = gw
         return _GATEWAY
     except Exception:
         return None
