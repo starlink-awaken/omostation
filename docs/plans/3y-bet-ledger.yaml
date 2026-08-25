@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 121
+  total_bets: 122
   windows:
   - Y1Q1
   - Y1Q2
@@ -7611,3 +7611,59 @@ bets:
         status: ACCEPTED
         direct_evidence: [replay]
     schema_version: completion-evidence-matrix/v1
+
+- id: BET-Y1Q3-T10-11
+  track: T10-MATURITY
+  window: Y1Q3
+  title: resident sediment 草稿→完整知识晋升管线 (promote 增强 + cron 自动化)
+  appetite: 0.5 day
+  priority: P1
+  status: done
+  started_at: 2026-08-25
+  done_at: '2026-08-25'
+  completed_at: '2026-08-25'
+  done_note: 'promote.py 增强(结构化 frontmatter + 失败根因画像 + 溯源) + install-resident-cron.sh 加 promote 行(10min) + 10 单测全绿; 真实 412 草稿→12 主题失败画像可检索(rate 0.2791); retro 入库 .omo/_knowledge/retros/BET-Y1Q3-T10-11.md'
+  goal: '让 sediment 沉淀从模板散件升级为可检索/可统计/可溯源的主题知识: promote 产出增强(结构化 frontmatter + 失败根因画像 + 溯源) + 接入 cron 自动化。'
+  non_goals:
+  - 不引入 LLM 调用(保持确定性启发式提炼)
+  - 不改 sediment 草稿生成逻辑
+  - 不改五类角色运行时行为
+  done_when:
+  - promote 产出 retro 含 frontmatter(topic/counts/failure_breakdown) 与失败根因画像
+  - install-resident-cron.sh 含 promote 行且语法校验通过
+  - 新增 promote 单元测试全绿
+  - 真实运行生成增强版 retro, 指标可检索(无回归)
+  verify:
+  - cmd: grep -q "failure_breakdown" projects/omo/src/omo/resident/promote.py
+    expect: exit 0
+  - cmd: grep -q "resident promote" bin/ssot/install-resident-cron.sh
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/promote.py
+  - projects/omo/src/omo/resident/cli.py
+  - projects/omo/src/omo/resident/tests/
+  - bin/ssot/install-resident-cron.sh
+  - docs/superpowers/specs/2026-08-25-resident-sediment-promotion-pipeline-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-sediment-promotion-pipeline-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:d0dcfc78e718274c53dd826acbf0c75ae13bd0712bc3c90abebfb2dedeb1728b"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-11
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
