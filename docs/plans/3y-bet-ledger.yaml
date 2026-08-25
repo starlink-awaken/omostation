@@ -7743,7 +7743,7 @@ bets:
   - 不引入 LLM 调用(提案内容仍由 scan_internal 确定性生成)
   - 不对历史 3898 个 JSON 批量回填 md(避免膨胀, 历史经 CLI 按需渲染)
   done_when:
-  - decision.py _write_proposal 双写 JSON + md 收件箱, md frontmatter 含 status: draft 与 trigger_event 溯源
+  - "decision.py _write_proposal 双写 JSON + md 收件箱, md frontmatter 含 status: draft 与 trigger_event 溯源"
   - omo resident decision list/status/show 三个子命令可用, list/status 直接扫描 evolution-proposals 全量(含历史)并输出统计
   - 新增 test_resident_decision.py 单元测试全绿
   - 真实工作区 omo resident decision status 可输出 3898 条历史统计(冒烟验证)
