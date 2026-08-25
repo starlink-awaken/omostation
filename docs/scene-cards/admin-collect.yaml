@@ -1,0 +1,28 @@
+title: Admin Collect Scene Card (行政流程·截止追踪)
+status: draft
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-25
+related:
+- ./admin-inbox.yaml
+---
+schema: scene-card/v2
+scene_id: admin-collect
+journey_id: admin-notification-workflow
+goal: 向 deadline_tracker 注册任务截止追踪, 进入等待回复状态
+trigger: journey 状态转移进入本 scene
+input_contract: latest_subject + deadline + target + task_type
+result_contract: 'deadline_registered 布尔 + awaiting_replies 恒 true (注册失败带 error 不阻塞)'
+outcome_metric: admin_collect_quality
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 行政流程产出质量下降 (草稿模式 + HITL 审阅兜底)
+data_classification: internal
+data_scope: work-documents-metadata-and-drafts
+operator: admin-collect-dispatch-under-risk-engine
+required_capabilities:
+- tracker:deadline-register
+notes:
+- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_collect'
+- '异常降级不阻塞流程'

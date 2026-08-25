@@ -1,0 +1,28 @@
+title: Admin Classify Scene Card (行政流程·任务分解)
+status: draft
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-25
+related:
+- ./admin-inbox.yaml
+---
+schema: scene-card/v2
+scene_id: admin-classify
+journey_id: admin-notification-workflow
+goal: 对已判定为任务的邮件做 LLM 任务分解, 识别转发需求/任务类型/截止时间/转发对象
+trigger: journey 状态转移进入本 scene
+input_contract: latest_subject + mails 分类上下文
+result_contract: 'requires_forwarding 布尔 + task_type + deadline + target + required_docs'
+outcome_metric: admin_classify_quality
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 行政流程产出质量下降 (草稿模式 + HITL 审阅兜底)
+data_classification: internal
+data_scope: work-documents-metadata-and-drafts
+operator: admin-classify-dispatch-under-risk-engine
+required_capabilities:
+- llm:local-classify
+notes:
+- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_classify'
+- '解析失败保守默认 requires_forwarding=true'

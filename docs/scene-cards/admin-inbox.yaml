@@ -1,0 +1,29 @@
+title: Admin Inbox Scene Card (行政流程·收件感知)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-25
+related:
+- ./admin-inbox.yaml
+---
+schema: scene-card/v2
+scene_id: admin-inbox
+journey_id: admin-notification-workflow
+goal: 读取工作邮箱未读邮件并 LLM 分类, 判定是否存在需要执行的任务
+trigger: journey 状态转移进入本 scene
+input_contract: 触发上下文 (subject/sender 可选), 不含正文原文
+result_contract: '分类结果列表 (subject/sender/category/priority/summary) + has_task 布尔判定 + latest_subject'
+outcome_metric: admin_inbox_quality
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 行政流程产出质量下降 (草稿模式 + HITL 审阅兜底)
+data_classification: internal
+data_scope: work-documents-metadata-and-drafts
+operator: admin-inbox-dispatch-under-risk-engine
+required_capabilities:
+- mail:netease_mailmaster
+- llm:local-classify
+notes:
+- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_inbox'
+- '2026-08-25 --live 实测: 真实读取并判出 has_task=true, 验证通过'
