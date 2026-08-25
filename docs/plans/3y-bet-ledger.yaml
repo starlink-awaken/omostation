@@ -7673,8 +7673,8 @@ bets:
   title: resident 事件源接入 workflow 生命周期 (消费端补全 + 重放)
   appetite: 0.5 day
   priority: P1
-  status: candidate
-  started_at: ''
+  status: done
+  done_at: '2026-08-25'
   goal: '让 workflow 生命周期事件被 resident 消费端真正消化(不再 placeholder) + 事件源接 cron 自动化: 补全 5 种未路由事件路由 + sediment 事件集合扩展(按 run 聚合去重) + roles 分片同步 + ingest 接 cron + 回退水位重放 2208 事件验证。'
   non_goals:
   - 不引入 LLM 调用(草稿仍模板占位, 五问提炼留运营 agent/人工)
