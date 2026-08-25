@@ -130,7 +130,28 @@ related-retro: .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
 
 ## ⚠️ 协调/环境记录
 
-- **agora pre-push hook 被 pre-existing 格式问题阻塞**：`src/agora/server/tools_governance.py:459` 在 agora main 上未通过 `ruff format --check`（由 `d00c4c16` 引入），非本 Task diff 所致；使用 hook 提供的 `SKIP_GATE=true` 逃生口推送。该 pre-existing 格式问题需单独 PR 修复。
+- **agora pre-push hook 被 pre-existing 格式问题阻塞（已修复）**：`src/agora/server/tools_governance.py:459` 在 agora main 上未通过 `ruff format --check`（由 `d00c4c16` 引入）。首次推送 binding_digest 时使用 `SKIP_GATE=true` 逃生口；随后在独立 clone 用 `ruff format` 修复（纯格式，commit `29fc497` → PR #37 → merge `870b500`）。**agora pre-push 通道已恢复**，后续 push 不再需要 SKIP_GATE。
 - 未碰并发 agent 的 `agora-services.json`（其本地 commit `2d4c7d7e` 在 `feat/agora-state-sync` 分支）。
 - 根仓 gitlink 推进属 Task 7（root-gate 持有者），本子仓交付完成即止（AC-10 child-first 满足：子仓已 commit/tag/PR/CI/merge）。
+
+---
+
+# 追加：agora 格式问题修复（2026-08-26）
+
+## 交付证据链
+
+| 环节 | 证据 |
+|------|------|
+| 修复 | `src/agora/server/tools_governance.py` 纯格式（尾逗号/空行/缩进，由 `ruff format` 生成），21+/15− |
+| commit | `29fc497` `style(agora): ruff format tools_governance.py to unblock pre-push gate` |
+| 分支 | `fix/t1-12-agora-format-gate-20260826`（独立 clone `t1-12-agora-format-fix-20260826-22`） |
+| PR | https://github.com/starlink-awaken/omostation-agora/pull/37 → **MERGED** squash `870b500`（2026-08-25T22:51:55Z） |
+| agora main | `870b500`；315 files formatted + ruff check clean（全绿） |
+| 验证 | 主仓 agora `test_tools_governance_convergence.py` 3 passed（功能基线）；改动为 ruff format 机械生成，无语义变化 |
+
+## 影响
+
+- agora pre-push hook（`ruff check src/` + `ruff format --check src/`）恢复通过，agora 交付通道不再被阻塞。
+- omo/cockpit 检查确认无同类格式阻塞（284/294 files formatted，lint clean）。
+
 
