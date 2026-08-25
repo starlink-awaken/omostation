@@ -6,6 +6,7 @@
 #     各自独立 checkpoint + topic_filter 分片消费, 互不干扰)
 #   - 每 5min: omo resident signals(personal-signals 轮询, 实际发布到事件流)
 #   - 每 5min: omo resident alert(告警转发)
+#   - 每 10min: omo resident promote(sediment 草稿 → 主题 retro 候选, 阶段2 知识晋升)
 #   - 每天 02:10: system-health-check --emit(体系健康探针)
 #
 # 幂等: 重复执行不重复添加。
@@ -40,6 +41,8 @@ done
 # 构造 cron 条目 (signals 实际发布, 不 dry-run)
 CRON_SIGNALS="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident signals >> ${WORKSPACE}/.omo/_delivery/personal-signals/cron.log 2>&1"
 CRON_ALERT="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident alert --dry-run >> ${WORKSPACE}/.omo/_delivery/alert-forwarder/cron.log 2>&1"
+# promote: 沉淀聚合→主题 retro 候选(实际落盘, 10min 节奏足够)
+CRON_PROMOTE="*/10 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident promote >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/promote.log 2>&1"
 CRON_HEALTH="10 2 * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} bin/ssot/system-health-check.py --emit >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/health.log 2>&1"
 
 # 移除旧 marker 块(幂等),再追加新块
@@ -52,6 +55,7 @@ ${CRON_MARKER}
 ${_ROLE_CRON}
 ${CRON_SIGNALS}
 ${CRON_ALERT}
+${CRON_PROMOTE}
 ${CRON_HEALTH}
 EOF
 
