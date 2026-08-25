@@ -206,7 +206,7 @@ python3 bin/gac/check-sfop-slots.py --json             # CR-SFOP-01/02: COMP-WS 
 python3 bin/gac/check-execution-chain.py --json        # CR-EXEC-CHAIN-01: constitution stack inventories
 ```
 
-- **sfop-slots**: `COMP-WS-*` 应自报合法 `sfop_slot` / `dao_layer`（未标注 = warn）。若已声明 `S`，至多一个且为 `COMP-WS-omo`（冲突 fail-closed）。
+- **sfop-slots**: `COMP-WS-*` 必须自报合法 `sfop_slot` / `dao_layer`；活跃 Project 中 `S` 槽恰好一个且为 `COMP-WS-omo`（CR-SFOP-01/02 fail-closed）。
 - **execution-chain**: 融合 script-registry × ci-surfaces × cron × capability-registry (MCP/CLI) × agent-workflows × `.agents/skills` × `.githooks`。现网未接线 = warn；`extra_active` 声称活跃却不在任一本账 = fail-closed。
 - 两检查均为 root-owned blocking（不在 `SOFT_CHECKS`），防 ecos `sgf-policy.yaml` 覆盖丢失。不新建第五套本体或平行 GaC。
 
