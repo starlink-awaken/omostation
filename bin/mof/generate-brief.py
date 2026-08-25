@@ -187,6 +187,29 @@ def scan_decision_inbox() -> list[dict]:
     return tasks
 
 
+
+def scan_active_pitfalls() -> dict:
+    """扫描活跃 pitfalls 计数 — Agent Institutional Memory 可见性."""
+    import glob as _g
+    pit_dir = WORKSPACE / ".omo" / "_knowledge" / "pitfalls"
+    result = {"active": 0, "categories": {}}
+    if not pit_dir.is_dir():
+        return result
+    import yaml as _y
+    for f in sorted(pit_dir.rglob("*.yaml")):
+        if f.name.startswith("."):
+            continue
+        try:
+            d = _y.safe_load(f.read_text())
+            if isinstance(d, dict) and d.get("status") == "active":
+                result["active"] += 1
+                cat = d.get("category", "?")
+                result["categories"][cat] = result["categories"].get(cat, 0) + 1
+        except Exception:
+            continue
+    return result
+
+
 def scan_x3_metrics() -> dict:
     """统计 X3 价值产出指标."""
     metrics = {
@@ -334,6 +357,7 @@ def generate_brief_content() -> str:
 
     now_str = get_now_str()
     decisions = scan_decision_inbox()
+    pitfalls = scan_active_pitfalls()
     x3 = scan_x3_metrics()
     violations = run_write_owner_audit()
 
