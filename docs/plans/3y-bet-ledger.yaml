@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 123
+  total_bets: 141
   windows:
   - Y1Q1
   - Y1Q2
@@ -7830,6 +7830,56 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:52d11162b0b3aad0dd414d76fe0bd27f757f7c66fa8821fc29464318da8433a3"
     decision_ref: decision://accepted/BET-Y1Q3-T10-13
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
+- id: BET-Y1Q3-T10-14
+  track: T10-MATURITY
+  window: Y1Q3
+  title: resident 告警外发渠道接线 (alert webhook + forwarder 修复)
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  started_at: '2026-08-25'
+  goal: '补齐 resident 告警外发最后一公里: alert-forwarder.py 修复连字符模块 import + deliver() 契约调用(告警链路可外发), alert-channels.yaml 声明 alert-wecom 渠道(env://ALERT_WECOM_WEBHOOK opaque 引用, 先只接线不配 URL, 未配 fail-closed), 回执事件 governance:alert_delivered/failed 可审计; 用户设置 ALERT_WECOM_WEBHOOK 后激活。'
+  non_goals:
+  - 不配真实 webhook URL(用户决策「先只接线不配 URL」)
+  - 不改 alert-connectors.py 渠道实现(WeComWebhookConnector.deliver 已正确)
+  - 不改 omo 侧 resident/alert.py(已是正确参照实现)
+  done_when:
+  - alert-forwarder.py 用 importlib 按路径加载 alert-connectors.py 并调用 conn.deliver(), 无 ModuleNotFoundError/AttributeError
+  - alert-connectors.py list 展示 4 channel 且 url_configured=NO
+  - alert-connectors.py send --channel alert-wecom fail-closed(exit=1 + failed 回执)
+  - alert-forwarder.py --dry-run 正常路由不崩
+  - 设置 ALERT_WECOM_WEBHOOK 后渠道 health 转 healthy
+  verify:
+  - cmd: python3 bin/ssot/alert-forwarder.py --dry-run
+    expect: exit 0
+  - cmd: python3 bin/ssot/alert-connectors.py list
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ssot/alert-forwarder.py
+  - docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:e26ecbc3bae56451c0f244fe3794f541412f59154cf4598b478ec2d21d15e062"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-14
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
