@@ -221,13 +221,14 @@ class TestSandboxAPI:
         sys.modules["runtime.executor.sandbox"] = mock_module
 
         try:
-            resp = client.post("/api/sandbox/execute", json={"code": "print('hello')"})
+            with patch("cockpit.adapters.runtime.Sandbox", mock_sandbox):
+                resp = client.post("/api/sandbox/execute", json={"code": "print('hello')"})
             assert resp.status_code == 200
             data = resp.json()
             assert data["success"] is True
             assert data["stdout"] == "hello"
         finally:
-            del sys.modules["runtime.executor.sandbox"]
+            sys.modules.pop("runtime.executor.sandbox", None)
 
     def test_execute_missing_code(self, client):
         # Validate the request before reporting runtime capability availability.

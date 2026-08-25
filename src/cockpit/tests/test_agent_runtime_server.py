@@ -27,6 +27,12 @@ from cockpit import agent_runtime_server
 class TestCreateApp:
     """create_app() 测试"""
 
+    def _install_runtime(self, mock_rt):
+        """SFOP adapter seam: create_app uses agent_runtime_server.AgentRuntime."""
+        _mock_runtime_engine.AgentRuntime.return_value = mock_rt
+        agent_runtime_server.AgentRuntime = mock.Mock(return_value=mock_rt)
+        agent_runtime_server._HAS_RUNTIME = True
+
     def _make_app(self, auth_token=""):
         """创建测试用 FastAPI app"""
         _mock_runtime_config.AUTH_TOKEN = auth_token
@@ -36,7 +42,7 @@ class TestCreateApp:
         mock_rt.run_task.return_value = {"result": "ok"}
         mock_rt.tools.build_tool_schemas.return_value = []
         mock_rt._call_llm.return_value = {"content": "Hello!", "finish_reason": "stop"}
-        _mock_runtime_engine.AgentRuntime.return_value = mock_rt
+        self._install_runtime(mock_rt)
         return agent_runtime_server.create_app()
 
     def test_health_endpoint(self):
@@ -91,7 +97,7 @@ class TestCreateApp:
         mock_rt = mock.MagicMock()
         mock_rt.tools.build_tool_schemas.return_value = []
         mock_rt._call_llm.return_value = {"error": "timeout"}
-        _mock_runtime_engine.AgentRuntime.return_value = mock_rt
+        self._install_runtime(mock_rt)
 
         app = agent_runtime_server.create_app()
         client = TestClient(app)
@@ -112,7 +118,7 @@ class TestCreateApp:
             {"content": "result", "finish_reason": "stop"},
         ]
         mock_rt._execute_tool.return_value = {"role": "tool", "content": "data"}
-        _mock_runtime_engine.AgentRuntime.return_value = mock_rt
+        self._install_runtime(mock_rt)
 
         app = agent_runtime_server.create_app()
         client = TestClient(app)
@@ -136,7 +142,7 @@ class TestCreateApp:
             )
         mock_rt._call_llm.side_effect = responses
         mock_rt._execute_tool.return_value = {"role": "tool", "content": "data"}
-        _mock_runtime_engine.AgentRuntime.return_value = mock_rt
+        self._install_runtime(mock_rt)
 
         app = agent_runtime_server.create_app()
         client = TestClient(app)
@@ -149,7 +155,7 @@ class TestCreateApp:
         """POST /run-task 直接传 prompt"""
         mock_rt = mock.MagicMock()
         mock_rt.run_task.return_value = {"result": "done"}
-        _mock_runtime_engine.AgentRuntime.return_value = mock_rt
+        self._install_runtime(mock_rt)
 
         app = agent_runtime_server.create_app()
         client = TestClient(app)
@@ -168,7 +174,7 @@ class TestCreateApp:
         """POST /run-task 执行失败返回 500"""
         mock_rt = mock.MagicMock()
         mock_rt.run_task.return_value = {"error": "execution failed"}
-        _mock_runtime_engine.AgentRuntime.return_value = mock_rt
+        self._install_runtime(mock_rt)
 
         app = agent_runtime_server.create_app()
         client = TestClient(app)
@@ -185,7 +191,7 @@ class TestCreateApp:
             mock_rt = mock.MagicMock()
             mock_rt.tools.build_tool_schemas.return_value = []
             mock_rt._call_llm.return_value = {"content": "test", "finish_reason": "stop"}
-            _mock_runtime_engine.AgentRuntime.return_value = mock_rt
+            self._install_runtime(mock_rt)
 
             app = agent_runtime_server.create_app()
             client = TestClient(app)
@@ -198,7 +204,7 @@ class TestCreateApp:
             mock_rt = mock.MagicMock()
             mock_rt.tools.build_tool_schemas.return_value = []
             mock_rt._call_llm.return_value = {"content": "authorized", "finish_reason": "stop"}
-            _mock_runtime_engine.AgentRuntime.return_value = mock_rt
+            self._install_runtime(mock_rt)
 
             app = agent_runtime_server.create_app()
             client = TestClient(app)
@@ -212,7 +218,7 @@ class TestCreateApp:
             mock_rt = mock.MagicMock()
             mock_rt.tools.build_tool_schemas.return_value = []
             mock_rt._call_llm.return_value = {"content": "test", "finish_reason": "stop"}
-            _mock_runtime_engine.AgentRuntime.return_value = mock_rt
+            self._install_runtime(mock_rt)
 
             app = agent_runtime_server.create_app()
             client = TestClient(app)
