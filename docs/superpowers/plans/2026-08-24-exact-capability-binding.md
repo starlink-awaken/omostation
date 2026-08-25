@@ -57,6 +57,8 @@ last-reviewed: 2026-08-24
 
 **Files:**
 - Modify: `projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml`
+- Modify: `projects/ecos/src/ecos/ssot/mof/compiler/api.py`
+- Modify: `projects/ecos/src/ecos/ssot/mof/compiler/emitters.py`
 - Modify: `projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py`
 - Modify: `projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.schema.json`
 - Modify: `projects/ecos/src/ecos/ssot/mof/generated/control/mof-control-schemas.ts`
@@ -67,7 +69,7 @@ last-reviewed: 2026-08-24
 - Test: `projects/ecos/tests/test_work_packet_compiler.py`
 
 **Interfaces:**
-- Consumes: existing `work-packet/v2` and inline-map generator contracts.
+- Consumes: existing `work-packet/v2` contract and extends the current direct inline-map IR/emitter support to closed inline-map list items.
 - Produces: optional strict `capability_requirements` list with inline exact fields; the ordered list participates in the invariant packet hash; old v1/v2 packets remain readable and no new M2 type file is created.
 
 - [ ] **Step 1: Write the failing MOF compiler test**
@@ -94,6 +96,27 @@ def test_work_packet_capability_requirements_are_strict_cross_language_contract(
     assert "capability_requirements" in artifacts["zod"]
 ```
 
+The same RED/GREEN test must dynamically import the generated Pydantic module,
+validate one complete requirement, and reject list items with an extra field,
+a missing required field, a wildcard/invalid ID, or an invalid operation/effect
+enum. This proves the emitted validator does more than declare
+`list[dict[str, Any]]`.
+
+Lock the Zod item shape rather than checking only the field name:
+
+```python
+zod = artifacts["zod"]
+assert "capability_requirements: z.array(z.object({" in zod
+assert "capability_id: z.string().regex(" in zod
+assert 'operation: z.enum(["find", "inspect", "load", "invoke"])' in zod
+assert 'effect: z.enum(["read_only", "effectful"])' in zod
+assert "}).strict()).optional()" in zod
+```
+
+If the eCOS test environment exposes a runnable Zod toolchain, execute the same
+valid/extra/missing/pattern/enum matrix against the generated schema; otherwise
+the exact emitted expression above is the minimum cross-language artifact gate.
+
 Also add deterministic compiler regressions in `tests/test_work_packet_compiler.py`:
 
 - the same v2 packet with a different ordered `capability_requirements` list must produce a different packet hash;
@@ -112,6 +135,13 @@ uv run pytest tests/test_mof_compiler.py::test_work_packet_capability_requiremen
 Expected: FAIL because `$defs.CapabilityRequirement` and the WorkPacket property do not exist.
 
 - [ ] **Step 3: Add the M2 schema**
+
+First extend the existing compiler IR and emitters so a `type: list` whose
+`items` is a closed inline map preserves the item `properties`, `required`,
+patterns, and `additionalProperties: false` in JSON Schema, Pydantic, and Zod.
+The current compiler only preserves those fields for a direct `type: map`; a
+plain `items: {type: map}` would otherwise degrade to an unconstrained object.
+Keep SQLite representation JSON-encoded and do not create a new M2 type.
 
 Add one inline optional WorkPacket property in `work_packet.yaml`:
 
@@ -150,8 +180,12 @@ Add validation rules that reject duplicates and invalid kind/operation combinati
 Update `work_packet_compiler.py` in the same RED→GREEN change: add
 `capability_requirements` to `INVARIANT_FIELDS` and apply the same strict shape,
 ID, operation/effect, duplicate, and Skill-invoke validation before emitting the
-canonical payload. The M2-generated models and the deterministic packet compiler
-must therefore accept and reject the same inputs.
+canonical payload. M2-generated models own the per-item structural contract;
+the deterministic packet compiler owns ordered identity, duplicate-ID, and
+kind/operation semantics (repeated again by the later OMO boundary consumer).
+Do not claim that arbitrary `validationRules` are emitted as executable
+cross-language validators; this compiler currently stores but does not translate
+those expressions.
 
 - [ ] **Step 4: Regenerate all eCOS control artifacts**
 
