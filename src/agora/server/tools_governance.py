@@ -443,3 +443,85 @@ def register_governance_tools(mcp: FastMCP) -> None:
                 "agent_card": card,
             }
         )
+
+    # ── governance_auto_fix ────────────────────────────────────────
+
+    @mcp.tool()
+    def governance_auto_fix() -> dict:
+        """Trigger the workspace self-healing auto-fix loop.
+
+        Scans for structural drift (missing frontmatter, orphan scripts,
+        stale cell state) and applies safe automatic repairs.
+
+        Returns status and summary of repaired findings.
+        """
+        import subprocess
+        workspace_root = os.environ.get("WORKSPACE_ROOT", os.getcwd())
+        res = subprocess.run(
+            ["uv", "run", "python", "bin/gac/auto-fix-loop.py", "--apply", "--json"],
+            cwd=workspace_root,
+            capture_output=True,
+            text=True
+        )
+        try:
+            data = json.loads(res.stdout) if res.stdout else {}
+        except Exception:
+            data = {"raw": res.stdout, "stderr": res.stderr}
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "returncode": res.returncode,
+            "result": data,
+        })
+
+    # ── cartridge_pack ─────────────────────────────────────────────
+
+    @mcp.tool()
+    def cartridge_pack(domain_path: str) -> dict:
+        """Hot-compile and sign a domain directory into a .cartridge capsule.
+
+        Args:
+            domain_path: Relative or absolute path to domain directory (e.g. 'domains/weijian-governance')
+
+        Returns packaging status and output path.
+        """
+        import subprocess
+        workspace_root = os.environ.get("WORKSPACE_ROOT", os.getcwd())
+        res = subprocess.run(
+            ["uv", "run", "cockpit", "cartridge", "pack", domain_path],
+            cwd=workspace_root,
+            capture_output=True,
+            text=True
+        )
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "returncode": res.returncode,
+            "output": res.stdout.strip(),
+            "error": res.stderr.strip() if res.returncode != 0 else "",
+        })
+
+    # ── daemon_bus_publish ─────────────────────────────────────────
+
+    @mcp.tool()
+    def daemon_bus_publish(topic: str, payload: dict) -> dict:
+        """Publish a real-time event to the Agora 2.0 In-Memory Daemon bus.
+
+        Args:
+            topic: Channel topic (e.g., 'governance:drift', 'workflow:run')
+            payload: JSON payload data dict
+
+        Returns publish confirmation and notification count.
+        """
+        import urllib.request
+        req_data = json.dumps({"topic": topic, "payload": payload}).encode("utf-8")
+        req = urllib.request.Request(
+            "http://127.0.0.1:7432/publish",
+            data=req_data,
+            headers={"Content-Type": "application/json"}
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return _ok({"format_version": FORMAT_VERSION, "bus_status": data})
+        except Exception as exc:
+            return _error(f"Daemon bus offline or unreachable on :7432 ({exc})")
+
