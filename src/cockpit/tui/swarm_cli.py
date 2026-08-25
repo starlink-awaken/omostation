@@ -33,7 +33,9 @@ def render_swarm_status_panel(state: SwarmGlobalState, console: Console | None =
         else "○ [bold yellow]DEGRADED[/bold yellow]"
     )
     daemon_status = state.daemon.get("status") if state.daemon else "offline"
-    daemon_icon = "[bold green]BUS :7432 ●[/bold green]" if daemon_status == "healthy" else "[bold red]BUS :7432 ○[/bold red]"
+    daemon_icon = (
+        "[bold green]BUS :7432 ●[/bold green]" if daemon_status == "healthy" else "[bold red]BUS :7432 ○[/bold red]"
+    )
     header_content = Text.from_markup(
         f"  {health_icon}  [dim]·[/dim]  {daemon_icon}  [bold white]OMOSTATION MULTI-AGENT SWARM[/bold white]  "
         f"[dim]·[/dim]  [cyan]{state.agents.healthy_count}/{state.agents.total_agents} Agents Active[/cyan]  "

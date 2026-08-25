@@ -34,6 +34,7 @@ def cmd_daemon_dispatch(args) -> int:
         return install_service(port)
     else:
         from agora.daemon import run_daemon
+
         run_daemon(port=port)
         return 0
 
@@ -106,7 +107,9 @@ WantedBy=default.target
 """
         SYSTEMD_PATH.write_text(service_content, encoding="utf-8")
         subprocess.run(["systemctl", "--user", "daemon-reload"], capture_output=True)
-        res = subprocess.run(["systemctl", "--user", "enable", "--now", "omostation-agora.service"], capture_output=True)
+        res = subprocess.run(
+            ["systemctl", "--user", "enable", "--now", "omostation-agora.service"], capture_output=True
+        )
         if res.returncode == 0:
             console.print(f"[bold green]✅ 已成功注册并启动 Linux systemd 用户服务:[/] {SYSTEMD_PATH}")
             return 0

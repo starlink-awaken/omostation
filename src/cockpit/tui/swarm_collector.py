@@ -137,6 +137,7 @@ class SwarmStateCollector:
 
     def collect_daemon(self, port: int = 7432) -> dict:
         import urllib.request
+
         try:
             req = urllib.request.Request(f"http://127.0.0.1:{port}/health", headers={"User-Agent": "cockpit-tui"})
             with urllib.request.urlopen(req, timeout=0.15) as resp:  # noqa: S310

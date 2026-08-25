@@ -529,7 +529,13 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
 
     daemon_p = sub.add_parser("daemon", help="Agora 2.0 后台常驻守护进程管理 (Agent-to-Agent Bus)")
     daemon_p.add_argument("--port", type=int, default=7432, help="监听端口 (默认 7432)")
-    daemon_p.add_argument("daemon_action", nargs="?", default="run", choices=["run", "status", "install-service", "uninstall-service", "restart"], help="动作 (run / status / install-service / uninstall-service / restart)")
+    daemon_p.add_argument(
+        "daemon_action",
+        nargs="?",
+        default="run",
+        choices=["run", "status", "install-service", "uninstall-service", "restart"],
+        help="动作 (run / status / install-service / uninstall-service / restart)",
+    )
 
     mesh_p = sub.add_parser("mesh", help="omlx 算力网格路由入口")
     mesh_sub = mesh_p.add_subparsers(dest="mesh_command", parser_class=workspace_parser)
