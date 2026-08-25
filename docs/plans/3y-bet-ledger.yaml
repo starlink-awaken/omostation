@@ -6709,14 +6709,8 @@ bets:
   appetite: 4 hours
   priority: P2
   status: done
-<<<<<<< HEAD
-||||||| fc52c4baf
-  status: candidate
-=======
   done_at: 2026-08-24
->>>>>>> origin/main
   started_at: 2026-08-24
-  done_at: 2026-08-24
   note: 'T6-14 深度复盘 — 9 维分析 (场景/功能/旅程/体验/愿景/运营/运维/防腐/约束). 治本路径已汇入 docs/reports/2026-08-24-resident-system-deep-review.md + .omo/_knowledge/retros/BET-Y1Q3-T6-14.md'
   goal: 对 resident 常驻 agent 体系（五类角色/事件驱动/规则订阅/多载体执行）与治理接线（MOF/SGF/BOS、agent-workflow 契约、gac-local-gate、PR 工作流、MCP 工具）从场景/功能/用户旅程/体验/目标愿景/长期运营/运维/防腐/约束 9 维度产出一份项目粒度深度复盘文档并入库
   non_goals:
