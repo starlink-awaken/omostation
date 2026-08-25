@@ -9,14 +9,15 @@ Automatically heals and restarts downed services with zero human intervention.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import sys
 import time
 import urllib.error
 import urllib.request
-import importlib.util
 from pathlib import Path
+from typing import NoReturn
 
 # Add workspace environment via env-resolver
 _BIN_DIR = Path(__file__).resolve().parents[1]
@@ -29,10 +30,34 @@ _ROOT = _env_resolver.setup_workspace_paths()
 HEALTH_URL = "http://127.0.0.1:7432/health"
 STATUS_FILE = _ROOT / ".omo" / "state" / "daemon-watchdog.json"
 LOG_FILE = _ROOT / ".omo" / "_delivery" / "watchdog.log"
+_REFUSAL_MESSAGE = (
+    "Mesh successor is pending; Cockpit PR #78 is retirement evidence only, "
+    "never the delivered successor."
+)
+
+
+def _refuse_retired_surface(command: str) -> NoReturn:
+    print(
+        json.dumps(
+            {
+                "ok": False,
+                "status": "retired",
+                "successor": "Mesh-bound capability admission",
+                "successor_status": "pending",
+                "retirement_evidence": "Cockpit PR #78",
+                "value_indicator_policy": False,
+                "command": command,
+                "message": _REFUSAL_MESSAGE,
+            },
+            ensure_ascii=False,
+        )
+    )
+    raise SystemExit(2)
 
 
 def check_daemon_health(timeout: float = 2.0) -> dict:
     """Probes the Agora daemon /health endpoint."""
+    _refuse_retired_surface("daemon-watchdog.check_daemon_health")
     start_time = time.time()
     try:
         req = urllib.request.Request(HEALTH_URL, headers={"User-Agent": "omostation-watchdog/1.0"})
@@ -66,6 +91,7 @@ def check_daemon_health(timeout: float = 2.0) -> dict:
 
 def restart_daemon() -> bool:
     """Attempts self-healing restart via cockpit daemon manager."""
+    _refuse_retired_surface("daemon-watchdog.restart_daemon")
     try:
         from cockpit.commands.daemon import restart_daemon_service
         restart_daemon_service()
@@ -80,6 +106,7 @@ def restart_daemon() -> bool:
 
 def log_event(message: str):
     """Appends an event to the watchdog log."""
+    _refuse_retired_surface("daemon-watchdog.log_event")
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
     ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     with open(LOG_FILE, "a", encoding="utf-8") as f:
@@ -88,6 +115,7 @@ def log_event(message: str):
 
 def run_watchdog(fix: bool = True, output_json: bool = False) -> int:
     """Executes a single watchdog scan cycle."""
+    _refuse_retired_surface("daemon-watchdog.run_watchdog")
     probe = check_daemon_health()
     healed = False
 
@@ -124,6 +152,7 @@ def run_watchdog(fix: bool = True, output_json: bool = False) -> int:
 
 
 def main():
+    _refuse_retired_surface("daemon-watchdog")
     parser = argparse.ArgumentParser(description="Autonomous Daemon Watchdog (ADR-0427)")
     parser.add_argument("--fix", action="store_true", default=True, help="Auto-heal downed services")
     parser.add_argument("--no-fix", dest="fix", action="store_false", help="Do not attempt auto-heal")
