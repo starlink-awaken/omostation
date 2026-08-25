@@ -251,7 +251,7 @@ def _ruff_json(policy: dict[str, Any], *, root: Path, debt: bool) -> list[dict[s
         if is_worktree:
             print(f"SKIP: ruff (worktree scope dirs not initialized: {', '.join(missing)}). "
                   f"Run: bash bin/gac/worktree-init.sh --minimal")
-            return 0
+            return []  # 空 diagnostics → compare_ruff_diagnostics 得 new=0, 降级 skip 非 fail (T10-09)
         raise RuntimeError(f"Ruff scope is not initialized: {', '.join(missing)}")
 
     command = ["ruff", "check", *scopes]
