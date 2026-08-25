@@ -17,7 +17,7 @@ last-reviewed: 2026-08-25
 
 ## Global Constraints
 
-- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.1.0`, digest `sha256:64b6bb07a7e613512a9c9e76480af8d3ef2498192859b88a34d23ed7360e6790`. The 1.1.0 scope amendment records the Phase8 root bypass facts behind merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) and adds Wave E (§7) with the child-first/root-follow-up ordering; the 2026-08-25 consistency correction lists `top` as the fifth retired bypass command (`swarm_dashboard` never existed on child main).
+- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.1.1`, digest `sha256:85156f1848b1c6d6dfa092d4755ea2b8ffaa567920889f52c7e23ebe86c209d3`. The 1.1.1 scope amendment records the Phase8 root bypass facts behind merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) and adds Wave E (§7) with the child-first/root-follow-up ordering; the 2026-08-25 correction uses schema-valid `maturity: deprecated` for the two `maturity: draft` registry entries, makes the refusal tests concrete, and separates LaunchAgent cleanup into a governed post-merge ops follow-up.
 - BET: `BET-Y1Q3-T1-12`; every edit must be covered by its WorkPacket and a current claim.
 - No new capability registry writer, scheduler, broker, database, workflow, or dispatch truth.
 - No automatic Human Verdict, decision outcome, time-saved estimate, or personal value promotion; all execution receipts keep `value_indicator_policy=false`.
@@ -1195,7 +1195,7 @@ Wait for every required PR-context check. Merge by standard squash only. Retire 
 
 ---
 
-### Task 8: Phase8 root recovery — retire root wrapper bypass commands (scope amendment 1.1.0)
+### Task 8: Phase8 root recovery — retire root wrapper bypass commands (scope amendment 1.1.1)
 
 Bounded TDD task implementing Spec §2.3 / §5.5.5 / Wave E. It only retires the root-side
 Phase8 bypass surface; it must not re-implement any retired child entrypoint, must not
@@ -1214,7 +1214,7 @@ add new capability surfaces, and must not touch files owned by other BETs.
 
 **Interfaces:**
 - Consumes: merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) entrypoint retirement; existing value-firewall and no-write test patterns.
-- Produces: compatibility-only root wrapper with `daemon`/`watchdog`/`scenario`/`top`/arbitrary `run` — five retired bypass commands — until Mesh-bound; retired active registry entries; synchronized docs and capability projection.
+- Produces: compatibility-only root wrapper with `daemon`/`watchdog`/`scenario`/`top`/arbitrary `run` — five retired bypass commands — until Mesh-bound; the two `maturity: draft` registry entries transitioned to schema-valid `maturity: deprecated` while the execution surfaces are retired; synchronized docs and capability projection.
 
 - [ ] **Step 1: Write RED negative no-write / value-firewall tests**
 
@@ -1222,6 +1222,12 @@ Extend `tests/unit/test_phase8_unified_ecosystem.py` (do not remove the existing
 resolver/scenario unit tests) with retired-command coverage:
 
 ```python
+import builtins
+import importlib
+import json
+import runpy
+import subprocess
+
 def _snapshot(root: Path) -> dict[str, bytes]:
     return {
         str(p.relative_to(root)): p.read_bytes()
@@ -1230,28 +1236,104 @@ def _snapshot(root: Path) -> dict[str, bytes]:
     }
 
 RETIRED_COMMANDS = ["daemon", "watchdog", "scenario", "top"]
+FORBIDDEN_VALUE_KEYS = {
+    "human_verdict",
+    "human_verdict_id",
+    "decision_outcome",
+    "decision_outcome_id",
+    "personal_value",
+    "value_indicator",
+}
+
+omostation_globals = runpy.run_path(
+    str(WORKSPACE / "bin" / "omostation"), run_name="omostation_test"
+)
+omostation_main = omostation_globals["main"]
+daemon_watchdog = _load_module_from_file(
+    "daemon_watchdog", WORKSPACE / "bin" / "gac" / "daemon-watchdog.py"
+)
+real_scenario_runner = _load_module_from_file(
+    "real_scenario_runner", WORKSPACE / "bin" / "ssot" / "real-scenario-runner.py"
+)
+
+def _sentinel(name: str):
+    def _raise(*_args, **_kwargs):
+        raise AssertionError(f"retired refusal called forbidden {name}")
+    return _raise
+
+def _refusal_payload(message: str) -> dict:
+    for line in reversed(message.splitlines()):
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            return payload
+    return {"message": message}
+
+def _assert_refusal_firewall(message: str) -> None:
+    assert "retired" in message.lower()
+    payload = _refusal_payload(message)
+    assert FORBIDDEN_VALUE_KEYS.isdisjoint(payload)
+    assert payload.get("value_indicator_policy") in (None, False)
+
+def _guard_effects(monkeypatch) -> None:
+    monkeypatch.setattr(runpy, "run_path", _sentinel("runpy.run_path"))
+    monkeypatch.setattr(runpy, "run_module", _sentinel("runpy.run_module"))
+    monkeypatch.setattr(subprocess, "run", _sentinel("subprocess.run"))
+    monkeypatch.setattr(importlib, "import_module", _sentinel("importlib.import_module"))
+    for module, names in (
+        (daemon_watchdog, ("run_watchdog", "check_daemon_health", "restart_daemon", "log_event")),
+        (real_scenario_runner, ("run_all_scenarios", "publish_to_bus", "record_resident_decision")),
+    ):
+        for name in names:
+            monkeypatch.setattr(module, name, _sentinel(f"{module.__name__}.{name}"))
+    original_import = builtins.__import__
+    def _project_import(name, *args, **kwargs):
+        if name.split(".", 1)[0] in {"agora", "cockpit", "ecos", "omo"}:
+            raise AssertionError(f"retired refusal imported project module {name}")
+        return original_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, "__import__", _project_import)
 
 def test_retired_bypass_commands_exit_nonzero_with_zero_writes(tmp_path, monkeypatch, capsys):
-    before = _snapshot(WORKSPACE)
+    before = _snapshot(tmp_path)
+    monkeypatch.setitem(omostation_globals, "_ROOT", tmp_path)
+    monkeypatch.setattr(daemon_watchdog, "_ROOT", tmp_path)
+    monkeypatch.setattr(real_scenario_runner, "_ROOT", tmp_path)
+    _guard_effects(monkeypatch)
+
     for cmd in RETIRED_COMMANDS + ["run"]:
         argv = ["omostation", cmd] + (["some.module"] if cmd == "run" else [])
         monkeypatch.setattr(sys, "argv", argv)
         with pytest.raises(SystemExit) as exc:
-            omostation_main.main()
+            omostation_main()
         assert exc.value.code != 0
         out = capsys.readouterr()
-        assert "retired" in (out.out + out.err).lower()
-    assert _snapshot(WORKSPACE) == before  # no-write: nothing changed on disk
+        _assert_refusal_firewall(out.out + out.err)
+    assert _snapshot(tmp_path) == before  # no-write: isolated tmp workspace is unchanged
 
-def test_retired_bypass_receipts_contain_no_value_fields(tmp_path, capsys):
-    # value firewall: retirement messages must not carry verdict/outcome/value fields
-    ...
+def test_retired_governance_scripts_refuse_before_effects(tmp_path, monkeypatch, capsys):
+    before = _snapshot(tmp_path)
+    for module, argv in (
+        (daemon_watchdog, ["daemon-watchdog", "--json"]),
+        (real_scenario_runner, ["real-scenario-runner", "--dir", str(tmp_path)]),
+    ):
+        monkeypatch.setattr(module, "_ROOT", tmp_path)
+        _guard_effects(monkeypatch)
+        monkeypatch.setattr(sys, "argv", argv)
+        with pytest.raises(SystemExit) as exc:
+            module.main()
+        assert exc.value.code != 0
+        out = capsys.readouterr()
+        _assert_refusal_firewall(out.out + out.err)
+    assert _snapshot(tmp_path) == before
 ```
 
 Every retired command must: exit non-zero, print a retirement notice naming the
-Mesh-bound successor path, leave every file untouched (byte-identical snapshot),
-perform zero provider/router/gateway calls, and emit no human verdict, decision
-outcome, or personal value field.
+Mesh-bound successor path, leave the isolated `tmp_path` byte-identical, perform
+zero project-specific imports, subprocess/provider/router/gateway calls, or file
+writes, and emit no human verdict, decision outcome, or personal value field;
+side-effect-free stdlib/`env_resolver` setup is allowed before refusal.
 
 - [ ] **Step 2: Make `bin/omostation` compatibility-only (GREEN)**
 
@@ -1260,8 +1342,9 @@ dispatch branches (including the ghost imports `cockpit.commands.daemon.daemon_c
 and `cockpit.tui.swarm_dashboard` — the latter never existed on child main, so
 `top` is retired with the other four bypass commands, not kept in transit). Keep
 status/policy/resident/distill/gate transit only where the target still exists
-on child main. Retired commands hit a shared refusal helper that exits 1 before
-any import, subprocess, or file write.
+on child main. Retired commands hit a shared refusal helper that may perform only
+side-effect-free stdlib/`env_resolver` setup and exits before project-specific
+imports, subprocess/provider/router/gateway calls, or file writes.
 
 - [ ] **Step 3: Retire the two governance scripts and their registry entries**
 
@@ -1269,16 +1352,25 @@ Neutralize the unbound execution surfaces in `bin/gac/daemon-watchdog.py`
 (`restart_daemon()` ghost import of `cockpit.commands.daemon.restart_daemon_service`)
 and `bin/ssot/real-scenario-runner.py` (direct A2A bus publish + resident decision
 write without WorkPacket/admission): refuse with a non-zero, no-write exit until
-Mesh-bound. Flip both `bin/_registry/scripts/governance/*.yaml` entries from active
-registration to explicitly retired (`maturity: retired`, retirement note referencing
-Spec §5.5.5 and PR #78), keeping the files append-only honest history.
+Mesh-bound, before project-specific imports, subprocess/provider/router/gateway calls,
+or file writes; side-effect-free stdlib/`env_resolver` setup may occur. Flip both
+`bin/_registry/scripts/governance/*.yaml` entries from `maturity: draft` to
+schema-valid `maturity: deprecated` (the execution surface is retired), with a
+retirement note referencing Spec §5.5.5 and PR #78, keeping the files append-only
+honest history.
 
 - [ ] **Step 4: Enforce child main → root pointer → projection ordering**
 
 Before touching any root file, prove ordering per Spec Wave E:
-`git -C projects/cockpit merge-base --is-ancestor 43dbf115 <child-main>` and the
-merge SHA `82dddbc9` must already be reachable on child main; only then move the
-root gitlink forward, and only then regenerate `docs/generated/capability-registry.yaml`.
+
+```bash
+git -C projects/cockpit fetch --no-tags origin main
+test "$(git -C projects/cockpit rev-parse FETCH_HEAD)" = "82dddbc926cc4377808fe530bf135f08213cd213"
+git -C projects/cockpit merge-base --is-ancestor 43dbf115db0fece980d3ffe2d8339e4fbc1b5b59 FETCH_HEAD
+```
+
+All three commands must exit 0 before moving the root gitlink, and only then
+regenerate `docs/generated/capability-registry.yaml`.
 Never regenerate the projection while the wrapper still exposes retired commands.
 
 - [ ] **Step 5: Sync docs projection**
@@ -1288,11 +1380,23 @@ gone from the available-surface listing (or explicitly marked retired with the
 Mesh-bound successor reference); regenerate the capability projection in the same
 commit so registry, docs, and wrapper agree.
 
-- [ ] **Step 6: Host LaunchAgent cleanup only after code merge**
+- [ ] **Step 6: Separate governed post-merge ops follow-up**
 
-Unload/remove the host LaunchAgent plist entries that auto-spawn the daemon,
-watchdog, or scenario runner only after the retirement code is merged to root main.
-Never clean up host services while a half-retired binary can still self-resurrect.
+This is not a Task8 repo write or Task8 code-PR completion prerequisite. The separate
+governed post-merge ops follow-up targets the exact service
+`com.omostation.agora.daemon` and plist
+`~/Library/LaunchAgents/com.omostation.agora.daemon.plist`; it must first collect
+read-only evidence:
+
+```bash
+launchctl list com.omostation.agora.daemon
+lsof -nP -iTCP:7432 -sTCP:LISTEN
+```
+
+Do not execute `launchctl unload`/`bootout`, `rm`, `kill`, or any other mutation in
+Task8. Until that separate follow-up is actually executed, operational cleanup
+remains pending; never clean up host services while a half-retired binary can still
+self-resurrect.
 
 - [ ] **Step 7: Run GREEN tests and deliver**
 
@@ -1303,4 +1407,4 @@ python3 bin/cockpit/gen-capability-registry.py --check --quiet
 
 Commit: `fix(phase8): retire root wrapper bypass commands`.
 
-Tag: `delivery/t1-12-phase8-root-recovery-v1`.
+Tag: `delivery/t1-12-phase8-root-scope-20260825-v3`.
