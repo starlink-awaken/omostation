@@ -58,7 +58,7 @@ last-reviewed: 2026-08-22
 | mof_m2_coverage            | mof        | round8  | 2026-09-08 | 15   | managed | bin/mof/mof-m2-coverage.py            | scripts/bin/mof/mof-m2-coverage.py            |
 | rule_history_insight       | gac        | round8  | 2026-09-08 | 15   | managed | bin/gac/rule-history-insight.py       | scripts/bin/gac/rule-history-insight.py       |
 | alert_aggregator           | gac        | round9  | 2026-09-15 | 15   | managed | bin/gac/alert-aggregator.py           | scripts/bin/gac/alert-aggregator.py           |
-| alert_mock_p0_notify       | gac        | round9  | 2026-09-15 | 15   | managed | bin/gac/alert-mock-p0-notify.py       | scripts/bin/gac/alert-mock-p0-notify.py       |
+| alert_mock_p0_notify       | gac        | round9  | 2026-09-15 | 15   | managed | bin/_archive/2026-08-conv3/alert-mock-p0-notify.py       | scripts/bin/_archive/2026-08-conv3/alert-mock-p0-notify.py       |
 | auto_merge_lane_policy     | gac        | round9  | 2026-09-15 | 15   | managed | bin/gac/auto-merge-lane-policy.py     | scripts/bin/gac/auto-merge-lane-policy.py     |
 | dim_weight                 | gac        | round9  | 2026-09-15 | 15   | managed | bin/gac/dim-weight.py                 | scripts/bin/gac/dim-weight.py                 |
 | event_loop_lint            | gac        | round9  | 2026-09-15 | 15   | managed | bin/gac/event-loop-lint.py            | scripts/bin/gac/event-loop-lint.py            |

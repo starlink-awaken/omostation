@@ -22,7 +22,7 @@ This roadmap publishes the multi-milestone plan for the next phase of governance
 
 | M | Round | Scope | Status |
 |---|-------|-------|--------|
-| **M1** | ADR-0384 | A1 `make rebase-regen` automation, A3 doc-ssot cleanup, B1 `bin/gac/gate-effectiveness.py` meta-meta tool | ✅ shipped |
+| **M1** | ADR-0384 | A1 `make rebase-regen` automation, A3 doc-ssot cleanup, B1 `bin/_archive/2026-08-conv3/gate-effectiveness.py` meta-meta tool | ✅ shipped |
 | **M2** | 0385+ | A2 cron pruner; B2 SSOT healthcheck auto-report | planned |
 | **M3** | later | C1 drift history → concurrent hot-spot prediction (use 10 rounds of drift data) | planned |
 | **M4** | later | C2 convergence proposal generator (semi-automated ADR draft from drift patterns) | planned |

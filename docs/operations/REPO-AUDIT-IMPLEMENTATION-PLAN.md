@@ -34,7 +34,7 @@ last-reviewed: 2026-08-18
 
 **Files:**
 - Create: `bin/ssot/audit-repo-health.sh`
-- Create: `bin/ssot/test-audit-repo-health.sh`
+- Create: `bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 
 **Interfaces:**
 - Consumes: 无（首个任务）
@@ -44,7 +44,7 @@ last-reviewed: 2026-08-18
 - [ ] **Step 1: 写失败测试（枚举函数）**
 
 ```bash
-cat > bin/ssot/test-audit-repo-health.sh <<'TESTEOF'
+cat > bin/_archive/2026-08-t6-05/test-audit-repo-health.sh <<'TESTEOF'
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
@@ -71,12 +71,12 @@ test_enumerate_repos
 test_log
 echo "ALL TESTS PASSED"
 TESTEOF
-chmod +x bin/ssot/test-audit-repo-health.sh
+chmod +x bin/_archive/2026-08-t6-05/test-audit-repo-health.sh
 ```
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: FAIL（`source: bin/ssot/audit-repo-health.sh: No such file or directory`）
 
 - [ ] **Step 3: 写最小骨架实现**
@@ -107,13 +107,13 @@ chmod +x bin/ssot/audit-repo-health.sh
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: PASS，输出 "枚举 N 个仓库"（N ≥ 15）+ "ALL TESTS PASSED"
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add bin/ssot/audit-repo-health.sh bin/ssot/test-audit-repo-health.sh
+git add bin/ssot/audit-repo-health.sh bin/_archive/2026-08-t6-05/test-audit-repo-health.sh
 git commit -m "feat(audit): 审计编排器骨架 + 仓库枚举"
 ```
 
@@ -123,7 +123,7 @@ git commit -m "feat(audit): 审计编排器骨架 + 仓库枚举"
 
 **Files:**
 - Modify: `bin/ssot/audit-repo-health.sh`（追加 audit_ci 函数 + main 分发）
-- Modify: `bin/ssot/test-audit-repo-health.sh`（追加测试）
+- Modify: `bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`（追加测试）
 
 **Interfaces:**
 - Consumes: `enumerate_repos()`、`log()`（Task 1）
@@ -133,7 +133,7 @@ git commit -m "feat(audit): 审计编排器骨架 + 仓库枚举"
 - [ ] **Step 1: 写失败测试**
 
 ```bash
-cat >> bin/ssot/test-audit-repo-health.sh <<'TESTEOF'
+cat >> bin/_archive/2026-08-t6-05/test-audit-repo-health.sh <<'TESTEOF'
 
 test_ci_status_green() {
   # 用本仓库 phase-gate workflow 实测 (近期应绿)
@@ -156,7 +156,7 @@ TESTEOF
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: FAIL（`ci_status_of: command not found`）
 
 - [ ] **Step 3: 实现 audit_ci + ci_status_of**
@@ -212,13 +212,13 @@ SHEOF
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: PASS + "ALL TESTS PASSED"（注意：`audit_ci` 需 gh 认证可用，测试仅验证 `ci_status_of` 返回逻辑）
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add bin/ssot/audit-repo-health.sh bin/ssot/test-audit-repo-health.sh
+git add bin/ssot/audit-repo-health.sh bin/_archive/2026-08-t6-05/test-audit-repo-health.sh
 git commit -m "feat(audit): CI 健康度检查 (gh run list 聚合)"
 ```
 
@@ -228,7 +228,7 @@ git commit -m "feat(audit): CI 健康度检查 (gh run list 聚合)"
 
 **Files:**
 - Modify: `bin/ssot/audit-repo-health.sh`（追加 audit_submodule）
-- Modify: `bin/ssot/test-audit-repo-health.sh`
+- Modify: `bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 
 **Interfaces:**
 - Consumes: `enumerate_repos()`、`log()`（Task 1）
@@ -238,7 +238,7 @@ git commit -m "feat(audit): CI 健康度检查 (gh run list 聚合)"
 - [ ] **Step 1: 写失败测试**
 
 ```bash
-cat >> bin/ssot/test-audit-repo-health.sh <<'TESTEOF'
+cat >> bin/_archive/2026-08-t6-05/test-audit-repo-health.sh <<'TESTEOF'
 
 test_audit_submodule_returns_json() {
   local out
@@ -258,7 +258,7 @@ TESTEOF
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: FAIL（`audit_submodule: command not found`）
 
 - [ ] **Step 3: 实现 audit_submodule（调用既有脚本 + 简单包装）**
@@ -287,13 +287,13 @@ SHEOF
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: PASS + "ALL TESTS PASSED"（若既有脚本输出格式不匹配，调整 python 解析字段名——用 `python3 -c` 打印实际 keys 定位）
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add bin/ssot/audit-repo-health.sh bin/ssot/test-audit-repo-health.sh
+git add bin/ssot/audit-repo-health.sh bin/_archive/2026-08-t6-05/test-audit-repo-health.sh
 git commit -m "feat(audit): submodule 漂移检查 (复用 check-submodule-pointer-drift)"
 ```
 
@@ -303,7 +303,7 @@ git commit -m "feat(audit): submodule 漂移检查 (复用 check-submodule-point
 
 **Files:**
 - Modify: `bin/ssot/audit-repo-health.sh`
-- Modify: `bin/ssot/test-audit-repo-health.sh`
+- Modify: `bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 
 **Interfaces:**
 - Consumes: `log()`（Task 1）
@@ -312,7 +312,7 @@ git commit -m "feat(audit): submodule 漂移检查 (复用 check-submodule-point
 - [ ] **Step 1: 写失败测试**
 
 ```bash
-cat >> bin/ssot/test-audit-repo-health.sh <<'TESTEOF'
+cat >> bin/_archive/2026-08-t6-05/test-audit-repo-health.sh <<'TESTEOF'
 
 test_audit_hook_shape() {
   local out
@@ -333,7 +333,7 @@ TESTEOF
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: FAIL（`audit_hook: command not found`）
 
 - [ ] **Step 3: 实现 audit_hook（对比 canonical .githooks vs 执行位置）**
@@ -366,13 +366,13 @@ SHEOF
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: PASS + "ALL TESTS PASSED"
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add bin/ssot/audit-repo-health.sh bin/ssot/test-audit-repo-health.sh
+git add bin/ssot/audit-repo-health.sh bin/_archive/2026-08-t6-05/test-audit-repo-health.sh
 git commit -m "feat(audit): hook 一致性检查 (canonical vs 执行位置)"
 ```
 
@@ -382,7 +382,7 @@ git commit -m "feat(audit): hook 一致性检查 (canonical vs 执行位置)"
 
 **Files:**
 - Modify: `bin/ssot/audit-repo-health.sh`
-- Modify: `bin/ssot/test-audit-repo-health.sh`
+- Modify: `bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 
 **Interfaces:**
 - Consumes: `audit_ci`（Task 2）、`audit_submodule`（Task 3）、`audit_hook`（Task 4）
@@ -392,7 +392,7 @@ git commit -m "feat(audit): hook 一致性检查 (canonical vs 执行位置)"
 - [ ] **Step 1: 写失败测试**
 
 ```bash
-cat >> bin/ssot/test-audit-repo-health.sh <<'TESTEOF'
+cat >> bin/_archive/2026-08-t6-05/test-audit-repo-health.sh <<'TESTEOF'
 
 test_risk_score_bounds() {
   local score
@@ -407,7 +407,7 @@ TESTEOF
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: FAIL（`risk_score: command not found`）
 
 - [ ] **Step 3: 实现**
@@ -453,13 +453,13 @@ SHEOF
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: PASS + "ALL TESTS PASSED"
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add bin/ssot/audit-repo-health.sh bin/ssot/test-audit-repo-health.sh
+git add bin/ssot/audit-repo-health.sh bin/_archive/2026-08-t6-05/test-audit-repo-health.sh
 git commit -m "feat(audit): 卫生检查 + 风险评分 (CI红40/漂移30/hook20/卫生10)"
 ```
 
@@ -469,7 +469,7 @@ git commit -m "feat(audit): 卫生检查 + 风险评分 (CI红40/漂移30/hook20
 
 **Files:**
 - Modify: `bin/ssot/audit-repo-health.sh`（追加 render_report + main）
-- Modify: `bin/ssot/test-audit-repo-health.sh`
+- Modify: `bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 
 **Interfaces:**
 - Consumes: `enumerate_repos`、`audit_ci`、`audit_submodule`、`audit_hook`、`audit_hygiene`、`risk_score`（Task 1-5）
@@ -479,7 +479,7 @@ git commit -m "feat(audit): 卫生检查 + 风险评分 (CI红40/漂移30/hook20
 - [ ] **Step 1: 写失败测试**
 
 ```bash
-cat >> bin/ssot/test-audit-repo-health.sh <<'TESTEOF'
+cat >> bin/_archive/2026-08-t6-05/test-audit-repo-health.sh <<'TESTEOF'
 
 test_main_json() {
   local out
@@ -506,7 +506,7 @@ TESTEOF
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: FAIL（脚本无 `--json`/`--markdown` 分发）
 
 - [ ] **Step 3: 实现 render_report + main 分发**
@@ -582,13 +582,13 @@ SHEOF
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: PASS + "ALL TESTS PASSED"（`--json --limit 1` 输出合法 JSON，`--markdown --limit 1` 含表头）
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add bin/ssot/audit-repo-health.sh bin/ssot/test-audit-repo-health.sh
+git add bin/ssot/audit-repo-health.sh bin/_archive/2026-08-t6-05/test-audit-repo-health.sh
 git commit -m "feat(audit): 报告渲染 --json/--markdown 双模式 + main 分发"
 ```
 
@@ -599,7 +599,7 @@ git commit -m "feat(audit): 报告渲染 --json/--markdown 双模式 + main 分�
 **Files:**
 - Modify: `bin/ssot/audit-repo-health.sh`（追加 render_debt_entries）
 - Create: `bin/ssot/debt-entry-template.yaml`
-- Modify: `bin/ssot/test-audit-repo-health.sh`
+- Modify: `bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 
 **Interfaces:**
 - Consumes: `render_report json` 输出（Task 6）
@@ -609,7 +609,7 @@ git commit -m "feat(audit): 报告渲染 --json/--markdown 双模式 + main 分�
 - [ ] **Step 1: 写失败测试**
 
 ```bash
-cat >> bin/ssot/test-audit-repo-health.sh <<'TESTEOF'
+cat >> bin/_archive/2026-08-t6-05/test-audit-repo-health.sh <<'TESTEOF'
 
 test_render_debt_entries() {
   local sample
@@ -627,7 +627,7 @@ TESTEOF
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: FAIL（`render_debt_entries: command not found`）
 
 - [ ] **Step 3: 实现（生成对齐 gap item 格式的 YAML 到 stdout）**
@@ -678,13 +678,13 @@ SHEOF
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: PASS + "ALL TESTS PASSED"
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add bin/ssot/audit-repo-health.sh bin/ssot/debt-entry-template.yaml bin/ssot/test-audit-repo-health.sh
+git add bin/ssot/audit-repo-health.sh bin/ssot/debt-entry-template.yaml bin/_archive/2026-08-t6-05/test-audit-repo-health.sh
 git commit -m "feat(audit): 台账条目生成 --debt 模式 (capability_gap)"
 ```
 
@@ -694,7 +694,7 @@ git commit -m "feat(audit): 台账条目生成 --debt 模式 (capability_gap)"
 
 **Files:**
 - Create: `.github/workflows/repo-health-daily.yml`
-- Modify: `bin/ssot/test-audit-repo-health.sh`（验证 YAML 语法）
+- Modify: `bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`（验证 YAML 语法）
 
 **Interfaces:**
 - Consumes: `bin/ssot/audit-repo-health.sh --json`（Task 6）
@@ -703,7 +703,7 @@ git commit -m "feat(audit): 台账条目生成 --debt 模式 (capability_gap)"
 - [ ] **Step 1: 写失败测试（YAML 语法）**
 
 ```bash
-cat >> bin/ssot/test-audit-repo-health.sh <<'TESTEOF'
+cat >> bin/_archive/2026-08-t6-05/test-audit-repo-health.sh <<'TESTEOF'
 
 test_workflow_yaml() {
   python3 -c "
@@ -722,7 +722,7 @@ TESTEOF
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: FAIL（文件不存在，yaml.safe_load 抛 FileNotFoundError）
 
 - [ ] **Step 3: 创建 workflow**
@@ -790,13 +790,13 @@ PYEOF
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: PASS + "ALL TESTS PASSED"
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add .github/workflows/repo-health-daily.yml bin/ssot/test-audit-repo-health.sh
+git add .github/workflows/repo-health-daily.yml bin/_archive/2026-08-t6-05/test-audit-repo-health.sh
 git commit -m "feat(ci): repo-health-daily 看板 (每日cron + 关键gate事件 + issue告警)"
 ```
 
@@ -805,7 +805,7 @@ git commit -m "feat(ci): repo-health-daily 看板 (每日cron + 关键gate事件
 ### Task 9: 端到端验证 + 分级验收
 
 **Files:**
-- Modify: `bin/ssot/test-audit-repo-health.sh`（追加 e2e 冒烟）
+- Modify: `bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`（追加 e2e 冒烟）
 
 **Interfaces:**
 - Consumes: 全部 Task 1-8
@@ -814,7 +814,7 @@ git commit -m "feat(ci): repo-health-daily 看板 (每日cron + 关键gate事件
 - [ ] **Step 1: 写 e2e 冒烟测试**
 
 ```bash
-cat >> bin/ssot/test-audit-repo-health.sh <<'TESTEOF'
+cat >> bin/_archive/2026-08-t6-05/test-audit-repo-health.sh <<'TESTEOF'
 
 test_e2e_full() {
   local out
@@ -836,7 +836,7 @@ TESTEOF
 
 - [ ] **Step 2: 跑测试确认通过（e2e 冒烟）**
 
-Run: `bash bin/ssot/test-audit-repo-health.sh`
+Run: `bash bin/_archive/2026-08-t6-05/test-audit-repo-health.sh`
 Expected: ALL TESTS PASSED（含 e2e：≥5 仓库、score 0-100）
 
 - [ ] **Step 3: 生成正式审计报告**
@@ -867,7 +867,7 @@ echo "  □ 看板首跑确认绿 (gh run list --workflow repo-health-daily)"
 - [ ] **Step 5: Commit（报告 + 台账条目）**
 
 ```bash
-git add docs/operations/REPO-AUDIT-2026-08-09.md bin/ssot/test-audit-repo-health.sh
+git add docs/operations/REPO-AUDIT-2026-08-09.md bin/_archive/2026-08-t6-05/test-audit-repo-health.sh
 # 台账条目按既有流程写入 .omo/_truth/registry/debt.yaml (人工确认后)
 git commit -m "docs(audit): 2026-08-09 全面审计报告 + 分级验收"
 ```
