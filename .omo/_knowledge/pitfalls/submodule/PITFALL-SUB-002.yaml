@@ -1,0 +1,16 @@
+schema: agent-error/v1
+id: PITFALL-SUB-002
+category: submodule
+severity: medium
+title: 跨子模块内省静默失败 — git show 读不到内容
+symptom: git show origin/main:projects/agora/etc/file.yaml 返回空 → 误判为'不存在'或'drift'
+root_cause: git show 无法读子模块内容(子模块对象不在主仓 object store)
+solution: '必须在子模块检出内操作: cd projects/<sub> && git show HEAD:<file>'
+prevention: '两次误报根因: -92口径误读 + split-brain假阳性'
+tags:
+- submodule
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active

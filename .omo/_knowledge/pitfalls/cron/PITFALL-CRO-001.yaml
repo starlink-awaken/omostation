@@ -1,0 +1,16 @@
+schema: agent-error/v1
+id: PITFALL-CRO-001
+category: cron
+severity: medium
+title: crontab 引用已归档/移动的脚本 → 静默断链
+symptom: meta-doctor M2 检出 dead_refs; cron job 持续失败但无人注意
+root_cause: 配额清偿归档脚本时未检查 crontab 引用(git grep 不覆盖 crontab -l)
+solution: 恢复脚本 或 移除 crontab 条目; 归档前必须跑 meta-doctor --json 检查
+prevention: 'anti-corrosion-check.py 案例: git grep 说零引用但 crontab 有'
+tags:
+- cron
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active
