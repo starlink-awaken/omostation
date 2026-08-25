@@ -16,13 +16,15 @@ def cmd_cartridge(args: argparse.Namespace) -> int:
 
     if action == "pack":
         from .cartridge_ops import pack_cartridge
+
         if not getattr(args, "source_dir", None) or not getattr(args, "output", None):
             console.print("[red]❌ 缺少必要参数: cockpit cartridge pack <DIR> --output <FILE>[/]")
             return 1
         return pack_cartridge(args.source_dir, args.output)
-    
+
     if action == "run":
         from .cartridge_ops import run_cartridge
+
         if not getattr(args, "cartridge_file", None) or not getattr(args, "intent", None):
             console.print("[red]❌ 缺少必要参数: cockpit cartridge run <FILE> --intent <INTENT>[/]")
             return 1

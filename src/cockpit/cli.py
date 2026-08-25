@@ -745,6 +745,7 @@ def main() -> int:
 
     def cmd_daemon(a):
         from agora.daemon import run_daemon
+
         run_daemon(port=a.port)
         return 0
 
