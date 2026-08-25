@@ -278,9 +278,7 @@ def test_system_map_builds_workspace_dimensions(monkeypatch, tmp_path):
     archive_path = Path(mesh_contract["physical_location"])
     assert archive_path.parts[:2] == ("bin", "_archive")
     mesh_verify = next(action for action in mesh_router["actions"] if action["id"] == "copy-verify-command")
-    assert mesh_verify["value"] == (
-        f'cd "{compat.WORKSPACE_ROOT}" && uv run python "{archive_path}" --check'
-    )
+    assert mesh_verify["value"] == (f'cd "{compat.WORKSPACE_ROOT}" && uv run python "{archive_path}" --check')
     assert not any(action["id"] == "copy-start-command" for action in mesh_router["actions"])
     metaos_project = next(project for project in payload["projects"] if project["id"] == "metaos")
     assert any("pytest" in command for command in metaos_project["operational"]["commands"])
