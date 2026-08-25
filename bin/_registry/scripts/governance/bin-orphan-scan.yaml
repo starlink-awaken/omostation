@@ -1,5 +1,5 @@
 schema: script-registry/v1
-id: bin/gac/bin-orphan-scan.py
+id: bin/_archive/2026-08-25-dfsq-quota/bin-orphan-scan.py
 name: Bin Orphan Scan
 category: governance
 owner: governance-team
