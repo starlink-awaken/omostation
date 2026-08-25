@@ -185,7 +185,7 @@ gac:
     check_type: advisory
     rule_baseline: 139
     adr_baseline: 361
-    script_baseline: 487    # 2026-08-25: main 并发合并遗留 (#2158 unified-health-score + #2160 error-knowledge 加脚本未同步 baseline), 487 active → SCRIPT-BASELINE-SYNC 铁律已固化
+    script_baseline: 494    # 2026-08-25: main 并发合并遗留 (#2158/#2160/#2183 + Phase7 #2187 加脚本未同步 baseline), 494 active → SCRIPT-BASELINE-SYNC 铁律已固化 (T10-12 闭环 PR 顺带同步)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
