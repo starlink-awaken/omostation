@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from argparse import Namespace
@@ -737,6 +738,8 @@ def test_real_ledger_lint_adds_zero_done_findings(
 
 GOVERNANCE_WORKFLOW = ROOT / ".github/workflows/governance-check.yml"
 BET_GATE_STEP_NAME = "BET done-transition gate"
+POINTER_DRIFT_STEP_NAME = "Submodule pointer drift check"
+POINTER_STRICT_STEP_NAME = "Submodule pointer strict auto-bump gate"
 
 
 def _governance_workflow() -> dict:
@@ -809,6 +812,78 @@ def test_governance_verify_has_bet_done_transition_gate() -> None:
     # The gate runs after Python deps are installed and before the full governance verification.
     assert names.index("Install Python gate deps") < names.index(BET_GATE_STEP_NAME)
     assert names.index(BET_GATE_STEP_NAME) < names.index("Run full governance verification")
+
+
+def test_governance_verify_scopes_strict_pointer_freshness_to_auto_bump_prs() -> None:
+    steps = _governance_verify_steps()
+    normal_steps = [step for step in steps if step.get("name") == POINTER_DRIFT_STEP_NAME]
+    strict_steps = [step for step in steps if step.get("name") == POINTER_STRICT_STEP_NAME]
+
+    assert len(normal_steps) == 1
+    normal_script = str(normal_steps[0].get("run", ""))
+    assert "python3 bin/gac/check-submodule-pointer-drift.py --json" in normal_script
+    assert "--strict" not in normal_script
+    assert 'status == "ahead"' in normal_script
+    assert '.results | type == "array"' in normal_script
+
+    assert len(strict_steps) == 1
+    strict = strict_steps[0]
+    assert strict.get("if") == (
+        "github.event_name == 'pull_request' && "
+        "startsWith(github.head_ref, 'auto/submodule-bump-')"
+    )
+    strict_script = str(strict.get("run", ""))
+    assert "python3 bin/gac/check-submodule-pointer-drift.py --strict" in strict_script
+
+
+@pytest.mark.parametrize(
+    ("payload", "checker_rc", "expected_rc"),
+    [
+        ({"results": [{"status": "aligned"}]}, 0, 0),
+        ({"results": [{"status": "behind"}]}, 0, 0),
+        ({"results": [{"status": "ahead"}]}, 0, 1),
+        ({"results": [{"status": "behind"}, {"status": "ahead"}]}, 0, 1),
+        ({"results": [{"status": "DIVERGED"}]}, 1, 1),
+        ({"results": "not-an-array"}, 0, 1),
+        ({"results": [{}]}, 0, 1),
+        ({"results": [None]}, 0, 1),
+        ({"results": [{"status": "unknown"}]}, 0, 1),
+        ("not-json", 0, 1),
+    ],
+)
+def test_normal_pointer_step_behavior(
+    tmp_path: Path,
+    payload: dict | str,
+    checker_rc: int,
+    expected_rc: int,
+) -> None:
+    step = next(
+        step for step in _governance_verify_steps() if step.get("name") == POINTER_DRIFT_STEP_NAME
+    )
+    stub_dir = tmp_path / "bin"
+    stub_dir.mkdir()
+    python_stub = stub_dir / "python3"
+    python_stub.write_text(
+        '#!/bin/sh\nprintf "%s\\n" "$POINTER_JSON"\nexit "$POINTER_RC"\n',
+        encoding="utf-8",
+    )
+    python_stub.chmod(0o755)
+    env = {
+        **os.environ,
+        "PATH": f"{stub_dir}:{os.environ['PATH']}",
+        "POINTER_JSON": json.dumps(payload) if isinstance(payload, dict) else payload,
+        "POINTER_RC": str(checker_rc),
+        "RUNNER_TEMP": str(tmp_path),
+    }
+    result = subprocess.run(
+        ["bash", "-c", f"set -euo pipefail\n{step['run']}"],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == expected_rc, result.stdout + result.stderr
 
 
 def test_governance_verify_runs_spec_binding_focused_tests() -> None:

@@ -205,8 +205,44 @@ jobs:
         run: python3 bin/gac/gac-local-gate.py --strict
       - name: Submodule pointer drift check
         run: |
+          # Normal PRs/main pushes reject ahead/diverged pointers. Reachable
+          # behind pointers remain a supply signal handled by the auto-bump PR.
+          pointer_out="$RUNNER_TEMP/submodule-pointer-drift.json"
+          set +e
+          python3 bin/gac/check-submodule-pointer-drift.py --json > "$pointer_out"
+          pointer_rc=$?
+          set -e
+          cat "$pointer_out"
+          if [[ "$pointer_rc" -ne 0 ]]; then
+            echo "❌ submodule pointer divergence detected"
+            exit 1
+          fi
+          if ! jq -e '
+            .results | type == "array" and all(.[];
+              type == "object" and (
+                .status == "aligned" or
+                .status == "behind" or
+                .status == "ahead" or
+                .status == "DIVERGED" or
+                .status == "unverifiable" or
+                .status == "skip"
+              )
+            )
+          ' "$pointer_out" > /dev/null; then
+            echo "❌ malformed submodule pointer report"
+            exit 1
+          fi
+          if jq -e 'any(.results[]; .status == "ahead")' "$pointer_out" > /dev/null; then
+            echo "❌ submodule pointer ahead of child main"
+            exit 1
+          fi
+      - name: Submodule pointer strict auto-bump gate
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'auto/submodule-bump-')
+        run: |
+          # A PR whose only purpose is freshness must close every reachable
+          # behind pointer; unlike normal delivery PRs, warnings are blocking.
           python3 bin/gac/check-submodule-pointer-drift.py --strict || {
-            echo "❌ submodule pointer drift detected"
+            echo "❌ submodule pointer freshness drift detected"
             exit 1
           }
       - name: Document governance
