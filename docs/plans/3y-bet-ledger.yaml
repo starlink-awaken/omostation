@@ -7726,3 +7726,57 @@ bets:
         evidence: {}
     overall_state: evaluating
   depends_on: []
+- id: BET-Y1Q3-T10-13
+  track: T10-MATURITY
+  window: Y1Q3
+  title: resident decision 提案可观测出口 (提案收件箱 + CLI 审计)
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  started_at: ''
+  goal: '补齐 decision 提案可观测出口: decision_agent 产出(决策提案)只有水位文件计数, 无沉淀可检索落点 + 无输出审计。补提案收件箱 md 视图(.omo/_knowledge/decision-proposals/) + omo resident decision list/status/show CLI 审计出口(扫描 evolution-proposals 全量含历史 3898 条), 让「大脑决策」既有输入追踪(trace_id 溯源)也有输出审计。'
+  non_goals:
+  - 不改提案 JSON 契约(resident-decision/v1 与 evolution-proposals 落点兼容)
+  - 不引入 LLM 调用(提案内容仍由 scan_internal 确定性生成)
+  - 不对历史 3898 个 JSON 批量回填 md(避免膨胀, 历史经 CLI 按需渲染)
+  done_when:
+  - "decision.py _write_proposal 双写 JSON + md 收件箱, md frontmatter 含 status: draft 与 trigger_event 溯源"
+  - omo resident decision list/status/show 三个子命令可用, list/status 直接扫描 evolution-proposals 全量(含历史)并输出统计
+  - 新增 test_resident_decision.py 单元测试全绿
+  - 真实工作区 omo resident decision status 可输出 3898 条历史统计(冒烟验证)
+  verify:
+  - cmd: grep -q "decision-proposals" projects/omo/src/omo/resident/decision.py
+    expect: exit 0
+  - cmd: grep -q "list" projects/omo/src/omo/resident/decision.py
+    expect: exit 0
+  - cmd: grep -q "status" projects/omo/src/omo/resident/decision.py
+    expect: exit 0
+  - cmd: grep -q "show" projects/omo/src/omo/resident/decision.py
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/decision.py
+  - projects/omo/tests/
+  - docs/superpowers/specs/2026-08-25-resident-decision-observability-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-decision-observability-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:52d11162b0b3aad0dd414d76fe0bd27f757f7c66fa8821fc29464318da8433a3"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-13
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
