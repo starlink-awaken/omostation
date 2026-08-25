@@ -8,7 +8,7 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 149 |
+| CLI 命令 (含子命令) | 150 |
 | MCP 工具 | 616 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 242 |
@@ -102,7 +102,7 @@
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
 | `cockpit cards` | 显示 CARDS 卡片状态 |
-| `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198) |
+| `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198/0203) |
 | `cockpit challenge` | ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196) |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit code` | 代码库分析与审查 (基于 codeanalyze) |
@@ -196,6 +196,7 @@
 | `cockpit resident` | Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...) |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
+| `cockpit run` | 在隔离沙箱中挂载卡带并执行领域意图 |
 | `cockpit runtime` | runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱) |
 | `cockpit sanyi-status` | 读取 Runtime 三医状态一致性回执 |
 | `cockpit scan` | 平面扫描 |
