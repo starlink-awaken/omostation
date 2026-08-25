@@ -25,5 +25,5 @@ required_capabilities:
 - risk_engine:send-email-check
 - mail:create-draft
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_review'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_review'
 - 'risk_engine L3 检查 + create_draft 占位收件人, 附件挂汇总报告'

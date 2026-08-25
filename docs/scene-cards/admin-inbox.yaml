@@ -25,5 +25,6 @@ required_capabilities:
 - mail:netease_mailmaster
 - llm:local-classify
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_inbox'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_inbox'
 - '2026-08-25 --live 实测: 真实读取并判出 has_task=true, 验证通过'
+- '2026-08-25 深化: mail_agent 桥接命令改指 runtime/ssot-stable/journey-runner.py + --root 主区 — 分支漂移不断供; payload 用 shlex.quote(json.dumps) 转义'

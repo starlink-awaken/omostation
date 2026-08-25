@@ -24,5 +24,5 @@ operator: admin-classify-dispatch-under-risk-engine
 required_capabilities:
 - llm:local-classify
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_classify'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_classify'
 - '解析失败保守默认 requires_forwarding=true'

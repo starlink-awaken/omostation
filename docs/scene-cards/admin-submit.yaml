@@ -25,5 +25,5 @@ required_capabilities:
 - risk_engine:submit-check
 - mail:create-draft
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_submit'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_submit'
 - '2026-08-25 修复: create_draft 挂汇总报告附件, 提交不再空手'

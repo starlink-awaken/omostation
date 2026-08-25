@@ -24,5 +24,5 @@ operator: admin-compile-dispatch-under-risk-engine
 required_capabilities:
 - doc:generate-draft
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_compile'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_compile'
 - '2026-08-25 修复: prompt 注入当前日期, 杜绝年份幻觉'

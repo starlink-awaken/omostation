@@ -25,5 +25,5 @@ required_capabilities:
 - risk_engine:forward-check
 - doc:generate-draft
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_forward'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_forward'
 - '2026-08-25 修复: 生成失败如实报 failed, 不再假报成功假推进'

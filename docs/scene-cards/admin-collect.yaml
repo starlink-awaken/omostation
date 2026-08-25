@@ -24,5 +24,5 @@ operator: admin-collect-dispatch-under-risk-engine
 required_capabilities:
 - tracker:deadline-register
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_collect'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_collect'
 - '异常降级不阻塞流程'
