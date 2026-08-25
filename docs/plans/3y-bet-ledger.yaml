@@ -5600,7 +5600,9 @@ bets:
   - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.manifest.json
   - projects/ecos/src/ecos/ssot/mof/generated/control/mof_control_models.py
   - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.sql
+  - projects/ecos/src/ecos/ssot/tools/mof-enforce.py
   - projects/ecos/tests/test_mof_compiler.py
+  - projects/ecos/tests/test_tool_p2.py
   - projects/ecos/tests/test_work_packet_compiler.py
   - projects/ecos
   - projects/omo/src/omo/blueprint_control.py
