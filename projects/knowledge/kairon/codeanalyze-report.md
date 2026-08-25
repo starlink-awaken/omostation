@@ -4,7 +4,7 @@
 ## 📦 项目概览
 - Python 文件: 1,092
 - 源码行数: ~179,424
-- 目录总文件: 1,344
+- 目录总文件: 1,355
 
 ## 🌐 Graphify 语义图谱
   ❌ graphify: /Users/xiamingxing/Workspace/projects/knowledge/kairon/.venv/bin/python3: No module named graphify

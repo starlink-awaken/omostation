@@ -192,11 +192,11 @@ kairon-lint:
 
 sync-capability-registry:  ## 生成只读能力投影 (扫描 MCP/BOS/CLI；非 SSOT)
 	@echo "── 生成只读能力投影 ──────────────────────────────────"
-	$(PY) bin/cockpit/gen-capability-registry.py
+	$(PY) bin/ssot/gen-capability-registry.py
 
 check-capability-registry:  ## 只读检查能力投影漂移（与 CI 同一实现）
 	@echo "── 检查能力投影漂移 ──────────────────────────────────"
-	@$(PY) bin/cockpit/gen-capability-registry.py --check --quiet
+	@$(PY) bin/ssot/gen-capability-registry.py --check --quiet
 
 capability-sync: sync-capability-registry  ## 兼容入口：薄委托到唯一 projection writer
 
@@ -207,14 +207,14 @@ capability-federation-audit:  ## 只读审计 provider/worker/workflow/capabilit
 
 sync-help-docs: sync-capability-registry  ## 从注册表生成派生文档
 	@echo "── 生成派生文档 ────────────────────────────────────"
-	python3 bin/cockpit/gen-help-docs.py
+	python3 bin/ssot/gen-help-docs.py
 
 sync-all-docs: sync-help-docs  ## 全量文档同步 (注册表 + 所有派生文档)
 	@echo "── 全量文档同步完成 ────────────────────────────────"
 
 check-docs-drift: check-capability-registry  ## 检测文档漂移 (CI 门禁)
 	@echo "── 检测文档漂移 ────────────────────────────────────"
-	@$(PY) bin/cockpit/gen-help-docs.py > /dev/null
+	@$(PY) bin/ssot/gen-help-docs.py > /dev/null
 	@git diff --exit-code projects/cockpit/CAPABILITY-MAP.md docs/CLI-REFERENCE.md docs/INDEX-MCP.md 2>/dev/null || \
 		(echo "❌ 文档漂移! 运行 make sync-all-docs 修复" && exit 1)
 	@echo "✅ 文档无漂移"

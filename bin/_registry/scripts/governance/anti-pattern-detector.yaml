@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/cockpit/gen-capability-registry.py
-name: Gen Capability Registry
+id: bin/gac/anti-pattern-detector.py
+name: Anti Pattern Detector
 category: governance
 owner: governance-team
 description: ""

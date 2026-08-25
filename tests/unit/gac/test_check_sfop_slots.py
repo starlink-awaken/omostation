@@ -232,6 +232,24 @@ class TestHbAdjacency:
         assert any("adapter seam" in w for w in result["warnings"])
         assert result["hb_seam_files"]
 
+    def test_venv_scan_parts_are_ignored(self, tmp_path: Path) -> None:
+        nodes = tmp_path / "nodes"
+        _node(nodes, "omo", "S", "shu")
+        noise = tmp_path / "projects" / "cockpit" / ".venv" / "lib" / "site-packages" / "hit.py"
+        noise.parent.mkdir(parents=True)
+        noise.write_text("from aetherforge.bridge import llm_generate\n", encoding="utf-8")
+        mod = _load_mod()
+        result = mod.check(
+            nodes_dir=nodes,
+            registry_path=tmp_path / "missing.yaml",
+            cron_registry_path=tmp_path / "cron.yaml",
+            projects_root=tmp_path / "projects",
+            baseline_path=tmp_path / "empty.txt",
+            repo_root=tmp_path,
+        )
+        assert result["ok"] is True
+        assert not any("CR-SFOP-05" in e for e in result["errors"])
+
 
 class TestGateInventory:
     def test_sfop_slots_is_blocking_not_soft(self) -> None:

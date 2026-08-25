@@ -19,13 +19,15 @@ import urllib.request
 from pathlib import Path
 from typing import NoReturn
 
-# Add workspace environment via env-resolver
-_BIN_DIR = Path(__file__).resolve().parents[1]
-_RESOLVER_PATH = _BIN_DIR / "cockpit" / "env-resolver.py"
-_spec = importlib.util.spec_from_file_location("env_resolver", _RESOLVER_PATH)
-_env_resolver = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_env_resolver)
-_ROOT = _env_resolver.setup_workspace_paths()
+# Add workspace environment via cockpit.env_resolver
+_ROOT = Path(__file__).resolve().parents[2]
+_COCKPIT_SRC = _ROOT / "projects" / "cockpit" / "src"
+if _COCKPIT_SRC.is_dir() and str(_COCKPIT_SRC) not in sys.path:
+    sys.path.insert(0, str(_COCKPIT_SRC))
+
+from cockpit.env_resolver import setup_workspace_paths, get_workspace_root  # noqa: E402
+
+_ROOT = setup_workspace_paths()
 
 HEALTH_URL = "http://127.0.0.1:7432/health"
 STATUS_FILE = _ROOT / ".omo" / "state" / "daemon-watchdog.json"

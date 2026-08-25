@@ -124,6 +124,9 @@ def _path_to_project(rel: str) -> str | None:
     return None
 
 
+_IGNORED_SCAN_PARTS = {"__pycache__", ".venv", "venv", ".git", "node_modules", "dist", "build", "site-packages"}
+
+
 def _scan_hb_calls(projects_root: Path, repo_root: Path) -> list[dict]:
     findings: list[dict] = []
     if not projects_root.is_dir():
@@ -133,7 +136,7 @@ def _scan_hb_calls(projects_root: Path, repo_root: Path) -> list[dict]:
         if not src.is_dir():
             continue
         for path in src.rglob("*.py"):
-            if "__pycache__" in path.parts or path.name.startswith("test_"):
+            if any(p in _IGNORED_SCAN_PARTS for p in path.parts) or path.name.startswith("test_"):
                 continue
             try:
                 text = path.read_text(encoding="utf-8", errors="replace")
@@ -166,7 +169,7 @@ def _scan_qi_l0(projects_root: Path, qi_projects: set[str], repo_root: Path) -> 
         if not root.is_dir():
             continue
         for path in root.rglob("*.yaml"):
-            if "__pycache__" in path.parts:
+            if any(p in _IGNORED_SCAN_PARTS for p in path.parts):
                 continue
             try:
                 text = path.read_text(encoding="utf-8", errors="replace")
