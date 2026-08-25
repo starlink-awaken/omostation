@@ -1,0 +1,53 @@
+---
+title: 织星道法术器 — MOF 嵌套的理论体系与硬约束
+status: active
+lifecycle: contract
+owner: 夏明星
+created: 2026-08-25
+last-reviewed: 2026-08-25
+type: theoretical-system
+id: DFSQ/v1
+does_not_supersede:
+  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+  - ARCHITECTURE.md
+  - projects/ecos/src/ecos/ssot/mof/m3.yaml
+note: >
+  道法术器不是第五套本体。硬检查入口：
+  python3 bin/gac/check-sfop-slots.py （gate id sfop-slots）
+  python3 bin/gac/check-execution-chain.py （gate id execution-chain, CR-EXEC-CHAIN-01）。
+---
+
+# 织星道法术器（DFSQ/v1）
+
+> **人只进一个收件箱；跨层执行只进一条工作流脊柱；禁止平行操作系统。**
+
+| 层 | 读法 | 已有基建 | 硬约束 |
+|---|---|---|---|
+| **道** | 为什么存在、什么可以存在 | Plan 北极星与证伪；M3 Element | 不可执行，只可违背后判失败 |
+| **法** | 必须 / 禁止 | M2 schema；L0 `CR-SFOP-*`；执行链账本 | `check-sfop-slots.py` + `check-execution-chain.py` |
+| **术** | 怎么做 | Mesh / MOS / agent-workflow / resident 投影 | 填槽，不新开术的种类 |
+| **器** | 用什么做 | `COMP-WS-*` Component；bin 脚本；MCP；CLI | 自报槽位；至少出现在一本触发账里 |
+
+## 宪法栈 → 现有账本（GaC 融合，不新建 OS）
+
+纵向覆盖走 **同一条** `execution-chain` 检查，而不是再开一套 GaC。
+
+| 宪法层 | 账本（已有） | 链上 id | 缺账 |
+|---|---|---|---|
+| 宪法指针 | `AGENTS.md` §3 / §5 | 非条目账 | 文档指针，不计数 |
+| skills | `.agents/skills/**/SKILL.md` | `skill:<rel>` | extra_active 孤儿 fail-closed |
+| workflow | `.omo/_truth/registry/agent-workflows/workflows/` | `workflow:<id>` | 同上 |
+| MCP | `docs/generated/capability-registry.yaml` `mcp_servers` | `mcp-server:<id>` | 同上 |
+| 内部 CLI | 同文件 `cli_commands` | `cli:<name>` | 同上 |
+| 脚本 | `bin/_registry/scripts` | 脚本路径 | 现网无 trigger = warn |
+| githook | `.githooks/*` | `.githooks/<name>` | 文件即账 |
+| CI | `.omo/_truth/registry/ci-surfaces.yaml` | `tool` 路径 | 现网无 trigger = warn |
+| 定时/异步 | `.omo/_cron` → `.omo/cron/registry.yaml` | command 中的 `bin/*.py` | cron trigger |
+
+**阻断律**
+
+- CR-SFOP-01：每个 `COMP-WS-*` 应声明合法 `sfop_slot` 与 `dao_layer`。现网未标注 = **warn**（新门禁 shadow，不锁主干）；节点目录缺失同样 warn。
+- CR-SFOP-02：若已声明 `S`，活跃 Project 中至多一个且必须为 `COMP-WS-omo`（冲突仍 fail-closed）。尚未声明 S = warn。
+- CR-EXEC-CHAIN-01：声称活跃却不在任一账本 → fail-closed；现网未接线的登记项只 warn。
+
+禁止：第二 dispatcher、第五套本体、把 AGE-v2 / resident / BCOS 当成第二控制面、为 skills/MCP 再造一套 GaC。
