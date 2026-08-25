@@ -1,5 +1,5 @@
 schema: script-registry/v1
-id: bin/cockpit/gen-help-docs.py
+id: bin/ssot/gen-help-docs.py
 name: Gen Help Docs
 category: governance
 owner: governance-team

@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+"""Cockpit CLI root entrypoint (L3 human front-door).
+
+Single unified entrypoint for human operators and AI agents in the workspace.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+# Ensure cockpit package is discoverable from workspace root
+_ROOT = Path(__file__).resolve().parent.parent
+_COCKPIT_SRC = _ROOT / "projects" / "cockpit" / "src"
+if _COCKPIT_SRC.is_dir() and str(_COCKPIT_SRC) not in sys.path:
+    sys.path.insert(0, str(_COCKPIT_SRC))
+
+from cockpit.cli import main  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main())
