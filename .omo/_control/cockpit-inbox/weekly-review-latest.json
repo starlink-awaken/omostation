@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-08-25T03:36:01+00:00",
+  "health": {
+    "score": 54.4
+  },
+  "value": {
+    "readiness": "not_ready",
+    "total_episodes": 0,
+    "progress_pct": 0,
+    "four_week_value_gate": "unknown"
+  },
+  "debt": {
+    "open_count": 2,
+    "proposed_count": 0,
+    "total": 2,
+    "mdead_titles": [
+      "引用断链: bin/gac/heartbeat-wrapper.sh"
+    ]
+  },
+  "decisions": [
+    {
+      "id": "w3w3-planned-status-normalize",
+      "title": "planned 卡 status 归一: deferred/backlog → pending|candidate",
+      "path": ".omo/tasks/archived/done/w3w3-planned-status-normalize.yaml",
+      "source": "omo-debt"
+    }
+  ]
+}

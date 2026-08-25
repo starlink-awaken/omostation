@@ -56,7 +56,7 @@ notes:
 - '2026-08-07: proposal_only→shadow 批量转换. 无业务副作用, 仅观察. falsifier: 若 shadow 期间无信号被归一化入
   inbox，则场景无价值，回退 draft'
 - 'W1 统一收件箱: 多渠道汇聚 → 分诊 → 路由到下游场景. 连接器复用 document-review 的 3 个公文源.'
-- Transitioned shadow→assisted at 2026-08-25T06:13:08.509122+00:00 by xiamingxing
+- Transitioned shadow→assisted at 2026-08-25T06:51:53.840403+00:00 by xiamingxing
 bet: BET-Y1Q1-T2-01
 falsifier: 若 shadow 期间无信号被归一化入 inbox，则场景无价值，回退 draft
 activation_blockers: []
