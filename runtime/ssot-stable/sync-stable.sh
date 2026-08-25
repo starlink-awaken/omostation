@@ -5,11 +5,13 @@
 # 不断供, mail-daemon 8h 断档实锤后的制度)。本脚本在变更里程碑后手动跑,
 # 把 bin/ssot 的运行时脚本同步过去。
 #
-# 用法: bash bin/ssot/sync-stable.sh
+# 用法: bash runtime/ssot-stable/sync-stable.sh
+# (2026-08-25: 从 bin/ssot/ 挪入本目录 — bin 配额规则"增1须删1",
+# 本脚本语义上就是 stable 目录的配套工具, 不该占 bin 名额)
 set -euo pipefail
 
-SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STABLE="$SRC/../../runtime/ssot-stable"
+STABLE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SRC="$(cd "$STABLE/../.." && pwd)/bin/ssot"
 
 FILES=(
   mail_daemon.py
