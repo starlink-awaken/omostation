@@ -1941,7 +1941,7 @@ cli_commands:
 - name: controller-shadow
   description: 读取 Runtime 旧控制器影子迁移回执
 - name: daemon
-  description: 启动 Agora 2.0 后台常驻守护进程 (Agent-to-Agent Bus)
+  description: Agora 2.0 后台常驻守护进程管理 (Agent-to-Agent Bus)
 - name: daily
   description: 每日研究简报
 - name: dashboard

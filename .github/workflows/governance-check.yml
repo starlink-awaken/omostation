@@ -150,23 +150,19 @@ jobs:
           # ADR-0379 E-2: check-interfaces 已由独立 workflow interfaces-enforce.yml 覆盖, 移除冗余
           python3 bin/ssot/doc-governance-check.py --scope workspace --no-new-warnings --json
 
-  governance-verify:
+  bet-done-transition:
+    name: bet-done-transition
     runs-on: ubuntu-latest
     if: "github.event_name != 'push' || github.ref == 'refs/heads/main'"
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # T1-12: done-transition 守卫需要 base revision 做台账 diff
-          submodules: recursive
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
-        continue-on-error: true
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
       - name: Install Python gate deps
-        run: pip install pyyaml pydantic pytest
+        run: pip install pyyaml pydantic
       - name: BET done-transition gate
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         run: |
@@ -198,6 +194,24 @@ jobs:
             echo "::error::BET done-transition findings present (BASE_LEDGER_UNREADABLE / BET_DONE_)"
             exit 1
           fi
+
+  governance-verify:
+    runs-on: ubuntu-latest
+    if: "github.event_name != 'push' || github.ref == 'refs/heads/main'"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # T1-12: done-transition 守卫需要 base revision 做台账 diff
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+      - name: Install Python gate deps
+        run: pip install pyyaml pydantic pytest
       - name: BET spec binding lint contract tests
         run: python3 -m pytest tests/test_spec_binding_lint.py -q
       - name: Run full governance verification
