@@ -46,8 +46,8 @@ note: >
 
 **阻断律**
 
-- CR-SFOP-01：每个 `COMP-WS-*` 必须声明合法 `sfop_slot` 与 `dao_layer`（节点目录缺失时 warn，不因未 init 子模块锁主干）。
-- CR-SFOP-02：活跃 Project 中 `sfop_slot=S` 至多一个，且为 `COMP-WS-omo`。
+- CR-SFOP-01：每个 `COMP-WS-*` 应声明合法 `sfop_slot` 与 `dao_layer`。现网未标注 = **warn**（新门禁 shadow，不锁主干）；节点目录缺失同样 warn。
+- CR-SFOP-02：若已声明 `S`，活跃 Project 中至多一个且必须为 `COMP-WS-omo`（冲突仍 fail-closed）。尚未声明 S = warn。
 - CR-EXEC-CHAIN-01：声称活跃却不在任一账本 → fail-closed；现网未接线的登记项只 warn。
 
 禁止：第二 dispatcher、第五套本体、把 AGE-v2 / resident / BCOS 当成第二控制面、为 skills/MCP 再造一套 GaC。
