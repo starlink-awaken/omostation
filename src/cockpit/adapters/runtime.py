@@ -53,14 +53,27 @@ except ImportError:  # runtime unavailable or tree without executor/i0/arch_heal
         return None
 
 
+try:
+    from runtime.executor.server import create_app  # type: ignore[import-not-found]
+except ImportError:
+    create_app = None  # type: ignore[assignment]
+
+try:
+    from runtime.executor.sandbox import Sandbox  # type: ignore[import-not-found]
+except ImportError:
+    Sandbox = None  # type: ignore[assignment]
+
+
 __all__ = [
     "AGENT_RUNTIME_PORT",
     "AUTH_TOKEN",
     "DEFAULT_MODEL",
     "EXEC_LOG_FILE",
     "AgentRuntime",
+    "Sandbox",
     "_build_alert_message",
     "_log_execution",
+    "create_app",
     "i0_events",
     "i0_protocols",
     "i0_services",

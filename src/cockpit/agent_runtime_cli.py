@@ -5,25 +5,14 @@ import json
 import sys
 from pathlib import Path
 
-try:
-    from runtime.executor.config import (  # type: ignore[import-not-found]
-        AGENT_RUNTIME_PORT,  # pyright: ignore[reportAttributeAccessIssue]  # removed upstream (agent-runtime archived); mock/fallback only
-        DEFAULT_MODEL,
-        log,
-        setup_logging,
-    )
-    from runtime.executor.engine import AgentRuntime  # type: ignore[import-not-found]
-except ImportError:  # runtime not installed / tree without executor — degrade gracefully
-    # NOTE: do not use KOS_REST_API_PORT — reserved by port-registry.
-    # Runtime's agent-runtime uses 8770 by default.
-    AGENT_RUNTIME_PORT = 0  # type: ignore[assignment]  # fallback: uvicorn picks free port
-    DEFAULT_MODEL = None  # type: ignore[assignment]
-    AgentRuntime = None  # type: ignore[assignment]
-    log = None  # type: ignore[assignment]
-
-    def setup_logging(*_args, **_kwargs) -> None:  # type: ignore[no-redef]
-        """No-op fallback when runtime is unavailable."""
-        return None
+from cockpit.adapters.runtime import (  # SFOP: H→B only via adapters seam
+    AGENT_RUNTIME_PORT,
+    DEFAULT_MODEL,
+    AgentRuntime,
+    create_app,
+    log,
+    setup_logging,
+)
 
 
 def _log_error(msg: str) -> None:
@@ -45,9 +34,7 @@ def run_agent_runtime(argv: list[str] | None = None) -> int:
     setup_logging()
 
     if args.server:
-        try:
-            from runtime.executor.server import create_app  # type: ignore[import-not-found]
-        except ImportError:
+        if create_app is None:
             _log_error("runtime.executor.server unavailable: runtime package missing")
             return 1
 

@@ -1,11 +1,12 @@
 """统一推理接入层 (llm-router) — Wave 2 核心交付。
 
 设计原则 (LLM-ENGINE-ARCHITECTURE.md §4)：
-1. 所有本地推理走网关 (omlxc/aetherforge)，直连 ollama 仅作最后兜底
+1. 所有本地推理走网关 HTTP (omlxc)，直连 ollama 仅作最后兜底
 2. 模型名从注册表动态发现，不硬编码
 3. 每级失败打印原因，不静默降级
+4. SFOP: 不 import aetherforge/omlxc（H↛B）；算力走网关 HTTP
 
-路由顺序: omlxc 网关 (OpenAI 兼容) → ollama 本地 (模型存在性校验) → None
+路由顺序: omlxc 网关 (OpenAI 兼容 HTTP) → ollama 本地 (模型存在性校验) → None
 """
 
 from __future__ import annotations
@@ -21,31 +22,8 @@ DEFAULT_GATEWAY_MODEL = os.environ.get("LLM_ROUTER_GATEWAY_MODEL", "coder-fast")
 DEFAULT_OLLAMA_FALLBACK = os.environ.get("LLM_ROUTER_OLLAMA_FALLBACK", "north-mini-code-1.0:mlx-nvfp4")
 
 
-def _get_bridge():
-    """Lazy import aetherforge bridge — returns None if unavailable."""
-    try:
-        import sys
-        from pathlib import Path
-
-        _af = str(Path(__file__).resolve().parents[3] / "projects" / "aetherforge" / "src")
-        if _af not in sys.path:
-            sys.path.insert(0, _af)
-        from aetherforge.bridge import llm_generate, llm_list_models
-
-        return llm_generate, llm_list_models
-    except Exception:
-        return None, None
-
-
 def discover_gateway_models() -> list[str]:
-    """查询可用模型列表 — 优先 bridge, 回退 HTTP。"""
-    _, list_models = _get_bridge()
-    if list_models:
-        try:
-            return [m["id"].split("/", 1)[-1] for m in list_models()]
-        except Exception:
-            pass
-    # Fallback: direct HTTP
+    """查询可用模型列表 — omlxc OpenAI 兼容 HTTP，不 import B 槽项目。"""
     try:
         req = urlrequest.Request(f"{OMLXC_GATEWAY_URL}/models")  # noqa: S310
         with urlrequest.urlopen(req, timeout=5) as resp:  # noqa: S310
@@ -74,17 +52,7 @@ def model_exists(model: str, tier: str = "ollama") -> bool:
 
 
 def _chat_gateway(prompt: str, model: str, temperature: float = 0.7, max_tokens: int = 2048) -> str | None:
-    """Tier 1: AetherForge bridge (unified LLM entry)。失败返回 None 并说明原因。"""
-    bridge_gen, _ = _get_bridge()
-    if bridge_gen:
-        try:
-            result = bridge_gen(prompt, model=model, timeout=120.0)
-            content = result.get("content", "") or ""
-            return content or None
-        except Exception as exc:
-            print(f"[llm-router] Tier1 bridge 失败: {exc}")
-            return None
-    # Fallback: direct HTTP to omlxc gateway
+    """Tier 1: omlxc OpenAI-compatible HTTP gateway。失败返回 None 并说明原因。"""
     try:
         payload = {
             "model": model,

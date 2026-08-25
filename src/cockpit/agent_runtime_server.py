@@ -4,23 +4,16 @@ import json
 import time
 from pathlib import Path
 
-try:
-    from runtime.executor.config import AUTH_TOKEN, EXEC_LOG_FILE, log  # type: ignore[import-not-found]
-    from runtime.executor.engine import (  # type: ignore[import-not-found]
-        AgentRuntime,
-        _build_alert_message,
-        _log_execution,
-    )
+from cockpit.adapters.runtime import (  # SFOP: H→B only via adapters seam
+    AUTH_TOKEN,
+    EXEC_LOG_FILE,
+    AgentRuntime,
+    _build_alert_message,
+    _log_execution,
+    log,
+)
 
-    _HAS_RUNTIME = True
-except ImportError:  # runtime not installed / tree without executor — degrade gracefully
-    AUTH_TOKEN = None  # type: ignore[assignment]
-    EXEC_LOG_FILE = None  # type: ignore[assignment]
-    log = None  # type: ignore[assignment]
-    AgentRuntime = None  # type: ignore[assignment]
-    _build_alert_message = None  # type: ignore[assignment]
-    _log_execution = None  # type: ignore[assignment]
-    _HAS_RUNTIME = False
+_HAS_RUNTIME = AgentRuntime is not None
 
 
 # ── FastAPI 应用 ──────────────────────────────────────────────────────────────

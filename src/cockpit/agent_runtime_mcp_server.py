@@ -34,8 +34,10 @@ def _log_execution(task_name: str, status: str, summary: str, result: dict[str, 
 def get_runtime():
     global _runtime
     if _runtime is None:
-        from runtime.executor.engine import AgentRuntime  # type: ignore[import-not-found]
+        from cockpit.adapters.runtime import AgentRuntime
 
+        if AgentRuntime is None:
+            raise RuntimeError("runtime package missing")
         _runtime = AgentRuntime()
     return _runtime
 
