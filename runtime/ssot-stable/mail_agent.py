@@ -103,6 +103,15 @@ def generate_briefing(mails: list[Mail], classifications: list[dict]) -> str:
                 action = cls.get("action_needed", "")
                 if action:
                     lines.append(f"- **需执行**: {action}")
+                # 2026-08-25 断点桥接(全链勘测结论): 任务→journey 的自动
+                # 触发保持人工确认(安全边界), briefing 提供一键启动提示。
+                # journey-runner 的 dry-run 默认开, --live 才真 dispatch。
+                lines.append(
+                    f"- 🚀 处理: cd ~/Workspace && python3 bin/ssot/journey-runner.py run "
+                    f"--journey admin-notification-workflow --input "
+                    f"'{{\"subject\": {(mail.subject or '')[:40]!r}, \"sender\": {(mail.sender or '')[:30]!r}}}'"
+                    f"  (dry-run 默认, 确认后加 --live)"
+                )
             else:
                 lines.append(f"- **{mail.subject[:50]}** — {cls.get('summary', '')}")
             lines.append("")
