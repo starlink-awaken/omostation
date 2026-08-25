@@ -181,6 +181,37 @@ def detect_drifts() -> list[Drift]:
     except Exception:
         pass
 
+    # 5. CELL-STALE: AGE-v2 Cell 状态文件有过期条目
+    try:
+        cell_state_file = WORKSPACE / ".omo" / "state" / "agent-cell" / "cell_states.json"
+        if cell_state_file.exists():
+            import json as _json
+            from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+            data = _json.loads(cell_state_file.read_text())
+            now = _dt.now(_tz.utc)
+            stale_count = 0
+            for state in data.values():
+                saved = state.get("saved_at", "")
+                if saved:
+                    try:
+                        ts = _dt.fromisoformat(str(saved).replace("Z", "+00:00"))
+                        if (now - ts).total_seconds() > 86400:  # >24h
+                            stale_count += 1
+                    except (ValueError, TypeError):
+                        pass
+            if stale_count > 0:
+                drifts.append(
+                    Drift(
+                        "CELL-STALE",
+                        "info",
+                        f"Cell 状态文件有 {stale_count} 个过期条目 (>24h)",
+                        "python3 -c \"from omo.resident.cell_state import CellStateManager; CellStateManager().cleanup_stale(max_age_hours=24)\"",
+                        auto_fixable=True,
+                    )
+                )
+    except Exception:
+        pass
+
     return drifts
 
 
@@ -203,6 +234,14 @@ def apply_fix(drift: Drift) -> tuple[bool, str]:
             cmd = drift.fix_cmd.split()
             r = subprocess.run(cmd, cwd=WORKSPACE, capture_output=True, text=True, timeout=60, check=False)
             return r.returncode == 0, (r.stdout or r.stderr)[-300:]
+        if drift.kind == "CELL-STALE":
+            # 清理过期 Cell 状态
+            try:
+                from omo.resident.cell_state import CellStateManager
+                cleaned = CellStateManager().cleanup_stale(max_age_hours=24)
+                return True, f"已清理 {cleaned} 个过期 Cell 状态"
+            except ImportError:
+                return False, "omo.resident.cell_state 不可用"
         return False, f"未知可修复类别: {drift.kind}"
     except Exception as exc:
         return False, str(exc)
