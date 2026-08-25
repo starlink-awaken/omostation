@@ -40,7 +40,7 @@ SSOT_GENERATORS: list[tuple[tuple[str, ...], list[str]]] = [
     # mof-capabilities SSOT → capability-registry 重生成
     (
         (".omo/_truth/registry/mof-capabilities.yaml",),
-        ["uv", "run", "--with", "pyyaml", "python", "bin/cockpit/gen-capability-registry.py"],
+        ["uv", "run", "--with", "pyyaml", "python", "bin/ssot/gen-capability-registry.py"],
     ),
 ]
 

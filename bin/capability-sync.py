@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compatibility CLI for the generated capability discovery projection.
 
-``bin/cockpit/gen-capability-registry.py`` is the sole projection writer. This
+``bin/ssot/gen-capability-registry.py`` is the sole projection writer. This
 module delegates sync/check to it, provides read-only discovery, and exposes
 the narrow public boundary for governed BOS loading/invocation. Native provider,
 BOS, and workflow registries remain the authorities. Only exact canonical IDs
