@@ -9,6 +9,8 @@ cleanup_events:
   - "2026-08-21 孤儿 attestation 文件清理(docs/operations 移动)"
 cleanup_verification: 运行状态无残留孤儿/锁
 verified_at: 2026-08-22
+
+last-reviewed: 2026-08-25
 ---
 
 运行清理(operational 证据):

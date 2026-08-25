@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # Operations Index — Where to Start
 
 > **Purpose**: one file, every operator-essential doc + tool pointer.

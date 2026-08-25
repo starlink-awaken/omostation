@@ -1,0 +1,21 @@
+========================================================
+  Anti-Corrosion Check
+========================================================
+  Status: FAIL
+
+  ✗ tool_bloat:
+      total: 42
+      max_total: 300
+      deprecated_count: 23
+      ✗ 23 deprecated tools need archival
+  ✓ doc_decay:
+      total: 261
+      stale: 5
+      stale_ratio: 0.019
+      max_stale_ratio: 0.1
+  ✗ scene_stagnation:
+      ✗ 3 scenes stuck in shadow
+
+  Violations:
+    ✗ 23 deprecated tools need archival
+    ✗ 3 scenes stuck in shadow

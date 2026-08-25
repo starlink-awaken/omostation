@@ -1,230 +1,48 @@
-# TLM 任务生命周期台账 (SSOT) — 2026-08-25 初版
-# 规则: 声明层(本文件, 人审低频) 与 运行时层(runtime/task-inventory/, 机器生成)分离。
-# lifecycle: proposed → active → degraded → archived → retired
-# 审计器 bin/gac/task-inventory.py 按本文件判活; 未登记的载体任务报 DRIFT。
+# 全谱任务台账 SSOT (task-registry.yaml)
+# 源起: 2026-08-25 五层任务全景图谱探查 (omlxc docs/operations/2026-08-25-task-landscape-five-layers.md)
+# 判活规则与审计器: bin/gac/task-inventory.py
+# 哲学: 扩展现有 SSOT, 不建平行体系 (P74 同级)
+#
+# 字段:
+#   id        稳定标识 (kebab)
+#   layer     compute|governance|life|agent|thirdparty (五层)
+#   carrier   launchd|cron|resident|hook|mcp|login-item
+#   ref       载体定位: launchd label / crontab 关键词 / 进程关键词
+#   freq      resident|1min|2min|5min|30min|hourly|daily|weekly|event
+#   intent    一句话意义
+#   evidence  心跳/产物路径 (可选; 无则只查载体登记)
+#   dormant_since  显式休眠标注 (历史活跃, 现停摆, 待人工裁决)
 schema_version: 1
-updated_at: '2026-08-25T10:30:00Z'
+generated: "2026-08-25"
 tasks:
-  # ===== 体系: compute (算力底座, omlxc/aetherforge) =====
-  - {id: omlxc-daemon, system: compute, carrier: launchd, carrier_ref: com.omlxc.daemon,
-     purpose: "omlx 控制面 daemon: 路由/探测/数据面", schedule: "常驻",
-     evidence: [{path: ~/.omlx/stats.json}], expected_period: 600, lifecycle: active}
-  - {id: omlxc-watchdog, system: compute, carrier: launchd, carrier_ref: com.omlxc.watchdog,
-     purpose: "算力链路守护: 进程自愈+常驻补齐+保活+内存哨兵+节点告警", schedule: "300s",
-     evidence: [{path: ~/.config/omlxc/watchdog.log}], expected_period: 1800, lifecycle: active}
-  - {id: aetherforge-gateway, system: compute, carrier: launchd, carrier_ref: com.aetherforge.gateway,
-     purpose: "云端模型池网关: 路由/凭据复验/free池扫描/weekly对账", schedule: "常驻",
-     evidence: [{path: ~/.aetherforge/state/free_pool_last_seen.json}], expected_period: 900, lifecycle: active}
-  - {id: lmstudio-server, system: compute, carrier: launchd, carrier_ref: com.lmstudio.server,
-     purpose: "LM Studio 推理服务(懒加载空仓策略)", schedule: "常驻",
-     evidence: [{path: "~/Library/Application Support/LM Studio/server-logs"}], expected_period: 86400, lifecycle: active}
-  - {id: ollama-app, system: compute, carrier: login-item, carrier_ref: Ollama,
-     purpose: "Ollama 推理兜底(懒加载)", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-  - {id: omlxc-ollama-env, system: compute, carrier: launchd, carrier_ref: com.omlxc.ollama-env,
-     purpose: "launchctl setenv OLLAMA_HOST 环境设置", schedule: "一次性",
-     evidence: [], expected_period: 0, lifecycle: active}
-
-  # ===== 体系: omostation (治理与自治) =====
-  - {id: omo-mail-daemon, system: omostation, carrier: launchd, carrier_ref: com.omostation.mail-daemon,
-     purpose: "数字大脑P0邮件感知: 读信+LLM分类(已修: 走云端glm-4.7-flash)", schedule: "1800s外层+30s内层",
-     evidence: [{path: "~/Library/Application Support/LM Studio/server-logs"}], expected_period: 86400, lifecycle: active,
-     owner_note: "2026-08-25 曾误路由qwythos bf16, 已修"}
-  - {id: omo-agent-tick, system: omostation, carrier: launchd, carrier_ref: com.omostation.agent-tick-daemon,
-     purpose: "agent tick 心跳", schedule: "常驻", evidence: [{path: ~/Workspace/.omo/state/agent-tick-daemon.jsonl}], expected_period: 3600, lifecycle: active}
-  - {id: omo-signal-poller, system: omostation, carrier: launchd, carrier_ref: com.omostation.signal-poller,
-     purpose: "信号轮询(常驻watch模式; 2026-08-25已砍cron --once冗余轨)", schedule: "常驻",
-     evidence: [{path: ~/Workspace/.omo/state/signal-poller-state.json}], expected_period: 3600, lifecycle: active}
-  - {id: omo-governance-scanner, system: omostation, carrier: launchd, carrier_ref: com.omostation.governance-scanner,
-     purpose: "治理扫描(30min)", schedule: "1800s", evidence: [], expected_period: 5400, lifecycle: active}
-  - {id: omo-resident-decision, system: omostation, carrier: cron, carrier_ref: "cron:resident-decision",
-     purpose: "resident五角色·决策", schedule: "120s",
-     evidence: [{path: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-decision.log}], expected_period: 600, lifecycle: active}
-  - {id: omo-resident-execute, system: omostation, carrier: cron, carrier_ref: "cron:resident-execute",
-     purpose: "resident五角色·执行", schedule: "120s",
-     evidence: [{path: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-execute.log}], expected_period: 600, lifecycle: active}
-  - {id: omo-resident-heartbeat, system: omostation, carrier: cron, carrier_ref: "cron:resident-heartbeat",
-     purpose: "resident五角色·心跳", schedule: "120s",
-     evidence: [{path: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-heartbeat.log}], expected_period: 600, lifecycle: active}
-  - {id: omo-resident-monitor, system: omostation, carrier: cron, carrier_ref: "cron:resident-monitor",
-     purpose: "resident五角色·监控", schedule: "120s",
-     evidence: [{path: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-monitor.log}], expected_period: 600, lifecycle: active}
-  - {id: omo-resident-sediment, system: omostation, carrier: cron, carrier_ref: "cron:resident-sediment",
-     purpose: "resident五角色·沉淀", schedule: "120s",
-     evidence: [{path: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-sediment.log}], expected_period: 600, lifecycle: active}
-  - {id: omo-alert-forwarder, system: omostation, carrier: cron, carrier_ref: "cron:resident-alert",
-     purpose: "告警转发(dry-run)", schedule: "300s",
-     evidence: [{path: ~/Workspace/.omo/_delivery/alert-forwarder/cron.log}], expected_period: 1800, lifecycle: active}
-  - {id: omo-personal-signals, system: omostation, carrier: cron, carrier_ref: "cron:resident-signals",
-     purpose: "个人信号处理", schedule: "300s",
-     evidence: [{path: ~/Workspace/.omo/_delivery/personal-signals/cron.log}], expected_period: 1800, lifecycle: active}
-  - {id: omo-system-health-check, system: omostation, carrier: cron, carrier_ref: "cron:system-health-check",
-     purpose: "系统健康检查+emit", schedule: "日02:10",
-     evidence: [{path: ~/Workspace/.omo/_delivery/resident-orchestrator/health.log}], expected_period: 90000, lifecycle: active}
-  - {id: omo-remediation, system: omostation, carrier: cron, carrier_ref: "cron:remediation-engine",
-     purpose: "GaC文档腐化修复(08-24新增, 08-25修通logs目录后复活)", schedule: "1800s",
-     evidence: [{path: ~/Workspace/.omo/logs/remediation.log}], expected_period: 5400, lifecycle: active}
-  - {id: omo-anti-corrosion, system: omostation, carrier: cron, carrier_ref: "cron:anti-corrosion-check",
-     purpose: "GaC防腐检查(同上复活)", schedule: "时",
-     evidence: [{path: ~/Workspace/.omo/logs/anti-corrosion.log}], expected_period: 10800, lifecycle: active}
-  - {id: omo-uhs, system: omostation, carrier: cron, carrier_ref: "cron:unified-health-score",
-     purpose: "统一健康分(同上复活)", schedule: "日00:00",
-     evidence: [{path: ~/Workspace/.omo/logs/uhs.log}], expected_period: 90000, lifecycle: active}
-  - {id: omo-north-star-weekly, system: omostation, carrier: cron, carrier_ref: "cron:north-star-weekly",
-     purpose: "北极星价值度量周报(同上复活)", schedule: "周一09:00",
-     evidence: [{path: ~/Workspace/.omo/logs/north-star-weekly.log}], expected_period: 612000, lifecycle: active}
-  - {id: omo-audit-rollout, system: omostation, carrier: cron, carrier_ref: "cron:audit-rollout",
-     purpose: "多仓周审计", schedule: "周一02:00",
-     evidence: [{path: ~/Workspace/runtime/logs/opc-cron.log}], expected_period: 612000, lifecycle: active}
-  - {id: omo-knowledge-foundry, system: omostation, carrier: launchd, carrier_ref: com.omostation.knowledge-foundry,
-     purpose: "知识铸造(P76; 08-25发现未加载已bootstrap, 死因: plist在目录但没load)", schedule: "日×4",
-     evidence: [{path: ~/.local/state/omostation/foundry.log}], expected_period: 64800, lifecycle: active}
-  - {id: omo-model-scheduler, system: omostation, carrier: launchd, carrier_ref: com.omo.model-scheduler,
-     purpose: "opencode模型调度", schedule: "日",
-     evidence: [], expected_period: 90000, lifecycle: active}
-  - {id: omo-agent-workflow-status, system: omostation, carrier: cron, carrier_ref: "cron:agent-workflow",
-     purpose: "P74工作流状态日报", schedule: "日09:00",
-     evidence: [{path: ~/Workspace/runtime/cron/operating-rhythm-daily.log}], expected_period: 90000, lifecycle: active}
-  - {id: omo-governance-evolution, system: omostation, carrier: cron, carrier_ref: "cron:governance-evolution",
-     purpose: "治理演化(日×2)", schedule: "日",
-     evidence: [{path: ~/Workspace/runtime/cron/operating-rhythm-daily.log}], expected_period: 90000, lifecycle: active}
-  - {id: omo-meta-doctor, system: omostation, carrier: cron, carrier_ref: "cron:meta-doctor",
-     purpose: "治理活性巡检(日)", schedule: "日09:25",
-     evidence: [{path: ~/Workspace/runtime/cron/operating-rhythm-daily.log}], expected_period: 90000, lifecycle: active}
-  - {id: omo-debt-refresh, system: omostation, carrier: cron, carrier_ref: "cron:debt-refresh",
-     purpose: "债务刷新(周)", schedule: "周一10:30",
-     evidence: [{path: ~/Workspace/runtime/cron/operating-rhythm-weekly.log}], expected_period: 612000, lifecycle: active}
-  - {id: omo-mof-drift, system: omostation, carrier: cron, carrier_ref: "cron:mof-drift",
-     purpose: "MOF漂移检查(周)", schedule: "周一10:05",
-     evidence: [{path: ~/Workspace/runtime/cron/operating-rhythm-weekly.log}], expected_period: 612000, lifecycle: active}
-  - {id: omo-mof-state-bridge, system: omostation, carrier: cron, carrier_ref: "cron:mof-state-bridge",
-     purpose: "MOF状态桥接(周)", schedule: "周一10:00",
-     evidence: [{path: ~/Workspace/runtime/cron/operating-rhythm-weekly.log}], expected_period: 612000, lifecycle: active}
-  - {id: omo-coordination-backup, system: omostation, carrier: cron, carrier_ref: "cron:coordination_store",
-     purpose: "协同存储备份(日)", schedule: "日08:30",
-     evidence: [{path: ~/Workspace/runtime/logs/coordination-backup.log}], expected_period: 90000, lifecycle: active}
-  - {id: omo-autoloop-daily, system: omostation, carrier: launchd, carrier_ref: com.omostation.autoloop-daily,
-     purpose: "autoloop日批", schedule: "86400s",
-     evidence: [{path: ~/Workspace/.omo/state/autoloop-trace.jsonl}], expected_period: 259200, lifecycle: active}
-  - {id: omo-evolution-agent, system: omostation, carrier: launchd, carrier_ref: com.omostation.evolution-agent,
-     purpose: "演化agent(6h)", schedule: "21600s", evidence: [], expected_period: 64800, lifecycle: active}
-  - {id: omo-problem-detector, system: omostation, carrier: launchd, carrier_ref: com.omostation.problem-detector,
-     purpose: "问题检测(日)", schedule: "86400s", evidence: [], expected_period: 259200, lifecycle: active}
-
-  # ===== 体系: lifedomain (生活域 @驾驶舱/卫健委) =====
-  - {id: life-watch-dispatch, system: lifedomain, carrier: cron, carrier_ref: "cron:watch-dispatch",
-     purpose: "分钟级文件变更调度(FDA绕行的cron版事件驱动)", schedule: "60s",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 3600, lifecycle: active}
-  - {id: life-domain-sync, system: lifedomain, carrier: cron, carrier_ref: "cron:domain-sync",
-     purpose: "域同步(日)", schedule: "日06:00",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 90000, lifecycle: active}
-  - {id: life-session-brief, system: lifedomain, carrier: cron, carrier_ref: "cron:session-brief",
-     purpose: "会话简报(日)", schedule: "日06:15",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 90000, lifecycle: active}
-  - {id: life-kos-ingest, system: lifedomain, carrier: cron, carrier_ref: "cron:kos-ingest",
-     purpose: "KOS文档摄取(周日)", schedule: "周日06:20",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 612000, lifecycle: active}
-  - {id: life-async-audit, system: lifedomain, carrier: cron, carrier_ref: "cron:async-audit",
-     purpose: "异步核对(日)", schedule: "日06:25",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 90000, lifecycle: active}
-  - {id: life-check-convergence, system: lifedomain, carrier: cron, carrier_ref: "cron:check-convergence",
-     purpose: "收敛检查(周)", schedule: "周一06:30",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 612000, lifecycle: active}
-  - {id: life-control-plane-freshness, system: lifedomain, carrier: cron, carrier_ref: "cron:control-plane-freshness",
-     purpose: "控制面新鲜度审计(周)", schedule: "周一06:35",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/control-plane-freshness-audit.md}], expected_period: 612000, lifecycle: active}
-  - {id: life-bridge-refresh, system: lifedomain, carrier: cron, carrier_ref: "cron:bridge-refresh",
-     purpose: "桥接刷新(日)", schedule: "日06:05",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 90000, lifecycle: active}
-  - {id: life-signals-rotate, system: lifedomain, carrier: cron, carrier_ref: "cron:signals-rotate",
-     purpose: "信号轮转(周)", schedule: "周一06:10",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 612000, lifecycle: active}
-  - {id: wjw-kems-update, system: lifedomain, carrier: cron, carrier_ref: "cron:check-kems-update",
-     purpose: "卫健委KEMS更新检查(日)", schedule: "日08:00",
-     evidence: [{path: ~/Documents/@工作文档/卫健委/_storage/工作文件/巡检报告/cron.log}], expected_period: 90000, lifecycle: active}
-  - {id: wjw-controller, system: lifedomain, carrier: cron, carrier_ref: "cron:controller",
-     purpose: "卫健委控制器(周)", schedule: "周一09:00",
-     evidence: [{path: ~/Documents/@工作文档/卫健委/_storage/工作文件/巡检报告/cron.log}], expected_period: 612000, lifecycle: active}
-  - {id: wjw-ocr-incremental, system: lifedomain, carrier: cron, carrier_ref: "cron:ocr-incremental",
-     purpose: "OCR增量(1/16日; 下次触发前无法判活)", schedule: "月2次",
-     evidence: [], expected_period: 0, lifecycle: proposed}
-  - {id: wjw-predictor, system: lifedomain, carrier: cron, carrier_ref: "cron:predictor",
-     purpose: "预测器(月1日; 同上挂观察)", schedule: "月",
-     evidence: [], expected_period: 0, lifecycle: proposed}
-  - {id: wjw-refresh-indexes, system: lifedomain, carrier: cron, carrier_ref: "cron:refresh-indexes",
-     purpose: "KEMS索引刷新(周日; 08-25从/tmp/gen_index.py改指正式脚本)", schedule: "周日09:30",
-     evidence: [{path: ~/Documents/@工作文档/卫健委/_storage/工作文件/巡检报告/cron.log}], expected_period: 612000, lifecycle: active}
-
-  # ===== 体系: agent-tool (agent工具层) =====
-  - {id: claude-hooks, system: agent-tool, carrier: hook, carrier_ref: "claude:settings-hooks",
-     purpose: "Claude Code 8种事件hook(ContextReduction/TaskGovernance/EventLogger等)", schedule: "事件驱动",
-     evidence: [], expected_period: 0, lifecycle: active}
-  - {id: opencode-quota-monitor, system: agent-tool, carrier: launchd, carrier_ref: com.opencode.quota-monitor,
-     purpose: "opencode配额监控", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-  - {id: hermes-event-watcher, system: agent-tool, carrier: agent-state, carrier_ref: "~/.hermes/hermes-event-watcher-state.json",
-     purpose: "Hermes事件观察(状态停在05-29, 全线休眠待裁决)", schedule: "曾常驻",
-     evidence: [{path: ~/.hermes/hermes-event-watcher-state.json}], expected_period: 3600, lifecycle: degraded}
-  - {id: opencode-mcp-health, system: agent-tool, carrier: agent-state, carrier_ref: "~/.config/opencode/health-status.json",
-     purpose: "opencode MCP健康(状态停在05-15, 死)", schedule: "曾周期",
-     evidence: [{path: ~/.config/opencode/health-status.json}], expected_period: 3600, lifecycle: degraded}
-
-  # ===== 体系: thirdparty (第三方) =====
-  - {id: tp-clashx, system: thirdparty, carrier: login-item, carrier_ref: ClashX,
-     purpose: "代理(系统级helper亦在)", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-  - {id: tp-codexbar, system: thirdparty, carrier: login-item, carrier_ref: CodexBar,
-     purpose: "配额监控UI", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-  - {id: tp-raycast, system: thirdparty, carrier: login-item, carrier_ref: Raycast,
-     purpose: "启动器", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-  - {id: tp-claude-desktop, system: thirdparty, carrier: login-item, carrier_ref: Claude,
-     purpose: "Claude桌面(MCP: MCP_DOCKER/cockpit)", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-  - {id: tp-tailscale, system: thirdparty, carrier: launchd, carrier_ref: com.tailscale.brew,
-     purpose: "三机组网", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-  - {id: tp-postgresql18, system: thirdparty, carrier: brew-service, carrier_ref: postgresql@18,
-     purpose: "(退役提案)08-07关机后未启, 空库", schedule: "-",
-     evidence: [{path: /opt/homebrew/var/log/postgresql@18.log}], expected_period: 0, lifecycle: degraded}
-  - {id: tp-neo4j, system: thirdparty, carrier: brew-service, carrier_ref: neo4j,
-     purpose: "(退役提案)从未自启", schedule: "-", evidence: [], expected_period: 0, lifecycle: degraded}
-  - {id: tp-liebao-helper, system: thirdparty, carrier: launchd, carrier_ref: com.liebao.v2401.helper,
-     purpose: "(待确认)猎豹浏览器helper", schedule: "-", evidence: [], expected_period: 0, lifecycle: proposed}
-  - {id: tp-todesk, system: thirdparty, carrier: launchd, carrier_ref: com.youqu.todesk.UninstallerHelper,
-     purpose: "(待确认)远程桌面", schedule: "-", evidence: [], expected_period: 0, lifecycle: proposed}
-  - {id: tp-cleanmymac, system: thirdparty, carrier: launchd, carrier_ref: com.macpaw.CleanMyMac5,
-     purpose: "清理工具(用户在用)", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-  - {id: tp-docker, system: thirdparty, carrier: launchd, carrier_ref: com.docker,
-     purpose: "Docker桌面(socket/vmnetd)", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-  - {id: tp-syspolicyd-watchdog, system: thirdparty, carrier: launchd, carrier_ref: com.user.syspolicyd-watchdog,
-     purpose: "自建系统策略监控", schedule: "-", evidence: [], expected_period: 0, lifecycle: proposed}
-
-  # ===== 体系: omostation 未跑服务(待裁决, 不动) =====
-  - {id: omo-cockpit-dashboard, system: omostation, carrier: launchd, carrier_ref: com.cockpit.dashboard,
-     purpose: "驾驶舱面板(uv run, 当前未跑, 待裁决复活/归档)", schedule: "-",
-     evidence: [], expected_period: 0, lifecycle: proposed}
-  - {id: omo-agora-sse, system: omostation, carrier: launchd, carrier_ref: com.agora.sse,
-     purpose: "Agora SSE服务(同上待裁决)", schedule: "-",
-     evidence: [], expected_period: 0, lifecycle: proposed}
-  - {id: omo-cron-service, system: omostation, carrier: launchd, carrier_ref: com.user.cron-service,
-     purpose: "runtime cron-service(同上待裁决)", schedule: "-",
-     evidence: [], expected_period: 0, lifecycle: proposed}
-
-  # ===== 2026-08-25 首轮审计 DRIFT 登记 =====
-  - {id: ecos-bos-registry-daemon, system: omostation, carrier: launchd, carrier_ref: com.ecos.bos-registry-daemon,
-     purpose: "BOS 注册表守护", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: proposed}
-  - {id: ecos-pasw-worktree-cleanup, system: omostation, carrier: launchd, carrier_ref: com.ecos.pasw-worktree-cleanup,
-     purpose: "worktree 清理(6h)", schedule: "21600s", evidence: [], expected_period: 64800, lifecycle: proposed}
-  - {id: omo-l4-governance-watch, system: omostation, carrier: launchd, carrier_ref: com.l4.governance.watch,
-     purpose: "L4 治理观察(state-stale-emit)", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: proposed}
-  - {id: life-pulse, system: lifedomain, carrier: launchd, carrier_ref: com.lifeos.pulse,
-     purpose: "LifeOS 脉搏", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-  - {id: life-concept-weave, system: lifedomain, carrier: launchd, carrier_ref: com.learningevolution.concept-weave.monthly,
-     purpose: "概念编织(月)", schedule: "月", evidence: [], expected_period: 0, lifecycle: proposed}
-  - {id: tp-wps-comate, system: thirdparty, carrier: launchd, carrier_ref: cn.wpscomate.comate-agent,
-     purpose: "WPS 灵犀", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
-
-  - {id: wjw-controller-cron, system: lifedomain, carrier: cron, carrier_ref: "cron:controller",
-     purpose: "卫健委 controller 周任务(与 launchd 无关的 cron 行)", schedule: "周一09:00",
-     evidence: [{path: "~/Documents/@工作文档/卫健委/_storage/工作文件/巡检报告/cron.log"}], expected_period: 612000, lifecycle: active}
-
-  # ===== 2026-08-25 sunset 首批执行(用户批准) =====
-  - {id: tp-liebao, system: thirdparty, carrier: launchd, carrier_ref: com.liebao.v2401.helper,
-     purpose: "(已批准卸载, 系统级待用户sudo执行)", schedule: "-", evidence: [], expected_period: 0, lifecycle: retired}
-  - {id: tp-todesk, system: thirdparty, carrier: launchd, carrier_ref: com.youqu.todesk.UninstallerHelper,
-     purpose: "(已批准卸载, 系统级待用户sudo执行)", schedule: "-", evidence: [], expected_period: 0, lifecycle: retired}
+  # ── 第一层 · 算力底座 (6) ──
+  - {id: omlxc-daemon, layer: compute, carrier: launchd, ref: com.omlxc.daemon, freq: resident, intent: 算力控制面 daemon, evidence: ~/.config/omlxc/state.db-wal}
+  - {id: omlxc-watchdog, layer: compute, carrier: launchd, ref: com.omlxc.watchdog, freq: 5min, intent: 算力看门狗(保活/告警/节点检测), evidence: ~/.config/omlxc/watchdog.log}
+  - {id: aetherforge-gateway, layer: compute, carrier: launchd, ref: com.aetherforge.gateway, freq: resident, intent: LLM 网关门面(本地+免费池), evidence: ~/.aetherforge/state/free_pool_last_seen.json}
+  - {id: lmstudio-server, layer: compute, carrier: launchd, ref: com.lmstudio.server, freq: resident, intent: LM Studio 本地推理}
+  - {id: omlx-app, layer: compute, carrier: launchd, ref: application.app.omlx, freq: resident, intent: oMLX App 本地推理}
+  - {id: ollama-env, layer: compute, carrier: launchd, ref: com.omlxc.ollama-env, freq: resident, intent: Ollama 环境守护}
+  # ── 第二层 · omostation 治理 (cron 系) ──
+  - {id: resident-decision, layer: governance, carrier: cron, ref: "resident daemon --once --role decision", freq: 2min, intent: 常驻五角色·决策, evidence: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-decision.log}
+  - {id: resident-execute, layer: governance, carrier: cron, ref: "resident daemon --once --role execute", freq: 2min, intent: 常驻五角色·执行, evidence: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-execute.log}
+  - {id: resident-monitor, layer: governance, carrier: cron, ref: "resident daemon --once --role monitor", freq: 2min, intent: 常驻五角色·监控, evidence: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-monitor.log}
+  - {id: resident-heartbeat, layer: governance, carrier: cron, ref: "resident daemon --once --role heartbeat", freq: 2min, intent: 常驻五角色·心跳, evidence: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-heartbeat.log}
+  - {id: resident-sediment, layer: governance, carrier: cron, ref: "resident daemon --once --role sediment", freq: 2min, intent: 常驻五角色·沉淀, evidence: ~/Workspace/.omo/_delivery/resident-orchestrator/cron-sediment.log}
+  - {id: alert-forwarder, layer: governance, carrier: cron, ref: "resident alert --dry-run", freq: 5min, intent: 告警转发, evidence: ~/Workspace/.omo/_delivery/alert-forwarder/cron.log}
+  - {id: personal-signals, layer: governance, carrier: cron, ref: "resident signals", freq: 5min, intent: 个人信号路由, evidence: ~/Workspace/.omo/_delivery/personal-signals/cron.log}
+  - {id: watch-dispatch, layer: governance, carrier: cron, ref: watch-dispatch.py, freq: 1min, intent: 文件变更事件驱动(FDA 绕行), evidence: ~/Documents/@驾驶舱/_generated/governance-cron.log}
+  - {id: remediation-engine, layer: governance, carrier: cron, ref: remediation-engine.py, freq: 30min, intent: GaC 自动修复(docs_stale), evidence: ~/Workspace/.omo/logs/remediation.log}
+  - {id: anti-corrosion, layer: governance, carrier: cron, ref: anti-corrosion-check.py, freq: hourly, intent: GaC 防腐扫描, evidence: ~/Workspace/.omo/logs/anti-corrosion.log}
+  - {id: meta-doctor, layer: governance, carrier: cron, ref: meta-doctor.py, freq: daily, intent: 治理机制自身活性巡检(M1心跳/M2引用), evidence: ~/Workspace/runtime/cron/operating-rhythm-daily.log}
+  - {id: governance-evolution-packages, layer: governance, carrier: cron, ref: "governance-evolution.py packages", freq: daily, intent: 治理演化·包扫描, evidence: ~/Workspace/runtime/cron/operating-rhythm-daily.log}
+  - {id: governance-evolution-status, layer: governance, carrier: cron, ref: "governance-evolution.py status", freq: daily, intent: 治理演化·状态}
+  - {id: governance-scanner, layer: governance, carrier: launchd, ref: com.omostation.governance-scanner, freq: 30min, intent: GaC 治理扫描器}
+  - {id: signal-poller, layer: governance, carrier: launchd, ref: com.omostation.signal-poller, freq: resident, intent: 生活原始信号采集→事件化}
+  - {id: l4-governance-watch, layer: governance, carrier: launchd, ref: com.l4.governance.watch, freq: hourly, intent: L4 治理盯防}
+  # ── 第三层 · 生活域 (代表) ──
+  - {id: domain-sync, layer: life, carrier: cron, ref: domain-sync.py, freq: daily, intent: 驾驶舱域同步, evidence: ~/Documents/@驾驶舱/_generated/governance-cron.log}
+  - {id: session-brief, layer: life, carrier: cron, ref: session-brief.py, freq: daily, intent: 会话简报, evidence: ~/Documents/@驾驶舱/_generated/governance-cron.log}
+  - {id: kos-ingest-weekly, layer: life, carrier: cron, ref: "kos ingest", freq: weekly, intent: 文档域 KOS 周摄取, evidence: ~/Documents/@驾驶舱/_generated/governance-cron.log}
+  # ── 第四层 · Agent 工具层 (已知半死/休眠) ──
+  - {id: opencode-mcp-health, layer: agent, carrier: cron, ref: mcp-health, freq: hourly, intent: opencode MCP 健康检查, dormant_since: "2026-05-15"}
+  - {id: hermes-event-watcher, layer: agent, carrier: cron, ref: hermes, freq: hourly, intent: agent 网关事件监听(退役裁决待定), dormant_since: "2026-05-29"}

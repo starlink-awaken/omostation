@@ -327,19 +327,6 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  A2A:      {result['a2a']['total']} messages, {result['a2a']['unresolved']} unresolved")
             print(f"  Autonomy: {result['autonomy'].get('score', '?')}/100")
             print(f"  Journeys: {result['journeys'].get('human_holds', 0)} human holds")
-    # TLM 任务台账审计(2026-08-25 M2 挂载): 每 30min 随 scanner 巡一遍任务面,
-    # 快照/drifts 落 runtime/task-inventory/。独立子进程+容错, 不阻塞主扫描。
-    try:
-        import subprocess as _sp
-
-        _r = _sp.run(
-            ["uv", "run", "--with", "pyyaml", "python", "bin/gac/task-inventory.py", "--json", "--quiet"],
-            capture_output=True, text=True, timeout=120,
-        )
-        if _r.returncode not in (0, 1):
-            print(f"  Tasks:    audit failed rc={_r.returncode}", file=sys.stderr)
-    except Exception as _exc:
-        print(f"  Tasks:    audit skipped: {_exc}", file=sys.stderr)
     return 0
 
 

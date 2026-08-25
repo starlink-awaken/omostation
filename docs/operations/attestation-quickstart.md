@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # 主人价值签核启动指南 — 北极星起搏器
 
 > 目标读者: xiamingxing(工作区主人)

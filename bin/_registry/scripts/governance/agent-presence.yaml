@@ -1,0 +1,28 @@
+schema: script-registry/v1
+id: bin/gac/agent-presence.py
+name: Agent Presence Registry
+category: governance
+owner: governance-team
+description: "跨 worktree 多 agent 在场注册与碰撞检测 (BET-Y1Q3-T10-09 后续)。Storage: runtime/agents/{agent_id}.json (主仓级, 不受 worktree 切换影响); TTL 5 分钟无 heartbeat 自动过期。用法: agent-presence.py register/heartbeat/deregister/list/check"
+inputs:
+  - name: agent
+    type: string
+    description: agent_id 标识
+  - name: branch
+    type: string
+    description: 所在分支 (register 可选)
+  - name: files
+    type: list
+    description: 声明占用文件 glob (check 用)
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers:
+  - 多 agent 并行碰撞检测
+  - 在场注册与心跳
+related:
+  - bin/gac/gac-worktree.sh
+  - docs/operations/worktree-hygiene.md
+maturity: draft
+last_reviewed: "2026-08-25"

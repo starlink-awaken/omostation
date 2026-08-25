@@ -159,7 +159,7 @@ def detect_drifts() -> list[Drift]:
         reg_script = WORKSPACE / "bin" / "ssot" / "script-registry.py"
         if reg_script.exists():
             r = subprocess.run(
-                [sys.executable, str(reg_script), "check"],
+                [sys.executable, str(reg_script), "validate"],
                 cwd=WORKSPACE,
                 capture_output=True,
                 text=True,
@@ -168,44 +168,44 @@ def detect_drifts() -> list[Drift]:
             )
             if r.returncode != 0:
                 # 提取未登记脚本列表 (从输出)
-                orphans = [line.strip() for line in r.stdout.splitlines() if line.strip() and "missing" in line.lower()]
-                drifts.append(
-                    Drift(
-                        "ORPHAN-SCRIPT",
-                        "warning",
-                        f"bin/ 新脚本未登记: {'; '.join(orphans[:5]) if orphans else 'script-registry check failed'}",
-                        "python3 bin/ssot/script-registry.py register --auto",
-                        auto_fixable=True,
+                orphans = [line.strip().replace("- ", "") for line in r.stdout.splitlines() if line.strip().startswith("- ")]
+                if orphans:
+                    drifts.append(
+                        Drift(
+                            "ORPHAN-SCRIPT",
+                            "warning",
+                            f"bin/ 新脚本未登记 ({len(orphans)}): {'; '.join(orphans[:5])}",
+                            f"python3 bin/ssot/script-registry.py register {' '.join(orphans)}",
+                            auto_fixable=True,
+                        )
                     )
-                )
     except Exception:
         pass
 
-    # 5. CELL-STALE: AGE-v2 Cell 状态文件有过期条目
+    # 4. FRONTMATTER-MISSING: 探测 Markdown 缺失 frontmatter
     try:
-        cell_state_file = WORKSPACE / ".omo" / "state" / "agent-cell" / "cell_states.json"
-        if cell_state_file.exists():
-            import json as _json
-            from datetime import datetime as _dt, timezone as _tz, timedelta as _td
-            data = _json.loads(cell_state_file.read_text())
-            now = _dt.now(_tz.utc)
-            stale_count = 0
-            for state in data.values():
-                saved = state.get("saved_at", "")
-                if saved:
-                    try:
-                        ts = _dt.fromisoformat(str(saved).replace("Z", "+00:00"))
-                        if (now - ts).total_seconds() > 86400:  # >24h
-                            stale_count += 1
-                    except (ValueError, TypeError):
-                        pass
-            if stale_count > 0:
+        doc_check = WORKSPACE / "bin" / "ssot" / "doc-governance-check.py"
+        if doc_check.exists():
+            r = subprocess.run(
+                [sys.executable, str(doc_check), "--strict"],
+                cwd=WORKSPACE,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+            missing_files = set()
+            for line in r.stdout.splitlines():
+                if "missing_frontmatter" in line and "does not start with YAML" in line:
+                    missing_files.add(line.split(":")[0])
+            if missing_files:
+                files_str = " ".join(list(missing_files)[:10]) # fix up to 10 at a time
                 drifts.append(
                     Drift(
-                        "CELL-STALE",
-                        "info",
-                        f"Cell 状态文件有 {stale_count} 个过期条目 (>24h)",
-                        "python3 -c \"from omo.resident.cell_state import CellStateManager; CellStateManager().cleanup_stale(max_age_hours=24)\"",
+                        "FRONTMATTER-MISSING",
+                        "warning",
+                        f"检测到 {len(missing_files)} 个文档缺失 Frontmatter (如: {list(missing_files)[0]})",
+                        f"python3 bin/gac/fix-frontmatter.py {files_str}",
                         auto_fixable=True,
                     )
                 )
@@ -230,18 +230,10 @@ def apply_fix(drift: Drift) -> tuple[bool, str]:
                 check=False,
             )
             return r.returncode == 0, (r.stdout or r.stderr)[-300:]
-        if drift.kind == "ORPHAN-SCRIPT":
+        if drift.kind in ("ORPHAN-SCRIPT", "FRONTMATTER-MISSING"):
             cmd = drift.fix_cmd.split()
             r = subprocess.run(cmd, cwd=WORKSPACE, capture_output=True, text=True, timeout=60, check=False)
             return r.returncode == 0, (r.stdout or r.stderr)[-300:]
-        if drift.kind == "CELL-STALE":
-            # 清理过期 Cell 状态
-            try:
-                from omo.resident.cell_state import CellStateManager
-                cleaned = CellStateManager().cleanup_stale(max_age_hours=24)
-                return True, f"已清理 {cleaned} 个过期 Cell 状态"
-            except ImportError:
-                return False, "omo.resident.cell_state 不可用"
         return False, f"未知可修复类别: {drift.kind}"
     except Exception as exc:
         return False, str(exc)

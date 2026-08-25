@@ -3,6 +3,8 @@ title: "卫健委控制器影子迁移阶段复盘"
 date: 2026-08-14
 status: in_progress
 scope: "Runtime 影子作业、Cockpit 只读投影、Workspace Documents binding"
+
+last-reviewed: 2026-08-25
 ---
 
 # 卫健委控制器影子迁移阶段复盘

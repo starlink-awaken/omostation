@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **149** 个命令 (含子命令)。按场景分组如下。
+共 **150** 个命令 (含子命令)。按场景分组如下。
 
 ## 入门
 
@@ -125,7 +125,7 @@
 | `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
-| `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198) |
+| `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198/0203) |
 | `cockpit challenge` | ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196) |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
@@ -182,6 +182,7 @@
 | `cockpit resident` | Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...) |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit route` | 为模型选择最优节点 |
+| `cockpit run` | 在隔离沙箱中挂载卡带并执行领域意图 |
 | `cockpit sanyi-status` | 读取 Runtime 三医状态一致性回执 |
 | `cockpit scan` | 平面扫描 |
 | `cockpit score` | 评分债务项 |

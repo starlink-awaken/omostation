@@ -1,0 +1,12 @@
+========================================================
+  Remediation Engine Report
+========================================================
+  Mode: EXECUTE
+  Total issues: 20
+  Total fixed: 20
+
+  [P2] 文档过期 (>30天未更新 last-reviewed)
+    Issues: 20, Fixed: 20, Mode: ✓ auto
+      - {'file': 'docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/diff.md', 'action': 'add_last_reviewed', 'value': '2026-08-25', 'dry_run': False}
+      - {'file': 'docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/merged_reachable_commit.md', 'action': 'add_last_reviewed', 'value': '2026-08-25', 'dry_run': False}
+      - {'file': 'docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/rollback.md', 'action': 'add_last_reviewed', 'value': '2026-08-25', 'dry_run': False}

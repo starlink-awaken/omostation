@@ -8,6 +8,8 @@ estimated_time_saved_seconds: 120
 outcome_feedback_schema: outcome-feedback/v1
 credential: ssh-ed25519 SHA256:OEfesj1+Ll2UT1xCKWvbdo4xNNZvqQUnNsFtYLQfRKw
 attested_at: 2026-08-21T12:50:00Z
+
+last-reviewed: 2026-08-25
 ---
 
 人类裁决: 对真实信号(跨仓耦合机制半删的观察)的 never-send 候选给出 accept 裁决。

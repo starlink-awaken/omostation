@@ -4,6 +4,8 @@ date: 2026-08-20
 status: active-baseline
 bet_id: BET-Y1Q3-T4-01
 evidence_cutoff: 2026-08-20T04:10:00Z
+
+last-reviewed: 2026-08-25
 ---
 
 # 织星近期架构、战略与执行体系深度复盘

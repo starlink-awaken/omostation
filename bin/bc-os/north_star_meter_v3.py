@@ -29,7 +29,6 @@ HEALTH_HISTORY = WS_ROOT / ".omo" / "state" / "history" / "health.jsonl"
 DECISIONS_LOG = WS_ROOT / ".omo" / "notepads" / "delegation-guardrails" / "decisions.md"
 AUDIT_TICK = WS_ROOT / ".omo" / "state" / "autoloop-trace.jsonl"
 DUCK_LOG = WS_ROOT / ".omo" / "state" / "agent-tick-daemon.jsonl"
-CELL_STATE_FILE = WS_ROOT / ".omo" / "state" / "agent-cell" / "cell_states.json"
 
 # A-axis: 系统自动化事件估时 (分钟/事件) — 这些值是经验估值, 后续可校准
 TIME_PER_EVENT_MIN = {
@@ -41,7 +40,6 @@ TIME_PER_EVENT_MIN = {
     "document_review_sample": 12,  # 一份公文 review ~12min
     "knowledge_curation": 3,       # 知识策展一次 ~3min
     "staleness_check": 2,          # staleness 检查 ~2min
-    "cell_episode": 3,             # AGE-v2 Cell 一次 Episode 执行 ~3min
 }
 
 
@@ -107,31 +105,6 @@ def _count_health_runs(since_days: int = 30) -> int:
     return count
 
 
-def _count_cell_episodes(since_days: int = 30) -> int:
-    """Count AGE-v2 Cell episodes from state file (completed episodes in window)."""
-    if not CELL_STATE_FILE.is_file():
-        return 0
-    cutoff = _utc_now() - dt.timedelta(days=since_days)
-    count = 0
-    try:
-        data = json.loads(CELL_STATE_FILE.read_text(encoding="utf-8"))
-        for state in data.values():
-            saved = state.get("saved_at", "")
-            if not saved:
-                continue
-            try:
-                ts = dt.datetime.fromisoformat(str(saved).replace("Z", "+00:00"))
-                if ts.tzinfo is None:
-                    ts = ts.replace(tzinfo=dt.UTC)
-                if ts >= cutoff:
-                    count += 1
-            except (ValueError, TypeError):
-                continue
-    except (OSError, json.JSONDecodeError):
-        pass
-    return count
-
-
 def _count_decision_inbox(since_days: int = 30) -> int:
     """Count decision-inbox entries (markdown headers with [YYYY-MM-DD] timestamps)."""
     if not DECISIONS_LOG.is_file():
@@ -175,7 +148,6 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
         "document_review_sample": 0,
         "knowledge_curation": 0,
         "staleness_check": 0,
-        "cell_episode": _count_cell_episodes(since_days),
     }
     total_minutes = sum(
         TIME_PER_EVENT_MIN[k] * v for k, v in counts.items()

@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/task-inventory.py
-name: Task Inventory
+id: bin/gac/fix-frontmatter.py
+name: Fix Frontmatter
 category: governance
 owner: governance-team
 description: ""

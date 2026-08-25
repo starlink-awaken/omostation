@@ -2,6 +2,8 @@
 status: active
 owner: runtime-control
 scope: documents-read-only-audit
+
+last-reviewed: 2026-08-25
 ---
 
 # CR08 卫健委三医态势安装态审计复盘
