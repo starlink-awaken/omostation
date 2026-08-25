@@ -44,11 +44,15 @@ def _get_gateway():
         return None
 
 
-def llm_ask(question: str, context: dict[str, Any] | None = None, timeout: float = 60.0) -> str | None:
+def llm_ask(question: str, context: dict[str, Any] | None = None, timeout: float = 60.0, model: str = "") -> str | None:
     """Ask LLM a question, return plain text response.
 
     Backend 1: AetherForge ModelGateway (omlx local).
     Backend 2: GLM cloud direct (key embedded).
+    model: 显式指定本地模型 id(如 "qwen-3.8-27b"); 空=auto-route。
+    注意 auto-route 依赖 gateway 复杂度链, 链头若配了本地不存在的模型名
+    (如 mythos-fast, 本地 oMLX 只有 mythos)会静默落 LM Link 兜底 —
+    稳定场景建议显式传 model (2026-08-25 mail-daemon 路由病根)。
     Returns None if all backends fail.
     """
     prompt = question
@@ -64,7 +68,7 @@ def llm_ask(question: str, context: dict[str, Any] | None = None, timeout: float
 
             req = GatewayRequest(
                 messages=[{"role": "user", "content": prompt}],
-                model="",
+                model=model,
                 timeout=timeout,
             )
             resp = run_async(gw.generate(req))

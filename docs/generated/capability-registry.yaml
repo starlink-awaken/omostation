@@ -11,10 +11,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/cockpit/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 616
+  mcp_tools: 619
   bos_services: 242
   bos_domains: 21
-  cli_commands: 150
+  cli_commands: 152
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -228,6 +228,7 @@ mcp_servers:
   - bcos_north_star
   - bcos_signals
   - bos_reload_routes
+  - cartridge_pack
   - cell_config_create
   - cell_config_list
   - cell_eval
@@ -245,11 +246,13 @@ mcp_servers:
   - cell_shadow
   - cell_verify
   - create_api_key
+  - daemon_bus_publish
   - debt_auto_seed_tool
   - entropy_cleanup_tool
   - get_agent_card
   - get_event_log
   - get_state_transitions
+  - governance_auto_fix
   - health_check
   - lifecycle_load_all
   - lifecycle_start_watch
@@ -301,7 +304,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 86
+  tool_count: 89
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -1919,6 +1922,8 @@ cli_commands:
   description: ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196)
 - name: channels
   description: 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml
+- name: client
+  description: 以 REPL 模式连接到 MCP server
 - name: code
   description: 代码库分析与审查 (基于 codeanalyze)
 - name: compass
@@ -1935,6 +1940,8 @@ cli_commands:
   description: 控制平面：submit / ack / nack
 - name: controller-shadow
   description: 读取 Runtime 旧控制器影子迁移回执
+- name: daemon
+  description: 启动 Agora 2.0 后台常驻守护进程 (Agent-to-Agent Bus)
 - name: daily
   description: 每日研究简报
 - name: dashboard
