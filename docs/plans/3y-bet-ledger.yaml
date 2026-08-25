@@ -5609,6 +5609,8 @@ bets:
   - tests/test_agent_workflow.py
   - tests/test_spec_binding_lint.py
   - projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml
+  - projects/ecos/src/ecos/ssot/mof/compiler/api.py
+  - projects/ecos/src/ecos/ssot/mof/compiler/emitters.py
   - projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py
   - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.schema.json
   - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control-schemas.ts
