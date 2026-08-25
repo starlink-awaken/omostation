@@ -161,6 +161,23 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run-id> \
    lane 组合（ADR-0129 §11.3.2: workflow 显式授权优先于硬编码隔离）；修复通道是补
    check 的 `allowed_lanes`，不是手动 env 伪造。
 
+**⚠️ 三个失败模式（2026-08-24 T10 验收会话，golden-rules: BASE-TREE-SNAPSHOT / SCHEMA-VALIDATOR-FIRST / TIME-FIRST-TRIAGE）**：
+
+1. **API 推送必须用完整 base_tree**——GitHub Git Data API 的 tree 是**完整快照不是 patch**。
+   `base_tree=None` + 只列变更 blobs = `.github/workflows/` 整个被删 → CI 0 runs
+   （PR #2126 曾因此 debug 一整轮）。**用 `bin/gac/gh-api-push.sh` 一键推送**
+   （内置 base_tree=父完整树 + 推后验证 workflows 存在），别手搓 gh api。
+2. **填 schema 数据先读 validator**——`bet-ledger complete` 的 completion_evidence
+   有三类必踩坑：diff 用 `receipt://`|`repo://`（不能用 `git://`）；merged_reachable_commit
+   用 `git://origin/main@<40hex>` 且先 `git merge-base --is-ancestor` 验证可达；
+   value.ACCEPTED 必须 attestation（ref+sha256）+ 声明 `overall_state: outcome_accepted`。
+   先读 `bin/plan/bet-ledger.py` 的 `COMPLETION_DIRECT_EVIDENCE` / `_validate_evidence_reference`
+   再填，别报错驱动式试。
+3. **CI 失败先算时间戳再归因**——`system_health.yaml` 的 `last_scan` 超 48h SLA 会让
+   CI meta-doctor fail（曾因 age 恰好跨 48h 边界误判"环境性"）。先 `date`+换算 age，
+   心跳状态过期是**可修的状态**，刷新 last_scan 即治本；只有"时间戳算过+反证找过+与
+   改动无关已证"才能标 blocked/环境性。
+
 ---
 
 ## 3. 执行期纪律

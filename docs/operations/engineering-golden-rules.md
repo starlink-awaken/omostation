@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: pattern
+owner: governance-team
+last-reviewed: 2026-08-24
+---
 # Engineering Golden Rules — 工程铁律 (防复发模板)
 
 > 差距治理 S4 (UX-NOISE / 模板固化) 产出。
@@ -146,3 +152,103 @@ CI 冷启动 runner 的 monotonic 时钟 <100s (实测 83.75/86.51) → 必然 f
 ```
 
 **验收**: 治理文档 grep 无未标注的真实格式 run-id 字符串 (可被占位符正则匹配)。
+
+## BASE-TREE-SNAPSHOT: GitHub API 建 commit 必须 base_tree 完整快照铁律 (T10 验收会话)
+
+**触发**: 任何通过 GitHub API (gh api / REST / MCP) 建 commit / 更新分支 ref 推送交付物。
+
+**根因实证** (2026-08-24, G5/G6 轮): 用 API 建 commit 时 `base_tree=None`
+(GitHub 工具默认行为), 结果 tree 只有 7 个 G5/G6 文件 blob —— **`.github/workflows/`
+整个被删**, GitHub 无法解析任何 workflow → CI **0 runs**。debug 链 (PR #2123 → API
+重建 #2126 → workflow_dispatch 422 → 空 commit → force ref → close/reopen) 全部失败,
+最后才发现分支上 workflow 文件 404。**GitHub Git Data API 的 tree 参数是完整快照,
+不是 patch** —— 只列要改的文件 = 其余路径全部消失。
+
+**规则**:
+```markdown
+## API 建 commit 铁律
+- tree 必须带 base_tree: 父 commit 的完整 tree sha (base_tree=None = 整棵树被删)
+- tree 只列变更 blobs + base_tree 指向完整父树, 二者缺一不可
+- 推送后必须先验证 `.github/workflows` 存在 (gh api .../contents/.github/workflows?ref=<branch>)
+- 验证通过再等 CI; 用 bin/gac/gh-api-push.sh 一键完成 (内置 base_tree + workflows 检查)
+- 触发: 任何 GitHub API 建 commit / 更新 ref / 推送分支
+```
+
+**验收**: API 推送后 `.github/workflows` 存在 (48 个 workflow 不消失), CI 正常触发。
+
+## SCHEMA-VALIDATOR-FIRST: schema 数据先读 validator 铁律 (T10 验收会话)
+
+**触发**: 填写任何受校验的 schema 数据 (completion_evidence / receipt / 台账字段 /
+注册表) 并依赖它通过 gate。
+
+**根因实证** (2026-08-24, T10 closeout 轮): `bet-ledger complete` 连续三轮报错:
+① `engineering.diff.ref must use repo:// or receipt://` (误用 `git://`);
+② `merged_reachable_commit.ref is not reachable from origin/main` (伪造 40hex 未验证可达);
+③ `OVERALL_STATE_MISMATCH: declared=None` (漏声明 overall_state)。
+**报错驱动式填数据** —— 每步都是 validator 教的, 浪费三轮往返。
+
+**规则**:
+```markdown
+## schema 数据铁律
+- 填任何受校验数据前, 先读 validator 源码:
+  - required keys: COMPLETION_DIRECT_EVIDENCE (各 status 的必填 key)
+  - ref 协议枚举: _validate_evidence_reference (diff→repo://|receipt://,
+    merged_reachable_commit→git://origin/main@40hex)
+  - derived 判定: 三轴全绿才 outcome_accepted
+- 引用 commit 先验证可达: git merge-base --is-ancestor <sha> origin/main
+- 不写没验证过的 SHA / ref; 声明所有 derived 字段
+- 触发: completion_evidence / attestation / 台账 / 任何 schema 数据
+```
+
+**验收**: schema 数据一次通过 validator, 无"报错驱动式"多轮往返。
+
+## TIME-FIRST-TRIAGE: CI 失败先算时间戳再归因铁律 (T10 验收会话)
+
+**触发**: 任何 CI 失败排查 / 判定是否"环境性 / flaky / 与改动无关"。
+
+**根因实证** (2026-08-24, PR #2133): interface-check 稳定 fail (rerun 两次都 fail),
+main 同 job pass。抓日志发现唯一差异是 `meta-doctor ok:false` ——
+`system_health.yaml` 的 `last_scan` 超 48h SLA。main run (12:14) age=47.7h 恰好 pass,
+我们的 run (12:38) age=48.1h 恰好 fail。**同一 commit 同一文件, 纯粹是运行时刻跨过
+SLA 边界**。第一反应是"main 也红过 interface-check"→ 直接下"环境性"结论, 没先算
+时间戳 (AGENTS.md 诊断三步法第 1 步没执行)。实际是**可修的状态过期**, 不是不可控环境。
+
+**规则**:
+```markdown
+## CI 失败归因铁律
+- 先算时间/age: date + 时间戳换算 (如 last_scan 距 now 多少小时 vs SLA)
+- 别凭"main 也红过 / 之前见过"断定环境性 —— 先量化再归因
+- heartbeat 状态文件过期 (.omo/state/system_health.yaml last_scan 超 SLA)
+  → 是"可修的状态", 刷新即治本 (正常维护, 不是环境)
+- 只有"反证找过 + 时间戳算过 + 与改动无关已证"才能标 blocked/环境性
+- 触发: 任何 CI 失败 / flaky 判定 / 环境性 closeout
+```
+
+**验收**: 所有环境性 closeout 都附时间戳计算证据, 无凭印象归类。
+
+
+## SCRIPT-BASELINE-SYNC: 新增 bin/ 脚本必须同步 subtraction_quota 铁律 (2026-08-25)
+
+**触发**: 任何 PR 新增/修改 `bin/` 下 `.py`/`.sh` 脚本, 或 CI 报 `subtraction-quota`。
+
+**根因实证** (2026-08-25, main 连续 3 次红): 并发 agent 在 PR 里新增 bin/ 脚本
+(closeout-audit / worktree-init / gh-api-push → #2143, north_star_meter_v3 → #2145,
+agent-presence → #2148, fix-frontmatter → #2146), 但**没在同一个 PR 里同步**
+`governance-checks.yaml` 的 `gac.subtraction_quota.script_baseline`。合入后 main 立即红
+(`bin/ 活跃脚本 N 超基线 M`), 只能事后补 baseline (如 #2154 486→487 这类跟随修复),
+形成"加脚本 → main 红 → 补 baseline"的重复事故循环。根因是减法配额 (BET-Y1Q3-T6-05)
+**只做全量计数, 不做 diff 感知**, 新增脚本无法在 PR 阶段被提前拦截。
+
+**规则**:
+```markdown
+## 新增脚本同步铁律
+- 在 PR 里新增 bin/ 下 .py/.sh → 必须同时改 governance-checks.yaml
+  subtraction_quota.script_baseline = 当前 active 数 + 新增数
+- CI 报 subtraction-quota 超限时, 错误消息带建议值 (script_baseline → N),
+  照抄更新即可; 不要删/归档他人脚本去压数 (会误伤并发交付)
+- 若只是改已有脚本/加 registry yaml (非 .py/.sh), 不需要动 baseline
+- 触发: 任何新增 bin/ 脚本的 PR / subtraction-quota CI 失败
+```
+
+**验收**: 新增 bin/ 脚本的 PR 在合并前 gac-validate 通过 (baseline 已在同 PR 同步),
+无事后 baseline 跟随修复。

@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # BCOS 业务域系统 v1 — 功能规格 SSOT
 
 > 最后更新: 2026-08-23

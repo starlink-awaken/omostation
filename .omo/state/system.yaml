@@ -11,7 +11,7 @@ phase_status: active
 current_wave: W5
 next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面落地)
 health_score_ref: .omo/state/health.yaml
-health_score: 70
+health_score: 45
 health_score_source: compass_radar_composite_isc3
 health_score_generated_at: '2026-08-24T11:11:42Z'
 active_agents: 0
@@ -223,9 +223,9 @@ service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
 governance_feedback_last_run: '2026-08-23T03:03:52Z'
-health_score_evidence: 100.0
+health_score_evidence: 94.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-25T06:50:37.855407+00:00'
+health_score_evidence_generated_at: '2026-08-25T06:52:31.330627+00:00'
 workflow_mesh_health:
   status: healthy
   event_count: 2106

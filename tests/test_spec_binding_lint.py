@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import base64
 import importlib.util
+import json
+import os
 import subprocess
 import sys
 from argparse import Namespace
@@ -442,6 +444,462 @@ def test_lint_requires_matrix_for_new_done_bet(
 
     assert rc == 1
     assert "COMPLETION_EVIDENCE_REQUIRED" in capsys.readouterr().out
+
+
+def _transition_base(monkeypatch: pytest.MonkeyPatch, *, base_status: str | None) -> None:
+    """Inject a resolved base ledger so cmd_lint can classify done transitions.
+
+    ``base_status`` is the BET-TEST status in the base revision; ``None`` means
+    the BET does not exist in the base at all (a newly added done BET is a
+    transition too).
+    """
+    monkeypatch.setenv("BET_LEDGER_BASE_REF", "HEAD")
+    base: dict[str, str] = {}
+    if base_status is not None:
+        base["BET-TEST"] = base_status
+    monkeypatch.setattr(
+        bl,
+        "_ledger_base_statuses",
+        lambda ref, *, workspace: dict(base),
+    )
+
+
+def test_lint_rejects_transitioned_done_bet_whose_matrix_derives_evaluating(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-25"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="IN_PROGRESS",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="evaluating",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status="candidate")
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "BET_DONE_REQUIRES_OUTCOME_ACCEPTED" in capsys.readouterr().out
+
+
+def test_lint_requires_done_at_for_transitioned_done_bet_with_outcome_accepted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="done")
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status="candidate")
+    monkeypatch.setattr(
+        bl,
+        "validate_completion_evidence",
+        lambda matrix, *, workspace: ("outcome_accepted", []),
+    )
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "BET_DONE_AT_REQUIRED" in capsys.readouterr().out
+
+
+def test_lint_accepts_transitioned_done_bet_with_outcome_accepted_and_done_at(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-25"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status="candidate")
+    monkeypatch.setattr(
+        bl,
+        "validate_completion_evidence",
+        lambda matrix, *, workspace: ("outcome_accepted", []),
+    )
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 0
+
+
+def test_lint_unchanged_done_bet_keeps_baseline_without_done_findings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    """Historical done BET with an internally-valid evaluating matrix is baseline-clean."""
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-24"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="IN_PROGRESS",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="evaluating",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status="done")
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "BET_DONE_REQUIRES_OUTCOME_ACCEPTED" not in out
+    assert "BET_DONE_AT_REQUIRED" not in out
+
+
+def test_lint_new_bet_marked_done_counts_as_transition(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    """A BET absent from the base has no done baseline, so done is a transition."""
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-25"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="IN_PROGRESS",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="evaluating",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status=None)
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    assert rc == 1
+    assert "BET_DONE_REQUIRES_OUTCOME_ACCEPTED" in capsys.readouterr().out
+
+
+def test_lint_without_resolved_base_produces_no_done_findings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    """Clean checkout / undetectable ledger transition keeps the guard off."""
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-24"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="IN_PROGRESS",
+        operational="NOT_PROVEN",
+        value="NOT_PROVEN",
+        overall_state="evaluating",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    monkeypatch.delenv("BET_LEDGER_BASE_REF", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "BET_DONE_" not in out
+
+
+def test_lint_fails_closed_when_declared_base_is_unreadable(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    """A declared-but-unreadable base fails lint without inventing BET_DONE_ findings."""
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-25"
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="outcome_accepted",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    monkeypatch.setenv("BET_LEDGER_BASE_REF", "deadbeef")
+    monkeypatch.setattr(
+        bl,
+        "validate_completion_evidence",
+        lambda matrix, *, workspace: ("outcome_accepted", []),
+    )
+
+    rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
+
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "BASE_LEDGER_UNREADABLE" in out
+    assert "BET_DONE_" not in out
+
+
+def _base_ref_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.email", "tests@example.invalid"], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.name", "Tests"], check=True)
+    ledger = repo / "docs" / "plans" / "3y-bet-ledger.yaml"
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    ledger.write_text(
+        "meta: {}\nbets:\n- id: BET-A\n  status: candidate\n",
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "-C", str(repo), "add", "docs/plans/3y-bet-ledger.yaml"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "seed ledger"], check=True)
+    return repo
+
+
+def test_base_ref_resolver_prefers_explicit_override(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("BET_LEDGER_BASE_REF", "refs/heads/baseline")
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+
+    assert bl._resolve_ledger_base_ref(workspace=tmp_path) == "refs/heads/baseline"
+
+
+def test_base_ref_resolver_reads_github_event_payload(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("BET_LEDGER_BASE_REF", raising=False)
+    sha = "b" * 40
+    event_path = tmp_path / "event.json"
+    monkeypatch.setenv("GITHUB_EVENT_PATH", str(event_path))
+
+    event_path.write_text(
+        json.dumps({"pull_request": {"base": {"sha": sha}}}),
+        encoding="utf-8",
+    )
+    assert bl._resolve_ledger_base_ref(workspace=tmp_path) == sha
+
+    event_path.write_text(json.dumps({"before": sha}), encoding="utf-8")
+    assert bl._resolve_ledger_base_ref(workspace=tmp_path) == sha
+
+    # An all-zero push "before" (new-branch push) is not a usable base; with no
+    # local ledger change either, the resolver must yield None.
+    event_path.write_text(json.dumps({"before": "0" * 40}), encoding="utf-8")
+    assert bl._resolve_ledger_base_ref(workspace=tmp_path) is None
+
+
+def test_base_ref_resolver_compares_local_ledger_against_head(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("BET_LEDGER_BASE_REF", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+    repo = _base_ref_repo(tmp_path)
+
+    assert bl._resolve_ledger_base_ref(workspace=repo) is None
+
+    ledger = repo / "docs" / "plans" / "3y-bet-ledger.yaml"
+    ledger.write_text(
+        "meta: {}\nbets:\n- id: BET-A\n  status: done\n",
+        encoding="utf-8",
+    )
+    assert bl._resolve_ledger_base_ref(workspace=repo) == "HEAD"
+
+
+def test_real_ledger_lint_adds_zero_done_findings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The repository ledger under a clean base comparison adds no BET_DONE_ lines."""
+    monkeypatch.delenv("BET_LEDGER_BASE_REF", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "bin/plan/bet-ledger.py"), "lint"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    combined = result.stdout + result.stderr
+
+    assert "BET_DONE_" not in combined
+    assert "BASE_LEDGER_UNREADABLE" not in combined
+
+
+GOVERNANCE_WORKFLOW = ROOT / ".github/workflows/governance-check.yml"
+BET_GATE_STEP_NAME = "BET done-transition gate"
+POINTER_DRIFT_STEP_NAME = "Submodule pointer drift check"
+POINTER_STRICT_STEP_NAME = "Submodule pointer strict auto-bump gate"
+
+
+def _governance_workflow() -> dict:
+    return yaml.safe_load(GOVERNANCE_WORKFLOW.read_text(encoding="utf-8"))
+
+
+def _governance_verify_steps() -> list[dict]:
+    return _governance_workflow()["jobs"]["governance-verify"]["steps"]
+
+
+def test_governance_verify_job_skips_non_authoritative_push_refs() -> None:
+    job = _governance_workflow()["jobs"]["governance-verify"]
+    assert job.get("if") == (
+        "github.event_name != 'push' || github.ref == 'refs/heads/main'"
+    )
+
+
+def test_governance_workflow_triggers_on_ledger_pull_requests() -> None:
+    workflow = _governance_workflow()
+    triggers = workflow.get("on", workflow.get(True))  # PyYAML 1.1 treats ``on`` as bool.
+
+    assert isinstance(triggers, dict)
+    assert "docs/**" in triggers["pull_request"]["paths"]
+
+
+def test_governance_verify_checkout_has_full_history() -> None:
+    """Transition classification diffs against the base revision, so checkout needs fetch-depth: 0."""
+    steps = _governance_verify_steps()
+
+    checkouts = [step for step in steps if str(step.get("uses", "")).startswith("actions/checkout")]
+    assert checkouts, "governance-verify must check out the repository"
+    assert all(step.get("with", {}).get("fetch-depth") == 0 for step in checkouts)
+
+
+def test_governance_verify_has_bet_done_transition_gate() -> None:
+    steps = _governance_verify_steps()
+    names = [str(step.get("name", "")) for step in steps]
+    assert "Install Python gate deps" in names
+    assert "Run full governance verification" in names
+
+    gate_steps = [step for step in steps if step.get("name") == BET_GATE_STEP_NAME]
+    assert len(gate_steps) == 1, "exactly one explicitly named BET done-transition gate step"
+    gate = gate_steps[0]
+    assert gate.get("if") == (
+        "github.event_name == 'pull_request' || "
+        "(github.event_name == 'push' && github.ref == 'refs/heads/main')"
+    )
+    script = str(gate.get("run", ""))
+
+    # The gate invokes the real ledger lint, exactly once.
+    assert script.count("bin/plan/bet-ledger.py lint") == 1
+    assert "python3 bin/plan/bet-ledger.py lint" in script
+
+    # Blocking classification covers exactly the two guard finding families.
+    assert "BASE_LEDGER_UNREADABLE" in script
+    assert "BET_DONE_" in script
+    assert "grep -qE 'BASE_LEDGER_UNREADABLE|BET_DONE_' \"$lint_out\"" in script
+
+    # Full lint output is printed before the classification greps.
+    assert "cat " in script and "grep" in script
+    assert script.index("cat ") < script.index("grep")
+
+    # The lint's own nonzero exit (historical non-transition debt) stays informational.
+    assert "lint_rc=$?" in script
+    assert 'exit "$lint_rc"' not in script
+    assert "exit $lint_rc" not in script
+
+    # A CLI crash must not masquerade as historical lint debt.  Only the two
+    # structural terminal shapes emitted by cmd_lint are accepted.
+    assert 'if [[ "$lint_rc" -eq 0 ]]' in script
+    assert 'elif [[ "$lint_rc" -eq 1 ]]' in script
+    assert 'tail -n 1 "$lint_out"' in script
+    assert "^OK — " in script
+    assert "^[0-9]+ 个问题$" in script
+    assert "bet-ledger lint did not complete structurally" in script
+
+    # The gate runs after Python deps are installed and before the full governance verification.
+    assert names.index("Install Python gate deps") < names.index(BET_GATE_STEP_NAME)
+    assert names.index(BET_GATE_STEP_NAME) < names.index("Run full governance verification")
+
+
+def test_governance_verify_scopes_strict_pointer_freshness_to_auto_bump_prs() -> None:
+    steps = _governance_verify_steps()
+    normal_steps = [step for step in steps if step.get("name") == POINTER_DRIFT_STEP_NAME]
+    strict_steps = [step for step in steps if step.get("name") == POINTER_STRICT_STEP_NAME]
+
+    assert len(normal_steps) == 1
+    normal_script = str(normal_steps[0].get("run", ""))
+    assert "python3 bin/gac/check-submodule-pointer-drift.py --json" in normal_script
+    assert "--strict" not in normal_script
+    assert 'status == "ahead"' in normal_script
+    assert '.results | type == "array"' in normal_script
+
+    assert len(strict_steps) == 1
+    strict = strict_steps[0]
+    assert strict.get("if") == (
+        "github.event_name == 'pull_request' && "
+        "startsWith(github.head_ref, 'auto/submodule-bump-')"
+    )
+    strict_script = str(strict.get("run", ""))
+    assert "python3 bin/gac/check-submodule-pointer-drift.py --strict" in strict_script
+
+
+@pytest.mark.parametrize(
+    ("payload", "checker_rc", "expected_rc"),
+    [
+        ({"results": [{"status": "aligned"}]}, 0, 0),
+        ({"results": [{"status": "behind"}]}, 0, 0),
+        ({"results": [{"status": "ahead"}]}, 0, 1),
+        ({"results": [{"status": "behind"}, {"status": "ahead"}]}, 0, 1),
+        ({"results": [{"status": "DIVERGED"}]}, 1, 1),
+        ({"results": "not-an-array"}, 0, 1),
+        ({"results": [{}]}, 0, 1),
+        ({"results": [None]}, 0, 1),
+        ({"results": [{"status": "unknown"}]}, 0, 1),
+        ("not-json", 0, 1),
+    ],
+)
+def test_normal_pointer_step_behavior(
+    tmp_path: Path,
+    payload: dict | str,
+    checker_rc: int,
+    expected_rc: int,
+) -> None:
+    step = next(
+        step for step in _governance_verify_steps() if step.get("name") == POINTER_DRIFT_STEP_NAME
+    )
+    stub_dir = tmp_path / "bin"
+    stub_dir.mkdir()
+    python_stub = stub_dir / "python3"
+    python_stub.write_text(
+        '#!/bin/sh\nprintf "%s\\n" "$POINTER_JSON"\nexit "$POINTER_RC"\n',
+        encoding="utf-8",
+    )
+    python_stub.chmod(0o755)
+    env = {
+        **os.environ,
+        "PATH": f"{stub_dir}:{os.environ['PATH']}",
+        "POINTER_JSON": json.dumps(payload) if isinstance(payload, dict) else payload,
+        "POINTER_RC": str(checker_rc),
+        "RUNNER_TEMP": str(tmp_path),
+    }
+    result = subprocess.run(
+        ["bash", "-c", f"set -euo pipefail\n{step['run']}"],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == expected_rc, result.stdout + result.stderr
+
+
+def test_governance_verify_runs_spec_binding_focused_tests() -> None:
+    """The transition guard tests are a CI consumer, not a local-only artifact."""
+    scripts = [str(step.get("run", "")) for step in _governance_verify_steps()]
+
+    assert any(
+        "python3 -m pytest tests/test_spec_binding_lint.py" in script for script in scripts
+    )
 
 
 def test_arbitrary_string_cannot_prove_human_verdict(tmp_path: Path) -> None:

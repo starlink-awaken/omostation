@@ -559,5 +559,22 @@ def wrapped_main(argv: list[str] | None = None) -> int:
         sys.argv = previous
 
 
+
+def _post_closeout_pitfall_hint():
+    """BET-Y1Q3-T10-09 后续: closeout 后如果有 blockers 提示记录 pitfalls."""
+    import sys as _sys
+    argv_str = " ".join(_sys.argv)
+    if "closeout" not in argv_str:
+        return
+    # 检查是否有 blockers 相关输出
+    # 简化实现: 打印提示让 agent 自行决定是否记录
+    print("\n💡 [error-knowledge] 如果本次 closeout 有 blockers/discovered 项，"
+          "建议记录到知识库:\n"
+          "  python3 bin/gac/error-knowledge.py record \\\n"
+          "    --category <submodule|cron|gate|scoring|coordination|environment|measurement> \\\n"
+          "    --title \"...\" --symptom \"...\" --solution \"...\"\n",
+          file=_sys.stderr)
+
 if __name__ == "__main__":
+    _post_closeout_pitfall_hint()
     sys.exit(wrapped_main())

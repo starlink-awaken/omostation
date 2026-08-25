@@ -1,0 +1,37 @@
+schema: script-registry/v1
+id: bin/gac/gh-api-push.sh
+name: Gh Api Push
+category: governance
+owner: governance-team
+description: "GitHub API 一键推送交付物到分支 — 内置 base_tree 完整快照 + 推后验证 .github/workflows 存在 (BASE-TREE-SNAPSHOT golden rule 防复发)。用法: gh-api-push.sh <owner> <repo> <branch> <base-ref> <commit-msg> <file...>"
+inputs:
+  - name: owner
+    type: string
+    description: GitHub owner (e.g. starlink-awaken)
+  - name: repo
+    type: string
+    description: GitHub repo (e.g. omostation)
+  - name: branch
+    type: string
+    description: 目标分支名 (不存在则基于 base-ref 创建)
+  - name: base-ref
+    type: string
+    description: base ref (main 或 完整 sha)
+  - name: commit-msg
+    type: string
+    description: commit message
+  - name: files
+    type: list
+    description: 要推送的本地文件路径 (相对 workspace root)
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers:
+  - API 推送交付物到 GitHub 分支
+  - 建 commit / 更新 ref / 推送 PR 分支
+related:
+  - bin/gac/gac-worktree.sh
+  - docs/operations/engineering-golden-rules.md
+maturity: draft
+last_reviewed: "2026-08-24"

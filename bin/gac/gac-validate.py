@@ -228,9 +228,13 @@ def _check_script_quota(path: Path = REGISTRY) -> list[str]:
             and "__pycache__" not in p.parts
         ]
         if len(active) > baseline:
+            # SCRIPT-BASELINE-SYNC golden rule (2026-08-25): 并发 PR 新增 bin/ 脚本
+            # 未同步 subtraction_quota.script_baseline 是 main 反复红的主因 (#2145/#2148/#2146).
+            # 超限时给出可执行建议值, 避免 agent 事后盲数 active 脚本.
             return [
                 f"subtraction-quota: bin/ 活跃脚本 {len(active)} 超基线 {baseline} "
-                "(新增脚本须同时归档/删除一个, BET-Y1Q3-T6-05)"
+                f"(新增脚本须同步 subtraction_quota.script_baseline → {len(active)}, "
+                "BET-Y1Q3-T6-05 / SCRIPT-BASELINE-SYNC)"
             ]
     except Exception:  # defensive: quota 检查失败不阻塞
         return []

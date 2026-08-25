@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # 可持续价值闭环与自进化治理 v1 — 架构方案 SSOT
 
 > 最后更新: 2026-08-23

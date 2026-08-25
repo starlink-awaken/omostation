@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # Resident Agent System v1 (ADR-0396 DigitalAgent / WP-A~I)
 
 > 文档 SSOT: 本文档是 resident 体系的**功能规格文档**（stable architecture contract）。

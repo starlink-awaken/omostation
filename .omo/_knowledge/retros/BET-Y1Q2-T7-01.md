@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # BET-Y1Q2-T7-01 Retro — 工程交付 dogfood 开 shadow
 
 - 状态: done (2026-08-22)

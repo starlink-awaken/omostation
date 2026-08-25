@@ -1,0 +1,17 @@
+schema: agent-error/v1
+id: PITFALL-MEA-001
+category: measurement
+severity: medium
+title: yaml raw count ≠ filtered registry count — 口径不同误判为漂移
+symptom: bos-services.yaml 237 services vs bos-registry.json 155 entries → 误判为 -82
+  漂移
+root_cause: registry 只镜像 CLASSIC_DOMAINS∩KEEP_STATUS 过滤后的子集
+solution: 对比时必须用相同口径; sync-bos-registry 输出已加 raw/mirror 说明
+prevention: -92 误报的根因
+tags:
+- measurement
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active

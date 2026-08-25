@@ -37,7 +37,7 @@ related:
 | evidence-gate | **PASS**（bos-registry live=156 同步） |
 | gac-gate / phase-gate | **PASS**（branch protection 必过项） |
 | PR #959 | **MERGED** `fbc820a43` squash 2026-08-04T13:29:45Z |
-| workflow closeout | `20260804T130023Z-project-code-change-2c9f9b0d` ok |
+| workflow closeout | `<run-id>` ok |
 
 ## 教训
 

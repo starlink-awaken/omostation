@@ -14,7 +14,16 @@ totals:
   mcp_tools: 616
   bos_services: 242
   bos_domains: 21
+<<<<<<< HEAD
   cli_commands: 149
+||||||| fc52c4baf
+  mcp_tools: 600
+  bos_services: 237
+  bos_domains: 20
+  cli_commands: 149
+=======
+  cli_commands: 150
+>>>>>>> origin/main
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -1914,7 +1923,7 @@ cli_commands:
 - name: cards
   description: 显示 CARDS 卡片状态
 - name: cartridge
-  description: 👁️ 长尾领域治理卡带工坊 (ADR-0198)
+  description: 👁️ 长尾领域治理卡带工坊 (ADR-0198/0203)
 - name: challenge
   description: ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196)
 - name: channels
@@ -2101,6 +2110,8 @@ cli_commands:
   description: 统一 BOS URI 路由解析与目标元数据提取
 - name: route
   description: 为模型选择最优节点
+- name: run
+  description: 在隔离沙箱中挂载卡带并执行领域意图
 - name: runtime
   description: runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱)
 - name: sanyi-status

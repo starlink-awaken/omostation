@@ -1,0 +1,16 @@
+schema: agent-error/v1
+id: PITFALL-MEA-002
+category: measurement
+severity: medium
+title: UHS 评分强依赖环境 — 跨worktree数值不可直接比
+symptom: 主仓测出74.4/C, 裸worktree测出52.9/F
+root_cause: tools维度需要子模块src目录, value需要runtime ledger, 都在worktree中缺失
+solution: UHS 测量应在全初始化的主仓环境中进行; 跨环境比较无意义
+prevention: ''
+tags:
+- measurement
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active

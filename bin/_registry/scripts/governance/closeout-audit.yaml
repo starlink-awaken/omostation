@@ -3,15 +3,20 @@ id: bin/plan/closeout-audit.py
 name: Closeout Audit
 category: governance
 owner: governance-team
-description: "G8 closeout 硬门: 诊断并自动修复 agent-workflow run 的 bet_id 缺失 (BET-Y1Q3-T10-08 落地)"
-inputs: []
+description: "agent-workflow run 与 bet 绑定的诊断/修复工具 (BET-Y1Q3-T10-08, G8 自进化债): 扫描 .omo/_delivery/agent-workflows/runs/ 诊断 unbound 状态, 提供修复建议 (auto-bind known / manual-review / governance-evolve 豁免)。用法: --report | --json | --bind-known。"
+inputs:
+  - name: mode
+    type: string
+    description: "--report (仅报告) | --json (JSON 输出) | --bind-known (自动绑定高置信度)"
 outputs:
   - type: exit_code
-  - type: yaml_file_edit
+  - type: json
 dependencies: []
-triggers: []
+triggers:
+  - agent-workflow run 缺 bet_id 诊断
+  - closeout chain_bind halt 排查
 related:
-  - bin/plan/chain-bind-check.py
-  - bin/agent-workflow.py
+  - bin/plan/chain_bind.py
+  - bin/plan/bet-ledger.py
 maturity: draft
 last_reviewed: "2026-08-24"

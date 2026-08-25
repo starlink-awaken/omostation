@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # Retro — BET-Y1Q3-T6-11: 同步 stale 子模块 pointer 到 origin/main
 
 ## 元信息

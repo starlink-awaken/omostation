@@ -1,0 +1,16 @@
+schema: agent-error/v1
+id: PITFALL-ENV-001
+category: environment
+severity: medium
+title: runtime/ 目录是 gitignored 但包含关键数据(event ledger)
+symptom: 新 clone 后 runtime/omo/event-ledger.sqlite3 不存在
+root_cause: runtime/ 被 .gitignore 因为是运行态数据
+solution: ledger 是 append-only 且按设计不可迁移; 新环境从空 ledger 开始积累
+prevention: ''
+tags:
+- environment
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active

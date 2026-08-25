@@ -16,6 +16,9 @@ checkers:
   severity: high
   enabled: true
   schedule: daily
+  owner: governance-team
+  expected: All operations pass debt audit + operation audit (X1 audit chain)
+  remediation: Investigate audit failure and apply targeted fix; re-run x1-audit-chain
 - id: x2-staleness
   dimension: X2
   name: 抗熵检查器
@@ -26,6 +29,9 @@ checkers:
   severity: medium
   enabled: true
   schedule: daily
+  owner: governance-team
+  expected: All facts stay fresh per X2 freshness rules (debt freshness + health trend)
+  remediation: Refresh stale facts via state sync; verify against x2-freshness-rules
 - id: x3-value
   dimension: X3
   name: 价值栈检查器
@@ -36,6 +42,9 @@ checkers:
   severity: medium
   enabled: true
   schedule: weekly
+  owner: governance-team
+  expected: Debt prioritized by value stack; SLA targets met (X3 value stack)
+  remediation: Rebalance debt priorities against x3-value-stack; escalate SLA misses
 - id: x4-consistency
   dimension: X4
   name: 一致性检查器
@@ -45,6 +54,9 @@ checkers:
   type: python
   severity: high
   enabled: true
+  owner: governance-team
+  expected: All rules enforced by CI + pre-commit + doc checks (X4 consistency)
+  remediation: Apply consistency rules via x4-consistency-rules; fix violation source
   schedule: daily
 execution:
   parallel: true
@@ -171,9 +183,9 @@ gac:
     - sweep_index_cli
   subtraction_quota:
     check_type: advisory
-    rule_baseline: 142    # 2026-08-24: 2b0ad8cae AGE-v2 adds 3 rules (CR-AGE-MEMORY/REPLAY/EVENT-01); 142 active
+    rule_baseline: 139
     adr_baseline: 361
-    script_baseline: 484    # 2026-08-25: +fix-orphan-locks.py +task-inventory.py; 484 active
+    script_baseline: 487    # 2026-08-25: main 并发合并遗留 (#2158 unified-health-score + #2160 error-knowledge 加脚本未同步 baseline), 487 active → SCRIPT-BASELINE-SYNC 铁律已固化
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -3649,48 +3661,6 @@ gac:
     expected: Check CR-RESIDENT-BOS-01 must pass without violations
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
-  - id: CR-AGE-MEMORY-01
-    dimension: X2
-    layer: L2
-    name: Agent Cell 记忆管道完整性
-    description: '记忆管道必须实现 candidate → conflict → consolidate → forget 完整流程.'
-    check_type: file_exists
-    target: projects/omo/src/omo/resident/memory_pipeline.py
-    source_ref: bin/gac/check-age-memory.py
-    executor: [ci_gate, gac_local_gate]
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-08-24'
-    adr: ADR-0401
-    enforcement: required
-  - id: CR-AGE-REPLAY-01
-    dimension: X2
-    layer: L2
-    name: Agent Cell 回放框架
-    description: '回放框架必须支持 replay/shadow/eval 三种模式.'
-    check_type: file_exists
-    target: projects/omo/src/omo/resident/replay.py
-    source_ref: bin/gac/check-age-replay.py
-    executor: [ci_gate, gac_local_gate]
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-08-24'
-    adr: ADR-0401
-    enforcement: required
-  - id: CR-AGE-EVENT-01
-    dimension: X1
-    layer: L2
-    name: Resident ↔ Agora 事件桥接
-    description: 'Resident 事件必须通过事件桥接发布到 Agora EventBus.'
-    check_type: file_exists
-    target: projects/omo/src/omo/resident/daemon.py
-    source_ref: bin/gac/check-age-event-bridge.py
-    executor: [ci_gate, gac_local_gate]
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-08-24'
-    adr: ADR-0401
-    enforcement: required
   drift:
     schedule: daily
     auto_heal: false

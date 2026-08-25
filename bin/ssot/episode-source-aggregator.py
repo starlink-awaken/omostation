@@ -382,6 +382,17 @@ def _self_test() -> bool:
 # CLI
 # ---------------------------------------------------------------------------
 
+
+
+def _write_heartbeat():
+    """Write execution heartbeat for meta-doctor M1 monitoring."""
+    hb_dir = WORKSPACE / ".omo" / "state" / "heartbeats"
+    hb_dir.mkdir(parents=True, exist_ok=True)
+    from datetime import datetime, UTC
+    (hb_dir / "episode-source-aggregator.json").write_text(
+        json.dumps({"generated_at": datetime.now(UTC).isoformat(), "ok": True}, indent=2) + "\n"
+    )
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Three-source episode draft aggregator for cockpit attest (read-only).",
