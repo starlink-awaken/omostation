@@ -456,22 +456,25 @@ def register_governance_tools(mcp: FastMCP) -> None:
         Returns status and summary of repaired findings.
         """
         import subprocess
+
         workspace_root = os.environ.get("WORKSPACE_ROOT", os.getcwd())
         res = subprocess.run(
             ["uv", "run", "python", "bin/gac/auto-fix-loop.py", "--apply", "--json"],
             cwd=workspace_root,
             capture_output=True,
-            text=True
+            text=True,
         )
         try:
             data = json.loads(res.stdout) if res.stdout else {}
         except Exception:
             data = {"raw": res.stdout, "stderr": res.stderr}
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "returncode": res.returncode,
-            "result": data,
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "returncode": res.returncode,
+                "result": data,
+            }
+        )
 
     # ── cartridge_pack ─────────────────────────────────────────────
 
@@ -485,19 +488,22 @@ def register_governance_tools(mcp: FastMCP) -> None:
         Returns packaging status and output path.
         """
         import subprocess
+
         workspace_root = os.environ.get("WORKSPACE_ROOT", os.getcwd())
         res = subprocess.run(
             ["uv", "run", "cockpit", "cartridge", "pack", domain_path],
             cwd=workspace_root,
             capture_output=True,
-            text=True
+            text=True,
         )
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "returncode": res.returncode,
-            "output": res.stdout.strip(),
-            "error": res.stderr.strip() if res.returncode != 0 else "",
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "returncode": res.returncode,
+                "output": res.stdout.strip(),
+                "error": res.stderr.strip() if res.returncode != 0 else "",
+            }
+        )
 
     # ── daemon_bus_publish ─────────────────────────────────────────
 
@@ -512,11 +518,12 @@ def register_governance_tools(mcp: FastMCP) -> None:
         Returns publish confirmation and notification count.
         """
         import urllib.request
+
         req_data = json.dumps({"topic": topic, "payload": payload}).encode("utf-8")
         req = urllib.request.Request(
             "http://127.0.0.1:7432/publish",
             data=req_data,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
         try:
             with urllib.request.urlopen(req, timeout=3) as resp:
@@ -524,4 +531,3 @@ def register_governance_tools(mcp: FastMCP) -> None:
                 return _ok({"format_version": FORMAT_VERSION, "bus_status": data})
         except Exception as exc:
             return _error(f"Daemon bus offline or unreachable on :7432 ({exc})")
-
