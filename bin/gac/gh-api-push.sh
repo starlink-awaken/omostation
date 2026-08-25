@@ -55,7 +55,7 @@ echo "🌳 base_tree: ${BASE_TREE:0:12} (父 commit 完整快照)"
 
 # 4) 上传变更 blobs
 python3 - "$OWNER" "$REPO" "$BASE_TREE" "$@" <<'PY'
-import base64, json, subprocess, sys
+import base64, json, os, subprocess, sys
 owner, repo, base_tree = sys.argv[1], sys.argv[2], sys.argv[3]
 files = sys.argv[4:]
 
@@ -71,10 +71,13 @@ for f in files:
         content = open(f, "rb").read()
     except OSError as e:
         raise RuntimeError(f"读取失败 {f}: {e}")
+    # 保留源文件可执行位: 脚本 (+x) 必须上传为 100755, 否则 CI fresh checkout
+    # 无执行权限 → subprocess 直接执行报 Errno 13 (doctor gac-health 曾因此红, #2155)
+    mode = "100755" if os.access(f, os.X_OK) else "100644"
     b = gh("-X", "POST", f"repos/{owner}/{repo}/git/blobs",
            "-f", "encoding=base64", "-f", f"content={base64.b64encode(content).decode()}")
-    blobs.append({"path": f, "mode": "100644", "type": "blob", "sha": b["sha"]})
-    print(f"  blob {f} {b['sha'][:10]}")
+    blobs.append({"path": f, "mode": mode, "type": "blob", "sha": b["sha"]})
+    print(f"  blob {f} {b['sha'][:10]} mode={mode}")
 
 body = {"base_tree": base_tree, "tree": blobs}
 r = subprocess.run(["gh", "api", "-X", "POST", f"repos/{owner}/{repo}/git/trees",
