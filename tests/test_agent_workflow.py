@@ -8,8 +8,10 @@ import shutil
 import subprocess
 import uuid
 from pathlib import Path
+from typing import Any
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_MODULE_PATH = ROOT / "bin" / "agent-workflow.py"
@@ -45,6 +47,7 @@ def _write_bet_workspace(
     bet_id: str = "BET-TEST-SPINE",
     status: str = "candidate",
     write_surfaces: list[str] | None = None,
+    capability_requirements: list[dict[str, str]] | None = None,
 ) -> tuple[str, Path]:
     relative_spec = "docs/superpowers/specs/test-spine.md"
     spec_path = workspace / relative_spec
@@ -72,6 +75,17 @@ def _write_bet_workspace(
     surfaces_yaml = "".join(
         f"      - {surface}\n" for surface in (write_surfaces or ["bin/agent-workflow.py", "tests/**"])
     )
+    capability_yaml = ""
+    if capability_requirements is not None:
+        if capability_requirements:
+            capability_yaml = "    capability_requirements:\n" + "".join(
+                "      - capability_id: {capability_id}\n"
+                "        operation: {operation}\n"
+                "        effect: {effect}\n".format(**item)
+                for item in capability_requirements
+            )
+        else:
+            capability_yaml = "    capability_requirements: []\n"
     ledger_path.write_text(
         f"""bets:
   - id: {bet_id}
@@ -91,7 +105,7 @@ def _write_bet_workspace(
         expect: exit 0
     workflow: bet-execution
     write_surfaces:
-{surfaces_yaml}    accepted_specifications:
+{surfaces_yaml}{capability_yaml}    accepted_specifications:
       - spec_ref: repo://{relative_spec}
         spec_version: 1.0.0
         content_digest: sha256:{digest}
@@ -115,9 +129,32 @@ def _bet_workflow_workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
     shutil.copy2(WORKFLOW_MODULE_PATH, workspace / "bin/agent-workflow.py")
     shutil.copy2(ROOT / "bin/plan/bet-ledger.py", plan_dir / "bet-ledger.py")
     shutil.copy2(ROOT / "bin/plan/chain_bind.py", plan_dir / "chain_bind.py")
+    shutil.copy2(ROOT / "bin/capability-sync.py", workspace / "bin/capability-sync.py")
+    lib_dir = workspace / "lib"
+    lib_dir.mkdir(parents=True, exist_ok=True)
+    for name in (
+        "capability_native_inspection.py",
+        "capability_native_receipt.py",
+        "capability_native_sources.py",
+        "capability_trace_binding.py",
+    ):
+        shutil.copy2(ROOT / "lib" / name, lib_dir / name)
     shutil.copytree(
         ROOT / ".omo/_truth/registry/agent-workflows",
         workspace / ".omo/_truth/registry/agent-workflows",
+    )
+    identity_path = workspace / ".git" / "agent-clone-identity.json"
+    identity_path.parent.mkdir(parents=True, exist_ok=True)
+    identity_path.write_text(
+        json.dumps(
+            {
+                "schema": "agent-clone-identity/v2",
+                "ready": True,
+                "actor_id": "test-agent",
+                "delivery_attempt_id": "attempt-test",
+            }
+        ),
+        encoding="utf-8",
     )
     _write_bet_workspace(workspace, bet_id="BET-Y1Q3-T4-01")
     return workspace
@@ -355,6 +392,353 @@ def test_prepare_bet_execution_builds_recomputable_ecos_packet_identity(tmp_path
     assert prepared["work_packet_hash"].startswith("sha256:")
 
 
+def test_prepare_bet_execution_digests_declared_empty_requirements(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    bet_id, _spec_path = _write_bet_workspace(tmp_path, capability_requirements=[])
+
+    prepared = module._prepare_bet_execution(bet_id, workspace=tmp_path)
+
+    assert prepared["work_packet"]["capability_requirements"] == []
+    assert prepared["capability_requirements_digest"].startswith("sha256:")
+
+
+def test_work_packet_compiles_capability_requirements_and_preserves_absent_vs_empty() -> None:
+    module = _load_root_workflow_wrapper()
+    ledger = module._load_bet_ledger_module()
+    binding = {
+        "spec_ref": "repo://docs/superpowers/specs/test-spine.md",
+        "spec_version": "1.0.0",
+        "content_digest": "sha256:" + "a" * 64,
+        "decision_ref": "decision://accepted/BET-TEST-SPINE",
+    }
+    instruction = {
+        "instruction_ref": "repo://docs/operations/blueprint-agent-instruction-pack-v1.md",
+        "instruction_version": "blueprint-agent-instruction-pack/v1",
+        "content_digest": "sha256:" + "b" * 64,
+        "instruction_profile": "executor",
+    }
+    requirements = [
+        {"capability_id": "skill:git-discipline", "operation": "load", "effect": "read_only"},
+        {"capability_id": "workflow:bet-execution", "operation": "load", "effect": "read_only"},
+    ]
+
+    absent = ledger._work_packet_from_bet({"id": "BET-TEST-SPINE"}, binding, instruction)
+    empty = ledger._work_packet_from_bet({"id": "BET-TEST-SPINE", "capability_requirements": []}, binding, instruction)
+    present = ledger._work_packet_from_bet(
+        {"id": "BET-TEST-SPINE", "capability_requirements": requirements}, binding, instruction
+    )
+
+    assert "capability_requirements" not in absent
+    assert empty["capability_requirements"] == []
+    assert present["capability_requirements"] == requirements
+
+
+def _set_capability_requirements(workspace: Path, requirements: list[dict[str, str]]) -> None:
+    ledger_path = workspace / "docs/plans/3y-bet-ledger.yaml"
+    ledger = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
+    ledger["bets"][0]["capability_requirements"] = requirements
+    ledger_path.write_text(yaml.safe_dump(ledger, sort_keys=False), encoding="utf-8")
+
+
+def _capability_requirements() -> list[dict[str, str]]:
+    return [{"capability_id": "workflow:bet-execution", "operation": "load", "effect": "read_only"}]
+
+
+def test_root_start_preflight_accepts_native_requirement_and_persists_redacted_receipt(
+    tmp_path: Path,
+    _bet_workflow_workspace: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    shutil.copytree(_bet_workflow_workspace, workspace, symlinks=True)
+    _set_capability_requirements(workspace, _capability_requirements())
+    registry = _isolated_workflow_registry(tmp_path)
+
+    result = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--dry-run",
+        "--json",
+        workspace=workspace,
+    )
+
+    assert result.returncode == 0, result.stderr
+    record = json.loads(result.stdout)
+    assert record["capability_requirements_digest"].startswith("sha256:")
+    preflight = record["capability_preflight"]
+    assert preflight["invoked"] is False
+    assert preflight["value_indicator_policy"] is False
+    assert list(preflight["receipts"]) == [
+        {
+            "capability_id": "workflow:bet-execution",
+            "source_digest": preflight["receipts"][0]["source_digest"],
+            "receipt_digest": preflight["receipts"][0]["receipt_digest"],
+        }
+    ]
+    assert set(preflight["binding"]) == {
+        "correlation_id",
+        "workflow_run_id",
+        "packet_id",
+        "packet_hash",
+        "assignment_id",
+        "dispatch_id",
+        "actor_id",
+        "delivery_attempt_id",
+    }
+    assert preflight["binding"]["correlation_id"] == record["run_id"]
+
+
+def _write_mcp_preflight_workspace(root: Path) -> dict[str, Any]:
+    identity_path = root / ".git/agent-clone-identity.json"
+    identity_path.parent.mkdir(parents=True, exist_ok=True)
+    identity_path.write_text(
+        json.dumps(
+            {
+                "schema": "agent-clone-identity/v2",
+                "ready": True,
+                "actor_id": "test-actor",
+                "delivery_attempt_id": "test-attempt",
+            }
+        ),
+        encoding="utf-8",
+    )
+    source = root / "native/demo_mcp.py"
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text(
+        "from fastmcp import FastMCP\n"
+        "mcp = FastMCP('demo')\n"
+        "@mcp.tool()\n"
+        "async def inspect_item(value: str) -> str:\n"
+        "    return value\n",
+        encoding="utf-8",
+    )
+    registry_path = root / "docs/generated/capability-registry.yaml"
+    registry_path.parent.mkdir(parents=True, exist_ok=True)
+    registry_path.write_text(
+        yaml.safe_dump(
+            {
+                "version": "1.0.0",
+                "schema": "capability-registry/v1",
+                "owner": "workspace-capability-governance",
+                "writer": "bin/cockpit/gen-capability-registry.py",
+                "mcp_servers": [
+                    {
+                        "id": "demo",
+                        "name": "Demo",
+                        "file": "native/demo_mcp.py",
+                        "exists": True,
+                        "tools": ["inspect_item"],
+                    }
+                ],
+                "bos_services": {"domains": {}},
+                "cli_commands": [],
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    requirement = {
+        "capability_id": "mcp-server:demo",
+        "operation": "load",
+        "effect": "read_only",
+    }
+    return {
+        "work_packet": {
+            "packet_id": "WP-BET-TEST",
+            "capability_requirements": [requirement],
+        },
+        "work_packet_hash": "sha256:" + "a" * 64,
+        "capability_requirements_digest": "sha256:" + "b" * 64,
+    }
+
+
+def test_root_preflight_resolves_and_inspects_exact_mcp_projection(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    delivery_identity = _write_mcp_preflight_workspace(tmp_path)
+
+    preflight = module._capability_preflight(delivery_identity, "run-mcp", workspace=tmp_path)
+
+    assert preflight["receipts"] == [
+        {
+            "capability_id": "mcp-server:demo",
+            "source_digest": preflight["receipts"][0]["source_digest"],
+            "receipt_digest": preflight["receipts"][0]["receipt_digest"],
+        }
+    ]
+    assert preflight["invoked"] is False
+    assert preflight["value_indicator_policy"] is False
+
+
+def test_root_preflight_rejects_projection_read_race(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_root_workflow_wrapper()
+    delivery_identity = _write_mcp_preflight_workspace(tmp_path)
+    capability_sync = module._load_capability_sync_module()
+    original = capability_sync.load_registry
+
+    def racing_load(path: Path) -> dict[str, Any]:
+        registry = original(path)
+        path.write_text(path.read_text(encoding="utf-8") + "# raced\n", encoding="utf-8")
+        return registry
+
+    monkeypatch.setattr(capability_sync, "load_registry", racing_load)
+
+    with pytest.raises(module.WorkflowError, match="CAPABILITY_PREFLIGHT_SOURCE_REJECTED"):
+        module._capability_preflight(delivery_identity, "run-race", workspace=tmp_path)
+
+
+@pytest.mark.parametrize("identity_mode", ["missing", "invalid"])
+def test_root_start_preflight_rejects_clone_identity_before_any_mutation(
+    tmp_path: Path,
+    _bet_workflow_workspace: Path,
+    identity_mode: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    shutil.copytree(_bet_workflow_workspace, workspace, symlinks=True)
+    _set_capability_requirements(workspace, _capability_requirements())
+    identity = workspace / ".git/agent-clone-identity.json"
+    if identity_mode == "missing":
+        identity.unlink()
+    else:
+        identity.write_text(json.dumps({"schema": "agent-clone-identity/v1"}), encoding="utf-8")
+    registry = _isolated_workflow_registry(tmp_path)
+    before = _snapshot_workflow_state(tmp_path)
+
+    result = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+        workspace=workspace,
+    )
+
+    assert result.returncode == 2
+    assert "CAPABILITY_PREFLIGHT" in result.stderr
+    assert _snapshot_workflow_state(tmp_path) == before
+
+
+def test_root_start_preflight_rejects_missing_source_before_any_mutation(
+    tmp_path: Path,
+    _bet_workflow_workspace: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    shutil.copytree(_bet_workflow_workspace, workspace, symlinks=True)
+    _set_capability_requirements(
+        workspace,
+        [{"capability_id": "workflow:not-installed", "operation": "load", "effect": "read_only"}],
+    )
+    registry = _isolated_workflow_registry(tmp_path)
+    before = _snapshot_workflow_state(tmp_path)
+
+    result = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+        workspace=workspace,
+    )
+
+    assert result.returncode == 2
+    assert "CAPABILITY_PREFLIGHT" in result.stderr
+    assert list((tmp_path / "runs").glob("*.yaml")) == []
+    assert _snapshot_workflow_state(tmp_path) == before
+
+
+def test_root_parent_child_preserves_exact_capability_identity(
+    tmp_path: Path,
+    _bet_workflow_workspace: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    shutil.copytree(_bet_workflow_workspace, workspace, symlinks=True)
+    _set_capability_requirements(workspace, _capability_requirements())
+    registry = _isolated_workflow_registry(tmp_path)
+    parent_result = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--json",
+        workspace=workspace,
+    )
+    assert parent_result.returncode == 0, parent_result.stderr
+    parent = json.loads(parent_result.stdout)
+
+    child_result = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--parent-run",
+        parent["run_id"],
+        "--dry-run",
+        "--json",
+        workspace=workspace,
+    )
+    assert child_result.returncode == 0, child_result.stderr
+    child = json.loads(child_result.stdout)
+    for key in ("capability_requirements_digest", "capability_preflight"):
+        assert child[key] == parent[key]
+
+
+def test_refresh_updates_preflight_atomically_and_rejects_capability_source_drift(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    requirement = [{"capability_id": "skill:test-capability", "operation": "load", "effect": "read_only"}]
+    registry, run_id, _before = _write_refreshable_run(
+        module,
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "tests/**"],
+        capability_requirements=requirement,
+    )
+    _write_bet_workspace(
+        tmp_path,
+        write_surfaces=["bin/agent-workflow.py", "bin/gac/test_agent_clone.py", "tests/**"],
+        capability_requirements=requirement,
+    )
+
+    _initial_path, initial = module._wf_life.read_run(registry, run_id)
+    initial_source_digest = initial["capability_preflight"]["receipts"][0]["source_digest"]
+    result = module._refresh_packet_run(registry, run_id, workspace=tmp_path, authoritative_ref=None)
+    _path, refreshed = module._wf_life.read_run(registry, run_id)
+    assert result["reason"] == "work_packet_refreshed"
+    assert refreshed["capability_preflight"]["binding"]["packet_hash"] == refreshed["work_packet_hash"]
+    assert refreshed["capability_preflight"]["receipts"][0]["source_digest"] == initial_source_digest
+
+    run_path, _payload = module._wf_life.read_run(registry, run_id)
+    before_run = run_path.read_bytes()
+    ledger_path = tmp_path / "events.jsonl"
+    before_ledger = ledger_path.read_bytes()
+    skill_path = tmp_path / ".agents/skills/test-capability/SKILL.md"
+    skill_path.write_text(skill_path.read_text(encoding="utf-8") + "changed\n", encoding="utf-8")
+
+    with pytest.raises(module.WorkflowError, match="CAPABILITY_PREFLIGHT_SOURCE_DRIFT"):
+        module._refresh_packet_run(registry, run_id, workspace=tmp_path, authoritative_ref=None)
+    assert run_path.read_bytes() == before_run
+    assert ledger_path.read_bytes() == before_ledger
+
+
 def test_prepare_bet_execution_rejects_non_startable_status(tmp_path: Path) -> None:
     module = _load_root_workflow_wrapper()
     bet_id, _spec_path = _write_bet_workspace(tmp_path, status="done")
@@ -474,24 +858,67 @@ def _write_refreshable_run(
     *,
     write_surfaces: list[str],
     claimed_path: str = "bin/agent-workflow.py",
+    capability_requirements: list[dict[str, str]] | None = None,
 ) -> tuple[dict, str, dict]:
-    bet_id, _spec_path = _write_bet_workspace(workspace, write_surfaces=write_surfaces)
+    bet_id, _spec_path = _write_bet_workspace(
+        workspace,
+        write_surfaces=write_surfaces,
+        capability_requirements=capability_requirements,
+    )
+    if capability_requirements is not None:
+        skill = workspace / ".agents/skills/test-capability/SKILL.md"
+        skill.parent.mkdir(parents=True, exist_ok=True)
+        skill.write_text(
+            "---\nname: test-capability\nversion: 1\n---\n\n# Test capability\n",
+            encoding="utf-8",
+        )
+        (workspace / "bin").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / "bin/capability-sync.py", workspace / "bin/capability-sync.py")
+        lib_dir = workspace / "lib"
+        lib_dir.mkdir(parents=True, exist_ok=True)
+        for name in (
+            "capability_native_inspection.py",
+            "capability_native_receipt.py",
+            "capability_native_sources.py",
+            "capability_trace_binding.py",
+        ):
+            shutil.copy2(ROOT / "lib" / name, lib_dir / name)
+        identity_path = workspace / ".git" / "agent-clone-identity.json"
+        identity_path.parent.mkdir(parents=True, exist_ok=True)
+        identity_path.write_text(
+            json.dumps(
+                {
+                    "schema": "agent-clone-identity/v2",
+                    "ready": True,
+                    "actor_id": "test-agent",
+                    "delivery_attempt_id": "attempt-test",
+                }
+            ),
+            encoding="utf-8",
+        )
     prepared = module._prepare_bet_execution(bet_id, workspace=workspace)
     registry_path = _write_control_plane_registry(workspace)
     registry = module.load_registry(registry_path)
     run_id = "20260821T000000Z-bet-execution-refresh"
     run_path = workspace / "runs" / f"{run_id}.yaml"
     run_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "run_id": run_id,
+        "workflow_id": "bet-execution",
+        "status": "active",
+        "bet_id": bet_id,
+        **prepared,
+        "claims": [{"paths": [claimed_path], "surfaces": []}],
+    }
+    if capability_requirements is not None:
+        payload["capability_preflight"] = module._capability_preflight(
+            prepared,
+            run_id,
+            workspace=workspace,
+        )
     module._wf_life.write_run(
         run_path,
-        {
-            "run_id": run_id,
-            "workflow_id": "bet-execution",
-            "status": "active",
-            "bet_id": bet_id,
-            **prepared,
-            "claims": [{"paths": [claimed_path], "surfaces": []}],
-        },
+        payload,
     )
     return registry, run_id, prepared
 
