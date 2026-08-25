@@ -497,9 +497,7 @@ class TestP34W1StdioProtocol:
                 successful_spawns.append({"pid": proc.pid, "argv": proc.args})
                 return proc
 
-            monkeypatch.setattr(
-                adapter_module.subprocess, "Popen", _transparent_popen
-            )
+            monkeypatch.setattr(adapter_module.subprocess, "Popen", _transparent_popen)
 
         r = invoke_stdio(
             "bos://analysis/minerva/research", "research", {"topic": "test"}

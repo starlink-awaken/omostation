@@ -106,16 +106,10 @@ async def test_bdsk_evaluate_routes_once_through_aetherforge_compute(monkeypatch
         }
         return {
             "status": "ok",
-            "result": {
-                "choices": [
-                    {"message": {"content": json.dumps(payload)}}
-                ]
-            },
+            "result": {"choices": [{"message": {"content": json.dumps(payload)}}]},
         }
 
-    monkeypatch.setattr(
-        "agora.server.tools_bos.bdsk._invoke_compute", fake_resolve
-    )
+    monkeypatch.setattr("agora.server.tools_bos.bdsk._invoke_compute", fake_resolve)
     res_deep = await persona_bdsk_evaluate(
         topic="引入边缘 MLX 计算网关执行推理分析",
         mode="deep",
@@ -127,12 +121,10 @@ async def test_bdsk_evaluate_routes_once_through_aetherforge_compute(monkeypatch
     assert res_deep.get("verdict") == "REVIEW_REQUIRED"
     assert res_deep.get("risk_score") == 41
     assert res_deep.get("topic_digest") == (
-        "sha256:"
-        + sha256("引入边缘 MLX 计算网关执行推理分析".encode()).hexdigest()
+        "sha256:" + sha256("引入边缘 MLX 计算网关执行推理分析".encode()).hexdigest()
     )
     assert res_deep.get("context_digest") == (
-        "sha256:"
-        + sha256("高敏感医疗与公文数据分析场景".encode()).hexdigest()
+        "sha256:" + sha256("高敏感医疗与公文数据分析场景".encode()).hexdigest()
     )
     assert "topic" not in res_deep
     assert "context" not in res_deep
@@ -151,9 +143,7 @@ async def test_bdsk_evaluate_compute_failure_is_not_proven(monkeypatch):
     async def fake_resolve(_uri, **_kwargs):
         return {"status": "error", "error": "daemon unavailable"}
 
-    monkeypatch.setattr(
-        "agora.server.tools_bos.bdsk._invoke_compute", fake_resolve
-    )
+    monkeypatch.setattr("agora.server.tools_bos.bdsk._invoke_compute", fake_resolve)
     res_fast = await persona_bdsk_evaluate(
         topic="紧急对齐 ADR-0300 规范文案",
         mode="fast",
@@ -175,9 +165,7 @@ async def test_bdsk_private_inputs_are_rejected_before_compute(
         calls.append((args, kwargs))
         raise AssertionError("privacy rejection must happen before compute")
 
-    monkeypatch.setattr(
-        "agora.server.tools_bos.bdsk._invoke_compute", fake_resolve
-    )
+    monkeypatch.setattr("agora.server.tools_bos.bdsk._invoke_compute", fake_resolve)
     private_inputs = [
         "/Users/example/private/board-proposal.md",
         "/opt/team/board-proposal.md",

@@ -271,9 +271,7 @@ def test_default_route_resolution_preserves_mounted_lifecycle_gate() -> None:
 
 def test_injected_probe_is_bounded_by_gateway_timeout() -> None:
     class BlockingAdapter(FakeAdapter):
-        def probe(
-            self, record: dict[str, Any], *, timeout: float
-        ) -> dict[str, Any]:
+        def probe(self, record: dict[str, Any], *, timeout: float) -> dict[str, Any]:
             self.probe_calls.append({"record": record, "timeout": timeout})
             threading.Event().wait(0.2)
             return {"status": "healthy"}

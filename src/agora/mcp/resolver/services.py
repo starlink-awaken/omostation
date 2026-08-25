@@ -41,6 +41,7 @@ def _with_uv_package(service: BosService) -> list[str]:
 # 2. `AGORA_BOS_REGISTRY=none` 强制使用硬编码 fallback
 # 3. 新增路由请编辑 etc/bos-services.yaml, 勿改本文件
 
+
 def _fallback_services() -> list[BosService]:
     """硬编码 fallback + internal transport 单源 (services_fallback + services_internal)."""
     from .services_fallback import _FALLBACK_SERVICES

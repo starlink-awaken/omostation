@@ -1,4 +1,5 @@
 """Agora 2.0 Daemon: In-Memory Agent-to-Agent Bus."""
+
 import asyncio
 import json
 import logging
@@ -10,17 +11,21 @@ try:
     from fastapi import FastAPI, WebSocket, WebSocketDisconnect
     from pydantic import BaseModel
     import uvicorn
+
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("agora.daemon")
+
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
-        self.subscribers: Dict[str, Set[WebSocket]] = {}
+        self.active_connections: dict[str, WebSocket] = {}
+        self.subscribers: dict[str, set[WebSocket]] = {}
 
     async def connect(self, client_id: str, websocket: WebSocket):
         await websocket.accept()
@@ -30,7 +35,7 @@ class ConnectionManager:
     def disconnect(self, client_id: str):
         ws = self.active_connections.pop(client_id, None)
         if ws:
-            for topic, subs in self.subscribers.items():
+            for subs in self.subscribers.values():
                 subs.discard(ws)
         logger.info(f"Agent disconnected: {client_id}")
 
@@ -53,6 +58,7 @@ class ConnectionManager:
             self.subscribers.setdefault(topic, set()).add(ws)
             logger.info(f"Agent {client_id} subscribed to {topic}")
 
+
 if HAS_FASTAPI:
     app = FastAPI(title="Agora 2.0 Agent Bus")
     manager = ConnectionManager()
@@ -64,7 +70,10 @@ if HAS_FASTAPI:
     @app.post("/publish")
     async def publish_message(msg: MessagePayload):
         await manager.broadcast(msg.topic, msg.payload)
-        return {"status": "ok", "subscribers_notified": len(manager.subscribers.get(msg.topic, set()))}
+        return {
+            "status": "ok",
+            "subscribers_notified": len(manager.subscribers.get(msg.topic, set())),
+        }
 
     @app.websocket("/ws/{client_id}")
     async def websocket_endpoint(websocket: WebSocket, client_id: str):
@@ -84,12 +93,14 @@ if HAS_FASTAPI:
             logger.error(f"Error handling websocket for {client_id}: {e}")
             manager.disconnect(client_id)
 
+
 def run_daemon(port: int = 7432):
     if not HAS_FASTAPI:
         logger.error("FastAPI not installed. Cannot run Agora 2.0 Daemon.")
         sys.exit(1)
     logger.info(f"Starting Agora 2.0 Daemon on port {port}")
     uvicorn.run(app, host="127.0.0.1", port=port)
+
 
 if __name__ == "__main__":
     run_daemon()

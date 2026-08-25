@@ -1424,5 +1424,3 @@ _FALLBACK_SERVICES: list[BosService] = [
 
 # ── POC_SERVICES: YAML 驱动加载器 ──────────────────────────
 # 向后兼容：所有 from .services import POC_SERVICES 继续工作
-
-

@@ -145,6 +145,7 @@ async def test_bos_inbox_mcp_endpoints(monkeypatch):
 @pytest.mark.asyncio
 async def test_bos_persona_bdsk_endpoint(monkeypatch):
     """测试 B.D.S.K. 虚拟董事会评估网关能力。"""
+
     async def fake_resolve(_uri, **_kwargs):
         payload = {
             "verdict": "REVIEW_REQUIRED",
@@ -157,14 +158,10 @@ async def test_bos_persona_bdsk_endpoint(monkeypatch):
         }
         return {
             "status": "ok",
-            "result": {
-                "choices": [{"message": {"content": json.dumps(payload)}}]
-            },
+            "result": {"choices": [{"message": {"content": json.dumps(payload)}}]},
         }
 
-    monkeypatch.setattr(
-        "agora.server.tools_bos.bdsk._invoke_compute", fake_resolve
-    )
+    monkeypatch.setattr("agora.server.tools_bos.bdsk._invoke_compute", fake_resolve)
     res_deep = await persona_bdsk_evaluate("系统升级到 V3", mode="deep")
     assert res_deep.get("status") == "ok"
     assert res_deep.get("verdict") == "REVIEW_REQUIRED"
