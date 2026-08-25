@@ -6,6 +6,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -139,19 +140,25 @@ def _clone_identity_for_preflight(workspace: Path) -> dict[str, str]:
         identity = json.loads(identity_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise WorkflowError("CAPABILITY_PREFLIGHT_CLONE_IDENTITY_REQUIRED") from exc
+    actor_id = identity.get("actor_id") if isinstance(identity, dict) else None
+    delivery_attempt_id = identity.get("delivery_attempt_id") if isinstance(identity, dict) else None
+    valid_id = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
     if (
         not isinstance(identity, dict)
         or identity.get("schema") != "agent-clone-identity/v2"
         or identity.get("ready") is not True
-        or not isinstance(identity.get("actor_id"), str)
-        or not identity["actor_id"].strip()
-        or not isinstance(identity.get("delivery_attempt_id"), str)
-        or not identity["delivery_attempt_id"].strip()
+        or not isinstance(actor_id, str)
+        or valid_id.fullmatch(actor_id) is None
+        or identity.get("agent_id") != actor_id
+        or not isinstance(delivery_attempt_id, str)
+        or valid_id.fullmatch(delivery_attempt_id) is None
+        or identity.get("canonical_root") != str(workspace.resolve())
+        or identity.get("working_branch") != f"agent/{actor_id}--{delivery_attempt_id}"
     ):
         raise WorkflowError("CAPABILITY_PREFLIGHT_CLONE_IDENTITY_INVALID")
     return {
-        "actor_id": identity["actor_id"],
-        "delivery_attempt_id": identity["delivery_attempt_id"],
+        "actor_id": actor_id,
+        "delivery_attempt_id": delivery_attempt_id,
     }
 
 
@@ -168,6 +175,9 @@ def _capability_preflight(
     digest = delivery_identity.get("capability_requirements_digest")
     if not isinstance(packet, dict) or not isinstance(requirements, list) or not isinstance(digest, str):
         raise WorkflowError("CAPABILITY_PREFLIGHT_REQUIREMENTS_INVALID")
+    expected_digest = _load_bet_ledger_module().capability_requirements_digest(requirements)
+    if digest != expected_digest:
+        raise WorkflowError("CAPABILITY_PREFLIGHT_REQUIREMENTS_DIGEST_MISMATCH")
 
     clone = _clone_identity_for_preflight(workspace)
     binding = {
@@ -180,93 +190,103 @@ def _capability_preflight(
         "actor_id": clone["actor_id"],
         "delivery_attempt_id": clone["delivery_attempt_id"],
     }
-    capability_sync = _load_capability_sync_module()
     registry_path = workspace / "docs/generated/capability-registry.yaml"
     registry: dict[str, Any] | None = None
     registry_content: bytes | None = None
-    inspected: list[dict[str, str]] = []
-    for requirement in requirements:
-        if not isinstance(requirement, dict):
-            raise WorkflowError("CAPABILITY_PREFLIGHT_REQUIREMENTS_INVALID")
-        capability_id = requirement.get("capability_id")
-        if not isinstance(capability_id, str) or ":" not in capability_id:
-            raise WorkflowError("CAPABILITY_PREFLIGHT_REQUIREMENTS_INVALID")
-        prefix = capability_id.split(":", 1)[0]
-        try:
-            if prefix in {"skill", "workflow"}:
-                receipt = capability_sync.inspect_native_capability(
-                    root=workspace,
-                    capability_id=capability_id,
-                    registry={},
-                    registry_content=b"",
-                    binding=binding,
-                )
-            else:
-                if registry is None or registry_content is None:
-                    before = registry_path.stat()
-                    registry_content = registry_path.read_bytes()
-                    registry = capability_sync.load_registry(registry_path)
-                    after = registry_path.stat()
-                    if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) != (
-                        after.st_dev,
-                        after.st_ino,
-                        after.st_size,
-                        after.st_mtime_ns,
-                    ) or len(registry_content) != before.st_size:
-                        raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED")
-                resolution = capability_sync.resolve_capability(registry, capability_id=capability_id)
-                if resolution.status != "resolved":
-                    raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_MISSING")
-                resolution_receipt = capability_sync.build_resolution_receipt(
-                    resolution,
-                    registry_content,
-                    {"capability_id": capability_id},
-                    binding=binding,
-                    projection_metadata=registry,
-                )
-                receipt = capability_sync.inspect_native_capability(
-                    root=workspace,
-                    capability_id=capability_id,
-                    registry=registry,
-                    registry_content=registry_content,
-                    resolution_receipt=resolution_receipt,
-                )
-        except WorkflowError:
-            raise
-        except Exception as exc:  # noqa: BLE001 - source proof must fail closed.
-            raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED") from exc
-        if not isinstance(receipt, dict) or receipt.get("status") != "inspected":
-            raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED")
-        source_digest = receipt.get("source_digest")
-        receipt_digest = receipt.get("receipt_digest")
-        if (
-            not isinstance(source_digest, str)
-            or not source_digest.startswith("sha256:")
-            or not isinstance(receipt_digest, str)
-            or not receipt_digest.startswith("sha256:")
-        ):
-            raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED")
-        inspected.append(
-            {
-                "capability_id": capability_id,
-                "source_digest": source_digest,
-                "receipt_digest": receipt_digest,
-            }
-        )
+
+    def inspect_with_binding(inspection_binding: dict[str, Any]) -> list[dict[str, str]]:
+        nonlocal registry, registry_content
+        if not requirements:
+            return []
+        capability_sync = _load_capability_sync_module()
+        inspected_rows: list[dict[str, str]] = []
+        for requirement in requirements:
+            if not isinstance(requirement, dict):
+                raise WorkflowError("CAPABILITY_PREFLIGHT_REQUIREMENTS_INVALID")
+            capability_id = requirement.get("capability_id")
+            if not isinstance(capability_id, str) or ":" not in capability_id:
+                raise WorkflowError("CAPABILITY_PREFLIGHT_REQUIREMENTS_INVALID")
+            prefix = capability_id.split(":", 1)[0]
+            try:
+                if prefix in {"skill", "workflow"}:
+                    receipt = capability_sync.inspect_native_capability(
+                        root=workspace,
+                        capability_id=capability_id,
+                        registry={},
+                        registry_content=b"",
+                        binding=inspection_binding,
+                    )
+                else:
+                    if registry is None or registry_content is None:
+                        before = registry_path.stat()
+                        registry_content = registry_path.read_bytes()
+                        registry = capability_sync.load_registry(registry_path)
+                        after = registry_path.stat()
+                        if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) != (
+                            after.st_dev,
+                            after.st_ino,
+                            after.st_size,
+                            after.st_mtime_ns,
+                        ) or len(registry_content) != before.st_size:
+                            raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED")
+                    resolution = capability_sync.resolve_capability(registry, capability_id=capability_id)
+                    if resolution.status != "resolved":
+                        raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_MISSING")
+                    resolution_receipt = capability_sync.build_resolution_receipt(
+                        resolution,
+                        registry_content,
+                        {"capability_id": capability_id},
+                        binding=inspection_binding,
+                        projection_metadata=registry,
+                    )
+                    receipt = capability_sync.inspect_native_capability(
+                        root=workspace,
+                        capability_id=capability_id,
+                        registry=registry,
+                        registry_content=registry_content,
+                        resolution_receipt=resolution_receipt,
+                    )
+            except WorkflowError:
+                raise
+            except Exception as exc:  # noqa: BLE001 - source proof must fail closed.
+                raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED") from exc
+            if not isinstance(receipt, dict) or receipt.get("status") != "inspected":
+                raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED")
+            source_digest = receipt.get("source_digest")
+            receipt_digest = receipt.get("receipt_digest")
+            if (
+                not isinstance(source_digest, str)
+                or not source_digest.startswith("sha256:")
+                or not isinstance(receipt_digest, str)
+                or not receipt_digest.startswith("sha256:")
+            ):
+                raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED")
+            inspected_rows.append(
+                {
+                    "capability_id": capability_id,
+                    "source_digest": source_digest,
+                    "receipt_digest": receipt_digest,
+                }
+            )
+        return inspected_rows
 
     if expected_preflight is not None:
         if expected_preflight.get("requirements_digest") != digest:
             raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_DRIFT")
-        previous = expected_preflight.get("receipts")
-        if not isinstance(previous, list) or len(previous) != len(inspected):
+        previous_binding = expected_preflight.get("binding")
+        if not isinstance(previous_binding, dict) or any(
+            previous_binding.get(field) != binding[field]
+            for field in binding
+            if field != "packet_hash"
+        ):
             raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_DRIFT")
-        for old, new in zip(previous, inspected):
-            if (
-                not isinstance(old, dict)
-                or old.get("capability_id") != new["capability_id"]
-                or old.get("source_digest") != new["source_digest"]
-            ):
-                raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_DRIFT")
+        comparable = inspect_with_binding(previous_binding)
+        previous = expected_preflight.get("receipts")
+        if not isinstance(previous, list) or previous != comparable:
+            raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_DRIFT")
+        inspected = comparable if previous_binding == binding else inspect_with_binding(binding)
+    else:
+        inspected = inspect_with_binding(binding)
 
     return {
         "requirements_digest": digest,

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess
 import uuid
@@ -21,6 +23,15 @@ LAYER_INDEX_SCRIPT = ROOT / "bin" / "mof" / "project-layer-index.py"
 DOC_SSOT_SCRIPT = ROOT / "bin" / "ssot" / "doc-ssot-lint.py"
 AFFECTED_GRAPH_SCRIPT = ROOT / "bin" / "gac" / "affected-graph.py"
 _CREATED_RECEIPTS: list[Path] = []
+
+
+def _sha256_ref(data: bytes) -> str:
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def _requirements_digest(requirements: list[dict[str, str]]) -> str:
+    canonical = json.dumps(requirements, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return _sha256_ref(canonical.encode("utf-8"))
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -150,8 +161,11 @@ def _bet_workflow_workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
             {
                 "schema": "agent-clone-identity/v2",
                 "ready": True,
+                "agent_id": "test-agent",
                 "actor_id": "test-agent",
                 "delivery_attempt_id": "attempt-test",
+                "canonical_root": str(workspace.resolve()),
+                "working_branch": "agent/test-agent--attempt-test",
             }
         ),
         encoding="utf-8",
@@ -438,6 +452,11 @@ def _set_capability_requirements(workspace: Path, requirements: list[dict[str, s
     ledger = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
     ledger["bets"][0]["capability_requirements"] = requirements
     ledger_path.write_text(yaml.safe_dump(ledger, sort_keys=False), encoding="utf-8")
+    identity_path = workspace / ".git/agent-clone-identity.json"
+    if identity_path.exists():
+        identity = json.loads(identity_path.read_text(encoding="utf-8"))
+        identity["canonical_root"] = str(workspace.resolve())
+        identity_path.write_text(json.dumps(identity), encoding="utf-8")
 
 
 def _capability_requirements() -> list[dict[str, str]]:
@@ -473,13 +492,13 @@ def test_root_start_preflight_accepts_native_requirement_and_persists_redacted_r
     preflight = record["capability_preflight"]
     assert preflight["invoked"] is False
     assert preflight["value_indicator_policy"] is False
-    assert list(preflight["receipts"]) == [
-        {
-            "capability_id": "workflow:bet-execution",
-            "source_digest": preflight["receipts"][0]["source_digest"],
-            "receipt_digest": preflight["receipts"][0]["receipt_digest"],
-        }
-    ]
+    receipt = preflight["receipts"][0]
+    assert receipt["capability_id"] == "workflow:bet-execution"
+    assert receipt["source_digest"] == _sha256_ref(
+        (workspace / ".omo/_truth/registry/agent-workflows/workflows/bet-execution.yaml").read_bytes()
+    )
+    assert re.fullmatch(r"sha256:[0-9a-f]{64}", receipt["source_digest"])
+    assert re.fullmatch(r"sha256:[0-9a-f]{64}", receipt["receipt_digest"])
     assert set(preflight["binding"]) == {
         "correlation_id",
         "workflow_run_id",
@@ -501,8 +520,11 @@ def _write_mcp_preflight_workspace(root: Path) -> dict[str, Any]:
             {
                 "schema": "agent-clone-identity/v2",
                 "ready": True,
+                "agent_id": "test-actor",
                 "actor_id": "test-actor",
                 "delivery_attempt_id": "test-attempt",
+                "canonical_root": str(root.resolve()),
+                "working_branch": "agent/test-actor--test-attempt",
             }
         ),
         encoding="utf-8",
@@ -553,7 +575,7 @@ def _write_mcp_preflight_workspace(root: Path) -> dict[str, Any]:
             "capability_requirements": [requirement],
         },
         "work_packet_hash": "sha256:" + "a" * 64,
-        "capability_requirements_digest": "sha256:" + "b" * 64,
+        "capability_requirements_digest": _requirements_digest([requirement]),
     }
 
 
@@ -563,13 +585,11 @@ def test_root_preflight_resolves_and_inspects_exact_mcp_projection(tmp_path: Pat
 
     preflight = module._capability_preflight(delivery_identity, "run-mcp", workspace=tmp_path)
 
-    assert preflight["receipts"] == [
-        {
-            "capability_id": "mcp-server:demo",
-            "source_digest": preflight["receipts"][0]["source_digest"],
-            "receipt_digest": preflight["receipts"][0]["receipt_digest"],
-        }
-    ]
+    receipt = preflight["receipts"][0]
+    assert receipt["capability_id"] == "mcp-server:demo"
+    assert receipt["source_digest"] == _sha256_ref((tmp_path / "native/demo_mcp.py").read_bytes())
+    assert re.fullmatch(r"sha256:[0-9a-f]{64}", receipt["source_digest"])
+    assert re.fullmatch(r"sha256:[0-9a-f]{64}", receipt["receipt_digest"])
     assert preflight["invoked"] is False
     assert preflight["value_indicator_policy"] is False
 
@@ -592,6 +612,107 @@ def test_root_preflight_rejects_projection_read_race(
 
     with pytest.raises(module.WorkflowError, match="CAPABILITY_PREFLIGHT_SOURCE_REJECTED"):
         module._capability_preflight(delivery_identity, "run-race", workspace=tmp_path)
+
+
+def test_root_preflight_rejects_tampered_requirements_digest_before_clone_reads(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    delivery_identity = _write_mcp_preflight_workspace(tmp_path)
+    delivery_identity["capability_requirements_digest"] = "sha256:" + "0" * 64
+    (tmp_path / ".git/agent-clone-identity.json").unlink()
+
+    with pytest.raises(module.WorkflowError, match="CAPABILITY_PREFLIGHT_REQUIREMENTS_DIGEST_MISMATCH"):
+        module._capability_preflight(delivery_identity, "run-tampered", workspace=tmp_path)
+
+
+@pytest.mark.parametrize("identity_mode", ["copied", "wrong-root", "wrong-agent", "wrong-branch"])
+def test_root_preflight_rejects_mismatched_v2_clone_identity(
+    tmp_path: Path, identity_mode: str
+) -> None:
+    module = _load_root_workflow_wrapper()
+    delivery_identity = _write_mcp_preflight_workspace(tmp_path)
+    identity_path = tmp_path / ".git/agent-clone-identity.json"
+    identity = json.loads(identity_path.read_text(encoding="utf-8"))
+    if identity_mode == "copied":
+        identity["canonical_root"] = str(tmp_path / "copied-clone")
+    elif identity_mode == "wrong-root":
+        identity["canonical_root"] = str(tmp_path.parent.resolve())
+    elif identity_mode == "wrong-agent":
+        identity["agent_id"] = "different-agent"
+    else:
+        identity["working_branch"] = "agent/test-actor--different-attempt"
+    identity_path.write_text(json.dumps(identity), encoding="utf-8")
+
+    with pytest.raises(module.WorkflowError, match="CAPABILITY_PREFLIGHT_CLONE_IDENTITY_INVALID"):
+        module._capability_preflight(delivery_identity, f"run-{identity_mode}", workspace=tmp_path)
+
+
+def test_root_preflight_rejects_projection_receipt_drift_with_unchanged_native_source(
+    tmp_path: Path,
+) -> None:
+    module = _load_root_workflow_wrapper()
+    delivery_identity = _write_mcp_preflight_workspace(tmp_path)
+    initial = module._capability_preflight(delivery_identity, "run-projection", workspace=tmp_path)
+    registry_path = tmp_path / "docs/generated/capability-registry.yaml"
+    registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    registry["mcp_servers"][0]["name"] = "Projection metadata changed"
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=True), encoding="utf-8")
+
+    with pytest.raises(module.WorkflowError, match="CAPABILITY_PREFLIGHT_SOURCE_DRIFT"):
+        module._capability_preflight(
+            delivery_identity,
+            "run-projection",
+            workspace=tmp_path,
+            expected_preflight=initial,
+        )
+
+
+def test_root_preflight_rebinds_projected_receipt_when_only_packet_hash_changes(
+    tmp_path: Path,
+) -> None:
+    module = _load_root_workflow_wrapper()
+    original_identity = _write_mcp_preflight_workspace(tmp_path)
+    initial = module._capability_preflight(original_identity, "run-rebind", workspace=tmp_path)
+    refreshed_identity = copy.deepcopy(original_identity)
+    refreshed_identity["work_packet_hash"] = "sha256:" + "c" * 64
+
+    refreshed = module._capability_preflight(
+        refreshed_identity,
+        "run-rebind",
+        workspace=tmp_path,
+        expected_preflight=initial,
+    )
+
+    assert refreshed["binding"]["packet_hash"] == refreshed_identity["work_packet_hash"]
+    assert refreshed["receipts"][0]["source_digest"] == initial["receipts"][0]["source_digest"]
+    assert refreshed["receipts"][0]["receipt_digest"] != initial["receipts"][0]["receipt_digest"]
+
+
+def test_root_start_without_capability_requirements_skips_preflight_and_clone_identity(
+    tmp_path: Path, _bet_workflow_workspace: Path
+) -> None:
+    workspace = tmp_path / "workspace"
+    shutil.copytree(_bet_workflow_workspace, workspace, symlinks=True)
+    (workspace / ".git/agent-clone-identity.json").unlink()
+    registry = _isolated_workflow_registry(tmp_path)
+
+    result = _run_root_workflow_strict(
+        "--registry",
+        str(registry),
+        "start",
+        "bet-execution",
+        "--profile",
+        "governance-agent",
+        "--bet",
+        "BET-Y1Q3-T4-01",
+        "--dry-run",
+        "--json",
+        workspace=workspace,
+    )
+
+    assert result.returncode == 0, result.stderr
+    record = json.loads(result.stdout)
+    assert "capability_requirements_digest" not in record
+    assert "capability_preflight" not in record
 
 
 @pytest.mark.parametrize("identity_mode", ["missing", "invalid"])
@@ -890,8 +1011,11 @@ def _write_refreshable_run(
                 {
                     "schema": "agent-clone-identity/v2",
                     "ready": True,
+                    "agent_id": "test-agent",
                     "actor_id": "test-agent",
                     "delivery_attempt_id": "attempt-test",
+                    "canonical_root": str(workspace.resolve()),
+                    "working_branch": "agent/test-agent--attempt-test",
                 }
             ),
             encoding="utf-8",
