@@ -2,13 +2,13 @@
 
 > 自动生成于 1970-01-01T00:00:00Z | 版本 1.0.0
 > 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑
-> 生成器: `bin/cockpit/gen-help-docs.py`
+> 生成器: `bin/ssot/gen-help-docs.py`
 
 ## 概览
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 151 |
+| CLI 命令 (含子命令) | 153 |
 | MCP 工具 | 619 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 242 |
@@ -180,6 +180,7 @@
 | `cockpit panorama` | 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产) |
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit pipeline` | pipeline 概览 |
+| `cockpit policy` | ⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*) |
 | `cockpit product-health` | 产品健康度检测 |
 | `cockpit profile` | 查看/编辑身份档案 (L4 入口) |
 | `cockpit project` | 🔍 17 项目全景 4D 体检与诊断 |
@@ -226,9 +227,10 @@
 | `cockpit vram` | 计算模型动态 KV Cache 显存预算 |
 | `cockpit warm` | 预热系统 Prompt 前缀缓存以实现 0ms TTFT |
 | `cockpit watch` | 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher) |
+| `cockpit watchdog` | 🐕 自治守护犬与自愈探针 (Agora Bus / Resident 监视器) |
 | `cockpit wave2` | 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON) |
 | `cockpit workflow` | BOS workflow 相关 |
 | `cockpit write` | 双轨写入 (+ Neo4j FACT 若配置) |
 
 ---
-*由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*
+*由 `bin/ssot/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*
