@@ -5573,8 +5573,8 @@ bets:
     expect: exit 0
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
-    spec_version: 1.1.0
-    content_digest: sha256:64b6bb07a7e613512a9c9e76480af8d3ef2498192859b88a34d23ed7360e6790
+    spec_version: 1.1.1
+    content_digest: sha256:85156f1848b1c6d6dfa092d4755ea2b8ffaa567920889f52c7e23ebe86c209d3
     decision_ref: decision://accepted/BET-Y1Q3-T1-12
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
