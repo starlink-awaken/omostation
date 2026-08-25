@@ -7871,6 +7871,7 @@ bets:
   priority: P1
   status: candidate
   started_at: '2026-08-25'
+  note: 'closeout ok (run 20260825T222712Z-project-code-change-81c6364a): done_when 1-4 达成 — alert-forwarder importlib 加载 + deliver 契约(PR #2200 MERGED 2026-08-25T11:46Z) / alert-connectors list 4 channel url_configured=NO / send --channel alert-wecom fail-closed exit=1+failed 回执 / --dry-run exit 0; 第 5 条待用户配 ALERT_WECOM_WEBHOOK(用户决策先只接线不配 URL); verify 3 checks 全 PASS(doc-ssot-lint/gac-local-gate 57/doc-claims-check)'
   goal: '补齐 resident 告警外发最后一公里: alert-forwarder.py 修复连字符模块 import + deliver() 契约调用(告警链路可外发), alert-channels.yaml 声明 alert-wecom 渠道(env://ALERT_WECOM_WEBHOOK opaque 引用, 先只接线不配 URL, 未配 fail-closed), 回执事件 governance:alert_delivered/failed 可审计; 用户设置 ALERT_WECOM_WEBHOOK 后激活。'
   non_goals:
   - 不配真实 webhook URL(用户决策「先只接线不配 URL」)
