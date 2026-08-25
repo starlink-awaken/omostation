@@ -23,6 +23,8 @@ FILES=(
   _shared.py
   journey-runner.py
   admin_scenes.py
+  risk_engine.py
+  deadline_tracker.py
 )
 
 for f in "${FILES[@]}"; do
