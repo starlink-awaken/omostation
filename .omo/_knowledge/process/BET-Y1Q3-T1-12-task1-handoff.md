@@ -154,4 +154,35 @@ related-retro: .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
 - agora pre-push hook（`ruff check src/` + `ruff format --check src/`）恢复通过，agora 交付通道不再被阻塞。
 - omo/cockpit 检查确认无同类格式阻塞（284/294 files formatted，lint clean）。
 
+---
+
+# 追加：capability-sync binding 透传修复（2026-08-26）⭐ 核心发现
+
+## 问题
+
+Task 6 Agora 侧的 binding_digest 已合并（`031fbde1`），但能力链在 **capability-sync → Agora 段断裂**：
+`bin/capability-sync.py` 的 `load`/`invoke` 分支**从不读取 `--binding-json`**——该参数只在 `find`/`inspect` parser 上。结果 `execute_gateway_operation` 不传 binding，agora gateway 永远收不到 binding，`binding_digest` 永远为空。**Task 6 的 binding 链半途而废，需要一个根仓修复才能贯通。**
+
+## 交付证据链
+
+| 环节 | 证据 |
+|------|------|
+| RED | 3 个新测试先红：`execute_gateway_operation` 无 `binding` 参数（TypeError）；CLI invoke 报 `unrecognized arguments: --binding-json`（SystemExit 2） |
+| 实现 | `bin/capability-sync.py`：`execute_gateway_operation` 加 `binding` 参数转发 `gateway.load/invoke`；`load`/`invoke` parser 加 `--binding-json`；main load/invoke 分支读 binding 并转发 |
+| 测试 | `tests/test_capability_sync.py`：`_FakeGateway` 签名 +`binding`；3 个新测试（透传 binding / 缺 binding → None / CLI invoke 读 --binding-json） |
+| GREEN | 3 新测试绿；103 capability 测试 passed（排除 1 个预存在 registry 漂移测试）；ruff lint + format clean |
+| commit | `5a1984cc6` `fix(capability): forward validated binding to Agora gateway operation`（仅 2 文件，路径限定，未污染并发改动） |
+| tag | `delivery/exact-capability-binding-capability-sync-20260826-v1` → `5a1984cc6`（重打过，最初误打至并发分支顶） |
+| 分支 | `feat/age-v2-final-update`（commit 时在此分支；**随后被并发 agent 切至 `feat/age-v2-pr`**，commit 对象完好在 final-update 分支） |
+
+## ⚠️ 环境记录（分支被切走）
+
+- 在 `feat/age-v2-final-update` 上 commit `5a1984cc6` 后、打 tag 前，共享主仓分支被并发 agent 切到 `feat/age-v2-pr`，导致**首次 tag 误打至并发分支顶 `8ae851490`**。
+- 处置：**未 checkout 回去**（git-discipline §5：分支被切走 → 停下报告，不自己切回）；删除误打的本地 tag 重打指向自己的 commit `5a1984cc6`。tag 是独立对象，重打不影响并发 agent 分支。
+- 我的 commit 在 `feat/age-v2-final-update` 分支历史中可达（commit 对象完好）；后续 push/PR 需基于该分支或内容等价分支进行，等待并发 agent 分支稳定。
+
+## 未处理项
+
+- **能力注册表漂移（预存在）**：`gen-capability-registry.py --check` 报漂移 → `test_make_and_ci_run_blocking_canonical_check` 失败。主仓工作树 `docs/generated/capability-registry.yaml` 有并发 agent 未提交改动，属其工作区，**不碰**，等待并发 agent 处理或单独修复。
+
 
