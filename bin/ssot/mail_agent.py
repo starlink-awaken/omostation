@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from _shared import utc_now
+from _shared import ROOT, append_jsonl, utc_now
 
 sys.path.insert(0, str(Path(__file__).parent))
 from _llm_helper import llm_ask
@@ -24,35 +24,86 @@ from mail_reader import Mail, read_all
 
 INBOX = Path.home() / "Documents" / "_inbox"
 
+# 积累回路 (2026-08-26, P0 数字大脑红线: 分类不能是无状态直连 LLM):
+# 每次分类落库 jsonl, 后续同发件人分类注入最近历史 → 一致性 + 可统计。
+HISTORY = ROOT / ".omo" / "state" / "mail-classification-history.jsonl"
+
+
+def _recent_history_for(sender: str, limit: int = 3) -> list[dict]:
+    """读同发件人最近分类记录(倒序扫, 早停)."""
+    if not sender or not HISTORY.exists():
+        return []
+    out: list[dict] = []
+    for line in reversed(HISTORY.read_text(errors="replace").splitlines()):
+        if not line.strip():
+            continue
+        try:
+            rec = json.loads(line)
+        except Exception:
+            continue
+        if rec.get("sender") == sender:
+            out.append(rec)
+            if len(out) >= limit:
+                break
+    return out
+
 
 def classify_mail(mail: Mail) -> dict[str, Any]:
+    hist = _recent_history_for(mail.sender or "")
+    hist_lines = "\n".join(
+        f"- [{h.get('category')}/{h.get('priority')}] {h.get('subject', '')[:30]}"
+        for h in hist
+    )
     prompt = (
         f"你是邮件分类助手。请将以下邮件分类为:\n"
         f"- 通知 (上级通知/政策文件/会议通知)\n- 任务 (需要执行: 收集数据/提交报告/转发文件)\n"
         f"- 参考 (资讯/学术)\n- 垃圾 (广告)\n- 个人\n\n"
-        f"标题: {mail.subject}\n发件人: {mail.sender}\n正文: {mail.body[:300]}\n\n"
+        + (f"该发件人历史分类(保持一致性):\n{hist_lines}\n\n" if hist_lines else "")
+        + f"标题: {mail.subject}\n发件人: {mail.sender}\n正文: {mail.body[:300]}\n\n"
         f'输出 JSON: {{"category":"...","priority":"high/medium/low","summary":"摘要","action_needed":"动作或空"}}'
     )
     response = llm_ask(prompt, timeout=30.0, model="qwen-3.8-27b")
     if not response:
-        return {
+        result = {
             "category": "未分类",
             "priority": "low",
             "summary": mail.subject[:60],
             "action_needed": "",
         }
-    m = re.search(r'\{[^{}]*"category"[^{}]*\}', response)
-    if m:
-        try:
-            return json.loads(m.group())
-        except Exception:
-            pass
-    return {
-        "category": "未分类",
-        "priority": "low",
-        "summary": response[:100],
-        "action_needed": "",
-    }
+    else:
+        m = re.search(r'\{[^{}]*"category"[^{}]*\}', response)
+        if m:
+            try:
+                result = json.loads(m.group())
+            except Exception:
+                result = {
+                    "category": "未分类",
+                    "priority": "low",
+                    "summary": response[:100],
+                    "action_needed": "",
+                }
+        else:
+            result = {
+                "category": "未分类",
+                "priority": "low",
+                "summary": response[:100],
+                "action_needed": "",
+            }
+    # 落库(失败不阻塞主流程)
+    try:
+        append_jsonl(
+            HISTORY,
+            {
+                "ts": utc_now(),
+                "subject": (mail.subject or "")[:80],
+                "sender": (mail.sender or "")[:60],
+                "category": result.get("category"),
+                "priority": result.get("priority"),
+            },
+        )
+    except Exception:
+        pass
+    return result
 
 
 def extract_task(mail: Mail, classification: dict) -> dict[str, Any] | None:
