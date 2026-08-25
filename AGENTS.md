@@ -31,6 +31,16 @@ Before editing:
 | ADR-0198 Domain Cartridge Factory | Vertical governance package manager (health / tech transfer) | `ecos-constraint cartridge list/export/validate` |
 | ADR-0199 Unified BOS URI, Cockpit & Cognitive Workflow | Full-lifecycle integration across Human Terminal → BOS → Agent Workflow | `cockpit intent/challenge/cartridge/fabric`, `bos://governance/*`, `bos://fabric/*` |
 
+**Binding architecture (DFSQ / SFOP) — obey, do not grow a parallel OS.**
+
+Current constraints and future direction are governed by 道法术器 (DFSQ) nested on MOF, and 脊面运行模式 (SFOP) slot grammar:
+
+- Theory: [`docs/architecture/dao-fa-shu-qi.md`](docs/architecture/dao-fa-shu-qi.md)
+- Runtime slots: [`docs/architecture/os-operating-pattern-v1.md`](docs/architecture/os-operating-pattern-v1.md)
+- Blocking law: `python3 bin/gac/check-sfop-slots.py` (CR-SFOP-01/02; gate id `sfop-slots`)
+
+Do **not** add a second dispatcher, a fifth ontology, or a new top-level human entry. New workspace projects join by declaring `sfop_slot` + `dao_layer` on a `COMP-WS-*` node. Mesh (`COMP-WS-omo`) is the only active `S` slot. AGE-v2 / resident / BCOS are backends, projectors, or meters — not a second operating system.
+
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 
 ## 1.1 RED LINE — Requirement iterations MUST use Agent Workflow (ADR-0203)

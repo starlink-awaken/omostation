@@ -401,6 +401,7 @@ if not any(gate.get("id") == "check-swarm-collision" for gate in GATES_LIST):
 #   derived-only-fast-track   GOV-REBAL  派生文档-only fast-track 判定 (软信号)
 #   auto-fix-loop             AUTO-FIX   漂移检测→分类→修复闭环 (PATH-DRIFT error 阻断)
 #   command-discovery         UX-NOISE   命令密度/重复/易混淆定位 (软信号)
+#   sfop-slots                SFOP/DFSQ  COMP-WS 槽位 + 唯一 dispatcher (CR-SFOP-01/02 阻断)
 for _gap_gate in (
     {
         "id": "capability-ownership",
@@ -417,6 +418,11 @@ for _gap_gate in (
     {
         "id": "command-discovery",
         "command": ["bin/gac/command-discovery.py"],
+    },
+    {
+        "id": "sfop-slots",
+        "command": ["bin/gac/check-sfop-slots.py", "--json"],
+        "note": "SFOP/DFSQ: COMP-WS 必须声明 sfop_slot+dao_layer; 活跃 S 槽至多一个且为 COMP-WS-omo (CR-SFOP-01/02 阻断, 非 SOFT)",
     },
 ):
     if not any(gate.get("id") == _gap_gate["id"] for gate in GATES_LIST):
