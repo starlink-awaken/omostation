@@ -1,0 +1,27 @@
+{
+  "schema_version": "resident-decision/v1",
+  "proposal_id": "prop-20260825-103024-SC-TF-SURGICAL-NAV-001",
+  "scenario_id": "SC-TF-SURGICAL-NAV-001",
+  "domain": "work-transfer",
+  "title": "医工交叉智能显微手术导航系统科技成果转化收益分配方案审核",
+  "status": "APPROVED",
+  "occurred_at": "2026-08-25T10:30:24Z",
+  "evaluations": [
+    {
+      "rule_id": "E-POL-TF-001",
+      "name": "科技成果转化科研团队收益分配红线",
+      "verdict": "PASS",
+      "detail": "科研团队收益分配比例达到 75% (法定红线 >= 70%)，合法合规保障科学家权益。"
+    },
+    {
+      "rule_id": "E-POL-TF-002",
+      "name": "产业化项目技术成熟度 (TRL) 准入审查",
+      "verdict": "PASS",
+      "detail": "项目技术成熟度评估达到 TRL 7 (准入要求 >= 6)，具备原型在真实环境中的有效性验证。"
+    }
+  ],
+  "recommendation": {
+    "action": "AUTHORIZE_WORKFLOW_EXECUTION",
+    "confidence": 1.0
+  }
+}
