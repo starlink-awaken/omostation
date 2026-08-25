@@ -3,15 +3,13 @@ id: bin/gac/check-execution-chain.py
 name: Check Execution Chain
 category: governance
 owner: governance-team
-description: Fuse constitution-stack inventories; CR-EXEC-CHAIN-01 extra_active orphan fail-closed.
+description: ""
 inputs: []
 outputs:
   - type: exit_code
   - type: json
 dependencies: []
-triggers:
-  - hook
-related:
-  - bin/gac/check-sfop-slots.py
+triggers: []
+related: []
 maturity: draft
-last_reviewed: "2026-08-25"
+last_reviewed: "2026-08-24"

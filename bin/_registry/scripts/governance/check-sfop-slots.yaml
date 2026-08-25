@@ -1,17 +1,15 @@
 schema: script-registry/v1
 id: bin/gac/check-sfop-slots.py
-name: Check Sfop Slots
+name: Check SFOP Slots
 category: governance
 owner: governance-team
-description: CR-SFOP-01/02 COMP-WS slot self-report and unique S=omo dispatcher.
+description: ""
 inputs: []
 outputs:
   - type: exit_code
   - type: json
 dependencies: []
-triggers:
-  - hook
-related:
-  - bin/gac/check-execution-chain.py
+triggers: []
+related: []
 maturity: draft
-last_reviewed: "2026-08-25"
+last_reviewed: "2026-08-24"
