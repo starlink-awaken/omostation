@@ -19,6 +19,7 @@ import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+WORKSPACE = Path(__file__).resolve().parents[2]
 REPO = Path(__file__).resolve().parents[2]  # bin/gac/ → Workspace/
 ECOS = REPO / "projects/ecos"
 HISTORY_FILE = REPO / ".omo/state/history/uhs.jsonl"
@@ -312,6 +313,7 @@ def main():
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--trend", action="store_true", help="Show trend")
     parser.add_argument("--check", action="store_true", help="CI mode: exit 1 if <80")
+    parser.add_argument("--sync", action="store_true", help="Write UHS into system.yaml::health_score")
     args = parser.parse_args()
 
     if args.trend:
@@ -341,6 +343,21 @@ def main():
 
     # 记录历史
     record_history(uhs, scores)
+
+    # --sync: 写入 system.yaml::health_score (整合方案#1: UHS 为唯一权威分数)
+    if getattr(args, "sync", False):
+        try:
+            import yaml as _y
+            sys_yaml_path = WORKSPACE / ".omo" / "state" / "system.yaml"
+            if sys_yaml_path.is_file():
+                sd = _y.safe_load(sys_yaml_path.read_text()) or {}
+                sd["health_score"] = int(round(uhs))
+                sys_yaml_path.write_text(
+                    _y.dump(sd, allow_unicode=True, sort_keys=False), encoding="utf-8"
+                )
+                print(f"  ✅ system.yaml::health_score synced = {int(round(uhs))}")
+        except Exception as e:
+            print(f"  ⚠️ sync failed: {e}", file=__import__("sys").stderr)
 
     if args.json:
         print(json.dumps({
