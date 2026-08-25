@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 122
+  total_bets: 123
   windows:
   - Y1Q1
   - Y1Q2
@@ -5595,6 +5595,7 @@ bets:
   - tests/test_agent_workflow.py
   - tests/test_spec_binding_lint.py
   - projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml
+  - projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py
   - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.schema.json
   - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control-schemas.ts
   - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.manifest.json
@@ -7655,6 +7656,65 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:d0dcfc78e718274c53dd826acbf0c75ae13bd0712bc3c90abebfb2dedeb1728b"
     decision_ref: decision://accepted/BET-Y1Q3-T10-11
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
+- id: BET-Y1Q3-T10-12
+  track: T10-MATURITY
+  window: Y1Q3
+  title: resident 事件源接入 workflow 生命周期 (消费端补全 + 重放)
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  started_at: ''
+  goal: '让 workflow 生命周期事件被 resident 消费端真正消化(不再 placeholder) + 事件源接 cron 自动化: 补全 5 种未路由事件路由 + sediment 事件集合扩展(按 run 聚合去重) + roles 分片同步 + ingest 接 cron + 回退水位重放 2208 事件验证。'
+  non_goals:
+  - 不引入 LLM 调用(草稿仍模板占位, 五问提炼留运营 agent/人工)
+  - 不改五类角色运行时框架(daemon tick/byte-offset 水位机制不动)
+  - 不接 monitor/heartbeat 角色的 workflow-mesh 事件(另渠道, 不在本 BET)
+  - 不解决 sediment 草稿模板化本身(知识提炼另开 BET)
+  done_when:
+  - resident-routes.yaml 含 5 条新规则(WorkflowRequested/WorkflowAdmitted/StepStarted/StepDispatched/EvidenceRecorded 到 knowledge_sediment)且 fail-closed 加载通过
+  - sediment.py 含 LIFECYCLE_EVENTS/EVIDENCE_EVENTS, dispatch 覆盖 5 类事件且按 run 幂等(同 run 多事件只写一次)
+  - roles.py sediment topic_filter 含 8 种事件
+  - install-resident-cron.sh 含 ingest 行且语法校验通过
+  - 新增单元测试全绿 + 重放验证: 回退水位重放 2208 条, processed=2208, 无 placeholder 落盘
+  verify:
+  - cmd: grep -q "WorkflowRequested" projects/omo/src/omo/resident/resident-routes.yaml
+    expect: exit 0
+  - cmd: grep -q "LIFECYCLE_EVENTS" projects/omo/src/omo/resident/sediment.py
+    expect: exit 0
+  - cmd: grep -q "EvidenceRecorded" projects/omo/src/omo/resident/sediment.py
+    expect: exit 0
+  - cmd: grep -q "resident ingest" bin/ssot/install-resident-cron.sh
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/resident-routes.yaml
+  - projects/omo/src/omo/resident/sediment.py
+  - projects/omo/src/omo/resident/roles.py
+  - projects/omo/src/omo/resident/tests/
+  - bin/ssot/install-resident-cron.sh
+  - docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:6f5eb250a1300cbe40a7c8d2bcac0db745203ac4eaca673314f8fd7656e5af78"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-12
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:

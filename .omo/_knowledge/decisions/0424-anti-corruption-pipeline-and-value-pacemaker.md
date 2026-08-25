@@ -1,9 +1,20 @@
-# ADR-0424: 防腐流水线与价值起搏器 — 48 小时全弧线架构决策沉淀
+---
+id: ADR-0424
 
-> Date: 2026-08-24
-> Status: accepted
-> Deciders: 主人 + Sisyphus(编排) + 并发 agent 群
-> Scope: 全仓治理体系 · 价值度量 · 防腐机制 · 多 agent 协作
+title: "ADR-0424: 防腐流水线与价值起搏器 — 48 小时全弧线架构决策沉淀"
+status: accepted
+lifecycle: decision
+owner: governance-team
+date: 2026-08-24
+last-reviewed: 2026-08-24
+tags: [anti-corruption, value-pacemaker, uhs, governance, multi-agent, north-star]
+related:
+  - docs/operations/engineering-golden-rules.md (SCRIPT-BASELINE-SYNC)
+  - bin/gac/unified-health-score.py (UHS 度量)
+  - BET-Y1Q3-T10-11 (sediment promotion pipeline)
+---
+
+# ADR-0424: 防腐流水线与价值起搏器 — 48 小时全弧线架构决策沉淀
 
 ## Context
 
