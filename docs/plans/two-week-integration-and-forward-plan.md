@@ -1,8 +1,9 @@
 ---
-status: active
-lifecycle: entry
+status: superseded
+lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last-reviewed: 2026-08-25
+superseded-by: docs/plans/2026-08-25-y1-value-loop-phase.md
 ---
 
 # Two-Week System Integration & Forward Plan

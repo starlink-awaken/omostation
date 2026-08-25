@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+"""
+OMOStation Unified Root CLI Wrapper (ADR-0427 / Phase 8)
+========================================================
+Single entry point for multi-agent workspace operations, eliminating
+PYTHONPATH fragmentation and providing unified command discovery.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import sys
+from pathlib import Path
+
+_BIN_DIR = Path(__file__).resolve().parent
+_RESOLVER_PATH = _BIN_DIR / "cockpit" / "env-resolver.py"
+_spec = importlib.util.spec_from_file_location("env_resolver", _RESOLVER_PATH)
+_env_resolver = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_env_resolver)
+
+_ROOT = _env_resolver.setup_workspace_paths()
+
+
+def print_banner():
+    print("""
+╔══════════════════════════════════════════════════════════════════╗
+║  🛰️  OMOStation Unified Cognitive Operating System (v2.8)        ║
+╚══════════════════════════════════════════════════════════════════╝
+    """)
+
+
+def print_help():
+    print_banner()
+    print("""Usage: omostation <command> [options]
+
+Core Commands:
+  status        Show real-time multi-agent swarm status & 8D panel
+  top           Launch Textual 1.x real-time control plane TUI
+  daemon        Manage Agora 2.0 daemon service (status/restart/install)
+  policy        Execute and explain Policy-as-Code rules (E-POL-*)
+  resident      Inspect resident autonomous decisions & knowledge drafts
+  distill       Run SEMA memory self-distillation & auto-crystallization
+  scenario      Execute real-world domain business scenarios
+  watchdog      Run autonomous daemon self-healing health prober
+  gate          Execute full Governance-as-Code (GaC) local gate
+  run <module>  Execute any workspace module directly with zero PYTHONPATH
+    """)
+
+
+def main():
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help", "help"):
+        print_help()
+        sys.exit(0)
+
+    cmd = sys.argv[1]
+    args = sys.argv[2:]
+
+    if cmd == "status":
+        from cockpit.tui.swarm_cli import main as status_main
+        sys.argv = ["omostation-status"] + args
+        status_main()
+    elif cmd == "top":
+        from cockpit.tui.swarm_dashboard import run_dashboard
+        sys.argv = ["omostation-top"] + args
+        run_dashboard()
+    elif cmd == "daemon":
+        from cockpit.commands.daemon import daemon_cli
+        sys.argv = ["cockpit daemon"] + args
+        daemon_cli()
+    elif cmd == "policy":
+        from ecos.cli.constraint import main as constraint_main
+        sys.exit(constraint_main(["policy"] + args))
+    elif cmd == "resident":
+        from omo.resident.decision import main as resident_main
+        sys.argv = ["omo-resident"] + args
+        resident_main()
+    elif cmd == "distill":
+        import runpy
+        sys.argv = ["sema-distill"] + args
+        runpy.run_path(str(_ROOT / "bin" / "ssot" / "sema-distill.py"), run_name="__main__")
+    elif cmd == "scenario":
+        import runpy
+        sys.argv = ["real-scenario-runner"] + args
+        runpy.run_path(str(_ROOT / "bin" / "ssot" / "real-scenario-runner.py"), run_name="__main__")
+    elif cmd == "watchdog":
+        import runpy
+        sys.argv = ["daemon-watchdog"] + args
+        runpy.run_path(str(_ROOT / "bin" / "gac" / "daemon-watchdog.py"), run_name="__main__")
+    elif cmd == "gate":
+        import subprocess
+        subprocess.run(["make", "gac-local-gate"], cwd=_ROOT)
+    elif cmd == "run":
+        if not args:
+            print("Error: Specify a module to run, e.g., 'omostation run omo.resident.decision status'")
+            sys.exit(1)
+        import runpy
+        target = args[0]
+        sys.argv = args
+        if target.endswith(".py"):
+            runpy.run_path(target, run_name="__main__")
+        else:
+            runpy.run_module(target, run_name="__main__")
+    else:
+        print(f"Unknown command: '{cmd}'. Run 'omostation help' for available commands.")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

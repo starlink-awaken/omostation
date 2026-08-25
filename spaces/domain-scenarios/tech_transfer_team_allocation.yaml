@@ -1,0 +1,34 @@
+schema_version: domain-scenario/v1
+scenario_id: SC-TF-SURGICAL-NAV-001
+domain: work-transfer
+title: 医工交叉智能显微手术导航系统科技成果转化收益分配方案审核
+description: 审查医科大学精密外科国家工程中心「AI多模态显微手术导航系统」千万级转化项目的科研团队收益比例红线与技术成熟度。
+
+project_metadata:
+  project_name: AI多模态显微手术导航系统产业化转化项目
+  inventor_team: 智能外科与医工交叉前沿团队
+  lead_inventor: "陈院士 / 严教授"
+  transfer_type: "作价入股与专利独占实施许可"
+  gross_transfer_value_wan: 1200
+  evaluated_value_wan: 1200
+  trl_level: 7
+  trl_certification_ref: "doc://technology-transfer/trl/TRL-MED-2026-042.pdf"
+
+revenue_allocation_plan:
+  team_incentive_ratio: 0.75   # 75% 奖励研发团队 (法定红线 >= 70%)
+  team_incentive_amount_wan: 900
+  school_development_fund_ratio: 0.15
+  school_development_amount_wan: 180
+  college_operating_fund_ratio: 0.10
+  college_operating_amount_wan: 120
+  tax_compliance_verified: true
+
+approval_chain:
+  academic_committee_approval: "AC-2026-MED-0912"
+  asset_management_filing: "AM-STATE-ASSET-2026-881"
+  public_announcement_period_days: 15
+  objections_received: 0
+
+policies_to_evaluate:
+  - E-POL-TF-001
+  - E-POL-TF-002

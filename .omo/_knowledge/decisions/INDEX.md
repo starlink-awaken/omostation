@@ -470,6 +470,28 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0384: Meta-Meta Governance — rebase-regen automation + gate-effectiveness + A1-A3/B1 roadmap — **ACCEPTED** | 2026-08-06 | Meta-meta governance | 0384-meta-meta-governance.md
 - ADR-0383: CI Runs Cap Governance + E-5 path-filter SSOT completion — **ACCEPTED** | 2026-08-06 | CI runs cap governance | 0383-ci-runs-cap-governance.md
 - ADR-0381: Agent-Workflow Test Restoration — v10 load_registry regression fix + CI coverage + E-5 trigger SSOT — **ACCEPTED** | 2026-08-06 | Agent-workflow test restoration | 0381-agent-workflow-test-restoration.md
+- ADR-0406: Model-driven Submodule Decision — **ACCEPTED** | 2026-08-08 | 0406-model-driven-submodule-decision.md
+- ADR-0407: Truthful CI Local Fast — **ACCEPTED** | 2026-08-08 | 0407-truthful-ci-local-fast.md
+- ADR-0408: G1 Swarm Readiness Gate Close — **ACCEPTED** | 2026-08-08 | 0408-g1-swarm-readiness-gate-close.md
+- ADR-0409: Documents Capability Route Owner Convergence — **ACCEPTED** | 2026-08-08 | 0409-documents-capability-route-owner-convergence.md
+- ADR-0410: Strategy Mainline Plan Supersedes Panorama — **ACCEPTED** | 2026-08-08 | 0410-strategy-mainline-plan-supersedes-panorama.md
+- ADR-0411: Aetherforge Mesh Router Owner Decision — **ACCEPTED** | 2026-08-08 | 0411-aetherforge-mesh-router-owner-decision.md
+- ADR-0412: Model-driven Disposition — **ACCEPTED** | 2026-08-08 | 0412-model-driven-disposition.md
+- ADR-0413: Gbrain Kairon Merge Disposition — **ACCEPTED** | 2026-08-08 | 0413-gbrain-kairon-merge-disposition.md
+- ADR-0414: Physical Multihost Tension Resolution — **ACCEPTED** | 2026-08-08 | 0414-physical-multihost-tension-resolution.md
+- ADR-0415: Reject AGT Integration Adopt Capability Parity — **ACCEPTED** | 2026-08-08 | 0415-reject-agt-integration-adopt-capability-parity.md
+- ADR-0416: Y2 Gate Vision Falsification — **ACCEPTED** | 2026-08-08 | 0416-y2-gate-vision-falsification.md
+- ADR-0417: Y3 Final Gate — **ACCEPTED** | 2026-08-08 | 0417-y3-final-gate.md
+- ADR-0418: External Expansion Decision — **ACCEPTED** | 2026-08-08 | 0418-external-expansion-decision.md
+- ADR-0419: Business Workflow Implementation Plan — **ACCEPTED** | 2026-08-08 | 0419-business-workflow-implementation-plan.md
+- ADR-0420: BCOS Evolution Engine — **ACCEPTED** | 2026-08-20 | 0420-bcos-evolution-engine.md
+- ADR-0421: BCOS 2-Week Retro — **ACCEPTED** | 2026-08-22 | 0421-bcos-2week-retro.md
+- ADR-0422: Escape Hatch Solidification — **ACCEPTED** | 2026-08-23 | 0422-escape-hatch-solidification.md
+- ADR-0423: Conv3 Project Convergence — **ACCEPTED** | 2026-08-24 | 0423-conv3-project-convergence.md
+- ADR-0424: Anti-Corruption Pipeline & Value Pacemaker — **ACCEPTED** | 2026-08-24 | 0424-anti-corruption-pipeline-and-value-pacemaker.md
+- ADR-0425: Agent LSP 潜意识护航与 Agora 2.0 内存总线架构 — **ACCEPTED** | 2026-08-25 | 0425-agent-lsp-and-in-memory-bus-architecture.md
+- ADR-0426: AST 语义级合流防腐、SEMA 自动结晶与蜂群常驻看护架构 — **ACCEPTED** | 2026-08-25 | 0426-ast-merge-mesh-sema-crystallization-and-swarm-supervision.md
+- ADR-0427: 根级环境解析器、自愈看门狗与真实领域业务卡带架构 — **ACCEPTED** | 2026-08-25 | 0427-root-environment-resolver-autonomous-watchdog-and-real-domain-scenarios.md
 
 ---
 
