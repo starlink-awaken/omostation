@@ -743,7 +743,13 @@ def main() -> int:
 
         return _c(a)
 
+    def cmd_daemon(a):
+        from agora.daemon import run_daemon
+        run_daemon(port=a.port)
+        return 0
+
     handlers = {
+        "daemon": cmd_daemon,
         "import": cmd_import,
         "mcp": cmd_mcp,
         "daily": cmd_daily,
