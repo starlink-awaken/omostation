@@ -170,6 +170,10 @@ def _bet_workflow_workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
         ),
         encoding="utf-8",
     )
+    (workspace / ".git/HEAD").write_text(
+        "ref: refs/heads/agent/test-agent--attempt-test\n",
+        encoding="utf-8",
+    )
     _write_bet_workspace(workspace, bet_id="BET-Y1Q3-T4-01")
     return workspace
 
@@ -529,6 +533,10 @@ def _write_mcp_preflight_workspace(root: Path) -> dict[str, Any]:
         ),
         encoding="utf-8",
     )
+    (root / ".git/HEAD").write_text(
+        "ref: refs/heads/agent/test-actor--test-attempt\n",
+        encoding="utf-8",
+    )
     source = root / "native/demo_mcp.py"
     source.parent.mkdir(parents=True, exist_ok=True)
     source.write_text(
@@ -624,7 +632,10 @@ def test_root_preflight_rejects_tampered_requirements_digest_before_clone_reads(
         module._capability_preflight(delivery_identity, "run-tampered", workspace=tmp_path)
 
 
-@pytest.mark.parametrize("identity_mode", ["copied", "wrong-root", "wrong-agent", "wrong-branch"])
+@pytest.mark.parametrize(
+    "identity_mode",
+    ["copied", "wrong-root", "wrong-agent", "wrong-branch", "wrong-live-branch"],
+)
 def test_root_preflight_rejects_mismatched_v2_clone_identity(
     tmp_path: Path, identity_mode: str
 ) -> None:
@@ -638,8 +649,13 @@ def test_root_preflight_rejects_mismatched_v2_clone_identity(
         identity["canonical_root"] = str(tmp_path.parent.resolve())
     elif identity_mode == "wrong-agent":
         identity["agent_id"] = "different-agent"
-    else:
+    elif identity_mode == "wrong-branch":
         identity["working_branch"] = "agent/test-actor--different-attempt"
+    else:
+        (tmp_path / ".git/HEAD").write_text(
+            "ref: refs/heads/agent/test-actor--different-attempt\n",
+            encoding="utf-8",
+        )
     identity_path.write_text(json.dumps(identity), encoding="utf-8")
 
     with pytest.raises(module.WorkflowError, match="CAPABILITY_PREFLIGHT_CLONE_IDENTITY_INVALID"):
@@ -1018,6 +1034,10 @@ def _write_refreshable_run(
                     "working_branch": "agent/test-agent--attempt-test",
                 }
             ),
+            encoding="utf-8",
+        )
+        (workspace / ".git/HEAD").write_text(
+            "ref: refs/heads/agent/test-agent--attempt-test\n",
             encoding="utf-8",
         )
     prepared = module._prepare_bet_execution(bet_id, workspace=workspace)

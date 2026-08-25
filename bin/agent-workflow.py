@@ -143,6 +143,15 @@ def _clone_identity_for_preflight(workspace: Path) -> dict[str, str]:
     actor_id = identity.get("actor_id") if isinstance(identity, dict) else None
     delivery_attempt_id = identity.get("delivery_attempt_id") if isinstance(identity, dict) else None
     valid_id = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+    expected_branch = (
+        f"agent/{actor_id}--{delivery_attempt_id}"
+        if isinstance(actor_id, str) and isinstance(delivery_attempt_id, str)
+        else ""
+    )
+    try:
+        live_head = (identity_path.parent / "HEAD").read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError):
+        live_head = ""
     if (
         not isinstance(identity, dict)
         or identity.get("schema") != "agent-clone-identity/v2"
@@ -153,7 +162,8 @@ def _clone_identity_for_preflight(workspace: Path) -> dict[str, str]:
         or not isinstance(delivery_attempt_id, str)
         or valid_id.fullmatch(delivery_attempt_id) is None
         or identity.get("canonical_root") != str(workspace.resolve())
-        or identity.get("working_branch") != f"agent/{actor_id}--{delivery_attempt_id}"
+        or identity.get("working_branch") != expected_branch
+        or live_head != f"ref: refs/heads/{expected_branch}"
     ):
         raise WorkflowError("CAPABILITY_PREFLIGHT_CLONE_IDENTITY_INVALID")
     return {
