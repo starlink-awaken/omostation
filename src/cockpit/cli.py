@@ -743,13 +743,7 @@ def main() -> int:
 
         return _c(a)
 
-    def cmd_daemon(a):
-        from cockpit.commands.daemon import cmd_daemon_dispatch
-
-        return cmd_daemon_dispatch(a)
-
     handlers = {
-        "daemon": cmd_daemon,
         "import": cmd_import,
         "mcp": cmd_mcp,
         "daily": cmd_daily,

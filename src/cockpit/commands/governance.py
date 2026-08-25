@@ -172,24 +172,6 @@ def cmd_governance(args: argparse.Namespace) -> int:
     if subcmd in _OMO_GOVERNANCE_SUBCOMMANDS:
         workspace_root = resolve_workspace_root()
         return _run_omo_governance([subcmd, *(args.extra_args or [])], workspace_root)
-    if subcmd == "auto-fix":
-        # Intent-to-Fix Unified Routing (Optimization 2 Phase 6)
-        workspace_root = resolve_workspace_root()
-        console = _get_console()
-        console.print("[cyan]🔍 正在扫描治理门禁 (Intent-to-Fix)...[/]")
-        gate_res = subprocess.run(
-            ["uv", "run", "python", "bin/gac/gac-local-gate.py", "--json"], cwd=workspace_root, capture_output=True
-        )
-        if gate_res.returncode == 0:
-            console.print("[green]✅ 系统当前完全合规，无任何违背门禁，无需自愈。[/]")
-            return 0
-        console.print("[yellow]⚠️ 检测到门禁偏离，正在启动影子挑战者静默自愈回路...[/]")
-        fix_res = subprocess.run(["uv", "run", "python", "bin/gac/auto-fix-loop.py", "--apply"], cwd=workspace_root)
-        if fix_res.returncode == 0:
-            console.print("[green]✅ Intent-to-Fix 执行成功，结构性漂移已静默化解。[/]")
-            return 0
-        console.print("[red]❌ 自愈回路未能完全化解冲突，请介入人工审查。[/]")
-        return fix_res.returncode
     if subcmd == "report":
         # omo governance 默认即 audit/report 报告，不接收 "report" 子命令
         workspace_root = resolve_workspace_root()
