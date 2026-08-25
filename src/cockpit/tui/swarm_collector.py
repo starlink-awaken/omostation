@@ -123,6 +123,7 @@ class SwarmGlobalState:
     locks: LockSummary
     bets: BetLedgerSummary
     submodules: SubmoduleRadarSummary
+    daemon: dict = field(default_factory=dict)
     recent_messages: list[A2AMessageItem] = field(default_factory=list)
 
 
@@ -134,6 +135,15 @@ class SwarmStateCollector:
         self._remote_sha_cache: dict[str, tuple[str, float]] = {}
         self._cache_ttl_sec = 300.0  # 5 分钟缓存
 
+    def collect_daemon(self, port: int = 7432) -> dict:
+        import urllib.request
+        try:
+            req = urllib.request.Request(f"http://127.0.0.1:{port}/health", headers={"User-Agent": "cockpit-tui"})
+            with urllib.request.urlopen(req, timeout=0.15) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except Exception:
+            return {"status": "offline", "active_agents": 0, "subscribed_topics": []}
+
     def collect_all(self, probe_remote_submodules: bool = False) -> SwarmGlobalState:
         """全量采集系统状态。"""
         now_iso = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -143,6 +153,7 @@ class SwarmStateCollector:
             locks=self.collect_locks(),
             bets=self.collect_bets(),
             submodules=self.collect_submodules(probe_remote=probe_remote_submodules),
+            daemon=self.collect_daemon(),
             recent_messages=self.collect_a2a_messages(limit=30),
         )
 
