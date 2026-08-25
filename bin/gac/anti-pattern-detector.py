@@ -66,11 +66,9 @@ def check_pattern_2_shadow_card_aging() -> dict[str, Any]:
     stale_cards = []
     for f in (WS_ROOT / "docs" / "scene-cards").glob("*.yaml"):
         text = f.read_text(encoding="utf-8")
-        # Find lifecycle: shadow
         m = re.search(r"^lifecycle:\s*(\w+)\s*$", text, re.MULTILINE)
         if not m or m.group(1) != "shadow":
             continue
-        # Check for last_reviewed or just file mtime
         mtime = f.stat().st_mtime
         age_days = (now.timestamp() - mtime) / 86400
         if age_days > stale_threshold_days:
