@@ -131,25 +131,10 @@ def dispatch_admin_forward(input_data: dict, token: dict) -> dict[str, Any]:
         "source_subject": subject,
     }
     notice = generate_doc("forward_notice", context)
-    form = generate_doc("data_collection", context)
-
-    # 2026-08-25 修复: 生成失败(容量不足/双发超时)时如实报 failed —
-    # 此前不检查落盘"(生成失败)"占位却报 email_drafts_created=True,
-    # journey 假推进(七步全链首跑实锤)。
-    if "(生成失败)" in notice or "(生成失败)" in form:
-        failed_parts = [t for t, c in (("forward_notice", notice), ("data_collection", form)) if "(生成失败)" in c]
-        notice_path = save_draft("forward_notice", notice)
-        form_path = save_draft("data_collection", form)
-        return {
-            "status": "failed",
-            "email_drafts_created": False,
-            "generation_failed": failed_parts,
-            "notice_draft": str(notice_path),
-            "form_draft": str(form_path),
-            "requires_human_confirm": True,
-        }
-
     notice_path = save_draft("forward_notice", notice)
+
+    # 生成数据收集表草稿
+    form = generate_doc("data_collection", context)
     form_path = save_draft("data_collection", form)
 
     return {
@@ -259,16 +244,10 @@ def dispatch_admin_submit(input_data: dict, token: dict) -> dict[str, Any]:
     except Exception:
         pass
 
-    # 2026-08-25 修复: 提交上级不带材料 = 空手套白狼。挂上汇总报告
-    # (review 环节同款处理; create_draft 的 attachments 参数本来就有)。
-    report_path = input_data.get("report_draft", "")
-    attachments = [report_path] if report_path else []
-
     draft_path = create_draft(
         to="superior@bjfsh.gov.cn",
         subject=f"关于{subject}的提交",
         body=f"根据通知要求，现将{subject}相关材料提交，请查收。",
-        attachments=attachments,
     )
 
     # 记录 trust outcome

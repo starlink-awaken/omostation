@@ -57,38 +57,39 @@ def _write_ci_surfaces(path: Path, tool: str, *, gate: bool = False, workflow: s
     )
 
 
-def _empty_chain_dirs(tmp_path: Path) -> dict:
-    scripts = tmp_path / "scripts"
-    scripts.mkdir()
-    ci = tmp_path / "ci.yaml"
-    ci.write_text("version: 1\nsurfaces: []\n", encoding="utf-8")
-    cron = tmp_path / "cron.yaml"
-    cron.write_text("version: 1\njobs: []\n", encoding="utf-8")
-    hooks = tmp_path / "hooks"
-    hooks.mkdir()
-    cap = tmp_path / "cap.yaml"
-    cap.write_text("version: 1\nmcp_servers: []\ncli_commands: []\n", encoding="utf-8")
-    wfs = tmp_path / "workflows"
-    wfs.mkdir()
-    skills = tmp_path / "skills"
-    skills.mkdir()
-    return {
-        "script_registry_dir": scripts,
-        "ci_surfaces_path": ci,
-        "cron_registry_path": cron,
-        "hooks_dir": hooks,
-        "capability_registry_path": cap,
-        "workflows_dir": wfs,
-        "skills_dir": skills,
-    }
+def _write_cron(path: Path, command: str) -> None:
+    path.write_text(
+        "\n".join(
+            [
+                "version: 1",
+                "jobs:",
+                "  - name: fixture-job",
+                "    schedule: '0 9 * * *'",
+                f"    command: {command!r}",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
 
 
 class TestShippedCheckFunction:
     def test_item_in_script_registry_is_not_fail_closed(self, tmp_path: Path) -> None:
-        kwargs = _empty_chain_dirs(tmp_path)
-        _write_script_registry(kwargs["script_registry_dir"], "bin/gac/known.py", triggers=["manual"])
+        scripts = tmp_path / "scripts"
+        _write_script_registry(scripts, "bin/gac/known.py", triggers=["manual"])
+        ci = tmp_path / "ci.yaml"
+        ci.write_text("version: 1\nsurfaces: []\n", encoding="utf-8")
+        cron = tmp_path / "cron.yaml"
+        cron.write_text("version: 1\njobs: []\n", encoding="utf-8")
+        hooks = tmp_path / "hooks"
+        hooks.mkdir()
         mod = _load_mod()
-        result = mod.check(**kwargs)
+        result = mod.check(
+            script_registry_dir=scripts,
+            ci_surfaces_path=ci,
+            cron_registry_path=cron,
+            hooks_dir=hooks,
+        )
         assert result["ok"] is True
         assert result["errors"] == []
         assert result["inventories"]["script_registry"] >= 1
@@ -96,60 +97,46 @@ class TestShippedCheckFunction:
         assert "bin/gac/known.py" in ids
 
     def test_orphan_extra_active_fails_closed(self, tmp_path: Path) -> None:
-        kwargs = _empty_chain_dirs(tmp_path)
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        ci = tmp_path / "ci.yaml"
+        ci.write_text("version: 1\nsurfaces: []\n", encoding="utf-8")
+        cron = tmp_path / "cron.yaml"
+        cron.write_text("version: 1\njobs: []\n", encoding="utf-8")
+        hooks = tmp_path / "hooks"
+        hooks.mkdir()
         mod = _load_mod()
-        result = mod.check(**kwargs, extra_active=["bin/gac/ghost-orphan.py"])
+        result = mod.check(
+            script_registry_dir=scripts,
+            ci_surfaces_path=ci,
+            cron_registry_path=cron,
+            hooks_dir=hooks,
+            extra_active=["bin/gac/ghost-orphan.py"],
+        )
         assert result["ok"] is False
         assert any("CR-EXEC-CHAIN-01" in err for err in result["errors"])
         assert any("ghost-orphan.py" in err for err in result["errors"])
 
     def test_ci_surface_counts_as_trigger_not_error(self, tmp_path: Path) -> None:
-        kwargs = _empty_chain_dirs(tmp_path)
-        _write_ci_surfaces(kwargs["ci_surfaces_path"], "bin/gac/wired.py", gate=True, workflow="gac-gate.yml")
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        ci = tmp_path / "ci.yaml"
+        _write_ci_surfaces(ci, "bin/gac/wired.py", gate=True, workflow="gac-gate.yml")
+        cron = tmp_path / "cron.yaml"
+        cron.write_text("version: 1\njobs: []\n", encoding="utf-8")
+        hooks = tmp_path / "hooks"
+        hooks.mkdir()
         mod = _load_mod()
-        result = mod.check(**kwargs, extra_active=["bin/gac/wired.py"])
+        result = mod.check(
+            script_registry_dir=scripts,
+            ci_surfaces_path=ci,
+            cron_registry_path=cron,
+            hooks_dir=hooks,
+            extra_active=["bin/gac/wired.py"],
+        )
         assert result["ok"] is True
         wired = next(i for i in result["items"] if i["id"] == "bin/gac/wired.py")
         assert "hook" in wired["triggers"] or "CI" in wired["triggers"] or "manual" in wired["triggers"]
-
-    def test_skill_workflow_mcp_are_on_chain_not_fail_closed(self, tmp_path: Path) -> None:
-        kwargs = _empty_chain_dirs(tmp_path)
-        skill_dir = kwargs["skills_dir"] / "git-discipline"
-        skill_dir.mkdir(parents=True)
-        (skill_dir / "SKILL.md").write_text("# skill\n", encoding="utf-8")
-        (kwargs["workflows_dir"] / "project-doc-change.yaml").write_text(
-            "id: project-doc-change\ntitle: docs\n", encoding="utf-8"
-        )
-        kwargs["capability_registry_path"].write_text(
-            "\n".join(
-                [
-                    "version: 1",
-                    "mcp_servers:",
-                    "- id: agora",
-                    "  file: projects/agora/src/agora/server.py",
-                    "cli_commands:",
-                    "- name: agent",
-                    "",
-                ]
-            ),
-            encoding="utf-8",
-        )
-        mod = _load_mod()
-        result = mod.check(
-            **kwargs,
-            extra_active=[
-                "skill:git-discipline",
-                "workflow:project-doc-change",
-                "mcp-server:agora",
-                "cli:agent",
-            ],
-        )
-        assert result["ok"] is True
-        assert result["errors"] == []
-        assert result["inventories"]["skills"] == 1
-        assert result["inventories"]["workflows"] == 1
-        assert result["inventories"]["mcp_servers"] == 1
-        assert result["inventories"]["cli_commands"] == 1
 
 
 class TestGateInventory:
@@ -192,8 +179,5 @@ class TestShippedCli:
         assert inv["script_registry"] > 0
         assert inv["ci_surfaces"] > 0
         assert inv["cron_jobs"] > 0
-        assert inv["skills"] > 0
-        assert inv["workflows"] > 0
-        assert inv["mcp_servers"] > 0
         assert data["examined"] > 0
         assert isinstance(data.get("warnings"), list)

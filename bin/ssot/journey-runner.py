@@ -281,7 +281,13 @@ def dispatch_real_inbox(input_data: dict, token: dict) -> dict[str, Any]:
                 check=False,
             )
             if result.returncode == 0 and result.stdout.strip():
-                items = json.loads(result.stdout)
+                # 2026-08-26: iris CLI 的弃用警告走 stdout 污染 JSON —
+                # 剥离非 JSON 前缀(找首个 [ 或 {)再解析
+                text = result.stdout.strip()
+                start = min((i for i in (text.find("["), text.find("{")) if i >= 0), default=-1)
+                if start < 0:
+                    continue
+                items = json.loads(text[start:])
                 if isinstance(items, list):
                     messages.extend(items)
         except Exception:
@@ -311,7 +317,9 @@ def _iris_list(connector: str, limit: int = 5) -> list[dict]:
             check=False,
         )
         if result.returncode == 0 and result.stdout.strip():
-            items = json.loads(result.stdout)
+            text = result.stdout.strip()
+            start = min((i for i in (text.find("["), text.find("{")) if i >= 0), default=-1)
+            items = json.loads(text[start:]) if start >= 0 else []
             if isinstance(items, list):
                 return [it for it in items if _is_real_item(it)]
     except Exception:

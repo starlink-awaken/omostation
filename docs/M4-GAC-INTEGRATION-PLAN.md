@@ -55,7 +55,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
 | **CLI 工具** | bin/l0-constraints-migrate.py | `omo_audit` executor, 派生面重建 |
 | **CLI 工具** | bin/gac/mcp-tool-data-complete.py | `ci_gate` executor, 单工具 MCPTOOL adder |
 | **CLI 工具** | bin/mof/m4-cron-hook.py | `radar_cron` executor, OMO 桥接 |
-| **CLI 工具** | bin/gac/omo-state-cleanup.py | `gac_local_gate` executor |
+| **CLI 工具** | bin/_archive/2026-08-conv3/omo-state-cleanup.py | `gac_local_gate` executor |
 | **CLI 工具** | bin/m2-date-migrate.py | `omo_audit` executor |
 | **Schema** | m2/constraint_l0.yaml | `source_ref` 锚 |
 | **Schema** | m2/m2_base_schema.yaml | `source_ref` 锚 |
@@ -169,7 +169,7 @@ M4 工程历时 5+ round 产出了 8 个治理工具 + 4 个 schema 文件 + 59 
     验证 DERIVED_PATHS 列表。
   check_type: ssot_pointer
   target: .omo/_derived/
-  source_ref: bin/gac/omo-state-cleanup.py
+  source_ref: bin/_archive/2026-08-conv3/omo-state-cleanup.py
   executor: [omo_audit, radar_cron]
   lifecycle: active
   version: 1.0.0

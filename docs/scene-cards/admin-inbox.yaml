@@ -1,30 +1,29 @@
-title: Admin Inbox Scene Card (行政流程·收件感知)
+title: Admin Inbox Scene Card (行政收件箱感知)
 status: active
 type: scene-card
 owner: product-architecture
 last-reviewed: 2026-08-25
 related:
-- ./admin-inbox.yaml
+- ./unified-inbox.yaml
 ---
 schema: scene-card/v2
 scene_id: admin-inbox
 journey_id: admin-notification-workflow
 goal: 读取工作邮箱未读邮件并 LLM 分类, 判定是否存在需要执行的任务
-trigger: journey 状态转移进入本 scene
+trigger: mail-daemon 周期扫描或人工触发 journey run
 input_contract: 触发上下文 (subject/sender 可选), 不含正文原文
 result_contract: '分类结果列表 (subject/sender/category/priority/summary) + has_task 布尔判定 + latest_subject'
-outcome_metric: admin_inbox_quality
+outcome_metric: admin_task_detection_accuracy
 consumer: xiamingxing
 approver: business-governance
 owner: xiamingxing
-failure_cost: 行政流程产出质量下降 (草稿模式 + HITL 审阅兜底)
+failure_cost: 任务邮件漏判导致行政工作延误
 data_classification: internal
-data_scope: work-documents-metadata-and-drafts
-operator: admin-inbox-dispatch-under-risk-engine
+data_scope: work-mail-metadata-and-llm-summary
+operator: admin-inbox-dispatch-under-human-review
 required_capabilities:
 - mail:netease_mailmaster
 - llm:local-classify
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_admin_inbox'
-- '2026-08-25 --live 实测: 真实读取并判出 has_task=true, 验证通过'
-- '2026-08-25 深化: mail_agent 桥接命令改指 runtime/ssot-stable/journey-runner.py + --root 主区 — 分支漂移不断供; payload 用 shlex.quote(json.dumps) 转义'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_inbox (读网易工作邮箱, LLM 分类前 3 封)'
+- '2026-08-25 --live 实测: 真实读取并判出 has_task=true (房山区医院统计表), 验证通过'

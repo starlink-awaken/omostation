@@ -106,7 +106,7 @@
 
 ```
 omo doctor (含 path-acl)
-    → bin/gac/omo-doctor-cron.py (09:20)
+    → bin/_archive/2026-08-conv3/omo-doctor-cron.py (09:20)
     → runtime/cron/omo-doctor-latest.json + history.jsonl
     → path_acl_warn_streak / path_acl_alert
     → GET /api/omo/doctor → Wave2 面板 banner
@@ -177,7 +177,7 @@ uv run --directory projects/c2g python -m c2g.dashboard_export --json | head
 uv run --directory projects/c2g python -m c2g.demo_seed --data-dir /tmp/c2g-demo --reset --json
 
 # ops
-uv run --with pyyaml python bin/gac/omo-doctor-cron.py --json | head
+uv run --with pyyaml python bin/_archive/2026-08-conv3/omo-doctor-cron.py --json | head
 # cockpit 起服务后: curl -s localhost:8090/api/omo/doctor | jq .highlights
 
 # 门

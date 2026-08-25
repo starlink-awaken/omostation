@@ -9,7 +9,7 @@ note: >
   2026-08-25 schema 修复: 嵌套 transitions(states[].transitions) 改规范形
   (顶层 transitions + states[].next)。修复前 runner 读不到顶层 transitions,
   任何状态 next 为空 → 恒误判 Terminal, --live 实测卡死在 received。
-  referenced scenes 的 scene card 已于同日补齐(7 张 admin-*.yaml)。
+  referenced scenes (admin-inbox etc.) 仍不在 docs/scene-cards, dispatch 走 fallback。
 description: >
   上级通知 → 分类 → 转发 → 收集 → 汇总 → 审阅 → 迭代 → 提交.
   由 mail-daemon 触发, risk_engine 安全检查, 人审批后执行行动.

@@ -1,28 +1,27 @@
-title: Admin Compile Scene Card (行政流程·汇总报告)
+title: Admin Compile Scene Card (汇总报告草稿)
 status: draft
 type: scene-card
 owner: product-architecture
 last-reviewed: 2026-08-25
 related:
-- ./admin-inbox.yaml
+- ./admin-collect.yaml
 ---
 schema: scene-card/v2
 scene_id: admin-compile
 journey_id: admin-notification-workflow
 goal: 汇总收集结果生成工作报告草稿
-trigger: journey 状态转移进入本 scene
+trigger: journey collecting→compiling / classified→compiling 转移
 input_contract: latest_subject + deadline + 已收集材料上下文
 result_contract: 'report_compiled 布尔 + report_draft 草稿路径'
-outcome_metric: admin_compile_quality
+outcome_metric: report_draft_acceptance_rate
 consumer: xiamingxing
 approver: business-governance
 owner: xiamingxing
-failure_cost: 行政流程产出质量下降 (草稿模式 + HITL 审阅兜底)
+failure_cost: 汇总遗漏导致报告不完整 (人工审阅兜底)
 data_classification: internal
-data_scope: work-documents-metadata-and-drafts
-operator: admin-compile-dispatch-under-risk-engine
+data_scope: draft-documents-only
+operator: admin-compile-dispatch
 required_capabilities:
 - doc:generate-draft
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_admin_compile'
-- '2026-08-25 修复: prompt 注入当前日期, 杜绝年份幻觉'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_compile (doc_generator summary_report 模板)'

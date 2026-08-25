@@ -19,7 +19,7 @@ related:
 | FakeDreamRunner | 单测不依赖 bun/gbrain |
 | SubprocessDreamRunner | 缺 bun/gbrain 时 degraded 不崩 |
 | BOS | `bos://memory/mos/consolidate` |
-| Foundry deck | `bin/decks/memory-os-consolidate-deck.py` + cron 6:45 |
+| Foundry deck | `bin/_archive/2026-08-conv3/memory-os-consolidate-deck.py` + cron 6:45 |
 | status | `backlog` + `last_consolidate` |
 
 ## 原则守住

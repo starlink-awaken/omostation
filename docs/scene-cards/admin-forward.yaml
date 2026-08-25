@@ -1,29 +1,28 @@
-title: Admin Forward Scene Card (行政流程·转发草稿)
+title: Admin Forward Scene Card (转发草稿生成)
 status: draft
 type: scene-card
 owner: product-architecture
 last-reviewed: 2026-08-25
 related:
-- ./admin-inbox.yaml
+- ./admin-classify.yaml
 ---
 schema: scene-card/v2
 scene_id: admin-forward
 journey_id: admin-notification-workflow
 goal: 生成转发通知与数据收集表两份草稿, 供人工确认后发送
-trigger: journey 状态转移进入本 scene
+trigger: journey classified→forwarding 转移 (requires_forwarding == true)
 input_contract: latest_subject + target + deadline
-result_contract: 'email_drafts_created 布尔 + notice_draft/form_draft 草稿路径 + requires_human_confirm (恒 true); 生成失败时 status=failed + generation_failed 明细'
-outcome_metric: admin_forward_quality
+result_contract: 'email_drafts_created 布尔 + notice_draft/form_draft 草稿路径 + requires_human_confirm (恒 true)'
+outcome_metric: draft_acceptance_rate
 consumer: xiamingxing
 approver: business-governance
 owner: xiamingxing
-failure_cost: 行政流程产出质量下降 (草稿模式 + HITL 审阅兜底)
+failure_cost: 草稿质量差增加人工修改成本 (不直接外发, 风险受控)
 data_classification: internal
-data_scope: work-documents-metadata-and-drafts
+data_scope: draft-documents-only
 operator: admin-forward-dispatch-under-risk-engine
 required_capabilities:
 - risk_engine:forward-check
 - doc:generate-draft
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_admin_forward'
-- '2026-08-25 修复: 生成失败如实报 failed, 不再假报成功假推进'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_forward (risk_engine L4 拒绝检查 + 只落草稿不发送)'

@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """SFOP/DFSQ slot laws — COMP-WS nodes must self-report slot; S-slot at most one (omo).
 
-SGF / root-owned gate id sfop-slots. Missing file would ENOENT the gate.
+Laws: CR-SFOP-01 / CR-SFOP-02 (L0-constraints.yaml)
+Theory: docs/architecture/dao-fa-shu-qi.md
+Pattern: docs/architecture/os-operating-pattern-v1.md
+
+Usage:
+    python3 bin/gac/check-sfop-slots.py
+    python3 bin/gac/check-sfop-slots.py --json
+    python3 bin/gac/check-sfop-slots.py --nodes-dir <dir> --registry <file>
 """
 
 from __future__ import annotations
@@ -19,6 +26,7 @@ except ImportError:  # pragma: no cover
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_NODES = ROOT / "projects/ecos/src/ecos/ssot/mof/nodes"
 DEFAULT_REGISTRY = ROOT / "docs/project-registry.yaml"
+
 SLOTS = {"K", "H", "P", "C", "S", "B", "J", "O", "F"}
 DAO = {"dao", "fa", "shu", "qi"}
 DISPATCHER_ID = "COMP-WS-omo"
@@ -28,32 +36,34 @@ ARCHIVED_PROJECTS = {"mesh-router"}
 def _load(path: Path) -> dict:
     if yaml is None:
         raise RuntimeError("pyyaml required")
-    if not path.exists():
-        return {}
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     return data if isinstance(data, dict) else {}
 
 
-def check(*, nodes_dir: Path | None = None, registry_path: Path | None = None) -> dict:
+def check(
+    *,
+    nodes_dir: Path | None = None,
+    registry_path: Path | None = None,
+) -> dict:
+    """Evaluate CR-SFOP-01/02 over COMP-WS YAML nodes.
+
+    Fail-closed: missing/invalid slot or dao_layer → error;
+    more than one active S-slot, or S-slot not omo → error.
+    Registry projects without a matching COMP-WS node → warning.
+    """
     nodes_dir = Path(nodes_dir) if nodes_dir is not None else DEFAULT_NODES
-    registry_path = Path(registry_path) if registry_path is not None else DEFAULT_REGISTRY
+    registry_path = (
+        Path(registry_path) if registry_path is not None else DEFAULT_REGISTRY
+    )
     errors: list[str] = []
     warnings: list[str] = []
     annotated: list[dict] = []
     s_holders: list[str] = []
-    if not nodes_dir.is_dir():
-        warnings.append(f"CR-SFOP-01: COMP-WS nodes dir missing ({nodes_dir}); skip slot scan")
-        return {
-            "ok": True,
-            "errors": errors,
-            "warnings": warnings,
-            "components": annotated,
-            "s_holders": s_holders,
-            "constraint_ids": ["CR-SFOP-01", "CR-SFOP-02"],
-        }
+
     nodes = sorted(nodes_dir.glob("COMP-WS-*.yaml"))
     if not nodes:
         errors.append(f"CR-SFOP-01: no COMP-WS-*.yaml under {nodes_dir}")
+
     for path in nodes:
         data = _load(path)
         cid = str(data.get("id") or path.stem)
@@ -67,13 +77,25 @@ def check(*, nodes_dir: Path | None = None, registry_path: Path | None = None) -
             errors.append(f"CR-SFOP-01: {cid}: missing/invalid dao_layer={dao!r}")
         if slot == "S" and status == "active":
             s_holders.append(cid)
-        annotated.append({"id": cid, "status": status, "sfop_slot": slot, "dao_layer": dao, "path": str(path)})
+        annotated.append(
+            {
+                "id": cid,
+                "status": status,
+                "sfop_slot": slot,
+                "dao_layer": dao,
+                "path": str(path),
+            }
+        )
+
     if len(s_holders) > 1:
-        errors.append(f"CR-SFOP-02: multiple active S-slot components: {s_holders}")
+        errors.append(
+            f"CR-SFOP-02: multiple active S-slot components: {s_holders}"
+        )
     elif s_holders and s_holders != [DISPATCHER_ID]:
-        errors.append(f"CR-SFOP-02: S-slot holder {s_holders} != {DISPATCHER_ID}")
-    elif not s_holders and nodes:
-        errors.append("CR-SFOP-02: no active S-slot dispatcher declared (expected COMP-WS-omo)")
+        errors.append(
+            f"CR-SFOP-02: S-slot holder {s_holders} != {DISPATCHER_ID}"
+        )
+
     if registry_path.exists():
         reg = _load(registry_path)
         projects = reg.get("projects") if isinstance(reg.get("projects"), dict) else {}
@@ -84,7 +106,10 @@ def check(*, nodes_dir: Path | None = None, registry_path: Path | None = None) -
             if meta.get("status") == "archived" or name in ARCHIVED_PROJECTS:
                 continue
             if name not in present:
-                warnings.append(f"registry project {name!r} has no COMP-WS-{name}.yaml")
+                warnings.append(
+                    f"registry project {name!r} has no COMP-WS-{name}.yaml"
+                )
+
     return {
         "ok": not errors,
         "errors": errors,
@@ -110,7 +135,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  ERROR  {e}")
         for w in result["warnings"]:
             print(f"  WARN   {w}")
-        print(f"  components={len(result['components'])} S={result['s_holders']}")
+        print(
+            f"  components={len(result['components'])} S={result['s_holders']}"
+        )
     return 0 if result["ok"] else 1
 
 

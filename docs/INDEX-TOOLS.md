@@ -156,7 +156,7 @@
 | gac-daemon.py | 后台 drift 监控 | `python3 bin/gac/gac-daemon.py` |
 | gac-dashboard.py | GaC 仪表盘数据 | `python3 bin/gac/gac-dashboard.py` |
 | gac-hook-pre-edit.py | 编辑前 hook | `python3 bin/gac/gac-hook-pre-edit.py` |
-| gac-ingest-legacy.py | legacy 规则摄入 | `python3 bin/gac/gac-ingest-legacy.py` |
+| gac-ingest-legacy.py | legacy 规则摄入 | `python3 bin/_archive/2026-08-gap-governance-s5/gac-ingest-legacy.py` |
 
 ### 2. ADR 治理 (bin/adr/)
 
@@ -179,7 +179,7 @@
 | check-boundary.py | 项目边界校验 | `python3 bin/ssot/check-boundary.py` |
 | check-cross-refs.py | 交叉引用一致性 | `python3 bin/ssot/check-cross-refs.py` (tracked; `--scope workspace` 做全量审计) |
 | doc-governance-check.py | 文档治理检查（ownership/lifecycle/freshness/discoverability；支持 warning signature baseline） | `python3 bin/ssot/doc-governance-check.py --no-new-warnings` |
-| doc-governance-migrate.py | 文档元数据迁移与 review-state 批次升级 | `python3 bin/ssot/doc-governance-migrate.py --scope tracked` |
+| doc-governance-migrate.py | 文档元数据迁移与 review-state 批次升级 | `python3 bin/_archive/2026-08-conv3/doc-governance-migrate.py --scope tracked` |
 | check_health_ssot.py | health SSOT 一致 | `python3 bin/ssot/check_health_ssot.py` |
 | doc-ssot-lint.py | 文档 SSOT 门禁 (CI) | `python3 bin/ssot/doc-ssot-lint.py` |
 | gen-project-registry.py | registry 派生 | `python3 bin/ssot/gen-project-registry.py` |

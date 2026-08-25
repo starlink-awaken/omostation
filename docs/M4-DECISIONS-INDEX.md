@@ -21,7 +21,7 @@ metadata-migrated-at: 2026-07-31
 | [0132](./../.omo/_knowledge/decisions/0132-l0-mof-m4-metamodel.md) | L0/M0/MOF 统一元模型 (M4 升级) | R0 | 5 决策 + 14 周路线图 | — |
 | [0133](./../.omo/_knowledge/decisions/0133-l0-constraints-v2-cutover.md) | L0-constraints v2 派生面 双轨切单轨 | R0 | 77 条 v2 schema | T5..T8 |
 | [0134](./../.omo/_knowledge/decisions/0134-m3-meta-cutover.md) | meta_model ↔ m3.yaml 双轨桥接受 | R0 | m3-meta.yaml 22 element | T9..T14 |
-| [0135](./../.omo/_knowledge/decisions/0135-derived-plane-unification.md) | 派生面统一收口 (ADR-0129 enforcement) | R0 | `bin/gac/omo-state-cleanup.py` | T22..T24 |
+| [0135](./../.omo/_knowledge/decisions/0135-derived-plane-unification.md) | 派生面统一收口 (ADR-0129 enforcement) | R0 | `bin/_archive/2026-08-conv3/omo-state-cleanup.py` | T22..T24 |
 | [0136](./../.omo/_knowledge/decisions/0136-m3-yaml-extension-p5.md) | P5 m3.yaml 扩展 4 gap 治本 | R0 | m3.yaml ConcurrencyElement + 3 m2 名称对齐 | T25..T27 |
 | [0137](./../.omo/_knowledge/decisions/0137-derived-plane-relocation.md) | 派生面落点纠偏 (Round 2a) | R2a | `bin/l0-constraints-migrate.py` 默认路径迁移 + 主仓根 `.omo/_derived/` 退役 | T7, T8, T23 |
 | [0138](./../.omo/_knowledge/decisions/0138-meta-element-promotion.md) | 元元模型类目提升至 m3.yaml 主流 (R2b) | R2b | m3.yaml MetaElement/MetaEntity/MetaRelationType/MetaConstraintRule | T1..T21 (跨测) |
@@ -95,7 +95,7 @@ R5 (战略收口)
 ### 主仓新增
 - `bin/l0-constraints-migrate.py` (325 行, ADR-0133)
 - `bin/mof/mof-bootstrap.py` (260+ 行, ADR-0134/0136/0141)
-- `bin/gac/omo-state-cleanup.py` (226 行, ADR-0135)
+- `bin/_archive/2026-08-conv3/omo-state-cleanup.py` (226 行, ADR-0135)
 - `bin/mof/m4-health-score.py` (270 行, ADR-0140)
 - `tests/integration/m4_metamodel/run_all.py` (650+ 行, 44 tests)
 - `docs/M4-ROADMAP.md` (358 行)

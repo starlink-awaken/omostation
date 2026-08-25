@@ -1,8 +1,7 @@
+health_score_evidence: 100.0
+health_score_evidence_source: bin/gac/evidence-smoke.py
+health_score_evidence_generated_at: '2026-08-25T13:58:13.292197+00:00'
 current_phase: 49
-phase41_status: completed
-phase41_completed_at: '2026-06-16T00:00:00Z'
-phase45_status: completed
-phase45_completed_at: '2026-08-01T00:00:00Z'
 phase46_status: completed
 phase46_completed_at: '2026-08-01T00:00:00Z'
 phase49_status: active
@@ -223,9 +222,6 @@ service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
 governance_feedback_last_run: '2026-08-23T03:03:52Z'
-health_score_evidence: 100.0
-health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-25T11:20:27.244369+00:00'
 workflow_mesh_health:
   status: healthy
   event_count: 2106

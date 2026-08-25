@@ -6,7 +6,7 @@
 
 两周架构分析发现算力路由存在**双 owner 职责重叠**：
 - **aetherforge**（projects/aetherforge，omostation-aetherforge 仓）：算力网关，活跃（08-15 #37 MBP intents 定向本地模型）
-- **gac-mesh-router**（bin/gac/gac-mesh-router.py）：独立 mesh 流式路由代理（HTTP server port 7437）
+- **gac-mesh-router**（bin/_archive/2026-08-conv3/gac-mesh-router.py）：独立 mesh 流式路由代理（HTTP server port 7437）
 
 ## 证据对比
 
