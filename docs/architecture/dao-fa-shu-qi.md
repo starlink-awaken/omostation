@@ -25,7 +25,7 @@ note: >
 | 层 | 读法 | 已有基建 | 硬约束 |
 |---|---|---|---|
 | **道** | 为什么存在、什么可以存在 | Plan 北极星与证伪；M3 Element | 不可执行，只可违背后判失败 |
-| **法** | 必须 / 禁止 | M2 schema；L0 `CR-SFOP-*`；SFOP 八律 | `check-sfop-slots.py` + gate `sfop-slots` |
+| **法** | 必须 / 禁止 | M2 schema；L0 `CR-SFOP-*`；SFOP 八律；script-registry × ci-surfaces × cron | `check-sfop-slots.py` + `check-execution-chain.py` |
 | **术** | 怎么做 | Mesh / MOS / agent-workflow / resident 投影 | 填槽，不新开术的种类 |
 | **器** | 用什么做 | `COMP-WS-*` Component | 必须自报 `sfop_slot` + `dao_layer` |
 
@@ -35,6 +35,7 @@ note: >
 
 - CR-SFOP-01：每个 `COMP-WS-*` 必须声明合法 `sfop_slot` 与 `dao_layer`。
 - CR-SFOP-02：活跃 Project 中 `sfop_slot=S` 至多一个，且为 `COMP-WS-omo`。
+- CR-EXEC-CHAIN-01：声称活跃却不在 script-registry / ci-surfaces / cron 任一本账里 → fail-closed；现网未接线的登记项只 warn。
 
 新工作区项目加入方式：新增 `COMP-WS-<name>.yaml`，从既有枚举声明槽位，而不是发明新运行时。registry 有项目、无对应节点 → 检查器 warning（可成长：补节点即可）。缺槽或双 dispatcher → fail-closed（自我纠错：修复声明，不能绕过）。
 

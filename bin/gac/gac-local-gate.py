@@ -402,6 +402,7 @@ if not any(gate.get("id") == "check-swarm-collision" for gate in GATES_LIST):
 #   auto-fix-loop             AUTO-FIX   漂移检测→分类→修复闭环 (PATH-DRIFT error 阻断)
 #   command-discovery         UX-NOISE   命令密度/重复/易混淆定位 (软信号)
 #   sfop-slots                SFOP/DFSQ  COMP-WS 槽位 + 唯一 dispatcher (CR-SFOP-01/02 阻断)
+#   execution-chain           脚本/CI/cron 触发链覆盖 (CR-EXEC-CHAIN-01 阻断)
 for _gap_gate in (
     {
         "id": "capability-ownership",
@@ -423,6 +424,12 @@ for _gap_gate in (
         "id": "sfop-slots",
         "command": ["bin/gac/check-sfop-slots.py", "--json"],
         "note": "SFOP/DFSQ: COMP-WS 必须声明 sfop_slot+dao_layer; 活跃 S 槽至多一个且为 COMP-WS-omo (CR-SFOP-01/02 阻断, 非 SOFT)",
+    },
+    {
+        "id": "execution-chain",
+        "command": ["bin/gac/check-execution-chain.py", "--json"],
+        "timeout": 45,
+        "note": "Fuse script-registry + ci-surfaces + cron; extra-active orphans fail-closed (CR-EXEC-CHAIN-01). Live gaps are warnings.",
     },
 ):
     if not any(gate.get("id") == _gap_gate["id"] for gate in GATES_LIST):
@@ -468,7 +475,7 @@ BROKEN_CHECKS = {g["id"] for g in GATES_LIST if g.get("broken")}
 # Live sgf-policy.yaml often omits timeout; semantic-gate runs several
 # subprocesses and false-timeouts at the 15s default. Named defaults apply
 # unless the gate dict sets an explicit timeout.
-_DEFAULT_CHECK_TIMEOUTS = {"governance-semantic-gate": 60}
+_DEFAULT_CHECK_TIMEOUTS = {"governance-semantic-gate": 60, "execution-chain": 45}
 _CHECK_TIMEOUTS = {
     g["id"]: g.get("timeout", _DEFAULT_CHECK_TIMEOUTS.get(g["id"], 15)) for g in GATES_LIST
 }

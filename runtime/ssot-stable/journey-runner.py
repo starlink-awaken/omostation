@@ -204,6 +204,13 @@ def _has_real_data(output: dict[str, Any]) -> bool:
         return True
     if output.get("has_task") is True:
         return True
+    # 2026-08-25: admin 后段状态输出是草稿路径型(notice/form/report/eml 草稿
+    # 落盘 = 真实产出), 不识别会误报 degraded
+    if any(
+        output.get(k)
+        for k in ("notice_draft", "form_draft", "report_draft", "leader_email_draft", "submission_draft")
+    ):
+        return True
     if output.get("messages"):
         return True
     if output.get("notes_count", 0) > 0:
