@@ -41,7 +41,7 @@ def _scene_lifecycle_counts() -> dict[str, int]:
 
 
 def _maturity_overall() -> float | None:
-    rc, out, _ = _run([sys.executable, str(WS_ROOT / "bin" / "gac" / "maturity-scorecard.py"), "--json"])
+    rc, out, _ = _run([sys.executable, str(WS_ROOT / "bin" / "gac" / "maturity-scorecard.py"), "--json"], timeout=180)
     if rc != 0:
         return None
     try:
@@ -78,7 +78,7 @@ def _bcos_north_star_status() -> str:
 
 
 def _compass_health() -> dict[str, Any]:
-    rc, out, _ = _run([sys.executable, str(WS_ROOT / "bin" / "compass_radar.py"), "--dry-run"])
+    rc, out, _ = _run([sys.executable, str(WS_ROOT / "bin" / "compass_radar.py"), "--dry-run"], timeout=180)
     if rc != 0:
         return {"composite": None, "available": False}
     m = re.search(r"health_score \(composite\):\s*(\d+)/100", out)

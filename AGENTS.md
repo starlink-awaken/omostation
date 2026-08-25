@@ -161,6 +161,10 @@ The full documentation contract is [`.omo/standards/doc-ssot-contract.md`](.omo/
 
 Stable architecture contracts live in [`ARCHITECTURE.md`](ARCHITECTURE.md). Project layer placement is generated from [`docs/project-registry.yaml`](docs/project-registry.yaml) into [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md).
 
+**道法术器 (DFSQ/v1)** nests on MOF; it is not a fifth ontology. Slot grammar + unique Mesh dispatcher (`COMP-WS-omo` = S): `python3 bin/gac/check-sfop-slots.py --json` (CR-SFOP-01/02). Script × CI × cron execution chain: `python3 bin/gac/check-execution-chain.py --json` (CR-EXEC-CHAIN-01; live uncovered = warn, claimed-active orphan = fail-closed). Spec: [`docs/architecture/dao-fa-shu-qi.md`](docs/architecture/dao-fa-shu-qi.md). Do not invent a parallel OS or a second dispatcher.
+
+Constitution → skills → workflow → MCP already have registries; this gate fuses the **vertical trigger chain** (script-registry + ci-surfaces + cron), not a new GaC plane. Skills/MCP/Make/submodule-hook orphans remain out of this check.
+
 ## 4. Governance Boundaries
 
 | Surface | Rule |
@@ -196,6 +200,17 @@ make ssot-guardian
 make gac-validate
 make gac-drift
 ```
+
+### 道法术器槽位 & 执行链覆盖 (DFSQ/v1)
+
+```bash
+python3 bin/gac/check-sfop-slots.py --json             # CR-SFOP-01/02: COMP-WS slot + unique S=omo
+python3 bin/gac/check-execution-chain.py --json        # CR-EXEC-CHAIN-01: script-registry × ci-surfaces × cron
+```
+
+- **sfop-slots**: 每个 `COMP-WS-*` 必须自报合法 `sfop_slot` / `dao_layer`；活跃 Project 中 `S` 槽至多一个且为 `COMP-WS-omo`。
+- **execution-chain**: 融合已有三本账。现网未接线 = warn（绿线）；`extra_active` 声称活跃却不在任一本账 = fail-closed。不新建第五套本体或平行 OS。
+- 两检查均为 root-owned blocking（不在 `SOFT_CHECKS`），防 ecos `sgf-policy.yaml` 覆盖丢失。
 
 ### 能力防腐 & 投影强制 (差距治理 S1, 2026-08-24)
 

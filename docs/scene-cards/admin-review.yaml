@@ -1,0 +1,29 @@
+title: Admin Review Scene Card (行政流程·领导审阅)
+status: draft
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-25
+related:
+- ./admin-inbox.yaml
+---
+schema: scene-card/v2
+scene_id: admin-review
+journey_id: admin-notification-workflow
+goal: 生成发领导的审阅请求邮件草稿 (占位收件人, 人工确认时修改)
+trigger: journey 状态转移进入本 scene
+input_contract: latest_subject + report_draft 路径
+result_contract: 'leader_email_draft 草稿路径 + requires_human_confirm 恒 true'
+outcome_metric: admin_review_quality
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 行政流程产出质量下降 (草稿模式 + HITL 审阅兜底)
+data_classification: internal
+data_scope: work-documents-metadata-and-drafts
+operator: admin-review-dispatch-under-risk-engine
+required_capabilities:
+- risk_engine:send-email-check
+- mail:create-draft
+notes:
+- '实现: bin/ssot/admin_scenes.py dispatch_dispatch_admin_review'
+- 'risk_engine L3 检查 + create_draft 占位收件人, 附件挂汇总报告'

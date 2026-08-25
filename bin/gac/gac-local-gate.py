@@ -422,6 +422,26 @@ for _gap_gate in (
     if not any(gate.get("id") == _gap_gate["id"] for gate in GATES_LIST):
         GATES_LIST.append(_gap_gate)
 
+# Root-owned DFSQ/v1 (2026-08-25): COMP-WS slot self-report + unique S=omo,
+# plus fused script-registry × ci-surfaces × cron coverage.
+# ecos sgf-policy.yaml currently lists both, but a submodule overwrite can
+# drop them; append here so CHECKS cannot lose blocking ids.
+# Not in SOFT_CHECKS / CI_ONLY / OPS_ONLY — fail-closed on CR-EXEC-CHAIN-01
+# extra_active orphans; live historical gaps stay warnings.
+for _dfsq_gate in (
+    {
+        "id": "sfop-slots",
+        "command": ["bin/gac/check-sfop-slots.py", "--json"],
+    },
+    {
+        "id": "execution-chain",
+        "command": ["bin/gac/check-execution-chain.py", "--json"],
+        "timeout": 45,
+    },
+):
+    if not any(gate.get("id") == _dfsq_gate["id"] for gate in GATES_LIST):
+        GATES_LIST.append(_dfsq_gate)
+
 # Root-owned bin 配额"变更侧问责" (2026-08-24, 并发 #2076): 每次变更自己负责守恒.
 # 检查 <base>..HEAD 中 bin/ 下 .py/.sh 新增 vs 删除, 净增 → FAIL.
 # 全局计数 (gac-validate subtraction-quota) 降级 advisory, 本 check 为增量问责.
