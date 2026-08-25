@@ -1,5 +1,5 @@
 schema: script-registry/v1
-id: bin/gac/subtraction-quota-enforcer.py
+id: bin/_archive/2026-08-25-dfsq-quota/subtraction-quota-enforcer.py
 name: Subtraction Quota Enforcer
 category: governance
 owner: governance-team
