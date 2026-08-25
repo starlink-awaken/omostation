@@ -25,3 +25,4 @@ required_capabilities:
 - tracker:deadline-register
 notes:
 - '实现: bin/ssot/admin_scenes.py dispatch_admin_collect (deadline_tracker.register_task, 异常降级不阻塞)'
+- '2026-08-26: deadline_tracker 补 30min launchd 常驻巡查(com.omostation.deadline-tracker, 指稳定副本) — 此前注册后无调度, 回复检测/截止告警无人执行; 首轮实测检测到真实回复'
