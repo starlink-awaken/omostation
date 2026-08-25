@@ -744,10 +744,9 @@ def main() -> int:
         return _c(a)
 
     def cmd_daemon(a):
-        from agora.daemon import run_daemon
+        from cockpit.commands.daemon import cmd_daemon_dispatch
 
-        run_daemon(port=a.port)
-        return 0
+        return cmd_daemon_dispatch(a)
 
     handlers = {
         "daemon": cmd_daemon,
