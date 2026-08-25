@@ -2,7 +2,9 @@
 
 import json
 from pathlib import Path
+
 import pytest
+
 from cockpit.cartridge import CartridgeManifest, CartridgePackager, CartridgeRuntime
 
 

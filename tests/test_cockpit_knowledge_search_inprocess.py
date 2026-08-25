@@ -1,6 +1,7 @@
 """Test cockpit knowledge search direct in-process retrieval fallback."""
 
 import argparse
+
 from cockpit.commands.knowledge import cmd_knowledge_search
 
 

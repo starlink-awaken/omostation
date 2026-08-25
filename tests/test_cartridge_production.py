@@ -1,7 +1,9 @@
 """Tests for Production Domain Cartridges (weijian-governance & family-hub) (ADR-0203)."""
 
 from pathlib import Path
+
 import pytest
+
 from cockpit.cartridge import CartridgeRuntime
 
 # Locate workspace root

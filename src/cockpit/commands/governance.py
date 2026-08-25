@@ -177,7 +177,9 @@ def cmd_governance(args: argparse.Namespace) -> int:
         workspace_root = resolve_workspace_root()
         console = _get_console()
         console.print("[cyan]🔍 正在扫描治理门禁 (Intent-to-Fix)...[/]")
-        gate_res = subprocess.run(["uv", "run", "python", "bin/gac/gac-local-gate.py", "--json"], cwd=workspace_root, capture_output=True)
+        gate_res = subprocess.run(
+            ["uv", "run", "python", "bin/gac/gac-local-gate.py", "--json"], cwd=workspace_root, capture_output=True
+        )
         if gate_res.returncode == 0:
             console.print("[green]✅ 系统当前完全合规，无任何违背门禁，无需自愈。[/]")
             return 0
