@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # Cockpit CLI 命令参考
 
 > 自动生成于 1970-01-01T00:00:00Z

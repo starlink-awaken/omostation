@@ -66,6 +66,11 @@ def llm_ask(question: str, context: dict[str, Any] | None = None, timeout: float
             from llm_gateway import GatewayRequest
             from llm_gateway.gateway import run_async
 
+            # 2026-08-25 根因修复: 此前 model="" 让网关自选路由, 结果邮件分类
+            # 这类轻任务被路由到本地 LM Studio 的 qwythos bf16(18.84GB JIT),
+            # mail-daemon 每 30s 轮询一次 → qwythos 反复被拉起驻留, 是 MBP
+            # swap 高烧与"神秘加载"的直接元凶。SSOT 邮件分类/轻文本任务固定
+            # 走云端免费 glm-4.7-flash(MODEL-BREW-ZHIPU, cost=0)。
             req = GatewayRequest(
                 messages=[{"role": "user", "content": prompt}],
                 model=model,

@@ -5441,7 +5441,7 @@ bets:
   title: Exact Capability Binding 与 native asset receipt 消费收敛
   appetite: 5 days
   priority: P0
-  status: candidate
+  status: done
   started_at: 2026-08-24
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact find-load、OMO admission/dispatch
     与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误 admission、平行 dispatch 和执行回执冒充个人价值。
@@ -6712,6 +6712,7 @@ bets:
   status: done
   done_at: 2026-08-24
   started_at: 2026-08-24
+  note: 'T6-14 深度复盘 — 9 维分析 (场景/功能/旅程/体验/愿景/运营/运维/防腐/约束). 治本路径已汇入 docs/reports/2026-08-24-resident-system-deep-review.md + .omo/_knowledge/retros/BET-Y1Q3-T6-14.md'
   goal: 对 resident 常驻 agent 体系（五类角色/事件驱动/规则订阅/多载体执行）与治理接线（MOF/SGF/BOS、agent-workflow 契约、gac-local-gate、PR 工作流、MCP 工具）从场景/功能/用户旅程/体验/目标愿景/长期运营/运维/防腐/约束 9 维度产出一份项目粒度深度复盘文档并入库
   non_goals:
   - 不改动 resident 运行时行为或治理接线代码（本 BET 仅沉淀分析结论）
@@ -7525,12 +7526,8 @@ bets:
   appetite: 0.5 day
   priority: P1
   status: done
-  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证) — 闭合 via #2129'
-  status: candidate
-  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证)'
-
   done_at: 2026-08-24
-  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证)'
+  note: 'G10: 自进化债 (70→90 vs 6.8→9.0 vs 验证态 不一致实证) — 闭合 via #2129'
   goal: '统一 health 报告 / maturity-scorecard / bet-ledger 验证态三方口径, 建单一 SSOT。'
   non_goals: []
   done_when:
