@@ -4,6 +4,8 @@
 # 安装 crontab 条目使 resident 体系持续运行 (M4.3: 五类角色独立 projector 并行):
 #   - 每 2min: 五类角色 daemon --once (sediment/decision/execute/monitor/heartbeat,
 #     各自独立 checkpoint + topic_filter 分片消费, 互不干扰)
+#   - 每 5min: omo resident ingest(event-ingest-adapter: workflow-mesh 事件 →
+#     bus_foundation 主题发布 + event-ledger 灌入, T10-12 事件源自动化)
 #   - 每 5min: omo resident signals(personal-signals 轮询, 实际发布到事件流)
 #   - 每 5min: omo resident alert(告警转发)
 #   - 每 10min: omo resident promote(sediment 草稿 → 主题 retro 候选, 阶段2 知识晋升)
@@ -39,6 +41,7 @@ for role in sediment decision execute monitor heartbeat; do
 done
 
 # 构造 cron 条目 (signals 实际发布, 不 dry-run)
+CRON_INGEST="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident ingest --ledger ${WORKSPACE}/runtime/omo/event-ledger.sqlite3 >> ${WORKSPACE}/.omo/_delivery/event-ingest/cron.log 2>&1"
 CRON_SIGNALS="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident signals >> ${WORKSPACE}/.omo/_delivery/personal-signals/cron.log 2>&1"
 CRON_ALERT="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident alert --dry-run >> ${WORKSPACE}/.omo/_delivery/alert-forwarder/cron.log 2>&1"
 # promote: 沉淀聚合→主题 retro 候选(实际落盘, 10min 节奏足够)
@@ -53,6 +56,7 @@ cat << EOF | crontab -
 ${CLEANED_CRON}
 ${CRON_MARKER}
 ${_ROLE_CRON}
+${CRON_INGEST}
 ${CRON_SIGNALS}
 ${CRON_ALERT}
 ${CRON_PROMOTE}
