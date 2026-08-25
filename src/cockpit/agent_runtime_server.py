@@ -4,14 +4,14 @@ import json
 import time
 from pathlib import Path
 
-from cockpit.adapters.runtime import (  # SFOP: H→B only via adapters seam
-    AUTH_TOKEN,
-    EXEC_LOG_FILE,
-    AgentRuntime,
-    _build_alert_message,
-    _log_execution,
-    log,
-)
+from cockpit.adapters import runtime as _runtime_port  # SFOP: H→B only via adapters seam
+
+AUTH_TOKEN = _runtime_port.AUTH_TOKEN
+EXEC_LOG_FILE = _runtime_port.EXEC_LOG_FILE
+AgentRuntime = _runtime_port.AgentRuntime
+_build_alert_message = _runtime_port._build_alert_message
+_log_execution = _runtime_port._log_execution
+log = _runtime_port.log
 
 _HAS_RUNTIME = AgentRuntime is not None
 
@@ -26,10 +26,11 @@ def _log_warning(msg: str) -> None:
 
 def _verify_auth(request):
     """验证 Bearer token 认证。AUTH_TOKEN 为空时不验证。"""
-    if not AUTH_TOKEN:
+    token = AUTH_TOKEN
+    if not token:
         return
     auth_header = request.headers.get("Authorization", "")
-    expected = f"Bearer {AUTH_TOKEN}"
+    expected = f"Bearer {token}"
     if auth_header != expected:
         from fastapi import HTTPException
 

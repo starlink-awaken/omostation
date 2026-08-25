@@ -30,6 +30,7 @@ class TestCreateApp:
     def _make_app(self, auth_token=""):
         """创建测试用 FastAPI app"""
         _mock_runtime_config.AUTH_TOKEN = auth_token
+        agent_runtime_server.AUTH_TOKEN = auth_token
         mock_rt = mock.MagicMock()
         mock_rt.model = "mock-model"
         mock_rt.run_task.return_value = {"result": "ok"}
