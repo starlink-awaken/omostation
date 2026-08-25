@@ -577,4 +577,4 @@ def _post_closeout_pitfall_hint():
 
 if __name__ == "__main__":
     _post_closeout_pitfall_hint()
-sys.exit(wrapped_main())
+    sys.exit(wrapped_main())
