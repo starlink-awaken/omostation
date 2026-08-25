@@ -151,6 +151,11 @@ def build_scenario_parser(scenario_p: Any, parser_class: type) -> None:
     review_weekly.add_argument("--weeks", type=int, default=1, help="回顾周数 (默认1周)")
     review_sub.add_parser("pilot", help="生成4周试点总结报告")
 
+    # 真实领域业务场景合规性全链路审查 (Policy-as-Code)
+    scenario_domain = scenario_sub.add_parser("domain", help="真实领域业务场景合规性审查 (Policy-as-Code)")
+    scenario_domain.add_argument("--file", type=str, help="指定待审查的领域业务场景 YAML 文件路径")
+    scenario_domain.add_argument("--json", action="store_true", help="以 JSON 格式输出审查报告")
+
 
 # ── Decision inbox engine ──
 
@@ -943,15 +948,43 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
     }
 
 
+def _cmd_scenario_domain(args) -> int:
+    import runpy
+
+    ws = _workspace_root()
+    runner = ws / "bin" / "ssot" / "real-scenario-runner.py"
+    target_file = getattr(args, "file", None)
+    is_json = getattr(args, "json", False)
+    runner_args = ["real-scenario-runner"]
+    if target_file:
+        runner_args.extend(["--file", target_file])
+    if is_json:
+        runner_args.append("--json")
+    old_argv = sys.argv
+    try:
+        sys.argv = runner_args
+        runpy.run_path(str(runner), run_name="__main__")
+        return 0
+    except SystemExit as exc:
+        return exc.code if isinstance(exc.code, int) else 0
+    except Exception as exc:
+        sys.stderr.write(f"Error running domain scenario: {exc}\n")
+        return 1
+    finally:
+        sys.argv = old_argv
+
+
 def cmd_scenario(args) -> int:
-    """cockpit scenario {radar|assistant|health|inbox|intake|task}."""
+    """cockpit scenario {radar|assistant|health|inbox|intake|task|domain}."""
     sub = getattr(args, "scenario_sub", None) or getattr(args, "scenario_action", None)
     if sub is None:
         console = sys.stderr
-        console.write("Usage: cockpit scenario {radar|assistant|health|inbox|intake|task} [--query Q]\n")
+        console.write("Usage: cockpit scenario {radar|assistant|health|inbox|intake|task|domain} [--query Q]\n")
         return 2
 
-    if sub == "radar":
+    if sub == "domain":
+        return _cmd_scenario_domain(args)
+    elif sub == "radar":
         result = _f1_technical_radar(limit=getattr(args, "limit", 10) or 10)
     elif sub == "assistant":
         query = getattr(args, "query", None) or "OPC P5 progress"

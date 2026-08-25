@@ -841,6 +841,10 @@ def main() -> int:
         "quickstart-check": lambda a: __import__(
             "cockpit.commands.quickstart", fromlist=["cmd_quickstart"]
         ).cmd_quickstart(__import__("argparse").Namespace(check=True, json=getattr(a, "json", False))),
+        "watchdog": lambda a: __import__("cockpit.commands.watchdog", fromlist=["cmd_watchdog"]).cmd_watchdog(a),
+        "policy": lambda a: __import__("ecos.cli.constraint", fromlist=["main"]).main(
+            ["policy"] + getattr(a, "policy_args", [])
+        ),
     }
 
     global_output = getattr(args, "global_output", "text")

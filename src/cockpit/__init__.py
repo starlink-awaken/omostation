@@ -2,4 +2,8 @@
 # CLI entry in cli.py. Run: python -m cockpit
 
 __version__ = "0.4.0"
-__all__ = ("__version__",)
+
+# Auto-resolve multi-repository paths across workspace
+from . import env_resolver
+
+__all__ = ("__version__", "env_resolver")

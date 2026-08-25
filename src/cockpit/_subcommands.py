@@ -975,3 +975,13 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     fab_eval = fab_sub.add_parser("speculative-eval", help="本地首选投机推演评估")
     fab_eval.add_argument("prompt", help="任务提示词")
     fab_eval.add_argument("--domain", help="领域标识")
+
+    # ── watchdog ───────────────────────────────────────────────
+    watchdog_p = sub.add_parser("watchdog", help="🐕 自治守护犬与自愈探针 (Agora Bus / Resident 监视器)")
+    watchdog_p.add_argument("--probe", action="store_true", help="仅执行单轮自愈探针检查并输出状态")
+    watchdog_p.add_argument("--json", action="store_true", help="以 JSON 格式输出健康数据")
+    watchdog_p.add_argument("--interval", type=float, default=5.0, help="守护巡检间隔秒数 (默认 5.0)")
+
+    # ── policy ────────────────────────────────────────────────
+    policy_p = sub.add_parser("policy", help="⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)")
+    policy_p.add_argument("policy_args", nargs=argparse.REMAINDER, help="传递给 ecos-constraint policy 的参数")
