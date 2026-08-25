@@ -2,5 +2,14 @@
 # Growth only via sink (fix / owned entry / SOFT). Shrink-only after shadow bootstrap.
 version: 1
 growth_policy: shrink_only
-shadow_end: "2026-08-28T00:00:00Z"
-entries: []
+shadow_end: '2026-08-28T00:00:00Z'
+entries:
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|503d59edaa630dfb
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 503d59edaa630dfb
+  kind: gitlink-regress
+  reason: submodule projects/omo pointer 74830df63622 rewinds 2d4741adad3f
+  range: origin/main..HEAD
+  recorded_at: '2026-08-25T08:15:33.793967+00:00'
+  active: true
