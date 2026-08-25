@@ -732,6 +732,76 @@ def test_real_ledger_lint_adds_zero_done_findings(
     combined = result.stdout + result.stderr
 
     assert "BET_DONE_" not in combined
+    assert "BASE_LEDGER_UNREADABLE" not in combined
+
+
+GOVERNANCE_WORKFLOW = ROOT / ".github/workflows/governance-check.yml"
+BET_GATE_STEP_NAME = "BET done-transition gate"
+
+
+def _governance_verify_steps() -> list[dict]:
+    workflow = yaml.safe_load(GOVERNANCE_WORKFLOW.read_text(encoding="utf-8"))
+    return workflow["jobs"]["governance-verify"]["steps"]
+
+
+def test_governance_verify_checkout_has_full_history() -> None:
+    """Transition classification diffs against the base revision, so checkout needs fetch-depth: 0."""
+    steps = _governance_verify_steps()
+
+    checkouts = [step for step in steps if str(step.get("uses", "")).startswith("actions/checkout")]
+    assert checkouts, "governance-verify must check out the repository"
+    assert all(step.get("with", {}).get("fetch-depth") == 0 for step in checkouts)
+
+
+def test_governance_verify_has_bet_done_transition_gate() -> None:
+    steps = _governance_verify_steps()
+    names = [str(step.get("name", "")) for step in steps]
+    assert "Install Python gate deps" in names
+    assert "Run full governance verification" in names
+
+    gate_steps = [step for step in steps if step.get("name") == BET_GATE_STEP_NAME]
+    assert len(gate_steps) == 1, "exactly one explicitly named BET done-transition gate step"
+    script = str(gate_steps[0].get("run", ""))
+
+    # The gate invokes the real ledger lint, exactly once.
+    assert script.count("bin/plan/bet-ledger.py lint") == 1
+    assert "python3 bin/plan/bet-ledger.py lint" in script
+
+    # Blocking classification covers exactly the two guard finding families.
+    assert "BASE_LEDGER_UNREADABLE" in script
+    assert "BET_DONE_" in script
+    assert "grep -qE 'BASE_LEDGER_UNREADABLE|BET_DONE_' \"$lint_out\"" in script
+
+    # Full lint output is printed before the classification greps.
+    assert "cat " in script and "grep" in script
+    assert script.index("cat ") < script.index("grep")
+
+    # The lint's own nonzero exit (historical non-transition debt) stays informational.
+    assert "lint_rc=$?" in script
+    assert 'exit "$lint_rc"' not in script
+    assert "exit $lint_rc" not in script
+
+    # A CLI crash must not masquerade as historical lint debt.  Only the two
+    # structural terminal shapes emitted by cmd_lint are accepted.
+    assert 'if [[ "$lint_rc" -eq 0 ]]' in script
+    assert 'elif [[ "$lint_rc" -eq 1 ]]' in script
+    assert 'tail -n 1 "$lint_out"' in script
+    assert "^OK — " in script
+    assert "^[0-9]+ 个问题$" in script
+    assert "bet-ledger lint did not complete structurally" in script
+
+    # The gate runs after Python deps are installed and before the full governance verification.
+    assert names.index("Install Python gate deps") < names.index(BET_GATE_STEP_NAME)
+    assert names.index(BET_GATE_STEP_NAME) < names.index("Run full governance verification")
+
+
+def test_governance_verify_runs_spec_binding_focused_tests() -> None:
+    """The transition guard tests are a CI consumer, not a local-only artifact."""
+    scripts = [str(step.get("run", "")) for step in _governance_verify_steps()]
+
+    assert any(
+        "python3 -m pytest tests/test_spec_binding_lint.py" in script for script in scripts
+    )
 
 
 def test_arbitrary_string_cannot_prove_human_verdict(tmp_path: Path) -> None:
