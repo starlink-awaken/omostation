@@ -57,6 +57,7 @@ last-reviewed: 2026-08-24
 
 **Files:**
 - Modify: `projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml`
+- Modify: `projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py`
 - Modify: `projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.schema.json`
 - Modify: `projects/ecos/src/ecos/ssot/mof/generated/control/mof-control-schemas.ts`
 - Modify: `projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.manifest.json`
@@ -67,7 +68,7 @@ last-reviewed: 2026-08-24
 
 **Interfaces:**
 - Consumes: existing `work-packet/v2` and inline-map generator contracts.
-- Produces: optional strict `capability_requirements` list with inline exact fields; old v1/v2 packets remain readable and no new M2 type file is created.
+- Produces: optional strict `capability_requirements` list with inline exact fields; the ordered list participates in the invariant packet hash; old v1/v2 packets remain readable and no new M2 type file is created.
 
 - [ ] **Step 1: Write the failing MOF compiler test**
 
@@ -92,6 +93,12 @@ def test_work_packet_capability_requirements_are_strict_cross_language_contract(
     assert "capability_requirements" in artifacts["pydantic"]
     assert "capability_requirements" in artifacts["zod"]
 ```
+
+Also add deterministic compiler regressions in `tests/test_work_packet_compiler.py`:
+
+- the same v2 packet with a different ordered `capability_requirements` list must produce a different packet hash;
+- duplicate IDs, wildcard IDs, extra fields, and `skill:*` with `operation=invoke` must fail before canonical serialization;
+- a packet without the optional field remains readable during the shadow rollout.
 
 - [ ] **Step 2: Run the RED test**
 
@@ -140,13 +147,20 @@ Add validation rules that reject duplicates and invalid kind/operation combinati
     message: Skill 只能 load，禁止 invoke
 ```
 
+Update `work_packet_compiler.py` in the same RED→GREEN change: add
+`capability_requirements` to `INVARIANT_FIELDS` and apply the same strict shape,
+ID, operation/effect, duplicate, and Skill-invoke validation before emitting the
+canonical payload. The M2-generated models and the deterministic packet compiler
+must therefore accept and reject the same inputs.
+
 - [ ] **Step 4: Regenerate all eCOS control artifacts**
 
 Run the existing generator command used by `tests/test_mof_compiler.py`:
 
 ```bash
 cd projects/ecos
-uv run python src/ecos/ssot/tools/mof-compile.py compile
+uv run python src/ecos/ssot/tools/mof-compile.py compile \
+  --out-dir src/ecos/ssot/mof/generated/control
 ```
 
 Expected: the five tracked generated control files change together; no unrelated M2 output changes.

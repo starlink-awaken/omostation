@@ -1,4 +1,4 @@
-schema: scene-card/v2
+schema: scene-card/v1
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
 lifecycle: shadow
@@ -48,6 +48,10 @@ notes:
   draft'
 - 'W3 会议督办: 会议决议 → 任务派发 → 督办跟踪 → 闭环. 内部pipeline场景 (make targets验证能力).'
 - Candidate seed 已存在于 scene-card-candidate-seeds.yaml, 本 card 为正式提升.
+- Transitioned draft→shadow at 2026-08-25T03:21:18.356167+00:00 by xiamingxing
+- Transitioned draft→shadow at 2026-08-25T03:25:27.157596+00:00 by xiamingxing
+- Transitioned draft→shadow at 2026-08-25T03:44:37.609593+00:00 by xiamingxing
+- Transitioned draft→shadow at 2026-08-25T03:49:31.323082+00:00 by xiamingxing
 bet: BET-Y1Q2-T6-04
 falsifier: 若 shadow 期间无会议记录被结构化，则场景无价值，回退 draft
 activation_blockers: []

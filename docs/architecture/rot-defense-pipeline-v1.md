@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # 防腐流水线 v1 — 两周机制的体系化接线图
 
 > 最后更新: 2026-08-24

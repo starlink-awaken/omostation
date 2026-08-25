@@ -32,7 +32,7 @@ def classify_mail(mail: Mail) -> dict[str, Any]:
         f"标题: {mail.subject}\n发件人: {mail.sender}\n正文: {mail.body[:300]}\n\n"
         f'输出 JSON: {{"category":"...","priority":"high/medium/low","summary":"摘要","action_needed":"动作或空"}}'
     )
-    response = llm_ask(prompt, timeout=30.0)
+    response = llm_ask(prompt, timeout=30.0, model="qwen-3.8-27b")
     if not response:
         return {
             "category": "未分类",
@@ -61,7 +61,7 @@ def extract_task(mail: Mail, classification: dict) -> dict[str, Any] | None:
         f"这封邮件需要执行什么任务?\n标题: {mail.subject}\n发件人: {mail.sender}\n正文: {mail.body[:400]}\n\n"
         f'输出 JSON: {{"task_type":"转发通知/收集数据/提交报告/其他","deadline":"截止时间","target":"对象","required_docs":"文档","steps":"步骤"}}'
     )
-    response = llm_ask(prompt, timeout=30.0)
+    response = llm_ask(prompt, timeout=30.0, model="qwen-3.8-27b")
     if not response:
         return None
     m = re.search(r"\{.*\}", response, re.DOTALL)
@@ -108,7 +108,7 @@ def generate_briefing(mails: list[Mail], classifications: list[dict]) -> str:
             lines.append("")
 
     if by_cat.get("任务"):
-        advice = llm_ask(f"今天有{len(by_cat['任务'])}个任务，给出优先排序建议(一句话)。")
+        advice = llm_ask(f"今天有{len(by_cat['任务'])}个任务，给出优先排序建议(一句话)。", model="qwen-3.8-27b")
         if advice:
             lines += ["## 💡 AI 建议", advice[:200], ""]
 

@@ -507,6 +507,30 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
 
+    # 10:00 — Domain Cartridge CI hot-compilation (ADR-0198/0203)
+    print("[10:00] cartridge-ci (domain hot-compilation)...")
+    results.append(
+        run_tool(
+            "10:00-cartridge-ci",
+            ["python3", "bin/ssot/cartridge-ci.py"],
+            retries=0,
+            timeout=180,
+        )
+    )
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
+    # 10:30 — SEMA 记忆自蒸馏与技能自动结晶 (ADR-0426)
+    print("[10:30] sema-distill (cognitive self-crystallization)...")
+    results.append(
+        run_tool(
+            "10:30-sema-distill",
+            ["python3", "bin/ssot/sema-distill.py"],
+            retries=0,
+            timeout=180,
+        )
+    )
+    print(f"  -> {results[-1]['status']} ({results[-1]['duration_s']:.1f}s)")
+
     # Persist run
     record = foundry_run_record(run_id, results)
     print(f"\n=== Foundry run {run_id} complete. Record: {record.relative_to(WORKSPACE)} ===")
