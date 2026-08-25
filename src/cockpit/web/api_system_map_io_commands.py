@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import shlex
 import socket
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -234,12 +235,24 @@ def _project_verify_command(path: Path, commands: list[str], manifests: list[dic
         ("dev", "serve", "start"),
     )
     if command:
-        # mesh-router is a daemon mounted from bin/gac. Its verification path
-        # must use the non-serving --check mode and the workspace uv runtime.
-        if path == compat.WORKSPACE_ROOT / "bin" / "gac" and command.startswith('python3 "bin/gac/'):
+        # mesh-router is a daemon whether active or archived.  Verification
+        # must run from the workspace root and force the non-serving --check
+        # mode; otherwise an archived relative path is invalid (or starts the
+        # HTTP server when made valid).
+        try:
+            command_tokens = shlex.split(command)
+        except ValueError:
+            return _command_with_cwd(path, command)
+        script_index = None
+        if len(command_tokens) >= 2 and command_tokens[0] in {"python", "python3"}:
+            script_index = 1
+        elif len(command_tokens) >= 4 and command_tokens[:3] == ["uv", "run", "python"]:
+            script_index = 3
+        if script_index is not None and Path(command_tokens[script_index]).name == "gac-mesh-router.py":
+            script = command_tokens[script_index]
             return _command_with_cwd(
                 compat.WORKSPACE_ROOT,
-                'uv run python "bin/gac/gac-mesh-router.py" --check',
+                f'uv run python "{script}" --check',
             )
         return _command_with_cwd(path, command)
 

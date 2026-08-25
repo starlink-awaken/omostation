@@ -273,10 +273,15 @@ def test_system_map_builds_workspace_dimensions(monkeypatch, tmp_path):
     mesh_router = next(project for project in payload["projects"] if project["id"] == "mesh-router")
     assert mesh_router["operational"]["surface_type"] == "implemented-in-bin"
     assert mesh_router["operational"]["status"] == "ready"
+    mesh_contract = mesh_router["registry_contract"]
+    assert mesh_contract["status"] == "archived"
+    archive_path = Path(mesh_contract["physical_location"])
+    assert archive_path.parts[:2] == ("bin", "_archive")
     mesh_verify = next(action for action in mesh_router["actions"] if action["id"] == "copy-verify-command")
     assert mesh_verify["value"] == (
-        f'cd "{compat.WORKSPACE_ROOT}" && uv run python "bin/gac/gac-mesh-router.py" --check'
+        f'cd "{compat.WORKSPACE_ROOT}" && uv run python "{archive_path}" --check'
     )
+    assert not any(action["id"] == "copy-start-command" for action in mesh_router["actions"])
     metaos_project = next(project for project in payload["projects"] if project["id"] == "metaos")
     assert any("pytest" in command for command in metaos_project["operational"]["commands"])
     toolbox_project = next(project for project in payload["projects"] if project["id"] == "toolbox")
@@ -364,7 +369,6 @@ def test_stopped_runtime_projects_expose_documented_start_actions():
     projects = {project["id"]: project for project in payload["projects"]}
 
     expected_commands = {
-        "mesh-router": "gac-mesh-router.py",
         "ecos": "ecos.services.events_sse serve",
         "l4-kernel": "l4_kernel.mcp_server --sse",
         "observability": "docker compose up -d",
@@ -376,8 +380,27 @@ def test_stopped_runtime_projects_expose_documented_start_actions():
         assert action["risk"] == "medium"
 
     assert not any(action["id"] == "copy-start-command" for action in projects["bus-foundation"]["actions"])
+    assert not any(action["id"] == "copy-start-command" for action in projects["mesh-router"]["actions"])
     # AetherForge is no longer a standalone project in the root registry.
     assert "aetherforge" not in projects
+
+
+def test_mesh_router_verify_normalization_requires_exact_script_basename():
+    project_path = compat.WORKSPACE_ROOT / "bin" / "gac"
+    unrelated = 'python3 "bin/gac/not-gac-mesh-router.py"'
+
+    assert api_system_map_io_commands._project_verify_command(project_path, [unrelated], []) == (
+        f'cd "{project_path}" && {unrelated}'
+    )
+
+
+def test_verify_command_tolerates_unbalanced_documented_quotes():
+    project_path = compat.WORKSPACE_ROOT / "projects" / "demo"
+    malformed = 'uv run pytest "unterminated'
+
+    assert api_system_map_io_commands._project_verify_command(project_path, [malformed], []) == (
+        f'cd "{project_path}" && {malformed}'
+    )
 
 
 def test_runtime_probe_command_is_successful_when_no_ports_are_listening():
