@@ -5533,6 +5533,17 @@ bets:
       residual: 纠错合并后必须从 main 启动 fresh bet-execution run，所有实现与最终 retro 走正式 WorkPacket
       gate_bypass: 1
       no_run_id: true
+    E7_phase8_root_bypass_reachability:
+      finding: >-
+        Cockpit PR #78（branch codex/t1-12-cockpit-parallel-entry-retire-20260825，source 43dbf115，child
+        main merge 82dddbc9）已删除 commands/daemon.py 并退役 _subcommands/cli/governance/swarm_collector
+        中的 unbound entrypoints；root main 的 bin/omostation 仍暴露 daemon/watchdog/scenario/run 旁路，
+        daemon 分支 import child 已删除的 cockpit.commands.daemon.daemon_cli，top 分支 import child main
+        从未存在的 cockpit.tui.swarm_dashboard，bin/gac/daemon-watchdog.py 的 restart_daemon() 引用同一
+        已删符号且零人工干预重启服务；bin/ssot/real-scenario-runner.py 直接向 Agora Bus 发事件并写
+        resident decision 提案；两脚本仍为 active script registry 条目，root gitlink 停在 d8af11c2 未跟进
+        child main 82dddbc9。
+      classification: direct_code_measurement
   done_when:
   - accepted Spec、BET、WorkPacket hash、run、claims 与 exact capability requirements 可重复读取且完全一致
   - skill、workflow、mcp-server、mcp-tool、bos-service exact ID 均可 find/inspect/load；歧义、通配符与 first-match 执行全部拒绝
@@ -5562,8 +5573,8 @@ bets:
     expect: exit 0
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:0af2a02ee52b3cdf7326f91701dd0c78e5a48a41c091adf7619df3301154a9a8
+    spec_version: 1.1.0
+    content_digest: sha256:657044b66de9748de636b5a8d78f7af9081daa6c3068b9cc4f257008b11d1c9b
     decision_ref: decision://accepted/BET-Y1Q3-T1-12
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -5588,14 +5599,21 @@ bets:
   - docs/architecture/blueprint-multi-agent-execution-control-v1.md
   - docs/architecture/digital-twin-blueprint-v1.md
   - docs/operations/blueprint-agent-instruction-pack-v1.md
+  - docs/CLI-REFERENCE.md
+  - docs/INDEX-MCP.md
   - docs/generated/capability-registry.yaml
   - docs/project-registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
   - .github/workflows/governance-check.yml
+  - bin/_registry/scripts/governance/daemon-watchdog.yaml
+  - bin/_registry/scripts/governance/real-scenario-runner.yaml
   - bin/agent-workflow.py
   - bin/capability-sync.py
   - bin/cockpit/gen-capability-registry.py
+  - bin/gac/daemon-watchdog.py
+  - bin/omostation
   - bin/plan/bet-ledger.py
+  - bin/ssot/real-scenario-runner.py
   - lib/capability_trace_binding.py
   - lib/capability_native_receipt.py
   - lib/capability_native_inspection.py
@@ -5608,6 +5626,7 @@ bets:
   - tests/test_capability_native_execution_receipt.py
   - tests/test_agent_workflow.py
   - tests/test_spec_binding_lint.py
+  - tests/unit/test_phase8_unified_ecosystem.py
   - projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml
   - projects/ecos/src/ecos/ssot/mof/compiler/api.py
   - projects/ecos/src/ecos/ssot/mof/compiler/emitters.py
