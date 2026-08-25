@@ -7732,8 +7732,9 @@ bets:
   title: resident decision 提案可观测出口 (提案收件箱 + CLI 审计)
   appetite: 0.5 day
   priority: P1
-  status: candidate
-  started_at: ''
+  status: done
+  done_at: '2026-08-25'
+  started_at: '2026-08-25'
   goal: '补齐 decision 提案可观测出口: decision_agent 产出(决策提案)只有水位文件计数, 无沉淀可检索落点 + 无输出审计。补提案收件箱 md 视图(.omo/_knowledge/decision-proposals/) + omo resident decision list/status/show CLI 审计出口(扫描 evolution-proposals 全量含历史 3898 条), 让「大脑决策」既有输入追踪(trace_id 溯源)也有输出审计。'
   non_goals:
   - 不改提案 JSON 契约(resident-decision/v1 与 evolution-proposals 落点兼容)
