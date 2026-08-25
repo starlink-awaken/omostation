@@ -90,7 +90,7 @@ def run_cartridge(cartridge_file: str, intent: str, workspace_root: Path) -> int
         import time
         time.sleep(1) 
         
-        console.print(f"[green]✅ 领域事实与合规策略已装载至模型上下文[/]")
+        console.print("[green]✅ 领域事实与合规策略已装载至模型上下文[/]")
         console.print(f"[bold magenta]⚡ 执行流启动: {intent}[/]")
         
         entrypoint = sandbox / "scripts" / "run.py"
@@ -99,5 +99,5 @@ def run_cartridge(cartridge_file: str, intent: str, workspace_root: Path) -> int
             return res.returncode
         else:
             console.print("[yellow]⚠️ 缺省意图拦截器: 卡带内未找到 scripts/run.py，已通过通用模型路由生成策略证明。[/]")
-            console.print(f"[green]📝 审计凭证 (Merkle Inclusion Proof) 已生成。[/]")
+            console.print("[green]📝 审计凭证 (Merkle Inclusion Proof) 已生成。[/]")
             return 0
