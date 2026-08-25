@@ -103,3 +103,34 @@ related-retro: .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
   OMO integrity → Agora/Cockpit → shadow/warning/fail → production canary。
 - `native-execution-receipt/v1` 只有库与测试、无生产消费者；不得以 fixture/测试/PR/maturity 顶替真实完成（D1）。
 - 最终 retro（五问 + 净增减 `bet-ledger.py surface`）须在所有 done_when 证据齐全后由正式 workflow 写入。
+
+---
+
+# 追加：Task 6 Agora 部分交付（2026-08-26）
+
+## 交付证据链
+
+| 环节 | 证据 |
+|------|------|
+| 实现 | `src/agora/capability_gateway.py`：`invoke`/`load` 接受可选 `binding`，receipt 增 `binding_digest`；identity 字段加入 caller-controlled reject set |
+| commit | `9683f764` `feat(agora): carry validated capability binding digest`（2 files, +138/−2） |
+| 分支 | `droid/t1-12-agora-binding-digest-20260826`（基于 origin/main，避免带入并发 agent 的 `agora-services.json` 本地 commit） |
+| tag | `delivery/exact-capability-binding-agora-20260824-v1` → `9683f764`（已 push） |
+| PR | https://github.com/starlink-awaken/omostation-agora/pull/36 → **MERGED** squash `031fbde1`（2026-08-25T22:43:29Z） |
+| agora main | `031fbde1` 含 binding_digest 实现（8 处引用） |
+| 测试 | 31 gateway + 69 capability 相关 + 26 pep 集成 = 全部通过；ruff check 全量 clean |
+| 根仓 gitlink | **未更新**——根仓 agora gitlink 当前指向 `2d4c7d7e`（并发 agent 的 `feat/agora-state-sync` 分支 commit），根仓集成属 Task 7，由 root-gate 持有者负责 |
+
+## 实现内容（Task 6 Step 4）
+
+- `_RECEIPT_FIELDS` 增 `binding_digest`；`serialize_receipt` 过滤 None/空值 → 无 binding 时 receipt 向后兼容（不输出 binding_digest）
+- `invoke`/`load` 可选 `binding` 参数：`binding_digest = _digest(binding)`（与其它 receipt 字段同一 digest 函数）
+- `_CALLER_CONTROLLED_FIELDS` 增 7 个 identity 字段（correlation_id/workflow_run_id/packet_id/assignment_id/dispatch_id/actor_id/delivery_attempt_id）→ caller 无法经 caller_options/payload 走私 identity
+- gateway 永不 mint actor/run/packet/assignment/dispatch ID（既有 + 新增测试锁定）
+
+## ⚠️ 协调/环境记录
+
+- **agora pre-push hook 被 pre-existing 格式问题阻塞**：`src/agora/server/tools_governance.py:459` 在 agora main 上未通过 `ruff format --check`（由 `d00c4c16` 引入），非本 Task diff 所致；使用 hook 提供的 `SKIP_GATE=true` 逃生口推送。该 pre-existing 格式问题需单独 PR 修复。
+- 未碰并发 agent 的 `agora-services.json`（其本地 commit `2d4c7d7e` 在 `feat/agora-state-sync` 分支）。
+- 根仓 gitlink 推进属 Task 7（root-gate 持有者），本子仓交付完成即止（AC-10 child-first 满足：子仓已 commit/tag/PR/CI/merge）。
+
