@@ -1,0 +1,28 @@
+schema: script-registry/v1
+id: bin/gac/error-knowledge.py
+name: Agent Institutional Memory
+category: governance
+owner: governance-team
+description: "Agent 错误知识库 — lookup/record/stats/check (ADR-0424 配套, #2160)。Storage: .omo/_knowledge/pitfalls/{category}/{slug}.yaml + .index.json 缓存。原则: 遇到问题先查这里 → 没有就解决并记录 → 有就直接复用。用法: error-knowledge.py lookup/record/stats/check"
+inputs:
+  - name: command
+    type: string
+    description: lookup | record | stats | check
+  - name: category
+    type: string
+    description: 错误类别 (record 用)
+  - name: slug
+    type: string
+    description: 错误标识 (lookup/record 用)
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers:
+  - agent 遇到已沉淀/新错误时查询或记录
+  - 错误知识库统计与一致性检查
+related:
+  - bin/gac/gac-validate.py
+  - docs/operations/engineering-golden-rules.md
+maturity: draft
+last_reviewed: "2026-08-25"
