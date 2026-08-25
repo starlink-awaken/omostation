@@ -225,7 +225,7 @@ divergence_triage_summary: {}
 governance_feedback_last_run: '2026-08-23T03:03:52Z'
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-25T10:26:22.221056+00:00'
+health_score_evidence_generated_at: '2026-08-25T11:13:07.088189+00:00'
 workflow_mesh_health:
   status: healthy
   event_count: 2106
