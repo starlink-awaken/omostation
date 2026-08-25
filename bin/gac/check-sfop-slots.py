@@ -62,11 +62,9 @@ def check(*, nodes_dir: Path | None = None, registry_path: Path | None = None) -
         slot = props.get("sfop_slot") or data.get("sfop_slot")
         dao = props.get("dao_layer") or data.get("dao_layer")
         if slot not in SLOTS:
-            # Unannotated live nodes stay warnings until ecos self-report lands.
-            # Declaring an illegal slot is still a warning; unique-S conflicts error.
-            warnings.append(f"CR-SFOP-01: {cid}: missing/invalid sfop_slot={slot!r}")
+            errors.append(f"CR-SFOP-01: {cid}: missing/invalid sfop_slot={slot!r}")
         if dao not in DAO:
-            warnings.append(f"CR-SFOP-01: {cid}: missing/invalid dao_layer={dao!r}")
+            errors.append(f"CR-SFOP-01: {cid}: missing/invalid dao_layer={dao!r}")
         if slot == "S" and status == "active":
             s_holders.append(cid)
         annotated.append({"id": cid, "status": status, "sfop_slot": slot, "dao_layer": dao, "path": str(path)})
@@ -75,7 +73,7 @@ def check(*, nodes_dir: Path | None = None, registry_path: Path | None = None) -
     elif s_holders and s_holders != [DISPATCHER_ID]:
         errors.append(f"CR-SFOP-02: S-slot holder {s_holders} != {DISPATCHER_ID}")
     elif not s_holders and nodes:
-        warnings.append("CR-SFOP-02: no active S-slot dispatcher declared (expected COMP-WS-omo)")
+        errors.append("CR-SFOP-02: no active S-slot dispatcher declared (expected COMP-WS-omo)")
     if registry_path.exists():
         reg = _load(registry_path)
         projects = reg.get("projects") if isinstance(reg.get("projects"), dict) else {}
