@@ -1,0 +1,42 @@
+schema_version: domain-scenario/v1
+scenario_id: SC-WJ-HOSPITAL-CLOUD-001
+domain: work-weijian
+title: 市级三甲医院智慧医疗云平台重大信息化项目论证与合规报批
+description: 评估市第一人民医院智慧医疗云平台升级改造项目（预算5,800万元）的专家论证、等保三级以及医疗数据互联互通合规性。
+
+project_metadata:
+  project_name: 市第一人民医院智慧医疗云平台一期建设项目
+  institution: 市第一人民医院
+  budget_total_wan: 5800
+  budget_breakdown:
+    cloud_infrastructure: 2200
+    ehr_interconnection_upgrade: 1800
+    security_level_protection: 1000
+    contingency_reserve: 800
+  security_level: "三级等保 (DJCP Level 3)"
+  security_evaluation_report: "DJCP-2026-WJ-8891-PASS"
+  interoperability_standard: "国家医疗健康信息互联互通标准化成熟度四级甲等"
+
+expert_committee:
+  committee_size: 5
+  lead_expert: "张建国 (主任医师 / 卫生信息化专委会主任委员)"
+  members:
+    - name: "李春华"
+      title: "教授级高工"
+      institution: "省卫生健康信息中心"
+    - name: "赵卫东"
+      title: "主任医师"
+      institution: "医科大学附属第一医院"
+    - name: "孙立群"
+      title: "高级工程师 / 注册信息安全专业人员 (CISP)"
+      institution: "国家医疗网络安全测评中心"
+    - name: "周明清"
+      title: "教授 / 博士生导师"
+      institution: "软件工程国家重点实验室"
+  deliberation_date: "2026-08-20"
+  consensus_verdict: "CONSENSUS_PASSED"
+  signed_minutes_ref: "doc://weijian/archives/2026/WJ-2026-EXP-088.pdf"
+
+policies_to_evaluate:
+  - E-POL-WJ-001
+  - E-POL-WJ-002
