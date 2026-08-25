@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import os
 import platform
 import subprocess
 import sys
 import urllib.request
-import json
 from pathlib import Path
+
 from rich.console import Console
 
 console = Console()
@@ -144,7 +145,7 @@ def status_service(port: int = 7432) -> int:
     url = f"http://127.0.0.1:{port}/health"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "cockpit-probe"})
-        with urllib.request.urlopen(req, timeout=2.0) as resp:
+        with urllib.request.urlopen(req, timeout=2.0) as resp:  # noqa: S310
             data = json.loads(resp.read().decode("utf-8"))
             console.print(f"[bold green]🟢 Agora 2.0 守护总线运行中[/] (端口 :{port})")
             console.print(f"  - 状态: [cyan]{data.get('status')}[/]")

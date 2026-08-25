@@ -139,7 +139,7 @@ class SwarmStateCollector:
         import urllib.request
         try:
             req = urllib.request.Request(f"http://127.0.0.1:{port}/health", headers={"User-Agent": "cockpit-tui"})
-            with urllib.request.urlopen(req, timeout=0.15) as resp:
+            with urllib.request.urlopen(req, timeout=0.15) as resp:  # noqa: S310
                 return json.loads(resp.read().decode("utf-8"))
         except Exception:
             return {"status": "offline", "active_agents": 0, "subscribed_topics": []}
