@@ -249,4 +249,45 @@ BET verify 第一条测试集（`tests/test_capability_sync.py test_capability_t
 - ✅ 能力注册表漂移（`gen-capability-registry.py --check`）**已由并发 agent 修复**（`test_make_and_ci_run_blocking_canonical_check` 通过）
 - ⚠️ gac-local-gate 有 1 个 `bin-quota-diff` FAIL（并发 agent 新增 bin 脚本未删旧，属其范围）
 
+# 追加：Cockpit binding 透传修复 PR #84（2026-08-26）✅ 合并
+
+## 问题（第三个 binding 链断裂点）
+
+设计 §5.5 / 验收 §9.5：**"Cockpit/Agora 透传同一 binding 与 receipt digest，不构造第二套 identity"**。检查 Cockpit L3 入口 `src/cockpit/commands/bos.py` 的 capability invoke 分支发现两个断裂：
+
+1. `cmd_bos_capability` invoke 调 `bin/capability-sync.py invoke` **不传 `--binding-json`** → Agora 侧永远收不到上层 binding → 无法产出 binding_digest。
+2. `_CAPABILITY_RECEIPT_FIELDS` / `_sanitize_capability_receipt` **丢弃 `binding_digest`** → 即使 receipt 含 binding_digest 也被洗掉。
+
+前两个断裂点：capability-sync→agora（#2233 已修）+ fixture 同步（#2242 已修）。这是 Cockpit→capability-sync 段。
+
+## 交付证据链
+
+| 环节 | 证据 |
+|------|------|
+| 修复 | `_CAPABILITY_RECEIPT_FIELDS` += `binding_digest`；invoke 分支 `getattr(args, "capability_binding_json", None)` 非 None 时 `command.extend(["--binding-json", str(binding_json)])`（只透传调用方传入的 binding 文件路径，不构造第二套 identity） |
+| RED | 2 个新测试先红：`--binding-json` 不在 command + `KeyError: 'binding_digest'` |
+| GREEN | 独立 clone `--no-sync` 下 test_bos_capability_invoke **7 passed**（原 5）；ruff check + format clean |
+| commit | `5c856c7a` `feat(bos): transparently forward binding to capability-sync invoke`（独立 clone `droid/t1-12-cockpit-binding-20260826` 分支） |
+| tag | `delivery/t1-12-cockpit-binding-20260826-v1` → `5c856c7a`（已 push origin） |
+| PR | https://github.com/starlink-awaken/omostation-cockpit/pull/84 → **MERGED** squash `d8498526`（lint + test 全 PASS，MERGEABLE/CLEAN） |
+| main 验证 | cockpit origin/main `d8498526` 含 `binding_digest`（bos.py:41）+ `--binding-json` 透传（bos.py:668） |
+
+## ⚠️ 环境记录（独立 clone --no-sync）
+
+- cockpit pyproject 的 `omo = { path = "../omo" }` 在独立 clone 里不存在 → `uv run` 直接报 `Distribution not found at: file:///private/tmp/omo`。
+- 解法：`PYTHONPATH=src uv run --with pyyaml --with pytest --no-sync python -m pytest ...`。`bos.py`/`test_bos_capability_invoke.py` 实际不依赖 omo，`--no-sync` 绕过即可。
+- `ruff` 同样需 `--no-sync`。
+
+## 当前 BET-Y1Q3-T1-12 全链路 binding 断裂点清账（2026-08-26 09:55Z）
+
+| 断裂点 | 段 | PR | 状态 |
+|--------|-----|-----|------|
+| 1. capability-sync → agora 不透传 binding | capability-sync 子命令 | #2233（合并 `745d3d590`） | ✅ |
+| 2. 测试 fixture 未同步 ssot writer | 测试面 | #2242（合并 `630d1c88`） | ✅ |
+| 3. Cockpit invoke 不透传 binding + 丢 binding_digest | Cockpit L3 入口 | #84（合并 `d8498526`） | ✅ |
+
+- ✅ 我的部分（#2233 + #2242 + #84）全链路绑定透传闭环
+- ⏳ 剩余 = 并发 agent 的 bound native execution 生产消费者（`test_bound_invoke_emits_native_execution_receipt` 等，未合并 main）+ ecos/omo 侧透传核对
+
+
 
