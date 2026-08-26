@@ -1,0 +1,57 @@
+name: BET Done Gate
+# 2026-08-26: bet-done-transition 从 governance-check.yml 拆出为独立必跑 workflow —
+# 根治 #2197 悬空 required check: governance-check 带 path 过滤, 改 bin//runtime/
+# 等路径的 PR 不触发它, required check 永久 "Expected — Waiting for status" 卡死合并。
+# 本 workflow 无 paths 过滤, 每个 PR 必跑必上报。job 名保持 bet-done-transition
+# (与 branch protection required 列表一致, 不动治理配置)。
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  bet-done-transition:
+    name: bet-done-transition
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install Python gate deps
+        run: pip install pyyaml pydantic
+      - name: BET done-transition gate
+        run: |
+          # T1-12 (PR #2157): done-transition 守卫接入 authoritative PR/push 路径.
+          # lint 自身 exit 1 = 历史非 transition 台账债务, 保持 informational;
+          # 仅 BASE_LEDGER_UNREADABLE / BET_DONE_ finding 硬失败.
+          lint_out="$RUNNER_TEMP/bet-ledger-lint.txt"
+          set +e
+          python3 bin/plan/bet-ledger.py lint > "$lint_out" 2>&1
+          lint_rc=$?
+          set -e
+          cat "$lint_out"
+          echo "bet-ledger lint exit code: $lint_rc (informational unless guard findings)"
+          if [[ "$lint_rc" -eq 0 ]]; then
+            if ! tail -n 1 "$lint_out" | grep -q '^OK — '; then
+              echo "::error::bet-ledger lint did not complete structurally (rc=$lint_rc)"
+              exit 1
+            fi
+          elif [[ "$lint_rc" -eq 1 ]]; then
+            if ! tail -n 1 "$lint_out" | grep -Eq '^[0-9]+ 个问题$'; then
+              echo "::error::bet-ledger lint did not complete structurally (rc=$lint_rc)"
+              exit 1
+            fi
+          else
+            echo "::error::bet-ledger lint did not complete structurally (rc=$lint_rc)"
+            exit 1
+          fi
+          if grep -qE 'BASE_LEDGER_UNREADABLE|BET_DONE_' "$lint_out"; then
+            echo "::error::BET done-transition findings present (BASE_LEDGER_UNREADABLE / BET_DONE_)"
+            exit 1
+          fi

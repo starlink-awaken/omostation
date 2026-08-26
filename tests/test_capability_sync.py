@@ -805,17 +805,10 @@ def test_execute_gateway_operation_without_binding_passes_none(
 
 
 def test_invoke_cli_reads_binding_json_and_forwards_it(
-    cap_sync, registry: dict, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    cap_sync, bound_files, monkeypatch
 ) -> None:
     """The CLI invoke path must read --binding-json and pass it to the gateway
     operation so Agora can emit a binding_digest."""
-    registry_path = tmp_path / "capability-registry.yaml"
-    registry_path.write_text(yaml.safe_dump(_canonical_trace_registry(registry), sort_keys=True), encoding="utf-8")
-    input_path = tmp_path / "input.json"
-    input_path.write_text("{}\n", encoding="utf-8")
-    binding_path = tmp_path / "binding.json"
-    binding_path.write_text(json.dumps(_trace_binding(), sort_keys=True), encoding="utf-8")
-
     captured: list[dict] = []
 
     def fake_execute(reg, operation, capability_id, *, payload=None, gateway=None, service_catalog=None, binding=None):
@@ -823,24 +816,12 @@ def test_invoke_cli_reads_binding_json_and_forwards_it(
         return {"schema": "capability-invocation-receipt/v1", "status": "succeeded"}
 
     monkeypatch.setattr(cap_sync, "execute_gateway_operation", fake_execute)
-    rc = cap_sync.main(
-        [
-            "invoke",
-            "--id",
-            "bos-service:bos://governance/shared",
-            "--input-json",
-            str(input_path),
-            "--registry",
-            str(registry_path),
-            "--binding-json",
-            str(binding_path),
-        ]
-    )
+    rc = cap_sync.main(bound_files.invoke_argv)
 
     assert rc == 0
     assert len(captured) == 1
     assert captured[0]["operation"] == "invoke"
-    assert captured[0]["binding"] == _trace_binding()
+    assert captured[0]["binding"] == bound_files.binding
 
 
 def test_native_router_requires_lifecycle_catalogs_before_seed(cap_sync) -> None:
@@ -955,3 +936,158 @@ def test_gateway_unavailable_fails_closed_without_echoing_sensitive_selector(
     assert receipt["status"] == "rejected"
     assert receipt["error_code"] == "CAPABILITY_GATEWAY_UNAVAILABLE"
     assert secret_id not in encoded
+
+
+@pytest.fixture
+def bound_files(registry, tmp_path):
+    from capability_native_receipt import build_native_inspection_receipt
+
+    digest = lambda value: "sha256:" + value * 64
+    binding = {
+        "correlation_id": "corr-test",
+        "workflow_run_id": "run-test",
+        "packet_id": "WP-TEST",
+        "packet_hash": digest("a"),
+        "assignment_id": "assignment-test",
+        "dispatch_id": "dispatch-test",
+        "actor_id": "actor-test",
+        "delivery_attempt_id": "attempt-test",
+    }
+    capability_id = "bos-service:bos://governance/omo/state"
+    projected = copy.deepcopy(registry)
+    projected["bos_services"]["domains"]["governance"][0]["uri"] = "bos://governance/omo/state"
+    registry_path = tmp_path / "registry.yaml"
+    registry_path.write_text(yaml.safe_dump(projected, sort_keys=False), encoding="utf-8")
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+    inspection = build_native_inspection_receipt(
+        capability_id=capability_id,
+        binding=binding,
+        proof={
+            "source_ref": "projects/agora/etc/bos-services.yaml",
+            "content": b"services: []\n",
+            "source_schema": "agora-bos-services-yaml/v1",
+            "proof": {"method": "canonical_bos_exact_uri", "strength": "strong"},
+            "native_version": "1.0.0",
+            "native_version_status": "proved",
+        },
+        upstream={
+            "status": "verified",
+            "schema": "capability-resolution-receipt/v1",
+            "receipt_digest": digest("1"),
+            "registry_digest": digest("2"),
+        },
+    )
+    inspection_path = tmp_path / "inspection.json"
+    inspection_path.write_text(json.dumps(inspection), encoding="utf-8")
+    admission = {
+        "receipt_digest": digest("3"),
+        "admission_id": "admission-test",
+        "step_run_id": "step-test",
+        "worker": {"status": "bound", "id": "worker-test"},
+    }
+    admission_path = tmp_path / "admission.json"
+    admission_path.write_text(json.dumps(admission), encoding="utf-8")
+    input_path = tmp_path / "input.json"
+    input_path.write_text("{}\n", encoding="utf-8")
+    return SimpleNamespace(
+        binding=binding,
+        invoke_argv=[
+            "invoke",
+            "--id",
+            capability_id,
+            "--input-json",
+            str(input_path),
+            "--registry",
+            str(registry_path),
+            "--binding-json",
+            str(binding_path),
+            "--inspection-receipt-json",
+            str(inspection_path),
+            "--admission-receipt-json",
+            str(admission_path),
+            "--operation-id",
+            "omo.state",
+            "--effect-classification",
+            "read_only",
+        ],
+    )
+
+
+def test_bound_invoke_emits_native_execution_receipt(
+    cap_sync, bound_files, monkeypatch, capsys
+):
+    monkeypatch.setattr(
+        cap_sync,
+        "execute_gateway_operation",
+        lambda *args, **kwargs: {"schema": "capability-invocation-receipt/v1", "status": "succeeded"},
+    )
+    rc = cap_sync.main(bound_files.invoke_argv)
+    receipt = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert receipt["schema"] == "native-execution-receipt/v1"
+    assert receipt["material"]["binding"] == bound_files.binding
+    assert receipt["value_indicator_policy"] is False
+
+
+def test_unbound_invoke_is_shadow_observed_before_fail_promotion(
+    cap_sync, monkeypatch, registry, tmp_path, capsys
+):
+    registry_file = tmp_path / "registry.yaml"
+    registry_file.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+    input_file = tmp_path / "input.json"
+    input_file.write_text("{}\n", encoding="utf-8")
+    calls = 0
+
+    def legacy_gateway(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return {"schema": "capability-invocation-receipt/v1", "status": "succeeded"}
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", legacy_gateway)
+    rc = cap_sync.main([
+        "invoke", "--id", "bos-service:bos://governance/shared",
+        "--input-json", str(input_file), "--registry", str(registry_file),
+    ])
+    receipt = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert calls == 1
+    assert receipt["binding_enforcement"] == "shadow_missing"
+
+
+def test_partial_binding_bundle_fails_closed_without_gateway_call(
+    cap_sync, monkeypatch, registry, tmp_path, capsys
+) -> None:
+    registry_path = tmp_path / "registry.yaml"
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+    input_path = tmp_path / "input.json"
+    input_path.write_text("{}\n", encoding="utf-8")
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(_trace_binding()), encoding="utf-8")
+    calls = 0
+
+    def forbidden(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        raise AssertionError("gateway must not run for a partial bundle")
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", forbidden)
+    rc = cap_sync.main(
+        [
+            "invoke",
+            "--id",
+            "bos-service:bos://governance/shared",
+            "--input-json",
+            str(input_path),
+            "--registry",
+            str(registry_path),
+            "--binding-json",
+            str(binding_path),
+        ]
+    )
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 4
+    assert calls == 0
+    assert receipt["failure_code"] == "binding_bundle_incomplete"
+    assert receipt["invocation"]["allowed"] is False
