@@ -25,6 +25,19 @@
 - **决策**: 采用 mini-shadow 模式 (3-useful-sample) 升级到 assisted
 - **理由**: 8 张场景卡停在 shadow 已多月, 30-sample 校准门槛过高
 - **实施**: bin/gac/scene-card-mini-shadow.py + scene-card-lifecycle.py transition
+- **验证**: 战略矩阵维度 1 (场景) YELLOW → GREEN, 3 张 card 到 assisted
+
+## [2026-08-25] P1: 战略一致性矩阵落地
+- **决策**: bin/gac/strategy-check.py 落地, 9 维 GREEN/YELLOW/RED/GREY 状态机
+- **理由**: 之前战略完成度是主观判断, 现在有 9 维客观矩阵
+- **实施**: 维度 1 场景 (lifecycle 计数), 3 旅程 (status 计数), 5 BCOS (north_star v3), 6 长期运营 (BET done %)
+- **验证**: GREEN=4, YELLOW=1, RED=0
+
+## [2026-08-25] P1: north_star_meter_v3 复合制价值证明落地
+- **决策**: 从 v2 (unprovable) 升 v3 (A 100, B 50, C 97.1 → composite 85/100, provable)
+- **理由**: v2 需 principal_id 单点输入, v3 从 telemetry 自动算, evidence-driven
+- **路径**: decisions.md 入库 + cockpit decide 子命令 (V3-01)
+||||||| 7f541d0f9
 - **验证**: 战略矩阵维度 1 场景 YELLOW → GREEN
 
 ## [2026-08-25] P1: 战略一致性矩阵落地
