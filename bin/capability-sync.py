@@ -55,21 +55,28 @@ from capability_trace_binding import (  # noqa: E402 -- CLI locates the local pu
     validate_trace_binding,
     validate_trace_bound_resolution_receipt,
 )
-from capability_native_cleanup import (  # noqa: E402 -- CLI locates the local pure library first
-    OWNERSHIP_BY_KIND,
-    build_native_cleanup_proof,
-)
-from capability_native_execution_model import (  # noqa: E402 -- CLI locates the local pure library first
-    AUTHORIZATION_BY_KIND,
-    NativeExecutionReceiptError,
-    canonical_digest,
-    derive_invocation_id,
-)
-from capability_native_execution_receipt import (  # noqa: E402 -- CLI locates the local pure library first
-    build_native_execution_marker,
-    build_native_execution_material,
-    build_native_execution_receipt,
-)
+try:
+    from capability_native_cleanup import (  # noqa: E402 -- CLI locates the local pure library first
+        OWNERSHIP_BY_KIND,
+        build_native_cleanup_proof,
+    )
+    from capability_native_execution_model import (  # noqa: E402 -- CLI locates the local pure library first
+        AUTHORIZATION_BY_KIND,
+        NativeExecutionReceiptError,
+        canonical_digest,
+        derive_invocation_id,
+    )
+    from capability_native_execution_receipt import (  # noqa: E402 -- CLI locates the local pure library first
+        build_native_execution_marker,
+        build_native_execution_material,
+        build_native_execution_receipt,
+    )
+
+    NATIVE_EXECUTION_LIBS_AVAILABLE = True
+except ImportError:
+    # Embedded minimal workspaces (e.g. agent-workflow preflight sandboxes) may
+    # omit the native-execution lib set; the module must stay importable there.
+    NATIVE_EXECUTION_LIBS_AVAILABLE = False
 
 BINDING_ENFORCEMENT = "shadow"
 
@@ -693,6 +700,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
             return 0 if receipt.get("status") in {"ready", "succeeded"} else 5
 
         try:
+            if not NATIVE_EXECUTION_LIBS_AVAILABLE:
+                raise TraceBindingError("native_execution_libraries_unavailable")
             binding = _read_trace_binding(args.binding_json)
             inspection = _read_bounded_native_json(args.inspection_receipt_json, "inspection_receipt")
             admission = _read_bounded_native_json(args.admission_receipt_json, "admission_receipt")
