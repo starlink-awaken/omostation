@@ -212,4 +212,41 @@ Task 6 Agora 侧的 binding_digest 已合并（`031fbde1`），但能力链在 *
 
 - **17 success + 4 skipped + 0 fail**：gac-gate / test / evidence-gate / interface-check / meta-doctor / ai-review / phase-gate / cascading_test 等全绿；governance-verify / doc-freshness / bet-done-transition / Documents-domain 为条件跳过。
 
+---
+
+# 追加：fixture 同步 PR #2242 合并（2026-08-26）✅ 完成
+
+## 问题
+
+BET verify 第一条测试集（`tests/test_capability_sync.py test_capability_trace_binding.py test_capability_native_inspection.py test_capability_native_execution_receipt.py`）本地 21 失败 + channel_exposure 3 失败。根因与 #2233 修的**同一类**：`#2231` 把 `gen-capability-registry.py` 从 `bin/cockpit/` 移到 `bin/ssot/`（`bin/{cockpit => ssot}/...` rename），但还有 2 个测试 fixture 没同步：
+
+- `tests/test_capability_native_inspection.py::_registry()`：writer 硬编码 `bin/cockpit/...` → `build_trace_bound_resolution_receipt` 的 metadata 校验报 `source_unprovable` → **21 失败**
+- `tests/test_channel_exposure_p0.py`：4 处加载 `bin/cockpit/gen-capability-registry.py`（已不存在 → `NotADirectoryError`）→ **3 失败**
+
+这些测试不在 CI 的 governance-check 测试列表（main 一直绿），只有 BET verify 本地命令暴露。
+
+## 交付证据链
+
+| 环节 | 证据 |
+|------|------|
+| 修复 | native_inspection writer 1 处 + channel_exposure 路径 4 处（cockpit→ssot） |
+| 验证 | 独立 clone main 上 native_inspection **39 passed**（原 21 失败）；channel_exposure 5 passed（剩 1 个无关 BOS 数据漂移）；主仓工作树曾临时验证 39/5 passed |
+| commit | `e98ed0bfd` `fix(test): sync capability registry fixtures to bin/ssot generator path`（独立 clone `droid/t1-12-fixture-sync-20260826` 分支） |
+| tag | `delivery/t1-12-fixture-sync-20260826-v1` → `e98ed0bfd`（已 push origin） |
+| PR | https://github.com/starlink-awaken/omostation/pull/2242 → **MERGED** squash `630d1c88`（2026-08-26T01:42:54Z） |
+| CI | **14 pass + 3 skipping + 0 fail**；mergeable MERGEABLE / CLEAN |
+| main 验证 | `3fb237f4d` 上 native_inspection 39 passed；agent_workflow 全绿 |
+
+## ⚠️ 处置记录（共享主仓工作树不可信）
+
+- 首次在主仓工作树改这 2 文件验证（39/5 passed）后，**被并发 agent 的 checkout/merge 恢复**（git-discipline 警告：共享主仓未提交改动会被并发清理）。
+- 改为**独立 clone**（`/tmp/t1-12-fixture-sweep`）重新应用 + 验证 + commit + push + PR——不污染并发 agent 的 detached HEAD/merge 状态。
+
+## 当前 BET-Y1Q3-T1-12 verify 状态（2026-08-26 01:45Z）
+
+- ✅ 我的部分（binding 透传 #2233 + fixture 同步 #2242）全部转绿
+- ⏳ 剩余失败 = **并发 agent 进行中**：`test_bound_invoke_emits_native_execution_receipt` / `test_unbound_invoke_is_shadow_observed_before_fail_promotion`（它在做 bound native execution 生产消费者 + `binding_enforcement` shadow 模式）
+- ✅ 能力注册表漂移（`gen-capability-registry.py --check`）**已由并发 agent 修复**（`test_make_and_ci_run_blocking_canonical_check` 通过）
+- ⚠️ gac-local-gate 有 1 个 `bin-quota-diff` FAIL（并发 agent 新增 bin 脚本未删旧，属其范围）
+
 
