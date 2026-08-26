@@ -7,7 +7,8 @@ candidate_ref: evidence://personal-draft/sha256:bf98089ffae238ffb3e242f837f368ef
 revision_digest: sha256:bf98089ffae238ffb3e242f837f368ef11fa99094a1842f3349c97cd05e1ee90
 changed_fields: []
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+---
 
 修订证据: accept 时记录 RevisionReceipt, 引用 never-send draft 候选
 (evidence:// 不透明引用, 不含绝对路径)。changed_fields 为空 = 无修订,

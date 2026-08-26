@@ -10,7 +10,8 @@ cleanup_events:
 cleanup_verification: 运行状态无残留孤儿/锁
 verified_at: 2026-08-22
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+---
 
 运行清理(operational 证据):
 - 多轮运行清理完成: 分支收敛、scripts 归档残留、孤儿文件
