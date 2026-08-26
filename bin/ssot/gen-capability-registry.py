@@ -511,6 +511,51 @@ def scan_cli_commands() -> list[dict]:
     return sorted(commands, key=lambda c: c["name"])
 
 
+def _skill_frontmatter(path: Path) -> dict:
+    """Read only a bounded YAML frontmatter document; never execute a skill."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return {}
+    if not text.startswith("---\n"):
+        return {}
+    end = text.find("\n---\n", 4)
+    if end < 0 or end > 65536:
+        return {}
+    try:
+        payload = yaml.safe_load(text[4:end])
+    except yaml.YAMLError:
+        return {}
+    return dict(payload) if isinstance(payload, dict) else {}
+
+
+def scan_skills() -> list[dict]:
+    """Discover canonical skill markdown by exact name-to-directory identity."""
+    directory = WORKSPACE / ".agents" / "skills"
+    rows: list[dict] = []
+    for path in sorted(directory.glob("*/SKILL.md")):
+        frontmatter = _skill_frontmatter(path)
+        skill_id = str(frontmatter.get("name") or "")
+        if skill_id and path.parent.name == skill_id:
+            rows.append({"id": skill_id, "file": path.relative_to(WORKSPACE).as_posix(), "exists": True})
+    return rows
+
+
+def scan_workflows() -> list[dict]:
+    """Discover canonical workflow YAML by exact id-to-filename identity."""
+    directory = WORKSPACE / ".omo" / "_truth" / "registry" / "agent-workflows" / "workflows"
+    rows: list[dict] = []
+    for path in sorted(directory.glob("*.yaml")):
+        try:
+            payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, yaml.YAMLError):
+            continue
+        workflow_id = str(payload.get("id") or "") if isinstance(payload, dict) else ""
+        if workflow_id and path.name == workflow_id + ".yaml":
+            rows.append({"id": workflow_id, "file": path.relative_to(WORKSPACE).as_posix(), "exists": True})
+    return rows
+
+
 # ── 主流程 ─────────────────────────────────────────────────────
 
 
@@ -518,6 +563,8 @@ def build_registry() -> dict:
     servers, total_tools = scan_mcp_servers()
     bos_domains, total_bos = scan_bos_services()
     cli_commands = scan_cli_commands()
+    skills = scan_skills()
+    workflows = scan_workflows()
 
     bos_summary = {d: len(v) for d, v in sorted(bos_domains.items())}
 
@@ -537,6 +584,8 @@ def build_registry() -> dict:
             "bos_services": total_bos,
             "bos_domains": len(bos_domains),
             "cli_commands": len(cli_commands),
+            "skills": len(skills),
+            "workflows": len(workflows),
         },
         "mcp_servers": servers,
         "bos_services": {
@@ -544,6 +593,8 @@ def build_registry() -> dict:
             "domains": {d: bos_domains[d] for d in sorted(bos_domains)},
         },
         "cli_commands": cli_commands,
+        "skills": skills,
+        "workflows": workflows,
     }
     return registry
 
