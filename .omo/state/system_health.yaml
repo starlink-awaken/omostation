@@ -1,89 +1,76 @@
-last_scan: 1787575450.139822
+last_scan: 1787751403.2804549
 services:
   agora-gateway:
-    health_check: healthy
+    health_check: healthy (probe)
     name: agora-gateway
-    port_listening: false
     runtime:
-      freshness_seconds: 0
-      port: null
-      status: running
-      timestamp: 1787575450.139822
-    timestamp: 1787575450.139822
+      exit_code: 113
+      last_healthy_seconds: 1732497
+      status: unrecoverable
+      unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
+        fault)
+    timestamp: 1787751403.2804549
     type: daemon
   agora-sse:
-    health_check: healthy
+    health_check: unreachable
     name: agora-sse
-    port_listening: true
-    runtime:
-      freshness_seconds: 0
-      port: 7431
-      status: running
-      timestamp: 1787575450.139822
-    timestamp: 1787575450.139822
-    type: daemon
-  cron-service:
-    health_check: healthy
-    name: cron-service
-    port_listening: true
-    runtime:
-      freshness_seconds: 0
-      port: 7450
-      status: running
-      timestamp: 1787575450.139822
-    timestamp: 1787575450.139822
-    type: daemon
-  gbrain:
-    health_check: healthy
-    name: gbrain
     port_listening: false
     runtime:
-      freshness_seconds: 0
-      port: null
-      status: running
-      timestamp: 1787575450.139822
-    timestamp: 1787575450.139822
+      exit_code: 113
+      last_healthy_seconds: 1217089
+      status: unrecoverable
+      unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
+        fault)
+    timestamp: 1787751403.2804549
+    type: daemon
+  cron-service:
+    health_check: unreachable
+    name: cron-service
+    port_listening: false
+    runtime:
+      exit_code: 113
+      last_healthy_seconds: 1660850
+      status: unrecoverable
+      unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
+        fault)
+    timestamp: 1787751403.2804549
+    type: daemon
+  gbrain:
+    name: gbrain
+    runtime:
+      last_healthy_seconds: 0
+      status: unmanaged
+    timestamp: 1787751403.2804549
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
-      freshness_seconds: 0
-      port: null
-      status: configured
-      timestamp: 1787575450.139822
-    timestamp: 1787575450.139822
+      status: scheduled
+    timestamp: 1787751403.2804549
     type: scheduled
   kos:
-    health_check: healthy
     name: kos
-    port_listening: false
     runtime:
-      freshness_seconds: 0
-      port: null
-      status: active
-      timestamp: 1787575450.139822
-    timestamp: 1787575450.139822
+      last_healthy_seconds: 0
+      status: unmanaged
+    timestamp: 1787751403.2804549
     type: integrated
   ollama:
     health_check: healthy
     name: ollama
     port_listening: true
     runtime:
-      freshness_seconds: 0
-      port: 11434
-      status: idle
-      timestamp: 1787575450.139822
-    timestamp: 1787575450.139822
+      exit_code: 113
+      last_healthy_seconds: 0
+      self_heal_attempted: true
+      status: failed
+    timestamp: 1787751403.2804549
     type: daemon
   runtime-mcp:
-    health_check: healthy
     name: runtime-mcp
-    port_listening: false
     runtime:
-      freshness_seconds: 0
-      port: null
-      status: active
-      timestamp: 1787575450.139822
-    timestamp: 1787575450.139822
+      last_healthy_seconds: 0
+      status: unmanaged
+    timestamp: 1787751403.2804549
     type: mcp
