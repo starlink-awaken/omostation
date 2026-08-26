@@ -14,10 +14,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Optional
 
@@ -31,6 +33,14 @@ ROOT = Path(__file__).resolve().parents[1]
 LIB = ROOT / "lib"
 if str(LIB) not in sys.path:
     sys.path.insert(0, str(LIB))
+OMO_SRC = ROOT / "projects" / "omo" / "src"
+if str(OMO_SRC) not in sys.path:
+    sys.path.insert(0, str(OMO_SRC))
+
+try:
+    from omo.workflow_mesh import project_workflow_run  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover - embedded verifier environments may omit OMO
+    project_workflow_run = None  # type: ignore[assignment]
 
 from capability_native_inspection import (  # noqa: E402 -- static native source proof only
     NativeInspectionError,
@@ -72,6 +82,7 @@ try:
         build_native_execution_marker,
         build_native_execution_material,
         build_native_execution_receipt,
+        validate_native_execution_material,
     )
 
     NATIVE_EXECUTION_LIBS_AVAILABLE = True
@@ -90,6 +101,11 @@ FEDERATION_AUDITOR = ROOT / "lib" / "capability_federation_audit.py"
 AGORA_SRC = ROOT / "projects" / "agora" / "src"
 SUPPORTED_SCHEMA_MAJOR = 1
 MAX_INPUT_JSON_BYTES = 1024 * 1024
+VERIFICATION_SCHEMA = "capability-admission-verification-request/v1"
+VERIFICATION_RECEIPT_SCHEMA = "capability-admission-verification-receipt/v1"
+VERIFICATION_FIELDS = {"schema", "material", "request", "expected"}
+VERIFICATION_EXPECTED_FIELDS = {"capability_id", "operation_id", "effect_classification"}
+MESH_LOG = Path("_knowledge/workflow-mesh/events.jsonl")
 
 
 class RegistryError(ValueError):
@@ -633,6 +649,218 @@ def _binding_error_receipt(selector: Mapping[str, Any], failure_code: str) -> di
     }
 
 
+_VERIFICATION_FAILURES = {
+    "source_unprovable",
+    "native_route_unprovable",
+    "admission_contradiction",
+    "admission_expired",
+    "admission_receipt_invalid",
+    "authorization_required",
+    "value_promotion_forbidden",
+}
+
+
+def _verification_receipt(
+    status: str, failure_code: Optional[str] = None, **values: Any  # noqa: UP045 -- Python 3.9 contract
+) -> dict[str, Any]:
+    receipt: dict[str, Any] = {
+        "schema": VERIFICATION_RECEIPT_SCHEMA,
+        "status": status,
+        "value_indicator_policy": False,
+    }
+    if status == "verified":
+        receipt.update(values)
+        receipt["authority"] = "omo-workflow-mesh"
+    else:
+        receipt["failure_code"] = failure_code if failure_code in _VERIFICATION_FAILURES else "native_route_unprovable"
+    return receipt
+
+
+def _mesh_stat_fingerprint(stat: Any) -> tuple[int, int, int, int, int]:
+    return (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+
+
+def _read_mesh_snapshot(omo_dir: Path, workflow_run_id: str) -> dict[str, Any]:
+    """Read the append-only Mesh log without constructing its locking store."""
+    if project_workflow_run is None:
+        raise TraceBindingError("source_unprovable")
+    log_path = Path(omo_dir) / MESH_LOG
+    try:
+        before = log_path.stat()
+        content = log_path.read_bytes()
+        after = log_path.stat()
+    except (OSError, UnicodeError) as exc:
+        raise TraceBindingError("source_unprovable") from exc
+    if _mesh_stat_fingerprint(before) != _mesh_stat_fingerprint(after) or len(content) > MAX_INPUT_JSON_BYTES:
+        raise TraceBindingError("source_unprovable")
+    events: list[dict[str, Any]] = []
+    try:
+        for line in content.splitlines():
+            if not line.strip():
+                continue
+            event = json.loads(line)
+            if not isinstance(event, dict):
+                raise ValueError("event_not_mapping")
+            events.append(event)
+    except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
+        raise TraceBindingError("admission_receipt_invalid") from exc
+    try:
+        snapshot = project_workflow_run(events, workflow_run_id)
+    except Exception as exc:  # noqa: BLE001 - Mesh details must never cross the public boundary
+        raise TraceBindingError("admission_receipt_invalid") from exc
+    if not isinstance(snapshot, dict):
+        raise TraceBindingError("admission_receipt_invalid")
+    return snapshot
+
+
+def _parse_verification_envelope(envelope: Any) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+    if not isinstance(envelope, Mapping) or set(envelope) != VERIFICATION_FIELDS:
+        raise TraceBindingError("native_route_unprovable")
+    if envelope.get("schema") != VERIFICATION_SCHEMA:
+        raise TraceBindingError("native_route_unprovable")
+    material = envelope.get("material")
+    request = envelope.get("request")
+    expected = envelope.get("expected")
+    if (
+        not isinstance(material, Mapping)
+        or not isinstance(request, Mapping)
+        or not isinstance(expected, Mapping)
+        or set(expected) != VERIFICATION_EXPECTED_FIELDS
+    ):
+        raise TraceBindingError("native_route_unprovable")
+    return dict(envelope), dict(material), dict(request), dict(expected)
+
+
+def _verify_worker_context(material: Mapping[str, Any], snapshot: Mapping[str, Any]) -> None:
+    binding = material["binding"]
+    admission_material = material["admission"]
+    worker = snapshot.get("worker")
+    if not isinstance(worker, Mapping):
+        raise TraceBindingError("admission_receipt_invalid")
+    if snapshot.get("state") not in {"dispatched", "running"}:
+        raise TraceBindingError("admission_contradiction")
+    expected = {
+        "dispatch_id": binding["dispatch_id"],
+        "worker_id": admission_material["worker"].get("id"),
+        "step_run_id": admission_material["step_run_id"],
+        "admission_id": admission_material["admission_id"],
+        "packet_id": binding["packet_id"],
+        "packet_hash": binding["packet_hash"],
+    }
+    if any(worker.get(key) != value for key, value in expected.items()):
+        raise TraceBindingError("admission_receipt_invalid")
+    if binding.get("actor_id") != worker.get("worker_id"):
+        raise TraceBindingError("admission_receipt_invalid")
+
+
+def verify_material_against_mesh(omo_dir: Path | str, envelope: Mapping[str, Any]) -> dict[str, Any]:
+    """Verify frozen execution material against one stable, persisted Mesh read."""
+    try:
+        _raw, material_input, request, expected = _parse_verification_envelope(envelope)
+        if not NATIVE_EXECUTION_LIBS_AVAILABLE:
+            raise TraceBindingError("native_route_unprovable")
+        material = validate_native_execution_material(material_input)
+        if expected != {
+            "capability_id": material["capability"]["id"],
+            "operation_id": material["operation_id"],
+            "effect_classification": material["effect_classification"],
+        }:
+            raise TraceBindingError("native_route_unprovable")
+        if material["capability"]["kind"] not in {"mcp_tool", "bos_service"}:
+            raise TraceBindingError("native_route_unprovable")
+        if canonical_digest(request) != material["request_digest"]:
+            raise TraceBindingError("native_route_unprovable")
+
+        binding = material["binding"]
+        admission_material = material["admission"]
+        snapshot = _read_mesh_snapshot(Path(omo_dir), binding["workflow_run_id"])
+        admission = snapshot.get("admission")
+        if snapshot.get("workflow_run_id") != binding["workflow_run_id"]:
+            raise TraceBindingError("admission_contradiction")
+        if snapshot.get("state") not in {"admitted", "dispatched", "running"}:
+            raise TraceBindingError("admission_contradiction")
+        if not isinstance(admission, Mapping):
+            raise TraceBindingError("admission_receipt_invalid")
+        proof = admission.get("proof")
+        if not isinstance(proof, str) or re.fullmatch(r"[0-9a-f]{64}", proof) is None:
+            raise TraceBindingError("admission_receipt_invalid")
+        if admission.get("admission_id") != admission_material["admission_id"]:
+            raise TraceBindingError("admission_receipt_invalid")
+        if admission_material["receipt_digest"] != "sha256:" + proof:
+            raise TraceBindingError("admission_receipt_invalid")
+        if admission.get("workflow_run_id") != binding["workflow_run_id"]:
+            raise TraceBindingError("admission_contradiction")
+
+        request_identity = admission.get("request_identity")
+        if not isinstance(request_identity, Mapping):
+            raise TraceBindingError("admission_receipt_invalid")
+        identity_expected = {"packet_id": binding["packet_id"], "packet_hash": binding["packet_hash"]}
+        if any(request_identity.get(key) != value for key, value in identity_expected.items()):
+            raise TraceBindingError("admission_receipt_invalid")
+        optional_identity = {
+            "capability_id": material["capability"]["id"],
+            "operation_id": material["operation_id"],
+            "effect_classification": material["effect_classification"],
+            "request_digest": material["request_digest"],
+        }
+        if any(key in request_identity and request_identity.get(key) != value for key, value in optional_identity.items()):
+            raise TraceBindingError("admission_receipt_invalid")
+        capabilities = admission.get("capabilities")
+        if not isinstance(capabilities, list) or not any(
+            capability == material["capability"]["id"]
+            or (
+                isinstance(capability, Mapping)
+                and capability.get("capability_id", capability.get("id")) == material["capability"]["id"]
+            )
+            for capability in capabilities
+        ):
+            raise TraceBindingError("admission_receipt_invalid")
+        if material["admission"]["step_run_id"] not in admission.get("step_run_ids", []):
+            raise TraceBindingError("admission_receipt_invalid")
+        step = snapshot.get("step_runs", {}).get(material["admission"]["step_run_id"])
+        if isinstance(step, Mapping) and step.get("admission_id") != admission_material["admission_id"]:
+            raise TraceBindingError("admission_receipt_invalid")
+
+        try:
+            expires_at = datetime.fromisoformat(str(admission["expires_at"]).replace("Z", "+00:00"))
+            issued_at = datetime.fromisoformat(str(admission["issued_at"]).replace("Z", "+00:00"))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise TraceBindingError("admission_receipt_invalid") from exc
+        if expires_at.tzinfo is None or issued_at.tzinfo is None or issued_at >= expires_at:
+            raise TraceBindingError("admission_receipt_invalid")
+        if datetime.now(UTC) >= expires_at:
+            raise TraceBindingError("admission_expired")
+
+        effect = material["effect_classification"]
+        if effect == "effectful":
+            _verify_worker_context(material, snapshot)
+        elif snapshot.get("state") in {"dispatched", "running"} and snapshot.get("worker") is not None:
+            _verify_worker_context(material, snapshot)
+        return _verification_receipt(
+            "verified",
+            material_digest=canonical_digest(material),
+            admission_digest=admission_material["receipt_digest"],
+            capability_id=material["capability"]["id"],
+            operation_id=material["operation_id"],
+            effect_classification=effect,
+        )
+    except TraceBindingError as exc:
+        return _verification_receipt("rejected", str(exc))
+    except (NativeExecutionReceiptError, KeyError, TypeError, ValueError):
+        return _verification_receipt("rejected", "native_route_unprovable")
+
+
+def _read_bounded_stdin_json() -> Any:
+    stream = getattr(sys.stdin, "buffer", sys.stdin)
+    content = stream.read(MAX_INPUT_JSON_BYTES + 1)
+    if not isinstance(content, (bytes, bytearray)) or len(content) > MAX_INPUT_JSON_BYTES:
+        raise TraceBindingError("native_route_unprovable")
+    try:
+        return json.loads(content)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise TraceBindingError("native_route_unprovable") from exc
+
+
 def _delegate_to_writer(action: str, registry_path: Path) -> int:
     command = [sys.executable, str(CANONICAL_GENERATOR), "--quiet", "--output", str(registry_path)]
     if action == "check":
@@ -657,6 +885,11 @@ def _delegate_to_federation_auditor(workspace_root: Path, *, strict: bool) -> in
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Capability registry compatibility and discovery CLI")
     commands = parser.add_subparsers(dest="command", required=True)
+
+    commands.add_parser(
+        "verify-material",
+        help="verify one bounded native execution material envelope against persisted Workflow Mesh admission",
+    )
 
     sync_parser = commands.add_parser("sync", help="delegate generation to the projection writer")
     sync_parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
@@ -745,6 +978,16 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 3.9 contract
     args = _parser().parse_args(argv)
+    if args.command == "verify-material":
+        try:
+            envelope = _read_bounded_stdin_json()
+        except TraceBindingError as exc:
+            receipt = _verification_receipt("rejected", str(exc))
+        else:
+            receipt = verify_material_against_mesh(ROOT / ".omo", envelope)
+        print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+        return 0 if receipt.get("status") == "verified" else 4
+
     if args.command in {"sync", "check"}:
         return _delegate_to_writer(args.command, args.registry)
 

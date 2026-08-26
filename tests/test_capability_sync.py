@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import copy
+import hashlib
 import importlib.util
 import json
 import os
@@ -1126,6 +1127,224 @@ def test_bound_invoke_emits_native_execution_receipt(cap_sync, bound_files, monk
     assert receipt["schema"] == "native-execution-receipt/v1"
     assert receipt["material"]["binding"] == bound_files.binding
     assert receipt["value_indicator_policy"] is False
+
+
+# ---------------------------------------------------------------------------
+# Task 6B root verifier: persisted admission is the only authority.
+# ---------------------------------------------------------------------------
+
+
+def _verification_request() -> dict:
+    return {"payload": {"scope": "bounded", "operation": "audit"}}
+
+
+def _verification_context(*, effect: str = "read_only", state: str = "admitted") -> tuple[dict, dict, list[dict]]:
+    run_id = "run-task6b"
+    packet_id = "WP-TASK6B-0123456789abcdef"
+    packet_hash = "sha256:" + "a" * 64
+    step_run_id = "step-task6b"
+    admission_id = "admission-task6b"
+    request = _verification_request()
+    request_digest = "sha256:" + hashlib.sha256(
+        json.dumps(request, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    request_identity = {
+        "packet_id": packet_id,
+        "packet_hash": packet_hash,
+        "capability_id": "bos-service:bos://governance/shared",
+        "operation_id": "audit",
+        "effect_classification": effect,
+        "request_digest": request_digest,
+    }
+    grant = {
+        "admission_id": admission_id,
+        "status": "admitted",
+        "workflow_run_id": run_id,
+        "trace_id": "trace-task6b",
+        "backend": "task6b-test",
+        "step_run_ids": [step_run_id],
+        "capabilities": ["bos-service:bos://governance/shared"],
+        "policy_digest": "sha256:" + "b" * 64,
+        "issued_at": "2026-08-26T00:00:00+00:00",
+        "expires_at": "2099-01-01T00:00:00+00:00",
+        "request_identity": request_identity,
+    }
+    grant["proof"] = hashlib.sha256(
+        json.dumps(grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    binding = {
+        "correlation_id": "corr-task6b",
+        "workflow_run_id": run_id,
+        "packet_id": packet_id,
+        "packet_hash": packet_hash,
+        "assignment_id": "assignment-task6b",
+        "dispatch_id": "dispatch-task6b",
+        "actor_id": "worker-task6b",
+        "delivery_attempt_id": "attempt-task6b",
+    }
+    material = {
+        "schema": "native-execution-material/v1",
+        "binding": binding,
+        "capability": {"kind": "bos_service", "id": request_identity["capability_id"]},
+        "inspection": {
+            "receipt_digest": "sha256:" + "c" * 64,
+            "source_digest": "sha256:" + "d" * 64,
+        },
+        "operation_id": "audit",
+        "request_digest": request_digest,
+        "admission": {
+            "receipt_digest": "sha256:" + grant["proof"],
+            "admission_id": admission_id,
+            "step_run_id": step_run_id,
+            "worker": {"status": "bound", "id": "worker-task6b"},
+        },
+        "authorization_source": "bos-pep",
+        "effect_classification": effect,
+        "execution_attempt": 1,
+    }
+    events = [
+        {
+            "event_id": "event-requested-task6b",
+            "event_type": "WorkflowRequested",
+            "trace_id": "trace-task6b",
+            "workflow_run_id": run_id,
+            "occurred_at": "2026-08-26T00:00:00+00:00",
+            "producer": "test",
+            "schema_version": "workflow-mesh/v1",
+            "idempotency_key": "task6b-requested",
+            "payload": {"request_identity": request_identity},
+        },
+        {
+            "event_id": "event-admitted-task6b",
+            "event_type": "WorkflowAdmitted",
+            "trace_id": "trace-task6b",
+            "workflow_run_id": run_id,
+            "occurred_at": "2026-08-26T00:00:01+00:00",
+            "producer": "test",
+            "schema_version": "workflow-mesh/v1",
+            "idempotency_key": "task6b-admitted",
+            "payload": {"admission": grant, **grant},
+        },
+    ]
+    if state in {"dispatched", "running"}:
+        events.append(
+            {
+                "event_id": "event-dispatched-task6b",
+                "event_type": "StepDispatched",
+                "trace_id": "trace-task6b",
+                "workflow_run_id": run_id,
+                "occurred_at": "2026-08-26T00:00:02+00:00",
+                "producer": "test",
+                "schema_version": "workflow-mesh/v1",
+                "idempotency_key": "task6b-dispatched",
+                "payload": {
+                    "step_run_id": step_run_id,
+                    "admission_id": admission_id,
+                    "dispatch_id": binding["dispatch_id"],
+                    "worker_id": binding["actor_id"],
+                    "packet_id": packet_id,
+                    "packet_hash": packet_hash,
+                    "instruction_binding": None,
+                },
+            }
+        )
+    if state == "running":
+        events.append(
+            {
+                "event_id": "event-started-task6b",
+                "event_type": "StepStarted",
+                "trace_id": "trace-task6b",
+                "workflow_run_id": run_id,
+                "occurred_at": "2026-08-26T00:00:03+00:00",
+                "producer": "test",
+                "schema_version": "workflow-mesh/v1",
+                "idempotency_key": "task6b-started",
+                "payload": {"step_run_id": step_run_id, "admission_id": admission_id},
+            }
+        )
+    return material, request, events
+
+
+def _verification_envelope(material: dict, request: dict) -> dict:
+    return {
+        "schema": "capability-admission-verification-request/v1",
+        "material": material,
+        "request": request,
+        "expected": {
+            "capability_id": material["capability"]["id"],
+            "operation_id": material["operation_id"],
+            "effect_classification": material["effect_classification"],
+        },
+    }
+
+
+def _write_mesh(omo_dir: Path, events: list[dict]) -> None:
+    path = omo_dir / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(json.dumps(event, sort_keys=True) + "\n" for event in events), encoding="utf-8")
+
+
+def test_verify_material_rejects_cross_run_before_any_outbound_call(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    material, request, events = _verification_context()
+    _write_mesh(tmp_path / ".omo", events)
+    material["binding"]["workflow_run_id"] = "other-run"
+    counters = {"provider": 0, "router": 0, "gateway": 0, "subprocess": 0}
+    for name in ("_load_native_gateway", "execute_gateway_operation"):
+        monkeypatch.setattr(cap_sync, name, lambda *args, **kwargs: counters.__setitem__("gateway", 1))
+    monkeypatch.setattr(cap_sync.subprocess, "run", lambda *args, **kwargs: counters.__setitem__("subprocess", 1))
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "admission_contradiction"
+    assert counters == {"provider": 0, "router": 0, "gateway": 0, "subprocess": 0}
+
+
+def test_verify_material_accepts_persisted_read_only_admission_without_writes(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context(effect="read_only", state="admitted")
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    log = omo_dir / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    before = (log.stat().st_mtime_ns, log.read_bytes())
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["schema"] == "capability-admission-verification-receipt/v1"
+    assert receipt["status"] == "verified"
+    assert receipt["capability_id"] == material["capability"]["id"]
+    assert receipt["operation_id"] == "audit"
+    assert receipt["effect_classification"] == "read_only"
+    assert receipt["authority"] == "omo-workflow-mesh"
+    assert receipt["value_indicator_policy"] is False
+    assert (log.stat().st_mtime_ns, log.read_bytes()) == before
+
+
+def test_verify_material_requires_dispatch_for_effectful_and_matches_worker(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context(effect="effectful", state="dispatched")
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+
+    assert cap_sync.verify_material_against_mesh(
+        omo_dir, _verification_envelope(material, request)
+    )["status"] == "verified"
+
+    material["admission"]["worker"]["id"] = "other-worker"
+    rejected = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+    assert rejected["status"] == "rejected"
+    assert rejected["failure_code"] == "admission_receipt_invalid"
+
+
+def test_verify_material_cli_reads_one_bounded_stdin_envelope_and_uses_fixed_omo_root(
+    cap_sync, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(cap_sync.sys, "stdin", SimpleNamespace(buffer=SimpleNamespace(read=lambda _size: b"{}")))
+    assert cap_sync.main(["verify-material"]) == 4
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] in {"native_route_unprovable", "admission_receipt_invalid"}
+    assert "omo_dir" not in json.dumps(receipt, sort_keys=True)
 
 
 def test_unbound_invoke_is_shadow_observed_before_fail_promotion(cap_sync, monkeypatch, registry, tmp_path, capsys):
