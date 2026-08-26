@@ -163,3 +163,65 @@ def test_cmd_bos_capability_invoke_strips_unknown_receipt_fields(monkeypatch, ca
         "capability_id",
         "invocation_attempted",
     }
+
+
+def test_cmd_bos_capability_invoke_forwards_binding_json(monkeypatch, capsys, tmp_path: Path) -> None:
+    """Cockpit must transparently forward the upper-layer binding to capability-sync
+    so Agora can emit a binding_digest (design 5.5 / acceptance 9.5 — no second identity)."""
+    payload = tmp_path / "payload.json"
+    payload.write_text('{"scope":"bounded"}', encoding="utf-8")
+    binding = tmp_path / "binding.json"
+    binding.write_text('{"correlation_id":"corr-1"}', encoding="utf-8")
+    monkeypatch.setattr(bos_mod, "_load_capability_services", lambda: [_service()])
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        return SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "schema": "capability-invocation-receipt/v1",
+                    "operation": "invoke",
+                    "status": "succeeded",
+                    "capability_id": "bos-service:bos://capability/swarm/run",
+                    "invocation_attempted": True,
+                    "binding_digest": "sha256:" + "a" * 64,
+                }
+            ),
+            stderr="",
+        )
+
+    monkeypatch.setattr(bos_mod.subprocess, "run", fake_run)
+    code = bos_mod.cmd_bos_capability(
+        argparse.Namespace(
+            capability_command="invoke",
+            capability_service="bos://capability/swarm/run",
+            capability_input_json=payload,
+            capability_binding_json=binding,
+            global_output="json",
+        )
+    )
+
+    assert code == 0
+    command = calls[0]
+    assert "--binding-json" in command
+    assert str(binding) in command
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["binding_digest"] == "sha256:" + "a" * 64
+
+
+def test_sanitize_receipt_preserves_binding_digest() -> None:
+    """binding_digest is a governed field — the sanitizer must not drop it."""
+    receipt = bos_mod._sanitize_capability_receipt(
+        {
+            "schema": "capability-invocation-receipt/v1",
+            "operation": "invoke",
+            "status": "succeeded",
+            "capability_id": "bos-service:bos://capability/swarm/run",
+            "invocation_attempted": True,
+            "binding_digest": "sha256:" + "b" * 64,
+        },
+        "bos-service:bos://capability/swarm/run",
+    )
+    assert receipt["binding_digest"] == "sha256:" + "b" * 64

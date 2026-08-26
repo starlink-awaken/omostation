@@ -38,6 +38,7 @@ _CAPABILITY_RECEIPT_FIELDS = frozenset(
         "exit_code",
         "error_code",
         "error_detail_digest",
+        "binding_digest",
     }
 )
 
@@ -662,6 +663,9 @@ def cmd_bos_capability(args) -> int:
             "--input-json",
             str(input_json),
         ]
+        binding_json = getattr(args, "capability_binding_json", None)
+        if binding_json is not None:
+            command.extend(["--binding-json", str(binding_json)])
         try:
             result = subprocess.run(command, check=False, capture_output=True, text=True)
         except OSError:
