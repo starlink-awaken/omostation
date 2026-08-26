@@ -94,6 +94,24 @@ def test_canonical_generator_declares_registry_contract(cap_sync, generator) -> 
     }
 
 
+def test_projection_and_index_include_canonical_skills_and_workflows(generator, cap_sync) -> None:
+    registry = generator.build_registry()
+
+    assert any(row["id"] == "git-discipline" for row in registry["skills"])
+    assert any(row["id"] == "bet-execution" for row in registry["workflows"])
+    index = cap_sync.build_capability_index(registry)
+    assert index["skill:git-discipline"][0]["kind"] == "skill"
+    assert index["workflow:bet-execution"][0]["kind"] == "workflow"
+
+
+def test_old_projection_without_skills_or_workflows_stays_discoverable(cap_sync, registry: dict) -> None:
+    index = cap_sync.build_capability_index(registry)
+
+    assert "skill:git-discipline" not in index
+    assert "workflow:bet-execution" not in index
+    assert index["mcp-tool:omo:status"][0]["kind"] == "mcp_tool"
+
+
 def test_trace_binding_compatibility_symbols_remain_available(cap_sync) -> None:
     for name in (
         "TraceBindingError",
@@ -938,11 +956,94 @@ def test_gateway_unavailable_fails_closed_without_echoing_sensitive_selector(
     assert secret_id not in encoded
 
 
+def test_local_skill_and_workflow_loads_do_not_call_a_provider(
+    cap_sync, monkeypatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def forbidden(*args, **kwargs):
+        raise AssertionError("local capability load must not reach a provider")
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", forbidden)
+    assert cap_sync.main(["load", "--id", "skill:git-discipline"]) == 0
+    skill_receipt = json.loads(capsys.readouterr().out)
+    assert skill_receipt["status"] == "ready"
+    assert skill_receipt["provider_called"] is False
+    assert skill_receipt["invoked"] is False
+
+    assert cap_sync.main(["load", "--id", "workflow:bet-execution"]) == 0
+    workflow_receipt = json.loads(capsys.readouterr().out)
+    assert workflow_receipt["status"] == "ready"
+    assert workflow_receipt["provider_called"] is False
+    assert workflow_receipt["invoked"] is False
+
+
+def test_skill_invoke_is_rejected_before_any_provider(
+    cap_sync, monkeypatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    payload = tmp_path / "input.json"
+    payload.write_text("{}\n", encoding="utf-8")
+    calls = 0
+
+    def forbidden(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        raise AssertionError("skill invocation must not reach a provider")
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", forbidden)
+    assert cap_sync.main(["invoke", "--id", "skill:git-discipline", "--input-json", str(payload)]) == 4
+    receipt = json.loads(capsys.readouterr().out)
+    assert calls == 0
+    assert receipt["failure_code"] == "skill_invoke_forbidden"
+    assert receipt["invocation"]["allowed"] is False
+
+
+@pytest.mark.parametrize(
+    ("actor_id", "expected_rc", "allowed"),
+    [("workflow-controller", 0, True), ("other-actor", 4, False)],
+)
+def test_workflow_invoke_requires_workflow_controller_actor(
+    cap_sync,
+    monkeypatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    actor_id: str,
+    expected_rc: int,
+    allowed: bool,
+) -> None:
+    payload = tmp_path / "input.json"
+    payload.write_text("{}\n", encoding="utf-8")
+    binding = _trace_binding()
+    binding["actor_id"] = actor_id
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+
+    monkeypatch.setattr(
+        cap_sync,
+        "execute_gateway_operation",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("workflow must stay local")),
+    )
+    rc = cap_sync.main(
+        [
+            "invoke",
+            "--id",
+            "workflow:bet-execution",
+            "--input-json",
+            str(payload),
+            "--binding-json",
+            str(binding_path),
+        ]
+    )
+    receipt = json.loads(capsys.readouterr().out)
+    assert rc == expected_rc
+    assert receipt["provider_called"] is False
+    assert receipt["invocation"]["allowed"] is allowed
+
+
 @pytest.fixture
 def bound_files(registry, tmp_path):
     from capability_native_receipt import build_native_inspection_receipt
 
-    digest = lambda value: "sha256:" + value * 64
+    def digest(value: str) -> str:
+        return "sha256:" + value * 64
     binding = {
         "correlation_id": "corr-test",
         "workflow_run_id": "run-test",

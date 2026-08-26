@@ -55,6 +55,7 @@ from capability_trace_binding import (  # noqa: E402 -- CLI locates the local pu
     validate_trace_binding,
     validate_trace_bound_resolution_receipt,
 )
+
 try:
     from capability_native_cleanup import (  # noqa: E402 -- CLI locates the local pure library first
         OWNERSHIP_BY_KIND,
@@ -228,6 +229,34 @@ def build_capability_index(registry: Mapping[str, Any]) -> dict[str, list[dict[s
             str(raw_command.get("description") or ""),
             "cockpit_native",
             name,
+        )
+
+    for raw_skill in registry.get("skills", []) or []:
+        if not isinstance(raw_skill, dict) or raw_skill.get("exists") is not True:
+            continue
+        skill_id = str(raw_skill.get("id") or "")
+        _add(
+            index,
+            "skill:" + skill_id,
+            "skill",
+            skill_id,
+            skill_id,
+            "instruction_native",
+            skill_id,
+        )
+
+    for raw_workflow in registry.get("workflows", []) or []:
+        if not isinstance(raw_workflow, dict) or raw_workflow.get("exists") is not True:
+            continue
+        workflow_id = str(raw_workflow.get("id") or "")
+        _add(
+            index,
+            "workflow:" + workflow_id,
+            "workflow",
+            workflow_id,
+            workflow_id,
+            "workflow_native",
+            workflow_id,
         )
 
     # Legacy flat registries remain discoverable but their stored invoke strings
@@ -453,6 +482,55 @@ def _gateway_error_receipt(operation: str, selector: Mapping[str, Any], reason: 
     }
 
 
+def _local_capability_receipt(
+    operation: str,
+    capability_id: str,
+    binding: Optional[Mapping[str, Any]] = None,  # noqa: UP045 -- Python 3.9 contract
+) -> tuple[dict[str, Any], int]:
+    """Authorize local metadata operations without importing or executing sources."""
+    prefix = capability_id.partition(":")[0]
+    selector = {"capability_id": capability_id}
+    if prefix == "skill" and operation == "invoke":
+        return {
+            "schema": "capability-local-operation-receipt/v1",
+            "status": "rejected",
+            "failure_code": "skill_invoke_forbidden",
+            "selector_digest": _digest(_canonical_json(selector)),
+            "provider_called": False,
+            "invoked": False,
+            "invocation": {"allowed": False, "route": "none", "reason": "skill_load_only"},
+        }, 4
+
+    if prefix == "workflow" and operation == "invoke":
+        try:
+            actor_id = validate_trace_binding(binding or {}).get("actor_id")
+        except (TypeError, ValueError):
+            actor_id = None
+        allowed = actor_id == "workflow-controller"
+        return {
+            "schema": "capability-local-operation-receipt/v1",
+            "status": "ready" if allowed else "rejected",
+            "failure_code": None if allowed else "workflow_controller_required",
+            "selector_digest": _digest(_canonical_json(selector)),
+            "provider_called": False,
+            "invoked": False,
+            "invocation": {
+                "allowed": allowed,
+                "route": "workflow_controller_only" if allowed else "none",
+                "reason": "not_executed" if allowed else "workflow_controller_required",
+            },
+        }, 0 if allowed else 4
+
+    return {
+        "schema": "capability-local-operation-receipt/v1",
+        "status": "ready",
+        "selector_digest": _digest(_canonical_json(selector)),
+        "provider_called": False,
+        "invoked": False,
+        "invocation": {"allowed": False, "route": "local_metadata_only", "reason": "load_only"},
+    }, 0
+
+
 def _read_json_payload(path: Path) -> Any:
     try:
         content = path.read_bytes()
@@ -666,6 +744,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
 
     if args.command in {"load", "invoke"}:
         selector = {"capability_id": args.capability_id}
+        try:
+            local_capability = not native_kind_requires_projection(args.capability_id)
+        except NativeInspectionError:
+            local_capability = False
+        if local_capability:
+            try:
+                binding = _read_trace_binding(args.binding_json) if args.binding_json is not None else None
+            except TraceBindingError:
+                binding = None
+            receipt, exit_code = _local_capability_receipt(args.command, args.capability_id, binding)
+            print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+            return exit_code
         bundle = (
             args.binding_json,
             args.inspection_receipt_json,

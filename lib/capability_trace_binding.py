@@ -33,6 +33,8 @@ CANONICAL_REGISTRY_METADATA = {
 SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 IDENTITY_RE = re.compile(r"^[A-Za-z0-9._:@/-]{1,256}$")
 CAPABILITY_SEMANTICS = {
+    "skill": {"native_owner": "workspace_skills", "adapter_kind": "instruction_native"},
+    "workflow": {"native_owner": "agent_workflow", "adapter_kind": "workflow_native"},
     "mcp_server": {"native_owner": "mcp", "adapter_kind": "mcp_native"},
     "mcp_tool": {"native_owner": "mcp", "adapter_kind": "mcp_native"},
     "bos_service": {"native_owner": "agora", "adapter_kind": "bos_native"},
