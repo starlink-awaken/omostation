@@ -111,8 +111,8 @@ def _workspace(tmp_path: Path) -> Path:
     _write(
         tmp_path / "docs/generated/capability-registry.yaml",
         "schema: capability-registry/v1\n"
-        "writer: bin/cockpit/gen-capability-registry.py\n"
-        "generator: bin/cockpit/gen-capability-registry.py\n"
+        "writer: bin/ssot/gen-capability-registry.py\n"
+        "generator: bin/ssot/gen-capability-registry.py\n"
         "mcp_servers:\n"
         "  - id: omo\n"
         "    file: projects/omo/src/omo/mcp_server.py\n"

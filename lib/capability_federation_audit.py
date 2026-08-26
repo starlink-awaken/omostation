@@ -310,7 +310,7 @@ def _projection_report(workspace: Path, payload: dict[str, Any], diagnostics: li
     authority_claim = payload.get("authority")
     writer = payload.get("writer")
     generator = payload.get("generator")
-    expected_writer = "bin/cockpit/gen-capability-registry.py"
+    expected_writer = "bin/ssot/gen-capability-registry.py"
     if authority_claim in {"ssot", "authoritative", "authority"} or _projection_header_claims_authority(workspace):
         diagnostics.append(
             _diagnostic(
