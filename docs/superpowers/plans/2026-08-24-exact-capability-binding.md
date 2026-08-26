@@ -1205,7 +1205,7 @@ Phase8 bypass surface; it must not re-implement any retired child entrypoint, mu
 add new capability surfaces, and must not touch files owned by other BETs.
 
 **Files:**
-- Modify: `bin/omostation`
+- ~~Modify: `bin/omostation`~~ — retired in PR #2260 / ADR-0428; root wrapper bypass commands removed.
 - Modify: `bin/gac/daemon-watchdog.py`
 - Modify: `bin/ssot/real-scenario-runner.py`
 - Modify: `bin/_registry/scripts/governance/daemon-watchdog.yaml`
@@ -1214,6 +1214,9 @@ add new capability surfaces, and must not touch files owned by other BETs.
 - Modify: `docs/CLI-REFERENCE.md`
 - Modify: `docs/INDEX-MCP.md`
 - Modify: `docs/generated/capability-registry.yaml`
+
+**Status:**
+- `bin/omostation` retirement completed in PR #2260. All five bypass commands (`daemon` / `watchdog` / `scenario` / `top` / arbitrary `run`) are removed. The unified human entrypoint is now `cockpit` only. See ADR-0428 for the decision record.
 
 **Interfaces:**
 - Consumes: merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) entrypoint retirement; existing value-firewall and no-write test patterns.

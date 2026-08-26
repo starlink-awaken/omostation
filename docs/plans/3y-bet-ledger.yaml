@@ -5585,15 +5585,14 @@ bets:
       no_run_id: true
     E7_phase8_root_bypass_reachability:
       finding: >-
-        Cockpit PR #78（branch codex/t1-12-cockpit-parallel-entry-retire-20260825，source 43dbf115，child
-        main merge 82dddbc9）已删除 commands/daemon.py 并退役 _subcommands/cli/governance/swarm_collector
-        中的 unbound entrypoints；root main 的 bin/omostation 仍暴露 daemon/watchdog/scenario/run 旁路，
-        daemon 分支 import child 已删除的 cockpit.commands.daemon.daemon_cli，top 分支 import child main
-        从未存在的 cockpit.tui.swarm_dashboard，bin/gac/daemon-watchdog.py 的 restart_daemon() 引用同一
-        已删符号且零人工干预重启服务；bin/ssot/real-scenario-runner.py 直接向 Agora Bus 发事件并写
-        resident decision 提案；两脚本仍为 active script registry 条目，root gitlink 停在 d8af11c2 未跟进
-        child main 82dddbc9。
+        [RESOLVED] PR #2260 / ADR-0428: bin/omostation 已退役，root wrapper bypass commands
+        (daemon/watchdog/scenario/top/run) 全部移除。统一人类入口收敛至 cockpit。
+        原 child PR #78 删除的 cockpit.commands.daemon 等入口面已同步跟进。
       classification: direct_code_measurement
+      resolution:
+        pr: 2260
+        adr: 0428
+        merged_at: 2026-08-26T10:26:33Z
   done_when:
   - accepted Spec、BET、WorkPacket hash、run、claims 与 exact capability requirements 可重复读取且完全一致
   - skill、workflow、mcp-server、mcp-tool、bos-service exact ID 均可 find/inspect/load；歧义、通配符与 first-match 执行全部拒绝
@@ -5661,7 +5660,7 @@ bets:
   - bin/capability-sync.py
   - bin/ssot/gen-capability-registry.py
   - bin/gac/daemon-watchdog.py
-  - bin/omostation
+  # bin/omostation retired in PR #2260 / ADR-0428
   - bin/plan/bet-ledger.py
   - bin/ssot/real-scenario-runner.py
   - lib/capability_federation_audit.py
