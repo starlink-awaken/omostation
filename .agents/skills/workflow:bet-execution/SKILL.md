@@ -2,7 +2,8 @@
 name: workflow:bet-execution
 description: SEMA 自动结晶技能包 — 基于 2 条 MOS 物理踩坑信念反向萃取
 category: SEMA-Crystallized-Skill
----
+
+last-reviewed: 2026-08-26---
 
 # 🛡️ 技能包: workflow:bet-execution
 

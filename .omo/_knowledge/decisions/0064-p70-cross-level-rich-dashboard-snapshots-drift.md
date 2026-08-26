@@ -46,7 +46,7 @@ if rec_rank > current_rank:
 
 ### D2: rich 库颜色 (P70 R2)
 
-**修改**: `bin/gac/alert-history.py`
+**修改**: `bin/_archive/alert-history.py`
 
 **新增**: rich Console/Table/Panel + 级别颜色
 ```python
@@ -81,7 +81,7 @@ level_color = {"P0": "bold red", "P1": "red", "P2": "yellow", "P3": "green"}
 
 ### D5: mof-drift v8 趋势集成 (P70 R4)
 
-**修改**: `bin/gac/governance-readiness-trend.py`
+**修改**: `bin/_archive/governance-readiness-trend.py`
 
 **新增**: 跑 mof-drift 并显示维度数
 ```python

@@ -20,7 +20,7 @@ an operator manually ran doctor.
 
 ## Decision
 
-1. Add `bin/gac/omo-doctor-cron.py` — runs doctor JSON, writes:
+1. Add `bin/_archive/omo-doctor-cron.py` — runs doctor JSON, writes:
    - `runtime/cron/omo-doctor-latest.json`
    - `runtime/cron/omo-doctor-history.jsonl` (cap 90)
 2. Extend `.omo/cron/operating-rhythm-crontab` daily **09:20** entry
@@ -36,7 +36,7 @@ an operator manually ran doctor.
 ## Verification
 
 ```bash
-uv run --with pyyaml python bin/gac/omo-doctor-cron.py --json | head
+uv run --with pyyaml python bin/_archive/omo-doctor-cron.py --json | head
 python -m pytest tests/test_omo_doctor_cron.py -q
 ```
 

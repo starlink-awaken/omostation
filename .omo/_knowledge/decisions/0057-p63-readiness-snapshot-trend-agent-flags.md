@@ -52,7 +52,7 @@ P62 收口后, P63 调研发现 3 项可深化:
 
 ### D2: governance-readiness-trend 报告 (P63 R2)
 
-**新工具**: `bin/gac/governance-readiness-trend.py`
+**新工具**: `bin/_archive/governance-readiness-trend.py`
 
 **功能**:
 - 加载最近 30 个快照

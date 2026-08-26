@@ -49,7 +49,7 @@ if suppressed:
 
 ### D2: alert-history ASCII 趋势图 + 抑制率 (P69 R2)
 
-**修改**: `bin/gac/alert-history.py`
+**修改**: `bin/_archive/alert-history.py`
 
 **新增**:
 - `load_suppressions()` 函数

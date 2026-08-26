@@ -47,7 +47,7 @@ P70 收口后, P71 调研 7 项候选, 选 4 项轻量实施:
 
 ### D2: alert-history 跨级别聚合 (P71 R2)
 
-**修改**: `bin/gac/alert-history.py` `analyze_history()`
+**修改**: `bin/_archive/alert-history.py` `analyze_history()`
 
 **新增**:
 - `by_cross_level` 字段: 按 (level, sup_state) 聚合

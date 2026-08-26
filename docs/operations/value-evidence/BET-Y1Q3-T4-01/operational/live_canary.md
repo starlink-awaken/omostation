@@ -11,7 +11,8 @@ canary_status: pass
 independently_verified: true
 retro: .omo/_knowledge/retros/2026-08-21-t1-19-acp-canary-retro.md
 verified_at: 2026-08-22
----
+
+last-reviewed: 2026-08-26---
 
 真实 canary 运行(operational 证据):
 - T1-19 ACP stdio cutover 三轮真实 canary(run f21e7fdc)

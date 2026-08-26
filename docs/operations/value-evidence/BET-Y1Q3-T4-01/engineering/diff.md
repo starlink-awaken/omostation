@@ -11,7 +11,8 @@ diff_scope:
   - docs/plans/3y-bet-ledger.yaml          # T4-01 条目 + completion_evidence
 merged: true
 verified_at: 2026-08-22
----
+
+last-reviewed: 2026-08-26---
 
 实现变更 diff:
 - #1831: 台账 T4-01 done + done_evidence + retro

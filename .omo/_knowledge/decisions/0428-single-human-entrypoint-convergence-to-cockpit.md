@@ -36,7 +36,7 @@ last-reviewed: '2026-08-26'
 - 彻底废除并删除 `bin/omostation` 平行入口。
 
 ### D3: 严格遵循脚本配额守恒（ADR-0394 / ADR-0423）
-- 删除 `bin/omostation` (-1)、清理 `bin/cockpit/env-resolver.py` (-1)，新增 `bin/cockpit` (+1)，迁移 2 个脚本至 `bin/ssot/`，净脚本增量为负数（-1），完美满足零膨胀与减法治理要求。
+- 删除 `bin/omostation` (-1)、清理 `bin/_archive/2026-08-conv3/cockpit-env-resolver.py` (-1)，新增 `bin/cockpit` (+1)，迁移 2 个脚本至 `bin/ssot/`，净脚本增量为负数（-1），完美满足零膨胀与减法治理要求。
 
 ---
 

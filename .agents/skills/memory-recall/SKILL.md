@@ -5,7 +5,8 @@ description: >
   Use when searching knowledge, recalling user preferences, writing episodic
   memory, forgetting facts, or deciding between kos / gbrain / cards / inbox.
   Prefer bos://memory/mos/* (phase1+ live; phase10 as_of + optional live backends).
----
+
+last-reviewed: 2026-08-26---
 
 # Memory Recall — Agent 默认记忆入口
 
