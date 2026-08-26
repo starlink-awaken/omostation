@@ -3660,6 +3660,112 @@ gac:
     expected: Check CR-RESIDENT-BOS-01 must pass without violations
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
+  # ── AGE-v2 Agent Cell 治理规则 ────────────────────────────────
+  - id: CR-AGE-BOS-01
+    dimension: X1
+    layer: L2
+    name: AGE-v2 Cell 核心链路 BOS 路由
+    description: AGE-v2 Cell 核心接口 (plan/execute/verify/govern) 必须经 bos://agent-cell/*
+      暴露, 禁止绕过 BOS 直连 Cell 内部数据面 (cell_states.json / handoff_log). 对齐 L0 CR-AGE-BOS-01.
+    check_type: bos_resolve
+    target: projects/agora/etc/bos-services.yaml::bos://agent-cell/*
+    source_ref: bin/gac/check-age-bos.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-26'
+    adr: ADR-0401
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-AGE-BOS-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-AGE-POLICY-01
+    dimension: X1
+    layer: L2
+    name: AGE-v2 Cell PDP/PEP 策略执行
+    description: Cell 高风险动作 (R2/R3) 必须经 PDP 评估 + PEP 强制执行, 禁止绕过策略引擎直接执行.
+      PDP 评估记录必须写入 Cell handoff_log 证据链. 对齐 L0 CR-AGE-POLICY-01.
+    check_type: static_analysis
+    target: projects/omo/src/omo/resident/pdp_pep.py
+    source_ref: bin/gac/check-age-policy.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-26'
+    adr: ADR-0401
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-AGE-POLICY-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-AGE-MEMORY-01
+    dimension: X2
+    layer: L2
+    name: AGE-v2 Cell 记忆管道活性
+    description: Cell Memory Pipeline 必须维持 candidate → conflict → consolidate → forget 四阶段运转,
+      禁止跳过 conflict 检测直接写入记忆. 对齐 L0 CR-AGE-MEMORY-01.
+    check_type: file_exists
+    target: projects/omo/src/omo/resident/memory_pipeline.py
+    source_ref: bin/gac/check-age-memory.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-26'
+    adr: ADR-0401
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-AGE-MEMORY-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-AGE-REPLAY-01
+    dimension: X4
+    layer: L2
+    name: AGE-v2 Cell 回放框架完整性
+    description: Cell Replay Framework 必须同时支持 replay / shadow / eval 三种模式,
+      禁止仅实现部分模式. 对齐 L0 CR-AGE-REPLAY-01.
+    check_type: static_analysis
+    target: projects/omo/src/omo/resident/replay.py
+    source_ref: bin/gac/check-age-replay.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-26'
+    adr: ADR-0401
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-AGE-REPLAY-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-AGE-EVENT-01
+    dimension: X3
+    layer: L2
+    name: AGE-v2 Cell 事件驱动路由
+    description: Cell Handler 必须订阅 WorkflowClosed / ExecutionRequested / WorkflowFailed / StepTimeout
+      四类事件, 禁止选择性订阅. 对齐 L0 CR-AGE-EVENT-01.
+    check_type: static_analysis
+    target: projects/omo/src/omo/resident/cell_handler.py
+    source_ref: bin/gac/check-age-event.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-26'
+    adr: ADR-0401
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-AGE-EVENT-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
   drift:
     schedule: daily
     auto_heal: false

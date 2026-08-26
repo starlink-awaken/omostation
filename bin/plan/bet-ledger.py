@@ -1451,7 +1451,7 @@ def validate_human_attestation(
     try:
         raw = receipt_path.read_text(encoding="utf-8")
         receipt = yaml.safe_load(raw)
-    except (OSError, ValueError) as exc:
+    except (OSError, ValueError, yaml.YAMLError) as exc:
         return [f"COMPLETION_HUMAN_AUTH_RECEIPT_UNREADABLE: {exc}"]
     if not isinstance(receipt, dict):
         return ["COMPLETION_HUMAN_AUTH_RECEIPT_SHAPE: receipt must be a mapping"]
