@@ -1450,8 +1450,9 @@ def validate_human_attestation(
         return ["COMPLETION_HUMAN_AUTH_RECEIPT_MISSING: attestation receipt does not resolve to a file"]
     try:
         raw = receipt_path.read_text(encoding="utf-8")
-        receipt = yaml.safe_load(raw)
-    except (OSError, ValueError) as exc:
+        docs = [d for d in yaml.safe_load_all(raw) if isinstance(d, dict)]
+        receipt = docs[-1] if docs else None
+    except (OSError, ValueError, yaml.YAMLError) as exc:
         return [f"COMPLETION_HUMAN_AUTH_RECEIPT_UNREADABLE: {exc}"]
     if not isinstance(receipt, dict):
         return ["COMPLETION_HUMAN_AUTH_RECEIPT_SHAPE: receipt must be a mapping"]
