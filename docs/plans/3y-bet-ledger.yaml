@@ -5609,11 +5609,12 @@ bets:
   - bin/_registry/scripts/governance/real-scenario-runner.yaml
   - bin/agent-workflow.py
   - bin/capability-sync.py
-  - bin/cockpit/gen-capability-registry.py
+  - bin/ssot/gen-capability-registry.py
   - bin/gac/daemon-watchdog.py
   - bin/omostation
   - bin/plan/bet-ledger.py
   - bin/ssot/real-scenario-runner.py
+  - lib/capability_federation_audit.py
   - lib/capability_trace_binding.py
   - lib/capability_native_receipt.py
   - lib/capability_native_inspection.py

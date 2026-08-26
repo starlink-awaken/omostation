@@ -301,7 +301,8 @@ def _projection_header_claims_authority(workspace: Path) -> bool:
         if not line.lstrip().startswith("#"):
             continue
         header = line.lstrip("#").strip().casefold()
-        if "ssot" in header and not any(negation in header for negation in negations):
+        claim_text = re.sub(r"(?<=/)ssot(?=/)", "path", header)
+        if "ssot" in claim_text and not any(negation in claim_text for negation in negations):
             return True
     return False
 
@@ -310,7 +311,7 @@ def _projection_report(workspace: Path, payload: dict[str, Any], diagnostics: li
     authority_claim = payload.get("authority")
     writer = payload.get("writer")
     generator = payload.get("generator")
-    expected_writer = "bin/cockpit/gen-capability-registry.py"
+    expected_writer = "bin/ssot/gen-capability-registry.py"
     if authority_claim in {"ssot", "authoritative", "authority"} or _projection_header_claims_authority(workspace):
         diagnostics.append(
             _diagnostic(
