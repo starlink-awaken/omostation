@@ -1759,10 +1759,29 @@ def _work_packet_compiler(workspace: Path) -> tuple[Any, Any]:
     return canonicalize, compute_packet_hash
 
 
+def _capability_requirement_validator(workspace: Path) -> Any:
+    ecos_src = workspace / "projects/ecos/src"
+    if str(ecos_src) not in sys.path:
+        sys.path.insert(0, str(ecos_src))
+    try:
+        from ecos.ssot.tools.work_packet_compiler import validate_capability_requirements
+    except (ImportError, ModuleNotFoundError) as exc:
+        raise SpecBindingContractError("CAPABILITY_REQUIREMENTS_VALIDATOR_UNAVAILABLE") from exc
+    return validate_capability_requirements
+
+
+def capability_requirements_digest(requirements: list[dict[str, str]]) -> str:
+    """Digest the ordered canonical requirement list without changing its order."""
+    canonical = json.dumps(requirements, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def _work_packet_from_bet(
     bet: dict[str, Any],
     binding: dict[str, str],
     instruction_binding: dict[str, str],
+    *,
+    workspace: Path = WS,
 ) -> dict[str, Any]:
     """Project one ledger BET into the existing ECOS WorkPacket v2 schema."""
     bet_id = str(bet["id"])
@@ -1778,7 +1797,7 @@ def _work_packet_from_bet(
     )
     spec_surface = binding["spec_ref"].removeprefix(SPEC_REF_PREFIX)
     instruction_surface = instruction_binding["instruction_ref"].removeprefix(SPEC_REF_PREFIX)
-    return {
+    packet = {
         "packet_id": f"WP-{bet_id}",
         "schema_version": "work-packet/v2",
         "blueprint_ref": "blueprint://multi-agent-execution-control/v1",
@@ -1828,6 +1847,14 @@ def _work_packet_from_bet(
         "spec_binding": binding,
         "instruction_binding": instruction_binding,
     }
+    if "capability_requirements" in bet:
+        try:
+            packet["capability_requirements"] = _capability_requirement_validator(workspace)(
+                bet.get("capability_requirements")
+            )
+        except (SpecBindingContractError, ValueError) as exc:
+            raise SpecBindingContractError(f"CAPABILITY_REQUIREMENTS_INVALID: {exc}") from exc
+    return packet
 
 
 def prepare_bet_execution(
@@ -1853,17 +1880,20 @@ def prepare_bet_execution(
         raise SpecBindingContractError("; ".join(errors or ["SPEC_BINDING_INVALID"]))
     instruction_binding = resolve_instruction_binding(workspace=workspace)
     canonicalize, compute_packet_hash = _work_packet_compiler(workspace)
-    packet = _work_packet_from_bet(bet, binding, instruction_binding)
+    packet = _work_packet_from_bet(bet, binding, instruction_binding, workspace=workspace)
     try:
         packet_hash = compute_packet_hash(canonicalize(packet))
     except ValueError as exc:
         raise SpecBindingContractError(f"WORK_PACKET_INVALID: {exc}") from exc
-    return {
+    result = {
         "spec_binding": binding,
         "instruction_binding": instruction_binding,
         "work_packet": packet,
         "work_packet_hash": packet_hash,
     }
+    if "capability_requirements" in packet:
+        result["capability_requirements_digest"] = capability_requirements_digest(packet["capability_requirements"])
+    return result
 
 
 def _normalize_claim_path(raw_path: str, workspace: Path) -> str:

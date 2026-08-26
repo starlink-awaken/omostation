@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/cockpit/env-resolver.py
-name: Env Resolver
+id: bin/ssot/gen-help-docs.py
+name: Gen Help Docs
 category: governance
 owner: governance-team
 description: ""
