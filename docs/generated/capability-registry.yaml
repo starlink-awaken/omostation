@@ -866,7 +866,7 @@ mcp_servers:
   tool_count: 75
 bos_services:
   _domain_counts:
-    agent-cell: 5
+    agent-cell: 16
     agora: 3
     analysis: 28
     bcos: 3
@@ -889,6 +889,50 @@ bos_services:
     system: 11
   domains:
     agent-cell:
+    - uri: bos://agent-cell/plan
+      description: Cell Plan — 意图解析 + 任务分解 + 风险评估
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/execute
+      description: Cell Execute — 按计划执行 + 工具调用 + 产出收集
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/verify
+      description: Cell Verify — 完整性 + 正确性 + 质量三维评分
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/govern
+      description: Cell Govern — R0-R3 风险分级 + 审批决策
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/pdp/evaluate
+      description: PDP Evaluate — 策略决策点上下文感知评估
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/pep/enforce
+      description: PEP Enforce — 策略执行点强制执行 + 审计
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/memory/process
+      description: Memory Process — Episode → 记忆候选生成
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/memory/consolidate
+      description: Memory Consolidate — 记忆冲突检测 + 整合
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/replay/run
+      description: Replay — Episode 回放验证
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/replay/shadow
+      description: Shadow — 影子运行 (无副作用验证)
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/replay/eval
+      description: Eval — 批量 Episode 性能评估
+      transport: stdio
+      status: active
     - uri: bos://agent-cell/pool/status
       description: Cell Pool 状态 — 多 Cell 并行运行状态
       transport: stdio
