@@ -183,7 +183,7 @@ gac:
     - sweep_index_cli
   subtraction_quota:
     check_type: advisory
-    rule_baseline: 144    # 2026-08-26: #2277 新增 5 条 AGE-v2 规则 (CR-AGE-*-01), 基线同步实际数 (subtraction-quota)
+    rule_baseline: 144  # 2026-08-26 139→144: 实测规则数(main 自身 governance-check 已连续红, BET-Y1Q2-T6-05 配额对齐现实)
     script_baseline: 498    # 2026-08-25: #2170 / #2187 / #2189 新增脚本后同步实际计数, 494 active → SCRIPT-BASELINE-SYNC
   rules:
   - id: CR-X4-HEALTH-SSOT

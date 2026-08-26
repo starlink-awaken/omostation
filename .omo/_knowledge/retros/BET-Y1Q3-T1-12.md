@@ -78,3 +78,36 @@ appetite 5 days；Wave B 实现跨 2026-08-25~26 完成（实际约 2 天实现 
 - T1-12 实现完成，completion_evidence engineering/operational 已 VERIFIED/PROVEN，**value 轴待 human attestation 签名**（`docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml` 需按 T10-14 模式生成 + `ssh-keygen -Y sign`）后置 `overall_state=outcome_accepted` + `status=done`
 - 137→27 ledger lint 已修复 110 个；剩余 27 个（T7-01/T4-01/T10-* 缺字段 + 状态冲突）属并发 agent 遗留，需逐条人工判断
 - 主仓工作树共享不可信，交付在独立 clone 完成
+
+---
+
+## 2026-08-26 实施复盘（真实交付，替代 premature 记录成为有效 retro）
+
+### Q1 实际耗时 vs appetite？
+appetite 5 天；实际 2026-08-24 → 2026-08-26 约 2 天完成 Task 4/5/6 全部与 Task 7 大部（多 agent 并行）。Task 1 曾被交付但分支丢失（tag 悬挂），本次以重指 tag 方式收口；Task 2/3 未由任何 owner 启动。
+
+### Q2 done_when 达成情况（诚实矩阵）
+| 任务 | 状态 | 证据 |
+|---|---|---|
+| T1 WorkPacket capability_requirements | ✅（经 #46 落地；悬挂 tag 重指） | ecos main ⊇ tag |
+| T2 OMO 校验并保留 requirements | ❌ 未交付 | 无 PR/tag |
+| T3 ledger 编译 + start-time preflight identity | ❌ 未交付 | omo-consumer tag 缺失 |
+| T4 shadow 原生回执 | ✅ root #2248 | tag root-native |
+| T5 dispatch 绑定持久化 admission | ✅ omo #106 + 根 #2256 | tag omo-integrity |
+| T6 Agora/Cockpit 收敛 | ✅ agora #36(tag 重指)/cockpit #86 | 两 tag |
+| T7 根集成/金丝/文档 | 🟡 本 PR：指针×4、warning 提升、负向金丝 5/5、文档/retro；正向金丝 BLOCKED | 本文+canary 报告 |
+| T8 Phase8 退役 | ❌ 未开始 | — |
+Engineering DONE 部分=✅；Operational NOT_PROVEN（无生产拓扑正向证据）；Value **NOT_PROVEN**（Golden Slice 待后）。
+
+### Q3 与 plan 不符的新事实？
+- ecos/agora 出现「打 tag 未合并」的重复交付悬挂提交，需 tag 重指而非代码合并。
+- omo-consumer（T3）完全缺失，阻塞金丝两项正项与 fail-promotion 的生产观察前提。
+- 运维陷阱固化：zsh 不分词导致 `git add $VAR`/jq 引号两处失败；代理断连窗口内 PR 被并行合并。
+
+### Q4 下一步 owner 指引
+1. T2/T3 owner：按 plan L222/L347 实施，交付 omo-consumer tag。
+2. fail-promotion owner：warning 窗口两次干净扫描后翻转常量并加零调用测试（scan 方法见 docs/reports/2026-08-26-binding-enforcement-scan.md）。
+3. Golden Slice owner：网关在线后补跑正项金丝，届时才允许 Operational 复评。
+
+### Q5 范围变化？
+仅既有修正案 1.1.1（T8）；无新增范围。
