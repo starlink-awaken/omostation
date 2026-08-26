@@ -11,7 +11,7 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 619
+  mcp_tools: 627
   bos_services: 242
   bos_domains: 21
   cli_commands: 153
@@ -227,29 +227,26 @@ mcp_servers:
   - bcos_evolve
   - bcos_north_star
   - bcos_signals
+  - bos_health
+  - bos_inbox_archive
+  - bos_inbox_draft
+  - bos_inbox_pending
+  - bos_inbox_search
+  - bos_inbox_triage
+  - bos_inbox_watch
+  - bos_metrics_status
+  - bos_middleware_status
+  - bos_reload_discovery
+  - bos_reload_m1
   - bos_reload_routes
   - cartridge_pack
-  - cell_config_create
-  - cell_config_list
-  - cell_eval
-  - cell_execute
-  - cell_govern
-  - cell_memory_consolidate
-  - cell_memory_process
-  - cell_pdp_evaluate
-  - cell_pep_enforce
-  - cell_plan
-  - cell_pool_scale
-  - cell_pool_status
-  - cell_pool_submit
-  - cell_replay
-  - cell_shadow
-  - cell_verify
+  - check_health
   - create_api_key
   - daemon_bus_publish
   - debt_auto_seed_tool
   - entropy_cleanup_tool
   - get_agent_card
+  - get_bos_schema
   - get_event_log
   - get_state_transitions
   - governance_auto_fix
@@ -261,17 +258,25 @@ mcp_servers:
   - lifecycle_unload_all
   - list_agent_cards
   - list_api_keys
+  - list_bos_domains
+  - list_bos_resources
+  - list_bos_tools
   - list_routes
   - list_services
+  - mutate_resource
+  - persona_bdsk_evaluate
   - proxy_add_service
   - proxy_arch_health
   - proxy_backend_health
+  - proxy_call
   - proxy_connect
   - proxy_governance_status
   - proxy_list_tools
   - proxy_omo_debt
+  - proxy_remove_service
+  - proxy_status
   - publish_event
-  - python
+  - read_resource
   - register_push_notification
   - register_service
   - registry_find_agent_tool
@@ -290,12 +295,15 @@ mcp_servers:
   - repo_unload
   - resident_roles
   - resident_status
+  - resolve_bos_uri
   - revoke_api_key
   - route_call
   - subscribe_event
   - swarm_nodes
   - swarm_resolve
   - swarm_status
+  - unwatch_resource
+  - watch_resource
   - workflow_capability_health
   - workspace_audit_gitlink
   - workspace_audit_governance
@@ -304,7 +312,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 89
+  tool_count: 97
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
