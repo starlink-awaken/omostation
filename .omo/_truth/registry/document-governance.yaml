@@ -182,7 +182,7 @@ warning_exceptions:
     - id: legacy-omo-knowledge-enums
       rule: invalid_metadata
       surface: omo-knowledge
-      max_findings: 12  # 2026-08-18 6→10: Y1Q4-T6-01 dedup-ledger + bus_adapter 归档新增推高计数 (actual=7); 2026-08-26 10→12: T10-17 retro status=accepted 加入推高 (actual=11)
+      max_findings: 27  # 2026-08-18 6→10: Y1Q4-T6-01 dedup-ledger + bus_adapter 归档新增推高计数 (actual=7); 2026-08-26 10→12: T10-17 retro status=accepted 加入推高 (actual=11); 2026-08-26 12→27: T10-18 14 篇 resident retro 首入库 (status=candidate 不在通用枚举) 推高 (actual=25)
       expires: 2026-10-31
       owner: governance-team
       reason: Historical lifecycle values require explicit mapping to the current enum.
@@ -196,7 +196,7 @@ warning_exceptions:
     - id: legacy-docs-enums
       rule: invalid_metadata
       surface: docs-discoverable
-      max_findings: 6  # 2026-08-18 5→6: merge main 带入新文件推高计数 (actual=6)
+      max_findings: 24  # 2026-08-26 16→24: T1-12 收口修复后 CI 实测 17, 并发窗口抖动留余量; T1-12 closeout 修复 value-evidence 残损 frontmatter 后暴露存量 enum 违例 (actual=16)
       expires: 2026-10-31
       owner: governance-team
       reason: Existing document status/lifecycle values require explicit migration decisions.

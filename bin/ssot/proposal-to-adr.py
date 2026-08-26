@@ -22,6 +22,65 @@ PROPOSALS_DIR = ROOT / ".omo" / "_knowledge" / "evolution-proposals"
 DECISIONS_DIR = ROOT / ".omo" / "_knowledge" / "decisions"
 NEXT_ADR_TOOL = ROOT / "bin" / "adr" / "next-adr-id.py"
 
+# 提案采纳状态机 (BET-Y1Q3-T10-19): new → drafted → adopted → executed → verified
+PROPOSAL_STATUSES = ["new", "drafted", "adopted", "executed", "verified"]
+_PROPOSAL_RANK = {s: i for i, s in enumerate(PROPOSAL_STATUSES)}
+
+
+def _read_status(proposal: dict) -> str:
+    """读取提案状态; 历史无 status 字段视为 new."""
+    status = proposal.get("status", "new")
+    return status if status in _PROPOSAL_RANK else "new"
+
+
+def _status_counts() -> dict[str, int]:
+    """统计各状态提案数."""
+    counts = {s: 0 for s in PROPOSAL_STATUSES}
+    if not PROPOSALS_DIR.is_dir():
+        return counts
+    for path in PROPOSALS_DIR.glob("proposal-*.json"):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        counts[_read_status(data)] += 1
+    return counts
+
+
+def _latest_new_proposal() -> tuple[str, dict] | None:
+    """返回 (filename_stem, proposal) 最新的 new 状态提案; 无则 None."""
+    if not PROPOSALS_DIR.is_dir():
+        return None
+    for path in sorted(PROPOSALS_DIR.glob("proposal-*.json"), reverse=True):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if _read_status(data) == "new":
+            return path.stem, data
+    return None
+
+
+def mark_status(proposal_id: str, status: str, *, dry_run: bool = False) -> dict:
+    """推进指定提案状态 (枚举 + 迁移校验, 禁回退)."""
+    if status not in _PROPOSAL_RANK:
+        return {"status": "error", "reason": f"invalid status: {status} (allowed: {PROPOSAL_STATUSES})"}
+    path = PROPOSALS_DIR / f"{proposal_id}.json"
+    if not path.exists():
+        return {"status": "error", "reason": f"proposal not found: {proposal_id}"}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"status": "error", "reason": f"unreadable proposal: {proposal_id}"}
+    current = _read_status(data)
+    if _PROPOSAL_RANK[status] < _PROPOSAL_RANK[current]:
+        return {"status": "error", "reason": f"invalid transition {current}→{status} (no rewind)"}
+    if dry_run:
+        return {"status": "preview", "proposal_id": proposal_id, "from": current, "to": status}
+    data["status"] = status
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+    return {"status": "ok", "proposal_id": proposal_id, "from": current, "to": status}
+
 
 def _latest_proposal() -> dict | None:
     """Load the most recent evolution proposal."""
@@ -109,10 +168,11 @@ _Pending human review. Auto-generated draft — do not merge without review._
 
 
 def convert(*, dry_run: bool = False) -> dict:
-    """Convert latest proposal to ADR draft."""
-    proposal = _latest_proposal()
-    if not proposal:
-        return {"status": "noop", "reason": "no proposals found"}
+    """Convert latest `new` proposal to ADR draft, then mark it `drafted`."""
+    found = _latest_new_proposal()
+    if not found:
+        return {"status": "noop", "reason": "no new proposals found", "status_counts": _status_counts()}
+    proposal_id, proposal = found
 
     adr_id = _next_adr_id()
     draft = _generate_adr_draft(adr_id, proposal)
@@ -126,32 +186,53 @@ def convert(*, dry_run: bool = False) -> dict:
 
     filename = f"{adr_id.lower().replace('adr-', '')}-{slug}.md"
     out_path = DECISIONS_DIR / filename
+    try:
+        rel_path = str(out_path.relative_to(ROOT))
+    except ValueError:
+        rel_path = str(out_path)  # 测试/隔离路径下 fallback 绝对路径
 
     if dry_run:
         return {
             "status": "dry_run",
+            "proposal_id": proposal_id,
             "adr_id": adr_id,
-            "target_path": str(out_path.relative_to(ROOT)),
+            "target_path": rel_path,
             "proposals_count": len(proposals),
             "preview": draft[:500],
+            "status_counts": _status_counts(),
         }
 
     DECISIONS_DIR.mkdir(parents=True, exist_ok=True)
     out_path.write_text(draft, encoding="utf-8")
+    mark_status(proposal_id, "drafted")
     return {
         "status": "created",
+        "proposal_id": proposal_id,
         "adr_id": adr_id,
-        "path": str(out_path.relative_to(ROOT)),
+        "path": rel_path,
         "proposals_count": len(proposals),
+        "status_counts": _status_counts(),
     }
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--mark-status",
+        nargs=2,
+        metavar=("PROPOSAL_ID", "STATUS"),
+        help=f"推进指定提案状态 (allowed: {PROPOSAL_STATUSES})",
+    )
+    parser.add_argument("--list-status", action="store_true", help="打印各状态提案计数")
     args = parser.parse_args(argv)
 
-    result = convert(dry_run=args.dry_run)
+    if args.list_status:
+        result = {"status_counts": _status_counts()}
+    elif args.mark_status:
+        result = mark_status(args.mark_status[0], args.mark_status[1], dry_run=args.dry_run)
+    else:
+        result = convert(dry_run=args.dry_run)
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 

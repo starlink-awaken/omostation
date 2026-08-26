@@ -1033,3 +1033,10 @@ W0 事实基线与冻结
 - 系统建设者角色持续突破资源上限；
 - 健康指标显示绿色但证据已过期；
 - 任意 Agent 能绕过 Mandate 或 Capability Gateway 产生副作用。
+
+## Exact Capability Binding rollout status (2026-08-26)
+
+Enforcement: `warning` (promoted from shadow; scans in
+docs/reports/2026-08-26-binding-enforcement-scan.md). Delivered tags:
+agora/cockpit/ecos/omo-integrity 20260824 v1 set; omo-consumer pending.
+Fail promotion and positive-topology canary remain gated on OMO Tasks 2/3.

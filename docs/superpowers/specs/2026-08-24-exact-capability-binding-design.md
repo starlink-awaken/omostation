@@ -1,11 +1,11 @@
 ---
 schema_version: specification/v1
-spec_version: 1.1.1
+spec_version: 1.1.2
 status: accepted
 lifecycle: contract
 owner: human-principal
 created: 2026-08-24
-last-reviewed: 2026-08-25
+last-reviewed: 2026-08-26
 bet_id: BET-Y1Q3-T1-12
 risk_level: L2
 human_gate: false
@@ -67,6 +67,22 @@ Golden Slice、Human Verdict、principal-bound decision_outcome 与连续价值�
 4. `bin/ssot/real-scenario-runner.py` 直接向 Agora Bus 发布 A2A 事件并写 resident decision 提案，不经 accepted WorkPacket、admission 或 trace binding。 → **已处理**：该脚本不再作为 root wrapper 旁路暴露。
 5. 上述两脚本仍登记为 `script-registry/v1` 条目... → **待 follow-up**：registry truth 条目需同步更新 `maturity` 状态（当前仍为 `draft`）。
 6. 截至 2026-08-25，根仓 gitlink 仍指向 `d8af11c2`（child main 为 `82dddbc9`），root 尚未跟进 child 的入口退役，形成 child-first/root-follow-up 缺口。 → **已解决**：PR #2260 已同步更新 cockpit 子模块指针并合并入 main。
+
+### 2.4 Task 6B canonical consumer 事实（2026-08-26 scope amendment 1.1.2）
+
+1. 根仓 `a0d0648555c447f985d4b3fc161e08fa3e9e8306` 与后续 `a9ed961a4585fb713a44003006da3bc94b4244eb`
+   的 Cockpit gitlink 均为 `e60d068a0cd88a1abfd012f1ce8fb6c725732200`；Cockpit child `origin/main`
+   已为 `a271a0d39e5bb59aff54aa56970b00b170d9cf42`，且前者是后者祖先。此前基于 `a271a0d`
+   的审议不能冒充 root pointer 已完成集成，Task 6B 必须从 child main 实施，再由 root follow-up 前进 gitlink。
+2. `a271a0d` 已让 BOS forwarder 接受完整五字段 bundle、KEMS dispatch 返回 410，并给 HTTP/MCP
+   增加 presence gate；但 canonical parser 尚未声明五个 flags，KEMS 仍在 410 前读取 body，HTTP/MCP
+   把任意非空 mapping 当作已验证 binding，MCP `chat` 没有 gate。
+3. 根仓 `native-execution-material/v1` 已冻结完整 trace、exact capability、inspection、operation、
+   request digest 与 admission projection；不得为 Task 6B 添加平行 material schema。
+4. OMO `WorkflowMeshStore` 已能只读投影 `WorkflowAdmitted`、StepRun 与 worker context；
+   `WorkflowAdmitted.proof` 覆盖 admission grant（含 `policy_digest`），是 verifier 必须复用的持久化权威。
+5. Orca run `run_0d064c36fd0d` 的 Task 6B 与 stale-PR 双审计支持受限 C-lite；BDSK live 调用仍为
+   `NOT_PROVEN / compute_unavailable`，不得把它写成 board consensus 或执行授权。
 
 ## 3. 自举授权证据
 
@@ -192,6 +208,48 @@ dispatch 前重新验证：
    零 provider/router/gateway 调用；拒绝路径只允许无副作用的标准库与 `env_resolver` 初始化，
    必须在任何项目专用 import、subprocess、provider/router/gateway 调用或文件写入之前退出。
 
+### 5.6 Task 6B C-lite admission verifier
+
+Task 6B 不新增 OMO query service、Cockpit admission cache 或第二 validator。唯一新能力是根仓
+`capability-sync verify-material` 的一次性只读进程：从 bounded stdin 读取一个 exact JSON envelope，
+调用既有纯函数验证 `native-execution-material/v1`，再只读比较 OMO Workflow Mesh snapshot。
+
+Envelope 必须且只能包含：
+
+```yaml
+schema: capability-admission-verification-request/v1
+material: <native-execution-material/v1>
+request: <bounded canonical request projection>
+expected:
+  capability_id: <exact mcp-tool or bos-service id>
+  operation_id: <exact endpoint operation id>
+  effect_classification: read_only|effectful
+```
+
+Verifier 必须在任何 provider/router/gateway 调用前完成以下检查：
+
+1. material 的 trace、capability、inspection、operation、request、admission、authorization 与 value
+   firewall 通过现有 validator；`canonical_digest(request) == material.request_digest`；`expected`
+   三字段与 material 完全一致。
+2. snapshot 的 run 等于 `binding.workflow_run_id`；admission id、packet id/hash 与 binding/material 一致；
+   `material.admission.receipt_digest == "sha256:" + WorkflowAdmitted.proof`，从而把既有 material
+   间接绑定到包含 `policy_digest` 的原始 admission grant，不修改 frozen material schema。
+3. `step_run_id` 属于 admitted StepRun；effectful 路径只接受 `dispatched|running`，要求 bound worker，
+   并逐字段匹配 dispatch/worker/step/admission/packet；read-only 路径可接受 `admitted|dispatched|running`。
+4. admission 未过期，snapshot 非 terminal/cancelled/unknown；任何缺失、歧义、跨 run、伪造、过期、
+   wrong operation/effect/capability、request drift 或 worker mismatch 均非零退出。
+
+成功只返回脱敏 `capability-admission-verification-receipt/v1`：verified 状态、material/admission digest、
+exact capability/operation/effect 与 `authority=omo-workflow-mesh`。失败只返回稳定 failure code；两者都不得
+回显 request、绝对路径、事件正文或底层错误，不得写 marker/Mesh/registry/cache，不得启动 subprocess、
+provider、router 或 gateway。
+
+Cockpit 只通过一个共享 fixed-argv subprocess adapter 调用该 verifier，HTTP 与 MCP 不复制验证规则、
+不注入 root `lib/`。`/run-task`、HTTP chat tools、MCP `run_task` 与 MCP `chat` 必须在构造 runtime、
+tool schemas 或执行 tool call 之前得到 verified receipt；verifier 缺失/不可用即 fail-closed。
+无 verified receipt 的 chat 只能返回 `authority_state=non_authoritative` 且 tools 为空。
+canonical BOS parser 必须暴露五个既有 bundle flags；KEMS 410 必须在 body read 前返回。
+
 ## 6. 数据流
 
 ```mermaid
@@ -234,10 +292,11 @@ sequenceDiagram
 
 ### Wave C：Cockpit/Agora consumer
 
-1. consumer 先兼容新 binding contract；
-2. Agora 仅在 receipt 字段确需透传时修改；
-3. Cockpit BOS/KEMS/agent-runtime 入口收敛；
-4. 子仓分别 merge 后，根仓只更新可达 gitlink。
+1. 先在 root 合入 `capability-sync verify-material` 与 zero-call negative tests；该动作只读且不改变 gitlink；
+2. Cockpit 从 child `origin/main` 实施一个共享 subprocess adapter、BOS 五 flags、KEMS body-unread 410、
+   HTTP/MCP/chat pre-effect gates 与七类负例；
+3. Agora 已在 child main 透传 `binding_digest`，本 slice 默认不修改；只有新证据证明 carrier 字段缺失才重审；
+4. Cockpit child commit/tag/PR/CI/merge 后，root 才把 `projects/cockpit` 前进到包含该 merge 的可达 main SHA。
 
 ### Wave D：生产拓扑 canary
 
@@ -293,7 +352,9 @@ sequenceDiagram
 5. Cockpit/Agora 不丢失 binding/receipt digest，不构造第二 identity。
 6. OMO 在 StepDispatched 前回验 persisted admission，伪造 grant 或跨 run admission 被拒绝且零副作用。
 7. legacy 空 capability grant 与 KEMS 裸派工路径被删除、接线或显式下线。
-8. agent-runtime/runtime registry/AGE-v2 未经本门不能成为生产权威入口。
+8. agent-runtime HTTP/MCP/chat 的 effectful 路径只有在 `verify-material` 返回 verified receipt 后才构造
+   runtime/tool schemas；missing、empty、malformed、wrong digest、wrong operation/effect、untrusted、
+   non-admitted 与 verifier unavailable 均证明 runtime/tool/provider 调用为 0。
 9. root、OMO、Cockpit、Agora targeted tests、cross-repo negative tests、GaC、SSOT、reachability 与
    production-topology canary 全绿。
 10. 子仓 commit/tag/PR/CI/merge 后才更新根仓 gitlink；所有 writer clone 由 lifecycle receipt 退役。
@@ -323,6 +384,10 @@ sequenceDiagram
 - 需要自动外发、自动 Human Verdict 或把执行回执提升为个人价值；
 - 子仓 main 不可达、gitlink rewind、无法保留旧消费者兼容窗口；
 - production canary 只能由 fixture/synthetic 数据替代。
+- verifier 需要写 OMO/Mesh/marker/cache、启动 provider/router/gateway/第二 subprocess，或从 Cockpit 复制
+  root validation rules；
+- effectful positive path 无法逐字段绑定 persisted admission、StepRun 与 worker context，或任一负例无法
+  证明 runtime/tool/provider 调用为 0。
 
 回滚以单仓 PR revert 为单位；append-only mesh/receipt 不做数据迁移，错误新入口直接恢复 isolated 状态。
 
@@ -336,3 +401,4 @@ sequenceDiagram
 | 4 | hard fail immediately / shadow-warning-fail | 三段式 | 新门禁先测存量，不用治理误伤锁死主干 |
 | 5 | industrial threat model / bounded personal-system model | bounded model | 复用现有 digest/admission，不新增重型密码学与平台 |
 | 6 | root wrapper 保留 `top`/`run` 兼容 / compatibility-only 收敛 | compatibility-only | PR #78 后 child main 无 `daemon_cli` 且从未有 `swarm_dashboard`，root 幽灵 import 无法恢复；Mesh-bound 前不允许第四条执行面 |
+| 7 | Cockpit-local validator / frozen material v2 / root C-lite verifier | root C-lite verifier | 复用 material v1 与 OMO proof，避免第二规则面和无必要 schema 分叉 |

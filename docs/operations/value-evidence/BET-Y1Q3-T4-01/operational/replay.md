@@ -10,6 +10,11 @@ replayable: true
 system_ref: .omo/state/system.yaml
 ac12_reference: AC-12 运行投影标签可直接重放
 verified_at: 2026-08-22
+status: active
+lifecycle: evidence
+owner: governance-team
+last-reviewed: 2026-08-26
+---
 
 last-reviewed: 2026-08-26
 ---

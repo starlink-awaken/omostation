@@ -44,6 +44,7 @@ projects:
 
   # ── Python projects ──
   agora:
+    # exact-capability-binding: delivery/exact-capability-binding-agora-20260824-v1
     layer: "I0"
     stack: "Python (uv, pytest)"
     python: ">=3.13"
@@ -104,6 +105,7 @@ projects:
             vector_dim: 512
 
   omo:
+    # exact-capability-binding: delivery/exact-capability-binding-omo-integrity-20260824-v1
     layer: "L2"
     stack: "Python (uv, pytest)"
     python: ">=3.13"
@@ -147,6 +149,7 @@ projects:
     status: "active"
 
   ecos:
+    # exact-capability-binding: delivery/exact-capability-binding-ecos-20260824-v1
     layer: "L0"
     stack: "Python (uv, pytest)"
     python: ">=3.13"
@@ -161,6 +164,7 @@ projects:
     governance_modules: 15       # find l0/governance -name "*.py" ! -name "__init__" | wc -l
 
   cockpit:
+    # exact-capability-binding: delivery/exact-capability-binding-cockpit-20260824-v1
     layer: "L3"
     stack: "Python (uv, pytest)"
     python: ">=3.13"
