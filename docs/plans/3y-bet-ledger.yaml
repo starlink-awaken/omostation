@@ -8007,29 +8007,29 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@9a0c6f7682bab1f522382c64e31993612d6d83af
           tests:
-            ref: receipt://projects/omo/tests/unit/test_resident_inbox.py
-            sha256: sha256:c9e48c076f088c5d67764d9469e68ddef08b34fd5d9eaef247e2d2f1ea0d1e0d
+            ref: receipt://tests/unit/test_signal_folder_source.py
+            sha256: sha256:82f078f3d4001a37cab3f919a1775bd0a517255bf01f6a9815a2775432e4d9d7
           diff:
-            ref: receipt://projects/omo/src/omo/resident/inbox.py
-            sha256: sha256:48452d795b5703ce7e90599e6fc2a9a0d8228edca2b8b8ef776ab3fd779c8088
+            ref: receipt://.omo/_truth/registry/signal-sources.yaml
+            sha256: sha256:97f81048365f9d1f5ef99baa79716c964a5380de385e9605d7433458c1329237
           rollback:
-            ref: receipt://projects/omo/src/omo/resident/sediment.py
-            sha256: sha256:3af8971ae7b5d20e749d36e75660427146af1e35f7f0a16490a1801958132c90
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
       operational:
         status: PROVEN
         evidence:
           live_canary:
-            ref: receipt://projects/omo/tests/unit/test_resident_inbox.py
-            sha256: sha256:c9e48c076f088c5d67764d9469e68ddef08b34fd5d9eaef247e2d2f1ea0d1e0d
+            ref: receipt://.omo/_truth/registry/signal-sources.yaml
+            sha256: sha256:97f81048365f9d1f5ef99baa79716c964a5380de385e9605d7433458c1329237
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-15-accept.yaml
             sha256: sha256:607dd718a0a3b86f9c09b0692ad632d18d415703a9037530cefaae6055ccd4cd
           replay:
-            ref: receipt://projects/omo/tests/unit/test_resident_inbox.py
-            sha256: sha256:c9e48c076f088c5d67764d9469e68ddef08b34fd5d9eaef247e2d2f1ea0d1e0d
+            ref: receipt://tests/unit/test_signal_folder_source.py
+            sha256: sha256:82f078f3d4001a37cab3f919a1775bd0a517255bf01f6a9815a2775432e4d9d7
           cleanup:
-            ref: receipt://projects/omo/src/omo/resident/inbox.py
-            sha256: sha256:48452d795b5703ce7e90599e6fc2a9a0d8228edca2b8b8ef776ab3fd779c8088
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
       value:
         status: ACCEPTED
         evidence:
