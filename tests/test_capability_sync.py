@@ -1163,7 +1163,20 @@ def _verification_context(*, effect: str = "read_only", state: str = "admitted")
             "content_digest": "sha256:" + "e" * 64,
             "instruction_profile": "executor",
         },
+        "capability_requirements": [
+            {
+                "capability_id": "bos-service:bos://governance/shared",
+                "operation": "invoke",
+                "effect": effect,
+            }
+        ],
     }
+    canonical_requirements = json.dumps(
+        request_identity["capability_requirements"], sort_keys=True, separators=(",", ":")
+    )
+    request_identity["capability_requirements_digest"] = "sha256:" + hashlib.sha256(
+        canonical_requirements.encode("utf-8")
+    ).hexdigest()
     grant = {
         "admission_id": admission_id,
         "status": "admitted",
@@ -1407,6 +1420,16 @@ def _write_mesh(omo_dir: Path, events: list[dict]) -> None:
     path.write_text("".join(json.dumps(event, sort_keys=True) + "\n" for event in events), encoding="utf-8")
 
 
+def _refresh_admission_proof(events: list[dict]) -> None:
+    """Keep test mutations valid as an OMO WorkflowAdmitted receipt."""
+    grant = events[1]["payload"]["admission"]
+    unsigned = {key: value for key, value in grant.items() if key != "proof"}
+    grant["proof"] = hashlib.sha256(
+        json.dumps(unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    events[1]["payload"].update(grant)
+
+
 def test_verify_material_rejects_cross_run_before_any_outbound_call(
     cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1442,6 +1465,175 @@ def test_verify_material_accepts_persisted_read_only_admission_without_writes(ca
     assert receipt["authority"] == "omo-workflow-mesh"
     assert receipt["value_indicator_policy"] is False
     assert (log.stat().st_mtime_ns, log.read_bytes()) == before
+
+
+def test_verification_fixture_uses_omo_exact_request_identity_without_execution_extras() -> None:
+    material, _request, events = _verification_context()
+    identity = events[0]["payload"]["request_identity"]
+
+    assert set(identity) == {
+        "bet_id",
+        "packet_id",
+        "packet_hash",
+        "task_ref",
+        "instruction_binding",
+        "capability_requirements",
+        "capability_requirements_digest",
+    }
+    assert identity["capability_requirements"] == [
+        {
+            "capability_id": material["capability"]["id"],
+            "operation": "invoke",
+            "effect": "read_only",
+        }
+    ]
+    canonical_requirements = json.dumps(
+        identity["capability_requirements"], sort_keys=True, separators=(",", ":")
+    )
+    assert identity["capability_requirements_digest"] == "sha256:" + hashlib.sha256(
+        canonical_requirements.encode("utf-8")
+    ).hexdigest()
+    assert not ({"operation", "effect", "request", "request_digest"} & set(identity))
+
+
+@pytest.mark.parametrize("receipt_digest", ["original", "sha256:" + "0" * 64])
+def test_verifier_rejects_old_or_new_material_after_real_omo_admission_renewal(
+    cap_sync, tmp_path: Path, receipt_digest: str
+) -> None:
+    material, request, events = _verification_context(effect="effectful", state="dispatched")
+    events.append(
+        {
+            "event_id": "event-admission-renewed-task6b",
+            "event_type": "AdmissionRenewed",
+            "trace_id": "trace-task6b",
+            "workflow_run_id": material["binding"]["workflow_run_id"],
+            "occurred_at": "2026-08-26T00:00:03+00:00",
+            "producer": "omo-workflow-dispatch",
+            "schema_version": "workflow-mesh/v1",
+            "idempotency_key": "task6b-admission-renewed",
+            "payload": {
+                "admission_id": material["admission"]["admission_id"],
+                "previous_expires_at": "2099-01-01T00:00:00+00:00",
+                "expires_at": "2099-01-01T00:15:00+00:00",
+                "renewed_at": "2026-08-26T00:00:03+00:00",
+            },
+        }
+    )
+    if receipt_digest != "original":
+        material["admission"]["receipt_digest"] = receipt_digest
+    _write_mesh(tmp_path / ".omo", events)
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt == {
+        "schema": "capability-admission-verification-receipt/v1",
+        "status": "rejected",
+        "failure_code": "admission_contradiction",
+        "value_indicator_policy": False,
+    }
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        [{"capability_id": "bos-service:bos://governance/shared"}],
+        [{"id": "bos-service:bos://governance/shared"}],
+        [],
+        None,
+        ["bos-service:bos://governance/shared", {"id": "bos-service:bos://governance/shared"}],
+    ],
+)
+def test_verifier_rejects_noncanonical_admission_capabilities(
+    cap_sync, tmp_path: Path, capabilities: object
+) -> None:
+    material, request, events = _verification_context()
+    events[1]["payload"]["admission"]["capabilities"] = capabilities
+    _refresh_admission_proof(events)
+    _write_mesh(tmp_path / ".omo", events)
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt["failure_code"] == "admission_receipt_invalid"
+
+
+def test_verifier_rejects_missing_admission_capabilities(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context()
+    events[1]["payload"]["admission"].pop("capabilities")
+    _refresh_admission_proof(events)
+    _write_mesh(tmp_path / ".omo", events)
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt["failure_code"] == "admission_receipt_invalid"
+
+
+def test_verifier_accepts_exact_mcp_tool_material_with_mcp_pep(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context()
+    capability_id = "mcp-tool:omo:status"
+    material["capability"] = {"kind": "mcp_tool", "id": capability_id}
+    material["authorization_source"] = "mcp-pep"
+    events[1]["payload"]["admission"]["capabilities"] = [capability_id]
+    events[0]["payload"]["request_identity"]["capability_requirements"][0]["capability_id"] = capability_id
+    _refresh_admission_proof(events)
+    material["admission"]["receipt_digest"] = "sha256:" + events[1]["payload"]["admission"]["proof"]
+    _write_mesh(tmp_path / ".omo", events)
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt["status"] == "verified"
+    assert receipt["capability_id"] == capability_id
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["dispatch_id", "worker_id", "step_run_id", "admission_id", "packet_id", "packet_hash"],
+)
+def test_verifier_rejects_each_exact_persisted_worker_identity_mismatch(
+    cap_sync, tmp_path: Path, field: str
+) -> None:
+    material, request, events = _verification_context(effect="effectful", state="dispatched")
+    if field in {"dispatch_id", "packet_id", "packet_hash"}:
+        material["binding"][field] = (
+            "sha256:" + "f" * 64 if field == "packet_hash" else "other-" + field
+        )
+    elif field == "worker_id":
+        material["admission"]["worker"]["id"] = "other-worker"
+    else:
+        material["admission"][field] = "other-" + field
+    _write_mesh(tmp_path / ".omo", events)
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt["failure_code"] == "admission_receipt_invalid"
+
+
+def test_first_lazy_omo_load_never_writes_bytecode_or_leaves_import_path(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fake_omo_src = tmp_path / "fake-root" / "projects" / "omo" / "src"
+    package = fake_omo_src / "omo"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "workflow_mesh.py").write_text(
+        "import sys\n"
+        "if not sys.dont_write_bytecode:\n"
+        "    raise RuntimeError('bytecode writes must be disabled')\n"
+        "def project_workflow_run(events, workflow_run_id):\n"
+        "    return {'workflow_run_id': workflow_run_id}\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cap_sync, "ROOT", tmp_path / "fake-root")
+    monkeypatch.setattr(cap_sync.sys, "dont_write_bytecode", False)
+    monkeypatch.delitem(sys.modules, "omo", raising=False)
+    monkeypatch.delitem(sys.modules, "omo.workflow_mesh", raising=False)
+    before = _tree_snapshot(fake_omo_src)
+
+    projector = cap_sync._load_workflow_mesh_projection()
+
+    assert callable(projector)
+    assert cap_sync.sys.dont_write_bytecode is False
+    assert str(fake_omo_src) not in cap_sync.sys.path
+    assert _tree_snapshot(fake_omo_src) == before
 
 
 def test_verify_material_requires_dispatch_for_effectful_and_matches_worker(cap_sync, tmp_path: Path) -> None:

@@ -681,12 +681,23 @@ def _mesh_path_stat(path: Path) -> Any:
 def _load_workflow_mesh_projection() -> Any:
     """Import OMO only for persisted-Mesh verification, never for legacy commands."""
     omo_src = ROOT / "projects" / "omo" / "src"
-    if str(omo_src) not in sys.path:
-        sys.path.insert(0, str(omo_src))
+    omo_src_text = str(omo_src)
+    inserted_path = omo_src_text not in sys.path
+    if inserted_path:
+        sys.path.insert(0, omo_src_text)
+    original_dont_write_bytecode = sys.dont_write_bytecode
     try:
+        sys.dont_write_bytecode = True
         from omo.workflow_mesh import project_workflow_run  # type: ignore[import-not-found]
     except ImportError as exc:
         raise TraceBindingError("source_unprovable") from exc
+    finally:
+        sys.dont_write_bytecode = original_dont_write_bytecode
+        if inserted_path:
+            try:
+                sys.path.remove(omo_src_text)
+            except ValueError:  # pragma: no cover - external mutation during the import is not trusted
+                pass
     return project_workflow_run
 
 
@@ -720,6 +731,13 @@ def _read_mesh_snapshot(omo_dir: Path, workflow_run_id: str) -> dict[str, Any]:
             events.append(event)
     except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
         raise TraceBindingError("admission_receipt_invalid") from exc
+    if any(
+        event.get("workflow_run_id") == workflow_run_id and event.get("event_type") == "AdmissionRenewed"
+        for event in events
+    ):
+        # OMO's v1 projection records the transition but does not rebind the
+        # grant proof or expiry.  No old or caller-proposed receipt is sound.
+        raise TraceBindingError("admission_contradiction")
     try:
         projector = _load_workflow_mesh_projection()
     except TraceBindingError:
@@ -824,13 +842,16 @@ def verify_material_against_mesh(  # noqa: UP007 -- public Python 3.9 compatibil
         if any(request_identity.get(key) != value for key, value in identity_expected.items()):
             raise TraceBindingError("admission_receipt_invalid")
         capabilities = admission.get("capabilities")
-        if not isinstance(capabilities, list) or not any(
-            capability == material["capability"]["id"]
-            or (
-                isinstance(capability, Mapping)
-                and capability.get("capability_id", capability.get("id")) == material["capability"]["id"]
+        if (
+            not isinstance(capabilities, list)
+            or not capabilities
+            or any(
+                not isinstance(capability, str)
+                or not IDENTITY_RE.fullmatch(capability)
+                or ".." in capability
+                for capability in capabilities
             )
-            for capability in capabilities
+            or material["capability"]["id"] not in capabilities
         ):
             raise TraceBindingError("admission_receipt_invalid")
         if material["admission"]["step_run_id"] not in admission.get("step_run_ids", []):
