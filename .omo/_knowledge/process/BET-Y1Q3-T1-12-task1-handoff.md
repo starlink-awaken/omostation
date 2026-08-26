@@ -365,5 +365,31 @@ BET verify 第二组 `test_channel_exposure_p0.py` 的 `test_bos_yaml_unimplemen
 - 合并后 main `ed1d58884` 复跑 BET verify **275 passed**（无回归），无子模块回退
 - **主仓 open PR 清零**（#2233/#2242/#84/#2251/#2255/#2259/#2258 全部 MERGED）
 
+# 追加：omo PR #93 修复+合并 — resident pi binding 精确化（2026-08-26 06:30Z）✅
+
+## 问题（omo #93，2026-08-23 起挂 3 天的失败 PR）
+
+- **lint fail**：`ruff format --check` 报 2 个集成测试文件 unformatted（`}, (` 需合并单行）
+- **3 个 domain 集成测试 fail**：`test_bos_40_uri_smoke` / `test_bos_agora_integration` / `test_bos_domain_chain` 断言 `Expected 6 domains, got 5`
+- **根因**：#93 作者把 BOS domain 断言从 5 个改成 6 个（误加 `resident`），违反北星 ADR-0007"5 domain 固定不可扩展"（`omo_bos.py:53`）；runtime registry 实际 5 domain → 测试 fail
+- 本地验证：omo main（c2ab954）上 3 测试全 PASS（18 passed）→ 判定 #93 引入，非预存在
+
+## 修复（干净分支重建，cherry-pick 核心 + 去错误断言）
+
+- 基于最新 omo origin/main 重建 `fix/pr-93-binding-clean`，cherry-pick #93 的 2 个 commit
+- **保留核心**：`src/omo/resident/execute.py`（`_resolve_run_binding` 从真实 run 文件解析 bet-ledger binding）+ `tests/unit/test_resident_execute.py`（新测试 154 行）
+- **移除错误**：3 个集成测试文件还原为 main 的 5-domain 断言（`git checkout origin/main --` 解决 cherry-pick 冲突）
+- ruff format 修复 → 变更精简为 **2 文件**（+189/-46）
+- 验证：ruff check + format 全过 + contract gatekeeper PASS + 30 passed + 2 skipped
+- tag `delivery/t1-12-omo-pr93-binding-clean-20260826` → force-with-lease push 更新 #93 分支
+- #93 CI 重新触发 → **3 pass 全绿** → CLEAN/MERGEABLE → **合并** → omo main `ba660c8`
+- 合并后 omo main 复跑 30 passed + 2 skipped（无回归）
+
+## 意义
+
+- omo 侧 resident pi 执行 binding 精确化（真实 run 文件 → bet-ledger 契约）进 main
+- omo binding 链补齐：#106 admission-binding + #93 execute-pi-real-run-binding 全进 main
+- **omo 侧 open PR 清零**；BOS domain 约束（北星 ADR-0007 5 domain）保持未被破坏
+
 
 
