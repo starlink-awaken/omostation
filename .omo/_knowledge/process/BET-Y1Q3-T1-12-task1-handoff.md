@@ -316,5 +316,33 @@ BET verify 第二组 `test_channel_exposure_p0.py` 的 `test_bos_yaml_unimplemen
 - ✅ 根项目 main gitlink 全部最新
 - ⏳ 剩余 = 并发 agent 的 bound native execution 生产消费者（未合并 main）+ ecos/omo 侧透传核对 + 主仓工作树同步（并发基底）
 
+# 追加：BET verify 全绿确认 + binding 链闭环核查（2026-08-26 04:05Z）✅ 完成
+
+## BET verify 根仓完整矩阵全绿
+
+独立 clone（main `74c9f9b55`）复跑 BET verify 完整测试集：
+
+| 测试组 | 结果 |
+|--------|------|
+| test_capability_sync + trace_binding + native_inspection + native_execution_receipt + channel_exposure + spec_binding_lint | **234 passed**（0 fail） |
+| bound/unbound native execution（`test_bound_invoke_emits_native_execution_receipt` / `test_unbound_invoke_is_shadow_observed_before_fail_promotion`） | **2 passed**（并发 agent 已合并 main） |
+| cockpit test_bos_capability_invoke | **7 passed** |
+
+**剩余失败全部清空**：并发 agent 的 bound native execution 生产消费者已合并进 main（`tests/test_capability_sync.py` 含 2 测试且通过）；omo #105/#106 已合并（CI success）。
+
+## binding 链闭环核查（无缺口）
+
+- **capability-sync → agora**：`--binding-json` 透传 + agora `capability_gateway.py` 正确消费 binding 并产出 `binding_digest`（`_digest(binding)` 多处 + receipt 含字段 + sanitize 保留）✅（#2233）
+- **Cockpit → capability-sync**：`bos.py` invoke 透传 `--binding-json` + `_CAPABILITY_RECEIPT_FIELDS` 保留 `binding_digest` ✅（#84）
+- **ecos 侧**：无 capability-sync 调用、无 binding 相关代码（protocol 层，不参与透传链）— **无缺口**
+- **agora 侧**：消费正确，receipt 含 binding_digest — **无缺口**
+- **omo 侧**：`dispatch-admission-binding`（#106，并发 agent）已合并 — 属并发范围，CI 全绿
+
+## 最终状态
+
+- ✅ **BET-Y1Q3-T1-12 verify 根仓矩阵完全全绿**（我的部分 + 并发 agent 部分全部合并）
+- ✅ binding 全链路透传闭环无缺口
+- ⏳ 主仓工作树同步（`feat/phase3-remaining` 并发基底，非交付范围）
+
 
 
