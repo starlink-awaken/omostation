@@ -99,6 +99,17 @@ VERIFICATION_RECEIPT_SCHEMA = "capability-admission-verification-receipt/v1"
 VERIFICATION_FIELDS = {"schema", "material", "request", "expected"}
 VERIFICATION_EXPECTED_FIELDS = {"capability_id", "operation_id", "effect_classification"}
 MESH_LOG = Path("_knowledge/workflow-mesh/events.jsonl")
+VERIFICATION_MESH_EVENT_STATES = {
+    "WorkflowRequested": "planned",
+    "WorkflowAdmitted": "admitted",
+    "StepDispatched": "dispatched",
+    "StepStarted": "running",
+    "WorkerAcknowledged": "dispatched",
+    "WorkerLeaseRenewed": "running",
+    "WorkerLeaseExpired": "unavailable",
+    "AdmissionRenewed": "dispatched",
+    "WorkerReclaimed": "running",
+}
 
 
 class RegistryError(ValueError):
@@ -728,13 +739,15 @@ def _project_verification_mesh_run(events: list[dict[str, Any]], workflow_run_id
         if not isinstance(payload, dict):
             raise TraceBindingError("admission_receipt_invalid")
         event_type = event.get("event_type")
+        if event_type not in VERIFICATION_MESH_EVENT_STATES:
+            raise TraceBindingError("admission_receipt_invalid")
         if event_type == "AdmissionRenewed":
             raise TraceBindingError("admission_contradiction")
-        if event_type not in allowed_states or snapshot["state"] not in allowed_states[event_type]:
+        if snapshot["state"] not in allowed_states[event_type]:
             raise TraceBindingError("admission_receipt_invalid")
 
         if event_type == "WorkflowRequested":
-            snapshot["state"] = "planned"
+            snapshot["state"] = VERIFICATION_MESH_EVENT_STATES[event_type]
             continue
 
         if event_type == "WorkflowAdmitted":
@@ -765,7 +778,7 @@ def _project_verification_mesh_run(events: list[dict[str, Any]], workflow_run_id
             ):
                 raise TraceBindingError("admission_receipt_invalid")
             snapshot["admission"] = dict(admission)
-            snapshot["state"] = "admitted"
+            snapshot["state"] = VERIFICATION_MESH_EVENT_STATES[event_type]
             continue
 
         admission = snapshot.get("admission")
@@ -839,16 +852,23 @@ def _project_verification_mesh_run(events: list[dict[str, Any]], workflow_run_id
             },
         )
         step["state"] = {
-            "StepDispatched": "dispatched",
-            "StepStarted": "running",
-            "WorkerLeaseRenewed": "running",
-            "WorkerLeaseExpired": "unavailable",
-            "WorkerReclaimed": "running",
+            event_name: VERIFICATION_MESH_EVENT_STATES[event_name]
+            for event_name in (
+                "StepDispatched",
+                "StepStarted",
+                "WorkerLeaseRenewed",
+                "WorkerLeaseExpired",
+                "WorkerReclaimed",
+            )
         }.get(event_type, step["state"])
         step["admission_id"] = payload.get("admission_id", step.get("admission_id"))
 
         if event_type == "StepDispatched":
-            snapshot["state"] = "running" if snapshot["state"] == "running" else "dispatched"
+            snapshot["state"] = (
+                VERIFICATION_MESH_EVENT_STATES["StepStarted"]
+                if snapshot["state"] == "running"
+                else VERIFICATION_MESH_EVENT_STATES[event_type]
+            )
             if payload.get("dispatch_id"):
                 snapshot["worker"] = {
                     "dispatch_id": payload["dispatch_id"],
@@ -872,14 +892,15 @@ def _project_verification_mesh_run(events: list[dict[str, Any]], workflow_run_id
                         "packet_id": payload["packet_id"],
                         "packet_hash": payload["packet_hash"],
                         "instruction_binding": payload["instruction_binding"],
+                        "ack_decision": payload["ack_decision"],
                     }
                 )
             elif event_type == "WorkerLeaseRenewed":
                 worker["state"] = "active"
-                snapshot["state"] = "running"
+                snapshot["state"] = VERIFICATION_MESH_EVENT_STATES[event_type]
             elif event_type == "WorkerLeaseExpired":
                 worker["state"] = "lease_expired"
-                snapshot["state"] = "unavailable"
+                snapshot["state"] = VERIFICATION_MESH_EVENT_STATES[event_type]
             else:
                 worker.update(
                     {
@@ -888,7 +909,7 @@ def _project_verification_mesh_run(events: list[dict[str, Any]], workflow_run_id
                         "successor_dispatch_id": payload["successor_dispatch_id"],
                     }
                 )
-                snapshot["state"] = "running"
+                snapshot["state"] = VERIFICATION_MESH_EVENT_STATES[event_type]
     return snapshot
 
 
@@ -971,6 +992,8 @@ def _verify_worker_context(material: Mapping[str, Any], snapshot: Mapping[str, A
     if snapshot.get("state") not in {"dispatched", "running"}:
         raise TraceBindingError("admission_contradiction")
     if worker.get("state") not in {"dispatched", "acknowledged", "active"}:
+        raise TraceBindingError("admission_contradiction")
+    if worker.get("ack_decision") == "stop":
         raise TraceBindingError("admission_contradiction")
     expected = {
         "dispatch_id": binding["dispatch_id"],

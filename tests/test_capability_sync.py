@@ -1659,6 +1659,81 @@ def test_root_mesh_projector_never_imports_omo_or_mutates_import_state(
     assert "omo.workflow_mesh" not in sys.modules
 
 
+def test_root_mesh_projector_vocabulary_matches_authoritative_omo_source_ast(cap_sync) -> None:
+    source_path = ROOT / "projects" / "omo" / "src" / "omo" / "workflow_mesh.py"
+    tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+    assignments = {
+        target.id: ast.literal_eval(node.value)
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        for target in node.targets
+        if isinstance(target, ast.Name) and target.id in {"EVENT_STATE", "_WORKER_EVENTS"}
+    }
+    authoritative_event_state = assignments["EVENT_STATE"]
+    authoritative_subset = {
+        "WorkflowRequested",
+        "WorkflowAdmitted",
+        "StepDispatched",
+        "StepStarted",
+        "AdmissionRenewed",
+        *assignments["_WORKER_EVENTS"],
+    }
+
+    assert cap_sync.VERIFICATION_MESH_EVENT_STATES == {
+        event_type: authoritative_event_state[event_type] for event_type in authoritative_subset
+    }
+    assert authoritative_subset == {
+        "WorkflowRequested",
+        "WorkflowAdmitted",
+        "StepDispatched",
+        "StepStarted",
+        "WorkerAcknowledged",
+        "WorkerLeaseRenewed",
+        "WorkerLeaseExpired",
+        "AdmissionRenewed",
+        "WorkerReclaimed",
+    }
+    assert not {
+        "WorkflowPrepared",
+        "WorkerDispatched",
+        "StepRunStarted",
+        "WorkerActive",
+    } & set(cap_sync.VERIFICATION_MESH_EVENT_STATES)
+
+
+@pytest.mark.parametrize(
+    ("worker_state", "ack_decision", "status", "failure_code"),
+    [
+        ("acknowledged", "proceed", "verified", None),
+        ("active", "proceed", "verified", None),
+        ("acknowledged", "stop", "rejected", "admission_contradiction"),
+        ("active", "stop", "rejected", "admission_contradiction"),
+    ],
+)
+def test_verifier_requires_proceed_acknowledgement_for_live_worker_context(
+    cap_sync,
+    tmp_path: Path,
+    worker_state: str,
+    ack_decision: str,
+    status: str,
+    failure_code: str | None,
+) -> None:
+    material, request, events = _verification_context(effect="effectful", state=worker_state)
+    acknowledgement = next(event for event in events if event["event_type"] == "WorkerAcknowledged")
+    acknowledgement["payload"]["ack_decision"] = ack_decision
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+
+    projector = cap_sync._load_workflow_mesh_projection()
+    snapshot = projector(events, material["binding"]["workflow_run_id"])
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert snapshot["worker"]["ack_decision"] == ack_decision
+    assert receipt["status"] == status
+    if failure_code is not None:
+        assert receipt["failure_code"] == failure_code
+
+
 def test_verify_material_requires_dispatch_for_effectful_and_matches_worker(cap_sync, tmp_path: Path) -> None:
     material, request, events = _verification_context(effect="effectful", state="dispatched")
     omo_dir = tmp_path / ".omo"
