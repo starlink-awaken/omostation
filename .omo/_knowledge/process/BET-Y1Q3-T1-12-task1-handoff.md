@@ -185,4 +185,31 @@ Task 6 Agora 侧的 binding_digest 已合并（`031fbde1`），但能力链在 *
 
 - **能力注册表漂移（预存在）**：`gen-capability-registry.py --check` 报漂移 → `test_make_and_ci_run_blocking_canonical_check` 失败。主仓工作树 `docs/generated/capability-registry.yaml` 有并发 agent 未提交改动，属其工作区，**不碰**，等待并发 agent 处理或单独修复。
 
+---
+
+# 追加：capability-sync PR #2233 合并 + CI 修复（2026-08-26）✅ 完成
+
+## PR #2233 交付
+
+| 环节 | 证据 |
+|------|------|
+| push | `feat/age-v2-final-update` → origin（pre-push hook 通过：pointer-drift 13/14 aligned 无 divergence） |
+| PR | https://github.com/starlink-awaken/omostation/pull/2233 `fix(capability): forward validated binding to Agora gateway operation` |
+| merge | **MERGED** `745d3d590`（2026-08-26T01:21:48Z by starlink-awaken）；main = 745d3d590 |
+| main 内容 | `bin/capability-sync.py` 44 处 binding 引用（binding 透传完整）；`tests/test_agent_workflow.py` fixture writer 已修复 |
+
+## CI 修复（pre-existing main 问题，用户授权并入 PR #2233）
+
+- **interface-check 修复**：`tests/test_agent_workflow.py:558` fixture 的 `writer: bin/cockpit/gen-capability-registry.py` → `bin/ssot/gen-capability-registry.py`。根因：并发 agent 把 projection writer 从 `bin/cockpit/` 移到 `bin/ssot/`（`bin/{cockpit => ssot}/gen-capability-registry.py` rename），#2228 的 fixture 过时 → `load_registry` 报 `registry_writer_invalid` → `test_root_preflight_*` 自 #2228 起红（main governance-check 从 23:19 起连续 4 次 failure）。修复后 90 agent-workflow tests + 16 preflight 全绿；interface-check CI **PASS**。
+- **governance-verify**：最初因 `.omo/tasks/planned/event-loop-dead-loop.yaml` 缺字段失败，分支 merge 最新 main 后变 **skipping**（并发 agent 处理中）。
+
+## ⚠️ 处置记录（独立 clone 提交）
+
+- 首次把 fixture 修复误 commit 到并发分支 `feat/cockpit-unified-entrypoint-root`（`a097c0f29`）→ 用 `git reset --soft HEAD~1` 撤销（**只回退我 1 分钟前的 commit，未触碰并发 agent 未提交改动**）→ 存 patch → 在**独立 clone**（`/tmp/t1-12-fixture-fix`）merge 最新 main 后应用 + commit `361f4c71c` → push 到 PR 分支。
+- PR 分支 `feat/age-v2-final-update` 通过 merge main 补上了 #2228 的 fixture（原分支 behind=6 不含它）。
+
+## CI 最终状态（commit 361f4c71c）
+
+- **17 success + 4 skipped + 0 fail**：gac-gate / test / evidence-gate / interface-check / meta-doctor / ai-review / phase-gate / cascading_test 等全绿；governance-verify / doc-freshness / bet-done-transition / Documents-domain 为条件跳过。
+
 
