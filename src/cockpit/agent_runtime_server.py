@@ -4,6 +4,7 @@ import json
 import time
 from pathlib import Path
 
+from cockpit.adapters import capability_binding
 from cockpit.adapters import runtime as _runtime_port  # SFOP: H→B only via adapters seam
 
 AUTH_TOKEN = _runtime_port.AUTH_TOKEN
@@ -111,7 +112,13 @@ def create_app():
                     messages.append({"role": h["role"], "content": h["content"]})
         messages.append({"role": "user", "content": req.message})
 
-        bound = isinstance(req.binding_receipt, dict) and bool(req.binding_receipt)
+        binding_supplied = isinstance(req.binding_receipt, dict) and bool(req.binding_receipt)
+        if binding_supplied and not capability_binding.verify_binding_envelope(req.binding_receipt):
+            raise HTTPException(
+                status_code=403,
+                detail="effectful agent-runtime tools require a verified capability binding",
+            )
+        bound = binding_supplied
         schemas = runtime.tools.build_tool_schemas() if bound else []
         max_turns = 30
 
@@ -142,6 +149,14 @@ def create_app():
                     "authority_state": "bound" if bound else "non_authoritative",
                 }
 
+            if not bound:
+                return {
+                    "response": response.get("content", "") or "",
+                    "turns": turn + 1,
+                    "duration_sec": round(time.time() - t0, 2),
+                    "authority_state": "non_authoritative",
+                }
+
             for tc in tcs:
                 messages.append(runtime._execute_tool(tc))
 
@@ -170,10 +185,10 @@ def create_app():
             raise HTTPException(status_code=400, detail="prompt or task is required")
 
         tools_enabled = bool(req.tools)
-        if tools_enabled and not (isinstance(req.binding_receipt, dict) and bool(req.binding_receipt)):
+        if tools_enabled and not capability_binding.verify_binding_envelope(req.binding_receipt):
             raise HTTPException(
                 status_code=403,
-                detail="effectful agent-runtime tools require an admitted capability binding",
+                detail="effectful agent-runtime tools require a verified capability binding",
             )
 
         result = runtime.run_task(prompt, tools_enabled=req.tools, context=req.context)
@@ -192,7 +207,7 @@ def create_app():
             raise HTTPException(status_code=500, detail=result["error"])
 
         result["duration_sec"] = round(elapsed, 2)
-        result["authority_state"] = "non_authoritative"
+        result["authority_state"] = "bound" if tools_enabled else "non_authoritative"
         return result
 
     @app.get("/logs")

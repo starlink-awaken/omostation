@@ -122,7 +122,14 @@ class TestCreateApp:
 
         app = agent_runtime_server.create_app()
         client = TestClient(app)
-        response = client.post("/chat", json={"message": "read"})
+        with mock.patch.object(agent_runtime_server.capability_binding, "verify_binding_envelope", return_value=True):
+            response = client.post(
+                "/chat",
+                json={
+                    "message": "read",
+                    "binding_receipt": {"schema": "capability-admission-verification-request/v1"},
+                },
+            )
         assert response.status_code == 200
         mock_rt._execute_tool.assert_called()
 
@@ -146,7 +153,14 @@ class TestCreateApp:
 
         app = agent_runtime_server.create_app()
         client = TestClient(app)
-        response = client.post("/chat", json={"message": "loop"})
+        with mock.patch.object(agent_runtime_server.capability_binding, "verify_binding_envelope", return_value=True):
+            response = client.post(
+                "/chat",
+                json={
+                    "message": "loop",
+                    "binding_receipt": {"schema": "capability-admission-verification-request/v1"},
+                },
+            )
         assert response.status_code == 200
         data = response.json()
         assert data.get("truncated") is True
@@ -237,21 +251,22 @@ def test_run_task_effectful_without_binding_is_403(tmp_path):
     client = _client_with_tmp_log(tmp_path)
     response = client.post("/run-task", json={"prompt": "do it", "tools": ["shell"]})
     assert response.status_code == 403
-    assert "admitted capability binding" in response.json()["detail"]
+    assert "verified capability binding" in response.json()["detail"]
 
 
 def test_run_task_with_binding_receipt_passes_gate(tmp_path):
     client = _client_with_tmp_log(tmp_path)
-    response = client.post(
-        "/run-task",
-        json={
-            "prompt": "do it",
-            "tools": ["shell"],
-            "binding_receipt": {"binding_digest": "sha256:" + "a" * 64},
-        },
-    )
+    with mock.patch.object(agent_runtime_server.capability_binding, "verify_binding_envelope", return_value=True):
+        response = client.post(
+            "/run-task",
+            json={
+                "prompt": "do it",
+                "tools": ["shell"],
+                "binding_receipt": {"schema": "capability-admission-verification-request/v1"},
+            },
+        )
     assert response.status_code == 200
-    assert response.json()["authority_state"] == "non_authoritative"
+    assert response.json()["authority_state"] == "bound"
 
 
 def test_chat_without_binding_reports_non_authoritative(tmp_path):
@@ -259,3 +274,64 @@ def test_chat_without_binding_reports_non_authoritative(tmp_path):
     response = client.post("/chat", json={"message": "hello"})
     assert response.status_code == 200
     assert response.json()["authority_state"] == "non_authoritative"
+
+
+def test_run_task_rejected_binding_has_zero_runtime_effects(tmp_path):
+    client = _client_with_tmp_log(tmp_path)
+    runtime = agent_runtime_server.AgentRuntime.return_value
+    envelope = {"schema": "capability-admission-verification-request/v1"}
+
+    with mock.patch.object(agent_runtime_server.capability_binding, "verify_binding_envelope", return_value=False):
+        response = client.post(
+            "/run-task",
+            json={"prompt": "do it", "tools": ["shell"], "binding_receipt": envelope},
+        )
+
+    assert response.status_code == 403
+    runtime.run_task.assert_not_called()
+    runtime.tools.build_tool_schemas.assert_not_called()
+    runtime._execute_tool.assert_not_called()
+
+
+def test_chat_rejected_binding_has_zero_schema_or_tool_execution(tmp_path):
+    client = _client_with_tmp_log(tmp_path)
+    runtime = agent_runtime_server.AgentRuntime.return_value
+    envelope = {"schema": "capability-admission-verification-request/v1"}
+
+    with mock.patch.object(agent_runtime_server.capability_binding, "verify_binding_envelope", return_value=False):
+        response = client.post("/chat", json={"message": "hello", "binding_receipt": envelope})
+
+    assert response.status_code == 403
+    runtime.tools.build_tool_schemas.assert_not_called()
+    runtime._call_llm.assert_not_called()
+    runtime._execute_tool.assert_not_called()
+
+
+def test_chat_verified_binding_builds_tools_and_reports_bound(tmp_path):
+    client = _client_with_tmp_log(tmp_path)
+    runtime = agent_runtime_server.AgentRuntime.return_value
+    envelope = {"schema": "capability-admission-verification-request/v1"}
+
+    with mock.patch.object(agent_runtime_server.capability_binding, "verify_binding_envelope", return_value=True):
+        response = client.post("/chat", json={"message": "hello", "binding_receipt": envelope})
+
+    assert response.status_code == 200
+    assert response.json()["authority_state"] == "bound"
+    runtime.tools.build_tool_schemas.assert_called_once_with()
+
+
+def test_unbound_chat_does_not_execute_unrequested_tool_calls(tmp_path):
+    client = _client_with_tmp_log(tmp_path)
+    runtime = agent_runtime_server.AgentRuntime.return_value
+    runtime._call_llm.return_value = {
+        "content": None,
+        "finish_reason": "tool_calls",
+        "tool_calls": [{"id": "1", "function": {"name": "shell", "arguments": "{}"}}],
+    }
+
+    response = client.post("/chat", json={"message": "hello"})
+
+    assert response.status_code == 200
+    assert response.json()["authority_state"] == "non_authoritative"
+    runtime.tools.build_tool_schemas.assert_not_called()
+    runtime._execute_tool.assert_not_called()

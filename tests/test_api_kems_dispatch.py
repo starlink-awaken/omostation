@@ -1,6 +1,7 @@
 # mock-heavy test file: monkeypatch assigns untyped attrs, so the attribute rule is disabled here.
 # pyright: reportAttributeAccessIssue=false
 
+import asyncio
 import sys
 import types
 
@@ -18,7 +19,7 @@ def client():
 
 def test_dispatch_requires_worker_and_write_scope():
     result = client().post("/api/kems/tasks/task-1/dispatch", json={"worker_id": "worker-1"})
-    assert result.status_code == 422
+    assert result.status_code == 410
 
 
 def test_dispatch_rejects_private_content():
@@ -30,7 +31,7 @@ def test_dispatch_rejects_private_content():
             "raw_text": "private source",
         },
     )
-    assert result.status_code == 422
+    assert result.status_code == 410
 
 
 def test_dispatch_endpoint_is_retired(monkeypatch):
@@ -51,3 +52,16 @@ def test_dispatch_endpoint_is_retired(monkeypatch):
 
     assert result.status_code == 410
     assert "retired" in result.json()["detail"]
+
+
+def test_dispatch_endpoint_rejects_before_request_json_is_read():
+    class PoisonRequest:
+        async def json(self):
+            raise AssertionError("retired dispatch must not consume private request bytes")
+
+    try:
+        asyncio.run(api_kems.dispatch_kems_task("task-1", PoisonRequest()))  # type: ignore[arg-type]
+    except Exception as exc:
+        assert getattr(exc, "status_code", None) == 410
+    else:
+        raise AssertionError("retired dispatch must reject")

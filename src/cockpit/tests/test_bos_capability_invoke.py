@@ -11,6 +11,15 @@ from types import SimpleNamespace
 from cockpit.commands import bos as bos_mod
 
 
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="cockpit")
+    sub = parser.add_subparsers(dest="command")
+    from cockpit._subcommands import register_subcommands
+
+    register_subcommands(sub, argparse.ArgumentParser)
+    return parser
+
+
 def _service() -> SimpleNamespace:
     return SimpleNamespace(
         uri="bos://capability/swarm/run",
@@ -252,3 +261,39 @@ def test_bos_invoke_forwards_all_binding_receipts(monkeypatch, tmp_path):
     assert "--admission-receipt-json" in captured
     assert "--operation-id" in captured
     assert "--effect-classification" in captured
+
+
+def test_canonical_bos_parser_exposes_complete_binding_bundle(tmp_path: Path) -> None:
+    paths = {
+        "input": tmp_path / "input.json",
+        "binding": tmp_path / "binding.json",
+        "inspection": tmp_path / "inspection.json",
+        "admission": tmp_path / "admission.json",
+    }
+
+    args = _build_parser().parse_args(
+        [
+            "bos",
+            "capability",
+            "invoke",
+            "bos://capability/swarm/run",
+            "--input-json",
+            str(paths["input"]),
+            "--binding-json",
+            str(paths["binding"]),
+            "--inspection-receipt-json",
+            str(paths["inspection"]),
+            "--admission-receipt-json",
+            str(paths["admission"]),
+            "--operation-id",
+            "swarm.run",
+            "--effect-classification",
+            "effectful",
+        ]
+    )
+
+    assert args.capability_binding_json == paths["binding"]
+    assert args.capability_inspection_receipt_json == paths["inspection"]
+    assert args.capability_admission_receipt_json == paths["admission"]
+    assert args.capability_operation_id == "swarm.run"
+    assert args.capability_effect_classification == "effectful"

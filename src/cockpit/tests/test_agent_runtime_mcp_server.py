@@ -21,6 +21,14 @@ sys.modules["runtime.executor.config"] = mock.MagicMock()
 from cockpit import agent_runtime_mcp_server
 
 
+def _verified_binding():
+    return mock.patch.object(
+        agent_runtime_mcp_server.capability_binding,
+        "verify_binding_envelope",
+        return_value=True,
+    )
+
+
 class TestGetRuntime:
     """get_runtime() 单例测试"""
 
@@ -53,17 +61,21 @@ class TestRunTask:
 
         with mock.patch("pathlib.Path.exists", return_value=True):
             with mock.patch("pathlib.Path.read_text", return_value=json.dumps(task_def)):
-                result = agent_runtime_mcp_server.run_task(
-                    "daily-summary", binding_receipt={"binding_digest": "sha256:" + "a" * 64}
-                )
+                with _verified_binding():
+                    result = agent_runtime_mcp_server.run_task(
+                        "daily-summary",
+                        binding_receipt={"schema": "capability-admission-verification-request/v1"},
+                    )
                 assert result == "Today was good"
 
     def test_run_task_not_found(self):
         """任务定义目录/文件不存在"""
         with mock.patch("pathlib.Path.exists", return_value=False):
-            result = agent_runtime_mcp_server.run_task(
-                "nonexistent", binding_receipt={"binding_digest": "sha256:" + "a" * 64}
-            )
+            with _verified_binding():
+                result = agent_runtime_mcp_server.run_task(
+                    "nonexistent",
+                    binding_receipt={"schema": "capability-admission-verification-request/v1"},
+                )
             assert "not found" in result
 
     def test_run_task_no_prompt(self):
@@ -72,9 +84,11 @@ class TestRunTask:
 
         with mock.patch("pathlib.Path.exists", return_value=True):
             with mock.patch("pathlib.Path.read_text", return_value=json.dumps({"no_prompt": 1})):
-                result = agent_runtime_mcp_server.run_task(
-                    "empty-task", binding_receipt={"binding_digest": "sha256:" + "a" * 64}
-                )
+                with _verified_binding():
+                    result = agent_runtime_mcp_server.run_task(
+                        "empty-task",
+                        binding_receipt={"schema": "capability-admission-verification-request/v1"},
+                    )
                 assert "no prompt" in result
 
     def test_run_task_with_error(self):
@@ -88,9 +102,11 @@ class TestRunTask:
 
         with mock.patch("pathlib.Path.exists", return_value=True):
             with mock.patch("pathlib.Path.read_text", return_value=json.dumps(task_def)):
-                result = agent_runtime_mcp_server.run_task(
-                    "bad-task", binding_receipt={"binding_digest": "sha256:" + "a" * 64}
-                )
+                with _verified_binding():
+                    result = agent_runtime_mcp_server.run_task(
+                        "bad-task",
+                        binding_receipt={"schema": "capability-admission-verification-request/v1"},
+                    )
                 assert "[ERROR]" in result
                 assert "something broke" in result
 
@@ -105,9 +121,11 @@ class TestRunTask:
 
         with mock.patch("pathlib.Path.exists", return_value=True):
             with mock.patch("pathlib.Path.read_text", return_value=json.dumps(task_def)):
-                result = agent_runtime_mcp_server.run_task(
-                    "empty-result", binding_receipt={"binding_digest": "sha256:" + "a" * 64}
-                )
+                with _verified_binding():
+                    result = agent_runtime_mcp_server.run_task(
+                        "empty-result",
+                        binding_receipt={"schema": "capability-admission-verification-request/v1"},
+                    )
                 assert "empty response" in result
 
 
@@ -165,7 +183,11 @@ class TestChat:
         mock_rt._execute_tool.return_value = {"role": "tool", "content": "file data"}
         agent_runtime_mcp_server._runtime = mock_rt
 
-        result = agent_runtime_mcp_server.chat("read test.txt")
+        with _verified_binding():
+            result = agent_runtime_mcp_server.chat(
+                "read test.txt",
+                binding_receipt={"schema": "capability-admission-verification-request/v1"},
+            )
         assert result == "File contents here"
         mock_rt._execute_tool.assert_called()
 
@@ -179,6 +201,64 @@ class TestChat:
         result = agent_runtime_mcp_server.chat("hi")
         assert "错误" in result
         assert "LLM timeout" in result
+
+
+def test_run_task_rejected_binding_does_not_construct_runtime_or_execute(monkeypatch):
+    forbidden = mock.Mock(side_effect=AssertionError("runtime must not be constructed"))
+    monkeypatch.setattr(agent_runtime_mcp_server, "get_runtime", forbidden)
+    monkeypatch.setattr(
+        agent_runtime_mcp_server.capability_binding,
+        "verify_binding_envelope",
+        lambda _envelope: False,
+    )
+
+    result = json.loads(
+        agent_runtime_mcp_server.run_task(
+            "daily-summary",
+            binding_receipt={"schema": "capability-admission-verification-request/v1"},
+        )
+    )
+
+    assert result["authority_state"] == "non_authoritative"
+    forbidden.assert_not_called()
+
+
+def test_mcp_chat_rejected_binding_does_not_construct_runtime_or_tools(monkeypatch):
+    forbidden = mock.Mock(side_effect=AssertionError("runtime must not be constructed"))
+    monkeypatch.setattr(agent_runtime_mcp_server, "get_runtime", forbidden)
+    monkeypatch.setattr(
+        agent_runtime_mcp_server.capability_binding,
+        "verify_binding_envelope",
+        lambda _envelope: False,
+    )
+
+    result = json.loads(
+        agent_runtime_mcp_server.chat(
+            "hello",
+            binding_receipt={"schema": "capability-admission-verification-request/v1"},
+        )
+    )
+
+    assert result["authority_state"] == "non_authoritative"
+    assert result["tools"] == []
+    forbidden.assert_not_called()
+
+
+def test_mcp_unbound_chat_never_builds_or_executes_tools():
+    mock_rt = mock.MagicMock()
+    mock_rt._call_llm.return_value = {
+        "content": None,
+        "finish_reason": "tool_calls",
+        "tool_calls": [{"id": "1", "function": {"name": "shell", "arguments": "{}"}}],
+    }
+    agent_runtime_mcp_server._runtime = mock_rt
+
+    result = json.loads(agent_runtime_mcp_server.chat("hello"))
+
+    assert result["authority_state"] == "non_authoritative"
+    assert result["tools"] == []
+    mock_rt._build_tool_schemas.assert_not_called()
+    mock_rt._execute_tool.assert_not_called()
 
 
 class TestMain:

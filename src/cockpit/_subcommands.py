@@ -636,6 +636,35 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         required=True,
         help="结构化输入 JSON 文件（上限由治理网关执行）",
     )
+    bos_capability_invoke_p.add_argument(
+        "--binding-json",
+        dest="capability_binding_json",
+        type=Path,
+        help="完整 trace binding JSON 文件",
+    )
+    bos_capability_invoke_p.add_argument(
+        "--inspection-receipt-json",
+        dest="capability_inspection_receipt_json",
+        type=Path,
+        help="native inspection receipt JSON 文件",
+    )
+    bos_capability_invoke_p.add_argument(
+        "--admission-receipt-json",
+        dest="capability_admission_receipt_json",
+        type=Path,
+        help="admission receipt JSON 文件",
+    )
+    bos_capability_invoke_p.add_argument(
+        "--operation-id",
+        dest="capability_operation_id",
+        help="exact operation identifier",
+    )
+    bos_capability_invoke_p.add_argument(
+        "--effect-classification",
+        dest="capability_effect_classification",
+        choices=("read_only", "effectful"),
+        help="operation effect classification",
+    )
 
     # ── scenario ──────────────────────────────────────────────
     scenario_p = sub.add_parser(

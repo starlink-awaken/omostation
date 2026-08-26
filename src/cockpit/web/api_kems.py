@@ -194,18 +194,8 @@ async def create_kems_task_draft(request: Request) -> dict[str, Any]:
 
 @router.post("/api/kems/tasks/{task_id}/dispatch")
 async def dispatch_kems_task(task_id: str, request: Request) -> dict[str, Any]:
-    """Dispatch an OMO-approved active task through the official OMO broker."""
-    body = await request.json()
-    if not isinstance(body, dict):
-        raise HTTPException(status_code=422, detail="KEMS dispatch must be an object")
-    _reject_private_fields(body)
-    required = ("worker_id", "allowed_write_paths")
-    missing = [field for field in required if not body.get(field)]
-    if missing:
-        raise HTTPException(status_code=422, detail=f"missing dispatch fields: {', '.join(missing)}")
-    allowed_paths = body["allowed_write_paths"]
-    if not isinstance(allowed_paths, list) or not all(isinstance(path, str) and path.strip() for path in allowed_paths):
-        raise HTTPException(status_code=422, detail="allowed_write_paths must be a non-empty string list")
+    """Reject the retired naked-dispatch route before consuming request bytes."""
+    del task_id, request
     raise HTTPException(
         status_code=410,
         detail="KEMS direct dispatch was retired; use an admitted WorkPacket through OMO BlueprintControl",

@@ -15,7 +15,7 @@ from typing import Any
 
 from fastmcp import FastMCP  # type: ignore[import-not-found]
 
-from cockpit.adapters import governance_context
+from cockpit.adapters import capability_binding, governance_context
 
 mcp = FastMCP("agent-runtime")
 
@@ -47,12 +47,12 @@ def run_task(task_name: str, binding_receipt: dict = None) -> str:
     """Run a predefined task by name (e.g. WF-005, codexbar-quota, daily-summary).
 
     Tasks are loaded from task_definitions/<name>.json.
-    Effectful execution requires an admitted capability binding receipt.
+    Effectful execution requires a verified capability binding receipt.
     """
-    if not isinstance(binding_receipt, dict) or not binding_receipt:
+    if not capability_binding.verify_binding_envelope(binding_receipt):
         return _json_envelope(
             {
-                "error": "effectful agent-runtime tools require an admitted capability binding",
+                "error": "effectful agent-runtime tools require a verified capability binding",
                 "authority_state": "non_authoritative",
             }
         )
@@ -85,7 +85,7 @@ def run_task(task_name: str, binding_receipt: dict = None) -> str:
 
 
 @mcp.tool()
-def chat(message: str, history_json: str = "") -> str:
+def chat(message: str, history_json: str = "", binding_receipt: dict = None) -> str:
     """Send a message to Agent Runtime and get a reply.
 
     Use this for interactive conversations where you want Agent Runtime's
@@ -96,6 +96,16 @@ def chat(message: str, history_json: str = "") -> str:
         history_json: Optional JSON array of previous exchanges
                       [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]
     """
+    binding_supplied = isinstance(binding_receipt, dict) and bool(binding_receipt)
+    if binding_supplied and not capability_binding.verify_binding_envelope(binding_receipt):
+        return _json_envelope(
+            {
+                "error": "effectful agent-runtime tools require a verified capability binding",
+                "authority_state": "non_authoritative",
+                "tools": [],
+            }
+        )
+    bound = binding_supplied
     runtime = get_runtime()
     history = []
     if history_json:
@@ -118,7 +128,7 @@ def chat(message: str, history_json: str = "") -> str:
             messages.append({"role": h["role"], "content": h["content"]})
     messages.append({"role": "user", "content": message})
 
-    schemas = runtime._build_tool_schemas()  # type: ignore[union-attr]
+    schemas = runtime._build_tool_schemas() if bound else []  # type: ignore[union-attr]
     max_turns = 30
 
     for turn in range(max_turns):
@@ -137,6 +147,15 @@ def chat(message: str, history_json: str = "") -> str:
 
         if finish == "stop" or not tcs:
             return response.get("content", "")
+
+        if not bound:
+            return _json_envelope(
+                {
+                    "response": response.get("content", "") or "",
+                    "authority_state": "non_authoritative",
+                    "tools": [],
+                }
+            )
 
         for tc in tcs:
             tool_result = runtime._execute_tool(tc)
