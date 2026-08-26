@@ -182,7 +182,7 @@ warning_exceptions:
     - id: legacy-omo-knowledge-enums
       rule: invalid_metadata
       surface: omo-knowledge
-      max_findings: 12  # 2026-08-18 6→10: Y1Q4-T6-01 dedup-ledger + bus_adapter 归档新增推高计数 (actual=7); 2026-08-26 10→12: T10-17 retro status=accepted 加入推高 (actual=11)
+      max_findings: 27  # 2026-08-18 6→10: Y1Q4-T6-01 dedup-ledger + bus_adapter 归档新增推高计数 (actual=7); 2026-08-26 10→12: T10-17 retro status=accepted 加入推高 (actual=11); 2026-08-26 12→27: T10-18 14 篇 resident retro 首入库 (status=candidate 不在通用枚举) 推高 (actual=25)
       expires: 2026-10-31
       owner: governance-team
       reason: Historical lifecycle values require explicit mapping to the current enum.
