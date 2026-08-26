@@ -721,7 +721,13 @@ def _read_mesh_snapshot(omo_dir: Path, workflow_run_id: str) -> dict[str, Any]:
     except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
         raise TraceBindingError("admission_receipt_invalid") from exc
     try:
-        snapshot = _load_workflow_mesh_projection()(events, workflow_run_id)
+        projector = _load_workflow_mesh_projection()
+    except TraceBindingError:
+        raise
+    except Exception as exc:  # noqa: BLE001 - unavailable OMO source is a redacted source failure
+        raise TraceBindingError("source_unprovable") from exc
+    try:
+        snapshot = projector(events, workflow_run_id)
     except Exception as exc:  # noqa: BLE001 - Mesh details must never cross the public boundary
         raise TraceBindingError("admission_receipt_invalid") from exc
     if not isinstance(snapshot, dict):
@@ -754,6 +760,8 @@ def _verify_worker_context(material: Mapping[str, Any], snapshot: Mapping[str, A
     if not isinstance(worker, Mapping):
         raise TraceBindingError("admission_receipt_invalid")
     if snapshot.get("state") not in {"dispatched", "running"}:
+        raise TraceBindingError("admission_contradiction")
+    if worker.get("state") not in {"dispatched", "acknowledged", "active"}:
         raise TraceBindingError("admission_contradiction")
     expected = {
         "dispatch_id": binding["dispatch_id"],
@@ -866,13 +874,15 @@ def verify_material_against_mesh(  # noqa: UP007 -- public Python 3.9 compatibil
 
 
 def _read_bounded_stdin_json() -> Any:
-    stream = getattr(sys.stdin, "buffer", sys.stdin)
-    content = stream.read(MAX_INPUT_JSON_BYTES + 1)
-    if not isinstance(content, (bytes, bytearray)) or len(content) > MAX_INPUT_JSON_BYTES:
-        raise TraceBindingError("native_route_unprovable")
     try:
+        stream = getattr(sys.stdin, "buffer", sys.stdin)
+        content = stream.read(MAX_INPUT_JSON_BYTES + 1)
+        if not isinstance(content, (bytes, bytearray)) or len(content) > MAX_INPUT_JSON_BYTES:
+            raise TraceBindingError("native_route_unprovable")
         return json.loads(content)
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except TraceBindingError:
+        raise
+    except (OSError, UnicodeError, TypeError, ValueError) as exc:
         raise TraceBindingError("native_route_unprovable") from exc
 
 
