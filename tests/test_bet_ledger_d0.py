@@ -136,6 +136,18 @@ def test_complete_accepts_index_pinned_submodule_surface(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     root, _, _ = _workspace_with_gitlink(tmp_path)
+    spec_path = root / "docs" / "superpowers" / "specs" / "accepted.md"
+    spec_path.parent.mkdir(parents=True)
+    spec_path.write_text(
+        "---\n"
+        "schema_version: specification/v1\n"
+        "spec_version: 1.0.0\n"
+        "status: accepted\n"
+        "bet_id: BET-TEST\n"
+        "---\n\n"
+        "# Test specification\n",
+        encoding="utf-8",
+    )
     ledger = root / "ledger.yaml"
     ledger.write_text(
         "bets:\n- id: BET-TEST\n  status: candidate\n",
@@ -143,11 +155,25 @@ def test_complete_accepts_index_pinned_submodule_surface(
     )
     monkeypatch.setattr(BET_LEDGER, "WS", root)
     monkeypatch.setattr(BET_LEDGER, "LEDGER", ledger)
+    monkeypatch.setattr(
+        BET_LEDGER,
+        "validate_completion_evidence",
+        lambda matrix, *, workspace: ("outcome_accepted", []),
+    )
     data = {
         "bets": [
             {
                 "id": "BET-TEST",
                 "status": "candidate",
+                "accepted_specifications": [
+                    {
+                        "spec_ref": "repo://docs/superpowers/specs/accepted.md",
+                        "spec_version": "1.0.0",
+                        "content_digest": f"sha256:{BET_LEDGER._file_sha256(spec_path)}",
+                        "decision_ref": "decision://accepted/BET-TEST",
+                    }
+                ],
+                "completion_evidence": {},
                 "write_surfaces": ["projects/omo/src/contract.py"],
             }
         ]
@@ -155,7 +181,7 @@ def test_complete_accepts_index_pinned_submodule_surface(
 
     rc = BET_LEDGER.cmd_complete(
         data,
-        SimpleNamespace(bet_id="BET-TEST", force=False),
+        SimpleNamespace(bet_id="BET-TEST", force=True),
     )
 
     assert rc == 0
