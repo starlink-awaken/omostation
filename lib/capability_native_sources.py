@@ -403,7 +403,7 @@ def _registration_tool_names(function: ast.AST, binding_parameter: str) -> list[
 def _module_imports(tree: ast.Module, module: str, source_ref: str) -> dict[str, tuple[str, str]]:
     imports: dict[str, tuple[str, str]] = {}
     is_package = source_ref.endswith("/__init__.py")
-    for statement in _module_guard_statements(tree.body):
+    for statement in tree.body:
         if not isinstance(statement, ast.ImportFrom):
             continue
         if any(alias.name == "*" for alias in statement.names):
@@ -512,12 +512,15 @@ def parse_fastmcp_composite_authority(root: Path, source_ref: str, server_id: st
     module_cache: dict[str, tuple[str, bytes, ast.Module]] = {}
     imported_symbols = _module_imports(tree, AGORA_COMPOSITE_MODULE, source_ref)
     tools: list[str] = []
+    recognized_entry_tool_calls: set[int] = set()
     for statement in tree.body:
-        declared, _recognized = _decorated_tool_names(statement, binding)
+        declared, recognized = _decorated_tool_names(statement, binding)
         tools.extend(declared)
+        recognized_entry_tool_calls.update(recognized)
 
     registrations: set[tuple[str, str]] = set()
-    for statement in _module_guard_statements(tree.body):
+    direct_registration_calls: set[int] = set()
+    for statement in tree.body:
         if not isinstance(statement, ast.Expr) or not isinstance(statement.value, ast.Call):
             continue
         registration = statement.value
@@ -537,6 +540,7 @@ def parse_fastmcp_composite_authority(root: Path, source_ref: str, server_id: st
         if target in registrations:
             _fail("duplicate_authority_claim")
         registrations.add(target)
+        direct_registration_calls.add(id(registration))
         _registration_ref, function = _resolve_registration_function(
             root, target[0], target[1], module_cache, sources, set()
         )
@@ -556,6 +560,47 @@ def parse_fastmcp_composite_authority(root: Path, source_ref: str, server_id: st
         ):
             _fail("source_unprovable")
         tools.extend(_registration_tool_names(function, parameters[0].arg))
+
+    parents: dict[int, ast.AST] = {}
+    for node in ast.walk(tree):
+        for child in ast.iter_child_nodes(node):
+            parents[id(child)] = node
+
+    def is_module_scope(node: ast.AST) -> bool:
+        child = node
+        current = parents.get(id(node))
+        while current is not None and current is not tree:
+            if isinstance(current, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if child not in current.decorator_list:
+                    return False
+            elif isinstance(current, (ast.ClassDef, ast.Lambda)):
+                return False
+            child = current
+            current = parents.get(id(current))
+        return True
+
+    for node in ast.walk(tree):
+        if not (
+            isinstance(node, ast.Call)
+            and node.args
+            and isinstance(node.args[0], ast.Name)
+            and node.args[0].id == binding
+        ):
+            continue
+        if is_module_scope(node) and id(node) not in direct_registration_calls:
+            _fail("source_unprovable")
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or id(node) in recognized_entry_tool_calls:
+            continue
+        function = node.func
+        if (
+            isinstance(function, ast.Attribute)
+            and function.attr == "tool"
+            and isinstance(function.value, ast.Name)
+            and function.value.id == binding
+            and is_module_scope(node)
+        ):
+            _fail("source_unprovable")
 
     if not registrations:
         _fail("source_unprovable")

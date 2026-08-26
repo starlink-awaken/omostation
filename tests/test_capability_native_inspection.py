@@ -333,6 +333,80 @@ def test_agora_composite_rejects_dynamic_registration_arguments(tmp_path: Path) 
         )
 
 
+def test_agora_composite_rejects_conditional_module_registration(tmp_path: Path) -> None:
+    server = tmp_path / "projects/agora/src/agora/server"
+    server.mkdir(parents=True)
+    (server / "mcp.py").write_text(
+        "from fastmcp import FastMCP\n"
+        "from agora.server.tools_core import register_core_tools\n"
+        "from agora.server.tools_optional import register_optional_tools\n"
+        "enabled = False\n"
+        "mcp = FastMCP('Agora — Service Convergence Hub')\n"
+        "register_core_tools(mcp)\n"
+        "if enabled:\n"
+        "    register_optional_tools(mcp)\n",
+        encoding="utf-8",
+    )
+    (server / "tools_core.py").write_text(
+        "def register_core_tools(mcp):\n"
+        "    @mcp.tool()\n"
+        "    async def core_tool():\n"
+        "        return 'ok'\n",
+        encoding="utf-8",
+    )
+    (server / "tools_optional.py").write_text(
+        "def register_optional_tools(mcp):\n"
+        "    @mcp.tool()\n"
+        "    async def optional_tool():\n"
+        "        return 'optional'\n",
+        encoding="utf-8",
+    )
+    registry = _agora_registry(["core_tool"])
+    capability_id = "mcp-server:agora"
+
+    with pytest.raises(NativeInspectionError, match="source_unprovable"):
+        inspect_native_capability(
+            root=tmp_path,
+            capability_id=capability_id,
+            registry=registry,
+            registry_content=_registry_bytes(registry),
+            resolution_receipt=_resolution_receipt(registry, capability_id),
+        )
+
+
+def test_agora_composite_rejects_untracked_entrypoint_tool_factory(tmp_path: Path) -> None:
+    server = tmp_path / "projects/agora/src/agora/server"
+    server.mkdir(parents=True)
+    (server / "mcp.py").write_text(
+        "from fastmcp import FastMCP\n"
+        "from agora.server.tools_core import register_core_tools\n"
+        "mcp = FastMCP('Agora — Service Convergence Hub')\n"
+        "async def hidden_tool():\n"
+        "    return 'hidden'\n"
+        "mcp.tool()(hidden_tool)\n"
+        "register_core_tools(mcp)\n",
+        encoding="utf-8",
+    )
+    (server / "tools_core.py").write_text(
+        "def register_core_tools(mcp):\n"
+        "    @mcp.tool()\n"
+        "    async def core_tool():\n"
+        "        return 'ok'\n",
+        encoding="utf-8",
+    )
+    registry = _agora_registry(["core_tool"])
+    capability_id = "mcp-server:agora"
+
+    with pytest.raises(NativeInspectionError, match="source_unprovable"):
+        inspect_native_capability(
+            root=tmp_path,
+            capability_id=capability_id,
+            registry=registry,
+            registry_content=_registry_bytes(registry),
+            resolution_receipt=_resolution_receipt(registry, capability_id),
+        )
+
+
 def test_mcp_explicit_literal_version_is_proved(authority_root: Path) -> None:
     registry = _registry()
     (authority_root / "native/demo_mcp.py").write_text(
