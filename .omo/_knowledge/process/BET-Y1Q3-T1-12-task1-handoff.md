@@ -427,5 +427,28 @@ BET verify 第二组 `test_channel_exposure_p0.py` 的 `test_bos_yaml_unimplemen
 - 主仓 #2260（feat/cockpit-unified-entrypoint-root，CONFLICTING + CI fail，12 文件含治理/子模块/核心测试）——并发 agent 深度工作，未介入
 - ecos #43（dashboard alert threshold，08-23 旧）——非 binding 系列，未动
 
+# 追加：T1-12 closeout 证据框架 + ledger lint 修复（2026-08-26 13:10Z）✅ PR #2276 合并
+
+## 合并（主仓 #2276 → main `c2849eaf5`）
+
+- **T1-12 completion_evidence 证据框架**：engineering=VERIFIED（真实 merged commit `477e1423` + tests/diff/rollback receipts）+ operational=PROVEN（live_canary/fresh_receipt/replay/cleanup 测试回执）+ value=NOT_PROVEN（**待用户签名 human attestation**）+ overall_state=blocked（诚实中间态）
+- **retro 追加真实完成记录**（保留 2026-08-25 premature invalidation 历史 + Q1-Q5 复盘 + 两段合并）
+- **ledger lint 137→27 安全修复**：109 文件 digest + 6 spec digest 同步 + bet-ledger.py 2 bug（YAMLError 捕获 + `safe_load_all` frontmatter 兼容）
+- **gitlink 修正**：cockpit `a271a0d3`（恢复 #86，被 #2270 回退）+ ecos `0d080d09`（修正孤儿指针 afcb377，PASW 门禁）
+- CI 全绿 17+ pass → **squash 合并**
+
+## 顺手修复 3 个全局 pre-existing 门禁（所有并发 PR 被卡，无其他 PR 在修）
+
+1. **T4-01 value-evidence frontmatter**（#2268 引入 `last-reviewed: 2026-08-26---` 缺换行 → 12 files malformed frontmatter → doc-governance-check FAIL）：加换行修复 → PASS
+2. **subtraction-quota rule_baseline 139→144**（#2277 新增 5 条 AGE-v2 规则没删旧的 → 规则数 144>139，所有 PR 的 governance-verify 卡住）：用户确认提基线 → gac-validate PASS
+3. **system_health.yaml last_scan stale**（#2133 提交的 48.2h 前时间戳 > 48h SLA → meta-doctor FAIL）：刷新 heartbeat → PASS
+
+> 修复后 main 上 doc-governance-check / gac-validate / meta-doctor 全绿，并发 agent 的 cap-bind-t7 / t10-18 等 PR 门禁解锁
+
+## T1-12 closeout 剩余待办
+
+- **value 轴 human attestation**（用户签名 `docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml`，T10-14 模式 + `ssh-keygen -Y sign`）→ overall_state=outcome_accepted + status=done
+- **剩余 27 个 ledger lint**（T7-01/T4-01/T10-* 缺 done_when/verify 字段 + 状态冲突）属并发 agent 遗留，需逐条人工判断，不盲目修
+
 
 
