@@ -9,6 +9,11 @@ pr: "1831"
 title: "governance(bet): close BET-Y1Q3-T4-01 as done"
 reachable_from_main: true
 verified_at: 2026-08-22
+status: active
+lifecycle: evidence
+owner: governance-team
+last-reviewed: 2026-08-26
+---
 
 last-reviewed: 2026-08-26---
 
