@@ -36,7 +36,8 @@ note: >
 - CR-SFOP-01：每个 `COMP-WS-*` 必须声明合法 `sfop_slot` 与 `dao_layer`。
 - CR-SFOP-02：活跃 Project 中 `sfop_slot=S` 至多一个，且为 `COMP-WS-omo`。
 - CR-SFOP-04：P（感知）/ O（结果）允许空槽。空不是缺口。
-- CR-SFOP-05：H 不得直接 import B；H↔B 唯一通道是 F（agora）。`cockpit.adapters` 是允许的 H 侧 B 端口（防腐层）。其它 H 文件新调用 fail-closed；baseline 键不含行号。
+- CR-SFOP-05：H 不得直接 import B。允许的 H→B 路径是经 F（agora），或 `cockpit.adapters` 作为 H 侧 B 端口（防腐层）。其它 H 文件新调用 fail-closed；baseline 键不含行号。
+- CR-SFOP-06：声称活跃（`status: active` / `claimed_active: true`）的 cron 账本条目必须声明合法 `sfop_slot`；未声称活跃的存量缺槽仅 warn。声称活跃的 H 槽 cron 不得执行 B 项目路径。
 - CR-DFSQ-01：`dao_layer=dao` 不得出现在 cron 执行账本。
 - CR-DFSQ-02：`dao_layer=qi` 的项目树不得编写 L0 `type: required`。
 - CR-X3-NS-001：北极星分子不得是治理自指量（已迁出 SFOP 编号；原 CR-SFOP-03）。

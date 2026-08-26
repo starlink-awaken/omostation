@@ -250,6 +250,107 @@ class TestHbAdjacency:
         assert result["ok"] is True
         assert not any("CR-SFOP-05" in e for e in result["errors"])
 
+    def test_claimed_active_cron_missing_slot_fails(self, tmp_path: Path) -> None:
+        nodes = tmp_path / "nodes"
+        _node(nodes, "omo", "S", "shu")
+        cron = tmp_path / "cron.yaml"
+        cron.write_text(
+            "jobs:\n  - name: live-sched\n    status: active\n    command: python3 bin/gac/meta-doctor.py\n",
+            encoding="utf-8",
+        )
+        mod = _load_mod()
+        result = mod.check(
+            nodes_dir=nodes,
+            registry_path=tmp_path / "missing.yaml",
+            cron_registry_path=cron,
+            projects_root=tmp_path / "projects",
+            baseline_path=tmp_path / "empty.txt",
+            repo_root=tmp_path,
+            skip_call_scan=True,
+        )
+        assert result["ok"] is False
+        assert any("CR-SFOP-06" in e and "live-sched" in e for e in result["errors"])
+
+    def test_claimed_active_cron_illegal_slot_fails(self, tmp_path: Path) -> None:
+        nodes = tmp_path / "nodes"
+        _node(nodes, "omo", "S", "shu")
+        cron = tmp_path / "cron.yaml"
+        cron.write_text(
+            "jobs:\n  - name: live-sched\n    status: active\n    sfop_slot: Z\n"
+            "    command: python3 bin/gac/meta-doctor.py\n",
+            encoding="utf-8",
+        )
+        mod = _load_mod()
+        result = mod.check(
+            nodes_dir=nodes,
+            registry_path=tmp_path / "missing.yaml",
+            cron_registry_path=cron,
+            projects_root=tmp_path / "projects",
+            skip_call_scan=True,
+        )
+        assert result["ok"] is False
+        assert any("CR-SFOP-06" in e and "sfop_slot='Z'" in e for e in result["errors"])
+
+    def test_unclaimed_cron_missing_slot_warns(self, tmp_path: Path) -> None:
+        nodes = tmp_path / "nodes"
+        _node(nodes, "omo", "S", "shu")
+        cron = tmp_path / "cron.yaml"
+        cron.write_text(
+            "jobs:\n  - name: historic\n    command: python3 bin/gac/meta-doctor.py\n",
+            encoding="utf-8",
+        )
+        mod = _load_mod()
+        result = mod.check(
+            nodes_dir=nodes,
+            registry_path=tmp_path / "missing.yaml",
+            cron_registry_path=cron,
+            projects_root=tmp_path / "projects",
+            skip_call_scan=True,
+        )
+        assert result["ok"] is True
+        assert any("CR-SFOP-06" in w and "historic" in w for w in result["warnings"])
+        assert not any("CR-SFOP-06" in e for e in result["errors"])
+
+    def test_claimed_active_cron_legal_slot_passes(self, tmp_path: Path) -> None:
+        nodes = tmp_path / "nodes"
+        _node(nodes, "omo", "S", "shu")
+        cron = tmp_path / "cron.yaml"
+        cron.write_text(
+            "jobs:\n  - name: live-sched\n    status: active\n    sfop_slot: S\n"
+            "    command: python3 bin/gac/meta-doctor.py\n",
+            encoding="utf-8",
+        )
+        mod = _load_mod()
+        result = mod.check(
+            nodes_dir=nodes,
+            registry_path=tmp_path / "missing.yaml",
+            cron_registry_path=cron,
+            projects_root=tmp_path / "projects",
+            skip_call_scan=True,
+        )
+        assert result["ok"] is True
+        assert not any("CR-SFOP-06" in e for e in result["errors"])
+
+    def test_claimed_active_h_cron_reaching_b_fails(self, tmp_path: Path) -> None:
+        nodes = tmp_path / "nodes"
+        _node(nodes, "omo", "S", "shu")
+        cron = tmp_path / "cron.yaml"
+        cron.write_text(
+            "jobs:\n  - name: h-job\n    status: active\n    sfop_slot: H\n"
+            "    command: python3 projects/runtime/bin/run.py\n",
+            encoding="utf-8",
+        )
+        mod = _load_mod()
+        result = mod.check(
+            nodes_dir=nodes,
+            registry_path=tmp_path / "missing.yaml",
+            cron_registry_path=cron,
+            projects_root=tmp_path / "projects",
+            skip_call_scan=True,
+        )
+        assert result["ok"] is False
+        assert any("CR-SFOP-05" in e and "h-job" in e for e in result["errors"])
+
 
 class TestGateInventory:
     def test_sfop_slots_is_blocking_not_soft(self) -> None:
@@ -282,4 +383,6 @@ class TestShippedCli:
         assert "O" in data["vacant_slots"]
         assert not any("toolbox" in w for w in data["warnings"])
         assert "CR-SFOP-05" in data["constraint_ids"]
+        assert "CR-SFOP-06" in data["constraint_ids"]
         assert "CR-DFSQ-01" in data["constraint_ids"]
+        assert not any("CR-SFOP-06" in e for e in data["errors"])
