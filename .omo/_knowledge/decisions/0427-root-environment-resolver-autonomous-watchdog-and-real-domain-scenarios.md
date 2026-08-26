@@ -26,7 +26,7 @@ last-reviewed: '2026-08-25'
 
 ## 2. 核心架构决策 (Decisions)
 
-### D1: 根级统一环境解析器与 CLI 网关 (`bin/cockpit/env-resolver.py` & `bin/omostation`)
+### D1: 根级统一环境解析器与 CLI 网关 (`bin/_archive/2026-08-conv3/cockpit-env-resolver.py` & `bin/omostation`)
 * 自动向上探测工作区根目录，动态将全仓 12 个子项目 `src/` 注入 `sys.path`；
 * 提供统一根级可执行入口 `bin/omostation`，支持 `status`, `daemon`, `policy`, `resident`, `scenario`, `distill`, `watchdog` 等子命令，彻底消除跨仓调用的环境摩擦。
 

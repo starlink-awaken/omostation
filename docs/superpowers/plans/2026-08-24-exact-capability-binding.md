@@ -40,7 +40,7 @@ last-reviewed: 2026-08-25
 | `projects/omo/src/omo/blueprint_control.py` | Preserve exact requirements through compile/admit/dispatch |
 | `bin/plan/bet-ledger.py` | Validate ledger requirements and compile WorkPacket v2 |
 | `projects/omo/src/omo/workflow/lifecycle.py` | Start-time native preflight and immutable run identity |
-| `bin/cockpit/gen-capability-registry.py` | Existing generated projection writer; add skill/workflow projection only |
+| `bin/_archive/2026-08-conv3/cockpit-gen-capability-registry.py` | Existing generated projection writer; add skill/workflow projection only |
 | `bin/capability-sync.py` | Public exact find/inspect/load/invoke boundary and B4-D receipt consumer |
 | `lib/capability_trace_binding.py` | Pure capability kind semantics and replay validation |
 | `lib/capability_native_execution_*` | Pure material/marker/receipt/cleanup/replay contracts; no provider I/O |
@@ -566,7 +566,7 @@ Tag: `delivery/exact-capability-binding-root-start-20260824-v1`.
 ### Task 4: Complete exact discovery/load and activate native execution receipts
 
 **Files:**
-- Modify: `bin/cockpit/gen-capability-registry.py`
+- Modify: `bin/_archive/2026-08-conv3/cockpit-gen-capability-registry.py`
 - Modify: `docs/generated/capability-registry.yaml`
 - Modify: `bin/capability-sync.py`
 - Modify: `lib/capability_trace_binding.py`
@@ -827,14 +827,14 @@ Persist a marker through the existing caller-owned receipt path before `execute_
 - [ ] **Step 6: Run root capability GREEN tests and regenerate projection**
 
 ```bash
-python3 bin/cockpit/gen-capability-registry.py
+python3 bin/_archive/2026-08-conv3/cockpit-gen-capability-registry.py
 uv run --with pyyaml --with pytest python -m pytest \
   tests/test_capability_sync.py \
   tests/test_capability_federation_audit.py \
   tests/test_capability_trace_binding.py \
   tests/test_capability_native_inspection.py \
   tests/test_capability_native_execution_receipt.py -q
-python3 bin/cockpit/gen-capability-registry.py --check --quiet
+python3 bin/_archive/2026-08-conv3/cockpit-gen-capability-registry.py --check --quiet
 ```
 
 Expected: PASS; generated projection is the only generated file.
@@ -1402,7 +1402,7 @@ self-resurrect.
 
 ```bash
 uv run --with pyyaml --with pytest python -m pytest tests/unit/test_phase8_unified_ecosystem.py -q
-python3 bin/cockpit/gen-capability-registry.py --check --quiet
+python3 bin/_archive/2026-08-conv3/cockpit-gen-capability-registry.py --check --quiet
 ```
 
 Commit: `fix(phase8): retire root wrapper bypass commands`.

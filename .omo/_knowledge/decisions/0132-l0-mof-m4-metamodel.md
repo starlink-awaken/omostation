@@ -235,7 +235,7 @@ L0 + M0 引擎
 ### Phase 3 (P3): 派生面统一 (W12)
 
 **A. 文件**: 
-  - `bin/gac/omo-state-cleanup.py` (新增) — 把 `.omo/_derived/` 路径收口
+  - `bin/_archive/2026-08-conv3/omo-state-cleanup.py` (新增) — 把 `.omo/_derived/` 路径收口
   - `.gitignore` 加 `.omo/_derived/` + `**/L0-constraints.v2.yaml`
 **B. 验收**: `git status` 不再 .omo/_derived/ 噪声
 

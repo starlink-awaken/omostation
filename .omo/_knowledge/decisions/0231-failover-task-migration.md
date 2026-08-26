@@ -21,7 +21,7 @@ Batch1 C3: design task migration when a node is lost; script dry-run without rea
 
 1. On false-death / mark_unhealthy, agents on that node stop receiving new tasks.
 2. Scheduler picks least-loaded healthy agent (existing TaskScheduler policy).
-3. Drill entry: `bin/delivery/failover_drill.py --dry-run` (sim 4 nodes, kill node-0,
+3. Drill entry: `bin/_archive/2026-08-conv3/failover_drill.py --dry-run` (sim 4 nodes, kill node-0,
    assert all tasks land elsewhere).
 4. Physical pull-cable uses the same script once hosts restore; no code change path
    for strategy — only env/endpoint config for physical measure.

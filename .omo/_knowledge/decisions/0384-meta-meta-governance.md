@@ -76,7 +76,7 @@ track `docs/plans/` via the 0381 exception budget. Plan:
 2. Reduce the exception budget from 2 → 1 (or close it) once the
    canonical plans doc is moved into the right surface.
 
-### D3. B1 — `bin/gac/gate-effectiveness.py`
+### D3. B1 — `bin/_archive/2026-08-conv3/gate-effectiveness.py`
 
 Read `.omo/_knowledge/governance-history.jsonl` (or fallback to
 gate-runner output), compute per-gate:
@@ -152,8 +152,8 @@ python3 bin/ssot/doc-ssot-lint.py            # 0 conflicts
 python3 bin/gac/gac-healthcheck.py           # 全绿
 
 # B1
-python3 bin/gac/gate-effectiveness.py         # top 5 + bottom 5 table
-python3 bin/gac/gate-effectiveness.py --json | jq '.gates | length'
+python3 bin/_archive/2026-08-conv3/gate-effectiveness.py         # top 5 + bottom 5 table
+python3 bin/_archive/2026-08-conv3/gate-effectiveness.py --json | jq '.gates | length'
 # ≥ 41 (all gates), with score ≥ 0 on at least the actively-firing ones
 
 # 全量

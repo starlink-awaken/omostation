@@ -37,7 +37,7 @@ S3 收敛差距治理复盘识别"低成熟项目稀释健康分"。三个项目
 |------|----------------------|------------|---------|--------------|
 | family-hub | 6 py (极小) | 2026-08-21 | 无 (仅影响范围提及) | 无 |
 | metaos | 102 py (中等) | 2026-08-20 (活跃) | 无 | 无 |
-| mesh-router | bin/gac/gac-mesh-router.py (无独立仓) | deprecated | BET-Y1Q3-T1-06 已收敛至 aetherforge | gac-mesh-router-check (唯一, 已移除) |
+| mesh-router | bin/_archive/2026-08-conv3/gac-mesh-router.py (无独立仓) | deprecated | BET-Y1Q3-T1-06 已收敛至 aetherforge | gac-mesh-router-check (唯一, 已移除) |
 
 ## Considered Options
 
