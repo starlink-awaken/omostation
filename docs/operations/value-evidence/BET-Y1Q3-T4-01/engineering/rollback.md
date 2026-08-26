@@ -13,7 +13,6 @@ verified_at: 2026-08-22
 
 last-reviewed: 2026-08-26
 ---
-
 回滚能力:
 - 所有实现 commit 均为独立合并 commit, 可逐个 `git revert`
 - north_star 恢复(#1845)是纯 rename, revert 无风险

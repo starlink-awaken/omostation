@@ -14,7 +14,6 @@ verified_at: 2026-08-22
 
 last-reviewed: 2026-08-26
 ---
-
 真实 canary 运行(operational 证据):
 - T1-19 ACP stdio cutover 三轮真实 canary(run f21e7fdc)
 - 发现 9 个真实协议缺陷(mock 全绿未拦住, 真实进程握手才暴露)

@@ -37,7 +37,14 @@ def load_policy(root: Path) -> dict[str, object]:
     if not policy_path.is_file():
         return {}
     try:
-        payload = yaml.safe_load(policy_path.read_text(encoding="utf-8")) or {}
+        text = policy_path.read_text(encoding="utf-8")
+        # staleness 管线盖 frontmatter 后 safe_load 只解析首文档 (last-reviewed),
+        # 正文 allowed_ignored_dirs 丢失 → 所有 ignored 目录误判违规 (CI .venv 实锤)
+        if text.startswith("---"):
+            end = text.find("\n---", 3)
+            if end != -1:
+                text = text[end + 4:]
+        payload = yaml.safe_load(text) or {}
     except (OSError, yaml.YAMLError):
         return {}
     return payload if isinstance(payload, dict) else {}

@@ -12,7 +12,6 @@ verified_at: 2026-08-22
 
 last-reviewed: 2026-08-26
 ---
-
 工程测试证据:
 - NorthStar 测试: 验证三轴分离(工程绿不推价值)+ causal 派生(只从真实 receipt)
 - compound-attribution 测试: 验证 overall=unprovable 推导

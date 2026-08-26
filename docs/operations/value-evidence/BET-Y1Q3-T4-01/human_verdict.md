@@ -11,7 +11,6 @@ attested_at: 2026-08-21T12:50:00Z
 
 last-reviewed: 2026-08-26
 ---
-
 人类裁决: 对真实信号(跨仓耦合机制半删的观察)的 never-send 候选给出 accept 裁决。
 裁决由用户(principal:xiamingxing)通过 personal-episode/feedback 端点提交,
 并已用其 SSH 私钥对规范化消息签名(见 attestation receipt)。

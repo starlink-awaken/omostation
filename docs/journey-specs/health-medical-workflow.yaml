@@ -1,0 +1,47 @@
+schema: journey-spec/v1
+journey_id: health-medical-workflow
+title: 健康就医全流程 (4 状态分叉闭环)
+status: draft
+version: 1
+created: 2026-08-26
+owner: xiamingxing
+note: >
+  BET-Y1Q3-T7-02 P1 健康域启动。参照 admin-notification-workflow v3 flat schema
+  (顶层 transitions + states[].next)。P1 只落契约 (场景卡全 draft), 运行时实现
+  与 deadline-tracker 复查节点挂载属 P2。
+description: >
+  症状/指标记录 → (需就诊) 就诊准备 → 就诊记录 → 归档追踪; 或 (仅记录) 直接归档.
+  风险分级对齐 risk_engine DOMAIN_OVERRIDES.health: 记录/归档/报告生成 L0 自动,
+  对医生/医院外发 send_email:doctor L2 强 HITL.
+
+trigger:
+  type: manual_journey_run
+  source: human
+
+states:
+  - name: recorded
+    scene: health-intake
+    next: [prepared, archived]
+  - name: prepared
+    scene: health-visit-prep
+    next: [visited]
+  - name: visited
+    scene: health-visit
+    next: [archived]
+  - name: archived
+    scene: health-archive
+    next: []
+
+transitions:
+  - from: recorded
+    to: prepared
+    condition: "needs_doctor_visit == true"
+  - from: recorded
+    to: archived
+    condition: "needs_doctor_visit == false"
+  - from: prepared
+    to: visited
+    condition: "visit_completed == true"
+  - from: visited
+    to: archived
+    condition: "records_received == true"

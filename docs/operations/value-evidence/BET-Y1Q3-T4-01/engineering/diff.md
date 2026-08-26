@@ -14,7 +14,6 @@ verified_at: 2026-08-22
 
 last-reviewed: 2026-08-26
 ---
-
 实现变更 diff:
 - #1831: 台账 T4-01 done + done_evidence + retro
 - #1845: north_star_meter_v2 恢复(rename from _archive, 100% 相似)

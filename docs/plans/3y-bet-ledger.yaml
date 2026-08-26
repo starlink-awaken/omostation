@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 144
+  total_bets: 145
   windows:
   - Y1Q1
   - Y1Q2
@@ -3555,6 +3555,56 @@ bets:
   human_gate: false
   circuit_breaker: 无法自动关联 → 改为人工每周抽样 10 条
   retro: required
+- id: BET-Y1Q3-T7-02
+  track: T7-SCENE
+  window: Y1Q3
+  title: P1 健康域启动 health-medical-workflow journey + 4 场景卡
+  appetite: 1 day
+  priority: P1
+  status: pending
+  note: 用户 2026-08-26 面授授权 P1 健康域。对齐 risk_engine health 域分级 (generate:report=L0,
+    send_email:doctor=L2) 与 agent-cli-worker 协作标准敏感域约束。
+  goal: 健康域从零资产到最小契约闭环 (记录→就诊→归档追踪)
+  non_goals:
+  - 场景卡运行时实现 (P2)
+  - 健康数据自动采集源接入
+  done_when:
+  - health-medical-workflow journey spec 通过 journey-check
+  - 4 张 health 场景卡通过 scene-card-check
+  - 卡片显式声明 L0/L2 风险分级边界
+  verify:
+  - cmd: make journey-check
+    expect: exit 0
+  - cmd: make scene-card-check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/journey-specs/health-medical-workflow.yaml
+  - docs/scene-cards/health-*.yaml
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 场景卡校验失败 → 降级为纯 spec 不带卡
+  retro: required
+  accepted_specifications:
+  - content_digest: sha256:c736527e1f990e20ffa11eab03b08d6644e5f2cf345e009d3f95637cc2b79310
+    decision_ref: decision://accepted/BET-Y1Q3-T7-02
+    spec_ref: repo://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
+    spec_version: 1.0.0
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 - id: BET-Y1Q3-T2-01
   track: T2-PERCEPT
   window: Y1Q3

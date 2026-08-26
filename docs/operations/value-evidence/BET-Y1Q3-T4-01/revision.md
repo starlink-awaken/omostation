@@ -9,7 +9,6 @@ changed_fields: []
 
 last-reviewed: 2026-08-26
 ---
-
 修订证据: accept 时记录 RevisionReceipt, 引用 never-send draft 候选
 (evidence:// 不透明引用, 不含绝对路径)。changed_fields 为空 = 无修订,
 原样采纳候选。draft 文件为 never_send=true 的本地产物, 永不外发。
