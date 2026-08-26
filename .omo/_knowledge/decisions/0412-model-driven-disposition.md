@@ -5,7 +5,7 @@ status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-08-16
-last-reviewed: 2026-08-16
+last-reviewed: 2026-08-26
 related:
   - ./0399-blueprint-consolidation.md
   - ../../../docs/plans/3y-bet-ledger.yaml#BET-Y1Q2-T1-02

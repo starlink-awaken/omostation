@@ -4,7 +4,7 @@ title: ci-local-fast 真实退出码与 Ruff 有界债务门
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: governance-team
-last-reviewed: 2026-08-11
+last-reviewed: 2026-08-26
 related:
   - ADR-0379
   - ADR-0388

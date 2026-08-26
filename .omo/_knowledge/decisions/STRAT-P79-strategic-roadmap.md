@@ -2,7 +2,7 @@
 status: ACCEPTED
 lifecycle: historical-strategy
 owner: governance-team
-last-reviewed: 2026-07-08
+last-reviewed: 2026-08-26
 related:
   - STRAT-P76-strategic-roadmap.md
   - STRAT-P77-strategic-roadmap.md

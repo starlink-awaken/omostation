@@ -3,7 +3,7 @@ id: ADR-0162
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-07
+last-reviewed: 2026-08-26
 related:
   - 0161-p76-phase7-llm-cron-tasks-mesh.md
   - STRAT-P76-strategic-roadmap.md

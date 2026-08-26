@@ -3,7 +3,7 @@ id: ADR-0287
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-29
+last-reviewed: 2026-08-26
 related:
   - 0247-strategic-pivot-collab-first-physical-deferred.md
   - 0249-governance-budget-cap-40-40-20.md

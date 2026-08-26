@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-03
 owner: governance-team
 lifecycle: ssot
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0356: Manifest-bound Shadow Evaluation 报告与激活边界

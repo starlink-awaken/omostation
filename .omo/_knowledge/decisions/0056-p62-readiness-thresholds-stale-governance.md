@@ -3,7 +3,7 @@ id: ADR-0056
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0056: P62 readiness 阈值优化 + mof-drift v7 stale_governance + install 脚本

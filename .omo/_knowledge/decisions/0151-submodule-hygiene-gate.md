@@ -3,7 +3,7 @@ id: ADR-0151
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-06
+last-reviewed: 2026-08-26
 related:
   - 0150-submodule-pr-reverse-review.md
   - 0149-p71-baseline-no-replay.md

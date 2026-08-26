@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-04
 owner: governance-team
 lifecycle: contract
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0360: Engineering Delivery Cockpit UI 收件箱与人工复核边界

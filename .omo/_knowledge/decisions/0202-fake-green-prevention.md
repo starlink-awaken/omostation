@@ -3,7 +3,7 @@ id: ADR-0202
 status: active
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 related:
   - 0179-runtime-probe-false-positive-treatment.md
   - 0195-architecture-convergence-isc2.md

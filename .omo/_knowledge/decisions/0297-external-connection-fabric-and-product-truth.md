@@ -5,7 +5,7 @@ status: ACCEPTED
 type: decision
 owner: architecture-governance
 created: 2026-08-02
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-26
 lifecycle: decision
 related:
   - ../../standards/external-connection-fabric.md

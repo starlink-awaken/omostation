@@ -5,7 +5,7 @@ status: accepted
 type: adr
 lifecycle: active
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 type: decision
 scope: cockpit task center and workflow mesh operations
 date: 2026-08-03

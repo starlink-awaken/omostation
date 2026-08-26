@@ -3,7 +3,7 @@ id: ADR-0170
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-07
+last-reviewed: 2026-08-26
 related:
   - 0168-p77-phase5-hardcoded-ports.md
   - 0169-p77-phase6-commit-assist-e2e.md

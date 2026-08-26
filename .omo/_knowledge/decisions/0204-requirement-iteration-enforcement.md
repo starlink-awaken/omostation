@@ -3,7 +3,7 @@ id: ADR-0204
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0204 — ADR-0203 可执行闸门 + pre-push 路径 + worktree/ADR 占号

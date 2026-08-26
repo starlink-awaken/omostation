@@ -3,7 +3,7 @@ id: ADR-0401
 status: ACCEPTED
 lifecycle: decision
 owner: architecture-governance
-last-reviewed: 2026-08-24
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0401 — AGE-v2 动态 Agent Cell 架构

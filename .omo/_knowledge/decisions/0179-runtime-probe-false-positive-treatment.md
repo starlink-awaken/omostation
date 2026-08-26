@@ -3,7 +3,7 @@ id: ADR-0179
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-10
+last-reviewed: 2026-08-26
 related:
   - 0178-p79-phase5-closeout.md
   - ../patterns/p76-launcher-zombie-false-positive.md

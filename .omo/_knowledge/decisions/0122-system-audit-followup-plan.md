@@ -3,7 +3,7 @@ id: ADR-0122
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-02
+last-reviewed: 2026-08-26
 related:
   - ../audits/2026-07-02-system-comprehensive-audit.md
   - ../patterns/p71-baseline-recovery-pattern.md

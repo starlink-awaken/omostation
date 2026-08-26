@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-03
 owner: governance-team
 lifecycle: contract
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0357: Engineering Delivery 真实元数据消费者与 Workflow Mesh 回执顺序

@@ -3,7 +3,7 @@ id: ADR-0255
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-28
+last-reviewed: 2026-08-26
 related:
   - 0253-p84-collab-mode-routing-after-k4.md
   - 0254-p84-w22-cclass-collab-detectors.md

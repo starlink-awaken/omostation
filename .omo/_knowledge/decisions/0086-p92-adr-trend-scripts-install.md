@@ -3,7 +3,7 @@ id: ADR-0086
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0086: P92 ADR 趋势洞察 + install-dashboard-cron 推入 scripts/ 子模块

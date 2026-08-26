@@ -3,7 +3,7 @@ id: ADR-0083
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0083: P89 X2 rule 状态洞察 + ADR drift check + 治理深化

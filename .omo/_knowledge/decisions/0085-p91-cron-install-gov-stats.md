@@ -3,7 +3,7 @@ id: ADR-0085
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0085: P91 governance dashboard cron install + X2-FRESH-GOV-DASHBOARD + gov-history-stats 深化

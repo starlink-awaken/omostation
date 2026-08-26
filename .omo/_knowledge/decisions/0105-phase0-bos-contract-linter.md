@@ -3,7 +3,7 @@ id: ADR-0105
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0105: Phase 0 BOS Contract Linter (mof-contract-lint) 落地

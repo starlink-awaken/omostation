@@ -4,7 +4,7 @@ title: AGT × eCOS v6 Integration via BOS URI External Adapter Pattern
 status: ACCEPTED
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-26
 note: "Reissues the AGT × eCOS v6 contract under a fresh id (replaces the placeholder that collided with ADR-0366); see ADR-0366 for the Pyright sweep algorithm."
 ---
 

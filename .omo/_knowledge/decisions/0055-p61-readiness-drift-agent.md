@@ -3,7 +3,7 @@ id: ADR-0055
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0055: P61 readiness 评分修复 + mof-drift v6 增量 + 自治治理代理

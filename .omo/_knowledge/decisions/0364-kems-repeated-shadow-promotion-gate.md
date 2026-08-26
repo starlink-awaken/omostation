@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-04
 owner: architecture-governance
 lifecycle: contract
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0364: KEMS Repeated Shadow Evaluation and Human Promotion Gate

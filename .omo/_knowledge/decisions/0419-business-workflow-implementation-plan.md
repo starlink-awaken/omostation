@@ -7,7 +7,7 @@ lifecycle: contract
 type: adr
 owner: governance-team
 date: 2026-08-19
-last-reviewed: 2026-08-20
+last-reviewed: 2026-08-26
 tags: [business, knowledge-ingest, shadow-mode, signal-sources]
 supersedes: []
 related:

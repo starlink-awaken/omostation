@@ -3,7 +3,7 @@ id: ADR-0240
 status: ACCEPTED
 lifecycle: decision
 owner: 夏明星
-last-reviewed: 2026-07-28
+last-reviewed: 2026-08-26
 related:
   - 0238-mof-m4-phase0-registry-self-governance.md
   - docs/proposals/2026-07-25-mof-m4-governance-optimization-plan.md

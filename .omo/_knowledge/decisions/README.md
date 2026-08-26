@@ -2,7 +2,7 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-29
+last-reviewed: 2026-08-26
 note: "P45 曾标记 archived, 但 ADR 制度仍活跃 (113 ADR), 2026-06-29 恢复 active"
 ---
 

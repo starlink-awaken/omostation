@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-04
 owner: architecture-governance
 lifecycle: contract
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0363: External Resource Refresh Plan and Controlled Reachability

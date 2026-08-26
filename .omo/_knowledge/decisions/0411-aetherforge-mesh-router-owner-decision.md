@@ -5,7 +5,7 @@ status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-08-16
-last-reviewed: 2026-08-16
+last-reviewed: 2026-08-26
 related:
   - ./0409-documents-capability-route-owner-convergence.md
 ---

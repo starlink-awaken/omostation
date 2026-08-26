@@ -5,7 +5,7 @@ status: accepted
 type: adr
 lifecycle: active
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 type: decision
 scope: Cockpit external connection fabric
 date: 2026-08-03

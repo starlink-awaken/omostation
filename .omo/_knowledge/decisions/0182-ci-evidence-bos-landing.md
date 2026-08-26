@@ -3,7 +3,7 @@ id: ADR-0182
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-14
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0182 — CI · evidence · BOS registry 常态化落地

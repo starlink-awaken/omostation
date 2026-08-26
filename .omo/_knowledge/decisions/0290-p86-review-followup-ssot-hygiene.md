@@ -3,7 +3,7 @@ id: ADR-0290
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-29
+last-reviewed: 2026-08-26
 related:
   - 0247-strategic-pivot-collab-first-physical-deferred.md
   - 0289-p86-a2-type1-demote-true-dispatch-shortfall.md

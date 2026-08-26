@@ -3,7 +3,7 @@ id: ADR-0183
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-14
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0183 — Wave 2 Phase A 范围锁定

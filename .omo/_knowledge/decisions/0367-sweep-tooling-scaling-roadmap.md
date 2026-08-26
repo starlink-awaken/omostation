@@ -5,7 +5,7 @@ status: PROPOSED
 date: 2026-08-04
 owner: governance-team
 lifecycle: plan
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-26
 related:
   - 0366-pyright-sweep-algorithm.md
   - 0130-p74-workflow-solidification.md

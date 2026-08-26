@@ -3,7 +3,7 @@ id: ADR-0201
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0201 — Doctor-cron 状态 API + path-acl 连续 warn 告警

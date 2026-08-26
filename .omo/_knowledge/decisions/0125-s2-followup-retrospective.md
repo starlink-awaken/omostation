@@ -3,7 +3,7 @@ id: ADR-0125
 status: active
 lifecycle: retrospective
 owner: governance-team
-last-reviewed: 2026-07-02
+last-reviewed: 2026-08-26
 related:
   - ../decisions/0122-system-audit-followup-plan.md
   - 0124-s1-followup-retrospective.md

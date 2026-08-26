@@ -3,7 +3,7 @@ id: ADR-0219
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 related:
   - 0216-compass-feedback-partial-smoke.md
   - 0217-workflow-hygiene-layer-check-and-evidence.md

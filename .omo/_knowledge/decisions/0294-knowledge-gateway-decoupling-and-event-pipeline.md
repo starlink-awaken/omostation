@@ -4,7 +4,7 @@ title: 知识网关解耦与增量事件索引管道
 status: ACCEPTED
 lifecycle: decision
 owner: engineering-agent
-last-reviewed: 2026-08-01
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0294: 知识网关解耦与增量事件索引管道

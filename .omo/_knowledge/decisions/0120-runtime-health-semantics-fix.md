@@ -3,7 +3,7 @@ id: ADR-0120
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-02
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0120: Runtime 健康监控语义修正与 SSOT 一致性加固

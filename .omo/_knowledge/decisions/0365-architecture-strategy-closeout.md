@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-04
 owner: architecture-governance
 lifecycle: contract
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0365: Adopt a scenario-first architecture strategy and Workflow Mesh as the sole execution spine

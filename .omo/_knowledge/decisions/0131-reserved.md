@@ -3,7 +3,7 @@ id: ADR-0131
 status: superseded
 lifecycle: dead
 owner: none
-last-reviewed: 2026-07-06
+last-reviewed: 2026-08-26
 ---
 # ADR 0131: Reserved
 

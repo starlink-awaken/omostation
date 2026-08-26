@@ -4,7 +4,7 @@ title: CI Consolidation — scope dedup, pytest merge, integration filter, workf
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: governance-team
-last-reviewed: 2026-08-07
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0386 Decision: CI Check Consolidation (Architecture Analysis + Plan)

@@ -3,7 +3,7 @@ id: ADR-0060
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0060: P66 alert-aggregator --notify 主动通知 (omo event emit aggregated)

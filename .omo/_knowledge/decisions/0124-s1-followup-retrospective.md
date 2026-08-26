@@ -3,7 +3,7 @@ id: ADR-0124
 status: active
 lifecycle: retrospective
 owner: governance-team
-last-reviewed: 2026-07-02
+last-reviewed: 2026-08-26
 related:
   - 0122-system-audit-followup-plan.md
   - ../patterns/p71-baseline-recovery-pattern.md

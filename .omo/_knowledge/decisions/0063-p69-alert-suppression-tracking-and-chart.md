@@ -3,7 +3,7 @@ id: ADR-0063
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0063: P69 抑制标记精确统计 + alert-history ASCII 趋势图

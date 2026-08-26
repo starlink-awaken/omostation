@@ -3,7 +3,7 @@ id: ADR-0090
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0090: P96 真 Levenshtein TYPO 修复 + venv 一致性 + X2-FRESH-ADR-DRIFT

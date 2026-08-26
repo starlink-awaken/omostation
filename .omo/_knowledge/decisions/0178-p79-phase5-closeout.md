@@ -3,7 +3,7 @@ id: ADR-0178
 status: ACCEPTED
 lifecycle: historical-strategy
 owner: governance-team
-last-reviewed: 2026-07-08
+last-reviewed: 2026-08-26
 related:
   - STRAT-P79-strategic-roadmap.md
   - 0177-p79-phase4-docs-refresh.md

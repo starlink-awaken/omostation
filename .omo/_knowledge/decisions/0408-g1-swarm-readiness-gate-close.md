@@ -4,7 +4,7 @@ title: G-1 Swarm Readiness Gate Close — six SR direct evidence
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: governance-team
-last-reviewed: 2026-08-11
+last-reviewed: 2026-08-26
 related:
   - ADR-0407
   - ADR-0371

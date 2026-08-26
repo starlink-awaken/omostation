@@ -3,7 +3,7 @@ id: ADR-0231
 status: ACCEPTED
 lifecycle: decision
 owner: 夏明星
-last-reviewed: 2026-07-24
+last-reviewed: 2026-08-26
 related:
   - 0230-agent-registry-node-role-capability.md
   - 0228-m1-acceptance-physical-deferred-reorder.md

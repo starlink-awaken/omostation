@@ -3,7 +3,7 @@ id: ADR-0159
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-07
+last-reviewed: 2026-08-26
 related:
   - 0158-p76-phase4-promotion.md
   - 0157-p76-phase3-self-meta.md
@@ -104,7 +104,7 @@ P76 Phase 5 (W12) 完成 3 项核心交付, **同时是 P76 全 5 phase 的收�
 STRAT-P76-strategic-roadmap.md:
 - status: draft → ACCEPTED
 - lifecycle: strategy-decision → historical-strategy
-- last-reviewed: 2026-07-06 → 2026-07-07
+- last-reviewed: 2026-08-26 → 2026-07-07
 - supersedes: []
 
 最终路线: 12 周 5 phase 全部交付, 无重做, 无回退

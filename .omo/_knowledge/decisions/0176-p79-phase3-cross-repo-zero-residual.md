@@ -3,7 +3,7 @@ id: ADR-0176
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-08
+last-reviewed: 2026-08-26
 related:
   - STRAT-P79-strategic-roadmap.md
   - 0174-p79-phase1-foundry-v2-cron.md

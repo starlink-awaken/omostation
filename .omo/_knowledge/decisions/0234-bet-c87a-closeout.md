@@ -4,7 +4,7 @@ title: "BET-c87a http-mcp-convergence 收尾正式立项"
 status: DONE
 lifecycle: accepted
 date: 2026-07-24
-last-reviewed: 2026-07-31
+last-reviewed: 2026-08-26
 owner: governance-team
 supersedes: BET-C87A-CLOSEOUT-PREP-2026-07-24.md (evidence-only)
 deciders: governance-team

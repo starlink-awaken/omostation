@@ -3,7 +3,7 @@ id: ADR-0075
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0075: P81 watchdog 集成 + dashboard UI + z-score 洞察 + 跨子目录引用检查

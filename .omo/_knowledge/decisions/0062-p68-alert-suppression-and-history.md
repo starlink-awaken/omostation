@@ -3,7 +3,7 @@ id: ADR-0062
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0062: P68 告警抑制时间窗 + 告警历史趋势报告

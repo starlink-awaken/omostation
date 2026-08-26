@@ -3,7 +3,7 @@ id: ADR-0211
 status: ACCEPTED
 lifecycle: governance-state-mutation
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 omo_task_ref: null
 agent_workflow_run: 20260715T080633Z-governance-state-mutation-1f020416
 supersedes: []

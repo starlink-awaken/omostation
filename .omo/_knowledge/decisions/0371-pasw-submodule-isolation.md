@@ -4,7 +4,7 @@ title: PASW — Per-Agent Submodule Worktree 隔离
 status: ACCEPTED
 lifecycle: decision
 owner: 夏明星
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-26
 related:
   - 0220-swarm-coordination-discipline-m1-gate.md
   - 0106-gac-governance-as-code.md

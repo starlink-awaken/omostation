@@ -3,7 +3,7 @@ id: ADR-0052
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0052: P54-P55 知识面深度收敛 — 设计契约区建立 + frontmatter 100% 全覆盖

@@ -3,7 +3,7 @@ id: ADR-0051
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0051: gbrain TODOs v5 终极收敛 — unknown 19→0 (P52)

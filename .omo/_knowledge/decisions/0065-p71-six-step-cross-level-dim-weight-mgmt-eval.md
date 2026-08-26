@@ -3,7 +3,7 @@ id: ADR-0065
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0065: P71 governance-agent 6 步 + alert-history 跨级别 + dim-weight + management 142 评估

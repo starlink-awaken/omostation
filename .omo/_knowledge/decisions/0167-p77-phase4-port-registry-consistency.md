@@ -3,7 +3,7 @@ id: ADR-0167
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-07
+last-reviewed: 2026-08-26
 related:
   - 0164-p77-phase1-cross-repo-consistency.md
   - 0165-p77-phase2-evolution-guardrails.md

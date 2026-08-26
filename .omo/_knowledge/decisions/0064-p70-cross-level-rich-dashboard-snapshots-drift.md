@@ -3,7 +3,7 @@ id: ADR-0064
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0064: P70 跨级别抑制 + rich 颜色 + dashboard 6 卡片 + 快照持久化 + mof-drift v8 趋势集成

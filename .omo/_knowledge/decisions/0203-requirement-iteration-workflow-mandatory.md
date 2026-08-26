@@ -3,7 +3,7 @@ id: ADR-0203
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0203 — 需求迭代强制走 Agent Workflow

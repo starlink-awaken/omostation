@@ -3,7 +3,7 @@ id: ADR-0106
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-26
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0106: GaC 治理即代码架构 (Governance-as-Code)

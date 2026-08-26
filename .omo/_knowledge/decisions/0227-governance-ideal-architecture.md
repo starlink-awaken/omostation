@@ -3,7 +3,7 @@ id: ADR-0227
 status: ACCEPTED
 lifecycle: decision
 owner: 夏明星
-last-reviewed: 2026-07-21
+last-reviewed: 2026-08-26
 related:
   - 0220-swarm-coordination-discipline-m1-gate.md
   - 0218-agent-isolation-p0-verify-and-hygiene.md

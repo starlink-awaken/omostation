@@ -6,7 +6,7 @@ type: decision
 owner: product-architecture
 date: 2026-08-03
 lifecycle: active
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - 0330-external-resource-review-queue.md

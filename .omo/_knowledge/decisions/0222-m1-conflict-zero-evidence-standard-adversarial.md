@@ -3,7 +3,7 @@ id: ADR-0222
 status: ACCEPTED
 lifecycle: decision
 owner: 架构师
-last-reviewed: 2026-07-18
+last-reviewed: 2026-08-26
 related:
   - 0210-three-year-strategy-execution-convergence.md
   - 0220-swarm-coordination-discipline-m1-gate.md

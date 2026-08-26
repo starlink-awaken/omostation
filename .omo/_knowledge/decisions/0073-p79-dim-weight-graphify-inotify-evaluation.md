@@ -3,7 +3,7 @@ id: ADR-0073
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0073: P79 dim-weight 真实调优 + graphify --report-only + inotify 评估

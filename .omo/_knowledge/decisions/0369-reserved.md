@@ -4,7 +4,7 @@ title: Reserved slot
 status: reserved
 lifecycle: dead
 owner: governance-team
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-26
 ---
 # ADR 0369: Reserved
 

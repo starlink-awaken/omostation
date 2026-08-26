@@ -5,7 +5,7 @@ status: accepted
 type: adr
 lifecycle: active
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 date: 2026-08-02
 deciders: architecture-governance
 supersedes: []

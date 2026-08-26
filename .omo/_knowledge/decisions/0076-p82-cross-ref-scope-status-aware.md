@@ -3,7 +3,7 @@ id: ADR-0076
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0076: P82 cross-ref scope-aware + status-aware + 死链治理收口

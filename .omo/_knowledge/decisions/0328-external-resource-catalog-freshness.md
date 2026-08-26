@@ -6,7 +6,7 @@ type: decision
 owner: architecture-governance
 date: 2026-08-03
 lifecycle: active
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - 0319-external-resource-observation-surfaces.md

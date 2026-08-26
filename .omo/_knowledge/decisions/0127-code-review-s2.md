@@ -3,7 +3,7 @@ id: ADR-0127
 status: active
 lifecycle: retrospective
 owner: governance-team
-last-reviewed: 2026-07-03
+last-reviewed: 2026-08-26
 related:
   - ../decisions/0126-s2-final-analysis.md
   - ../../.omo/_knowledge/decisions/0126-s2-final-analysis.md

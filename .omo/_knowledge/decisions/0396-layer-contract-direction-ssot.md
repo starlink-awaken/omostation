@@ -6,7 +6,7 @@ type: decision
 owner: architecture-governance
 date: 2026-08-07
 lifecycle: active
-last-reviewed: 2026-08-07
+last-reviewed: 2026-08-26
 related:
   - 0156-p76-phase2-call-direction.md
   - 0217-workflow-hygiene-layer-check-and-evidence.md

@@ -6,7 +6,7 @@ date: 2026-08-03
 owner: engineering-team
 scope: Workflow Mesh / OMO / Cockpit
 lifecycle: active
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0317: WorkflowRequested 到受治理 admission 的晋升边界

@@ -2,7 +2,7 @@
 status: ACCEPTED
 lifecycle: historical-strategy
 owner: governance-team
-last-reviewed: 2026-07-07
+last-reviewed: 2026-08-26
 related:
   - 0155-p76-phase1-cleanup.md
   - 0156-p76-phase2-call-direction.md

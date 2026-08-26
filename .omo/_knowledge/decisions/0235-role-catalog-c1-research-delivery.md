@@ -3,7 +3,7 @@ id: ADR-0235
 status: ACCEPTED
 lifecycle: decision
 owner: 夏明星
-last-reviewed: 2026-07-25
+last-reviewed: 2026-08-26
 related:
   - 0230-agent-registry-node-role-capability.md
   - STRAT-P81-strategic-roadmap.md

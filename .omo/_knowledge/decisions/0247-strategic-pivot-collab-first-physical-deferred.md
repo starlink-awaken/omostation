@@ -3,7 +3,7 @@ id: ADR-0247
 status: ACCEPTED
 lifecycle: decision
 owner: 夏明星
-last-reviewed: 2026-07-26
+last-reviewed: 2026-08-26
 related:
   - 0414-physical-multihost-tension-resolution.md
   - 0210-three-year-strategy-execution-convergence.md

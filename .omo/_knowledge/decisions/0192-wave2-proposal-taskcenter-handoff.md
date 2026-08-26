@@ -3,7 +3,7 @@ id: ADR-0192
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0192 — Wave2 提案 → TaskCenter 闭环（dry-run plan）

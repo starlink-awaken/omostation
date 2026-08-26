@@ -6,7 +6,7 @@ type: decision
 owner: architecture-governance
 lifecycle: active
 created: 2026-08-02
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-26
 related:
   - ../../../.omo/standards/external-connection-fabric.md
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

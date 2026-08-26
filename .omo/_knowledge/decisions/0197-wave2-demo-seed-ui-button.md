@@ -3,7 +3,7 @@ id: ADR-0197
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0197 — Cockpit「加载演示数据」按钮

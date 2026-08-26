@@ -3,7 +3,7 @@ id: ADR-0216
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 related:
   - 0202-fake-green-prevention.md
   - 0215-agora-gateway-false-green-pid-health-check.md

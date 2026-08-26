@@ -3,7 +3,7 @@ id: ADR-0200
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0200 — operating-rhythm 接入 omo-doctor-cron

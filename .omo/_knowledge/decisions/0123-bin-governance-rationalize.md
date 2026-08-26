@@ -3,7 +3,7 @@ id: ADR-0123
 status: proposed
 lifecycle: rfc
 owner: governance-team
-last-reviewed: 2026-07-02
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0123: bin/ 治理工具集重整 (命名归一 + 孤立工具接入 gate)

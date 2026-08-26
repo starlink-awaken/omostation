@@ -3,7 +3,7 @@ id: ADR-0058
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0058: P64 dashboard 数据源 + 异常自动告警 (--alert mode)

@@ -3,7 +3,7 @@ id: ADR-0153
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
+last-reviewed: 2026-08-26
 related:
   - 0152-m4-gac-rules.md
   - 0151-submodule-hygiene-gate.md

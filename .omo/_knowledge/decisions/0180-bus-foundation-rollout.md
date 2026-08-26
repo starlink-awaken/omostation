@@ -3,7 +3,7 @@ id: ADR-0180
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-13
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0180 — bus-foundation 全面落地 (P7x-bus-foundation-rollout)

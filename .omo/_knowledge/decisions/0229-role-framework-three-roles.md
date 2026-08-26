@@ -3,7 +3,7 @@ id: ADR-0229
 status: ACCEPTED
 lifecycle: decision
 owner: 夏明星
-last-reviewed: 2026-07-24
+last-reviewed: 2026-08-26
 related:
   - 0228-m1-acceptance-physical-deferred-reorder.md
   - STRAT-P81-strategic-roadmap.md

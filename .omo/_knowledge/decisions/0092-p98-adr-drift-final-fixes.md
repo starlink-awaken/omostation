@@ -3,7 +3,7 @@ id: ADR-0092
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0092: P98 ADR drift 实际修复 + regex bug 修 + P50+ 19→2 (-89%)

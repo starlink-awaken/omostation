@@ -5,7 +5,7 @@ status: accepted
 type: decision
 owner: architecture-governance
 lifecycle: active
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-26
 related:
   - ../../standards/agent-cli-worker-collaboration.md
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

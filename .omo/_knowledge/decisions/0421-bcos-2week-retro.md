@@ -7,7 +7,7 @@ lifecycle: retrospective
 type: retrospective
 owner: governance-team
 date: 2026-08-19
-last-reviewed: 2026-08-20
+last-reviewed: 2026-08-26
 tags: [bcos, retrospective, 2-week]
 supersedes: []
 related:

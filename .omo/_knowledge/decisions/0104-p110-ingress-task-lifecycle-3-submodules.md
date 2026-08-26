@@ -3,7 +3,7 @@ id: ADR-0104
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0104: P110 omo_ingress_task_lifecycle 3 子模块化 (1530→614L, <800L warn 清零)

@@ -3,7 +3,7 @@ id: ADR-0140
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
+last-reviewed: 2026-08-26
 related:
   - 0132-l0-mof-m4-metamodel.md
   - 0129-state-projection-plane-phase3.md

@@ -3,7 +3,7 @@ id: ADR-0082
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0082: P88 omo_lint 拆解 + X2 rule template standard + governance 趋势报告

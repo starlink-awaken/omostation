@@ -3,7 +3,7 @@ id: ADR-0096
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0096: P102 omo_lint surfaces 子模块拆分 (731→594L, <600L ideal 达成)

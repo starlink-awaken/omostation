@@ -3,7 +3,7 @@ id: ADR-0217
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 related:
   - 0203-requirement-iteration-workflow-mandatory.md
   - 0216-compass-feedback-partial-smoke.md

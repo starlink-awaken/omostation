@@ -4,7 +4,7 @@ title: CI plane completion — runner migration, orphan cleanup, concurrent-drif
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: governance-team
-last-reviewed: 2026-08-06
+last-reviewed: 2026-08-26
 ---
 
 # 0380 — CI Plane Completion Round

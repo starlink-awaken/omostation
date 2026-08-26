@@ -3,7 +3,7 @@ id: ADR-0188
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0188 — Wave 2 Phase C: C2G → OMO 治理提案联动（无自动改规则）

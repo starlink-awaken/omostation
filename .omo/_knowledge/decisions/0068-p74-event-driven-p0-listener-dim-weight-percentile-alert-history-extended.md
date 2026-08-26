@@ -3,7 +3,7 @@ id: ADR-0068
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0068: P74 事件驱动 P0 检测 + dim-weight percentile 调优 + alert-history 多维扩展

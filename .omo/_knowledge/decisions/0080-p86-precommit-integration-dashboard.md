@@ -3,7 +3,7 @@ id: ADR-0080
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0080: P86 pre-commit 集成 4 治理工具 + governance dashboard

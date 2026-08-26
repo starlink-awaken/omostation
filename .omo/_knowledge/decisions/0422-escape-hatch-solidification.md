@@ -6,7 +6,7 @@ status: accepted
 lifecycle: decision
 owner: governance-team
 date: 2026-08-21
-last-reviewed: 2026-08-21
+last-reviewed: 2026-08-26
 tags: [d4, escape-hatch, swarm, gac]
 related:
   - ADR-0220 (swarm coordination D4)

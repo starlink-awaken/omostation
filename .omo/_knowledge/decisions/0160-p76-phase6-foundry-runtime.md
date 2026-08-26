@@ -3,7 +3,7 @@ id: ADR-0160
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-07
+last-reviewed: 2026-08-26
 related:
   - 0159-p76-phase5-foundry.md
   - 0158-p76-phase4-promotion.md

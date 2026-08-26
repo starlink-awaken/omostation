@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-03
 owner: governance-team
 lifecycle: contract
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0359: Engineering Delivery Cockpit 人工复核工作台边界

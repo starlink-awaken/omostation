@@ -3,7 +3,7 @@ id: ADR-0209
 status: PROPOSED
 lifecycle: governance-audit
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 omo_task_ref: null
 agent_workflow_run: 20260715T074610Z-governance-audit-d0d7c3c6
 supersedes: []

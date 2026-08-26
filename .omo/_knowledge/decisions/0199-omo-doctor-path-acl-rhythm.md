@@ -3,7 +3,7 @@ id: ADR-0199
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0199 — `omo doctor` 纳入 path-acl 日常节奏

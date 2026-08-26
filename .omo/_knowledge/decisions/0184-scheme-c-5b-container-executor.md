@@ -3,7 +3,7 @@ id: ADR-0184
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0184 — Scheme C Phase 5b: Container Executor 运行时模型

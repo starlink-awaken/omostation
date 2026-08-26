@@ -3,7 +3,7 @@ id: ADR-0050
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0050: gbrain 53 TODOs 4 类决策 (P50 R2)

@@ -4,7 +4,7 @@ title: CI Pruner + SSOT Usage — scheduled prune-ci-runs cron + SSOT freshness 
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: governance-team
-last-reviewed: 2026-08-07
+last-reviewed: 2026-08-26
 ---
 
 # 0385 — CI Pruner + SSOT Usage Round

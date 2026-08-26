@@ -3,7 +3,7 @@ id: ADR-0213
 status: ACCEPTED
 lifecycle: governance-audit
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-08-26
 related:
   - 0209-ledger-trim-and-adr-ssot-renumbering.md
   - 0203-requirement-iteration-workflow-mandatory.md

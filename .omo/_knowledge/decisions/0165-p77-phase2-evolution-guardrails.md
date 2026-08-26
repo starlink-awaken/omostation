@@ -3,7 +3,7 @@ id: ADR-0165
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-07
+last-reviewed: 2026-08-26
 related:
   - 0164-p77-phase1-cross-repo-consistency.md
   - STRAT-P77-strategic-roadmap.md (Phase 2 启动)

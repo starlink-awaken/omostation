@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-03
 owner: governance-team
 lifecycle: contract
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0358: Engineering Delivery 机器摄取与人工复核反馈边界

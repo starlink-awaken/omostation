@@ -4,7 +4,7 @@ title: Meta-meta governance — rebase-regen automation + gate effectiveness too
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: governance-team
-last-reviewed: 2026-08-06
+last-reviewed: 2026-08-26
 ---
 
 # 0384 — Meta-Meta Governance Round (PLANNED)

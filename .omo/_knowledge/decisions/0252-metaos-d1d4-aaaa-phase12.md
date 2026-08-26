@@ -3,7 +3,7 @@ id: ADR-0252
 status: ACCEPTED
 lifecycle: decision
 owner: 夏明星
-last-reviewed: 2026-07-28
+last-reviewed: 2026-08-26
 related:
   - 0242-metaos-registry-drift-gate-extension.md
   - docs/proposals/2026-07-25-metaos-governance-optimization-plan.md

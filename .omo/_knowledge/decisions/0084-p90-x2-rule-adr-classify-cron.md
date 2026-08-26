@@ -3,7 +3,7 @@ id: ADR-0084
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0084: P90 X2 rule 扩 (OMO-LINT-SIZE) + ADR drift 归类 + governance dashboard cron

@@ -3,7 +3,7 @@ id: ADR-0088
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0088: P94 adr-drift-apply + 13 god-module list + REAL_BUG 修复

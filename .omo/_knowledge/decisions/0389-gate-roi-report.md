@@ -4,7 +4,7 @@ title: M5 gate ROI 治理价值报告 — 量化 gate 价值的减法决策输�
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: governance-team
-last-reviewed: 2026-08-07
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0389 Decision: M5 gate ROI 治理价值报告

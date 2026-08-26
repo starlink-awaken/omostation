@@ -4,7 +4,7 @@ title: CI 平面净红收官 — scripts/check-* orphan 化 + drift 检测 ahead
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: governance-team
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0395 Decision: CI 平面净红收官

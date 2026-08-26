@@ -6,7 +6,7 @@ type: adr
 date: 2026-08-03
 lifecycle: active
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 decision: "以 external-scene-consumer/v1 登记真实消费者边界，并将其作为晋升就绪度的必需事实；声明不授予执行权限。"
 ---
 

@@ -4,7 +4,7 @@ title: CI runs cap governance + E-5 path-filter SSOT completion
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: governance-team
-last-reviewed: 2026-08-06
+last-reviewed: 2026-08-26
 ---
 
 # 0383 — CI Runs Cap Governance + E-5 Completion Round

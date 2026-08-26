@@ -5,7 +5,7 @@ status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-08-17
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-26
 deciders:
   - 夏明星 (最终确认 pending)
   - governance-agent (起草)

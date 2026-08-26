@@ -3,7 +3,7 @@ id: ADR-0158
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-07
+last-reviewed: 2026-08-26
 related:
   - 0157-p76-phase3-self-meta.md
   - 0156-p76-phase2-call-direction.md

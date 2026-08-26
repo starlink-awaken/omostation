@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-02
 owner: engineering-team
 lifecycle: active
-last-reviewed: 2026-08-02
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0315: Knowledge to Action 以引用、任务和行动回执组成 J2 垂直切片

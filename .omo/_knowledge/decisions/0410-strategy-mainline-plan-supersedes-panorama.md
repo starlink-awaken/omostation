@@ -4,7 +4,7 @@ title: 三年战略主线归属 — Plan supersede Panorama
 status: ACCEPTED
 lifecycle: ACTIVE
 owner: 夏明星
-last-reviewed: 2026-08-15
+last-reviewed: 2026-08-26
 related:
   - ADR-0203
   - ADR-0210

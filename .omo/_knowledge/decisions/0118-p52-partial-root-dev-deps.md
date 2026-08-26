@@ -3,7 +3,7 @@ id: ADR-0118
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-30
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0118: 根仓 dev-deps 统一 — 部分真治本 + P3 follow-up

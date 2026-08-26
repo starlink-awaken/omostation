@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-04
 owner: governance-team
 lifecycle: contract
-last-reviewed: 2026-08-04
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0366: Pyright 与 Ruff 扫描修复算法固化

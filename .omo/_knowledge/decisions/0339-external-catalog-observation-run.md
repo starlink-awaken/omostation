@@ -6,7 +6,7 @@ type: adr
 date: 2026-08-03
 lifecycle: active
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-26
 decision: "将一次外部目录发现/只读探活作为独立的运行事实持久化，但不把它提升为业务成功或 WorkflowRun 证据。"
 ---
 

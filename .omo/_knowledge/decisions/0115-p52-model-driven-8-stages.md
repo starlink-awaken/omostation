@@ -3,7 +3,7 @@ id: ADR-0115
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-30
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0115: model-driven LifecycleStage 7→8 阶段 (P60 GOVERNANCE_MAINTENANCE)

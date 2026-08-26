@@ -3,7 +3,7 @@ id: ADR-0098
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0098: P104 omo_governance_surfaces snapshots 子模块拆分 (1762→1244L, 13→12 god-module)

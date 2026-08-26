@@ -3,7 +3,7 @@ id: ADR-0150
 status: ACCEPTED
 lifecycle: decision
 owner: governance-team
-last-reviewed: 2026-07-06
+last-reviewed: 2026-08-26
 related:
   - 0142-decisions-quick-ref.md
   - 0147-mcptool-adder-guide.md

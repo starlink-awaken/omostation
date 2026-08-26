@@ -3,7 +3,7 @@ id: ADR-0121
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-02
+last-reviewed: 2026-08-26
 ---
 
 # ADR-0121: Governance Convergence Special Initiative (GCSI) — 治理收敛专项
