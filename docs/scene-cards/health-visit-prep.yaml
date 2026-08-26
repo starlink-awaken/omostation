@@ -1,0 +1,29 @@
+title: Health Visit Prep Scene Card (就诊准备包生成)
+status: draft
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-26
+related:
+- ./health-intake.yaml
+---
+schema: scene-card/v2
+scene_id: health-visit-prep
+journey_id: health-medical-workflow
+goal: 汇总症状时间线 + 历史健康摘要 + 就诊问题清单, 生成就诊准备包供人携带就诊
+trigger: journey 前置状态 recorded 判定 needs_doctor_visit == true 后进入
+input_contract: 本地健康台账中的历史记录 + 当前症状时间线
+result_contract: 就诊准备包 (symptom_timeline/history_summary/question_list) 供人工使用
+outcome_metric: health_visit_prep_completeness
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 就诊时遗漏关键症状信息或想不起要问的问题
+data_classification: confidential
+data_scope: local-health-ledger-only
+operator: health-visit-prep-dispatch-under-human-review
+required_capabilities:
+- llm:local-summarize
+- storage:local-health-ledger
+notes:
+- 'P1 契约先行: 实现属 P2; 就诊准备包仅本地生成与展示, 不自动发送给任何外部方'
+- '风险边界: L0 (报告生成类, 对齐 risk_engine health.generate:report=L0); 若未来需发医生邮箱属 L2 强 HITL'
