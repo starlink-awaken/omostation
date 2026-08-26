@@ -31,6 +31,16 @@ Before editing:
 | ADR-0198 Domain Cartridge Factory | Vertical governance package manager (health / tech transfer) | `ecos-constraint cartridge list/export/validate` |
 | ADR-0199 Unified BOS URI, Cockpit & Cognitive Workflow | Full-lifecycle integration across Human Terminal → BOS → Agent Workflow | `cockpit intent/challenge/cartridge/fabric`, `bos://governance/*`, `bos://fabric/*` |
 
+**Binding architecture (DFSQ / SFOP) — obey, do not grow a parallel OS.**
+
+Current constraints and future direction are governed by 道法术器 (DFSQ) nested on MOF, and 脊面运行模式 (SFOP) slot grammar:
+
+- Theory: [`docs/architecture/dao-fa-shu-qi.md`](docs/architecture/dao-fa-shu-qi.md)
+- Runtime slots: [`docs/architecture/os-operating-pattern-v1.md`](docs/architecture/os-operating-pattern-v1.md)
+- Blocking law: `python3 bin/gac/check-sfop-slots.py` (CR-SFOP-01/02; gate id `sfop-slots`); `python3 bin/gac/check-execution-chain.py` (CR-EXEC-CHAIN-01; gate id `execution-chain`)
+
+Do **not** add a second dispatcher, a fifth ontology, or a new top-level human entry. New workspace projects join by declaring `sfop_slot` + `dao_layer` on a `COMP-WS-*` node. Mesh (`COMP-WS-omo`) is the only active `S` slot. AGE-v2 / resident / BCOS are backends, projectors, or meters — not a second operating system.
+
 Project-specific instructions override this guide only within that project and only when they do not violate workspace governance.
 
 ## 1.1 RED LINE — Requirement iterations MUST use Agent Workflow (ADR-0203)
@@ -161,6 +171,8 @@ The full documentation contract is [`.omo/standards/doc-ssot-contract.md`](.omo/
 
 Stable architecture contracts live in [`ARCHITECTURE.md`](ARCHITECTURE.md). Project layer placement is generated from [`docs/project-registry.yaml`](docs/project-registry.yaml) into [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md).
 
+**道法术器 (DFSQ/v1)** nests on MOF; it is not a fifth ontology. Slot grammar + unique Mesh dispatcher (`COMP-WS-omo` = S): `python3 bin/gac/check-sfop-slots.py --json` (CR-SFOP-01/02/04/05, CR-DFSQ-01/02). Constitution stack (skills × workflow × MCP × CLI × scripts × githooks × CI × cron) fuses into one execution-chain check: `python3 bin/gac/check-execution-chain.py --json` (CR-EXEC-CHAIN-01; live uncovered = warn, claimed-active orphan = fail-closed). Spec: [`docs/architecture/dao-fa-shu-qi.md`](docs/architecture/dao-fa-shu-qi.md). Do not invent a parallel OS or a second dispatcher.
+
 ## 4. Governance Boundaries
 
 | Surface | Rule |
@@ -196,6 +208,17 @@ make ssot-guardian
 make gac-validate
 make gac-drift
 ```
+
+### 道法术器槽位 & 执行链覆盖 (DFSQ/v1)
+
+```bash
+python3 bin/gac/check-sfop-slots.py --json             # CR-SFOP-01/02/04/05/06 + CR-DFSQ-01/02
+python3 bin/gac/check-execution-chain.py --json        # CR-EXEC-CHAIN-01: constitution stack inventories
+```
+
+- **sfop-slots**: `COMP-WS-*` 必须自报合法 `sfop_slot` / `dao_layer`；活跃 Project 中 `S` 槽恰好一个且为 `COMP-WS-omo`（CR-SFOP-01/02 fail-closed）。P/O 允许空槽。H↛B 须经 F 或 `cockpit.adapters`（允许的 H 侧 B 端口），其它 H 文件新增 fail-closed。声称活跃的 cron 必须带合法 `sfop_slot`（CR-SFOP-06）；未声称活跃的缺槽仅 warn。dao 不入 cron；qi 不写 L0 required。`toolbox` 为仓外能力，不要求 COMP-WS。
+- **execution-chain**: 融合 script-registry × ci-surfaces × cron × capability-registry (MCP/CLI) × agent-workflows × `.agents/skills` × `.githooks`。现网未接线 = warn；`extra_active` 声称活跃却不在任一本账 = fail-closed。
+- 两检查均为 root-owned blocking（不在 `SOFT_CHECKS`），防 ecos `sgf-policy.yaml` 覆盖丢失。不新建第五套本体或平行 GaC。
 
 ### 能力防腐 & 投影强制 (差距治理 S1, 2026-08-24)
 

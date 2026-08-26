@@ -102,7 +102,7 @@ for r in last:
 ## 后续
 
 1. **12-24h 后**: 验证 dev 环境 daemon tick 写出含 checks 的事件
-2. **修复确认后**: 重跑 `bin/gac/gate-roi-report.py` 看 7 gates 真实 30d 趋势（不再是冻结数据）
+2. **修复确认后**: 重跑 `bin/_archive/2026-08-conv3/gate-roi-report.py` 看 7 gates 真实 30d 趋势（不再是冻结数据）
 3. **ADR-0390 §五 暂缓项** 此时可启动: agora-health/task-consistency/doc-lifecycle 真假修复判定 + ruff-lint/debt-integrity warn 降级
 4. **bet T1-00** "并发写冲突止血" 应补一条: 合并后必须 re-verify 修复代码在生产 omo 指针下的可读性 (cherry-pick 不算落地)
 

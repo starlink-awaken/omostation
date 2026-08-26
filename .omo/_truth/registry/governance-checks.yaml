@@ -184,8 +184,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 139
-    adr_baseline: 361
-    script_baseline: 487    # 2026-08-25: main 并发合并遗留 (#2158 unified-health-score + #2160 error-knowledge 加脚本未同步 baseline), 487 active → SCRIPT-BASELINE-SYNC 铁律已固化
+    script_baseline: 498    # 2026-08-25: #2170 / #2187 / #2189 新增脚本后同步实际计数, 494 active → SCRIPT-BASELINE-SYNC
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

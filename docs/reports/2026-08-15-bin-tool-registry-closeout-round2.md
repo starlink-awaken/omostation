@@ -261,7 +261,7 @@
   - `bin/gac/event-loop-lint.py`
   - `bin/gac/kos-seed-import.py`
   - `bin/gac/phase-gate-check.py`
-  - `bin/gac/alert-mock-p0-notify.py`
+  - `bin/_archive/2026-08-conv3/alert-mock-p0-notify.py`
 - 为可执行闭环，补齐 Makefile：
   - `.PHONY` 增加 `bin-tool-registry-round9`
   - `make bin-tool-registry-round9` 作为 strict + 并行缺口 + 依赖热点 + 周报的一键闭环。

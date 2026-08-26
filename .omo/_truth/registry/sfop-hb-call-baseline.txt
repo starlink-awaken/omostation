@@ -1,0 +1,4 @@
+# SFOP H→B call baseline (CR-SFOP-05).
+# Stable keys: file:H->B:caller->callee (no line numbers).
+# Adapter seam files are allowed and omitted. Do not add keys to hide new calls.
+# Emptied 2026-08-26 after cockpit #80 moved non-adapter imports into adapters/.

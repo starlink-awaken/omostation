@@ -5,6 +5,7 @@ type: collab-trail
 batch: 2
 task_id: cockpit-debt-debt-1
 task_path: .omo/tasks/planned/cockpit-debt-debt-1.yaml
+last-reviewed: 2026-08-25
 ---
 
 # `cockpit-debt-debt-1`

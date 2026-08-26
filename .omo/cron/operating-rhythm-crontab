@@ -2,7 +2,6 @@
 #
 # 三档节奏 (Meadows 9 范式级杠杆, initiative governance-operating-rhythm):
 #   daily      - 每天 09:00 (status 检查: agent-workflow + governance-evolution)
-#   weekly     - 周一 10:00 (mof-state-bridge + mof-drift 桥接巡检)
 #   pre_release - 手动触发 (PR 合并前, 不进 cron; 跑 make gac-local-gate + compliance + validate)
 #
 # 治理源: .omo/_truth/registry/governance-evolution-roadmap.yaml::operating_rhythm
@@ -22,7 +21,6 @@ OMO_WORKSPACE_ROOT=
 # doctor + path-acl 摘要 (ADR-0200) → runtime/cron/omo-doctor-latest.json
 20 9 * * * test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && uv run --with pyyaml python bin/agent-workflow.py doctor --json >> runtime/cron/operating-rhythm-daily.log 2>&1
 # ── weekly 周一 10:00 (MOF 桥接 + drift 巡检) ──
-0 10 * * 1 test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --json >> runtime/cron/operating-rhythm-weekly.log 2>&1
 5 10 * * 1 test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && bin/mof/mof-drift >> runtime/cron/operating-rhythm-weekly.log 2>&1
 30 10 * * 1 test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && uv run --project projects/omo omo debt refresh --now "$(date -u +\%Y-\%m-\%dT\%H:\%M:\%SZ)" >> runtime/cron/operating-rhythm-weekly.log 2>&1
 # ── weekly-review 主人周检视卡 (M3 仪式心跳源, 周一 10:35) ──

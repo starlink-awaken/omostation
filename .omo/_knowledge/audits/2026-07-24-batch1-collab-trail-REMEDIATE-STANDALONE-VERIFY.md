@@ -5,6 +5,7 @@ type: collab-trail
 backlog: true
 task_id: REMEDIATE-STANDALONE-VERIFY
 task_path: .omo/tasks/remediation/REMEDIATE-STANDALONE-VERIFY.yaml
+last-reviewed: 2026-08-25
 ---
 
 # Real backlog collab: `REMEDIATE-STANDALONE-VERIFY`

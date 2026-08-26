@@ -61,7 +61,7 @@ def _registry() -> dict:
         "version": "1.0.0",
         "schema": "capability-registry/v1",
         "owner": "workspace-capability-governance",
-        "writer": "bin/cockpit/gen-capability-registry.py",
+        "writer": "bin/ssot/gen-capability-registry.py",
         "generated_at": "1970-01-01T00:00:00Z",
         "totals": {"mcp_servers": 1, "mcp_tools": 1, "bos_services": 1, "bos_domains": 1, "cli_commands": 0},
         "mcp_servers": [

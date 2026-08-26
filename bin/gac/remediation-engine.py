@@ -59,6 +59,13 @@ REMEDIATION_STRATEGIES = {
         "fixer": "generate_health_diagnostic",
         "auto_fixable": False,
     },
+    "mdead_dead_ref": {
+        "description": "MDEAD 断链引用(文件被归档/移动但 crontab/config 引用未同步)",
+        "severity": "P1",
+        "detector": "detect_mdead_dead_refs",
+        "fixer": "fix_mdead_dead_refs",
+        "auto_fixable": True,
+    },
 }
 
 
@@ -207,6 +214,69 @@ def detect_health_degradation() -> list[dict]:
 
 
 # ── 修复器 ──────────────────────────────────────────────────
+
+
+
+def detect_mdead_dead_refs() -> list[dict]:
+    """运行 meta-doctor --json 提取 dead reference 类型的 debt proposals."""
+    import subprocess
+    script = REPO / "bin" / "gac" / "meta-doctor.py"
+    if not script.is_file():
+        return []
+    try:
+        r = subprocess.run(
+            ["python3", str(script), "--workspace", str(REPO)],
+            capture_output=True, text=True, timeout=60,
+        )
+        raw = r.stdout
+        start = raw.find("{")
+        if start < 0:
+            return []
+        data = json.loads(raw[start:])
+        findings = []
+        for p in data.get("debt_proposals", []):
+            if "断链" in p.get("title", "") or "dead" in p.get("title", "").lower():
+                findings.append({
+                    "proposal_id": p.get("id", ""),
+                    "title": p.get("title", ""),
+                    "target_ref": p.get("target_ref", ""),
+                    "severity": p.get("severity", "medium"),
+                })
+        return findings
+    except Exception:
+        return []
+
+
+def fix_mdead_dead_refs(findings: list[dict], dry_run: bool = True) -> list[dict]:
+    """对 MDEAD 断链尝试从 git 历史恢复文件(仅当 target_ref 可解析出路径时)."""
+    import subprocess
+    results = []
+    for f in findings:
+        title = f.get("title", "")
+        # 从标题提取路径: "引用断链: <filename>"
+        parts = title.replace("引用断链: ", "").strip()
+        candidate = REPO / "bin" / "gac" / parts
+        if not candidate.is_file() and not (REPO / "bin" / "ssot" / parts).is_file():
+            # 尝试在 git 历史中找到最近一次存在该文件的 commit
+            search_paths = [f"bin/gac/{parts}", f"bin/ssot/{parts}"]
+            restored = False
+            for sp in search_paths:
+                r = subprocess.run(
+                    ["git", "log", "--all", "--format=%H", "-1", "--", sp],
+                    capture_output=True, text=True, cwd=REPO,
+                )
+                sha = r.stdout.strip()
+                if sha:
+                    if dry_run:
+                        results.append({"action": "would_restore", "path": sp, "from_commit": sha[:12]})
+                    else:
+                        subprocess.run(["git", "checkout", sha, "--", sp], cwd=REPO, check=True)
+                        results.append({"action": "restored", "path": sp, "from_commit": sha[:12]})
+                    restored = True
+                    break
+            if not restored and not dry_run:
+                results.append({"action": "cannot_auto_fix", "path": parts})
+    return results
 
 def fix_stale_docs(stale_docs: list[dict], dry_run: bool = True) -> list[dict]:
     """修复过期文档: 更新 last-reviewed 为今天."""

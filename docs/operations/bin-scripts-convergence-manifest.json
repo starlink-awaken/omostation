@@ -1750,7 +1750,7 @@
     },
     {
       "name": "gen_capability_registry",
-      "bin": "bin/cockpit/gen-capability-registry.py",
+      "bin": "bin/ssot/gen-capability-registry.py",
       "scripts": "scripts/bin/cockpit/gen-capability-registry.py",
       "status": "managed",
       "action": "bin-master, scripts-retired",
@@ -1758,7 +1758,7 @@
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/cockpit/gen-capability-registry.py"
+          "bin/ssot/gen-capability-registry.py"
         ],
         "retired_files": [
           "scripts/bin/cockpit/gen-capability-registry.py"
@@ -1790,7 +1790,7 @@
     },
     {
       "name": "gen_help_docs",
-      "bin": "bin/cockpit/gen-help-docs.py",
+      "bin": "bin/ssot/gen-help-docs.py",
       "scripts": "scripts/bin/cockpit/gen-help-docs.py",
       "status": "managed",
       "action": "bin-master, scripts-retired",
@@ -1798,7 +1798,7 @@
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/cockpit/gen-help-docs.py"
+          "bin/ssot/gen-help-docs.py"
         ],
         "retired_files": [
           "scripts/bin/cockpit/gen-help-docs.py"

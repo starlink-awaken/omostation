@@ -28,7 +28,7 @@ RESOLUTION_SOURCE_REF = "generated:capability-registry/v1"
 CANONICAL_REGISTRY_METADATA = {
     "schema": "capability-registry/v1",
     "owner": "workspace-capability-governance",
-    "writer": "bin/cockpit/gen-capability-registry.py",
+    "writer": "bin/ssot/gen-capability-registry.py",
 }
 SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 IDENTITY_RE = re.compile(r"^[A-Za-z0-9._:@/-]{1,256}$")

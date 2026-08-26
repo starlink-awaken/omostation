@@ -3,6 +3,7 @@ title: Batch2 C1 physical recovery package
 date: 2026-07-24
 type: audit
 batch: 2
+last-reviewed: 2026-08-25
 ---
 
 # Physical recovery package

@@ -1,0 +1,28 @@
+---
+schema: resident-decision/v1
+status: draft
+trigger_event_type: StepTimeout
+trace_id: trace-StepTimeout
+workflow_run_id: 
+event_id: 
+proposal_count: 1
+generated_at: 2026-08-25T10:50:14Z
+last-reviewed: 2026-08-25
+---
+
+# 决策提案收件箱 (T10-13)
+
+## 触发事件
+
+- event_type: StepTimeout
+- trace_id: trace-StepTimeout
+- workflow_run_id: 
+- event_id: 
+
+## 提案内容 (1 条)
+
+### 1. [?] ?
+
+- 类型: ? (severity: ?)
+- 建议: 
+

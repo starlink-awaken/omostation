@@ -245,6 +245,7 @@ projects:
      layer_aligned_with: "ecos/src/ecos/ssot/mof/m1/domain/DOMAIN-toolbox-tools.yaml"
      stack: "Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline)"
      build_backend: "external-capability-runtime"
+     # 仓外能力平面，不是 git 子模块；check-sfop-slots 不要求 COMP-WS-toolbox.yaml
      role: "本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP×5 / Skill×5 / CLI×1 / Pipeline×2)"
      storage: "/Users/xiamingxing/ToolBox/"
      version: "v5 (2026-07-21)"

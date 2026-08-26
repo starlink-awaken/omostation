@@ -1,0 +1,28 @@
+title: Admin Submit Scene Card (提交草稿与归档)
+status: draft
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-25
+related:
+- ./admin-review.yaml
+---
+schema: scene-card/v2
+scene_id: admin-submit
+journey_id: admin-notification-workflow
+goal: 生成提交上级的邮件草稿并记录 trust outcome, 完成任务闭环
+trigger: journey reviewing→submitted 转移 (status == succeeded)
+input_contract: latest_subject
+result_contract: 'submission_draft 草稿路径 + task_completed 布尔'
+outcome_metric: submit_draft_acceptance_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 提交遗漏导致任务未闭环 (草稿模式, 发送由人确认)
+data_classification: internal
+data_scope: draft-email-only
+operator: admin-submit-dispatch-under-risk-engine
+required_capabilities:
+- risk_engine:submit-check
+- mail:create-draft
+notes:
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_submit (risk_engine L3 检查 + record_outcome 信任闭环)'

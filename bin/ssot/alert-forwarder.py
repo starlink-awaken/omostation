@@ -59,6 +59,20 @@ def _read_incremental() -> tuple[list[dict[str, Any]], int]:
     return events, file_size
 
 
+def _load_alert_connectors() -> Any:
+    """Load bin/ssot/alert-connectors.py by file path (dash name, not importable)."""
+    import importlib.util
+
+    connector_file = Path(__file__).resolve().parent / "alert-connectors.py"
+    if not connector_file.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("alert_connectors", connector_file)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
 def _send_alert(event: dict[str, Any]) -> bool:
     """Route one alert via alert-connectors; returns success."""
     severity = str(event.get("severity") or "")
@@ -66,8 +80,11 @@ def _send_alert(event: dict[str, Any]) -> bool:
     title = str(event.get("title") or event.get("event_type") or "resident-alert")
     body = str(event.get("message") or event.get("description") or json.dumps(event, ensure_ascii=False)[:300])
     try:
-        sys.path.insert(0, str(Path(__file__).resolve().parent))
-        from alert_connectors import build_connectors, route_connector  # noqa: PLC0415
+        connectors = _load_alert_connectors()
+        if connectors is None:
+            return False
+        build_connectors = connectors.build_connectors
+        route_connector = connectors.route_connector
 
         conn = route_connector(severity, domain)
         if conn is None:
@@ -77,8 +94,8 @@ def _send_alert(event: dict[str, Any]) -> bool:
                     break
         if conn is None:
             return False
-        conn.send(severity=severity, title=title, body=body)
-        return True
+        receipt = conn.deliver({"severity": severity, "title": title, "body": body, "domain": domain})
+        return receipt.get("result_state") == "delivered"
     except Exception as exc:  # noqa: BLE001 - alert is best-effort
         print(f"  alert_send_failed {severity}: {exc}", file=sys.stderr)
         return False

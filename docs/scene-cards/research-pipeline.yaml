@@ -46,7 +46,7 @@ notes:
 - '调研管线: 问题 → 收集 (rss/zhihu/wxread) → 推导 → 检索 → 报告. 提升自 research-pipeline scenario.'
 - '场景绑定: kairon.kronos(收集) + kairon.ontoderive(推导) + kairon.minerva(检索) + gbrain(记忆).'
 - '连接器: iris:rss (14.1K, 信息源订阅) + iris:zhihu (7K, 专业讨论) + iris:wxread (7.8K, 深度阅读).'
-- Transitioned shadow→assisted at 2026-08-25T06:08:33.050442+00:00 by xiamingxing
+- Transitioned shadow→assisted at 2026-08-25T06:51:32.714265+00:00 by xiamingxing
 bet: BET-Y1Q1-T3-01
 falsifier: 若 shadow 期间无研究报告被自动汇编，则场景无价值，回退 draft
 activation_blockers: []

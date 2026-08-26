@@ -261,7 +261,7 @@ score = loader.compute_meta_confidence(
 | ID | 任务 | 工时 | 产物 |
 |----|------|------|------|
 | P3-1 | 审计所有 `.omo/_derived/` 现有产物 | 4h | audit log |
-| P3-2 | 写 `bin/gac/omo-state-cleanup.py` | 8h | ~200 行 |
+| P3-2 | 写 `bin/_archive/2026-08-conv3/omo-state-cleanup.py` | 8h | ~200 行 |
 | P3-3 | 更新 `.gitignore` | 1h | `.gitignore` +1 行 |
 | P3-4 | 36 仓 24 个 .omo/_derived/ 路径收口 | 8h | 24 path |
 

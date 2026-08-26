@@ -59,7 +59,7 @@ last-reviewed: 2026-08-24
 | 维度 | 数据 |
 |------|------|
 | 状态 | deprecated (owner 收敛至 aetherforge) |
-| 实现 | bin/gac/gac-mesh-router.py (无独立仓) |
+| 实现 | bin/_archive/2026-08-conv3/gac-mesh-router.py (无独立仓) |
 | 引用 | 主仓零引用/未接线 |
 
 **选项**:
