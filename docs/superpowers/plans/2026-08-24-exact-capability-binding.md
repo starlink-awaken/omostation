@@ -2,7 +2,7 @@
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-25
+last-reviewed: 2026-08-26
 ---
 
 # Wave B Exact Capability Binding Implementation Plan
@@ -11,23 +11,23 @@ last-reviewed: 2026-08-25
 
 **Goal:** Make accepted WorkPackets declare exact Skill/Workflow/MCP/BOS requirements and make every admitted dispatch produce replayable, identity-bound native execution receipts without introducing a second registry, scheduler, database, or value truth.
 
-**Architecture:** Extend the existing WorkPacket v2 contract with an optional strict `capability_requirements` list, then make new BETs compile and preflight it at workflow start. Dispatch rebinds the same requirements to real assignment/admission/dispatch identities, while `capability-sync` and existing Agora/Cockpit/OMO choke points consume the existing B4 trace, inspection, cleanup, and execution receipt libraries. Delivery is child-first and split across eCOS, OMO, root, Agora/Cockpit, then a root integration canary.
+**Architecture:** Extend the existing WorkPacket v2 contract with an optional strict `capability_requirements` list, then make new BETs compile and preflight it at workflow start. Dispatch rebinds the same requirements to real assignment/admission/dispatch identities. Task 6B adds one root read-only `verify-material` projection over the existing material v1 and OMO Workflow Mesh, then makes Cockpit consume that verdict before any effect; it does not add an OMO service, Cockpit-local validator, registry, daemon or cache. Delivery stays staged across eCOS, OMO, root verifier, Cockpit child, root gitlink and a final production-topology canary.
 
 **Tech Stack:** Python 3.9-compatible source, Python 3.13 test runtime via uv, YAML SSOT/MOF, Pydantic v2, pytest, Git submodules, GitHub PR checks, Orca orchestration.
 
 ## Global Constraints
 
-- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.1.1`, digest `sha256:85156f1848b1c6d6dfa092d4755ea2b8ffaa567920889f52c7e23ebe86c209d3`. The 1.1.1 scope amendment records the Phase8 root bypass facts behind merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) and adds Wave E (§7) with the child-first/root-follow-up ordering; the 2026-08-25 correction uses schema-valid `maturity: deprecated` for the two `maturity: draft` registry entries, makes the refusal tests concrete, and separates LaunchAgent cleanup into a governed post-merge ops follow-up.
+- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.1.2`, digest `sha256:34d9d086f5f8991169aa895791ddddf5bca9610370a91ae8020edf470f236d44`. The 1.1.2 amendment records the current root/Cockpit pointer divergence and freezes the C-lite verifier contract: reuse material v1, bind its admission digest to `WorkflowAdmitted.proof`, verify persisted step/worker identity read-only, gate Cockpit before effects and leave OMO/Agora unchanged in this slice.
 - BET: `BET-Y1Q3-T1-12`; every edit must be covered by its WorkPacket and a current claim.
 - No new capability registry writer, scheduler, broker, database, workflow, or dispatch truth.
 - No automatic Human Verdict, decision outcome, time-saved estimate, or personal value promotion; all execution receipts keep `value_indicator_policy=false`.
 - No query first-match, wildcards, caller-supplied adapter/transport/argv, or legacy invoke strings.
-- New blocking behavior rolls out shadow → warning → fail; do not hard-fail unmeasured legacy traffic.
+- New blocking behavior rolls out shadow → warning → fail; do not hard-fail unmeasured legacy traffic. Task 6B effectful HTTP/MCP paths have no proved legitimate caller, so verifier-unavailable starts fail-closed while root bundle-absent legacy invocation remains on its existing shadow track.
 - Child repository PRs merge and tag before the root gitlink moves; root pointers must reference child `origin/main` descendants.
 - Use independent clone v2 delivery attempts. Never edit `/Users/xiamingxing/Workspace` or reuse a linked worktree as a writer.
 - Every implementation task ends with targeted tests, an independent Orca review, commit, source tag, PR-context CI, merge, and lifecycle retirement receipt.
 - After every two or three PRs, rerun the main/open-PR/submodule strategic delta audit and update Documents.
-- The bootstrap waiver ended with merged PR #2137. This plan and its ledger scope correction are governed by run `20260824T130405Z-bet-execution-6de0fd3a`; they do not extend or reuse the waiver.
+- The bootstrap waiver ended with merged PR #2137. The 1.1.2 amendment is governed by run `20260826T112630Z-bet-execution-555d73bb`; it does not extend or reuse any waiver.
 
 ---
 
@@ -47,8 +47,10 @@ last-reviewed: 2026-08-25
 | `projects/omo/src/omo/worker_lifecycle.py` | Persisted admission recheck before StepDispatched |
 | `projects/omo/src/omo/omo_worker_dispatch.py` | Single admitted worker dispatch path; remove dead legacy grant |
 | `projects/cockpit/src/cockpit/commands/bos.py` | Human CLI consumer that forwards canonical binding inputs |
+| `projects/cockpit/src/cockpit/_subcommands.py` | Canonical BOS parser owns the five existing bundle flags |
+| `projects/cockpit/src/cockpit/adapters/capability_binding.py` | One fixed-argv subprocess adapter; no local validation rules |
 | `projects/cockpit/src/cockpit/web/api_kems.py` | Remove the already-dead naked dispatch endpoint |
-| `projects/agora/src/agora/capability_gateway.py` | Native gateway receipt fields, never identity authority |
+| `projects/agora/src/agora/capability_gateway.py` | Existing binding-digest carrier; unchanged by Task 6B unless a new direct gap is proved |
 | `docs/architecture/*` and Instruction Pack | Durable status, entrypoint and handoff contract |
 
 ---
@@ -952,106 +954,115 @@ Tag: `delivery/exact-capability-binding-omo-integrity-20260824-v1`.
 
 ---
 
-### Task 6: Make Cockpit/Agora consume the same binding and retire naked entrypoints
+### Task 6B: Verify persisted admission and gate every Cockpit effect path
 
 **Files:**
+- Modify: `bin/capability-sync.py`
+- Modify: `tests/test_capability_sync.py`
+- Modify: `projects/cockpit/src/cockpit/_subcommands.py`
 - Modify: `projects/cockpit/src/cockpit/commands/bos.py`
 - Modify: `projects/cockpit/src/cockpit/web/api_kems.py`
 - Modify: `projects/cockpit/src/cockpit/agent_runtime_server.py`
 - Modify: `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py`
-- Create: `projects/cockpit/src/cockpit/tests/test_bos_capability_invoke.py`
-- Create: `projects/cockpit/src/cockpit/tests/test_api_kems_retired.py`
+- Create: `projects/cockpit/src/cockpit/adapters/capability_binding.py`
+- Create: `projects/cockpit/src/cockpit/tests/test_capability_binding_adapter.py`
+- Modify: `projects/cockpit/src/cockpit/tests/test_bos_capability_invoke.py`
+- Modify: `projects/cockpit/src/cockpit/tests/test_api_kems_retired.py`
 - Modify: `projects/cockpit/src/cockpit/tests/test_agent_runtime_server.py`
+- Modify: `projects/cockpit/src/cockpit/tests/test_agent_runtime_mcp_server.py`
 - Modify: `projects/cockpit/tests/test_api_kems_dispatch.py`
-- Modify: `projects/agora/src/agora/capability_gateway.py`
-- Modify: `projects/agora/tests/unit/test_capability_gateway.py`
 
 **Interfaces:**
-- Consumes: root capability-sync CLI inputs and OMO admission identity.
-- Produces: no alternative identity; KEMS returns 410; agent-runtime effectful tools reject unbound calls.
+- Consumes: bounded `capability-admission-verification-request/v1`, frozen `native-execution-material/v1`,
+  and the existing OMO Workflow Mesh event log.
+- Produces: one redacted `capability-admission-verification-receipt/v1`; no alternative identity, marker,
+  cache or execution state. Cockpit only consumes the verdict through fixed argv/stdin.
 
-- [ ] **Step 1: Write Cockpit RED forwarding tests**
-
-```python
-def test_bos_invoke_forwards_all_binding_receipts(monkeypatch, tmp_path):
-    captured: list[str] = []
-    monkeypatch.setattr(
-        subprocess,
-        "run",
-        lambda argv, **kwargs: captured.extend(argv)
-        or subprocess.CompletedProcess(argv, 0, stdout="{}", stderr=""),
-    )
-    rc = run_bos_capability_invoke(
-        capability_id="bos-service:bos://capability/test/invoke",
-        input_json=tmp_path / "input.json",
-        binding_json=tmp_path / "binding.json",
-        inspection_receipt_json=tmp_path / "inspection.json",
-        admission_receipt_json=tmp_path / "admission.json",
-        operation_id="test.invoke",
-        effect_classification="read_only",
-    )
-    assert rc == 0
-    assert "--binding-json" in captured
-    assert "--inspection-receipt-json" in captured
-    assert "--admission-receipt-json" in captured
-```
-
-- [ ] **Step 2: Downline the already-dead KEMS naked dispatch endpoint**
-
-Replace the naked `dispatch_task` call with an explicit response:
+- [ ] **Step 1: Write root RED verifier tests**
 
 ```python
-raise HTTPException(
-    status_code=410,
-    detail="KEMS direct dispatch was retired; use an admitted WorkPacket through OMO BlueprintControl",
-)
+def test_verify_material_rejects_cross_run_before_any_outbound_call(mesh, material, request, counters):
+    material["binding"]["workflow_run_id"] = "other-run"
+    receipt = verify_material_against_mesh(mesh.omo_dir, envelope(material, request))
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "admission_binding_mismatch"
+    assert counters == {"provider": 0, "router": 0, "gateway": 0, "subprocess": 0}
 ```
 
-Delete the direct import. Add a test asserting 410 and zero OMO writes.
+- [ ] **Step 2: Implement root `verify-material` as a bounded read-only projection**
 
-- [ ] **Step 3: Make agent-runtime non-authoritative by default**
+The CLI reads one envelope from stdin and calls the existing material validator. It recomputes the request digest,
+checks expected capability/operation/effect, reads `WorkflowMeshStore.snapshot(workflow_run_id)`, and compares:
 
-For `/run-task` and MCP `run_task`, require a validated binding before effectful tools:
+- admission id and `"sha256:" + admission.proof` to the material admission projection;
+- packet id/hash to the trace binding and persisted request identity;
+- admitted StepRun plus exact dispatch/worker/step/admission/packet context for effectful calls;
+- live state and admission expiry.
 
-```python
-if tools_enabled and binding_receipt is None:
-    raise HTTPException(
-        status_code=403,
-        detail="effectful agent-runtime tools require an admitted capability binding",
-    )
-```
+It emits only a redacted verdict. It does not accept a caller-controlled OMO path, write a marker, or call a provider,
+router, gateway or nested subprocess.
 
-Read-only chat without tools remains available and returns `authority_state="non_authoritative"`.
-
-- [ ] **Step 4: Keep Agora a transport/receipt carrier, not identity owner**
-
-Add `binding_digest` to the fixed receipt field set, derive it only from the validated binding supplied by capability-sync, and reject caller options containing identity fields. The gateway must never mint actor/run/packet/assignment/dispatch IDs.
-
-- [ ] **Step 5: Run child GREEN tests**
+- [ ] **Step 3: Run root GREEN and no-write regression**
 
 ```bash
-cd projects/agora
-uv run pytest tests/unit/test_capability_gateway.py -q
-uv run ruff check src/agora/capability_gateway.py tests/unit/test_capability_gateway.py
-
-cd ../cockpit
-uv run pytest src/cockpit/tests/test_bos_capability_invoke.py src/cockpit/tests/test_api_kems_retired.py src/cockpit/tests/test_agent_runtime_server.py tests/test_api_kems_dispatch.py -q
-uv run ruff check src/cockpit/commands/bos.py src/cockpit/web/api_kems.py src/cockpit/agent_runtime_server.py src/cockpit/agent_runtime_mcp_server.py
+uv run --with pyyaml --with pytest python -m pytest \
+  tests/test_capability_sync.py tests/test_capability_native_execution_receipt.py -q
+uv run --with ruff ruff check bin/capability-sync.py tests/test_capability_sync.py
 ```
 
-Expected: PASS.
+Expected: valid dispatched/running bindings verify; missing, malformed, cross-run, wrong proof/digest, expired,
+wrong capability/operation/effect/request and worker mismatch reject with stable codes and zero outbound/write calls.
 
-- [ ] **Step 6: Commit/tag/merge child PRs in order**
+- [ ] **Step 4: Write Cockpit RED adapter and entrypoint tests**
 
-Agora merges first because its receipt gains the validated binding digest:
+Cover these contracts before implementation:
 
-- Commit: `feat(agora): carry validated capability binding digest`
-- Tag: `delivery/exact-capability-binding-agora-20260824-v1`
+1. canonical BOS parser exposes and forwards all five existing bundle flags;
+2. adapter argv is fixed to root `bin/capability-sync.py verify-material`, uses stdin, `shell=False`, bounded timeout,
+   and rejects non-verified/malformed output;
+3. HTTP `/run-task` and chat-with-tools, MCP `run_task` and MCP `chat` reject seven invalid classes before
+   `get_runtime()`, tool-schema construction or tool execution;
+4. verifier unavailable is fail-closed; unbound chat returns `authority_state=non_authoritative` with no tools;
+5. PoisonRequest/ASGI receive proves KEMS 410 never reads the body.
 
-Cockpit after Agora main:
+- [ ] **Step 5: Implement one shared Cockpit adapter and gate every effect path**
 
-- Commit: `fix(cockpit): converge capability execution entrypoints`
-- Tag: `delivery/exact-capability-binding-cockpit-20260824-v1`
+`agent_runtime_server.py` and `agent_runtime_mcp_server.py` import only the shared adapter. They do not import root
+pure libraries or duplicate structural rules. MCP `chat` gains the binding input and both MCP tools gate before
+runtime construction. KEMS moves the fixed 410 above `request.json()`. `_subcommands.py` owns the five BOS flags;
+`commands/bos.py` keeps the existing forwarding implementation.
+
+- [ ] **Step 6: Run Cockpit GREEN and focused regression**
+
+```bash
+cd projects/cockpit
+uv run pytest \
+  src/cockpit/tests/test_capability_binding_adapter.py \
+  src/cockpit/tests/test_bos_capability_invoke.py \
+  src/cockpit/tests/test_api_kems_retired.py \
+  src/cockpit/tests/test_agent_runtime_server.py \
+  src/cockpit/tests/test_agent_runtime_mcp_server.py \
+  tests/test_api_kems_dispatch.py -q
+uv run ruff check \
+  src/cockpit/_subcommands.py src/cockpit/commands/bos.py \
+  src/cockpit/adapters/capability_binding.py src/cockpit/web/api_kems.py \
+  src/cockpit/agent_runtime_server.py src/cockpit/agent_runtime_mcp_server.py
+```
+
+- [ ] **Step 7: Deliver root first, then Cockpit child, then root gitlink**
+
+1. Root verifier: commit/tag/PR/CI/merge without changing any gitlink.
+2. Fresh Cockpit clone from child `origin/main` (`a271a0d` or descendant): commit/tag/PR/CI/merge.
+3. Fresh root follow-up advances `projects/cockpit` only to a child-main descendant containing Task 6B.
+
+Tags:
+
+- `delivery/exact-capability-binding-root-verifier-20260826-v1`
+- `delivery/exact-capability-binding-cockpit-gate-20260826-v1`
+- `delivery/exact-capability-binding-root-pointer-20260826-v1`
+
+Stop before implementation if reading persisted admission requires an OMO write/service change, any local validator copy,
+new daemon/port/cache, caller-controlled authority path, or a negative case cannot prove zero runtime/tool/provider calls.
 
 ---
 
