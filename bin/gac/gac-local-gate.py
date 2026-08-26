@@ -423,7 +423,7 @@ for _gap_gate in (
     {
         "id": "sfop-slots",
         "command": ["bin/gac/check-sfop-slots.py", "--json"],
-        "note": "SFOP/DFSQ: COMP-WS 必须声明 sfop_slot+dao_layer; 活跃 S 槽至多一个且为 COMP-WS-omo (CR-SFOP-01/02 阻断, 非 SOFT)",
+        "note": "SFOP/DFSQ: COMP-WS 必须声明 sfop_slot+dao_layer; 活跃 S 槽至多一个且为 COMP-WS-omo; H→B via F or cockpit.adapters; claimed-active cron must declare sfop_slot (CR-SFOP-01/02/05/06 阻断, 非 SOFT)",
     },
     {
         "id": "execution-chain",
