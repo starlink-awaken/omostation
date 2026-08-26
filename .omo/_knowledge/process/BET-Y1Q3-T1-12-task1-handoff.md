@@ -289,5 +289,32 @@ BET verify 第一条测试集（`tests/test_capability_sync.py test_capability_t
 - ✅ 我的部分（#2233 + #2242 + #84）全链路绑定透传闭环
 - ⏳ 剩余 = 并发 agent 的 bound native execution 生产消费者（`test_bound_invoke_emits_native_execution_receipt` 等，未合并 main）+ ecos/omo 侧透传核对
 
+# 追加：channel_exposure 测试修复 PR #2255 合并 + 根项目更新确认（2026-08-26）✅
+
+## 问题（BET verify 暴露的过时测试）
+
+BET verify 第二组 `test_channel_exposure_p0.py` 的 `test_bos_yaml_unimplemented_filtered_from_routable` 失败（`assert 0 >= 8`）。根因：agora `a7d7d18b`（BET-Y1Q3-T1-05 声明诚实化）把 8 个 AGT 服务从 `unimplemented` 标记为 `deprecated`，测试仍断言 `len(unimplemented) >= 8` → 得 0。CI 不跑该测试（纯本地 BET verify 暴露），main 一直绿。
+
+## 修复（PR #2255，已合并 `454af2bc`）
+
+- 测试"非可路由"判定从仅 `unimplemented` 扩展为 `unimplemented` + `deprecated`（两者都不可路由）
+- 保留核心安全意图：AGT uris 绝不能出现在 routable 集合（8 个 agt uris 全 deprecated，已验证不在 routable）
+- 独立 clone main 复现失败 → 修复后 6 passed（was 5 passed + 1 failed）；ruff clean
+- commit `f60ec60c0` + tag `delivery/t1-12-channel-exposure-20260826-v1` → PR #2255 → **MERGED** squash `454af2bc`
+
+## 根项目（omostation main）更新确认
+
+用户提醒"根项目记得也更新了"。全面检查确认 **main 的所有 gitlink 已与各子模块 origin/main 一致**（无落后）：
+- cockpit gitlink = `e60d068a`（含 PR #84 binding 透传）✅
+- omo gitlink = `783feaad`（最新，含并发 agent 推进）✅
+- 主仓工作树 HEAD 分支 `feat/phase3-remaining`（本地分支，非 PR）落后 main 18 commits——属并发 agent 基底，**不在主仓动它**（共享工作树，396 dirty 文件）
+- main 上 channel_exposure 6 passed 验证（`2811fd70d` 上复跑通过）
+
+## 当前 BET-Y1Q3-T1-12 状态（2026-08-26 03:45Z）
+
+- ✅ 我的部分：binding 透传（#2233）+ fixture 同步（#2242）+ Cockpit 透传（#84）+ channel_exposure 测试（#2255）全部进 main
+- ✅ 根项目 main gitlink 全部最新
+- ⏳ 剩余 = 并发 agent 的 bound native execution 生产消费者（未合并 main）+ ecos/omo 侧透传核对 + 主仓工作树同步（并发基底）
+
 
 
