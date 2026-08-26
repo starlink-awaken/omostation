@@ -23,6 +23,7 @@ from capability_native_receipt import (
 from capability_native_sources import (
     NativeInspectionError,
     parse_fastmcp_authority,
+    parse_fastmcp_composite_authority,
     read_stable_source,
     snapshot_directory_files,
 )
@@ -138,8 +139,12 @@ def _inspect_mcp(root: Path, registry: Mapping[str, Any], prefix: str, native_id
     if row.get("exists") is not True or not isinstance(row.get("file"), str):
         _fail("source_unprovable")
     source_ref = str(row["file"])
-    content = _read_stable_source(root, source_ref)
-    authority = parse_fastmcp_authority(content, source_ref, server_id)
+    if server_id == "agora":
+        authority = parse_fastmcp_composite_authority(root, source_ref, server_id)
+        content = authority["content"]
+    else:
+        content = _read_stable_source(root, source_ref)
+        authority = parse_fastmcp_authority(content, source_ref, server_id)
     static_tools = authority["tools"]
     projected_tools = row.get("tools")
     if not isinstance(projected_tools, list) or not all(isinstance(value, str) for value in projected_tools):

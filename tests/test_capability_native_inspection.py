@@ -107,6 +107,19 @@ def _registry_bytes(registry: dict) -> bytes:
     return yaml.safe_dump(registry, sort_keys=True).encode("utf-8")
 
 
+def _agora_registry(tools: list[str]) -> dict:
+    registry = _registry()
+    registry["totals"]["mcp_tools"] = len(tools)
+    registry["mcp_servers"][0] = {
+        "id": "agora",
+        "name": "Agora Service Convergence Hub",
+        "file": "projects/agora/src/agora/server/mcp.py",
+        "exists": True,
+        "tools": tools,
+    }
+    return registry
+
+
 def _workspace_registry() -> tuple[dict, bytes]:
     content = REGISTRY_PATH.read_bytes()
     registry = yaml.safe_load(content)
@@ -287,6 +300,37 @@ def test_agora_projection_contains_only_tools_reachable_from_the_composite_entry
     assert "cell_execute" not in tools
     assert "cell_govern" not in tools
     assert "python" not in tools
+
+
+def test_agora_composite_rejects_dynamic_registration_arguments(tmp_path: Path) -> None:
+    server = tmp_path / "projects/agora/src/agora/server"
+    server.mkdir(parents=True)
+    (server / "mcp.py").write_text(
+        "from fastmcp import FastMCP\n"
+        "from agora.server.tools_demo import register_demo_tools\n"
+        "dynamic_args = ()\n"
+        "mcp = FastMCP('Agora — Service Convergence Hub')\n"
+        "register_demo_tools(mcp, *dynamic_args)\n",
+        encoding="utf-8",
+    )
+    (server / "tools_demo.py").write_text(
+        "def register_demo_tools(mcp):\n"
+        "    @mcp.tool()\n"
+        "    async def demo_tool():\n"
+        "        return 'ok'\n",
+        encoding="utf-8",
+    )
+    registry = _agora_registry(["demo_tool"])
+    capability_id = "mcp-server:agora"
+
+    with pytest.raises(NativeInspectionError, match="source_unprovable"):
+        inspect_native_capability(
+            root=tmp_path,
+            capability_id=capability_id,
+            registry=registry,
+            registry_content=_registry_bytes(registry),
+            resolution_receipt=_resolution_receipt(registry, capability_id),
+        )
 
 
 def test_mcp_explicit_literal_version_is_proved(authority_root: Path) -> None:

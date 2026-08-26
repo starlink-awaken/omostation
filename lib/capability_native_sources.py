@@ -13,13 +13,18 @@ import hashlib
 import os
 import re
 import stat
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
 MAX_SOURCE_BYTES = 4 * 1024 * 1024
 SAFE_SOURCE_PART = re.compile(r"^[^/\\\x00]+$")
+SAFE_TOOL_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,256}$")
+AGORA_COMPOSITE_SOURCE_REF = "projects/agora/src/agora/server/mcp.py"
+AGORA_COMPOSITE_MODULE = "agora.server.mcp"
+AGORA_COMPOSITE_NATIVE_NAME = "Agora — Service Convergence Hub"
+AGORA_SOURCE_PREFIX = "projects/agora/src/"
 
 
 class NativeInspectionError(ValueError):
@@ -265,16 +270,18 @@ def _literal_keyword_value(call: ast.Call, keyword_name: str) -> Any:
     return values[0].value if isinstance(values[0], ast.Constant) else None
 
 
-def parse_fastmcp_authority(content: bytes, source_ref: str, server_id: str) -> dict[str, Any]:
-    """Prove one exact top-level FastMCP binding and its static tool set."""
+def _parse_python_module(content: bytes, source_ref: str) -> ast.Module:
     try:
         tree = ast.parse(content.decode("utf-8"), filename=source_ref, feature_version=(3, 9))
     except (SyntaxError, UnicodeDecodeError):
         _fail("source_schema_unsupported")
     if not isinstance(tree, ast.Module):
         _fail("source_schema_unsupported")
-    canonical_alias = _canonical_fastmcp_alias(tree)
+    return tree
 
+
+def _top_level_fastmcp_binding(tree: ast.Module) -> tuple[str, ast.Call]:
+    canonical_alias = _canonical_fastmcp_alias(tree)
     authorities: list[tuple[str, ast.Call]] = []
     for statement in tree.body:
         if not isinstance(statement, (ast.Assign, ast.AnnAssign)) or not isinstance(statement.value, ast.Call):
@@ -291,7 +298,292 @@ def parse_fastmcp_authority(content: bytes, source_ref: str, server_id: str) -> 
         _fail("source_unprovable")
     if len(authorities) != 1:
         _fail("duplicate_authority_claim")
-    binding, call = authorities[0]
+    return authorities[0]
+
+
+def _tool_factory_name(
+    call: ast.Call, binding: str, default: str
+) -> Optional[str]:  # noqa: UP045 -- Python 3.9 contract
+    function = call.func
+    if not (
+        isinstance(function, ast.Attribute)
+        and function.attr == "tool"
+        and isinstance(function.value, ast.Name)
+        and function.value.id == binding
+    ):
+        return None
+    if call.args:
+        _fail("source_unprovable")
+    if not call.keywords:
+        name = default
+    elif (
+        len(call.keywords) == 1
+        and call.keywords[0].arg == "name"
+        and isinstance(call.keywords[0].value, ast.Constant)
+        and isinstance(call.keywords[0].value.value, str)
+    ):
+        name = call.keywords[0].value.value
+    else:
+        _fail("source_unprovable")
+    if not SAFE_TOOL_NAME.fullmatch(name):
+        _fail("source_unprovable")
+    return name
+
+
+def _decorated_tool_names(function: ast.AST, binding: str) -> tuple[list[str], set[int]]:
+    if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        return [], set()
+    tools: list[str] = []
+    recognized_calls: set[int] = set()
+    for decorator in function.decorator_list:
+        if isinstance(decorator, ast.Call):
+            name = _tool_factory_name(decorator, binding, function.name)
+            if name is not None:
+                tools.append(name)
+                recognized_calls.add(id(decorator))
+        elif (
+            isinstance(decorator, ast.Attribute)
+            and decorator.attr == "tool"
+            and isinstance(decorator.value, ast.Name)
+            and decorator.value.id == binding
+        ):
+            _fail("source_unprovable")
+    return tools, recognized_calls
+
+
+def _registration_tool_names(function: ast.AST, binding_parameter: str) -> list[str]:
+    if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        _fail("source_unprovable")
+    tools: list[str] = []
+    recognized_calls: set[int] = set()
+    for statement in function.body:
+        declared, decorator_calls = _decorated_tool_names(statement, binding_parameter)
+        tools.extend(declared)
+        recognized_calls.update(decorator_calls)
+        if not isinstance(statement, ast.Expr) or not isinstance(statement.value, ast.Call):
+            continue
+        outer = statement.value
+        if not isinstance(outer.func, ast.Call):
+            continue
+        inner = outer.func
+        if not (
+            len(outer.args) == 1
+            and isinstance(outer.args[0], ast.Name)
+            and not outer.keywords
+        ):
+            if _tool_factory_name(inner, binding_parameter, "invalid") is not None:
+                _fail("source_unprovable")
+            continue
+        name = _tool_factory_name(inner, binding_parameter, outer.args[0].id)
+        if name is not None:
+            tools.append(name)
+            recognized_calls.update({id(inner), id(outer)})
+
+    parent: dict[int, ast.AST] = {}
+    for node in ast.walk(function):
+        for child in ast.iter_child_nodes(node):
+            parent[id(child)] = node
+        if isinstance(node, ast.Name) and node.id == binding_parameter and isinstance(node.ctx, (ast.Store, ast.Del)):
+            _fail("source_unprovable")
+    for node in ast.walk(function):
+        if not isinstance(node, ast.Name) or node.id != binding_parameter or not isinstance(node.ctx, ast.Load):
+            continue
+        current: Optional[ast.AST] = parent.get(id(node))  # noqa: UP045 -- Python 3.9 contract
+        proved = False
+        while current is not None and current is not function:
+            if isinstance(current, ast.Call) and id(current) in recognized_calls:
+                proved = True
+                break
+            current = parent.get(id(current))
+        if not proved:
+            _fail("source_unprovable")
+    return tools
+
+
+def _module_imports(tree: ast.Module, module: str, source_ref: str) -> dict[str, tuple[str, str]]:
+    imports: dict[str, tuple[str, str]] = {}
+    is_package = source_ref.endswith("/__init__.py")
+    for statement in _module_guard_statements(tree.body):
+        if not isinstance(statement, ast.ImportFrom):
+            continue
+        if any(alias.name == "*" for alias in statement.names):
+            _fail("source_unprovable")
+        if statement.level:
+            base = module.split(".") if is_package else module.split(".")[:-1]
+            remove = statement.level - 1
+            if remove > len(base):
+                _fail("source_unprovable")
+            base = base[: len(base) - remove] if remove else base
+            target_module = ".".join([*base, *(statement.module or "").split(".")]).rstrip(".")
+        else:
+            target_module = statement.module or ""
+        if not target_module:
+            _fail("source_unprovable")
+        for alias in statement.names:
+            local_name = alias.asname or alias.name
+            target = (target_module, alias.name)
+            if local_name in imports and imports[local_name] != target:
+                _fail("duplicate_authority_claim")
+            imports[local_name] = target
+    return imports
+
+
+def _load_agora_module(
+    root: Path,
+    module: str,
+    cache: dict[str, tuple[str, bytes, ast.Module]],
+    sources: dict[str, bytes],
+) -> tuple[str, bytes, ast.Module]:
+    if module in cache:
+        return cache[module]
+    if not module.startswith("agora.") or not all(SAFE_SOURCE_PART.fullmatch(part) for part in module.split(".")):
+        _fail("source_unprovable")
+    relative = module.replace(".", "/")
+    candidates = (
+        f"{AGORA_SOURCE_PREFIX}{relative}/__init__.py",
+        f"{AGORA_SOURCE_PREFIX}{relative}.py",
+    )
+    for candidate in candidates:
+        try:
+            content = read_stable_source(root, candidate)
+        except NativeInspectionError as exc:
+            if str(exc) != "source_unprovable":
+                raise
+            continue
+        loaded = (candidate, content, _parse_python_module(content, candidate))
+        cache[module] = loaded
+        sources[candidate] = content
+        return loaded
+    _fail("source_unprovable")
+
+
+def _resolve_registration_function(
+    root: Path,
+    module: str,
+    symbol: str,
+    cache: dict[str, tuple[str, bytes, ast.Module]],
+    sources: dict[str, bytes],
+    seen: set[tuple[str, str]],
+) -> tuple[str, ast.AST]:
+    key = (module, symbol)
+    if key in seen:
+        _fail("source_unprovable")
+    seen.add(key)
+    source_ref, _content, tree = _load_agora_module(root, module, cache, sources)
+    matches = [
+        statement
+        for statement in tree.body
+        if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)) and statement.name == symbol
+    ]
+    if len(matches) > 1:
+        _fail("duplicate_authority_claim")
+    if matches:
+        return source_ref, matches[0]
+    imported = _module_imports(tree, module, source_ref).get(symbol)
+    if imported is None:
+        _fail("source_unprovable")
+    return _resolve_registration_function(root, imported[0], imported[1], cache, sources, seen)
+
+
+def _composite_proof_content(sources: Mapping[str, bytes]) -> bytes:
+    payload = bytearray(b"python-ast-fastmcp-composite/v1\x00")
+    for source_ref in sorted(sources):
+        encoded_ref = source_ref.encode("utf-8")
+        content = sources[source_ref]
+        payload.extend(len(encoded_ref).to_bytes(8, "big"))
+        payload.extend(encoded_ref)
+        payload.extend(len(content).to_bytes(8, "big"))
+        payload.extend(content)
+    return bytes(payload)
+
+
+def parse_fastmcp_composite_authority(root: Path, source_ref: str, server_id: str) -> dict[str, Any]:
+    """Prove Agora's exact static FastMCP registration graph without importing it."""
+    if source_ref != AGORA_COMPOSITE_SOURCE_REF or server_id != "agora":
+        _fail("source_unprovable")
+    entry_content = read_stable_source(root, source_ref)
+    tree = _parse_python_module(entry_content, source_ref)
+    binding, call = _top_level_fastmcp_binding(tree)
+    native_name = _literal_native_name(call)
+    if native_name != AGORA_COMPOSITE_NATIVE_NAME:
+        _fail("source_unprovable")
+
+    sources = {source_ref: entry_content}
+    module_cache: dict[str, tuple[str, bytes, ast.Module]] = {}
+    imported_symbols = _module_imports(tree, AGORA_COMPOSITE_MODULE, source_ref)
+    tools: list[str] = []
+    for statement in tree.body:
+        declared, _recognized = _decorated_tool_names(statement, binding)
+        tools.extend(declared)
+
+    registrations: set[tuple[str, str]] = set()
+    for statement in _module_guard_statements(tree.body):
+        if not isinstance(statement, ast.Expr) or not isinstance(statement.value, ast.Call):
+            continue
+        registration = statement.value
+        if (
+            not registration.args
+            or not isinstance(registration.args[0], ast.Name)
+            or registration.args[0].id != binding
+        ):
+            continue
+        if not isinstance(registration.func, ast.Name):
+            _fail("source_unprovable")
+        if registration.keywords or any(isinstance(argument, ast.Starred) for argument in registration.args):
+            _fail("source_unprovable")
+        target = imported_symbols.get(registration.func.id)
+        if target is None:
+            _fail("source_unprovable")
+        if target in registrations:
+            _fail("duplicate_authority_claim")
+        registrations.add(target)
+        _registration_ref, function = _resolve_registration_function(
+            root, target[0], target[1], module_cache, sources, set()
+        )
+        parameters = (
+            [*function.args.posonlyargs, *function.args.args]
+            if isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef))
+            else []
+        )
+        if not parameters:
+            _fail("source_unprovable")
+        required_parameters = len(parameters) - len(function.args.defaults)
+        if (
+            function.args.vararg is not None
+            or function.args.kwarg is not None
+            or any(default is None for default in function.args.kw_defaults)
+            or not required_parameters <= len(registration.args) <= len(parameters)
+        ):
+            _fail("source_unprovable")
+        tools.extend(_registration_tool_names(function, parameters[0].arg))
+
+    if not registrations:
+        _fail("source_unprovable")
+    if len(tools) != len(set(tools)):
+        _fail("duplicate_authority_claim")
+
+    version_value = _literal_keyword_value(call, "version")
+    version: Optional[str] = None  # noqa: UP045 -- Python 3.9 contract
+    version_status = "unprovable"
+    if isinstance(version_value, str) and version_value.strip() == version_value and 0 < len(version_value) <= 64:
+        if not any(ord(character) < 32 for character in version_value):
+            version = version_value
+            version_status = "proved"
+    return {
+        "binding": binding,
+        "native_name": native_name,
+        "tools": sorted(tools),
+        "source_refs": sorted(sources),
+        "content": _composite_proof_content(sources),
+        "native_version": version,
+        "native_version_status": version_status,
+    }
+
+
+def parse_fastmcp_authority(content: bytes, source_ref: str, server_id: str) -> dict[str, Any]:
+    """Prove one exact top-level FastMCP binding and its static tool set."""
+    tree = _parse_python_module(content, source_ref)
+    binding, call = _top_level_fastmcp_binding(tree)
     native_name = _literal_native_name(call)
     if not isinstance(native_name, str) or native_name != server_id:
         _fail("source_unprovable")

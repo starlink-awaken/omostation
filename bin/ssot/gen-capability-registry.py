@@ -16,6 +16,8 @@
 准确性说明 (静态扫描的固有限制):
   本生成器用正则/AST 静态提取工具名, 对动态注册的工具 (如 mcp.tool(name=var))
   可能漏抓, 实测准确率 ~95% (如 KOS 静态 44 vs 运行时 46)。
+  Agora 是精确特例：从 FastMCP 入口沿静态 registration graph 证明可达工具，
+  不使用 tools_*.py 文件名扫描，因此不会把未接线模块投影为原生能力。
   长期改进: 加 --verify 模式启动各 MCP server 调 list_tools() 做运行时内省,
   用运行时结果校正静态扫描。当前数字作为"能力规模近似"已足够驱动 help/文档/UI。
 
@@ -45,6 +47,11 @@ OUTPUT_YAML = WORKSPACE / "docs" / "generated" / "capability-registry.yaml"
 REGISTRY_SCHEMA = "capability-registry/v1"
 REGISTRY_OWNER = "workspace-capability-governance"
 REGISTRY_WRITER = "bin/ssot/gen-capability-registry.py"
+LIB_DIR = WORKSPACE / "lib"
+if str(LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(LIB_DIR))
+
+from capability_native_sources import parse_fastmcp_composite_authority  # noqa: E402
 
 # ── MCP server 探测 ──────────────────────────────────────────
 
@@ -87,7 +94,6 @@ _KNOWN_MCP_SERVERS: list[dict] = [
         "layer": "I0",
         "file": "projects/agora/src/agora/server/mcp.py",
         "transport": "stdio/sse",
-        "extra_glob": "projects/agora/src/agora/server/tools_*.py",
     },
     {
         "id": "ecos",
@@ -406,7 +412,10 @@ def scan_mcp_servers() -> tuple[list[dict], int]:
         }
         if "ports" in spec:
             srv["ports"] = spec["ports"]
-        if file_path.suffix == ".py":
+        if spec["id"] == "agora":
+            authority = parse_fastmcp_composite_authority(WORKSPACE, file_rel, "agora")
+            srv["tools"] = authority["tools"]
+        elif file_path.suffix == ".py":
             srv["tools"] = _extract_tools_from_python(file_path)
         elif file_path.suffix in (".ts", ".js"):
             srv["tools"] = _extract_tools_from_typescript(file_path)
