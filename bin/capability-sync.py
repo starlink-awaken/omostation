@@ -55,6 +55,23 @@ from capability_trace_binding import (  # noqa: E402 -- CLI locates the local pu
     validate_trace_binding,
     validate_trace_bound_resolution_receipt,
 )
+from capability_native_cleanup import (  # noqa: E402 -- CLI locates the local pure library first
+    OWNERSHIP_BY_KIND,
+    build_native_cleanup_proof,
+)
+from capability_native_execution_model import (  # noqa: E402 -- CLI locates the local pure library first
+    AUTHORIZATION_BY_KIND,
+    NativeExecutionReceiptError,
+    canonical_digest,
+    derive_invocation_id,
+)
+from capability_native_execution_receipt import (  # noqa: E402 -- CLI locates the local pure library first
+    build_native_execution_marker,
+    build_native_execution_material,
+    build_native_execution_receipt,
+)
+
+BINDING_ENFORCEMENT = "shadow"
 
 DEFAULT_REGISTRY = ROOT / "docs" / "generated" / "capability-registry.yaml"
 CANONICAL_GENERATOR = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
@@ -457,6 +474,20 @@ def _read_trace_binding(path: Path) -> dict[str, str]:
     return validate_trace_binding(value)
 
 
+def _read_bounded_native_json(path: Path, prefix: str) -> Any:
+    """Read one bounded native receipt JSON; failures raise redacted contract codes."""
+    try:
+        content = path.read_bytes()
+    except OSError as exc:
+        raise TraceBindingError(f"{prefix}_unreadable") from exc
+    if len(content) > MAX_INPUT_JSON_BYTES:
+        raise TraceBindingError(f"{prefix}_too_large")
+    try:
+        return json.loads(content)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise TraceBindingError(f"{prefix}_invalid") from exc
+
+
 def _binding_error_receipt(selector: Mapping[str, Any], failure_code: str) -> dict[str, Any]:
     """Return a redacted non-execution denial; never echo user-supplied identities."""
     return {
@@ -556,6 +587,27 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         help="read-only B4-B causal binding JSON; forwarded to Agora so the receipt carries a binding_digest",
     )
+
+    for target_parser in (load_parser, invoke_parser):
+        target_parser.add_argument(
+            "--inspection-receipt-json",
+            type=Path,
+            help="bounded native inspection receipt JSON required for a bound execution",
+        )
+        target_parser.add_argument(
+            "--admission-receipt-json",
+            type=Path,
+            help="bounded admission receipt JSON required for a bound execution",
+        )
+        target_parser.add_argument(
+            "--operation-id",
+            help="caller-owned operation identifier recorded in the native execution material",
+        )
+        target_parser.add_argument(
+            "--effect-classification",
+            choices=("read_only", "effectful"),
+            help="declared effect classification recorded in the native execution material",
+        )
     return parser
 
 
@@ -607,28 +659,105 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
 
     if args.command in {"load", "invoke"}:
         selector = {"capability_id": args.capability_id}
+        bundle = (
+            args.binding_json,
+            args.inspection_receipt_json,
+            args.admission_receipt_json,
+            args.operation_id,
+            args.effect_classification,
+        )
+        bundle_present = any(value is not None for value in bundle)
+        bundle_complete = all(value is not None for value in bundle)
+        if bundle_present and not bundle_complete:
+            print(
+                json.dumps(
+                    _binding_error_receipt(selector, "binding_bundle_incomplete"),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+            )
+            return 4
+        if not bundle_present:
+            # Shadow rollout invariant: legacy responses are observed only and are
+            # never labeled native or independently verified.
+            try:
+                registry = load_registry(args.registry)
+                payload = _read_json_payload(args.input_json) if args.command == "invoke" else None
+                receipt = execute_gateway_operation(registry, args.command, args.capability_id, payload=payload)
+            except (GatewayError, OSError, RegistryError) as exc:
+                reason = str(exc) if isinstance(exc, GatewayError) else "invalid_registry"
+                receipt = _gateway_error_receipt(args.command, selector, reason)
+            receipt["binding_enforcement"] = f"{BINDING_ENFORCEMENT}_missing"
+            print("capability binding is required for new callers", file=sys.stderr)
+            print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+            return 0 if receipt.get("status") in {"ready", "succeeded"} else 5
+
         try:
-            registry = load_registry(args.registry)
+            binding = _read_trace_binding(args.binding_json)
+            inspection = _read_bounded_native_json(args.inspection_receipt_json, "inspection_receipt")
+            admission = _read_bounded_native_json(args.admission_receipt_json, "admission_receipt")
+            capability = inspection.get("capability") if isinstance(inspection, dict) else None
+            if not isinstance(capability, dict) or capability.get("id") != args.capability_id:
+                raise TraceBindingError("native_route_unprovable")
+            if args.effect_classification == "effectful":
+                # Fail closed until a caller-owned terminal action evidence path exists.
+                raise TraceBindingError("execution_evidence_missing")
             payload = _read_json_payload(args.input_json) if args.command == "invoke" else None
-            binding = None
-            if args.binding_json is not None:
-                binding = _read_trace_binding(args.binding_json)
-            receipt = execute_gateway_operation(
-                registry,
-                args.command,
-                args.capability_id,
-                payload=payload,
+            material = build_native_execution_material(
                 binding=binding,
+                capability=capability,
+                inspection={
+                    "receipt_digest": inspection["receipt_digest"],
+                    "source_digest": inspection["source_digest"],
+                },
+                operation_id=args.operation_id,
+                request_digest=canonical_digest(payload),
+                admission=admission,
+                authorization_source=AUTHORIZATION_BY_KIND[capability["kind"]],
+                effect_classification=args.effect_classification,
+                execution_attempt=1,
+            )
+            # Derivation-only marker: durable persistence stays caller-owned.
+            build_native_execution_marker(material)
+            registry = load_registry(args.registry)
+            gateway_receipt = execute_gateway_operation(
+                registry, args.command, args.capability_id, payload=payload, binding=binding
+            )
+            succeeded = gateway_receipt.get("status") == "succeeded"
+            cleanup = build_native_cleanup_proof(
+                capability_kind=material["capability"]["kind"],
+                invocation_id=derive_invocation_id(material),
+                ownership_scope=OWNERSHIP_BY_KIND[material["capability"]["kind"]],
+                baseline_digest=canonical_digest(payload),
+                terminal_digest=canonical_digest(payload),
+                measurements={
+                    "owned_lock_count": 0,
+                    "reference_count_delta": 0,
+                    "connection_created": False,
+                    "connection_disconnected": False,
+                    "owned_residue_count": 0,
+                },
+                status="proved",
+                failure_code=None,
+            )
+            receipt = build_native_execution_receipt(
+                material=material,
+                transport_state="confirmed" if succeeded else "failed",
+                outcome="succeeded" if succeeded else "failed",
+                failure_code=None if succeeded else "native_invocation_failed",
+                result_digest=canonical_digest(gateway_receipt) if succeeded else None,
+                action_receipt={"status": "not_applicable", "id": None, "digest": None},
+                cleanup_proof=cleanup,
             )
         except (GatewayError, OSError, RegistryError) as exc:
             reason = str(exc) if isinstance(exc, GatewayError) else "invalid_registry"
             receipt = _gateway_error_receipt(args.command, selector, reason)
-        except TraceBindingError as exc:
+        except (TraceBindingError, NativeExecutionReceiptError) as exc:
             receipt = _binding_error_receipt(selector, str(exc))
             print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
             return 4
         print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
-        return 0 if receipt.get("status") in {"ready", "succeeded"} else 5
+        return 0 if receipt.get("status") in {"ready", "succeeded", "completed"} else 5
 
     selector: dict[str, Any] = {}
     if args.capability_id:
