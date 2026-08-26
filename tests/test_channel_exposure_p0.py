@@ -44,8 +44,8 @@ def test_bos_yaml_unimplemented_filtered_from_routable():
 
 
 def test_gen_capability_registry_build_has_channels():
-    # Official SSOT generator: bin/cockpit/gen-capability-registry.py
-    mod = _load("gen_cap_reg", ROOT / "bin/cockpit/gen-capability-registry.py")
+    # Official SSOT generator: bin/ssot/gen-capability-registry.py
+    mod = _load("gen_cap_reg", ROOT / "bin/ssot/gen-capability-registry.py")
     # support either build()/main patterns
     if hasattr(mod, "build_registry"):
         reg = mod.build_registry()
@@ -62,7 +62,7 @@ def test_gen_capability_registry_build_has_channels():
         subprocess.run(
             [
                 "python3",
-                str(ROOT / "bin/cockpit/gen-capability-registry.py"),
+                str(ROOT / "bin/ssot/gen-capability-registry.py"),
                 "--quiet",
             ],
             check=True,
@@ -83,7 +83,7 @@ def test_gen_capability_registry_build_has_channels():
 
 
 def test_gen_capability_registry_includes_documents_cockpit_commands():
-    mod = _load("gen_cap_reg_commands", ROOT / "bin/cockpit/gen-capability-registry.py")
+    mod = _load("gen_cap_reg_commands", ROOT / "bin/ssot/gen-capability-registry.py")
 
     commands = {command["name"] for command in mod.scan_cli_commands()}
 
