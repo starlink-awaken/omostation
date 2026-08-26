@@ -97,6 +97,15 @@ for sub in $SUBMODULE_CHECK; do
         unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
         git -C "$sub_path" merge-base --is-ancestor "$base_sha" "$staged_sha"
       ) 2>/dev/null; then
+        # Keep pre-commit aligned with the pre-push ancestry gate: an
+        # intentional recovery is allowed only when its exact fingerprint was
+        # already recorded in the governed known-debt SSOT.
+        fingerprint=$(printf '%s\n%s\n%s' "$sub" "$base_sha" "$staged_sha" | shasum -a 256 | awk '{print substr($1, 1, 16)}')
+        debt_path="$ROOT/.omo/_truth/registry/gate-known-debt.yaml"
+        if [ -f "$debt_path" ] && grep -q "gitlink-ancestry|submodule-ancestry-gate|$fingerprint" "$debt_path"; then
+          echo "[submodule-guard] ⚠️ $sub 指针回退已由 known-debt 指纹记录，允许继续提交" >&2
+          continue
+        fi
         echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 不是 fast-forward" >&2
         echo "   base SHA: $base_sha" >&2
         echo "   staged SHA: $staged_sha" >&2
