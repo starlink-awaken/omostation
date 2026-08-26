@@ -49,3 +49,12 @@ entries:
   range: origin/main..HEAD
   recorded_at: '2026-08-25T08:15:33.793967+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|41dc601cfea79771
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 41dc601cfea79771
+  kind: gitlink-regress
+  reason: submodule projects/ecos pointer e5327d3a4393 rewinds afcb377cfd9d
+  range: origin/main..4bc830c7bb59
+  recorded_at: '2026-08-26T23:03:18.412358+00:00'
+  active: true
