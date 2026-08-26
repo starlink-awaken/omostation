@@ -391,5 +391,21 @@ BET verify 第二组 `test_channel_exposure_p0.py` 的 `test_bos_yaml_unimplemen
 - omo binding 链补齐：#106 admission-binding + #93 execute-pi-real-run-binding 全进 main
 - **omo 侧 open PR 清零**；BOS domain 约束（北星 ADR-0007 5 domain）保持未被破坏
 
+# 追加：cockpit PR #86 合并 — capability execution entrypoints 收敛（2026-08-26 06:45Z）✅
+
+## 合并（cockpit #86 → cockpit main `a271a0d3`）
+
+- 今天新开（06:15）的 capability/binding 系列 PR：**converge capability execution entrypoints**
+- 提取公共 `run_bos_capability_invoke`（bos.py / agent_runtime_server / agent_runtime_mcp_server 复用），收敛 capability 执行入口（DRY）
+- **与 #84 完全兼容**：保留 `--binding-json` 透传 + `binding_digest` 保留（receipt 测试含 binding_digest）
+- 验证：`test_bos_capability_invoke` 8 passed（含我的 #84 2 测试，7→8）+ CI 2 pass
+- **合并** → cockpit main `a271a0d3`；合并后复跑 8 passed（无回归）
+- **cockpit 侧 open PR 清零**
+
+## 累计状态
+
+- **cockpit binding 链**：#84 透传 + #86 入口收敛 全进 cockpit main
+- **主仓 + cockpit + omo 三仓 open PR 清零**（ecos #43 dashboard 修复除外，非 binding 系列）
+
 
 
