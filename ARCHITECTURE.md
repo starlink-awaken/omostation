@@ -70,6 +70,16 @@ Worker YAML dispatch artifacts, runtime logs and handoff notes are derived
 operational materials. They may explain or recover an execution, but they do
 not advance WorkflowRun state without the corresponding OMO event.
 
+Information-flow roles (perception, cognition, spine, outcome) and how
+AGE-v2 / resident / BCOS nest as backends, projectors, or meters — not as
+second operating systems — are owned by
+[`docs/architecture/os-operating-pattern-v1.md`](docs/architecture/os-operating-pattern-v1.md).
+Dao / Fa / Shu / Qi as a reading of MOF M3–M0 (not a fifth ontology) lives in
+[`docs/architecture/dao-fa-shu-qi.md`](docs/architecture/dao-fa-shu-qi.md).
+This file keeps layer placement and routing contracts; those files keep slot
+grammar and hard slot checks (`sfop-slots` in the local GaC gate). Do not add a
+third runtime narrative.
+
 ## 3. Entry Architecture
 
 | Audience | Preferred Entry | Contract |

@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # Workflow waiver 证据 — 差距治理实施 (S1-S4)
 
 > ADR-0203 窄豁免记录。用户书面明确授权实施。

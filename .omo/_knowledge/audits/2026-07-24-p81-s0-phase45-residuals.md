@@ -4,6 +4,7 @@ date: 2026-07-24
 type: audit
 stage: S0
 strat: STRAT-P81
+last-reviewed: 2026-08-25
 ---
 
 # P81 S0.2 phase45 residual re-verify (post-skeptic)

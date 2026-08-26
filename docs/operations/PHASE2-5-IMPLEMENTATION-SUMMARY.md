@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # Phase 2-5 Implementation Summary — 90% Architecture Maturity
 
 > Date: 2026-08-24
@@ -26,7 +33,7 @@ Phase 2-5 of the 90% architecture maturity design has been implemented. All core
 | `bin/ssot/script-registry.py` | ✅ | 10 scripts registered, validate works |
 
 ### Key Findings
-- 1 runbook rot issue: `docs/operations/runbook-state-freshness.md:45` references missing `bin/ssot/archive-ssot.py`
+- 1 runbook rot issue: `docs/operations/runbook-state-freshness.md:45` references missing `bin/_archive/2026-08-t6-05/archive-ssot.py`
 - 5 skill registry issues: 1 skill references missing tool
 - 4 governance check coverage issues: dry-run shows changes needed (already applied)
 - 2 checks skipped: `doc-link-check.py` and `hardcode-scan.py` not yet implemented
@@ -71,7 +78,7 @@ Phase 2-5 of the 90% architecture maturity design has been implemented. All core
 | `bin/_registry/quickstart.md` | ✅ | 1-page agent quickstart |
 | `bin/gac/pre-pr-check.py` | ✅ | 7-check pre-PR sanity checklist |
 | `bin/gac/session-recovery.py` | ✅ | Shows changes since last session |
-| `bin/gac/cockpit-auto-start.sh` | ✅ | Install/verify launchd plist |
+| `bin/_archive/2026-08-conv3/cockpit-auto-start.sh` | ✅ | Install/verify launchd plist |
 | `bin/gac/silent-workflow-dashboard.py` | ✅ | Dedicated silent workflow view |
 | `docs/operations/onboarding-template.md` | ✅ | 3-phase onboarding checklist |
 
@@ -125,7 +132,7 @@ Phase 2-5 of the 90% architecture maturity design has been implemented. All core
 ### Completed
 - ✅ 139 governance checks backfilled with `owner`, `expected`, `remediation`, `related_runbooks`
 - ✅ `bin/ssot/governance-migration.py` created and applied
-- ✅ `bin/gac/subtraction-quota-enforcer.py` created
+- ✅ `bin/_archive/2026-08-25-dfsq-quota/subtraction-quota-enforcer.py` created
 - ✅ Pre-PR checklist integrated into `gac-local-gate`
 
 ### Pending

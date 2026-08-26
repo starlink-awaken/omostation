@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # Cleanup Rounds 2026-08-22 — Retrospective & How to Recover from Drift
 
 > **Status**: closed (2026-08-23) — 11 PRs merged, 5 health-anomaly classes cleared, 4 structural gates added
@@ -297,13 +304,13 @@ it's a deeper drift, not a stale state.
 These are **未做** by design, with context for the next operator:
 
 1. **Concurrent write broker enforcement** — gate, not fix. New ADR.
-2. **Stash audit tool** — a future `bin/git/stash-inspect.py` (not yet implemented) to identify owner/age/branch-context.
+2. **Stash audit tool** — a future `bin/_archive/2026-08-conv3/stash-inspect.py` (not yet implemented) to identify owner/age/branch-context.
 3. **Health score history** — currently only current snapshot exists;
    trend analysis requires persistent history in `.omo/state/history/`.
 4. **Cockpit auto-start** — add `nohup` launcher or launchd plist.
 5. **Mesh router module** — `mesh-router` is `status: deprecated` in
    `project-registry.yaml`; the new aetherforge has the same function
-   (per `bin/gac/gac-mesh-router.py` --check). Could be removed entirely.
+   (per `bin/_archive/2026-08-conv3/gac-mesh-router.py` --check). Could be removed entirely.
 
 ---
 

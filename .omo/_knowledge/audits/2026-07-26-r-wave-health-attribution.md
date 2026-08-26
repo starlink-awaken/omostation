@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-25
+---
+
 # R 波 health 93→96 归因审计 (2026-07-26, Round 3)
 
 > profile: governance-agent · run: 2827d190 · 红线守: 未放宽 ADR-0242/P0-5 门, 未恢复 CI ignore

@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-25
+---
+
 # 信息分诊心智模型 (Information Triage Mental Model)
 
 > 状态: ACTIVE | 版本: 1.0 | 创建: 2026-07-31

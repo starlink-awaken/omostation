@@ -27,8 +27,8 @@ Foundry = omostation 治理 cron 系统，每 6h 自动执行 10 个 deck，输�
 | 5:00 | debt-closed | `bin/gac/debt-closed-per-feature.py` | 60s |
 | 5:30 | submodule-bump | `bin/ssot/submodule-bump-check.py` | 30s |
 | 6:00 | brief-gen | `bin/mof/generate-brief.py --write` | 60s |
-| 6:30 | port-governance | `bin/decks/port-governance-deck.py` | 120s |
-| 6:45 | memory-os-consolidate | `bin/decks/memory-os-consolidate-deck.py` (default dry-run; `MOS_CONSOLIDATE_LIVE=1` for live) | 900s |
+| 6:30 | port-governance | `bin/_archive/2026-08-conv3/port-governance-deck.py` | 120s |
+| 6:45 | memory-os-consolidate | `bin/_archive/2026-08-conv3/memory-os-consolidate-deck.py` (default dry-run; `MOS_CONSOLIDATE_LIVE=1` for live) | 900s |
 
 ## 2. 输出
 
@@ -43,13 +43,13 @@ runtime/omo/_delivery/foundry/
 ## 3. 排查
 
 - **deck fail**: 查看对应 stdout/stderr; 重试用 `uv run python bin/gac/knowledge-foundry-cron.py`
-- **port-governance fail**: 运行 `uv run --with pyyaml python bin/decks/port-governance-deck.py` 查看详情
+- **port-governance fail**: 运行 `uv run --with pyyaml python bin/_archive/2026-08-conv3/port-governance-deck.py` 查看详情
 - **cc-switch fail**: 环境凭证问题, 不影响 code health
 
 ## 4. 相关
 
 - `bin/gac/knowledge-foundry-cron.py` — 主 cron 脚本
-- `bin/decks/port-governance-deck.py` — v2 新增 deck
+- `bin/_archive/2026-08-conv3/port-governance-deck.py` — v2 新增 deck
 - `docs/operations/knowledge-foundry-monitor.md` — cockpit 面板文档
 
 ---

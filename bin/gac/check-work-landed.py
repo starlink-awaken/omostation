@@ -206,7 +206,7 @@ def main(argv: list[str] | None = None) -> int:
             age = now - ts
             if age >= BLOCK_AFTER:
                 rid = run.get("run_id") or path.stem
-                print(f"#{rid}  # age={age.days}d")
+                print(f"{rid}  # age={age.days}d")
         return 0
 
     if not RUNS_DIR.is_dir():

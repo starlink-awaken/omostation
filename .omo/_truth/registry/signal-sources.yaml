@@ -88,6 +88,22 @@ sources:
   last_signal_at: null
   registered_at: '2026-08-23T00:00:00Z'
   bos_uri: bos://perception/personal/signals
+- id: resident_inbox
+  description: 感知文件夹事件流通道 — omo.resident.inbox 轮询发布 InboxSignal 到事件流 (BET-Y1Q3-T10-15)
+  scene_binding: unified-inbox
+  transport: local_filesystem
+  path: ~/Documents/@感知信号
+  poll_interval: 300s
+  dedup_window: 1h
+  idempotency_key: content_digest
+  failure_policy:
+    max_retries: 3
+    backoff: exponential
+    on_failure: emit_unreachable
+  health: healthy
+  last_signal_at: null
+  registered_at: '2026-08-25T00:00:00Z'
+  bos_uri: bos://perception/folder/inbox-resident
 health_states:
 - healthy
 - degraded

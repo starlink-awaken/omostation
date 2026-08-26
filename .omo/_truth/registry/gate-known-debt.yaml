@@ -40,3 +40,12 @@ entries:
   range: origin/main..28c6344325b6
   recorded_at: '2026-08-26T02:48:58.458957+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|503d59edaa630dfb
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 503d59edaa630dfb
+  kind: gitlink-regress
+  reason: submodule projects/omo pointer 74830df63622 rewinds 2d4741adad3f
+  range: origin/main..HEAD
+  recorded_at: '2026-08-25T08:15:33.793967+00:00'
+  active: true

@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # CONV-3 项目收敛决策卡 (差距治理 S3)
 
 > 生成: 2026-08-24 · 状态: ✅ 已决策 (用户授权 agent 定案, 2026-08-24T05:48Z)
@@ -52,7 +59,7 @@
 | 维度 | 数据 |
 |------|------|
 | 状态 | deprecated (owner 收敛至 aetherforge) |
-| 实现 | bin/gac/gac-mesh-router.py (无独立仓) |
+| 实现 | bin/_archive/2026-08-conv3/gac-mesh-router.py (无独立仓) |
 | 引用 | 主仓零引用/未接线 |
 
 **选项**:

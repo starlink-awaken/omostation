@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-25
+---
+
 # Phase 4 GaC M1 化 — Feasibility Analysis
 
 > **Task**: Feasibility analysis for materializing GaC rules to M1 `GAC-RULE-*.yaml` nodes + integrating with mof-schema-validate / mof-bridge-sync.

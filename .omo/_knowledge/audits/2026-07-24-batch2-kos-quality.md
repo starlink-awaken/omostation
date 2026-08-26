@@ -3,6 +3,7 @@ title: Batch2 D1 KOS quality deepening (≥50 sample)
 date: 2026-07-24
 type: audit
 batch: 2
+last-reviewed: 2026-08-25
 ---
 
 # KOS quality + retrieval baseline

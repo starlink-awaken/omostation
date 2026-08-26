@@ -10,7 +10,7 @@ metadata-migrated-at: 2026-07-31
 
 > ADR: 0186 · 0187 · 0189 · 0194 · 0196 · 0198 · **0199**（doctor 日常节奏）
 
-日检 cron（ADR-0200）: `bin/gac/omo-doctor-cron.py` → `runtime/cron/omo-doctor-latest.json`  
+日检 cron（ADR-0200）: `bin/_archive/2026-08-conv3/omo-doctor-cron.py` → `runtime/cron/omo-doctor-latest.json`  
 控制台: `GET /api/omo/doctor` + Wave2 横幅（ADR-0201，streak≥3 标 ALERT）  
 新机清单: [omo-bootstrap-checklist.md](./omo-bootstrap-checklist.md)
 

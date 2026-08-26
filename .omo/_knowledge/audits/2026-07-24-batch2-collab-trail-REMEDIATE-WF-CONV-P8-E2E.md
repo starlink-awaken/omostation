@@ -5,6 +5,7 @@ type: collab-trail
 batch: 2
 task_id: REMEDIATE-WF-CONV-P8-E2E
 task_path: .omo/tasks/remediation/REMEDIATE-WF-CONV-P8-E2E.yaml
+last-reviewed: 2026-08-25
 ---
 
 # `REMEDIATE-WF-CONV-P8-E2E`

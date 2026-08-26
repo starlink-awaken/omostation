@@ -1,0 +1,10 @@
+schema: script-registry/v1
+id: bin/gac/agent-lsp-hook.sh
+name: Agent LSP Hook
+category: governance
+owner: governance-team
+description: "Antigravity lifecycle hook for pre-emptive subconscious escort post tool use."
+inputs: []
+outputs:
+  - type: json
+dependencies: []

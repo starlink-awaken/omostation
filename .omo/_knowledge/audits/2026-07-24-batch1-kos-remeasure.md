@@ -2,6 +2,7 @@
 title: Batch1 D1 KOS remeasure (with seed growth)
 date: 2026-07-24
 type: audit
+last-reviewed: 2026-08-25
 ---
 
 # KOS incremental remeasure

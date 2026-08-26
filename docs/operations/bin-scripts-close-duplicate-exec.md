@@ -59,7 +59,7 @@ last-reviewed: 2026-08-22
 | mof_bootstrap              | mof        | round8  | managed | removed | identical | bin/mof/mof-bootstrap.py              | scripts/bin/mof/mof-bootstrap.py              |
 | mof_m2_coverage            | mof        | round8  | managed | removed | identical | bin/mof/mof-m2-coverage.py            | scripts/bin/mof/mof-m2-coverage.py            |
 | alert_aggregator           | gac        | round9  | managed | removed | identical | bin/gac/alert-aggregator.py           | scripts/bin/gac/alert-aggregator.py           |
-| alert_mock_p0_notify       | gac        | round9  | managed | removed | identical | bin/gac/alert-mock-p0-notify.py       | scripts/bin/gac/alert-mock-p0-notify.py       |
+| alert_mock_p0_notify       | gac        | round9  | managed | removed | identical | bin/_archive/2026-08-conv3/alert-mock-p0-notify.py       | scripts/bin/_archive/2026-08-conv3/alert-mock-p0-notify.py       |
 | auto_merge_lane_policy     | gac        | round9  | managed | removed | identical | bin/gac/auto-merge-lane-policy.py     | scripts/bin/gac/auto-merge-lane-policy.py     |
 | dim_weight                 | gac        | round9  | managed | removed | identical | bin/gac/dim-weight.py                 | scripts/bin/gac/dim-weight.py                 |
 | event_loop_lint            | gac        | round9  | managed | removed | identical | bin/gac/event-loop-lint.py            | scripts/bin/gac/event-loop-lint.py            |

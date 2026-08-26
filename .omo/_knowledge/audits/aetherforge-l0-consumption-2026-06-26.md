@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-25
+---
+
 # AetherForge L0 M1 消费鸿沟审计 (TASK-13AD0B21)
 
 > **日期**: 2026-06-26

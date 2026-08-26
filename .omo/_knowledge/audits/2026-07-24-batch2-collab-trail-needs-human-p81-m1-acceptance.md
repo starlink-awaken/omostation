@@ -5,6 +5,7 @@ type: collab-trail
 batch: 2
 task_id: needs-human-p81-m1-acceptance
 task_path: .omo/tasks/planned/needs-human-p81-m1-acceptance.yaml
+last-reviewed: 2026-08-25
 ---
 
 # `needs-human-p81-m1-acceptance`

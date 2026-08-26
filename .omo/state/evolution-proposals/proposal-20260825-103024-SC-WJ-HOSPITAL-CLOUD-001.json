@@ -1,0 +1,27 @@
+{
+  "schema_version": "resident-decision/v1",
+  "proposal_id": "prop-20260825-103024-SC-WJ-HOSPITAL-CLOUD-001",
+  "scenario_id": "SC-WJ-HOSPITAL-CLOUD-001",
+  "domain": "work-weijian",
+  "title": "市级三甲医院智慧医疗云平台重大信息化项目论证与合规报批",
+  "status": "APPROVED",
+  "occurred_at": "2026-08-25T10:30:24Z",
+  "evaluations": [
+    {
+      "rule_id": "E-POL-WJ-001",
+      "name": "重大信息化项目预算与专家论证门禁",
+      "verdict": "PASS",
+      "detail": "项目预算 5800 万元 (>=500万)，经由 5 位高级职称专家委员会严谨论证并达成 CONSENSUS_PASSED 一致通过决议。"
+    },
+    {
+      "rule_id": "E-POL-WJ-002",
+      "name": "医疗卫生网络安全三级等保与互联互通标准合规",
+      "verdict": "PASS",
+      "detail": "已完备具备等保三级评测 (DJCP-2026-WJ-8891-PASS) 并在方案中固化国家互联互通标准化成熟度四级甲等数据接口。"
+    }
+  ],
+  "recommendation": {
+    "action": "AUTHORIZE_WORKFLOW_EXECUTION",
+    "confidence": 1.0
+  }
+}

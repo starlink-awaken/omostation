@@ -6,6 +6,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -42,6 +43,7 @@ _ORIG_MAIN = main
 
 _BET_LEDGER_MODULE: ModuleType | None = None
 _PROJECTION_MODULE: ModuleType | None = None
+_CAPABILITY_SYNC_MODULE: ModuleType | None = None
 
 
 def _load_bet_ledger_module() -> ModuleType:
@@ -73,6 +75,26 @@ def _load_projection_module() -> ModuleType:
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     _PROJECTION_MODULE = module
+    return module
+
+
+def _load_capability_sync_module() -> ModuleType:
+    """Load the existing read-only capability resolver/inspector boundary."""
+    global _CAPABILITY_SYNC_MODULE
+    if _CAPABILITY_SYNC_MODULE is not None:
+        return _CAPABILITY_SYNC_MODULE
+    path = WORKSPACE / "bin/capability-sync.py"
+    spec = importlib.util.spec_from_file_location("_agent_workflow_capability_sync", path)
+    if spec is None or spec.loader is None:
+        raise WorkflowError("CAPABILITY_PREFLIGHT_INSPECTOR_UNAVAILABLE")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+    except Exception as exc:  # noqa: BLE001 - a missing mandatory inspector fails closed.
+        sys.modules.pop(spec.name, None)
+        raise WorkflowError("CAPABILITY_PREFLIGHT_INSPECTOR_UNAVAILABLE") from exc
+    _CAPABILITY_SYNC_MODULE = module
     return module
 
 
@@ -110,6 +132,179 @@ def _validate_packet_run(
         )
     except ledger_contract.SpecBindingContractError as exc:
         raise WorkflowError(str(exc)) from exc
+
+
+def _clone_identity_for_preflight(workspace: Path) -> dict[str, str]:
+    identity_path = workspace / ".git" / "agent-clone-identity.json"
+    try:
+        identity = json.loads(identity_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise WorkflowError("CAPABILITY_PREFLIGHT_CLONE_IDENTITY_REQUIRED") from exc
+    actor_id = identity.get("actor_id") if isinstance(identity, dict) else None
+    delivery_attempt_id = identity.get("delivery_attempt_id") if isinstance(identity, dict) else None
+    valid_id = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+    expected_branch = (
+        f"agent/{actor_id}--{delivery_attempt_id}"
+        if isinstance(actor_id, str) and isinstance(delivery_attempt_id, str)
+        else ""
+    )
+    try:
+        live_head = (identity_path.parent / "HEAD").read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError):
+        live_head = ""
+    if (
+        not isinstance(identity, dict)
+        or identity.get("schema") != "agent-clone-identity/v2"
+        or identity.get("ready") is not True
+        or not isinstance(actor_id, str)
+        or valid_id.fullmatch(actor_id) is None
+        or identity.get("agent_id") != actor_id
+        or not isinstance(delivery_attempt_id, str)
+        or valid_id.fullmatch(delivery_attempt_id) is None
+        or identity.get("canonical_root") != str(workspace.resolve())
+        or identity.get("working_branch") != expected_branch
+        or live_head != f"ref: refs/heads/{expected_branch}"
+    ):
+        raise WorkflowError("CAPABILITY_PREFLIGHT_CLONE_IDENTITY_INVALID")
+    return {
+        "actor_id": actor_id,
+        "delivery_attempt_id": delivery_attempt_id,
+    }
+
+
+def _capability_preflight(
+    delivery_identity: dict[str, Any],
+    run_id: str,
+    *,
+    workspace: Path = WORKSPACE,
+    expected_preflight: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resolve and statically inspect each exact requirement without execution."""
+    packet = delivery_identity.get("work_packet")
+    requirements = packet.get("capability_requirements") if isinstance(packet, dict) else None
+    digest = delivery_identity.get("capability_requirements_digest")
+    if not isinstance(packet, dict) or not isinstance(requirements, list) or not isinstance(digest, str):
+        raise WorkflowError("CAPABILITY_PREFLIGHT_REQUIREMENTS_INVALID")
+    expected_digest = _load_bet_ledger_module().capability_requirements_digest(requirements)
+    if digest != expected_digest:
+        raise WorkflowError("CAPABILITY_PREFLIGHT_REQUIREMENTS_DIGEST_MISMATCH")
+
+    clone = _clone_identity_for_preflight(workspace)
+    binding = {
+        "correlation_id": run_id,
+        "workflow_run_id": run_id,
+        "packet_id": packet.get("packet_id"),
+        "packet_hash": delivery_identity.get("work_packet_hash"),
+        "assignment_id": f"preflight:{run_id}:assignment",
+        "dispatch_id": f"preflight:{run_id}:dispatch",
+        "actor_id": clone["actor_id"],
+        "delivery_attempt_id": clone["delivery_attempt_id"],
+    }
+    registry_path = workspace / "docs/generated/capability-registry.yaml"
+    registry: dict[str, Any] | None = None
+    registry_content: bytes | None = None
+
+    def inspect_with_binding(inspection_binding: dict[str, Any]) -> list[dict[str, str]]:
+        nonlocal registry, registry_content
+        if not requirements:
+            return []
+        capability_sync = _load_capability_sync_module()
+        inspected_rows: list[dict[str, str]] = []
+        for requirement in requirements:
+            if not isinstance(requirement, dict):
+                raise WorkflowError("CAPABILITY_PREFLIGHT_REQUIREMENTS_INVALID")
+            capability_id = requirement.get("capability_id")
+            if not isinstance(capability_id, str) or ":" not in capability_id:
+                raise WorkflowError("CAPABILITY_PREFLIGHT_REQUIREMENTS_INVALID")
+            prefix = capability_id.split(":", 1)[0]
+            try:
+                if prefix in {"skill", "workflow"}:
+                    receipt = capability_sync.inspect_native_capability(
+                        root=workspace,
+                        capability_id=capability_id,
+                        registry={},
+                        registry_content=b"",
+                        binding=inspection_binding,
+                    )
+                else:
+                    if registry is None or registry_content is None:
+                        before = registry_path.stat()
+                        registry_content = registry_path.read_bytes()
+                        registry = capability_sync.load_registry(registry_path)
+                        after = registry_path.stat()
+                        if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) != (
+                            after.st_dev,
+                            after.st_ino,
+                            after.st_size,
+                            after.st_mtime_ns,
+                        ) or len(registry_content) != before.st_size:
+                            raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED")
+                    resolution = capability_sync.resolve_capability(registry, capability_id=capability_id)
+                    if resolution.status != "resolved":
+                        raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_MISSING")
+                    resolution_receipt = capability_sync.build_resolution_receipt(
+                        resolution,
+                        registry_content,
+                        {"capability_id": capability_id},
+                        binding=inspection_binding,
+                        projection_metadata=registry,
+                    )
+                    receipt = capability_sync.inspect_native_capability(
+                        root=workspace,
+                        capability_id=capability_id,
+                        registry=registry,
+                        registry_content=registry_content,
+                        resolution_receipt=resolution_receipt,
+                    )
+            except WorkflowError:
+                raise
+            except Exception as exc:  # noqa: BLE001 - source proof must fail closed.
+                raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED") from exc
+            if not isinstance(receipt, dict) or receipt.get("status") != "inspected":
+                raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED")
+            source_digest = receipt.get("source_digest")
+            receipt_digest = receipt.get("receipt_digest")
+            if (
+                not isinstance(source_digest, str)
+                or not source_digest.startswith("sha256:")
+                or not isinstance(receipt_digest, str)
+                or not receipt_digest.startswith("sha256:")
+            ):
+                raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_REJECTED")
+            inspected_rows.append(
+                {
+                    "capability_id": capability_id,
+                    "source_digest": source_digest,
+                    "receipt_digest": receipt_digest,
+                }
+            )
+        return inspected_rows
+
+    if expected_preflight is not None:
+        if expected_preflight.get("requirements_digest") != digest:
+            raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_DRIFT")
+        previous_binding = expected_preflight.get("binding")
+        if not isinstance(previous_binding, dict) or any(
+            previous_binding.get(field) != binding[field]
+            for field in binding
+            if field != "packet_hash"
+        ):
+            raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_DRIFT")
+        comparable = inspect_with_binding(previous_binding)
+        previous = expected_preflight.get("receipts")
+        if not isinstance(previous, list) or previous != comparable:
+            raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_DRIFT")
+        inspected = comparable if previous_binding == binding else inspect_with_binding(binding)
+    else:
+        inspected = inspect_with_binding(binding)
+
+    return {
+        "requirements_digest": digest,
+        "binding": binding,
+        "receipts": inspected,
+        "invoked": False,
+        "value_indicator_policy": False,
+    }
 
 
 def _flag(argv: list[str], name: str) -> str:
@@ -327,6 +522,20 @@ def _refresh_packet_run(
         candidate = dict(payload)
         candidate["work_packet"] = prepared["work_packet"]
         candidate["work_packet_hash"] = prepared["work_packet_hash"]
+        payload_has_capabilities = "capability_requirements_digest" in payload
+        prepared_has_capabilities = "capability_requirements_digest" in prepared
+        if payload_has_capabilities != prepared_has_capabilities:
+            raise WorkflowError("CAPABILITY_PREFLIGHT_SOURCE_DRIFT")
+        refreshed_preflight = None
+        if prepared_has_capabilities:
+            refreshed_preflight = _capability_preflight(
+                prepared,
+                run_id,
+                workspace=workspace,
+                expected_preflight=payload.get("capability_preflight"),
+            )
+            candidate["capability_requirements_digest"] = prepared["capability_requirements_digest"]
+            candidate["capability_preflight"] = refreshed_preflight
         claimed_paths, claimed_surfaces = _claimed_scope(payload)
         _validate_packet_run(
             candidate,
@@ -350,10 +559,22 @@ def _refresh_packet_run(
                 confirmed,
                 authoritative_ref=authoritative_revision,
             )
+        if prepared_has_capabilities:
+            confirmed_preflight = _capability_preflight(
+                confirmed,
+                run_id,
+                workspace=workspace,
+                expected_preflight=payload.get("capability_preflight"),
+            )
+            if confirmed_preflight != refreshed_preflight:
+                raise WorkflowError("WORK_PACKET_REFRESH_SOURCE_RACED: capability source changed during refresh")
 
         old_hash = str(payload.get("work_packet_hash") or "")
         payload["work_packet"] = prepared["work_packet"]
         payload["work_packet_hash"] = prepared["work_packet_hash"]
+        if prepared_has_capabilities:
+            payload["capability_requirements_digest"] = prepared["capability_requirements_digest"]
+            payload["capability_preflight"] = refreshed_preflight
         _wf_life.write_run(path, payload)
         try:
             _wf_life.append_ledger_event(
@@ -430,6 +651,7 @@ def wrapped_main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     _install_patches()
     command, cmd_at = _find_command(argv)
+    start_preflight = None
     if command in {"projection-sync", "projection-check"}:
         if "--help" in argv or "-h" in argv:
             print(
@@ -527,10 +749,34 @@ def wrapped_main(argv: list[str] | None = None) -> int:
             return 1
         if bet_id:
             try:
-                _prepare_bet_execution(bet_id)
+                prepared = _prepare_bet_execution(bet_id)
+                if not parent_run_id and "capability_requirements_digest" in prepared:
+                    def root_start_preflight(run_id: str, _identity: dict[str, Any]) -> dict[str, Any]:
+                        return _capability_preflight(prepared, run_id, workspace=WORKSPACE)
+
+                    start_preflight = root_start_preflight
             except WorkflowError as exc:
                 print(f"agent-workflow: {exc}", file=sys.stderr)
                 return 1
+
+        # Optimization 4: Edge-First Triage via AetherForge
+        objective = _flag(argv, "--objective")
+        if objective:
+            print("\n[Edge-First] 🧠 正在通过本地 AetherForge (omlxc) 评估意图复杂度与预热上下文...", file=sys.stderr)
+            try:
+                triage_res = subprocess.run(
+                    ["uv", "run", "omlxc", "fabric", "triage", objective],
+                    cwd=str(WORKSPACE / "projects" / "omlxc"),
+                    capture_output=True,
+                    text=True
+                )
+                if triage_res.returncode == 0:
+                    print(triage_res.stdout, file=sys.stderr)
+                else:
+                    print(f"  [WARN] 本地分诊引擎未就绪，降级到标准流程。({triage_res.stderr.strip()})", file=sys.stderr)
+            except Exception as e:
+                print(f"  [WARN] Triage skipped: {e}", file=sys.stderr)
+
     elif command == "closeout":
         run_id = _positional_after(argv, cmd_at)
         status = _flag(argv, "--status") or "ok"
@@ -554,7 +800,7 @@ def wrapped_main(argv: list[str] | None = None) -> int:
     try:
         previous = sys.argv
         sys.argv = [sys.argv[0], *argv]
-        return int(_ORIG_MAIN() or 0)
+        return int(_ORIG_MAIN(start_preflight=start_preflight) or 0)
     finally:
         sys.argv = previous
 
