@@ -5594,6 +5594,22 @@ bets:
         resident decision 提案；两脚本仍为 active script registry 条目，root gitlink 停在 d8af11c2 未跟进
         child main 82dddbc9。
       classification: direct_code_measurement
+    E8_task6b_c_lite_recovery:
+      run_id: run_0d064c36fd0d
+      spec_audit_task_id: task_219b418614bb
+      spec_audit_dispatch_id: ctx_a298657d1028
+      stale_pr_audit_task_id: task_c74fde77d258
+      stale_pr_audit_dispatch_id: ctx_243f06b8b741
+      finding: >-
+        root a0d06485 与后续 a9ed961a 的 Cockpit gitlink 均停在 e60d068a，而 child main 已为
+        a271a0d；canonical parser 缺五个 bundle flags，KEMS 410 前仍读 body，HTTP/MCP 接受任意
+        非空 mapping，MCP chat 无 gate。采用 C-lite：root 只读 verify-material 复用 frozen material v1
+        与 OMO WorkflowAdmitted proof，Cockpit 仅以 fixed subprocess adapter 在任何 effect 前消费；
+        root verifier 先合、Cockpit child 后合、root gitlink 最后跟进，OMO/Agora 本 slice 不改。
+      stale_pr_disposition: '#2264 closed after audit proved 118-file mixed scope and malformed Skill delimiters'
+      bdsk_proof_state: not_proven
+      bdsk_failure: compute_unavailable
+      classification: independent_architecture_and_scope_review
   done_when:
   - accepted Spec、BET、WorkPacket hash、run、claims 与 exact capability requirements 可重复读取且完全一致
   - skill、workflow、mcp-server、mcp-tool、bos-service exact ID 均可 find/inspect/load；歧义、通配符与 first-match 执行全部拒绝
@@ -5601,7 +5617,7 @@ bets:
   - native-execution-receipt/v1 至少有一个真实生产消费者，durable marker、replay、uncertain transport、cleanup 与 value firewall 负例全绿
   - Cockpit/Agora 透传同一 binding 与 receipt digest，不构造第二套 identity 或 fallback 执行路径
   - OMO 在 StepDispatched 前回验 persisted admission；跨 run admission、伪造 grant、错误 policy digest 被拒且零副作用
-  - legacy 空 capability grant 与 KEMS 裸派工路径被删除、接线或显式下线；agent-runtime/runtime registry 保持 non-authoritative
+  - legacy 空 capability grant 与 KEMS 裸派工路径被删除、接线或显式下线；agent-runtime effectful HTTP/MCP/chat 仅在 root verify-material 逐字段回验 persisted admission、StepRun 与 worker context 后执行，缺门时保持 non-authoritative
   - AGE-v2 Agent Cell 未经同一 WorkPacket、admission 与 capability receipt 不能成为生产派工入口
   - root/OMO/Cockpit/Agora targeted tests、跨仓负例、GaC、SSOT、reachability、独立 review 与 production-topology canary 全绿
   - 子仓 commit/tag/PR/CI/merge 后才更新根仓 gitlink；所有 writer clone 由 lifecycle receipt 退役
@@ -5615,7 +5631,7 @@ bets:
     expect: exit 0
   - cmd: cd projects/omo && uv run pytest tests/test_omo_worker_admission_gate.py tests/test_worker_lifecycle_mesh.py tests/test_workflow_mesh.py -q
     expect: exit 0
-  - cmd: cd projects/cockpit && uv run pytest src/cockpit/tests/test_bos_capability_invoke.py src/cockpit/tests/test_api_kems_retired.py src/cockpit/tests/test_agent_runtime_server.py tests/test_api_kems_dispatch.py -q
+  - cmd: cd projects/cockpit && uv run pytest src/cockpit/tests/test_capability_binding_adapter.py src/cockpit/tests/test_bos_capability_invoke.py src/cockpit/tests/test_api_kems_retired.py src/cockpit/tests/test_agent_runtime_server.py src/cockpit/tests/test_agent_runtime_mcp_server.py tests/test_api_kems_dispatch.py -q
     expect: exit 0
   - cmd: cd projects/agora && uv run pytest tests/unit/test_capability_gateway.py -q
     expect: exit 0
@@ -5623,8 +5639,8 @@ bets:
     expect: exit 0
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
-    spec_version: 1.1.1
-    content_digest: sha256:85156f1848b1c6d6dfa092d4755ea2b8ffaa567920889f52c7e23ebe86c209d3
+    spec_version: 1.1.2
+    content_digest: sha256:34d9d086f5f8991169aa895791ddddf5bca9610370a91ae8020edf470f236d44
     decision_ref: decision://accepted/BET-Y1Q3-T1-12
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -5706,13 +5722,17 @@ bets:
   - projects/omo/tests/test_worker_lifecycle_mesh.py
   - projects/omo/tests/test_workflow_mesh.py
   - projects/omo
+  - projects/cockpit/src/cockpit/_subcommands.py
   - projects/cockpit/src/cockpit/commands/bos.py
+  - projects/cockpit/src/cockpit/adapters/capability_binding.py
   - projects/cockpit/src/cockpit/web/api_kems.py
   - projects/cockpit/src/cockpit/agent_runtime_server.py
   - projects/cockpit/src/cockpit/agent_runtime_mcp_server.py
+  - projects/cockpit/src/cockpit/tests/test_capability_binding_adapter.py
   - projects/cockpit/src/cockpit/tests/test_bos_capability_invoke.py
   - projects/cockpit/src/cockpit/tests/test_api_kems_retired.py
   - projects/cockpit/src/cockpit/tests/test_agent_runtime_server.py
+  - projects/cockpit/src/cockpit/tests/test_agent_runtime_mcp_server.py
   - projects/cockpit/tests/test_api_kems_dispatch.py
   - projects/cockpit
   - projects/agora/src/agora/capability_gateway.py
@@ -5724,7 +5744,8 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: 需要新增 registry writer、scheduler、database、第二 dispatch truth，或必须放宽 WorkPacket/Spec/claim/admission/receipt
-    校验，或只能用 fixture/synthetic 代替 production canary 时停止实施并重新审查
+    校验，或 verifier 需要写 OMO/Mesh/marker/cache、启动 provider/router/gateway/第二 subprocess、复制 root validator
+    到 Cockpit，或任一负例无法证明 runtime/tool/provider 零调用，或只能用 fixture/synthetic 代替 production canary 时停止实施并重新审查
   subtraction:
   - 删除不可达 legacy 空 capability grant 分支；无消费者则下线 KEMS 裸派工入口；不新增活动脚本、registry writer、workflow 或 database
   retro: required
