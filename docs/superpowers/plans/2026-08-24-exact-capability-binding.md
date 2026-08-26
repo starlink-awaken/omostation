@@ -960,7 +960,9 @@ Tag: `delivery/exact-capability-binding-omo-integrity-20260824-v1`.
 - Modify: `projects/cockpit/src/cockpit/agent_runtime_server.py`
 - Modify: `projects/cockpit/src/cockpit/agent_runtime_mcp_server.py`
 - Create: `projects/cockpit/src/cockpit/tests/test_bos_capability_invoke.py`
+- Create: `projects/cockpit/src/cockpit/tests/test_api_kems_retired.py`
 - Modify: `projects/cockpit/src/cockpit/tests/test_agent_runtime_server.py`
+- Modify: `projects/cockpit/tests/test_api_kems_dispatch.py`
 - Modify: `projects/agora/src/agora/capability_gateway.py`
 - Modify: `projects/agora/tests/unit/test_capability_gateway.py`
 
@@ -1033,7 +1035,7 @@ uv run pytest tests/unit/test_capability_gateway.py -q
 uv run ruff check src/agora/capability_gateway.py tests/unit/test_capability_gateway.py
 
 cd ../cockpit
-uv run pytest src/cockpit/tests/test_bos_capability_invoke.py src/cockpit/tests/test_agent_runtime_server.py -q
+uv run pytest src/cockpit/tests/test_bos_capability_invoke.py src/cockpit/tests/test_api_kems_retired.py src/cockpit/tests/test_agent_runtime_server.py tests/test_api_kems_dispatch.py -q
 uv run ruff check src/cockpit/commands/bos.py src/cockpit/web/api_kems.py src/cockpit/agent_runtime_server.py src/cockpit/agent_runtime_mcp_server.py
 ```
 
