@@ -784,3 +784,10 @@ Strategic Director 每次最多签发两个 Executor 包；Verifier 保留独立
 8. 以真实 Outcome 推进蓝图，而不是以工程产物数量推进。
 
 该角色需要由 OMO/Cockpit 持久化，不能依赖单次对话记忆。
+
+## Exact Capability Binding rollout status (2026-08-26)
+
+Enforcement: `warning` (promoted from shadow; scans in
+docs/reports/2026-08-26-binding-enforcement-scan.md). Delivered tags:
+agora/cockpit/ecos/omo-integrity 20260824 v1 set; omo-consumer pending.
+Fail promotion and positive-topology canary remain gated on OMO Tasks 2/3.

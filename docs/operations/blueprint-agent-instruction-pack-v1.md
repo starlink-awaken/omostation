@@ -296,3 +296,10 @@ Handoff 只传完成职责所需的最小上下文，不传完整私有记忆、
 - “所有 Agent 达成共识”。
 
 必须替换为：可重复命令、returncode、diff、hash、运行结果、失败样例和真实 Outcome。
+
+## Exact Capability Binding rollout status (2026-08-26)
+
+Enforcement: `warning` (promoted from shadow; scans in
+docs/reports/2026-08-26-binding-enforcement-scan.md). Delivered tags:
+agora/cockpit/ecos/omo-integrity 20260824 v1 set; omo-consumer pending.
+Fail promotion and positive-topology canary remain gated on OMO Tasks 2/3.
