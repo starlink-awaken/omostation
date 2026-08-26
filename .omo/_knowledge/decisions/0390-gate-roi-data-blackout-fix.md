@@ -79,7 +79,7 @@ cd projects/omo && uv run python -m pytest \
   tests/test_omo_daemon_history_checks.py -q
 
 # 数据恢复: 等 daemon 下次 tick 后, governance-history 新增 events 应含 checks
-python3 bin/_archive/gate-roi-report.py --json | jq '.gates[].fire_rate_30d'
+python3 bin/_archive/2026-08-conv3/gate-roi-report.py --json | jq '.gates[].fire_rate_30d'
 ```
 
 ## 五、教训 (P73 真理驱动)

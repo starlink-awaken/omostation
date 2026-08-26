@@ -23,7 +23,7 @@ C1 (ADR-0235) 已加 research/delivery + governance dispatch 能力，为多轮�
 
 ## Decision
 
-在 `bin/_archive/role_framework.py` 加三个 C2 函数（协议层，Python，复用 RoleProtocolBus）：
+在 `bin/_archive/2026-08-conv3/role_framework.py` 加三个 C2 函数（协议层，Python，复用 RoleProtocolBus）：
 
 1. **`run_multi_round_negotiation(max_rounds, satisfy_after)`**：
    governance ↔ research 多轮 research_request/result 往返，直到 `satisfy_after` 轮满意

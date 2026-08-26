@@ -37,7 +37,7 @@ last-reviewed: 2026-08-07
 
 ## 二、决策
 
-### 决策 1: 新增 `bin/_archive/gate-roi-report.py`
+### 决策 1: 新增 `bin/_archive/2026-08-conv3/gate-roi-report.py`
 
 复用 gate-effectiveness 的 governance-history.jsonl 加载, 新增:
 
@@ -74,9 +74,9 @@ gate-effectiveness 保留 (评分视角), ROI 报告在其上叠加决策层, �
 ## 四、验证
 
 ```bash
-python3 bin/_archive/gate-roi-report.py             # 表格 + 减法建议
-python3 bin/_archive/gate-roi-report.py --json      # 结构化 (仪表盘可消费)
-python3 bin/_archive/gate-roi-report.py --markdown  # 季度报告文本
+python3 bin/_archive/2026-08-conv3/gate-roi-report.py             # 表格 + 减法建议
+python3 bin/_archive/2026-08-conv3/gate-roi-report.py --json      # 结构化 (仪表盘可消费)
+python3 bin/_archive/2026-08-conv3/gate-roi-report.py --markdown  # 季度报告文本
 ```
 
 ## 五、后续 (下一轮减法的量化候选)

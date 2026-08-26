@@ -25,7 +25,7 @@ supersedes: []
 |------|:---:|---------|
 | **Env Var 映射 SSOT** | ✅ | `protocols/port-registry.yaml env_vars:` 25 端口映射 |
 | **迁移助手** | ✅ | `bin/migrate-port-env-var.py` (scan + suggest + --apply) |
-| **root repo 迁移** | ✅ | `bin/_archive/start-gateway.sh` (9290→LLM_GATEWAY_PORT), `bin/_archive/2026-08-conv3/gac-mesh-router.py` (7437→OMLX_MESH_ROUTER_PORT) |
+| **root repo 迁移** | ✅ | `bin/_archive/2026-08-t6-05/start-gateway.sh` (9290→LLM_GATEWAY_PORT), `bin/_archive/2026-08-conv3/gac-mesh-router.py` (7437→OMLX_MESH_ROUTER_PORT) |
 | **端口类型声明** | ✅ | 7422/7456/8090: `env-only`+ 类型栏 |
 | **GaC rule** | ✅ | `CR-ENV-VAR-PORT` (governance-checks.yaml: 172 rules) |
 | **catalog 50 原则** | ✅ | p76-principles.md 45→50 (P77-7-1..5) |
@@ -41,7 +41,7 @@ P77-5-3 principle **environment-variable-preferred** 沉淀但从未执行. 39 �
 25 有 env-only 类型, 但代码中 73 处硬编码字面量.
 
 修真修真反模式:
-- `bin/_archive/start-gateway.sh`: `--port 9290` 字面量 → 部署不能无修改切换
+- `bin/_archive/2026-08-t6-05/start-gateway.sh`: `--port 9290` 字面量 → 部署不能无修改切换
 - `bin/_archive/2026-08-conv3/gac-mesh-router.py`: `PORT = 7437` 字面量 → 不能多实例配不同端口
 - 16 处 `7430` 在 agora 仓 — 最大单体反模式
 
@@ -64,7 +64,7 @@ port = int(os.environ.get("AGORA_INTERNAL_PORT", "7430"))
 
 | 文件 | 旧 | 新 | Env Var |
 |------|----|----|---------|
-| `bin/_archive/start-gateway.sh:12` | `--port 9290` | `--port "${LLM_GATEWAY_PORT:-9290}"` | `LLM_GATEWAY_PORT` |
+| `bin/_archive/2026-08-t6-05/start-gateway.sh:12` | `--port 9290` | `--port "${LLM_GATEWAY_PORT:-9290}"` | `LLM_GATEWAY_PORT` |
 | `bin/_archive/2026-08-conv3/gac-mesh-router.py:17` | `PORT = 7437` | `PORT = int(os.environ.get("OMLX_MESH_ROUTER_PORT", "7437"))` | `OMLX_MESH_ROUTER_PORT` |
 
 ### 1.4 WHAT — 迁移模式

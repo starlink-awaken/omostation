@@ -56,7 +56,7 @@ P63 readiness 历史快照 + trend 报告实施后, P64 调研发现 2 项可深
 
 ### D2: --alert 自动告警 (P64 R2)
 
-**修改**: `bin/_archive/governance-readiness-trend.py` 加 `--alert` 选项
+**修改**: `bin/_archive/2026-08-conv3/governance-readiness-trend.py` 加 `--alert` 选项
 
 **逻辑**:
 ```python

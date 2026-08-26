@@ -61,7 +61,7 @@ CLI 模式:
 
 ```
 # ADR-0151 (Round 5f): runtime/.watch-dispatch-stamps.json 是 OMO runtime-stamp-policy
-# 守门自动写入的派生面 (每次 bin/_archive/migrated_low_value/omo-state-cleanup.py sync 触发). 主仓 SSOT 跟踪
+# 守门自动写入的派生面 (每次 bin/_archive/2026-08-conv3/omo-state-cleanup.py sync 触发). 主仓 SSOT 跟踪
 # metadata (system.yaml, system_health.yaml, health.yaml 等), stamps 本身可重建.
 # 治本: 不在主仓 SSOT 中保留. P74 governance boundary 守护.
 runtime/.watch-dispatch-stamps.json

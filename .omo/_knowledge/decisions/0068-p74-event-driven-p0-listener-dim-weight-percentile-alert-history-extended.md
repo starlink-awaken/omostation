@@ -64,7 +64,7 @@ P73 收口后, P74 调研 6 项候选, 实施 3 项:
 
 ### D3: alert-history 多维扩展 (P74 R3)
 
-**修改**: `bin/_archive/alert-history.py` `analyze_history()`
+**修改**: `bin/_archive/2026-08-conv3/alert-history.py` `analyze_history()`
 
 **新增 3 维度**:
 - `by_level_sup_state`: 按级别拆分 fired/suppressed

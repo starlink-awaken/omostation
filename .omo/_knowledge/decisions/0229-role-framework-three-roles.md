@@ -25,7 +25,7 @@ exists as process-local CollabBus (`bin/delivery/role_collab.py`).
 1. **First-ship roles**: `engineering`, `governance`, `audit` (maps to implementer /
    orchestrator / verifier in G-DEL.2a handshake).
 2. **Role =** capability set + send/recv message boundaries + private memory scope prefix.
-3. **Host surface**: `bin/_archive/role_framework.py` (thin orchestration over existing
+3. **Host surface**: `bin/_archive/2026-08-conv3/role_framework.py` (thin orchestration over existing
    delivery tooling; aetherforge/swarm reserved for later multi-host).
 4. **Protocol**: assign → claim_ack → handoff → verify_result → complete with
    PermissionError on illegal send/recv.

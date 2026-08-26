@@ -35,7 +35,7 @@ last-reviewed: 2026-08-05
 
 ### D1. G5 — Rewrite `check_drift` to container semantics
 
-`bin/_archive/migrations/gac-ingest-legacy.py::check_drift` now validates at the **file**
+`bin/_archive/2026-08-gap-governance-s5/gac-ingest-legacy.py::check_drift` now validates at the **file**
 level, matching how consolidation actually models the legacy plane:
 
 | Field | Old (per-rule) | New (per-file) |
@@ -101,7 +101,7 @@ Live result: `ok=True, source_count=4, covered=4, missing=[], ghost=[]`.
 
 ```bash
 # G5 — legacy plane aligned
-uv run --with pyyaml python bin/_archive/migrations/gac-ingest-legacy.py --check --json
+uv run --with pyyaml python bin/_archive/2026-08-gap-governance-s5/gac-ingest-legacy.py --check --json
 #   {"ok": true, "source_count": 4, "covered_files": [...4...], "missing": [], "ghost": []}
 
 # G7 — regression

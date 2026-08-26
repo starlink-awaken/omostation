@@ -8,7 +8,7 @@ related:
   - STRAT-P79-strategic-roadmap.md
   - 0173-p78-phase2-baseline-foundry-v2.md
   - ../../../../../bin/knowledge-foundry-cron.py
-  - ../../../../../bin/_archive/quota-clearance-2026-08-24/port-governance-deck.py
+  - ../../../../../bin/_archive/2026-08-conv3/port-governance-deck.py
   - ../../../../../docs/operations/knowledge-foundry-monitor.md
 supersedes: []
 ---
@@ -22,7 +22,7 @@ supersedes: []
 | 交付 | 状态 | 关键产物 |
 |------|:---:|---------|
 | **10-deck cron 编排** | ✅ | `knowledge-foundry-cron.py`: 6:30 port-governance 加入 |
-| **port-governance deck** | ✅ | `bin/_archive/quota-clearance-2026-08-24/port-governance-deck.py` (4 checks) |
+| **port-governance deck** | ✅ | `bin/_archive/2026-08-conv3/port-governance-deck.py` (4 checks) |
 | **dry-run 更新** | ✅ | 列 10 deck 而非 9 |
 | **cron docstring** | ✅ | schedule 表含 6:30 entry |
 | **foundry monitor** | ✅ | docs/operations/knowledge-foundry-monitor.md |

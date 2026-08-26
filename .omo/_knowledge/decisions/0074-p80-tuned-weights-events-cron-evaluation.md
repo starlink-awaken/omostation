@@ -53,7 +53,7 @@ if os.environ.get("USE_TUNED_WEIGHTS") == "1":
 
 ### D2: 跨子仓 omo event 联动订阅器 (P80 R2)
 
-**新工具**: `bin/_archive/migrated_low_value/cross-submodule-events.py` (165 行)
+**新工具**: `bin/_archive/2026-08-conv3/cross-submodule-events.py` (165 行)
 
 **功能**:
 - 读 .omo/_knowledge/omo-events.jsonl
