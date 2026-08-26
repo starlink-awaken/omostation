@@ -200,7 +200,7 @@ Task 6 Agora 侧的 binding_digest 已合并（`031fbde1`），但能力链在 *
 
 ## CI 修复（pre-existing main 问题，用户授权并入 PR #2233）
 
-- **interface-check 修复**：`tests/test_agent_workflow.py:558` fixture 的 `writer: bin/cockpit/gen-capability-registry.py` → `bin/ssot/gen-capability-registry.py`。根因：并发 agent 把 projection writer 从 `bin/cockpit/` 移到 `bin/ssot/`（`bin/{cockpit => ssot}/gen-capability-registry.py` rename），#2228 的 fixture 过时 → `load_registry` 报 `registry_writer_invalid` → `test_root_preflight_*` 自 #2228 起红（main governance-check 从 23:19 起连续 4 次 failure）。修复后 90 agent-workflow tests + 16 preflight 全绿；interface-check CI **PASS**。
+- **interface-check 修复**：`tests/test_agent_workflow.py:558` fixture 的 `writer: bin/ssot/gen-capability-registry.py`（此前曾误写成 archive 路径）→ `bin/ssot/gen-capability-registry.py`。根因：并发 agent 把 projection writer 从 `bin/cockpit/` 移到 `bin/ssot/`（`bin/{cockpit => ssot}/gen-capability-registry.py` rename），#2228 的 fixture 过时 → `load_registry` 报 `registry_writer_invalid` → `test_root_preflight_*` 自 #2228 起红（main governance-check 从 23:19 起连续 4 次 failure）。修复后 90 agent-workflow tests + 16 preflight 全绿；interface-check CI **PASS**。
 - **governance-verify**：最初因 `.omo/tasks/planned/event-loop-dead-loop.yaml` 缺字段失败，分支 merge 最新 main 后变 **skipping**（并发 agent 处理中）。
 
 ## ⚠️ 处置记录（独立 clone 提交）
@@ -221,7 +221,7 @@ Task 6 Agora 侧的 binding_digest 已合并（`031fbde1`），但能力链在 *
 BET verify 第一条测试集（`tests/test_capability_sync.py test_capability_trace_binding.py test_capability_native_inspection.py test_capability_native_execution_receipt.py`）本地 21 失败 + channel_exposure 3 失败。根因与 #2233 修的**同一类**：`#2231` 把 `gen-capability-registry.py` 从 `bin/cockpit/` 移到 `bin/ssot/`（`bin/{cockpit => ssot}/...` rename），但还有 2 个测试 fixture 没同步：
 
 - `tests/test_capability_native_inspection.py::_registry()`：writer 硬编码 `bin/cockpit/...` → `build_trace_bound_resolution_receipt` 的 metadata 校验报 `source_unprovable` → **21 失败**
-- `tests/test_channel_exposure_p0.py`：4 处加载 `bin/cockpit/gen-capability-registry.py`（已不存在 → `NotADirectoryError`）→ **3 失败**
+- `tests/test_channel_exposure_p0.py`：4 处加载 `bin/ssot/gen-capability-registry.py`（已不存在 → `NotADirectoryError`）→ **3 失败**
 
 这些测试不在 CI 的 governance-check 测试列表（main 一直绿），只有 BET verify 本地命令暴露。
 
@@ -288,6 +288,5 @@ BET verify 第一条测试集（`tests/test_capability_sync.py test_capability_t
 
 - ✅ 我的部分（#2233 + #2242 + #84）全链路绑定透传闭环
 - ⏳ 剩余 = 并发 agent 的 bound native execution 生产消费者（`test_bound_invoke_emits_native_execution_receipt` 等，未合并 main）+ ecos/omo 侧透传核对
-
 
 

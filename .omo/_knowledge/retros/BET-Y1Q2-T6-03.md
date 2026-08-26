@@ -12,7 +12,7 @@ bet_id: BET-Y1Q2-T6-03
 2026-08-08
 
 ## 交付物
-- `bin/gac/bin-orphan-scan.py`: 零引用脚本扫描 + 归档工具
+- `bin/_archive/2026-08-25-dfsq-quota/bin-orphan-scan.py`: 零引用脚本扫描 + 归档工具
 - 77 个零引用脚本归档到 `bin/_archive/`
 - 脚本数: 360 → 283 (活跃)
 
