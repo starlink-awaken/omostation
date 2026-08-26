@@ -1156,6 +1156,44 @@ def test_unbound_invoke_is_shadow_observed_before_fail_promotion(
     assert receipt["binding_enforcement"] == "shadow_missing"
 
 
+# ---------------------------------------------------------------------------
+# T1-12 Task4C: local skill/workflow load/invoke must exact-resolve the
+# registry before returning a local receipt; prefix branching alone is a
+# fail-closed hole.
+
+_LOCAL_RECEIPT_FLAGS = {
+    "read_only": True,
+    "executed": False,
+    "provider_called": False,
+    "invoked": False,
+    "value_indicator_policy": False,
+}
+
+
+def _assert_local_receipt_flags(receipt: dict) -> None:
+    for key, expected in _LOCAL_RECEIPT_FLAGS.items():
+        assert key in receipt, f"local receipt must state {key} explicitly"
+        assert receipt[key] is expected, f"{key} must be exactly {expected}"
+
+
+def _local_projection(registry: dict) -> dict:
+    result = _canonical_trace_registry(registry)
+    result["skills"] = [
+        {"id": "git-discipline", "exists": True},
+        {"id": "unavailable-skill", "exists": False},
+    ]
+    result["workflows"] = [{"id": "bet-execution", "exists": True}]
+    return result
+
+
+def _forbid_provider(cap_sync, monkeypatch: pytest.MonkeyPatch) -> None:
+    def forbidden(*args, **kwargs):
+        raise AssertionError("local capability operations must never reach a provider")
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", forbidden)
+    monkeypatch.setattr(cap_sync, "_load_native_gateway", forbidden)
+
+
 def test_partial_binding_bundle_fails_closed_without_gateway_call(
     cap_sync, monkeypatch, registry, tmp_path, capsys
 ) -> None:
@@ -1192,3 +1230,201 @@ def test_partial_binding_bundle_fails_closed_without_gateway_call(
     assert calls == 0
     assert receipt["failure_code"] == "binding_bundle_incomplete"
     assert receipt["invocation"]["allowed"] is False
+
+
+@pytest.mark.parametrize("capability_id", ["skill:does-not-exist", "workflow:does-not-exist"])
+def test_local_load_rejects_nonexistent_ids_before_provider(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str], capability_id: str
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", capability_id, "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "resolution_not_found"
+    encoded = json.dumps(receipt, sort_keys=True)
+    assert "does-not-exist" not in encoded
+    assert str(tmp_path) not in encoded
+    assert receipt["invocation"]["allowed"] is False
+    _assert_local_receipt_flags(receipt)
+
+
+def test_local_load_rejects_old_projection_without_local_capabilities(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    registry_path = tmp_path / "old-projection.yaml"
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=True), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", "skill:git-discipline", "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "resolution_not_found"
+    _assert_local_receipt_flags(receipt)
+
+
+def test_local_load_rejects_unavailable_local_capability(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", "skill:unavailable-skill", "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert receipt["failure_code"] == "resolution_not_found"
+    _assert_local_receipt_flags(receipt)
+
+
+@pytest.mark.parametrize("corruption", ["missing_file", "malformed_yaml"])
+def test_local_load_invalid_registry_rejects_without_provider(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str], corruption: str
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    if corruption == "malformed_yaml":
+        registry_path.write_text("version: [broken\n  - !!float 'x'", encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", "skill:git-discipline", "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 4
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "invalid_registry"
+    encoded = json.dumps(receipt, sort_keys=True)
+    assert "git-discipline" not in encoded
+    _assert_local_receipt_flags(receipt)
+
+
+def test_local_load_rejects_duplicate_local_capability_ids(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    duplicate = _local_projection(registry)
+    duplicate["skills"].append(dict(duplicate["skills"][0]))
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(duplicate, sort_keys=True), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", "skill:git-discipline", "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 3
+    assert receipt["failure_code"] == "resolution_ambiguous"
+    assert receipt["invocation"]["allowed"] is False
+    _assert_local_receipt_flags(receipt)
+
+
+@pytest.mark.parametrize("capability_id", ["skill:git-discipline", "workflow:bet-execution"])
+def test_local_load_exact_canonical_ids_succeed(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str], capability_id: str
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", capability_id, "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert receipt["status"] == "ready"
+    assert receipt["invocation"] == {"allowed": False, "route": "local_metadata_only", "reason": "load_only"}
+    _assert_local_receipt_flags(receipt)
+
+
+def test_local_skill_invoke_rejects_with_full_local_receipt(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    payload = tmp_path / "input.json"
+    payload.write_text("{}\n", encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(
+        ["invoke", "--id", "skill:git-discipline", "--input-json", str(payload), "--registry", str(registry_path)]
+    )
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 4
+    assert receipt["failure_code"] == "skill_invoke_forbidden"
+    assert receipt["invocation"] == {"allowed": False, "route": "none", "reason": "skill_load_only"}
+    _assert_local_receipt_flags(receipt)
+
+
+@pytest.mark.parametrize(
+    ("actor_id", "expected_rc", "allowed"),
+    [
+        ("workflow-controller", 0, True),
+        ("other-actor", 4, False),
+    ],
+)
+def test_local_workflow_invoke_requires_controller_with_full_local_receipt(
+    cap_sync,
+    monkeypatch,
+    registry,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    actor_id: str,
+    expected_rc: int,
+    allowed: bool,
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    payload = tmp_path / "input.json"
+    payload.write_text("{}\n", encoding="utf-8")
+    binding = _trace_binding()
+    binding["actor_id"] = actor_id
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(
+        [
+            "invoke",
+            "--id",
+            "workflow:bet-execution",
+            "--input-json",
+            str(payload),
+            "--registry",
+            str(registry_path),
+            "--binding-json",
+            str(binding_path),
+        ]
+    )
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == expected_rc
+    assert receipt["invocation"]["allowed"] is allowed
+    if not allowed:
+        assert receipt["failure_code"] == "workflow_controller_required"
+    _assert_local_receipt_flags(receipt)
+
+
+def test_local_load_does_not_read_local_sources(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    skill = tmp_path / ".agents/skills/git-discipline/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("---\nname: git-discipline\n---\nprivate instructions\n", encoding="utf-8")
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    before = (skill.stat().st_mtime_ns, skill.read_bytes())
+    _forbid_provider(cap_sync, monkeypatch)
+    monkeypatch.setattr(cap_sync, "ROOT", tmp_path)
+
+    rc = cap_sync.main(["load", "--id", "skill:git-discipline", "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    encoded = json.dumps(receipt, sort_keys=True)
+    assert "private instructions" not in encoded
+    assert "git-discipline" not in encoded
+    assert (skill.stat().st_mtime_ns, skill.read_bytes()) == before
