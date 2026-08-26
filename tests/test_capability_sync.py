@@ -822,9 +822,7 @@ def test_execute_gateway_operation_without_binding_passes_none(
     assert gateway.calls[0][4] is None
 
 
-def test_invoke_cli_reads_binding_json_and_forwards_it(
-    cap_sync, bound_files, monkeypatch
-) -> None:
+def test_invoke_cli_reads_binding_json_and_forwards_it(cap_sync, bound_files, monkeypatch) -> None:
     """The CLI invoke path must read --binding-json and pass it to the gateway
     operation so Agora can emit a binding_digest."""
     captured: list[dict] = []
@@ -1044,6 +1042,7 @@ def bound_files(registry, tmp_path):
 
     def digest(value: str) -> str:
         return "sha256:" + value * 64
+
     binding = {
         "correlation_id": "corr-test",
         "workflow_run_id": "run-test",
@@ -1115,9 +1114,7 @@ def bound_files(registry, tmp_path):
     )
 
 
-def test_bound_invoke_emits_native_execution_receipt(
-    cap_sync, bound_files, monkeypatch, capsys
-):
+def test_bound_invoke_emits_native_execution_receipt(cap_sync, bound_files, monkeypatch, capsys):
     monkeypatch.setattr(
         cap_sync,
         "execute_gateway_operation",
@@ -1131,9 +1128,7 @@ def test_bound_invoke_emits_native_execution_receipt(
     assert receipt["value_indicator_policy"] is False
 
 
-def test_unbound_invoke_is_shadow_observed_before_fail_promotion(
-    cap_sync, monkeypatch, registry, tmp_path, capsys
-):
+def test_unbound_invoke_is_shadow_observed_before_fail_promotion(cap_sync, monkeypatch, registry, tmp_path, capsys):
     registry_file = tmp_path / "registry.yaml"
     registry_file.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
     input_file = tmp_path / "input.json"
@@ -1146,14 +1141,21 @@ def test_unbound_invoke_is_shadow_observed_before_fail_promotion(
         return {"schema": "capability-invocation-receipt/v1", "status": "succeeded"}
 
     monkeypatch.setattr(cap_sync, "execute_gateway_operation", legacy_gateway)
-    rc = cap_sync.main([
-        "invoke", "--id", "bos-service:bos://governance/shared",
-        "--input-json", str(input_file), "--registry", str(registry_file),
-    ])
+    rc = cap_sync.main(
+        [
+            "invoke",
+            "--id",
+            "bos-service:bos://governance/shared",
+            "--input-json",
+            str(input_file),
+            "--registry",
+            str(registry_file),
+        ]
+    )
     receipt = json.loads(capsys.readouterr().out)
     assert rc == 0
     assert calls == 1
-    assert receipt["binding_enforcement"] == "shadow_missing"
+    assert receipt["binding_enforcement"] == f"{cap_sync.BINDING_ENFORCEMENT}_missing"
 
 
 # ---------------------------------------------------------------------------
