@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-audit
-generated_at: 2026-08-26T13:40:17Z
+generated_at: 2026-08-26T13:50:23Z
 status: candidate
 counts:
   runs: 9
@@ -15,7 +15,7 @@ failure_breakdown:
 ---
 # governance-audit 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-26T13:40:17Z
+- generated_at: 2026-08-26T13:50:23Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 9 成功运行 + 4 失败模式 = 13 草稿
 - 失败率: 30.77%
