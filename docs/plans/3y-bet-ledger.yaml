@@ -7932,7 +7932,7 @@ bets:
   - sediment.py INBOX_EVENTS 分支写 sediment/inbox/{slug}.md 感知信号草稿
   - roles.py sediment topic_filter / resident-routes.yaml InboxSignal 路由 / ingest.py topic 映射 / cli.py SUBCOMMANDS 全链接线
   - install-resident-cron.sh 加每 5min omo.cli resident inbox
-  - 真实链路验证: inbox 实跑 → events.jsonl 出现 InboxSignal → daemon --role sediment → sediment/inbox/ 出现草稿(幂等)
+  - '真实链路验证: inbox 实跑 → events.jsonl 出现 InboxSignal → daemon --role sediment → sediment/inbox/ 出现草稿(幂等)'
   verify:
   - cmd: uv run --directory projects/omo --with pytest python -m pytest tests/unit/test_resident_inbox.py tests/unit/test_resident_sediment.py tests/integration/test_resident_roles.py -q
     expect: exit 0
