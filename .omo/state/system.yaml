@@ -1,6 +1,6 @@
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-26T06:29:29.025965+00:00'
+health_score_evidence_generated_at: '2026-08-26T06:39:01.644725+00:00'
 current_phase: 49
 phase46_status: completed
 phase46_completed_at: '2026-08-01T00:00:00Z'
