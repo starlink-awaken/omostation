@@ -5714,6 +5714,7 @@ bets:
   - tests/test_capability_trace_binding.py
   - tests/test_capability_native_inspection.py
   - tests/test_capability_native_execution_receipt.py
+  - tests/test_bet_ledger_d0.py
   - tests/test_agent_workflow.py
   - tests/test_spec_binding_lint.py
   - tests/unit/test_phase8_unified_ecosystem.py
