@@ -18,6 +18,8 @@ LIB_PATH = ROOT / "lib" / "capability_native_inspection.py"
 SOURCES_PATH = ROOT / "lib" / "capability_native_sources.py"
 RECEIPT_PATH = ROOT / "lib" / "capability_native_receipt.py"
 SYNC_PATH = ROOT / "bin" / "capability-sync.py"
+GENERATOR_PATH = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
+REGISTRY_PATH = ROOT / "docs" / "generated" / "capability-registry.yaml"
 if str(ROOT / "lib") not in sys.path:
     sys.path.insert(0, str(ROOT / "lib"))
 
@@ -41,6 +43,18 @@ def _load_sync():
 
 
 SYNC = _load_sync()
+
+
+def _load_generator():
+    spec = importlib.util.spec_from_file_location("capability_registry_generator_native_contract", GENERATOR_PATH)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+GENERATOR = _load_generator()
 
 
 def _binding() -> dict[str, str]:
@@ -91,6 +105,13 @@ def _registry() -> dict:
 
 def _registry_bytes(registry: dict) -> bytes:
     return yaml.safe_dump(registry, sort_keys=True).encode("utf-8")
+
+
+def _workspace_registry() -> tuple[dict, bytes]:
+    content = REGISTRY_PATH.read_bytes()
+    registry = yaml.safe_load(content)
+    assert isinstance(registry, dict)
+    return registry, content
 
 
 def _resolution_receipt(registry: dict, capability_id: str) -> dict:
@@ -230,6 +251,42 @@ def test_mcp_server_static_declaration_is_provable(authority_root: Path) -> None
         resolution_receipt=_resolution_receipt(registry, capability_id),
     )
     assert receipt["capability"]["kind"] == "mcp_server"
+
+
+def test_agora_composite_native_inspection_proves_the_real_registration_graph() -> None:
+    registry, _generated_content = _workspace_registry()
+    content = _registry_bytes(registry)
+    capability_id = "mcp-server:agora"
+
+    receipt = inspect_native_capability(
+        root=ROOT,
+        capability_id=capability_id,
+        registry=registry,
+        registry_content=content,
+        resolution_receipt=_resolution_receipt(registry, capability_id),
+    )
+
+    assert receipt["status"] == "inspected"
+    assert receipt["source_ref"] == "projects/agora/src/agora/server/mcp.py"
+    assert receipt["proof"] == {"method": "python_ast_static_declaration", "strength": "strong"}
+
+
+def test_agora_projection_contains_only_tools_reachable_from_the_composite_entrypoint() -> None:
+    servers, _total = GENERATOR.scan_mcp_servers()
+    agora = next(server for server in servers if server["id"] == "agora")
+    tools = set(agora["tools"])
+
+    assert {
+        "agora_execute",
+        "agora_capability_discover",
+        "mutate_resource",
+        "bos_health",
+        "list_bos_tools",
+        "persona_bdsk_evaluate",
+    } <= tools
+    assert "cell_execute" not in tools
+    assert "cell_govern" not in tools
+    assert "python" not in tools
 
 
 def test_mcp_explicit_literal_version_is_proved(authority_root: Path) -> None:
