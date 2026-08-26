@@ -224,3 +224,38 @@ class TestCreateApp:
             client = TestClient(app)
             response = client.post("/chat", json={"message": "hi"}, headers={"Authorization": "Bearer wrong"})
             assert response.status_code == 401
+
+
+def _client_with_tmp_log(tmp_path):
+    t = TestCreateApp()
+    app = t._make_app()
+    agent_runtime_server.EXEC_LOG_FILE = tmp_path / "exec.log"
+    return TestClient(app)
+
+
+def test_run_task_effectful_without_binding_is_403(tmp_path):
+    client = _client_with_tmp_log(tmp_path)
+    response = client.post("/run-task", json={"prompt": "do it", "tools": ["shell"]})
+    assert response.status_code == 403
+    assert "admitted capability binding" in response.json()["detail"]
+
+
+def test_run_task_with_binding_receipt_passes_gate(tmp_path):
+    client = _client_with_tmp_log(tmp_path)
+    response = client.post(
+        "/run-task",
+        json={
+            "prompt": "do it",
+            "tools": ["shell"],
+            "binding_receipt": {"binding_digest": "sha256:" + "a" * 64},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["authority_state"] == "non_authoritative"
+
+
+def test_chat_without_binding_reports_non_authoritative(tmp_path):
+    client = _client_with_tmp_log(tmp_path)
+    response = client.post("/chat", json={"message": "hello"})
+    assert response.status_code == 200
+    assert response.json()["authority_state"] == "non_authoritative"

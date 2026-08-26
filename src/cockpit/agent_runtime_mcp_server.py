@@ -43,12 +43,19 @@ def get_runtime():
 
 
 @mcp.tool()
-def run_task(task_name: str) -> str:
+def run_task(task_name: str, binding_receipt: dict = None) -> str:
     """Run a predefined task by name (e.g. WF-005, codexbar-quota, daily-summary).
 
     Tasks are loaded from task_definitions/<name>.json.
-    Returns the LLM response or error message.
+    Effectful execution requires an admitted capability binding receipt.
     """
+    if not isinstance(binding_receipt, dict) or not binding_receipt:
+        return _json_envelope(
+            {
+                "error": "effectful agent-runtime tools require an admitted capability binding",
+                "authority_state": "non_authoritative",
+            }
+        )
     runtime = get_runtime()
     task_def_dir = Path(__file__).parent / "task_definitions"
     task_file = task_def_dir / f"{task_name}.json"

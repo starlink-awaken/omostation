@@ -603,6 +603,46 @@ def _sanitize_capability_receipt(receipt: object, canonical_id: str) -> dict:
     return {key: receipt[key] for key in _CAPABILITY_RECEIPT_FIELDS if key in receipt}
 
 
+def run_bos_capability_invoke(
+    *,
+    capability_id: str,
+    input_json,
+    binding_json=None,
+    inspection_receipt_json=None,
+    admission_receipt_json=None,
+    operation_id=None,
+    effect_classification=None,
+) -> int:
+    """Forward one governed BOS invoke with its full binding bundle to capability-sync."""
+    command = [
+        sys.executable,
+        str(_WORKSPACE / "bin" / "capability-sync.py"),
+        "invoke",
+        "--id",
+        capability_id,
+        "--input-json",
+        str(input_json),
+    ]
+    if binding_json is not None:
+        command.extend(["--binding-json", str(binding_json)])
+    if inspection_receipt_json is not None:
+        command.extend(["--inspection-receipt-json", str(inspection_receipt_json)])
+    if admission_receipt_json is not None:
+        command.extend(["--admission-receipt-json", str(admission_receipt_json)])
+    if operation_id is not None:
+        command.extend(["--operation-id", operation_id])
+    if effect_classification is not None:
+        command.extend(["--effect-classification", effect_classification])
+    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    try:
+        receipt = _sanitize_capability_receipt(json.loads(result.stdout), capability_id)
+    except (json.JSONDecodeError, ValueError):
+        print(json.dumps({"schema": "capability-invocation-receipt/v1", "status": "invalid_receipt"}, sort_keys=True))
+    else:
+        print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+    return int(result.returncode)
+
+
 def cmd_bos_capability(args) -> int:
     """BOS capability / toolbox 外部能力入口。"""
     subcmd = getattr(args, "capability_command", "list")
@@ -666,6 +706,18 @@ def cmd_bos_capability(args) -> int:
         binding_json = getattr(args, "capability_binding_json", None)
         if binding_json is not None:
             command.extend(["--binding-json", str(binding_json)])
+        inspection_receipt_json = getattr(args, "capability_inspection_receipt_json", None)
+        if inspection_receipt_json is not None:
+            command.extend(["--inspection-receipt-json", str(inspection_receipt_json)])
+        admission_receipt_json = getattr(args, "capability_admission_receipt_json", None)
+        if admission_receipt_json is not None:
+            command.extend(["--admission-receipt-json", str(admission_receipt_json)])
+        operation_id = getattr(args, "capability_operation_id", None)
+        if operation_id is not None:
+            command.extend(["--operation-id", operation_id])
+        effect_classification = getattr(args, "capability_effect_classification", None)
+        if effect_classification is not None:
+            command.extend(["--effect-classification", effect_classification])
         try:
             result = subprocess.run(command, check=False, capture_output=True, text=True)
         except OSError:

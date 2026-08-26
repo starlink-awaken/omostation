@@ -33,21 +33,12 @@ def test_dispatch_rejects_private_content():
     assert result.status_code == 422
 
 
-def test_dispatch_calls_omo_broker(monkeypatch):
-    seen = {}
-
-    def fake_dispatch(root, task_id, worker_id, allowed_write_paths, **kwargs):
-        seen.update(
-            root=root,
-            task_id=task_id,
-            worker_id=worker_id,
-            allowed_write_paths=allowed_write_paths,
-            kwargs=kwargs,
-        )
-        return {"dispatch_id": "dispatch-1", "run_ref": ".omo/workers/runs/dispatch-1.yaml"}
+def test_dispatch_endpoint_is_retired(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("naked KEMS dispatch must not reach the OMO broker")
 
     fake_module = types.ModuleType("omo.omo_worker_dispatch")
-    fake_module.dispatch_task = fake_dispatch
+    fake_module.dispatch_task = forbidden
     monkeypatch.setitem(sys.modules, "omo.omo_worker_dispatch", fake_module)
 
     result = client().post(
@@ -55,21 +46,8 @@ def test_dispatch_calls_omo_broker(monkeypatch):
         json={
             "worker_id": "worker-1",
             "allowed_write_paths": ["projects/knowledge/kairon"],
-            "transport": "cli_prompt",
-            "prior_evidence": ["evidence-1"],
-            "prompt_addendum": ["Run targeted tests"],
         },
     )
 
-    assert result.status_code == 200
-    assert result.json() == {
-        "task_id": "task-1",
-        "status": "dispatched",
-        "dispatch": {"dispatch_id": "dispatch-1", "run_ref": ".omo/workers/runs/dispatch-1.yaml"},
-        "authority": "omo",
-    }
-    assert seen["task_id"] == "task-1"
-    assert seen["worker_id"] == "worker-1"
-    assert seen["allowed_write_paths"] == ["projects/knowledge/kairon"]
-    assert seen["kwargs"]["transport"] == "cli_prompt"
-    assert seen["kwargs"]["prior_evidence"] == ["evidence-1"]
+    assert result.status_code == 410
+    assert "retired" in result.json()["detail"]

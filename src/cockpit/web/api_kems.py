@@ -206,25 +206,10 @@ async def dispatch_kems_task(task_id: str, request: Request) -> dict[str, Any]:
     allowed_paths = body["allowed_write_paths"]
     if not isinstance(allowed_paths, list) or not all(isinstance(path, str) and path.strip() for path in allowed_paths):
         raise HTTPException(status_code=422, detail="allowed_write_paths must be a non-empty string list")
-    try:
-        from omo.omo_worker_dispatch import dispatch_task
-
-        result = dispatch_task(
-            WORKSPACE_DIR,
-            task_id,
-            str(body["worker_id"]),
-            allowed_paths,
-            launch=bool(body.get("launch", False)),
-            transport=str(body.get("transport", "cli_prompt")),
-            prior_evidence=[str(item) for item in body.get("prior_evidence", [])],
-            prompt_addendum=[str(item) for item in body.get("prompt_addendum", [])],
-            omo_dir=body.get("omo_dir", ".omo"),
-        )
-    except ImportError as exc:
-        raise HTTPException(status_code=503, detail="OMO dispatch broker is unavailable") from exc
-    except (KeyError, ValueError, OSError) as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
-    return {"task_id": task_id, "status": "dispatched", "dispatch": result, "authority": "omo"}
+    raise HTTPException(
+        status_code=410,
+        detail="KEMS direct dispatch was retired; use an admitted WorkPacket through OMO BlueprintControl",
+    )
 
 
 @router.post("/api/kems/ocr/reports")

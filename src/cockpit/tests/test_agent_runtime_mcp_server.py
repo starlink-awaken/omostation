@@ -53,13 +53,17 @@ class TestRunTask:
 
         with mock.patch("pathlib.Path.exists", return_value=True):
             with mock.patch("pathlib.Path.read_text", return_value=json.dumps(task_def)):
-                result = agent_runtime_mcp_server.run_task("daily-summary")
+                result = agent_runtime_mcp_server.run_task(
+                    "daily-summary", binding_receipt={"binding_digest": "sha256:" + "a" * 64}
+                )
                 assert result == "Today was good"
 
     def test_run_task_not_found(self):
         """任务定义目录/文件不存在"""
         with mock.patch("pathlib.Path.exists", return_value=False):
-            result = agent_runtime_mcp_server.run_task("nonexistent")
+            result = agent_runtime_mcp_server.run_task(
+                "nonexistent", binding_receipt={"binding_digest": "sha256:" + "a" * 64}
+            )
             assert "not found" in result
 
     def test_run_task_no_prompt(self):
@@ -68,7 +72,9 @@ class TestRunTask:
 
         with mock.patch("pathlib.Path.exists", return_value=True):
             with mock.patch("pathlib.Path.read_text", return_value=json.dumps({"no_prompt": 1})):
-                result = agent_runtime_mcp_server.run_task("empty-task")
+                result = agent_runtime_mcp_server.run_task(
+                    "empty-task", binding_receipt={"binding_digest": "sha256:" + "a" * 64}
+                )
                 assert "no prompt" in result
 
     def test_run_task_with_error(self):
@@ -82,7 +88,9 @@ class TestRunTask:
 
         with mock.patch("pathlib.Path.exists", return_value=True):
             with mock.patch("pathlib.Path.read_text", return_value=json.dumps(task_def)):
-                result = agent_runtime_mcp_server.run_task("bad-task")
+                result = agent_runtime_mcp_server.run_task(
+                    "bad-task", binding_receipt={"binding_digest": "sha256:" + "a" * 64}
+                )
                 assert "[ERROR]" in result
                 assert "something broke" in result
 
@@ -97,7 +105,9 @@ class TestRunTask:
 
         with mock.patch("pathlib.Path.exists", return_value=True):
             with mock.patch("pathlib.Path.read_text", return_value=json.dumps(task_def)):
-                result = agent_runtime_mcp_server.run_task("empty-result")
+                result = agent_runtime_mcp_server.run_task(
+                    "empty-result", binding_receipt={"binding_digest": "sha256:" + "a" * 64}
+                )
                 assert "empty response" in result
 
 

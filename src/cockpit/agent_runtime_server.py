@@ -78,12 +78,14 @@ def create_app():
         task: str = ""
         tools: list = None  # type: ignore
         context: dict = None  # type: ignore
+        binding_receipt: dict = None  # type: ignore
 
     class ChatRequest(BaseModel):
         message: str
         history: list = None  # type: ignore
         session_id: str = ""
         context: dict = None  # type: ignore
+        binding_receipt: dict = None  # type: ignore
 
     # ── 端点 ──────────────────────────────────────────────────────────────
 
@@ -109,7 +111,8 @@ def create_app():
                     messages.append({"role": h["role"], "content": h["content"]})
         messages.append({"role": "user", "content": req.message})
 
-        schemas = runtime.tools.build_tool_schemas()
+        bound = isinstance(req.binding_receipt, dict) and bool(req.binding_receipt)
+        schemas = runtime.tools.build_tool_schemas() if bound else []
         max_turns = 30
 
         for turn in range(max_turns):
@@ -120,6 +123,7 @@ def create_app():
                     "response": f"抱歉，我遇到了错误: {response['error']}",
                     "turns": turn + 1,
                     "duration_sec": round(time.time() - t0, 2),
+                    "authority_state": "bound" if bound else "non_authoritative",
                 }
 
             assistant_msg = dict(response)
@@ -135,6 +139,7 @@ def create_app():
                     "turns": turn + 1,
                     "usage": response.get("usage", {}),
                     "duration_sec": round(time.time() - t0, 2),
+                    "authority_state": "bound" if bound else "non_authoritative",
                 }
 
             for tc in tcs:
@@ -164,6 +169,13 @@ def create_app():
         if not prompt:
             raise HTTPException(status_code=400, detail="prompt or task is required")
 
+        tools_enabled = bool(req.tools)
+        if tools_enabled and not (isinstance(req.binding_receipt, dict) and bool(req.binding_receipt)):
+            raise HTTPException(
+                status_code=403,
+                detail="effectful agent-runtime tools require an admitted capability binding",
+            )
+
         result = runtime.run_task(prompt, tools_enabled=req.tools, context=req.context)
         elapsed = time.time() - t0
 
@@ -180,6 +192,7 @@ def create_app():
             raise HTTPException(status_code=500, detail=result["error"])
 
         result["duration_sec"] = round(elapsed, 2)
+        result["authority_state"] = "non_authoritative"
         return result
 
     @app.get("/logs")

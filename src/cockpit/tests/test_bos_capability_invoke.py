@@ -225,3 +225,30 @@ def test_sanitize_receipt_preserves_binding_digest() -> None:
         "bos-service:bos://capability/swarm/run",
     )
     assert receipt["binding_digest"] == "sha256:" + "b" * 64
+
+
+def test_bos_invoke_forwards_all_binding_receipts(monkeypatch, tmp_path):
+    """Task 6: the canonical forwarding helper must pass the complete bundle to capability-sync."""
+    import subprocess as _subprocess
+
+    captured: list[str] = []
+    monkeypatch.setattr(
+        bos_mod.subprocess,
+        "run",
+        lambda argv, **kwargs: captured.extend(argv) or _subprocess.CompletedProcess(argv, 0, stdout="{}", stderr=""),
+    )
+    rc = bos_mod.run_bos_capability_invoke(
+        capability_id="bos-service:bos://capability/test/invoke",
+        input_json=tmp_path / "input.json",
+        binding_json=tmp_path / "binding.json",
+        inspection_receipt_json=tmp_path / "inspection.json",
+        admission_receipt_json=tmp_path / "admission.json",
+        operation_id="test.invoke",
+        effect_classification="read_only",
+    )
+    assert rc == 0
+    assert "--binding-json" in captured
+    assert "--inspection-receipt-json" in captured
+    assert "--admission-receipt-json" in captured
+    assert "--operation-id" in captured
+    assert "--effect-classification" in captured
