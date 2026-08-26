@@ -1,15 +1,24 @@
 ---
-status: active
-lifecycle: entry
-owner: auto-fix-loop
-last-reviewed: 2026-08-24
+schema: resident-retro-candidate/v1
+topic: project-code-change
+generated_at: 2026-08-26T11:14:44Z
+status: candidate
+counts:
+  runs: 35
+  failures: 19
+  total: 54
+failure_rate: 0.3519
+failure_breakdown:
+  by_event_type:
+    StepFailed: 19
+  trace_count: 19
 ---
-
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-23T06:07:00Z
+- generated_at: 2026-08-26T11:14:44Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 28 成功运行 + 19 失败模式 = 47 草稿
+- sediment 覆盖: 35 成功运行 + 19 失败模式 = 54 草稿
+- 失败率: 35.19%
 
 ## 成功运行 (runs/)
 
@@ -41,6 +50,13 @@ last-reviewed: 2026-08-24
 - 20260822T204128Z-project-code-change-7b1cd904.md
 - 20260822T204217Z-project-code-change-9e7f7076.md
 - 20260822T215855Z-project-code-change-fdf192e5.md
+- 20260824T064614Z-project-code-change-c59578bf.md
+- 20260824T125706Z-project-code-change-261e19b6.md
+- 20260824T131143Z-project-code-change-ca90c164.md
+- 20260824T223753Z-project-code-change-21443090.md
+- 20260825T031957Z-project-code-change-e303abdb.md
+- 20260825T122540Z-project-code-change-dc99222a.md
+- 20260825T231805Z-project-code-change-afc51383.md
 
 ## 失败模式 (failures/)
 
@@ -64,10 +80,267 @@ last-reviewed: 2026-08-24
 - 20260822T204217Z-project-code-change-9e7f7076-8d25d42e.md
 - 20260822T215855Z-project-code-change-fdf192e5-9044dbbf.md
 
+## 失败根因画像 (确定性启发式)
+
+- StepFailed: 19 篇
+- 关联工作流溯源: 19 个 (trace_id 见下)
+  - `20260806T045517Z-project-code-change-bcde97d4`
+  - `20260807T032328Z-project-code-change-09c74847`
+  - `20260808T111928Z-project-code-change-aa88e96d`
+  - `20260813T113527Z-project-code-change-09d36fb5`
+  - `20260814T120902Z-project-code-change-af83b5b6`
+  - `20260816T032059Z-project-code-change-48e654fa`
+  - `20260816T115049Z-project-code-change-0fdaac1f`
+  - `20260816T121722Z-project-code-change-7e7891ec`
+  - `20260820T023451Z-project-code-change-a9f457f1`
+  - `20260822T160521Z-project-code-change-6d6b79e3`
+  - `20260822T180030Z-project-code-change-9d21d909`
+  - `20260822T180114Z-project-code-change-2d58c960`
+  - `20260822T180231Z-project-code-change-0ff37015`
+  - `20260822T190929Z-project-code-change-b97cf92a`
+  - `20260822T193706Z-project-code-change-7bd3cdd2`
+  - `20260822T204103Z-project-code-change-6fcbcd58`
+  - `20260822T204128Z-project-code-change-7b1cd904`
+  - `20260822T204217Z-project-code-change-9e7f7076`
+  - `20260822T215855Z-project-code-change-fdf192e5`
+
+## 确定性五问骨架 (ledger 追溯, 自动填充)
+
+- **20260804T071152Z-project-code-change-e396751d**
+  - 计划 (objective): AGT 集成收口: agora bos-services 8 服务 + agt-integration.yaml + 主仓 test_agt_integration 断言适配 components 结构
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=982.932
+- **20260806T045517Z-project-code-change-bcde97d4**
+  - 计划 (objective): 3Y-PLAN-LEDGER project-code-change
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=80782.019
+- **20260807T032328Z-project-code-change-09c74847**
+  - 计划 (objective): 新增 check-conflict-markers gate: 扫描 staged 文件冲突标记(<<<<<<< etc)防入库, 接入 gac-local-gate GATES_LIST. 治本 ecos 0ff6ad3 冲突标记入库类问题(2026-08-07 实证)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=1102.64
+- **20260808T111928Z-project-code-change-aa88e96d**
+  - 计划 (objective): ADR-0404 Phase 3 eCOS submodule federated governance (global PASW, A2A path locks, affected graph CI)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=44515.95
+- **20260809T225432Z-project-code-change-70d8fc9d**
+  - 计划 (objective): SR-02: restore canonical delegation preflight and alias-check tools with Makefile entrypoints
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=27635.005
+- **20260810T063513Z-project-code-change-db1dce41**
+  - 计划 (objective): W0 blueprint convergence: honest scene-card gate, freshness health projection, and evidence baseline
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=77294.482
+- **20260810T154444Z-project-code-change-9fed343a**
+  - 计划 (objective): 让 AetherForge 从 omlxc SSOT 读取实测模型内存体积并修正本地算力路由别名
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=1268.191
+- **20260813T113527Z-project-code-change-09d36fb5**
+  - 计划 (objective): 发布已合入的 omlxc CLI resolve 与体验更新为受控补丁版本，并完成回归验证
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=88307.104
+- **20260814T120902Z-project-code-change-af83b5b6**
+  - 计划 (objective): 提交数字大脑模块单元测试（20 tests）与 mos 审计产物
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=603.851
+- **20260814T122010Z-project-code-change-3e5b45b1**
+  - 计划 (objective): Resume previous interrupted work and continue submodule + governance alignment
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=502.008
+- **20260814T122953Z-project-code-change-68d8f7f3**
+  - 计划 (objective): Continue after closeout: keep check-work-landed fix and workspace/runtime updates in governed lane
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=61.51
+- **20260815T045424Z-project-code-change-1ea09fa2**
+  - 计划 (objective): omlxc inventory-drop WARNING: high-water vs adapter list_models count on successful catalog probe
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=1658.943
+- **20260815T060303Z-project-code-change-4abcdb00**
+  - 计划 (objective): omlxc: release cutover 缺少 app-models 重建步骤，补 README 文档说明 + bin/omlx 启动期防呆提醒，修复模型目录塌陷根因
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=82052.488
+- **20260816T032059Z-project-code-change-48e654fa**
+  - 计划 (objective): bin/scripts convergence round9: 登记 141 个 missing_manifest_entry 镜像对 + 修复 audit 脚本 __init__/_lib 内部模块误报
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=3909.466
+- **20260816T115049Z-project-code-change-0fdaac1f**
+  - 计划 (objective): 架构债务落盘: 新建 3 BET (Y1Q3-T1-05/T6-04/T1-06) + 4 debt items (D-1~D-4) + 台账更新
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=144.39
+- **20260816T121722Z-project-code-change-7e7891ec**
+  - 计划 (objective): 第二轮架构债务落盘: 4 BET (T6-05/T1-07/T6-06/T3-04) + 3 debt (D-5~D-7) 基于两周分析
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=96.87
+- **20260816T230155Z-project-code-change-30bcb40a**
+  - 计划 (objective): 全面 lint 修复: 主仓 23 门禁错误 + 子项目 (agora 95/domain-kems 85/cockpit-ui 73 等)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=8153.215
+- **20260820T023451Z-project-code-change-a9f457f1**
+  - 计划 (objective): Fix metabolic_loop CI: omo-autopilot.yml 'omo-debt analyze' invalid in bundled omo-debt (ADR-0412); replace with refresh+dispatch. Waiver: user-authorized CI ops fixes.
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=2679.631
+- **20260822T160521Z-project-code-change-6d6b79e3**
+  - 计划 (objective): B2e-A integration-authority claim for committed transfer verifier; no shared-tree code edits; user waiver because no claimable BET exists
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=463.589
+- **20260822T180030Z-project-code-change-9d21d909**
+  - 计划 (objective): B2e-B authority claim for strict gitlink transfer proof integration
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=36.727
+- **20260822T180114Z-project-code-change-2d58c960**
+  - 计划 (objective): B2e-B authority claim for strict gitlink transfer proof integration
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=66.13
+- **20260822T180231Z-project-code-change-0ff37015**
+  - 计划 (objective): B2e-B authority claim for strict gitlink transfer proof integration
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=548.938
+- **20260822T190929Z-project-code-change-b97cf92a**
+  - 计划 (objective): B2e-C authority claim: add fail-closed abort-unready lifecycle; user-authorized BET-unbound waiver
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=489.3
+- **20260822T193706Z-project-code-change-7bd3cdd2**
+  - 计划 (objective): B2e-D: add explicit local root/child clone transport acceleration while preserving exact GitHub authority and v2 writer readiness; waiver: user explicitly authorized optimal execution on 2026-08-23 because ledger has no startable BET
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=3643.939
+- **20260822T204103Z-project-code-change-6fcbcd58**
+  - 计划 (objective): B2e-D.1: make normal merged-PR retire accept attempt-qualified identity v2 without weakening provenance, clean, branch, PR, race, or fd-bound deletion checks; user-authorized narrow waiver because ledger has no startable BET
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=16.025
+- **20260822T204128Z-project-code-change-7b1cd904**
+  - 计划 (objective): B2e-D.1: make normal merged-PR retire accept attempt-qualified identity v2 without weakening provenance, clean, branch, PR, race, or fd-bound deletion checks; user-authorized narrow waiver because ledger has no startable BET
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=36.546
+- **20260822T204217Z-project-code-change-9e7f7076**
+  - 计划 (objective): B2e-D.1: make normal merged-PR retire accept attempt-qualified identity v2 without weakening provenance, clean, branch, PR, race, or fd-bound deletion checks; user-authorized narrow waiver because ledger has no startable BET
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=1386.354
+- **20260822T215855Z-project-code-change-fdf192e5**
+  - 计划 (objective): B3 integration-authority claim for source commit 536b15ab7: Orca visible-runtime recovery and exact terminal identity hardening; user-authorized waiver because related BETs are closed
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=573.618
+- **20260824T064614Z-project-code-change-c59578bf**
+  - 计划 (objective): [BET-Y1Q3-T6-14] resident 常驻体系与治理接线全面深度复盘 (Appetite: 4 hours)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=92720.115
+- **20260824T125706Z-project-code-change-261e19b6**
+  - 计划 (objective): [BET-Y1Q3-T1-11] platform-rebase 独立 clone 退役 provenance 收敛 (Appetite: 1 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=868.254
+- **20260824T131143Z-project-code-change-ca90c164**
+  - 计划 (objective): [BET-Y1Q3-T1-11] platform-rebase 独立 clone 退役 provenance 收敛 (Appetite: 1 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=65.939
+- **20260824T223753Z-project-code-change-21443090**
+  - 计划 (objective): [BET-Y1Q3-T6-14] resident 常驻体系与治理接线全面深度复盘 (Appetite: 4 hours)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=145.877
+- **20260825T031957Z-project-code-change-e303abdb**
+  - 计划 (objective): [BET-Y1Q3-T10-12] resident 事件源接入 workflow 生命周期 (消费端补全 + 重放) (Appetite: 0.5 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=12364.292
+- **20260825T122540Z-project-code-change-dc99222a**
+  - 计划 (objective): [BET-Y1Q3-T10-15] resident 多信号源扩流 (感知文件夹 inbox_folder 接入事件流) (Appetite: 0.5 day)
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20260825T231805Z-project-code-change-afc51383**
+  - 计划 (objective): [BET-Y1Q3-T10-14] resident 告警外发渠道接线 (alert webhook + forwarder 修复) (Appetite: 0.5 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=889.927
+
+> 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
+
 ## 待完善(运营 agent/人工)
 
-- [ ] 计划 vs 实际
-- [ ] 结果与证据
 - [ ] 关键发现
 - [ ] 净增减
 - [ ] 交接建议
