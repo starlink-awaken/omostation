@@ -5,9 +5,12 @@ Laws:
   CR-SFOP-01  COMP-WS must declare legal sfop_slot + dao_layer
   CR-SFOP-02  unique active S-slot = COMP-WS-omo
   CR-SFOP-04  P/O may stay vacant (documented, not an error)
-  CR-SFOP-05  H must not call B directly; F is the only H↔B bridge.
-              cockpit.adapters is the allowed H-side B-port. Other H files
-              fail-closed unless in the line-stable baseline.
+  CR-SFOP-05  H must not import B except via F (agora) or cockpit.adapters
+              (the allowed H-side B-port). Other H files fail-closed unless
+              in the line-stable baseline.
+  CR-SFOP-06  claimed-active cron rows must declare a legal sfop_slot;
+              unclaimed live gaps warn. Claimed-active H-slot cron must
+              not execute a B project path.
   CR-DFSQ-01  dao-layer components must not appear on the cron ledger
   CR-DFSQ-02  qi-layer trees must not author L0 type: required constraints
   CR-X3-NS-001  north-star numerator must not be governance self-data
@@ -195,6 +198,12 @@ def _cron_jobs(path: Path) -> list[dict]:
     return [j for j in jobs if isinstance(j, dict)]
 
 
+def _is_claimed_active(row: dict) -> bool:
+    if row.get("claimed_active") is True:
+        return True
+    return str(row.get("status") or "").strip().lower() == "active"
+
+
 def _x3_self_data(path: Path) -> list[str]:
     if not path.exists():
         return []
@@ -248,6 +257,7 @@ def check(
                 "CR-SFOP-02",
                 "CR-SFOP-04",
                 "CR-SFOP-05",
+                "CR-SFOP-06",
                 "CR-DFSQ-01",
                 "CR-DFSQ-02",
                 "CR-X3-NS-001",
@@ -316,9 +326,26 @@ def check(
                 warnings.append(f"registry project {name!r} has no COMP-WS-{name}.yaml")
 
     # CR-DFSQ-01: dao must not sit on the cron execution ledger.
+    # CR-SFOP-06: claimed-active cron rows carry a legal sfop_slot.
     for job in _cron_jobs(cron_registry_path):
         command = str(job.get("command") or "")
         job_id = str(job.get("id") or job.get("name") or "cron-job")
+        slot = job.get("sfop_slot")
+        claimed = _is_claimed_active(job)
+        if slot not in SLOTS:
+            msg = f"CR-SFOP-06: cron {job_id!r} missing/illegal sfop_slot={slot!r}"
+            if claimed:
+                errors.append(msg)
+            else:
+                warnings.append(msg)
+        elif claimed and slot == "H":
+            for hit in BIN_IN_COMMAND.findall(command):
+                project = _path_to_project(hit)
+                if project in B_PROJECTS:
+                    errors.append(
+                        f"CR-SFOP-05: cron {job_id!r} H-slot command reaches "
+                        f"B({project}) via {hit}; must go through F or cockpit.adapters"
+                    )
         for hit in BIN_IN_COMMAND.findall(command):
             project = _path_to_project(hit)
             dao = project_dao.get(project or "")
@@ -332,9 +359,8 @@ def check(
     for rel in _scan_qi_l0(projects_root, qi_projects, repo_root):
         errors.append(f"CR-DFSQ-02: qi-layer tree authored L0 required constraint at {rel}")
 
-    # CR-SFOP-05: H↛B except through F. Adapter files are the H-side B-port
-    # (anti-corruption seam) until those ports speak BOS/agora. Other H files
-    # fail-closed unless listed in the line-stable baseline.
+    # CR-SFOP-05: H↛B except via F (agora) or cockpit.adapters (H-side B-port).
+    # Other H files fail-closed unless listed in the line-stable baseline.
     hb_seam_files: list[str] = []
     if not skip_call_scan:
         baseline = _load_baseline(baseline_path)
@@ -387,6 +413,7 @@ def check(
             "CR-SFOP-02",
             "CR-SFOP-04",
             "CR-SFOP-05",
+            "CR-SFOP-06",
             "CR-DFSQ-01",
             "CR-DFSQ-02",
             "CR-X3-NS-001",

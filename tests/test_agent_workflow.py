@@ -555,7 +555,7 @@ def _write_mcp_preflight_workspace(root: Path) -> dict[str, Any]:
                 "version": "1.0.0",
                 "schema": "capability-registry/v1",
                 "owner": "workspace-capability-governance",
-                "writer": "bin/cockpit/gen-capability-registry.py",
+                "writer": "bin/ssot/gen-capability-registry.py",
                 "mcp_servers": [
                     {
                         "id": "demo",
