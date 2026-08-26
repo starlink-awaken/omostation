@@ -135,4 +135,24 @@ if [ -f "$CONFLICT_CHECK" ]; then
   run_py "$CONFLICT_CHECK" || exit 1
 fi
 
+# ── Ruff format/lint check (advisory) ────────────────────────────
+# 检查 staged Python 文件的格式和 lint 问题 (warn 不阻断)
+RUFF="$(git rev-parse --show-toplevel)/.venv/bin/ruff"
+if [ ! -x "$RUFF" ]; then
+  RUFF="$(command -v ruff 2>/dev/null || true)"
+fi
+if [ -n "$RUFF" ] && [ -x "$RUFF" ]; then
+  STAGED_PY="$(git diff --cached --name-only --diff-filter=ACM -- '*.py' 2>/dev/null || true)"
+  if [ -n "$STAGED_PY" ]; then
+    echo "[ruff] 检查 staged Python 文件..." >&2
+    echo "$STAGED_PY" | while read -r f; do
+      if [ -f "$f" ]; then
+        "$RUFF" check --quiet "$f" 2>/dev/null || echo "[ruff] ⚠ $f 有 lint 问题 (运行 'ruff check --fix $f' 修复)" >&2
+        "$RUFF" format --check --quiet "$f" 2>/dev/null || echo "[ruff] ⚠ $f 格式不规范 (运行 'ruff format $f' 修复)" >&2
+      fi
+    done
+    echo "[ruff] ✅ 检查完成 (advisory, 不阻断提交)" >&2
+  fi
+fi
+
 exit 0

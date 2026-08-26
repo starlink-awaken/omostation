@@ -6,13 +6,14 @@
 
 **病根**:自动化 agent (OMC/autopilot) commit 子模块 + bump 主仓指针却不 push → 主仓 gitlink 指向子模块远程没有的 commit → CI `submodules: recursive` 拉不到 (`not our ref`) → 整条 CI 红。(2026-06-17 实测 14/18 子模块悬空)
 
-## pre-commit — GaC / SSOT 本地硬门
+## pre-commit — GaC / SSOT / Ruff 本地硬门
 
 commit 前依次运行:
 
 - `bin/gac-hygiene-check.py` (advisory)
 - `bin/gac-local-gate.py` (blocking)
 - `bin/ssot-guardian.py` (blocking)
+- `ruff check` + `ruff format --check` (advisory, staged Python 文件)
 
 ## 安装 (新 clone 必跑)
 
