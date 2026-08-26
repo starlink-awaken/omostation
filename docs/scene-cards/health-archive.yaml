@@ -1,0 +1,28 @@
+title: Health Archive Scene Card (报告归档与复查追踪)
+status: draft
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-26
+related:
+- ./health-visit.yaml
+---
+schema: scene-card/v2
+scene_id: health-archive
+journey_id: health-medical-workflow
+goal: 归档就诊档案与体检报告, 提取复查/用药时间节点形成追踪清单 (journey 终态)
+trigger: journey 前置状态 visited 的 records_received == true, 或 recorded 直接分叉进入
+input_contract: 就诊档案 + 报告文件 (本地路径)
+result_contract: 归档索引 (archived_at/category) + followup_checklist (复查日期/用药周期) + archive_completed 布尔判定
+outcome_metric: health_archive_retrievability
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 报告散落各处难检索, 复查时间遗忘
+data_classification: confidential
+data_scope: local-health-ledger-only
+operator: health-archive-dispatch-under-human-review
+required_capabilities:
+- storage:local-health-ledger
+notes:
+- 'P1 契约先行: 归档即终态; followup_checklist 挂载 deadline-tracker 提醒属 P2'
+- '风险边界: L0 归档动作 (对齐 risk_engine health.generate:report=L0); 本域数据不出本地 (confidential 最高敏分级)'
