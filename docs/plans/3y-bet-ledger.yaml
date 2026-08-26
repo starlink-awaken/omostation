@@ -5680,6 +5680,7 @@ bets:
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
   write_surfaces:
+  - .omo/_truth/registry/gate-known-debt.yaml
   - docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
   - docs/superpowers/plans/2026-08-24-exact-capability-binding.md
   - docs/plans/3y-bet-ledger.yaml
