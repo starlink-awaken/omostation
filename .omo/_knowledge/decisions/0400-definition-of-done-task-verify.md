@@ -14,8 +14,8 @@ last-reviewed: '2026-08-09'
 - supersedes: 无 (新机制)
 - related:
   - `.omo/debt/gap-items/` (能力缺口台账)
-  - `bin/ssot/gap-verify.py` (清零率验证)
-  - `bin/ssot/task-verify.py` (完成验证门禁)
+  - `bin/_archive/2026-08-conv3/gap-verify.py` (清零率验证)
+  - `bin/_archive/2026-08-conv3/task-verify.py` (完成验证门禁)
 
 ---
 

@@ -28,7 +28,7 @@ P76 收口后, P77 调研 3 项候选, 实施 1 项:
 
 ### D1: management 144 物理迁移 (P77 R1)
 
-**新工具**: `bin/ssot/management-migrate.py` (130 行)
+**新工具**: `bin/_archive/2026-08-conv3/management-migrate.py` (130 行)
 
 **迁移策略**:
 - 沿 P53 双指针, 但简化版 (因 P75 已加 category 字段, 不需要原位 deprecated)
@@ -63,7 +63,7 @@ P76 收口后, P77 调研 3 项候选, 实施 1 项:
 
 **沿用现有工具**:
 - `bin/ssot/management-categorize.py` (P75) → 加 category
-- `bin/ssot/management-migrate.py` (P77) → 物理迁移
+- `bin/_archive/2026-08-conv3/management-migrate.py` (P77) → 物理迁移
 
 ## Consequences
 
