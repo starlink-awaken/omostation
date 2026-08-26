@@ -737,6 +737,7 @@ def test_real_ledger_lint_adds_zero_done_findings(
 
 
 GOVERNANCE_WORKFLOW = ROOT / ".github/workflows/governance-check.yml"
+BET_GATE_WORKFLOW = ROOT / ".github/workflows/bet-done-gate.yml"
 BET_GATE_JOB_ID = "bet-done-transition"
 BET_GATE_STEP_NAME = "BET done-transition gate"
 POINTER_DRIFT_STEP_NAME = "Submodule pointer drift check"
@@ -751,8 +752,16 @@ def _governance_verify_steps() -> list[dict]:
     return _governance_workflow()["jobs"]["governance-verify"]["steps"]
 
 
+def _bet_gate_jobs() -> dict:
+    """bet-done gate 的 job 表 — 2026-08-26 起该 job 住在独立必跑 workflow
+    (bet-done-gate.yml, 根治 #2197 悬空 required check); 兼容回退旧位置。"""
+    if BET_GATE_WORKFLOW.exists():
+        return yaml.safe_load(BET_GATE_WORKFLOW.read_text(encoding="utf-8"))["jobs"]
+    return _governance_workflow()["jobs"]
+
+
 def _bet_done_transition_steps() -> list[dict]:
-    return _governance_workflow()["jobs"][BET_GATE_JOB_ID]["steps"]
+    return _bet_gate_jobs()[BET_GATE_JOB_ID]["steps"]
 
 
 def test_governance_verify_job_skips_non_authoritative_push_refs() -> None:
@@ -781,15 +790,19 @@ def test_governance_verify_checkout_has_full_history() -> None:
 
 def test_bet_done_transition_has_an_independent_status_context() -> None:
     """The transition guard must not share failure state with broad governance checks."""
-    jobs = _governance_workflow()["jobs"]
+    jobs = _bet_gate_jobs()
 
     assert BET_GATE_JOB_ID in jobs
     job = jobs[BET_GATE_JOB_ID]
     assert job.get("name") == BET_GATE_JOB_ID
     assert "needs" not in job
-    assert job.get("if") == (
-        "github.event_name != 'push' || github.ref == 'refs/heads/main'"
-    )
+    if BET_GATE_WORKFLOW.exists():
+        # 独立 workflow 无 paths 过滤必跑, 无需 if 门(2026-08-26 #2197 根治形态)
+        assert job.get("if") is None
+    else:
+        assert job.get("if") == (
+            "github.event_name != 'push' || github.ref == 'refs/heads/main'"
+        )
 
     steps = job["steps"]
     names = [str(step.get("name", "")) for step in steps]
