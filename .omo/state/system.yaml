@@ -8,7 +8,8 @@ phase49_status: active
 phase49_started_at: '2026-08-01T13:32:00Z'
 phase_status: active
 current_wave: W5
-next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面落地)
+next_milestone: "Phase 49 W1 \u2014 \u77E5\u8BC6\u6D41\u52A8\xB7\u7528\u6237\u4EF7\
+  \u503C\u5151\u73B0 (T1-T6 \u5168\u9762\u843D\u5730)"
 health_score_ref: .omo/state/health.yaml
 health_score: 45
 health_score_source: compass_radar_composite_isc3
@@ -18,7 +19,7 @@ idle_agents: 4
 dead_agents: 0
 blocked_tasks: 1
 completed_tasks: 290
-total_tasks: 298
+total_tasks: 299
 active_tasks: 1
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -32,7 +33,8 @@ phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
 phase36_status: completed
 phase36_completed_at: '2026-06-11T00:00:00Z'
 next_active_tasks:
-- kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
+- "kos-q-growth-rolling (KOS \u5B63\u5EA6\u6269\u91CF\u6301\u7EED\u76D1\u6D4B (rolling\
+  \ goal \u5173\u8054 task))"
 last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
   may proceed)
 phase2_status: completed
@@ -67,7 +69,9 @@ phase30_status: completed
 phase30_completed_at: '2026-06-06T01:30:00Z'
 phase31_status: completed
 phase31_completed_at: '2026-06-18T00:00:00Z'
-phase31_note: '部分完成: cost tracking + langfuse + governance data 已实现; 完整指标体系待后续迭代'
+phase31_note: "\u90E8\u5206\u5B8C\u6210: cost tracking + langfuse + governance data\
+  \ \u5DF2\u5B9E\u73B0; \u5B8C\u6574\u6307\u6807\u4F53\u7CFB\u5F85\u540E\u7EED\u8FED\
+  \u4EE3"
 divergence_flags: []
 task_gate_summary: {}
 promotion_blockers: {}
@@ -109,39 +113,41 @@ debt_weight_items:
   D2_CI_E2E:
     resolved: true
     weight: 0.15
-    desc: CI E2E 测试环境容器化
+    desc: "CI E2E \u6D4B\u8BD5\u73AF\u5883\u5BB9\u5668\u5316"
   D3_EU_PRICING:
     resolved: true
     weight: 0.15
-    desc: eu-pricing 独立测试覆盖
+    desc: "eu-pricing \u72EC\u7ACB\u6D4B\u8BD5\u8986\u76D6"
   SB_DECOMPOSITION:
     resolved: true
     weight: 0.2
-    desc: SharedBrain 拆解进度 (19器官→核+迁移+废弃)
+    desc: "SharedBrain \u62C6\u89E3\u8FDB\u5EA6 (19\u5668\u5B98\u2192\u6838+\u8FC1\
+      \u79FB+\u5E9F\u5F03)"
   SB_UNTESTED_PKGS:
     resolved: true
     weight: 0.15
-    desc: kairon 4个untested包 (core-models, shared-lib, sharedbrain-bridge, wksp)
+    desc: "kairon 4\u4E2Auntested\u5305 (core-models, shared-lib, sharedbrain-bridge,\
+      \ wksp)"
   SB_ORPHANED_TASKS:
     resolved: true
     weight: 0.1
-    desc: orphaned_tasks 结构化 registry
+    desc: "orphaned_tasks \u7ED3\u6784\u5316 registry"
   SB_ROOT_CLEANUP:
     resolved: true
     weight: 0.05
-    desc: 根目录 SharedBrain/ 空壳清理
+    desc: "\u6839\u76EE\u5F55 SharedBrain/ \u7A7A\u58F3\u6E05\u7406"
   SB_BRIDGE_FIX:
     resolved: true
     weight: 0.1
-    desc: sharedbrain-bridge 死代码清理或重连
+    desc: "sharedbrain-bridge \u6B7B\u4EE3\u7801\u6E05\u7406\u6216\u91CD\u8FDE"
   SB_PROJECTS_YAML:
     resolved: true
     weight: 0.05
-    desc: PROJECTS.yaml 行数更新 (71K→824K)
+    desc: "PROJECTS.yaml \u884C\u6570\u66F4\u65B0 (71K\u2192824K)"
   SB_PHASE17_PLAN:
     resolved: true
     weight: 0.05
-    desc: Phase 17 Wave 1 实施计划创建
+    desc: "Phase 17 Wave 1 \u5B9E\u65BD\u8BA1\u5212\u521B\u5EFA"
 resolved_debt_items:
 - D2_CI_E2E
 - D3_EU_PRICING
@@ -179,23 +185,27 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 6
+planned_tasks: 7
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- bet-y3h1-t7-01 (中试 / 政策申报升 assisted)
-- bet-y3h2-t7-01 (公文场景 routine (限格式类))
-- cockpit-debt-debt-1 (治理技术债务：债务)
-- kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
-- needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
-  物理 KPI 解锁）)
-- 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
+- "bet-y3h1-t7-01 (\u4E2D\u8BD5 / \u653F\u7B56\u7533\u62A5\u5347 assisted)"
+- "bet-y3h2-t7-01 (\u516C\u6587\u573A\u666F routine (\u9650\u683C\u5F0F\u7C7B))"
+- "cockpit-debt-debt-1 (\u6CBB\u7406\u6280\u672F\u503A\u52A1\uFF1A\u503A\u52A1)"
+- "kos-q-growth-rolling (KOS \u5B63\u5EA6\u6269\u91CF\u6301\u7EED\u76D1\u6D4B (rolling\
+  \ goal \u5173\u8054 task))"
+- "needs-human-batch2-physical-recovery-checklist (\u673A\u5668\u6062\u590D\u65E5\u9A8C\
+  \u6536\u6E05\u5355\uFF08\u63A2\u6D4B\u2192G-DEL.3\u2192G-DEL.1\u2192S1 \u7269\u7406\
+  \ KPI \u89E3\u9501\uFF09)"
+- "needs-human-p80-physical-hosts (P80 T2: expand physical hosts \u22654 + G-DEL.3\
+  \ (stat)"
 phase27_status: completed
 phase27_completed_at: '2026-06-10T00:00:00Z'
 phase28_status: completed
 phase28_completed_at: '2026-06-05T22:10:00Z'
 governance:
   code_freeze: false
-  code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
+  code_freeze_note: "\u5DF2\u89E3\u9664 \u2014 2026-06-28 \u503A\u9879\u9A8C\u8BC1\
+    \u5168\u90E8\u4E3A DRIFT\uFF0C\u975E\u771F\u5B9E\u62E6\u622A"
 runtime_health_summary:
   online_services: 4
   total_services: 4
