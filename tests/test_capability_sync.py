@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import builtins
 import copy
 import hashlib
 import importlib.util
@@ -1430,6 +1431,15 @@ def _refresh_admission_proof(events: list[dict]) -> None:
     events[1]["payload"].update(grant)
 
 
+def _refresh_capability_requirements_digest(request_identity: dict) -> None:
+    canonical_requirements = json.dumps(
+        request_identity["capability_requirements"], sort_keys=True, separators=(",", ":")
+    )
+    request_identity["capability_requirements_digest"] = "sha256:" + hashlib.sha256(
+        canonical_requirements.encode("utf-8")
+    ).hexdigest()
+
+
 def test_verify_material_rejects_cross_run_before_any_outbound_call(
     cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1538,6 +1548,7 @@ def test_verifier_rejects_old_or_new_material_after_real_omo_admission_renewal(
     [
         [{"capability_id": "bos-service:bos://governance/shared"}],
         [{"id": "bos-service:bos://governance/shared"}],
+        ["mcp-tool:omo:status"],
         [],
         None,
         ["bos-service:bos://governance/shared", {"id": "bos-service:bos://governance/shared"}],
@@ -1573,7 +1584,9 @@ def test_verifier_accepts_exact_mcp_tool_material_with_mcp_pep(cap_sync, tmp_pat
     material["capability"] = {"kind": "mcp_tool", "id": capability_id}
     material["authorization_source"] = "mcp-pep"
     events[1]["payload"]["admission"]["capabilities"] = [capability_id]
-    events[0]["payload"]["request_identity"]["capability_requirements"][0]["capability_id"] = capability_id
+    request_identity = events[0]["payload"]["request_identity"]
+    request_identity["capability_requirements"][0]["capability_id"] = capability_id
+    _refresh_capability_requirements_digest(request_identity)
     _refresh_admission_proof(events)
     material["admission"]["receipt_digest"] = "sha256:" + events[1]["payload"]["admission"]["proof"]
     _write_mesh(tmp_path / ".omo", events)
@@ -1582,6 +1595,15 @@ def test_verifier_accepts_exact_mcp_tool_material_with_mcp_pep(cap_sync, tmp_pat
 
     assert receipt["status"] == "verified"
     assert receipt["capability_id"] == capability_id
+    assert events[1]["payload"]["admission"]["request_identity"] == request_identity
+    assert request_identity["capability_requirements"] == [
+        {"capability_id": capability_id, "operation": "invoke", "effect": "read_only"}
+    ]
+    assert request_identity["capability_requirements_digest"] == "sha256:" + hashlib.sha256(
+        json.dumps(
+            request_identity["capability_requirements"], sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+    ).hexdigest()
 
 
 @pytest.mark.parametrize(
@@ -1607,33 +1629,34 @@ def test_verifier_rejects_each_exact_persisted_worker_identity_mismatch(
     assert receipt["failure_code"] == "admission_receipt_invalid"
 
 
-def test_first_lazy_omo_load_never_writes_bytecode_or_leaves_import_path(
-    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_root_mesh_projector_never_imports_omo_or_mutates_import_state(
+    cap_sync, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    fake_omo_src = tmp_path / "fake-root" / "projects" / "omo" / "src"
-    package = fake_omo_src / "omo"
-    package.mkdir(parents=True)
-    (package / "__init__.py").write_text("", encoding="utf-8")
-    (package / "workflow_mesh.py").write_text(
-        "import sys\n"
-        "if not sys.dont_write_bytecode:\n"
-        "    raise RuntimeError('bytecode writes must be disabled')\n"
-        "def project_workflow_run(events, workflow_run_id):\n"
-        "    return {'workflow_run_id': workflow_run_id}\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(cap_sync, "ROOT", tmp_path / "fake-root")
-    monkeypatch.setattr(cap_sync.sys, "dont_write_bytecode", False)
+    material, _request, events = _verification_context(effect="effectful", state="active")
     monkeypatch.delitem(sys.modules, "omo", raising=False)
     monkeypatch.delitem(sys.modules, "omo.workflow_mesh", raising=False)
-    before = _tree_snapshot(fake_omo_src)
+    original_import = builtins.__import__
+
+    def guarded_import(name, *args, **kwargs):
+        if name == "omo" or name.startswith("omo."):
+            raise AssertionError("root verifier must not import OMO")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+    before_path = list(sys.path)
+    before_dont_write_bytecode = sys.dont_write_bytecode
 
     projector = cap_sync._load_workflow_mesh_projection()
+    snapshot = projector(events, material["binding"]["workflow_run_id"])
 
     assert callable(projector)
-    assert cap_sync.sys.dont_write_bytecode is False
-    assert str(fake_omo_src) not in cap_sync.sys.path
-    assert _tree_snapshot(fake_omo_src) == before
+    assert snapshot["state"] == "running"
+    assert snapshot["step_runs"][material["admission"]["step_run_id"]]["state"] == "running"
+    assert snapshot["worker"]["state"] == "active"
+    assert sys.path == before_path
+    assert sys.dont_write_bytecode is before_dont_write_bytecode
+    assert "omo" not in sys.modules
+    assert "omo.workflow_mesh" not in sys.modules
 
 
 def test_verify_material_requires_dispatch_for_effectful_and_matches_worker(cap_sync, tmp_path: Path) -> None:
@@ -1795,6 +1818,7 @@ def test_verifier_is_python39_safe_and_legacy_import_does_not_load_omo(cap_sync,
     source = SYNC_PATH.read_text(encoding="utf-8")
     ast.parse(source, filename=str(SYNC_PATH), feature_version=(3, 9))
     assert "from datetime import UTC" not in source
+    assert "omo.workflow_mesh" not in source
     assert "Path | str" not in source
     assert "OMO_SRC" not in source
     assert callable(cap_sync._load_workflow_mesh_projection)
@@ -1807,6 +1831,53 @@ def test_verifier_is_python39_safe_and_legacy_import_does_not_load_omo(cap_sync,
         lambda: (_ for _ in ()).throw(AssertionError("legacy command loaded OMO")),
     )
     assert cap_sync.main(["find", "--id", "mcp-server:omo", "--registry", str(registry_path)]) == 0
+
+
+def test_xcode_python39_subprocess_positively_verifies_temp_mesh(tmp_path: Path) -> None:
+    python39 = Path("/Applications/Xcode.app/Contents/Developer/usr/bin/python3")
+    assert python39.is_file(), "the required Xcode Python 3.9 interpreter is unavailable"
+    material, request, events = _verification_context(effect="effectful", state="active")
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    envelope_path = tmp_path / "envelope.json"
+    envelope_path.write_text(
+        json.dumps(_verification_envelope(material, request), sort_keys=True), encoding="utf-8"
+    )
+    before = _tree_snapshot(tmp_path)
+    probe = """
+import importlib.util
+import json
+import sys
+
+source_path, omo_dir, envelope_path = sys.argv[1:]
+spec = importlib.util.spec_from_file_location("capability_sync_python39_probe", source_path)
+if spec is None or spec.loader is None:
+    raise SystemExit("unable to load capability-sync")
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+with open(envelope_path, "r", encoding="utf-8") as handle:
+    envelope = json.load(handle)
+receipt = module.verify_material_against_mesh(omo_dir, envelope)
+print(json.dumps(receipt, sort_keys=True))
+raise SystemExit(0 if receipt.get("status") == "verified" else 1)
+"""
+
+    completed = subprocess.run(
+        [str(python39), "-c", probe, str(SYNC_PATH), str(omo_dir), str(envelope_path)],
+        cwd=ROOT,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    receipt = json.loads(completed.stdout)
+    assert receipt["status"] == "verified"
+    assert receipt["authority"] == "omo-workflow-mesh"
+    assert receipt["capability_id"] == material["capability"]["id"]
+    assert _tree_snapshot(tmp_path) == before
 
 
 def test_mesh_reader_uses_separate_log_bound_and_rejects_path_replacement(
