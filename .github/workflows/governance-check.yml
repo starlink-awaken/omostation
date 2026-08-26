@@ -152,50 +152,9 @@ jobs:
           # ADR-0379 E-2: check-interfaces 已由独立 workflow interfaces-enforce.yml 覆盖, 移除冗余
           python3 bin/ssot/doc-governance-check.py --scope workspace --no-new-warnings --json
 
-  bet-done-transition:
-    name: bet-done-transition
-    runs-on: ubuntu-latest
-    if: "github.event_name != 'push' || github.ref == 'refs/heads/main'"
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - name: Install Python gate deps
-        run: pip install pyyaml pydantic
-      - name: BET done-transition gate
-        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        run: |
-          # T1-12 (PR #2157): done-transition 守卫接入 authoritative PR/push 路径.
-          # lint 自身 exit 1 = 历史非 transition 台账债务, 保持 informational;
-          # 仅 BASE_LEDGER_UNREADABLE / BET_DONE_ finding 硬失败.
-          lint_out="$RUNNER_TEMP/bet-ledger-lint.txt"
-          set +e
-          python3 bin/plan/bet-ledger.py lint > "$lint_out" 2>&1
-          lint_rc=$?
-          set -e
-          cat "$lint_out"
-          echo "bet-ledger lint exit code: $lint_rc (informational unless guard findings)"
-          if [[ "$lint_rc" -eq 0 ]]; then
-            if ! tail -n 1 "$lint_out" | grep -q '^OK — '; then
-              echo "::error::bet-ledger lint did not complete structurally (rc=$lint_rc)"
-              exit 1
-            fi
-          elif [[ "$lint_rc" -eq 1 ]]; then
-            if ! tail -n 1 "$lint_out" | grep -Eq '^[0-9]+ 个问题$'; then
-              echo "::error::bet-ledger lint did not complete structurally (rc=$lint_rc)"
-              exit 1
-            fi
-          else
-            echo "::error::bet-ledger lint did not complete structurally (rc=$lint_rc)"
-            exit 1
-          fi
-          if grep -qE 'BASE_LEDGER_UNREADABLE|BET_DONE_' "$lint_out"; then
-            echo "::error::BET done-transition findings present (BASE_LEDGER_UNREADABLE / BET_DONE_)"
-            exit 1
-          fi
+  # 2026-08-26: bet-done-transition 拆至独立 workflow bet-done-gate.yml —
+  # 本 workflow 的 path 过滤使 required check 在非匹配路径 PR 上永久悬空
+  # (#2197), 独立必跑 workflow 根治。job 名不变, branch protection 无需改动。
 
   governance-verify:
     runs-on: ubuntu-latest
