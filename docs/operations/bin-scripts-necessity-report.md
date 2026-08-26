@@ -48,7 +48,7 @@ last-reviewed: 2026-08-22
 | control_experiment         | collab     | managed | close-duplicate-gap-first | round10 | 2026-09-22 | 8    | bin/collab/control_experiment.py      | scripts/bin/collab/control_experiment.py      |
 | physical_recovery          | delivery   | managed | close-duplicate-gap-first | round10 | 2026-09-22 | 8    | bin/delivery/physical_recovery.py     | scripts/bin/delivery/physical_recovery.py     |
 | alert_aggregator           | gac        | managed | close-duplicate-gap-first | round9  | 2026-09-15 | 15   | bin/gac/alert-aggregator.py           | scripts/bin/gac/alert-aggregator.py           |
-| alert_mock_p0_notify       | gac        | managed | close-duplicate-gap-first | round9  | 2026-09-15 | 15   | bin/gac/alert-mock-p0-notify.py       | scripts/bin/gac/alert-mock-p0-notify.py       |
+| alert_mock_p0_notify       | gac        | managed | close-duplicate-gap-first | round9  | 2026-09-15 | 15   | bin/_archive/2026-08-conv3/alert-mock-p0-notify.py       | scripts/bin/_archive/2026-08-conv3/alert-mock-p0-notify.py       |
 | auto_merge_lane_policy     | gac        | managed | close-duplicate-gap-first | round9  | 2026-09-15 | 15   | bin/gac/auto-merge-lane-policy.py     | scripts/bin/gac/auto-merge-lane-policy.py     |
 | dim_weight                 | gac        | managed | close-duplicate-gap-first | round9  | 2026-09-15 | 15   | bin/gac/dim-weight.py                 | scripts/bin/gac/dim-weight.py                 |
 | drift_history_insight      | gac        | managed | close-duplicate-gap-first | round8  | 2026-09-08 | 15   | bin/gac/drift-history-insight.py      | scripts/bin/gac/drift-history-insight.py      |
@@ -130,7 +130,7 @@ last-reviewed: 2026-08-22
 | debt_integrity_check                 | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/debt-integrity-check.py                  | scripts/bin/gac/debt-integrity-check.py                  |
 | dir_hygiene_check                    | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/dir-hygiene-check.py                    | scripts/bin/ssot/dir-hygiene-check.py                    |
 | doc_governance_check                 | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/doc-governance-check.py                 | scripts/bin/ssot/doc-governance-check.py                 |
-| doc_governance_migrate               | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/doc-governance-migrate.py               | scripts/bin/ssot/doc-governance-migrate.py               |
+| doc_governance_migrate               | governance | managed | bin-master, scripts-compat-shim | -   | bin/_archive/2026-08-conv3/doc-governance-migrate.py               | scripts/bin/_archive/2026-08-conv3/doc-governance-migrate.py               |
 | doc_link_check                       | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/doc-link-check.py                       | scripts/bin/ssot/doc-link-check.py                       |
 | doc_ssot_lint                        | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/doc-ssot-lint.py                        | scripts/bin/ssot/doc-ssot-lint.py                        |
 | ecos_link                            | governance | managed | bin-master, scripts-compat-shim | -   | bin/mof/ecos-link                                | scripts/bin/mof/ecos-link                                |
@@ -150,10 +150,10 @@ last-reviewed: 2026-08-22
 | gac_export_agents                    | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/gac-export-agents.py                     | scripts/bin/gac/gac-export-agents.py                     |
 | gac_healthcheck                      | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/gac-healthcheck.py                       | scripts/bin/gac/gac-healthcheck.py                       |
 | gac_hook_pre_edit                    | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/gac-hook-pre-edit.py                     | scripts/bin/gac/gac-hook-pre-edit.py                     |
-| gac_ingest_legacy                    | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/gac-ingest-legacy.py                     | scripts/bin/gac/gac-ingest-legacy.py                     |
+| gac_ingest_legacy                    | governance | managed | bin-master, scripts-compat-shim | -   | bin/_archive/2026-08-gap-governance-s5/gac-ingest-legacy.py                     | scripts/bin/_archive/2026-08-gap-governance-s5/gac-ingest-legacy.py                     |
 | gac_local_gate                       | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/gac-local-gate.py                        | scripts/bin/gac/gac-local-gate.py                        |
 | gac_m1_sync                          | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/gac-m1-sync.py                           | scripts/bin/gac/gac-m1-sync.py                           |
-| gac_mesh_router                      | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/gac-mesh-router.py                       | scripts/bin/gac/gac-mesh-router.py                       |
+| gac_mesh_router                      | governance | managed | bin-master, scripts-compat-shim | -   | bin/_archive/2026-08-conv3/gac-mesh-router.py                       | scripts/bin/_archive/2026-08-conv3/gac-mesh-router.py                       |
 | gac_severity                         | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/gac_severity.py                          | scripts/bin/gac/gac_severity.py                          |
 | gac_validate                         | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/gac-validate.py                          | scripts/bin/gac/gac-validate.py                          |
 | gac_worktree                         | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/gac-worktree.sh                          | scripts/bin/gac/gac-worktree.sh                          |
@@ -216,7 +216,7 @@ last-reviewed: 2026-08-22
 | omostation_bootloader                | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/omostation-bootloader.py                 | scripts/bin/gac/omostation-bootloader.py                 |
 | physical_client                      | governance | managed | bin-master, scripts-compat-shim | -   | bin/delivery/physical_client.py                  | scripts/bin/delivery/physical_client.py                  |
 | physical_node                        | governance | managed | bin-master, scripts-compat-shim | -   | bin/delivery/physical_node.py                    | scripts/bin/delivery/physical_node.py                    |
-| port_governance_deck                 | governance | managed | bin-master, scripts-compat-shim | -   | bin/decks/port-governance-deck.py                | scripts/bin/decks/port-governance-deck.py                |
+| port_governance_deck                 | governance | managed | bin-master, scripts-compat-shim | -   | bin/_archive/2026-08-conv3/port-governance-deck.py                | scripts/bin/_archive/2026-08-conv3/port-governance-deck.py                |
 | project_layer_index                  | governance | managed | bin-master, scripts-compat-shim | -   | bin/mof/project-layer-index.py                   | scripts/bin/mof/project-layer-index.py                   |
 | recommend_mode                       | governance | managed | bin-master, scripts-compat-shim | -   | bin/collab/recommend_mode.py                     | scripts/bin/collab/recommend_mode.py                     |
 | resolve_root_remote                  | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/resolve-root-remote.sh                   | scripts/bin/gac/resolve-root-remote.sh                   |
@@ -243,11 +243,11 @@ last-reviewed: 2026-08-22
 | sync_bos_registry                    | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/sync-bos-registry.py                    | scripts/bin/ssot/sync-bos-registry.py                    |
 | sync_submodule_pointers              | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/sync-submodule-pointers.sh              | scripts/bin/ssot/sync-submodule-pointers.sh              |
 | sync_submodules                      | governance | managed | bin-master, scripts-compat-shim | -   | bin/sync-submodules.sh                           | scripts/bin/sync-submodules.sh                           |
-| test_bus_e2e_harness                 | governance | managed | bin-master, scripts-compat-shim | -   | bin/tests/test_bus-e2e-harness.py                | scripts/bin/tests/test_bus-e2e-harness.py                |
+| test_bus_e2e_harness                 | governance | managed | bin-master, scripts-compat-shim | -   | bin/_archive/2026-08-conv3/test_bus-e2e-harness.py                | scripts/bin/_archive/2026-08-conv3/test_bus-e2e-harness.py                |
 | test_coverage_check                  | governance | managed | bin-master, scripts-compat-shim | -   | bin/gac/test-coverage-check.py                   | scripts/bin/gac/test-coverage-check.py                   |
 | test_gac_engine                      | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/test-gac-engine.py                      | scripts/bin/ssot/test-gac-engine.py                      |
 | test_mcp_kos                         | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/test-mcp-kos.py                         | scripts/bin/ssot/test-mcp-kos.py                         |
-| test_zones_check                     | governance | managed | bin-master, scripts-compat-shim | -   | bin/tests/test_zones_check.py                    | scripts/bin/tests/test_zones_check.py                    |
+| test_zones_check                     | governance | managed | bin-master, scripts-compat-shim | -   | bin/_archive/2026-08-conv3/test_zones_check.py                    | scripts/bin/_archive/2026-08-conv3/test_zones_check.py                    |
 | ts_analyze                           | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/ts-analyze.mjs                          | scripts/bin/ssot/ts-analyze.mjs                          |
 | ts_file_analyze                      | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/ts-file-analyze.py                      | scripts/bin/ssot/ts-file-analyze.py                      |
 | venv_yaml_check                      | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/venv-yaml-check.py                      | scripts/bin/ssot/venv-yaml-check.py                      |
@@ -255,7 +255,7 @@ last-reviewed: 2026-08-22
 | workspace                            | governance | managed | bin-master, scripts-compat-shim | -   | bin/workspace                                    | scripts/bin/workspace                                    |
 | workspace_audit                      | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/workspace-audit                         | scripts/bin/ssot/workspace-audit                         |
 | write_owner_audit                    | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/write-owner-audit.py                    | scripts/bin/ssot/write-owner-audit.py                    |
-| write_owner_repair_draft             | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/write-owner-repair-draft.py             | scripts/bin/ssot/write-owner-repair-draft.py             |
+| write_owner_repair_draft             | governance | managed | bin-master, scripts-compat-shim | -   | bin/_archive/2026-08-conv3/write-owner-repair-draft.py             | scripts/bin/_archive/2026-08-conv3/write-owner-repair-draft.py             |
 | yaml_validate                        | governance | managed | bin-master, scripts-compat-shim | -   | bin/ssot/yaml-validate.py                        | scripts/bin/ssot/yaml-validate.py                        |
 
 ## 四、`bin-ssot-master, root-wrapper, scripts-compat-shim`（SSOT wrapper）

@@ -3,6 +3,7 @@ title: KOS remeasure (STRAT-P80 T3)
 date: 2026-07-24
 type: audit
 goal: KOS-Q-GROWTH
+last-reviewed: 2026-08-25
 ---
 
 # KOS documents remeasure

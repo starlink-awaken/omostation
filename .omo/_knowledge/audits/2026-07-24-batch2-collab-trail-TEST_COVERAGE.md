@@ -5,6 +5,7 @@ type: collab-trail
 batch: 2
 task_id: TEST_COVERAGE
 task_path: .omo/debt/items/TEST_COVERAGE.yaml
+last-reviewed: 2026-08-25
 ---
 
 # `TEST_COVERAGE`

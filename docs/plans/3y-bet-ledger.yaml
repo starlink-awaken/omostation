@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 123
+  total_bets: 143
   windows:
   - Y1Q1
   - Y1Q2
@@ -159,6 +159,20 @@ tracks:
     - projects/cockpit/src/cockpit/web/**
     pasw_required: false
     default_workflow: governance-state-mutation
+    agent_profile_hint: governance-agent
+  T10-MATURITY:
+    title: 成熟度收官 (scorecard 0-10, target 9.0)
+    scope: 'maturity-scorecard 口径对齐 / 治理 bet 绑定 / resident promote + 事件源管线 / gaC 机制自进化 (G10 三方口径: scorecard/health/台账)'
+    primary_write_surfaces:
+    - bin/gac/maturity-scorecard.py
+    - bin/plan/bet-ledger.py
+    - bin/plan/chain_bind.py
+    - bin/gac/check-*
+    - bin/ssot/install-resident-cron.sh
+    - docs/plans/3y-bet-ledger.yaml
+    - projects/omo/src/omo/resident/**
+    pasw_required: false
+    default_workflow: governance-audit
     agent_profile_hint: governance-agent
 concurrency:
   max_parallel_bets: 4
@@ -5441,7 +5455,7 @@ bets:
   title: Exact Capability Binding 与 native asset receipt 消费收敛
   appetite: 5 days
   priority: P0
-  status: done
+  status: candidate
   started_at: 2026-08-24
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact find-load、OMO admission/dispatch
     与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误 admission、平行 dispatch 和执行回执冒充个人价值。
@@ -5519,6 +5533,17 @@ bets:
       residual: 纠错合并后必须从 main 启动 fresh bet-execution run，所有实现与最终 retro 走正式 WorkPacket
       gate_bypass: 1
       no_run_id: true
+    E7_phase8_root_bypass_reachability:
+      finding: >-
+        Cockpit PR #78（branch codex/t1-12-cockpit-parallel-entry-retire-20260825，source 43dbf115，child
+        main merge 82dddbc9）已删除 commands/daemon.py 并退役 _subcommands/cli/governance/swarm_collector
+        中的 unbound entrypoints；root main 的 bin/omostation 仍暴露 daemon/watchdog/scenario/run 旁路，
+        daemon 分支 import child 已删除的 cockpit.commands.daemon.daemon_cli，top 分支 import child main
+        从未存在的 cockpit.tui.swarm_dashboard，bin/gac/daemon-watchdog.py 的 restart_daemon() 引用同一
+        已删符号且零人工干预重启服务；bin/ssot/real-scenario-runner.py 直接向 Agora Bus 发事件并写
+        resident decision 提案；两脚本仍为 active script registry 条目，root gitlink 停在 d8af11c2 未跟进
+        child main 82dddbc9。
+      classification: direct_code_measurement
   done_when:
   - accepted Spec、BET、WorkPacket hash、run、claims 与 exact capability requirements 可重复读取且完全一致
   - skill、workflow、mcp-server、mcp-tool、bos-service exact ID 均可 find/inspect/load；歧义、通配符与 first-match 执行全部拒绝
@@ -5548,8 +5573,8 @@ bets:
     expect: exit 0
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:0af2a02ee52b3cdf7326f91701dd0c78e5a48a41c091adf7619df3301154a9a8
+    spec_version: 1.1.1
+    content_digest: sha256:85156f1848b1c6d6dfa092d4755ea2b8ffaa567920889f52c7e23ebe86c209d3
     decision_ref: decision://accepted/BET-Y1Q3-T1-12
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -5574,14 +5599,21 @@ bets:
   - docs/architecture/blueprint-multi-agent-execution-control-v1.md
   - docs/architecture/digital-twin-blueprint-v1.md
   - docs/operations/blueprint-agent-instruction-pack-v1.md
+  - docs/CLI-REFERENCE.md
+  - docs/INDEX-MCP.md
   - docs/generated/capability-registry.yaml
   - docs/project-registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
   - .github/workflows/governance-check.yml
+  - bin/_registry/scripts/governance/daemon-watchdog.yaml
+  - bin/_registry/scripts/governance/real-scenario-runner.yaml
   - bin/agent-workflow.py
   - bin/capability-sync.py
   - bin/cockpit/gen-capability-registry.py
+  - bin/gac/daemon-watchdog.py
+  - bin/omostation
   - bin/plan/bet-ledger.py
+  - bin/ssot/real-scenario-runner.py
   - lib/capability_trace_binding.py
   - lib/capability_native_receipt.py
   - lib/capability_native_inspection.py
@@ -5594,7 +5626,10 @@ bets:
   - tests/test_capability_native_execution_receipt.py
   - tests/test_agent_workflow.py
   - tests/test_spec_binding_lint.py
+  - tests/unit/test_phase8_unified_ecosystem.py
   - projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml
+  - projects/ecos/src/ecos/ssot/mof/compiler/api.py
+  - projects/ecos/src/ecos/ssot/mof/compiler/emitters.py
   - projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py
   - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.schema.json
   - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control-schemas.ts
@@ -7284,7 +7319,12 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-06.md
             sha256: sha256:73636ea85b99d3b494997a503be0403142b276525277e9af4eeac510b64d3b6d
     overall_state: outcome_accepted
-  depends_on: BET-Y1Q3-T10-01, BET-Y1Q3-T10-02, BET-Y1Q3-T10-03, BET-Y1Q3-T10-04, BET-Y1Q3-T10-05
+  depends_on:
+  - BET-Y1Q3-T10-01
+  - BET-Y1Q3-T10-02
+  - BET-Y1Q3-T10-03
+  - BET-Y1Q3-T10-04
+  - BET-Y1Q3-T10-05
 
 - id: BET-Y1Q3-T10-07
   track: T10-MATURITY
@@ -7674,7 +7714,10 @@ bets:
   appetite: 0.5 day
   priority: P1
   status: done
+  started_at: '2026-08-25'
   done_at: '2026-08-25'
+  completed_at: '2026-08-25'
+  done_note: '5 条生命周期路由接入 sediment + LIFECYCLE/EVIDENCE 事件集(按 run 幂等) + roles topic_filter 8 事件 + cron ingest 行; 53 resident 单测全绿; 真实重放 2214 事件 processed=2090, 753 草稿落盘, 0 placeholder, 0 handler_error; retro 入库 .omo/_knowledge/retros/BET-Y1Q3-T10-12.md'
   goal: '让 workflow 生命周期事件被 resident 消费端真正消化(不再 placeholder) + 事件源接 cron 自动化: 补全 5 种未路由事件路由 + sediment 事件集合扩展(按 run 聚合去重) + roles 分片同步 + ingest 接 cron + 回退水位重放 2208 事件验证。'
   non_goals:
   - 不引入 LLM 调用(草稿仍模板占位, 五问提炼留运营 agent/人工)
@@ -7686,7 +7729,7 @@ bets:
   - sediment.py 含 LIFECYCLE_EVENTS/EVIDENCE_EVENTS, dispatch 覆盖 5 类事件且按 run 幂等(同 run 多事件只写一次)
   - roles.py sediment topic_filter 含 8 种事件
   - install-resident-cron.sh 含 ingest 行且语法校验通过
-  - 新增单元测试全绿 + 重放验证: 回退水位重放 2208 条, processed=2208, 无 placeholder 落盘
+  - '新增单元测试全绿 + 重放验证: 回退水位重放 2208 条, processed=2208, 无 placeholder 落盘'
   verify:
   - cmd: grep -q "WorkflowRequested" projects/omo/src/omo/resident/resident-routes.yaml
     expect: exit 0
@@ -7706,12 +7749,106 @@ bets:
   - bin/ssot/install-resident-cron.sh
   - docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md
   - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/governance-checks.yaml
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md
     spec_version: 1.0.0
     content_digest: "sha256:6f5eb250a1300cbe40a7c8d2bcac0db745203ac4eaca673314f8fd7656e5af78"
     decision_ref: decision://accepted/BET-Y1Q3-T10-12
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c10893fd687bfe6c7a7205bdc1e4b8a24cb8e695
+          tests:
+            ref: receipt://projects/omo/tests/unit/test_resident_sediment.py
+            sha256: sha256:af8f250d581e6fe0e10c60d12eaee095b5dead8f6b853c3ff6047a4ea21b701c
+          diff:
+            ref: receipt://projects/omo/src/omo/resident/resident-routes.yaml
+            sha256: sha256:1db58f2f064d61453dba019f6b7b2194f97c733980441ef73db4f1402d028a7f
+          rollback:
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:3c7cef4d20a3b5e25b8bea85ee2fff1acbf93ba4cd9ee38789b1db325cd88b2e
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://bin/plan/bet-ledger.py
+            sha256: sha256:08a3631604cab32e09a77aa0b13b65369d12ee34caa09b93d9429513511d0fb4
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-12-accept.yaml
+            sha256: sha256:64132d70d7dfda8cf5e26db2a63808ece51fec10d6bc7cd8c5efc0548e999eda
+          live_canary:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          replay:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+      value:
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-12-accept.yaml
+            sha256: sha256:64132d70d7dfda8cf5e26db2a63808ece51fec10d6bc7cd8c5efc0548e999eda
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-12-accept.yaml
+            sha256: sha256:64132d70d7dfda8cf5e26db2a63808ece51fec10d6bc7cd8c5efc0548e999eda
+          real_signal:
+            ref: receipt://bin/plan/chain-bind-check.py
+            sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-12.md
+            sha256: sha256:2e9bbb2ac6eb30fd739af0f512eb62c650e37638dbd1e0614fcd8cc41ca58c7b
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-12.md
+            sha256: sha256:2e9bbb2ac6eb30fd739af0f512eb62c650e37638dbd1e0614fcd8cc41ca58c7b
+    overall_state: outcome_accepted
+  depends_on: []
+- id: BET-Y1Q3-T10-13
+  track: T10-MATURITY
+  window: Y1Q3
+  title: resident decision 提案可观测出口 (提案收件箱 + CLI 审计)
+  appetite: 0.5 day
+  priority: P1
+  status: done
+  done_at: '2026-08-25'
+  started_at: '2026-08-25'
+  goal: '补齐 decision 提案可观测出口: decision_agent 产出(决策提案)只有水位文件计数, 无沉淀可检索落点 + 无输出审计。补提案收件箱 md 视图(.omo/_knowledge/decision-proposals/) + omo resident decision list/status/show CLI 审计出口(扫描 evolution-proposals 全量含历史 3898 条), 让「大脑决策」既有输入追踪(trace_id 溯源)也有输出审计。'
+  non_goals:
+  - 不改提案 JSON 契约(resident-decision/v1 与 evolution-proposals 落点兼容)
+  - 不引入 LLM 调用(提案内容仍由 scan_internal 确定性生成)
+  - 不对历史 3898 个 JSON 批量回填 md(避免膨胀, 历史经 CLI 按需渲染)
+  done_when:
+  - "decision.py _write_proposal 双写 JSON + md 收件箱, md frontmatter 含 status: draft 与 trigger_event 溯源"
+  - omo resident decision list/status/show 三个子命令可用, list/status 直接扫描 evolution-proposals 全量(含历史)并输出统计
+  - 新增 test_resident_decision.py 单元测试全绿
+  - 真实工作区 omo resident decision status 可输出 3898 条历史统计(冒烟验证)
+  verify:
+  - cmd: grep -q "decision-proposals" projects/omo/src/omo/resident/decision.py
+    expect: exit 0
+  - cmd: grep -q "list" projects/omo/src/omo/resident/decision.py
+    expect: exit 0
+  - cmd: grep -q "status" projects/omo/src/omo/resident/decision.py
+    expect: exit 0
+  - cmd: grep -q "show" projects/omo/src/omo/resident/decision.py
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/decision.py
+  - projects/omo/tests/
+  - docs/superpowers/specs/2026-08-25-resident-decision-observability-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-decision-observability-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:52d11162b0b3aad0dd414d76fe0bd27f757f7c66fa8821fc29464318da8433a3"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-13
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -7725,4 +7862,211 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+  depends_on: []
+- id: BET-Y1Q3-T10-14
+  track: T10-MATURITY
+  window: Y1Q3
+  title: resident 告警外发渠道接线 (alert webhook + forwarder 修复)
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  started_at: '2026-08-25'
+  note: 'closeout ok (run 20260825T222712Z-project-code-change-81c6364a): done_when 1-4 达成 — alert-forwarder importlib 加载 + deliver 契约(PR #2200 MERGED 2026-08-25T11:46Z) / alert-connectors list 4 channel url_configured=NO / send --channel alert-wecom fail-closed exit=1+failed 回执 / --dry-run exit 0; 第 5 条待用户配 ALERT_WECOM_WEBHOOK(用户决策先只接线不配 URL); verify 3 checks 全 PASS(doc-ssot-lint/gac-local-gate 57/doc-claims-check)'
+  goal: '补齐 resident 告警外发最后一公里: alert-forwarder.py 修复连字符模块 import + deliver() 契约调用(告警链路可外发), alert-channels.yaml 声明 alert-wecom 渠道(env://ALERT_WECOM_WEBHOOK opaque 引用, 先只接线不配 URL, 未配 fail-closed), 回执事件 governance:alert_delivered/failed 可审计; 用户设置 ALERT_WECOM_WEBHOOK 后激活。'
+  non_goals:
+  - 不配真实 webhook URL(用户决策「先只接线不配 URL」)
+  - 不改 alert-connectors.py 渠道实现(WeComWebhookConnector.deliver 已正确)
+  - 不改 omo 侧 resident/alert.py(已是正确参照实现)
+  done_when:
+  - alert-forwarder.py 用 importlib 按路径加载 alert-connectors.py 并调用 conn.deliver(), 无 ModuleNotFoundError/AttributeError
+  - alert-connectors.py list 展示 4 channel 且 url_configured=NO
+  - alert-connectors.py send --channel alert-wecom fail-closed(exit=1 + failed 回执)
+  - alert-forwarder.py --dry-run 正常路由不崩
+  - 设置 ALERT_WECOM_WEBHOOK 后渠道 health 转 healthy
+  verify:
+  - cmd: python3 bin/ssot/alert-forwarder.py --dry-run
+    expect: exit 0
+  - cmd: python3 bin/ssot/alert-connectors.py list
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ssot/alert-forwarder.py
+  - docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:e26ecbc3bae56451c0f244fe3794f541412f59154cf4598b478ec2d21d15e062"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-14
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
+- id: BET-Y1Q3-T10-15
+  track: T10-MATURITY
+  window: Y1Q3
+  title: resident 多信号源扩流 (感知文件夹 inbox_folder 接入事件流)
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  started_at: '2026-08-25'
+  goal: '补齐 resident 输入源缺口: 新增 InboxSignal 事件类型, 复用 personal-signals 模式实现 omo.resident.inbox adapter 轮询 ~/Documents/@感知信号/*.md(content-digest 幂等水位) → 发布 mesh:perception:inbox + 追加 InboxSignal 到 events.jsonl → sediment INBOX_EVENTS 分支沉淀 sediment/inbox/{slug}.md → roles/routes/ingest/cli 全链接线 + cron 每 5min; 感知文件夹 4 个真实信号(已有)接入事件流, 事件流从仅 personal-signals 扩为双源。'
+  non_goals:
+  - 不接 apple_mail / netease_mailmaster / github_push 信号源(后续轮)
+  - 不改 signal-poller.py(感知健康通道与事件流通道并行, 互不干扰)
+  - 不实现信号五问提炼(下一里程碑)
+  done_when:
+  - projects/omo/src/omo/resident/inbox.py 实现 poll(glob *.md + content-digest 水位幂等) + 发布 + 追加 InboxSignal 事件
+  - sediment.py INBOX_EVENTS 分支写 sediment/inbox/{slug}.md 感知信号草稿
+  - roles.py sediment topic_filter / resident-routes.yaml InboxSignal 路由 / ingest.py topic 映射 / cli.py SUBCOMMANDS 全链接线
+  - install-resident-cron.sh 加每 5min omo.cli resident inbox
+  - '真实链路验证: inbox 实跑 → events.jsonl 出现 InboxSignal → daemon --role sediment → sediment/inbox/ 出现草稿(幂等)'
+  verify:
+  - cmd: uv run --directory projects/omo --with pytest python -m pytest tests/unit/test_resident_inbox.py tests/unit/test_resident_sediment.py tests/integration/test_resident_roles.py -q
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/inbox.py
+  - projects/omo/src/omo/resident/sediment.py
+  - projects/omo/src/omo/resident/roles.py
+  - projects/omo/src/omo/resident/resident-routes.yaml
+  - projects/omo/src/omo/resident/ingest.py
+  - projects/omo/src/omo/resident/cli.py
+  - projects/omo/tests/unit/test_resident_inbox.py
+  - projects/omo/tests/unit/test_resident_sediment.py
+  - projects/omo/tests/integration/test_resident_roles.py
+  - bin/ssot/install-resident-cron.sh
+  - docs/superpowers/specs/2026-08-25-resident-inbox-folder-signal-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/signal-sources.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-inbox-folder-signal-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:dfc1d9d95980468c32eab3ebac948d2a32e7c6e34252f132fa2b4e0ff0895cd3"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-15
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
+- id: BET-Y1Q3-T10-16
+  track: T10-MATURITY
+  window: Y1Q3
+  title: resident monitor/heartbeat 空转治理 (角色私有 tick 接线)
+  appetite: 0.5 day
+  priority: P1
+  status: done
+  done_at: '2026-08-26'
+  started_at: '2026-08-26'
+  goal: '消除 monitor/heartbeat 角色每 2min 纯空转: 三缺口叠加(daemon 未注册 alert/heartbeat handler + resident-routes.yaml 无 system.health/governance:gate_failed/alert/heartbeat/system.alive 规则 + 统一事件流无 monitor/heartbeat 事件类型, observability 平面 456 条 258 critical 从未进事件流)。本次把 monitor/heartbeat 升级为角色私有 tick(publish→路由→处理): 新建 omo.resident.heartbeat(register_with_daemon 注册 heartbeat handler safe + publish_heartbeat 调 status.snapshot 生成 system.alive→追加统一事件流→路由→沉淀 .omo/state/resident-heartbeat.jsonl 活性台账) + omo.resident.monitor(注册 alert handler safe + publish_monitor 增量读 observability severity∈{critical,degraded}→生成 alert 事件→追加统一事件流→路由→调 alert-connectors deliver 外发复用 T10-14 alert.py) + daemon _register_default_handlers 增补两模块 + run_daemon per-role publish hook(tick_once 后 publish, 本 tick 消费上一 tick 发布, 2min 节律) + resident-routes.yaml 新增 alert→alert/system.alive→heartbeat 两规则 + cron 移除 CRON_ALERT(--dry-run) 告警外发统一 monitor 承担 + 真实外发挂账 ALERT_WECOM_WEBHOOK(T10-14 第 5 条, 先接线不配 URL)。'
+  non_goals:
+  - 不配置 ALERT_WECOM_WEBHOOK (T10-14 第 5 条挂账点, 用户决策先只接线不配 URL)
+  - 不接 alert-handler.py (OBS-02 governance-alerts 主动引擎, 独立体系后续评估)
+  - 不实现 monitor 对 governance:gate_failed 的主动探测 (observability 有事件才转发)
+  - 不改 signal-poller.py / status.py 既有逻辑
+  done_when:
+  - projects/omo/src/omo/resident/heartbeat.py 实现 register_with_daemon(heartbeat handler safe) + publish_heartbeat(status.snapshot→system.alive→统一事件流)
+  - projects/omo/src/omo/resident/monitor.py 实现 register_with_daemon(alert handler safe) + publish_monitor(增量读 observability→critical/degraded→alert 事件→统一事件流→deliver)
+  - daemon.py _register_default_handlers 增补 monitor/heartbeat 模块 + run_daemon per-role publish hook (tick_once 后 publish)
+  - 'resident-routes.yaml 新增 alert→alert / system.alive→heartbeat 两条规则 (safe: true)'
+  - install-resident-cron.sh 移除 CRON_ALERT(--dry-run), 告警外发统一 monitor 角色承担
+  - '真实链路验证: heartbeat.publish 实跑 → events.jsonl 出现 system.alive → daemon --role heartbeat → .omo/state/resident-heartbeat.jsonl 活性台账追加(幂等); monitor.publish 实跑 → observability critical/degraded → events.jsonl 出现 alert → daemon --role monitor → deliver 调用(fail-closed)'
+  verify:
+  - cmd: uv run --directory projects/omo --with pytest python -m pytest tests/unit/test_resident_heartbeat.py tests/unit/test_resident_monitor.py tests/integration/test_resident_roles.py -q
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/heartbeat.py
+  - projects/omo/src/omo/resident/monitor.py
+  - projects/omo/src/omo/resident/daemon.py
+  - projects/omo/src/omo/resident/resident-routes.yaml
+  - projects/omo/src/omo/resident/roles.py
+  - projects/omo/src/omo/resident/cli.py
+  - projects/omo/tests/unit/test_resident_heartbeat.py
+  - projects/omo/tests/unit/test_resident_monitor.py
+  - projects/omo/tests/integration/test_resident_roles.py
+  - bin/ssot/install-resident-cron.sh
+  - docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:73c2bfd98aa6bf551ddaf9a2eecb6e7cb654937a21f5f4e9f415b54bf98abefc"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-16
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@2524eec05ca7061e761c19907d7517c11d0736b0
+          tests:
+            ref: receipt://tests/test_heartbeat_wrapper.py
+            sha256: sha256:0145ff7ce4a9630b9014888c54023eb178fe4244c6c4f2c71596245eb5c9f82c
+          diff:
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+          rollback:
+            ref: receipt://bin/gac/heartbeat-wrapper.sh
+            sha256: sha256:7bf63977fc7894ce07ed8ba174727877265655f68500103dd6fe68ba1818a81a
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-16-accept.yaml
+            sha256: sha256:3a0be3e67874c8d40545ce5289f329444f8ae56aa548eab8b0524737d1049e94
+          replay:
+            ref: receipt://tests/test_heartbeat_wrapper.py
+            sha256: sha256:0145ff7ce4a9630b9014888c54023eb178fe4244c6c4f2c71596245eb5c9f82c
+          cleanup:
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+      value:
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-16-accept.yaml
+            sha256: sha256:3a0be3e67874c8d40545ce5289f329444f8ae56aa548eab8b0524737d1049e94
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-16-accept.yaml
+            sha256: sha256:3a0be3e67874c8d40545ce5289f329444f8ae56aa548eab8b0524737d1049e94
+          real_signal:
+            ref: receipt://docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md
+            sha256: sha256:73c2bfd98aa6bf551ddaf9a2eecb6e7cb654937a21f5f4e9f415b54bf98abefc
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-16.md
+            sha256: sha256:8e65d813c54fad49d3a2112c64b380e5920354c6aa8d24bffc39615f68726da8
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-16.md
+            sha256: sha256:8e65d813c54fad49d3a2112c64b380e5920354c6aa8d24bffc39615f68726da8
+    overall_state: outcome_accepted
   depends_on: []

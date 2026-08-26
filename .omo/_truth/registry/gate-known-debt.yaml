@@ -2,5 +2,50 @@
 # Growth only via sink (fix / owned entry / SOFT). Shrink-only after shadow bootstrap.
 version: 1
 growth_policy: shrink_only
-shadow_end: "2026-08-28T00:00:00Z"
-entries: []
+shadow_end: '2026-08-28T00:00:00Z'
+entries:
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|6aa02fd4be66a8ae
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 6aa02fd4be66a8ae
+  kind: gitlink-regress
+  reason: submodule projects/aetherforge pointer 36e0b220ee41 rewinds 7245ecc6ab33
+  range: origin/main..28c6344325b6
+  recorded_at: '2026-08-26T02:48:58.458957+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|cbe44df8a5d1f671
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: cbe44df8a5d1f671
+  kind: gitlink-regress
+  reason: submodule projects/agora pointer ca93a953b92a rewinds 9885202ff5ce
+  range: origin/main..28c6344325b6
+  recorded_at: '2026-08-26T02:48:58.458957+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|65db6328b4960d53
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 65db6328b4960d53
+  kind: gitlink-regress
+  reason: submodule projects/ecos pointer bbfce11b3453 rewinds 0d080d09d022
+  range: origin/main..28c6344325b6
+  recorded_at: '2026-08-26T02:48:58.458957+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|a2ab3db822fc593d
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: a2ab3db822fc593d
+  kind: gitlink-regress
+  reason: submodule projects/omo pointer e41b7484d4b9 rewinds 06cf56b98d2e
+  range: origin/main..28c6344325b6
+  recorded_at: '2026-08-26T02:48:58.458957+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|503d59edaa630dfb
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 503d59edaa630dfb
+  kind: gitlink-regress
+  reason: submodule projects/omo pointer 74830df63622 rewinds 2d4741adad3f
+  range: origin/main..HEAD
+  recorded_at: '2026-08-25T08:15:33.793967+00:00'
+  active: true

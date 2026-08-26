@@ -1,20 +1,20 @@
 # docs/generated/capability-registry.yaml — generated projection, not SSOT / 不是 SSOT
 # 自动生成，请勿手动编辑
-# 生成器: bin/cockpit/gen-capability-registry.py
+# 生成器: bin/ssot/gen-capability-registry.py
 # 生成时间: 1970-01-01T00:00:00Z
 
 version: 1.0.0
 schema: capability-registry/v1
 owner: workspace-capability-governance
-writer: bin/cockpit/gen-capability-registry.py
+writer: bin/ssot/gen-capability-registry.py
 generated_at: '1970-01-01T00:00:00Z'
-generator: bin/cockpit/gen-capability-registry.py
+generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 619
   bos_services: 242
   bos_domains: 21
-  cli_commands: 152
+  cli_commands: 153
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -1940,8 +1940,6 @@ cli_commands:
   description: 控制平面：submit / ack / nack
 - name: controller-shadow
   description: 读取 Runtime 旧控制器影子迁移回执
-- name: daemon
-  description: 启动 Agora 2.0 后台常驻守护进程 (Agent-to-Agent Bus)
 - name: daily
   description: 每日研究简报
 - name: dashboard
@@ -2074,6 +2072,8 @@ cli_commands:
   description: 查看未决待办快照预览
 - name: pipeline
   description: pipeline 概览
+- name: policy
+  description: ⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)
 - name: product-health
   description: 产品健康度检测
 - name: profile
@@ -2166,6 +2166,8 @@ cli_commands:
   description: 预热系统 Prompt 前缀缓存以实现 0ms TTFT
 - name: watch
   description: 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher)
+- name: watchdog
+  description: 🐕 自治守护犬与自愈探针 (Agora Bus / Resident 监视器)
 - name: wave2
   description: 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON)
 - name: workflow

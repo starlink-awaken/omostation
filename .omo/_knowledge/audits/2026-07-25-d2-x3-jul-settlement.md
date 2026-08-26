@@ -7,6 +7,7 @@ related_cards:
   - strat-p81-batch3-workorder
 related_runs:
   - D3 closeout (#501)
+last-reviewed: 2026-08-25
 ---
 
 # D2 · X3 7 月交付月度结算与归因

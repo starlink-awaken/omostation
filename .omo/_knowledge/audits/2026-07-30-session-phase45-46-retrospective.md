@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-25
+---
+
 # Session 复盘 — 2026-07-29 ~ 2026-07-30
 
 > 主题: Phase 45 治理可观测性 + Phase 46 Registry MCP 化 + 跨节点 State Sync

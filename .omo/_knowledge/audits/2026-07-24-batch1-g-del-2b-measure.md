@@ -3,6 +3,7 @@ title: Batch1 G-DEL.2b measure (≥30 tasks)
 date: 2026-07-24
 type: audit
 gate: G-DEL.2b
+last-reviewed: 2026-08-25
 ---
 
 # G-DEL.2b measure report

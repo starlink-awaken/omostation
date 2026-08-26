@@ -737,6 +737,8 @@ def test_real_ledger_lint_adds_zero_done_findings(
 
 
 GOVERNANCE_WORKFLOW = ROOT / ".github/workflows/governance-check.yml"
+BET_GATE_WORKFLOW = ROOT / ".github/workflows/bet-done-gate.yml"
+BET_GATE_JOB_ID = "bet-done-transition"
 BET_GATE_STEP_NAME = "BET done-transition gate"
 POINTER_DRIFT_STEP_NAME = "Submodule pointer drift check"
 POINTER_STRICT_STEP_NAME = "Submodule pointer strict auto-bump gate"
@@ -748,6 +750,18 @@ def _governance_workflow() -> dict:
 
 def _governance_verify_steps() -> list[dict]:
     return _governance_workflow()["jobs"]["governance-verify"]["steps"]
+
+
+def _bet_gate_jobs() -> dict:
+    """bet-done gate 的 job 表 — 2026-08-26 起该 job 住在独立必跑 workflow
+    (bet-done-gate.yml, 根治 #2197 悬空 required check); 兼容回退旧位置。"""
+    if BET_GATE_WORKFLOW.exists():
+        return yaml.safe_load(BET_GATE_WORKFLOW.read_text(encoding="utf-8"))["jobs"]
+    return _governance_workflow()["jobs"]
+
+
+def _bet_done_transition_steps() -> list[dict]:
+    return _bet_gate_jobs()[BET_GATE_JOB_ID]["steps"]
 
 
 def test_governance_verify_job_skips_non_authoritative_push_refs() -> None:
@@ -766,7 +780,7 @@ def test_governance_workflow_triggers_on_ledger_pull_requests() -> None:
 
 
 def test_governance_verify_checkout_has_full_history() -> None:
-    """Transition classification diffs against the base revision, so checkout needs fetch-depth: 0."""
+    """Broad pointer checks still compare ranges and require complete history."""
     steps = _governance_verify_steps()
 
     checkouts = [step for step in steps if str(step.get("uses", "")).startswith("actions/checkout")]
@@ -774,19 +788,57 @@ def test_governance_verify_checkout_has_full_history() -> None:
     assert all(step.get("with", {}).get("fetch-depth") == 0 for step in checkouts)
 
 
-def test_governance_verify_has_bet_done_transition_gate() -> None:
-    steps = _governance_verify_steps()
+def test_bet_done_transition_has_an_independent_status_context() -> None:
+    """The transition guard must not share failure state with broad governance checks."""
+    jobs = _bet_gate_jobs()
+
+    assert BET_GATE_JOB_ID in jobs
+    job = jobs[BET_GATE_JOB_ID]
+    assert job.get("name") == BET_GATE_JOB_ID
+    assert "needs" not in job
+    if BET_GATE_WORKFLOW.exists():
+        # 独立 workflow 无 paths 过滤必跑, 无需 if 门(2026-08-26 #2197 根治形态)
+        assert job.get("if") is None
+    else:
+        assert job.get("if") == (
+            "github.event_name != 'push' || github.ref == 'refs/heads/main'"
+        )
+
+    steps = job["steps"]
+    names = [str(step.get("name", "")) for step in steps]
+    assert names.count(BET_GATE_STEP_NAME) == 1
+    assert "Run full governance verification" not in names
+    assert POINTER_DRIFT_STEP_NAME not in names
+
+    checkouts = [step for step in steps if str(step.get("uses", "")).startswith("actions/checkout")]
+    assert len(checkouts) == 1
+    assert checkouts[0].get("with", {}).get("fetch-depth") == 0
+
+    all_gate_steps = [
+        step
+        for candidate in jobs.values()
+        for step in candidate.get("steps", [])
+        if step.get("name") == BET_GATE_STEP_NAME
+    ]
+    assert len(all_gate_steps) == 1
+
+
+def test_bet_done_transition_job_has_guard_contract() -> None:
+    steps = _bet_done_transition_steps()
     names = [str(step.get("name", "")) for step in steps]
     assert "Install Python gate deps" in names
-    assert "Run full governance verification" in names
+    assert "Run full governance verification" not in names
 
     gate_steps = [step for step in steps if step.get("name") == BET_GATE_STEP_NAME]
     assert len(gate_steps) == 1, "exactly one explicitly named BET done-transition gate step"
     gate = gate_steps[0]
-    assert gate.get("if") == (
-        "github.event_name == 'pull_request' || "
-        "(github.event_name == 'push' && github.ref == 'refs/heads/main')"
-    )
+    if not BET_GATE_WORKFLOW.exists():
+        # 旧形态(job 住 governance-check)需 step 级 if; 独立 workflow(2026-08-26
+        # #2197 根治)无 paths 必跑, step 无需 if
+        assert gate.get("if") == (
+            "github.event_name == 'pull_request' || "
+            "(github.event_name == 'push' && github.ref == 'refs/heads/main')"
+        )
     script = str(gate.get("run", ""))
 
     # The gate invokes the real ledger lint, exactly once.
@@ -816,9 +868,8 @@ def test_governance_verify_has_bet_done_transition_gate() -> None:
     assert "^[0-9]+ 个问题$" in script
     assert "bet-ledger lint did not complete structurally" in script
 
-    # The gate runs after Python deps are installed and before the full governance verification.
+    # The isolated gate runs only after its own Python dependencies are installed.
     assert names.index("Install Python gate deps") < names.index(BET_GATE_STEP_NAME)
-    assert names.index(BET_GATE_STEP_NAME) < names.index("Run full governance verification")
 
 
 def test_governance_verify_scopes_strict_pointer_freshness_to_auto_bump_prs() -> None:

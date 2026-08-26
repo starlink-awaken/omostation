@@ -5,6 +5,7 @@ type: collab-trail
 batch: 2
 task_id: HEALTH_SCORE_FORMULA
 task_path: .omo/debt/items/HEALTH_SCORE_FORMULA.yaml
+last-reviewed: 2026-08-25
 ---
 
 # `HEALTH_SCORE_FORMULA`

@@ -112,18 +112,22 @@ def is_submodule(path: Path) -> bool:
     return gitdir.exists()
 
 
-def count_entries(path: Path) -> tuple[int, int, int]:
+def count_entries(path: Path, max_depth: int = 3) -> tuple[int, int, int]:
     file_count = 0
     dir_count = 0
     byte_count = 0
-    for _, dirs, files in os.walk(path):
+    root_depth = len(path.parts)
+    for root, dirs, files in os.walk(path):
+        cur_depth = len(Path(root).parts) - root_depth
+        if cur_depth >= max_depth:
+            dirs.clear()
         dir_count += len(dirs)
         file_count += len(files)
         for name in files:
-            fp = Path(_, name)
+            fp = Path(root, name)
             try:
                 byte_count += fp.stat().st_size
-            except FileNotFoundError:
+            except (OSError, FileNotFoundError):
                 pass
     return file_count, dir_count, byte_count
 

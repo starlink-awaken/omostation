@@ -80,7 +80,7 @@ omostation 是 eCOS v6 的多项目工作区，目标是把知识、Agent、治�
 | `observability` | Langfuse、Postgres 和 Webhook Bridge 等运行观测设施 |
 | `family-hub` | 家庭数字枢纽、Quest 和家庭域工作流 |
 | `omo-debt` | 技术债务评分、登记和处理辅助 |
-| `mesh-router` | 由 `bin/gac/gac-mesh-router.py` 提供的算力路由实现，不是独立仓库 |
+| `mesh-router` | 由 `bin/_archive/2026-08-conv3/gac-mesh-router.py` 提供的算力路由实现，不是独立仓库 |
 
 ## 4. 用户如何使用
 

@@ -1,8 +1,9 @@
 ---
-status: active
+id: ADR-0425
+status: accepted
 lifecycle: entry
-owner: auto-fix-loop
-last-reviewed: 2026-08-25
+owner: agora
+last-reviewed: '2026-08-25'
 ---
 
 # ADR-0425: Agent LSP 潜意识护航与 Agora 2.0 内存总线架构

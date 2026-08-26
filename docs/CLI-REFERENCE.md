@@ -1,9 +1,16 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-24
+---
+
 # Cockpit CLI 命令参考
 
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **152** 个命令 (含子命令)。按场景分组如下。
+共 **153** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -26,11 +33,13 @@
 | `cockpit mof` | MOF 元模型操作 (委派 mof CLI) |
 | `cockpit mutate` | 通过 agora 统一 BOS URI 写协议修改资源 |
 | `cockpit omo` | OMO CLI 委派 (debt/state/governance/lint/...) |
+| `cockpit policy` | ⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*) |
 | `cockpit sanyi-status` | 读取 Runtime 三医状态一致性回执 |
 | `cockpit scan` | 平面扫描 |
 | `cockpit skill` | 运行 L4 定时技能 |
 | `cockpit ssb` | [DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用 |
 | `cockpit validate` | 验证 Workspace 契约 |
+| `cockpit watchdog` | 🐕 自治守护犬与自愈探针 (Agora Bus / Resident 监视器) |
 
 ## 工作流与协同
 
@@ -98,7 +107,6 @@
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit control` | 控制平面：submit / ack / nack |
 | `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
-| `cockpit daemon` | Agora 2.0 后台常驻守护进程管理 (Agent-to-Agent Bus) |
 | `cockpit nack` | 否定确认任务 |
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit publish` | 发布事件 |
@@ -227,11 +235,11 @@
 |----------|-----------|--------|
 | `cockpit omo` | `omo` | 22 |
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
-| `cockpit gbrain` | `gbrain` | 75 |
+| `cockpit gbrain` | `gbrain` | 0 |
 | `cockpit model-driven` | `model-driven` | 28 |
-| `cockpit agora` | `agora` | 89 |
-| `cockpit family-hub` | `family-hub` | 6 |
+| `cockpit agora` | `agora` | 86 |
+| `cockpit family-hub` | `family-hub` | 0 |
 | `cockpit mesh` | `aetherforge` | 15 |
 | `cockpit compute` | `aetherforge` | 15 |
 
-*由 `bin/cockpit/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*
+*由 `bin/ssot/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*

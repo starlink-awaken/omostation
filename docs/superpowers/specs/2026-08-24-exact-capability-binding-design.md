@@ -1,11 +1,11 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.1.1
 status: accepted
 lifecycle: contract
 owner: human-principal
 created: 2026-08-24
-last-reviewed: 2026-08-24
+last-reviewed: 2026-08-25
 bet_id: BET-Y1Q3-T1-12
 risk_level: L2
 human_gate: false
@@ -54,6 +54,29 @@ Golden Slice、Human Verdict、principal-bound decision_outcome 与连续价值�
 5. OMO `StepDispatched` 前没有重新核对持久化 admitted state、admission id 与 policy digest。
 6. Cockpit KEMS 裸 dispatch 已 fail-closed 但成为死入口；agent-runtime、runtime registry 和候选
    AGE-v2 Agent Cell 仍可能成为平行派工面。
+
+### 2.3 Phase8 root bypass 事实（2026-08-25 scope amendment 1.1.1）
+
+1. Cockpit 子仓 PR #78（分支 `codex/t1-12-cockpit-parallel-entry-retire-20260825`，
+   source head `43dbf115db0fece980d3ffe2d8339e4fbc1b5b59`，child main merge
+   `82dddbc926cc4377808fe530bf135f08213cd213`，2026-08-25）已删除
+   `cockpit/commands/daemon.py` 并退役 `_subcommands.py`、`cli.py`、`commands/governance.py`、
+   `tui/swarm_collector.py` 中的未绑定入口面，以 `test_parallel_entrypoints_retired.py` 锁定。
+2. 根仓 main 的 `bin/omostation` 仍暴露 `daemon` / `watchdog` / `scenario` / `top` /
+   `run <module>` 五条旁路命令：`daemon` 分支 import 的 `cockpit.commands.daemon.daemon_cli`
+   在 child main `82dddbc9` 已不存在，`top` 分支 import 的 `cockpit.tui.swarm_dashboard`
+   在 child main 从未存在——root gitlink 前进到 child main 后这两条命令立即 ImportError，
+   `top` 与 `daemon` 同为无法恢复的幽灵入口，必须一并退休。
+3. `bin/gac/daemon-watchdog.py` 的自愈路径 `restart_daemon()` 同样 import child 已删除的
+   `cockpit.commands.daemon.restart_daemon_service`，且以 zero-human-intervention 方式直接
+   重启服务，绕过 admission 与 capability receipt。
+4. `bin/ssot/real-scenario-runner.py` 直接向 Agora Bus 发布 A2A 事件并写 resident decision
+   提案，不经 accepted WorkPacket、admission 或 trace binding。
+5. 上述两脚本仍登记为 `script-registry/v1` 条目，当前两个条目的 registry truth 均为
+   `maturity: draft`（`bin/_registry/scripts/governance/daemon-watchdog.yaml`、
+   `bin/_registry/scripts/governance/real-scenario-runner.yaml`）；执行面本身仍未退休。
+6. 截至 2026-08-25，根仓 gitlink 仍指向 `d8af11c2`（child main 为 `82dddbc9`），
+   root 尚未跟进 child 的入口退役，形成 child-first/root-follow-up 缺口。
 
 ## 3. 自举授权证据
 
@@ -172,6 +195,12 @@ dispatch 前重新验证：
 3. agent-runtime 与 runtime registry 在未接入本门前保持 isolated/non-authoritative，不允许注册为生产派工入口。
 4. AGE-v2 Agent Cell 在合并前必须把 `cell_execute/cell_govern` 等路径接到同一 WorkPacket、admission、
    capability receipt 与 OMO dispatch identity；否则 defer。
+5. 根仓统一 wrapper（`bin/omostation`）必须 compatibility-only：`daemon`、`watchdog`、
+   `scenario`、`top` 与任意 `run <module>` 直通执行五类入口退休，直到对应能力被 Mesh-bound
+   （accepted WorkPacket + OMO admission + capability receipt + dispatch identity）；wrapper
+   只保留对已收敛入口的透传，不成为第四条执行面或新调度面。退役命令必须非零退出、零写入、
+   零 provider/router/gateway 调用；拒绝路径只允许无副作用的标准库与 `env_resolver` 初始化，
+   必须在任何项目专用 import、subprocess、provider/router/gateway 调用或文件写入之前退出。
 
 ## 6. 数据流
 
@@ -232,6 +261,29 @@ sequenceDiagram
 6. wrong digest、missing binding、wrong admission、ambiguous selector、uncertain transport 五类负例；
 7. rollback/cleanup 与 clone lifecycle receipt。
 
+### Wave E：Phase8 root recovery（scope amendment 1.1.1）
+
+排序契约为 child-first / root-follow-up，任何一步不得倒置：
+
+1. child main 先行：Cockpit PR #78（`43dbf115` → merge `82dddbc9`）已退役 unbound
+   entrypoints，是既成事实；root 不得在其前重写、复刻或重新暴露这些入口；
+2. root gitlink 跟进：仅在 child main merge SHA 可达后前进根仓 pointer；
+3. root wrapper 收敛：与 pointer 前进同一批或紧随其后的 root 变更里，把 `bin/omostation`
+   的 `daemon` / `watchdog` / `scenario` / `top` / `run` 五条旁路命令全部退休为
+   compatibility-only（§5.5.5），同步退役 `bin/gac/daemon-watchdog.py` 与
+   `bin/ssot/real-scenario-runner.py` 的执行面，将两个 `maturity: draft` registry 条目
+   转为 schema-valid `maturity: deprecated`，并同步文档投影（CLI-REFERENCE / INDEX-MCP /
+   capability-registry）；
+4. 每步配 negative no-write 测试：被退役命令非零退出、零文件写入、provider/router/gateway 调用为 0，
+   且不产生 human verdict、decision outcome 或个人价值字段（value firewall）；
+5. host LaunchAgent 清理不属于 Task8 repo write 或 code-PR completion prerequisite，必须作为
+   独立的 governed post-merge ops follow-up 执行；目标为 service
+   `com.omostation.agora.daemon` 与 plist
+   `~/Library/LaunchAgents/com.omostation.agora.daemon.plist`，先只读采集
+   `launchctl list com.omostation.agora.daemon` 和 `lsof -nP -iTCP:7432 -sTCP:LISTEN`，不得在
+   Task8 执行 unload/bootout、rm、kill 或其他 mutation；在该 follow-up 单独执行前，T1
+   operational cleanup 保持 pending，避免半退役状态下服务自拉起。
+
 ## 8. Rollout
 
 新门禁遵循三段式：
@@ -256,6 +308,11 @@ sequenceDiagram
    production-topology canary 全绿。
 10. 子仓 commit/tag/PR/CI/merge 后才更新根仓 gitlink；所有 writer clone 由 lifecycle receipt 退役。
 11. 每 2–3 个 PR 或一次跨仓 wave 后重放全增量纠偏，不让并行分支改变主线优先级。
+12. `bin/omostation` 的 `daemon`/`watchdog`/`scenario`/`top`/`run` 五条旁路被退休为非零退出的
+    compatibility-only 拒绝路径；退役命令零写入、零 provider/router/gateway 调用，script registry
+    条目由 `maturity: draft` 转为 schema-valid `maturity: deprecated`，capability projection
+    不再把它们列为可用能力；`com.omostation.agora.daemon` 的 LaunchAgent cleanup 属于独立
+    post-merge ops follow-up，在单独执行前 operational cleanup 保持 pending。
 
 ## 10. 反指标
 
@@ -288,3 +345,4 @@ sequenceDiagram
 | 3 | one giant cross-repo PR / staged PRs | staged PRs | 保持 child-first reachability，降低 main 红窗 |
 | 4 | hard fail immediately / shadow-warning-fail | 三段式 | 新门禁先测存量，不用治理误伤锁死主干 |
 | 5 | industrial threat model / bounded personal-system model | bounded model | 复用现有 digest/admission，不新增重型密码学与平台 |
+| 6 | root wrapper 保留 `top`/`run` 兼容 / compatibility-only 收敛 | compatibility-only | PR #78 后 child main 无 `daemon_cli` 且从未有 `swarm_dashboard`，root 幽灵 import 无法恢复；Mesh-bound 前不允许第四条执行面 |

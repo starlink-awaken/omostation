@@ -31,7 +31,7 @@ uv run --project projects/omo python -m omo.cli --help
 
 - [ ] `omo doctor` 可跑
 - [ ] `omo lint path-acl --json` 可跑
-- [ ] `bin/gac/omo-doctor-cron.py --no-write` 可跑
+- [ ] `bin/_archive/2026-08-conv3/omo-doctor-cron.py --no-write` 可跑
 - [ ] 已安装 pre-push 含 `bin/ssot/sync-submodules-push`
 
 ## 2. 治理写面权限（5c）
@@ -90,7 +90,7 @@ uv run --directory projects/c2g python -m c2g.demo_seed \
 ```bash
 omo doctor
 test -f runtime/cron/omo-doctor-latest.json || \
-  uv run --with pyyaml python bin/gac/omo-doctor-cron.py
+  uv run --with pyyaml python bin/_archive/2026-08-conv3/omo-doctor-cron.py
 jq '.highlights' runtime/cron/omo-doctor-latest.json
 ```
 

@@ -2,7 +2,7 @@
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last-reviewed: 2026-08-25
 ---
 
 # Wave B Exact Capability Binding Implementation Plan
@@ -17,7 +17,7 @@ last-reviewed: 2026-08-24
 
 ## Global Constraints
 
-- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.0.0`, digest `sha256:0af2a02ee52b3cdf7326f91701dd0c78e5a48a41c091adf7619df3301154a9a8`.
+- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.1.1`, digest `sha256:85156f1848b1c6d6dfa092d4755ea2b8ffaa567920889f52c7e23ebe86c209d3`. The 1.1.1 scope amendment records the Phase8 root bypass facts behind merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) and adds Wave E (§7) with the child-first/root-follow-up ordering; the 2026-08-25 correction uses schema-valid `maturity: deprecated` for the two `maturity: draft` registry entries, makes the refusal tests concrete, and separates LaunchAgent cleanup into a governed post-merge ops follow-up.
 - BET: `BET-Y1Q3-T1-12`; every edit must be covered by its WorkPacket and a current claim.
 - No new capability registry writer, scheduler, broker, database, workflow, or dispatch truth.
 - No automatic Human Verdict, decision outcome, time-saved estimate, or personal value promotion; all execution receipts keep `value_indicator_policy=false`.
@@ -57,6 +57,8 @@ last-reviewed: 2026-08-24
 
 **Files:**
 - Modify: `projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml`
+- Modify: `projects/ecos/src/ecos/ssot/mof/compiler/api.py`
+- Modify: `projects/ecos/src/ecos/ssot/mof/compiler/emitters.py`
 - Modify: `projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py`
 - Modify: `projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.schema.json`
 - Modify: `projects/ecos/src/ecos/ssot/mof/generated/control/mof-control-schemas.ts`
@@ -67,7 +69,7 @@ last-reviewed: 2026-08-24
 - Test: `projects/ecos/tests/test_work_packet_compiler.py`
 
 **Interfaces:**
-- Consumes: existing `work-packet/v2` and inline-map generator contracts.
+- Consumes: existing `work-packet/v2` contract and extends the current direct inline-map IR/emitter support to closed inline-map list items.
 - Produces: optional strict `capability_requirements` list with inline exact fields; the ordered list participates in the invariant packet hash; old v1/v2 packets remain readable and no new M2 type file is created.
 
 - [ ] **Step 1: Write the failing MOF compiler test**
@@ -94,6 +96,27 @@ def test_work_packet_capability_requirements_are_strict_cross_language_contract(
     assert "capability_requirements" in artifacts["zod"]
 ```
 
+The same RED/GREEN test must dynamically import the generated Pydantic module,
+validate one complete requirement, and reject list items with an extra field,
+a missing required field, a wildcard/invalid ID, or an invalid operation/effect
+enum. This proves the emitted validator does more than declare
+`list[dict[str, Any]]`.
+
+Lock the Zod item shape rather than checking only the field name:
+
+```python
+zod = artifacts["zod"]
+assert "capability_requirements: z.array(z.object({" in zod
+assert "capability_id: z.string().regex(" in zod
+assert 'operation: z.enum(["find", "inspect", "load", "invoke"])' in zod
+assert 'effect: z.enum(["read_only", "effectful"])' in zod
+assert "}).strict()).optional()" in zod
+```
+
+If the eCOS test environment exposes a runnable Zod toolchain, execute the same
+valid/extra/missing/pattern/enum matrix against the generated schema; otherwise
+the exact emitted expression above is the minimum cross-language artifact gate.
+
 Also add deterministic compiler regressions in `tests/test_work_packet_compiler.py`:
 
 - the same v2 packet with a different ordered `capability_requirements` list must produce a different packet hash;
@@ -112,6 +135,13 @@ uv run pytest tests/test_mof_compiler.py::test_work_packet_capability_requiremen
 Expected: FAIL because `$defs.CapabilityRequirement` and the WorkPacket property do not exist.
 
 - [ ] **Step 3: Add the M2 schema**
+
+First extend the existing compiler IR and emitters so a `type: list` whose
+`items` is a closed inline map preserves the item `properties`, `required`,
+patterns, and `additionalProperties: false` in JSON Schema, Pydantic, and Zod.
+The current compiler only preserves those fields for a direct `type: map`; a
+plain `items: {type: map}` would otherwise degrade to an unconstrained object.
+Keep SQLite representation JSON-encoded and do not create a new M2 type.
 
 Add one inline optional WorkPacket property in `work_packet.yaml`:
 
@@ -150,8 +180,12 @@ Add validation rules that reject duplicates and invalid kind/operation combinati
 Update `work_packet_compiler.py` in the same RED→GREEN change: add
 `capability_requirements` to `INVARIANT_FIELDS` and apply the same strict shape,
 ID, operation/effect, duplicate, and Skill-invoke validation before emitting the
-canonical payload. The M2-generated models and the deterministic packet compiler
-must therefore accept and reject the same inputs.
+canonical payload. M2-generated models own the per-item structural contract;
+the deterministic packet compiler owns ordered identity, duplicate-ID, and
+kind/operation semantics (repeated again by the later OMO boundary consumer).
+Do not claim that arbitrary `validationRules` are emitted as executable
+cross-language validators; this compiler currently stores but does not translate
+those expressions.
 
 - [ ] **Step 4: Regenerate all eCOS control artifacts**
 
@@ -1158,3 +1192,219 @@ The retro must include actual elapsed time, every failed or unproven done_when, 
 Root source tag: `delivery/exact-capability-binding-root-integration-20260824-v1`.
 
 Wait for every required PR-context check. Merge by standard squash only. Retire every writer clone through `clone-lifecycle retire`; use `--platform-rebased-pr` whenever GitHub update-branch changed the PR head. Preserve every JSON retirement receipt.
+
+---
+
+### Task 8: Phase8 root recovery — retire root wrapper bypass commands (scope amendment 1.1.1)
+
+Bounded TDD task implementing Spec §2.3 / §5.5.5 / Wave E. It only retires the root-side
+Phase8 bypass surface; it must not re-implement any retired child entrypoint, must not
+add new capability surfaces, and must not touch files owned by other BETs.
+
+**Files:**
+- Modify: `bin/omostation`
+- Modify: `bin/gac/daemon-watchdog.py`
+- Modify: `bin/ssot/real-scenario-runner.py`
+- Modify: `bin/_registry/scripts/governance/daemon-watchdog.yaml`
+- Modify: `bin/_registry/scripts/governance/real-scenario-runner.yaml`
+- Test: `tests/unit/test_phase8_unified_ecosystem.py`
+- Modify: `docs/CLI-REFERENCE.md`
+- Modify: `docs/INDEX-MCP.md`
+- Modify: `docs/generated/capability-registry.yaml`
+
+**Interfaces:**
+- Consumes: merged Cockpit PR #78 (source `43dbf115`, child main merge `82dddbc9`) entrypoint retirement; existing value-firewall and no-write test patterns.
+- Produces: compatibility-only root wrapper with `daemon`/`watchdog`/`scenario`/`top`/arbitrary `run` — five retired bypass commands — until Mesh-bound; the two `maturity: draft` registry entries transitioned to schema-valid `maturity: deprecated` while the execution surfaces are retired; synchronized docs and capability projection.
+
+- [ ] **Step 1: Write RED negative no-write / value-firewall tests**
+
+Extend `tests/unit/test_phase8_unified_ecosystem.py` (do not remove the existing
+resolver/scenario unit tests) with retired-command coverage:
+
+```python
+import builtins
+import importlib
+import json
+import runpy
+import subprocess
+
+def _snapshot(root: Path) -> dict[str, bytes]:
+    return {
+        str(p.relative_to(root)): p.read_bytes()
+        for p in sorted(root.rglob("*"))
+        if p.is_file() and ".git" not in p.parts
+    }
+
+RETIRED_COMMANDS = ["daemon", "watchdog", "scenario", "top"]
+FORBIDDEN_VALUE_KEYS = {
+    "human_verdict",
+    "human_verdict_id",
+    "decision_outcome",
+    "decision_outcome_id",
+    "personal_value",
+    "value_indicator",
+}
+
+omostation_globals = runpy.run_path(
+    str(WORKSPACE / "bin" / "omostation"), run_name="omostation_test"
+)
+omostation_main = omostation_globals["main"]
+daemon_watchdog = _load_module_from_file(
+    "daemon_watchdog", WORKSPACE / "bin" / "gac" / "daemon-watchdog.py"
+)
+real_scenario_runner = _load_module_from_file(
+    "real_scenario_runner", WORKSPACE / "bin" / "ssot" / "real-scenario-runner.py"
+)
+
+def _sentinel(name: str):
+    def _raise(*_args, **_kwargs):
+        raise AssertionError(f"retired refusal called forbidden {name}")
+    return _raise
+
+def _refusal_payload(message: str) -> dict:
+    for line in reversed(message.splitlines()):
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            return payload
+    return {"message": message}
+
+def _assert_refusal_firewall(message: str) -> None:
+    assert "retired" in message.lower()
+    payload = _refusal_payload(message)
+    assert FORBIDDEN_VALUE_KEYS.isdisjoint(payload)
+    assert payload.get("value_indicator_policy") in (None, False)
+
+def _guard_effects(monkeypatch) -> None:
+    monkeypatch.setattr(runpy, "run_path", _sentinel("runpy.run_path"))
+    monkeypatch.setattr(runpy, "run_module", _sentinel("runpy.run_module"))
+    monkeypatch.setattr(subprocess, "run", _sentinel("subprocess.run"))
+    monkeypatch.setattr(importlib, "import_module", _sentinel("importlib.import_module"))
+    for module, names in (
+        (daemon_watchdog, ("run_watchdog", "check_daemon_health", "restart_daemon", "log_event")),
+        (real_scenario_runner, ("run_all_scenarios", "publish_to_bus", "record_resident_decision")),
+    ):
+        for name in names:
+            monkeypatch.setattr(module, name, _sentinel(f"{module.__name__}.{name}"))
+    original_import = builtins.__import__
+    def _project_import(name, *args, **kwargs):
+        if name.split(".", 1)[0] in {"agora", "cockpit", "ecos", "omo"}:
+            raise AssertionError(f"retired refusal imported project module {name}")
+        return original_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, "__import__", _project_import)
+
+def test_retired_bypass_commands_exit_nonzero_with_zero_writes(tmp_path, monkeypatch, capsys):
+    before = _snapshot(tmp_path)
+    monkeypatch.setitem(omostation_globals, "_ROOT", tmp_path)
+    monkeypatch.setattr(daemon_watchdog, "_ROOT", tmp_path)
+    monkeypatch.setattr(real_scenario_runner, "_ROOT", tmp_path)
+    _guard_effects(monkeypatch)
+
+    for cmd in RETIRED_COMMANDS + ["run"]:
+        argv = ["omostation", cmd] + (["some.module"] if cmd == "run" else [])
+        monkeypatch.setattr(sys, "argv", argv)
+        with pytest.raises(SystemExit) as exc:
+            omostation_main()
+        assert exc.value.code != 0
+        out = capsys.readouterr()
+        _assert_refusal_firewall(out.out + out.err)
+    assert _snapshot(tmp_path) == before  # no-write: isolated tmp workspace is unchanged
+
+def test_retired_governance_scripts_refuse_before_effects(tmp_path, monkeypatch, capsys):
+    before = _snapshot(tmp_path)
+    for module, argv in (
+        (daemon_watchdog, ["daemon-watchdog", "--json"]),
+        (real_scenario_runner, ["real-scenario-runner", "--dir", str(tmp_path)]),
+    ):
+        monkeypatch.setattr(module, "_ROOT", tmp_path)
+        _guard_effects(monkeypatch)
+        monkeypatch.setattr(sys, "argv", argv)
+        with pytest.raises(SystemExit) as exc:
+            module.main()
+        assert exc.value.code != 0
+        out = capsys.readouterr()
+        _assert_refusal_firewall(out.out + out.err)
+    assert _snapshot(tmp_path) == before
+```
+
+Every retired command must: exit non-zero, print a retirement notice naming the
+Mesh-bound successor path, leave the isolated `tmp_path` byte-identical, perform
+zero project-specific imports, subprocess/provider/router/gateway calls, or file
+writes, and emit no human verdict, decision outcome, or personal value field;
+side-effect-free stdlib/`env_resolver` setup is allowed before refusal.
+
+- [ ] **Step 2: Make `bin/omostation` compatibility-only (GREEN)**
+
+Remove the `daemon`, `watchdog`, `scenario`, `top`, and arbitrary `run <module>`
+dispatch branches (including the ghost imports `cockpit.commands.daemon.daemon_cli`
+and `cockpit.tui.swarm_dashboard` — the latter never existed on child main, so
+`top` is retired with the other four bypass commands, not kept in transit). Keep
+status/policy/resident/distill/gate transit only where the target still exists
+on child main. Retired commands hit a shared refusal helper that may perform only
+side-effect-free stdlib/`env_resolver` setup and exits before project-specific
+imports, subprocess/provider/router/gateway calls, or file writes.
+
+- [ ] **Step 3: Retire the two governance scripts and their registry entries**
+
+Neutralize the unbound execution surfaces in `bin/gac/daemon-watchdog.py`
+(`restart_daemon()` ghost import of `cockpit.commands.daemon.restart_daemon_service`)
+and `bin/ssot/real-scenario-runner.py` (direct A2A bus publish + resident decision
+write without WorkPacket/admission): refuse with a non-zero, no-write exit until
+Mesh-bound, before project-specific imports, subprocess/provider/router/gateway calls,
+or file writes; side-effect-free stdlib/`env_resolver` setup may occur. Flip both
+`bin/_registry/scripts/governance/*.yaml` entries from `maturity: draft` to
+schema-valid `maturity: deprecated` (the execution surface is retired), with a
+retirement note referencing Spec §5.5.5 and PR #78, keeping the files append-only
+honest history.
+
+- [ ] **Step 4: Enforce child main → root pointer → projection ordering**
+
+Before touching any root file, prove ordering per Spec Wave E:
+
+```bash
+git -C projects/cockpit fetch --no-tags origin main
+test "$(git -C projects/cockpit rev-parse FETCH_HEAD)" = "82dddbc926cc4377808fe530bf135f08213cd213"
+git -C projects/cockpit merge-base --is-ancestor 43dbf115db0fece980d3ffe2d8339e4fbc1b5b59 FETCH_HEAD
+```
+
+All three commands must exit 0 before moving the root gitlink, and only then
+regenerate `docs/generated/capability-registry.yaml`.
+Never regenerate the projection while the wrapper still exposes retired commands.
+
+- [ ] **Step 5: Sync docs projection**
+
+Update `docs/CLI-REFERENCE.md` and `docs/INDEX-MCP.md` so the retired commands are
+gone from the available-surface listing (or explicitly marked retired with the
+Mesh-bound successor reference); regenerate the capability projection in the same
+commit so registry, docs, and wrapper agree.
+
+- [ ] **Step 6: Separate governed post-merge ops follow-up**
+
+This is not a Task8 repo write or Task8 code-PR completion prerequisite. The separate
+governed post-merge ops follow-up targets the exact service
+`com.omostation.agora.daemon` and plist
+`~/Library/LaunchAgents/com.omostation.agora.daemon.plist`; it must first collect
+read-only evidence:
+
+```bash
+launchctl list com.omostation.agora.daemon
+lsof -nP -iTCP:7432 -sTCP:LISTEN
+```
+
+Do not execute `launchctl unload`/`bootout`, `rm`, `kill`, or any other mutation in
+Task8. Until that separate follow-up is actually executed, operational cleanup
+remains pending; never clean up host services while a half-retired binary can still
+self-resurrect.
+
+- [ ] **Step 7: Run GREEN tests and deliver**
+
+```bash
+uv run --with pyyaml --with pytest python -m pytest tests/unit/test_phase8_unified_ecosystem.py -q
+python3 bin/cockpit/gen-capability-registry.py --check --quiet
+```
+
+Commit: `fix(phase8): retire root wrapper bypass commands`.
+
+Tag: `delivery/t1-12-phase8-root-scope-20260825-v3`.
