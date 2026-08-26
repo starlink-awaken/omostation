@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Cockpit Architecture
 
 > Architecture overview for **Cockpit**. For the full workspace architecture, see [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md).

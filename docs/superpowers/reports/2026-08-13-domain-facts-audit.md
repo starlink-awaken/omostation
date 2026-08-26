@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Documents Domain Facts Audit — 2026-08-13
 
 ## Scope

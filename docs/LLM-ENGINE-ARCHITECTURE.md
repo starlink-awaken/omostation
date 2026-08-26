@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # LLM 引擎统一接入架构设计 (LLM-ENGINE-ARCHITECTURE)
 
 > 状态: **implemented + 迭代优化 (全量违规归零)** | 作者: Atlas | 日期: 2026-08-05

@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Acknowledgments
 
 We thank everyone who has contributed to `cockpit` through issues, pull requests, documentation, feedback, and testing.

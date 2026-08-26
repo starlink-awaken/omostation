@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # cockpit — Call Chain
 
 > 本文档描述 cockpit 内部最核心的一条调用链 / 数据流。

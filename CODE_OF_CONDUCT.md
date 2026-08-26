@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Contributor Covenant Code of Conduct
 
 ## Our Pledge

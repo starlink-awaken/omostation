@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Cockpit API / Usage Reference
 
 > Quick reference for using **Cockpit** programmatically and from the command line.

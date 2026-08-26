@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Release Process
 
 This document describes how to cut a new release for `cockpit`.

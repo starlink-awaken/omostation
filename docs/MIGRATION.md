@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Migration Guide
 
 ## Upgrading Within Major Versions

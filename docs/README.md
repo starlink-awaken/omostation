@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Cockpit Documentation
 
 > L3 · 统一 CLI/Web 入口

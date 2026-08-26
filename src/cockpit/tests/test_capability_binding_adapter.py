@@ -60,9 +60,9 @@ def test_verified_envelope_uses_only_fixed_bounded_verifier_transport(monkeypatc
             ],
             {
                 "cwd": str(capability_binding._WORKSPACE_ROOT),
-                "input": json.dumps(
-                    _envelope(), ensure_ascii=False, sort_keys=True, separators=(",", ":")
-                ).encode("utf-8"),
+                "input": json.dumps(_envelope(), ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
+                    "utf-8"
+                ),
                 "capture_output": True,
                 "check": False,
                 "timeout": capability_binding._VERIFY_TIMEOUT_SECONDS,
@@ -103,9 +103,7 @@ def test_oversize_envelope_is_rejected_without_starting_verifier(monkeypatch: py
         subprocess.TimeoutExpired(cmd="verify-material", timeout=1),
     ],
 )
-def test_unavailable_or_timed_out_verifier_is_rejected(
-    monkeypatch: pytest.MonkeyPatch, failure: BaseException
-) -> None:
+def test_unavailable_or_timed_out_verifier_is_rejected(monkeypatch: pytest.MonkeyPatch, failure: BaseException) -> None:
     def fail(*_args: object, **_kwargs: object) -> None:
         raise failure
 

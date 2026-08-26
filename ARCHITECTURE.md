@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # cockpit — Architecture
 
 > **Layer**: L3 入口层  

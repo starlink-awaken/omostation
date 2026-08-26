@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Cockpit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)

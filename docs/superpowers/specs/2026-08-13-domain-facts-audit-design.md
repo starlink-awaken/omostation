@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Domain Facts Audit Design
 
 > Date: 2026-08-13
