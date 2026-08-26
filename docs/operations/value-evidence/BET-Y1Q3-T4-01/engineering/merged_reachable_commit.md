@@ -10,8 +10,8 @@ title: "governance(bet): close BET-Y1Q3-T4-01 as done"
 reachable_from_main: true
 verified_at: 2026-08-22
 
-last-reviewed: 2026-08-26---
-
+last-reviewed: 2026-08-26
+---
 T4-01 核心实现已合并并 reachable from origin/main:
 - #1831 (9c4978c4): T4-01 closeout(ledger done + retro + 12/12 AC 证据)
 - #1845 (311cc311): north_star_meter_v2 恢复(#1839 误归档修复)

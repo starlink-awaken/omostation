@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from typing import Any
 from collections import Counter
 from pathlib import Path
 
@@ -31,8 +32,19 @@ def parse_execution_report(path: Path) -> dict[str, dict[str, str]]:
     return rows
 
 
+def _load_json_tolerant(path: Path) -> Any:
+    # staleness 管线会给 .json 盖 last-reviewed frontmatter, 读侧剥掉再解析
+    # (2026-08-26: 6251163a5 之后 manifest 头部出现 --- 包裹, json.loads 直接崩)
+    text = path.read_text(encoding="utf-8")
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        if end != -1:
+            text = text[end + 4:].lstrip("\n")
+    return json.loads(text)
+
+
 def audit(root: Path, manifest_path: Path, execution_path: Path) -> dict[str, object]:
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest = _load_json_tolerant(manifest_path)
     entries = manifest.get("entries", [])
     if not isinstance(entries, list):
         raise ValueError("manifest.entries must be a list")
