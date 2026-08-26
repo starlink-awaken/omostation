@@ -1,20 +1,22 @@
 # docs/generated/capability-registry.yaml — generated projection, not SSOT / 不是 SSOT
 # 自动生成，请勿手动编辑
-# 生成器: bin/cockpit/gen-capability-registry.py
+# 生成器: bin/ssot/gen-capability-registry.py
 # 生成时间: 1970-01-01T00:00:00Z
 
 version: 1.0.0
 schema: capability-registry/v1
 owner: workspace-capability-governance
-writer: bin/cockpit/gen-capability-registry.py
+writer: bin/ssot/gen-capability-registry.py
 generated_at: '1970-01-01T00:00:00Z'
-generator: bin/cockpit/gen-capability-registry.py
+generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 619
+  mcp_tools: 627
   bos_services: 242
   bos_domains: 21
-  cli_commands: 152
+  cli_commands: 153
+  skills: 28
+  workflows: 17
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -227,29 +229,26 @@ mcp_servers:
   - bcos_evolve
   - bcos_north_star
   - bcos_signals
+  - bos_health
+  - bos_inbox_archive
+  - bos_inbox_draft
+  - bos_inbox_pending
+  - bos_inbox_search
+  - bos_inbox_triage
+  - bos_inbox_watch
+  - bos_metrics_status
+  - bos_middleware_status
+  - bos_reload_discovery
+  - bos_reload_m1
   - bos_reload_routes
   - cartridge_pack
-  - cell_config_create
-  - cell_config_list
-  - cell_eval
-  - cell_execute
-  - cell_govern
-  - cell_memory_consolidate
-  - cell_memory_process
-  - cell_pdp_evaluate
-  - cell_pep_enforce
-  - cell_plan
-  - cell_pool_scale
-  - cell_pool_status
-  - cell_pool_submit
-  - cell_replay
-  - cell_shadow
-  - cell_verify
+  - check_health
   - create_api_key
   - daemon_bus_publish
   - debt_auto_seed_tool
   - entropy_cleanup_tool
   - get_agent_card
+  - get_bos_schema
   - get_event_log
   - get_state_transitions
   - governance_auto_fix
@@ -261,17 +260,25 @@ mcp_servers:
   - lifecycle_unload_all
   - list_agent_cards
   - list_api_keys
+  - list_bos_domains
+  - list_bos_resources
+  - list_bos_tools
   - list_routes
   - list_services
+  - mutate_resource
+  - persona_bdsk_evaluate
   - proxy_add_service
   - proxy_arch_health
   - proxy_backend_health
+  - proxy_call
   - proxy_connect
   - proxy_governance_status
   - proxy_list_tools
   - proxy_omo_debt
+  - proxy_remove_service
+  - proxy_status
   - publish_event
-  - python
+  - read_resource
   - register_push_notification
   - register_service
   - registry_find_agent_tool
@@ -290,12 +297,15 @@ mcp_servers:
   - repo_unload
   - resident_roles
   - resident_status
+  - resolve_bos_uri
   - revoke_api_key
   - route_call
   - subscribe_event
   - swarm_nodes
   - swarm_resolve
   - swarm_status
+  - unwatch_resource
+  - watch_resource
   - workflow_capability_health
   - workspace_audit_gitlink
   - workspace_audit_governance
@@ -304,7 +314,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 89
+  tool_count: 97
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -856,7 +866,7 @@ mcp_servers:
   tool_count: 75
 bos_services:
   _domain_counts:
-    agent-cell: 5
+    agent-cell: 16
     agora: 3
     analysis: 28
     bcos: 3
@@ -879,6 +889,50 @@ bos_services:
     system: 11
   domains:
     agent-cell:
+    - uri: bos://agent-cell/plan
+      description: Cell Plan — 意图解析 + 任务分解 + 风险评估
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/execute
+      description: Cell Execute — 按计划执行 + 工具调用 + 产出收集
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/verify
+      description: Cell Verify — 完整性 + 正确性 + 质量三维评分
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/govern
+      description: Cell Govern — R0-R3 风险分级 + 审批决策
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/pdp/evaluate
+      description: PDP Evaluate — 策略决策点上下文感知评估
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/pep/enforce
+      description: PEP Enforce — 策略执行点强制执行 + 审计
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/memory/process
+      description: Memory Process — Episode → 记忆候选生成
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/memory/consolidate
+      description: Memory Consolidate — 记忆冲突检测 + 整合
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/replay/run
+      description: Replay — Episode 回放验证
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/replay/shadow
+      description: Shadow — 影子运行 (无副作用验证)
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/replay/eval
+      description: Eval — 批量 Episode 性能评估
+      transport: stdio
+      status: active
     - uri: bos://agent-cell/pool/status
       description: Cell Pool 状态 — 多 Cell 并行运行状态
       transport: stdio
@@ -1940,8 +1994,6 @@ cli_commands:
   description: 控制平面：submit / ack / nack
 - name: controller-shadow
   description: 读取 Runtime 旧控制器影子迁移回执
-- name: daemon
-  description: Agora 2.0 后台常驻守护进程管理 (Agent-to-Agent Bus)
 - name: daily
   description: 每日研究简报
 - name: dashboard
@@ -2074,6 +2126,8 @@ cli_commands:
   description: 查看未决待办快照预览
 - name: pipeline
   description: pipeline 概览
+- name: policy
+  description: ⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)
 - name: product-health
   description: 产品健康度检测
 - name: profile
@@ -2166,9 +2220,148 @@ cli_commands:
   description: 预热系统 Prompt 前缀缓存以实现 0ms TTFT
 - name: watch
   description: 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher)
+- name: watchdog
+  description: 🐕 自治守护犬与自愈探针 (Agora Bus / Resident 监视器)
 - name: wave2
   description: 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON)
 - name: workflow
   description: BOS workflow 相关
 - name: write
   description: 双轨写入 (+ Neo4j FACT 若配置)
+skills:
+- id: a2a-coordination
+  file: .agents/skills/a2a-coordination/SKILL.md
+  exists: true
+- id: agent-onboarding
+  file: .agents/skills/agent-onboarding/SKILL.md
+  exists: true
+- id: agent-quickstart
+  file: .agents/skills/agent-quickstart/SKILL.md
+  exists: true
+- id: bdsk-virtual-board
+  file: .agents/skills/bdsk-virtual-board/SKILL.md
+  exists: true
+- id: bet-execution
+  file: .agents/skills/bet-execution/SKILL.md
+  exists: true
+- id: bos-service-discovery
+  file: .agents/skills/bos-service-discovery/SKILL.md
+  exists: true
+- id: ci-red-triage
+  file: .agents/skills/ci-red-triage/SKILL.md
+  exists: true
+- id: cognitive-governance
+  file: .agents/skills/cognitive-governance/SKILL.md
+  exists: true
+- id: delegation-guardrails
+  file: .agents/skills/delegation-guardrails/SKILL.md
+  exists: true
+- id: domain-cartridge-governance
+  file: .agents/skills/domain-cartridge-governance/SKILL.md
+  exists: true
+- id: ecos-test-cycle
+  file: .agents/skills/ecos-test-cycle/SKILL.md
+  exists: true
+- id: external-agent-attach
+  file: .agents/skills/external-agent-attach/SKILL.md
+  exists: true
+- id: git-discipline
+  file: .agents/skills/git-discipline/SKILL.md
+  exists: true
+- id: governance-phase-orchestrator
+  file: .agents/skills/governance-phase-orchestrator/SKILL.md
+  exists: true
+- id: governance-ssot-edit
+  file: .agents/skills/governance-ssot-edit/SKILL.md
+  exists: true
+- id: memory-recall
+  file: .agents/skills/memory-recall/SKILL.md
+  exists: true
+- id: nextgen-cognitive-mesh
+  file: .agents/skills/nextgen-cognitive-mesh/SKILL.md
+  exists: true
+- id: omlxc-compute-fabric
+  file: .agents/skills/omlxc-compute-fabric/SKILL.md
+  exists: true
+- id: omo-audit-baseline
+  file: .agents/skills/omo-audit-baseline/SKILL.md
+  exists: true
+- id: project-governance
+  file: .agents/skills/project-governance/SKILL.md
+  exists: true
+- id: system-index-distill
+  file: .agents/skills/system-index-distill/SKILL.md
+  exists: true
+- id: workflow-silence-detection
+  file: .agents/skills/workflow-silence-detection/SKILL.md
+  exists: true
+- id: workflow:bet-execution
+  file: .agents/skills/workflow:bet-execution/SKILL.md
+  exists: true
+- id: workflow:governance-state-mutation
+  file: .agents/skills/workflow:governance-state-mutation/SKILL.md
+  exists: true
+- id: workflow:mini
+  file: .agents/skills/workflow:mini/SKILL.md
+  exists: true
+- id: workflow:project-code-change
+  file: .agents/skills/workflow:project-code-change/SKILL.md
+  exists: true
+- id: workflow:project-doc-change
+  file: .agents/skills/workflow:project-doc-change/SKILL.md
+  exists: true
+- id: worktree-ci-isolate
+  file: .agents/skills/worktree-ci-isolate/SKILL.md
+  exists: true
+workflows:
+- id: agent-onboarding
+  file: .omo/_truth/registry/agent-workflows/workflows/agent-onboarding.yaml
+  exists: true
+- id: bet-execution
+  file: .omo/_truth/registry/agent-workflows/workflows/bet-execution.yaml
+  exists: true
+- id: c2g-spec-ingress
+  file: .omo/_truth/registry/agent-workflows/workflows/c2g-spec-ingress.yaml
+  exists: true
+- id: cognitive-governance-delivery
+  file: .omo/_truth/registry/agent-workflows/workflows/cognitive-governance-delivery.yaml
+  exists: true
+- id: external-adapter-sync
+  file: .omo/_truth/registry/agent-workflows/workflows/external-adapter-sync.yaml
+  exists: true
+- id: governance-audit
+  file: .omo/_truth/registry/agent-workflows/workflows/governance-audit.yaml
+  exists: true
+- id: governance-state-mutation
+  file: .omo/_truth/registry/agent-workflows/workflows/governance-state-mutation.yaml
+  exists: true
+- id: handoff-resume
+  file: .omo/_truth/registry/agent-workflows/workflows/handoff-resume.yaml
+  exists: true
+- id: mof-model-change
+  file: .omo/_truth/registry/agent-workflows/workflows/mof-model-change.yaml
+  exists: true
+- id: mof-state-bridge-audit
+  file: .omo/_truth/registry/agent-workflows/workflows/mof-state-bridge-audit.yaml
+  exists: true
+- id: observer-audit
+  file: .omo/_truth/registry/agent-workflows/workflows/observer-audit.yaml
+  exists: true
+- id: project-code-change
+  file: .omo/_truth/registry/agent-workflows/workflows/project-code-change.yaml
+  exists: true
+- id: project-doc-change
+  file: .omo/_truth/registry/agent-workflows/workflows/project-doc-change.yaml
+  exists: true
+- id: pyright-sweep
+  file: .omo/_truth/registry/agent-workflows/workflows/pyright-sweep.yaml
+  exists: true
+- id: resident-runtime-observe
+  file: .omo/_truth/registry/agent-workflows/workflows/resident-runtime-observe.yaml
+  exists: true
+- id: state-sync
+  file: .omo/_truth/registry/agent-workflows/workflows/state-sync.yaml
+  exists: true
+- id: submodule-pointer-close
+  file: .omo/_truth/registry/agent-workflows/workflows/submodule-pointer-close.yaml
+  exists: true

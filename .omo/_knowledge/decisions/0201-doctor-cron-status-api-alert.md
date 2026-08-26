@@ -29,7 +29,7 @@ needed: (1) cockpit consumption, (2) multi-day path-acl warn signal.
 ## Verification
 
 ```bash
-python bin/gac/omo-doctor-cron.py
+python bin/_archive/2026-08-conv3/omo-doctor-cron.py
 curl -s localhost:8090/api/omo/doctor | jq .highlights
 pytest tests/test_omo_doctor_cron.py projects/cockpit/src/cockpit/tests/test_api_omo_doctor.py -q
 ```

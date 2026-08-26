@@ -423,7 +423,7 @@ for _gap_gate in (
     {
         "id": "sfop-slots",
         "command": ["bin/gac/check-sfop-slots.py", "--json"],
-        "note": "SFOP/DFSQ: COMP-WS 必须声明 sfop_slot+dao_layer; 活跃 S 槽至多一个且为 COMP-WS-omo (CR-SFOP-01/02 阻断, 非 SOFT)",
+        "note": "SFOP/DFSQ: COMP-WS 必须声明 sfop_slot+dao_layer; 活跃 S 槽至多一个且为 COMP-WS-omo; H→B via F or cockpit.adapters; claimed-active cron must declare sfop_slot (CR-SFOP-01/02/05/06 阻断, 非 SOFT)",
     },
     {
         "id": "execution-chain",
@@ -493,8 +493,13 @@ AGENT_WORKFLOW_GATE_CHECKS = {g["id"] for g in GATES_LIST if g.get("agent_workfl
 BROKEN_CHECKS = {g["id"] for g in GATES_LIST if g.get("broken")}
 # Live sgf-policy.yaml often omits timeout; semantic-gate runs several
 # subprocesses and false-timeouts at the 15s default. Named defaults apply
-# unless the gate dict sets an explicit timeout.
-_DEFAULT_CHECK_TIMEOUTS = {"governance-semantic-gate": 60, "execution-chain": 45}
+_DEFAULT_CHECK_TIMEOUTS = {
+    "governance-semantic-gate": 60,
+    "execution-chain": 45,
+    "layer-call-direction-check": 45,
+    "gac-drift": 45,
+    "sfop-slots": 45,
+}
 _CHECK_TIMEOUTS = {
     g["id"]: g.get("timeout", _DEFAULT_CHECK_TIMEOUTS.get(g["id"], 15)) for g in GATES_LIST
 }

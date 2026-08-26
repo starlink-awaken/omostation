@@ -99,6 +99,19 @@ def test_binding_receipt_is_deterministic_replay_safe_and_value_isolated() -> No
     assert module.validate_trace_bound_resolution_receipt(first) == first
 
 
+def test_skill_and_workflow_semantics_are_exact_and_not_projection_owned() -> None:
+    module = _load()
+
+    assert module.CAPABILITY_SEMANTICS["skill"] == {
+        "native_owner": "workspace_skills",
+        "adapter_kind": "instruction_native",
+    }
+    assert module.CAPABILITY_SEMANTICS["workflow"] == {
+        "native_owner": "agent_workflow",
+        "adapter_kind": "workflow_native",
+    }
+
+
 @pytest.mark.parametrize(
     ("mutation", "reason"),
     [

@@ -1,3 +1,7 @@
+---
+last-reviewed: 2026-08-26
+---
+
 # Human attestation trusted signers.
 # Copy this file to human-attestation-allowed-signers (gitignored) and add
 # your trusted key:   <identity> <ssh-public-key>

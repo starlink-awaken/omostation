@@ -1,7 +1,8 @@
 ---
 name: agent-quickstart
 description: "Minimal 5-minute quickstart for AI agents working in the omostation workspace. Covers: run a gate, claim a path, edit + test, submit a PR, and where to find docs. Use when you're a new agent session and need to know 'what do I actually do'. NOT for full onboarding (use agent-onboarding skill instead)."
----
+
+last-reviewed: 2026-08-26---
 
 # Agent Quickstart — What Do I Actually Do?
 

@@ -30,7 +30,7 @@ metadata-migrated-at: 2026-07-31
 
 **收敛原真规则** (X1-X4/L0 源 → GaC indexed):
 ```bash
-python3 bin/gac/gac-ingest-legacy.py --write    # 增量 ingest
+python3 bin/_archive/migrations/gac-ingest-legacy.py --write    # 增量 ingest
 ```
 
 ## 2. 检测 (5 层 drift + 体系自检)
@@ -41,7 +41,7 @@ python3 bin/gac/gac-validate.py --gate
 
 # 5 层 drift 检测
 python3 bin/gac/gac-drift.py              # GaC 规则 vs 执行器 (机制4)
-python3 bin/gac/gac-ingest-legacy.py --check  # X1-X4+L0 源 vs indexed (动态收敛)
+python3 bin/_archive/migrations/gac-ingest-legacy.py --check  # X1-X4+L0 源 vs indexed (动态收敛)
 python3 bin/gac/gac-bootstrap.py          # GaC 自身 4 层 (schema/工具/indexed/exec)
 python3 bin/gac/gac-executor.py           # executor 声明 vs 实际存在
 python3 bin/gac/gac-mof-validate.py       # 规则 vs M2 type (机制7)
@@ -53,8 +53,8 @@ python3 bin/gac/gac-healthcheck.py
 ## 3. 修复
 
 ```bash
-python3 bin/gac/gac-ingest-legacy.py --write          # indexed drift (源有 GaC 没)
-python3 bin/gac/gac-ingest-legacy.py --update-relates  # relates_to 重叠识别回填
+python3 bin/_archive/migrations/gac-ingest-legacy.py --write          # indexed drift (源有 GaC 没)
+python3 bin/_archive/migrations/gac-ingest-legacy.py --update-relates  # relates_to 重叠识别回填
 python3 bin/gac/gac-executor.py --run                  # executor 调度 POC (机制3)
 ```
 

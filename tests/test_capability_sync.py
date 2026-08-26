@@ -17,7 +17,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SYNC_PATH = ROOT / "bin" / "capability-sync.py"
-GENERATOR_PATH = ROOT / "bin" / "cockpit" / "gen-capability-registry.py"
+GENERATOR_PATH = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
 
 
 def _load(name: str, path: Path):
@@ -44,7 +44,7 @@ def registry() -> dict:
     return {
         "version": "1.0.0",
         "generated_at": "1970-01-01T00:00:00Z",
-        "generator": "bin/cockpit/gen-capability-registry.py",
+        "generator": "bin/ssot/gen-capability-registry.py",
         "totals": {
             "mcp_servers": 1,
             "mcp_tools": 2,
@@ -86,12 +86,30 @@ def test_canonical_generator_declares_registry_contract(cap_sync, generator) -> 
 
     assert registry["schema"] == "capability-registry/v1"
     assert registry["owner"] == "workspace-capability-governance"
-    assert registry["writer"] == "bin/cockpit/gen-capability-registry.py"
+    assert registry["writer"] == "bin/ssot/gen-capability-registry.py"
     assert cap_sync.CANONICAL_REGISTRY_METADATA == {
         "schema": generator.REGISTRY_SCHEMA,
         "owner": generator.REGISTRY_OWNER,
         "writer": generator.REGISTRY_WRITER,
     }
+
+
+def test_projection_and_index_include_canonical_skills_and_workflows(generator, cap_sync) -> None:
+    registry = generator.build_registry()
+
+    assert any(row["id"] == "git-discipline" for row in registry["skills"])
+    assert any(row["id"] == "bet-execution" for row in registry["workflows"])
+    index = cap_sync.build_capability_index(registry)
+    assert index["skill:git-discipline"][0]["kind"] == "skill"
+    assert index["workflow:bet-execution"][0]["kind"] == "workflow"
+
+
+def test_old_projection_without_skills_or_workflows_stays_discoverable(cap_sync, registry: dict) -> None:
+    index = cap_sync.build_capability_index(registry)
+
+    assert "skill:git-discipline" not in index
+    assert "workflow:bet-execution" not in index
+    assert index["mcp-tool:omo:status"][0]["kind"] == "mcp_tool"
 
 
 def test_trace_binding_compatibility_symbols_remain_available(cap_sync) -> None:
@@ -167,7 +185,7 @@ def test_make_and_ci_run_blocking_canonical_check() -> None:
     checkout_step = next(step for step in job["steps"] if step.get("uses") == "actions/checkout@v4")
     assert checkout_step.get("continue-on-error", False) is False
     check_step = next(step for step in job["steps"] if step.get("name") == "Check capability registry drift")
-    assert check_step["run"].strip() == "python3 bin/cockpit/gen-capability-registry.py --check --quiet"
+    assert check_step["run"].strip() == "python3 bin/ssot/gen-capability-registry.py --check --quiet"
 
 
 def test_python39_grammar_is_supported() -> None:
@@ -190,7 +208,7 @@ def test_canonical_registry_metadata_is_accepted(cap_sync, registry: dict, tmp_p
         {
             "schema": "capability-registry/v1",
             "owner": "workspace-capability-governance",
-            "writer": "bin/cockpit/gen-capability-registry.py",
+            "writer": "bin/ssot/gen-capability-registry.py",
         }
     )
     path = tmp_path / "registry.yaml"
@@ -214,7 +232,7 @@ def test_noncanonical_registry_metadata_is_rejected(
         {
             "schema": "capability-registry/v1",
             "owner": "workspace-capability-governance",
-            "writer": "bin/cockpit/gen-capability-registry.py",
+            "writer": "bin/ssot/gen-capability-registry.py",
         }
     )
     registry[field] = value
@@ -357,7 +375,7 @@ def _canonical_trace_registry(registry: dict) -> dict:
         {
             "schema": "capability-registry/v1",
             "owner": "workspace-capability-governance",
-            "writer": "bin/cockpit/gen-capability-registry.py",
+            "writer": "bin/ssot/gen-capability-registry.py",
         }
     )
     return result
@@ -449,17 +467,20 @@ def test_inspect_cli_is_static_read_only_and_does_not_delegate_or_load_provider(
         raise AssertionError("inspect must not start a process")
 
     monkeypatch.setattr(cap_sync.subprocess, "run", forbidden_process)
-    assert cap_sync.main(
-        [
-            "inspect",
-            "--id",
-            "skill:demo",
-            "--binding-json",
-            str(binding_path),
-            "--registry",
-            str(registry_path),
-        ]
-    ) == 0
+    assert (
+        cap_sync.main(
+            [
+                "inspect",
+                "--id",
+                "skill:demo",
+                "--binding-json",
+                str(binding_path),
+                "--registry",
+                str(registry_path),
+            ]
+        )
+        == 0
+    )
     receipt = json.loads(capsys.readouterr().out)
 
     assert receipt["status"] == "inspected"
@@ -483,17 +504,20 @@ def test_inspect_cli_returns_stable_upstream_failure_code(
     binding_path.write_text(json.dumps(_trace_binding(), sort_keys=True), encoding="utf-8")
     monkeypatch.setattr(cap_sync, "ROOT", tmp_path)
 
-    assert cap_sync.main(
-        [
-            "inspect",
-            "--id",
-            "mcp-tool:omo:status",
-            "--binding-json",
-            str(binding_path),
-            "--registry",
-            str(registry_path),
-        ]
-    ) == 4
+    assert (
+        cap_sync.main(
+            [
+                "inspect",
+                "--id",
+                "mcp-tool:omo:status",
+                "--binding-json",
+                str(binding_path),
+                "--registry",
+                str(registry_path),
+            ]
+        )
+        == 4
+    )
     receipt = json.loads(capsys.readouterr().out)
     assert receipt["failure_code"] == "upstream_resolution_required"
     assert receipt["executed"] is False
@@ -531,17 +555,20 @@ def test_inspect_cli_replays_resolution_and_statically_proves_mcp_source(
     resolution_path.write_text(json.dumps(resolution, sort_keys=True), encoding="utf-8")
     monkeypatch.setattr(cap_sync, "ROOT", tmp_path)
 
-    assert cap_sync.main(
-        [
-            "inspect",
-            "--id",
-            "mcp-tool:omo:status",
-            "--resolution-receipt-json",
-            str(resolution_path),
-            "--registry",
-            str(registry_path),
-        ]
-    ) == 0
+    assert (
+        cap_sync.main(
+            [
+                "inspect",
+                "--id",
+                "mcp-tool:omo:status",
+                "--resolution-receipt-json",
+                str(resolution_path),
+                "--registry",
+                str(registry_path),
+            ]
+        )
+        == 0
+    )
     receipt = json.loads(capsys.readouterr().out)
     assert receipt["status"] == "inspected"
     assert receipt["proof"] == {"method": "python_ast_static_declaration", "strength": "strong"}
@@ -555,39 +582,75 @@ def test_bound_find_fails_closed_for_unproved_or_ambiguous_sources(
     binding_path = tmp_path / "binding.json"
     binding_path.write_text(json.dumps(_trace_binding(), sort_keys=True), encoding="utf-8")
 
-    assert cap_sync.main(
-        [
-            "find",
-            "--id",
-            "mcp-tool:omo:status",
-            "--binding-json",
-            str(binding_path),
-            "--registry",
-            str(tmp_path / "missing-registry.yaml"),
-        ]
-    ) == 4
+    assert (
+        cap_sync.main(
+            [
+                "find",
+                "--id",
+                "mcp-tool:omo:status",
+                "--binding-json",
+                str(binding_path),
+                "--registry",
+                str(tmp_path / "missing-registry.yaml"),
+            ]
+        )
+        == 4
+    )
     assert json.loads(capsys.readouterr().out)["failure_code"] == "source_unprovable"
 
     registry_path = tmp_path / "legacy-registry.yaml"
     registry_path.write_text(yaml.safe_dump(registry, sort_keys=True), encoding="utf-8")
-    assert cap_sync.main(
-        ["find", "--id", "mcp-tool:omo:status", "--binding-json", str(binding_path), "--registry", str(registry_path)]
-    ) == 4
+    assert (
+        cap_sync.main(
+            [
+                "find",
+                "--id",
+                "mcp-tool:omo:status",
+                "--binding-json",
+                str(binding_path),
+                "--registry",
+                str(registry_path),
+            ]
+        )
+        == 4
+    )
     assert json.loads(capsys.readouterr().out)["failure_code"] == "source_unprovable"
 
     proved = _canonical_trace_registry(registry)
     registry_path.write_text(yaml.safe_dump(proved, sort_keys=True), encoding="utf-8")
-    assert cap_sync.main(
-        ["find", "--id", "mcp-tool:omo:missing", "--binding-json", str(binding_path), "--registry", str(registry_path)]
-    ) == 4
+    assert (
+        cap_sync.main(
+            [
+                "find",
+                "--id",
+                "mcp-tool:omo:missing",
+                "--binding-json",
+                str(binding_path),
+                "--registry",
+                str(registry_path),
+            ]
+        )
+        == 4
+    )
     assert json.loads(capsys.readouterr().out)["failure_code"] == "resolution_not_found"
 
     duplicate = _canonical_trace_registry(registry)
     duplicate["mcp_servers"].append(dict(duplicate["mcp_servers"][0]))
     registry_path.write_text(yaml.safe_dump(duplicate, sort_keys=True), encoding="utf-8")
-    assert cap_sync.main(
-        ["find", "--id", "mcp-tool:omo:status", "--binding-json", str(binding_path), "--registry", str(registry_path)]
-    ) == 4
+    assert (
+        cap_sync.main(
+            [
+                "find",
+                "--id",
+                "mcp-tool:omo:status",
+                "--binding-json",
+                str(binding_path),
+                "--registry",
+                str(registry_path),
+            ]
+        )
+        == 4
+    )
     assert json.loads(capsys.readouterr().out)["failure_code"] == "resolution_ambiguous"
 
 
@@ -595,8 +658,8 @@ class _FakeGateway:
     def __init__(self) -> None:
         self.calls: list[tuple] = []
 
-    def load(self, record: dict, *, selector: dict) -> dict:
-        self.calls.append(("load", record, selector))
+    def load(self, record: dict, *, selector: dict, binding: dict | None = None) -> dict:
+        self.calls.append(("load", record, selector, binding))
         return {
             "schema": "capability-invocation-receipt/v1",
             "operation": "load",
@@ -605,8 +668,8 @@ class _FakeGateway:
             "invocation_attempted": False,
         }
 
-    def invoke(self, record: dict, payload: object, *, selector: dict) -> dict:
-        self.calls.append(("invoke", record, payload, selector))
+    def invoke(self, record: dict, payload: object, *, selector: dict, binding: dict | None = None) -> dict:
+        self.calls.append(("invoke", record, payload, selector, binding))
         return {
             "schema": "capability-invocation-receipt/v1",
             "operation": "invoke",
@@ -699,6 +762,82 @@ def test_gateway_operations_are_explicit_and_do_not_spawn_provider_processes(
     assert invoke_receipt["status"] == "succeeded"
     assert [call[0] for call in gateway.calls] == ["load", "invoke"]
     assert gateway.calls[1][2] == {"scope": "bounded"}
+
+
+def test_execute_gateway_operation_forwards_binding_to_gateway(
+    cap_sync, registry: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Task 6: a validated binding supplied to the gateway operation must be
+    forwarded to Agora so the receipt can carry a binding_digest."""
+    gateway = _FakeGateway()
+    binding = _trace_binding()
+
+    monkeypatch.setattr(
+        cap_sync.subprocess, "run", lambda *a, **k: (_ for _ in ()).throw(AssertionError("subprocess forbidden"))
+    )
+
+    invoke_receipt = cap_sync.execute_gateway_operation(
+        registry,
+        "invoke",
+        "bos-service:bos://governance/shared",
+        payload={"scope": "bounded"},
+        gateway=gateway,
+        service_catalog=[_native_service()],
+        binding=binding,
+    )
+    load_receipt = cap_sync.execute_gateway_operation(
+        registry,
+        "load",
+        "bos-service:bos://governance/shared",
+        gateway=gateway,
+        service_catalog=[_native_service()],
+        binding=binding,
+    )
+
+    assert invoke_receipt["status"] == "succeeded"
+    assert load_receipt["status"] == "ready"
+    assert gateway.calls[0][0] == "invoke"
+    assert gateway.calls[0][4] == binding  # invoke received the binding
+    assert gateway.calls[1][0] == "load"
+    assert gateway.calls[1][3] == binding  # load received the binding
+
+
+def test_execute_gateway_operation_without_binding_passes_none(
+    cap_sync, registry: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Absent binding must still reach the gateway as None (backward compatible)."""
+    gateway = _FakeGateway()
+    monkeypatch.setattr(
+        cap_sync.subprocess, "run", lambda *a, **k: (_ for _ in ()).throw(AssertionError("subprocess forbidden"))
+    )
+
+    cap_sync.execute_gateway_operation(
+        registry,
+        "invoke",
+        "bos-service:bos://governance/shared",
+        payload={},
+        gateway=gateway,
+        service_catalog=[_native_service()],
+    )
+    assert gateway.calls[0][4] is None
+
+
+def test_invoke_cli_reads_binding_json_and_forwards_it(cap_sync, bound_files, monkeypatch) -> None:
+    """The CLI invoke path must read --binding-json and pass it to the gateway
+    operation so Agora can emit a binding_digest."""
+    captured: list[dict] = []
+
+    def fake_execute(reg, operation, capability_id, *, payload=None, gateway=None, service_catalog=None, binding=None):
+        captured.append({"operation": operation, "binding": binding})
+        return {"schema": "capability-invocation-receipt/v1", "status": "succeeded"}
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", fake_execute)
+    rc = cap_sync.main(bound_files.invoke_argv)
+
+    assert rc == 0
+    assert len(captured) == 1
+    assert captured[0]["operation"] == "invoke"
+    assert captured[0]["binding"] == bound_files.binding
 
 
 def test_native_router_requires_lifecycle_catalogs_before_seed(cap_sync) -> None:
@@ -813,3 +952,481 @@ def test_gateway_unavailable_fails_closed_without_echoing_sensitive_selector(
     assert receipt["status"] == "rejected"
     assert receipt["error_code"] == "CAPABILITY_GATEWAY_UNAVAILABLE"
     assert secret_id not in encoded
+
+
+def test_local_skill_and_workflow_loads_do_not_call_a_provider(
+    cap_sync, monkeypatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def forbidden(*args, **kwargs):
+        raise AssertionError("local capability load must not reach a provider")
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", forbidden)
+    assert cap_sync.main(["load", "--id", "skill:git-discipline"]) == 0
+    skill_receipt = json.loads(capsys.readouterr().out)
+    assert skill_receipt["status"] == "ready"
+    assert skill_receipt["provider_called"] is False
+    assert skill_receipt["invoked"] is False
+
+    assert cap_sync.main(["load", "--id", "workflow:bet-execution"]) == 0
+    workflow_receipt = json.loads(capsys.readouterr().out)
+    assert workflow_receipt["status"] == "ready"
+    assert workflow_receipt["provider_called"] is False
+    assert workflow_receipt["invoked"] is False
+
+
+def test_skill_invoke_is_rejected_before_any_provider(
+    cap_sync, monkeypatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    payload = tmp_path / "input.json"
+    payload.write_text("{}\n", encoding="utf-8")
+    calls = 0
+
+    def forbidden(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        raise AssertionError("skill invocation must not reach a provider")
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", forbidden)
+    assert cap_sync.main(["invoke", "--id", "skill:git-discipline", "--input-json", str(payload)]) == 4
+    receipt = json.loads(capsys.readouterr().out)
+    assert calls == 0
+    assert receipt["failure_code"] == "skill_invoke_forbidden"
+    assert receipt["invocation"]["allowed"] is False
+
+
+@pytest.mark.parametrize(
+    ("actor_id", "expected_rc", "allowed"),
+    [("workflow-controller", 0, True), ("other-actor", 4, False)],
+)
+def test_workflow_invoke_requires_workflow_controller_actor(
+    cap_sync,
+    monkeypatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    actor_id: str,
+    expected_rc: int,
+    allowed: bool,
+) -> None:
+    payload = tmp_path / "input.json"
+    payload.write_text("{}\n", encoding="utf-8")
+    binding = _trace_binding()
+    binding["actor_id"] = actor_id
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+
+    monkeypatch.setattr(
+        cap_sync,
+        "execute_gateway_operation",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("workflow must stay local")),
+    )
+    rc = cap_sync.main(
+        [
+            "invoke",
+            "--id",
+            "workflow:bet-execution",
+            "--input-json",
+            str(payload),
+            "--binding-json",
+            str(binding_path),
+        ]
+    )
+    receipt = json.loads(capsys.readouterr().out)
+    assert rc == expected_rc
+    assert receipt["provider_called"] is False
+    assert receipt["invocation"]["allowed"] is allowed
+
+
+@pytest.fixture
+def bound_files(registry, tmp_path):
+    from capability_native_receipt import build_native_inspection_receipt
+
+    def digest(value: str) -> str:
+        return "sha256:" + value * 64
+
+    binding = {
+        "correlation_id": "corr-test",
+        "workflow_run_id": "run-test",
+        "packet_id": "WP-TEST",
+        "packet_hash": digest("a"),
+        "assignment_id": "assignment-test",
+        "dispatch_id": "dispatch-test",
+        "actor_id": "actor-test",
+        "delivery_attempt_id": "attempt-test",
+    }
+    capability_id = "bos-service:bos://governance/omo/state"
+    projected = copy.deepcopy(registry)
+    projected["bos_services"]["domains"]["governance"][0]["uri"] = "bos://governance/omo/state"
+    registry_path = tmp_path / "registry.yaml"
+    registry_path.write_text(yaml.safe_dump(projected, sort_keys=False), encoding="utf-8")
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+    inspection = build_native_inspection_receipt(
+        capability_id=capability_id,
+        binding=binding,
+        proof={
+            "source_ref": "projects/agora/etc/bos-services.yaml",
+            "content": b"services: []\n",
+            "source_schema": "agora-bos-services-yaml/v1",
+            "proof": {"method": "canonical_bos_exact_uri", "strength": "strong"},
+            "native_version": "1.0.0",
+            "native_version_status": "proved",
+        },
+        upstream={
+            "status": "verified",
+            "schema": "capability-resolution-receipt/v1",
+            "receipt_digest": digest("1"),
+            "registry_digest": digest("2"),
+        },
+    )
+    inspection_path = tmp_path / "inspection.json"
+    inspection_path.write_text(json.dumps(inspection), encoding="utf-8")
+    admission = {
+        "receipt_digest": digest("3"),
+        "admission_id": "admission-test",
+        "step_run_id": "step-test",
+        "worker": {"status": "bound", "id": "worker-test"},
+    }
+    admission_path = tmp_path / "admission.json"
+    admission_path.write_text(json.dumps(admission), encoding="utf-8")
+    input_path = tmp_path / "input.json"
+    input_path.write_text("{}\n", encoding="utf-8")
+    return SimpleNamespace(
+        binding=binding,
+        invoke_argv=[
+            "invoke",
+            "--id",
+            capability_id,
+            "--input-json",
+            str(input_path),
+            "--registry",
+            str(registry_path),
+            "--binding-json",
+            str(binding_path),
+            "--inspection-receipt-json",
+            str(inspection_path),
+            "--admission-receipt-json",
+            str(admission_path),
+            "--operation-id",
+            "omo.state",
+            "--effect-classification",
+            "read_only",
+        ],
+    )
+
+
+def test_bound_invoke_emits_native_execution_receipt(cap_sync, bound_files, monkeypatch, capsys):
+    monkeypatch.setattr(
+        cap_sync,
+        "execute_gateway_operation",
+        lambda *args, **kwargs: {"schema": "capability-invocation-receipt/v1", "status": "succeeded"},
+    )
+    rc = cap_sync.main(bound_files.invoke_argv)
+    receipt = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert receipt["schema"] == "native-execution-receipt/v1"
+    assert receipt["material"]["binding"] == bound_files.binding
+    assert receipt["value_indicator_policy"] is False
+
+
+def test_unbound_invoke_is_shadow_observed_before_fail_promotion(cap_sync, monkeypatch, registry, tmp_path, capsys):
+    registry_file = tmp_path / "registry.yaml"
+    registry_file.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+    input_file = tmp_path / "input.json"
+    input_file.write_text("{}\n", encoding="utf-8")
+    calls = 0
+
+    def legacy_gateway(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return {"schema": "capability-invocation-receipt/v1", "status": "succeeded"}
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", legacy_gateway)
+    rc = cap_sync.main(
+        [
+            "invoke",
+            "--id",
+            "bos-service:bos://governance/shared",
+            "--input-json",
+            str(input_file),
+            "--registry",
+            str(registry_file),
+        ]
+    )
+    receipt = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert calls == 1
+    assert receipt["binding_enforcement"] == f"{cap_sync.BINDING_ENFORCEMENT}_missing"
+
+
+# ---------------------------------------------------------------------------
+# T1-12 Task4C: local skill/workflow load/invoke must exact-resolve the
+# registry before returning a local receipt; prefix branching alone is a
+# fail-closed hole.
+
+_LOCAL_RECEIPT_FLAGS = {
+    "read_only": True,
+    "executed": False,
+    "provider_called": False,
+    "invoked": False,
+    "value_indicator_policy": False,
+}
+
+
+def _assert_local_receipt_flags(receipt: dict) -> None:
+    for key, expected in _LOCAL_RECEIPT_FLAGS.items():
+        assert key in receipt, f"local receipt must state {key} explicitly"
+        assert receipt[key] is expected, f"{key} must be exactly {expected}"
+
+
+def _local_projection(registry: dict) -> dict:
+    result = _canonical_trace_registry(registry)
+    result["skills"] = [
+        {"id": "git-discipline", "exists": True},
+        {"id": "unavailable-skill", "exists": False},
+    ]
+    result["workflows"] = [{"id": "bet-execution", "exists": True}]
+    return result
+
+
+def _forbid_provider(cap_sync, monkeypatch: pytest.MonkeyPatch) -> None:
+    def forbidden(*args, **kwargs):
+        raise AssertionError("local capability operations must never reach a provider")
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", forbidden)
+    monkeypatch.setattr(cap_sync, "_load_native_gateway", forbidden)
+
+
+def test_partial_binding_bundle_fails_closed_without_gateway_call(
+    cap_sync, monkeypatch, registry, tmp_path, capsys
+) -> None:
+    registry_path = tmp_path / "registry.yaml"
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+    input_path = tmp_path / "input.json"
+    input_path.write_text("{}\n", encoding="utf-8")
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(_trace_binding()), encoding="utf-8")
+    calls = 0
+
+    def forbidden(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        raise AssertionError("gateway must not run for a partial bundle")
+
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", forbidden)
+    rc = cap_sync.main(
+        [
+            "invoke",
+            "--id",
+            "bos-service:bos://governance/shared",
+            "--input-json",
+            str(input_path),
+            "--registry",
+            str(registry_path),
+            "--binding-json",
+            str(binding_path),
+        ]
+    )
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 4
+    assert calls == 0
+    assert receipt["failure_code"] == "binding_bundle_incomplete"
+    assert receipt["invocation"]["allowed"] is False
+
+
+@pytest.mark.parametrize("capability_id", ["skill:does-not-exist", "workflow:does-not-exist"])
+def test_local_load_rejects_nonexistent_ids_before_provider(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str], capability_id: str
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", capability_id, "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "resolution_not_found"
+    encoded = json.dumps(receipt, sort_keys=True)
+    assert "does-not-exist" not in encoded
+    assert str(tmp_path) not in encoded
+    assert receipt["invocation"]["allowed"] is False
+    _assert_local_receipt_flags(receipt)
+
+
+def test_local_load_rejects_old_projection_without_local_capabilities(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    registry_path = tmp_path / "old-projection.yaml"
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=True), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", "skill:git-discipline", "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "resolution_not_found"
+    _assert_local_receipt_flags(receipt)
+
+
+def test_local_load_rejects_unavailable_local_capability(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", "skill:unavailable-skill", "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert receipt["failure_code"] == "resolution_not_found"
+    _assert_local_receipt_flags(receipt)
+
+
+@pytest.mark.parametrize("corruption", ["missing_file", "malformed_yaml"])
+def test_local_load_invalid_registry_rejects_without_provider(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str], corruption: str
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    if corruption == "malformed_yaml":
+        registry_path.write_text("version: [broken\n  - !!float 'x'", encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", "skill:git-discipline", "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 4
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "invalid_registry"
+    encoded = json.dumps(receipt, sort_keys=True)
+    assert "git-discipline" not in encoded
+    _assert_local_receipt_flags(receipt)
+
+
+def test_local_load_rejects_duplicate_local_capability_ids(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    duplicate = _local_projection(registry)
+    duplicate["skills"].append(dict(duplicate["skills"][0]))
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(duplicate, sort_keys=True), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", "skill:git-discipline", "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 3
+    assert receipt["failure_code"] == "resolution_ambiguous"
+    assert receipt["invocation"]["allowed"] is False
+    _assert_local_receipt_flags(receipt)
+
+
+@pytest.mark.parametrize("capability_id", ["skill:git-discipline", "workflow:bet-execution"])
+def test_local_load_exact_canonical_ids_succeed(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str], capability_id: str
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(["load", "--id", capability_id, "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert receipt["status"] == "ready"
+    assert receipt["invocation"] == {"allowed": False, "route": "local_metadata_only", "reason": "load_only"}
+    _assert_local_receipt_flags(receipt)
+
+
+def test_local_skill_invoke_rejects_with_full_local_receipt(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    payload = tmp_path / "input.json"
+    payload.write_text("{}\n", encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(
+        ["invoke", "--id", "skill:git-discipline", "--input-json", str(payload), "--registry", str(registry_path)]
+    )
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 4
+    assert receipt["failure_code"] == "skill_invoke_forbidden"
+    assert receipt["invocation"] == {"allowed": False, "route": "none", "reason": "skill_load_only"}
+    _assert_local_receipt_flags(receipt)
+
+
+@pytest.mark.parametrize(
+    ("actor_id", "expected_rc", "allowed"),
+    [
+        ("workflow-controller", 0, True),
+        ("other-actor", 4, False),
+    ],
+)
+def test_local_workflow_invoke_requires_controller_with_full_local_receipt(
+    cap_sync,
+    monkeypatch,
+    registry,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    actor_id: str,
+    expected_rc: int,
+    allowed: bool,
+) -> None:
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    payload = tmp_path / "input.json"
+    payload.write_text("{}\n", encoding="utf-8")
+    binding = _trace_binding()
+    binding["actor_id"] = actor_id
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+    _forbid_provider(cap_sync, monkeypatch)
+
+    rc = cap_sync.main(
+        [
+            "invoke",
+            "--id",
+            "workflow:bet-execution",
+            "--input-json",
+            str(payload),
+            "--registry",
+            str(registry_path),
+            "--binding-json",
+            str(binding_path),
+        ]
+    )
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == expected_rc
+    assert receipt["invocation"]["allowed"] is allowed
+    if not allowed:
+        assert receipt["failure_code"] == "workflow_controller_required"
+    _assert_local_receipt_flags(receipt)
+
+
+def test_local_load_does_not_read_local_sources(
+    cap_sync, monkeypatch, registry, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    skill = tmp_path / ".agents/skills/git-discipline/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("---\nname: git-discipline\n---\nprivate instructions\n", encoding="utf-8")
+    registry_path = tmp_path / "capability-registry.yaml"
+    registry_path.write_text(yaml.safe_dump(_local_projection(registry), sort_keys=True), encoding="utf-8")
+    before = (skill.stat().st_mtime_ns, skill.read_bytes())
+    _forbid_provider(cap_sync, monkeypatch)
+    monkeypatch.setattr(cap_sync, "ROOT", tmp_path)
+
+    rc = cap_sync.main(["load", "--id", "skill:git-discipline", "--registry", str(registry_path)])
+    receipt = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    encoded = json.dumps(receipt, sort_keys=True)
+    assert "private instructions" not in encoded
+    assert "git-discipline" not in encoded
+    assert (skill.stat().st_mtime_ns, skill.read_bytes()) == before

@@ -16,13 +16,15 @@
 准确性说明 (静态扫描的固有限制):
   本生成器用正则/AST 静态提取工具名, 对动态注册的工具 (如 mcp.tool(name=var))
   可能漏抓, 实测准确率 ~95% (如 KOS 静态 44 vs 运行时 46)。
+  Agora 是精确特例：从 FastMCP 入口沿静态 registration graph 证明可达工具，
+  不使用 tools_*.py 文件名扫描，因此不会把未接线模块投影为原生能力。
   长期改进: 加 --verify 模式启动各 MCP server 调 list_tools() 做运行时内省,
   用运行时结果校正静态扫描。当前数字作为"能力规模近似"已足够驱动 help/文档/UI。
 
 Usage:
-    uv run --with pyyaml python bin/cockpit/gen-capability-registry.py
-    uv run --with pyyaml python bin/cockpit/gen-capability-registry.py --check
-    uv run --with pyyaml python bin/cockpit/gen-capability-registry.py --json
+    uv run --with pyyaml python bin/ssot/gen-capability-registry.py
+    uv run --with pyyaml python bin/ssot/gen-capability-registry.py --check
+    uv run --with pyyaml python bin/ssot/gen-capability-registry.py --json
 """
 
 from __future__ import annotations
@@ -44,7 +46,12 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 OUTPUT_YAML = WORKSPACE / "docs" / "generated" / "capability-registry.yaml"
 REGISTRY_SCHEMA = "capability-registry/v1"
 REGISTRY_OWNER = "workspace-capability-governance"
-REGISTRY_WRITER = "bin/cockpit/gen-capability-registry.py"
+REGISTRY_WRITER = "bin/ssot/gen-capability-registry.py"
+LIB_DIR = WORKSPACE / "lib"
+if str(LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(LIB_DIR))
+
+from capability_native_sources import parse_fastmcp_composite_authority  # noqa: E402
 
 # ── MCP server 探测 ──────────────────────────────────────────
 
@@ -87,7 +94,6 @@ _KNOWN_MCP_SERVERS: list[dict] = [
         "layer": "I0",
         "file": "projects/agora/src/agora/server/mcp.py",
         "transport": "stdio/sse",
-        "extra_glob": "projects/agora/src/agora/server/tools_*.py",
     },
     {
         "id": "ecos",
@@ -406,7 +412,10 @@ def scan_mcp_servers() -> tuple[list[dict], int]:
         }
         if "ports" in spec:
             srv["ports"] = spec["ports"]
-        if file_path.suffix == ".py":
+        if spec["id"] == "agora":
+            authority = parse_fastmcp_composite_authority(WORKSPACE, file_rel, "agora")
+            srv["tools"] = authority["tools"]
+        elif file_path.suffix == ".py":
             srv["tools"] = _extract_tools_from_python(file_path)
         elif file_path.suffix in (".ts", ".js"):
             srv["tools"] = _extract_tools_from_typescript(file_path)
@@ -502,6 +511,51 @@ def scan_cli_commands() -> list[dict]:
     return sorted(commands, key=lambda c: c["name"])
 
 
+def _skill_frontmatter(path: Path) -> dict:
+    """Read only a bounded YAML frontmatter document; never execute a skill."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return {}
+    if not text.startswith("---\n"):
+        return {}
+    end = text.find("\n---\n", 4)
+    if end < 0 or end > 65536:
+        return {}
+    try:
+        payload = yaml.safe_load(text[4:end])
+    except yaml.YAMLError:
+        return {}
+    return dict(payload) if isinstance(payload, dict) else {}
+
+
+def scan_skills() -> list[dict]:
+    """Discover canonical skill markdown by exact name-to-directory identity."""
+    directory = WORKSPACE / ".agents" / "skills"
+    rows: list[dict] = []
+    for path in sorted(directory.glob("*/SKILL.md")):
+        frontmatter = _skill_frontmatter(path)
+        skill_id = str(frontmatter.get("name") or "")
+        if skill_id and path.parent.name == skill_id:
+            rows.append({"id": skill_id, "file": path.relative_to(WORKSPACE).as_posix(), "exists": True})
+    return rows
+
+
+def scan_workflows() -> list[dict]:
+    """Discover canonical workflow YAML by exact id-to-filename identity."""
+    directory = WORKSPACE / ".omo" / "_truth" / "registry" / "agent-workflows" / "workflows"
+    rows: list[dict] = []
+    for path in sorted(directory.glob("*.yaml")):
+        try:
+            payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, yaml.YAMLError):
+            continue
+        workflow_id = str(payload.get("id") or "") if isinstance(payload, dict) else ""
+        if workflow_id and path.name == workflow_id + ".yaml":
+            rows.append({"id": workflow_id, "file": path.relative_to(WORKSPACE).as_posix(), "exists": True})
+    return rows
+
+
 # ── 主流程 ─────────────────────────────────────────────────────
 
 
@@ -509,6 +563,8 @@ def build_registry() -> dict:
     servers, total_tools = scan_mcp_servers()
     bos_domains, total_bos = scan_bos_services()
     cli_commands = scan_cli_commands()
+    skills = scan_skills()
+    workflows = scan_workflows()
 
     bos_summary = {d: len(v) for d, v in sorted(bos_domains.items())}
 
@@ -528,6 +584,8 @@ def build_registry() -> dict:
             "bos_services": total_bos,
             "bos_domains": len(bos_domains),
             "cli_commands": len(cli_commands),
+            "skills": len(skills),
+            "workflows": len(workflows),
         },
         "mcp_servers": servers,
         "bos_services": {
@@ -535,6 +593,8 @@ def build_registry() -> dict:
             "domains": {d: bos_domains[d] for d in sorted(bos_domains)},
         },
         "cli_commands": cli_commands,
+        "skills": skills,
+        "workflows": workflows,
     }
     return registry
 

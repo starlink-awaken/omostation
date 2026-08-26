@@ -27,7 +27,7 @@ Batch2 B3 eval 页（`audits/2026-07-24-batch2-role-expansion-eval.md`）已画�
 
 ## Decision
 
-1. **扩展 `bin/delivery/role_framework.py::ROLE_CATALOG`** 加两个 RoleSpec：
+1. **扩展 `bin/_archive/2026-08-conv3/role_framework.py::ROLE_CATALOG`** 加两个 RoleSpec：
    - **research**: capabilities=(read-evidence, search-kos, synthesize-knowledge)；
      can_send=(research_result, progress, block)；can_recv=(assign, research_request, verify_result)；
      private_scope_prefix=private.research；legacy=researcher

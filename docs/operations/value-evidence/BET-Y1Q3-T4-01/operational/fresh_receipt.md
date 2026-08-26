@@ -11,8 +11,14 @@ source_ref: omo-state:sync
 artifact: runtime/omo/_delivery/ingress/state/system-projection-2026-08-21T06-51-01Z.yaml
 freshness: < 24h
 verified_at: 2026-08-22
+status: active
+lifecycle: evidence
+owner: governance-team
+last-reviewed: 2026-08-26
 ---
 
+last-reviewed: 2026-08-26
+---
 新鲜运行 receipt(operational 证据):
 - 最新 ingress 审计 receipt: 2026-08-21T06:51:01Z(state projection 写入)
 - 运行面持续产生新鲜 receipt(ingress-audit.jsonl 实时追加)

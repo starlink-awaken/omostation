@@ -61,7 +61,7 @@ P80 收口后, P81 调研 4 项候选, 全部实施:
 
 ### D3: alert-history z-score 洞察 (P81 R3)
 
-**修改**: `bin/gac/alert-history.py` `detect_anomalies()`
+**修改**: `bin/_archive/2026-08-conv3/alert-history.py` `detect_anomalies()`
 
 **新增 5 类异常**: (原 4 类 + z-score)
 1. sudden_spike (1h 内同类型 > 5)

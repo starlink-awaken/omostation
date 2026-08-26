@@ -33,19 +33,25 @@ def test_mcp_attach_smoke_passes():
 def test_bos_yaml_unimplemented_filtered_from_routable():
     docs = list(yaml.safe_load_all((ROOT / "projects/agora/etc/bos-services.yaml").read_text()))
     svcs = next(d["services"] for d in docs if isinstance(d, dict) and "services" in d)
-    unimplemented = [s for s in svcs if s.get("status") == "unimplemented"]
-    assert len(unimplemented) >= 8  # AGT pack
+    # AGT pack is declared non-routable: agora BET-Y1Q3-T1-05 "声明诚实化"
+    # (a7d7d18b) marked the 8 AGT services `deprecated` instead of `unimplemented`;
+    # both states must stay out of the routable set.
+    non_routable = [
+        s for s in svcs if (s.get("status") or "active") in ("unimplemented", "deprecated")
+    ]
+    assert len(non_routable) >= 8  # AGT pack
     routable = [s for s in svcs if (s.get("status") or "active") not in ("unimplemented", "deprecated")]
     assert all(s.get("status") != "unimplemented" for s in routable)
+    assert all(s.get("status") != "deprecated" for s in routable)
     # AGT uris must not be routable
-    agt_uris = {s.get("uri") for s in unimplemented if "agt" in (s.get("uri") or "")}
-    assert agt_uris
+    agt_uris = {s.get("uri") for s in non_routable if "agt" in (s.get("uri") or "")}
+    assert len(agt_uris) >= 8
     assert not agt_uris & {s.get("uri") for s in routable}
 
 
 def test_gen_capability_registry_build_has_channels():
-    # Official SSOT generator: bin/cockpit/gen-capability-registry.py
-    mod = _load("gen_cap_reg", ROOT / "bin/cockpit/gen-capability-registry.py")
+    # Official SSOT generator: bin/ssot/gen-capability-registry.py
+    mod = _load("gen_cap_reg", ROOT / "bin/ssot/gen-capability-registry.py")
     # support either build()/main patterns
     if hasattr(mod, "build_registry"):
         reg = mod.build_registry()
@@ -62,7 +68,7 @@ def test_gen_capability_registry_build_has_channels():
         subprocess.run(
             [
                 "python3",
-                str(ROOT / "bin/cockpit/gen-capability-registry.py"),
+                str(ROOT / "bin/ssot/gen-capability-registry.py"),
                 "--quiet",
             ],
             check=True,
@@ -83,7 +89,7 @@ def test_gen_capability_registry_build_has_channels():
 
 
 def test_gen_capability_registry_includes_documents_cockpit_commands():
-    mod = _load("gen_cap_reg_commands", ROOT / "bin/cockpit/gen-capability-registry.py")
+    mod = _load("gen_cap_reg_commands", ROOT / "bin/ssot/gen-capability-registry.py")
 
     commands = {command["name"] for command in mod.scan_cli_commands()}
 

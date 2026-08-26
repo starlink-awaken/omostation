@@ -9,7 +9,7 @@
 前置: 先运行 gen-capability-registry.py 生成注册表
 
 Usage:
-    uv run --with pyyaml python bin/cockpit/gen-help-docs.py
+    uv run --with pyyaml python bin/ssot/gen-help-docs.py
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ REGISTRY_PATH = WORKSPACE / "docs" / "generated" / "capability-registry.yaml"
 def load_registry() -> dict:
     if not REGISTRY_PATH.exists():
         print(f"❌ 注册表不存在: {REGISTRY_PATH}", file=sys.stderr)
-        print("   先运行: python bin/cockpit/gen-capability-registry.py", file=sys.stderr)
+        print("   先运行: python bin/ssot/gen-capability-registry.py", file=sys.stderr)
         sys.exit(2)
     return yaml.safe_load(REGISTRY_PATH.read_text(encoding="utf-8"))
 
@@ -46,7 +46,7 @@ def gen_capability_map(reg: dict) -> str:
         "",
         f"> 自动生成于 {reg['generated_at']} | 版本 {reg['version']}",
         "> 源: `docs/generated/capability-registry.yaml` | 请勿手动编辑",
-        "> 生成器: `bin/cockpit/gen-help-docs.py`",
+        "> 生成器: `bin/ssot/gen-help-docs.py`",
         "",
         "## 概览",
         "",
@@ -86,7 +86,7 @@ def gen_capability_map(reg: dict) -> str:
         lines.append(f"| `cockpit {cmd['name']}` | {cmd['description']} |")
     lines.append("")
     lines.append("---")
-    lines.append(f"*由 `bin/cockpit/gen-help-docs.py` 于 {reg['generated_at']} 生成*")
+    lines.append(f"*由 `bin/ssot/gen-help-docs.py` 于 {reg['generated_at']} 生成*")
     return "\n".join(lines)
 
 
@@ -98,6 +98,8 @@ _CMD_CATEGORIES: dict[str, list[str]] = {
         "governance",
         "gac",
         "omo",
+        "policy",
+        "watchdog",
         "debt",
         "audit",
         "audit-ledger",
@@ -283,8 +285,23 @@ def _categorize(cmd_name: str) -> str:
     return "其他"
 
 
-def gen_cli_reference(reg: dict) -> str:
-    lines = [
+def _extract_frontmatter(path: Path) -> str:
+    if not path.exists():
+        return ""
+    text = path.read_text(encoding="utf-8")
+    if text.startswith("---"):
+        parts = text.split("---", 2)
+        if len(parts) >= 3:
+            return f"---{parts[1]}---\n\n"
+    return ""
+
+
+def gen_cli_reference(reg: dict, frontmatter: str = "") -> str:
+    lines = []
+    if frontmatter:
+        lines.append(frontmatter.rstrip())
+        lines.append("")
+    lines.extend([
         "# Cockpit CLI 命令参考",
         "",
         f"> 自动生成于 {reg['generated_at']}",
@@ -292,7 +309,7 @@ def gen_cli_reference(reg: dict) -> str:
         "",
         f"共 **{reg['totals']['cli_commands']}** 个命令 (含子命令)。按场景分组如下。",
         "",
-    ]
+    ])
     # 过滤掉子命令 (只保留顶层命令, 通过黑名单判断)
     # 子命令特征: xxx_sub.add_parser 注册的, 难以区分, 这里展示全部但按分类
     by_cat: dict[str, list[dict]] = {}
@@ -336,7 +353,7 @@ def gen_cli_reference(reg: dict) -> str:
         total = sum(srv_map.get(mid, 0) for mid in mcp_ids.split("/"))
         lines.append(f"| `cockpit {cli_cmd}` | `{mcp_ids}` | {total} |")
     lines.append("")
-    lines.append(f"*由 `bin/cockpit/gen-help-docs.py` 于 {reg['generated_at']} 生成*")
+    lines.append(f"*由 `bin/ssot/gen-help-docs.py` 于 {reg['generated_at']} 生成*")
     return "\n".join(lines)
 
 
@@ -372,16 +389,17 @@ def gen_mcp_index(reg: dict) -> str:
         tool_list = ", ".join(f"`{t}`" for t in srv["tools"])
         lines.append(tool_list)
         lines.append("")
-    lines.append(f"*由 `bin/cockpit/gen-help-docs.py` 于 {reg['generated_at']} 生成*")
+    lines.append(f"*由 `bin/ssot/gen-help-docs.py` 于 {reg['generated_at']} 生成*")
     return "\n".join(lines)
 
 
 def main() -> int:
     reg = load_registry()
 
+    cli_ref_path = WORKSPACE / "docs" / "CLI-REFERENCE.md"
     outputs = {
         WORKSPACE / "projects" / "cockpit" / "CAPABILITY-MAP.md": gen_capability_map(reg),
-        WORKSPACE / "docs" / "CLI-REFERENCE.md": gen_cli_reference(reg),
+        cli_ref_path: gen_cli_reference(reg, _extract_frontmatter(cli_ref_path)),
         WORKSPACE / "docs" / "INDEX-MCP.md": gen_mcp_index(reg),
     }
     for path, content in outputs.items():

@@ -1,4 +1,4 @@
-last_scan: 1787575450.139822
+last_scan: 1787749205.511455
 services:
   agora-gateway:
     health_check: healthy

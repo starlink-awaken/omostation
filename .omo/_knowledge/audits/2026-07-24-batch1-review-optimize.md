@@ -32,7 +32,7 @@ Code + tests + honesty on PR #483 delivery surface (`bin/delivery/*`, tests, clo
 uv run --with pytest --with pyyaml python -m pytest \
   tests/test_batch1_role_framework.py tests/test_physical_suspend_reminder.py -q
 # 12 passed
-ruff check bin/delivery/role_framework.py ...  # clean
+ruff check bin/_archive/role_framework.py ...  # clean
 schedule_harness --mode physical → exit 2
 ```
 

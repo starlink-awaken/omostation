@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Compatibility CLI for the generated capability discovery projection.
 
-``bin/cockpit/gen-capability-registry.py`` is the sole projection writer. This
+``bin/ssot/gen-capability-registry.py`` is the sole projection writer. This
 module delegates sync/check to it, provides read-only discovery, and exposes
 the narrow public boundary for governed BOS loading/invocation. Native provider,
 BOS, and workflow registries remain the authorities. Only exact canonical IDs
-may reach Agora's native gateway; caller supplied commands,
+may reach Agora's native gateway; local skill/workflow kinds must exact-resolve
+in the registry before any local receipt is granted. Caller supplied commands,
 argv, module paths, targets, and transport overrides are never accepted.
 """
 
@@ -56,12 +57,41 @@ from capability_trace_binding import (  # noqa: E402 -- CLI locates the local pu
     validate_trace_bound_resolution_receipt,
 )
 
+try:
+    from capability_native_cleanup import (  # noqa: E402 -- CLI locates the local pure library first
+        OWNERSHIP_BY_KIND,
+        build_native_cleanup_proof,
+    )
+    from capability_native_execution_model import (  # noqa: E402 -- CLI locates the local pure library first
+        AUTHORIZATION_BY_KIND,
+        NativeExecutionReceiptError,
+        canonical_digest,
+        derive_invocation_id,
+    )
+    from capability_native_execution_receipt import (  # noqa: E402 -- CLI locates the local pure library first
+        build_native_execution_marker,
+        build_native_execution_material,
+        build_native_execution_receipt,
+    )
+
+    NATIVE_EXECUTION_LIBS_AVAILABLE = True
+except ImportError:
+    # Embedded minimal workspaces (e.g. agent-workflow preflight sandboxes) may
+    # omit the native-execution lib set; the module must stay importable there.
+    NATIVE_EXECUTION_LIBS_AVAILABLE = False
+
+# Promoted shadow -> warning on 2026-08-26 after two consecutive caller scans
+# showed zero unbound production entrypoints (docs/reports/2026-08-26-binding-enforcement-scan.md).
+BINDING_ENFORCEMENT = "warning"
+
 DEFAULT_REGISTRY = ROOT / "docs" / "generated" / "capability-registry.yaml"
-CANONICAL_GENERATOR = ROOT / "bin" / "cockpit" / "gen-capability-registry.py"
+CANONICAL_GENERATOR = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
 FEDERATION_AUDITOR = ROOT / "lib" / "capability_federation_audit.py"
 AGORA_SRC = ROOT / "projects" / "agora" / "src"
 SUPPORTED_SCHEMA_MAJOR = 1
 MAX_INPUT_JSON_BYTES = 1024 * 1024
+
+
 class RegistryError(ValueError):
     """The registry is missing, malformed, or uses an unsupported schema."""
 
@@ -202,6 +232,34 @@ def build_capability_index(registry: Mapping[str, Any]) -> dict[str, list[dict[s
             str(raw_command.get("description") or ""),
             "cockpit_native",
             name,
+        )
+
+    for raw_skill in registry.get("skills", []) or []:
+        if not isinstance(raw_skill, dict) or raw_skill.get("exists") is not True:
+            continue
+        skill_id = str(raw_skill.get("id") or "")
+        _add(
+            index,
+            "skill:" + skill_id,
+            "skill",
+            skill_id,
+            skill_id,
+            "instruction_native",
+            skill_id,
+        )
+
+    for raw_workflow in registry.get("workflows", []) or []:
+        if not isinstance(raw_workflow, dict) or raw_workflow.get("exists") is not True:
+            continue
+        workflow_id = str(raw_workflow.get("id") or "")
+        _add(
+            index,
+            "workflow:" + workflow_id,
+            "workflow",
+            workflow_id,
+            workflow_id,
+            "workflow_native",
+            workflow_id,
         )
 
     # Legacy flat registries remain discoverable but their stored invoke strings
@@ -360,10 +418,7 @@ def build_native_bos_record(
 def _prepare_native_router(router: Any, exact_services: Sequence[Any]) -> Any:
     """Require lifecycle catalogs before any exact route is seeded."""
     router.enable_capability_gating()
-    if (
-        getattr(router, "_capability_catalog", None) is None
-        or getattr(router, "_admission_catalog", None) is None
-    ):
+    if getattr(router, "_capability_catalog", None) is None or getattr(router, "_admission_catalog", None) is None:
         raise GatewayError("lifecycle_catalog_unavailable")
     router.seed_from_poc(list(exact_services))
     return router
@@ -383,9 +438,7 @@ def _load_native_gateway(capability_id: str) -> tuple[Any, Sequence[Any]]:
     uri = capability_id.removeprefix("bos-service:")
     exact_services = [service for service in POC_SERVICES if getattr(service, "uri", "") == uri]
     try:
-        gateway = CapabilityInvocationGateway(
-            router=_prepare_native_router(bos_router, exact_services)
-        )
+        gateway = CapabilityInvocationGateway(router=_prepare_native_router(bos_router, exact_services))
     except Exception as exc:  # noqa: BLE001 - public boundary fails closed
         if isinstance(exc, GatewayError):
             raise
@@ -401,8 +454,13 @@ def execute_gateway_operation(
     payload: Any = None,
     gateway: Any = None,
     service_catalog: Optional[Sequence[Any]] = None,  # noqa: UP045 -- Python 3.9 contract
+    binding: Optional[Mapping[str, Any]] = None,  # noqa: UP045 -- Python 3.9 contract
 ) -> dict[str, Any]:
-    """Load or invoke through Agora; never construct a provider process."""
+    """Load or invoke through Agora; never construct a provider process.
+
+    A validated ``binding`` (from capability-sync's ``--binding-json``) is
+    forwarded to Agora so the invocation receipt can carry a ``binding_digest``.
+    """
     if operation not in {"load", "invoke"}:
         raise GatewayError("unsupported_gateway_operation")
     if gateway is None or service_catalog is None:
@@ -410,27 +468,114 @@ def execute_gateway_operation(
     record = build_native_bos_record(registry, capability_id, service_catalog)
     selector = {"capability_id": capability_id}
     if operation == "load":
-        return dict(gateway.load(record, selector=selector))
-    return dict(gateway.invoke(record, payload, selector=selector))
+        return dict(gateway.load(record, selector=selector, binding=binding))
+    return dict(gateway.invoke(record, payload, selector=selector, binding=binding))
 
 
 def _gateway_error_receipt(operation: str, selector: Mapping[str, Any], reason: str) -> dict[str, Any]:
-    error_code = (
-        "CAPABILITY_GATEWAY_UNAVAILABLE"
-        if reason == "gateway_unavailable"
-        else "CAPABILITY_NOT_LOADABLE"
-    )
+    error_code = "CAPABILITY_GATEWAY_UNAVAILABLE" if reason == "gateway_unavailable" else "CAPABILITY_NOT_LOADABLE"
     return {
         "schema": "capability-invocation-receipt/v1",
         "operation": operation,
         "status": "rejected",
-        "selector_digest": _digest(
-            json.dumps(selector, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        ),
+        "selector_digest": _digest(json.dumps(selector, sort_keys=True, separators=(",", ":")).encode("utf-8")),
         "error_code": error_code,
         "error_detail_digest": _digest(reason.encode("utf-8")),
         "invocation_attempted": False,
     }
+
+
+_LOCAL_RESOLUTION_FAILURES = {
+    # Exit codes mirror the find contract: not_found=2, ambiguous=3, selector=4.
+    "not_found": ("resolution_not_found", 2),
+    "ambiguous": ("resolution_ambiguous", 3),
+    "invalid_selector": ("resolution_invalid", 4),
+}
+
+
+def _local_rejection_receipt(selector: Mapping[str, Any], failure_code: str) -> dict[str, Any]:
+    """Redacted local denial; the selector is never echoed back."""
+    return {
+        "schema": "capability-local-operation-receipt/v1",
+        "status": "rejected",
+        "failure_code": failure_code,
+        "selector_digest": _digest(_canonical_json(selector)),
+        "read_only": True,
+        "executed": False,
+        "provider_called": False,
+        "invoked": False,
+        "invocation": {"allowed": False, "route": "none", "reason": failure_code},
+        "value_indicator_policy": False,
+    }
+
+
+def _local_capability_receipt(
+    operation: str,
+    capability_id: str,
+    resolution: Optional[Resolution],  # noqa: UP045 -- Python 3.9 contract
+    binding: Optional[Mapping[str, Any]] = None,  # noqa: UP045 -- Python 3.9 contract
+) -> tuple[dict[str, Any], int]:
+    """Authorize local metadata operations without importing or executing sources.
+
+    The capability must first exact-resolve against the loaded registry;
+    prefix branching alone never grants a local receipt.
+    """
+    prefix = capability_id.partition(":")[0]
+    selector = {"capability_id": capability_id}
+    if resolution is None:
+        return _local_rejection_receipt(selector, "invalid_registry"), 4
+    if resolution.status != "resolved":
+        failure_code, exit_code = _LOCAL_RESOLUTION_FAILURES.get(resolution.status, ("resolution_invalid", 4))
+        return _local_rejection_receipt(selector, failure_code), exit_code
+
+    if prefix == "skill" and operation == "invoke":
+        return {
+            "schema": "capability-local-operation-receipt/v1",
+            "status": "rejected",
+            "failure_code": "skill_invoke_forbidden",
+            "selector_digest": _digest(_canonical_json(selector)),
+            "read_only": True,
+            "executed": False,
+            "provider_called": False,
+            "invoked": False,
+            "invocation": {"allowed": False, "route": "none", "reason": "skill_load_only"},
+            "value_indicator_policy": False,
+        }, 4
+
+    if prefix == "workflow" and operation == "invoke":
+        try:
+            actor_id = validate_trace_binding(binding or {}).get("actor_id")
+        except (TypeError, ValueError):
+            actor_id = None
+        allowed = actor_id == "workflow-controller"
+        return {
+            "schema": "capability-local-operation-receipt/v1",
+            "status": "ready" if allowed else "rejected",
+            "failure_code": None if allowed else "workflow_controller_required",
+            "selector_digest": _digest(_canonical_json(selector)),
+            "read_only": True,
+            "executed": False,
+            "provider_called": False,
+            "invoked": False,
+            "invocation": {
+                "allowed": allowed,
+                "route": "workflow_controller_only" if allowed else "none",
+                "reason": "not_executed" if allowed else "workflow_controller_required",
+            },
+            "value_indicator_policy": False,
+        }, 0 if allowed else 4
+
+    return {
+        "schema": "capability-local-operation-receipt/v1",
+        "status": "ready",
+        "selector_digest": _digest(_canonical_json(selector)),
+        "read_only": True,
+        "executed": False,
+        "provider_called": False,
+        "invoked": False,
+        "invocation": {"allowed": False, "route": "local_metadata_only", "reason": "load_only"},
+        "value_indicator_policy": False,
+    }, 0
 
 
 def _read_json_payload(path: Path) -> Any:
@@ -459,6 +604,20 @@ def _read_trace_binding(path: Path) -> dict[str, str]:
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise TraceBindingError("binding_json_invalid") from exc
     return validate_trace_binding(value)
+
+
+def _read_bounded_native_json(path: Path, prefix: str) -> Any:
+    """Read one bounded native receipt JSON; failures raise redacted contract codes."""
+    try:
+        content = path.read_bytes()
+    except OSError as exc:
+        raise TraceBindingError(f"{prefix}_unreadable") from exc
+    if len(content) > MAX_INPUT_JSON_BYTES:
+        raise TraceBindingError(f"{prefix}_too_large")
+    try:
+        return json.loads(content)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise TraceBindingError(f"{prefix}_invalid") from exc
 
 
 def _binding_error_receipt(selector: Mapping[str, Any], failure_code: str) -> dict[str, Any]:
@@ -545,11 +704,42 @@ def _parser() -> argparse.ArgumentParser:
     load_parser = commands.add_parser("load", help="admit and probe one exact native BOS capability")
     load_parser.add_argument("--id", dest="capability_id", required=True, help="exact BOS capability ID")
     load_parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
+    load_parser.add_argument(
+        "--binding-json",
+        type=Path,
+        help="read-only B4-B causal binding JSON; forwarded to Agora so the receipt carries a binding_digest",
+    )
 
     invoke_parser = commands.add_parser("invoke", help="invoke one admitted native BOS capability")
     invoke_parser.add_argument("--id", dest="capability_id", required=True, help="exact BOS capability ID")
     invoke_parser.add_argument("--input-json", type=Path, required=True, help="bounded structured input file")
     invoke_parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
+    invoke_parser.add_argument(
+        "--binding-json",
+        type=Path,
+        help="read-only B4-B causal binding JSON; forwarded to Agora so the receipt carries a binding_digest",
+    )
+
+    for target_parser in (load_parser, invoke_parser):
+        target_parser.add_argument(
+            "--inspection-receipt-json",
+            type=Path,
+            help="bounded native inspection receipt JSON required for a bound execution",
+        )
+        target_parser.add_argument(
+            "--admission-receipt-json",
+            type=Path,
+            help="bounded admission receipt JSON required for a bound execution",
+        )
+        target_parser.add_argument(
+            "--operation-id",
+            help="caller-owned operation identifier recorded in the native execution material",
+        )
+        target_parser.add_argument(
+            "--effect-classification",
+            choices=("read_only", "effectful"),
+            help="declared effect classification recorded in the native execution material",
+        )
     return parser
 
 
@@ -568,20 +758,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
                 registry_content = args.registry.read_bytes()
                 registry = load_registry(args.registry)
                 after = args.registry.stat()
-                if (
-                    (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
-                    != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
-                    or len(registry_content) != before.st_size
-                ):
+                if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) != (
+                    after.st_dev,
+                    after.st_ino,
+                    after.st_size,
+                    after.st_mtime_ns,
+                ) or len(registry_content) != before.st_size:
                     raise NativeInspectionError("source_digest_mismatch")
             else:
                 registry_content = b""
                 registry = {}
             binding = _read_json_payload(args.binding_json) if args.binding_json is not None else None
             resolution_receipt = (
-                _read_json_payload(args.resolution_receipt_json)
-                if args.resolution_receipt_json is not None
-                else None
+                _read_json_payload(args.resolution_receipt_json) if args.resolution_receipt_json is not None else None
             )
             receipt = inspect_native_capability(
                 root=ROOT,
@@ -603,19 +792,123 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
     if args.command in {"load", "invoke"}:
         selector = {"capability_id": args.capability_id}
         try:
-            registry = load_registry(args.registry)
+            local_capability = not native_kind_requires_projection(args.capability_id)
+        except NativeInspectionError:
+            local_capability = False
+        if local_capability:
+            try:
+                binding = _read_trace_binding(args.binding_json) if args.binding_json is not None else None
+            except TraceBindingError:
+                binding = None
+            try:
+                registry = load_registry(args.registry)
+                resolution = resolve_capability(registry, capability_id=args.capability_id)
+            except (OSError, RegistryError):
+                resolution = None
+            receipt, exit_code = _local_capability_receipt(args.command, args.capability_id, resolution, binding)
+            print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+            return exit_code
+        bundle = (
+            args.binding_json,
+            args.inspection_receipt_json,
+            args.admission_receipt_json,
+            args.operation_id,
+            args.effect_classification,
+        )
+        bundle_present = any(value is not None for value in bundle)
+        bundle_complete = all(value is not None for value in bundle)
+        if bundle_present and not bundle_complete:
+            print(
+                json.dumps(
+                    _binding_error_receipt(selector, "binding_bundle_incomplete"),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+            )
+            return 4
+        if not bundle_present:
+            # Shadow rollout invariant: legacy responses are observed only and are
+            # never labeled native or independently verified.
+            try:
+                registry = load_registry(args.registry)
+                payload = _read_json_payload(args.input_json) if args.command == "invoke" else None
+                receipt = execute_gateway_operation(registry, args.command, args.capability_id, payload=payload)
+            except (GatewayError, OSError, RegistryError) as exc:
+                reason = str(exc) if isinstance(exc, GatewayError) else "invalid_registry"
+                receipt = _gateway_error_receipt(args.command, selector, reason)
+            receipt["binding_enforcement"] = f"{BINDING_ENFORCEMENT}_missing"
+            print("capability binding is required for new callers", file=sys.stderr)
+            print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+            return 0 if receipt.get("status") in {"ready", "succeeded"} else 5
+
+        try:
+            if not NATIVE_EXECUTION_LIBS_AVAILABLE:
+                raise TraceBindingError("native_execution_libraries_unavailable")
+            binding = _read_trace_binding(args.binding_json)
+            inspection = _read_bounded_native_json(args.inspection_receipt_json, "inspection_receipt")
+            admission = _read_bounded_native_json(args.admission_receipt_json, "admission_receipt")
+            capability = inspection.get("capability") if isinstance(inspection, dict) else None
+            if not isinstance(capability, dict) or capability.get("id") != args.capability_id:
+                raise TraceBindingError("native_route_unprovable")
+            if args.effect_classification == "effectful":
+                # Fail closed until a caller-owned terminal action evidence path exists.
+                raise TraceBindingError("execution_evidence_missing")
             payload = _read_json_payload(args.input_json) if args.command == "invoke" else None
-            receipt = execute_gateway_operation(
-                registry,
-                args.command,
-                args.capability_id,
-                payload=payload,
+            material = build_native_execution_material(
+                binding=binding,
+                capability=capability,
+                inspection={
+                    "receipt_digest": inspection["receipt_digest"],
+                    "source_digest": inspection["source_digest"],
+                },
+                operation_id=args.operation_id,
+                request_digest=canonical_digest(payload),
+                admission=admission,
+                authorization_source=AUTHORIZATION_BY_KIND[capability["kind"]],
+                effect_classification=args.effect_classification,
+                execution_attempt=1,
+            )
+            # Derivation-only marker: durable persistence stays caller-owned.
+            build_native_execution_marker(material)
+            registry = load_registry(args.registry)
+            gateway_receipt = execute_gateway_operation(
+                registry, args.command, args.capability_id, payload=payload, binding=binding
+            )
+            succeeded = gateway_receipt.get("status") == "succeeded"
+            cleanup = build_native_cleanup_proof(
+                capability_kind=material["capability"]["kind"],
+                invocation_id=derive_invocation_id(material),
+                ownership_scope=OWNERSHIP_BY_KIND[material["capability"]["kind"]],
+                baseline_digest=canonical_digest(payload),
+                terminal_digest=canonical_digest(payload),
+                measurements={
+                    "owned_lock_count": 0,
+                    "reference_count_delta": 0,
+                    "connection_created": False,
+                    "connection_disconnected": False,
+                    "owned_residue_count": 0,
+                },
+                status="proved",
+                failure_code=None,
+            )
+            receipt = build_native_execution_receipt(
+                material=material,
+                transport_state="confirmed" if succeeded else "failed",
+                outcome="succeeded" if succeeded else "failed",
+                failure_code=None if succeeded else "native_invocation_failed",
+                result_digest=canonical_digest(gateway_receipt) if succeeded else None,
+                action_receipt={"status": "not_applicable", "id": None, "digest": None},
+                cleanup_proof=cleanup,
             )
         except (GatewayError, OSError, RegistryError) as exc:
             reason = str(exc) if isinstance(exc, GatewayError) else "invalid_registry"
             receipt = _gateway_error_receipt(args.command, selector, reason)
+        except (TraceBindingError, NativeExecutionReceiptError) as exc:
+            receipt = _binding_error_receipt(selector, str(exc))
+            print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+            return 4
         print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
-        return 0 if receipt.get("status") in {"ready", "succeeded"} else 5
+        return 0 if receipt.get("status") in {"ready", "succeeded", "completed"} else 5
 
     selector: dict[str, Any] = {}
     if args.capability_id:
@@ -626,7 +919,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
     binding: Optional[dict[str, str]] = None  # noqa: UP045 -- Python 3.9 contract
     if args.binding_json is not None:
         if not args.capability_id:
-            print(json.dumps(_binding_error_receipt(selector, "binding_requires_exact_id"), ensure_ascii=False, sort_keys=True))
+            print(
+                json.dumps(
+                    _binding_error_receipt(selector, "binding_requires_exact_id"), ensure_ascii=False, sort_keys=True
+                )
+            )
             return 4
         try:
             binding = _read_trace_binding(args.binding_json)

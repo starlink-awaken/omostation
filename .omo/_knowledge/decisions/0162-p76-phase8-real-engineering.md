@@ -82,7 +82,7 @@ LLM-Gateway 在测试环境 ConnectionRefused → fallback mock (设计内: KISS
 
 ### 1.5 WHAT — 8.4 .omo/_derived/ dead paths
 
-`bin/ssot/check-dead-path-refs.py` 之前误判 `projects/ecos/.omo/_derived/` (存在的子模块路径) 为死引用.
+`bin/_archive/2026-08-conv3/check-dead-path-refs.py` 之前误判 `projects/ecos/.omo/_derived/` (存在的子模块路径) 为死引用.
 
 修复:
 1. 工具增加 fallback 解析: 检查 OMO/{path} 然后 projects/ecos/.omo/{path}, 任一存在即 OK

@@ -4,14 +4,17 @@ bet: BET-Y1Q3-T4-01
 axis: engineering
 evidence_key: rollback
 rollback_strategy: git_revert
-revertible_commits:
-  - 9c4978c4bb680a214df4c2d4d2212454adba0a7d  # #1831 closeout (git revert)
-  - 311cc311d1061e0c614a6ef13f64d1d93ed16a26  # #1845 north_star 恢复
-  - ad33183ee                                 # #1849 attestation verifier
+revertible_commits: 
 rollback_verification: git revert --no-commit <sha> 可干净回退(无冲突)
 verified_at: 2026-08-22
+status: active
+lifecycle: evidence
+owner: governance-team
+last-reviewed: 2026-08-26
 ---
 
+last-reviewed: 2026-08-26
+---
 回滚能力:
 - 所有实现 commit 均为独立合并 commit, 可逐个 `git revert`
 - north_star 恢复(#1845)是纯 rename, revert 无风险

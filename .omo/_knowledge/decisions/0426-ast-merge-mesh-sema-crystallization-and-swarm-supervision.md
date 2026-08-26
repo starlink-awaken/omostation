@@ -36,7 +36,7 @@ last-reviewed: '2026-08-25'
 
 ### D3: Agora 2.0 守护服务托管与 50-Agent 混沌压测
 * 在 `cockpit daemon` 增加 `install-service` / `uninstall-service` / `status` / `restart` 命令，生成 macOS `launchd` plist / Linux `systemd` 服务；
-* 配套 `bin/gac/daemon-stress-test.py` 压测套件，实测 50-Agent 并发 QPS > 90 且 P99 延迟 < 1.0ms。
+* 配套 `bin/_archive/2026-08-conv3/daemon-stress-test.py` 压测套件，实测 50-Agent 并发 QPS > 90 且 P99 延迟 < 1.0ms。
 
 ### D4: 全景座舱多维观测集成 (`cockpit tui` / `omo-status`)
 * 在 `SwarmGlobalState` 与 `SwarmStateCollector` 中打通 Agora 2.0 守护总线实时探测；
@@ -47,6 +47,6 @@ last-reviewed: '2026-08-25'
 ## 3. 验收与实证 (Verification & Evidence)
 
 1. `python3 bin/gac/ast-merge-mesh.py`: YAML/JSON 列表三路合并 0 冲突；
-2. `python3 bin/gac/daemon-stress-test.py --chaos`: 50-Agent 压测 PASS (P99 = 0.26ms)；
+2. `python3 bin/_archive/2026-08-conv3/daemon-stress-test.py --chaos`: 50-Agent 压测 PASS (P99 = 0.26ms)；
 3. `python3 bin/ssot/sema-distill.py`: 扫描并验证自蒸馏技能生成逻辑；
 4. `cockpit daemon status`: 🟢 Agora 2.0 守护总线运行中 (:7432)。

@@ -8,6 +8,8 @@ jobs:
     planes: [crontab]
     sla_heartbeat_hours: 48
     owner: governance-team
+    sfop_slot: S
+    status: active
 
   - name: debt-refresh-weekly
     schedule: "30 10 * * 1"
@@ -15,6 +17,8 @@ jobs:
     planes: [crontab]
     sla_heartbeat_hours: 336
     owner: governance-team
+    sfop_slot: S
+    status: active
 
   - name: agent-workflow-status
     schedule: "0 9 * * *"
@@ -22,6 +26,8 @@ jobs:
     planes: [crontab]
     sla_heartbeat_hours: 48
     owner: governance-team
+    sfop_slot: S
+    status: active
 
   - name: governance-evolution-status
     schedule: "5 9 * * *"
@@ -29,3 +35,5 @@ jobs:
     planes: [crontab]
     sla_heartbeat_hours: 48
     owner: governance-team
+    sfop_slot: S
+    status: active

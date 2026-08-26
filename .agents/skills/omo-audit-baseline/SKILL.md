@@ -1,7 +1,8 @@
 ---
 name: omo-audit-baseline
 description: "Governance audit baseline workflow for the omostation workspace. Run omo audit, check results, commit governance data. Use when syncing governance state or running audit checks."
----
+
+last-reviewed: 2026-08-26---
 
 # OMO Audit Baseline — Governance State Sync
 

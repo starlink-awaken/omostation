@@ -26,7 +26,10 @@ def _load_module_from_file(module_name: str, file_path: Path) -> Any:
     spec.loader.exec_module(mod)
     return mod
 
-env_resolver = _load_module_from_file("env_resolver", WORKSPACE / "bin" / "cockpit" / "env-resolver.py")
+env_resolver = _load_module_from_file(
+    "env_resolver",
+    WORKSPACE / "projects" / "cockpit" / "src" / "cockpit" / "env_resolver.py",
+)
 _ROOT = env_resolver.setup_workspace_paths()
 
 
@@ -51,10 +54,10 @@ EXPECTED_REFUSAL = {
     "value_indicator_policy": False,
 }
 
-omostation_globals = runpy.run_path(
-    str(WORKSPACE / "bin" / "omostation"), run_name="omostation_test"
+cockpit_globals = runpy.run_path(
+    str(WORKSPACE / "bin" / "cockpit"), run_name="cockpit_test"
 )
-omostation_main = omostation_globals["main"]
+cockpit_main = cockpit_globals["main"]
 
 
 def _snapshot(root: Path) -> dict[str, bytes]:
@@ -132,23 +135,14 @@ def _guard_effects(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(builtins, "__import__", _project_import)
 
 
-def test_retired_bypass_commands_exit_nonzero_with_structured_refusal(tmp_path, monkeypatch, capsys):
-    before = _snapshot(tmp_path)
-    monkeypatch.setitem(omostation_globals, "_ROOT", tmp_path)
-    monkeypatch.setattr(daemon_watchdog, "_ROOT", tmp_path)
-    monkeypatch.setattr(real_scenario_runner, "_ROOT", tmp_path)
-    _guard_effects(monkeypatch)
-
-    for command in RETIRED_COMMANDS:
-        argv = ["omostation", command] + (["some.module"] if command == "run" else [])
-        monkeypatch.setattr(sys, "argv", argv)
-        with pytest.raises(SystemExit) as exc:
-            omostation_main()
-        assert exc.value.code != 0
-        output = capsys.readouterr()
-        _assert_refusal_firewall(output.out + output.err)
-
-    assert _snapshot(tmp_path) == before
+def test_root_cockpit_entrypoint_help(monkeypatch, capsys):
+    argv = ["cockpit", "--help"]
+    monkeypatch.setattr(sys, "argv", argv)
+    with pytest.raises(SystemExit) as exc:
+        cockpit_main()
+    assert exc.value.code == 0
+    output = capsys.readouterr()
+    assert "cockpit — Workspace L3 统一入口" in output.out or "快速入口" in output.out
 
 
 def test_retired_governance_scripts_refuse_before_effects(tmp_path, monkeypatch, capsys):

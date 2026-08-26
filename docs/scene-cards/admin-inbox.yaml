@@ -28,3 +28,5 @@ notes:
 - '实现: bin/ssot/admin_scenes.py dispatch_admin_inbox (读网易工作邮箱, LLM 分类前 3 封)'
 - '2026-08-25 --live 实测: 真实读取并判出 has_task=true (房山区医院统计表), 验证通过'
 - '2026-08-26: classify_mail 积累回路 — 分类历史落库 mail-classification-history.jsonl, 同发件人最近 3 条注入 prompt 保持一致性(P0 积累红线)'
+- '2026-08-26: 规则预分类 — 机器通知发件人(github 等)短路不进 LLM(首批积累数据实证占 80% 调用); 脏 category 白名单防御'
+- '2026-08-26: mail-daemon 自动触发 journey --live(闭环最后一公里) — 任务到达 30min 内自动产五草稿, 人工只剩审阅发送; subject 去重防重复产出'

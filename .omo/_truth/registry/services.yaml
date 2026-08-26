@@ -225,10 +225,13 @@ services:
 
   # ── 服务面 (Workspace) ─────────────────────────────────────
   - id: agora.sse
-    enabled: true
+    # 2026-08-26 停用: plist 指向的 worktree ws-g1-truthful-control-plane 已删除,
+    # 服务长期未加载(声明/执行鸿沟)。plist 已移除并备份。
+    # 若要恢复: 把 entrypoint 指向 projects/agora 后重建 plist 再置 true。
+    enabled: false
     # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
     generate: false
-    config_source: 手写 plist (~/Library/LaunchAgents/com.agora.sse.plist)
+    config_source: 手写 plist (~/Library/LaunchAgents/com.agora.sse.plist) — 已移除
     scheduler: launchd
     trigger: keepalive
     label: com.agora.sse
@@ -300,9 +303,12 @@ services:
     notes: 本地搜索。占用 8080 —— 本地模型端口曾与它冲突, 已避让。
   # ── LLM 入口 ───────────────────────────────────────────────
   - id: aetherforge.gateway
-    enabled: true
+    # 2026-08-26 停用: gw-guard 依赖的 venv 目录 ~/aetherforge-final-ae3570f 已删除,
+    # 而 keepalive:always + run_at_load 导致 launchd 无限重启 → 退出码1 空转刷日志。
+    # 若要恢复: 让 gw-guard 指向 projects/aetherforge 并跑 uv sync 建好 venv 后再置 true。
+    enabled: false
     generate: false
-    config_source: ~/Library/LaunchAgents/com.aetherforge.gateway.plist
+    config_source: ~/Library/LaunchAgents/com.aetherforge.gateway.plist — 已移除
     scheduler: launchd
     trigger: keepalive
     label: com.aetherforge.gateway

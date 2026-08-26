@@ -28,6 +28,34 @@ INBOX = Path.home() / "Documents" / "_inbox"
 # 每次分类落库 jsonl, 后续同发件人分类注入最近历史 → 一致性 + 可统计。
 HISTORY = ROOT / ".omo" / "state" / "mail-classification-history.jsonl"
 
+# 规则预分类 (2026-08-26, 首批积累数据实证: github 通知占 16/20 = 80% 的
+# LLM 调用花在固定模式上 — 机器通知发件人无需 LLM, 直接短路省钱省时)。
+RULE_PRECLASSIFY = {
+    "notifications@github.com": {"category": "参考", "priority": "low"},
+    "noreply@redditmail.com": {"category": "参考", "priority": "low"},
+    "hi@news.kilocode.ai": {"category": "垃圾", "priority": "low"},
+}
+
+VALID_CATEGORIES = {"通知", "任务", "参考", "垃圾", "个人", "未分类"}
+
+
+def _persist_history(mail: Mail, result: dict[str, Any]) -> None:
+    """分类结果落库(失败不阻塞主流程)."""
+    try:
+        append_jsonl(
+            HISTORY,
+            {
+                "ts": utc_now(),
+                "subject": (mail.subject or "")[:80],
+                "sender": (mail.sender or "")[:60],
+                "category": result.get("category"),
+                "priority": result.get("priority"),
+                "source": result.get("_source", "llm"),
+            },
+        )
+    except Exception:
+        pass
+
 
 def _recent_history_for(sender: str, limit: int = 3) -> list[dict]:
     """读同发件人最近分类记录(倒序扫, 早停)."""
@@ -49,6 +77,19 @@ def _recent_history_for(sender: str, limit: int = 3) -> list[dict]:
 
 
 def classify_mail(mail: Mail) -> dict[str, Any]:
+    # 规则短路: 机器通知发件人不进 LLM(首批数据实证 80% 调用浪费在此)
+    for sender_key, preset in RULE_PRECLASSIFY.items():
+        if sender_key in (mail.sender or ""):
+            result = {
+                "category": preset["category"],
+                "priority": preset["priority"],
+                "summary": (mail.subject or "")[:60],
+                "action_needed": "",
+                "_source": "rule",
+            }
+            _persist_history(mail, result)
+            return result
+
     hist = _recent_history_for(mail.sender or "")
     hist_lines = "\n".join(
         f"- [{h.get('category')}/{h.get('priority')}] {h.get('subject', '')[:30]}"
@@ -89,20 +130,10 @@ def classify_mail(mail: Mail) -> dict[str, Any]:
                 "summary": response[:100],
                 "action_needed": "",
             }
-    # 落库(失败不阻塞主流程)
-    try:
-        append_jsonl(
-            HISTORY,
-            {
-                "ts": utc_now(),
-                "subject": (mail.subject or "")[:80],
-                "sender": (mail.sender or "")[:60],
-                "category": result.get("category"),
-                "priority": result.get("priority"),
-            },
-        )
-    except Exception:
-        pass
+    # 脏值防御(首批数据实证: LLM 偶发把枚举列表原文当 category 返回)
+    if result.get("category") not in VALID_CATEGORIES:
+        result["category"] = "未分类"
+    _persist_history(mail, result)
     return result
 
 
