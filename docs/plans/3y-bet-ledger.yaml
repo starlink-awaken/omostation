@@ -8027,14 +8027,14 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@2524eec05ca7061e761c19907d7517c11d0736b0
           tests:
-            ref: receipt://projects/omo/tests/unit/test_resident_heartbeat.py
-            sha256: sha256:08ce200e2782ea0301e2b5e0fe07f7a14f981b19684522d4850507adc33fe1c3
+            ref: receipt://tests/test_heartbeat_wrapper.py
+            sha256: sha256:0145ff7ce4a9630b9014888c54023eb178fe4244c6c4f2c71596245eb5c9f82c
           diff:
-            ref: receipt://projects/omo/src/omo/resident/heartbeat.py
-            sha256: sha256:a8c3b35610dfaf2759b51b4bb6323cad667d5258508a866b6403c3b7c8f5fc70
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
           rollback:
-            ref: receipt://projects/omo/src/omo/resident/monitor.py
-            sha256: sha256:cfaac6b5975b4600e880c3553c4898c928ee47c48fdb86d684f9c7f3ca582c68
+            ref: receipt://bin/gac/heartbeat-wrapper.sh
+            sha256: sha256:7bf63977fc7894ce07ed8ba174727877265655f68500103dd6fe68ba1818a81a
       operational:
         status: PROVEN
         evidence:
@@ -8045,8 +8045,8 @@ bets:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-16-accept.yaml
             sha256: sha256:3a0be3e67874c8d40545ce5289f329444f8ae56aa548eab8b0524737d1049e94
           replay:
-            ref: receipt://projects/omo/tests/integration/test_resident_roles.py
-            sha256: sha256:1302d2796752188b59860e972f84013ab000d4d6418ebff8b31f83984d072ee0
+            ref: receipt://tests/test_heartbeat_wrapper.py
+            sha256: sha256:0145ff7ce4a9630b9014888c54023eb178fe4244c6c4f2c71596245eb5c9f82c
           cleanup:
             ref: receipt://bin/ssot/install-resident-cron.sh
             sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
@@ -8060,8 +8060,8 @@ bets:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-16-accept.yaml
             sha256: sha256:3a0be3e67874c8d40545ce5289f329444f8ae56aa548eab8b0524737d1049e94
           real_signal:
-            ref: receipt://projects/omo/src/omo/resident/heartbeat.py
-            sha256: sha256:a8c3b35610dfaf2759b51b4bb6323cad667d5258508a866b6403c3b7c8f5fc70
+            ref: receipt://docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md
+            sha256: sha256:73c2bfd98aa6bf551ddaf9a2eecb6e7cb654937a21f5f4e9f415b54bf98abefc
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-16.md
             sha256: sha256:8e65d813c54fad49d3a2112c64b380e5920354c6aa8d24bffc39615f68726da8
