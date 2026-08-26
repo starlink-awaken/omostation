@@ -11,11 +11,11 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 627
-  bos_services: 242
+  mcp_tools: 643
+  bos_services: 253
   bos_domains: 21
   cli_commands: 153
-  skills: 28
+  skills: 1
   workflows: 17
 mcp_servers:
 - id: omo
@@ -242,6 +242,22 @@ mcp_servers:
   - bos_reload_m1
   - bos_reload_routes
   - cartridge_pack
+  - cell_config_create
+  - cell_config_list
+  - cell_eval
+  - cell_execute
+  - cell_govern
+  - cell_memory_consolidate
+  - cell_memory_process
+  - cell_pdp_evaluate
+  - cell_pep_enforce
+  - cell_plan
+  - cell_pool_scale
+  - cell_pool_status
+  - cell_pool_submit
+  - cell_replay
+  - cell_shadow
+  - cell_verify
   - check_health
   - create_api_key
   - daemon_bus_publish
@@ -314,7 +330,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 97
+  tool_count: 113
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -866,7 +882,7 @@ mcp_servers:
   tool_count: 75
 bos_services:
   _domain_counts:
-    agent-cell: 16
+    agent-cell: 19
     agora: 3
     analysis: 28
     bcos: 3
@@ -889,6 +905,26 @@ bos_services:
     system: 11
   domains:
     agent-cell:
+    - uri: bos://agent-cell/pool/status
+      description: Cell Pool 状态 — 多 Cell 并行运行状态
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/pool/submit
+      description: Cell Pool 提交 — 提交 Episode 到 Cell Pool
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/pool/scale
+      description: Cell Pool 扩缩容 — 调整 Cell 数量
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/config/list
+      description: Cell Config 列表 — 列出预设配置
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/config/create
+      description: Cell Config 创建 — 从预设创建 Cell
+      transport: stdio
+      status: active
     - uri: bos://agent-cell/plan
       description: Cell Plan — 意图解析 + 任务分解 + 风险评估
       transport: stdio
@@ -933,24 +969,16 @@ bos_services:
       description: Eval — 批量 Episode 性能评估
       transport: stdio
       status: active
-    - uri: bos://agent-cell/pool/status
-      description: Cell Pool 状态 — 多 Cell 并行运行状态
+    - uri: bos://agent-cell/pool/auto-scale
+      description: Cell Pool 自动扩缩容 — 基于负载自动调整
       transport: stdio
       status: active
-    - uri: bos://agent-cell/pool/submit
-      description: Cell Pool 提交 — 提交 Episode 到 Cell Pool
+    - uri: bos://agent-cell/pool/metrics
+      description: Cell Pool 指标 — 详细监控指标
       transport: stdio
       status: active
-    - uri: bos://agent-cell/pool/scale
-      description: Cell Pool 扩缩容 — 调整 Cell 数量
-      transport: stdio
-      status: active
-    - uri: bos://agent-cell/config/list
-      description: Cell Config 列表 — 列出预设配置
-      transport: stdio
-      status: active
-    - uri: bos://agent-cell/config/create
-      description: Cell Config 创建 — 从预设创建 Cell
+    - uri: bos://agent-cell/health
+      description: Cell Health — 全链路健康检查
       transport: stdio
       status: active
     agora:
@@ -2229,89 +2257,8 @@ cli_commands:
 - name: write
   description: 双轨写入 (+ Neo4j FACT 若配置)
 skills:
-- id: a2a-coordination
-  file: .agents/skills/a2a-coordination/SKILL.md
-  exists: true
-- id: agent-onboarding
-  file: .agents/skills/agent-onboarding/SKILL.md
-  exists: true
-- id: agent-quickstart
-  file: .agents/skills/agent-quickstart/SKILL.md
-  exists: true
-- id: bdsk-virtual-board
-  file: .agents/skills/bdsk-virtual-board/SKILL.md
-  exists: true
-- id: bet-execution
-  file: .agents/skills/bet-execution/SKILL.md
-  exists: true
-- id: bos-service-discovery
-  file: .agents/skills/bos-service-discovery/SKILL.md
-  exists: true
-- id: ci-red-triage
-  file: .agents/skills/ci-red-triage/SKILL.md
-  exists: true
-- id: cognitive-governance
-  file: .agents/skills/cognitive-governance/SKILL.md
-  exists: true
-- id: delegation-guardrails
-  file: .agents/skills/delegation-guardrails/SKILL.md
-  exists: true
-- id: domain-cartridge-governance
-  file: .agents/skills/domain-cartridge-governance/SKILL.md
-  exists: true
-- id: ecos-test-cycle
-  file: .agents/skills/ecos-test-cycle/SKILL.md
-  exists: true
-- id: external-agent-attach
-  file: .agents/skills/external-agent-attach/SKILL.md
-  exists: true
 - id: git-discipline
   file: .agents/skills/git-discipline/SKILL.md
-  exists: true
-- id: governance-phase-orchestrator
-  file: .agents/skills/governance-phase-orchestrator/SKILL.md
-  exists: true
-- id: governance-ssot-edit
-  file: .agents/skills/governance-ssot-edit/SKILL.md
-  exists: true
-- id: memory-recall
-  file: .agents/skills/memory-recall/SKILL.md
-  exists: true
-- id: nextgen-cognitive-mesh
-  file: .agents/skills/nextgen-cognitive-mesh/SKILL.md
-  exists: true
-- id: omlxc-compute-fabric
-  file: .agents/skills/omlxc-compute-fabric/SKILL.md
-  exists: true
-- id: omo-audit-baseline
-  file: .agents/skills/omo-audit-baseline/SKILL.md
-  exists: true
-- id: project-governance
-  file: .agents/skills/project-governance/SKILL.md
-  exists: true
-- id: system-index-distill
-  file: .agents/skills/system-index-distill/SKILL.md
-  exists: true
-- id: workflow-silence-detection
-  file: .agents/skills/workflow-silence-detection/SKILL.md
-  exists: true
-- id: workflow:bet-execution
-  file: .agents/skills/workflow:bet-execution/SKILL.md
-  exists: true
-- id: workflow:governance-state-mutation
-  file: .agents/skills/workflow:governance-state-mutation/SKILL.md
-  exists: true
-- id: workflow:mini
-  file: .agents/skills/workflow:mini/SKILL.md
-  exists: true
-- id: workflow:project-code-change
-  file: .agents/skills/workflow:project-code-change/SKILL.md
-  exists: true
-- id: workflow:project-doc-change
-  file: .agents/skills/workflow:project-doc-change/SKILL.md
-  exists: true
-- id: worktree-ci-isolate
-  file: .agents/skills/worktree-ci-isolate/SKILL.md
   exists: true
 workflows:
 - id: agent-onboarding

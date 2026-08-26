@@ -49,6 +49,8 @@ CRON_SIGNALS="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_B
 CRON_INBOX="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident inbox >> ${WORKSPACE}/.omo/_delivery/perception-inbox/cron.log 2>&1"
 # promote: 沉淀聚合→主题 retro 候选(实际落盘, 10min 节奏足够)
 CRON_PROMOTE="*/10 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident promote >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/promote.log 2>&1"
+# proposal-to-adr: 决策提案 → ADR 草稿 (每天 01:00, 只生成草稿不自动采纳, BET-Y1Q3-T10-19)
+CRON_PROPOSAL_ADR="0 1 * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} bin/ssot/proposal-to-adr.py >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/proposal-to-adr.log 2>&1"
 CRON_HEALTH="10 2 * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} bin/ssot/system-health-check.py --emit >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/health.log 2>&1"
 
 # 移除旧 marker 块(幂等),再追加新块
@@ -63,6 +65,7 @@ ${CRON_INGEST}
 ${CRON_SIGNALS}
 ${CRON_INBOX}
 ${CRON_PROMOTE}
+${CRON_PROPOSAL_ADR}
 ${CRON_HEALTH}
 EOF
 

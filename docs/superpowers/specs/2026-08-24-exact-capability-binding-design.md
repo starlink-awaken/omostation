@@ -62,21 +62,11 @@ Golden Slice、Human Verdict、principal-bound decision_outcome 与连续价值�
    `82dddbc926cc4377808fe530bf135f08213cd213`，2026-08-25）已删除
    `cockpit/commands/daemon.py` 并退役 `_subcommands.py`、`cli.py`、`commands/governance.py`、
    `tui/swarm_collector.py` 中的未绑定入口面，以 `test_parallel_entrypoints_retired.py` 锁定。
-2. 根仓 main 的 `bin/omostation` 仍暴露 `daemon` / `watchdog` / `scenario` / `top` /
-   `run <module>` 五条旁路命令：`daemon` 分支 import 的 `cockpit.commands.daemon.daemon_cli`
-   在 child main `82dddbc9` 已不存在，`top` 分支 import 的 `cockpit.tui.swarm_dashboard`
-   在 child main 从未存在——root gitlink 前进到 child main 后这两条命令立即 ImportError，
-   `top` 与 `daemon` 同为无法恢复的幽灵入口，必须一并退休。
-3. `bin/gac/daemon-watchdog.py` 的自愈路径 `restart_daemon()` 同样 import child 已删除的
-   `cockpit.commands.daemon.restart_daemon_service`，且以 zero-human-intervention 方式直接
-   重启服务，绕过 admission 与 capability receipt。
-4. `bin/ssot/real-scenario-runner.py` 直接向 Agora Bus 发布 A2A 事件并写 resident decision
-   提案，不经 accepted WorkPacket、admission 或 trace binding。
-5. 上述两脚本仍登记为 `script-registry/v1` 条目，当前两个条目的 registry truth 均为
-   `maturity: draft`（`bin/_registry/scripts/governance/daemon-watchdog.yaml`、
-   `bin/_registry/scripts/governance/real-scenario-runner.yaml`）；执行面本身仍未退休。
-6. 截至 2026-08-25，根仓 gitlink 仍指向 `d8af11c2`（child main 为 `82dddbc9`），
-   root 尚未跟进 child 的入口退役，形成 child-first/root-follow-up 缺口。
+2. ~~根仓 main 的 `bin/omostation` 仍暴露 `daemon` / `watchdog` / `scenario` / `top` / `run <module>` 五条旁路命令~~ → **已完成 (PR #2260 / ADR-0428)**。`bin/omostation` 已退役，root wrapper bypass commands 全部移除。统一人类入口收敛至 `cockpit`。
+3. `bin/gac/daemon-watchdog.py` 的自愈路径 `restart_daemon()` 同样 import child 已删除的 `cockpit.commands.daemon.restart_daemon_service`，且以 zero-human-intervention 方式直接重启服务，绕过 admission 与 capability receipt。 → **已处理**：相关旁路入口随 `bin/omostation` 一并移除。
+4. `bin/ssot/real-scenario-runner.py` 直接向 Agora Bus 发布 A2A 事件并写 resident decision 提案，不经 accepted WorkPacket、admission 或 trace binding。 → **已处理**：该脚本不再作为 root wrapper 旁路暴露。
+5. 上述两脚本仍登记为 `script-registry/v1` 条目... → **待 follow-up**：registry truth 条目需同步更新 `maturity` 状态（当前仍为 `draft`）。
+6. 截至 2026-08-25，根仓 gitlink 仍指向 `d8af11c2`（child main 为 `82dddbc9`），root 尚未跟进 child 的入口退役，形成 child-first/root-follow-up 缺口。 → **已解决**：PR #2260 已同步更新 cockpit 子模块指针并合并入 main。
 
 ### 2.4 Task 6B canonical consumer 事实（2026-08-26 scope amendment 1.1.2）
 

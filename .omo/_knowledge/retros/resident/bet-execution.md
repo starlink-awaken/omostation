@@ -1,15 +1,24 @@
 ---
-status: active
-lifecycle: entry
-owner: auto-fix-loop
-last-reviewed: 2026-08-24
+schema: resident-retro-candidate/v1
+topic: bet-execution
+generated_at: 2026-08-26T23:20:02Z
+status: candidate
+counts:
+  runs: 33
+  failures: 25
+  total: 58
+failure_rate: 0.431
+failure_breakdown:
+  by_event_type:
+    StepFailed: 25
+  trace_count: 25
 ---
-
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-23T06:07:00Z
+- generated_at: 2026-08-26T23:20:02Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 28 成功运行 + 25 失败模式 = 53 草稿
+- sediment 覆盖: 33 成功运行 + 25 失败模式 = 58 草稿
+- 失败率: 43.10%
 
 ## 成功运行 (runs/)
 
@@ -41,6 +50,11 @@ last-reviewed: 2026-08-24
 - 20260820T122929Z-bet-execution-fceac207.md
 - 20260821T020119Z-bet-execution-f21e7fdc.md
 - 20260821T111433Z-bet-execution-967f03e6.md
+- 20260825T135444Z-bet-execution-596be20c.md
+- 20260825T162500Z-bet-execution-d4a6c909.md
+- 20260825T162646Z-bet-execution-2f247733.md
+- 20260825T194427Z-bet-execution-5054fe7c.md
+- 20260825T222015Z-bet-execution-1def4ef0.md
 
 ## 失败模式 (failures/)
 
@@ -70,10 +84,269 @@ last-reviewed: 2026-08-24
 - 20260820T122929Z-bet-execution-fceac207-930e945f.md
 - 20260821T111433Z-bet-execution-967f03e6-f19fb0db.md
 
+## 失败根因画像 (确定性启发式)
+
+- StepFailed: 25 篇
+- 关联工作流溯源: 25 个 (trace_id 见下)
+  - `20260807T130548Z-bet-execution-be3544c4`
+  - `20260808T020406Z-bet-execution-528a2fb6`
+  - `20260808T041815Z-bet-execution-053948fb`
+  - `20260808T130448Z-bet-execution-7f7b8dd2`
+  - `20260808T141706Z-bet-execution-f6b1bc5b`
+  - `20260808T233049Z-bet-execution-67a82a81`
+  - `20260808T235723Z-bet-execution-f1b22516`
+  - `20260809T002015Z-bet-execution-2f976e93`
+  - `20260809T003604Z-bet-execution-c2a83c6b`
+  - `20260809T005325Z-bet-execution-ae24983d`
+  - `20260809T011348Z-bet-execution-120fc7c6`
+  - `20260809T012730Z-bet-execution-b2956466`
+  - `20260809T014308Z-bet-execution-40b3cd13`
+  - `20260809T020020Z-bet-execution-b33f81a6`
+  - `20260809T021558Z-bet-execution-e898fdda`
+  - `20260809T023252Z-bet-execution-a51fe519`
+  - `20260809T051522Z-bet-execution-5b278374`
+  - `20260809T055007Z-bet-execution-d342f79d`
+  - `20260809T083614Z-bet-execution-290d144a`
+  - `20260809T084619Z-bet-execution-36e8738f`
+  - `20260816T123949Z-bet-execution-c654bb0f`
+  - `20260817T054104Z-bet-execution-dd5fb3cd`
+  - `20260818T020320Z-bet-execution-182821e7`
+  - `20260820T122929Z-bet-execution-fceac207`
+  - `20260821T111433Z-bet-execution-967f03e6`
+
+## 确定性五问骨架 (ledger 追溯, 自动填充)
+
+- **20260807T063711Z-bet-execution-66b7ef2c**
+  - 计划 (objective): BET-Y1Q1-T1-07 git 入口收口 — shim 强制走 swarm-git
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=23087.146
+- **20260807T130548Z-bet-execution-be3544c4**
+  - 计划 (objective): 全域 scene card v2 升级 + 下一波意图注入
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=35068.126
+- **20260808T020406Z-bet-execution-528a2fb6**
+  - 计划 (objective): BET-Y1Q2-T6-02 ADR 分层 — 只分层不裁剪
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=77792.315
+- **20260808T041815Z-bet-execution-053948fb**
+  - 计划 (objective): BET-Y1Q2-T4-01 capability_calibration auto-update
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=69743.71
+- **20260808T130448Z-bet-execution-7f7b8dd2**
+  - 计划 (objective): BET-Y1Q2-T5-01 durable timer — waiting_approval 跨进程存活 ≥7 天
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=2829.185
+- **20260808T141706Z-bet-execution-f6b1bc5b**
+  - 计划 (objective): BET-Y1Q3-T8-02 cockpit CLI 缺陷修复 — events-watch AttributeError + audit 路径硬编码
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=33858.09
+- **20260808T233049Z-bet-execution-67a82a81**
+  - 计划 (objective): BET-Y1Q3-T1-01 cockpit SSOT 漂移治理 — COMMAND_CATALOG + help_map 同步 + 弃用 CLI 清理
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=635.161
+- **20260808T235723Z-bet-execution-f1b22516**
+  - 计划 (objective): BET-Y1Q3-T6-02 cockpit Phase 4 清理债务 — cockpit_mcp.py 残留 import + 子模块指针漂移
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=1278.54
+- **20260809T002015Z-bet-execution-2f976e93**
+  - 计划 (objective): BET-Y1Q3-T3-01 MOS 双栈一致性观察 8 周
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=935.14
+- **20260809T003604Z-bet-execution-c2a83c6b**
+  - 计划 (objective): BET-Y1Q2-T7-01 工程交付 dogfood 开 shadow
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=1014.425
+- **20260809T005325Z-bet-execution-ae24983d**
+  - 计划 (objective): BET-Y1Q4-T4-01 真实评测集 v1 — 200 条真实 adjudication + 正/负/边界例
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=972.736
+- **20260809T011348Z-bet-execution-120fc7c6**
+  - 计划 (objective): BET-Y1Q4-T3-01 自主性阶梯 L0-L3 判据实现 — 硬门判据 + 升降级 OMO 事件
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=784.639
+- **20260809T012730Z-bet-execution-b2956466**
+  - 计划 (objective): BET-Y1Q2-T8-01 /outcomes 结果与校准面板 — 三视图 + D1 未接入标注 + /journeys 时间线
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=897.861
+- **20260809T012847Z-bet-execution-936fdb4e**
+  - 计划 (objective): BET-Y1Q3-T3-02 Neo4j 生产启用 — 启动本地 Neo4j + env 注入 + smoke 验证
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=623.712
+- **20260809T014308Z-bet-execution-40b3cd13**
+  - 计划 (objective): BET-Y1Q3-T7-01 知识场景召回被引用率上线 — 召回/引用自动统计 + /outcomes 指标 + 首月基线
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=982.976
+- **20260809T020020Z-bet-execution-b33f81a6**
+  - 计划 (objective): BET-Y1Q4-T5-01 并行会签 fork/join — journey.type parallel + join 策略 + 集成测试
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=903.647
+- **20260809T021558Z-bet-execution-e898fdda**
+  - 计划 (objective): BET-Y2Q3-T3-02 漂移监控与自动降级 — 验证已实现 + 补测试
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=972.473
+- **20260809T023252Z-bet-execution-a51fe519**
+  - 计划 (objective): BET-Y3H1-T5-01 编排模板化 — journey 模板参数化 + 3 场景共用 + 影响面可查
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=986.846
+- **20260809T051522Z-bet-execution-5b278374**
+  - 计划 (objective): BET-Y2Q4-T3-01 多模型路由按实测成本优化 — cost_estimate 路由决策 + 成本下降 + calibration 不跌
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=1466.199
+- **20260809T055007Z-bet-execution-d342f79d**
+  - 计划 (objective): BET-Y2Q2-T8-01 /inbox 每日习惯化 — 零条目有意义内容 + 使用频次埋点
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=840.256
+- **20260809T083614Z-bet-execution-290d144a**
+  - 计划 (objective): BET-Y1Q4-T7-01 公文场景 format_check 升 L2 — 首次真实放权 + 回滚路径
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=194.09
+- **20260809T084619Z-bet-execution-36e8738f**
+  - 计划 (objective): BET-Y1Q3-T2-01 感知面第二根管子 — 文件夹信号源 + 抽象无特判
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=1258.279
+- **20260816T123949Z-bet-execution-c654bb0f**
+  - 计划 (objective): [BET-Y1Q3-T1-06] aetherforge 双副本指针同步 + 算力路由双 owner 收敛决策 (Appetite: 2 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=2165.28
+- **20260817T054104Z-bet-execution-dd5fb3cd**
+  - 计划 (objective): [BET-Y1Q3-T6-05] 治理工具自净闭环 — 脚本减法配额制度化 + 孤儿清理 (Appetite: 1 week)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=7706.971
+- **20260818T020320Z-bet-execution-182821e7**
+  - 计划 (objective): [BET-Y1Q3-T6-06] 文档治理减负 — 0 违规后停止扩面转纯维护 (Appetite: 3 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=179566.449
+- **20260820T122929Z-bet-execution-fceac207**
+  - 计划 (objective): [BET-Y1Q3-T4-01] 真实个人价值证据脊柱与战略事实重基线 (Appetite: 2 weeks)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=100295.099
+- **20260821T020119Z-bet-execution-f21e7fdc**
+  - 计划 (objective): [BET-Y1Q2-T1-19] Codex ACP stdio permission-broker cutover and cli_prompt retirement (Appetite: 3 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=5136.617
+- **20260821T111433Z-bet-execution-967f03e6**
+  - 计划 (objective): [BET-Y1Q3-T4-01] 真实个人价值证据脊柱与战略事实重基线 (Appetite: 2 weeks)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=80882.275
+- **20260825T135444Z-bet-execution-596be20c**
+  - 计划 (objective): [BET-Y1Q3-T1-12] Exact Capability Binding 与 native asset receipt 消费收敛 (Appetite: 5 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=3968.562
+- **20260825T162500Z-bet-execution-d4a6c909**
+  - 计划 (objective): [BET-Y1Q3-T1-12] Exact Capability Binding 与 native asset receipt 消费收敛 (Appetite: 5 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=86.067
+- **20260825T162646Z-bet-execution-2f247733**
+  - 计划 (objective): [BET-Y1Q3-T1-12] Exact Capability Binding 与 native asset receipt 消费收敛 (Appetite: 5 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=695.241
+- **20260825T194427Z-bet-execution-5054fe7c**
+  - 计划 (objective): [BET-Y1Q3-T1-12] Exact Capability Binding 与 native asset receipt 消费收敛 (Appetite: 5 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=13220.931
+- **20260825T222015Z-bet-execution-1def4ef0**
+  - 计划 (objective): [BET-Y1Q3-T1-12] Exact Capability Binding 与 native asset receipt 消费收敛 (Appetite: 5 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=2
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=3419.2
+
+> 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
+
 ## 待完善(运营 agent/人工)
 
-- [ ] 计划 vs 实际
-- [ ] 结果与证据
 - [ ] 关键发现
 - [ ] 净增减
 - [ ] 交接建议

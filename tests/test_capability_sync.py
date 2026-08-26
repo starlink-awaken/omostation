@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import ast
+import builtins
 import copy
+import hashlib
 import importlib.util
+import io
 import json
 import os
 import subprocess
@@ -1126,6 +1129,1029 @@ def test_bound_invoke_emits_native_execution_receipt(cap_sync, bound_files, monk
     assert receipt["schema"] == "native-execution-receipt/v1"
     assert receipt["material"]["binding"] == bound_files.binding
     assert receipt["value_indicator_policy"] is False
+
+
+# ---------------------------------------------------------------------------
+# Task 6B root verifier: persisted admission is the only authority.
+# ---------------------------------------------------------------------------
+
+
+def _verification_request() -> dict:
+    return {"payload": {"scope": "bounded", "operation": "audit"}}
+
+
+def _verification_context(*, effect: str = "read_only", state: str = "admitted") -> tuple[dict, dict, list[dict]]:
+    run_id = "run-task6b"
+    packet_id = "WP-TASK6B-0123456789abcdef"
+    packet_hash = "sha256:" + "a" * 64
+    step_run_id = "step-task6b"
+    admission_id = "admission-task6b"
+    request = _verification_request()
+    request_digest = "sha256:" + hashlib.sha256(
+        json.dumps(request, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    # WorkflowAdmitted preserves OMO's canonical WorkPacket identity.  The
+    # execution envelope, not the admission identity, owns operation/effect
+    # and request-digest binding.
+    request_identity = {
+        "bet_id": "BET-Y1Q3-T1-12",
+        "packet_id": packet_id,
+        "packet_hash": packet_hash,
+        "task_ref": "tasks/task6b.yaml",
+        "instruction_binding": {
+            "instruction_ref": "instructions/task6b.md",
+            "instruction_version": "v1",
+            "content_digest": "sha256:" + "e" * 64,
+            "instruction_profile": "executor",
+        },
+        "capability_requirements": [
+            {
+                "capability_id": "bos-service:bos://governance/shared",
+                "operation": "invoke",
+                "effect": effect,
+            }
+        ],
+    }
+    canonical_requirements = json.dumps(
+        request_identity["capability_requirements"], sort_keys=True, separators=(",", ":")
+    )
+    request_identity["capability_requirements_digest"] = "sha256:" + hashlib.sha256(
+        canonical_requirements.encode("utf-8")
+    ).hexdigest()
+    grant = {
+        "admission_id": admission_id,
+        "status": "admitted",
+        "workflow_run_id": run_id,
+        "trace_id": "trace-task6b",
+        "backend": "task6b-test",
+        "step_run_ids": [step_run_id],
+        "capabilities": ["bos-service:bos://governance/shared"],
+        "policy_digest": "sha256:" + "b" * 64,
+        "issued_at": "2026-08-26T00:00:00+00:00",
+        "expires_at": "2099-01-01T00:00:00+00:00",
+        "request_identity": request_identity,
+    }
+    grant["proof"] = hashlib.sha256(
+        json.dumps(grant, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    binding = {
+        "correlation_id": "corr-task6b",
+        "workflow_run_id": run_id,
+        "packet_id": packet_id,
+        "packet_hash": packet_hash,
+        "assignment_id": "assignment-task6b",
+        "dispatch_id": "dispatch-task6b",
+        "actor_id": "worker-task6b",
+        "delivery_attempt_id": "attempt-task6b",
+    }
+    material = {
+        "schema": "native-execution-material/v1",
+        "binding": binding,
+        "capability": {"kind": "bos_service", "id": "bos-service:bos://governance/shared"},
+        "inspection": {
+            "receipt_digest": "sha256:" + "c" * 64,
+            "source_digest": "sha256:" + "d" * 64,
+        },
+        "operation_id": "audit",
+        "request_digest": request_digest,
+        "admission": {
+            "receipt_digest": "sha256:" + grant["proof"],
+            "admission_id": admission_id,
+            "step_run_id": step_run_id,
+            "worker": {"status": "bound", "id": "worker-task6b"},
+        },
+        "authorization_source": "bos-pep",
+        "effect_classification": effect,
+        "execution_attempt": 1,
+    }
+    events = [
+        {
+            "event_id": "event-requested-task6b",
+            "event_type": "WorkflowRequested",
+            "trace_id": "trace-task6b",
+            "workflow_run_id": run_id,
+            "occurred_at": "2026-08-26T00:00:00+00:00",
+            "producer": "test",
+            "schema_version": "workflow-mesh/v1",
+            "idempotency_key": "task6b-requested",
+            "payload": {"request_identity": request_identity},
+        },
+        {
+            "event_id": "event-admitted-task6b",
+            "event_type": "WorkflowAdmitted",
+            "trace_id": "trace-task6b",
+            "workflow_run_id": run_id,
+            "occurred_at": "2026-08-26T00:00:01+00:00",
+            "producer": "test",
+            "schema_version": "workflow-mesh/v1",
+            "idempotency_key": "task6b-admitted",
+            "payload": {"admission": grant, **grant},
+        },
+    ]
+    if state in {"dispatched", "running", "acknowledged", "active", "lease_expired", "reclaimed", "successor"}:
+        events.append(
+            {
+                "event_id": "event-dispatched-task6b",
+                "event_type": "StepDispatched",
+                "trace_id": "trace-task6b",
+                "workflow_run_id": run_id,
+                "occurred_at": "2026-08-26T00:00:02+00:00",
+                "producer": "test",
+                "schema_version": "workflow-mesh/v1",
+                "idempotency_key": "task6b-dispatched",
+                "payload": {
+                    "step_run_id": step_run_id,
+                    "admission_id": admission_id,
+                    "dispatch_id": binding["dispatch_id"],
+                    "worker_id": binding["actor_id"],
+                    "packet_id": packet_id,
+                    "packet_hash": packet_hash,
+                    "instruction_binding": None,
+                },
+            }
+        )
+    if state == "running":
+        events.append(
+            {
+                "event_id": "event-started-task6b",
+                "event_type": "StepStarted",
+                "trace_id": "trace-task6b",
+                "workflow_run_id": run_id,
+                "occurred_at": "2026-08-26T00:00:03+00:00",
+                "producer": "test",
+                "schema_version": "workflow-mesh/v1",
+                "idempotency_key": "task6b-started",
+                "payload": {"step_run_id": step_run_id, "admission_id": admission_id},
+            }
+        )
+    if state in {"acknowledged", "active", "lease_expired", "reclaimed", "successor"}:
+        events.append(
+            {
+                "event_id": "event-acknowledged-task6b",
+                "event_type": "WorkerAcknowledged",
+                "trace_id": "trace-task6b",
+                "workflow_run_id": run_id,
+                "occurred_at": "2026-08-26T00:00:03+00:00",
+                "producer": "test",
+                "schema_version": "workflow-mesh/v1",
+                "idempotency_key": "task6b-acknowledged",
+                "payload": {
+                    "dispatch_id": binding["dispatch_id"],
+                    "worker_id": binding["actor_id"],
+                    "step_run_id": step_run_id,
+                    "admission_id": admission_id,
+                    "acknowledged_at": "2026-08-26T00:00:03+00:00",
+                    "lease_expires_at": "2026-08-26T00:10:00+00:00",
+                    "packet_id": packet_id,
+                    "packet_hash": packet_hash,
+                    "instruction_binding": None,
+                    "ack_decision": "proceed",
+                    "ack_origin_proof_digest": "sha256:" + "f" * 64,
+                },
+            }
+        )
+    if state in {"active", "lease_expired", "reclaimed", "successor"}:
+        events.append(
+            {
+                "event_id": "event-renewed-task6b",
+                "event_type": "WorkerLeaseRenewed",
+                "trace_id": "trace-task6b",
+                "workflow_run_id": run_id,
+                "occurred_at": "2026-08-26T00:00:04+00:00",
+                "producer": "test",
+                "schema_version": "workflow-mesh/v1",
+                "idempotency_key": "task6b-renewed",
+                "payload": {
+                    "dispatch_id": binding["dispatch_id"],
+                    "worker_id": binding["actor_id"],
+                    "step_run_id": step_run_id,
+                    "admission_id": admission_id,
+                    "heartbeat_id": "heartbeat-task6b",
+                    "heartbeat_at": "2026-08-26T00:00:04+00:00",
+                    "lease_expires_at": "2026-08-26T00:20:00+00:00",
+                },
+            }
+        )
+    if state in {"lease_expired", "reclaimed", "successor"}:
+        events.append(
+            {
+                "event_id": "event-expired-task6b",
+                "event_type": "WorkerLeaseExpired",
+                "trace_id": "trace-task6b",
+                "workflow_run_id": run_id,
+                "occurred_at": "2026-08-26T00:20:01+00:00",
+                "producer": "test",
+                "schema_version": "workflow-mesh/v1",
+                "idempotency_key": "task6b-expired",
+                "payload": {
+                    "dispatch_id": binding["dispatch_id"],
+                    "worker_id": binding["actor_id"],
+                    "step_run_id": step_run_id,
+                    "admission_id": admission_id,
+                    "expired_at": "2026-08-26T00:20:01+00:00",
+                    "lease_expires_at": "2026-08-26T00:20:00+00:00",
+                    "reason": "lease_expired",
+                },
+            }
+        )
+    if state in {"reclaimed", "successor"}:
+        events.append(
+            {
+                "event_id": "event-reclaimed-task6b",
+                "event_type": "WorkerReclaimed",
+                "trace_id": "trace-task6b",
+                "workflow_run_id": run_id,
+                "occurred_at": "2026-08-26T00:20:02+00:00",
+                "producer": "test",
+                "schema_version": "workflow-mesh/v1",
+                "idempotency_key": "task6b-reclaimed",
+                "payload": {
+                    "dispatch_id": binding["dispatch_id"],
+                    "worker_id": binding["actor_id"],
+                    "step_run_id": step_run_id,
+                    "admission_id": admission_id,
+                    "reclaimed_at": "2026-08-26T00:20:02+00:00",
+                    "successor_worker_id": "worker-task6b-successor",
+                    "successor_dispatch_id": "dispatch-task6b-successor",
+                    "reason": "lease_expired",
+                },
+            }
+        )
+    if state == "successor":
+        events.append(
+            {
+                "event_id": "event-successor-dispatched-task6b",
+                "event_type": "StepDispatched",
+                "trace_id": "trace-task6b",
+                "workflow_run_id": run_id,
+                "occurred_at": "2026-08-26T00:20:03+00:00",
+                "producer": "test",
+                "schema_version": "workflow-mesh/v1",
+                "idempotency_key": "task6b-successor-dispatched",
+                "payload": {
+                    "step_run_id": step_run_id,
+                    "admission_id": admission_id,
+                    "dispatch_id": "dispatch-task6b-successor",
+                    "worker_id": "worker-task6b-successor",
+                    "packet_id": packet_id,
+                    "packet_hash": packet_hash,
+                    "instruction_binding": None,
+                },
+            }
+        )
+    return material, request, events
+
+
+def _verification_envelope(material: dict, request: dict) -> dict:
+    return {
+        "schema": "capability-admission-verification-request/v1",
+        "material": material,
+        "request": request,
+        "expected": {
+            "capability_id": material["capability"]["id"],
+            "operation_id": material["operation_id"],
+            "effect_classification": material["effect_classification"],
+        },
+    }
+
+
+def _write_mesh(omo_dir: Path, events: list[dict]) -> None:
+    path = omo_dir / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(json.dumps(event, sort_keys=True) + "\n" for event in events), encoding="utf-8")
+
+
+def _refresh_admission_proof(events: list[dict]) -> None:
+    """Keep test mutations valid as an OMO WorkflowAdmitted receipt."""
+    grant = events[1]["payload"]["admission"]
+    unsigned = {key: value for key, value in grant.items() if key != "proof"}
+    grant["proof"] = hashlib.sha256(
+        json.dumps(unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    events[1]["payload"].update(grant)
+
+
+def _refresh_capability_requirements_digest(request_identity: dict) -> None:
+    canonical_requirements = json.dumps(
+        request_identity["capability_requirements"], sort_keys=True, separators=(",", ":")
+    )
+    request_identity["capability_requirements_digest"] = "sha256:" + hashlib.sha256(
+        canonical_requirements.encode("utf-8")
+    ).hexdigest()
+
+
+def test_verify_material_rejects_cross_run_before_any_outbound_call(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    material, request, events = _verification_context()
+    _write_mesh(tmp_path / ".omo", events)
+    material["binding"]["workflow_run_id"] = "other-run"
+    counters = {"provider": 0, "router": 0, "gateway": 0, "subprocess": 0}
+    for name in ("_load_native_gateway", "execute_gateway_operation"):
+        monkeypatch.setattr(cap_sync, name, lambda *args, **kwargs: counters.__setitem__("gateway", 1))
+    monkeypatch.setattr(cap_sync.subprocess, "run", lambda *args, **kwargs: counters.__setitem__("subprocess", 1))
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "admission_contradiction"
+    assert counters == {"provider": 0, "router": 0, "gateway": 0, "subprocess": 0}
+
+
+def test_verify_material_accepts_persisted_read_only_admission_without_writes(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context(effect="read_only", state="admitted")
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    log = omo_dir / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    before = (log.stat().st_mtime_ns, log.read_bytes())
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["schema"] == "capability-admission-verification-receipt/v1"
+    assert receipt["status"] == "verified"
+    assert receipt["capability_id"] == material["capability"]["id"]
+    assert receipt["operation_id"] == "audit"
+    assert receipt["effect_classification"] == "read_only"
+    assert receipt["authority"] == "omo-workflow-mesh"
+    assert receipt["value_indicator_policy"] is False
+    assert (log.stat().st_mtime_ns, log.read_bytes()) == before
+
+
+def test_verification_fixture_uses_omo_exact_request_identity_without_execution_extras() -> None:
+    material, _request, events = _verification_context()
+    identity = events[0]["payload"]["request_identity"]
+
+    assert set(identity) == {
+        "bet_id",
+        "packet_id",
+        "packet_hash",
+        "task_ref",
+        "instruction_binding",
+        "capability_requirements",
+        "capability_requirements_digest",
+    }
+    assert identity["capability_requirements"] == [
+        {
+            "capability_id": material["capability"]["id"],
+            "operation": "invoke",
+            "effect": "read_only",
+        }
+    ]
+    canonical_requirements = json.dumps(
+        identity["capability_requirements"], sort_keys=True, separators=(",", ":")
+    )
+    assert identity["capability_requirements_digest"] == "sha256:" + hashlib.sha256(
+        canonical_requirements.encode("utf-8")
+    ).hexdigest()
+    assert not ({"operation", "effect", "request", "request_digest"} & set(identity))
+
+
+@pytest.mark.parametrize("receipt_digest", ["original", "sha256:" + "0" * 64])
+def test_verifier_rejects_old_or_new_material_after_real_omo_admission_renewal(
+    cap_sync, tmp_path: Path, receipt_digest: str
+) -> None:
+    material, request, events = _verification_context(effect="effectful", state="dispatched")
+    events.append(
+        {
+            "event_id": "event-admission-renewed-task6b",
+            "event_type": "AdmissionRenewed",
+            "trace_id": "trace-task6b",
+            "workflow_run_id": material["binding"]["workflow_run_id"],
+            "occurred_at": "2026-08-26T00:00:03+00:00",
+            "producer": "omo-workflow-dispatch",
+            "schema_version": "workflow-mesh/v1",
+            "idempotency_key": "task6b-admission-renewed",
+            "payload": {
+                "admission_id": material["admission"]["admission_id"],
+                "previous_expires_at": "2099-01-01T00:00:00+00:00",
+                "expires_at": "2099-01-01T00:15:00+00:00",
+                "renewed_at": "2026-08-26T00:00:03+00:00",
+            },
+        }
+    )
+    if receipt_digest != "original":
+        material["admission"]["receipt_digest"] = receipt_digest
+    _write_mesh(tmp_path / ".omo", events)
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt == {
+        "schema": "capability-admission-verification-receipt/v1",
+        "status": "rejected",
+        "failure_code": "admission_contradiction",
+        "value_indicator_policy": False,
+    }
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        [{"capability_id": "bos-service:bos://governance/shared"}],
+        [{"id": "bos-service:bos://governance/shared"}],
+        ["mcp-tool:omo:status"],
+        [],
+        None,
+        ["bos-service:bos://governance/shared", {"id": "bos-service:bos://governance/shared"}],
+    ],
+)
+def test_verifier_rejects_noncanonical_admission_capabilities(
+    cap_sync, tmp_path: Path, capabilities: object
+) -> None:
+    material, request, events = _verification_context()
+    events[1]["payload"]["admission"]["capabilities"] = capabilities
+    _refresh_admission_proof(events)
+    _write_mesh(tmp_path / ".omo", events)
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt["failure_code"] == "admission_receipt_invalid"
+
+
+def test_verifier_rejects_missing_admission_capabilities(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context()
+    events[1]["payload"]["admission"].pop("capabilities")
+    _refresh_admission_proof(events)
+    _write_mesh(tmp_path / ".omo", events)
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt["failure_code"] == "admission_receipt_invalid"
+
+
+def test_verifier_accepts_exact_mcp_tool_material_with_mcp_pep(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context()
+    capability_id = "mcp-tool:omo:status"
+    material["capability"] = {"kind": "mcp_tool", "id": capability_id}
+    material["authorization_source"] = "mcp-pep"
+    events[1]["payload"]["admission"]["capabilities"] = [capability_id]
+    request_identity = events[0]["payload"]["request_identity"]
+    request_identity["capability_requirements"][0]["capability_id"] = capability_id
+    _refresh_capability_requirements_digest(request_identity)
+    _refresh_admission_proof(events)
+    material["admission"]["receipt_digest"] = "sha256:" + events[1]["payload"]["admission"]["proof"]
+    _write_mesh(tmp_path / ".omo", events)
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt["status"] == "verified"
+    assert receipt["capability_id"] == capability_id
+    assert events[1]["payload"]["admission"]["request_identity"] == request_identity
+    assert request_identity["capability_requirements"] == [
+        {"capability_id": capability_id, "operation": "invoke", "effect": "read_only"}
+    ]
+    assert request_identity["capability_requirements_digest"] == "sha256:" + hashlib.sha256(
+        json.dumps(
+            request_identity["capability_requirements"], sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["dispatch_id", "worker_id", "step_run_id", "admission_id", "packet_id", "packet_hash"],
+)
+def test_verifier_rejects_each_exact_persisted_worker_identity_mismatch(
+    cap_sync, tmp_path: Path, field: str
+) -> None:
+    material, request, events = _verification_context(effect="effectful", state="dispatched")
+    if field in {"dispatch_id", "packet_id", "packet_hash"}:
+        material["binding"][field] = (
+            "sha256:" + "f" * 64 if field == "packet_hash" else "other-" + field
+        )
+    elif field == "worker_id":
+        material["admission"]["worker"]["id"] = "other-worker"
+    else:
+        material["admission"][field] = "other-" + field
+    _write_mesh(tmp_path / ".omo", events)
+
+    receipt = cap_sync.verify_material_against_mesh(tmp_path / ".omo", _verification_envelope(material, request))
+
+    assert receipt["failure_code"] == "admission_receipt_invalid"
+
+
+def test_root_mesh_projector_never_imports_omo_or_mutates_import_state(
+    cap_sync, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    material, _request, events = _verification_context(effect="effectful", state="active")
+    monkeypatch.delitem(sys.modules, "omo", raising=False)
+    monkeypatch.delitem(sys.modules, "omo.workflow_mesh", raising=False)
+    original_import = builtins.__import__
+
+    def guarded_import(name, *args, **kwargs):
+        if name == "omo" or name.startswith("omo."):
+            raise AssertionError("root verifier must not import OMO")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+    before_path = list(sys.path)
+    before_dont_write_bytecode = sys.dont_write_bytecode
+
+    projector = cap_sync._load_workflow_mesh_projection()
+    snapshot = projector(events, material["binding"]["workflow_run_id"])
+
+    assert callable(projector)
+    assert snapshot["state"] == "running"
+    assert snapshot["step_runs"][material["admission"]["step_run_id"]]["state"] == "running"
+    assert snapshot["worker"]["state"] == "active"
+    assert sys.path == before_path
+    assert sys.dont_write_bytecode is before_dont_write_bytecode
+    assert "omo" not in sys.modules
+    assert "omo.workflow_mesh" not in sys.modules
+
+
+def test_root_mesh_projector_vocabulary_matches_authoritative_omo_source_ast(cap_sync) -> None:
+    source_path = ROOT / "projects" / "omo" / "src" / "omo" / "workflow_mesh.py"
+    tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+    assignments = {
+        target.id: ast.literal_eval(node.value)
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        for target in node.targets
+        if isinstance(target, ast.Name) and target.id in {"EVENT_STATE", "_WORKER_EVENTS"}
+    }
+    authoritative_event_state = assignments["EVENT_STATE"]
+    authoritative_subset = {
+        "WorkflowRequested",
+        "WorkflowAdmitted",
+        "StepDispatched",
+        "StepStarted",
+        "AdmissionRenewed",
+        *assignments["_WORKER_EVENTS"],
+    }
+
+    assert cap_sync.VERIFICATION_MESH_EVENT_STATES == {
+        event_type: authoritative_event_state[event_type] for event_type in authoritative_subset
+    }
+    assert authoritative_subset == {
+        "WorkflowRequested",
+        "WorkflowAdmitted",
+        "StepDispatched",
+        "StepStarted",
+        "WorkerAcknowledged",
+        "WorkerLeaseRenewed",
+        "WorkerLeaseExpired",
+        "AdmissionRenewed",
+        "WorkerReclaimed",
+    }
+    assert not {
+        "WorkflowPrepared",
+        "WorkerDispatched",
+        "StepRunStarted",
+        "WorkerActive",
+    } & set(cap_sync.VERIFICATION_MESH_EVENT_STATES)
+
+
+@pytest.mark.parametrize(
+    ("worker_state", "ack_decision", "status", "failure_code"),
+    [
+        ("acknowledged", "proceed", "verified", None),
+        ("active", "proceed", "verified", None),
+        ("acknowledged", "stop", "rejected", "admission_contradiction"),
+        ("active", "stop", "rejected", "admission_contradiction"),
+    ],
+)
+def test_verifier_requires_proceed_acknowledgement_for_live_worker_context(
+    cap_sync,
+    tmp_path: Path,
+    worker_state: str,
+    ack_decision: str,
+    status: str,
+    failure_code: str | None,
+) -> None:
+    material, request, events = _verification_context(effect="effectful", state=worker_state)
+    acknowledgement = next(event for event in events if event["event_type"] == "WorkerAcknowledged")
+    acknowledgement["payload"]["ack_decision"] = ack_decision
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+
+    projector = cap_sync._load_workflow_mesh_projection()
+    snapshot = projector(events, material["binding"]["workflow_run_id"])
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert snapshot["worker"]["ack_decision"] == ack_decision
+    assert receipt["status"] == status
+    if failure_code is not None:
+        assert receipt["failure_code"] == failure_code
+
+
+def test_verify_material_requires_dispatch_for_effectful_and_matches_worker(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context(effect="effectful", state="dispatched")
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+
+    assert cap_sync.verify_material_against_mesh(
+        omo_dir, _verification_envelope(material, request)
+    )["status"] == "verified"
+
+    material["admission"]["worker"]["id"] = "other-worker"
+    rejected = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+    assert rejected["status"] == "rejected"
+    assert rejected["failure_code"] == "admission_receipt_invalid"
+
+
+@pytest.mark.parametrize(
+    ("worker_state", "status", "failure_code"),
+    [
+        ("dispatched", "verified", None),
+        ("acknowledged", "verified", None),
+        ("active", "verified", None),
+        ("lease_expired", "rejected", "admission_contradiction"),
+        ("reclaimed", "rejected", "admission_contradiction"),
+        ("successor", "rejected", "admission_receipt_invalid"),
+    ],
+)
+def test_verifier_requires_a_live_projected_worker_lease_and_rejects_replaced_dispatch(
+    cap_sync, tmp_path: Path, worker_state: str, status: str, failure_code: str | None
+) -> None:
+    """Use the actual Mesh projection for every worker lifecycle state."""
+    material, request, events = _verification_context(effect="effectful", state=worker_state)
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["status"] == status
+    if failure_code is not None:
+        assert receipt["failure_code"] == failure_code
+
+
+def test_verifier_preserves_source_unprovable_when_lazy_mesh_projector_cannot_load(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    material, request, events = _verification_context()
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    monkeypatch.setattr(
+        cap_sync,
+        "_load_workflow_mesh_projection",
+        lambda: (_ for _ in ()).throw(cap_sync.TraceBindingError("source_unprovable")),
+    )
+
+    assert cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request)) == {
+        "schema": "capability-admission-verification-receipt/v1",
+        "status": "rejected",
+        "failure_code": "source_unprovable",
+        "value_indicator_policy": False,
+    }
+
+
+@pytest.mark.parametrize(
+    "reader",
+    [
+        lambda _size: (_ for _ in ()).throw(OSError("private input path")),
+        lambda size: b"x" * size,
+        lambda _size: b"{not-json}",
+    ],
+)
+def test_verify_material_cli_always_emits_the_exact_redacted_receipt_for_stdin_failures(
+    cap_sync, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], reader
+) -> None:
+    monkeypatch.setattr(cap_sync.sys, "stdin", SimpleNamespace(buffer=SimpleNamespace(read=reader)))
+
+    assert cap_sync.main(["verify-material"]) == 4
+
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt == {
+        "schema": "capability-admission-verification-receipt/v1",
+        "status": "rejected",
+        "failure_code": "native_route_unprovable",
+        "value_indicator_policy": False,
+    }
+
+
+def test_verify_material_cli_reads_one_bounded_stdin_envelope_and_uses_fixed_omo_root(
+    cap_sync, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(cap_sync.sys, "stdin", SimpleNamespace(buffer=SimpleNamespace(read=lambda _size: b"{}")))
+    assert cap_sync.main(["verify-material"]) == 4
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] in {"native_route_unprovable", "admission_receipt_invalid"}
+    assert "omo_dir" not in json.dumps(receipt, sort_keys=True)
+
+
+def test_verify_material_cli_uses_only_fixed_root_omo_and_never_creates_files(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    material, request, events = _verification_context()
+    envelope = _verification_envelope(material, request)
+    encoded = json.dumps(envelope, sort_keys=True).encode("utf-8")
+    root = tmp_path / "root"
+    root.mkdir()
+    _write_mesh(root / ".omo", events)
+    monkeypatch.setattr(cap_sync, "ROOT", root)
+    monkeypatch.setattr(cap_sync.sys, "stdin", SimpleNamespace(buffer=io.BytesIO(encoded)))
+    before = _tree_snapshot(root)
+
+    assert cap_sync.main(["verify-material"]) == 0
+    assert json.loads(capsys.readouterr().out)["status"] == "verified"
+    assert _tree_snapshot(root) == before
+
+    empty_root = tmp_path / "empty-root"
+    empty_root.mkdir()
+    monkeypatch.setattr(cap_sync, "ROOT", empty_root)
+    monkeypatch.setattr(cap_sync.sys, "stdin", SimpleNamespace(buffer=io.BytesIO(encoded)))
+    before_empty = _tree_snapshot(empty_root)
+
+    assert cap_sync.main(["verify-material"]) == 4
+    assert json.loads(capsys.readouterr().out) == {
+        "schema": "capability-admission-verification-receipt/v1",
+        "status": "rejected",
+        "failure_code": "source_unprovable",
+        "value_indicator_policy": False,
+    }
+    assert _tree_snapshot(empty_root) == before_empty
+
+
+def _tree_snapshot(root: Path) -> dict[str, tuple[bytes, int]]:
+    """Capture every file below root so verifier reads cannot hide writes."""
+    return {
+        path.relative_to(root).as_posix(): (path.read_bytes(), path.stat().st_mode)
+        for path in root.rglob("*")
+        if path.is_file()
+    }
+
+
+def _forbid_verifier_gateways(cap_sync, monkeypatch: pytest.MonkeyPatch) -> dict[str, int]:
+    calls = {"gateway": 0, "subprocess": 0}
+
+    def forbidden_gateway(*args, **kwargs):
+        calls["gateway"] += 1
+        raise AssertionError("verifier must not reach a native gateway")
+
+    def forbidden_subprocess(*args, **kwargs):
+        calls["subprocess"] += 1
+        raise AssertionError("verifier must not spawn a subprocess")
+
+    monkeypatch.setattr(cap_sync, "_load_native_gateway", forbidden_gateway)
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", forbidden_gateway)
+    monkeypatch.setattr(cap_sync.subprocess, "run", forbidden_subprocess)
+    return calls
+
+
+def test_verifier_is_python39_safe_and_legacy_import_does_not_load_omo(cap_sync, registry: dict, tmp_path: Path, monkeypatch) -> None:
+    source = SYNC_PATH.read_text(encoding="utf-8")
+    ast.parse(source, filename=str(SYNC_PATH), feature_version=(3, 9))
+    assert "from datetime import UTC" not in source
+    assert "omo.workflow_mesh" not in source
+    assert "Path | str" not in source
+    assert "OMO_SRC" not in source
+    assert callable(cap_sync._load_workflow_mesh_projection)
+
+    registry_path = tmp_path / "registry.yaml"
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+    monkeypatch.setattr(
+        cap_sync,
+        "_load_workflow_mesh_projection",
+        lambda: (_ for _ in ()).throw(AssertionError("legacy command loaded OMO")),
+    )
+    assert cap_sync.main(["find", "--id", "mcp-server:omo", "--registry", str(registry_path)]) == 0
+
+
+def test_xcode_python39_subprocess_positively_verifies_temp_mesh(tmp_path: Path) -> None:
+    python39 = Path("/Applications/Xcode.app/Contents/Developer/usr/bin/python3")
+    assert python39.is_file(), "the required Xcode Python 3.9 interpreter is unavailable"
+    material, request, events = _verification_context(effect="effectful", state="active")
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    envelope_path = tmp_path / "envelope.json"
+    envelope_path.write_text(
+        json.dumps(_verification_envelope(material, request), sort_keys=True), encoding="utf-8"
+    )
+    before = _tree_snapshot(tmp_path)
+    probe = """
+import importlib.util
+import json
+import sys
+
+source_path, omo_dir, envelope_path = sys.argv[1:]
+spec = importlib.util.spec_from_file_location("capability_sync_python39_probe", source_path)
+if spec is None or spec.loader is None:
+    raise SystemExit("unable to load capability-sync")
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+with open(envelope_path, "r", encoding="utf-8") as handle:
+    envelope = json.load(handle)
+receipt = module.verify_material_against_mesh(omo_dir, envelope)
+print(json.dumps(receipt, sort_keys=True))
+raise SystemExit(0 if receipt.get("status") == "verified" else 1)
+"""
+
+    completed = subprocess.run(
+        [str(python39), "-c", probe, str(SYNC_PATH), str(omo_dir), str(envelope_path)],
+        cwd=ROOT,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    receipt = json.loads(completed.stdout)
+    assert receipt["status"] == "verified"
+    assert receipt["authority"] == "omo-workflow-mesh"
+    assert receipt["capability_id"] == material["capability"]["id"]
+    assert _tree_snapshot(tmp_path) == before
+
+
+def test_mesh_reader_uses_separate_log_bound_and_rejects_path_replacement(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    material, request, events = _verification_context()
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    log = omo_dir / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    assert cap_sync.MAX_MESH_LOG_BYTES > cap_sync.MAX_INPUT_JSON_BYTES
+
+    # A Mesh log is not stdin: shrinking only the stdin cap must not reject it.
+    monkeypatch.setattr(cap_sync, "MAX_INPUT_JSON_BYTES", 1)
+    assert cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))["status"] == "verified"
+
+    replacement = log.with_name("replacement.jsonl")
+    replacement.write_bytes(log.read_bytes())
+    calls = 0
+
+    def replace_after_open(path: Path):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            replacement.replace(log)
+        return path.stat()
+
+    monkeypatch.setattr(cap_sync, "_mesh_path_stat", replace_after_open)
+    rejected = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+    assert rejected == {
+        "schema": "capability-admission-verification-receipt/v1",
+        "status": "rejected",
+        "failure_code": "source_unprovable",
+        "value_indicator_policy": False,
+    }
+
+
+@pytest.mark.parametrize("effect,state", [("read_only", "dispatched"), ("read_only", "running"), ("effectful", "dispatched"), ("effectful", "running")])
+def test_verifier_accepts_exact_projected_dispatch_context_without_writes(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, effect: str, state: str
+) -> None:
+    material, request, events = _verification_context(effect=effect, state=state)
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    before = _tree_snapshot(omo_dir)
+    calls = _forbid_verifier_gateways(cap_sync, monkeypatch)
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["status"] == "verified"
+    assert _tree_snapshot(omo_dir) == before
+    assert calls == {"gateway": 0, "subprocess": 0}
+
+
+@pytest.mark.parametrize(
+    ("mutation", "failure_code"),
+    [
+        (lambda material, request, events: events[1]["payload"]["admission"].update({"expires_at": "2000-01-01T00:00:00+00:00"}), "admission_receipt_invalid"),
+        (lambda material, request, events: events[1]["payload"]["admission"]["request_identity"].update({"packet_id": "other-packet"}), "admission_receipt_invalid"),
+        (lambda material, request, events: events[1]["payload"]["admission"]["request_identity"].update({"packet_hash": "sha256:" + "0" * 64}), "admission_receipt_invalid"),
+        (lambda material, request, events: events[1]["payload"]["admission"].update({"capabilities": []}), "admission_receipt_invalid"),
+        (lambda material, request, events: events[1]["payload"]["admission"].update({"proof": "0" * 64}), "admission_receipt_invalid"),
+        (lambda material, request, events: material["admission"].update({"admission_id": "other-admission"}), "admission_receipt_invalid"),
+        (lambda material, request, events: material["binding"].update({"workflow_run_id": "other-run"}), "admission_contradiction"),
+        (lambda material, request, events: request["payload"].update({"operation": "drifted"}), "native_route_unprovable"),
+    ],
+)
+def test_verifier_rejects_bound_admission_and_material_mismatches_without_writes(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mutation, failure_code: str
+) -> None:
+    material, request, events = _verification_context()
+    mutation(material, request, events)
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    before = _tree_snapshot(omo_dir)
+    calls = _forbid_verifier_gateways(cap_sync, monkeypatch)
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == failure_code
+    assert _tree_snapshot(omo_dir) == before
+    assert calls == {"gateway": 0, "subprocess": 0}
+
+
+def test_verifier_rejects_when_native_verifier_is_unavailable_without_outbound_calls(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    material, request, events = _verification_context()
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    calls = _forbid_verifier_gateways(cap_sync, monkeypatch)
+    monkeypatch.setattr(cap_sync, "NATIVE_EXECUTION_LIBS_AVAILABLE", False)
+
+    assert cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request)) == {
+        "schema": "capability-admission-verification-receipt/v1",
+        "status": "rejected",
+        "failure_code": "native_route_unprovable",
+        "value_indicator_policy": False,
+    }
+    assert calls == {"gateway": 0, "subprocess": 0}
+
+
+@pytest.mark.parametrize("state", ["dispatched", "running"])
+def test_verifier_requires_exact_step_run_projection_for_dispatched_paths(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, state: str
+) -> None:
+    material, request, events = _verification_context(effect="read_only", state=state)
+    admission = events[1]["payload"]["admission"]
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    monkeypatch.setattr(cap_sync, "_load_workflow_mesh_projection", lambda: lambda _events, _run_id: {
+        "workflow_run_id": material["binding"]["workflow_run_id"],
+        "state": state,
+        "admission": admission,
+        "step_runs": {},
+        "worker": {
+            "dispatch_id": material["binding"]["dispatch_id"],
+            "worker_id": material["binding"]["actor_id"],
+            "step_run_id": material["admission"]["step_run_id"],
+            "admission_id": material["admission"]["admission_id"],
+            "packet_id": material["binding"]["packet_id"],
+            "packet_hash": material["binding"]["packet_hash"],
+        },
+    })
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["failure_code"] == "admission_receipt_invalid"
+
+
+def test_effectful_admitted_and_missing_or_wrong_step_run_are_rejected(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context(effect="effectful", state="admitted")
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    assert cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))["failure_code"] == "admission_contradiction"
+
+    material, request, events = _verification_context(effect="effectful", state="dispatched")
+    events[2]["payload"]["admission_id"] = "wrong-admission"
+    _write_mesh(omo_dir, events)
+    assert cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))["failure_code"] == "admission_receipt_invalid"
+
+
+def test_verifier_rejects_expired_admission_after_reproof(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context()
+    grant = events[1]["payload"]["admission"]
+    grant["issued_at"] = "1999-01-01T00:00:00+00:00"
+    grant["expires_at"] = "2000-01-01T00:00:00+00:00"
+    proof_input = dict(grant)
+    proof_input.pop("proof", None)
+    grant["proof"] = hashlib.sha256(
+        json.dumps(proof_input, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    events[1]["payload"]["issued_at"] = grant["issued_at"]
+    events[1]["payload"]["expires_at"] = grant["expires_at"]
+    events[1]["payload"]["proof"] = grant["proof"]
+    material["admission"]["receipt_digest"] = "sha256:" + grant["proof"]
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["failure_code"] == "admission_expired"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("capability_id", "bos-service:bos://governance/other"),
+        ("operation_id", "other"),
+        ("effect_classification", "effectful"),
+    ],
+)
+def test_verifier_rejects_expected_material_mismatch(cap_sync, tmp_path: Path, field: str, value: str) -> None:
+    material, request, events = _verification_context()
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    envelope = _verification_envelope(material, request)
+    envelope["expected"][field] = value
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, envelope)
+
+    assert receipt["failure_code"] == "native_route_unprovable"
+
+
+def test_verifier_rejects_malformed_or_oversize_mesh_log_with_redacted_failure(cap_sync, tmp_path: Path, monkeypatch) -> None:
+    material, request, events = _verification_context()
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    log = omo_dir / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    log.write_text("not-json\n", encoding="utf-8")
+    malformed = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+    assert malformed["failure_code"] == "admission_receipt_invalid"
+    assert str(log) not in json.dumps(malformed, sort_keys=True)
+
+    _write_mesh(omo_dir, events)
+    monkeypatch.setattr(cap_sync, "MAX_MESH_LOG_BYTES", 1)
+    oversize = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+    assert oversize["failure_code"] == "source_unprovable"
+    assert str(log) not in json.dumps(oversize, sort_keys=True)
 
 
 def test_unbound_invoke_is_shadow_observed_before_fail_promotion(cap_sync, monkeypatch, registry, tmp_path, capsys):

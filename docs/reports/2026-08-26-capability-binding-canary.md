@@ -24,14 +24,15 @@ exit-code alignment follow-up.
 
 | Required evidence | State |
 |---|---|
-| accepted Spec/WorkPacket start | **BLOCKED** — OMO Tasks 2/3 (requirements preservation + start-time preflight identity) undelivered |
-| admitted dispatch | **BLOCKED** — same dependency |
+| accepted Spec/WorkPacket start | **DEPS-DELIVERED / LIVE-RUN-PENDING** — T2 landed via omo #101; T3 landed via root #2285; only the gateway-backed execution remains |
+| admitted dispatch | **DEPS-DELIVERED / LIVE-RUN-PENDING** — dispatch recheck consumes persisted admission (omo-integrity); live run pending |
 | confirmed read-only native receipt | **CONTRACT-COVERED** — bound path unit contracts (root #2248 suite, cockpit #86); live-gateway run pending |
 | replay with zero new invocation | **CONTRACT-COVERED** — idempotency-key contract in worker-lifecycle suites |
 | cleanup proof | **CONTRACT-COVERED** — proved-cleanup validator exercised in native-receipt suites |
 
 ## Conclusion
 
-Negative surface fully executed and blocked correctly. Positive topology
-cannot be claimed until Tasks 2/3 land and a gateway-backed run executes;
-value stays NOT_PROVEN by design.
+Negative surface fully executed and blocked correctly. Tasks 2/3 have since
+landed (omo #101, root #2285): the dependency blocker is cleared, so positive
+topology now awaits only a gateway-backed execution run; value stays
+NOT_PROVEN until then.
