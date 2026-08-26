@@ -5565,7 +5565,7 @@ bets:
     expect: exit 0
   - cmd: cd projects/omo && uv run pytest tests/test_omo_worker_admission_gate.py tests/test_worker_lifecycle_mesh.py tests/test_workflow_mesh.py -q
     expect: exit 0
-  - cmd: cd projects/cockpit && uv run pytest src/cockpit/tests/test_bos_capability_invoke.py src/cockpit/tests/test_agent_runtime_server.py -q
+  - cmd: cd projects/cockpit && uv run pytest src/cockpit/tests/test_bos_capability_invoke.py src/cockpit/tests/test_api_kems_retired.py src/cockpit/tests/test_agent_runtime_server.py tests/test_api_kems_dispatch.py -q
     expect: exit 0
   - cmd: cd projects/agora && uv run pytest tests/unit/test_capability_gateway.py -q
     expect: exit 0
@@ -5661,7 +5661,9 @@ bets:
   - projects/cockpit/src/cockpit/agent_runtime_server.py
   - projects/cockpit/src/cockpit/agent_runtime_mcp_server.py
   - projects/cockpit/src/cockpit/tests/test_bos_capability_invoke.py
+  - projects/cockpit/src/cockpit/tests/test_api_kems_retired.py
   - projects/cockpit/src/cockpit/tests/test_agent_runtime_server.py
+  - projects/cockpit/tests/test_api_kems_dispatch.py
   - projects/cockpit
   - projects/agora/src/agora/capability_gateway.py
   - projects/agora/tests/unit/test_capability_gateway.py
