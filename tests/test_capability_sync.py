@@ -1347,6 +1347,230 @@ def test_verify_material_cli_reads_one_bounded_stdin_envelope_and_uses_fixed_omo
     assert "omo_dir" not in json.dumps(receipt, sort_keys=True)
 
 
+def _tree_snapshot(root: Path) -> dict[str, tuple[bytes, int]]:
+    """Capture every file below root so verifier reads cannot hide writes."""
+    return {
+        path.relative_to(root).as_posix(): (path.read_bytes(), path.stat().st_mode)
+        for path in root.rglob("*")
+        if path.is_file()
+    }
+
+
+def _forbid_verifier_gateways(cap_sync, monkeypatch: pytest.MonkeyPatch) -> dict[str, int]:
+    calls = {"gateway": 0, "subprocess": 0}
+
+    def forbidden_gateway(*args, **kwargs):
+        calls["gateway"] += 1
+        raise AssertionError("verifier must not reach a native gateway")
+
+    def forbidden_subprocess(*args, **kwargs):
+        calls["subprocess"] += 1
+        raise AssertionError("verifier must not spawn a subprocess")
+
+    monkeypatch.setattr(cap_sync, "_load_native_gateway", forbidden_gateway)
+    monkeypatch.setattr(cap_sync, "execute_gateway_operation", forbidden_gateway)
+    monkeypatch.setattr(cap_sync.subprocess, "run", forbidden_subprocess)
+    return calls
+
+
+def test_verifier_is_python39_safe_and_legacy_import_does_not_load_omo(cap_sync, registry: dict, tmp_path: Path, monkeypatch) -> None:
+    source = SYNC_PATH.read_text(encoding="utf-8")
+    ast.parse(source, filename=str(SYNC_PATH), feature_version=(3, 9))
+    assert "from datetime import UTC" not in source
+    assert "Path | str" not in source
+    assert "OMO_SRC" not in source
+    assert callable(cap_sync._load_workflow_mesh_projection)
+
+    registry_path = tmp_path / "registry.yaml"
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+    monkeypatch.setattr(
+        cap_sync,
+        "_load_workflow_mesh_projection",
+        lambda: (_ for _ in ()).throw(AssertionError("legacy command loaded OMO")),
+    )
+    assert cap_sync.main(["find", "--id", "mcp-server:omo", "--registry", str(registry_path)]) == 0
+
+
+def test_mesh_reader_uses_separate_log_bound_and_rejects_path_replacement(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    material, request, events = _verification_context()
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    log = omo_dir / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    assert cap_sync.MAX_MESH_LOG_BYTES > cap_sync.MAX_INPUT_JSON_BYTES
+
+    # A Mesh log is not stdin: shrinking only the stdin cap must not reject it.
+    monkeypatch.setattr(cap_sync, "MAX_INPUT_JSON_BYTES", 1)
+    assert cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))["status"] == "verified"
+
+    replacement = log.with_name("replacement.jsonl")
+    replacement.write_bytes(log.read_bytes())
+    calls = 0
+
+    def replace_after_open(path: Path):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            replacement.replace(log)
+        return path.stat()
+
+    monkeypatch.setattr(cap_sync, "_mesh_path_stat", replace_after_open)
+    rejected = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+    assert rejected == {
+        "schema": "capability-admission-verification-receipt/v1",
+        "status": "rejected",
+        "failure_code": "source_unprovable",
+        "value_indicator_policy": False,
+    }
+
+
+@pytest.mark.parametrize("effect,state", [("read_only", "dispatched"), ("read_only", "running"), ("effectful", "dispatched"), ("effectful", "running")])
+def test_verifier_accepts_exact_projected_dispatch_context_without_writes(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, effect: str, state: str
+) -> None:
+    material, request, events = _verification_context(effect=effect, state=state)
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    before = _tree_snapshot(omo_dir)
+    calls = _forbid_verifier_gateways(cap_sync, monkeypatch)
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["status"] == "verified"
+    assert _tree_snapshot(omo_dir) == before
+    assert calls == {"gateway": 0, "subprocess": 0}
+
+
+@pytest.mark.parametrize(
+    ("mutation", "failure_code"),
+    [
+        (lambda material, request, events: events[1]["payload"]["admission"].update({"expires_at": "2000-01-01T00:00:00+00:00"}), "admission_receipt_invalid"),
+        (lambda material, request, events: events[1]["payload"]["admission"]["request_identity"].update({"packet_id": "other-packet"}), "admission_receipt_invalid"),
+        (lambda material, request, events: events[1]["payload"]["admission"].update({"capabilities": []}), "admission_receipt_invalid"),
+        (lambda material, request, events: events[1]["payload"]["admission"].update({"proof": "0" * 64}), "admission_receipt_invalid"),
+        (lambda material, request, events: material["admission"].update({"admission_id": "other-admission"}), "admission_receipt_invalid"),
+        (lambda material, request, events: material["binding"].update({"workflow_run_id": "other-run"}), "admission_contradiction"),
+        (lambda material, request, events: request["payload"].update({"operation": "drifted"}), "native_route_unprovable"),
+    ],
+)
+def test_verifier_rejects_bound_admission_and_material_mismatches_without_writes(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mutation, failure_code: str
+) -> None:
+    material, request, events = _verification_context()
+    mutation(material, request, events)
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    before = _tree_snapshot(omo_dir)
+    calls = _forbid_verifier_gateways(cap_sync, monkeypatch)
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == failure_code
+    assert _tree_snapshot(omo_dir) == before
+    assert calls == {"gateway": 0, "subprocess": 0}
+
+
+@pytest.mark.parametrize("state", ["dispatched", "running"])
+def test_verifier_requires_exact_step_run_projection_for_dispatched_paths(
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, state: str
+) -> None:
+    material, request, events = _verification_context(effect="read_only", state=state)
+    admission = events[1]["payload"]["admission"]
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    monkeypatch.setattr(cap_sync, "_load_workflow_mesh_projection", lambda: lambda _events, _run_id: {
+        "workflow_run_id": material["binding"]["workflow_run_id"],
+        "state": state,
+        "admission": admission,
+        "step_runs": {},
+        "worker": {
+            "dispatch_id": material["binding"]["dispatch_id"],
+            "worker_id": material["binding"]["actor_id"],
+            "step_run_id": material["admission"]["step_run_id"],
+            "admission_id": material["admission"]["admission_id"],
+            "packet_id": material["binding"]["packet_id"],
+            "packet_hash": material["binding"]["packet_hash"],
+        },
+    })
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["failure_code"] == "admission_receipt_invalid"
+
+
+def test_effectful_admitted_and_missing_or_wrong_step_run_are_rejected(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context(effect="effectful", state="admitted")
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    assert cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))["failure_code"] == "admission_contradiction"
+
+    material, request, events = _verification_context(effect="effectful", state="dispatched")
+    events[2]["payload"]["admission_id"] = "wrong-admission"
+    _write_mesh(omo_dir, events)
+    assert cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))["failure_code"] == "admission_receipt_invalid"
+
+
+def test_verifier_rejects_expired_admission_after_reproof(cap_sync, tmp_path: Path) -> None:
+    material, request, events = _verification_context()
+    grant = events[1]["payload"]["admission"]
+    grant["issued_at"] = "1999-01-01T00:00:00+00:00"
+    grant["expires_at"] = "2000-01-01T00:00:00+00:00"
+    proof_input = dict(grant)
+    proof_input.pop("proof", None)
+    grant["proof"] = hashlib.sha256(
+        json.dumps(proof_input, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    events[1]["payload"]["issued_at"] = grant["issued_at"]
+    events[1]["payload"]["expires_at"] = grant["expires_at"]
+    events[1]["payload"]["proof"] = grant["proof"]
+    material["admission"]["receipt_digest"] = "sha256:" + grant["proof"]
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+
+    assert receipt["failure_code"] == "admission_expired"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("capability_id", "bos-service:bos://governance/other"),
+        ("operation_id", "other"),
+        ("effect_classification", "effectful"),
+    ],
+)
+def test_verifier_rejects_expected_material_mismatch(cap_sync, tmp_path: Path, field: str, value: str) -> None:
+    material, request, events = _verification_context()
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    envelope = _verification_envelope(material, request)
+    envelope["expected"][field] = value
+
+    receipt = cap_sync.verify_material_against_mesh(omo_dir, envelope)
+
+    assert receipt["failure_code"] == "native_route_unprovable"
+
+
+def test_verifier_rejects_malformed_or_oversize_mesh_log_with_redacted_failure(cap_sync, tmp_path: Path, monkeypatch) -> None:
+    material, request, events = _verification_context()
+    omo_dir = tmp_path / ".omo"
+    _write_mesh(omo_dir, events)
+    log = omo_dir / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    log.write_text("not-json\n", encoding="utf-8")
+    malformed = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+    assert malformed["failure_code"] == "admission_receipt_invalid"
+    assert str(log) not in json.dumps(malformed, sort_keys=True)
+
+    _write_mesh(omo_dir, events)
+    monkeypatch.setattr(cap_sync, "MAX_MESH_LOG_BYTES", 1)
+    oversize = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
+    assert oversize["failure_code"] == "source_unprovable"
+    assert str(log) not in json.dumps(oversize, sort_keys=True)
+
+
 def test_unbound_invoke_is_shadow_observed_before_fail_promotion(cap_sync, monkeypatch, registry, tmp_path, capsys):
     registry_file = tmp_path / "registry.yaml"
     registry_file.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")

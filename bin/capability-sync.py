@@ -14,14 +14,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 try:
     import yaml
@@ -33,15 +34,6 @@ ROOT = Path(__file__).resolve().parents[1]
 LIB = ROOT / "lib"
 if str(LIB) not in sys.path:
     sys.path.insert(0, str(LIB))
-OMO_SRC = ROOT / "projects" / "omo" / "src"
-if str(OMO_SRC) not in sys.path:
-    sys.path.insert(0, str(OMO_SRC))
-
-try:
-    from omo.workflow_mesh import project_workflow_run  # type: ignore[import-not-found]
-except ImportError:  # pragma: no cover - embedded verifier environments may omit OMO
-    project_workflow_run = None  # type: ignore[assignment]
-
 from capability_native_inspection import (  # noqa: E402 -- static native source proof only
     NativeInspectionError,
     inspect_native_capability,
@@ -101,6 +93,7 @@ FEDERATION_AUDITOR = ROOT / "lib" / "capability_federation_audit.py"
 AGORA_SRC = ROOT / "projects" / "agora" / "src"
 SUPPORTED_SCHEMA_MAJOR = 1
 MAX_INPUT_JSON_BYTES = 1024 * 1024
+MAX_MESH_LOG_BYTES = 8 * 1024 * 1024
 VERIFICATION_SCHEMA = "capability-admission-verification-request/v1"
 VERIFICATION_RECEIPT_SCHEMA = "capability-admission-verification-receipt/v1"
 VERIFICATION_FIELDS = {"schema", "material", "request", "expected"}
@@ -680,18 +673,41 @@ def _mesh_stat_fingerprint(stat: Any) -> tuple[int, int, int, int, int]:
     return (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
 
 
+def _mesh_path_stat(path: Path) -> Any:
+    """Small seam for testing the pathname identity around one descriptor read."""
+    return path.stat()
+
+
+def _load_workflow_mesh_projection() -> Any:
+    """Import OMO only for persisted-Mesh verification, never for legacy commands."""
+    omo_src = ROOT / "projects" / "omo" / "src"
+    if str(omo_src) not in sys.path:
+        sys.path.insert(0, str(omo_src))
+    try:
+        from omo.workflow_mesh import project_workflow_run  # type: ignore[import-not-found]
+    except ImportError as exc:
+        raise TraceBindingError("source_unprovable") from exc
+    return project_workflow_run
+
+
 def _read_mesh_snapshot(omo_dir: Path, workflow_run_id: str) -> dict[str, Any]:
     """Read the append-only Mesh log without constructing its locking store."""
-    if project_workflow_run is None:
-        raise TraceBindingError("source_unprovable")
     log_path = Path(omo_dir) / MESH_LOG
     try:
-        before = log_path.stat()
-        content = log_path.read_bytes()
-        after = log_path.stat()
+        with log_path.open("rb") as mesh_log:
+            before = os.fstat(mesh_log.fileno())
+            before_path = _mesh_path_stat(log_path)
+            content = mesh_log.read(MAX_MESH_LOG_BYTES + 1)
+            after = os.fstat(mesh_log.fileno())
+            after_path = _mesh_path_stat(log_path)
     except (OSError, UnicodeError) as exc:
         raise TraceBindingError("source_unprovable") from exc
-    if _mesh_stat_fingerprint(before) != _mesh_stat_fingerprint(after) or len(content) > MAX_INPUT_JSON_BYTES:
+    if (
+        _mesh_stat_fingerprint(before) != _mesh_stat_fingerprint(after)
+        or (before.st_dev, before.st_ino) != (before_path.st_dev, before_path.st_ino)
+        or (after.st_dev, after.st_ino) != (after_path.st_dev, after_path.st_ino)
+        or len(content) > MAX_MESH_LOG_BYTES
+    ):
         raise TraceBindingError("source_unprovable")
     events: list[dict[str, Any]] = []
     try:
@@ -705,7 +721,7 @@ def _read_mesh_snapshot(omo_dir: Path, workflow_run_id: str) -> dict[str, Any]:
     except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
         raise TraceBindingError("admission_receipt_invalid") from exc
     try:
-        snapshot = project_workflow_run(events, workflow_run_id)
+        snapshot = _load_workflow_mesh_projection()(events, workflow_run_id)
     except Exception as exc:  # noqa: BLE001 - Mesh details must never cross the public boundary
         raise TraceBindingError("admission_receipt_invalid") from exc
     if not isinstance(snapshot, dict):
@@ -753,7 +769,9 @@ def _verify_worker_context(material: Mapping[str, Any], snapshot: Mapping[str, A
         raise TraceBindingError("admission_receipt_invalid")
 
 
-def verify_material_against_mesh(omo_dir: Path | str, envelope: Mapping[str, Any]) -> dict[str, Any]:
+def verify_material_against_mesh(  # noqa: UP007 -- public Python 3.9 compatibility contract
+    omo_dir: Union[Path, str], envelope: Mapping[str, Any]  # noqa: UP007 -- Python 3.9 style
+) -> dict[str, Any]:
     """Verify frozen execution material against one stable, persisted Mesh read."""
     try:
         _raw, material_input, request, expected = _parse_verification_envelope(envelope)
@@ -797,14 +815,6 @@ def verify_material_against_mesh(omo_dir: Path | str, envelope: Mapping[str, Any
         identity_expected = {"packet_id": binding["packet_id"], "packet_hash": binding["packet_hash"]}
         if any(request_identity.get(key) != value for key, value in identity_expected.items()):
             raise TraceBindingError("admission_receipt_invalid")
-        optional_identity = {
-            "capability_id": material["capability"]["id"],
-            "operation_id": material["operation_id"],
-            "effect_classification": material["effect_classification"],
-            "request_digest": material["request_digest"],
-        }
-        if any(key in request_identity and request_identity.get(key) != value for key, value in optional_identity.items()):
-            raise TraceBindingError("admission_receipt_invalid")
         capabilities = admission.get("capabilities")
         if not isinstance(capabilities, list) or not any(
             capability == material["capability"]["id"]
@@ -817,9 +827,6 @@ def verify_material_against_mesh(omo_dir: Path | str, envelope: Mapping[str, Any
             raise TraceBindingError("admission_receipt_invalid")
         if material["admission"]["step_run_id"] not in admission.get("step_run_ids", []):
             raise TraceBindingError("admission_receipt_invalid")
-        step = snapshot.get("step_runs", {}).get(material["admission"]["step_run_id"])
-        if isinstance(step, Mapping) and step.get("admission_id") != admission_material["admission_id"]:
-            raise TraceBindingError("admission_receipt_invalid")
 
         try:
             expires_at = datetime.fromisoformat(str(admission["expires_at"]).replace("Z", "+00:00"))
@@ -828,13 +835,21 @@ def verify_material_against_mesh(omo_dir: Path | str, envelope: Mapping[str, Any
             raise TraceBindingError("admission_receipt_invalid") from exc
         if expires_at.tzinfo is None or issued_at.tzinfo is None or issued_at >= expires_at:
             raise TraceBindingError("admission_receipt_invalid")
-        if datetime.now(UTC) >= expires_at:
+        if datetime.now(timezone.utc) >= expires_at:  # noqa: UP017 -- Python 3.9 has no datetime.UTC
             raise TraceBindingError("admission_expired")
 
         effect = material["effect_classification"]
+        if effect == "effectful" and snapshot.get("state") not in {"dispatched", "running"}:
+            raise TraceBindingError("admission_contradiction")
+        requires_projected_step = effect == "effectful" or snapshot.get("state") in {"dispatched", "running"}
+        if requires_projected_step:
+            step_runs = snapshot.get("step_runs")
+            step = step_runs.get(admission_material["step_run_id"]) if isinstance(step_runs, Mapping) else None
+            if not isinstance(step, Mapping) or step.get("admission_id") != admission_material["admission_id"]:
+                raise TraceBindingError("admission_receipt_invalid")
         if effect == "effectful":
             _verify_worker_context(material, snapshot)
-        elif snapshot.get("state") in {"dispatched", "running"} and snapshot.get("worker") is not None:
+        elif snapshot.get("state") in {"dispatched", "running"}:
             _verify_worker_context(material, snapshot)
         return _verification_receipt(
             "verified",
