@@ -8,7 +8,8 @@
 #     bus_foundation 主题发布 + event-ledger 灌入, T10-12 事件源自动化)
 #   - 每 5min: omo resident signals(personal-signals 轮询, 实际发布到事件流)
 #   - 每 5min: omo resident inbox(感知文件夹 @感知信号 轮询, 实际发布到事件流, T10-15)
-#   - 每 5min: omo resident alert(告警转发)
+#   - 告警外发唯一路径 = daemon monitor 角色 (T10-16): monitor 每 2min publish
+#     observability 严重事件 → alert 事件流 → alert handler 外发, 不再单独 CRON_ALERT
 #   - 每 10min: omo resident promote(sediment 草稿 → 主题 retro 候选, 阶段2 知识晋升)
 #   - 每天 02:10: system-health-check --emit(体系健康探针)
 #
@@ -46,7 +47,6 @@ CRON_INGEST="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BI
 CRON_SIGNALS="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident signals >> ${WORKSPACE}/.omo/_delivery/personal-signals/cron.log 2>&1"
 # inbox: 感知文件夹轮询(实际发布, 与 signals 并列, T10-15)
 CRON_INBOX="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident inbox >> ${WORKSPACE}/.omo/_delivery/perception-inbox/cron.log 2>&1"
-CRON_ALERT="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident alert --dry-run >> ${WORKSPACE}/.omo/_delivery/alert-forwarder/cron.log 2>&1"
 # promote: 沉淀聚合→主题 retro 候选(实际落盘, 10min 节奏足够)
 CRON_PROMOTE="*/10 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident promote >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/promote.log 2>&1"
 CRON_HEALTH="10 2 * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} bin/ssot/system-health-check.py --emit >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/health.log 2>&1"
@@ -62,7 +62,6 @@ ${_ROLE_CRON}
 ${CRON_INGEST}
 ${CRON_SIGNALS}
 ${CRON_INBOX}
-${CRON_ALERT}
 ${CRON_PROMOTE}
 ${CRON_HEALTH}
 EOF
