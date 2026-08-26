@@ -344,5 +344,16 @@ BET verify 第二组 `test_channel_exposure_p0.py` 的 `test_bos_yaml_unimplemen
 - ✅ binding 全链路透传闭环无缺口
 - ⏳ 主仓工作树同步（`feat/phase3-remaining` 并发基底，非交付范围）
 
+# 追加：PR #2259 合并 — task4c skill/workflow discovery（2026-08-26 05:50Z）✅
+
+## 合并（PR #2259 → main `61dbd6498`）
+
+- 同一 BET 系列（T1-12 task4c）：**local skill/workflow discovery** 扩展
+- 变更：`bin/capability-sync.py`（skill/workflow 精确解析）+ `lib/capability_trace_binding.py`（新增 skill/workflow kind → native_owner 映射）+ `bin/ssot/gen-capability-registry.py` + 测试
+- 对 `capability_trace_binding.py` 变更仅增量（`skill`/`workflow` 2 个 kind 映射），**未动 binding_digest 透传逻辑**（#2233）— 无冲突
+- 验证：PR 分支 BET verify 275 passed + ruff clean → CI CLEAN（18 pass + 3 skipping）→ 合并
+- 合并后 main `61dbd6498` 复跑 **275 passed**（无回归）
+- 结论：binding 链闭环 + local skill/workflow discovery 全进 main，T1-12 capability/binding 线完整收敛
+
 
 
