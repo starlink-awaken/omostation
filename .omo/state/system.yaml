@@ -1,6 +1,5 @@
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-26T01:07:35.672013+00:00'
 current_phase: 49
 phase46_status: completed
 phase46_completed_at: '2026-08-01T00:00:00Z'
@@ -232,3 +231,4 @@ workflow_mesh_health:
   - agent-workflow
   - engineering-delivery-consumer
   - omo
+health_score_evidence_generated_at: '2026-08-26T04:28:33.080941+00:00'
