@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,45 @@ from mail_reader import read_all
 
 INBOX = Path.home() / "Documents" / "_inbox"
 HEARTBEAT = ROOT / ".omo" / "state" / "mail-daemon.jsonl"
+STABLE_JR = ROOT / "runtime" / "ssot-stable" / "journey-runner.py"
+JOURNEY_TRIGGERED = ROOT / ".omo" / "state" / "mail-journey-triggered.json"
+
+
+def _trigger_journey_live(mail: Any, cls: dict) -> dict[str, Any] | None:
+    """对任务邮件自动跑 journey --live (闭环最后一公里, 2026-08-26)。
+
+    journey 七步全程草稿模式(HITL 挡发送), 自动跑安全; 人工只剩审草稿
+    决定发不发。防重入: subject 已触发过即跳过 — 未读邮件不会消失,
+    不去重会每 30min 重复产五草稿(_drafts 的 -1/-2/-3 堆积实锤)。
+    """
+    try:
+        seen = json.loads(JOURNEY_TRIGGERED.read_text(encoding="utf-8")) if JOURNEY_TRIGGERED.exists() else {}
+    except Exception:
+        seen = {}
+    key = (mail.subject or "")[:80]
+    if key in seen:
+        return None
+    payload = json.dumps({"subject": key, "sender": (mail.sender or "")[:30]}, ensure_ascii=False)
+    try:
+        r = subprocess.run(
+            [
+                "python3", str(STABLE_JR), "--root", str(ROOT),
+                "run", "--journey", "admin-notification-workflow",
+                "--input", payload, "--live",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+        )
+        ok = r.returncode == 0 and '"status": "completed"' in (r.stdout or "")
+        rec = {"ts": utc_now(), "ok": ok}
+        seen[key] = rec
+        JOURNEY_TRIGGERED.parent.mkdir(parents=True, exist_ok=True)
+        JOURNEY_TRIGGERED.write_text(json.dumps(seen, ensure_ascii=False, indent=1), encoding="utf-8")
+        return {"subject": key, **rec}
+    except Exception as exc:
+        return {"subject": key, "error": str(exc)[:80]}
 
 
 def run_cycle() -> dict[str, Any]:
@@ -72,11 +112,21 @@ def run_cycle() -> dict[str, Any]:
             save_draft(template, content)
             drafts += 1
 
+    # 自动触发 journey --live(闭环最后一公里): 任务到达 30min 内自动产
+    # 五草稿。每轮最多 1 个(防 LLM 风暴, 7步全链约 3 分钟), 其余任务仍走
+    # briefing 桥接命令人工触发; 已触发 subject 去重。
+    journeys: list[dict[str, Any]] = []
+    if tasks:
+        j = _trigger_journey_live(tasks[0][0], tasks[0][1])
+        if j:
+            journeys.append(j)
+
     result = {
         "ts": ts,
         "mails": len(mails),
         "tasks": len(tasks),
         "drafts": drafts,
+        "journeys": journeys,
         "briefing": str(briefing_path),
         "status": "ok",
     }
