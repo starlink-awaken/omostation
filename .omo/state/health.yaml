@@ -1,10 +1,10 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-08-25T22:33:12Z
+# generated_at: 2026-08-26T06:11:42Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5, 'drift': 0.1, 'staleness': 0.1, 'alignment': 0.1}
 
-generated_at: "2026-08-25T22:33:12Z"
+generated_at: "2026-08-26T06:11:42Z"
 source: "c2g.strategy (real audit, no mock)"
 health_score: 73
 governance_anomaly_score: 0
@@ -12,11 +12,11 @@ anomaly_count: 3
 service_online_ratio: 1.000
 freshness_score: 100
 drift_score: 100
-staleness_score: 73
-alignment_score: 74
+staleness_score: 71
+alignment_score: 76
 feedback_alive: True
-feedback_last_ts: "2026-08-25T22:32:54Z"
-feedback_staleness_hours: 0.0
+feedback_last_ts: "2026-08-26T05:53:59+00:00"
+feedback_staleness_hours: 0.3
 total_tasks: 7
 done: 0
 planned: 7
@@ -46,13 +46,13 @@ health_composite_breakdown:
     freshness: 20.0
     runtime: 50.0
     drift: 10.0
-    staleness: 7.300000000000001
-    alignment: 7.4
+    staleness: 7.1000000000000005
+    alignment: 7.6000000000000005
   raw: 72.85
 
 anomalies:
   - "[WARN]  L3 高风险任务 3 个, 需重点 review"
-  - "[WARN]  Owner 集中度: human 持有 57% 待处理任务 (单点故障风险, 知识/能力集中)"
+  - "[WARN]  Owner 集中度: human 持有 67% 待处理任务 (单点故障风险, 知识/能力集中)"
 
 drift_detail:
   source: "drift-sweep"
@@ -64,23 +64,23 @@ drift_detail:
 
 staleness_detail:
   source: "staleness-check"
-  checked: "507"
-  clean: "434"
-  stale: "73"
-  total_issues: "100"
-  stale_ratio: "0.144"
-  issue_density: "0.1972"
-  score: "73"
+  checked: "508"
+  clean: "431"
+  stale: "77"
+  total_issues: "107"
+  stale_ratio: "0.1516"
+  issue_density: "0.2106"
+  score: "71"
 
 alignment_detail:
   source: "maturity-align"
-  reconciliation_score: "74"
+  reconciliation_score: "76"
   drift_detected: "False"
-  normalised: "{'compass_radar': 70.0, 'maturity_scorecard': None, 'bet_ledger': 96.5}"
+  normalised: "{'compass_radar': 73.0, 'maturity_scorecard': None, 'bet_ledger': 96.5}"
   high_dimension: "bet_ledger"
   low_dimension: "compass_radar"
   warnings: "[]"
-  score: "74"
+  score: "76"
 
 distributions:
   priority_dist:
@@ -89,22 +89,19 @@ distributions:
     P2: 2
     P3: 1
     medium: 1
-    unassigned: 1
   risk_dist:
     L1: 2
     L2: 1
     L3: 3
-    unassigned: 1
   owner_dist:
     agent: 1
     human: 4
-    unassigned: 2
+    unassigned: 1
   phase_dist:
-    unphased: 7
+    unphased: 6
   status_dist:
     candidate: 2
     pending: 4
-    unknown: 1
   governance_dist:
     freshness: 20
     governance: 0
