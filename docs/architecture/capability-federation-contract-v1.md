@@ -513,3 +513,10 @@ The capability foundation evolves in bounded steps:
 Plugin installation, Multica production dispatch, remote ACP/A2A, automatic
 model/quota selection and cross-host multi-tenancy remain deferred until the
 preceding evidence is complete.
+
+## Exact Capability Binding rollout status (2026-08-26)
+
+Enforcement: `warning` (promoted from shadow; scans in
+docs/reports/2026-08-26-binding-enforcement-scan.md). Delivered tags:
+agora/cockpit/ecos/omo-integrity 20260824 v1 set; omo-consumer pending.
+Fail promotion and positive-topology canary remain gated on OMO Tasks 2/3.
