@@ -289,5 +289,143 @@ BET verify 第一条测试集（`tests/test_capability_sync.py test_capability_t
 - ✅ 我的部分（#2233 + #2242 + #84）全链路绑定透传闭环
 - ⏳ 剩余 = 并发 agent 的 bound native execution 生产消费者（`test_bound_invoke_emits_native_execution_receipt` 等，未合并 main）+ ecos/omo 侧透传核对
 
+# 追加：channel_exposure 测试修复 PR #2255 合并 + 根项目更新确认（2026-08-26）✅
+
+## 问题（BET verify 暴露的过时测试）
+
+BET verify 第二组 `test_channel_exposure_p0.py` 的 `test_bos_yaml_unimplemented_filtered_from_routable` 失败（`assert 0 >= 8`）。根因：agora `a7d7d18b`（BET-Y1Q3-T1-05 声明诚实化）把 8 个 AGT 服务从 `unimplemented` 标记为 `deprecated`，测试仍断言 `len(unimplemented) >= 8` → 得 0。CI 不跑该测试（纯本地 BET verify 暴露），main 一直绿。
+
+## 修复（PR #2255，已合并 `454af2bc`）
+
+- 测试"非可路由"判定从仅 `unimplemented` 扩展为 `unimplemented` + `deprecated`（两者都不可路由）
+- 保留核心安全意图：AGT uris 绝不能出现在 routable 集合（8 个 agt uris 全 deprecated，已验证不在 routable）
+- 独立 clone main 复现失败 → 修复后 6 passed（was 5 passed + 1 failed）；ruff clean
+- commit `f60ec60c0` + tag `delivery/t1-12-channel-exposure-20260826-v1` → PR #2255 → **MERGED** squash `454af2bc`
+
+## 根项目（omostation main）更新确认
+
+用户提醒"根项目记得也更新了"。全面检查确认 **main 的所有 gitlink 已与各子模块 origin/main 一致**（无落后）：
+- cockpit gitlink = `e60d068a`（含 PR #84 binding 透传）✅
+- omo gitlink = `783feaad`（最新，含并发 agent 推进）✅
+- 主仓工作树 HEAD 分支 `feat/phase3-remaining`（本地分支，非 PR）落后 main 18 commits——属并发 agent 基底，**不在主仓动它**（共享工作树，396 dirty 文件）
+- main 上 channel_exposure 6 passed 验证（`2811fd70d` 上复跑通过）
+
+## 当前 BET-Y1Q3-T1-12 状态（2026-08-26 03:45Z）
+
+- ✅ 我的部分：binding 透传（#2233）+ fixture 同步（#2242）+ Cockpit 透传（#84）+ channel_exposure 测试（#2255）全部进 main
+- ✅ 根项目 main gitlink 全部最新
+- ⏳ 剩余 = 并发 agent 的 bound native execution 生产消费者（未合并 main）+ ecos/omo 侧透传核对 + 主仓工作树同步（并发基底）
+
+# 追加：BET verify 全绿确认 + binding 链闭环核查（2026-08-26 04:05Z）✅ 完成
+
+## BET verify 根仓完整矩阵全绿
+
+独立 clone（main `74c9f9b55`）复跑 BET verify 完整测试集：
+
+| 测试组 | 结果 |
+|--------|------|
+| test_capability_sync + trace_binding + native_inspection + native_execution_receipt + channel_exposure + spec_binding_lint | **234 passed**（0 fail） |
+| bound/unbound native execution（`test_bound_invoke_emits_native_execution_receipt` / `test_unbound_invoke_is_shadow_observed_before_fail_promotion`） | **2 passed**（并发 agent 已合并 main） |
+| cockpit test_bos_capability_invoke | **7 passed** |
+
+**剩余失败全部清空**：并发 agent 的 bound native execution 生产消费者已合并进 main（`tests/test_capability_sync.py` 含 2 测试且通过）；omo #105/#106 已合并（CI success）。
+
+## binding 链闭环核查（无缺口）
+
+- **capability-sync → agora**：`--binding-json` 透传 + agora `capability_gateway.py` 正确消费 binding 并产出 `binding_digest`（`_digest(binding)` 多处 + receipt 含字段 + sanitize 保留）✅（#2233）
+- **Cockpit → capability-sync**：`bos.py` invoke 透传 `--binding-json` + `_CAPABILITY_RECEIPT_FIELDS` 保留 `binding_digest` ✅（#84）
+- **ecos 侧**：无 capability-sync 调用、无 binding 相关代码（protocol 层，不参与透传链）— **无缺口**
+- **agora 侧**：消费正确，receipt 含 binding_digest — **无缺口**
+- **omo 侧**：`dispatch-admission-binding`（#106，并发 agent）已合并 — 属并发范围，CI 全绿
+
+## 最终状态
+
+- ✅ **BET-Y1Q3-T1-12 verify 根仓矩阵完全全绿**（我的部分 + 并发 agent 部分全部合并）
+- ✅ binding 全链路透传闭环无缺口
+- ⏳ 主仓工作树同步（`feat/phase3-remaining` 并发基底，非交付范围）
+
+# 追加：PR #2259 合并 — task4c skill/workflow discovery（2026-08-26 05:50Z）✅
+
+## 合并（PR #2259 → main `61dbd6498`）
+
+- 同一 BET 系列（T1-12 task4c）：**local skill/workflow discovery** 扩展
+- 变更：`bin/capability-sync.py`（skill/workflow 精确解析）+ `lib/capability_trace_binding.py`（新增 skill/workflow kind → native_owner 映射）+ `bin/ssot/gen-capability-registry.py` + 测试
+- 对 `capability_trace_binding.py` 变更仅增量（`skill`/`workflow` 2 个 kind 映射），**未动 binding_digest 透传逻辑**（#2233）— 无冲突
+- 验证：PR 分支 BET verify 275 passed + ruff clean → CI CLEAN（18 pass + 3 skipping）→ 合并
+- 合并后 main `61dbd6498` 复跑 **275 passed**（无回归）
+- 结论：binding 链闭环 + local skill/workflow discovery 全进 main，T1-12 capability/binding 线完整收敛
+
+# 追加：PR #2258 合并 — T10-14/T10-15 closeout（2026-08-26 06:00Z）✅ 主仓 open PR 清零
+
+## 合并（PR #2258 → main `ed1d58884`）
+
+- 并发 agent 的 BET-Y1Q3-T10-14/T10-15 closeout（台账升 done，outcome_accepted，含 human attestation）
+- 变更 5 个文档：retros（T10-14/15）+ human-attestations（accept.yaml × 2）+ 3y-bet-ledger.yaml（status done + evidence VERIFIED）
+- 用户确认"pr合并提交"范围 → 合并（CI 17 pass + 3 skipping + MERGEABLE）
+- 合并后 main `ed1d58884` 复跑 BET verify **275 passed**（无回归），无子模块回退
+- **主仓 open PR 清零**（#2233/#2242/#84/#2251/#2255/#2259/#2258 全部 MERGED）
+
+# 追加：omo PR #93 修复+合并 — resident pi binding 精确化（2026-08-26 06:30Z）✅
+
+## 问题（omo #93，2026-08-23 起挂 3 天的失败 PR）
+
+- **lint fail**：`ruff format --check` 报 2 个集成测试文件 unformatted（`}, (` 需合并单行）
+- **3 个 domain 集成测试 fail**：`test_bos_40_uri_smoke` / `test_bos_agora_integration` / `test_bos_domain_chain` 断言 `Expected 6 domains, got 5`
+- **根因**：#93 作者把 BOS domain 断言从 5 个改成 6 个（误加 `resident`），违反北星 ADR-0007"5 domain 固定不可扩展"（`omo_bos.py:53`）；runtime registry 实际 5 domain → 测试 fail
+- 本地验证：omo main（c2ab954）上 3 测试全 PASS（18 passed）→ 判定 #93 引入，非预存在
+
+## 修复（干净分支重建，cherry-pick 核心 + 去错误断言）
+
+- 基于最新 omo origin/main 重建 `fix/pr-93-binding-clean`，cherry-pick #93 的 2 个 commit
+- **保留核心**：`src/omo/resident/execute.py`（`_resolve_run_binding` 从真实 run 文件解析 bet-ledger binding）+ `tests/unit/test_resident_execute.py`（新测试 154 行）
+- **移除错误**：3 个集成测试文件还原为 main 的 5-domain 断言（`git checkout origin/main --` 解决 cherry-pick 冲突）
+- ruff format 修复 → 变更精简为 **2 文件**（+189/-46）
+- 验证：ruff check + format 全过 + contract gatekeeper PASS + 30 passed + 2 skipped
+- tag `delivery/t1-12-omo-pr93-binding-clean-20260826` → force-with-lease push 更新 #93 分支
+- #93 CI 重新触发 → **3 pass 全绿** → CLEAN/MERGEABLE → **合并** → omo main `ba660c8`
+- 合并后 omo main 复跑 30 passed + 2 skipped（无回归）
+
+## 意义
+
+- omo 侧 resident pi 执行 binding 精确化（真实 run 文件 → bet-ledger 契约）进 main
+- omo binding 链补齐：#106 admission-binding + #93 execute-pi-real-run-binding 全进 main
+- **omo 侧 open PR 清零**；BOS domain 约束（北星 ADR-0007 5 domain）保持未被破坏
+
+# 追加：cockpit PR #86 合并 — capability execution entrypoints 收敛（2026-08-26 06:45Z）✅
+
+## 合并（cockpit #86 → cockpit main `a271a0d3`）
+
+- 今天新开（06:15）的 capability/binding 系列 PR：**converge capability execution entrypoints**
+- 提取公共 `run_bos_capability_invoke`（bos.py / agent_runtime_server / agent_runtime_mcp_server 复用），收敛 capability 执行入口（DRY）
+- **与 #84 完全兼容**：保留 `--binding-json` 透传 + `binding_digest` 保留（receipt 测试含 binding_digest）
+- 验证：`test_bos_capability_invoke` 8 passed（含我的 #84 2 测试，7→8）+ CI 2 pass
+- **合并** → cockpit main `a271a0d3`；合并后复跑 8 passed（无回归）
+- **cockpit 侧 open PR 清零**
+
+## 累计状态
+
+- **cockpit binding 链**：#84 透传 + #86 入口收敛 全进 cockpit main
+- **主仓 + cockpit + omo 三仓 open PR 清零**（ecos #43 dashboard 修复除外，非 binding 系列）
+
+# 追加：主仓 auto-bump #2262 合并 — 子模块指针同步（2026-08-26 10:30Z）✅ 根项目更新确认
+
+## 合并（主仓 #2262 → main `1d001e152`）
+
+- auto-bump PR：**同步我的 cockpit #86（a271a0d3）+ omo #93（ba660c8）到主仓 gitlink**
+- 纯指针 bump（2 文件 +2/-2），CLEAN + CI 17 pass → **合并**
+- #2263（相同 bump 的重复 auto-PR）验证为 stale 重复 → **关闭**
+
+## 根项目（omostation main）gitlink 更新确认
+
+- cockpit `a271a0d3`（含 #84 + #86）✅
+- omo `ba660c8`（含 #106 + #93）✅
+- agora `9885202f`、ecos `0d080d09`（最新）✅
+- **main 所有 gitlink = 各子模块 origin/main，无回退**
+
+## 剩余 open PR（并发 agent 进行中）
+
+- 主仓 #2260（feat/cockpit-unified-entrypoint-root，CONFLICTING + CI fail，12 文件含治理/子模块/核心测试）——并发 agent 深度工作，未介入
+- ecos #43（dashboard alert threshold，08-23 旧）——非 binding 系列，未动
+
 
 
