@@ -335,6 +335,21 @@ def test_negated_projection_header_is_not_an_authority_claim(tmp_path: Path) -> 
     assert "CAP_FED_PROJECTION_AUTHORITY_CLAIM" not in _codes(report)
 
 
+def test_canonical_generator_path_is_not_an_authority_claim(tmp_path: Path) -> None:
+    module = _load_module()
+    workspace = _workspace(tmp_path)
+    projection = workspace / "docs/generated/capability-registry.yaml"
+    projection.write_text(
+        "# generated projection, not SSOT / 不是 SSOT\n"
+        "# 生成器: bin/ssot/gen-capability-registry.py\n" + projection.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    report = module.audit_workspace(workspace)
+
+    assert "CAP_FED_PROJECTION_AUTHORITY_CLAIM" not in _codes(report)
+
+
 def test_strict_turns_existing_warning_into_non_zero_without_changing_default(tmp_path: Path) -> None:
     workspace = _workspace(tmp_path)
     (workspace / ".omo/_truth/registry/agent-workflows.yaml").unlink()

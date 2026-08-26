@@ -301,7 +301,8 @@ def _projection_header_claims_authority(workspace: Path) -> bool:
         if not line.lstrip().startswith("#"):
             continue
         header = line.lstrip("#").strip().casefold()
-        if "ssot" in header and not any(negation in header for negation in negations):
+        claim_text = re.sub(r"(?<=/)ssot(?=/)", "path", header)
+        if "ssot" in claim_text and not any(negation in claim_text for negation in negations):
             return True
     return False
 
