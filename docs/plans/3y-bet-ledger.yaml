@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 142
+  total_bets: 143
   windows:
   - Y1Q1
   - Y1Q2
@@ -7971,4 +7971,102 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+  depends_on: []
+- id: BET-Y1Q3-T10-16
+  track: T10-MATURITY
+  window: Y1Q3
+  title: resident monitor/heartbeat 空转治理 (角色私有 tick 接线)
+  appetite: 0.5 day
+  priority: P1
+  status: done
+  done_at: '2026-08-26'
+  started_at: '2026-08-26'
+  goal: '消除 monitor/heartbeat 角色每 2min 纯空转: 三缺口叠加(daemon 未注册 alert/heartbeat handler + resident-routes.yaml 无 system.health/governance:gate_failed/alert/heartbeat/system.alive 规则 + 统一事件流无 monitor/heartbeat 事件类型, observability 平面 456 条 258 critical 从未进事件流)。本次把 monitor/heartbeat 升级为角色私有 tick(publish→路由→处理): 新建 omo.resident.heartbeat(register_with_daemon 注册 heartbeat handler safe + publish_heartbeat 调 status.snapshot 生成 system.alive→追加统一事件流→路由→沉淀 .omo/state/resident-heartbeat.jsonl 活性台账) + omo.resident.monitor(注册 alert handler safe + publish_monitor 增量读 observability severity∈{critical,degraded}→生成 alert 事件→追加统一事件流→路由→调 alert-connectors deliver 外发复用 T10-14 alert.py) + daemon _register_default_handlers 增补两模块 + run_daemon per-role publish hook(tick_once 后 publish, 本 tick 消费上一 tick 发布, 2min 节律) + resident-routes.yaml 新增 alert→alert/system.alive→heartbeat 两规则 + cron 移除 CRON_ALERT(--dry-run) 告警外发统一 monitor 承担 + 真实外发挂账 ALERT_WECOM_WEBHOOK(T10-14 第 5 条, 先接线不配 URL)。'
+  non_goals:
+  - 不配置 ALERT_WECOM_WEBHOOK (T10-14 第 5 条挂账点, 用户决策先只接线不配 URL)
+  - 不接 alert-handler.py (OBS-02 governance-alerts 主动引擎, 独立体系后续评估)
+  - 不实现 monitor 对 governance:gate_failed 的主动探测 (observability 有事件才转发)
+  - 不改 signal-poller.py / status.py 既有逻辑
+  done_when:
+  - projects/omo/src/omo/resident/heartbeat.py 实现 register_with_daemon(heartbeat handler safe) + publish_heartbeat(status.snapshot→system.alive→统一事件流)
+  - projects/omo/src/omo/resident/monitor.py 实现 register_with_daemon(alert handler safe) + publish_monitor(增量读 observability→critical/degraded→alert 事件→统一事件流→deliver)
+  - daemon.py _register_default_handlers 增补 monitor/heartbeat 模块 + run_daemon per-role publish hook (tick_once 后 publish)
+  - 'resident-routes.yaml 新增 alert→alert / system.alive→heartbeat 两条规则 (safe: true)'
+  - install-resident-cron.sh 移除 CRON_ALERT(--dry-run), 告警外发统一 monitor 角色承担
+  - '真实链路验证: heartbeat.publish 实跑 → events.jsonl 出现 system.alive → daemon --role heartbeat → .omo/state/resident-heartbeat.jsonl 活性台账追加(幂等); monitor.publish 实跑 → observability critical/degraded → events.jsonl 出现 alert → daemon --role monitor → deliver 调用(fail-closed)'
+  verify:
+  - cmd: uv run --directory projects/omo --with pytest python -m pytest tests/unit/test_resident_heartbeat.py tests/unit/test_resident_monitor.py tests/integration/test_resident_roles.py -q
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/heartbeat.py
+  - projects/omo/src/omo/resident/monitor.py
+  - projects/omo/src/omo/resident/daemon.py
+  - projects/omo/src/omo/resident/resident-routes.yaml
+  - projects/omo/src/omo/resident/roles.py
+  - projects/omo/src/omo/resident/cli.py
+  - projects/omo/tests/unit/test_resident_heartbeat.py
+  - projects/omo/tests/unit/test_resident_monitor.py
+  - projects/omo/tests/integration/test_resident_roles.py
+  - bin/ssot/install-resident-cron.sh
+  - docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md
+    spec_version: 1.0.0
+    content_digest: "sha256:73c2bfd98aa6bf551ddaf9a2eecb6e7cb654937a21f5f4e9f415b54bf98abefc"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-16
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@2524eec05ca7061e761c19907d7517c11d0736b0
+          tests:
+            ref: receipt://tests/test_heartbeat_wrapper.py
+            sha256: sha256:0145ff7ce4a9630b9014888c54023eb178fe4244c6c4f2c71596245eb5c9f82c
+          diff:
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+          rollback:
+            ref: receipt://bin/gac/heartbeat-wrapper.sh
+            sha256: sha256:7bf63977fc7894ce07ed8ba174727877265655f68500103dd6fe68ba1818a81a
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-16-accept.yaml
+            sha256: sha256:3a0be3e67874c8d40545ce5289f329444f8ae56aa548eab8b0524737d1049e94
+          replay:
+            ref: receipt://tests/test_heartbeat_wrapper.py
+            sha256: sha256:0145ff7ce4a9630b9014888c54023eb178fe4244c6c4f2c71596245eb5c9f82c
+          cleanup:
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+      value:
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-16-accept.yaml
+            sha256: sha256:3a0be3e67874c8d40545ce5289f329444f8ae56aa548eab8b0524737d1049e94
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-16-accept.yaml
+            sha256: sha256:3a0be3e67874c8d40545ce5289f329444f8ae56aa548eab8b0524737d1049e94
+          real_signal:
+            ref: receipt://docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md
+            sha256: sha256:73c2bfd98aa6bf551ddaf9a2eecb6e7cb654937a21f5f4e9f415b54bf98abefc
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-16.md
+            sha256: sha256:8e65d813c54fad49d3a2112c64b380e5920354c6aa8d24bffc39615f68726da8
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-16.md
+            sha256: sha256:8e65d813c54fad49d3a2112c64b380e5920354c6aa8d24bffc39615f68726da8
+    overall_state: outcome_accepted
   depends_on: []
