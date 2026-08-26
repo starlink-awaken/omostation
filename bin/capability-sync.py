@@ -80,7 +80,9 @@ except ImportError:
     # omit the native-execution lib set; the module must stay importable there.
     NATIVE_EXECUTION_LIBS_AVAILABLE = False
 
-BINDING_ENFORCEMENT = "shadow"
+# Promoted shadow -> warning on 2026-08-26 after two consecutive caller scans
+# showed zero unbound production entrypoints (docs/reports/2026-08-26-binding-enforcement-scan.md).
+BINDING_ENFORCEMENT = "warning"
 
 DEFAULT_REGISTRY = ROOT / "docs" / "generated" / "capability-registry.yaml"
 CANONICAL_GENERATOR = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
