@@ -355,5 +355,15 @@ BET verify 第二组 `test_channel_exposure_p0.py` 的 `test_bos_yaml_unimplemen
 - 合并后 main `61dbd6498` 复跑 **275 passed**（无回归）
 - 结论：binding 链闭环 + local skill/workflow discovery 全进 main，T1-12 capability/binding 线完整收敛
 
+# 追加：PR #2258 合并 — T10-14/T10-15 closeout（2026-08-26 06:00Z）✅ 主仓 open PR 清零
+
+## 合并（PR #2258 → main `ed1d58884`）
+
+- 并发 agent 的 BET-Y1Q3-T10-14/T10-15 closeout（台账升 done，outcome_accepted，含 human attestation）
+- 变更 5 个文档：retros（T10-14/15）+ human-attestations（accept.yaml × 2）+ 3y-bet-ledger.yaml（status done + evidence VERIFIED）
+- 用户确认"pr合并提交"范围 → 合并（CI 17 pass + 3 skipping + MERGEABLE）
+- 合并后 main `ed1d58884` 复跑 BET verify **275 passed**（无回归），无子模块回退
+- **主仓 open PR 清零**（#2233/#2242/#84/#2251/#2255/#2259/#2258 全部 MERGED）
+
 
 
