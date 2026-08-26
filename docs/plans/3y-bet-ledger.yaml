@@ -8315,3 +8315,57 @@ bets:
             sha256: sha256:8618da57400d4bc884255c7b2a3119bd5326c6a442e9b86734192e4bc8933f77
     overall_state: outcome_accepted
   depends_on: []
+- id: BET-Y1Q3-T10-18
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'resident 知识兑现闭环 (promote 自动化 + 五问提炼真实入库 + 草稿 retention + retro 索引)'
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  note: '方向 A (Task #51 下一里程碑, 用户选「以上全部依次执行」): promote cron 未装配 (crontab 缺 promote/ingest/inbox, promote.log 不存在) + main retro 全 2026-08-23 旧清单格式无五问骨架 + T10-17 能力 dry-run 502→14 主题 five_q_filled=14/14 未入库 + sediment 508 草稿无 retention + retro 无索引; 本 BET = cron 装配 + 真实五问 retro 入库 + retention + index'
+  goal: '把 resident 知识沉淀链路「事件→草稿→五问提炼 retro→知识」从能力就绪兑现为真实运行并入库: ①重装 install-resident-cron.sh 使 crontab 含 CRON_PROMOTE/INGEST/INBOX, promote.log 落盘 ②非 dry-run promote 生成含确定性五问骨架 retro 经 PR 提交 main ③promote.py 支持 --retain-days(默认30) 超窗草稿归档到 gitignored sediment-archive ④promote 落盘后生成 RETRO_ROOT/index.md(主题/草稿数/failure_rate/five_q_filled/生成时间) ⑤单测覆盖 retention+index。'
+  non_goals:
+  - 不引入 LLM / 不自动撰写语义项
+  - 不重写存量草稿 (幂等不覆盖)
+  - 不改 events.jsonl schema / 不加事件类型 / 不改 daemon 路由
+  - 不建决策提案采纳闭环 (方向 B 另开 BET)
+  - 不处理 Agent Cell 子系统 (方向 C 另开 BET)
+  - 不补规格文档漂移 (inbox/monitor/heartbeat/omo cell, 方向 D 另开 BET)
+  done_when:
+  - 'crontab 含 CRON_PROMOTE (*/10min omo resident promote) + CRON_INGEST + CRON_INBOX (重装 install-resident-cron.sh 后验证), promote.log 存在且非空'
+  - 'omo resident promote (非 dry-run) 在含运行时数据 checkout 生成 14 篇含确定性五问骨架 retro, 并经 PR 提交 main'
+  - 'promote.py 支持 --retain-days (默认 30): dry-run 报告含 archivable_count, 落盘时超窗草稿移入 .omo/_knowledge/sediment-archive/ (gitignored)'
+  - 'promote 落盘后生成 RETRO_ROOT/index.md (主题/草稿数/failure_rate/five_q_filled/生成时间), 经 PR 提交 main'
+  - 'tests/unit/test_resident_promote_retention_index.py 覆盖 retention 归档 + index 生成'
+  verify:
+  - cmd: uv run --directory projects/omo --with pytest python -m pytest tests/unit/test_resident_promote_retention_index.py -q
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/promote.py
+  - projects/omo/tests/unit/test_resident_promote_retention_index.py
+  - bin/ssot/install-resident-cron.sh
+  - .omo/_knowledge/retros/resident/
+  - docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md
+    spec_version: 1.0.0
+    content_digest: "sha256:c4dcb13d6da3c98b9be2b17febd3b1457892539908c4b30b68e8aafc73a77c6a"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-18
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
