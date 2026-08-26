@@ -1,7 +1,8 @@
 ---
 name: project-governance
 description: Use when an agent changes this workspace or a child project and needs executable governance workflow routing instead of relying on AGENTS.md or CLAUDE.md memory. ADR-0203 — all requirement iterations MUST start an agent-workflow run before edits.
----
+
+last-reviewed: 2026-08-26---
 
 # Project Governance Workflow
 

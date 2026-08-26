@@ -1,6 +1,6 @@
-health_score_evidence: 100.0
+health_score_evidence: 86.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-26T01:07:35.672013+00:00'
+health_score_evidence_generated_at: '2026-08-26T10:16:26.621383+00:00'
 current_phase: 49
 phase46_status: completed
 phase46_completed_at: '2026-08-01T00:00:00Z'
@@ -10,9 +10,9 @@ phase_status: active
 current_wave: W5
 next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面落地)
 health_score_ref: .omo/state/health.yaml
-health_score: 73
+health_score: 74
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-08-25T22:33:12Z'
+health_score_generated_at: '2026-08-26T10:14:17Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -201,8 +201,8 @@ runtime_health_summary:
   online_services: 4
   total_services: 4
   ratio: 1.0
-  health_score: 73
-  last_scan: '2026-08-25T22:33:12Z'
+  health_score: 74
+  last_scan: '2026-08-26T10:14:17Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
 phase42_status: completed

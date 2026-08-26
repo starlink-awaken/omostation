@@ -9,7 +9,8 @@ test_files:
   - tests/test_spec_binding_lint.py          # spec binding + completion-evidence + attestation (30 tests)
 ci_status: all_green
 verified_at: 2026-08-22
----
+
+last-reviewed: 2026-08-26---
 
 工程测试证据:
 - NorthStar 测试: 验证三轴分离(工程绿不推价值)+ causal 派生(只从真实 receipt)

@@ -100,7 +100,7 @@ bonus (单独展示, 不计入 overall):
 
 ### 3.3 OMO 集成 (后续, 本 ADR 不实施)
 
-`bin/gac/omo-state-cleanup.py` 可读 `.omo/_derived/m4-health.json` 嵌入 governance-evolution-roadmap report。
+`bin/_archive/migrated_low_value/omo-state-cleanup.py` 可读 `.omo/_derived/m4-health.json` 嵌入 governance-evolution-roadmap report。
 本 ADR 仅产出派生面, 后续治理整合是 Round 3+ 工作。
 
 ---

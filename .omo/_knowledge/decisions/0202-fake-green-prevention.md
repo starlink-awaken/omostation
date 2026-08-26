@@ -30,7 +30,7 @@ supersedes: []
 见 `.github/workflows/workspace.yml` `inline zero-byte guard` step。
 
 ### D2 · pre-commit 迁移保内容守卫
-`bin/gac/check-move-integrity.py` 进 `.pre-commit-config.yaml`:
+`bin/_archive/migrated_low_value/check-move-integrity.py` 进 `.pre-commit-config.yaml`:
 - 暂存区新增 (A) 的 `*.py` 为 0 字节 → 拦截 (骨架占位必须显式 `# placeholder` 声明)
 - 暂存区出现 "删 >0 字节文件 + 同名新增 0 字节文件" 的迁移对 → 拦截 (a615ace16 模式)
 
