@@ -407,5 +407,25 @@ BET verify 第二组 `test_channel_exposure_p0.py` 的 `test_bos_yaml_unimplemen
 - **cockpit binding 链**：#84 透传 + #86 入口收敛 全进 cockpit main
 - **主仓 + cockpit + omo 三仓 open PR 清零**（ecos #43 dashboard 修复除外，非 binding 系列）
 
+# 追加：主仓 auto-bump #2262 合并 — 子模块指针同步（2026-08-26 10:30Z）✅ 根项目更新确认
+
+## 合并（主仓 #2262 → main `1d001e152`）
+
+- auto-bump PR：**同步我的 cockpit #86（a271a0d3）+ omo #93（ba660c8）到主仓 gitlink**
+- 纯指针 bump（2 文件 +2/-2），CLEAN + CI 17 pass → **合并**
+- #2263（相同 bump 的重复 auto-PR）验证为 stale 重复 → **关闭**
+
+## 根项目（omostation main）gitlink 更新确认
+
+- cockpit `a271a0d3`（含 #84 + #86）✅
+- omo `ba660c8`（含 #106 + #93）✅
+- agora `9885202f`、ecos `0d080d09`（最新）✅
+- **main 所有 gitlink = 各子模块 origin/main，无回退**
+
+## 剩余 open PR（并发 agent 进行中）
+
+- 主仓 #2260（feat/cockpit-unified-entrypoint-root，CONFLICTING + CI fail，12 文件含治理/子模块/核心测试）——并发 agent 深度工作，未介入
+- ecos #43（dashboard alert threshold，08-23 旧）——非 binding 系列，未动
+
 
 
