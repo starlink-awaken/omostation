@@ -7869,7 +7869,8 @@ bets:
   title: resident 告警外发渠道接线 (alert webhook + forwarder 修复)
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: '2026-08-26'
   started_at: '2026-08-25'
   note: 'closeout ok (run 20260825T222712Z-project-code-change-81c6364a): done_when 1-4 达成 — alert-forwarder importlib 加载 + deliver 契约(PR #2200 MERGED 2026-08-25T11:46Z) / alert-connectors list 4 channel url_configured=NO / send --channel alert-wecom fail-closed exit=1+failed 回执 / --dry-run exit 0; 第 5 条待用户配 ALERT_WECOM_WEBHOOK(用户决策先只接线不配 URL); verify 3 checks 全 PASS(doc-ssot-lint/gac-local-gate 57/doc-claims-check)'
   goal: '补齐 resident 告警外发最后一公里: alert-forwarder.py 修复连字符模块 import + deliver() 契约调用(告警链路可外发), alert-channels.yaml 声明 alert-wecom 渠道(env://ALERT_WECOM_WEBHOOK opaque 引用, 先只接线不配 URL, 未配 fail-closed), 回执事件 governance:alert_delivered/failed 可审计; 用户设置 ALERT_WECOM_WEBHOOK 后激活。'
@@ -7904,15 +7905,53 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6982b57de9520051c25f8f42a2458bd927b162b3
+          tests:
+            ref: receipt://bin/ssot/alert-connectors.py
+            sha256: sha256:ee26a65e84a7a886d2887d0523a174b6a357737178b08d2302de1225ac0cd3b3
+          diff:
+            ref: receipt://bin/ssot/alert-forwarder.py
+            sha256: sha256:06df59f1d98d233b56545593ba15e9a767c6d9d806b2512bff6f7db4e3fd5199
+          rollback:
+            ref: receipt://.omo/_truth/registry/alert-channels.yaml
+            sha256: sha256:f323475ac307289b2ae4eca74fc7b8806ffbb520e37ba0fdfb5ba1c687a28225
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://bin/ssot/alert-forwarder.py
+            sha256: sha256:06df59f1d98d233b56545593ba15e9a767c6d9d806b2512bff6f7db4e3fd5199
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-14-accept.yaml
+            sha256: sha256:68d8369cea51024368f68dadb915c2ee0a976ab7937bbc871e01089070ff5129
+          replay:
+            ref: receipt://bin/ssot/alert-connectors.py
+            sha256: sha256:ee26a65e84a7a886d2887d0523a174b6a357737178b08d2302de1225ac0cd3b3
+          cleanup:
+            ref: receipt://bin/ssot/alert-forwarder.py
+            sha256: sha256:06df59f1d98d233b56545593ba15e9a767c6d9d806b2512bff6f7db4e3fd5199
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-14-accept.yaml
+            sha256: sha256:68d8369cea51024368f68dadb915c2ee0a976ab7937bbc871e01089070ff5129
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-14-accept.yaml
+            sha256: sha256:68d8369cea51024368f68dadb915c2ee0a976ab7937bbc871e01089070ff5129
+          real_signal:
+            ref: receipt://docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md
+            sha256: sha256:e26ecbc3bae56451c0f244fe3794f541412f59154cf4598b478ec2d21d15e062
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-14.md
+            sha256: sha256:b8be7a02afa5d6806fe813bc35e0cf55eb765115ad02ed5f3c0d88452e510561
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-14.md
+            sha256: sha256:b8be7a02afa5d6806fe813bc35e0cf55eb765115ad02ed5f3c0d88452e510561
+    overall_state: outcome_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-15
   track: T10-MATURITY
@@ -7920,7 +7959,8 @@ bets:
   title: resident 多信号源扩流 (感知文件夹 inbox_folder 接入事件流)
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: '2026-08-26'
   started_at: '2026-08-25'
   goal: '补齐 resident 输入源缺口: 新增 InboxSignal 事件类型, 复用 personal-signals 模式实现 omo.resident.inbox adapter 轮询 ~/Documents/@感知信号/*.md(content-digest 幂等水位) → 发布 mesh:perception:inbox + 追加 InboxSignal 到 events.jsonl → sediment INBOX_EVENTS 分支沉淀 sediment/inbox/{slug}.md → roles/routes/ingest/cli 全链接线 + cron 每 5min; 感知文件夹 4 个真实信号(已有)接入事件流, 事件流从仅 personal-signals 扩为双源。'
   non_goals:
@@ -7962,15 +8002,53 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9a0c6f7682bab1f522382c64e31993612d6d83af
+          tests:
+            ref: receipt://projects/omo/tests/unit/test_resident_inbox.py
+            sha256: sha256:c9e48c076f088c5d67764d9469e68ddef08b34fd5d9eaef247e2d2f1ea0d1e0d
+          diff:
+            ref: receipt://projects/omo/src/omo/resident/inbox.py
+            sha256: sha256:48452d795b5703ce7e90599e6fc2a9a0d8228edca2b8b8ef776ab3fd779c8088
+          rollback:
+            ref: receipt://projects/omo/src/omo/resident/sediment.py
+            sha256: sha256:3af8971ae7b5d20e749d36e75660427146af1e35f7f0a16490a1801958132c90
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://projects/omo/tests/unit/test_resident_inbox.py
+            sha256: sha256:c9e48c076f088c5d67764d9469e68ddef08b34fd5d9eaef247e2d2f1ea0d1e0d
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-15-accept.yaml
+            sha256: sha256:607dd718a0a3b86f9c09b0692ad632d18d415703a9037530cefaae6055ccd4cd
+          replay:
+            ref: receipt://projects/omo/tests/unit/test_resident_inbox.py
+            sha256: sha256:c9e48c076f088c5d67764d9469e68ddef08b34fd5d9eaef247e2d2f1ea0d1e0d
+          cleanup:
+            ref: receipt://projects/omo/src/omo/resident/inbox.py
+            sha256: sha256:48452d795b5703ce7e90599e6fc2a9a0d8228edca2b8b8ef776ab3fd779c8088
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-15-accept.yaml
+            sha256: sha256:607dd718a0a3b86f9c09b0692ad632d18d415703a9037530cefaae6055ccd4cd
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-15-accept.yaml
+            sha256: sha256:607dd718a0a3b86f9c09b0692ad632d18d415703a9037530cefaae6055ccd4cd
+          real_signal:
+            ref: receipt://docs/superpowers/specs/2026-08-25-resident-inbox-folder-signal-design.md
+            sha256: sha256:dfc1d9d95980468c32eab3ebac948d2a32e7c6e34252f132fa2b4e0ff0895cd3
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-15.md
+            sha256: sha256:3f18dd3ff7bbb2e257931a013da0d47bd16ec7c7f61ca7283a54476ff0c3b1c0
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-15.md
+            sha256: sha256:3f18dd3ff7bbb2e257931a013da0d47bd16ec7c7f61ca7283a54476ff0c3b1c0
+    overall_state: outcome_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-16
   track: T10-MATURITY
