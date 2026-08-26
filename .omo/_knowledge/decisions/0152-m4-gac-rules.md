@@ -43,7 +43,7 @@ M4 元模型工程产出的 8 个治理工具 + 4 个 schema 文件 + 5-check �
 | M4-HEALTH-SCORE | X2 | meta | freshness | advisory | bin/mof/m4-health-score.py + 派生面 |
 | M4-SUBMODULE-HYGIENE | X1 | meta | audit_chain | preferred | bin/ssot/check-submodule-hygiene.py |
 | M4-MCPTOOL-INTEGRITY | X4 | L0 | consistency_drift | required | bin/gac/mcp-tool-data-complete.py |
-| M4-DERIVED-PLANE-AUDIT | X1 | meta | ssot_pointer | advisory | bin/_archive/migrated_low_value/omo-state-cleanup.py + 派生面范式 |
+| M4-DERIVED-PLANE-AUDIT | X1 | meta | ssot_pointer | advisory | bin/_archive/2026-08-conv3/omo-state-cleanup.py + 派生面范式 |
 
 ### 1.1 规则详情
 

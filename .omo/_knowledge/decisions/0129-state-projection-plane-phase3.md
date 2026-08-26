@@ -206,7 +206,7 @@ ADR-0129 解决的是**“写到哪里、按什么生命周期管理”**的问�
    - `bin/mof/generate-brief.py`
    - `bin/gac/state-freshness-check.py`
    - `bin/gac/governance-readiness.py`
-   - `omo health dashboard` (from `bin/_archive/migrated_low_value/omo-health.py`, 2026-07-07 迁移)
+   - `omo health dashboard` (from `bin/_archive/2026-08-conv3/omo-health.py`, 2026-07-07 迁移)
    - `projects/cockpit/src/cockpit/web/api_omos.py`
    - `projects/cockpit/src/cockpit/commands/status.py`
    - `.github/workflows/c2g-radar-daily.yml`

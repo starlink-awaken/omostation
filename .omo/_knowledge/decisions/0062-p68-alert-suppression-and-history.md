@@ -55,7 +55,7 @@ def emit_notification():
 
 ### D2: 告警历史趋势报告 (P68 R2)
 
-**新工具**: `bin/_archive/alert-history.py` (130 行)
+**新工具**: `bin/_archive/2026-08-conv3/alert-history.py` (130 行)
 
 **功能**:
 - 读 alert-notifications.jsonl 最近 N 天

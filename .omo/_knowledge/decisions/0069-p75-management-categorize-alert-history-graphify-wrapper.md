@@ -61,7 +61,7 @@ P74 收口后, P75 调研 4 项候选, 实施 3 项:
 
 ### D3: graphify 重生 wrapper (P75 R3)
 
-**新工具**: `bin/_archive/graphify-local-extract.py` (90 行)
+**新工具**: `bin/_archive/2026-08-conv3/graphify-local-extract.py` (90 行)
 
 **策略**:
 - 检测 OPENAI_API_KEY 配置
