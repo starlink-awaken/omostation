@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -160,6 +161,13 @@ def test_complete_accepts_index_pinned_submodule_surface(
         "validate_completion_evidence",
         lambda matrix, *, workspace: ("outcome_accepted", []),
     )
+    monkeypatch.setitem(
+        sys.modules,
+        "chain_bind",
+        SimpleNamespace(
+            evaluate_complete=lambda bet, workspace, force: SimpleNamespace(ok=True, reasons=[])
+        ),
+    )
     data = {
         "bets": [
             {
@@ -181,7 +189,7 @@ def test_complete_accepts_index_pinned_submodule_surface(
 
     rc = BET_LEDGER.cmd_complete(
         data,
-        SimpleNamespace(bet_id="BET-TEST", force=True),
+        SimpleNamespace(bet_id="BET-TEST", force=False),
     )
 
     assert rc == 0
