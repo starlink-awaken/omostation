@@ -1,5 +1,6 @@
 id: event-loop-dead-loop
 title: '闭环回路死回路: 2 个 emit 零消费者'
+<<<<<<< HEAD
 status: candidate
 task_type: debt
 priority: P1
@@ -47,3 +48,13 @@ started_at: null
 completed_at: null
 blocked_by: null
 retry_count: 0
+||||||| 68db027c7
+=======
+needs-human: true
+description: event-loop-lint 检测到 emit 零消费者 (死回路, emit 没人看). 需人工接消费者/触达.
+dead_loops:
+- kind: state_stale
+  emit_count: 13791
+- kind: autonomy.level_change
+  emit_count: 1789
+>>>>>>> origin/feat/age-v2-final
