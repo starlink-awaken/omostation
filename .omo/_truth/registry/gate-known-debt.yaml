@@ -49,3 +49,12 @@ entries:
   range: origin/main..HEAD
   recorded_at: '2026-08-25T08:15:33.793967+00:00'
   active: true
+- fingerprint: ci-local-fast|gac|service-config-drift|c27246ff4a77dbf3
+  surface: ci-local-fast
+  check_id: gac
+  signature: c27246ff4a77dbf3
+  kind: pre-existing-main
+  reason: service-config-drift (bin/mof/gen-service-configs.py --check) com.l4.governance.watch plist 与 services.yaml 不一致 — origin/main 同红 (并发 agent MOF 改动), 非本 PR 引入
+  range: origin/main..HEAD
+  recorded_at: '2026-08-26T14:35:00+00:00'
+  active: true

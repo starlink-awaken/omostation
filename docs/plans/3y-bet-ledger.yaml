@@ -8447,3 +8447,50 @@ bets:
         evidence: {}
     overall_state: evaluating
   depends_on: []
+- id: BET-Y1Q3-T10-20
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'resident 规格文档对齐 (CLI 全量收录 + Agent Cell 子系统状态标记)'
+  appetite: 0.5 day
+  priority: P2
+  status: candidate
+  note: '方向 D (Task #51 下一里程碑, 用户选「以上全部依次执行」): resident-agent-system-v1.md 落后实现 (2.1 缺 inbox/monitor/heartbeat, 无 Agent Cell 子系统收录, 数据面/cron 过时); 本 BET = 纯文档对齐 (CLI 全量 + §3.1 Agent Cell 状态标记 + §4 更新), 不接线/不归档 (方向 C 决策延迟 T1-12)'
+  goal: '让 resident-agent-system-v1.md 与实现同步: ①2.1 CLI 补 inbox/monitor/heartbeat + promote 五问注释 ②新增 §3.1 Agent Cell 子系统 (模块清单 + omo cell 入口 + T1-12 并发状态标记 + 方向 C 决策) ③§4 运维/数据面更新 (CRON_PROPOSAL_ADR + retros/resident + evolution-proposals) ④last-reviewed=2026-08-26。'
+  non_goals:
+  - 不改 omo 代码 / 不改路由表 / 不接线 Agent Cell (方向 C 决策延迟)
+  - 不归档任何模块 (AGE-v2 为并发活跃工作)
+  - 不引入新章节结构 (沿用现有 § 编号, 仅插入 §3.1)
+  done_when:
+  - '2.1 CLI 列表含 inbox/monitor/heartbeat, promote 注释含五问骨架'
+  - '§3.1 Agent Cell 子系统段存在 (模块清单 + omo cell 入口 + T1-12 状态标记)'
+  - '§4 含 CRON_PROPOSAL_ADR + retros/resident + evolution-proposals'
+  - 'last-reviewed = 2026-08-26'
+  verify:
+  - cmd: make doc-ssot-lint
+    expect: exit 0
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - docs/architecture/resident-agent-system-v1.md
+  - docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md
+    spec_version: 1.0.0
+    content_digest: "sha256:d910b9b984609a01b3516f736f59d061517a5e942368c5e304edfdc38bbb2978"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-20
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
