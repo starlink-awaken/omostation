@@ -90,8 +90,8 @@ appetite 5 天；实际 2026-08-24 → 2026-08-26 约 2 天完成 Task 4/5/6 全
 | 任务 | 状态 | 证据 |
 |---|---|---|
 | T1 WorkPacket capability_requirements | ✅（经 #46 落地；悬挂 tag 重指） | ecos main ⊇ tag |
-| T2 OMO 校验并保留 requirements | ❌ 未交付 | 无 PR/tag |
-| T3 ledger 编译 + start-time preflight identity | ❌ 未交付 | omo-consumer tag 缺失 |
+| T2 OMO 校验并保留 requirements | ✅ omo #101 已在 main（此前仅缺 tag） | tag omo-consumer 已补 |
+| T3 ledger 编译 + start-time preflight identity | ✅ root #2285（merge-commit 保 root-start tag 祖先） | tag root-start |
 | T4 shadow 原生回执 | ✅ root #2248 | tag root-native |
 | T5 dispatch 绑定持久化 admission | ✅ omo #106 + 根 #2256 | tag omo-integrity |
 | T6 Agora/Cockpit 收敛 | ✅ agora #36(tag 重指)/cockpit #86 | 两 tag |
@@ -105,7 +105,7 @@ Engineering DONE 部分=✅；Operational NOT_PROVEN（无生产拓扑正向证�
 - 运维陷阱固化：zsh 不分词导致 `git add $VAR`/jq 引号两处失败；代理断连窗口内 PR 被并行合并。
 
 ### Q4 下一步 owner 指引
-1. T2/T3 owner：按 plan L222/L347 实施，交付 omo-consumer tag。
+1. ~~T2/T3~~ 已交付（#101 / #2285）；tag 均已就位。
 2. fail-promotion owner：warning 窗口两次干净扫描后翻转常量并加零调用测试（scan 方法见 docs/reports/2026-08-26-binding-enforcement-scan.md）。
 3. Golden Slice owner：网关在线后补跑正项金丝，届时才允许 Operational 复评。
 
