@@ -371,6 +371,50 @@ def weekly_report(
     return measure_value_truth(db_path=db_path, principal_id=principal_id, observed_at=observed_at)
 
 
+def _knowledge_consumption(workspace_root: Path) -> dict[str, Any]:
+    """知识消费投影 (BET-Y1Q3-T10-19): 决策提案采纳率 + resident retro 被引用数.
+
+    纯投影 (projection never writer), 只读不写; 不改 value 轴判定。
+    """
+    proposals_dir = workspace_root / ".omo" / "_knowledge" / "evolution-proposals"
+    retro_dir = workspace_root / ".omo" / "_knowledge" / "retros" / "resident"
+    decisions_dir = workspace_root / ".omo" / "_knowledge" / "decisions"
+
+    statuses = ["new", "drafted", "adopted", "executed", "verified"]
+    counts = {s: 0 for s in statuses}
+    total = 0
+    if proposals_dir.is_dir():
+        for path in proposals_dir.glob("proposal-*.json"):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            status = data.get("status", "new")
+            counts[status if status in counts else "new"] += 1
+            total += 1
+    adopted = counts["adopted"] + counts["executed"] + counts["verified"]
+    adoption_rate = round(adopted / max(1, total), 4)
+
+    retro_files = sorted(retro_dir.glob("*.md")) if retro_dir.is_dir() else []
+    referenced: set[str] = set()
+    if decisions_dir.is_dir() and retro_files:
+        for decision in decisions_dir.glob("*.md"):
+            try:
+                text = decision.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for retro in retro_files:
+                if retro.name in text:
+                    referenced.add(retro.name)
+    return {
+        "proposal_total": total,
+        "proposal_status": counts,
+        "proposal_adoption_rate": adoption_rate,
+        "retro_total": len(retro_files),
+        "retro_referenced": len(referenced),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true")
@@ -419,6 +463,7 @@ def main() -> int:
         return completed.returncode
 
     report = weekly_report(db_path=args.db_path, principal_id=args.principal_id, observed_at=args.observed_at)
+    report["knowledge_consumption"] = _knowledge_consumption(ROOT)
     if args.json:
         print(json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True))
     else:

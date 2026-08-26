@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 145
+  total_bets: 146
   windows:
   - Y1Q1
   - Y1Q2
@@ -8378,6 +8378,61 @@ bets:
     spec_version: 1.0.0
     content_digest: "sha256:c4dcb13d6da3c98b9be2b17febd3b1457892539908c4b30b68e8aafc73a77c6a"
     decision_ref: decision://accepted/BET-Y1Q3-T10-18
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
+- id: BET-Y1Q3-T10-19
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'resident 决策采纳闭环 (提案状态机 + ADR 草稿自动化 + north_star 知识消费轴)'
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  note: '方向 B (Task #51 下一里程碑, 用户选「以上全部依次执行」): decision 角色每 2min 写提案 (evolution-proposals 3945 JSON) 只写不消化, 无采纳→执行→验证状态机; proposal-to-adr 手动不在 cron; north_star 纯 value 投影不读 sediment/retro/proposal; 本 BET = proposal-to-adr 状态机 (new/drafted/adopted/executed/verified + --mark-status) + ADR 草稿 cron 自动化 + north_star knowledge_consumption 轴'
+  goal: '把决策提案从「只写不消化」变为「可采纳→可执行→可验证」闭环: ①proposal-to-adr.py 支持 status 字段 (new/drafted/adopted/executed/verified) + --mark-status 推进 (枚举+迁移校验) + --dry-run --json 报告 status_counts ②convert() 处理最新 new proposal → ADR 草稿标记 drafted (不自动采纳) ③install-resident-cron.sh 增 CRON_PROPOSAL_ADR (每天 01:00) ④north_star_meter_v2.py 输出增 knowledge_consumption (proposal_total/adoption_rate/retro_referenced), 不改 value 轴 ⑤测试覆盖状态机+知识轴。'
+  non_goals:
+  - 不自动采纳/执行提案 (人工/运营 agent 兜底)
+  - 不改 decision.py 提案写入 schema (仅增 status 字段兼容读取)
+  - 不改 north_star 现有 value 轴判定 / 不重算历史快照
+  - 不引入 LLM 自动撰写 ADR 决策内容
+  - 不处理 Agent Cell 子系统 (方向 C 另开 BET) / 不补规格文档漂移 (方向 D 另开 BET)
+  done_when:
+  - 'proposal-to-adr.py 支持 --mark-status <proposal-id> <status> (枚举+迁移校验), --dry-run --json 报告含 status_counts; 历史无状态 proposal 视为 new'
+  - 'convert() 处理最新 new proposal → ADR 草稿并标记 drafted (dry-run 不落盘)'
+  - 'install-resident-cron.sh 含 CRON_PROPOSAL_ADR (每天 01:00), 重装后 crontab 可见'
+  - 'north_star_meter_v2.py 输出含 knowledge_consumption (proposal_total/adoption_rate/retro_referenced), 现有 value 轴判定不变'
+  - '测试覆盖状态机迁移 + 知识轴输出'
+  verify:
+  - cmd: python3 bin/ssot/proposal-to-adr.py --dry-run --json
+    expect: exit 0
+  - cmd: python3 bin/bc-os/north_star_meter_v2.py --json
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ssot/proposal-to-adr.py
+  - bin/bc-os/north_star_meter_v2.py
+  - bin/ssot/install-resident-cron.sh
+  - tests/unit/test_proposal_to_adr_status.py
+  - docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md
+    spec_version: 1.0.0
+    content_digest: "sha256:2ace3dddc54292c3ada89ff385e710ff4a6abda1d56b4d7d55be08b8743429c6"
+    decision_ref: decision://accepted/BET-Y1Q3-T10-19
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
