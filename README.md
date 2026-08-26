@@ -33,6 +33,7 @@ It is organized as a **5+4+1+1 layered architecture**:
 > Architecture contracts: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 > Project layer index: [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md)
 > Layer dependency rules: [`docs/layer-contract.yaml`](docs/layer-contract.yaml)
+> Unified entrypoint decision: [`.omo/_knowledge/decisions/0428-single-human-entrypoint-convergence-to-cockpit.md`](.omo/_knowledge/decisions/0428-single-human-entrypoint-convergence-to-cockpit.md)
 
 ### Entry Points
 
@@ -125,6 +126,7 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
 > 架构契约: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 > 项目分层索引: [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md)
 > 分层依赖规则: [`docs/layer-contract.yaml`](docs/layer-contract.yaml)
+> 统一入口决策: [`.omo/_knowledge/decisions/0428-single-human-entrypoint-convergence-to-cockpit.md`](.omo/_knowledge/decisions/0428-single-human-entrypoint-convergence-to-cockpit.md)
 
 ### 入口
 
