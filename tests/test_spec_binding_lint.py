@@ -832,10 +832,13 @@ def test_bet_done_transition_job_has_guard_contract() -> None:
     gate_steps = [step for step in steps if step.get("name") == BET_GATE_STEP_NAME]
     assert len(gate_steps) == 1, "exactly one explicitly named BET done-transition gate step"
     gate = gate_steps[0]
-    assert gate.get("if") == (
-        "github.event_name == 'pull_request' || "
-        "(github.event_name == 'push' && github.ref == 'refs/heads/main')"
-    )
+    if not BET_GATE_WORKFLOW.exists():
+        # 旧形态(job 住 governance-check)需 step 级 if; 独立 workflow(2026-08-26
+        # #2197 根治)无 paths 必跑, step 无需 if
+        assert gate.get("if") == (
+            "github.event_name == 'pull_request' || "
+            "(github.event_name == 'push' && github.ref == 'refs/heads/main')"
+        )
     script = str(gate.get("run", ""))
 
     # The gate invokes the real ledger lint, exactly once.
