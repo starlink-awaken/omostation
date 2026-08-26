@@ -58,3 +58,12 @@ entries:
   range: origin/main..4bc830c7bb59
   recorded_at: '2026-08-26T23:03:18.412358+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|99b87719446d55b7
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 99b87719446d55b7
+  kind: gitlink-regress
+  reason: submodule projects/agora pointer a8a920197079 rewinds f4284c37adfc
+  range: origin/main..followup/agora-pointer-fix-20260827
+  recorded_at: '2026-08-27T00:00:00Z'
+  active: true
