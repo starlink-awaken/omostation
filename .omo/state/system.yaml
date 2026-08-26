@@ -1,6 +1,6 @@
-health_score_evidence: 86.0
+health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-25T22:17:11.047023+00:00'
+health_score_evidence_generated_at: '2026-08-25T23:16:02.823048+00:00'
 current_phase: 49
 phase46_status: completed
 phase46_completed_at: '2026-08-01T00:00:00Z'
@@ -10,15 +10,15 @@ phase_status: active
 current_wave: W5
 next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面落地)
 health_score_ref: .omo/state/health.yaml
-health_score: 45
+health_score: 73
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-08-24T11:11:42Z'
+health_score_generated_at: '2026-08-25T22:33:12Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 1
 completed_tasks: 290
-total_tasks: 298
+total_tasks: 299
 active_tasks: 1
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -56,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-08-23T03:03:54Z'
+updated_at: '2026-08-25T22:35:30Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -179,12 +179,13 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
-planned_tasks: 6
+planned_tasks: 7
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - bet-y3h1-t7-01 (中试 / 政策申报升 assisted)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
 - cockpit-debt-debt-1 (治理技术债务：债务)
+- 'event-loop-dead-loop (闭环回路死回路: 2 个 emit 零消费者)'
 - kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
@@ -200,8 +201,8 @@ runtime_health_summary:
   online_services: 4
   total_services: 4
   ratio: 1.0
-  health_score: 70
-  last_scan: '2026-08-24T11:11:42Z'
+  health_score: 73
+  last_scan: '2026-08-25T22:33:12Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
 phase42_status: completed
@@ -221,7 +222,7 @@ governance_anomaly_score: 0
 service_online_ratio: 1.0
 divergence_detail_refs: {}
 divergence_triage_summary: {}
-governance_feedback_last_run: '2026-08-23T03:03:52Z'
+governance_feedback_last_run: '2026-08-25T22:33:12Z'
 workflow_mesh_health:
   status: healthy
   event_count: 2106

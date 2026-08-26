@@ -165,6 +165,25 @@ def _status_for_bets(bet: dict[str, Any]) -> str:
     return "RED"
 
 
+def _anti_pattern_status() -> dict[str, Any]:
+    rc, out, _ = _run(
+        [sys.executable, str(WS_ROOT / "bin" / "gac" / "anti-pattern-detector.py"), "--json"],
+        timeout=120,
+    )
+    if rc != 0:
+        return {"available": False, "detected_count": None}
+    try:
+        data = json.loads(out)
+        return {
+            "available": True,
+            "detected_count": data.get("detected_count", 0),
+            "total_patterns": data.get("total_patterns", 0),
+            "status": data.get("status", "unknown"),
+        }
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return {"available": False, "detected_count": None}
+
+
 def collect_dimensions() -> list[dict[str, Any]]:
     scene_counts = _scene_lifecycle_counts()
     overall = _maturity_overall()
@@ -173,6 +192,7 @@ def collect_dimensions() -> list[dict[str, Any]]:
     health = _compass_health()
     rot = _rot_defense_layers()
     bet = _bet_completion()
+    anti_pattern = _anti_pattern_status()
 
     return [
         {"id": 1, "name": "场景", "target_3m": "≥3 张 shadow → assisted", "current": scene_counts, "status": _status_for_scene(scene_counts, target_3m_assisted=3)},
@@ -183,7 +203,13 @@ def collect_dimensions() -> list[dict[str, Any]]:
         {"id": 6, "name": "长期运营", "target_3m": "weekly-review routine 化 (proxy: BET ≥ 95%)", "current": bet, "status": _status_for_bets(bet)},
         {"id": 7, "name": "运维", "target_3m": "L1 入口 6.5 → 8 (proxy: cockpit maturity)", "current": {"note": "proxy: maturity ≥ 8.0"}, "status": _status_for_maturity(overall, target_3m=8.0)},
         {"id": 8, "name": "防腐", "target_3m": "G1/G2 接线缺口闭合", "current": rot, "status": "GREEN" if rot.get("doc_present") == "yes" else "GREY"},
-        {"id": 9, "name": "约束", "target_3m": "5 反模式 → 0", "current": {"note": "anti-pattern detector TODO"}, "status": "GREY"},
+        {
+            "id": 9,
+            "name": "约束",
+            "target_3m": "5 反模式 → 0",
+            "current": anti_pattern,
+            "status": "GREEN" if anti_pattern.get("available") and anti_pattern.get("detected_count", 0) == 0 else "YELLOW" if anti_pattern.get("available") else "GREY",
+        },
     ]
 
 

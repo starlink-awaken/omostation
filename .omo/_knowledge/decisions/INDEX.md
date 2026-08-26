@@ -492,6 +492,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0425: Agent LSP 潜意识护航与 Agora 2.0 内存总线架构 — **ACCEPTED** | 2026-08-25 | 0425-agent-lsp-and-in-memory-bus-architecture.md
 - ADR-0426: AST 语义级合流防腐、SEMA 自动结晶与蜂群常驻看护架构 — **ACCEPTED** | 2026-08-25 | 0426-ast-merge-mesh-sema-crystallization-and-swarm-supervision.md
 - ADR-0427: 根级环境解析器、自愈看门狗与真实领域业务卡带架构 — **ACCEPTED** | 2026-08-25 | 0427-root-environment-resolver-autonomous-watchdog-and-real-domain-scenarios.md
+- ADR-0428: L3 单一人类入口收敛与 Cockpit 全域网关固化 — **ACCEPTED** | 2026-08-26 | Cockpit entrypoint convergence | 0428-single-human-entrypoint-convergence-to-cockpit.md
 
 ---
 

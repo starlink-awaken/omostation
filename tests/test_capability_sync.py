@@ -17,7 +17,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SYNC_PATH = ROOT / "bin" / "capability-sync.py"
-GENERATOR_PATH = ROOT / "bin" / "cockpit" / "gen-capability-registry.py"
+GENERATOR_PATH = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
 
 
 def _load(name: str, path: Path):
@@ -44,7 +44,7 @@ def registry() -> dict:
     return {
         "version": "1.0.0",
         "generated_at": "1970-01-01T00:00:00Z",
-        "generator": "bin/cockpit/gen-capability-registry.py",
+        "generator": "bin/ssot/gen-capability-registry.py",
         "totals": {
             "mcp_servers": 1,
             "mcp_tools": 2,
@@ -86,7 +86,7 @@ def test_canonical_generator_declares_registry_contract(cap_sync, generator) -> 
 
     assert registry["schema"] == "capability-registry/v1"
     assert registry["owner"] == "workspace-capability-governance"
-    assert registry["writer"] == "bin/cockpit/gen-capability-registry.py"
+    assert registry["writer"] == "bin/ssot/gen-capability-registry.py"
     assert cap_sync.CANONICAL_REGISTRY_METADATA == {
         "schema": generator.REGISTRY_SCHEMA,
         "owner": generator.REGISTRY_OWNER,
@@ -167,7 +167,7 @@ def test_make_and_ci_run_blocking_canonical_check() -> None:
     checkout_step = next(step for step in job["steps"] if step.get("uses") == "actions/checkout@v4")
     assert checkout_step.get("continue-on-error", False) is False
     check_step = next(step for step in job["steps"] if step.get("name") == "Check capability registry drift")
-    assert check_step["run"].strip() == "python3 bin/cockpit/gen-capability-registry.py --check --quiet"
+    assert check_step["run"].strip() == "python3 bin/ssot/gen-capability-registry.py --check --quiet"
 
 
 def test_python39_grammar_is_supported() -> None:
@@ -190,7 +190,7 @@ def test_canonical_registry_metadata_is_accepted(cap_sync, registry: dict, tmp_p
         {
             "schema": "capability-registry/v1",
             "owner": "workspace-capability-governance",
-            "writer": "bin/cockpit/gen-capability-registry.py",
+            "writer": "bin/ssot/gen-capability-registry.py",
         }
     )
     path = tmp_path / "registry.yaml"
@@ -214,7 +214,7 @@ def test_noncanonical_registry_metadata_is_rejected(
         {
             "schema": "capability-registry/v1",
             "owner": "workspace-capability-governance",
-            "writer": "bin/cockpit/gen-capability-registry.py",
+            "writer": "bin/ssot/gen-capability-registry.py",
         }
     )
     registry[field] = value
@@ -357,7 +357,7 @@ def _canonical_trace_registry(registry: dict) -> dict:
         {
             "schema": "capability-registry/v1",
             "owner": "workspace-capability-governance",
-            "writer": "bin/cockpit/gen-capability-registry.py",
+            "writer": "bin/ssot/gen-capability-registry.py",
         }
     )
     return result

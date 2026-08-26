@@ -5,8 +5,9 @@ Laws:
   CR-SFOP-01  COMP-WS must declare legal sfop_slot + dao_layer
   CR-SFOP-02  unique active S-slot = COMP-WS-omo
   CR-SFOP-04  P/O may stay vacant (documented, not an error)
-  CR-SFOP-05  H must not call B directly; F is the only H↔B bridge
-              (new violations fail-closed; baseline inventory warns)
+  CR-SFOP-05  H must not call B directly; F is the only H↔B bridge.
+              cockpit.adapters is the allowed H-side B-port. Other H files
+              fail-closed unless in the line-stable baseline.
   CR-DFSQ-01  dao-layer components must not appear on the cron ledger
   CR-DFSQ-02  qi-layer trees must not author L0 type: required constraints
   CR-X3-NS-001  north-star numerator must not be governance self-data
@@ -78,6 +79,24 @@ def _is_external(name: str, meta: dict) -> bool:
     return backend in EXTERNAL_BACKENDS
 
 
+def _stable_hb_key(rel: str, caller: str, callee: str) -> str:
+    return f"{rel}:H->B:{caller}->{callee}"
+
+
+def _normalize_baseline_key(key: str) -> str:
+    """Accept both `file:line:H->B:...` and `file:H->B:...`."""
+    parts = key.split(":H->B:")
+    if len(parts) != 2:
+        return key
+    left, right = parts
+    left = re.sub(r":\d+$", "", left)
+    return f"{left}:H->B:{right}"
+
+
+def _is_adapter_seam(rel: str) -> bool:
+    return "/adapters/" in rel.replace("\\", "/")
+
+
 def _load_baseline(path: Path) -> set[str]:
     if not path.exists():
         return set()
@@ -86,7 +105,7 @@ def _load_baseline(path: Path) -> set[str]:
         text = line.strip()
         if not text or text.startswith("#"):
             continue
-        keys.add(text)
+        keys.add(_normalize_baseline_key(text))
     return keys
 
 
@@ -105,6 +124,9 @@ def _path_to_project(rel: str) -> str | None:
     return None
 
 
+_IGNORED_SCAN_PARTS = {"__pycache__", ".venv", "venv", ".git", "node_modules", "dist", "build", "site-packages"}
+
+
 def _scan_hb_calls(projects_root: Path, repo_root: Path) -> list[dict]:
     findings: list[dict] = []
     if not projects_root.is_dir():
@@ -114,7 +136,7 @@ def _scan_hb_calls(projects_root: Path, repo_root: Path) -> list[dict]:
         if not src.is_dir():
             continue
         for path in src.rglob("*.py"):
-            if "__pycache__" in path.parts or path.name.startswith("test_"):
+            if any(p in _IGNORED_SCAN_PARTS for p in path.parts) or path.name.startswith("test_"):
                 continue
             try:
                 text = path.read_text(encoding="utf-8", errors="replace")
@@ -128,14 +150,13 @@ def _scan_hb_calls(projects_root: Path, repo_root: Path) -> list[dict]:
                     rel = path.resolve().relative_to(repo_root.resolve()).as_posix()
                 except ValueError:
                     rel = str(path)
-                line_no = text[: match.start()].count("\n") + 1
                 findings.append(
                     {
                         "file": rel,
-                        "line": line_no,
                         "caller": h_name,
                         "callee": target,
-                        "key": f"{rel}:{line_no}:H->B:{h_name}->{target}",
+                        "seam": _is_adapter_seam(rel),
+                        "key": _stable_hb_key(rel, h_name, target),
                     }
                 )
     return findings
@@ -148,7 +169,7 @@ def _scan_qi_l0(projects_root: Path, qi_projects: set[str], repo_root: Path) -> 
         if not root.is_dir():
             continue
         for path in root.rglob("*.yaml"):
-            if "__pycache__" in path.parts:
+            if any(p in _IGNORED_SCAN_PARTS for p in path.parts):
                 continue
             try:
                 text = path.read_text(encoding="utf-8", errors="replace")
@@ -221,6 +242,7 @@ def check(
             "components": annotated,
             "s_holders": s_holders,
             "vacant_slots": sorted(VACANT_ALLOWED),
+            "hb_seam_files": [],
             "constraint_ids": [
                 "CR-SFOP-01",
                 "CR-SFOP-02",
@@ -310,20 +332,38 @@ def check(
     for rel in _scan_qi_l0(projects_root, qi_projects, repo_root):
         errors.append(f"CR-DFSQ-02: qi-layer tree authored L0 required constraint at {rel}")
 
-    # CR-SFOP-05: H↛B except through F. Baseline = warn; new = error.
+    # CR-SFOP-05: H↛B except through F. Adapter files are the H-side B-port
+    # (anti-corruption seam) until those ports speak BOS/agora. Other H files
+    # fail-closed unless listed in the line-stable baseline.
+    hb_seam_files: list[str] = []
     if not skip_call_scan:
         baseline = _load_baseline(baseline_path)
+        seen_seam: set[str] = set()
+        seen_nonseam: set[str] = set()
         for finding in _scan_hb_calls(projects_root, repo_root):
+            rel = finding["file"]
+            if finding.get("seam"):
+                seen_seam.add(rel)
+                continue
             key = finding["key"]
+            if key in seen_nonseam:
+                continue
+            seen_nonseam.add(key)
             msg = (
-                f"CR-SFOP-05: {finding['file']}:{finding['line']} "
+                f"CR-SFOP-05: {rel} "
                 f"H({finding['caller']}) → B({finding['callee']}); "
-                "cross-slot calls must go through F (agora)"
+                "cross-slot calls must go through F (agora) or cockpit.adapters"
             )
             if key in baseline:
                 warnings.append(msg + " [baseline]")
             else:
                 errors.append(msg)
+        hb_seam_files = sorted(seen_seam)
+        if hb_seam_files:
+            warnings.append(
+                f"CR-SFOP-05: {len(hb_seam_files)} adapter seam file(s) import B "
+                "(allowed H-side port; do not add new non-adapter H→B)"
+            )
 
     # CR-X3-NS-001: north-star stack must not use governance self-data tokens.
     ns_hits = _x3_self_data(x3_path)
@@ -341,6 +381,7 @@ def check(
         "s_holders": s_holders,
         "vacant_slots": vacant,
         "vacant_allowed": sorted(VACANT_ALLOWED),
+        "hb_seam_files": hb_seam_files,
         "constraint_ids": [
             "CR-SFOP-01",
             "CR-SFOP-02",
@@ -376,15 +417,24 @@ def main(argv: list[str] | None = None) -> int:
         findings = _scan_hb_calls(projects_root, repo_root)
         lines = [
             "# SFOP H→B call baseline (CR-SFOP-05).",
-            "# Existing inventory: warn. New keys not in this file: fail-closed.",
-            "# F (agora) is the only legal H↔B bridge. Do not add new lines to hide new calls.",
+            "# Stable keys: file:H->B:caller->callee (no line numbers).",
+            "# Adapter seam files are allowed and omitted. Do not add keys to hide new calls.",
             "",
         ]
+        seen: set[str] = set()
+        n = 0
         for finding in findings:
-            lines.append(finding["key"])
+            if finding.get("seam"):
+                continue
+            key = finding["key"]
+            if key in seen:
+                continue
+            seen.add(key)
+            lines.append(key)
+            n += 1
         baseline_path.parent.mkdir(parents=True, exist_ok=True)
         baseline_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        print(f"wrote {len(findings)} H→B baseline keys → {baseline_path}")
+        print(f"wrote {n} non-seam H→B baseline keys → {baseline_path}")
         return 0
 
     result = check(
