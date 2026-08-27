@@ -1,11 +1,11 @@
 ---
 id: ADR-0333
 title: Scene Card 输入到只读 activation preflight 的产品闭环
-status: accepted
+status: archived
 type: decision
 owner: product-architecture
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

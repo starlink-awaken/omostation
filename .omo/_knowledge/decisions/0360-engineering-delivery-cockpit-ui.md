@@ -4,7 +4,7 @@ title: Engineering Delivery Cockpit UI 收件箱与人工复核边界
 status: ACCEPTED
 date: 2026-08-04
 owner: governance-team
-lifecycle: contract
+lifecycle: spec
 last-reviewed: 2026-08-04
 ---
 

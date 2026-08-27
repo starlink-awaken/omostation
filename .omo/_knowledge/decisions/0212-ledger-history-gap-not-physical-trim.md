@@ -1,7 +1,7 @@
 ---
 id: ADR-0212
 status: ACCEPTED
-lifecycle: governance-audit
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-15
 omo_task_ref: null

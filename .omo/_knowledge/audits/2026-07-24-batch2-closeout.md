@@ -5,6 +5,8 @@ type: audit
 stage: batch2
 workorder: .omo/plans/strat-p81-batch2-workorder.md
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Batch 2 closeout — 11-item reconciliation

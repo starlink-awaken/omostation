@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: ssot
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-06-28
 related: F7114ABA (gbrain SRP), TASK-F7114ABA (cockpit god-module)

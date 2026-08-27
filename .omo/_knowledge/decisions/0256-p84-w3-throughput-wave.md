@@ -1,7 +1,7 @@
 ---
 id: ADR-0256
 status: ACCEPTED
-lifecycle: decision
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-28
 related:

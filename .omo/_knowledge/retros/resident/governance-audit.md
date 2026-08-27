@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: governance-audit
 generated_at: 2026-08-27T11:40:02Z
-status: candidate
+status: planned
 counts:
   runs: 9
   failures: 4
@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 4
   trace_count: 4
+lifecycle: history
+owner: unassigned
 ---
 # governance-audit 运行复盘聚合 (resident 事件驱动)
 

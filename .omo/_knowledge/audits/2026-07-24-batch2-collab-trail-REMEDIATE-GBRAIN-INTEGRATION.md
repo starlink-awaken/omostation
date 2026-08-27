@@ -6,6 +6,8 @@ batch: 2
 task_id: REMEDIATE-GBRAIN-INTEGRATION
 task_path: .omo/tasks/remediation/REMEDIATE-GBRAIN-INTEGRATION.yaml
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # `REMEDIATE-GBRAIN-INTEGRATION`

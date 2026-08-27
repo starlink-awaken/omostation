@@ -1,8 +1,8 @@
 ---
 id: ADR-0416
 title: Y2 年度门 — 愿景证伪判定（BET-Y2Q4-T1-01）
-status: accepted
-lifecycle: gate
+status: archived
+lifecycle: spec
 owner: 夏明星
 created: 2026-08-18
 last-reviewed: 2026-08-18

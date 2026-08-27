@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # P58 — 跨面引用检查工具 + status 分布趋势报告 收口

@@ -1,11 +1,11 @@
 ---
 id: ADR-0334
 title: External Resource Pack Conformance Before Dynamic Discovery
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

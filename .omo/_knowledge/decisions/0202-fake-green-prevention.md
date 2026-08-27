@@ -1,7 +1,7 @@
 ---
 id: ADR-0202
 status: active
-lifecycle: decision
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-15
 related:

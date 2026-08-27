@@ -1,10 +1,10 @@
 ---
 id: ADR-0344
 title: External scene consumer contract
-status: accepted
+status: archived
 type: adr
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-03
 decision: "以 external-scene-consumer/v1 登记真实消费者边界，并将其作为晋升就绪度的必需事实；声明不授予执行权限。"

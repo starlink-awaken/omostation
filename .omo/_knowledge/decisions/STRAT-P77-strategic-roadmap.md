@@ -1,6 +1,6 @@
 ---
 status: draft
-lifecycle: strategy-decision
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-07
 related:

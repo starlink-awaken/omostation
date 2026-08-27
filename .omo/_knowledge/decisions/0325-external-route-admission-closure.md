@@ -1,11 +1,11 @@
 ---
 id: ADR-0325
 title: 外部动态路由注册的统一准入闭环
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

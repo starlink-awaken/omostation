@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Session 复盘 — 2026-07-29 ~ 2026-07-30

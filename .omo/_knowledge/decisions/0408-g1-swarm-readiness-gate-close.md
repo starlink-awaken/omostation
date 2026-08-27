@@ -2,7 +2,7 @@
 id: ADR-0408
 title: G-1 Swarm Readiness Gate Close — six SR direct evidence
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-11
 related:

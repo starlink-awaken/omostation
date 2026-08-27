@@ -1,10 +1,10 @@
 ---
 id: ADR-0300
 title: Adaptive Digital 副官决策循环的 Workflow Mesh 边界
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
-lifecycle: active
+lifecycle: spec
 created: 2026-08-02
 last-reviewed: 2026-08-02
 related:

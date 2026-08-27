@@ -4,7 +4,7 @@ title: Memory OS 控制面 — 统一记忆写读巩固与适配器边界
 status: ACCEPTED
 date: 2026-08-04
 owner: governance-team
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-04
 workflow_run: 20260804T115206Z-project-doc-change-7e6535ab
 session: memory-os-p0

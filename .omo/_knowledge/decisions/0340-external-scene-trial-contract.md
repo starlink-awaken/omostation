@@ -1,10 +1,10 @@
 ---
 id: ADR-0340
 title: External scene trial contract and feedback promotion boundary
-status: accepted
+status: archived
 type: adr
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-03
 decision: "将真实消费者、结果指标、证据计划和回滚方案绑定为 proposal-only 的 observation-only trial，并把真实执行与 outcome feedback 作为后续独立晋升门槛。"

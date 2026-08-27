@@ -1,7 +1,7 @@
 ---
 id: ADR-0221
 status: ACCEPTED
-lifecycle: decision
+lifecycle: spec
 owner: 架构师
 last-reviewed: 2026-07-18
 related:
