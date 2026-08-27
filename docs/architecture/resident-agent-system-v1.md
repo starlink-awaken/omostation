@@ -2,7 +2,7 @@
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last-reviewed: 2026-08-26
 ---
 
 # Resident Agent System v1 (ADR-0396 DigitalAgent / WP-A~I)
@@ -44,12 +44,15 @@ uv run --directory projects/omo python -m omo.cli resident status      # 运行�
 uv run --directory projects/omo python -m omo.cli resident roles       # 五类角色配置
 uv run --directory projects/omo python -m omo.cli resident daemon --once   # 单次 tick
 uv run --directory projects/omo python -m omo.cli resident signals     # 个人信号输入
+uv run --directory projects/omo python -m omo.cli resident inbox       # 感知文件夹轮询 (T10-15)
 uv run --directory projects/omo python -m omo.cli resident decision    # 决策提案
 uv run --directory projects/omo python -m omo.cli resident execute     # 执行 worker (批准门)
 uv run --directory projects/omo python -m omo.cli resident alert       # 告警转发
+uv run --directory projects/omo python -m omo.cli resident monitor     # 监控告警 (T10-16)
+uv run --directory projects/omo python -m omo.cli resident heartbeat   # 活性台账 (T10-16)
 uv run --directory projects/omo python -m omo.cli resident sediment    # 知识沉淀
 uv run --directory projects/omo python -m omo.cli resident memory      # 记忆
-uv run --directory projects/omo python -m omo.cli resident promote     # 场景升迁
+uv run --directory projects/omo python -m omo.cli resident promote     # 场景升迁 (五问骨架, T10-17)
 uv run --directory projects/omo python -m omo.cli resident resources   # 资源领域隔离
 uv run --directory projects/omo python -m omo.cli resident ingest      # 事件摄入
 ```
@@ -87,12 +90,24 @@ uv run --directory projects/omo python -m omo.cli resident ingest      # 事件�
 | BOS URI | `bos://resident/core/status` / `bos://resident/core/roles` / `bos://resident/daemon/once` / `bos://resident/decision/run` | 已注册 |
 | Makefile | `make resident-status` / `make resident-roles` | 已添加 |
 
+## 3.1 Agent Cell 子系统（AGE-v2, 并发推进中）
+
+`projects/omo/src/omo/resident/` 下另有一组 **AGE-v2 Dynamic Agent Cell** 实现（2026-08-24~25 由并发 agent
+合入 omo main）：`cell.py` / `cell_pool.py` / `cell_handler.py` / `cell_config.py` / `cell_state.py` /
+`cell_cartridge.py` / `cell_cli.py`（CLI 入口 `omo cell`）+ `executor.py` / `planner.py` / `governor.py` /
+`pdp_pep.py` / `memory_pipeline.py` / `replay.py` / `swarm_custodian.py`。
+
+> **状态**：这些模块**不进 resident-routes 路由表**（非 resident 五类角色事件流），由
+> **BET-Y1Q3-T1-12（Exact Capability Binding）** 并发推进消费接线（omo gitlink AGE-v2 主线 320d4dca）。
+> 决策（2026-08-26 方向 C）：**不归档**（避免破坏并发工作）、**不提前接线**（与 T1-12 重叠），
+> 待 T1-12 合流后统一评估。executor.py 的 pi-worker 后端有完整实现（非死引用）。
+
 ## 4. 运维与监控
 
 - 守护进程由 cron 驱动（每 2min 五类 daemon `--once --role`），**无常驻进程**——以 byte_offset 水位判断活性
-- 安装 cron：`bash bin/ssot/install-resident-cron.sh`
+- 安装 cron：`bash bin/ssot/install-resident-cron.sh`（含 CRON_PROMOTE 每 10min + CRON_PROPOSAL_ADR 每天 01:00）
 - 健康监控：`omo resident status`（`resident.status` 事件被 `system-health-check` 消费）
-- 数据面：`runtime/omo/event-ledger.sqlite3`（哈希链）、`.omo/_knowledge/workflow-mesh/events.jsonl`（事件流）、`.omo/_knowledge/sediment/`（沉淀）
+- 数据面：`runtime/omo/event-ledger.sqlite3`（哈希链）、`.omo/_knowledge/workflow-mesh/events.jsonl`（事件流）、`.omo/_knowledge/sediment/`（沉淀）、`.omo/_knowledge/retros/resident/`（五问 retro + index.md）、`.omo/_knowledge/evolution-proposals/`（决策提案）
 
 ## 5. 相关
 
