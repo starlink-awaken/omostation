@@ -163,3 +163,9 @@ def test_conflict_marker_gate_scans_all_tracked_files() -> None:
         "bin/gac/check-conflict-markers.py",
         "--all",
     ]
+
+
+def test_mof_schema_validate_has_explicit_ci_safe_timeout() -> None:
+    module = _load_module()
+
+    assert module._CHECK_TIMEOUTS["mof-schema-validate"] == 45

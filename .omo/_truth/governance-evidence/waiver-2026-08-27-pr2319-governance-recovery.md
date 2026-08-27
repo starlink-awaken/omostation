@@ -31,6 +31,10 @@ no-run-id: true
 
 > 补充本次 #2319 post-merge governance baseline recovery waiver：当前 main 已由 #2323 清理原授权的 12 个 .omo/_knowledge/retros/resident 文件，后续 recovery 不得重写这些文件；允许随 bin/verify-config.sh 一并删除 bin/_registry/scripts/governance/verify-config.yaml；允许仅将 .omo/_truth/registry/document-governance.yaml 中 concurrent-plans-orphan-docs.max_findings 从 50 恢复为 8，并恢复该条目在 #2321 前的 reason 文本，不得修改其他 warning budget；把本补充句追加写入 .omo/_truth/governance-evidence/waiver-2026-08-27-pr2319-governance-recovery.md；其余已授权范围、禁止项、唯一 PR、验证与清理要求保持不变。
 
+## Supplemental authorization — schema validation timeout
+
+> 补充本次 #2319 post-merge governance baseline recovery waiver：允许在既有授权路径 bin/gac/gac-local-gate.py 中仅为 mof-schema-validate 设置显式 timeout: 45，替代当前默认 15 秒，并在既有授权路径 tests/unit/gac/test_gac_local_gate_purity.py 中增加对应 timeout 契约测试；原因是 PR #2329 Governance Check run 33072974655 的 attempt 1 与 attempt 2 均仅在该检查发生 TIMEOUT after 15s，而同一检查本地约 2.6 秒通过、enclosing full governance verification 与其余 GaC checks 均通过；把本补充句追加写入 .omo/_truth/governance-evidence/waiver-2026-08-27-pr2319-governance-recovery.md；不得修改其他 gate、timeout、命令顺序、文件、CI workflow、registry、BET、completion/value evidence、gitlink、运行态或用户配置；其余授权范围、禁止项、唯一 PR、验证与清理要求保持不变。
+
 ## Recovery boundaries
 
 - Root base: `da0f68cf2d0cd6a767b59a0ca7f0a1d00f736561`

@@ -498,6 +498,7 @@ _DEFAULT_CHECK_TIMEOUTS = {
     "execution-chain": 45,
     "layer-call-direction-check": 45,
     "gac-drift": 45,
+    "mof-schema-validate": 45,
     "sfop-slots": 45,
 }
 _CHECK_TIMEOUTS = {
