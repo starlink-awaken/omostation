@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Phase 5 Retrospective — Runtime Documents Plane
 
 > Date: 2026-08-12

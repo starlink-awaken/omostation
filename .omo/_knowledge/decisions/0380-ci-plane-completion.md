@@ -1,7 +1,7 @@
 ---
 id: ADR-0380
 title: CI plane completion — runner migration, orphan cleanup, concurrent-drift absorption
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-06

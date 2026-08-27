@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: plan
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-03
 review-state: content-reviewed

@@ -1,7 +1,7 @@
 ---
 title: "Closeout 模板（5 分钟）"
 status: active
-lifecycle: entry
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-15
 ---

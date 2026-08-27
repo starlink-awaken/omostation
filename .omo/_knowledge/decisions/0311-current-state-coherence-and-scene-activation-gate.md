@@ -1,7 +1,7 @@
 ---
 id: ADR-0311
 title: 当前状态一致性与场景激活门
-status: ACCEPTED
+status: archived
 type: decision
 owner: architecture-governance
 created: 2026-08-02

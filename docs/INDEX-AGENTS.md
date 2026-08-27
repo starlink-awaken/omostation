@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # INDEX-AGENTS.md — Agent 能力索引
 
 > **维护规则**

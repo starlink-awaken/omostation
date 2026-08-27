@@ -1,7 +1,7 @@
 ---
 id: ADR-0319
 title: External Connection Fabric 观察与候选评审产品边界
-status: ACCEPTED
+status: archived
 date: 2026-08-03
 owner: architecture-governance
 scope: Workflow Mesh / Cockpit / External Connection Fabric

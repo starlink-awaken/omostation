@@ -1,7 +1,7 @@
 ---
 id: ADR-0388
 title: CI 平面减法收官 — workflow retire + 内联 paths 检测盲区修复 + SSOT 生成器
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-07

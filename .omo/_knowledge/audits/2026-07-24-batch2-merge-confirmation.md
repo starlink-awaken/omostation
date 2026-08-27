@@ -8,6 +8,7 @@ run: 20260724T064622Z-governance-state-mutation-5246576d (verify 以 CI 为准, 
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # Batch2 合并后确认 (2026-07-24)

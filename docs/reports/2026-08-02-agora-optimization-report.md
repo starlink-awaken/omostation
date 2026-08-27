@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # agora 全面优化报告（2026-08-02）
 
 > **创建时间**：2026-08-02

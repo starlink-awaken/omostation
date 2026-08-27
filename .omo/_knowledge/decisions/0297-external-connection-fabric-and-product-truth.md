@@ -1,7 +1,7 @@
 ---
 id: ADR-0297
 title: 收敛产品真相与外部连接织层
-status: ACCEPTED
+status: archived
 type: decision
 owner: architecture-governance
 created: 2026-08-02

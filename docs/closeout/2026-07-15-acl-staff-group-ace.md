@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Closeout — staff group ACE (ADR-0208)
 
 ```bash

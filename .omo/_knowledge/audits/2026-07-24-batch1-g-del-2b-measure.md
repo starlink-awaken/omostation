@@ -6,6 +6,7 @@ gate: G-DEL.2b
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # G-DEL.2b measure report

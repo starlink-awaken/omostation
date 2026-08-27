@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: contract
+lifecycle: history
 owner: strategy-team
 last-reviewed: 2026-08-09
 related:

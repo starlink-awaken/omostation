@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Phase 1 Retrospective — L4 Content Boundary and Declarative Domains
 
 > Date: 2026-08-11

@@ -3,7 +3,7 @@ type: standard
 status: active
 owner: governance-team
 created: 2026-08-15
-lifecycle: contract
+lifecycle: history
 related:
   - docs/reports/2026-08-15-multi-repo-collab-retro-v2.md (E7)
   - .omo/standards/agent-workflow-contract.md

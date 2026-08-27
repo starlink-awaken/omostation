@@ -8,6 +8,7 @@ task_path: .omo/tasks/planned/vision-roadmap/IMPORTED-c4b2d7.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `IMPORTED-c4b2d7`

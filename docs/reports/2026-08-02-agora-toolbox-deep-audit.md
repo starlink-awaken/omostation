@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # agora × toolbox 深度调研报告与修复规划
 
 > **文档创建时间**：2026-08-02

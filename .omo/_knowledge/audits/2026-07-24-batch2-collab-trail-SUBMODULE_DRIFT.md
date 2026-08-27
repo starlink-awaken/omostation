@@ -8,6 +8,7 @@ task_path: .omo/debt/items/SUBMODULE_DRIFT.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `SUBMODULE_DRIFT`

@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Predictor preflight owner evidence — 2026-08-28
 
 The legacy Weijian predictor writes a dated forecast Markdown file below

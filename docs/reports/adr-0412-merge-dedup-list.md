@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # ADR-0412 归并去重清单 (BET-Y1Q2-T1-01)
 
 ## 内包 (非删除 — 子模块条目移除, 代码进 omo._vendored)

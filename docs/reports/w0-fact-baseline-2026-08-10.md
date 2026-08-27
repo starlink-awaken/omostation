@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # W0 Fact Baseline Report — 2026-08-10
 
 > **Type**: Evidence-backed baseline inventory · Read-only probe results

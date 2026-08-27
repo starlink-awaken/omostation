@@ -35,6 +35,56 @@ STATUS_MAP = {
     "completed": "archived",
     "in-review": "planned",
 }
+ALLOWED_STATUS = {
+    "active",
+    "archived",
+    "deprecated",
+    "draft",
+    "experimental",
+    "planned",
+    "retired",
+    "stale",
+    "superseded",
+}
+ALLOWED_LIFECYCLE = {
+    "contract",
+    "entry",
+    "experimental",
+    "generated",
+    "history",
+    "pattern",
+    "plan",
+    "proposal",
+    "report",
+    "retired",
+    "spec",
+    "ssot",
+    "stable",
+}
+
+
+def _nearest_allowed_status(value: str) -> str:
+    """Pick the closest allowed status for an unknown one."""
+    v = value.lower()
+    if "active" in v or "open" in v or "live" in v or "candidate-delivery" in v:
+        return "active"
+    if "archive" in v or "done" in v or "accept" in v or "complet" in v:
+        return "archived"
+    if "block" in v or "stale" in v or "fail" in v:
+        return "stale"
+    if "plan" in v or "ready" in v or "pending" in v or "candidate" in v:
+        return "planned"
+    if "draft" in v or "wip" in v:
+        return "draft"
+    if "experiment" in v or "pilot" in v:
+        return "experimental"
+    if "deprecat" in v or "obsolete" in v:
+        return "deprecated"
+    if "supersed" in v:
+        return "superseded"
+    if "retire" in v:
+        return "retired"
+    return "archived"
 LIFECYCLE_BY_PATH = {
     "plans": "plan",
     "retros": "history",
@@ -211,10 +261,23 @@ def _resolve_conflicts(path: Path) -> bool:
 
 
 def _fix_frontmatter_fields(path: Path) -> bool:
-    """映射 status 到 allowed set, 按父目录名设 lifecycle, 补 owner (unassigned)."""
+    """映射 status 到 allowed set, 按父目录名设 lifecycle, 补 owner (unassigned).
+
+    也补缺失的 status / lifecycle / owner 字段.
+    """
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---"):
-        return False
+        # 无 frontmatter — 插入默认
+        default_lifecycle = LIFECYCLE_BY_PATH.get(path.parent.name, "history")
+        new_fm = (
+            f"status: archived\n"
+            f"lifecycle: {default_lifecycle}\n"
+            f"owner: unassigned\n"
+            f"last-reviewed: 2026-08-27"
+        )
+        new_content = f"{FM_OPEN}\n{new_fm}\n{FM_OPEN}\n{text}"
+        path.write_text(new_content, encoding="utf-8")
+        return True
     m = FM_RE.match(text)
     if not m:
         new_text = _ensure_closing_frontmatter_text(text)
@@ -227,14 +290,25 @@ def _fix_frontmatter_fields(path: Path) -> bool:
     has_status = has_lifecycle = has_owner = False
     modified = False
     for line in lines:
+        # docs/ 下的文件 surface 异构, 不主动 remap 已知在 allowed set 的 status
+        # (docs/superpowers/specs 用不同 enum, 改了反而触发新错). 但未在
+        # allowed set 的 (如 proposed) 仍要 nearest 映射到合法值.
+        in_docs = "docs" in path.parts
         if re.match(r"^status:\s*", line):
             has_status = True
             m2 = re.match(r"^status:\s*(\S+)", line)
-            if m2 and m2.group(1) in STATUS_MAP:
-                new_v = STATUS_MAP[m2.group(1)]
-                if new_v != m2.group(1):
-                    line = f"status: {new_v}"
-                    modified = True
+            if m2:
+                cur = m2.group(1)
+                if cur in STATUS_MAP and not in_docs:
+                    new_v = STATUS_MAP[cur]
+                    if new_v != cur:
+                        line = f"status: {new_v}"
+                        modified = True
+                elif cur not in ALLOWED_STATUS:
+                    new_v = _nearest_allowed_status(cur)
+                    if new_v != cur:
+                        line = f"status: {new_v}"
+                        modified = True
         elif re.match(r"^lifecycle:\s*", line):
             has_lifecycle = True
             m3 = re.match(r"^lifecycle:\s*(\S+)", line)
@@ -251,6 +325,12 @@ def _fix_frontmatter_fields(path: Path) -> bool:
         modified = True
     if not has_owner:
         new_lines.append("owner: unassigned")
+        modified = True
+    if not any(l.startswith("last-reviewed:") for l in new_lines):
+        new_lines.append("last-reviewed: 2026-08-27")
+        modified = True
+    if not has_status:
+        new_lines.append("status: archived")
         modified = True
     if not modified:
         return False
@@ -270,6 +350,7 @@ def _batch_fix(root: Path) -> tuple[int, int]:
         root / ".omo" / "_knowledge" / "audits",
         root / ".omo" / "_knowledge" / "summaries",
         root / ".omo" / "_knowledge" / "decisions",
+        root / "docs",  # 全 docs/ 都扫
     ]
     jsonl_targets = [
         root / ".omo" / "_knowledge",

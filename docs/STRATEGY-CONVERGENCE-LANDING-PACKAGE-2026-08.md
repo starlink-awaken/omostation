@@ -5,7 +5,7 @@ type: landing-package
 owner: 夏明星（人类执行）
 created: 2026-08-15
 adopted: 2026-08-15
-lifecycle: entry
+lifecycle: history
 companion-doc: docs/STRATEGY-CONVERGENCE-MASTER-2026-08.md
 executed_in: work/bet-y1q1-t6-01
 bet: BET-Y1Q1-T6-01

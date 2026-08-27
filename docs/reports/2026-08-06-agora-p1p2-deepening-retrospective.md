@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # agora P1+P2 深化深度复盘报告 (2026-08-06)
 
 > 复盘范围: P1 (ProcessPool/ProxyManager收口/路径env化) + P2 (/metrics/hashchain/双进程统一/本地调用放行) 全链路。

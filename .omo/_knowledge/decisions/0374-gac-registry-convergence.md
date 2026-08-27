@@ -1,7 +1,7 @@
 ---
 id: ADR-0374
 title: GaC Registry Convergence — indexed-drift fix, m1 orphan purge, stat auto-bump, symmetry tests
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-05

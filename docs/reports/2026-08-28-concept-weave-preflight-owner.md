@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Concept weave preflight owner evidence — 2026-08-28
 
 The monthly LaunchAgent currently executes a Documents shell writer that

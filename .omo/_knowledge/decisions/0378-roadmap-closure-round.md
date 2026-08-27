@@ -1,7 +1,7 @@
 ---
 id: ADR-0378
 title: Roadmap closure round — verify and close all delivered governance initiatives
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-05

@@ -2,6 +2,7 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # omostation 系统功能架构梳理 + 能力地图 + 用户场景分析

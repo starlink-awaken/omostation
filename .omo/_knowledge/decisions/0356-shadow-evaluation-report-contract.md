@@ -1,7 +1,7 @@
 ---
 id: ADR-0356
 title: Manifest-bound Shadow Evaluation 报告与激活边界
-status: ACCEPTED
+status: archived
 date: 2026-08-03
 owner: governance-team
 lifecycle: spec

@@ -2,7 +2,7 @@
 number: 362
 id: ADR-0362
 title: KEMS runtime health and verified SQLite recovery
-status: ACCEPTED
+status: archived
 date: 2026-08-04
 owner: governance-team
 lifecycle: spec

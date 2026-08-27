@@ -1,7 +1,7 @@
 ---
 id: ADR-0376
 title: M1 tracked-truth convergence — health checks read git HEAD, not working tree
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-05

@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Controller preflight owner evidence — 2026-08-28
 
 The legacy Weijian `controller.py` writes a daily report beneath Documents and

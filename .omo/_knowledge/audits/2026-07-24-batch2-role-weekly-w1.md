@@ -7,6 +7,7 @@ period: W1
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # Role collaboration weekly — W1

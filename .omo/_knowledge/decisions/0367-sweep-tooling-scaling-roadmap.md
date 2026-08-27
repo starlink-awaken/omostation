@@ -1,7 +1,7 @@
 ---
 id: ADR-0367
 title: Python 质量扫描基础设施规模化路线图
-status: PROPOSED
+status: archived
 date: 2026-08-04
 owner: governance-team
 lifecycle: spec

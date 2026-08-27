@@ -6,7 +6,7 @@ owner: 夏明星
 created: 2026-08-04
 last-reviewed: 2026-08-04
 version: v1.0
-lifecycle: contract
+lifecycle: history
 related:
   - ARCHITECTURE.md
   - docs/WORKFLOW-MESH-IMPLEMENTATION.md

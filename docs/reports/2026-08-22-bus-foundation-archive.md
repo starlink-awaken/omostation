@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # bus-foundation 归档决策 — D-2 闭环 2026-08-22
 
 > debt: D-2 僵尸候选，07-14 后冻结 1 月+，观察期 14 天 → 归档

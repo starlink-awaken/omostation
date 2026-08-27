@@ -8,6 +8,7 @@ task_path: .omo/tasks/archived/archive/IMPORTED-06fb03.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `IMPORTED-06fb03`

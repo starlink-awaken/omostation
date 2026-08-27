@@ -7,6 +7,7 @@ strat: STRAT-P81
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # STRAT-P81 Stage 0 closeout (final)

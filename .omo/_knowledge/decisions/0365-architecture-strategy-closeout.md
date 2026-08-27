@@ -1,7 +1,7 @@
 ---
 id: ADR-0365
 title: Adopt a scenario-first architecture strategy and Workflow Mesh as the sole execution spine
-status: ACCEPTED
+status: archived
 date: 2026-08-04
 owner: architecture-governance
 lifecycle: spec

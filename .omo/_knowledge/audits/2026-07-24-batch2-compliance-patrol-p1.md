@@ -7,6 +7,7 @@ period: P1
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # Governance weekly patrol — P1

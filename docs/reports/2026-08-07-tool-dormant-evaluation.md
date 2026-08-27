@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # B2: Dormant Tool Evaluation — bin/ssot/ 94 tools audit
 
 > 2026-08-07 | Path B (减法收敛) | Tool: `make tool-audit`

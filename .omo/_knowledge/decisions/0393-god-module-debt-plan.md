@@ -1,7 +1,7 @@
 ---
 id: ADR-0393
 title: god-module 大文件治理计划 — 3 个 >1500L 债的拆分路径
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-08

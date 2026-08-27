@@ -3,7 +3,7 @@ title: G-DEL 执行面门禁 · 实测说明
 status: active
 type: metrics
 related: [BET-7e074, BET-664e3, BET-3e602, BET-8c7c, ADR-0221, ADR-0225]
-lifecycle: contract
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-07-31
 review-state: metadata-only

@@ -4,7 +4,7 @@ status: draft
 type: review
 owner: 夏明星
 created: 2026-08-06
-lifecycle: report
+lifecycle: history
 review-state: evidence-based-audit
 note: >
   本文是评审报告，不是 SSOT。所有事实断言均标注取证命令或文件路径，可复核。
@@ -13,6 +13,7 @@ note: >
 related:
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
   - docs/plans/3Y-BET-LEDGER.md
+last-reviewed: 2026-08-27
 ---
 
 # 织星 / eCOS v6 深度 Review

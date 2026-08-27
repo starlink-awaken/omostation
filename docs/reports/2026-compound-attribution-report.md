@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # 3Y 战略三轴事实归因报告
 
 > 报告时间: 2026-08-20T04:58:00Z

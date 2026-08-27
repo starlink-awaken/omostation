@@ -14,6 +14,7 @@ failure_breakdown:
   trace_count: 14
 lifecycle: history
 owner: unassigned
+last-reviewed: 2026-08-27
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 

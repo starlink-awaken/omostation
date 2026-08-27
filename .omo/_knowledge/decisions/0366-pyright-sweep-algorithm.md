@@ -1,7 +1,7 @@
 ---
 id: ADR-0366
 title: Pyright 与 Ruff 扫描修复算法固化
-status: ACCEPTED
+status: archived
 date: 2026-08-04
 owner: governance-team
 lifecycle: spec

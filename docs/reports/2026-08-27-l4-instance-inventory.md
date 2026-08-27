@@ -1,9 +1,11 @@
 ---
 schema_version: evidence-report/v1
-status: observed
+status: archived
 owner: governance-team
 observed_at: 2026-08-27
 bet_id: BET-Y1Q3-T10-21
+lifecycle: history
+last-reviewed: 2026-08-27
 ---
 
 # L4 实例与 Documents 边界盘点

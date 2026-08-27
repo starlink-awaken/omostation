@@ -1,7 +1,7 @@
 ---
 id: ADR-0368
 title: Runtime Registry 测试契约与 TaskFallback 响应对齐
-status: ACCEPTED
+status: archived
 date: 2026-08-04
 owner: governance-team
 lifecycle: spec

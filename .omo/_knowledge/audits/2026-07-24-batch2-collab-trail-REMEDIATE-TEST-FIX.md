@@ -8,6 +8,7 @@ task_path: .omo/tasks/remediation/REMEDIATE-TEST-FIX.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `REMEDIATE-TEST-FIX`

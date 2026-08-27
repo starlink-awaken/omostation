@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Closeout — 2026-07-15 doctor path-acl + runbook
 
 - ADR-0199: omo doctor includes path-acl warn

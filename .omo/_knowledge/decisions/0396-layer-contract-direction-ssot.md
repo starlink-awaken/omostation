@@ -1,7 +1,7 @@
 ---
 id: ADR-0396
 title: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐
-status: proposed
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-07

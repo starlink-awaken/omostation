@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: contract
+lifecycle: history
 owner: kems-team
 last-reviewed: 2026-07-31
 review-state: metadata-only

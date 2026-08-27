@@ -5,7 +5,7 @@ type: execution-plan
 owner: 夏明星
 created: 2026-08-01
 updated: 2026-08-01
-lifecycle: plan
+lifecycle: history
 strategy_ref: docs/STRATEGY-3YEAR-PANORAMA.md
 last-reviewed: 2026-08-18
 ---

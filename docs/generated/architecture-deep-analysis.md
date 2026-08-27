@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # 织星 eCOS v6 — 架构深度剖析
 
 > 生成时间: 2026-07-13

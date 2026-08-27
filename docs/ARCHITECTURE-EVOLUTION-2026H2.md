@@ -10,7 +10,7 @@ related:
   - ARCHITECTURE.md
   - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
   - docs/VISION-ROADMAP.md
-lifecycle: contract
+lifecycle: history
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---

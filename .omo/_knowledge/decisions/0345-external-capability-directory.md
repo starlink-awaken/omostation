@@ -1,7 +1,7 @@
 ---
 id: ADR-0345
 title: External Capability Directory 只读能力地图
-status: ACCEPTED
+status: archived
 date: 2026-08-03
 owner: architecture-governance
 last-reviewed: 2026-08-03

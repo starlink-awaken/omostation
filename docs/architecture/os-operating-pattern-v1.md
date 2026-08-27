@@ -1,7 +1,7 @@
 ---
 title: 织星脊面运行模式 v1 — Spine-Face Operating Pattern
 status: active
-lifecycle: contract
+lifecycle: history
 owner: 夏明星
 created: 2026-08-25
 last-reviewed: 2026-08-25

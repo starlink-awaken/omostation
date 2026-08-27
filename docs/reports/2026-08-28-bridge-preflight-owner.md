@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Bridge preflight owner evidence — 2026-08-28
 
 The live bridge-refresh cron previously wrote Documents Dashboard projections.

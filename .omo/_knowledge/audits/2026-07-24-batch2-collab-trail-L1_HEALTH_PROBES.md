@@ -8,6 +8,7 @@ task_path: .omo/debt/items/L1_HEALTH_PROBES.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `L1_HEALTH_PROBES`

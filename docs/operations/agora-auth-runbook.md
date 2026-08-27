@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: entry
+lifecycle: history
 owner: agora-gateway
 last-reviewed: 2026-08-24
 related:

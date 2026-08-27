@@ -10,6 +10,7 @@ related_runs:
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # D2 · X3 7 月交付月度结算与归因

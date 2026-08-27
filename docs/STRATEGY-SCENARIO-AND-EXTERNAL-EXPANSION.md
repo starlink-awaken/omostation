@@ -3,7 +3,7 @@ title: BOS 多源私有知识与 Workflow Mesh 场景战略架构
 status: active
 type: strategy-architecture
 date: 2026-08-03
-lifecycle: entry
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-18
 ---

@@ -1,7 +1,7 @@
 ---
 id: ADR-0313
 title: Workflow Mesh operations projection and explicit consumption boundary
-status: ACCEPTED
+status: archived
 date: 2026-08-02
 last-reviewed: 2026-08-02
 owner: engineering-team

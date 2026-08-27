@@ -1,7 +1,7 @@
 ---
 id: ADR-0294
 title: 知识网关解耦与增量事件索引管道
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: engineering-agent
 last-reviewed: 2026-08-01

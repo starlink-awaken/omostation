@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Closeout — 2026-07-15 全栈总结与复盘
 
 > **范围**: Scheme C 5b → 5c L2 ACE apply → ops（doctor/cron/status API）+ Wave2 A/B/C 全链路  

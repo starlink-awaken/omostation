@@ -1,7 +1,7 @@
 ---
 id: ADR-0359
 title: Engineering Delivery Cockpit 人工复核工作台边界
-status: ACCEPTED
+status: archived
 date: 2026-08-03
 owner: governance-team
 lifecycle: spec

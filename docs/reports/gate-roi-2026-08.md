@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Gate ROI 季度治理价值报告
 
 > 数据源: governance-history.jsonl | 事件数: 693 | 趋势窗口: 近 30 天 | 估算总节省: **65.3 小时**

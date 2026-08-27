@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Closeout — 2026-07-15 Scheme C Phase 5b Container Executor
 
 ## What landed

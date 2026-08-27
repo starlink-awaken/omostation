@@ -1,7 +1,7 @@
 ---
 id: ADR-0298
 title: 外部连接织层运行时边界与 Workflow Mesh 回执
-status: ACCEPTED
+status: archived
 type: decision
 owner: architecture-governance
 created: 2026-08-02

@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Convergence preflight owner evidence — 2026-08-28
 
 The legacy `@公共/_runtime/check-convergence.py` is a Documents-side writer:

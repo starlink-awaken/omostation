@@ -1,6 +1,6 @@
 ---
 id: ADR-0226
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: 架构师
 last-reviewed: 2026-07-19

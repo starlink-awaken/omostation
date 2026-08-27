@@ -1,7 +1,7 @@
 ---
 id: ADR-0370
 title: AGT × eCOS v6 Integration via BOS URI External Adapter Pattern
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-04

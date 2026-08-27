@@ -1,7 +1,7 @@
 ---
 id: ADR-0363
 title: External Resource Refresh Plan and Controlled Reachability
-status: ACCEPTED
+status: archived
 date: 2026-08-04
 owner: architecture-governance
 lifecycle: spec

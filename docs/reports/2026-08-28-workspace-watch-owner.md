@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Workspace watch owner evidence — 2026-08-28
 
 The legacy minute watcher executed Documents `domain-sync`, `bridge-refresh`,

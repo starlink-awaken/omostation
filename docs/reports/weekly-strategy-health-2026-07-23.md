@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # 三年战略诚实体检 · 2026-07-23（周四）
 
 **结论一句话：战略正在"原地当图纸"——收敛期 6 个 P0/P1 全部 planned，8 天零启动，done=0。本周必须至少启动一个 P0。**

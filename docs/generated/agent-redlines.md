@@ -1,5 +1,8 @@
 ---
 last-reviewed: 2026-08-26
+lifecycle: history
+owner: unassigned
+status: archived
 ---
 
 # Agent 红线/灰线清单 (宪法 Wave 1)

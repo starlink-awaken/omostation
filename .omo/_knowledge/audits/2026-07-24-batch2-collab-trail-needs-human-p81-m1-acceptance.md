@@ -8,6 +8,7 @@ task_path: .omo/tasks/planned/needs-human-p81-m1-acceptance.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `needs-human-p81-m1-acceptance`

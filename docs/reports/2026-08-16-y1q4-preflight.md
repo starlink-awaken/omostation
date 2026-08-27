@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Y1Q4 六 Bet 可行性预检报告
 
 **类型**: report

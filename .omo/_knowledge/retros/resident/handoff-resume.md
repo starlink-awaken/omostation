@@ -13,6 +13,7 @@ failure_breakdown:
   trace_count: 0
 lifecycle: history
 owner: unassigned
+last-reviewed: 2026-08-27
 ---
 # handoff-resume 运行复盘聚合 (resident 事件驱动)
 

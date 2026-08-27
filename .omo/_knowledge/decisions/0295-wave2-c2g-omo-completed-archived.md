@@ -1,6 +1,6 @@
 ---
 id: ADR-0295
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-agent
 last-reviewed: 2026-08-01

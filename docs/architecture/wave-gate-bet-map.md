@@ -5,7 +5,7 @@ type: architecture-map
 owner: governance-team
 created: 2026-08-15
 bet: BET-Y1Q1-T6-02
-lifecycle: contract
+lifecycle: history
 does_not_invent: 第四套 ID。Wave/Gate 名称保留蓝图原文；BET 轨道保留 3y-bet-ledger.yaml。
 ssot:
   waves: docs/architecture/digital-twin-blueprint-v1.md

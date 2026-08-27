@@ -3,7 +3,7 @@ title: "runbook-p74-silent-workflow"
 status: active
 type: runbook
 owner: governance-team
-lifecycle: contract
+lifecycle: history
 last-reviewed: 2026-08-23
 ---
 # Runbook: P74 Silent Workflow Detected

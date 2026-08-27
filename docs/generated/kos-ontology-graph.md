@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # eCOS v6 物理拓扑与架构依赖图谱
 
 > **自动刷新时间**: 2026-07-06 15:44:53

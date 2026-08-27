@@ -6,6 +6,7 @@ needs-human: true
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # Physical base probe (fail-closed)

@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Documents consumer audit — 2026-08-27
 
 入口：`bin/gac/documents-domain-owner-job.py consumer-audit`；实现位于

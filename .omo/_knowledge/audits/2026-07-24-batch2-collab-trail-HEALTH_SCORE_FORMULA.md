@@ -8,6 +8,7 @@ task_path: .omo/debt/items/HEALTH_SCORE_FORMULA.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `HEALTH_SCORE_FORMULA`

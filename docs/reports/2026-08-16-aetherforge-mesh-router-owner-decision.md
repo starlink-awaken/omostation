@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # 算力路由双 Owner 收敛决策 — BET-Y1Q3-T1-06
 
 > 日期: 2026-08-16 · Owner: governance-team · Status: accepted

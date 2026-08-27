@@ -1,7 +1,7 @@
 ---
 id: ADR-0315
 title: Knowledge to Action 以引用、任务和行动回执组成 J2 垂直切片
-status: ACCEPTED
+status: archived
 date: 2026-08-02
 owner: engineering-team
 lifecycle: spec

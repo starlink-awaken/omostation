@@ -1,6 +1,6 @@
 ---
 status: stale
-lifecycle: contract
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-17
 review-state: content-reviewed-20260817

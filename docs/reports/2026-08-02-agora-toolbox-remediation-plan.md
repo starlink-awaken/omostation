@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # agora × toolbox 修复清单（P0/P1）
 
 > **创建时间**：2026-08-02

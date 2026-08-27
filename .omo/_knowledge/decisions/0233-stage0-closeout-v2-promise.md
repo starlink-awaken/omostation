@@ -1,7 +1,7 @@
 ---
 id: ADR-0233
 title: "STRAT-P81 Stage 0 closeout v2 占位"
-status: SUPERSEDED
+status: superseded
 lifecycle: spec
 date: 2026-07-24
 last-reviewed: 2026-07-24

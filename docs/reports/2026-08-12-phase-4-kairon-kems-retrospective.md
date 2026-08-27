@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Phase 4 Retrospective — Kairon/KOS KEMS Content Operations
 
 > Date: 2026-08-12

@@ -8,6 +8,7 @@ task_path: .omo/tasks/archived/archive/BET-ARCH-CONVERGENCE.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `BET-ARCH-CONVERGENCE`

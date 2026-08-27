@@ -8,6 +8,7 @@ task_path: .omo/tasks/remediation/REMEDIATE-STANDALONE-VERIFY.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `REMEDIATE-STANDALONE-VERIFY`

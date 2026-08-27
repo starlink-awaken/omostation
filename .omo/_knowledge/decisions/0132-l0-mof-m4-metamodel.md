@@ -1,6 +1,6 @@
 ---
 id: ADR-0132
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-team + eCOS team
 last-reviewed: 2026-07-06

@@ -1,7 +1,7 @@
 ---
 title: 台账 done 状态完整性抽样审计
 type: audit
-status: final
+status: archived
 owner: governance-team
 created: 2026-08-15
 lifecycle: history

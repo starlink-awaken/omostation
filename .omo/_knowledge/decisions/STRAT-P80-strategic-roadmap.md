@@ -1,5 +1,5 @@
 ---
-status: PROPOSED
+status: archived
 lifecycle: spec
 owner: 夏明星
 last-reviewed: 2026-07-24

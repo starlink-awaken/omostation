@@ -1,7 +1,7 @@
 ---
 id: ADR-0373
 title: Sweep-tooling Convergence — A4 / C5 / D3 / B2 / E2 plus GaC iteration
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-05

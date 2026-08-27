@@ -1,6 +1,6 @@
 ---
 id: ADR-0129
-status: proposed
+status: archived
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-03

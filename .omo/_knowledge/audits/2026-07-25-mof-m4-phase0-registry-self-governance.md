@@ -2,6 +2,7 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # MOF/M4 Phase 0 注册面守自止血 — 完成审计

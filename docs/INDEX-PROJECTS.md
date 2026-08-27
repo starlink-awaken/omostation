@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # INDEX-PROJECTS.md — 项目索引
 
 > **维护规则**

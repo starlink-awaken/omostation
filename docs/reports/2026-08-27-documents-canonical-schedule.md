@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Documents canonical schedule candidate — 2026-08-27
 
 ## Decision

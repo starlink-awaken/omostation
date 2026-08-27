@@ -4,6 +4,7 @@ date: 2026-08-20
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # BET-Y1Q3-T1-08 Retro — 退役 coordination-daemon 独立 clone 部署

@@ -1,8 +1,11 @@
 ---
 title: "Documents 客户端投影与 Cockpit 路由阶段复盘"
 date: 2026-08-13
-status: reconciled
+status: archived
 scope: "Documents 域网关、Workspace Cockpit MCP、本机客户端投影与外部 ChatGPT 隧道前置条件"
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
 ---
 
 # Documents 客户端投影与 Cockpit 路由阶段复盘

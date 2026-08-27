@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Documents consumer audit modes — 2026-08-28
 
 The consumer audit now separates active execution from read-only content

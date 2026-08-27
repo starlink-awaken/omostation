@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # BET-Y1Q3-T4-01 价值轴验收报告
 
 - 报告编号: VALUE-ACCEPTANCE-Y1Q3-T4-01

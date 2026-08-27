@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Phase 2 Retrospective — Cockpit Governance Context and Domain Bindings
 
 > Date: 2026-08-11

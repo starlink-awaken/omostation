@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Signals preflight owner evidence — 2026-08-28
 
 The legacy `@公共/_runtime/signals-rotate.py` rewrites Documents

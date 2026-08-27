@@ -8,6 +8,7 @@ task_path: .omo/tasks/planned/cockpit-debt-debt-1.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `cockpit-debt-debt-1`

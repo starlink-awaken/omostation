@@ -2,6 +2,7 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # 债务审计报告

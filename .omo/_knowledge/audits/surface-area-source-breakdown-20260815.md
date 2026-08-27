@@ -1,7 +1,7 @@
 ---
 title: 表面积暴涨溯源审计 — +926K 行增量归因
 type: audit
-status: final
+status: archived
 owner: governance-team
 created: 2026-08-15
 lifecycle: history

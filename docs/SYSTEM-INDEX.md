@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # SYSTEM-INDEX.md — Workspace 全景导航
 
 > **维护规则**

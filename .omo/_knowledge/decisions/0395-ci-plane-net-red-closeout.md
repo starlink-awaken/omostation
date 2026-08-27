@@ -1,7 +1,7 @@
 ---
 id: ADR-0395
 title: CI 平面净红收官 — scripts/check-* orphan 化 + drift 检测 ahead 容忍
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-08

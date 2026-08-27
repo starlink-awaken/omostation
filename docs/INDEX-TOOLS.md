@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # INDEX-TOOLS.md — 治理工具统一目录
 
 > **维护规则**

@@ -6,7 +6,7 @@ owner: 夏明星
 created: 2026-08-06
 adopted: 2026-08-15
 horizon: 2026H2-2029
-lifecycle: entry
+lifecycle: history
 supersedes:
   - docs/STRATEGY-3YEAR-PANORAMA.md
 builds-on:

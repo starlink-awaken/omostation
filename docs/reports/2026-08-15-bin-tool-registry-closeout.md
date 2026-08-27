@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # 2026-08-15 bin 工具治理收敛复盘
 
 ## 一、背景与目标

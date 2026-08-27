@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # MCP 服务器索引
 
 > 自动生成于 1970-01-01T00:00:00Z

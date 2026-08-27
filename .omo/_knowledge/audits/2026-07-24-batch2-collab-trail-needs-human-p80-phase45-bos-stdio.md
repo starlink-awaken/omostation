@@ -8,6 +8,7 @@ task_path: .omo/tasks/planned/needs-human-p80-phase45-bos-stdio.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `needs-human-p80-phase45-bos-stdio`

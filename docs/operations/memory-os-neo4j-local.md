@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: plan
+lifecycle: history
 owner: engineering-team
 last-reviewed: 2026-08-05
 related:

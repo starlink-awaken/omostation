@@ -12,7 +12,7 @@ related:
 note: >
   health_score 口径重构设计。权威源 .omo/state/health.yaml（ISC-1 guarded，
   改动须走 OMO broker，不得直写 health_score）。本文是设计，非落地。
-lifecycle: contract
+lifecycle: history
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31

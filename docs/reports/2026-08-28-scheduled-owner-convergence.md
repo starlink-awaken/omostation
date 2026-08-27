@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Scheduled owner convergence evidence — 2026-08-28
 
 The active `monday-vault-health` Scheduled skill previously instructed direct

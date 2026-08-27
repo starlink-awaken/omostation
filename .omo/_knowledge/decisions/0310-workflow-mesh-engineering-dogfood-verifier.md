@@ -1,7 +1,7 @@
 ---
 id: ADR-0310
 title: Workflow Mesh 工程 dogfood 端到端验收与场景绑定传递
-status: ACCEPTED
+status: archived
 lifecycle: spec
 owner: engineering-team
 date: 2026-08-02

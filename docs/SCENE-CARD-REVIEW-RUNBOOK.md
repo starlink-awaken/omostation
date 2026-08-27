@@ -8,7 +8,7 @@ related:
   - ./WORKFLOW-MESH-IMPLEMENTATION.md
   - ./scene-card-candidate-seeds.yaml
   - ../.omo/standards/scene-card-candidate.schema.yaml
-lifecycle: entry
+lifecycle: history
 ---
 
 # Scene Card 候选人工评审运行手册

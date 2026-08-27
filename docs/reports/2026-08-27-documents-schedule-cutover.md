@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Documents schedule cutover evidence — 2026-08-27
 
 This report records the attempted exact two-line host schedule cutover from

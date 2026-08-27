@@ -2,6 +2,7 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # P0 收口 — Inbox 卡定性 + Anomaly 归因 + Git 收口

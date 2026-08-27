@@ -8,6 +8,7 @@ pr: https://github.com/starlink-awaken/omostation/pull/483
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # Batch 1 closeout — 12-item reconciliation

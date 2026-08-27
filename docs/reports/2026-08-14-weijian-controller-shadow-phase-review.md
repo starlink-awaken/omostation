@@ -1,8 +1,11 @@
 ---
 title: "卫健委控制器影子迁移阶段复盘"
 date: 2026-08-14
-status: in_progress
+status: archived
 scope: "Runtime 影子作业、Cockpit 只读投影、Workspace Documents binding"
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
 ---
 
 # 卫健委控制器影子迁移阶段复盘

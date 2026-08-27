@@ -1,5 +1,8 @@
 ---
 last-reviewed: 2026-08-26
+lifecycle: history
+owner: unassigned
+status: archived
 ---
 
 # omostation / eCOS v6 — 项目粒度架构与战略深度复盘（2026-08-24 续）

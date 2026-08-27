@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # ADR-0390 修复验证报告
 
 **生成时间**: 2026-08-08 (UTC)  

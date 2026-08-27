@@ -1,6 +1,6 @@
 ---
 status: superseded
-lifecycle: history
+lifecycle: plan
 owner: auto-fix-loop
 last-reviewed: 2026-08-25
 superseded-by: docs/plans/2026-08-25-y1-value-loop-phase.md

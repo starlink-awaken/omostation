@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # resident retro 索引 (promote 自动生成)
 
 - generated_at: 2026-08-27T11:40:02Z

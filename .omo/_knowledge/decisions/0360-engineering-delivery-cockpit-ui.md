@@ -1,7 +1,7 @@
 ---
 id: ADR-0360
 title: Engineering Delivery Cockpit UI 收件箱与人工复核边界
-status: ACCEPTED
+status: archived
 date: 2026-08-04
 owner: governance-team
 lifecycle: spec

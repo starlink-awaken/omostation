@@ -1,7 +1,7 @@
 ---
 id: ADR-0318
 title: Agora 能力健康作为 Cockpit 准入证据
-status: ACCEPTED
+status: archived
 date: 2026-08-03
 owner: architecture-governance
 scope: Workflow Mesh / Cockpit / Agora

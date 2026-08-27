@@ -8,6 +8,7 @@ task_path: .omo/tasks/remediation/REMEDIATE-HERMES-PHASEA.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # Real backlog collab: `REMEDIATE-HERMES-PHASEA`

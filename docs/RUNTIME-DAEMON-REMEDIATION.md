@@ -12,7 +12,7 @@ related:
 note: >
   daemon 在线率 0.6 的根因盘点。运行时数字为 2026-07-15 沙箱实测快照，
   权威源 .omo/state/system_health.yaml。整改代码/PR 在授权 dev 环境执行。
-lifecycle: contract
+lifecycle: history
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31

@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: contract
+lifecycle: history
 owner: architecture-team
 last-reviewed: 2026-08-12
 review-state: verified-v3

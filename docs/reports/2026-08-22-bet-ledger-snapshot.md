@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # 三年规划台账快照 — 2026-08-22
 
 - schema: bet-ledger-snapshot/v1

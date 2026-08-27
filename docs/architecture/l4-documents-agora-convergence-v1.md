@@ -1,9 +1,10 @@
 ---
 schema_version: architecture/v1
-status: proposed
+status: archived
 owner: governance-team
 last-reviewed: 2026-08-27
 bet_id: BET-Y1Q3-T10-21
+lifecycle: history
 ---
 
 # L4 / Documents / Agora 单实例收敛架构 v1

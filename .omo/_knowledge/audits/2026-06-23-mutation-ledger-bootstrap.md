@@ -2,6 +2,7 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # Mutation Ledger Bootstrap

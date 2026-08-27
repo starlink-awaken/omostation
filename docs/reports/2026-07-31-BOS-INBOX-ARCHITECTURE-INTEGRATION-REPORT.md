@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # BOS Inbox 多源私有知识神经网：架构整合、落地实证与全景规划报告
 
 > **文档创建时间**：2026-07-31  

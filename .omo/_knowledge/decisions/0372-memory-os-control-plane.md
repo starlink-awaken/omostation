@@ -1,7 +1,7 @@
 ---
 id: ADR-0372
 title: Memory OS 控制面 — 统一记忆写读巩固与适配器边界
-status: ACCEPTED
+status: archived
 date: 2026-08-04
 owner: governance-team
 lifecycle: spec

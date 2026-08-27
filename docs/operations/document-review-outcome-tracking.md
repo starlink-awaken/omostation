@@ -2,7 +2,7 @@
 title: Document Review Outcome Tracking — 30-sample calibration protocol
 type: ops-protocol
 status: active
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-08-18
 related:

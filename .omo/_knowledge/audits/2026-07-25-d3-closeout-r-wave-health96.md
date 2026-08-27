@@ -13,6 +13,7 @@ related_runs:
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # D3 closeout · R 波 health 91→96 达成对账

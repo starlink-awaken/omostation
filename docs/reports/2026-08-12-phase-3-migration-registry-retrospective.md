@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Phase 3 Retrospective — Documents Migration Registry and Coverage Gate
 
 > Date: 2026-08-12

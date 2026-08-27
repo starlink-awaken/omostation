@@ -14,7 +14,7 @@ created: 2026-07-18
 note: >
   Pre-M1 allowed. Spec/interfaces only — no multi-machine registry, scheduler,
   or collab runtime. Implements nothing of G-DEL.1/3/5.
-lifecycle: contract
+lifecycle: history
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31

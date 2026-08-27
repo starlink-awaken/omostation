@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Production-topology canary — exact capability binding (2026-08-26)
 
 Scope-honest execution receipt for plan Task 7 step 3. Driver: real subprocess

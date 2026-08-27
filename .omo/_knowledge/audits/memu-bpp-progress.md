@@ -1,5 +1,5 @@
 ---
-status: complete
+status: archived
 lifecycle: history
 owner: laowang
 last-reviewed: 2026-06-28

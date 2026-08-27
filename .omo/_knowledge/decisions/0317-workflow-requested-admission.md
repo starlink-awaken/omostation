@@ -1,7 +1,7 @@
 ---
 id: ADR-0317
 title: WorkflowRequested 到受治理 admission 的晋升边界
-status: ACCEPTED
+status: archived
 date: 2026-08-03
 owner: engineering-team
 scope: Workflow Mesh / OMO / Cockpit

@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: pattern
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-24
 ---

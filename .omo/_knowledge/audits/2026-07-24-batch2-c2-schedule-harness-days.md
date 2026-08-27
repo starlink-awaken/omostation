@@ -6,6 +6,7 @@ batch: 2
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # C2 schedule harness — wall-clock day coverage

@@ -6,6 +6,7 @@ front: T1.1
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # GAC anomaly 专项归因 (2026-07-24)

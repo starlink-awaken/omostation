@@ -8,6 +8,7 @@ task_path: .omo/debt/items/UNASSIGNED_ENTROPY.yaml
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # `UNASSIGNED_ENTROPY`

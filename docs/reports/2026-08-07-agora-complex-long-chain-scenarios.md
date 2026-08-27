@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # agora 极度复杂超长链路场景验证报告 (2026-08-07)
 
 > 验证方式: 从工作领域构造 5 个**极度复杂**超长链路场景 (跨多子系统/多阶段/多数据流),

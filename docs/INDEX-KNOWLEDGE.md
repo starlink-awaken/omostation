@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # INDEX-KNOWLEDGE.md — 知识资产统一索引
 
 > **维护规则**

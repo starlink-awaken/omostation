@@ -4,7 +4,7 @@ status: draft
 type: analysis-and-strategy
 owner: 夏明星
 created: 2026-08-06
-lifecycle: report
+lifecycle: history
 related:
   - .omo/_knowledge/decisions/0220-swarm-coordination-discipline-m1-gate.md
   - .omo/_knowledge/decisions/0371-pasw-submodule-isolation.md
@@ -13,6 +13,7 @@ related:
 note: >
   所有数据为 2026-08-06 实测，附录 A 给取证命令。
   本文只诊断与给方案，执行拆解见台账 BET-Y1Q1-T1-00/05/06/07。
+last-reviewed: 2026-08-27
 ---
 
 # 多 Agent 并行的 Git 拓扑分析与根治方案

@@ -1,7 +1,7 @@
 ---
 id: ADR-0312
 title: Cockpit Delivery Journey truthful state projection
-status: ACCEPTED
+status: archived
 date: 2026-08-02
 last-reviewed: 2026-08-02
 owner: engineering-team

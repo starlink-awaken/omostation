@@ -1,7 +1,7 @@
 ---
 title: 织星道法术器 — MOF 嵌套的理论体系与硬约束
 status: active
-lifecycle: contract
+lifecycle: history
 owner: 夏明星
 created: 2026-08-25
 last-reviewed: 2026-08-26

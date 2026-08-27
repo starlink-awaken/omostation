@@ -1,6 +1,6 @@
 ---
 status: superseded
-lifecycle: contract
+lifecycle: history
 owner: runtime-team
 last-reviewed: 2026-08-22
 review-state: metadata-only

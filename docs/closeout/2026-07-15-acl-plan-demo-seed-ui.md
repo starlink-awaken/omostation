@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Closeout — 2026-07-15 plan --acl + demo seed UI
 
 - ADR-0196: omo acl plan --acl (dry-run ACE script)

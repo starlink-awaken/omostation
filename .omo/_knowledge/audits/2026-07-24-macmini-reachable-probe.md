@@ -9,6 +9,7 @@ related_cards:
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+status: archived
 ---
 
 # macmini 恢复可达 — 网络层探测

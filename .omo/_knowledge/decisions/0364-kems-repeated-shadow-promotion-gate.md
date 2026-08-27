@@ -1,7 +1,7 @@
 ---
 id: ADR-0364
 title: KEMS repeated shadow evaluation and human promotion gate
-status: ACCEPTED
+status: archived
 date: 2026-08-04
 owner: architecture-governance
 lifecycle: spec

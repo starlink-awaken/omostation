@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # 多 Agent 治理体系深化 — 深度复盘报告
 
 > 时间: 2026-08-04 ~ 2026-08-05

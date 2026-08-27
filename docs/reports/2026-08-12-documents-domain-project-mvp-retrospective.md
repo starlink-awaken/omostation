@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Documents Domain Project MVP — Phase 6 Retrospective
 
 Date: 2026-08-12

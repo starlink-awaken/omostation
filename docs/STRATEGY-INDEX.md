@@ -5,7 +5,7 @@ type: strategy-index
 owner: 夏明星
 created: 2026-07-15
 updated: 2026-08-15
-lifecycle: contract
+lifecycle: history
 last-reviewed: 2026-08-17
 review-state: plan-mainline-adr-0410
 note: >

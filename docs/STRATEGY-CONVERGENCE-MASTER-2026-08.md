@@ -5,7 +5,7 @@ type: strategy-convergence-master
 owner: 夏明星 (人类主权) · Claude (协作起草)
 created: 2026-08-15
 adopted: 2026-08-15
-lifecycle: entry
+lifecycle: history
 grill_locks:
   D1: plan-mainline-supersede-panorama
   D2: plan-one-sentence-north-star

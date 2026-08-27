@@ -4,7 +4,7 @@ status: draft
 type: analysis-and-strategy
 owner: 夏明星
 created: 2026-08-14
-lifecycle: report
+lifecycle: history
 related:
   - docs/reports/2026-08-06-multi-agent-git-topology.md
   - .omo/_truth/registry/swarm-coordination.yaml
@@ -14,6 +14,7 @@ note: >
   本文是对 2026-08-06《多 Agent 并行的 Git 拓扑分析与根治方案》的延伸，
   聚焦该报告里定义但未展开的「L3 状态面」。数据为 2026-08-14 实测
   （git ls-files 计数、.gitignore 核对、swarm-coordination.yaml 现状）。
+last-reviewed: 2026-08-27
 ---
 
 # 多 Agent 共享运行时状态的缺口——为什么「拓扑改造」不够

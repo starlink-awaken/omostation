@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # bin ↔ cockpit ↔ gate 收敛报告 — D-1 / D-5 闭环 2026-08-22
 
 > debts: D-1 四入口不统一 + D-5 gate 2倍冗余 → 单一事实源收敛

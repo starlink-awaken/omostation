@@ -1,3 +1,9 @@
+---
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-08-27
+---
 # Documents Runtime Source/Owner Parity Inventory
 
 > Date: 2026-08-12

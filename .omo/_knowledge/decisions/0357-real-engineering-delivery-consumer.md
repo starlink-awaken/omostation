@@ -1,7 +1,7 @@
 ---
 id: ADR-0357
 title: Engineering Delivery 真实元数据消费者与 Workflow Mesh 回执顺序
-status: ACCEPTED
+status: archived
 date: 2026-08-03
 owner: governance-team
 lifecycle: spec
