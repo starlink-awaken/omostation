@@ -36,14 +36,14 @@ WORKFLOW_MESH_EVENTS = WS_ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "even
 
 # A-axis: 系统自动化事件估时 (分钟/事件) — 这些值是经验估值, 后续可校准
 TIME_PER_EVENT_MIN = {
-    "compass_radar_run": 5,  # 一次健康巡检手动跑 ~5min
-    "drift_sweep_run": 8,  # 漂移扫描 ~8min
-    "signal_poll": 1,  # 信号轮询 ~1min
-    "agent_tick": 2,  # 一次 agent 后台 tick ~2min
-    "maturity_scorecard_run": 4,  # 成熟度扫描 ~4min
+    "compass_radar_run": 5,        # 一次健康巡检手动跑 ~5min
+    "drift_sweep_run": 8,          # 漂移扫描 ~8min
+    "signal_poll": 1,             # 信号轮询 ~1min
+    "agent_tick": 2,              # 一次 agent 后台 tick ~2min
+    "maturity_scorecard_run": 4,   # 成熟度扫描 ~4min
     "document_review_sample": 12,  # 一份公文 review ~12min
-    "knowledge_curation": 3,  # 知识策展一次 ~3min
-    "staleness_check": 2,  # staleness 检查 ~2min
+    "knowledge_curation": 3,       # 知识策展一次 ~3min
+    "staleness_check": 2,          # staleness 检查 ~2min
 }
 
 
@@ -130,60 +130,6 @@ def _count_decision_inbox(since_days: int = 30) -> int:
     return count
 
 
-_P_RE = re.compile(r"^##\s*\[\d{4}-\d{2}-\d{2}\]\s*P([0-2])\b", re.MULTILINE)
-_ADOPT_RE = re.compile(r"^-\s+\*\*(验证|实施)\*\*", re.MULTILINE)
-
-
-def _analyze_decisions(since_days: int = 30) -> dict[str, Any]:
-    """E-axis: per-decision P-level + adoption analysis.
-
-    Each `## [DATE] P{0-2}: TITLE` block counts as one decision. A decision is
-    'adopted' if its body contains at least one 验证/实施/决策/方案 marker, which
-    is the convention in delegation-guardrails/decisions.md.
-
-    Returns counts + the global adoption ratio so callers can compute
-    weighted quality scores.
-    """
-    out: dict[str, Any] = {
-        "p0_p1_count": 0,
-        "p2_count": 0,
-        "adopted_count": 0,
-        "total": 0,
-        "adoption_ratio": 0.0,
-    }
-    if not DECISIONS_LOG.is_file():
-        return out
-    cutoff = _utc_now() - dt.timedelta(days=since_days)
-    try:
-        text = DECISIONS_LOG.read_text(encoding="utf-8")
-    except OSError:
-        return out
-    blocks = re.split(r"(?=^##\s*\[)", text, flags=re.MULTILINE)
-    for blk in blocks:
-        head_m = re.match(r"^##\s*\[(\d{4}-\d{2}-\d{2})\]", blk)
-        if not head_m:
-            continue
-        try:
-            ts = dt.datetime.fromisoformat(head_m.group(1) + "T00:00:00+00:00")
-            if ts < cutoff:
-                continue
-        except ValueError:
-            pass
-        p_m = _P_RE.search(blk)
-        level = int(p_m.group(1)) if p_m else -1  # -1 = unprioritized
-        adopted = bool(_ADOPT_RE.search(blk))
-        out["total"] += 1
-        if level in (0, 1):
-            out["p0_p1_count"] += 1
-        elif level == 2:
-            out["p2_count"] += 1
-        if adopted:
-            out["adopted_count"] += 1
-    ratio: float = round(out["adopted_count"] / out["total"], 2) if out["total"] else 0.0
-    out["adoption_ratio"] = ratio
-    return out
-
-
 def _cadence_label(events_per_month: float) -> str:
     if events_per_month >= 12:
         return "high"
@@ -235,77 +181,6 @@ def _count_knowledge_consumption(since_days: int = 30) -> dict[str, int]:
     return counts
 
 
-def _read_kv_cache_stats(timeout: int = 5) -> dict[str, Any]:
-    """A2-axis: live KV-cache efficiency from omlxc fabric inspect.
-
-    Reads omlxc/dataplane/SemanticCacheRegistry state via the JSON CLI. Returns
-    `{hit_rate, l1_hits, l2_hits, total_queries, total_entries, available}`.
-    If omlxc isn't installed or times out, returns `available=False` so the
-    composite treats it as 0 without failing the whole meter.
-    """
-    omlxc_cli = WS_ROOT / "projects" / "omlxc"
-    if not omlxc_cli.is_dir():
-        return {
-            "available": False,
-            "hit_rate": 0.0,
-            "l1_hits": 0,
-            "l2_hits": 0,
-            "total_queries": 0,
-            "total_entries": 0,
-            "note": "omlxc not installed",
-        }
-    try:
-        res = subprocess.run(
-            ["uv", "run", "--directory", str(omlxc_cli), "omlxc", "fabric", "inspect", "--json"],
-            cwd=WS_ROOT,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=timeout,
-        )
-    except (subprocess.TimeoutExpired, OSError) as e:
-        return {
-            "available": False,
-            "hit_rate": 0.0,
-            "l1_hits": 0,
-            "l2_hits": 0,
-            "total_queries": 0,
-            "total_entries": 0,
-            "note": f"timeout or os error: {type(e).__name__}",
-        }
-    if res.returncode != 0:
-        return {
-            "available": False,
-            "hit_rate": 0.0,
-            "l1_hits": 0,
-            "l2_hits": 0,
-            "total_queries": 0,
-            "total_entries": 0,
-            "note": f"omlxc inspect exit {res.returncode}",
-        }
-    try:
-        payload = json.loads(res.stdout)
-        cs = payload.get("data", {}).get("cache_stats", {})
-    except (json.JSONDecodeError, AttributeError):
-        return {
-            "available": False,
-            "hit_rate": 0.0,
-            "l1_hits": 0,
-            "l2_hits": 0,
-            "total_queries": 0,
-            "total_entries": 0,
-            "note": "parse error",
-        }
-    return {
-        "available": True,
-        "hit_rate": float(cs.get("hit_rate", 0.0)),
-        "l1_hits": int(cs.get("l1_exact_hits", 0)),
-        "l2_hits": int(cs.get("l2_semantic_hits", 0)),
-        "total_queries": int(cs.get("total_queries", 0)),
-        "total_entries": int(cs.get("total_entries", 0)),
-    }
-
-
 def compute_axes(since_days: int = 30) -> dict[str, Any]:
     """Compute the 4 axes with their scores and supporting data."""
     # A-axis: time saved
@@ -319,17 +194,12 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
         "knowledge_curation": 0,
         "staleness_check": 0,
     }
-    total_minutes = sum(TIME_PER_EVENT_MIN[k] * v for k, v in counts.items())
+    total_minutes = sum(
+        TIME_PER_EVENT_MIN[k] * v for k, v in counts.items()
+    )
     # Scale: 0-100 score. Reference: 60 min/day × 30 days = 1800 min = 100
     a_score = min(100, round(100 * total_minutes / 1800))
     a_hours = total_minutes / 60
-
-    # A2-axis: KV-cache accelerated inference (omlxc two-tier cache).
-    # Score is the cache hit_rate × 100, capped at 100. When the in-memory
-    # cache is empty (no live omlxc queries yet) the honest reading is 0 —
-    # the value is real only when the cache is actively serving inference.
-    a2_stats = _read_kv_cache_stats()
-    a2_score = min(100, round(100 * a2_stats["hit_rate"])) if a2_stats["available"] else 0
 
     # B-axis: decision throughput
     decision_count = _count_decision_inbox(since_days)
@@ -341,11 +211,7 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
     c_pct = None
     res = subprocess.run(
         [sys.executable, str(WS_ROOT / "bin" / "plan" / "bet-ledger.py"), "status"],
-        cwd=WS_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=30,
+        cwd=WS_ROOT, capture_output=True, text=True, check=False, timeout=30,
     )
     m = re.search(r"done\s+(\d+)", res.stdout or "")
     t = re.search(r"总 bet:\s*(\d+)", res.stdout or "")
@@ -360,14 +226,6 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
     d_score = min(100, round(100 * d_events_per_month / 30))
     d_cadence = _cadence_label(d_events_per_month)
 
-    # E-axis: decision quality (advisory, 5-axis composite).
-    # Quality = P0/P1 decisions × adoption_ratio. Reference: 5 P0/P1 adopted
-    # decisions per 30d = 100 (≈ 1 high-value adopted decision per week).
-    e_analysis = _analyze_decisions(since_days)
-    e_p0_p1_per_month = e_analysis["p0_p1_count"] * (30 / since_days) if since_days else e_analysis["p0_p1_count"]
-    e_quality_score = e_p0_p1_per_month * e_analysis["adoption_ratio"]
-    e_score = min(100, round(20 * e_quality_score))
-
     # 3-axis composite (BC — main score, backward compat for strategy-check)
     weights_3axis = {"A": 0.70, "B": 0.30, "C": 0.0}
     score_3axis = round(a_score * 0.70 + b_score * 0.30)
@@ -375,15 +233,6 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
     # 4-axis advisory composite (D pulls 0.10 from A and 0.10 from B)
     weights_4axis = {"A": 0.60, "B": 0.20, "C": 0.0, "D": 0.20}
     score_4axis = round(a_score * 0.60 + b_score * 0.20 + d_score * 0.20)
-
-    # 5-axis advisory composite (E pulls 0.10 from B; B becomes advisory)
-    weights_5axis = {"A": 0.55, "B": 0.10, "C": 0.0, "D": 0.20, "E": 0.15}
-    score_5axis = round(a_score * 0.55 + b_score * 0.10 + d_score * 0.20 + e_score * 0.15)
-
-    # 6-axis advisory composite (A2 added; pulls 0.10 from A; A1 = A)
-    # A1 = event-driven time savings (B-series); A2 = inference-time KV cache.
-    weights_6axis = {"A1": 0.45, "A2": 0.10, "B": 0.10, "C": 0.0, "D": 0.20, "E": 0.15}
-    score_6axis = round(a_score * 0.45 + a2_score * 0.10 + b_score * 0.10 + d_score * 0.20 + e_score * 0.15)
 
     # Status (D5 防腐: 双重阻断 — read-only 永远 unprovable if not enough data)
     if total_minutes == 0 and decision_count == 0:
@@ -397,20 +246,14 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
 
     return {
         "axes": {
-            "A1": {
-                "name": "时间账本 A1 (主, 3-axis 0.70)",
+            "A": {
+                "name": "时间账本 (主, 3-axis 0.70)",
                 "score": a_score,
                 "weight": 0.70,
                 "data": counts,
                 "total_minutes_saved": total_minutes,
                 "total_hours_saved": round(a_hours, 1),
                 "window_days": since_days,
-            },
-            "A2": {
-                "name": "KV 缓存加速 A2 (advisory, 6-axis 0.10)",
-                "score": a2_score,
-                "weight": 0.10,
-                "data": a2_stats,
             },
             "B": {
                 "name": "决策吞吐 (3-axis 0.30)",
@@ -434,14 +277,6 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
                 "events_per_month": round(d_events_per_month, 1),
                 "cadence": d_cadence,
             },
-            "E": {
-                "name": "决策质量 (advisory, 5-axis 0.15)",
-                "score": e_score,
-                "weight": 0.15,
-                "data": e_analysis,
-                "p0_p1_per_month": round(e_p0_p1_per_month, 1),
-                "adoption_ratio": e_analysis["adoption_ratio"],
-            },
         },
         "composite": {
             "score": score_3axis,
@@ -452,18 +287,6 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
             "weights": weights_4axis,
             "advisory": True,
             "note": "A60+B20+D20; pulls 0.10 from A and 0.10 from B; aligns compass_radar↔bet_ledger.",
-        },
-        "composite_5axis": {
-            "score": score_5axis,
-            "weights": weights_5axis,
-            "advisory": True,
-            "note": "A55+B10+D20+E15; E pulls 0.10 from B; weights decision quality (P0/P1 × adoption).",
-        },
-        "composite_6axis": {
-            "score": score_6axis,
-            "weights": weights_6axis,
-            "advisory": True,
-            "note": "A1=0.45 + A2=0.10 + B=0.10 + D=0.20 + E=0.15; A1 (events) split from A; A2 (KV cache) added; A1 weight drops 0.55->0.45.",
         },
         "status": status,
         "snapshot_at": _utc_now().isoformat().replace("+00:00", "Z"),
@@ -478,44 +301,21 @@ def render_text(d: dict[str, Any]) -> str:
     lines.append("")
     for label, axis in d["axes"].items():
         lines.append(f"  Axis {label} (w={axis['weight']}, {axis['name']}): {axis['score']}/100")
-        if label == "A1":
+        if label == "A":
             lines.append(f"    time saved (30d): {axis['total_hours_saved']}h = {axis['total_minutes_saved']}min")
             for k, v in axis["data"].items():
                 lines.append(f"    - {k:<28} {v}")
-        elif label == "A2":
-            cs = axis["data"]
-            note = f" ({cs['note']})" if cs.get("note") else ""
-            lines.append(
-                f"    KV cache hit_rate: {cs['hit_rate']:.2%} (l1={cs['l1_hits']}, l2={cs['l2_hits']}, queries={cs['total_queries']}, entries={cs['total_entries']}, available={cs['available']}){note}"
-            )
         elif label == "B":
-            lines.append(
-                f"    decisions: {axis['data']['decisions_30d']} (cadence: {axis['cadence']}, ~{axis['decisions_per_month']}/mo)"
-            )
+            lines.append(f"    decisions: {axis['data']['decisions_30d']} (cadence: {axis['cadence']}, ~{axis['decisions_per_month']}/mo)")
         elif label == "D":
             lines.append(
                 f"    knowledge events: {axis['data']['total']} (evidence={axis['data']['evidence_recorded']}, succeeded={axis['data']['workflow_succeeded']}, cadence: {axis['cadence']}, ~{axis['events_per_month']}/mo)"
             )
-        elif label == "E":
-            ed = axis["data"]
-            lines.append(
-                f"    P0/P1 decisions: {ed['p0_p1_count']} (P2: {ed['p2_count']}, adopted: {ed['adopted_count']}/{ed['total']} ratio={ed['adoption_ratio']}, ~{axis['p0_p1_per_month']}/mo)"
-            )
         else:
             lines.append(f"    BET done pct: {axis['data']['bet_done_pct']}%")
     lines.append("")
-    lines.append(f"  composite (3-axis, BC):       {d['composite']['score']}/100  weights={d['composite']['weights']}")
-    lines.append(
-        f"  composite (4-axis, advisory): {d['composite_4axis']['score']}/100  weights={d['composite_4axis']['weights']}"
-    )
-    if "composite_5axis" in d:
-        lines.append(
-            f"  composite (5-axis, advisory): {d['composite_5axis']['score']}/100  weights={d['composite_5axis']['weights']}"
-        )
-    if "composite_6axis" in d:
-        lines.append(
-            f"  composite (6-axis, advisory): {d['composite_6axis']['score']}/100  weights={d['composite_6axis']['weights']}"
-        )
+    lines.append(f"  composite (3-axis, BC):    {d['composite']['score']}/100  weights={d['composite']['weights']}")
+    lines.append(f"  composite (4-axis, advisory): {d['composite_4axis']['score']}/100  weights={d['composite_4axis']['weights']}")
     lines.append(f"  status: {d['status']}")
     return "\n".join(lines)
 
