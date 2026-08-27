@@ -168,6 +168,38 @@ LEGACY_CR_IDS = {
     "M4-SUBMODULE-HYGIENE",
     "M4-MCPTOOL-INTEGRITY",
     "M4-DERIVED-PLANE-AUDIT",
+    # Historical CR identifiers retained in ADRs after their checks were
+    # consolidated into newer registry entries. Keep these references
+    # fail-closed only for registration convergence; active gates still come
+    # from governance-checks.yaml.
+    "CR-BASELINE-REPLAYED",
+    "CR-CROSS-REPO-CHECK",
+    "CR-DEPRECATED-PORT",
+    "CR-DOC-NO-LAST-UPDATED",
+    "CR-ENV-VAR-PORT",
+    "CR-L0-BOS-DOMAIN-NORM",
+    "CR-L0-MATRIX-LAUNCHD-COVERAGE",
+    "CR-LAYER-CALL-DIRECTION",
+    "CR-M4-DERIVED-PLANE-AUDIT",
+    "CR-M4-HEALTH-SCORE",
+    "CR-META-BIN-NAMING",
+    "CR-META-BIN-ORPHAN",
+    "CR-META-CI-SKIP-MATRIX",
+    "CR-META-METRIC-DEBT-FEATURE",
+    "CR-P74-RUNTIME-STAMP-POLICY",
+    "CR-P74-STATE-PROJECTION-GUARD",
+    "CR-P74-WORKFLOW-SILENCE",
+    "CR-P74-WORKFLOW-SUGGEST",
+    "CR-PR-CHECKLIST-COMPLETE",
+    "CR-PR-DESCRIPTION-NON-EMPTY",
+    "CR-SUBMODULE-BUMP-AUTO",
+    "CR-WORKTREE-CLEAN-BEFORE-PR",
+    "CR-X-PROMOTION-LIFECYCLE",
+    "CR-X1-EVIDENCE-RUNNABLE",
+    "CR-X1-FRESHNESS-SEMANTIC",
+    "CR-X2-GAC-EXEC-DRIFT",
+    "CR-X3-DELIVERY-CADENCE",
+    "CR-X4-METAOS-REGISTRY-DRIFT",
 }
 
 
