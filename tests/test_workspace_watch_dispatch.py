@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def _module():
-    path = Path(__file__).parents[1] / "bin/gac/workspace-watch-dispatch.py"
+    path = Path(__file__).parents[1] / "lib/workspace_watch_dispatch.py"
     spec = importlib.util.spec_from_file_location("workspace_watch_dispatch", path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)

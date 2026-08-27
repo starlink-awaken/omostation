@@ -7726,7 +7726,7 @@ bets:
   workflow: project-code-change
   underlying_workflow: project-code-change
   write_surfaces:
-  - bin/gac/workspace-watch-dispatch.py
+  - lib/workspace_watch_dispatch.py
   - tests/test_workspace_watch_dispatch.py
   - .omo/cron/documents-content-plane-crontab
   - docs/superpowers/specs/2026-08-28-workspace-watch-owner-design.md

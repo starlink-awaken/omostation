@@ -13,8 +13,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-LEGACY_MARKERS = ("domain-sync.py", "bridge-refresh.py", "session-brief.py", "weekly-verdict-generator.py")
+ROOT = Path(__file__).resolve().parents[1]
 
 
 @dataclass(frozen=True)

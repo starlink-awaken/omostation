@@ -7,7 +7,7 @@ cron lines were migrated.
 
 ## Owner contract
 
-- Entry: `bin/gac/workspace-watch-dispatch.py`.
+- Entry: `lib/workspace_watch_dispatch.py`.
 - Preserves four watch groups and Workspace stamp semantics.
 - Domain, bridge, and inbox changes call canonical Workspace/read-only owners.
 - Weekly verdict changes produce an explicit `pending` event because no
@@ -18,7 +18,7 @@ cron lines were migrated.
 ## Candidate schedule
 
 ```cron
-* * * * * cd "$HOME/.local/share/omostation/accepted-20260903" && uv run --with pyyaml python bin/gac/workspace-watch-dispatch.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --stamps "$HOME/Workspace/runtime/.watch-dispatch-stamps.json" --json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
+* * * * * cd "$HOME/.local/share/omostation/accepted-20260903" && uv run --with pyyaml python lib/workspace_watch_dispatch.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --stamps "$HOME/Workspace/runtime/.watch-dispatch-stamps.json" --json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
 ```
 
 The candidate is not installed by the implementation PR. A governed cutover
