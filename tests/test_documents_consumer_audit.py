@@ -93,6 +93,43 @@ def test_audit_detects_active_sources_and_ignores_comment_only_lines(tmp_path: P
     assert all(item["active"] is True for item in payload["consumers"])
     assert {item["family"] for item in payload["consumers"]} == {"public-runtime", "learning-runtime"}
     assert payload["consumer_ids"] == sorted(payload["consumer_ids"])
+    assert all(item["execution_mode"] == "documents-executor" for item in payload["consumers"])
+    assert payload["summary"]["forbidden_executors"] == 3
+
+
+def test_workspace_owner_read_is_not_forbidden_executor(tmp_path: Path) -> None:
+    documents = tmp_path / "Documents"
+    documents.mkdir()
+    crontab = tmp_path / "crontab"
+    crontab.write_text(
+        '0 6 * * * cd "$HOME/.local/share/omostation/accepted-20260902" && '
+        'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py '
+        'controller-preflight --documents-root "$HOME/Documents"\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "launch").mkdir()
+    (tmp_path / "scheduled").mkdir()
+
+    result = _run(
+        "--documents-root",
+        str(documents),
+        "--registry",
+        str(_registry(tmp_path / "migrations.yaml")),
+        "--crontab",
+        str(crontab),
+        "--launch-agents-root",
+        str(tmp_path / "launch"),
+        "--scheduled-root",
+        str(tmp_path / "scheduled"),
+    )
+
+    payload = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert payload["summary"]["forbidden_executors"] == 0
+    assert payload["summary"]["workspace_read_owners"] == 1
+    assert payload["consumers"][0]["execution_mode"] == "workspace-owner-read"
+    assert payload["consumers"][0]["writes_documents"] is False
+    assert payload["consumers"][0]["forbidden_executor"] is False
 
 
 def test_unknown_active_consumer_fails_closed(tmp_path: Path) -> None:

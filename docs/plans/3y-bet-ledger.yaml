@@ -7622,6 +7622,47 @@ bets:
   human_gate: true
   circuit_breaker: 'Rule parity gap, Documents write attempt, or unverified control-loop semantics blocks cutover.'
   retro: required
+- id: BET-Y1Q3-T10-36
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'Documents consumer audit execution-mode 分层'
+  appetite: 1 day
+  priority: P0
+  status: pending
+  goal: '区分 Documents executor、Workspace owner read 和 content reference，建立 forbidden_executors=0 的真实清零指标。'
+  non_goals:
+  - 不删除仍有业务价值的 Documents 内容引用
+  - 不把 Workspace owner 的只读 Documents 输入误判为执行器
+  - 不修改 cron、LaunchAgent 或 Scheduled runtime
+  done_when:
+  - 'consumer-audit emits execution_mode, writes_documents, and forbidden_executor for every consumer'
+  - 'summary reports total references, forbidden executors, Workspace read owners, and content references separately'
+  - 'legacy Documents executable commands remain violations while Workspace owner commands are classified as read-only'
+  - 'focused tests and root CI pass; existing audit evidence remains schema-compatible'
+  verify:
+  - cmd: 'uv run --with pyyaml --with pytest python -m pytest tests/test_documents_consumer_audit.py -q'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - lib/documents_consumer_audit.py
+  - tests/test_documents_consumer_audit.py
+  - docs/superpowers/specs/2026-08-28-consumer-audit-modes-design.md
+  - docs/reports/2026-08-28-consumer-audit-modes.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-36.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-consumer-audit-modes-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:6ca652906a823a8477509bbf04eae981419db3233070fa6597ae1196a09a5792'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-36
+  depends_on:
+  - BET-Y1Q3-T10-35
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'Classification ambiguity or a forbidden executor false-negative blocks release.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3

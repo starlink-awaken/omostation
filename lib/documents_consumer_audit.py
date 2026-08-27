@@ -110,8 +110,35 @@ def _consumer_id(source: str, kind: str, relative: str, fragment: str) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:20]
 
 
+def _execution_classification(kind: str, relative: str, fragment: str) -> tuple[str, bool, bool]:
+    """Classify the action surface, not merely the referenced Documents path."""
+    normalized = fragment.lower()
+    workspace_owner = (
+        "documents-domain-owner-job.py" in normalized
+        or "generate-brief.py" in normalized
+        or ("accepted-" in normalized and "--documents-root" in normalized and "uv run" in normalized)
+    )
+    if workspace_owner:
+        return "workspace-owner-read", False, False
+
+    # Domain gateway files are declarations/instructions, not live execution
+    # surfaces. Keep their references visible as content references; only
+    # crontab/LaunchAgent/Scheduled surfaces prove an active executor.
+    if kind == "domain-gateway":
+        return "content-reference", False, False
+
+    executable_path = any(
+        marker in relative
+        for marker in ("/_runtime/", "/_scripts/", "/tools/", "/.kems/", "/family-dashboard-app/")
+    ) or relative.endswith((".py", ".py3", ".sh", ".js", ".ts"))
+    if executable_path and kind in {"crontab", "launchagent", "scheduled-skill", "domain-gateway"}:
+        return "documents-executor", True, True
+    return "content-reference", False, False
+
+
 def _consumer(source: str, kind: str, relative: str, fragment: str, families: list[dict[str, Any]]) -> dict[str, Any]:
     family, matches = _family_for(relative, families)
+    execution_mode, writes_documents, forbidden_executor = _execution_classification(kind, relative, fragment)
     return {
         "consumer_id": _consumer_id(source, kind, relative, fragment),
         "source": source,
@@ -121,6 +148,9 @@ def _consumer(source: str, kind: str, relative: str, fragment: str, families: li
         "command_fragment": fragment.strip(),
         "family": family,
         "family_matches": matches,
+        "execution_mode": execution_mode,
+        "writes_documents": writes_documents,
+        "forbidden_executor": forbidden_executor,
     }
 
 
@@ -163,8 +193,12 @@ def _scan_text(
         else:
             lines = [line]
         for candidate in lines:
-            for relative in sorted(set(_paths_in_text(candidate, documents_root))):
-                if not _is_execution_candidate(relative):
+            relatives = set(_paths_in_text(candidate, documents_root))
+            if "--documents-root" in candidate and ("$HOME/Documents" in candidate or str(documents_root) in candidate):
+                relatives.add(".")
+            for relative in sorted(relatives):
+                owner_root_reference = relative == "." and _execution_classification(kind, relative, candidate)[0] == "workspace-owner-read"
+                if not _is_execution_candidate(relative) and not owner_root_reference:
                     continue
                 found.append(_consumer(path_label, kind, relative, candidate, families))
     return found
@@ -280,7 +314,11 @@ def audit(
 
     unique: dict[str, dict[str, Any]] = {item["consumer_id"]: item for item in consumers}
     consumers = [unique[key] for key in sorted(unique)]
-    unmatched = [item for item in consumers if item["family"] is None]
+    unmatched = [
+        item
+        for item in consumers
+        if item["family"] is None and item["execution_mode"] != "workspace-owner-read"
+    ]
     errors.extend(
         f"{item['consumer_id']}: unmatched migration family for {item['relative_path']} ({item['kind']})"
         for item in unmatched
@@ -297,6 +335,16 @@ def audit(
             "total": len(consumers),
             "active": sum(1 for item in consumers if item["active"]),
             "unmatched": len(unmatched),
+            "forbidden_executors": sum(
+                1
+                for item in consumers
+                if item["active"] and item["forbidden_executor"] and item["kind"] != "domain-gateway"
+            ),
+            "gateway_instructions": sum(
+                1 for item in consumers if item["active"] and item["kind"] == "domain-gateway" and item["execution_mode"] == "content-reference"
+            ),
+            "workspace_read_owners": sum(1 for item in consumers if item["active"] and item["execution_mode"] == "workspace-owner-read"),
+            "content_references": sum(1 for item in consumers if item["active"] and item["execution_mode"] == "content-reference"),
             "families": {
                 family: sum(1 for item in consumers if item["family"] == family)
                 for family in sorted({item["family"] for item in consumers if item["family"]})
