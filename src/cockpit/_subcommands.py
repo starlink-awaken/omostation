@@ -995,9 +995,13 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
 
     # ── AGE-v2 Agent Cell ────────────────────────────────────────
     cell_p = sub.add_parser("cell", help="🤖 AGE-v2 动态 Agent Cell (规划/执行/验证/治理)")
-    cell_p.add_argument("cell_action", nargs="?", default="help",
-                        choices=["plan", "execute", "verify", "govern", "pdp", "pep", "memory", "replay", "dashboard"],
-                        help="Cell 子命令")
+    cell_p.add_argument(
+        "cell_action",
+        nargs="?",
+        default="help",
+        choices=["plan", "execute", "verify", "govern", "pdp", "pep", "memory", "replay", "dashboard"],
+        help="Cell 子命令",
+    )
     cell_p.add_argument("cell_args", nargs="*", help="子命令参数")
 
     # ── V2 主权算力网络与 0ms TTFT 快照 (ADR-0197) ─────────────────
