@@ -147,19 +147,20 @@ router = APIRouter(prefix="/api/workflow-mesh", tags=["workflow-mesh"]) if APIRo
 from cockpit.web._agora_ports import agora_http_endpoint
 
 _AGORA_HTTP_ENDPOINT = agora_http_endpoint()
+from cockpit.web import workflow_mesh_helpers
+from cockpit.web.workflow_mesh_helpers import (
+    _build_draft_from_snapshot,
+    _normalize_resp_input,
+    _optional_burden,
+    _personal_draft_evidence_ref,
+    _personal_error,
+    _projection_fields,
+    _projection_value_is_private,
+    _required_text,
+    _unavailable_projection,
+)
+
 _logger = logging.getLogger(__name__)
-
-
-def _unavailable_projection(error_type: str, next_action: str) -> dict[str, Any]:
-    now_iso = datetime.datetime.now(datetime.UTC).isoformat()
-    return {
-        "schema_version": "workflow-mesh-operations/v1",
-        "status": "unavailable",
-        "source": {"kind": "omo_append_only_event_log"},
-        "generated_at": now_iso,
-        "error_type": error_type,
-        "next_action": next_action,
-    }
 
 
 def _event_ledger_db_path() -> Path:
@@ -180,6 +181,7 @@ def _personal_draft_dir() -> Path:
 
 PERSONAL_SIGNAL_SOURCE_ID = "iris-local-files"
 PERSONAL_SIGNAL_URI_PREFIX = "iris://local-files/"
+_DRAFT_FIELDS = frozenset({"title", "context", "deadline", "next_action"})
 
 
 def _personal_signal_dir() -> Path:
@@ -266,10 +268,11 @@ def _personal_episode_service() -> Any:
 
 def _personal_error(reason: str, *, status_code: int = 409) -> Any:
     """Return a non-success response without leaking broker or PEP internals."""
-    payload = {"ok": False, "status": "blocked", "error": reason}
-    if JSONResponse is None:
-        return payload
-    return JSONResponse(status_code=status_code, content=payload)
+    return workflow_mesh_helpers._personal_error(
+        reason,
+        status_code=status_code,
+        json_response_cls=JSONResponse,
+    )
 
 
 def _personal_request(body: Any, allowed: set[str]) -> dict[str, Any]:
@@ -282,53 +285,19 @@ def _personal_request(body: Any, allowed: set[str]) -> dict[str, Any]:
 
 
 def _required_text(body: dict[str, Any], field: str) -> str:
-    value = body.get(field)
-    if not isinstance(value, str) or not value.strip():
-        raise PersonalEpisodeError("invalid_request", f"{field} must be non-empty")
-    return value.strip()
+    return workflow_mesh_helpers._required_text(body, field)
 
 
 def _optional_burden(body: dict[str, Any], field: str) -> float | None:
-    """Extract an optional non-negative finite numeric burden field.
-
-    Returns None when the field is absent; otherwise validates that the
-    value is a real number (rejecting bool, NaN, inf, negative).  The
-    OMO layer re-validates, but catching at the boundary gives a clean
-    error without touching the ledger.
-    """
-    if field not in body or body[field] is None:
-        return None
-    value = body[field]
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise PersonalEpisodeError("invalid_burden", f"{field} must be a number")
-    v = float(value)
-    if v < 0 or not math.isfinite(v):
-        raise PersonalEpisodeError("invalid_burden", f"{field} must be non-negative and finite")
-    return v
+    return workflow_mesh_helpers._optional_burden(body, field)
 
 
 def _projection_value_is_private(value: Any) -> bool:
-    """Reject path- and connector-shaped strings from the public projection."""
-    if not isinstance(value, str):
-        return False
-    stripped = value.strip()
-    lowered = stripped.lower()
-    return "file://" in lowered or "iris://" in lowered or stripped.startswith(("/", "~/")) or "/users/" in lowered
+    return workflow_mesh_helpers._projection_value_is_private(value)
 
 
 def _projection_fields(source: Any, fields: tuple[str, ...]) -> dict[str, Any]:
-    """Copy explicitly public scalar fields from one projection mapping."""
-    if not isinstance(source, dict):
-        return {}
-    result: dict[str, Any] = {}
-    for field in fields:
-        if field not in source:
-            continue
-        value = source.get(field)
-        if value is None or isinstance(value, (str, int, float, bool)):
-            if not _projection_value_is_private(value):
-                result[field] = value
-    return result
+    return workflow_mesh_helpers._projection_fields(source, fields)
 
 
 def _episode_projection_http_dto(projection: Any) -> dict[str, Any]:
@@ -632,57 +601,15 @@ def _write_local_draft(context: Any, draft: dict[str, str], output_origin: str =
 
 
 def _personal_draft_evidence_ref(artifact: Path) -> str:
-    """Return a stable opaque reference without exposing the local artifact path."""
-    digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
-    return f"evidence://personal-draft/sha256:{digest}"
-
-
-_DRAFT_FIELDS = frozenset({"title", "context", "deadline", "next_action"})
+    return workflow_mesh_helpers._personal_draft_evidence_ref(artifact)
 
 
 def _normalize_resp_input(responsibilities: list[str]) -> tuple[list, set[str]]:
-    """Normalize caller responsibility strings for OMO assign() and comparison.
-
-    ``responsibility:xxx`` → mapping dict (exact resp_id, no re-slug);
-    plain string → left as-is for OMO slug+prefix normalization.
-    Returns ``(items_for_assign, expected_canonical_ids)``.
-    """
-    import re
-
-    def _slugify(name: str) -> str:
-        slug = re.sub(r"[^A-Za-z0-9]+", "-", name).strip("-").lower()
-        return slug or "item"
-
-    items: list = []
-    expected: set[str] = set()
-    for r in responsibilities:
-        r = r.strip()
-        if r.startswith("responsibility:"):
-            suffix = r.split(":", 1)[1]
-            items.append({"resp_id": r, "name": suffix})
-            expected.add(r)
-        else:
-            items.append(r)
-            expected.add(f"responsibility:{_slugify(r)}")
-    return items, expected
+    return workflow_mesh_helpers._normalize_resp_input(responsibilities)
 
 
 def _build_draft_from_snapshot(snapshot: Any) -> dict[str, str]:
-    """Deterministically build a safe draft dict from a persisted Episode snapshot.
-
-    Only uses fields already in the ledger event — summary, why_now,
-    deadline.  Never touches raw signal body, filesystem paths, or URIs.
-    """
-    summary = str(getattr(snapshot, "summary", "") or "").strip()
-    why_now = str(getattr(snapshot, "why_now", "") or "").strip()
-    deadline = str(getattr(snapshot, "deadline", "") or "").strip()
-    context_text = f"{summary}. {why_now}." if why_now else f"{summary}."
-    return {
-        "title": summary or "Personal follow-up draft",
-        "context": context_text.strip(),
-        "deadline": deadline,
-        "next_action": "Review and edit the local draft.",
-    }
+    return workflow_mesh_helpers._build_draft_from_snapshot(snapshot)
 
 
 async def _read_capability_health(required_capabilities: list[str]) -> dict[str, Any]:

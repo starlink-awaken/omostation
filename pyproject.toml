@@ -87,8 +87,10 @@ kos = { path = "../knowledge/kairon/packages/kos", editable = true }
 
 [dependency-groups]
 dev = [
+    "fastmcp>=4.0.0b1",
     "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
+    "rich>=14.3.4",
 ]
 
 [tool.pyright]
