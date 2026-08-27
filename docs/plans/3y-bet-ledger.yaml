@@ -7137,6 +7137,49 @@ bets:
   human_gate: true
   circuit_breaker: 'registry/path ambiguity, write-back attempt, or non-deterministic output blocks schedule cutover.'
   retro: required
+- id: BET-Y1Q3-T10-25
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'Documents canonical schedule candidate（不安装）'
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  goal: '为已完成 owner 对等的 consumer audit 与 freshness audit 生成 Workspace canonical schedule candidate，保留原 cadence，明确未迁移任务和安装/回滚硬门。'
+  non_goals:
+  - 不修改宿主 crontab、LaunchAgent、Scheduled skill 或 Documents 内容
+  - 不把未完成 parity 的 7 个 active consumer 标记为已迁移
+  - 不删除旧脚本或数据
+  done_when:
+  - 'candidate schedule preserves exact daily 06:25 and Monday 06:35 cadence'
+  - 'candidate invokes Workspace owner entrypoints and writes only Workspace evidence/logs'
+  - 'old/new matrix, dry-run evidence, and rollback procedure are recorded'
+  - 'focused static checks, doc claims, and root CI pass'
+  verify:
+  - cmd: 'test -f .omo/cron/documents-content-plane-crontab && ! rg -n "^[^#]*Documents/.+(_runtime|_control|\.kems)" .omo/cron/documents-content-plane-crontab'
+    expect: exit 0
+  - cmd: 'rg -n "25 6|35 6 \* \* 1|NOT INSTALLED|Workspace" .omo/cron/documents-content-plane-crontab'
+    expect: exit 0
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - .omo/cron/documents-content-plane-crontab
+  - docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md
+  - docs/reports/2026-08-27-documents-canonical-schedule.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-25.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:5176804559aa4b769b1bdbf1b4aaba816e1d4f00e3c8e7504fbf90da77f59c11'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-25
+  depends_on:
+  - BET-Y1Q3-T10-23
+  - BET-Y1Q3-T10-24
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'any cadence drift, Documents write path, missing owner evidence, or failed dry-run stops installation.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
