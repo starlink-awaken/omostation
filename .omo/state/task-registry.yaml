@@ -111,39 +111,39 @@ tasks:
      purpose: "问题检测(日)", schedule: "86400s", evidence: [], expected_period: 259200, lifecycle: active}
 
   # ===== 体系: lifedomain (生活域 @驾驶舱/卫健委) =====
-  - {id: life-watch-dispatch, system: lifedomain, carrier: cron, carrier_ref: "cron:watch-dispatch",
+  - {id: life-watch-dispatch, system: lifedomain, carrier: cron, carrier_ref: "cron:workspace_watch_dispatch",
      purpose: "分钟级文件变更调度(FDA绕行的cron版事件驱动)", schedule: "60s",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 3600, lifecycle: active}
-  - {id: life-domain-sync, system: lifedomain, carrier: cron, carrier_ref: "cron:domain-sync",
+     evidence: [{path: ~/Workspace/runtime/cron/documents-plane.log}], expected_period: 3600, lifecycle: active}
+  - {id: life-domain-sync, system: lifedomain, carrier: cron, carrier_ref: "cron:documents-domain-index",
      purpose: "域同步(日)", schedule: "日06:00",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 90000, lifecycle: active}
-  - {id: life-session-brief, system: lifedomain, carrier: cron, carrier_ref: "cron:session-brief",
+     evidence: [{path: ~/Workspace/runtime/cron/documents-plane.log}], expected_period: 90000, lifecycle: active}
+  - {id: life-session-brief, system: lifedomain, carrier: cron, carrier_ref: "cron:generate-brief",
      purpose: "会话简报(日)", schedule: "日06:15",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 90000, lifecycle: active}
-  - {id: life-kos-ingest, system: lifedomain, carrier: cron, carrier_ref: "cron:kos-ingest",
+     evidence: [{path: ~/Workspace/runtime/cron/documents-plane.log}], expected_period: 90000, lifecycle: active}
+  - {id: life-kos-ingest, system: lifedomain, carrier: cron, carrier_ref: "cron:documents_kos_preflight",
      purpose: "KOS文档摄取(周日)", schedule: "周日06:20",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 612000, lifecycle: active}
-  - {id: life-async-audit, system: lifedomain, carrier: cron, carrier_ref: "cron:async-audit",
+     evidence: [{path: ~/Workspace/runtime/cron/kos.stdout.log}], expected_period: 612000, lifecycle: active}
+  - {id: life-async-audit, system: lifedomain, carrier: cron, carrier_ref: "cron:documents-domain-owner-job",
      purpose: "异步核对(日)", schedule: "日06:25",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 90000, lifecycle: active}
-  - {id: life-check-convergence, system: lifedomain, carrier: cron, carrier_ref: "cron:check-convergence",
+     evidence: [{path: ~/Workspace/runtime/cron/documents-plane.log}], expected_period: 90000, lifecycle: active}
+  - {id: life-check-convergence, system: lifedomain, carrier: cron, carrier_ref: "cron:documents-domain-owner-job",
      purpose: "收敛检查(周)", schedule: "周一06:30",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 612000, lifecycle: active}
-  - {id: life-control-plane-freshness, system: lifedomain, carrier: cron, carrier_ref: "cron:control-plane-freshness",
+     evidence: [{path: ~/Workspace/runtime/cron/documents-plane.log}], expected_period: 612000, lifecycle: active}
+  - {id: life-control-plane-freshness, system: lifedomain, carrier: cron, carrier_ref: "cron:documents-domain-owner-job",
      purpose: "控制面新鲜度审计(周)", schedule: "周一06:35",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/control-plane-freshness-audit.md}], expected_period: 612000, lifecycle: active}
-  - {id: life-bridge-refresh, system: lifedomain, carrier: cron, carrier_ref: "cron:bridge-refresh",
+     evidence: [{path: ~/Workspace/runtime/cron/documents-plane.log}], expected_period: 612000, lifecycle: active}
+  - {id: life-bridge-refresh, system: lifedomain, carrier: cron, carrier_ref: "cron:documents-domain-owner-job",
      purpose: "桥接刷新(日)", schedule: "日06:05",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 90000, lifecycle: active}
-  - {id: life-signals-rotate, system: lifedomain, carrier: cron, carrier_ref: "cron:signals-rotate",
+     evidence: [{path: ~/Workspace/runtime/cron/documents-plane.log}], expected_period: 90000, lifecycle: active}
+  - {id: life-signals-rotate, system: lifedomain, carrier: cron, carrier_ref: "cron:documents-domain-owner-job",
      purpose: "信号轮转(周)", schedule: "周一06:10",
-     evidence: [{path: ~/Documents/@驾驶舱/_generated/governance-cron.log}], expected_period: 612000, lifecycle: active}
-  - {id: wjw-kems-update, system: lifedomain, carrier: cron, carrier_ref: "cron:check-kems-update",
+     evidence: [{path: ~/Workspace/runtime/cron/documents-plane.log}], expected_period: 612000, lifecycle: active}
+  - {id: wjw-kems-update, system: lifedomain, carrier: cron, carrier_ref: "cron:documents_daily_health_preflight",
      purpose: "卫健委KEMS更新检查(日)", schedule: "日08:00",
-     evidence: [{path: ~/Documents/@工作文档/卫健委/_storage/工作文件/巡检报告/cron.log}], expected_period: 90000, lifecycle: active}
-  - {id: wjw-controller, system: lifedomain, carrier: cron, carrier_ref: "cron:controller",
+     evidence: [{path: ~/Workspace/runtime/daily-health-preflight.json}], expected_period: 90000, lifecycle: active}
+  - {id: wjw-controller, system: lifedomain, carrier: cron, carrier_ref: "cron:documents-domain-owner-job",
      purpose: "卫健委控制器(周)", schedule: "周一09:00",
-     evidence: [{path: ~/Documents/@工作文档/卫健委/_storage/工作文件/巡检报告/cron.log}], expected_period: 612000, lifecycle: active}
+     evidence: [{path: ~/Workspace/runtime/cron/documents-plane.log}], expected_period: 612000, lifecycle: active}
   - {id: wjw-ocr-incremental, system: lifedomain, carrier: cron, carrier_ref: "cron:ocr-incremental",
      purpose: "OCR增量(1/16日; 下次触发前无法判活)", schedule: "月2次",
      evidence: [], expected_period: 0, lifecycle: proposed}
@@ -152,7 +152,7 @@ tasks:
      evidence: [], expected_period: 0, lifecycle: proposed}
   - {id: wjw-refresh-indexes, system: lifedomain, carrier: cron, carrier_ref: "cron:refresh-indexes",
      purpose: "KEMS索引刷新(周日; 08-25从/tmp/gen_index.py改指正式脚本)", schedule: "周日09:30",
-     evidence: [{path: ~/Documents/@工作文档/卫健委/_storage/工作文件/巡检报告/cron.log}], expected_period: 612000, lifecycle: active}
+     evidence: [], expected_period: 612000, lifecycle: proposed}
 
   # ===== 体系: agent-tool (agent工具层) =====
   - {id: claude-hooks, system: agent-tool, carrier: hook, carrier_ref: "claude:settings-hooks",
@@ -219,9 +219,9 @@ tasks:
   - {id: tp-wps-comate, system: thirdparty, carrier: launchd, carrier_ref: cn.wpscomate.comate-agent,
      purpose: "WPS 灵犀", schedule: "常驻", evidence: [], expected_period: 0, lifecycle: active}
 
-  - {id: wjw-controller-cron, system: lifedomain, carrier: cron, carrier_ref: "cron:controller",
+  - {id: wjw-controller-cron, system: lifedomain, carrier: cron, carrier_ref: "cron:documents-domain-owner-job",
      purpose: "卫健委 controller 周任务(与 launchd 无关的 cron 行)", schedule: "周一09:00",
-     evidence: [{path: "~/Documents/@工作文档/卫健委/_storage/工作文件/巡检报告/cron.log"}], expected_period: 612000, lifecycle: active}
+     evidence: [{path: ~/Workspace/runtime/cron/documents-plane.log}], expected_period: 612000, lifecycle: active}
 
   # ===== 2026-08-25 sunset 首批执行(用户批准) =====
   - {id: tp-liebao, system: thirdparty, carrier: launchd, carrier_ref: com.liebao.v2401.helper,
