@@ -235,6 +235,77 @@ def _count_knowledge_consumption(since_days: int = 30) -> dict[str, int]:
     return counts
 
 
+def _read_kv_cache_stats(timeout: int = 5) -> dict[str, Any]:
+    """A2-axis: live KV-cache efficiency from omlxc fabric inspect.
+
+    Reads omlxc/dataplane/SemanticCacheRegistry state via the JSON CLI. Returns
+    `{hit_rate, l1_hits, l2_hits, total_queries, total_entries, available}`.
+    If omlxc isn't installed or times out, returns `available=False` so the
+    composite treats it as 0 without failing the whole meter.
+    """
+    omlxc_cli = WS_ROOT / "projects" / "omlxc"
+    if not omlxc_cli.is_dir():
+        return {
+            "available": False,
+            "hit_rate": 0.0,
+            "l1_hits": 0,
+            "l2_hits": 0,
+            "total_queries": 0,
+            "total_entries": 0,
+            "note": "omlxc not installed",
+        }
+    try:
+        res = subprocess.run(
+            ["uv", "run", "--directory", str(omlxc_cli), "omlxc", "fabric", "inspect", "--json"],
+            cwd=WS_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=timeout,
+        )
+    except (subprocess.TimeoutExpired, OSError) as e:
+        return {
+            "available": False,
+            "hit_rate": 0.0,
+            "l1_hits": 0,
+            "l2_hits": 0,
+            "total_queries": 0,
+            "total_entries": 0,
+            "note": f"timeout or os error: {type(e).__name__}",
+        }
+    if res.returncode != 0:
+        return {
+            "available": False,
+            "hit_rate": 0.0,
+            "l1_hits": 0,
+            "l2_hits": 0,
+            "total_queries": 0,
+            "total_entries": 0,
+            "note": f"omlxc inspect exit {res.returncode}",
+        }
+    try:
+        payload = json.loads(res.stdout)
+        cs = payload.get("data", {}).get("cache_stats", {})
+    except (json.JSONDecodeError, AttributeError):
+        return {
+            "available": False,
+            "hit_rate": 0.0,
+            "l1_hits": 0,
+            "l2_hits": 0,
+            "total_queries": 0,
+            "total_entries": 0,
+            "note": "parse error",
+        }
+    return {
+        "available": True,
+        "hit_rate": float(cs.get("hit_rate", 0.0)),
+        "l1_hits": int(cs.get("l1_exact_hits", 0)),
+        "l2_hits": int(cs.get("l2_semantic_hits", 0)),
+        "total_queries": int(cs.get("total_queries", 0)),
+        "total_entries": int(cs.get("total_entries", 0)),
+    }
+
+
 def compute_axes(since_days: int = 30) -> dict[str, Any]:
     """Compute the 4 axes with their scores and supporting data."""
     # A-axis: time saved
@@ -252,6 +323,13 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
     # Scale: 0-100 score. Reference: 60 min/day × 30 days = 1800 min = 100
     a_score = min(100, round(100 * total_minutes / 1800))
     a_hours = total_minutes / 60
+
+    # A2-axis: KV-cache accelerated inference (omlxc two-tier cache).
+    # Score is the cache hit_rate × 100, capped at 100. When the in-memory
+    # cache is empty (no live omlxc queries yet) the honest reading is 0 —
+    # the value is real only when the cache is actively serving inference.
+    a2_stats = _read_kv_cache_stats()
+    a2_score = min(100, round(100 * a2_stats["hit_rate"])) if a2_stats["available"] else 0
 
     # B-axis: decision throughput
     decision_count = _count_decision_inbox(since_days)
@@ -302,6 +380,11 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
     weights_5axis = {"A": 0.55, "B": 0.10, "C": 0.0, "D": 0.20, "E": 0.15}
     score_5axis = round(a_score * 0.55 + b_score * 0.10 + d_score * 0.20 + e_score * 0.15)
 
+    # 6-axis advisory composite (A2 added; pulls 0.10 from A; A1 = A)
+    # A1 = event-driven time savings (B-series); A2 = inference-time KV cache.
+    weights_6axis = {"A1": 0.45, "A2": 0.10, "B": 0.10, "C": 0.0, "D": 0.20, "E": 0.15}
+    score_6axis = round(a_score * 0.45 + a2_score * 0.10 + b_score * 0.10 + d_score * 0.20 + e_score * 0.15)
+
     # Status (D5 防腐: 双重阻断 — read-only 永远 unprovable if not enough data)
     if total_minutes == 0 and decision_count == 0:
         status = "unprovable"
@@ -314,14 +397,20 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
 
     return {
         "axes": {
-            "A": {
-                "name": "时间账本 (主, 3-axis 0.70)",
+            "A1": {
+                "name": "时间账本 A1 (主, 3-axis 0.70)",
                 "score": a_score,
                 "weight": 0.70,
                 "data": counts,
                 "total_minutes_saved": total_minutes,
                 "total_hours_saved": round(a_hours, 1),
                 "window_days": since_days,
+            },
+            "A2": {
+                "name": "KV 缓存加速 A2 (advisory, 6-axis 0.10)",
+                "score": a2_score,
+                "weight": 0.10,
+                "data": a2_stats,
             },
             "B": {
                 "name": "决策吞吐 (3-axis 0.30)",
@@ -370,6 +459,12 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
             "advisory": True,
             "note": "A55+B10+D20+E15; E pulls 0.10 from B; weights decision quality (P0/P1 × adoption).",
         },
+        "composite_6axis": {
+            "score": score_6axis,
+            "weights": weights_6axis,
+            "advisory": True,
+            "note": "A1=0.45 + A2=0.10 + B=0.10 + D=0.20 + E=0.15; A1 (events) split from A; A2 (KV cache) added; A1 weight drops 0.55->0.45.",
+        },
         "status": status,
         "snapshot_at": _utc_now().isoformat().replace("+00:00", "Z"),
     }
@@ -383,10 +478,16 @@ def render_text(d: dict[str, Any]) -> str:
     lines.append("")
     for label, axis in d["axes"].items():
         lines.append(f"  Axis {label} (w={axis['weight']}, {axis['name']}): {axis['score']}/100")
-        if label == "A":
+        if label == "A1":
             lines.append(f"    time saved (30d): {axis['total_hours_saved']}h = {axis['total_minutes_saved']}min")
             for k, v in axis["data"].items():
                 lines.append(f"    - {k:<28} {v}")
+        elif label == "A2":
+            cs = axis["data"]
+            note = f" ({cs['note']})" if cs.get("note") else ""
+            lines.append(
+                f"    KV cache hit_rate: {cs['hit_rate']:.2%} (l1={cs['l1_hits']}, l2={cs['l2_hits']}, queries={cs['total_queries']}, entries={cs['total_entries']}, available={cs['available']}){note}"
+            )
         elif label == "B":
             lines.append(
                 f"    decisions: {axis['data']['decisions_30d']} (cadence: {axis['cadence']}, ~{axis['decisions_per_month']}/mo)"
@@ -410,6 +511,10 @@ def render_text(d: dict[str, Any]) -> str:
     if "composite_5axis" in d:
         lines.append(
             f"  composite (5-axis, advisory): {d['composite_5axis']['score']}/100  weights={d['composite_5axis']['weights']}"
+        )
+    if "composite_6axis" in d:
+        lines.append(
+            f"  composite (6-axis, advisory): {d['composite_6axis']['score']}/100  weights={d['composite_6axis']['weights']}"
         )
     lines.append(f"  status: {d['status']}")
     return "\n".join(lines)
