@@ -78,7 +78,7 @@ from cockpit.web.api_system_map_io_commands import (
     _workflow_evidence_search_command,
     build_source_ref_preview,
 )
-from cockpit.web.api_system_map_status import (
+from cockpit.web.system_map_status_helpers import (
     _build_layers,
     _commands_from_agents,
     _coverage_check,
