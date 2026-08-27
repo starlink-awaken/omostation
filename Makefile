@@ -11,6 +11,7 @@
 	hygiene-worktree hygiene-audit hygiene-janitor hygiene-dir dir-hygiene root-directory-governance bin-scripts-convergence-audit worktree-guard worktree-prune worktree-cleanup worktree-audit worktree-hygiene worktree-janitor \
 	memory-os-check memory-os-env memory-os-env-export memory-os-up memory-os-smoke memory-os-asof-seed \
 	omo-status omo-top swarm-activity observability-events observability-adapters observability-trace log-rotate \
+	ops ops-status ops-up ops-down ops-deploy ops-logs \
 	agent-workflows agent-workflow-bootstrap agent-workflow-lint agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-integrations agent-workflow-adapters agent-workflow-status \
 	mof-bootstrap m4-health m4-health-compare registry-drift gac-healthcheck gac-drift gac-validate \
 	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
@@ -608,6 +609,27 @@ bcos-signals:  ## BCOS 统一信号路由 (W1-D2, 公文/会议/调研/代码)
 
 bcos-north-star:  ## BCOS 北极星价值度量 v2 (排除 self-data)
 	python3 bin/bc-os/north_star_meter_v2.py --json || true
+
+# ==============================================================================
+# Service Gateway (ops 控制面)
+# ==============================================================================
+ops:  ## ops 状态总览
+	python3 bin/ops/cli.py status
+
+ops-status:  ## 全量服务健康状态
+	python3 bin/ops/cli.py status
+
+ops-up:  ## 启动所有服务 (按依赖拓扑)
+	python3 bin/ops/cli.py up
+
+ops-down:  ## 停止所有服务 (逆拓扑)
+	python3 bin/ops/cli.py down
+
+ops-deploy:  ## 部署信息生成
+	python3 bin/ops/cli.py deploy
+
+ops-logs:  ## 聚合日志查看
+	python3 bin/ops/cli.py logs
 
 # ==============================================================================
 # 自治蜂群与防腐体系 (Self-Governing Swarm & Anti-Corrosion)
