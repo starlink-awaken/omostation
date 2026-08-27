@@ -143,6 +143,14 @@ def main(argv: list[str] | None = None) -> int:
         from lib.documents_convergence_preflight import main as convergence_preflight_main
 
         return convergence_preflight_main(arguments[1:])
+    if arguments and arguments[0] == "daily-health-preflight":
+        from lib.documents_daily_health_preflight import main as daily_health_preflight_main
+
+        return daily_health_preflight_main(arguments[1:])
+    if arguments and arguments[0] == "kos-preflight":
+        from lib.documents_kos_preflight import main as kos_preflight_main
+
+        return kos_preflight_main(arguments[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("job_id")
     parser.add_argument("--documents-root", type=Path, required=True)
