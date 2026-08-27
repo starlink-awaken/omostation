@@ -31,5 +31,8 @@
 # Replaces: 0 9 * * 1 Documents/@工作文档/卫健委/_control/controller.py
 0 9 * * 1 cd "$HOME/.local/share/omostation/accepted-20260902" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py controller-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260902" --evidence .omo/_delivery/documents-plane/controller-preflight.json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
 
+# Replaces: * * * * * Documents/@公共/_runtime/watch-dispatch.py
+* * * * * cd "$HOME/.local/share/omostation/accepted-20260903" && uv run --with pyyaml python bin/gac/workspace-watch-dispatch.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --stamps "$HOME/Workspace/runtime/.watch-dispatch-stamps.json" --json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
+
 # Not yet replaced: legacy controller/predictor jobs. Keep their current schedule until owner parity and
 # rollback evidence are accepted.

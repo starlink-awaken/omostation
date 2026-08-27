@@ -7703,6 +7703,48 @@ bets:
   human_gate: true
   circuit_breaker: 'Any remaining direct Documents executable instruction or lost Scheduled behavior blocks the edit.'
   retro: required
+- id: BET-Y1Q3-T10-38
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'minute watcher 迁移到 Workspace canonical owners'
+  appetite: 1 day
+  priority: P0
+  status: pending
+  goal: '停止每分钟 Documents watch-dispatch.py 执行器，保留变更检测与 stamps，但只触发 Workspace canonical owners，不再唤醒 Documents writer。'
+  non_goals:
+  - 不删除 Documents watch-dispatch.py 或旧数据
+  - 不新增第二个调度系统
+  - 不改变 canonical owner 的业务语义
+  done_when:
+  - 'Workspace watcher preserves four watch groups and writes stamps/evidence under Workspace'
+  - 'watcher never executes a Documents script and maps domain/bridge/inbox changes to canonical owners'
+  - 'weekly verdict is reported as pending rather than silently writing Documents'
+  - 'minute cron line is replaced exactly once after accepted release deployment; rollback proof and CI are green'
+  verify:
+  - cmd: 'uv run --with pyyaml --with pytest python -m pytest tests/test_workspace_watch_dispatch.py -q'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/workspace-watch-dispatch.py
+  - tests/test_workspace_watch_dispatch.py
+  - .omo/cron/documents-content-plane-crontab
+  - docs/superpowers/specs/2026-08-28-workspace-watch-owner-design.md
+  - docs/reports/2026-08-28-workspace-watch-owner.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-38.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-workspace-watch-owner-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:068aaaa348704204a9e2460ff90ddd0e06bbe7afd7dd99971e653303392a41ab'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-38
+  depends_on:
+  - BET-Y1Q3-T10-37
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'Any Documents script execution or lost watch group blocks cutover.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
