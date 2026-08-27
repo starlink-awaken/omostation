@@ -25,6 +25,6 @@ required_capabilities:
 - llm:local-classify
 - storage:local-health-ledger
 notes:
-- 'P1 契约先行: 实现落 bin/ssot/health_scenes.py 属 P2 (BET-Y1Q3-T7-02 non_goals)'
+- 'P1 契约先行: 运行时实现属 P2 (BET-Y1Q3-T7-02 non_goals)'
 - '风险边界: 本场景仅 L0 记录动作 (对齐 risk_engine health.generate:report=L0); 任何对外发送属 L2 需单独走 send_email:doctor 审批'
 - '敏感域约束: 不接自动采集源 (穿戴设备/体检 API), 不外发任何未人审内容 (agent-cli-worker 协作标准)'
