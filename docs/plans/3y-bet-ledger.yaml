@@ -7180,6 +7180,50 @@ bets:
   human_gate: true
   circuit_breaker: 'any cadence drift, Documents write path, missing owner evidence, or failed dry-run stops installation.'
   retro: required
+- id: BET-Y1Q3-T10-26
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'Documents 两条 owner schedule 原子切换'
+  appetite: 0.5 day
+  priority: P0
+  status: pending
+  goal: '在完整备份与精确行匹配的前提下，仅将每日 06:25 async-audit 和周一 06:35 freshness audit 切换到 Workspace owner，并完成即时验证与回滚证据。'
+  non_goals:
+  - 不修改其他 crontab 行、LaunchAgent、Scheduled skill 或 Documents 内容
+  - 不删除旧脚本；旧脚本保留为回滚材料
+  - 不扩展到 OCR、domain-sync、session-brief、bridge-refresh、controller/predictor
+  done_when:
+  - 'complete pre-cutover crontab backup and sha256 are recorded under Workspace evidence'
+  - 'exactly two old lines are replaced, unrelated lines remain byte-identical, and post-cutover counts are verified'
+  - 'both Workspace owner commands run after cutover with truthful exit/evidence semantics'
+  - 'rollback command and one-cycle observation record are present; root CI passes'
+  verify:
+  - cmd: 'test -f .omo/cron/documents-content-plane-crontab && rg -n "NOT INSTALLED|25 6|35 6" .omo/cron/documents-content-plane-crontab'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py consumer-audit --help'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py freshness-audit --help'
+    expect: exit 0
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/superpowers/specs/2026-08-27-documents-schedule-cutover-design.md
+  - docs/reports/2026-08-27-documents-schedule-cutover.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-26.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-27-documents-schedule-cutover-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:88b0771fe2f9aa06efbf0e2b3d77ae6ad13210b8b6fb724f68c737fb439915e8'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-26
+  depends_on:
+  - BET-Y1Q3-T10-25
+  - BET-Y1Q3-T10-24
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 'missing/duplicate old line, candidate drift, owner command error, or any unrelated-line difference causes abort or rollback.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
