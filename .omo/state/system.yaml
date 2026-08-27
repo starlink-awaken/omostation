@@ -1,15 +1,18 @@
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-27T08:53:44.507300+00:00'
+health_score_evidence_generated_at: '2026-08-27T10:07:05.651324+00:00'
 runtime_health_summary:
   online_services: 3
   total_services: 4
   ratio: 0.75
   health_score: 75
-  last_scan: '1787820510.842475'
+  last_scan: '1787823391.543896'
   service_count: 8
   degraded: []
   source: runtime_daemon_de_false_positive
 service_online_ratio: 0.75
-updated_at: '2026-08-27T16:48:40.711317+08:00'
-governance_feedback_last_run: '2026-08-27T16:48:40.711317+08:00'
+updated_at: '2026-08-27T17:38:25.756381+08:00'
+governance_feedback_last_run: '2026-08-27T17:38:25.756381+08:00'
+current_phase: 49
+current_wave: W5
+phase_status: active
