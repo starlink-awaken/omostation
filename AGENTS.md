@@ -334,6 +334,9 @@ Prefer targeted checks for narrow edits. Broaden verification when the change to
 - Most `projects/*` directories are independent repositories. Commit inside the submodule first only when the user requested commits, then update the root pointer.
 - **Submodule pointer update**: prefer `bash bin/ssot/submodule-pointer-transaction.sh --message "..."` (pushes submodules + verifies reachability + stages). If using `git update-index --cacheinfo` manually, always get the hash from `git -C <submodule> rev-parse HEAD` and verify with `git ls-tree HEAD <submodule>` before committing. Never copy-paste hashes from `git log` output (abbreviated hashes cause silent mismatches).
 - Never revert unrelated dirty files. Treat them as user or concurrent-agent work.
+- **禁止 `sed -i` 做添加/删除条目操作**：sed 不具备幂等性——运行两次产生两份。任何添加/删除条目必须用 Python `read → check → modify → write` 模式（2026-08-27 复盘固化）。
+- **Check-before-fix 协议**：修改任何治理检查的输入文件前，先读检查脚本的 `DEFAULT_*` 路径常量，确认文件实际读取位置。不要假设（2026-08-27 复盘固化）。
+- **死循环自检**：连续两次执行相同操作得到相同异常结果时，立即停止并换策略，不要尝试第三次（2026-08-27 复盘固化）。
 
 #### 高危 git 操作守门（2026-08-23 复盘固化，详见 `2026-08-23-agent-session-deep-retrospective.md`）
 
