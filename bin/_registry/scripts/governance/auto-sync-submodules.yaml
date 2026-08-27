@@ -1,0 +1,14 @@
+schema: script-registry/v1
+id: bin/gac/auto-sync-submodules.sh
+name: Auto Sync Submodules
+category: governance
+owner: governance-team
+description: ""
+inputs: []
+outputs:
+  - type: exit_code
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last-reviewed: "2026-08-27"
