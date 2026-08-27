@@ -115,6 +115,10 @@ def main(argv: list[str] | None = None) -> int:
         from lib.documents_consumer_audit import main as consumer_audit_main
 
         return consumer_audit_main(arguments[1:])
+    if arguments and arguments[0] == "freshness-audit":
+        from lib.documents_freshness_owner import main as freshness_audit_main
+
+        return freshness_audit_main(arguments[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("job_id")
     parser.add_argument("--documents-root", type=Path, required=True)
