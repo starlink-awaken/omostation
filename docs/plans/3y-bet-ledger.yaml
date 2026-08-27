@@ -7663,6 +7663,46 @@ bets:
   human_gate: true
   circuit_breaker: 'Classification ambiguity or a forbidden executor false-negative blocks release.'
   retro: required
+- id: BET-Y1Q3-T10-37
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'monday-vault-health Scheduled 指令收敛到 Workspace owners'
+  appetite: 4 hours
+  priority: P0
+  status: pending
+  goal: '移除 monday-vault-health 中直接执行 Documents controller.py/check-convergence.py 的指令，改为读取 Workspace accepted owners 的 evidence。'
+  non_goals:
+  - 不删除 monday-vault-health Scheduled skill
+  - 不修改用户业务资料或 Documents 内容
+  - 不修改 cron、LaunchAgent 或其他 Scheduled skill
+  done_when:
+  - 'monday-vault-health contains no direct Documents executable invocation for controller.py or check-convergence.py'
+  - 'replacement instructions point to Workspace controller-preflight and convergence-preflight evidence'
+  - 'consumer audit classifies the Scheduled skill as workspace-owner-read rather than forbidden executor'
+  - 'before/after file SHA and rollback copy are recorded; CI and workflow closeout pass'
+  verify:
+  - cmd: 'python3 -c "from pathlib import Path; p=Path.home()/\"Documents/Claude/Scheduled/monday-vault-health/SKILL.md\"; t=p.read_text(); assert \"controller.py\" not in t; assert \"check-convergence.py\" not in t; print(\"scheduled-owner: PASS\")"'
+    expect: exit 0
+  workflow: governance-state-mutation
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - /Users/xiamingxing/Documents/Claude/Scheduled/monday-vault-health/SKILL.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-28-scheduled-owner-convergence-design.md
+  - docs/reports/2026-08-28-scheduled-owner-convergence.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-37.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-scheduled-owner-convergence-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:e11ca9afd2c2c4b5f6b6497b5587f32586110c8f438b25977f4a58c8ff1df875'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-37
+  depends_on:
+  - BET-Y1Q3-T10-36
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'Any remaining direct Documents executable instruction or lost Scheduled behavior blocks the edit.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
