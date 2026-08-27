@@ -119,6 +119,10 @@ def main(argv: list[str] | None = None) -> int:
         from lib.documents_freshness_owner import main as freshness_audit_main
 
         return freshness_audit_main(arguments[1:])
+    if arguments and arguments[0] == "ocr-preflight":
+        from lib.documents_ocr_preflight import main as ocr_preflight_main
+
+        return ocr_preflight_main(arguments[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("job_id")
     parser.add_argument("--documents-root", type=Path, required=True)
