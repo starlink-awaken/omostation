@@ -1,0 +1,15 @@
+# Documents Content Plane canonical schedule candidate
+# STATUS: NOT INSTALLED — human gate required before host crontab mutation.
+# Source evidence: docs/reports/2026-08-27-documents-consumer-audit.md
+# Owner commands are Workspace-owned; Documents is read-only.
+# Rollback: restore the exact pre-install `crontab -l` snapshot.
+
+# Replaces: 25 6 * * * Documents/@公共/_runtime/async-audit.py
+25 6 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py consumer-audit --json --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --evidence .omo/_delivery/documents-plane/consumer-audit.json >> runtime/cron/documents-plane.log 2>&1
+
+# Replaces: 35 6 * * 1 Documents/@公共/_runtime/control-plane-freshness-audit.py --report
+35 6 * * 1 cd "$HOME/Workspace" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py freshness-audit --json --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --evidence .omo/_delivery/documents-plane/freshness-audit.json >> runtime/cron/documents-plane.log 2>&1
+
+# Not yet replaced: OCR, domain-sync, session-brief, bridge-refresh, convergence,
+# signals rotation, and legacy controller/predictor jobs. Keep their current
+# schedule until owner parity and rollback evidence are accepted.
