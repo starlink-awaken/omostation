@@ -169,3 +169,18 @@ human-accepted real outcomes
 - nested L4 退役条件和 rollback 条件已定义；
 - 既有 Documents convergence plan 已纳入 nested-L4 波次；
 - 本波次不声称已完成生产切换、物理迁移或 nested L4 删除。
+
+## 11. Documents 能力下沉决策（T10-41）
+
+可以下沉，但必须按“能力边界”而不是按“文件后缀”下沉：
+
+- Documents 只保留原始材料、最终报告、证据、DOMAIN/CONTENT 声明、方法规则和人工决策；
+- Workspace 统一承载 owner job、cron/LaunchAgent、运行状态、缓存、索引、数据库和结构化 evidence；
+- L4 负责域身份与内容契约，不能变成第二个脚本运行时；
+- Kairon/KOS 负责知识 ingest/search/graph，不能把数据库或索引重新落回 Documents；
+- 仍被 Workspace 只读消费的 Documents 文件不是“执行器”，不能误删；
+- 未知消费者、语义不等价或无法回滚的文件保持 unresolved，不做物理动作。
+
+迁移采用两阶段闸门：先迁消费者和 owner，再对 `Documents/_runtime`、`.kems`
+中的生成物做可恢复 quarantine；永久删除必须由独立人类确认的 BET 承担。这样既能
+让 Documents 变成真正的内容平面，也不会把历史证据、业务报告和可恢复性一起清掉。
