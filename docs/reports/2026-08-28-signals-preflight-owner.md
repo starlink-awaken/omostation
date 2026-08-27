@@ -29,6 +29,16 @@ The canonical candidate replaces only Monday 06:10:
 10 6 * * 1 cd "$HOME/.local/share/omostation/accepted-20260831" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py signals-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260831" --evidence .omo/_delivery/documents-plane/signals-preflight.json >> runtime/cron/documents-plane.log 2>&1
 ```
 
-The candidate is not installed by the implementation PR. A separate governed
-cutover must record accepted-release identity, crontab backup/hash, exact
-old/new counts, unrelated-line byte identity, and post-cutover smoke.
+## Cutover evidence
+
+- Run: `20260827T175111Z-governance-state-mutation-702337a3`
+- Accepted root: `2d59d58970fbd14c8acd37ee9f9b3eea8113c7e9`
+- Before crontab SHA-256: `705894d0cf34e8a61fa01dfd8dd3452b15cfc34ce735384cb5a8a7bf730d2cdd`
+- After crontab SHA-256: `ef7e25fc16346b6792cbdb918d1e971a61f6dd6a17b270615b9dc5c9932f6d7b`
+- Target replacement: old `signals-rotate.py` count `1 -> 0`; new
+  `signals-preflight` count `0 -> 1`.
+- Unrelated crontab lines: `108`, byte-identical before/after.
+- Post-cutover result: `documents.signals-preflight.v1`, status `ok`, exit `0`,
+  `human=3`, `machine=0`, `total=3`, errors `[]`.
+- The accepted release ran from its own directory; `SIGNALS.md` was not
+  rewritten and no Documents `_generated` output was created by the new owner.
