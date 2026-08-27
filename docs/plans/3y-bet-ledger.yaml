@@ -7832,6 +7832,57 @@ bets:
   human_gate: true
   circuit_breaker: 'Prediction source ambiguity, Documents write attempt, or missing parity blocks cutover.'
   retro: required
+- id: BET-Y1Q3-T10-41
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'Documents 执行面与缓存面退休闸门'
+  appetite: 1 day
+  priority: P1
+  status: pending
+  goal: '在不损伤业务内容的前提下，盘点并分批退休 Documents 中剩余的执行器、运行状态、缓存、索引和数据库；将可验证能力下沉到既有 Workspace owners，并为物理 quarantine/删除建立可回滚闸门。'
+  non_goals:
+  - 不批量删除或移动 Documents 业务资料、最终报告、证据和人工决策
+  - 不按文件后缀把 Markdown、Office/PDF、DOMAIN/CONTENT 声明误判为执行器
+  - 不新增第二个 workflow engine、KEMS runtime、Registry 或调度入口
+  - 不在没有 consumer=0、语义对等和 rollback receipt 时做物理删除
+  done_when:
+  - 'daily-health-run.py、KOS ingest 及所有 active Documents consumer 都有可复算 owner/consumer/disposition 映射'
+  - 'Documents _runtime/.kems 完成 content、reference、workspace-owner、quarantine、unresolved 五类清单'
+  - '可迁移消费者完成 Workspace owner parity 验证；未知或语义不等价项 fail-closed 保留'
+  - '业务内容文件数、字节数、树指纹和元数据在 inventory 期间保持不变'
+  - '无永久删除；任何 quarantine 均具备精确回滚包与观察窗口'
+  verify:
+  - cmd: 'python3 -c "from pathlib import Path; p=Path(\"docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md\"); assert p.is_file(); assert \"BET-Y1Q3-T10-41\" in p.read_text(); print(\"retirement-spec: PASS\")"'
+    expect: exit 0
+  - cmd: 'make doc-ssot-lint'
+    expect: exit 0
+  - cmd: 'python3 bin/gac/check-capability-ownership.py'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - lib/documents_daily_health_preflight.py
+  - lib/documents_kos_preflight.py
+  - tests/test_documents_daily_health_preflight.py
+  - tests/test_documents_kos_preflight.py
+  - bin/gac/documents-domain-owner-job.py
+  - .omo/cron/documents-content-plane-crontab
+  - docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md
+  - docs/reports/2026-08-28-documents-execution-retirement.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-41.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:ad49c1699cb5a166b95e885ecc646d2a17009578c7120c8bc40667821a0a89aa'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-41
+  depends_on:
+  - BET-Y1Q3-T10-40
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'unknown active consumer, Documents write, business-content drift, root overlap, missing Workspace parity, or missing rollback blocks physical action.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3

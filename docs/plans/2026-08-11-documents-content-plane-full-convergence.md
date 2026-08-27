@@ -1003,3 +1003,17 @@ The next bounded client step is a fresh Zed Agent Panel journey after the user
 session is unlocked. ZCode remains on the generic `agents_compatible` contract,
 and ChatGPT web remains the separately provisioned public HTTPS or secure-tunnel
 track.
+## Next governed wave: T10-41 Documents execution retirement
+
+The remaining `_runtime` and `.kems` material is not one homogeneous class.
+The next wave therefore separates active executors, Workspace read inputs,
+generated runtime/cache/index artifacts, and business content before any
+physical operation. `daily-health-run.py` and the KOS ingest schedule are the
+first explicit consumers to map. No permanent deletion is authorized by this
+wave; quarantine and deletion require separate evidence and human-gated
+decisions.
+
+The acceptance boundary is `consumer=0` for a candidate, a verified Workspace
+replacement where execution is involved, unchanged business-document bytes and
+metadata, and a recoverable rollback package. An unknown or semantically
+ambiguous candidate remains in place and is reported as unresolved.
