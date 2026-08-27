@@ -7076,6 +7076,7 @@ bets:
   - docs/architecture/l4-documents-agora-convergence-v1.md
   - docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md
   - docs/reports/2026-08-27-l4-instance-inventory.md
+  - docs/SYSTEM-INDEX.md
   - docs/plans/2026-08-11-documents-content-plane-full-convergence.md
   - docs/plans/3y-bet-ledger.yaml
   pasw_required: false

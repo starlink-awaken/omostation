@@ -96,6 +96,12 @@
 
 → [织星架构战略深度复盘](reports/2026-08-20-blueprint-strategy-retrospective.md) — 三轴完成语义、机制收敛、Golden Slice 准入与停线边界
 
+→ [共享运行时协调缺口](downloads/2026-08-14-shared-runtime-coordination-gap.md) — 运行时共享边界与待治理缺口
+→ [运营基础设施治理简报](downloads/AGENT-BRIEF-OPS-INFRA-GOVERNANCE.md) — 运营治理执行摘要
+→ [战略收敛剩余项简报](downloads/AGENT-BRIEF-STRATEGY-CONVERGENCE-REMAINDER.md) — 战略收敛剩余工作
+→ [架构战略展望 2026-08](downloads/ARCHITECTURE-STRATEGY-OUTLOOK-2026-08.md) — 架构战略展望
+→ [决策场景推导确认](downloads/DECISION-SCENARIO-DERIVATION-CONFIRMATION-2026-08.md) — 决策与场景推导确认
+
 → [BET-Y1Q2-T1-19 权威复盘](../.omo/_knowledge/retros/BET-Y1Q2-T1-19.md) — Codex ACP 切割的当前事实与未证边界
 
 → [CR08 卫健委三医态势安装态审计复盘](reports/2026-08-14-weijian-sanyi-status-audit-retrospective.md) — 临时隔离源码的只读审计边界与可复核证据
