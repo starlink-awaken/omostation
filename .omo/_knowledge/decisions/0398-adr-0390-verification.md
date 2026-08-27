@@ -1,7 +1,7 @@
 ---
 id: ADR-0398
 status: active
-lifecycle: proposed
+lifecycle: spec
 owner: '@Builder'
 last-reviewed: '2026-08-09'
 ---

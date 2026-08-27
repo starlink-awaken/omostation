@@ -31,7 +31,7 @@ The bounded T1-12 scope approved by that response is:
 
 ## Recovery boundary
 
-- Root base: `e3eee7690537ca850a0af4f30f7c8c0d3d16e309`
+- Root base: `9e9f042fb6345361cf2f09c906a6174c486c0eeb`
 - Allowed ledger fields: `status`, `done_at`, `completion_evidence.axes.value.status`, `completion_evidence.overall_state`
-- Preserved byte-for-byte: all completion evidence refs/digests, engineering axis, operational axis, accepted Spec, human attestation, every other BET including the newly merged T10-42 changes, retro, implementation, tests, gitlinks, runtime, and user configuration
+- Preserved byte-for-byte: all completion evidence refs/digests, engineering axis, operational axis, accepted Spec, human attestation, every other BET and all #2371 frontmatter/convergence changes, retro, implementation, tests, gitlinks, runtime, and user configuration
 - No completion or value claim is created by this repair.

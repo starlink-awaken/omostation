@@ -2,7 +2,7 @@
 id: ADR-0234
 title: "BET-c87a http-mcp-convergence 收尾正式立项"
 status: DONE
-lifecycle: accepted
+lifecycle: spec
 date: 2026-07-24
 last-reviewed: 2026-07-31
 owner: governance-team

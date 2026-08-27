@@ -6,6 +6,8 @@ backlog: true
 task_id: REMEDIATE-WF-CONV-P0-EVENTS
 task_path: .omo/tasks/remediation/REMEDIATE-WF-CONV-P0-EVENTS.yaml
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Real backlog collab: `REMEDIATE-WF-CONV-P0-EVENTS`

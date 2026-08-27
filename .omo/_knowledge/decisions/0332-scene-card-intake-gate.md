@@ -1,11 +1,11 @@
 ---
 id: ADR-0332
 title: Scene Card 业务输入闸门与提案态归一化
-status: accepted
+status: archived
 type: decision
 owner: product-architecture
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

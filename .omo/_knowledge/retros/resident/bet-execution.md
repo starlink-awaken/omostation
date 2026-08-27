@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: bet-execution
 generated_at: 2026-08-27T11:40:02Z
-status: candidate
+status: planned
 counts:
   runs: 33
   failures: 25
@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 25
   trace_count: 25
+lifecycle: history
+owner: unassigned
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 

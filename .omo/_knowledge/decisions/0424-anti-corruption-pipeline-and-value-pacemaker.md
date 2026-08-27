@@ -2,8 +2,8 @@
 id: ADR-0424
 
 title: "ADR-0424: 防腐流水线与价值起搏器 — 48 小时全弧线架构决策沉淀"
-status: accepted
-lifecycle: decision
+status: archived
+lifecycle: spec
 owner: governance-team
 date: 2026-08-24
 last-reviewed: 2026-08-24

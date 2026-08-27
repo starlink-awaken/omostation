@@ -1,7 +1,7 @@
 ---
 id: ADR-0427
-status: accepted
-lifecycle: entry
+status: archived
+lifecycle: spec
 owner: cockpit
 last-reviewed: '2026-08-25'
 ---

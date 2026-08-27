@@ -1,10 +1,10 @@
 ---
 id: ADR-0301
 title: Workflow Mesh Watchdog 只写过期事件
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-02
 related:
   - ../../standards/agent-cli-worker-collaboration.md

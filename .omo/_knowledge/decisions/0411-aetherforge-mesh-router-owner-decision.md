@@ -1,8 +1,8 @@
 ---
 id: ADR-0411
 title: "算力路由双 Owner 收敛决策 — AetherForge 单一所有权"
-status: accepted
-lifecycle: contract
+status: archived
+lifecycle: spec
 owner: governance-team
 created: 2026-08-16
 last-reviewed: 2026-08-16

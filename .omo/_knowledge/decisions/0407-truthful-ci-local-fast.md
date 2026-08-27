@@ -2,7 +2,7 @@
 id: ADR-0407
 title: ci-local-fast 真实退出码与 Ruff 有界债务门
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-11
 related:

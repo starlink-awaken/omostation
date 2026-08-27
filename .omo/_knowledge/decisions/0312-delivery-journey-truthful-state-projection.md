@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-02
 last-reviewed: 2026-08-02
 owner: engineering-team
-lifecycle: active
+lifecycle: spec
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - ../../standards/agent-workflow-contract.md

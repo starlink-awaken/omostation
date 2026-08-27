@@ -1,9 +1,9 @@
 ---
 id: ADR-0349
 title: Scene Card planned task handoff
-status: accepted
+status: archived
 type: adr
-lifecycle: active
+lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-03
 type: decision

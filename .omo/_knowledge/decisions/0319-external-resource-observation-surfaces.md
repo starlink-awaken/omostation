@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-03
 owner: architecture-governance
 scope: Workflow Mesh / Cockpit / External Connection Fabric
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 ---
 

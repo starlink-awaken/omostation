@@ -2,7 +2,7 @@
 id: BET-C87A-CLOSEOUT-PREP
 title: BET-c87a http-mcp-convergence 收尾准备（Stage 0 后启动）
 owner: governance-team
-status: candidate
+status: planned
 created_at: 2026-07-24T08:58:00Z
 strat: STRAT-P81
 stage: S0 (closeout-able)
@@ -12,6 +12,7 @@ warning: |
   Evidence-only. 不修改代码、不重定义 transport、不动 cockpit-ui 源码。
   立项后启动收尾工程。
 last-reviewed: 2026-08-25
+lifecycle: plan
 ---
 
 # BET-c87a 收尾准备 (evidence)

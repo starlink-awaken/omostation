@@ -2,7 +2,7 @@
 id: ADR-0410
 title: 三年战略主线归属 — Plan supersede Panorama
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: 夏明星
 last-reviewed: 2026-08-15
 related:

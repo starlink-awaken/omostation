@@ -5,7 +5,7 @@ title: KEMS runtime health and verified SQLite recovery
 status: ACCEPTED
 date: 2026-08-04
 owner: governance-team
-lifecycle: contract
+lifecycle: spec
 last-reviewed: 2026-08-04
 ---
 

@@ -6,6 +6,8 @@ stage: S0
 strat: STRAT-P81
 needs-human: true
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Physical base probe (S0.3 · fail-closed)

@@ -4,7 +4,7 @@ type: audit
 status: final
 owner: governance-team
 created: 2026-08-15
-lifecycle: report
+lifecycle: history
 related:
   - bin/plan/bet-ledger.py
   - docs/plans/3y-bet-ledger.yaml

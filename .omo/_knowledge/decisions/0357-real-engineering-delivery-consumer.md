@@ -4,7 +4,7 @@ title: Engineering Delivery 真实元数据消费者与 Workflow Mesh 回执顺�
 status: ACCEPTED
 date: 2026-08-03
 owner: governance-team
-lifecycle: contract
+lifecycle: spec
 last-reviewed: 2026-08-03
 ---
 

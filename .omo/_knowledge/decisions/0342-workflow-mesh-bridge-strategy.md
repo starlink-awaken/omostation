@@ -1,9 +1,9 @@
 ---
 id: ADR-0342
 title: Workflow Mesh Bridge 四阶段桥接策略
-status: accepted
+status: archived
 type: adr
-lifecycle: active
+lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-03
 date: 2026-08-02

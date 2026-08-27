@@ -5,6 +5,8 @@ type: weekly-report
 batch: 2
 period: W1
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Role collaboration weekly — W1

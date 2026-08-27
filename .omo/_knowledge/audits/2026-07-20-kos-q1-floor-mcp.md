@@ -5,6 +5,8 @@ type: audit
 goal: KOS-Q-GROWTH
 gate: G-DEL.4
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # KOS ≥5000 + shared-context MCP

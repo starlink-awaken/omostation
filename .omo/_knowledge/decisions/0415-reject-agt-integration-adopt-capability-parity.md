@@ -1,8 +1,8 @@
 ---
 id: ADR-0415
 title: 拒绝 AGT 整体接入，确立能力对齐路线
-status: accepted
-lifecycle: contract
+status: archived
+lifecycle: spec
 owner: governance-team
 created: 2026-08-18
 last-reviewed: 2026-08-18

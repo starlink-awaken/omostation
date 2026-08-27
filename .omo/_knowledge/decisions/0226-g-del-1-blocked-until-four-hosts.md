@@ -1,7 +1,7 @@
 ---
 id: ADR-0226
 status: ACCEPTED
-lifecycle: decision
+lifecycle: spec
 owner: 架构师
 last-reviewed: 2026-07-19
 related:

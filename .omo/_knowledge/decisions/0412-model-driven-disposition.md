@@ -1,8 +1,8 @@
 ---
 id: ADR-0412
 title: "model-driven (M0) 定位判定 — 接入主链 (保留独立子仓)"
-status: accepted
-lifecycle: contract
+status: archived
+lifecycle: spec
 owner: governance-team
 created: 2026-08-16
 last-reviewed: 2026-08-16

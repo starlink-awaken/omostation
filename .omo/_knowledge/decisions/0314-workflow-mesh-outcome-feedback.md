@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-02
 last-reviewed: 2026-08-02
 owner: engineering-team
-lifecycle: active
+lifecycle: spec
 related:
   - ../../../docs/operations/outcome-feedback.md
   - ../../../docs/operations/workflow-mesh-operations.md
