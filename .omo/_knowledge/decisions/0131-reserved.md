@@ -1,7 +1,7 @@
 ---
 id: ADR-0131
 status: superseded
-lifecycle: dead
+lifecycle: spec
 owner: none
 last-reviewed: 2026-07-06
 ---

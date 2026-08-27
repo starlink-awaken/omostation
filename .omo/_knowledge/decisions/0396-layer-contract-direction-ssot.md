@@ -5,7 +5,7 @@ status: proposed
 type: decision
 owner: architecture-governance
 date: 2026-08-07
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-07
 related:
   - 0156-p76-phase2-call-direction.md

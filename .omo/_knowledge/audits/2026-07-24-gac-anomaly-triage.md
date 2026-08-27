@@ -4,6 +4,8 @@ date: 2026-07-24
 type: audit
 front: T1.1
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # GAC anomaly 专项归因 (2026-07-24)

@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: project-doc-change
 generated_at: 2026-08-27T11:40:02Z
-status: candidate
+status: planned
 counts:
   runs: 24
   failures: 14
@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 14
   trace_count: 14
+lifecycle: history
+owner: unassigned
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 

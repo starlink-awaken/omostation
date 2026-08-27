@@ -4,7 +4,7 @@ title: Runtime Registry 测试契约与 TaskFallback 响应对齐
 status: ACCEPTED
 date: 2026-08-04
 owner: governance-team
-lifecycle: contract
+lifecycle: spec
 last-reviewed: 2026-08-04
 related:
   - 0366-pyright-sweep-algorithm.md

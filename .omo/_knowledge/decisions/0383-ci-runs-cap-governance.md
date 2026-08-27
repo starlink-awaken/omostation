@@ -2,7 +2,7 @@
 id: ADR-0383
 title: CI runs cap governance + E-5 path-filter SSOT completion
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-06
 ---

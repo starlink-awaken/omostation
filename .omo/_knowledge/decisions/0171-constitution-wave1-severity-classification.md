@@ -1,7 +1,7 @@
 ---
 id: ADR-0171
 status: ACCEPTED
-lifecycle: decision
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-08
 related: [ADR-0106, 宪法-Wave-1, PR-178]

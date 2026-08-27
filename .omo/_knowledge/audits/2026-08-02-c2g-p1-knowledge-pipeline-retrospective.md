@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # C2G 预测性结果至知识图谱发布管线 (P1) —— 深度复盘与迭代优化报告

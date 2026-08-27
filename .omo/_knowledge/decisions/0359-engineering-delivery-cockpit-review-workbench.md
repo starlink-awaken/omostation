@@ -4,7 +4,7 @@ title: Engineering Delivery Cockpit 人工复核工作台边界
 status: ACCEPTED
 date: 2026-08-03
 owner: governance-team
-lifecycle: contract
+lifecycle: spec
 last-reviewed: 2026-08-03
 ---
 

@@ -1,8 +1,8 @@
 ---
 id: ADR-0418
 title: 对外扩展决策 — 默认不做（BET-Y3H2-T1-01）
-status: accepted
-lifecycle: contract
+status: archived
+lifecycle: spec
 owner: 夏明星
 created: 2026-08-18
 last-reviewed: 2026-08-18

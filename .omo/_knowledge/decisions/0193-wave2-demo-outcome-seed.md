@@ -1,7 +1,7 @@
 ---
 id: ADR-0193
 status: ACCEPTED
-lifecycle: decision
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-15
 ---

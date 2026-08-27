@@ -6,6 +6,8 @@ batch: 2
 task_id: REMEDIATE-HERMES-PHASEA
 task_path: .omo/tasks/remediation/REMEDIATE-HERMES-PHASEA.yaml
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # `REMEDIATE-HERMES-PHASEA`

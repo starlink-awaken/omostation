@@ -5,6 +5,8 @@ type: audit
 stage: S0
 strat: STRAT-P81
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # STRAT-P81 Stage 0 closeout (final)

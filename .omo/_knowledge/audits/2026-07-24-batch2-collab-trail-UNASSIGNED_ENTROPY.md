@@ -6,6 +6,8 @@ batch: 2
 task_id: UNASSIGNED_ENTROPY
 task_path: .omo/debt/items/UNASSIGNED_ENTROPY.yaml
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # `UNASSIGNED_ENTROPY`

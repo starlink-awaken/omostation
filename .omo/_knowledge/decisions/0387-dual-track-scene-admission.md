@@ -1,11 +1,11 @@
 ---
 id: ADR-0387
 title: 双轨场景准入 — 内部 pipeline 场景的独立准入轨道
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-07
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-07
 related:
   - 0297-external-connection-fabric-and-product-truth.md

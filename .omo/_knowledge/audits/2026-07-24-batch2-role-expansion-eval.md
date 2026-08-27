@@ -4,6 +4,8 @@ date: 2026-07-24
 type: audit
 batch: 2
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # 角色扩容评估（research / delivery）

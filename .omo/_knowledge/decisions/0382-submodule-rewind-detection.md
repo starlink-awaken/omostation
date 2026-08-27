@@ -2,7 +2,7 @@
 id: ADR-0382
 title: 子模块指针回退检测 (CR-SUBMODULE-REWIND)
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-07
 ---

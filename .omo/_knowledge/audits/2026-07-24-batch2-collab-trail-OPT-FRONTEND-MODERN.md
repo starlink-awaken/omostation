@@ -6,6 +6,8 @@ batch: 2
 task_id: OPT-FRONTEND-MODERN
 task_path: .omo/tasks/planned/vision-roadmap/OPT-FRONTEND-MODERN.yaml
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # `OPT-FRONTEND-MODERN`

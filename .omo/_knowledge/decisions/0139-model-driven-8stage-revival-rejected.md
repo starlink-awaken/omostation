@@ -1,7 +1,7 @@
 ---
 id: ADR-0139
 status: ACCEPTED
-lifecycle: decision
+lifecycle: spec
 owner: governance-team + eCOS team
 last-reviewed: 2026-07-06
 related:

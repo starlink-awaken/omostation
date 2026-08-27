@@ -6,6 +6,8 @@ batch: 2
 task_id: REMEDIATE-KAIRON-ARCH-BASELINE-review
 task_path: .omo/tasks/remediation/REMEDIATE-KAIRON-ARCH-BASELINE-review.md
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # `REMEDIATE-KAIRON-ARCH-BASELINE-review`

@@ -4,7 +4,7 @@ title: KEMS repeated shadow evaluation and human promotion gate
 status: ACCEPTED
 date: 2026-08-04
 owner: architecture-governance
-lifecycle: contract
+lifecycle: spec
 last-reviewed: 2026-08-04
 ---
 

@@ -1,11 +1,11 @@
 ---
 id: ADR-0329
 title: 外部资源目录变化风险分类与人工复核投影
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

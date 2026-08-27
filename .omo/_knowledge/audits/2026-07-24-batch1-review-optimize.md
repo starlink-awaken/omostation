@@ -4,6 +4,8 @@ date: 2026-07-24
 type: audit
 pr: https://github.com/starlink-awaken/omostation/pull/483
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Batch1 review / optimize

@@ -6,7 +6,7 @@ type: decision
 owner: architecture-governance
 created: 2026-08-02
 last-reviewed: 2026-08-02
-lifecycle: decision
+lifecycle: spec
 related:
   - ../../standards/agent-cli-worker-collaboration.md
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

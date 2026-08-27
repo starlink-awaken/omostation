@@ -1,11 +1,11 @@
 ---
 id: ADR-0323
 title: Workflow Mesh Sandbox ToolPack 失败、不可用与恢复契约
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

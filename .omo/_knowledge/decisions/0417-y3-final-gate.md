@@ -1,8 +1,8 @@
 ---
 id: ADR-0417
 title: Y3 终局门 — 三年验收标准判定（BET-Y3H2-T1-02）
-status: accepted
-lifecycle: gate
+status: archived
+lifecycle: spec
 owner: 夏明星
 created: 2026-08-18
 last-reviewed: 2026-08-18

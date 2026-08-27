@@ -2,7 +2,7 @@
 id: ADR-0390
 title: M5 数据黑障修复 — omo_daemon governance-history checks 丢失
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-08
 ---

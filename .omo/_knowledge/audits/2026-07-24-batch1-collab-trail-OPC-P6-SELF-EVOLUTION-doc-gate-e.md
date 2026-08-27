@@ -6,6 +6,8 @@ backlog: true
 task_id: OPC-P6-SELF-EVOLUTION-doc-gate-e
 task_path: .omo/tasks/remediation/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Real backlog collab: `OPC-P6-SELF-EVOLUTION-doc-gate-e`

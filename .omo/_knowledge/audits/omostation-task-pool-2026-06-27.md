@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: tracking
+lifecycle: history
 owner: laowang
 last-reviewed: 2026-06-27
 ---

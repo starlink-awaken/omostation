@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # BOS Deprecated 声明 D 调研 — agent-runtime 部分

@@ -1,11 +1,11 @@
 ---
 id: ADR-0320
 title: External Resource 评估与可解释选择边界
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../standards/external-connection-fabric.md
