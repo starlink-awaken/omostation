@@ -16,8 +16,23 @@ remain explicitly deferred.
 
 ## LaunchAgent candidate
 
-The existing label/calendar semantics will be preserved, while ProgramArguments
-will point to the accepted Workspace release's
-`lib/documents_concept_weave_preflight.py` with explicit Documents input and
-Workspace evidence output. A separate governed plist cutover must record the
-before/after plist SHA, `plutil -lint`, `launchctl print`, and rollback copy.
+The existing label/calendar semantics were preserved by migrating the calendar
+event to an equivalent monthly cron line. The LaunchAgent plist remains as
+disabled rollback material; its program is `/usr/bin/true` and contains no
+Documents path.
+
+## Cutover evidence
+
+- Run: `20260827T202802Z-governance-state-mutation-6e0946ad`
+- Original plist SHA-256: `5075040e211cce40401c45f981c5e57ecf404baf3c29d2c1e7f0e4723c03c8d8`
+- Disabled rollback plist SHA-256: `fc23ff3e3e2679b6359d21f12b16a8922621533c82625d4b9abc297ff77b3657`
+- Final direct-Python plist candidate SHA-256:
+  `cea8fb20888edf676d3fcc797293bd125d7ecc42db8d1d3b5ffb010395d6abcd`
+- All plist variants passed `plutil -lint`; original label and
+  `Day=1/Hour=9/Minute=0` calendar were preserved in rollback material.
+- LaunchAgent was booted out and is absent from `launchctl print`; the monthly
+  09:00 day-1 schedule now runs via cron.
+- Cron owner post-smoke: exit `1`, 78 concepts, 76 orphans, 3 link edges, 0
+  decay candidates.
+- Documents concept/log/inbox snapshot: 92 files before and after, unchanged
+  tree fingerprint; no legacy writer executed.
