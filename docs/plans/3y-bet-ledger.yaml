@@ -7874,6 +7874,11 @@ bets:
   - /Users/xiamingxing/Documents/Claude/Scheduled/weijian-daily-health/SKILL.md
   - .omo/state/system.yaml
   - .omo/state/task-registry.yaml
+  - lib/bos_neural_mesh_owner.py
+  - tests/test_bos_neural_mesh_owner.py
+  - /Users/xiamingxing/Documents/@公共/_runtime/bos-neural-mesh-runner.py
+  - /Users/xiamingxing/Documents/@公共/_runtime/bos-neural-mesh-state.sqlite
+  - /Users/xiamingxing/Documents/@公共/_runtime/bos-neural-mesh-state.sqlite.lock
   pasw_required: true
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md
