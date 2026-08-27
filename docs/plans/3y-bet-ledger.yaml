@@ -7389,7 +7389,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-ocr-preflight-cutover-design.md
     spec_version: 1.0.0
-    content_digest: 'sha256:6a6850019d7787415d6ab36a44aa952b98fd977101239bf350a14abe366ae0bf'
+    content_digest: 'sha256:b1d0f59c9e5d09881877bfed455c576286c29a198844e96951f44cc3fe430057'
     decision_ref: decision://accepted/BET-Y1Q3-T10-30
   depends_on:
   - BET-Y1Q3-T10-29
