@@ -7577,6 +7577,51 @@ bets:
   human_gate: true
   circuit_breaker: 'Workspace output ambiguity, Documents write attempt, or brief owner duplication blocks cutover.'
   retro: required
+- id: BET-Y1Q3-T10-35
+  track: T10-MATURITY
+  window: Y1Q3
+  title: '卫健委 controller Documents writer 改为 Workspace control-loop preflight'
+  appetite: 2 days
+  priority: P0
+  status: pending
+  goal: '停止周一 09:00 Documents controller.py 写入器，复用现有 Workspace owners 并补齐 11 条 CR 规则的只读 parity，统一输出到 Workspace runtime。'
+  non_goals:
+  - 不执行 Documents _runtime 下的旧检查脚本
+  - 不修改 Documents 控制状态、信号或业务资料
+  - 不在本轮切换 predictor.py 与 daily-health-run.py
+  done_when:
+  - 'controller-preflight emits a stable Workspace evidence envelope covering CR01/02/03/05/08/23/24/25/26/29/30 and no Documents writes'
+  - 'findings map to exit 1, healthy to exit 0, unavailable/invalid inputs to exit 2'
+  - '09:00 Monday controller.py line is replaced exactly once after accepted release deployment'
+  - 'legacy controller remains available for rollback/parity and unrelated crontab lines are byte-identical'
+  verify:
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py controller-preflight --help'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml --with pytest python -m pytest tests/test_documents_controller_preflight.py -q'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - lib/documents_controller_preflight.py
+  - bin/gac/documents-domain-owner-job.py
+  - tests/test_documents_controller_preflight.py
+  - .omo/cron/documents-content-plane-crontab
+  - docs/superpowers/specs/2026-08-28-controller-preflight-owner-design.md
+  - docs/reports/2026-08-28-controller-preflight-owner.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-35.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-controller-preflight-owner-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:29d95161c038f06e76c4590264a6f9a234b6bf76c3a949403ed9111359dc056c'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-35
+  depends_on:
+  - BET-Y1Q3-T10-34
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'Rule parity gap, Documents write attempt, or unverified control-loop semantics blocks cutover.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
