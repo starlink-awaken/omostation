@@ -404,13 +404,35 @@ T1 自动立案 (MDEAD-* + auto-fix-loop)
 | 8 防腐 | G1/G2 闭合 | 6 层全通 | 防腐契约自动演化 |
 | 9 约束 | 5 反模式 → 0 | 100% 硬约束守护 | 自演化约束管理 |
 
-**当前快照 (2026-08-24, 9 维)**:
+**当前快照 (2026-08-25, 9 维)**:
 
-| # | dim | status | 距 3m |
-|---|-----|--------|------|
-| 1 | 场景 | YELLOW | 3 张 assisted |
-| 2 | 功能 | GREEN (~8.2) | 已达 |
-| 3 | 旅程 | YELLOW | ≥3 active |
+| # | dim | status | 距 3m | key_data |
+|---|-----|--------|-------|----------|
+| 1 | 场景 | GREEN | 3 张 assisted 卡 | scene-card-mini-shadow 3-sample |
+| 2 | 功能 | YELLOW | maturity 7.7/10 | strategy-check timeout 后稳定 |
+| 3 | 旅程 | GREEN | validated + active | 动态 |
+| 4 | 体验 | RED→YELLOW* | health 53→75 | transient daemon 50% |
+| 5 | 愿景 (BCOS) | GREEN | north_star 88/100 provable | A=100 B=50 C=97 |
+| 6 | 长期运营 | GREEN | BET 141/147 done | 95.9% |
+| 7 | 运维 | YELLOW | maturity proxy < 8.0 | timeout fix applied |
+| 8 | 防腐 | GREEN | rot-defense 文档齐 | 6 层接通 |
+| 9 | 约束 | GREEN | 5/5 反模式 healthy | anti-pattern detector |
+
+*维度4的RED状态是由于运行时daemon临时离线(service_online_ratio=50%)。daemon恢复后自动回到YELLOW。
+
+**summary: GREEN=6 YELLOW=2 RED=1 (transient) GREY=0**
+
+**战略主轴进展:**
+- 北极星 v3: composite 88/100, status: provable
+- B轴决策吞吐: 5 decisions/月
+- 反模式检测: 5/5 healthy
+- staleness: 95→3 issues (-97%)
+- alignment: 76-79
+
+**下一步:**
+1. 维度 4 体验: daemon 恢复后 health_score 回升
+2. 维度 2/7: maturity-scorecard timeout 修复 (180s)
+3. PR #2284: 需原作者 rebase
 | 4 | 体验 | GREY | health≥80 |
 | 5 | 愿景 (BCOS) | RED | north_star provable |
 | 6 | 长期运营 | YELLOW | BET ≥95% |
