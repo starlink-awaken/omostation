@@ -124,14 +124,23 @@ def validate() -> None:
             errors.append(f"{f}: {e}")
 
     actual_scripts = set()
-    for f in BIN_DIR.iterdir():
-        if f.is_file() and f.suffix in (".py", ".sh"):
-            actual_scripts.add(str(f.relative_to(REPO_ROOT)))
-        elif f.is_dir() and f.name != "_registry" and not f.name.startswith("_"):
-            for s in f.rglob("*.py"):
-                actual_scripts.add(str(s.relative_to(REPO_ROOT)))
-            for s in f.rglob("*.sh"):
-                actual_scripts.add(str(s.relative_to(REPO_ROOT)))
+    # 只验证 git tracked 脚本 (2026-08-27 深度复盘: iterdir 扫文件系统会把并行
+    # agent 的进行中未提交脚本算进来, 冻结所有人的 push — 应只问责已提交面)
+    import subprocess
+    ls = subprocess.run(
+        ["git", "ls-files", "--", "bin"],
+        cwd=REPO_ROOT, capture_output=True, text=True, check=False,
+    )
+    for line in ls.stdout.splitlines():
+        line = line.strip()
+        if not line.endswith((".py", ".sh")):
+            continue
+        parts = Path(line).parts
+        if len(parts) > 1 and parts[1] == "_registry":
+            continue
+        if len(parts) > 1 and parts[1].startswith("_"):
+            continue
+        actual_scripts.add(line)
 
     missing = actual_scripts - registered
     extra = registered - actual_scripts
