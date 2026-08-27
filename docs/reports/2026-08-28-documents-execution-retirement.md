@@ -62,3 +62,11 @@ restoring the verified crontab backup after checking its SHA-256.
 
 No Documents file has been moved or deleted. The legacy scripts remain intact
 as rollback material; their active schedules are no longer installed.
+
+## Remaining consumer tail
+
+T10-42 is registered for the remaining Scheduled health instructions and the
+OMO derived task-state projection. The next run must update the Scheduled
+skill through a bounded host-file mutation and synchronize `.omo/state` only
+through the OMO broker. It must not infer consumer completion from the cron
+cutover alone.

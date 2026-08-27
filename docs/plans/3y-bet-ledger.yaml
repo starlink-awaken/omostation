@@ -7871,6 +7871,10 @@ bets:
   - docs/reports/2026-08-28-documents-execution-retirement.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T10-41.md
+  - docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md
+  - /Users/xiamingxing/Documents/Claude/Scheduled/weijian-daily-health/SKILL.md
+  - .omo/state/system.yaml
+  - .omo/state/task-registry.yaml
   pasw_required: true
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md
@@ -7882,6 +7886,50 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 'unknown active consumer, Documents write, business-content drift, root overlap, missing Workspace parity, or missing rollback blocks physical action.'
+  retro: required
+- id: BET-Y1Q3-T10-42
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'Documents consumer tail 与 OMO 派生证据收敛'
+  appetite: 0.5 day
+  priority: P1
+  status: pending
+  goal: '移除 Scheduled health 对 Documents 脚本的直接执行指令，修复 OMO 派生任务证据路径与计数投影，并保留可回滚的宿主/状态证据。'
+  non_goals:
+  - 不删除或移动 Documents 业务内容、报告、证据和人工决策
+  - 不直接编辑 .omo/state，所有状态同步必须经 OMO broker
+  - 不新增调度器、Registry 或平行 KOS runtime
+  done_when:
+  - 'weijian-daily-health Scheduled skill 不再包含 Documents 脚本执行指令'
+  - 'active task evidence 指向 Workspace runtime，task counters 与真实任务目录一致'
+  - 'Scheduled/OMO consumer scan、前后哈希、rollback receipt 和 owner smoke 均已记录'
+  - 'Documents 内容与元数据快照保持不变；无永久删除'
+  verify:
+  - cmd: 'python3 -c "from pathlib import Path; p=Path(\"docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md\"); assert p.is_file(); assert \"BET-Y1Q3-T10-42\" in p.read_text(); print(\"tail-spec: PASS\")"'
+    expect: exit 0
+  - cmd: 'make doc-ssot-lint'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml python bin/ssot/ssot-guardian.py'
+    expect: exit 0
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md
+  - docs/reports/2026-08-28-documents-execution-retirement.md
+  - .omo/state/system.yaml
+  - .omo/state/task-registry.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-42.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:32151882131752d98664d9270905f80a36d68db68c28bec0bcbbd0ac10e3776e'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-42
+  depends_on:
+  - BET-Y1Q3-T10-41
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'any remaining direct Documents executor, failed OMO broker sync, evidence-path drift, or content mutation blocks closeout.'
   retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
