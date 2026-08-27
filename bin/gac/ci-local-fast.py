@@ -25,31 +25,61 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 BASELINE_PATH = WORKSPACE / ".omo/_truth/registry/ruff-diagnostics-baseline.yaml"
 RuffKey = tuple[str, str, str]
 RUFF_BASELINE_MAXIMA: dict[RuffKey, int] = {
+    # 2026-08-27: cockpit 子仓 33cc02ba 更新带入 (PR #2313), 原 omo 6 条已全部修复
     (
-        "projects/omo/src/omo/omo_compass.py",
-        "F541",
-        "f-string without any placeholders",
-    ): 17,
-    (
-        "projects/omo/src/omo/omo_crystallizer.py",
-        "E741",
-        "Ambiguous variable name: `l`",
+        "projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py",
+        "F811",
+        "Redefinition of unused `_build_draft_from_snapshot`",
     ): 1,
     (
-        "projects/omo/src/omo/omo_crystallizer.py",
-        "F541",
-        "f-string without any placeholders",
-    ): 2,
+        "projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py",
+        "F811",
+        "Redefinition of unused `_normalize_resp_input`",
+    ): 1,
     (
-        "projects/omo/src/omo/omo_project_inspector.py",
-        "F541",
-        "f-string without any placeholders",
-    ): 4,
-    ("projects/omo/src/omo/scenewatcher.py", "E741", "Ambiguous variable name: `l`"): 1,
+        "projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py",
+        "F811",
+        "Redefinition of unused `_optional_burden`",
+    ): 1,
     (
-        "projects/omo/src/omo/scenewatcher.py",
-        "F541",
-        "f-string without any placeholders",
+        "projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py",
+        "F811",
+        "Redefinition of unused `_personal_draft_evidence_ref`",
+    ): 1,
+    (
+        "projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py",
+        "F811",
+        "Redefinition of unused `_personal_error`",
+    ): 1,
+    (
+        "projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py",
+        "F811",
+        "Redefinition of unused `_projection_fields`",
+    ): 1,
+    (
+        "projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py",
+        "F811",
+        "Redefinition of unused `_projection_value_is_private`",
+    ): 1,
+    (
+        "projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py",
+        "F811",
+        "Redefinition of unused `_required_text`",
+    ): 1,
+    (
+        "projects/cockpit/src/cockpit/web/api_external_resources.py",
+        "F811",
+        "Redefinition of unused `_latest_catalog`",
+    ): 1,
+    (
+        "projects/cockpit/src/cockpit/web/api_external_resources.py",
+        "F811",
+        "Redefinition of unused `_latest_observation`",
+    ): 1,
+    (
+        "projects/cockpit/src/cockpit/web/api_external_resources.py",
+        "F811",
+        "Redefinition of unused `_resolve_catalog_projection`",
     ): 1,
 }
 RUFF_BASELINE_CAP = sum(RUFF_BASELINE_MAXIMA.values())
@@ -183,7 +213,7 @@ def _load_ruff_baseline(
         key = (
             str(item.get("path") or ""),
             str(item.get("code") or ""),
-            str(item.get("message") or ""),
+            _normalize_ruff_message(str(item.get("message") or "")),
         )
         count = item.get("count")
         if not all(key) or not isinstance(count, int) or count < 1:
@@ -207,6 +237,17 @@ def _load_ruff_baseline(
     return policy, baseline
 
 
+def _normalize_ruff_message(message: str) -> str:
+    """剥 ruff 消息中的行号 (F811 'from line N: ...'), 使 baseline 对代码位移鲁棒."""
+    # F811: "Redefinition of unused `xxx` from line 27: `xxx` redefined here"
+    # → "Redefinition of unused `xxx`"
+    import re
+    m = re.match(r"(.+?)\s+from line \d+:.*", message)
+    if m:
+        return m.group(1)
+    return message
+
+
 def _diagnostic_counts(diagnostics: list[dict[str, Any]], *, root: Path) -> Counter[RuffKey]:
     counts: Counter[RuffKey] = Counter()
     resolved_root = root.resolve()
@@ -217,7 +258,9 @@ def _diagnostic_counts(diagnostics: list[dict[str, Any]], *, root: Path) -> Coun
             relpath = absolute.resolve().relative_to(resolved_root).as_posix()
         except ValueError as exc:
             raise RuntimeError(f"Ruff diagnostic outside workspace: {filename}") from exc
-        key = (relpath, str(item.get("code") or ""), str(item.get("message") or ""))
+        raw_message = str(item.get("message") or "")
+        message = _normalize_ruff_message(raw_message)
+        key = (relpath, str(item.get("code") or ""), message)
         if not key[1] or not key[2]:
             raise RuntimeError(f"malformed Ruff diagnostic: {item!r}")
         counts[key] += 1

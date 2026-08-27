@@ -15,32 +15,54 @@ policy:
     - projects/omo/src
   debt_ignore: [F401, F821, E402, E722]
   growth_policy: forbidden
-  hard_cap: 26  # independent code maxima freeze all six approved buckets
-  captured_at: '2026-08-11'
-  captured_diagnostic_count: 26
+  hard_cap: 11  # independent code maxima freeze all six approved buckets
+  captured_at: '2026-08-27'
+  captured_diagnostic_count: 11
   observed_full_scope_debt: 997
 diagnostics:
-  - path: projects/omo/src/omo/omo_compass.py
-    code: F541
-    message: f-string without any placeholders
-    count: 17
-  - path: projects/omo/src/omo/omo_crystallizer.py
-    code: E741
-    message: 'Ambiguous variable name: `l`'
+  # 2026-08-27: cockpit 子仓 33cc02ba 更新带入 (PR #2313), 原 26 条已全部修复
+  # 消息格式: 无行号 (ci-local-fast.py _normalize_ruff_message 自动剥行号)
+  - path: projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+    code: F811
+    message: "Redefinition of unused `_build_draft_from_snapshot`"
     count: 1
-  - path: projects/omo/src/omo/omo_crystallizer.py
-    code: F541
-    message: f-string without any placeholders
-    count: 2
-  - path: projects/omo/src/omo/omo_project_inspector.py
-    code: F541
-    message: f-string without any placeholders
-    count: 4
-  - path: projects/omo/src/omo/scenewatcher.py
-    code: E741
-    message: 'Ambiguous variable name: `l`'
+  - path: projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+    code: F811
+    message: "Redefinition of unused `_normalize_resp_input`"
     count: 1
-  - path: projects/omo/src/omo/scenewatcher.py
-    code: F541
-    message: f-string without any placeholders
+  - path: projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+    code: F811
+    message: "Redefinition of unused `_optional_burden`"
+    count: 1
+  - path: projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+    code: F811
+    message: "Redefinition of unused `_personal_draft_evidence_ref`"
+    count: 1
+  - path: projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+    code: F811
+    message: "Redefinition of unused `_personal_error`"
+    count: 1
+  - path: projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+    code: F811
+    message: "Redefinition of unused `_projection_fields`"
+    count: 1
+  - path: projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+    code: F811
+    message: "Redefinition of unused `_projection_value_is_private`"
+    count: 1
+  - path: projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+    code: F811
+    message: "Redefinition of unused `_required_text`"
+    count: 1
+  - path: projects/cockpit/src/cockpit/web/api_external_resources.py
+    code: F811
+    message: "Redefinition of unused `_latest_catalog`"
+    count: 1
+  - path: projects/cockpit/src/cockpit/web/api_external_resources.py
+    code: F811
+    message: "Redefinition of unused `_latest_observation`"
+    count: 1
+  - path: projects/cockpit/src/cockpit/web/api_external_resources.py
+    code: F811
+    message: "Redefinition of unused `_resolve_catalog_projection`"
     count: 1
