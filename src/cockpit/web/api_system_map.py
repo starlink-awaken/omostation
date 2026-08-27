@@ -78,6 +78,7 @@ from cockpit.web.api_system_map_io_commands import (
     _workflow_evidence_search_command,
     build_source_ref_preview,
 )
+from cockpit.web.router_health import router_health_snapshot
 from cockpit.web.system_map_status_helpers import (
     _build_layers,
     _commands_from_agents,
@@ -99,7 +100,6 @@ from cockpit.web.system_map_status_helpers import (
     _resolved_physical_location,
     _runtime_profile,
 )
-from cockpit.web.router_health import router_health_snapshot
 
 
 def _project_registry_contract(project_data: dict[str, Any], project_path: Path | None = None) -> dict[str, Any]:

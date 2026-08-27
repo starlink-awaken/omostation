@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from cockpit.web import api_external_resources
+from cockpit.web import api_external_resources, external_resource_helpers
 
 
 def _app() -> FastAPI:
@@ -803,8 +803,8 @@ def _scene_trial(trial_id: str = "scene-trial:test") -> dict:
 
 
 def test_external_scene_trial_review_projection_is_read_only(monkeypatch):
-    monkeypatch.setattr(api_external_resources, "read_external_scene_trials", lambda _path: [_scene_trial()])
-    monkeypatch.setattr(api_external_resources, "read_external_scene_trial_feedback", lambda _path: [])
+    monkeypatch.setattr(external_resource_helpers, "read_external_scene_trials", lambda _path: [_scene_trial()])
+    monkeypatch.setattr(external_resource_helpers, "read_external_scene_trial_feedback", lambda _path: [])
 
     response = TestClient(_app()).get("/api/external-resources/scene-trials?scene_id=research-brief")
     body = response.json()
