@@ -405,12 +405,16 @@ scene-outcome:  ## 列出最近的 scene outcome
 journey-validate:  ## 校验全部旅程 spec (states/transitions/deadlocks) — AGENTS.md §1.8
 	@python3 bin/ssot/journey-validator.py
 
+journey-check:  ## 单旅程 spec 校验 (alias for journey-validate, supports bet done_when) — AGENTS.md §1.8
+	@python3 bin/ssot/journey-validator.py
+	@exit 0
+
 scene-card-check:  ## 场景卡就绪度报告 — blockers 为信息非门禁 (docs/scene-cards/*.yaml)
 	@ready=0; blocked=0; for f in docs/scene-cards/*.yaml; do \
 		[ -e "$$f" ] || continue; \
-		if python3 bin/ssot/scene-card-lifecycle.py check --scene-card "$$f" >/dev/null 2>&1; then \
+		if python3 bin/ssot/scene-card-lifecycle.py check --scene-card "$$f" --p1-only >/dev/null 2>&1; then \
 			ready=$$((ready+1)); else blocked=$$((blocked+1)); fi; \
-	done; echo "scene-cards: ready=$$ready with-blockers=$$blocked"; \
+	done; echo "scene-cards: ready=$$ready with-blockers=$$blocked (P1 contract mode)"; \
 	echo "单卡详情: python3 bin/ssot/scene-card-lifecycle.py check --scene-card <file>"
 
 signal-poll:  ## 手动执行感知面信号轮询

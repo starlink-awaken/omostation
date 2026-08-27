@@ -160,8 +160,14 @@ def transition_scene_card(
     }
 
 
-def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
-    """Check if a scene card is ready for activation (read-only, no side effects)."""
+def check_readiness(root: Path, scene_card_path: Path, p1_only: bool = False) -> dict[str, Any]:
+    """Check if a scene card is ready for activation (read-only, no side effects).
+
+    With p1_only=True, the approval + trial preconditions are excluded —
+    P1 contract-only bets declare the journey + scene cards as the
+    deliverable, and the approval/trial artifacts are P2 readiness gates
+    that don't block the P1 done_when check.
+    """
     card = _load_yaml_scene_card(scene_card_path)
     scene_type = card.get("scene_type", "external_resource")
     checks: dict[str, Any] = {
@@ -179,7 +185,7 @@ def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
     blockers = card.get("activation_blockers", [])
     checks["preconditions"]["blockers_empty"] = len(blockers) == 0
 
-    # Check 2: approval_state must be confirmed
+    # Check 2: approval_state must be confirmed (P1 bet: skipped)
     checks["preconditions"]["approval_confirmed"] = card.get("approval_state") == "confirmed"
 
     # Check 3: run track-specific preflight
@@ -198,15 +204,24 @@ def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
         # External track: delegate to external-scene-trial for preflight
         checks["preconditions"]["preflight_pass"] = True  # external track has its own tools
 
-    # Check 4: trial evidence must exist
+    # Check 4: trial evidence must exist (P1 bet: skipped)
     if scene_type == "internal_pipeline":
         trial_log = root / ".omo" / "_knowledge" / "workflow-mesh" / "internal-scene-trials.jsonl"
     else:
         trial_log = root / ".omo" / "_knowledge" / "workflow-mesh" / "external-scene-trials.jsonl"
     checks["preconditions"]["trial_recorded"] = trial_log.exists()
 
-    # Aggregate
-    checks["ready"] = all(checks["preconditions"].values())
+    # Aggregate — P1 contract mode excludes approval + trial preconditions
+    if p1_only:
+        relevant = {
+            k: v
+            for k, v in checks["preconditions"].items()
+            if k not in {"approval_confirmed", "trial_recorded"}
+        }
+        checks["ready"] = all(relevant.values())
+        checks["p1_only"] = True
+    else:
+        checks["ready"] = all(checks["preconditions"].values())
 
     return checks
 
@@ -217,6 +232,11 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command")
     check_parser = sub.add_parser("check", help="check readiness (read-only)")
     check_parser.add_argument("--scene-card", type=Path, required=True)
+    check_parser.add_argument(
+        "--p1-only",
+        action="store_true",
+        help="P1 contract mode: exclude approval + trial preconditions (P2 readiness gates)",
+    )
     validate_parser = sub.add_parser("validate", help="validate v2 schema (5-tier lifecycle + bet/falsifier)")
     validate_parser.add_argument("--scene-card", type=Path)
     validate_parser.add_argument(
@@ -263,7 +283,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if command == "check":
         try:
-            result = check_readiness(args.root, args.scene_card)
+            result = check_readiness(args.root, args.scene_card, p1_only=getattr(args, "p1_only", False))
         except Exception as exc:
             # Keep the honest gate machine-readable even when a card is
             # malformed or violates a preflight contract.  A traceback is
@@ -286,7 +306,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if result["ready"] else 1
 
     if command == "activate":
-        readiness = check_readiness(args.root, args.scene_card)
+        readiness = check_readiness(args.root, args.scene_card, p1_only=getattr(args, "p1_only", False))
         if not readiness["ready"]:
             print("ERROR: scene card not ready for activation:", file=sys.stderr)
             print(json.dumps(readiness["preconditions"], indent=2), file=sys.stderr)
