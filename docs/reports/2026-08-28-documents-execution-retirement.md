@@ -115,3 +115,19 @@ and invoked zero connectors. The owner reports `writes_documents=false`; it
 does not copy the old connector chain into a second runtime. The legacy runner
 and state DB remain intact until an accepted-release state-mutation run records
 copy/hash/integrity/rollback evidence.
+
+## BOS Neural Mesh state cutover
+
+- Accepted release: `accepted-20260908`, root SHA `576600b12`.
+- No active cron or launchd runner existed; the only launchd reference was in
+  the archived directory.
+- The legacy runner, SQLite DB, and lock were moved to
+  `$HOME/Workspace/runtime/quarantine/documents-bos-neural-mesh-20260828/`.
+- The canonical DB is `$HOME/Workspace/runtime/bos-neural-mesh-state.sqlite`;
+  SQLite integrity is `ok`, and source/target SHA-256 is
+  `d4aed59608c3eac58b97741cb5148eb53c55b195c647fb786f4be064fb944092`.
+- Post-migration owner smoke reports legacy runner/state `absent`,
+  `state_owner=workspace`, `connector_invocations=0`, and
+  `writes_documents=false`; connector execution remains fail-closed.
+- Quarantine objects retain byte-identical hashes; the exact receipts are under
+  the governed state-mutation evidence directory.
