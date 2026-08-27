@@ -19,6 +19,9 @@
 # Replaces: 5 6 * * * Documents/@公共/_runtime/bridge-refresh.py
 5 6 * * * cd "$HOME/.local/share/omostation/accepted-20260829" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py bridge-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260829" --evidence .omo/_delivery/documents-plane/bridge-preflight.json >> runtime/cron/documents-plane.log 2>&1
 
-# Not yet replaced: session-brief, convergence, signals rotation, and legacy
+# Replaces: 30 6 * * 1 Documents/@公共/_runtime/check-convergence.py
+30 6 * * 1 cd "$HOME/.local/share/omostation/accepted-20260830" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py convergence-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260830" --evidence .omo/_delivery/documents-plane/convergence-preflight.json >> runtime/cron/documents-plane.log 2>&1
+
+# Not yet replaced: session-brief, signals rotation, and legacy
 # controller/predictor jobs. Keep their current schedule until owner parity and
 # rollback evidence are accepted.

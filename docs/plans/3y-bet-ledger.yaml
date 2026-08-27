@@ -7443,6 +7443,51 @@ bets:
   human_gate: true
   circuit_breaker: 'marker/source ambiguity, Documents write attempt, or Cockpit replacement uncertainty blocks cutover.'
   retro: required
+- id: BET-Y1Q3-T10-32
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'check-convergence Documents writer 改为 Workspace preflight'
+  appetite: 1 day
+  priority: P0
+  status: pending
+  goal: '停止周一 06:30 Documents check-convergence 写入器，切换为 Workspace-only convergence preflight，保留原始检查语义和可回滚证据。'
+  non_goals:
+  - 不删除 Documents 中的历史内容或旧检查脚本
+  - 不宣称 12 个域的 T8 已通过
+  - 不修改其他 crontab、LaunchAgent 或 Scheduled skill
+  done_when:
+  - 'convergence-preflight emits documents.convergence-preflight.v1 with truthful exit semantics'
+  - 'preflight performs no Documents writes; report/history/evidence stay under Workspace runtime state'
+  - '06:30 Monday check-convergence line is replaced exactly once after accepted release deployment'
+  - 'legacy check-convergence remains available for rollback/parity and unrelated crontab lines are byte-identical'
+  verify:
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py convergence-preflight --help'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml --with pytest python -m pytest tests/test_documents_convergence_preflight.py -q'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - lib/documents_convergence_preflight.py
+  - bin/gac/documents-domain-owner-job.py
+  - tests/test_documents_convergence_preflight.py
+  - .omo/cron/documents-content-plane-crontab
+  - docs/superpowers/specs/2026-08-28-convergence-preflight-owner-design.md
+  - docs/reports/2026-08-28-convergence-preflight-owner.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-32.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-convergence-preflight-owner-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:c83dff68ef38fbb8e541e3cbdafa3eff829e7125539a865eeb27ae16460b6e84'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-32
+  depends_on:
+  - BET-Y1Q3-T10-31
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'Documents write attempt, semantic drift, or missing owner parity blocks cutover.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
