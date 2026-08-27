@@ -127,6 +127,10 @@ def main(argv: list[str] | None = None) -> int:
         from lib.documents_bridge_preflight import main as bridge_preflight_main
 
         return bridge_preflight_main(arguments[1:])
+    if arguments and arguments[0] == "signals-preflight":
+        from lib.documents_signals_preflight import main as signals_preflight_main
+
+        return signals_preflight_main(arguments[1:])
     if arguments and arguments[0] == "convergence-preflight":
         from lib.documents_convergence_preflight import main as convergence_preflight_main
 

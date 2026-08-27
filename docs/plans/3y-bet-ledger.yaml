@@ -7488,6 +7488,51 @@ bets:
   human_gate: true
   circuit_breaker: 'Documents write attempt, semantic drift, or missing owner parity blocks cutover.'
   retro: required
+- id: BET-Y1Q3-T10-33
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'signals-rotate Documents writer 改为 Workspace preflight'
+  appetite: 1 day
+  priority: P0
+  status: pending
+  goal: '停止周一 06:10 Documents signals-rotate 重写器，切换为 Workspace-only signals preflight，保留 SIGNALS.md 内容与回滚基线。'
+  non_goals:
+  - 不删除或改写 Documents SIGNALS.md
+  - 不替换 OMO/resident 的 canonical signal ingress
+  - 不修改其他 crontab、LaunchAgent 或 Scheduled skill
+  done_when:
+  - 'signals-preflight emits documents.signals-preflight.v1 with truthful exit semantics'
+  - 'preflight reads SIGNALS.md without writing Documents and publishes evidence only under Workspace'
+  - '06:10 Monday signals-rotate line is replaced exactly once after accepted release deployment'
+  - 'legacy signals-rotate remains available for rollback/parity and unrelated crontab lines are byte-identical'
+  verify:
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py signals-preflight --help'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml --with pytest python -m pytest tests/test_documents_signals_preflight.py -q'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - lib/documents_signals_preflight.py
+  - bin/gac/documents-domain-owner-job.py
+  - tests/test_documents_signals_preflight.py
+  - .omo/cron/documents-content-plane-crontab
+  - docs/superpowers/specs/2026-08-28-signals-preflight-owner-design.md
+  - docs/reports/2026-08-28-signals-preflight-owner.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-33.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-signals-preflight-owner-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:dbf3c6f073ef0f650c2260b7d5f2be0b9f6ed6739396f7b1724172fb5b690a44'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-33
+  depends_on:
+  - BET-Y1Q3-T10-32
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'Documents write attempt, signal ingress ambiguity, or owner parity uncertainty blocks cutover.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
