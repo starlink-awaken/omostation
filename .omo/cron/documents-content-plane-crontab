@@ -16,6 +16,9 @@
 # Replaces: 0 10 1,16 * * Documents/@工作文档/卫健委/_runtime/cron/ocr-incremental.sh
 0 10 1,16 * * cd "$HOME/.local/share/omostation/accepted-20260828" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py ocr-preflight --json --documents-root "$HOME/Documents" --source-relative "@工作文档/卫健委/_storage/06-工具/批量提取/ocr_20260731" --workspace-root "$HOME/.local/share/omostation/accepted-20260828" --evidence .omo/_delivery/documents-plane/ocr-preflight.json >> runtime/cron/documents-plane.log 2>&1
 
-# Not yet replaced: session-brief, bridge-refresh, convergence, signals rotation,
-# and legacy controller/predictor jobs. Keep their current schedule until owner
-# parity and rollback evidence are accepted.
+# Replaces: 5 6 * * * Documents/@公共/_runtime/bridge-refresh.py
+5 6 * * * cd "$HOME/.local/share/omostation/accepted-20260829" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py bridge-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260829" --evidence .omo/_delivery/documents-plane/bridge-preflight.json >> runtime/cron/documents-plane.log 2>&1
+
+# Not yet replaced: session-brief, convergence, signals rotation, and legacy
+# controller/predictor jobs. Keep their current schedule until owner parity and
+# rollback evidence are accepted.
