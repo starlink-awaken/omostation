@@ -519,10 +519,10 @@ def _resolve_catalog_projection() -> tuple[dict[str, Any], str]:
         latest = None
     if latest is not None:
         return latest, "omo.external_resource_observation"
-    if check_external_resource_pack is None:
+    if collect_external_resources is None:
         raise RuntimeError("external_resource_catalog_unavailable")
     return (
-        check_external_resource_pack(_REPO_ROOT, probe=True),
+        collect_external_resources(_REPO_ROOT, probe=True),
         "agora.external_resource_discovery",
     )
 

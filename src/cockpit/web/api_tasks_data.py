@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from cockpit.web.tasks_data_helpers import (
-    Any,
     L4_KERNEL_DIR,
-    Path,
     WORKSPACE_DIR,
     WORKSPACE_ROOT,
+    Any,
+    Path,
     _approval_next_action,
     _approval_proposal_id,
     _approval_state,
