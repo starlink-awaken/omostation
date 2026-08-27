@@ -85,7 +85,8 @@ def test_read_jsonl_events_counts_recent(tool, tmp_path):
 
 def test_compute_axes_returns_three_axes(tool):
     out = tool.compute_axes(since_days=30)
-    assert "A" in out["axes"]
+    assert "A1" in out["axes"]
+    assert "A2" in out["axes"]
     assert "B" in out["axes"]
     assert "C" in out["axes"]
     assert "D" in out["axes"]
@@ -97,6 +98,7 @@ def test_compute_axes_composite_in_range(tool):
     assert 0 <= out["composite"]["score"] <= 100
     assert 0 <= out["composite_4axis"]["score"] <= 100
     assert 0 <= out["composite_5axis"]["score"] <= 100
+    assert 0 <= out["composite_6axis"]["score"] <= 100
     assert out["status"] in {"unprovable", "low", "partial", "provable"}
 
 
@@ -113,6 +115,24 @@ def test_compute_axes_5axis_advisory_flag(tool):
     c5 = out["composite_5axis"]
     assert c5["advisory"] is True
     assert c5["weights"]["E"] == 0.15
+
+
+def test_compute_axes_6axis_advisory_flag(tool):
+    out = tool.compute_axes(since_days=30)
+    c6 = out["composite_6axis"]
+    assert c6["advisory"] is True
+    assert c6["weights"]["A2"] == 0.10
+    assert c6["weights"]["A1"] == 0.45
+
+
+def test_read_kv_cache_stats_returns_unavailable_when_omlxc_missing(tool, tmp_path, monkeypatch):
+    """When projects/omlxc doesn't exist, A2 reports unavailable=False safely."""
+    monkeypatch.setattr(tool, "WS_ROOT", tmp_path)
+    (tmp_path / "projects").mkdir()
+    result = tool._read_kv_cache_stats(timeout=1)
+    assert result["available"] is False
+    assert result["hit_rate"] == 0.0
+    assert "note" in result
 
 
 def test_analyze_decisions_returns_zeros_for_missing_file(tool, tmp_path, monkeypatch):
@@ -212,17 +232,17 @@ def test_compute_axes_window_parameter(tool):
     """Larger window = more events, smaller window = fewer."""
     out_30 = tool.compute_axes(since_days=30)
     out_1 = tool.compute_axes(since_days=1)
-    a30 = sum(out_30["axes"]["A"]["data"].values())
-    a1 = sum(out_1["axes"]["A"]["data"].values())
+    a30 = sum(out_30["axes"]["A1"]["data"].values())
+    a1 = sum(out_1["axes"]["A1"]["data"].values())
     # 30d window should count >= 1d window (monotonic)
     assert a30 >= a1
 
 
 def test_compute_axes_real_workspace_produces_a_data(tool):
-    """Smoke: real workspace has agent-tick-daemon.jsonl with events → A > 0."""
+    """Smoke: real workspace has agent-tick-daemon.jsonl with events → A1 > 0."""
     out = tool.compute_axes(since_days=30)
     # Either compass_radar_run or signal_poll should have some count
-    a_data = out["axes"]["A"]["data"]
+    a_data = out["axes"]["A1"]["data"]
     total = sum(a_data.values())
     # In a real workspace with cron activity, this should be > 0
     # (don't enforce, but at least log)
