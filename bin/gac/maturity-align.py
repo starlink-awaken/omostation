@@ -106,7 +106,7 @@ def collect_maturity_scorecard(ws_root: Path) -> dict:
             capture_output=True,
             text=True,
             check=False,
-            timeout=60,
+            timeout=120,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         out["error"] = f"subprocess: {str(exc)[:120]}"
@@ -123,7 +123,11 @@ def collect_maturity_scorecard(ws_root: Path) -> dict:
     out["overall"] = data.get("overall")
     out["target"] = data.get("target")
     out["gap"] = data.get("gap")
-    out["dimensions"] = data.get("scores") or {}
+    out["dimensions"] = data.get("dimensions") or data.get("scores") or {}
+    if out["overall"] is None and out["dimensions"]:
+        scores = [d.get("score", 0) for d in out["dimensions"] if isinstance(d, dict)]
+        if scores:
+            out["overall"] = round(sum(scores) / len(scores), 1)
     out["raw"] = data
     return out
 
