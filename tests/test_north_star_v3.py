@@ -76,12 +76,71 @@ def test_compute_axes_returns_three_axes(tool):
     assert "A" in out["axes"]
     assert "B" in out["axes"]
     assert "C" in out["axes"]
+    assert "D" in out["axes"]
 
 
 def test_compute_axes_composite_in_range(tool):
     out = tool.compute_axes(since_days=30)
     assert 0 <= out["composite"]["score"] <= 100
+    assert 0 <= out["composite_4axis"]["score"] <= 100
     assert out["status"] in {"unprovable", "low", "partial", "provable"}
+
+
+def test_compute_axes_4axis_advisory_flag(tool):
+    out = tool.compute_axes(since_days=30)
+    c4 = out["composite_4axis"]
+    assert c4["advisory"] is True
+    assert "weights" in c4
+    assert c4["weights"]["D"] == 0.20
+
+
+def test_count_knowledge_consumption_returns_zeros_for_missing_file(tool, tmp_path, monkeypatch):
+    monkeypatch.setattr(tool, "WORKFLOW_MESH_EVENTS", tmp_path / "no-such.jsonl")
+    result = tool._count_knowledge_consumption(since_days=30)
+    assert result == {"evidence_recorded": 0, "workflow_succeeded": 0, "total": 0}
+
+
+def test_count_knowledge_consumption_counts_recent_events(tool, tmp_path, monkeypatch):
+    from datetime import datetime, timezone, timedelta
+    p = tmp_path / "events.jsonl"
+    cutoff = datetime.now(timezone.utc) - timedelta(days=10)
+    recent_iso = cutoff.isoformat()
+    p.write_text(
+        json.dumps({"event_type": "EvidenceRecorded", "occurred_at": recent_iso}) + "\n"
+        + json.dumps({"event_type": "WorkflowSucceeded", "occurred_at": recent_iso}) + "\n"
+        + json.dumps({"event_type": "EvidenceRecorded", "occurred_at": "2020-01-01T00:00:00Z"}) + "\n"
+        + json.dumps({"event_type": "WorkflowRequested", "occurred_at": recent_iso}) + "\n"
+    )
+    monkeypatch.setattr(tool, "WORKFLOW_MESH_EVENTS", p)
+    result = tool._count_knowledge_consumption(since_days=30)
+    assert result["evidence_recorded"] == 1
+    assert result["workflow_succeeded"] == 1
+    assert result["total"] == 2
+
+
+def test_compute_axes_d_axis_score_capped(tool, tmp_path, monkeypatch):
+    """D score caps at 100 even when events_per_month > 30."""
+    from datetime import datetime, timezone
+    p = tmp_path / "events.jsonl"
+    now = datetime.now(timezone.utc).isoformat()
+    lines = "\n".join(
+        json.dumps({"event_type": "EvidenceRecorded", "occurred_at": now}) for _ in range(100)
+    )
+    p.write_text(lines + "\n")
+    monkeypatch.setattr(tool, "WORKFLOW_MESH_EVENTS", p)
+    out = tool.compute_axes(since_days=30)
+    assert out["axes"]["D"]["score"] == 100
+    assert out["composite_4axis"]["score"] <= 100
+
+
+def test_compute_axes_window_parameter(tool):
+    """Larger window = more events, smaller window = fewer."""
+    out_30 = tool.compute_axes(since_days=30)
+    out_1 = tool.compute_axes(since_days=1)
+    a30 = sum(out_30["axes"]["A"]["data"].values())
+    a1 = sum(out_1["axes"]["A"]["data"].values())
+    # 30d window should count >= 1d window (monotonic)
+    assert a30 >= a1
 
 
 def test_compute_axes_real_workspace_produces_a_data(tool):
@@ -93,16 +152,6 @@ def test_compute_axes_real_workspace_produces_a_data(tool):
     # In a real workspace with cron activity, this should be > 0
     # (don't enforce, but at least log)
     assert total >= 0
-
-
-def test_compute_axes_window_parameter(tool):
-    """Larger window = more events, smaller window = fewer."""
-    out_30 = tool.compute_axes(since_days=30)
-    out_1 = tool.compute_axes(since_days=1)
-    a30 = sum(out_30["axes"]["A"]["data"].values())
-    a1 = sum(out_1["axes"]["A"]["data"].values())
-    # 30d window should count >= 1d window (monotonic)
-    assert a30 >= a1
 
 
 # ---------------------------------------------------------------------------
