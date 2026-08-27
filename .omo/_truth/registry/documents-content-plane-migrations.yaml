@@ -187,6 +187,7 @@ families:
       - "@学习进化/_control/**"
       - "@学习进化/.githooks/**"
       - "@学习进化/_inbox/**"
+      - "学习进化/2-knowledge/基建架构/**"
     artifact_kind: [runtime, cache]
     disposition: delegate
     owner: runtime
@@ -238,6 +239,7 @@ families:
   - id: public-runtime
     source_globs:
       - "@公共/_runtime/**"
+      - "@公共/kems-v2/**"
     artifact_kind: [runtime, cache]
     disposition: delegate
     owner: runtime
@@ -253,6 +255,7 @@ families:
   - id: cockpit-runtime
     source_globs:
       - "@驾驶舱/_runtime/**"
+      - "驾驶舱/scripts/**"
     artifact_kind: [runtime, cache]
     disposition: delegate
     owner: cockpit
