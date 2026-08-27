@@ -162,7 +162,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Validate the submitted tree itself. GitHub's synthetic merge ref
+          # Validate the submitted tree itself for deterministic PR evidence.
+          # GitHub's synthetic merge ref
           # can resolve conflicting gitlinks to the base side, which would
           # make governance checks inspect a different submodule graph than
           # the PR delivers.
