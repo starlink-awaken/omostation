@@ -127,8 +127,17 @@ def scan_crontab_lines(lines: list[str], source: str, ws_root: Path) -> list[dic
         if not s or s.startswith("#"):
             continue
         anchored = bool(_ANCHOR_RE.search(s))
+        # cd <DIR> && 语义: 后续相对路径 token 锚定到 DIR 而非 ws_root
+        # (2026-08-27: line92 'cd .../projects/omlxc && python3 scripts/weekly-report.py'
+        #  曾被误判 dead — 相对 token 解析到 workspace 根而实际锚在 omlxc)
+        cd_m = re.search(r"(?:^|&&|\s)cd\s+(\S+)", s)
+        cd_dir = Path(os.path.expandvars(cd_m.group(1))) if cd_m else None
         for tok in candidates_from(tokenize(s)):
             p = resolve_candidate(tok, ws_root)
+            if not p.exists() and cd_dir and not tok.startswith(("/", "$HOME", "~")):
+                cd_try = cd_dir / tok
+                if cd_try.exists():
+                    p = cd_try
             sp = str(p)
             entry = {"source": source, "line": i, "target": tok,
                      "resolved": sp, "exists": p.exists(), "ok": True}
