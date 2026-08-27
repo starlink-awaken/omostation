@@ -33,6 +33,21 @@ last-reviewed: 2026-08-18
 - [ ] 每个域单独 T8 通过，之后 T8 进入默认文档域 profile。
 - [ ] 每个物理迁移都有前后文件数、字节数、SHA-256/树指纹、消费者证据和回滚包。
 
+## 0.1 Architecture Addendum — Canonical L4 and Agora Nested L4
+
+The convergence target includes the Workspace root `projects/l4-kernel` as the
+only canonical L4 implementation. `projects/agora/projects/l4-kernel` is an
+older nested submodule and must be treated as a separately governed migration
+family, not as an equivalent implementation. Before any nested-L4 deletion or
+route cutover, record instance identity, commit SHA, registry digest, all
+Agora consumers, dual-instance canary results, and rollback evidence.
+
+The migration order is: canonical route contract → explicit Agora consumer
+cutover → observation and parity → consumer/schedule zero proof → separately
+authorized nested submodule retirement. This addendum does not authorize
+deletion, gitlink changes, production route changes, or Documents content
+moves.
+
 ## 1. Non-Negotiable Boundaries
 
 1. 不扶正 `projects/domain-kems`，不创建第二 KEMS runtime。
