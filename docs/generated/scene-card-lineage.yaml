@@ -1,0 +1,40 @@
+version: '1.0'
+generated_at: '2026-08-04T11:09:11Z'
+generator: bin/ssot/gen-scene-card-lineage.py
+funnel:
+  candidates: 0
+  scene_cards: 2
+  pending_business: 2
+  active: 0
+scenes:
+- scene_id: document-review
+  journey_id: document-to-decision
+  lifecycle: proposal_only
+  approval_state: pending_business_confirmation
+  outcome_metric: review_cycle_hours
+  capability_refs:
+  - iris:apple_mail
+  - iris:netease_mailmaster
+  - iris:seeyon_oa
+  - kairon.sophia
+  - gbrain.evals
+  source: docs/scene-cards/document-review.yaml
+- scene_id: engineering-delivery
+  journey_id: intent-to-evidence
+  lifecycle: proposal_only
+  approval_state: pending_business_confirmation
+  outcome_metric: verified_delivery_lead_time
+  capability_refs: []
+  source: docs/scene-cards/engineering-delivery-dogfood.yaml
+candidates: []
+connector_relations:
+  gbrain.evals:
+  - document-review
+  iris:apple_mail:
+  - document-review
+  iris:netease_mailmaster:
+  - document-review
+  iris:seeyon_oa:
+  - document-review
+  kairon.sophia:
+  - document-review

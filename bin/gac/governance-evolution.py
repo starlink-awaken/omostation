@@ -551,7 +551,7 @@ def classify_release_package(path: str) -> tuple[str, str]:
         path.startswith("projects/") and path.endswith(("/AGENTS.md", "/CLAUDE.md", "/README.md"))
     ):
         return "project-entry-docs", "review as project entrypoint documentation"
-    if path == "scripts" or (path.startswith("projects/") and path.count("/") == 1):
+    if path == "scripts" or (path.startswith("projects/") and path.count("/") <= 2):
         return "submodule-pointer", "review child repository status before release"
     if path.startswith("protocols/"):
         return "protocol-registry", "review protocol registry drift and consumers"

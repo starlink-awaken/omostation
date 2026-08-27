@@ -1992,7 +1992,7 @@ gac:
     name: AGE-v2 Cell PDP/PEP 策略执行
     description: Cell 高风险动作 (R2/R3) 必须经 PDP 评估 + PEP 强制执行, 禁止绕过策略引擎直接执行.
       PDP 评估记录必须写入 Cell handoff_log 证据链. 对齐 L0 CR-AGE-POLICY-01.
-    check_type: static_analysis
+    check_type: ssot_lint
     target: projects/omo/src/omo/resident/pdp_pep.py
     source_ref: bin/gac/check-age-policy.py
     executor:
@@ -2034,7 +2034,7 @@ gac:
     name: AGE-v2 Cell 回放框架完整性
     description: Cell Replay Framework 必须同时支持 replay / shadow / eval 三种模式,
       禁止仅实现部分模式. 对齐 L0 CR-AGE-REPLAY-01.
-    check_type: static_analysis
+    check_type: ssot_lint
     target: projects/omo/src/omo/resident/replay.py
     source_ref: bin/gac/check-age-replay.py
     executor:
@@ -2055,7 +2055,7 @@ gac:
     name: AGE-v2 Cell 事件驱动路由
     description: Cell Handler 必须订阅 WorkflowClosed / ExecutionRequested / WorkflowFailed / StepTimeout
       四类事件, 禁止选择性订阅. 对齐 L0 CR-AGE-EVENT-01.
-    check_type: static_analysis
+    check_type: ssot_lint
     target: projects/omo/src/omo/resident/cell_handler.py
     source_ref: bin/gac/check-age-event.py
     executor:
