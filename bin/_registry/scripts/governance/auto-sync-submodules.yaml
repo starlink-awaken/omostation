@@ -1,0 +1,18 @@
+schema: script-registry/v1
+id: bin/gac/auto-sync-submodules.sh
+name: Auto Sync Submodules
+category: governance
+owner: governance-team
+description: "Synchronize approved submodule pointers through the governed transaction path"
+inputs:
+  - type: repository
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers:
+  - manual
+related:
+  - bin/ssot/submodule-pointer-transaction.sh
+maturity: draft
+last_reviewed: "2026-08-27"

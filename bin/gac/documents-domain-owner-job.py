@@ -13,6 +13,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 RUNTIME_SRC = ROOT / "projects" / "runtime" / "src"
 L4_SRC = ROOT / "projects" / "l4-kernel" / "src"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 for source_root in (RUNTIME_SRC, L4_SRC):
     if str(source_root) not in sys.path:
         sys.path.insert(0, str(source_root))
@@ -108,6 +110,11 @@ def _build_job(
 
 
 def main(argv: list[str] | None = None) -> int:
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments and arguments[0] == "consumer-audit":
+        from lib.documents_consumer_audit import main as consumer_audit_main
+
+        return consumer_audit_main(arguments[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("job_id")
     parser.add_argument("--documents-root", type=Path, required=True)
@@ -117,7 +124,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--l4-executable", type=Path, required=True)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--json", action="store_true", dest="json_output")
-    args = parser.parse_args(argv)
+    args = parser.parse_args(arguments)
 
     try:
         jobs, spec = _build_job(
