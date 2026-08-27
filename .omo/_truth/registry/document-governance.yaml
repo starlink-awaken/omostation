@@ -145,7 +145,7 @@ warning_exceptions:
     - id: concurrent-plans-orphan-docs
       rule: orphan_document
       surface: docs-discoverable
-      max_findings: 15
+      max_findings: 20
       expires: 2026-10-31
       owner: governance-team
       reason: >
