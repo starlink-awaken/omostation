@@ -149,14 +149,6 @@ from cockpit.web._agora_ports import agora_http_endpoint
 _AGORA_HTTP_ENDPOINT = agora_http_endpoint()
 from cockpit.web import workflow_mesh_helpers
 from cockpit.web.workflow_mesh_helpers import (
-    _build_draft_from_snapshot,
-    _normalize_resp_input,
-    _optional_burden,
-    _personal_draft_evidence_ref,
-    _personal_error,
-    _projection_fields,
-    _projection_value_is_private,
-    _required_text,
     _unavailable_projection,
 )
 

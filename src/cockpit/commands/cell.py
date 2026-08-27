@@ -103,6 +103,7 @@ def cmd_cell(args) -> int:
             return 1
     elif subcmd == "dashboard":
         from omo.resident.cell_pool import CellPool
+
         pool = CellPool()
         status = pool.get_pool_status()
         print(json.dumps(status, ensure_ascii=False, indent=2))

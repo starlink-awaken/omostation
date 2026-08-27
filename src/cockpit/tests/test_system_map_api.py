@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from cockpit import compat
 from cockpit.dashboard_server import app
-from cockpit.web import api_system_map, api_system_map_io_commands, api_system_map_status
+from cockpit.web import api_system_map, api_system_map_io_commands, api_system_map_status, system_map_status_helpers
 from cockpit.web.api_system_map import build_source_ref_preview, build_system_map
 
 
@@ -560,7 +560,7 @@ def test_runtime_status_marks_static_frontend_as_not_applicable(tmp_path, monkey
 
 def test_controlled_verification_audit_downgrades_stale_failure_to_closeout_warning(monkeypatch):
     monkeypatch.setattr(
-        api_system_map_status,
+        system_map_status_helpers,
         "_latest_controlled_verification",
         lambda _project_id: {"exit_code": 0, "log_ref": "runtime/omo/verification.log"},
     )
