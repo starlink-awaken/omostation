@@ -7092,6 +7092,51 @@ bets:
   human_gate: true
   circuit_breaker: 'unreadable source, unknown consumer, or registry mismatch blocks cutover and leaves the current route unchanged.'
   retro: required
+- id: BET-Y1Q3-T10-24
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'Documents freshness audit 下沉 Workspace owner'
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: '将 control-plane freshness 只读检查从 Documents 执行面下沉到 Workspace owner，使用 L4 registry 作为域列表 SSOT，真实反映 stale/missing/invalid，并将 evidence 写到 Workspace。'
+  non_goals:
+  - 不切换或删除现有 cron/LaunchAgent/Scheduled
+  - 不修改 Documents 内容、控制文件或运行状态
+  - 不创建第二域 registry、调度器或人机入口
+  done_when:
+  - 'existing documents-domain-owner-job freshness-audit emits documents.freshness-audit.v1 with stable per-domain status'
+  - 'healthy/finding/input-error exit semantics are 0/1/2 and registry paths fail closed'
+  - 'evidence is Workspace-only and Documents bytes/mtime remain unchanged'
+  - 'focused tests, root governance gates, and owner parity evidence pass'
+  verify:
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py freshness-audit --help'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml --with pytest python -m pytest tests/test_documents_freshness_owner.py -q'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py freshness-audit --documents-root /var/empty --json'
+    expect: exit 2
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - lib/documents_freshness_owner.py
+  - bin/gac/documents-domain-owner-job.py
+  - tests/test_documents_freshness_owner.py
+  - docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md
+  - docs/reports/2026-08-27-documents-freshness-owner.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-24.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:35e2c12c1483a15d859793deb1dbf1f4024fefd33b689d47ea750634857c6fc4'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-24
+  depends_on: []
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'registry/path ambiguity, write-back attempt, or non-deterministic output blocks schedule cutover.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
