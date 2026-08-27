@@ -34,5 +34,8 @@
 # Replaces: * * * * * Documents/@公共/_runtime/watch-dispatch.py
 * * * * * cd "$HOME/.local/share/omostation/accepted-20260903" && uv run --with pyyaml python lib/workspace_watch_dispatch.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --stamps "$HOME/Workspace/runtime/.watch-dispatch-stamps.json" --json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
 
-# Not yet replaced: legacy controller/predictor jobs. Keep their current schedule until owner parity and
+# Not yet replaced: legacy daily-health job. Keep its current schedule until owner parity and
 # rollback evidence are accepted.
+
+# Replaces: 30 8 1 * * Documents/@工作文档/卫健委/_control/predictor.py
+30 8 1 * * cd "$HOME/.local/share/omostation/accepted-20260905" && /opt/homebrew/opt/python@3.14/bin/python3.14 lib/documents_predictor_preflight.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --evidence "$HOME/Workspace/runtime/predictor-preflight.json" --json >> "$HOME/Workspace/runtime/cron/predictor.stdout.log" 2> "$HOME/Workspace/runtime/cron/predictor.stderr.log"

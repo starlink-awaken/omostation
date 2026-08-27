@@ -127,6 +127,10 @@ def main(argv: list[str] | None = None) -> int:
         from lib.documents_bridge_preflight import main as bridge_preflight_main
 
         return bridge_preflight_main(arguments[1:])
+    if arguments and arguments[0] == "predictor-preflight":
+        from lib.documents_predictor_preflight import main as predictor_preflight_main
+
+        return predictor_preflight_main(arguments[1:])
     if arguments and arguments[0] == "controller-preflight":
         from lib.documents_controller_preflight import main as controller_preflight_main
 
