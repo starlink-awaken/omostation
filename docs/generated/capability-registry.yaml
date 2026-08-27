@@ -882,7 +882,7 @@ mcp_servers:
   tool_count: 75
 bos_services:
   _domain_counts:
-    agent-cell: 19
+    agent-cell: 16
     agora: 3
     analysis: 28
     bcos: 3
@@ -967,18 +967,6 @@ bos_services:
       status: active
     - uri: bos://agent-cell/replay/eval
       description: Eval — 批量 Episode 性能评估
-      transport: stdio
-      status: active
-    - uri: bos://agent-cell/pool/auto-scale
-      description: Cell Pool 自动扩缩容 — 基于负载自动调整
-      transport: stdio
-      status: active
-    - uri: bos://agent-cell/pool/metrics
-      description: Cell Pool 指标 — 详细监控指标
-      transport: stdio
-      status: active
-    - uri: bos://agent-cell/health
-      description: Cell Health — 全链路健康检查
       transport: stdio
       status: active
     agora:
