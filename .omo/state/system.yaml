@@ -1,16 +1,235 @@
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-27T06:36:54.472233+00:00'
-54.471808+00:00'
+health_score_evidence_generated_at: '2026-08-27T06:49:23.276501+00:00'
+current_phase: 49
+phase46_status: completed
+phase46_completed_at: '2026-08-01T00:00:00Z'
+phase49_status: active
+phase49_started_at: '2026-08-01T13:32:00Z'
+phase_status: active
+current_wave: W5
+next_milestone: Phase 49 W1 — 知识流动·用户价值兑现 (T1-T6 全面落地)
+health_score_ref: .omo/state/health.yaml
+health_score: 55
+health_score_source: compass_radar_composite_isc3
+health_score_generated_at: '2026-08-26T23:11:05Z'
+active_agents: 0
+idle_agents: 4
+dead_agents: 0
+blocked_tasks: 1
+completed_tasks: 290
+total_tasks: 299
+active_tasks: 1
+phase39_status: completed
+phase39_completed_at: '2026-06-14T00:00:00Z'
+phase2_core_complete: true
+phase3_foundation_status: completed
+phase3_foundation_completed_at: '2026-05-30T16:14:37Z'
+phase3_capability_slice_status: completed
+phase3_capability_slice_completed_at: '2026-05-30T22:35:00Z'
+phase3_acceptance_status: completed
+phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
+phase36_status: completed
+phase36_completed_at: '2026-06-11T00:00:00Z'
+next_active_tasks:
+- kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
+last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
+  may proceed)
+phase2_status: completed
+phase2_completed_at: '2026-05-30T15:36:00Z'
+phase4_worker_collab_status: wave2_completed
+phase5_status: completed
+phase6_status: completed
+phase7_status: completed
+phase8_status: completed
+phase9_status: completed
+phase9_completed_at: '2026-05-31T20:50:00Z'
+phase10_status: completed
+phase10_completed_at: '2026-05-31T22:05:00Z'
+phase11_status: completed
+phase11_completed_at: '2026-06-01T00:10:00Z'
+phase11_plans_generated:
+- phase11-program-plan.md
+- phase11-wave1-execution-plan.md
+- phase11-wave2-execution-plan.md
+- phase11-wave3-execution-plan.md
+- phase11-wave4-execution-plan.md
+phase11_plan_approved: true
+phase11_entry_gate: phase10_completed
+updated_at: '2026-08-27T10:45:00.458874+08:00'
+phase33_status: completed
+phase33_completed_at: '2026-06-08T00:00:00Z'
+phase34_status: completed
+phase34_completed_at: '2026-06-09T00:00:00Z'
+phase29_status: completed
+phase29_completed_at: '2026-06-05T20:00:00Z'
+phase30_status: completed
+phase30_completed_at: '2026-06-06T01:30:00Z'
+phase31_status: completed
+phase31_completed_at: '2026-06-18T00:00:00Z'
+phase31_note: '部分完成: cost tracking + langfuse + governance data 已实现; 完整指标体系待后续迭代'
+divergence_flags: []
+task_gate_summary: {}
+promotion_blockers: {}
+phase12_status: completed
+phase12_completed_at: '2026-06-01T00:50:00Z'
+ecosystem_maturity_score: 100
+phase13_status: completed
+phase13_completed_at: '2026-06-01T05:40:00Z'
+metacognition_safety_score: 100
+phase14_status: completed
+phase14_completed_at: '2026-06-01T06:40:00Z'
+ecosystem_expansion_safety_score: 100
+phase15_status: completed
+phase15_completed_at: '2026-06-01T08:20:00Z'
+governance_loop_safety_score: 100
+user_value_traceability_score: 100
+phase16_status: completed
+phase16_completed_at: '2026-06-01T09:10:00Z'
+phase17_completed_at: '2026-06-03T14:42:00Z'
+phase18_completed_at: '2026-06-03T14:42:00Z'
+phase19_status: completed
+phase19_completed_at: '2026-06-03T15:00:00Z'
+phase20_status: completed
+phase20_completed_at: '2026-06-03T15:30:00Z'
+phase21_status: completed
+phase21_completed_at: '2026-06-03T16:00:00Z'
+phase22_status: completed
+phase22_completed_at: '2026-06-03T16:30:00Z'
+phase23_status: completed
+phase23_completed_at: '2026-06-03T17:00:00Z'
+phase24_status: completed
+phase24_completed_at: '2026-06-04T11:27:00Z'
+phase26_entry_gate: phase24_completed
+product_surface_traceability_score: 100
+knowledge_capture_search_readiness_score: 100
+phase32_completed_at: '2026-06-07T00:00:00Z'
+debt_weight: 1.0
+debt_weight_items:
+  D2_CI_E2E:
+    resolved: true
+    weight: 0.15
+    desc: CI E2E 测试环境容器化
+  D3_EU_PRICING:
+    resolved: true
+    weight: 0.15
+    desc: eu-pricing 独立测试覆盖
+  SB_DECOMPOSITION:
+    resolved: true
+    weight: 0.2
+    desc: SharedBrain 拆解进度 (19器官→核+迁移+废弃)
+  SB_UNTESTED_PKGS:
+    resolved: true
+    weight: 0.15
+    desc: kairon 4个untested包 (core-models, shared-lib, sharedbrain-bridge, wksp)
+  SB_ORPHANED_TASKS:
+    resolved: true
+    weight: 0.1
+    desc: orphaned_tasks 结构化 registry
+  SB_ROOT_CLEANUP:
+    resolved: true
+    weight: 0.05
+    desc: 根目录 SharedBrain/ 空壳清理
+  SB_BRIDGE_FIX:
+    resolved: true
+    weight: 0.1
+    desc: sharedbrain-bridge 死代码清理或重连
+  SB_PROJECTS_YAML:
+    resolved: true
+    weight: 0.05
+    desc: PROJECTS.yaml 行数更新 (71K→824K)
+  SB_PHASE17_PLAN:
+    resolved: true
+    weight: 0.05
+    desc: Phase 17 Wave 1 实施计划创建
+resolved_debt_items:
+- D2_CI_E2E
+- D3_EU_PRICING
+- SB_DECOMPOSITION
+- SB_UNTESTED_PKGS
+- SB_ORPHANED_TASKS
+- SB_ROOT_CLEANUP
+- SB_BRIDGE_FIX
+- SB_PROJECTS_YAML
+- SB_PHASE17_PLAN
+- DEBT-CARDS-FRONTMATTER-PARSE
+- DEBT-CLI-1
+- DEBT-COCKPIT-HEALTH-DISTORTION
+- DEBT-CROSSPROJECT-SYSPATH
+- DEBT-EMPTY-INIT-PY
+- DEBT-GBRAIN-55-TODOS
+- DEBT-GBRAIN-OPERATIONS-TS
+- DEBT-KAIRON-ONTODERIVE-PHANTOM
+- DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG
+- DEBT-OMC-GBRAIN-PERSISTENCE
+- DEBT-OMC-METAOS-OMO-PLANE
+- DEBT-SWARM-ENGINE-20260614104223
+orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
+debt_registry_ref: .omo/_truth/registry/debt.yaml
+debt_dashboard_ref: .omo/_control/debt-dashboard/current.yaml
+debt_review_pack_ref: .omo/_control/debt-dashboard/health-trend.md
+debt_metrics:
+  debt_health: 100.0
+  classification_entropy: 0.0
+  state_entropy: 0.0
+  pointer_entropy: 0.0
+  time_entropy: 0.0
+  backlog_pressure: 0
+  coupling_load: 0.0
+debt_watchlist_count: 0
+debt_gate_count: 0
+debt_reporting_ref: .omo/_control/debt-dashboard/current.yaml
+planned_tasks: 7
+planned_tasks_ref: .omo/tasks/registry/INDEX.md
+next_planned_tasks:
+- bet-y3h1-t7-01 (中试 / 政策申报升 assisted)
+- bet-y3h2-t7-01 (公文场景 routine (限格式类))
+- cockpit-debt-debt-1 (治理技术债务：债务)
+- 'event-loop-dead-loop (闭环回路死回路: 2 个 emit 零消费者)'
+- kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
+- needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
+  物理 KPI 解锁）)
+- 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
+phase27_status: completed
+phase27_completed_at: '2026-06-10T00:00:00Z'
+phase28_status: completed
+phase28_completed_at: '2026-06-05T22:10:00Z'
+governance:
+  code_freeze: false
+  code_freeze_note: 已解除 — 2026-06-28 债项验证全部为 DRIFT，非真实拦截
 runtime_health_summary:
   online_services: 2
   total_services: 4
   ratio: 0.5
   health_score: 50
-  last_scan: '1787812570.97347'
+  last_scan: '1787798697.0786922'
   service_count: 8
   degraded: []
   source: runtime_daemon_de_false_positive
+phase42_status: completed
+phase42_completed_at: '2026-07-14T20:59:00Z'
+phase43_status: completed
+phase43_completed_at: '2026-07-14T21:00:00Z'
+phase44_status: active
+health_score_raw: 88.0
+xplane_score: 0.0
+xplane_coverage: 100.0
+xplane_factor: 0.7
+debt_adjusted_health_score: 61.6
+debt_items_total: 7
+debt_items_resolved: 7
+debt_adjusted_note: all 7 debt items resolved
+governance_anomaly_score: 0
 service_online_ratio: 0.5
-updated_at: '2026-08-27T14:36:11.603625+08:00'
-governance_feedback_last_run: '2026-08-27T14:36:11.603625+08:00'
+divergence_detail_refs: {}
+divergence_triage_summary: {}
+governance_feedback_last_run: '2026-08-27T10:45:00.458874+08:00'
+workflow_mesh_health:
+  status: healthy
+  event_count: 2106
+  events_last_hour: 0
+  last_event_age_seconds: 35658.9
+  bridges_active:
+  - agent-workflow
+  - engineering-delivery-consumer
+  - omo
