@@ -5505,7 +5505,8 @@ bets:
   title: Exact Capability Binding 与 native asset receipt 消费收敛
   appetite: 5 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-08-27'
   started_at: 2026-08-24
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact find-load、OMO admission/dispatch
     与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误 admission、平行 dispatch 和执行回执冒充个人价值。
@@ -5652,10 +5653,10 @@ bets:
             ref: git://origin/main@477e142325e36c025337b308511ac4ee70000b4a
           tests:
             ref: receipt://tests/test_capability_sync.py
-            sha256: sha256:a273d017803c1164e532e952f1323f8dc17b9a9d22d4e9d41fe91bff8e2b5f45
+            sha256: sha256:6a53e60da7305f7ab4631b48ddbf0da49af3660531ad48c682eecc1163b9bce2
           diff:
             ref: receipt://bin/capability-sync.py
-            sha256: sha256:4e17c2e206b35a2c74deffcbc664a2eda00a1a3fa19392d83fc604f6a581bd57
+            sha256: sha256:9cc0d9fed096ff377e2481200b1a1d73d4bd79624a78acedb3aaa4505978acfa
           rollback:
             ref: receipt://lib/capability_trace_binding.py
             sha256: sha256:7dc472b2176e6b0b8897e9f0776e60470bb8f172fc5ad42ec076bd744916fcad
@@ -5679,16 +5680,16 @@ bets:
         evidence:
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
-            sha256: sha256:34d9d086f5f8991169aa895791ddddf5bca9610370a91ae8020edf470f236d44
+            sha256: sha256:41b7175076f14129b5e62989042f2f97d5f2b6ffb60cdd3a0ac9d60c27c0267a
           human_verdict:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
             sha256: sha256:f11d3224c60b3c1657ac79998e96c38cd06ce3718ac5c60de5442802c337b429
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:d9ec0eb16494365653dc22979607282294375f625d1079b0c05676c01cc9b6fb
+            sha256: sha256:9bf04f6175ad27ad8f2140b84f77e48578a54a560602c175571eabdbdfebc59b
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:d9ec0eb16494365653dc22979607282294375f625d1079b0c05676c01cc9b6fb
+            sha256: sha256:9bf04f6175ad27ad8f2140b84f77e48578a54a560602c175571eabdbdfebc59b
           attestation:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
             sha256: sha256:f11d3224c60b3c1657ac79998e96c38cd06ce3718ac5c60de5442802c337b429
