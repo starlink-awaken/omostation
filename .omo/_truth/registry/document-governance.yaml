@@ -145,7 +145,7 @@ warning_exceptions:
     - id: concurrent-plans-orphan-docs
       rule: orphan_document
       surface: docs-discoverable
-      max_findings: 50  # TRACKING: retro 2026-08-27-ci-debt-battle R1 — 需逐批加 SYSTEM-INDEX.md 降回 8
+      max_findings: 8  # 2026-08-27 R1 根因修复: _is_discoverable 兼容相对路径口径, orphan 0 实测
       expires: 2026-10-31
       owner: governance-team
       reason: >
