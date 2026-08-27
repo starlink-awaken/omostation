@@ -7480,7 +7480,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-convergence-preflight-owner-design.md
     spec_version: 1.0.0
-    content_digest: 'sha256:7fc968b3440dda659d9ed4dbc30fc9b667b92398e50c05aa57821ffefcbf53a1'
+    content_digest: 'sha256:c83dff68ef38fbb8e541e3cbdafa3eff829e7125539a865eeb27ae16460b6e84'
     decision_ref: decision://accepted/BET-Y1Q3-T10-32
   depends_on:
   - BET-Y1Q3-T10-31
