@@ -21,6 +21,16 @@ cron lines were migrated.
 * * * * * cd "$HOME/.local/share/omostation/accepted-20260903" && uv run --with pyyaml python lib/workspace_watch_dispatch.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --stamps "$HOME/Workspace/runtime/.watch-dispatch-stamps.json" --json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
 ```
 
-The candidate is not installed by the implementation PR. A governed cutover
-must record accepted-release identity, crontab backup/hash, exact old/new
-counts, unrelated-line byte identity, and a post-cutover smoke.
+## Cutover evidence
+
+- Run: `20260827T200025Z-governance-state-mutation-6575ec3b`
+- Accepted root: `e0d61b8adae0894d1ca4c37bae9dd73c5c15d275`
+- Before crontab SHA-256: `c3e8c84e499400f074429928a6d267b8346153dadbede10e4871abe7631ef334`
+- After crontab SHA-256: `800024add72ae588e2615a5b3cbbf14cfc785f6146e195dd3a96825208de4d46`
+- Target replacement: old `watch-dispatch.py` count `1 -> 0`; new Workspace
+  watcher count `0 -> 1`.
+- Unrelated crontab lines: `108`, byte-identical before/after.
+- Post-cutover result: `workspace.watch-dispatch.v1`, status `ok`, exit `0`,
+  JSON stdout parsed cleanly, no events on stable inputs.
+- Live stamps remain under Workspace runtime; no Documents script was invoked by
+  the post-cutover smoke.
