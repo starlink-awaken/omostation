@@ -3596,15 +3596,24 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          pr_and_gates:
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T7-02/engineering/pr_and_gates.md
+            sha256: sha256:pending
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          verifications:
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T7-02/operational/verifications.md
+            sha256: sha256:pending
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        status: ACCEPTED
+        evidence:
+          health_domain_contract:
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T7-02/value/health_domain_contract.md
+            sha256: sha256:pending
+    overall_state: outcome_accepted
 - id: BET-Y1Q3-T2-01
   track: T2-PERCEPT
   window: Y1Q3
