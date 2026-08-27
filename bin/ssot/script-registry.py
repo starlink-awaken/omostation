@@ -128,7 +128,7 @@ def validate() -> None:
     # agent 的进行中未提交脚本算进来, 冻结所有人的 push — 应只问责已提交面)
     import subprocess
     ls = subprocess.run(
-        ["git", "ls-files", "--", "bin"],
+        ["git", "ls-tree", "-r", "HEAD", "--name-only", "--", "bin"],
         cwd=REPO_ROOT, capture_output=True, text=True, check=False,
     )
     for line in ls.stdout.splitlines():
