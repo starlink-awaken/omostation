@@ -7310,6 +7310,51 @@ bets:
   human_gate: true
   circuit_breaker: 'missing old line, unexpected writer, cadence drift, or new command error triggers immediate rollback.'
   retro: required
+- id: BET-Y1Q3-T10-29
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'OCR broken consumer 改为 Workspace preflight owner'
+  appetite: 1 day
+  priority: P0
+  status: pending
+  goal: '将当前指向不存在工作目录且写回 Documents runtime 的 OCR 定时入口切换为 Workspace-only preflight，真实报告 source/engine readiness，不执行未验证 OCR。'
+  non_goals:
+  - 不执行或迁移真实 OCR 内容
+  - 不删除旧 OCR runner、输入、输出或日志
+  - 不宣称 OCR quality parity 或生产可用
+  done_when:
+  - 'ocr-preflight emits documents.ocr-preflight.v1 with bounded readiness and truthful exit 0/1/2'
+  - 'invalid paths fail closed and Documents bytes/mtimes remain unchanged'
+  - 'candidate schedule replaces only the 1st/16th 10:00 OCR consumer after accepted release deployment'
+  - 'focused tests, live smoke, root CI and rollback evidence pass'
+  verify:
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py ocr-preflight --help'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml --with pytest python -m pytest tests/test_documents_ocr_preflight.py -q'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - lib/documents_ocr_preflight.py
+  - bin/gac/documents-domain-owner-job.py
+  - tests/test_documents_ocr_preflight.py
+  - .omo/cron/documents-content-plane-crontab
+  - docs/superpowers/specs/2026-08-27-ocr-preflight-owner-design.md
+  - docs/reports/2026-08-27-ocr-preflight-owner.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-29.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-27-ocr-preflight-owner-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:3da57de80c3f012c7b1b445b5a2dc3cdcaad9be239a1e48e8abcef94872fba99'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-29
+  depends_on:
+  - BET-Y1Q3-T10-28
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'source/input ambiguity, Documents write attempt, or missing bounded evidence blocks OCR execution.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
