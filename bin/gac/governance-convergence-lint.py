@@ -223,6 +223,12 @@ def check_rule_registration() -> tuple[list[str], list[str]]:
             errors.append(
                 f"R-GOV-1 ERROR: Rule '{cr_id}' referenced in ADR but not registered in governance-checks.yaml"
             )
+    # R-GOV-1-WARN: LEGACY_CR_IDS exceeding 80 entries signals unreviewed accumulation
+    if len(LEGACY_CR_IDS) > 80:
+        warnings.append(
+            f"R-GOV-1 WARN: LEGACY_CR_IDS has {len(LEGACY_CR_IDS)} entries — audit quarterly to "
+            "either register rules properly in governance-checks.yaml or remove references from ADRs"
+        )
     return errors, warnings
 
 

@@ -1375,6 +1375,10 @@ def sync_system_yaml(
             },
         )
         data.update(updates)
+        # Sync health_score_evidence to match health_score (R-GOV-2 convergence)
+        if "health_score" in updates:
+            data["health_score_evidence"] = updates["health_score"]
+            data["health_score_evidence_source"] = "compass_radar (synced)"
         payload = yaml.dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False)
         changed = _write_text_if_changed(
             system_yaml,
