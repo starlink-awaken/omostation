@@ -1,32 +1,32 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-08-26T23:11:05Z
+# generated_at: 2026-08-27T07:24:47Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5, 'drift': 0.1, 'staleness': 0.1, 'alignment': 0.1}
 
-generated_at: "2026-08-26T23:11:05Z"
+generated_at: "2026-08-27T07:24:47Z"
 source: "c2g.strategy (real audit, no mock)"
-health_score: 55
+health_score: 74
 governance_anomaly_score: 0
 anomaly_count: 3
-service_online_ratio: 0.500
+service_online_ratio: 1.000
 freshness_score: 100
-drift_score: 85
+drift_score: 100
 staleness_score: 99
-alignment_score: 79
+alignment_score: 69
 feedback_alive: True
-feedback_last_ts: "2026-08-26T23:07:58+00:00"
-feedback_staleness_hours: 0.1
+feedback_last_ts: "2026-08-27T07:14:02+00:00"
+feedback_staleness_hours: 0.2
 total_tasks: 7
 done: 0
 planned: 7
 
 governance_execution_surface:
   base_anomaly_score: 55
-  execution_deduction: 157
+  execution_deduction: 160
   orphan_worktrees: 0
-  adr_renumber_events: 1
-  concurrent_conflicts: 19
+  adr_renumber_events: 0
+  concurrent_conflicts: 20
   score: 0
   weights:
     orphan_worktrees: 4
@@ -44,11 +44,11 @@ health_composite_breakdown:
   contributions:
     governance: 0.0
     freshness: 20.0
-    runtime: 25.0
-    drift: 8.5
+    runtime: 50.0
+    drift: 10.0
     staleness: 9.9
-    alignment: 7.9
-  raw: 54.85
+    alignment: 6.9
+  raw: 74.46
 
 anomalies:
   - "[WARN]  L3 高风险任务 3 个, 需重点 review"
@@ -57,30 +57,30 @@ anomalies:
 drift_detail:
   source: "drift-sweep"
   total: "16"
-  pass: "15"
-  fail: "1"
+  pass: "16"
+  fail: "0"
   skip: "0"
-  score: "85"
+  score: "100"
 
 staleness_detail:
   source: "staleness-check"
   checked: "514"
-  clean: "511"
-  stale: "3"
-  total_issues: "3"
-  stale_ratio: "0.0058"
-  issue_density: "0.0058"
+  clean: "512"
+  stale: "2"
+  total_issues: "2"
+  stale_ratio: "0.0039"
+  issue_density: "0.0039"
   score: "99"
 
 alignment_detail:
   source: "maturity-align"
-  reconciliation_score: "79"
-  drift_detected: "False"
-  normalised: "{'compass_radar': 75.0, 'maturity_scorecard': None, 'bet_ledger': 95.9}"
+  reconciliation_score: "69"
+  drift_detected: "True"
+  normalised: "{'compass_radar': 64.0, 'maturity_scorecard': None, 'bet_ledger': 95.3}"
   high_dimension: "bet_ledger"
   low_dimension: "compass_radar"
-  warnings: "[]"
-  score: "79"
+  warnings: "['score spread = 31 (compass 64.0, scorecard None, ledger 95.3)']"
+  score: "69"
 
 distributions:
   priority_dist:
@@ -105,4 +105,4 @@ distributions:
   governance_dist:
     freshness: 20
     governance: 0
-    runtime: 25
+    runtime: 50

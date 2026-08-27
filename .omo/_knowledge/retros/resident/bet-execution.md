@@ -1,13 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-<<<<<<< HEAD
-generated_at: 2026-08-27T06:40:02Z
-||||||| fafcbbea7
-generated_at: 2026-08-26T23:20:02Z
-=======
-generated_at: 2026-08-27T02:40:14Z
->>>>>>> origin/main
+generated_at: 2026-08-27T08:40:10Z
 status: candidate
 counts:
   runs: 33
@@ -21,13 +15,7 @@ failure_breakdown:
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-<<<<<<< HEAD
-- generated_at: 2026-08-27T06:40:02Z
-||||||| fafcbbea7
-- generated_at: 2026-08-26T23:20:02Z
-=======
-- generated_at: 2026-08-27T02:40:14Z
->>>>>>> origin/main
+- generated_at: 2026-08-27T08:40:10Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 33 成功运行 + 25 失败模式 = 58 草稿
 - 失败率: 43.10%
