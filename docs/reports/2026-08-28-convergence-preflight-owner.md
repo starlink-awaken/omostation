@@ -30,6 +30,17 @@ The canonical candidate adds a single replacement for Monday 06:30:
 30 6 * * 1 cd "$HOME/.local/share/omostation/accepted-20260830" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py convergence-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260830" --evidence .omo/_delivery/documents-plane/convergence-preflight.json >> runtime/cron/documents-plane.log 2>&1
 ```
 
-The candidate is not installed by this code PR. A separate governed cutover
-must record accepted-release identity, crontab backup/hash, exact old/new
-counts, unrelated-line byte identity, and post-cutover smoke.
+## Cutover evidence
+
+- Run: `20260827T172519Z-governance-state-mutation-fa89806e`
+- Accepted root: `a23141ad8a39d5b39ecac0a4c00787e8e6600a2b`
+- Before crontab SHA-256: `d15b1be2d67eb4a5dd44c8acdb761dd0b1916634c9ffe794f8718b0eb73e17e9`
+- After crontab SHA-256: `705894d0cf34e8a61fa01dfd8dd3452b15cfc34ce735384cb5a8a7bf730d2cdd`
+- Target replacement: old `check-convergence.py` count `1 -> 0`; new
+  `convergence-preflight` count `0 -> 1`.
+- Unrelated crontab lines: `108`, byte-identical before/after.
+- Post-cutover result: `documents.convergence-preflight.v1`, status `findings`,
+  exit `1`, `checks=5`, `passed=4`, `findings=884`, errors `[]`.
+- The accepted release ran from its own directory; evidence was written below
+  its Workspace runtime state and no Documents history/report was created by
+  the new owner.
