@@ -1,0 +1,27 @@
+id: P0-RESTORE-INTEGRATION-STACK
+phase: 2
+milestone: M2.6
+priority: P0
+title: "Restore integration test stack (docker compose up) and verify E2E/smoke/fault-injection tests"
+status: done
+completed_at: "2026-05-30T03:30:00+08:00"
+assigned_to: "reasonix-code"
+source_docs:
+  - ".omo/summaries/phase1-retrospective.md"
+  - "projects/SharedBrain/tests/integration/docker-compose.yml"
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - "Docker daemon running"
+evidence_required:
+  - "docker ps shows 4/4 healthy integration containers"
+  - "smoke_test.py 5/5 PASS"
+  - "test-e2e-phase1.py 11/11 PASS"
+  - "test-fault-injection.py 5/5 PASS"
+test_plan:
+  - "tests/integration/test-e2e-phase1.py"
+  - "projects/SharedBrain/tests/integration/smoke_test.py"
+  - "tests/integration/test-fault-injection.py"
+started_at: "2026-05-30T03:10:00+08:00"

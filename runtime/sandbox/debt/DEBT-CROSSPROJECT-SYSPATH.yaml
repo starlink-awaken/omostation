@@ -1,0 +1,17 @@
+id: DEBT-CROSSPROJECT-SYSPATH
+title: 23 处 sys.path.insert 硬编码路径注入
+resolution_evidence: |
+  2026-06-19 闭环: 23 sys.path.insert 中 19 已消除 (cockpit:8, agora:8, runtime:3, metaos:2)。
+  剩余 4 处经评估为可接受 (agora resolver 1 dynamic / cockpit tests 2 harness /
+  agora mcp_proxy 1 resolved via metaos dep)。生产代码已无 /Users/... 硬编码路径。
+  闭环验证: ruff 全包 0 hit; mof-enforce post-check OK; governance surfaces pass.
+remediation: |
+  1. cockpit/compat.py → 加 agora editable dep
+  2. cockpit/commands/{bos,scenario}.py + dashboard_server.py + web/api_proposals.py → 加 agora/omo/runtime editable deps
+  3. agora/server/* → 加 ecos editable dep
+  4. agora/mcp_proxy/manager.py → 加 metaos editable dep
+  5. runtime/scheduler.py → 加 omo editable dep
+  6. metaos/* self-referential → 修包结构
+  7. cockpit/tests/* harness → 迁 conftest (评估后保留)
+registered_at: '2026-06-19T16:30:00Z'
+closed_at: '2026-06-19T18:00:00Z'

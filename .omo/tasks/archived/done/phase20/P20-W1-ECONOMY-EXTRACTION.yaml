@@ -1,0 +1,36 @@
+id: P20-W1-ECONOMY-EXTRACTION
+phase: 20
+milestone: M20.1
+priority: P0
+title: 'D_Economy→eu-pricing: 能量账本+信誉+市场分析填入壳子'
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P18-W4-CLEANUP-DWINDOW-REFS
+entry_gate:
+- phase19_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- eu-pricing/src/eu_pricing/ledger.py 有实际实现
+- eu-pricing/src/eu_pricing/reputation.py 有实际实现
+- eu-pricing/src/eu_pricing/market.py 有实际实现
+- 'BaseMembrane: 23文件→0'
+- ruff check通过
+acceptance_criteria:
+- eu-pricing从壳子变为实际实现
+- 测试≥70%通过率
+- D_Economy归档到_archived/
+test_plan:
+- 填入 eu-pricing 壳子后验证账本、信誉与市场分析模块闭合
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

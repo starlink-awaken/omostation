@@ -1,0 +1,686 @@
+{
+ "ts": "2026-08-27T01:35:01Z",
+ "counts": {
+  "HEALTHY": 47,
+  "DORMANT": 3,
+  "PAPER": 11,
+  "proposed": 12,
+  "degraded": 2,
+  "retired": 2,
+  "DRIFT": 7
+ },
+ "results": [
+  {
+   "id": "omlxc-daemon",
+   "system": "compute",
+   "status": "HEALTHY",
+   "note": "证据 3min 前",
+   "carrier_ref": "com.omlxc.daemon",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omlxc-watchdog",
+   "system": "compute",
+   "status": "HEALTHY",
+   "note": "证据 0min 前",
+   "carrier_ref": "com.omlxc.watchdog",
+   "lifecycle": "active"
+  },
+  {
+   "id": "aetherforge-gateway",
+   "system": "compute",
+   "status": "DORMANT",
+   "note": "证据过期 1 天 (阈值 0.0 天)",
+   "carrier_ref": "com.aetherforge.gateway",
+   "lifecycle": "active"
+  },
+  {
+   "id": "lmstudio-server",
+   "system": "compute",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "com.lmstudio.server",
+   "lifecycle": "active"
+  },
+  {
+   "id": "ollama-app",
+   "system": "compute",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "Ollama",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omlxc-ollama-env",
+   "system": "compute",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "com.omlxc.ollama-env",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-mail-daemon",
+   "system": "omostation",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "com.omostation.mail-daemon",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-agent-tick",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 2min 前",
+   "carrier_ref": "com.omostation.agent-tick-daemon",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-signal-poller",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "com.omostation.signal-poller",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-governance-scanner",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "com.omostation.governance-scanner",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-resident-decision",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:resident-decision",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-resident-execute",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:resident-execute",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-resident-heartbeat",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:resident-heartbeat",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-resident-monitor",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:resident-monitor",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-resident-sediment",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:resident-sediment",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-alert-forwarder",
+   "system": "omostation",
+   "status": "DORMANT",
+   "note": "证据过期 1 天 (阈值 0.1 天)",
+   "carrier_ref": "cron:resident-alert",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-personal-signals",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 0min 前",
+   "carrier_ref": "cron:resident-signals",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-system-health-check",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 445min 前",
+   "carrier_ref": "cron:system-health-check",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-remediation",
+   "system": "omostation",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "cron:remediation-engine",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-anti-corrosion",
+   "system": "omostation",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "cron:anti-corrosion-check",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-uhs",
+   "system": "omostation",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "cron:unified-health-score",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-north-star-weekly",
+   "system": "omostation",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "cron:north-star-weekly",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-audit-rollout",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 4775min 前",
+   "carrier_ref": "cron:audit-rollout",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-knowledge-foundry",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 1291min 前",
+   "carrier_ref": "com.omostation.knowledge-foundry",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-model-scheduler",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "com.omo.model-scheduler",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-agent-workflow-status",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 10min 前",
+   "carrier_ref": "cron:agent-workflow",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-governance-evolution",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 10min 前",
+   "carrier_ref": "cron:governance-evolution",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-meta-doctor",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 10min 前",
+   "carrier_ref": "cron:meta-doctor",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-debt-refresh",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 4265min 前",
+   "carrier_ref": "cron:debt-refresh",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-mof-drift",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 4265min 前",
+   "carrier_ref": "cron:mof-drift",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-mof-state-bridge",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 4265min 前",
+   "carrier_ref": "cron:mof-state-bridge",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-coordination-backup",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 60min 前",
+   "carrier_ref": "cron:coordination_store",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-autoloop-daily",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "证据 1066min 前",
+   "carrier_ref": "com.omostation.autoloop-daily",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-evolution-agent",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "com.omostation.evolution-agent",
+   "lifecycle": "active"
+  },
+  {
+   "id": "omo-problem-detector",
+   "system": "omostation",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "com.omostation.problem-detector",
+   "lifecycle": "active"
+  },
+  {
+   "id": "life-watch-dispatch",
+   "system": "lifedomain",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:watch-dispatch",
+   "lifecycle": "active"
+  },
+  {
+   "id": "life-domain-sync",
+   "system": "lifedomain",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:domain-sync",
+   "lifecycle": "active"
+  },
+  {
+   "id": "life-session-brief",
+   "system": "lifedomain",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:session-brief",
+   "lifecycle": "active"
+  },
+  {
+   "id": "life-kos-ingest",
+   "system": "lifedomain",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:kos-ingest",
+   "lifecycle": "active"
+  },
+  {
+   "id": "life-async-audit",
+   "system": "lifedomain",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:async-audit",
+   "lifecycle": "active"
+  },
+  {
+   "id": "life-check-convergence",
+   "system": "lifedomain",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:check-convergence",
+   "lifecycle": "active"
+  },
+  {
+   "id": "life-control-plane-freshness",
+   "system": "lifedomain",
+   "status": "HEALTHY",
+   "note": "证据 4500min 前",
+   "carrier_ref": "cron:control-plane-freshness",
+   "lifecycle": "active"
+  },
+  {
+   "id": "life-bridge-refresh",
+   "system": "lifedomain",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:bridge-refresh",
+   "lifecycle": "active"
+  },
+  {
+   "id": "life-signals-rotate",
+   "system": "lifedomain",
+   "status": "HEALTHY",
+   "note": "证据 1min 前",
+   "carrier_ref": "cron:signals-rotate",
+   "lifecycle": "active"
+  },
+  {
+   "id": "wjw-kems-update",
+   "system": "lifedomain",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "cron:check-kems-update",
+   "lifecycle": "active"
+  },
+  {
+   "id": "wjw-controller",
+   "system": "lifedomain",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "cron:controller",
+   "lifecycle": "active"
+  },
+  {
+   "id": "wjw-ocr-incremental",
+   "system": "lifedomain",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "cron:ocr-incremental",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "wjw-predictor",
+   "system": "lifedomain",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "cron:predictor",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "wjw-refresh-indexes",
+   "system": "lifedomain",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "cron:refresh-indexes",
+   "lifecycle": "active"
+  },
+  {
+   "id": "claude-hooks",
+   "system": "agent-tool",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "claude:settings-hooks",
+   "lifecycle": "active"
+  },
+  {
+   "id": "opencode-quota-monitor",
+   "system": "agent-tool",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "com.opencode.quota-monitor",
+   "lifecycle": "active"
+  },
+  {
+   "id": "hermes-event-watcher",
+   "system": "agent-tool",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "~/.hermes/hermes-event-watcher-state.json",
+   "lifecycle": "degraded"
+  },
+  {
+   "id": "opencode-mcp-health",
+   "system": "agent-tool",
+   "status": "DORMANT",
+   "note": "证据过期 104 天 (阈值 0.1 天)",
+   "carrier_ref": "~/.config/opencode/health-status.json",
+   "lifecycle": "degraded"
+  },
+  {
+   "id": "tp-clashx",
+   "system": "thirdparty",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "ClashX",
+   "lifecycle": "active"
+  },
+  {
+   "id": "tp-codexbar",
+   "system": "thirdparty",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "CodexBar",
+   "lifecycle": "active"
+  },
+  {
+   "id": "tp-raycast",
+   "system": "thirdparty",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "Raycast",
+   "lifecycle": "active"
+  },
+  {
+   "id": "tp-claude-desktop",
+   "system": "thirdparty",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "Claude",
+   "lifecycle": "active"
+  },
+  {
+   "id": "tp-tailscale",
+   "system": "thirdparty",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "com.tailscale.brew",
+   "lifecycle": "active"
+  },
+  {
+   "id": "tp-postgresql18",
+   "system": "thirdparty",
+   "status": "degraded",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "postgresql@18",
+   "lifecycle": "degraded"
+  },
+  {
+   "id": "tp-neo4j",
+   "system": "thirdparty",
+   "status": "degraded",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "neo4j",
+   "lifecycle": "degraded"
+  },
+  {
+   "id": "tp-liebao-helper",
+   "system": "thirdparty",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "com.liebao.v2401.helper",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "tp-todesk",
+   "system": "thirdparty",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "com.youqu.todesk.UninstallerHelper",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "tp-cleanmymac",
+   "system": "thirdparty",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "com.macpaw.CleanMyMac5",
+   "lifecycle": "active"
+  },
+  {
+   "id": "tp-docker",
+   "system": "thirdparty",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "com.docker",
+   "lifecycle": "active"
+  },
+  {
+   "id": "tp-syspolicyd-watchdog",
+   "system": "thirdparty",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "com.user.syspolicyd-watchdog",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "omo-cockpit-dashboard",
+   "system": "omostation",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "com.cockpit.dashboard",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "omo-agora-sse",
+   "system": "omostation",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "com.agora.sse",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "omo-cron-service",
+   "system": "omostation",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "com.user.cron-service",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "ecos-bos-registry-daemon",
+   "system": "omostation",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "com.ecos.bos-registry-daemon",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "ecos-pasw-worktree-cleanup",
+   "system": "omostation",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "com.ecos.pasw-worktree-cleanup",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "omo-l4-governance-watch",
+   "system": "omostation",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "com.l4.governance.watch",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "life-pulse",
+   "system": "lifedomain",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "com.lifeos.pulse",
+   "lifecycle": "active"
+  },
+  {
+   "id": "life-concept-weave",
+   "system": "lifedomain",
+   "status": "proposed",
+   "note": "台账豁免",
+   "carrier_ref": "com.learningevolution.concept-weave.monthly",
+   "lifecycle": "proposed"
+  },
+  {
+   "id": "tp-wps-comate",
+   "system": "thirdparty",
+   "status": "HEALTHY",
+   "note": "免检(无周期或无证据定义)",
+   "carrier_ref": "cn.wpscomate.comate-agent",
+   "lifecycle": "active"
+  },
+  {
+   "id": "wjw-controller-cron",
+   "system": "lifedomain",
+   "status": "PAPER",
+   "note": "有配置但证据产物不存在(纸面/脐带未接)",
+   "carrier_ref": "cron:controller",
+   "lifecycle": "active"
+  },
+  {
+   "id": "tp-liebao",
+   "system": "thirdparty",
+   "status": "retired",
+   "note": "台账豁免",
+   "carrier_ref": "com.liebao.v2401.helper",
+   "lifecycle": "retired"
+  },
+  {
+   "id": "tp-todesk",
+   "system": "thirdparty",
+   "status": "retired",
+   "note": "台账豁免",
+   "carrier_ref": "com.youqu.todesk.UninstallerHelper",
+   "lifecycle": "retired"
+  },
+  {
+   "id": "drift:com.omostation.deadline-tracker",
+   "system": "?",
+   "status": "DRIFT",
+   "note": "载体存在但台账未登记",
+   "carrier_ref": "com.omostation.deadline-tracker",
+   "lifecycle": "?"
+  },
+  {
+   "id": "drift:cron:daily-health-run",
+   "system": "?",
+   "status": "DRIFT",
+   "note": "载体存在但台账未登记",
+   "carrier_ref": "cron:daily-health-run",
+   "lifecycle": "?"
+  },
+  {
+   "id": "drift:cron:full-status",
+   "system": "?",
+   "status": "DRIFT",
+   "note": "载体存在但台账未登记",
+   "carrier_ref": "cron:full-status",
+   "lifecycle": "?"
+  },
+  {
+   "id": "drift:cron:proposal-to-adr",
+   "system": "?",
+   "status": "DRIFT",
+   "note": "载体存在但台账未登记",
+   "carrier_ref": "cron:proposal-to-adr",
+   "lifecycle": "?"
+  },
+  {
+   "id": "drift:cron:task-inventory",
+   "system": "?",
+   "status": "DRIFT",
+   "note": "载体存在但台账未登记",
+   "carrier_ref": "cron:task-inventory",
+   "lifecycle": "?"
+  },
+  {
+   "id": "drift:cron:weekly-report",
+   "system": "?",
+   "status": "DRIFT",
+   "note": "载体存在但台账未登记",
+   "carrier_ref": "cron:weekly-report",
+   "lifecycle": "?"
+  },
+  {
+   "id": "drift:cron:weekly-value-report",
+   "system": "?",
+   "status": "DRIFT",
+   "note": "载体存在但台账未登记",
+   "carrier_ref": "cron:weekly-value-report",
+   "lifecycle": "?"
+  }
+ ]
+}

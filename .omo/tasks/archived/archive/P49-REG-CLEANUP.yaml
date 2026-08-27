@@ -1,0 +1,68 @@
+id: P49-REG-CLEANUP
+title: P49 治理注册表收口 — TASK-A5378E91 漂移修复 + 3 候选 done
+status: done
+task_type: governance
+risk_level: L2
+depends_on:
+- P48-GBR-AHEAD
+source_docs:
+- .c2g_data/pitches/Idea-P49-治理注册表收口-TASK-A5378E91-漂移修复.md
+- .omo/tasks/planned/TASK-A5378E91.yaml
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+deliverables:
+- omo-governance-surfaces.yaml registry 修 (debt/workers 删 + 3 新增)
+- cockpit test_no_subcommand pass
+- 3 PLANNED 候选 done
+- P49 收口报告
+imported_via: omo_broker_c2g
+context_uri: bos://strategy/bets/P49
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: P49-REG-CLEANUP
+review_ref: null
+knowledge_refs:
+- .omo/_knowledge/audits/2026-06-23-p48-gbrain-drift-closeout.md
+handoff_refs:
+- P49-R3-closeout
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+entry_gate:
+- P48-GBR-AHEAD
+evidence_required:
+- registry 修 (debt/workers 删 + 3 新增)
+- cockpit test_no_subcommand pass
+- 3 PLANNED 候选 done
+test_plan:
+- cockpit test_no_subcommand
+- omo governance 100 A+
+allowed_operation_level: L3
+human_approval_required: false
+priority: P1
+description: 'P49 R1-R3: registry 漂移修复 + 3 PLANNED done + 收口'
+phase: '49'
+created_at: '2026-06-23T04:00:00Z'
+updated_at: '2026-06-23T04:00:00Z'
+metadata:
+  ingress_plane: c2g
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: P49-REG-CLEANUP
+  completed_at: '2026-06-23T02:13:27Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P49-R3
+evidence_paths:
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/DOC-LIFECYCLE.md
+- .omo/bets.json
+- .omo/tasks.json
+- projects/cockpit/src/cockpit/tests/test_cli_research_extra.py
+completed_at: '2026-06-23T02:13:27Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: 'P49 R1: cockpit test_no_subcommand PASS (registry 已含 OMO-DOC-LIFECYCLE/OMO-BETS/OMO-TASKS);
+  P49 R2: 3 PLANNED 候选 done (2 cascade + TASK-A5378E91 已在 done/); PLANNED 目录清零 (0
+  candidate/pending)'
+commit_ref: P49 R1-R3 (cascade)

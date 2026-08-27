@@ -1,0 +1,29 @@
+id: P32-W0-AGORA-FIX
+phase: 32
+wave: W0
+title: "修 agent-runtime-mcp stdio 错位 — agora 80% → 100%"
+status: completed
+task_type: infra
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P32-W0-AGORA completed"
+depends_on:
+  - P32-W0-AGORA
+deliverables:
+  - ".omo/_delivery/phase32-agora-fix-stdio.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_delivery/phase32-agent-runtime-investigation.md"
+knowledge_refs: []
+description: |
+  P31 误判 agent-runtime 源码丢失, 实际是协议栈错配。
+  改 omo_health.py 加 STDIO_ONLY_SERVICES 跳过 HTTP 探活。
+  启动 cockpit-mcp stdio 进程。
+  agora 80% → 100%。
+started_at: '2026-06-06T05:30:00Z'
+completed_at: '2026-06-06T05:30:00Z'
+blocked_by: null
+retry_count: 0

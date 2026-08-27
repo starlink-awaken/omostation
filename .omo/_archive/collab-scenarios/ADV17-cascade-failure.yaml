@@ -1,0 +1,28 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-28
+---
+id: ADV17-cascade-failure
+category: B_failure_injection
+adversarial: true
+seed: 117
+description: "[对抗·red-team] 上游超时引发下游连锁失败 (cascade), 须 cascade_failure_contained"
+setup:
+  blackboard: []
+  roles: [upstream, mid, downstream]
+inject:
+  - {type: role_timeout, role: upstream}
+  - {type: subtask_fail, subtask: mid_work}
+  - {type: subtask_fail, subtask: down_work}
+expected:
+  behavior: cascade_failure_contained
+  silent_loss: 0
+verdict:
+  - criterion: cascade_failure_contained
+    check: events_contain
+    args: {kind: cascade_failure_contained}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

@@ -1,0 +1,29 @@
+apiVersion: omo/v1
+kind: SpaceIdentityAdmissionSchema
+id: space-identity-admission/v1
+identity_anchor: actor_space_membership
+required:
+  - apiVersion
+  - kind
+  - id
+  - space_ref
+  - identity_anchor
+  - actors
+  - memberships
+  - capability_bindings
+  - admission
+actor_types:
+  - human
+  - agent
+  - service
+membership_required:
+  - id
+  - actor_ref
+  - space_ref
+  - roles
+admission_required:
+  - decision_scope
+  - subject_binding
+  - default_mode
+capability_taxonomy_ref_field: capability_taxonomy_ref
+admission_matrix_ref_field: admission_matrix_ref

@@ -1,0 +1,60 @@
+id: P28-W1-POLICY-TRACKER
+phase: 28
+wave: W1
+title: "卫生政策追踪 — 卫健委/医保局/药监局政策 fetcher + KOS 入库"
+status: completed
+started_at: "2026-06-05T13:00:00Z"
+completed_at: "2026-06-05T13:20:00Z"
+task_type: feature
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W0-NORTH-STAR completed"
+  - "P28-W0-TOOL-HEATMAP completed"
+depends_on:
+  - P28-W0-NORTH-STAR
+  - P28-W0-TOOL-HEATMAP
+deliverables:
+  - "projects/kairon/packages/minerva/src/minerva/policy_tracker/fetcher.py"
+  - "projects/kairon/packages/minerva/tests/unit/test_policy_tracker.py"
+  - ".omo/_delivery/phase28-policy-tracker-2026-06-05-report.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/design/plans/phase28-observable-knowledge-workflow.md"
+  - ".omo/_control/north-star.md"
+knowledge_refs:
+  - ".omo/tasks/planned/P28-W1-E2E-DEMO.yaml"
+description: |
+  E2E-DEMO（场景 A 卫健委工作辅助）的下游依赖。
+  E2E-DEMO 链路中"KOS 搜索相关政策"这一环需要稳定的政策源，
+  本任务先打通 fetcher + 入库通路，为 E2E-DEMO 提供政策数据底座。
+
+  数据源（初期）：
+    - 国家卫健委政策法规栏目 RSS（nhc.gov.cn）
+    - 国家医保局政策法规 RSS
+    - 国家药监局公告栏目
+    - 退而求其次：对应栏目 HTML 抓取 + 简单正文提取
+
+  处理流程（参考 minerva.tech_radar 模式）：
+    1. fetcher 拉取最新 N 条政策条目
+    2. 解析标题/发布时间/正文摘要/URL
+    3. 标准化字段（date ISO、source 枚举）
+    4. 入库 KOS（projects/kairon/packages/kos/），打标签 #health-policy #source:nhc
+    5. 输出 markdown 报告到 .omo/_delivery/
+
+  验收（严格）：
+    - fetcher 至少能稳定抓取 1 个数据源（卫健委优先）
+    - 单测覆盖：HTTP 错误/超时/空响应/字段缺失
+    - 至少 1 条政策成功入库 KOS 并可被 KOS 检索查询到
+    - 不引入新的重型依赖（复用 minerva 已有 requests/beautifulsoup 配置）
+
+  关联：
+    - 产出供 P28-W1-E2E-DEMO 消费，E2E-DEMO 演示时应能引用本任务入库的政策条目
+    - 暂不做 cron 调度（手跑 + 单条入库即可），调度统一走 P28-W2 算力统一阶段
+    - 风险 L1：仅新增子包 + fetcher，不动现有模块
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

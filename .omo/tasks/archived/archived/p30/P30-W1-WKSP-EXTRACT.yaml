@@ -1,0 +1,51 @@
+id: P30-W1-WKSP-EXTRACT
+phase: 30
+wave: W1
+title: "wksp 独立 + cockpit 建项目 + hermes 合并"
+status: done
+task_type: extraction
+priority: P0
+assigned_to: claude
+human_approval_required: true
+entry_gate:
+  - "P30-W0-DECISION 审批通过"
+  - "P30-W0-DAEMON-INSTALL 完成"
+depends_on:
+  - P30-W0-DECISION
+  - P30-W0-DAEMON-INSTALL
+deliverables:
+  - "projects/cockpit/ 新建项目目录 (cli/ + web/ 两子项目)"
+  - "kairon/packages/wksp/ 内容 git mv 到 projects/cockpit/cli/"
+  - "projects/hermes-console/ 内容 git mv 到 projects/cockpit/web/ 合并"
+  - "kairon monorepo 中移除 wksp 包"
+  - "projects/hermes-console/ 标记 archived/"
+  - "projects/cockpit/ 整体 make test + build 全绿"
+risk_level: L2
+allowed_operation_level: L2
+source_docs:
+  - ".omo/_knowledge/management/decision-p30-architecture-final.md"
+  - ".omo/_knowledge/management/architecture-final-state-v3.md"
+knowledge_refs:
+  - "kairon/packages/wksp 当前 15K 行, 仅依赖 agora"
+  - "projects/hermes-console/ 34 源文件 (React)"
+description: |
+  wksp 独立 + 合并 hermes-console 成 cockpit (用户入口 = L3 层)。
+  风险: 高 — 双项目合并涉及 TypeScript + Python 双栈, 接口对齐复杂。
+  验证: projects/cockpit/ cli 调 web 端到端通, hermes 旧功能全保留。
+
+  ## 实际执行 (2026-06-06)
+  - 10 步 spec 全部完成
+  - kairon 24 → 23 包 (移除 wksp)
+  - projects/cockpit/ 落地 (src/cockpit/ + web/ + tests/)
+  - 跨包 import wksp 清理: 0 处
+  - 交付报告: .omo/_delivery/phase30-wksp-extract.md
+
+  ## 遗留
+  - kairon/packages/wksp/ 工作树清理 (待后续 batch)
+  - projects/cockpit/ 顶层 Makefile 编写 (规格要求"整体 make test 全绿"未达)
+  - hermes 旧构建失败按决策保留未修
+started_at: "2026-06-06T00:00:00Z"
+completed_at: "2026-06-06T01:30:00Z"
+blocked_by: null
+retry_count: 0
+delivery_report: .omo/_delivery/phase30-wksp-extract.md

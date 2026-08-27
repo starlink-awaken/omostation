@@ -1,0 +1,147 @@
+{
+  "schema": "mos-dual-stack-consistency/v1",
+  "week": "2026-W33",
+  "observed_at": "2026-08-14T11:17:37Z",
+  "queries_count": 8,
+  "consistent_count": 7,
+  "consistency_ratio": 0.875,
+  "target": 0.99,
+  "results": [
+    {
+      "query": "借调政策",
+      "mos_count": 0,
+      "kos_count": 0,
+      "jaccard": 1.0,
+      "consistent": true,
+      "mos_ids": [],
+      "kos_ids": [],
+      "mos_error": null,
+      "backend": {
+        "kos": "ok",
+        "gbrain": "ok",
+        "neo4j": "ok",
+        "temporal": "ok"
+      }
+    },
+    {
+      "query": "Memory OS",
+      "mos_count": 7,
+      "kos_count": 0,
+      "jaccard": 0.0,
+      "consistent": false,
+      "mos_ids": [
+        "kos-adr-0372",
+        "mem_semantic_197c566464ad",
+        "mem_semantic_1ab29b7f24fa",
+        "mem_semantic_63c01d51abec",
+        "mem_semantic_ab8c561e4a81",
+        "mem_semantic_c3fa126eb1dc",
+        "mem_semantic_f6f750f3cc1d"
+      ],
+      "kos_ids": [],
+      "mos_error": null,
+      "backend": {
+        "kos": "ok",
+        "gbrain": "ok",
+        "neo4j": "ok",
+        "temporal": "ok"
+      }
+    },
+    {
+      "query": "治理规则",
+      "mos_count": 0,
+      "kos_count": 0,
+      "jaccard": 1.0,
+      "consistent": true,
+      "mos_ids": [],
+      "kos_ids": [],
+      "mos_error": null,
+      "backend": {
+        "kos": "ok",
+        "gbrain": "ok",
+        "neo4j": "ok",
+        "temporal": "ok"
+      }
+    },
+    {
+      "query": "债务管理",
+      "mos_count": 0,
+      "kos_count": 0,
+      "jaccard": 1.0,
+      "consistent": true,
+      "mos_ids": [],
+      "kos_ids": [],
+      "mos_error": null,
+      "backend": {
+        "kos": "ok",
+        "gbrain": "ok",
+        "neo4j": "ok",
+        "temporal": "ok"
+      }
+    },
+    {
+      "query": "工作流",
+      "mos_count": 0,
+      "kos_count": 0,
+      "jaccard": 1.0,
+      "consistent": true,
+      "mos_ids": [],
+      "kos_ids": [],
+      "mos_error": null,
+      "backend": {
+        "kos": "ok",
+        "gbrain": "ok",
+        "neo4j": "ok",
+        "temporal": "ok"
+      }
+    },
+    {
+      "query": "知识检索",
+      "mos_count": 0,
+      "kos_count": 0,
+      "jaccard": 1.0,
+      "consistent": true,
+      "mos_ids": [],
+      "kos_ids": [],
+      "mos_error": null,
+      "backend": {
+        "kos": "ok",
+        "gbrain": "ok",
+        "neo4j": "ok",
+        "temporal": "ok"
+      }
+    },
+    {
+      "query": "Agent 协作",
+      "mos_count": 0,
+      "kos_count": 0,
+      "jaccard": 1.0,
+      "consistent": true,
+      "mos_ids": [],
+      "kos_ids": [],
+      "mos_error": null,
+      "backend": {
+        "kos": "ok",
+        "gbrain": "ok",
+        "neo4j": "ok",
+        "temporal": "ok"
+      }
+    },
+    {
+      "query": "决策记录",
+      "mos_count": 0,
+      "kos_count": 0,
+      "jaccard": 1.0,
+      "consistent": true,
+      "mos_ids": [],
+      "kos_ids": [],
+      "mos_error": null,
+      "backend": {
+        "kos": "ok",
+        "gbrain": "ok",
+        "neo4j": "ok",
+        "temporal": "ok"
+      }
+    }
+  ]
+}

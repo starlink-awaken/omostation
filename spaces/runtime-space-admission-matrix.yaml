@@ -1,0 +1,8 @@
+apiVersion: omo/v1
+kind: AdmissionMatrix
+space_ref: spaces/runtime-space.yaml
+rules:
+  - capability: runtime.observe
+    membership: runtime-space-observer-membership
+    decision_mode: conditional_approval
+schema_version: v1

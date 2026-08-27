@@ -1,0 +1,19 @@
+# launchctl list 输出 (2026-06-18T15:18:00Z +0800)
+
+## 命令
+```bash
+launchctl list 2>&1 | grep -E "agora|cockpit|cron"
+```
+
+## 实际输出
+_(empty — 没有匹配 com.agora.sse / com.cockpit.dashboard / com.user.cron-service 的 service)_
+
+## 结论
+- DEBT-COCKPIT-HEALTH-DISTORTION 描述的"com.agora.sse / com.cockpit.dashboard / com.user.cron-service running" 状态**不存在**。
+- 这意味着 cockpit health 报告的"失真"不是因为 launchd 服务没在跑，而是因为 cockpit health --full 内部的 CARDS frontmatter 解析失败 (见 evidence/cockpit-health-full-2026-06-18T15-18-00Z.txt)。
+- **真实 root cause** 是 DEBT-CARDS-FRONTMATTER-PARSE，不是 DEBT-COCKPIT-HEALTH-DISTORTION。
+- 建议: DEBT-COCKPIT-HEALTH-DISTORTION 可以 close (描述与实际不符)，或 reassign 为 DEBT-CARDS-FRONTMATTER-PARSE 的子 issue。
+
+## 备注
+- capture by: laowang-engineer-drift-audit
+- for: DEBT-COCKPIT-HEALTH-DISTORTION + DEBT-CARDS-FRONTMATTER-PARSE 联合审计

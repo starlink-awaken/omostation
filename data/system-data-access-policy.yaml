@@ -1,0 +1,28 @@
+apiVersion: omo/v1
+kind: DataAccessPolicy
+schema_version: v1
+id: system-data-access-policy
+space_ref: spaces/system-space.yaml
+rules:
+  - action: project.dispatch
+    allowed_roots:
+      - data
+    required_registry_ref: spaces/system-space-cross-root-rule-registry.yaml
+    runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+    controls:
+      registry_ref: spaces/system-space-cross-root-rule-registry.yaml
+      runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+  - action: runtime.observe
+    allowed_roots: []
+    required_registry_ref: spaces/system-space-cross-root-rule-registry.yaml
+    runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+    controls:
+      registry_ref: spaces/system-space-cross-root-rule-registry.yaml
+      runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+  - action: runtime.mutate
+    allowed_roots: []
+    required_registry_ref: spaces/system-space-cross-root-rule-registry.yaml
+    runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+    controls:
+      registry_ref: spaces/system-space-cross-root-rule-registry.yaml
+      runtime_boundary_ref: runtime/system-runtime-boundary.yaml

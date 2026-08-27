@@ -1,0 +1,42 @@
+id: M2.4-SSOT-DOMAIN-SCHEMA-FIELD-UPGRADE
+phase: 2
+milestone: M2.4
+priority: P1
+title: "SSOT domain schema field upgrade — add governance fields to 7 domain YAMLs"
+status: done
+owner: architecture
+assigned_to: "me"
+started_at: "2026-05-30T16:00:00Z"
+completed_at: "2026-05-30T16:05:00Z"
+evidence:
+  - "system.yaml: added owner=governance, write_policy=admin_only, schema_version=0.2.0"
+  - "All 8 domain YAMLs parse with 0 errors"
+  - "Validation: YAML field check — all 7 expected domains + sharedbrain have owner, write_policy, schema_version, conflict_resolution"
+evidence_required:
+  - "YAML parse result per domain ✅"
+  - "validate output ✅"
+test_plan:
+  - "python3 -c \"import yaml; [yaml.safe_load(open(f)) for f in glob(...)]\" — PASS (0 errors)"
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+  - ".omo/standards/ssot-7-domain-schema.md"
+depends_on:
+  - M2.3-SSOT-7-DOMAIN-SCHEMA
+dependencies:
+  - M2.3-SSOT-7-DOMAIN-SCHEMA
+inputs:
+  - "projects/kairon/packages/ssot/domains/*.yaml"
+outputs:
+  - "7 domain YAMLs with governance fields: owner, write_policy, schema_version, conflict_resolution"
+acceptance_criteria:
+  - "All 7 domain YAMLs parse successfully"
+  - "Each YAML has owner, write_policy, schema_version fields added"
+  - "validate/eidos reports 0 errors"
+evidence_required:
+  - "YAML parse result per domain"
+  - "validate output"
+test_plan:
+  - "python3 -c \"import yaml; [yaml.safe_load(open(f)) for f in glob(...)]\""

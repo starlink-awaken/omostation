@@ -1,0 +1,32 @@
+title: Admin Inbox Scene Card (行政收件箱感知)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-25
+related:
+- ./unified-inbox.yaml
+---
+schema: scene-card/v2
+scene_id: admin-inbox
+journey_id: admin-notification-workflow
+goal: 读取工作邮箱未读邮件并 LLM 分类, 判定是否存在需要执行的任务
+trigger: mail-daemon 周期扫描或人工触发 journey run
+input_contract: 触发上下文 (subject/sender 可选), 不含正文原文
+result_contract: '分类结果列表 (subject/sender/category/priority/summary) + has_task 布尔判定 + latest_subject'
+outcome_metric: admin_task_detection_accuracy
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 任务邮件漏判导致行政工作延误
+data_classification: internal
+data_scope: work-mail-metadata-and-llm-summary
+operator: admin-inbox-dispatch-under-human-review
+required_capabilities:
+- mail:netease_mailmaster
+- llm:local-classify
+notes:
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_inbox (读网易工作邮箱, LLM 分类前 3 封)'
+- '2026-08-25 --live 实测: 真实读取并判出 has_task=true (房山区医院统计表), 验证通过'
+- '2026-08-26: classify_mail 积累回路 — 分类历史落库 mail-classification-history.jsonl, 同发件人最近 3 条注入 prompt 保持一致性(P0 积累红线)'
+- '2026-08-26: 规则预分类 — 机器通知发件人(github 等)短路不进 LLM(首批积累数据实证占 80% 调用); 脏 category 白名单防御'
+- '2026-08-26: mail-daemon 自动触发 journey --live(闭环最后一公里) — 任务到达 30min 内自动产五草稿, 人工只剩审阅发送; subject 去重防重复产出'

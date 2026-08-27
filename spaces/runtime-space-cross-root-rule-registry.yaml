@@ -1,0 +1,24 @@
+apiVersion: omo/v1
+kind: CrossRootRuleRegistry
+space_ref: spaces/runtime-space.yaml
+rules:
+  - id: runtime-space-runtime-observe
+    space_ref: spaces/runtime-space.yaml
+    action: runtime.observe
+    admission_contract_ref: spaces/runtime-space-identity-admission.yaml
+    rollout_policy_ref: spaces/runtime-space-rollout-policy.yaml
+    data_policy_ref: data/runtime-space-access-policy.yaml
+    runtime_boundary_ref: runtime/runtime-space-boundary.yaml
+    delivery_evidence_refs:
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/verify.yaml
+    governance:
+      admission_contract_ref: spaces/runtime-space-identity-admission.yaml
+      rollout_policy_ref: spaces/runtime-space-rollout-policy.yaml
+    data:
+      policy_ref: data/runtime-space-access-policy.yaml
+    runtime:
+      boundary_ref: runtime/runtime-space-boundary.yaml
+    delivery:
+      contract_ref: .omo/_delivery/task-center/contracts/runtime-space-runtime-observe-delivery-contract.yaml
+schema_version: v1

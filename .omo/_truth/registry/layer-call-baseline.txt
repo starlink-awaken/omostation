@@ -1,0 +1,13 @@
+# Layer-call-direction baseline (P0-A 存量 grace, 2026-07-27)
+# 新违规 (不在此文件的 file:line) 阻断 gate; 存量 grace
+projects/agora/src/agora/cli/commands_a2a.py:19
+projects/agora/src/agora/server/mcp.py:429
+projects/agora/src/agora/server/tools_proxy.py:631
+projects/cockpit/src/cockpit/adapters/ecos.py:6
+projects/cockpit/src/cockpit/dashboard/helpers_wave2.py:92
+projects/ecos/src/ecos/ssot/tools/mof_contract_lint.py:150
+projects/ecos/src/ecos/ssot/tools/omo_bridge_interface.py:42
+projects/ecos/src/ecos/workflow/backends/metaos.py:35
+projects/omo/src/omo/omo_governance_surfaces.py:592
+projects/runtime/scripts/check_stale_debts.py:8
+projects/runtime/src/runtime/adapters/omo.py:15

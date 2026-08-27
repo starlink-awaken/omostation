@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=https://protocols/est-minutes-coefficient/v1
+# SSOT: 时间账本估算系数表 (est-minutes-coefficient/v1)
+#
+# 用途: 为时间账本 (time ledger) 提供每类任务的标准分钟数估算系数。
+# 决策依据: D7 "宁低估勿高估" — 系数保守, 避免虚增产能信号。
+#
+# 演进策略: L2 半自动 — agent 提案 + 证据 (git log 实测 / PR 吞吐 / 回归耗时)
+#           → PR 门禁审核 → 合并后生效。禁止直接改数值不走 PR。
+#
+# 校准基线 (2026-08-24 采样, 近 7 天):
+#   - PR merges: 61 (git log --since="7 days ago" --merges)
+#   - 非合并 commits: 394
+#   - docs/ commits: 184
+#   - .omo/ commits: 129
+#   - bin/ commits: 164
+#   - ADR 新增: 11
+#   - scene/attest 相关: 16
+#   - infra/fix 相关: 112
+#   - research/digest 相关: 8
+#   - debt/closeout 相关: 27
+
+version: est-minutes-coefficient/v1
+updated_at: "2026-08-24"
+
+# 边界: 单条系数必须落在 [floor, cap] 区间, 超出由 --validate 拒绝。
+floor_minutes: 5      # 最小可信耗时: 低于 5 分钟的任务不计入账本
+cap_minutes: 240       # 上限: 超过 4 小时应拆分为子任务
+
+# 审查策略: L2 半自动
+#   - agent 可提案修改 (附 basis 证据), 但必须走 PR
+#   - PR 门禁: gac-local-gate + doc-ssot-lint
+#   - 合并前至少一名人类 maintainer 审阅系数变更
+#   - 禁止绕过 PR 直接 commit 数值
+review_policy:
+  level: L2
+  mode: semi-auto
+  proposal: agent-with-evidence
+  gate: pr-required
+  reviewers:
+    - human-maintainer
+  min_evidence:
+    - git-log-throughput
+    - or-pr-cycle-time
+    - or-regression-timing
+  revalidate_cadence_days: 30
+
+# 系数表: 每条必须有 basis (推导依据), 引用实测数据。
+coefficients:
+  - type: pr_merge
+    minutes: 15
+    basis: |
+      近 7 天 61 次 PR merge (git log --since="7 days ago" --merges)。
+      单次 merge 含: 终审 + squash/merge + 子模块指针更新 + closeout 记录。
+      实测 wall-clock 约 10-20 min/次, 取保守下界 15 min。
+      推导: 61 merges × 15 min = 915 min ≈ 15.25 h / 7d ≈ 2.18 h/d。
+
+  - type: debt_close
+    minutes: 20
+    basis: |
+      近 7 天 27 次 debt/closeout 相关 commit。
+      含: 验证修复 + 台账勾销 + ADR/证据链接 + 回归确认。
+      单次保守 20 min (低于实际平均, 因部分 debt 需多轮)。
+
+  - type: doc_write
+    minutes: 10
+    basis: |
+      近 7 天 184 次 docs/ commit。
+      多为小颗粒编辑 (runbook/ADR/registry 指针)。
+      单次 10 min 保守 (含: 写 + 自测链接 + lint)。
+
+  - type: scene_activation
+    minutes: 25
+    basis: |
+      近 7 天 16 次 scene/attest 相关 commit。
+      含: 场景卡填写 + 激活校验 + journey 验证。
+      保守 25 min (低于完整激活流, 仅计账本可见部分)。
+
+  - type: infra_fix
+    minutes: 30
+    basis: |
+      近 7 天 112 次 infra/fix 相关 commit。
+      含: 复现 + 定位 + 修补 + 验证 + 回归。
+      保守 30 min (复杂 infra 故障实际 60-120 min, 取下界)。
+
+  - type: research_digest
+    minutes: 45
+    basis: |
+      近 7 天 8 次 research/digest 相关 commit。
+      含: 阅读 + 摘要 + 写入 knowledge/笔记。
+      保守 45 min (深度研究实际 2-4h, 此处仅计账本登记粒度)。
+
+  - type: attestation_review
+    minutes: 20
+    basis: |
+      近 7 天 16 次 attest 相关 commit (与 scene 重叠采样)。
+      含: 证据核对 + 签名验证 + 账本登记。
+      保守 20 min (低于完整审计流)。
+
+  - type: default
+    minutes: 15
+    basis: |
+      兜底系数: 未分类任务默认按 pr_merge 基线 15 min 计。
+      推导: 与 pr_merge 同档, 因多数未分类任务粒度相近。
+      后续若发现 default 偏差 >30%, 走 PR 调整。

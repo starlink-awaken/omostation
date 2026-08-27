@@ -1,0 +1,54 @@
+# Agent 类型注册表 — onboard 引导配置
+# 每种类型关联推荐的 workflow 和说明
+
+types:
+  engineer:
+    name: "工程师 (Engineer)"
+    description: "功能开发 / Bug 修复 / 重构"
+    recommended_workflows:
+      - project-code-change
+      - fix-bug
+    tips:
+      - "遵循项目 AGENTS.md 的编码规范"
+      - "改完跑 make test-diff 或对应项目测试"
+
+  architect:
+    name: "架构师 (Architect)"
+    description: "架构决策 / ADR / 跨系统设计"
+    recommended_workflows:
+      - requirement-iteration
+    tips:
+      - "先写 ADR (.omo/_knowledge/decisions/)"
+      - "更新 ARCHITECTURE.md"
+
+  researcher:
+    name: "研究员 (Researcher)"
+    description: "技术调研 / 方案评估 / 原型验证"
+    recommended_workflows:
+      - requirement-iteration
+    tips:
+      - "产出写到 docs/reports/"
+      - "使用 ArXiv skill 搜索论文"
+
+  governance:
+    name: "治理 Agent (Governance)"
+    description: "治理检查 / 债务清理 / 健康度审计"
+    recommended_workflows:
+      - governance-state-mutation
+    tips:
+      - "运行 make gac-local-gate"
+      - "检查 P74 compliance"
+
+  data:
+    name: "数据分析师 (Data Analyst)"
+    description: "数据分析 / 指标看板 / 报告生成"
+    recommended_workflows:
+      - project-code-change
+    tips:
+      - "更新 BRIEF.md 和 governance-dashboard"
+
+  custom:
+    name: "自定义 (Custom)"
+    description: "手动指定 objective"
+    recommended_workflows: []
+    tips: []

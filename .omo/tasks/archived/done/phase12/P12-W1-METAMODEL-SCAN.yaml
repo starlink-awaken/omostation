@@ -1,0 +1,43 @@
+id: P12-W1-METAMODEL-SCAN
+phase: 12
+milestone: W1
+priority: P0
+title: Capability metamodel and core scan baseline
+status: done
+assigned_to: codex
+dispatch_id: phase12-wave1-metamodel-scan
+run_ref: .omo/summaries/phase12-closeout.md
+approval_ref: user-request-2026-06-01-complete-phase11-and-phase12
+review_ref: .omo/_knowledge/management/phase12-cross-audit.md
+source_docs:
+  - .omo/plans/archive/phase12-wave1-execution-plan.md
+deliverables:
+  - .omo/standards/capability-metamodel.md
+  - .omo/standards/capabilities.schema.yaml
+  - .omo/standards/scenario.schema.yaml
+  - .omo/registry/INDEX.md
+  - .omo/registry/projects-capabilities.yaml
+  - .omo/registry/sharedwork-sample.yaml
+  - .omo/registry/system-packages.yaml
+  - .omo/registry/agent-clis.yaml
+  - .omo/_knowledge/design/cli-unification-plan.md
+depends_on:
+  - P11-W4-EVOLUTION-BRIDGE
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 11 Wave 4 closeout GO
+evidence_required:
+  - capability metamodel exists
+  - registry has at least 50 core capability records
+  - SharedWork sample has at least 10 records
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase12_execution.py -q
+started_at: '2026-06-01T00:12:00Z'
+completed_at: '2026-06-01T00:20:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary:
+  closeout_ref: .omo/summaries/phase12-closeout.md
+  result: completed

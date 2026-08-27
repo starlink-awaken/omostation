@@ -1,0 +1,47 @@
+apiVersion: omo/v1
+kind: SpaceIdentityAdmission
+schema: spaces/_schema/space-identity-admission.schema.yaml
+id: system-space-identity-admission
+space_ref: spaces/system-space.yaml
+identity_anchor: actor_space_membership
+capability_taxonomy_ref: spaces/system-space-capability-taxonomy.yaml
+admission_matrix_ref: spaces/system-space-admission-matrix.yaml
+actors:
+  - id: system-operator
+    actor_type: human
+    description: Human operator allowed to administer the governed workspace roots.
+  - id: automation-agent
+    actor_type: agent
+    description: Automation or agent worker operating inside the governed workspace contract.
+memberships:
+  - id: system-governor-membership
+    actor_ref: system-operator
+    space_ref: spaces/system-space.yaml
+    roles:
+      - governor
+      - operator
+  - id: automation-runtime-membership
+    actor_ref: automation-agent
+    space_ref: spaces/system-space.yaml
+    roles:
+      - runtime-observer
+capability_bindings:
+  - id: governance-admin
+    membership_ref: system-governor-membership
+    capabilities:
+      - governance.write
+      - space.membership.manage
+      - project.dispatch
+  - id: runtime-observer
+    membership_ref: automation-runtime-membership
+    capabilities:
+      - data.read
+      - runtime.observe
+  - id: runtime-operator
+    membership_ref: system-governor-membership
+    capabilities:
+      - runtime.mutate
+admission:
+  decision_scope: cross_root_action
+  subject_binding: membership
+  default_mode: explicit_grant_required

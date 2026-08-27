@@ -1,0 +1,36 @@
+name: MetaOS CI
+on:
+  push:
+    branches: [main]
+    paths: ['projects/metaos/**', '.github/workflows/metaos-ci.yml']
+  pull_request:
+    branches: [main]
+    paths: ['projects/metaos/**', '.github/workflows/metaos-ci.yml']
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+      - name: Install dependencies
+        run: cd projects/metaos && uv sync
+      - name: Run tests
+        # P0-2 (metaos governance batch): 3 ignore 移除 — 本地全量 260 passed 证明
+        # collection error 已修 (P0-1 修 5 红 test). 回退 ignore = 重建假绿 (workorder 熔断).
+        run: cd projects/metaos && uv run pytest tests/ -q
+      - name: Doc claims lint (P0-5 禁止裸数字宣称)
+        # P0-5: 防 AGENTS/CLAUDE/INTERFACE 退回裸 "100% 通过"/"NNN tests" 宣称 (P0-3 已指针化).
+        # 注入失真可检出 (tests/test_doc_claims.py). 详见 ADR-0242.
+        run: uv run --with pyyaml python bin/mof/check-doc-claims.py --project projects/metaos

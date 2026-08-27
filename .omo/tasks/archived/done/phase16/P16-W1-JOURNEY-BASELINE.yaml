@@ -1,0 +1,8 @@
+id: P16-W1-JOURNEY-BASELINE
+phase: 16
+status: done
+title: Journey baseline and OMO retrospective
+evidence_refs:
+  - .omo/evidence/phase16/journey-baseline.yaml
+  - /Users/xiamingxing/Documents/学习进化/体系/OMO/_delivery/cases/2026-06-01-phase16-knowledge-capture-search-retrospective.md
+verification: project roles and control-plane-to-user-value gap are recorded

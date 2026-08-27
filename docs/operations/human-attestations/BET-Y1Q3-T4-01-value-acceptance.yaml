@@ -1,0 +1,14 @@
+---
+last-reviewed: 2026-08-26
+---
+
+schema_version: human-attestation/v1
+principal_id: principal:xiamingxing
+verdict: accept
+episode_id: episode_088af4df0c0ed55f204e2bae
+signal_event_id: evt_6a91f63077fe64fb9344b10e
+observed_at: '2026-08-22T02:15:00Z'
+report_ref: repo://docs/reports/2026-08-22-T4-01-value-axis-acceptance.md
+report_sha256: sha256:0479282f4b47a4a3f6e8b769383a089f85882a32456d68b77b029264638cf383
+signer_identity: xiamingxing
+signature_b64: LS0tLS1CRUdJTiBTU0ggU0lHTkFUVVJFLS0tLS0KVTFOSVUwbEhBQUFBQVFBQUFETUFBQUFMYzNOb0xXVmtNalUxTVRrQUFBQWc3UE44L3pUWUlVSDZLcEZsNElaUnQzSmVucAp5K2hlcERtbDVrRWRON0hTUUFBQUFjYjIxdmMzUmhkR2x2Ymkxb2RXMWhiaTFoZEhSbGMzUmhkR2x2YmdBQUFBQUFBQUFHCmMyaGhOVEV5QUFBQVV3QUFBQXR6YzJndFpXUXlOVFV4T1FBQUFFQUdRNlNaUXllNGRvdHlpUFRWVDYyd0UwVjNTcWpTcnkKcmNGN0Nxd0hIQktlcnBrcEg4YWVFcjdDUThKWVh0bEYyaUUrakp2RkM1Y0hOREhISnhBQWtJCi0tLS0tRU5EIFNTSCBTSUdOQVRVUkUtLS0tLQo=

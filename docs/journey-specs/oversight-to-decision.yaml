@@ -1,0 +1,52 @@
+schema: journey-spec/v1
+journey_id: oversight-to-decision
+description: "项目状态汇聚 → 风险评估 → 决策建议 → 干预/知识沉淀"
+
+states:
+  - name: status_collected
+    scene: project-supervision
+    next: [risk_assessed]
+  - name: risk_assessed
+    scene: project-supervision
+    next: [decision_advised, escalated]
+  - name: decision_advised
+    scene: project-supervision
+    next: [intervention_initiated, knowledge_captured]
+  - name: intervention_initiated
+    scene: engineering-delivery
+    next: [supervised]
+    checkpoint:
+      require: human_approval
+      timeout_hours: 72
+  - name: supervised
+    scene: project-supervision
+    next: [knowledge_captured]
+  - name: escalated
+    scene: project-supervision
+    next: [status_collected]
+  - name: knowledge_captured
+    scene: knowledge-curation
+    next: []
+
+transitions:
+  - from: status_collected
+    to: risk_assessed
+    condition: "status == succeeded"
+  - from: risk_assessed
+    to: decision_advised
+    condition: "supervision.risk_level != high"
+  - from: risk_assessed
+    to: escalated
+    condition: "supervision.risk_level == high"
+  - from: decision_advised
+    to: intervention_initiated
+    condition: "delivery.status == succeeded"
+  - from: decision_advised
+    to: knowledge_captured
+    condition: "status == succeeded"
+  - from: intervention_initiated
+    to: supervised
+    condition: "delivery.status == succeeded"
+  - from: supervised
+    to: knowledge_captured
+    condition: "always"

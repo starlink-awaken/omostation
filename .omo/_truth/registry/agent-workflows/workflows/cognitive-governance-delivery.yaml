@@ -1,0 +1,137 @@
+id: cognitive-governance-delivery
+run_frequency: on-demand
+title: Cognitive Governance Intent-to-Delivery Lifecycle (ADR-0199)
+purpose: >
+  V2.0 认知操作系统全链路交付工作流：
+  从人类自然语言模糊意图出发，经意图规格编译(IntentSpec)、主权算力投机分诊与KV快照预热(0ms TTFT)、
+  长尾领域治理卡带装载、多角色DAG初稿起草、影子红蓝对抗审查与自动打补丁，
+  到最终双平面物理隔离归档与事实真源14天保鲜闭环。
+agents:
+  roles:
+    - sage-planner        # 意图解构与工程规格反编译 (ADR-0195)
+    - builder-agent       # 主权算力投机生成与代码/公文起草 (ADR-0197)
+    - keeper-cartridge    # 领域卡带与 SOP 资产装配 (ADR-0198)
+    - devil-challenger    # 审计/等保/法务影子对抗审查与 Auto-Patch (ADR-0196)
+  observer_policy: required
+allowed_lanes:
+  - docs
+  - code
+  - governance_code
+  - governance_state
+  - config
+lock_scopes:
+  - governance:cognitive-delivery
+  - root-gate
+surfaces:
+  read:
+    - docs/adr/ADR-0195-*.md
+    - docs/adr/ADR-0196-*.md
+    - docs/adr/ADR-0197-*.md
+    - docs/adr/ADR-0198-*.md
+    - docs/adr/ADR-0199-*.md
+    - .omo/_truth/registry/agent-workflows/**
+    - AGENTS.md
+    - CLAUDE.md
+  write:
+    - ~/Documents/**
+    - .omo/state/**
+    - docs/adr/**
+    - docs/governance/**
+phases:
+  preflight:
+    - id: status
+      mode: required
+      command:
+        - git
+        - status
+        - --short
+    - id: intent-compiler-check
+      mode: required
+      command:
+        - python3
+        - -m
+        - ecos.cli.constraint
+        - intent
+        - --help
+    - id: compute-fabric-check
+      mode: required
+      command:
+        - omlxc
+        - fabric
+        - inspect
+  execute:
+    - id: phase-1-intent-spec
+      title: 意图解构与规格编译 (Intent-to-Spec)
+      agent: sage-planner
+      mode: required
+      command:
+        - ecos-constraint
+        - intent
+        - compile
+        - "${PROMPT}"
+    - id: phase-2-compute-triage
+      title: 主权算力分诊与 0ms TTFT 快照预热
+      agent: builder-agent
+      mode: required
+      command:
+        - omlxc
+        - fabric
+        - snapshot
+        - warm
+        - --name
+        - mof-governance-v3
+    - id: phase-3-cartridge-mount
+      title: 长尾领域标准卡带与 SOP 装配
+      agent: keeper-cartridge
+      mode: required
+      command:
+        - ecos-constraint
+        - cartridge
+        - export
+        - "${CARTRIDGE_ID:-cartridge-weijian-v1}"
+    - id: phase-4-dual-plane-draft
+      title: 双平面物理隔离初稿起草
+      agent: builder-agent
+      mode: required
+      target_plane: Documents
+      command:
+        - ecos-constraint
+        - draft
+        - "${DRAFT_PATH}"
+    - id: phase-5-shadow-challenge
+      title: 影子红蓝对抗审查与自动打补丁 (Auto-Patch)
+      agent: devil-challenger
+      mode: required
+      command:
+        - ecos-constraint
+        - challenge
+        - "${DRAFT_PATH}"
+        - --auto-patch
+        - --strict
+    - id: phase-6-facts-closeout
+      title: 事实真源回写与 14 天保鲜封板
+      agent: keeper-cartridge
+      mode: required
+      command:
+        - ecos-constraint
+        - facts
+        - validate
+        - --strict
+  verification:
+    - id: hygiene-patrol
+      mode: required
+      command:
+        - python3
+        - bin/ssot/weekly-hygiene-patrol.py
+        - --strict
+    - id: chaos-drill
+      mode: required
+      command:
+        - python3
+        - bin/ssot/chaos-governance-drill.py
+        - --strict
+  closeout:
+    - id: done
+      mode: required
+      command:
+        - echo

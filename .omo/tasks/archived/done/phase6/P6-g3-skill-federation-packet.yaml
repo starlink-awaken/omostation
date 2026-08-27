@@ -1,0 +1,36 @@
+id: P6-G3-SKILL-FEDERATION-PACKET
+phase: 6
+milestone: W3
+priority: P0
+title: Land the skill federation packet
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase6-g3-skill-federation
+run_ref: .omo/plans/archive/phase6-wave3-execution-plan.md
+approval_ref: null
+review_ref: .omo/summaries/phase6-wave3-closeout.md
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+  - .omo/plans/archive/phase6-program-plan.md
+  - .omo/plans/archive/phase6-wave3-execution-plan.md
+deliverables:
+  - scripts/omo_skill.py
+  - .omo/tests/test_omo_skill.py
+  - .omo/summaries/phase6-wave3-closeout.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 6 Wave 2 closeout recorded with GO
+evidence_required:
+  - skill manifests persist in truth
+  - skill packets bridge into governed worker execution
+test_plan:
+  - python3 -m pytest .omo/tests/test_omo_skill.py -q
+  - python3 scripts/sync_omo_state.py --omo-dir .omo
+started_at: '2026-05-31T08:45:00Z'
+completed_at: '2026-05-31T08:55:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary: Wave 3 landed skill manifests and governed skill-to-task packet bridging on top of the Phase 6 runtime core.

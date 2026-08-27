@@ -1,0 +1,25 @@
+id: cockpit-triage-aetherforge-runtime-check-ports-promotion-approval-2026-07-28T09-08-09Z-proposal
+title: Grant promotion approval for cockpit-triage-aetherforge-runtime-check-ports
+operation_level: L2
+requested_by: cockpit-task-center
+target:
+  ref: .omo/workers/runs/cockpit-triage-aetherforge-runtime-check-ports-promotion-approval-2026-07-28T09-08-09Z.yaml
+changes:
+  set:
+    approval_status: granted
+change_summary: Grant promotion approval for cockpit-triage-aetherforge-runtime-check-ports
+impact: Releases a planned task into the promotion approval chain.
+verification_plan:
+- python3 scripts/omo_worker.py task promote-eval cockpit-triage-aetherforge-runtime-check-ports
+  --omo-dir .omo
+rollback_plan:
+- Set .omo/workers/runs/cockpit-triage-aetherforge-runtime-check-ports-promotion-approval-2026-07-28T09-08-09Z.yaml
+  approval_status back to requested if the release must be withdrawn.
+secret_refs: []
+trace_id: trace-cockpit-triage-aetherforge-runtime-check-ports-promotion-approval-2026-07-28T09-08-09Z
+status: verified
+requested_at: '2026-07-28T09:08:09Z'
+approved_at: '2026-07-28T09:08:10Z'
+applied_at: '2026-07-28T09:08:10Z'
+verified_at: '2026-07-28T09:08:10Z'
+approved_by: cockpit-task-center

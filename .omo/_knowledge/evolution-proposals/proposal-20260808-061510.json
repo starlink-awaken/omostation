@@ -1,0 +1,39 @@
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 2,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-08-08T06:14:32.471229+00:00",
+  "internal_proposals": 1,
+  "mode": "deep",
+  "proposals": [
+    {
+      "action": "create_scene_cards",
+      "level": "S2",
+      "proposal": "Only 9 scene cards — consider adding more domain coverage",
+      "severity": "medium",
+      "source": "scene_coverage",
+      "type": "insufficient_cards"
+    },
+    {
+      "action": "research_task",
+      "level": "S3",
+      "proposal": "Evaluate A2A protocol maturity for swarm implementation",
+      "severity": "low",
+      "source": "external_research",
+      "type": "framework_evaluation"
+    },
+    {
+      "action": "research_task",
+      "level": "S2",
+      "proposal": "Evaluate Apple Health API for health-tracking connector",
+      "severity": "low",
+      "source": "external_research",
+      "type": "tool_evaluation"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 3
+}

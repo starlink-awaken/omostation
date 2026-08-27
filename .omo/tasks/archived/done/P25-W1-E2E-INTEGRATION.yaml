@@ -1,0 +1,40 @@
+id: P25-W1-E2E-INTEGRATION
+phase: 25
+milestone: M25.1
+priority: P2
+title: 'E2E集成测试: 4个接口契约 + 自愈回路完整演练'
+status: done
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P24-W2-NUCLEUS-REPLACE
+entry_gate:
+- phase24_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- 身份验证回路E2E测试 <100ms
+- 自愈回路完整演练(异常→检测→隔离→恢复→验证)
+- 知识查询回路E2E测试
+- 性能基准报告
+acceptance_criteria:
+- 4个接口契约全部验证通过
+- 自愈回路端到端 <5s
+- 知识查询回路端到端 <200ms
+test_plan:
+- 完成 E2E 演练后验证 4 个接口契约与自愈回路闭环
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.385753+00:00'
+routed_by: omo-debt route
+completed_at: '2026-06-17T09:21:48.878191Z'
+closeout_note: 'Superseded: E2E tests exist (4 scripts + 1 python)'

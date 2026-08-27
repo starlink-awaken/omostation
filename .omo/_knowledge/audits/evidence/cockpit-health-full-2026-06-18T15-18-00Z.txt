@@ -1,0 +1,89 @@
+
+═══ L4 上下文 ═══
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ 🛸 Workspace Context                                                         │
+│ Phase 42 · P42 治理面 SSOT 同步纪元 — 14 phase 复盘合并 (Governance SSOT     │
+│ Catch-up)                                                                    │
+│ 状态: active                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+⚡ P0 活跃 (3):
+  ▪ Phase 33 大一统：BOS URI 挂载与 Agora Mesh
+  ▪ 建设AI研究管线 — 从碎片信息到可执行判断
+  ▪ 理想i6选号上牌
+
+🔒 约束 (1):
+  ◦  authoritative_policy_source
+
+🧭 下一步:
+  → 1.
+  → 查看 P0 卡片确定当前优先任务。2.
+  → 调用 cards_check 验证操作合规。3.
+  → 经 Agora 调用 L2 工具执行。4.
+  → 完成后调 cards_update 记录状态。.
+
+
+═══ L3 Cockpit ═══
+
+╭───────────────────────────────────────╮
+│ 🛠️ 工作台                             │
+│ 2026-06-18 23:17 · 从这开始今天的工作 │
+╰───────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ ⚡ 快速行动    research <主题>   import <路径|URL>   daily   demo   |        │
+│ contracts validate   profile   dashboard                                     │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Cockpit status error: unable to open database file
+
+═══ I0 服务网格 ═══
+
+⚠ agora CLI 未安装
+
+═══ L4 域健康 ═══
+
+⚠ l4-kernel 未安装
+
+═══ L1 运行时 ═══
+
+  服务注册: 12 项
+  健康: 0/12
+
+═══ L2 治理 ═══
+
+  Phase: 42  |  健康分: 61.6  |  债务权重: 1.0
+
+═══ L4 文档域 ═══
+
+  域ID                  名称                 类型         健康   KEMS   CLAUDE
+  ──────────────────── ────────────────── ────────── ──── ────── ───────
+  cockpit              @驾驶舱               document   🟢    5/5    ✅
+  vault                @学习进化              document   🟡    4/5    ✅
+  creative             @创意创作              document   🟢    5/5    ✅
+  personal             @个人                document   🟢    5/5    ✅
+  shared               @公共                document   🟢    5/5    ✅
+  family               @家庭生活              document   🟡    4/5    ✅
+  work-weijian         @工作文档/卫健委          document   🟢    5/5    ✅
+  work-guozhuan        @工作文档/国转中心         document   🟢    5/5    ✅
+  opc                  @OPC               document   🟡    4/5    ✅
+  family-shared        FamilyShared       document   🟡    4/5    ❌
+  obsidian-vault       Obsidian Vault (iCloud) document   🟡    4/5    ✅
+  icloud-sharedconf    SharedConf         document   🔴    1/5    ❌
+  ai-config            ~/.ai              config     🟡    0/0    ✅
+  agents-config        ~/.agents          config     🟡    0/0    ✅
+  minerva              Minerva引擎          engine     🔴    0/0    ❌
+  knowledge-engine     知识引擎               engine     🔴    0/0    ❌
+  l4-kernel            L4 Kernel          engine     🟡    0/0    ✅
+  bin                  ~/bin              tool       🟡    0/0    ✅
+  toolbox-tools        ~/ToolBox          tool       🟡    0/0    ✅
+  sharedwork           SharedWork         workspace  🔴    0/0    ❌
+  ecos-workbench       eCOS Workbench     workspace  🟡    0/0    ✅
+  runtime              Runtime Data       workspace  🔴    0/0    ❌
+  shareddisk           SharedDisk         storage    🔴    0/0    ❌
+  sharedmodel          SharedModel        model      🔴    0/0    ❌
+  model-volume         Model              model      🔴    0/0    ❌
+  🟢 6  🟡 11  🔴 8
+  通过率: 24%
+
+✅ 全栈健康检查完成
+

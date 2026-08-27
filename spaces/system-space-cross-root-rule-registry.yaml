@@ -1,0 +1,63 @@
+apiVersion: omo/v1
+kind: CrossRootRuleRegistry
+schema_version: v1
+id: system-space-cross-root-rule-registry
+space_ref: spaces/system-space.yaml
+rules:
+  - id: system-space-project-dispatch
+    space_ref: spaces/system-space.yaml
+    action: project.dispatch
+    admission_contract_ref: spaces/system-space-identity-admission.yaml
+    rollout_policy_ref: spaces/system-space-rollout-policy.yaml
+    data_policy_ref: data/system-data-access-policy.yaml
+    runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+    delivery_evidence_refs:
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/verify.yaml
+    governance:
+      admission_contract_ref: spaces/system-space-identity-admission.yaml
+      rollout_policy_ref: spaces/system-space-rollout-policy.yaml
+    data:
+      policy_ref: data/system-data-access-policy.yaml
+    runtime:
+      boundary_ref: runtime/system-runtime-boundary.yaml
+    delivery:
+      contract_ref: .omo/_delivery/task-center/contracts/project-dispatch-delivery-contract.yaml
+  - id: system-space-runtime-observe
+    space_ref: spaces/system-space.yaml
+    action: runtime.observe
+    admission_contract_ref: spaces/system-space-identity-admission.yaml
+    rollout_policy_ref: spaces/system-space-rollout-policy.yaml
+    data_policy_ref: data/system-data-access-policy.yaml
+    runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+    delivery_evidence_refs:
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/verify.yaml
+    governance:
+      admission_contract_ref: spaces/system-space-identity-admission.yaml
+      rollout_policy_ref: spaces/system-space-rollout-policy.yaml
+    data:
+      policy_ref: data/system-data-access-policy.yaml
+    runtime:
+      boundary_ref: runtime/system-runtime-boundary.yaml
+    delivery:
+      contract_ref: .omo/_delivery/task-center/contracts/runtime-observe-delivery-contract.yaml
+  - id: system-space-runtime-mutate
+    space_ref: spaces/system-space.yaml
+    action: runtime.mutate
+    admission_contract_ref: spaces/system-space-identity-admission.yaml
+    rollout_policy_ref: spaces/system-space-rollout-policy.yaml
+    data_policy_ref: data/system-data-access-policy.yaml
+    runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+    delivery_evidence_refs:
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/verify.yaml
+    governance:
+      admission_contract_ref: spaces/system-space-identity-admission.yaml
+      rollout_policy_ref: spaces/system-space-rollout-policy.yaml
+    data:
+      policy_ref: data/system-data-access-policy.yaml
+    runtime:
+      boundary_ref: runtime/system-runtime-boundary.yaml
+    delivery:
+      contract_ref: .omo/_delivery/task-center/contracts/runtime-mutate-delivery-contract.yaml

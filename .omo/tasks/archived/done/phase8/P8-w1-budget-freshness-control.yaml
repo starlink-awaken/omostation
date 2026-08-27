@@ -1,0 +1,39 @@
+id: P8-W1-BUDGET-FRESHNESS-CONTROL
+phase: 8
+milestone: W1
+priority: P0
+title: Land the Phase 8 Wave 1 budget and freshness control packet
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase8-wave1-control-plane
+run_ref: .omo/plans/archive/phase8-starter-packet-spec.md
+approval_ref: null
+review_ref: .omo/summaries/phase8-wave1-closeout.md
+knowledge_refs:
+  - docs/superpowers/specs/2026-05-31-phase8-control-plane-design.md
+handoff_refs: []
+source_docs:
+  - .omo/plans/archive/phase8-planning-gate.md
+  - .omo/plans/archive/phase8-program-plan.md
+  - .omo/plans/archive/phase8-starter-packet-spec.md
+deliverables:
+  - scripts/omo_experience.py
+  - .omo/_delivery/task-center/control/current.yaml
+  - .omo/summaries/phase8-wave1-closeout.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 8 planning gate ratified
+  - Phase 7 accounting and freshness artifacts available as inputs
+evidence_required:
+  - one request path is governed by budget and freshness before execution
+  - control decision artifacts are persisted
+test_plan:
+  - python3 -m pytest .omo/tests/test_omo_experience.py -q -k control_gate
+  - python3 scripts/omo_experience.py control --budget-limit 2.5 --now 2026-05-31T18:12:00Z
+  - python3 scripts/sync_omo_state.py --omo-dir .omo
+started_at: '2026-05-31T18:12:00Z'
+completed_at: '2026-05-31T18:26:00Z'
+retry_count: 0
+completion_summary: Wave 1 converted accounting and freshness visibility into a governed pre-execution control decision with persisted control artifacts.

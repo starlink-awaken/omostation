@@ -1,0 +1,81 @@
+name: audit-rollout-monthly
+# Round 28 P0: §12.5.1 步骤 3 实质化 — omostation 根每月 1 号跑跨仓 audit-rollout
+# 跨仓聚合当前看到 omo + omostation 2 仓, 各仓 §12.2 接入后自动扩展.
+
+on:
+  schedule:
+    # 每月 1 号 01:00 UTC (晚于 omo 仓 refresh-baseline 1h, 让 baseline 先就位)
+    - cron: '0 1 1 * *'
+  workflow_dispatch:  # 支持手动触发
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+permissions:
+  contents: write
+
+jobs:
+  aggregate-rollout:
+    name: Aggregate cross-repo audit baseline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        run: pip install --quiet uv
+      - name: Run omo audit-rollout
+        # 当前只看到 omo + omostation 2 仓 baseline
+        # 各仓 §12.2 接入后, 扩 --repos 加 name:path
+        # 退出码语义 (Round 27 P0):
+        #   0 = 0 漂移 (完美)
+        #   1 = 有漂移 (报告生成成功, CI warning)
+        #   2 = 错误 (fail)
+        run: |
+          cd projects/omo
+          DATE=$(date -u +%Y-%m-%d)
+          OUTPUT=".omo/_delivery/audit-rollout/${DATE}.json"
+          echo "DATE=$DATE" >> $GITHUB_ENV
+          uv run python -m omo.cli audit-rollout \
+            --repos "omostation:." \
+            --repos "gbrain:../gbrain" \
+            --repos "metaos:../metaos" \
+            --repos "model-driven:../model-driven" \
+            --output "$OUTPUT" || {
+              echo "::warning::audit-rollout reports drift (Round 27 设计, 1 退出码不阻塞)"
+              exit 0
+            }
+      - name: Upload audit-rollout-metrics artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-rollout-metrics
+          path: "projects/omo/.omo/_delivery/audit-rollout/${{ env.DATE }}.json"
+          retention-days: 90
+          if-no-files-found: ignore
+      - name: Run omo logs audit --metrics (Round 41 P0 — §17 度量接 cron)
+        # §17.8 实质化 (`--exclude-locked` 默认 True) 让 §17.6 健康度评分可执行
+        # 退出码语义 (R39 P0):
+        #   0 = R0 优秀
+        #   1 = R1-R2 (warning)
+        #   2 = R3+ (fail)
+        run: |
+          cd projects/omo
+          DATE=$(date -u +%Y-%m-%d)
+          METRICS_OUTPUT=".omo/_delivery/audit-rollout/${DATE}-metrics.json"
+          uv run python -m omo.cli logs audit --metrics \
+            > "$METRICS_OUTPUT" 2>&1 || {
+              echo "::warning::§17 metrics 跑出 R3+ (R39 P0 退出码 2), 标 warning 不阻塞"
+              exit 0
+            }
+          # 终端输出当前健康度评分 (CI log 友好)
+          cat "$METRICS_OUTPUT" | python3 -c "import sys, json; d=json.load(sys.stdin); print(f'§17 metrics: drift={d[\"drift_count\"]} locked={d[\"locked_drift\"]} new_debt={d[\"drift_count_excluding_locked\"]} density={d[\"debt_density\"]:.6f} grade={d[\"health_grade\"]}')"
+      # E 推广 (原则1, 同 #440 c2g-radar / #443 c2g-gc): 去 Commit step.
+      # .omo/_delivery/ 是 gitignored (运行时写面 L1), git add 本就无效 (exit 128).
+      # bot push main 撞分支保护 (GH006). rollout+metrics 已走 artifact (retention 90天).

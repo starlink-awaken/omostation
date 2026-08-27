@@ -1,0 +1,17 @@
+schema: script-registry/v1
+id: bin/bc-os/north_star_meter_v3.py
+name: North Star Meter v3
+category: governance
+owner: governance-team
+description: "BCOS 复合制价值证明 v3: A 时间账本 (70%) + B 决策吞吐 (30%) + C 项目推进力 (佐证, 0%) (project-strategy-v1 §5.2 落地)"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - bin/bc-os/north_star_meter_v2.py
+  - bin/gac/strategy-check.py
+maturity: draft
+last_reviewed: "2026-08-24"

@@ -1,0 +1,49 @@
+id: M2.FULL-AGENT-REGISTRY-HEARTBEAT-RUNTIME
+phase: 2
+milestone: M2.FULL-GO
+priority: P0
+title: "Validate Agent Registry heartbeat/cache runtime prototype"
+status: done
+owner: agent
+assigned_to: copilot
+source_docs:
+  - ".omo/standards/phase2-full-execution-go-no-go.md"
+  - ".omo/standards/agent-registry-heartbeat.md"
+inputs:
+  - ".omo/standards/agent-registry-heartbeat.md"
+  - "Existing Agora or Agent Registry runtime entrypoint"
+outputs:
+  - "Minimal heartbeat registration path"
+  - "Local cache fallback behavior"
+  - "Runtime or test proof for stale/zombie agent handling"
+acceptance_criteria:
+  - "Agent can register heartbeat with identity metadata"
+  - "Stale heartbeat is detected according to the standard"
+  - "Registry outage falls back to local cache for the documented window"
+  - "No high-autonomy routing is enabled by this task"
+evidence_required:
+  - "Runtime command or test output for heartbeat registration"
+  - "Runtime command or test output for stale heartbeat detection"
+  - "Runtime command or test output for cache fallback"
+evidence:
+  code_paths:
+    - "projects/kairon/packages/agora/src/agora/registry.py"
+  tests:
+    - "cd projects/kairon/packages/agora && PYTHONPATH=src python3 -m pytest tests/test_registry.py -q"
+  test_result: "40 passed"
+  runtime_probe:
+    heartbeat: "{'name': 'runtime-worker', 'status': 'heartbeat_registered', 'last_heartbeat': 100.0}"
+    stale_detection: "[{'name': 'runtime-worker', 'age_seconds': 100.0, 'last_heartbeat': 100.0}]"
+    cache_fallback: "load_cache_snapshot restored runtime-worker with provider_info {'role': 'worker'}"
+blocked_by: []
+dependencies:
+  - M2.2-AGENT-REGISTRY-HEARTBEAT
+risk_level: L1
+allowed_operation_level: L1
+operation_level: L1
+human_approval_required: false
+test_plan:
+  - ".omo/tests/README.md#agent-control-plane-tests"
+started_at: "2026-05-30T05:17:00Z"
+completed_at: "2026-05-30T05:20:40Z"
+retry_count: 0

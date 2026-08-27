@@ -1,0 +1,36 @@
+id: TASK-OMO-PHYSICAL-REORG
+title: omo 物理文件重组 (125文件→5子包)
+status: done
+priority: P3
+risk_level: L2
+description: '已有 categories 索引模块 (omo.categories) 提供逻辑分组。
+  物理重组需更新46处内部import。categories 设计初衷即 "不移动物理文件"。
+  结论: categories 已充分满足组织需求，物理重组不增加架构价值。'
+created_at: '2026-06-19T12:00:00Z'
+owner: omo-team
+note: '✅ 已解决 — omo.categories 逻辑分组索引已落地 (audit/bos/debt/governance/worker)。
+  物理文件重组的预期收益已被 categories 结构覆盖。保留了原有导入路径不变，
+  同时通过 categories 提供领域索引。'
+closed_at: '2026-06-21T14:45:00Z'
+evidence:
+- omo.categories 5 个子模块提供逻辑分组 (audit, bos, debt, governance, worker)
+- categories/__init__.py 明确声明 "不移动物理文件" 为设计目标
+- 46处内部import保持不变，无需破坏性重构
+task_type: feature
+deliverables:
+- omo 物理文件重组 (125文件→5子包) — superseded by categories logical grouping
+source_docs:
+- .omo/tasks/planned/TASK-OMO-PHYSICAL-REORG.yaml#legacy-normalized
+knowledge_refs:
+- projects/omo/src/omo/categories/__init__.py
+handoff_refs: []
+entry_gate: []
+evidence_required: []
+test_plan: []
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+allowed_operation_level: L2
+human_approval_required: true

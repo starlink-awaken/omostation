@@ -1,0 +1,37 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-18
+note: >
+  Committed unlock projection for CI hard gate (ADR-0223).
+  Updated when m1-closeout-report (or future M2 harness) flips unlock.
+  Do not set unlocked=true without evidence_path + source pointer.
+---
+# Phase unlock verdict SSOT (read by phase-gate-check.py / CI)
+
+version: 1
+updated_at: "2026-07-18T10:50:00Z"
+
+phases:
+  phase2:
+    unlocked: true
+    unlocked_at: "2026-07-18T10:47:27Z"
+    evidence_path: adversarial
+    source: m1-closeout-report/v2
+    adr: ["0210", "0220", "0222", "0223"]
+    evidence_files:
+      - .omo/_delivery/m1-adversarial/latest.json
+      - .omo/_delivery/m1-closeout/m1-closeout-adversarial-rejudge.json
+    pr_421_deviation: >
+      PR#421 merged while m1-closeout still reported phase2_recommend=false
+      (window_open). ADR-0222 path B + this verdict file provide the legitimate
+      unlock; ADR-0223 prevents recurrence via CI hard block.
+    note: M1 path B four-gate adversarial all blocked (2026-07-18)
+
+  phase3:
+    unlocked: false
+    unlocked_at: null
+    evidence_path: null
+    source: null
+    note: M2 multi-machine collab ≥ 85% not yet measured

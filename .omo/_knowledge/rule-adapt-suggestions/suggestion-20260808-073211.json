@@ -1,0 +1,200 @@
+{
+  "downgrade_suggestions": 24,
+  "generated_at": "2026-08-08T07:32:11Z",
+  "required_rules": 24,
+  "schema": "rule-adapt/v1",
+  "suggestions": [
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-X4-HEALTH-SSOT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "health_score 唯一源 system.yaml, 文档用指针不复制",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-M0-STAGE-GATE",
+      "suggestion": "downgrade_to_warn",
+      "summary": "M1→M2→M3 派生必走 mof Stage/Gate (零风险派生)",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-L0-BOS-RESOLVE",
+      "suggestion": "downgrade_to_warn",
+      "summary": "BOS URI 声明必须 resolve (evidence-smoke 防 alive 标志假阳)",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-L0-PROTOCOLS-SSOT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "protocols/{port,vault-paths,x-axis}-registry.yaml 协议层 SSOT, markdown/代码禁硬编码端口号; scripts/check-vault-",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-L0-BOS-DOMAIN-NORM",
+      "suggestion": "downgrade_to_warn",
+      "summary": "防 BOS 域越界 + 协议漂移: eCOS v6 锁定 5 主域 (memory/governance/analysis/persona/capability), 扩展域 (meta/omo/swa",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-X4-MOF-CAPABILITIES-DRIFT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-X4-METAOS-REGISTRY-DRIFT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-X4-DOC-CLAIMS",
+      "suggestion": "downgrade_to_warn",
+      "summary": "",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-M4-BOOTSTRAP-REFLEX",
+      "suggestion": "downgrade_to_warn",
+      "summary": "M4 5-check 自反校验:check_1(m3)/check_2(m2)/check_3(m2-m3锚)/check_4(m3-meta)/check_5(M2BaseSchema).覆盖sch",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-M4-MCPTOOL-INTEGRITY",
+      "suggestion": "downgrade_to_warn",
+      "summary": "MCPTOOL单工具yaml校验tool_name+server非空.集合yaml跳过(ADR-0145).",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-SEC-YAML-BYPASS",
+      "suggestion": "downgrade_to_warn",
+      "summary": "禁止 yaml.load (不安全), 必 safe_load/safe_load_all. memory frontmatter-safe-load-all.",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-SEC-SENSITIVE-WRITE",
+      "suggestion": "downgrade_to_warn",
+      "summary": "禁止硬编码 password/token/secret/api_key (用 env var/vault).",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-X2-GOD-MODULE-EDIT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "编辑 god module (文件超 800L) 时警告, 拆分. memory check-god-module-mechanism.",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-SEC-EVAL-EXEC",
+      "suggestion": "downgrade_to_warn",
+      "summary": "禁止 eval()/exec() (不安全). 用 ast.literal_eval 或专门解析.",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-PY-MUTABLE-DEFAULT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "禁止 def f(x=[])/dict()/set() 默认参数 (Python 高频坑). 用 None+内部创建.",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-SUBMODULE-REWIND",
+      "suggestion": "downgrade_to_warn",
+      "summary": "检测子模块指针是否被意外回退: 对比 index 当前指针与上一次 commit 的指针, 当前指针 NOT ancestor of 上一次指针 → rewind. 防止 Phase 4 等变更被意外",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-P76-7-1-LLM-ADVISORY-ONLY",
+      "suggestion": "downgrade_to_warn",
+      "summary": "LLM 只 generate suggestion, 永不 auto-apply. 实现: bin/gac/check-llm-advisory-only.py (gac-gate CI)",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-P76-8-1-SUBMODULE-PR-INDEPENDENT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "跨仓 PR 独立提交, 不在主仓 commit submodule 内容. 实现: bin/gac/check-submodule-pr-independent.py (gac-gate CI)",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-P76-8-4-INCREMENTAL-COMMIT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "每 sub-task 完成立即 commit, 防 X-Plane clean worktree 丢失工作. 实现: bin/gac/check-incremental-commit.py (gac-",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-P76-9A-4-HEURISTIC-DEFAULT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "本地调 --no-llm 不依赖外部服务可用. 实现: bin/gac/check-heuristic-default.py (gac-gate CI)",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-L0-CONSTRAINTS-SSOT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "L0-constraints.yaml 中所有约束的 GaC 索引. 源文件包含: constraint, protocol_registry, trigger_constraints, opc_ca",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-X4-CONSISTENCY-SSOT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "x4-consistency-rules.yaml 中所有规则的 GaC 索引. 源文件包含: governance_surfaces, llmgateway_archived, p43_closed",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-X4-MCPTOOL-IMPL-DRIFT",
+      "suggestion": "downgrade_to_warn",
+      "summary": "",
+      "violations": 0
+    },
+    {
+      "enforcement": "required",
+      "reason": "required 但违规历史为空 — 误伤成本 > 拦截价值 (Bet-Y1Q2-T6-01)",
+      "rule_id": "CR-SWEEP-INDEX-AUTO",
+      "suggestion": "downgrade_to_warn",
+      "summary": "检测 .omo/_knowledge/sweeps/INDEX.md 是否与同一目录下的 <date>.json 派生内容漂移.\nbin/sweep/sweep_index.py --check 在 ",
+      "violations": 0
+    }
+  ]
+}

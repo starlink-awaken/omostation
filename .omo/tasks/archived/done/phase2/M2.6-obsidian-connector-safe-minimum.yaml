@@ -1,0 +1,60 @@
+id: M2.6-OBSIDIAN-CONNECTOR-SAFE-MINIMUM
+phase: 2
+milestone: M2.6
+priority: P2
+title: "Obsidian vault connector — read-only safe minimum"
+status: done
+owner: iris
+assigned_to: null
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/iris/src/iris/"
+  - "~/Documents/Obsidian/学习进化/"
+outputs:
+  - "projects/kairon/packages/iris/src/iris/connectors/obsidian_connector.py"
+acceptance_criteria:
+  - "Read-only: no writes to vault files"
+  - "Incremental sync: only new/changed files since last sync"
+  - "Full sync requires L2 confirmation (default blocked)"
+  - "Parses YAML frontmatter (title, tags, dates)"
+  - "Converts to KOS entities in knowledge domain"
+evidence_required:
+  - "obsidian_connector.py implemented"
+  - "Read-only test (attempt write → verified blocked)"
+  - "Incremental sync test"
+test_plan:
+  - "unit: YAML frontmatter parsing"
+  - "unit: incremental file detection"
+  - "integration: sync test vault → verify entities in KOS"
+evidence:
+  implementation:
+    file: "projects/kairon/packages/iris/src/iris/connectors/obsidian.py"
+    lines: 461
+    capabilities:
+      - "List vault items by folder"
+      - "Get single item with YAML frontmatter parsing"
+      - "Search by tag or content"
+      - "Vault sync status (last_modified tracking)"
+      - "Incremental sync (only files modified since last sync)"
+      - "Path traversal protection (_validate_path)"
+      - "Soft delete (trash) and hard delete"
+  tests:
+    file: "projects/kairon/packages/iris/tests/test_obsidian.py"
+    total: 51
+    passed: 51
+    failed: 0
+    skipped: 0
+    coverage:
+      - "YAML frontmatter parsing (tags, title, dates, aliases)"
+      - "Vault sync (full + incremental)"
+      - "Item CRUD operations"
+      - "Path traversal attack prevention"
+      - "Tag-based and folder-based filtering"
+      - "Frontmatter generation for writes"
+completed_at: "2026-05-30T13:15:00Z"

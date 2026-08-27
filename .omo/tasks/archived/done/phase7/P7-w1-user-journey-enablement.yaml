@@ -1,0 +1,42 @@
+id: P7-W1-USER-JOURNEY-ENABLEMENT
+phase: 7
+milestone: W1
+priority: P0
+title: Land the Phase 7 Wave 1 user journey enablement packet
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase7-wave1-experience-loop
+run_ref: .omo/plans/archive/phase7-wave1-execution-plan.md
+approval_ref: null
+review_ref: .omo/summaries/phase7-wave1-closeout.md
+knowledge_refs:
+  - .omo/plans/archive/phase7-program-plan.md
+handoff_refs:
+  - .omo/_delivery/task-center/consensus/p7-w1-user-journey-enablement-20260531-101500.yaml
+source_docs:
+  - .omo/plans/archive/phase7-planning-gate.md
+  - .omo/plans/archive/phase7-program-plan.md
+  - .omo/plans/archive/phase7-starter-packet-spec.md
+  - .omo/plans/archive/phase7-wave1-execution-plan.md
+deliverables:
+  - scripts/omo_experience.py
+  - .omo/tests/test_omo_experience.py
+  - .omo/_delivery/task-center/consensus/p7-w1-user-journey-enablement-20260531-101500.yaml
+  - .omo/summaries/phase7-wave1-closeout.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 7 planning gate ratified
+  - orphaned_tasks:1 resolved by folding ratification packet into the current goal graph
+evidence_required:
+  - Wave 1 evidence links context preload, task bridge, confirmation evidence, and freshness output
+test_plan:
+  - python3 -m pytest .omo/tests/test_omo_experience.py -q
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 scripts/sync_omo_state.py --omo-dir .omo
+started_at: '2026-05-31T09:40:00Z'
+completed_at: '2026-05-31T10:18:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary: Wave 1 made the user journey real by connecting bootstrap context, governed task bridging, confirmation evidence, and freshness surfaces.

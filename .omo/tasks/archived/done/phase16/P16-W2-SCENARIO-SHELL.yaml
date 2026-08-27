@@ -1,0 +1,8 @@
+id: P16-W2-SCENARIO-SHELL
+phase: 16
+status: done
+title: knowledge-capture-search scenario shell
+evidence_refs:
+  - .omo/scenarios/knowledge-capture-search.yaml
+  - .omo/evidence/phase16/scenario-shell.yaml
+verification: shell binds intent, context, policy, execution, verification, and recovery

@@ -1,0 +1,47 @@
+{
+  "schema": "mos-dual-stack-consistency/intervention/v1",
+  "week": "2026-W33",
+  "observed_at": "2026-08-14T12:05:22Z",
+  "status": "immediate-intervention",
+  "immediate_actions": [
+    {
+      "at": "2026-08-14T11:58:00Z",
+      "action": "run-cockpit-status",
+      "command": "uv run --project projects/cockpit python -m cockpit.cli status --json",
+    "evidence": [
+        "KOS: healthy=false",
+        "Agora SSE: healthy=false",
+        "service_total_research_traces_increase=0"
+      ],
+      "result": "legacy stack not ready; only local trace artifact observed"
+    },
+    {
+      "at": "2026-08-14T12:00:35Z",
+      "action": "run-memory-os-recall-vs-search",
+      "command": "python3 bin/ssot/mos-dual-stack-consistency.py --query \"借调政策\" --query \"治理规则\" --query \"Memory OS\" --query \"ADR-0372\" --query \"Mos\" --query \"kos\" --query \"知识 规则\" --query \"债务管理\" --json",
+      "result": {
+        "consistency_ratio": 0.5,
+        "consistent_count": 4,
+        "queries_count": 8
+      },
+      "impact": "Memory OS query 与既有旧栈检索口径存在持续偏差"
+    },
+    {
+      "at": "2026-08-14T12:01:00Z",
+      "action": "inspect-kos-empty-hit-shape",
+      "command": "uv run --project projects/cockpit python -m cockpit.cli search \"Memory OS\" --limit 10",
+      "evidence": [
+        "raw line includes `▸  search-trace: Memory OS  cockpit-local`"
+      ],
+      "result": "parser in current observer treats trace line as id candidate; comparison is polluted"
+    }
+  ],
+  "followup_plan": {
+    "next_steps": [
+      "立即同步：将本次差异录入并同步给 T3 track 负责人",
+      "增加：每周固定 2 次跑一致性（周一/周三）并落盘",
+      "增加：扩充观测 queries 至 10 条（新增 2 条 query）并保留 1 条固定观测探针"
+    ],
+    "sync_with_track": "不等待 8 周；本周即触发回归修复与服务告警联动"
+  }
+}

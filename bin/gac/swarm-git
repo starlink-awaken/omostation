@@ -1,0 +1,254 @@
+#!/usr/bin/env bash
+# swarm-git — agent-facing git wrapper (G-CONV.7 / ADR-0220 D4 + T1-07 高危拦截)
+#
+# Fail-closed for --no-verify: only allowlisted SWARM_ESCAPE_ID may pass.
+# Bare `git commit --no-verify` / `git push --no-verify` still skip hooks by
+# design of git; agents MUST use this wrapper (or PATH shim) for fail-closed D4.
+#
+# T1-07: 也拦高危 (clean -fd/reset --hard/stash -u/共享分支 rebase).
+# 关键: 内部 git 调用用 REAL_GIT (PATH 中非 shim 的 git 绝对路径), 否则
+# shim→swarm-git→exec git→PATH(shim)→shim→… 无限递归.
+
+set -euo pipefail
+
+# 🛡️ 防护 1: 严格递归深度计数器 — 允许最大深度 1, 大于 1 直接 exit 1 物理熔断 (防 Fork Bomb)
+if [ "${SWARM_GIT_DEPTH:-0}" -ge 1 ]; then
+  echo "[swarm-git] ❌ 递归深度 ${SWARM_GIT_DEPTH} 超限, 触发物理熔断阻断 (防 Fork Bomb 绝杀)" >&2
+  exit 1
+fi
+export SWARM_GIT_DEPTH=$((${SWARM_GIT_DEPTH:-0} + 1))
+
+# 🛡️ 防护 2: PATH 绝对净化 — 在全脚本所有子进程中物理剥离 shim 目录 (防 Python 内部二次调 git 递归)
+_shim_dir="${HOME:-}/agents/shim/bin"
+CLEANED_PATH=""
+IFS=':' read -ra _dirs <<< "${PATH:-}"
+for _d in "${_dirs[@]}"; do
+  [ "$_d" = "$_shim_dir" ] && continue
+  CLEANED_PATH="${CLEANED_PATH:+$CLEANED_PATH:}$_d"
+done
+export PATH="$CLEANED_PATH"
+
+# 查找真实系统 git 路径
+REAL_GIT=""
+for _d in "${_dirs[@]}"; do
+  [ "$_d" = "$_shim_dir" ] && continue
+  if [ -x "$_d/git" ]; then REAL_GIT="$_d/git"; break; fi
+done
+REAL_GIT="${REAL_GIT:-/usr/bin/git}"
+
+# Normalize Git's global options before evaluating the repository and command.
+# Without this, `git -C repo merge ...` would bypass policy that only reads $1.
+_git_argv=("$@")
+_git_global_args=()
+GIT_COMMAND=""
+GIT_COMMAND_ARGS=()
+GIT_INLINE_ALIAS_CONFIG=0
+_git_index=0
+while [ "$_git_index" -lt "${#_git_argv[@]}" ]; do
+  _git_arg="${_git_argv[$_git_index]}"
+  case "$_git_arg" in
+    -C|--git-dir|--work-tree|--namespace)
+      _git_global_args+=("$_git_arg")
+      _git_index=$((_git_index + 1))
+      if [ "$_git_index" -lt "${#_git_argv[@]}" ]; then
+        _git_global_args+=("${_git_argv[$_git_index]}")
+      fi
+      ;;
+    -c|--config-env)
+      _git_global_args+=("$_git_arg")
+      _git_index=$((_git_index + 1))
+      if [ "$_git_index" -lt "${#_git_argv[@]}" ]; then
+        _git_config_value="${_git_argv[$_git_index]}"
+        _git_global_args+=("$_git_config_value")
+        case "$_git_config_value" in
+          [Aa][Ll][Ii][Aa][Ss].*) GIT_INLINE_ALIAS_CONFIG=1 ;;
+        esac
+      fi
+      ;;
+    --config-env=*)
+      _git_global_args+=("$_git_arg")
+      case "${_git_arg#--config-env=}" in
+        [Aa][Ll][Ii][Aa][Ss].*) GIT_INLINE_ALIAS_CONFIG=1 ;;
+      esac
+      ;;
+    --git-dir=*|--work-tree=*|--namespace=*|--exec-path=*|--bare|--no-pager|--paginate|--literal-pathspecs|--glob-pathspecs|--noglob-pathspecs|--icase-pathspecs|--no-optional-locks|--no-replace-objects)
+      _git_global_args+=("$_git_arg")
+      ;;
+    --)
+      ;;
+    -*)
+      _git_global_args+=("$_git_arg")
+      ;;
+    *)
+      GIT_COMMAND="$_git_arg"
+      GIT_COMMAND_ARGS=("${_git_argv[@]:$((_git_index + 1))}")
+      break
+      ;;
+  esac
+  _git_index=$((_git_index + 1))
+done
+
+_git_probe() {
+  if [ "${#_git_global_args[@]}" -gt 0 ]; then
+    "$REAL_GIT" "${_git_global_args[@]}" "$@"
+  else
+    "$REAL_GIT" "$@"
+  fi
+}
+
+ROOT="$(_git_probe rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "${ROOT:-}" ]; then
+  exec "$REAL_GIT" "$@"
+fi
+
+# 🛡️ 防护 3: 后台异步脱离心跳上报 — 完全脱离主父进程, 零延迟, 零死循环风险
+if [ -n "${AGENT_ID:-}" ]; then
+  (
+    PYTHONPATH="$ROOT/projects/agora/src" "$REAL_GIT" --version >/dev/null 2>&1
+    python3 -c "
+import os, sys
+from pathlib import Path
+try:
+    from agora.swarm_mesh import SwarmMeshManager
+    sm = SwarmMeshManager(root=Path('$ROOT'))
+    sm.register_node(agent_id=os.environ.get('AGENT_ID', 'agent-cli'), role='Developer', working_paths=['.'])
+except Exception:
+    pass
+" 2>/dev/null || true
+  ) >/dev/null 2>&1 &
+fi
+
+# D4: --no-verify fail-closed (ADR-0220 / ADR-0422 observe-then-skip)
+if printf '%s\0' "$@" | grep -qz -- '--no-verify'; then
+  CLI="$ROOT/bin/gac/swarm-discipline-cli.py"
+  if [ ! -f "$CLI" ]; then
+    echo "[swarm-git] ❌ missing swarm-discipline-cli.py; refusing --no-verify" >&2
+    exit 1
+  fi
+  FLAG="no_verify_push"
+  for a in "$@"; do [ "$a" = "commit" ] && { FLAG="no_verify_commit"; break; }; done
+  _FAIL_JSON=""
+  if [ "$FLAG" = "no_verify_push" ] && [ -f "$ROOT/bin/gac/ci-local-fast.py" ]; then
+    _FAIL_JSON="$(mktemp "${TMPDIR:-/tmp}/swarm-git-failures.json.XXXXXX")"
+    python3 "$ROOT/bin/gac/ci-local-fast.py" --failures-json "$_FAIL_JSON" >/dev/null 2>&1 || true
+  fi
+  _esc_cmd=(python3 "$CLI" escape-check --flag "$FLAG")
+  if [ -n "$_FAIL_JSON" ] && [ -f "$_FAIL_JSON" ]; then
+    _esc_cmd+=(--failures-file "$_FAIL_JSON")
+  fi
+  OUT="$("${_esc_cmd[@]}" 2>&1)" || RC=$?
+  RC="${RC:-0}"
+  rm -f "$_FAIL_JSON"
+  printf '%s\n' "$OUT" | sed 's/^/[swarm-git] /' >&2
+  if [ "$RC" -ne 0 ]; then
+    cat >&2 <<EOF
+[swarm-git] ❌ --no-verify blocked (G-CONV.7 D4 / ADR-0220 / ADR-0422)
+   Set SWARM_ESCAPE_ID to a permission class in
+   .omo/_truth/registry/swarm-coordination.yaml::escape_hatch_exemptions
+   Agent path cannot use emergency-human-hotfix without SWARM_ESCAPE_TOKEN
+EOF
+    exit 1
+  fi
+fi
+
+# T1-07: 高危 argv 拦截 — clean -fd/reset --hard/stash -u (agent 禁做, 无 escape)
+if printf '%s\0' "$@" | grep -qzE '\bclean\b|\breset\b|\bstash\b'; then
+  DANGER_PY="$ROOT/bin/gac/swarm_discipline.py"
+  if [ -f "$DANGER_PY" ]; then
+    DANGER="$(AGENT_BIN="$ROOT/bin/gac" python3 -c '
+import sys, os
+sys.path.insert(0, os.environ["AGENT_BIN"])
+from swarm_discipline import argv_has_dangerous
+print("DANGER" if argv_has_dangerous(sys.argv[1:]) else "OK")
+' "$@" 2>/dev/null)" || DANGER="ERR"
+    if [ "$DANGER" = "DANGER" ]; then
+      cat >&2 <<EOF
+[swarm-git] ❌ high-risk op blocked (T1-07): clean -fd / reset --hard / stash -u 禁在 agent 环境
+   这些操作删 peer agent 未入库工作. 用 worktree 隔离 + 三段式 add→commit→tag (git-discipline §1-2)
+EOF
+      exit 1
+    fi
+  fi
+fi
+
+# B2d-1: agent/* is an immutable writer lineage.  A delivery attempt may add
+# commits, but it must never absorb upstream history or rewrite commits in
+# place.  A fresh attempt/clone is the only forward-migration path.
+BRANCH="$(_git_probe rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+IMMUTABLE_WRITER=0
+case "$BRANCH" in
+  agent/*) IMMUTABLE_WRITER=1 ;;
+esac
+
+if [ "$IMMUTABLE_WRITER" -eq 1 ]; then
+  if [ "$GIT_INLINE_ALIAS_CONFIG" -eq 1 ]; then
+    echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot inject Git aliases" >&2
+    exit 1
+  fi
+  if [ -n "$GIT_COMMAND" ]; then
+    _git_alias="$(_git_probe config --get "alias.$GIT_COMMAND" 2>/dev/null || true)"
+    if [ -n "$_git_alias" ]; then
+      echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot dispatch configured Git alias '$GIT_COMMAND'" >&2
+      exit 1
+    fi
+  fi
+  case "$GIT_COMMAND" in
+    rebase)
+      if [ "${#GIT_COMMAND_ARGS[@]}" -ne 1 ] || [ "${GIT_COMMAND_ARGS[0]:-}" != "--abort" ]; then
+        echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot rebase; start a fresh delivery attempt" >&2
+        exit 1
+      fi
+      ;;
+    merge)
+      if [ "${#GIT_COMMAND_ARGS[@]}" -ne 1 ] || [ "${GIT_COMMAND_ARGS[0]:-}" != "--abort" ]; then
+        echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot merge upstream; start a fresh delivery attempt" >&2
+        exit 1
+      fi
+      ;;
+    pull)
+      echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot pull upstream; start a fresh delivery attempt" >&2
+      exit 1
+      ;;
+    push)
+      # The sole force-looking exception is an atomic create-if-absent lease.
+      # Empty expected OID means Git rejects the push if the remote attempt ref
+      # already exists; it can never rewrite an existing history.
+      _atomic_create_lease=0
+      if [ "${#GIT_COMMAND_ARGS[@]}" -eq 4 ] \
+        && [ "${GIT_COMMAND_ARGS[0]}" = "--porcelain" ] \
+        && [ "${GIT_COMMAND_ARGS[1]}" = "--force-with-lease=refs/heads/$BRANCH:" ] \
+        && [ "${GIT_COMMAND_ARGS[2]}" = "origin" ] \
+        && [ "${GIT_COMMAND_ARGS[3]#*:}" = "refs/heads/$BRANCH" ]; then
+        _create_source="${GIT_COMMAND_ARGS[3]%%:*}"
+        if printf '%s' "$_create_source" | grep -qE '^[0-9a-f]{40}([0-9a-f]{24})?$'; then
+          _atomic_create_lease=1
+        fi
+      fi
+      if [ "${#GIT_COMMAND_ARGS[@]}" -gt 0 ]; then
+        for _arg in "${GIT_COMMAND_ARGS[@]}"; do
+          case "$_arg" in
+            -f|--force|--force=*|--force-with-lease|--force-with-lease=*)
+              if [ "$_atomic_create_lease" -eq 1 ] \
+                && [ "$_arg" = "--force-with-lease=refs/heads/$BRANCH:" ]; then
+                continue
+              fi
+              echo "[swarm-git] ❌ immutable writer branch '$BRANCH' cannot force-push history" >&2
+              exit 1
+              ;;
+          esac
+        done
+      fi
+      ;;
+  esac
+fi
+
+# T1-07 compatibility: legacy shared branches still block ordinary rebase.
+# Recovery is always allowed so an interrupted operation can be abandoned.
+if [ "$GIT_COMMAND" = "rebase" ] && { [ "${#GIT_COMMAND_ARGS[@]}" -ne 1 ] || [ "${GIT_COMMAND_ARGS[0]:-}" != "--abort" ]; }; then
+  if [ -n "$BRANCH" ] && ! printf '%s' "$BRANCH" | grep -qE '^work/|^pr/'; then
+    echo "[swarm-git] ❌ rebase on shared branch '$BRANCH' blocked (T1-07): 把工作挪到 work/* 分支" >&2
+    exit 1
+  fi
+fi
+
+exec "$REAL_GIT" "$@"

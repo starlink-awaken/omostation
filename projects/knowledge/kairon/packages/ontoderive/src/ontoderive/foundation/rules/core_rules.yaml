@@ -1,0 +1,83 @@
+# 核心确定性规则 (R1-R9) — YAML声明式
+# RuleReasoner启动时通过RuleLoader加载, 不修改源码即可扩展
+
+- id: R1
+  name: numeric_comparison
+  type: numeric_comparison
+  category: deduction
+  description: 同域数值比较, 标注显著差异
+  premises: ["has_numeric_value", "same_domain"]
+  conclusion_template: "{label_a}({val_a})是{label_b}({val_b})的{ratio:.1f}倍"
+  confidence: 0.95
+
+- id: R2
+  name: shared_premise
+  type: shared_premise
+  category: induction
+  description: 两个推论共享≥2个前提, 可能互补或矛盾
+  premises: ["shared_premises >= 2"]
+  conclusion_template: "推论'{a}'和'{b}'共享{n}个前提({shared}), 可能互补或矛盾"
+  confidence: 0.75
+
+- id: R3
+  name: missing_reference
+  type: missing_reference
+  category: deduction
+  description: 推论引用了不存在的事实ID
+  premises: ["referenced_id_not_found"]
+  conclusion_template: "推论'{inf}'引用了不存在的事实'{fid}'"
+  confidence: 0.99
+
+- id: R4
+  name: evidence_gap
+  type: evidence_gap
+  category: induction
+  description: 推论依赖前提数少于阈值
+  premises: ["premise_count < 3"]
+  conclusion_template: "推论'{inf}'仅基于{n}个前提, 建议增加引用以增强可信度"
+  confidence: 0.80
+
+- id: R5
+  name: threshold_alert
+  type: threshold_alert
+  category: deduction
+  description: 事实值超过预设阈值
+  premises: ["value > threshold"]
+  conclusion_template: "{metric}达到{value}, 超过基准{threshold}"
+  confidence: 0.90
+
+- id: R6
+  name: chain_break
+  type: chain_break
+  category: deduction
+  description: 推论引用链中存在未定义的中间节点
+  premises: ["derivation_chain_incomplete"]
+  conclusion_template: "推导链断裂: '{inf}'引用了未定义的'{missing}'"
+  confidence: 0.95
+
+- id: R7
+  name: modus_ponens
+  type: modus_ponens_valid
+  category: deduction
+  description: 假言推理 — 前提全成立则推论有效
+  premises: ["all_premises_valid"]
+  conclusion_template: "推论'{inf}'的{n}个前提全部成立, 推论有效"
+  confidence: 0.90
+
+- id: R8
+  name: transitive_dependency
+  type: transitive_dependency
+  category: deduction
+  description: A→B→C传递依赖
+  premises: ["depends_on_chain"]
+  conclusion_template: "推论'{inf}'间接依赖{n}个前提: {deps}"
+  confidence: 0.75
+
+- id: R9
+  name: subsumption
+  type: subsumption
+  category: deduction
+  description: 本体包含推理 — ID前缀归类到正确的元类型
+  premises: ["id_prefix_in_hierarchy"]
+  conclusion_template: "本体归类: {correct}/{total}个ID正确({pct}%)"
+  confidence: 0.85

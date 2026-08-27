@@ -1,0 +1,13 @@
+id: w3w3-planned-status-normalize
+title: 'planned 卡 status 归一: deferred/backlog → pending|candidate'
+description: 'P84 W3 wave3 follow-up — 修 governance-verify planned schema'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-28T14:10:00Z'
+completion_evidence:
+  - .omo/tasks/planned/needs-human-*.yaml
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+stage: P84-W3

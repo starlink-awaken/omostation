@@ -1,0 +1,267 @@
+#!/bin/bash
+# 治本 D: 主仓 push 前同步未推子模块, 防 CI 悬空.
+#
+# 病根: 自动化 agent (OMC/autopilot) commit 子模块 + bump 主仓指针却不 push
+#   → 主仓 gitlink 指向子模块远程没有的 commit → CI `submodules: recursive`
+#   拉不到 → "not our ref" → 整条 CI 红. (2026-06-17 实测 14/18 子模块悬空)
+#
+# 此钩子: 主仓 push(触发 CI)前, 把本地领先远程的子模块 push 上去, 让 gitlink 可达.
+# 子模块 push 失败会阻断主仓 push,避免把不可达 gitlink 推到远端.
+#
+# direct-push-to-main 守卫历程:
+#   2a (2026-06-30): advisory (警告不阻断)
+#   2c (2026-07-01, commit 893f2332): 升级 blocking (exit 1)
+#   路径A第1步 (2026-07-01): 回退 advisory — 2c 意外生效但 auto-PR 通道未建,
+#     escape hatch 滥用废 blocking (半吊子). 第4步 (auto-PR通+并发agent切PR) 恢复 blocking.
+# 当前: blocking (实测 2026-07-04: git push --dry-run origin main → [blocking] exit 1; work/* 放行).
+#   注: 此行曾滞后写成 advisory (路径A第1步回退叙事), 但实际代码 (第34-54行 Phase 2c blocking) 一直是 active,
+#   以 `git push --dry-run origin main` 实测为准, 勿信旧注释.
+# 详见 docs/AGENT-ISOLATION-ROLLOUT.md §4 Phase 2 (ISC-3b) + docs/AUTO-PR-REVIEW-ISA.md.
+#
+# 安装: make install-hooks  (从本文件复制到 .git/hooks/pre-push)
+# 新 clone 必跑: make install-hooks
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+PY_RUNTIME="$ROOT/bin/gac/managed-python"
+
+run_py() {
+  "$PY_RUNTIME" run --profile stdlib -- "$@"
+}
+
+run_py_with_yaml() {
+  "$PY_RUNTIME" run --profile pyyaml -- "$@"
+}
+
+# ── 读 pre-push stdin (push ref 列表), 供 advisory 守卫 ──────────
+# stdin 格式每行: <local-ref> <local-sha> <remote-ref> <remote-sha>
+PUSH_REFS=""
+ALL_DELETIONS="true"
+PUSH_REMOTE_SHA=""
+PUSH_LOCAL_SHA=""
+while read -r _lref _lsha _rref _rsha; do
+  PUSH_REFS="${PUSH_REFS}${_rref}
+"
+  # 捕获首个 push 目标的 remote_sha (push 前远程真实状态) → 增量 reachability base
+  if [ -z "$PUSH_REMOTE_SHA" ] && [ "$_rsha" != "0000000000000000000000000000000000000000" ]; then
+    PUSH_REMOTE_SHA="$_rsha"
+  fi
+  # 捕获首个非删除 push 的 local_sha → gitlink ancestry gate 的 head 基准
+  if [ -z "$PUSH_LOCAL_SHA" ] && [ "$_lsha" != "0000000000000000000000000000000000000000" ]; then
+    PUSH_LOCAL_SHA="$_lsha"
+  fi
+  # local-sha 为全 0 表示删除远端 ref
+  if [ "$_lsha" != "0000000000000000000000000000000000000000" ]; then
+    ALL_DELETIONS="false"
+  fi
+done
+
+# ── direct-push-to-main 守卫 (Phase 2c: blocking) ───────────────────────────
+# push 目标含 refs/heads/main 且当前分支非 work/* 或 pr/* → 物理阻断 (exit 1)
+# 强制所有 Agent 并行开发必须走 per-session worktree + PR 合流。
+# 绕过拦截: 紧急情况下可使用 git push --no-verify 自担风险。
+{
+  CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+  if printf '%s\n' "$PUSH_REFS" | grep -qE 'refs/heads/main'; then
+    if [ -z "$CURRENT_BRANCH" ] || ! printf '%s' "$CURRENT_BRANCH" | grep -qE '^work/|^pr/'; then
+      cat >&2 <<EOF
+[blocking] ❌ 拒绝直接 Push 至 main 分支 (当前分支: ${CURRENT_BRANCH:-detached})
+   原因: 大仓已全面落地 SGF-v1 隔离工作区策略 (Phase 2c)。
+   建议: 请使用隔离分支或 pr 分支开发，并开 PR 合流。
+   步骤:
+     1. 起 worktree:  bash bin/gac-worktree.sh claim <session>
+     2. 提交分支:     bash bin/gac-worktree.sh submit <session>
+     3. 强制合流:     bash bin/gac-worktree.sh merge <session>
+EOF
+      exit 1
+    fi
+  fi
+}
+
+# ── 治本 D: sync 子模块, 防 gitlink 悬空 ─────────────────────────
+# SSOT paths live under bin/ssot/ (bin rationalization). Prefer ssot/,
+# fall back to bin/ wrappers for older checkouts.
+# sync 子模块, 结果显示到 stderr; 失败即阻断 push.
+SYNC_SCRIPT="$ROOT/bin/ssot/sync-submodules-push.sh"
+if [ ! -f "$SYNC_SCRIPT" ]; then
+  SYNC_SCRIPT="$ROOT/bin/sync-submodules-push.sh"
+fi
+REACH_SCRIPT="$ROOT/bin/ssot/submodule-reachability-gate.py"
+if [ ! -f "$REACH_SCRIPT" ]; then
+  REACH_SCRIPT="$ROOT/bin/submodule-reachability-gate.py"
+fi
+REACH_BASELINE="$ROOT/.omo/_truth/registry/submodule-reachability-baseline.txt"
+if [ -f "$REACH_BASELINE" ]; then
+  REACH_ARGS="--skip-file $REACH_BASELINE"
+else
+  REACH_ARGS=""
+fi
+if [ ! -f "$SYNC_SCRIPT" ]; then
+  echo "[pre-push] ❌ missing sync-submodules-push.sh (expected bin/ssot/ or bin/)" >&2
+  exit 1
+fi
+"$SYNC_SCRIPT" 2>&1 | sed 's/^/[pre-push] /' >&2
+# 增量 reachability (2026-08-08): 只验本次 push 实际变化的 submodule.
+# 全仓检查会让任一并行 agent 的本地子模块 commit 未推送时冻结所有人的 push;
+# 本地 pre-push 应增量, CI full checkout (evidence-smoke-gate) 仍是全量守门员.
+# 基线优先级: PUSH_REMOTE_SHA (stdin 远程真实状态, 最准) > REACH_CHANGED_FROM
+#   (显式覆盖) > origin/main (回退) > 全量. 基线不可解析时 gate 脚本自身
+#   回退全量 (main 已修), 增量不因基线缺失漏检.
+REACH_CHANGED_FROM="${REACH_CHANGED_FROM:-}"
+if [ -n "$PUSH_REMOTE_SHA" ] && git cat-file -e "${PUSH_REMOTE_SHA}^{commit}" >/dev/null 2>&1; then
+  REACH_CHANGED_FROM="$PUSH_REMOTE_SHA"
+elif [ -z "$REACH_CHANGED_FROM" ] && git rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
+  # 先 fetch 使 base 新鲜 (origin/main ref 可能陈旧 — 见 2026-08-08 会话),
+  # 避免 git diff 陈旧 base..HEAD 产生伪 submodule 差异.
+  git fetch --quiet origin main >/dev/null 2>&1
+  REACH_CHANGED_FROM="origin/main"
+fi
+if [ -n "$REACH_CHANGED_FROM" ]; then
+  run_py $REACH_SCRIPT --source head --fetch $REACH_ARGS --changed-from "$REACH_CHANGED_FROM" 2>&1 | sed 's/^/[reachability] /' >&2
+else
+  run_py $REACH_SCRIPT --source head --fetch $REACH_ARGS 2>&1 | sed 's/^/[reachability] /' >&2
+fi
+
+# ── Observe-then-skip (ADR-0422): always run preflight, then maybe skip ─
+# CI_LOCAL_SKIP=1 no longer skips the run; it only changes the exit policy.
+_FAILURES_JSON="$(mktemp "${TMPDIR:-/tmp}/ci-local-failures.json.XXXXXX")"
+_CI_RC=0
+_DRIFT_RC=0
+if [ "$ALL_DELETIONS" != "true" ]; then
+  if [ -f "$ROOT/bin/gac/ci-local-fast.py" ]; then
+    run_py_with_yaml "$ROOT/bin/gac/ci-local-fast.py" --failures-json "$_FAILURES_JSON" 2>&1 | sed 's/^/[ci-local] /' >&2 || _CI_RC=$?
+    _CI_RC="${_CI_RC:-0}"
+  elif [ -f "$ROOT/Makefile" ]; then
+    make -C "$ROOT" ci-local-fast 2>&1 | sed 's/^/[ci-local] /' >&2 || _CI_RC=$?
+    _CI_RC="${_CI_RC:-0}"
+  fi
+  if [ -f "$ROOT/bin/gac/check-submodule-pointer-drift.py" ]; then
+    _drift_out="$(run_py "$ROOT/bin/gac/check-submodule-pointer-drift.py" 2>&1)" || _DRIFT_RC=$?
+    _DRIFT_RC="${_DRIFT_RC:-0}"
+    printf '%s\n' "$_drift_out" | sed 's/^/[pointer-drift] /' >&2
+    if [ "$_DRIFT_RC" -ne 0 ]; then
+      run_py - "$_FAILURES_JSON" "$_drift_out" <<'PY'
+import json, sys, hashlib
+path, excerpt = sys.argv[1], sys.argv[2]
+try:
+    payload = json.loads(open(path, encoding="utf-8").read())
+except Exception:
+    payload = {"ok": False, "failures": []}
+if not isinstance(payload, dict):
+    payload = {"ok": False, "failures": []}
+payload.setdefault("failures", []).append({
+    "surface": "pointer-drift",
+    "check_id": "pointer-drift",
+    "signature": hashlib.sha256(excerpt.encode()).hexdigest()[:16],
+    "kind": "preflight",
+    "producer": "pointer-drift",
+    "output_excerpt": " ".join(excerpt.split())[:240],
+})
+payload["ok"] = False
+open(path, "w", encoding="utf-8").write(json.dumps(payload, indent=2) + "\n")
+PY
+    fi
+  fi
+fi
+
+if [ "${CI_LOCAL_SKIP:-}" = "1" ]; then
+  if [ -f "$ROOT/bin/gac/swarm-discipline-cli.py" ]; then
+    _esc_cmd=(run_py_with_yaml "$ROOT/bin/gac/swarm-discipline-cli.py" escape-check --flag ci_local_skip)
+    if [ -f "$_FAILURES_JSON" ]; then
+      _esc_cmd+=(--failures-file "$_FAILURES_JSON")
+    fi
+    _esc_out="$("${_esc_cmd[@]}" 2>&1)" || _esc_rc=$?
+    _esc_rc="${_esc_rc:-0}"
+    printf '%s\n' "$_esc_out" | sed 's/^/[swarm-d4] /' >&2
+    if [ "$_esc_rc" -ne 0 ]; then
+      cat >&2 <<EOF
+[swarm-d4] ❌ CI_LOCAL_SKIP=1 blocked (G-CONV.7 / ADR-0220 D4 / ADR-0422)
+   需要: SWARM_ESCAPE_ID=<permission class> 且 fingerprint 允许跳过
+   预存债走 known-debt / local-preflight-preexisting；未 init 子模块走 partial-worktree
+   人类紧急: 系统 git 或 SWARM_ESCAPE_TOKEN（一次性）
+EOF
+      rm -f "$_FAILURES_JSON"
+      exit 1
+    fi
+  fi
+else
+  if [ "$_CI_RC" -ne 0 ]; then
+    cat >&2 <<EOF
+[ci-local] ❌ 本地 CI 预检未通过. 修复后重试, 或:
+  SWARM_ESCAPE_ID=local-preflight-preexisting CI_LOCAL_SKIP=1 git push ...
+  （ADR-0422: 仍会先跑预检并记录 fingerprint；禁止拿万能票跳过自己引入的失败）
+EOF
+    rm -f "$_FAILURES_JSON"
+    exit 1
+  fi
+  if [ "$_DRIFT_RC" -ne 0 ]; then
+    cat >&2 <<EOF
+[pointer-drift] ❌ 子模块指针 DIVERGED — 根仓指向 side branch, 代码不可见!
+   修复: bin/gac/managed-python run --profile stdlib -- bin/gac/check-submodule-pointer-drift.py --fix --apply
+EOF
+    rm -f "$_FAILURES_JSON"
+    exit 1
+  fi
+fi
+rm -f "$_FAILURES_JSON"
+
+
+# --- mass-deletion gate: 拦住把 gitlink 指向被清空子模块的推送 ---
+GATE="$(git rev-parse --show-toplevel)/bin/gac/mass-deletion-gate.py"
+if [ -f "$GATE" ] && git rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
+  run_py "$GATE" --range origin/main HEAD --submodules || exit 1
+fi
+
+# --- gitlink ancestry gate (D5 双重阻断, 2026-08-24): 拦截子模块指针回退 ---
+# 病根: 并发合并把子模块 gitlink 带回旧 SHA → 后续合入者看到"指针退回",
+# 配额拉锯的根因之一. 本地 pre-push blocking 是核心价值 (CI 侧首周 advisory).
+# 豁免: base..head 区间 commit body 含 [gitlink-regress: <理由>] → 降级 warning
+#   + 指纹记入 .omo/_truth/registry/gate-known-debt.yaml (shrink_only, 只追加).
+ANCESTRY_GATE="$(git rev-parse --show-toplevel)/bin/gac/check-submodule-rewind.py"
+if [ "$ALL_DELETIONS" != "true" ] && [ -f "$ANCESTRY_GATE" ] && git rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
+  # 先 fetch 使 origin/main 新鲜 (同 reachability 段先例), 离线时回退现有 ref
+  git fetch --quiet origin main >/dev/null 2>&1 || true
+  run_py_with_yaml "$ANCESTRY_GATE" --range origin/main "${PUSH_LOCAL_SHA:-HEAD}" 2>&1 | sed 's/^/[gitlink-ancestry] /' >&2 || exit 1
+fi
+
+# --- remote-hygiene gate (2026-08-08) ---
+# 共享 checkout origin 被误设成 agora/kairon 会污染 fetch/push (本会话踩 3 次),
+# 推送前校验 origin 指向 omostation, 主仓与高冲突子模块一并检查.
+ROOT="$(git rev-parse --show-toplevel)"
+for remote_ref in \
+  "$ROOT:https://github.com/starlink-awaken/omostation.git" \
+  "$ROOT/projects/knowledge/gbrain:https://github.com/starlink-awaken/omostation-gbrain.git" \
+  "$ROOT/projects/cockpit:https://github.com/starlink-awaken/omostation-cockpit.git" \
+  "$ROOT/projects/agora:https://github.com/starlink-awaken/omostation-agora.git"; do
+  # repo_path is everything before the first ':'; expected URL is everything after.
+  # The expected URL itself contains 'https://...', so we must use the shortest
+  # prefix removal to avoid stripping the scheme.
+  repo_path="${remote_ref%%:*}"
+  expected="${remote_ref#*:}"
+  # Unset GIT_DIR/GIT_WORK_TREE so git -C <submodule> reads the submodule's
+  # own config rather than inheriting the outer (possibly worktree) repo.
+  # toplevel_check: 子模块未初始化时该目录不是独立 git 仓, `git -C` 会向上
+  # 落到父仓并返回父仓的 origin —— 把"未初始化"误判成"origin 配错",
+  # 且照它给的命令修会把根仓 origin 改成子模块 URL。2026-08-09 实际发生:
+  # 根仓 origin 被改成 omostation-gbrain, 随后 rebase origin/main 变成往
+  # gbrain 历史上 rebase(要重放 4939 个 commit)。
+  [ -d "$repo_path" ] || continue
+  repo_real="$(cd "$repo_path" 2>/dev/null && pwd -P)" || continue
+  # Unset GIT_DIR/GIT_WORK_TREE for the toplevel probe too. A hook-only GIT_DIR
+  # makes `git -C <non-repo-dir> rev-parse --show-toplevel` return the -C path,
+  # so an inlined (non-gitlink) projects/knowledge/gbrain directory is treated
+  # as its own repo and the parent origin is compared to omostation-gbrain.
+  repo_top="$(env -u GIT_DIR -u GIT_WORK_TREE git -C "$repo_path" rev-parse --show-toplevel 2>/dev/null || true)"
+  [ -n "$repo_top" ] || continue
+  [ "$(cd "$repo_top" && pwd -P)" = "$repo_real" ] || continue   # 非自有仓 → 跳过
+  actual="$(env -u GIT_DIR -u GIT_WORK_TREE git -C "$repo_path" remote get-url origin 2>/dev/null || true)"
+  ssh_expected="${expected/https:\/\//git@github.com:}"
+  if [ -n "$actual" ] && [ "$actual" != "$expected" ] && [ "$actual" != "$ssh_expected" ]; then
+    echo "[remote-hygiene] ❌ $repo_path origin 指向异常: $actual (应为 $expected)" >&2
+    echo "[remote-hygiene] 修复: git -C $repo_path remote set-url origin $expected" >&2
+    exit 1
+  fi
+done
+
+exit 0

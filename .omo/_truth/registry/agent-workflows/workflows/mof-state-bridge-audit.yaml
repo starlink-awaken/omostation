@@ -1,0 +1,70 @@
+id: mof-state-bridge-audit
+run_frequency: periodic
+title: MOF state bridge audit
+purpose: Read-only audit of MOF schema health, M1/M2 coverage, and OMO task bridge
+  alignment.
+agents:
+  roles:
+  - mof-agent
+  - observer-agent
+  - governance-agent
+  observer_policy: read_only_required
+allowed_lanes:
+- governance_code
+- governance_state
+lock_scopes:
+- mof-state-bridge-readonly
+surfaces:
+  read:
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - .omo/_truth/mof-version.yaml
+  - .omo/tasks/**
+  - projects/ecos/src/ecos/ssot/mof/**
+  write: []
+phases:
+  preflight:
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: mof-schema-validate
+    mode: required
+    command:
+    - python3
+    - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+    - --json
+  - id: mof-state-bridge
+    mode: required
+    command:
+    - python3
+    - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py
+    - --json
+  verification:
+  - id: mof-drift
+    mode: required
+    command:
+    - bin/mof-drift
+  - id: agent-workflow-doctor
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - doctor
+  closeout:
+  - id: handoff
+    mode: manual
+    command:
+    - agent
+    - report
+    - mof-state-bridge-findings

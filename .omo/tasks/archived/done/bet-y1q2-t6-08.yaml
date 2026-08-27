@@ -1,0 +1,50 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-08T04:17:10+00:00
+id: BET-Y1Q2-T6-08
+title: 100% 责任归因代理链 — Subagent 全流程继承树审计
+status: candidate
+task_type: bet
+priority: P1
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-08
+window: Y1Q2
+track: T6-EVOLUTION
+appetite: 2 days
+desc: 在 audit.log 中扩充 human_session_id -> parent_agent -> task 完整继承归因树
+non_goals: []
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- start_run 接受 parent_run_id/parent_agent 参数，写入 run record + ledger 事件
+- spawn_run 创建子 run 时自动继承父 agent_profile
+- trace_attribution 可追溯完整归因链（支持多层级、缺失节点）
+- CLI 新增 spawn / trace 子命令，start 支持 --parent-run
+- 9 个测试全通过
+test_plan: []
+workflow: bet-execution
+write_surfaces: []
+pasw_required: false
+circuit_breaker: ''
+retro_required: false
+retro_path: .omo/_knowledge/retros/BET-Y1Q2-T6-08.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

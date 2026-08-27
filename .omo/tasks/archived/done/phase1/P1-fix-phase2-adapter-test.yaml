@@ -1,0 +1,30 @@
+id: P1-FIX-PHASE2-ADAPTER-TEST
+phase: 2
+milestone: M2.6
+priority: P1
+title: Fix Phase 2 adapter test hardcoded paths
+status: done
+completed_at: '2026-05-30T03:33:00+08:00'
+evidence:
+- test_phase2_integration.py hardcoded paths replaced with auto-detection
+- WORKSPACE → Path(__file__).resolve().parents[2]
+- eidos/src → projects/kairon/packages/eidos/src
+assigned_to: reasonix-code
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- .omo/tests/test_phase2_integration.py
+depends_on: []
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate:
+- test file exists
+evidence_required:
+- test passes without hardcoded path errors
+- no stale eidos/src/ontoderive/engine/src/minerva/src paths remain
+test_plan: []

@@ -1,0 +1,15 @@
+changes:
+- cards_debts: []
+  description: 织星 MOF 基座建设 — M3/M2/M1全栈·575节点·11工具
+  id: CHG-2026-06-06-001
+  l0_decisions:
+  - DEC-2026-06-06-MOF-L0
+  - DEC-2026-06-06-5-4-1
+  - DEC-2026-06-06-M2-12
+  - DEC-2026-06-06-L0-SELF
+  l0_m1_nodes: 575
+  omo_tasks: []
+  status: l0_updated
+  type: architectural
+updated: '2026-06-06'
+version: 1.0.0

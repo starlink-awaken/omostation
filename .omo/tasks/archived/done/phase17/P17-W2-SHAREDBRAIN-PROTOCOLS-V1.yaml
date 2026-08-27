@@ -1,0 +1,44 @@
+id: P17-W2-SHAREDBRAIN-PROTOCOLS-V1
+phase: 17
+milestone: M17.2
+priority: P0
+title: SharedBrain 5个协议定义v1 + .circuit YAML Schema
+status: completed
+assigned_to: organ-extraction
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs:
+- _knowledge/design/omostation-strategic-architecture-v2.md
+handoff_refs: []
+source_docs:
+- _knowledge/design/omostation-strategic-architecture-v2.md
+depends_on:
+- P17-W1-ARCHITECTURE-FOUNDATION
+entry_gate:
+- phase16_completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- sharedbrain/protocols/identity.py 定义完成
+- sharedbrain/protocols/health.py 定义完成
+- sharedbrain/protocols/circuit.py 含YAML Schema
+- sharedbrain/protocols/metrics.py 定义完成
+- sharedbrain/protocols/governance.py 定义完成
+- sharedbrain/stem_cell.py 5接口定义完成
+acceptance_criteria:
+- 每个协议有完整类型注解
+- CircuitProtocol YAML Schema可验证
+- 干细胞验证器5接口可以通过Python ABC校验
+test_plan:
+- 核对 5 个协议定义与 .circuit YAML Schema 草案覆盖 acceptance_criteria
+accepted: true
+opened_at: '2026-06-02T23:17:32Z'
+completed_at: '2026-06-03T09:00:00Z'
+completion_summary: >
+  所有5个协议代码在 kairon/packages/core-models/src/core_models/protocols/ 中已存在：
+  identity.py, health.py, circuit.py, metrics.py, governance.py.
+  stem_cell.py 验证器5接口完整定义于 core_models/stem_cell.py。
+  协议文件于器官提取期已实现，P17-W2 实际为追认关闭。

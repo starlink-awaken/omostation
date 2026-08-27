@@ -1,0 +1,68 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-08-08
+---
+
+# Cross-Domain Trend Fusion Registry
+# Defines domains, adapters, weights, and alert thresholds for cross-domain governance intelligence.
+
+version: 1
+description: Cross-domain trend fusion configuration for governance intelligence
+
+domains:
+  governance:
+    description: Governance metrics from gac-local-gate
+    source: .omo/state/metrics-store.jsonl
+    adapter: governance-trend-adapter
+    enabled: true
+    metrics:
+      - gate_pass_rate
+      - check_duration_trend
+      - debt_volume_trend
+      - anomaly_count
+
+  code_quality:
+    description: Code quality metrics from pyright/ruff
+    source: .omo/state/code-quality-metrics.jsonl
+    adapter: code-quality-trend-adapter
+    enabled: false
+    metrics:
+      - type_error_count
+      - lint_warning_count
+      - import_error_count
+
+  test_health:
+    description: Test health metrics from pytest
+    source: .omo/state/test-metrics.jsonl
+    adapter: test-health-trend-adapter
+    enabled: false
+    metrics:
+      - coverage_percent
+      - failure_rate
+      - test_count_trend
+
+  knowledge:
+    description: Knowledge base activity from KOS
+    source: .omo/state/knowledge-metrics.jsonl
+    adapter: knowledge-trend-adapter
+    enabled: false
+    metrics:
+      - search_hit_rate
+      - update_frequency
+      - index_size_trend
+
+fusion:
+  weights:
+    governance: 0.5
+    code_quality: 0.2
+    test_health: 0.2
+    knowledge: 0.1
+  alert_threshold: 0.3
+  min_history_days: 3
+  smoothing_alpha: 0.3
+
+output:
+  format: json
+  path: .omo/state/runtime/cross-domain-trend.json

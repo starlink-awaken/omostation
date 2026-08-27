@@ -1,0 +1,27 @@
+{
+  "schema": "mos-dual-stack-consistency/v1",
+  "week": "2026-W32",
+  "observed_at": "2026-08-09T00:26:49Z",
+  "queries_count": 1,
+  "consistent_count": 1,
+  "consistency_ratio": 1.0,
+  "target": 0.99,
+  "results": [
+    {
+      "query": "借调政策",
+      "mos_count": 0,
+      "kos_count": 0,
+      "jaccard": 1.0,
+      "consistent": true,
+      "mos_ids": [],
+      "kos_ids": [],
+      "mos_error": null,
+      "backend": {
+        "kos": "ok",
+        "gbrain": "ok",
+        "neo4j": "ok",
+        "temporal": "ok"
+      }
+    }
+  ]
+}

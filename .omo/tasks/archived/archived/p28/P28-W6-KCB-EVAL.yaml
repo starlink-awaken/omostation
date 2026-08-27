@@ -1,0 +1,58 @@
+id: P28-W6-KCB-EVAL
+phase: 28
+wave: W6
+title: "kaironcloud-billing 归档评估 — ADR-0002 后续"
+status: completed
+task_type: analysis
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W2-PKG-SLIM completed"
+  - "P28-W3-ADR-SETUP completed"
+depends_on:
+  - P28-W2-PKG-SLIM
+  - P28-W3-ADR-SETUP
+deliverables:
+  - ".omo/_delivery/phase28-kcb-archive-eval.md"
+  - ".omo/_knowledge/decisions/0004-kcb-archived.md"
+  - "projects/kairon/CLAUDE.md"
+  - "projects/_archived/kairon-archived-pkg-kaironcloud-billing-2026-06-05/kaironcloud-billing"
+decision: A_immediate_archive
+score:
+  test_coverage: 4
+  external_deps: 1
+  business_value: 3
+  migration_cost: 3
+  total: 8
+  threshold_evaluation: "≥4 suggests keep, but no production users + soft import design = archive per ADR-0002 rules"
+risk_level: L2
+allowed_operation_level: L2
+source_docs:
+  - ".omo/_knowledge/management/tool-heatmap-phase28.md"
+  - ".omo/_delivery/phase28-pkg-slim-plan.md"
+knowledge_refs:
+  - "ADR-0002"
+  - "ADR-0004"
+description: |
+  评估 kaironcloud-billing 是否可继续归档。W2 报告说"agora/router.py:406
+  有 1 处 EULedger import 需要治理"，本任务做严肃评估 + 决策。
+
+  关键发现：agora/router.py:406 的 import 已经在 try/except + type: ignore
+  包裹的软依赖中，archive 后的行为 = ModuleNotFoundError 被吞 + 1 条
+  logger.warning，与当前 kaironcloud_billing 运行时崩溃的行为完全一致。
+
+  决策: A (立即归档) — 已执行物理归档，更新 CLAUDE.md，写 ADR-0004。
+started_at: '2026-06-05T23:00:00Z'
+completed_at: '2026-06-05T23:30:00Z'
+blocked_by: null
+retry_count: 0
+verification:
+  ruff_check: "69 errors (pre-existing, not introduced by archive)"
+  kcb_import: "ModuleNotFoundError (expected)"
+  agora_import: "agora OK"
+  git_deletions: 38
+follow_up:
+  - id: P28-W7-AGORA-EU-CLEANUP
+    description: "可选：显式删除 agora/router.py 的 EU cost tracking 中间件（软依赖清理）"
+    priority: P2

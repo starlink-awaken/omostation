@@ -1,0 +1,398 @@
+# docs/project-registry.yaml — 项目元数据 SSOT
+#
+# 本文件是所有项目元数据的唯一读源 (Single Source of Truth)。
+# 所有 markdown 文档 (CLAUDE.md / AGENTS.md / README.md / LAYER-INDEX.md 等)
+# 必须引用本文件，不得硬编码以下任何值。
+#
+# 更新方式: 修改实际代码后，同步更新本文件。CI 门禁 (bin/ssot/doc-ssot-lint.py) 会检测
+# markdown 中的硬编码数字是否与本注册表冲突。
+#
+# drift 检测: python3 bin/mof/gen-project-registry.py (registry version/python vs pyproject.toml)
+# 自动修复: python3 bin/mof/gen-project-registry.py --write (修复 version/python drift)
+
+workspace:
+  architecture: "5+4+1+1"
+  ecos_version: "v6"
+  total_submodules: 19          # git submodule status | wc -l
+  total_projects: 18            # ls projects/*/ | wc -l (含 cockpit-ui 非子模块)
+
+layers:
+  L0: "协议层 (ecos)"
+  L1: "运行时 (runtime / omlxc)"
+  L2: "引擎面 (knowledge{gbrain,kairon} / omo / metaos)"
+  L3: "入口层 (cockpit 控制面; cockpit-ui 表现面, layer=L3)"
+  L4: "自我层 (l4-kernel)"
+  I0: "织层 (agora)"
+  M0: "横切框架 (model-driven)"
+  X:  "横切扩展 (bus-foundation / observability / family-hub; aetherforge/c2g/omo-debt 已内包 runtime+omo, ADR-0412+T6-01+Y1Q4-T6-01)"
+
+projects:
+  # mesh-router 不是独立 git 仓 — 实现 = bin/gac/gac-mesh-router.py (HTTP server on port 7437)
+  # P76 Phase 7.4 决议: 标 implemented-in-bin, 移除 submodule init 期望
+  # CONV-3 (2026-08-24, 用户授权): 正式归档 → bin/_archive/2026-08-conv3/
+  mesh-router:
+    layer: "L0"
+    stack: "Python (http/urllib)"
+    python: ">=3.13"
+    role: "omlx 算力网格智能路由代理 (archived — owner 已收敛至 aetherforge, 见 BET-Y1Q4-T6-01 aetherforge 已并入 runtime)"
+    version: "1.0.0"
+    port: 7437
+    status: "archived"
+    physical_location: "bin/_archive/2026-08-conv3/gac-mesh-router.py"
+    port_registry_ref: "protocols/port-registry.yaml::7437"
+    note: "无独立仓. BET-Y1Q3-T1-06 (2026-08-16) 双 owner 收敛决策: 算力路由单一 owner = aetherforge (2026-08-18 已并入 projects/runtime/aetherforge/) (BOS 已登记 bos://memory/aetherforge/mcp-server + forge_* tools, 主仓 9 处引用, 活跃). CONV-3 (2026-08-24, 用户授权决策): deprecated → 正式归档 bin/_archive/2026-08-conv3/ (完成'半吊子归档', 历史决策可追溯, 移出活跃面; 对应 gac-mesh-router-check gate 已移除). 见 ADR-0162 P76 Phase 7 + CONV-3 ADR."
+
+  # ── Python projects ──
+  agora:
+    # exact-capability-binding: delivery/exact-capability-binding-agora-20260824-v1
+    layer: "I0"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "3.0.0"
+    role: "MCP Hub · BOS URI 路由"
+    bos_services: 223  # live yaml 复核 2026-08-17 实测一致 (T6-07 r3)
+    src_dir: "src/agora/"
+
+  # (kairon 已并入 knowledge — BET-Y1Q3-T6-01; 元数据移至 knowledge.kairon)
+  knowledge:
+    layer: "L2"
+    role: "知识工程复合体 · gbrain(Postgres RAG) + kairon(python 引擎 monorepo) (BET-Y1Q3-T6-01)"
+    gbrain:
+        stack: "TypeScript (bun)"
+        version: "0.39.0.0"
+        build_backend: "bun"
+        role: "Postgres 知识数据库"
+        src_dir: "src/"
+    kairon:
+        stack: "Python (uv, pytest)"
+        python: ">=3.13"
+        build_backend: "hatchling"
+        version: "1.0.0"
+        role: "知识引擎 monorepo"
+        src_dir: "src/"
+        packages: 16                 # ls packages/*/ | wc -l
+        package_list:
+            - codeanalyze
+            - core-models
+            - eidos
+            - forge
+            - health-profile
+            - iris
+            - kairon-lib-events
+            - kairon-observability
+            - kairon-pipeline
+            - kairon-plugin-sdk
+            - kairon-utils
+            - kos
+            - kronos
+            - minerva
+            - ontoderive
+            - sophia
+        kos_details:
+            role: "知识检索系统 (KOS)"
+            rest_api: "http://localhost:8766"
+            endpoints: 9
+            modules:
+                - graphrag_engine (LLM推理)
+                - ontology/auto_builder (自动本体)
+                - search/ranker (排序学习)
+                - monitoring (可观测性)
+                - agent/client (Agent SDK)
+                - web/app (REST API)
+            mcp_tools: 25
+            embedding_model: "BAAI/bge-small-zh-v1.5"
+            vector_dim: 512
+
+  omo:
+    # exact-capability-binding: delivery/exact-capability-binding-omo-integrity-20260824-v1
+    layer: "L2"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "uv_build"
+    version: "1.0.0"
+    role: "治理中枢 · Agent OS 内核"
+    src_dir: "src/"
+    src_files: 173               # find src/omo -name "*.py" | wc -l
+    cli_subcommands: 39          # grep -c 'args\[0\]' cli.py
+    mcp_tools: 19                # grep -c '@mcp.tool()' mcp_server.py
+
+  metaos:
+    layer: "L2"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "编排引擎 · 决策门控/免疫/路由"
+    src_dir: "src/"
+
+  runtime:
+    layer: "L1"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "运行时 · Matrix/Scheduler/KEI 沙箱"
+    src_dir: "src/"
+
+  omlxc:
+    layer: "L1"
+    stack: "Python (uv, pytest, Textual)"
+    python: ">=3.13,<3.14"
+    build_backend: "hatchling"
+    version: "3.0.15"
+    role: "本地算力运行时 · omlxcd 守护进程、物理放置与算力驾驶舱"
+    src_dir: "src/omlxc/"
+    cli_entry: "omlxc"
+    daemon_entry: "omlxcd"
+    control_transport: "Unix Socket"
+    status: "active"
+
+  ecos:
+    # exact-capability-binding: delivery/exact-capability-binding-ecos-20260824-v1
+    layer: "L0"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "0.8.0"
+    role: "SSB 签名链 + MOF 元模型 + L0 约束"
+    src_dir: "src/"
+    mof_tools: 34                # find ssot/tools -name "*.py" ! -name "__init__" ! -name "_*" | wc -l
+    m1_yaml: 1196                # find mof/m1 -name "*.yaml" | wc -l
+    m2_yaml: 55                  # find mof/m2 -name "*.yaml" | wc -l
+    m1_domains: 28               # find mof/m1/domain -name "*.yaml" | wc -l
+    governance_modules: 15       # find l0/governance -name "*.py" ! -name "__init__" | wc -l
+
+  cockpit:
+    # exact-capability-binding: delivery/exact-capability-binding-cockpit-20260824-v1
+    layer: "L3"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "0.5.0"
+    role: "统一入口 (CLI + MCP + Web)"
+    src_dir: "src/"
+    cli_entry: "cockpit"
+    coverage:
+      - "agora (BOS 网关)"
+      - "model-driven (生命周期 / OKR)"
+      - "gbrain (Postgres 知识库)"
+      - "kairon (知识引擎 monorepo)"
+      - "bus (Omni-Bus 三平面)"
+      - "observe (Langfuse 可观测性)"
+      - "family-hub (家庭数字枢纽)"
+      - "mesh (算力网格路由)"
+      - "bos capability (toolbox 外部能力)"
+
+  l4-kernel:
+    layer: "L4"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "自我层管理面 · 域统一注册 · KEMS"
+    src_dir: "src/"
+    domains: 28                 # grep -c "Domain(" registry.py
+
+  model-driven:
+    layer: "M0"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "1.0.0"
+    role: "生命周期横切框架 · M3→M2→M1 桥接"
+    src_dir: "src/"
+
+
+  bus-foundation:
+    layer: "X"
+    stack: "Python (uv, pytest)"
+    python: ">=3.13"
+    build_backend: "hatchling"
+    version: "0.3.0"
+    role: "Omni-Bus (Data/Event/Control)"
+    src_dir: "src/"
+
+
+  observability:
+    layer: "X"
+    stack: "Docker"
+    version: "langfuse:2"
+    build_backend: "docker-compose"
+    role: "Langfuse 可观测性"
+    src_dir: "."
+
+  family-hub:
+    layer: "L2"
+    stack: "Python (FastMCP)"
+    python: ">=3.13"
+    build_backend: "uv_build"
+    version: "0.1.0"
+    role: "家庭数字枢纽"
+    status: "paused"
+    status_note: "CONV-3 (2026-08-24, 用户授权): 归档观察 — 6 py 极小 + v0.1.0 + 无专属 bet (仅影响范围提及), 愿景占位性质. 代码/gitlink 保留不删除, 未来家庭场景成为真实交付目标 (Phase 49+) 可复活."
+    src_dir: "src/"
+
+  cockpit-ui:
+    layer: "L3"
+    stack: "TypeScript (Vite, React)"
+    version: "1.0.0"
+    build_backend: "vite"
+    src_dir: "src/"
+    role: "Web 控制台 UI (作为 cockpit 前端表现层挂载至/)"
+    path_env: "COCKPIT_UI_ROOT"
+    dist_env: "COCKPIT_UI_DIST"
+    note: "独立 UI 仓库；由 COCKPIT_UI_ROOT 指向源码 worktree，COCKPIT_UI_DIST 指向构建产物后由 cockpit 托管"
+
+  toolbox:
+     layer: "L1-L3"
+     layer_aligned_with: "ecos/src/ecos/ssot/mof/m1/domain/DOMAIN-toolbox-tools.yaml"
+     stack: "Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline)"
+     build_backend: "external-capability-runtime"
+     # 仓外能力平面，不是 git 子模块；check-sfop-slots 不要求 COMP-WS-toolbox.yaml
+     role: "本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP×5 / Skill×5 / CLI×1 / Pipeline×2)"
+     storage: "/Users/xiamingxing/ToolBox/"
+     version: "v5 (2026-07-21)"
+     # 收敛到 bos://capability/ 域 (eCOS 5 域锁定), 不创建新域
+     bos_uri_root: "bos://capability"
+     bos_services:
+       - id: wps-office-mcp
+         bos_uri: "bos://capability/wps-office-mcp/invoke"
+         git: "/Users/xiamingxing/ToolBox/mcp/wps-office-mcp/.git"
+         tools_count: 243
+         status: active
+       - id: wps-skills
+         bos_uri: "bos://capability/wps-skills/load"
+         git: "/Users/xiamingxing/ToolBox/skills/wps-skills/.git"
+         status: active
+       - id: bos-skill-cli
+         bos_uri: "bos://capability/bos-skill-cli/exec"
+         git: "/Users/xiamingxing/ToolBox/cli/bos-skill-cli/.git"
+         status: active
+       - id: headroom
+         bos_uri: "bos://capability/headroom/compress"
+         git: "/Users/xiamingxing/ToolBox/mcp/headroom/.git"
+         status: active
+       - id: code-review-graph
+         bos_uri: "bos://capability/code-review-graph/analyze"
+         git: "/Users/xiamingxing/ToolBox/mcp/code-review-graph/.git"
+         status: active
+       - id: deer-flow
+         bos_uri: "bos://capability/deer-flow/run"
+         git: "/Users/xiamingxing/ToolBox/mcp/deer-flow/.git"
+         status: active
+       - id: datafoundry
+         bos_uri: "bos://capability/datafoundry/analyze"
+         git: "/Users/xiamingxing/ToolBox/mcp/datafoundry/.git"
+         status: active
+       - id: claude-skills
+         bos_uri: "bos://capability/claude-skills/load"
+         git: "/Users/xiamingxing/ToolBox/skills/claude-skills/.git"
+         status: active
+       - id: last30days-skill
+         bos_uri: "bos://capability/last30days-skill/fetch"
+         git: "/Users/xiamingxing/ToolBox/skills/last30days-skill/.git"
+         status: active
+       - id: skills-for-fabric
+         bos_uri: "bos://capability/skills-for-fabric/load"
+         git: "/Users/xiamingxing/ToolBox/skills/skills-for-fabric/.git"
+         status: active
+       - id: knowledge-work-plugins
+         bos_uri: "bos://capability/knowledge-work-plugins/load"
+         git: "/Users/xiamingxing/ToolBox/skills/knowledge-work-plugins/.git"
+         status: active
+       - id: media-crawler
+         bos_uri: "bos://capability/media-crawler/crawl"
+         git: "/Users/xiamingxing/ToolBox/pipelines/media-crawler/.git"
+         status: active
+       - id: open-montage
+         bos_uri: "bos://capability/open-montage/render"
+         git: "/Users/xiamingxing/ToolBox/pipelines/open-montage/.git"
+         status: active
+     note: "v5: 13 实例全部注册 BOS URI, 3 SSOT 一致, I0 Agora 9 服务注册"
+     crosscut:
+       consumes: [L4-A, L4-B, L4-C, L5, L∞]
+       produces: [I0-capability-services, L0-tools-registry]
+       governed_by: [X1-C02-I0/Agora, X1-C03-agora.register, CS-10-BOS-URI, CR-ADMISSION-01]
+     i0_connected: true
+     x1_audit: true
+     x2_freshness: true
+     x3_value: false
+     status: active
+     added: "2026-06-30"
+
+# ── Cross-project facts ──
+bos:
+  service_count: 223  # live bos-services.yaml 2026-08-15; same count as agora.bos_services
+  domains:
+    primary: ["memory", "governance", "analysis", "persona", "capability"]
+    extended: ["meta", "omo", "swarm", "system", "toolbox"]
+
+gac:
+  rules_count: 96                # grep -c '    - id: CR-' .omo/_truth/registry/governance-checks.yaml (gac-validate 报 146 含 X1-X4 legacy_index)
+
+# ── Archived projects (historical reference) ──
+archived:
+  - name: "compute-mesh"
+    merged_into: "aetherforge/packages/mesh"
+  - name: "swarm-engine"
+    merged_into: "aetherforge/packages/swarm"
+  - name: "hermes-console"
+    merged_into: "cockpit-ui"
+  - name: "agora-dashboard"
+    merged_into: "cockpit HTTP :8090"
+
+# ── Submodule Branch Policy (GaC #39) ──
+# stable:  子模块在 main 上, 跟踪上游发布
+# feature: 子模块在功能分支上, 允许偏离 main
+# tolerance_days: 超出此天数无更新 → warning (尚未强制)
+submodule_policy:
+  stable:
+    - projects/bus-foundation
+    - projects/knowledge/kairon
+    - projects/l4-kernel
+  feature:
+    - projects/cockpit       # codex/cockpit-instance-contract
+    - projects/metaos        # work/adr-0181-scheme-c
+    - projects/aetherforge   # r94-otel-linkage
+    - projects/agora         # work/add-pydantic-dep
+    - projects/omlxc         # codex/omlxc-v3
+  tracking:                   # detached HEAD — 由 CI/bot 保持
+    - projects/ecos
+    - projects/runtime
+    - scripts
+    - projects/omo
+  dormant:                    # 低活跃, 不频繁更新
+    - projects/family-hub
+    - projects/model-driven
+    - projects/observability
+  tolerance_days: 30
+
+# ── Metadata ──
+_last_updated: "2026-08-17"
+_update_method: "Manual version/python; drift 由 bin/gen-project-registry.py 检测 (代码→registry SSOT 链闭环)"
+
+# ── omlx Local Compute Mesh Nodes ──
+compute_nodes:
+  MBP-M5-Max:
+    ip: "100.96.126.35"
+    role: "coder, reasoner, vision"
+    vram: "64GB"
+    hardware: "Apple M5 Max"
+    models: ["coder", "reasoner", "vision", "vision-lite", "embed-bge"]
+  mac-mini-M4:
+    ip: "100.99.210.78"
+    lan_ip: "192.168.31.210"
+    mac: "d0:11:e5:01:11:b2"
+    role: "fast, embed, rerank"
+    vram: "16GB"
+    hardware: "Apple M4"
+    models: ["fast", "mini-chat", "embed", "rerank", "mini-9b"]
+  Y7000P-4070:
+    ip: "100.64.43.36"
+    lan_ip: "192.168.31.128"
+    mac: "c0:35:32:e2:e3:f1"
+    role: "vision-lite, ocr, mid"
+    vram: "8GB"
+    hardware: "NVIDIA RTX 4070"
+    models: ["vision-lite", "ocr", "mid"]

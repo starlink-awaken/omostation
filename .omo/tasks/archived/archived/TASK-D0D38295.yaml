@@ -1,0 +1,55 @@
+id: TASK-D0D38295
+title: 'AETHERFORGE P2: 路径硬编码清 (AUDIT 1.2, CI 可移植)'
+description: 'AUDIT 1.2: 路径硬编码问题. pricing.py M1_MODEL_DIR = Path.home()/Workspace/...
+  硬编码. 改相对路径 (CLAUDE.md CI 治本机制).'
+status: archived
+task_type: refactor
+risk_level: L1
+depends_on: []
+source_docs:
+- projects/aetherforge/AUDIT.md
+deliverables:
+- pricing.py M1_MODEL_DIR 等硬编码 → Path(__file__).resolve().parents[N]
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/TASK-D0D38295
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+completed_at: 2026-06-27 05:39:44.467992+00:00
+evidence_provided:
+- 'commit: aetherforge 0a2abb1 - refactor pricing consume M1_MODEL_DIR from aetherforge._paths
+  SSOT'
+- 'tests: pytest packages/gateway/tests/test_pricing.py 11 passed; pytest packages/gateway/tests
+  78 passed'
+- 'lint: ruff check pricing.py All checks passed'
+- 'runtime: PYTHONPATH smoke resolves to same M1 model path'
+evidence_actor: crush-agent
+evidence_required:
+- 无硬编码路径 (同 ecos CI 治本机制)
+test_plan:
+- CI clone 可跑 (无硬编码 workspace 路径)
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  priority: P2
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-06-26T06:44:52Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: aetherforge-path-hardcode
+archived_at: '2026-06-27T05:39:44Z'
+archived_by: crush-agent
+archived_source_ref: aetherforge:commit:0a2abb1

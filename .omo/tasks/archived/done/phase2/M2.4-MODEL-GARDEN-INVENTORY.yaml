@@ -1,0 +1,37 @@
+id: M2.4-MODEL-GARDEN-INVENTORY
+phase: 2
+milestone: M2.4
+priority: P2
+title: "Model garden inventory — local model catalog"
+status: done
+owner: forge
+assigned_to: "me"
+started_at: "2026-05-30T17:45:00Z"
+completed_at: "2026-05-30T17:55:00Z"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+depends_on: []
+dependencies: []
+inputs:
+  - "/Volumes/Model/"
+outputs:
+  - "projects/kairon/packages/forge/src/forge/model_garden.py"
+acceptance_criteria:
+  - "Inventories all local models with name, size, quantization"
+  - "Tracks last used date"
+  - "Recommends model for task (claude, coding, research)"
+  - "Pruning ONLY outputs suggestions, never auto-deletes"
+evidence_required:
+  - "model_garden.py implemented"
+  - "Inventory output with 10+ models"
+  - "Recommendation unit tests"
+evidence:
+  - "model_garden.py exists with ModelGarden class: add_model, inventory, add_benchmark, recommend (task-based), prune_candidates (read-only)"
+  - "TASK_MODEL_MAP: coding, research, chat, vision with known model names"
+  - "17/17 unit tests pass: task map (2), add model (4), recommend (4), benchmark (3), prune (4)"
+test_plan:
+  - "unit: model inventory parsing"
+  - "unit: recommendation engine"
+  - "unit: pruning suggestion (no actual delete)"

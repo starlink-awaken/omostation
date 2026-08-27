@@ -1,0 +1,54 @@
+id: M2.4-KOS-HEALTH-MONITOR-IMPLEMENTATION
+phase: 2
+milestone: M2.4
+priority: P0
+title: "KOS health monitor implementation — detect drift without auto-reindex"
+status: done
+owner: kos
+assigned_to: "me"
+started_at: "2026-05-30T16:10:00Z"
+completed_at: "2026-05-30T16:30:00Z"
+evidence:
+  - "Implemented: projects/kairon/packages/ecos/src/ecos/kos_health_monitor.py (existing file, verified)"
+  - "Tests: 21/21 pass at ecos/tests/test_kos_health_monitor.py"
+  - "Baseline: 7327 docs, 6 zones"
+  - "Drift detection: warning ±5%, critical ±10%"
+  - "No auto-reindex: confirmed in all code paths"
+  - "Known-doc retrieval: check_known_docs() with warning 8-9/10, critical <8/10"
+  - "L2 approval request: generate_reindex_request() outputs _confirmed:false"
+  - "Sensitive capabilities remain blocked"
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+  - ".omo/standards/kos-baseline-drift-monitor.md"
+depends_on:
+  - M2.3-KOS-BASELINE-DRIFT-MONITOR
+dependencies:
+  - M2.3-KOS-BASELINE-DRIFT-MONITOR
+inputs:
+  - "projects/kairon/packages/kos/src/kos/mcp/server.py"
+  - "/Users/xiamingxing/Workspace/kos/kos-index.sqlite"
+baseline:
+  documents: 7327
+  zones: {workspace_root: 8, omo: 179, kairon: 1886, agentmesh: 38, gbrain: 506, sharedbrain: 4710}
+  known_doc_retrieval: "10/10"
+outputs:
+  - "projects/kairon/packages/ecos/src/ecos/kos_health_monitor.py"
+acceptance_criteria:
+  - "Reads current KOS status via get_system_status tool"
+  - "Compares document count (7327 baseline) with current per zone"
+  - "Detects drift when deviation >10% from baseline"
+  - "Does NOT auto-reindex"
+  - "Reindex suggestion outputs L2 approval request (_confirmed:false)"
+  - "Known-doc retrieval check on demand"
+  - "Thresholds: warning ±5%, critical ±10%"
+evidence_required:
+  - "Code implemented at kos_health_monitor.py"
+  - "Drift detection test with threshold validation"
+  - "L2 approval request format documented"
+test_plan:
+  - "unit: threshold comparisons"
+  - "unit: known-doc retrieval"
+  - "integration: kos health endpoint access"

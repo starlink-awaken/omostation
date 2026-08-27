@@ -1,0 +1,14 @@
+openspec:
+  status: optional_adapter
+  command: openspec
+  authority: input_adapter
+  ssot_rule: OpenSpec changes may seed governed work but OMO/C2G planned tasks remain
+    canonical.
+  ingress_workflow: c2g-spec-ingress
+  bridge: uv run --project projects/omo omo bridge --format openspec <source-file>
+  pattern: specs become contracts before implementation and then enter OMO through
+    the bridge compatibility path
+  health_command:
+  - openspec
+  - list
+  health_required: false

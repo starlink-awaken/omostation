@@ -1,0 +1,24 @@
+id: P1-RESTORE-SMOKE-TEST
+phase: 2
+milestone: M2.6
+priority: P1
+title: Restore smoke_test.py or remove CI reference
+status: done
+assigned_to: "reasonix-code"
+completed_at: "2026-05-30T22:32:00+08:00"
+evidence:
+  - "smoke_test.py exists at projects/SharedBrain/tests/integration/smoke_test.py"
+  - "File is 4903 bytes, pytest 5/5 PASS verified"
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs: []
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- smoke_test.py exists or CI reference removed

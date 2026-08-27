@@ -1,0 +1,110 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-08-08
+---
+
+# 三级权限名单 — autoloop自主执行的安全边界 (ADR-0402)
+#
+# 白名单: 自动执行(worktree→PR→审查矩阵→自动merge)
+# 灰名单: AI心智模型判断→提级到人或拒绝
+# 黑名单: 禁止(需架构委员会)
+#
+# 管理模式: dynamic — Trust积累可自动调整级别
+
+version: 1
+description: Three-tier action permission matrix for autonomous execution
+
+whitelist:
+  - action_type: rule_downgrade
+    description: "rule-adapt降级建议: required→advisory"
+    match:
+      source: rule-adapt
+      change: enforcement_required_to_advisory
+    executor: rule-adapt.py --apply --confirm
+  - action_type: tool_archive
+    description: "dormant工具归档到_archive"
+    match:
+      source: tool-usage-audit
+      status: dormant
+    executor: mv_to_archive
+  - action_type: adr_draft
+    description: "进化提案→ADR草稿生成"
+    match:
+      source: evolution-agent
+    executor: proposal-to-adr.py
+  - action_type: verification_cmd_fix
+    description: "修复过时的gap verification_cmd"
+    match:
+      source: gap-verify
+      status: verification_failed
+    executor: update_verification_cmd
+  - action_type: reflection_contract_add
+    description: "给缺reflection的scene card补配置"
+    match:
+      source: scene-card-check
+    executor: add_reflection_contract
+  - action_type: vision_gap_append
+    description: "vision-audit发现的gap追加到VISION-ROADMAP"
+    match:
+      source: vision-audit
+    executor: append_vision_gap
+
+graylist:
+  - action_type: scene_card_create
+    description: "新建场景卡"
+    match:
+      source: evolution-agent
+    mental_model_check: true
+  - action_type: journey_spec_create
+    description: "新建journey spec"
+    match:
+      source: scene-card-check
+    mental_model_check: true
+  - action_type: connector_config
+    description: "配置新信号源连接器"
+    match:
+      source: signal-poller
+    mental_model_check: true
+  - action_type: governance_rule_add
+    description: "新增治理规则"
+    match:
+      source: evolution-agent
+    mental_model_check: true
+
+blacklist:
+  - action_type: delete_core_module
+    description: "删除核心模块"
+    reason: 不可逆，需架构委员会评审
+  - action_type: modify_gac_gate
+    description: "修改GaC门禁配置"
+    reason: 自我保护——不能绕过自己的约束
+  - action_type: modify_permission_matrix
+    description: "修改本权限名单"
+    reason: 自我保护——不能自己改自己的约束
+  - action_type: disable_redline
+    description: "禁用红线规则"
+    reason: 安全底线不可自主修改
+
+# 动态调整规则 (Trust-driven promotion/demotion)
+promotion_rules:
+  - id: gray-to-white
+    condition: "graylist action approved by mental-model 3+ consecutive times"
+    action: promote_to_whitelist
+    auto_apply: true
+  - id: white-to-gray
+    condition: "whitelist action rejected by PR review 2+ times"
+    action: demote_to_graylist
+    auto_apply: true
+  - id: gray-to-black
+    condition: "graylist action caused incident or data loss"
+    action: demote_to_blacklist
+    auto_apply: true
+    requires_human_confirm: true
+
+# Trust阈值 (决定mental_model置信度要求)
+trust_thresholds:
+  auto_merge_min_confidence: 0.8   # 审查矩阵全approve且心智模型confidence≥0.8才自动merge
+  graylist_min_confidence: 0.6     # 灰名单需心智模型confidence≥0.6才提级
+  human_escalation: 0.4            # confidence<0.4强制人审

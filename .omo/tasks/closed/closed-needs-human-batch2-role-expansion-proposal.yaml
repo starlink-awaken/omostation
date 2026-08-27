@@ -1,0 +1,17 @@
+---
+id: NEEDS-HUMAN-BATCH2-ROLE-EXPANSION
+title: "Batch2 B3 research/delivery 实装 — CLOSED (ADR-0235 已落地)"
+status: closed
+closed_at: "2026-07-28T09:15:00Z"
+needs-human: false
+human_approval_required: false
+priority: P2
+owner: human
+close_reason: >
+  骨架与协议已落地: ADR-0235 ACCEPTED + PR #510 MERGED (measure_five_role_batch)。
+  role_framework SECOND_WAVE_ROLES 在 main。卡文「待拍板/无代码」过时。
+  第 6+ 角色才需新拍板；cockpit 生产调度/≥15 任务试点属执行优先级非本决策。
+closeout_adr: .omo/_knowledge/decisions/0235-role-catalog-c1-research-delivery.md
+resolved_by: "ADR-0235 + PR#510"
+superseded_by: ADR-0235
+---

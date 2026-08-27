@@ -1,0 +1,33 @@
+id: IMPORTED-CLI-1
+title: CLI broker 落任务
+status: candidate
+task_type: feature
+risk_level: L0
+depends_on: []
+source_docs:
+- spec.md
+deliverables:
+- 代码
+- 测试
+imported_via: projects/c2g
+context_uri: bos://memory/specs/spec.md#IMPORTED-CLI-1
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+entry_gate: []
+evidence_required:
+- pytest
+test_plan:
+- uv run pytest
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  ingress_plane: projects/c2g
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: c2g:bridge-import:IMPORTED-CLI-1

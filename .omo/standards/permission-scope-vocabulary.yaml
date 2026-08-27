@@ -1,0 +1,24 @@
+schema: permission-scope-vocabulary/v1
+description: >
+  内部 pipeline 场景的 RBAC scope 受控词表.
+  Scene card 的 permission_scope 字段只能引用此词表中的 scope.
+  新增 scope 需走 ADR 审批.
+last-reviewed: 2026-08-07
+owner: architecture-governance
+
+internal_pipeline:
+  - name: ci-read
+    description: 读取 CI 结果、gate 状态、测试输出
+    granted_by: gac-local-gate 可执行
+  - name: workflow-read
+    description: 读取 agent workflow 状态、运行历史
+    granted_by: agent-workflow 系统存在
+  - name: evidence-write
+    description: 写入交付证据 (PR refs, trial logs, scene-trials.jsonl)
+    granted_by: scene card admission confirmed
+  - name: config-read
+    description: 读取项目配置 (project-registry, port-registry, Makefile)
+    granted_by: 文件系统读取权限
+  - name: state-read
+    description: 读取 .omo/state/ 运行时状态快照
+    granted_by: omo state sync 可执行

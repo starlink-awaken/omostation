@@ -1,0 +1,59 @@
+id: P9-W3-IDENTITY-ADMISSION-CONTRACT
+phase: 9
+milestone: W3
+priority: P0
+title: Define the cross-root identity, authorization, and admission contract
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase9-wave3-identity-admission
+run_ref: .omo/workers/runs/phase9-wave3-identity-admission-dispatch.yaml
+approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+review_ref: .omo/summaries/phase9-wave3-closeout.md
+knowledge_refs:
+  - .omo/plans/archive/phase9-workspace-plane-refactor-plan.md
+  - .omo/plans/archive/phase9-program-plan.md
+handoff_refs:
+  - .omo/workers/runs/phase9-wave3-identity-admission-envelope.yaml
+  - .omo/workers/runs/phase9-wave3-identity-admission-prompt.md
+  - .omo/workers/runs/phase9-wave3-identity-admission-checkpoint.md
+source_docs:
+  - .omo/summaries/phase9-wave2-closeout.md
+  - .omo/plans/archive/phase9-wave3-execution-plan.md
+deliverables:
+  - .omo/plans/archive/phase9-wave3-execution-plan.md
+  - spaces/_schema/space-identity-admission.schema.yaml
+  - spaces/system-space-identity-admission.yaml
+  - spaces/system-space-capability-taxonomy.yaml
+  - spaces/system-space-admission-matrix.yaml
+  - .omo/workers/templates/worker-task-envelope.yaml
+  - .omo/workers/runs/phase9-wave3-identity-admission-envelope.yaml
+  - .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+  - .omo/_truth/task-center/proposals/phase9-wave3-identity-admission-approval-proposal.yaml
+  - scripts/omo_admission.py
+  - scripts/omo_worker.py
+  - .omo/tests/test_phase9_identity_admission_contract.py
+  - .omo/tests/test_omo_admission.py
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 9 Wave 2 closeout exists at .omo/summaries/phase9-wave2-closeout.md
+  - spaces/ registry and system-space baseline exist
+evidence_required:
+  - Wave 3 plan explicitly defines the actor + space membership anchor
+  - system-space links to an explicit identity/admission contract
+  - system-space defines a machine-checkable capability taxonomy and admission matrix
+  - worker envelopes bind action and membership to the admission contract
+  - admission evaluator returns an explicit allow/conditional_approval/deny decision
+  - conditional approval generates a governance proposal and approval record
+test_plan:
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 -m pytest .omo/tests/test_phase9_identity_admission_contract.py -q
+  - python3 -m pytest .omo/tests/test_omo_admission.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T11:58:30Z'
+completed_at: '2026-05-31T12:38:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary: Wave 3 closed by landing a governed identity/admission contract, capability taxonomy, admission matrix, execution-context binding, evaluator seam, and a verified governance approval path for project.dispatch.

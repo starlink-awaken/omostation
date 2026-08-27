@@ -1,0 +1,36 @@
+id: P46-W1-ENDPOINT-E2E-VERIFY
+title: P46 W1 7 端点端到端验证 (TestClient 8/8 HTTP 200)
+status: done
+task_type: verify
+risk_level: L0
+depends_on:
+- P46-COCKPIT-ENDPOINTS
+source_docs:
+- projects/cockpit/src/cockpit/dashboard_server.py
+- projects/cockpit/src/cockpit/web/api_omos.py
+- projects/cockpit/src/cockpit/web/api_ecos.py
+deliverables:
+- .omo/_knowledge/management/retrospective-2026-06-16-p46-w1.md
+imported_via: c2g bet
+context_uri: bos://memory/p46-w1-e2e-verify
+allowed_operation_level: L0
+human_approval_required: false
+assigned_to: team-lead
+entry_gate: []
+evidence_required:
+- 8/8 端点 HTTP 200 (TestClient ASGI dispatch)
+- /api/omos/status 返 converged JSON
+- /api/ecos/status 返 converged JSON
+test_plan:
+- uv run python TestClient(app).get(8 endpoints)
+metadata:
+  c2g_mechanism: radar+bet
+  phase: 46
+  wave: W1
+  category: e2e-verify
+closed_at: '2026-06-16T06:36:22Z'
+closed_by: team-lead
+evidence: 'P46 W1 真端到端验证. TestClient(app) 走完整 ASGI 路由 dispatch, 8/8 端点 HTTP 200: /healthz
+  /governance/{status,projects,dashboard} /api/omos/{status,health} /api/ecos/{status,health}.
+  /api/omos/status 返 {service:omo-dashboard,status:converged}. P45 W3 known issue
+  (注释 vs 代码差距) 真闭环. 验证方式比 uvicorn 后台更干净 (不受 Bash tool 生命周期限制).'

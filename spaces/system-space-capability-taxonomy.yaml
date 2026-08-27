@@ -1,0 +1,11 @@
+apiVersion: omo/v1
+kind: SpaceCapabilityTaxonomy
+id: system-space-capability-taxonomy
+space_ref: spaces/system-space.yaml
+actions:
+  - governance.write
+  - space.membership.manage
+  - data.read
+  - runtime.observe
+  - runtime.mutate
+  - project.dispatch

@@ -1,0 +1,43 @@
+id: M2.5-EU-IMMUNE-EXTENSION
+phase: 2
+milestone: M2.5
+priority: P2
+title: "EU immune extension — routing + tracking + audit (no auto scheduling)"
+status: done
+owner: agora
+assigned_to: codebuddy
+completed_at: "2026-05-30T13:15:00Z"
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+  - ".omo/summaries/phase2-integration-verification-report.md"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/agora/src/agora/"
+  - "projects/kairon/packages/eu-pricing/src/eu_pricing/"
+outputs:
+  - "projects/kairon/packages/agora/src/agora/router.py (EU cost tracking integrated)"
+  - "projects/agentmesh/src/model-gateway/eu-tracker.ts"
+  - "projects/gbrain/src/core/eu-tracker.ts"
+  - "Immune audit stage (agora router middleware)"
+acceptance_criteria:
+  - "Agora EU router: metrics and cost tracking (no auto-routing changes)"
+  - "agentmesh EU: tool calls tracked with cost"
+  - "gbrain EU: memory writes tracked with cost"
+  - "Immune audit: audit stage in pipeline (no auto-high-risk scheduling)"
+evidence:
+  - "agora router test: 38 passed, 1 skipped (EU middleware integrated)"
+  - "agentmesh eu-tracker: 6/6 tests passed"
+  - "gbrain eu-tracker: 6/6 tests passed"
+  - "kairon EULedger: ledger.py in eu-pricing package"
+evidence_required:
+  - "EU router middleware code"
+  - "agentmesh EU tracking test"
+  - "Immune audit stage test"
+test_plan:
+  - "unit: EU cost tracking"
+  - "unit: immune audit flagging"
+  - "integration: pipeline with EU and immune stages"

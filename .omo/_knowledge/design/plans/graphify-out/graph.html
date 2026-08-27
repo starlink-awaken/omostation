@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OMO Plans (133 documents) — graphify tree viewer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      margin: 20px 0 0 24px;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #1e3a56;
+    }
+    .controls {
+      margin: 20px 0 15px 24px;
+    }
+    button {
+      margin-right: 10px;
+      padding: 8px 18px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:active {
+      background: #004085;
+    }
+    #tree-container {
+      width: calc(100vw - 48px); /* Adjust for body margin/padding */
+      height: 85vh;
+      overflow: auto;
+      border-radius: 8px;
+      background: #fff;
+      margin-left: 24px;
+      margin-right: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 1px solid #ddd;
+    }
+    svg {
+      background: #fff;
+      border-radius: 8px;
+      display: block; /* Important for D3 */
+    }
+    .node circle {
+      stroke-width: 2.5px;
+    }
+    .node text { /* Base style for the <text> container */
+      font: 13px 'Segoe UI', sans-serif;
+      paint-order: stroke fill; /* Ensures text is readable over lines */
+      stroke: #fff; /* White halo */
+      stroke-width: 3px; /* Halo thickness */
+      stroke-linejoin: round;
+      stroke-opacity: 0.85; /* Halo opacity */
+    }
+    .link {
+      fill: none;
+      stroke-opacity: 0.7;
+      stroke-width: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>OMO Plans (133 documents) — Knowledge Graph</h1>
+  <div class="controls">
+    <button onclick="expandAll()">Expand All</button>
+    <button onclick="collapseAll()">Collapse All</button>
+    <button onclick="resetView()">Reset View</button>
+  </div>
+  <div id="tree-container">
+    <svg id="tree-svg" width="6000" height="8000"></svg>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const initialJsonData = {"name":"OMO Plans (133 documents)","total_count":133,"children":[{"name":"agent-architecture-audit-redteam.md","total_count":1,"children":[{"name":"深度架构审计：Agent协作体系 × 第一性原理","total_count":1,"children":[]}]},{"name":"architecture-final-vision.md","total_count":1,"children":[{"name":"架构终极进化蓝图：从 omostation 到 AGI Personal OS","total_count":1,"children":[]}]},{"name":"archive","total_count":105,"children":[{"name":"architecture-governance-v5.md","total_count":1,"children":[{"name":"全面架构设计与治理方案 v5","total_count":1,"children":[]}]},{"name":"architecture-phase-abc.md","total_count":1,"children":[{"name":"架构迭代：Phase A/B/C 执行方案","total_count":1,"children":[]}]},{"name":"architecture-upgrade-v4.md","total_count":1,"children":[{"name":"架构升级优化方案 v4","total_count":1,"children":[]}]},{"name":"architecture-v4-4-plus-1-plus-3-plus-i.md","total_count":1,"children":[{"name":"4+1+3+I 架构修订方案 v4","total_count":1,"children":[]}]},{"name":"complete-architecture-analysis-v3.md","total_count":1,"children":[{"name":"全架构分析 v3 — 24 项目体系","total_count":1,"children":[]}]},{"name":"deep-analysis-next-phase.md","total_count":1,"children":[{"name":"深度分析与下一阶段规划","total_count":1,"children":[]}]},{"name":"error-experience-optimization.md","total_count":1,"children":[{"name":"错误体验优化计划","total_count":1,"children":[]}]},{"name":"gap-implementation-roadmap.md","total_count":1,"children":[{"name":"个人AI操作系统 — 差距实施路线图","total_count":1,"children":[]}]},{"name":"governance-phase1.md","total_count":1,"children":[{"name":"Governance Phase 1 — 基础设施清理","total_count":1,"children":[]}]},{"name":"governance-phase2.md","total_count":1,"children":[{"name":"Governance Phase 2 — 核心链路闭环","total_count":1,"children":[]}]},{"name":"governance-phase3.md","total_count":1,"children":[{"name":"Governance Phase 3 — 统一入口建立","total_count":1,"children":[]}]},{"name":"governance-phase4.md","total_count":1,"children":[{"name":"Governance Phase 4 — 能力增强（滚动执行）","total_count":1,"children":[]}]},{"name":"hermes-ops-design.md","total_count":1,"children":[{"name":"OPS-01 — 统一运维中心方案设计","total_count":1,"children":[]}]},{"name":"knowledge-foundation-phase2.md","total_count":1,"children":[{"name":"Phase 2: Eidos 适配器层 — OntoDerive + Minerva + Agora","total_count":1,"children":[]}]},{"name":"knowledge-foundation.md","total_count":1,"children":[{"name":"Phase 1 — Eidos + KOS 知识基座实现计划","total_count":1,"children":[]}]},{"name":"legacy-integration.md","total_count":1,"children":[{"name":"Legacy 项目融合方案","total_count":1,"children":[]}]},{"name":"modeling-fix.md","total_count":1,"children":[{"name":"建模全链路修复 — 执行计划","total_count":1,"children":[]}]},{"name":"ontology-toolkit-phase3a.md","total_count":1,"children":[{"name":"Phase 3A: 元模型层 + 可视化工具","total_count":1,"children":[]}]},{"name":"ontology-toolkit-phase3b.md","total_count":1,"children":[{"name":"Phase 3B: Pipeline 编排","total_count":1,"children":[]}]},{"name":"ontology-toolkit-phase3c.md","total_count":1,"children":[{"name":"Phase 3C: 场景模板 + Pipeline 完全体 (已完成)","total_count":1,"children":[]}]},{"name":"ops-rename-and-correlation.md","total_count":1,"children":[{"name":"OPS 解耦与关联推理引擎方案","total_count":1,"children":[]}]},{"name":"phase-0-execution.md","total_count":1,"children":[{"name":"Phase O: OpenHuman 对标迭代","total_count":1,"children":[]}]},{"name":"phase-0-openhuman-benchmark.md","total_count":1,"children":[{"name":"OpenHuman vs Workspace — 全面对标分析与蓝图","total_count":1,"children":[]}]},{"name":"phase-i-execution.md","total_count":1,"children":[{"name":"Phase I — 集成织物层实施详细方案","total_count":1,"children":[]}]},{"name":"phase-m-maintenance.md","total_count":1,"children":[{"name":"Phase M — 运维保障方案","total_count":1,"children":[]}]},{"name":"phase1-sprint-plan.md","total_count":1,"children":[{"name":"Phase 1 Sprint 执行计划: 基础设施补完","total_count":1,"children":[]}]},{"name":"phase1-task-specs.md","total_count":1,"children":[{"name":"Phase 1 任务规格书 + Agent 执行手册","total_count":1,"children":[]}]},{"name":"phase1-verification-report.md","total_count":1,"children":[{"name":"Phase 1 完成验证报告","total_count":1,"children":[]}]},{"name":"phase10-cleanup-commands.md","total_count":1,"children":[{"name":"Phase 10 收尾 — 10个子任务执行命令","total_count":1,"children":[]}]},{"name":"phase10-commands.md","total_count":1,"children":[{"name":"Phase 10 — 命令集 (执行Agent用)","total_count":1,"children":[]}]},{"name":"phase10-planning-analysis.md","total_count":1,"children":[{"name":"Phase 10 债务治理需求分析","total_count":1,"children":[]}]},{"name":"phase10-program-plan.md","total_count":1,"children":[{"name":"Phase 10 program plan","total_count":1,"children":[]}]},{"name":"phase10-wave1-execution-plan.md","total_count":1,"children":[{"name":"Phase 10 Wave 1 execution plan","total_count":1,"children":[]}]},{"name":"phase10-wave2-execution-plan.md","total_count":1,"children":[{"name":"Phase 10 Wave 2 execution plan","total_count":1,"children":[]}]},{"name":"phase10-wave3-execution-plan.md","total_count":1,"children":[{"name":"Phase 10 Wave 3 execution plan","total_count":1,"children":[]}]},{"name":"phase10-wave4-execution-plan.md","total_count":1,"children":[{"name":"Phase 10 Wave 4 execution plan","total_count":1,"children":[]}]},{"name":"phase11-program-plan.md","total_count":1,"children":[{"name":"Phase 11 program plan: Capability & user layer enablement","total_count":1,"children":[]}]},{"name":"phase11-wave1-execution-plan.md","total_count":1,"children":[{"name":"Phase 11 Wave 1 execution plan: SSOT repair + baseline inventory","total_count":1,"children":[]}]},{"name":"phase11-wave2-execution-plan.md","total_count":1,"children":[{"name":"Phase 11 Wave 2 execution plan: Core debt assault","total_count":1,"children":[]}]},{"name":"phase11-wave3-execution-plan.md","total_count":1,"children":[{"name":"Phase 11 Wave 3 execution plan: User layer MVP","total_count":1,"children":[]}]},{"name":"phase11-wave4-execution-plan.md","total_count":1,"children":[{"name":"Phase 11 Wave 4 execution plan: Deep hardening + evolution alignment","total_count":1,"children":[]}]},{"name":"phase12-p0-pilot-adr.md","total_count":1,"children":[{"name":"Phase 12 P0 pilot ADR","total_count":1,"children":[]}]},{"name":"phase12-planning-gate.md","total_count":1,"children":[{"name":"Phase 12 planning gate: Capability ecosystem foundation entry","total_count":1,"children":[]}]},{"name":"phase12-program-plan.md","total_count":1,"children":[{"name":"Phase 12 主计划：系统能力生态构建","total_count":1,"children":[]}]},{"name":"phase12-wave1-execution-plan.md","total_count":1,"children":[{"name":"Phase 12 Wave 1 执行计划：能力生态元模型 + 核心扫描基线","total_count":1,"children":[]}]},{"name":"phase12-wave2-execution-plan.md","total_count":1,"children":[{"name":"Phase 12 Wave 2 执行计划：注册表启用 + 场景 MVP + pilot ADR","total_count":1,"children":[]}]},{"name":"phase12-wave3-execution-plan.md","total_count":1,"children":[{"name":"Phase 12 Wave 3 执行计划：单一融合 pilot + 包生态 dry-run","total_count":1,"children":[]}]},{"name":"phase12-wave4-execution-plan.md","total_count":1,"children":[{"name":"Phase 12 Wave 4 执行计划：架构验证 + 红队 + P13/P14 交接","total_count":1,"children":[]}]},{"name":"phase12-wave5-execution-plan.md","total_count":1,"children":[{"name":"Phase 12 Wave 5 execution plan: merged into Wave 4","total_count":1,"children":[]}]},{"name":"phase13-metacognition-preplanning.md","total_count":1,"children":[{"name":"Phase 13 metacognition pre-planning gate","total_count":1,"children":[]}]},{"name":"phase13-metacognition.md","total_count":1,"children":[{"name":"Phase 13+ — 终极进化 🧬✨","total_count":1,"children":[]}]},{"name":"phase14-deferred-ecosystem-backlog.md","total_count":1,"children":[{"name":"Phase 14 deferred ecosystem backlog","total_count":1,"children":[]}]},{"name":"phase14-program-plan.md","total_count":1,"children":[{"name":"Phase 14 program plan: Deferred ecosystem expansion","total_count":1,"children":[]}]},{"name":"phase2-phase3-task-manifest.md","total_count":1,"children":[{"name":"Phase 2 / Phase 3 Task Manifest","total_count":1,"children":[]}]},{"name":"phase2-task-specs-v2.md","total_count":1,"children":[{"name":"Phase 2 任务规格书 v2.1（Post-Phase1 gated execution）","total_count":1,"children":[]}]},{"name":"phase2-task-specs.md","total_count":1,"children":[{"name":"Phase 2 任务规格书 + Agent 执行手册","total_count":1,"children":[]}]},{"name":"phase3-task-specs-v2.md","total_count":1,"children":[{"name":"Phase 3 任务规格书 v2.1（future-gated）","total_count":1,"children":[]}]},{"name":"phase3-task-specs.md","total_count":1,"children":[{"name":"Phase 3 任务规格书 + Agent 执行手册","total_count":1,"children":[]}]},{"name":"phase4-closure-and-phase5-entry-plan.md","total_count":1,"children":[{"name":"Phase 4 Closure and Phase 5 Entry Plan","total_count":1,"children":[]}]},{"name":"phase4-execution-roadmap.md","total_count":1,"children":[{"name":"Phase 4 execution roadmap","total_count":1,"children":[]}]},{"name":"phase4-task-specs-v2.md","total_count":1,"children":[{"name":"Phase 4 任务规格书 v2.1（future-gated）","total_count":1,"children":[]}]},{"name":"phase4-task-specs.md","total_count":1,"children":[{"name":"Phase 4 任务规格书 + Agent 执行手册","total_count":1,"children":[]}]},{"name":"phase4-wave2-hardening-design.md","total_count":1,"children":[{"name":"Phase 4 Wave 2 hardening design","total_count":1,"children":[]}]},{"name":"phase4-wave2-hardening-implementation-plan.md","total_count":1,"children":[{"name":"Phase 4 Wave 2 Hardening Implementation Plan","total_count":1,"children":[]}]},{"name":"phase5-entry-gate-checklist.md","total_count":1,"children":[{"name":"Phase 5 entry gate checklist","total_count":1,"children":[]}]},{"name":"phase5-program-plan.md","total_count":1,"children":[{"name":"Phase 5 program plan","total_count":1,"children":[]}]},{"name":"phase5-wave0-execution-plan.md","total_count":1,"children":[{"name":"Phase 5 Wave 0 Execution Plan","total_count":1,"children":[]}]},{"name":"phase5-wave0-task-specs.md","total_count":1,"children":[{"name":"Phase 5 Wave 0 task specs","total_count":1,"children":[]}]},{"name":"phase5-wave1-execution-plan.md","total_count":1,"children":[{"name":"Phase 5 Wave 1 execution plan","total_count":1,"children":[]}]},{"name":"phase5-wave2-execution-plan.md","total_count":1,"children":[{"name":"Phase 5 Wave 2 execution plan","total_count":1,"children":[]}]},{"name":"phase5-wave3-execution-plan.md","total_count":1,"children":[{"name":"Phase 5 Wave 3 execution plan","total_count":1,"children":[]}]},{"name":"phase6-entry-hardening-packet-implementation-plan.md","total_count":1,"children":[{"name":"Phase 6 Entry Hardening Packet Implementation Plan","total_count":1,"children":[]}]},{"name":"phase6-program-plan.md","total_count":1,"children":[{"name":"Phase 6 program plan","total_count":1,"children":[]}]},{"name":"phase6-wave1-execution-plan.md","total_count":1,"children":[{"name":"Phase 6 Wave 1 execution plan","total_count":1,"children":[]}]},{"name":"phase6-wave1-task-specs.md","total_count":1,"children":[{"name":"Phase 6 Wave 1 task specs","total_count":1,"children":[]}]},{"name":"phase6-wave2-execution-plan.md","total_count":1,"children":[{"name":"Phase 6 Wave 2 execution plan","total_count":1,"children":[]}]},{"name":"phase6-wave3-execution-plan.md","total_count":1,"children":[{"name":"Phase 6 Wave 3 execution plan","total_count":1,"children":[]}]},{"name":"phase7-planning-gate.md","total_count":1,"children":[{"name":"Phase 7 planning gate","total_count":1,"children":[]}]},{"name":"phase7-program-plan.md","total_count":1,"children":[{"name":"Phase 7 program plan","total_count":1,"children":[]}]},{"name":"phase7-run-tools.md","total_count":1,"children":[{"name":"Phase 7 — 让工具跑起来","total_count":1,"children":[]}]},{"name":"phase7-starter-packet-spec.md","total_count":1,"children":[{"name":"Phase 7 starter packet spec","total_count":1,"children":[]}]},{"name":"phase7-wave1-execution-plan.md","total_count":1,"children":[{"name":"Phase 7 Wave 1 execution plan","total_count":1,"children":[]}]},{"name":"phase7-wave2-execution-plan.md","total_count":1,"children":[{"name":"Phase 7 Wave 2 execution plan","total_count":1,"children":[]}]},{"name":"phase7-wave3-execution-plan.md","total_count":1,"children":[{"name":"Phase 7 Wave 3 execution plan","total_count":1,"children":[]}]},{"name":"phase8-multi-agent-collab.md","total_count":1,"children":[{"name":"Phase 8 — 多Agent真实协作","total_count":1,"children":[]}]},{"name":"phase8-planning-gate.md","total_count":1,"children":[{"name":"Phase 8 planning gate","total_count":1,"children":[]}]},{"name":"phase8-program-plan.md","total_count":1,"children":[{"name":"Phase 8 program plan","total_count":1,"children":[]}]},{"name":"phase8-starter-packet-spec.md","total_count":1,"children":[{"name":"Phase 8 starter packet spec","total_count":1,"children":[]}]},{"name":"phase8-wave2-execution-plan.md","total_count":1,"children":[{"name":"Phase 8 Wave 2 execution plan","total_count":1,"children":[]}]},{"name":"phase8-wave3-execution-plan.md","total_count":1,"children":[{"name":"Phase 8 Wave 3 execution plan","total_count":1,"children":[]}]},{"name":"phase9-multi-org-collab.md","total_count":1,"children":[{"name":"Phase 9 — 多人多组织 🏢","total_count":1,"children":[]}]},{"name":"phase9-program-plan.md","total_count":1,"children":[{"name":"Phase 9 program plan","total_count":1,"children":[]}]},{"name":"phase9-wave2-execution-plan.md","total_count":1,"children":[{"name":"Phase 9 Wave 2 execution plan","total_count":1,"children":[]}]},{"name":"phase9-wave3-execution-plan.md","total_count":1,"children":[{"name":"Phase 9 Wave 3 execution plan","total_count":1,"children":[]}]},{"name":"phase9-wave4-execution-plan.md","total_count":1,"children":[{"name":"Phase 9 Wave 4 execution plan","total_count":1,"children":[]}]},{"name":"phase9-workspace-plane-refactor-plan.md","total_count":1,"children":[{"name":"Phase 9 workspace plane refactor plan","total_count":1,"children":[]}]},{"name":"product-experience-optimization.md","total_count":1,"children":[{"name":"Product Experience Optimization","total_count":1,"children":[]}]},{"name":"product-ux-redesign.md","total_count":1,"children":[{"name":"Product UX Redesign — Workspace CLI + Dashboard","total_count":1,"children":[]}]},{"name":"self-collab-consensus-phase.md","total_count":1,"children":[{"name":"Phase 5 — Self-Collab-Consensus 架构落地","total_count":1,"children":[]}]},{"name":"test-report-script.md","total_count":1,"children":[{"name":"W3.2: Test Aggregation Reporter","total_count":1,"children":[]}]},{"name":"verify-retro-iteration-phase.md","total_count":1,"children":[{"name":"Phase 6 — 验证·复盘·迭代·纠偏","total_count":1,"children":[]}]},{"name":"workspace-ai-os-master-roadmap.md","total_count":1,"children":[{"name":"Workspace AI OS 长期总规划（Master Roadmap）","total_count":1,"children":[]}]},{"name":"workspace-ai-os-roadmap-v2.md","total_count":1,"children":[{"name":"Workspace AI OS 全景路线图","total_count":1,"children":[]}]},{"name":"workspace-ai-os-roadmap-v3.md","total_count":1,"children":[{"name":"Workspace AI OS 全景路线图 v3 — Phase 9 至 终局","total_count":1,"children":[]}]},{"name":"x3-traceability-proposal.md","total_count":1,"children":[{"name":"X3 引用链追溯方案","total_count":1,"children":[]}]}]},{"name":"beyond-phase4-review.md","total_count":1,"children":[{"name":"Phase ∞ 远景规划：红队分析 + 战略审查 + 安全分析","total_count":1,"children":[]}]},{"name":"beyond-phase4-vision.md","total_count":1,"children":[{"name":"远景规划：Phase 4 之后 —— omostation 的终极演化","total_count":1,"children":[]}]},{"name":"comprehensive-architecture-audit.md","total_count":1,"children":[{"name":"全景架构深度审查：SSOT 本体拆解与缺口分析","total_count":1,"children":[]}]},{"name":"dbo-archive","total_count":7,"children":[{"name":"approved","total_count":4,"children":[{"name":"GIP-2026-001-global-implementation-plan.zh-CN.md","total_count":1,"children":[{"name":"DigitalBrainOS 全局实施计划","total_count":1,"children":[]}]},{"name":"phase0-freeze-report.md","total_count":1,"children":[{"name":"Phase 0 Freeze Report","total_count":1,"children":[]}]},{"name":"PLAN-INDEX.md","total_count":1,"children":[{"name":"Plan Index","total_count":1,"children":[]}]},{"name":"W1-conductor-operating-system.md","total_count":1,"children":[{"name":"W1 Conductor Operating System","total_count":1,"children":[]}]}]},{"name":"templates","total_count":3,"children":[{"name":"proposal-template.md","total_count":1,"children":[{"name":"Proposal","total_count":1,"children":[]}]},{"name":"sprint-plan-template.md","total_count":1,"children":[{"name":"Sprint Plan","total_count":1,"children":[]}]},{"name":"wave-plan-template.md","total_count":1,"children":[{"name":"Wave Plan","total_count":1,"children":[]}]}]}]},{"name":"deep-architecture-agent-analysis.md","total_count":1,"children":[{"name":"深度架构分析：多Agent协作 · 第一性原理 · 控制面设计","total_count":1,"children":[]}]},{"name":"evolution-roadmap-4phases.md","total_count":1,"children":[{"name":"架构终极进化路线图：4 阶段执行计划","total_count":1,"children":[]}]},{"name":"kos-repair-plan.md","total_count":1,"children":[{"name":"KOS Index Repair Plan — M2.1","total_count":1,"children":[]}]},{"name":"layer-capability-user-planning.md","total_count":1,"children":[{"name":"系统能力层 + 用户使用层 — 全景梳理与建设规划","total_count":1,"children":[]}]},{"name":"llm-convergence-planning-packet.md","total_count":1,"children":[{"name":"LLM Convergence Planning Packet","total_count":1,"children":[]}]},{"name":"llm-convergence-requirements.md","total_count":1,"children":[{"name":"LLM 调用统一收敛 — 需求规格说明书","total_count":1,"children":[]}]},{"name":"omo-fusion-optimization-blueprint.md","total_count":1,"children":[{"name":"OMO fusion optimization blueprint","total_count":1,"children":[]}]},{"name":"phase15-autonomous-governance-preplanning.md","total_count":1,"children":[{"name":"Phase 15 autonomous governance pre-planning","total_count":1,"children":[]}]},{"name":"phase16-product-surface-convergence-preplanning.md","total_count":1,"children":[{"name":"Phase 16 product surface convergence plan","total_count":1,"children":[]}]},{"name":"phase17-wave1-sharedbrain-decomposition-plan.md","total_count":1,"children":[{"name":"Phase 17 Wave 1 实施计划：SharedBrain 拆解","total_count":1,"children":[]}]},{"name":"phase7-planning-analysis-requirements.md","total_count":1,"children":[{"name":"Phase 7 规划分析需求文档","total_count":1,"children":[]}]},{"name":"README.md","total_count":1,"children":[{"name":".omo/plans/ 目录索引","total_count":1,"children":[]}]},{"name":"redteam-revision-patch.md","total_count":1,"children":[{"name":"红队审查修订补丁：全部 4 阶段任务规格书","total_count":1,"children":[]}]},{"name":"safe-mesh-rbac-deployment-roadmap.md","total_count":1,"children":[{"name":"Safe Mesh / RBAC Deployment Roadmap","total_count":1,"children":[]}]},{"name":"sharedbrain-kairon-integration.md","total_count":1,"children":[{"name":"SharedBrain × kairon 融合实施计划","total_count":1,"children":[]}]},{"name":"tech-intelligence-2026q2.md","total_count":1,"children":[{"name":"技术情报报告：2026 Q2 行业扫描 × omostation 迭代","total_count":1,"children":[]}]}]};
+
+    function transformData(jsonData) {
+        // Helper function to recursively build the children structure
+        function processNode(node, parentL1StageName) {
+            let displayName = node.name;
+            // Append total_count if it exists and is not already in the name
+            if (node.total_count !== undefined) {
+                if (!/\(Total Count: \d+\)$/.test(displayName)) {
+                    displayName += ` (Total Count: ${node.total_count})`;
+                }
+            }
+
+            const newNode = { name: displayName };
+
+            if (parentL1StageName === "Root") {
+                 newNode.originalStageName = node.name;
+            } else {
+                newNode.originalStageName = parentL1StageName;
+            }
+
+            if (node.children && node.children.length > 0) {
+                const stageNameToPass = (parentL1StageName === "Root") ? node.name : parentL1StageName;
+                newNode.children = node.children.map(child => processNode(child, stageNameToPass));
+            }
+
+            return newNode;
+        }
+
+        let rootDisplayName = jsonData.name;
+        if (jsonData.total_count !== undefined && !/\(Total Count: \d+\)$/.test(rootDisplayName)) {
+            rootDisplayName += ` (Total Count: ${jsonData.total_count})`;
+        }
+
+        return {
+            name: rootDisplayName,
+            originalStageName: "Root",
+            children: (jsonData.children || []).map(child => processNode(child, "Root"))
+        };
+    }
+
+    const treeData = transformData(initialJsonData);
+
+    // Auto-populated phaseColors: every depth-1 child of the root gets
+    // a stable colour from a bigger palette so all top-level dirs are
+    // distinguishable.
+    const PALETTE = [
+      ["#3498DB","#2980B9","#AED6F1"], ["#2ECC71","#27AE60","#A9DFBF"],
+      ["#E74C3C","#C0392B","#F5B7B1"], ["#9B59B6","#8E44AD","#D7BDE2"],
+      ["#F39C12","#D68910","#FAD7A0"], ["#1ABC9C","#117864","#A2D9CE"],
+      ["#34495E","#1B2631","#ABB2B9"], ["#E67E22","#BA4A00","#F5CBA7"],
+      ["#16A085","#0E6655","#A2D9CE"], ["#D35400","#A04000","#EDBB99"],
+      ["#7F8C8D","#566573","#D5DBDB"], ["#C0392B","#7B241C","#F5B7B1"],
+      ["#2E86C1","#1B4F72","#A9CCE3"], ["#28B463","#196F3D","#A9DFBF"],
+      ["#AF7AC5","#6C3483","#D2B4DE"],
+    ];
+    const phaseColors = { "Root": { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+                          "Default": { fill: "#BDC3C7", stroke: "#95A5A6", collapsedFill: "#ECF0F1" } };
+    (initialJsonData.children || []).forEach((c, i) => {
+      const pal = PALETTE[i % PALETTE.length];
+      phaseColors[c.name] = { fill: pal[0], stroke: pal[1], collapsedFill: pal[2] };
+    });
+
+    const levelSpecificPalettes = {
+      0: { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+      2: { fill: "#6ab04c", stroke: "#508a38", collapsedFill: "#a3d391" },
+      3: { fill: "#f0932b", stroke: "#d0730f", collapsedFill: "#f6c07e" },
+      4: { fill: "#be2edd", stroke: "#a01cb3", collapsedFill: "#e08bf2" },
+      5: { fill: "#00a8ff", stroke: "#007ac1", collapsedFill: "#74d2ff" },
+      6: { fill: "#e55039", stroke: "#c23620", collapsedFill: "#f09a8d" },
+      default: { fill: "#747d8c", stroke: "#57606f", collapsedFill: "#a4b0be" }
+    };
+
+    const svgElement = d3.select("#tree-svg");
+    const initialSvgWidth = +svgElement.attr("width");
+    const initialSvgHeight = +svgElement.attr("height");
+    const margin = { top: 40, right: 120, bottom: 80, left: 450 };
+    let width = initialSvgWidth - margin.left - margin.right;
+    let height = initialSvgHeight - margin.top - margin.bottom;
+    const duration = 500;
+    let nodeCounter = 0;
+    const g = svgElement.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const treemap = d3.tree().nodeSize([40, 0]);
+    let rootNode = d3.hierarchy(treeData, d => d.children);
+    rootNode.x0 = 0;
+    rootNode.y0 = 0;
+
+    if (rootNode.children) {
+      rootNode.children.forEach(d_child => {
+        if (d_child.children) { collapseBranch(d_child); }
+      });
+    }
+    updateTree(rootNode);
+
+    function collapseBranch(d) { if (d.children) { d._children = d.children; d._children.forEach(collapseBranch); d.children = null; } }
+    function expandBranch(d) { if (d._children) { d.children = d._children; d._children = null; } if (d.children) { d.children.forEach(expandBranch); } }
+    window.expandAll = () => { expandBranch(rootNode); updateTree(rootNode); };
+    window.collapseAll = () => { if (rootNode.children) { rootNode.children.forEach(collapseBranch); } updateTree(rootNode); };
+    window.resetView = () => { if (rootNode.children) { rootNode.children.forEach(d_child => { if (d_child.children || d_child._children) { collapseBranch(d_child); } }); } if (rootNode._children && !rootNode.children) { rootNode.children = rootNode._children; rootNode._children = null; } updateTree(rootNode); };
+
+    function updateTree(source) {
+      const treeLayoutData = treemap(rootNode);
+      let nodes = treeLayoutData.descendants();
+      let links = treeLayoutData.descendants().slice(1);
+
+      let minX = 0;
+      let maxX = 0;
+      if (nodes.length > 0) {
+        minX = d3.min(nodes, d => d.x);
+        maxX = d3.max(nodes, d => d.x);
+      }
+
+      let neededHeight = Math.max(initialSvgHeight, maxX - minX + margin.top + margin.bottom + 100);
+      svgElement.transition().duration(duration / 2).attr("height", neededHeight);
+      g.transition().duration(duration / 2).attr("transform", `translate(${margin.left},${margin.top - minX + 40})`);
+
+      nodes.forEach(d => { d.y = d.depth * 400; }); // Adjust horizontal separation if needed
+
+      const node = g.selectAll('g.node').data(nodes, d => d.id || (d.id = ++nodeCounter));
+      const nodeEnter = node.enter().append('g')
+        .attr('class', d => "node" + (d.children || d._children ? " node--internal" : " node--leaf") + (d._children ? " _children" : ""))
+        .attr('transform', d => `translate(${source.y0},${source.x0})`)
+        .on('click', (event, d) => { if (d.children) { d._children = d.children; d.children = null; } else if (d._children) { d.children = d._children; d._children = null; } updateTree(d); })
+        .style('cursor', d => (d.children || d._children) ? 'pointer' : 'default');
+
+      nodeEnter.append('circle').attr('r', 1e-6);
+
+      nodeEnter.append('text')
+        .attr('dy', '.35em')
+        .attr('x', d => d.children || d._children ? -14 : 14)
+        .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
+        .style("fill-opacity", 1e-6)
+        .call(wrapText, 380);
+
+      const nodeUpdate = nodeEnter.merge(node);
+      nodeUpdate.transition().duration(duration)
+        .attr('transform', d => `translate(${d.y},${d.x})`)
+        .attr('class', d => "node" + (d.children ? " node--internal" : " node--leaf") + (d._children ? " node--internal _children" : ""));
+
+      nodeUpdate.select('circle').attr('r', 8.5)
+        .style('fill', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            if (d._children) return palette.collapsedFill;
+            if (d.children) return palette.fill;
+            return "#fff";
+        })
+        .style('stroke', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            return palette.stroke;
+        });
+      nodeUpdate.select('text').style("fill-opacity", 1).call(wrapText, 380);
+
+      const nodeExit = node.exit().transition().duration(duration).attr('transform', d => `translate(${source.y},${source.x})`).remove();
+      nodeExit.select('circle').attr('r', 1e-6);
+      nodeExit.select('text').style('fill-opacity', 1e-6);
+
+      const link = g.selectAll('path.link').data(links, d => d.id);
+      const linkEnter = link.enter().insert('path', "g").attr('class', 'link').attr('d', d => { const o = { x: source.x0, y: source.y0 }; return diagonal(o, o); });
+
+      linkEnter.merge(link).transition().duration(duration).attr('d', d => diagonal(d, d.parent))
+        .style('stroke', d => {
+            const sourceNode = d.parent;
+            if (!sourceNode) return phaseColors.Default.stroke;
+            const l1AncestorName = sourceNode.data.originalStageName;
+            const colorPalette = phaseColors[l1AncestorName] || phaseColors.Default;
+            return colorPalette.stroke;
+        });
+      link.exit().transition().duration(duration).attr('d', d => { const o = { x: source.x, y: source.y }; return diagonal(o, o); }).remove();
+      nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+    }
+
+    function diagonal(s, d) { return `M ${s.y} ${s.x} C ${(s.y + d.y) / 2} ${s.x}, ${(s.y + d.y) / 2} ${d.x}, ${d.y} ${d.x}`; }
+
+    function wrapText(textElements, maxWidth) {
+        const textPartColors = {
+            name: '#343a40',
+            count: '#0056b3'
+        };
+        const countRegex = /(\s\(Total Count: \d+\))$/;
+
+        textElements.each(function () {
+            const textD3 = d3.select(this);
+            const originalNodeText = textD3.datum().data.name;
+            const x = parseFloat(textD3.attr("x") || 0);
+            const initialDy = textD3.attr("dy");
+            const textAnchor = textD3.attr("text-anchor");
+            const lineHeight = 1.1;
+
+            textD3.text(null);
+
+            let namePart = originalNodeText;
+            let countPartText = "";
+
+            const countMatch = originalNodeText.match(countRegex);
+            if (countMatch && originalNodeText.endsWith(countMatch[0])) {
+                namePart = originalNodeText.substring(0, originalNodeText.length - countMatch[0].length).trim();
+                countPartText = countMatch[0].trim();
+            }
+
+            const tokens = [];
+            namePart.split(/\s+/).filter(Boolean).forEach(word => {
+                tokens.push({ text: word, type: 'name' });
+            });
+            if (countPartText) {
+                tokens.push({ text: countPartText, type: 'count' });
+            }
+
+            if (tokens.length === 0 && originalNodeText) {
+                tokens.push({ text: originalNodeText, type: 'name' });
+            }
+
+            let currentTspan = textD3.append("tspan").attr("x", x).attr("dy", initialDy);
+            if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+
+            let lineTokens = [];
+
+            for (let i = 0; i < tokens.length; i++) {
+                const tokenObj = tokens[i];
+
+                lineTokens.push(tokenObj);
+                currentTspan.text(lineTokens.map(t => t.text).join(" "));
+
+                if (currentTspan.node().getComputedTextLength() > maxWidth && lineTokens.length > 1) {
+                    lineTokens.pop();
+
+                    currentTspan.text(null);
+                    lineTokens.forEach((prevToken, idx) => {
+                        currentTspan.append("tspan")
+                            .text((idx > 0 ? " " : "") + prevToken.text)
+                            .style("fill", textPartColors[prevToken.type] || textPartColors.name)
+                            .style("font-weight", prevToken.type === 'count' ? "bold" : "normal");
+                    });
+
+                    lineTokens = [tokenObj];
+                    currentTspan = textD3.append("tspan").attr("x", x).attr("dy", lineHeight + "em");
+                    if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+                }
+            }
+
+            currentTspan.text(null);
+            lineTokens.forEach((token, idx) => {
+                currentTspan.append("tspan")
+                    .text((idx > 0 ? " " : "") + token.text)
+                    .style("fill", textPartColors[token.type] || textPartColors.name)
+                    .style("font-weight", token.type === 'count' ? "bold" : "normal");
+            });
+
+            if (textD3.selectAll("tspan > tspan").empty() && textD3.select("tspan").text().length === 0 && originalNodeText) {
+                let t = textD3.select("tspan");
+                let displayText = originalNodeText;
+                t.text(displayText).style("fill", textPartColors.name);
+                if (t.node() && t.node().getComputedTextLength() > maxWidth && displayText.length > 20) {
+                    let estimatedChars = Math.floor(maxWidth / (t.node().getComputedTextLength()/displayText.length) );
+                    displayText = displayText.substring(0, Math.max(0, estimatedChars - 3)) + "...";
+                    t.text(displayText);
+                }
+            }
+        });
+    }
+  </script>
+</body>
+</html>

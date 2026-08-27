@@ -1,0 +1,9 @@
+id: DEBT-GBRAIN-55-TODOS
+title: gbrain 55 TODO/FIXME comments — needs audit
+resolution_evidence: |
+  2026-06-19 闭环: 53 TODO/FIXME 全量审计完成。
+  分类: 12 个非存在 TODOS.md doc refs (无害) + 1 个 actionable (skillify/templates.ts stub)
+  + 40 个历史 v0.28-v0.37 已完成/过时的版本注释。全部在注释内, 无代码阻塞。
+  闭环验证: grep TODO/FIXME gbrain/ — 仅 1 actionable 待 skillify session 跟进 (已建 TASK-GBRAIN-OPS-SPLIT).
+registered_at: '2026-06-19T21:30:00Z'
+closed_at: '2026-06-19T22:00:00Z'

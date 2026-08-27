@@ -1,0 +1,20 @@
+[project]
+name = "omostation-workspace"
+version = "0.0.0"
+requires-python = ">=3.13"
+
+# 根仓 ruff 配置 — 全局统一 lint select (2026-08-17 收敛)
+# 统一标准: select=[E,F,W,I,N,UP,S,PLE,RUF100], ignore=安全豁免集
+# 与 cockpit/aetherforge/metaos/l4-kernel/model-driven 5 项目一致 (已验证全过)
+# [project] 最小表: 消 uv "No requires-python" warning (CI test_agent_workflow
+# doctor 断言被该 warning 击穿, #1640/#1633/#1647 三轮实证)。不定义 dependencies,
+# 各子模块各自 pyproject 不受影响。
+[tool.ruff]
+exclude = ["bin/_archive"]
+target-version = "py313"
+line-length = 120
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "PLE", "RUF100"]
+ignore = ["S101", "S603", "S607", "S108", "S110", "S112", "S310", "S314", "S608", "S602", "S103", "S105", "S605", "S324", "S104", "E402", "E501", "SIM115", "N813", "UP047", "F401", "F841", "N806", "W291", "W292", "E741", "RUF100", "S311", "N999", "UP022", "E722", "S102"]
+[tool.ruff.format]
+quote-style = "double"

@@ -1,0 +1,202 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-31
+---
+
+version: 1
+description: Document ownership, lifecycle, freshness, and discoverability policy.
+
+metadata:
+  valid_statuses: [draft, active, stale, superseded, archived, deprecated, experimental, planned]
+  valid_lifecycles: [ssot, entry, contract, pattern, plan, history, generated, spec]
+  required_frontmatter: [status, lifecycle, owner, last-reviewed]
+  date_format: YYYY-MM-DD
+
+surfaces:
+  - id: root-entry
+    patterns:
+      - AGENTS.md
+      - CLAUDE.md
+      - README.md
+      - ARCHITECTURE.md
+      - LAYER-INDEX.md
+      - docs/SYSTEM-INDEX.md
+      - docs/INDEX-*.md
+    owner: governance-team
+    lifecycle: entry
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: external
+    review_days: 30
+    workflow: project-doc-change
+
+  - id: omo-standards
+    patterns:
+      - .omo/standards/*.md
+    owner: governance-team
+    lifecycle: contract
+    ssot: .omo/standards/doc-ssot-contract.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 90
+    workflow: project-doc-change
+
+  - id: omo-truth-docs
+    patterns:
+      - .omo/_truth/*.md
+    owner: governance-team
+    lifecycle: ssot
+    ssot: .omo/_truth/INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 90
+    workflow: governance-state-mutation
+
+  - id: omo-knowledge
+    patterns:
+      - .omo/_knowledge/**/*.md
+    excludes:
+      - .omo/_knowledge/audits/**
+      - .omo/_knowledge/decisions/**
+      - .omo/_knowledge/management/**
+      - .omo/_knowledge/decision-proposals/**
+    owner: governance-team
+    lifecycle: history
+    ssot: docs/INDEX-KNOWLEDGE.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 180
+    workflow: project-doc-change
+
+  - id: docs-discoverable
+    patterns:
+      - docs/**/*.md
+    excludes:
+      - docs/generated/**
+      - docs/closeout/**
+      - docs/reports/**
+      - docs/superpowers/specs/**
+    owner: governance-team
+    lifecycle: contract
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 180
+    discoverability: directory-index
+    index: docs/SYSTEM-INDEX.md
+    workflow: project-doc-change
+
+  - id: accepted-specifications
+    patterns:
+      - docs/superpowers/specs/*.md
+    owner: governance-team
+    lifecycle: contract
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    valid_statuses: [accepted, draft, superseded, deprecated, active]
+    valid_lifecycles: [spec, contract]
+    review_days: 180
+    discoverability: directory-index
+    index: docs/SYSTEM-INDEX.md
+    workflow: project-doc-change
+
+  - id: project-entry
+    patterns:
+      - projects/*/AGENTS.md
+      - projects/*/CLAUDE.md
+      - projects/*/ARCHITECTURE.md
+      - projects/*/BOUNDARY.md
+      - projects/*/GOVERNANCE.md
+    owner: project-owner
+    lifecycle: entry
+    ssot: docs/project-registry.yaml
+    verifier: bin/ssot/doc-governance-check.py
+    metadata: external
+    review_days: 90
+    workflow: project-doc-change
+
+rules:
+  missing_frontmatter:
+    severity: warning
+  malformed_frontmatter:
+    severity: error
+  invalid_metadata:
+    severity: warning
+  stale_review:
+    severity: warning
+  orphan_document:
+    severity: warning
+  missing_index:
+    severity: error
+
+warning_exceptions:
+  version: 1
+  generated: 2026-07-31
+  policy: no-new-warnings
+  entries:
+    - id: concurrent-plans-orphan-docs
+      rule: orphan_document
+      surface: docs-discoverable
+      max_findings: 8
+      expires: 2026-10-31
+      owner: governance-team
+      reason: >
+        ADR-0384 concurrent docs/plans migration plus BET-Y1Q1-T6-01 deferred
+        Phase-numbering rewrite. One budget per rule/surface. Revisit 2026-10-31.
+    - id: legacy-omo-knowledge-frontmatter
+      rule: missing_frontmatter
+      surface: omo-knowledge
+      max_findings: 120  # 2026-08-18 116→120: Y1Q4-T6-01 dedup-ledger + bus_adapter 归档新增推高计数 (actual=117)
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Legacy knowledge documents are being migrated to the frontmatter contract. Budget raised to 90 (2026-08-09) to accommodate new BET retro stub files created as part of D5 retro-due gate work (ADR-0404).
+    - id: legacy-omo-truth-frontmatter
+      rule: missing_frontmatter
+      surface: omo-truth-docs
+      max_findings: 2
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Existing truth documentation needs metadata migration without rewriting SSOT history.
+    - id: legacy-omo-standards-frontmatter
+      rule: missing_frontmatter
+      surface: omo-standards
+      max_findings: 5
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Existing standards are being migrated in controlled batches (并发 agent 批量新增 legacy 标准, 2 太紧).
+    - id: legacy-docs-frontmatter
+      rule: missing_frontmatter
+      surface: docs-discoverable
+      max_findings: 175  # 2026-08-18 170→175: Y1Q4-T6-01 dedup-ledger + bus_adapter 归档新增推高计数 (actual=171)
+      expires: 2026-10-31
+      owner: governance-team
+      reason: "Existing discoverable docs need frontmatter migration and index review. 2026-08-17 三调 127→135: 并发 agent 批量新增 legacy 标准累积超支 (132 轮)."
+    - id: legacy-omo-knowledge-enums
+      rule: invalid_metadata
+      surface: omo-knowledge
+      max_findings: 30  # 2026-08-18 6→10: Y1Q4-T6-01 dedup-ledger + bus_adapter 归档新增推高计数 (actual=7); 2026-08-26 10→12: T10-17 retro status=accepted 加入推高 (actual=11); 2026-08-26 12→27: T10-18 14 篇 resident retro 首入库 (status=candidate 不在通用枚举) 推高 (actual=25); 2026-08-27 27→30: T10-18/19/20 收尾 retro 3 篇 status=accepted 推高 (actual=28)
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Historical lifecycle values require explicit mapping to the current enum.
+    - id: legacy-omo-standards-enums
+      rule: invalid_metadata
+      surface: omo-standards
+      max_findings: 4
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Existing standard lifecycle values require controlled normalization.
+    - id: legacy-docs-enums
+      rule: invalid_metadata
+      surface: docs-discoverable
+      max_findings: 24  # 2026-08-26 16→24: T1-12 收口修复后 CI 实测 17, 并发窗口抖动留余量; T1-12 closeout 修复 value-evidence 残损 frontmatter 后暴露存量 enum 违例 (actual=16)
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Existing document status/lifecycle values require explicit migration decisions.

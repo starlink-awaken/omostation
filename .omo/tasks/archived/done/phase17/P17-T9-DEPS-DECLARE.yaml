@@ -1,0 +1,28 @@
+id: P17-T9-DEPS-DECLARE
+phase: 17
+milestone: M17.2
+priority: P1
+title: "补全 5 包 dependencies 声明"
+status: done
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+source_docs:
+  - ".omo/plans/phase17-debt-governance-sprint.md"
+  - "projects/kairon/packages/engine-core/pyproject.toml"
+  - "projects/kairon/packages/forge/pyproject.toml"
+  - "projects/kairon/packages/core-models/pyproject.toml"
+  - "projects/kairon/packages/agent-runtime/pyproject.toml"
+  - "projects/kairon/packages/ecos/pyproject.toml"
+entry_gate:
+  - phase16_completed
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+evidence_required:
+  - "engine-core/forge/core-models/agent-runtime/ecos 均有完整 dependencies 声明"
+  - "uv sync 不报错"
+test_plan:
+  - "cd projects/kairon && uv sync && uv run pytest --collect-only -q"

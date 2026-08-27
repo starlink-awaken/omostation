@@ -1,0 +1,114 @@
+{
+  "date": "2026-08-06",
+  "tool": "pyright --outputjson",
+  "total_errors": 1718,
+  "line_suppressions": 0,
+  "file_suppressions": 0,
+  "suppression_ratio": 0.0,
+  "diff_mode": false,
+  "diff_origin": null,
+  "diff_projects": null,
+  "strict": false,
+  "strict_violations": {},
+  "projects": {
+    "aetherforge": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "agora": {
+      "ok": true,
+      "errors": 4,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "bus-foundation": {
+      "ok": true,
+      "errors": 10,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "c2g": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "cockpit": {
+      "ok": true,
+      "errors": 100,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "ecos": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "family-hub": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "kairon": {
+      "ok": true,
+      "errors": 1604,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "l4-kernel": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "metaos": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "model-driven": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "omo": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "omo-debt": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    },
+    "runtime": {
+      "ok": true,
+      "errors": 0,
+      "line_suppressions": 0,
+      "file_suppressions": 0,
+      "suppression_ratio": 0.0
+    }
+  },
+  "argv": []
+}

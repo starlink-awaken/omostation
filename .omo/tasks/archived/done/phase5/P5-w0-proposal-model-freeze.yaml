@@ -1,0 +1,40 @@
+id: P5-W0-PROPOSAL-MODEL-FREEZE
+phase: 5
+milestone: W0
+priority: P0
+title: Freeze proposal lifecycle and governance contract for Phase 5
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase5-wave0-proposal-freeze
+run_ref: .omo/_knowledge/design/phase5-proposal-governance-model.md
+approval_ref: null
+review_ref: .omo/_knowledge/design/phase5-proposal-governance-model.md
+knowledge_refs:
+  - .omo/_knowledge/design/phase5-program-architecture.md
+  - .omo/_knowledge/design/phase5-requirements.md
+  - .omo/_knowledge/design/reviews/review-architecture.md
+  - .omo/_knowledge/design/reviews/review-security-redteam.md
+  - .omo/_knowledge/design/reviews/review-ops-reliability.md
+handoff_refs: []
+source_docs:
+  - .omo/plans/archive/phase5-wave0-task-specs.md
+  - .omo/_knowledge/design/phase5-program-architecture.md
+  - .omo/_knowledge/design/phase5-requirements.md
+  - .omo/_knowledge/design/reviews/review-architecture.md
+deliverables:
+  - .omo/_knowledge/design/phase5-proposal-governance-model.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - G5.0 active queue seeded
+evidence_required:
+  - proposal schema and lifecycle are explicit
+  - approval boundary for L2 and L3 truth mutations is explicit
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase5_wave0_docs.py -q --tb=short
+blocked_by: null
+started_at: '2026-05-31T01:00:00Z'
+completed_at: '2026-05-31T01:05:00Z'
+retry_count: 0
+completion_summary: "Coordinator froze the Phase 5 proposal contract: proposal schema, lifecycle states, per-level approval rules, and plane ownership are now explicit for Wave 1 implementation."

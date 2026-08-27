@@ -1,0 +1,38 @@
+id: P29-W3-DAEMON-AGORA-HEALTH
+phase: 29
+wave: W3
+title: "sync daemon + agora 健康检查（ADR-0005 阶段 3）"
+status: completed
+task_type: feature
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P29-W2-KAIRON-GOVERNANCE-PKG completed"
+depends_on:
+  - P29-W2-KAIRON-GOVERNANCE-PKG
+deliverables:
+  - "packages/kairon-governance/src/kairon_governance/daemon.py"
+  - "packages/kairon-governance/src/kairon_governance/agora_health.py"
+  - "packages/kairon-governance/src/kairon_governance/audit.py (加 check_agora_health)"
+  - "packages/kairon-governance/src/kairon_governance/cli.py (daemon + agora-health 子命令)"
+  - "packages/kairon-governance/tests/unit/test_daemon.py (15 测试)"
+  - "packages/kairon-governance/tests/unit/test_agora_health.py (17 测试)"
+  - ".omo/_knowledge/governance-history.jsonl (6 条)"
+  - ".omo/_delivery/phase29-daemon-and-agora-health.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs: []
+knowledge_refs:
+  - "ADR-0005"
+description: |
+  ADR-0005 阶段 3：建 sync daemon（30min tick）+ agora 健康检查。
+  解决 .omo 平面单向人工 + agora 路由与实际服务脱节。
+  - daemon: PID file + SIGTERM/SIGINT + run_once 给 cron 用
+  - agora_health: 18 个服务端口字典，并发 5，5s 超时，4xx 算 healthy
+  - audit 第 6 项 agora 健康度：≥80% ok / ≥50% warn / <50% fail
+  - daemon 跑时 KAIRON_AUDIT_SKIP_AGORA=1 跳过 agora 探活
+started_at: '2026-06-06T00:30:00Z'
+completed_at: '2026-06-06T00:55:00Z'
+blocked_by: null
+retry_count: 0

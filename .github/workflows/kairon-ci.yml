@@ -1,0 +1,57 @@
+name: kairon-ci
+# kairon monorepo (16 包). make test 循环 pytest + make typecheck-gate mypy 回归门.
+on:
+  push:
+    branches: [main]
+    paths: ['projects/knowledge/kairon/**', '.github/workflows/kairon-ci.yml']
+  pull_request:
+    branches: [main]
+    paths: ['projects/knowledge/kairon/**', '.github/workflows/kairon-ci.yml']
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  test:
+    name: kairon make test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v4
+      - name: Install and verify ripgrep
+        run: |
+          sudo apt-get install -y ripgrep
+          rg --version
+      - name: uv sync (装配 kairon venv + pytest)
+        run: cd projects/knowledge/kairon && uv sync --quiet --all-groups
+      - name: make test-fast (16 包循环 pytest, 对齐原 kairon 仓 CI 语义)
+        # 注: 原子仓 CI 只跑指定 kems 文件; 根仓对齐 test-fast 口径
+        # (unit only, 排 integration/benchmarks — sqlite schema 类集成测需要
+        # Postgres/初始化环境, 全量口径在原仓同样挂, 见基线对照 2026-08-16).
+        run: cd projects/knowledge/kairon && make test-fast
+
+  typecheck-gate:
+    name: kairon mypy regression gate (DEBT-CI-MYPY-STRICT)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v4
+      - name: make typecheck-gate (卡增量不卡存量)
+        # 存量 1245 errors (见 projects/knowledge/kairon/mypy-baseline.yaml); CI 卡回归 (新错误致红).
+        # mypy 版本漂移致误报时: cd projects/knowledge/kairon && make typecheck-gate-update 刷新 baseline.
+        run: cd projects/knowledge/kairon && make typecheck-gate

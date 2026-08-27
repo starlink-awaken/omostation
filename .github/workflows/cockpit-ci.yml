@@ -1,0 +1,35 @@
+name: Cockpit CI
+on:
+  push:
+    branches: [main]
+    paths: ['projects/cockpit/**', '.github/workflows/cockpit-ci.yml']
+  pull_request:
+    branches: [main]
+    paths: ['projects/cockpit/**', '.github/workflows/cockpit-ci.yml']
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "projects/cockpit/pyproject.toml"
+      - name: Install dependencies
+        # recursive checkout 已拉 runtime/aetherforge/l4-kernel 子模块 → uv sync 装全 workspace (含 fastapi)
+        run: cd projects/cockpit && uv sync
+      - name: Run tests
+        # 单元测试 (src/cockpit/tests), 跳 integration (需 runtime 运行时) + benchmark
+        run: cd projects/cockpit && uv run pytest src/cockpit/tests -q

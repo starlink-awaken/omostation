@@ -1,0 +1,57 @@
+name: c2g-radar-daily
+# P43 W0 → P44 W1: 每日 8:00 UTC 跑 c2g radar 真审计 + 写 health.yaml SSOT
+# 关联: Plans/c2g-enchanted-coral.md §3.1
+# 关联 SSOT: .omo/state/health.yaml (生成) + .omo/state/system.yaml (同步)
+
+on:
+  schedule:
+    # 每日 8:00 UTC (北京时间 16:00, 工作日下午心跳)
+    - cron: '0 8 * * *'
+  workflow_dispatch:  # 支持手动触发
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+permissions:
+  contents: write
+
+jobs:
+  radar-audit:
+    name: Run c2g radar + write health.yaml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 显式 init c2g (下方步骤), 不 recursive (避免撞 private 子模块)
+          submodules: false
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pip install --quiet uv
+
+      - name: Run c2g radar via compass_radar
+        # 跑 bin/compass_radar.py → 落 .omo/state/health.yaml + 同步 system.yaml
+        # 退出码语义:
+        #   0 = OK (0 异常 或 异常已知)
+        #   1 = 脚本错误 (fail)
+        run: |
+          uv run --with pyyaml python bin/compass_radar.py
+      - name: Upload health.yaml artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-health-${{ github.run_id }}
+          path: .omo/state/health.yaml
+          retention-days: 30
+      # E (健康治理理想态·原则1 分层不越界): 去 Commit step.
+      # health.yaml 是运行时快照, 不该 commit main (跟 system_health.yaml 同类, 属 L1 运行时写面).
+      # bot push main 撞分支保护 (required_pull_request_reviews + enforce_admins, GH006) —
+      # 不是 bot 问题, 是 health.yaml 放错地方.
+      # 改由 foundry cron (本地 launchd) 跑 compass_radar 刷 health.yaml + BRIEF 读本地.
+      # GHA 本 job 只做 CI 独立审计 + artifact (30天历史), 不污染 main 历史.
+      # permissions: contents: write 保留 (artifact upload 不需要, 但 submodules checkout token 兼容).

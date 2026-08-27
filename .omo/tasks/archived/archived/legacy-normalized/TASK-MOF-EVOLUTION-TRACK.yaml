@@ -1,0 +1,27 @@
+id: TASK-MOF-EVOLUTION-TRACK
+title: MOF 系统演化追踪
+description: '实现 mof-evolution，追踪系统演化路径。 例如: kairon 从 monorepo 演化为 16 个子包。 优先级: P2
+  (中 ROI，历史记录)
+
+  '
+status: archived
+priority: P2
+risk_level: L2
+source: mof-analysis-20260620
+scope: mof
+effort: 1 week
+acceptance:
+- mof-evolution --project <name> 能输出演化报告
+- 能追踪 state_history 变化
+- 能生成时间线
+completed_at: '2026-06-20T00:00:00Z'
+completed_by: mof-session
+metadata:
+  legacy_normalized_from: planned
+  legacy_status: done
+  normalized_at: '2026-06-20T07:00:00Z'
+  normalized_by: codex-reviewer
+  normalization_source_ref: omo:worker:normalize-planned:TASK-MOF-EVOLUTION-TRACK
+  priority: P2
+archived_at: '2026-06-20T07:00:00Z'
+archived_by: codex-reviewer

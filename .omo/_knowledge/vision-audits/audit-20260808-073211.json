@@ -1,0 +1,91 @@
+{
+  "bet_progress": {
+    "done": 23,
+    "done_rate": 0.35,
+    "total": 66
+  },
+  "coverage_rate": 0.17,
+  "detail": [
+    {
+      "coverage": "implemented",
+      "implementation_signals": [
+        "docs:agent"
+      ],
+      "pillar": "技能自动结晶引擎 — 踩坑经验自动重构为持久化 Agent Skill"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "B.D.S.K. 影子沙箱预演场 — 0-Touch 代码提交前对抗仿真"
+    },
+    {
+      "coverage": "implemented",
+      "implementation_signals": [
+        "docs:agent"
+      ],
+      "pillar": "100% 责任归因代理链 — Subagent 全流程继承树审计"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "AetherForge 动态算力与模型自动配比"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "god-module 大文件 SRP 拆分 (3 个 >1500L 债)"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "并发写冲突止血 — 共享主树禁写 + PASW 全覆盖"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "废除 X3 mtime 交付指标"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "子模块指针对齐 + 漂移 CI 门禁"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "goals/current.yaml 复活"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "未入库产物普查 + D0 铁律门禁"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "仓库拓扑改造 — 单实例多租户 → 多实例单写者"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "子模块隔离 — PASW 覆盖 3→18, 拓扑改造后整体退役"
+    }
+  ],
+  "gap_pillars": [
+    "B.D.S.K. 影子沙箱预演场 — 0-Touch 代码提交前对抗仿真",
+    "AetherForge 动态算力与模型自动配比",
+    "god-module 大文件 SRP 拆分 (3 个 >1500L 债)",
+    "并发写冲突止血 — 共享主树禁写 + PASW 全覆盖",
+    "废除 X3 mtime 交付指标",
+    "子模块指针对齐 + 漂移 CI 门禁",
+    "goals/current.yaml 复活",
+    "未入库产物普查 + D0 铁律门禁",
+    "仓库拓扑改造 — 单实例多租户 → 多实例单写者",
+    "子模块隔离 — PASW 覆盖 3→18, 拓扑改造后整体退役"
+  ],
+  "gaps": 10,
+  "generated_at": "2026-08-08T07:32:11Z",
+  "implemented": 2,
+  "pillars_found": 12,
+  "schema": "vision-audit/v1"
+}

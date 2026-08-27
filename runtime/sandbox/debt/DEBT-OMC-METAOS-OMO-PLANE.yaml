@@ -1,0 +1,12 @@
+id: DEBT-OMC-METAOS-OMO-PLANE
+title: metaos 与 omo 治理面边界 (avoid direct .omo write)
+resolution_evidence: |
+  2026-06-21 audit fix (X2-FRESH-DEBT-EVIDENCE-INTEGRITY):
+  metaos admission gateway 收口, 禁止绕过 omo ingress 直接落盘 .omo/。
+  X1-CONS-METAOS-ADMISSION 约束 (CR-ADMISSION-01) 已生效。
+remediation: |
+  1. metaos admission evaluate → omo broker
+  2. agora ProxyManager 注册前必走 admission
+  3. omo lint admission 全过
+registered_at: '2026-06-12T00:00:00Z'
+closed_at: '2026-06-21T00:00:00Z'

@@ -1,0 +1,57 @@
+id: P9-W4-ROLLOUT-OPS-CLOSEOUT
+phase: 9
+milestone: W4
+priority: P0
+title: Land rollout governance, runtime/ops boundaries, and Phase 9 closeout
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase9-wave4-rollout-ops
+run_ref: .omo/workers/runs/phase9-wave4-rollout-ops-dispatch.yaml
+approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+review_ref: .omo/summaries/phase9-wave4-closeout.md
+knowledge_refs:
+  - .omo/plans/archive/phase9-workspace-plane-refactor-plan.md
+  - .omo/plans/archive/phase9-program-plan.md
+handoff_refs:
+  - .omo/workers/runs/phase9-wave4-rollout-ops-envelope.yaml
+  - .omo/workers/runs/phase9-wave4-rollout-ops-prompt.md
+  - .omo/workers/runs/phase9-wave4-rollout-ops-checkpoint.md
+  - .omo/workers/runs/phase9-wave4-rollout-ops-acceptance.yaml
+source_docs:
+  - .omo/summaries/phase9-wave3-closeout.md
+  - .omo/plans/archive/phase9-wave4-execution-plan.md
+deliverables:
+  - .omo/plans/archive/phase9-wave4-execution-plan.md
+  - spaces/system-space-rollout-policy.yaml
+  - runtime/system-runtime-boundary.yaml
+  - .omo/workers/runs/phase9-wave4-rollout-ops-envelope.yaml
+  - .omo/workers/runs/phase9-wave4-rollout-ops-acceptance.yaml
+  - scripts/omo_rollout.py
+  - scripts/omo_worker.py
+  - .omo/tests/test_phase9_rollout_governance.py
+  - .omo/tests/test_phase9_completion_docs.py
+  - .omo/summaries/phase9-wave4-closeout.md
+  - .omo/summaries/phase9-closeout-retrospective.md
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 9 Wave 3 closeout exists at .omo/summaries/phase9-wave3-closeout.md
+  - Wave 3 approval artifact is granted and verified
+evidence_required:
+  - system-space links a rollout policy
+  - runtime/ carries a boundary contract for residue
+  - one live rollout path evaluates allow from a granted approval
+  - one live acceptance record is written and linked from the envelope
+  - Phase 9 closeout retrospective is recorded
+test_plan:
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 -m pytest .omo/tests/test_phase9_rollout_governance.py -q
+  - python3 -m pytest .omo/tests/test_phase9_completion_docs.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T20:40:00Z'
+completed_at: '2026-05-31T20:50:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary: Wave 4 closed by landing rollout policy, runtime boundary, a live acceptance artifact, and the final Phase 9 retrospective.

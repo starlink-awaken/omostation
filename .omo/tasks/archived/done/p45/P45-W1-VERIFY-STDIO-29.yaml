@@ -1,0 +1,35 @@
+id: P45-W1-VERIFY-STDIO-29
+title: P45 W1 stdio 化验证 (29/29 MCP 默认 stdio)
+status: done
+task_type: verify
+risk_level: L0
+depends_on: []
+source_docs:
+- .omc/_knowledge/.../strategic-governance-p42.md
+- protocols/port-registry.yaml
+- e22d84da commit message (P45 战略)
+deliverables:
+- .omc/_knowledge/management/retrospective-2026-06-16-p45-w1.md
+- .omc/_knowledge/management/strategic-governance-p42.md
+imported_via: c2g bet
+context_uri: bos://memory/p45-w1-stdio-verify
+allowed_operation_level: L0
+human_approval_required: false
+assigned_to: team-lead
+entry_gate: []
+evidence_required:
+- grep 'transport.*stdio' 各 mcp_server.py 验证默认 stdio
+- protocols/port-registry.yaml mcp_transport_defaults 段 10 服务显式 stdio
+- 4 端口冲突已消解 (conflicts_resolved 段)
+test_plan:
+- 跑 c2g radar 验证 P45 W1 任务在 planned/done
+- 跑 0 端口冲突 (port-registry 验证)
+metadata:
+  c2g_mechanism: radar + bet
+  phase: 45
+  wave: W1
+  category: governance-convergence
+closed_at: '2026-06-16T05:55:45Z'
+closed_by: team-lead
+evidence: P45 W1 stdio 化验证完成. 29/29 MCP 默认 stdio (10 显式 mcp_transport_defaults + 19
+  隐式默认). 4 端口冲突已消解. e22d84da commit 已落 P45 战略 + port-registry 改.

@@ -1,0 +1,41 @@
+id: P7-R0-PHASE7-PLANNING-GATE
+phase: 7
+milestone: R0
+priority: P0
+title: Ratify the Phase 7 planning gate and seed Wave 1 only
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase7-r0-planning-gate
+run_ref: .omo/plans/archive/phase7-program-plan.md
+approval_ref: null
+review_ref: .omo/summaries/phase7-planning-ratification.md
+knowledge_refs:
+  - .omo/_knowledge/management/omo-convergence-audit-2026-05-31.md
+  - docs/superpowers/specs/2026-05-31-phase7-planning-gate-design.md
+handoff_refs: []
+source_docs:
+  - .omo/plans/archive/phase7-planning-gate.md
+  - .omo/plans/archive/phase7-program-plan.md
+  - .omo/plans/archive/phase7-starter-packet-spec.md
+deliverables:
+  - .omo/goals/current.yaml
+  - .omo/state/system.yaml
+  - .omo/_control/INDEX.md
+  - .omo/summaries/phase7-planning-ratification.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 6 completed
+  - Phase 7 planning artifacts approved
+evidence_required:
+  - live control/state points to Phase 7 Wave 1 only
+  - one execution-ready packet is seeded in tasks/active
+test_plan:
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 scripts/sync_omo_state.py --omo-dir .omo
+  - python3 -m pytest .omo/tests/test_phase7_planning_gate_docs.py -q
+started_at: '2026-05-31T09:10:00Z'
+completed_at: '2026-05-31T09:20:00Z'
+retry_count: 0
+completion_summary: Phase 7 was ratified by landing the planning gate, promoting the live control plane to Wave 1, and seeding only the user-journey-enablement starter packet.

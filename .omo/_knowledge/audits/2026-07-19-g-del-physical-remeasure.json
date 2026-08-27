@@ -1,0 +1,107 @@
+{
+  "schema": "g-del-physical-metrics/v2",
+  "env_class": "physical_multi_host",
+  "caliber_adr": [
+    "0210",
+    "0225",
+    "0226"
+  ],
+  "physical_hosts": 2,
+  "endpoint_count": 2,
+  "hosts": [
+    {
+      "node_id": "local-mac",
+      "addr": "127.0.0.1:18765"
+    },
+    {
+      "node_id": "macmini",
+      "addr": "192.168.31.210:18765"
+    }
+  ],
+  "env_evidence": {
+    "controller_hostname": "Mac",
+    "controller_time_utc": "2026-07-19T04:49:14Z",
+    "probed_hosts": [
+      {
+        "node_id": "local-mac",
+        "ip": "127.0.0.1",
+        "port": 18765,
+        "hello": {
+          "ok": true,
+          "node_id": "local-mac",
+          "agents": 0,
+          "wall_ms": 0.34887506626546383
+        }
+      },
+      {
+        "node_id": "macmini",
+        "ip": "192.168.31.210",
+        "port": 18765,
+        "hello": {
+          "ok": true,
+          "node_id": "macmini",
+          "agents": 0,
+          "wall_ms": 9.877667063847184
+        }
+      }
+    ]
+  },
+  "g_del_1": {
+    "gate": "G-DEL.1",
+    "kpi": "schedule_success_rate > 99%",
+    "env": "physical multi-host TCP agents over real hosts (ADR-0225)",
+    "env_class": "physical_multi_host",
+    "n_tasks": 50,
+    "successes": 50,
+    "failures": 0,
+    "success_rate": 1.0,
+    "success_rate_pct": 100.0,
+    "dispatch_p99_ms": 18.2385,
+    "nodes": [
+      "local-mac",
+      "macmini"
+    ],
+    "endpoints": [
+      "127.0.0.1:18765",
+      "192.168.31.210:18765"
+    ],
+    "meets_sim_harness": true,
+    "physical_hosts": 2,
+    "min_physical_hosts": 4,
+    "gate_status": "BLOCKED",
+    "blocked_reason": "physical_hosts=2 < min_physical_hosts=4",
+    "meets_physical_gate": false,
+    "meets_gate": false
+  },
+  "g_del_3": {
+    "gate": "G-DEL.3",
+    "kpi": "sync_latency_p99 < 100ms",
+    "env": "physical multi-host parallel fan-out put over real TCP (ADR-0225)",
+    "env_class": "physical_multi_host",
+    "n_ops": 400,
+    "successes": 400,
+    "p50_ms": 8.3922,
+    "p95_ms": 14.5555,
+    "p99_ms": 162.2941,
+    "max_ms": 168.1123,
+    "sync_mode": "parallel_fanout_put",
+    "nodes": [
+      "local-mac",
+      "macmini"
+    ],
+    "endpoints": [
+      "127.0.0.1:18765",
+      "192.168.31.210:18765"
+    ],
+    "meets_sim_harness": false,
+    "physical_hosts": 2,
+    "min_physical_hosts": 2,
+    "gate_status": "OPEN",
+    "meets_physical_gate": false,
+    "meets_gate": false
+  },
+  "g_del_1_blocked": true,
+  "g_del_3_physical_pass": false,
+  "all_physical_gates_pass": false,
+  "generated_at": "2026-07-19T04:49:24Z"
+}

@@ -1,0 +1,20 @@
+id: "TEST_COVERAGE"
+title: "测试覆盖缺口 — 部分层无测试框架"
+dimension: "governance"
+subdimension: "quality"
+domain: "ecos"
+scope: "workspace"
+severity: "medium"
+weight: 0.10
+entropy_class: "high"
+lifecycle_state: "resolved"
+resolution_evidence: "P43-ARCH-ANALYSIS-005: 测试覆盖已由 gac-local-gate + pytest 门禁守护 (44 checks ALL GREEN)"
+owner: "omo-team"
+affected_roots: []
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-07-14"
+last_reviewed_at: "2026-07-14"
+gate_level: "P2"
+x1_policy_ref: "P43-ARCH-ANALYSIS-005"
+x3_tier: "Framework"

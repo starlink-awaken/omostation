@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# bin/omo-status — Multi-Agent Swarm 全景协作监控快照
+#
+# 用法:
+#   bin/omo-status              # 打印 4 象限 Rich 彩色综合诊断大盘 + sub-project health
+#   bin/omo-status --json       # 导出结构化 JSON 供脚本集成
+#   bin/omo-status --probe-remote # 探测远端 19 子仓 SHA 指针
+#   bin/omo-status --no-subprojects # 跳过 sub-project health 检查
+# ==============================================================================
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export WORKSPACE_ROOT="$REPO_ROOT"
+
+# Check if sub-project health should be skipped
+SKIP_SUBPROJECTS=false
+for arg in "$@"; do
+    if [ "$arg" = "--no-subprojects" ]; then
+        SKIP_SUBPROJECTS=true
+        break
+    fi
+done
+
+# Run sub-project health if not skipped and not in JSON mode
+if [ "$SKIP_SUBPROJECTS" = "false" ] && [[ " $* " != *" --json "* ]]; then
+    echo ""
+    echo "=== Sub-project Health ==="
+    uv run python3 "$REPO_ROOT/bin/meta/sub-project-health.py" 2>/dev/null || true
+    echo ""
+fi
+
+exec uv run --project "$REPO_ROOT/projects/cockpit" python -m cockpit.tui.swarm_cli "$@"

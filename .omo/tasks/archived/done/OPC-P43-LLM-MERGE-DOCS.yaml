@@ -1,0 +1,50 @@
+id: OPC-P43-LLM-MERGE-DOCS
+phase: 43
+milestone: M43.5
+priority: P1
+title: 更新所有架构文档与交叉引用反映 llm-gateway 合并
+status: done
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../plan/pitches/PITCH-llm-gateway-merge.md
+- docs/PANORAMA.md
+- docs/ARCHITECTURE-EVOLUTION.md
+- projects/aetherforge/ARCHITECTURE.md
+- projects/llm-gateway/ARCHITECTURE.md
+depends_on:
+- OPC-P43-LLM-MERGE-MOF
+- OPC-P43-LLM-MERGE-CONFIG
+entry_gate:
+- BET-a15b
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- docs/PANORAMA.md 不再将 llm-gateway 列为独立活跃项目
+- docs/ARCHITECTURE-EVOLUTION.md 更新合并状态
+- projects/aetherforge/ARCHITECTURE.md 反映 gateway 包完整能力
+- projects/llm-gateway/*.md 顶部添加 DEPRECATED/ARCHIVED 水印
+- 引用 llm-gateway 的其他项目 BOUNDARY.md 更新
+acceptance_criteria:
+- 全站 grep "llm-gateway" docs/ projects/*/ 仅出现在归档说明和历史对比中
+- make doc-lint 通过
+- 所有链接有效
+test_plan:
+- make doc-lint
+- grep -r "llm-gateway" docs/ projects/*/ --include='*.md' | grep -v ARCHIVED | grep
+  -v EVOLUTION | wc -l == 0
+accepted: null
+opened_at: '2026-06-16T12:00:00Z'
+owner: docs-team
+m3_parent: OMOTASK
+model_driven_refs:
+- model_driven.lifecycle.stages.STAGE-IMPLEMENT
+signals:
+- task-OPC-P43-LLM-MERGE-DOCS-running
+completed_at: '2026-06-17T09:19:04.047737Z'

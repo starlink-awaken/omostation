@@ -1,0 +1,3570 @@
+{
+  "generated_at": "2026-08-15T11:59:07.405523+00:00",
+  "scope": "all",
+  "totals": {
+    "total_commands": 453,
+    "domains": 14,
+    "commands_by_domain": [
+      [
+        "_archive",
+        76
+      ],
+      [
+        "adr",
+        8
+      ],
+      [
+        "cockpit",
+        2
+      ],
+      [
+        "collab",
+        6
+      ],
+      [
+        "decks",
+        2
+      ],
+      [
+        "delivery",
+        6
+      ],
+      [
+        "gac",
+        151
+      ],
+      [
+        "mesh",
+        1
+      ],
+      [
+        "mof",
+        28
+      ],
+      [
+        "plan",
+        1
+      ],
+      [
+        "root",
+        21
+      ],
+      [
+        "ssot",
+        145
+      ],
+      [
+        "svc",
+        1
+      ],
+      [
+        "sweep",
+        5
+      ]
+    ],
+    "extensions": {
+      ".py": 392,
+      ".sh": 33,
+      "<noext>": 26,
+      ".orig": 1,
+      ".mjs": 1
+    },
+    "duplicate_count": 5,
+    "duplicate_commands": [
+      {
+        "command": "git-health-hook",
+        "count": 2,
+        "paths": [
+          "git-health-hook.py",
+          "ssot/git-health-hook.py"
+        ],
+        "severity": "warn"
+      },
+      {
+        "command": "nested-with",
+        "count": 2,
+        "paths": [
+          "_archive/nested-with.py",
+          "sweep/nested-with.py"
+        ],
+        "severity": "warn"
+      },
+      {
+        "command": "predictive-governance",
+        "count": 2,
+        "paths": [
+          "gac/predictive-governance.py",
+          "ssot/predictive-governance.py"
+        ],
+        "severity": "warn"
+      },
+      {
+        "command": "submodule-reachability-gate",
+        "count": 2,
+        "paths": [
+          "ssot/submodule-reachability-gate.py",
+          "submodule-reachability-gate.py"
+        ],
+        "severity": "warn"
+      },
+      {
+        "command": "sync-submodules-push",
+        "count": 2,
+        "paths": [
+          "ssot/sync-submodules-push.sh",
+          "sync-submodules-push.sh"
+        ],
+        "severity": "warn"
+      }
+    ],
+    "legacy_snake_case": [
+      "check_health_ssot.py",
+      "collab/control_experiment.py",
+      "collab/recommend_mode.py",
+      "collab/scenario_lib.py",
+      "compass_radar.py",
+      "delivery/measure_all.py",
+      "delivery/measure_physical.py",
+      "delivery/physical_node.py",
+      "delivery/physical_recovery.py",
+      "gac/coordination_store.py",
+      "gac/swarm_discipline.py",
+      "gac/test_coordination_layer.py",
+      "ssot/_llm_helper.py",
+      "ssot/admin_scenes.py",
+      "ssot/consumer_index.py",
+      "ssot/corrosion_learner.py",
+      "ssot/deadline_tracker.py",
+      "ssot/doc_generator.py",
+      "ssot/export_mof_framework.py",
+      "ssot/governance_closed_loop.py",
+      "ssot/health_agent.py",
+      "ssot/llm_provider.py",
+      "ssot/m0_feedback.py",
+      "ssot/mail_agent.py",
+      "ssot/mail_daemon.py",
+      "ssot/mail_reader.py",
+      "ssot/mail_sender.py",
+      "ssot/model_graph_query.py",
+      "ssot/onto_ekg_bootstrap.py",
+      "ssot/onto_merge.py",
+      "ssot/onto_reconcile.py",
+      "ssot/owl_adapter.py",
+      "ssot/project_health_check.py",
+      "ssot/risk_engine.py",
+      "ssot/semantic_diff.py",
+      "svc/service_view.py",
+      "sweep/sweep_index.py"
+    ],
+    "missing_shebang": [],
+    "thick_entries": [
+      {
+        "path": "collab/scenario_lib.py",
+        "domain": "collab",
+        "command": "scenario_lib",
+        "lines": 4835
+      },
+      {
+        "path": "gac/orca-codex-supervisor.py",
+        "domain": "gac",
+        "command": "orca-codex-supervisor",
+        "lines": 1465
+      },
+      {
+        "path": "gac/agent-clone.py",
+        "domain": "gac",
+        "command": "agent-clone",
+        "lines": 1178
+      },
+      {
+        "path": "ssot/doc-governance-check.py",
+        "domain": "ssot",
+        "command": "doc-governance-check",
+        "lines": 1138
+      },
+      {
+        "path": "gac/swarm_discipline.py",
+        "domain": "gac",
+        "command": "swarm_discipline",
+        "lines": 1042
+      },
+      {
+        "path": "compass_radar.py",
+        "domain": "root",
+        "command": "compass_radar",
+        "lines": 1032
+      },
+      {
+        "path": "ssot/external-resource-catalog.py",
+        "domain": "ssot",
+        "command": "external-resource-catalog",
+        "lines": 1005
+      },
+      {
+        "path": "gac/governance-evolution.py",
+        "domain": "gac",
+        "command": "governance-evolution",
+        "lines": 972
+      },
+      {
+        "path": "gac/evidence-smoke.py",
+        "domain": "gac",
+        "command": "evidence-smoke",
+        "lines": 931
+      },
+      {
+        "path": "gac/gac-local-gate.py",
+        "domain": "gac",
+        "command": "gac-local-gate",
+        "lines": 919
+      },
+      {
+        "path": "gac/codex-worker-adapter.py",
+        "domain": "gac",
+        "command": "codex-worker-adapter",
+        "lines": 897
+      },
+      {
+        "path": "ssot/journey-runner.py",
+        "domain": "ssot",
+        "command": "journey-runner",
+        "lines": 862
+      },
+      {
+        "path": "gac/governance-dashboard.py",
+        "domain": "gac",
+        "command": "governance-dashboard",
+        "lines": 847
+      },
+      {
+        "path": "gac/gac-worktree.sh",
+        "domain": "gac",
+        "command": "gac-worktree",
+        "lines": 793
+      },
+      {
+        "path": "plan/bet-ledger.py",
+        "domain": "plan",
+        "command": "bet-ledger",
+        "lines": 759
+      },
+      {
+        "path": "gac/m1-closeout-report.py",
+        "domain": "gac",
+        "command": "m1-closeout-report",
+        "lines": 721
+      },
+      {
+        "path": "gac/kandev-loopback-trial.py",
+        "domain": "gac",
+        "command": "kandev-loopback-trial",
+        "lines": 580
+      },
+      {
+        "path": "gac/coordination_store.py",
+        "domain": "gac",
+        "command": "coordination_store",
+        "lines": 560
+      },
+      {
+        "path": "ssot/ssot-guardian.py",
+        "domain": "ssot",
+        "command": "ssot-guardian",
+        "lines": 558
+      },
+      {
+        "path": "gac/swarm-activity-dashboard.py",
+        "domain": "gac",
+        "command": "swarm-activity-dashboard",
+        "lines": 548
+      },
+      {
+        "path": "gac/gac-healthcheck.py",
+        "domain": "gac",
+        "command": "gac-healthcheck",
+        "lines": 536
+      },
+      {
+        "path": "gac/test_coordination_layer.py",
+        "domain": "gac",
+        "command": "test_coordination_layer",
+        "lines": 520
+      },
+      {
+        "path": "svc/service_view.py",
+        "domain": "svc",
+        "command": "service_view",
+        "lines": 514
+      },
+      {
+        "path": "mof/generate-brief.py",
+        "domain": "mof",
+        "command": "generate-brief",
+        "lines": 513
+      },
+      {
+        "path": "gac/documents-codex-profile.py",
+        "domain": "gac",
+        "command": "documents-codex-profile",
+        "lines": 512
+      },
+      {
+        "path": "gac/phase-gate-check.py",
+        "domain": "gac",
+        "command": "phase-gate-check",
+        "lines": 512
+      },
+      {
+        "path": "delivery/measure_physical.py",
+        "domain": "delivery",
+        "command": "measure_physical",
+        "lines": 499
+      },
+      {
+        "path": "tool-registry-audit.py",
+        "domain": "root",
+        "command": "tool-registry-audit",
+        "lines": 495
+      },
+      {
+        "path": "gac/gac-m1-sync.py",
+        "domain": "gac",
+        "command": "gac-m1-sync",
+        "lines": 468
+      },
+      {
+        "path": "cockpit/gen-capability-registry.py",
+        "domain": "cockpit",
+        "command": "gen-capability-registry",
+        "lines": 451
+      },
+      {
+        "path": "gac/check-foundry-deck-coverage.py",
+        "domain": "gac",
+        "command": "check-foundry-deck-coverage",
+        "lines": 440
+      },
+      {
+        "path": "gac/worktree-hygiene-audit.py",
+        "domain": "gac",
+        "command": "worktree-hygiene-audit",
+        "lines": 436
+      },
+      {
+        "path": "ssot/freshness.py",
+        "domain": "ssot",
+        "command": "freshness",
+        "lines": 433
+      },
+      {
+        "path": "_archive/alert-history.py",
+        "domain": "_archive",
+        "command": "alert-history",
+        "lines": 430
+      },
+      {
+        "path": "gac/swarm-discipline-cli.py",
+        "domain": "gac",
+        "command": "swarm-discipline-cli",
+        "lines": 419
+      },
+      {
+        "path": "gac/documents-zed-profile.py",
+        "domain": "gac",
+        "command": "documents-zed-profile",
+        "lines": 417
+      },
+      {
+        "path": "ssot/god-module-13-error-list.py",
+        "domain": "ssot",
+        "command": "god-module-13-error-list",
+        "lines": 411
+      },
+      {
+        "path": "gac/documents-claude-desktop-config.py",
+        "domain": "gac",
+        "command": "documents-claude-desktop-config",
+        "lines": 407
+      },
+      {
+        "path": "ssot/doc-ssot-lint.py",
+        "domain": "ssot",
+        "command": "doc-ssot-lint",
+        "lines": 403
+      },
+      {
+        "path": "mof/check-mof-capabilities-drift.py",
+        "domain": "mof",
+        "command": "check-mof-capabilities-drift",
+        "lines": 399
+      },
+      {
+        "path": "ssot-watcher.py",
+        "domain": "root",
+        "command": "ssot-watcher",
+        "lines": 397
+      },
+      {
+        "path": "ssot/observability-events.py",
+        "domain": "ssot",
+        "command": "observability-events",
+        "lines": 389
+      },
+      {
+        "path": "delegation-preflight.py",
+        "domain": "root",
+        "command": "delegation-preflight",
+        "lines": 387
+      },
+      {
+        "path": "gac/governance-convergence-lint.py",
+        "domain": "gac",
+        "command": "governance-convergence-lint",
+        "lines": 380
+      },
+      {
+        "path": "ssot/scene-card-intake-pipeline.py",
+        "domain": "ssot",
+        "command": "scene-card-intake-pipeline",
+        "lines": 378
+      },
+      {
+        "path": "gac/governance-alert-dispatch.py",
+        "domain": "gac",
+        "command": "governance-alert-dispatch",
+        "lines": 376
+      },
+      {
+        "path": "gac/gac-consensus-inject.py",
+        "domain": "gac",
+        "command": "gac-consensus-inject",
+        "lines": 375
+      },
+      {
+        "path": "gac/documents-zcode-config.py",
+        "domain": "gac",
+        "command": "documents-zcode-config",
+        "lines": 369
+      },
+      {
+        "path": "gac/governance-readiness.py",
+        "domain": "gac",
+        "command": "governance-readiness",
+        "lines": 369
+      },
+      {
+        "path": "mof/gen-dependency-baseline.py",
+        "domain": "mof",
+        "command": "gen-dependency-baseline",
+        "lines": 364
+      },
+      {
+        "path": "gac/check-ci-surfaces.py",
+        "domain": "gac",
+        "command": "check-ci-surfaces",
+        "lines": 363
+      },
+      {
+        "path": "gac/gac-ingest-legacy.py",
+        "domain": "gac",
+        "command": "gac-ingest-legacy",
+        "lines": 356
+      },
+      {
+        "path": "_archive/rule-vitality-report.py",
+        "domain": "_archive",
+        "command": "rule-vitality-report",
+        "lines": 349
+      },
+      {
+        "path": "gac/gac-mesh-router.py",
+        "domain": "gac",
+        "command": "gac-mesh-router",
+        "lines": 349
+      },
+      {
+        "path": "gac/gac-drift.py",
+        "domain": "gac",
+        "command": "gac-drift",
+        "lines": 346
+      },
+      {
+        "path": "ssot/autoloop-controller.py",
+        "domain": "ssot",
+        "command": "autoloop-controller",
+        "lines": 343
+      },
+      {
+        "path": "_archive/gen-scenarios.py",
+        "domain": "_archive",
+        "command": "gen-scenarios",
+        "lines": 341
+      },
+      {
+        "path": "gac/gac-validate.py",
+        "domain": "gac",
+        "command": "gac-validate",
+        "lines": 341
+      },
+      {
+        "path": "layer-dependency-check.py",
+        "domain": "root",
+        "command": "layer-dependency-check",
+        "lines": 340
+      },
+      {
+        "path": "gac/knowledge-foundry-cron.py",
+        "domain": "gac",
+        "command": "knowledge-foundry-cron",
+        "lines": 338
+      },
+      {
+        "path": "gac/alert-aggregator.py",
+        "domain": "gac",
+        "command": "alert-aggregator",
+        "lines": 335
+      },
+      {
+        "path": "ssot/external-activation-preflight.py",
+        "domain": "ssot",
+        "command": "external-activation-preflight",
+        "lines": 332
+      },
+      {
+        "path": "ssot/external-resource-pack.py",
+        "domain": "ssot",
+        "command": "external-resource-pack",
+        "lines": 331
+      },
+      {
+        "path": "gac/gac-compute-onboard.py",
+        "domain": "gac",
+        "command": "gac-compute-onboard",
+        "lines": 329
+      },
+      {
+        "path": "_archive/l0-constraints-migrate.py",
+        "domain": "_archive",
+        "command": "l0-constraints-migrate",
+        "lines": 327
+      },
+      {
+        "path": "ssot/scene-card-lifecycle.py",
+        "domain": "ssot",
+        "command": "scene-card-lifecycle",
+        "lines": 327
+      },
+      {
+        "path": "ssot/scene-card-decision-inbox.py",
+        "domain": "ssot",
+        "command": "scene-card-decision-inbox",
+        "lines": 325
+      },
+      {
+        "path": "gac/mcp-server-kos.py",
+        "domain": "gac",
+        "command": "mcp-server-kos",
+        "lines": 323
+      },
+      {
+        "path": "ssot/scene-card-connector.py",
+        "domain": "ssot",
+        "command": "scene-card-connector",
+        "lines": 322
+      },
+      {
+        "path": "ssot/signal-poller.py",
+        "domain": "ssot",
+        "command": "signal-poller",
+        "lines": 320
+      },
+      {
+        "path": "ssot/scene-card-approval-flow.py",
+        "domain": "ssot",
+        "command": "scene-card-approval-flow",
+        "lines": 314
+      },
+      {
+        "path": "gac/check-work-landed.py",
+        "domain": "gac",
+        "command": "check-work-landed",
+        "lines": 313
+      },
+      {
+        "path": "ssot/management-cross-ref-check.py",
+        "domain": "ssot",
+        "command": "management-cross-ref-check",
+        "lines": 311
+      },
+      {
+        "path": "ssot/governance-scanner.py",
+        "domain": "ssot",
+        "command": "governance-scanner",
+        "lines": 309
+      },
+      {
+        "path": "ssot/check-layer-call-direction.py",
+        "domain": "ssot",
+        "command": "check-layer-call-direction",
+        "lines": 308
+      },
+      {
+        "path": "ssot/internal-scene-preflight.py",
+        "domain": "ssot",
+        "command": "internal-scene-preflight",
+        "lines": 303
+      },
+      {
+        "path": "mof/mof-bootstrap.py",
+        "domain": "mof",
+        "command": "mof-bootstrap",
+        "lines": 301
+      },
+      {
+        "path": "gac/gac-hook-pre-edit.py",
+        "domain": "gac",
+        "command": "gac-hook-pre-edit",
+        "lines": 300
+      },
+      {
+        "path": "mof/m4-health-score.py",
+        "domain": "mof",
+        "command": "m4-health-score",
+        "lines": 298
+      },
+      {
+        "path": "ssot/gen-tools-index.py",
+        "domain": "ssot",
+        "command": "gen-tools-index",
+        "lines": 298
+      },
+      {
+        "path": "ssot/current-state-coherence.py",
+        "domain": "ssot",
+        "command": "current-state-coherence",
+        "lines": 294
+      },
+      {
+        "path": "gac/kos-seed-import.py",
+        "domain": "gac",
+        "command": "kos-seed-import",
+        "lines": 293
+      },
+      {
+        "path": "_archive/omo-doctor-cron.py",
+        "domain": "_archive",
+        "command": "omo-doctor-cron",
+        "lines": 292
+      },
+      {
+        "path": "collab/control_experiment.py",
+        "domain": "collab",
+        "command": "control_experiment",
+        "lines": 292
+      },
+      {
+        "path": "gac/check-submodule-pointer-drift.py",
+        "domain": "gac",
+        "command": "check-submodule-pointer-drift",
+        "lines": 288
+      },
+      {
+        "path": "ssot/mesh-iris-executor.py",
+        "domain": "ssot",
+        "command": "mesh-iris-executor",
+        "lines": 288
+      },
+      {
+        "path": "ssot/submodule-reachability-gate.py",
+        "domain": "ssot",
+        "command": "submodule-reachability-gate",
+        "lines": 286
+      },
+      {
+        "path": "ssot/god-module-roadmap.py",
+        "domain": "ssot",
+        "command": "god-module-roadmap",
+        "lines": 284
+      },
+      {
+        "path": "sweep/scan.py",
+        "domain": "sweep",
+        "command": "scan",
+        "lines": 284
+      },
+      {
+        "path": "adr/adr-coverage.py",
+        "domain": "adr",
+        "command": "adr-coverage",
+        "lines": 283
+      },
+      {
+        "path": "gac/gac-executor.py",
+        "domain": "gac",
+        "command": "gac-executor",
+        "lines": 282
+      },
+      {
+        "path": "gac/orca-worker-start.py",
+        "domain": "gac",
+        "command": "orca-worker-start",
+        "lines": 282
+      },
+      {
+        "path": "ssot/risk_engine.py",
+        "domain": "ssot",
+        "command": "risk_engine",
+        "lines": 282
+      },
+      {
+        "path": "gac/state-freshness-check.py",
+        "domain": "gac",
+        "command": "state-freshness-check",
+        "lines": 278
+      },
+      {
+        "path": "ssot/check-cross-refs.py",
+        "domain": "ssot",
+        "command": "check-cross-refs",
+        "lines": 277
+      },
+      {
+        "path": "ssot/evolution-agent.py",
+        "domain": "ssot",
+        "command": "evolution-agent",
+        "lines": 277
+      },
+      {
+        "path": "ssot/internal-scene-trial.py",
+        "domain": "ssot",
+        "command": "internal-scene-trial",
+        "lines": 275
+      },
+      {
+        "path": "_archive/gac-ingress-check.py",
+        "domain": "_archive",
+        "command": "gac-ingress-check",
+        "lines": 272
+      },
+      {
+        "path": "ssot/external-scene-trial.py",
+        "domain": "ssot",
+        "command": "external-scene-trial",
+        "lines": 271
+      },
+      {
+        "path": "gac/check-submodule-rewind.py",
+        "domain": "gac",
+        "command": "check-submodule-rewind",
+        "lines": 270
+      },
+      {
+        "path": "gac/x2-rule-add.py",
+        "domain": "gac",
+        "command": "x2-rule-add",
+        "lines": 269
+      },
+      {
+        "path": "_archive/gate-roi-report.py",
+        "domain": "_archive",
+        "command": "gate-roi-report",
+        "lines": 267
+      },
+      {
+        "path": "gac/governance-semantic-gate.py",
+        "domain": "gac",
+        "command": "governance-semantic-gate",
+        "lines": 265
+      },
+      {
+        "path": "ssot/doc-governance-migrate.py",
+        "domain": "ssot",
+        "command": "doc-governance-migrate",
+        "lines": 265
+      },
+      {
+        "path": "ssot/gen-real-evalset.py",
+        "domain": "ssot",
+        "command": "gen-real-evalset",
+        "lines": 265
+      },
+      {
+        "path": "gac/p0-event-listener.py",
+        "domain": "gac",
+        "command": "p0-event-listener",
+        "lines": 264
+      },
+      {
+        "path": "_archive/feedback-loop-guard.py",
+        "domain": "_archive",
+        "command": "feedback-loop-guard",
+        "lines": 257
+      },
+      {
+        "path": "ssot/alert-connectors.py",
+        "domain": "ssot",
+        "command": "alert-connectors",
+        "lines": 255
+      },
+      {
+        "path": "mof/gen-service-configs.py",
+        "domain": "mof",
+        "command": "gen-service-configs",
+        "lines": 254
+      },
+      {
+        "path": "commit-assist.py",
+        "domain": "root",
+        "command": "commit-assist",
+        "lines": 252
+      },
+      {
+        "path": "ssot/pr-review-matrix.py",
+        "domain": "ssot",
+        "command": "pr-review-matrix",
+        "lines": 251
+      },
+      {
+        "path": "_archive/wsvc.py",
+        "domain": "_archive",
+        "command": "wsvc",
+        "lines": 248
+      },
+      {
+        "path": "ssot/admin_scenes.py",
+        "domain": "ssot",
+        "command": "admin_scenes",
+        "lines": 248
+      },
+      {
+        "path": "gac/check-governance-ratio.py",
+        "domain": "gac",
+        "command": "check-governance-ratio",
+        "lines": 247
+      },
+      {
+        "path": "ssot/check-cross-repo-consistency.py",
+        "domain": "ssot",
+        "command": "check-cross-repo-consistency",
+        "lines": 247
+      },
+      {
+        "path": "ssot/check-hardcoded-ports.py",
+        "domain": "ssot",
+        "command": "check-hardcoded-ports",
+        "lines": 245
+      },
+      {
+        "path": "ssot/bus-usage-report.py",
+        "domain": "ssot",
+        "command": "bus-usage-report",
+        "lines": 241
+      },
+      {
+        "path": "ssot/check-toolbox-ssot.py",
+        "domain": "ssot",
+        "command": "check-toolbox-ssot",
+        "lines": 241
+      },
+      {
+        "path": "_archive/m1-adversarial-probe.py",
+        "domain": "_archive",
+        "command": "m1-adversarial-probe",
+        "lines": 240
+      },
+      {
+        "path": "ssot/gen-knowledge-index.py",
+        "domain": "ssot",
+        "command": "gen-knowledge-index",
+        "lines": 238
+      },
+      {
+        "path": "ssot/scene-card-intake.py",
+        "domain": "ssot",
+        "command": "scene-card-intake",
+        "lines": 237
+      },
+      {
+        "path": "gac/check-severity-registry.py",
+        "domain": "gac",
+        "command": "check-severity-registry",
+        "lines": 234
+      },
+      {
+        "path": "gac/mcp-tool-data-complete.py",
+        "domain": "gac",
+        "command": "mcp-tool-data-complete",
+        "lines": 233
+      },
+      {
+        "path": "_archive/dormant_adapter.py",
+        "domain": "_archive",
+        "command": "dormant_adapter",
+        "lines": 232
+      },
+      {
+        "path": "_archive/bet-to-task.py",
+        "domain": "_archive",
+        "command": "bet-to-task",
+        "lines": 231
+      },
+      {
+        "path": "adr/adr-drift-check.py",
+        "domain": "adr",
+        "command": "adr-drift-check",
+        "lines": 231
+      },
+      {
+        "path": "ssot/ts-file-analyze.py",
+        "domain": "ssot",
+        "command": "ts-file-analyze",
+        "lines": 231
+      },
+      {
+        "path": "change-lane-check.py",
+        "domain": "root",
+        "command": "change-lane-check",
+        "lines": 230
+      },
+      {
+        "path": "ssot/scene-card-review.py",
+        "domain": "ssot",
+        "command": "scene-card-review",
+        "lines": 230
+      },
+      {
+        "path": "cockpit/gen-help-docs.py",
+        "domain": "cockpit",
+        "command": "gen-help-docs",
+        "lines": 229
+      },
+      {
+        "path": "ssot/scene-card-candidates.py",
+        "domain": "ssot",
+        "command": "scene-card-candidates",
+        "lines": 229
+      },
+      {
+        "path": "_archive/migrate-port-env-var.py",
+        "domain": "_archive",
+        "command": "migrate-port-env-var",
+        "lines": 227
+      },
+      {
+        "path": "delegation-alias-check.py",
+        "domain": "root",
+        "command": "delegation-alias-check",
+        "lines": 227
+      },
+      {
+        "path": "gac/cross-domain-trend.py",
+        "domain": "gac",
+        "command": "cross-domain-trend",
+        "lines": 227
+      },
+      {
+        "path": "_archive/omo-state-cleanup.py",
+        "domain": "_archive",
+        "command": "omo-state-cleanup",
+        "lines": 226
+      },
+      {
+        "path": "gac/governance-trend-report.py",
+        "domain": "gac",
+        "command": "governance-trend-report",
+        "lines": 225
+      },
+      {
+        "path": "gac/omo-runtime-stamp-policy.py",
+        "domain": "gac",
+        "command": "omo-runtime-stamp-policy",
+        "lines": 225
+      },
+      {
+        "path": "_archive/auto-merge-decide.py",
+        "domain": "_archive",
+        "command": "auto-merge-decide",
+        "lines": 220
+      },
+      {
+        "path": "_archive/governance-readiness-trend.py",
+        "domain": "_archive",
+        "command": "governance-readiness-trend",
+        "lines": 220
+      },
+      {
+        "path": "ssot/audit-repo-health.sh",
+        "domain": "ssot",
+        "command": "audit-repo-health",
+        "lines": 220
+      }
+    ],
+    "dependency": {
+      "edges": [
+        {
+          "from": "_archive/agent-lifecycle.py",
+          "to": []
+        },
+        {
+          "from": "_archive/agent-output-extract.py",
+          "to": []
+        },
+        {
+          "from": "_archive/agent-registry.py",
+          "to": []
+        },
+        {
+          "from": "_archive/alert-history.py",
+          "to": []
+        },
+        {
+          "from": "_archive/auto-merge-decide.py",
+          "to": []
+        },
+        {
+          "from": "_archive/bet-to-task.py",
+          "to": [
+            "plan/bet-ledger.py"
+          ]
+        },
+        {
+          "from": "_archive/capability-router.py",
+          "to": []
+        },
+        {
+          "from": "_archive/capability-zombie-tasks.py",
+          "to": []
+        },
+        {
+          "from": "_archive/check-alert-coverage.py",
+          "to": []
+        },
+        {
+          "from": "_archive/check-baseline-growth.py",
+          "to": []
+        },
+        {
+          "from": "_archive/check-dead-path-refs.py",
+          "to": []
+        },
+        {
+          "from": "_archive/check-move-integrity.py",
+          "to": []
+        },
+        {
+          "from": "_archive/check-perf-budget.py",
+          "to": []
+        },
+        {
+          "from": "_archive/check-scenario-growth.py",
+          "to": [
+            "collab/scenario_lib.py"
+          ]
+        },
+        {
+          "from": "_archive/check-submodule-hygiene.py",
+          "to": []
+        },
+        {
+          "from": "_archive/classify_planned.py",
+          "to": []
+        },
+        {
+          "from": "_archive/collab_cli.py",
+          "to": []
+        },
+        {
+          "from": "_archive/control-experiment.py",
+          "to": []
+        },
+        {
+          "from": "_archive/cross-submodule-check.py",
+          "to": []
+        },
+        {
+          "from": "_archive/cross-submodule-events.py",
+          "to": []
+        },
+        {
+          "from": "_archive/doc-claim-lint.py",
+          "to": []
+        },
+        {
+          "from": "_archive/dormant_adapter.py",
+          "to": [
+            "ssot/bus-usage-report.py"
+          ]
+        },
+        {
+          "from": "_archive/dry-conflict-detector.py",
+          "to": []
+        },
+        {
+          "from": "_archive/emergence_cli.py",
+          "to": []
+        },
+        {
+          "from": "_archive/emergency-override.py",
+          "to": []
+        },
+        {
+          "from": "_archive/failover_drill.py",
+          "to": []
+        },
+        {
+          "from": "_archive/feedback-loop-guard.py",
+          "to": []
+        },
+        {
+          "from": "_archive/fix-debts.py",
+          "to": []
+        },
+        {
+          "from": "_archive/gac-audit-engine.py",
+          "to": []
+        },
+        {
+          "from": "_archive/gac-branch-prune.sh",
+          "to": []
+        },
+        {
+          "from": "_archive/gac-execution-gap.py",
+          "to": []
+        },
+        {
+          "from": "_archive/gac-ingress-check.py",
+          "to": []
+        },
+        {
+          "from": "_archive/gac-kos-sync.py",
+          "to": []
+        },
+        {
+          "from": "_archive/gac-rule-gate-mapping.py",
+          "to": []
+        },
+        {
+          "from": "_archive/gate-effectiveness.py",
+          "to": []
+        },
+        {
+          "from": "_archive/gate-roi-report.py",
+          "to": []
+        },
+        {
+          "from": "_archive/gbrain-todo-scan.py",
+          "to": []
+        },
+        {
+          "from": "_archive/gen-scenarios.py",
+          "to": []
+        },
+        {
+          "from": "_archive/governance-readiness-trend.py",
+          "to": [
+            "mof/mof-drift"
+          ]
+        },
+        {
+          "from": "_archive/graphify-local-extract.py",
+          "to": []
+        },
+        {
+          "from": "_archive/iris-live-test.py",
+          "to": []
+        },
+        {
+          "from": "_archive/l0-constraints-migrate.py",
+          "to": []
+        },
+        {
+          "from": "_archive/m1-adversarial-probe.py",
+          "to": [
+            "gac/swarm-discipline-cli.py",
+            "gac/swarm-git"
+          ]
+        },
+        {
+          "from": "_archive/m2-date-migrate.py",
+          "to": [
+            "mof/mof-bootstrap.py"
+          ]
+        },
+        {
+          "from": "_archive/m4-cron-hook.py",
+          "to": []
+        },
+        {
+          "from": "_archive/management-categorize.py",
+          "to": []
+        },
+        {
+          "from": "_archive/management-migrate.py",
+          "to": []
+        },
+        {
+          "from": "_archive/mesh-stale-analyze.py",
+          "to": []
+        },
+        {
+          "from": "_archive/migrate-port-env-var.py",
+          "to": []
+        },
+        {
+          "from": "_archive/mof-fix-cross-project.sh",
+          "to": []
+        },
+        {
+          "from": "_archive/mos-cold-start.py",
+          "to": []
+        },
+        {
+          "from": "_archive/n9-iris-coverage-scan.py",
+          "to": []
+        },
+        {
+          "from": "_archive/nested-with.py",
+          "to": []
+        },
+        {
+          "from": "_archive/omo-doctor-cron.py",
+          "to": []
+        },
+        {
+          "from": "_archive/omo-health.py",
+          "to": []
+        },
+        {
+          "from": "_archive/omo-state-cleanup.py",
+          "to": [
+            "_archive/l0-constraints-migrate.py",
+            "mof/mof-bootstrap.py"
+          ]
+        },
+        {
+          "from": "_archive/omo-submodule-split-validate.sh",
+          "to": []
+        },
+        {
+          "from": "_archive/pattern-governor-bridge.py",
+          "to": []
+        },
+        {
+          "from": "_archive/permission-matrix.py",
+          "to": []
+        },
+        {
+          "from": "_archive/register-mcp.py",
+          "to": []
+        },
+        {
+          "from": "_archive/risk-gate.py",
+          "to": []
+        },
+        {
+          "from": "_archive/rule-vitality-report.py",
+          "to": []
+        },
+        {
+          "from": "_archive/run-scenario.py",
+          "to": []
+        },
+        {
+          "from": "_archive/scan_hardcoded.sh",
+          "to": []
+        },
+        {
+          "from": "_archive/schedule_harness.py",
+          "to": []
+        },
+        {
+          "from": "_archive/skill-crystallizer.py",
+          "to": []
+        },
+        {
+          "from": "_archive/start-gateway.sh",
+          "to": []
+        },
+        {
+          "from": "_archive/state-stale-consume.py",
+          "to": []
+        },
+        {
+          "from": "_archive/status-distribution.py",
+          "to": []
+        },
+        {
+          "from": "_archive/swarm-manager.py",
+          "to": []
+        },
+        {
+          "from": "_archive/sync-gitignore.sh",
+          "to": []
+        },
+        {
+          "from": "_archive/sync-mcptool-impl.py",
+          "to": []
+        },
+        {
+          "from": "_archive/task-archive.py",
+          "to": []
+        },
+        {
+          "from": "_archive/verify-spaces.py",
+          "to": []
+        },
+        {
+          "from": "_archive/wsvc.py",
+          "to": []
+        },
+        {
+          "from": "_archive/x3-auto-distribute.py",
+          "to": []
+        },
+        {
+          "from": "adr/adr-coverage.py",
+          "to": []
+        },
+        {
+          "from": "adr/adr-drift-apply.py",
+          "to": []
+        },
+        {
+          "from": "adr/adr-drift-auto-fix.py",
+          "to": []
+        },
+        {
+          "from": "adr/adr-drift-check.py",
+          "to": []
+        },
+        {
+          "from": "adr/adr-drift-classify.py",
+          "to": []
+        },
+        {
+          "from": "adr/adr-frontmatter-backfill.py",
+          "to": []
+        },
+        {
+          "from": "adr/adr-trend-insight.py",
+          "to": []
+        },
+        {
+          "from": "adr/next-adr-id.py",
+          "to": []
+        },
+        {
+          "from": "agent-workflow.py",
+          "to": []
+        },
+        {
+          "from": "change-lane-check.py",
+          "to": [
+            "agent-workflow.py",
+            "cockpit-readiness.py",
+            "compass_radar.py",
+            "gac/governance-dashboard.py",
+            "gac/governance-evolution.py",
+            "gac/governance-history-stats.py",
+            "gac/governance-semantic-gate.py",
+            "gac/governance-trend-report.py",
+            "gac/install-watch-agent.py",
+            "gac/mcp-server-kos.py",
+            "gac/state-freshness-check.py",
+            "gac/state-stale-emit.py",
+            "mof/generate-brief.py",
+            "mof/project-layer-index.py",
+            "ssot/check-cockpit-ui-dist.py",
+            "ssot/doc-link-check.py",
+            "ssot/doc-ssot-lint.py",
+            "ssot/ssot-guardian.py",
+            "ssot/submodule-pointer-transaction.sh",
+            "ssot/submodule-reachability-gate.py",
+            "ssot/sync-submodules-push.sh",
+            "ssot/test-mcp-kos.py",
+            "ssot/write-owner-audit.py"
+          ]
+        },
+        {
+          "from": "check_health_ssot.py",
+          "to": [
+            "compass_radar.py"
+          ]
+        },
+        {
+          "from": "cockpit/gen-capability-registry.py",
+          "to": []
+        },
+        {
+          "from": "cockpit/gen-help-docs.py",
+          "to": [
+            "cockpit/gen-capability-registry.py"
+          ]
+        },
+        {
+          "from": "cockpit-readiness.py",
+          "to": [
+            "gac/governance-dashboard.py"
+          ]
+        },
+        {
+          "from": "collab/adv-fail-report.py",
+          "to": []
+        },
+        {
+          "from": "collab/bos-stdio-inventory.py",
+          "to": []
+        },
+        {
+          "from": "collab/control_experiment.py",
+          "to": []
+        },
+        {
+          "from": "collab/export-dualtrack.py",
+          "to": []
+        },
+        {
+          "from": "collab/recommend_mode.py",
+          "to": []
+        },
+        {
+          "from": "collab/scenario_lib.py",
+          "to": []
+        },
+        {
+          "from": "commit-assist.py",
+          "to": []
+        },
+        {
+          "from": "compass_radar.py",
+          "to": []
+        },
+        {
+          "from": "decks/memory-os-consolidate-deck.py",
+          "to": []
+        },
+        {
+          "from": "decks/port-governance-deck.py",
+          "to": []
+        },
+        {
+          "from": "delegation-alias-check.py",
+          "to": []
+        },
+        {
+          "from": "delegation-preflight.py",
+          "to": []
+        },
+        {
+          "from": "delivery/measure_all.py",
+          "to": []
+        },
+        {
+          "from": "delivery/measure_physical.py",
+          "to": [
+            "delivery/physical_node.py"
+          ]
+        },
+        {
+          "from": "delivery/physical-recovery.sh",
+          "to": []
+        },
+        {
+          "from": "delivery/physical_node.py",
+          "to": []
+        },
+        {
+          "from": "delivery/physical_recovery.py",
+          "to": []
+        },
+        {
+          "from": "delivery/shared-context-cli.py",
+          "to": []
+        },
+        {
+          "from": "gac/adaptive-gate.py",
+          "to": []
+        },
+        {
+          "from": "gac/affected-graph.py",
+          "to": []
+        },
+        {
+          "from": "gac/agent-clone.py",
+          "to": []
+        },
+        {
+          "from": "gac/alert-aggregator.py",
+          "to": []
+        },
+        {
+          "from": "gac/alert-mock-p0-notify.py",
+          "to": []
+        },
+        {
+          "from": "gac/alert-router.py",
+          "to": []
+        },
+        {
+          "from": "gac/anomaly-detector.py",
+          "to": []
+        },
+        {
+          "from": "gac/auto-merge-lane-policy.py",
+          "to": []
+        },
+        {
+          "from": "gac/bdsk-shadow-sandbox.py",
+          "to": []
+        },
+        {
+          "from": "gac/bin-orphan-scan.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-adversarial-effectiveness.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-catalog-health.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-ci-surfaces.py",
+          "to": [
+            "gac/ci-check-runner.py"
+          ]
+        },
+        {
+          "from": "gac/check-conflict-markers.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-dead-path-tool-fallback.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-delivery-cadence.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-delivery-value-gate.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-doc-freshness-gate.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-dual-track-purity.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-evidence-freshness.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-evidence-honest-closure.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-external-agent-audit.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-fallback-test-coverage.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-foundry-deck-coverage.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-gateway-status-doc.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-governance-ratio.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-governance-trend.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-heuristic-default.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-hook-sync.sh",
+          "to": []
+        },
+        {
+          "from": "gac/check-incremental-commit.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-llm-advisory-only.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-llm-gateway-only.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-llm-tier-fallback.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-memory-os-surfaces.py",
+          "to": [
+            "memory-os-asof-seed.sh",
+            "memory-os-env.sh",
+            "memory-os-neo4j-up.sh",
+            "memory-os-smoke.sh"
+          ]
+        },
+        {
+          "from": "gac/check-mesh-executor-reliability.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-mesh-routing-consistency.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-meta-health.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-metric-trend.py",
+          "to": [
+            "gac/governance-evolution.py"
+          ]
+        },
+        {
+          "from": "gac/check-pr-description.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-principle-enforcement.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-project-health-freshness.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-redline-coverage.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-resolve-not-stub.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-ruff-scope-stable.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-severity-registry.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-silent-loss.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-submodule-drift.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-submodule-pointer-drift.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-submodule-pointer-integrity.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-submodule-pr-independent.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-submodule-rewind.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-swarm-collision.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-sweep-tool-integrity.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-uri-prefix-pattern.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-work-landed.py",
+          "to": []
+        },
+        {
+          "from": "gac/check-workorder-schema.py",
+          "to": []
+        },
+        {
+          "from": "gac/ci-check-runner.py",
+          "to": []
+        },
+        {
+          "from": "gac/codex-worker-adapter.py",
+          "to": []
+        },
+        {
+          "from": "gac/coordination_store.py",
+          "to": []
+        },
+        {
+          "from": "gac/cross-domain-trend.py",
+          "to": []
+        },
+        {
+          "from": "gac/debt-closed-per-feature.py",
+          "to": []
+        },
+        {
+          "from": "gac/debt-integrity-check.py",
+          "to": []
+        },
+        {
+          "from": "gac/debt-predictor.py",
+          "to": []
+        },
+        {
+          "from": "gac/dim-weight.py",
+          "to": []
+        },
+        {
+          "from": "gac/distribute-submodule-workflows.sh",
+          "to": []
+        },
+        {
+          "from": "gac/documents-chatgpt-tunnel.py",
+          "to": []
+        },
+        {
+          "from": "gac/documents-claude-desktop-config.py",
+          "to": []
+        },
+        {
+          "from": "gac/documents-codex-profile.py",
+          "to": []
+        },
+        {
+          "from": "gac/documents-zcode-config.py",
+          "to": []
+        },
+        {
+          "from": "gac/documents-zed-profile.py",
+          "to": []
+        },
+        {
+          "from": "gac/drift-history-insight.py",
+          "to": []
+        },
+        {
+          "from": "gac/event-loop-lint.py",
+          "to": []
+        },
+        {
+          "from": "gac/evidence-smoke.py",
+          "to": []
+        },
+        {
+          "from": "gac/gac-bootstrap.py",
+          "to": []
+        },
+        {
+          "from": "gac/gac-branch-protection.sh",
+          "to": []
+        },
+        {
+          "from": "gac/gac-compute-onboard.py",
+          "to": [
+            "gac/omlxc-node-wakeup.py"
+          ]
+        },
+        {
+          "from": "gac/gac-consensus-inject.py",
+          "to": []
+        },
+        {
+          "from": "gac/gac-coverage-lint.py",
+          "to": []
+        },
+        {
+          "from": "gac/gac-daemon.py",
+          "to": [
+            "ssot/consumer_index.py",
+            "ssot/m0_feedback.py"
+          ]
+        },
+        {
+          "from": "gac/gac-drift.py",
+          "to": [
+            "sweep/sweep_index.py"
+          ]
+        },
+        {
+          "from": "gac/gac-executor.py",
+          "to": [
+            "gac/evidence-smoke.py",
+            "gac/gac-drift.py",
+            "gac/gac-gc.py",
+            "gac/gac-hook-pre-edit.py",
+            "gac/gac-local-gate.py",
+            "gac/gac-mof-validate.py",
+            "gac/knowledge-foundry-cron.py",
+            "sweep/sweep_index.py"
+          ]
+        },
+        {
+          "from": "gac/gac-export-agents.py",
+          "to": [
+            "gac/gac-drift.py",
+            "gac/gac-validate.py"
+          ]
+        },
+        {
+          "from": "gac/gac-gc.py",
+          "to": []
+        },
+        {
+          "from": "gac/gac-healthcheck.py",
+          "to": [
+            "change-lane-check.py",
+            "gac/check-ci-surfaces.py",
+            "gac/gac-bootstrap.py",
+            "gac/gac-drift.py",
+            "gac/gac-executor.py",
+            "gac/gac-hook-pre-edit.py",
+            "gac/gac-hygiene-check.py",
+            "gac/gac-ingest-legacy.py",
+            "gac/gac-local-gate.py",
+            "gac/gac-m1-sync.py",
+            "gac/gac-mof-validate.py",
+            "gac/gac-validate.py",
+            "gac/governance-dashboard.py",
+            "mof/gen-project-registry.py",
+            "ssot/doc-link-check.py",
+            "ssot/doc-ssot-lint.py",
+            "ssot/ssot-usage.py",
+            "ssot/submodule-pointer-transaction.sh",
+            "ssot/submodule-reachability-gate.py"
+          ]
+        },
+        {
+          "from": "gac/gac-hook-pre-edit.py",
+          "to": []
+        },
+        {
+          "from": "gac/gac-hygiene-check.py",
+          "to": []
+        },
+        {
+          "from": "gac/gac-ingest-legacy.py",
+          "to": [
+            "gac/gac-validate.py"
+          ]
+        },
+        {
+          "from": "gac/gac-local-gate.py",
+          "to": [
+            "adr/adr-coverage.py",
+            "agent-workflow.py",
+            "change-lane-check.py",
+            "gac/bdsk-shadow-sandbox.py",
+            "gac/check-adversarial-effectiveness.py",
+            "gac/check-conflict-markers.py",
+            "gac/check-dual-track-purity.py",
+            "gac/check-evidence-freshness.py",
+            "gac/check-evidence-honest-closure.py",
+            "gac/check-foundry-deck-coverage.py",
+            "gac/check-gateway-status-doc.py",
+            "gac/check-governance-ratio.py",
+            "gac/check-governance-trend.py",
+            "gac/check-redline-coverage.py",
+            "gac/check-severity-registry.py",
+            "gac/check-silent-loss.py",
+            "gac/check-submodule-rewind.py",
+            "gac/check-swarm-collision.py",
+            "gac/check-work-landed.py",
+            "gac/check-workorder-schema.py",
+            "gac/debt-integrity-check.py",
+            "gac/gac-compute-onboard.py",
+            "gac/gac-consensus-inject.py",
+            "gac/gac-drift.py",
+            "gac/gac-mesh-router.py",
+            "gac/gac-validate.py",
+            "gac/governance-evolution.py",
+            "gac/governance-semantic-gate.py",
+            "gac/install-watch-agent.py",
+            "gac/omo-state-write-guard.py",
+            "gac/state-freshness-check.py",
+            "gac/test-coverage-check.py",
+            "mof/check-doc-claims.py",
+            "mof/check-mof-capabilities-drift.py",
+            "mof/gen-dependency-baseline.py",
+            "mof/gen-service-configs.py",
+            "mof/generate-brief.py",
+            "mof/mof-bootstrap.py",
+            "mof/mof-drift",
+            "mof/project-layer-index.py",
+            "ssot/bos-tracking-gate.py",
+            "ssot/bus-e2e-harness.py",
+            "ssot/bus-usage-report.py",
+            "ssot/check-cockpit-ui-dist.py",
+            "ssot/check-dashboard-registry-consistency.py",
+            "ssot/check-domain-m1-alignment.py",
+            "ssot/check-index-drift.py",
+            "ssot/check-layer-call-direction.py",
+            "ssot/check-toolbox-ssot.py",
+            "ssot/current-state-coherence.py",
+            "ssot/doc-governance-check.py",
+            "ssot/doc-link-check.py",
+            "ssot/doc-ssot-lint.py",
+            "ssot/matrix-consistency-lint.py",
+            "ssot/test-gac-engine.py",
+            "ssot/test-mcp-kos.py",
+            "ssot/write-owner-audit.py",
+            "sweep/sweep_index.py",
+            "tool-registry-audit.py"
+          ]
+        },
+        {
+          "from": "gac/gac-m1-sync.py",
+          "to": []
+        },
+        {
+          "from": "gac/gac-mesh-router.py",
+          "to": []
+        },
+        {
+          "from": "gac/gac-mof-validate.py",
+          "to": []
+        },
+        {
+          "from": "gac/gac-validate.py",
+          "to": [
+            "gac/evidence-smoke.py"
+          ]
+        },
+        {
+          "from": "gac/gac-worktree-cleanup.sh",
+          "to": []
+        },
+        {
+          "from": "gac/gac-worktree-guard.sh",
+          "to": [
+            "gac/gac-worktree-prune.sh"
+          ]
+        },
+        {
+          "from": "gac/gac-worktree-prune.sh",
+          "to": []
+        },
+        {
+          "from": "gac/gac-worktree.sh",
+          "to": [
+            "adr/next-adr-id.py",
+            "agent-workflow.py",
+            "mof/gen-dependency-baseline.py",
+            "ssot/sync-bos-registry.py"
+          ]
+        },
+        {
+          "from": "gac/git-divergence-check.py",
+          "to": []
+        },
+        {
+          "from": "gac/git-shim",
+          "to": [
+            "gac/swarm-git"
+          ]
+        },
+        {
+          "from": "gac/governance-alert-dispatch.py",
+          "to": []
+        },
+        {
+          "from": "gac/governance-convergence-lint.py",
+          "to": [
+            "ssot/matrix-consistency-lint.py"
+          ]
+        },
+        {
+          "from": "gac/governance-dashboard.py",
+          "to": [
+            "adr/adr-coverage.py",
+            "adr/adr-drift-apply.py",
+            "adr/adr-drift-auto-fix.py",
+            "adr/adr-drift-check.py",
+            "adr/adr-drift-classify.py",
+            "adr/adr-trend-insight.py",
+            "gac/drift-history-insight.py",
+            "gac/evidence-smoke.py",
+            "gac/governance-history-insight.py",
+            "gac/governance-history-stats.py",
+            "gac/governance-summary.py",
+            "gac/governance-trend-report.py",
+            "gac/rule-history-insight.py",
+            "gac/x2-freshness-check.py",
+            "gac/x2-rule-add.py",
+            "gac/x2-rule-lint.py",
+            "mof/mof-m2-coverage.py",
+            "ssot/god-module-13-error-list.py",
+            "ssot/god-module-roadmap.py",
+            "ssot/management-cross-ref-check.py",
+            "ssot/venv-yaml-check.py"
+          ]
+        },
+        {
+          "from": "gac/governance-evolution.py",
+          "to": [
+            "agent-workflow.py"
+          ]
+        },
+        {
+          "from": "gac/governance-history-insight.py",
+          "to": []
+        },
+        {
+          "from": "gac/governance-history-stats.py",
+          "to": []
+        },
+        {
+          "from": "gac/governance-readiness.py",
+          "to": [
+            "gac/dim-weight.py",
+            "mof/mof-drift"
+          ]
+        },
+        {
+          "from": "gac/governance-semantic-gate.py",
+          "to": [
+            "adr/adr-coverage.py",
+            "agent-workflow.py",
+            "gac/gac-bootstrap.py",
+            "gac/gac-executor.py",
+            "gac/gac-mof-validate.py",
+            "gac/governance-evolution.py",
+            "mof/gen-service-configs.py"
+          ]
+        },
+        {
+          "from": "gac/governance-summarizer.py",
+          "to": []
+        },
+        {
+          "from": "gac/governance-summary.py",
+          "to": []
+        },
+        {
+          "from": "gac/governance-trend-report.py",
+          "to": []
+        },
+        {
+          "from": "gac/install-watch-agent.py",
+          "to": [
+            "mof/gen-service-configs.py"
+          ]
+        },
+        {
+          "from": "gac/kandev-loopback-trial.py",
+          "to": []
+        },
+        {
+          "from": "gac/knowledge-foundry-cron.py",
+          "to": [
+            "agent-workflow.py",
+            "compass_radar.py",
+            "decks/memory-os-consolidate-deck.py",
+            "decks/port-governance-deck.py",
+            "gac/debt-closed-per-feature.py",
+            "gac/event-loop-lint.py",
+            "gac/gac-coverage-lint.py",
+            "gac/gac-executor.py",
+            "gac/git-divergence-check.py",
+            "gac/omostation-bootloader.py",
+            "gac/swarm-discipline-cli.py",
+            "mof/generate-brief.py",
+            "mof/m4-health-score.py",
+            "mof/mof-drift",
+            "ssot/submodule-bump-check.py",
+            "submodule-gitlink-check.py"
+          ]
+        },
+        {
+          "from": "gac/kos",
+          "to": []
+        },
+        {
+          "from": "gac/kos-seed-import.py",
+          "to": []
+        },
+        {
+          "from": "gac/m1-closeout-report.py",
+          "to": [
+            "gac/gac-branch-protection.sh",
+            "gac/gac-worktree.sh",
+            "gac/knowledge-foundry-cron.py",
+            "gac/kos-seed-import.py",
+            "gac/swarm_discipline.py",
+            "ssot/write-owner-repair-draft.py"
+          ]
+        },
+        {
+          "from": "gac/mass-deletion-gate.py",
+          "to": []
+        },
+        {
+          "from": "gac/mcp-server-kos.py",
+          "to": []
+        },
+        {
+          "from": "gac/mcp-tool-data-complete.py",
+          "to": []
+        },
+        {
+          "from": "gac/metrics-store.py",
+          "to": []
+        },
+        {
+          "from": "gac/omlxc-node-wakeup.py",
+          "to": []
+        },
+        {
+          "from": "gac/omo-acl-ops-window.sh",
+          "to": []
+        },
+        {
+          "from": "gac/omo-manage",
+          "to": []
+        },
+        {
+          "from": "gac/omo-runtime-stamp-policy.py",
+          "to": []
+        },
+        {
+          "from": "gac/omo-state-projection-guard.py",
+          "to": []
+        },
+        {
+          "from": "gac/omo-state-write-guard.py",
+          "to": []
+        },
+        {
+          "from": "gac/omo-validate",
+          "to": []
+        },
+        {
+          "from": "gac/omostation-bootloader.py",
+          "to": []
+        },
+        {
+          "from": "gac/orca-codex-supervisor.py",
+          "to": []
+        },
+        {
+          "from": "gac/orca-worker-start.py",
+          "to": []
+        },
+        {
+          "from": "gac/p0-event-listener.py",
+          "to": []
+        },
+        {
+          "from": "gac/phase-gate-check.py",
+          "to": [
+            "delivery/measure_all.py"
+          ]
+        },
+        {
+          "from": "gac/pre-bump-check.sh",
+          "to": []
+        },
+        {
+          "from": "gac/predictive-governance.py",
+          "to": []
+        },
+        {
+          "from": "gac/resolve-root-remote.sh",
+          "to": []
+        },
+        {
+          "from": "gac/risk-profile.py",
+          "to": [
+            "agent-workflow.py"
+          ]
+        },
+        {
+          "from": "gac/rule-history-insight.py",
+          "to": []
+        },
+        {
+          "from": "gac/state-freshness-check.py",
+          "to": []
+        },
+        {
+          "from": "gac/state-stale-emit.py",
+          "to": []
+        },
+        {
+          "from": "gac/swarm-activity-dashboard.py",
+          "to": [
+            "agent-workflow.py"
+          ]
+        },
+        {
+          "from": "gac/swarm-activity-dashboard.py.orig",
+          "to": [
+            "agent-workflow.py",
+            "gac/swarm-activity-dashboard.py"
+          ]
+        },
+        {
+          "from": "gac/swarm-discipline-cli.py",
+          "to": [
+            "gac/swarm-git",
+            "gac/swarm_discipline.py"
+          ]
+        },
+        {
+          "from": "gac/swarm-git",
+          "to": []
+        },
+        {
+          "from": "gac/swarm_discipline.py",
+          "to": []
+        },
+        {
+          "from": "gac/test-coverage-check.py",
+          "to": []
+        },
+        {
+          "from": "gac/test_coordination_layer.py",
+          "to": []
+        },
+        {
+          "from": "gac/worktree-cleanup.sh",
+          "to": []
+        },
+        {
+          "from": "gac/worktree-hygiene-audit.py",
+          "to": []
+        },
+        {
+          "from": "gac/worktree-safe-add.sh",
+          "to": []
+        },
+        {
+          "from": "gac/x2-freshness-check.py",
+          "to": []
+        },
+        {
+          "from": "gac/x2-rule-add.py",
+          "to": [
+            "gac/x2-rule-lint.py"
+          ]
+        },
+        {
+          "from": "gac/x2-rule-lint.py",
+          "to": []
+        },
+        {
+          "from": "git-health-hook.py",
+          "to": []
+        },
+        {
+          "from": "layer-dependency-check.py",
+          "to": []
+        },
+        {
+          "from": "memory-os-asof-seed.sh",
+          "to": [
+            "memory-os-env.sh"
+          ]
+        },
+        {
+          "from": "memory-os-env.sh",
+          "to": [
+            "memory-os-neo4j-up.sh"
+          ]
+        },
+        {
+          "from": "memory-os-neo4j-up.sh",
+          "to": []
+        },
+        {
+          "from": "memory-os-smoke.sh",
+          "to": []
+        },
+        {
+          "from": "mesh/mesh-orphan-cleanup.py",
+          "to": []
+        },
+        {
+          "from": "mof/check-doc-claims.py",
+          "to": []
+        },
+        {
+          "from": "mof/check-mof-capabilities-drift.py",
+          "to": []
+        },
+        {
+          "from": "mof/ecos-link",
+          "to": []
+        },
+        {
+          "from": "mof/gen-agent-redlines.py",
+          "to": [
+            "gac/gac-drift.py"
+          ]
+        },
+        {
+          "from": "mof/gen-dependency-baseline.py",
+          "to": []
+        },
+        {
+          "from": "mof/gen-mof-artifacts.py",
+          "to": []
+        },
+        {
+          "from": "mof/gen-project-registry.py",
+          "to": []
+        },
+        {
+          "from": "mof/gen-service-configs.py",
+          "to": []
+        },
+        {
+          "from": "mof/generate-brief.py",
+          "to": [
+            "collab/export-dualtrack.py"
+          ]
+        },
+        {
+          "from": "mof/m2-ssot-inventory.py",
+          "to": []
+        },
+        {
+          "from": "mof/m4-health-score.py",
+          "to": [
+            "mof/mof-bootstrap.py"
+          ]
+        },
+        {
+          "from": "mof/mof-act",
+          "to": [
+            "mof/mof-enforce"
+          ]
+        },
+        {
+          "from": "mof/mof-analyze",
+          "to": []
+        },
+        {
+          "from": "mof/mof-assign",
+          "to": []
+        },
+        {
+          "from": "mof/mof-autonomous",
+          "to": []
+        },
+        {
+          "from": "mof/mof-bootstrap.py",
+          "to": []
+        },
+        {
+          "from": "mof/mof-decide",
+          "to": []
+        },
+        {
+          "from": "mof/mof-drift",
+          "to": [
+            "mof/mof-version"
+          ]
+        },
+        {
+          "from": "mof/mof-enforce",
+          "to": []
+        },
+        {
+          "from": "mof/mof-evolution",
+          "to": []
+        },
+        {
+          "from": "mof/mof-export",
+          "to": []
+        },
+        {
+          "from": "mof/mof-graph",
+          "to": []
+        },
+        {
+          "from": "mof/mof-io",
+          "to": []
+        },
+        {
+          "from": "mof/mof-m2-coverage.py",
+          "to": []
+        },
+        {
+          "from": "mof/mof-manage",
+          "to": []
+        },
+        {
+          "from": "mof/mof-scan",
+          "to": []
+        },
+        {
+          "from": "mof/mof-version",
+          "to": []
+        },
+        {
+          "from": "mof/project-layer-index.py",
+          "to": []
+        },
+        {
+          "from": "plan/bet-ledger.py",
+          "to": [
+            "agent-workflow.py",
+            "gac/gac-worktree.sh"
+          ]
+        },
+        {
+          "from": "ssot/_llm_helper.py",
+          "to": []
+        },
+        {
+          "from": "ssot/a2a-adapter.py",
+          "to": []
+        },
+        {
+          "from": "ssot/admin_scenes.py",
+          "to": []
+        },
+        {
+          "from": "ssot/adr-number-check.py",
+          "to": []
+        },
+        {
+          "from": "ssot/agent-tick-daemon.py",
+          "to": []
+        },
+        {
+          "from": "ssot/alert-connectors.py",
+          "to": []
+        },
+        {
+          "from": "ssot/alert-handler.py",
+          "to": []
+        },
+        {
+          "from": "ssot/approve-proposal.py",
+          "to": []
+        },
+        {
+          "from": "ssot/arcnode-validate",
+          "to": []
+        },
+        {
+          "from": "ssot/audit-repo-health.sh",
+          "to": [
+            "gac/check-submodule-pointer-drift.py"
+          ]
+        },
+        {
+          "from": "ssot/autoloop-controller.py",
+          "to": []
+        },
+        {
+          "from": "ssot/autoloop-executor.py",
+          "to": [
+            "ssot/proposal-to-adr.py",
+            "ssot/rule-adapt.py"
+          ]
+        },
+        {
+          "from": "ssot/bos-tracking-gate.py",
+          "to": []
+        },
+        {
+          "from": "ssot/bus-dlq",
+          "to": []
+        },
+        {
+          "from": "ssot/bus-e2e-harness.py",
+          "to": []
+        },
+        {
+          "from": "ssot/bus-usage-report.py",
+          "to": []
+        },
+        {
+          "from": "ssot/capability-token.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-boundary.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-branch-redundant.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-cockpit-ui-dist.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-cross-refs.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-cross-repo-consistency.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-dashboard-registry-consistency.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-doc-l0-mapping.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-domain-m1-alignment.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-god-module.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-hardcoded-ports.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-index-drift.py",
+          "to": [
+            "ssot/gen-agents-index.py",
+            "ssot/gen-knowledge-index.py",
+            "ssot/gen-projects-index.py",
+            "ssot/gen-tools-index.py"
+          ]
+        },
+        {
+          "from": "ssot/check-layer-call-direction.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-mcptool-impl-drift.py",
+          "to": []
+        },
+        {
+          "from": "ssot/check-toolbox-ssot.py",
+          "to": []
+        },
+        {
+          "from": "ssot/conflict-marker-check.py",
+          "to": []
+        },
+        {
+          "from": "ssot/constraint-gate.py",
+          "to": []
+        },
+        {
+          "from": "ssot/consumer_index.py",
+          "to": []
+        },
+        {
+          "from": "ssot/corrosion_learner.py",
+          "to": []
+        },
+        {
+          "from": "ssot/current-state-coherence.py",
+          "to": []
+        },
+        {
+          "from": "ssot/dashboard.py",
+          "to": [
+            "ssot/evolution-agent.py",
+            "ssot/problem-detector.py"
+          ]
+        },
+        {
+          "from": "ssot/deadline_tracker.py",
+          "to": []
+        },
+        {
+          "from": "ssot/dir-hygiene-check.py",
+          "to": []
+        },
+        {
+          "from": "ssot/doc-governance-check.py",
+          "to": []
+        },
+        {
+          "from": "ssot/doc-governance-migrate.py",
+          "to": [
+            "ssot/doc-governance-check.py"
+          ]
+        },
+        {
+          "from": "ssot/doc-link-check.py",
+          "to": []
+        },
+        {
+          "from": "ssot/doc-ssot-lint.py",
+          "to": [
+            "agent-workflow.py"
+          ]
+        },
+        {
+          "from": "ssot/doc_generator.py",
+          "to": []
+        },
+        {
+          "from": "ssot/evolution-agent.py",
+          "to": [
+            "ssot/problem-detector.py",
+            "ssot/tool-usage-audit.py"
+          ]
+        },
+        {
+          "from": "ssot/export_mof_framework.py",
+          "to": [
+            "ssot/consumer_index.py",
+            "ssot/corrosion_learner.py",
+            "ssot/m0_feedback.py",
+            "ssot/model_graph_query.py",
+            "ssot/onto_ekg_bootstrap.py",
+            "ssot/semantic_diff.py"
+          ]
+        },
+        {
+          "from": "ssot/external-activation-preflight.py",
+          "to": []
+        },
+        {
+          "from": "ssot/external-resource-catalog.py",
+          "to": []
+        },
+        {
+          "from": "ssot/external-resource-pack.py",
+          "to": []
+        },
+        {
+          "from": "ssot/external-scene-trial.py",
+          "to": [
+            "ssot/external-activation-preflight.py",
+            "ssot/scene-card-intake.py"
+          ]
+        },
+        {
+          "from": "ssot/freshness.py",
+          "to": []
+        },
+        {
+          "from": "ssot/gen-agent-constraints.py",
+          "to": []
+        },
+        {
+          "from": "ssot/gen-agents-index.py",
+          "to": []
+        },
+        {
+          "from": "ssot/gen-ci-surfaces-triggers.py",
+          "to": [
+            "gac/check-ci-surfaces.py"
+          ]
+        },
+        {
+          "from": "ssot/gen-external-channels-inventory.py",
+          "to": []
+        },
+        {
+          "from": "ssot/gen-knowledge-index.py",
+          "to": []
+        },
+        {
+          "from": "ssot/gen-projects-index.py",
+          "to": []
+        },
+        {
+          "from": "ssot/gen-real-evalset.py",
+          "to": []
+        },
+        {
+          "from": "ssot/gen-scene-card-lineage.py",
+          "to": []
+        },
+        {
+          "from": "ssot/gen-tools-index.py",
+          "to": [
+            "adr/adr-coverage.py",
+            "adr/adr-drift-apply.py",
+            "adr/adr-drift-auto-fix.py",
+            "adr/adr-drift-check.py",
+            "adr/adr-drift-classify.py",
+            "adr/adr-trend-insight.py",
+            "check_health_ssot.py",
+            "cockpit-readiness.py",
+            "cockpit/gen-capability-registry.py",
+            "commit-assist.py",
+            "gac/gac-bootstrap.py",
+            "gac/gac-daemon.py",
+            "gac/gac-drift.py",
+            "gac/gac-executor.py",
+            "gac/gac-export-agents.py",
+            "gac/gac-gc.py",
+            "gac/gac-healthcheck.py",
+            "gac/gac-hook-pre-edit.py",
+            "gac/gac-hygiene-check.py",
+            "gac/gac-ingest-legacy.py",
+            "gac/gac-m1-sync.py",
+            "gac/gac-mof-validate.py",
+            "gac/gac-validate.py",
+            "mof/gen-project-registry.py",
+            "mof/mof-m2-coverage.py",
+            "mof/project-layer-index.py",
+            "ssot/check-boundary.py",
+            "ssot/check-cross-refs.py",
+            "ssot/check-index-drift.py",
+            "ssot/doc-governance-check.py",
+            "ssot/doc-governance-migrate.py",
+            "ssot/doc-link-check.py",
+            "ssot/doc-ssot-lint.py",
+            "ssot/external-scene-trial.py",
+            "ssot/gen-agents-index.py",
+            "ssot/gen-external-channels-inventory.py",
+            "ssot/gen-knowledge-index.py",
+            "ssot/gen-projects-index.py",
+            "ssot/gen-scene-card-lineage.py",
+            "ssot/internal-scene-preflight.py",
+            "ssot/internal-scene-trial.py",
+            "ssot/mcp-attach-smoke.py",
+            "ssot/scene-card-approval-flow.py",
+            "ssot/scene-card-candidates.py",
+            "ssot/scene-card-connector.py",
+            "ssot/scene-card-decision-inbox.py",
+            "ssot/scene-card-intake-pipeline.py",
+            "ssot/scene-card-intake.py",
+            "ssot/scene-card-lifecycle.py",
+            "ssot/scene-card-review.py",
+            "ssot/scene-card-task-bridge.py",
+            "ssot/scene-chain-validator.py",
+            "ssot/scene-feedback-collector.py",
+            "ssot/ssot-guardian.py"
+          ]
+        },
+        {
+          "from": "ssot/git-health-hook.py",
+          "to": []
+        },
+        {
+          "from": "ssot/git-safe",
+          "to": []
+        },
+        {
+          "from": "ssot/god-module-13-error-list.py",
+          "to": [
+            "ssot/ts-file-analyze.py"
+          ]
+        },
+        {
+          "from": "ssot/god-module-roadmap.py",
+          "to": []
+        },
+        {
+          "from": "ssot/governance-scanner.py",
+          "to": []
+        },
+        {
+          "from": "ssot/governance_closed_loop.py",
+          "to": [
+            "ssot/consumer_index.py",
+            "ssot/m0_feedback.py",
+            "ssot/owl_adapter.py"
+          ]
+        },
+        {
+          "from": "ssot/health_agent.py",
+          "to": []
+        },
+        {
+          "from": "ssot/internal-scene-preflight.py",
+          "to": []
+        },
+        {
+          "from": "ssot/internal-scene-trial.py",
+          "to": [
+            "ssot/internal-scene-preflight.py",
+            "ssot/scene-card-intake.py"
+          ]
+        },
+        {
+          "from": "ssot/journey-runner.py",
+          "to": [
+            "ssot/capability-token.py",
+            "ssot/journey-state-store.py",
+            "ssot/journey-validator.py",
+            "ssot/scene-reflection.py"
+          ]
+        },
+        {
+          "from": "ssot/journey-state-store.py",
+          "to": []
+        },
+        {
+          "from": "ssot/journey-validator.py",
+          "to": []
+        },
+        {
+          "from": "ssot/llm_provider.py",
+          "to": []
+        },
+        {
+          "from": "ssot/log-rotate.py",
+          "to": []
+        },
+        {
+          "from": "ssot/m0_feedback.py",
+          "to": []
+        },
+        {
+          "from": "ssot/machine-config-write-lint.py",
+          "to": [
+            "gac/install-watch-agent.py",
+            "mof/gen-service-configs.py",
+            "svc/service_view.py"
+          ]
+        },
+        {
+          "from": "ssot/mail_agent.py",
+          "to": []
+        },
+        {
+          "from": "ssot/mail_daemon.py",
+          "to": []
+        },
+        {
+          "from": "ssot/mail_reader.py",
+          "to": []
+        },
+        {
+          "from": "ssot/mail_sender.py",
+          "to": []
+        },
+        {
+          "from": "ssot/management-cross-ref-check.py",
+          "to": []
+        },
+        {
+          "from": "ssot/matrix-consistency-lint.py",
+          "to": []
+        },
+        {
+          "from": "ssot/mcp-attach-smoke.py",
+          "to": []
+        },
+        {
+          "from": "ssot/mesh-consumer.py",
+          "to": []
+        },
+        {
+          "from": "ssot/mesh-iris-executor.py",
+          "to": []
+        },
+        {
+          "from": "ssot/model_graph_query.py",
+          "to": [
+            "ssot/consumer_index.py"
+          ]
+        },
+        {
+          "from": "ssot/mos-dual-stack-consistency.py",
+          "to": []
+        },
+        {
+          "from": "ssot/mypy-baseline-gate",
+          "to": []
+        },
+        {
+          "from": "ssot/observability-events.py",
+          "to": []
+        },
+        {
+          "from": "ssot/onto_ekg_bootstrap.py",
+          "to": []
+        },
+        {
+          "from": "ssot/onto_merge.py",
+          "to": []
+        },
+        {
+          "from": "ssot/onto_reconcile.py",
+          "to": [
+            "ssot/onto_ekg_bootstrap.py"
+          ]
+        },
+        {
+          "from": "ssot/owl_adapter.py",
+          "to": []
+        },
+        {
+          "from": "ssot/pi-adapter.py",
+          "to": []
+        },
+        {
+          "from": "ssot/post-commit-sync-check.py",
+          "to": []
+        },
+        {
+          "from": "ssot/pr-review-matrix.py",
+          "to": []
+        },
+        {
+          "from": "ssot/predictive-governance.py",
+          "to": []
+        },
+        {
+          "from": "ssot/problem-detector.py",
+          "to": [
+            "ssot/tool-usage-audit.py"
+          ]
+        },
+        {
+          "from": "ssot/project_health_check.py",
+          "to": []
+        },
+        {
+          "from": "ssot/proposal-to-adr.py",
+          "to": [
+            "adr/next-adr-id.py"
+          ]
+        },
+        {
+          "from": "ssot/prune-ci-runs-cron.py",
+          "to": []
+        },
+        {
+          "from": "ssot/prune-ci-runs.py",
+          "to": []
+        },
+        {
+          "from": "ssot/rebase-regen.sh",
+          "to": [
+            "cockpit/gen-capability-registry.py",
+            "cockpit/gen-help-docs.py",
+            "gac/gac-m1-sync.py",
+            "mof/check-mof-capabilities-drift.py",
+            "ssot/gen-ci-surfaces-triggers.py",
+            "ssot/sync-bos-registry.py"
+          ]
+        },
+        {
+          "from": "ssot/risk_engine.py",
+          "to": []
+        },
+        {
+          "from": "ssot/rule-adapt.py",
+          "to": [
+            "ssot/verify.py"
+          ]
+        },
+        {
+          "from": "ssot/scene-card-approval-flow.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-card-candidates.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-card-connector.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-card-decision-inbox.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-card-intake-pipeline.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-card-intake.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-card-lifecycle.py",
+          "to": [
+            "ssot/internal-scene-preflight.py"
+          ]
+        },
+        {
+          "from": "ssot/scene-card-review.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-card-task-bridge.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-chain-validator.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-feedback-collector.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-outcome-recorder.py",
+          "to": []
+        },
+        {
+          "from": "ssot/scene-reflection.py",
+          "to": [
+            "ssot/evolution-agent.py"
+          ]
+        },
+        {
+          "from": "ssot/semantic_diff.py",
+          "to": []
+        },
+        {
+          "from": "ssot/signal-poller.py",
+          "to": [
+            "ssot/journey-runner.py"
+          ]
+        },
+        {
+          "from": "ssot/ssot-guardian.py",
+          "to": [
+            "gac/gac-hygiene-check.py"
+          ]
+        },
+        {
+          "from": "ssot/ssot-usage.py",
+          "to": []
+        },
+        {
+          "from": "ssot/submodule-autobump.sh",
+          "to": []
+        },
+        {
+          "from": "ssot/submodule-bump-check.py",
+          "to": []
+        },
+        {
+          "from": "ssot/submodule-pointer-transaction.sh",
+          "to": []
+        },
+        {
+          "from": "ssot/submodule-reachability-gate.py",
+          "to": []
+        },
+        {
+          "from": "ssot/sync-bos-registry.py",
+          "to": []
+        },
+        {
+          "from": "ssot/sync-submodule-pointers.sh",
+          "to": []
+        },
+        {
+          "from": "ssot/sync-submodules-push.sh",
+          "to": [
+            "sync-submodules-push.sh"
+          ]
+        },
+        {
+          "from": "ssot/test-audit-repo-health.sh",
+          "to": [
+            "ssot/audit-repo-health.sh"
+          ]
+        },
+        {
+          "from": "ssot/test-gac-engine.py",
+          "to": []
+        },
+        {
+          "from": "ssot/test-mcp-kos.py",
+          "to": []
+        },
+        {
+          "from": "ssot/tool-usage-audit.py",
+          "to": []
+        },
+        {
+          "from": "ssot/trust-adjuster.py",
+          "to": []
+        },
+        {
+          "from": "ssot/ts-analyze.mjs",
+          "to": []
+        },
+        {
+          "from": "ssot/ts-file-analyze.py",
+          "to": [
+            "ssot/ts-analyze.mjs"
+          ]
+        },
+        {
+          "from": "ssot/venv-yaml-check.py",
+          "to": []
+        },
+        {
+          "from": "ssot/verify-omo.sh",
+          "to": []
+        },
+        {
+          "from": "ssot/verify.py",
+          "to": []
+        },
+        {
+          "from": "ssot/vision-audit.py",
+          "to": [
+            "ssot/autoloop-controller.py",
+            "ssot/evolution-agent.py",
+            "ssot/signal-poller.py"
+          ]
+        },
+        {
+          "from": "ssot/workflow-health.py",
+          "to": []
+        },
+        {
+          "from": "ssot/workspace-audit",
+          "to": []
+        },
+        {
+          "from": "ssot/write-owner-audit.py",
+          "to": []
+        },
+        {
+          "from": "ssot/write-owner-repair-draft.py",
+          "to": []
+        },
+        {
+          "from": "ssot/yaml-validate.py",
+          "to": []
+        },
+        {
+          "from": "ssot-watcher.py",
+          "to": []
+        },
+        {
+          "from": "submodule-gitlink-check.py",
+          "to": []
+        },
+        {
+          "from": "submodule-reachability-gate.py",
+          "to": []
+        },
+        {
+          "from": "svc/service_view.py",
+          "to": []
+        },
+        {
+          "from": "sweep/nested-with.py",
+          "to": []
+        },
+        {
+          "from": "sweep/pyright.py",
+          "to": []
+        },
+        {
+          "from": "sweep/ruff.py",
+          "to": []
+        },
+        {
+          "from": "sweep/scan.py",
+          "to": [
+            "sweep/pyright.py"
+          ]
+        },
+        {
+          "from": "sweep/sweep_index.py",
+          "to": [
+            "sweep/scan.py"
+          ]
+        },
+        {
+          "from": "sync-submodules-push.sh",
+          "to": [
+            "ssot/sync-submodules-push.sh"
+          ]
+        },
+        {
+          "from": "sync-submodules.sh",
+          "to": []
+        },
+        {
+          "from": "tool-registry-audit.py",
+          "to": []
+        },
+        {
+          "from": "workspace",
+          "to": []
+        }
+      ],
+      "out_degree_top": [
+        {
+          "path": "gac/gac-local-gate.py",
+          "out_degree": 59
+        },
+        {
+          "path": "ssot/gen-tools-index.py",
+          "out_degree": 54
+        },
+        {
+          "path": "change-lane-check.py",
+          "out_degree": 23
+        },
+        {
+          "path": "gac/governance-dashboard.py",
+          "out_degree": 21
+        },
+        {
+          "path": "gac/gac-healthcheck.py",
+          "out_degree": 19
+        },
+        {
+          "path": "gac/knowledge-foundry-cron.py",
+          "out_degree": 16
+        },
+        {
+          "path": "gac/gac-executor.py",
+          "out_degree": 8
+        },
+        {
+          "path": "gac/governance-semantic-gate.py",
+          "out_degree": 7
+        },
+        {
+          "path": "gac/m1-closeout-report.py",
+          "out_degree": 6
+        },
+        {
+          "path": "ssot/export_mof_framework.py",
+          "out_degree": 6
+        },
+        {
+          "path": "ssot/rebase-regen.sh",
+          "out_degree": 6
+        },
+        {
+          "path": "gac/check-memory-os-surfaces.py",
+          "out_degree": 4
+        },
+        {
+          "path": "gac/gac-worktree.sh",
+          "out_degree": 4
+        },
+        {
+          "path": "ssot/check-index-drift.py",
+          "out_degree": 4
+        },
+        {
+          "path": "ssot/journey-runner.py",
+          "out_degree": 4
+        },
+        {
+          "path": "ssot/governance_closed_loop.py",
+          "out_degree": 3
+        },
+        {
+          "path": "ssot/machine-config-write-lint.py",
+          "out_degree": 3
+        },
+        {
+          "path": "ssot/vision-audit.py",
+          "out_degree": 3
+        },
+        {
+          "path": "_archive/m1-adversarial-probe.py",
+          "out_degree": 2
+        },
+        {
+          "path": "_archive/omo-state-cleanup.py",
+          "out_degree": 2
+        }
+      ],
+      "in_degree_top": [
+        {
+          "path": "agent-workflow.py",
+          "in_degree": 11
+        },
+        {
+          "path": "gac/gac-drift.py",
+          "in_degree": 6
+        },
+        {
+          "path": "gac/gac-validate.py",
+          "in_degree": 5
+        },
+        {
+          "path": "mof/mof-drift",
+          "in_degree": 4
+        },
+        {
+          "path": "mof/mof-bootstrap.py",
+          "in_degree": 4
+        },
+        {
+          "path": "gac/governance-evolution.py",
+          "in_degree": 4
+        },
+        {
+          "path": "ssot/doc-link-check.py",
+          "in_degree": 4
+        },
+        {
+          "path": "ssot/doc-ssot-lint.py",
+          "in_degree": 4
+        },
+        {
+          "path": "ssot/consumer_index.py",
+          "in_degree": 4
+        },
+        {
+          "path": "gac/gac-mof-validate.py",
+          "in_degree": 4
+        },
+        {
+          "path": "gac/gac-executor.py",
+          "in_degree": 4
+        },
+        {
+          "path": "adr/adr-coverage.py",
+          "in_degree": 4
+        },
+        {
+          "path": "mof/gen-service-configs.py",
+          "in_degree": 4
+        },
+        {
+          "path": "gac/swarm-git",
+          "in_degree": 3
+        },
+        {
+          "path": "compass_radar.py",
+          "in_degree": 3
+        },
+        {
+          "path": "gac/governance-dashboard.py",
+          "in_degree": 3
+        },
+        {
+          "path": "gac/install-watch-agent.py",
+          "in_degree": 3
+        },
+        {
+          "path": "mof/generate-brief.py",
+          "in_degree": 3
+        },
+        {
+          "path": "mof/project-layer-index.py",
+          "in_degree": 3
+        },
+        {
+          "path": "cockpit/gen-capability-registry.py",
+          "in_degree": 3
+        }
+      ]
+    },
+    "cycle_nodes": [
+      "adr/adr-coverage.py",
+      "adr/adr-drift-apply.py",
+      "adr/adr-drift-auto-fix.py",
+      "adr/adr-drift-check.py",
+      "adr/adr-drift-classify.py",
+      "adr/adr-trend-insight.py",
+      "agent-workflow.py",
+      "change-lane-check.py",
+      "check_health_ssot.py",
+      "cockpit-readiness.py",
+      "cockpit/gen-capability-registry.py",
+      "collab/export-dualtrack.py",
+      "commit-assist.py",
+      "compass_radar.py",
+      "decks/memory-os-consolidate-deck.py",
+      "decks/port-governance-deck.py",
+      "gac/bdsk-shadow-sandbox.py",
+      "gac/check-adversarial-effectiveness.py",
+      "gac/check-ci-surfaces.py",
+      "gac/check-conflict-markers.py",
+      "gac/check-dual-track-purity.py",
+      "gac/check-evidence-freshness.py",
+      "gac/check-evidence-honest-closure.py",
+      "gac/check-foundry-deck-coverage.py",
+      "gac/check-gateway-status-doc.py",
+      "gac/check-governance-ratio.py",
+      "gac/check-governance-trend.py",
+      "gac/check-redline-coverage.py",
+      "gac/check-severity-registry.py",
+      "gac/check-silent-loss.py",
+      "gac/check-submodule-rewind.py",
+      "gac/check-swarm-collision.py",
+      "gac/check-work-landed.py",
+      "gac/check-workorder-schema.py",
+      "gac/ci-check-runner.py",
+      "gac/debt-closed-per-feature.py",
+      "gac/debt-integrity-check.py",
+      "gac/drift-history-insight.py",
+      "gac/event-loop-lint.py",
+      "gac/evidence-smoke.py",
+      "gac/gac-bootstrap.py",
+      "gac/gac-compute-onboard.py",
+      "gac/gac-consensus-inject.py",
+      "gac/gac-coverage-lint.py",
+      "gac/gac-daemon.py",
+      "gac/gac-drift.py",
+      "gac/gac-executor.py",
+      "gac/gac-export-agents.py",
+      "gac/gac-gc.py",
+      "gac/gac-healthcheck.py",
+      "gac/gac-hook-pre-edit.py",
+      "gac/gac-hygiene-check.py",
+      "gac/gac-ingest-legacy.py",
+      "gac/gac-local-gate.py",
+      "gac/gac-m1-sync.py",
+      "gac/gac-mesh-router.py",
+      "gac/gac-mof-validate.py",
+      "gac/gac-validate.py",
+      "gac/git-divergence-check.py",
+      "gac/governance-dashboard.py",
+      "gac/governance-evolution.py",
+      "gac/governance-history-insight.py",
+      "gac/governance-history-stats.py",
+      "gac/governance-semantic-gate.py",
+      "gac/governance-summary.py",
+      "gac/governance-trend-report.py",
+      "gac/install-watch-agent.py",
+      "gac/knowledge-foundry-cron.py",
+      "gac/mcp-server-kos.py",
+      "gac/omlxc-node-wakeup.py",
+      "gac/omo-state-write-guard.py",
+      "gac/omostation-bootloader.py",
+      "gac/rule-history-insight.py",
+      "gac/state-freshness-check.py",
+      "gac/state-stale-emit.py",
+      "gac/swarm-discipline-cli.py",
+      "gac/swarm-git",
+      "gac/swarm_discipline.py",
+      "gac/test-coverage-check.py",
+      "gac/x2-freshness-check.py",
+      "gac/x2-rule-add.py",
+      "gac/x2-rule-lint.py",
+      "mof/check-doc-claims.py",
+      "mof/check-mof-capabilities-drift.py",
+      "mof/gen-dependency-baseline.py",
+      "mof/gen-project-registry.py",
+      "mof/gen-service-configs.py",
+      "mof/generate-brief.py",
+      "mof/m4-health-score.py",
+      "mof/mof-bootstrap.py",
+      "mof/mof-drift",
+      "mof/mof-m2-coverage.py",
+      "mof/mof-version",
+      "mof/project-layer-index.py",
+      "ssot/bos-tracking-gate.py",
+      "ssot/bus-e2e-harness.py",
+      "ssot/bus-usage-report.py",
+      "ssot/check-boundary.py",
+      "ssot/check-cockpit-ui-dist.py",
+      "ssot/check-cross-refs.py",
+      "ssot/check-dashboard-registry-consistency.py",
+      "ssot/check-domain-m1-alignment.py",
+      "ssot/check-index-drift.py",
+      "ssot/check-layer-call-direction.py",
+      "ssot/check-toolbox-ssot.py",
+      "ssot/consumer_index.py",
+      "ssot/current-state-coherence.py",
+      "ssot/doc-governance-check.py",
+      "ssot/doc-governance-migrate.py",
+      "ssot/doc-link-check.py",
+      "ssot/doc-ssot-lint.py",
+      "ssot/external-activation-preflight.py",
+      "ssot/external-scene-trial.py",
+      "ssot/gen-agents-index.py",
+      "ssot/gen-external-channels-inventory.py",
+      "ssot/gen-knowledge-index.py",
+      "ssot/gen-projects-index.py",
+      "ssot/gen-scene-card-lineage.py",
+      "ssot/gen-tools-index.py",
+      "ssot/god-module-13-error-list.py",
+      "ssot/god-module-roadmap.py",
+      "ssot/internal-scene-preflight.py",
+      "ssot/internal-scene-trial.py",
+      "ssot/m0_feedback.py",
+      "ssot/management-cross-ref-check.py",
+      "ssot/matrix-consistency-lint.py",
+      "ssot/mcp-attach-smoke.py",
+      "ssot/scene-card-approval-flow.py",
+      "ssot/scene-card-candidates.py",
+      "ssot/scene-card-connector.py",
+      "ssot/scene-card-decision-inbox.py",
+      "ssot/scene-card-intake-pipeline.py",
+      "ssot/scene-card-intake.py",
+      "ssot/scene-card-lifecycle.py",
+      "ssot/scene-card-review.py",
+      "ssot/scene-card-task-bridge.py",
+      "ssot/scene-chain-validator.py",
+      "ssot/scene-feedback-collector.py",
+      "ssot/ssot-guardian.py",
+      "ssot/ssot-usage.py",
+      "ssot/submodule-bump-check.py",
+      "ssot/submodule-pointer-transaction.sh",
+      "ssot/submodule-reachability-gate.py",
+      "ssot/sync-submodules-push.sh",
+      "ssot/test-gac-engine.py",
+      "ssot/test-mcp-kos.py",
+      "ssot/ts-analyze.mjs",
+      "ssot/ts-file-analyze.py",
+      "ssot/venv-yaml-check.py",
+      "ssot/write-owner-audit.py",
+      "submodule-gitlink-check.py",
+      "sweep/pyright.py",
+      "sweep/scan.py",
+      "sweep/sweep_index.py",
+      "sync-submodules-push.sh",
+      "tool-registry-audit.py"
+    ]
+  },
+  "issues": [
+    {
+      "type": "duplicate_commands",
+      "count": 5,
+      "severity": "high",
+      "message": "同名入口命令重复，请先定义迁移顺序再收敛"
+    },
+    {
+      "type": "legacy_snake_case",
+      "count": 37,
+      "severity": "warn",
+      "message": "存在 snake_case 命名，建议逐步迁移为 kebab-case 并保留兼容 shim"
+    },
+    {
+      "type": "dependency_cycle",
+      "count": 156,
+      "severity": "warn",
+      "message": "存在依赖闭环，优先打断跨脚本耦合路径"
+    }
+  ]
+}

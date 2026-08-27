@@ -1,0 +1,46 @@
+id: OPC-P6-SELF-EVOLUTION-nop-20260624T092459Z
+title: 'No-op: drift detector reported 0 drift; loop continues'
+status: candidate
+task_type: governance
+risk_level: L1
+depends_on: []
+source_docs:
+- .omo/_control/evolution/drift/2026-06-24.json
+deliverables:
+- 'No-op: drift detector reported 0 drift; loop continues'
+imported_via: opc_p6_self_evolve
+context_uri: bos://governance/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260624T092459Z
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate:
+- P6 drift review accepted
+evidence_required:
+- human approval granted before promotion
+test_plan:
+- python3 scripts/omo/omo_worker.py task promotion-readiness --omo-dir .omo
+allowed_operation_level: L1
+human_approval_required: true
+approval_required: true
+approval_state: awaiting_human
+created_at: '2026-06-24T09:24:59Z'
+source: drift:none
+drift_ref: .omo/_control/evolution/drift/2026-06-24.json
+loop_history_ref: .omo/_control/evolution/loop/history.json
+review_lane: opc-p6-self-evolution-board
+prerequisite_for: OPC-P6
+red_lines:
+- self-evolution task 仅落 planned/, 永不入 active/ 除非 human approval
+next_action: human reviewer approve in OMO audit queue before promoting to active/
+metadata:
+  created_via: opc_p6_self_evolve
+  generated_at: '2026-06-24T09:24:59Z'
+  ingress_plane: scripts/opc_p6_self_evolve.py
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: opc-p6-self-evolve:OPC-P6-SELF-EVOLUTION-nop-20260624T092459Z
+last_run_at: '2026-06-24T09:24:59Z'
+latest_week: 2026-W29

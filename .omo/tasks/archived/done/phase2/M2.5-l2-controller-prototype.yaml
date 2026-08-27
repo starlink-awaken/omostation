@@ -1,0 +1,43 @@
+id: M2.5-L2-CONTROLLER-PROTOTYPE
+phase: 2
+milestone: M2.5
+priority: P1
+title: "L2 controller prototype — PID hysteresis for capability layer"
+status: done
+owner: metaos
+assigned_to: metaos
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+  - ".omo/plans/deep-architecture-agent-analysis.md"
+depends_on: []
+dependencies: []
+inputs:
+  - ".omo/standards/operation-levels.md"
+  - "projects/kairon/packages/metaos/src/metaos/"
+outputs:
+  - "projects/kairon/packages/metaos/src/metaos/l2_controller.py"
+  - "projects/kairon/packages/metaos/tests/test_l2_controller.py"
+acceptance_criteria:
+  - "Health input: latency, error rate, CPU per service"
+  - "Concurrency adjustment simulation (PID smooth)"
+  - "Hysteresis: latency >2× baseline → reduce; <1× → restore; 60s cooldown"
+  - "Oscillation test: no ping-pong behavior"
+  - "Real production tuning blocked (simulation only)"
+evidence:
+  - "l2_controller.py implemented (~150 lines, full L2Controller class)"
+  - "60 unit tests passing (12 test classes)"
+  - "Hysteresis: zones=normal/reducing, cooldown=60s, thresholds=2.0/1.0"
+  - "PID: Kp=0.5, Ki=0.1, Kd=0.2, anti-windup=±100, output clamped to [-1,1]"
+  - "No oscillation: cooldown prevents ping-pong, smooth adjustment via PID"
+  - "READONLY: adjust() returns suggestion, doesn't modify state"
+  - "Cross-layer feedback: _alerts queue with severity/source"
+  - "MCP tools: l2_controller_status, l2_controller_adjust"
+  - "No regression: 39 existing metaos tests still pass"
+completed_at: "2026-05-30T20:10:00Z"
+test_results:
+  total: 60
+  passed: 60
+  failed: 0
+  regression: 0

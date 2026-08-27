@@ -1,0 +1,34 @@
+id: P31-W1-MERGE-SOT-BRIDGE
+phase: 31
+wave: W1
+title: "合并 2/3: sot-bridge (ssot + sharedbrain-bridge)"
+status: completed
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P31-W1-MERGE-PROTOCOLS-LAYER completed"
+depends_on:
+  - P31-W1-MERGE-PROTOCOLS-LAYER
+deliverables:
+  - "projects/kairon/packages/sot-bridge/"
+  - ".omo/_delivery/phase31-merge-sot-bridge.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/decisions/0006-kairon-package-merge.md"
+knowledge_refs:
+  - "ADR-0006"
+description: |
+  3 组合并第 2 步: ssot + sharedbrain-bridge → sot-bridge。
+  原 AST 实证 (sharedbrain-bridge→ssot_kernel: 5 次) 在 Phase 31 stubify 后已无
+  实际跨包 import (sharedbrain-bridge 内部全为 stub, 无 from ssot_kernel)。
+  合并仍按 ADR-0006 实施, 主要收益是包结构合并、ssot 命名空间整合、消除历史
+  跨包引用 5 条 (虽已 stubify, 但合并后原引用路径消失)。
+  src/ 共 15,732 行 (80 .py, 14 tests, ssot=12k + sharedbrain-bridge=1k)。
+  保留 6 个月 shim (packages/ssot/, packages/sharedbrain-bridge/)。
+started_at: '2026-06-06T03:30:00Z'
+completed_at: '2026-06-06T03:30:00Z'
+blocked_by: null
+retry_count: 0

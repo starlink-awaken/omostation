@@ -1,0 +1,26 @@
+id: IMPORTED-8a2b53
+title: 实现核心模块
+status: candidate
+task_type: feature
+risk_level: L0
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/runtime/sandbox/OpenSpec-测试C2G对接与网关.md
+deliverables:
+- 执行记录与源码修改
+imported_via: omo_bridge
+context_uri: bos://memory/openspecs/OpenSpec-测试C2G对接与网关.md#IMPORTED-8a2b53
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate: []
+evidence_required:
+- '[Fallback] Default evidence'
+test_plan:
+- '[Fallback] Default test plan'
+allowed_operation_level: L0
+human_approval_required: false

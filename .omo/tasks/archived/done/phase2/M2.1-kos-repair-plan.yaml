@@ -1,0 +1,34 @@
+id: M2.1-KOS-REPAIR-PLAN
+phase: 2
+milestone: M2.1
+priority: P0
+title: "Prepare KOS repair plan with no-loss guard"
+status: done
+assigned_to: "reasonix-code"
+started_at: "2026-05-30T01:50:30+08:00"
+completed_at: "2026-05-30T01:53:00+08:00"
+evidence:
+  - "Repair plan: .omo/plans/kos-repair-plan.md"
+  - "Includes: backup strategy, dry-run, write-pause conditions, 10 known docs verification"
+  - "Root cause fix: engine.py L1016-1027 path resolution bug"
+  - "Human approval required before execution (operation_level=L2)"
+  - "No destructive action performed during planning"
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+  - ".omo/standards/post-phase1-governance-and-phase2-entry.md"
+depends_on:
+  - M2.1-KOS-INDEX-DIAGNOSIS
+risk_level: L2
+operation_level: L2
+human_approval_required: true
+entry_gate:
+  - "KOS degradation root cause diagnosed"
+evidence_required:
+  - "Backup or snapshot strategy before repair"
+  - "Dry-run reindex or recovery plan"
+  - "Write-pause condition for critical degradation"
+  - "10 known documents verification list"
+test_plan:
+  - ".omo/tests/README.md#kos-baseline-tests"
+exit_gate:
+  - "Human approves repair before any destructive or bulk write action"

@@ -1,0 +1,17 @@
+id: w17-adv-harden-9799101
+title: 'ADV97/99/101 加硬 (l2-censorship/mev-collusion/aa-drain)'
+description: 'P84 wave17 真实任务'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-29T04:45:00Z'
+completion_evidence:
+  - .omo/_delivery/collab-scenarios/ADV97-l2-sequencer-censorship.yaml
+  - .omo/_delivery/collab-scenarios/ADV99-mev-builder-collusion.yaml
+  - .omo/_delivery/collab-scenarios/ADV101-account-abstraction-drain.yaml
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+  - .omo/_knowledge/decisions/0272-p84-wave17-adv919395.md
+stage: P84-W17

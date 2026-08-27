@@ -1,0 +1,27 @@
+id: P32-W1-RUFF-CLEANUP
+phase: 32
+wave: W1
+title: "修 kairon 280 ruff errors 推 B(81.7) → A+(98.3)"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P32-W0-AGORA-FIX completed"
+depends_on:
+  - P32-W0-AGORA-FIX
+deliverables:
+  - ".omo/_delivery/phase32-ruff-cleanup.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs: []
+knowledge_refs: []
+description: |
+  P32-W0 收官总分 81.7 (B), ruff errors=280 是唯一未满分项。
+  修 ruff errors 推 B→A。
+  优先 noqa 抑制, 保留业务逻辑。
+started_at: '2026-06-06T06:00:00Z'
+completed_at: '2026-06-06T06:00:00Z'
+blocked_by: null
+retry_count: 0

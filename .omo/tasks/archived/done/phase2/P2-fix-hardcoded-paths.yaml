@@ -1,0 +1,34 @@
+id: P2-FIX-HARDCODED-PATHS
+phase: 2
+milestone: M2.6
+priority: P2
+title: Fix remaining 21 hardcoded /Users/xiamingxing paths
+status: done
+assigned_to: codebuddy
+dispatch_id: p2-fix-hardcoded-paths-codebuddy-20260530-145751
+run_ref: .omo/workers/runs/p2-fix-hardcoded-paths-codebuddy-20260530-145751-dispatch.yaml
+approval_ref: null
+review_ref: .omo/workers/runs/p2-fix-hardcoded-paths-codebuddy-20260530-145751-review.md
+knowledge_refs:
+- .omo/standards/hardcoded-paths-inventory.md
+handoff_refs:
+- .omo/workers/runs/p2-fix-hardcoded-paths-codebuddy-20260530-145751-envelope.yaml
+- .omo/workers/runs/p2-fix-hardcoded-paths-codebuddy-20260530-145751-prompt.md
+source_docs:
+- .omo/standards/hardcoded-paths-inventory.md
+deliverables:
+  - .omo/standards/hardcoded-paths-inventory.md
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate:
+- Inventory exists
+evidence_required:
+- At least 5 paths fixed
+- Remaining paths filed as follow-up
+test_plan:
+- rg "/Users/xiamingxing" across the touched packages after changes
+- Verify replaced paths still resolve via relative or BOS-style config
+started_at: '2026-05-30T14:57:51Z'
+completed_at: '2026-05-30T15:08:00Z'
+completion_summary: 11 hardcoded paths fixed across targeted packages; inventory updated and workspace scan returned zero matches.

@@ -1,0 +1,33 @@
+id: P28-W0-TOOL-HEATMAP
+phase: 28
+wave: W0
+title: "工具使用热力图 — 分析 Agora trace log，标注零调用候选"
+status: completed
+task_type: analysis
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W0-NORTH-STAR completed"
+depends_on:
+  - P28-W0-NORTH-STAR
+deliverables:
+  - ".omo/_knowledge/management/tool-heatmap-phase28.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/design/plans/phase28-observable-knowledge-workflow.md"
+knowledge_refs: []
+description: |
+  分析以下数据源，生成工具调用热力图：
+    - projects/kairon/packages/agora/src/agora/trace_log.jsonl（调用记录）
+    - projects/kairon/packages/agora/agora-routes.json（注册工具列表）
+  输出：
+    1. 各工具调用频次排行
+    2. 零调用工具清单（归档候选 or 保留说明）
+    3. 高频工具 Top 10
+  输出文件: .omo/_knowledge/management/tool-heatmap-phase28.md
+started_at: '2026-06-05T14:00:00Z'
+completed_at: '2026-06-05T14:30:00Z'
+blocked_by: null
+retry_count: 0

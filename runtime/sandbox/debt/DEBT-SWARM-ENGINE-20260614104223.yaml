@@ -1,0 +1,11 @@
+id: DEBT-SWARM-ENGINE-20260614104223
+title: swarm-engine 已归档, 仅保留 _archive 快照
+resolution_evidence: |
+  2026-06-21 audit fix (X2-FRESH-DEBT-EVIDENCE-INTEGRITY):
+  swarm-engine 已并入 projects/aetherforge/packages/swarm/。
+  _archive/swarm-engine/ 仅保留历史快照, 不再产生独立维护成本。
+remediation: |
+  1. aetherforge packages/swarm 替代 swarm-engine 入口
+  2. _archive 仅作 history evidence
+registered_at: '2026-06-14T10:42:23Z'
+closed_at: '2026-06-21T00:00:00Z'

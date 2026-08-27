@@ -1,0 +1,29 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-28
+---
+
+packages:
+- id: kairon
+  manager: python
+  manifest: projects/knowledge/kairon/pyproject.toml
+  version: declared-in-manifest
+  status: declared
+- id: agentmesh
+  manager: bun
+  manifest: projects/agentmesh/package.json
+  version: declared-in-manifest
+  status: archived
+  note: "TS 源码已归档（REMEDIATE-AGENTMESH-ARCHIVE completed 2026-06-03），目录不存在，声明保留作审计轨迹"
+- id: gbrain
+  manager: bun
+  manifest: projects/knowledge/gbrain/package.json
+  version: declared-in-manifest
+  status: declared
+- id: SharedBrain
+  manager: python
+  manifest: projects/SharedBrain/pyproject.toml
+  version: declared-in-manifest
+  status: declared

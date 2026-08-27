@@ -1,0 +1,62 @@
+---
+title: Scene Card Candidate Seeds
+status: active
+type: catalog
+owner: product-architecture
+last-reviewed: 2026-08-02
+related:
+  - ./STRATEGY-3YEAR-PANORAMA.md
+  - ../.omo/standards/scene-card-candidate.schema.yaml
+---
+schema: scene-card-candidate-seeds/v1
+mode: candidate_only
+activation: forbidden
+raw_content_policy: never_read_or_export
+notes:
+  - These entries are architecture-level opportunity hypotheses, not business approvals.
+  - A candidate must receive a complete Scene Card and business evidence before activation.
+candidates:
+  - candidate_id: scene-candidate:document-review
+    title: 公文起草与审查
+    proposed_scene_id: document-review
+    proposed_journey_id: document-to-decision
+    outcome_metric_hint: review_cycle_hours
+    capability_refs:
+      - kairon.iris
+      - kairon.sophia
+      - gbrain.evals
+    discovery_refs:
+      - docs/STRATEGY-3YEAR-PANORAMA.md#W2
+    safe_observations:
+      - 需要把草稿生成、格式检查、敏感项检查和依据核验放进同一条可审计旅程
+      - 输出必须可编辑、逐项解释并支持人工退回
+
+  - candidate_id: scene-candidate:meeting-supervision
+    title: 会议到任务派发与督办
+    proposed_scene_id: meeting-supervision
+    proposed_journey_id: meeting-to-delivery
+    outcome_metric_hint: overdue_task_rate
+    capability_refs:
+      - kairon.ontoderive
+      - omo.workflow_dispatch
+      - external.channel
+    discovery_refs:
+      - docs/STRATEGY-3YEAR-PANORAMA.md#W3
+    safe_observations:
+      - 需要将会议决议收敛为可确认的任务、责任人、时限和升级链
+      - 派发必须有人工确认、渠道回执和逾期恢复路径
+
+  - candidate_id: scene-candidate:engineering-delivery
+    title: 工程研发与系统进化
+    proposed_scene_id: engineering-delivery
+    proposed_journey_id: intent-to-evidence
+    outcome_metric_hint: verified_delivery_lead_time
+    capability_refs:
+      - omo.agent_workflow
+      - omo.workflow_mesh
+      - cockpit.workflow_mesh
+    discovery_refs:
+      - docs/STRATEGY-3YEAR-PANORAMA.md#W6
+    safe_observations:
+      - 需要把意图、隔离实施、测试、PR、合并和证据收敛为一条可恢复旅程
+      - 技术执行结果必须回到业务目标、消费位置和复盘提案

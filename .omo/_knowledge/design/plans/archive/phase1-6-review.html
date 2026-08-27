@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMO Phase 1-6 全面 Review 可视化看板</title>
+<style>
+  :root {
+    --p1: #6366f1; --p2: #8b5cf6; --p3: #a855f7;
+    --p4: #d946ef; --p5: #ec4899; --p6: #f43f5e;
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --text: #f1f5f9; --text2: #94a3b8; --accent: #38bdf8;
+    --green: #22c55e; --yellow: #eab308; --red: #ef4444;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; overflow-x: hidden;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid var(--surface2);
+    padding: 48px 24px 32px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .header::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(56,189,248,.08) 0%, transparent 70%);
+  }
+  .header h1 { font-size: 2.2rem; font-weight: 700; letter-spacing: -.02em; position: relative; }
+  .header h1 span { background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header p { color: var(--text2); margin-top: 8px; font-size: 1rem; position: relative; }
+
+  /* Container */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+  /* Dashboard Cards */
+  .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .dash-card {
+    background: var(--surface); border-radius: 12px; padding: 20px;
+    border: 1px solid var(--surface2); text-align: center;
+  }
+  .dash-card .value { font-size: 2.4rem; font-weight: 700; }
+  .dash-card .value.green { color: var(--green); }
+  .dash-card .value.gold { color: var(--yellow); }
+  .dash-card .value.blue { color: var(--accent); }
+  .dash-card .label { color: var(--text2); font-size: .85rem; margin-top: 4px; }
+
+  /* Section */
+  .section { margin-bottom: 32px; }
+  .section-title {
+    font-size: 1.2rem; font-weight: 600; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .badge {
+    font-size: .7rem; font-weight: 500; padding: 2px 8px;
+    border-radius: 4px; background: var(--surface2); color: var(--text2);
+  }
+
+  /* Timeline */
+  .timeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .phase-card {
+    background: var(--surface); border-radius: 12px; padding: 20px;
+    border: 1px solid var(--surface2);
+    transition: transform .15s, box-shadow .15s;
+    cursor: default; position: relative; overflow: hidden;
+  }
+  .phase-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+  .phase-card .bar { height: 4px; border-radius: 2px; margin-bottom: 12px; }
+  .phase-card .pnum { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; opacity: .6; }
+  .phase-card .name { font-size: 1.05rem; font-weight: 600; margin: 4px 0 8px; }
+  .phase-card .health {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: .85rem; font-weight: 600; padding: 2px 10px;
+    border-radius: 20px; margin-bottom: 8px;
+  }
+  .phase-card .health.h75 { background: rgba(234,179,8,.15); color: var(--yellow); }
+  .phase-card .health.h80 { background: rgba(168,85,247,.15); color: #a855f7; }
+  .phase-card .health.h88 { background: rgba(56,189,248,.15); color: var(--accent); }
+  .phase-card .health.h90 { background: rgba(34,197,94,.15); color: var(--green); }
+  .phase-card .stats { color: var(--text2); font-size: .8rem; line-height: 1.6; }
+  .phase-card .stats strong { color: var(--text); }
+
+  /* Trend Chart */
+  .chart-wrap { background: var(--surface); border-radius: 12px; padding: 24px; border: 1px solid var(--surface2); }
+  .chart { display: flex; align-items: flex-end; gap: 8px; height: 200px; padding: 0 8px; position: relative; }
+  .chart .y-label { position: absolute; left: -8px; color: var(--text2); font-size: .7rem; }
+  .chart .y-label.top { top: 0; } .chart .y-label.mid { top: 50%; transform: translateY(-50%); } .chart .y-label.bot { bottom: 0; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .bar-col .bar-fill {
+    width: 100%; max-width: 60px; border-radius: 6px 6px 2px 2px;
+    transition: height .8s cubic-bezier(.34,1.56,.64,1); min-height: 4px;
+    position: relative; cursor: default;
+  }
+  .bar-col .bar-fill .val {
+    position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
+    font-size: .85rem; font-weight: 700; white-space: nowrap;
+  }
+  .bar-col .bar-label { margin-top: 8px; font-size: .75rem; color: var(--text2); text-align: center; }
+
+  /* Module Grid */
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+  .module-item {
+    background: var(--surface); border-radius: 8px; padding: 12px 16px;
+    border: 1px solid var(--surface2); font-size: .85rem;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .module-item .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* Flow */
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .flow-step {
+    background: var(--surface); border-radius: 20px; padding: 6px 16px;
+    border: 1px solid var(--surface2); font-size: .82rem;
+  }
+  .flow-step.active { border-color: var(--accent); background: rgba(56,189,248,.08); }
+  .flow-arrow { color: var(--text2); font-size: .85rem; }
+
+  /* Defects */
+  .defect-row {
+    background: var(--surface); border-radius: 8px; padding: 12px 16px;
+    border: 1px solid var(--surface2); margin-bottom: 6px;
+    display: grid; grid-template-columns: auto 1fr auto auto;
+    gap: 12px; align-items: center; font-size: .85rem;
+  }
+  .defect-row .id { font-weight: 700; font-size: .8rem; min-width: 32px; }
+  .defect-row .sev {
+    padding: 2px 8px; border-radius: 4px; font-size: .7rem; font-weight: 600;
+  }
+  .defect-row .sev.high { background: rgba(239,68,68,.15); color: var(--red); }
+  .defect-row .sev.mid { background: rgba(234,179,8,.15); color: var(--yellow); }
+  .defect-row .sev.low { background: rgba(34,197,94,.15); color: var(--green); }
+  .defect-row .status { color: var(--text2); font-size: .75rem; }
+
+  /* Card grid for scenarios */
+  .scenario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
+  .scenario-item {
+    background: var(--surface); border-radius: 8px; padding: 10px 14px;
+    border: 1px solid var(--surface2); font-size: .82rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .scenario-item .pass { color: var(--green); font-size: .75rem; }
+
+  /* Usage Evolution */
+  .usage-row {
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--surface2);
+  }
+  .usage-row:last-child { border-bottom: none; }
+  .usage-row .phase-tag {
+    font-size: .75rem; font-weight: 600; padding: 2px 8px;
+    border-radius: 4px; min-width: 70px; text-align: center;
+  }
+  .usage-row .channels {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .usage-row .channels .ch {
+    background: var(--surface2); border-radius: 12px; padding: 2px 10px;
+    font-size: .78rem;
+  }
+  .usage-row .channels .ch.new { background: rgba(56,189,248,.15); color: var(--accent); border: 1px solid rgba(56,189,248,.3); }
+
+  /* Comparison table */
+  .comp-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .comp-table th {
+    text-align: left; padding: 10px 12px; background: var(--surface);
+    border-bottom: 2px solid var(--surface2); font-weight: 600;
+    color: var(--text2); text-transform: uppercase; font-size: .7rem; letter-spacing: .04em;
+  }
+  .comp-table td { padding: 8px 12px; border-bottom: 1px solid var(--surface2); }
+  .comp-table tr:hover td { background: rgba(255,255,255,.02); }
+  .comp-table .cell-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; }
+
+  /* Recommendations */
+  .rec-card {
+    background: var(--surface); border-radius: 12px; padding: 16px 20px;
+    border: 1px solid var(--surface2); margin-bottom: 8px;
+  }
+  .rec-card .rec-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .rec-card .rec-prio {
+    font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+  }
+  .rec-card .rec-prio.p0 { background: rgba(239,68,68,.15); color: var(--red); }
+  .rec-card .rec-prio.p1 { background: rgba(234,179,8,.15); color: var(--yellow); }
+  .rec-card .rec-prio.p2 { background: rgba(56,189,248,.15); color: var(--accent); }
+  .rec-card .rec-body { color: var(--text2); font-size: .82rem; margin-top: 4px; }
+
+  @media (max-width: 768px) {
+    .timeline { grid-template-columns: repeat(2, 1fr); }
+    .header h1 { font-size: 1.4rem; }
+    .dashboard { grid-template-columns: repeat(2, 1fr); }
+    .defect-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>OMO <span>Phase 1-6</span> 全面 Review</h1>
+  <p>5 维度评估 · 6 阶段递进 · 整体架构 → 核心流程</p>
+</div>
+
+<div class="container">
+
+  <!-- Dashboard -->
+  <div class="dashboard">
+    <div class="dash-card">
+      <div class="value green">6</div>
+      <div class="label">完成阶段</div>
+    </div>
+    <div class="dash-card">
+      <div class="value green">90</div>
+      <div class="label">当前健康分</div>
+    </div>
+    <div class="dash-card">
+      <div class="value gold">85/87</div>
+      <div class="label">任务完成</div>
+    </div>
+    <div class="dash-card">
+      <div class="value blue">218</div>
+      <div class="label">验收测试数</div>
+    </div>
+    <div class="dash-card">
+      <div class="value gold">5</div>
+      <div class="label">架构层级</div>
+    </div>
+    <div class="dash-card">
+      <div class="value blue">7</div>
+      <div class="label">待修复缺陷</div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="section">
+    <div class="section-title">📊 阶段演进时间线 <span class="badge">6 phases · 5 days</span></div>
+    <div class="timeline">
+      <div class="phase-card">
+        <div class="bar" style="background:var(--p1)"></div>
+        <div class="pnum" style="color:var(--p1)">Phase 1</div>
+        <div class="name">基础设施补完</div>
+        <div class="health h75">❤️ 75</div>
+        <div class="stats"><strong>21/21</strong> 任务 · 8 模块</div>
+      </div>
+      <div class="phase-card">
+        <div class="bar" style="background:var(--p2)"></div>
+        <div class="pnum" style="color:var(--p2)">Phase 2</div>
+        <div class="name">知识能力深化</div>
+        <div class="health h80">❤️ 80</div>
+        <div class="stats"><strong>~30</strong> 包 · 6 里程碑</div>
+      </div>
+      <div class="phase-card">
+        <div class="bar" style="background:var(--p3)"></div>
+        <div class="pnum" style="color:var(--p3)">Phase 3</div>
+        <div class="name">自我进化闭环</div>
+        <div class="health h88">❤️ 88</div>
+        <div class="stats"><strong>218/218</strong> 测试 · 6 套件</div>
+      </div>
+      <div class="phase-card">
+        <div class="bar" style="background:var(--p4)"></div>
+        <div class="pnum" style="color:var(--p4)">Phase 4</div>
+        <div class="name">Worker Ops 生产化</div>
+        <div class="health h90">❤️ 90</div>
+        <div class="stats"><strong>2</strong> 波浪 · 6+ 脚本</div>
+      </div>
+      <div class="phase-card">
+        <div class="bar" style="background:var(--p5)"></div>
+        <div class="pnum" style="color:var(--p5)">Phase 5</div>
+        <div class="name">治理正式化</div>
+        <div class="health h90">❤️ 90</div>
+        <div class="stats"><strong>4</strong> 波浪 · 四平面</div>
+      </div>
+      <div class="phase-card">
+        <div class="bar" style="background:var(--p6)"></div>
+        <div class="pnum" style="color:var(--p6)">Phase 6</div>
+        <div class="name">运行时实现</div>
+        <div class="health h90">❤️ 90</div>
+        <div class="stats"><strong>3</strong> 波浪 · 6+ 模块</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Health Trend -->
+  <div class="section">
+    <div class="section-title">📈 健康评分趋势</div>
+    <div class="chart-wrap">
+      <div class="chart" id="healthChart"></div>
+    </div>
+  </div>
+
+  <!-- Architecture Evolution -->
+  <div class="section">
+    <div class="section-title">🏗️ 架构层级演进</div>
+    <div class="comp-table-wrap" style="overflow-x:auto;">
+      <table class="comp-table">
+        <thead><tr>
+          <th>架构层级</th>
+          <th style="color:var(--p1)">P1</th>
+          <th style="color:var(--p2)">P2</th>
+          <th style="color:var(--p3)">P3</th>
+          <th style="color:var(--p4)">P4</th>
+          <th style="color:var(--p5)">P5</th>
+          <th style="color:var(--p6)">P6</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td>项目级 (kairon/SharedBrain/agentmesh/gbrain)</td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+          </tr>
+          <tr>
+            <td>Mesh 级 (Agora service mesh)</td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+          </tr>
+          <tr>
+            <td>治理级 (goals/state/tasks/standards)</td>
+            <td style="color:var(--text2)">—</td>
+            <td style="color:var(--text2)">—</td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+          </tr>
+          <tr>
+            <td>运营级 (worker dispatch/reclaim)</td>
+            <td style="color:var(--text2)">—</td>
+            <td style="color:var(--text2)">—</td>
+            <td style="color:var(--text2)">—</td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+          </tr>
+          <tr>
+            <td>治理正式级 (四平面架构)</td>
+            <td style="color:var(--text2)">—</td>
+            <td style="color:var(--text2)">—</td>
+            <td style="color:var(--text2)">—</td>
+            <td style="color:var(--text2)">—</td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+          </tr>
+          <tr>
+            <td>运行时级 (proposal/checkpoint/skill)</td>
+            <td style="color:var(--text2)">—</td>
+            <td style="color:var(--text2)">—</td>
+            <td style="color:var(--text2)">—</td>
+            <td style="color:var(--text2)">—</td>
+            <td style="color:var(--text2)">—</td>
+            <td><span class="cell-dot" style="background:var(--green)"></span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Usage Evolution -->
+  <div class="section">
+    <div class="section-title">🛠️ 使用方式演变</div>
+    <div class="chart-wrap">
+      <div class="usage-row">
+        <div class="phase-tag" style="background:var(--p1);color:#fff">P1</div>
+        <div class="channels">
+          <span class="ch new">CLI</span>
+          <span class="ch new">MCP</span>
+          <span class="ch">Web UI</span>
+        </div>
+      </div>
+      <div class="usage-row">
+        <div class="phase-tag" style="background:var(--p2);color:#fff">P2</div>
+        <div class="channels">
+          <span class="ch">CLI</span>
+          <span class="ch">MCP</span>
+          <span class="ch new">Hermes Agent</span>
+        </div>
+      </div>
+      <div class="usage-row">
+        <div class="phase-tag" style="background:var(--p3);color:#fff">P3</div>
+        <div class="channels">
+          <span class="ch">CLI</span>
+          <span class="ch">MCP</span>
+          <span class="ch">Hermes</span>
+          <span class="ch new">CI (验收自动化)</span>
+        </div>
+      </div>
+      <div class="usage-row">
+        <div class="phase-tag" style="background:var(--p4);color:#fff">P4</div>
+        <div class="channels">
+          <span class="ch">CLI</span>
+          <span class="ch">MCP</span>
+          <span class="ch">Hermes</span>
+          <span class="ch">CI</span>
+          <span class="ch new">Worker Ops</span>
+        </div>
+      </div>
+      <div class="usage-row">
+        <div class="phase-tag" style="background:var(--p5);color:#fff">P5</div>
+        <div class="channels">
+          <span class="ch">CLI</span>
+          <span class="ch">MCP</span>
+          <span class="ch">Hermes</span>
+          <span class="ch">CI</span>
+          <span class="ch">Worker Ops</span>
+          <span class="ch new">治理平台</span>
+        </div>
+      </div>
+      <div class="usage-row">
+        <div class="phase-tag" style="background:var(--p6);color:#fff">P6</div>
+        <div class="channels">
+          <span class="ch">CLI</span>
+          <span class="ch">MCP</span>
+          <span class="ch">Hermes</span>
+          <span class="ch">CI</span>
+          <span class="ch">Worker Ops</span>
+          <span class="ch">治理平台</span>
+          <span class="ch new">自运维</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Deliveries -->
+  <div class="section">
+    <div class="section-title">📦 各阶段核心交付 <span class="badge">~55 个模块</span></div>
+    <div class="module-grid" id="moduleGrid"></div>
+  </div>
+
+  <!-- Core Flow -->
+  <div class="section">
+    <div class="section-title">🔁 核心流程演进</div>
+    <div class="chart-wrap" style="padding:16px 20px;">
+      <div class="flow" id="flowContainer"></div>
+      <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--surface2);">
+        <div class="flow">
+          <span class="flow-step" style="background:rgba(34,197,94,.1);border-color:var(--green)">goals/</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">plans/</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">tasks/active/</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">worker dispatch</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">evidence/</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step" style="background:rgba(56,189,248,.1);border-color:var(--accent)">state/system.yaml</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step" style="background:rgba(239,68,68,.1);border-color:var(--red)">divergence flags</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Defects -->
+  <div class="section">
+    <div class="section-title">⚠️ 跨阶段缺陷 <span class="badge">7 open</span></div>
+    <div id="defectsList"></div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="section">
+    <div class="section-title">💡 改进建议</div>
+    <div id="recsList"></div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const pColors = ['#6366f1','#8b5cf6','#a855f7','#d946ef','#ec4899','#f43f5e'];
+
+  // Health Chart
+  const healthData = [
+    { phase: 'P1', score: 75, color: pColors[0] },
+    { phase: 'P2', score: 80, color: pColors[1] },
+    { phase: 'P3', score: 88, color: pColors[2] },
+    { phase: 'P4', score: 90, color: pColors[3] },
+    { phase: 'P5', score: 90, color: pColors[4] },
+    { phase: 'P6', score: 90, color: pColors[5] },
+  ];
+  const chartEl = document.getElementById('healthChart');
+  const maxScore = 100;
+  healthData.forEach(d => {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    const fill = document.createElement('div');
+    fill.className = 'bar-fill';
+    fill.style.background = d.color;
+    fill.style.height = (d.score / maxScore * 180) + 'px';
+    const val = document.createElement('span');
+    val.className = 'val';
+    val.style.color = d.color;
+    val.textContent = d.score;
+    fill.appendChild(val);
+    col.appendChild(fill);
+    const label = document.createElement('div');
+    label.className = 'bar-label';
+    label.textContent = d.phase;
+    col.appendChild(label);
+    chartEl.appendChild(col);
+  });
+
+  // Modules
+  const modules = [
+    { phase: 1, name: 'MCP 标准化修复', color: pColors[0] },
+    { phase: 1, name: 'sharedbrain-bridge 包', color: pColors[0] },
+    { phase: 1, name: 'memU 引擎 (TS 866行)', color: pColors[0] },
+    { phase: 1, name: 'LiteLLM 适配器', color: pColors[0] },
+    { phase: 2, name: 'KOS 知识操作栈', color: pColors[1] },
+    { phase: 2, name: 'Deadlock Detector (60测试)', color: pColors[1] },
+    { phase: 2, name: 'BFTS 搜索 (44测试)', color: pColors[1] },
+    { phase: 2, name: 'Obsidian Connector (51测试)', color: pColors[1] },
+    { phase: 2, name: 'Trust Graph / TokenJuicer', color: pColors[1] },
+    { phase: 2, name: 'EU 追踪 (3项目)', color: pColors[1] },
+    { phase: 3, name: 'LLM Contract 统一', color: pColors[2] },
+    { phase: 3, name: 'Capability Slice (5系统)', color: pColors[2] },
+    { phase: 3, name: 'Acceptance Runner', color: pColors[2] },
+    { phase: 4, name: 'Worker dispatch 自动化', color: pColors[3] },
+    { phase: 4, name: 'Checkpointed reclaim', color: pColors[3] },
+    { phase: 4, name: 'Consistency auto-gate', color: pColors[3] },
+    { phase: 4, name: 'Divergence triage', color: pColors[3] },
+    { phase: 5, name: '四平面架构', color: pColors[4] },
+    { phase: 5, name: '着陆模型冻结', color: pColors[4] },
+    { phase: 5, name: 'Packet 模式', color: pColors[4] },
+    { phase: 5, name: 'Hermes 收敛策略', color: pColors[4] },
+    { phase: 6, name: 'Proposal-governed runtime', color: pColors[5] },
+    { phase: 6, name: 'Checkpoint/Lease/Watchdog', color: pColors[5] },
+    { phase: 6, name: 'Blueprint discovery', color: pColors[5] },
+    { phase: 6, name: 'Skill manifest + bridge', color: pColors[5] },
+  ];
+  const mg = document.getElementById('moduleGrid');
+  modules.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'module-item';
+    el.innerHTML = `<span class="dot" style="background:${m.color}"></span><span>${m.name}</span>`;
+    mg.appendChild(el);
+  });
+
+  // Flow evolution
+  const flows = [
+    { phase: 'P1', steps: '需求 → 实现 → 测试 → 文档', cls: '' },
+    { phase: 'P2', steps: '+ 测试覆盖 + 安全', cls: '' },
+    { phase: 'P3', steps: '+ 验收 (acceptance runner)', cls: 'active' },
+    { phase: 'P4', steps: '+ Worker dispatch → reclaim', cls: 'active' },
+    { phase: 'P5', steps: '+ Packet (plan+task+evidence+retro)', cls: 'active' },
+    { phase: 'P6', steps: '+ Proposal → checkpoint → skill', cls: 'active' },
+  ];
+  const fc = document.getElementById('flowContainer');
+  flows.forEach(f => {
+    const step = document.createElement('span');
+    step.className = 'flow-step' + (f.cls ? ' ' + f.cls : '');
+    step.style.borderColor = pColors[flows.indexOf(f)];
+    step.innerHTML = `<strong>${f.phase}:</strong> ${f.steps}`;
+    fc.appendChild(step);
+    if (flows.indexOf(f) < flows.length - 1) {
+      const arrow = document.createElement('span');
+      arrow.className = 'flow-arrow';
+      arrow.textContent = '→';
+      fc.appendChild(arrow);
+    }
+  });
+
+  // Defects
+  const defects = [
+    { id: 'D1', name: 'KOS 对 gbrain SQLite 紧耦合', phases: 'P2-P6', sev: '中', sevCls: 'mid', status: '未修复 — Phase 3 已记录风险' },
+    { id: 'D2', name: 'E2E 测试需运行中服务集群', phases: 'P2-P6', sev: '高', sevCls: 'high', status: '未完全解决' },
+    { id: 'D3', name: 'eu-pricing 无独立测试', phases: 'P2-P6', sev: '低', sevCls: 'low', status: '通过间接覆盖' },
+    { id: 'D4', name: '跨仓库治理同步不一致 (43仓库)', phases: 'P2-P6', sev: '中', sevCls: 'mid', status: '部分推进' },
+    { id: 'D5', name: 'Blocked connector specs (Apple/WeChat)', phases: 'P3-P6', sev: '中', sevCls: 'mid', status: '外部阻塞' },
+    { id: 'D6', name: 'Hermes 调度面 179 条断链', phases: 'P1-P6', sev: '中', sevCls: 'mid', status: '待收敛 (Direction A)' },
+    { id: 'D7', name: 'Orphaned task (1个)', phases: 'P6', sev: '中', sevCls: 'mid', status: '已记录 divergence' },
+  ];
+  const dl = document.getElementById('defectsList');
+  defects.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'defect-row';
+    row.innerHTML = `<span class="id" style="color:${pColors[Math.min(parseInt(d.id[1])-1,5)]}">${d.id}</span>
+      <span><strong>${d.name}</strong><br><span style="color:var(--text2);font-size:.78rem">涉及: ${d.phases}</span></span>
+      <span class="sev ${d.sevCls}">${d.sev}</span>
+      <span class="status">${d.status}</span>`;
+    dl.appendChild(row);
+  });
+
+  // Recommendations
+  const recs = [
+    { prio: 'P0', label: 'KOS 存储抽象层', desc: '解耦 gbrain SQLite 依赖，支持多后端。消除架构紧耦合风险。', cls: 'p0' },
+    { prio: 'P0', label: 'CI 测试环境', desc: '搭建 Agora + SharedBrain + gbrain 的 CI 测试集群，E2E 测试可脱离本地运行。', cls: 'p0' },
+    { prio: 'P1', label: 'Hermes 调度面收敛', desc: '按 Direction A 方案融合 cron-service，消除 179 条断链、统一调度。', cls: 'p1' },
+    { prio: 'P1', label: '跨仓库治理同步', desc: '统一 43 仓库的 AGENTS.md 和 CI 配置，降低维护成本。', cls: 'p1' },
+    { prio: 'P2', label: '性能回归门禁', desc: '在 CI 中引入 P95 阈值检查，防止性能退化。', cls: 'p2' },
+    { prio: 'P2', label: 'eu-pricing 独立测试', desc: '添加专用测试目录，提升 EU 计价可靠性。', cls: 'p2' },
+  ];
+  const rl = document.getElementById('recsList');
+  recs.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'rec-card';
+    card.innerHTML = `<div class="rec-header"><span class="rec-prio ${r.cls}">${r.prio}</span><strong>${r.label}</strong></div><div class="rec-body">${r.desc}</div>`;
+    rl.appendChild(card);
+  });
+})();
+</script>
+</body>
+</html>

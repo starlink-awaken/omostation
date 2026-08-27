@@ -1,0 +1,4 @@
+version: 1
+generated: '2026-07-31'
+algorithm: sha256(rule,path,evidence)
+signatures: []

@@ -1,0 +1,42 @@
+id: cockpit-debt-debt-1
+title: 治理技术债务：债务
+description: 处理 unknown 维度技术债务“债务”，确认影响范围、责任人和关闭证据。当前 owner：unassigned。
+status: pending
+task_type: governance
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+- cockpit:debt:debt-1
+entry_gate:
+- 确认债务范围、影响面和责任人
+evidence_required:
+- 债务处理结果
+- 验证或治理证据
+- closeout 记录
+deliverables:
+- 完成技术债务 debt-1 的治理处理并回写结果。
+test_plan:
+- 按处理方案完成验证，并将结果与证据回写到任务 closeout。
+priority: medium
+tags:
+- cockpit-debt
+- debt-1
+- unknown
+- P2
+metadata:
+  created_via: cockpit-debt-ledger
+  debt_id: debt-1
+  dimension: unknown
+  owner: unassigned
+  severity: P2
+  source_ref: cockpit:debt:debt-1
+  ingress_plane: cockpit-task-center
+  broker: projects/omo/src/omo/omo_ingress.py

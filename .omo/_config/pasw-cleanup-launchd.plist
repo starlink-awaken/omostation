@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyLists-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.omostation.pasw-cleanup</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/bash</string>
+        <string>/Users/xiamingxing/Workspace/bin/gac/gac-worktree-cleanup.sh</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>21600</integer>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/.omo/_log/pasw-cleanup-launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/.omo/_log/pasw-cleanup-launchd.err</string>
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>

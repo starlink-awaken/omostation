@@ -1,0 +1,7 @@
+apiVersion: omo/v1
+kind: CapabilityTaxonomy
+space_ref: spaces/runtime-space.yaml
+capabilities:
+  - id: runtime.observe
+    description: Observe runtime status inside runtime-space
+schema_version: v1

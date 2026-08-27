@@ -1,0 +1,46 @@
+id: M2.FULL-OPERATION-LEVEL-MCP-DENY-PATH
+phase: 2
+milestone: M2.FULL-GO
+priority: P0
+title: "Wire Operation Levels deny path into one MCP tool"
+status: done
+owner: agent
+assigned_to: copilot
+source_docs:
+  - ".omo/standards/phase2-full-execution-go-no-go.md"
+  - ".omo/standards/operation-levels.md"
+inputs:
+  - ".omo/standards/operation-levels.md"
+  - "A low-risk MCP tool selected for L2 denial-path validation"
+outputs:
+  - "One MCP tool enforces L2 confirmation before write/action"
+  - "Audit record for allow/deny decision"
+  - "Test output proving unconfirmed L2 action is denied"
+acceptance_criteria:
+  - "Unconfirmed L2 operation raises an explicit denial"
+  - "Confirmed L2 operation proceeds only through the documented path"
+  - "Allow and deny decisions are auditable"
+  - "No sensitive connector is enabled by this task"
+evidence_required:
+  - "Code path or configuration path that enforces the gate"
+  - "Test log for denied unconfirmed action"
+  - "Test log for confirmed allowed action"
+evidence:
+  code_paths:
+    - "projects/kairon/packages/kos/src/kos/mcp/server.py"
+  tests:
+    - "cd projects/kairon/packages/kos && PYTHONPATH=src:src/kos python3 -m pytest tests/test_mcp_server.py -q"
+  test_result: "9 passed, 1 warning"
+  denied_unconfirmed_action: "{'status': 'denied', 'error': 'L2 operation requires explicit confirmation before full KOS reindex', 'operation_level': 'L2', 'required_confirmation': True}"
+blocked_by: []
+dependencies:
+  - M2.2-OPERATION-LEVELS
+risk_level: L1
+allowed_operation_level: L1
+operation_level: L1
+human_approval_required: false
+test_plan:
+  - ".omo/tests/README.md#operation-level-tests"
+started_at: "2026-05-30T05:17:00Z"
+completed_at: "2026-05-30T05:20:40Z"
+retry_count: 0

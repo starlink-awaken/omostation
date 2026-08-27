@@ -1,0 +1,15 @@
+id: REMEDIATE-GBRAIN-INTEGRATION
+phase: '17'
+priority: P1
+title: gbrain→kairon集成验证
+description: 验证kairon→gbrain MCP通路端到端可用
+status: completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+rollback: 无(只读测试)
+acceptance_criteria:
+- MCP通路延迟<500ms
+- 数据正确
+completed_at: '2026-06-03T00:00:00Z'
+findings: gbrain可运行但未在agora中注册MCP服务

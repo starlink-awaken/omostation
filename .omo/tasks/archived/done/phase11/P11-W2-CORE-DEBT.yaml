@@ -1,0 +1,59 @@
+id: P11-W2-CORE-DEBT
+phase: 11
+milestone: W2
+priority: P0
+title: Execute the Phase 11 core debt assault packet
+status: done
+assigned_to: worker-1
+dispatch_id: phase11-wave2-core-debt
+run_ref: .omo/workers/runs/phase11-wave2-core-debt-dispatch.yaml
+approval_ref: null
+review_ref: .omo/summaries/phase11-wave2-closeout.md
+knowledge_refs:
+  - .omo/plans/archive/phase11-program-plan.md
+  - .omo/plans/archive/phase11-wave2-execution-plan.md
+  - .omo/summaries/phase11-wave1-closeout.md
+  - .omo/summaries/phase11-wave2-closeout.md
+handoff_refs:
+  - .omo/workers/runs/phase11-wave2-core-debt-prompt.md
+  - .omo/workers/runs/phase11-wave2-core-debt-checkpoint.md
+  - .omo/workers/runs/phase11-wave2-core-debt-reclaim.md
+source_docs:
+  - .omo/plans/archive/phase11-program-plan.md
+  - .omo/plans/archive/phase11-wave2-execution-plan.md
+  - .omo/summaries/phase11-wave2-closeout.md
+  - .omo/summaries/phase11-wave1-closeout.md
+deliverables:
+  - .omo/plans/archive/phase11-wave2-execution-plan.md
+  - .github/workflows/phase11-ci.yml
+  - .omo/summaries/SB-DECISION.md
+  - .omo/summaries/phase11-wave2-closeout.md
+  - .omo/workers/runs/phase11-wave2-core-debt-dispatch.yaml
+  - .omo/workers/runs/phase11-wave2-core-debt-prompt.md
+  - .omo/workers/runs/phase11-wave2-core-debt-review.md
+  - .omo/workers/runs/phase11-wave2-core-debt-checkpoint.md
+  - .omo/workers/runs/phase11-wave2-core-debt-reclaim.md
+  - .omo/tests/test_phase11_wave2_docs.py
+depends_on:
+  - P11-W1-SSOT-BASELINE
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 11 Wave 1 closeout exists at .omo/summaries/phase11-wave1-closeout.md
+  - goals/current.yaml promotes G11.2 as the only active wave goal
+  - only one active packet may remain in .omo/tasks/active/
+evidence_required:
+  - Wave 2 is the only active packet in .omo/tasks/active/
+  - goals/current.yaml and state/system.yaml report Phase 11 Wave 2 as active
+  - core debt work uses the Wave 1 inventory and closeout as inputs
+test_plan:
+  - python3 scripts/sync_omo_state.py
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 -m pytest .omo/tests/test_phase11_kickoff_docs.py .omo/tests/test_phase11_wave2_docs.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-06-01T00:00:00Z'
+completed_at: '2026-05-31T15:39:16Z'
+blocked_by: null
+retry_count: 0
+completion_summary: Wave 2 closed by landing truthful CI/test baselines, SharedBrain decisioning, active-path cleanup, and additive model unification with ADR coverage.

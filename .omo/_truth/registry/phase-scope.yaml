@@ -1,0 +1,193 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-19
+related:
+  - 0223-phase-gate-ci-enforcement.md
+  - 0225-g-del-physical-multihost-gate-caliber.md
+  - 0210-three-year-strategy-execution-convergence.md
+  - 0222-m1-conflict-zero-evidence-standard-adversarial.md
+---
+# Phase scope registry — which paths require which stage unlock (ADR-0223)
+# Metrics caliber — sim vs physical multi-host (ADR-0225)
+
+version: 1
+verdict_ssot: .omo/_truth/registry/phase-verdict.yaml
+escape_dir: .omo/_delivery/phase-escape
+# CI-visible committed escapes (delivery/ is often gitignored)
+escape_dirs:
+  - .omo/_truth/registry/phase-escapes
+
+phases:
+  phase2:
+    id: phase2
+    name: 兑现期 (Delivery)
+    description: >
+      Agent swarm registry/schedule/collab/sync/emergence implementation surfaces.
+      Unlock requires M1 phase2_recommend (passive 72h OR adversarial path B, ADR-0222/0224).
+      G-DEL.1/3 official gates are physical multi-host (ADR-0225); in-process sim is harness only.
+    unlock:
+      verdict_key: phases.phase2.unlocked
+      equals: true
+      source_hint: m1-closeout-report phase2_recommend
+    paths:
+      - "bin/delivery/**"
+      - "docs/G-DEL-EXECUTION-METRICS.md"
+      - "docs/G-DEL-2a-role-framework-contract.md"
+      - "docs/G-DEL-4-CALLCHAIN.md"
+      - "docs/G-DEL-3-WIRED-REMEASURE.md"
+      - "docs/G-DEL-2b5b-OPS.md"
+      - "docs/G-DEL-PHASE2-BOARD.md"
+    # PR titles/bodies matching these do not auto-unlock; only verdict SSOT does
+
+  phase3:
+    id: phase3
+    name: 跃迁期 (Leap)
+    description: >
+      Personal brain / digital twin / external GaC productization (预留).
+      Unlock: M2 multi-machine collab ≥ 85% measured on physical multi-host (future).
+    unlock:
+      verdict_key: phases.phase3.unlocked
+      equals: true
+      source_hint: m2_collab_rate >= 0.85 physical_multi_host
+    paths:
+      - "docs/LEAP/**"
+      - "projects/metaos/src/metaos/leap/**"
+
+# ADR-0225/0226 — measurement caliber (scheme A: physical multi-host official for G-DEL.1/3)
+metrics_caliber:
+  scheme: A
+  adr: ["0210", "0225", "0226"]
+  inventory_ref: .omo/_knowledge/audits/2026-07-19-physical-node-inventory.json
+  # P1 真机测量 2026-07-24 (STRAT-P81): macmini reachable (ping 7.4ms + SSH:22 key 自动),
+  # env_class=physical_multi_host (local-mac + macmini, reachable=2). G-DEL.3 p99=159.83ms
+  # WiFi (≥100ms 未达标, 待 macmini 以太网重测). Evidence:
+  # audits/2026-07-24-physical-g-del3-quick.json + 2026-07-24-physical-g-del3-measure.md
+  env_classes:
+    - id: in-process_simulation
+      aliases:
+        - in-process
+        - simulation
+        - sim
+        - not physical
+        - process-local multi-node
+      description: "Logical nodes in one process; not physical multi-host"
+    - id: physical_multi_host
+      aliases:
+        - physical
+        - multi-host
+        - multi_host
+      description: "Real hosts over network (SSH/agent mesh); official G-DEL.1/3 caliber"
+  # Goals whose official meets_gate requires physical_multi_host
+  physical_gates:
+    - id: g_del_1
+      gate: G-DEL.1
+      metric_keys: [g_del_1]
+      requires_env_class: physical_multi_host
+      # ADR-0210 四机门禁；2 机底座不得官方达标 (ADR-0226)
+      min_physical_hosts: 4
+      ideal_physical_hosts: 4
+      kpi: schedule_success_rate > 0.99
+      status: BLOCKED
+      blocked_reason: >
+        reachable_physical_hosts=2 < min_physical_hosts=4
+        (ADR-0210 4-machine schedule gate; ADR-0226 fail-closed)
+        [PARKED-DEFERRED 2026-08-17: ADR-0414 方案a — deferred 期间不告警不待办,
+         unblock 条件不变, ADR-0247 deferred 解除或四机到位取先]
+      unblock_when: >
+        inventory reachable_physical_hosts ≥ 4 AND physical measure
+        meets_physical_gate=true with env_class=physical_multi_host
+      sim_allowed_true_fields: [meets_sim_harness]
+      physical_only_true_fields: [meets_physical_gate, meets_gate]
+    - id: g_del_3
+      gate: G-DEL.3
+      metric_keys: [g_del_3]
+      requires_env_class: physical_multi_host
+      min_physical_hosts: 2
+      ideal_physical_hosts: 4
+      kpi: sync_latency_p99_ms < 100
+      # OPEN for measurement; not yet physical-pass (Wi-Fi tail)
+      status: OPEN
+      last_physical_measure:
+        n_ops: 10000
+        p50_ms: 10.11
+        p95_ms: 19.27
+        p99_ms: 101.01
+        meets_physical_gate: false
+        link_class: wifi
+        evidence: .omo/_knowledge/audits/2026-07-19-g-del3-large-n.json
+        note: >
+          Large-N trusted p99≈101ms on Wi-Fi (body healthy). Prior n=100 p99≈157
+          was small-sample. Unblock: ethernet path or protocol that brings p99<100
+          with n≥1000.
+      next_action: >
+        Plug Ethernet on macmini (en0 currently inactive) + local host;
+        re-run measure_physical --n-ops 10000; see docs/G-DEL-3-WIRED-REMEASURE.md
+      sim_allowed_true_fields: [meets_sim_harness]
+      physical_only_true_fields: [meets_physical_gate, meets_gate]
+  # Non-physical goals (protocol / safety) may use process-local meets_gate
+  non_physical_gates:
+    - id: g_del_2b
+      gate: G-DEL.2b
+      metric_keys: [g_del_2b]
+      caliber: process_local
+      # Official process-local pass (ADR-0232 D1) — NOT multi-host physical
+      status: PASSED
+      meets_gate: true
+      meets_physical_gate: false
+      official_announce: true
+      official_pass_adr: .omo/_knowledge/decisions/0232-g-del-2b-official-pass.md
+      measure_evidence: .omo/_knowledge/audits/2026-07-24-batch1-g-del-2b-measure.md
+      last_measure:
+        n_tasks: 30
+        completion_rate: 1.0
+        env_class: in-process_simulation
+        date: "2026-07-24"
+        note: >
+          Human-announced official G-DEL.2b pass via ADR-0232.
+          Process-local collab KPI only; G-DEL.1/3 remain fail-closed for physical.
+      entry: bin/delivery/collab_cli.py
+      ops: docs/G-DEL-2b5b-OPS.md
+      history: .omo/_delivery/collab/
+    - id: g_del_5b
+      gate: G-DEL.5b
+      metric_keys: [g_del_5b]
+      caliber: process_local
+      status: OPEN
+      entry: bin/delivery/emergence_cli.py
+      ops: docs/G-DEL-2b5b-OPS.md
+      kill_flag: .omo/_delivery/emergence/session.kill
+      adr: ["0221"]
+    - id: g_del_4
+      gate: G-DEL.4
+      metric_keys: [g_del_4]
+      caliber: single_repo_gbrain
+      status: OPEN
+      callchain: docs/G-DEL-4-CALLCHAIN.md
+      entry: bin/delivery/shared-context-cli.py
+      store: .omo/_delivery/shared-context/
+      last_measure_note: >
+        Cross-process CLI handoff + KOS seed/retrieve measured by role_memory.py;
+        gbrain AgentSharedContextStore is the TypeScript twin.
+  rules:
+    - id: no-sim-in-physical-fields
+      description: >
+        Simulation-labeled metrics must not set physical_only_true_fields to true.
+        Official G-DEL.1/3 pass requires env_class=physical_multi_host and measured hosts.
+    - id: min-hosts-for-physical-pass
+      description: >
+        Physical-labeled metrics with meets_gate/meets_physical_gate=true must
+        report physical_hosts >= min_physical_hosts for that gate (G-DEL.1 → 4).
+    - id: honest-env-label
+      description: >
+        measure_all default harness must stamp env_class=in-process_simulation.
+    - id: g-del-1-blocked-fail-closed
+      description: >
+        While g_del_1.status=BLOCKED, no report may claim G-DEL.1 official pass
+        (sim or under-provisioned physical). Unblock only per unblock_when.
+
+notes:
+  - CI job phase-gate-enforce is required on main (ADR-0223).
+  - Escapes must land under escape_dir with PR rationale; silent bypass forbidden.
+  - metrics_caliber enforced by phase-gate-check --metrics / --check-caliber (ADR-0225/0226).

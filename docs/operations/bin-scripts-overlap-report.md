@@ -1,0 +1,211 @@
+---
+status: superseded
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-08-22
+---
+
+# bin/scripts 能力重叠扫描
+
+> **已退役** (2026-08-21): `scripts/bin/` 工具已迁移到 `bin/`，scripts 仓库已 archive。
+> 本文档保留作为历史记录。
+
+- 重叠脚本: 144
+- 仅 bin: 340
+- 仅 scripts/bin: 57
+- 同名不同码: 44
+
+## 完全一致（建议优先收敛到 bin）
+- `_archive/l0-constraints-migrate.py`
+- `_archive/m2-date-migrate.py`
+- `_archive/mof-fix-cross-project.sh`
+- `_archive/omo-submodule-split-validate.sh`
+- `adr/_lib.py`
+- `check_health_ssot.py`
+- `cockpit/gen-help-docs.py`
+- `collab/adv-fail-report.py`
+- `collab/bos-stdio-inventory.py`
+- `collab/export-dualtrack.py`
+- `collab/recommend_mode.py`
+- `collab/scenario_lib.py`
+- `commit-assist.py`
+- `decks/port-governance-deck.py`
+- `delivery/__init__.py`
+- `delivery/agent_registry.py`
+- `delivery/caliber.py`
+- `delivery/emergence.py`
+- `delivery/latency_stats.py`
+- `delivery/measure_all.py`
+- `delivery/measure_physical.py`
+- `delivery/network_path.py`
+- `delivery/physical-recovery.sh`
+- `delivery/physical_client.py`
+- `delivery/physical_node.py`
+- `delivery/role_collab.py`
+- `delivery/role_memory.py`
+- `delivery/scheduler.py`
+- `delivery/shared-context-cli.py`
+- `delivery/shared_context_store.py`
+- `delivery/state_sync.py`
+- `gac/SECURITY.md`
+- `gac/check-adversarial-effectiveness.py`
+- `gac/check-dual-track-purity.py`
+- `gac/check-redline-coverage.py`
+- `gac/check-severity-registry.py`
+- `gac/check-silent-loss.py`
+- `gac/check-workorder-schema.py`
+- `gac/debt-closed-per-feature.py`
+- `gac/debt-integrity-check.py`
+- `gac/gac-branch-protection.sh`
+- `gac/gac-compute-onboard.py`
+- `gac/gac-consensus-inject.py`
+- `gac/gac-export-agents.py`
+- `gac/gac-hook-pre-edit.py`
+- `gac/gac-mesh-router.py`
+- `gac/gac-worktree-guard.sh`
+- `gac/gac_severity.py`
+- `gac/git-divergence-check.py`
+- `gac/governance-history-stats.py`
+- `gac/governance-readiness.py`
+- `gac/governance-semantic-gate.py`
+- `gac/governance-trend-report.py`
+- `gac/kos`
+- `gac/mcp-server-kos.py`
+- `gac/mcp-tool-data-complete.py`
+- `gac/omlxc-node-wakeup.py`
+- `gac/omo-manage`
+- `gac/omo-runtime-stamp-policy.py`
+- `gac/omo-state-projection-guard.py`
+- `gac/omo-validate`
+- `gac/omostation-bootloader.py`
+- `gac/resolve-root-remote.sh`
+- `gac/state-stale-emit.py`
+- `gac/test-coverage-check.py`
+- `layer-dependency-check.py`
+- `mof/m4-health-score.py`
+- `mof/mof-act`
+- `mof/mof-analyze`
+- `mof/mof-assign`
+- `mof/mof-autonomous`
+- `mof/mof-decide`
+- `mof/mof-drift`
+- `mof/mof-enforce`
+- `mof/mof-evolution`
+- `mof/mof-export`
+- `mof/mof-graph`
+- `mof/mof-io`
+- `mof/mof-manage`
+- `mof/mof-scan`
+- `mof/mof-version`
+- `mof/project-layer-index.py`
+- `ssot-watcher.py`
+- `ssot/PACKS/INDEX.md`
+- `ssot/PACKS/dormant-adapter/INSTALL.md`
+- `ssot/PACKS/dormant-adapter/SKILL.md`
+- `ssot/PACKS/dormant-adapter/VERIFY.md`
+- `ssot/PACKS/dormant-adapter/src/Tests/test_dormant_adapter.py`
+- `ssot/arcnode-validate`
+- `ssot/bos-tracking-gate.py`
+- `ssot/bus-dlq`
+- `ssot/bus-e2e-harness.py`
+- `ssot/check-boundary.py`
+- `ssot/check-branch-redundant.py`
+- `ssot/check-cockpit-ui-dist.py`
+- `ssot/check-cross-refs.py`
+- `ssot/check-cross-repo-consistency.py`
+- `ssot/check-dashboard-registry-consistency.py`
+- `ssot/check-domain-m1-alignment.py`
+- `ssot/check-god-module.py`
+- `ssot/check-hardcoded-ports.py`
+- `ssot/check-index-drift.py`
+- `ssot/check-layer-call-direction.py`
+- `ssot/check-mcptool-impl-drift.py`
+- `ssot/check-toolbox-ssot.py`
+- `ssot/current-state-coherence.py`
+- `ssot/dir-hygiene-check.py`
+- `ssot/doc-governance-migrate.py`
+- `ssot/doc-link-check.py`
+- `ssot/external-activation-preflight.py`
+- `ssot/external-resource-pack.py`
+- `ssot/external-scene-trial.py`
+- `ssot/gen-knowledge-index.py`
+- `ssot/gen-projects-index.py`
+- `ssot/git-health-hook.py`
+- `ssot/git-safe`
+- `ssot/god-module-13-error-list.py`
+- `ssot/god-module-roadmap.py`
+- `ssot/management-cross-ref-check.py`
+- `ssot/matrix-consistency-lint.py`
+- `ssot/mypy-baseline-gate`
+- `ssot/scene-card-candidates.py`
+- `ssot/ssot-guardian.py`
+- `ssot/ssot-writeback.py`
+- `ssot/submodule-bump-check.py`
+- `ssot/sync-bos-registry.py`
+- `ssot/sync-submodule-pointers.sh`
+- `ssot/sync-submodules-push.sh`
+- `ssot/test-gac-engine.py`
+- `ssot/test-mcp-kos.py`
+- `ssot/ts-analyze.mjs`
+- `ssot/ts-file-analyze.py`
+- `ssot/venv-yaml-check.py`
+- `ssot/workspace-audit`
+- `ssot/write-owner-audit.py`
+- `ssot/write-owner-repair-draft.py`
+- `ssot/yaml-validate.py`
+- `submodule-reachability-gate.py`
+- `sync-submodules-push.sh`
+- `sync-submodules.sh`
+- `tests/test_bus-e2e-harness.py`
+- `tests/test_bus-usage-report.py`
+- `tests/test_zones_check.py`
+- `workspace`
+
+## 同名但不同码（需逐个对比）
+- `README.md`: bin=d62cadd6a999fe8c9daad5e5a6e8a0cc3b42af1f7d719c58570e34f5d51b8b72 / scripts=87a841020d270ff9b075d6e03272b3ca9ea3bb8c6f0ed8ee07eb2ab9fe932d7b
+- `adr/adr-coverage.py`: bin=3d46e9656d2ecd8c68bf1360e8c040d3458c2b64659dea94c3c83ad28b5f01a8 / scripts=0f784f4b38841ea461c3283b250fbf34cb930ba722a645c469838d1c2c60a031
+- `agent-workflow.py`: bin=c1040468bd5c7377c043e86a9b9593c636aca6b836101632ff238323926101a4 / scripts=97902f87163a09856ac53a73fb2ad7841712a51d1a6362bb5b69e53189bde4bc
+- `change-lane-check.py`: bin=1adc5ec59357ed966fbdb1d7675bce313c25b7beea29bcd67ffc22b10cdc5fc6 / scripts=197cf127eaf30354f9b7dea66e514ea4b435dbe51152128e3ab93dda70edf178
+- `cockpit/gen-capability-registry.py`: bin=7b2001c7c436417be42618b274b62d13a2a4a80a9c314260a085c6b01e8498b2 / scripts=364cbb0650a8a6f3cfb895c9d29024cc3da7f614d773c9ea0bf89c53d4d7f2bd
+- `compass_radar.py`: bin=8a7aa539c552a427f51a09db450e8c3979ddf3fe3112cba4890551021b332310 / scripts=ea11d6c54d9223a46fa88cedfdf6a9beb4ec19249c060560cc60460105d60574
+- `gac/check-governance-ratio.py`: bin=614dc194b29e1b7dec2dcbe8bcb76c65f3c48912b7455c871e60a62bebffaf8f / scripts=c98e0dc6ec0ac8a63d2e7e16ce8940ac72419bc4195d14bc97f8ddafb6213c2f
+- `gac/check-work-landed.py`: bin=b49ef7a49e4183447f07ed61eeda24730655912a6301184d5c71729b49c32c22 / scripts=793eac11f214c7885c7f323a8f37beacee6a4fde4cfebd88560d072da163d581
+- `gac/evidence-smoke.py`: bin=432f42ef60e55f9aadf19b094176916706681b69a9885cdc565f635223c6ffda / scripts=d6bb2e8331d3caf477ee4516123b66023c5446fb2dce1b6b25a94b933b6bc798
+- `gac/gac-daemon.py`: bin=762d768acd42c66de61cf420df5bda0d66d6523f801dd736fa2b327243573cf3 / scripts=8f399ff91ce8d9976d9f0be30745ec954259929246e013a26af09d6d7a08c0e0
+- `gac/gac-drift.py`: bin=6fc771aac00ba0e00c55eea7da4b81a8f516357a31a07fe03603ea694b6adebb / scripts=53d2fc234ad981e93e05c9c0d5bc820ac35b53226d7274bc371881dd98e8d83a
+- `gac/gac-executor.py`: bin=374a8ace759195ea51e3b8d48d82f1bf39f4e7d3de47bd2eed90fdf19ad0acbb / scripts=660916770051791b13e7812d1216fef25cfc086d852500ad9240c9243229cad4
+- `gac/gac-healthcheck.py`: bin=04c43740037122d39118596f37f6c1da93d6f9e6c0d13b8bfc64d92e3cff0627 / scripts=b4c857c2709063fbef1b808624014f732d5b8931496bb822ac144cd6eb7656e6
+- `gac/gac-ingest-legacy.py`: bin=d2732da70b33ac6fb92a333c36a0106f47face270c9ccc00bd6fd76568d895e6 / scripts=55cdbece4b6403b1206db8c047b042a8809a6b0b36a0056ccdc1fdef45983aa9
+- `gac/gac-local-gate.py`: bin=53cf1682b3bb017acaaeb3e20967502d8033052034db9646c609a2a9105f60cc / scripts=13e26430a0282b606b6e3883dc817ac5f3325f9a6007e0ad7ae296777810e705
+- `gac/gac-m1-sync.py`: bin=30948f4935aa8c44eb232bc2bdf0a5c51141e990a9ca074a6e195cc2f975153c / scripts=0f8ca83b802e2234a94c9735e4822a7f1f3c4ddb4d543b844f2d5e33f74a0720
+- `gac/gac-validate.py`: bin=8ec2ba48ed967caf71417d23f28cddb618ca302b162526299797622dad2c25a7 / scripts=0cbce51c00c7d5497c95eb8aa414e40e91d41ceb639897ddf4d05eb6f82aaaf2
+- `gac/gac-worktree-cleanup.sh`: bin=13d907ee63811cdd93aedc303c2d34e6091c6ea729594dd9e15f9091f0357715 / scripts=facbaa79ae5154a4cdc5cb106299c17677c127c2214bd415b1dc64836a9245f8
+- `gac/gac-worktree-prune.sh`: bin=bed1884c790ea73e1d3b1153b7d60e9f598da15797e5a2c6f656a973f1849cf0 / scripts=3b8a53bea62a545c2d8e48c7267acb65965d77db7809bf2d486d39c715fb04df
+- `gac/gac-worktree.sh`: bin=3bc1fbcb40d40cdf6df45e5cc551ab46738441ca28f639bee8c981748eff8500 / scripts=6037e6bc8ed65590d715ab9727760c6dedd06d239c31bb5618a5d283ab5b36a6
+- `gac/governance-convergence-lint.py`: bin=8c5b2ead201f7a657a84fd04e687c0d11227613e5df476287db0ffea00b12f95 / scripts=75849feeb775a1843a007e289fcf29698baff8bf686f587269a8f3b9dbf1ee1e
+- `gac/governance-dashboard.py`: bin=1251ca41dd251434cfc3cc85d259c64258e013cbd335b54782a9b17b9d017647 / scripts=240632276bb811981d2902048c18e4e3cabbdf7e6d38ec8201b2f583e53a25ba
+- `gac/governance-evolution.py`: bin=cef329cd2960c22380c36cd45ec47e4ab43e1701fdbb81557a813d40379dcaa8 / scripts=dc1fdd35ce2a76416075d35dbe88edddbf6d23854609fc67e628d6bb7f644ba9
+- `gac/install-watch-agent.py`: bin=25160bef65c6919b987c2f1990e31d41d3e59ea46474d6bd43811b67af8dd8de / scripts=5a11961de2c459fca601b5e334de2efa682910db90ad9a56fc37e4606858fda0
+- `gac/knowledge-foundry-cron.py`: bin=eb45dbe53cf3698ce65f999f7f6d7ec0add9415b0fb6799200df80210cdff986 / scripts=a76c9eb2ff8f97caa73ca2a0c31dffeff7a4b84f251dcb45711f5e62d3894056
+- `gac/swarm-discipline-cli.py`: bin=31af3d0f6025448ee3df7db80d92fc7f69a50e8d1b8bd37ab95855ba30758afb / scripts=c06df47f106f980153be4b5715c0659eb19d2b1c1564b6d13894869b9ef50be8
+- `gac/swarm-git`: bin=077de682b2d8d8fe9d208f3d243faedb0a9caa3741c206cf7c297b7d997c819b / scripts=16e39b057df400f1a937d98e354735b90f3e4a072e9cecfce4fa8f2378929438
+- `gac/swarm_discipline.py`: bin=bbd2a37195399fa333f69aec784147affb308c819237c79e7b7d65af3da622b1 / scripts=04453abf596bf36a28991a7b0a5ed6ecb7f241383782ac2463b043b858bdbc15
+- `mof/check-mof-capabilities-drift.py`: bin=a75aee2b378db0a536f957df72c8e776b3e027d2b95cb8ac1dbd18b855a246c6 / scripts=5d491438d1a4a6d926d7703935f24178b1cb90fbcad260544c2d3636a0d10870
+- `mof/ecos-link`: bin=75d5b1e0cea1a7c8f14df11fd8a55c0224f9dc6138476961eaeb1ccb23bd5d13 / scripts=a213d0923cf76901de0e0a0846ca6f515a7a1cd8f0250ace06e906b22dbeea7e
+- `mof/gen-agent-redlines.py`: bin=2a077935ec0506f3452783a472fb46fdd57505892ca2c0596d678ab89ab510b5 / scripts=b94420d88fdd3c202f0840c2b7dfbd3e9ee1ac1ea1296eb2f522601aa44cd8f2
+- `mof/gen-service-configs.py`: bin=25d1ee5a6eca5e303b1660a79a79a68c40c2e2261ae24d15d1572d940ad11039 / scripts=7bad5a453aef11884cc4c8d6690abbefda4c4148c183620e62ec112f4d0193be
+- `mof/generate-brief.py`: bin=6dcd6a94b0889dee4a2db46bb3a76d6fb81e8e191937dbe77c84c7e46ce8d2d1 / scripts=3e1f82e734bdf852bb9f8588bf3106d1af69661c424e1f45818c5f2064e2a2e3
+- `ssot/doc-governance-check.py`: bin=aab51fc9a01afd74122fe674d564353420ce1ebdee5c79d452b1aa755d4937be / scripts=0ec357dea4f8ea3636468b347231ffc7a6b708222372f1bbaba352c19773b556
+- `ssot/doc-ssot-lint.py`: bin=1f052317dc8a4eb5fd3359d86f2d5438c19d1045368e39f6cbe80e12285fc260 / scripts=94cb4f35877c8889adb286298d8539dd30becd37a13da5e3e93748872f62107e
+- `ssot/external-resource-catalog.py`: bin=11ff14453b62c168ec1841981d0a9de2bcaba0410e4e0afde0fa7bf33e783e90 / scripts=adf4a58aecdc19fddac9f045ecef99121849d7315ec8fc4cfe74a3d6e89a162a
+- `ssot/gen-agents-index.py`: bin=ae8dae89f9fb71bb31196c1ab07b987fe6edbd5ed03bc97133c7ea59369c5f77 / scripts=9b351ae12621ff1637c4db78f770efe2531fc20da6573d5e717c116fe4bbd1d0
+- `ssot/gen-tools-index.py`: bin=7534f42efad5b0abea75bdf2b2edb0c40d5b3a82c23ac4733e564901140fd328 / scripts=d19627dcca05657e31d2d19523672855244c428e320fb7acd084962cd1d5c11a
+- `ssot/scene-card-intake.py`: bin=1a68cc5b0b8cf2da65a6840699f7d0d45ad882b21cf238291398526039a5c630 / scripts=aa242e1038899f5b161794f98418aa4e12d46d88fe008bc6c79d1de34511304b
+- `ssot/scene-card-review.py`: bin=95eee0f4fbcb5cd95c2f12e0e27177f2edf659f99eb8bf20aabd05096b5233f0 / scripts=d272ea767fc5d3f6c254c5a51a3581fe31358643c873bffc174666e1a023ba1a
+- `ssot/submodule-autobump.sh`: bin=94b708a60a1c9fd5757b2905f94114ddfed8efb693337ff00c3cc89f9bbc8b5d / scripts=ee3c75d37c4f6773f4dd24631bb89dbbfbe41341d00b05833cd7e920414ab7ce
+- `ssot/submodule-pointer-transaction.sh`: bin=d78b4c3e07f3809525b9c6c71c387baf436f97b48005270c2d03864e762cf282 / scripts=641cf4ce3f8982c665e7dc1828981cdf91a384b14eab5871eb9b583ea8c67940
+- `ssot/submodule-reachability-gate.py`: bin=c4a74e2e912b7d0532e69e867d876eb0571e29d4517d163f14b690df118fdf81 / scripts=51d697fb2092fb30aa6e9f5f98e1d305e833299fc2d6b148d24d827cfdbe0857
+- `ssot/verify-omo.sh`: bin=40675a23fe16fd487f0e55cad89026651195ef884f0faf5468ae1a76a96250ab / scripts=648efbf9a21ebe786893f74aabc9ac6ec6ef146d2d4a4ad79165a0192eec0c84
+
+## 收敛建议
+- 将完全一致项统一迁移到 `bin/` 作为主入口，并保留 scripts 子项目引用为薄 wrapper（如仍有兼容需求）。

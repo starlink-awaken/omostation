@@ -1,0 +1,34 @@
+id: P20-W2-KI-KOS-MERGE
+phase: 20
+milestone: M20.2
+priority: P0
+title: 'D_KnowledgeIntegration→kos: 查询+注入+新鲜度+模式提取'
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P18-W4-CLEANUP-DWINDOW-REFS
+entry_gate:
+- phase19_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- 9个D_Memory懒引用全部解析为eidos/gbrain引用
+- 'kos新增: query_service, context_injector, freshness, pattern_extractor'
+- 'BaseMembrane: 1文件→0'
+acceptance_criteria:
+- 0个对D_Memory的引用
+- kos测试≥70%通过率
+- 知识查询回路端到端 <200ms
+test_plan:
+- 迁入 kos 后验证查询、注入、新鲜度与模式提取能力闭合
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

@@ -1,0 +1,50 @@
+# AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
+# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# generated_at: 2026-08-08T04:17:10+00:00
+id: BET-Y1Q2-T6-10
+title: god-module 大文件 SRP 拆分 (3 个 >1500L 债)
+status: candidate
+task_type: bet
+priority: P2
+owner: agent
+source: 3y-bet-ledger
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-10
+window: Y1Q2
+track: T6-EVOLUTION
+appetite: 1 week
+desc: 把 agora/external_connections.py (1663L) + cockpit/api_system_map_catalog.py
+  (1565L) + cockpit/cli.py (1533L) 各自拆分为 2-3 个职责清晰的文件, 让 omo lint god-module 回归全绿
+non_goals:
+- 修改 god-module 阈值 (L0 锁定)
+- 加 allowlist (与减法方向矛盾)
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/plans/AGENT-BRIEF.md
+- docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate: []
+evidence_required: []
+evidence_ref: docs/plans/3y-bet-ledger.yaml::BET-Y1Q2-T6-10.evidence （3 条，动手前必读：bin/plan/bet-ledger.py
+  show BET-Y1Q2-T6-10）
+test_plan: []
+workflow: bet-execution
+write_surfaces: []
+pasw_required: false
+circuit_breaker: ''
+retro_required: false
+retro_path: .omo/_knowledge/retros/BET-Y1Q2-T6-10.md
+agent_profile_hint: engineering-agent
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

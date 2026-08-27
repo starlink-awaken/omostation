@@ -1,0 +1,18 @@
+# governance-dashboard Cron (P90 D)
+#
+# 每日 6:00 跑 governance-dashboard (12 工具), 输出到 governance-dashboard 日志.
+# 用途: 趋势跟踪 + 异常告警 (P91+ 可加 omo event emit 自动告警)
+# 配合 governance-history.jsonl 持续累积, gov-trend-report 即可生成 weekly 报告.
+#
+# 安装: ./scripts/omo/install-dashboard-cron.sh
+# 卸载: ./scripts/omo/install-dashboard-cron.sh --uninstall
+# 状态: ./scripts/omo/install-dashboard-cron.sh --status
+
+# 时区: Asia/Shanghai
+TZ=Asia/Shanghai
+
+# 每日 6:00 — governance dashboard 12 工具统一巡检
+0 6 * * * cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=gov-dashboard python3 bin/governance-dashboard.py >> /tmp/governance-dashboard.log 2>&1
+
+# 每周一 7:00 — gov-trend-report weekly 报告 (markdown 输出到 reports/)
+0 7 * * 1 cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=gov-trend python3 bin/gov-trend-report.py --markdown > /Users/xiamingxing/Workspace/.omo/_delivery/reports/gov-trend-weekly-$(date +\%Y\%m\%d).md 2>&1

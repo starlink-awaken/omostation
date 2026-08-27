@@ -1,0 +1,56 @@
+id: P28-W2-PKG-SLIM
+phase: 28
+wave: W2
+title: "包瘦身 — kairon 包数量从 25+ 降至 20 以内"
+status: completed
+task_type: refactor
+priority: P1
+assigned_to: claude-code-agent
+human_approval_required: true
+entry_gate:
+  - "P28-W0-TOOL-HEATMAP completed"
+depends_on:
+  - P28-W0-TOOL-HEATMAP
+deliverables:
+  - ".omo/_delivery/phase28-pkg-slim-plan.md"
+  - "projects/kairon/CLAUDE.md"
+risk_level: L2
+allowed_operation_level: L2
+source_docs:
+  - ".omo/_knowledge/design/plans/phase28-observable-knowledge-workflow.md"
+knowledge_refs:
+  - ".omo/_delivery/phase28-pkg-slim-plan.md"
+description: |
+  基于工具热力图结果，归并或归档低使用率包。
+
+  初步归档候选（需热力图确认）：
+    - wksp（零测试，疑似遗留）→ 经核实在 workspace 中活跃，不归档
+    - kairon-assistant（状态待评估）→ 0 外部 import，**已归档**
+    - kairon-voice（状态待评估）→ 0 外部 import、whisper 缺依赖，**已归档**
+
+  假候选（已不存在）：
+    - eu-pricing — live 目录无此包
+    - gc-engine — live 目录无此包
+
+  实际执行（2026-06-05）：
+    1. 归档 packages/kairon-assistant → projects/_archived/kairon-archived-pkg-kairon-assistant-2026-06-05/
+    2. 归档 packages/kairon-voice → projects/_archived/kairon-archived-pkg-kairon-voice-2026-06-05/
+    3. 更新 projects/kairon/CLAUDE.md 和 AGENTS.md
+    4. kairon git commit: P28-W2-PKG-SLIM 归档提交
+    5. 包数量：25 → 23
+
+  验收（PASS）：
+    - uv sync: 成功
+    - import kairon_assistant / kairon_voice: ModuleNotFoundError（已不可导入）
+    - import minerva, kos, eidos 等核心包: OK
+    - uv run pytest packages/ -q: 发现 pre-existing core-models 失败（与本任务无关）
+
+  延后归档（下期 P28-W3+）：
+    - kaironcloud-billing（agora/router.py 有 1 处外部 import，需先治理）
+    - wksp 进一步精简（_archived/wksp 旧版存在，需规划合并）
+
+  目标：packages/ 目录包数量 ≤ 20（本次达 23，仍未达；下期继续）
+started_at: 2026-06-05T00:00:00Z
+completed_at: 2026-06-05T00:00:00Z
+blocked_by: null
+retry_count: 0

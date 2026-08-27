@@ -1,0 +1,35 @@
+id: M2.1-KOS-INDEX-DIAGNOSIS
+phase: 2
+milestone: M2.1
+priority: P0
+title: "Diagnose KOS index degradation"
+status: done
+assigned_to: "reasonix-code"
+started_at: "2026-05-30T01:44:30+08:00"
+completed_at: "2026-05-30T01:50:00+08:00"
+evidence:
+  - "Root cause: absent-file cleanup bug in src/kos/indexer/engine.py lines 1016-1027"
+  - "Bug: cleanup always uses get_zone_path() instead of custom path/additionalPaths"
+  - "Expected count: depends on files on disk; before/after delta: ~9400 false absent marks"
+  - "Storage: SQLite (kos-index.sqlite), not LanceDB/Neo4j"
+  - "No destructive action taken during diagnosis"
+  - "Full diagnosis report: see explore subagent output above"
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+  - ".omo/plans/comprehensive-architecture-audit.md"
+depends_on:
+  - M2.0-TASK-SYSTEM-SEED
+risk_level: L1
+operation_level: L0
+human_approval_required: false
+entry_gate:
+  - "Task YAML SSOT is active"
+evidence_required:
+  - "Observed document count recorded"
+  - "Expected document count/source inventory recorded"
+  - "Root-cause hypothesis with evidence for/against"
+  - "No write or reindex action performed during diagnosis"
+test_plan:
+  - ".omo/tests/README.md#kos-baseline-tests"
+exit_gate:
+  - "Root cause known or explicitly escalated"

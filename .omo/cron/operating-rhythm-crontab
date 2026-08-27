@@ -1,0 +1,39 @@
+# Operating-rhythm crontab (ADR-0119/0121, governance-evolution-roadmap §operating_rhythm)
+#
+# 三档节奏 (Meadows 9 范式级杠杆, initiative governance-operating-rhythm):
+#   daily      - 每天 09:00 (status 检查: agent-workflow + governance-evolution)
+#   pre_release - 手动触发 (PR 合并前, 不进 cron; 跑 make gac-local-gate + compliance + validate)
+#
+# 治理源: .omo/_truth/registry/governance-evolution-roadmap.yaml::operating_rhythm
+# 安装: crontab .omo/cron/operating-rhythm-crontab
+# 卸载: crontab -r (或 crontab -l 后删本表条目)
+# 日志: runtime/cron/operating-rhythm-{daily,weekly}.log (.gitignored 运行时写面)
+#
+# 安装前必须把 OMO_WORKSPACE_ROOT 设置为含 .omo 的绝对 Workspace 路径；否则所有任务 fail-closed。
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin
+OMO_WORKSPACE_ROOT=
+# ── daily 09:00 (status 节奏, ADR-0121 维度 3 Loop Convergence) ──
+0 9 * * * test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && bash bin/gac/heartbeat-wrapper.sh agent-workflow-status uv run --with pyyaml python bin/agent-workflow.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1
+5 9 * * * test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && uv run --with pyyaml python bin/gac/governance-evolution.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1
+10 9 * * * test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && uv run --with pyyaml python bin/gac/governance-evolution.py packages --json >> runtime/cron/operating-rhythm-daily.log 2>&1
+15 9 * * * test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && uv run --with pyyaml python bin/mof/m4-health-score.py --emit >> runtime/cron/operating-rhythm-daily.log 2>&1
+# doctor + path-acl 摘要 (ADR-0200) → runtime/cron/omo-doctor-latest.json
+20 9 * * * test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && uv run --with pyyaml python bin/agent-workflow.py doctor --json >> runtime/cron/operating-rhythm-daily.log 2>&1
+# ── weekly 周一 10:00 (MOF 桥接 + drift 巡检) ──
+5 10 * * 1 test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && bin/mof/mof-drift >> runtime/cron/operating-rhythm-weekly.log 2>&1
+30 10 * * 1 test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && uv run --project projects/omo omo debt refresh --now "$(date -u +\%Y-\%m-\%dT\%H:\%M:\%SZ)" >> runtime/cron/operating-rhythm-weekly.log 2>&1
+# ── weekly-review 主人周检视卡 (M3 仪式心跳源, 周一 10:35) ──
+35 10 * * 1 test -n "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && python3 bin/ssot/weekly-review.py --post-inbox >> runtime/cron/weekly-review.log 2>&1 # omostation-weekly-review
+# ── drift-sweep 防腐聚合扫描 (周三 09:00, heartbeat-wrapped) ──
+0 9 * * 3 test -n "$OMO_WORKSPACE_ROOT" && cd "$OMO_WORKSPACE_ROOT" && bash bin/gac/heartbeat-wrapper.sh drift-sweep python3 bin/gac/drift-sweep.py --json >> runtime/cron/drift-sweep.log 2>&1 # omostation-drift-sweep
+# ── capability-ownership 每日巡检 (每日 08:30, heartbeat-wrapped) ──
+30 8 * * * test -n "$OMO_WORKSPACE_ROOT" && cd "$OMO_WORKSPACE_ROOT" && bash bin/gac/heartbeat-wrapper.sh capability-ownership python3 bin/gac/check-capability-ownership.py --json >> runtime/cron/capability-ownership.log 2>&1 # omostation-capability-ownership
+# ── daily 08:30 (统一事件面常态化, T9-OBSERV) — 事件适配器增量同步 + 日志轮转 ──
+30 8 * * * test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && python3 bin/ssot/observability-events.py adapters run >> runtime/cron/observability-daily.log 2>&1
+35 8 * * * test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && python3 bin/ssot/log-rotate.py >> runtime/cron/observability-daily.log 2>&1
+# ── daily 08:45 (告警到人, T9-OBSERV) — 检测 metrics 异常 → 路由 → channel 通知 ──
+45 8 * * * test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && python3 bin/gac/anomaly-detector.py --json >> runtime/cron/observability-daily.log 2>&1 && python3 bin/gac/alert-router.py --window 20 >> runtime/cron/observability-daily.log 2>&1
+25 9 * * * test -n "$OMO_WORKSPACE_ROOT" && test "${OMO_WORKSPACE_ROOT#/}" != "$OMO_WORKSPACE_ROOT" && test -d "$OMO_WORKSPACE_ROOT/.omo" && cd "$OMO_WORKSPACE_ROOT" && python3 bin/gac/meta-doctor.py >> runtime/cron/operating-rhythm-daily.log 2>&1
+# ── daily 09:30 UHS sync (整合方案#1: UHS 为唯一权威分数覆写 health_score) ──
+30 9 * * * test -n "$OMO_WORKSPACE_ROOT" && cd "$OMO_WORKSPACE_ROOT" && python3 bin/gac/unified-health-score.py --sync >> runtime/cron/operating-rhythm-daily.log 2>&1

@@ -1,0 +1,31 @@
+name: port-registry-enforce
+# P47 A1: 端口硬编码 enforce (声明/执行鸿沟收口).
+# 复用 scripts/check-vault-paths.py --check-ports (与本地 pre-commit 同一检查).
+# 增量 enforce: --check-ports 自动读 protocols/port-hardcode-baseline.yaml,
+#   已知历史 (12 处子模块硬编码) 容忍, 新违规 fail.
+# 刷新 baseline: python3 scripts/check-vault-paths.py --baseline-init
+on:
+  push:
+    branches: [main]
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: port hardcode check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install deps
+        run: pip install pyyaml
+      - name: Run port hardcode check (registry-driven, ADR-0380 P1a)
+        run: python3 bin/gac/ci-check-runner.py --workflow port-registry-enforce.yml

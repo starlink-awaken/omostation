@@ -1,0 +1,15 @@
+id: w15-collab-tests
+title: 'test_collab_scenario_runner wave15 断言'
+description: 'P84 wave15 真实任务'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-29T04:15:00Z'
+completion_evidence:
+  - tests/test_collab_scenario_runner.py
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+  - .omo/_knowledge/decisions/0270-p84-wave15-adv798183.md
+stage: P84-W15

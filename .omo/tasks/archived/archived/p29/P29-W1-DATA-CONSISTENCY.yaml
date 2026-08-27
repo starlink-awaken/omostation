@@ -1,0 +1,33 @@
+id: P29-W1-DATA-CONSISTENCY
+phase: 29
+wave: W1
+title: "数据/文档/配置一致性修正 + system.yaml 同步器"
+status: completed
+task_type: governance
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P29-W0-GOVERNANCE-AUDIT completed"
+  - "P29-W0-FOLLOW-UP completed"
+depends_on:
+  - P29-W0-GOVERNANCE-AUDIT
+  - P29-W0-FOLLOW-UP
+deliverables:
+  - "projects/kairon/scripts/sync_system_state.py"
+  - "projects/kairon/tests/scripts/test_sync_system_state.py"
+  - ".omo/_delivery/phase29-data-consistency-report.md"
+risk_level: L2
+allowed_operation_level: L2
+source_docs: []
+knowledge_refs: []
+description: |
+  修正 system.yaml / .omo/INDEX.md 与实际产出的脱节。
+  写 sync_system_state.py 防止下次再脱节（白名单 + dry-run + 备份）。
+  主要修复：current_phase 28→29, current_wave W3→W1, health_score 100.0→80.0,
+  health_score_raw 98.5→80.0, planned_tasks 16→27, completed_tasks 25→26,
+  next_milestone 去重, phase28_status active→completed, debt_watchlist_count 0→1.
+started_at: '2026-06-06T00:00:00Z'
+completed_at: '2026-06-06T00:00:00Z'
+blocked_by: null
+retry_count: 0

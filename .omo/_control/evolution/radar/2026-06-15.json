@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-06-15T00:18:52Z",
+  "trigger_source": "manual",
+  "candidate_count": 8,
+  "real_candidate_count": 8,
+  "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260615T001852Z-technical-radar-195c3b9e.json",
+  "history": {
+    "run_count": 5,
+    "cron_run_count": 0,
+    "manual_run_count": 5,
+    "latest_generated_at": "2026-06-15T00:18:52Z",
+    "latest_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260615T001852Z-technical-radar-195c3b9e.json",
+    "latest_day": "2026-06-15"
+  }
+}

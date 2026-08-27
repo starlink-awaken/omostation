@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: l4-kernel-validate
+        name: L4 Domain Schema Validation
+        entry: l4-kernel domain validate --json
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true

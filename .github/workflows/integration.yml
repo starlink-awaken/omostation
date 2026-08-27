@@ -1,0 +1,48 @@
+name: Integration Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'projects/omo/**'
+      - 'projects/*/pyproject.toml'
+      - 'bin/gac/**'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Cache uv store
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run tracked-project integration tests
+        # P41-W1 fix: projects/knowledge/kairon is .gitignore'd. Run integration tests for projects tracked in monorepo.
+        # Workspace-only omo tests (depend on monorepo layout) run here; they are ignored in omo standalone CI.
+        run: |
+          cd projects/omo && uv sync && uv run pytest tests/integration/ \
+            tests/test_sr06_gap_fixes.py \
+            tests/unit/test_omo_project_inspector.py \
+            tests/unit/test_workflow_cli_bet_gate.py \
+            -q --ignore=tests/integration/test_runtime_e2e.py

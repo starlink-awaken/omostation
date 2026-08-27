@@ -1,0 +1,47 @@
+id: P10-W2-NORMALIZED-RULE-BUNDLE
+phase: 10
+milestone: W2
+priority: P0
+title: Normalize the cross-root rule bundle shape
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase10-wave2-normalized-rules
+run_ref: .omo/workers/runs/phase10-wave2-normalized-rules-dispatch.yaml
+approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+review_ref: .omo/workers/runs/phase10-wave2-normalized-rules-review.md
+knowledge_refs:
+  - .omo/plans/archive/phase10-program-plan.md
+  - .omo/plans/archive/phase10-wave2-execution-plan.md
+handoff_refs:
+  - .omo/workers/runs/phase10-wave2-normalized-rules-envelope.yaml
+  - .omo/workers/runs/phase10-wave2-normalized-rules-prompt.md
+  - .omo/workers/runs/phase10-wave2-normalized-rules-checkpoint.md
+source_docs:
+  - .omo/summaries/phase9-closeout-retrospective.md
+  - .omo/plans/archive/phase10-wave2-execution-plan.md
+deliverables:
+  - .omo/plans/archive/phase10-wave2-execution-plan.md
+  - .omo/_delivery/task-center/contracts/project-dispatch-delivery-contract.yaml
+  - .omo/workers/runs/phase10-wave2-normalized-rules-envelope.yaml
+  - scripts/omo_rules.py
+  - .omo/tests/test_phase10_wave2_normalization.py
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 10 Wave 1 rule registry exists and is green
+  - Phase 9 rollout acceptance record exists at .omo/workers/runs/phase9-wave4-rollout-ops-acceptance.yaml
+evidence_required:
+  - normalized bundle returns typed data and delivery contracts
+  - live Wave 2 envelope resolves against the real workspace
+  - rules-eval CLI prints the normalized bundle refs
+test_plan:
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 -m pytest .omo/tests/test_phase10_wave2_docs.py -q
+  - python3 -m pytest .omo/tests/test_phase10_wave2_normalization.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T21:18:00Z'
+completed_at: '2026-05-31T21:24:00Z'
+blocked_by: null
+retry_count: 0

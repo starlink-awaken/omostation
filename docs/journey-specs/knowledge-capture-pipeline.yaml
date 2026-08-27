@@ -1,0 +1,132 @@
+schema: journey-spec/v1
+status: active
+journey_id: knowledge-capture-pipeline
+description: "知识捕获 → 结构化处理 → 索引 → 人工复核 → 入库/拒绝 (BET-Y3H1 业务落地)"
+owner: product-architecture
+created: 2026-08-19
+tags: [knowledge-ingest, business, shadow-mode]
+
+# 参数化模板 (可被 knowledge-capture-deliver-* 实例化)
+params:
+  default:
+    source_scene: "*"  # 任意上游场景
+    min_quality_score: 0.6
+    auto_accept_threshold: 0.85
+
+states:
+  - name: capture
+    scene: knowledge-curation
+    description: "从上游场景完成事件中捕获知识片段"
+    trigger: passive  # 监听 scene.completed 事件
+    input:
+      source_scene_ref: "evidence://scene/<source_scene>/output"
+      fragment_type: "*"  # code_review / meeting_insight / research_finding / doc_experience
+    next: [extract]
+
+  - name: extract
+    scene: knowledge-curation
+    description: "提取 → 清洗 → 结构化"
+    processing:
+      - extract_key_insights
+      - remove_pii
+      - classify_type
+      - generate_tags
+      - compute_quality_score
+    next: [quality_gate]
+
+  - name: quality_gate
+    description: "质量评分门"
+    condition: "extract.quality_score >= params.min_quality_score"
+    next:
+      pass: [index]
+      fail: [reject_low_quality]
+
+  - name: index
+    scene: knowledge-curation
+    description: "建立检索索引 + 生成摘要"
+    processing:
+      - build_search_index
+      - generate_summary
+      - link_related_knowledge
+    next: [notify_human]
+
+  - name: notify_human
+    scene: knowledge-curation
+    description: "通知人工复核 (cockpit-ui 面板)"
+    notification:
+      channel: cockpit_ui
+      priority: normal
+      timeout_hours: 48
+    next: [human_review]
+
+  - name: human_review
+    scene: knowledge-curation
+    description: "人工复核决策"
+    decision:
+      - accept: 知识入库
+      - reject: 记录原因 + 反馈改进
+      - escalate: 升级处理
+    next:
+      accept: [record_accept]
+      reject: [record_reject]
+
+  - name: record_accept
+    scene: knowledge-curation
+    description: "记录入库 + 更新 calibration"
+    processing:
+      - mark_as_accepted
+      - update_calibration(success=True)
+      - emit_knowledge_event
+    next: [closed]
+
+  - name: record_reject
+    scene: knowledge-curation
+    description: "记录拒绝 + 更新 calibration"
+    processing:
+      - mark_as_rejected
+      - update_calibration(success=False)
+      - log_rejection_reason
+    next: [closed]
+
+  - name: reject_low_quality
+    description: "低质量自动拒绝"
+    processing:
+      - log_rejection(reason="below_quality_threshold")
+      - update_calibration(success=False)
+    next: [closed]
+
+  - name: closed
+    terminal: true
+    description: "旅程结束"
+
+transitions:
+  - { from: capture, to: extract, condition: always }
+  - { from: extract, to: quality_gate, condition: always }
+  - { from: quality_gate, to: index, condition: "quality_score >= min" }
+  - { from: quality_gate, to: reject_low_quality, condition: "quality_score < min" }
+  - { from: index, to: notify_human, condition: always }
+  - { from: notify_human, to: human_review, condition: "notification_delivered" }
+  - { from: human_review, to: record_accept, condition: "decision == accept" }
+  - { from: human_review, to: record_reject, condition: "decision == reject" }
+  - { from: record_accept, to: closed, condition: always }
+  - { from: record_reject, to: closed, condition: always }
+  - { from: reject_low_quality, to: closed, condition: always }
+
+outcome_metrics:
+  - knowledge_accept_rate  # 人工接受率
+  - time_to_review_hours   # 复核耗时
+  - calibration_delta      # 校准度变化
+  - samples_per_week       # 每周样本数
+
+shadow_mode:
+  enabled: true
+  start_date: 2026-08-19
+  duration_weeks: 2
+  success_criteria:
+    min_samples: 30
+    min_calibration: 0.60
+    min_accept_rate: 0.50
+  exit_strategy:
+    pass: upgrade_to_assisted
+    fail_extend: extend_2_weeks
+    fail_rollback: revert_to_draft_with_adr

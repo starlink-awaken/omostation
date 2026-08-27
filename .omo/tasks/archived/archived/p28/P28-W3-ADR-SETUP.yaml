@@ -1,0 +1,43 @@
+id: P28-W3-ADR-SETUP
+phase: 28
+wave: W3
+title: "ADR 制度化 — 建立 decisions/ 目录，写入首批 3 条 ADR"
+status: completed
+task_type: governance
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W1-E2E-DEMO completed"
+depends_on:
+  - P28-W1-E2E-DEMO
+deliverables:
+  - ".omo/_knowledge/decisions/README.md"
+  - ".omo/_knowledge/decisions/0001-agora-routes-deferred.md"
+  - ".omo/_knowledge/decisions/0002-pkg-archive-p28-w2.md"
+  - ".omo/_knowledge/decisions/0003-tech-radar-bypass-agora.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/design/plans/phase28-observable-knowledge-workflow.md"
+knowledge_refs: []
+description: |
+  建立 ADR（Architecture Decision Record）制度，防止隐性知识单点集中。
+
+  ADR 格式（每条包含）：
+    - 标题 + 日期 + 状态（Accepted/Superseded）
+    - 问题背景
+    - 决策内容
+    - 决策理由
+    - 后果与权衡
+
+  首批 3 条 ADR（记录 Phase 27 已完成的重大决策）：
+    - ADR-001: Agora 作为唯一 L0 MCP 网关
+    - ADR-002: gbrain Postgres 作为 L4 知识持久层
+    - ADR-003: OMO MCP Server 防越权机制
+
+  后续规范：每个 Phase 关闭前检查是否有新架构决策未记录。
+started_at: 2026-06-05T21:35:00+08:00
+completed_at: 2026-06-05T21:50:00+08:00
+blocked_by: null
+retry_count: 0

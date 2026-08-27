@@ -1,0 +1,36 @@
+id: P32-W0-DELIVERABLES
+phase: 32
+wave: W0
+title: "回填 39 missing deliverables — task consistency 0 → 100"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P31-VERIFY completed"
+depends_on:
+  - P31-VERIFY
+deliverables:
+  - ".omo/_delivery/phase32-deliverables-report.md"
+risk_level: L0
+allowed_operation_level: L0
+source_docs: []
+knowledge_refs:
+  - "P29-W0-FOLLOW-UP (历史同类修复参考)"
+description: |
+  P31 收官 audit 发现 39 个任务标 completed 但 deliverables 路径不存在。
+  修正路径（不移动文件）让 task consistency 0→100。
+  参照 P29-W0-FOLLOW-UP 处理方式：仅修改 YAML `deliverables` 字段，
+  不移动 .omo/_delivery/ 下的任何实际文件，不重启 omo daemon，
+  不修改 .omo/state/system.yaml、.omo/goals/current.yaml、.omo/INDEX.md。
+
+  验收：
+    - task consistency 0 → 100
+    - audit 总分 46.7 (F) → 70.0 (C)
+    - 13 活跃 planned 任务 YAML 数量不变
+    - omo daemon PID 47826 保持
+started_at: '2026-06-06T05:00:00Z'
+completed_at: '2026-06-06T05:00:00Z'
+blocked_by: null
+retry_count: 0

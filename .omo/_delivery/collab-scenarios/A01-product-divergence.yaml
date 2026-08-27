@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: A01-product-divergence
+category: A_conflict
+adversarial: false
+seed: 42
+description: 两角色写同一产物产生分歧, 测冲突检测与消解 (冲突原型·产物分歧)
+setup:
+  blackboard:
+    - {key: artifact_x, value: null}
+  roles: [research, delivery]
+inject:
+  - {type: write_conflict, role: research, target: artifact_x, value: "方案A"}
+  - {type: write_conflict, role: delivery, target: artifact_x, value: "方案B"}
+expected:
+  behavior: conflict_detected_and_resolved
+  max_resolution_rounds: 3
+  silent_loss: 0
+verdict:
+  - criterion: conflict_logged
+    check: events_contain
+    args: {kind: conflict_detected}
+  - criterion: resolved_within_rounds
+    check: resolution_rounds_le
+    args: {max: 3}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

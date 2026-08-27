@@ -1,0 +1,212 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
+# X1 Governance Policies — 变更审计与系统边界治理
+#
+# 记录所有影响系统边界的结构性变更，确保每次合并/归档/入口收敛都可追溯。
+
+documentation_contract:
+  ssot_role: authoritative_policy_source
+  derived_consumers:
+    - AGENTS.md
+    - .omo/INDEX.md
+    - .omo/standards/omo-governance-surfaces.md
+
+policies:
+  - policy_id: X1-OMNI-BUS-ROUTING-20260617
+    title: Omni-Bus 全能总线强制路由策略
+    type: governance_stack
+    status: active
+    created: '2026-06-17'
+    description: >
+      全系统内异步任务、事件派发、日志埋点必须通过 Omni-Bus (bos://capability/bus/*) 进行投递。
+      所有旧式的自定义消息队列、直接文件写入日志、硬编码定时器应逐步废弃并迁移至三大 Facade 切面 (data, event, control)。
+      所有通过 Omni-Bus 流转的 Payload 必须遵守 M2 OmniEnvelope 契约。
+    scope:
+      - projects/bus-foundation/src/bus_foundation/facade/
+      - projects/agora/etc/bos-services.yaml
+      - projects/ecos/src/ecos/ssot/mof/m2/omni_envelope.yaml
+    audit_requirements:
+      - source: .omo/standards/omo-governance-surfaces.md
+      - source: projects/ecos/src/ecos/ssot/tools/mof-verify.py
+    evidence:
+      - standard: omni-bus-architecture
+    owner: architecture-team
+    review_frequency: weekly
+    next_review: '2026-06-28'
+    enforcement: block-write
+
+  - policy_id: X1-OMO-GOVERNANCE-SURFACES-20260616
+    title: OMO 三层治理面约束
+    type: governance_stack
+    status: active
+    created: '2026-06-16'
+    description: >
+      `.omo/` 只能被视为治理状态面；`projects/omo/` 是治理执行内核；
+      `projects/c2g/` 是战略入口。所有 `.omo` 顶层资产必须登记，
+      所有上游任务导入必须通过 c2g/omo 契约收口。
+    scope:
+      - .omo/
+      - projects/omo/
+      - projects/c2g/
+    audit_requirements:
+      - source: .omo/standards/omo-governance-surfaces.md
+      - source: .omo/_truth/registry/omo-governance-surfaces.yaml
+      - source: projects/omo/src/omo/omo_paths.py
+      - source: projects/c2g/src/c2g/task_builder.py
+    evidence:
+      - standard: omo-governance-surfaces
+      - registry: omo-governance-surfaces
+    owner: governance-team
+    review_frequency: weekly
+    next_review: '2026-06-28'
+    enforcement: block-write
+
+  - policy_id: X1-OMO-DIRECT-MUTATION-GATE-20260617
+    title: 非 broker 禁止直接改写 `.omo`
+    type: write_gate
+    status: active
+    created: '2026-06-17'
+    description: >
+      `.omo/` 与 `spaces/` 的文件系统改写必须通过 OMO 内核、C2G ingress
+      或等价受审计 broker 完成。非 broker Python 代码不得直接 write_text、
+      open(..., "w")、unlink、mkdir 等改写这些治理面。
+    scope:
+      - projects/omo/src/omo/
+      - projects/c2g/src/c2g/
+      - scripts/
+      - bin/
+    audit_requirements:
+      - source: projects/ecos/scripts/contract_gatekeeper.py
+      - source: .pre-commit-config.yaml
+      - source: .omo/standards/omo-governance-surfaces.md
+    evidence:
+      - command: uv run --directory projects/omo python -m omo.cli lint direct-omo-io --diff
+    owner: governance-team
+    review_frequency: weekly
+    next_review: '2026-06-28'
+    enforcement: block-write
+
+  - policy_id: X1-ARCH-MERGE-LLMGATEWAY-20260616
+    title: llm-gateway 并入 aetherforge 架构变更审计
+    type: architecture_merge
+    status: active
+    created: '2026-06-16'
+    description: >
+      将独立项目 projects/llm-gateway/ 的代码与能力迁移到
+      projects/aetherforge/packages/gateway/，作为 AetherForge 三位一体
+      （gateway / mesh / swarm）的一部分。
+    scope:
+      - projects/aetherforge/packages/gateway/
+      - projects/llm-gateway/
+      - projects/ecos/src/ecos/ssot/mof/m1/bosroute/BOSROUTE-KAIRON-llm-gateway.yaml
+    audit_requirements:
+      - source: plan/pitches/PITCH-llm-gateway-merge.md
+      - source: .omo/tasks/planned/OPC-P43-LLM-MERGE-*.yaml
+      - source: projects/ecos/src/ecos/ssot/mof/m1/bosroute/BOSROUTE-KAIRON-llm-gateway.yaml
+      - source: projects/aetherforge/packages/gateway/MERGE-CHECKLIST.md
+    evidence:
+      - commit: projects/aetherforge (llm-gateway _legacy migration)
+      - commit: projects/ecos (MOF BOSRoute update)
+      - doc: projects/aetherforge/packages/gateway/src/llm_gateway/_legacy/README.md (P44 R0 文档化)
+    owner: architecture-team
+    review_frequency: once
+    next_review: '2026-06-30'
+    enforcement: log-and-notify
+
+  - policy_id: X1-DEBT-EVIDENCE-CLOSURE-20260620
+    title: P43 债务证据闭环强制策略
+    type: governance_loop
+    status: active
+    created: '2026-06-20'
+    description: >
+      所有 closed 状态的 DEBT yaml 必须携带 ≥ 20 字符的 resolution_evidence 字段；
+      所有 deferred 状态的 DEBT yaml 必须携带 next_review_at + gate_level 字段，
+      防止"沉默延期"。验证入口: `omo governance` (debt integrity 检查项)
+      + `bin/mof-enforce post-check`。修复路径必须走 `omo governance ingress-debt`
+      broker + fcntl 锁，不允许 ad-hoc yaml 直写。
+    scope:
+      - .omo/debt/items/DEBT-*.yaml
+      - projects/omo/src/omo/omo_ingress.py (upsert_debt_item)
+      - projects/omo/src/omo/omo_audit.py (governance_check_debt)
+    audit_requirements:
+      - source: .omo/_knowledge/audits/2026-06-20-debt-evidence-closure.md
+      - source: .omo/_truth/registry/direct-io-baseline.yaml
+      - source: projects/omo/src/omo/omo_audit.py
+    evidence:
+      - 5 debt ingressed via broker on 2026-06-20 (4 closure + 1 next-action)
+      - score 85.0 → 100.0 (A+) over P43 rounds
+    owner: governance-team
+    review_frequency: monthly
+    next_review: '2026-07-20'
+    enforcement: block-write
+
+  - policy_id: X1-CROSS-PROJECT-LINT-ENFORCE-20260620
+    title: P43 跨子项目 lint 强制策略
+    type: governance_loop
+    status: active
+    created: '2026-06-20'
+    description: >
+      所有子项目 (kairon/agora/cockpit/runtime/omo/metaos/aetherforge/c2g/ecos)
+      的 ruff check 必须保持 0 errors。`omo governance` 通过 kairon ruff check
+      反推 score = 100 - errors*5。修复策略: 优先 `ruff --fix` 自动修复，
+      残留真 bug (F821 missing imports, RUF100 stale noqa, F841 unused var,
+      E402 import order) 走 omo governance ingress-task broker + 验证。
+    scope:
+      - projects/*/src/*/*.py
+      - projects/knowledge/kairon/packages/*/src/*/*.py
+      - projects/omo/src/omo/omo_audit.py (governance_check_lint)
+    audit_requirements:
+      - source: projects/omo/src/omo/omo_audit.py:governance_check_lint
+      - source: bin/mof-enforce
+    evidence:
+      - P43 R5 final: 9 子项目 ruff 全 0 errors
+      - 46+ errors closed across kairon/cockpit/aetherforge/ecos
+    owner: governance-team
+    review_frequency: weekly
+    next_review: '2026-06-28'
+    enforcement: block-write
+
+  - policy_id: X1-AUD-COMMIT-LOOP
+    title: 强制闭环审计 (mandatory commit loop)
+    type: commit_closure
+    status: active
+    created: '2026-06-23'
+    description: >
+      mof-version.yaml 中每条 history entry 必须有对应的 git commit 在同一会话内。
+      P59 治理闭环修复后, 此规则持续维护。
+      检测: 反向校验最近 N 个 mof-version history 与 git log commit 的时间窗口配对。
+      失配: 强制闭环破坏, 触发 CR-GOV-CLOSED-LOOP-01 error 级别。
+    scope:
+      - .omo/_truth/mof-version.yaml
+      - bin/mof-version
+      - .githooks/post-commit
+    owner: governance-team
+    references:
+      - "L0-constraints.yaml:CR-GOV-CLOSED-LOOP-01"
+      - ".omo/_knowledge/audits/2026-06-23-p59-git-commit-closure-closeout.md"
+  - policy_id: X1-AGT-AUDIT-HASHCHAIN-202608
+    title: AGT 审计哈希链补充策略
+    type: audit_supplement
+    status: active
+    created: '2026-08-04'
+    description: >
+      AGT (Agent Governance Toolkit) 审计哈希链作为 eCOS 审计日志的补充。
+      eCOS 审计日志必须可从 AGT Merkle 审计链复现，确保篡改可检测。
+    scope:
+      - .omo/_log/
+      - .omo/_truth/
+      - bin/gac/gac-local-gate.py
+    owner: governance-team
+    references:
+      - "L0-constraints.yaml:CR-AGT-AUDIT-HASHCHAIN-01"
+      - "projects/ecos/src/ecos/ssot/mof/m1/component/COMP-EXT-AGT-hypervisor.yaml"
+    enforcement: block-write
+
+    notes: >
+      P43-P58 期间多次出现 mof-version bump 但 git commit 失同步, P59 一次修复 571 文件落地。
+      此后强制闭环纪律是 L0 级别 error, 不可降级。

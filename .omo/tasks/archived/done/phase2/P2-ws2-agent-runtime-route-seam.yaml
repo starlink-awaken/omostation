@@ -1,0 +1,36 @@
+id: P2-WS2-AGENT-RUNTIME-ROUTE-SEAM
+phase: 2
+milestone: M2.7
+priority: P1
+title: agent-runtime env switch to LiteLLM + smoke evidence
+status: done
+assigned_to: copilot-cli
+dispatch_id: manual-phase2-provider-plane
+run_ref: .omo/summaries/p2-provider-plane-evidence.md
+approval_ref: null
+review_ref: .omo/summaries/p2-provider-plane-evidence.md
+knowledge_refs:
+  - .omo/state/provider-plane.yaml
+  - projects/agentmesh/config/gateway.yaml
+  - projects/agentmesh/packages/gateway/src/config/gateway.yaml
+handoff_refs: []
+blocked_by: null
+source_docs:
+  - .omo/plans/llm-convergence-planning-packet.md
+  - .omo/plans/llm-convergence-requirements.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - P2-WS1-LITELLM-BASELINE completed
+  - AGENT_RUNTIME_BASE_URL and AGENT_RUNTIME_API_KEY path decided
+evidence_required:
+  - agent-runtime points to LiteLLM without business-code edits
+  - smoke request succeeds through agent-runtime path
+  - rollback path documented in review note
+test_plan:
+  - set AGENT_RUNTIME_BASE_URL / AGENT_RUNTIME_API_KEY
+  - run one smoke request through agent-runtime
+  - revert env and verify old path still available if needed
+completed_at: '2026-05-30T15:36:00Z'
+completion_summary: "agentmesh runtime config now prefers local LiteLLM for Claude traffic, using config-only seam changes and preserving rollback via gateway YAML."

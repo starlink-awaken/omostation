@@ -1,0 +1,235 @@
+# swarm-coordination.yaml — G-CONV.7 / ADR-0220 SSOT
+#
+# Multi-agent swarm discipline gates (独立 clone 拓扑).
+# Runtime lock/claim files live under .omo/_delivery/ (gitignored delivery plane).
+# Policy (this file) is the long-lived registry; validators fail closed.
+#
+# Gates:
+#   D1 adr_atomic_claim      — ADR numbers claimed before write [ACTIVE]
+#   D2 branch_occupancy      — RETIRED 2026-08-19 (独立 clone 消除分支竞争)
+#   D3 shared_worktree_claim — RETIRED 2026-08-19 (独立 clone 消除共享 worktree)
+#   D4 escape_hatch          — --no-verify / CI_LOCAL_SKIP allowlist only [ACTIVE]
+#   D5 pasw_submodule_isolation — PARTIALLY RETIRED (gitlink FF 校验保留)
+#
+# D3 升级为跨仓变更审计引擎 (agent-clone.py --verify-claims).
+
+version: 2
+last_updated: "2026-08-19"
+related:
+  - adr: "0220"
+  - goal: "G-CONV.7"
+  - bet: "BET-Y1Q1-T1-05"
+  - m1_gate: concurrent_main_conflict_zero
+
+delivery:
+  adr_claims_dir: .omo/_delivery/adr-claims
+  branch_claims_dir: .omo/_delivery/branch-claims
+  escape_log_dir: .omo/_delivery/swarm-escape
+  conflict_events: .omo/_delivery/swarm-conflicts/events.jsonl
+  conflict_window: .omo/_delivery/swarm-conflicts/window.json
+  lock_ttl_hours: 24
+
+topology_migration:
+  phase: writer_clone_gate_pilot
+  target: independent_clone_per_agent
+  integration_root: "~/Workspace"
+  tool: bin/gac/agent-clone.py
+  manifest_schema: agent-clone-manifest/v1
+  changeset_schema: cross-repo-changeset/v1
+  persistent_git_alternates_allowed: false
+  invariants:
+    - integration_root_read_only_for_agent_identity
+    - one_independent_clone_per_agent
+    - integration_only_through_refs_and_review
+  writer_clone_gate:
+    entry: bin/gac/agent-clone.py guard --require-clone
+    hook_activation: agent_identity_present
+    admission_requires:
+      - agent_identity_present
+      - independent_clone_identity_verified
+      - clone_private_branch_matches_identity
+      - clone_local_hooks_active
+    human_operation_unaffected: true
+    observation_never_implies_admission: true
+  transition:
+    legacy_worktrees_allowed_for_agent_identity: false
+    legacy_worktrees_allowed_for_human_migration: true
+    strict_gate_for_migrated_writers: true
+    existing_gates_remain_active: [d2, d3, d5]
+    retirement_requires:
+      - real_clone_pilot_verified
+      - frozen_manifest_replay_verified
+      - cross_repo_changeset_verified
+      - all_active_agents_migrated
+      - integration_root_agent_reflog_window_clean
+  # BET-Y1Q1-T1-05A: 共享运行时协调层 (跨 clone 认领/心跳/消息).
+  # shadow 灰度: D2/D3 文件锁仍是权威判定源, SQLite 是镜像; warning/fail
+  # 阶段翻开关只改处置不改判定. D2/D3 gate 条目退役属 T1-05 D3 阶段,
+  # 本 bet 不动 (T1-05 verify grep 依赖它们存在).
+  coordination_layer:
+    db_path: "~/agents/_shared/runtime/coordination.sqlite3"
+    db_env_override: OMO_COORDINATION_DB
+    mode: shadow
+    owner_bet: BET-Y1Q1-T1-05A
+    store: bin/gac/coordination_store.py
+    cli_status: bin/gac/swarm-discipline-cli.py status
+    cli_token_check: bin/gac/swarm-discipline-cli.py token-check
+    heartbeat_source: bin/ssot/agent-tick-daemon.py
+    heartbeat_interval_min: 5
+    stale_after_ticks: 3
+    heartbeat_attestation:
+      fields: [component, code_sha256, workspace_revision, python_version]
+      privacy_excludes: [filesystem_path, username, hostname]
+      visible_via: bin/gac/swarm-discipline-cli.py status
+    fencing_requires: [active, owner_match, token_match, unexpired]
+    missing_token_policy: audited_shadow_reject
+    backup_fallback:
+      max_age_hours: 24
+      non_recursive: true
+      lock_serialized: true
+    tables: [claims, agent_health, messages, shadow_events]
+    shadow_started_at: "2026-08-14T12:56:00Z"
+    shadow_window_days: 7
+    non_goals:
+      - cross_host_coordination
+      - messages_table_data_flow
+      - cockpit_ui
+
+gates:
+  d1_adr_atomic_claim:
+    id: d1
+    name: ADR number atomic claim
+    entry: bin/adr/next-adr-id.py --claim
+    check: bin/gac/swarm-discipline-cli.py adr-check
+    fail_closed: true
+  # D2/D3 retired 2026-08-19 (BET-Y1Q1-T1-05 D3 减法):
+  # 独立 clone 拓扑消除了共享树, 分支占用锁与共享 worktree claim 不再需要.
+  # 退役原因: 每 agent 独立 clone → refs/branch 物理隔离 → 无竞争.
+  # D1 (ADR atomic) 与 D4 (escape hatch) 保留 — 与拓扑无关.
+  d2_branch_occupancy:
+    id: d2
+    name: "[RETIRED 2026-08-19] work-branch occupancy lock"
+    status: retired
+    retired_reason: "独立 clone 拓扑消除分支竞争 (BET-Y1Q1-T1-05)"
+    entry: bin/gac/gac-worktree.sh claim
+    check: bin/gac/swarm-discipline-cli.py branch-check
+    fail_closed: false
+  d3_shared_worktree_claim:
+    id: d3
+    name: "[RETIRED 2026-08-19] shared worktree claim-before-commit"
+    status: retired
+    retired_reason: "独立 clone 拓扑消除共享 worktree (BET-Y1Q1-T1-05)"
+    entry: pre-commit swarm-claim-check
+    check: bin/gac/swarm-discipline-cli.py claim-check --staged
+    fail_closed: false
+  d4_escape_hatch:
+    id: d4
+    name: escape-hatch allowlist
+    entry: >
+      .githooks/pre-push (CI_LOCAL_SKIP) + bin/gac/swarm-git (--no-verify fail-closed).
+      Bare git --no-verify still skips hooks by git design; agents must use swarm-git
+      (or PATH wrap) so D4 is fail-closed on the supported agent path.
+    check: bin/gac/swarm-discipline-cli.py escape-check | git-argv-check
+    fail_closed: true
+    agent_wrapper: bin/gac/swarm-git
+  # D5 partially retired: PASW dynamic worktree 不再需要 (独立 clone 自带 .git/modules 隔离).
+  # 但 pre-commit gitlink 来源校验仍保留 (defense-in-depth for 3 高冲突子模块).
+  d5_pasw_submodule_isolation:
+    id: d5
+    name: "[PARTIALLY RETIRED 2026-08-19] Per-Agent Submodule Worktree isolation"
+    status: retired_dynamic_worktree
+    retired_reason: "独立 clone 自带 .git/modules 隔离, PASW 动态 worktree 不再需要"
+    retained_defense_in_depth: >
+      pre-commit gitlink 来源校验仍覆盖 gbrain/cockpit/agora (高冲突子模块).
+    entry: >
+      PASW (ADR-0371/0404): 动态 worktree 退役. pre-commit gitlink 来源校验保留为
+      defense-in-depth (仅 gbrain/cockpit/agora 三个高冲突子模块).
+    check: .githooks/pre-commit (submodule-guard, 缩减范围) + CI reachability gate
+    fail_closed: true
+    claimed_submodules: retired
+    precommit_gitlink_guard:
+      - projects/knowledge/gbrain
+      - projects/cockpit
+      - projects/agora
+    ttl_hours: 24
+    cleanup_script: bin/gac/gac-worktree-cleanup.sh
+
+# Paths that may be committed on the shared main worktree without isolation
+# (docs-only / generated / self-describing). Everything else needs claim or worktree.
+shared_worktree_allow_path_globs:
+  - "runtime/**"
+  - ".omo/_delivery/**"
+  - "kos/**"
+  - "*.log"
+
+# Escape hatch exemptions (D4). Using CI_LOCAL_SKIP or no-verify requires
+# SWARM_ESCAPE_ID matching one of these ids (or --escape-id for CLI).
+# Permission class (this list) ≠ fingerprint debt (gate-known-debt.yaml). ADR-0422.
+escape_solidification:
+  mode: shadow
+  shadow_end: "2026-08-28T00:00:00Z"
+  overheat_threshold: 3
+  overheat_window_days: 7
+  class_spray_quota: 8
+  known_debt: .omo/_truth/registry/gate-known-debt.yaml
+  digest: bin/gac/escape-digest.py
+
+escape_hatch_exemptions:
+  - id: partial-worktree
+    allow: [no_verify_push, ci_local_skip]
+    surfaces: [ci-local-fast, pointer-drift]
+    fingerprint_allow: ["uninitialized-submodule:*"]
+    reason: "partial submodule init; only uninitialized-submodule fingerprints"
+    active: true
+  - id: local-preflight-preexisting
+    allow: [no_verify_push, ci_local_skip]
+    surfaces: [ci-local-fast, pointer-drift]
+    reason: "unexpired known-debt or unrelated-to-diff local preflight failures"
+    active: true
+  - id: pointer-drift
+    allow: [no_verify_push, ci_local_skip]
+    surfaces: [pointer-drift]
+    reason: "submodule pointer drift skip"
+    active: true
+  - id: write-owner-repair-draft
+    allow: [no_verify_commit]
+    surfaces: [pre-commit]
+    reason: "G-CONV.5 L2 repair-draft local commit must not recurse pre-commit"
+    active: true
+  - id: emergency-human-hotfix
+    allow: [no_verify_push, no_verify_commit, ci_local_skip]
+    surfaces: ["*"]
+    reason: "Human-declared emergency; must log conflict risk"
+    active: true
+    requires_human: true
+  - id: submodule-reachability-partial-worktree
+    alias_of: partial-worktree
+    allow: [no_verify_push, ci_local_skip]
+    reason: "deprecated alias of partial-worktree (expires with shadow_end)"
+    active: true
+    deprecated: true
+    alias_expires: "2026-08-28T00:00:00Z"
+
+
+# 有意指向子模块 side branch 的 root 指针 (BET-Y1Q2-T1-05 drift 门禁豁免).
+# 登记后 check-submodule-pointer-drift DIVERGED 不阻断; 未登记的 side-branch 仍 fail.
+submodule_pointer_exemptions:
+  - submodule: scripts
+    gitlink: 04ded29fa490e57694f88c84fe239a496bc69d72
+    reason: "T6-06 ruff sweep 分支 (agent/t6-06-skill-scripts) 待合并进 scripts main"
+    owner: t6-06-agent
+    active: true
+
+conflict_event_kinds:
+  - adr_renumber_race
+  - branch_hijack
+  - unclaimed_write
+  - orphan_commit
+  - escape_hatch_abuse
+  - pasw_submodule_shared_write
+  - pasw_pointer_not_on_main
+  - pasw_worktree_leak
+
+observation:
+  window_hours: 72
+  m1_pass_requires: "elapsed_hours >= 72 AND conflict_count == 0"

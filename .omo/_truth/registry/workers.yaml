@@ -1,0 +1,314 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-28
+---
+
+version: 1
+status: active
+policy_owner: governance
+default_worker_role: worker
+default_allowed_operation_level: L1
+coordinator_owns_phase_promotion: true
+coordinator_owns_global_state_sync: true
+sensitive_capabilities_default: blocked
+
+defaults:
+  transport_preference:
+    - acp_stdio
+    - cli_prompt
+  knowledge_policy:
+    require_task_envelope: true
+    require_prompt_contract: true
+    require_evidence_summary: true
+    require_reusable_outputs: true
+  lease_policy:
+    heartbeat_interval_seconds: 300
+    warning_after_seconds: 900
+    lease_expired_after_seconds: 1200
+    reclaim_after_seconds: 1800
+  stall_policy:
+    read_budget: 5
+    require_partial_output_when_stuck: true
+    auto_requeue_on_lease_expired: true
+  permission_policy:
+    max_operation_level_without_human_approval: L1
+    allow_l2_prepare_only: true
+    allow_l3_prepare_only: false
+    forbid_global_state_writes: true
+    forbid_sensitive_capability_execution: true
+
+workers:
+  - id: codebuddy
+    enabled: true
+    admission_state: declared
+    provider_ref: codebuddy
+    role: worker
+    class: external_agent_cli
+    transports:
+      cli_prompt:
+        command: 'codebuddy -y -p "{prompt}"'
+      acp_stdio:
+        command: "codebuddy --acp --acp-transport stdio"
+      acp_streamable_http:
+        command: "codebuddy --acp --acp-transport streamable-http"
+    strengths:
+      - implementation
+      - multi_step_execution
+      - review_followup
+      - resumable_sessions
+    capabilities:
+      - code_change
+      - test_execution
+      - verification
+      - structured_followup
+    allowed_operation_level: L1
+    may_prepare_levels:
+      - L2
+    forbidden_domains:
+      - apple
+      - wechat
+      - smb
+      - family
+      - media
+    write_scope:
+      mode: task_declared_only
+      forbidden_paths:
+        - ".omo/state/system.yaml"
+        - ".omo/goals/current.yaml"
+        - "convergence.yaml"
+    lease_policy:
+      heartbeat_interval_seconds: 300
+      warning_after_seconds: 900
+      lease_expired_after_seconds: 1200
+      reclaim_after_seconds: 1800
+
+  - id: reasonix
+    enabled: true
+    admission_state: declared
+    provider_ref: reasonix
+    role: worker
+    class: external_agent_cli
+    transports:
+      cli_prompt:
+        command: 'reasonix run "{prompt}"'
+      acp_stdio:
+        command: "reasonix acp"
+    strengths:
+      - focused_execution
+      - diagnostics
+      - code_mode
+    capabilities:
+      - code_change
+      - verification
+      - diagnosis
+    allowed_operation_level: L1
+    may_prepare_levels:
+      - L2
+    forbidden_domains:
+      - apple
+      - wechat
+      - smb
+      - family
+      - media
+    write_scope:
+      mode: task_declared_only
+      forbidden_paths:
+        - ".omo/state/system.yaml"
+        - ".omo/goals/current.yaml"
+        - "convergence.yaml"
+    lease_policy:
+      heartbeat_interval_seconds: 300
+      warning_after_seconds: 900
+      lease_expired_after_seconds: 1200
+      reclaim_after_seconds: 1800
+
+  - id: pi
+    enabled: true
+    admission_state: admitted
+    provider_ref: pi
+    role: worker
+    class: external_agent_cli
+    transports:
+      cli_prompt:
+        # BlueprintControlService injects one isolated --receipt path at execution time.
+        command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/pi-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 120 --prompt "{prompt}"'
+        worker_ack_protocol: omo-worker-origin-ack/v1
+        provider_conformance:
+          transport_id: pi_cli
+          backend_ref: omlxc
+          route_ref: bos://compute/aetherforge/infer
+          operation_level: L0
+          write_scope: none
+          workspace_admission: not_required_read_only
+          states: [succeeded, failed]
+    capabilities: [reasoning, verification]
+    require_explicit_capabilities: true
+    allowed_operation_level: L0
+    forbidden_domains: [apple, wechat, smb, family, media]
+    write_scope: {mode: none}
+    lease_policy:
+      heartbeat_interval_seconds: 300
+      warning_after_seconds: 900
+      lease_expired_after_seconds: 1200
+      reclaim_after_seconds: 1800
+
+  - id: oh-my-pi
+    enabled: true
+    admission_state: admitted
+    provider_ref: oh-my-pi
+    role: worker
+    class: external_agent_cli
+    transports:
+      cli_prompt:
+        # BlueprintControlService injects one isolated --receipt path at execution time.
+        command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/omp-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 120 --prompt "{prompt}"'
+        worker_ack_protocol: omo-worker-origin-ack/v1
+        provider_conformance:
+          transport_id: omp_cli
+          backend_ref: omlxc
+          route_ref: bos://compute/aetherforge/infer
+          operation_level: L0
+          write_scope: none
+          workspace_admission: not_required_read_only
+          states: [succeeded, failed]
+    capabilities: [reasoning, verification]
+    require_explicit_capabilities: true
+    allowed_operation_level: L0
+    forbidden_domains: [apple, wechat, smb, family, media]
+    write_scope: {mode: none}
+    lease_policy:
+      heartbeat_interval_seconds: 300
+      warning_after_seconds: 900
+      lease_expired_after_seconds: 1200
+      reclaim_after_seconds: 1800
+
+  - id: codex
+    enabled: true
+    admission_state: admitted
+    provider_ref: codex
+    role: worker
+    class: external_agent_cli
+    transports:
+      cli_prompt:
+        # The Blueprint controller supplies the immutable identity arguments.
+        # A legacy direct launch intentionally exits non-zero on missing args.
+        command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/orca-codex-supervisor.py" start'
+        worker_ack_protocol: omo-worker-origin-ack/v1
+        provider_conformance:
+          transport_id: orca_manual_break_glass
+          backend_ref: codex
+          route_ref: null
+          operation_level: L1
+          write_scope: human_gated
+          workspace_admission: verified_independent_clone
+          states: [awaiting_human_action, settled_observed, failed]
+      bounded_exec:
+        # BlueprintControlService injects one isolated --receipt path at execution time.
+        command: 'uv run --with pyyaml python "{workspace_root}/bin/gac/codex-worker-adapter.py" run --execute --workspace-root "{workspace_root}" --run-id "{run_id}" --packet-id "{packet_id}" --packet-hash "{packet_hash}" --instruction-binding-json "{instruction_binding_json}" --timeout-seconds 900 --prompt "{prompt}"'
+        worker_ack_protocol: omo-worker-origin-ack/v1
+        provider_conformance:
+          transport_id: codex_exec
+          backend_ref: codex
+          route_ref: null
+          operation_level: L1
+          write_scope: bounded
+          workspace_admission: verified_independent_clone
+          states: [succeeded, failed]
+    capabilities: [code_change, test_execution, verification]
+    require_explicit_capabilities: true
+    allowed_operation_level: L1
+    may_prepare_levels: [L2]
+    supervision:
+      controller_approval: required
+      provider_review: manual_click_required
+      waiting_state: awaiting_human_action
+      readiness_evidence: settled_worker_done_and_transcript_digest
+      transport_ack_is_readiness: false
+      controller_direct_start_required: true
+    forbidden_domains: [apple, wechat, smb, family, media]
+    write_scope:
+      mode: task_declared_only
+      forbidden_paths:
+        - ".omo/state/system.yaml"
+        - ".omo/goals/current.yaml"
+        - "convergence.yaml"
+    lease_policy:
+      heartbeat_interval_seconds: 300
+      warning_after_seconds: 900
+      lease_expired_after_seconds: 1200
+      reclaim_after_seconds: 1800
+
+  # Candidate pool: declarations are discoverable but cannot be dispatched until a
+  # coordinator promotes them and supplies a complete governed transport contract.
+
+  - id: opencode
+    enabled: false
+    admission_state: declared
+    provider_ref: opencode
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: claude-code
+    enabled: false
+    admission_state: declared
+    provider_ref: claude-code
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, research, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: crush
+    enabled: false
+    admission_state: declared
+    provider_ref: crush
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: grok
+    enabled: false
+    admission_state: declared
+    provider_ref: grok
+    role: worker
+    class: external_agent_cli
+    capabilities: [research, diagnosis, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: mimo
+    enabled: false
+    admission_state: declared
+    provider_ref: mimo
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: agy
+    enabled: false
+    admission_state: declared
+    provider_ref: agy
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+
+  - id: kilo
+    enabled: false
+    admission_state: declared
+    provider_ref: kilo
+    role: worker
+    class: external_agent_cli
+    capabilities: [code_change, test_execution, verification]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}

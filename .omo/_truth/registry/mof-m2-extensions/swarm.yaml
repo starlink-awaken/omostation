@@ -1,0 +1,28 @@
+# M2: Swarm — multi-twin collaboration (ADR-0396)
+m2_type: Swarm
+version: 1.0.0
+Swarm:
+  m3_parent: BehavioralElement.Process
+  description: 蜂群 — 多twin临时编组协作
+  stateMachine:
+    forming:
+      description: 组建中 — 提议+接受
+      transitions: [active, dissolved]
+    active:
+      description: 运行中 — 共享上下文+任务委托
+      transitions: [dissolved]
+    dissolved:
+      description: 已解散
+      transitions: []
+  requiredProperties:
+    swarm_id: {type: string}
+    goal: {type: string}
+    members: {type: list, items: string, description: "namespace IDs"}
+  optionalProperties:
+    shared_context: {type: object}
+    deadline: {type: datetime}
+    rules: {type: object, description: "分工/升级/超时规则"}
+  communicationProtocol:
+    bus: aetherforge
+    channels: [swarm_shared, member_direct]
+  privacyGuarantee: "成员间不暴露private namespace数据"

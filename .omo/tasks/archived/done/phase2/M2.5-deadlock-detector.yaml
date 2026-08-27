@@ -1,0 +1,47 @@
+id: M2.5-DEADLOCK-DETECTOR
+phase: 2
+milestone: M2.5
+priority: P1
+title: "Deadlock Detector — DFS cycle detection + timeout + READONLY resolution"
+status: done
+owner: metaos
+assigned_to: metaos
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/kos/src/kos/task_dispatcher.py"
+  - "projects/kairon/packages/metaos/src/metaos/l2_controller.py"
+outputs:
+  - "projects/kairon/packages/metaos/src/metaos/deadlock_detector.py"
+  - "projects/kairon/packages/metaos/tests/test_deadlock_detector.py"
+acceptance_criteria:
+  - "Dependency Graph: track which Agent is waiting for which other Agent"
+  - "Cycle Detection: DFS detect circular wait → deadlock confirmed"
+  - "Resolution: terminate lowest-priority Agent in the cycle → notify human"
+  - "Checkpoint: terminated Agent resumes from last checkpoint after resolution"
+  - "Timeout: any Agent wait > 5min → flag as potential deadlock"
+  - "MCP tools: metaos_deadlock_check, metaos_deadlock_resolve"
+evidence:
+  - "deadlock_detector.py implemented (full DeadlockDetector class, ~230 lines)"
+  - "60 unit tests passing (12 test classes)"
+  - "DFS cycle detection: A→B→A detected, A→B→C→A detected, DAG no false positive"
+  - "Timeout: 5min threshold, exact boundary (300s) not flagged"
+  - "READONLY: resolve_deadlock() returns suggestion, doesn't terminate"
+  - "Lowest priority termination: P3 agent selected over P0 in a cycle"
+  - "Checkpoint: save/get/reference in resolution suggestion"
+  - "Cross-layer feedback: _alerts queue with severity/source"
+  - "MCP tools: metaos_deadlock_check + metaos_deadlock_resolve handlers"
+  - "No regression: 159 metaos tests pass (60 new + 60 L2 + 39 unit)"
+  - "Integration: detect → release → redetect (no deadlock)"
+  - "Timeout + deadlock detected simultaneously"
+completed_at: "2026-05-30T21:20:00Z"
+test_results:
+  total: 60
+  passed: 60
+  failed: 0
+  regression: 0

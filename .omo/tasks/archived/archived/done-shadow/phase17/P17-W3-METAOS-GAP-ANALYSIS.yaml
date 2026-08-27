@@ -1,0 +1,36 @@
+id: P17-W3-METAOS-GAP-ANALYSIS
+phase: 17
+milestone: M17.3
+priority: P1
+title: metaos差距分析 — 壳子vs D_Immunity/D_Genesis需求
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- _knowledge/design/omostation-strategic-architecture-v2.md
+depends_on:
+- P17-W1-ARCHITECTURE-FOUNDATION
+entry_gate:
+- phase16_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- metaos/core/immune.py 差距清单(壳子vs实际需求)
+- metaos/core/gate.py 差距清单
+- metaos/core/engine.py 差距清单
+- metaos/core/governance.py 差距清单
+- metaos/core/router.py 差距清单
+acceptance_criteria:
+- 每个壳子模块有明确的"缺什么"清单
+- 差距按P0/P1/P2优先级排列
+- 每个差距关联到D_Immunity或D_Genesis的具体源文件
+test_plan:
+- 输出 metaos 差距清单并逐项对照 immunity/genesis 需求缺口
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

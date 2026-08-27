@@ -1,0 +1,43 @@
+id: MEDIUM-AUDIT-FIXES-BUNDLE
+phase: 2
+milestone: M2.8-AUDIT-FIX
+priority: P2
+title: Fix all MEDIUM and LOW severity audit findings (M1-M14, L1-L4)
+status: done
+assigned_to: codebuddy
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+owner: workspace
+risk_level: L1
+allowed_operation_level: L0
+human_approval_required: false
+source_docs:
+- .omo/audits/phase2-comprehensive-audit-20260530.md
+inputs:
+- projects/kairon/packages/agora/src/agora/web_of_trust.py
+- projects/kairon/packages/kos/src/kos/trust_layer.py
+- projects/kairon/packages/minerva/src/minerva/search/bfs_search.py
+- projects/kairon/packages/sophia/src/sophia/kems_runtime.py
+- projects/kairon/packages/metaos/src/metaos/deadlock_detector.py
+- .omo/
+acceptance_criteria:
+- 'M1: Agora is_safe_url strengthened'
+- 'M8: trust_layer age decay logic mutually exclusive'
+- 'M9: web_of_trust.py _get_conn closes connection on exception'
+- 'M10: SOURCE_TRUST mutable global → instance-level'
+- 'M11: KEMS Planes/Chains MAP immutable'
+- 'M12: deadlock_detector MCP handler param type fixed'
+- 'M13: system.yaml phase2_core_complete field added'
+- 'M14: connector prefix naming fixed'
+- 'L1: wildcard depends_on removed or hardened'
+- 'L2: STATE.md phase_status updated'
+evidence_required:
+- git diff for each fix
+- pytest passes on affected packages
+test_plan:
+- 'unit: affected modules'
+started_at: '2026-05-30T21:42:00+08:00'

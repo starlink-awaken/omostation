@@ -1,0 +1,30 @@
+id: M2.6-WECHAT-SMB-MEDIA-DEFERRED-SPECS
+phase: 2
+milestone: M2.6
+priority: P3
+title: "WeChat/SMB/Media — deferred spec (sensitive capabilities)"
+status: blocked
+blocked_reason: "sensitive_capability — WeChat message/file access, SMB/NAS mount, Media photo indexing all require Safe Mesh + RBAC tool-level authorization"
+owner: iris
+assigned_to: null
+risk_level: L2
+allowed_operation_level: L0
+human_approval_required: true
+source_deps:
+  - "Safe Mesh deployment complete"
+  - "RBAC tool-level authorization ready"
+  - "Operation Levels rollout complete (Wave 4+)"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/iris/src/iris/"
+outputs:
+  - "WeChat connector spec (deferred)"
+  - "SMB connector spec (deferred)"
+  - "Media indexing spec (deferred)"
+acceptance_criteria:
+  - "Specs document scope and risks"
+  - "No connector implementation"
+  - "Blocked until infrastructure ready"
+evidence_required: []
+test_plan: "blocked — no implementation"

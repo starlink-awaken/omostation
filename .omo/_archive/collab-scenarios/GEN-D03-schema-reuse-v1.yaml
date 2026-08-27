@@ -1,0 +1,37 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: D03-schema-reuse-v1
+category: D_reuse_pair
+adversarial: false
+seed: 4030
+description: '[W2.1 批量] schema 复用 (配对03 实例1) — 测黑板复用命中'
+setup:
+  blackboard: []
+  roles:
+  - research
+  - delivery
+inject:
+- type: write_conflict
+  role: research
+  target: x_3_0
+  value: template
+- type: write_conflict
+  role: delivery
+  target: y_3_0
+  value: template
+expected:
+  behavior: blackboard_reuse
+  silent_loss: 0
+verdict:
+- criterion: x_3_0_present
+  check: final_artifact_present
+  args:
+    key: x_3_0
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

@@ -1,0 +1,63 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-08-08
+---
+
+# 告警通知渠道注册表 (channel kind)
+
+# 对齐 external-connection-fabric (channel kind + deliver/receipt/suppress + approved_delivery).
+# 凭据 opaque 引用: url_ref = env://<VAR> (secret_policy: credential_ref_only, 禁落盘 token).
+# 路由: routes.severity/domains 决定哪类告警走哪个 channel.
+# 生成器/消费者: bin/ssot/alert-connectors.py (list/health/send) + observability-events.py notify
+
+version: 1
+status: active
+owner: governance-team
+
+channels:
+  - id: alert-slack
+    kind: channel
+    provider: slack
+    protocol: https-webhook
+    url_ref: env://ALERT_SLACK_WEBHOOK
+    enabled: true
+    routes:
+      severity: [critical, degraded, warning]
+      domains: [governance, runtime, swarm]
+    owner: governance-team
+    note: "Slack incoming webhook — 配置 ALERT_SLACK_WEBHOOK 环境变量后生效"
+  - id: alert-feishu
+    kind: channel
+    provider: feishu
+    protocol: https-webhook
+    url_ref: env://ALERT_FEISHU_WEBHOOK
+    enabled: true
+    routes:
+      severity: [critical, degraded]
+      domains: [governance]
+    owner: governance-team
+    note: "飞书群机器人 webhook — 配置 ALERT_FEISHU_WEBHOOK 环境变量后生效"
+  - id: alert-wecom
+    kind: channel
+    provider: wecom
+    protocol: https-webhook
+    url_ref: env://ALERT_WECOM_WEBHOOK
+    enabled: true
+    routes:
+      severity: [critical]
+      domains: [governance, runtime]
+    owner: governance-team
+    note: "企业微信机器人 webhook — 配置 ALERT_WECOM_WEBHOOK 环境变量后生效"
+  - id: alert-generic
+    kind: channel
+    provider: generic
+    protocol: https-webhook
+    url_ref: env://ALERT_GENERIC_WEBHOOK
+    enabled: true
+    routes:
+      severity: [info]
+      domains: [perception, scene, knowledge]
+    owner: governance-team
+    note: "通用 webhook (低优先级通知) — 配置 ALERT_GENERIC_WEBHOOK 环境变量后生效"

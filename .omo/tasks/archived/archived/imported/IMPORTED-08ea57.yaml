@@ -1,0 +1,9 @@
+id: IMPORTED-08ea57
+title: 1.1 cli.py 去掉 sys.path.insert，统一为 from .omo_* 导入
+status: completed
+task_type: feature
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/scratch/omo-cleanup-plan.md
+deliverables: []
+imported_via: omo_bridge

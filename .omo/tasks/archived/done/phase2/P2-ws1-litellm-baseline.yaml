@@ -1,0 +1,33 @@
+id: P2-WS1-LITELLM-BASELINE
+phase: 2
+milestone: M2.7
+priority: P1
+title: LiteLLM baseline availability + health/model smoke
+status: done
+assigned_to: copilot-cli
+dispatch_id: manual-phase2-provider-plane
+run_ref: .omo/summaries/p2-provider-plane-evidence.md
+approval_ref: null
+review_ref: .omo/summaries/p2-provider-plane-evidence.md
+knowledge_refs:
+  - .omo/state/provider-plane.yaml
+handoff_refs: []
+blocked_by: null
+source_docs:
+  - .omo/plans/llm-convergence-planning-packet.md
+  - .omo/plans/llm-convergence-requirements.md
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate:
+  - At least one healthy LiteLLM provider path verified
+evidence_required:
+  - curl :4000/health shows healthy_count > 0
+  - curl /v1/chat/completions returns a valid completion
+  - Smoke evidence added to follow-up review note
+test_plan:
+  - curl :4000/health
+  - curl /v1/chat/completions
+  - capture model id and response latency in review note
+completed_at: '2026-05-30T15:36:00Z'
+completion_summary: "LiteLLM local baseline is live; health check and chat completion smoke both succeeded against the selected Claude route."

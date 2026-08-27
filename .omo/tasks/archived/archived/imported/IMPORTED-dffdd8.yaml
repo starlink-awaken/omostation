@@ -1,0 +1,10 @@
+id: IMPORTED-dffdd8
+title: 3.2 全量测试运行 + 回归修复
+status: completed
+task_type: feature
+depends_on:
+- IMPORTED-7bea82
+source_docs:
+- /Users/xiamingxing/Workspace/scratch/omo-cleanup-plan.md
+deliverables: []
+imported_via: omo_bridge

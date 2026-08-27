@@ -1,0 +1,36 @@
+id: P3-WS4-FRAGMENT-LLM-CLEANUP
+phase: 3
+milestone: M3.1
+priority: P1
+title: sophia / ssot / ontoderive / metaos env-driven convergence
+status: done
+assigned_to: copilot-cli
+dispatch_id: manual-phase3-foundation
+run_ref: .omo/summaries/p3-foundation-convergence-retrospective.md
+approval_ref: null
+review_ref: .omo/summaries/p3-foundation-convergence-retrospective.md
+knowledge_refs:
+  - projects/kairon/packages/ssot/src/ssot_kernel/extractor/llm.py
+  - projects/kairon/packages/ontoderive/engine/intelligence/providers.py
+  - projects/kairon/packages/ontoderive/engine/intelligence/llm.py
+  - projects/kairon/packages/metaos/src/metaos/layers/m_layer.py
+handoff_refs: []
+blocked_by: null
+source_docs:
+  - .omo/plans/archive/phase2-phase3-task-manifest.md
+  - .omo/plans/llm-convergence-planning-packet.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - gbrain and Minerva foundation routes landed
+evidence_required:
+  - ssot accepts unified LLM_* route selection
+  - ontoderive auto-detect accepts unified LLM_* route selection
+  - metaos accepts unified LLM_* for ollama mode
+test_plan:
+  - PYTHONPATH=src python3 -m pytest tests/test_extractor.py -q
+  - python3 -m pytest tests/test_llm.py -q
+  - PYTHONPATH=src python3 -m unittest tests.test_unit.TestMLayer.test_ollama_backend_reads_standard_llm_env
+completed_at: '2026-05-30T16:14:37Z'
+completion_summary: "SSOT, OntoDerive, and MetaOS now accept the unified LLM_* env seam while preserving their legacy provider-specific env compatibility."

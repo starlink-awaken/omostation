@@ -1,0 +1,32 @@
+id: P29-W0-GOVERNANCE-AUDIT
+phase: 29
+wave: W0
+title: "治理巡检器 — 健康分真相核查 + debt watchlist 重建"
+status: completed
+task_type: feature
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W3-ADR-SETUP completed"
+depends_on:
+  - P28-W3-ADR-SETUP
+deliverables:
+  - "projects/kairon/scripts/governance_audit.py"
+  - "projects/kairon/tests/scripts/test_governance_audit.py"
+  - ".omo/_delivery/phase28-governance-audit-2026-06-05.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs: []
+knowledge_refs:
+  - "ADR-0001"
+description: |
+  健康分 98.5 看着高但可能假健康。
+  5 项自动检查：lint / 测试覆盖 / 债务证据 / ADR 链接 / 任务交付物一致性。
+  找出"被标 resolved 但实际未治理"的债务，重建 watchlist。
+
+  巡检器是只读工具，不修改 .omo/state/、.omo/goals/、.omo/INDEX.md。
+started_at: '2026-06-05T23:00:00Z'
+completed_at: '2026-06-05T23:00:00Z'
+blocked_by: null
+retry_count: 0

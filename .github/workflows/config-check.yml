@@ -1,0 +1,31 @@
+name: Config Check
+on:
+  push:
+    paths: ["projects/knowledge/kairon/packages/agora/agora-services.json", "projects/agora/src/agora-services.json"]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Validate agora config
+        # P41-W1 fix: projects/knowledge/kairon is .gitignore'd. Use the in-monorepo agora config (src/agora-services.json)
+        # which is the canonical authoritative copy for this monorepo CI.
+        run: |
+          if [ -f "projects/agora/src/agora-services.json" ]; then
+            python3 -c "import json; json.load(open('projects/agora/src/agora-services.json')); print('Config valid (in-monorepo agora-services.json) ✅')"
+          elif [ -f "projects/knowledge/kairon/packages/agora/agora-services.json" ]; then
+            python3 -c "import json; json.load(open('projects/knowledge/kairon/packages/agora/agora-services.json')); print('Config valid (kairon agora-services.json) ✅')"
+          else
+            echo "No agora-services.json found in monorepo (kairon path is .gitignore'd) — skipping."
+          fi

@@ -1,0 +1,454 @@
+{
+  "generated_at": "2026-08-16T12:23:12",
+  "filter_round": "all",
+  "filter_owner": "",
+  "entries": 43,
+  "round_count": {
+    "round10": 3,
+    "round7": 10,
+    "round8": 10,
+    "round9": 20
+  },
+  "owner_count": {
+    "adr": 6,
+    "collab": 1,
+    "delivery": 1,
+    "gac": 24,
+    "governance": 3,
+    "mesh": 1,
+    "mof": 6,
+    "ssot": 1
+  },
+  "items": [
+    {
+      "name": "control_experiment",
+      "owner": "collab",
+      "round": "round10",
+      "due": "2026-09-22",
+      "risk": 8,
+      "status": "managed",
+      "bin": "bin/collab/control_experiment.py",
+      "scripts": "scripts/bin/collab/control_experiment.py"
+    },
+    {
+      "name": "git_health_hook",
+      "owner": "governance",
+      "round": "round10",
+      "due": "2026-09-22",
+      "risk": 8,
+      "status": "managed",
+      "bin": "bin/git-health-hook.py",
+      "scripts": "scripts/bin/git-health-hook.py"
+    },
+    {
+      "name": "physical_recovery",
+      "owner": "delivery",
+      "round": "round10",
+      "due": "2026-09-22",
+      "risk": 8,
+      "status": "managed",
+      "bin": "bin/delivery/physical_recovery.py",
+      "scripts": "scripts/bin/delivery/physical_recovery.py"
+    },
+    {
+      "name": "bus_usage_report",
+      "owner": "ssot",
+      "round": "round7",
+      "due": "2026-09-01",
+      "risk": 19,
+      "status": "managed",
+      "bin": "bin/ssot/bus-usage-report.py",
+      "scripts": "scripts/bin/ssot/bus-usage-report.py"
+    },
+    {
+      "name": "adr_drift_apply",
+      "owner": "adr",
+      "round": "round7",
+      "due": "2026-09-01",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/adr/adr-drift-apply.py",
+      "scripts": "scripts/bin/adr/adr-drift-apply.py"
+    },
+    {
+      "name": "adr_drift_auto_fix",
+      "owner": "adr",
+      "round": "round7",
+      "due": "2026-09-01",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/adr/adr-drift-auto-fix.py",
+      "scripts": "scripts/bin/adr/adr-drift-auto-fix.py"
+    },
+    {
+      "name": "adr_drift_check",
+      "owner": "adr",
+      "round": "round7",
+      "due": "2026-09-01",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/adr/adr-drift-check.py",
+      "scripts": "scripts/bin/adr/adr-drift-check.py"
+    },
+    {
+      "name": "adr_drift_classify",
+      "owner": "adr",
+      "round": "round7",
+      "due": "2026-09-01",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/adr/adr-drift-classify.py",
+      "scripts": "scripts/bin/adr/adr-drift-classify.py"
+    },
+    {
+      "name": "adr_trend_insight",
+      "owner": "adr",
+      "round": "round7",
+      "due": "2026-09-01",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/adr/adr-trend-insight.py",
+      "scripts": "scripts/bin/adr/adr-trend-insight.py"
+    },
+    {
+      "name": "cockpit_readiness",
+      "owner": "governance",
+      "round": "round7",
+      "due": "2026-09-01",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/cockpit-readiness.py",
+      "scripts": "scripts/bin/cockpit-readiness.py"
+    },
+    {
+      "name": "mesh_orphan_cleanup",
+      "owner": "mesh",
+      "round": "round7",
+      "due": "2026-09-01",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/mesh/mesh-orphan-cleanup.py",
+      "scripts": "scripts/bin/mesh/mesh-orphan-cleanup.py"
+    },
+    {
+      "name": "next_adr_id",
+      "owner": "adr",
+      "round": "round7",
+      "due": "2026-09-01",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/adr/next-adr-id.py",
+      "scripts": "scripts/bin/adr/next-adr-id.py"
+    },
+    {
+      "name": "submodule_gitlink_check",
+      "owner": "governance",
+      "round": "round7",
+      "due": "2026-09-01",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/submodule-gitlink-check.py",
+      "scripts": "scripts/bin/submodule-gitlink-check.py"
+    },
+    {
+      "name": "check_doc_claims",
+      "owner": "mof",
+      "round": "round8",
+      "due": "2026-09-08",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/mof/check-doc-claims.py",
+      "scripts": "scripts/bin/mof/check-doc-claims.py"
+    },
+    {
+      "name": "drift_history_insight",
+      "owner": "gac",
+      "round": "round8",
+      "due": "2026-09-08",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/drift-history-insight.py",
+      "scripts": "scripts/bin/gac/drift-history-insight.py"
+    },
+    {
+      "name": "gac_hygiene_check",
+      "owner": "gac",
+      "round": "round8",
+      "due": "2026-09-08",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/gac-hygiene-check.py",
+      "scripts": "scripts/bin/gac/gac-hygiene-check.py"
+    },
+    {
+      "name": "gen_dependency_baseline",
+      "owner": "mof",
+      "round": "round8",
+      "due": "2026-09-08",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/mof/gen-dependency-baseline.py",
+      "scripts": "scripts/bin/mof/gen-dependency-baseline.py"
+    },
+    {
+      "name": "gen_project_registry",
+      "owner": "mof",
+      "round": "round8",
+      "due": "2026-09-08",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/mof/gen-project-registry.py",
+      "scripts": "scripts/bin/mof/gen-project-registry.py"
+    },
+    {
+      "name": "governance_history_insight",
+      "owner": "gac",
+      "round": "round8",
+      "due": "2026-09-08",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/governance-history-insight.py",
+      "scripts": "scripts/bin/gac/governance-history-insight.py"
+    },
+    {
+      "name": "m2_ssot_inventory",
+      "owner": "mof",
+      "round": "round8",
+      "due": "2026-09-08",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/mof/m2-ssot-inventory.py",
+      "scripts": "scripts/bin/mof/m2-ssot-inventory.py"
+    },
+    {
+      "name": "mof_bootstrap",
+      "owner": "mof",
+      "round": "round8",
+      "due": "2026-09-08",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/mof/mof-bootstrap.py",
+      "scripts": "scripts/bin/mof/mof-bootstrap.py"
+    },
+    {
+      "name": "mof_m2_coverage",
+      "owner": "mof",
+      "round": "round8",
+      "due": "2026-09-08",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/mof/mof-m2-coverage.py",
+      "scripts": "scripts/bin/mof/mof-m2-coverage.py"
+    },
+    {
+      "name": "rule_history_insight",
+      "owner": "gac",
+      "round": "round8",
+      "due": "2026-09-08",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/rule-history-insight.py",
+      "scripts": "scripts/bin/gac/rule-history-insight.py"
+    },
+    {
+      "name": "alert_aggregator",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/alert-aggregator.py",
+      "scripts": "scripts/bin/gac/alert-aggregator.py"
+    },
+    {
+      "name": "alert_mock_p0_notify",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/alert-mock-p0-notify.py",
+      "scripts": "scripts/bin/gac/alert-mock-p0-notify.py"
+    },
+    {
+      "name": "auto_merge_lane_policy",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/auto-merge-lane-policy.py",
+      "scripts": "scripts/bin/gac/auto-merge-lane-policy.py"
+    },
+    {
+      "name": "dim_weight",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/dim-weight.py",
+      "scripts": "scripts/bin/gac/dim-weight.py"
+    },
+    {
+      "name": "event_loop_lint",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/event-loop-lint.py",
+      "scripts": "scripts/bin/gac/event-loop-lint.py"
+    },
+    {
+      "name": "gac_bootstrap",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/gac-bootstrap.py",
+      "scripts": "scripts/bin/gac/gac-bootstrap.py"
+    },
+    {
+      "name": "gac_coverage_lint",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/gac-coverage-lint.py",
+      "scripts": "scripts/bin/gac/gac-coverage-lint.py"
+    },
+    {
+      "name": "gac_gc",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/gac-gc.py",
+      "scripts": "scripts/bin/gac/gac-gc.py"
+    },
+    {
+      "name": "gac_mof_validate",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/gac-mof-validate.py",
+      "scripts": "scripts/bin/gac/gac-mof-validate.py"
+    },
+    {
+      "name": "governance_alert_dispatch",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/governance-alert-dispatch.py",
+      "scripts": "scripts/bin/gac/governance-alert-dispatch.py"
+    },
+    {
+      "name": "kos_seed_import",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/kos-seed-import.py",
+      "scripts": "scripts/bin/gac/kos-seed-import.py"
+    },
+    {
+      "name": "m1_closeout_report",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/m1-closeout-report.py",
+      "scripts": "scripts/bin/gac/m1-closeout-report.py"
+    },
+    {
+      "name": "omo_acl_ops_window",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/omo-acl-ops-window.sh",
+      "scripts": "scripts/bin/gac/omo-acl-ops-window.sh"
+    },
+    {
+      "name": "omo_state_write_guard",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/omo-state-write-guard.py",
+      "scripts": "scripts/bin/gac/omo-state-write-guard.py"
+    },
+    {
+      "name": "p0_event_listener",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/p0-event-listener.py",
+      "scripts": "scripts/bin/gac/p0-event-listener.py"
+    },
+    {
+      "name": "phase_gate_check",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/phase-gate-check.py",
+      "scripts": "scripts/bin/gac/phase-gate-check.py"
+    },
+    {
+      "name": "state_freshness_check",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/state-freshness-check.py",
+      "scripts": "scripts/bin/gac/state-freshness-check.py"
+    },
+    {
+      "name": "x2_freshness_check",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/x2-freshness-check.py",
+      "scripts": "scripts/bin/gac/x2-freshness-check.py"
+    },
+    {
+      "name": "x2_rule_add",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/x2-rule-add.py",
+      "scripts": "scripts/bin/gac/x2-rule-add.py"
+    },
+    {
+      "name": "x2_rule_lint",
+      "owner": "gac",
+      "round": "round9",
+      "due": "2026-09-15",
+      "risk": 15,
+      "status": "managed",
+      "bin": "bin/gac/x2-rule-lint.py",
+      "scripts": "scripts/bin/gac/x2-rule-lint.py"
+    }
+  ]
+}

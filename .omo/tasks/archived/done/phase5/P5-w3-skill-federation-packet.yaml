@@ -1,0 +1,39 @@
+id: P5-W3-SKILL-FEDERATION-PACKET
+phase: 5
+milestone: W3
+priority: P0
+title: Freeze the skill federation packet
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase5-wave3-packet
+run_ref: .omo/plans/archive/phase5-wave3-execution-plan.md
+approval_ref: null
+review_ref: .omo/summaries/phase5-wave3-retrospective.md
+knowledge_refs:
+  - .omo/workers/registry.yaml
+  - .omo/standards/agent-cli-worker-collaboration.md
+  - .omo/_knowledge/design/hermes-convergence-strategy.md
+handoff_refs:
+  - .omo/evidence/handoffs/P5-W0-LANDING-MODEL-FREEZE.md
+  - .omo/evidence/handoffs/P5-W0-HERMES-COMPATIBILITY-CONTRACT.md
+  - .omo/evidence/handoffs/P5-W0-REVIEW-REFRESH-PACKET.md
+source_docs:
+  - .omo/plans/archive/phase5-program-plan.md
+  - .omo/_knowledge/design/phase5-program-architecture.md
+deliverables:
+  - .omo/plans/archive/phase5-wave3-execution-plan.md
+  - .omo/summaries/phase5-wave3-retrospective.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - G5.2 completed
+evidence_required:
+  - governed AI execution bridge is explicit
+  - Hermes memory consumption path is bounded
+test_plan:
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T12:00:00Z'
+completed_at: '2026-05-31T12:10:00Z'
+retry_count: 0
+completion_summary: "Wave 3 closed as a skill-federation packet that uses the worker runtime and handoff evidence corpus as the governed AI execution bridge."

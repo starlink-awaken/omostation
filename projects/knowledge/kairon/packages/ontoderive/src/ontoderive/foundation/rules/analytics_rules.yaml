@@ -1,0 +1,42 @@
+# 分析规则示例 — YAML声明式规则
+# RuleLoader自动加载, 不需改Python源码
+
+# R22: 趋势检测
+- id: R22
+  name: trend_detection
+  type: threshold_alert
+  category: analytics
+  description: 检测指标的显著变化趋势
+  premises: ["has_numeric_value"]
+  conclusion_template: "{desc}从{old}变为{new}, 变化{change}%, 趋势{trend_direction}"
+  confidence: 0.75
+
+# R23: 集中度风险
+- id: R23
+  name: concentration_risk
+  type: threshold_alert
+  category: risk
+  description: 客户/供应商集中度超过阈值
+  premises: ["concentration > 50%"]
+  conclusion_template: "{entity}的{metric}达到{value}%, 超过{threshold}%集中度风险阈值"
+  confidence: 0.80
+
+# R24: 偏离基准检测
+- id: R24
+  name: benchmark_deviation
+  type: numeric_comparison
+  category: analytics
+  description: 指标偏离行业基准
+  premises: ["has_benchmark"]
+  conclusion_template: "{metric}={value}偏离基准{benchmark}达{gap}%, {severity}级别偏差"
+  confidence: 0.70
+
+# R25: 周期不匹配
+- id: R25
+  name: cycle_mismatch
+  type: evidence_gap
+  category: risk
+  description: 两个时间周期出现不匹配
+  premises: ["has_two_periods"]
+  conclusion_template: "{short_period}不足以完成{task}, 需要{long_period}, 差距{gap}"
+  confidence: 0.75

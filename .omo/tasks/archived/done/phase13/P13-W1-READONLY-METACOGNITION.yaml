@@ -1,0 +1,34 @@
+id: P13-W1-READONLY-METACOGNITION
+phase: 13
+milestone: W1
+priority: P0
+title: Read-only metacognition baseline
+status: done
+assigned_to: codex
+dispatch_id: phase13-wave1-readonly-metacognition
+run_ref: .omo/summaries/phase13-closeout.md
+approval_ref: user-request-2026-06-01-complete-phase11-12-13
+review_ref: .omo/summaries/phase13-closeout.md
+source_docs:
+  - .omo/plans/archive/phase13-metacognition-preplanning.md
+deliverables:
+  - .omo/evidence/phase13/metacognition-baseline.yaml
+depends_on:
+  - P12-W4-AUDIT-HANDOFF
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 12 closeout GO
+evidence_required:
+  - read-only baseline exists
+  - blind spots and confidence scoring exist
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase13_execution.py -q
+started_at: '2026-06-01T05:00:00Z'
+completed_at: '2026-06-01T05:10:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary:
+  closeout_ref: .omo/summaries/phase13-closeout.md
+  result: completed

@@ -1,0 +1,8 @@
+id: cockpit-debt-debt-1
+title: 治理技术债务：债务 — CLOSED (占位债无执行面)
+status: closed
+closed_at: '2026-07-28T13:00:00Z'
+close_reason: >
+  卡片 description 仅为 "债务"/unknown 维度/owner unassigned, 无影响面与验收标准。
+  W3 产能轨 triage: 关闭占位, 避免污染 planned 计数. 真债须带 debt_id 与证据再开卡.
+needs-human: false

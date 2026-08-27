@@ -1,0 +1,8 @@
+id: DEBT-L0-GAC-CONSENSUS-ONBOARD-TRIAGE
+title: "gac-consensus-inject + gac-compute-onboard — CLOSED (wave2 修)"
+status: closed
+closed_at: '2026-07-28T13:15:00Z'
+close_reason: >
+  entity_type 迁移 + schema-tolerant 查询; compute-onboard --check 轻量路径 <1s
+  (非放宽超时). 验证见 tests/test_gac_consensus_schema.py.
+needs-human: false

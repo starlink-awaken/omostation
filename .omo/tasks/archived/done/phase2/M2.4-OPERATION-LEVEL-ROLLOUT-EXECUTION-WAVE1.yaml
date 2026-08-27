@@ -1,0 +1,49 @@
+id: M2.4-OPERATION-LEVEL-ROLLOUT-EXECUTION-WAVE1
+phase: 2
+milestone: M2.4
+priority: P0
+title: "Operation levels rollout — implement deny paths for first 5 candidates"
+status: done
+owner: runtime-safety
+assigned_to: "me"
+started_at: "2026-05-30T16:35:00Z"
+completed_at: "2026-05-30T17:10:00Z"
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+  - ".omo/standards/operation-level-rollout-plan.md"
+depends_on:
+  - M2.3-OPERATION-LEVEL-ROLLOUT-PLAN
+dependencies:
+  - M2.3-OPERATION-LEVEL-ROLLOUT-PLAN
+inputs:
+  - "projects/kairon/packages/kos/src/kos/mcp/server.py"
+outputs:
+  - "L0: kos search_knowledge deny path (no-op, read-only)"
+  - "L1: kos run_indexer(incremental) deny path align"
+  - "L2: kos run_indexer(full) deny path align"
+  - "L2: gbrain delete_page deny path (verified existing)"
+  - "L3: kos db_vacuum deny path stub (24h cooldown required)"
+  - "projects/kairon/packages/kos/src/kos/operation_level/__init__.py"
+acceptance_criteria:
+  - "L2 unconfirmed raise PermissionError"
+  - "L3 unconfirmed OR cooldown<24h raise PermissionError"
+  - "Existing KOS MCP tests continue to pass"
+  - "No sensitive capabilities launched"
+  - "No destructive operations executed — deny paths only"
+evidence_required:
+  - "Deny path implementations for 5 candidates"
+  - "KOS MCP server.py tests pass"
+  - "gbrain MCP tests pass (no regression)"
+evidence:
+  - "KOS MCP deny paths verified in isolated env: search_knowledge L0 ok, run_indexer L1 audit ok, run_indexer/full L2 deny w/o confirmation ok, db_vacuum L3 deny w/o confirmation+cooldown ok"
+  - "gbrain delete_page already has L2 deny path at core/operations.ts:1028-1029 — check `!_confirmed` throws OperationError permission_denied"
+  - "Shared operation_level module created at kos/src/kos/operation_level/__init__.py with deny_unconfirmed_l2, deny_unconfirmed_l3, require_level"
+  - "test_adapters.py: 10/10 passed (no regression)"
+  - "gbrain operations.ts: delete_page L2 deny path verified (no regression)"
+test_plan:
+  - "unit: L2 deny path test"
+  - "unit: L3 cooldown test"
+  - "integration: KOS MCP server.py existing tests pass"

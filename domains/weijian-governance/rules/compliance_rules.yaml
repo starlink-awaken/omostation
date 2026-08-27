@@ -1,0 +1,21 @@
+---
+domain: work-weijian
+version: 1.0.0
+policies:
+  - id: RULE-WEIJIAN-DATA-01
+    name: 医疗数据不出网与强制脱敏
+    severity: CRITICAL
+    constraint: "not (contains(action.uri, 'public-cloud') and not action.args.is_sanitized)"
+    message: "严禁向未经批准的公网环境传输未经脱敏的医疗与健康数据"
+
+  - id: RULE-WEIJIAN-FINANCE-02
+    name: 大额立项预算论证前置门禁
+    severity: HIGH
+    constraint: "action.args.budget_cny <= 500000 or action.args.has_expert_review == true"
+    message: "预算超过50万元的信息化项目必须具有专家论证意见书"
+
+  - id: RULE-WEIJIAN-SECURITY-03
+    name: 等保三级上线硬性要求
+    severity: CRITICAL
+    constraint: "action.args.system_level != 'core' or action.args.mlps_grade >= 3"
+    message: "核心业务系统上线前必须达到等保三级评测要求"

@@ -1,0 +1,35 @@
+id: M2.2-OPERATION-LEVELS
+phase: 2
+milestone: M2.2
+priority: P0
+title: "Define and enforce L0-L3 operation levels"
+status: done
+assigned_to: "reasonix-code"
+started_at: "2026-05-30T01:53:30+08:00"
+completed_at: "2026-05-30T01:55:30+08:00"
+evidence:
+  - "L0-L3 definitions: .omo/standards/operation-levels.md"
+  - "Deny path pattern defined: _confirmed flag + PermissionError"
+  - "Audit log schema defined: action/actor/target/reason/timestamp"
+  - "Test scenarios: 6 cases covering allow/deny for L0/L1/L2/L3"
+  - "Integration plan: Agora registry → agentmesh dispatch"
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+  - ".omo/plans/deep-architecture-agent-analysis.md"
+  - ".omo/plans/agent-architecture-audit-redteam.md"
+depends_on:
+  - M2.0-TASK-SYSTEM-SEED
+risk_level: L2
+operation_level: L2
+human_approval_required: true
+entry_gate:
+  - "M2.0 governance close accepted or waived"
+evidence_required:
+  - "L0/L1/L2/L3 definitions documented"
+  - "L2 action denied without confirmation"
+  - "L3 action requires human confirmation and cool-down"
+  - "Audit log captures allow/deny decision"
+test_plan:
+  - ".omo/tests/README.md#operation-level-tests"
+exit_gate:
+  - "Sensitive connectors remain blocked until this task passes"

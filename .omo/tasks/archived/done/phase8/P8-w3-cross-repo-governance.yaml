@@ -1,0 +1,38 @@
+id: P8-W3-CROSS-REPO-GOVERNANCE
+phase: 8
+milestone: W3
+priority: P0
+title: Land the Phase 8 Wave 3 cross-repo governance and blocked-surface ratification packet
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase8-wave3-governance
+run_ref: .omo/plans/archive/phase8-wave3-execution-plan.md
+approval_ref: null
+review_ref: .omo/summaries/phase8-wave3-closeout.md
+knowledge_refs:
+  - docs/superpowers/specs/2026-05-31-phase8-control-plane-design.md
+handoff_refs: []
+source_docs:
+  - .omo/plans/archive/phase8-program-plan.md
+  - .omo/plans/archive/phase8-wave3-execution-plan.md
+deliverables:
+  - .omo/standards/operation-levels.md
+  - .omo/summaries/phase8-wave3-closeout.md
+  - .omo/summaries/phase8-closeout-retrospective.md
+  - .omo/summaries/phase8-review.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 8 Wave 2 closeout recorded with GO
+evidence_required:
+  - blocked sensitive surfaces remain explicitly gated with ratification criteria
+  - final retrospective and review are recorded
+test_plan:
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 scripts/sync_omo_state.py --omo-dir .omo
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T18:39:00Z'
+completed_at: '2026-05-31T18:45:00Z'
+retry_count: 0
+completion_summary: Wave 3 completed by ratifying the repo-local governance boundary and recording the final Phase 8 retrospective and review.

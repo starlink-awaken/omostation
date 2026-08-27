@@ -1,0 +1,24 @@
+id: P17-T6-FORGE-REGISTRY-FIX
+phase: 17
+milestone: M17.2
+priority: P0
+title: "修复 forge tools-registry.json 空注册表"
+status: done
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+source_docs:
+  - ".omo/plans/phase17-debt-governance-sprint.md"
+  - "projects/kairon/packages/forge/"
+entry_gate:
+  - phase16_completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+  - "forge/tools-registry.json 包含有效工具条目"
+  - "forge status 可正常运行不崩溃"
+test_plan:
+  - "cd projects/kairon && python3 -c 'from forge.cli import forge_status; forge_status()'"

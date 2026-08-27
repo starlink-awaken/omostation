@@ -1,0 +1,84 @@
+{
+  "coverage_rate": 0.0,
+  "detail": [
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "稳定愿景"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "愿景原则"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "北极星"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "愿景场景"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "愿景架构"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "愿景路线"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "一、愿景定义"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "二、能力模型"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "三、Roadmap 规划"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "四、技术架构演进"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "五、关键里程碑"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "六、资源需求"
+    }
+  ],
+  "gap_pillars": [
+    "稳定愿景",
+    "愿景原则",
+    "北极星",
+    "愿景场景",
+    "愿景架构",
+    "愿景路线",
+    "一、愿景定义",
+    "二、能力模型",
+    "三、Roadmap 规划",
+    "四、技术架构演进",
+    "五、关键里程碑",
+    "六、资源需求"
+  ],
+  "gaps": 12,
+  "generated_at": "2026-08-08T06:12:44.316218+00:00",
+  "implemented": 0,
+  "pillars_found": 12,
+  "schema": "vision-audit/v1"
+}

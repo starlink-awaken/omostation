@@ -1,0 +1,40 @@
+schema: journey-spec/v1
+journey_id: intent-to-execution
+description: "BOS意图 → 网关路由 → 能力执行 → 审计链 → 指标记录"
+
+states:
+  - name: intent_resolved
+    scene: agora-bos-gateway
+    next: [route_selected]
+  - name: route_selected
+    scene: agora-bos-gateway
+    next: [capability_executed, route_failed]
+  - name: capability_executed
+    scene: agora-bos-gateway
+    next: [audit_recorded]
+  - name: route_failed
+    scene: agora-bos-gateway
+    next: [intent_resolved]
+  - name: audit_recorded
+    scene: agora-bos-gateway
+    next: [metrics_updated]
+  - name: metrics_updated
+    scene: agora-bos-gateway
+    next: []
+
+transitions:
+  - from: intent_resolved
+    to: route_selected
+    condition: "status == succeeded"
+  - from: route_selected
+    to: capability_executed
+    condition: "status == succeeded"
+  - from: route_selected
+    to: route_failed
+    condition: "status == failed"
+  - from: capability_executed
+    to: audit_recorded
+    condition: "always"
+  - from: audit_recorded
+    to: metrics_updated
+    condition: "always"

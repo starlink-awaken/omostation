@@ -1,0 +1,36 @@
+id: P4-W2-DIVERGENCE-TRIAGE
+phase: 4
+milestone: W2
+priority: P0
+title: Define severity owner and disposition for core divergence patterns
+status: done
+assigned_to: copilot-cli
+dispatch_id: wave2-governance-hardening
+run_ref: .omo/summaries/p4-wave2-closure-retrospective.md
+approval_ref: null
+review_ref: .omo/_knowledge/management/omo-convergence-audit-2026-05-31.md
+knowledge_refs:
+  - .omo/plans/archive/phase4-wave2-hardening-design.md
+  - .omo/plans/archive/phase4-wave2-hardening-implementation-plan.md
+  - .omo/standards/divergence-triage.yaml
+  - .omo/evidence/divergence/orphaned_tasks.yaml
+handoff_refs:
+  - scripts/sync_omo_state.py
+blocked_by: null
+source_docs:
+  - .omo/plans/archive/phase4-wave2-hardening-design.md
+  - .omo/plans/archive/phase4-wave2-hardening-implementation-plan.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 4 Wave 1 worker ops baseline completed
+evidence_required:
+  - core divergence patterns have severity owner and disposition guidance
+  - control snapshot and truth triage remain clearly separated
+test_plan:
+  - python3 -m pytest .omo/tests/test_omo_automation.py -q --tb=short
+  - python3 -m pytest .omo/tests/test_phase4_wave2_docs.py -q --tb=short
+created_at: '2026-05-31T01:10:00Z'
+completed_at: '2026-05-31T02:20:00Z'
+completion_summary: "Goal divergence is now triaged as compact control-plane flags with structured drill-down artifacts, separating live state from truth-plane remediation detail."

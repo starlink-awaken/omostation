@@ -1,0 +1,9 @@
+# 子模块可达性基线 — 已知假阳性白名单
+# 这些子模块的 gitlink 指针在本地工作区可能不可达（预存问题），
+# pre-push hook 将跳过这些子模块的可达性检查。
+# 每行一个子模块路径，支持 # 注释。
+#
+# projects/runtime — OMO 运行时环境，非标准 git 工作流，指针常漂移
+projects/runtime
+# projects/scripts — 独立脚本仓库，非标准 git 工作流，指针常漂移
+scripts

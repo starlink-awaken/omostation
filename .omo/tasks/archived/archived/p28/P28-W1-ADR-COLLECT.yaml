@@ -1,0 +1,56 @@
+id: P28-W1-ADR-COLLECT
+phase: 28
+wave: W1
+title: "ADR 候选自动收集 — 从 minerva 研究结果与 kairon 决策日志中提取 ADR 候选"
+status: completed
+task_type: analysis
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W0-NORTH-STAR completed"
+  - "P28-W0-TOOL-HEATMAP completed"
+depends_on:
+  - P28-W0-NORTH-STAR
+  - P28-W0-TOOL-HEATMAP
+deliverables:
+  - "projects/kairon/scripts/adr_collect.py"
+  - "projects/kairon/tests/scripts/test_adr_collect.py"
+  - ".omo/_delivery/phase28-adr-candidates.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/design/plans/phase28-observable-knowledge-workflow.md"
+knowledge_refs:
+  - ".omo/tasks/planned/P28-W3-ADR-SETUP.yaml"
+description: |
+  为 P28-W3-ADR-SETUP 提前做 ADR 候选收集，避免 W3 临时拍脑袋补 ADR。
+  W3 阶段才会正式建 `.omo/_knowledge/decisions/` 目录并写首份正式 ADR；
+  本任务只做"候选挖掘"工作，不写正式 ADR。
+
+  实际扫描源（4 个文档 + git log）：
+    1. projects/kairon/docs/governance_plan.md（8 候选）
+    2. projects/kairon/docs/architecture_audit.md（3 候选）
+    3. .omo/_knowledge/management/tool-heatmap-phase28.md（3 候选）
+    4. .omo/_delivery/phase28-pkg-slim-plan.md（2 候选）
+    5. git log --since=30 days ago（含决策关键词的 commit）
+
+  提取策略：
+    - 关键词触发（英文：decision/choose/adopt/deprecate/migrate；中文：决策/选择/采用/迁移/废弃）
+    - 章节级解析（governance_plan: H3 治理条目; architecture_audit: H2/H3 风险分级; tool-heatmap: 结论 1/2/3; pkg-slim: 2.1/2.2 立即归档）
+    - 置信度评分：file:line → HIGH; commit hash → MED; 关键词命中 → LOW
+
+  验收（严格）：
+    - 脚本可对 4 个源跑通（run 结果 16 候选, 0 失败）
+    - 输出 ≥2 条候选 ADR（实际 16 条, 必选 2 条: agora 路由精简 / 5 包归档）
+    - 单测覆盖 16 个测试：关键词命中、置信度评分、源扫描、CLI、报告组装、空输入降级
+    - 报告存到 `.omo/_delivery/phase28-adr-candidates.md`（用户指定的交付物位置）
+
+  约束：
+    - 不写正式 .omo/_knowledge/decisions/ADR-XXX.md（W3 任务范围）
+    - 不修改 minerva/kairon 现有产物，只读不写
+    - 失败安全：脚本异常时输出空候选，不污染上游
+started_at: "2026-06-05T21:13:00+08:00"
+completed_at: "2026-06-05T21:17:30+08:00"
+blocked_by: null
+retry_count: 0

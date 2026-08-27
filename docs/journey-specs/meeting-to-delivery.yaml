@@ -1,0 +1,67 @@
+schema: journey-spec/v1
+journey_id: meeting-to-delivery
+description: "会议决议 → 任务派发 → 工程交付 → 绩效报送 → 知识沉淀"
+
+states:
+  - name: meeting_recorded
+    scene: meeting-supervision
+    next: [tasks_extracted]
+  - name: tasks_extracted
+    scene: meeting-supervision
+    next: [task_dispatched, deferred]
+  - name: task_dispatched
+    scene: engineering-delivery
+    next: [delivered, blocked]
+    checkpoint:
+      require: human_approval
+      timeout_hours: 72
+  - name: delivered
+    scene: engineering-delivery
+    next: [performance_reported]
+  - name: blocked
+    scene: meeting-supervision
+    next: [task_dispatched]
+  - name: performance_reported
+    scene: periodic-reporting
+    next: [supervised]
+  - name: supervised
+    scene: project-supervision
+    next: [knowledge_captured, escalated]
+  - name: escalated
+    scene: meeting-supervision
+    next: [tasks_extracted]
+  - name: knowledge_captured
+    scene: knowledge-curation
+    next: []
+  - name: deferred
+    scene: meeting-supervision
+    next: []
+
+transitions:
+  - from: meeting_recorded
+    to: tasks_extracted
+    condition: "meeting.decisions.count > 0"
+  - from: tasks_extracted
+    to: task_dispatched
+    condition: "task.assignee != null"
+  - from: tasks_extracted
+    to: deferred
+    condition: "task.assignee == null"
+  - from: task_dispatched
+    to: delivered
+    condition: "delivery.status == succeeded"
+  - from: task_dispatched
+    to: blocked
+    condition: "delivery.status == blocked"
+  - from: delivered
+    to: performance_reported
+    condition: "always"
+  - from: performance_reported
+    to: supervised
+    condition: "always"
+  - from: supervised
+    to: knowledge_captured
+    condition: "supervision.risk_level != high"
+  - from: supervised
+    to: escalated
+    condition: "supervision.risk_level == high"

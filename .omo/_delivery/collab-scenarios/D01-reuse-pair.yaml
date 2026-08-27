@@ -1,0 +1,30 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: D01-reuse-pair
+category: D_reuse_pair
+adversarial: false
+seed: 3
+description: 复用配对 — 先做 artifact_x, 再做相似 artifact_y, 测黑板复用命中 (复用配对)
+setup:
+  blackboard: []
+  roles: [research, delivery]
+inject:
+  - {type: write_conflict, role: research, target: artifact_x, value: "模板"}
+  - {type: write_conflict, role: delivery, target: artifact_y, value: "模板"}
+expected:
+  behavior: blackboard_reuse
+  silent_loss: 0
+verdict:
+  - criterion: x_present
+    check: final_artifact_present
+    args: {key: artifact_x}
+  - criterion: y_present
+    check: final_artifact_present
+    args: {key: artifact_y}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

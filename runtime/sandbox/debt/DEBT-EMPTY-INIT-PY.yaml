@@ -1,0 +1,14 @@
+id: DEBT-EMPTY-INIT-PY
+title: 5 empty __init__.py files need module docstrings
+resolution_evidence: |
+  2026-06-19 闭环: 5 个空 __init__.py 已补 module docstring (projects/{cockpit,agora,ecos,omo,runtime}/.../__init__.py)。
+  docstring 描述包入口契约 (BOS URI 暴露面 / 入参 / 公共 API)。
+  验证: ruff 全包 0 hit; mypy strict 16/16 包通过; omo lint surfaces pass.
+remediation: |
+  1. projects/cockpit/src/cockpit/__init__.py — 加 cockpit 入口契约 docstring
+  2. projects/agora/src/agora/__init__.py — 加 agora MCP hub 入口 docstring
+  3. projects/ecos/src/ecos/__init__.py — 加 ecos L0 协议 docstring
+  4. projects/omo/src/omo/__init__.py — 加 omo OS 入口 docstring
+  5. projects/runtime/src/runtime/__init__.py — 加 runtime 调度 docstring
+registered_at: '2026-06-19T21:30:00Z'
+closed_at: '2026-06-19T22:00:00Z'

@@ -1,0 +1,123 @@
+# OPC Evolution Loop Configuration (SSOT)
+#
+# 日期: 2026-06-13
+# 关联: OPC P5-P7 self-correction closeout
+# 关联: GOV-X1-CONSTRAINT.yaml: CR-CADENCE-01 / CR-INDEX-LOCK-01 / CR-MODE-ENV-01 / CR-TIME-ENV-01 / CR-MODE-COPY-01 / CR-DRIFT-LOOP-01 / CR-AUDIT-5REPOS-01
+# 关联: GOV-X4-CONSISTENCY.yaml: CS-06 / CS-07 / CS-08
+# 适用范围: scripts/opc_p5_*.py / scripts/opc_p6_*.py / scripts/opc_p7_*.py / .omo/cron/opc-closeout-crontab
+
+# ── 元数据 ──
+version: "1.0.0"
+introduced: "2026-06-13"
+owner: "omo"
+scope: "all OPC cadence + drift + radar + self-evolve scripts"
+
+# ── Cron 注入环境变量 (CR-CADENCE-01) ──
+# 所有 OPC cron wrapper 必须显式注入以下 env, 禁止 daemon 兜底推断
+injection_env:
+  INVOCATION_ID: "cron"           # 强制 cron 标识, 与 manual 区分
+  OPC_TRIGGER: "cron"             # 标识 evidence type
+  WORKSPACE: "/Users/xiamingxing/Workspace"  # 工作区路径, 注入而非依赖 ~/
+  PYTHONPATH: "projects/omo/src"  # omo 模块路径
+
+# ── 索引锁路径 (CR-INDEX-LOCK-01) ──
+# 所有 *.index.json 写入必须 fcntl.flock 互斥
+index_paths:
+  loop_index: ".omo/_control/evolution/loop/index.json"
+  drift_index: ".omo/_control/evolution/drift/index.json"
+  radar_index: ".omo/_control/evolution/radar/index.json"
+  self_evolve_index: ".omo/_control/evolution/self-evolve/index.json"
+lock_strategy: "fcntl.flock(LOCK_EX) context manager"
+lock_dir: "/tmp/opc-evo-locks"   # 进程退出自动释放, 跨平台稳定
+
+# ── 模式注入 (CR-MODE-ENV-01) ──
+# OPC_MODE 透传到 5repos.py, 决定 {date}-{mode}.json 副本命名
+modes:
+  weekly:
+    cron_expr: "0 2 * * 1"       # 周一 02:00
+    OPC_MODE: "weekly"
+    output_basename: "weekly.json"
+    next_action_tier: "三级"
+  monthly:
+    cron_expr: "0 3 1 * *"       # 每月 1 号 03:00
+    OPC_MODE: "monthly"
+    output_basename: "monthly.json"
+    next_action_tier: "二级"
+  pre-release:
+    cron_expr: "manual"          # 不在 cron, 由 release_cycle 触发
+    OPC_MODE: "pre-release"
+    output_basename: "pre-release.json"
+    next_action_tier: "一级"
+default_mode: "weekly"
+
+# ── 语义时间覆盖 (CR-TIME-ENV-01) ──
+# 注入 OPC_GENERATED_AT / OPC_TODAY 用于回放 / 手动演练 / 复测
+# 不注入时退化为 datetime.now()
+time_env:
+  OPC_GENERATED_AT:
+    description: "覆盖 weekly/radar/drift 报告的 generated_at 字段"
+    fallback: "datetime.now(timezone.utc).isoformat()"
+    injection_examples:
+      - "OPC_GENERATED_AT=2026-06-13T11:00:00Z"
+      - "OPC_GENERATED_AT=2026-W24-anchor"
+  OPC_TODAY:
+    description: "覆盖日期维度 (用于回放历史周)"
+    fallback: "datetime.now().date().isoformat()"
+    injection_examples:
+      - "OPC_TODAY=2026-06-13"
+      - "OPC_TODAY=2026-06-01"
+
+# ── 5repos 单写副本 (CR-MODE-COPY-01) ──
+# 5repos.py 是 {date}-{mode}.json 唯一 owner, daemon 不得双写
+mode_specific_copy:
+  owner: "scripts/opc_audit_rollout_5repos.py"
+  path_template: ".omo/_delivery/audit-rollout/{date}-{mode}.json"
+  daemon_forbidden: "scripts/opc_p7_audit_rollout_daemon.py 禁止再生成 mode-specific 副本"
+  fallback_chain:
+    - primary: "opc_audit_rollout_5repos.py"   # 主路径
+    - fallback: "opc_p7_audit_rollout_daemon.py"  # 仅写 5repos.json
+    - output: ".omo/_delivery/audit-rollout/{date}-5repos.json"
+
+# ── 漂移闭环 (CR-DRIFT-LOOP-01) ──
+# drift>0 → emit self-evolution task → 落 planned/ → approval_required=true
+drift_loop:
+  detector: "scripts/opc_p6_drift_detector.py"
+  self_evolve_emitter: "scripts/opc_p6_self_evolve.py"
+  task_drop_dir: ".omo/tasks/planned/"
+  task_required_fields:
+    - "id: OPC-P6-SELF-EVOLUTION-*"
+    - "status: planned"
+    - "approval_required: true"
+    - "human_approval_required: true"
+    - "approval_state: awaiting_human"
+  forbid:
+    - "task 推 active/"
+    - "task approval_required=false"
+    - "task approval_state != awaiting_human"
+
+# ── §17 Metrics 路径 (CR-AUDIT-5REPOS-01) ──
+audit_5repos:
+  output_path: ".omo/_delivery/audit-rollout/{date}-5repos.json"
+  cross_refs:
+    - "scripts/opc_p7_audit_rollout_daemon.py"
+    - "scripts/opc_p7_phase_gate_check.py"
+    - ".omo/_knowledge/audits/*-self-correction-closeout.md"
+
+# ── 关闭红线 (5 红线) ──
+red_lines:
+  - "gate_status 一律维持 not_yet_passed, 不得改为 passed"
+  - "planned/ 任务不得推 active/, 必须经人工审批"
+  - "manual 演练仅限单测/wrapper 探针/冒烟 1 次, evidence 必须真 cron"
+  - "子仓指针不自动 bump, 根仓只 commit 元数据"
+  - "无 §17 证据 / 无 5repos.json / 无 audit 报告 → 不得宣称 passed"
+
+# ── Memory 引用 ──
+memory_refs:
+  - "feedback_opc_cron_wrapper_trigger_injection_20260612.md"
+  - "feedback_no_standard_weakening_20260612.md"
+  - "feedback_real_cron_window_stop_manual_practice_20260612.md"
+  - "feedback_opc_closeout_reviewer_acceptable_20260613.md"
+  - "feedback_submodule_state_decoupling_20260612.md"
+  - "feedback_p6_self_evolution_planned_only.md"
+  - "feedback_8field_review_template_20260612.md"
+  - "feedback_release_notes_three_piece_20260612.md"

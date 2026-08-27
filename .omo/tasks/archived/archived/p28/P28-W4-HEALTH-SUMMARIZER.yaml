@@ -1,0 +1,30 @@
+id: P28-W4-HEALTH-SUMMARIZER
+phase: 28
+wave: W4
+title: "健康摘要自动化 — 扫描 FamilyShared 档案，生成家庭可读待办"
+status: completed
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W1-HEALTH-PROFILE completed"
+depends_on:
+  - P28-W1-HEALTH-PROFILE
+deliverables:
+  - "projects/kairon/packages/minerva/src/minerva/health_summarizer/"
+  - ".omo/_delivery/phase28-w4-health-summarizer.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_control/north-star.md"
+knowledge_refs:
+  - "ADR-0001"
+description: |
+  北极星场景 C 落地：让 health-profile 数据真正进入家庭日常。
+  扫描 FamilyShared 02.健康/档案/*.json，应用 5 条健康提醒规则，
+  输出可读 Markdown 到 FamilyShared 01.健康/00-待办.md。
+started_at: '2026-06-05T22:30:00Z'
+completed_at: '2026-06-05T22:30:00Z'
+blocked_by: null
+retry_count: 0

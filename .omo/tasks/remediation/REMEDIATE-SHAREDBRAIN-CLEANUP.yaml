@@ -1,0 +1,14 @@
+id: REMEDIATE-SHAREDBRAIN-CLEANUP
+phase: '17'
+priority: P1
+title: SharedBrain遗留代码清理
+description: 清理nucleus/conductor/organs旧代码，归档到_archived/
+status: completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+rollback: mv回移
+acceptance_criteria:
+- 旧代码已归档
+- README已更新
+completed_at: '2026-06-03T00:00:00Z'

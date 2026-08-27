@@ -1,0 +1,30 @@
+id: P31-VERIFY
+phase: 31
+wave: W1
+title: "P31 收官 audit — 3 组合并 + agora 修复后真实健康分"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P31-W1-CLEANUP-SHIM completed"
+depends_on:
+  - P31-W1-CLEANUP-SHIM
+deliverables:
+  - ".omo/_delivery/phase31-verify-report.md"
+risk_level: L0
+allowed_operation_level: L0
+source_docs: []
+knowledge_refs:
+  - "ADR-0006"
+description: |
+  P31 收官 audit: 重跑 omo governance audit 看真实健康分。
+  对比 P30-W2-VERIFY (57.2 F) 看合并后是否提升。
+  真实结果: 总分 46.7 (F), 净降 10.5 分, 关键发现 audit 暴露 4 项 WARN/FAIL
+  (ruff 270/test coverage 6 包无 test/task consistency 39 deliverables/agora 2/5)。
+  P32 建议从"发版策略"调整为"治理清算"。
+started_at: '2026-06-06T04:30:00Z'
+completed_at: '2026-06-06T04:30:00Z'
+blocked_by: null
+retry_count: 0

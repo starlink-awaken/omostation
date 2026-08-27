@@ -1,0 +1,30 @@
+title: Health Intake Scene Card (健康信息结构化记录)
+status: draft
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-08-26
+related:
+- ./unified-inbox.yaml
+---
+schema: scene-card/v2
+scene_id: health-intake
+journey_id: health-medical-workflow
+goal: 将症状/体征指标/医嘱等健康信息结构化记录到本地健康台账, 并判定是否需要就诊
+trigger: 人工触发 journey run (P1 无自动采集源, 敏感域约束)
+input_contract: 健康事件描述 (症状文本/指标数值/发生时间), 仅本地处理
+result_contract: 结构化健康记录 (symptom/metric/onset/severity) + needs_doctor_visit 布尔判定
+outcome_metric: health_intake_structuring_accuracy
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 症状信息遗漏或误判就医必要性导致延误
+data_classification: confidential
+data_scope: local-health-ledger-only
+operator: health-intake-dispatch-under-human-review
+required_capabilities:
+- llm:local-classify
+- storage:local-health-ledger
+notes:
+- 'P1 契约先行: 运行时实现属 P2 (BET-Y1Q3-T7-02 non_goals)'
+- '风险边界: 本场景仅 L0 记录动作 (对齐 risk_engine health.generate:report=L0); 任何对外发送属 L2 需单独走 send_email:doctor 审批'
+- '敏感域约束: 不接自动采集源 (穿戴设备/体检 API), 不外发任何未人审内容 (agent-cli-worker 协作标准)'

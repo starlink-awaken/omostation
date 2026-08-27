@@ -1,0 +1,41 @@
+# M2: DigitalAgent — extends Agent for digital organism (ADR-0396)
+m2_type: DigitalAgent
+version: 1.0.0
+extends: Agent
+DigitalAgent:
+  m3_parent: StructuralElement.Component
+  description: 数字生命体Agent — 三层生态(常驻/按需/涌现) + 持续进化 + 治理约束
+  additionalProperties:
+    tier:
+      type: enum
+      values: [resident, on_demand, emergent]
+      description: Agent生态层级
+    performance:
+      type: object
+      properties:
+        total_executions: integer
+        acceptance_rate: float
+        trust_score: float
+        trend: enum[improving, stable, declining]
+    lifecycle:
+      type: object
+      properties:
+        version: semver
+        born_from: string
+        evolution_changelog: list
+    governance:
+      type: object
+      properties:
+        self_modification_level: enum[S1, S2, S3]
+        can_auto_implement: enum[S1_only, none]
+    schedule:
+      type: object
+      properties:
+        daily: list
+        weekly: list
+        monthly: list
+  validationRules:
+  - rule: tier in [resident, on_demand, emergent]
+    level: error
+  - rule: performance.trust_score >= 0.0 and <= 1.0
+    level: error

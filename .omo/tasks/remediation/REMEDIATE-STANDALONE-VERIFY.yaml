@@ -1,0 +1,15 @@
+id: REMEDIATE-STANDALONE-VERIFY
+phase: '17'
+priority: P2
+title: sharedbrain-standalone运营验证
+description: 启动standalone服务并验证HTTP端点响应
+status: completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+rollback: 无(仅测试)
+acceptance_criteria:
+- 服务端口响应
+- health/circuit/neural端点可用
+completed_at: '2026-06-03T00:00:00Z'
+resolution: gbrain已注册到agora KNOWN_SERVICES, gbrain_client.py编译通过

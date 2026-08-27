@@ -1,0 +1,102 @@
+name: Cascading Topological Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  cascading_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          fetch-depth: 2
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          ignore-nothing-to-cache: true
+      - run: pip install pyyaml
+      - name: Determine changed files
+        id: changed-files
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }}
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+          else
+            CHANGED=$(git diff --name-only HEAD^ HEAD)
+          fi
+          
+          # Extract project names
+          PROJECTS=""
+          for file in $CHANGED; do
+            if [[ $file == projects/* ]]; then
+              proj=$(echo $file | cut -d'/' -f2)
+              # ADR-0412 (2026-08-16): 子模块删除后 gitlink 仍出现在 diff —
+              # 目录已不存在(或非目录)的 project 不传给 affected-graph (严格 fail-closed 语义保留)
+              [[ -d "projects/$proj" ]] && PROJECTS="$PROJECTS $proj"
+            fi
+          done
+          
+          PROJECTS=$(echo $PROJECTS | tr ' ' '\n' | sort -u | tr '\n' ' ')
+          echo "Changed projects: $PROJECTS"
+          echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
+
+      - name: Run Topological Affected Graph
+        id: graph
+        if: steps.changed-files.outputs.projects != ''
+        run: |
+          PROJS="${{ steps.changed-files.outputs.projects }}"
+          read -r -a PROJECTS <<< "$PROJS"
+          if [ "${#PROJECTS[@]}" -eq 0 ]; then
+            echo "No projects changed; skipping affected graph"
+            echo "affected=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          python3 bin/gac/affected-graph.py --changed-projects "${PROJECTS[@]}" --json > /tmp/affected.json
+          AFFECTED=$(python3 -c "import json; print(' '.join(json.load(open('/tmp/affected.json')).get('affected_projects', [])))")
+          echo "Affected projects: $AFFECTED"
+          echo "affected=$AFFECTED" >> $GITHUB_OUTPUT
+
+      - name: Trigger downstream tests
+        if: steps.graph.outputs.affected != ''
+        run: |
+          echo "Affected projects (receipt): ${{ steps.graph.outputs.affected }}"
+          echo "Blocking project tests (direct changes): ${{ steps.changed-files.outputs.projects }}"
+          # The affected graph remains the dependency-impact receipt. Only
+          # directly changed projects own blocking tests; transitive projects
+          # may have unrelated baseline/environment failures and are covered
+          # by their own change lane or scheduled full-suite workflows.
+          for proj in ${{ steps.changed-files.outputs.projects }}; do
+            if [ -d "projects/$proj/tests" ] && [ -f "projects/$proj/pyproject.toml" ]; then
+              echo "──────────────────────────────────────────────"
+              echo "🧪 Testing affected project: projects/$proj"
+              echo "──────────────────────────────────────────────"
+              TEST_HOME="$RUNNER_TEMP/cascading-home/$proj"
+              mkdir -p "$TEST_HOME"
+              (
+                cd "projects/$proj" &&
+                HOME="$TEST_HOME" \
+                XDG_CONFIG_HOME="$TEST_HOME/.config" \
+                XDG_CACHE_HOME="$TEST_HOME/.cache" \
+                uv sync --quiet &&
+                HOME="$TEST_HOME" \
+                XDG_CONFIG_HOME="$TEST_HOME/.config" \
+                XDG_CACHE_HOME="$TEST_HOME/.cache" \
+                uv run pytest -q --ignore=tests/e2e --ignore=tests/integration
+              ) || {
+                echo "❌ Cascading test failed in projects/$proj"
+                exit 1
+              }
+            fi
+          done

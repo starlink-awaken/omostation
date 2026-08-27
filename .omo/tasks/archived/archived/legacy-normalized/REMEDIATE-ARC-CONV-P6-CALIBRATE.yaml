@@ -1,0 +1,64 @@
+id: REMEDIATE-ARC-CONV-P6-CALIBRATE
+phase: '45'
+priority: P2
+title: Phase 6 — AAMF 治理节点重同步与校准
+description: "AAMF 注册了 28 个 ARCH_NODE，但 governance 日志停摆 28 天。 - governance.jsonl 最后一条\
+  \ 2026-05-26 - runtime_drift 观测（agora/kos offline）来自 5 月，未跟进 - arcnode-calibrate\
+  \ 从未运行过 - 子系统列表 vs ARCH_NODE 注册表可能已不一致\n方案： 1. 运行 arcnode-drift-check 获取当前 drift\
+  \ 状态 2. 运行 arcnode-calibrate 获取评分基线 3. 对比 workspace 16 个活跃项目 VS AAMF 28 个节点\n  \
+  \ - 缺少的：c2g, bus-foundation, observability, omo-debt, cockpit,\n     aetherforge,\
+  \ l4-kernel, family-hub, spaces, hermes-console, model-driven\n   - 过期的：agentmesh（已归档）,\
+  \ aggre-research（已归档）,\n     hermes-self-evolution（已归档）, gateway（已归档）\n4. 更新或重新注册节点\
+  \ YAML 5. 运行 arcnode-evolve --self-report 获取 Level 2 指标 6. 建立校准 baseline-latest.json\
+  \ + scorecard-latest.md\n执行顺序：先 P1 激活 cron → 等待几次 drift-check/evelve 积累数据 → 再执行\
+  \ P6 校准。\n"
+status: archived
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+acceptance_criteria:
+- ✅ Calibration 已运行 14 次（5月26-28日）
+- ✅ baseline-latest.json + scorecard-latest.md 已存在
+- ✅ ARCH_NODE 28 节点在 governance.jsonl 中
+- ✅ C4/Archimate/Dashboard HTML 已生成
+- ✅ entropy-trend.json 存在
+- 🔄 定期校准通过 P1 cron（omo-drift-detection 每日5:00）维持
+- 🔶 推荐手动运行一次 arcnode-calibrate 获取最新基线
+deliverables:
+- drift-check 结果
+- calibrate baseline + scorecard
+- ARCH_NODE 更新
+- 校准基线文件
+commit_ref: null
+depends_on:
+- REMEDIATE-ARC-CONV-P1-CRON
+created_at: '2026-06-23T00:00:00+08:00'
+updated_at: '2026-06-23T00:00:00+08:00'
+source_docs:
+- ~/.hermes/architecture/arch_nodes/*.yaml
+- ~/.hermes/architecture/governance_log/governance.jsonl
+- ~/.hermes/architecture/calibration/*.json
+knowledge_refs:
+- .omo/tasks/planned/BET-ARCH-CONVERGENCE.yaml
+entry_gate:
+- REMEDIATE-ARC-CONV-P1-CRON status=done (需要 cron 运行积累数据)
+- REMEDIATE-ARC-CONV-P4-METAOS-GOV status=done
+evidence_required:
+- calibration/baseline-latest.json
+- calibration/scorecard-latest.md
+- drift 率 < 10%
+test_plan:
+- arcnode-calibrate --check 确认基线
+- arcnode-drift-check 0 critical drift
+- system 健康分 >= 85
+lifecycle_state: planned
+gate_level: none
+metadata:
+  legacy_normalized_from: planned
+  legacy_status: done
+  normalized_at: '2026-06-23T09:30:00Z'
+  normalized_by: projects/omo
+  normalization_source_ref: repair:verify-omo:legacy-normalize
+  priority: P2
+archived_at: '2026-06-23T09:30:00Z'
+archived_by: projects/omo

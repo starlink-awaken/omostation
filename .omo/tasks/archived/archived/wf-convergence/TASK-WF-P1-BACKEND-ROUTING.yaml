@@ -1,0 +1,30 @@
+id: TASK-WF-P1-BACKEND-ROUTING
+title: 'Phase 1: ecos/workflow 模块化拆分 + metaos 后端路由'
+status: planned
+task_type: feature
+risk_level: L2
+depends_on:
+  - BET-WF-CONVERGENCE
+entry_gate:
+  - BET_APPROVED
+deliverables:
+  - ecos/workflow 拆为 loader/executor/backend_registry/validator 四模块
+  - backend_registry.py 支持动态注册 execute backend
+  - metaos workflow 注册为第一个非硬编码 backend
+  - execute_m1_workflow() 新函数，支持 M1 节点→backend 路由
+evidence_required:
+  - ecos 472 tests 全过
+  - 旧 execute_workflow() 行为不变
+  - 执行 1 个测试 M1 节点走 metaos backend
+mof_m1_required:
+  - TASK-WF-P1-TEST-NODE (测试用 M1 节点)
+test_plan:
+  - cd projects/ecos && uv run pytest tests/ -q
+  - curl -s http://localhost:8090/api/workflow/execute/test
+assigned_to: hermes
+human_approval_required: false
+phase: 1
+estimated_days: 2
+created_at: '2026-06-22'
+updated_at: '2026-06-22'
+allowed_operation_level: L3

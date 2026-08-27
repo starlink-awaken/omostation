@@ -1,0 +1,10 @@
+apiVersion: omo/v1
+kind: RuntimeBoundary
+space_ref: spaces/runtime-space.yaml
+allowed_runtime_roots:
+  - runtime/run-continuation
+  - runtime/logs
+disallowed_operations:
+  - destructive_changes_without_approval
+  - side_effects_outside_runtime_space
+schema_version: v1

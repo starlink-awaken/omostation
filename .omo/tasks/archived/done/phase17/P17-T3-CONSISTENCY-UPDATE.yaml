@@ -1,0 +1,24 @@
+id: P17-T3-CONSISTENCY-UPDATE
+phase: 17
+milestone: M17.1
+priority: P2
+title: "更新 CONSISTENCY-CHECK.md 覆盖 Phase 5-16"
+status: done
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+source_docs:
+  - ".omo/plans/phase17-debt-governance-sprint.md"
+  - ".omo/CONSISTENCY-CHECK.md"
+entry_gate:
+  - phase16_completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+  - "CONSISTENCY-CHECK.md 更新日期为 2026-06-03"
+  - "覆盖 Phase 5-16 的一致性检查项"
+test_plan:
+  - "grep 'phase' .omo/CONSISTENCY-CHECK.md | grep -c '5\\|6\\|7\\|8\\|9\\|10\\|11\\|12\\|13\\|14\\|15\\|16'"

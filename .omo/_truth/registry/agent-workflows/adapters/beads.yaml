@@ -1,0 +1,13 @@
+beads:
+  status: optional_adapter
+  command: beads
+  authority: input_adapter
+  ssot_rule: beads items may seed governed work but OMO/C2G planned tasks remain canonical.
+  ingress_workflow: external-adapter-sync
+  pattern: small dependency-tracked work items can be imported as OMO planned tasks
+    when available
+  health_command:
+  - beads
+  - version
+  health_required: false
+  degrade_to: c2g-spec-ingress plus OMO planned tasks

@@ -1,0 +1,35 @@
+id: P28-W5-AGORA-ROUTES
+phase: 28
+wave: W5
+title: "agora 路由表自动生成 — 偿还 G27.1 治理债务（L1 包批量注册）"
+status: completed
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W0-TOOL-HEATMAP completed"
+  - "P28-W3-ADR-SETUP completed"
+depends_on:
+  - P28-W0-TOOL-HEATMAP
+  - P28-W3-ADR-SETUP
+deliverables:
+  - "projects/kairon/scripts/agora_route_generator.py"
+  - "projects/kairon/tests/scripts/test_agora_route_generator.py"
+  - ".omo/_delivery/phase28-agora-routes-report.md"
+  - ".omo/_delivery/phase28-agora-routes-report.json"
+risk_level: L2
+allowed_operation_level: L2
+source_docs:
+  - ".omo/_knowledge/management/tool-heatmap-phase28.md"
+knowledge_refs:
+  - "ADR-0001"
+description: |
+  G27.1 偿还：自动扫描 kairon 各包（@mcp.tool() / @fastmcp.tool() 装饰器），
+  生成完整 agora-routes.json。从 2 条扩到 106 条（覆盖 10 个核心 L1 工具包）。
+  不修改 agora 核心代码（router.py / server.py），只动 agora-routes.json。
+  覆盖前自动备份 .bak-{UTC timestamp}。
+started_at: '2026-06-05T22:30:00Z'
+completed_at: '2026-06-05T22:30:00Z'
+blocked_by: null
+retry_count: 0

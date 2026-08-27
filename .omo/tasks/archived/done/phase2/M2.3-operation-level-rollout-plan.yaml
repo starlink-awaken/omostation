@@ -1,0 +1,106 @@
+id: M2.3-OPERATION-LEVEL-ROLLOUT-PLAN
+phase: 2
+milestone: M2.3
+priority: P1
+title: "Operation levels rollout plan — extend L0-L3 deny path across all MCP tools"
+status: done
+owner: governance
+assigned_to: "agent:runtime-safety"
+source_docs:
+  - ".omo/standards/operation-levels.md"
+  - ".omo/standards/phase2-full-execution-go-no-go.md"
+  - ".omo/tasks/done/M2.2-operation-levels.yaml"
+  - "projects/kairon/packages/shared-lib/src/kairon_lib/operation_level.py"
+  - "projects/kairon/packages/kos/src/kos/mcp/server.py"
+depends_on:
+  - M2.2-OPERATION-LEVELS
+dependencies:
+  - M2.2-OPERATION-LEVELS
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+
+inputs:
+  - ".omo/standards/operation-levels.md"
+  - "projects/kairon/packages/shared-lib/src/kairon_lib/operation_level.py"
+  - "projects/kairon/packages/kos/src/kos/mcp/server.py"
+  - "Known MCP/tool entrypoints across kairon, gbrain, agentmesh, and SharedBrain"
+
+outputs:
+  mcptool_inventory:
+    description: "Complete inventory of all MCP tools across KOS, Agora, Eidos, gbrain, SharedBrain"
+    format: "table: service / tool name / current level / target level / deny path status"
+  classification_table:
+    description: "L0/L1/L2/L3 classification for every MCP tool"
+    required_sections:
+      - "Read-only (L0): search, query, list, get, status"
+      - "Low-risk write (L1): add, tag, log, cache update, incremental sync"
+      - "High-risk write (L2): delete, full reindex, schema modify, bulk operation"
+      - "Destructive (L3): drop, truncate, purge all, factory reset"
+  deny_path_standard:
+    description: "Standardized deny path implementation pattern"
+    must_include:
+      - "confirmed: bool = False  (default False -> deny for L2+)"
+      - "cool_down_hours: int = 0  (L3 requires >= 24)"
+      - "PermissionError with standard message format"
+      - "Audit log: tool, level, action (allow/deny), actor, reason, timestamp"
+    reference_implementation: "projects/kairon/packages/shared-lib/src/kairon_lib/operation_level.py"
+  human_approval_standard:
+    description: "When and how human approval is required"
+    must_include:
+      - "L2 requires _confirmed=True; default False -> deny"
+      - "L3 requires _confirmed=True AND cooldown >= 24h"
+      - "Audit trail logs all allow/deny decisions"
+  first_wave_candidates:
+    description: "Minimum viable tools for first implementation wave"
+    criteria:
+      - "Cover each level (L0/L1/L2/L3) with at least 1 tool"
+      - "Align with KOS MCP existing annotations (see server.py:398, 463, 486)"
+      - "Do NOT touch sensitive capabilities (Apple/WeChat/Family OS/SMB/Media)"
+
+evidence:
+  - "MCP tool inventory: 5 services × 8-12 tools each = ~45 tools classified (§1)"
+  - "Classification table: L0/L1/L2/L3 rules defined (§2)"
+  - "Deny path standard: aligned with operation-levels.md (§3)"
+  - "Human approval standard: L2 confirmed:true, L3 confirmed+24h (§4)"
+  - "First-wave candidates: 5 tools (kos search/L1/full, gbrain delete, kos vacuum) (§5)"
+  - "sensitive capabilities remain blocked: explicit rule (§7)"
+  - "KOS MCP alignment: server.py:398(L2), 463(L1), 486(L2) referenced (§3,§5)"
+  - "Rollout sequence: 4 Wave plan (§6)"
+evidence_required:
+  - "MCP/tool inventory"
+  - "L0/L1/L2/L3 classification table"
+  - "deny path standard"
+  - "human approval standard"
+  - "first-wave implementation candidates"
+  - "sensitive capabilities remain blocked proof"
+
+evidence_paths:
+  - ".omo/standards/operation-level-rollout-plan.md"
+
+notes: >
+  Rollout plan document complete. All acceptance criteria are met.
+  Document-only task (no code changes). First-wave candidates selected.
+  Aligned with existing KOS MCP annotations. Sensitive capabilities remain blocked.
+  Next step: M2.3-OPERATION-LEVEL-ROLLOUT-EXECUTION for code implementation.
+
+acceptance_criteria:
+  - "Does NOT start sensitive capabilities"
+  - "All L2/L3 operations have deny path or confirmed path documented"
+  - "Aligned with .omo/standards/operation-levels.md"
+  - "Aligned with KOS MCP already-implemented pattern (operation_level annotations in server.py)"
+  - "First-wave candidates selected — do not block on full rollout"
+  - "Rollout plan is L0 document-only; no code changes required for this task"
+
+test_plan:
+  - ".omo/tests/README.md#operation-level-tests"
+
+reviewed_by: "agent:copilot"
+completed_at: "2026-05-30T14:42:01+08:00"
+
+entry_gate:
+  - "operation-levels.md standard exists"
+  - "kairon_lib/operation_level.py reference implementation exists"
+  - "KOS MCP server.py has existing operation_level annotations"
+exit_gate:
+  - "Rollout plan approved -> can proceed to M2.3-OPERATION-LEVEL-ROLLOUT-EXECUTION task"

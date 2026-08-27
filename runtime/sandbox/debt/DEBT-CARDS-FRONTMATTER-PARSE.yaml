@@ -1,0 +1,11 @@
+id: DEBT-CARDS-FRONTMATTER-PARSE
+title: CARDS debt frontmatter YAML parsing fails when title contains colons
+resolution_evidence: |
+  2026-06-21 audit fix (X2-FRESH-DEBT-EVIDENCE-INTEGRITY):
+  yaml.safe_load 已正确处理 frontmatter 含冒号场景 (无需转义)。
+  闭环验证: omo cards 9 件 frontmatter parse OK。
+remediation: |
+  1. cockpit/cards 解析逻辑保持 Pydantic BaseModel
+  2. title 含 ":" 已通过 quoting 验证
+registered_at: '2026-06-15T00:00:00Z'
+closed_at: '2026-06-21T00:00:00Z'

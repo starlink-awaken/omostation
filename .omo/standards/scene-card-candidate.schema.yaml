@@ -1,0 +1,104 @@
+---
+title: Scene Card Candidate Projection Schema
+status: active
+type: standard
+owner: architecture-governance
+last-reviewed: 2026-08-02
+related:
+  - ../../docs/scene-card-candidate-seeds.yaml
+  - ../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
+  - ./external-connection-fabric.md
+---
+schema: scene-card-candidate/v2
+purpose: Discover and review possible business scenes without activating runtime capability.
+lifecycle_tiers:
+  description: >
+    五档生命周期，打破 proposal_only→active 断崖。
+    shadow 档定义为"无业务副作用，不需要业务确认"，可自由上线验证。
+  tiers:
+    - id: draft
+      description: 草稿，仅作者可见，无运行时影响
+      requires_business_confirmation: false
+      side_effects: none
+    - id: shadow
+      description: 影子模式，无业务副作用，不需要业务确认，可自由上线
+      requires_business_confirmation: false
+      side_effects: none
+    - id: assisted
+      description: 辅助模式，agent 执行但人类逐步确认每一步
+      requires_business_confirmation: true
+      side_effects: controlled
+    - id: supervised
+      description: 监督模式，agent 自主执行但人类事后审查
+      requires_business_confirmation: true
+      side_effects: monitored
+    - id: routine
+      description: 常规模式，agent 全自主执行，仅异常上报
+      requires_business_confirmation: true
+      side_effects: autonomous
+  valid_transitions:
+    - [draft, shadow]
+    - [shadow, assisted]
+    - [assisted, supervised]
+    - [supervised, routine]
+    - [shadow, draft]
+    - [assisted, shadow]
+    - [supervised, assisted]
+    - [routine, supervised]
+required_fields_v2:
+  - bet
+  - falsifier
+input_sources:
+  - governed scenario contracts under .omo/_truth/scenarios
+  - explicitly curated strategy seed catalog
+output:
+  mode: candidate_only
+  activation: forbidden
+  raw_content_policy: never_read_or_export
+  required_fields:
+    - candidate_id
+    - title
+    - discovery_source
+    - discovery_refs
+    - proposed_scene_id
+    - proposed_journey_id
+    - outcome_metric_hint
+    - capability_refs
+    - safe_observations
+    - missing_activation_fields
+  empty_until_business_confirmation:
+    - activation_evidence_refs
+    - sample_refs
+    - demand_evidence_refs
+    - opportunity_window
+activation_boundary:
+  required_scene_card_fields:
+    - scene_id
+    - journey_id
+    - goal
+    - trigger
+    - input_contract
+    - result_contract
+    - outcome_metric
+    - consumer
+    - approver
+    - owner
+    - failure_cost
+    - data_classification
+    - data_scope
+    - operator
+    - permission_ref
+    - rollback_plan
+    - sample_refs
+    - demand_evidence_or_opportunity_window
+  evidence_policy: References only; use evidence:// or vault://redacted/ and never business raw content.
+  activation_owner: Business owner and OMO admission contract
+  candidate_discovery_must_not:
+    - call an external provider
+    - read private source content
+    - persist credentials or raw samples
+    - mutate OMO runtime state
+    - create or dispatch a WorkflowRun
+  next_states:
+    - proposal_only
+    - sandbox

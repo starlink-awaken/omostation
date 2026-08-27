@@ -1,0 +1,32 @@
+---
+id: NEEDS-HUMAN-INGRESS-REGISTRY-DRIFT
+title: "ingress-registry 28 task carrier missing (cockpit-triage WIP 悬空引用, governance-verify fail 根因)"
+status: closed  # W3.2 清: needs-human:false 技术性卡 (governance-verify handoff_refs schema), 28 cockpit-triage carrier 债转 task #9 追踪
+needs-human: false  # S5清: 归debt或冗余
+priority: P2
+owner: human
+created_at: "2026-07-25T12:55:00Z"
+assigned_to: null
+dispatch_id: null
+run_ref: 20260725T125232Z-governance-state-mutation-822fda21
+approval_ref: null
+review_ref: null
+knowledge_refs:
+  - .omo/_knowledge/audits/2026-07-25-p0-inbox-triage-anomaly-closeout.md
+handoff_refs: []
+source_docs: []
+entry_gate: []
+evidence_required:
+  - 确认 28 cockpit-triage-* task 是否 cockpit WIP 遗留 (runtime 写面悬空)
+  - 清理 ingress registry 悬空引用 或 补 task carrier
+test_plan:
+  - omo lint ingress-registry → 0 issue (governance-verify 全绿)
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+desc: >
+  P0 收口发现 pre-existing 治理债: omo lint ingress-registry 报 28 task carrier missing
+  (governance-verify fail 根因, 但 governance-verify 非 required check 不阻塞 PR 合并).
+  全部为 cockpit-triage-* (cockpit 子模块各项目 triage task) + TASK-93165AA8. 疑似
+  cockpit 运行时创建 ingress task 引用但 task 文件未落地 (runtime 写面悬空). 需
+  cockpit 团队确认: 清理悬空引用 或 补 task carrier. 修复后 governance-verify 全绿.

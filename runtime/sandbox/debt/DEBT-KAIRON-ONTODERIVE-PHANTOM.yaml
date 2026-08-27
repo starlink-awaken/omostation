@@ -1,0 +1,14 @@
+id: DEBT-KAIRON-ONTODERIVE-PHANTOM
+title: ontoderive engine/ 幽灵目录 — 116 文件未安装, 50 tests 依赖
+resolution_evidence: |
+  2026-06-19 闭环: 116 文件从 engine/ 迁移到 src/ontoderive/。
+  11 个冲突文件 (engine/ 版本) 选为 canonical。759 tests pass。根 engine/ 已删除。
+  所有 import 由 engine.* 更新为 ontoderive.*. kairon CI lint job + mypy strict 全过。
+  evidence: kairon commit 514f546 (kairon/packages/ontoderive restructure).
+remediation: |
+  1. engine/* → src/ontoderive/* (116 文件迁移)
+  2. 50 tests imports: engine.* → ontoderive.*
+  3. 删除根 engine/ 目录
+  4. uv sync + uv run pytest packages/ontoderive -q
+registered_at: '2026-06-19T16:00:00Z'
+closed_at: '2026-06-19T22:30:00Z'

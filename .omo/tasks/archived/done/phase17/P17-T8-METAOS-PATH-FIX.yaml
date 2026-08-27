@@ -1,0 +1,25 @@
+id: P17-T8-METAOS-PATH-FIX
+phase: 17
+milestone: M17.2
+priority: P0
+title: "替换 metaos 中 15 处 sys.path.insert 为标准导入"
+status: done
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+source_docs:
+  - ".omo/plans/phase17-debt-governance-sprint.md"
+  - "projects/kairon/packages/metaos/"
+entry_gate:
+  - phase16_completed
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+evidence_required:
+  - "metaos 包中无 sys.path.insert 调用"
+  - "ruff lint 通过"
+test_plan:
+  - "grep -r 'sys.path.insert' projects/kairon/packages/metaos/ | wc -l == 0"
+  - "cd projects/kairon && make lint"

@@ -1,0 +1,41 @@
+id: P12-W4-AUDIT-HANDOFF
+phase: 12
+milestone: W4
+priority: P0
+title: Phase 12 audit, redteam, and Phase 13/14 handoff
+status: done
+assigned_to: codex
+dispatch_id: phase12-wave4-audit-handoff
+run_ref: .omo/summaries/phase12-closeout.md
+approval_ref: user-request-2026-06-01-complete-phase11-and-phase12
+review_ref: .omo/_knowledge/management/phase12-redteam.md
+source_docs:
+  - .omo/plans/archive/phase12-wave4-execution-plan.md
+deliverables:
+  - .omo/_knowledge/management/phase12-cross-audit.md
+  - .omo/_knowledge/management/phase12-redteam.md
+  - .omo/summaries/phase12-pilot-closeout.md
+  - .omo/evidence/phase12/promotion-checklist.md
+  - .omo/summaries/phase12-retrospective.md
+  - .omo/summaries/phase12-closeout.md
+depends_on:
+  - P12-W3-SINGLE-PILOT-PKG-DRYRUN
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Wave 3 pilot, trace, and dry-run complete
+evidence_required:
+  - cross-audit pass
+  - redteam has no blocking Critical finding
+  - promotion checklist exists
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase12_execution.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-06-01T00:40:00Z'
+completed_at: '2026-06-01T00:50:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary:
+  closeout_ref: .omo/summaries/phase12-closeout.md
+  result: completed

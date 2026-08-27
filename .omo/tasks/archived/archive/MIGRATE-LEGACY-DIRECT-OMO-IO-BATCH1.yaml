@@ -1,0 +1,41 @@
+id: MIGRATE-LEGACY-DIRECT-OMO-IO-BATCH1
+title: migrate first batch of legacy direct .omo writes to brokered governance surfaces
+status: candidate
+task_type: governance
+risk_level: L1
+depends_on: []
+source_docs:
+- .omo/standards/omo-governance-surfaces.md
+deliverables:
+- broker migration patchset
+- updated tests
+- clean direct-omo-io subset evidence
+imported_via: projects/cockpit
+context_uri: bos://governance/omo-governance-surfaces#legacy-direct-omo-io-batch1
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+entry_gate:
+- omo lint direct-omo-io
+evidence_required:
+- uv run --directory projects/omo python -m omo.cli lint direct-omo-io
+test_plan:
+- uv run --directory projects/omo pytest tests/test_omo_direct_io_gate.py -q
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  batch_scope:
+  - projects/cockpit
+  - projects/ecos
+  - projects/runtime
+  - scripts
+  ingress_plane: projects/cockpit
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: reviewer:task:legacy-direct-omo-io-batch1

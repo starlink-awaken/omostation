@@ -1,0 +1,2102 @@
+# governance-checks.yaml — 治理检查规则 SSOT
+version: 1.0
+description: X1-X4 治理检查器注册表
+checkers:
+- id: x1-audit-chain
+  dimension: X1
+  name: 审计链检查器
+  description: 检查操作是否安全：债务审计 + 操作审计
+  module: ecos.l0.governance.checkers
+  class: X1AuditChainChecker
+  type: python
+  severity: high
+  enabled: true
+  schedule: daily
+  owner: governance-team
+  expected: All operations pass debt audit + operation audit (X1 audit chain)
+  remediation: Investigate audit failure and apply targeted fix; re-run x1-audit-chain
+- id: x2-staleness
+  dimension: X2
+  name: 抗熵检查器
+  description: 检查数据是否新鲜：债务新鲜度 + 健康度趋势
+  module: ecos.l0.governance.checkers
+  class: X2StalenessChecker
+  type: python
+  severity: medium
+  enabled: true
+  schedule: daily
+  owner: governance-team
+  expected: All facts stay fresh per X2 freshness rules (debt freshness + health trend)
+  remediation: Refresh stale facts via state sync; verify against x2-freshness-rules
+- id: x3-value
+  dimension: X3
+  name: 价值栈检查器
+  description: 检查投入是否合理：债务优先级 + SLA 达成
+  module: ecos.l0.governance.checkers
+  class: X3ValueChecker
+  type: python
+  severity: medium
+  enabled: true
+  schedule: weekly
+  owner: governance-team
+  expected: Debt prioritized by value stack; SLA targets met (X3 value stack)
+  remediation: Rebalance debt priorities against x3-value-stack; escalate SLA misses
+- id: x4-consistency
+  dimension: X4
+  name: 一致性检查器
+  description: 检查规则是否被遵守：CI + pre-commit + 文档
+  module: ecos.l0.governance.checkers
+  class: X4ConsistencyChecker
+  type: python
+  severity: high
+  enabled: true
+  owner: governance-team
+  expected: All rules enforced by CI + pre-commit + doc checks (X4 consistency)
+  remediation: Apply consistency rules via x4-consistency-rules; fix violation source
+  schedule: daily
+execution:
+  parallel: true
+  max_workers: 4
+  timeout_seconds: 300
+  retry:
+    enabled: true
+    max_retries: 2
+    backoff_seconds: 5
+alerting:
+  channels:
+  - type: log
+    enabled: true
+  - type: webhook
+    enabled: false
+    url: ''
+  thresholds:
+    critical: 1
+    high: 3
+    medium: 10
+sla:
+  X1:
+    response_hours: 1
+    resolution_hours: 24
+  X2:
+    response_hours: 24
+    resolution_hours: 168
+  X3:
+    response_hours: 24
+    resolution_hours: 168
+  X4:
+    response_hours: 24
+    resolution_hours: 72
+gac:
+  version: '1.0'
+  north_star: .omo/_knowledge/gac/NORTH-STAR.md
+  adr: ADR-0106
+  schema:
+    required:
+    - id
+    - dimension
+    - layer
+    - check_type
+    - executor
+    - lifecycle
+    - version
+    - created_at
+    source_type_enum:
+    - native
+    - indexed
+    indexed_required:
+    - source_ref
+    dimension_enum:
+    - X1
+    - X2
+    - X3
+    - X4
+    layer_enum:
+    - M0
+    - L0
+    - L1
+    - L2
+    - L3
+    - L4
+    - I0
+    - X
+    - meta
+    check_type_enum:
+    - ssot_pointer
+    - mof_stage_gate
+    - bos_resolve
+    - task_field
+    - drift_audit
+    - freshness
+    - value_roi
+    - audit_chain
+    - direct_io_gate
+    - hygiene_zero_byte
+    - hygiene_case
+    - legacy_index
+    - schema_integrity
+    - yaml_bypass
+    - sensitive_write
+    - mutation_surface
+    - registry_integrity
+    - internal_write_profile
+    - state_plane_asset
+    - ingress_boundary
+    - ingress_artifact
+    - mutation_ledger
+    - doc_lifecycle
+    - doc_archival
+    - self_evolution_approval
+    - task_policy
+    - god_module
+    - test_coverage
+    - ssot_lint
+    - mesh_routing
+    - memory_rag
+    - ingress_precheck
+    - consistency_drift
+    - eval_exec
+    - mutable_default
+    - placeholder
+    lifecycle_enum:
+    - draft
+    - active
+    - deprecated
+    - superseded
+    - removed
+    executor_enum:
+    - hook_pre_edit
+    - hook_post
+    - ci_gate
+    - omo_audit
+    - mcp_tool
+    - mof_validate
+    - mof_audit
+    - evidence_smoke
+    - radar_cron
+    - gc_cron
+    - gac_local_gate
+    - foundry_cron
+    - sweep_index_cli
+  subtraction_quota:
+    check_type: advisory
+    rule_baseline: 180
+    script_baseline: 498
+  rules:
+  - id: CR-X4-HEALTH-SSOT
+    dimension: X4
+    layer: L2
+    name: 健康分 SSOT
+    description: health_score 唯一源 system.yaml, 文档用指针不复制
+    check_type: ssot_pointer
+    target: .omo/state/system.yaml::health_score
+    forbid_copy_in:
+    - CLAUDE.md
+    - '**/*.md'
+    - HEALTH_DASHBOARD.md
+    executor:
+    - hook_pre_edit
+    - ci_gate
+    - omo_audit
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-26'
+    adr: ADR-0053
+    enforcement: required
+    source_ref: bin/mof/m4-health-score.py
+    owner: governance-team
+    expected: .omo/state/system.yaml::health_score is the unique source of truth;
+      no markdown or other file may duplicate this value
+    remediation: Remove duplicated value from markdown; reference the SSOT file instead
+    related_runbooks: []
+  - id: CR-M0-STAGE-GATE
+    dimension: X4
+    layer: M0
+    name: M0 7 阶段 Stage/Gate 派生一致
+    description: M1→M2→M3 派生必走 mof Stage/Gate (零风险派生)
+    check_type: mof_stage_gate
+    target: projects/model-driven (7 阶段引擎)
+    executor:
+    - mof_validate
+    - mof_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-26'
+    adr: ADR-0156
+    enforcement: required
+    source_ref: bin/mof/mof-bootstrap.py::all
+    owner: ecos-team
+    expected: Check CR-M0-STAGE-GATE must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-L0-BOS-RESOLVE
+    dimension: X1
+    layer: L0
+    name: BOS 声明/执行一致
+    description: BOS URI 声明必须 resolve (evidence-smoke 防 alive 标志假阳)
+    check_type: bos_resolve
+    target: projects/agora/etc/bos-services.yaml
+    executor:
+    - mof_validate
+    - evidence_smoke
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-26'
+    adr: ADR-0105
+    enforcement: required
+    source_ref: projects/agora/etc/bos-services.yaml
+    owner: ecos-team
+    expected: Check CR-L0-BOS-RESOLVE must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-L2-TASK-DELIVERABLE
+    dimension: X4
+    layer: L2
+    name: 任务 deliverable 文件路径必填
+    description: OMO 任务必声明 deliverables (task-yaml-rules 规则 1)
+    check_type: task_field
+    target: .omo/tasks/**/*.yaml::deliverables
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-26'
+    adr: ADR-0106
+    enforcement: advisory
+    source_ref: .omo/_truth/tasks/
+    owner: omo-team
+    expected: Check CR-L2-TASK-DELIVERABLE must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X2-GAC-DRIFT
+    dimension: X2
+    layer: meta
+    name: GaC drift 自检 (注册表 vs 实际执行)
+    description: '防 GaC 自己走偏: 注册表规则 vs hook/mcp/gate 实际注册, drift 告警 + 自愈'
+    check_type: drift_audit
+    target: governance-checks.yaml::gac.rules vs executor 实际注册
+    executor:
+    - ci_gate
+    - radar_cron
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-26'
+    adr: ADR-0121
+    enforcement: advisory
+    source_ref: bin/gac/gac-drift.py
+    owner: governance-team
+    expected: Check CR-X2-GAC-DRIFT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X1-AGENT-AUDIT
+    dimension: X1
+    layer: meta
+    name: agent 操作审计链
+    description: agent 编辑经 MCP/omo CLI, 自动记 AppendOnlyLog (可追溯)
+    check_type: audit_chain
+    target: runtime/omo/_delivery/ingress/ingress-trail.jsonl
+    executor:
+    - ci_gate
+    - mcp_tool
+    - omo_audit
+    - evidence_smoke
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-26'
+    adr: ADR-0121
+    enforcement: advisory
+    source_ref: bin/gac/check-external-agent-audit.py
+    owner: governance-team
+    expected: Check CR-X1-AGENT-AUDIT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X3-DEBT-TIER
+    dimension: X3
+    layer: L2
+    name: 债务 X3 tier 必声明
+    description: debt items 必声明 x3_tier (价值分级, 投入产出可量化)
+    check_type: value_roi
+    target: .omo/debt/items/*.yaml::x3_tier
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-26'
+    adr: ADR-0106
+    enforcement: advisory
+    source_ref: .omo/debt/items/
+    owner: governance-team
+    expected: Check CR-X3-DEBT-TIER must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-L1-RUNTIME-HEALTH
+    dimension: X2
+    layer: L1
+    name: 运行时健康监控新鲜
+    description: runtime 健康监控数据新鲜 (不超 24h, X2 抗熵)
+    check_type: freshness
+    target: projects/runtime (健康监控)
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0078
+    enforcement: advisory
+    source_ref: projects/runtime/
+    owner: governance-team
+    expected: Check CR-L1-RUNTIME-HEALTH must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-L3-COCKPIT-ENTRY
+    dimension: X4
+    layer: L3
+    name: cockpit 唯一人类 CLI 入口
+    description: cockpit 是唯一人类 CLI/Web 入口 (其他 CLI 程序接口, X4 一致)
+    check_type: ssot_pointer
+    target: projects/cockpit (唯一入口)
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0156
+    enforcement: advisory
+    source_ref: projects/cockpit/
+    owner: cockpit-team
+    expected: projects/cockpit (唯一入口) is the unique source of truth; no markdown or
+      other file may duplicate this value
+    remediation: Remove duplicated value from markdown; reference the SSOT file instead
+    related_runbooks: []
+  - id: CR-L2-DIRECT-IO
+    dimension: X1
+    layer: L2
+    name: .omo 直写拦截 (走 omo ingress, 禁原生 write_text/mkdir)
+    description: 禁止绕过 omo ingress 直写 .omo (防状态竞态死锁, 报告债务① Critical)
+    check_type: direct_io_gate
+    target: .omo/ (omo lint direct-omo-io gate)
+    executor:
+    - ci_gate
+    - omo_audit
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0155
+    enforcement: advisory
+    source_ref: .omo/
+    owner: omo-team
+    expected: Check CR-L2-DIRECT-IO must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X4-DOC-SSOT
+    dimension: X4
+    layer: meta
+    name: 文档 SSOT (markdown 禁硬编码项目元数据, 引用 project-registry)
+    description: markdown 禁硬编码 (包数/版本/Phase/健康分), 引用 docs/project-registry.yaml (bin/ssot/doc-ssot-lint.py
+      扫描)
+    check_type: ssot_pointer
+    target: docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py 扫描范围
+    forbid_copy_in:
+    - AGENTS.md
+    - CLAUDE.md
+    - '**/README.md'
+    - LAYER-INDEX.md
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0053
+    enforcement: advisory
+    source_ref: .omo/standards/doc-ssot-contract.md
+    owner: governance-team
+    expected: docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py 扫描范围 is the unique
+      source of truth; no markdown or other file may duplicate this value
+    remediation: Remove duplicated value from markdown; reference the SSOT file instead
+    related_runbooks: []
+  - id: CR-L2-SURFACES-INTEGRITY
+    dimension: X4
+    layer: L2
+    name: governance surfaces 面定义完整 (state/kernel/ingress plane)
+    description: omo-governance-surfaces.yaml 面定义权威 (plane 资产归属), GaC 引用不复制; omo governance
+      surfaces 校验完整
+    check_type: ssot_pointer
+    target: .omo/_truth/registry/omo-governance-surfaces.yaml::governance_stack
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0156
+    enforcement: advisory
+    source_ref: .omo/_truth/registry/omo-governance-surfaces.yaml
+    owner: omo-team
+    expected: .omo/_truth/registry/omo-governance-surfaces.yaml::governance_stack
+      is the unique source of truth; no markdown or other file may duplicate this
+      value
+    remediation: Remove duplicated value from markdown; reference the SSOT file instead
+    related_runbooks: []
+  - id: CR-L0-PROTOCOLS-SSOT
+    dimension: X4
+    layer: L0
+    name: protocols 注册表 SSOT (端口/vault/x-axis 禁硬编码)
+    description: protocols/{port,vault-paths,x-axis}-registry.yaml 协议层 SSOT, markdown/代码禁硬编码端口号;
+      scripts/check-vault-paths.py CI 校验
+    check_type: ssot_pointer
+    target: protocols/port-registry.yaml + vault-paths.yaml + x-axis-registry.yaml
+    forbid_copy_in:
+    - '**/*.md'
+    - '**/*.py'
+    executor:
+    - mof_validate
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0053
+    enforcement: required
+    source_ref: protocols/
+    owner: ecos-team
+    expected: protocols/port-registry.yaml + vault-paths.yaml + x-axis-registry.yaml
+      is the unique source of truth; no markdown or other file may duplicate this
+      value
+    remediation: Remove duplicated value from markdown; reference the SSOT file instead
+    related_runbooks: []
+  - id: CR-X2-GAC-BOOTSTRAP
+    dimension: X2
+    layer: meta
+    name: GaC 自举递归 (工具活/indexed 完整/exec 有效/schema 自洽)
+    description: 'GaC 治一切, GaC 自己也要被治 (NORTH-STAR 元治理递归); bin/gac/gac-bootstrap.py
+      检测 4 层: 工具活/死 + indexed source_ref 完整 + executor 执行有效 + schema 自洽'
+    check_type: drift_audit
+    target: bin/gac/gac-bootstrap.py (GaC 自身完整性自检)
+    executor:
+    - ci_gate
+    - radar_cron
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0121
+    enforcement: advisory
+    source_ref: bin/gac/gac-bootstrap.py
+    owner: governance-team
+    expected: Check CR-X2-GAC-BOOTSTRAP must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X2-GOVERNANCE-SEMANTIC-GATE
+    dimension: X2
+    layer: meta
+    name: 治理语义门禁统一契约
+    description: '防声明/执行语义错位: 本地 gate 不只看 exit code, 还消费 gac-bootstrap/gac-executor/gac-mof-validate/mof-schema/adr-coverage/AGCP/package
+      的 JSON ok 字段; release 模式硬挡 active runs 和 release package 未决. PR #17 落地工具 (bin/gac/governance-semantic-gate.py),
+      M1 实例同步派生, 但 registry SSOT 漏登记 — 本 commit 补.'
+    check_type: schema_integrity
+    target: bin/gac/governance-semantic-gate.py (统一消费治理工具 JSON 语义)
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-02'
+    adr: ADR-0121
+    enforcement: advisory
+    source_ref: bin/gac/governance-semantic-gate.py
+    owner: ecos-team
+    expected: Check CR-X2-GOVERNANCE-SEMANTIC-GATE must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X1-GOD-MODULE-LIMIT
+    dimension: X1
+    layer: L2
+    name: god-module 文件行数上限 (新代码 > 1500L 阻塞)
+    description: '防 god module 漂移: 当前已知 7 文件 > 1500L (gbrain 重灾区) + 51 文件 > 800L,
+      大多数是历史累积. 新代码不许引入 > 1500L 文件 (P0 audit 2026-07-02). 实现: bin/ssot/check-god-module.py
+      扩展 --strict 模式, 新加文件 > 1500L 返回 exit 1. 已有 god module 走 ADR-0115 渐进拆分 (单仓 /
+      跨仓分别由对应模块 owner 实施)'
+    check_type: god_module
+    target: bin/ssot/check-god-module.py --strict (新文件 > 1500L 阻塞, 已有文件仅 warn)
+    executor:
+    - ci_gate
+    - radar_cron
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-02'
+    adr: ADR-0171
+    enforcement: advisory
+    source_ref: bin/gac/check-god-module.py
+    owner: governance-team
+    expected: Check CR-X1-GOD-MODULE-LIMIT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-L0-MATRIX-PORT-CONSISTENCY
+    dimension: X4
+    layer: meta
+    name: matrix.yaml port 与 port-registry.yaml 一致性
+    description: '防 SSOT 漂移: matrix.yaml 中配了 port 的服务, port 必须在 port-registry.yaml
+      注册; stdio/scheduled 类型不应配 port (除非有 health_url). 实现: bin/ssot/matrix-consistency-lint.py
+      R2/R3'
+    check_type: ssot_lint
+    target: ~/runtime/matrix.yaml + protocols/port-registry.yaml
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-02'
+    adr: ADR-0120
+    enforcement: advisory
+    source_ref: protocols/port-registry.yaml
+    owner: governance-team
+    expected: SSOT references in markdown must point to valid files
+    remediation: Fix or remove broken SSOT reference
+    related_runbooks: []
+  - id: CR-L0-SSOT-PATH-NORM
+    dimension: X4
+    layer: meta
+    name: SSOT 路径与 broker 写入路径一致
+    description: '防 P71 Class A (路径错位): SSOT 声明路径必须与 broker 实际写入路径一致. 案例: dependency-baseline
+      从 .omo/ 迁到 runtime/omo/ (gitignored) 导致 CI 拿不到. 实现: bin/gac/governance-convergence-lint.py
+      --rule ssot-path-norm'
+    check_type: ssot_lint
+    target: .omo/_truth/ + broker 写入路径
+    executor:
+    - ci_gate
+    - radar_cron
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-02'
+    adr: ADR-0121
+    enforcement: advisory
+    source_ref: .omo/standards/ssot-path-norm.md
+    owner: ecos-team
+    expected: SSOT references in markdown must point to valid files
+    remediation: Fix or remove broken SSOT reference
+    related_runbooks: []
+  - id: CR-X4-TEST-COVERAGE
+    dimension: X3
+    layer: L2
+    name: 测试覆盖检查
+    description: '每个非归档 kairon 包至少 1 个 test_*.py (omo_audit 检查 #2)'
+    check_type: test_coverage
+    target: projects/knowledge/kairon/packages/*/tests/
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-28'
+    adr: ADR-0171
+    enforcement: advisory
+    source_ref: tests/
+    owner: governance-team
+    expected: Test coverage must meet project thresholds
+    remediation: Add tests for uncovered code or adjust coverage threshold
+    related_runbooks: []
+  - id: CR-X4-ADR-LINKS
+    dimension: X3
+    layer: L2
+    name: ADR 链接完整性
+    description: 'ADR INDEX.md 引用的所有 ADR 文件必须存在 (omo_audit 检查 #4)'
+    check_type: doc_lifecycle
+    target: .omo/_knowledge/decisions/
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-28'
+    adr: ADR-0053
+    enforcement: advisory
+    source_ref: .omo/_knowledge/decisions/INDEX.md
+    owner: governance-team
+    expected: Documents must have valid frontmatter and lifecycle metadata
+    remediation: 'Add or fix frontmatter: status, type, owner, lifecycle, last-reviewed'
+    related_runbooks: []
+  - id: CR-L4-DOMAIN-REGISTRY-FRESHNESS
+    dimension: X2
+    layer: L4
+    name: L4 域注册表新鲜度
+    description: 'L4 DomainRegistry 新鲜度, 防 stale 域配置 (治审计 D5: L4 整层 0 GaC 规则盲区, 打破完全无约束)'
+    check_type: freshness
+    target: projects/l4-kernel/src/l4_kernel/registry.py (DomainRegistry)
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-01'
+    adr: ADR-0114
+    enforcement: advisory
+    source_ref: protocols/port-registry.yaml
+    owner: governance-team
+    expected: Check CR-L4-DOMAIN-REGISTRY-FRESHNESS must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X4-MOF-CAPABILITIES-DRIFT
+    relates_to:
+    - CR-X4-METAOS-REGISTRY-DRIFT
+    - CR-X4-DOC-CLAIMS
+    - CR-LAYER-CALL-DIRECTION
+    - CR-P77-3-2-PREFIX-PATTERN
+    - CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
+    - CR-X4-MCPTOOL-IMPL-DRIFT
+    source_type: native
+    source_ref: bin/mof/check-mof-capabilities-drift.py
+    dimension: X4
+    layer: meta
+    check_type: consistency_drift
+    executor:
+    - ci_gate
+    enforcement: required
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-25'
+    adr: ADR-0238
+    target: projects/*/src/**
+    owner: governance-team
+    expected: No unexplained drift between declared and actual state
+    remediation: Align declared state with actual state; update SSOT or code
+    related_runbooks: []
+  - id: CR-X4-DOC-CLAIMS
+    relates_to:
+    - CR-X4-MOF-CAPABILITIES-DRIFT
+    - CR-X4-METAOS-REGISTRY-DRIFT
+    - CR-LAYER-CALL-DIRECTION
+    - CR-P77-3-2-PREFIX-PATTERN
+    - CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
+    - CR-X4-MCPTOOL-IMPL-DRIFT
+    source_type: native
+    source_ref: bin/mof/check-doc-claims.py
+    dimension: X4
+    layer: meta
+    check_type: consistency_drift
+    executor:
+    - ci_gate
+    enforcement: required
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-26'
+    adr: ADR-0242
+    target: projects/*/src/**
+    owner: governance-team
+    expected: No unexplained drift between declared and actual state
+    remediation: Align declared state with actual state; update SSOT or code
+    related_runbooks: []
+  - id: CR-M4-BOOTSTRAP-REFLEX
+    dimension: X1
+    layer: meta
+    name: M4 自反校验门禁 (5-check)
+    description: M4 5-check 自反校验:check_1(m3)/check_2(m2)/check_3(m2-m3锚)/check_4(m3-meta)/check_5(M2BaseSchema).覆盖schema:constraint_l0.yaml/m2_base_schema.yaml/m3-meta.yaml/mof_driven.py
+    check_type: audit_chain
+    target: projects/ecos/src/ecos/ssot/mof/
+    source_ref: bin/mof/mof-bootstrap.py::all
+    executor:
+    - hook_pre_edit
+    - ci_gate
+    - gac_local_gate
+    enforcement: required
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-06'
+    adr: ADR-0152
+    owner: ecos-team
+    expected: Check CR-M4-BOOTSTRAP-REFLEX must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-M4-SUBMODULE-HYGIENE
+    dimension: X1
+    layer: meta
+    name: 子模块卫生守门
+    description: 检测3类:submodule-dirty/tracked-derived/pointer-stale.每周cron.
+    check_type: audit_chain
+    target: .gitignore
+    source_ref: bin/ssot/check-submodule-hygiene.py::strict
+    executor:
+    - radar_cron
+    - gac_local_gate
+    - ci_gate
+    enforcement: preferred
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-06'
+    adr: ADR-0152
+    owner: governance-team
+    expected: Check CR-M4-SUBMODULE-HYGIENE must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-M4-MCPTOOL-INTEGRITY
+    dimension: X4
+    layer: L0
+    name: MCPTOOL 数据完整性守门
+    description: MCPTOOL单工具yaml校验tool_name+server非空.集合yaml跳过(ADR-0145).
+    check_type: consistency_drift
+    target: projects/ecos/src/ecos/ssot/mof/m1/mcptool/
+    source_ref: bin/gac/mcp-tool-data-complete.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    enforcement: required
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-06'
+    adr: ADR-0152
+    owner: governance-team
+    expected: No unexplained drift between declared and actual state
+    remediation: Align declared state with actual state; update SSOT or code
+    related_runbooks: []
+  - id: CR-FOUNDRY-MONITOR
+    dimension: X2
+    layer: meta
+    name: Knowledge Foundry cron 监控
+    description: 'Knowledge Foundry 9-cron deck 每 6h 跑一次, run ledger 持久化 (runtime/omo/_delivery/foundry/).
+
+      threshold: 9 deck 中 ≥ 7/9 (80%) ok. 跨 deck fail 必须写 FAIL-<run-id>.yaml.
+
+      实施: bin/gac/knowledge-foundry-cron.py
+
+      '
+    check_type: drift_audit
+    target: bin/gac/knowledge-foundry-cron.py
+    source_ref: bin/gac/knowledge-foundry-cron.py::main
+    executor:
+    - radar_cron
+    - omo_audit
+    - gac_local_gate
+    - ci_gate
+    enforcement: advisory
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-07'
+    adr: ADR-0160
+    owner: runtime-team
+    expected: Check CR-FOUNDRY-MONITOR must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-COMMIT-LLM-ASSIST
+    dimension: X2
+    layer: meta
+    name: LLM-assisted commit (advisory 硬门)
+    description: 'LLM 永远不能 auto-commit. 必须通过 bin/gac/commit-assist.py, 必须 write .commit-suggestion
+      (侧车)
+
+      然后用户显式 git commit -F .commit-suggestion 接受.
+
+      LLM 3-tier: aetherforge → ollama → heuristic (任一可用即可).
+
+      网关失败 fallback: --no-llm 硬门 (永不阻塞 PR).
+
+      '
+    check_type: drift_audit
+    target: bin/gac/commit-assist.py
+    source_ref: bin/gac/commit-assist.py::query_llm
+    executor:
+    - omo_audit
+    - gac_local_gate
+    - ci_gate
+    enforcement: advisory
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-07'
+    adr: ADR-0161
+    owner: aetherforge-team
+    expected: Check CR-COMMIT-LLM-ASSIST must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-CROSS-REPO-CONSISTENT
+    dimension: X4
+    layer: meta
+    name: 跨仓 BOS URI / port-registry 一致性 (hard, P77 Phase 3 治本后)
+    description: '对比 projects/agora/etc/bos-services.yaml (BOS URI SSOT) 与 projects/*/src/
+      中
+
+      bos:// 引用. unregistered (referenced but not in SSOT) 应 = 0 (Phase 3 治本, hard).
+
+      同步检查 ecos port-registry 与各仓 port 声明.
+
+      实施: bin/ssot/check-cross-repo-consistency.py
+
+      '
+    check_type: consistency_drift
+    target: bin/ssot/check-cross-repo-consistency.py
+    source_ref: bin/ssot/check-cross-repo-consistency.py::main
+    executor:
+    - radar_cron
+    - omo_audit
+    - ci_gate
+    - gac_local_gate
+    enforcement: error
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-07'
+    adr: ADR-0164
+    owner: governance-team
+    expected: No unexplained drift between declared and actual state
+    remediation: Align declared state with actual state; update SSOT or code
+    related_runbooks: []
+  - id: CR-PRINCIPLE-FOLLOWED
+    dimension: X1
+    layer: meta
+    name: P76 沉淀原则 catalog 引用
+    description: '任意 phase 主交付的 ADR 必须含 § 2 沉淀原则段并引用 .omo/standards/p76-principles.md.
+
+      这是原则形式化硬门 — 防 ADR 缺失原则说明 (修真修真反模式).
+
+      实施: docs/SPEC # 6.
+
+      '
+    check_type: ssot_pointer
+    target: .omo/standards/p76-principles.md
+    source_ref: .omo/standards/p76-principles.md::§ 1-5
+    executor:
+    - omo_audit
+    - gac_local_gate
+    - ci_gate
+    enforcement: advisory
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-07'
+    adr: ADR-0165
+    owner: omo-team
+    expected: .omo/standards/p76-principles.md is the unique source of truth; no markdown
+      or other file may duplicate this value
+    remediation: Remove duplicated value from markdown; reference the SSOT file instead
+    related_runbooks: []
+  - id: CR-EVIDENCE-DECLARED
+    dimension: X2
+    layer: meta
+    name: ADR closeout 引用 ≥1 evidence path
+    description: 'ADR closeout 必须有真 evidence path. 防 ophist 反模式 (修真修真原则 P76-7-4).
+
+      含 evidence_required 字段的 task close 必须引 evidence file path.
+
+      '
+    check_type: drift_audit
+    target: omo task done --evidence-path
+    source_ref: .omo/standards/p76-principles.md::P76-7-4
+    executor:
+    - omo_audit
+    - ci_gate
+    enforcement: advisory
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-07'
+    adr: ADR-0165
+    owner: governance-team
+    expected: Check CR-EVIDENCE-DECLARED must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-COMMIT-ASSIST-E2E
+    dimension: X4
+    layer: meta
+    name: commit-assist E2E 测试 (19/19, P77-6-1 e2e-test-for-advisory-tool)
+    description: 'bin/commit-assist.py 的 19 E2E 测试必须全通过 (P77-6-1).
+
+      测试覆盖: heuristic_subject (8), clean_suggestion (3),
+
+      72-char truncation (2), tier fallback (2), integration (2),
+
+      CONVENTIONAL_TYPES (1), ctype format (1).
+
+      修真修真反模式: advisory tool 也必须测试, 防沉默失效.
+
+      实施: tests/test_commit_assist_e2e.py
+
+      '
+    check_type: consistency_drift
+    target: tests/test_commit_assist_e2e.py
+    source_ref: tests/test_commit_assist_e2e.py::main
+    executor:
+    - ci_gate
+    - gac_local_gate
+    enforcement: advisory
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-07'
+    adr: ADR-0169
+    owner: governance-team
+    expected: No unexplained drift between declared and actual state
+    remediation: Align declared state with actual state; update SSOT or code
+    related_runbooks: []
+  - id: CR-SEC-YAML-BYPASS
+    dimension: X1
+    layer: L2
+    name: yaml safe_load 强制 (禁止 yaml.load)
+    description: 禁止 yaml.load (不安全), 必 safe_load/safe_load_all. memory frontmatter-safe-load-all.
+    check_type: yaml_bypass
+    target: Python yaml.load 调用 (声明面; 执行面 hook 内置 PR#190)
+    executor:
+    - hook_pre_edit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: 2026-07-08
+    adr: ADR-0123
+    source_type: native
+    enforcement: required
+    source_ref: bin/ssot/check-yaml-bypass.py
+    owner: omo-team
+    expected: Check CR-SEC-YAML-BYPASS must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-SEC-SENSITIVE-WRITE
+    dimension: X1
+    layer: L2
+    name: 敏感信息硬编码禁止
+    description: 禁止硬编码 password/token/secret/api_key (用 env var/vault).
+    check_type: sensitive_write
+    target: Python 源码硬编码密钥 (声明面; 执行面 hook 内置 PR#190)
+    executor:
+    - hook_pre_edit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: 2026-07-08
+    adr: ADR-0106
+    source_type: native
+    enforcement: required
+    source_ref: bin/ssot/check-sensitive-write.py
+    owner: governance-team
+    expected: Check CR-SEC-SENSITIVE-WRITE must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X2-GOD-MODULE-EDIT
+    dimension: X1
+    layer: L2
+    name: God Module 编辑门禁 (>800L)
+    description: 编辑 god module (文件超 800L) 时警告, 拆分. memory check-god-module-mechanism.
+    check_type: god_module
+    target: Python 文件行数 (声明面; 执行面 hook 内置 PR#193)
+    executor:
+    - hook_pre_edit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: 2026-07-08
+    adr: ADR-0171
+    source_type: native
+    enforcement: required
+    source_ref: bin/gac/check-god-module.py
+    owner: omo-team
+    expected: Check CR-X2-GOD-MODULE-EDIT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-SEC-EVAL-EXEC
+    dimension: X1
+    layer: L2
+    name: eval/exec 禁止 (用 ast.literal_eval)
+    description: 禁止 eval()/exec() (不安全). 用 ast.literal_eval 或专门解析.
+    check_type: eval_exec
+    target: Python eval/exec 调用 (声明面; 执行面 hook 内置 PR#196)
+    executor:
+    - hook_pre_edit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: 2026-07-08
+    adr: ADR-0106
+    source_type: native
+    enforcement: required
+    source_ref: bin/ssot/check-eval-exec.py
+    owner: governance-team
+    expected: Check CR-SEC-EVAL-EXEC must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-PY-MUTABLE-DEFAULT
+    dimension: X1
+    layer: L2
+    name: 函数默认参数禁用 mutable
+    description: 禁止 def f(x=[])/dict()/set() 默认参数 (Python 高频坑). 用 None+内部创建.
+    check_type: mutable_default
+    target: Python 函数默认参数 (声明面; 执行面 hook 内置 PR#196)
+    executor:
+    - hook_pre_edit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: 2026-07-08
+    adr: ADR-0171
+    source_type: native
+    enforcement: required
+    source_ref: bin/ssot/check-mutable-default.py
+    owner: governance-team
+    expected: Check CR-PY-MUTABLE-DEFAULT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-PRINCIPLE-ENFORCEMENT
+    relates_to:
+    - CR-PR-DESCRIPTION-NON-EMPTY
+    - CR-P79-3-FOUNDRY-DECK
+    - CR-P79-4-CATALOG-HEALTH-METRIC
+    - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
+    - CR-P76-7-5-RESOLVE-NOT-STUB
+    - CR-X1-EXTERNAL-AGENT-AUDIT
+    dimension: X1
+    layer: meta
+    name: 原则执行化
+    description: 'governance audit 每月 dry-run, 验证工程原则是否被工具/流程执行. 实现: bin/gac/check-principle-enforcement.py
+      (gac-gate CI advisory)'
+    check_type: audit_chain
+    executor:
+    - omo_audit
+    - ci_gate
+    - evidence_smoke
+    lifecycle: active
+    version: 1.0.0
+    created_at: 2026-07-08
+    activated_at: 2026-08-04
+    adr: ADR-0165
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-principle-enforcement.py
+    target: .omo/_truth/registry/**
+    owner: governance-team
+    expected: Check CR-PRINCIPLE-ENFORCEMENT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-SUBMODULE-REWIND
+    dimension: X1
+    layer: meta
+    name: 子模块指针回退检测
+    description: '检测子模块指针是否被意外回退: 对比 index 当前指针与上一次 commit 的指针, 当前指针 NOT ancestor
+      of 上一次指针 → rewind. 防止 Phase 4 等变更被意外撤销. 实施: bin/gac/check-submodule-rewind.py'
+    check_type: audit_chain
+    target: projects/*/ (submodule gitlink pointer)
+    source_ref: bin/gac/check-submodule-rewind.py::main
+    executor:
+    - ci_gate
+    - gac_local_gate
+    enforcement: required
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-06'
+    adr: ADR-0380
+    owner: governance-team
+    expected: Check CR-SUBMODULE-REWIND must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-P76-6-5-LLM-DEFERRAL
+    dimension: X1
+    layer: meta
+    name: LLM commit 推迟
+    description: LLM-assisted commit 推到 Phase 7+. 对应 P76-6-5 (vit-via-LLM-deferral)
+    check_type: hygiene_case
+    executor:
+    - omo_audit
+    lifecycle: removed
+    superseded_at: 2026-08-06
+    superseded_by: CR-P76-7-1-LLM-ADVISORY-ONLY,CR-P76-7-2-TIER-GRACEFUL-FALLBACK,CR-COMMIT-LLM-ASSIST
+    superseded_reason: 被 3 条 active LLM 护栏规则取代, LLM 辅助 commit 已落地
+    version: 0.1.0
+    created_at: 2026-07-08
+    adr: ADR-0158
+    source_type: native
+    owner: governance-team
+    expected: Check CR-P76-6-5-LLM-DEFERRAL must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-P77-2-1-PRINCIPLE-FORMALIZATION
+    dimension: X1
+    layer: meta
+    name: 原则形式化
+    description: 原则形式化保留上下文, 不变成死的 checkbox. 对应 P77-2-1 (principle-formalization-with-context)
+    check_type: audit_chain
+    executor:
+    - omo_audit
+    lifecycle: removed
+    superseded_at: 2026-08-06
+    superseded_by: CR-PRINCIPLE-FOLLOWED,CR-PRINCIPLE-ENFORCEMENT
+    superseded_reason: 被 CR-PRINCIPLE-FOLLOWED 和 CR-PRINCIPLE-ENFORCEMENT (active)
+      取代, 原则形式化已通过 ADR §2 引用实现
+    version: 0.1.0
+    created_at: 2026-07-08
+    adr: ADR-0165
+    source_type: native
+    owner: governance-team
+    expected: Check CR-P77-2-1-PRINCIPLE-FORMALIZATION must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-P77-2-2-CATALOG-SSOT
+    dimension: X1
+    layer: meta
+    name: 原则 catalog SSOT
+    description: 原则 catalog 是 SSOT, ADR 是 mirror. 对应 P77-2-2 (catalog-SSOT)
+    check_type: audit_chain
+    executor:
+    - omo_audit
+    lifecycle: removed
+    superseded_at: 2026-08-06
+    superseded_by: CR-PRINCIPLE-FOLLOWED
+    superseded_reason: 被 CR-PRINCIPLE-FOLLOWED (active) 取代, 原则 catalog 已通过 .omo/standards/p76-principles.md
+      SSOT 实现
+    version: 0.1.0
+    created_at: 2026-07-08
+    adr: ADR-0165
+    source_type: native
+    owner: governance-team
+    expected: Check CR-P77-2-2-CATALOG-SSOT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-P77-3-2-PREFIX-PATTERN
+    relates_to:
+    - CR-X4-MOF-CAPABILITIES-DRIFT
+    - CR-X4-METAOS-REGISTRY-DRIFT
+    - CR-X4-DOC-CLAIMS
+    - CR-LAYER-CALL-DIRECTION
+    - CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
+    - CR-X4-MCPTOOL-IMPL-DRIFT
+    dimension: X4
+    layer: X
+    name: URI 前缀模式
+    description: 'URI 末尾 / 表 routing prefix, 不需具体服务注册. 对应 P77-3-2 (prefix-pattern-allowed).
+      实现: bin/gac/check-uri-prefix-pattern.py (gac-gate CI, advisory)'
+    check_type: consistency_drift
+    executor:
+    - ci_gate
+    - omo_audit
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-uri-prefix-pattern.py
+    target: projects/*/src/**
+    owner: governance-team
+    expected: No unexplained drift between declared and actual state
+    remediation: Align declared state with actual state; update SSOT or code
+    related_runbooks: []
+  - id: CR-P77-6-2-TIER-FALLBACK-TEST
+    relates_to:
+    - CR-P77-6-3-GATEWAY-STATUS-DOC
+    - CR-WORKORDER-SCHEMA
+    dimension: X2
+    layer: meta
+    name: 层级 fallback 测试
+    description: '每级 fallback 都必须有测试证明不崩溃. 对应 P77-6-2 (tier-test-for-fallback). 实现:
+      bin/gac/check-fallback-test-coverage.py (gac-gate CI, advisory)'
+    check_type: schema_integrity
+    executor:
+    - ci_gate
+    - omo_audit
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-fallback-test-coverage.py
+    target: .omo/**/*.yaml
+    owner: governance-team
+    expected: Check CR-P77-6-2-TIER-FALLBACK-TEST must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-P77-6-3-GATEWAY-STATUS-DOC
+    relates_to:
+    - CR-P77-6-2-TIER-FALLBACK-TEST
+    - CR-WORKORDER-SCHEMA
+    dimension: X2
+    layer: meta
+    name: Gateway 状态文档化
+    description: '外部 LLM gateway 不可达时, 必须文档化不可达状态. 对应 P77-6-3 (gateway-status-documentation).
+      实现: bin/gac/check-gateway-status-doc.py (gac-local-gate)'
+    check_type: schema_integrity
+    executor:
+    - omo_audit
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: 2026-07-08
+    activated_at: '2026-08-06'
+    adr: ADR-0158
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-gateway-status-doc.py
+    target: .omo/**/*.yaml
+    owner: governance-team
+    expected: Check CR-P77-6-3-GATEWAY-STATUS-DOC must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-P79-3-FOUNDRY-DECK
+    relates_to:
+    - CR-PR-DESCRIPTION-NON-EMPTY
+    - CR-PRINCIPLE-ENFORCEMENT
+    - CR-P79-4-CATALOG-HEALTH-METRIC
+    - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
+    - CR-P76-7-5-RESOLVE-NOT-STUB
+    - CR-X1-EXTERNAL-AGENT-AUDIT
+    dimension: X1
+    layer: meta
+    name: 治理轴 Foundry Deck
+    description: '每治理轴对应一个 foundry deck. 对应 P79-3 (foundry-deck-per-governance-axis).
+      实现: bin/gac/check-foundry-deck-coverage.py (gac-local-gate)'
+    check_type: audit_chain
+    executor:
+    - omo_audit
+    - gac_local_gate
+    - evidence_smoke
+    lifecycle: active
+    version: 1.0.0
+    created_at: 2026-07-08
+    activated_at: '2026-08-05'
+    adr: ADR-0174
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-foundry-deck-coverage.py
+    target: .omo/_truth/registry/**
+    owner: governance-team
+    expected: Check CR-P79-3-FOUNDRY-DECK must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-P79-4-CATALOG-HEALTH-METRIC
+    relates_to:
+    - CR-PR-DESCRIPTION-NON-EMPTY
+    - CR-PRINCIPLE-ENFORCEMENT
+    - CR-P79-3-FOUNDRY-DECK
+    - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
+    - CR-P76-7-5-RESOLVE-NOT-STUB
+    - CR-X1-EXTERNAL-AGENT-AUDIT
+    dimension: X1
+    layer: meta
+    name: Catalog 健康指标
+    description: '原则数和 GaC 规则数作为可观测指标写入 foundry. 对应 P79-4 (catalog-health-metric).
+      实现: bin/gac/check-catalog-health.py (gac-gate CI, advisory)'
+    check_type: audit_chain
+    executor:
+    - ci_gate
+    - omo_audit
+    - evidence_smoke
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-catalog-health.py
+    target: .omo/_truth/registry/**
+    owner: governance-team
+    expected: Check CR-P79-4-CATALOG-HEALTH-METRIC must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-RUFF-SCOPE-STABLE
+    dimension: X4
+    layer: X
+    name: Ruff Scope 稳定
+    description: '防止 X-Plane 项目改变 ruff scope 导致 lint 面漂移. 实现: bin/gac/check-ruff-scope-stable.py
+      (gac-gate CI)'
+    check_type: schema_integrity
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: 2026-07-08
+    activated_at: 2026-08-04
+    adr: ADR-0171
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-ruff-scope-stable.py
+    target: .omo/**/*.yaml
+    owner: governance-team
+    expected: Check CR-RUFF-SCOPE-STABLE must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-L0-CONSTRAINTS-SSOT
+    relates_to:
+    - CR-X4-CONSISTENCY-SSOT
+    source_type: indexed
+    source_ref: projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
+    dimension: X4
+    layer: L0
+    name: L0 约束集 SSOT (GaC 索引)
+    description: 'L0-constraints.yaml 中所有约束的 GaC 索引. 源文件包含: constraint, protocol_registry,
+      trigger_constraints, opc_cadence_constraints, mof_schema_validate_constraints,
+      c2g_v3_constraints, c2g_v4_constraints, omni_bus_constraints, debt_constraints,
+      governance_closure_constraints 等集合.'
+    check_type: legacy_index
+    executor:
+    - omo_audit
+    - ci_gate
+    - mof_validate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0106
+    enforcement: required
+    target: docs/**
+    owner: ecos-team
+    expected: Check CR-L0-CONSTRAINTS-SSOT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X1-POLICIES-SSOT
+    relates_to:
+    - CR-CI-SURFACE-SSOT
+    source_type: indexed
+    source_ref: .omo/_truth/x1-governance-policies.yaml::policies
+    dimension: X1
+    layer: meta
+    name: X1 治理策略 SSOT (GaC 索引)
+    description: 'x1-governance-policies.yaml 中所有策略的 GaC 索引. 源文件包含: omni_bus_routing,
+      governance_surfaces, direct_mutation_gate, arch_merge_llmgateway, debt_evidence_closure,
+      cross_project_lint_enforce, aud_commit_loop 等策略.'
+    check_type: legacy_index
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0106
+    enforcement: advisory
+    target: docs/**
+    owner: governance-team
+    expected: Check CR-X1-POLICIES-SSOT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X2-FRESHNESS-SSOT
+    source_type: indexed
+    source_ref: .omo/_truth/x2-freshness-rules.yaml::rules
+    dimension: X2
+    layer: meta
+    name: X2 新鲜度规则 SSOT (GaC 索引)
+    description: 'x2-freshness-rules.yaml 中所有规则的 GaC 索引. 源文件包含: governance_surfaces,
+      evidence_alias, archived_llmgateway, merge_checklist, debt_evidence_integrity,
+      cross_project_lint, mof_version_bump, doc_lifecycle, commit_fatigue, omo_lint_size,
+      gov_dashboard, adr_drift 等规则.'
+    check_type: legacy_index
+    executor:
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0106
+    enforcement: advisory
+    target: docs/**
+    owner: governance-team
+    expected: Check CR-X2-FRESHNESS-SSOT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X4-CONSISTENCY-SSOT
+    relates_to:
+    - CR-L0-CONSTRAINTS-SSOT
+    source_type: indexed
+    source_ref: .omo/_truth/x4-consistency-rules.yaml::rules
+    dimension: X4
+    layer: meta
+    name: X4 一致性规则 SSOT (GaC 索引)
+    description: 'x4-consistency-rules.yaml 中所有规则的 GaC 索引. 源文件包含: governance_surfaces,
+      llmgateway_archived, p43_closed_loop_ssot, debt_gitignore_boundary, drift_vs_governance
+      等规则.'
+    check_type: legacy_index
+    executor:
+    - mof_validate
+    - omo_audit
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-06-27'
+    adr: ADR-0106
+    enforcement: required
+    target: docs/**
+    owner: governance-team
+    expected: Check CR-X4-CONSISTENCY-SSOT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X4-MCPTOOL-IMPL-DRIFT
+    relates_to:
+    - CR-X4-MOF-CAPABILITIES-DRIFT
+    - CR-X4-METAOS-REGISTRY-DRIFT
+    - CR-X4-DOC-CLAIMS
+    - CR-LAYER-CALL-DIRECTION
+    - CR-P77-3-2-PREFIX-PATTERN
+    - CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
+    source_type: indexed
+    source_ref: bin/ssot/check-mcptool-impl-drift.py
+    dimension: X4
+    layer: meta
+    check_type: consistency_drift
+    executor:
+    - mof_validate
+    - ci_gate
+    enforcement: required
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-07-06'
+    adr: ADR-0106
+    target: projects/*/src/**
+    owner: governance-team
+    expected: No unexplained drift between declared and actual state
+    remediation: Align declared state with actual state; update SSOT or code
+    related_runbooks: []
+  - id: CR-X4-SUBMODULE-POINTER-INTEGRITY
+    relates_to:
+    - CR-P76-7-1-LLM-ADVISORY-ONLY
+    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
+    - CR-P76-8-4-INCREMENTAL-COMMIT
+    - CR-P76-9A-4-HEURISTIC-DEFAULT
+    - CR-WORKTREE-CLEAN-BEFORE-PR
+    - CR-X4-MESH-EXECUTOR-RELIABILITY
+    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
+    - CR-X4-SWEEP-TOOL-INTEGRITY
+    - CR-X-META-HEALTH
+    - CR-REDLINE-COVERAGE
+    - CR-DUAL-TRACK-PURITY
+    - CR-ADVERSARIAL-EFFECTIVENESS
+    dimension: X4
+    layer: meta
+    name: 子模块指针完整性
+    description: '子模块指针必须与远程同步: 禁止超前指针 (未推送的 submodule commit), 禁止指针漂移 (submodule
+      commit 被 rebase/drop). 实现: bin/gac/check-submodule-pointer-integrity.py (gac-gate
+      CI)'
+    check_type: hygiene_case
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-04'
+    activated_at: '2026-08-04'
+    adr: ADR-0367
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-submodule-pointer-integrity.py
+    target: projects/*/**
+    owner: governance-team
+    expected: Check CR-X4-SUBMODULE-POINTER-INTEGRITY must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X4-MESH-EXECUTOR-RELIABILITY
+    relates_to:
+    - CR-P76-7-1-LLM-ADVISORY-ONLY
+    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
+    - CR-P76-8-4-INCREMENTAL-COMMIT
+    - CR-P76-9A-4-HEURISTIC-DEFAULT
+    - CR-WORKTREE-CLEAN-BEFORE-PR
+    - CR-X4-SUBMODULE-POINTER-INTEGRITY
+    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
+    - CR-X4-SWEEP-TOOL-INTEGRITY
+    - CR-X-META-HEALTH
+    - CR-REDLINE-COVERAGE
+    - CR-DUAL-TRACK-PURITY
+    - CR-ADVERSARIAL-EFFECTIVENESS
+    dimension: X4
+    layer: meta
+    name: Mesh executor 可靠性
+    description: 'mesh executor 脚本必须有: 超时控制 (timeout/retry), 错误处理 (try/except), 日志记录
+      (logging). 防止 iris→mesh 自动化管道无声失败. 实现: bin/gac/check-mesh-executor-reliability.py
+      (gac-gate CI, advisory)'
+    check_type: hygiene_case
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-04'
+    activated_at: '2026-08-04'
+    adr: ADR-0367
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-mesh-executor-reliability.py
+    target: projects/*/**
+    owner: governance-team
+    expected: Check CR-X4-MESH-EXECUTOR-RELIABILITY must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X4-MEMORY-OS-SURFACE-INTEGRITY
+    relates_to:
+    - CR-P76-7-1-LLM-ADVISORY-ONLY
+    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
+    - CR-P76-8-4-INCREMENTAL-COMMIT
+    - CR-P76-9A-4-HEURISTIC-DEFAULT
+    - CR-WORKTREE-CLEAN-BEFORE-PR
+    - CR-X4-SUBMODULE-POINTER-INTEGRITY
+    - CR-X4-MESH-EXECUTOR-RELIABILITY
+    - CR-X4-SWEEP-TOOL-INTEGRITY
+    - CR-X-META-HEALTH
+    - CR-REDLINE-COVERAGE
+    - CR-DUAL-TRACK-PURITY
+    - CR-ADVERSARIAL-EFFECTIVENESS
+    dimension: X4
+    layer: meta
+    name: Memory-OS surface 一致性
+    description: 'Memory OS light gate: SSOT/ports/env.example/help catalog/smoke
+      surfaces 必须齐全. 实现: bin/gac/check-memory-os-surfaces.py (gac-gate CI blocking;
+      make memory-os-check)'
+    check_type: hygiene_case
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-04'
+    activated_at: '2026-08-04'
+    adr: ADR-0367
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-memory-os-surfaces.py
+    target: projects/*/**
+    owner: governance-team
+    expected: Check CR-X4-MEMORY-OS-SURFACE-INTEGRITY must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X1-EXTERNAL-AGENT-AUDIT
+    relates_to:
+    - CR-PR-DESCRIPTION-NON-EMPTY
+    - CR-PRINCIPLE-ENFORCEMENT
+    - CR-P79-3-FOUNDRY-DECK
+    - CR-P79-4-CATALOG-HEALTH-METRIC
+    - CR-P76-7-4-EVIDENCE-HONEST-CLOSURE
+    - CR-P76-7-5-RESOLVE-NOT-STUB
+    dimension: X1
+    layer: meta
+    name: 外部 agent 接入审计
+    description: '外部 agent 接入必须: 1) 注册 MCP 工具入口 2) 审计链记录操作 3) 不绕过 .omo ingress. 扩展
+      CR-X1-AGENT-AUDIT 覆盖外部 agent 场景. 实现: bin/gac/check-external-agent-audit.py (gac-gate
+      CI, advisory)'
+    check_type: audit_chain
+    executor:
+    - ci_gate
+    - evidence_smoke
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-04'
+    activated_at: '2026-08-04'
+    adr: ADR-0367
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-external-agent-audit.py
+    target: .omo/_truth/registry/**
+    owner: governance-team
+    expected: Check CR-X1-EXTERNAL-AGENT-AUDIT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X4-SWEEP-TOOL-INTEGRITY
+    relates_to:
+    - CR-P76-7-1-LLM-ADVISORY-ONLY
+    - CR-P76-8-1-SUBMODULE-PR-INDEPENDENT
+    - CR-P76-8-4-INCREMENTAL-COMMIT
+    - CR-P76-9A-4-HEURISTIC-DEFAULT
+    - CR-WORKTREE-CLEAN-BEFORE-PR
+    - CR-X4-SUBMODULE-POINTER-INTEGRITY
+    - CR-X4-MESH-EXECUTOR-RELIABILITY
+    - CR-X4-MEMORY-OS-SURFACE-INTEGRITY
+    - CR-X-META-HEALTH
+    - CR-REDLINE-COVERAGE
+    - CR-DUAL-TRACK-PURITY
+    - CR-ADVERSARIAL-EFFECTIVENESS
+    dimension: X4
+    layer: meta
+    name: Sweep 工具完整性
+    description: 'sweep 工具链 (bin/sweep/) 必须有测试覆盖和 CI 集成. 对应 ADR-0367. 实现: bin/gac/check-sweep-tool-integrity.py
+      (gac-gate CI, advisory)'
+    check_type: hygiene_case
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-sweep-tool-integrity.py
+    target: projects/*/**
+    owner: governance-team
+    expected: Check CR-X4-SWEEP-TOOL-INTEGRITY must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X4-MESH-ROUTING-CONSISTENCY
+    dimension: X4
+    layer: meta
+    name: Mesh 路由一致性
+    description: 'mesh 路由必须遵循 BOS URI 标准, 确保路由注册与声明一致. 实现: bin/gac/check-mesh-routing-consistency.py
+      (gac-gate CI, advisory)'
+    check_type: mesh_routing
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-mesh-routing-consistency.py
+    target: projects/agora/etc/**
+    owner: governance-team
+    expected: Check CR-X4-MESH-ROUTING-CONSISTENCY must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X2-PROJECT-HEALTH-FRESHNESS
+    relates_to:
+    - CR-X2-DOC-FRESHNESS-GATE
+    - CR-X2-METRIC-TREND
+    - CR-GOVERNANCE-RATIO
+    - CR-X2-EVIDENCE-FRESHNESS
+    - CR-X2-GOVERNANCE-TREND
+    dimension: X2
+    layer: meta
+    name: 项目健康分新鲜度
+    description: '项目健康分 (system.yaml health_score) 必须定期更新, 不超过 48h. 实现: bin/gac/check-project-health-freshness.py
+      (gac-gate CI, advisory)'
+    check_type: freshness
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-project-health-freshness.py
+    target: docs/**/*.md
+    owner: governance-team
+    expected: Check CR-X2-PROJECT-HEALTH-FRESHNESS must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X3-DELIVERY-VALUE-GATE
+    relates_to:
+    - CR-X3-DELIVERY-CADENCE
+    - CR-X3-L2-DELIVERY-VALUE
+    - CR-X3-X-SLA-ACHIEVEMENT
+    - CR-X3-M4-HEALTH-TREND
+    dimension: X3
+    layer: meta
+    name: 交付 X3 价值门禁
+    description: '交付文件必须有 X3 价值标注 (x3_tier/value/roi), 确保投入产出可量化. 平衡 X3 维度覆盖. 实现:
+      bin/gac/check-delivery-value-gate.py (gac-gate CI, advisory)'
+    check_type: value_roi
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-delivery-value-gate.py
+    target: docs/plans/**
+    owner: governance-team
+    expected: Check CR-X3-DELIVERY-VALUE-GATE must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-SWEEP-INDEX-AUTO
+    dimension: X4
+    layer: meta
+    name: Sweep 历史索引自动维护 (C5, ADR-0373)
+    description: '检测 .omo/_knowledge/sweeps/INDEX.md 是否与同一目录下的 <date>.json 派生内容漂移.
+
+      bin/sweep/sweep_index.py --check 在 CI/closeout 同时被调用, drift → exit 1.
+
+      Excludes short-term local probes via AGENT_WORKFLOW_SWEEP_FAIL_HARD=0 (default).
+
+      '
+    check_type: consistency_drift
+    target: .omo/_knowledge/sweeps/**
+    source_ref: bin/sweep/sweep_index.py::--check
+    executor:
+    - sweep_index_cli
+    - ci_gate
+    - gac_local_gate
+    enforcement: required
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    adr: ADR-0373
+    owner: governance-team
+    expected: No unexplained drift between declared and actual state
+    remediation: Align declared state with actual state; update SSOT or code
+    related_runbooks: []
+  - id: CR-X2-DOC-FRESHNESS-GATE
+    relates_to:
+    - CR-X2-PROJECT-HEALTH-FRESHNESS
+    - CR-X2-METRIC-TREND
+    - CR-GOVERNANCE-RATIO
+    - CR-X2-EVIDENCE-FRESHNESS
+    - CR-X2-GOVERNANCE-TREND
+    dimension: X2
+    layer: meta
+    name: 文档新鲜度门禁
+    description: '检查 docs/ 下 md 文件是否在 90 天内更新过. 平衡 X2 维度覆盖. 实现: bin/gac/check-doc-freshness-gate.py
+      (gac-gate CI, advisory)'
+    check_type: freshness
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-doc-freshness-gate.py
+    target: docs/**/*.md
+    owner: governance-team
+    expected: Check CR-X2-DOC-FRESHNESS-GATE must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X2-METRIC-TREND
+    relates_to:
+    - CR-X2-PROJECT-HEALTH-FRESHNESS
+    - CR-X2-DOC-FRESHNESS-GATE
+    - CR-GOVERNANCE-RATIO
+    - CR-X2-EVIDENCE-FRESHNESS
+    - CR-X2-GOVERNANCE-TREND
+    dimension: X2
+    layer: meta
+    name: 治理指标趋势
+    description: '检查 governance-evolution 指标趋势, 确认关键指标未恶化. 平衡 X2 维度覆盖. 实现: bin/gac/check-metric-trend.py
+      (gac-gate CI, advisory)'
+    check_type: freshness
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-metric-trend.py
+    target: docs/**/*.md
+    owner: governance-team
+    expected: Check CR-X2-METRIC-TREND must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-CI-SURFACE-SSOT
+    relates_to:
+    - CR-X1-POLICIES-SSOT
+    source_type: indexed
+    source_ref: .omo/_truth/registry/ci-surfaces.yaml::surfaces
+    dimension: X1
+    layer: meta
+    name: CI 平面检查登记 SSOT (ADR-0379 E-1)
+    description: 'ci-surfaces.yaml 是 CI 平面检查接线登记 SSOT. 所有 workflow / sgf-policy 中执行的
+      check 类工具必须登记; bin/gac/check-ci-surfaces.py 检测 unregistered / gate-parity /
+      orphan / overlap / double-trigger (on: [push, pull_request] 双跑).'
+    check_type: legacy_index
+    executor:
+    - ci_gate
+    - omo_audit
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0379
+    enforcement: advisory
+    target: docs/**
+    owner: governance-team
+    expected: Check CR-CI-SURFACE-SSOT must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X2-EVIDENCE-FRESHNESS
+    relates_to:
+    - CR-X2-PROJECT-HEALTH-FRESHNESS
+    - CR-X2-DOC-FRESHNESS-GATE
+    - CR-X2-METRIC-TREND
+    - CR-GOVERNANCE-RATIO
+    - CR-X2-GOVERNANCE-TREND
+    dimension: X2
+    layer: meta
+    name: 证据新鲜度检查
+    description: 'evidence-smoke 报告必须 7 天内生成, 分数不低于 90. 实现: bin/gac/check-evidence-freshness.py
+      (gac-local-gate)'
+    check_type: freshness
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-evidence-freshness.py
+    target: docs/**/*.md
+    owner: governance-team
+    expected: Check CR-X2-EVIDENCE-FRESHNESS must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-X2-GOVERNANCE-TREND
+    relates_to:
+    - CR-X2-PROJECT-HEALTH-FRESHNESS
+    - CR-X2-DOC-FRESHNESS-GATE
+    - CR-X2-METRIC-TREND
+    - CR-GOVERNANCE-RATIO
+    - CR-X2-EVIDENCE-FRESHNESS
+    dimension: X2
+    layer: meta
+    name: 治理指标趋势检查
+    description: '治理指标在合理范围内: 规则数 ≤ freeze, ADR 100%, 无过期 draft. 实现: bin/gac/check-governance-trend.py
+      (gac-local-gate)'
+    check_type: freshness
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-05'
+    activated_at: '2026-08-05'
+    adr: ADR-0373
+    source_type: native
+    enforcement: advisory
+    source_ref: bin/gac/check-governance-trend.py
+    target: docs/**/*.md
+    owner: governance-team
+    expected: Check CR-X2-GOVERNANCE-TREND must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-LLM-GATEWAY-ONLY
+    source_type: native
+    dimension: X2
+    layer: meta
+    name: LLM 推理统一接入层
+    description: '禁止业务代码直连 ollama (11434) / 裸 OpenAI 端点; 必须走 llm-router / AetherForge
+      网关. 静态源码扫描, --warn 迁移期仅告警. 实现: bin/gac/check-llm-gateway-only.py'
+    check_type: drift_audit
+    target: projects/**
+    source_ref: bin/gac/check-llm-gateway-only.py::--warn
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-06'
+    activated_at: '2026-08-06'
+    adr: ADR-0380
+    enforcement: advisory
+    owner: aetherforge-team
+    expected: Check CR-LLM-GATEWAY-ONLY must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-L4-DOCUMENTS-MIGRATION-COVERAGE
+    dimension: X4
+    layer: L4
+    name: Documents 内容面迁移覆盖
+    description: runtime/cache 候选必须恰好归属一个声明式迁移族，且目标 owner、replacement、回滚与确认门完整
+    check_type: registry_integrity
+    target: .omo/_truth/registry/documents-content-plane-migrations.yaml
+    source_ref: bin/gac/documents-content-plane-migration-check.py
+    executor:
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-12'
+    adr: ADR-0106
+    source_type: native
+    enforcement: required
+    owner: governance-team
+    expected: Registry files must be valid YAML and match schema
+    remediation: Fix YAML syntax or update registry entry to match schema
+    related_runbooks: []
+  - id: CR-RESIDENT-STATUS-01
+    dimension: X2
+    layer: meta
+    name: resident daemon 水位活性
+    description: resident 体系活性以 daemon 角色水位判断 (cron --once 下无常驻进程, 进程退出正常). 水位新鲜 ≤30min,
+      超阈值 → degraded. 排除订阅层 resident-sub.json 防误判. 对齐 L0 CR-RESIDENT-STATUS-01.
+    check_type: freshness
+    target: .omo/_delivery/resident-orchestrator/watermarks/resident-*.json
+    source_ref: bin/gac/check-resident-status.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    - omo_audit
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-23'
+    adr: ADR-0396
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-RESIDENT-STATUS-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-RESIDENT-MOF-SYNC-01
+    dimension: X4
+    layer: L0
+    name: resident 角色双份对齐
+    description: resident 五类角色 (sediment/decision/execute/monitor/heartbeat) 必须同时注册在
+      roles.py (SSOT) 与 MOF m1 DigitalAgent (AGENT-RESIDENT-*), 零漂移. 对齐 L0 CR-RESIDENT-MOF-SYNC-01.
+    check_type: drift_audit
+    target: projects/omo/src/omo/resident/roles.py vs projects/ecos/src/ecos/ssot/mof/m1/agent/AGENT-RESIDENT-ROLES.yaml
+    source_ref: bin/gac/check-resident-mof-sync.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    - mof_validate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-23'
+    adr: ADR-0396
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-RESIDENT-MOF-SYNC-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-RESIDENT-BOS-01
+    dimension: X1
+    layer: L2
+    name: resident 接口 BOS 路由
+    description: resident 接口 (status/roles/daemon/decision/execute) 必须经 bos://resident/*
+      暴露, 禁止绕过 BOS 直连 resident 内部数据面 (events.jsonl / sediment / ledger). 对齐 L0 CR-RESIDENT-BOS-01.
+    check_type: bos_resolve
+    target: projects/agora/etc/bos-services.yaml::bos://resident/*
+    source_ref: bin/gac/check-resident-bos.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    - evidence_smoke
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-23'
+    adr: ADR-0396
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-RESIDENT-BOS-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-AGE-BOS-01
+    dimension: X1
+    layer: L2
+    name: AGE-v2 Cell 核心链路 BOS 路由
+    description: AGE-v2 Cell 核心接口 (plan/execute/verify/govern) 必须经 bos://agent-cell/*
+      暴露, 禁止绕过 BOS 直连 Cell 内部数据面 (cell_states.json / handoff_log). 对齐 L0 CR-AGE-BOS-01.
+    check_type: bos_resolve
+    target: projects/agora/etc/bos-services.yaml::bos://agent-cell/*
+    source_ref: bin/gac/check-age-bos.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-26'
+    adr: ADR-0401
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-AGE-BOS-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-AGE-POLICY-01
+    dimension: X1
+    layer: L2
+    name: AGE-v2 Cell PDP/PEP 策略执行
+    description: Cell 高风险动作 (R2/R3) 必须经 PDP 评估 + PEP 强制执行, 禁止绕过策略引擎直接执行. PDP 评估记录必须写入
+      Cell handoff_log 证据链. 对齐 L0 CR-AGE-POLICY-01.
+    check_type: ssot_lint
+    target: projects/omo/src/omo/resident/pdp_pep.py
+    source_ref: bin/gac/check-age-policy.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-26'
+    adr: ADR-0401
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-AGE-POLICY-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-AGE-MEMORY-01
+    dimension: X2
+    layer: L2
+    name: AGE-v2 Cell 记忆管道活性
+    description: Cell Memory Pipeline 必须维持 candidate → conflict → consolidate → forget
+      四阶段运转, 禁止跳过 conflict 检测直接写入记忆. 对齐 L0 CR-AGE-MEMORY-01.
+    check_type: file_exists
+    target: projects/omo/src/omo/resident/memory_pipeline.py
+    source_ref: bin/gac/check-age-memory.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-26'
+    adr: ADR-0401
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-AGE-MEMORY-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-AGE-REPLAY-01
+    dimension: X4
+    layer: L2
+    name: AGE-v2 Cell 回放框架完整性
+    description: Cell Replay Framework 必须同时支持 replay / shadow / eval 三种模式, 禁止仅实现部分模式.
+      对齐 L0 CR-AGE-REPLAY-01.
+    check_type: ssot_lint
+    target: projects/omo/src/omo/resident/replay.py
+    source_ref: bin/gac/check-age-replay.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-26'
+    adr: ADR-0401
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-AGE-REPLAY-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-AGE-EVENT-01
+    dimension: X3
+    layer: L2
+    name: AGE-v2 Cell 事件驱动路由
+    description: Cell Handler 必须订阅 WorkflowClosed / ExecutionRequested / WorkflowFailed
+      / StepTimeout 四类事件, 禁止选择性订阅. 对齐 L0 CR-AGE-EVENT-01.
+    check_type: ssot_lint
+    target: projects/omo/src/omo/resident/cell_handler.py
+    source_ref: bin/gac/check-age-event.py
+    executor:
+    - ci_gate
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-08-26'
+    adr: ADR-0401
+    enforcement: required
+    owner: ecos-team
+    expected: Check CR-AGE-EVENT-01 must pass without violations
+    remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  drift:
+    schedule: daily
+    auto_heal: false
+    alert_on:
+    - missing_executor
+    - ghost_rule
+    - version_mismatch
+  freeze:
+    active: true
+    since: '2026-08-05'
+    max_rules: 150
+    dimension_limits:
+      X1: 38
+      X2: 35
+      X3: 38
+      X4: 55
+      rationale: 各维度上限确保均衡覆盖, 防止单维度主导. X4 上限最高因其一致性检查需求最大.
+    slot_reservation:
+      X4: 6
+      X1: 5
+      X3: 5
+      X2: 4
+      rationale: 剩余 20 槽位按需分配, 优先 X4 一致性检查和新维度扩展.
+    exemption_process: ADR + governance-team approval
+    review_trigger: 剩余槽位 < 5 或每季度末
+    reason: '治理合并后封顶 — 210→115 条规则, 预留 35 条扩展空间. 当前 126 active, 维度均衡: X1=30 X2=26
+      X3=32 X4=38.'
+  lifecycle:
+    draft_to_active_days: 7
+    deprecated_to_removed_days: 28
+_meta:
+  status: active
+  lifecycle: ssot
+  owner: governance-team
+  last-reviewed: 2026-06-28

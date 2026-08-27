@@ -1,0 +1,17 @@
+schema: agent-error/v1
+id: PITFALL-GAT-001
+category: gate
+severity: medium
+title: fresh worktree 子模块未 init → 大量 gate 环境性假红
+symptom: ci-local-fast 报 ruff scope not initialized, agcp_drift missing files, agent-workflow
+  lint ModuleNotFoundError
+root_cause: 新 worktree 只有 gitlinks, 子模块内容未 checkout
+solution: bash bin/gac/worktree-init.sh --minimal 一键初始化(#2134)
+prevention: 今日撞了3次以上; worktree-init.sh 是根治方案
+tags:
+- gate
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active

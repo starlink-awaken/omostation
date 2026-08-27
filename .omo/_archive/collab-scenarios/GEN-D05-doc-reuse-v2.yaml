@@ -1,0 +1,37 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: D05-doc-reuse-v2
+category: D_reuse_pair
+adversarial: false
+seed: 4051
+description: '[W2.1 批量] 文档复用 (配对05 实例2) — 测黑板复用命中'
+setup:
+  blackboard: []
+  roles:
+  - research
+  - delivery
+inject:
+- type: write_conflict
+  role: research
+  target: x_5_1
+  value: template
+- type: write_conflict
+  role: delivery
+  target: y_5_1
+  value: template
+expected:
+  behavior: blackboard_reuse
+  silent_loss: 0
+verdict:
+- criterion: x_5_1_present
+  check: final_artifact_present
+  args:
+    key: x_5_1
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

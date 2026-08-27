@@ -1,0 +1,26 @@
+# M2: MentalModel — MOS agent_belief三表 (ADR-0396 Keystone)
+m2_type: MentalModel
+version: 1.0.0
+MentalModel:
+  m3_parent: StructuralElement.Component
+  description: 心智模型 — world_snapshot + capability_calibration + decision_outcome
+  tables:
+    world_snapshot:
+      description: 世界快照 — 系统对世界的认知
+      schema: world_snapshot/v1
+      required: [domain, key, value]
+      optional: [source, confidence]
+    capability_calibration:
+      description: 能力校准 — trust score + 性能指标
+      schema: capability_calibration/v1
+      required: [action_type, trust_score]
+      optional: [context_tag, total_executions, acceptance_rate, last_5_outcomes]
+    decision_outcome:
+      description: 决策结果 — 历史裁决记录
+      schema: decision_outcome/v1
+      required: [scene_id, run_id, adjudication]
+      optional: [action, actor, notes, revision_diff]
+  learningRhythm:
+    daily: [pattern_update, trust_recalculation]
+    weekly: [ai_synthesis, strategy_refinement]
+    monthly: [vision_review, identity_alignment]

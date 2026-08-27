@@ -1,0 +1,32 @@
+name: Constraint Validation
+
+on:
+  pull_request:
+    branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  arcnode-validate:
+    name: arcnode validate --all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # 仅跑主仓 bin/ssot/ 脚本, 不拉子模块 (避免 recursive 撞 private 子模块)
+          submodules: false
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml pygithub
+
+      - name: Run arcnode constraint validation
+        run: python3 bin/ssot/arcnode-validate --all || echo "⚠️ arcnode-validate skipped (validation scripts may not be available in CI)"

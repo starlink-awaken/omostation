@@ -1,0 +1,49 @@
+current_phase: cold_start
+entity_id: OKR-MODEL-DIFF
+entity_type: ''
+lifecycle_stages:
+  business_ops:
+    completed_at: ''
+    started_at: ''
+    status: not_started
+  deployment:
+    completed_at: ''
+    started_at: ''
+    status: not_started
+  design:
+    completed_at: '2026-06-09T12:00:00Z'
+    started_at: ''
+    status: completed
+  development:
+    completed_at: ''
+    started_at: ''
+    status: not_started
+  operations:
+    completed_at: ''
+    started_at: ''
+    status: not_started
+  planning:
+    completed_at: '2026-06-09T10:00:00Z'
+    started_at: '2026-06-09T04:06:36.306840+00:00'
+    status: completed
+  runtime:
+    completed_at: ''
+    started_at: ''
+    status: not_started
+phases:
+  cold_start:
+    completed_at: '2026-06-09T04:06:36.306846+00:00'
+    issues: []
+    started_at: '2026-06-09T04:06:36.306828+00:00'
+    status: completed
+  evolution:
+    completed_at: ''
+    issues: []
+    started_at: ''
+    status: not_started
+  hardening:
+    completed_at: ''
+    issues: []
+    started_at: ''
+    status: not_started
+saved_at: '2026-06-09T04:06:36.311803+00:00'

@@ -1,0 +1,36 @@
+id: P6-G2-DISCOVERY-TEMPLATES-PACKET
+phase: 6
+milestone: W2
+priority: P0
+title: Land the discovery and templates packet
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase6-g2-discovery-templates
+run_ref: .omo/plans/archive/phase6-wave2-execution-plan.md
+approval_ref: null
+review_ref: .omo/summaries/phase6-wave2-closeout.md
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+  - .omo/plans/archive/phase6-program-plan.md
+  - .omo/plans/archive/phase6-wave2-execution-plan.md
+deliverables:
+  - scripts/omo_discovery.py
+  - .omo/tests/test_omo_discovery.py
+  - .omo/summaries/phase6-wave2-closeout.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 6 Wave 1 closeout recorded with GO
+evidence_required:
+  - blueprint discovery registry persisted in task-center truth
+  - instantiated task packets remain schema-valid
+test_plan:
+  - python3 -m pytest .omo/tests/test_omo_discovery.py -q
+  - python3 scripts/sync_omo_state.py --omo-dir .omo
+started_at: '2026-05-31T08:25:00Z'
+completed_at: '2026-05-31T08:40:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary: Wave 2 landed blueprint discovery and governed template instantiation without introducing a second metadata truth.

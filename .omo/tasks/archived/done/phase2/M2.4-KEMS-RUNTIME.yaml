@@ -1,0 +1,39 @@
+id: M2.4-KEMS-RUNTIME
+phase: 2
+milestone: M2.4
+priority: P2
+title: "KEMS runtime — KEMS methodology operationalization"
+status: done
+owner: sophia
+assigned_to: codebuddy
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/sophia/src/sophia/"
+outputs:
+  - "projects/kairon/packages/sophia/src/sophia/kems_runtime.py"
+  - "projects/kairon/packages/sophia/tests/test_kems_runtime.py"
+acceptance_criteria:
+  - "Four Planes (Knowledge/Experience/Methodology/System) mapped to kairon components"
+  - "Three Chains (Data/Method/Evolution) defined"
+  - "Three Protocols (Knowledge/Process/Evolution) defined"
+  - "Minerva research can call KEMS runtime"
+evidence_required:
+  - "kems_runtime.py implemented"
+  - "Planes × Chains × Protocols mapping documented"
+evidence:
+  - "kems_runtime.py exists with KemsRuntime, Planes, Chains, Protocols classes"
+  - "55/55 tests pass — Planes: 9 tests (4 constants + 5 MAP mapping), Chains: 16 tests (3 constants + 13 MAP component mentions), Protocols: 11 tests (3 constants + 8 MAP component mentions), KemsRuntime: 19 tests (init, describe, independence)"
+  - "Four Planes mapped: Knowledge→KOS, Experience→gbrain, Methodology→ontoderive, System→ecos"
+  - "Three Chains mapped: Data→kronos→eidos→KOS, Method→minerva→ontoderive→KOS, Evolution→KOS self(observe→hypothesize→experiment→learn)"
+  - "Three Protocols mapped: Knowledge→eidos schema, Process→pipeline workflow, Evolution→KOS self adaptation + HITL gates"
+test_plan:
+  - "unit: plane instantiation"  # TestPlanes: 9 tests
+  - "unit: chain execution"      # TestChains: 16 tests
+  - "integration: minerva research via KEMS"  # TestKemsRuntime: 19 tests
+completed_at: "2026-05-30T18:00:00Z"
+completed_by: codebuddy

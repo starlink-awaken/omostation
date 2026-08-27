@@ -1,0 +1,40 @@
+id: P46-COCKPIT-ENDPOINTS
+title: P46 cockpit /api/omos /api/ecos 端点真修 (governance/omos/ecos 3 router mount)
+status: done
+task_type: implement
+risk_level: L1
+depends_on:
+- P45-W3-VERIFY-CONVERGENCE
+source_docs:
+- projects/cockpit/src/cockpit/dashboard_server.py (app = FastAPI)
+- projects/cockpit/src/cockpit/web/governance/api.py (router 装饰器)
+- port-registry.yaml:9190/9090 (OMO/eCOS 注释 converged to cockpit /api/)
+- P45 W3 known issue (W4 升级 P46)
+deliverables:
+- projects/cockpit/src/cockpit/web/api_omos.py (新)
+- projects/cockpit/src/cockpit/web/api_ecos.py (新)
+- projects/cockpit/src/cockpit/dashboard_server.py (3 include_router)
+imported_via: c2g bet
+context_uri: bos://memory/p46-cockpit-endpoints
+allowed_operation_level: L1
+human_approval_required: false
+assigned_to: team-lead
+entry_gate: []
+evidence_required:
+- '7 个新端点可达: /api/omos/status /api/omos/health /api/ecos/status /api/ecos/health /governance/status
+  /governance/dashboard /governance/projects'
+- cockpit tests 563 passed + 1 历史 failed (与本任务无关)
+- '端到端 import 验证: app 加载, 路由数 29'
+test_plan:
+- python3 -c 'from cockpit.dashboard_server import app' 验证 import
+- uv run pytest src/cockpit/tests/ -q 验证不破
+metadata:
+  c2g_mechanism: radar + bet
+  phase: 46
+  wave: W0
+  category: cockpit-endpoints-realization
+closed_at: '2026-06-16T06:22:31Z'
+closed_by: team-lead
+evidence: 'P46 真修. 新建 api_omos.py (prefix /api/omos, 2 端点) + api_ecos.py (prefix /api/ecos,
+  2 端点). dashboard_server.py 加 3 include_router (governance + omos + ecos). 端到端验证:
+  7 端点可达, app 29 routes, cockpit 563 tests pass. P45 W3 known issue (注释 vs 代码差距) 真修.'

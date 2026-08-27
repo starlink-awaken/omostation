@@ -1,0 +1,10 @@
+generated_at: '2026-06-01T00:00:00Z'
+decision: allow
+reasons:
+- within_budget_and_fresh
+budget_limit_usd: 2.5
+total_cost_usd: 0.0334
+freshness_score: 100
+stale_items: []
+accounting_ref: .omo/_truth/task-center/usage-accounting.yaml
+freshness_ref: .omo/_delivery/task-center/freshness/current.yaml

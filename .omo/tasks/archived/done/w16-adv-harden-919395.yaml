@@ -1,0 +1,17 @@
+id: w16-adv-harden-919395
+title: 'ADV91/93/95 加硬 (restaking-slash/intent-theft/dao-drain)'
+description: 'P84 wave16 真实任务'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-29T04:30:00Z'
+completion_evidence:
+  - .omo/_delivery/collab-scenarios/ADV91-restaking-slashing-cascade.yaml
+  - .omo/_delivery/collab-scenarios/ADV93-intent-solver-theft.yaml
+  - .omo/_delivery/collab-scenarios/ADV95-dao-treasury-drain.yaml
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+  - .omo/_knowledge/decisions/0271-p84-wave16-adv858789.md
+stage: P84-W16

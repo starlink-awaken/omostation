@@ -1,0 +1,39 @@
+# 调度编译器登记源 — 单一事实源 (ADR-A)
+# 编译产物: crontab / launchd / GitHub Actions schedule
+version: 1
+jobs:
+  - name: meta-doctor-daily
+    schedule: "25 9 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/gac/meta-doctor.py --json >> runtime/cron/operating-rhythm-daily.log 2>&1'
+    planes: [crontab]
+    sla_heartbeat_hours: 48
+    owner: governance-team
+    sfop_slot: S
+    status: active
+
+  - name: debt-refresh-weekly
+    schedule: "30 10 * * 1"
+    command: 'cd "$HOME/Workspace" && uv run --project projects/omo omo debt refresh --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> runtime/cron/operating-rhythm-weekly.log 2>&1'
+    planes: [crontab]
+    sla_heartbeat_hours: 336
+    owner: governance-team
+    sfop_slot: S
+    status: active
+
+  - name: agent-workflow-status
+    schedule: "0 9 * * *"
+    command: 'cd "$HOME/Workspace" && uv run --with pyyaml python bin/agent-workflow.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1'
+    planes: [crontab]
+    sla_heartbeat_hours: 48
+    owner: governance-team
+    sfop_slot: S
+    status: active
+
+  - name: governance-evolution-status
+    schedule: "5 9 * * *"
+    command: 'cd "$HOME/Workspace" && uv run --with pyyaml python bin/governance-evolution.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1'
+    planes: [crontab]
+    sla_heartbeat_hours: 48
+    owner: governance-team
+    sfop_slot: S
+    status: active

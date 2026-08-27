@@ -1,0 +1,27 @@
+apiVersion: omo/v1
+kind: SpaceRolloutPolicy
+id: system-space-rollout-policy
+space_ref: spaces/system-space.yaml
+default_exit_bar: single_live_path
+rules:
+  - action: project.dispatch
+    required_approval_status: granted
+    required_evidence_refs:
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/verify.yaml
+    required_runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+    acceptance_record_ref_field: gates.acceptance_ref
+  - action: runtime.observe
+    required_approval_status: granted
+    required_evidence_refs:
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/verify.yaml
+    required_runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+    acceptance_record_ref_field: gates.acceptance_ref
+  - action: runtime.mutate
+    required_approval_status: granted
+    required_evidence_refs:
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/verify.yaml
+    required_runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+    acceptance_record_ref_field: gates.acceptance_ref

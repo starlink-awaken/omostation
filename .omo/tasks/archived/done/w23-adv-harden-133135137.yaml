@@ -1,0 +1,17 @@
+id: w23-adv-harden-133135137
+title: 'ADV133/135/137 加硬 (typosquat/webhook-ssrf/jwt-none)'
+description: 'P84 wave23 真实任务'
+status: done
+task_type: governance
+assigned_to: engineering-agent
+completed_at: '2026-07-29T06:05:00Z'
+completion_evidence:
+  - .omo/_delivery/collab-scenarios/ADV133-supply-chain-typosquat.yaml
+  - .omo/_delivery/collab-scenarios/ADV135-webhook-ssrf.yaml
+  - .omo/_delivery/collab-scenarios/ADV137-jwt-alg-none.yaml
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+  - .omo/_knowledge/decisions/0278-p84-wave23-adv127129131.md
+stage: P84-W23

@@ -1,0 +1,30 @@
+id: P31-W0-HISTORICAL-TESTS
+phase: 31
+wave: W0
+title: "历史失败测试清算 — kairon/cockpit/runtime 测试债务"
+status: completed
+task_type: test
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P30-W2-VERIFY completed"
+depends_on:
+  - P30-W2-VERIFY
+deliverables:
+  - ".omo/_delivery/phase31-historical-tests.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_delivery/phase30-verify-report.md"
+knowledge_refs: []
+description: |
+  P30 收官发现 kairon/cockpit/runtime 三个项目有非 P30 引入的历史失败测试。
+  本任务逐个诊断 + 修复。
+  - kairon 7 collection errors: uv sync 修 workspace 依赖
+  - cockpit 11 failed: 复测已通过，无需改动
+  - runtime 1 collection error: tests/conftest.py 加 sys.path shim
+started_at: '2026-06-06T02:00:00Z'
+completed_at: '2026-06-06T02:00:00Z'
+blocked_by: null
+retry_count: 0

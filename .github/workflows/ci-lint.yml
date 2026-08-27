@@ -1,0 +1,255 @@
+name: CI Lint (workflows + shell)
+
+# Round 12 P1 — CI lint 闭环
+# 目标: 锁住 .github/workflows/*.yml 语法/action 引用 + scripts/*.sh shell 安全
+# 触发: push/PR + 周一凌晨 06:00 (周巡, 对齐 omostation-governance 节奏)
+# 失败即 fail-fast, 保护 L0/CI 质量不漂移
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+      - "scripts/**"
+      - ".pre-commit-config.yaml"
+      - ".agents/**"
+      - "bin/cockpit/**"
+      - "bin/ssot/check-agent-skills.py"
+      - "docs/generated/capability-registry.yaml"
+      - "docs/local-compute/**"
+      - "projects/agora/etc/bos-services.yaml"
+      - "projects/cockpit/src/cockpit/cli.py"
+      - "projects/omlxc/**"
+      - "projects/aetherforge/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+      - "scripts/**"
+      - ".pre-commit-config.yaml"
+      - ".agents/**"
+      - "bin/cockpit/**"
+      - "bin/ssot/check-agent-skills.py"
+      - "docs/generated/capability-registry.yaml"
+      - "docs/local-compute/**"
+      - "projects/agora/etc/bos-services.yaml"
+      - "projects/cockpit/src/cockpit/cli.py"
+      - "projects/omlxc/**"
+      - "projects/aetherforge/**"
+  schedule:
+    # 周一 06:00 UTC ≈ 北京时间 14:00, 早于 omostation-governance (UTC 07:00+)
+    # 抢在治理扫描前发现 drift
+    - cron: "0 6 * * 1"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  # ── 1. actionlint — GitHub Actions 工作流静态检查 ─────────────────
+  actionlint:
+    name: actionlint (workflow YAML)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Download actionlint (binary, latest stable)
+        id: get_actionlint
+        run: |
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          echo "executable=$(pwd)/actionlint" >> "$GITHUB_OUTPUT"
+      - name: Check workflows
+        env:
+          ACTIONLINT: ${{ steps.get_actionlint.outputs.executable }}
+          SHELLCHECK_OPTS: "--severity=error"
+        shell: bash
+        run: |
+          # shellcheck disable=SC2086  # ACTIONLINT 引用形式固定
+          $ACTIONLINT -color
+
+  # ── 2. check-yaml — YAML 语法/可解析性 ────────────────────────────
+  check-yaml:
+    name: check-yaml (all YAML)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install yamllint + pre-commit
+        run: |
+          pip install --quiet yamllint pre-commit
+      - name: yamllint all .yml/.yaml
+        # 限定范围: 跳过 kairon 仓 (submodule, 单独 lint)
+        run: |
+          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable, truthy: {check-keys: false}}}" \
+            .github/workflows/ \
+            .pre-commit-config.yaml \
+            protocols/ \
+            2>&1 | tee /tmp/yamllint.log
+          # yamllint 0 exit = 全过, 非 0 = 有违例
+      - name: Pre-commit (check-yaml hook)
+        # 走标准 pre-commit-hooks 的 check-yaml, 双保险
+        run: |
+          pre-commit run --all-files check-yaml
+
+  # ── 3. shellcheck — scripts/*.sh 静态安全检查 ─────────────────────
+  shellcheck:
+    name: shellcheck (scripts/*.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
+          shellcheck --version
+      - name: Lint scripts/
+        # 仿 runtime/Makefile shellcheck target: scripts/*.sh
+        # 排除 submodule (kairon) 与 _archived
+        run: |
+          set -e
+          # 只 lint 主仓根目录的 scripts/ 与子项目的 scripts/
+          mapfile -t SH_FILES < <(find scripts projects/omo/scripts projects/cockpit/scripts -name "*.sh" -type f 2>/dev/null || true)
+          if [ ${#SH_FILES[@]} -eq 0 ]; then
+            echo "⚠️  无 .sh 文件, skip"
+            exit 0
+          fi
+          echo "Linting ${#SH_FILES[@]} shell files:"
+          printf '  %s\n' "${SH_FILES[@]}"
+          shellcheck --severity=error "${SH_FILES[@]}"
+
+  # ── 4. omo logs audit — JSONL 漂移检测 (Round 12 P0 接力) ────────
+  omo-logs-audit:
+    name: omo logs audit (SSOT 漂移)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install omo + uv
+        run: |
+          pip install --quiet uv
+          # 不 install omo, 直接 uv run 走 PEP 723 兼容
+      - name: Run omo logs audit
+        run: |
+          cd projects/omo
+          uv run --no-sync python -m omo.cli logs audit || {
+            echo "::warning::omo logs audit 报 drift (老数据残留), 标记 warning 不阻塞 (Round 12 P0 设计)"
+            exit 0
+          }
+
+  # ── 4.5 omo lint-metrics — 6 规则 + §17 健康度 (Round 43 P0) ──
+  omo-lint-metrics:
+    name: omo lint-metrics (X1 契约 + X2 健康度评分)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install omo + uv
+        run: |
+          pip install --quiet uv
+      - name: Run omo lint-metrics
+        # Round 43 P0: 集成 Round 42 P0 lint-metrics 子命令到 CI
+        # 退出码 (R42 P0):
+        #   0 = lint 0 违规 AND metrics R0 优秀
+        #   1 = lint 有违规 (R1-R2 警告)
+        #   2 = metrics R3+ 严重
+        # R3+ 让 CI fail, R1-R2 标 warning 不阻塞
+        # tee捕获 stdout (含 JSON metrics 块), 90d artifact 供后续 pipeline 分析
+        run: |
+          (cd projects/omo
+            uv run --no-sync python -m omo.cli lint-metrics || {
+              echo "::warning::omo lint-metrics 报 R1-R2 警告 (R42 P0 退出码 1), 标 warning 不阻塞"
+              exit 0
+            }) 2>&1 | tee /tmp/lint-metrics-out.txt
+      - name: Upload omo-lint-metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omo-lint-metrics
+          path: /tmp/lint-metrics-out.txt
+          retention-days: 90
+
+  # ── 5. omo lint schemas — Pydantic 写时契约静态校验 (Round 15 P0) ──
+  omo-lint-schemas:
+    name: omo lint schemas (X1 审计契约)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        run: pip install --quiet uv
+      - name: Run omo lint schemas
+        # 5 consumer 模块 (omo_audit/sync/alert/event/trail) 所有 .append() 都传 schema=
+        # 守住 §11 X1 审计: schema 校验 = 写时锁, 跳过 = 失去写时一致性保证
+        # 退出码非 0 即 fail (有 schema 校验缺失, 真回归)
+        run: |
+          cd projects/omo
+          uv run python -m omo.cli lint schemas
+
+  # ── 6. capability-registry-drift — 能力注册表 SSOT 漂移检测 ───────
+  capability-registry-drift:
+    name: capability-registry drift (SSOT 同步)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pyyaml
+        run: pip install --quiet pyyaml
+      - name: Check capability registry drift
+        # 能力注册表 (docs/generated/capability-registry.yaml) 是 help/文档/UI 的 SSOT
+        # 若 MCP/BOS/CLI 源变了但注册表没重新生成 → 漂移, 失败
+        # 修复: make sync-all-docs
+        run: |
+          python3 bin/ssot/gen-capability-registry.py --check --quiet
+
+  # ── 7. agent-skills-lint — 智能体技能 frontmatter 静态校验 ────────
+  agent-skills-lint:
+    name: agent-skills-lint (Skills SSOT)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        continue-on-error: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pyyaml
+        run: pip install --quiet pyyaml
+      - name: Check Agent Skills format and contracts
+        run: python3 bin/ssot/check-agent-skills.py

@@ -1,0 +1,41 @@
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 2,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-08-08T06:04:40.801895+00:00",
+  "internal_proposals": 1,
+  "mode": "deep",
+  "proposals": [
+    {
+      "action": "create_scene_cards",
+      "level": "S2",
+      "proposal": "Only 9 scene cards — consider adding more domain coverage",
+      "severity": "medium",
+      "source": "scene_coverage",
+      "type": "insufficient_cards"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] Mythos social engineering AISI INC-2026-07-28-01",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] NASA to keep its 48-year-old Voyager 2 probe running for yet another year",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 3
+}

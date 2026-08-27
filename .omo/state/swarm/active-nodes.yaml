@@ -1,0 +1,10 @@
+nodes:
+- active_run_id: ''
+  agent_id: agent-claude-01
+  last_heartbeat: '2026-08-07T22:40:19.856132+00:00'
+  role: Architect
+  status: active
+  working_paths:
+  - Makefile
+  - projects/omo/
+updated_at: '2026-08-07T22:40:19.866947+00:00'

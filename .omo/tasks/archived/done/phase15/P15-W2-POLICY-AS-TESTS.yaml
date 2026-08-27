@@ -1,0 +1,8 @@
+id: P15-W2-POLICY-AS-TESTS
+phase: 15
+status: done
+title: Policy-as-tests executable gates
+evidence_refs:
+  - .omo/evidence/phase15/policy-test-report.yaml
+  - .omo/tests/test_phase15_execution.py
+verification: policy report blocks live promotion, multiple active packets, hidden scope, missing rollback, draft leaks, and missing user evidence

@@ -1,0 +1,76 @@
+id: project-code-change
+run_frequency: on_demand
+title: Project code change
+purpose: Route code changes through project-local verification and workspace governance
+  gates.
+agents:
+  roles:
+  - engineering-agent
+  - qa-agent
+  - governance-agent
+  observer_policy: use_for_high_blast_radius_or_unattended_runs
+allowed_lanes:
+- code
+- governance_code
+- config
+lock_scopes:
+- project:{project}
+- root-gate
+surfaces:
+  read:
+  - projects/{project}/**
+  - docs/project-registry.yaml
+  - .omo/_truth/registry/governance-checks.yaml
+  write:
+  - projects/{project}/**
+phases:
+  preflight:
+  - id: root-status
+    mode: required
+    command:
+    - git
+    - status
+    - --short
+  - id: project-status
+    mode: advisory
+    cwd: projects/{project}
+    command:
+    - git
+    - status
+    - --short
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: implement
+    mode: manual
+    command:
+    - agent
+    - edit
+    - project-code
+  verification:
+  - id: project-tests
+    mode: manual
+    cwd: projects/{project}
+    command:
+    - project-local
+    - test-command
+  - id: gac-local-gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
+  closeout:
+  - id: diff-stat
+    mode: required
+    command:
+    - git
+    - diff
+    - --stat

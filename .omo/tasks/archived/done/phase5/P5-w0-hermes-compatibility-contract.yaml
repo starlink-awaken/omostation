@@ -1,0 +1,43 @@
+id: P5-W0-HERMES-COMPATIBILITY-CONTRACT
+phase: 5
+milestone: W0
+priority: P0
+title: Freeze Hermes ingress and memory contract for Phase 5
+status: done
+assigned_to: codebuddy
+dispatch_id: p5-w0-hermes-compatibility-contract-codebuddy-20260531-004221
+run_ref: .omo/workers/runs/p5-w0-hermes-compatibility-contract-codebuddy-20260531-004221-dispatch.yaml
+approval_ref: null
+review_ref: .omo/workers/runs/p5-w0-hermes-compatibility-contract-codebuddy-20260531-004221-review.md
+knowledge_refs:
+  - .omo/_knowledge/design/hermes-convergence-strategy.md
+  - .omo/_knowledge/design/phase5-program-architecture.md
+  - .omo/plans/archive/phase5-wave0-task-specs.md
+  - .omo/plans/archive/phase5-entry-gate-checklist.md
+handoff_refs:
+  - .omo/workers/runs/p5-w0-hermes-compatibility-contract-codebuddy-20260531-004221-envelope.yaml
+  - .omo/workers/runs/p5-w0-hermes-compatibility-contract-codebuddy-20260531-004221-prompt.md
+  - .omo/workers/runs/p5-w0-hermes-compatibility-contract-codebuddy-20260531-004221-checkpoint.md
+  - .omo/evidence/handoffs/P5-W0-HERMES-COMPATIBILITY-CONTRACT.md
+source_docs:
+  - .omo/plans/archive/phase5-wave0-task-specs.md
+  - .omo/_knowledge/design/hermes-convergence-strategy.md
+  - .omo/_knowledge/design/phase5-program-architecture.md
+  - .omo/plans/archive/phase5-entry-gate-checklist.md
+deliverables:
+  - .omo/_knowledge/design/phase5-hermes-contract.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - G5.0 active queue seeded
+evidence_required:
+  - Hermes retained scope is limited to ingress plus memory and bounded fallback dependencies
+  - Hermes is no longer described as scheduler backbone for new work
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase5_wave0_docs.py -q --tb=short
+blocked_by: null
+started_at: '2026-05-31T00:42:21Z'
+completed_at: '2026-05-31T00:55:00Z'
+retry_count: 0
+completion_summary: "Worker-produced Hermes compatibility contract was reviewed and accepted; Direction A is now frozen as an execution contract with explicit IN/OUT/maintenance-only boundaries and migration checkpoints."

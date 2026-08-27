@@ -1,0 +1,11 @@
+apiVersion: omo/v1
+kind: RolloutPolicy
+space_ref: spaces/runtime-space.yaml
+rules:
+  - action: runtime.observe
+    required_approval_status: granted
+    runtime_boundary_ref: runtime/runtime-space-boundary.yaml
+    acceptance_evidence_refs:
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml
+      - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/verify.yaml
+schema_version: v1

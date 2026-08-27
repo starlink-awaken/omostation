@@ -1,0 +1,1336 @@
+---
+schema: resident-retro-candidate/v1
+topic: mini
+generated_at: 2026-08-27T11:40:02Z
+status: candidate
+counts:
+  runs: 168
+  failures: 33
+  total: 201
+failure_rate: 0.1642
+failure_breakdown:
+  by_event_type:
+    StepFailed: 33
+  trace_count: 33
+---
+# mini 运行复盘聚合 (resident 事件驱动)
+
+- generated_at: 2026-08-27T11:40:02Z
+- status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
+- sediment 覆盖: 168 成功运行 + 33 失败模式 = 201 草稿
+- 失败率: 16.42%
+
+## 成功运行 (runs/)
+
+- 20260803T063617Z-mini-c9be3c75.md
+- 20260803T063617Z-mini-ce061285.md
+- 20260803T063618Z-mini-cbfc4143.md
+- 20260803T063648Z-mini-0612f751.md
+- 20260803T063648Z-mini-16f40638.md
+- 20260803T063649Z-mini-dda7eb08.md
+- 20260803T063652Z-mini-2eefa246.md
+- 20260803T064037Z-mini-d97f8392.md
+- 20260803T064037Z-mini-f0665748.md
+- 20260803T064039Z-mini-df6dae22.md
+- 20260803T064044Z-mini-8caf42b4.md
+- 20260803T064149Z-mini-2bee6ef9.md
+- 20260803T064149Z-mini-e1c4b8fc.md
+- 20260803T064151Z-mini-f64705d8.md
+- 20260803T064154Z-mini-6cdf1d16.md
+- 20260803T064343Z-mini-1a2b0b08.md
+- 20260803T064343Z-mini-65ca19ed.md
+- 20260803T064345Z-mini-1730c205.md
+- 20260803T064348Z-mini-cc57b92c.md
+- 20260803T064525Z-mini-1de11393.md
+- 20260803T064525Z-mini-8b17198b.md
+- 20260803T064528Z-mini-7c17b2ec.md
+- 20260803T064532Z-mini-c0a0cece.md
+- 20260803T064620Z-mini-bda65c35.md
+- 20260803T064620Z-mini-ed0220c7.md
+- 20260803T064622Z-mini-fdc9c3f6.md
+- 20260803T064625Z-mini-d2a16583.md
+- 20260803T064738Z-mini-0ac393fa.md
+- 20260803T064739Z-mini-9df60609.md
+- 20260803T064740Z-mini-8890761e.md
+- 20260803T064745Z-mini-14540d86.md
+- 20260803T064920Z-mini-5ad334a1.md
+- 20260803T064921Z-mini-1a0a21e2.md
+- 20260803T064923Z-mini-83b99be9.md
+- 20260803T064928Z-mini-e359ae0b.md
+- 20260804T082421Z-mini-ecfb7543.md
+- 20260804T082422Z-mini-1e525a96.md
+- 20260804T082423Z-mini-2373c27b.md
+- 20260804T082426Z-mini-62bef740.md
+- 20260804T082541Z-mini-d57502d0.md
+- 20260804T082541Z-mini-e4724756.md
+- 20260804T082543Z-mini-026b90b4.md
+- 20260804T082545Z-mini-a5c01dff.md
+- 20260804T082700Z-mini-2e9c44b0.md
+- 20260804T082701Z-mini-bd06ae2a.md
+- 20260804T082702Z-mini-4d101873.md
+- 20260804T082704Z-mini-e44c5e0f.md
+- 20260804T102040Z-mini-02f3abcb.md
+- 20260804T102040Z-mini-673db83e.md
+- 20260804T102041Z-mini-80fbe834.md
+- 20260804T102044Z-mini-adcfc8ee.md
+- 20260804T105445Z-mini-705ff4e5.md
+- 20260804T105445Z-mini-abd0ce77.md
+- 20260804T105447Z-mini-b9c5461f.md
+- 20260804T105450Z-mini-8387ad3b.md
+- 20260804T105609Z-mini-7cb7d2c9.md
+- 20260804T105609Z-mini-d3ce8de7.md
+- 20260804T105610Z-mini-9ce2dce7.md
+- 20260804T105613Z-mini-875bfce0.md
+- 20260805T012012Z-mini-040dcdce.md
+- 20260805T012012Z-mini-f8708bda.md
+- 20260805T012014Z-mini-65a60659.md
+- 20260805T012019Z-mini-739751ae.md
+- 20260805T012640Z-mini-4094b0a2.md
+- 20260805T012640Z-mini-6b68bec6.md
+- 20260805T012641Z-mini-a7ecca83.md
+- 20260805T012644Z-mini-3e8b9b9e.md
+- 20260805T110903Z-mini-50a79a67.md
+- 20260805T110903Z-mini-de6eb285.md
+- 20260805T110904Z-mini-3eb66a2f.md
+- 20260805T110908Z-mini-5221d576.md
+- 20260805T124458Z-mini-4dd01f93.md
+- 20260805T124458Z-mini-6fa1b72a.md
+- 20260805T124459Z-mini-11c07d2e.md
+- 20260805T124503Z-mini-0d86424c.md
+- 20260805T124823Z-mini-0c0d1edb.md
+- 20260808T014348Z-mini-0414dc9a.md
+- 20260808T014348Z-mini-7dc91625.md
+- 20260808T014350Z-mini-8e03c676.md
+- 20260808T014353Z-mini-4c681905.md
+- 20260808T023806Z-mini-f09b5d82.md
+- 20260808T023807Z-mini-e21b827f.md
+- 20260808T023808Z-mini-d09996c9.md
+- 20260808T023811Z-mini-b90348cf.md
+- 20260808T051019Z-mini-4674877f.md
+- 20260808T051019Z-mini-8e0d16fd.md
+- 20260808T051020Z-mini-e185b394.md
+- 20260808T051023Z-mini-6a1dbceb.md
+- 20260808T051107Z-mini-1f9660ed.md
+- 20260808T051107Z-mini-678292a2.md
+- 20260808T051108Z-mini-05856574.md
+- 20260808T051111Z-mini-c20ad06f.md
+- 20260808T051157Z-mini-27d55782.md
+- 20260808T051157Z-mini-b0e7c827.md
+- 20260808T051159Z-mini-38447e4e.md
+- 20260808T051236Z-mini-1d095fee.md
+- 20260808T051236Z-mini-be6154e7.md
+- 20260808T051237Z-mini-676300ee.md
+- 20260808T051241Z-mini-b6faf1ed.md
+- 20260809T015905Z-mini-18c33860.md
+- 20260809T015906Z-mini-c28e37c0.md
+- 20260809T015907Z-mini-c490e0c6.md
+- 20260809T015910Z-mini-4a3e9a9b.md
+- 20260817T012938Z-mini-07cd9207.md
+- 20260817T012939Z-mini-5df015d4.md
+- 20260817T012941Z-mini-7ec0bce3.md
+- 20260817T012946Z-mini-68d46209.md
+- 20260817T013219Z-mini-277e8f73.md
+- 20260817T013219Z-mini-5bf4fb65.md
+- 20260817T013222Z-mini-165d0c97.md
+- 20260817T013227Z-mini-4ca60652.md
+- 20260817T013434Z-mini-9d55bb3f.md
+- 20260817T013435Z-mini-b9479fe3.md
+- 20260817T013437Z-mini-c81c4307.md
+- 20260817T013442Z-mini-c53bc992.md
+- 20260817T013554Z-mini-40c210c2.md
+- 20260817T013554Z-mini-662f5247.md
+- 20260817T013556Z-mini-d640649f.md
+- 20260817T013601Z-mini-92ed30c8.md
+- 20260817T013657Z-mini-2ceba203.md
+- 20260817T013657Z-mini-cf48a442.md
+- 20260817T013659Z-mini-c811e0d6.md
+- 20260817T013705Z-mini-b88b854a.md
+- 20260821T064929Z-mini-436fcc99.md
+- 20260821T064929Z-mini-7291b4ff.md
+- 20260821T064931Z-mini-1c2a4f97.md
+- 20260821T064940Z-mini-6679bf8f.md
+- 20260821T065055Z-mini-dc7ea164.md
+- 20260821T065056Z-mini-63717be9.md
+- 20260821T065058Z-mini-11a2c417.md
+- 20260821T065105Z-mini-0cfa5173.md
+- 20260821T104327Z-mini-49826994.md
+- 20260821T104327Z-mini-b1e3e8c0.md
+- 20260821T104330Z-mini-9b273999.md
+- 20260821T104336Z-mini-56fb9e3b.md
+- 20260822T081347Z-mini-fd3c03ad.md
+- 20260824T223446Z-mini-a5b7fa72.md
+- 20260824T223446Z-mini-ef64c801.md
+- 20260824T223447Z-mini-88745eca.md
+- 20260824T223448Z-mini-2b7a38d3.md
+- 20260824T223808Z-mini-4935b654.md
+- 20260824T223809Z-mini-95fad449.md
+- 20260825T165251Z-mini-29ea852a.md
+- 20260825T165251Z-mini-70c13350.md
+- 20260825T223643Z-mini-afe0ea49.md
+- 20260825T223645Z-mini-a4e40e31.md
+- 20260825T232537Z-mini-5bfffef4.md
+- 20260825T232539Z-mini-4f7c43ff.md
+- 20260825T232853Z-mini-f7900a88.md
+- 20260825T232856Z-mini-a307ec63.md
+- 20260825T235533Z-mini-3b4168fe.md
+- 20260825T235534Z-mini-a891737d.md
+- 20260825T235717Z-mini-6ca4a50b.md
+- 20260825T235717Z-mini-9cd56c8d.md
+- 20260826T005218Z-mini-74b7c38a.md
+- 20260826T005219Z-mini-ce4518bf.md
+- 20260826T010931Z-mini-03fdc6f5.md
+- 20260826T010932Z-mini-669ac039.md
+- 20260826T011308Z-mini-61911227.md
+- 20260826T011309Z-mini-f3108389.md
+- 20260826T012346Z-mini-e233ae20.md
+- 20260826T012347Z-mini-2a289457.md
+- 20260826T013012Z-mini-e49b07ef.md
+- 20260826T013013Z-mini-dfff8e40.md
+- 20260826T013317Z-mini-f5dae418.md
+- 20260826T013318Z-mini-f8daa782.md
+- 20260826T013534Z-mini-62318048.md
+- 20260826T013535Z-mini-d99ee833.md
+
+## 失败模式 (failures/)
+
+- 20260803T064037Z-mini-f0665748-468892a6.md
+- 20260803T064149Z-mini-2bee6ef9-92191eb1.md
+- 20260803T064343Z-mini-65ca19ed-0aacc177.md
+- 20260803T064525Z-mini-1de11393-40ffb620.md
+- 20260803T064620Z-mini-ed0220c7-69c90f09.md
+- 20260803T064739Z-mini-9df60609-b643a31c.md
+- 20260803T064921Z-mini-1a0a21e2-14d06166.md
+- 20260804T082422Z-mini-1e525a96-647dd8d9.md
+- 20260804T082541Z-mini-e4724756-39c41221.md
+- 20260804T082701Z-mini-bd06ae2a-d95ef0aa.md
+- 20260804T102040Z-mini-02f3abcb-85663ee0.md
+- 20260804T105445Z-mini-705ff4e5-de937743.md
+- 20260804T105609Z-mini-d3ce8de7-9554a0c0.md
+- 20260805T012012Z-mini-f8708bda-2b35a748.md
+- 20260805T012640Z-mini-4094b0a2-dc22e010.md
+- 20260805T110903Z-mini-50a79a67-300330c7.md
+- 20260805T124458Z-mini-4dd01f93-61bc6ba4.md
+- 20260805T124823Z-mini-0c0d1edb-35dcd0ae.md
+- 20260808T014348Z-mini-0414dc9a-77535d54.md
+- 20260808T023807Z-mini-e21b827f-9222135f.md
+- 20260808T051019Z-mini-8e0d16fd-6b7448be.md
+- 20260808T051107Z-mini-678292a2-c9314dd8.md
+- 20260808T051157Z-mini-27d55782-6acaf932.md
+- 20260808T051236Z-mini-1d095fee-7cdf40b2.md
+- 20260809T015906Z-mini-c28e37c0-33e29163.md
+- 20260817T012939Z-mini-5df015d4-60b95b82.md
+- 20260817T013219Z-mini-277e8f73-8a37fed6.md
+- 20260817T013435Z-mini-b9479fe3-5a52d898.md
+- 20260817T013554Z-mini-40c210c2-2c7e4235.md
+- 20260817T013657Z-mini-2ceba203-906a78f2.md
+- 20260821T064929Z-mini-7291b4ff-10e76f35.md
+- 20260821T065056Z-mini-63717be9-cf5b5d9e.md
+- 20260821T104327Z-mini-b1e3e8c0-786a5244.md
+
+## 失败根因画像 (确定性启发式)
+
+- StepFailed: 33 篇
+- 关联工作流溯源: 33 个 (trace_id 见下)
+  - `20260803T064037Z-mini-f0665748`
+  - `20260803T064149Z-mini-2bee6ef9`
+  - `20260803T064343Z-mini-65ca19ed`
+  - `20260803T064525Z-mini-1de11393`
+  - `20260803T064620Z-mini-ed0220c7`
+  - `20260803T064739Z-mini-9df60609`
+  - `20260803T064921Z-mini-1a0a21e2`
+  - `20260804T082422Z-mini-1e525a96`
+  - `20260804T082541Z-mini-e4724756`
+  - `20260804T082701Z-mini-bd06ae2a`
+  - `20260804T102040Z-mini-02f3abcb`
+  - `20260804T105445Z-mini-705ff4e5`
+  - `20260804T105609Z-mini-d3ce8de7`
+  - `20260805T012012Z-mini-f8708bda`
+  - `20260805T012640Z-mini-4094b0a2`
+  - `20260805T110903Z-mini-50a79a67`
+  - `20260805T124458Z-mini-4dd01f93`
+  - `20260805T124823Z-mini-0c0d1edb`
+  - `20260808T014348Z-mini-0414dc9a`
+  - `20260808T023807Z-mini-e21b827f`
+  - `20260808T051019Z-mini-8e0d16fd`
+  - `20260808T051107Z-mini-678292a2`
+  - `20260808T051157Z-mini-27d55782`
+  - `20260808T051236Z-mini-1d095fee`
+  - `20260809T015906Z-mini-c28e37c0`
+  - `20260817T012939Z-mini-5df015d4`
+  - `20260817T013219Z-mini-277e8f73`
+  - `20260817T013435Z-mini-b9479fe3`
+  - `20260817T013554Z-mini-40c210c2`
+  - `20260817T013657Z-mini-2ceba203`
+  - `20260821T064929Z-mini-7291b4ff`
+  - `20260821T065056Z-mini-63717be9`
+  - `20260821T104327Z-mini-b1e3e8c0`
+
+## 确定性五问骨架 (ledger 追溯, 自动填充)
+
+- **20260803T063617Z-mini-c9be3c75**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.099
+- **20260803T063617Z-mini-ce061285**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.111
+- **20260803T063618Z-mini-cbfc4143**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.072
+- **20260803T063648Z-mini-0612f751**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.101
+- **20260803T063648Z-mini-16f40638**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.106
+- **20260803T063649Z-mini-dda7eb08**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.07
+- **20260803T063652Z-mini-2eefa246**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.104
+- **20260803T064037Z-mini-d97f8392**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.133
+- **20260803T064037Z-mini-f0665748**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.13
+- **20260803T064039Z-mini-df6dae22**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.126
+- **20260803T064044Z-mini-8caf42b4**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.188
+- **20260803T064149Z-mini-2bee6ef9**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.131
+- **20260803T064149Z-mini-e1c4b8fc**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.13
+- **20260803T064151Z-mini-f64705d8**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.11
+- **20260803T064154Z-mini-6cdf1d16**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.116
+- **20260803T064343Z-mini-1a2b0b08**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.133
+- **20260803T064343Z-mini-65ca19ed**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.127
+- **20260803T064345Z-mini-1730c205**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.081
+- **20260803T064348Z-mini-cc57b92c**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.12
+- **20260803T064525Z-mini-1de11393**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.304
+- **20260803T064525Z-mini-8b17198b**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.236
+- **20260803T064528Z-mini-7c17b2ec**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.145
+- **20260803T064532Z-mini-c0a0cece**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.161
+- **20260803T064620Z-mini-bda65c35**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.144
+- **20260803T064620Z-mini-ed0220c7**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.128
+- **20260803T064622Z-mini-fdc9c3f6**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.09
+- **20260803T064625Z-mini-d2a16583**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.184
+- **20260803T064738Z-mini-0ac393fa**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.131
+- **20260803T064739Z-mini-9df60609**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.137
+- **20260803T064740Z-mini-8890761e**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.103
+- **20260803T064745Z-mini-14540d86**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.187
+- **20260803T064920Z-mini-5ad334a1**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.187
+- **20260803T064921Z-mini-1a0a21e2**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.18
+- **20260803T064923Z-mini-83b99be9**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.123
+- **20260803T064928Z-mini-e359ae0b**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.191
+- **20260804T082421Z-mini-ecfb7543**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.114
+- **20260804T082422Z-mini-1e525a96**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.103
+- **20260804T082423Z-mini-2373c27b**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.073
+- **20260804T082426Z-mini-62bef740**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.114
+- **20260804T082541Z-mini-d57502d0**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.114
+- **20260804T082541Z-mini-e4724756**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.113
+- **20260804T082543Z-mini-026b90b4**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.079
+- **20260804T082545Z-mini-a5c01dff**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.123
+- **20260804T082700Z-mini-2e9c44b0**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.105
+- **20260804T082701Z-mini-bd06ae2a**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.105
+- **20260804T082702Z-mini-4d101873**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.07
+- **20260804T082704Z-mini-e44c5e0f**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.105
+- **20260804T102040Z-mini-02f3abcb**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.101
+- **20260804T102040Z-mini-673db83e**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.101
+- **20260804T102041Z-mini-80fbe834**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.077
+- **20260804T102044Z-mini-adcfc8ee**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.101
+- **20260804T105445Z-mini-705ff4e5**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.128
+- **20260804T105445Z-mini-abd0ce77**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.127
+- **20260804T105447Z-mini-b9c5461f**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.086
+- **20260804T105450Z-mini-8387ad3b**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.112
+- **20260804T105609Z-mini-7cb7d2c9**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.131
+- **20260804T105609Z-mini-d3ce8de7**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.123
+- **20260804T105610Z-mini-9ce2dce7**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.094
+- **20260804T105613Z-mini-875bfce0**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.108
+- **20260805T012012Z-mini-040dcdce**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.142
+- **20260805T012012Z-mini-f8708bda**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.14
+- **20260805T012014Z-mini-65a60659**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.125
+- **20260805T012019Z-mini-739751ae**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.193
+- **20260805T012640Z-mini-4094b0a2**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.111
+- **20260805T012640Z-mini-6b68bec6**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.112
+- **20260805T012641Z-mini-a7ecca83**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.082
+- **20260805T012644Z-mini-3e8b9b9e**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.113
+- **20260805T110903Z-mini-50a79a67**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.114
+- **20260805T110903Z-mini-de6eb285**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.116
+- **20260805T110904Z-mini-3eb66a2f**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.083
+- **20260805T110908Z-mini-5221d576**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.115
+- **20260805T124458Z-mini-4dd01f93**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.11
+- **20260805T124458Z-mini-6fa1b72a**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.111
+- **20260805T124459Z-mini-11c07d2e**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.081
+- **20260805T124503Z-mini-0d86424c**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.114
+- **20260805T124823Z-mini-0c0d1edb**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=138863.63
+- **20260808T014348Z-mini-0414dc9a**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.143
+- **20260808T014348Z-mini-7dc91625**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.162
+- **20260808T014350Z-mini-8e03c676**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.099
+- **20260808T014353Z-mini-4c681905**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.14
+- **20260808T023806Z-mini-f09b5d82**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.136
+- **20260808T023807Z-mini-e21b827f**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.129
+- **20260808T023808Z-mini-d09996c9**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.1
+- **20260808T023811Z-mini-b90348cf**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.137
+- **20260808T051019Z-mini-4674877f**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.149
+- **20260808T051019Z-mini-8e0d16fd**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.168
+- **20260808T051020Z-mini-e185b394**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.107
+- **20260808T051023Z-mini-6a1dbceb**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.145
+- **20260808T051107Z-mini-1f9660ed**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.135
+- **20260808T051107Z-mini-678292a2**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.14
+- **20260808T051108Z-mini-05856574**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.09
+- **20260808T051111Z-mini-c20ad06f**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.128
+- **20260808T051157Z-mini-27d55782**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.124
+- **20260808T051157Z-mini-b0e7c827**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.131
+- **20260808T051159Z-mini-38447e4e**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.094
+- **20260808T051236Z-mini-1d095fee**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.145
+- **20260808T051236Z-mini-be6154e7**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.144
+- **20260808T051237Z-mini-676300ee**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.11
+- **20260808T051241Z-mini-b6faf1ed**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.128
+- **20260809T015905Z-mini-18c33860**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.127
+- **20260809T015906Z-mini-c28e37c0**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.134
+- **20260809T015907Z-mini-c490e0c6**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.094
+- **20260809T015910Z-mini-4a3e9a9b**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.131
+- **20260817T012938Z-mini-07cd9207**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.143
+- **20260817T012939Z-mini-5df015d4**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.147
+- **20260817T012941Z-mini-7ec0bce3**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.194
+- **20260817T012946Z-mini-68d46209**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.178
+- **20260817T013219Z-mini-277e8f73**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.178
+- **20260817T013219Z-mini-5bf4fb65**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.194
+- **20260817T013222Z-mini-165d0c97**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.248
+- **20260817T013227Z-mini-4ca60652**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.157
+- **20260817T013434Z-mini-9d55bb3f**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.156
+- **20260817T013435Z-mini-b9479fe3**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.153
+- **20260817T013437Z-mini-c81c4307**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.248
+- **20260817T013442Z-mini-c53bc992**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.154
+- **20260817T013554Z-mini-40c210c2**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.139
+- **20260817T013554Z-mini-662f5247**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.149
+- **20260817T013556Z-mini-d640649f**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.198
+- **20260817T013601Z-mini-92ed30c8**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.18
+- **20260817T013657Z-mini-2ceba203**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.172
+- **20260817T013657Z-mini-cf48a442**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.148
+- **20260817T013659Z-mini-c811e0d6**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.27
+- **20260817T013705Z-mini-b88b854a**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.147
+- **20260821T064929Z-mini-436fcc99**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.145
+- **20260821T064929Z-mini-7291b4ff**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.136
+- **20260821T064931Z-mini-1c2a4f97**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.227
+- **20260821T064940Z-mini-6679bf8f**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.138
+- **20260821T065055Z-mini-dc7ea164**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.176
+- **20260821T065056Z-mini-63717be9**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.169
+- **20260821T065058Z-mini-11a2c417**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.187
+- **20260821T065105Z-mini-0cfa5173**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.151
+- **20260821T104327Z-mini-49826994**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.135
+- **20260821T104327Z-mini-b1e3e8c0**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.135
+- **20260821T104330Z-mini-9b273999**
+  - 计划 (objective): closeout test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=0.218
+- **20260821T104336Z-mini-56fb9e3b**
+  - 计划 (objective): legacy close test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.148
+- **20260822T081347Z-mini-fd3c03ad**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.142
+- **20260824T223446Z-mini-a5b7fa72**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.867
+- **20260824T223446Z-mini-ef64c801**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.857
+- **20260824T223447Z-mini-88745eca**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=1.007
+- **20260824T223448Z-mini-2b7a38d3**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=1.242
+- **20260824T223808Z-mini-4935b654**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.292
+- **20260824T223809Z-mini-95fad449**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.257
+- **20260825T165251Z-mini-29ea852a**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.155
+- **20260825T165251Z-mini-70c13350**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.169
+- **20260825T223643Z-mini-afe0ea49**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.539
+- **20260825T223645Z-mini-a4e40e31**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.596
+- **20260825T232537Z-mini-5bfffef4**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.505
+- **20260825T232539Z-mini-4f7c43ff**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.386
+- **20260825T232853Z-mini-f7900a88**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=1.201
+- **20260825T232856Z-mini-a307ec63**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.552
+- **20260825T235533Z-mini-3b4168fe**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.153
+- **20260825T235534Z-mini-a891737d**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.152
+- **20260825T235717Z-mini-6ca4a50b**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.165
+- **20260825T235717Z-mini-9cd56c8d**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.159
+- **20260826T005218Z-mini-74b7c38a**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.185
+- **20260826T005219Z-mini-ce4518bf**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.209
+- **20260826T010931Z-mini-03fdc6f5**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.314
+- **20260826T010932Z-mini-669ac039**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.259
+- **20260826T011308Z-mini-61911227**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.223
+- **20260826T011309Z-mini-f3108389**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.269
+- **20260826T012346Z-mini-e233ae20**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.203
+- **20260826T012347Z-mini-2a289457**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.187
+- **20260826T013012Z-mini-e49b07ef**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.249
+- **20260826T013013Z-mini-dfff8e40**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.212
+- **20260826T013317Z-mini-f5dae418**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.195
+- **20260826T013318Z-mini-f8daa782**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.223
+- **20260826T013534Z-mini-62318048**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.274
+- **20260826T013535Z-mini-d99ee833**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.246
+
+> 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
+
+## 待完善(运营 agent/人工)
+
+- [ ] 关键发现
+- [ ] 净增减
+- [ ] 交接建议

@@ -1,0 +1,16 @@
+schema: agent-error/v1
+id: PITFALL-GAT-002
+category: gate
+severity: medium
+title: 多文档 yaml 用 safe_load 解析 → 数据丢失假零
+symptom: governance-checks.yaml 规则数显示为0; UHS governance 维度归零
+root_cause: governance-checks.yaml 是多文档结构, safe_load 只读第一个文档
+solution: 一律用 yaml.safe_load_all 遍历全部文档
+prevention: UHS governance 归零事故根因
+tags:
+- gate
+discovered_by: sisyphus-48h-session
+discovered_at: '2026-08-25'
+times_encountered: 1
+last_confirmed_at: '2026-08-25'
+status: active

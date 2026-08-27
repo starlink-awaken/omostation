@@ -1,0 +1,70 @@
+{
+  "schema": "m1-conflict-rootcause/v1",
+  "adr": ["0224", "0222", "0220"],
+  "generated_at": "2026-07-18T12:55:00Z",
+  "window_start": "2026-07-17T13:52:27Z",
+  "gate_land_reference": {
+    "pr": 415,
+    "title": "feat(g-conv.7): ADR-0220 swarm coordination discipline",
+    "merged_at_utc": "2026-07-17T13:55:14Z",
+    "note": "Four gates D1–D4 first on main"
+  },
+  "events": [
+    {
+      "ts": "2026-07-18T08:53:51Z",
+      "kind": "escape_hatch_abuse",
+      "session": null,
+      "detail": {
+        "flag": "no_verify_push",
+        "reason": "missing_escape_id"
+      },
+      "vs_gate_land": {
+        "gate_merged_at": "2026-07-17T13:55:14Z",
+        "after_gate": true,
+        "hours_after_gate": 18.98
+      },
+      "class": "gate_interception",
+      "bypass_path": null,
+      "analysis": "D4 check_escape_hatch emitted event when SWARM_ESCAPE_ID missing — refusal path, not successful bare git --no-verify bypass. Source: intentional probe/skeptic (same second as D2 probe)."
+    },
+    {
+      "ts": "2026-07-18T08:53:52Z",
+      "kind": "branch_hijack",
+      "session": "skeptic-d2-b",
+      "detail": {
+        "branch": "work/skeptic-contested",
+        "holder": "skeptic-d2-a",
+        "challenger": "skeptic-d2-b"
+      },
+      "vs_gate_land": {
+        "gate_merged_at": "2026-07-17T13:55:14Z",
+        "after_gate": true,
+        "hours_after_gate": 18.98
+      },
+      "class": "gate_interception",
+      "bypass_path": null,
+      "analysis": "D2 acquire_branch_lock denied second session; event is denied hijack attempt. Session names skeptic-d2-* prove intentional adversarial/skeptic probe, not production main conflict."
+    }
+  ],
+  "residual_coverage_notes": [
+    {
+      "gate": "D2",
+      "gap": "branch-claim only enforced inside gac-worktree.sh claim — bare `git branch/checkout -b work/x` does not call lock",
+      "exploited_by_these_events": false
+    },
+    {
+      "gate": "D4",
+      "gap": "bare `git push --no-verify` skips hooks; agent path uses swarm-git fail-closed",
+      "exploited_by_these_events": false
+    }
+  ],
+  "disposition": {
+    "m1_keep_pass": true,
+    "freeze_g_del": false,
+    "reason": "All events classified gate_interception after gate land; no coverage_gap_bypass proven. Residual bare-git gaps tracked as follow-up, not freeze."
+  },
+  "raw_events_jsonl": [
+    "{\"ts\": \"2026-07-18T08:53:51Z\", \"kind\": \"escape_hatch_abuse\", \"session\": null, \"detail\": {\"flag\": \"no_verify_push\", \"reason\": \"missing_escape_id\"}}",
+    "{\"ts\": \"2026-07-18T08:53:52Z\", \"kind\": \"branch_hijack\", \"session\": \"skeptic-d2-b\", \"detail\": {\"branch\": \"work/skeptic-contested\", \"holder\": \"skeptic-d2-a\", \"challenger\": \"skeptic-d2-b\"}}"
+  ]
+}

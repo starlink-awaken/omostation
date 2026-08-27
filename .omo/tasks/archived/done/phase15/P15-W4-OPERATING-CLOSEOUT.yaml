@@ -1,0 +1,10 @@
+id: P15-W4-OPERATING-CLOSEOUT
+phase: 15
+status: done
+title: Supervised operating closeout
+evidence_refs:
+  - .omo/evidence/phase15/operating-dashboard-snapshot.yaml
+  - .omo/evidence/phase15/recovery-drill-report.yaml
+  - .omo/_knowledge/management/phase15-cross-audit.md
+  - .omo/summaries/phase15-closeout.md
+verification: dashboard, recovery, audit, closeout, and user-value loop are complete without active-task leakage

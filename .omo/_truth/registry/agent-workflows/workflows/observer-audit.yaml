@@ -1,0 +1,67 @@
+id: observer-audit
+run_frequency: continuous
+title: Agent workflow observer audit
+purpose: Read-only oversight for workflow runs, locks, ledger events, and handoff
+  evidence.
+agents:
+  roles:
+  - observer-agent
+  - governance-agent
+  observer_policy: read_only_required
+allowed_lanes:
+- governance_code
+- governance_state
+lock_scopes:
+- observer-readonly
+surfaces:
+  read:
+  - .omo/_delivery/agent-workflows/runs/**
+  - .omo/_delivery/agent-workflows/locks/**
+  - .omo/_delivery/agent-workflows/events.jsonl
+  write: []
+phases:
+  preflight:
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: observe
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - observe
+  verification:
+  - id: observe-json
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - observe
+    - --json
+  closeout:
+  - id: doctor
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - doctor

@@ -1,0 +1,44 @@
+id: P9-W2-SPACE-REGISTRY-FOUNDATION
+phase: 9
+milestone: W2
+priority: P0
+title: Seed the workspace space registry and first ownership manifests
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase9-wave2-space-registry
+run_ref: .omo/plans/archive/phase9-wave2-execution-plan.md
+approval_ref: null
+review_ref: .omo/summaries/phase9-wave2-closeout.md
+knowledge_refs:
+  - .omo/plans/archive/phase9-workspace-plane-refactor-plan.md
+  - .omo/summaries/phase9-first-migration-baseline.md
+handoff_refs: []
+source_docs:
+  - .omo/plans/archive/phase9-program-plan.md
+  - .omo/plans/archive/phase9-wave2-execution-plan.md
+deliverables:
+  - spaces/registry.yaml
+  - spaces/_schema/space-manifest.schema.yaml
+  - spaces/system-space.yaml
+  - .omo/tests/test_phase9_space_registry.py
+  - .omo/summaries/phase9-wave2-closeout.md
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 9 first migration baseline accepted
+  - spaces/, data/, and runtime/ roots exist
+evidence_required:
+  - one valid space registry exists under spaces/
+  - one valid system space manifest links to owning roots
+  - tests fail when required space boundary fields are removed
+test_plan:
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 -m pytest .omo/tests/test_phase9_space_registry.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T11:35:32Z'
+completed_at: '2026-05-31T11:52:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary: Wave 2 closed by turning spaces into a governed workspace boundary with a registry, manifest schema, first system-space manifest, and regression coverage.

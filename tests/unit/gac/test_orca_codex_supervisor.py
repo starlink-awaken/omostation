@@ -1,0 +1,1838 @@
+from __future__ import annotations
+
+import hashlib
+import importlib.util
+import json
+import shlex
+import sys
+from pathlib import Path
+
+import pytest
+
+WORKSPACE = Path(__file__).resolve().parents[3]
+SCRIPT = WORKSPACE / "bin" / "gac" / "orca-codex-supervisor.py"
+
+
+def _load_module():
+    spec = importlib.util.spec_from_file_location("orca_codex_supervisor", SCRIPT)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    module._subprocess_guard_runner = _guard_runner
+    module._validate_instruction_binding = lambda **_kwargs: {
+        "run_id": "run-1",
+        "packet_id": "WP-1",
+        "packet_hash": "sha256:" + "a" * 64,
+        "instruction_digest": "sha256:" + "b" * 64,
+    }
+    return module
+
+
+class FakeRunner:
+    def __init__(self, responses: list[tuple[int, object, str]]) -> None:
+        self.responses = list(responses)
+        self.calls: list[tuple[str, ...]] = []
+        self.timeouts: list[float] = []
+
+    def __call__(self, command: tuple[str, ...], timeout_seconds: float):
+        self.calls.append(command)
+        self.timeouts.append(timeout_seconds)
+        returncode, payload, stderr = self.responses.pop(0)
+        stdout = payload if isinstance(payload, str) else json.dumps(payload)
+        return returncode, stdout, stderr
+
+
+def _ok(result: dict) -> dict:
+    return {"ok": True, "result": result}
+
+
+def _orca_worktree_id(workspace: Path) -> str:
+    return f"repo-001::{workspace}"
+
+
+def _guard_receipt(workspace: str, agent_id: str) -> dict:
+    return {
+        "ok": True,
+        "workspace": workspace,
+        "clone_root": workspace,
+        "agent_id": agent_id,
+        "state": "verified_clone",
+    }
+
+
+def _guard_runner(command: tuple[str, ...], _timeout: float, agent_id: str):
+    workspace = command[command.index("--workspace") + 1]
+    return 0, json.dumps(_guard_receipt(workspace, agent_id)), ""
+
+
+def _trusted_codex_argv(workspace: Path) -> tuple[str, ...]:
+    canonical_workspace = str(workspace.resolve())
+    escaped_workspace = canonical_workspace.replace("\\", "\\\\").replace('"', '\\"')
+    trust_override = f'projects={{"{escaped_workspace}"={{trust_level="trusted"}}}}'
+    return (
+        "env",
+        "AGENT_ID=agent-001",
+        "/opt/homebrew/bin/codex",
+        "--ask-for-approval",
+        "on-request",
+        "--sandbox",
+        "read-only",
+        "-c",
+        trust_override,
+        "-C",
+        canonical_workspace,
+    )
+
+
+def _trusted_codex_command(workspace: Path) -> str:
+    return shlex.join(_trusted_codex_argv(workspace))
+
+
+def _launch_request(argv: tuple[str, ...]) -> dict[str, object]:
+    canonical_argv = json.dumps(list(argv), ensure_ascii=False, separators=(",", ":"))
+    return {
+        "argv_digest": "sha256:" + hashlib.sha256(canonical_argv.encode("utf-8")).hexdigest(),
+        "authority": "supervisor_request",
+        "executed_argv_attested": False,
+    }
+
+
+def _expected_binding(module, identity: dict[str, str]) -> dict[str, str]:
+    workspace = identity["workspace_root"]
+    guard = _guard_receipt(workspace, identity["agent_id"])
+    return {
+        **{key: value for key, value in identity.items() if key not in {"workspace_root", "agent_id"}},
+        "clone_agent_id": identity["agent_id"],
+        "canonical_root_digest": module._path_digest(workspace),
+        "guard_receipt_digest": module._digest_payload(guard),
+        "instruction_digest": "sha256:" + "b" * 64,
+        "orca_worktree_id": _orca_worktree_id(Path(workspace)),
+    }
+
+
+def _collect_clone_args(module, identity: dict[str, str]) -> dict[str, object]:
+    workspace = identity["workspace_root"]
+    binding_receipt = {
+        "run_id": "run-1",
+        "packet_id": "WP-1",
+        "packet_hash": "sha256:" + "a" * 64,
+        "instruction_digest": "sha256:" + "b" * 64,
+    }
+    return {
+        "canonical_root_digest": module._path_digest(workspace),
+        "guard_receipt_digest": module._digest_payload(_guard_receipt(workspace, identity["agent_id"])),
+        "orca_worktree_id": _orca_worktree_id(Path(workspace)),
+        "previous_provider_attempt": module._build_orca_provider_attempt(
+            binding_receipt=binding_receipt,
+            omo_dispatch_id=identity["omo_dispatch_id"],
+            state="awaiting_human_action",
+            evidence_digest=module._initial_provider_evidence_digest(
+                binding_receipt,
+                identity["omo_dispatch_id"],
+            ),
+        ),
+    }
+
+
+def _collect_prefix(workspace: Path) -> list[tuple[int, object, str]]:
+    return [
+        (
+            0,
+            _ok(
+                {
+                    "worktree": {
+                        "id": _orca_worktree_id(workspace),
+                        "path": str(workspace),
+                    }
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "terminal": {
+                        "handle": "terminal-001",
+                        "worktreeId": _orca_worktree_id(workspace),
+                        "worktreePath": str(workspace),
+                        "connected": True,
+                        "writable": True,
+                    }
+                }
+            ),
+            "",
+        ),
+    ]
+
+
+def _settled_worker_response() -> tuple[int, object, str]:
+    return (
+        0,
+        _ok(
+            {
+                "dispatch": {
+                    "id": "orca-dispatch-001",
+                    "task_id": "orca-task-001",
+                    "run_id": "orca-run-001",
+                    "status": "completed",
+                },
+                "worker": {
+                    "state": "completed",
+                    "outcome": "succeeded",
+                    "worker_done": {
+                        "outcome": "succeeded",
+                        "task_id": "orca-task-001",
+                        "dispatch_id": "orca-dispatch-001",
+                    },
+                },
+            }
+        ),
+        "",
+    )
+
+
+def _transcript_response(messages: list[object]) -> tuple[int, object, str]:
+    return 0, _ok({"source": "transcript", "transcript": {"messages": messages}}), ""
+
+
+def _session_not_reported_response() -> tuple[int, object, str]:
+    return (
+        1,
+        {
+            "ok": False,
+            "error": {
+                "code": "transcript_required",
+                "message": "Structured output is unavailable: session_not_reported.",
+                "data": {"reason": "session_not_reported"},
+            },
+        },
+        "",
+    )
+
+
+def _terminal_fallback_response(
+    *, terminal_handle: str = "terminal-001", tail: list[str] | None = None
+) -> tuple[int, object, str]:
+    return (
+        0,
+        _ok(
+            {
+                "source": "terminal",
+                "fallbackReason": "session_not_reported",
+                "sourceIdentity": "terminal-source-001",
+                "status": {"worker": "succeeded", "terminal": "running"},
+                "terminal": {
+                    "handle": terminal_handle,
+                    "status": "running",
+                    "truncated": False,
+                    "limited": True,
+                    "tail": tail
+                    or [
+                        "• Completed the declared documentation update.",
+                        "",
+                        "─ Worked for 2m 45s ─",
+                    ],
+                },
+            }
+        ),
+        "",
+    )
+
+
+def _completed_task_list_response() -> tuple[int, object, str]:
+    return (
+        0,
+        _ok(
+            {
+                "runId": "orca-run-001",
+                "tasks": [
+                    {
+                        "id": "orca-task-001",
+                        "run_id": "orca-run-001",
+                        "status": "completed",
+                        "result": json.dumps(
+                            {
+                                "provenance": "worker_report",
+                                "outcome": "succeeded",
+                                "messageId": "message-001",
+                                "reportedBy": "terminal-001",
+                                "completedBy": "terminal-001",
+                                "filesModified": ["docs/evidence/canary.md"],
+                            }
+                        ),
+                    }
+                ],
+            }
+        ),
+        "",
+    )
+
+
+def _identity(tmp_path: Path, prompt: str = "Update the declared documentation fixture.") -> dict[str, str]:
+    (tmp_path / "prompts").mkdir(exist_ok=True)
+    (tmp_path / ".git").mkdir(exist_ok=True)
+    prompt_path = tmp_path / "prompts" / "dogfood.md"
+    prompt_path.write_text(prompt, encoding="utf-8")
+    return {
+        "workflow_run_id": "wf-001",
+        "omo_task_id": "OMO-TASK-001",
+        "packet_id": "packet-001",
+        "packet_hash": "sha256:" + "a" * 64,
+        "omo_dispatch_id": "omo-dispatch-001",
+        "workspace_root": str(tmp_path),
+        "prompt_ref": "prompts/dogfood.md",
+        "prompt_digest": "sha256:" + hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+        "agent_id": "agent-001",
+    }
+
+
+def _start_responses(workspace: Path) -> list[tuple[int, object, str]]:
+    return [
+        (
+            0,
+            _ok(
+                {
+                    "app": {"running": True, "desktopWindowStatus": "available"},
+                    "runtime": {"state": "ready", "reachable": True},
+                    "graph": {"state": "ready"},
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "worktree": {
+                        "id": _orca_worktree_id(workspace),
+                        "path": str(workspace),
+                    }
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "terminal": {
+                        "handle": "coordinator-001",
+                        "worktreeId": _orca_worktree_id(workspace),
+                    }
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "terminal": {
+                        "handle": "coordinator-001",
+                        "worktreeId": _orca_worktree_id(workspace),
+                        "worktreePath": str(workspace),
+                        "connected": True,
+                        "writable": True,
+                    }
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "run": {
+                        "id": "orca-run-001",
+                        "coordinator_handle": "coordinator-001",
+                    }
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok({"task": {"id": "orca-task-001", "run_id": "orca-run-001"}}),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "terminal": {
+                        "handle": "terminal-001",
+                        "worktreeId": _orca_worktree_id(workspace),
+                        "worktreePath": str(workspace),
+                        "connected": True,
+                        "writable": True,
+                    }
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok({"wait": {"condition": "tui-idle", "satisfied": True}}),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "terminal": {
+                        "handle": "terminal-001",
+                        "worktreeId": _orca_worktree_id(workspace),
+                        "worktreePath": str(workspace),
+                        "connected": True,
+                        "writable": True,
+                    }
+                }
+            ),
+            "",
+        ),
+        (
+            0,
+            _ok(
+                {
+                    "state": "ready",
+                    "stage": "input_accepted",
+                    "dispatchId": "orca-dispatch-001",
+                    "taskId": "orca-task-001",
+                    "runId": "orca-run-001",
+                    "effects": [
+                        {
+                            "kind": "terminal",
+                            "role": "agent",
+                            "action": "reused",
+                            "id": "terminal-001",
+                        },
+                        {
+                            "kind": "dispatch_input",
+                            "role": "agent",
+                            "id": "terminal-001",
+                            "state": "accepted",
+                        },
+                    ],
+                    "mutation": {"requestId": "worker-request-001"},
+                }
+            ),
+            "",
+        ),
+    ]
+
+
+def _runtime_status(
+    *,
+    running: bool,
+    state: str,
+    desktop_window_status: str = "available",
+    reachable: bool = True,
+    graph_state: str = "ready",
+) -> tuple[int, object, str]:
+    return (
+        0,
+        _ok(
+            {
+                "app": {"running": running, "desktopWindowStatus": desktop_window_status},
+                "runtime": {"state": state, "reachable": reachable},
+                "graph": {"state": graph_state},
+            }
+        ),
+        "",
+    )
+
+
+def _runtime_opened() -> tuple[int, object, str]:
+    return (
+        0,
+        _ok(
+            {
+                "app": {"running": True, "desktopWindowStatus": "available"},
+                "runtime": {"state": "graph_not_ready", "reachable": True},
+                "graph": {"state": "unavailable"},
+            }
+        ),
+        "",
+    )
+
+
+def _run_residuals() -> list[str]:
+    return ["orca:terminal:coordinator-001", "orca:run:orca-run-001"]
+
+
+def _run_task_residuals() -> list[str]:
+    return [
+        "orca:terminal:coordinator-001",
+        "orca:run:orca-run-001",
+        "orca:task:orca-task-001",
+    ]
+
+
+def test_start_binds_omo_and_orca_identities_without_claiming_input_or_completion(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    runner = FakeRunner(_start_responses(tmp_path))
+    identity = _identity(tmp_path)
+
+    receipt = module.start_supervised_codex(
+        **identity,
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+    binding_receipt = {
+        "run_id": "run-1",
+        "packet_id": "WP-1",
+        "packet_hash": "sha256:" + "a" * 64,
+        "instruction_digest": "sha256:" + "b" * 64,
+    }
+
+    assert receipt == {
+        "schema": "orca-codex-supervisor/v1",
+        "ok": True,
+        "state": "awaiting_human_action",
+        "binding": {
+            **_expected_binding(module, identity),
+        },
+        "orca": {
+            "run_id": "orca-run-001",
+            "task_id": "orca-task-001",
+            "dispatch_id": "orca-dispatch-001",
+            "terminal_handle": "terminal-001",
+        },
+        "runtime_recovery": {
+            "attempted": False,
+            "recovered": False,
+            "final_state": "ready",
+        },
+        "human_action_required": True,
+        "approval": {
+            "mode": "manual_click",
+            "policy": "on-request",
+            "sandbox": "read-only",
+            "write_requires_human_click": True,
+        },
+        "launch_request": _launch_request(_trusted_codex_argv(tmp_path)),
+        "input_accepted": "unproven",
+        "model_completion": "unproven",
+        "provider_attempt": module._build_orca_provider_attempt(
+            binding_receipt=binding_receipt,
+            omo_dispatch_id=identity["omo_dispatch_id"],
+            state="awaiting_human_action",
+            evidence_digest=module._initial_provider_evidence_digest(
+                binding_receipt,
+                identity["omo_dispatch_id"],
+            ),
+        ),
+    }
+    assert runner.calls == [
+        ("orca", "status", "--json"),
+        (
+            "orca",
+            "worktree",
+            "show",
+            "--worktree",
+            f"path:{tmp_path}",
+            "--json",
+        ),
+        (
+            "orca",
+            "terminal",
+            "create",
+            "--worktree",
+            f"id:{_orca_worktree_id(tmp_path)}",
+            "--title",
+            "supervised-coordinator-OMO-TASK-001",
+            "--json",
+        ),
+        (
+            "orca",
+            "terminal",
+            "show",
+            "--terminal",
+            "coordinator-001",
+            "--json",
+        ),
+        (
+            "orca",
+            "orchestration",
+            "run-create",
+            "--objective",
+            "supervised-codex:wf-001:OMO-TASK-001:packet-001:omo-dispatch-001",
+            "--from",
+            "coordinator-001",
+            "--json",
+        ),
+        (
+            "orca",
+            "orchestration",
+            "task-create",
+            "--run",
+            "orca-run-001",
+            "--task-title",
+            "supervised-codex-OMO-TASK-001",
+            "--spec",
+            "Update the declared documentation fixture.",
+            "--from",
+            "coordinator-001",
+            "--json",
+        ),
+        (
+            "orca",
+            "terminal",
+            "create",
+            "--worktree",
+            f"id:{_orca_worktree_id(tmp_path)}",
+            "--title",
+            "supervised-codex-OMO-TASK-001",
+            "--command",
+            _trusted_codex_command(tmp_path),
+            "--json",
+        ),
+        (
+            "orca",
+            "terminal",
+            "wait",
+            "--terminal",
+            "terminal-001",
+            "--for",
+            "tui-idle",
+            "--timeout-ms",
+            "60000",
+            "--json",
+        ),
+        (
+            "orca",
+            "terminal",
+            "show",
+            "--terminal",
+            "terminal-001",
+            "--json",
+        ),
+        (
+            "orca",
+            "orchestration",
+            "worker-start",
+            "--run",
+            "orca-run-001",
+            "--task",
+            "orca-task-001",
+            "--worktree",
+            f"id:{_orca_worktree_id(tmp_path)}",
+            "--terminal",
+            "terminal-001",
+            "--from",
+            "coordinator-001",
+            "--json",
+        ),
+    ]
+
+
+def test_start_recovers_runtime_before_worktree_or_terminal_mutations(tmp_path: Path) -> None:
+    module = _load_module()
+    normal = _start_responses(tmp_path)
+    runner = FakeRunner(
+        [
+            _runtime_status(running=False, state="not_running"),
+            _runtime_opened(),
+            _runtime_status(running=True, state="ready"),
+            normal[1],
+            *normal[2:],
+        ]
+    )
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    assert receipt["runtime_recovery"] == {
+        "attempted": True,
+        "recovered": True,
+        "final_state": "ready",
+    }
+    assert runner.calls[:4] == [
+        ("orca", "status", "--json"),
+        ("orca", "open", "--json"),
+        ("orca", "status", "--json"),
+        ("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json"),
+    ]
+
+
+def test_start_recovers_headless_ready_runtime_before_resources(tmp_path: Path) -> None:
+    module = _load_module()
+    normal = _start_responses(tmp_path)
+    runner = FakeRunner(
+        [
+            _runtime_status(
+                running=True,
+                state="ready",
+                desktop_window_status="unavailable",
+            ),
+            _runtime_opened(),
+            _runtime_status(running=True, state="ready"),
+            normal[1],
+            *normal[2:],
+        ]
+    )
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    assert receipt["runtime_recovery"]["recovered"] is True
+    assert runner.calls[:3] == [
+        ("orca", "status", "--json"),
+        ("orca", "open", "--json"),
+        ("orca", "status", "--json"),
+    ]
+
+
+def test_start_runtime_recovery_fails_closed_when_recheck_is_not_ready(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner(
+        [
+            _runtime_status(running=False, state="not_running"),
+            _runtime_opened(),
+            _runtime_status(running=True, state="graph_not_ready"),
+        ]
+    )
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "status"
+    assert receipt["reason"] == "orca_runtime_not_ready"
+    assert runner.calls == [
+        ("orca", "status", "--json"),
+        ("orca", "open", "--json"),
+        ("orca", "status", "--json"),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("open_response", "reason"),
+    [
+        ((1, {"ok": False, "error": {"code": "open_failed"}}, ""), "orca_runtime_open_failed"),
+        ((0, "not-json", "detail that must not leak"), "orca_response_invalid"),
+    ],
+    ids=["open-failed", "open-malformed"],
+)
+def test_start_runtime_recovery_rejects_unproven_open_before_resources(
+    tmp_path: Path,
+    open_response: tuple[int, object, str],
+    reason: str,
+) -> None:
+    module = _load_module()
+    runner = FakeRunner(
+        [
+            _runtime_status(running=False, state="not_running"),
+            open_response,
+        ]
+    )
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "runtime_open"
+    assert receipt["reason"] == reason
+    assert runner.calls == [
+        ("orca", "status", "--json"),
+        ("orca", "open", "--json"),
+    ]
+
+
+def test_start_runtime_recovery_rejects_malformed_recheck_before_resources(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner(
+        [
+            _runtime_status(running=False, state="not_running"),
+            _runtime_opened(),
+            (0, "not-json", "detail that must not leak"),
+        ]
+    )
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "status"
+    assert receipt["reason"] == "orca_response_invalid"
+    assert runner.calls == [
+        ("orca", "status", "--json"),
+        ("orca", "open", "--json"),
+        ("orca", "status", "--json"),
+    ]
+
+
+def test_start_can_disable_runtime_recovery_without_orca_mutations(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner([_runtime_status(running=False, state="not_running")])
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runtime_recovery=False,
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "status"
+    assert receipt["reason"] == "orca_runtime_not_ready"
+    assert runner.calls == [("orca", "status", "--json")]
+
+
+def test_start_rejects_agent_terminal_created_for_another_worktree(tmp_path: Path) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    responses[6][1]["result"]["terminal"]["worktreeId"] = "repo-other::/tmp/other"
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "terminal_create"
+    assert receipt["reason"] == "orca_response_invalid"
+    assert not any(call[:3] == ("orca", "terminal", "wait") for call in runner.calls)
+
+
+def test_start_rejects_agent_terminal_show_for_another_worktree(tmp_path: Path) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    responses[8][1]["result"]["terminal"]["worktreeId"] = "repo-other::/tmp/other"
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "terminal_show"
+    assert receipt["reason"] == "codex_terminal_unverified"
+    assert not any(call[:3] == ("orca", "orchestration", "worker-start") for call in runner.calls)
+
+
+def test_start_gives_orca_wait_rpc_timeout_cushion(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner(_start_responses(tmp_path))
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        timeout_ms=60_000,
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    wait_index = runner.calls.index(
+        (
+            "orca",
+            "terminal",
+            "wait",
+            "--terminal",
+            "terminal-001",
+            "--for",
+            "tui-idle",
+            "--timeout-ms",
+            "60000",
+            "--json",
+        )
+    )
+    assert runner.timeouts[wait_index] >= 65.0
+
+
+def test_start_uses_process_scoped_trust_override_after_verified_clone_guard(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    expected_command = _trusted_codex_command(tmp_path)
+    responses = _start_responses(tmp_path)
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    command = runner.calls[6]
+    assert command[command.index("--command") + 1] == expected_command
+    assert tuple(shlex.split(command[command.index("--command") + 1])) == _trusted_codex_argv(tmp_path)
+    trust_override = _trusted_codex_argv(tmp_path)[8]
+    assert trust_override.startswith('projects={"')
+    assert 'projects."' not in trust_override
+    assert "--approve-for-me" not in expected_command
+    assert "--dangerously-bypass-approvals-and-sandbox" not in expected_command
+    assert receipt["launch_request"] == _launch_request(_trusted_codex_argv(tmp_path))
+    assert str(tmp_path) not in json.dumps(receipt["launch_request"])
+    assert not any(call[:3] == ("orca", "terminal", "read") for call in runner.calls)
+    assert not any(call[:3] == ("orca", "terminal", "send") for call in runner.calls)
+
+
+def test_start_round_trips_quote_backslash_and_single_quote_workspace_path(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    workspace = tmp_path / "quote\"-backslash\\-single'.with.dots"
+    workspace.mkdir()
+    expected_command = _trusted_codex_command(workspace)
+    responses = _start_responses(workspace)
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(workspace),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    command = runner.calls[6][runner.calls[6].index("--command") + 1]
+    assert command == expected_command
+    assert tuple(shlex.split(command)) == _trusted_codex_argv(workspace)
+    assert receipt["launch_request"] == _launch_request(_trusted_codex_argv(workspace))
+
+
+@pytest.mark.parametrize("control", ["\x00", "\t", "\n", "\x7f"], ids=["nul", "tab", "newline", "del"])
+def test_start_rejects_control_character_workspace_before_orca_calls(tmp_path: Path, control: str) -> None:
+    module = _load_module()
+    runner = FakeRunner([])
+    if control == "\x00":
+        identity = _identity(tmp_path)
+        identity["workspace_root"] = f"{tmp_path}{control}"
+    else:
+        workspace = tmp_path / f"control{control}workspace"
+        workspace.mkdir()
+        identity = _identity(workspace)
+
+    receipt = module.start_supervised_codex(
+        **identity,
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "input"
+    assert runner.calls == []
+
+
+def test_start_derives_one_stable_retry_request_per_orca_mutation(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    worker_request_id = hashlib.sha256(b"retry-request-001\nworker-start").hexdigest()
+    responses[-1][1]["result"]["mutation"]["requestId"] = worker_request_id
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        idempotency_key="retry-request-001",
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    stage_ids = receipt["idempotency"]["stage_retry_requests"]
+    assert receipt["idempotency"]["transaction_key_digest"] == (
+        "sha256:" + hashlib.sha256(b"retry-request-001").hexdigest()
+    )
+    assert set(stage_ids) == {"run-create", "task-create", "worker-start"}
+    assert len(set(stage_ids.values())) == 3
+    for command, stage in zip(
+        (runner.calls[4], runner.calls[5], runner.calls[-1]),
+        ("run-create", "task-create", "worker-start"),
+        strict=True,
+    ):
+        assert command[-3:] == ("--retry-request", stage_ids[stage], "--json")
+    assert worker_request_id == stage_ids["worker-start"]
+
+
+def test_start_rejects_coordinator_create_for_another_worktree_before_mutation(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    responses[2][1]["result"]["terminal"]["worktreeId"] = "repo-other::/tmp/other"
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "coordinator_terminal_create"
+    assert receipt["reason"] == "orca_response_invalid"
+    assert receipt["residual_resources"] == ["orca:terminal:coordinator-001"]
+    assert len(runner.calls) == 3
+
+
+def test_start_rejects_unusable_coordinator_terminal_before_mutation(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    responses[3][1]["result"]["terminal"]["worktreePath"] = "/tmp/other"
+    responses[3][1]["result"]["terminal"]["writable"] = False
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "coordinator_terminal_attestation"
+    assert receipt["reason"] == "orca_response_invalid"
+    assert receipt["residual_resources"] == ["orca:terminal:coordinator-001"]
+    assert len(runner.calls) == 4
+
+
+def test_start_rejects_worker_start_receipt_without_bound_terminal_effect(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    result = responses[-1][1]["result"]
+    result["effects"][0]["id"] = "wrong-terminal"
+
+    receipt = module.start_supervised_codex(
+        **_identity(tmp_path),
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=FakeRunner(responses),
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "worker_start"
+    assert receipt["reason"] == "orca_response_invalid"
+    assert "orca:dispatch:orca-dispatch-001" in receipt["residual_resources"]
+
+
+def test_start_fails_closed_on_unbound_worker_receipt_without_cleanup(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    responses[-1] = (
+        0,
+        _ok(
+            {
+                "state": "ready",
+                "dispatchId": "orca-dispatch-001",
+                "taskId": "wrong-task",
+                "runId": "orca-run-001",
+                "agentTerminalHandle": "terminal-001",
+            }
+        ),
+        "",
+    )
+    runner = FakeRunner(responses)
+    identity = _identity(tmp_path)
+
+    receipt = module.start_supervised_codex(
+        **identity,
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt == {
+        "schema": "orca-codex-supervisor/v1",
+        "ok": False,
+        "stage": "worker_start",
+        "reason": "orca_response_invalid",
+        "binding": {
+            **_expected_binding(module, identity),
+        },
+        "orca": {
+            "run_id": "orca-run-001",
+            "task_id": "wrong-task",
+            "dispatch_id": "orca-dispatch-001",
+            "terminal_handle": "terminal-001",
+        },
+        "residual_resources": [
+            "orca:terminal:coordinator-001",
+            "orca:run:orca-run-001",
+            "orca:task:orca-task-001",
+            "orca:terminal:terminal-001",
+            "orca:task:wrong-task",
+            "orca:dispatch:orca-dispatch-001",
+        ],
+    }
+    assert not any("worker-stop" in command for command in runner.calls)
+
+
+def test_start_rejects_non_json_status_before_orca_mutations(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner([(0, "not-json", "runtime detail that must not leak")])
+    identity = _identity(tmp_path)
+
+    receipt = module.start_supervised_codex(**identity, runner=runner)
+
+    expected_binding = _expected_binding(module, identity)
+    expected_binding.pop("orca_worktree_id")
+    assert receipt == {
+        "schema": "orca-codex-supervisor/v1",
+        "ok": False,
+        "stage": "status",
+        "reason": "orca_response_invalid",
+        "binding": expected_binding,
+        "residual_resources": [],
+    }
+    assert runner.calls == [("orca", "status", "--json")]
+
+
+def test_start_rejects_worktree_id_with_nonmatching_suffix_path(tmp_path: Path) -> None:
+    module = _load_module()
+    responses = _start_responses(tmp_path)
+    responses[1][1]["result"]["worktree"]["id"] = f"repo-001::{tmp_path}/other"
+    runner = FakeRunner(responses)
+
+    receipt = module.start_supervised_codex(**_identity(tmp_path), runner=runner)
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "worktree_show"
+    assert receipt["reason"] == "orca_worktree_unavailable"
+    assert runner.calls == [
+        ("orca", "status", "--json"),
+        ("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json"),
+    ]
+
+
+def test_start_rejects_clone_guard_before_any_orca_call(tmp_path: Path) -> None:
+    module = _load_module()
+    guard_calls: list[tuple[str, ...]] = []
+
+    def rejected_guard(command: tuple[str, ...], _timeout: float, _agent_id: str):
+        guard_calls.append(command)
+        return 1, json.dumps({"ok": False, "reason": "clone_identity_required"}), ""
+
+    runner = FakeRunner([])
+    receipt = module.start_supervised_codex(**_identity(tmp_path), runner=runner, guard_runner=rejected_guard)
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "input"
+    assert receipt["reason"] == "agent_clone_guard_rejected"
+    assert runner.calls == []
+    assert guard_calls[0][-2:] == ("--require-clone", "--json")
+
+
+def test_start_rejects_linked_gitdir_before_clone_guard_or_orca(tmp_path: Path) -> None:
+    module = _load_module()
+    identity = _identity(tmp_path)
+    git_dir = tmp_path / ".git"
+    git_dir.rmdir()
+    git_dir.write_text("gitdir: /shared/worktrees/x\n", encoding="utf-8")
+    guard_called = False
+
+    def guard_should_not_run(*_args):
+        nonlocal guard_called
+        guard_called = True
+        return 0, "{}", ""
+
+    runner = FakeRunner([])
+    receipt = module.start_supervised_codex(**identity, runner=runner, guard_runner=guard_should_not_run)
+
+    assert receipt["reason"] == "workspace_not_independent_clone"
+    assert guard_called is False
+    assert runner.calls == []
+
+
+@pytest.mark.parametrize(
+    ("task_response", "reason"),
+    [
+        (
+            (1, {"ok": False, "error": {"code": "task_create_failed"}}, ""),
+            "orca_task_not_created",
+        ),
+        (
+            (
+                0,
+                _ok({"task": {"id": "orca-task-001", "run_id": "wrong-run"}}),
+                "",
+            ),
+            "orca_response_invalid",
+        ),
+    ],
+    ids=["task-create-failed", "task-create-bad-schema"],
+)
+def test_task_create_failure_preserves_created_run(
+    tmp_path: Path, task_response: tuple[int, object, str], reason: str
+) -> None:
+    module = _load_module()
+    runner = FakeRunner(_start_responses(tmp_path)[:5] + [task_response])
+
+    receipt = module.start_supervised_codex(**_identity(tmp_path), runner=runner)
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "task_create"
+    assert receipt["reason"] == reason
+    assert receipt["residual_resources"] == _run_residuals()
+    assert len(runner.calls) == 6
+
+
+@pytest.mark.parametrize(
+    ("worker_response", "reason", "residual_resources"),
+    [
+        (
+            (1, {"ok": False, "error": {"code": "worker_failed"}}, ""),
+            "orca_worker_not_started",
+            _run_task_residuals(),
+        ),
+        ((0, "not-json", ""), "orca_response_invalid", _run_task_residuals()),
+        (
+            (
+                7,
+                _ok(
+                    {
+                        "state": "ready",
+                        "dispatchId": "orca-dispatch-001",
+                        "taskId": "orca-task-001",
+                        "runId": "orca-run-001",
+                        "agentTerminalHandle": "terminal-001",
+                    }
+                ),
+                "nonzero",
+            ),
+            "orca_worker_not_started",
+            [
+                *_run_task_residuals(),
+                "orca:dispatch:orca-dispatch-001",
+                "orca:terminal:terminal-001",
+            ],
+        ),
+        (
+            (124, {"ok": False, "error": {"code": "timeout"}}, "timed out"),
+            "orca_worker_not_started",
+            _run_task_residuals(),
+        ),
+    ],
+    ids=["worker-failed", "worker-non-json", "worker-nonzero", "worker-timeout"],
+)
+def test_worker_start_failure_preserves_created_run_and_task(
+    tmp_path: Path,
+    worker_response: tuple[int, object, str],
+    reason: str,
+    residual_resources: list[str],
+) -> None:
+    module = _load_module()
+    runner = FakeRunner(_start_responses(tmp_path)[:-1] + [worker_response])
+
+    receipt = module.start_supervised_codex(**_identity(tmp_path), runner=runner)
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "worker_start"
+    assert receipt["reason"] == reason
+    expected = [*_run_task_residuals(), "orca:terminal:terminal-001"]
+    if "orca:dispatch:orca-dispatch-001" in residual_resources:
+        expected.append("orca:dispatch:orca-dispatch-001")
+    assert receipt["residual_resources"] == expected
+    assert len(runner.calls) == 10
+
+
+def test_collect_returns_only_digest_after_succeeded_worker_done_and_transcript(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    runner = FakeRunner(
+        _collect_prefix(tmp_path)
+        + [
+            (
+                0,
+                _ok(
+                    {
+                        "dispatch": {
+                            "id": "orca-dispatch-001",
+                            "task_id": "orca-task-001",
+                            "run_id": "orca-run-001",
+                            "status": "completed",
+                        },
+                        "worker": {
+                            "state": "completed",
+                            "outcome": "succeeded",
+                            "worker_done": {
+                                "outcome": "succeeded",
+                                "task_id": "orca-task-001",
+                                "dispatch_id": "orca-dispatch-001",
+                            },
+                        },
+                    }
+                ),
+                "",
+            ),
+            (
+                0,
+                _ok(
+                    {
+                        "source": "transcript",
+                        "transcript": {
+                            "messages": [
+                                {
+                                    "role": "assistant",
+                                    "blocks": [{"type": "text", "text": "private result"}],
+                                }
+                            ]
+                        },
+                    }
+                ),
+                "",
+            ),
+        ]
+    )
+    identity = _identity(tmp_path)
+
+    receipt = module.collect_supervised_codex(
+        **identity,
+        orca_run_id="orca-run-001",
+        orca_task_id="orca-task-001",
+        orca_dispatch_id="orca-dispatch-001",
+        terminal_handle="terminal-001",
+        **_collect_clone_args(module, identity),
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    assert receipt["state"] == "settled"
+    assert receipt["model_completion"] == "observed"
+    assert receipt["transcript_digest"].startswith("sha256:")
+    assert receipt["provider_attempt"]["state"] == "settled_observed"
+    assert receipt["provider_attempt"]["outcome"] == "observed_not_adjudicated"
+    assert receipt["provider_attempt"]["revision"] == 2
+    assert receipt["provider_attempt"]["human_action_required"] is True
+    assert receipt["provider_attempt"]["previous_receipt_digest"] == _collect_clone_args(
+        module, identity
+    )["previous_provider_attempt"]["receipt_digest"]
+    assert "private result" not in json.dumps(receipt)
+    assert runner.calls == [
+        ("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json"),
+        ("orca", "terminal", "show", "--terminal", "terminal-001", "--json"),
+        (
+            "orca",
+            "orchestration",
+            "worker-show",
+            "--dispatch",
+            "orca-dispatch-001",
+            "--json",
+        ),
+        (
+            "orca",
+            "orchestration",
+            "worker-read",
+            "--dispatch",
+            "orca-dispatch-001",
+            "--source",
+            "transcript",
+            "--limit",
+            "200",
+            "--json",
+        ),
+    ]
+
+
+def test_collect_uses_bounded_terminal_evidence_when_session_was_not_reported(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    runner = FakeRunner(
+        _collect_prefix(tmp_path)
+        + [
+            (
+                0,
+                _ok(
+                    {
+                        "dispatch": {
+                            "id": "orca-dispatch-001",
+                            "task_id": "orca-task-001",
+                            "run_id": "orca-run-001",
+                            "status": "completed",
+                        },
+                        "worker": {
+                            "dispatch_id": "orca-dispatch-001",
+                            "agent_terminal_handle": "terminal-001",
+                            "state": "succeeded",
+                            "stage": "settled",
+                        },
+                    }
+                ),
+                "",
+            ),
+            _session_not_reported_response(),
+            _completed_task_list_response(),
+            _terminal_fallback_response(),
+        ]
+    )
+    identity = _identity(tmp_path)
+
+    receipt = module.collect_supervised_codex(
+        **identity,
+        orca_run_id="orca-run-001",
+        orca_task_id="orca-task-001",
+        orca_dispatch_id="orca-dispatch-001",
+        terminal_handle="terminal-001",
+        **_collect_clone_args(module, identity),
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    assert receipt["state"] == "settled"
+    assert receipt["model_completion"] == "observed"
+    assert receipt["model_output_source"] == "bounded_terminal_fallback"
+    assert receipt["fallback_reason"] == "session_not_reported"
+    assert receipt["model_output_digest"].startswith("sha256:")
+    assert receipt["completion_receipt_digest"].startswith("sha256:")
+    assert receipt["source_identity_digest"].startswith("sha256:")
+    assert receipt["provider_attempt"]["state"] == "settled_observed"
+    assert receipt["provider_attempt"]["outcome"] == "observed_not_adjudicated"
+    assert receipt["provider_attempt"]["revision"] == 2
+    assert receipt["provider_attempt"]["previous_receipt_digest"] == _collect_clone_args(
+        module, identity
+    )["previous_provider_attempt"]["receipt_digest"]
+    serialized = json.dumps(receipt)
+    assert "Completed the declared documentation update" not in serialized
+    assert "terminal-source-001" not in serialized
+    assert runner.calls[-3:] == [
+        (
+            "orca",
+            "orchestration",
+            "worker-read",
+            "--dispatch",
+            "orca-dispatch-001",
+            "--source",
+            "transcript",
+            "--limit",
+            "200",
+            "--json",
+        ),
+        (
+            "orca",
+            "orchestration",
+            "task-list",
+            "--run",
+            "orca-run-001",
+            "--json",
+        ),
+        (
+            "orca",
+            "orchestration",
+            "worker-read",
+            "--dispatch",
+            "orca-dispatch-001",
+                "--source",
+                "auto",
+                "--limit",
+                "800",
+                "--json",
+            ),
+    ]
+
+
+@pytest.mark.parametrize(
+    "terminal_response",
+    [
+        _terminal_fallback_response(terminal_handle="different-terminal"),
+        _terminal_fallback_response(tail=["• Ran a command", "no completion sentinel"]),
+    ],
+    ids=["terminal-drift", "model-output-unproven"],
+)
+def test_collect_terminal_fallback_fails_closed_without_bound_model_output(
+    tmp_path: Path, terminal_response: tuple[int, object, str]
+) -> None:
+    module = _load_module()
+    identity = _identity(tmp_path)
+    runner = FakeRunner(
+        _collect_prefix(tmp_path)
+        + [
+            (
+                0,
+                _ok(
+                    {
+                        "dispatch": {
+                            "id": "orca-dispatch-001",
+                            "task_id": "orca-task-001",
+                            "run_id": "orca-run-001",
+                            "status": "completed",
+                        },
+                        "worker": {
+                            "dispatch_id": "orca-dispatch-001",
+                            "agent_terminal_handle": "terminal-001",
+                            "state": "succeeded",
+                            "stage": "settled",
+                        },
+                    }
+                ),
+                "",
+            ),
+            _session_not_reported_response(),
+            _completed_task_list_response(),
+            terminal_response,
+        ]
+    )
+
+    receipt = module.collect_supervised_codex(
+        **identity,
+        **_collect_clone_args(module, identity),
+        orca_run_id="orca-run-001",
+        orca_task_id="orca-task-001",
+        orca_dispatch_id="orca-dispatch-001",
+        terminal_handle="terminal-001",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "worker_read"
+    assert receipt["reason"] == "model_output_unproven"
+
+
+def test_collect_keeps_active_worker_unmanaged_and_does_not_read_transcript(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    runner = FakeRunner(
+        _collect_prefix(tmp_path)
+        + [
+            (
+                0,
+                _ok(
+                    {
+                        "dispatch": {
+                            "id": "orca-dispatch-001",
+                            "task_id": "orca-task-001",
+                            "run_id": "orca-run-001",
+                            "status": "dispatched",
+                        },
+                        "worker": {"state": "ready", "outcome": None},
+                    }
+                ),
+                "",
+            )
+        ]
+    )
+    identity = _identity(tmp_path)
+
+    receipt = module.collect_supervised_codex(
+        **identity,
+        orca_run_id="orca-run-001",
+        orca_task_id="orca-task-001",
+        orca_dispatch_id="orca-dispatch-001",
+        terminal_handle="terminal-001",
+        **_collect_clone_args(module, identity),
+        runner=runner,
+    )
+
+    assert receipt == {
+        "schema": "orca-codex-supervisor/v1",
+        "ok": False,
+        "stage": "worker_show",
+        "reason": "worker_not_settled",
+        "binding": _expected_binding(module, identity),
+        "orca": {
+            "run_id": "orca-run-001",
+            "task_id": "orca-task-001",
+            "dispatch_id": "orca-dispatch-001",
+            "terminal_handle": "terminal-001",
+        },
+        "residual_resources": ["terminal-001"],
+    }
+    assert len(runner.calls) == 3
+
+
+def test_collect_rejects_orca_worktree_id_drift_before_terminal_or_worker_read(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    identity = _identity(tmp_path)
+    runner = FakeRunner(
+        [
+            (
+                0,
+                _ok(
+                    {
+                        "worktree": {
+                            "id": f"repo-002::{tmp_path}",
+                            "path": str(tmp_path),
+                        }
+                    }
+                ),
+                "",
+            )
+        ]
+    )
+
+    receipt = module.collect_supervised_codex(
+        **identity,
+        **_collect_clone_args(module, identity),
+        orca_run_id="orca-run-001",
+        orca_task_id="orca-task-001",
+        orca_dispatch_id="orca-dispatch-001",
+        terminal_handle="terminal-001",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "worktree_show"
+    assert receipt["reason"] == "orca_worktree_drift"
+    assert runner.calls == [("orca", "worktree", "show", "--worktree", f"path:{tmp_path}", "--json")]
+
+
+def test_collect_rejects_matching_worktree_id_with_nonmatching_suffix_path(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    identity = _identity(tmp_path)
+    bad_worktree_id = f"repo-001::{tmp_path}/other"
+    runner = FakeRunner(
+        [
+            (
+                0,
+                _ok(
+                    {
+                        "worktree": {
+                            "id": bad_worktree_id,
+                            "path": str(tmp_path),
+                        }
+                    }
+                ),
+                "",
+            )
+        ]
+    )
+    clone_args = _collect_clone_args(module, identity)
+    clone_args["orca_worktree_id"] = bad_worktree_id
+
+    receipt = module.collect_supervised_codex(
+        **identity,
+        **clone_args,
+        orca_run_id="orca-run-001",
+        orca_task_id="orca-task-001",
+        orca_dispatch_id="orca-dispatch-001",
+        terminal_handle="terminal-001",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "worktree_show"
+    assert receipt["reason"] == "orca_worktree_drift"
+    assert len(runner.calls) == 1
+
+
+def test_collect_rejects_terminal_drift_before_worker_read(tmp_path: Path) -> None:
+    module = _load_module()
+    identity = _identity(tmp_path)
+    prefix = _collect_prefix(tmp_path)
+    prefix[-1][1]["result"]["terminal"]["writable"] = False
+    runner = FakeRunner(prefix)
+
+    receipt = module.collect_supervised_codex(
+        **identity,
+        **_collect_clone_args(module, identity),
+        orca_run_id="orca-run-001",
+        orca_task_id="orca-task-001",
+        orca_dispatch_id="orca-dispatch-001",
+        terminal_handle="terminal-001",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "terminal_show"
+    assert receipt["reason"] == "orca_terminal_drift"
+    assert len(runner.calls) == 2
+
+
+@pytest.mark.parametrize(
+    "messages",
+    [
+        [{}],
+        [{"role": "user", "blocks": [{"type": "text", "text": "request"}]}],
+        [{"role": "system", "blocks": [{"type": "text", "text": "notice"}]}],
+        [{"role": "assistant", "blocks": [{"type": "text", "text": "   "}]}],
+    ],
+    ids=["empty-object", "user-only", "system-only", "empty-assistant-output"],
+)
+def test_collect_rejects_transcript_without_explicit_nonempty_model_output(
+    tmp_path: Path, messages: list[object]
+) -> None:
+    module = _load_module()
+    identity = _identity(tmp_path)
+    runner = FakeRunner(_collect_prefix(tmp_path) + [_settled_worker_response(), _transcript_response(messages)])
+
+    receipt = module.collect_supervised_codex(
+        **identity,
+        **_collect_clone_args(module, identity),
+        orca_run_id="orca-run-001",
+        orca_task_id="orca-task-001",
+        orca_dispatch_id="orca-dispatch-001",
+        terminal_handle="terminal-001",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "worker_read"
+    assert receipt["reason"] == "model_output_unproven"
+
+
+def test_start_rejects_prompt_digest_drift_before_orca_calls(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner([])
+    identity = _identity(tmp_path)
+    identity["prompt_digest"] = "sha256:" + "b" * 64
+
+    receipt = module.start_supervised_codex(**identity, runner=runner)
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "input"
+    assert receipt["reason"] == "prompt_digest_mismatch"
+    assert runner.calls == []
+
+
+def test_start_rejects_non_sha256_packet_hash_before_orca_calls(tmp_path: Path) -> None:
+    module = _load_module()
+    runner = FakeRunner([])
+    identity = _identity(tmp_path)
+    identity["packet_hash"] = "not-a-sha256"
+
+    receipt = module.start_supervised_codex(**identity, runner=runner)
+
+    assert receipt == {
+        "schema": "orca-codex-supervisor/v1",
+        "ok": False,
+        "stage": "input",
+        "reason": "identity_invalid",
+        "binding": {},
+        "residual_resources": [],
+    }
+    assert runner.calls == []
+
+
+def test_start_rejects_symlink_prompt_ref_before_orca_calls(tmp_path: Path) -> None:
+    module = _load_module()
+    outside = tmp_path.parent / "outside-prompt.md"
+    outside.write_text("outside", encoding="utf-8")
+    (tmp_path / "prompts").mkdir()
+    (tmp_path / "prompts" / "dogfood.md").symlink_to(outside)
+    identity = {
+        "workflow_run_id": "wf-001",
+        "omo_task_id": "OMO-TASK-001",
+        "packet_id": "packet-001",
+        "packet_hash": "sha256:" + "a" * 64,
+        "omo_dispatch_id": "omo-dispatch-001",
+        "workspace_root": str(tmp_path),
+        "prompt_ref": "prompts/dogfood.md",
+        "prompt_digest": "sha256:" + hashlib.sha256(b"outside").hexdigest(),
+        "agent_id": "agent-001",
+    }
+    runner = FakeRunner([])
+
+    receipt = module.start_supervised_codex(**identity, runner=runner)
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "input"
+    assert receipt["reason"] == "prompt_ref_unsafe"
+    assert runner.calls == []
+
+
+def test_start_accepts_plus_sign_in_dispatch_id(tmp_path: Path) -> None:
+    """Realistic omo_dispatch_id with +0000 suffix must pass identity validation."""
+    module = _load_module()
+    runner = FakeRunner(_start_responses(tmp_path))
+    identity = _identity(tmp_path)
+    identity["omo_dispatch_id"] = "ctx_1d58fa0dd44d+0000"
+
+    receipt = module.start_supervised_codex(
+        **identity,
+        codex_executable="/opt/homebrew/bin/codex",
+        runner=runner,
+    )
+
+    assert receipt["ok"] is True
+    assert receipt["binding"]["omo_dispatch_id"] == "ctx_1d58fa0dd44d+0000"
+    assert len(runner.calls) > 0  # identity passed validation, reached runner
+
+
+@pytest.mark.parametrize(
+    "bad_char",
+    [" ", "\t", "\n", "\r", "/", "\\", ";", "|", "&", "$", "`", "'", '"', "(", ")"],
+    ids=[
+        "space",
+        "tab",
+        "newline",
+        "carriage-return",
+        "slash",
+        "backslash",
+        "semicolon",
+        "pipe",
+        "ampersand",
+        "dollar",
+        "backtick",
+        "single-quote",
+        "double-quote",
+        "lparen",
+        "rparen",
+    ],
+)
+def test_start_rejects_shell_dangerous_chars_in_dispatch_id(tmp_path: Path, bad_char: str) -> None:
+    """Shell-dangerous / path-traversal chars in dispatch ID must still be rejected."""
+    module = _load_module()
+    runner = FakeRunner([])
+    identity = _identity(tmp_path)
+    identity["omo_dispatch_id"] = f"ctx_abc{bad_char}def"
+
+    receipt = module.start_supervised_codex(**identity, runner=runner)
+
+    assert receipt["ok"] is False
+    assert receipt["reason"] == "identity_invalid"
+    assert runner.calls == []
+
+
+def test_start_rejects_nul_prompt_ref_before_orca_calls(tmp_path: Path) -> None:
+    module = _load_module()
+    identity = _identity(tmp_path)
+    identity["prompt_ref"] = "prompts/\x00dogfood.md"
+    runner = FakeRunner([])
+
+    receipt = module.start_supervised_codex(**identity, runner=runner)
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "input"
+    assert receipt["reason"] == "prompt_ref_unsafe"
+    assert runner.calls == []
+
+
+def test_start_rejects_binding_before_prompt_clone_or_orca(tmp_path: Path) -> None:
+    module = _load_module()
+    module._validate_instruction_binding = lambda **_kwargs: (_ for _ in ()).throw(
+        ValueError("instruction_binding_rejected")
+    )
+    runner = FakeRunner([])
+
+    receipt = module.start_supervised_codex(**_identity(tmp_path), runner=runner)
+
+    assert receipt["ok"] is False
+    assert receipt["stage"] == "binding"
+    assert receipt["reason"] == "instruction_binding_rejected"
+    assert runner.calls == []

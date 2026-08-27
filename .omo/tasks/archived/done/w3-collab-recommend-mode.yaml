@@ -1,0 +1,17 @@
+id: w3-collab-recommend-mode
+title: '可执行路由 CLI recommend_mode (ADR-0253/0255)'
+description: 'P84 W3 产能轨真实任务 (非构造场景)'
+status: done
+task_type: collaboration
+assigned_to: engineering-agent
+completed_at: '2026-07-28T13:00:00Z'
+completion_evidence:
+- bin/collab/recommend_mode.py
+- tests/test_collab_recommend_mode.py 4 passed
+- Makefile collab-recommend-mode
+collab_metrics:
+  human_direct: false
+  silent_loss: 0
+source_docs:
+- .omo/plans/strat-p84-scenario-driven-longplan.md
+stage: P84-W3
