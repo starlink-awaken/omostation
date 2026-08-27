@@ -1,0 +1,20 @@
+schema: script-registry/v1
+id: bin/gac/documents-consumer-audit.py
+name: Documents Consumer Audit
+category: governance
+owner: governance-team
+description: "Read-only audit of active consumers of the Documents execution plane"
+inputs:
+  - type: path
+  - type: registry
+outputs:
+  - type: json
+  - type: exit_code
+dependencies:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+triggers:
+  - manual
+related:
+  - docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md
+maturity: draft
+last_reviewed: "2026-08-27"
