@@ -12,7 +12,7 @@ artifact: runtime/omo/_delivery/ingress/state/system-projection-2026-08-21T06-51
 freshness: < 24h
 verified_at: 2026-08-22
 status: active
-lifecycle: evidence
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-26
 ---

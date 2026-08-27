@@ -10,7 +10,7 @@ title: "governance(bet): close BET-Y1Q3-T4-01 as done"
 reachable_from_main: true
 verified_at: 2026-08-22
 status: active
-lifecycle: evidence
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-26
 ---

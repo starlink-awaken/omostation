@@ -7,7 +7,7 @@ test_files:
 ci_status: all_green
 verified_at: 2026-08-22
 status: active
-lifecycle: evidence
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-26
 ---
