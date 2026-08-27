@@ -7044,6 +7044,53 @@ bets:
             sha256: sha256:a7a617b5b45922176b8398571995c1beab07d864e009bc632b0c17980f69693c
     overall_state: outcome_accepted
   depends_on: []
+- id: BET-Y1Q3-T10-21
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'L4/Documents/Agora 单实例收敛架构基线'
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: '建立唯一 canonical L4、明确 Documents 内容平面与 Workspace 执行平面边界，治理 Agora nested l4-kernel 的身份/路由分裂，并形成可持续的隔离、控制、治理与长期运维验收基线。'
+  non_goals:
+  - 不删除 projects/agora/projects/l4-kernel
+  - 不更新 root 或 Agora gitlink
+  - 不物理移动、删除或改写用户 Documents 内容
+  - 不切换生产 cron、LaunchAgent、客户端 MCP 或运行时路由
+  - 不新增第二 Registry、第二 workflow engine 或第二 KEMS runtime
+  done_when:
+  - '架构设计明确 Documents、L4、Cockpit、OMO、Runtime、Kairon/KOS、Agora 的唯一 owner 与数据流'
+  - '记录主 L4 与 Agora nested L4 的仓库边界、commit、域模型、工具面、消费者和路由差异'
+  - '定义 L4 instance identity、canonical route、Documents/Runtime 根目录隔离和 nested L4 退役前置门'
+  - '现有 Documents content-plane convergence plan 纳入 nested L4 治理波次，并保留删除/切换确认门'
+  verify:
+  - cmd: 'python3 -c "from pathlib import Path; p=Path(\"docs/architecture/l4-documents-agora-convergence-v1.md\"); assert p.is_file(); text=p.read_text(); assert all(x in text for x in [\"nested L4\", \"Documents\", \"instance_id\", \"rollback\"]); print(\"architecture-baseline: PASS\")"'
+    expect: exit 0
+  - cmd: 'python3 -c "from pathlib import Path; p=Path(\"docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md\"); assert p.is_file(); assert \"BET-Y1Q3-T10-21\" in p.read_text(); print(\"design-spec: PASS\")"'
+    expect: exit 0
+  - cmd: 'make doc-ssot-lint'
+    expect: exit 0
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - docs/architecture/l4-documents-agora-convergence-v1.md
+  - docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md
+  - docs/reports/2026-08-27-l4-instance-inventory.md
+  - docs/SYSTEM-INDEX.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-21.md
+  - docs/plans/2026-08-11-documents-content-plane-full-convergence.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  depends_on: []
+  risk_level: L1
+  human_gate: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:e6646859bc9350ff4f320201287a68be1066b5bee9cdc1166a387538fb51ca03'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-21
+  circuit_breaker: '发现 canonical route 不唯一、Documents/Runtime 根重叠或无法复算 commit/registry digest 时停止，不进行切换或删除。'
+  retro: required
 
 - id: BET-Y1Q3-T10-02
   track: T10-MATURITY
