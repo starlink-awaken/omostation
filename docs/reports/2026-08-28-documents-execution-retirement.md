@@ -105,3 +105,13 @@ references: `驾驶舱/scripts/**` is `cockpit-runtime`, `@公共/kems-v2/**` is
 `learning-runtime`. The final consumer audit reports `status=ok`,
 `forbidden_executors=0`, and `unmatched=0`; gateway instructions remain
 classified as content references/read-only owner inputs.
+
+## BOS Neural Mesh state-owner preflight
+
+`lib/bos_neural_mesh_owner.py` now provides a Workspace-owned, fail-closed
+entrypoint. Live smoke detected the legacy Documents runner and state DB,
+resolved the target state DB to `$HOME/Workspace/runtime/bos-neural-mesh-state.sqlite`,
+and invoked zero connectors. The owner reports `writes_documents=false`; it
+does not copy the old connector chain into a second runtime. The legacy runner
+and state DB remain intact until an accepted-release state-mutation run records
+copy/hash/integrity/rollback evidence.
