@@ -14,7 +14,7 @@ risk_level: L1
 
 ## Objective
 
-建立一个只读的 Workspace 审计入口，扫描当前宿主机和仓库中仍执行
+建立一个只读的 Workspace 审计能力，通过既有 Documents owner job 入口扫描当前宿主机和仓库中仍执行
 Documents 内脚本、数据库、缓存或控制面文件的消费者，并将每个消费者绑定
 到既有 `documents-content-plane-migrations.yaml` family。审计结果只写
 Workspace evidence，不修改 Documents、crontab、LaunchAgent 或客户端配置。
@@ -30,6 +30,8 @@ Workspace evidence，不修改 Documents、crontab、LaunchAgent 或客户端配
 - 只报告，不执行发现的命令；文件读取不越出显式 root；无法读取的来源
   fail closed 为 `unavailable`，不伪造零消费者。
 - registry family 只能来自既有 migration SSOT；未匹配消费者是错误。
+- 入口必须复用 `bin/gac/documents-domain-owner-job.py consumer-audit`；实现位于
+  `lib/documents_consumer_audit.py`，不得新增第二个 `bin/` 顶层入口。
 
 ## Non-goals
 

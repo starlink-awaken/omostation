@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-SCRIPT = Path(__file__).parents[1] / "bin" / "gac" / "documents-consumer-audit.py"
+SCRIPT = Path(__file__).parents[1] / "bin" / "gac" / "documents-domain-owner-job.py"
 
 
 def _registry(path: Path) -> Path:
@@ -40,7 +40,7 @@ def _registry(path: Path) -> Path:
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, str(SCRIPT), *args, "--json"],
+        [sys.executable, str(SCRIPT), "consumer-audit", *args, "--json"],
         check=False,
         capture_output=True,
         text=True,

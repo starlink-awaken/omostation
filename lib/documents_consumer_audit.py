@@ -321,7 +321,7 @@ def _current_crontab(path: Path) -> tuple[Path | None, str | None, list[str]]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--documents-root", type=Path, default=Path.home() / "Documents")
-    parser.add_argument("--registry", type=Path, default=Path(__file__).resolve().parents[2] / ".omo/_truth/registry/documents-content-plane-migrations.yaml")
+    parser.add_argument("--registry", type=Path, default=Path(__file__).resolve().parents[1] / ".omo/_truth/registry/documents-content-plane-migrations.yaml")
     parser.add_argument("--crontab", type=Path, default=Path("-"))
     parser.add_argument("--launch-agents-root", type=Path, default=Path.home() / "Library/LaunchAgents")
     parser.add_argument("--scheduled-root", type=Path, default=Path.home() / "Documents/Claude/Scheduled")

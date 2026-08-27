@@ -1,5 +1,9 @@
 # Documents consumer audit — 2026-08-27
 
+入口：`bin/gac/documents-domain-owner-job.py consumer-audit`；实现位于
+`lib/documents_consumer_audit.py`，复用既有 Documents owner job，未新增第二个
+`bin/` 顶层入口。
+
 ## Result
 
 The read-only audit ran against `/Users/xiamingxing/Documents`, the current user

@@ -7063,17 +7063,17 @@ bets:
   - 'live scan records current host consumer evidence under Workspace only'
   - 'focused tests, live scan, doc claims and root CI pass'
   verify:
-  - cmd: 'uv run --with pyyaml python bin/gac/documents-consumer-audit.py --help'
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py consumer-audit --help'
     expect: exit 0
   - cmd: 'uv run --with pyyaml --with pytest python -m pytest tests/test_documents_consumer_audit.py -q'
     expect: exit 0
-  - cmd: 'uv run --with pyyaml python bin/gac/documents-consumer-audit.py --json --crontab /dev/null'
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py consumer-audit --json --documents-root /var/empty --crontab /dev/null --launch-agents-root /var/empty --scheduled-root /var/empty'
     expect: exit 0
   workflow: project-code-change
   underlying_workflow: project-code-change
   write_surfaces:
-  - bin/gac/documents-consumer-audit.py
-  - bin/_registry/scripts/governance/documents-consumer-audit.yaml
+  - lib/documents_consumer_audit.py
+  - bin/gac/documents-domain-owner-job.py
   - bin/_registry/scripts/governance/auto-sync-submodules.yaml
   - .omo/_truth/registry/governance-checks.yaml
   - tests/test_documents_consumer_audit.py
@@ -7085,7 +7085,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md
     spec_version: 1.0.0
-    content_digest: 'sha256:2250e261f551e250601bf44aaa751477bb86910f150e5a515e2e1c05e6b654fd'
+    content_digest: 'sha256:3bcc900177108e1abcda44620e02ea4a3b2ea8f5d6adcd43766cf68ba03c5d85'
     decision_ref: decision://accepted/BET-Y1Q3-T10-23
   depends_on: []
   risk_level: L1
