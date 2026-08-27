@@ -106,7 +106,7 @@ def collect_maturity_scorecard(ws_root: Path) -> dict:
             capture_output=True,
             text=True,
             check=False,
-            timeout=120,
+            timeout=180,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         out["error"] = f"subprocess: {str(exc)[:120]}"
@@ -278,8 +278,14 @@ def main() -> int:
         print("2. maturity-scorecard (6 维度 × 1-10, target 9.0):")
         if scorecard.get("available"):
             print(f"   overall                         {scorecard.get('overall')}/10 (target {scorecard.get('target')}, gap {scorecard.get('gap')})")
-            for dim, score in (scorecard.get("dimensions") or {}).items():
-                print(f"   - {dim:<28} {score}/10")
+            dims = scorecard.get("dimensions") or []
+            if isinstance(dims, list):
+                for d in dims:
+                    if isinstance(d, dict):
+                        print(f"   - {d.get('dimension', '?'):<28} {d.get('score', '?')}/10")
+            elif isinstance(dims, dict):
+                for dim, score in dims.items():
+                    print(f"   - {dim:<28} {score}/10")
         else:
             print("   unavailable:", scorecard.get("error", "tool missing"))
         print()

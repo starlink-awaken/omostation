@@ -1,0 +1,52 @@
+name: post-merge-validate
+# 治理迭代 R3 (2026-08-27 复盘): admin merge 绕过 CI 后的兜底验证。
+# 三起断指事故根因: 子仓 commit 未推远程 + admin merge 不跑 CI → gitlink 不可达。
+# 本 workflow 在每次 push 到 main 后强制验证 gitlink 可达性 + 冲突标记检测。
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Submodule gitlink reachability
+        run: |
+          # 对比 index 中所有 gitlink 是否在对应子仓远程可达
+          python3 bin/ssot/submodule-reachability-gate.py --source index --fetch
+
+      - name: Conflict marker detection
+        run: |
+          # R4 治理: 冲突标记提交进 main (2026-08-27 retros/resident 5 文件教训)
+          # 只查最近一次 push 引入的变更, 不扫全仓 (存量由 remediation-engine 管)
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          if [ -n "$CHANGED" ]; then
+            echo "$CHANGED" | while read f; do
+              if [ -f "$f" ]; then
+                if grep -qE '^<{7} |^>{7} |^\|{7} ' "$f" 2>/dev/null; then
+                  echo "❌ 冲突标记检出: $f"
+                  grep -nE '^<{7} |^>{7} |^\|{7} ' "$f" | head -3
+                  FAILED=1
+                fi
+              fi
+            done
+            if [ "${FAILED:-0}" = "1" ]; then
+              echo "::error::Conflict markers detected in recently pushed files"
+              exit 1
+            fi
+          fi
+          echo "✅ 无冲突标记"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Post-merge validation summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Gitlink reachability: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
