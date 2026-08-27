@@ -7224,6 +7224,49 @@ bets:
   human_gate: true
   circuit_breaker: 'missing/duplicate old line, candidate drift, owner command error, or any unrelated-line difference causes abort or rollback.'
   retro: required
+- id: BET-Y1Q3-T10-27
+  track: T10-MATURITY
+  window: Y1Q3
+  title: '安装 versioned accepted Workspace release'
+  appetite: 0.5 day
+  priority: P0
+  status: pending
+  goal: '在不触碰共享 dirty Workspace 的前提下，安装并验证 versioned accepted release，作为 Documents 两条 owner schedule 的稳定代码根。'
+  non_goals:
+  - 不修改共享 Workspace checkout
+  - 不修改 Documents、crontab、LaunchAgent 或 Scheduled skill
+  - 不删除旧 release 或用户数据
+  done_when:
+  - 'release path contains merged owner entrypoint and source modules with recorded root/child provenance'
+  - 'live consumer/freshness owner smokes return structured findings rather than entrypoint errors'
+  - 'canonical schedule candidate points to release root and remains NOT INSTALLED'
+  - 'release evidence, tests, doc claims and root CI pass'
+  verify:
+  - cmd: 'test -f .omo/cron/documents-content-plane-crontab && rg -n "accepted-20260827|NOT INSTALLED" .omo/cron/documents-content-plane-crontab'
+    expect: exit 0
+  - cmd: 'test -f docs/reports/2026-08-27-documents-accepted-release.md && rg -n "consumer audit|freshness audit|191|12" docs/reports/2026-08-27-documents-accepted-release.md'
+    expect: exit 0
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - .omo/cron/documents-content-plane-crontab
+  - docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md
+  - docs/reports/2026-08-27-documents-accepted-release.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-27.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:ffd0230e5e2f31241c0162d34f2efcfc7ab94c972a2ec4ed476d930e57e51549'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-27
+  depends_on:
+  - BET-Y1Q3-T10-24
+  - BET-Y1Q3-T10-25
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 'release provenance mismatch, owner smoke error, or schedule path drift stops deployment.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3

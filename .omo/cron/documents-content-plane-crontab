@@ -5,10 +5,10 @@
 # Rollback: restore the exact pre-install `crontab -l` snapshot.
 
 # Replaces: 25 6 * * * Documents/@公共/_runtime/async-audit.py
-25 6 * * * cd "$HOME/Workspace" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py consumer-audit --json --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --evidence .omo/_delivery/documents-plane/consumer-audit.json >> runtime/cron/documents-plane.log 2>&1
+25 6 * * * cd "$HOME/.local/share/omostation/accepted-20260827" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py consumer-audit --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260827" --evidence .omo/_delivery/documents-plane/consumer-audit.json >> runtime/cron/documents-plane.log 2>&1
 
 # Replaces: 35 6 * * 1 Documents/@公共/_runtime/control-plane-freshness-audit.py --report
-35 6 * * 1 cd "$HOME/Workspace" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py freshness-audit --json --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --evidence .omo/_delivery/documents-plane/freshness-audit.json >> runtime/cron/documents-plane.log 2>&1
+35 6 * * 1 cd "$HOME/.local/share/omostation/accepted-20260827" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py freshness-audit --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260827" --evidence .omo/_delivery/documents-plane/freshness-audit.json >> runtime/cron/documents-plane.log 2>&1
 
 # Not yet replaced: OCR, domain-sync, session-brief, bridge-refresh, convergence,
 # signals rotation, and legacy controller/predictor jobs. Keep their current
