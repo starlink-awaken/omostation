@@ -7875,7 +7875,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md
     spec_version: 1.0.0
-    content_digest: 'sha256:e8624451f9c8aacef38936fe130a75e22dc9fa6765b31b8d80ffad0804479fca'
+    content_digest: 'sha256:ad49c1699cb5a166b95e885ecc646d2a17009578c7120c8bc40667821a0a89aa'
     decision_ref: decision://accepted/BET-Y1Q3-T10-41
   depends_on:
   - BET-Y1Q3-T10-40

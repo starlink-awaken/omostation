@@ -4,8 +4,8 @@ spec_version: 1.0.0
 status: accepted
 lifecycle: contract
 owner: human-principal
-created: 2026-08-28
-last-reviewed: 2026-08-28
+created: 2026-08-27
+last-reviewed: 2026-08-27
 bet_id: BET-Y1Q3-T10-41
 risk_level: L1
 ---
