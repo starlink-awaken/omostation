@@ -1,6 +1,6 @@
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-27T08:48:45.656399+00:00'
+health_score_evidence_generated_at: '2026-08-27T08:53:44.507300+00:00'
 runtime_health_summary:
   online_services: 3
   total_services: 4
