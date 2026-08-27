@@ -1,7 +1,19 @@
 ---
 schema: resident-retro-candidate/v1
 topic: external-adapter-sync
+<<<<<<< HEAD
+generated_at: 2026-08-27T08:40:10Z
+||||||| b16a64e7a
+<<<<<<< HEAD
 generated_at: 2026-08-27T06:40:02Z
+||||||| fafcbbea7
+generated_at: 2026-08-26T23:20:02Z
+=======
+generated_at: 2026-08-27T02:40:16Z
+>>>>>>> origin/main
+=======
+generated_at: 2026-08-27T06:40:02Z
+>>>>>>> origin/main
 status: candidate
 counts:
   runs: 3
@@ -15,7 +27,19 @@ failure_breakdown:
 ---
 # external-adapter-sync 运行复盘聚合 (resident 事件驱动)
 
+<<<<<<< HEAD
+- generated_at: 2026-08-27T08:40:10Z
+||||||| b16a64e7a
+<<<<<<< HEAD
 - generated_at: 2026-08-27T06:40:02Z
+||||||| fafcbbea7
+- generated_at: 2026-08-26T23:20:02Z
+=======
+- generated_at: 2026-08-27T02:40:16Z
+>>>>>>> origin/main
+=======
+- generated_at: 2026-08-27T06:40:02Z
+>>>>>>> origin/main
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 3 成功运行 + 2 失败模式 = 5 草稿
 - 失败率: 40.00%
