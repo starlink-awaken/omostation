@@ -7745,6 +7745,48 @@ bets:
   human_gate: true
   circuit_breaker: 'Any Documents script execution or lost watch group blocks cutover.'
   retro: required
+- id: BET-Y1Q3-T10-39
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'concept-weave monthly LaunchAgent 改为 Workspace preflight'
+  appetite: 1 day
+  priority: P0
+  status: pending
+  goal: '停止 LaunchAgent 直接执行 Documents concept-weave 写入器，改为 Workspace-only 概念网络健康 preflight，保留原始资料和 rollback。'
+  non_goals:
+  - 不删除 Documents 概念资料、bridge-map 或旧脚本
+  - 不在无 owner 的情况下自动改写概念文档或生成 Documents inbox 待办
+  - 不修改其他 LaunchAgent、cron 或 Scheduled skill
+  done_when:
+  - 'concept-weave-preflight emits a stable Workspace evidence envelope with orphan/link/decay metrics'
+  - 'preflight never executes or writes Documents and reports write-capable mesh/bridge as deferred'
+  - 'monthly LaunchAgent is replaced exactly once with accepted Workspace owner after plist validation'
+  - 'plist before/after hashes, launchctl state, rollback copy and CI evidence are recorded'
+  verify:
+  - cmd: 'uv run --with pyyaml --with pytest python -m pytest tests/test_documents_concept_weave_preflight.py -q'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - lib/documents_concept_weave_preflight.py
+  - tests/test_documents_concept_weave_preflight.py
+  - docs/superpowers/specs/2026-08-28-concept-weave-preflight-owner-design.md
+  - docs/reports/2026-08-28-concept-weave-preflight-owner.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-39.md
+  - /Users/xiamingxing/Library/LaunchAgents/com.learningevolution.concept-weave.monthly.plist
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-concept-weave-preflight-owner-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:1a3e5c00078c969c614ca842e3d20621b271c5059b61455a1d5621f715884c36'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-39
+  depends_on:
+  - BET-Y1Q3-T10-38
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'Any Documents write attempt, missing plist rollback, or metric ambiguity blocks LaunchAgent cutover.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
