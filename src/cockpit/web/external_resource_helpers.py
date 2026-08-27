@@ -87,17 +87,6 @@ else:
     _CATALOG_IMPORT_ERROR = None
 
 
-def _load_catalog_module() -> Any:
-    module_path = _REPO_ROOT / "bin" / "ssot" / "external-resource-catalog.py"
-    spec = importlib.util.spec_from_file_location("cockpit_external_resource_catalog_projection", module_path)
-    if spec is None or spec.loader is None:
-        raise ImportError("external resource catalog projection is unavailable")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
 def _load_pack_module() -> Any:
     module_path = _REPO_ROOT / "bin" / "ssot" / "external-resource-pack.py"
     spec = importlib.util.spec_from_file_location("cockpit_external_resource_pack_projection", module_path)
