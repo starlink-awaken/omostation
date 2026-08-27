@@ -1,13 +1,14 @@
 ---
-status: active
+status: accepted
 lifecycle: history
 owner: engineering-agent
 bet: BET-Y1Q3-T7-02
-last-reviewed: 2026-08-26
+last-reviewed: 2026-08-27
 ---
 # BET-Y1Q3-T7-02 Retro — P1 健康域启动
 
-> run: 20260826T104439Z-project-code-change-0375422e · PR #2273 MERGED
+> run: 20260826T104439Z-project-code-change-0375422e · PR #2273 MERGED (a9ed961a)
+> 收尾: run 20260827T230318Z-bet-execution-aecf5cb2 · attestation 2026-08-27T23:08:08Z (ED25519 Good) · 台账升 done
 
 ## 五问
 
