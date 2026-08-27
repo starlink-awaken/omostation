@@ -3561,9 +3561,9 @@ bets:
   title: P1 健康域启动 health-medical-workflow journey + 4 场景卡
   appetite: 1 day
   priority: P1
-  status: pending
-  note: 用户 2026-08-26 面授授权 P1 健康域。对齐 risk_engine health 域分级 (generate:report=L0,
-    send_email:doctor=L2) 与 agent-cli-worker 协作标准敏感域约束。
+  status: done
+  done_at: '2026-08-27'
+  note: 'closeout ok (run 20260827T230318Z-bet-execution-aecf5cb2): 交付 PR #2273 MERGED (a9ed961a, 2026-08-26, run 0375422e, 21 checks 全绿) — health-medical-workflow journey spec (v3 flat schema, journey-validate 13/13) + 4 场景卡 health-{intake,visit-prep,visit,archive} (scene-card/v2, draft, activation_blockers 空, L0/L2 风险边界 + confidential 分级); 用户 2026-08-26 面授授权; 台账升 done (outcome_accepted) 由人类 SSH 签名 attestation 绑定'
   goal: 健康域从零资产到最小契约闭环 (记录→就诊→归档追踪)
   non_goals:
   - 场景卡运行时实现 (P2)
@@ -3596,15 +3596,53 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a9ed961a4585fb713a44003006da3bc94b4244eb
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
+            sha256: sha256:c736527e1f990e20ffa11eab03b08d6644e5f2cf345e009d3f95637cc2b79310
+          diff:
+            ref: receipt://docs/journey-specs/health-medical-workflow.yaml
+            sha256: sha256:5d7f9733d2c59e080baf5686cd3d6ce06915c76d8bacca78cde8b58f7cb81703
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
+            sha256: sha256:c736527e1f990e20ffa11eab03b08d6644e5f2cf345e009d3f95637cc2b79310
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/journey-specs/health-medical-workflow.yaml
+            sha256: sha256:5d7f9733d2c59e080baf5686cd3d6ce06915c76d8bacca78cde8b58f7cb81703
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T7-02-accept.yaml
+            sha256: sha256:4421d2e9d5afe9ee6680c4addcf6a158aeb2b5ed2964f56f6ae0327284b87923
+          replay:
+            ref: receipt://docs/scene-cards/health-intake.yaml
+            sha256: sha256:d99cd6c40e960807a7ae48bfc5f090d875330939d941c0f4602b62edea676c05
+          cleanup:
+            ref: receipt://docs/scene-cards/health-archive.yaml
+            sha256: sha256:2eee16a162d481bb8a7c3cbbd11e53437e4bd1acf95b7d2c2541030dd17c6b24
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T7-02-accept.yaml
+            sha256: sha256:4421d2e9d5afe9ee6680c4addcf6a158aeb2b5ed2964f56f6ae0327284b87923
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T7-02-accept.yaml
+            sha256: sha256:4421d2e9d5afe9ee6680c4addcf6a158aeb2b5ed2964f56f6ae0327284b87923
+          real_signal:
+            ref: receipt://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
+            sha256: sha256:c736527e1f990e20ffa11eab03b08d6644e5f2cf345e009d3f95637cc2b79310
+          revision:
+            ref: receipt://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
+            sha256: sha256:c736527e1f990e20ffa11eab03b08d6644e5f2cf345e009d3f95637cc2b79310
+          time_burden:
+            ref: receipt://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
+            sha256: sha256:c736527e1f990e20ffa11eab03b08d6644e5f2cf345e009d3f95637cc2b79310
+    overall_state: outcome_accepted
 - id: BET-Y1Q3-T2-01
   track: T2-PERCEPT
   window: Y1Q3
