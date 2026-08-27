@@ -5505,8 +5505,7 @@ bets:
   title: Exact Capability Binding 与 native asset receipt 消费收敛
   appetite: 5 days
   priority: P0
-  status: done
-  done_at: '2026-08-27'
+  status: candidate
   started_at: 2026-08-24
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact find-load、OMO admission/dispatch
     与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误 admission、平行 dispatch 和执行回执冒充个人价值。
@@ -5676,7 +5675,7 @@ bets:
             ref: receipt://tests/test_capability_native_inspection.py
             sha256: sha256:a67e950b13e50f89db92b5f0964022694597f24e60e0be8b19f3c3e85f3b6399
       value:
-        status: ACCEPTED
+        status: NOT_PROVEN
         evidence:
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
@@ -5693,7 +5692,7 @@ bets:
           attestation:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
             sha256: sha256:f11d3224c60b3c1657ac79998e96c38cd06ce3718ac5c60de5442802c337b429
-    overall_state: outcome_accepted
+    overall_state: blocked
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
   write_surfaces:
