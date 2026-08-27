@@ -697,7 +697,14 @@ def _is_discoverable(rel: str, surface: dict[str, Any], index_text: str) -> bool
         return True
     if surface.get("discoverability") == "directory-index":
         parent = PurePosixPath(rel).parent.as_posix()
-        return parent != "." and f"{parent}/" in index_text
+        if parent != "." and f"{parent}/" in index_text:
+            return True
+        # SYSTEM-INDEX.md 惯用相对路径 (无 docs/ 前缀), 两种口径都认
+        # (2026-08-27 复盘 R1 根因: 路径口径不匹配导致 replay.md 等长期误报 orphan)
+        if parent.startswith("docs/"):
+            rel_parent = parent[len("docs/"):]
+            if rel_parent != "." and f"{rel_parent}/" in index_text:
+                return True
     return True
 
 
