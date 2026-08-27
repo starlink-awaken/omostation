@@ -29,6 +29,15 @@ HEARTBEAT = ROOT / ".omo" / "state" / "mail-daemon.jsonl"
 STABLE_JR = ROOT / "runtime" / "ssot-stable" / "journey-runner.py"
 JOURNEY_TRIGGERED = ROOT / ".omo" / "state" / "mail-journey-triggered.json"
 
+# 主题级黑名单 (2026-08-28 P1a: JetBrains 仓库通知刷屏占 91.9%, 分类前直接跳过 —
+# 比 RULE_PRECLASSIFY 更省: 不分类不落库不占 briefing 名额, 让真任务浮出来)
+SUBJECT_BLACKLIST = ("[JetBrains/",)
+
+
+def _blacklisted(subject: str) -> bool:
+    subj = str(subject or "")
+    return any(subj.startswith(p) or f" {p}" in subj or f"Re: {p}" in subj for p in SUBJECT_BLACKLIST)
+
 
 def _trigger_journey_live(mail: Any, cls: dict) -> dict[str, Any] | None:
     """对任务邮件自动跑 journey --live (闭环最后一公里, 2026-08-26)。
@@ -77,7 +86,11 @@ def run_cycle() -> dict[str, Any]:
 
     classifications = []
     tasks = []
+    skipped = 0
     for mail in mails:
+        if _blacklisted(getattr(mail, "subject", "")):
+            skipped += 1
+            continue
         cls = classify_mail(mail)
         classifications.append(cls)
         if cls.get("category") == "任务":
@@ -124,6 +137,7 @@ def run_cycle() -> dict[str, Any]:
     result = {
         "ts": ts,
         "mails": len(mails),
+        "skipped_blacklist": skipped,
         "tasks": len(tasks),
         "drafts": drafts,
         "journeys": journeys,
