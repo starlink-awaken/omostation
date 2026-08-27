@@ -324,12 +324,6 @@ surfaces:
   - scheduled
   status: active
   note: Manifest/execution parity guard for bin/scripts convergence.
-- id: bin-gac-gac-mesh-router-py
-  tool: bin/gac/gac-mesh-router.py
-  workflow: (none)
-  gate: true
-  triggers: []
-  status: active
 - id: bin-gac-gac-validate-py
   tool: bin/gac/gac-validate.py
   workflow: (none)
