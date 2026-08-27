@@ -7875,7 +7875,6 @@ bets:
   - /Users/xiamingxing/Documents/Claude/Scheduled/weijian-daily-health/SKILL.md
   - .omo/state/system.yaml
   - .omo/state/task-registry.yaml
-  - .omo/_truth/registry/documents-content-plane-migrations.yaml
   pasw_required: true
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md
@@ -7920,6 +7919,7 @@ bets:
   - .omo/state/system.yaml
   - .omo/state/task-registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T10-42.md
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
   pasw_required: true
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md
