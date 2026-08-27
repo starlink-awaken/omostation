@@ -81,6 +81,36 @@ def test_health_status_thresholds(tool):
     assert tool._status_for_health(None) == "GREY"
 
 
+def test_dim4_experience_uses_compass_when_available(tool):
+    """When compass daemon reports a healthy composite, that wins."""
+    health = {"composite": 85, "available": True}
+    ns = {"composite_5axis": 98}
+    assert tool._status_for_dim4_experience(health, ns) == "GREEN"
+
+    health = {"composite": 70, "available": True}
+    assert tool._status_for_dim4_experience(health, ns) == "YELLOW"
+
+
+def test_dim4_experience_falls_back_to_v3_when_compass_down(tool):
+    """When compass daemon is unavailable, fall back to v3 5-axis (or 4-axis/BC)."""
+    health = {"composite": None, "available": False}
+    ns = {"composite_5axis": 98, "composite_4axis": 96, "composite": 94}
+    assert tool._status_for_dim4_experience(health, ns) == "GREEN"
+
+    ns = {"composite_5axis": None, "composite_4axis": 70, "composite": 65}
+    assert tool._status_for_dim4_experience(health, ns) == "YELLOW"
+
+    ns = {"composite_5axis": None, "composite_4axis": None, "composite": 50}
+    assert tool._status_for_dim4_experience(health, ns) == "RED"
+
+
+def test_dim4_experience_grey_when_no_data(tool):
+    """When both compass and v3 are unavailable, status is GREY (not RED)."""
+    health = {"composite": None, "available": False}
+    ns = {}
+    assert tool._status_for_dim4_experience(health, ns) == "GREY"
+
+
 def test_bet_status_thresholds(tool):
     assert tool._status_for_bets({"available": True, "completion_pct": 95.0}) == "GREEN"
     assert tool._status_for_bets({"available": True, "completion_pct": 90.0}) == "YELLOW"
@@ -89,10 +119,7 @@ def test_bet_status_thresholds(tool):
 
 
 def test_render_text_shows_all_9_dimensions(tool):
-    dims = [
-        {"id": i, "name": f"d{i}", "status": "GREEN", "target_3m": "x", "current": {}}
-        for i in range(1, 10)
-    ]
+    dims = [{"id": i, "name": f"d{i}", "status": "GREEN", "target_3m": "x", "current": {}} for i in range(1, 10)]
     text = tool.render_text(dims)
     for i in range(1, 10):
         assert f"d{i}" in text
@@ -113,6 +140,7 @@ def test_render_text_summary_counts(tool):
 
 def test_cli_runs_and_emits_matrix():
     import subprocess
+
     result = subprocess.run(
         [sys.executable, str(TOOL), "--json"],
         capture_output=True,

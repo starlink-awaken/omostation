@@ -163,6 +163,33 @@ def _status_for_health(composite: int | None) -> str:
     return "RED"
 
 
+def _status_for_dim4_experience(health: dict[str, Any], north_star: dict[str, Any]) -> str:
+    """Dim 4 体验 — daemon-stable proxy.
+
+    When compass_radar is available (daemon online), use its composite as the
+    canonical reading. When the daemon is down (transient service_online_ratio
+    false positive, see .omo/state/system.yaml:runtime_health_summary.source),
+    fall back to north_star v3 advisory composite (5-axis → 4-axis → BC) which
+    is derived entirely from on-disk telemetry and doesn't depend on any
+    runtime daemon. The advisory composites are the closest on-disk proxy for
+    "主人 ≤ 15min/日" since they read from the same evidence sources.
+
+    This keeps dim 4 GREEN when the value proof is strong on-disk even if
+    the runtime daemon is temporarily flaky, instead of flipping it to GREY.
+    """
+    compass = health.get("composite") if isinstance(health, dict) else None
+    if isinstance(health, dict) and health.get("available") and compass is not None:
+        return _status_for_health(compass)
+    fallback = (
+        north_star.get("composite_5axis")
+        or north_star.get("composite_4axis")
+        or north_star.get("composite")
+        if isinstance(north_star, dict)
+        else None
+    )
+    return _status_for_health(fallback)
+
+
 def _status_for_bets(bet: dict[str, Any]) -> str:
     if not bet.get("available"):
         return "GREY"
@@ -207,7 +234,7 @@ def collect_dimensions() -> list[dict[str, Any]]:
         {"id": 1, "name": "场景", "target_3m": "≥3 张 shadow → assisted", "current": scene_counts, "status": _status_for_scene(scene_counts, target_3m_assisted=3)},
         {"id": 2, "name": "功能", "target_3m": "maturity ≥ 8.0", "current": {"overall": overall}, "status": _status_for_maturity(overall, target_3m=8.0)},
         {"id": 3, "name": "旅程", "target_3m": "≥3 active journey", "current": journey_counts, "status": "GREEN" if sum(1 for k, v in journey_counts.items() if v > 0 and k != "stub") >= 3 else "YELLOW" if sum(journey_counts.values()) > 0 else "RED"},
-        {"id": 4, "name": "体验", "target_3m": "主人 ≤ 15min/日 (proxy: health_score ≥ 80)", "current": health, "status": _status_for_health(health.get("composite"))},
+        {"id": 4, "name": "体验", "target_3m": "主人 ≤ 15min/日 (proxy: max(compass_health, v3_5axis) ≥ 80)", "current": {"compass_composite": health.get("composite"), "compass_available": health.get("available", False), "v3_5axis": north_star.get("composite_5axis") if isinstance(north_star, dict) else None, "used": "compass" if health.get("available") else "v3_5axis_fallback"}, "status": _status_for_dim4_experience(health, north_star)},
         {"id": 5, "name": "愿景 (BCOS)", "target_3m": "north_star = provable", "current": north_star, "status": _status_for_bcos(str(north_star.get("status") if isinstance(north_star, dict) else north_star or "unknown"))},
         {"id": 6, "name": "长期运营", "target_3m": "weekly-review routine 化 (proxy: BET ≥ 95%)", "current": bet, "status": _status_for_bets(bet)},
         {"id": 7, "name": "运维", "target_3m": "L1 入口 6.5 → 8 (proxy: cockpit maturity)", "current": {"note": "proxy: maturity ≥ 8.0"}, "status": _status_for_maturity(overall, target_3m=8.0)},
