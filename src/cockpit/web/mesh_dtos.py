@@ -297,6 +297,15 @@ def _engineering_delivery_auth_error(exc: Exception) -> Any:
     return JSONResponse(status_code=status_code, content=content) if JSONResponse is not None else content
 
 
+def _personal_draft_dir() -> Path:
+    """Resolve the server-owned local draft directory, never a caller path."""
+    configured = os.environ.get("PERSONAL_DRAFT_DIR")
+    if configured:
+        return Path(configured).resolve()
+    repo_root = Path(__file__).resolve().parents[5]
+    return (repo_root / "runtime" / "omo" / "personal-drafts").resolve()
+
+
 def _write_local_draft(
     context: Any,
     draft: dict[str, str],

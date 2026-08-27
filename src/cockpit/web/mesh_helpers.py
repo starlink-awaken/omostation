@@ -11,12 +11,7 @@ def _projection_value_is_private(value: Any) -> bool:
         return False
     stripped = value.strip()
     lowered = stripped.lower()
-    return (
-        "file://" in lowered
-        or "iris://" in lowered
-        or stripped.startswith(("/", "~/"))
-        or "/users/" in lowered
-    )
+    return "file://" in lowered or "iris://" in lowered or stripped.startswith(("/", "~/")) or "/users/" in lowered
 
 
 def _projection_fields(source: Any, fields: tuple[str, ...]) -> dict[str, Any]:
