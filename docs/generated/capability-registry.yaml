@@ -11,8 +11,8 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 643
-  bos_services: 253
+  mcp_tools: 651
+  bos_services: 260
   bos_domains: 21
   cli_commands: 153
   skills: 1
@@ -244,14 +244,22 @@ mcp_servers:
   - cartridge_pack
   - cell_config_create
   - cell_config_list
+  - cell_dag_execute
   - cell_eval
   - cell_execute
   - cell_govern
+  - cell_governance_audit
+  - cell_governance_report
+  - cell_health
   - cell_memory_consolidate
   - cell_memory_process
+  - cell_memory_publish
+  - cell_memory_search
   - cell_pdp_evaluate
   - cell_pep_enforce
   - cell_plan
+  - cell_pool_auto_scale
+  - cell_pool_metrics
   - cell_pool_scale
   - cell_pool_status
   - cell_pool_submit
@@ -330,7 +338,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 113
+  tool_count: 121
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -882,7 +890,7 @@ mcp_servers:
   tool_count: 75
 bos_services:
   _domain_counts:
-    agent-cell: 16
+    agent-cell: 23
     agora: 3
     analysis: 28
     bcos: 3
@@ -915,6 +923,34 @@ bos_services:
       status: active
     - uri: bos://agent-cell/pool/scale
       description: Cell Pool 扩缩容 — 调整 Cell 数量
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/pool/auto-scale
+      description: Cell Pool 自动扩缩容 — 基于负载自动调整
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/pool/metrics
+      description: Cell Pool 指标 — 详细监控指标
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/dag/execute
+      description: Cell DAG 执行 — 跨 Cell 编排
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/memory/publish
+      description: Memory Publish — 发布记忆到网络
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/memory/search
+      description: Memory Search — 跨 Cell 搜索
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/governance/audit
+      description: Governance Audit — 配置合规审计
+      transport: stdio
+      status: active
+    - uri: bos://agent-cell/governance/report
+      description: Governance Report — 治理报告
       transport: stdio
       status: active
     - uri: bos://agent-cell/config/list
