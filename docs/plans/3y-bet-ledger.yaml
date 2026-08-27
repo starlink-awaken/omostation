@@ -7533,6 +7533,50 @@ bets:
   human_gate: true
   circuit_breaker: 'Documents write attempt, signal ingress ambiguity, or owner parity uncertainty blocks cutover.'
   retro: required
+- id: BET-Y1Q3-T10-34
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'session-brief Documents writer 收敛到 canonical Workspace brief'
+  appetite: 1 day
+  priority: P0
+  status: pending
+  goal: '停止每日 06:15 Documents session-brief 写入器，复用 bin/mof/generate-brief.py 生成 live Workspace BRIEF.md，保留旧脚本作为回滚基线。'
+  non_goals:
+  - 不生成或改写 Documents @驾驶舱/_control/BRIEF.md
+  - 不新增第二个简报生成器或改变 Cockpit brief 入口
+  - 不修改其他 crontab、LaunchAgent 或 Scheduled skill
+  done_when:
+  - 'canonical generate-brief owner accepts explicit Workspace root and output path without changing default behavior'
+  - 'session-brief schedule replacement writes only Workspace BRIEF.md and does not invoke Documents runtime scripts'
+  - '06:15 daily session-brief line is replaced exactly once after accepted release deployment'
+  - 'legacy session-brief remains available for rollback/parity and unrelated crontab lines are byte-identical'
+  verify:
+  - cmd: 'uv run python bin/mof/generate-brief.py --help'
+    expect: exit 0
+  - cmd: 'uv run --with pytest python -m pytest tests/test_generate_brief_workspace_output.py -q'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/mof/generate-brief.py
+  - tests/test_generate_brief_workspace_output.py
+  - .omo/cron/documents-content-plane-crontab
+  - docs/superpowers/specs/2026-08-28-session-brief-workspace-owner-design.md
+  - docs/reports/2026-08-28-session-brief-workspace-owner.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-34.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-session-brief-workspace-owner-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:54c6cc487016c5b1ff2f25ddd71e9020a3ec3719bf378ac7d7729907661b819c'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-34
+  depends_on:
+  - BET-Y1Q3-T10-33
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 'Workspace output ambiguity, Documents write attempt, or brief owner duplication blocks cutover.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3

@@ -2,13 +2,14 @@
 """Generate BRIEF.md containing Decision Inbox and X3 Value Metrics."""
 
 import argparse
+import os
 import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-WORKSPACE = Path(__file__).resolve().parents[2]
+WORKSPACE = Path(os.environ.get("OMOSTATION_WORKSPACE_ROOT", Path(__file__).resolve().parents[2])).expanduser().resolve()
 SYSTEM_YAML = WORKSPACE / ".omo" / "state" / "system.yaml"
-BRIEF_MD = WORKSPACE / "BRIEF.md"
+BRIEF_MD = Path(os.environ.get("OMOSTATION_BRIEF_OUTPUT", WORKSPACE / "BRIEF.md")).expanduser().resolve()
 DECISION_CHECKLIST_PATH = ".omo/tasks/closed/decision-checklist-13-items.md"
 
 
@@ -36,6 +37,7 @@ def write_brief_if_changed(content: str) -> bool:
         current = BRIEF_MD.read_text(encoding="utf-8")
         if normalize_brief_content(current) == normalize_brief_content(content):
             return False
+    BRIEF_MD.parent.mkdir(parents=True, exist_ok=True)
     BRIEF_MD.write_text(content, encoding="utf-8")  # audit-exempt: non-atomic-write
     return True
 
