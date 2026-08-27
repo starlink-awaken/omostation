@@ -7044,6 +7044,52 @@ bets:
             sha256: sha256:a7a617b5b45922176b8398571995c1beab07d864e009bc632b0c17980f69693c
     overall_state: outcome_accepted
   depends_on: []
+- id: BET-Y1Q3-T10-22
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'Agora canonical L4 route 与 nested L4 隔离'
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: '让 Agora 在 Workspace 嵌套运行时只解析 canonical projects/l4-kernel，消除相对路径误解析和主/嵌套 L4 身份分裂，并为后续 nested L4 退役建立 child-first 路由证据。'
+  non_goals:
+  - 不删除 projects/agora/projects/l4-kernel
+  - 不更新 root gitlink，直到 Agora child PR 合并并完成 reachability 验证
+  - 不切换生产客户端、cron、LaunchAgent 或现有 BOS consumer
+  - 不改主 L4 源码、Documents 内容或 Runtime state
+  done_when:
+  - 'Workspace nested Agora resolves <workspace>/projects/l4-kernel without parents-path misresolution'
+  - 'standalone fallback is explicitly marked legacy-nested and invalid explicit roots fail closed'
+  - 'L4 service metadata exposes route mode/root for audit and canary'
+  - 'child targeted tests and ruff pass; root route/consumer evidence is recorded'
+  verify:
+  - cmd: 'cd projects/agora && uv run pytest tests/unit/test_mcp_l4_route.py -q'
+    expect: exit 0
+  - cmd: 'cd projects/agora && uv run ruff check src/agora/mcp/mcp_bootstrap.py tests/unit/test_mcp_l4_route.py'
+    expect: exit 0
+  - cmd: 'python3 -c "from pathlib import Path; p=Path(\"docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md\"); assert p.is_file(); assert \"BET-Y1Q3-T10-22\" in p.read_text(); print(\"route-spec: PASS\")"'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora/src/agora/mcp/mcp_bootstrap.py
+  - projects/agora/tests/unit/test_mcp_l4_route.py
+  - projects/agora
+  - docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md
+  - docs/reports/2026-08-27-agora-l4-route-evidence.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-22.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:acdf73d84dd252734ae58802991bbfa58f6e237e451ae7e93b474ba7c5db7a74'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-22
+  depends_on: []
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 'route ambiguity, identity mismatch, missing canonical root, or failed child canary stops cutover and preserves nested fallback.'
+  retro: required
 - id: BET-Y1Q3-T10-21
   track: T10-MATURITY
   window: Y1Q3
