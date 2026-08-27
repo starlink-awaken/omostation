@@ -6,8 +6,7 @@ from fastapi.testclient import TestClient
 
 from cockpit import compat
 from cockpit.dashboard_server import app
-from cockpit.web import api_system_map, api_system_map_io_commands, api_system_map_status
-from cockpit.web import system_map_status_helpers
+from cockpit.web import api_system_map, api_system_map_io_commands, api_system_map_status, system_map_status_helpers
 from cockpit.web.api_system_map import build_source_ref_preview, build_system_map
 
 
