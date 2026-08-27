@@ -38,7 +38,7 @@
 0 8 * * * cd "$HOME/.local/share/omostation/accepted-20260906" && /opt/homebrew/opt/python@3.14/bin/python3.14 lib/documents_daily_health_preflight.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --evidence "$HOME/Workspace/runtime/daily-health-preflight.json" --json >> "$HOME/Workspace/runtime/cron/daily-health.stdout.log" 2> "$HOME/Workspace/runtime/cron/daily-health.stderr.log"
 
 # Replaces: 20 6 * * 0 cd "$HOME/Documents"; /usr/local/bin/kos ingest ...
-20 6 * * 0 cd "$HOME/.local/share/omostation/accepted-20260906" && for d in @学习进化 @工作文档 @驾驶舱 @公共 @个人 @创意创作 @OPC @家庭生活; do KOS_HOME="$HOME/Workspace/kos" uv run --directory "$HOME/.local/share/omostation/accepted-20260906/projects/knowledge/kairon" python packages/kos/kos-cli.py ingest "$HOME/Documents/$d"; done >> "$HOME/Workspace/runtime/cron/kos.stdout.log" 2> "$HOME/Workspace/runtime/cron/kos.stderr.log"
+20 6 * * 0 cd "$HOME/.local/share/omostation/accepted-20260906" && /opt/homebrew/opt/python@3.14/bin/python3.14 lib/documents_kos_preflight.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --ingest --json >> "$HOME/Workspace/runtime/cron/kos.stdout.log" 2> "$HOME/Workspace/runtime/cron/kos.stderr.log"
 
 # Replaces: 30 8 1 * * Documents/@工作文档/卫健委/_control/predictor.py
 30 8 1 * * cd "$HOME/.local/share/omostation/accepted-20260905" && /opt/homebrew/opt/python@3.14/bin/python3.14 lib/documents_predictor_preflight.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --evidence "$HOME/Workspace/runtime/predictor-preflight.json" --json >> "$HOME/Workspace/runtime/cron/predictor.stdout.log" 2> "$HOME/Workspace/runtime/cron/predictor.stderr.log"
