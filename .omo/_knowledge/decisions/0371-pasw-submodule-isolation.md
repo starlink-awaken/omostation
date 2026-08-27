@@ -2,7 +2,7 @@
 id: ADR-0371
 title: PASW — Per-Agent Submodule Worktree 隔离
 status: ACCEPTED
-lifecycle: decision
+lifecycle: spec
 owner: 夏明星
 last-reviewed: 2026-08-04
 related:

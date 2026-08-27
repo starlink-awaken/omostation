@@ -1,7 +1,7 @@
 ---
 title: BET-Y1Q2-T1-19 复盘 — Codex ACP stdio permission-broker cutover
 type: retro
-status: blocked
+status: stale
 owner: engineering-agent
 created: 2026-08-20
 bet: BET-Y1Q2-T1-19

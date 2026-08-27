@@ -1,9 +1,9 @@
 ---
 id: ADR-0352
 title: Workflow Mesh result receipt and evaluation readiness projection
-status: accepted
+status: archived
 type: adr
-lifecycle: active
+lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-03
 type: decision

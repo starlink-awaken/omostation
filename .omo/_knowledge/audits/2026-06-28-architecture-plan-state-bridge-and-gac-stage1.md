@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # 架构方案: MOF State-Bridge 失同步修复 + GaC Stage 1 执行绑定

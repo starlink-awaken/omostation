@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # BOS 声明/执行鸿沟审计 — 2026-06-24

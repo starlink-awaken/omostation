@@ -1,10 +1,10 @@
 ---
 id: ADR-0307
 title: Workflow Mesh 外部调用安全契约
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
-lifecycle: active
+lifecycle: spec
 created: 2026-08-02
 last-reviewed: 2026-08-02
 related:

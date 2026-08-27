@@ -2,7 +2,7 @@
 id: ADR-0369
 title: Reserved slot
 status: reserved
-lifecycle: dead
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-04
 ---

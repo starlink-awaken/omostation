@@ -3,6 +3,8 @@ title: Batch2 B2 real backlog collab index (≥30)
 date: 2026-07-24
 type: audit
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Batch2 B2 collab index

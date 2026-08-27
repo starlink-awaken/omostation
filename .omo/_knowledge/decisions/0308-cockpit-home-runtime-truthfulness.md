@@ -1,10 +1,10 @@
 ---
 id: ADR-0308
 title: Cockpit 首页运行态真值与分源降级契约
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
-lifecycle: active
+lifecycle: spec
 created: 2026-08-02
 last-reviewed: 2026-08-02
 related:

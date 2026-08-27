@@ -1,11 +1,11 @@
 ---
 id: ADR-0326
 title: 外部连接激活前置检查与只读提案边界
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

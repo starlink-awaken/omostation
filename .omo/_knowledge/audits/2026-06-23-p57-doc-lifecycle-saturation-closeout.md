@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # P57 — doc-lifecycle 100/100 + linter 维度饱和评估 收口报告

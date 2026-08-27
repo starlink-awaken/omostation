@@ -1,6 +1,6 @@
 ---
 status: PROPOSED
-lifecycle: strategy
+lifecycle: spec
 owner: 夏明星
 last-reviewed: 2026-07-24
 related:

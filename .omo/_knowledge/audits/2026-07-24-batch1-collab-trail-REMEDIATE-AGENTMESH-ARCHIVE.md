@@ -6,6 +6,8 @@ backlog: true
 task_id: REMEDIATE-AGENTMESH-ARCHIVE
 task_path: .omo/tasks/remediation/REMEDIATE-AGENTMESH-ARCHIVE.yaml
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Real backlog collab: `REMEDIATE-AGENTMESH-ARCHIVE`

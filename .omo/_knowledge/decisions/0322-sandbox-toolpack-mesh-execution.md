@@ -1,11 +1,11 @@
 ---
 id: ADR-0322
 title: Workflow Mesh 受控 Sandbox ToolPack 执行闭环
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

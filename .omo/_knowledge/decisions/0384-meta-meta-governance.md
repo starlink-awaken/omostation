@@ -2,7 +2,7 @@
 id: ADR-0384
 title: Meta-meta governance — rebase-regen automation + gate effectiveness tool + roadmap A1-A3/B1
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-06
 ---

@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: submodule-pointer-close
 generated_at: 2026-08-27T11:40:02Z
-status: candidate
+status: planned
 counts:
   runs: 11
   failures: 1
@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 1
   trace_count: 1
+lifecycle: history
+owner: unassigned
 ---
 # submodule-pointer-close 运行复盘聚合 (resident 事件驱动)
 

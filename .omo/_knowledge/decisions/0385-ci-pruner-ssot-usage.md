@@ -2,7 +2,7 @@
 id: ADR-0385
 title: CI Pruner + SSOT Usage — scheduled prune-ci-runs cron + SSOT freshness monitor
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-07
 ---

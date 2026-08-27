@@ -8,6 +8,8 @@ workorder: .omo/plans/strat-p81-stage0-handoff.md
 pr: null
 supersedes: 2026-07-24-p81-stage0-closeout.md
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # STRAT-P81 Stage 0 closeout (v2 · review-hardened)

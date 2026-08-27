@@ -1,7 +1,7 @@
 ---
 id: ADR-0125
 status: active
-lifecycle: retrospective
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-02
 related:
