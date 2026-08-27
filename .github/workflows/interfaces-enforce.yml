@@ -14,6 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # Validate the PR head tree so gitlink updates are not shadowed by
+          # an unreachable submodule pointer from GitHub's synthetic merge ref.
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           # 显式 init scripts, 不 recursive (避免撞 private 子模块)
           submodules: false
           token: ${{ secrets.CROSS_REPO_TOKEN }}
