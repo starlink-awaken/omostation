@@ -25,5 +25,8 @@
 # Replaces: 10 6 * * 1 Documents/@公共/_runtime/signals-rotate.py
 10 6 * * 1 cd "$HOME/.local/share/omostation/accepted-20260831" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py signals-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260831" --evidence .omo/_delivery/documents-plane/signals-preflight.json >> runtime/cron/documents-plane.log 2>&1
 
-# Not yet replaced: session-brief and legacy controller/predictor jobs. Keep their current schedule until owner parity and
+# Replaces: 15 6 * * * Documents/@公共/_runtime/session-brief.py
+15 6 * * * cd "$HOME/.local/share/omostation/accepted-20260901" && OMOSTATION_WORKSPACE_ROOT="$HOME/Workspace" OMOSTATION_BRIEF_OUTPUT="$HOME/Workspace/BRIEF.md" uv run --with pyyaml python bin/mof/generate-brief.py --write --if-changed >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
+
+# Not yet replaced: legacy controller/predictor jobs. Keep their current schedule until owner parity and
 # rollback evidence are accepted.
