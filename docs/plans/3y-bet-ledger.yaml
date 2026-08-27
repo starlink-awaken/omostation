@@ -7267,6 +7267,49 @@ bets:
   human_gate: true
   circuit_breaker: 'release provenance mismatch, owner smoke error, or schedule path drift stops deployment.'
   retro: required
+- id: BET-Y1Q3-T10-28
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'domain-sync 06:00 Workspace owner 切换'
+  appetite: 0.5 day
+  priority: P0
+  status: pending
+  goal: '将每日 06:00 domain-sync 从 Documents Python 3.9 脚本切换到 accepted Workspace L4 index check，保持只读、原 cadence 与可回滚。'
+  non_goals:
+  - 不修改 DOMAIN-INDEX 或任何 Documents 内容
+  - 不修改其他 crontab 行、LaunchAgent、Scheduled skill 或旧脚本
+  - 不扩展到其他未完成 parity 的 Documents execution family
+  done_when:
+  - 'old domain-sync line is replaced exactly once by accepted-release index check'
+  - 'unrelated crontab lines remain byte-identical and backup hash is recorded'
+  - 'old/new command behavior is evidenced; new command has no Python 3.9 import failure'
+  - 'post-cutover read-only smoke and root CI pass'
+  verify:
+  - cmd: 'rg -n "documents-domain-index.py check|accepted-20260827" .omo/cron/documents-content-plane-crontab'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-index.py --help'
+    expect: exit 0
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/cron/documents-content-plane-crontab
+  - docs/superpowers/specs/2026-08-27-domain-sync-owner-cutover-design.md
+  - docs/reports/2026-08-27-domain-sync-owner-cutover.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-28.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-27-domain-sync-owner-cutover-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:c7e13d536e89eea8a19e61967dfaa07813edd37f8d7845f09f081dd55aa7a153'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-28
+  depends_on:
+  - BET-Y1Q3-T10-26
+  - BET-Y1Q3-T10-27
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 'missing old line, unexpected writer, cadence drift, or new command error triggers immediate rollback.'
+  retro: required
 - id: BET-Y1Q3-T10-22
   track: T10-MATURITY
   window: Y1Q3
