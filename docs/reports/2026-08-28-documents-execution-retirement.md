@@ -70,3 +70,31 @@ OMO derived task-state projection. The next run must update the Scheduled
 skill through a bounded host-file mutation and synchronize `.omo/state` only
 through the OMO broker. It must not infer consumer completion from the cron
 cutover alone.
+
+The T10-42 state run completed the Scheduled migration and brokered task-counter
+sync. The Scheduled file changed from SHA-256
+`983aa3db4f09277359bdd3a85a86c0b7852992c8e97adc718ead496d01cf933e` to
+`0cac9455eca53b5df444300510642eba25e83cea896a19113d5488eb6041d210`; its
+legacy Documents execution references are absent. `omo state sync-tasks`
+updated `system.yaml` to completed=290, planned=7, active=1, blocked=1,
+total=299 through the broker. The task registry's old Documents evidence
+references were replaced with Workspace runtime evidence for the 11 migrated
+tasks; before/after hashes are retained in the run evidence. Task inventory
+now reports 48 healthy, 3 dormant, 10 paper, 8 drift, 12 proposed, 2 degraded,
+and 2 retired tasks; after the final two registry corrections, inventory
+reports 49 healthy, 3 dormant, 8 paper, 8 drift, 13 proposed, 2 degraded,
+and 2 retired tasks. The remaining drift entries are separately identified
+unregistered carriers, not a reason to restore Documents execution.
+
+The live OMO state sync was executed through `omo state sync-tasks` (exit `0`),
+which set completed=290, planned=7, active=1, blocked=1, total=299. The live
+`system.yaml` after hash is
+`4a1c2e08f6d36cdd1c07250f6eaaa28c2578c0a150b12aaff37153cd31fc0680`; the
+worktree copy contains the same semantic projection with a separate generated
+timestamp. The task-registry before/after hashes are
+`7f98e3167490e58c338af109d0543498744c6d217dd1c2a7eea1fe7d9426f0e9` and
+`9d012acffa4e01f90c6cb0341bcf0c4012626ad6c1c1c5c846ffc61d718076d6`.
+Only the 11 migrated consumer records plus the stale inactive index record and
+duplicate controller record changed; the registry backups are retained in the
+governed run evidence. The final task-registry hash is
+`74d00c73dda09da4a623eed86c69c0192a0c24382914e9df21b30f2fec740666`.
