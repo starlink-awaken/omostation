@@ -1,7 +1,7 @@
 ---
 id: ADR-0210
 status: ACCEPTED
-lifecycle: decision
+lifecycle: spec
 owner: 夏明星
 last-reviewed: 2026-07-19
 related:

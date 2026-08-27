@@ -2,7 +2,7 @@
 id: ADR-0377
 title: Drift-noise convergence — runtime-derived plane exclusion + release_ready semantics
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-05
 ---

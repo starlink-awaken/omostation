@@ -9,6 +9,7 @@ related:
   - docs/adr/ADR-0191-workspace-documents-dual-plane-architecture.md
   - docs/OPS-INFRA-GOVERNANCE-LONGTERM-BLUEPRINT-2026-08.md
 last-reviewed: 2026-08-25
+lifecycle: history
 ---
 
 # E-DOC-001~005 (即 ADR-0191 §2.2 ln 规则集) 生效状态核实

@@ -1,9 +1,9 @@
 ---
 id: ADR-0346
 title: External Resource Connection Plan
-status: accepted
+status: archived
 type: adr
-lifecycle: active
+lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-03
 type: decision

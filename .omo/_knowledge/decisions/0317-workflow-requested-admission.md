@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-03
 owner: engineering-team
 scope: Workflow Mesh / OMO / Cockpit
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 ---
 

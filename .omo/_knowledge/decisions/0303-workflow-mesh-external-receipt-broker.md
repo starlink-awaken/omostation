@@ -1,10 +1,10 @@
 ---
 id: ADR-0303
 title: Workflow Mesh 外部 receipt 回写 broker
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
-lifecycle: active
+lifecycle: spec
 created: 2026-08-02
 last-reviewed: 2026-08-02
 related:

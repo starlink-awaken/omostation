@@ -4,7 +4,7 @@ title: Adopt a scenario-first architecture strategy and Workflow Mesh as the sol
 status: ACCEPTED
 date: 2026-08-04
 owner: architecture-governance
-lifecycle: contract
+lifecycle: spec
 last-reviewed: 2026-08-04
 ---
 

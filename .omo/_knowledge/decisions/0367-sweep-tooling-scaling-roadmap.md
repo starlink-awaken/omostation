@@ -4,7 +4,7 @@ title: Python 质量扫描基础设施规模化路线图
 status: PROPOSED
 date: 2026-08-04
 owner: governance-team
-lifecycle: plan
+lifecycle: spec
 last-reviewed: 2026-08-04
 related:
   - 0366-pyright-sweep-algorithm.md

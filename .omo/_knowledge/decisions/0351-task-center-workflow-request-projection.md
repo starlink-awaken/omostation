@@ -1,9 +1,9 @@
 ---
 id: ADR-0351
 title: Task Center Workflow request projection and admission navigation
-status: accepted
+status: archived
 type: adr
-lifecycle: active
+lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-03
 type: decision

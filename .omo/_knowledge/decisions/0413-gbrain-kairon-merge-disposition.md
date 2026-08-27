@@ -1,8 +1,8 @@
 ---
 id: ADR-0413
 title: gbrain + kairon 归并为 knowledge — 决策补档
-status: accepted
-lifecycle: contract
+status: archived
+lifecycle: spec
 owner: governance-team
 created: 2026-08-17
 last-reviewed: 2026-08-18

@@ -2,7 +2,7 @@
 id: ADR-0375
 title: Legacy Rule Plane Convergence — container-semantics drift fix + project-registry sync
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-05
 ---

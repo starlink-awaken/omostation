@@ -1,11 +1,11 @@
 ---
 id: ADR-0324
 title: BackendUnavailable 的 WorkflowRun 与 StepRun 投影一致性
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

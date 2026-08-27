@@ -1,7 +1,7 @@
 ---
 id: ADR-0096
 status: active
-lifecycle: contract
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
 ---

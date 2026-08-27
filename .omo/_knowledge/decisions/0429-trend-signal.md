@@ -1,7 +1,7 @@
 ---
 id: ADR-0429
 status: draft
-lifecycle: proposed
+lifecycle: spec
 owner: evolution-agent
 last-reviewed: 2026-08-27
 ---

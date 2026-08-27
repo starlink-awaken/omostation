@@ -1,10 +1,10 @@
 ---
 id: ADR-0309
 title: Cockpit 首页工作焦点只读投影与日常入口
-status: accepted
+status: archived
 type: decision
 owner: product-architecture
-lifecycle: active
+lifecycle: spec
 created: 2026-08-02
 last-reviewed: 2026-08-02
 related:

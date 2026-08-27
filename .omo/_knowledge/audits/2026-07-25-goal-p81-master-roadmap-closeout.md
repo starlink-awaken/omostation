@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # STRAT-P81 Master Roadmap — goal 收官 (P0→P1/P2→P3)

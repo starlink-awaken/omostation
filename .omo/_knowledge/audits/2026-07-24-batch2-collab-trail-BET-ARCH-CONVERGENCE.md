@@ -6,6 +6,8 @@ batch: 2
 task_id: BET-ARCH-CONVERGENCE
 task_path: .omo/tasks/archived/archive/BET-ARCH-CONVERGENCE.yaml
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # `BET-ARCH-CONVERGENCE`

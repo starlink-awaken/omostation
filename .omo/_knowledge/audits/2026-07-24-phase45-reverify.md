@@ -4,6 +4,8 @@ date: 2026-07-24
 type: audit
 front: T1.2
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Phase 45 re-verify (7 endpoints)

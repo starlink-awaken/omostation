@@ -1,7 +1,7 @@
 ---
 id: ADR-0130
 status: active
-lifecycle: architecture
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-03
 related:

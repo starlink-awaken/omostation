@@ -2,7 +2,7 @@
 id: ADR-0386
 title: CI Consolidation — scope dedup, pytest merge, integration filter, workflow health
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-07
 ---

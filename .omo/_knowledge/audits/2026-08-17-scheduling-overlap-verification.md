@@ -8,6 +8,7 @@ bet: BET-Y1Q1-T6-08
 related:
   - docs/OPS-INFRA-GOVERNANCE-LONGTERM-BLUEPRINT-2026-08.md
 last-reviewed: 2026-08-25
+lifecycle: history
 ---
 
 # 调度重叠核实（宿主机实测 2026-08-17，本机终端权限可用）
