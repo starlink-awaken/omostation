@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """north_star_meter_v3: 复合制价值证明 (project-strategy-v1 §5.2 落地).
 
-3 轴复合 (D4 混合数据源策略):
-  A 时间账本 (主, 70%): 系统自动化事件数 × 估时/事件 → 月可证时间节省
-  B 决策吞吐 (30%): 决策收件箱条目数 + cadence (0/低/中/高)
-  C 项目推进力 (佐证, 0%): BET done rate (无成本导出)
+4 轴复合 (D4 混合数据源策略):
+  A 时间账本 (主, 3-axis 0.70): 系统自动化事件数 × 估时/事件 → 月可证时间节省
+  B 决策吞吐 (3-axis 0.30): 决策收件箱条目数 + cadence (0/低/中/高)
+  C 项目推进力 (3-axis 0.00, advisory): BET done rate (无成本导出)
+  D 知识消费深度 (advisory, 4-axis 0.20): EvidenceRecorded + WorkflowSucceeded
+    拉平 compass_radar(55) ↔ bet_ledger(95) 的口径差距 — 两者都能讲同一个故事.
 
-输出: provable / partial / unprovable + 三轴各自得分.
+输出: provable / partial / unprovable + 主 3 轴得分 + 4-axis advisory.
 
 用法:
   python3 bin/bc-os/north_star_meter_v3.py --json
   python3 bin/bc-os/north_star_meter_v3.py
+  python3 bin/bc-os/north_star_meter_v3.py --json --since-days 7
 """
 
 from __future__ import annotations
@@ -29,6 +32,7 @@ HEALTH_HISTORY = WS_ROOT / ".omo" / "state" / "history" / "health.jsonl"
 DECISIONS_LOG = WS_ROOT / ".omo" / "notepads" / "delegation-guardrails" / "decisions.md"
 AUDIT_TICK = WS_ROOT / ".omo" / "state" / "autoloop-trace.jsonl"
 DUCK_LOG = WS_ROOT / ".omo" / "state" / "agent-tick-daemon.jsonl"
+WORKFLOW_MESH_EVENTS = WS_ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
 
 # A-axis: 系统自动化事件估时 (分钟/事件) — 这些值是经验估值, 后续可校准
 TIME_PER_EVENT_MIN = {
@@ -136,8 +140,49 @@ def _cadence_label(events_per_month: float) -> str:
     return "none"
 
 
+def _count_knowledge_consumption(since_days: int = 30) -> dict[str, int]:
+    """D-axis: knowledge consumption via workflow-mesh evidence + success events.
+
+    Both compass_radar (governance health) and bet_ledger (delivery %) can verify
+    these events because they are recorded by the central workflow-mesh writer.
+    """
+    if not WORKFLOW_MESH_EVENTS.is_file():
+        return {"evidence_recorded": 0, "workflow_succeeded": 0, "total": 0}
+    cutoff = _utc_now() - dt.timedelta(days=since_days)
+    counts = {"evidence_recorded": 0, "workflow_succeeded": 0, "total": 0}
+    try:
+        for line in WORKFLOW_MESH_EVENTS.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            ts_str = rec.get("occurred_at") or rec.get("ts") or rec.get("ts_iso") or ""
+            if not ts_str:
+                continue
+            try:
+                ts = dt.datetime.fromisoformat(str(ts_str).replace("Z", "+00:00"))
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=dt.UTC)
+                if ts < cutoff:
+                    continue
+            except (ValueError, TypeError):
+                continue
+            et = rec.get("event_type") or ""
+            if et == "EvidenceRecorded":
+                counts["evidence_recorded"] += 1
+                counts["total"] += 1
+            elif et == "WorkflowSucceeded":
+                counts["workflow_succeeded"] += 1
+                counts["total"] += 1
+    except OSError:
+        pass
+    return counts
+
+
 def compute_axes(since_days: int = 30) -> dict[str, Any]:
-    """Compute the 3 axes with their scores and supporting data."""
+    """Compute the 4 axes with their scores and supporting data."""
     # A-axis: time saved
     counts = {
         "compass_radar_run": _count_health_runs(since_days),
@@ -173,9 +218,21 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
     if m and t:
         c_pct = round(100 * int(m.group(1)) / int(t.group(1)), 1)
 
-    # Composite (weighted average, 0 weights redistribute to A)
-    weights = {"A": 0.70, "B": 0.30, "C": 0.0}
-    score = round(a_score * 0.70 + b_score * 0.30)
+    # D-axis: knowledge consumption (advisory, 4-axis composite)
+    d_counts = _count_knowledge_consumption(since_days)
+    d_total = d_counts["total"]
+    # Scale: 30 evidence+success events per 30d = 100 (1/day = full credit)
+    d_events_per_month = d_total * (30 / since_days) if since_days else d_total
+    d_score = min(100, round(100 * d_events_per_month / 30))
+    d_cadence = _cadence_label(d_events_per_month)
+
+    # 3-axis composite (BC — main score, backward compat for strategy-check)
+    weights_3axis = {"A": 0.70, "B": 0.30, "C": 0.0}
+    score_3axis = round(a_score * 0.70 + b_score * 0.30)
+
+    # 4-axis advisory composite (D pulls 0.10 from A and 0.10 from B)
+    weights_4axis = {"A": 0.60, "B": 0.20, "C": 0.0, "D": 0.20}
+    score_4axis = round(a_score * 0.60 + b_score * 0.20 + d_score * 0.20)
 
     # Status (D5 防腐: 双重阻断 — read-only 永远 unprovable if not enough data)
     if total_minutes == 0 and decision_count == 0:
@@ -190,7 +247,7 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
     return {
         "axes": {
             "A": {
-                "name": "时间账本 (主, 70%)",
+                "name": "时间账本 (主, 3-axis 0.70)",
                 "score": a_score,
                 "weight": 0.70,
                 "data": counts,
@@ -199,7 +256,7 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
                 "window_days": since_days,
             },
             "B": {
-                "name": "决策吞吐 (30%)",
+                "name": "决策吞吐 (3-axis 0.30)",
                 "score": b_score,
                 "weight": 0.30,
                 "data": {"decisions_30d": decision_count},
@@ -212,10 +269,24 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
                 "weight": 0.0,
                 "data": {"bet_done_pct": c_pct},
             },
+            "D": {
+                "name": "知识消费深度 (advisory, 4-axis 0.20)",
+                "score": d_score,
+                "weight": 0.20,
+                "data": d_counts,
+                "events_per_month": round(d_events_per_month, 1),
+                "cadence": d_cadence,
+            },
         },
         "composite": {
-            "score": score,
-            "weights": weights,
+            "score": score_3axis,
+            "weights": weights_3axis,
+        },
+        "composite_4axis": {
+            "score": score_4axis,
+            "weights": weights_4axis,
+            "advisory": True,
+            "note": "A60+B20+D20; pulls 0.10 from A and 0.10 from B; aligns compass_radar↔bet_ledger.",
         },
         "status": status,
         "snapshot_at": _utc_now().isoformat().replace("+00:00", "Z"),
@@ -236,8 +307,16 @@ def render_text(d: dict[str, Any]) -> str:
                 lines.append(f"    - {k:<28} {v}")
         elif label == "B":
             lines.append(f"    decisions: {axis['data']['decisions_30d']} (cadence: {axis['cadence']}, ~{axis['decisions_per_month']}/mo)")
+        elif label == "D":
+            lines.append(
+                f"    knowledge events: {axis['data']['total']} (evidence={axis['data']['evidence_recorded']}, succeeded={axis['data']['workflow_succeeded']}, cadence: {axis['cadence']}, ~{axis['events_per_month']}/mo)"
+            )
         else:
             lines.append(f"    BET done pct: {axis['data']['bet_done_pct']}%")
+    lines.append("")
+    lines.append(f"  composite (3-axis, BC):    {d['composite']['score']}/100  weights={d['composite']['weights']}")
+    lines.append(f"  composite (4-axis, advisory): {d['composite_4axis']['score']}/100  weights={d['composite_4axis']['weights']}")
+    lines.append(f"  status: {d['status']}")
     return "\n".join(lines)
 
 

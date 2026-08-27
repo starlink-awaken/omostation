@@ -66,15 +66,24 @@ def _journey_status_counts() -> dict[str, int]:
     return counts
 
 
-def _bcos_north_star_status() -> str:
+def _bcos_north_star_status() -> dict:
+    """BCOS north_star status — includes 3-axis BC + 4-axis advisory (D axis)."""
     rc, out, _ = _run([sys.executable, str(WS_ROOT / "bin" / "bc-os" / "north_star_meter_v3.py"), "--json"])
     if rc != 0:
-        return "unavailable"
+        return {"status": "unavailable", "composite": None, "composite_4axis": None, "axes": None}
     try:
         data = json.loads(out)
-        return str(data.get("status") or "unknown")
     except (json.JSONDecodeError, TypeError, ValueError):
-        return "unknown"
+        return {"status": "unknown", "composite": None, "composite_4axis": None, "axes": None}
+    composite = (data.get("composite") or {}).get("score")
+    composite_4axis = (data.get("composite_4axis") or {}).get("score")
+    axes = data.get("axes") or {}
+    return {
+        "status": str(data.get("status") or "unknown"),
+        "composite": composite,
+        "composite_4axis": composite_4axis,
+        "axes": {k: v.get("score") for k, v in axes.items() if isinstance(v, dict)},
+    }
 
 
 def _compass_health() -> dict[str, Any]:
@@ -199,7 +208,7 @@ def collect_dimensions() -> list[dict[str, Any]]:
         {"id": 2, "name": "功能", "target_3m": "maturity ≥ 8.0", "current": {"overall": overall}, "status": _status_for_maturity(overall, target_3m=8.0)},
         {"id": 3, "name": "旅程", "target_3m": "≥3 active journey", "current": journey_counts, "status": "GREEN" if sum(1 for k, v in journey_counts.items() if v > 0 and k != "stub") >= 3 else "YELLOW" if sum(journey_counts.values()) > 0 else "RED"},
         {"id": 4, "name": "体验", "target_3m": "主人 ≤ 15min/日 (proxy: health_score ≥ 80)", "current": health, "status": _status_for_health(health.get("composite"))},
-        {"id": 5, "name": "愿景 (BCOS)", "target_3m": "north_star = provable", "current": {"status": north_star}, "status": _status_for_bcos(north_star)},
+        {"id": 5, "name": "愿景 (BCOS)", "target_3m": "north_star = provable", "current": north_star, "status": _status_for_bcos(str(north_star.get("status") if isinstance(north_star, dict) else north_star or "unknown"))},
         {"id": 6, "name": "长期运营", "target_3m": "weekly-review routine 化 (proxy: BET ≥ 95%)", "current": bet, "status": _status_for_bets(bet)},
         {"id": 7, "name": "运维", "target_3m": "L1 入口 6.5 → 8 (proxy: cockpit maturity)", "current": {"note": "proxy: maturity ≥ 8.0"}, "status": _status_for_maturity(overall, target_3m=8.0)},
         {"id": 8, "name": "防腐", "target_3m": "G1/G2 接线缺口闭合", "current": rot, "status": "GREEN" if rot.get("doc_present") == "yes" else "GREY"},
