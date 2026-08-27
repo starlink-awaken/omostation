@@ -1,11 +1,11 @@
 ---
 id: ADR-0321
 title: External Resource Selection 评测证据与提案边界
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../standards/external-connection-fabric.md

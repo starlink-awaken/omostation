@@ -1,11 +1,11 @@
 ---
 id: ADR-0335
 title: Cockpit External Resource Pack Review Surface
-status: accepted
+status: archived
 type: decision
 owner: product-architecture
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

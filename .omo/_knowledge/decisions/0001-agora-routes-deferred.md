@@ -1,7 +1,7 @@
 ---
 id: ADR-0001
 status: archived
-lifecycle: history
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-22
 archived-since: 2026-06-22

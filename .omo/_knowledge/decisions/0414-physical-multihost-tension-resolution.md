@@ -1,8 +1,8 @@
 ---
 id: ADR-0414
 title: ADR-0247 与 ADR-0225/0226 物理多机张力 — 关系澄清
-status: accepted
-lifecycle: contract
+status: archived
+lifecycle: spec
 owner: governance-team
 created: 2026-08-17
 last-reviewed: 2026-08-18

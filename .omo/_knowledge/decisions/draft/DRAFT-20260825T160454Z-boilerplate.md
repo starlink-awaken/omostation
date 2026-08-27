@@ -1,6 +1,6 @@
 ---
 status: DRAFT
-lifecycle: decision
+lifecycle: history
 owner: bootloader
 last-reviewed: 2026-08-25
 related: []

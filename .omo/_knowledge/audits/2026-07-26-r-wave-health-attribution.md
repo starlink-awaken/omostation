@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # R 波 health 93→96 归因审计 (2026-07-26, Round 3)

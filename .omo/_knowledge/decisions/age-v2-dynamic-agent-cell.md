@@ -1,7 +1,7 @@
 ---
 id: ADR-0401
 status: ACCEPTED
-lifecycle: decision
+lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-24
 ---

@@ -1,7 +1,7 @@
 ---
 id: ADR-0122
 status: active
-lifecycle: contract
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-02
 related:

@@ -1,8 +1,8 @@
 ---
 id: ADR-0420
 title: BCOS evolution engine 占位决策
-status: accepted
-lifecycle: contract
+status: archived
+lifecycle: spec
 owner: governance-team
 created: 2026-08-20
 last-reviewed: 2026-08-20

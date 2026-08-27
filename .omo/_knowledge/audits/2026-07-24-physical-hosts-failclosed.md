@@ -4,6 +4,8 @@ date: 2026-07-24
 type: audit
 needs-human: true
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # Physical base probe (fail-closed)

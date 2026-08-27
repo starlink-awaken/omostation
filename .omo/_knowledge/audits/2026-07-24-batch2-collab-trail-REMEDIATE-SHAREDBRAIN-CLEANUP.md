@@ -6,6 +6,8 @@ batch: 2
 task_id: REMEDIATE-SHAREDBRAIN-CLEANUP
 task_path: .omo/tasks/remediation/REMEDIATE-SHAREDBRAIN-CLEANUP.yaml
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # `REMEDIATE-SHAREDBRAIN-CLEANUP`

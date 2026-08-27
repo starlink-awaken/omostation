@@ -1,7 +1,7 @@
 ---
 id: ADR-0425
-status: accepted
-lifecycle: entry
+status: archived
+lifecycle: spec
 owner: agora
 last-reviewed: '2026-08-25'
 ---

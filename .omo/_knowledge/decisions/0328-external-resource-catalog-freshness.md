@@ -1,11 +1,11 @@
 ---
 id: ADR-0328
 title: 外部资源目录 freshness、失效与回退边界
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

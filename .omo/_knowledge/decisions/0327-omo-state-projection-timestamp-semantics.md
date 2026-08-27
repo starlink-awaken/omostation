@@ -1,11 +1,11 @@
 ---
 id: ADR-0327
 title: OMO 状态投影的时间戳语义与业务变更判定
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 last-reviewed: 2026-08-03
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

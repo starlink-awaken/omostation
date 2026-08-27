@@ -6,6 +6,8 @@ batch: 2
 task_id: IMPORTED-3268f8
 task_path: .omo/tasks/archived/archive/IMPORTED-3268f8.yaml
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # `IMPORTED-3268f8`

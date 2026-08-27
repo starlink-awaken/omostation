@@ -7,6 +7,8 @@ related_cards:
   - needs-human-p80-physical-hosts
   - needs-human-batch2-physical-recovery-checklist
 last-reviewed: 2026-08-25
+lifecycle: history
+owner: unassigned
 ---
 
 # macmini 恢复可达 — 网络层探测

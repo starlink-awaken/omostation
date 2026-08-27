@@ -2,7 +2,7 @@
 id: ADR-0392
 title: CI 修复 + 主仓 dirty 提交 — drafts persistence_mode + runtime state 同步
 status: ACCEPTED
-lifecycle: ACTIVE
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-08
 ---

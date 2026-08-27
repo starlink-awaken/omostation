@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: pyright-sweep
 generated_at: 2026-08-27T06:40:02Z
-status: candidate
+status: planned
 counts:
   runs: 5
   failures: 1
@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 1
   trace_count: 1
+lifecycle: history
+owner: unassigned
 ---
 # pyright-sweep 运行复盘聚合 (resident 事件驱动)
 

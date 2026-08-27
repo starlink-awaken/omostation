@@ -1,10 +1,10 @@
 ---
 id: ADR-0305
 title: Runtime 跨进程 effect journal 与显式补偿边界
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
-lifecycle: active
+lifecycle: spec
 created: 2026-08-02
 last-reviewed: 2026-08-02
 related:

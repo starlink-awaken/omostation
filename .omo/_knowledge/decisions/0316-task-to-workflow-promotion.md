@@ -1,10 +1,10 @@
 ---
 id: ADR-0316
 title: 知识行动任务到 Workflow Mesh 请求的晋升边界
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
-lifecycle: active
+lifecycle: spec
 created: 2026-08-02
 last-reviewed: 2026-08-02
 related:

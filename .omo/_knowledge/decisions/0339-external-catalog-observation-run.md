@@ -1,10 +1,10 @@
 ---
 id: ADR-0339
 title: External catalog observation run receipt
-status: accepted
+status: archived
 type: adr
 date: 2026-08-03
-lifecycle: active
+lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-03
 decision: "将一次外部目录发现/只读探活作为独立的运行事实持久化，但不把它提升为业务成功或 WorkflowRun 证据。"

@@ -1,10 +1,10 @@
 ---
 id: ADR-0302
 title: Workflow Mesh watchdog 真实 cadence 与运行账本
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
-lifecycle: active
+lifecycle: spec
 created: 2026-08-02
 last-reviewed: 2026-08-02
 related:

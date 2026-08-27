@@ -2,8 +2,8 @@
 id: ADR-0423
 
 title: "ADR-0423: CONV-3 项目收敛 — family-hub / metaos / mesh-router 三态定案"
-status: accepted
-lifecycle: decision
+status: archived
+lifecycle: spec
 owner: governance-team
 date: 2026-08-24
 last-reviewed: 2026-08-24

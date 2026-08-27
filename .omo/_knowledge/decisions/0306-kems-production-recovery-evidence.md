@@ -1,10 +1,10 @@
 ---
 id: ADR-0306
 title: KEMS 生产持久化恢复证据作为放行前置条件
-status: accepted
+status: archived
 type: decision
 owner: architecture-governance
-lifecycle: active
+lifecycle: spec
 created: 2026-08-02
 last-reviewed: 2026-08-02
 related:

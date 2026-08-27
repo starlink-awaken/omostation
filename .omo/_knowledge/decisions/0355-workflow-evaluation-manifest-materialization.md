@@ -1,9 +1,9 @@
 ---
 id: ADR-0355
 title: Workflow Mesh explicit adjudication materialized into KEMS evaluation manifest
-status: accepted
+status: archived
 type: adr
-lifecycle: active
+lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-03
 type: decision
