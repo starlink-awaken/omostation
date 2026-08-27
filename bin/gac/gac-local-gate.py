@@ -382,7 +382,7 @@ if not any(gate.get("id") == "check-conflict-markers" for gate in GATES_LIST):
     GATES_LIST.append(
         {
             "id": "check-conflict-markers",
-            "command": ["bin/gac/check-conflict-markers.py"],
+            "command": ["bin/gac/check-conflict-markers.py", "--all"],
         }
     )
 

@@ -153,3 +153,13 @@ def test_make_target_expands_to_read_only_gate_command() -> None:
     assert tokens[-1] == "bin/gac/gac-local-gate.py"
     assert "git" not in tokens
     assert all("submodule" not in token for token in tokens)
+
+
+def test_conflict_marker_gate_scans_all_tracked_files() -> None:
+    module = _load_module()
+    commands = {gate["id"]: gate["command"] for gate in module.GATES_LIST}
+
+    assert commands["check-conflict-markers"] == [
+        "bin/gac/check-conflict-markers.py",
+        "--all",
+    ]
