@@ -98,3 +98,10 @@ Only the 11 migrated consumer records plus the stale inactive index record and
 duplicate controller record changed; the registry backups are retained in the
 governed run evidence. The final task-registry hash is
 `74d00c73dda09da4a623eed86c69c0192a0c24382914e9df21b30f2fec740666`.
+
+The migration-family registry now covers the 12 previously unmatched gateway
+references: `驾驶舱/scripts/**` is `cockpit-runtime`, `@公共/kems-v2/**` is
+`public-runtime`, and `学习进化/2-knowledge/基建架构/**` is
+`learning-runtime`. The final consumer audit reports `status=ok`,
+`forbidden_executors=0`, and `unmatched=0`; gateway instructions remain
+classified as content references/read-only owner inputs.
