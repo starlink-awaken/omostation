@@ -6,7 +6,7 @@ review_duration_seconds: 30
 estimated_time_saved_seconds: 120
 burden_is_below_saved: true
 status: active
-lifecycle: evidence
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-26
 ---

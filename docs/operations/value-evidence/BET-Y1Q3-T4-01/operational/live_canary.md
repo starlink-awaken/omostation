@@ -12,7 +12,7 @@ independently_verified: true
 retro: .omo/_knowledge/retros/2026-08-21-t1-19-acp-canary-retro.md
 verified_at: 2026-08-22
 status: active
-lifecycle: evidence
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-26
 ---

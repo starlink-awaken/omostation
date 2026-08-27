@@ -8,7 +8,7 @@ revertible_commits:
 rollback_verification: git revert --no-commit <sha> 可干净回退(无冲突)
 verified_at: 2026-08-22
 status: active
-lifecycle: evidence
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-26
 ---

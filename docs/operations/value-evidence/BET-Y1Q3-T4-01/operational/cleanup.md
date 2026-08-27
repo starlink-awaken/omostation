@@ -7,7 +7,7 @@ cleanup_events:
 cleanup_verification: 运行状态无残留孤儿/锁
 verified_at: 2026-08-22
 status: active
-lifecycle: evidence
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-26
 ---
