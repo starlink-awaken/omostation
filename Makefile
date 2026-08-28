@@ -687,3 +687,12 @@ ops-metrics-server:  ## Prometheus 指标服务器
 
 ops-alert:  ## 告警检查
 	python3 bin/ops/alert.py --check
+
+ops-template:  ## 服务模板列表
+	python3 bin/ops/cli.py template list
+
+ops-batch-up:  ## 批量启动服务
+	python3 bin/ops/cli.py batch up
+
+ops-batch-down:  ## 批量停止服务
+	python3 bin/ops/cli.py batch down
