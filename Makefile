@@ -702,3 +702,6 @@ ops-drift:  ## 配置漂移检测
 
 ops-drift-fix:  ## 配置漂移检测 + 自动修复
 	python3 bin/ops/cli.py drift --fix
+
+ops-history:  ## 服务健康历史
+	python3 bin/ops/cli.py history
