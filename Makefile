@@ -669,3 +669,9 @@ ops-validate:  ## 配置校验
 
 ops-generate:  ## 生成部署配置
 	python3 bin/ops/cli.py generate
+
+ops-recover:  ## 自动恢复失败服务
+	python3 bin/ops/cli.py recover
+
+ops-health-cron:  ## 健康检查定时任务 (每 5 分钟)
+	python3 bin/ops/health-check-cron.py
