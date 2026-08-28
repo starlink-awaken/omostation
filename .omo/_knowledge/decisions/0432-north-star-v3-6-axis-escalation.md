@@ -1,6 +1,21 @@
+---
+id: ADR-0432
+status: candidate
+lifecycle: spec
+owner: xiamingxing
+last-reviewed: 2026-08-28
+---
+
 # ADR-0432: North Star v3 6-Axis Escalation
 
-## Status: accepted
+## Status: candidate
+
+## Evidence Status: UNPROVABLE
+
+The six-axis proposal remains a candidate. Direct evidence currently contains
+mutually inconsistent axis values (including A2 values of `0.0` and `0.15`);
+this recovery does not select a value, accept the model, or produce completion
+or value evidence.
 
 ## Date: 2026-08-28
 
@@ -22,7 +37,7 @@ The escalation provides increasing granularity:
 - D-axis (0.20): Knowledge consumption events
 - E-axis (0.15): Decision quality (P0/P1 adoption rate)
 
-## Decision
+## Candidate proposal (not an accepted decision)
 
 1. **E-axis (Decision Quality)**: Added as 5th axis measuring P0/P1 decision
    count and adoption ratio. Score = 20 × p0_p1_count × adoption_ratio.
