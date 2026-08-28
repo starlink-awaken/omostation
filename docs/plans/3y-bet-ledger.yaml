@@ -8415,7 +8415,8 @@ bets:
   title: 'installed owner release-root convergence'
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-28
   goal: '将当前已安装的 Workspace owner/preflight cron entries 统一到 clean accepted-20260908，仅改变 release root token，不改变 cadence、参数或 family 语义。'
   non_goals:
   - 不完成 T10-28 至 T10-34 的原始 Documents family semantic migration proof
@@ -8445,6 +8446,42 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:d9dac6748703eabfbccb707efbcce63728d841a18346219160a3157b7a826b5f'
     decision_ref: decision://accepted/BET-Y1Q3-T10-46
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@7f32db85abe144d47675d75f44f43a31236a003c
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md
+            sha256: sha256:d9dac6748703eabfbccb707efbcce63728d841a18346219160a3157b7a826b5f
+          diff:
+            ref: receipt://docs/reports/2026-08-28-owner-release-root-convergence.md
+            sha256: sha256:a61e0f875daa46bdd6be564b05cc12db5584452e10e299a89f9c963cc39b8b3c
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-46.md
+            sha256: sha256:009773a092f8f75b3b392c63d6fdef9f7533f5eb38d0a331e5615d09083ec480
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-28-owner-release-root-convergence.md
+            sha256: sha256:a61e0f875daa46bdd6be564b05cc12db5584452e10e299a89f9c963cc39b8b3c
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-46.md
+            sha256: sha256:009773a092f8f75b3b392c63d6fdef9f7533f5eb38d0a331e5615d09083ec480
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md
+            sha256: sha256:d9dac6748703eabfbccb707efbcce63728d841a18346219160a3157b7a826b5f
+          cleanup:
+            ref: receipt://docs/reports/2026-08-28-owner-release-root-convergence.md
+            sha256: sha256:a61e0f875daa46bdd6be564b05cc12db5584452e10e299a89f9c963cc39b8b3c
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-45
   risk_level: L2
