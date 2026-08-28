@@ -7907,7 +7907,8 @@ bets:
   title: 'Documents freshness audit 下沉 Workspace owner'
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-28
   goal: '将 control-plane freshness 只读检查从 Documents 执行面下沉到 Workspace owner，使用 L4 registry 作为域列表 SSOT，真实反映 stale/missing/invalid，并将 evidence 写到 Workspace。'
   non_goals:
   - 不切换或删除现有 cron/LaunchAgent/Scheduled
@@ -7979,7 +7980,22 @@ bets:
             sha256: sha256:ae2fd43289ffc7e3352ef1315e6cf349c66ccec2dd06af854c4ec93993ccedd2
       value:
         status: ACCEPTED
-        evidence: {}
+        evidence:
+          real_signal:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-24-accept.yaml
+            sha256: sha256:b4276350f4923226f1902f321a50bcd3438b2378905a57f940e5c2d86e46f2f8
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-24-accept.yaml
+            sha256: sha256:b4276350f4923226f1902f321a50bcd3438b2378905a57f940e5c2d86e46f2f8
+          revision:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-24-accept.yaml
+            sha256: sha256:b4276350f4923226f1902f321a50bcd3438b2378905a57f940e5c2d86e46f2f8
+          time_burden:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-24-accept.yaml
+            sha256: sha256:b4276350f4923226f1902f321a50bcd3438b2378905a57f940e5c2d86e46f2f8
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-24-accept.yaml
+            sha256: sha256:b4276350f4923226f1902f321a50bcd3438b2378905a57f940e5c2d86e46f2f8
     overall_state: outcome_accepted
   retro: required
 - id: BET-Y1Q3-T10-25
