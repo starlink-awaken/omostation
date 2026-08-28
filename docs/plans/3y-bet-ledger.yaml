@@ -7642,6 +7642,9 @@ bets:
   - bin/ops/cli.py
   - bin/_registry/scripts/governance/templates.yaml
   - .omo/_truth/registry/governance-checks.yaml
+  - .omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-binding.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-spec-bootstrap.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-28-product-p0-spec-bootstrap.md
   - .omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md
   - .omo/_knowledge/decisions/INDEX.md
   - .github/workflows/gac-gate.yml
@@ -7653,6 +7656,7 @@ bets:
   - bin/gac/omo-runtime-stamp-policy.py
   - bin/ssot/root-directory-governance-scan.py
   - tests/test_ci_surfaces.py
+  - tests/test_gac_gate_workflow.py
   - tests/test_root_directory_governance.py
   - tests/test_gac_gate_workflow_purity.py
   - tests/test_gac_branch_protection.py
