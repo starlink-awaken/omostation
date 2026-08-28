@@ -774,3 +774,6 @@ ops-monitor-once:  ## 单次健康检查
 
 ops-monitor-json:  ## 健康检查 JSON 输出
 	python3 bin/ops/monitor_daemon.py --once --json
+
+ops-catalog-api:  ## 服务目录 API
+	python3 bin/ops/catalog_api.py --port 8092
