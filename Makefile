@@ -405,13 +405,14 @@ scene-outcome:  ## 列出最近的 scene outcome
 journey-validate:  ## 校验全部旅程 spec (states/transitions/deadlocks) — AGENTS.md §1.8
 	@python3 bin/ssot/journey-validator.py
 
-scene-card-check:  ## 场景卡就绪度报告 — blockers 为信息非门禁 (docs/scene-cards/*.yaml)
+scene-card-check:  ## 场景卡就绪度报告 — 任一 blocker 即非零退出 (BET-Y1Q3-T4-03 honest gate)
 	@ready=0; blocked=0; for f in docs/scene-cards/*.yaml; do \
 		[ -e "$$f" ] || continue; \
-		if python3 bin/ssot/scene-card-lifecycle.py check --scene-card "$$f" >/dev/null 2>&1; then \
+		if python3 bin/ssot/scene-card-lifecycle.py --root . check --scene-card "$$f" >/dev/null 2>&1; then \
 			ready=$$((ready+1)); else blocked=$$((blocked+1)); fi; \
 	done; echo "scene-cards: ready=$$ready with-blockers=$$blocked"; \
-	echo "单卡详情: python3 bin/ssot/scene-card-lifecycle.py check --scene-card <file>"
+	echo "单卡详情: python3 bin/ssot/scene-card-lifecycle.py check --scene-card <file>"; \
+	test "$$blocked" -eq 0
 
 signal-poll:  ## 手动执行感知面信号轮询
 	@python3 bin/ssot/signal-poller.py
@@ -641,3 +642,164 @@ ast-blast:     ## 分析当前 Git 暂存改动的 AST 爆炸半径 (0.3ms 极�
 
 ast-audit:     ## AST 语义引擎物理自检与证伪测试
 	@python3 bin/gac/ast-blast-radius.py --selftest
+
+# ==============================================================================
+# Service Gateway (ops 控制面)
+# ==============================================================================
+
+ops:  ## ops 状态总览
+	python3 bin/ops/cli.py status
+
+ops-summary:  ## 系统概览
+	python3 bin/ops/cli.py summary
+
+ops-up:  ## 启动所有服务 (DAG 分层)
+	python3 bin/ops/cli.py up
+
+ops-down:  ## 停止所有服务 (逆拓扑)
+	python3 bin/ops/cli.py down
+
+ops-deps:  ## 依赖图
+	python3 bin/ops/cli.py deps
+
+ops-discover:  ## 自动发现服务
+	python3 bin/ops/cli.py discover
+
+ops-validate:  ## 配置校验
+	python3 bin/ops/cli.py validate
+
+ops-generate:  ## 生成部署配置
+	python3 bin/ops/cli.py generate
+
+ops-recover:  ## 自动恢复失败服务
+	python3 bin/ops/cli.py recover
+
+ops-health-cron:  ## 健康检查定时任务 (每 5 分钟)
+	python3 bin/ops/health-check-cron.py
+
+ops-dashboard:  ## Web 仪表盘
+	python3 bin/ops/dashboard.py --port 8091
+
+ops-metrics:  ## Prometheus 指标导出
+	python3 bin/ops/cli.py metrics --text
+
+ops-metrics-server:  ## Prometheus 指标服务器
+	python3 bin/ops/cli.py metrics --port 9090
+
+ops-alert:  ## 告警检查
+	python3 bin/ops/alert.py --check
+
+ops-template:  ## 服务模板列表
+	python3 bin/ops/cli.py template list
+
+ops-batch-up:  ## 批量启动服务
+	python3 bin/ops/cli.py batch up
+
+ops-batch-down:  ## 批量停止服务
+	python3 bin/ops/cli.py batch down
+
+ops-drift:  ## 配置漂移检测
+	python3 bin/ops/cli.py drift
+
+ops-drift-fix:  ## 配置漂移检测 + 自动修复
+	python3 bin/ops/cli.py drift --fix
+
+ops-catalog:  ## 服务目录
+	python3 bin/ops/cli.py catalog
+
+ops-graph:  ## 可视化依赖图
+	python3 bin/ops/cli.py graph
+
+ops-score:  ## 系统健康评分
+	python3 bin/ops/cli.py score
+
+ops-history:  ## 服务健康历史
+	python3 bin/ops/cli.py history
+
+ops-metrics-unified:  ## 统一指标聚合
+	python3 bin/ops/unified_metrics.py --once
+
+ops-metrics-server:  ## 统一指标服务器
+	python3 bin/ops/unified_metrics.py --port 9091
+
+ops-slo:  ## SLO 追踪报告
+	python3 bin/ops/slo_tracker.py --report
+
+ops-slo-record:  ## 记录 SLO 指标
+	python3 bin/ops/slo_tracker.py --record
+
+ops-slo-json:  ## SLO JSON 输出
+	python3 bin/ops/slo_tracker.py --json
+
+ops-cost:  ## 成本追踪报告
+	python3 bin/ops/cost_tracker.py --report
+
+ops-cost-record:  ## 记录成本
+	python3 bin/ops/cost_tracker.py --record
+
+ops-cost-json:  ## 成本 JSON 输出
+	python3 bin/ops/cost_tracker.py --json
+
+ops-runbook:  ## 自动化 Runbook (全部场景)
+	python3 bin/ops/runbook.py all
+
+ops-runbook-down:  ## 服务宕机检测+恢复
+	python3 bin/ops/runbook.py service-down
+
+ops-runbook-latency:  ## 高延迟诊断
+	python3 bin/ops/runbook.py high-latency
+
+ops-runbook-resource:  ## 资源耗尽检测
+	python3 bin/ops/runbook.py resource-exhaustion
+
+ops-runbook-deps:  ## 依赖故障追踪
+	python3 bin/ops/runbook.py dependency-failure
+
+ops-env:  ## 显示当前环境配置
+	python3 bin/ops/env_config.py show
+
+ops-env-list:  ## 列出所有环境
+	python3 bin/ops/env_config.py list
+
+ops-env-apply:  ## 应用环境配置
+	python3 bin/ops/env_config.py apply
+
+ops-env-apply-dry:  ## 预览环境配置变更
+	python3 bin/ops/env_config.py apply --dry-run
+
+ops-monitor:  ## 持续监控守护进程
+	python3 bin/ops/monitor_daemon.py
+
+ops-monitor-once:  ## 单次健康检查
+	python3 bin/ops/monitor_daemon.py --once
+
+ops-monitor-json:  ## 健康检查 JSON 输出
+	python3 bin/ops/monitor_daemon.py --once --json
+
+ops-catalog-api:  ## 服务目录 API
+	python3 bin/ops/catalog_api.py --port 8092
+
+ops-dashboard:  ## Web 仪表盘
+	@echo "Opening Service Gateway Dashboard..."
+	@open docs/observability/dashboard.html 2>/dev/null || xdg-open docs/observability/dashboard.html 2>/dev/null || echo "Open docs/observability/dashboard.html in your browser"
+
+ops-alert:  ## 智能告警检查
+	python3 bin/ops/smart_alert.py --check
+
+ops-alert-report:  ## 告警报告
+	python3 bin/ops/smart_alert.py --report
+
+ops-capacity:  ## 容量规划报告
+	python3 bin/ops/capacity_planner.py --report
+
+ops-capacity-json:  ## 容量规划 JSON
+	python3 bin/ops/capacity_planner.py --json
+
+ops-templates:  ## 服务模板列表
+	python3 bin/ops/templates.py list
+
+ops-template-show:  ## 显示模板详情
+	python3 bin/ops/templates.py show
+
+ops-template-apply:  ## 应用模板创建服务
+	python3 bin/ops/templates.py apply

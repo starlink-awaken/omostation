@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ops/__init__.py
+name: Init
+category: governance
+owner: governance-team
+description: "Package marker for the Workspace operations control-plane commands."
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - bin/ops/cli.py
+maturity: active
+last_reviewed: "2026-08-28"

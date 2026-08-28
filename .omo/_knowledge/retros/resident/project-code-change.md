@@ -1,26 +1,24 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-08-27T11:40:02Z
-status: planned
+generated_at: 2026-08-28T08:00:00Z
+status: candidate
 counts:
-  runs: 35
+  runs: 42
   failures: 19
-  total: 54
-failure_rate: 0.3519
+  total: 61
+failure_rate: 0.3115
 failure_breakdown:
   by_event_type:
     StepFailed: 19
   trace_count: 19
-lifecycle: history
-owner: unassigned
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-27T11:40:02Z
+- generated_at: 2026-08-28T08:00:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 35 成功运行 + 19 失败模式 = 54 草稿
-- 失败率: 35.19%
+- sediment 覆盖: 42 成功运行 + 19 失败模式 = 61 草稿
+- 失败率: 31.15%
 
 ## 成功运行 (runs/)
 
@@ -59,6 +57,13 @@ owner: unassigned
 - 20260825T031957Z-project-code-change-e303abdb.md
 - 20260825T122540Z-project-code-change-dc99222a.md
 - 20260825T231805Z-project-code-change-afc51383.md
+- 20260827T123940Z-project-code-change-f9700579.md
+- 20260828T030650Z-project-code-change-c40373ad.md
+- 20260828T033623Z-project-code-change-41d5fbe9.md
+- 20260828T034026Z-project-code-change-39787959.md
+- 20260828T034833Z-project-code-change-d00c41e3.md
+- 20260828T035039Z-project-code-change-165f3365.md
+- 20260828T041632Z-project-code-change-fa15f5e3.md
 
 ## 失败模式 (failures/)
 
@@ -338,6 +343,55 @@ owner: unassigned
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=1
   - 指标: event_count=6, duration_s=889.927
+- **20260827T123940Z-project-code-change-f9700579**
+  - 计划 (objective): [BET-Y1Q3-T7-02] P1 健康域启动 health-medical-workflow journey + 4 场景卡 (Appetite: 1 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=37654.882
+- **20260828T030650Z-project-code-change-c40373ad**
+  - 计划 (objective): [BET-Y1Q3-T10-23] Documents 宿主消费者审计与切换硬门 (Appetite: 1 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=376.869
+- **20260828T033623Z-project-code-change-41d5fbe9**
+  - 计划 (objective): [BET-Y1Q3-T10-43] service-config lifecycle-only 声明与 validator 修复 (Appetite: 0.5 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=219.595
+- **20260828T034026Z-project-code-change-39787959**
+  - 计划 (objective): [BET-Y1Q3-T10-43] service-config lifecycle-only 声明与 validator 修复 (Appetite: 0.5 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=462.374
+- **20260828T034833Z-project-code-change-d00c41e3**
+  - 计划 (objective): Canonical claim for #2386 prerequisite script registry baseline recovery
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=124.933
+- **20260828T035039Z-project-code-change-165f3365**
+  - 计划 (objective): Stable-actor canonical claim for #2386 prerequisite script registry baseline recovery
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1509.192
+- **20260828T041632Z-project-code-change-fa15f5e3**
+  - 计划 (objective): Canonical claims for pre-authorized service-config lifecycle-only repair
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1631.424
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

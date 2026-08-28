@@ -494,6 +494,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0427: 根级环境解析器、自愈看门狗与真实领域业务卡带架构 — **ACCEPTED** | 2026-08-25 | 0427-root-environment-resolver-autonomous-watchdog-and-real-domain-scenarios.md
 - ADR-0428: L3 单一人类入口收敛与 Cockpit 全域网关固化 — **ACCEPTED** | 2026-08-26 | Cockpit entrypoint convergence | 0428-single-human-entrypoint-convergence-to-cockpit.md
 - ADR-0429: [hacker_news] Meta reaches $16.68B settlement over social media harms to children — **DRAFT** | 2026-08-26 | Evolution proposal | 0429-trend-signal.md
+- ADR-0430: Reserved slot — **RESERVED** | 2026-08-28 | governance-team | 0430-reserved.md
+- ADR-0431: 防腐五层框架 — 人的权威分层 × 三机制 + MAPE-K 对齐 — **CANDIDATE** | 2026-08-28 | xiamingxing | 0431-anti-corrosion-five-layer-framework.md
 
 ---
 

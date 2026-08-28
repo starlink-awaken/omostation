@@ -1,0 +1,3061 @@
+{
+  "consumer_ids": [
+    "03553b2e30cf9eb93cf8",
+    "05bf426efddc301b614d",
+    "075367c9c814b89de1bb",
+    "07b5f07bdf7e5af578ce",
+    "07ed69a4335077aefe45",
+    "083452049eed7a837987",
+    "08a14a55f91a34074057",
+    "0bdab33447d738135b73",
+    "0c02fdafb5ba6050e0fe",
+    "0ec22686041025ea046e",
+    "0f10eef31f801f08e391",
+    "117d7a53fedf1ffc2117",
+    "13f0e4db270da224d71a",
+    "14ad303eb734799ab626",
+    "16a8f02280c51017dbb7",
+    "185a330b9053c562a1bf",
+    "1a1e4716daa459ddada2",
+    "1a53d284737ec9091d73",
+    "1ab18a6c708a3e441c53",
+    "1b11fa4d5e04a61156bc",
+    "1b8762e27db34b95e6fc",
+    "1be0cc787c15aa1842dc",
+    "1de1c2918d9521f157bb",
+    "1de6d24a03f696885d87",
+    "23153619ec6233d9673e",
+    "25469e3089f799eb0c1f",
+    "26026865a477ac32e2ba",
+    "2b68af88925d22822eaa",
+    "2b96b7501bf9e95194ce",
+    "2c29b688268e4cd7bdc9",
+    "2d5b682c346ae5d3d4be",
+    "2f5f7d5d4e5c639f18de",
+    "3038dd2cc4ec4586147a",
+    "31cf3089bdfd9d878365",
+    "346025174123aeb3902e",
+    "35fbefa00b0ad96f3204",
+    "368b43b7db4e693ccf05",
+    "36cbc13849128e70c87c",
+    "39007b4d07487b7043e7",
+    "3debb58329ff16724df4",
+    "3f3ee6c0793a2ca12846",
+    "40054fbeb0d65897fb26",
+    "41df473f1ec4e9597579",
+    "443a50f55e67daf4adeb",
+    "44c0d50cf953661d7eb2",
+    "460c57cae5edebfce78a",
+    "4753f0a19de541ec453d",
+    "4aaa52f875a243cbf483",
+    "4b95417fcab96170a238",
+    "4bd4eea6358470f0bd47",
+    "4c05c697aaca38e68827",
+    "4c5a90ad97a2e3e95ba2",
+    "4d8ec10c61cb71748f37",
+    "4e02b00ac3b6d104e3f7",
+    "4e449e4fa78c457d04d7",
+    "51f296d64be5039c7d9c",
+    "538a9ccedda16271d2bb",
+    "53c1b87a9da655015656",
+    "53d0d403845af956c461",
+    "5415b656c52d7f15fd47",
+    "546de3bbc18229799c8c",
+    "56f2d5f0cb81eecfa36f",
+    "581b831aa078a7c68fba",
+    "58bebfa6587cefe94c54",
+    "5a7dd57a3680fd62603a",
+    "5affa2c0a4ae6d13c085",
+    "5c03f5b567730a659929",
+    "5d84829450b732817ae9",
+    "5df054045f0f5d0af503",
+    "5f96dc74969a00213663",
+    "5fc2d69af2febcddf60a",
+    "60746d907b8f65e1ac52",
+    "60edaace62791c1f3ae7",
+    "65dcc5d4b8b695e2e3a3",
+    "66ff59f4d5096bb4505a",
+    "685bee606b2e0cbdf703",
+    "695e0ca0fc0c654ccfd9",
+    "6cd5c46048b7e26e1dcd",
+    "6dd763530781934580de",
+    "718823f3bbf3e95b16e6",
+    "725beffa5faa9f2e5264",
+    "731edacf1d845cee4dfa",
+    "74834211c07823e04a46",
+    "7676759ae29aaa0b2afe",
+    "767cd1020a55a9eea69b",
+    "778447d8a81b5fb20687",
+    "7839a34493d0ded75e90",
+    "78a43506817697b4da9c",
+    "79856f295ac3f35609dd",
+    "7d72cced31d875d6640f",
+    "7dc33e8c4ced7afd22ce",
+    "7e906ebcc5281956e25a",
+    "7f1c323dee9dd605a238",
+    "818e0bc6a11afbe6da37",
+    "82dcd83d208d839b5bad",
+    "846eff2211e240da7194",
+    "849d9a4a52a6e8b9e183",
+    "85460ad6c76967e7d2a7",
+    "8561c6a07b6f28b2a09f",
+    "86528893e4aa57c9179f",
+    "88ea0759e2d007dbe077",
+    "89252fe92fb1fe01947f",
+    "89ece260a90bc771494b",
+    "8bc7f125bf8cfaea318b",
+    "8c24e1f82205e4de1f89",
+    "8c824dca1649a959bae3",
+    "8d26f1f6c1fa44ada22f",
+    "8ed22a771d86ad452f41",
+    "8f8ac28d975e894d6c04",
+    "9080b3d2b6dd4496cfbd",
+    "90d3e75dbe2fcc4abc33",
+    "9195f1a3a543edb21ac8",
+    "956810e03c0c12744d68",
+    "95ea913041ab114158f8",
+    "969c10eddee069ed6f04",
+    "9ab1efe3f3114f0472ec",
+    "9eb05e4da809eabb9e50",
+    "a1a1f248115dcb010aa1",
+    "a1c62d1a5a5fe3d87c6d",
+    "a2554b6c7a55cc3e894e",
+    "a2e2e4bcfb7f5a8291d6",
+    "a317b4548bced73f9bc5",
+    "a4913c3d795292cc8765",
+    "a4f6417f90f0ff8a88b1",
+    "a54de01e00f91f14f751",
+    "a8011d6e4d050ed2b66c",
+    "a92abf9623f48f31b5b1",
+    "aa0ca662985e1bfa97d3",
+    "ab099aa91def2b6c2bad",
+    "ac7d6443fe6c5e54412d",
+    "ad6d03151fd22a42cf81",
+    "ad8dc366b47a7e2a7743",
+    "adfbe4a265c116738f44",
+    "af5863c6a1331796d968",
+    "b098968f40567887886d",
+    "b287a8cd987f98020b3b",
+    "b8321cd8a88ca16b2a99",
+    "b84e587ad12c04d2f636",
+    "b8e3bbda70213bbbf399",
+    "b92fc0d2b24a1e40af69",
+    "bcb315071476c2843dd3",
+    "bce407338df2a180f9c3",
+    "bd1be8a4b2c188209ea2",
+    "bdf6c6461d4fa7376171",
+    "bf3bab3cef2a28fb8e1e",
+    "bf4d2eaf1f85a8086f17",
+    "c16ee2d868e0e14e7dac",
+    "c36783a635a8a9df2d53",
+    "ca1b8574963936ed8594",
+    "ca874131f52702dc726e",
+    "cab227dc588cff5412cc",
+    "cae38e490714adba1e4d",
+    "cbf088ac0b978e62a735",
+    "cee7620f1d58186889cf",
+    "d0e8317e9d4e74fb2aab",
+    "d0ebac569bca7031e04e",
+    "d0f9ad9e4f13a4703c8e",
+    "d11e5c8f775aec1e3531",
+    "d267593aa093c73f8e4c",
+    "d37acb377b90dedd1101",
+    "d6d7cee57c4a71d39fe2",
+    "d6d800ea501d9dc19069",
+    "d73c27b19145fe18b317",
+    "dcdd94c91dbbef2cd545",
+    "de4003d8c4a182cd4cc3",
+    "dfca712a278b5e7bf22a",
+    "e2a25501ebc01e89449a",
+    "e30229956caf8ea5a358",
+    "e555fdda4342bb4d9998",
+    "e677a0360cab068afb8b",
+    "e79277506ec41cccf183",
+    "e7f35b6940835515206b",
+    "e8566c7e937eb08e668c",
+    "e8f904e6468d1bacc6c1",
+    "ea22deeba2aa2883c804",
+    "ea76d6770b1aa3d654a3",
+    "ea9c3ce7e3b57ddf61bf",
+    "ead7434938fb7c12bdf9",
+    "eb180982ad2caef2627c",
+    "ecd67a211a1f61bada8c",
+    "ef8434c71a2935c28524",
+    "f09e43f234554f4634bd",
+    "f1b684d850d7debb44b9",
+    "f2d12a76ce81c3567369",
+    "f5fec2e283c14fb27cfe",
+    "f86edb6383f8d63e7e35",
+    "f959244119b9aedef562",
+    "f96f2d0ee2d17211c4bf",
+    "fb9e71e29f9948b77ec2",
+    "fde7737cab7ad80958d7",
+    "fe63978db97e4f98161b"
+  ],
+  "consumers": [
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/check-convergence.py",
+      "consumer_id": "03553b2e30cf9eb93cf8",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_patterns/dynamic-bridge.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@学习进化/_knowledge/10-systems/KEMS/.kems/_contracts/",
+      "consumer_id": "05bf426efddc301b614d",
+      "execution_mode": "content-reference",
+      "family": "learning-content-archives",
+      "family_matches": [
+        "learning-content-archives"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@学习进化/_knowledge/10-systems/KEMS/.kems/_contracts/",
+      "source": "/Users/xiamingxing/Documents/@学习进化/.kems-repair-backups/20260803-092838/_knowledge/10-systems/KEMS/_strategy/KEMS-本体优化建议-v1.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "bash ~/Documents/驾驶舱/scripts/ecos-init.sh",
+      "consumer_id": "075367c9c814b89de1bb",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "驾驶舱/scripts/ecos-init.sh",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/DEPLOY.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "07b5f07bdf7e5af578ce",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@工作文档/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@学习进化/_knowledge/10-systems/KEMS/_runtime/cases/",
+      "consumer_id": "07ed69a4335077aefe45",
+      "execution_mode": "content-reference",
+      "family": "learning-content-archives",
+      "family_matches": [
+        "learning-content-archives"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@学习进化/_knowledge/10-systems/KEMS/_runtime/cases/",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_control/kos-index.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/validate-concept-card.py",
+      "consumer_id": "083452049eed7a837987",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/validate-concept-card.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/_gates/06-g18-concept-validation.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/app/(app)/assets/page.tsx",
+      "consumer_id": "08a14a55f91a34074057",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/app/(app",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "~/Documents/kos-index.sqlite",
+      "consumer_id": "0bdab33447d738135b73",
+      "execution_mode": "content-reference",
+      "family": "root-oneoff-assets",
+      "family_matches": [
+        "root-oneoff-assets"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "kos-index.sqlite",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-30-方案设计1-知识图谱与实体秒级抽取管线.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/@公共/_runtime/meta-model-audit.py",
+      "consumer_id": "0c02fdafb5ba6050e0fe",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/meta-model-audit.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/CLAUDE-公约.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/kems",
+      "consumer_id": "0ec22686041025ea046e",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/kems",
+      "source": "/Users/xiamingxing/Documents/@学习进化/.kems-repair-backups/20260803-092838/_knowledge/10-systems/KEMS/_scenarios/2026-07-20-kems-v7.5-evolution-analysis.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@公共/_runtime/reachbridge-enterprise-gateway.py",
+      "consumer_id": "0f10eef31f801f08e391",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/reachbridge-enterprise-gateway.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/lib/manifest.ts",
+      "consumer_id": "117d7a53fedf1ffc2117",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/lib/manifest.ts",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/claude-registry-sync.py --write",
+      "consumer_id": "13f0e4db270da224d71a",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/claude-registry-sync.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/CLAUDE-REGISTRY.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.gitignore",
+      "consumer_id": "14ad303eb734799ab626",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/.gitignore",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/docs/superpowers/plans/2026-07-03-family-dashboard-web.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "0 9 * * 1 cd \"$HOME/.local/share/omostation/accepted-20260902\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py controller-preflight --json --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260902\" --evidence .omo/_delivery/documents-plane/controller-preflight.json >> \"$HOME/Workspace/runtime/cron/documents-plane.log\" 2>&1",
+      "consumer_id": "16a8f02280c51017dbb7",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "crontab",
+      "relative_path": ".",
+      "source": "crontab",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-η-audit.py        # 5 类刷分",
+      "consumer_id": "185a330b9053c562a1bf",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-η-audit.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_gates/12-G17-治理自动化.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "1a1e4716daa459ddada2",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@工作文档/国转中心/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/domain-sync.py",
+      "consumer_id": "1a53d284737ec9091d73",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/domain-sync.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-02-系统性优化方案与路线.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "_inbox/2026-08-03-老化知识处理脚本.sh --apply",
+      "consumer_id": "1ab18a6c708a3e441c53",
+      "execution_mode": "content-reference",
+      "family": "root-oneoff-assets",
+      "family_matches": [
+        "root-oneoff-assets"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "_inbox/2026-08-03-老化知识处理脚本.sh",
+      "source": "/Users/xiamingxing/Documents/_inbox/2026-08-03-monday-vault-health.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/signals-rotate.py",
+      "consumer_id": "1b11fa4d5e04a61156bc",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/signals-rotate.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-02-系统性优化方案与路线.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/",
+      "consumer_id": "1b8762e27db34b95e6fc",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/",
+      "source": "/Users/xiamingxing/Documents/@学习进化/.kems-repair-backups/20260803-092838/_knowledge/10-systems/KEMS/_scenarios/2026-07-20-kems-v7.5-evolution-analysis.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/",
+      "consumer_id": "1be0cc787c15aa1842dc",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/docs/superpowers/plans/2026-07-03-family-dashboard-web.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/app/(app)/health/page.tsx",
+      "consumer_id": "1de1c2918d9521f157bb",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/app/(app",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/types/domain.ts",
+      "consumer_id": "1de6d24a03f696885d87",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/types/domain.ts",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/components/domain/DomainOverview.tsx",
+      "consumer_id": "23153619ec6233d9673e",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/components/domain/DomainOverview.tsx",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "25469e3089f799eb0c1f",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@创意创作/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "26026865a477ac32e2ba",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/",
+      "consumer_id": "2b68af88925d22822eaa",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/README.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/data-manifest/growth.yaml",
+      "consumer_id": "2b96b7501bf9e95194ce",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/data-manifest/growth.yaml",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "10 6 * * 1 cd \"$HOME/.local/share/omostation/accepted-20260831\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py signals-preflight --json --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260831\" --evidence .omo/_delivery/documents-plane/signals-preflight.json >> runtime/cron/documents-plane.log 2>&1",
+      "consumer_id": "2c29b688268e4cd7bdc9",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "crontab",
+      "relative_path": ".",
+      "source": "crontab",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@公共/_runtime/kems-materialize.py",
+      "consumer_id": "2d5b682c346ae5d3d4be",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/kems-materialize.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/check-convergence.py",
+      "consumer_id": "2f5f7d5d4e5c639f18de",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/CLAUDE_GLOBAL.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py        # 5 类记忆",
+      "consumer_id": "3038dd2cc4ec4586147a",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_gates/12-G17-治理自动化.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/bos-neural-mesh-runner.py",
+      "consumer_id": "31cf3089bdfd9d878365",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/bos-neural-mesh-runner.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网架构设计与融合收敛规范.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "bash ~/Documents/_inbox/2026-08-02-async-audit-心跳补丁.sh",
+      "consumer_id": "346025174123aeb3902e",
+      "execution_mode": "content-reference",
+      "family": "root-oneoff-assets",
+      "family_matches": [
+        "root-oneoff-assets"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "_inbox/2026-08-02-async-audit-心跳补丁.sh",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/2026-08-02-文档与目录治理方案.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 /Users/xiamingxing/Documents/@公共/_runtime/meta-model-audit.py",
+      "consumer_id": "35fbefa00b0ad96f3204",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/meta-model-audit.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/决策日志/跨域治理深度分析-2026-06-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "368b43b7db4e693ccf05",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/_archive/superseded-design-docs-2026-06-30/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "bash @公共/_runtime/pre-scan.sh <目标路径> [最大深度]",
+      "consumer_id": "36cbc13849128e70c87c",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/pre-scan.sh",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_protocol/05-pre-scan-contract.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "~/Documents/_inbox/2026-08-02-文档治理.sh",
+      "consumer_id": "39007b4d07487b7043e7",
+      "execution_mode": "content-reference",
+      "family": "root-oneoff-assets",
+      "family_matches": [
+        "root-oneoff-assets"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "_inbox/2026-08-02-文档治理.sh",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/2026-08-02-文档与目录治理方案.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/meta-model-audit.py",
+      "consumer_id": "3debb58329ff16724df4",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/meta-model-audit.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/app/(app)/members/page.tsx",
+      "consumer_id": "3f3ee6c0793a2ca12846",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/app/(app",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/kems",
+      "consumer_id": "40054fbeb0d65897fb26",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/kems",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/_scenarios/2026-07-20-kems-v7.5-evolution-analysis.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/package.json",
+      "consumer_id": "41df473f1ec4e9597579",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/package.json",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/app/(app)/members/page.tsx",
+      "consumer_id": "443a50f55e67daf4adeb",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/app/(app",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/scripts/verify-domain-data.ts",
+      "consumer_id": "44c0d50cf953661d7eb2",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/scripts/verify-domain-data.ts",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/health-dashboard.py",
+      "consumer_id": "460c57cae5edebfce78a",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/health-dashboard.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_archive/root-changelogs/CHANGELOG-2026-06-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@公共/_runtime/bos-neural-mesh-runner.py",
+      "consumer_id": "4753f0a19de541ec453d",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/bos-neural-mesh-runner.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/@公共/_runtime/meta-model-audit.py --domain learning-vault",
+      "consumer_id": "4aaa52f875a243cbf483",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/meta-model-audit.py --domain learning-vault",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/CLAUDE-公约.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/meta-model-audit.py",
+      "consumer_id": "4b95417fcab96170a238",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/meta-model-audit.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/CLAUDE-公约.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "check-kems-update.py -> @公共/_runtime/check-kems-update.py",
+      "consumer_id": "4bd4eea6358470f0bd47",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-kems-update.py",
+      "source": "/Users/xiamingxing/Documents/@工作文档/卫健委/_meta/_methods/15-系统迭代修复升级交付报告-20260731.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/package.json",
+      "consumer_id": "4c05c697aaca38e68827",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/package.json",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/prefix-clean.py --fix @学习进化/_knowledge/10-systems/KEMS",
+      "consumer_id": "4c5a90ad97a2e3e95ba2",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/prefix-clean.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_patterns/ssot-convergence.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "bash ~/Documents/@工作文档/卫健委/_runtime/host-deploy.sh",
+      "consumer_id": "4d8ec10c61cb71748f37",
+      "execution_mode": "content-reference",
+      "family": "work-runtime",
+      "family_matches": [
+        "work-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@工作文档/卫健委/_runtime/host-deploy.sh",
+      "source": "/Users/xiamingxing/Documents/@工作文档/卫健委/_runtime/skills/宿主机部署/SKILL.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/sync/",
+      "consumer_id": "4e02b00ac3b6d104e3f7",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/sync/",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/bridging-protocol-v1.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/C2G-writeback.py",
+      "consumer_id": "4e449e4fa78c457d04d7",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/C2G-writeback.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/复盘/月度对账-2026-07-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/data-manifest/assets.yaml",
+      "consumer_id": "51f296d64be5039c7d9c",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/data-manifest/assets.yaml",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/app/(app)/growth/page.tsx",
+      "consumer_id": "538a9ccedda16271d2bb",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/app/(app",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "~/Documents/@驾驶舱/_runtime/cron/l4-governance-crontab",
+      "consumer_id": "53c1b87a9da655015656",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@驾驶舱/_runtime/cron/l4-governance-crontab",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/2026-08-02-crontab-降频评估.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/C2G-writeback.py",
+      "consumer_id": "53d0d403845af956c461",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/C2G-writeback.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_archive/root-changelogs/CHANGELOG-2026-06-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@公共/_runtime/reachbridge-enterprise-gateway.py --production",
+      "consumer_id": "5415b656c52d7f15fd47",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/reachbridge-enterprise-gateway.py --production",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/scripts/build-all.ts",
+      "consumer_id": "546de3bbc18229799c8c",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/scripts/build-all.ts",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "cd \"$HOME/.local/share/omostation/accepted-20260830\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py convergence-preflight --json --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260830\" --evidence .omo/_delivery/documents-plane/convergence-preflight.json",
+      "consumer_id": "56f2d5f0cb81eecfa36f",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": ".",
+      "source": "/Users/xiamingxing/Documents/Claude/Scheduled/monday-vault-health/SKILL.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/驾驶舱/scripts/ecos-health-check.py",
+      "consumer_id": "581b831aa078a7c68fba",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "驾驶舱/scripts/ecos-health-check.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/brief.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "58bebfa6587cefe94c54",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@个人/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "5a7dd57a3680fd62603a",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@工作文档/合同法规/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/pre-scan.sh",
+      "consumer_id": "5affa2c0a4ae6d13c085",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/pre-scan.sh",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/决策日志/治理反思与长期机制-2026-06-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/驾驶舱/scripts/ecos-health-check.py",
+      "consumer_id": "5c03f5b567730a659929",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "驾驶舱/scripts/ecos-health-check.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/DEPLOY.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "35 6 * * 1 cd \"$HOME/.local/share/omostation/accepted-20260827\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py freshness-audit --json --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260827\" --evidence .omo/_delivery/documents-plane/freshness-audit.json >> runtime/cron/documents-plane.log 2>&1",
+      "consumer_id": "5d84829450b732817ae9",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "crontab",
+      "relative_path": ".",
+      "source": "crontab",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/meta-model-audit.py",
+      "consumer_id": "5df054045f0f5d0af503",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/meta-model-audit.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/CLAUDE-公约.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/data-manifest/daily.yaml",
+      "consumer_id": "5f96dc74969a00213663",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/data-manifest/daily.yaml",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/check-convergence.py",
+      "consumer_id": "5fc2d69af2febcddf60a",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/DOMAIN-META-MODEL.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/@公共/_runtime/async-audit.py",
+      "consumer_id": "60746d907b8f65e1ac52",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/async-audit.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/2026-08-02-定时任务优化-执行补丁.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "cd \"$HOME/.local/share/omostation/accepted-20260830\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py convergence-preflight --json --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260830\" --evidence .omo/_delivery/documents-plane/convergence-preflight.json",
+      "consumer_id": "60edaace62791c1f3ae7",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "scheduled-skill",
+      "relative_path": ".",
+      "source": "/Users/xiamingxing/Documents/Claude/Scheduled/monday-vault-health/SKILL.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/types/domain.ts",
+      "consumer_id": "65dcc5d4b8b695e2e3a3",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/types/domain.ts",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/kems-v2/refresh-indexes.py",
+      "consumer_id": "66ff59f4d5096bb4505a",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/kems-v2/refresh-indexes.py",
+      "source": "/Users/xiamingxing/Documents/@工作文档/卫健委/_knowledge/索引目录/README.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@学习进化/_knowledge/10-systems/KEMS/.kems/_patterns/",
+      "consumer_id": "685bee606b2e0cbdf703",
+      "execution_mode": "content-reference",
+      "family": "learning-content-archives",
+      "family_matches": [
+        "learning-content-archives"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@学习进化/_knowledge/10-systems/KEMS/.kems/_patterns/",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_storage/知识订阅/AI-与智能体/2026-07-21-Code-Review-Graph-代码图谱评审.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/prefix-clean.py --check @学习进化/_knowledge/10-systems/KEMS",
+      "consumer_id": "695e0ca0fc0c654ccfd9",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/prefix-clean.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_patterns/ssot-convergence.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/data-manifest/assets.yaml",
+      "consumer_id": "6cd5c46048b7e26e1dcd",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/data-manifest/assets.yaml",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/principle-reality.py",
+      "consumer_id": "6dd763530781934580de",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/principle-reality.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_gates/05-principle-reality.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/lib/manifest.ts",
+      "consumer_id": "718823f3bbf3e95b16e6",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/lib/manifest.ts",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/bridge-refresh.py",
+      "consumer_id": "725beffa5faa9f2e5264",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/bridge-refresh.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-02-系统性优化方案与路线.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/version-sync.py    --ssot @学习进化/_knowledge/10-systems/KEMS/VERSION.yaml    --targets INDEX.md,README.md,CLAUDE.md,SKILL.md    --auto-replace",
+      "consumer_id": "731edacf1d845cee4dfa",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/version-sync.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_patterns/ssot-convergence.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/app/(app)/daily/page.tsx",
+      "consumer_id": "74834211c07823e04a46",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/app/(app",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/@公共/_runtime/meta-model-audit.py --report",
+      "consumer_id": "7676759ae29aaa0b2afe",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/meta-model-audit.py --report",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/CLAUDE-公约.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/control-plane-freshness-audit.py",
+      "consumer_id": "767cd1020a55a9eea69b",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/control-plane-freshness-audit.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_generated/control-plane-freshness-audit.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@驾驶舱/_runtime/_l0/",
+      "consumer_id": "778447d8a81b5fb20687",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@驾驶舱/_runtime/_l0/",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/00-architecture/5+4+1架构全景.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/scripts/verify-domain-data.ts",
+      "consumer_id": "7839a34493d0ded75e90",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/scripts/verify-domain-data.ts",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/principle-reality.py",
+      "consumer_id": "78a43506817697b4da9c",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/principle-reality.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/决策日志/治理反思与长期机制-2026-06-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/claim-audit.py [target]  # 应 0 失败",
+      "consumer_id": "79856f295ac3f35609dd",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/claim-audit.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_gates/04-claim-audit.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/kems-toolkit.py",
+      "consumer_id": "7d72cced31d875d6640f",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/kems-toolkit.py",
+      "source": "/Users/xiamingxing/Documents/@工作文档/卫健委/_storage/05-交付区/07-文档与机制治理/2026-08-01-三清点回填与缺口闭环汇总及宿主机交办单.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "bash @公共/_runtime/pre-scan.sh <target>  # 30 秒内输出深度树",
+      "consumer_id": "7dc33e8c4ced7afd22ce",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/pre-scan.sh",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/决策日志/治理反思与长期机制-2026-06-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "crontab ~/Documents/@驾驶舱/_runtime/cron/l4-governance-crontab",
+      "consumer_id": "7e906ebcc5281956e25a",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@驾驶舱/_runtime/cron/l4-governance-crontab",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/2026-08-02-crontab-降频评估.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/check-convergence.py",
+      "consumer_id": "7f1c323dee9dd605a238",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/CLAUDE-REGISTRY.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/check-convergence.py",
+      "consumer_id": "818e0bc6a11afbe6da37",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/CLAUDE-公约.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/app/(app)/daily/page.tsx",
+      "consumer_id": "82dcd83d208d839b5bad",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/app/(app",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@学习进化/_knowledge/10-systems/KEMS/.kems/_protocol/01-write-contract.md",
+      "consumer_id": "846eff2211e240da7194",
+      "execution_mode": "content-reference",
+      "family": "learning-content-archives",
+      "family_matches": [
+        "learning-content-archives"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@学习进化/_knowledge/10-systems/KEMS/.kems/_protocol/01-write-contract.md",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_control/debt-registry.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/check-convergence.py --check-cross-workspace",
+      "consumer_id": "849d9a4a52a6e8b9e183",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_gates/06-dynamic-bridge.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/驾驶舱/scripts/ecos-health-check.py",
+      "consumer_id": "85460ad6c76967e7d2a7",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "驾驶舱/scripts/ecos-health-check.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/ONBOARD.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/signals-rotate.py",
+      "consumer_id": "8561c6a07b6f28b2a09f",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/signals-rotate.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-21-Phase9-CARDS重启方案.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/check-convergence.py",
+      "consumer_id": "86528893e4aa57c9179f",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/",
+      "consumer_id": "88ea0759e2d007dbe077",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/_scenarios/2026-07-20-kems-v7.5-evolution-analysis.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/check-convergence.py --check-cross-workspace",
+      "consumer_id": "89252fe92fb1fe01947f",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/bridging-protocol-v1.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@学习进化/_knowledge/10-systems/KEMS/.kems/_onboarding/04-domain-upgrade-protocol.md",
+      "consumer_id": "89ece260a90bc771494b",
+      "execution_mode": "content-reference",
+      "family": "learning-content-archives",
+      "family_matches": [
+        "learning-content-archives"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@学习进化/_knowledge/10-systems/KEMS/.kems/_onboarding/04-domain-upgrade-protocol.md",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/CLAUDE-公约.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/claim-audit.py",
+      "consumer_id": "8bc7f125bf8cfaea318b",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/claim-audit.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_gates/04-claim-audit.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/",
+      "consumer_id": "8c24e1f82205e4de1f89",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-30-方案设计3-注意力预算与周度单点裁决机制.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/C2G-writeback.py",
+      "consumer_id": "8c824dca1649a959bae3",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/C2G-writeback.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/复盘/月度对账-2026-07-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@公共/_runtime/evidence/kems-adjudication-queue-20260801T160717Z.jsonl",
+      "consumer_id": "8d26f1f6c1fa44ada22f",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/evidence/kems-adjudication-queue-20260801T160717Z.jsonl",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/kems-v2/",
+      "consumer_id": "8ed22a771d86ad452f41",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/kems-v2/",
+      "source": "/Users/xiamingxing/Documents/_inbox/2026-08-13-facts落地cockpit深度审查.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/health-dashboard.py --aggregate-recursive",
+      "consumer_id": "8f8ac28d975e894d6c04",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/health-dashboard.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/_gates/03-metrics.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.env.example",
+      "consumer_id": "9080b3d2b6dd4496cfbd",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/.env.example",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/docs/superpowers/plans/2026-07-03-family-dashboard-web.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/pre-scan.sh",
+      "consumer_id": "90d3e75dbe2fcc4abc33",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/pre-scan.sh",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_protocol/05-pre-scan-contract.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/kems-v2/kems-cross-check.py",
+      "consumer_id": "9195f1a3a543edb21ac8",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/kems-v2/kems-cross-check.py",
+      "source": "/Users/xiamingxing/Documents/_inbox/2026-08-06-KEMS体系完成存档.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/kems-v2/kems-cross-check.py",
+      "consumer_id": "956810e03c0c12744d68",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/kems-v2/kems-cross-check.py",
+      "source": "/Users/xiamingxing/Documents/@工作文档/卫健委/_storage/07-存档/业务资料/信息化项目/2026-08-KEMS更新存档/2026-08-06-KEMS体系完成存档.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/claim-audit.py [target]",
+      "consumer_id": "95ea913041ab114158f8",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/claim-audit.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_gates/04-claim-audit.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "cd \"$HOME/.local/share/omostation/accepted-20260902\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py controller-preflight --json --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260902\" --evidence .omo/_delivery/documents-plane/controller-preflight.json",
+      "consumer_id": "969c10eddee069ed6f04",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": ".",
+      "source": "/Users/xiamingxing/Documents/Claude/Scheduled/monday-vault-health/SKILL.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/claim-audit.py @学习进化",
+      "consumer_id": "9ab1efe3f3114f0472ec",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/claim-audit.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/_gates/03-metrics.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@驾驶舱/_runtime/cron/l4-governance-crontab",
+      "consumer_id": "9eb05e4da809eabb9e50",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@驾驶舱/_runtime/cron/l4-governance-crontab",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-02-系统性优化方案与路线.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/session-brief.py",
+      "consumer_id": "a1a1f248115dcb010aa1",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/session-brief.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/CONTEXT-SNAPSHOT-20260731.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "a1c62d1a5a5fe3d87c6d",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@工作文档/卫健委/_meta/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/session-brief.py",
+      "consumer_id": "a2554b6c7a55cc3e894e",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/session-brief.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-02-系统性优化方案与路线.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/health-dashboard.py",
+      "consumer_id": "a2e2e4bcfb7f5a8291d6",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/health-dashboard.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_generated/health-dashboard.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "* * * * * cd \"$HOME/.local/share/omostation/accepted-20260903\" && uv run --with pyyaml python lib/workspace_watch_dispatch.py --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/Workspace\" --stamps \"$HOME/Workspace/runtime/.watch-dispatch-stamps.json\" --json >> \"$HOME/Workspace/runtime/cron/documents-plane.log\" 2>&1",
+      "consumer_id": "a317b4548bced73f9bc5",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "crontab",
+      "relative_path": ".",
+      "source": "crontab",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "_inbox/inbox-router.sh",
+      "consumer_id": "a4913c3d795292cc8765",
+      "execution_mode": "content-reference",
+      "family": "root-oneoff-assets",
+      "family_matches": [
+        "root-oneoff-assets"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "_inbox/inbox-router.sh",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-21-EX05-upgrade-plan.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/app/(app)/growth/page.tsx",
+      "consumer_id": "a4f6417f90f0ff8a88b1",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/app/(app",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/data-manifest/health.yaml",
+      "consumer_id": "a54de01e00f91f14f751",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/data-manifest/health.yaml",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@公共/_runtime/evidence/production-preflight-latest-20260801.json",
+      "consumer_id": "a8011d6e4d050ed2b66c",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/evidence/production-preflight-latest-20260801.json",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/data-manifest/health.yaml",
+      "consumer_id": "a92abf9623f48f31b5b1",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/data-manifest/health.yaml",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/data-manifest/members.yaml",
+      "consumer_id": "aa0ca662985e1bfa97d3",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/data-manifest/members.yaml",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@公共/_runtime/evidence/kems-adjudication-queue-20260801T160717Z.jsonl",
+      "consumer_id": "ab099aa91def2b6c2bad",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/evidence/kems-adjudication-queue-20260801T160717Z.jsonl",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-08-01-KEMS真实标注规范与双人裁决操作手册.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@驾驶舱/_runtime/cron/l4-governance-crontab",
+      "consumer_id": "ac7d6443fe6c5e54412d",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@驾驶舱/_runtime/cron/l4-governance-crontab",
+      "source": "/Users/xiamingxing/Documents/@工作文档/卫健委/_storage/05-交付区/07-文档与机制治理/2026-08-01-文档与目录治理报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/principle-reality.py",
+      "consumer_id": "ad6d03151fd22a42cf81",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/principle-reality.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_gates/05-principle-reality.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "30 6 * * 1 cd \"$HOME/.local/share/omostation/accepted-20260830\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py convergence-preflight --json --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260830\" --evidence .omo/_delivery/documents-plane/convergence-preflight.json >> runtime/cron/documents-plane.log 2>&1",
+      "consumer_id": "ad8dc366b47a7e2a7743",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "crontab",
+      "relative_path": ".",
+      "source": "crontab",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/version-sync.py",
+      "consumer_id": "adfbe4a265c116738f44",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/version-sync.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_patterns/ssot-convergence.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/驾驶舱/scripts/x3-coverage-report.py",
+      "consumer_id": "af5863c6a1331796d968",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "驾驶舱/scripts/x3-coverage-report.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/ONBOARD.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "_inbox/inbox-router.sh",
+      "consumer_id": "b098968f40567887886d",
+      "execution_mode": "content-reference",
+      "family": "root-oneoff-assets",
+      "family_matches": [
+        "root-oneoff-assets"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "_inbox/inbox-router.sh",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_control/kos-index.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/app/(app)/assets/page.tsx",
+      "consumer_id": "b287a8cd987f98020b3b",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/app/(app",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/驾驶舱/scripts/ecos-onboard.py",
+      "consumer_id": "b8321cd8a88ca16b2a99",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "驾驶舱/scripts/ecos-onboard.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/ACCESS.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/app/(app)/health/page.tsx",
+      "consumer_id": "b84e587ad12c04d2f636",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/app/(app",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@驾驶舱/_runtime/_l1/",
+      "consumer_id": "b8e3bbda70213bbbf399",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@驾驶舱/_runtime/_l1/",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/00-architecture/5+4+1架构全景.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@学习进化/_knowledge/10-systems/KEMS/.kems/_contracts/",
+      "consumer_id": "b92fc0d2b24a1e40af69",
+      "execution_mode": "content-reference",
+      "family": "learning-content-archives",
+      "family_matches": [
+        "learning-content-archives"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@学习进化/_knowledge/10-systems/KEMS/.kems/_contracts/",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/_strategy/KEMS-本体优化建议-v1.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@学习进化/_knowledge/10-systems/KEMS/.kems/_contracts/PC-01~05",
+      "consumer_id": "bcb315071476c2843dd3",
+      "execution_mode": "content-reference",
+      "family": "learning-content-archives",
+      "family_matches": [
+        "learning-content-archives"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@学习进化/_knowledge/10-systems/KEMS/.kems/_contracts/PC-01~05",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/CLAUDE-公约.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/health-dashboard.py --aggregate-recursive",
+      "consumer_id": "bce407338df2a180f9c3",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/health-dashboard.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/check-convergence.py --check-cross-workspace",
+      "consumer_id": "bd1be8a4b2c188209ea2",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/_gates/03-metrics.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/C2G-writeback.py   # git 写回",
+      "consumer_id": "bdf6c6461d4fa7376171",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/C2G-writeback.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_gates/12-G17-治理自动化.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/驾驶舱/scripts/ecos-whoami.py",
+      "consumer_id": "bf3bab3cef2a28fb8e1e",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "驾驶舱/scripts/ecos-whoami.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/DEPLOY.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/kems-v2/gen-dashboard.py",
+      "consumer_id": "bf4d2eaf1f85a8086f17",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/kems-v2/gen-dashboard.py",
+      "source": "/Users/xiamingxing/Documents/@工作文档/卫健委/_control/DASHBOARD.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@学习进化/_knowledge/10-systems/KEMS/.kems/_meta-model/",
+      "consumer_id": "c16ee2d868e0e14e7dac",
+      "execution_mode": "content-reference",
+      "family": "learning-content-archives",
+      "family_matches": [
+        "learning-content-archives"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@学习进化/_knowledge/10-systems/KEMS/.kems/_meta-model/",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_control/kos-index.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/principle-reality.py @工作文档",
+      "consumer_id": "c36783a635a8a9df2d53",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/principle-reality.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/_gates/03-metrics.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/check-convergence.py --check-cross-workspace",
+      "consumer_id": "ca1b8574963936ed8594",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_gates/06-dynamic-bridge.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@驾驶舱/_runtime/ecos",
+      "consumer_id": "ca874131f52702dc726e",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@驾驶舱/_runtime/ecos",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/00-architecture/5+4+1架构全景.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@公共/_runtime/evidence/production-preflight-<run_id>.json",
+      "consumer_id": "cab227dc588cff5412cc",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/evidence/production-preflight-",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/health-dashboard.py",
+      "consumer_id": "cae38e490714adba1e4d",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/health-dashboard.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/sensors.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/claim-audit.py  # 扫描\"已实现/全部\"等关键词",
+      "consumer_id": "cbf088ac0b978e62a735",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/claim-audit.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/决策日志/治理反思与长期机制-2026-06-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "25 6 * * * cd \"$HOME/.local/share/omostation/accepted-20260827\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py consumer-audit --json --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260827\" --evidence .omo/_delivery/documents-plane/consumer-audit.json >> runtime/cron/documents-plane.log 2>&1",
+      "consumer_id": "cee7620f1d58186889cf",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "crontab",
+      "relative_path": ".",
+      "source": "crontab",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/health-dashboard.py --aggregate-recursive",
+      "consumer_id": "d0e8317e9d4e74fb2aab",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/health-dashboard.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/决策日志/治理反思与长期机制-2026-06-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/session-brief.py",
+      "consumer_id": "d0ebac569bca7031e04e",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/session-brief.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_entities/系统/MetaOS.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/scripts/build-all.ts",
+      "consumer_id": "d0f9ad9e4f13a4703c8e",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/scripts/build-all.ts",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/学习进化/2-knowledge/基建架构/ecos-constraint-validator.py",
+      "consumer_id": "d11e5c8f775aec1e3531",
+      "execution_mode": "content-reference",
+      "family": "learning-runtime",
+      "family_matches": [
+        "learning-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "学习进化/2-knowledge/基建架构/ecos-constraint-validator.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/ONBOARD.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "0 10 1,16 * * cd \"$HOME/.local/share/omostation/accepted-20260828\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py ocr-preflight --json --documents-root \"$HOME/Documents\" --source-relative \"@工作文档/卫健委/_storage/06-工具/批量提取/ocr_20260731\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260828\" --evidence .omo/_delivery/documents-plane/ocr-preflight.json >> runtime/cron/documents-plane.log 2>&1",
+      "consumer_id": "d267593aa093c73f8e4c",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "crontab",
+      "relative_path": ".",
+      "source": "crontab",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/",
+      "consumer_id": "d37acb377b90dedd1101",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/",
+      "source": "/Users/xiamingxing/Documents/@工作文档/卫健委/_storage/05-交付区/07-文档与机制治理/2026-08-01-文档与目录治理报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@公共/_runtime/evidence/production-preflight-bos-mesh-20260731T153051Z-69948.json",
+      "consumer_id": "d6d7cee57c4a71d39fe2",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/evidence/production-preflight-bos-mesh-20260731T153051Z-69948.json",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@学习进化/_knowledge/10-systems/KEMS/.kems/_planes/",
+      "consumer_id": "d6d800ea501d9dc19069",
+      "execution_mode": "content-reference",
+      "family": "learning-content-archives",
+      "family_matches": [
+        "learning-content-archives"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@学习进化/_knowledge/10-systems/KEMS/.kems/_planes/",
+      "source": "/Users/xiamingxing/Documents/@工作文档/卫健委/_control/PLANE_INDEX.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "bash @公共/_runtime/pre-scan.sh @工作文档/合同法规 3",
+      "consumer_id": "d73c27b19145fe18b317",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/pre-scan.sh",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_protocol/05-pre-scan-contract.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 /Users/xiamingxing/Documents/@公共/_runtime/check-convergence.py",
+      "consumer_id": "dcdd94c91dbbef2cd545",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/决策日志/跨域治理深度分析-2026-06-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "bash _inbox/inbox-router.sh",
+      "consumer_id": "de4003d8c4a182cd4cc3",
+      "execution_mode": "content-reference",
+      "family": "root-oneoff-assets",
+      "family_matches": [
+        "root-oneoff-assets"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "_inbox/inbox-router.sh",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_inbox/CLAUDE.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/bridge-refresh.py --check",
+      "consumer_id": "dfca712a278b5e7bf22a",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/bridge-refresh.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-21-Phase9-CARDS重启方案.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "bash _inbox/inbox-router.sh --dry-run",
+      "consumer_id": "e2a25501ebc01e89449a",
+      "execution_mode": "content-reference",
+      "family": "root-oneoff-assets",
+      "family_matches": [
+        "root-oneoff-assets"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "_inbox/inbox-router.sh",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_inbox/CLAUDE.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "5 6 * * * cd \"$HOME/.local/share/omostation/accepted-20260829\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py bridge-preflight --json --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260829\" --evidence .omo/_delivery/documents-plane/bridge-preflight.json >> runtime/cron/documents-plane.log 2>&1",
+      "consumer_id": "e30229956caf8ea5a358",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "crontab",
+      "relative_path": ".",
+      "source": "crontab",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@工作文档/卫健委/_runtime/",
+      "consumer_id": "e555fdda4342bb4d9998",
+      "execution_mode": "content-reference",
+      "family": "work-runtime",
+      "family_matches": [
+        "work-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@工作文档/卫健委/_runtime/",
+      "source": "/Users/xiamingxing/Documents/@工作文档/_runtime/README.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/session-brief.py",
+      "consumer_id": "e677a0360cab068afb8b",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/session-brief.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-21-Phase9-CARDS重启方案.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/src/components/domain/DomainOverview.tsx",
+      "consumer_id": "e79277506ec41cccf183",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/src/components/domain/DomainOverview.tsx",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/",
+      "consumer_id": "e7f35b6940835515206b",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/INDEX.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/bridge-refresh.py",
+      "consumer_id": "e8566c7e937eb08e668c",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/bridge-refresh.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/DASHBOARD.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "uv run --project \"/Users/xiamingxing/Workspace/projects/runtime\"       python \"/Users/xiamingxing/Workspace/projects/runtime/scripts/kems_production_preflight.py\"       --docs-root \"/Users/xiamingxing/Documents\"       --evaluation-manifest \"$KEMS_EVALUATION_MANIFEST\"       --model-acceptance \"$KEMS_MODEL_ACCEPTANCE_REPORT\"       --omo-root \"/Users/xiamingxing/Workspace/.omo\"       --task-id \"$KEMS_OMO_TASK_ID\" --production       --evidence-output \"/Users/xiamingxing/Documents/@公共/_runtime/evidence/production-preflight-$BOS_MESH_RUN_ID.json\"",
+      "consumer_id": "e8f904e6468d1bacc6c1",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/evidence/production-preflight-$BOS_MESH_RUN_ID.json",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-31-BOS多源私有知识神经网落地验收与上线闸门报告.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/驾驶舱/scripts/ecos-sla-tracker.py",
+      "consumer_id": "ea22deeba2aa2883c804",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "驾驶舱/scripts/ecos-sla-tracker.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/OPS.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 ~/Documents/驾驶舱/scripts/ecos-health-check.py",
+      "consumer_id": "ea76d6770b1aa3d654a3",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "驾驶舱/scripts/ecos-health-check.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/ACCESS.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "ea9c3ce7e3b57ddf61bf",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "ead7434938fb7c12bdf9",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_control/l4-kernel.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/",
+      "consumer_id": "eb180982ad2caef2627c",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/",
+      "source": "/Users/xiamingxing/Documents/_inbox/2026-08-13-facts结构化改造方案.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/data-manifest/growth.yaml",
+      "consumer_id": "ecd67a211a1f61bada8c",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/data-manifest/growth.yaml",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/check-convergence.py --check-cross-workspace",
+      "consumer_id": "ef8434c71a2935c28524",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/check-convergence.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_control/决策日志/治理反思与长期机制-2026-06-19.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@工作文档/国转中心/_runtime/",
+      "consumer_id": "f09e43f234554f4634bd",
+      "execution_mode": "content-reference",
+      "family": "work-runtime",
+      "family_matches": [
+        "work-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@工作文档/国转中心/_runtime/",
+      "source": "/Users/xiamingxing/Documents/@工作文档/_runtime/README.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "bash @公共/_runtime/pre-scan.sh @工作文档/卫健委 4",
+      "consumer_id": "f1b684d850d7debb44b9",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/pre-scan.sh",
+      "source": "/Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/KEMS/.kems/_protocol/05-pre-scan-contract.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@公共/_runtime/validate-concept-card.py",
+      "consumer_id": "f2d12a76ce81c3567369",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/validate-concept-card.py",
+      "source": "/Users/xiamingxing/Documents/@学习进化/.kems-repair-backups/20260803-092838/_knowledge/10-systems/KEMS/_gates/06-g18-concept-validation.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "@驾驶舱/_runtime/cron/l4-governance-crontab",
+      "consumer_id": "f5fec2e283c14fb27cfe",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@驾驶舱/_runtime/cron/l4-governance-crontab",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/2026-08-02-crontab-降频评估.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "cd \"$HOME/.local/share/omostation/accepted-20260902\" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py controller-preflight --json --documents-root \"$HOME/Documents\" --workspace-root \"$HOME/.local/share/omostation/accepted-20260902\" --evidence .omo/_delivery/documents-plane/controller-preflight.json",
+      "consumer_id": "f86edb6383f8d63e7e35",
+      "execution_mode": "workspace-owner-read",
+      "family": null,
+      "family_matches": [],
+      "forbidden_executor": false,
+      "kind": "scheduled-skill",
+      "relative_path": ".",
+      "source": "/Users/xiamingxing/Documents/Claude/Scheduled/monday-vault-health/SKILL.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "cd ~/Documents && python3 @公共/_runtime/domain-sync.py --check",
+      "consumer_id": "f959244119b9aedef562",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/domain-sync.py",
+      "source": "/Users/xiamingxing/Documents/@驾驶舱/_knowledge/20-operations/2026-07-21-Phase9-CARDS重启方案.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/data-manifest/members.yaml",
+      "consumer_id": "f96f2d0ee2d17211c4bf",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/data-manifest/members.yaml",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/_docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @驾驶舱/_runtime/ecos-health-check.py",
+      "consumer_id": "fb9e71e29f9948b77ec2",
+      "execution_mode": "content-reference",
+      "family": "cockpit-runtime",
+      "family_matches": [
+        "cockpit-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@驾驶舱/_runtime/ecos-health-check.py",
+      "source": "/Users/xiamingxing/Documents/@公共/_control/CLAUDE-公约.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/data-manifest/daily.yaml",
+      "consumer_id": "fde7737cab7ad80958d7",
+      "execution_mode": "content-reference",
+      "family": "family-dashboard-app",
+      "family_matches": [
+        "family-dashboard-app"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@家庭生活/family-dashboard-app/data-manifest/daily.yaml",
+      "source": "/Users/xiamingxing/Documents/@家庭生活/family-dashboard-app/.next/standalone/_docs/docs/superpowers/plans/2026-07-03-domain-data-minimal.md",
+      "writes_documents": false
+    },
+    {
+      "active": true,
+      "command_fragment": "python3 @公共/_runtime/M-θ-audit.py",
+      "consumer_id": "fe63978db97e4f98161b",
+      "execution_mode": "content-reference",
+      "family": "public-runtime",
+      "family_matches": [
+        "public-runtime"
+      ],
+      "forbidden_executor": false,
+      "kind": "domain-gateway",
+      "relative_path": "@公共/_runtime/M-θ-audit.py",
+      "source": "/Users/xiamingxing/Documents/@OPC/_control/l4-kernel.md",
+      "writes_documents": false
+    }
+  ],
+  "documents_root": "/Users/xiamingxing/Documents",
+  "errors": [],
+  "registry": "/Users/xiamingxing/.local/share/omostation/accepted-20260908/.omo/_truth/registry/documents-content-plane-migrations.yaml",
+  "schema": "documents.consumer-audit.v1",
+  "status": "ok",
+  "summary": {
+    "active": 191,
+    "content_references": 179,
+    "families": {
+      "cockpit-runtime": 18,
+      "family-dashboard-app": 35,
+      "learning-content-archives": 9,
+      "learning-runtime": 1,
+      "public-runtime": 105,
+      "root-oneoff-assets": 8,
+      "work-runtime": 3
+    },
+    "forbidden_executors": 0,
+    "gateway_instructions": 179,
+    "total": 191,
+    "unmatched": 0,
+    "workspace_read_owners": 12
+  }
+}

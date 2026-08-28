@@ -3,12 +3,17 @@
 Validates that invalid scene cards and failed validators cause the
 canonical scene-card-check / journey-validate commands to exit nonzero
 with deterministic machine-readable evidence.
+
+BET-Y1Q3-T4-03: the Make aggregate gate must reflect blockers in its
+exit code — run the real `make scene-card-check` target from a
+controlled cwd, not just the per-card Python validator.
 """
 
 from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -112,3 +117,52 @@ class TestSceneCardLifecycleHonestGate:
         trial_log.write_text("{}", encoding="utf-8")
         ret = lifecycle_mod.main(["--root", str(tmp_path), "check", "--scene-card", str(card_path)])
         assert ret == 0
+
+
+class TestSceneCardMakeAggregateGate:
+    """BET-Y1Q3-T4-03: make 聚合门退出码必须如实反映 blockers (spec §3).
+
+    从真实 Make 入口运行 (make -f <ROOT>/Makefile scene-card-check)，受控
+    cwd 自带 docs/scene-cards 测试卡 + bin symlink + trial log，不触碰真实
+    runtime 数据面。
+    """
+
+    def _mk_env(self, tmp_path: Path, *cards: tuple[str, dict[str, object]]) -> None:
+        (tmp_path / "bin").symlink_to(ROOT / "bin")
+        trial_log = tmp_path / ".omo" / "_knowledge" / "workflow-mesh" / "external-scene-trials.jsonl"
+        trial_log.parent.mkdir(parents=True, exist_ok=True)
+        trial_log.write_text("{}", encoding="utf-8")
+        for name, overrides in cards:
+            _write_scene_card(tmp_path / "docs" / "scene-cards" / f"{name}.yaml", **overrides)
+
+    def _run_make(self, cwd: Path) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["make", "-f", str(ROOT / "Makefile"), "scene-card-check"],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+
+    def test_mixed_cards_exit_nonzero(self, tmp_path: Path) -> None:
+        self._mk_env(
+            tmp_path,
+            ("ready-card", {}),
+            ("blocked-card", {"activation_blockers": ["blocker1"]}),
+        )
+        proc = self._run_make(tmp_path)
+        assert "ready=1 with-blockers=1" in proc.stdout
+        assert proc.returncode != 0  # 旧实现 false-green (exit 0) 必须在此 RED
+
+    def test_all_ready_exit_zero(self, tmp_path: Path) -> None:
+        self._mk_env(tmp_path, ("ready-card", {}))
+        proc = self._run_make(tmp_path)
+        assert "ready=1 with-blockers=0" in proc.stdout
+        assert proc.returncode == 0
+
+    def test_no_cards_exit_zero(self, tmp_path: Path) -> None:
+        """无卡片 = vacuous ready, 必须退出零 (spec 回滚条款边界)."""
+        (tmp_path / "bin").symlink_to(ROOT / "bin")
+        proc = self._run_make(tmp_path)
+        assert "ready=0 with-blockers=0" in proc.stdout
+        assert proc.returncode == 0
