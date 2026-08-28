@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 520  # 2026-08-28 519→520: 固化 registry_drift_monitor.py (登记遗漏监控脚本自身)
+    script_baseline: 528  # 2026-08-28 520→528: 固化 cmd_deps 修复 + frontmatter 治理脚本增量 (BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
