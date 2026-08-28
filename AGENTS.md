@@ -263,6 +263,8 @@ See [`bin/README.md`](bin/README.md) for the full tool catalog.
 - **禁止 `sed -i` 做添加/删除条目操作**：用 Python `read → check → modify → write` 模式。
 - **Check-before-fix 协议**：修改治理检查输入文件前，先读脚本的 `DEFAULT_*` 路径常量。
 - **死循环自检**：连续两次执行相同操作得到相同异常结果时，立即停止并换策略。
+- **子模块 commit 三步走**：① `cd projects/<sub> && git add && git commit` ② `git push`（子模块内）③ `cd 主仓 && git add projects/<sub> && git commit && push`。直接在主仓 commit 子模块内容会失败（`is in submodule`）。
+- **pull --rebase 风险**：本地 commit 基于旧 main 时，`git pull --rebase` 可能丢弃本地改动。rebase 后用 `git reflog` 确认 commit 仍在；若丢失，用 `git cherry-pick` 恢复。
 
 #### 高危 git 操作守门
 
@@ -326,6 +328,9 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
 | Code exploration | Prefer codebase-memory MCP (`list_projects` → `search_graph` / `trace_path`) |
 
 If a test cannot run, report why and what risk remains.
+
+**已知 flaky 测试**：
+- `tests/test_agent_workflow.py::test_start_run_dry_run_does_not_write_state`：并发 agent 写入 runs 目录导致断言失败，非代码问题。
 
 ## 8. Historical Patterns
 
