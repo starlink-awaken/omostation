@@ -9353,7 +9353,7 @@ bets:
   title: 'concept-weave monthly LaunchAgent 改为 Workspace preflight'
   appetite: 1 day
   priority: P0
-  status: pending
+  status: done
   goal: '停止 LaunchAgent 直接执行 Documents concept-weave 写入器，改为 Workspace-only 概念网络健康 preflight，保留原始资料和 rollback。'
   non_goals:
   - 不删除 Documents 概念资料、bridge-map 或旧脚本
@@ -9383,6 +9383,44 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:1a3e5c00078c969c614ca842e3d20621b271c5059b61455a1d5621f715884c36'
     decision_ref: decision://accepted/BET-Y1Q3-T10-39
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a068eef18f909a077283b7a37fcd659789494124
+          tests:
+            ref: receipt://tests/test_documents_concept_weave_preflight.py
+            sha256: sha256:639804826c121201f1677de9c5bebe00fbc7b0e873febf387be3adfed9c7225e
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-concept-weave-preflight-owner-design.md
+            sha256: sha256:1a3e5c00078c969c614ca842e3d20621b271c5059b61455a1d5621f715884c36
+          rollback:
+            ref: receipt://docs/reports/2026-08-28-concept-weave-preflight-owner.md
+            sha256: sha256:22785fdb868cb49915a5f89bbfd24b564b6c41bffdbd96f501160c581496a17e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-39.md
+            sha256: sha256:802212a0666726004c7bb8d41a298ae645a0f38ded0ed3087c324ea1c0d9d0d9
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-28-concept-weave-preflight-owner.md
+            sha256: sha256:22785fdb868cb49915a5f89bbfd24b564b6c41bffdbd96f501160c581496a17e
+          replay:
+            ref: receipt://tests/test_documents_concept_weave_preflight.py
+            sha256: sha256:639804826c121201f1677de9c5bebe00fbc7b0e873febf387be3adfed9c7225e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-39.md
+            sha256: sha256:802212a0666726004c7bb8d41a298ae645a0f38ded0ed3087c324ea1c0d9d0d9
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  done_at: 2026-08-29
   depends_on:
   - BET-Y1Q3-T10-38
   risk_level: L1
