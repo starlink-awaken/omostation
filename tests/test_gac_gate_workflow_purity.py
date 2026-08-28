@@ -76,6 +76,18 @@ def test_clean_tree_is_checked_before_and_after_blocking_path() -> None:
     assert _step("immutable checkout postcondition").get("if") == "always()"
 
 
+def test_evidence_freshness_never_generates_missing_reports() -> None:
+    freshness = _step(
+        "CR-X2-EVIDENCE-FRESHNESS — 证据新鲜度检查 (advisory)"
+    )
+    run = freshness["run"]
+
+    assert freshness.get("continue-on-error") is True
+    assert "compgen -G '.omo/_delivery/evidence-smoke/*.json'" in run
+    assert "check-evidence-freshness.py --json" in run
+    assert "SKIP evidence freshness" in run
+
+
 def test_immutable_guard_rejects_tracked_staged_and_untracked_changes(
     tmp_path: Path,
 ) -> None:
