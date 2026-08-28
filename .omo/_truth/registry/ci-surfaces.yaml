@@ -281,12 +281,9 @@ surfaces:
   status: active
 - id: bin-gac-gac-export-agents-py
   tool: bin/gac/gac-export-agents.py
-  workflow: gac-gate.yml
+  workflow: (none)
   gate: false
-  triggers:
-  - manual
-  - per_pr
-  - push
+  triggers: []
   status: active
 - id: bin-gac-gac-local-gate-py
   tool: bin/gac/gac-local-gate.py
@@ -577,12 +574,9 @@ surfaces:
   status: active
 - id: bin-ssot-sync-submodule-pointers-sh
   tool: bin/ssot/sync-submodule-pointers.sh
-  workflow: gac-gate.yml
-  also_in:
-  - workspace.yml
+  workflow: workspace.yml
   gate: false
   triggers:
-  - manual
   - per_pr
   - push
   status: active
@@ -606,11 +600,14 @@ surfaces:
   status: active
 - id: bin-ssot-script-registry-py
   tool: bin/ssot/script-registry.py
-  workflow: (none)
+  workflow: gac-gate.yml
   gate: true
-  triggers: []
+  triggers:
+  - manual
+  - per_pr
+  - push
   status: active
-  note: sgf-policy gate script-registry-validate (ecos d331ad4c)
+  note: strict validation is executed by the existing gac-gate job
 - id: bin-sweep-scan-py
   tool: bin/sweep/scan.py
   workflow: pyright-sweep.yml
@@ -1339,4 +1336,3 @@ workflow_triggers:
   - workflow: registry-drift-monitor.yml
     triggers: [manual, scheduled]
     path_filtered: false
-
