@@ -730,6 +730,11 @@ def main() -> int:
     batch_p.add_argument("services", nargs="+", help="Service IDs")
     batch_p.set_defaults(func=cmd_batch)
 
+    # ── drift ──
+    drift_p = sub.add_parser("drift", help="Configuration drift detection")
+    drift_p.add_argument("--fix", action="store_true", help="Auto-fix drift where possible")
+    drift_p.set_defaults(func=cmd_drift)
+
     # ── discover ──
     discover_p = sub.add_parser("discover", help="Auto-discover running services")
     discover_p.add_argument("--update", action="store_true", help="Update services.yaml with discoveries")
@@ -1127,6 +1132,99 @@ def cmd_template(args: argparse.Namespace) -> int:
         return 0
 
     return 0
+
+
+def cmd_drift(args: argparse.Namespace) -> int:
+    """Configuration drift detection — compare manifest vs running state."""
+    import subprocess as sp
+    import re
+
+    services = load_services()
+    fix = getattr(args, "fix", False)
+
+    drift_found = 0
+    drift_fixed = 0
+
+    # Get actual running processes
+    running_processes: dict[str, list[int]] = {}
+    try:
+        proc = sp.run(["ps", "aux"], capture_output=True, text=True, timeout=10)
+        if proc.returncode == 0:
+            for line in proc.stdout.splitlines()[1:]:
+                parts = line.split()
+                if len(parts) >= 11:
+                    pid = int(parts[1])
+                    cmd = " ".join(parts[10:])
+                    # Match known entrypoints
+                    for svc in services:
+                        entry = svc.get("program", {}).get("entrypoint", "")
+                        if entry and entry in cmd:
+                            sid = svc.get("id", "")
+                            running_processes.setdefault(sid, []).append(pid)
+    except Exception:
+        pass
+
+    # Get actual listening ports
+    running_ports: dict[int, list[int]] = {}
+    try:
+        proc = sp.run(["lsof", "-i", "-P", "-n"], capture_output=True, text=True, timeout=10)
+        if proc.returncode == 0:
+            for line in proc.stdout.splitlines()[1:]:
+                parts = line.split()
+                if len(parts) >= 9 and "LISTEN" in parts[9]:
+                    pid = int(parts[1])
+                    port_match = re.search(r":(\d+)", parts[8])
+                    if port_match:
+                        port = int(port_match.group(1))
+                        running_ports.setdefault(port, []).append(pid)
+    except Exception:
+        pass
+
+    # Compare manifest vs running
+    for svc in services:
+        sid = svc.get("id", "")
+        if not svc.get("enabled", False):
+            continue
+
+        # Check if service should be running but isn't
+        pids = running_processes.get(sid, [])
+        pid_file = PIDS_DIR / f"{sid}.pid"
+
+        if svc.get("scheduler") == "launchd":
+            # Launchd service should have a running process
+            if not pids and not pid_file.exists():
+                print(f"  [DRIFT] {sid}: manifest enabled but not running")
+                drift_found += 1
+                if fix:
+                    cmd = _get_cmd(svc)
+                    try:
+                        log_file = LOGS_DIR / f"{sid}.log"
+                        log_file.parent.mkdir(parents=True, exist_ok=True)
+                        with open(log_file, "a") as lf:
+                            proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True)
+                        pid_file.write_text(str(proc.pid))
+                        print(f"    [FIXED] Started {sid} (pid={proc.pid})")
+                        drift_fixed += 1
+                    except Exception as e:
+                        print(f"    [FAIL] {e}")
+
+        # Check port conflicts
+        manifest_ports = svc.get("ports", [])
+        for port in manifest_ports:
+            actual_pids = running_ports.get(port, [])
+            # Filter out our own processes
+            own_pids = set(pids)
+            other_pids = [p for p in actual_pids if p not in own_pids]
+            if other_pids:
+                print(f"  [DRIFT] {sid}: port {port} also used by pids {other_pids}")
+                drift_found += 1
+
+    if drift_found == 0:
+        print("No configuration drift detected")
+        return 0
+
+    print(f"\nTotal: {drift_found} drift(s) detected, {drift_fixed} fixed")
+    return 1 if drift_found > drift_fixed else 0
 
 
 def cmd_batch(args: argparse.Namespace) -> int:

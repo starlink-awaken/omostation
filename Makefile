@@ -696,3 +696,9 @@ ops-batch-up:  ## 批量启动服务
 
 ops-batch-down:  ## 批量停止服务
 	python3 bin/ops/cli.py batch down
+
+ops-drift:  ## 配置漂移检测
+	python3 bin/ops/cli.py drift
+
+ops-drift-fix:  ## 配置漂移检测 + 自动修复
+	python3 bin/ops/cli.py drift --fix
