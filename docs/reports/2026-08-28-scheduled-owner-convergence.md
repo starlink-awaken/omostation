@@ -1,19 +1,28 @@
-# Scheduled owner convergence evidence — 2026-08-28
+# monday-vault-health Scheduled owner convergence — 2026-08-29
 
-The active `monday-vault-health` Scheduled skill previously instructed direct
-execution of the Documents Weijian controller and convergence audit. Those
-instructions were changed to consume accepted Workspace owner evidence.
+## Scope
 
-## Evidence
+Updated only:
+`/Users/xiamingxing/Documents/Claude/Scheduled/monday-vault-health/SKILL.md`.
+The change replaces stale accepted-release references with the current clean
+`accepted-20260908` Workspace release for `controller-preflight` and
+`convergence-preflight`. No cron, LaunchAgent, other Scheduled skill, or
+Documents business content was changed.
 
-- Target: `/Users/xiamingxing/Documents/Claude/Scheduled/monday-vault-health/SKILL.md`
-- Workflow: `20260827T192317Z-governance-state-mutation-2a6468e8`
-- Before SHA-256: `5c9102c3081b4a307bd6bdf10e37c3534e4a0f9ddf6f78e5a216f1c55ebb1cc4`
-- After SHA-256: `7256b1efb5a921b6d3b3bd28149e5a43733d8d03d179bc540276d80147b3d001`
-- Before bytes: `4262`; after bytes: `4943`.
-- Direct legacy script references: `0` for both controller and convergence audit.
-- Replacement instructions point to accepted Workspace releases
-  `accepted-20260902` and `accepted-20260830` and read their evidence.
-- The external path cannot be represented by the current workflow path-claim
-  mechanism; repo-side spec/report/retro were claimed and the exact rollback
-  snapshot is stored under the run evidence directory.
+## Before/after and rollback
+
+- Backup: `/Users/xiamingxing/.local/state/omostation/t10-37-scheduled-backups/20260829T172112Z/SKILL.md.before`
+- Before SHA-256: `7256b1efb5a921b6d3b3bd28149e5a43733d8d03d179bc540276d80147b3d001`
+- After SHA-256: `b52eb0b72c91489a997f6c50b19faadbd0bc831f59666357b464e841eaa07dd4`
+- The backup is an exact byte-for-byte rollback copy.
+
+## Verification
+
+- Scheduled-owner assertion: PASS; `controller.py` and `check-convergence.py`
+  are absent from the target skill.
+- Consumer audit: exit `0`, schema `documents.consumer-audit.v1`,
+  `total=191`, `active=191`, `unmatched=0`, `forbidden_executors=0`,
+  `workspace_read_owners=12`, `content_references=179`, `errors=[]`.
+- The target skill's controller and convergence commands are classified as
+  `workspace-owner-read` with `writes_documents=false`.
+- No cron, LaunchAgent, or other Scheduled surface was mutated.
