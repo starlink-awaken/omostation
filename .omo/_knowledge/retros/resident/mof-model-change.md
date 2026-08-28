@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: mof-model-change
 generated_at: 2026-08-28T08:00:00Z
-status: candidate
+status: planned
 counts:
   runs: 4
   failures: 1
@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 1
   trace_count: 1
+lifecycle: history
+owner: unassigned
 ---
 # mof-model-change 运行复盘聚合 (resident 事件驱动)
 

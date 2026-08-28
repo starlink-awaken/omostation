@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: external-adapter-sync
 generated_at: 2026-08-28T08:00:00Z
-status: candidate
+status: planned
 counts:
   runs: 3
   failures: 2
@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 2
   trace_count: 2
+lifecycle: history
+owner: unassigned
 ---
 # external-adapter-sync 运行复盘聚合 (resident 事件驱动)
 
