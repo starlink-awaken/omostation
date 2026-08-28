@@ -8409,6 +8409,49 @@ bets:
   human_gate: true
   circuit_breaker: 'missing or duplicate line, release mismatch, Documents write, or unrelated crontab delta triggers rollback.'
   retro: required
+- id: BET-Y1Q3-T10-46
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'installed owner release-root convergence'
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  goal: '将当前已安装的 Workspace owner/preflight cron entries 统一到 clean accepted-20260908，仅改变 release root token，不改变 cadence、参数或 family 语义。'
+  non_goals:
+  - 不完成 T10-28 至 T10-34 的原始 Documents family semantic migration proof
+  - 不修改 Documents 内容、LaunchAgent、Scheduled skill、child repository 或 runtime data
+  - 不修改 cadence、命令参数、输出路径或任何未列入 preflight 的 crontab 行
+  done_when:
+  - preflight inventory 中的每一条 owner/preflight active line 均指向 accepted-20260908
+  - complete before/after crontab backup 证明只有 inventory lines 改变
+  - 每个 target entrypoint 的 help/smoke 结果与 exit semantics 已记录
+  - rollback 可恢复精确 preflight crontab，T10-28..34 仍独立追踪
+  verify:
+  - cmd: 'test -d /Users/xiamingxing/.local/share/omostation/accepted-20260908 && test -z "$(git -C /Users/xiamingxing/.local/share/omostation/accepted-20260908 status --porcelain)"'
+    expect: exit 0
+  - cmd: 'python3 bin/gac/documents-domain-owner-job.py consumer-audit --help'
+    expect: exit 0
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md
+  - docs/reports/2026-08-28-owner-release-root-convergence.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-46.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-28-t10-46-bootstrap.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:d9dac6748703eabfbccb707efbcce63728d841a18346219160a3157b7a826b5f'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-46
+  depends_on:
+  - BET-Y1Q3-T10-45
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 'missing target entrypoint, unexpected line, command semantic drift, Documents write, or unrelated crontab delta triggers rollback.'
+  retro: required
+  value_indicator_policy: false
 - id: BET-Y1Q3-T10-28
   track: T10-MATURITY
   window: Y1Q3
