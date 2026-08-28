@@ -496,6 +496,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0429: [hacker_news] Meta reaches $16.68B settlement over social media harms to children — **DRAFT** | 2026-08-26 | Evolution proposal | 0429-trend-signal.md
 - ADR-0430: Reserved slot — **RESERVED** | 2026-08-28 | governance-team | 0430-reserved.md
 - ADR-0431: 防腐五层框架 — 人的权威分层 × 三机制 + MAPE-K 对齐 — **CANDIDATE** | 2026-08-28 | xiamingxing | 0431-anti-corrosion-five-layer-framework.md
+- ADR-0432: North Star v3 6-Axis Escalation — **CANDIDATE / UNPROVABLE** | 2026-08-28 | xiamingxing | 0432-north-star-v3-6-axis-escalation.md
 
 ---
 

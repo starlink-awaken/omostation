@@ -7677,6 +7677,7 @@ bets:
   - runtime/daily-health-preflight-live-smoke.json
   - runtime/daily-health-preflight.json
   - runtime/heartbeats/weijian-daily-health
+  - bin/INDEX.md
   - runtime/kos-preflight-live-smoke.json
   - runtime/predictor-preflight-live-smoke.json
   - runtime/predictor-preflight.json
