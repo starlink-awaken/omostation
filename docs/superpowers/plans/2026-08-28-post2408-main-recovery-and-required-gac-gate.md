@@ -18,10 +18,27 @@ value_indicator_policy: false
 
 **Tech Stack:** Python 3.13, Bash, PyYAML, pytest, Git/GitHub CLI, GitHub Actions, Agent Workflow, `bin/gac/gac-local-gate.py`, `bin/plan/bet-ledger.py`.
 
+## 2026-08-28 Latest-Main Rebaseline
+
+This plan was re-audited again after concurrent main advanced from `c24e821082a3aa0f25559e5ed7aa9917008d9661` to the frozen delivery baseline `1289e7fd6df0b85492fb591f2df8900e863c4a2f`. The following commits are prior evidence, not permission to skip remaining gates:
+
+| Main evidence | Honest disposition |
+|---|---|
+| `ad19e2202` / PR #2438 | R1 **PARTIAL**: ADR-0432 is candidate/UNPROVABLE and two tracked artifacts were removed; its own report says full strict GaC was still blocked. |
+| `05e813ba5` / PR #2441 | H1a **PARTIAL**: the strict step is blocking, but the workflow still mutates the checkout before it runs. |
+| [main run `33162551807`](https://github.com/starlink-awaken/omostation/actions/runs/33162551807) at `db34192d4` | GitHub Actions API receipt: `event=push`, job `gac-gate=success`, strict step `success`. It predates immutable H1a and therefore is historical evidence, not the required H1b canary. |
+| `66a703b59` / [PR #2451](https://github.com/starlink-awaken/omostation/pull/2451) | The stale Core/Sentinel architecture row was removed. R1 repository blockers are now `already_resolved`, but that main push's `gac-gate` failed and immutable H1a evidence still does not exist. |
+| [main run `33164830199`](https://github.com/starlink-awaken/omostation/actions/runs/33164830199) at `77258bdff` | Later `gac-gate=success`, but it still used the mutating pre-H1a workflow. It is baseline-health evidence only, not the required immutable H1b canary. |
+| `1289e7fd6` / [PR #2455](https://github.com/starlink-awaken/omostation/pull/2455) | The writer now uses the documented `required_status_checks` PATCH subresource and leaves live protection untouched. It remains **PARTIAL and out of order**: only one pre-write read means concurrent context drift can still be overwritten, and no operation receipt exists. |
+| live branch protection GET at `2026-08-28T10:41:20Z` | Direct endpoint `GET /repos/starlink-awaken/omostation/branches/main/protection`; normalized redacted digest `sha256:bd2d544768528f5e7f236d7fc2ec2d0ae38ac9e74d52f524b514f2d4345d6921`; contexts exactly `phase-gate`, `bet-done-transition`. This read proves current drift only; Tasks 6 and 9 remain human-gated and `NOT_PROVEN`. |
+| current final tree | 24 bound runtime artifacts remain tracked; treeish recurrence protection and host-retention evidence do not exist. |
+
+At frozen baseline `1289e7fd6`, R1 document/script/ADR blockers are already resolved; Task 1 should close as a no-op if execution-time strict checks remain green. H1a immutability, CI binding, a post-H1a canary, honest guarded mutation, R2 and closeout remain outstanding. Every execution phase still recomputes its own latest-main failure set.
+
 ## Global Constraints
 
 - Canonical BET: `BET-Y1Q3-T6-15`; WorkPacket: `WP-BET-Y1Q3-T6-15`.
-- Accepted Spec: `docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md`, version `1.0.0`, digest `sha256:afd7daded6ab2e279c5b0c5d2f9e9465263c541316d034acafb8fa0671028459`.
+- Accepted Spec: `docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md`, version `1.0.0`, digest `sha256:afd7daded6ab2e279c5b0c5d2f9e9465263c541316d034acafb8fa0671028459`, until the separately authorized Task 4B amendment replaces it.
 - Every repository task starts from execution-time latest `origin/main` in a new governance-profile independent clone.
 - Maximum one repository writer in each of R1, H1a/H1c and R2a. Read-only reviewers may run in parallel.
 - R1 must merge before H1a; H1a main canary must pass before H1c live mutation; H1c must be active before R2a; R2a must merge before R2b.
@@ -38,15 +55,15 @@ value_indicator_policy: false
 
 | Surface | Responsibility |
 |---|---|
-| `.omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-binding.md` | Remove the frontmatter warning introduced by the binding bootstrap; no authorization semantics change. |
-| `.omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md` | Preserve the proposal as candidate and explicitly record contradictory/unprovable evidence. |
-| `.omo/_knowledge/decisions/INDEX.md` | Register ADR-0432 exactly once as candidate. |
+| `ARCHITECTURE.md` | Read-only R1 guard at `1289e7fd6`; modify only if execution-time latest main reintroduces the two stale Core/Sentinel links. |
+| `.omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-binding.md` | Read-only prior R1 evidence unless latest-main validation proves a new structural regression. |
+| `.omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md` and `INDEX.md` | Read-only prior R1 evidence; ADR-0432 must remain candidate/UNPROVABLE. |
 | `.github/workflows/gac-gate.yml` | Make the existing job check-only, immutable and blocking. |
 | `.omo/_truth/registry/ci-surfaces.yaml` | Bind script-registry validation to `gac-gate.yml` using supported workflow-level fields. |
 | `tests/test_gac_gate_workflow_purity.py` | Lock immutable workflow behavior and strict-step blocking semantics. |
 | `tests/test_ci_surfaces.py` | Lock supported script-registry workflow binding. |
-| `bin/gac/gac-branch-protection.sh` | Implement guarded double-read context-only add/remove/check. |
-| `tests/test_gac_branch_protection.py` | Exercise protection logic through an isolated fake `gh` executable. |
+| `bin/gac/gac-branch-protection.sh` | Keep the documented status-checks PATCH subresource from `1289e7fd6`, add a second pre-write read/race refusal and redacted receipt, and remove false atomic-CAS wording. |
+| `tests/test_gac_branch_protection.py` | Extend the existing fake-API tests to prove two reads, race refusal, exact preservation and redacted receipts. |
 | `bin/gac/omo-runtime-stamp-policy.py` | Add authoritative immutable-tree runtime classification. |
 | `tests/test_omo_runtime_stamp_policy.py` | Cover final-tree forbidden/allowed/ambiguous behavior and exact JSON output. |
 | `.gitignore` | Keep the WorkPacket-bound runtime outputs local after R2a untracking. |
@@ -55,7 +72,7 @@ value_indicator_policy: false
 
 ## Plan-Approval Decision: CAS Terminology Amendment
 
-The current accepted Spec and BET use the term `compare-and-swap` for H1c. The GitHub branch-protection REST update does not expose a proven server-side ETag/version precondition for atomic PUT. Claiming atomic CAS would therefore be false.
+The current accepted Spec and BET use the term `compare-and-swap` for H1c. GitHub's official REST guidance says conditional requests for unsafe methods (`POST`, `PUT`, `PATCH`, `DELETE`) are unsupported unless the specific endpoint documents an exception; the branch-protection update endpoint documents no such exception. A returned ETag plus an `If-Match` request header therefore does not prove atomic PUT. Claiming atomic CAS would be false. Source: https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api#use-conditional-requests-if-appropriate
 
 Plan approval must also approve a narrow Spec/BET amendment before Task 5 starts:
 
@@ -64,7 +81,7 @@ CAS / compare-and-swap
   -> guarded double-read read-modify-write
 ```
 
-The replacement contract is: GET A, validate expected contexts and preserved-field digest, GET B immediately before PUT, require `digest(B)==digest(A)`, perform one context-only PUT, then GET C and verify the exact result. A residual race remains between GET B and PUT; H1c therefore retains a separate human gate, a redacted before/after receipt and an exact context-only rollback. No Task 5/6 implementation begins until Spec version/binding and BET wording are updated and reviewed.
+The replacement contract is: GET A, validate expected contexts and preserved-field digest, GET B immediately before PATCH, require `digest(B)==digest(A)`, perform one `required_status_checks` subresource PATCH, then GET C and verify the exact full-protection result. A residual race remains between GET B and PATCH; H1c therefore retains a separate human gate, a redacted before/after receipt and an exact context-only rollback. No Task 5/6 implementation begins until Spec version/binding and BET wording are updated and reviewed.
 
 ## Per-Phase Governed Delivery Lifecycle
 
@@ -102,9 +119,12 @@ Create the exact claim list for the selected phase:
 case "$T6_PHASE" in
   r1)
     printf '%s\n' \
+      ARCHITECTURE.md \
       .omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-binding.md \
       .omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md \
       .omo/_knowledge/decisions/INDEX.md \
+      docs/reports/2026-08-28-post2408-main-recovery-closeout.md \
+      .omo/_knowledge/retros/BET-Y1Q3-T6-15.md \
       bin/_registry/scripts/governance/templates.yaml \
       .omo/_truth/registry/governance-checks.yaml > /tmp/t6-phase-claims.txt
     ;;
@@ -242,6 +262,7 @@ python3 - <<'PY'
 from pathlib import Path
 required = {
     ".gitignore",
+    "ARCHITECTURE.md",
     ".omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-binding.md",
     ".omo/_truth/governance-evidence/waiver-2026-08-28-t6-15-guarded-update-amendment.md",
     ".omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md",
@@ -286,6 +307,8 @@ commands = [
     ["git", "rev-parse", "HEAD"],
     ["git", "status", "--porcelain", "--ignore-submodules=none"],
     ["uv", "run", "--python", "3.13", "--with", "pyyaml", "python", "bin/ssot/script-registry.py", "validate"],
+    ["uv", "run", "--python", "3.13", "--with", "pyyaml", "python", "bin/ssot/doc-link-check.py", "--files", "ARCHITECTURE.md"],
+    ["uv", "run", "--python", "3.13", "--with", "pyyaml", "python", "bin/gac/gac-local-gate.py", "--strict"],
 ]
 results = []
 for command in commands:
@@ -305,6 +328,9 @@ Expected: one untracked, content-digested receipt; no repository file changes.
 ### Task 1: R1 Structural Baseline Recovery
 
 **Files:**
+- Modify: `ARCHITECTURE.md`
+- Append: `docs/reports/2026-08-28-post2408-main-recovery-closeout.md`
+- Append: `.omo/_knowledge/retros/BET-Y1Q3-T6-15.md`
 - Modify: `.omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-binding.md`
 - Modify: `.omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md`
 - Modify: `.omo/_knowledge/decisions/INDEX.md`
@@ -313,7 +339,7 @@ Expected: one untracked, content-digested receipt; no repository file changes.
 
 **Interfaces:**
 - Consumes: Task 0 failure classification.
-- Produces: structurally valid candidate ADR, clean binding waiver metadata and a full strict-gate baseline excluding separately authorized live operations.
+- Produces: latest-main strict GaC green while preserving already-landed candidate ADR and waiver evidence.
 
 - [ ] **Step 1: Capture RED for the known document failures**
 
@@ -333,9 +359,11 @@ else
 fi
 ```
 
-Expected: ADR-0432 is absent/misaligned and the binding waiver contributes a frontmatter warning. If both are already green on latest main, record `already_resolved`, skip Steps 2–4, run Steps 5–6 without a commit, and close the R1 run with the green receipts.
+Expected on rebaseline `1289e7fd6`: ADR coverage, document governance, script registry and the architecture link check are already green, so Steps 2–5 are read-only confirmation/no-op. If execution-time latest main differs, only blockers inside the T6-15 write surfaces may be repaired; any new blocker outside scope stops R1 for WorkPacket review.
 
 - [ ] **Step 2: Complete the waiver metadata without changing its authorization body**
+
+If Step 1 reports the waiver already valid, compare it read-only with this shape and do not edit it. Only an execution-time structural regression permits the minimal frontmatter correction below.
 
 Change only the YAML frontmatter to:
 
@@ -355,6 +383,8 @@ value_indicator_policy: false
 Expected: the exact user quote and all body text remain byte-identical.
 
 - [ ] **Step 3: Convert ADR-0432 from false acceptance to candidate/UNPROVABLE**
+
+If Step 1 reports ADR-0432 already candidate/UNPROVABLE, verify the text read-only and do not rewrite it. Use the following correction only if latest main has regressed.
 
 Prepend this frontmatter and replace the prose status heading:
 
@@ -386,6 +416,8 @@ Expected: existing context is preserved below the new evidence status; no confli
 
 - [ ] **Step 4: Register ADR-0432 exactly once**
 
+If the candidate row already exists exactly once, do not touch the index. Add the row only when the execution-time index check proves it missing.
+
 Add this row immediately after ADR-0431 in `.omo/_knowledge/decisions/INDEX.md`:
 
 ```markdown
@@ -394,7 +426,40 @@ Add this row immediately after ADR-0431 in `.omo/_knowledge/decisions/INDEX.md`:
 
 Expected: filename, ID and status agree; no second ADR-0432 row exists.
 
-- [ ] **Step 5: Prove script registration/baseline remain already resolved**
+- [ ] **Step 5: Repair only the latest-main stale architecture links**
+
+First prove the current failure and the canonical replacement surfaces:
+
+```bash
+set +e
+uv run --python 3.13 --with pyyaml python bin/ssot/doc-link-check.py --files ARCHITECTURE.md
+link_rc=$?
+set -e
+if test "$link_rc" -eq 0; then
+  echo "architecture links already_resolved"
+else
+  test ! -e bin/ops/core-daemon.py
+  test ! -e bin/ops/sentinel-daemon.py
+  test -e bin/ops/cli.py
+  test -e docs/operations/service-gateway.md
+fi
+```
+
+Replace only this stale row:
+
+```markdown
+| 双守护运维架构 (Core & Sentinel) | `bin/ops/core-daemon.py` · `bin/ops/sentinel-daemon.py` |
+```
+
+with the canonical current entry:
+
+```markdown
+| 统一 Service Gateway 运维控制面 | `bin/ops/cli.py` · `docs/operations/service-gateway.md` |
+```
+
+Expected: no invented daemon replacement, no changes outside the one row, and `doc-link-check.py --files ARCHITECTURE.md` becomes green. If those links are already repaired, mark this step `already_resolved` and make no edit.
+
+- [ ] **Step 6: Prove script registration/baseline remain already resolved**
 
 ```bash
 uv run --python 3.13 --with pyyaml python bin/ssot/script-registry.py validate
@@ -403,29 +468,33 @@ uv run --python 3.13 --with pyyaml python bin/gac/gac-validate.py --gate
 
 Expected: both pass without edits. The execution baseline already contains `templates.yaml` and a synchronized script baseline. Any regression stops R1 and requires a fresh-main scope review; this task does not rewrite them speculatively.
 
-- [ ] **Step 6: Run GREEN and commit R1**
+- [ ] **Step 7: Run GREEN and commit only if R1 required a repair**
+
+If and only if execution-time R1 required a scoped repair, append a dated section to the existing R1 report and retro; do not rewrite their earlier partial evidence. Record execution-time main SHA, exact RED finding, minimal diff, full strict result and the statement that H1/R2/value remain unproven. If every check is already green, leave all files untouched and take the Step 8 no-op closeout path.
 
 ```bash
 uv run --python 3.13 --with pyyaml python bin/adr/adr-coverage.py --json
 uv run --python 3.13 --with pyyaml python bin/ssot/doc-governance-check.py --no-new-warnings
+uv run --python 3.13 --with pyyaml python bin/ssot/doc-link-check.py --files ARCHITECTURE.md
 uv run --python 3.13 --with pyyaml python bin/ssot/script-registry.py validate
 uv run --python 3.13 --with pyyaml python bin/gac/gac-validate.py --gate
 uv run --python 3.13 python -m py_compile bin/ops/cli.py
 uv run --python 3.13 python bin/gac/check-conflict-markers.py --all
+uv run --python 3.13 --with pyyaml python bin/gac/gac-local-gate.py --strict
 git diff --check
-git add .omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-binding.md \
-  .omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md \
-  .omo/_knowledge/decisions/INDEX.md
+git add ARCHITECTURE.md \
+  docs/reports/2026-08-28-post2408-main-recovery-closeout.md \
+  .omo/_knowledge/retros/BET-Y1Q3-T6-15.md
 git commit -m "fix(governance): restore post2408 baseline truth"
 ```
 
-Expected: direct checks pass; `bin/ops/cli.py` and registry/baseline files remain unchanged when already resolved.
+Expected: direct and full strict checks pass; ADR, waiver, `bin/ops/cli.py` and registry/baseline files remain unchanged when already resolved.
 
-- [ ] **Step 7: Close the R1 run and publish its unique PR**
+- [ ] **Step 8: Close the R1 run and publish its unique PR**
 
 If Step 1 classified every R1 surface as `already_resolved` and `git diff --quiet origin/main...HEAD` is true, verify and close the clean run, retire the clean clone without a PR, and proceed to H1a. Do not create an empty recovery PR.
 
-Otherwise, after the Step 6 commit, execute the phase lifecycle explicitly:
+Otherwise, after the Step 7 commit, execute the phase lifecycle explicitly:
 
 ```bash
 verify_args=()
@@ -436,7 +505,7 @@ git tag -a "delivery/${T6_ATTEMPT}" -m "BET-Y1Q3-T6-15 r1" HEAD
 git push -u origin HEAD --follow-tags
 gh pr create --base main \
   --title "fix(governance): restore post2408 baseline truth" \
-  --body "BET-Y1Q3-T6-15 R1 only: normalize the binding waiver metadata and make ADR-0432 candidate/UNPROVABLE."
+  --body "BET-Y1Q3-T6-15 R1 continuation only: replace two stale architecture links and preserve prior ADR-0432 candidate/UNPROVABLE evidence."
 export PHASE_PR_NUMBER="$(gh pr view --json number --jq .number)"
 gh pr checks --required --watch --interval 10
 gh pr checks --watch --interval 15
@@ -535,7 +604,7 @@ def test_immutable_guard_rejects_tracked_staged_and_untracked(tmp_path: Path) ->
 uv run --with pyyaml --with pytest python -m pytest tests/test_gac_gate_workflow_purity.py -q
 ```
 
-Expected: failures show the current pointer sync, `git add`, generator writes, MOF write mode and advisory strict step.
+Expected on latest main: the existing `tests/test_gac_gate_workflow.py` blocking assertion is already green, while the new purity tests fail on pointer sync, `git add`, generator writes, MOF write mode and missing complete clean-tree guards.
 
 - [ ] **Step 3: Replace mutating workflow steps with exact read-only steps**
 
@@ -748,9 +817,10 @@ In the Spec, change `spec_version: 1.0.0` to `1.0.1` and replace H1c `compare-an
 
 ```text
 guarded double-read read-modify-write: GET A -> validate/hash -> GET B ->
-require digest equality -> one context-only PUT -> GET C verify. The API lacks
-a proven server-side conditional PUT, so a residual GET-B/PUT race remains and
-is bounded by a second human gate, receipt and context-only rollback.
+require digest equality -> one required_status_checks subresource PATCH -> GET C
+verify. The API lacks a proven server-side conditional unsafe write, so a
+residual GET-B/PATCH race remains and is bounded by a second human gate,
+receipt and context-only rollback.
 ```
 
 Apply the same wording to T6-15 `goal`, H1c `done_when` and `circuit_breaker`; do not change status or completion evidence.
@@ -829,15 +899,16 @@ Expected: the PR contains exactly three paths; required checks and independent r
 
 **Files:**
 - Modify: `bin/gac/gac-branch-protection.sh`
-- Create: `tests/test_gac_branch_protection.py`
+- Modify: `tests/test_gac_branch_protection.py`
 
 **Interfaces:**
+- Consumes: the safer but single-read `1289e7fd6` status-checks PATCH implementation as a RED baseline; optimistic atomicity is not accepted as proven.
 - Produces: `--check`, `--add-required-context`, `--remove-required-context`, `--expected-contexts`, `--receipt` and stable exit codes `0/1/2`.
 - Preserves: every non-context protection field.
 
-- [ ] **Step 1: Write fake-API RED tests**
+- [ ] **Step 1: Replace the existing fake-API suite with guarded-double-read RED tests**
 
-Create `tests/test_gac_branch_protection.py` with a fake `gh` executable that reads `FAKE_PROTECTION_STATE` and appends PUT bodies to `FAKE_GH_WRITES`:
+Retain useful preservation coverage from `1289e7fd6`, remove assertions that call a single read "CAS", and make `tests/test_gac_branch_protection.py` use a fake `gh` executable that reads `FAKE_PROTECTION_STATE` and appends PATCH bodies to `FAKE_GH_WRITES`:
 
 ```python
 from __future__ import annotations
@@ -890,22 +961,15 @@ gets_path=os.environ['FAKE_GH_GETS']
 if os.environ.get('FAKE_GH_UNREADABLE') == '1':
     raise SystemExit(2)
 args=sys.argv[1:]
-if '-X' in args and args[args.index('-X')+1] == 'PUT':
-    payload=json.load(sys.stdin)
+if '-X' in args and args[args.index('-X')+1] == 'PATCH':
+    input_path=args[args.index('--input')+1]
+    payload=json.load(open(input_path, encoding='utf-8'))
     with open(writes_path, 'a', encoding='utf-8') as fh:
         fh.write(json.dumps(payload, sort_keys=True)+'\\n')
-    response={
-        'required_status_checks': payload['required_status_checks'],
-        'required_pull_request_reviews': payload['required_pull_request_reviews'],
-        'enforce_admins': {'enabled': payload['enforce_admins']},
-        'restrictions': payload['restrictions'],
-        'required_linear_history': {'enabled': payload['required_linear_history']},
-        'allow_force_pushes': {'enabled': payload['allow_force_pushes']},
-        'allow_deletions': {'enabled': payload['allow_deletions']},
-        'block_creations': {'enabled': payload['block_creations']},
-        'required_conversation_resolution': {'enabled': payload['required_conversation_resolution']},
-        'lock_branch': {'enabled': payload['lock_branch']},
-        'allow_fork_syncing': {'enabled': payload['allow_fork_syncing']},
+    response=json.load(open(state_path, encoding='utf-8'))
+    response['required_status_checks']={
+        'strict': bool(payload['strict']),
+        'contexts': list(payload['contexts']),
     }
     with open(state_path, 'w', encoding='utf-8') as fh:
         json.dump(response, fh)
@@ -957,7 +1021,7 @@ def test_check_returns_zero_one_two(tmp_path: Path) -> None:
     assert _run(env, "--check", "--expected-contexts", "phase-gate,bet-done-transition").returncode == 2
 
 
-def test_add_context_expected_before_mismatch_performs_zero_puts(tmp_path: Path) -> None:
+def test_add_context_expected_before_mismatch_performs_zero_patches(tmp_path: Path) -> None:
     env, _state, writes = _fake_gh(tmp_path)
     result = _run(env, "--add-required-context", "gac-gate", "--expected-contexts", "phase-gate", "--receipt", str(tmp_path / "receipt.json"), "--yes")
     assert result.returncode != 0
@@ -969,16 +1033,13 @@ def test_add_context_preserves_non_context_fields(tmp_path: Path) -> None:
     before = json.loads(state.read_text(encoding="utf-8"))
     result = _run(env, "--add-required-context", "gac-gate", "--expected-contexts", "phase-gate,bet-done-transition", "--receipt", str(tmp_path / "receipt.json"), "--yes")
     assert result.returncode == 0, result.stderr
-    put = json.loads(writes.read_text(encoding="utf-8").splitlines()[0])
-    assert sorted(put["required_status_checks"]["contexts"]) == ["bet-done-transition", "gac-gate", "phase-gate"]
-    assert put["enforce_admins"] is before["enforce_admins"]["enabled"]
-    assert put["allow_force_pushes"] is before["allow_force_pushes"]["enabled"]
-    assert put["allow_deletions"] is before["allow_deletions"]["enabled"]
-    assert put["block_creations"] is before["block_creations"]["enabled"]
-    assert put["required_conversation_resolution"] is before["required_conversation_resolution"]["enabled"]
-    assert put["lock_branch"] is before["lock_branch"]["enabled"]
-    assert put["allow_fork_syncing"] is before["allow_fork_syncing"]["enabled"]
-    assert put["required_pull_request_reviews"] == before["required_pull_request_reviews"]
+    patch = json.loads(writes.read_text(encoding="utf-8").splitlines()[0])
+    assert set(patch) == {"strict", "contexts"}
+    assert sorted(patch["contexts"]) == ["bet-done-transition", "gac-gate", "phase-gate"]
+    after = json.loads(state.read_text(encoding="utf-8"))
+    for key, value in before.items():
+        if key != "required_status_checks":
+            assert after[key] == value
 
 
 def test_remove_context_removes_only_gac_gate(tmp_path: Path) -> None:
@@ -988,8 +1049,9 @@ def test_remove_context_removes_only_gac_gate(tmp_path: Path) -> None:
     state.write_text(json.dumps(payload), encoding="utf-8")
     result = _run(env, "--remove-required-context", "gac-gate", "--expected-contexts", "phase-gate,bet-done-transition,gac-gate", "--receipt", str(tmp_path / "receipt.json"), "--yes")
     assert result.returncode == 0
-    put = json.loads(writes.read_text(encoding="utf-8").splitlines()[0])
-    assert sorted(put["required_status_checks"]["contexts"]) == ["bet-done-transition", "phase-gate"]
+    patch = json.loads(writes.read_text(encoding="utf-8").splitlines()[0])
+    assert set(patch) == {"strict", "contexts"}
+    assert sorted(patch["contexts"]) == ["bet-done-transition", "phase-gate"]
 
 
 def test_unknown_extra_context_fails_closed(tmp_path: Path) -> None:
@@ -1002,7 +1064,7 @@ def test_unknown_extra_context_fails_closed(tmp_path: Path) -> None:
     assert not writes.exists()
 
 
-def test_second_read_change_stops_before_put(tmp_path: Path) -> None:
+def test_second_read_change_stops_before_patch(tmp_path: Path) -> None:
     env, _state, writes = _fake_gh(tmp_path)
     env["FAKE_GH_RACE_AFTER_GET"] = "1"
     result = _run(env, "--add-required-context", "gac-gate", "--expected-contexts", "phase-gate,bet-done-transition", "--receipt", str(tmp_path / "receipt.json"), "--yes")
@@ -1018,7 +1080,7 @@ The fixture state must include reviews, `enforce_admins`, restrictions, linear-h
 uv run --with pytest python -m pytest tests/test_gac_branch_protection.py -q
 ```
 
-Expected: FAIL because current script has full hard-coded PUT and destructive DELETE rollback.
+Expected on `1289e7fd6`: FAIL because the current tool performs only one pre-write read, exposes no durable redacted receipt contract, and does not reject a second-read race. The documented PATCH subresource itself remains the required narrow write path.
 
 - [ ] **Step 3: Implement strict CLI parsing and guarded double-read**
 
@@ -1038,15 +1100,15 @@ bash bin/gac/gac-branch-protection.sh --remove-required-context gac-gate \
 Implementation rules:
 
 ```text
-GET A -> normalize one writable payload -> hash redacted before
+GET A -> normalize/hash redacted full protection
 -> compare exact sorted expected contexts -> GET B -> require digest(B)==digest(A)
--> change only contexts -> PUT once
--> GET again -> compare exact after and every preserved field -> create receipt exclusively
+-> PATCH required_status_checks once with only strict+contexts
+-> GET C -> compare exact after and every preserved field -> create receipt exclusively
 ```
 
-The writable payload must preserve `required_pull_request_reviews`, `enforce_admins`, `restrictions`, `required_linear_history`, `allow_force_pushes`, `allow_deletions`, `block_creations`, `required_conversation_resolution`, `lock_branch` and `allow_fork_syncing`; only `required_status_checks.contexts` changes.
+The PATCH body must contain only `strict` and `contexts`. Full-protection GET A/B/C comparison must prove `required_pull_request_reviews`, `enforce_admins`, `restrictions`, `required_linear_history`, `allow_force_pushes`, `allow_deletions`, `block_creations`, `required_conversation_resolution`, `lock_branch` and `allow_fork_syncing` remain unchanged.
 
-`--check`: aligned `0`, readable drift `1`, unreadable/API/schema error `2`. Expected-before mismatch performs zero PUTs. Remove the old whole-object `DELETE` path.
+`--check`: aligned `0`, readable drift `1`, unreadable/API/schema error `2`. Expected-before or second-read mismatch performs zero PATCHes. Keep every whole-protection PUT/DELETE path disabled.
 
 - [ ] **Step 4: Run GREEN and commit**
 
@@ -1109,7 +1171,7 @@ bash bin/gac/gac-branch-protection.sh --check \
   --expected-contexts phase-gate,bet-done-transition,gac-gate
 ```
 
-Expected: one PUT, post-GET exact contexts, all other protection fields preserved.
+Expected: one narrow status-checks PATCH, post-GET exact contexts, all other protection fields preserved.
 
 - [ ] **Step 4: Record redacted before/after digests**
 
@@ -1356,15 +1418,15 @@ Append:
 
 ```gitignore
 /runtime/bos-neural-mesh-*
-/runtime/concept-weave-preflight.json
+/runtime/concept-weave-preflight*.json
 /runtime/consumer-audit-*.json
-/runtime/control/evidence/
+/runtime/control/evidence/documents-weijian-*/documents-weijian-*.json
 /runtime/daily-health-preflight*.json
-/runtime/heartbeats/
+/runtime/heartbeats/weijian-*
 /runtime/kos-preflight-*.json
 /runtime/predictor-preflight*.json
 /runtime/quarantine/documents-bos-neural-mesh-20260828/
-/runtime/task-inventory/snapshots/
+/runtime/task-inventory/snapshots/20260828-*.json
 ```
 
 Expected: every runtime path in `WP-BET-Y1Q3-T6-15` is ignored under `git check-ignore --no-index`; canonical code/contracts remain trackable.
@@ -1374,14 +1436,19 @@ Expected: every runtime path in `WP-BET-Y1Q3-T6-15` is ignored under `git check-
 ```bash
 uv run --with pyyaml --with pytest python -m pytest tests/test_omo_runtime_stamp_policy.py -q
 uv run --with pyyaml --with pytest python -m pytest tests/unit/gac/test_gac_local_gate_purity.py -q
-uv run --with pyyaml python bin/gac/omo-runtime-stamp-policy.py --treeish HEAD --json
+set +e
+uv run --with pyyaml python bin/gac/omo-runtime-stamp-policy.py --treeish HEAD --json > /tmp/r2a-policy-red.json
+policy_rc=$?
+set -e
+test "$policy_rc" -ne 0
+test -s /tmp/r2a-policy-red.json
 git diff --check
 git add bin/gac/gac-local-gate.py bin/gac/omo-runtime-stamp-policy.py \
   tests/test_omo_runtime_stamp_policy.py tests/unit/gac/test_gac_local_gate_purity.py .gitignore
 git commit -m "fix(governance): gate tracked runtime artifacts by tree"
 ```
 
-Expected: policy code/tests pass; the current branch remains RED only because the bound artifacts are still tracked until Task 8.
+Expected: policy code and synthetic tests pass; the immutable current-HEAD probe fails with the exact bound tracked artifacts. That intentional branch-level RED is consumed immediately by Task 8 in the same R2a run/PR; R2a cannot verify or close between Tasks 7 and 8.
 
 ---
 
@@ -1575,6 +1642,8 @@ Expected: every result is `ok`. Missing digest, ownership, ignored-state, integr
 **Interfaces:**
 - Consumes: R1 merge, H1a/H1c merges, H1b canary, live protection receipt, R2a merge/fresh clone and R2b receipts.
 - Produces: `delivery_accepted` with value `NOT_PROVEN` and a Wave A resume decision.
+
+The files already exist on latest main as an honest **R1 partial** report/retro from `ad19e2202`. Preserve that history and append the final assertion mapping; their existence alone is not closeout evidence and must never be interpreted as T6-15 completion.
 
 - [ ] **Step 1: Write the redacted closeout mapping**
 
