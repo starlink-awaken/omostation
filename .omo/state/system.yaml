@@ -1,5 +1,36 @@
 current_phase: 29
 current_wave: W1
 health_score_evidence: 100.0
-health_score_evidence_generated_at: '2026-08-28T10:19:33.357617+00:00'
+health_score_evidence_generated_at: '2026-08-28T10:21:00.459293+00:00'
 health_score_evidence_source: bin/gac/evidence-smoke.py
+health_score: 78
+governance_anomaly_score: 7
+service_online_ratio: 1.0
+health_score_source: compass_radar_composite_isc3
+health_score_generated_at: '2026-08-28T10:18:13Z'
+runtime_health_summary:
+  online_services: 4
+  total_services: 4
+  ratio: 1.0
+  health_score: 78
+  last_scan: '2026-08-28T10:18:13Z'
+  source: compass_radar_isc3_daemon_ratio
+  degraded: []
+governance_feedback_last_run: '2026-08-28T10:18:13Z'
+updated_at: '2026-08-28T10:21:00Z'
+completed_tasks: 290
+planned_tasks: 7
+active_tasks: 1
+blocked_tasks: 1
+total_tasks: 299
+next_active_tasks:
+- kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
+next_planned_tasks:
+- bet-y3h1-t7-01 (中试 / 政策申报升 assisted)
+- bet-y3h2-t7-01 (公文场景 routine (限格式类))
+- cockpit-debt-debt-1 (治理技术债务：债务)
+- 'event-loop-dead-loop (闭环回路死回路: 2 个 emit 零消费者)'
+- kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
+- needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
+  物理 KPI 解锁）)
+- 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
