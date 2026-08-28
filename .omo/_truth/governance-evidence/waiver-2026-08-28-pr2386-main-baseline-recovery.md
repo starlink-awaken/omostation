@@ -49,7 +49,7 @@ Do not modify ops implementation, services, any other ADR, BET,
 completion/value evidence, gitlink, CI workflow, branch protection, runtime
 state, host configuration, or user configuration. Recount immediately before
 integration; after the post-merge supplement below, if the active script count
-is no longer exactly `503`, stop
+is no longer exactly `504`, stop
 instead of changing the baseline again.
 
 ## Baseline evidence
@@ -80,3 +80,16 @@ Under the same written principal delegation, this supplement narrowly permits
 one tail recovery to register `bin/ops/dashboard.py`, advance only
 `subtraction_quota.script_baseline` from `502` to `503`, and update this evidence
 file. All forbidden scope above remains unchanged.
+
+## Post-merge supplement — #2399 alert
+
+PR #2399 (`8bb5c4f9`) added `bin/ops/alert.py` after the dashboard tail
+recovery. Direct verification on that main found active scripts `504`,
+configured baseline `503`, and exactly one missing registration:
+`bin/ops/alert.py`.
+
+Under the same written principal delegation, this supplement narrowly permits
+registration of `bin/ops/alert.py`, advancement of only
+`subtraction_quota.script_baseline` from `503` to `504`, and this evidence
+update. It is delivered alongside the independent T10-43 service-config repair
+as separate commits and workflow claims; all forbidden scope remains unchanged.

@@ -517,6 +517,50 @@ bets:
   - projects/omo/src/omo/workflow/lifecycle.py
   pasw_required: false
   depends_on: []
+- id: BET-Y1Q3-T10-43
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'service-config lifecycle-only 声明与 validator 修复'
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: '将误标为 launchd 生成任务的 OMO lifecycle-only 服务显式设为非生成记录，并让服务注册 validator 在生成前拒绝缺 label 或 program 的 launchd 声明。'
+  non_goals:
+  - 不创建、修改、加载或卸载任何宿主 plist
+  - 不改变 OMO governor/verifier/replay/alert/status 的业务语义或调度策略
+  - 不新增服务注册表、调度器或控制平面
+  done_when:
+  - '五条 OMO lifecycle-only 声明不再参与 plist 生成或 drift 比对'
+  - 'generated launchd 服务缺 label/program 时 validate 明确失败，check 不抛未处理异常'
+  - 'service-config validate 与 focused tests 通过；check 可报告既有 host drift，但不抛未处理异常'
+  verify:
+  - cmd: 'python3 bin/mof/gen-service-configs.py --validate --json'
+    expect: exit 0
+  - cmd: 'python3 -c "import subprocess; p=subprocess.run([\"python3\",\"bin/mof/gen-service-configs.py\",\"--check\",\"--json\"],capture_output=True,text=True); assert p.returncode in (0,1); assert \"KeyError\" not in p.stderr"'
+    expect: exit 0
+  - cmd: 'uv run --with pytest --with pyyaml python -m pytest tests/test_gen_service_configs.py -q'
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - .omo/_truth/registry/services.yaml
+  - bin/mof/gen-service-configs.py
+  - tests/test_gen_service_configs.py
+  - docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-43.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-28-service-config-p0-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:b7bea44d24199abcd7b430de007b52049bff1c8ba34b40e2aa73fb6d0ef6b2dc'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-43
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 'Any attempt to write host plist, ambiguous lifecycle ownership, or generated launchd contract beyond the five declared records stops this BET.'
+  retro: required
 - id: BET-Y1Q3-T4-02
   track: T4-OUTCOME
   window: Y1Q3
