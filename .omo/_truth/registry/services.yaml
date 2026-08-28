@@ -1788,6 +1788,8 @@ services:
   liveness:
     signal: .omo/_delivery/kairon-cli/
     max_stale_hours: 168
+  depends_on:
+  - mcp.kos
 - id: cli.kos
   enabled: true
   scheduler: manual
@@ -1796,6 +1798,11 @@ services:
     interpreter: uv
     entrypoint: projects/knowledge/kairon
   notes: KOS CLI — 知识操作系统
+  liveness:
+    signal: .omo/_delivery/kos-cli/
+    max_stale_hours: 168
+  depends_on:
+  - mcp.kos
 - id: cli.minerva
   enabled: true
   scheduler: manual
@@ -1804,6 +1811,11 @@ services:
     interpreter: uv
     entrypoint: projects/knowledge/kairon
   notes: Minerva CLI — 研究助手
+  liveness:
+    signal: .omo/_delivery/minerva-cli/
+    max_stale_hours: 168
+  depends_on:
+  - mcp.minerva
 - id: cli.gbrain
   enabled: true
   scheduler: manual
@@ -1815,6 +1827,8 @@ services:
   liveness:
     signal: .omo/_delivery/gbrain-cli/
     max_stale_hours: 168
+  depends_on:
+  - mcp.gbrain
 - id: cli.ecos
   enabled: true
   scheduler: manual
@@ -1826,6 +1840,8 @@ services:
   liveness:
     signal: .omo/_delivery/ecos-cli/
     max_stale_hours: 168
+  depends_on:
+  - mcp.agora
 - id: mcp.gbrain
   enabled: true
   scheduler: manual
@@ -1840,6 +1856,10 @@ services:
     endpoint: http://localhost:7443/health
     max_stale_hours: 24
   notes: GBrain MCP — 图数据库
+  ports:
+  - 7443
+  depends_on:
+  - mcp.agora
 - id: mcp.c2g
   enabled: true
   scheduler: manual
@@ -1854,6 +1874,10 @@ services:
     endpoint: http://localhost:7444/health
     max_stale_hours: 24
   notes: C2G MCP — 策略物化
+  ports:
+  - 7444
+  depends_on:
+  - mcp.agora
 - id: mcp.aetherforge
   enabled: true
   scheduler: manual
@@ -1868,3 +1892,889 @@ services:
     endpoint: http://localhost:7445/health
     max_stale_hours: 24
   notes: AetherForge MCP — 本地算力
+  ports:
+  - 7445
+  depends_on:
+  - mcp.agora
+- id: bos.kos.rest
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: http
+  uri: bos://memory/kos/rest-api
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7450
+- id: bos.kos.mcp_v2
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/kos/mcp-v2
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.kos.schema
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/kos/schema
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.kos.query
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/kos/query
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.kronos.ingest
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/kronos/ingest
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.kronos.query
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://memory/kronos/query
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.kronos.schedule
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://memory/kronos/schedule
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.gbrain.search
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://memory/gbrain/search
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.gbrain.query
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://memory/gbrain/query
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mos.write
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/mos/write
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mos.recall
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/mos/recall
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mos.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/mos/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mos.consolidate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/mos/consolidate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.omo.inspect
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://governance/omo/inspect
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.omo.sync
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://governance/omo/sync
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.omo.ledger_append
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/ledger-append
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.omo.ledger_read
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/ledger-read
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.omo.ledger_verify
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/ledger-verify
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.workflow.observe
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/agent-workflow/observe
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.workflow.doctor
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/agent-workflow/doctor
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.evolution.validate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/evolution/validate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.evolution.traces
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/evolution/traces
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.evolution.packages
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/evolution/packages
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.metaos.route
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/metaos/route
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.metaos.gate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://governance/metaos/gate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.metaos.register
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://governance/metaos/register
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.minerva.ask
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/minerva/ask
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.minerva.summarize
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/minerva/summarize
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.minerva.draft
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://analysis/minerva/draft
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.minerva.audit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://analysis/minerva/audit
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.ontoderive.validate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/validate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.ontoderive.explain
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/explain
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.ontoderive.audit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/audit
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.ontoderive.fact_check
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/fact-check
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.codeanalyze.analyze
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/codeanalyze/analyze
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.codeanalyze.metrics
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/codeanalyze/metrics
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.codeanalyze.lint
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://analysis/codeanalyze/lint
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.iris.scan
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/iris/scan
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.iris.recall
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/iris/recall
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.agent-runtime.list-tools
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/list-tools
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.agent-runtime.chat
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/chat
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.agent-runtime.run-task
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/run-task
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.agent-runtime.task-status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/task-status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.agent-runtime.agent-list
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/agent-list
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.swarm.run
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://capability/swarm/run
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.compute.generate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://capability/compute/generate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.bus.data
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://capability/bus/data
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.bus.event
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://capability/bus/event
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mof.autonomous
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/autonomous
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mof.act
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/act
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mof.analyze
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/analyze
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mof.export
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/export
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mof.drift
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/drift
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mof.scan
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/scan
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mof.assign
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/assign
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mof.evolution
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/evolution
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mof.enforce
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/enforce
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.mof.manage
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/manage
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.system.backends.register
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/backends/register
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.system.governance.heartbeat
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/governance/heartbeat
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.system.omo.debt
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/omo/debt
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+- id: bos.system.discovery.package
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://system/discovery/package
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.cell.memory.publish
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/memory/publish
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.cell.memory.search
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/memory/search
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.cell.governance.audit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/governance/audit
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.cell.config.list
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/config/list
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.cell.replay.run
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/replay/run
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.agora.metrics
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://agora/metrics
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.agora.registry
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://agora/registry
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.cockpit.cards_status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://cockpit/tools/cards_status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.cockpit.test
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://cockpit/tools/test
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.compute.mesh
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://compute/aetherforge/mesh
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.compute.swarm
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://compute/aetherforge/swarm
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.ecos.events
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/events
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.ecos.workflow
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/workflow
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.persona.validate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://persona/core-models/validate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.persona.update
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://persona/health-profile/update
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+- id: bos.resident.roles
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://resident/core/roles
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - resident.orchestrator
+- id: bos.resident.daemon
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://resident/daemon/once
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - resident.orchestrator
+- id: bos.resident.decision
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://resident/decision/run
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - resident.orchestrator
