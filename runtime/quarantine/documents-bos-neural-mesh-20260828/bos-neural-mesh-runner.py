@@ -127,7 +127,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the governed BOS Neural Mesh pipeline")
     parser.add_argument("--dry-run", action="store_true", help="validate the plan without invoking connectors")
     parser.add_argument("--allow-derived", action="store_true", help="explicitly allow vector/graph/dispatch steps")
-    parser.add_argument("--production", action="store_true", help="run the fail-closed production preflight before connectors")
+    parser.add_argument(
+        "--production", action="store_true", help="run the fail-closed production preflight before connectors"
+    )
     parser.add_argument("--docs-root", type=Path, default=DEFAULT_DOCS_ROOT)
     parser.add_argument("--state-db", type=Path, default=DEFAULT_STATE_DB)
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
@@ -143,12 +145,18 @@ def _runtime_root() -> Path | None:
         Path("/Users/xiamingxing/ws-runtime-kems-m6-20260731"),
     )
     return next(
-        (candidate for candidate in candidates if candidate and (candidate / "scripts" / "kems_production_preflight.py").is_file()),
+        (
+            candidate
+            for candidate in candidates
+            if candidate and (candidate / "scripts" / "kems_production_preflight.py").is_file()
+        ),
         None,
     )
 
 
-def run_production_preflight(args: argparse.Namespace, docs_root: Path, state_db: Path, run_id: str, runtime_dir: Path) -> bool:
+def run_production_preflight(
+    args: argparse.Namespace, docs_root: Path, state_db: Path, run_id: str, runtime_dir: Path
+) -> bool:
     step = Step("production-preflight", "生产上线前置闸门", "kems_production_preflight.py", "governance", False, True)
     runtime_root = _runtime_root()
     script = runtime_root / "scripts" / step.script_name if runtime_root else runtime_dir / step.script_name
@@ -183,7 +191,16 @@ def run_production_preflight(args: argparse.Namespace, docs_root: Path, state_db
         save_step(state_db, run_id, step, script, "failed", finished_at=utc_now(), error_type="preflight_error")
         return False
     if result.returncode:
-        save_step(state_db, run_id, step, script, "blocked", finished_at=utc_now(), return_code=result.returncode, error_type="preflight_blocked")
+        save_step(
+            state_db,
+            run_id,
+            step,
+            script,
+            "blocked",
+            finished_at=utc_now(),
+            return_code=result.returncode,
+            error_type="preflight_blocked",
+        )
         return False
     save_step(state_db, run_id, step, script, "succeeded", finished_at=utc_now(), return_code=0)
     return True
@@ -199,7 +216,11 @@ def run_pipeline(args: argparse.Namespace) -> int:
     errors = 0
 
     try:
-        if args.production and not args.dry_run and not run_production_preflight(args, docs_root, state_db, run_id, runtime_dir):
+        if (
+            args.production
+            and not args.dry_run
+            and not run_production_preflight(args, docs_root, state_db, run_id, runtime_dir)
+        ):
             errors += 1
         for step in STEPS:
             if errors:
@@ -221,7 +242,9 @@ def run_pipeline(args: argparse.Namespace) -> int:
                     break
                 continue
             if step.derived and not args.allow_derived:
-                save_step(state_db, run_id, step, script, "blocked", finished_at=utc_now(), error_type="derived_not_allowed")
+                save_step(
+                    state_db, run_id, step, script, "blocked", finished_at=utc_now(), error_type="derived_not_allowed"
+                )
                 errors += 1
                 break
             if not script.is_file():
@@ -270,13 +293,19 @@ def run_pipeline(args: argparse.Namespace) -> int:
                 break
             except OSError as exc:
                 errors += 1
-                save_step(state_db, run_id, step, script, "failed", finished_at=utc_now(), error_type=type(exc).__name__)
+                save_step(
+                    state_db, run_id, step, script, "failed", finished_at=utc_now(), error_type=type(exc).__name__
+                )
                 break
     finally:
         status = "succeeded" if errors == 0 else "failed"
         finish_run(state_db, run_id, status, errors)
 
-    print(json.dumps({"run_id": run_id, "status": status, "error_count": errors, "state_db": str(state_db)}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"run_id": run_id, "status": status, "error_count": errors, "state_db": str(state_db)}, ensure_ascii=False
+        )
+    )
     return 0 if status == "succeeded" else 1
 
 
