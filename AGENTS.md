@@ -57,8 +57,14 @@ Do **not** add a second dispatcher, a fifth ontology, or a new top-level human e
 **可执行闸门（ADR-0204）**：`compliance` / `status` 对 **已 stage** 的需求面路径检查是否存在 active run；无 run → **halt**（exit 1）。旁路：`AGCP_REQUIREMENT_ITERATION_GATE=0`。
 
 ```bash
+uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
+uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
+uv run --with "pyyaml" python "bin/agent-workflow.py" compliance
 make agent-workflow-bootstrap && make agent-workflow-status
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --bet <BET-ID> --objective "<summary>"
+uv run --with "pyyaml" python "bin/agent-workflow.py" suggest --from-diff --profile <agent-profile>
+uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> \
+  --profile <agent-profile> --bet <BET-ID> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 uv run --with "pyyaml" python "bin/agent-workflow.py" verify <run-id> --from-diff --execute
 make agent-workflow-closeout RUN_ID=<run-id>
