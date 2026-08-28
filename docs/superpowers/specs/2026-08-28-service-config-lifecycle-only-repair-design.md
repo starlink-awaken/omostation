@@ -28,6 +28,9 @@ installed launchd jobs; they must not generate machine plist files.
 - `--check` reports structured drift or validation failure and never raises a
   `KeyError` for registry input. Existing host plist drift remains visible and
   is not reclassified as a passing result by this repair.
+- When the host launchd observer directory is absent (for example on Linux CI),
+  `--check --json` returns a structured `launchd_observer_unavailable` skip
+  after declaration validation; it does not fabricate plist drift.
 - No host plist, launchctl state, or service process is changed by this BET.
 
 ## Verification
@@ -36,4 +39,6 @@ installed launchd jobs; they must not generate machine plist files.
    launchd record.
 2. `gen-service-configs.py --validate --json` passes; `--check --json` may
    return drift but completes without an unhandled exception.
-3. Existing generated service declarations remain byte-compatible.
+3. A missing host observer skips only byte comparison; malformed generated
+   launchd declarations still fail validation.
+4. Existing generated service declarations remain byte-compatible.
