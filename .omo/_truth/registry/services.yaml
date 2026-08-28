@@ -4826,6 +4826,7 @@ services:
 - id: omo.governor
   enabled: true
   scheduler: launchd
+  generate: false
   trigger: on_demand
   program:
     interpreter: uv
@@ -4837,6 +4838,7 @@ services:
 - id: omo.verifier
   enabled: true
   scheduler: launchd
+  generate: false
   trigger: on_demand
   program:
     interpreter: uv
@@ -4848,6 +4850,7 @@ services:
 - id: omo.replay
   enabled: true
   scheduler: launchd
+  generate: false
   trigger: on_demand
   program:
     interpreter: uv
@@ -4859,6 +4862,7 @@ services:
 - id: omo.alert
   enabled: true
   scheduler: launchd
+  generate: false
   trigger: on_demand
   program:
     interpreter: uv
@@ -4870,6 +4874,7 @@ services:
 - id: omo.status
   enabled: true
   scheduler: launchd
+  generate: false
   trigger: on_demand
   program:
     interpreter: uv
