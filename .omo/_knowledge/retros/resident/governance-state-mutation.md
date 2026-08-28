@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-state-mutation
-generated_at: 2026-08-28T04:50:00Z
+generated_at: 2026-08-28T05:10:08Z
 status: candidate
 counts:
   runs: 27
@@ -15,7 +15,7 @@ failure_breakdown:
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-28T04:50:00Z
+- generated_at: 2026-08-28T05:10:08Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 27 成功运行 + 13 失败模式 = 40 草稿
 - 失败率: 32.50%
@@ -262,7 +262,9 @@ failure_breakdown:
 - **20260828T044529Z-governance-state-mutation-69537635**
   - 计划 (objective): Canonical claims for post-2398 BOS mirror recovery
   - workflow: governance-state-mutation
-  - 指标: event_count=1, duration_s=0.0
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=738.012
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
