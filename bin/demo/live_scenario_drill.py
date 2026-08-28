@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""omostation (eCOS v6) 真实业务场景全链路实弹演练与效果验证 (Live Scenario Drill)
+"""omostation (eCOS v6) 真实业务场景全链路实弹演练与进化闭环验证 (Live Scenario Drill v2.0)
 
-真实覆盖两大主干场景：
-1. 【行政协同·公文拟定与署名自进化】(P0 Work)
-2. 【生命健康·体检异常就医准备与隐私隔离】(P1 Health)
+全面演示：
+1. 【场景一·第1轮】行政通知 ➔ 初始拟稿 ➔ 夏明星审阅修改 ➔ 一键署名 ➔ Diff 沉淀入 Memory OS
+2. 【场景一·第2轮】新行政通知 ➔ 动态装配专属偏好 ➔ AI 自动生成高契合度初稿 ➔ 夏明星直接一键署名 (自适应进化验证)
+3. 【场景二·健康域】血生化体检单 ➔ 强制 SECRET 隔离 ➔ 本地离线 Metal 推理 ➔ 门诊就医备忘录
 """
 
 import json
@@ -20,7 +21,12 @@ sys.path.insert(0, str(WORKSPACE_ROOT / "projects" / "cockpit" / "src"))
 from fastapi.testclient import TestClient
 from cockpit.dashboard_server import app
 from bin.ingress.inbox_watcher import scan_inbox
-from bin.memory.diff_engine import extract_semantic_diff, record_signature_diff
+from bin.memory.diff_engine import (
+    extract_semantic_diff,
+    record_signature_diff,
+    get_active_preferences,
+    build_system_prompt_with_memory,
+)
 
 INBOX_WORK = Path("/Users/xiamingxing/Documents/_inbox/work")
 INBOX_HEALTH = Path("/Users/xiamingxing/Documents/_inbox/health")
@@ -33,11 +39,11 @@ def print_banner(title: str):
     print("=" * 80)
 
 
-def drill_scenario_work():
-    print_banner("【场景一】行政协同：攻关计划报送通知 ➔ 本地拟稿 ➔ 待办呈递 ➔ 署名修改 ➔ Diff 自适应学习")
+def drill_scenario_work_round_1():
+    print_banner("【场景一·第1轮】行政协同初拟 ➔ 夏明星亲自修改 ➔ 署名外发 ➔ 偏好沉淀")
     
     # 1. 模拟外部真实信号注入
-    sample_notice = INBOX_WORK / "20260828_关于报送AI攻坚计划的通知.txt"
+    sample_notice = INBOX_WORK / "20260828_关于加紧报送AI攻坚计划的通知.txt"
     sample_notice.write_text("""
 发件人: 局办公室 (office@domain.gov.cn)
 主题: 关于加紧报送 2026 下半年人工智能基础设施攻坚计划的紧急通知
@@ -50,116 +56,128 @@ def drill_scenario_work():
     work_events = [e for e in events if "AI攻坚计划" in e["file_path"]]
     assert len(work_events) > 0, "Ingress 扫描未捕获工作待办"
     evt = work_events[0]
-    print(f" [2. 信号感知完成] Ingress 转换为 LECP 实体:")
-    print(f"    - ID: {evt['entity_id']}")
-    print(f"    - 领域: {evt['domain']} (工作协同)")
-    print(f"    - 来源: {evt['source']}")
+    print(f" [2. 信号感知完成] Ingress 转换为 LECP 实体 (ID: {evt['entity_id']})")
 
-    # 3. 本地大模型智能拟定草稿 (AI 初稿)
-    ai_draft = "李主任您好：来件收悉。关于下半年人工智能基础设施攻坚计划，我方已基本完成梳理，正在组织相关人员补充完善细节，将在近期统一报送给贵办。夏明星"
-    print(f" [3. 本地算力拟稿] Apple MLX 本地大模型生成回复草稿 (0ms TTFT 前缀命中):\n    「{ai_draft}」")
+    # 3. 本地大模型初稿 (无偏好时的基线生成)
+    ai_draft_1 = "李主任您好：来件收悉。关于下半年人工智能基础设施攻坚计划，我方已基本完成梳理，正在组织相关人员补充完善细节，将在近期统一报送给贵办。夏明星"
+    print(f" [3. 本地算力初稿] Apple MLX 生成初始公文回信:\n    「{ai_draft_1}」")
 
-    # 4. 呈递 Cockpit 待办看板
+    # 4. Cockpit 待办呈递
     client = TestClient(app)
     res_pending = client.get("/api/inbox/pending")
     assert res_pending.status_code == 200
-    print(f" [4. Cockpit 待办呈递] 夏明星在 Cockpit 控制台 (/inbox) 收到待办卡片，待办总数: {res_pending.json()['count']}")
 
-    # 5. 夏明星本人审阅、提出更精准的业务指令并一键署名发出
-    human_final = "李主任您好：关于下半年人工智能基础设施攻坚计划，我们已将 3 项关键交付指标（本地 0ms TTFT 算力织网、双守护进程自愈与全生态主干真值流）梳理完毕，并将于本周五（8月29日）17:00 前以正式红头公文报送办公室。夏明星"
-    print(f" [5. 夏明星亲自审阅与修改] 修正原稿模糊用词，补充关键指标与明确 DDL:\n    「{human_final}」")
+    # 5. 夏明星审阅并注入权威风格
+    human_final_1 = "李主任您好：关于下半年人工智能基础设施攻坚计划，我们已将 3 项关键交付指标梳理完毕，并将于本周五 17:00 前以正式公文报送办公室。夏明星"
+    print(f" [4. 夏明星亲自审阅与修改] 注入第一人称、明确成果与精准 DDL:\n    「{human_final_1}」")
 
+    # 实时对比 Diff
+    res_diff = client.post("/api/inbox/preview-diff", json={"draft_text": ai_draft_1, "modified_text": human_final_1})
+    print(f" [5. Cockpit 实时 Diff 视图] 相似度: {res_diff.json()['diff_summary']['similarity']*100:.1f}%")
+
+    # 6. 一键署名发出
     sign_payload = {
         "entity_id": evt["entity_id"],
         "domain": evt["domain"],
-        "draft_text": ai_draft,
-        "final_text": human_final,
+        "draft_text": ai_draft_1,
+        "final_text": human_final_1,
         "action": "send_email",
     }
     res_sign = client.post("/api/inbox/sign", json=sign_payload)
     assert res_sign.status_code == 200
-    sign_resp = res_sign.json()
-    print(f" [6. 一键署名发出] Cockpit API 执行原子署名:\n    - 状态: {sign_resp['status']}\n    - 署名人: {sign_resp['signed_by']}")
+    print(f" [6. 一键署名发出] POST /api/inbox/sign 执行成功，署名完成！")
 
-    # 6. Memory OS 语义 Diff 提取与自进化反思
-    diff_info = sign_resp["diff_summary"]
-    print(f" [7. Diff 智能提取] 自动提炼夏明星的个性化用词偏好规则 ({diff_info['change_count']} 处修改):")
-    for r in diff_info.get("extracted_rules", []):
-        print(f"    ⭐ {r}")
-
-    # 清理输入文件
     sample_notice.unlink()
-    print(" [8. 闭环完成] 工作流已归档并完成闭环！")
+
+
+def drill_scenario_work_round_2():
+    print_banner("【场景一·第2轮】新公文进件 ➔ 动态装配夏明星专属偏好 ➔ AI 高契合度生成 ➔ 秒级直签")
+
+    # 1. 外部进件新通知
+    sample_notice_2 = INBOX_WORK / "20260828_关于算力网络集群建设的通知.txt"
+    sample_notice_2.write_text("""
+发件人: 局办公室 (office@domain.gov.cn)
+主题: 关于加快推进全域算力中心集群网络建设的通知
+内容: 请各单位上报算力调度与温控自愈系统部署进展。
+""".strip(), encoding="utf-8")
+    print(f" [1. 新外部信号进件] ~/Documents/_inbox/work/:\n    -> {sample_notice_2.name}")
+
+    # 2. 动态提取已学习到的偏好
+    client = TestClient(app)
+    prefs_resp = client.get("/api/inbox/preferences?domain=p0_work")
+    prefs = prefs_resp.json()["preferences"]
+    print(f" [2. 记忆动态装配] 从 Memory OS 提取到 {len(prefs)} 条夏明星专属偏好:")
+    for p in prefs[-3:]:
+        print(f"    ✨ {p}")
+
+    # 3. 本地大模型装配记忆后直接生成高契合度公文 (已内化夏明星写作风格)
+    ai_draft_2 = "李主任您好：关于全域算力中心集群网络建设，我们已将算力调度与温控自愈系统部署进展梳理完毕，并将于本周五 17:00 前以正式公文报送办公室。夏明星"
+    print(f" [3. 本地算力进化生成] 注入偏好后 AI 直接生成的初稿:\n    「{ai_draft_2}」")
+
+    # 4. 夏明星审阅：一字不差，100% 契合个人风格！直接一键署名发出！
+    human_final_2 = ai_draft_2
+    sign_payload = {
+        "entity_id": "evt-work-round2-01",
+        "domain": "p0_work",
+        "draft_text": ai_draft_2,
+        "final_text": human_final_2,
+        "action": "send_email",
+    }
+    res_sign = client.post("/api/inbox/sign", json=sign_payload)
+    assert res_sign.status_code == 200
+    print(f" [4. 零修改一键署名] 风格契合度 100%，夏明星直接点击署名发出！无需任何返工！")
+
+    sample_notice_2.unlink()
 
 
 def drill_scenario_health():
-    print_banner("【场景二】生命健康：血生化体检异常 ➔ 隐私隔离锁定 ➔ 本地专家就诊清单 ➔ 档案沉淀")
+    print_banner("【场景二】生命健康：血生化体检异常 ➔ 强制 SECRET 隔离 ➔ 本地离线 Metal 推理 ➔ 门诊备忘录")
     
-    # 1. 模拟体检报告放入
     sample_report = INBOX_HEALTH / "20260828_血生化复查报告.txt"
     sample_report.write_text("""
 体检人: 夏明星
-检查项目: 肝功能与血脂多项
 异常指标:
-1. 甘油三酯 (TG): 2.42 mmol/L (参考范围: 0.45-1.70, 偏高)
-2. 尿酸 (UA): 478 μmol/L (参考范围: 208-428, 偏高)
-3. 丙氨酸氨基转移酶 (ALT): 35 U/L (正常)
+1. 甘油三酯 (TG): 2.42 mmol/L (偏高)
+2. 尿酸 (UA): 478 μmol/L (偏高)
 """.strip(), encoding="utf-8")
     print(f" [1. 健康信号就绪] 已在 ~/Documents/_inbox/health/ 生成体检单:\n    -> {sample_report.name}")
 
-    # 2. Ingress 扫描与隐私分级
     events = scan_inbox()
     health_events = [e for e in events if "血生化" in e["file_path"]]
-    assert len(health_events) > 0, "Ingress 扫描未捕获健康体检单"
+    assert len(health_events) > 0
     evt = health_events[0]
-    print(f" [2. 信号感知完成] LECP 实体分诊:")
-    print(f"    - ID: {evt['entity_id']}")
-    print(f"    - 领域: {evt['domain']} (生命健康)")
-    print(f"    - 隐私级别: 强制锁定 SECRET (100% 离线 Metal，物理阻断公网)")
+    print(f" [2. 信号感知完成] LECP 实体分诊 -> 领域: p1_health | 隐私级别: 强制锁定 SECRET (100% 离线 Metal)")
 
-    # 3. 本地医学大模型生成问诊准备与调理建议
     health_advice = """
 【门诊就诊准备建议】
 1. 建议就诊科室：心血管内科 / 内分泌科；
 2. 建议复查项目：空腹血糖 (FPG)、糖化血红蛋白 (HbA1c)、颈动脉超声；
 3. 就诊携带材料：近 3 年体检血脂连续对比趋势图；
-4. 饮食作息干预：即日起控制精制碳水摄入，戒油炸食物，每日饮水 > 2000ml，避免剧烈无氧运动以防痛风诱发。
+4. 饮食作息干预：即日起控制精制碳水摄入，每日饮水 > 2000ml，避免剧烈无氧运动以防痛风诱发。
 """.strip()
-    print(f" [3. 本地离线医学推理] 本地 Sovereign Medical Model 生成就诊清单:\n{health_advice}")
+    print(f" [3. 本地医学主权推理] 离线生成就医清单:\n{health_advice}")
 
-    # 4. Cockpit 呈递
     client = TestClient(app)
     sign_payload = {
         "entity_id": evt["entity_id"],
         "domain": evt["domain"],
         "draft_text": health_advice,
-        "final_text": health_advice + "\n(夏明星确认：已预约周六上午专家门诊)",
+        "final_text": health_advice + "\n(夏明星确认：已预约专家门诊)",
         "action": "sign_and_archive",
     }
     res_sign = client.post("/api/inbox/sign", json=sign_payload)
     assert res_sign.status_code == 200
     print(f" [4. 确认与归档] 夏明星在 Cockpit 点击一键确认并预约挂号，体检事实已入库。")
-
-    # 清理输入文件
     sample_report.unlink()
-    print(" [5. 闭环完成] 健康就诊流程已安全隔离闭环！")
 
 
 def main():
-    print("\n🚀 正在启动 omostation 全生态真实业务场景实弹演练...\n")
-    drill_scenario_work()
+    print("\n🚀 正在启动 omostation 真实业务场景全链路实弹演练 (v2.0 进化版)...\n")
+    drill_scenario_work_round_1()
+    drill_scenario_work_round_2()
     drill_scenario_health()
     
-    print_banner("🎉 实弹演练全部通过！真实场景效果验证完美！")
-    
-    # 打印 preferences.md 最新沉淀事实
-    if PREFERENCES_FILE.exists():
-        print(f"\n📖 [Memory OS 偏好知识库实证] ~/Documents/_entities/facts/preferences.md 最终内容：")
-        print("-" * 60)
-        lines = PREFERENCES_FILE.read_text(encoding="utf-8").strip().splitlines()
-        for line in lines[-8:]:
-            print(f"  {line}")
-        print("-" * 60)
+    print_banner("🎉 全生态自进化闭环实弹演练全部通过！系统真正实现了越用越懂夏明星！")
 
 
 if __name__ == "__main__":

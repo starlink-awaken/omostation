@@ -40,7 +40,7 @@ def test_inbox_watcher_scan(tmp_path):
     
     events = scan_inbox(inbox_root=test_inbox)
     assert len(events) >= 1
-    health_ev = next(e for e in events if e["source"]["title"] == "体检单_2026.txt")
+    health_ev = next(e for e in events if "体检单_2026.txt" in e.get("file_path", ""))
     assert health_ev["domain"] == "p1_health"
     assert health_ev["privacy_level"] == "secret"
 
