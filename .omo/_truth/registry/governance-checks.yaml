@@ -179,13 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-<<<<<<< HEAD
     script_baseline: 503
-||||||| parent of a6c7c055f (feat(gac): ADR-0431 防腐五层全链路落地 — D2 规则生命周期 + agent 感知)
-    script_baseline: 502
-=======
-    script_baseline: 508  # 2026-08-28: rules-lifecycle + proposal-triage + 治理监控系列 (SCRIPT-BASELINE-SYNC)
->>>>>>> a6c7c055f (feat(gac): ADR-0431 防腐五层全链路落地 — D2 规则生命周期 + agent 感知)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -214,7 +208,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-HEALTH-SSOT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-HEALTH-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-M0-STAGE-GATE
     dimension: X4
     layer: M0
@@ -238,7 +232,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-M0-STAGE-GATE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-M0-STAGE-GATE — 待补存在理由 (90 天内补齐)'
   - id: CR-L0-BOS-RESOLVE
     dimension: X1
     layer: L0
@@ -262,7 +256,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L0-BOS-RESOLVE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L0-BOS-RESOLVE — 待补存在理由 (90 天内补齐)'
   - id: CR-L2-TASK-DELIVERABLE
     dimension: X4
     layer: L2
@@ -285,7 +279,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L2-TASK-DELIVERABLE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L2-TASK-DELIVERABLE — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-GAC-DRIFT
     dimension: X2
     layer: meta
@@ -308,7 +302,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X2-GAC-DRIFT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X2-GAC-DRIFT — 待补存在理由 (90 天内补齐)'
   - id: CR-X1-AGENT-AUDIT
     dimension: X1
     layer: meta
@@ -333,7 +327,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X1-AGENT-AUDIT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X1-AGENT-AUDIT — 待补存在理由 (90 天内补齐)'
   - id: CR-X3-DEBT-TIER
     dimension: X3
     layer: L2
@@ -356,7 +350,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X3-DEBT-TIER — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X3-DEBT-TIER — 待补存在理由 (90 天内补齐)'
   - id: CR-L1-RUNTIME-HEALTH
     dimension: X2
     layer: L1
@@ -379,7 +373,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L1-RUNTIME-HEALTH — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L1-RUNTIME-HEALTH — 待补存在理由 (90 天内补齐)'
   - id: CR-L3-COCKPIT-ENTRY
     dimension: X4
     layer: L3
@@ -402,7 +396,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L3-COCKPIT-ENTRY — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L3-COCKPIT-ENTRY — 待补存在理由 (90 天内补齐)'
   - id: CR-L2-DIRECT-IO
     dimension: X1
     layer: L2
@@ -425,7 +419,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L2-DIRECT-IO — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L2-DIRECT-IO — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-DOC-SSOT
     dimension: X4
     layer: meta
@@ -452,7 +446,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-DOC-SSOT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-DOC-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-L2-SURFACES-INTEGRITY
     dimension: X4
     layer: L2
@@ -475,7 +469,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L2-SURFACES-INTEGRITY — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L2-SURFACES-INTEGRITY — 待补存在理由 (90 天内补齐)'
   - id: CR-L0-PROTOCOLS-SSOT
     dimension: X4
     layer: L0
@@ -501,7 +495,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L0-PROTOCOLS-SSOT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L0-PROTOCOLS-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-GAC-BOOTSTRAP
     dimension: X2
     layer: meta
@@ -524,7 +518,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X2-GAC-BOOTSTRAP — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X2-GAC-BOOTSTRAP — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-GOVERNANCE-SEMANTIC-GATE
     dimension: X2
     layer: meta
@@ -548,7 +542,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X2-GOVERNANCE-SEMANTIC-GATE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X2-GOVERNANCE-SEMANTIC-GATE — 待补存在理由 (90 天内补齐)'
   - id: CR-X1-GOD-MODULE-LIMIT
     dimension: X1
     layer: L2
@@ -572,7 +566,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X1-GOD-MODULE-LIMIT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X1-GOD-MODULE-LIMIT — 待补存在理由 (90 天内补齐)'
   - id: CR-L0-MATRIX-PORT-CONSISTENCY
     dimension: X4
     layer: meta
@@ -595,7 +589,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L0-MATRIX-PORT-CONSISTENCY — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L0-MATRIX-PORT-CONSISTENCY — 待补存在理由 (90 天内补齐)'
   - id: CR-L0-SSOT-PATH-NORM
     dimension: X4
     layer: meta
@@ -618,7 +612,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L0-SSOT-PATH-NORM — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L0-SSOT-PATH-NORM — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-TEST-COVERAGE
     dimension: X3
     layer: L2
@@ -641,7 +635,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-TEST-COVERAGE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-TEST-COVERAGE — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-ADR-LINKS
     dimension: X3
     layer: L2
@@ -664,7 +658,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-ADR-LINKS — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-ADR-LINKS — 待补存在理由 (90 天内补齐)'
   - id: CR-L4-DOMAIN-REGISTRY-FRESHNESS
     dimension: X2
     layer: L4
@@ -687,7 +681,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L4-DOMAIN-REGISTRY-FRESHNESS — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L4-DOMAIN-REGISTRY-FRESHNESS — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-MOF-CAPABILITIES-DRIFT
     relates_to:
     - CR-X4-METAOS-REGISTRY-DRIFT
@@ -715,7 +709,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-MOF-CAPABILITIES-DRIFT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-MOF-CAPABILITIES-DRIFT — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-DOC-CLAIMS
     relates_to:
     - CR-X4-MOF-CAPABILITIES-DRIFT
@@ -743,7 +737,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-DOC-CLAIMS — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-DOC-CLAIMS — 待补存在理由 (90 天内补齐)'
   - id: CR-M4-BOOTSTRAP-REFLEX
     dimension: X1
     layer: meta
@@ -767,7 +761,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-M4-BOOTSTRAP-REFLEX — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-M4-BOOTSTRAP-REFLEX — 待补存在理由 (90 天内补齐)'
   - id: CR-M4-SUBMODULE-HYGIENE
     dimension: X1
     layer: meta
@@ -791,7 +785,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-M4-SUBMODULE-HYGIENE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-M4-SUBMODULE-HYGIENE — 待补存在理由 (90 天内补齐)'
   - id: CR-M4-MCPTOOL-INTEGRITY
     dimension: X4
     layer: L0
@@ -814,7 +808,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-M4-MCPTOOL-INTEGRITY — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-M4-MCPTOOL-INTEGRITY — 待补存在理由 (90 天内补齐)'
   - id: CR-FOUNDRY-MONITOR
     dimension: X2
     layer: meta
@@ -845,7 +839,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-FOUNDRY-MONITOR — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-FOUNDRY-MONITOR — 待补存在理由 (90 天内补齐)'
   - id: CR-COMMIT-LLM-ASSIST
     dimension: X2
     layer: meta
@@ -877,7 +871,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-COMMIT-LLM-ASSIST — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-COMMIT-LLM-ASSIST — 待补存在理由 (90 天内补齐)'
   - id: CR-CROSS-REPO-CONSISTENT
     dimension: X4
     layer: meta
@@ -910,7 +904,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-CROSS-REPO-CONSISTENT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-CROSS-REPO-CONSISTENT — 待补存在理由 (90 天内补齐)'
   - id: CR-PRINCIPLE-FOLLOWED
     dimension: X1
     layer: meta
@@ -940,7 +934,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-PRINCIPLE-FOLLOWED — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-PRINCIPLE-FOLLOWED — 待补存在理由 (90 天内补齐)'
   - id: CR-EVIDENCE-DECLARED
     dimension: X2
     layer: meta
@@ -967,7 +961,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-EVIDENCE-DECLARED — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-EVIDENCE-DECLARED — 待补存在理由 (90 天内补齐)'
   - id: CR-COMMIT-ASSIST-E2E
     dimension: X4
     layer: meta
@@ -1002,7 +996,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-COMMIT-ASSIST-E2E — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-COMMIT-ASSIST-E2E — 待补存在理由 (90 天内补齐)'
   - id: CR-SEC-YAML-BYPASS
     dimension: X1
     layer: L2
@@ -1026,7 +1020,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-SEC-YAML-BYPASS — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-SEC-YAML-BYPASS — 待补存在理由 (90 天内补齐)'
   - id: CR-SEC-SENSITIVE-WRITE
     dimension: X1
     layer: L2
@@ -1050,7 +1044,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-SEC-SENSITIVE-WRITE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-SEC-SENSITIVE-WRITE — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-GOD-MODULE-EDIT
     dimension: X1
     layer: L2
@@ -1074,7 +1068,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X2-GOD-MODULE-EDIT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X2-GOD-MODULE-EDIT — 待补存在理由 (90 天内补齐)'
   - id: CR-SEC-EVAL-EXEC
     dimension: X1
     layer: L2
@@ -1098,7 +1092,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-SEC-EVAL-EXEC — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-SEC-EVAL-EXEC — 待补存在理由 (90 天内补齐)'
   - id: CR-PY-MUTABLE-DEFAULT
     dimension: X1
     layer: L2
@@ -1122,7 +1116,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-PY-MUTABLE-DEFAULT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-PY-MUTABLE-DEFAULT — 待补存在理由 (90 天内补齐)'
   - id: CR-PRINCIPLE-ENFORCEMENT
     relates_to:
     - CR-PR-DESCRIPTION-NON-EMPTY
@@ -1155,7 +1149,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-PRINCIPLE-ENFORCEMENT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-PRINCIPLE-ENFORCEMENT — 待补存在理由 (90 天内补齐)'
   - id: CR-SUBMODULE-REWIND
     dimension: X1
     layer: meta
@@ -1178,7 +1172,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-SUBMODULE-REWIND — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-SUBMODULE-REWIND — 待补存在理由 (90 天内补齐)'
   - id: CR-P76-6-5-LLM-DEFERRAL
     dimension: X1
     layer: meta
@@ -1201,7 +1195,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-P76-6-5-LLM-DEFERRAL — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-P76-6-5-LLM-DEFERRAL — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-2-1-PRINCIPLE-FORMALIZATION
     dimension: X1
     layer: meta
@@ -1224,7 +1218,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-P77-2-1-PRINCIPLE-FORMALIZATION — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-P77-2-1-PRINCIPLE-FORMALIZATION — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-2-2-CATALOG-SSOT
     dimension: X1
     layer: meta
@@ -1247,7 +1241,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-P77-2-2-CATALOG-SSOT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-P77-2-2-CATALOG-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-3-2-PREFIX-PATTERN
     relates_to:
     - CR-X4-MOF-CAPABILITIES-DRIFT
@@ -1279,7 +1273,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-P77-3-2-PREFIX-PATTERN — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-P77-3-2-PREFIX-PATTERN — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-6-2-TIER-FALLBACK-TEST
     relates_to:
     - CR-P77-6-3-GATEWAY-STATUS-DOC
@@ -1307,7 +1301,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-P77-6-2-TIER-FALLBACK-TEST — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-P77-6-2-TIER-FALLBACK-TEST — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-6-3-GATEWAY-STATUS-DOC
     relates_to:
     - CR-P77-6-2-TIER-FALLBACK-TEST
@@ -1335,7 +1329,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-P77-6-3-GATEWAY-STATUS-DOC — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-P77-6-3-GATEWAY-STATUS-DOC — 待补存在理由 (90 天内补齐)'
   - id: CR-P79-3-FOUNDRY-DECK
     relates_to:
     - CR-PR-DESCRIPTION-NON-EMPTY
@@ -1368,7 +1362,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-P79-3-FOUNDRY-DECK — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-P79-3-FOUNDRY-DECK — 待补存在理由 (90 天内补齐)'
   - id: CR-P79-4-CATALOG-HEALTH-METRIC
     relates_to:
     - CR-PR-DESCRIPTION-NON-EMPTY
@@ -1401,7 +1395,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-P79-4-CATALOG-HEALTH-METRIC — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-P79-4-CATALOG-HEALTH-METRIC — 待补存在理由 (90 天内补齐)'
   - id: CR-RUFF-SCOPE-STABLE
     dimension: X4
     layer: X
@@ -1425,7 +1419,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-RUFF-SCOPE-STABLE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-RUFF-SCOPE-STABLE — 待补存在理由 (90 天内补齐)'
   - id: CR-L0-CONSTRAINTS-SSOT
     relates_to:
     - CR-X4-CONSISTENCY-SSOT
@@ -1453,7 +1447,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L0-CONSTRAINTS-SSOT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L0-CONSTRAINTS-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X1-POLICIES-SSOT
     relates_to:
     - CR-CI-SURFACE-SSOT
@@ -1480,7 +1474,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X1-POLICIES-SSOT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X1-POLICIES-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-FRESHNESS-SSOT
     source_type: indexed
     source_ref: .omo/_truth/x2-freshness-rules.yaml::rules
@@ -1505,7 +1499,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X2-FRESHNESS-SSOT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X2-FRESHNESS-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-CONSISTENCY-SSOT
     relates_to:
     - CR-L0-CONSTRAINTS-SSOT
@@ -1532,7 +1526,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-CONSISTENCY-SSOT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-CONSISTENCY-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-MCPTOOL-IMPL-DRIFT
     relates_to:
     - CR-X4-MOF-CAPABILITIES-DRIFT
@@ -1561,7 +1555,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-MCPTOOL-IMPL-DRIFT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-MCPTOOL-IMPL-DRIFT — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-SUBMODULE-POINTER-INTEGRITY
     relates_to:
     - CR-P76-7-1-LLM-ADVISORY-ONLY
@@ -1598,7 +1592,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-SUBMODULE-POINTER-INTEGRITY — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-SUBMODULE-POINTER-INTEGRITY — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-MESH-EXECUTOR-RELIABILITY
     relates_to:
     - CR-P76-7-1-LLM-ADVISORY-ONLY
@@ -1635,7 +1629,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-MESH-EXECUTOR-RELIABILITY — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-MESH-EXECUTOR-RELIABILITY — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-MEMORY-OS-SURFACE-INTEGRITY
     relates_to:
     - CR-P76-7-1-LLM-ADVISORY-ONLY
@@ -1672,7 +1666,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-MEMORY-OS-SURFACE-INTEGRITY — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-MEMORY-OS-SURFACE-INTEGRITY — 待补存在理由 (90 天内补齐)'
   - id: CR-X1-EXTERNAL-AGENT-AUDIT
     relates_to:
     - CR-PR-DESCRIPTION-NON-EMPTY
@@ -1704,7 +1698,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X1-EXTERNAL-AGENT-AUDIT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X1-EXTERNAL-AGENT-AUDIT — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-SWEEP-TOOL-INTEGRITY
     relates_to:
     - CR-P76-7-1-LLM-ADVISORY-ONLY
@@ -1741,7 +1735,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-SWEEP-TOOL-INTEGRITY — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-SWEEP-TOOL-INTEGRITY — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-MESH-ROUTING-CONSISTENCY
     dimension: X4
     layer: meta
@@ -1765,7 +1759,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X4-MESH-ROUTING-CONSISTENCY — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X4-MESH-ROUTING-CONSISTENCY — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-PROJECT-HEALTH-FRESHNESS
     relates_to:
     - CR-X2-DOC-FRESHNESS-GATE
@@ -1795,7 +1789,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X2-PROJECT-HEALTH-FRESHNESS — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X2-PROJECT-HEALTH-FRESHNESS — 待补存在理由 (90 天内补齐)'
   - id: CR-X3-DELIVERY-VALUE-GATE
     relates_to:
     - CR-X3-DELIVERY-CADENCE
@@ -1824,7 +1818,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X3-DELIVERY-VALUE-GATE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X3-DELIVERY-VALUE-GATE — 待补存在理由 (90 天内补齐)'
   - id: CR-SWEEP-INDEX-AUTO
     dimension: X4
     layer: meta
@@ -1854,7 +1848,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-SWEEP-INDEX-AUTO — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-SWEEP-INDEX-AUTO — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-DOC-FRESHNESS-GATE
     relates_to:
     - CR-X2-PROJECT-HEALTH-FRESHNESS
@@ -1884,7 +1878,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X2-DOC-FRESHNESS-GATE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X2-DOC-FRESHNESS-GATE — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-METRIC-TREND
     relates_to:
     - CR-X2-PROJECT-HEALTH-FRESHNESS
@@ -1914,7 +1908,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X2-METRIC-TREND — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X2-METRIC-TREND — 待补存在理由 (90 天内补齐)'
   - id: CR-CI-SURFACE-SSOT
     relates_to:
     - CR-X1-POLICIES-SSOT
@@ -1942,7 +1936,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-CI-SURFACE-SSOT — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-CI-SURFACE-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-EVIDENCE-FRESHNESS
     relates_to:
     - CR-X2-PROJECT-HEALTH-FRESHNESS
@@ -1972,7 +1966,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X2-EVIDENCE-FRESHNESS — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X2-EVIDENCE-FRESHNESS — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-GOVERNANCE-TREND
     relates_to:
     - CR-X2-PROJECT-HEALTH-FRESHNESS
@@ -2002,7 +1996,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-X2-GOVERNANCE-TREND — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-X2-GOVERNANCE-TREND — 待补存在理由 (90 天内补齐)'
   - id: CR-LLM-GATEWAY-ONLY
     source_type: native
     dimension: X2
@@ -2026,7 +2020,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-LLM-GATEWAY-ONLY — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-LLM-GATEWAY-ONLY — 待补存在理由 (90 天内补齐)'
   - id: CR-L4-DOCUMENTS-MIGRATION-COVERAGE
     dimension: X4
     layer: L4
@@ -2049,7 +2043,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-L4-DOCUMENTS-MIGRATION-COVERAGE — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-L4-DOCUMENTS-MIGRATION-COVERAGE — 待补存在理由 (90 天内补齐)'
   - id: CR-RESIDENT-STATUS-01
     dimension: X2
     layer: meta
@@ -2073,7 +2067,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-RESIDENT-STATUS-01 — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-RESIDENT-STATUS-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-RESIDENT-MOF-SYNC-01
     dimension: X4
     layer: L0
@@ -2097,7 +2091,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-RESIDENT-MOF-SYNC-01 — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-RESIDENT-MOF-SYNC-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-RESIDENT-BOS-01
     dimension: X1
     layer: L2
@@ -2121,7 +2115,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-RESIDENT-BOS-01 — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-RESIDENT-BOS-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-AGE-BOS-01
     dimension: X1
     layer: L2
@@ -2144,7 +2138,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-AGE-BOS-01 — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-AGE-BOS-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-AGE-POLICY-01
     dimension: X1
     layer: L2
@@ -2167,7 +2161,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-AGE-POLICY-01 — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-AGE-POLICY-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-AGE-MEMORY-01
     dimension: X2
     layer: L2
@@ -2190,7 +2184,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-AGE-MEMORY-01 — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-AGE-MEMORY-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-AGE-REPLAY-01
     dimension: X4
     layer: L2
@@ -2213,7 +2207,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-AGE-REPLAY-01 — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-AGE-REPLAY-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-AGE-EVENT-01
     dimension: X3
     layer: L2
@@ -2236,7 +2230,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-AGE-EVENT-01 — 待补存在理由 (90 天内补齐, 否则减法候选)'
+    justification: '[ADR-0431 D2] CR-AGE-EVENT-01 — 待补存在理由 (90 天内补齐)'
   drift:
     schedule: daily
     auto_heal: false
