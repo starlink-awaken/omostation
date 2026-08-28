@@ -14,7 +14,7 @@ on:
   # implemented as additional push without branch filter + job if:
   # keep simple: always on main + all PRs is enough for protection.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'push' && github.sha || github.ref }}
   cancel-in-progress: true
 
 
