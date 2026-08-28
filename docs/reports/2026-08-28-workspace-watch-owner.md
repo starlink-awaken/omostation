@@ -1,4 +1,4 @@
-# Workspace watch owner evidence — 2026-08-28
+# Workspace watch owner evidence — 2026-08-29
 
 The legacy minute watcher executed Documents `domain-sync`, `bridge-refresh`,
 `session-brief`, and `weekly-verdict-generator` based on mtime changes. Those
@@ -18,7 +18,7 @@ cron lines were migrated.
 ## Candidate schedule
 
 ```cron
-* * * * * cd "$HOME/.local/share/omostation/accepted-20260903" && uv run --with pyyaml python lib/workspace_watch_dispatch.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --stamps "$HOME/Workspace/runtime/.watch-dispatch-stamps.json" --json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
+* * * * * cd "$HOME/.local/share/omostation/accepted-20260908" && uv run --with pyyaml python lib/workspace_watch_dispatch.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --stamps "$HOME/Workspace/runtime/.watch-dispatch-stamps.json" --json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
 ```
 
 ## Cutover evidence
@@ -34,3 +34,13 @@ cron lines were migrated.
   JSON stdout parsed cleanly, no events on stable inputs.
 - Live stamps remain under Workspace runtime; no Documents script was invoked by
   the post-cutover smoke.
+
+## Current release verification
+
+The current accepted-20260908 owner was run from an isolated temporary
+Workspace root against the real Documents root. The first pass returned the
+four expected groups: `domain-manifests=ok`, `workspace-state=findings`,
+`inbox-router=ok`, and `weekly-verdict=pending`; the findings status reflects
+the underlying bridge owner and is not hidden. The second unchanged-input pass
+returned exit `0` with no events. Stamps and generated `BRIEF.md` stayed inside
+the temporary Workspace, and no legacy Documents writer process was observed.
