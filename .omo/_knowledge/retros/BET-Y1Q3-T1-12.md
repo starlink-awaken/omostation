@@ -161,3 +161,21 @@ output and is idempotent on retry. Child PR #109 merged at
 cascading/governance gates passed. This proves the production consumer entry
 point, not the positive topology canary, complete admission-to-dispatch proof,
 or principal-bound value.
+
+## 2026-08-29 canonical admission context and e2e canary
+
+The first positive canary exposed two real deployment gaps: MetaOS could not be
+installed because its wheel configuration duplicated package resources, and
+Agora seeded BOS routes with `role=route_registry` before the bound invocation
+context reached the gateway. MetaOS packaging was repaired in child PR #7 and
+the canonical context was then reused for both route registration and invocation
+admission in Agora child PR #42 and root PR #2497. The live local canary used
+the real `capability-sync` producer with MetaOS admission, produced a completed
+`native-execution-receipt/v1`, and fed it to the OMO `worker external-receipt`
+production entry; the result was exit 0 and one digest-only `EvidenceRecorded`
+event with no material/binding/outcome copied into evidence.
+
+This is a local end-to-end canary over a temporary Workflow Mesh run, not host
+production topology evidence. T1-12 therefore remains `engineering=IN_PROGRESS`,
+`operational=NOT_PROVEN`, `value=NOT_PROVEN`; persistent topology, replay across
+the real resident path, and principal-bound value remain open.
