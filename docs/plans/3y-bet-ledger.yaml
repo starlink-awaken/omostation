@@ -9516,7 +9516,7 @@ bets:
   title: 'Documents 执行面与缓存面退休闸门'
   appetite: 1 day
   priority: P1
-  status: pending
+  status: done
   goal: '在不损伤业务内容的前提下，盘点并分批退休 Documents 中剩余的执行器、运行状态、缓存、索引和数据库；将可验证能力下沉到既有 Workspace owners，并为物理 quarantine/删除建立可回滚闸门。'
   non_goals:
   - 不批量删除或移动 Documents 业务资料、最终报告、证据和人工决策
@@ -9564,6 +9564,44 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:ad49c1699cb5a166b95e885ecc646d2a17009578c7120c8bc40667821a0a89aa'
     decision_ref: decision://accepted/BET-Y1Q3-T10-41
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@1b9c3abeb79f1e67561d64079c3788de5bb6f271
+          tests:
+            ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
+            sha256: sha256:6b8a48f2a0eeb8534e8e06245757f625e1a41237be84c87c869010be5e7f18df
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md
+            sha256: sha256:ad49c1699cb5a166b95e885ecc646d2a17009578c7120c8bc40667821a0a89aa
+          rollback:
+            ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
+            sha256: sha256:6b8a48f2a0eeb8534e8e06245757f625e1a41237be84c87c869010be5e7f18df
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-41.md
+            sha256: sha256:21e4db1f39bad8afbba45b56efcc7e1dda084063ccce235e107b2acbaef7f18c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
+            sha256: sha256:6b8a48f2a0eeb8534e8e06245757f625e1a41237be84c87c869010be5e7f18df
+          replay:
+            ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
+            sha256: sha256:6b8a48f2a0eeb8534e8e06245757f625e1a41237be84c87c869010be5e7f18df
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-41.md
+            sha256: sha256:21e4db1f39bad8afbba45b56efcc7e1dda084063ccce235e107b2acbaef7f18c
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  done_at: 2026-08-29
   depends_on:
   - BET-Y1Q3-T10-40
   risk_level: L1
