@@ -16,7 +16,7 @@ through the existing `documents-domain-owner-job.py` entrypoint.
 
 ## Live smoke
 
-Against `$HOME/Documents/@工作文档/卫健委` on 2026-08-28:
+Against `$HOME/Documents/@工作文档/卫健委` on 2026-08-29:
 
 - Schema: `documents.controller-preflight.v1`.
 - Status: `findings`, exit `1`.
@@ -26,10 +26,15 @@ Against `$HOME/Documents/@工作文档/卫健委` on 2026-08-28:
   missing stages; CR30 reports 29 missing material categories.
 - The Documents source tree and report directory were not written by the owner.
 
+The current accepted-release smoke was run without `--evidence`, so it produced
+no Workspace runtime write: status is `findings`, exit `1`, `rules=11`,
+`rule_findings=5`, `findings=5`, and `errors=[]`. The focused regression suite
+passes `3/3`, and the wrapper help command exits `0`.
+
 ## Candidate schedule
 
 ```cron
-0 9 * * 1 cd "$HOME/.local/share/omostation/accepted-20260902" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py controller-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260902" --evidence .omo/_delivery/documents-plane/controller-preflight.json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
+0 9 * * 1 cd "$HOME/.local/share/omostation/accepted-20260908" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py controller-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260908" --evidence .omo/_delivery/documents-plane/controller-preflight.json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
 ```
 
 ## Cutover evidence
@@ -45,3 +50,14 @@ Against `$HOME/Documents/@工作文档/卫健委` on 2026-08-28:
   exit `1`, `rules=11`, `rule_findings=5`, `findings=5`.
 - Documents `_runtime/巡检报告` tree fingerprint was identical before/after
   the live owner invocation (`15` files); no legacy report was written.
+
+## Release-root reconciliation
+
+The active Monday 09:00 line now runs exactly once from clean
+`accepted-20260908`; the legacy `controller.py` schedule count is `0`. The
+release-root convergence was performed by the later T10-46 host reconciliation,
+which preserved unrelated crontab bytes and retained this owner as the sole
+controller entry. The historical first-cutover receipt named above is not
+present in the current evidence stores and remains `UNPROVABLE`; this report
+does not treat the current reconciliation as retroactive proof of that missing
+receipt.
