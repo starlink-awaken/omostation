@@ -664,7 +664,8 @@ bets:
   title: Product P0 WP1 Honest Scene Card Gate
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-28
   parent_bet_id: BET-Y1Q3-T4-02
   delivery_wave: A
   goal: 让 make scene-card-check 在任一场景卡 blocker 或 validator 失败时返回非零，全部 ready 时才返回零，不修改任何场景卡内容或审批状态。
@@ -700,15 +701,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bb8980ce01da9b1bcb8c20aee397ec818c607442
+          tests:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          replay:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   depends_on: []
   value_indicator_policy: false
   risk_level: L1
@@ -5826,15 +5850,37 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bb8980ce01da9b1bcb8c20aee397ec818c607442
+          tests:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          replay:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
   goal: 把 D4 逃生口从「无限复用的万能票」收成「权限类 + fingerprint 债」，预存失败必须下沉，agent 不能再用 emergency-human-hotfix
     跳新失败
   non_goals:
@@ -5942,15 +5988,37 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bb8980ce01da9b1bcb8c20aee397ec818c607442
+          tests:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          replay:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
   retro: required
   started_at: '2026-08-23T21:40:00+08:00'
 - id: BET-Y1Q3-T1-11
@@ -6020,15 +6088,37 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bb8980ce01da9b1bcb8c20aee397ec818c607442
+          tests:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          replay:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
   workflow: project-code-change
   underlying_workflow: project-code-change
   write_surfaces:
@@ -9593,15 +9683,37 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bb8980ce01da9b1bcb8c20aee397ec818c607442
+          tests:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          replay:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
   depends_on: []
 - id: BET-Y1Q3-T10-12
   track: T10-MATURITY
@@ -9749,15 +9861,37 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bb8980ce01da9b1bcb8c20aee397ec818c607442
+          tests:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
+            sha256: sha256:85d172ebd3717d8e45dee6690b6d38437c1e8b57ba93a273435c5658a3a78a61
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
+          replay:
+            ref: receipt://tests/test_scene_card_lifecycle_check.py
+            sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-03.md
+            sha256: sha256:0d3014fe46795276f68654b9a8f9f17484b160d64be0ac7059acf67e439a2bd7
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
   depends_on: []
 - id: BET-Y1Q3-T10-14
   track: T10-MATURITY
