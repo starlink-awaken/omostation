@@ -39,6 +39,7 @@ services:
     max_stale_hours: 24
   generated_by: bin/mof/gen-service-configs.py
   note: 原 install-watch-agent.py 硬编码 plist (sys.executable 炸弹), 治本后从本注册生成
+  depends_on: []
 - id: evidence-smoke
   enabled: true
   scheduler: gha
@@ -51,6 +52,7 @@ services:
     signal: .omo/_delivery/evidence-smoke/
     max_stale_hours: 24
   note: 实测 health (回路多源 OR/BOS/dirty). gha 调度. 引导扇区 (evidence 源, 不自生).
+  depends_on: []
 - id: compass-radar
   enabled: true
   scheduler: gha
@@ -63,6 +65,7 @@ services:
     signal: .omo/state/health.yaml::generated_at
     max_stale_hours: 24
   note: 合成 health_score (含 feedback 硬门槛 PR#81). gha daily. 引导扇区.
+  depends_on: []
 - id: gen-service-configs
   enabled: true
   scheduler: manual
@@ -72,6 +75,7 @@ services:
     entrypoint: bin/mof/gen-service-configs.py
   note: 从本注册生 launchd plist (scheduler=launchd 项). manual/on-registry-change. 引导扇区
     (生成本身, 不自生).
+  depends_on: []
 - id: lmstudio.server
   enabled: true
   generate: false
@@ -100,6 +104,7 @@ services:
     signal: http
     endpoint: http://localhost:1234/health
     max_stale_hours: 24
+  depends_on: []
 - id: omlxc.daemon
   enabled: true
   generate: false
@@ -124,6 +129,7 @@ services:
     signal: http
     endpoint: http://localhost:7432/health
     max_stale_hours: 24
+  depends_on: []
 - id: omlx.gateway
   enabled: false
   lifecycle: retired
@@ -260,6 +266,7 @@ services:
     signal: http
     endpoint: http://localhost:8090/health
     max_stale_hours: 24
+  depends_on: []
 - id: docker.observability-db
   enabled: true
   generate: false
@@ -278,6 +285,7 @@ services:
   liveness:
     signal: docker
     max_stale_hours: 1
+  depends_on: []
 - id: docker.searxng
   enabled: true
   generate: false
@@ -299,6 +307,7 @@ services:
     signal: http
     endpoint: http://localhost:8080/health
     max_stale_hours: 24
+  depends_on: []
 - id: aetherforge.gateway
   enabled: false
   generate: false
@@ -350,6 +359,7 @@ services:
     signal: .omo/state/system.yaml::governance_feedback_last_run
     max_stale_hours: 24
   notes: OMO sync daemon — 30min tick, audit→history→sync (dry-run), 只读
+  depends_on: []
 - id: resident.orchestrator
   enabled: true
   scheduler: launchd
@@ -373,6 +383,7 @@ services:
     event_kind: resident_tick
     max_stale_hours: 1
   notes: Resident 编排 daemon — ledger checkpoint + 规则路由 (30s 间隔)
+  depends_on: []
 - id: gac.daemon_watchdog
   enabled: true
   scheduler: launchd
@@ -407,6 +418,7 @@ services:
     signal: .omo/_delivery/capability-ownership/
     max_stale_hours: 24
   notes: 每日能力所有权检查
+  depends_on: []
 - id: cron.agent_workflow_status
   enabled: true
   scheduler: cron
@@ -421,6 +433,7 @@ services:
     signal: .omo/_delivery/agent-workflow/
     max_stale_hours: 24
   notes: 每日 agent workflow 状态检查
+  depends_on: []
 - id: cron.governance_evolution
   enabled: true
   scheduler: cron
@@ -435,6 +448,7 @@ services:
   liveness:
     signal: .omo/_delivery/governance-evolution/
     max_stale_hours: 24
+  depends_on: []
 - id: cron.meta_doctor
   enabled: true
   scheduler: cron
@@ -451,6 +465,7 @@ services:
   liveness:
     signal: .omo/_delivery/meta-doctor/
     max_stale_hours: 24
+  depends_on: []
 - id: cron.debt_refresh
   enabled: true
   scheduler: cron
@@ -466,6 +481,7 @@ services:
   liveness:
     signal: .omo/_delivery/debt-refresh/
     max_stale_hours: 168
+  depends_on: []
 - id: mcp.agora
   enabled: true
   scheduler: manual
@@ -504,6 +520,7 @@ services:
     signal: http
     endpoint: http://localhost:7463/health
     max_stale_hours: 24
+  depends_on: []
 - id: cli.cockpit
   enabled: true
   scheduler: manual
@@ -517,6 +534,7 @@ services:
   liveness:
     signal: .omo/_delivery/cli.cockpit/
     max_stale_hours: 168
+  depends_on: []
 - id: cli.omo
   enabled: true
   scheduler: manual
@@ -692,6 +710,7 @@ services:
   liveness:
     signal: .omo/_delivery/resident-signals/
     max_stale_hours: 1
+  depends_on: []
 - id: resident.inbox
   enabled: true
   scheduler: launchd
@@ -713,6 +732,7 @@ services:
   liveness:
     signal: .omo/_delivery/resident-inbox/
     max_stale_hours: 1
+  depends_on: []
 - id: resident.promote
   enabled: true
   scheduler: launchd
@@ -751,6 +771,7 @@ services:
     signal: .omo/_delivery/observability-events/
     max_stale_hours: 24
   notes: 每日可观测性事件采集
+  depends_on: []
 - id: cron.log_rotate
   enabled: true
   scheduler: cron
@@ -763,6 +784,7 @@ services:
   liveness:
     signal: .omo/_delivery/log-rotate/
     max_stale_hours: 24
+  depends_on: []
 - id: cron.anomaly_detector
   enabled: true
   scheduler: cron
@@ -805,6 +827,7 @@ services:
     signal: .omo/_delivery/m4-health/
     max_stale_hours: 24
   notes: 每日 M4 健康分计算
+  depends_on: []
 - id: cron.agent_workflow_doctor
   enabled: true
   scheduler: cron
@@ -835,6 +858,7 @@ services:
   liveness:
     signal: .omo/_delivery/uhs-sync/
     max_stale_hours: 24
+  depends_on: []
 - id: cron.drift_sweep
   enabled: true
   scheduler: cron
@@ -1108,6 +1132,7 @@ services:
   liveness:
     signal: .omo/_delivery/cli.aetherforge/
     max_stale_hours: 168
+  depends_on: []
 - id: cli.l4_kernel
   enabled: true
   scheduler: manual
@@ -1119,6 +1144,7 @@ services:
   liveness:
     signal: .omo/_delivery/cli.l4_kernel/
     max_stale_hours: 168
+  depends_on: []
 - id: cli.llm_gateway
   enabled: true
   scheduler: manual
@@ -1130,6 +1156,7 @@ services:
   liveness:
     signal: .omo/_delivery/cli.llm_gateway/
     max_stale_hours: 168
+  depends_on: []
 - id: docker.ecos
   enabled: true
   scheduler: docker
@@ -1146,6 +1173,7 @@ services:
   liveness:
     signal: docker
     max_stale_hours: 1
+  depends_on: []
 - id: docker.aetherforge
   enabled: true
   scheduler: docker
@@ -1162,6 +1190,7 @@ services:
   liveness:
     signal: docker
     max_stale_hours: 1
+  depends_on: []
 - id: docker.kairon
   enabled: true
   scheduler: docker
@@ -1178,6 +1207,7 @@ services:
   liveness:
     signal: docker
     max_stale_hours: 1
+  depends_on: []
 - id: docker.minerva
   enabled: true
   scheduler: docker
@@ -1194,6 +1224,7 @@ services:
   liveness:
     signal: docker
     max_stale_hours: 1
+  depends_on: []
 - id: docker.eidos
   enabled: true
   scheduler: docker
@@ -1210,6 +1241,7 @@ services:
   liveness:
     signal: docker
     max_stale_hours: 1
+  depends_on: []
 - id: mail.daemon
   enabled: true
   scheduler: launchd
@@ -4739,6 +4771,7 @@ services:
     signal: .omo/_delivery/cron.gac_validate/
     max_stale_hours: 24
   notes: 每日 GaC 校验
+  depends_on: []
 - id: cron.gac_drift
   enabled: true
   scheduler: cron
@@ -4751,6 +4784,7 @@ services:
     signal: .omo/_delivery/cron.gac_drift/
     max_stale_hours: 24
   notes: 每日 GaC 漂移检测
+  depends_on: []
 - id: cron.doc_ssot
   enabled: true
   scheduler: cron
@@ -4763,6 +4797,7 @@ services:
     signal: .omo/_delivery/cron.doc_ssot/
     max_stale_hours: 24
   notes: 每日文档 SSOT 检查
+  depends_on: []
 - id: cron.ssot_guardian
   enabled: true
   scheduler: cron
@@ -4775,6 +4810,7 @@ services:
     signal: .omo/_delivery/cron.ssot_guardian/
     max_stale_hours: 24
   notes: 每日 SSOT 守护
+  depends_on: []
 - id: cron.ssot_sync
   enabled: true
   scheduler: cron
@@ -4787,6 +4823,7 @@ services:
     signal: .omo/_delivery/cron.ssot_sync/
     max_stale_hours: 24
   notes: 每日 SSOT 同步
+  depends_on: []
 - id: cron.ssot_log
   enabled: true
   scheduler: cron
@@ -4799,6 +4836,7 @@ services:
     signal: .omo/_delivery/cron.ssot_log/
     max_stale_hours: 24
   notes: 每日 SSOT 日志
+  depends_on: []
 - id: cron.sync_submodules
   enabled: true
   scheduler: cron
@@ -4811,6 +4849,7 @@ services:
     signal: .omo/_delivery/cron.sync_submodules/
     max_stale_hours: 24
   notes: 每日子模块同步
+  depends_on: []
 - id: cron.worktree_prune
   enabled: true
   scheduler: cron
@@ -4823,6 +4862,7 @@ services:
     signal: .omo/_delivery/cron.worktree_prune/
     max_stale_hours: 24
   notes: 每周 worktree 清理
+  depends_on: []
 - id: omo.governor
   enabled: true
   scheduler: launchd
@@ -4835,6 +4875,7 @@ services:
     signal: .omo/_delivery/omo.governor/
     max_stale_hours: 24
   notes: OMO 治理门 PDP/PEP
+  depends_on: []
 - id: omo.verifier
   enabled: true
   scheduler: launchd
@@ -4847,6 +4888,7 @@ services:
     signal: .omo/_delivery/omo.verifier/
     max_stale_hours: 24
   notes: OMO 验证器
+  depends_on: []
 - id: omo.replay
   enabled: true
   scheduler: launchd
@@ -4859,6 +4901,7 @@ services:
     signal: .omo/_delivery/omo.replay/
     max_stale_hours: 24
   notes: OMO 事件回放
+  depends_on: []
 - id: omo.alert
   enabled: true
   scheduler: launchd
@@ -4871,6 +4914,7 @@ services:
     signal: .omo/_delivery/omo.alert/
     max_stale_hours: 24
   notes: OMO 告警转发
+  depends_on: []
 - id: omo.status
   enabled: true
   scheduler: launchd
@@ -4883,6 +4927,7 @@ services:
     signal: .omo/_delivery/omo.status/
     max_stale_hours: 24
   notes: OMO 状态快照
+  depends_on: []
 - id: cron.bin_scripts
   enabled: true
   scheduler: cron
@@ -4895,6 +4940,7 @@ services:
     max_stale_hours: 24
   notes: 每周 bin 脚本收敛
   schedule: 0 11 * * 1
+  depends_on: []
 - id: cron.evidence_smoke
   enabled: true
   scheduler: cron
@@ -4907,6 +4953,7 @@ services:
     max_stale_hours: 24
   notes: 每日 evidence smoke
   schedule: 0 8 * * *
+  depends_on: []
 - id: cron.config_check
   enabled: true
   scheduler: cron
@@ -4919,6 +4966,7 @@ services:
     max_stale_hours: 24
   notes: 每日配置检查
   schedule: 0 12 * * *
+  depends_on: []
 - id: cron.state_sync
   enabled: true
   scheduler: cron
@@ -4931,6 +4979,7 @@ services:
     max_stale_hours: 24
   notes: 每日状态同步
   schedule: 0 13 * * *
+  depends_on: []
 - id: cron.install_hooks
   enabled: true
   scheduler: cron
@@ -4943,6 +4992,7 @@ services:
     signal: .omo/_delivery/cron.install_hooks/
     max_stale_hours: 168
   notes: 每周安装 hooks
+  depends_on: []
 - id: cli.sophia
   enabled: true
   scheduler: manual
