@@ -23,4 +23,16 @@ diff check and repository-side strict GaC pass under the standard PyYAML runner.
 The local-only service-config drift check remains external host evidence and is
 not changed by this repository PR.
 
-H1/H1c and R2 remain gated on main integration and their own receipts.
+## Gate disposition
+
+Repository-side R1 checks pass, including registry `519/519`, ADR coverage,
+tracked hygiene, root directory governance, compile, conflict scan and diff
+check. Strict gate remains blocked by the pre-existing document-governance
+warning budget: 104 legacy frontmatter/metadata warnings, with
+`legacy-omo-truth-frontmatter` observed at 3 against a budget of 2. Historical
+BET completion evidence also has 37 pre-existing digest/state mismatches.
+Neither issue is corrected by raising a budget or rewriting evidence in this
+R1 packet.
+
+H1/H1c and R2 remain gated on resolution/accepted disposition of these mainline
+debts and their own receipts. Local host retention remains `UNPROVABLE`.
