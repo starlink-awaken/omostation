@@ -55,6 +55,7 @@ At frozen baseline `1289e7fd6`, R1 document/script/ADR blockers are already reso
 
 | Surface | Responsibility |
 |---|---|
+| `docs/plans/3y-bet-ledger.yaml` | Task -1 only: refine T6-15 write surfaces from execution-time latest main before implementation starts; never change status, binding or completion. |
 | `ARCHITECTURE.md` | Read-only R1 guard at `1289e7fd6`; modify only if execution-time latest main reintroduces the two stale Core/Sentinel links. |
 | `.omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-binding.md` | Read-only prior R1 evidence unless latest-main validation proves a new structural regression. |
 | `.omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md` and `INDEX.md` | Read-only prior R1 evidence; ADR-0432 must remain candidate/UNPROVABLE. |
@@ -85,7 +86,7 @@ The replacement contract is: GET A, validate expected contexts and preserved-fie
 
 ## Per-Phase Governed Delivery Lifecycle
 
-R1, H1a, guarded-update amendment, H1c-tool, R2a and closeout each use a new clone and a new run. Set `T6_PHASE` to exactly one of `r1`, `h1a`, `amendment`, `h1c-tool`, `r2a`, `closeout`, then run:
+Scope refinement, R1, H1a, guarded-update amendment, H1c-tool, R2a and closeout each use a new clone and a new run. Set `T6_PHASE` to exactly one of `scope`, `r1`, `h1a`, `amendment`, `h1c-tool`, `r2a`, `closeout`, then run:
 
 ```bash
 export T6_ACTOR="product-p0-recovery-${T6_PHASE}"
@@ -117,6 +118,10 @@ Create the exact claim list for the selected phase:
 
 ```bash
 case "$T6_PHASE" in
+  scope)
+    printf '%s\n' \
+      docs/plans/3y-bet-ledger.yaml > /tmp/t6-phase-claims.txt
+    ;;
   r1)
     printf '%s\n' \
       ARCHITECTURE.md \
@@ -181,7 +186,7 @@ while IFS= read -r path; do
 done < /tmp/t6-phase-claims.txt
 ```
 
-At phase completion, the phase task first creates its scoped commit. Then verify every claimed file explicitly, close the run, create a delivery tag, submit one PR, verify the merged main SHA, and retire using the exact merged PR number. This generic `closeout --status ok` flow applies to `r1`, `h1a`, `h1c-tool`, `r2a` and `closeout`; `amendment` uses the explicit blocked-closeout exception in Task 4B because it intentionally changes its own binding.
+At phase completion, the phase task first creates its scoped commit. Then verify every claimed file explicitly, close the run, create a delivery tag, submit one PR, verify the merged main SHA, and retire using the exact merged PR number. This generic `closeout --status ok` flow applies to `r1`, `h1a`, `h1c-tool`, `r2a` and `closeout`. `scope` and `amendment` use the explicit blocked-closeout exceptions in Task -1 and Task 4B because each intentionally changes the active run's own WorkPacket/binding source.
 
 ```bash
 verify_args=()
@@ -205,6 +210,164 @@ python3 bin/gac/clone-lifecycle.py retire \
 Expected: `retire_ok`. A fail-closed provenance/identity error is reported as a clone-lifecycle mechanism gap; do not manually delete the clone.
 
 If full GaC fails only on a reproduced latest-main baseline outside the phase diff, close `blocked`, release every lock and report the exact signature. Do not mark the phase or BET complete. Never reuse that clone for the next phase.
+
+---
+
+### Task -1: Latest-Main WorkPacket Scope Refinement
+
+This writing-plan PR intentionally contains only the plan file. Before any R1/H1/R2 implementation, create a fresh `scope` delivery attempt from then-current main and update only T6-15 `write_surfaces`. The existing WorkPacket already authorizes its own ledger path, so this phase uses the normal workflow and needs no bypass waiver.
+
+**Files:**
+- Modify: `docs/plans/3y-bet-ledger.yaml` only inside `BET-Y1Q3-T6-15.write_surfaces`
+
+**Interfaces:**
+- Consumes: approved writing plan and execution-time latest main.
+- Produces: an exact WorkPacket whose path claims cover Task 4B, root GaC wiring and intentional runtime untracking without making untracked exact paths fail D0 completion.
+
+- [ ] **Step 1: Start and claim the scope phase**
+
+Set `T6_PHASE=scope` and execute the Per-Phase Governed Delivery Lifecycle. Confirm the active run claims only `docs/plans/3y-bet-ledger.yaml` and that T6-15 is still candidate/evaluating.
+
+- [ ] **Step 2: Replace only the T6-15 surface list mechanically**
+
+Use a targeted read/check/modify/write script; do not dump/reformat the full ledger:
+
+```bash
+uv run --with pyyaml python - <<'PY'
+from copy import deepcopy
+from fnmatch import fnmatch
+from pathlib import Path
+import yaml
+
+ledger = Path('docs/plans/3y-bet-ledger.yaml')
+text = ledger.read_text(encoding='utf-8')
+start = text.index('- id: BET-Y1Q3-T6-15\n')
+end = text.find('\n- id:', start + 1)
+if end < 0:
+    end = len(text)
+block = text[start:end]
+payload = yaml.safe_load('bets:\n' + ''.join('  ' + line + '\n' for line in block.splitlines()))
+before = payload['bets'][0]
+assert before['status'] == 'candidate'
+frozen = {
+    'accepted_specifications': deepcopy(before['accepted_specifications']),
+    'completion_evidence': deepcopy(before['completion_evidence']),
+    'status': before['status'],
+}
+
+patterns = [
+    'runtime/bos-neural-mesh-*',
+    'runtime/concept-weave-preflight*.json',
+    'runtime/consumer-audit-*.json',
+    'runtime/control/evidence/documents-weijian-*/documents-weijian-*.json',
+    'runtime/daily-health-preflight*.json',
+    'runtime/heartbeats/weijian-*',
+    'runtime/kos-preflight-*.json',
+    'runtime/predictor-preflight*.json',
+    'runtime/quarantine/documents-bos-neural-mesh-20260828/*',
+    'runtime/task-inventory/snapshots/20260828-*.json',
+]
+surfaces = list(before['write_surfaces'])
+unknown_runtime = [
+    item for item in surfaces
+    if item.startswith('runtime/') and not any(fnmatch(item, pattern) for pattern in patterns)
+]
+assert not unknown_runtime, f'UNCLASSIFIED_RUNTIME_SURFACE: {unknown_runtime}'
+surfaces = [
+    item for item in surfaces
+    if not item.startswith('runtime/') and item != 'bin/INDEX.md'
+]
+for item in (
+    '.gitignore',
+    '.omo/_truth/governance-evidence/waiver-2026-08-28-t6-15-guarded-update-amendment.md',
+    'bin/gac/gac-local-gate.py',
+):
+    if item not in surfaces:
+        surfaces.append(item)
+surfaces.extend(pattern for pattern in patterns if pattern not in surfaces)
+assert len(surfaces) == len(set(surfaces))
+
+ws_start = block.index('  write_surfaces:\n')
+ws_end = block.index('  pasw_required:', ws_start)
+replacement = '  write_surfaces:\n' + ''.join(f'  - {item}\n' for item in surfaces)
+new_block = block[:ws_start] + replacement + block[ws_end:]
+new_text = text[:start] + new_block + text[end:]
+ledger.write_text(new_text, encoding='utf-8')
+
+after_all = yaml.safe_load(new_text)
+after = next(item for item in after_all['bets'] if item['id'] == 'BET-Y1Q3-T6-15')
+for key, value in frozen.items():
+    assert after[key] == value, key
+PY
+```
+
+- [ ] **Step 3: Prove the scope diff is exact**
+
+```bash
+test "$(git diff --name-only)" = "docs/plans/3y-bet-ledger.yaml"
+git diff --check
+uv run --with pyyaml python bin/plan/bet-ledger.py show BET-Y1Q3-T6-15
+uv run --with pyyaml python - <<'PY'
+import subprocess, yaml
+main = yaml.safe_load(subprocess.run(
+    ['git', 'show', 'origin/main:docs/plans/3y-bet-ledger.yaml'],
+    text=True, capture_output=True, check=True,
+).stdout)
+current = yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml'))
+before = {item['id']: item for item in main['bets']}
+after = {item['id']: item for item in current['bets']}
+changed = [bet_id for bet_id in after if after[bet_id] != before.get(bet_id)]
+assert changed == ['BET-Y1Q3-T6-15'], changed
+bet = after[changed[0]]
+patterns = [item for item in bet['write_surfaces'] if item.startswith('runtime/')]
+assert len(patterns) == 10 and all('*' in item for item in patterns)
+expanded = set()
+for pattern in patterns:
+    expanded.update(subprocess.run(
+        ['git', 'ls-files', '--', pattern], text=True, capture_output=True, check=True,
+    ).stdout.splitlines())
+assert expanded, 'RUNTIME_SCOPE_EMPTY'
+print(f'scope-refinement: PASS runtime_paths={len(expanded)}')
+PY
+```
+
+Expected at the observed baseline: ten patterns expand to 24 tracked paths. The execution-time count may differ, but every match must belong to the same ten reviewed families. No BET status, accepted binding, completion/value evidence, goal or implementation file changes.
+
+- [ ] **Step 4: Commit and publish the unique scope PR**
+
+```bash
+git add docs/plans/3y-bet-ledger.yaml
+git commit -m "docs(plan): refine T6-15 execution surfaces"
+
+verify_args=(--file docs/plans/3y-bet-ledger.yaml)
+set +e
+uv run --with pyyaml python bin/agent-workflow.py verify "$T6_RUN_ID" \
+  "${verify_args[@]}" --execute --json > /tmp/t6-scope-verify.json 2>&1
+scope_verify_rc=$?
+set -e
+test "$scope_verify_rc" -ne 0
+rg -q 'WORK_PACKET_(SOURCE_DRIFT|SCOPE_MISMATCH)' /tmp/t6-scope-verify.json
+uv run --with pyyaml python bin/agent-workflow.py closeout "$T6_RUN_ID" \
+  --status blocked "${verify_args[@]}" --json
+git tag -a "delivery/${T6_ATTEMPT}" -m "BET-Y1Q3-T6-15 scope refinement" HEAD
+git push -u origin HEAD --follow-tags
+gh pr create --base main \
+  --title "docs(plan): refine T6-15 execution surfaces" \
+  --body "BET-Y1Q3-T6-15 scope-only self-binding update. Candidate state, accepted binding and completion/value evidence are unchanged."
+export PHASE_PR_NUMBER="$(gh pr view --json number --jq .number)"
+gh pr checks --required --watch --interval 10
+gh pr checks --watch --interval 15
+gh pr merge "$PHASE_PR_NUMBER" --squash --delete-branch
+export SCOPE_MERGE_SHA="$(gh pr view "$PHASE_PR_NUMBER" --json mergeCommit --jq '.mergeCommit.oid')"
+git fetch origin main --prune
+git merge-base --is-ancestor "$SCOPE_MERGE_SHA" origin/main
+cd /Users/xiamingxing/Workspace
+python3 bin/gac/clone-lifecycle.py retire \
+  --destination "$T6_DEST" \
+  --platform-rebased-pr "$PHASE_PR_NUMBER"
+```
+
+Expected: verify fails closed because the active run is bound to the pre-change WorkPacket; `closeout --status blocked` releases every lock. This is the required self-binding evidence, not a gate bypass. Task 0 starts a fresh run only from main containing this scope PR.
 
 ---
 
