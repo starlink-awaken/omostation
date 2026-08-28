@@ -1,8 +1,8 @@
 ---
 schema: resident-retro-candidate/v1
 topic: mof-model-change
-generated_at: 2026-08-27T11:40:02Z
-status: planned
+generated_at: 2026-08-28T04:50:00Z
+status: candidate
 counts:
   runs: 4
   failures: 1
@@ -12,12 +12,10 @@ failure_breakdown:
   by_event_type:
     StepFailed: 1
   trace_count: 1
-lifecycle: history
-owner: unassigned
 ---
 # mof-model-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-27T11:40:02Z
+- generated_at: 2026-08-28T04:50:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 4 成功运行 + 1 失败模式 = 5 草稿
 - 失败率: 20.00%
