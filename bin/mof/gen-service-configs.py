@@ -61,6 +61,27 @@ def _stable_python3() -> str:
 INTERPRETERS = {"stable-python3": _stable_python3}
 
 
+def validate_service_declaration(svc: dict) -> list[str]:
+    """Validate fields required before a launchd plist can be generated."""
+    service_id = str(svc.get("id") or "?")
+    violations: list[str] = []
+    if not svc.get("id"):
+        violations.append("service 缺必填 id")
+    scheduler = svc.get("scheduler")
+    if not scheduler:
+        violations.append("service 缺必填 scheduler")
+    if scheduler != "launchd" or not svc.get("enabled", True) or not svc.get("generate", True):
+        return violations
+    if not isinstance(svc.get("label"), str) or not svc["label"].strip():
+        violations.append(f"{service_id}: launchd generator requires label")
+    program = svc.get("program")
+    if not isinstance(program, dict) or not isinstance(program.get("interpreter"), str) or not program["interpreter"].strip():
+        violations.append(f"{service_id}: launchd generator requires program.interpreter")
+    if not isinstance(program, dict) or not isinstance(program.get("entrypoint"), str) or not program["entrypoint"].strip():
+        violations.append(f"{service_id}: launchd generator requires program.entrypoint")
+    return violations
+
+
 def load_services() -> list[dict]:
     docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
     return (docs[-1] if docs else {}).get("services", []) or []
@@ -187,13 +208,13 @@ def main() -> int:
         for svc in services:
             if not svc.get("enabled", True):
                 continue
+            violations.extend(validate_service_declaration(svc))
+            if svc.get("scheduler") == "launchd" and not svc.get("generate", True):
+                continue
             try:
                 resolve_interpreter(svc.get("program", {}).get("interpreter", ""))
             except ValueError as e:
                 violations.append(f"{svc.get('id', '?')}: {e}")
-            for f in ("id", "scheduler"):
-                if not svc.get(f):
-                    violations.append(f"service 缺必填 {f}")
             # GHA 调度验 schedule_ref 存在 (治 P4 元递归全覆盖 — 引导扇区 GHA 声明可证, CI 可验仓库内)
             if svc.get("scheduler") == "gha":
                 sched_ref = svc.get("schedule_ref")
@@ -219,6 +240,12 @@ def main() -> int:
         # 生成器会拿注册表里的简化描述去覆盖手写 plist —— 2026-08-08 就是这样
         # 把 omlx 网关等 7 个 plist 写成了死路径。
         if not svc.get("generate", True):
+            continue
+        declaration_errors = validate_service_declaration(svc)
+        if declaration_errors:
+            for error in declaration_errors:
+                print(f"❌ {error}", file=sys.stderr)
+            bad_services.extend(declaration_errors)
             continue
         try:
             plist = gen_launchd_plist(svc)
