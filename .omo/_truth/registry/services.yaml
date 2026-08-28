@@ -6605,3 +6605,91 @@ services:
     max_stale_hours: 24
   notes: 每日状态同步
   schedule: 0 13 * * *
+- id: cron.install_hooks
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 0 14 * * 0
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.install_hooks/
+    max_stale_hours: 168
+  notes: 每周安装 hooks
+- id: cli.sophia
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: .omo/_delivery/cli.sophia/
+    max_stale_hours: 168
+  notes: Sophia CLI — 知识编译
+- id: cli.iris
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: .omo/_delivery/cli.iris/
+    max_stale_hours: 168
+  notes: Iris CLI — 信息检索
+- id: cli.kronos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: .omo/_delivery/cli.kronos/
+    max_stale_hours: 168
+  notes: Kronos CLI — 时间智能
+- id: cli.ontoderive
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: .omo/_delivery/cli.ontoderive/
+    max_stale_hours: 168
+  notes: OntoDerive CLI — 本体推导
+- id: mcp.ecos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  port: 7455
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: http
+    endpoint: http://localhost:7455/health
+    max_stale_hours: 24
+  depends_on:
+  - mcp.agora
+  notes: ECOS MCP — 协议编织
+- id: mcp.omo_web
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  port: 7456
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: http
+    endpoint: http://localhost:7456/health
+    max_stale_hours: 24
+  depends_on:
+  - mcp.agora
+  notes: OMO Web MCP
