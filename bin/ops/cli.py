@@ -710,6 +710,26 @@ def main() -> int:
     metrics_p.add_argument("--text", action="store_true", help="Output text format (default: serve HTTP)")
     metrics_p.set_defaults(func=cmd_metrics)
 
+    # ── template ──
+    template_p = sub.add_parser("template", help="Service templates")
+    template_p.add_argument("template_action", nargs="?", default="list",
+                            choices=["list", "apply"],
+                            help="Template action (default: list)")
+    template_p.add_argument("--name", help="Service name for apply")
+    template_p.add_argument("--type", choices=["daemon", "cron", "mcp", "cli", "docker"],
+                            default="daemon", help="Service type")
+    template_p.add_argument("--entrypoint", help="Entrypoint path")
+    template_p.add_argument("--interval", type=int, help="Interval in seconds (daemon)")
+    template_p.add_argument("--schedule", help="Cron schedule (cron)")
+    template_p.set_defaults(func=cmd_template)
+
+    # ── batch ──
+    batch_p = sub.add_parser("batch", help="Batch operations")
+    batch_p.add_argument("batch_action", choices=["up", "down", "status"],
+                        help="Batch action")
+    batch_p.add_argument("services", nargs="+", help="Service IDs")
+    batch_p.set_defaults(func=cmd_batch)
+
     # ── discover ──
     discover_p = sub.add_parser("discover", help="Auto-discover running services")
     discover_p.add_argument("--update", action="store_true", help="Update services.yaml with discoveries")
@@ -993,6 +1013,190 @@ def cmd_generate(args: argparse.Namespace) -> int:
         print(f"Generated {fmt} config: {output}")
     else:
         print(content)
+
+    return 0
+
+
+def cmd_template(args: argparse.Namespace) -> int:
+    """Service template management."""
+    action = args.template_action
+
+    if action == "list":
+        templates = {
+            "daemon": {
+                "scheduler": "launchd",
+                "trigger": "interval",
+                "program": {"interpreter": "stable-python3", "entrypoint": "bin/examples/<name>.py"},
+                "resilience": {"keepalive": "crashed", "throttle_interval": 60},
+            },
+            "cron": {
+                "scheduler": "cron",
+                "trigger": "schedule",
+                "program": {"interpreter": "stable-python3", "entrypoint": "bin/examples/<name>.py"},
+            },
+            "mcp": {
+                "scheduler": "manual",
+                "trigger": "on_demand",
+                "transport": "stdio",
+                "program": {"interpreter": "uv", "entrypoint": "projects/agora"},
+            },
+            "cli": {
+                "scheduler": "manual",
+                "trigger": "on_demand",
+                "program": {"interpreter": "uv", "entrypoint": "projects/cockpit"},
+            },
+            "docker": {
+                "scheduler": "docker",
+                "trigger": "compose",
+                "program": {"interpreter": "docker", "entrypoint": "projects/<name>"},
+            },
+        }
+        print("Available templates:\n")
+        for name, tmpl in templates.items():
+            print(f"  {name}:")
+            for k, v in tmpl.items():
+                print(f"    {k}: {v}")
+            print()
+        return 0
+
+    if action == "apply":
+        name = args.name
+        if not name:
+            print("ERROR: --name required for apply", file=sys.stderr)
+            return 1
+
+        svc_type = args.type
+        entrypoint = args.entrypoint
+
+        # Build service from template
+        svc: dict[str, Any] = {
+            "id": name,
+            "enabled": True,
+            "program": {},
+        }
+
+        if svc_type == "daemon":
+            svc["scheduler"] = "launchd"
+            svc["trigger"] = "interval"
+            svc["interval_sec"] = args.interval or 300
+            svc["program"]["interpreter"] = "stable-python3"
+            svc["program"]["entrypoint"] = entrypoint or f"bin/{name}.py"
+            svc["resilience"] = {"keepalive": "crashed", "throttle_interval": 60}
+            svc["liveness"] = {"signal": f".omo/_delivery/{name}/", "max_stale_hours": 24}
+        elif svc_type == "cron":
+            svc["scheduler"] = "cron"
+            svc["trigger"] = "schedule"
+            svc["schedule"] = args.schedule or "0 9 * * *"
+            svc["program"]["interpreter"] = "stable-python3"
+            svc["program"]["entrypoint"] = entrypoint or f"bin/{name}.py"
+            svc["liveness"] = {"signal": f".omo/_delivery/{name}/", "max_stale_hours": 24}
+        elif svc_type == "mcp":
+            svc["scheduler"] = "manual"
+            svc["trigger"] = "on_demand"
+            svc["transport"] = "stdio"
+            svc["program"]["interpreter"] = "uv"
+            svc["program"]["entrypoint"] = entrypoint or "projects/agora"
+        elif svc_type == "cli":
+            svc["scheduler"] = "manual"
+            svc["trigger"] = "on_demand"
+            svc["program"]["interpreter"] = "uv"
+            svc["program"]["entrypoint"] = entrypoint or "projects/cockpit"
+        elif svc_type == "docker":
+            svc["scheduler"] = "docker"
+            svc["trigger"] = "compose"
+            svc["program"]["interpreter"] = "docker"
+            svc["program"]["entrypoint"] = entrypoint or f"projects/{name}"
+
+        # Load existing and append
+        services = load_services()
+        services.append(svc)
+
+        # Write back
+        content = SERVICES_YAML.read_text()
+        docs = list(yaml.safe_load_all(content))
+        for doc in docs:
+            if isinstance(doc, dict) and "services" in doc:
+                doc["services"] = services
+                break
+        output = []
+        for doc in docs:
+            output.append(yaml.dump(doc, default_flow_style=False, allow_unicode=True, sort_keys=False))
+        SERVICES_YAML.write_text("---\n".join(output))
+
+        print(f"Created service '{name}' from template '{svc_type}'")
+        return 0
+
+    return 0
+
+
+def cmd_batch(args: argparse.Namespace) -> int:
+    """Batch operations on multiple services."""
+    services = load_services()
+    action = args.batch_action
+    target_ids = set(args.services)
+
+    # Find target services
+    targets = [s for s in services if s.get("id") in target_ids]
+    found_ids = {s.get("id") for s in targets}
+    missing = target_ids - found_ids
+
+    if missing:
+        print(f"WARNING: services not found: {', '.join(missing)}")
+
+    if not targets:
+        print("No matching services")
+        return 1
+
+    if action == "status":
+        for svc in targets:
+            sid = svc.get("id", "")
+            liv = check_liveness(svc)
+            running = _is_running(svc)
+            print(f"  {sid}: {liv['status']} (running={running})")
+        return 0
+
+    if action == "up":
+        import subprocess as sp
+        started = 0
+        for svc in targets:
+            sid = svc.get("id", "")
+            if _is_running(svc):
+                print(f"  [SKIP] {sid} (running)")
+                continue
+            cmd = _get_cmd(svc)
+            try:
+                log_file = LOGS_DIR / f"{sid}.log"
+                log_file.parent.mkdir(parents=True, exist_ok=True)
+                with open(log_file, "a") as lf:
+                    proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True)
+                _get_pid_file(sid).write_text(str(proc.pid))
+                print(f"  [START] {sid} (pid={proc.pid})")
+                started += 1
+            except Exception as e:
+                print(f"  [FAIL] {sid}: {e}")
+        print(f"\nStarted {started}/{len(targets)} services")
+        return 0
+
+    if action == "down":
+        stopped = 0
+        for svc in targets:
+            sid = svc.get("id", "")
+            pid_file = _get_pid_file(sid)
+            if not pid_file.exists():
+                print(f"  [SKIP] {sid} (not running)")
+                continue
+            try:
+                pid = int(pid_file.read_text().strip())
+                import os
+                os.kill(pid, 15)
+                pid_file.unlink(missing_ok=True)
+                print(f"  [STOP] {sid} (pid={pid})")
+                stopped += 1
+            except (ValueError, OSError, ProcessLookupError) as e:
+                print(f"  [FAIL] {sid}: {e}")
+                pid_file.unlink(missing_ok=True)
+        print(f"\nStopped {stopped}/{len(targets)} services")
+        return 0
 
     return 0
 
