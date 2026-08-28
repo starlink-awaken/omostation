@@ -9116,7 +9116,7 @@ bets:
   title: 'Documents consumer audit execution-mode 分层'
   appetite: 1 day
   priority: P0
-  status: pending
+  status: done
   goal: '区分 Documents executor、Workspace owner read 和 content reference，建立 forbidden_executors=0 的真实清零指标。'
   non_goals:
   - 不删除仍有业务价值的 Documents 内容引用
@@ -9145,6 +9145,44 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:6ca652906a823a8477509bbf04eae981419db3233070fa6597ae1196a09a5792'
     decision_ref: decision://accepted/BET-Y1Q3-T10-36
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c3f4a1d23b91ab4217881f4cdf5ca6bafbecda19
+          tests:
+            ref: receipt://tests/test_documents_consumer_audit.py
+            sha256: sha256:044af21e33b07bc1ffd899523a0490d69c5738ef448ce3cef4ecb6f3ee4be4ed
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-consumer-audit-modes-design.md
+            sha256: sha256:6ca652906a823a8477509bbf04eae981419db3233070fa6597ae1196a09a5792
+          rollback:
+            ref: receipt://docs/reports/2026-08-28-consumer-audit-modes.md
+            sha256: sha256:9dcb09b54c0efa3c89a09c5952a569763b13740ba2f6d43642417251e02373cf
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-36.md
+            sha256: sha256:f723e159df789a4e6c7eefe363d070fc00932a92b58a989a7b4de7ebf15d3e8a
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-28-consumer-audit-modes.md
+            sha256: sha256:9dcb09b54c0efa3c89a09c5952a569763b13740ba2f6d43642417251e02373cf
+          replay:
+            ref: receipt://tests/test_documents_consumer_audit.py
+            sha256: sha256:044af21e33b07bc1ffd899523a0490d69c5738ef448ce3cef4ecb6f3ee4be4ed
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-36.md
+            sha256: sha256:f723e159df789a4e6c7eefe363d070fc00932a92b58a989a7b4de7ebf15d3e8a
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  done_at: 2026-08-29
   depends_on:
   - BET-Y1Q3-T10-35
   risk_level: L1
