@@ -7866,7 +7866,8 @@ bets:
   title: 'Documents 宿主消费者审计与切换硬门'
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-28
   goal: '建立只读、可复现的宿主消费者审计，把 cron、LaunchAgent、Scheduled skill 和域入口中仍执行 Documents 能力的消费者绑定到既有迁移 family，为 Workspace owner 切换提供硬证据。'
   non_goals:
   - 不修改或执行 Documents 内脚本
@@ -7902,6 +7903,43 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:3bcc900177108e1abcda44620e02ea4a3b2ea8f5d6adcd43766cf68ba03c5d85'
     decision_ref: decision://accepted/BET-Y1Q3-T10-23
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d4bcf62ac2851b18c7122f0a7077448219636d79
+          tests:
+            ref: receipt://tests/test_documents_consumer_audit.py
+            sha256: sha256:044af21e33b07bc1ffd899523a0490d69c5738ef448ce3cef4ecb6f3ee4be4ed
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md
+            sha256: sha256:3bcc900177108e1abcda44620e02ea4a3b2ea8f5d6adcd43766cf68ba03c5d85
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md
+            sha256: sha256:3bcc900177108e1abcda44620e02ea4a3b2ea8f5d6adcd43766cf68ba03c5d85
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-27-documents-consumer-audit.md
+            sha256: sha256:7ae95d2340a9f3bdc49c4aa4bcc00bfe3a6d243f0456562e76c3e1cdea61b570
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-23.md
+            sha256: sha256:985285f6020c6029694e72bd18374392f8bc04acf3d07bb75c1a475b5809f4ec
+          replay:
+            ref: receipt://tests/test_documents_consumer_audit.py
+            sha256: sha256:044af21e33b07bc1ffd899523a0490d69c5738ef448ce3cef4ecb6f3ee4be4ed
+          cleanup:
+            ref: receipt://docs/reports/2026-08-27-documents-consumer-audit.md
+            sha256: sha256:7ae95d2340a9f3bdc49c4aa4bcc00bfe3a6d243f0456562e76c3e1cdea61b570
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on: []
   risk_level: L1
   human_gate: true
