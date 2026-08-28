@@ -1,12 +1,12 @@
 ---
 schema_version: specification/v1
 spec_version: 1.0.0
-status: draft
+status: accepted
 lifecycle: contract
 owner: human-principal
 created: 2026-08-28
 last-reviewed: 2026-08-28
-bet_id: unbound
+bet_id: BET-Y1Q3-T6-15
 risk_level: L3
 human_gate: true
 value_indicator_policy: false
