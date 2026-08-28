@@ -155,6 +155,11 @@ The authoritative SSOT map (fact types → sources) lives in [`ARCHITECTURE.md` 
 
 For task-level routing (BOS, governance, ports, ADRs, main landing, scene admission), see [`ARCHITECTURE.md` §1](ARCHITECTURE.md) and the INDEX docs above.
 
+## 6.5 Anti-Corrosion Five-Layer Framework (ADR-0431)
+
+Rules carry lifecycles (`added_at`/`review_before`/`justification` in `governance-checks.yaml::gac.rules`). Check health: `python3 bin/gac/rules-lifecycle.py` (weekly cron; expired → subtraction candidates). Human authority layers L1-L5 (charter/context/decision/constraints/unknown) are orthogonal — see `.omo/_knowledge/decisions/0431-anti-corrosion-five-layer-framework.md`. BOS: `bos://governance/anti-corrosion/*`. MCP: `rules_lifecycle` tool.
+
+
 ## 7. Closeout
 
 ```bash
