@@ -1515,7 +1515,6 @@ def record_health_history(svc_id: str, status: str) -> None:
 
     with open(history_file, "a") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
->>>>>>> origin/main
 
 
 def cmd_drift(args: argparse.Namespace) -> int:
