@@ -341,6 +341,59 @@ def _direct_evidence(workspace: Path) -> dict[str, dict]:
     return result
 
 
+def test_value_exempt_verified_delivery_derives_delivery_accepted(tmp_path: Path) -> None:
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="NOT_PROVEN",
+        overall_state="delivery_accepted",
+        evidence=_direct_evidence(tmp_path),
+    )
+
+    state, errors = bl.validate_completion_evidence(
+        matrix,
+        value_indicator_policy=False,
+        workspace=tmp_path,
+    )
+
+    assert state == "delivery_accepted"
+    assert errors == []
+
+
+def test_value_exempt_bet_rejects_accepted_value(tmp_path: Path) -> None:
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="ACCEPTED",
+        overall_state="blocked",
+        evidence=_direct_evidence(tmp_path),
+    )
+
+    state, errors = bl.validate_completion_evidence(
+        matrix,
+        value_indicator_policy=False,
+        workspace=tmp_path,
+    )
+
+    assert state == "blocked"
+    assert any("COMPLETION_VALUE_POLICY_VIOLATION" in error for error in errors)
+
+
+def test_unspecified_value_policy_keeps_outcome_required(tmp_path: Path) -> None:
+    matrix = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="NOT_PROVEN",
+        overall_state="blocked",
+        evidence=_direct_evidence(tmp_path),
+    )
+
+    state, errors = bl.validate_completion_evidence(matrix, workspace=tmp_path)
+
+    assert state == "blocked"
+    assert errors == []
+
+
 def test_engineering_only_never_derives_outcome_accepted(tmp_path: Path) -> None:
     evidence = _direct_evidence(tmp_path)
     matrix = _completion_matrix(
@@ -505,7 +558,7 @@ def test_lint_requires_done_at_for_transitioned_done_bet_with_outcome_accepted(
     monkeypatch.setattr(
         bl,
         "validate_completion_evidence",
-        lambda matrix, *, workspace: ("outcome_accepted", []),
+        lambda matrix, *, value_indicator_policy=True, workspace: ("outcome_accepted", []),
     )
 
     rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
@@ -533,12 +586,52 @@ def test_lint_accepts_transitioned_done_bet_with_outcome_accepted_and_done_at(
     monkeypatch.setattr(
         bl,
         "validate_completion_evidence",
-        lambda matrix, *, workspace: ("outcome_accepted", []),
+        lambda matrix, *, value_indicator_policy=True, workspace: ("outcome_accepted", []),
     )
 
     rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
 
     assert rc == 0
+
+
+def test_lint_accepts_value_exempt_done_transition(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bet = _bet(status="done")
+    bet["done_at"] = "2026-08-28"
+    bet["value_indicator_policy"] = False
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="NOT_PROVEN",
+        overall_state="delivery_accepted",
+        evidence=_direct_evidence(tmp_path),
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    _transition_base(monkeypatch, base_status="candidate")
+
+    assert bl.cmd_lint(_lint_data(bet), type("Args", (), {})()) == 0
+
+
+@pytest.mark.parametrize("policy", ["false", 0, None, []], ids=["string", "number", "null", "list"])
+def test_lint_rejects_non_boolean_value_indicator_policy(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+    policy: object,
+) -> None:
+    bet = _bet()
+    bet["value_indicator_policy"] = policy
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    monkeypatch.setattr(bl, "WS", tmp_path)
+
+    assert bl.cmd_lint(_lint_data(bet), type("Args", (), {})()) == 1
+    assert (
+        "ERROR BET-TEST.value_indicator_policy: "
+        "VALUE_INDICATOR_POLICY_TYPE: value_indicator_policy must be a boolean"
+    ) in capsys.readouterr().out
 
 
 def test_lint_unchanged_done_bet_keeps_baseline_without_done_findings(
@@ -637,7 +730,7 @@ def test_lint_fails_closed_when_declared_base_is_unreadable(
     monkeypatch.setattr(
         bl,
         "validate_completion_evidence",
-        lambda matrix, *, workspace: ("outcome_accepted", []),
+        lambda matrix, *, value_indicator_policy=True, workspace: ("outcome_accepted", []),
     )
 
     rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
@@ -994,6 +1087,70 @@ def test_complete_rejects_engineering_only_matrix_even_with_force(
 
     assert rc == 1
     assert "not outcome_accepted" in capsys.readouterr().out
+
+
+def test_complete_accepts_value_exempt_delivery(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bet = _bet(status="review")
+    bet["value_indicator_policy"] = False
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="NOT_PROVEN",
+        overall_state="delivery_accepted",
+        evidence=_direct_evidence(tmp_path),
+    )
+    ledger_path = tmp_path / "docs/plans/3y-bet-ledger.yaml"
+    ledger_path.parent.mkdir(parents=True)
+    ledger_path.write_text("- id: BET-TEST\n  status: review\n", encoding="utf-8")
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    monkeypatch.setattr(bl, "LEDGER", ledger_path)
+
+    args = type("Args", (), {"bet_id": "BET-TEST", "force": True})()
+
+    assert bl.cmd_complete(_lint_data(bet), args) == 0
+    saved = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
+    assert next(entry for entry in saved if entry["id"] == "BET-TEST")["status"] == "done"
+
+
+@pytest.mark.parametrize("policy", ["false", 0, None, []], ids=["string", "number", "null", "list"])
+def test_complete_rejects_non_boolean_value_indicator_policy_without_persisting(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+    policy: object,
+) -> None:
+    bet = _bet(status="review")
+    bet["value_indicator_policy"] = policy
+    bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
+    bet["completion_evidence"] = _completion_matrix(
+        engineering="VERIFIED",
+        operational="PROVEN",
+        value="NOT_PROVEN",
+        overall_state="delivery_accepted",
+        evidence=_direct_evidence(tmp_path),
+    )
+    ledger_path = tmp_path / "docs/plans/3y-bet-ledger.yaml"
+    ledger_path.parent.mkdir(parents=True)
+    ledger_path.write_text(
+        "- id: BET-OTHER\n  status: review\n- id: BET-TEST\n  status: review\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(bl, "WS", tmp_path)
+    monkeypatch.setattr(bl, "LEDGER", ledger_path)
+
+    rc = bl.cmd_complete(_lint_data(bet), Namespace(bet_id="BET-TEST", force=True))
+
+    assert rc == 1
+    assert (
+        "[complete] ❌ BET-TEST.value_indicator_policy: "
+        "VALUE_INDICATOR_POLICY_TYPE: value_indicator_policy must be a boolean"
+    ) in capsys.readouterr().out
+    saved = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
+    assert next(entry for entry in saved if entry["id"] == "BET-TEST")["status"] == "review"
 
 
 def test_complete_requires_matrix_even_with_force(
