@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 515  # 2026-08-28 509→515: 登记 bin/ops/{slo_tracker,unified_metrics,cost_tracker,env_config,monitor_daemon,runbook}.py (并发 agent ops 模块批量新增遗漏登记)
+    script_baseline: 516  # 2026-08-28 509→516: main 515 (ops 六件套) + catalog_api 合并登记 (SCRIPT-BASELINE-SYNC, BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
