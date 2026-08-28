@@ -8538,7 +8538,8 @@ bets:
   title: 'OCR broken consumer 改为 Workspace preflight owner'
   appetite: 1 day
   priority: P0
-  status: pending
+  status: done
+  done_at: 2026-08-28
   goal: '将当前指向不存在工作目录且写回 Documents runtime 的 OCR 定时入口切换为 Workspace-only preflight，真实报告 source/engine readiness，不执行未验证 OCR。'
   non_goals:
   - 不执行或迁移真实 OCR 内容
@@ -8571,6 +8572,43 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:3da57de80c3f012c7b1b445b5a2dc3cdcaad9be239a1e48e8abcef94872fba99'
     decision_ref: decision://accepted/BET-Y1Q3-T10-29
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6561dbe4faa6d872dbe281aff82d6008ab5e0c1b
+          tests:
+            ref: receipt://tests/test_documents_ocr_preflight.py
+            sha256: sha256:e4d598719ccbfd8821ef0a422f1c20b338093f1a827a2d26725cd9eb1847164f
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-27-ocr-preflight-owner-design.md
+            sha256: sha256:3da57de80c3f012c7b1b445b5a2dc3cdcaad9be239a1e48e8abcef94872fba99
+          rollback:
+            ref: receipt://docs/reports/2026-08-27-ocr-preflight-owner.md
+            sha256: sha256:db490582f2bfb575f79826d804b336dae3d8b14431781b701683141640e0465d
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-27-ocr-preflight-owner.md
+            sha256: sha256:db490582f2bfb575f79826d804b336dae3d8b14431781b701683141640e0465d
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-29.md
+            sha256: sha256:5fcec6e221a71e88b78f995b9961199fe48e17c2a752ca2f9d13f270002ff863
+          replay:
+            ref: receipt://tests/test_documents_ocr_preflight.py
+            sha256: sha256:e4d598719ccbfd8821ef0a422f1c20b338093f1a827a2d26725cd9eb1847164f
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-29.md
+            sha256: sha256:5fcec6e221a71e88b78f995b9961199fe48e17c2a752ca2f9d13f270002ff863
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on:
   - BET-Y1Q3-T10-28
   risk_level: L1
