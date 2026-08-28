@@ -9433,7 +9433,7 @@ bets:
   title: '卫健委 predictor Documents writer 改为 Workspace preflight'
   appetite: 1 day
   priority: P1
-  status: pending
+  status: done
   goal: '停止每月 1 日 08:30 Documents predictor.py 写入器，保留同源预测规则并输出 Workspace evidence。'
   non_goals:
   - 不修改或删除 Documents 业务资料
@@ -9466,6 +9466,44 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:fa3b02498bf5d0beb04a839a2d0c263a793ef5f009ea5c042f36818d6db9c960'
     decision_ref: decision://accepted/BET-Y1Q3-T10-40
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9761897ee14899150119ebe3009904081e76c936
+          tests:
+            ref: receipt://tests/test_documents_predictor_preflight.py
+            sha256: sha256:3ab6e0e26c06742c5d1bb83b1237c599c4237489a66ff66adc49486f0f1aa033
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-predictor-preflight-owner-design.md
+            sha256: sha256:fa3b02498bf5d0beb04a839a2d0c263a793ef5f009ea5c042f36818d6db9c960
+          rollback:
+            ref: receipt://docs/reports/2026-08-28-predictor-preflight-owner.md
+            sha256: sha256:6098b1ad98428832a475352b4f6e56248b759fff42fe11911575426f5a51c577
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-40.md
+            sha256: sha256:9b8d55effc5bb2335a3ef6702b65f8d01edf2d2b579884adeceac244bfb312d3
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-28-predictor-preflight-owner.md
+            sha256: sha256:6098b1ad98428832a475352b4f6e56248b759fff42fe11911575426f5a51c577
+          replay:
+            ref: receipt://tests/test_documents_predictor_preflight.py
+            sha256: sha256:3ab6e0e26c06742c5d1bb83b1237c599c4237489a66ff66adc49486f0f1aa033
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-40.md
+            sha256: sha256:9b8d55effc5bb2335a3ef6702b65f8d01edf2d2b579884adeceac244bfb312d3
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  done_at: 2026-08-29
   depends_on:
   - BET-Y1Q3-T10-39
   risk_level: L1
