@@ -700,7 +700,7 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
+        status: IN_PROGRESS
         evidence: {}
       operational:
         status: NOT_PROVEN
