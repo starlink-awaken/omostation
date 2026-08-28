@@ -205,3 +205,16 @@ principal 于 08-29 就"operational 证据标准"裁决: **测试回执不可计
 - 下一步: 重建 binding canary driver (08-26 版为 /tmp 临时脚本未入库), 跑
   find→inspect→load→invoke 正向链, 产出 confirmed read-only native receipt
 - canary 报告更新后, operational 复评 PROVEN → complete → done
+
+## 2026-08-29 正向 canary 执行成功 — operational 复评 PROVEN
+
+- driver 入库: bin/ssot/binding-canary-driver.py (binding-canary-report/v1)
+- 生产执行 (canonical, 真 gateway + metaos admission provider): 五格全绿
+  find resolved / inspect inspected / invoke transport=confirmed /
+  replay 同 invocation_id 幂等 / cleanup proved
+- receipt_digest: sha256:8de7d5c1db642949b3e3edc0ccb6553897f3624b8175f665fd9ea116a29274cf
+- 靶子: bos://system/omo/debt (internal transport, read_only)
+- 报告: docs/reports/2026-08-29-binding-canary.json
+- ledger: operational → PROVEN, overall → outcome_accepted, complete → done ✓
+- 副产品: bos-services.yaml internal handler 声明漂移审计 (2 活/1 func 缺/N module 缺)
+  已记录, 待单独治理 PR
