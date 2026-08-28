@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 519  # 2026-08-28 518→519: 登记 bin/ops/templates.py (并发 agent #2432 遗漏)
+    script_baseline: 520  # 2026-08-28 519→520: 固化 registry_drift_monitor.py (登记遗漏监控脚本自身)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
