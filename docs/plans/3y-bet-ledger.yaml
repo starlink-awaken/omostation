@@ -6496,6 +6496,8 @@ bets:
   - projects/omo/tests/test_worker_lifecycle_mesh.py
   - projects/omo/tests/test_workflow_mesh.py
   - projects/omo
+  - projects/metaos
+  - projects/metaos/pyproject.toml
   - projects/cockpit/src/cockpit/_subcommands.py
   - projects/cockpit/src/cockpit/commands/bos.py
   - projects/cockpit/src/cockpit/adapters/capability_binding.py
