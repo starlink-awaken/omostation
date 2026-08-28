@@ -1,0 +1,132 @@
+name: Service Gateway CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bin/ops/**'
+      - '.omo/_truth/registry/services.yaml'
+      - '.github/workflows/service-gateway.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'bin/ops/**'
+      - '.omo/_truth/registry/services.yaml'
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Test ops CLI
+        run: |
+          echo "=== Testing ops CLI ==="
+          python3 bin/ops/cli.py status --json | head -20
+          python3 bin/ops/cli.py summary --json | head -20
+          python3 bin/ops/cli.py deps | head -20
+
+      - name: Test unified metrics
+        run: |
+          echo "=== Testing unified metrics ==="
+          python3 bin/ops/unified_metrics.py --once | head -20
+
+      - name: Test SLO tracker
+        run: |
+          echo "=== Testing SLO tracker ==="
+          python3 bin/ops/slo_tracker.py --json | head -20
+
+      - name: Test cost tracker
+        run: |
+          echo "=== Testing cost tracker ==="
+          python3 bin/ops/cost_tracker.py --json | head -20
+
+      - name: Test runbook
+        run: |
+          echo "=== Testing runbook ==="
+          python3 bin/ops/runbook.py all | head -20
+
+      - name: Test env config
+        run: |
+          echo "=== Testing env config ==="
+          python3 bin/ops/env_config.py show
+
+      - name: Test catalog API
+        run: |
+          echo "=== Testing catalog API ==="
+          python3 bin/ops/catalog_api.py &
+          sleep 2
+          curl -s http://127.0.0.1:8092/api/health | head -20
+          curl -s http://127.0.0.1:8092/api/services | head -20
+          pkill -f catalog_api.py || true
+
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Validate services.yaml
+        run: |
+          python3 -c "
+          import yaml
+          from pathlib import Path
+          content = Path('.omo/_truth/registry/services.yaml').read_text()
+          docs = list(yaml.safe_load_all(content))
+          for doc in docs:
+              if isinstance(doc, dict) and 'services' in doc:
+                  services = doc['services']
+                  print(f'Total services: {len(services)}')
+                  enabled = sum(1 for s in services if s.get('enabled'))
+                  print(f'Enabled: {enabled}')
+                  disabled = sum(1 for s in services if not s.get('enabled'))
+                  print(f'Disabled: {disabled}')
+                  # Check for required fields
+                  for svc in services:
+                      assert 'id' in svc, f'Missing id in {svc}'
+                      assert 'scheduler' in svc, f'Missing scheduler in {svc[\"id\"]}'
+                  print('All services valid!')
+          "
+
+  health-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Run health check
+        run: |
+          python3 bin/ops/monitor_daemon.py --once --json
+
+      - name: Record SLO metrics
+        run: |
+          python3 bin/ops/slo_tracker.py --record
+
+      - name: Record cost metrics
+        run: |
+          python3 bin/ops/cost_tracker.py --record
