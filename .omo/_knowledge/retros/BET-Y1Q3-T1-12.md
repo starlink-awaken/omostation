@@ -146,5 +146,18 @@ exit 4, `failure_code=binding_required`, a redacted resolution receipt, and
 `invoked/evidenced/independently_verified=false`; the gateway/provider was not
 called. Root 413/413, OMO 55/55, Cockpit capability 85/85, and Agora 31/31
 targeted regressions passed, and the default GaC gate passed 57/57. This closes
-the missing-binding negative path only; production native receipt consumer and
-positive topology canary remain unproven.
+the missing-binding negative path only.
+
+## 2026-08-29 OMO native receipt consumer slice
+
+OMO now consumes confirmed successful `native-execution-receipt/v1` envelopes
+through the existing `external-receipt` broker. It checks the native schema,
+value firewall states, workflow/step identity, and result digest, then records
+digest-only `EvidenceRecorded` metadata; it does not copy material or provider
+output and is idempotent on retry. Child PR #109 merged at
+`29d2fb4b75ba9c7943fba06ca6ef15d393920d82`; root PR #2493 merged at
+`79073d313556ded54577c57f6c58f2159d62d5b9`. OMO full regression was
+`2030 passed, 218 skipped, 15 warnings`; child lint/test/test-cov and root
+cascading/governance gates passed. This proves the production consumer entry
+point, not the positive topology canary, complete admission-to-dispatch proof,
+or principal-bound value.

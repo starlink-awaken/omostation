@@ -1214,8 +1214,11 @@ When a native `load` or `invoke` caller omits the complete binding bundle, the
 CLI now returns exit `4` before registry/gateway/provider execution and emits a
 redacted `capability-resolution-receipt/v1` with all invocation/evidence/
 verification states false. The regression and live CLI canary both prove the
-zero-call invariant. Native production receipt consumption and positive
-topology canary remain separate open T1-12 requirements.
+zero-call invariant. The production OMO consumer now accepts only confirmed,
+successful `native-execution-receipt/v1` envelopes, binds workflow/step
+identity, and projects digest-only evidence through the existing receipt broker
+(merged child PR #109 and root PR #2493). Positive topology canary and
+principal-bound value remain separate open T1-12 requirements.
 
 Wait for every required PR-context check. Merge by standard squash only. Retire every writer clone through `clone-lifecycle retire`; use `--platform-rebased-pr` whenever GitHub update-branch changed the PR head. Preserve every JSON retirement receipt.
 
