@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-25
+title: Workflow waiver 证据 — #2170 post-merge baseline recovery
+type: doc
 ---
 
 # Workflow waiver 证据 — #2170 post-merge baseline recovery

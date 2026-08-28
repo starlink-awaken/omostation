@@ -9,6 +9,8 @@ related:
   - ../operations/blueprint-agent-instruction-pack-v1.md
   - ../reports/2026-08-06-multi-agent-git-topology.md
   - ../superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
+title: 多 Agent 协作固化方案 v1 — 蓝图执行推进总案
+type: doc
 ---
 
 # 多 Agent 协作固化方案 v1 — 蓝图执行推进总案

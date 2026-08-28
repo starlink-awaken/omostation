@@ -4,6 +4,8 @@ lifecycle: contract
 owner: xiamingxing
 last-reviewed: 2026-08-27
 review-state: user-authorized
+title: #2323 Cockpit unreachable gitlink recovery waiver
+type: doc
 ---
 
 # #2323 Cockpit unreachable gitlink recovery waiver

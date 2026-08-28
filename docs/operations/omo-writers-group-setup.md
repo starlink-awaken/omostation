@@ -5,6 +5,8 @@ owner: runtime-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+title: macOS `omo-writers` 组创建说明（ADR-0207 残留）
+type: doc
 ---
 # macOS `omo-writers` 组创建说明（ADR-0207 残留）
 

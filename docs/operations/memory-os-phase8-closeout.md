@@ -9,6 +9,8 @@ related:
   - ./memory-os.env.example
   - ../../.omo/standards/memory-os-ops.md
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
+title: Memory OS Phase 8 — 剩余工作收口（配置 / 文档 / 治理）
+type: doc
 ---
 
 # Memory OS Phase 8 — 剩余工作收口（配置 / 文档 / 治理）

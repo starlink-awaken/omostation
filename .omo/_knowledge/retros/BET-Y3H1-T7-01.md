@@ -5,6 +5,8 @@ lifecycle: history
 last-reviewed: 2026-08-20
 status: archived
 owner: governance-team
+title: BET-Y3H1-T7-01 Retro — 中试 / 政策申报升 assisted
+type: retro
 ---
 
 # BET-Y3H1-T7-01 Retro — 中试 / 政策申报升 assisted

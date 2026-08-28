@@ -5,6 +5,7 @@ owner: governance-team
 created: 2026-08-15
 lifecycle: history
 last-reviewed: 2026-08-15
+type: retro
 ---
 
 # BET-Y1Q2-T6-09 复盘（追溯补记 2026-08-15，台账信任修复 r2 处置 D3）

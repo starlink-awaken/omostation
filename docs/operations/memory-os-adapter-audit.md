@@ -6,6 +6,8 @@ last-reviewed: 2026-08-04
 related:
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
   - ../../.omo/_truth/registry/memory-os.yaml
+title: Memory OS — 适配器与调用方审计（Phase 0）
+type: doc
 ---
 
 # Memory OS — 适配器与调用方审计（Phase 0）

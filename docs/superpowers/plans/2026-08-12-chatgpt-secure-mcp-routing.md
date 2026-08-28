@@ -3,6 +3,8 @@ status: active
 lifecycle: plan
 owner: governance-team
 last-reviewed: 2026-08-18
+title: ChatGPT Secure MCP Routing Implementation Plan
+type: doc
 ---
 # ChatGPT Secure MCP Routing Implementation Plan
 

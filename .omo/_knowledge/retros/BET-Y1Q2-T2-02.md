@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-18
+title: BET-Y1Q2-T2-02 复盘：个人 dogfood 操作入口
+type: retro
 ---
 # BET-Y1Q2-T2-02 复盘：个人 dogfood 操作入口
 

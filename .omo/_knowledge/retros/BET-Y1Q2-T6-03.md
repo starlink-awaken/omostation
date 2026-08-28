@@ -4,6 +4,8 @@ lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-11
 bet_id: BET-Y1Q2-T6-03
+title: "BET-Y1Q2-T6-03 Retro: bin 脚本清理"
+type: retro
 ---
 
 # BET-Y1Q2-T6-03 Retro: bin 脚本清理

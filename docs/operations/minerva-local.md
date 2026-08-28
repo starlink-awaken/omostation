@@ -5,6 +5,8 @@ owner: runtime-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+title: Minerva 本地运行（SearXNG + 研究）
+type: doc
 ---
 # Minerva 本地运行（SearXNG + 研究）
 

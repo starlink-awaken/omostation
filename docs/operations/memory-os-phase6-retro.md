@@ -7,6 +7,8 @@ related:
   - ./memory-os-phase5-retro.md
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
   - ../../.omo/_truth/registry/memory-rbac.yaml
+title: Memory OS Phase 6 — 复盘
+type: doc
 ---
 
 # Memory OS Phase 6 — 复盘

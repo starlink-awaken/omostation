@@ -3,6 +3,8 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-18
+title: OpenCode 委托基础设施配置 — delegation-infra-config
+type: doc
 ---
 # OpenCode 委托基础设施配置 — delegation-infra-config
 

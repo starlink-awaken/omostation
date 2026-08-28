@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-24
+title: BET-Y1Q3-T1-11 退役 provenance 收敛复盘
+type: retro
 ---
 
 # BET-Y1Q3-T1-11 退役 provenance 收敛复盘

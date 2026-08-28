@@ -5,6 +5,8 @@ owner: runtime-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+title: Physical recovery package (Batch2 C1)
+type: doc
 ---
 # Physical recovery package (Batch2 C1)
 

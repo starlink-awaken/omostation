@@ -7,6 +7,8 @@ related:
 - ../../projects/agora/src/agora/server/mcp_entry.py
 - ../../projects/agora/src/agora/server/tools_auth.py
 - ../../docs/scene-cards/agora-bos-gateway.yaml
+title: Agora Auth Runbook
+type: doc
 ---
 
 # Agora Auth Runbook

@@ -3,6 +3,8 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-18
+title: External Agent Attach Card — Minimum Path
+type: doc
 ---
 # External Agent Attach Card — Minimum Path
 

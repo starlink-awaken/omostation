@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-18
+title: "BET-Y1Q2-T5-02 Retro: 回退边执行语义"
+type: retro
 ---
 # BET-Y1Q2-T5-02 Retro: 回退边执行语义
 

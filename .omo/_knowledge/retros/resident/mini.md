@@ -1,24 +1,28 @@
 ---
 schema: resident-retro-candidate/v1
 topic: mini
-generated_at: 2026-08-28T08:00:00Z
+generated_at: 2026-08-28T09:50:00Z
 status: candidate
 counts:
-  runs: 168
+  runs: 170
   failures: 33
-  total: 201
-failure_rate: 0.1642
+  total: 203
+failure_rate: 0.1626
 failure_breakdown:
   by_event_type:
     StepFailed: 33
   trace_count: 33
+title: mini 运行复盘聚合 (resident 事件驱动)
+lifecycle: history
+owner: laowang-agent
+last-reviewed: 2026-08-28
 ---
 # mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-28T08:00:00Z
+- generated_at: 2026-08-28T09:50:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 168 成功运行 + 33 失败模式 = 201 草稿
-- 失败率: 16.42%
+- sediment 覆盖: 170 成功运行 + 33 失败模式 = 203 草稿
+- 失败率: 16.26%
 
 ## 成功运行 (runs/)
 
@@ -190,6 +194,8 @@ failure_breakdown:
 - 20260826T013318Z-mini-f8daa782.md
 - 20260826T013534Z-mini-62318048.md
 - 20260826T013535Z-mini-d99ee833.md
+- 20260828T080012Z-mini-67561564.md
+- 20260828T080013Z-mini-fa40eb28.md
 
 ## 失败模式 (failures/)
 
@@ -1326,6 +1332,19 @@ failure_breakdown:
   - 结果与证据: ok=False, status=failed, evidence_count=0
   - 失败根因: step=execute, error=workflow failed
   - 指标: event_count=6, duration_s=0.246
+- **20260828T080012Z-mini-67561564**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.299
+- **20260828T080013Z-mini-fa40eb28**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=0.296
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

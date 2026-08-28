@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+title: Operations Index — Where to Start
+type: doc
 ---
 
 # Operations Index — Where to Start

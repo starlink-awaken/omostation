@@ -5,6 +5,8 @@ lifecycle: history
 last-reviewed: 2026-08-20
 status: archived
 owner: governance-team
+title: BET-Y1Q3-T6-13 Retro — 归档 bin/bc-os/ 无外部引用的 speculative 脚本
+type: retro
 ---
 
 # BET-Y1Q3-T6-13 Retro — 归档 bin/bc-os/ 无外部引用的 speculative 脚本

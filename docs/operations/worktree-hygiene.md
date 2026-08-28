@@ -5,6 +5,8 @@ owner: runtime-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+title: Worktree 卫生（多 agent 栈落地后）
+type: doc
 ---
 # Worktree 卫生（多 agent 栈落地后）
 

@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+title: Directory Convergence Decisions
+type: doc
 ---
 
 # Directory Convergence Decisions

@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-18
+title: Phase 0-4 复盘 — Gap 清零闭环实施
+type: retro
 ---
 # Phase 0-4 复盘 — Gap 清零闭环实施
 

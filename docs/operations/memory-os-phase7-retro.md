@@ -7,6 +7,8 @@ related:
   - ./memory-os-phase6-retro.md
   - ./memory-os-neo4j-local.md
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
+title: Memory OS Phase 7 — 复盘
+type: doc
 ---
 
 # Memory OS Phase 7 — 复盘

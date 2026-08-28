@@ -3,6 +3,8 @@ status: superseded
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-22
+title: scripts close-duplicate-gap-first 执行清单
+type: doc
 ---
 
 # scripts close-duplicate-gap-first 执行清单

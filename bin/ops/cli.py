@@ -538,6 +538,44 @@ def cmd_up(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_deps(args: argparse.Namespace) -> int:
+    """Show service dependency graph (DAG)."""
+    services = load_services()
+    target = getattr(args, "service", None)
+
+    if target:
+        svc = get_service_by_id(services, target)
+        if not svc:
+            print(f"ERROR: service '{target}' not found", file=sys.stderr)
+            return 1
+        deps = svc.get("depends_on", [])
+        print(f"{target} ({svc.get('type', 'unknown')})")
+        if deps:
+            print(f"  depends on: {', '.join(deps)}")
+        else:
+            print("  no dependencies")
+        # Show reverse deps (who depends on this)
+        reverse = [s["id"] for s in services if target in s.get("depends_on", [])]
+        if reverse:
+            print(f"  depended by: {', '.join(reverse)}")
+        return 0
+
+    # Show full DAG
+    enabled = [s for s in services if s.get("enabled", False)]
+    layers = topological_sort(enabled)
+    print(f"Service DAG: {len(enabled)} services in {len(layers)} layers\n")
+    for i, layer in enumerate(layers, 1):
+        print(f"  Layer {i}:")
+        for sid in layer:
+            svc = get_service_by_id(enabled, sid)
+            if not svc:
+                continue
+            deps = svc.get("depends_on", [])
+            dep_str = f" ← {', '.join(deps)}" if deps else ""
+            print(f"    {sid}{dep_str}")
+    return 0
+
+
 def cmd_down(args: argparse.Namespace) -> int:
     """Stop services (reverse dependency order)."""
     services = load_services()

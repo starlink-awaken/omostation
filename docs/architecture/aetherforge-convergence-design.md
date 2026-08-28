@@ -3,6 +3,8 @@ status: active
 lifecycle: contract
 owner: architecture-team
 last-reviewed: 2026-08-12
+title: AetherForge × omlxc v3 收敛契约
+type: doc
 ---
 
 # AetherForge × omlxc v3 收敛契约

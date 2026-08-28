@@ -6,6 +6,8 @@ last-reviewed: 2026-08-08
 session-span: 2026-08-07 ~ 2026-08-08
 related-bets: [BET-Y1Q1-T1-07]
 related-prs: ["#1082", "#1085", "#1088", "#1131", "#1133"]
+title: 2026-08-08 深度复盘：fork bomb 治理 → state drift → 治理漏洞全链
+type: doc
 ---
 
 # 2026-08-08 深度复盘：fork bomb 治理 → state drift → 治理漏洞全链

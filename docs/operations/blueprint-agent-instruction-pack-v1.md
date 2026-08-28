@@ -9,6 +9,8 @@ related:
   - ../architecture/blueprint-multi-agent-execution-control-v1.md
   - ../../.omo/standards/agent-workflow-contract.md
   - ../plans/AGENT-BRIEF.md
+title: 织星蓝图通用 Agent 执行指令 v1
+type: doc
 ---
 
 # 织星蓝图通用 Agent 执行指令 v1

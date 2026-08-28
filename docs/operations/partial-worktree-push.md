@@ -3,6 +3,8 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-18
+title: Partial Worktree Push 操作规范 (G2)
+type: doc
 ---
 # Partial Worktree Push 操作规范 (G2)
 

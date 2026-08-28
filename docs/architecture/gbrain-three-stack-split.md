@@ -10,6 +10,8 @@ related:
   - ../../../docs/SOP-GOD-MODULE-SPLIT.md
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+title: gbrain 三栈拆分架构图 (P76 Phase 2 / ADR-0156)
+type: doc
 ---
 
 # gbrain 三栈拆分架构图 (P76 Phase 2 / ADR-0156)

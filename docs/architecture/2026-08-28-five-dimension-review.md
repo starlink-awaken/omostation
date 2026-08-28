@@ -3,6 +3,8 @@ status: active
 lifecycle: spec
 owner: engineering-agent
 last-reviewed: 2026-08-28
+title: 三动脉方案·五维深度审议 — 长期运营/运维/治理/防腐/进化 × 愿景 (2026-08-28)
+type: doc
 ---
 
 # 三动脉方案·五维深度审议 — 长期运营/运维/治理/防腐/进化 × 愿景 (2026-08-28)

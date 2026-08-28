@@ -10,6 +10,8 @@ related:
   - ../architecture/memory-os.md
   - ./memory-os-phase8-closeout.md
   - ./memory-os-adapter-audit.md
+title: Memory OS 史诗复盘（ADR-0372 · Phase 0–8 + 收口）
+type: doc
 ---
 
 # Memory OS 史诗复盘（ADR-0372 · Phase 0–8 + 收口）

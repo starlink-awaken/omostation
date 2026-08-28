@@ -4,6 +4,8 @@ lifecycle: history
 owner: governance-team
 bet: BET-Y1Q1-T6-01
 last-reviewed: 2026-08-15
+title: BET-Y1Q1-T6-01 复盘
+type: retro
 ---
 
 # BET-Y1Q1-T6-01 复盘

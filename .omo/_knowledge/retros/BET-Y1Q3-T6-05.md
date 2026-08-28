@@ -18,6 +18,7 @@ scope:
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-18
+title: "BET-Y1Q3-T6-05 Retro: 治理工具自净闭环"
 ---
 
 # BET-Y1Q3-T6-05 Retro: 治理工具自净闭环

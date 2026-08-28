@@ -9,6 +9,8 @@ related:
   - ../architecture/memory-os.md
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
   - ../../.omo/_truth/registry/memory-os.yaml
+title: Memory OS Phase 10 — 能力加深复盘
+type: doc
 ---
 
 # Memory OS Phase 10 — 能力加深复盘
