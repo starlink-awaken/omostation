@@ -178,3 +178,19 @@ This is a local end-to-end canary over a temporary Workflow Mesh run, not host
 production topology evidence. T1-12 therefore remains `engineering=IN_PROGRESS`,
 `operational=NOT_PROVEN`, `value=NOT_PROVEN`; persistent topology, replay across
 the real resident path, and principal-bound value remain open.
+
+---
+
+## 2026-08-29 关账-降级-合成 全记录 (治理分歧留档)
+
+时间线:
+1. **#2456 (08-28)**: principal SSH 签署 value attestation, evidence 拉满 (VERIFIED/PROVEN/ACCEPTED),
+   complete 通过 → 但 agent 在 stash 冲突清场时弄丢 status: done, 合进去的是 candidate
+2. **#2492 (08-29)**: 另一 agent 有意降级矩阵至 evaluating —— 理由: operational 的证据是
+   测试回执, "正向生产证据" (production canary) 缺失 (Wave B 遗留: 正向金丝 BLOCKED 网关不在线)
+3. **本轮合成**: engineering VERIFIED (交付无争议) + value ACCEPTED (attestation 无争议) +
+   operational NOT_PROVEN (尊重 #2492 判断) → derived blocked
+
+待裁决 (principal): operational 证据标准 — 测试回执可否计为 PROVEN?
+- 若可: 恢复 #2456 版矩阵 → complete → done
+- 若否: 跑正向 production canary (网关在线后) → 复评 → done
