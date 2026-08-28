@@ -524,7 +524,10 @@ bets:
   title: Resident ledger read-status lock contention repair
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
+  completed_at: 2026-08-29
+  done_note: Bounded resident ledger read-status retry delivered child-first; transient lock recovery, truthful exhausted-lock degradation, broker cleanup, and unchanged host ledger evidence verified. Host writer contention remains visible and is not silently cleared.
   goal: Make the resident status ledger probe tolerate bounded transient SQLite contention without mutating the host ledger or runtime.
   non_goals:
   - No database migration, WAL checkpoint/deletion, force unlock, process signal, launchd change, or service restart.
@@ -562,6 +565,43 @@ bets:
   human_gate: false
   circuit_breaker: If the fix needs any host mutation, a second ledger authority, or an unbounded retry, stop and re-review the Spec.
   retro: required
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@315cd65cb9ddff46c90f637c76080a58cb0832f2
+          tests:
+            ref: receipt://projects/omo/tests/unit/test_resident_status.py
+            sha256: sha256:1ddc100b6a5da69d8a47cb4b2514fb43fc2977752d89cbe3df8ebbd99c0bd48a
+          diff:
+            ref: receipt://projects/omo/src/omo/resident/status.py
+            sha256: sha256:a7829df53a58e9f93cdfa2427b922da609eb16fca4c83beb4c3a0f8233b88daf
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md
+            sha256: sha256:cd834b1d9fa347898b2bf746f93c86c4c5e2b7cd474f701450cba9c72783dea3
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-resident-ledger-read-status.md
+            sha256: sha256:a452e0fdabb9408aafdeb559c2d6408f0293546f7f6994a68b4c457673d854bf
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-48.md
+            sha256: sha256:d43e7096e9339301155749e40c0809fef7c597f23443e52b968aac5a882e80e0
+          replay:
+            ref: receipt://projects/omo/tests/test_event_ledger.py
+            sha256: sha256:099b92d7a446b612056d36094d5633990dd20bf6caa856a516bbdaea8a81753e
+          cleanup:
+            ref: receipt://docs/reports/2026-08-29-resident-ledger-read-status.md
+            sha256: sha256:a452e0fdabb9408aafdeb559c2d6408f0293546f7f6994a68b4c457673d854bf
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q3-T10-43
   track: T10-MATURITY
   window: Y1Q3
