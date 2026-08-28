@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-28
+---
 # Service Gateway (ops 控制面)
 
 > 统一运维控制面 — 管理 omostation 所有服务
