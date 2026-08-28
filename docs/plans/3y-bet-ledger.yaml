@@ -8569,7 +8569,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-service-config-stable-interpreter-reconciliation-design.md
     spec_version: 1.0.0
-    content_digest: sha256:6888ac6f3a3d56a454697c892c26a74aac0e8413d8df49f6c6bdd6fee7a235fb
+    content_digest: sha256:1794a8e915ef7c65460122caf4c2975b0fa0b0451c12dc539d6a466419afa3e8
     decision_ref: decision://accepted/BET-Y1Q3-T10-47
   depends_on:
   - BET-Y1Q3-T10-43
