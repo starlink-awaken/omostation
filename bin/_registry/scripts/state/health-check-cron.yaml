@@ -1,0 +1,17 @@
+schema: script-registry/v1
+id: bin/ops/health-check-cron.py
+name: Health Check Cron
+category: state
+owner: governance-team
+description: "Scheduled Service Gateway health check and self-healing entrypoint."
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers:
+  - cron
+related:
+  - bin/ops/cli.py
+maturity: active
+last_reviewed: "2026-08-28"
