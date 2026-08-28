@@ -32,6 +32,65 @@ PORT_REGISTRY = WORKSPACE / "protocols" / "port-registry.yaml"
 LOGS_DIR = WORKSPACE / "runtime" / "logs"
 PIDS_DIR = WORKSPACE / "runtime" / "pids"
 
+# ── Service Profiles ──
+# Define which services belong to each profile
+SERVICE_PROFILES: dict[str, set[str]] = {
+    "minimal": {
+        # Core infrastructure
+        "omo.sync_daemon",
+        "resident.orchestrator",
+        "resident.heartbeat",
+        "gac.daemon_watchdog",
+        # Essential cron
+        "cron.capability_ownership",
+        "cron.agent_workflow_status",
+        "cron.meta_doctor",
+        # Core MCP
+        "mcp.agora",
+        # Essential CLI
+        "cli.cockpit",
+        "cli.omo",
+    },
+    "standard": {
+        # Include minimal + standard services
+        "omo.sync_daemon",
+        "resident.orchestrator",
+        "resident.heartbeat",
+        "resident.sediment",
+        "resident.monitor",
+        "gac.daemon_watchdog",
+        "cockpit.dashboard",
+        # Cron
+        "cron.capability_ownership",
+        "cron.agent_workflow_status",
+        "cron.meta_doctor",
+        "cron.governance_evolution",
+        "cron.m4_health",
+        "cron.debt_refresh",
+        # MCP
+        "mcp.agora",
+        "mcp.kos",
+        "mcp.minerva",
+        # CLI
+        "cli.cockpit",
+        "cli.omo",
+        "cli.kos",
+    },
+    "full": None,  # All enabled services
+}
+
+
+def get_profile_services(profile: str, all_services: list[dict]) -> list[dict]:
+    """Get services belonging to a profile."""
+    if profile == "full" or profile not in SERVICE_PROFILES:
+        return [s for s in all_services if s.get("enabled", False)]
+
+    profile_ids = SERVICE_PROFILES[profile]
+    if profile_ids is None:
+        return [s for s in all_services if s.get("enabled", False)]
+
+    return [s for s in all_services if s.get("id") in profile_ids and s.get("enabled", False)]
+
 
 def load_services() -> list[dict[str, Any]]:
     """Load service manifest from services.yaml SSOT (multi-doc with frontmatter)."""
@@ -412,6 +471,7 @@ def cmd_up(args: argparse.Namespace) -> int:
     services = load_services()
     target = getattr(args, "service", None)
     dry_run = getattr(args, "dry_run", False)
+    profile = getattr(args, "profile", "full")
 
     if target:
         svc = get_service_by_id(services, target)
@@ -437,10 +497,11 @@ def cmd_up(args: argparse.Namespace) -> int:
             print(f"ERROR: {e}", file=sys.stderr)
             return 1
 
-    # Start all enabled services in DAG order
-    enabled = [s for s in services if s.get("enabled", False)]
+    # Start services in DAG order (filtered by profile)
+    enabled = get_profile_services(profile, services)
     layers = topological_sort(enabled)
     total = sum(len(l) for l in layers)
+    print(f"Profile: {profile} ({len(enabled)} services)")
 
     if dry_run:
         print(f"[DRY-RUN] Starting {total} services in {len(layers)} layers:")
@@ -613,6 +674,8 @@ def main() -> int:
     up_p = sub.add_parser("up", help="Start services")
     up_p.add_argument("service", nargs="?", help="Specific service to start")
     up_p.add_argument("--dry-run", action="store_true", help="Show what would be started")
+    up_p.add_argument("--profile", choices=["minimal", "standard", "full"], default="full",
+                      help="Service profile (default: full)")
     up_p.set_defaults(func=cmd_up)
 
     # ── down ──
@@ -656,6 +719,12 @@ def main() -> int:
     generate_p.add_argument("--format", choices=["docker-compose", "systemd", "launchd"], default="docker-compose")
     generate_p.add_argument("--output", "-o", help="Output file path")
     generate_p.set_defaults(func=cmd_generate)
+
+    # ── recover ──
+    recover_p = sub.add_parser("recover", help="Auto-recover failed services")
+    recover_p.add_argument("--profile", choices=["minimal", "standard", "full"], default="full",
+                           help="Service profile (default: full)")
+    recover_p.set_defaults(func=cmd_recover)
 
     args = parser.parse_args()
 
@@ -805,6 +874,46 @@ def cmd_validate(args: argparse.Namespace) -> int:
     else:
         print(f"Configuration valid ({len(to_validate)} services checked)")
         return 0
+
+
+def cmd_recover(args: argparse.Namespace) -> int:
+    """Auto-recover failed services (restart unhealthy ones)."""
+    import subprocess as sp
+
+    services = load_services()
+    profile = getattr(args, "profile", "full")
+    to_check = get_profile_services(profile, services)
+
+    recovered = 0
+    skipped = 0
+    failed = 0
+
+    print(f"Checking {len(to_check)} services for recovery...\n")
+
+    for svc in to_check:
+        sid = svc.get("id", "")
+        liv = check_liveness(svc)
+
+        if liv["status"] in ("healthy", "disabled"):
+            skipped += 1
+            continue
+
+        # Try to restart
+        cmd = _get_cmd(svc)
+        try:
+            log_file = LOGS_DIR / f"{sid}.log"
+            log_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(log_file, "a") as lf:
+                proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True)
+            _get_pid_file(sid).write_text(str(proc.pid))
+            print(f"  [RECOVER] {sid} (pid={proc.pid}, was {liv['status']})")
+            recovered += 1
+        except Exception as e:
+            print(f"  [FAIL] {sid}: {e}")
+            failed += 1
+
+    print(f"\nSummary: {recovered} recovered, {skipped} healthy, {failed} failed")
+    return 0
 
 
 def cmd_generate(args: argparse.Namespace) -> int:
