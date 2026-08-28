@@ -9,6 +9,8 @@ related:
   - ../../../docs/architecture/knowledge-foundry-cron.md
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+title: Knowledge Foundry Monitor (cockpit L3 出口) — P76 Phase 6
+type: doc
 ---
 
 # Knowledge Foundry Monitor (cockpit L3 出口) — P76 Phase 6

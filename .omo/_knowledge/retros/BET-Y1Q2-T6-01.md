@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-18
+title: "BET-Y1Q2-T6-06 Retro: Dynamic GaC Rule Subtraction"
+type: retro
 ---
 # BET-Y1Q2-T6-06 Retro: Dynamic GaC Rule Subtraction
 

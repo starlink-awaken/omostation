@@ -7,6 +7,8 @@ related:
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
   - ./memory-os-adapter-audit.md
   - ../architecture/memory-os.md
+title: Memory OS Phase 1 — 复盘与迭代
+type: doc
 ---
 
 # Memory OS Phase 1 — 复盘与迭代

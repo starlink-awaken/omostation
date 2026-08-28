@@ -9,6 +9,8 @@ related:
   - ../operations/blueprint-agent-instruction-pack-v1.md
   - ../plans/3y-bet-ledger.yaml
   - ../../.omo/standards/agent-workflow-contract.md
+title: 织星蓝图多 Agent 战略执行与合规控制体系 v1
+type: doc
 ---
 
 # 织星蓝图多 Agent 战略执行与合规控制体系 v1

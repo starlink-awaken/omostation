@@ -8,6 +8,8 @@ related:
   - ../STRATEGY-3YEAR-PLAN-2026H2-2029.md
   - ../plans/3y-bet-ledger.yaml
   - ./blueprint-multi-agent-execution-control-v1.md
+title: 织星第二数字分身总体架构蓝图 v1
+type: doc
 ---
 
 # 织星第二数字分身总体架构蓝图 v1

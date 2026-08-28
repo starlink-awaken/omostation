@@ -4,6 +4,7 @@ status: active
 lifecycle: contract
 owner: architecture-governance
 last-reviewed: 2026-08-23
+type: doc
 ---
 
 # Capability Federation Contract v1

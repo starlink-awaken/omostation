@@ -3,6 +3,8 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-18
+title: Agora CI 运维经验（2026-08-08 会话沉淀）
+type: doc
 ---
 # Agora CI 运维经验（2026-08-08 会话沉淀）
 

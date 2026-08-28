@@ -9,6 +9,8 @@ related:
   - ../../../docs/SOP-GOD-MODULE-SPLIT.md
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+title: Knowledge Foundry · 4-cron 编排 (P76 Phase 5 雏形)
+type: doc
 ---
 
 # Knowledge Foundry · 4-cron 编排 (P76 Phase 5 雏形)

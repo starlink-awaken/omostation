@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-18
+title: BET-Y1Q2-T2-01 复盘：本地真实信号进入个人 Episode
+type: retro
 ---
 # BET-Y1Q2-T2-01 复盘：本地真实信号进入个人 Episode
 

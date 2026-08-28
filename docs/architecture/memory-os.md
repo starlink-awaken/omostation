@@ -12,6 +12,8 @@ related:
   - ../operations/memory-os-epic-retro.md
   - ../operations/memory-os-neo4j-local.md
   - ../operations/knowledge-foundry-sop.md
+title: Memory OS（MOS）— 架构导航
+type: doc
 ---
 
 # Memory OS（MOS）— 架构导航

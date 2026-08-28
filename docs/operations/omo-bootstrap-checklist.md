@@ -5,6 +5,8 @@ owner: runtime-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+title: OMO / omostation 新机 Bootstrap 清单
+type: doc
 ---
 # OMO / omostation 新机 Bootstrap 清单
 

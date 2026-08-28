@@ -9,6 +9,8 @@ related:
   - ./minerva-local.md
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
   - ../../.omo/standards/memory-os-ops.md
+title: Memory OS — 本机 Neo4j 启动
+type: doc
 ---
 
 # Memory OS — 本机 Neo4j 启动

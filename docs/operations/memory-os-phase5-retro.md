@@ -6,6 +6,8 @@ last-reviewed: 2026-08-04
 related:
   - ./memory-os-phase4-retro.md
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
+title: Memory OS Phase 5 — 复盘
+type: doc
 ---
 
 # Memory OS Phase 5 — 复盘

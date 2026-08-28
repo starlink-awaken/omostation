@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-26
+title: Workflow waiver 证据 — git-discipline frontmatter delimiter 紧急
+type: doc
 ---
 
 # Workflow waiver 证据 — git-discipline frontmatter delimiter 紧急恢复

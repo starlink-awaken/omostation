@@ -3,6 +3,8 @@ status: active
 lifecycle: stable
 owner: governance-team
 last-reviewed: 2026-08-24
+title: 场景卡激活剧本 v1 — 主人侧操作手册
+type: doc
 ---
 
 # 场景卡激活剧本 v1 — 主人侧操作手册

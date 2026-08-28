@@ -3,6 +3,8 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-18
+title: Ralph PRD 完成定义 (G6)
+type: doc
 ---
 # Ralph PRD 完成定义 (G6)
 

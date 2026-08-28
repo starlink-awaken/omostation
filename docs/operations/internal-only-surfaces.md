@@ -3,6 +3,8 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-18
+title: Internal-Only Surfaces Policy
+type: doc
 ---
 # Internal-Only Surfaces Policy
 

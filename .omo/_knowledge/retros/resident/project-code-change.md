@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-08-28T08:00:00Z
+generated_at: 2026-08-28T09:50:00Z
 status: candidate
 counts:
   runs: 42
@@ -12,10 +12,14 @@ failure_breakdown:
   by_event_type:
     StepFailed: 19
   trace_count: 19
+title: project-code-change 运行复盘聚合 (resident 事件驱动)
+lifecycle: history
+owner: laowang-agent
+last-reviewed: 2026-08-28
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-28T08:00:00Z
+- generated_at: 2026-08-28T09:50:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 42 成功运行 + 19 失败模式 = 61 草稿
 - 失败率: 31.15%

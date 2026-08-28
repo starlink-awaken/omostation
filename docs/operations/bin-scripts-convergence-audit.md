@@ -4,6 +4,8 @@ lifecycle: contract
 owner: runtime-team
 last-reviewed: 2026-08-22
 review-state: metadata-only
+title: bin/scripts 收敛审计
+type: doc
 ---
 
 # bin/scripts 收敛审计

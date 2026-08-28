@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-generated_at: 2026-08-28T08:00:00Z
+generated_at: 2026-08-28T09:50:00Z
 status: candidate
 counts:
   runs: 36
@@ -12,10 +12,14 @@ failure_breakdown:
   by_event_type:
     StepFailed: 25
   trace_count: 25
+title: bet-execution 运行复盘聚合 (resident 事件驱动)
+lifecycle: history
+owner: laowang-agent
+last-reviewed: 2026-08-28
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-28T08:00:00Z
+- generated_at: 2026-08-28T09:50:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 36 成功运行 + 25 失败模式 = 61 草稿
 - 失败率: 40.98%

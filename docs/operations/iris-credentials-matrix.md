@@ -5,6 +5,8 @@ owner: runtime-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+title: Iris 连接器凭据矩阵
+type: doc
 ---
 # Iris 连接器凭据矩阵
 

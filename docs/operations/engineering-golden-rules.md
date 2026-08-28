@@ -3,6 +3,8 @@ status: active
 lifecycle: pattern
 owner: governance-team
 last-reviewed: 2026-08-24
+title: Engineering Golden Rules — 工程铁律 (防复发模板)
+type: doc
 ---
 # Engineering Golden Rules — 工程铁律 (防复发模板)
 

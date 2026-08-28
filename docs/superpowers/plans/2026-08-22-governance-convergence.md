@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+title: Governance Convergence Implementation Plan
+type: doc
 ---
 
 # Governance Convergence Implementation Plan

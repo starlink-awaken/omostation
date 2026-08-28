@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-26
+title: Resident Agent System v1 (ADR-0396 DigitalAgent / WP-A~I)
+type: doc
 ---
 
 # Resident Agent System v1 (ADR-0396 DigitalAgent / WP-A~I)

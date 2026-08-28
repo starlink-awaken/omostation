@@ -3,6 +3,8 @@ status: superseded
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-22
+title: scripts 兼容层与并行能力收敛清单（快照）
+type: doc
 ---
 
 # scripts 兼容层与并行能力收敛清单（快照）

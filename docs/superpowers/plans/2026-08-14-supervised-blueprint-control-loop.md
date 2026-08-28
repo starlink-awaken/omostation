@@ -3,6 +3,8 @@ status: active
 lifecycle: plan
 owner: governance-team
 last-reviewed: 2026-08-13
+title: Supervised Blueprint Control Loop Implementation Plan
+type: doc
 ---
 
 # Supervised Blueprint Control Loop Implementation Plan

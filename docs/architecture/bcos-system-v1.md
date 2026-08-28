@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+title: BCOS 业务域系统 v1 — 功能规格 SSOT
+type: doc
 ---
 
 # BCOS 业务域系统 v1 — 功能规格 SSOT

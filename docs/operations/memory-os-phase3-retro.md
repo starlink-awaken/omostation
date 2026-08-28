@@ -7,6 +7,8 @@ related:
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
   - ./memory-os-phase2-retro.md
   - ../architecture/memory-os.md
+title: Memory OS Phase 3 — 复盘
+type: doc
 ---
 
 # Memory OS Phase 3 — 复盘

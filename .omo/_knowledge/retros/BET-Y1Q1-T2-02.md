@@ -5,6 +5,7 @@ owner: governance-team
 created: 2026-08-15
 lifecycle: history
 last-reviewed: 2026-08-15
+type: retro
 ---
 
 # BET-Y1Q1-T2-02 复盘

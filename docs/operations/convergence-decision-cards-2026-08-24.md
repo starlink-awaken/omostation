@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+title: CONV-3 项目收敛决策卡 (差距治理 S3)
+type: doc
 ---
 
 # CONV-3 项目收敛决策卡 (差距治理 S3)

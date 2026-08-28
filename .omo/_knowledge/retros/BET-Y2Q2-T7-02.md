@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-19
+title: BET-Y2Q2-T7-02 复盘
+type: retro
 ---
 # BET-Y2Q2-T7-02 复盘
 

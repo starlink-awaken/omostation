@@ -3,6 +3,8 @@ status: active
 lifecycle: active
 owner: governance-team
 last-reviewed: 2026-08-27
+title: AGE-v2 Agent Cell — 使用指南
+type: doc
 ---
 
 # AGE-v2 Agent Cell — 使用指南

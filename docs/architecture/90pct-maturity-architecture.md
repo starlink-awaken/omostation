@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+title: 90% 架构成熟度设计方案
+type: doc
 ---
 
 # 90% 架构成熟度设计方案

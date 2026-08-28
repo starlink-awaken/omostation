@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-28
+title: #2386 prerequisite main baseline recovery waiver
+type: doc
 ---
 
 # #2386 prerequisite main baseline recovery waiver

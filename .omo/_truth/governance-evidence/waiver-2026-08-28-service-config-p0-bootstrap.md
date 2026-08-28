@@ -5,6 +5,8 @@ lifecycle: history
 owner: governance-team
 created: 2026-08-28
 last-reviewed: 2026-08-28
+title: BET-Y1Q3-T10-43 self-bootstrap waiver
+type: doc
 ---
 
 # BET-Y1Q3-T10-43 self-bootstrap waiver
