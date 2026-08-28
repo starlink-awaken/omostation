@@ -7690,6 +7690,7 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
+  - .gitignore
   - AGENTS.md
   - ARCHITECTURE.md
   - docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
@@ -7746,6 +7747,7 @@ bets:
   - runtime/quarantine/documents-bos-neural-mesh-20260828/bos-neural-mesh-state.sqlite
   - runtime/task-inventory/snapshots/20260828-0633.json
   - runtime/task-inventory/snapshots/20260828-0638.json
+  - runtime/task-inventory/snapshots/20260827-0935.json
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
