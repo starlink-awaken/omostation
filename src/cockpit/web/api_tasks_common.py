@@ -43,7 +43,28 @@ from cockpit.web.api_tasks_data import (
 
 async def _sync_task_workspace() -> None:
     """Keep the route module and data layer on one workspace root."""
+    # ``api_tasks_data`` is a compatibility shim that re-exports the helper
+    # symbols.  Keep the actual helper module synchronized too: tests and
+    # embedding callers historically patch the shim's workspace/function
+    # attributes, while the split helper functions resolve globals in their
+    # own module.  Without this bridge the API silently reads the canonical
+    # workspace instead of the request's isolated workspace and loses OMO
+    # history/execution artifacts.
+    from cockpit.web import tasks_data_helpers as _helpers
+
     _task_data.WORKSPACE_DIR = WORKSPACE_DIR
+    _helpers.WORKSPACE_DIR = WORKSPACE_DIR
+    for name in (
+        "_load_persisted_task",
+        "_task_group",
+        "_task_history",
+        "_workflow_request_projection",
+        "_validate_evidence_paths",
+        "_workspace_file_ref",
+    ):
+        shim_value = getattr(_task_data, name, None)
+        if shim_value is not None:
+            setattr(_helpers, name, shim_value)
 
 
 router = APIRouter(dependencies=[Depends(_sync_task_workspace)])
