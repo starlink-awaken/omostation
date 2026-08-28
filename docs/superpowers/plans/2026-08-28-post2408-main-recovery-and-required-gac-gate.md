@@ -20,7 +20,7 @@ value_indicator_policy: false
 
 ## 2026-08-28 Latest-Main Rebaseline
 
-This plan was re-audited again after concurrent main advanced from `c24e821082a3aa0f25559e5ed7aa9917008d9661` to the frozen delivery baseline `1289e7fd6df0b85492fb591f2df8900e863c4a2f`. The following commits are prior evidence, not permission to skip remaining gates:
+This plan was re-audited after the delivery clone froze at `1289e7fd6df0b85492fb591f2df8900e863c4a2f` and remote main advanced to `6bcf17b4e7f2d0de6f444bd5e5da10dd7ad7c3c8`. The following commits and live reads are evidence, not permission to skip remaining gates:
 
 | Main evidence | Honest disposition |
 |---|---|
@@ -30,10 +30,12 @@ This plan was re-audited again after concurrent main advanced from `c24e821082a3
 | `66a703b59` / [PR #2451](https://github.com/starlink-awaken/omostation/pull/2451) | The stale Core/Sentinel architecture row was removed. R1 repository blockers are now `already_resolved`, but that main push's `gac-gate` failed and immutable H1a evidence still does not exist. |
 | [main run `33164830199`](https://github.com/starlink-awaken/omostation/actions/runs/33164830199) at `77258bdff` | Later `gac-gate=success`, but it still used the mutating pre-H1a workflow. It is baseline-health evidence only, not the required immutable H1b canary. |
 | `1289e7fd6` / [PR #2455](https://github.com/starlink-awaken/omostation/pull/2455) | The writer now uses the documented `required_status_checks` PATCH subresource and leaves live protection untouched. It remains **PARTIAL and out of order**: only one pre-write read means concurrent context drift can still be overwritten, and no operation receipt exists. |
-| live branch protection GET at `2026-08-28T10:41:20Z` | Direct endpoint `GET /repos/starlink-awaken/omostation/branches/main/protection`; normalized redacted digest `sha256:bd2d544768528f5e7f236d7fc2ec2d0ae38ac9e74d52f524b514f2d4345d6921`; contexts exactly `phase-gate`, `bet-done-transition`. This read proves current drift only; Tasks 6 and 9 remain human-gated and `NOT_PROVEN`. |
-| current final tree | 24 bound runtime artifacts remain tracked; treeish recurrence protection and host-retention evidence do not exist. |
+| `6bcf17b4e` / [PR #2457](https://github.com/starlink-awaken/omostation/pull/2457) | R2a **PARTIAL / out of order**: 25 runtime artifacts were untracked and `--treeish` exists. Fresh-main command returns `ok=true`, but the merged targeted suite is stale (`1 failed, 1 passed`) and no `omo-runtime-final-tree` blocking gate is wired into root GaC. R2b was explicitly not performed. |
+| live branch protection GET at `2026-08-28T11:33:01Z` | Direct endpoint `GET /repos/starlink-awaken/omostation/branches/main/protection`; normalized redacted digest `sha256:9261174fd9b814f48bc602ea4ee3fe42020ed4d2a5b3b1d6941556e767730ded`; contexts are `phase-gate`, `bet-done-transition`, `gac-gate`. Both required external receipt directories are missing, so the already-live H1c state is `UNPROVABLE` pending human adopt-or-rollback adjudication. |
+| current final tree | Bound runtime artifacts matched by the reviewed families are now untracked (`0` remain); recurrence tests/wiring and host-retention evidence remain incomplete. |
+| live Workspace read at `2026-08-28T11:33Z` | Shared checkout remains at `77258bdff`, before R2a main; 25 of 26 exact ledger runtime paths remain present locally and the historical heartbeat is absent. No backup/integrity/producer receipt exists, so this proves local presence only, not R2b retention/migration. |
 
-At frozen baseline `1289e7fd6`, R1 document/script/ADR blockers are already resolved; Task 1 should close as a no-op if execution-time strict checks remain green. H1a immutability, CI binding, a post-H1a canary, honest guarded mutation, R2 and closeout remain outstanding. Every execution phase still recomputes its own latest-main failure set.
+R1 repository blockers are already resolved. H1a immutability, CI binding, a post-H1a canary, human adjudication of the premature live context, R2a test/wiring completion, R2b and final closeout remain outstanding. Every execution phase still recomputes its own latest-main failure set.
 
 ## Global Constraints
 
@@ -41,8 +43,8 @@ At frozen baseline `1289e7fd6`, R1 document/script/ADR blockers are already reso
 - Accepted Spec: `docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md`, version `1.0.0`, digest `sha256:afd7daded6ab2e279c5b0c5d2f9e9465263c541316d034acafb8fa0671028459`, until the separately authorized Task 4B amendment replaces it.
 - Every repository task starts from execution-time latest `origin/main` in a new governance-profile independent clone.
 - Maximum one repository writer in each of R1, H1a/H1c and R2a. Read-only reviewers may run in parallel.
-- R1 must merge before H1a; H1a main canary must pass before H1c live mutation; H1c must be active before R2a; R2a must merge before R2b.
-- H1c and R2b require new, operation-specific human authorization. This plan does not authorize either live mutation.
+- The intended order remains R1 -> H1a -> H1b -> H1c -> R2a -> R2b. Concurrent work violated that order; existing H1c/R2a effects are quarantined as partial evidence until H1 is reconciled and a human adopts or rolls back the live context.
+- H1c reconciliation and R2b require new, operation-specific human authorization. This plan does not adopt, repeat, or roll back either live mutation.
 - `gac-gate` remains the only GaC workflow/job. `phase-gate` keeps its existing owner-job responsibility.
 - CI blocking checks must run against an immutable checkout and leave HEAD, index and worktree unchanged.
 - CI surface binding remains workflow-level. Unsupported `job`, `step`, `job_id`, `step_id` or `required` registry fields are forbidden.
@@ -65,9 +67,10 @@ At frozen baseline `1289e7fd6`, R1 document/script/ADR blockers are already reso
 | `tests/test_ci_surfaces.py` | Lock supported script-registry workflow binding. |
 | `bin/gac/gac-branch-protection.sh` | Keep the documented status-checks PATCH subresource from `1289e7fd6`, add a second pre-write read/race refusal and redacted receipt, and remove false atomic-CAS wording. |
 | `tests/test_gac_branch_protection.py` | Extend the existing fake-API tests to prove two reads, race refusal, exact preservation and redacted receipts. |
-| `bin/gac/omo-runtime-stamp-policy.py` | Add authoritative immutable-tree runtime classification. |
-| `tests/test_omo_runtime_stamp_policy.py` | Cover final-tree forbidden/allowed/ambiguous behavior and exact JSON output. |
-| `.gitignore` | Keep the WorkPacket-bound runtime outputs local after R2a untracking. |
+| `bin/gac/omo-runtime-stamp-policy.py` | Deepen the partial `6bcf17b4e` treeish classifier with mode-aware deterministic evidence. |
+| `tests/test_omo_runtime_stamp_policy.py` | Replace the stale merged negative assertion and cover forbidden/allowed/mode/revision behavior on immutable trees. |
+| `bin/gac/gac-local-gate.py` | Wire `omo-runtime-final-tree` as a root-owned blocking gate. |
+| `.gitignore` | Retain the landed R2a ignore behavior while narrowing reviewed family patterns where needed. |
 | `docs/reports/2026-08-28-post2408-main-recovery-closeout.md` | Redacted R1/H1/R2 receipts and final acceptance mapping. |
 | `.omo/_knowledge/retros/BET-Y1Q3-T6-15.md` | Five-question retrospective and surface accounting at final closeout. |
 
@@ -265,7 +268,7 @@ patterns = [
     'runtime/kos-preflight-*.json',
     'runtime/predictor-preflight*.json',
     'runtime/quarantine/documents-bos-neural-mesh-20260828/*',
-    'runtime/task-inventory/snapshots/20260828-*.json',
+    'runtime/task-inventory/snapshots/2026082[78]-*.json',
 ]
 surfaces = list(before['write_surfaces'])
 unknown_runtime = [
@@ -326,12 +329,11 @@ for pattern in patterns:
     expanded.update(subprocess.run(
         ['git', 'ls-files', '--', pattern], text=True, capture_output=True, check=True,
     ).stdout.splitlines())
-assert expanded, 'RUNTIME_SCOPE_EMPTY'
 print(f'scope-refinement: PASS runtime_paths={len(expanded)}')
 PY
 ```
 
-Expected at the observed baseline: ten patterns expand to 24 tracked paths. The execution-time count may differ, but every match must belong to the same ten reviewed families. No BET status, accepted binding, completion/value evidence, goal or implementation file changes.
+Expected at observed main `6bcf17b4e`: ten patterns expand to `0` tracked paths because #2457 already untracked the reviewed artifacts. The execution-time count may differ, but every match and every pre-refinement exact runtime surface must belong to the same ten reviewed families. An empty expansion is valid after proven R2a untracking. No BET status, accepted binding, completion/value evidence, goal or implementation file changes.
 
 - [ ] **Step 4: Commit and publish the unique scope PR**
 
@@ -1292,7 +1294,7 @@ gh pr create --base main \
   --body "BET-Y1Q3-T6-15 H1c tool only. No live branch-protection mutation in this PR."
 ```
 
-Expected: tool/tests merge; live contexts remain unchanged.
+Expected: the tool PR itself performs no live mutation. Task 6 independently audits whatever live context set exists after merge; current observed state is already three contexts and cannot be treated as this PR's completion evidence.
 
 ---
 
@@ -1303,42 +1305,65 @@ Expected: tool/tests merge; live contexts remain unchanged.
 
 **Interfaces:**
 - Consumes: H1b canary and merged guarded-update tool.
-- Produces: exact live required set `phase-gate`, `bet-done-transition`, `gac-gate`.
+- Produces: a human-adjudicated, receipt-backed disposition of the already-live set `phase-gate`, `bet-done-transition`, `gac-gate`.
 
-- [ ] **Step 1: Obtain a new exact human authorization**
+- [ ] **Step 1: Stop on the observed out-of-order state**
 
-The authorization must name the repository, expected-before contexts, context to add, rollback context and receipt path. Without it, stop with `human_gate=required`.
+At observed main, `gac-gate` is already required even though H1a immutability/H1b and the external receipt are incomplete. Do not add the context again and do not synthesize a historical receipt. Report `human_gate=adopt_or_rollback`.
 
-- [ ] **Step 2: Read and preserve the live payload**
+- [ ] **Step 2: Capture a new read-only adjudication snapshot**
 
 ```bash
-mkdir -p "/Users/xiamingxing/Documents/学习进化/基建架构/evidence/2026-08-28-post2408-required-gac-gate"
 gh api 'repos/starlink-awaken/omostation/branches/main/protection' > /tmp/protection-before.json
 python3 - <<'PY'
 import json
 d=json.load(open('/tmp/protection-before.json'))
 contexts=sorted((d.get('required_status_checks') or {}).get('contexts') or [])
-assert contexts == ['bet-done-transition','phase-gate'], contexts
+assert contexts in (
+    ['bet-done-transition','phase-gate'],
+    ['bet-done-transition','gac-gate','phase-gate'],
+), contexts
 print(contexts)
 PY
+test ! -e "/Users/xiamingxing/Documents/学习进化/基建架构/evidence/2026-08-28-post2408-required-gac-gate/branch-protection-receipt.json" \
+  || shasum -a 256 "/Users/xiamingxing/Documents/学习进化/基建架构/evidence/2026-08-28-post2408-required-gac-gate/branch-protection-receipt.json"
 ```
 
-- [ ] **Step 3: Perform one guarded mutation and verify**
+- [ ] **Step 3: Obtain one exact human disposition**
+
+The authorization must choose exactly one:
+
+```text
+ADOPT: keep the current three contexts prospectively after H1a/H1b become valid;
+record that the original mutation time/actor/receipt remain UNPROVABLE.
+
+ROLLBACK: remove only gac-gate now, preserving phase-gate and
+bet-done-transition, then allow a fresh guarded promotion after H1a/H1b.
+```
+
+The authorization must name the repository, observed digest/context set, chosen disposition, rollback command and external receipt path. Without it, stop without mutation.
+
+- [ ] **Step 4A: Execute ADOPT only after H1a/H1b**
+
+For ADOPT, do not write branch protection. After a valid post-H1a main canary, create a prospective adjudication receipt containing the human quote, current GET digest, exact context set and the explicit limitation that original mutation provenance remains `UNPROVABLE`. Then run only:
 
 ```bash
-bash bin/gac/gac-branch-protection.sh --add-required-context gac-gate \
-  --expected-contexts phase-gate,bet-done-transition \
-  --receipt "/Users/xiamingxing/Documents/学习进化/基建架构/evidence/2026-08-28-post2408-required-gac-gate/branch-protection-receipt.json" \
-  --yes
 bash bin/gac/gac-branch-protection.sh --check \
   --expected-contexts phase-gate,bet-done-transition,gac-gate
 ```
 
-Expected: one narrow status-checks PATCH, post-GET exact contexts, all other protection fields preserved.
+- [ ] **Step 4B: Execute ROLLBACK only with exact authorization**
 
-- [ ] **Step 4: Record redacted before/after digests**
+```bash
+bash bin/gac/gac-branch-protection.sh --remove-required-context gac-gate \
+  --expected-contexts phase-gate,bet-done-transition,gac-gate \
+  --receipt "/Users/xiamingxing/Documents/学习进化/基建架构/evidence/2026-08-28-post2408-required-gac-gate/branch-protection-rollback-receipt.json" \
+  --yes
+bash bin/gac/gac-branch-protection.sh --check \
+  --expected-contexts phase-gate,bet-done-transition
+```
 
-The guarded-update tool writes the external receipt. It must contain both pre-write GET digests, post-write digest, context sets, GitHub request/result identifiers, the documented residual race and rollback command, but no token, actor credential or raw restriction identity.
+Expected: ADOPT performs zero live writes; ROLLBACK performs one narrow status-checks PATCH. Either receipt contains the human quote, read digests, post-state, request/result identifiers and limitations, but no token, credential or raw restriction identity. Neither path retroactively proves the missing original mutation receipt.
 
 ---
 
@@ -1347,11 +1372,12 @@ The guarded-update tool writes the external receipt. It must contain both pre-wr
 **Files:**
 - Modify: `bin/gac/gac-local-gate.py`
 - Modify: `bin/gac/omo-runtime-stamp-policy.py`
-- Create: `tests/test_omo_runtime_stamp_policy.py`
+- Modify: `tests/test_omo_runtime_stamp_policy.py`
 - Modify: `tests/unit/gac/test_gac_local_gate_purity.py`
 - Modify: `.gitignore`
 
 **Interfaces:**
+- Consumes: partial #2457 treeish implementation, landed ignore rules and repository untracking.
 - Produces: `--treeish REVISION` final-tree mode and JSON key `forbidden_tracked_paths`.
 - Produces: blocking root-owned local-gate id `omo-runtime-final-tree` with command `bin/gac/omo-runtime-stamp-policy.py --treeish HEAD --json`.
 - Preserves: existing worktree orphan mode for local diagnostics.
@@ -1482,7 +1508,7 @@ def test_treeish_json_paths_are_sorted(tmp_path: Path, monkeypatch: pytest.Monke
     assert mod.evaluate_treeish(head)["forbidden_tracked_paths"] == ["runtime/a.json", "runtime/z.json"]
 
 
-def test_workpacket_runtime_paths_are_ignored_after_untrack() -> None:
+def test_workpacket_runtime_patterns_have_no_tracked_outputs() -> None:
     ledger = yaml.safe_load((ROOT / "docs/plans/3y-bet-ledger.yaml").read_text(encoding="utf-8"))
     bet = next(item for item in ledger["bets"] if item["id"] == "BET-Y1Q3-T6-15")
     patterns = [path for path in bet["write_surfaces"] if path.startswith("runtime/")]
@@ -1498,12 +1524,7 @@ def test_workpacket_runtime_paths_are_ignored_after_untrack() -> None:
         ).stdout.splitlines()
         if path
     })
-    assert paths
-    missing = [
-        path for path in paths
-        if subprocess.run(["git", "check-ignore", "--no-index", "-q", "--", path], cwd=ROOT).returncode != 0
-    ]
-    assert missing == []
+    assert paths == []
 ```
 
 Append to `tests/unit/gac/test_gac_local_gate_purity.py`:
@@ -1528,7 +1549,7 @@ def test_runtime_final_tree_gate_is_root_owned_and_blocking() -> None:
 uv run --with pyyaml --with pytest python -m pytest tests/test_omo_runtime_stamp_policy.py -q
 ```
 
-Expected: FAIL because current tool has no `--treeish` and blanket-allows tracked files.
+Expected on `6bcf17b4e`: RED because the merged test still expects a deleted artifact, the implementation does not expose mode-aware `evaluate_treeish`, and root GaC has no blocking `omo-runtime-final-tree` gate.
 
 - [ ] **Step 3: Implement final-tree classification**
 
@@ -1589,7 +1610,7 @@ Append:
 /runtime/kos-preflight-*.json
 /runtime/predictor-preflight*.json
 /runtime/quarantine/documents-bos-neural-mesh-20260828/
-/runtime/task-inventory/snapshots/20260828-*.json
+/runtime/task-inventory/snapshots/2026082[78]-*.json
 ```
 
 Expected: every runtime path in `WP-BET-Y1Q3-T6-15` is ignored under `git check-ignore --no-index`; canonical code/contracts remain trackable.
@@ -1599,19 +1620,15 @@ Expected: every runtime path in `WP-BET-Y1Q3-T6-15` is ignored under `git check-
 ```bash
 uv run --with pyyaml --with pytest python -m pytest tests/test_omo_runtime_stamp_policy.py -q
 uv run --with pyyaml --with pytest python -m pytest tests/unit/gac/test_gac_local_gate_purity.py -q
-set +e
-uv run --with pyyaml python bin/gac/omo-runtime-stamp-policy.py --treeish HEAD --json > /tmp/r2a-policy-red.json
-policy_rc=$?
-set -e
-test "$policy_rc" -ne 0
-test -s /tmp/r2a-policy-red.json
+uv run --with pyyaml python bin/gac/omo-runtime-stamp-policy.py --treeish HEAD --json > /tmp/r2a-policy-green.json
+uv run --with pyyaml python -c 'import json; d=json.load(open("/tmp/r2a-policy-green.json")); assert d["ok"] is True; assert d["forbidden_tracked_paths"] == []; assert d["invalid_modes"] == []'
 git diff --check
 git add bin/gac/gac-local-gate.py bin/gac/omo-runtime-stamp-policy.py \
   tests/test_omo_runtime_stamp_policy.py tests/unit/gac/test_gac_local_gate_purity.py .gitignore
 git commit -m "fix(governance): gate tracked runtime artifacts by tree"
 ```
 
-Expected: policy code and synthetic tests pass; the immutable current-HEAD probe fails with the exact bound tracked artifacts. That intentional branch-level RED is consumed immediately by Task 8 in the same R2a run/PR; R2a cannot verify or close between Tasks 7 and 8.
+Expected: replacement tests pass in a fresh clone, current HEAD reports zero forbidden artifacts, and the new root blocking gate is present. Task 8 then proves repository untracking is already resolved or removes only any newly reintroduced matches in the same R2a run/PR.
 
 ---
 
@@ -1641,41 +1658,47 @@ while IFS= read -r pattern; do
   git ls-files -- "$pattern" >> /tmp/t6-15-runtime-paths.txt
 done < /tmp/t6-15-runtime-patterns.txt
 sort -u /tmp/t6-15-runtime-paths.txt -o /tmp/t6-15-runtime-paths.txt
-test -s /tmp/t6-15-runtime-paths.txt
+wc -l /tmp/t6-15-runtime-paths.txt
 ```
 
-Expected: every pattern contains `*`, so the existing D0 completion guard treats it as an intentional removal family; the expanded file contains only concrete tracked paths and is the sole input to `git rm --cached`.
+Expected at `6bcf17b4e`: zero paths and `already_resolved` repository untracking. Every pattern still contains `*`, so D0 treats it as an intentional removal family. If execution-time main reintroduces matches, the expanded file contains only concrete tracked paths and is the sole input to `git rm --cached`.
 
 - [ ] **Step 2: Prove every path is tracked, present and ignored-after-untrack**
 
 ```bash
-while IFS= read -r path; do
-  git ls-files --error-unmatch "$path" >/dev/null
-  test -e "$path"
-  git check-ignore --no-index -q -- "$path"
-done < /tmp/t6-15-runtime-paths.txt
+if test -s /tmp/t6-15-runtime-paths.txt; then
+  while IFS= read -r runtime_path; do
+    git ls-files --error-unmatch "$runtime_path" >/dev/null
+    test -e "$runtime_path"
+    git check-ignore --no-index -q -- "$runtime_path"
+  done < /tmp/t6-15-runtime-paths.txt
+else
+  echo "runtime untracking already_resolved"
+fi
 ```
 
-Expected: all checks pass. A missing, ambiguous, symlinked or non-ignored path stops R2a before index mutation.
+Expected: zero paths is a valid already-resolved result. Otherwise all checks pass; a missing, ambiguous, symlinked or non-ignored path stops R2a before index mutation.
 
 - [ ] **Step 3: Remove only the exact paths from the index**
 
 ```bash
-while IFS= read -r path; do
-  git rm --cached -- "$path"
-done < /tmp/t6-15-runtime-paths.txt
+if test -s /tmp/t6-15-runtime-paths.txt; then
+  while IFS= read -r runtime_path; do
+    git rm --cached -- "$runtime_path"
+  done < /tmp/t6-15-runtime-paths.txt
+fi
 ```
 
-Expected: Git records deletions; `test -e` still passes for every local source path.
+Expected: no mutation when the list is empty. Otherwise Git records only the exact deletions and `test -e` still passes for every local source path.
 
 - [ ] **Step 4: Verify final tree and fresh-clone behavior**
 
 ```bash
 git write-tree > /tmp/r2a-tree.txt
 uv run --with pyyaml python bin/gac/omo-runtime-stamp-policy.py --treeish "$(cat /tmp/r2a-tree.txt)" --json
-while IFS= read -r path; do
-  test -e "$path"
-  test -z "$(git ls-files "$path")"
+while IFS= read -r runtime_path; do
+  test -e "$runtime_path"
+  test -z "$(git ls-files "$runtime_path")"
 done < /tmp/t6-15-runtime-paths.txt
 git diff --check
 ```
@@ -1683,12 +1706,16 @@ git diff --check
 - [ ] **Step 5: Commit and merge R2a**
 
 ```bash
-git add .gitignore bin/gac/omo-runtime-stamp-policy.py tests/test_omo_runtime_stamp_policy.py
-git commit -m "fix(runtime): untrack generated runtime outputs"
+if test -s /tmp/t6-15-runtime-paths.txt; then
+  git add .gitignore
+  git commit -m "fix(runtime): untrack reintroduced runtime outputs"
+else
+  git diff --exit-code
+fi
 git push -u origin HEAD
 gh pr create --base main \
-  --title "fix(runtime): remove tracked runtime outputs" \
-  --body "BET-Y1Q3-T6-15 R2a repository-only untracking. Host retention is not claimed."
+  --title "fix(governance): complete runtime final-tree admission" \
+  --body "BET-Y1Q3-T6-15 R2a recurrence tests and root blocking wiring; repository untracking is revalidated. Host retention is not claimed."
 ```
 
 Required evidence: PR final-tree policy green, synthetic merge ref green, main post-merge green, fresh clone contains none of the removed outputs.
