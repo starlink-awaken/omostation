@@ -8532,6 +8532,51 @@ bets:
   human_gate: true
   circuit_breaker: 'missing old line, unexpected writer, cadence drift, or new command error triggers immediate rollback.'
   retro: required
+- id: BET-Y1Q3-T10-47
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'service-config stable interpreter reconciliation'
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: '修复 gen-service-configs 在 uv PATH 下误选系统 Python 导致的 host plist drift，保持 services.yaml 语义不变并恢复 gac gate。'
+  non_goals:
+  - 不创建、修改、加载或卸载任何宿主 plist
+  - 不改变服务参数、调度策略或生命周期语义
+  - 不新增服务注册表、调度器或控制平面
+  done_when:
+  - generator stable interpreter selection is deterministic under normal and uv-like PATH environments
+  - services.yaml validate/check and focused regression tests pass with zero false drift
+  - make gac-local-gate passes without host plist mutation
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --validate --json
+    expect: exit 0
+  - cmd: uv run --with pytest --with pyyaml python -m pytest tests/test_gen_service_configs.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/mof/gen-service-configs.py
+  - tests/test_gen_service_configs.py
+  - docs/superpowers/specs/2026-08-29-service-config-stable-interpreter-reconciliation-design.md
+  - docs/reports/2026-08-29-service-config-stable-interpreter-reconciliation.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-47.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-service-config-stable-interpreter-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-service-config-stable-interpreter-reconciliation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:6888ac6f3a3d56a454697c892c26a74aac0e8413d8df49f6c6bdd6fee7a235fb
+    decision_ref: decision://accepted/BET-Y1Q3-T10-47
+  depends_on:
+  - BET-Y1Q3-T10-43
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 'Any host plist mutation or service semantic drift blocks the repair.'
+  retro: required
 - id: BET-Y1Q3-T10-29
   track: T10-MATURITY
   window: Y1Q3
