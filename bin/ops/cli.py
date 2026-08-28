@@ -704,6 +704,12 @@ def main() -> int:
     summary_p = sub.add_parser("summary", help="Show system summary")
     summary_p.set_defaults(func=cmd_summary)
 
+    # ── metrics ──
+    metrics_p = sub.add_parser("metrics", help="Export Prometheus metrics")
+    metrics_p.add_argument("--port", type=int, default=9090, help="Metrics server port (default: 9090)")
+    metrics_p.add_argument("--text", action="store_true", help="Output text format (default: serve HTTP)")
+    metrics_p.set_defaults(func=cmd_metrics)
+
     # ── discover ──
     discover_p = sub.add_parser("discover", help="Auto-discover running services")
     discover_p.add_argument("--update", action="store_true", help="Update services.yaml with discoveries")
@@ -988,6 +994,79 @@ def cmd_generate(args: argparse.Namespace) -> int:
     else:
         print(content)
 
+    return 0
+
+
+def cmd_metrics(args: argparse.Namespace) -> int:
+    """Export Prometheus metrics."""
+    services = load_services()
+    port = args.port
+    text_mode = args.text
+
+    enabled = [s for s in services if s.get("enabled", False)]
+    running = [s for s in enabled if _is_running(s)]
+    healthy = [s for s in enabled if check_liveness(s).get("status") == "healthy"]
+
+    metrics_lines: list[str] = []
+
+    # Help and type comments
+    metrics_lines.append("# HELP omostation_services_total Total number of services")
+    metrics_lines.append("# TYPE omostation_services_total gauge")
+    metrics_lines.append(f"omostation_services_total {len(services)}")
+
+    metrics_lines.append("# HELP omostation_services_enabled Total enabled services")
+    metrics_lines.append("# TYPE omostation_services_enabled gauge")
+    metrics_lines.append(f"omostation_services_enabled {len(enabled)}")
+
+    metrics_lines.append("# HELP omostation_services_running Total running services")
+    metrics_lines.append("# TYPE omostation_services_running gauge")
+    metrics_lines.append(f"omostation_services_running {len(running)}")
+
+    metrics_lines.append("# HELP omostation_services_healthy Total healthy services")
+    metrics_lines.append("# TYPE omostation_services_healthy gauge")
+    metrics_lines.append(f"omostation_services_healthy {len(healthy)}")
+
+    # Per-service metrics
+    metrics_lines.append("# HELP omostation_service_running Service running state (1=running, 0=not)")
+    metrics_lines.append("# TYPE omostation_service_running gauge")
+    for svc in enabled:
+        sid = svc.get("id", "").replace(".", "_").replace("-", "_")
+        is_running = 1 if _is_running(svc) else 0
+        metrics_lines.append(f'omostation{{service="{sid}"}} {is_running}')
+
+    metrics_lines.append("# HELP omostation_service_healthy Service health state (1=healthy, 0=not)")
+    metrics_lines.append("# TYPE omostation_service_healthy gauge")
+    for svc in enabled:
+        sid = svc.get("id", "").replace(".", "_").replace("-", "_")
+        is_healthy = 1 if check_liveness(svc).get("status") == "healthy" else 0
+        metrics_lines.append(f'omostation_healthy{{service="{sid}"}} {is_healthy}')
+
+    content = "\n".join(metrics_lines) + "\n"
+
+    if text_mode:
+        print(content)
+        return 0
+
+    # Serve metrics via HTTP
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+
+    class MetricsHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; version=0.0.4")
+            self.end_headers()
+            self.wfile.write(content.encode())
+
+        def log_message(self, format, *args):
+            pass
+
+    server = HTTPServer(("127.0.0.1", port), MetricsHandler)
+    print(f"Prometheus metrics: http://127.0.0.1:{port}/metrics")
+    print("Press Ctrl+C to stop")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        server.server_close()
     return 0
 
 
