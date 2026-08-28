@@ -151,3 +151,27 @@ concept-weave, and consumer-audit reads. Both snapshots were identical:
 `18b18d0edb585feffb042402530fc60e4e8dfaf033790c25c09aab16f50d452b`.
 This proves inventory-time stability, not that unresolved families are
 retired. No permanent deletion was performed.
+
+## T10-42 current consumer-tail verification — 2026-08-29
+
+The `weijian-daily-health` Scheduled skill contains no `controller.py`,
+`check-convergence.py`, or other direct Documents executable invocation. Its
+single owner command now points to clean `accepted-20260908`.
+
+- Scheduled skill before SHA-256: `0cac9455eca53b5df444300510642eba25e83cea896a19113d5488eb6041d210`.
+- Scheduled skill after SHA-256: `06238a83d9a85378e2670c6237e00910f9608c1dde99663e12baf074050c1c06`.
+- Rollback copy: `/Users/xiamingxing/.local/state/omostation/t10-42-scheduled-backups/20260829T181730Z/SKILL.md.before`.
+- Brokered live `system.yaml` before/after SHA-256:
+  `bf5265a467e25f7c67a4a254e24dc2fb409d2100527fce54f4a49b45483b86b4` →
+  `5c4f86e942ea01a5aa54779c844d146d45b646d08ccb56e1c75e312487a1c7bb`.
+- Broker result: `completed=290`, `planned=7`, `active=1`, `blocked=1`,
+  `total=299`; `task-registry.yaml` remained unchanged.
+- Accepted-release clone state was also synchronized through the broker;
+  local `system.yaml` records the same counters and has SHA-256
+  `e41dedcdb3080ca1a8ca90f81c193f900f5688d6d5f92a20d99b5b3c63a8f3f5`.
+- Current consumer audit: `191/191` active, `unmatched=0`,
+  `forbidden_executors=0`, `workspace_read_owners=12`,
+  `content_references=179`, `errors=[]`.
+
+The Documents content manifest remained identical during the owner checks;
+there was no permanent deletion or direct `.omo/state` edit.

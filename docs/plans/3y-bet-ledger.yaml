@@ -9574,13 +9574,13 @@ bets:
             ref: git://origin/main@1b9c3abeb79f1e67561d64079c3788de5bb6f271
           tests:
             ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
-            sha256: sha256:6b8a48f2a0eeb8534e8e06245757f625e1a41237be84c87c869010be5e7f18df
+            sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md
             sha256: sha256:ad49c1699cb5a166b95e885ecc646d2a17009578c7120c8bc40667821a0a89aa
           rollback:
             ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
-            sha256: sha256:6b8a48f2a0eeb8534e8e06245757f625e1a41237be84c87c869010be5e7f18df
+            sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
       operational:
         status: PROVEN
         evidence:
@@ -9589,10 +9589,10 @@ bets:
             sha256: sha256:21e4db1f39bad8afbba45b56efcc7e1dda084063ccce235e107b2acbaef7f18c
           fresh_receipt:
             ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
-            sha256: sha256:6b8a48f2a0eeb8534e8e06245757f625e1a41237be84c87c869010be5e7f18df
+            sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
           replay:
             ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
-            sha256: sha256:6b8a48f2a0eeb8534e8e06245757f625e1a41237be84c87c869010be5e7f18df
+            sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-41.md
             sha256: sha256:21e4db1f39bad8afbba45b56efcc7e1dda084063ccce235e107b2acbaef7f18c
@@ -9614,7 +9614,7 @@ bets:
   title: 'Documents consumer tail 与 OMO 派生证据收敛'
   appetite: 0.5 day
   priority: P1
-  status: pending
+  status: done
   goal: '移除 Scheduled health 对 Documents 脚本的直接执行指令，修复 OMO 派生任务证据路径与计数投影，并保留可回滚的宿主/状态证据。'
   non_goals:
   - 不删除或移动 Documents 业务内容、报告、证据和人工决策
@@ -9647,6 +9647,44 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:32151882131752d98664d9270905f80a36d68db68c28bec0bcbbd0ac10e3776e'
     decision_ref: decision://accepted/BET-Y1Q3-T10-42
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d5a821d3e2e2f884ca7f2f1caf0f5134ed70f896
+          tests:
+            ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
+            sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md
+            sha256: sha256:32151882131752d98664d9270905f80a36d68db68c28bec0bcbbd0ac10e3776e
+          rollback:
+            ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
+            sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-42.md
+            sha256: sha256:3c09f82aa1569e32b9259481089f9436955dba84c2a4034c067ffe9db18710de
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
+            sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
+          replay:
+            ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
+            sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-42.md
+            sha256: sha256:3c09f82aa1569e32b9259481089f9436955dba84c2a4034c067ffe9db18710de
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  done_at: 2026-08-29
   depends_on:
   - BET-Y1Q3-T10-41
   risk_level: L1
