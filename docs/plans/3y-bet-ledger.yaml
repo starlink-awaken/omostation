@@ -7634,6 +7634,8 @@ bets:
   workflow: bet-execution
   underlying_workflow: project-code-change
   write_surfaces:
+  - .gitignore
+  - .omo/_truth/governance-evidence/waiver-2026-08-28-t6-15-guarded-update-amendment.md
   - docs/plans/3y-bet-ledger.yaml
   - AGENTS.md
   - ARCHITECTURE.md
@@ -7652,6 +7654,7 @@ bets:
   - .github/workflows/gac-gate.yml
   - .omo/_truth/registry/ci-surfaces.yaml
   - bin/gac/gac-branch-protection.sh
+  - bin/gac/gac-local-gate.py
   - bin/ssot/sync-submodule-pointers.sh
   - bin/mof/project-layer-index.py
   - bin/gac/gac-export-agents.py
@@ -7665,32 +7668,16 @@ bets:
   - tests/test_omo_runtime_stamp_policy.py
   - tests/unit/gac/test_gac_local_gate_purity.py
   - tests/unit/gac/test_gac_local_gate_timeouts.py
-  - runtime/bos-neural-mesh-owner-live-smoke.json
-  - runtime/bos-neural-mesh-owner-post-migration.json
-  - runtime/bos-neural-mesh-state.sqlite
-  - runtime/concept-weave-preflight.json
-  - runtime/consumer-audit-current.json
-  - runtime/consumer-audit-family-final.json
-  - runtime/consumer-audit-family-smoke.json
-  - runtime/consumer-audit-final-post-bos.json
-  - runtime/consumer-audit-final.json
-  - runtime/consumer-audit-post-bos.json
-  - runtime/control/evidence/documents-weijian-control-health/documents-weijian-control-health.json
-  - runtime/control/evidence/documents-weijian-controller-shadow/documents-weijian-controller-shadow.json
-  - runtime/control/evidence/documents-weijian-model-freshness/documents-weijian-model-freshness.json
-  - runtime/control/evidence/documents-weijian-sanyi-status-audit/documents-weijian-sanyi-status-audit.json
-  - runtime/daily-health-preflight-accepted-smoke.json
-  - runtime/daily-health-preflight-live-smoke.json
-  - runtime/daily-health-preflight.json
-  - runtime/heartbeats/weijian-daily-health
-  - bin/INDEX.md
-  - runtime/kos-preflight-live-smoke.json
-  - runtime/predictor-preflight-live-smoke.json
-  - runtime/predictor-preflight.json
-  - runtime/quarantine/documents-bos-neural-mesh-20260828/bos-neural-mesh-runner.py
-  - runtime/quarantine/documents-bos-neural-mesh-20260828/bos-neural-mesh-state.sqlite
-  - runtime/task-inventory/snapshots/20260828-0633.json
-  - runtime/task-inventory/snapshots/20260828-0638.json
+  - runtime/bos-neural-mesh-*
+  - runtime/concept-weave-preflight*.json
+  - runtime/consumer-audit-*.json
+  - runtime/control/evidence/documents-weijian-*/documents-weijian-*.json
+  - runtime/daily-health-preflight*.json
+  - runtime/heartbeats/weijian-*
+  - runtime/kos-preflight-*.json
+  - runtime/predictor-preflight*.json
+  - runtime/quarantine/documents-bos-neural-mesh-20260828/*
+  - runtime/task-inventory/snapshots/20260828-*.json
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
