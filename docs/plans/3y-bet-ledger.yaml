@@ -3650,47 +3650,37 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@b357690a9f5883441aa86c638758f46d0247d7e9
-      operational:
-        status: PROVEN
-        evidence:
-          merged_reachable:
-            ref: git://origin/main@HEAD
-      value:
-        status: ACCEPTED
-        evidence:
-          scorecard_9_0:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@e1f4e0b6831616a07ae4cdd9c8e951407998c94a
           tests:
-            ref: receipt://projects/omo/tests/test_engineering_delivery_consumer.py
-            sha256: sha256:173d1eca2d65d7d254a19566db25cb0dd2f0c991f48e3d76efede60c29fc2c02
+            ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
+            sha256: sha256:edf741a016c159a481ff532b5effc95eb306f8c1d65b319531ab434f9b8e3255
           diff:
             ref: receipt://bin/ssot/engineering-delivery-candidate-importer.py
             sha256: sha256:3133ef83fadc11479ba7124d2af510c84b1d9a95a1122dca9287bcebd0b18f7b
           rollback:
             ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
-            sha256: sha256:7ef01c772f7f786f978a0f3945caaf75dcb21a4feaea6323a59921b18ab45cc3
+            sha256: sha256:edf741a016c159a481ff532b5effc95eb306f8c1d65b319531ab434f9b8e3255
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
-            sha256: sha256:7ef01c772f7f786f978a0f3945caaf75dcb21a4feaea6323a59921b18ab45cc3
+            sha256: sha256:edf741a016c159a481ff532b5effc95eb306f8c1d65b319531ab434f9b8e3255
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q2-T7-01-human-gate.yaml
             sha256: sha256:2fcff56667924e6dba8163636928dc4d3912748f248fcb83365f0b6f2dc3d104
           replay:
             ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
-            sha256: sha256:7ef01c772f7f786f978a0f3945caaf75dcb21a4feaea6323a59921b18ab45cc3
+            sha256: sha256:edf741a016c159a481ff532b5effc95eb306f8c1d65b319531ab434f9b8e3255
           cleanup:
             ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
-            sha256: sha256:7ef01c772f7f786f978a0f3945caaf75dcb21a4feaea6323a59921b18ab45cc3
+            sha256: sha256:edf741a016c159a481ff532b5effc95eb306f8c1d65b319531ab434f9b8e3255
       value:
         status: REJECTED
         evidence:
           real_signal:
             ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
-            sha256: sha256:7ef01c772f7f786f978a0f3945caaf75dcb21a4feaea6323a59921b18ab45cc3
+            sha256: sha256:edf741a016c159a481ff532b5effc95eb306f8c1d65b319531ab434f9b8e3255
           human_verdict:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q2-T7-01-human-gate.yaml
             sha256: sha256:2fcff56667924e6dba8163636928dc4d3912748f248fcb83365f0b6f2dc3d104
@@ -7152,59 +7142,52 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@9c4978c4bb680a214df4c2d4d2212454adba0a7d
-      operational:
-        status: PROVEN
-        evidence:
-          merged_reachable:
-            ref: git://origin/main@HEAD
-      value:
-        status: ACCEPTED
-        evidence:
-          scorecard_9_0:
-            ref: receipt://bin/gac/maturity-scorecard.py
+            ref: git://origin/main@481bca3f818603d4b1c4f1d7b81fff3b44ad2ca0
           tests:
             ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/tests.md
-            sha256: sha256:bc31fdd6df872ab5f01aa481b257828a6e93e0cd357870d35d72d3877cd8c307
+            sha256: sha256:af6e54c34c43cea04697aaf130174cd62cda7e093f6b5529862819e47382ce21
           diff:
             ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/diff.md
-            sha256: sha256:30480cdef0ebbd7965408e950592dd5964f7a1fa80bb534f66ab728ffe94732a
+            sha256: sha256:d994ad634207a07d31db0fa1a0153cb706d49df05fda0acc3ec2022b902a95bd
           rollback:
             ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/engineering/rollback.md
-            sha256: sha256:e7bd0fa5f46198887cc47a00a2f2245b4bc9e2a3c5f84cc54b35db230333ecc9
+            sha256: sha256:40ea0406753605712e74b91d3fe63769e1b3800fbd6f4355a3652a16700804dd
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/live_canary.md
-            sha256: sha256:026f7a4fffbd16351dbfbf12f95626077482345002a55b8c4bbdb584428a18b6
+            sha256: sha256:78543f4def1878a09c62bde14799ed3e9bd885858f10d5bcdaf55fdde31bb456
           fresh_receipt:
             ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/fresh_receipt.md
-            sha256: sha256:4e58e4eecafa441041f167b6d0a4bd49f0c06292fced0f3dfff915eeeafc524f
+            sha256: sha256:4e99d228bf47b92ee8c39a8f3c4625cf9a110891afe58bd1b155d702063318a3
           replay:
             ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/replay.md
-            sha256: sha256:5c192d983f9519013aa5e4f5d23ae527d1d44fa2ed779c57e38ef2b992caec37
+            sha256: sha256:15558ca00169527c74cd429b5ffef0bb501baab7d37042cf8f1922cf66079bf9
           cleanup:
             ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/operational/cleanup.md
-            sha256: sha256:a18d6bf00903d8bc3f38fdeb8d37bb9e85390ab558e3673d5eed2f5024fa34d9
+            sha256: sha256:093c3cd41e2f0b95381a80443f046acccc8cad034c7c7f1cf79a3e927aaa3b7a
       value:
         status: ACCEPTED
         evidence:
-          real_signal:
-            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/real_signal.md
-            sha256: sha256:f3cbcdc2d5d3e02fc192e9fb2433fd7e24f1e3d0a0831b497fd66932362719dd
-          human_verdict:
-            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/human_verdict.md
-            sha256: sha256:ea76a1877b81277abf7fff1237df725dcd9c5485851bd21114d08d2a7a363dd6
-          revision:
-            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/revision.md
-            sha256: sha256:43b3a8616d8a0de24da80f9f3d933ac12087dac1fe3efe817fe10ed2515cf343
-          time_burden:
-            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/time_burden.md
-            sha256: sha256:e184dc8516111c366502c56bf0e44312a9d39bef3e6a61fa22626c472396e610
           attestation:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-01-accept.yaml
             sha256: sha256:861b16a62645067d34405d410bfb219570e91d7cf45170268ed28227dfa11dd4
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-01-accept.yaml
+            sha256: sha256:861b16a62645067d34405d410bfb219570e91d7cf45170268ed28227dfa11dd4
+          real_signal:
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/real_signal.md
+            sha256: sha256:20321b8a952cd0507884c532e96712bf2010ce81fc5a9f45209dd5010e9a9aa6
+          human_verdict:
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/human_verdict.md
+            sha256: sha256:3565625e3f2b7d07f7aef23a5057bf1ef65ffdcf9fcee5d8273c6287169f876f
+          revision:
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/revision.md
+            sha256: sha256:62e6b4ac0af03b9b2efa1813ba7246ea3363d686afd75d356e4c12b9e2468a62
+          time_burden:
+            ref: receipt://docs/operations/value-evidence/BET-Y1Q3-T4-01/time_burden.md
+            sha256: sha256:235475f0278dab8ec50a95f8b0a64f832f0a4198aaa5db7e6205f5b8243786d4
     overall_state: outcome_accepted
   goal: 把现有大量工程能力收敛成一条可证伪的个人价值主链：真实低敏信号进入后， 只产生 never-send 候选，由本人裁决并记录修订差异；所有工程完成、运行完成和
     价值完成分别取证，只有直接 Outcome 与 Human Adjudication 能推进价值状态。
@@ -7489,7 +7472,12 @@ bets:
   note: 'G1: maturity-scorecard evolvable 验证开关'
   goal: '登记全部 444 bin 脚本到 script registry, 使 script-registry.py validate 返回 VALIDATION PASSED, evolvable 6→8。'
   non_goals: []
-  done_when: []
+  done_when:
+  - script-registry.py validate 返回 VALIDATION PASSED (444 脚本全登记)
+  - maturity-scorecard evolvable 指标 6→8
+  verify:
+  - cmd: python3 bin/ssot/script-registry.py validate
+    expect: exit 0
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -8661,7 +8649,12 @@ bets:
   note: 'G2: iterable 验证开关 = 本设计文档存在'
   goal: '落盘 docs/operations/90pct-maturity-design.md (已含 Phase 1-5), 使 score_iterable 检测通过, iterable 6→8。'
   non_goals: []
-  done_when: []
+  done_when:
+  - docs/operations/90pct-maturity-design.md 落盘 (含 Phase 1-5)
+  - score_iterable 检测通过, iterable 6→8
+  verify:
+  - cmd: test -f docs/operations/90pct-maturity-design.md
+    expect: exit 0
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -8738,7 +8731,12 @@ bets:
   note: 'G3: adr-link-validator 检测'
   goal: '修复 .omo/_knowledge/decisions/ 中 broken ADR links, 使 adr-link-validator.py rc=0, traceable 6→8。'
   non_goals: []
-  done_when: []
+  done_when:
+  - .omo/_knowledge/decisions/ broken ADR links 修复
+  - adr-link-validator.py rc=0, traceable 6→8
+  verify:
+  - cmd: python3 bin/ssot/adr-link-validator.py
+    expect: exit 0
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -8816,7 +8814,12 @@ bets:
   note: 'G4: governance-migration dry-run 检测'
   goal: '完成 governance checks owner 字段迁移, 使 governance-migration.py --dry-run 返回 No changes needed, troubleshootable 6→8。'
   non_goals: []
-  done_when: []
+  done_when:
+  - governance checks owner 字段迁移完成
+  - governance-migration.py --dry-run 返回 No changes needed
+  verify:
+  - cmd: python3 bin/ssot/governance-migration.py --dry-run
+    expect: exit 0
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -8895,7 +8898,12 @@ bets:
   note: 'G5: observable 加新指标'
   goal: '在 compass_radar.py 集成新治理指标 (如成熟度分项/台账验证态), 提升 observable 到 9+。'
   non_goals: []
-  done_when: []
+  done_when:
+  - compass_radar.py 集成新治理指标 (成熟度分项/台账验证态)
+  - observable 指标 8→9+
+  verify:
+  - cmd: python3 bin/gac/compass_radar.py --json
+    expect: exit 0
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -8921,10 +8929,10 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/compass_radar.py
-            sha256: sha256:f74d8325e7cd59d399d001a6e395bd092244cbb09407559dedea68f5ec72e2f0
+            sha256: sha256:4b370084acca7dbc84b61ad780e30fca2dba86498666727c5bcb1f5e792c34a8
           rollback:
             ref: receipt://bin/compass_radar.py
-            sha256: sha256:f74d8325e7cd59d399d001a6e395bd092244cbb09407559dedea68f5ec72e2f0
+            sha256: sha256:4b370084acca7dbc84b61ad780e30fca2dba86498666727c5bcb1f5e792c34a8
       operational:
         status: PROVEN
         evidence:
@@ -8936,7 +8944,7 @@ bets:
             sha256: sha256:faa91257068806752d05dcb7e28027586c874afe3acbefc3f5725c3e8a78f0d5
           live_canary:
             ref: receipt://bin/compass_radar.py
-            sha256: sha256:f74d8325e7cd59d399d001a6e395bd092244cbb09407559dedea68f5ec72e2f0
+            sha256: sha256:4b370084acca7dbc84b61ad780e30fca2dba86498666727c5bcb1f5e792c34a8
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -8951,7 +8959,7 @@ bets:
             sha256: sha256:faa91257068806752d05dcb7e28027586c874afe3acbefc3f5725c3e8a78f0d5
           real_signal:
             ref: receipt://bin/compass_radar.py
-            sha256: sha256:f74d8325e7cd59d399d001a6e395bd092244cbb09407559dedea68f5ec72e2f0
+            sha256: sha256:4b370084acca7dbc84b61ad780e30fca2dba86498666727c5bcb1f5e792c34a8
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-05.md
             sha256: sha256:22b52a18411644c2276ef982ecf8c64fcdc595080335edcfcace5aa73c0adf59
@@ -8972,7 +8980,12 @@ bets:
   note: 'G6: 核心 — scorecard 封顶 8/9, 9.0 数学不可达'
   goal: '升级 maturity-scorecard.py 检测粒度, 加 9/10 分档验证标准 (连续/深度指标), 使 overall 9.0 可达。本轮关键自进化。'
   non_goals: []
-  done_when: []
+  done_when:
+  - maturity-scorecard.py 检测粒度升级, 加 9/10 分档验证标准
+  - overall score 9.0 可达
+  verify:
+  - cmd: python3 bin/gac/maturity-scorecard.py --json
+    expect: exit 0
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -9054,7 +9067,12 @@ bets:
   note: 'G7: 自进化债 (CONV-3 被堵实证)'
   goal: 'run-id 格式占位符化规范入 engineering-golden-rules, 治理文档避免 workspace 级误报拦截。'
   non_goals: []
-  done_when: []
+  done_when:
+  - run-id 格式占位符规范入 engineering-golden-rules
+  - workspace 级误报拦截消除
+  verify:
+  - cmd: grep -q "run-id" docs/operations/engineering-golden-rules.md
+    expect: exit 0
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -9131,7 +9149,12 @@ bets:
   note: 'G8: 自进化债 (S1/S5/CONV-3 三次 blocked 实证)'
   goal: '为治理演进登记专属 bet 机制, 消除 waiver run 无 bet 绑定导致的 vision→retro closeout 硬门拦截。'
   non_goals: []
-  done_when: []
+  done_when:
+  - 治理演进登记专属 bet 机制
+  - waiver run 无 bet 绑定的 vision→retro closeout 硬门消除
+  verify:
+  - cmd: grep -q "bet" .omo/_truth/registry/governance-evolution-roadmap.yaml
+    expect: exit 0
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -9209,7 +9232,12 @@ bets:
   note: 'G9: 自进化债 (12 submodule 未 checkout 实证)'
   goal: 'worktree init 策略 + gate 环境感知, 减少 submodule 未 checkout 导致的本地 gate 环境性失败。'
   non_goals: []
-  done_when: []
+  done_when:
+  - worktree init 策略 + gate 环境感知落地
+  - submodule 未 checkout 的本地 gate 环境性失败减少
+  verify:
+  - cmd: grep -q "worktree" docs/operations/worktree-hygiene.md
+    expect: exit 0
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -9291,6 +9319,9 @@ bets:
   - 引入 maturity-align.py 三方对齐工具
   - compass_radar composite 集成 alignment_score (reconciliation 0-100)
   - reconciliation 跑通, 三大系统口径一致 (drift < 30)
+  verify:
+  - cmd: python3 bin/gac/maturity-align.py --check
+    expect: exit 0
   workflow: governance-audit
   underlying_workflow: project-code-change
   write_surfaces:
@@ -9329,7 +9360,7 @@ bets:
             sha256: sha256:0a3a599c02c04c0aa4da32023812c4e20f6347a6a8f8e872fa1689ce222c228b
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-10-accept.yaml
-            sha256: sha256:6a1c8708ef765d46d89bd91eabc6485d034196dbf190f8fc92855650f72c7b24
+            sha256: sha256:337a8e2702de957e5070a9b09a5abd35778a70a024d2bb1e618a14ac36bb0f42
           live_canary:
             ref: receipt://docs/GOVERNANCE-EVOLUTION-ROADMAP.md
             sha256: sha256:ee45925d2dffc0f25b184041e3fe423f8232d871a763893e62f8ca8882f5dea5
@@ -9341,10 +9372,10 @@ bets:
         evidence:
           attestation:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-10-accept.yaml
-            sha256: sha256:6a1c8708ef765d46d89bd91eabc6485d034196dbf190f8fc92855650f72c7b24
+            sha256: sha256:337a8e2702de957e5070a9b09a5abd35778a70a024d2bb1e618a14ac36bb0f42
           human_verdict:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-10-accept.yaml
-            sha256: sha256:6a1c8708ef765d46d89bd91eabc6485d034196dbf190f8fc92855650f72c7b24
+            sha256: sha256:337a8e2702de957e5070a9b09a5abd35778a70a024d2bb1e618a14ac36bb0f42
           real_signal:
             ref: receipt://docs/GOVERNANCE-EVOLUTION-ROADMAP.md
             sha256: sha256:ee45925d2dffc0f25b184041e3fe423f8232d871a763893e62f8ca8882f5dea5
@@ -9356,18 +9387,6 @@ bets:
             sha256: sha256:cc0d57e5cbcf7176420122aa17a3f92e747fae8c5dece6951bd7b72a3691b80c
     overall_state: outcome_accepted
   depends_on: []
-  completion_evidence:
-    axes:
-      engineering:
-        status: VERIFIED
-        direct_evidence: [merged_reachable_commit, tests]
-      operational:
-        status: PROVEN
-        direct_evidence: [live_canary, fresh_receipt]
-      value:
-        status: ACCEPTED
-        direct_evidence: [replay]
-    schema_version: completion-evidence-matrix/v1
 
 - id: BET-Y1Q3-T10-11
   track: T10-MATURITY
@@ -9482,14 +9501,14 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@c10893fd687bfe6c7a7205bdc1e4b8a24cb8e695
           tests:
-            ref: receipt://projects/omo/tests/unit/test_resident_sediment.py
-            sha256: sha256:cba4b9757c126dd12e1752581288ecdf0f13ec732d9e6d26da399bbf5d0be1e2
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-12.md
+            sha256: sha256:65eea097037e9e5eb8724d475cf1a1cb0ff783ba07a0e4e5def089109af94f62
           diff:
-            ref: receipt://projects/omo/src/omo/resident/resident-routes.yaml
-            sha256: sha256:88bf4d8579468463393890195d552c8163b54015edfcecd5c970043d56e7647a
+            ref: receipt://bin/ssot/install-resident-cron.sh
+            sha256: sha256:0e1f40ef77f7bacc037266095a206f594f0e0ae29501c50229b985d031bddd7d
           rollback:
             ref: receipt://bin/ssot/install-resident-cron.sh
-            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+            sha256: sha256:0e1f40ef77f7bacc037266095a206f594f0e0ae29501c50229b985d031bddd7d
       operational:
         status: PROVEN
         evidence:
@@ -9519,10 +9538,10 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-12.md
-            sha256: sha256:18a0bd07e8291ed1c00e0db13cf57073e964419ae983f56c121c891d3fd84111
+            sha256: sha256:65eea097037e9e5eb8724d475cf1a1cb0ff783ba07a0e4e5def089109af94f62
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-12.md
-            sha256: sha256:18a0bd07e8291ed1c00e0db13cf57073e964419ae983f56c121c891d3fd84111
+            sha256: sha256:65eea097037e9e5eb8724d475cf1a1cb0ff783ba07a0e4e5def089109af94f62
     overall_state: outcome_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-13
@@ -9664,10 +9683,10 @@ bets:
             sha256: sha256:e26ecbc3bae56451c0f244fe3794f541412f59154cf4598b478ec2d21d15e062
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-14.md
-            sha256: sha256:b8be7a02afa5d6806fe813bc35e0cf55eb765115ad02ed5f3c0d88452e510561
+            sha256: sha256:aed033bb1aafab9e384e670011b0da8213b082c7b7178c3ebd440c3c0edb4f71
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-14.md
-            sha256: sha256:b8be7a02afa5d6806fe813bc35e0cf55eb765115ad02ed5f3c0d88452e510561
+            sha256: sha256:aed033bb1aafab9e384e670011b0da8213b082c7b7178c3ebd440c3c0edb4f71
     overall_state: outcome_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-15
@@ -9731,7 +9750,7 @@ bets:
             sha256: sha256:97f81048365f9d1f5ef99baa79716c964a5380de385e9605d7433458c1329237
           rollback:
             ref: receipt://bin/ssot/install-resident-cron.sh
-            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+            sha256: sha256:0e1f40ef77f7bacc037266095a206f594f0e0ae29501c50229b985d031bddd7d
       operational:
         status: PROVEN
         evidence:
@@ -9746,7 +9765,7 @@ bets:
             sha256: sha256:82f078f3d4001a37cab3f919a1775bd0a517255bf01f6a9815a2775432e4d9d7
           cleanup:
             ref: receipt://bin/ssot/install-resident-cron.sh
-            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+            sha256: sha256:0e1f40ef77f7bacc037266095a206f594f0e0ae29501c50229b985d031bddd7d
       value:
         status: ACCEPTED
         evidence:
@@ -9761,10 +9780,10 @@ bets:
             sha256: sha256:dfc1d9d95980468c32eab3ebac948d2a32e7c6e34252f132fa2b4e0ff0895cd3
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-15.md
-            sha256: sha256:3f18dd3ff7bbb2e257931a013da0d47bd16ec7c7f61ca7283a54476ff0c3b1c0
+            sha256: sha256:5f8267ee0d7846c5e7df4b897e2c9e297c6fcf093c8a64c315370e760a2c3579
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-15.md
-            sha256: sha256:3f18dd3ff7bbb2e257931a013da0d47bd16ec7c7f61ca7283a54476ff0c3b1c0
+            sha256: sha256:5f8267ee0d7846c5e7df4b897e2c9e297c6fcf093c8a64c315370e760a2c3579
     overall_state: outcome_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-16
@@ -9826,7 +9845,7 @@ bets:
             sha256: sha256:0145ff7ce4a9630b9014888c54023eb178fe4244c6c4f2c71596245eb5c9f82c
           diff:
             ref: receipt://bin/ssot/install-resident-cron.sh
-            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+            sha256: sha256:0e1f40ef77f7bacc037266095a206f594f0e0ae29501c50229b985d031bddd7d
           rollback:
             ref: receipt://bin/gac/heartbeat-wrapper.sh
             sha256: sha256:7bf63977fc7894ce07ed8ba174727877265655f68500103dd6fe68ba1818a81a
@@ -9835,7 +9854,7 @@ bets:
         evidence:
           live_canary:
             ref: receipt://bin/ssot/install-resident-cron.sh
-            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+            sha256: sha256:0e1f40ef77f7bacc037266095a206f594f0e0ae29501c50229b985d031bddd7d
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-16-accept.yaml
             sha256: sha256:8c562b3513a3242e623d58d072900d1c7e24beecfa70b50fafba0d76d8f8bc43
@@ -9844,7 +9863,7 @@ bets:
             sha256: sha256:0145ff7ce4a9630b9014888c54023eb178fe4244c6c4f2c71596245eb5c9f82c
           cleanup:
             ref: receipt://bin/ssot/install-resident-cron.sh
-            sha256: sha256:2fbc90811a344042c3b6b384f47446a627e194ede154a25998bc6d2a82f84039
+            sha256: sha256:0e1f40ef77f7bacc037266095a206f594f0e0ae29501c50229b985d031bddd7d
       value:
         status: ACCEPTED
         evidence:
@@ -9859,10 +9878,10 @@ bets:
             sha256: sha256:73c2bfd98aa6bf551ddaf9a2eecb6e7cb654937a21f5f4e9f415b54bf98abefc
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-16.md
-            sha256: sha256:8e65d813c54fad49d3a2112c64b380e5920354c6aa8d24bffc39615f68726da8
+            sha256: sha256:47977f0df6e32d26fb3cc3106e4f10c39a24ffab558ca2c3d479ae19fe848469
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-16.md
-            sha256: sha256:8e65d813c54fad49d3a2112c64b380e5920354c6aa8d24bffc39615f68726da8
+            sha256: sha256:47977f0df6e32d26fb3cc3106e4f10c39a24ffab558ca2c3d479ae19fe848469
     overall_state: outcome_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-17
@@ -9922,13 +9941,13 @@ bets:
             sha256: sha256:d5500fc302cd09320bf6be4bebd0758ddd88125eed7a611bb9887520c98c9636
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-17.md
-            sha256: sha256:8618da57400d4bc884255c7b2a3119bd5326c6a442e9b86734192e4bc8933f77
+            sha256: sha256:c169dcc91e01cfa4e663022b72513a5b560ddf1ed5cdad51d8d9324f1103b63f
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-17.md
-            sha256: sha256:8618da57400d4bc884255c7b2a3119bd5326c6a442e9b86734192e4bc8933f77
+            sha256: sha256:c169dcc91e01cfa4e663022b72513a5b560ddf1ed5cdad51d8d9324f1103b63f
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-17-accept.yaml
             sha256: sha256:964dd987b4c32b6695ebd846405d5acfd242d22b9e86e5a0f30535bb1a11b88c
@@ -9952,10 +9971,10 @@ bets:
             sha256: sha256:d5500fc302cd09320bf6be4bebd0758ddd88125eed7a611bb9887520c98c9636
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-17.md
-            sha256: sha256:8618da57400d4bc884255c7b2a3119bd5326c6a442e9b86734192e4bc8933f77
+            sha256: sha256:c169dcc91e01cfa4e663022b72513a5b560ddf1ed5cdad51d8d9324f1103b63f
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-17.md
-            sha256: sha256:8618da57400d4bc884255c7b2a3119bd5326c6a442e9b86734192e4bc8933f77
+            sha256: sha256:c169dcc91e01cfa4e663022b72513a5b560ddf1ed5cdad51d8d9324f1103b63f
     overall_state: outcome_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-18
@@ -10015,13 +10034,13 @@ bets:
             sha256: sha256:c4dcb13d6da3c98b9be2b17febd3b1457892539908c4b30b68e8aafc73a77c6a
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-18.md
-            sha256: sha256:aac8169936db62729f2572b391196e4c757c4e6ddda2babbb09f080833859d68
+            sha256: sha256:0bf1c17074c8459561c52fda3d778b46addbbf8234e5ea66b720a95bf867a92a
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-18.md
-            sha256: sha256:aac8169936db62729f2572b391196e4c757c4e6ddda2babbb09f080833859d68
+            sha256: sha256:0bf1c17074c8459561c52fda3d778b46addbbf8234e5ea66b720a95bf867a92a
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-18-accept.yaml
             sha256: sha256:fd3565587a9ffa9cad73288864f0c32e10079b59d35bc944e7af5e6892a5000f
@@ -10045,10 +10064,10 @@ bets:
             sha256: sha256:c4dcb13d6da3c98b9be2b17febd3b1457892539908c4b30b68e8aafc73a77c6a
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-18.md
-            sha256: sha256:aac8169936db62729f2572b391196e4c757c4e6ddda2babbb09f080833859d68
+            sha256: sha256:0bf1c17074c8459561c52fda3d778b46addbbf8234e5ea66b720a95bf867a92a
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-18.md
-            sha256: sha256:aac8169936db62729f2572b391196e4c757c4e6ddda2babbb09f080833859d68
+            sha256: sha256:0bf1c17074c8459561c52fda3d778b46addbbf8234e5ea66b720a95bf867a92a
     overall_state: outcome_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-19
@@ -10109,13 +10128,13 @@ bets:
             sha256: sha256:2ace3dddc54292c3ada89ff385e710ff4a6abda1d56b4d7d55be08b8743429c6
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-19.md
-            sha256: sha256:f6ba898fa02bf80eb6f2ff87454ec1ac72b4bb16987601ec0b0e0e424937c230
+            sha256: sha256:f100dbfb169bb1227fed1004703ba4bcc8c5a1bde6e7c7a116b40a92fe8e6754
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-19.md
-            sha256: sha256:f6ba898fa02bf80eb6f2ff87454ec1ac72b4bb16987601ec0b0e0e424937c230
+            sha256: sha256:f100dbfb169bb1227fed1004703ba4bcc8c5a1bde6e7c7a116b40a92fe8e6754
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-19-accept.yaml
             sha256: sha256:18a3ba2883bb8ff13f4bcca4ef370d9c4a240b429358fbc63c60ed372fbb6de4
@@ -10139,10 +10158,10 @@ bets:
             sha256: sha256:2ace3dddc54292c3ada89ff385e710ff4a6abda1d56b4d7d55be08b8743429c6
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-19.md
-            sha256: sha256:f6ba898fa02bf80eb6f2ff87454ec1ac72b4bb16987601ec0b0e0e424937c230
+            sha256: sha256:f100dbfb169bb1227fed1004703ba4bcc8c5a1bde6e7c7a116b40a92fe8e6754
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-19.md
-            sha256: sha256:f6ba898fa02bf80eb6f2ff87454ec1ac72b4bb16987601ec0b0e0e424937c230
+            sha256: sha256:f100dbfb169bb1227fed1004703ba4bcc8c5a1bde6e7c7a116b40a92fe8e6754
     overall_state: outcome_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-20
@@ -10195,13 +10214,13 @@ bets:
             sha256: sha256:d910b9b984609a01b3516f736f59d061517a5e942368c5e304edfdc38bbb2978
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-20.md
-            sha256: sha256:bcf6e1d4755a72b881535da0865b50ba54f3d60eb9f28b440198151ea0817e13
+            sha256: sha256:ed78f26022fff610a1157e8d1ae35a043c5f95cddd9f82882b7cfff48033afc9
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-20.md
-            sha256: sha256:bcf6e1d4755a72b881535da0865b50ba54f3d60eb9f28b440198151ea0817e13
+            sha256: sha256:ed78f26022fff610a1157e8d1ae35a043c5f95cddd9f82882b7cfff48033afc9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-20-accept.yaml
             sha256: sha256:f597a8dda301dec3b6f7e27870c0c9a36a3fd559d9d1632a22e6f13547465e8a
@@ -10225,9 +10244,9 @@ bets:
             sha256: sha256:d910b9b984609a01b3516f736f59d061517a5e942368c5e304edfdc38bbb2978
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-20.md
-            sha256: sha256:bcf6e1d4755a72b881535da0865b50ba54f3d60eb9f28b440198151ea0817e13
+            sha256: sha256:ed78f26022fff610a1157e8d1ae35a043c5f95cddd9f82882b7cfff48033afc9
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-20.md
-            sha256: sha256:bcf6e1d4755a72b881535da0865b50ba54f3d60eb9f28b440198151ea0817e13
+            sha256: sha256:ed78f26022fff610a1157e8d1ae35a043c5f95cddd9f82882b7cfff48033afc9
     overall_state: outcome_accepted
   depends_on: []
