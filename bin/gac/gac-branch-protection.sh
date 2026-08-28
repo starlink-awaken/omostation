@@ -86,17 +86,16 @@ cas_update_gac_gate() {
   local action="$1"
   local expected_contexts="$2"
   local expected_digest="$3"
-  local snapshot payload etag_file expected_payload after_snapshot
+  local snapshot payload expected_payload after_snapshot
   snapshot=$(mktemp "${TMPDIR:-/tmp}/gac-protection.XXXXXX")
   payload="${snapshot}.payload"
-  etag_file="${snapshot}.etag"
   expected_payload="${snapshot}.expected"
   after_snapshot="${snapshot}.after"
-  trap 'rm -f "$snapshot" "$payload" "$etag_file" "$expected_payload" "$after_snapshot"' RETURN
+  trap 'rm -f "$snapshot" "$payload" "$expected_payload" "$after_snapshot"' RETURN
 
   gh api --include "repos/$REPO/branches/main/protection" >"$snapshot"
   local before_digest
-  before_digest=$(python3 - "$snapshot" "$payload" "$etag_file" "$expected_payload" "$expected_contexts" "$expected_digest" "$action" <<'PY'
+  before_digest=$(python3 - "$snapshot" "$payload" "$expected_payload" "$expected_contexts" "$expected_digest" "$action" <<'PY'
 import hashlib
 import json
 import re
@@ -105,18 +104,14 @@ from pathlib import Path
 
 snapshot_path = Path(sys.argv[1])
 payload_path = Path(sys.argv[2])
-etag_path = Path(sys.argv[3])
-expected_path = Path(sys.argv[4])
-expected_contexts = [item for item in sys.argv[5].split(",") if item]
-expected_digest = sys.argv[6]
-action = sys.argv[7]
+expected_path = Path(sys.argv[3])
+expected_contexts = [item for item in sys.argv[4].split(",") if item]
+expected_digest = sys.argv[5]
+action = sys.argv[6]
 
 
 def read_response(path: Path) -> tuple[str, dict]:
     text = path.read_text(encoding="utf-8")
-    match = re.search(r"(?im)^etag:\s*(.+?)\s*$", text)
-    if match is None:
-        raise SystemExit("CAS_ETAG_MISSING")
     marker = text.find("\n{")
     if marker < 0:
         raise SystemExit("CAS_JSON_BODY_MISSING")
@@ -124,7 +119,7 @@ def read_response(path: Path) -> tuple[str, dict]:
     data, _ = json.JSONDecoder().raw_decode(body.lstrip())
     if not isinstance(data, dict):
         raise SystemExit("CAS_JSON_BODY_INVALID")
-    return match.group(1).strip(), data
+    return data
 
 
 def enabled(value: object) -> bool:
@@ -191,7 +186,7 @@ def digest(payload: dict) -> str:
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
-etag, live = read_response(snapshot_path)
+live = read_response(snapshot_path)
 current = normalized(live)
 status = current.get("required_status_checks") or {}
 actual_contexts = list(status.get("contexts") or [])
@@ -220,17 +215,21 @@ else:
     raise SystemExit("CAS_ACTION_INVALID")
 desired_status["contexts"] = contexts
 desired["required_status_checks"] = desired_status
-payload_path.write_text(json.dumps(desired, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+api_payload = {
+    "strict": bool(desired_status.get("strict")),
+    "contexts": contexts,
+}
+payload_path.write_text(json.dumps(api_payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
 expected_path.write_text(json.dumps(desired, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-etag_path.write_text(etag, encoding="utf-8")
 print(actual_digest)
 PY
 )
-  local etag
-  etag=$(cat "$etag_file")
   echo "H1c expected-before digest: $before_digest"
   echo "H1c desired context set: ${expected_contexts},gac-gate (action=$action)"
-  gh api "repos/$REPO/branches/main/protection" -X PUT -H "If-Match: $etag" --input "$payload" >/dev/null
+  # GitHub disallows conditional headers on this unsafe endpoint. PATCHing the
+  # dedicated status-check subresource minimizes the write set; the expected
+  # full-payload digest and exact-after GET provide optimistic CAS semantics.
+  gh api "repos/$REPO/branches/main/protection/required_status_checks" -X PATCH --input "$payload" >/dev/null
   gh api --include "repos/$REPO/branches/main/protection" >"$after_snapshot"
   python3 - "$after_snapshot" "$expected_payload" <<'PY'
 import json

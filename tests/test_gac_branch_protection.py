@@ -17,9 +17,9 @@ def test_promotion_is_compare_and_swap_and_fail_closed() -> None:
     assert "--promote-gac-gate" in source
     assert "--rollback-gac-gate" in source
     assert "GAC_EXPECTED_PROTECTION_DIGEST" in source
-    assert "If-Match" in source
-    assert "expected-before" in source
     assert "required_status_checks" in source
+    assert "-X PATCH" in source
+    assert "expected-before" in source
     assert "refusing legacy full protection deletion" in source
 
 
@@ -105,9 +105,11 @@ from pathlib import Path
 state_path = Path(__import__('os').environ['FAKE_GH_STATE'])
 log_path = Path(__import__('os').environ['FAKE_GH_LOG'])
 args = sys.argv[1:]
-if '-X' in args and args[args.index('-X') + 1] == 'PUT':
+if '-X' in args and args[args.index('-X') + 1] == 'PATCH':
     payload_path = Path(args[args.index('--input') + 1])
-    state_path.write_text(payload_path.read_text(encoding='utf-8'), encoding='utf-8')
+    state = json.loads(state_path.read_text(encoding='utf-8'))
+    state['required_status_checks'] = json.loads(payload_path.read_text(encoding='utf-8'))
+    state_path.write_text(json.dumps(state), encoding='utf-8')
     log_path.write_text(log_path.read_text(encoding='utf-8') + 'PUT\\n' if log_path.exists() else 'PUT\\n', encoding='utf-8')
     raise SystemExit(0)
 payload = json.loads(state_path.read_text(encoding='utf-8'))
