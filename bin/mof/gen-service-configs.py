@@ -61,9 +61,34 @@ def _stable_python3() -> str:
 INTERPRETERS = {"stable-python3": _stable_python3}
 
 
+def validate_service_declaration(svc: dict) -> list[str]:
+    """Validate fields required before a launchd plist can be generated."""
+    service_id = str(svc.get("id") or "?")
+    violations: list[str] = []
+    if not svc.get("id"):
+        violations.append("service 缺必填 id")
+    scheduler = svc.get("scheduler")
+    if not scheduler:
+        violations.append("service 缺必填 scheduler")
+    if scheduler != "launchd" or not svc.get("enabled", True) or not svc.get("generate", True):
+        return violations
+    if not isinstance(svc.get("label"), str) or not svc["label"].strip():
+        violations.append(f"{service_id}: launchd generator requires label")
+    program = svc.get("program")
+    if not isinstance(program, dict) or not isinstance(program.get("interpreter"), str) or not program["interpreter"].strip():
+        violations.append(f"{service_id}: launchd generator requires program.interpreter")
+    if not isinstance(program, dict) or not isinstance(program.get("entrypoint"), str) or not program["entrypoint"].strip():
+        violations.append(f"{service_id}: launchd generator requires program.entrypoint")
+    return violations
+
+
 def load_services() -> list[dict]:
     docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
     return (docs[-1] if docs else {}).get("services", []) or []
+
+
+def _launchd_dir() -> Path:
+    return Path.home() / "Library" / "LaunchAgents"
 
 
 def _resolve_path(p: str) -> str:
@@ -187,13 +212,13 @@ def main() -> int:
         for svc in services:
             if not svc.get("enabled", True):
                 continue
+            violations.extend(validate_service_declaration(svc))
+            if svc.get("scheduler") == "launchd" and not svc.get("generate", True):
+                continue
             try:
                 resolve_interpreter(svc.get("program", {}).get("interpreter", ""))
             except ValueError as e:
                 violations.append(f"{svc.get('id', '?')}: {e}")
-            for f in ("id", "scheduler"):
-                if not svc.get(f):
-                    violations.append(f"service 缺必填 {f}")
             # GHA 调度验 schedule_ref 存在 (治 P4 元递归全覆盖 — 引导扇区 GHA 声明可证, CI 可验仓库内)
             if svc.get("scheduler") == "gha":
                 sched_ref = svc.get("schedule_ref")
@@ -208,7 +233,8 @@ def main() -> int:
         }
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0 if report["ok"] else 1
-    launchd_dir = Path.home() / "Library" / "LaunchAgents"
+    launchd_dir = _launchd_dir()
+    launchd_observer_available = launchd_dir.is_dir()
     drifts: list[str] = []
     bad_services: list[str] = []
     for svc in services:
@@ -220,8 +246,13 @@ def main() -> int:
         # 把 omlx 网关等 7 个 plist 写成了死路径。
         if not svc.get("generate", True):
             continue
-        # 跳过缺 label 或 program 的服务 (BET-Y1Q3-T10-43: validator 已验这些)
-        if not svc.get("label") or not svc.get("program"):
+        declaration_errors = validate_service_declaration(svc)
+        if declaration_errors:
+            for error in declaration_errors:
+                print(f"❌ {error}", file=sys.stderr)
+            bad_services.extend(declaration_errors)
+            continue
+        if args.check and not launchd_observer_available:
             continue
         try:
             plist = gen_launchd_plist(svc)
@@ -256,6 +287,18 @@ def main() -> int:
             print(f"--- {svc['label']} ---")
             print(plist)
     if args.check:
+        if not launchd_observer_available:
+            report = {
+                "ok": not bad_services,
+                "skipped": True,
+                "reason": "launchd_observer_unavailable",
+                "validation_errors": bad_services,
+            }
+            if args.json:
+                print(json.dumps(report, ensure_ascii=False, indent=2))
+            else:
+                print("⏭ launchd observer unavailable; plist byte comparison skipped")
+            return 0 if report["ok"] else 1
         if args.json:
             report = {"ok": not drifts, "drift_count": len(drifts), "drifts": drifts}
             print(json.dumps(report, ensure_ascii=False, indent=2))
