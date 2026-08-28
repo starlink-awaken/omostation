@@ -15,3 +15,24 @@
 
 No other crontab entry, LaunchAgent, Scheduled skill, or Documents content was
 changed.
+
+## 2026-08-28 release-root reconciliation (T10-45)
+
+The already-installed domain-index owner line was still running from
+`accepted-20260827`. This reconciliation changed exactly that one active line
+to clean `accepted-20260908`; it did not claim the original Documents
+`domain-sync.py` migration as a new completion.
+
+- preflight backup: `/Users/xiamingxing/.local/state/omostation/t10-45-crontab-backups/20260828T150659Z/crontab-before.txt`
+- before SHA-256: `778c9b007575e2ef376c887dffa6fcf2cc7e80ba02678ebb515c79a7dd0c9d67`
+- after SHA-256: `6d469c2429437a79a2add9db3df3248219365dff3f31094e2fdfd5084f08d7df`
+- changed lines: exactly one `0 6` line; all unrelated crontab bytes were
+  identical
+- post-reconciliation `documents-domain-index.py check`: exit `0`
+- legacy Documents domain-sync/domain-index process count at observation: `0`
+- accepted release: `accepted-20260908`, root
+  `c5187900d4ae77e16631c512571cdb82a35dcafb`
+- rollback: `crontab /Users/xiamingxing/.local/state/omostation/t10-45-crontab-backups/20260828T150659Z/crontab-before.txt`
+
+The older T10-28 cutover receipt remains a separate historical artifact and is
+not replaced by this one-line release-root reconciliation.

@@ -8335,7 +8335,8 @@ bets:
   title: 'domain-index owner accepted release-root reconciliation'
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-28
   goal: '将已安装的 06:00 domain-index Workspace owner 行从 stale accepted-20260827 对齐到 clean accepted-20260908，不把原始 Documents domain-sync 迁移宣称为完成。'
   non_goals:
   - 不修改 Documents DOMAIN-INDEX、域 registry 或任何 Documents 内容
@@ -8365,6 +8366,43 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:6d2b1fc9a5acbcb6bedc182e4024840a0893e5756b53f8d30e1c56253402673a'
     decision_ref: decision://accepted/BET-Y1Q3-T10-45
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@57065c194e0e814031ea9d4a12f4c22f698cf6bc
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-08-28-domain-index-release-root-reconciliation-design.md
+            sha256: sha256:6d2b1fc9a5acbcb6bedc182e4024840a0893e5756b53f8d30e1c56253402673a
+          diff:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-45.md
+            sha256: sha256:c5b1fb4bd8dcfb86ec03b6cc7120a1d2d62f8d018f4142fddebd9d1771fa0b90
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-45.md
+            sha256: sha256:c5b1fb4bd8dcfb86ec03b6cc7120a1d2d62f8d018f4142fddebd9d1771fa0b90
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-08-28-domain-index-release-root-reconciliation-design.md
+            sha256: sha256:6d2b1fc9a5acbcb6bedc182e4024840a0893e5756b53f8d30e1c56253402673a
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-45.md
+            sha256: sha256:c5b1fb4bd8dcfb86ec03b6cc7120a1d2d62f8d018f4142fddebd9d1771fa0b90
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on:
   - BET-Y1Q3-T10-27
   risk_level: L2
