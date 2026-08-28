@@ -6,11 +6,16 @@ The former active OCR cron points at a missing Documents work directory:
 This wave adds a Workspace-only preflight owner. It reports the missing source
 truthfully and does not run or mutate the legacy OCR runner.
 
-The canonical schedule candidate targets the next versioned release
-`accepted-20260828`; the current half-month OCR cron remains unchanged until that
-release is built and the cutover is separately verified.
+The installed half-month OCR cron now targets the clean versioned release
+`accepted-20260908`; the schedule root was converged by T10-46. This report
+records the OCR owner semantics and does not claim OCR quality parity.
 
 Live preflight evidence: source status `missing`, files `0`, tesseract/`chi_sim`
-status `ready`, overall status `findings`, exit `1`. Evidence was written under
-the Workspace run evidence directory; no OCR command and no Documents write was
-performed.
+status `ready`, overall status `findings`, exit `1`. Invalid traversal input
+returned exit `2` with `source.status=invalid`. Focused tests were `4 passed`.
+No OCR command and no Documents write was performed.
+
+The active crontab contains exactly one `1st/16th 10:00` owner line pointing to
+`accepted-20260908`. Its release-root reconciliation and rollback receipt are
+recorded by T10-46; the original Documents migration remains a separate BET
+boundary.
