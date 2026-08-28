@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 517  # 2026-08-28 516→517: 登记 bin/ops/smart_alert.py (#2426 智能告警, SCRIPT-BASELINE-SYNC, BET-Y1Q3-T6-05)
+    script_baseline: 518  # 2026-08-28 517→518: 登记 bin/ops/capacity_planner.py (并发 agent 持续新增遗漏登记)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
