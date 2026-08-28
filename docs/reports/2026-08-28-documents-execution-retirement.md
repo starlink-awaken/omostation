@@ -131,3 +131,23 @@ copy/hash/integrity/rollback evidence.
   `writes_documents=false`; connector execution remains fail-closed.
 - Quarantine objects retain byte-identical hashes; the exact receipts are under
   the governed state-mutation evidence directory.
+
+## Current retirement-gate inventory — 2026-08-29
+
+The current inventory uses five explicit dispositions and does not infer
+retirement from file suffixes:
+
+| disposition | current evidence | decision |
+|---|---|---|
+| `content` | Weijian content tree: 14,664 files and 15,982,761,205 bytes | retain in Documents |
+| `reference-only` | 179 content references in the consumer audit | retain as inputs; forbid execution |
+| `workspace-owner` | 12 read owners; migrated preflight, bridge, signals, convergence, predictor, controller, and watcher owners | keep Workspace owners canonical |
+| `quarantine` | BOS neural mesh runner, SQLite state DB, and lock: 3 objects under Workspace quarantine with recorded hashes | retain through observation window; no deletion |
+| `unresolved` | `.kems` contains 80 files; migration registry has 16 families (14 `pending`, 2 `in_progress`) | fail closed; no physical move |
+
+The content-tree manifest was captured before and after daily-health, KOS,
+concept-weave, and consumer-audit reads. Both snapshots were identical:
+14,664 files, 15,982,761,205 bytes, manifest SHA-256
+`18b18d0edb585feffb042402530fc60e4e8dfaf033790c25c09aab16f50d452b`.
+This proves inventory-time stability, not that unresolved families are
+retired. No permanent deletion was performed.
