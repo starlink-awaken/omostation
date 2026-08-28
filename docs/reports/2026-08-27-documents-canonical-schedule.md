@@ -25,3 +25,25 @@ No host schedule was changed in this BET. Before installation, snapshot
 `crontab -l`, compare the exact old/new matrix, run both commands manually, verify
 Workspace evidence, install atomically, and observe one full trigger cycle. Roll
 back by restoring the exact snapshot.
+
+## 2026-08-28 candidate verification
+
+The candidate was reviewed on the current main checkout after T10-23 and
+T10-24 became complete. It is an overlay containing exactly two active lines:
+daily `06:25` consumer audit and Monday `06:35` freshness audit. The other
+Documents execution families are explicitly excluded and remain unchanged on
+the host.
+
+Dry-run evidence:
+
+- `consumer-audit --documents-root /var/empty --crontab /dev/null
+  --launch-agents-root /var/empty --scheduled-root /var/empty --json` returned
+  exit `0`, status `ok`, total `0`, unmatched `0`.
+- `freshness-audit --documents-root /var/empty --json` returned exit `2`,
+  status `unavailable`, preserving fail-closed input-error semantics.
+- Static schedule check passed: `STATUS: NOT INSTALLED`, exact cadence present,
+  two active lines only, and no active Documents-local executable path.
+
+No host crontab, LaunchAgent, Scheduled skill, or Documents content was
+modified. Installation remains a separate human-gated operation requiring an
+exact crontab backup and one-cycle observation.

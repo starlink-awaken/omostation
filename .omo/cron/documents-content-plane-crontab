@@ -1,7 +1,9 @@
 # Documents Content Plane canonical schedule candidate
 # STATUS: NOT INSTALLED — human gate required before host crontab mutation.
+# This file is a two-line overlay candidate, not a replacement crontab.
+# Unrelated and not-yet-migrated schedules remain unchanged on the host.
 # Source evidence: docs/reports/2026-08-27-documents-consumer-audit.md
-# Owner commands are Workspace-owned; Documents is read-only.
+# Owner commands are Workspace-owned; Documents is a read-only input root.
 # Rollback: restore the exact pre-install `crontab -l` snapshot.
 
 # Replaces: 25 6 * * * Documents/@公共/_runtime/async-audit.py
@@ -10,35 +12,7 @@
 # Replaces: 35 6 * * 1 Documents/@公共/_runtime/control-plane-freshness-audit.py --report
 35 6 * * 1 cd "$HOME/.local/share/omostation/accepted-20260827" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py freshness-audit --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260827" --evidence .omo/_delivery/documents-plane/freshness-audit.json >> runtime/cron/documents-plane.log 2>&1
 
-# Replaces: 0 6 * * * Documents/@公共/_runtime/domain-sync.py
-0 6 * * * cd "$HOME/.local/share/omostation/accepted-20260827" && uv run --with pyyaml python bin/gac/documents-domain-index.py check --domain-registry "$HOME/Documents/@公共/_control/L4-DOMAIN-REGISTRY.yaml" --index-path "$HOME/Documents/@驾驶舱/_control/DOMAIN-INDEX.md" >> runtime/cron/documents-plane.log 2>&1
-
-# Replaces: 0 10 1,16 * * Documents/@工作文档/卫健委/_runtime/cron/ocr-incremental.sh
-0 10 1,16 * * cd "$HOME/.local/share/omostation/accepted-20260828" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py ocr-preflight --json --documents-root "$HOME/Documents" --source-relative "@工作文档/卫健委/_storage/06-工具/批量提取/ocr_20260731" --workspace-root "$HOME/.local/share/omostation/accepted-20260828" --evidence .omo/_delivery/documents-plane/ocr-preflight.json >> runtime/cron/documents-plane.log 2>&1
-
-# Replaces: 5 6 * * * Documents/@公共/_runtime/bridge-refresh.py
-5 6 * * * cd "$HOME/.local/share/omostation/accepted-20260829" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py bridge-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260829" --evidence .omo/_delivery/documents-plane/bridge-preflight.json >> runtime/cron/documents-plane.log 2>&1
-
-# Replaces: 30 6 * * 1 Documents/@公共/_runtime/check-convergence.py
-30 6 * * 1 cd "$HOME/.local/share/omostation/accepted-20260830" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py convergence-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260830" --evidence .omo/_delivery/documents-plane/convergence-preflight.json >> runtime/cron/documents-plane.log 2>&1
-
-# Replaces: 10 6 * * 1 Documents/@公共/_runtime/signals-rotate.py
-10 6 * * 1 cd "$HOME/.local/share/omostation/accepted-20260831" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py signals-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260831" --evidence .omo/_delivery/documents-plane/signals-preflight.json >> runtime/cron/documents-plane.log 2>&1
-
-# Replaces: 15 6 * * * Documents/@公共/_runtime/session-brief.py
-15 6 * * * cd "$HOME/.local/share/omostation/accepted-20260901" && OMOSTATION_WORKSPACE_ROOT="$HOME/Workspace" OMOSTATION_BRIEF_OUTPUT="$HOME/Workspace/BRIEF.md" uv run --with pyyaml python bin/mof/generate-brief.py --write --if-changed >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
-
-# Replaces: 0 9 * * 1 Documents/@工作文档/卫健委/_control/controller.py
-0 9 * * 1 cd "$HOME/.local/share/omostation/accepted-20260902" && uv run --with pyyaml python bin/gac/documents-domain-owner-job.py controller-preflight --json --documents-root "$HOME/Documents" --workspace-root "$HOME/.local/share/omostation/accepted-20260902" --evidence .omo/_delivery/documents-plane/controller-preflight.json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
-
-# Replaces: * * * * * Documents/@公共/_runtime/watch-dispatch.py
-* * * * * cd "$HOME/.local/share/omostation/accepted-20260903" && uv run --with pyyaml python lib/workspace_watch_dispatch.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --stamps "$HOME/Workspace/runtime/.watch-dispatch-stamps.json" --json >> "$HOME/Workspace/runtime/cron/documents-plane.log" 2>&1
-
-# Replaces: 0 8 * * * Documents/@工作文档/卫健委/_runtime/daily-health-run.py
-0 8 * * * cd "$HOME/.local/share/omostation/accepted-20260906" && /opt/homebrew/opt/python@3.14/bin/python3.14 lib/documents_daily_health_preflight.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --evidence "$HOME/Workspace/runtime/daily-health-preflight.json" --json >> "$HOME/Workspace/runtime/cron/daily-health.stdout.log" 2> "$HOME/Workspace/runtime/cron/daily-health.stderr.log"
-
-# Replaces: 20 6 * * 0 cd "$HOME/Documents"; /usr/local/bin/kos ingest ...
-20 6 * * 0 cd "$HOME/.local/share/omostation/accepted-20260906" && /opt/homebrew/opt/python@3.14/bin/python3.14 lib/documents_kos_preflight.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --ingest --json >> "$HOME/Workspace/runtime/cron/kos.stdout.log" 2> "$HOME/Workspace/runtime/cron/kos.stderr.log"
-
-# Replaces: 30 8 1 * * Documents/@工作文档/卫健委/_control/predictor.py
-30 8 1 * * cd "$HOME/.local/share/omostation/accepted-20260905" && /opt/homebrew/opt/python@3.14/bin/python3.14 lib/documents_predictor_preflight.py --documents-root "$HOME/Documents" --workspace-root "$HOME/Workspace" --evidence "$HOME/Workspace/runtime/predictor-preflight.json" --json >> "$HOME/Workspace/runtime/cron/predictor.stdout.log" 2> "$HOME/Workspace/runtime/cron/predictor.stderr.log"
+# Not included in this candidate: OCR, domain-index, bridge-refresh,
+# convergence, signals rotation, session-brief, controller, predictor,
+# watch-dispatch, daily-health, and KOS. Their existing host schedules remain
+# unchanged until their own parity and rollback BETs are complete.
