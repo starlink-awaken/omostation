@@ -735,6 +735,13 @@ def main() -> int:
     drift_p.add_argument("--fix", action="store_true", help="Auto-fix drift where possible")
     drift_p.set_defaults(func=cmd_drift)
 
+    # ── history ──
+    history_p = sub.add_parser("history", help="Service health history")
+    history_p.add_argument("service", nargs="?", help="Specific service to view")
+    history_p.add_argument("--days", type=int, default=7, help="Days of history (default: 7)")
+    history_p.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    history_p.set_defaults(func=cmd_history)
+
     # ── discover ──
     discover_p = sub.add_parser("discover", help="Auto-discover running services")
     discover_p.add_argument("--update", action="store_true", help="Update services.yaml with discoveries")
@@ -1132,6 +1139,91 @@ def cmd_template(args: argparse.Namespace) -> int:
         return 0
 
     return 0
+
+
+def cmd_history(args: argparse.Namespace) -> int:
+    """Show service health history."""
+    from datetime import timedelta
+
+    history_dir = WORKSPACE / ".omo" / "_delivery" / "ops-health-history"
+    days = args.days
+    fmt = args.format
+
+    if args.service:
+        # Show history for specific service
+        history_file = history_dir / f"{args.service}.jsonl"
+        if not history_file.exists():
+            print(f"No history found for {args.service}")
+            return 1
+
+        entries = []
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        with open(history_file) as f:
+            for line in f:
+                try:
+                    entry = json.loads(line.strip())
+                    ts = datetime.fromisoformat(entry["timestamp"])
+                    if ts >= cutoff:
+                        entries.append(entry)
+                except Exception:
+                    continue
+
+        if fmt == "json":
+            print(json.dumps(entries, indent=2, ensure_ascii=False))
+        else:
+            print(f"Health history for {args.service} (last {days} days):\n")
+            for entry in entries[-20:]:  # Last 20 entries
+                ts = entry.get("timestamp", "?")[:19]
+                status = entry.get("status", "?")
+                print(f"  {ts} {status}")
+        return 0
+
+    # Show summary for all services
+    if not history_dir.exists():
+        print("No health history found")
+        return 0
+
+    history_files = list(history_dir.glob("*.jsonl"))
+    if fmt == "json":
+        result = {}
+        for hf in history_files:
+            sid = hf.stem
+            entries = []
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            with open(hf) as f:
+                for line in f:
+                    try:
+                        entry = json.loads(line.strip())
+                        ts = datetime.fromisoformat(entry["timestamp"])
+                        if ts >= cutoff:
+                            entries.append(entry)
+                    except Exception:
+                        continue
+            result[sid] = entries[-5:]  # Last 5 entries
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    else:
+        print(f"Health history summary (last {days} days):\n")
+        for hf in sorted(history_files):
+            sid = hf.stem
+            count = sum(1 for _ in open(hf))
+            print(f"  {sid}: {count} entries")
+    return 0
+
+
+def record_health_history(svc_id: str, status: str) -> None:
+    """Record a health check result to history."""
+    history_dir = WORKSPACE / ".omo" / "_delivery" / "ops-health-history"
+    history_dir.mkdir(parents=True, exist_ok=True)
+    history_file = history_dir / f"{svc_id}.jsonl"
+
+    entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "service": svc_id,
+        "status": status,
+    }
+
+    with open(history_file, "a") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
 def cmd_drift(args: argparse.Namespace) -> int:
