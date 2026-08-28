@@ -835,6 +835,7 @@ def main() -> int:
         "ask": lambda a: __import__("cockpit.commands.ask", fromlist=["cmd_ask"]).cmd_ask(a),
         "proxy-env": lambda a: __import__("cockpit.commands.ask", fromlist=["cmd_proxy_env"]).cmd_proxy_env(a),
         "bos-inbox": lambda a: __import__("cockpit.commands.bos_inbox", fromlist=["cmd_bos_inbox"]).cmd_bos_inbox(a),
+        "ops": lambda a: __import__("cockpit.commands.ops", fromlist=["cmd_ops"]).cmd_ops(a),
         "events-watch": lambda a: _c_events(
             __import__("argparse").Namespace(watch=True, limit=getattr(a, "limit", 20), topic=None)
         ),
