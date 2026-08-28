@@ -619,7 +619,8 @@ bets:
   title: 'projects/omo root gitlink reachability recovery'
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-28
   goal: '修复 root projects/omo 指向 child origin/main 之外的 gitlink divergence，恢复 fresh recursive clone 与 root governance gate 的可验证性。'
   non_goals:
   - 不修改 projects/omo child 源码、分支历史或其他 gitlink
@@ -651,6 +652,43 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:74360d967424c7495cb73f71a55c87911aff0ed82b70bc60b02ed01b1716b3e2'
     decision_ref: decision://accepted/BET-Y1Q3-T10-44
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@4e05745aa7c90c179cb2756d7636c8f39f88ee2c
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md
+            sha256: sha256:74360d967424c7495cb73f71a55c87911aff0ed82b70bc60b02ed01b1716b3e2
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md
+            sha256: sha256:74360d967424c7495cb73f71a55c87911aff0ed82b70bc60b02ed01b1716b3e2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-44.md
+            sha256: sha256:c06eb804c1cf7b73be41c100883103a20b350117ad9fa5d6e8c4493fb84a4fde
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-44.md
+            sha256: sha256:c06eb804c1cf7b73be41c100883103a20b350117ad9fa5d6e8c4493fb84a4fde
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-44.md
+            sha256: sha256:c06eb804c1cf7b73be41c100883103a20b350117ad9fa5d6e8c4493fb84a4fde
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md
+            sha256: sha256:74360d967424c7495cb73f71a55c87911aff0ed82b70bc60b02ed01b1716b3e2
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-44.md
+            sha256: sha256:c06eb804c1cf7b73be41c100883103a20b350117ad9fa5d6e8c4493fb84a4fde
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on: []
   risk_level: L1
   human_gate: true
