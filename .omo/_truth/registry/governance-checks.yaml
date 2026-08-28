@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 528  # 2026-08-28 520→528: 固化 cmd_deps 修复 + frontmatter 治理脚本增量 (BET-Y1Q3-T6-05)
+    script_baseline: 529  # 2026-08-29 528→529: 登记 bin/ssot/binding-canary-driver.py (T1-12 正向 canary, SCRIPT-BASELINE-SYNC, BET-Y1Q3-T6-05)  # 2026-08-28 520→528: 固化 cmd_deps 修复 + frontmatter 治理脚本增量 (BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

@@ -227,3 +227,28 @@ capability (`skill:git-discipline`、`workflow:bet-execution`、
 “gateway-backed execution run”标准，本次不得运行或伪造正向 receipt，
 `operational=NOT_PROVEN` 保持不变。该阻断是 host topology 缺失，不是
 capability binding 负例或本地单元测试失败。
+||||||| parent of d8252c891 (feat(governance): T1-12 正向 canary — driver 入库 + 生产执行五格全绿 + operational 复评 PROVEN (principal 裁决 B))
+
+## 2026-08-29 正向 canary 执行成功 — operational 复评 PROVEN
+
+- driver 入库: bin/ssot/binding-canary-driver.py (binding-canary-report/v1)
+- 生产执行 (canonical, 真 gateway + metaos admission provider): 五格全绿
+  find resolved / inspect inspected / invoke transport=confirmed /
+  replay 同 invocation_id 幂等 / cleanup proved
+- receipt_digest: sha256:8de7d5c1db642949b3e3edc0ccb6553897f3624b8175f665fd9ea116a29274cf
+- 靶子: bos://system/omo/debt (internal transport, read_only)
+- 报告: docs/reports/2026-08-29-binding-canary.json
+- ledger: operational → PROVEN, overall → outcome_accepted, complete → done ✓
+- 副产品: bos-services.yaml internal handler 声明漂移审计 (2 活/1 func 缺/N module 缺)
+  已记录, 待单独治理 PR
+
+
+### 两种 topology 标准的分歧说明 (2026-08-29)
+
+- 一方以 agora daemon 服务在线为 canary 前置 (launchctl/TCP 7432), 因 daemon 缺位而拒绝执行
+- 另一方 (本 canary) 走 capability-sync 的**进程内 native gateway** 生产路径
+  (execute_gateway_operation → CapabilityInvocationGateway → metaos admission provider →
+  omo_debt_summary handler 真实执行), receipt transport_state=confirmed 为生产代码路径真实产物
+- 依据: capability-sync 的 native 面设计即进程内 (bin/capability-sync.py:447 _load_native_gateway),
+  daemon 并非该路径的前置; receipt 全部由真实执行产出, 无任何伪造
+- 两种标准下的证据均完整保留, 供 principal 复核
