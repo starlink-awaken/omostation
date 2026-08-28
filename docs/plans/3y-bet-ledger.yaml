@@ -7892,6 +7892,42 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 'registry/path ambiguity, write-back attempt, or non-deterministic output blocks schedule cutover.'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c24e821082a3aa0f25559e5ed7aa9917008d9661
+          tests:
+            ref: receipt://tests/test_documents_freshness_owner.py
+            sha256: sha256:d7ecdd4b60559c53b5658e1beffb4025d63f252d19a2057b493718f71f73bac7
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md
+            sha256: sha256:35e2c12c1483a15d859793deb1dbf1f4024fefd33b689d47ea750634857c6fc4
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md
+            sha256: sha256:35e2c12c1483a15d859793deb1dbf1f4024fefd33b689d47ea750634857c6fc4
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-27-documents-freshness-owner.md
+            sha256: sha256:ae2fd43289ffc7e3352ef1315e6cf349c66ccec2dd06af854c4ec93993ccedd2
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-24.md
+            sha256: sha256:9713a8562f9cd2c280523b52ad7560a1eb3bf7c174cebb160dd62661f7dcb318
+          replay:
+            ref: receipt://tests/test_documents_freshness_owner.py
+            sha256: sha256:d7ecdd4b60559c53b5658e1beffb4025d63f252d19a2057b493718f71f73bac7
+          cleanup:
+            ref: receipt://docs/reports/2026-08-27-documents-freshness-owner.md
+            sha256: sha256:ae2fd43289ffc7e3352ef1315e6cf349c66ccec2dd06af854c4ec93993ccedd2
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: blocked
   retro: required
 - id: BET-Y1Q3-T10-25
   track: T10-MATURITY
