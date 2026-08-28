@@ -63,6 +63,9 @@ Project-specific instructions override this guide only within that project and o
 **可执行闸门（ADR-0204）**：`compliance` / `status` 对 **已 stage** 的需求面路径检查是否存在 active run；无 run → **halt**（exit 1）。仅 unstaged dirty → warn。旁路：`AGCP_REQUIREMENT_ITERATION_GATE=0`（须用户授权并写入 waiver 证据）。
 
 ```bash
+uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
+uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
+uv run --with "pyyaml" python "bin/agent-workflow.py" compliance
 make agent-workflow-bootstrap
 make agent-workflow-status
 uv run --with "pyyaml" python "bin/agent-workflow.py" suggest --from-diff --profile <agent-profile>
