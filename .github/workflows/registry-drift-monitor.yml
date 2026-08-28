@@ -1,0 +1,74 @@
+name: registry-drift-monitor
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # 每 6 小时: 检测并发 agent 新增 bin/* 脚本的 script-registry 登记遗漏
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 运行 script-registry 登记遗漏监控
+        id: monitor
+        run: |
+          set +e
+          python3 bin/ops/registry_drift_monitor.py --json > /tmp/registry-drift.json 2>&1
+          echo "rc=$?" >> "$GITHUB_OUTPUT"
+          echo "report_json=$(python3 -c 'import json; d=json.load(open("/tmp/registry-drift.json")); print(json.dumps(d, ensure_ascii=False))' 2>/dev/null)" >> "$GITHUB_OUTPUT"
+      - name: 检查结果
+        id: check
+        run: |
+          rc=$(grep -o 'rc=[0-9]*' "$GITHUB_OUTPUT" | cut -d= -f2)
+          echo "monitor_rc=$rc"
+          if [ "$rc" = "1" ]; then
+            echo "drift_found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "drift_found=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: 漂移时开 issue 报告登记遗漏
+        if: steps.check.outputs.drift_found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os
+          d = json.load(open('/tmp/registry-drift.json'))
+          missing = d.get('script_registry', {}).get('missing', [])
+          gac_detail = d.get('gac_validate', {}).get('detail', '')
+          title = f"\u26a0\ufe0f script-registry \u767b\u8bb0\u9057\u6f0f (main={d.get('main','?')})"
+          missing_lines = "".join(f"- `{m}`\n" for m in missing)
+          body = (
+              f"## script-registry \u767b\u8bb0\u9057\u6f0f\u68c0\u6d4b (\u6bcf 6 \u5c0f\u65f6)\n\n"
+              f"**\u68c0\u6d4b\u65f6\u95f4**: {d.get('checked_at','?')}\n"
+              f"**main**: {d.get('main','?')}\n\n"
+              f"### Missing registrations ({len(missing)})\n\n"
+              f"{missing_lines}\n"
+              f"### gac-validate\n\n```\n{gac_detail[:1500]}\n```\n\n"
+              f"### \u4fee\u590d\n\n"
+              f"\u6bcf\u4e2a\u9057\u6f0f\u811a\u672c\u9700 `python3 bin/ssot/script-registry.py register <path>` \u5e76\u540c\u6b65\n"
+              f"`subtraction_quota.script_baseline` (SCRIPT-BASELINE-SYNC, BET-Y1Q3-T6-05).\n"
+          )
+          subprocess = __import__('subprocess')
+          r = subprocess.run(['gh', 'issue', 'create', '--title', title, '--body', body],
+                             capture_output=True, text=True)
+          print(r.stdout.strip())
+          if r.returncode != 0:
+              print(r.stderr, file=os.sys.stderr)
+              raise SystemExit(1)
+          PYEOF

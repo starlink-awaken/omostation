@@ -1089,6 +1089,14 @@ surfaces:
   triggers:
   - push
   status: active
+- id: bin-ops-registry-drift-monitor-py
+  tool: bin/ops/registry_drift_monitor.py
+  workflow: registry-drift-monitor.yml
+  also_in: []
+  gate: false
+  triggers:
+  - scheduled
+  status: active
 workflow_triggers:
   - workflow: aetherforge-ci.yml
     triggers: [per_pr, push]
@@ -1328,3 +1336,7 @@ workflow_triggers:
     - .github/workflows/worktree-hygiene.yml
     - bin/gac/worktree-hygiene-audit.py
     - tests/unit/gac/test_worktree_hygiene_audit.py
+  - workflow: registry-drift-monitor.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
+
