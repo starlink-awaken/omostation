@@ -451,12 +451,17 @@ def render_text(d: dict[str, Any]) -> str:
             lines.append(
                 f"    P0/P1 decisions: {axis['data']['p0_p1_count']}/{axis['data']['total']} (adopted: {axis['data']['adopted_count']}, ratio: {axis['data']['adoption_ratio']:.0%})"
             )
+        elif label == "A2":
+            hit_rate = axis['data'].get('hit_rate', 0)
+            total = axis['data'].get('total_queries', 0)
+            lines.append(f"    hit_rate: {hit_rate:.1%} ({total} queries)")
         else:
             lines.append(f"    BET done pct: {axis['data']['bet_done_pct']}%")
     lines.append("")
     lines.append(f"  composite (3-axis, BC):    {d['composite']['score']}/100  weights={d['composite']['weights']}")
     lines.append(f"  composite (4-axis, advisory): {d['composite_4axis']['score']}/100  weights={d['composite_4axis']['weights']}")
     lines.append(f"  composite (5-axis, advisory): {d['composite_5axis']['score']}/100  weights={d['composite_5axis']['weights']}")
+    lines.append(f"  composite (6-axis, advisory): {d['composite_6axis']['score']}/100  weights={d['composite_6axis']['weights']}")
     lines.append(f"  status: {d['status']}")
     return "\n".join(lines)
 

@@ -253,7 +253,7 @@ def test_count_decision_quality_counts_recent(tool):
 def test_compute_axes_returns_five_axes(tool):
     """Test that v3 returns 5 axes."""
     out = tool.compute_axes(since_days=30)
-    assert len(out["axes"]) == 5
+    assert len(out["axes"]) == 6
     assert "A" in out["axes"]
     assert "B" in out["axes"]
     assert "C" in out["axes"]
