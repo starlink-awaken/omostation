@@ -41,3 +41,14 @@ rules while emitting a Workspace-only structured evidence envelope.
 The implementation and live cutover are separate governed steps; the cutover
 above records the accepted-release identity, crontab backup/hash, exact
 old/new counts, unrelated-line byte identity, and post-cutover smoke.
+
+## Current release verification — 2026-08-29
+
+The active 08:30 day-1 line now runs exactly once from clean
+`accepted-20260908`. A fresh no-evidence smoke returned
+`documents.predictor-preflight.v1`, status `findings`, exit `1`, with four
+forecast categories (`sanyi`, `assessment`, `quality`, `contracts`), three
+assessment months, five renewal contracts, one new project, and no errors. The
+focused regression suite passes `3/3`, help exits `0`, and no legacy
+`predictor.py` process was observed. Documents report content remains
+rollback/source material; the owner writes no Documents file.
