@@ -7635,6 +7635,7 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
+  - ARCHITECTURE.md
   - docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
   - docs/superpowers/plans/2026-08-28-post2408-main-recovery-and-required-gac-gate.md
   - docs/reports/2026-08-28-post2408-main-recovery-closeout.md
