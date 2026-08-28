@@ -1165,8 +1165,6 @@ services:
   notes: OMO SSE Daemon (实验性) — 监听 Agora SSE 事件总线替代轮询
   ports:
   - 7432
-
-# ── BOS URI 核心服务 (每域代表) ────────────────────────────
 - id: bos.kos.search
   enabled: true
   scheduler: manual
@@ -1176,9 +1174,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/knowledge/kairon/packages/kos
-  depends_on: [mcp.agora]
-  notes: "BOS: KOS 知识搜索"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: KOS 知识搜索'
 - id: bos.eidos.memory
   enabled: true
   scheduler: manual
@@ -1188,9 +1186,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/knowledge/kairon/packages/eidos
-  depends_on: [mcp.agora]
-  notes: "BOS: Eidos 记忆存储"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Eidos 记忆存储'
 - id: bos.minerva.research
   enabled: true
   scheduler: manual
@@ -1200,9 +1198,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/knowledge/kairon/packages/minerva
-  depends_on: [mcp.agora]
-  notes: "BOS: Minerva 深度研究"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Minerva 深度研究'
 - id: bos.ontoderive.derive
   enabled: true
   scheduler: manual
@@ -1212,9 +1210,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/knowledge/kairon/packages/ontoderive
-  depends_on: [mcp.agora]
-  notes: "BOS: OntoDerive 本体推导"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: OntoDerive 本体推导'
 - id: bos.cockpit.mcp
   enabled: true
   scheduler: manual
@@ -1224,9 +1222,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/cockpit
-  depends_on: [mcp.agora]
-  notes: "BOS: Cockpit MCP 入口"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Cockpit MCP 入口'
 - id: bos.governance.decide
   enabled: true
   scheduler: manual
@@ -1236,9 +1234,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/omo
-  depends_on: [mcp.agora]
-  notes: "BOS: MetaOS 决策"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MetaOS 决策'
 - id: bos.governance.audit
   enabled: true
   scheduler: manual
@@ -1248,9 +1246,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/omo
-  depends_on: [omo.sync_daemon]
-  notes: "BOS: OMO 审计"
-
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: OMO 审计'
 - id: bos.governance.debt
   enabled: true
   scheduler: manual
@@ -1260,9 +1258,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/omo
-  depends_on: [omo.sync_daemon]
-  notes: "BOS: OMO 债务管理"
-
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: OMO 债务管理'
 - id: bos.cell.status
   enabled: true
   scheduler: manual
@@ -1272,9 +1270,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/omo
-  depends_on: [mcp.agora]
-  notes: "BOS: Agent Cell 状态"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Agent Cell 状态'
 - id: bos.resident.status
   enabled: true
   scheduler: manual
@@ -1284,9 +1282,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/omo
-  depends_on: [resident.orchestrator]
-  notes: "BOS: Resident 状态"
-
+  depends_on:
+  - resident.orchestrator
+  notes: 'BOS: Resident 状态'
 - id: bos.compute.infer
   enabled: true
   scheduler: manual
@@ -1296,9 +1294,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/aetherforge
-  depends_on: [mcp.agora]
-  notes: "BOS: AetherForge 推理"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: AetherForge 推理'
 - id: bos.bcos.evolve
   enabled: true
   scheduler: manual
@@ -1308,9 +1306,9 @@ services:
   program:
     interpreter: stable-python3
     entrypoint: bin/bc-os/evolution_engine.py
-  depends_on: [mcp.agora]
-  notes: "BOS: BCOS 进化引擎"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: BCOS 进化引擎'
 - id: bos.mof.io
   enabled: true
   scheduler: manual
@@ -1320,9 +1318,9 @@ services:
   program:
     interpreter: uv
     entrypoint: bin/mof/mof-io
-  depends_on: [mcp.agora]
-  notes: "BOS: MOF IO"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MOF IO'
 - id: bos.agora.status
   enabled: true
   scheduler: manual
@@ -1332,9 +1330,9 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/agora
-  depends_on: [mcp.agora]
-  notes: "BOS: Agora 状态"
-
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Agora 状态'
 - id: bos.system.health
   enabled: true
   scheduler: manual
@@ -1344,5 +1342,529 @@ services:
   program:
     interpreter: uv
     entrypoint: projects/agora
-  depends_on: [mcp.agora]
-  notes: "BOS: 系统后端健康"
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: 系统后端健康'
+- id: bos.kos.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/kos/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: KOS MCP Server'
+- id: bos.kos.graphrag
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/kos/graphrag
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: KOS GraphRAG'
+- id: bos.kos.ingest
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/kos/ingest
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: KOS 摄入'
+- id: bos.eidos.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/eidos/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Eidos MCP Server'
+- id: bos.ontoderive.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/ontoderive/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: OntoDerive MCP'
+- id: bos.minerva.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/minerva/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Minerva MCP'
+- id: bos.kronos.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/kronos/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Kronos MCP'
+- id: bos.iris.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/iris/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Iris MCP'
+- id: bos.sophia.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/sophia/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Sophia MCP'
+- id: bos.forge.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/forge/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Forge MCP'
+- id: bos.omo.state
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/state
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: OMO 状态'
+- id: bos.omo.compass
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/compass-trace
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: OMO 指南针'
+- id: bos.omo.project
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/project-inspect
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: OMO 项目检查'
+- id: bos.workflow.bootstrap
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/agent-workflow/bootstrap
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: Workflow 引导'
+- id: bos.workflow.compliance
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/agent-workflow/compliance
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: Workflow 合规'
+- id: bos.evolution.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/evolution/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: 演进状态'
+- id: bos.metaos.decide
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/metaos/decide
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MetaOS 决策'
+- id: bos.metaos.immune
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/metaos/immune
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MetaOS 免疫'
+- id: bos.codeanalyze.scan
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/codeanalyze/scan
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: 代码分析扫描'
+- id: bos.codeanalyze.report
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://analysis/codeanalyze/report
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: 代码分析报告'
+- id: bos.iris.discover
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/iris/discover
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Iris 发现'
+- id: bos.agent-runtime.execute
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/execute
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Agent Runtime 执行'
+- id: bos.agent-runtime.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Agent Runtime 状态'
+- id: bos.runtime.health
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/runtime/health
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Runtime 健康'
+- id: bos.cell.plan
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/plan
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Cell 规划'
+- id: bos.cell.execute
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/execute
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Cell 执行'
+- id: bos.cell.verify
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/verify
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Cell 验证'
+- id: bos.cell.govern
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/govern
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Cell 治理'
+- id: bos.mof.version
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/version
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MOF 版本'
+- id: bos.mof.reason
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/reason
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MOF 推理'
+- id: bos.mof.decide
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/decide
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MOF 决策'
+- id: bos.mof.graph
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/graph
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MOF 图'
+- id: bos.system.routes
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/routes/reload
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: 系统路由'
+- id: bos.system.governance
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/governance/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: 系统治理'
+- id: bos.persona.schema
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://persona/core-models/schema
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Persona  schema'
+- id: bos.persona.health
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://persona/health-profile/query
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Persona 健康画像'
+- id: cli.kairon
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  notes: Kairon CLI — 知识工程入口
+  liveness:
+    signal: .omo/_delivery/kairon-cli/
+    max_stale_hours: 168
+- id: cli.kos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  notes: KOS CLI — 知识操作系统
+- id: cli.minerva
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  notes: Minerva CLI — 研究助手
+- id: cli.gbrain
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  notes: GBrain CLI — 图数据库
+  liveness:
+    signal: .omo/_delivery/gbrain-cli/
+    max_stale_hours: 168
+- id: cli.ecos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  notes: ECOS CLI — 协议编织
+  liveness:
+    signal: .omo/_delivery/ecos-cli/
+    max_stale_hours: 168
+- id: mcp.gbrain
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  port: 7443
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/gbrain
+  liveness:
+    signal: http
+    endpoint: http://localhost:7443/health
+    max_stale_hours: 24
+  notes: GBrain MCP — 图数据库
+- id: mcp.c2g
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  port: 7444
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/gbrain
+  liveness:
+    signal: http
+    endpoint: http://localhost:7444/health
+    max_stale_hours: 24
+  notes: C2G MCP — 策略物化
+- id: mcp.aetherforge
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  port: 7445
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/gbrain
+  liveness:
+    signal: http
+    endpoint: http://localhost:7445/health
+    max_stale_hours: 24
+  notes: AetherForge MCP — 本地算力
