@@ -746,6 +746,15 @@ def main() -> int:
                           help="Output format")
     catalog_p.set_defaults(func=cmd_catalog)
 
+    # ── graph ──
+    graph_p = sub.add_parser("graph", help="Visual dependency graph (DOT format)")
+    graph_p.add_argument("--format", choices=["dot", "svg", "png"], default="dot",
+                         help="Output format (default: dot)")
+    graph_p.add_argument("--output", "-o", help="Output file (default: stdout)")
+    graph_p.add_argument("--profile", choices=["minimal", "standard", "full"], default="full",
+                         help="Service profile")
+    graph_p.set_defaults(func=cmd_graph)
+
     # ── history ──
     history_p = sub.add_parser("history", help="Service health history")
     history_p.add_argument("service", nargs="?", help="Specific service to view")
@@ -1148,6 +1157,110 @@ def cmd_template(args: argparse.Namespace) -> int:
 
         print(f"Created service '{name}' from template '{svc_type}'")
         return 0
+
+    return 0
+
+
+def cmd_graph(args: argparse.Namespace) -> int:
+    """Generate visual dependency graph in DOT format."""
+    services = load_services()
+    profile = args.profile
+    fmt = args.format
+    output = args.output
+
+    # Filter by profile
+    enabled = get_profile_services(profile, services)
+
+    # Build DOT graph
+    lines: list[str] = []
+    lines.append("digraph omostation {")
+    lines.append('    rankdir=TB;')
+    lines.append('    node [shape=box, style="rounded,filled", fontname="Helvetica"];')
+    lines.append('    edge [fontname="Helvetica", fontsize=10];')
+    lines.append("")
+
+    # Color by type
+    type_colors = {
+        "launchd": "#4CAF50",
+        "cron": "#2196F3",
+        "manual": "#9E9E9E",
+        "docker": "#FF9800",
+        "gha": "#9C27B0",
+    }
+
+    # Add nodes
+    lines.append("    // Nodes")
+    for svc in enabled:
+        sid = svc.get("id", "")
+        scheduler = svc.get("scheduler", "unknown")
+        color = type_colors.get(scheduler, "#9E9E9E")
+
+        # Check health
+        liv = check_liveness(svc)
+        status = liv["status"]
+        if status == "healthy":
+            color = type_colors.get(scheduler, "#4CAF50")
+        elif status in ("stale", "missing"):
+            color = "#F44336"
+
+        # Shorten ID for display
+        display_id = sid.replace("bos.", "").replace("cron.", "").replace("cli.", "")
+        lines.append(f'    "{sid}" [label="{display_id}", fillcolor="{color}"];')
+
+    lines.append("")
+
+    # Add edges
+    lines.append("    // Edges (dependencies)")
+    for svc in enabled:
+        sid = svc.get("id", "")
+        deps = svc.get("depends_on", [])
+        for dep in deps:
+            # Only include if dep is in our filtered set
+            if any(s.get("id") == dep for s in enabled):
+                lines.append(f'    "{dep}" -> "{sid}";')
+
+    lines.append("}")
+
+    content = "\n".join(lines)
+
+    if fmt == "dot":
+        if output:
+            Path(output).write_text(content)
+            print(f"DOT graph written to {output}")
+        else:
+            print(content)
+        return 0
+
+    # For SVG/PNG, use graphviz if available
+    if fmt in ("svg", "png"):
+        try:
+            import subprocess as sp
+
+            # Write DOT to temp file
+            dot_file = Path("/tmp/omostation_graph.dot")
+            dot_file.write_text(content)
+
+            # Run graphviz
+            cmd = ["dot", f"-T{fmt}", str(dot_file), "-o", output or f"/tmp/omostation_graph.{fmt}"]
+            result = sp.run(cmd, capture_output=True, text=True, timeout=30)
+
+            if result.returncode == 0:
+                out_path = output or f"/tmp/omostation_graph.{fmt}"
+                print(f"{fmt.upper()} graph written to {out_path}")
+                if not output:
+                    # Print to stdout for piping
+                    with open(out_path, "rb") as f:
+                        import sys
+                        sys.stdout.buffer.write(f.read())
+            else:
+                print(f"Graphviz error: {result.stderr}", file=sys.stderr)
+                print("Install graphviz: brew install graphviz", file=sys.stderr)
+                return 1
+        except FileNotFoundError:
+            print("Graphviz not found. Install: brew install graphviz", file=sys.stderr)
+            print("Falling back to DOT format:")
+            print(content)
+            return 1
 
     return 0
 

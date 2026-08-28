@@ -706,5 +706,8 @@ ops-drift-fix:  ## 配置漂移检测 + 自动修复
 ops-catalog:  ## 服务目录
 	python3 bin/ops/cli.py catalog
 
+ops-graph:  ## 可视化依赖图
+	python3 bin/ops/cli.py graph
+
 ops-history:  ## 服务健康历史
 	python3 bin/ops/cli.py history
