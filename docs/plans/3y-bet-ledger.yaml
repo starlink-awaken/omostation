@@ -8621,19 +8621,20 @@ bets:
   title: '半月 OCR broken consumer 切换 preflight owner'
   appetite: 0.5 day
   priority: P0
-  status: pending
+  status: done
+  done_at: 2026-08-28
   goal: '将唯一半月 OCR Documents 脚本消费者切换为 accepted Workspace ocr-preflight，真实暴露 source missing/engine readiness，不执行未验证 OCR。'
   non_goals:
   - 不执行 OCR、不移动/删除 OCR 输入输出
   - 不修改其他 crontab 行、LaunchAgent、Scheduled skill 或 Documents 内容
   - 不宣称 OCR 质量或生产 parity 已完成
   done_when:
-  - 'old OCR cron line is replaced exactly once by accepted-20260828 preflight'
+  - 'old OCR cron line is replaced exactly once by accepted-20260908 preflight'
   - 'unrelated crontab lines remain byte-identical and backup hash is recorded'
   - 'post-cutover preflight returns documents.ocr-preflight.v1 findings without Documents write'
   - 'rollback and root CI evidence pass'
   verify:
-  - cmd: 'rg -n "ocr-preflight|accepted-20260828|0 10 1,16" .omo/cron/documents-content-plane-crontab'
+  - cmd: 'rg -n "ocr-preflight|accepted-20260908|0 10 1,16" docs/reports/2026-08-28-ocr-preflight-cutover.md'
     expect: exit 0
   - cmd: 'uv run --with pyyaml python bin/gac/documents-domain-owner-job.py ocr-preflight --help'
     expect: exit 0
@@ -8651,6 +8652,43 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:b1d0f59c9e5d09881877bfed455c576286c29a198844e96951f44cc3fe430057'
     decision_ref: decision://accepted/BET-Y1Q3-T10-30
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d60235c65da2cea710582e52e9fadbdd0a5c8ba7
+          tests:
+            ref: receipt://tests/test_documents_ocr_preflight.py
+            sha256: sha256:e4d598719ccbfd8821ef0a422f1c20b338093f1a827a2d26725cd9eb1847164f
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-ocr-preflight-cutover-design.md
+            sha256: sha256:b1d0f59c9e5d09881877bfed455c576286c29a198844e96951f44cc3fe430057
+          rollback:
+            ref: receipt://docs/reports/2026-08-28-ocr-preflight-cutover.md
+            sha256: sha256:6a5912721318b256a9a20e6b1bae4e240e042f30dfa6f0658eebe3572c125ab0
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-28-ocr-preflight-cutover.md
+            sha256: sha256:6a5912721318b256a9a20e6b1bae4e240e042f30dfa6f0658eebe3572c125ab0
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-30.md
+            sha256: sha256:078a64da9721a86bfa9cefc3e7bbe8a7b8c2c0ce3fc28658a4290036e6c5a2a2
+          replay:
+            ref: receipt://tests/test_documents_ocr_preflight.py
+            sha256: sha256:e4d598719ccbfd8821ef0a422f1c20b338093f1a827a2d26725cd9eb1847164f
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-30.md
+            sha256: sha256:078a64da9721a86bfa9cefc3e7bbe8a7b8c2c0ce3fc28658a4290036e6c5a2a2
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on:
   - BET-Y1Q3-T10-29
   - BET-Y1Q3-T10-27
