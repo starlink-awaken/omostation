@@ -49,6 +49,7 @@
 | BOS 服务 | `projects/agora/etc/bos-services.yaml` | 边界层 |
 | L0 约束 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 协议层 |
 | MOF 能力 | `.omo/_truth/registry/mof-capabilities.yaml` | 事实层 |
+| LECP 统一生命事件契约 | `protocols/lecp-schema.yaml` | 协议层 |
 | 能力联合关系与状态边界 | [`architecture/capability-federation-contract-v1.md`](architecture/capability-federation-contract-v1.md) | 架构层 |
 | 运维脚本入口 | [`bin/README.md`](../bin/README.md) | 运行时工具 |
 | 空间配置入口 | `spaces/AGENTS.md` · `spaces/registry.yaml` | 空间策略 |

@@ -41,6 +41,8 @@
 | Scene execution engine | `bin/ssot/journey-runner.py` (rebuild) · `signal-poller.py` (感知面) · `scene-outcome-recorder.py` (结果面) |
 | Permission scope vocabulary | [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) |
 | Signal sources registry | [`.omo/_truth/registry/signal-sources.yaml`](.omo/_truth/registry/signal-sources.yaml) |
+| LECP 生命事件契约 (LECP v3.0) | [`protocols/lecp-schema.yaml`](protocols/lecp-schema.yaml) |
+| 双守护运维架构 (Core & Sentinel) | [`bin/ops/core-daemon.py`](bin/ops/core-daemon.py) · [`bin/ops/sentinel-daemon.py`](bin/ops/sentinel-daemon.py) |
 
 ## 2. Layer Model
 
