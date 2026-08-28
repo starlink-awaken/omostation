@@ -10,7 +10,7 @@ last-reviewed: 2026-08-24
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **153** 个命令 (含子命令)。按场景分组如下。
+共 **155** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -225,6 +225,13 @@ last-reviewed: 2026-08-24
 | `cockpit quickstart` | 🚀 新用户快速上手向导（环境核验 + 上手指引） |
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
 
+## 其他
+
+| 命令 | 描述 |
+|------|------|
+| `cockpit cell` | 🤖 AGE-v2 动态 Agent Cell (规划/执行/验证/治理) |
+| `cockpit ops` | 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate) |
+
 ---
 
 ### MCP 工具映射
@@ -237,7 +244,7 @@ last-reviewed: 2026-08-24
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
-| `cockpit agora` | `agora` | 121 |
+| `cockpit agora` | `agora` | 99 |
 | `cockpit family-hub` | `family-hub` | 6 |
 | `cockpit mesh` | `aetherforge` | 15 |
 | `cockpit compute` | `aetherforge` | 15 |
