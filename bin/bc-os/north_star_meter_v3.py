@@ -361,6 +361,15 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
             "weights": {"A": 0.50, "B": 0.10, "C": 0.0, "D": 0.20, "E": 0.15},
             "advisory": True,
             "note": "A50+B10+D20+E15; E adds decision quality dimension.",
+            "signpost": {
+                "4axis_vs_5axis": "5-axis is 3pts lower because B weight dropped from 0.20 to 0.10 (-8pts) while A dropped from 0.60 to 0.50 (-10pts), offset by E adding 15pts.",
+                "axis_contributions": {
+                    "A": round(a_score * 0.50, 1),
+                    "B": round(b_score * 0.10, 1),
+                    "D": round(d_score * 0.20, 1),
+                    "E": round(e_score * 0.15, 1),
+                }
+            },
         },
         "status": status,
         "snapshot_at": _utc_now().isoformat().replace("+00:00", "Z"),
