@@ -63,6 +63,25 @@ surfaces:
   - push
   status: active
   note: CR-EXEC-CHAIN fused script/CI/cron/MCP/CLI/workflow/skill/hook coverage
+- id: bin-gac-check-evidence-freshness-py
+  tool: bin/gac/check-evidence-freshness.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory check-only in gac-gate; missing reports are skipped rather than generated
+- id: bin-gac-check-foundry-deck-coverage-py
+  tool: bin/gac/check-foundry-deck-coverage.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
 - id: bin-gac-check-governance-ratio-py
   tool: bin/gac/check-governance-ratio.py
   workflow: (none)
