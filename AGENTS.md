@@ -175,6 +175,14 @@ For `.omo` or `spaces` mutations, use the registered broker/CLI path.
 
 ## 5. Essential Commands
 
+### Agent Workflow 生命周期 (单入口)
+
+```bash
+uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap       # 加载 SSOT 运行时事实
+uv run --with "pyyaml" python "bin/agent-workflow.py" compliance      # 合规审计 (P74)
+uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>   # 闭环收尾
+```
+
 ### 治理门禁 (Gate & lint)
 
 ```bash
