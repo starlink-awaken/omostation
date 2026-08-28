@@ -9195,7 +9195,7 @@ bets:
   title: 'monday-vault-health Scheduled 指令收敛到 Workspace owners'
   appetite: 4 hours
   priority: P0
-  status: pending
+  status: done
   goal: '移除 monday-vault-health 中直接执行 Documents controller.py/check-convergence.py 的指令，改为读取 Workspace accepted owners 的 evidence。'
   non_goals:
   - 不删除 monday-vault-health Scheduled skill
@@ -9223,6 +9223,44 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:e11ca9afd2c2c4b5f6b6497b5587f32586110c8f438b25977f4a58c8ff1df875'
     decision_ref: decision://accepted/BET-Y1Q3-T10-37
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@77d5b83c15ccd9f9d24f6c913748963b95b6b366
+          tests:
+            ref: receipt://docs/reports/2026-08-28-scheduled-owner-convergence.md
+            sha256: sha256:07b6b1e15825e0c37ee4f9f16d34c34fd832efc9a514373d88355679479eb54a
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-scheduled-owner-convergence-design.md
+            sha256: sha256:e11ca9afd2c2c4b5f6b6497b5587f32586110c8f438b25977f4a58c8ff1df875
+          rollback:
+            ref: receipt://docs/reports/2026-08-28-scheduled-owner-convergence.md
+            sha256: sha256:07b6b1e15825e0c37ee4f9f16d34c34fd832efc9a514373d88355679479eb54a
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-37.md
+            sha256: sha256:aeff55a3d775eaa9f4c55d00bc87ef69713d837f577042858e69b155aa752718
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-28-scheduled-owner-convergence.md
+            sha256: sha256:07b6b1e15825e0c37ee4f9f16d34c34fd832efc9a514373d88355679479eb54a
+          replay:
+            ref: receipt://docs/reports/2026-08-28-scheduled-owner-convergence.md
+            sha256: sha256:07b6b1e15825e0c37ee4f9f16d34c34fd832efc9a514373d88355679479eb54a
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-37.md
+            sha256: sha256:aeff55a3d775eaa9f4c55d00bc87ef69713d837f577042858e69b155aa752718
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  done_at: 2026-08-29
   depends_on:
   - BET-Y1Q3-T10-36
   risk_level: L1
