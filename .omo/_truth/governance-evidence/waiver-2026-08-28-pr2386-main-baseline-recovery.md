@@ -48,7 +48,8 @@ below. It does not create a reusable or open-ended bypass.
 Do not modify ops implementation, services, any other ADR, BET,
 completion/value evidence, gitlink, CI workflow, branch protection, runtime
 state, host configuration, or user configuration. Recount immediately before
-integration; if the active script count is no longer exactly `502`, stop
+integration; after the post-merge supplement below, if the active script count
+is no longer exactly `503`, stop
 instead of changing the baseline again.
 
 ## Baseline evidence
@@ -62,3 +63,20 @@ instead of changing the baseline again.
   `id` and absent from `INDEX.md`.
 - Earlier main Governance Check run `33138528954` reproduced the script/ADR
   failures before subsequent Service Gateway increments.
+
+## Post-merge supplement — #2394 dashboard
+
+PR #2394 (`9ea49da63`) landed immediately before #2395 was merged. Its
+`bin/ops/dashboard.py` entrypoint was therefore present in #2395's final merge
+tree even though #2395's branch was correctly based on the preceding 502-script
+snapshot. Direct post-merge verification at main `750c1a15` found:
+
+- active scripts: `503`;
+- the only missing script registration: `bin/ops/dashboard.py`;
+- the only subtraction-quota drift: configured `502`, observed `503`;
+- ADR coverage remained green.
+
+Under the same written principal delegation, this supplement narrowly permits
+one tail recovery to register `bin/ops/dashboard.py`, advance only
+`subtraction_quota.script_baseline` from `502` to `503`, and update this evidence
+file. All forbidden scope above remains unchanged.
