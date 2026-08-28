@@ -49,7 +49,7 @@ Do not modify ops implementation, services, any other ADR, BET,
 completion/value evidence, gitlink, CI workflow, branch protection, runtime
 state, host configuration, or user configuration. Recount immediately before
 integration; after the post-merge supplement below, if the active script count
-is no longer exactly `504`, stop
+is no longer exactly `505`, stop
 instead of changing the baseline again.
 
 ## Baseline evidence
@@ -93,3 +93,16 @@ registration of `bin/ops/alert.py`, advancement of only
 `subtraction_quota.script_baseline` from `503` to `504`, and this evidence
 update. It is delivered alongside the independent T10-43 service-config repair
 as separate commits and workflow claims; all forbidden scope remains unchanged.
+
+## Post-merge supplement — #2398 rules lifecycle
+
+PR #2398 (`10e3d201`) added `bin/gac/rules-lifecycle.py` and its canonical
+script-registry entry, but retained `subtraction_quota.script_baseline: 503`.
+Together with the already observed `bin/ops/alert.py`, direct main-tree evidence
+is active scripts `505` with complete registration after this delivery.
+
+This supplement narrowly permits advancing only
+`subtraction_quota.script_baseline` from `503` to `505` in the final merged tree
+(covering alert + rules-lifecycle) and updating this evidence. No #2398
+implementation, registry entry, capability, cron, gitlink, or governance rule is
+modified by this recovery.
