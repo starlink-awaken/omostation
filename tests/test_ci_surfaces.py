@@ -57,6 +57,61 @@ def test_live_registry_is_clean() -> None:
     assert report["surfaces"] >= 90, f"expected >=90 registered surfaces, got {report['surfaces']}"
 
 
+def test_script_registry_validation_is_bound_to_gac_gate() -> None:
+    import yaml
+
+    payload = yaml.safe_load(
+        (ROOT / ".omo/_truth/registry/ci-surfaces.yaml").read_text(encoding="utf-8")
+    )
+    surface = next(
+        item
+        for item in payload["surfaces"]
+        if item["id"] == "bin-ssot-script-registry-py"
+    )
+
+    assert surface["tool"] == "bin/ssot/script-registry.py"
+    assert surface["workflow"] == "gac-gate.yml"
+    assert surface["gate"] is True
+    assert surface["triggers"] == ["manual", "per_pr", "push"]
+    assert not ({"job", "step", "job_id", "step_id", "required"} & set(surface))
+
+    workflow = yaml.safe_load(
+        (ROOT / ".github/workflows/gac-gate.yml").read_text(encoding="utf-8")
+    )
+    strict = next(
+        item
+        for item in workflow["jobs"]["gac-gate"]["steps"]
+        if item.get("name") == "gac-local-gate (strict)"
+    )
+    assert strict["run"] == "python3 bin/gac/gac-local-gate.py --strict"
+
+    gate = _load(ROOT / "bin/gac/gac-local-gate.py", "gac_local_gate_ci_binding")
+    commands = {item["id"]: item["command"] for item in gate.GATES_LIST}
+    assert commands["script-registry-validate"] == [
+        "python3",
+        "bin/ssot/script-registry.py",
+        "validate",
+    ]
+
+
+def test_removed_mutators_are_not_bound_to_gac_gate() -> None:
+    import yaml
+
+    payload = yaml.safe_load(
+        (ROOT / ".omo/_truth/registry/ci-surfaces.yaml").read_text(encoding="utf-8")
+    )
+    surfaces = {item["id"]: item for item in payload["surfaces"]}
+
+    exporter = surfaces["bin-gac-gac-export-agents-py"]
+    assert exporter["workflow"] == "(none)"
+    assert exporter["triggers"] == []
+
+    sync = surfaces["bin-ssot-sync-submodule-pointers-sh"]
+    assert sync["workflow"] == "workspace.yml"
+    assert sync["triggers"] == ["per_pr", "push"]
+    assert "also_in" not in sync
+
+
 def test_unregistered_check_detected(cs, tmp_path) -> None:
     """workflow 执行未登记 check 工具 → unregistered-check error."""
     _write(tmp_path / "ci-surfaces.yaml", "version: 1\nsurfaces: []\n")
