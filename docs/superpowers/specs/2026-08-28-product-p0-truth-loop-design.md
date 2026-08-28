@@ -132,6 +132,20 @@ bootstrap -> start --bet -> claim -> RED -> minimal implementation
 -> root pointer when required -> closeout -> clone retirement receipt
 ```
 
+### 7.1 Implementation plan artifacts
+
+Writing-plans 阶段由父 BET workflow 一次性产出一份总控计划和六份独立 child 计划，不在计划阶段修改实现代码：
+
+- `docs/superpowers/plans/2026-08-28-product-p0-truth-loop.md`
+- `docs/superpowers/plans/2026-08-28-product-p0-wp1-honest-scene-gate.md`
+- `docs/superpowers/plans/2026-08-28-product-p0-wp2-honest-agent-cell-receipt.md`
+- `docs/superpowers/plans/2026-08-28-product-p0-wp3-canonical-outbox-publisher.md`
+- `docs/superpowers/plans/2026-08-28-product-p0-wp4-principal-authority-binding.md`
+- `docs/superpowers/plans/2026-08-28-product-p0-wp5-human-adjudication-value.md`
+- `docs/superpowers/plans/2026-08-28-product-p0-wp6-physical-recovery-drill.md`
+
+总控计划只编排 completion-policy 前置、Wave A/B/C、串行 SSOT/root-pointer 收口和验收；每份 child 计划独立定义 RED/GREEN、精确写面、子仓 PR、回滚、canary 和清理。
+
 验收必须分开六个维度：
 
 1. implementation 是否存在；
