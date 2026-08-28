@@ -8502,7 +8502,9 @@ bets:
   title: 'L4/Documents/Agora 单实例收敛架构基线'
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-08-28'
+  started_at: '2026-08-27'
   goal: '建立唯一 canonical L4、明确 Documents 内容平面与 Workspace 执行平面边界，治理 Agora nested l4-kernel 的身份/路由分裂，并形成可持续的隔离、控制、治理与长期运维验收基线。'
   non_goals:
   - 不删除 projects/agora/projects/l4-kernel
@@ -8541,6 +8543,57 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:e6646859bc9350ff4f320201287a68be1066b5bee9cdc1166a387538fb51ca03'
     decision_ref: decision://accepted/BET-Y1Q3-T10-21
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@80fce6d5284651b9b64316b59673a0541cd7d2c0
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md
+            sha256: sha256:e6646859bc9350ff4f320201287a68be1066b5bee9cdc1166a387538fb51ca03
+          diff:
+            ref: receipt://docs/architecture/l4-documents-agora-convergence-v1.md
+            sha256: sha256:982354775f43d905fed352a4efa9c03f0fe2ce840d0577be69c93435e6f1d1bc
+          rollback:
+            ref: receipt://docs/reports/2026-08-27-l4-instance-inventory.md
+            sha256: sha256:9699040e0addd411e31971331c9f1008a6e6c3be6b3ceb7ea337c9c737596cbe
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/architecture/l4-documents-agora-convergence-v1.md
+            sha256: sha256:982354775f43d905fed352a4efa9c03f0fe2ce840d0577be69c93435e6f1d1bc
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-21-accept.yaml
+            sha256: sha256:93052fb05515c5daa2a0f3fa5c11dfdc2ba34c18864e5d4e103499a259f5a8db
+          replay:
+            ref: receipt://docs/reports/2026-08-27-l4-instance-inventory.md
+            sha256: sha256:9699040e0addd411e31971331c9f1008a6e6c3be6b3ceb7ea337c9c737596cbe
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-21.md
+            sha256: sha256:5d9104953ae34a2fcdb677870d710a2141b089c86ad9fb797d7e28abc62f408e
+      value:
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-21-accept.yaml
+            sha256: sha256:93052fb05515c5daa2a0f3fa5c11dfdc2ba34c18864e5d4e103499a259f5a8db
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-21-accept.yaml
+            sha256: sha256:93052fb05515c5daa2a0f3fa5c11dfdc2ba34c18864e5d4e103499a259f5a8db
+          real_signal:
+            ref: receipt://docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md
+            sha256: sha256:e6646859bc9350ff4f320201287a68be1066b5bee9cdc1166a387538fb51ca03
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-21.md
+            sha256: sha256:5d9104953ae34a2fcdb677870d710a2141b089c86ad9fb797d7e28abc62f408e
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-21.md
+            sha256: sha256:5d9104953ae34a2fcdb677870d710a2141b089c86ad9fb797d7e28abc62f408e
+    overall_state: outcome_accepted
   circuit_breaker: '发现 canonical route 不唯一、Documents/Runtime 根重叠或无法复算 commit/registry digest 时停止，不进行切换或删除。'
   retro: required
 
