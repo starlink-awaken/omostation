@@ -8456,7 +8456,9 @@ bets:
   title: 'Agora canonical L4 route 与 nested L4 隔离'
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-08-28'
+  started_at: '2026-08-27'
   goal: '让 Agora 在 Workspace 嵌套运行时只解析 canonical projects/l4-kernel，消除相对路径误解析和主/嵌套 L4 身份分裂，并为后续 nested L4 退役建立 child-first 路由证据。'
   non_goals:
   - 不删除 projects/agora/projects/l4-kernel
@@ -8491,6 +8493,57 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:acdf73d84dd252734ae58802991bbfa58f6e237e451ae7e93b474ba7c5db7a74'
     decision_ref: decision://accepted/BET-Y1Q3-T10-22
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@5e0feb2162fdbe4f412a1c6bc4dc6c5408cc0c12
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md
+            sha256: sha256:acdf73d84dd252734ae58802991bbfa58f6e237e451ae7e93b474ba7c5db7a74
+          diff:
+            ref: receipt://docs/reports/2026-08-27-agora-l4-route-evidence.md
+            sha256: sha256:3a52829a77c009cdb9da4f614792105616d78a9560af9f28c95c4afddaf4f941
+          rollback:
+            ref: receipt://docs/reports/2026-08-27-agora-l4-route-evidence.md
+            sha256: sha256:3a52829a77c009cdb9da4f614792105616d78a9560af9f28c95c4afddaf4f941
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-27-agora-l4-route-evidence.md
+            sha256: sha256:3a52829a77c009cdb9da4f614792105616d78a9560af9f28c95c4afddaf4f941
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-22-accept.yaml
+            sha256: sha256:6354f95f34b16fba67a35e1724f72c6c8a2c670ee020084aabb7cdc9565ad550
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md
+            sha256: sha256:acdf73d84dd252734ae58802991bbfa58f6e237e451ae7e93b474ba7c5db7a74
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-22.md
+            sha256: sha256:4aeecd1d9886bea866abbd80398ed5f7d9cc686ea4cd8883f4bb7c330ec7063c
+      value:
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-22-accept.yaml
+            sha256: sha256:6354f95f34b16fba67a35e1724f72c6c8a2c670ee020084aabb7cdc9565ad550
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-22-accept.yaml
+            sha256: sha256:6354f95f34b16fba67a35e1724f72c6c8a2c670ee020084aabb7cdc9565ad550
+          real_signal:
+            ref: receipt://docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md
+            sha256: sha256:acdf73d84dd252734ae58802991bbfa58f6e237e451ae7e93b474ba7c5db7a74
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-22.md
+            sha256: sha256:4aeecd1d9886bea866abbd80398ed5f7d9cc686ea4cd8883f4bb7c330ec7063c
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-22.md
+            sha256: sha256:4aeecd1d9886bea866abbd80398ed5f7d9cc686ea4cd8883f4bb7c330ec7063c
+    overall_state: outcome_accepted
   depends_on: []
   risk_level: L2
   human_gate: true
@@ -8574,7 +8627,7 @@ bets:
             sha256: sha256:9699040e0addd411e31971331c9f1008a6e6c3be6b3ceb7ea337c9c737596cbe
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-21.md
-            sha256: sha256:5d9104953ae34a2fcdb677870d710a2141b089c86ad9fb797d7e28abc62f408e
+            sha256: sha256:e4fe9125d55b54a4b24d165b849f0fe5baa791d4bfeb8bbd1184150cdadfc9b2
       value:
         status: ACCEPTED
         evidence:
@@ -8589,10 +8642,10 @@ bets:
             sha256: sha256:e6646859bc9350ff4f320201287a68be1066b5bee9cdc1166a387538fb51ca03
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-21.md
-            sha256: sha256:5d9104953ae34a2fcdb677870d710a2141b089c86ad9fb797d7e28abc62f408e
+            sha256: sha256:e4fe9125d55b54a4b24d165b849f0fe5baa791d4bfeb8bbd1184150cdadfc9b2
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-21.md
-            sha256: sha256:5d9104953ae34a2fcdb677870d710a2141b089c86ad9fb797d7e28abc62f408e
+            sha256: sha256:e4fe9125d55b54a4b24d165b849f0fe5baa791d4bfeb8bbd1184150cdadfc9b2
     overall_state: outcome_accepted
   circuit_breaker: '发现 canonical route 不唯一、Documents/Runtime 根重叠或无法复算 commit/registry digest 时停止，不进行切换或删除。'
   retro: required
