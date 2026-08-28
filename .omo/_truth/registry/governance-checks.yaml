@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 509  # 2026-08-28 505→509: 登记 bin/gac/{anti-corrosion-detector,doc-auto-update,governance-health-monitor}.py + bin/ssot/doc-governance-autofix.py (并发 agent 治理脚本遗漏登记, PR #2401 修复)
+    script_baseline: 515  # 2026-08-28 509→515: 登记 bin/ops/{slo_tracker,unified_metrics,cost_tracker,env_config,monitor_daemon,runbook}.py (并发 agent ops 模块批量新增遗漏登记)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
