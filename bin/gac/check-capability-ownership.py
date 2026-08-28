@@ -43,6 +43,8 @@ MOF_CAPABILITIES = ROOT / ".omo" / "_truth" / "registry" / "mof-capabilities.yam
 CAPABILITY_REGISTRY = ROOT / "docs" / "generated" / "capability-registry.yaml"
 # BOS 服务注册 (agora)
 BOS_SERVICES = ROOT / "projects" / "agora" / "etc" / "bos-services.yaml"
+# 项目能力注册 (projects-capabilities.yaml)
+PROJECTS_CAPABILITIES = ROOT / ".omo" / "_truth" / "registry" / "projects-capabilities.yaml"
 
 # owner 缺失时默认 owner (未声明 → 视为无人负责)
 DEFAULT_OWNER = "unassigned"
@@ -147,6 +149,27 @@ def _collect_registered(paths: list[Path]) -> list[dict]:
                         "registered": bool(meta.get("implements")),
                     }
                 )
+    return entries
+
+
+def _collect_projects_capabilities() -> list[dict]:
+    """从 projects-capabilities.yaml 收集项目能力条目."""
+    entries: list[dict] = []
+    data = _load_yaml(PROJECTS_CAPABILITIES)
+    if not isinstance(data, dict):
+        return entries
+    file_owner = str(_load_yaml_frontmatter(PROJECTS_CAPABILITIES).get("owner") or DEFAULT_OWNER)
+    for cap in data.get("capabilities", []):
+        if isinstance(cap, dict) and "entrypoint" in cap:
+            entries.append(
+                {
+                    "capability": str(cap.get("id", cap["entrypoint"])),
+                    "path": str(cap["entrypoint"]),
+                    "owner": str(cap.get("owner") or file_owner),
+                    "explicit_owner": bool(cap.get("owner")),
+                    "registered": True,
+                }
+            )
     return entries
 
 
@@ -281,7 +304,7 @@ def main() -> int:
     ap.add_argument("--scope", default="", help="单面检查 (impl|owner|reverse)")
     args = ap.parse_args()
 
-    entries = _collect_registered([MOF_CAPABILITIES])
+    entries = _collect_registered([MOF_CAPABILITIES]) + _collect_projects_capabilities()
     bos = _collect_bos_services()
     findings: list[Finding] = []
     impls = _scan_project_impls()
