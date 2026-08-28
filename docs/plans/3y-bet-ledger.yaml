@@ -546,6 +546,7 @@ bets:
   write_surfaces:
   - projects/omo/src/omo/resident/status.py
   - projects/omo/tests/unit/test_resident_status.py
+  - projects/omo
   - docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md
   - docs/reports/2026-08-29-resident-ledger-read-status.md
   - docs/plans/3y-bet-ledger.yaml
