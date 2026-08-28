@@ -1517,9 +1517,10 @@ def validate_human_attestation(
 def validate_completion_evidence(
     matrix: Any,
     *,
+    value_indicator_policy: bool = True,
     workspace: Path = WS,
 ) -> tuple[str, list[str]]:
-    """Validate the three independent completion axes and derive one fail-closed state."""
+    """Validate three axes and derive value-required or value-exempt completion."""
     errors: list[str] = []
     if not isinstance(matrix, dict):
         return "blocked", ["COMPLETION_EVIDENCE_SHAPE: matrix must be a mapping"]
@@ -1601,8 +1602,21 @@ def validate_completion_evidence(
                     )
                 )
 
+    value_status = statuses.get("value")
+    if not value_indicator_policy and value_status != "NOT_PROVEN":
+        errors.append(
+            "COMPLETION_VALUE_POLICY_VIOLATION: "
+            "value_indicator_policy=false requires value.status=NOT_PROVEN"
+        )
+
     if set(statuses) != set(COMPLETION_AXIS_STATUSES):
         derived = "blocked"
+    elif not value_indicator_policy and (
+        statuses["engineering"] == "VERIFIED"
+        and statuses["operational"] == "PROVEN"
+        and statuses["value"] == "NOT_PROVEN"
+    ):
+        derived = "delivery_accepted"
     elif statuses["value"] == "REJECTED":
         derived = "rejected"
     elif (
@@ -1622,6 +1636,19 @@ def validate_completion_evidence(
     if declared != derived:
         errors.append(f"OVERALL_STATE_MISMATCH: declared={declared!r} derived={derived!r}")
     return derived, errors
+
+
+def resolve_value_indicator_policy(bet: dict[str, Any]) -> tuple[bool, str | None]:
+    """Return the BET completion policy, rejecting non-boolean YAML values."""
+    if "value_indicator_policy" not in bet:
+        return True, None
+    value_indicator_policy = bet["value_indicator_policy"]
+    if not isinstance(value_indicator_policy, bool):
+        return (
+            True,
+            "VALUE_INDICATOR_POLICY_TYPE: value_indicator_policy must be a boolean",
+        )
+    return value_indicator_policy, None
 
 
 def resolve_instruction_binding(*, workspace: Path = WS) -> dict[str, str]:
@@ -2374,17 +2401,25 @@ def cmd_lint(data: dict, args) -> int:
             and base_statuses.get(str(b.get("id") or "")) != "done"
         )
         matrix_required = b.get("status") in COMPLETION_MATRIX_REQUIRED_STATUSES or done_needs_evidence
-        if matrix_required and completion_matrix is None:
+        value_indicator_policy, policy_error = resolve_value_indicator_policy(b)
+        if policy_error:
+            errs.append(f"{b['id']}.value_indicator_policy: {policy_error}")
+        elif matrix_required and completion_matrix is None:
             errs.append(f"{b['id']}.completion_evidence: COMPLETION_EVIDENCE_REQUIRED")
         elif completion_matrix is not None:
             state, completion_errors = validate_completion_evidence(
                 completion_matrix,
+                value_indicator_policy=value_indicator_policy,
                 workspace=WS,
             )
             errs.extend(f"{b['id']}.completion_evidence: {error}" for error in completion_errors)
-            # validate_completion_evidence 有错时强制 blocked，state==outcome_accepted 即无错
-            if transitioned_to_done and state != "outcome_accepted":
-                errs.append(f"{b['id']}.completion_evidence: BET_DONE_REQUIRES_OUTCOME_ACCEPTED")
+            required_done_state = "outcome_accepted" if value_indicator_policy else "delivery_accepted"
+            # validate_completion_evidence 有错时强制 blocked，只有要求状态才能完成
+            if transitioned_to_done and state != required_done_state:
+                errs.append(
+                    f"{b['id']}.completion_evidence: "
+                    f"BET_DONE_REQUIRES_{required_done_state.upper()}"
+                )
         if transitioned_to_done and not b.get("done_at"):
             errs.append(f"{b['id']}.done_at: BET_DONE_AT_REQUIRED")
     if errs:
@@ -2416,21 +2451,28 @@ def cmd_complete(data: dict, args) -> int:
         print(f"[complete] {b['id']} 已是 done, 无需操作")
         return 0
 
+    value_indicator_policy, policy_error = resolve_value_indicator_policy(b)
+    if policy_error:
+        print(f"[complete] ❌ {b['id']}.value_indicator_policy: {policy_error}")
+        return 1
+
     completion_matrix = b.get("completion_evidence")
     if completion_matrix is None:
         print(f"[complete] ❌ {b['id']}.completion_evidence: COMPLETION_EVIDENCE_REQUIRED")
         return 1
     completion_state, completion_errors = validate_completion_evidence(
         completion_matrix,
+        value_indicator_policy=value_indicator_policy,
         workspace=WS,
     )
-    if completion_errors or completion_state != "outcome_accepted":
+    required_completion_state = "outcome_accepted" if value_indicator_policy else "delivery_accepted"
+    if completion_errors or completion_state != required_completion_state:
         for error in completion_errors:
             print(f"[complete] ❌ {b['id']}.completion_evidence: {error}")
-        if completion_state != "outcome_accepted":
+        if completion_state != required_completion_state:
             print(
                 f"[complete] ❌ {b['id']}.completion_evidence: "
-                f"derived state is {completion_state}, not outcome_accepted"
+                f"derived state is {completion_state}, not {required_completion_state}"
             )
         return 1
 
