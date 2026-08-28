@@ -1,0 +1,17 @@
+schema: script-registry/v1
+id: bin/ops/cli.py
+name: Ops CLI
+category: governance
+owner: governance-team
+description: "Workspace operations control-plane CLI."
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - bin/ops/__init__.py
+  - bin/ops/health-check-cron.py
+maturity: active
+last_reviewed: "2026-08-28"
