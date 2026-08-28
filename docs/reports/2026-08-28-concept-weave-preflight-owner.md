@@ -36,3 +36,14 @@ Documents path.
   decay candidates.
 - Documents concept/log/inbox snapshot: 92 files before and after, unchanged
   tree fingerprint; no legacy writer executed.
+
+## Current release verification — 2026-08-29
+
+The active day-1 monthly cron now runs exactly once from clean
+`accepted-20260908` and invokes the Workspace preflight. The disabled plist
+remains the rollback carrier: `plutil -lint` passes, `Disabled=true`,
+`ProgramArguments=/usr/bin/true`, and `launchctl print` reports the service is
+absent. A fresh preflight returned `documents.concept-weave-preflight.v1`,
+status `findings`, exit `1`, 78 concept files, 76 orphan files, 3 link edges,
+0 decay candidates, `write_capable_status=deferred`, and no errors. No
+Documents content was written.
