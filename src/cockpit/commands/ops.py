@@ -51,6 +51,19 @@ def cmd_ops(args: Namespace) -> int:
         ops_args.extend(["-n", str(getattr(args, "lines", 50))])
     elif action == "summary":
         ops_args = ["summary"]
+    elif action == "discover":
+        ops_args = ["discover"]
+        if getattr(args, "update", False):
+            ops_args.append("--update")
+    elif action == "validate":
+        ops_args = ["validate"]
+        if getattr(args, "service", None):
+            ops_args.append(args.service)
+    elif action == "generate":
+        ops_args = ["generate"]
+        ops_args.extend(["--format", getattr(args, "format", "docker-compose")])
+        if getattr(args, "output", None):
+            ops_args.extend(["--output", args.output])
     else:
         ops_args = [action]
 

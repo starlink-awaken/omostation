@@ -1027,12 +1027,15 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     policy_p.add_argument("policy_args", nargs=argparse.REMAINDER, help="传递给 ecos-constraint policy 的参数")
 
     # ── ops (Service Gateway) ─────────────────────────────────
-    ops_p = sub.add_parser("ops", help="🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs)")
+    ops_p = sub.add_parser("ops", help="🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate)")
     ops_p.add_argument("ops_action", nargs="?", default="status",
-                       choices=["status", "up", "down", "deploy", "deps", "logs", "summary"],
+                       choices=["status", "up", "down", "deploy", "deps", "logs", "summary", "discover", "validate", "generate"],
                        help="ops 子命令 (默认: status)")
-    ops_p.add_argument("service", nargs="?", help="服务 ID (用于 up/down/deps)")
+    ops_p.add_argument("service", nargs="?", help="服务 ID (用于 up/down/deps/validate)")
     ops_p.add_argument("--json", action="store_true", help="以 JSON 格式输出")
     ops_p.add_argument("--dry-run", action="store_true", help="预览模式 (不实际执行)")
     ops_p.add_argument("--profile", choices=["minimal", "full"], default="full", help="部署配置")
+    ops_p.add_argument("--format", choices=["docker-compose", "systemd", "launchd"], default="docker-compose", help="生成格式")
+    ops_p.add_argument("--output", "-o", help="输出文件路径")
+    ops_p.add_argument("--update", action="store_true", help="更新 services.yaml")
     ops_p.add_argument("-n", "--lines", type=int, default=50, help="日志行数")
