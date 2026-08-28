@@ -199,6 +199,7 @@ def _count_decision_quality(since_days: int = 30) -> dict:
     p2_count = 0
     total = 0
     adopted_count = 0
+    p0_p1_adoption = 0
     
     for block in blocks[1:]:  # Skip first empty part
         # Extract date
@@ -226,6 +227,8 @@ def _count_decision_quality(since_days: int = 30) -> dict:
         # Check adoption (has verification section)
         if re.search(r"验证|已实施|已合并|已部署|已上线", block):
             adopted_count += 1
+            if re.search(r"P0:|P1:", block):
+                p0_p1_adoption += 1
     
     adoption_ratio = adopted_count / total if total > 0 else 0.0
     
@@ -235,6 +238,7 @@ def _count_decision_quality(since_days: int = 30) -> dict:
         "total": total,
         "adopted_count": adopted_count,
         "adoption_ratio": round(adoption_ratio, 2),
+        "p0_p1_adoption_rate": round(p0_p1_adoption / p0_p1_count if p0_p1_count > 0 else 0.0, 2),
     }
 
 
