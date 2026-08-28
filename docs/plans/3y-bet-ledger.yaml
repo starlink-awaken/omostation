@@ -8173,7 +8173,7 @@ bets:
             sha256: sha256:5176804559aa4b769b1bdbf1b4aaba816e1d4f00e3c8e7504fbf90da77f59c11
           diff:
             ref: receipt://.omo/cron/documents-content-plane-crontab
-            sha256: sha256:f89dfa308c7a8a432b0955982d043b91835efdb9b709c17557e4839c786fd967
+            sha256: sha256:5fe6d0d5973d7e5b00d5043e3ee2eada895a56435978589019cd832dada206d5
           rollback:
             ref: receipt://docs/reports/2026-08-27-documents-canonical-schedule.md
             sha256: sha256:4ab9303967fa297875d44f5a83f9c140d093438488539bff02d4af1a1356fff2
@@ -8191,7 +8191,7 @@ bets:
             sha256: sha256:5176804559aa4b769b1bdbf1b4aaba816e1d4f00e3c8e7504fbf90da77f59c11
           cleanup:
             ref: receipt://.omo/cron/documents-content-plane-crontab
-            sha256: sha256:f89dfa308c7a8a432b0955982d043b91835efdb9b709c17557e4839c786fd967
+            sha256: sha256:5fe6d0d5973d7e5b00d5043e3ee2eada895a56435978589019cd832dada206d5
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -8254,7 +8254,8 @@ bets:
   title: '安装 versioned accepted Workspace release'
   appetite: 0.5 day
   priority: P0
-  status: pending
+  status: done
+  done_at: 2026-08-28
   goal: '在不触碰共享 dirty Workspace 的前提下，安装并验证 versioned accepted release，作为 Documents 两条 owner schedule 的稳定代码根。'
   non_goals:
   - 不修改共享 Workspace checkout
@@ -8266,7 +8267,7 @@ bets:
   - 'canonical schedule candidate points to release root and remains NOT INSTALLED'
   - 'release evidence, tests, doc claims and root CI pass'
   verify:
-  - cmd: 'test -f .omo/cron/documents-content-plane-crontab && rg -n "accepted-20260827|NOT INSTALLED" .omo/cron/documents-content-plane-crontab'
+  - cmd: 'test -f .omo/cron/documents-content-plane-crontab && rg -n "accepted-20260908|NOT INSTALLED" .omo/cron/documents-content-plane-crontab'
     expect: exit 0
   - cmd: 'test -f docs/reports/2026-08-27-documents-accepted-release.md && rg -n "consumer audit|freshness audit|191|12" docs/reports/2026-08-27-documents-accepted-release.md'
     expect: exit 0
@@ -8284,6 +8285,43 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:ffd0230e5e2f31241c0162d34f2efcfc7ab94c972a2ec4ed476d930e57e51549'
     decision_ref: decision://accepted/BET-Y1Q3-T10-27
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c7b703084b0e55d844b466209cb353a242714049
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md
+            sha256: sha256:ffd0230e5e2f31241c0162d34f2efcfc7ab94c972a2ec4ed476d930e57e51549
+          diff:
+            ref: receipt://.omo/cron/documents-content-plane-crontab
+            sha256: sha256:5fe6d0d5973d7e5b00d5043e3ee2eada895a56435978589019cd832dada206d5
+          rollback:
+            ref: receipt://docs/reports/2026-08-27-documents-accepted-release.md
+            sha256: sha256:28d1a56ad093ec0b34808517bd5cc9416d5b673b1cf89338bc56638abe046fb4
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-27-documents-accepted-release.md
+            sha256: sha256:28d1a56ad093ec0b34808517bd5cc9416d5b673b1cf89338bc56638abe046fb4
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-27.md
+            sha256: sha256:e3e7f01e9c3da3f53a034c66f99ed23881e404f42a5cd8e1567a367ed7f156fd
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md
+            sha256: sha256:ffd0230e5e2f31241c0162d34f2efcfc7ab94c972a2ec4ed476d930e57e51549
+          cleanup:
+            ref: receipt://.omo/cron/documents-content-plane-crontab
+            sha256: sha256:5fe6d0d5973d7e5b00d5043e3ee2eada895a56435978589019cd832dada206d5
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on:
   - BET-Y1Q3-T10-24
   - BET-Y1Q3-T10-25
