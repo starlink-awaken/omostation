@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 516  # 2026-08-28 515→516: 登记 bin/ops/catalog_api.py (并发 agent 持续新增遗漏登记)
+    script_baseline: 517  # 2026-08-28 516→517: 登记 bin/ops/smart_alert.py (#2426 智能告警, SCRIPT-BASELINE-SYNC, BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
