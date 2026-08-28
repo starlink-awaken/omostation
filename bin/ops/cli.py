@@ -64,12 +64,12 @@ def get_service_by_id(services: list[dict], sid: str) -> dict[str, Any] | None:
 
 
 def check_liveness(svc: dict[str, Any]) -> dict[str, Any]:
-    """Check liveness signal for a service."""
+    """Check liveness signal for a service (HTTP/TCP/Docker/PID/File)."""
     liveness = svc.get("liveness", {})
     signal = liveness.get("signal", "")
     max_stale = liveness.get("max_stale_hours", 24)
 
-    result = {
+    result: dict[str, Any] = {
         "status": "unknown",
         "signal": signal,
         "last_seen": None,
@@ -79,12 +79,11 @@ def check_liveness(svc: dict[str, Any]) -> dict[str, Any]:
     if not signal:
         return result
 
-    # HTTP endpoint check
-    if liveness.get("signal") == "http" and liveness.get("endpoint"):
+    # ── HTTP endpoint check ──
+    if signal == "http" and liveness.get("endpoint"):
         endpoint = liveness["endpoint"]
         try:
             import urllib.request
-
             req = urllib.request.Request(endpoint, method="GET")
             with urllib.request.urlopen(req, timeout=5) as resp:
                 if resp.status == 200:
@@ -92,11 +91,74 @@ def check_liveness(svc: dict[str, Any]) -> dict[str, Any]:
                     result["last_seen"] = datetime.now(UTC).isoformat()
                 else:
                     result["status"] = "unhealthy"
-        except Exception:
+                    result["http_status"] = resp.status
+        except Exception as e:
             result["status"] = "unreachable"
+            result["error"] = str(e)[:100]
         return result
 
-    # File-based signal check
+    # ── TCP port check ──
+    if signal == "tcp":
+        port = liveness.get("port") or (svc.get("ports", [None])[0] if svc.get("ports") else None)
+        if port:
+            import socket
+            try:
+                with socket.create_connection(("127.0.0.1", int(port)), timeout=3):
+                    result["status"] = "healthy"
+                    result["last_seen"] = datetime.now(UTC).isoformat()
+            except (socket.error, OSError) as e:
+                result["status"] = "unreachable"
+                result["error"] = str(e)[:100]
+        else:
+            result["status"] = "no_port"
+        return result
+
+    # ── Docker container check ──
+    if signal == "docker":
+        label = liveness.get("label") or svc.get("label", "")
+        if label:
+            import subprocess as sp
+            try:
+                proc = sp.run(
+                    ["docker", "ps", "--filter", f"name={label}", "--format", "{{.Status}}"],
+                    capture_output=True, text=True, timeout=10,
+                )
+                if proc.returncode == 0 and proc.stdout.strip():
+                    status_str = proc.stdout.strip().lower()
+                    if "up" in status_str:
+                        result["status"] = "healthy"
+                        result["last_seen"] = datetime.now(UTC).isoformat()
+                        result["docker_status"] = status_str
+                    else:
+                        result["status"] = "unhealthy"
+                        result["docker_status"] = status_str
+                else:
+                    result["status"] = "missing"
+            except Exception as e:
+                result["status"] = "error"
+                result["error"] = str(e)[:100]
+        else:
+            result["status"] = "no_label"
+        return result
+
+    # ── Process check (PID file) ──
+    if signal == "pid":
+        pid_file = _get_pid_file(svc.get("id", ""))
+        if pid_file.exists():
+            try:
+                pid = int(pid_file.read_text().strip())
+                os.kill(pid, 0)
+                result["status"] = "healthy"
+                result["pid"] = pid
+                result["last_seen"] = datetime.now(UTC).isoformat()
+            except (ValueError, OSError, ProcessLookupError):
+                result["status"] = "stale"
+                pid_file.unlink(missing_ok=True)
+        else:
+            result["status"] = "missing"
+        return result
+
+    # ── File-based signal check ──
     if "::" in signal:
         file_path, attr = signal.split("::", 1)
         fp = WORKSPACE / file_path
@@ -107,7 +169,6 @@ def check_liveness(svc: dict[str, Any]) -> dict[str, Any]:
                 if isinstance(data, dict) and attr in data:
                     ts_str = data[attr]
                     result["last_seen"] = ts_str
-                    # Parse timestamp
                     try:
                         if isinstance(ts_str, str):
                             ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
@@ -580,6 +641,22 @@ def main() -> int:
     summary_p = sub.add_parser("summary", help="Show system summary")
     summary_p.set_defaults(func=cmd_summary)
 
+    # ── discover ──
+    discover_p = sub.add_parser("discover", help="Auto-discover running services")
+    discover_p.add_argument("--update", action="store_true", help="Update services.yaml with discoveries")
+    discover_p.set_defaults(func=cmd_discover)
+
+    # ── validate ──
+    validate_p = sub.add_parser("validate", help="Validate service configuration")
+    validate_p.add_argument("service", nargs="?", help="Specific service to validate")
+    validate_p.set_defaults(func=cmd_validate)
+
+    # ── generate ──
+    generate_p = sub.add_parser("generate", help="Generate deployment configs")
+    generate_p.add_argument("--format", choices=["docker-compose", "systemd", "launchd"], default="docker-compose")
+    generate_p.add_argument("--output", "-o", help="Output file path")
+    generate_p.set_defaults(func=cmd_generate)
+
     args = parser.parse_args()
 
     if not args.command:
@@ -587,6 +664,222 @@ def main() -> int:
         return 1
 
     return args.func(args)
+
+
+def cmd_discover(args: argparse.Namespace) -> int:
+    """Auto-discover running services."""
+    import subprocess as sp
+    import re
+
+    services = load_services()
+    existing_ids = {s["id"] for s in services}
+
+    discovered: list[dict[str, Any]] = []
+
+    # Discover listening ports
+    try:
+        proc = sp.run(["lsof", "-i", "-P", "-n"], capture_output=True, text=True, timeout=10)
+        if proc.returncode == 0:
+            for line in proc.stdout.splitlines()[1:]:
+                parts = line.split()
+                if len(parts) >= 9 and "LISTEN" in parts[9]:
+                    pid = parts[1]
+                    port_match = re.search(r":(\d+)", parts[8])
+                    if port_match:
+                        port = int(port_match.group(1))
+                        # Try to get process name
+                        ps_proc = sp.run(["ps", "-p", pid, "-o", "comm="], capture_output=True, text=True, timeout=5)
+                        name = ps_proc.stdout.strip() if ps_proc.returncode == 0 else "unknown"
+                        discovered.append({"type": "port", "port": port, "pid": pid, "name": name})
+    except Exception:
+        pass
+
+    # Discover running processes matching known patterns
+    known_patterns = ["python3", "uv", "node", "docker", "nginx", "postgres"]
+    for svc in services:
+        sid = svc.get("id", "")
+        program = svc.get("program", {})
+        entry = program.get("entrypoint", "")
+        if entry:
+            # Check if process is running
+            ps_proc = sp.run(["pgrep", "-f", entry], capture_output=True, text=True, timeout=5)
+            if ps_proc.returncode == 0:
+                pids = ps_proc.stdout.strip().split("\n")
+                discovered.append({"type": "process", "id": sid, "pids": pids, "entry": entry})
+
+    # Print discoveries
+    print(f"Discovered {len(discovered)} running services:\n")
+    for d in discovered:
+        if d["type"] == "port":
+            print(f"  [PORT] :{d['port']} (pid={d['pid']}, name={d['name']})")
+        elif d["type"] == "process":
+            print(f"  [PROC] {d['id']} (pids={', '.join(d['pids'])})")
+
+    # Update services.yaml if requested
+    if args.update:
+        added = 0
+        for d in discovered:
+            if d["type"] == "port":
+                sid = f"discovered.port.{d['port']}"
+                if sid not in existing_ids:
+                    services.append({
+                        "id": sid,
+                        "enabled": False,
+                        "scheduler": "manual",
+                        "trigger": "on_demand",
+                        "ports": [d["port"]],
+                        "program": {"interpreter": d["name"], "entrypoint": f":{d['port']}"},
+                        "notes": f"Auto-discovered on port {d['port']}",
+                    })
+                    added += 1
+        if added:
+            # Write back
+            for doc in [services]:
+                pass  # services is already the list
+            # Find the services doc and update
+            content = SERVICES_YAML.read_text()
+            docs = list(yaml.safe_load_all(content))
+            for doc in docs:
+                if isinstance(doc, dict) and "services" in doc:
+                    doc["services"] = services
+                    break
+            output = []
+            for doc in docs:
+                output.append(yaml.dump(doc, default_flow_style=False, allow_unicode=True, sort_keys=False))
+            SERVICES_YAML.write_text("---\n".join(output))
+            print(f"\nAdded {added} discovered services to services.yaml")
+
+    return 0
+
+
+def cmd_validate(args: argparse.Namespace) -> int:
+    """Validate service configuration."""
+    services = load_services()
+    target = args.service
+
+    to_validate = services
+    if target:
+        svc = get_service_by_id(services, target)
+        if not svc:
+            print(f"ERROR: service '{target}' not found", file=sys.stderr)
+            return 1
+        to_validate = [svc]
+
+    issues: list[str] = []
+    for svc in to_validate:
+        sid = svc.get("id", "")
+        program = svc.get("program", {})
+        entry = program.get("entrypoint", "")
+        interpreter = program.get("interpreter", "")
+
+        # Check entrypoint exists
+        if entry and not entry.startswith("projects/") and not entry.startswith("bin/"):
+            if not (WORKSPACE / entry).exists() and not Path(entry).exists():
+                issues.append(f"[{sid}] entrypoint not found: {entry}")
+
+        # Check interpreter exists
+        if interpreter == "uv":
+            import shutil
+            if not shutil.which("uv"):
+                issues.append(f"[{sid}] interpreter not found: uv")
+        elif interpreter and not interpreter.startswith("/") and interpreter != "stable-python3":
+            import shutil
+            if not shutil.which(interpreter):
+                issues.append(f"[{sid}] interpreter not found: {interpreter}")
+
+        # Check ports are not conflicting
+        ports = svc.get("ports", [])
+        for other in services:
+            if other.get("id") == sid:
+                continue
+            other_ports = other.get("ports", [])
+            for p in ports:
+                if p in other_ports:
+                    issues.append(f"[{sid}] port conflict: {p} also used by {other.get('id')}")
+
+    if issues:
+        print(f"Found {len(issues)} configuration issues:\n")
+        for issue in issues:
+            print(f"  ⚠️  {issue}")
+        return 1
+    else:
+        print(f"Configuration valid ({len(to_validate)} services checked)")
+        return 0
+
+
+def cmd_generate(args: argparse.Namespace) -> int:
+    """Generate deployment configs (docker-compose/systemd/launchd)."""
+    services = load_services()
+    fmt = args.format
+    output = args.output
+
+    enabled = [s for s in services if s.get("enabled", False)]
+
+    lines: list[str] = []
+
+    if fmt == "docker-compose":
+        lines.append("version: '3.8'")
+        lines.append("services:")
+        for svc in enabled[:20]:  # Limit to first 20 for readability
+            sid = svc.get("id", "").replace(".", "-")
+            ports = svc.get("ports", [])
+            port_str = "\n".join(f"      - {p}:{p}" for p in ports) if ports else ""
+            lines.append(f"  {sid}:")
+            lines.append(f"    image: omostation/{sid}:latest")
+            if port_str:
+                lines.append(f"    ports:{port_str}")
+            lines.append(f"    restart: unless-stopped")
+            lines.append("")
+    elif fmt == "systemd":
+        for svc in enabled[:10]:
+            sid = svc.get("id", "").replace(".", "-")
+            entry = svc.get("program", {}).get("entrypoint", "")
+            lines.append(f"[Unit]")
+            lines.append(f"Description=omostation {sid}")
+            lines.append(f"After=network.target")
+            lines.append("")
+            lines.append(f"[Service]")
+            lines.append(f"Type=simple")
+            lines.append(f"ExecStart=/usr/bin/env {entry}")
+            lines.append(f"WorkingDirectory={WORKSPACE}")
+            lines.append(f"Restart=on-failure")
+            lines.append("")
+            lines.append(f"[Install]")
+            lines.append(f"WantedBy=multi-user.target")
+            lines.append("")
+    elif fmt == "launchd":
+        for svc in enabled[:10]:
+            sid = svc.get("id", "").replace(".", "_")
+            entry = svc.get("program", {}).get("entrypoint", "")
+            lines.append(f"<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+            lines.append(f"<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">")
+            lines.append(f"<plist version=\"1.0\">")
+            lines.append(f"<dict>")
+            lines.append(f"    <key>Label</key>")
+            lines.append(f"    <string>com.omostation.{sid}</string>")
+            lines.append(f"    <key>ProgramArguments</key>")
+            lines.append(f"    <array>")
+            lines.append(f"        <string>/usr/bin/env</string>")
+            lines.append(f"        <string>{entry}</string>")
+            lines.append(f"    </array>")
+            lines.append(f"    <key>WorkingDirectory</key>")
+            lines.append(f"    <string>{WORKSPACE}</string>")
+            lines.append(f"    <key>RunAtLoad</key>")
+            lines.append(f"    <true/>")
+            lines.append(f"    <key>KeepAlive</key>")
+            lines.append(f"    <true/>")
+            lines.append(f"</dict>")
+            lines.append(f"</plist>")
+            lines.append("")
+
+    content = "\n".join(lines)
+    if output:
+        Path(output).write_text(content)
+        print(f"Generated {fmt} config: {output}")
+    else:
+        print(content)
+
+    return 0
 
 
 def cmd_summary(args: argparse.Namespace) -> int:

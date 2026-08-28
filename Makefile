@@ -641,3 +641,31 @@ ast-blast:     ## 分析当前 Git 暂存改动的 AST 爆炸半径 (0.3ms 极�
 
 ast-audit:     ## AST 语义引擎物理自检与证伪测试
 	@python3 bin/gac/ast-blast-radius.py --selftest
+
+# ==============================================================================
+# Service Gateway (ops 控制面)
+# ==============================================================================
+
+ops:  ## ops 状态总览
+	python3 bin/ops/cli.py status
+
+ops-summary:  ## 系统概览
+	python3 bin/ops/cli.py summary
+
+ops-up:  ## 启动所有服务 (DAG 分层)
+	python3 bin/ops/cli.py up
+
+ops-down:  ## 停止所有服务 (逆拓扑)
+	python3 bin/ops/cli.py down
+
+ops-deps:  ## 依赖图
+	python3 bin/ops/cli.py deps
+
+ops-discover:  ## 自动发现服务
+	python3 bin/ops/cli.py discover
+
+ops-validate:  ## 配置校验
+	python3 bin/ops/cli.py validate
+
+ops-generate:  ## 生成部署配置
+	python3 bin/ops/cli.py generate
