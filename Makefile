@@ -675,3 +675,6 @@ ops-recover:  ## 自动恢复失败服务
 
 ops-health-cron:  ## 健康检查定时任务 (每 5 分钟)
 	python3 bin/ops/health-check-cron.py
+
+ops-dashboard:  ## Web 仪表盘
+	python3 bin/ops/dashboard.py --port 8091
