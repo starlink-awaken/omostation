@@ -765,3 +765,12 @@ ops-env-apply:  ## 应用环境配置
 
 ops-env-apply-dry:  ## 预览环境配置变更
 	python3 bin/ops/env_config.py apply --dry-run
+
+ops-monitor:  ## 持续监控守护进程
+	python3 bin/ops/monitor_daemon.py
+
+ops-monitor-once:  ## 单次健康检查
+	python3 bin/ops/monitor_daemon.py --once
+
+ops-monitor-json:  ## 健康检查 JSON 输出
+	python3 bin/ops/monitor_daemon.py --once --json
