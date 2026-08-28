@@ -96,6 +96,10 @@ services:
     server start 幂等。
   ports:
   - 1234
+  liveness:
+    signal: http
+    endpoint: http://localhost:1234/health
+    max_stale_hours: 24
 - id: omlxc.daemon
   enabled: true
   generate: false
@@ -114,6 +118,12 @@ services:
   run_at_load: true
   notes: omlxc 私有本地算力守护进程，仅经权限受限的 Unix Socket 服务 CLI、TUI 与 AetherForge；不声明网络端口。plist
     由 projects/omlxc 自己安装和管理， Workspace 只登记生命周期，因此 generate=false。
+  ports:
+  - 7432
+  liveness:
+    signal: http
+    endpoint: http://localhost:7432/health
+    max_stale_hours: 24
 - id: omlx.gateway
   enabled: false
   lifecycle: retired
@@ -214,6 +224,10 @@ services:
     stderr: ~/.agora/logs/sse-stderr.log
   notes: Agora MCP (SSE 模式, :7431)。BOS 的 mcp_proxy 能力由本进程按需 spawn stdio 子进程承载 —— 它们不监听独立端口,
     不要在 bos-services 里给它们写 http endpoint (见 omostation-agora#19)。
+  liveness:
+    signal: http
+    endpoint: http://localhost:7431/health
+    max_stale_hours: 24
 - id: cockpit.dashboard
   enabled: true
   generate: false
@@ -242,6 +256,10 @@ services:
     stderr: .omo/_delivery/cockpit-dashboard-stderr.log
   notes: Cockpit Web 面板 :8090 (含 /api/svc/* 服务控制面)。 注意 8090 会自增占用 809x, 本地模型端口已避让到
     818x/819x 段。
+  liveness:
+    signal: http
+    endpoint: http://localhost:8090/health
+    max_stale_hours: 24
 - id: docker.observability-db
   enabled: true
   generate: false
@@ -278,8 +296,9 @@ services:
   - 8080
   notes: 本地搜索。占用 8080 —— 本地模型端口曾与它冲突, 已避让。
   liveness:
-    signal: docker
-    max_stale_hours: 1
+    signal: http
+    endpoint: http://localhost:8080/health
+    max_stale_hours: 24
 - id: aetherforge.gateway
   enabled: false
   generate: false
@@ -304,6 +323,10 @@ services:
     归 AetherForge，本地物理 placement 与执行经 omlxc Unix Socket API。 硬约束: 启动路径不得有外部网络依赖(guard
     直接用项目 venv 解释器, 不走 uv run), 且显式隔离系统代理 —— LiteLLM 曾栽在这两条上。 绑到 loopback 之外(--bind
     tailnet)必须配 AETHERFORGE_API_KEY, 否则拒绝启动 —— 绑定范围变大和鉴权消失不允许同时发生。'
+  liveness:
+    signal: http
+    endpoint: http://localhost:9290/health
+    max_stale_hours: 24
 - id: omo.sync_daemon
   enabled: true
   scheduler: launchd
@@ -458,7 +481,7 @@ services:
   liveness:
     signal: http
     endpoint: http://localhost:7433/health
-    max_stale_hours: 1
+    max_stale_hours: 24
   notes: Agora MCP 统一入口, 35+ tools
   ports:
   - 7433
@@ -477,6 +500,10 @@ services:
   notes: OMO MCP (FastMCP), 治理内核
   ports:
   - 7463
+  liveness:
+    signal: http
+    endpoint: http://localhost:7463/health
+    max_stale_hours: 24
 - id: cli.cockpit
   enabled: true
   scheduler: manual
@@ -1221,6 +1248,10 @@ services:
   notes: OMO SSE Daemon (实验性) — 监听 Agora SSE 事件总线替代轮询
   ports:
   - 7432
+  liveness:
+    signal: http
+    endpoint: http://localhost:7432/health
+    max_stale_hours: 24
 - id: bos.kos.search
   enabled: true
   scheduler: manual
@@ -4918,6 +4949,8 @@ services:
     signal: .omo/_delivery/cli.sophia/
     max_stale_hours: 168
   notes: Sophia CLI — 知识编译
+  depends_on:
+  - mcp.sophia
 - id: cli.iris
   enabled: true
   scheduler: manual
@@ -4929,6 +4962,8 @@ services:
     signal: .omo/_delivery/cli.iris/
     max_stale_hours: 168
   notes: Iris CLI — 信息检索
+  depends_on:
+  - mcp.iris
 - id: cli.kronos
   enabled: true
   scheduler: manual
@@ -4940,6 +4975,8 @@ services:
     signal: .omo/_delivery/cli.kronos/
     max_stale_hours: 168
   notes: Kronos CLI — 时间智能
+  depends_on:
+  - mcp.kronos
 - id: cli.ontoderive
   enabled: true
   scheduler: manual
@@ -4951,6 +4988,8 @@ services:
     signal: .omo/_delivery/cli.ontoderive/
     max_stale_hours: 168
   notes: OntoDerive CLI — 本体推导
+  depends_on:
+  - mcp.ontoderive
 - id: mcp.ecos
   enabled: true
   scheduler: manual
@@ -4967,6 +5006,8 @@ services:
   depends_on:
   - mcp.agora
   notes: ECOS MCP — 协议编织
+  ports:
+  - 7455
 - id: mcp.omo_web
   enabled: true
   scheduler: manual
@@ -4983,3 +5024,5 @@ services:
   depends_on:
   - mcp.agora
   notes: OMO Web MCP
+  ports:
+  - 7456
