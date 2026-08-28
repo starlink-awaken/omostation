@@ -67,21 +67,23 @@ def _journey_status_counts() -> dict[str, int]:
 
 
 def _bcos_north_star_status() -> dict:
-    """BCOS north_star status — includes 3-axis BC + 4-axis advisory (D axis)."""
+    """BCOS north_star status — includes 3-axis BC + 4-axis + 5-axis advisory."""
     rc, out, _ = _run([sys.executable, str(WS_ROOT / "bin" / "bc-os" / "north_star_meter_v3.py"), "--json"])
     if rc != 0:
-        return {"status": "unavailable", "composite": None, "composite_4axis": None, "axes": None}
+        return {"status": "unavailable", "composite": None, "composite_4axis": None, "composite_5axis": None, "axes": None}
     try:
         data = json.loads(out)
     except (json.JSONDecodeError, TypeError, ValueError):
-        return {"status": "unknown", "composite": None, "composite_4axis": None, "axes": None}
+        return {"status": "unknown", "composite": None, "composite_4axis": None, "composite_5axis": None, "axes": None}
     composite = (data.get("composite") or {}).get("score")
     composite_4axis = (data.get("composite_4axis") or {}).get("score")
+    composite_5axis = (data.get("composite_5axis") or {}).get("score")
     axes = data.get("axes") or {}
     return {
         "status": str(data.get("status") or "unknown"),
         "composite": composite,
         "composite_4axis": composite_4axis,
+        "composite_5axis": composite_5axis,
         "axes": {k: v.get("score") for k, v in axes.items() if isinstance(v, dict)},
     }
 

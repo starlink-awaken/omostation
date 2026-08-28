@@ -186,3 +186,86 @@ def test_cli_text_mode_runs():
 
 # Late import to avoid circular issues
 import subprocess
+
+# ---------------------------------------------------------------------------
+# E-axis: Decision Quality
+# ---------------------------------------------------------------------------
+
+
+def test_count_decision_quality_returns_dict(tool):
+    """Test that _count_decision_quality returns expected structure."""
+    result = tool._count_decision_quality(since_days=30)
+    assert "p0_p1_count" in result
+    assert "p2_count" in result
+    assert "total" in result
+    assert "adopted_count" in result
+    assert "adoption_ratio" in result
+
+
+def test_count_decision_quality_empty_when_no_file(tool):
+    """Test returns empty when decisions.md doesn't exist."""
+    import tempfile
+    import os
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create a temporary WS_ROOT without decisions.md
+        original = tool.WS_ROOT
+        tool.WS_ROOT = Path(tmpdir)
+        try:
+            result = tool._count_decision_quality(since_days=30)
+            assert result["total"] == 0
+            assert result["p0_p1_count"] == 0
+            assert result["adopted_count"] == 0
+            assert result["adoption_ratio"] == 0.0
+        finally:
+            tool.WS_ROOT = original
+
+
+def test_count_decision_quality_counts_recent(tool):
+    """Test that only recent decisions are counted."""
+    import tempfile
+    import os
+    from datetime import datetime, timezone, timedelta
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        original = tool.WS_ROOT
+        tool.WS_ROOT = Path(tmpdir)
+        try:
+            # Create decisions.md with a recent P1 decision
+            decisions_dir = Path(tmpdir) / ".omo" / "notepads" / "delegation-guardrails"
+            decisions_dir.mkdir(parents=True)
+            decisions_path = decisions_dir / "decisions.md"
+            
+            recent_date = (datetime.now(timezone.utc) - timedelta(days=5)).strftime("%Y-%m-%d")
+            decisions_path.write_text(f"""## [{recent_date}] P1: Test decision
+- **决策**: test
+- **验证**: implemented
+""")
+            
+            result = tool._count_decision_quality(since_days=30)
+            assert result["total"] == 1
+            assert result["p0_p1_count"] == 1
+            assert result["adopted_count"] == 1
+            assert result["adoption_ratio"] == 1.0
+        finally:
+            tool.WS_ROOT = original
+
+
+def test_compute_axes_returns_five_axes(tool):
+    """Test that v3 returns 5 axes."""
+    out = tool.compute_axes(since_days=30)
+    assert len(out["axes"]) == 5
+    assert "A" in out["axes"]
+    assert "B" in out["axes"]
+    assert "C" in out["axes"]
+    assert "D" in out["axes"]
+    assert "E" in out["axes"]
+
+
+def test_compute_axes_composite_5axis(tool):
+    """Test that 5-axis composite is computed."""
+    out = tool.compute_axes(since_days=30)
+    assert "composite_5axis" in out
+    assert "score" in out["composite_5axis"]
+    assert "weights" in out["composite_5axis"]
+    assert out["composite_5axis"]["weights"]["E"] == 0.15
+    assert out["composite_5axis"]["weights"]["D"] == 0.20
