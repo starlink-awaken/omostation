@@ -729,3 +729,12 @@ ops-slo-record:  ## 记录 SLO 指标
 
 ops-slo-json:  ## SLO JSON 输出
 	python3 bin/ops/slo_tracker.py --json
+
+ops-cost:  ## 成本追踪报告
+	python3 bin/ops/cost_tracker.py --report
+
+ops-cost-record:  ## 记录成本
+	python3 bin/ops/cost_tracker.py --record
+
+ops-cost-json:  ## 成本 JSON 输出
+	python3 bin/ops/cost_tracker.py --json
