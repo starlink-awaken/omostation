@@ -1,336 +1,4985 @@
----
 status: active
 lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-07-03
 ---
-
-# 调度服务注册 (Scheduling Contract) — 理想态注册→生成→drift 闭环
-#
-# 调度配置 (launchd plist / GHA schedule / daemon) 从本注册生成, 不手写.
-# 生成器 bin/mof/gen-service-configs.py 读此 → 产 plist (稳定锚点, 杜绝 uv 临时路径炸弹).
-# GaC drift check: plist vs 本注册不一致 = drift.
-# 见 P73 pattern + governance-ssot-edit skill.
-#
-# interpreter 锚点: stable-python3 → shutil.which("python3"); 绝对路径 → 直接用 (须稳定).
-
 services:
-  - id: governance.watch
-    enabled: true
-    scheduler: launchd
-    trigger: watchpaths
-    label: com.l4.governance.watch
-    program:
-      interpreter: stable-python3
-      entrypoint: bin/gac/state-stale-emit.py
-      # args 与 install-watch-agent.py 触发 + state-stale-emit --surface 需求一致 (SSOT 完整声明)
-      args: [--source, launchd-watch, --trigger, watchpaths, --surface, .omo/_truth/registry, --surface, projects/ecos/src/ecos/ssot]
-    watch_paths:
-      - .omo/_truth/registry
-      - projects/ecos/src/ecos/ssot
-    environment:
-      PATH: /opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
-    resilience:
-      keepalive: crashed
-      throttle_interval: 10
-    run_at_load: true
-    outputs:
-      stdout: runtime/logs/watch_stdout.log
-      stderr: runtime/logs/watch_stderr.log
-    liveness:
-      signal: .omo/_knowledge/omo-events.jsonl
-      event_kind: state_stale
-      max_stale_hours: 24
-    generated_by: bin/mof/gen-service-configs.py
-    note: "原 install-watch-agent.py 硬编码 plist (sys.executable 炸弹), 治本后从本注册生成"
-
-  # ── 引导扇区 (阶段4 元递归): GaC/health 工具自身调度注册 ──────────
-  # 这些工具是 evidence/health/gac 真源, 调度注册为元递归闭环 (GaC 治含自身).
-  # scheduler=gha/manual (非 launchd), gen-service-configs 跳过不生配置 —
-  # 引导扇区: 这些工具定义 gen/evidence/health 本身, 不能由自己生成自己 (避循环),
-  # 仅声明注册 (SSOT 完整: services.yaml 含所有调度含 GaC 自身).
-  - id: evidence-smoke
-    enabled: true
-    scheduler: gha
-    trigger: schedule
-    program:
-      interpreter: stable-python3
-      entrypoint: bin/gac/evidence-smoke.py
-    schedule_ref: .github/workflows/evidence-smoke-gate.yml
-    liveness:
-      signal: .omo/_delivery/evidence-smoke/
-      max_stale_hours: 24
-    note: "实测 health (回路多源 OR/BOS/dirty). gha 调度. 引导扇区 (evidence 源, 不自生)."
-  - id: compass-radar
-    enabled: true
-    scheduler: gha
-    trigger: schedule
-    program:
-      interpreter: stable-python3
-      entrypoint: bin/compass_radar.py
-    schedule_ref: .github/workflows/c2g-radar-daily.yml
-    liveness:
-      signal: .omo/state/health.yaml::generated_at
-      max_stale_hours: 24
-    note: "合成 health_score (含 feedback 硬门槛 PR#81). gha daily. 引导扇区."
-  - id: gen-service-configs
-    enabled: true
-    scheduler: manual
-    trigger: on-registry-change
-    program:
-      interpreter: stable-python3
-      entrypoint: bin/mof/gen-service-configs.py
-    note: "从本注册生 launchd plist (scheduler=launchd 项). manual/on-registry-change. 引导扇区 (生成本身, 不自生)."
-  # ── 计算面 (omlx) ──────────────────────────────────────────
-  # 2026-08-08: 这些一直在跑但没有生命周期声明, wsvc 的 S1 检查会持续告警。
-  # 字段照 ~/Library/LaunchAgents/*.plist 的真实配置登记, 未臆造。
-  # ── 本地算力中枢 ────────────────────────────────────────────────────────
-  # 算力配置、模型放置与节点授权以 omlxc 私有配置及 Unix Socket API 为 SSOT。
-  # AetherForge 只持有逻辑路由与公共数据面；后端、驻留、内存准入与远程身份均由 omlxc 决策。
-  - id: lmstudio.server
-    enabled: true
-    generate: false
-    config_source: ~/Library/LaunchAgents/com.lmstudio.server.plist
-    scheduler: launchd
-    trigger: run_at_load
-    label: com.lmstudio.server
-    program:
-      interpreter: /bin/bash
-      entrypoint: ~/.lmstudio/bin/lms
-      args: ["server", "start", "--port", "1234"]
-    run_at_load: true
-    outputs:
-      stdout: /tmp/lmstudio-server.out.log
-      stderr: /tmp/lmstudio-server.err.log
-    notes: >-
-      MBP 的 LM Studio server :1234(只绑 loopback; 跨机走 LM Link 自己的通道)。
-      是 omlx 后端起不来时的兜底引擎, 也是 MBP 向 LM Link 池供模型的入口。
-      2026-08-10 实测它当时并未运行, 池子从 43 个模型缩到 17 个而无人察觉 ——
-      纳入注册表就是为了让这种"少了一台"能被看见。lms server start 幂等。
-
-  - id: omlxc.daemon
-    enabled: true
-    generate: false
-    config_source: projects/omlxc/packaging/launchd/com.omlxc.daemon.plist
-    scheduler: launchd
-    trigger: keepalive
-    label: com.omlxc.daemon
-    program:
-      interpreter: /usr/bin/env
-      entrypoint: ~/.local/bin/omlxcd
-      args: []
-    transport: unix_socket
-    socket_ref: omlxc.config.socket
-    resilience:
-      keepalive: crashed
-    run_at_load: true
-    notes: >-
-      omlxc 私有本地算力守护进程，仅经权限受限的 Unix Socket 服务 CLI、TUI 与
-      AetherForge；不声明网络端口。plist 由 projects/omlxc 自己安装和管理，
-      Workspace 只登记生命周期，因此 generate=false。
-
-  - id: omlx.gateway
-    # 2026-08-10 已 bootout, 端口 4000 交给 aetherforge.gateway。
-    # 先关不删: 观察期内若门面出问题, bootstrap 回来即可回滚。
-    enabled: false
-    lifecycle: retired
-    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
-    generate: false
-    config_source: ~/omlx-orchestration/launchd/com.omlx.gateway.plist
-    scheduler: launchd
-    trigger: keepalive
-    label: com.omlx.gateway
-    program:
-      interpreter: /bin/bash
-      entrypoint: ~/.local/bin/omlx-gw-guard
-      args: []
-    resilience:
-      keepalive: always
-    run_at_load: true
-    outputs:
-      stdout: ~/Library/Logs/omlx-gateway.log
-      stderr: ~/Library/Logs/omlx-gateway.log
-    notes: >-
-      LiteLLM 网关 :4000 —— 已退役。职责已由 aetherforge.gateway 接管
-      (门面过渡期同时监听 4000)。保留本条 config_source/program 作为回滚记录，
-      不得与 aetherforge.gateway 同时启用。
-      另: 它实际下发的是 --host 0.0.0.0, 对同网段任意机器开放, 与
-      "tailnet + localhost" 的说法不符; 门面只绑 loopback + tailnet。
-
-  - id: omlx.gateway-ui
-    enabled: false
-    lifecycle: retired
-    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
-    generate: false
-    config_source: ~/omlx-orchestration/launchd/com.omlx.gateway-ui.plist
-    scheduler: launchd
-    trigger: keepalive
-    label: com.omlx.gateway-ui
-    program:
-      interpreter: /bin/bash
-      entrypoint: ~/.local/bin/omlx-gw-ui-guard
-      args: []
-    resilience:
-      keepalive: always
-    run_at_load: true
-    outputs:
-      stdout: ~/Library/Logs/omlx-gateway-ui.log
-      stderr: ~/Library/Logs/omlx-gateway-ui.log
-    notes: 已退役的网关 UI；保留 config_source/program 作为只读归档与回滚记录。
-
-  - id: omlx.autopilot
-    enabled: false
-    lifecycle: retired
-    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
-    generate: false
-    config_source: ~/omlx-orchestration/launchd/com.omlx.autopilot.plist
-    scheduler: launchd
-    trigger: interval
-    interval_sec: 300
-    label: com.omlx.autopilot
-    program:
-      interpreter: stable-python3
-      entrypoint: ~/omlx-orchestration/bin/omlx-autopilot
-      args: []
-    run_at_load: true
-    outputs:
-      stdout: ~/omlx-orchestration/logs/autopilot.out.log
-      stderr: ~/omlx-orchestration/logs/autopilot.err.log
-    notes: >-
-      已退役；预热、空闲卸载、内存准入与自愈职责归 omlxc.daemon。
-      保留 config_source/program 作为只读归档与回滚记录。
-
-  - id: omlx.autostart
-    enabled: false
-    lifecycle: retired
-    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
-    generate: false
-    config_source: ~/omlx-orchestration/launchd/com.omlx.autostart.plist
-    scheduler: launchd
-    trigger: boot
-    label: com.omlx.autostart
-    program:
-      interpreter: /bin/bash
-      entrypoint: ~/omlx-orchestration/bin/omlx-autostart-boot.sh
-      args: []
-    resilience:
-      keepalive: crashed
-    run_at_load: true
-    outputs:
-      stdout: ~/omlx-orchestration/logs/autostart-agent.out.log
-      stderr: ~/omlx-orchestration/logs/autostart-agent.err.log
-    notes: >-
-      已退役；本地运行时启动与模型驻留由 omlxc.daemon 管理。
-      保留 config_source/program 作为只读归档与回滚记录。
-
-  # ── 服务面 (Workspace) ─────────────────────────────────────
-  - id: agora.sse
-    # 2026-08-26 停用: plist 指向的 worktree ws-g1-truthful-control-plane 已删除,
-    # 服务长期未加载(声明/执行鸿沟)。plist 已移除并备份。
-    # 若要恢复: 把 entrypoint 指向 projects/agora 后重建 plist 再置 true。
-    enabled: false
-    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
-    generate: false
-    config_source: 手写 plist (~/Library/LaunchAgents/com.agora.sse.plist) — 已移除
-    scheduler: launchd
-    trigger: keepalive
-    label: com.agora.sse
-    program:
-      interpreter: uv
-      entrypoint: projects/agora
-      args: ["agora-mcp", "--sse"]
-    resilience:
-      keepalive: always
-    run_at_load: true
-    ports: [7431]
-    outputs:
-      stdout: ~/.agora/logs/sse-stdout.log
-      stderr: ~/.agora/logs/sse-stderr.log
-    notes: Agora MCP (SSE 模式, :7431)。BOS 的 mcp_proxy 能力由本进程按需 spawn
-      stdio 子进程承载 —— 它们不监听独立端口, 不要在 bos-services 里给它们写
-      http endpoint (见 omostation-agora#19)。
-
-  - id: cockpit.dashboard
-    enabled: true
-    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
-    generate: false
-    config_source: 手写 plist (~/Library/LaunchAgents/com.cockpit.dashboard.plist)
-    scheduler: launchd
-    trigger: keepalive
-    label: com.cockpit.dashboard
-    program:
-      interpreter: uv
-      entrypoint: projects/cockpit
-      args: ["python", "-m", "cockpit.dashboard_server", "--host", "127.0.0.1", "--port", "8090"]
-    resilience:
-      keepalive: crashed
-    run_at_load: true
-    ports: [8090]
-    outputs:
-      stdout: .omo/_delivery/cockpit-dashboard-stdout.log
-      stderr: .omo/_delivery/cockpit-dashboard-stderr.log
-    notes: Cockpit Web 面板 :8090 (含 /api/svc/* 服务控制面)。
-      注意 8090 会自增占用 809x, 本地模型端口已避让到 818x/819x 段。
-
-  # ── 数据面 (docker) ────────────────────────────────────────
-  - id: docker.observability-db
-    enabled: true
-    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
-    generate: false
-    config_source: docker compose (projects/observability)
-    scheduler: docker
-    trigger: compose
-    label: "docker:observability-db-1"
-    program:
-      interpreter: docker
-      entrypoint: projects/observability
-      args: ["compose", "up", "-d"]
-    notes: 可观测性数据库
-
-  - id: docker.searxng
-    enabled: true
-    # plist/容器由外部拥有, 注册表只记录不生成 (见 gen-service-configs)
-    generate: false
-    config_source: docker compose
-    scheduler: docker
-    trigger: compose
-    label: "docker:searxng"
-    program:
-      interpreter: docker
-      entrypoint: searxng
-      args: ["compose", "up", "-d"]
-    ports: [8080]
-    notes: 本地搜索。占用 8080 —— 本地模型端口曾与它冲突, 已避让。
-  # ── LLM 入口 ───────────────────────────────────────────────
-  - id: aetherforge.gateway
-    # 2026-08-26 停用: gw-guard 依赖的 venv 目录 ~/aetherforge-final-ae3570f 已删除,
-    # 而 keepalive:always + run_at_load 导致 launchd 无限重启 → 退出码1 空转刷日志。
-    # 若要恢复: 让 gw-guard 指向 projects/aetherforge 并跑 uv sync 建好 venv 后再置 true。
-    enabled: false
-    generate: false
-    config_source: ~/Library/LaunchAgents/com.aetherforge.gateway.plist — 已移除
-    scheduler: launchd
-    trigger: keepalive
-    label: com.aetherforge.gateway
-    program:
-      interpreter: /bin/bash
-      entrypoint: ~/.local/bin/aetherforge-gw-guard
-      args: []
-    resilience:
-      keepalive: always
-    run_at_load: true
-    # 过渡期同时监听 4000: 调用方(kairon 10 处 / cockpit 2 处 / bin/gac 1 处)
-    # 全写着 :4000, 门面就地接管这个位置, 停 LiteLLM 就是零改动的事。
-    # 调用方迁到 9290 之后再把 4000 摘掉。两者不能同时绑 4000。
-    ports: [9290, 4000]
-    outputs:
-      stdout: ~/Library/Logs/aetherforge-gateway.log
-      stderr: ~/Library/Logs/aetherforge-gateway.log
-    notes: >-
-      aetherforge OpenAI 兼容门面 — LiteLLM :4000 的继任者。
-      唯一公共推理 URI 是 bos://compute/aetherforge/infer；逻辑模型、认证与公共数据面
-      归 AetherForge，本地物理 placement 与执行经 omlxc Unix Socket API。
-      硬约束: 启动路径不得有外部网络依赖(guard 直接用项目 venv 解释器,
-      不走 uv run), 且显式隔离系统代理 —— LiteLLM 曾栽在这两条上。
-      绑到 loopback 之外(--bind tailnet)必须配 AETHERFORGE_API_KEY,
-      否则拒绝启动 —— 绑定范围变大和鉴权消失不允许同时发生。
+- id: governance.watch
+  enabled: true
+  scheduler: launchd
+  trigger: watchpaths
+  label: com.l4.governance.watch
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/gac/state-stale-emit.py
+    args:
+    - --source
+    - launchd-watch
+    - --trigger
+    - watchpaths
+    - --surface
+    - .omo/_truth/registry
+    - --surface
+    - projects/ecos/src/ecos/ssot
+  watch_paths:
+  - .omo/_truth/registry
+  - projects/ecos/src/ecos/ssot
+  environment:
+    PATH: /opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
+  resilience:
+    keepalive: crashed
+    throttle_interval: 10
+  run_at_load: true
+  outputs:
+    stdout: runtime/logs/watch_stdout.log
+    stderr: runtime/logs/watch_stderr.log
+  liveness:
+    signal: .omo/_knowledge/omo-events.jsonl
+    event_kind: state_stale
+    max_stale_hours: 24
+  generated_by: bin/mof/gen-service-configs.py
+  note: 原 install-watch-agent.py 硬编码 plist (sys.executable 炸弹), 治本后从本注册生成
+- id: evidence-smoke
+  enabled: true
+  scheduler: gha
+  trigger: schedule
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/gac/evidence-smoke.py
+  schedule_ref: .github/workflows/evidence-smoke-gate.yml
+  liveness:
+    signal: .omo/_delivery/evidence-smoke/
+    max_stale_hours: 24
+  note: 实测 health (回路多源 OR/BOS/dirty). gha 调度. 引导扇区 (evidence 源, 不自生).
+- id: compass-radar
+  enabled: true
+  scheduler: gha
+  trigger: schedule
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/compass_radar.py
+  schedule_ref: .github/workflows/c2g-radar-daily.yml
+  liveness:
+    signal: .omo/state/health.yaml::generated_at
+    max_stale_hours: 24
+  note: 合成 health_score (含 feedback 硬门槛 PR#81). gha daily. 引导扇区.
+- id: gen-service-configs
+  enabled: true
+  scheduler: manual
+  trigger: on-registry-change
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/mof/gen-service-configs.py
+  note: 从本注册生 launchd plist (scheduler=launchd 项). manual/on-registry-change. 引导扇区
+    (生成本身, 不自生).
+- id: lmstudio.server
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.lmstudio.server.plist
+  scheduler: launchd
+  trigger: run_at_load
+  label: com.lmstudio.server
+  program:
+    interpreter: /bin/bash
+    entrypoint: ~/.lmstudio/bin/lms
+    args:
+    - server
+    - start
+    - --port
+    - '1234'
+  run_at_load: true
+  outputs:
+    stdout: /tmp/lmstudio-server.out.log
+    stderr: /tmp/lmstudio-server.err.log
+  notes: MBP 的 LM Studio server :1234(只绑 loopback; 跨机走 LM Link 自己的通道)。 是 omlx 后端起不来时的兜底引擎,
+    也是 MBP 向 LM Link 池供模型的入口。 2026-08-10 实测它当时并未运行, 池子从 43 个模型缩到 17 个而无人察觉 —— 纳入注册表就是为了让这种"少了一台"能被看见。lms
+    server start 幂等。
+  ports:
+  - 1234
+- id: omlxc.daemon
+  enabled: true
+  generate: false
+  config_source: projects/omlxc/packaging/launchd/com.omlxc.daemon.plist
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omlxc.daemon
+  program:
+    interpreter: /usr/bin/env
+    entrypoint: ~/.local/bin/omlxcd
+    args: []
+  transport: unix_socket
+  socket_ref: omlxc.config.socket
+  resilience:
+    keepalive: crashed
+  run_at_load: true
+  notes: omlxc 私有本地算力守护进程，仅经权限受限的 Unix Socket 服务 CLI、TUI 与 AetherForge；不声明网络端口。plist
+    由 projects/omlxc 自己安装和管理， Workspace 只登记生命周期，因此 generate=false。
+- id: omlx.gateway
+  enabled: false
+  lifecycle: retired
+  generate: false
+  config_source: ~/omlx-orchestration/launchd/com.omlx.gateway.plist
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omlx.gateway
+  program:
+    interpreter: /bin/bash
+    entrypoint: ~/.local/bin/omlx-gw-guard
+    args: []
+  resilience:
+    keepalive: always
+  run_at_load: true
+  outputs:
+    stdout: ~/Library/Logs/omlx-gateway.log
+    stderr: ~/Library/Logs/omlx-gateway.log
+  notes: 'LiteLLM 网关 :4000 —— 已退役。职责已由 aetherforge.gateway 接管 (门面过渡期同时监听 4000)。保留本条
+    config_source/program 作为回滚记录， 不得与 aetherforge.gateway 同时启用。 另: 它实际下发的是 --host
+    0.0.0.0, 对同网段任意机器开放, 与 "tailnet + localhost" 的说法不符; 门面只绑 loopback + tailnet。'
+- id: omlx.gateway-ui
+  enabled: false
+  lifecycle: retired
+  generate: false
+  config_source: ~/omlx-orchestration/launchd/com.omlx.gateway-ui.plist
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omlx.gateway-ui
+  program:
+    interpreter: /bin/bash
+    entrypoint: ~/.local/bin/omlx-gw-ui-guard
+    args: []
+  resilience:
+    keepalive: always
+  run_at_load: true
+  outputs:
+    stdout: ~/Library/Logs/omlx-gateway-ui.log
+    stderr: ~/Library/Logs/omlx-gateway-ui.log
+  notes: 已退役的网关 UI；保留 config_source/program 作为只读归档与回滚记录。
+- id: omlx.autopilot
+  enabled: false
+  lifecycle: retired
+  generate: false
+  config_source: ~/omlx-orchestration/launchd/com.omlx.autopilot.plist
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 300
+  label: com.omlx.autopilot
+  program:
+    interpreter: stable-python3
+    entrypoint: ~/omlx-orchestration/bin/omlx-autopilot
+    args: []
+  run_at_load: true
+  outputs:
+    stdout: ~/omlx-orchestration/logs/autopilot.out.log
+    stderr: ~/omlx-orchestration/logs/autopilot.err.log
+  notes: 已退役；预热、空闲卸载、内存准入与自愈职责归 omlxc.daemon。 保留 config_source/program 作为只读归档与回滚记录。
+- id: omlx.autostart
+  enabled: false
+  lifecycle: retired
+  generate: false
+  config_source: ~/omlx-orchestration/launchd/com.omlx.autostart.plist
+  scheduler: launchd
+  trigger: boot
+  label: com.omlx.autostart
+  program:
+    interpreter: /bin/bash
+    entrypoint: ~/omlx-orchestration/bin/omlx-autostart-boot.sh
+    args: []
+  resilience:
+    keepalive: crashed
+  run_at_load: true
+  outputs:
+    stdout: ~/omlx-orchestration/logs/autostart-agent.out.log
+    stderr: ~/omlx-orchestration/logs/autostart-agent.err.log
+  notes: 已退役；本地运行时启动与模型驻留由 omlxc.daemon 管理。 保留 config_source/program 作为只读归档与回滚记录。
+- id: agora.sse
+  enabled: false
+  generate: false
+  config_source: 手写 plist (~/Library/LaunchAgents/com.agora.sse.plist) — 已移除
+  scheduler: launchd
+  trigger: keepalive
+  label: com.agora.sse
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+    args:
+    - agora-mcp
+    - --sse
+  resilience:
+    keepalive: always
+  run_at_load: true
+  ports:
+  - 7431
+  outputs:
+    stdout: ~/.agora/logs/sse-stdout.log
+    stderr: ~/.agora/logs/sse-stderr.log
+  notes: Agora MCP (SSE 模式, :7431)。BOS 的 mcp_proxy 能力由本进程按需 spawn stdio 子进程承载 —— 它们不监听独立端口,
+    不要在 bos-services 里给它们写 http endpoint (见 omostation-agora#19)。
+- id: cockpit.dashboard
+  enabled: true
+  generate: false
+  config_source: 手写 plist (~/Library/LaunchAgents/com.cockpit.dashboard.plist)
+  scheduler: launchd
+  trigger: keepalive
+  label: com.cockpit.dashboard
+  program:
+    interpreter: uv
+    entrypoint: projects/cockpit
+    args:
+    - python
+    - -m
+    - cockpit.dashboard_server
+    - --host
+    - 127.0.0.1
+    - --port
+    - '8090'
+  resilience:
+    keepalive: crashed
+  run_at_load: true
+  ports:
+  - 8090
+  outputs:
+    stdout: .omo/_delivery/cockpit-dashboard-stdout.log
+    stderr: .omo/_delivery/cockpit-dashboard-stderr.log
+  notes: Cockpit Web 面板 :8090 (含 /api/svc/* 服务控制面)。 注意 8090 会自增占用 809x, 本地模型端口已避让到
+    818x/819x 段。
+- id: docker.observability-db
+  enabled: true
+  generate: false
+  config_source: docker compose (projects/observability)
+  scheduler: docker
+  trigger: compose
+  label: docker:observability-db-1
+  program:
+    interpreter: docker
+    entrypoint: projects/observability
+    args:
+    - compose
+    - up
+    - -d
+  notes: 可观测性数据库
+  liveness:
+    signal: docker
+    max_stale_hours: 1
+- id: docker.searxng
+  enabled: true
+  generate: false
+  config_source: docker compose
+  scheduler: docker
+  trigger: compose
+  label: docker:searxng
+  program:
+    interpreter: docker
+    entrypoint: searxng
+    args:
+    - compose
+    - up
+    - -d
+  ports:
+  - 8080
+  notes: 本地搜索。占用 8080 —— 本地模型端口曾与它冲突, 已避让。
+  liveness:
+    signal: docker
+    max_stale_hours: 1
+- id: aetherforge.gateway
+  enabled: false
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.aetherforge.gateway.plist — 已移除
+  scheduler: launchd
+  trigger: keepalive
+  label: com.aetherforge.gateway
+  program:
+    interpreter: /bin/bash
+    entrypoint: ~/.local/bin/aetherforge-gw-guard
+    args: []
+  resilience:
+    keepalive: always
+  run_at_load: true
+  ports:
+  - 9290
+  - 4000
+  outputs:
+    stdout: ~/Library/Logs/aetherforge-gateway.log
+    stderr: ~/Library/Logs/aetherforge-gateway.log
+  notes: 'aetherforge OpenAI 兼容门面 — LiteLLM :4000 的继任者。 唯一公共推理 URI 是 bos://compute/aetherforge/infer；逻辑模型、认证与公共数据面
+    归 AetherForge，本地物理 placement 与执行经 omlxc Unix Socket API。 硬约束: 启动路径不得有外部网络依赖(guard
+    直接用项目 venv 解释器, 不走 uv run), 且显式隔离系统代理 —— LiteLLM 曾栽在这两条上。 绑到 loopback 之外(--bind
+    tailnet)必须配 AETHERFORGE_API_KEY, 否则拒绝启动 —— 绑定范围变大和鉴权消失不允许同时发生。'
+- id: omo.sync_daemon
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 1800
+  label: com.l4.omo.sync
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - omo-sync
+  resilience:
+    keepalive: crashed
+    throttle_interval: 60
+  run_at_load: true
+  ports: []
+  outputs:
+    stdout: runtime/logs/omo-sync-stdout.log
+    stderr: runtime/logs/omo-sync-stderr.log
+  liveness:
+    signal: .omo/state/system.yaml::governance_feedback_last_run
+    max_stale_hours: 24
+  notes: OMO sync daemon — 30min tick, audit→history→sync (dry-run), 只读
+- id: resident.orchestrator
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 30
+  label: com.l4.resident.orchestrator
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/ssot/resident-orchestrator-daemon.py
+    args: []
+  resilience:
+    keepalive: crashed
+    throttle_interval: 30
+  run_at_load: true
+  ports: []
+  outputs:
+    stdout: runtime/logs/resident-orchestrator-stdout.log
+    stderr: runtime/logs/resident-orchestrator-stderr.log
+  liveness:
+    signal: .omo/_knowledge/omo-events.jsonl
+    event_kind: resident_tick
+    max_stale_hours: 1
+  notes: Resident 编排 daemon — ledger checkpoint + 规则路由 (30s 间隔)
+- id: gac.daemon_watchdog
+  enabled: true
+  scheduler: launchd
+  trigger: keepalive
+  label: com.l4.gac.watchdog
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/gac/daemon-watchdog.py
+    args: []
+  resilience:
+    keepalive: always
+  run_at_load: true
+  ports: []
+  outputs:
+    stdout: runtime/logs/gac-watchdog-stdout.log
+    stderr: runtime/logs/gac-watchdog-stderr.log
+  notes: GaC 自治 Daemon 看门狗 — 监控 Agora Bus (:7432) + BOS 服务, 自动修复重启
+  liveness:
+    signal: .omo/_delivery/gac-watchdog/
+    max_stale_hours: 2
+  depends_on:
+  - omo.sync_daemon
+- id: cron.capability_ownership
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 30 8 * * *
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/gac/check-capability-ownership.py
+  liveness:
+    signal: .omo/_delivery/capability-ownership/
+    max_stale_hours: 24
+  notes: 每日能力所有权检查
+- id: cron.agent_workflow_status
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 0 9 * * *
+  program:
+    interpreter: uv
+    entrypoint: bin/agent-workflow.py
+    args:
+    - status
+  liveness:
+    signal: .omo/_delivery/agent-workflow/
+    max_stale_hours: 24
+  notes: 每日 agent workflow 状态检查
+- id: cron.governance_evolution
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 5 9 * * *
+  program:
+    interpreter: uv
+    entrypoint: bin/gac/governance-evolution.py
+    args:
+    - status
+  notes: 每日治理演进状态
+  liveness:
+    signal: .omo/_delivery/governance-evolution/
+    max_stale_hours: 24
+- id: cron.meta_doctor
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 25 9 * * *
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/gac/meta-doctor.py
+    args:
+    - --workspace
+    - .
+    - --json
+  notes: 治理活性巡检
+  liveness:
+    signal: .omo/_delivery/meta-doctor/
+    max_stale_hours: 24
+- id: cron.debt_refresh
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 30 10 * * 1
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - debt
+    - refresh
+  notes: 每周债务刷新
+  liveness:
+    signal: .omo/_delivery/debt-refresh/
+    max_stale_hours: 168
+- id: mcp.agora
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: sse
+  port: 7433
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+    args:
+    - agora-mcp
+    - --sse
+  liveness:
+    signal: http
+    endpoint: http://localhost:7433/health
+    max_stale_hours: 1
+  notes: Agora MCP 统一入口, 35+ tools
+  ports:
+  - 7433
+  depends_on:
+  - cockpit.dashboard
+- id: mcp.omo
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - mcp
+  notes: OMO MCP (FastMCP), 治理内核
+  ports:
+  - 7463
+- id: cli.cockpit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/cockpit
+    args:
+    - --help
+  notes: Cockpit CLI — 统一人类入口 (50+ 子命令)
+  liveness:
+    signal: .omo/_delivery/cli.cockpit/
+    max_stale_hours: 168
+- id: cli.omo
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  notes: OMO CLI — 治理内核 (20+ 子命令)
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/cli.omo/
+    max_stale_hours: 168
+- id: resident.sediment
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 120
+  label: com.l4.resident.sediment
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - resident
+    - sediment
+    - --once
+  resilience:
+    keepalive: crashed
+    throttle_interval: 120
+  run_at_load: true
+  depends_on:
+  - resident.orchestrator
+  outputs:
+    stdout: runtime/logs/resident-sediment-stdout.log
+    stderr: runtime/logs/resident-sediment-stderr.log
+  notes: Resident 记忆沉淀 — 成功/关闭事件→知识草稿 (2min)
+  liveness:
+    signal: .omo/_delivery/resident-sediment/
+    max_stale_hours: 2
+- id: resident.decision
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 120
+  label: com.l4.resident.decision
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - resident
+    - decision
+    - --once
+  resilience:
+    keepalive: crashed
+    throttle_interval: 120
+  run_at_load: true
+  depends_on:
+  - resident.orchestrator
+  notes: Resident 大脑决策 — 失败事件→决策提案 (2min)
+  liveness:
+    signal: .omo/_delivery/resident-decision/
+    max_stale_hours: 2
+- id: resident.execute
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 120
+  label: com.l4.resident.execute
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - resident
+    - execute
+    - --once
+  resilience:
+    keepalive: crashed
+    throttle_interval: 120
+  run_at_load: true
+  depends_on:
+  - resident.orchestrator
+  notes: Resident 手执行 — 执行请求→pi-worker (批准门) (2min)
+  liveness:
+    signal: .omo/_delivery/resident-execute/
+    max_stale_hours: 2
+- id: resident.monitor
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 120
+  label: com.l4.resident.monitor
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - resident
+    - monitor
+    - --once
+  resilience:
+    keepalive: crashed
+    throttle_interval: 120
+  run_at_load: true
+  depends_on:
+  - resident.orchestrator
+  notes: Resident 眼睛监控 — 可观测/告警事件→告警通道 (2min)
+  liveness:
+    signal: .omo/_delivery/resident-monitor/
+    max_stale_hours: 2
+- id: resident.heartbeat
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 120
+  label: com.l4.resident.heartbeat
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - resident
+    - heartbeat
+    - --once
+  resilience:
+    keepalive: crashed
+    throttle_interval: 120
+  run_at_load: true
+  depends_on:
+  - resident.orchestrator
+  notes: Resident 心脏心跳 — 存活/心跳事件→活性台账 (2min)
+  liveness:
+    signal: .omo/_delivery/resident-heartbeat/
+    max_stale_hours: 2
+- id: resident.event_ingest
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 300
+  label: com.l4.resident.event-ingest
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - resident
+    - ingest
+    - --once
+  resilience:
+    keepalive: crashed
+    throttle_interval: 300
+  run_at_load: true
+  depends_on:
+  - omo.sync_daemon
+  notes: Resident 事件摄入 — workflow-mesh→bus_foundation→event-ledger (5min)
+  liveness:
+    signal: .omo/_delivery/resident-ingest/
+    max_stale_hours: 1
+- id: resident.signals
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 300
+  label: com.l4.resident.signals
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - resident
+    - signals
+    - --once
+  resilience:
+    keepalive: crashed
+    throttle_interval: 300
+  run_at_load: true
+  notes: Resident 个人信号 — personal-signals 轮询→事件流 (5min)
+  liveness:
+    signal: .omo/_delivery/resident-signals/
+    max_stale_hours: 1
+- id: resident.inbox
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 300
+  label: com.l4.resident.inbox
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - resident
+    - inbox
+    - --once
+  resilience:
+    keepalive: crashed
+    throttle_interval: 300
+  run_at_load: true
+  notes: Resident 感知 inbox — 感知文件夹轮询→事件流 (5min)
+  liveness:
+    signal: .omo/_delivery/resident-inbox/
+    max_stale_hours: 1
+- id: resident.promote
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 600
+  label: com.l4.resident.promote
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - resident
+    - promote
+    - --once
+  resilience:
+    keepalive: crashed
+    throttle_interval: 600
+  run_at_load: true
+  depends_on:
+  - resident.sediment
+  notes: Resident 知识晋升 — sediment 草稿→主题 retro 候选 (10min)
+  liveness:
+    signal: .omo/_delivery/resident-promote/
+    max_stale_hours: 2
+- id: cron.observability_events
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 30 8 * * *
+  program:
+    interpreter: uv
+    entrypoint: bin/ssot/observability-events.py
+    args:
+    - adapters
+    - run
+  liveness:
+    signal: .omo/_delivery/observability-events/
+    max_stale_hours: 24
+  notes: 每日可观测性事件采集
+- id: cron.log_rotate
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 35 8 * * *
+  program:
+    interpreter: uv
+    entrypoint: bin/ssot/log-rotate.py
+  notes: 每日日志轮转
+  liveness:
+    signal: .omo/_delivery/log-rotate/
+    max_stale_hours: 24
+- id: cron.anomaly_detector
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 45 8 * * *
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/gac/anomaly-detector.py
+  depends_on:
+  - cron.observability_events
+  notes: 每日异常检测
+  liveness:
+    signal: .omo/_delivery/anomaly-detector/
+    max_stale_hours: 24
+- id: cron.alert_router
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 45 8 * * *
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/gac/alert-router.py
+  depends_on:
+  - cron.anomaly_detector
+  notes: 每日告警路由
+  liveness:
+    signal: .omo/_delivery/alert-router/
+    max_stale_hours: 24
+- id: cron.m4_health
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 15 9 * * *
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/mof/m4-health-score.py
+    args:
+    - --emit
+  liveness:
+    signal: .omo/_delivery/m4-health/
+    max_stale_hours: 24
+  notes: 每日 M4 健康分计算
+- id: cron.agent_workflow_doctor
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 20 9 * * *
+  program:
+    interpreter: uv
+    entrypoint: bin/agent-workflow.py
+    args:
+    - doctor
+  notes: 每日 workflow 诊断
+  liveness:
+    signal: .omo/_delivery/agent-workflow-doctor/
+    max_stale_hours: 24
+  depends_on:
+  - cron.agent_workflow_status
+- id: cron.uhs_sync
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 30 9 * * *
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/gac/unified-health-score.py
+    args:
+    - --sync
+  notes: 每日 UHS 同步
+  liveness:
+    signal: .omo/_delivery/uhs-sync/
+    max_stale_hours: 24
+- id: cron.drift_sweep
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 0 9 * * 3
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/gac/drift-sweep.py
+  notes: 每周三漂移扫描
+  liveness:
+    signal: .omo/_delivery/drift-sweep/
+    max_stale_hours: 168
+  depends_on:
+  - cron.meta_doctor
+- id: cron.mof_drift
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 5 10 * * 1
+  program:
+    interpreter: uv
+    entrypoint: bin/mof/mof-drift
+  notes: 每周一 MOF 漂移检测
+  liveness:
+    signal: .omo/_delivery/mof-drift/
+    max_stale_hours: 168
+  depends_on:
+  - cron.meta_doctor
+- id: cron.weekly_review
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 30 10 * * 1
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/ssot/weekly-review.py
+    args:
+    - --post-inbox
+  notes: 每周回顾
+  liveness:
+    signal: .omo/_delivery/weekly-review/
+    max_stale_hours: 168
+  depends_on:
+  - cron.debt_refresh
+- id: cron.proposal_to_adr
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 0 1 * * *
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - resident
+    - promote
+    - --proposals
+  depends_on:
+  - resident.promote
+  notes: 每日决策提案→ADR 草稿
+  liveness:
+    signal: .omo/_delivery/proposal-to-adr/
+    max_stale_hours: 24
+- id: cron.system_health
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 10 2 * * *
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/ssot/system-health-check.py
+    args:
+    - --emit
+  notes: 每日系统健康检查
+  liveness:
+    signal: .omo/_delivery/system-health/
+    max_stale_hours: 24
+  depends_on:
+  - cron.uhs_sync
+- id: mcp.kos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/kos
+    args:
+    - mcp
+  notes: KOS MCP — 知识操作系统 (search/ingest/schema/graphrag)
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7434
+  liveness:
+    signal: http
+    endpoint: http://localhost:7434/health
+    max_stale_hours: 24
+- id: mcp.minerva
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/minerva
+    args:
+    - mcp
+  notes: Minerva MCP — 研究助手 (research/ask/summarize)
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7435
+  liveness:
+    signal: http
+    endpoint: http://localhost:7435/health
+    max_stale_hours: 24
+- id: mcp.ontoderive
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/ontoderive
+    args:
+    - mcp
+  notes: OntoDerive MCP — 本体推导 (derive/validate/explain)
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7436
+  liveness:
+    signal: http
+    endpoint: http://localhost:7436/health
+    max_stale_hours: 24
+- id: mcp.kronos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/kronos
+    args:
+    - mcp
+  notes: Kronos MCP — 时间智能
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7437
+  liveness:
+    signal: http
+    endpoint: http://localhost:7437/health
+    max_stale_hours: 24
+- id: mcp.iris
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/iris
+    args:
+    - mcp
+  notes: Iris MCP — 信息检索
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7438
+  liveness:
+    signal: http
+    endpoint: http://localhost:7438/health
+    max_stale_hours: 24
+- id: mcp.sophia
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/sophia
+    args:
+    - mcp
+  notes: Sophia MCP — 知识编译与评估
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7439
+  liveness:
+    signal: http
+    endpoint: http://localhost:7439/health
+    max_stale_hours: 24
+- id: mcp.forge
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/forge
+    args:
+    - mcp
+  notes: Forge MCP — 知识锻造
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7440
+  liveness:
+    signal: http
+    endpoint: http://localhost:7440/health
+    max_stale_hours: 24
+- id: mcp.eidos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/eidos
+    args:
+    - mcp
+  notes: Eidos MCP — 记忆存储
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7441
+  liveness:
+    signal: http
+    endpoint: http://localhost:7441/health
+    max_stale_hours: 24
+- id: mcp.cockpit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  program:
+    interpreter: uv
+    entrypoint: projects/cockpit
+    args:
+    - mcp
+  notes: Cockpit MCP — Agent Runtime
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7442
+  liveness:
+    signal: http
+    endpoint: http://localhost:7442/health
+    max_stale_hours: 24
+- id: cli.agora
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  notes: Agora CLI — BOS URI 路由与 MCP Hub
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/cli.agora/
+    max_stale_hours: 168
+- id: cli.aetherforge
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/aetherforge
+  notes: AetherForge CLI — 本地算力管理
+  liveness:
+    signal: .omo/_delivery/cli.aetherforge/
+    max_stale_hours: 168
+- id: cli.l4_kernel
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/agora/projects/l4-kernel
+  notes: L4 Kernel CLI
+  liveness:
+    signal: .omo/_delivery/cli.l4_kernel/
+    max_stale_hours: 168
+- id: cli.llm_gateway
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/aetherforge/packages/gateway
+  notes: LLM Gateway CLI
+  liveness:
+    signal: .omo/_delivery/cli.llm_gateway/
+    max_stale_hours: 168
+- id: docker.ecos
+  enabled: true
+  scheduler: docker
+  trigger: compose
+  label: docker:ecos
+  program:
+    interpreter: docker
+    entrypoint: projects/ecos
+    args:
+    - compose
+    - up
+    - -d
+  notes: ECOS 容器 — 协议编织层
+  liveness:
+    signal: docker
+    max_stale_hours: 1
+- id: docker.aetherforge
+  enabled: true
+  scheduler: docker
+  trigger: compose
+  label: docker:aetherforge
+  program:
+    interpreter: docker
+    entrypoint: projects/aetherforge
+    args:
+    - compose
+    - up
+    - -d
+  notes: AetherForge 容器 — 算力门面
+  liveness:
+    signal: docker
+    max_stale_hours: 1
+- id: docker.kairon
+  enabled: true
+  scheduler: docker
+  trigger: compose
+  label: docker:kairon
+  program:
+    interpreter: docker
+    entrypoint: projects/knowledge/kairon
+    args:
+    - compose
+    - up
+    - -d
+  notes: Kairon 容器 — 知识工程
+  liveness:
+    signal: docker
+    max_stale_hours: 1
+- id: docker.minerva
+  enabled: true
+  scheduler: docker
+  trigger: compose
+  label: docker:minerva
+  program:
+    interpreter: docker
+    entrypoint: projects/knowledge/kairon/packages/minerva
+    args:
+    - compose
+    - up
+    - -d
+  notes: Minerva 容器 — 研究助手
+  liveness:
+    signal: docker
+    max_stale_hours: 1
+- id: docker.eidos
+  enabled: true
+  scheduler: docker
+  trigger: compose
+  label: docker:eidos
+  program:
+    interpreter: docker
+    entrypoint: projects/knowledge/kairon/packages/eidos
+    args:
+    - compose
+    - up
+    - -d
+  notes: Eidos 容器 — 记忆存储
+  liveness:
+    signal: docker
+    max_stale_hours: 1
+- id: mail.daemon
+  enabled: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 1800
+  label: com.l4.mail.daemon
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/ssot/mail_daemon.py
+  resilience:
+    keepalive: crashed
+    throttle_interval: 300
+  run_at_load: true
+  outputs:
+    stdout: runtime/logs/mail-daemon-stdout.log
+    stderr: runtime/logs/mail-daemon-stderr.log
+  notes: 邮件感知 daemon — 每 30min 读邮件→LLM 分类→任务提取
+  liveness:
+    signal: .omo/_delivery/mail-daemon/
+    max_stale_hours: 2
+  depends_on:
+  - omo.sync_daemon
+- id: omo.sse_daemon
+  enabled: false
+  scheduler: launchd
+  trigger: keepalive
+  label: com.l4.omo.sse
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+    args:
+    - omo-sse
+  resilience:
+    keepalive: always
+  run_at_load: true
+  notes: OMO SSE Daemon (实验性) — 监听 Agora SSE 事件总线替代轮询
+  ports:
+  - 7432
+- id: bos.kos.search
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/kos/search
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/kos
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: KOS 知识搜索'
+  liveness:
+    signal: .omo/_delivery/bos.kos.search/
+    max_stale_hours: 168
+- id: bos.eidos.memory
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/eidos/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/eidos
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Eidos 记忆存储'
+  liveness:
+    signal: .omo/_delivery/bos.eidos.memory/
+    max_stale_hours: 168
+- id: bos.minerva.research
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://analysis/minerva/research
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/minerva
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Minerva 深度研究'
+  liveness:
+    signal: .omo/_delivery/bos.minerva.research/
+    max_stale_hours: 168
+- id: bos.ontoderive.derive
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://analysis/ontoderive/derive
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon/packages/ontoderive
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: OntoDerive 本体推导'
+  liveness:
+    signal: .omo/_delivery/bos.ontoderive.derive/
+    max_stale_hours: 168
+- id: bos.cockpit.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://capability/cockpit/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/cockpit
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Cockpit MCP 入口'
+  liveness:
+    signal: .omo/_delivery/bos.cockpit.mcp/
+    max_stale_hours: 168
+- id: bos.governance.decide
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://governance/metaos/decide
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MetaOS 决策'
+  liveness:
+    signal: .omo/_delivery/bos.governance.decide/
+    max_stale_hours: 168
+- id: bos.governance.audit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://omo/audit
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: OMO 审计'
+  liveness:
+    signal: .omo/_delivery/bos.governance.audit/
+    max_stale_hours: 168
+- id: bos.governance.debt
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://omo/debt
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: OMO 债务管理'
+  liveness:
+    signal: .omo/_delivery/bos.governance.debt/
+    max_stale_hours: 168
+- id: bos.cell.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://agent-cell/pool/status
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Agent Cell 状态'
+  liveness:
+    signal: .omo/_delivery/bos.cell.status/
+    max_stale_hours: 168
+- id: bos.resident.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://resident/core/status
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  depends_on:
+  - resident.orchestrator
+  notes: 'BOS: Resident 状态'
+  liveness:
+    signal: .omo/_delivery/bos.resident.status/
+    max_stale_hours: 168
+- id: bos.compute.infer
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://compute/aetherforge/infer
+  program:
+    interpreter: uv
+    entrypoint: projects/aetherforge
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: AetherForge 推理'
+  liveness:
+    signal: .omo/_delivery/bos.compute.infer/
+    max_stale_hours: 168
+- id: bos.bcos.evolve
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://bcos/evolution/run
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/bc-os/evolution_engine.py
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: BCOS 进化引擎'
+  liveness:
+    signal: .omo/_delivery/bos.bcos.evolve/
+    max_stale_hours: 168
+- id: bos.mof.io
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://governance/mof/io
+  program:
+    interpreter: uv
+    entrypoint: bin/mof/mof-io
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MOF IO'
+  liveness:
+    signal: .omo/_delivery/bos.mof.io/
+    max_stale_hours: 168
+- id: bos.agora.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://agora/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Agora 状态'
+  liveness:
+    signal: .omo/_delivery/bos.agora.status/
+    max_stale_hours: 168
+- id: bos.system.health
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/backends/health
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: 系统后端健康'
+  liveness:
+    signal: .omo/_delivery/bos.system.health/
+    max_stale_hours: 168
+- id: bos.kos.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/kos/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: KOS MCP Server'
+  liveness:
+    signal: .omo/_delivery/bos.kos.mcp/
+    max_stale_hours: 168
+- id: bos.kos.graphrag
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/kos/graphrag
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: KOS GraphRAG'
+  liveness:
+    signal: .omo/_delivery/bos.kos.graphrag/
+    max_stale_hours: 168
+- id: bos.kos.ingest
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/kos/ingest
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: KOS 摄入'
+  liveness:
+    signal: .omo/_delivery/bos.kos.ingest/
+    max_stale_hours: 168
+- id: bos.ontoderive.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/ontoderive/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: OntoDerive MCP'
+  liveness:
+    signal: .omo/_delivery/bos.ontoderive.mcp/
+    max_stale_hours: 168
+- id: bos.minerva.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/minerva/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Minerva MCP'
+  liveness:
+    signal: .omo/_delivery/bos.minerva.mcp/
+    max_stale_hours: 168
+- id: bos.kronos.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/kronos/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Kronos MCP'
+  liveness:
+    signal: .omo/_delivery/bos.kronos.mcp/
+    max_stale_hours: 168
+- id: bos.iris.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/iris/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Iris MCP'
+  liveness:
+    signal: .omo/_delivery/bos.iris.mcp/
+    max_stale_hours: 168
+- id: bos.sophia.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/sophia/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Sophia MCP'
+  liveness:
+    signal: .omo/_delivery/bos.sophia.mcp/
+    max_stale_hours: 168
+- id: bos.forge.mcp
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/forge/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Forge MCP'
+  liveness:
+    signal: .omo/_delivery/bos.forge.mcp/
+    max_stale_hours: 168
+- id: bos.omo.state
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/state
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: OMO 状态'
+  liveness:
+    signal: .omo/_delivery/bos.omo.state/
+    max_stale_hours: 168
+- id: bos.omo.compass
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/compass-trace
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: OMO 指南针'
+  liveness:
+    signal: .omo/_delivery/bos.omo.compass/
+    max_stale_hours: 168
+- id: bos.omo.project
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/project-inspect
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: OMO 项目检查'
+  liveness:
+    signal: .omo/_delivery/bos.omo.project/
+    max_stale_hours: 168
+- id: bos.workflow.bootstrap
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/agent-workflow/bootstrap
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: Workflow 引导'
+  liveness:
+    signal: .omo/_delivery/bos.workflow.bootstrap/
+    max_stale_hours: 168
+- id: bos.workflow.compliance
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/agent-workflow/compliance
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: Workflow 合规'
+  liveness:
+    signal: .omo/_delivery/bos.workflow.compliance/
+    max_stale_hours: 168
+- id: bos.evolution.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/evolution/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  notes: 'BOS: 演进状态'
+  liveness:
+    signal: .omo/_delivery/bos.evolution.status/
+    max_stale_hours: 168
+- id: bos.metaos.immune
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/metaos/immune
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MetaOS 免疫'
+  liveness:
+    signal: .omo/_delivery/bos.metaos.immune/
+    max_stale_hours: 168
+- id: bos.codeanalyze.scan
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/codeanalyze/scan
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: 代码分析扫描'
+  liveness:
+    signal: .omo/_delivery/bos.codeanalyze.scan/
+    max_stale_hours: 168
+- id: bos.codeanalyze.report
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://analysis/codeanalyze/report
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: 代码分析报告'
+  liveness:
+    signal: .omo/_delivery/bos.codeanalyze.report/
+    max_stale_hours: 168
+- id: bos.iris.discover
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/iris/discover
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Iris 发现'
+  liveness:
+    signal: .omo/_delivery/bos.iris.discover/
+    max_stale_hours: 168
+- id: bos.agent-runtime.execute
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/execute
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Agent Runtime 执行'
+  liveness:
+    signal: .omo/_delivery/bos.agent-runtime.execute/
+    max_stale_hours: 168
+- id: bos.agent-runtime.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Agent Runtime 状态'
+  liveness:
+    signal: .omo/_delivery/bos.agent-runtime.status/
+    max_stale_hours: 168
+- id: bos.runtime.health
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/runtime/health
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Runtime 健康'
+  liveness:
+    signal: .omo/_delivery/bos.runtime.health/
+    max_stale_hours: 168
+- id: bos.cell.plan
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/plan
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Cell 规划'
+  liveness:
+    signal: .omo/_delivery/bos.cell.plan/
+    max_stale_hours: 168
+- id: bos.cell.execute
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/execute
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Cell 执行'
+  liveness:
+    signal: .omo/_delivery/bos.cell.execute/
+    max_stale_hours: 168
+- id: bos.cell.verify
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/verify
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Cell 验证'
+  liveness:
+    signal: .omo/_delivery/bos.cell.verify/
+    max_stale_hours: 168
+- id: bos.cell.govern
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/govern
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Cell 治理'
+  liveness:
+    signal: .omo/_delivery/bos.cell.govern/
+    max_stale_hours: 168
+- id: bos.mof.version
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/version
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MOF 版本'
+  liveness:
+    signal: .omo/_delivery/bos.mof.version/
+    max_stale_hours: 168
+- id: bos.mof.reason
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/reason
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MOF 推理'
+  liveness:
+    signal: .omo/_delivery/bos.mof.reason/
+    max_stale_hours: 168
+- id: bos.mof.decide
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/decide
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MOF 决策'
+  liveness:
+    signal: .omo/_delivery/bos.mof.decide/
+    max_stale_hours: 168
+- id: bos.mof.graph
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/graph
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: MOF 图'
+  liveness:
+    signal: .omo/_delivery/bos.mof.graph/
+    max_stale_hours: 168
+- id: bos.system.routes
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/routes/reload
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: 系统路由'
+  liveness:
+    signal: .omo/_delivery/bos.system.routes/
+    max_stale_hours: 168
+- id: bos.system.governance
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/governance/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: 系统治理'
+  liveness:
+    signal: .omo/_delivery/bos.system.governance/
+    max_stale_hours: 168
+- id: bos.persona.schema
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://persona/core-models/schema
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Persona  schema'
+  liveness:
+    signal: .omo/_delivery/bos.persona.schema/
+    max_stale_hours: 168
+- id: bos.persona.health
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://persona/health-profile/query
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  notes: 'BOS: Persona 健康画像'
+  liveness:
+    signal: .omo/_delivery/bos.persona.health/
+    max_stale_hours: 168
+- id: cli.kairon
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  notes: Kairon CLI — 知识工程入口
+  liveness:
+    signal: .omo/_delivery/kairon-cli/
+    max_stale_hours: 168
+  depends_on:
+  - mcp.kos
+- id: cli.kos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  notes: KOS CLI — 知识操作系统
+  liveness:
+    signal: .omo/_delivery/kos-cli/
+    max_stale_hours: 168
+  depends_on:
+  - mcp.kos
+- id: cli.minerva
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  notes: Minerva CLI — 研究助手
+  liveness:
+    signal: .omo/_delivery/minerva-cli/
+    max_stale_hours: 168
+  depends_on:
+  - mcp.minerva
+- id: cli.gbrain
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  notes: GBrain CLI — 图数据库
+  liveness:
+    signal: .omo/_delivery/gbrain-cli/
+    max_stale_hours: 168
+  depends_on:
+  - mcp.gbrain
+- id: cli.ecos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  notes: ECOS CLI — 协议编织
+  liveness:
+    signal: .omo/_delivery/ecos-cli/
+    max_stale_hours: 168
+  depends_on:
+  - mcp.agora
+- id: mcp.gbrain
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  port: 7443
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/gbrain
+  liveness:
+    signal: http
+    endpoint: http://localhost:7443/health
+    max_stale_hours: 24
+  notes: GBrain MCP — 图数据库
+  ports:
+  - 7443
+  depends_on:
+  - mcp.agora
+- id: mcp.c2g
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  port: 7444
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/gbrain
+  liveness:
+    signal: http
+    endpoint: http://localhost:7444/health
+    max_stale_hours: 24
+  notes: C2G MCP — 策略物化
+  ports:
+  - 7444
+  depends_on:
+  - mcp.agora
+- id: mcp.aetherforge
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  port: 7445
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/gbrain
+  liveness:
+    signal: http
+    endpoint: http://localhost:7445/health
+    max_stale_hours: 24
+  notes: AetherForge MCP — 本地算力
+  ports:
+  - 7445
+  depends_on:
+  - mcp.agora
+- id: bos.kos.rest
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: http
+  uri: bos://memory/kos/rest-api
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  ports:
+  - 7450
+  liveness:
+    signal: http
+    endpoint: http://localhost:7450/health
+    max_stale_hours: 24
+- id: bos.kos.mcp_v2
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/kos/mcp-v2
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.kos.mcp_v2/
+    max_stale_hours: 168
+- id: bos.kos.schema
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/kos/schema
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.kos.schema/
+    max_stale_hours: 168
+- id: bos.kos.query
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/kos/query
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.kos.query/
+    max_stale_hours: 168
+- id: bos.kronos.ingest
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/kronos/ingest
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.kronos.ingest/
+    max_stale_hours: 168
+- id: bos.kronos.query
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://memory/kronos/query
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.kronos.query/
+    max_stale_hours: 168
+- id: bos.kronos.schedule
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://memory/kronos/schedule
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.kronos.schedule/
+    max_stale_hours: 168
+- id: bos.gbrain.search
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://memory/gbrain/search
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.gbrain.search/
+    max_stale_hours: 168
+- id: bos.gbrain.query
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://memory/gbrain/query
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.gbrain.query/
+    max_stale_hours: 168
+- id: bos.mos.write
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/mos/write
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mos.write/
+    max_stale_hours: 168
+- id: bos.mos.recall
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/mos/recall
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mos.recall/
+    max_stale_hours: 168
+- id: bos.mos.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/mos/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mos.status/
+    max_stale_hours: 168
+- id: bos.mos.consolidate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/mos/consolidate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mos.consolidate/
+    max_stale_hours: 168
+- id: bos.omo.inspect
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://governance/omo/inspect
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.omo.inspect/
+    max_stale_hours: 168
+- id: bos.omo.sync
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://governance/omo/sync
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.omo.sync/
+    max_stale_hours: 168
+- id: bos.omo.ledger_append
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/ledger-append
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.omo.ledger_append/
+    max_stale_hours: 168
+- id: bos.omo.ledger_read
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/ledger-read
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.omo.ledger_read/
+    max_stale_hours: 168
+- id: bos.omo.ledger_verify
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/ledger-verify
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.omo.ledger_verify/
+    max_stale_hours: 168
+- id: bos.workflow.observe
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/agent-workflow/observe
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.workflow.observe/
+    max_stale_hours: 168
+- id: bos.workflow.doctor
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/agent-workflow/doctor
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.workflow.doctor/
+    max_stale_hours: 168
+- id: bos.evolution.validate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/evolution/validate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.evolution.validate/
+    max_stale_hours: 168
+- id: bos.evolution.traces
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/evolution/traces
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.evolution.traces/
+    max_stale_hours: 168
+- id: bos.evolution.packages
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/evolution/packages
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.evolution.packages/
+    max_stale_hours: 168
+- id: bos.metaos.route
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/metaos/route
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.metaos.route/
+    max_stale_hours: 168
+- id: bos.metaos.gate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://governance/metaos/gate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.metaos.gate/
+    max_stale_hours: 168
+- id: bos.metaos.register
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://governance/metaos/register
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.metaos.register/
+    max_stale_hours: 168
+- id: bos.minerva.ask
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/minerva/ask
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.minerva.ask/
+    max_stale_hours: 168
+- id: bos.minerva.summarize
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/minerva/summarize
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.minerva.summarize/
+    max_stale_hours: 168
+- id: bos.minerva.draft
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://analysis/minerva/draft
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.minerva.draft/
+    max_stale_hours: 168
+- id: bos.minerva.audit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://analysis/minerva/audit
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.minerva.audit/
+    max_stale_hours: 168
+- id: bos.ontoderive.validate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/validate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.ontoderive.validate/
+    max_stale_hours: 168
+- id: bos.ontoderive.explain
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/explain
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.ontoderive.explain/
+    max_stale_hours: 168
+- id: bos.ontoderive.audit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/audit
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.ontoderive.audit/
+    max_stale_hours: 168
+- id: bos.ontoderive.fact_check
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/fact-check
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.ontoderive.fact_check/
+    max_stale_hours: 168
+- id: bos.codeanalyze.analyze
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/codeanalyze/analyze
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.codeanalyze.analyze/
+    max_stale_hours: 168
+- id: bos.codeanalyze.metrics
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/codeanalyze/metrics
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.codeanalyze.metrics/
+    max_stale_hours: 168
+- id: bos.codeanalyze.lint
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://analysis/codeanalyze/lint
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.codeanalyze.lint/
+    max_stale_hours: 168
+- id: bos.iris.scan
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/iris/scan
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.iris.scan/
+    max_stale_hours: 168
+- id: bos.iris.recall
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/iris/recall
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.iris.recall/
+    max_stale_hours: 168
+- id: bos.agent-runtime.list-tools
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/list-tools
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent-runtime.list-tools/
+    max_stale_hours: 168
+- id: bos.agent-runtime.chat
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/chat
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent-runtime.chat/
+    max_stale_hours: 168
+- id: bos.agent-runtime.run-task
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/run-task
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent-runtime.run-task/
+    max_stale_hours: 168
+- id: bos.agent-runtime.task-status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/task-status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent-runtime.task-status/
+    max_stale_hours: 168
+- id: bos.agent-runtime.agent-list
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://capability/agent-runtime/agent-list
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent-runtime.agent-list/
+    max_stale_hours: 168
+- id: bos.swarm.run
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://capability/swarm/run
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.swarm.run/
+    max_stale_hours: 168
+- id: bos.compute.generate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://capability/compute/generate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.compute.generate/
+    max_stale_hours: 168
+- id: bos.bus.data
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://capability/bus/data
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.bus.data/
+    max_stale_hours: 168
+- id: bos.bus.event
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://capability/bus/event
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.bus.event/
+    max_stale_hours: 168
+- id: bos.mof.autonomous
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/autonomous
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mof.autonomous/
+    max_stale_hours: 168
+- id: bos.mof.act
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/act
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mof.act/
+    max_stale_hours: 168
+- id: bos.mof.analyze
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/analyze
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mof.analyze/
+    max_stale_hours: 168
+- id: bos.mof.export
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/export
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mof.export/
+    max_stale_hours: 168
+- id: bos.mof.drift
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/drift
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mof.drift/
+    max_stale_hours: 168
+- id: bos.mof.scan
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/scan
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mof.scan/
+    max_stale_hours: 168
+- id: bos.mof.assign
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/assign
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mof.assign/
+    max_stale_hours: 168
+- id: bos.mof.evolution
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/evolution
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mof.evolution/
+    max_stale_hours: 168
+- id: bos.mof.enforce
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/enforce
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mof.enforce/
+    max_stale_hours: 168
+- id: bos.mof.manage
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/mof/manage
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.mof.manage/
+    max_stale_hours: 168
+- id: bos.system.backends.register
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/backends/register
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.system.backends.register/
+    max_stale_hours: 168
+- id: bos.system.governance.heartbeat
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/governance/heartbeat
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.system.governance.heartbeat/
+    max_stale_hours: 168
+- id: bos.system.omo.debt
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/omo/debt
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.system.omo.debt/
+    max_stale_hours: 168
+- id: bos.system.discovery.package
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://system/discovery/package
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.system.discovery.package/
+    max_stale_hours: 168
+- id: bos.cell.memory.publish
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/memory/publish
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.cell.memory.publish/
+    max_stale_hours: 168
+- id: bos.cell.memory.search
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/memory/search
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.cell.memory.search/
+    max_stale_hours: 168
+- id: bos.cell.governance.audit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/governance/audit
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.cell.governance.audit/
+    max_stale_hours: 168
+- id: bos.cell.config.list
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/config/list
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.cell.config.list/
+    max_stale_hours: 168
+- id: bos.cell.replay.run
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/replay/run
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.cell.replay.run/
+    max_stale_hours: 168
+- id: bos.agora.metrics
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://agora/metrics
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agora.metrics/
+    max_stale_hours: 168
+- id: bos.agora.registry
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://agora/registry
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agora.registry/
+    max_stale_hours: 168
+- id: bos.cockpit.cards_status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://cockpit/tools/cards_status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.cockpit.cards_status/
+    max_stale_hours: 168
+- id: bos.cockpit.test
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://cockpit/tools/test
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.cockpit.test/
+    max_stale_hours: 168
+- id: bos.compute.mesh
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://compute/aetherforge/mesh
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.compute.mesh/
+    max_stale_hours: 168
+- id: bos.compute.swarm
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://compute/aetherforge/swarm
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.compute.swarm/
+    max_stale_hours: 168
+- id: bos.ecos.events
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/events
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.ecos.events/
+    max_stale_hours: 168
+- id: bos.ecos.workflow
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/workflow
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.ecos.workflow/
+    max_stale_hours: 168
+- id: bos.persona.validate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://persona/core-models/validate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.persona.validate/
+    max_stale_hours: 168
+- id: bos.persona.update
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://persona/health-profile/update
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.persona.update/
+    max_stale_hours: 168
+- id: bos.resident.roles
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://resident/core/roles
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - resident.orchestrator
+  liveness:
+    signal: .omo/_delivery/bos.resident.roles/
+    max_stale_hours: 168
+- id: bos.resident.daemon
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://resident/daemon/once
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - resident.orchestrator
+  liveness:
+    signal: .omo/_delivery/bos.resident.daemon/
+    max_stale_hours: 168
+- id: bos.resident.decision
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://resident/decision/run
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - resident.orchestrator
+  liveness:
+    signal: .omo/_delivery/bos.resident.decision/
+    max_stale_hours: 168
+- id: bos.memory.ecos.mcp_server
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/ecos/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.ecos.mcp_server/
+    max_stale_hours: 168
+- id: bos.memory.omo.mcp_server
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/omo/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.memory.omo.mcp_server/
+    max_stale_hours: 168
+- id: bos.memory.aetherforge.mcp_server
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/aetherforge/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.aetherforge.mcp_server/
+    max_stale_hours: 168
+- id: bos.memory.c2g.mcp_server
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_proxy
+  uri: bos://memory/c2g/mcp-server
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.c2g.mcp_server/
+    max_stale_hours: 168
+- id: bos.memory.kronos.scan
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/kronos/scan
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.kronos.scan/
+    max_stale_hours: 168
+- id: bos.governance.omo.debt
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/debt
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.governance.omo.debt/
+    max_stale_hours: 168
+- id: bos.governance.agent_workflow.verify_plan
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/agent-workflow/verify-plan
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.governance.agent_workflow.verify_plan/
+    max_stale_hours: 168
+- id: bos.governance.evolution.golden_paths
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/evolution/golden-paths
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.evolution.golden_paths/
+    max_stale_hours: 168
+- id: bos.governance.eidos.validate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/eidos/validate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.eidos.validate/
+    max_stale_hours: 168
+- id: bos.analysis.ontoderive.toolforge.match
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/toolforge/match
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.analysis.ontoderive.toolforge.match/
+    max_stale_hours: 168
+- id: bos.analysis.ontoderive.toolforge.select
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/toolforge/select
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.analysis.ontoderive.toolforge.select/
+    max_stale_hours: 168
+- id: bos.analysis.ontoderive.toolforge.guide
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/toolforge/guide
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.analysis.ontoderive.toolforge.guide/
+    max_stale_hours: 168
+- id: bos.persona.sot_bridge_persona.recall_entity
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://persona/sot-bridge-persona/recall-entity
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.persona.sot_bridge_persona.recall_entity/
+    max_stale_hours: 168
+- id: bos.capability.compute.mesh_status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://capability/compute/mesh-status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.compute.mesh_status/
+    max_stale_hours: 168
+- id: bos.memory.local.all_search
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://memory/local/all-search
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.local.all_search/
+    max_stale_hours: 168
+- id: bos.persona.family_hub.health
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://persona/family-hub/health
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.persona.family_hub.health/
+    max_stale_hours: 168
+- id: bos.governance.omo.audit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://governance/omo/audit
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.governance.omo.audit/
+    max_stale_hours: 168
+- id: bos.governance.omo.ledger_status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/omo/ledger-status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.governance.omo.ledger_status/
+    max_stale_hours: 168
+- id: bos.governance.l4_kernel.domains
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://governance/l4-kernel/domains
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.l4_kernel.domains/
+    max_stale_hours: 168
+- id: bos.l4_kernel.domains
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://l4-kernel/domains
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.l4_kernel.domains/
+    max_stale_hours: 168
+- id: bos.meta.discover
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://meta/discover
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.meta.discover/
+    max_stale_hours: 168
+- id: bos.memory.vault.search
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://memory/vault/search
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.vault.search/
+    max_stale_hours: 168
+- id: bos.persona.health_profile.summary
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://persona/health-profile/summary
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.persona.health_profile.summary/
+    max_stale_hours: 168
+- id: bos.persona.health_profile.alert
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://persona/health-profile/alert
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.persona.health_profile.alert/
+    max_stale_hours: 168
+- id: bos.capability.bus.control
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://capability/bus/control
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.bus.control/
+    max_stale_hours: 168
+- id: bos.memory.gbrain.sync
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: mcp_stdio
+  uri: bos://memory/gbrain/sync
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.gbrain.sync/
+    max_stale_hours: 168
+- id: bos.memory.mos.forget
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/mos/forget
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.mos.forget/
+    max_stale_hours: 168
+- id: bos.memory.mos.knowledge_ref
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://memory/mos/knowledge-ref
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.mos.knowledge_ref/
+    max_stale_hours: 168
+- id: bos.swarm.orchestrator.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://swarm/orchestrator/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.swarm.orchestrator.status/
+    max_stale_hours: 168
+- id: bos.governance.evolution.loop
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://governance/evolution/loop
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.evolution.loop/
+    max_stale_hours: 168
+- id: bos.governance.quality.audit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://governance/quality/audit
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.quality.audit/
+    max_stale_hours: 168
+- id: bos.analysis.eidos.validate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/eidos/validate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.analysis.eidos.validate/
+    max_stale_hours: 168
+- id: bos.analysis.ontoderive.align
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://analysis/ontoderive/align
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.analysis.ontoderive.align/
+    max_stale_hours: 168
+- id: bos.omo.eidos.pipeline
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://omo/eidos/pipeline
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.omo.eidos.pipeline/
+    max_stale_hours: 168
+- id: bos.ecos.workflow.list
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/workflow/list
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.ecos.workflow.list/
+    max_stale_hours: 168
+- id: bos.ecos.workflow.describe
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/workflow/describe
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.ecos.workflow.describe/
+    max_stale_hours: 168
+- id: bos.ecos.workflow.run
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/workflow/run
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.ecos.workflow.run/
+    max_stale_hours: 168
+- id: bos.ecos.workflow.logs
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/workflow/logs
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.ecos.workflow.logs/
+    max_stale_hours: 168
+- id: bos.ecos.workflow.cache_status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/workflow/cache-status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.ecos.workflow.cache_status/
+    max_stale_hours: 168
+- id: bos.ecos.workflow.cache_invalidate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/workflow/cache-invalidate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.ecos.workflow.cache_invalidate/
+    max_stale_hours: 168
+- id: bos.ecos.workflow.cb_status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/workflow/cb-status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.ecos.workflow.cb_status/
+    max_stale_hours: 168
+- id: bos.ecos.workflow.cb_reset
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://ecos/workflow/cb-reset
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.ecos.workflow.cb_reset/
+    max_stale_hours: 168
+- id: bos.system.backends.list
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://system/backends/list
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.system.backends.list/
+    max_stale_hours: 168
+- id: bos.capability.wps_office_mcp.invoke
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/wps-office-mcp/invoke
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.wps_office_mcp.invoke/
+    max_stale_hours: 168
+- id: bos.capability.wps_skills.load
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/wps-skills/load
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.wps_skills.load/
+    max_stale_hours: 168
+- id: bos.capability.bos_skill_cli.exec
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/bos-skill-cli/exec
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.bos_skill_cli.exec/
+    max_stale_hours: 168
+- id: bos.capability.headroom.compress
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/headroom/compress
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.headroom.compress/
+    max_stale_hours: 168
+- id: bos.capability.code_review_graph.analyze
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/code-review-graph/analyze
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.code_review_graph.analyze/
+    max_stale_hours: 168
+- id: bos.capability.claude_skills.load
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/claude-skills/load
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.claude_skills.load/
+    max_stale_hours: 168
+- id: bos.capability.last30days_skill.fetch
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/last30days-skill/fetch
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.last30days_skill.fetch/
+    max_stale_hours: 168
+- id: bos.capability.media_crawler.crawl
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/media-crawler/crawl
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.media_crawler.crawl/
+    max_stale_hours: 168
+- id: bos.capability.open_montage.render
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/open-montage/render
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.open_montage.render/
+    max_stale_hours: 168
+- id: bos.capability.skills_for_fabric.load
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/skills-for-fabric/load
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.skills_for_fabric.load/
+    max_stale_hours: 168
+- id: bos.capability.deer_flow.run
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/deer-flow/run
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.deer_flow.run/
+    max_stale_hours: 168
+- id: bos.capability.datafoundry.analyze
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/datafoundry/analyze
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.datafoundry.analyze/
+    max_stale_hours: 168
+- id: bos.capability.knowledge_work_plugins.load
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://capability/knowledge-work-plugins/load
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.knowledge_work_plugins.load/
+    max_stale_hours: 168
+- id: bos.capability.evaluator
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://capability/evaluator
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.capability.evaluator/
+    max_stale_hours: 168
+- id: bos.system.discovery.package.action
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://system/discovery/package/action
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.system.discovery.package.action/
+    max_stale_hours: 168
+- id: bos.system.runtime.workers.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://system/runtime/workers/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.system.runtime.workers.status/
+    max_stale_hours: 168
+- id: bos.forge.market.list
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://forge/market/list
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.forge.market.list/
+    max_stale_hours: 168
+- id: bos.governance.roles.list
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://governance/roles/list
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.roles.list/
+    max_stale_hours: 168
+- id: bos.analysis.minerva
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://analysis/minerva
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.analysis.minerva/
+    max_stale_hours: 168
+- id: bos.memory.docs.readme
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://memory/docs/readme
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.docs.readme/
+    max_stale_hours: 168
+- id: bos.system.vault.state
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://system/vault/state
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.system.vault.state/
+    max_stale_hours: 168
+- id: bos.governance.governance.tasks
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://governance/governance/tasks
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.governance.tasks/
+    max_stale_hours: 168
+- id: bos.governance.governance.circuit_breaker
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://governance/governance/circuit_breaker
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.governance.circuit_breaker/
+    max_stale_hours: 168
+- id: bos.governance.governance.daily_budget
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://governance/governance/daily_budget
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.governance.daily_budget/
+    max_stale_hours: 168
+- id: bos.governance.governance.quests
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://governance/governance/quests
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.governance.quests/
+    max_stale_hours: 168
+- id: bos.governance.governance.omo_worker_dispatch
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://governance/governance/omo_worker_dispatch
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.governance.governance.omo_worker_dispatch/
+    max_stale_hours: 168
+- id: bos.memory.fast_track.virtual_doc
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://memory/fast-track/virtual-doc
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.fast_track.virtual_doc/
+    max_stale_hours: 168
+- id: bos.omo.tasks.active
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://omo/tasks/active
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - omo.sync_daemon
+  liveness:
+    signal: .omo/_delivery/bos.omo.tasks.active/
+    max_stale_hours: 168
+- id: bos.governance.board.execute
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://governance/board/execute
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.board.execute/
+    max_stale_hours: 168
+- id: bos.persona.board.route
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: inline
+  uri: bos://persona/board/route
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.persona.board.route/
+    max_stale_hours: 168
+- id: bos.memory.inbox.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://memory/inbox/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.inbox.status/
+    max_stale_hours: 168
+- id: bos.memory.inbox.search
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://memory/inbox/search
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.inbox.search/
+    max_stale_hours: 168
+- id: bos.memory.inbox.pending
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://memory/inbox/pending
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.inbox.pending/
+    max_stale_hours: 168
+- id: bos.memory.inbox.watch
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://memory/inbox/watch
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.inbox.watch/
+    max_stale_hours: 168
+- id: bos.memory.inbox.archive
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://memory/inbox/archive
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.inbox.archive/
+    max_stale_hours: 168
+- id: bos.memory.inbox.triage
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://memory/inbox/triage
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.inbox.triage/
+    max_stale_hours: 168
+- id: bos.memory.inbox.draft
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://memory/inbox/draft
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.inbox.draft/
+    max_stale_hours: 168
+- id: bos.persona.bdsk.evaluate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: internal
+  uri: bos://persona/bdsk/evaluate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.persona.bdsk.evaluate/
+    max_stale_hours: 168
+- id: bos.memory.kems.status
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: http
+  uri: bos://memory/kems/status
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.kems.status/
+    max_stale_hours: 168
+- id: bos.memory.kems.graph
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: http
+  uri: bos://memory/kems/graph
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.kems.graph/
+    max_stale_hours: 168
+- id: bos.memory.kems.ocr_queue
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: http
+  uri: bos://memory/kems/ocr-queue
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.memory.kems.ocr_queue/
+    max_stale_hours: 168
+- id: bos.analysis.kems.forecast
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: http
+  uri: bos://analysis/kems/forecast
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.analysis.kems.forecast/
+    max_stale_hours: 168
+- id: bos.governance.intent.compile
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/intent/compile
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.intent.compile/
+    max_stale_hours: 168
+- id: bos.governance.shadow.challenge
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/shadow/challenge
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.shadow.challenge/
+    max_stale_hours: 168
+- id: bos.governance.cartridge.list
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/cartridge/list
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.cartridge.list/
+    max_stale_hours: 168
+- id: bos.governance.meta_doctor.check
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/meta-doctor/check
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.meta_doctor.check/
+    max_stale_hours: 168
+- id: bos.governance.scheduler_compile.check
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/scheduler-compile/check
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.scheduler_compile.check/
+    max_stale_hours: 168
+- id: bos.governance.session_handoff.emit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://governance/session-handoff/emit
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.governance.session_handoff.emit/
+    max_stale_hours: 168
+- id: bos.fabric.snapshot.manage
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://fabric/snapshot/manage
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.fabric.snapshot.manage/
+    max_stale_hours: 168
+- id: bos.agent_cell.pool.submit
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/pool/submit
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.pool.submit/
+    max_stale_hours: 168
+- id: bos.agent_cell.pool.scale
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/pool/scale
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.pool.scale/
+    max_stale_hours: 168
+- id: bos.agent_cell.pool.auto_scale
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/pool/auto-scale
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.pool.auto_scale/
+    max_stale_hours: 168
+- id: bos.agent_cell.pool.metrics
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/pool/metrics
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.pool.metrics/
+    max_stale_hours: 168
+- id: bos.agent_cell.dag.execute
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/dag/execute
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.dag.execute/
+    max_stale_hours: 168
+- id: bos.agent_cell.governance.report
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/governance/report
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.governance.report/
+    max_stale_hours: 168
+- id: bos.agent_cell.config.create
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/config/create
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.config.create/
+    max_stale_hours: 168
+- id: bos.agent_cell.pdp.evaluate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/pdp/evaluate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.pdp.evaluate/
+    max_stale_hours: 168
+- id: bos.agent_cell.pep.enforce
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/pep/enforce
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.pep.enforce/
+    max_stale_hours: 168
+- id: bos.agent_cell.memory.process
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/memory/process
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.memory.process/
+    max_stale_hours: 168
+- id: bos.agent_cell.memory.consolidate
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/memory/consolidate
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.memory.consolidate/
+    max_stale_hours: 168
+- id: bos.agent_cell.replay.shadow
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/replay/shadow
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.replay.shadow/
+    max_stale_hours: 168
+- id: bos.agent_cell.replay.eval
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://agent-cell/replay/eval
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.agent_cell.replay.eval/
+    max_stale_hours: 168
+- id: bos.bcos.signals.route
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://bcos/signals/route
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.bcos.signals.route/
+    max_stale_hours: 168
+- id: bos.bcos.north_star.measure
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  uri: bos://bcos/north-star/measure
+  program:
+    interpreter: uv
+    entrypoint: projects/agora
+  depends_on:
+  - mcp.agora
+  liveness:
+    signal: .omo/_delivery/bos.bcos.north_star.measure/
+    max_stale_hours: 168
+- id: cron.gac_validate
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 30 9 * * *
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.gac_validate/
+    max_stale_hours: 24
+  notes: 每日 GaC 校验
+- id: cron.gac_drift
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 35 9 * * *
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.gac_drift/
+    max_stale_hours: 24
+  notes: 每日 GaC 漂移检测
+- id: cron.doc_ssot
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 40 9 * * *
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.doc_ssot/
+    max_stale_hours: 24
+  notes: 每日文档 SSOT 检查
+- id: cron.ssot_guardian
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 45 9 * * *
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.ssot_guardian/
+    max_stale_hours: 24
+  notes: 每日 SSOT 守护
+- id: cron.ssot_sync
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 50 9 * * *
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.ssot_sync/
+    max_stale_hours: 24
+  notes: 每日 SSOT 同步
+- id: cron.ssot_log
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 55 9 * * *
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.ssot_log/
+    max_stale_hours: 24
+  notes: 每日 SSOT 日志
+- id: cron.sync_submodules
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 0 10 * * *
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.sync_submodules/
+    max_stale_hours: 24
+  notes: 每日子模块同步
+- id: cron.worktree_prune
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 5 10 * * 1
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.worktree_prune/
+    max_stale_hours: 24
+  notes: 每周 worktree 清理
+- id: omo.governor
+  enabled: true
+  scheduler: launchd
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/omo.governor/
+    max_stale_hours: 24
+  notes: OMO 治理门 PDP/PEP
+- id: omo.verifier
+  enabled: true
+  scheduler: launchd
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/omo.verifier/
+    max_stale_hours: 24
+  notes: OMO 验证器
+- id: omo.replay
+  enabled: true
+  scheduler: launchd
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/omo.replay/
+    max_stale_hours: 24
+  notes: OMO 事件回放
+- id: omo.alert
+  enabled: true
+  scheduler: launchd
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/omo.alert/
+    max_stale_hours: 24
+  notes: OMO 告警转发
+- id: omo.status
+  enabled: true
+  scheduler: launchd
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/omo.status/
+    max_stale_hours: 24
+  notes: OMO 状态快照
+- id: cron.bin_scripts
+  enabled: true
+  scheduler: cron
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.bin_scripts/
+    max_stale_hours: 24
+  notes: 每周 bin 脚本收敛
+  schedule: 0 11 * * 1
+- id: cron.evidence_smoke
+  enabled: true
+  scheduler: cron
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.evidence_smoke/
+    max_stale_hours: 24
+  notes: 每日 evidence smoke
+  schedule: 0 8 * * *
+- id: cron.config_check
+  enabled: true
+  scheduler: cron
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.config_check/
+    max_stale_hours: 24
+  notes: 每日配置检查
+  schedule: 0 12 * * *
+- id: cron.state_sync
+  enabled: true
+  scheduler: cron
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.state_sync/
+    max_stale_hours: 24
+  notes: 每日状态同步
+  schedule: 0 13 * * *
+- id: cron.install_hooks
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 0 14 * * 0
+  program:
+    interpreter: uv
+    entrypoint: projects/omo
+  liveness:
+    signal: .omo/_delivery/cron.install_hooks/
+    max_stale_hours: 168
+  notes: 每周安装 hooks
+- id: cli.sophia
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: .omo/_delivery/cli.sophia/
+    max_stale_hours: 168
+  notes: Sophia CLI — 知识编译
+- id: cli.iris
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: .omo/_delivery/cli.iris/
+    max_stale_hours: 168
+  notes: Iris CLI — 信息检索
+- id: cli.kronos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: .omo/_delivery/cli.kronos/
+    max_stale_hours: 168
+  notes: Kronos CLI — 时间智能
+- id: cli.ontoderive
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: .omo/_delivery/cli.ontoderive/
+    max_stale_hours: 168
+  notes: OntoDerive CLI — 本体推导
+- id: mcp.ecos
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  port: 7455
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: http
+    endpoint: http://localhost:7455/health
+    max_stale_hours: 24
+  depends_on:
+  - mcp.agora
+  notes: ECOS MCP — 协议编织
+- id: mcp.omo_web
+  enabled: true
+  scheduler: manual
+  trigger: on_demand
+  transport: stdio
+  port: 7456
+  program:
+    interpreter: uv
+    entrypoint: projects/knowledge/kairon
+  liveness:
+    signal: http
+    endpoint: http://localhost:7456/health
+    max_stale_hours: 24
+  depends_on:
+  - mcp.agora
+  notes: OMO Web MCP

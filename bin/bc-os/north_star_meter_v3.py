@@ -179,6 +179,67 @@ def _count_knowledge_consumption(since_days: int = 30) -> dict[str, int]:
     except OSError:
         pass
     return counts
+def _count_decision_quality(since_days: int = 30) -> dict:
+    """Count P0/P1 decisions and adoption ratio from decisions.md."""
+    decisions_path = WS_ROOT / ".omo" / "notepads" / "delegation-guardrails" / "decisions.md"
+    if not decisions_path.exists():
+        return {"p0_p1_count": 0, "p2_count": 0, "total": 0, "adopted_count": 0, "adoption_ratio": 0.0}
+    
+    cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=since_days)
+    
+    try:
+        text = decisions_path.read_text(encoding="utf-8")
+    except OSError:
+        return {"p0_p1_count": 0, "p2_count": 0, "total": 0, "adopted_count": 0, "adoption_ratio": 0.0}
+    
+    # Split into decision blocks
+    blocks = re.split(r"## \[", text)
+    
+    p0_p1_count = 0
+    p2_count = 0
+    total = 0
+    adopted_count = 0
+    p0_p1_adoption = 0
+    
+    for block in blocks[1:]:  # Skip first empty part
+        # Extract date
+        date_match = re.match(r"(\d{4}-\d{2}-\d{2})", block)
+        if not date_match:
+            continue
+        
+        try:
+            block_date = dt.datetime.fromisoformat(date_match.group(1) + "T00:00:00+00:00")
+            if block_date < cutoff:
+                continue
+        except ValueError:
+            continue
+        
+        total += 1
+        
+        # Check priority
+        if re.search(r"P0:", block):
+            p0_p1_count += 1
+        elif re.search(r"P1:", block):
+            p0_p1_count += 1
+        elif re.search(r"P2:", block):
+            p2_count += 1
+        
+        # Check adoption (has verification section)
+        if re.search(r"验证|已实施|已合并|已部署|已上线", block):
+            adopted_count += 1
+            if re.search(r"P0:|P1:", block):
+                p0_p1_adoption += 1
+    
+    adoption_ratio = adopted_count / total if total > 0 else 0.0
+    
+    return {
+        "p0_p1_count": p0_p1_count,
+        "p2_count": p2_count,
+        "total": total,
+        "adopted_count": adopted_count,
+        "adoption_ratio": round(adoption_ratio, 2),
+        "p0_p1_adoption_rate": round(p0_p1_adoption / p0_p1_count if p0_p1_count > 0 else 0.0, 2),
+    }
 
 
 def compute_axes(since_days: int = 30) -> dict[str, Any]:
@@ -225,6 +286,11 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
     d_events_per_month = d_total * (30 / since_days) if since_days else d_total
     d_score = min(100, round(100 * d_events_per_month / 30))
     d_cadence = _cadence_label(d_events_per_month)
+
+    # E-axis: Decision Quality (advisory, 5-axis composite)
+    e_quality = _count_decision_quality(since_days)
+    # Scale: 5 P0/P1 decisions with 100% adoption = 100
+    e_score = min(100, round(20 * e_quality["p0_p1_count"] * e_quality["adoption_ratio"]))
 
     # 3-axis composite (BC — main score, backward compat for strategy-check)
     weights_3axis = {"A": 0.70, "B": 0.30, "C": 0.0}
@@ -277,6 +343,12 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
                 "events_per_month": round(d_events_per_month, 1),
                 "cadence": d_cadence,
             },
+            "E": {
+                "name": "决策质量 (advisory, 5-axis 0.15)",
+                "score": e_score,
+                "weight": 0.15,
+                "data": e_quality,
+            },
         },
         "composite": {
             "score": score_3axis,
@@ -287,6 +359,21 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
             "weights": weights_4axis,
             "advisory": True,
             "note": "A60+B20+D20; pulls 0.10 from A and 0.10 from B; aligns compass_radar↔bet_ledger.",
+        },
+        "composite_5axis": {
+            "score": round(a_score * 0.50 + b_score * 0.10 + d_score * 0.20 + e_score * 0.15),
+            "weights": {"A": 0.50, "B": 0.10, "C": 0.0, "D": 0.20, "E": 0.15},
+            "advisory": True,
+            "note": "A50+B10+D20+E15; E adds decision quality dimension.",
+            "signpost": {
+                "4axis_vs_5axis": "5-axis is 3pts lower because B weight dropped from 0.20 to 0.10 (-8pts) while A dropped from 0.60 to 0.50 (-10pts), offset by E adding 15pts.",
+                "axis_contributions": {
+                    "A": round(a_score * 0.50, 1),
+                    "B": round(b_score * 0.10, 1),
+                    "D": round(d_score * 0.20, 1),
+                    "E": round(e_score * 0.15, 1),
+                }
+            },
         },
         "status": status,
         "snapshot_at": _utc_now().isoformat().replace("+00:00", "Z"),
@@ -311,11 +398,16 @@ def render_text(d: dict[str, Any]) -> str:
             lines.append(
                 f"    knowledge events: {axis['data']['total']} (evidence={axis['data']['evidence_recorded']}, succeeded={axis['data']['workflow_succeeded']}, cadence: {axis['cadence']}, ~{axis['events_per_month']}/mo)"
             )
+        elif label == "E":
+            lines.append(
+                f"    P0/P1 decisions: {axis['data']['p0_p1_count']}/{axis['data']['total']} (adopted: {axis['data']['adopted_count']}, ratio: {axis['data']['adoption_ratio']:.0%})"
+            )
         else:
             lines.append(f"    BET done pct: {axis['data']['bet_done_pct']}%")
     lines.append("")
     lines.append(f"  composite (3-axis, BC):    {d['composite']['score']}/100  weights={d['composite']['weights']}")
     lines.append(f"  composite (4-axis, advisory): {d['composite_4axis']['score']}/100  weights={d['composite_4axis']['weights']}")
+    lines.append(f"  composite (5-axis, advisory): {d['composite_5axis']['score']}/100  weights={d['composite_5axis']['weights']}")
     lines.append(f"  status: {d['status']}")
     return "\n".join(lines)
 
@@ -335,3 +427,6 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+# ---------------------------------------------------------------------------
+# E-axis: Decision Quality
+# ---------------------------------------------------------------------------

@@ -113,11 +113,14 @@ def generate_report() -> dict:
     recommendations = []
     a_score = north_star.get("axes", {}).get("A", {}).get("score", 0)
     b_score = north_star.get("axes", {}).get("B", {}).get("score", 0)
+    e_score = north_star.get("axes", {}).get("E", {}).get("score", 0)
 
     if a_score < 60:
         recommendations.append("A 轴时间节省不足: 增加自动化 cron 覆盖率")
     if b_score < 50:
         recommendations.append("B 轴决策吞吐不足: 增加 cockpit decide 使用频率")
+    if e_score < 70:
+        recommendations.append("E 轴决策质量不足: 增加 P0/P1 决策的验证覆盖")
     if not recommendations:
         recommendations.append("各指标健康: 继续保持当前运营节奏")
 
@@ -127,9 +130,12 @@ def generate_report() -> dict:
     report["summary"] = {
         "status": north_star.get("status", "unknown"),
         "composite_score": north_star.get("composite", {}).get("score", 0),
+        "composite_5axis": north_star.get("composite_5axis", {}).get("score", 0),
         "hours_saved_30d": north_star.get("axes", {}).get("A", {}).get("total_hours_saved", 0),
         "decisions_30d": north_star.get("axes", {}).get("B", {}).get("data", {}).get("decisions_30d", 0),
         "bet_done_pct": bet_status.get("pct", 0),
+        "knowledge_events": north_star.get("axes", {}).get("D", {}).get("data", {}).get("total", 0),
+        "decision_quality": north_star.get("axes", {}).get("E", {}).get("data", {}).get("adoption_ratio", 0.0),
     }
 
     return report
@@ -155,9 +161,12 @@ def main():
         print(f"Weekly Value Report — {report['week_id']}")
         print(f"  Status: {s['status'].upper()}")
         print(f"  Composite Score: {s['composite_score']}/100")
+        print(f"  5-axis Advisory: {s.get('composite_5axis', 'N/A')}/100")
         print(f"  Hours Saved (30d): {s['hours_saved_30d']}h")
         print(f"  Decisions (30d): {s['decisions_30d']}")
         print(f"  BET Done: {s['bet_done_pct']}%")
+        print(f"  Knowledge Events: {s.get('knowledge_events', 0)}")
+        print(f"  Decision Quality: {s.get('decision_quality', 0):.0%}")
         if report.get("trends"):
             d = report["trends"]["hours_saved_delta"]
             sign = "+" if d >= 0 else ""
