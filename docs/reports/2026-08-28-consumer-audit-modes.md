@@ -29,3 +29,13 @@ The 180 gateway instructions remain visible as a separate cleanup queue, not as
 false proof of active execution. The next migration waves must reduce both
 `forbidden_executors` and `gateway_instructions`, with different evidence for
 runtime cutover versus documentation cleanup.
+
+## Current release verification — 2026-08-29
+
+The accepted-20260908 owner was invoked without `--evidence` to avoid a runtime
+write during verification. It returned exit `0` with schema
+`documents.consumer-audit.v1`, `total=191`, `active=191`, `unmatched=0`,
+`forbidden_executors=0`, `workspace_read_owners=12`, and
+`content_references=179`; `errors=[]`. The focused regression suite passes
+`4/4` and the owner help command exits `0`. The earlier three-executor result
+is retained as historical baseline, not current state.
