@@ -1,0 +1,22 @@
+{
+  "dashboard_write": "deferred",
+  "documents_root": "/Users/xiamingxing/Documents",
+  "domain": "/Users/xiamingxing/Documents/@工作文档/卫健委",
+  "errors": [],
+  "findings": [
+    "679 knowledge files exceed 30 days",
+    "4 inbox files exceed 7 days",
+    "legacy governance and dashboard writers were not invoked"
+  ],
+  "observed_on": "2026-08-28",
+  "schema": "documents.daily-health-preflight.v1",
+  "status": "findings",
+  "summary": {
+    "pending_inbox": 0,
+    "signals": 0,
+    "stale_inbox": 4,
+    "stale_knowledge": 679
+  },
+  "workspace_root": "/Users/xiamingxing/Workspace",
+  "writes_documents": false
+}

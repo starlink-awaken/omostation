@@ -735,6 +735,17 @@ def main() -> int:
     drift_p.add_argument("--fix", action="store_true", help="Auto-fix drift where possible")
     drift_p.set_defaults(func=cmd_drift)
 
+    # ── catalog ──
+    catalog_p = sub.add_parser("catalog", help="Service catalog (search & filter)")
+    catalog_p.add_argument("query", nargs="?", help="Search query")
+    catalog_p.add_argument("--type", choices=["launchd", "cron", "manual", "docker", "gha"],
+                          help="Filter by scheduler type")
+    catalog_p.add_argument("--status", choices=["healthy", "stale", "missing", "disabled"],
+                          help="Filter by health status")
+    catalog_p.add_argument("--format", choices=["table", "json", "csv"], default="table",
+                          help="Output format")
+    catalog_p.set_defaults(func=cmd_catalog)
+
     # ── history ──
     history_p = sub.add_parser("history", help="Service health history")
     history_p.add_argument("service", nargs="?", help="Specific service to view")
@@ -1141,6 +1152,74 @@ def cmd_template(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_catalog(args: argparse.Namespace) -> int:
+    """Service catalog — search and filter services."""
+    services = load_services()
+    query = (args.query or "").lower()
+    svc_type = args.type
+    status_filter = args.status
+    fmt = args.format
+
+    # Filter services
+    filtered = []
+    for svc in services:
+        sid = svc.get("id", "")
+
+        # Text search
+        if query and query not in sid.lower():
+            # Also search in notes
+            notes = svc.get("notes", "").lower()
+            if query not in notes:
+                continue
+
+        # Type filter
+        if svc_type and svc.get("scheduler") != svc_type:
+            continue
+
+        # Status filter
+        if status_filter:
+            liv = check_liveness(svc)
+            if liv["status"] != status_filter:
+                continue
+
+        filtered.append(svc)
+
+    # Output
+    if fmt == "json":
+        print(json.dumps(filtered, indent=2, ensure_ascii=False))
+    elif fmt == "csv":
+        print("id,scheduler,enabled,status,ports")
+        for svc in filtered:
+            sid = svc.get("id", "")
+            scheduler = svc.get("scheduler", "")
+            enabled = svc.get("enabled", False)
+            status = check_liveness(svc).get("status", "")
+            ports = ",".join(str(p) for p in svc.get("ports", []))
+            print(f"{sid},{scheduler},{enabled},{status},{ports}")
+    else:
+        # Table format
+        print(f"Found {len(filtered)} services:\n")
+        if not filtered:
+            return 0
+
+        # Group by type
+        groups: dict[str, list[dict]] = {}
+        for svc in filtered:
+            t = svc.get("scheduler", "unknown")
+            groups.setdefault(t, []).append(svc)
+
+        for t, svcs in sorted(groups.items()):
+            print(f"  {t} ({len(svcs)}):")
+            for svc in sorted(svcs, key=lambda s: s.get("id", "")):
+                sid = svc.get("id", "")
+                status = check_liveness(svc).get("status", "")
+                enabled = "✓" if svc.get("enabled") else "○"
+                print(f"    {enabled} {sid} [{status}]")
+            print()
+
+    return 0
+
+
 def cmd_history(args: argparse.Namespace) -> int:
     """Show service health history."""
     from datetime import timedelta
@@ -1224,6 +1303,7 @@ def record_health_history(svc_id: str, status: str) -> None:
 
     with open(history_file, "a") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+>>>>>>> origin/main
 
 
 def cmd_drift(args: argparse.Namespace) -> int:

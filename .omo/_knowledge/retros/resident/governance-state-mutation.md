@@ -1,26 +1,24 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-state-mutation
-generated_at: 2026-08-27T11:40:02Z
-status: planned
+generated_at: 2026-08-28T04:50:00Z
+status: candidate
 counts:
-  runs: 24
+  runs: 27
   failures: 13
-  total: 37
-failure_rate: 0.3514
+  total: 40
+failure_rate: 0.325
 failure_breakdown:
   by_event_type:
     StepFailed: 13
   trace_count: 13
-lifecycle: history
-owner: unassigned
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-27T11:40:02Z
+- generated_at: 2026-08-28T04:50:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 24 成功运行 + 13 失败模式 = 37 草稿
-- 失败率: 35.14%
+- sediment 覆盖: 27 成功运行 + 13 失败模式 = 40 草稿
+- 失败率: 32.50%
 
 ## 成功运行 (runs/)
 
@@ -48,6 +46,9 @@ owner: unassigned
 - 20260823T135620Z-governance-state-mutation-06c726b4.md
 - 20260824T010956Z-governance-state-mutation-3768d513.md
 - 20260825T101143Z-governance-state-mutation-2e7ce1a1.md
+- 20260828T034834Z-governance-state-mutation-4a8001e1.md
+- 20260828T035040Z-governance-state-mutation-44a204d2.md
+- 20260828T044529Z-governance-state-mutation-69537635.md
 
 ## 失败模式 (failures/)
 
@@ -244,6 +245,24 @@ owner: unassigned
   - 结果与证据: ok=False, status=blocked, evidence_count=3
   - 失败根因: step=execute, error=workflow failed
   - 指标: event_count=6, duration_s=87645.814
+- **20260828T034834Z-governance-state-mutation-4a8001e1**
+  - 计划 (objective): Canonical claim for #2386 prerequisite ADR continuity recovery
+  - workflow: governance-state-mutation
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=124.483
+- **20260828T035040Z-governance-state-mutation-44a204d2**
+  - 计划 (objective): Stable-actor canonical claim for #2386 prerequisite ADR continuity recovery
+  - workflow: governance-state-mutation
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1508.708
+- **20260828T044529Z-governance-state-mutation-69537635**
+  - 计划 (objective): Canonical claims for post-2398 BOS mirror recovery
+  - workflow: governance-state-mutation
+  - 指标: event_count=1, duration_s=0.0
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

@@ -1,0 +1,26 @@
+{
+  "connector_invocations": 0,
+  "documents_root": "/Users/xiamingxing/Documents",
+  "errors": [],
+  "findings": [
+    "legacy BOS runner remains in Documents and is not an accepted Workspace owner",
+    "legacy BOS state DB remains in Documents and requires a verified migration/rollback",
+    "BOS connector execution is fail-closed until every step has an accepted Workspace owner"
+  ],
+  "invoked": false,
+  "legacy_runner": "present",
+  "legacy_runner_path": "/Users/xiamingxing/Documents/@公共/_runtime/bos-neural-mesh-runner.py",
+  "legacy_state_db": "present",
+  "legacy_state_db_path": "/Users/xiamingxing/Documents/@公共/_runtime/bos-neural-mesh-state.sqlite",
+  "schema": "documents.bos-neural-mesh-owner.v1",
+  "state_db": "/Users/xiamingxing/Workspace/runtime/bos-neural-mesh-state.sqlite",
+  "state_owner": "workspace",
+  "status": "findings",
+  "summary": {
+    "execution": "blocked",
+    "legacy_runner": "present",
+    "legacy_state_db": "present"
+  },
+  "workspace_root": "/Users/xiamingxing/Workspace",
+  "writes_documents": false
+}

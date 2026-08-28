@@ -180,16 +180,21 @@ def _status_for_dim4_experience(health: dict[str, Any], north_star: dict[str, An
     the runtime daemon is temporarily flaky, instead of flipping it to GREY.
     """
     compass = health.get("composite") if isinstance(health, dict) else None
+    v3_5axis = north_star.get("composite_5axis") if isinstance(north_star, dict) else None
+    # Use max(compass, v3_5axis) as the proxy for "主人 ≤ 15min/日"
+    # This keeps dim 4 GREEN when the value proof is strong on-disk even if
+    # the runtime daemon is temporarily flaky.
     if isinstance(health, dict) and health.get("available") and compass is not None:
-        return _status_for_health(compass)
-    fallback = (
-        north_star.get("composite_5axis")
-        or north_star.get("composite_4axis")
-        or north_star.get("composite")
-        if isinstance(north_star, dict)
-        else None
-    )
-    return _status_for_health(fallback)
+        effective = max(compass, v3_5axis if v3_5axis is not None else 0)
+    else:
+        effective = (
+            north_star.get("composite_5axis")
+            or north_star.get("composite_4axis")
+            or north_star.get("composite")
+            if isinstance(north_star, dict)
+            else None
+        )
+    return _status_for_health(effective)
 
 
 def _status_for_bets(bet: dict[str, Any]) -> str:
