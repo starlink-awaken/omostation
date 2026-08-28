@@ -194,3 +194,14 @@ the real resident path, and principal-bound value remain open.
 待裁决 (principal): operational 证据标准 — 测试回执可否计为 PROVEN?
 - 若可: 恢复 #2456 版矩阵 → complete → done
 - 若否: 跑正向 production canary (网关在线后) → 复评 → done
+
+## 2026-08-29 principal 裁决: 选项 B — 正向生产证据必须真实 canary
+
+principal 于 08-29 就"operational 证据标准"裁决: **测试回执不可计为 PROVEN**,
+正向 production canary (gateway-backed execution run) 是唯一合格证据。
+
+- 合成状态 (engineering VERIFIED + value ACCEPTED + operational NOT_PROVEN) 为
+  裁决后的权威中间态 (#2506 已合), 保持 operational NOT_PROVEN 不动
+- 下一步: 重建 binding canary driver (08-26 版为 /tmp 临时脚本未入库), 跑
+  find→inspect→load→invoke 正向链, 产出 confirmed read-only native receipt
+- canary 报告更新后, operational 复评 PROVEN → complete → done
