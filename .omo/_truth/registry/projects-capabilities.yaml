@@ -2,7 +2,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-28
+last-reviewed: 2026-08-28
 ---
 capabilities:
 - id: kairon.codeanalyze
@@ -165,4 +165,84 @@ capabilities:
     - research-pipeline
     - workspace-governance
     source: projects/knowledge/kairon/packages/sophia
+- id: ops.cli
+  type: cli
+  protocol: local
+  entrypoint: bin/ops/cli.py
+  lifecycle: active
+  metadata:
+    description: 'Service Gateway 统一运维控制面 CLI'
+    version: local
+    tags:
+    - ops
+    - service-gateway
+    - cli
+    scenario_tags:
+    - operations
+    - observability
+    source: bin/ops/cli.py
+- id: plan.bet-ledger
+  type: cli
+  protocol: local
+  entrypoint: bin/plan/bet-ledger.py
+  lifecycle: active
+  metadata:
+    description: '三年规划 BET 执行台账管理'
+    version: local
+    tags:
+    - plan
+    - bet
+    - ledger
+    scenario_tags:
+    - planning
+    - governance
+    source: bin/plan/bet-ledger.py
+- id: mof.health-score
+  type: cli
+  protocol: local
+  entrypoint: bin/mof/m4-health-score.py
+  lifecycle: active
+  metadata:
+    description: 'M4 Health Score 量化评估'
+    version: local
+    tags:
+    - mof
+    - health
+    - score
+    scenario_tags:
+    - governance
+    - observability
+    source: bin/mof/m4-health-score.py
+- id: mof.bootstrap
+  type: cli
+  protocol: local
+  entrypoint: bin/mof/mof-bootstrap.py
+  lifecycle: active
+  metadata:
+    description: 'MOF 元模型 5-check 严格自举验证'
+    version: local
+    tags:
+    - mof
+    - bootstrap
+    - validation
+    scenario_tags:
+    - governance
+    - meta-model
+    source: bin/mof/mof-bootstrap.py
+- id: mof.gen-service-configs
+  type: cli
+  protocol: local
+  entrypoint: bin/mof/gen-service-configs.py
+  lifecycle: active
+  metadata:
+    description: 'MOF 服务配置生成器 (services.yaml SSOT)'
+    version: local
+    tags:
+    - mof
+    - service-config
+    - generation
+    scenario_tags:
+    - governance
+    - service-registry
+    source: bin/mof/gen-service-configs.py
 
