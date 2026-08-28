@@ -1,0 +1,123 @@
+# LECP (Life Event & Card Protocol) Schema v3.0
+# SSOT: protocols/lecp-schema.yaml
+# 统一 P0(工作) / P1(健康) / P2(家庭) / P3(心智) / P4(科研) 五域的生命事件与卡片模型
+
+schema_version: "lecp/v3.0"
+title: "Life Event & Card Protocol"
+description: "全系统统一事件、待办、草稿与署名审计实体规范"
+
+domains:
+  - id: "p0_work"
+    name: "工作协同"
+    default_privacy: "internal"
+  - id: "p1_health"
+    name: "生命健康"
+    default_privacy: "secret"
+  - id: "p2_family"
+    name: "家庭生活"
+    default_privacy: "secret"
+  - id: "p3_mind"
+    name: "个人心智"
+    default_privacy: "secret"
+  - id: "p4_research"
+    name: "知识科研"
+    default_privacy: "internal"
+
+privacy_levels:
+  - id: "public"
+    network_policy: "unrestricted"
+  - id: "internal"
+    network_policy: "commercial_apis_allowed"
+  - id: "secret"
+    network_policy: "strictly_local_offline"
+
+entity_schema:
+  type: "object"
+  required:
+    - entity_id
+    - domain
+    - timestamp
+    - privacy_level
+    - status
+    - source
+    - payload
+  properties:
+    entity_id:
+      type: "string"
+      pattern: "^evt-[0-9]{8}-[a-z0-9_-]+$"
+    domain:
+      type: "string"
+      enum: ["p0_work", "p1_health", "p2_family", "p3_mind", "p4_research"]
+    timestamp:
+      type: "string"
+      format: "date-time"
+    privacy_level:
+      type: "string"
+      enum: ["public", "internal", "secret"]
+    status:
+      type: "string"
+      enum: ["raw", "triaged", "drafted", "signed", "archived", "rejected"]
+    source:
+      type: "object"
+      required:
+        - channel
+        - title
+      properties:
+        channel:
+          type: "string"
+          enum: ["calendar", "apple_mail", "netease_mail", "local_inbox", "manual", "system"]
+        sender:
+          type: "string"
+        title:
+          type: "string"
+        raw_ref:
+          type: "string"
+    payload:
+      type: "object"
+      properties:
+        summary:
+          type: "string"
+        extracted_tasks:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              task:
+                type: "string"
+              deadline:
+                type: "string"
+              priority:
+                type: "string"
+                enum: ["low", "medium", "high", "urgent"]
+    draft:
+      type: "object"
+      properties:
+        generated_at:
+          type: "string"
+          format: "date-time"
+        model_id:
+          type: "string"
+        draft_content:
+          type: "string"
+        target_channel:
+          type: "string"
+    signature_audit:
+      type: "object"
+      properties:
+        signed_at:
+          type: "string"
+          format: "date-time"
+        signed_by:
+          type: "string"
+          default: "夏明星"
+        final_content:
+          type: "string"
+        diff_record:
+          type: "object"
+          properties:
+            diff_summary:
+              type: "string"
+            refined_rules:
+              type: "array"
+              items:
+                type: "string"

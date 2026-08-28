@@ -48,6 +48,7 @@
 | `governance-ssot-edit` | Edit governance SSOT (governance-checks.yaml / gac-*.py / write-owners / x*-rules / mutation-surfaces) safely in a co... | Edit governance SSOT (governance-checks |
 | `omo-audit-baseline` | Governance audit baseline workflow for the omostation workspace. Run omo audit, check results, commit governance data... | Governance audit baseline workflow for the omostation workspace |
 | `project-governance` | Use when an agent changes this workspace or a child project and needs executable governance workflow routing instead ... | Use when an agent changes this workspace or a child project and needs executable |
+| `spine-value-pipeline` | omostation (eCOS v6) 主干真值流与署名自进化技能包。指导 AI Agent 如何通过标准 bos:// 服务感知外部信号、驱动 Journey、调用本地算力并在 Cockpit 呈递署名。 | 业务处理、公文拟定、健康管理、日历待办、署名Diff学习 |
 | `system-index-distill` | Deep workspace analysis to find information silos and create unified navigation. Use when the workspace has many proj... | Deep workspace analysis to find information silos and create unified navigation |
 | `workflow-silence-detection` | Detect silent agent workflows (registered in agent-workflows.yaml but with no recent activity). Use when running gove... | Detect silent agent workflows (registered in agent-workflows |
 | `worktree-ci-isolate` | Create isolated git worktrees for CI fixes and parallel development. Init submodules, work in isolation, clean up whe... | Create isolated git worktrees for CI fixes and parallel development |
