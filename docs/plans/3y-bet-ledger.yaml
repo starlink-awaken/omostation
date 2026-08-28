@@ -8538,7 +8538,8 @@ bets:
   title: 'service-config stable interpreter reconciliation'
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   goal: '修复 gen-service-configs 在 uv PATH 下误选系统 Python 导致的 host plist drift，保持 services.yaml 语义不变并恢复 gac gate。'
   non_goals:
   - 不创建、修改、加载或卸载任何宿主 plist
@@ -8571,6 +8572,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:1794a8e915ef7c65460122caf4c2975b0fa0b0451c12dc539d6a466419afa3e8
     decision_ref: decision://accepted/BET-Y1Q3-T10-47
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b3567115ddcb87951a1407ccc8d81051abe6cfc8
+          tests:
+            ref: receipt://tests/test_gen_service_configs.py
+            sha256: sha256:38b45428b8393ee6b878017078eb3aea6b90cfae54c551d8fba5b7b2a56fc313
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-service-config-stable-interpreter-reconciliation-design.md
+            sha256: sha256:1794a8e915ef7c65460122caf4c2975b0fa0b0451c12dc539d6a466419afa3e8
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-service-config-stable-interpreter-reconciliation.md
+            sha256: sha256:bf6b6a008ec25f4059183a19b3a96d9a98587387112313c2b25852a84eca27cf
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-47.md
+            sha256: sha256:11e9442e333d6b8969e687d4c74041d905424ebae169a53b81d5ab021a0cbe6c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-service-config-stable-interpreter-reconciliation.md
+            sha256: sha256:bf6b6a008ec25f4059183a19b3a96d9a98587387112313c2b25852a84eca27cf
+          replay:
+            ref: receipt://tests/test_gen_service_configs.py
+            sha256: sha256:38b45428b8393ee6b878017078eb3aea6b90cfae54c551d8fba5b7b2a56fc313
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-47.md
+            sha256: sha256:11e9442e333d6b8969e687d4c74041d905424ebae169a53b81d5ab021a0cbe6c
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on:
   - BET-Y1Q3-T10-43
   risk_level: L1
