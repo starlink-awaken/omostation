@@ -524,7 +524,8 @@ bets:
   title: Resident ledger read-status lock contention repair
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-08-29'
   goal: Make the resident status ledger probe tolerate bounded transient SQLite contention without mutating the host ledger or runtime.
   non_goals:
   - No database migration, WAL checkpoint/deletion, force unlock, process signal, launchd change, or service restart.
@@ -557,6 +558,57 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:cd834b1d9fa347898b2bf746f93c86c4c5e2b7cd474f701450cba9c72783dea3
     decision_ref: decision://accepted/BET-Y1Q3-T10-48
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@4aaf638515b76eaaec96b9ddbe0620d399f97dcb
+          tests:
+            ref: receipt://projects/omo/tests/unit/test_resident_status.py
+            sha256: sha256:1ddc100b6a5da69d8a47cb4b2514fb43fc2977752d89cbe3df8ebbd99c0bd48a
+          diff:
+            ref: receipt://projects/omo/src/omo/resident/status.py
+            sha256: sha256:a7829df53a58e9f93cdfa2427b922da609eb16fca4c83beb4c3a0f8233b88daf
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md
+            sha256: sha256:cd834b1d9fa347898b2bf746f93c86c4c5e2b7cd474f701450cba9c72783dea3
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-48.md
+            sha256: sha256:364ecd3ab7b97ff54400f394741508382db08e68e7ec3b21f5db11052c4cb222
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-48-accept.yaml
+            sha256: sha256:4e61435da350b8130aef311c0ba1df5e77f39e74135957b38d720feacccb96a0
+          replay:
+            ref: receipt://projects/omo/tests/unit/test_resident_status.py
+            sha256: sha256:1ddc100b6a5da69d8a47cb4b2514fb43fc2977752d89cbe3df8ebbd99c0bd48a
+          cleanup:
+            ref: receipt://projects/omo/src/omo/resident/status.py
+            sha256: sha256:a7829df53a58e9f93cdfa2427b922da609eb16fca4c83beb4c3a0f8233b88daf
+      value:
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-48-accept.yaml
+            sha256: sha256:4e61435da350b8130aef311c0ba1df5e77f39e74135957b38d720feacccb96a0
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-48-accept.yaml
+            sha256: sha256:4e61435da350b8130aef311c0ba1df5e77f39e74135957b38d720feacccb96a0
+          real_signal:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-48.md
+            sha256: sha256:364ecd3ab7b97ff54400f394741508382db08e68e7ec3b21f5db11052c4cb222
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-48.md
+            sha256: sha256:364ecd3ab7b97ff54400f394741508382db08e68e7ec3b21f5db11052c4cb222
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-48.md
+            sha256: sha256:364ecd3ab7b97ff54400f394741508382db08e68e7ec3b21f5db11052c4cb222
+    overall_state: outcome_accepted
   depends_on: []
   risk_level: L1
   human_gate: false
