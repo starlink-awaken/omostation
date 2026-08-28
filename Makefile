@@ -738,3 +738,18 @@ ops-cost-record:  ## 记录成本
 
 ops-cost-json:  ## 成本 JSON 输出
 	python3 bin/ops/cost_tracker.py --json
+
+ops-runbook:  ## 自动化 Runbook (全部场景)
+	python3 bin/ops/runbook.py all
+
+ops-runbook-down:  ## 服务宕机检测+恢复
+	python3 bin/ops/runbook.py service-down
+
+ops-runbook-latency:  ## 高延迟诊断
+	python3 bin/ops/runbook.py high-latency
+
+ops-runbook-resource:  ## 资源耗尽检测
+	python3 bin/ops/runbook.py resource-exhaustion
+
+ops-runbook-deps:  ## 依赖故障追踪
+	python3 bin/ops/runbook.py dependency-failure
