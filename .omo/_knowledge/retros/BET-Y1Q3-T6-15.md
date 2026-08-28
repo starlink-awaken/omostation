@@ -22,3 +22,9 @@ changed.
 
 The next admissible phase is H1 only after this R1 branch is merged and a real
 main `gac-gate` canary succeeds.
+
+R1 strict gate disposition: repository checks pass, but mainline
+`doc-governance --no-new-warnings` remains blocked by 104 legacy warnings and
+one exceeded exception budget; `bet-ledger lint` reports 37 historical
+completion evidence mismatches. These remain separate governance debt and no
+budget/evidence was falsified to claim green.
