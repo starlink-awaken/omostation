@@ -1,0 +1,28 @@
+# Prometheus scrape configuration for omostation Service Gateway
+#
+# Usage:
+#   1. Start the unified metrics server: make ops-metrics-server
+#   2. Add this scrape config to your prometheus.yml
+#   3. Restart Prometheus
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "omostation-ops"
+    static_configs:
+      - targets: ["localhost:9091"]
+        labels:
+          instance: "omostation-ops"
+          environment: "production"
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: "bus-foundation"
+    static_configs:
+      - targets: ["localhost:8745"]
+        labels:
+          instance: "bus-foundation"
+    metrics_path: /metrics
+    scrape_interval: 30s

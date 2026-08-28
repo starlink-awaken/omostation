@@ -714,3 +714,9 @@ ops-score:  ## 系统健康评分
 
 ops-history:  ## 服务健康历史
 	python3 bin/ops/cli.py history
+
+ops-metrics-unified:  ## 统一指标聚合
+	python3 bin/ops/unified_metrics.py --once
+
+ops-metrics-server:  ## 统一指标服务器
+	python3 bin/ops/unified_metrics.py --port 9091
