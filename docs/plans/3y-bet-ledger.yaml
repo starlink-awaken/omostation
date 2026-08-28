@@ -554,6 +554,13 @@ bets:
   - bin/plan/bet-ledger.py
   - tests/test_spec_binding_lint.py
   - docs/superpowers/specs/2026-08-28-product-p0-truth-loop-design.md
+  - docs/superpowers/plans/2026-08-28-product-p0-truth-loop.md
+  - docs/superpowers/plans/2026-08-28-product-p0-wp1-honest-scene-gate.md
+  - docs/superpowers/plans/2026-08-28-product-p0-wp2-honest-agent-cell-receipt.md
+  - docs/superpowers/plans/2026-08-28-product-p0-wp3-canonical-outbox-publisher.md
+  - docs/superpowers/plans/2026-08-28-product-p0-wp4-principal-authority-binding.md
+  - docs/superpowers/plans/2026-08-28-product-p0-wp5-human-adjudication-value.md
+  - docs/superpowers/plans/2026-08-28-product-p0-wp6-physical-recovery-drill.md
   - docs/reports/2026-08-28-product-p0-truth-loop-closeout.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T4-02.md
@@ -561,7 +568,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-product-p0-truth-loop-design.md
     spec_version: 1.0.0
-    content_digest: sha256:f4101f2bfab2c553be03e10f75a9148ba2076784ca7731505ba7e7471cfd2153
+    content_digest: sha256:ee0f5f0edc41159ddb808f3f2937400c6d1d49489c29c08aedf0946e56e91748
     decision_ref: decision://accepted/BET-Y1Q3-T4-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
