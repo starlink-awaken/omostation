@@ -29,6 +29,30 @@ Rollback reference: restore
 `.omo/evidence/20260827T152904Z-governance-state-mutation-dd693732/crontab-before.txt`
 after verifying its SHA-256 above.
 
+## 2026-08-28 accepted-release reconciliation
+
+The host already contained the two Workspace owner lines from the earlier
+cutover, but they still pointed to the older `accepted-20260827` release. This
+run performed a second, exact two-line reconciliation to the clean
+`accepted-20260908` release; no other crontab line changed.
+
+- preflight backup: `/Users/xiamingxing/.local/state/omostation/t10-26-crontab-backups/20260828T143633Z/crontab-before.txt`
+- before SHA-256: `2e78e757f48e778deab409b03018e2b66bd98a290658ca9fbc55964ef6da3196`
+- after SHA-256: `778c9b007575e2ef376c887dffa6fcf2cc7e80ba02678ebb515c79a7dd0c9d67`
+- changed lines: exactly the daily `06:25` and Monday `06:35` owner lines;
+  unrelated lines were byte-identical
+- post-cutover consumer smoke: exit `0`, 191 consumers, unmatched `0`,
+  forbidden executors `0`
+- post-cutover freshness smoke: exit `1`, 12 missing review metadata, no
+  execution error
+- legacy target processes: absent at observation time
+- rollback: `crontab /Users/xiamingxing/.local/state/omostation/t10-26-crontab-backups/20260828T143633Z/crontab-before.txt`
+
+The original 2026-08-27 pre-cutover backup referenced above is not present in
+the current filesystem. This proves the current release-root update and
+rollback, but does not retroactively prove the original Documents-to-Workspace
+replacement receipt; that historical gap remains explicitly unproven.
+
 ## Remaining boundary
 
 The shared Workspace checkout remains dirty and old, but the installed schedule
