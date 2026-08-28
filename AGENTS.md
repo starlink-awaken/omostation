@@ -2,6 +2,7 @@
 
 > 最后更新: 2026-08-28
 > Root operating guide for AI coding agents and developers. Keep this file operational. Put runtime facts in SSOT files, not here.
+> 单入口: `python "bin/agent-workflow.py" bootstrap` · 闭环收尾: `python "bin/agent-workflow.py" closeout` · 合规审计: `python "bin/agent-workflow.py" compliance`
 
 ## 1. Read This First
 
