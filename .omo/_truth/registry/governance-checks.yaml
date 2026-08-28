@@ -180,7 +180,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 499
+    script_baseline: 503  # 2026-08-28 499→503: 登记 bin/ops/{__init__,cli,dashboard,health-check-cron}.py (并发 agent 新增 ops 模块遗漏登记, PR #2401 修复)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
