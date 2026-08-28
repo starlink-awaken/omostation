@@ -2,7 +2,7 @@
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-26
+last-reviewed: 2026-08-29
 title: Wave B Exact Capability Binding Implementation Plan
 type: doc
 ---
@@ -19,12 +19,12 @@ type: doc
 
 ## Global Constraints
 
-- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.1.2`, digest `sha256:34d9d086f5f8991169aa895791ddddf5bca9610370a91ae8020edf470f236d44`. The 1.1.2 amendment records the current root/Cockpit pointer divergence and freezes the C-lite verifier contract: reuse material v1, bind its admission digest to `WorkflowAdmitted.proof`, verify persisted step/worker identity read-only, gate Cockpit before effects and leave OMO/Agora unchanged in this slice.
+- Canonical Spec: `docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md`, version `1.1.2`, digest `sha256:41b7175076f14129b5e62989042f2f97d5f2b6ffb60cdd3a0ac9d60c27c0267a`. The 1.1.2 amendment records the current root/Cockpit pointer divergence and freezes the C-lite verifier contract: reuse material v1, bind its admission digest to `WorkflowAdmitted.proof`, verify persisted step/worker identity read-only, gate Cockpit before effects and leave OMO/Agora unchanged in this slice.
 - BET: `BET-Y1Q3-T1-12`; every edit must be covered by its WorkPacket and a current claim.
 - No new capability registry writer, scheduler, broker, database, workflow, or dispatch truth.
 - No automatic Human Verdict, decision outcome, time-saved estimate, or personal value promotion; all execution receipts keep `value_indicator_policy=false`.
 - No query first-match, wildcards, caller-supplied adapter/transport/argv, or legacy invoke strings.
-- New blocking behavior rolls out shadow → warning → fail; do not hard-fail unmeasured legacy traffic. Task 6B effectful HTTP/MCP paths have no proved legitimate caller, so verifier-unavailable starts fail-closed while root bundle-absent legacy invocation remains on its existing shadow track.
+- New blocking behavior rolls out shadow → warning → fail. The root native `load`/`invoke` path now enforces complete binding fail-closed; effectful HTTP/MCP paths still require their separately measured rollout evidence. Missing binding returns a redacted receipt and prevents registry/gateway/provider execution.
 - Child repository PRs merge and tag before the root gitlink moves; root pointers must reference child `origin/main` descendants.
 - Use independent clone v2 delivery attempts. Never edit `/Users/xiamingxing/Workspace` or reuse a linked worktree as a writer.
 - Every implementation task ends with targeted tests, an independent Orca review, commit, source tag, PR-context CI, merge, and lifecycle retirement receipt.
@@ -1206,6 +1206,16 @@ The retro must include actual elapsed time, every failed or unproven done_when, 
 - [ ] **Step 8: Root commit/tag/PR/merge and lifecycle retirement**
 
 Root source tag: `delivery/exact-capability-binding-root-integration-20260824-v1`.
+
+## 2026-08-29 fail-closed enforcement slice
+
+The existing warning fallback was promoted to `BINDING_ENFORCEMENT="fail"`.
+When a native `load` or `invoke` caller omits the complete binding bundle, the
+CLI now returns exit `4` before registry/gateway/provider execution and emits a
+redacted `capability-resolution-receipt/v1` with all invocation/evidence/
+verification states false. The regression and live CLI canary both prove the
+zero-call invariant. Native production receipt consumption and positive
+topology canary remain separate open T1-12 requirements.
 
 Wait for every required PR-context check. Merge by standard squash only. Retire every writer clone through `clone-lifecycle retire`; use `--platform-rebased-pr` whenever GitHub update-branch changed the PR head. Preserve every JSON retirement receipt.
 

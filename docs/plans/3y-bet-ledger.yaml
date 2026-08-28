@@ -6420,53 +6420,15 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@477e142325e36c025337b308511ac4ee70000b4a
-          tests:
-            ref: receipt://tests/test_capability_sync.py
-            sha256: sha256:6a53e60da7305f7ab4631b48ddbf0da49af3660531ad48c682eecc1163b9bce2
-          diff:
-            ref: receipt://bin/capability-sync.py
-            sha256: sha256:9cc0d9fed096ff377e2481200b1a1d73d4bd79624a78acedb3aaa4505978acfa
-          rollback:
-            ref: receipt://lib/capability_trace_binding.py
-            sha256: sha256:7dc472b2176e6b0b8897e9f0776e60470bb8f172fc5ad42ec076bd744916fcad
+        status: IN_PROGRESS
+        evidence: {}
       operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://tests/test_channel_exposure_p0.py
-            sha256: sha256:9dcc2c3e4a551b523ebe3a927e5a0f1a0f857a4002d2a983e30b91c58e2de6bb
-          fresh_receipt:
-            ref: receipt://tests/test_capability_native_execution_receipt.py
-            sha256: sha256:6d7d04e9b66a4e9afc09eb09addade511e4498366609ab613ff3f5dd982d07ca
-          replay:
-            ref: receipt://tests/test_capability_trace_binding.py
-            sha256: sha256:e7a55a2a923314b658cc4966b093b360f5f560283b987c0665d3905dc7f9de89
-          cleanup:
-            ref: receipt://tests/test_capability_native_inspection.py
-            sha256: sha256:a67e950b13e50f89db92b5f0964022694597f24e60e0be8b19f3c3e85f3b6399
+        status: NOT_PROVEN
+        evidence: {}
       value:
-        status: ACCEPTED
-        evidence:
-          real_signal:
-            ref: receipt://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
-            sha256: sha256:41b7175076f14129b5e62989042f2f97d5f2b6ffb60cdd3a0ac9d60c27c0267a
-          human_verdict:
-            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
-            sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
-          revision:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:52a670138db2ec7565e6c13e2d62004d35413ff191301c6f2b9ea33743a4efdf
-          time_burden:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:52a670138db2ec7565e6c13e2d62004d35413ff191301c6f2b9ea33743a4efdf
-          attestation:
-            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
-            sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
-    overall_state: outcome_accepted
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
   write_surfaces:
