@@ -161,7 +161,6 @@ output and is idempotent on retry. Child PR #109 merged at
 cascading/governance gates passed. This proves the production consumer entry
 point, not the positive topology canary, complete admission-to-dispatch proof,
 or principal-bound value.
-
 ## 2026-08-29 canonical admission context and e2e canary
 
 The first positive canary exposed two real deployment gaps: MetaOS could not be
