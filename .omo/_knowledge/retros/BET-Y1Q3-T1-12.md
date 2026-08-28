@@ -137,3 +137,14 @@ Engineering DONE 部分=✅；Operational NOT_PROVEN（无生产拓扑正向证�
 - claim 面先跑 verify 再估工作量 (P73 D1 第 6 次: plan 08-24 文本 vs 08-28 实况全落地)
 - 追加测试前先 `rg "def test_工作名"`, 重名 F811 是信号不是噪音
 - retro 主分支版本必须先读再动 (本轮第 3 次覆盖事故, git checkout 自纠)
+
+## 2026-08-29 fail-closed enforcement slice
+
+The warning fallback was promoted to fail-closed after the binding/consumer
+slice had clean negative coverage. A real CLI canary with no binding returned
+exit 4, `failure_code=binding_required`, a redacted resolution receipt, and
+`invoked/evidenced/independently_verified=false`; the gateway/provider was not
+called. Root 413/413, OMO 55/55, Cockpit capability 85/85, and Agora 31/31
+targeted regressions passed, and the default GaC gate passed 57/57. This closes
+the missing-binding negative path only; production native receipt consumer and
+positive topology canary remain unproven.
