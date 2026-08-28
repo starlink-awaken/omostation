@@ -8951,7 +8951,8 @@ bets:
   title: 'session-brief Documents writer 收敛到 canonical Workspace brief'
   appetite: 1 day
   priority: P0
-  status: pending
+  status: done
+  done_at: 2026-08-29
   goal: '停止每日 06:15 Documents session-brief 写入器，复用 bin/mof/generate-brief.py 生成 live Workspace BRIEF.md，保留旧脚本作为回滚基线。'
   non_goals:
   - 不生成或改写 Documents @驾驶舱/_control/BRIEF.md
@@ -8983,6 +8984,43 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:54c6cc487016c5b1ff2f25ddd71e9020a3ec3719bf378ac7d7729907661b819c'
     decision_ref: decision://accepted/BET-Y1Q3-T10-34
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@34c5921b4de5e4fa36f25ba5ae7435cc60935fcc
+          tests:
+            ref: receipt://tests/test_generate_brief_workspace_output.py
+            sha256: sha256:da5d754977d8ca1e26207ee560fe16beb6d33a084ed21695223997e6424be4a9
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-session-brief-workspace-owner-design.md
+            sha256: sha256:54c6cc487016c5b1ff2f25ddd71e9020a3ec3719bf378ac7d7729907661b819c
+          rollback:
+            ref: receipt://docs/reports/2026-08-28-session-brief-workspace-owner.md
+            sha256: sha256:c7fc640174374c820b03679d4d178563454df3e1c519aa890c4c2c6b7e10a31d
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-34.md
+            sha256: sha256:d25d8a7f77598663ff84cd873cb89f130cab9e492b93a08f183c97551c1567b2
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-28-session-brief-workspace-owner.md
+            sha256: sha256:c7fc640174374c820b03679d4d178563454df3e1c519aa890c4c2c6b7e10a31d
+          replay:
+            ref: receipt://tests/test_generate_brief_workspace_output.py
+            sha256: sha256:da5d754977d8ca1e26207ee560fe16beb6d33a084ed21695223997e6424be4a9
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-34.md
+            sha256: sha256:d25d8a7f77598663ff84cd873cb89f130cab9e492b93a08f183c97551c1567b2
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on:
   - BET-Y1Q3-T10-33
   risk_level: L1
