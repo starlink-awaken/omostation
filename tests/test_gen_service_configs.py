@@ -78,3 +78,33 @@ def test_check_skips_byte_comparison_when_host_observer_is_unavailable(
         "reason": "launchd_observer_unavailable",
         "validation_errors": [],
     }
+
+
+def test_observer_unavailable_does_not_mask_malformed_declarations(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    """spec Verification 3: observer 缺失只 skip 字节比对, 缺 label 的
+    generate 声明仍必须 fail validation (skip 不是逃生门)."""
+    module = _module()
+    monkeypatch.setattr(module, "_launchd_dir", lambda: tmp_path / "missing-launchagents")
+    monkeypatch.setattr(
+        module,
+        "load_services",
+        lambda: [
+            {
+                "id": "broken.missing_label",
+                "enabled": True,
+                "scheduler": "launchd",
+            }
+        ],
+    )
+    monkeypatch.setattr(module.sys, "argv", ["gen-service-configs.py", "--check", "--json"])
+
+    assert module.main() == 1
+    report = json.loads(capsys.readouterr().out)
+    assert report["skipped"] is True
+    assert report["ok"] is False
+    assert report["reason"] == "launchd_observer_unavailable"
+    assert any("requires label" in e for e in report["validation_errors"])
