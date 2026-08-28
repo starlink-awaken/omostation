@@ -549,6 +549,7 @@ bets:
   - docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T10-43.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-28-service-config-p0-bootstrap.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
