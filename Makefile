@@ -709,5 +709,8 @@ ops-catalog:  ## 服务目录
 ops-graph:  ## 可视化依赖图
 	python3 bin/ops/cli.py graph
 
+ops-score:  ## 系统健康评分
+	python3 bin/ops/cli.py score
+
 ops-history:  ## 服务健康历史
 	python3 bin/ops/cli.py history

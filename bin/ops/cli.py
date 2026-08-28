@@ -755,6 +755,12 @@ def main() -> int:
                          help="Service profile")
     graph_p.set_defaults(func=cmd_graph)
 
+    # ── score ──
+    score_p = sub.add_parser("score", help="System health score (0-100)")
+    score_p.add_argument("--format", choices=["text", "json"], default="text",
+                         help="Output format")
+    score_p.set_defaults(func=cmd_score)
+
     # ── history ──
     history_p = sub.add_parser("history", help="Service health history")
     history_p.add_argument("service", nargs="?", help="Specific service to view")
@@ -1157,6 +1163,99 @@ def cmd_template(args: argparse.Namespace) -> int:
 
         print(f"Created service '{name}' from template '{svc_type}'")
         return 0
+
+    return 0
+
+
+def cmd_score(args: argparse.Namespace) -> int:
+    """Calculate system health score (0-100)."""
+    services = load_services()
+    fmt = args.format
+
+    enabled = [s for s in services if s.get("enabled", False)]
+    if not enabled:
+        print("No enabled services")
+        return 0
+
+    # Calculate component scores
+    total = len(enabled)
+    healthy = 0
+    running = 0
+    has_liveness = 0
+    has_deps = 0
+
+    for svc in enabled:
+        liv = check_liveness(svc)
+        if liv["status"] == "healthy":
+            healthy += 1
+        if _is_running(svc):
+            running += 1
+        if svc.get("liveness"):
+            has_liveness += 1
+        if svc.get("depends_on"):
+            has_deps += 1
+
+    # Health score (40% weight)
+    health_score = (healthy / total * 100) if total > 0 else 0
+
+    # Running score (30% weight)
+    running_score = (running / total * 100) if total > 0 else 0
+
+    # Observability score (15% weight)
+    observability_score = (has_liveness / total * 100) if total > 0 else 0
+
+    # Dependency score (15% weight)
+    dependency_score = (has_deps / total * 100) if total > 0 else 0
+
+    # Overall score
+    overall = (
+        health_score * 0.4
+        + running_score * 0.3
+        + observability_score * 0.15
+        + dependency_score * 0.15
+    )
+
+    if fmt == "json":
+        result = {
+            "overall": round(overall, 1),
+            "health": round(health_score, 1),
+            "running": round(running_score, 1),
+            "observability": round(observability_score, 1),
+            "dependency": round(dependency_score, 1),
+            "total_services": total,
+            "healthy": healthy,
+            "running": running,
+            "with_liveness": has_liveness,
+            "with_dependencies": has_deps,
+        }
+        print(json.dumps(result, indent=2))
+    else:
+        print("System Health Score")
+        print("=" * 40)
+        print(f"  Overall:        {round(overall, 1)}/100")
+        print(f"  Health:         {round(health_score, 1)}/100 (40%)")
+        print(f"  Running:        {round(running_score, 1)}/100 (30%)")
+        print(f"  Observability:  {round(observability_score, 1)}/100 (15%)")
+        print(f"  Dependency:     {round(dependency_score, 1)}/100 (15%)")
+        print()
+        print(f"  Total services: {total}")
+        print(f"  Healthy:        {healthy}")
+        print(f"  Running:       {running}")
+        print(f"  With liveness: {has_liveness}")
+        print(f"  With deps:     {has_deps}")
+
+        # Grade
+        if overall >= 90:
+            grade = "A"
+        elif overall >= 80:
+            grade = "B"
+        elif overall >= 70:
+            grade = "C"
+        elif overall >= 60:
+            grade = "D"
+        else:
+            grade = "F"
+        print(f"\n  Grade: {grade}")
 
     return 0
 
