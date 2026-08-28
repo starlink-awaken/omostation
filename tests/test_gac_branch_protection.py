@@ -20,6 +20,7 @@ def test_promotion_is_compare_and_swap_and_fail_closed() -> None:
     assert "If-Match" in source
     assert "expected-before" in source
     assert "required_status_checks" in source
+    assert "refusing legacy full protection deletion" in source
 
 
 def test_default_set_path_is_not_used_for_h1c() -> None:

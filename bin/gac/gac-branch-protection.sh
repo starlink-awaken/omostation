@@ -17,8 +17,6 @@
 #   - 0 required reviews (单人可 merge, 不阻塞)
 #
 # 用法:
-#   gac-branch-protection.sh                # 设置 (交互确认)
-#   gac-branch-protection.sh --yes          # 设置 (非交互, agent/CI 用)
 #   gac-branch-protection.sh --check        # 查 protection 状态 (解析各项, 可读)
 #   gac-branch-protection.sh --promote-gac-gate --expected-digest <sha256:...> [--yes]
 #   gac-branch-protection.sh --rollback-gac-gate --expected-digest <sha256:...> [--yes]
@@ -316,10 +314,8 @@ PY
     ;;
 
   --remove)
-    echo "⚠️  移除 main branch protection (回退到 direct push)"
-    confirm_action "确认移除?"
-    gh api "repos/$REPO/branches/main/protection" -X DELETE 2>&1 | head -3
-    echo "✅ protection 移除 (direct push 恢复)"
+    echo "❌ refusing legacy full protection deletion; use --rollback-gac-gate CAS subcommand" >&2
+    exit 2
     ;;
 
   --help|-h)
@@ -327,17 +323,6 @@ PY
     ;;
 
   *)
-    echo "⚠️  设置 main branch protection (破坏性, 改全局 push 流程):"
-    echo "   - Require PR before merging (禁 direct push main)"
-    echo "   - 0 required reviews (单人可 merge)"
-    echo "   - Required CI: phase-gate (ADR-0223)"
-    echo ""
-    echo "影响: 所有 agent direct push main 被拒, 必须走 PR."
-    echo "      配合 gac-worktree.sh = 多 agent 真并行 (各 worktree 各 PR)."
-    echo "      ⚠️  eCOS auto-push (direct push main) 会断! 须先完成 Phase 2 (eCOS 迁 PR)."
-    echo ""
-    confirm_action "确认设置?"
-
     echo "❌ refusing legacy full-payload branch-protection write; use explicit CAS subcommand" >&2
     echo "   promote: $0 --promote-gac-gate --expected-digest sha256:<64-hex> --yes" >&2
     echo "   check:   $0 --check" >&2
