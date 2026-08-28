@@ -47,6 +47,15 @@ REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "services.yaml"
 def _stable_python3() -> str:
     import os
 
+    # Prefer machine-stable installations before scanning PATH.  `uv run`
+    # prepends temporary/venv directories and, after those are skipped, can
+    # make `/usr/bin/python3` win even when the installed plist was generated
+    # with Homebrew Python.  A generator/check pair must choose one identity
+    # independent of the caller's environment.
+    for candidate in ("/opt/homebrew/bin/python3", "/usr/local/bin/python3"):
+        if Path(candidate).is_file():
+            return candidate
+
     for path in os.environ.get("PATH", "").split(os.pathsep):
         # 跳过 uv 临时目录、uv 管理的 .venv 入口 (uv run 会把 .venv/bin 提到 PATH 最前),
         # 这些都是 uv 拥有生命周期的 Python, GC 后会失效或切版本 — 不属于 "stable" 锚点.

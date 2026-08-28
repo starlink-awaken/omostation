@@ -46,6 +46,18 @@ def test_generated_launchd_record_requires_label_and_program() -> None:
     assert "broken.generated: launchd generator requires program.entrypoint" in violations
 
 
+def test_stable_python_prefers_fixed_homebrew_path_over_uv_like_path(monkeypatch) -> None:
+    module = _module()
+    monkeypatch.setenv("PATH", "/usr/bin:/opt/homebrew/bin")
+    monkeypatch.setattr(
+        module.Path,
+        "is_file",
+        lambda path: str(path) == "/opt/homebrew/bin/python3",
+    )
+
+    assert module._stable_python3() == "/opt/homebrew/bin/python3"
+
+
 def test_check_skips_byte_comparison_when_host_observer_is_unavailable(
     tmp_path: Path,
     monkeypatch,
