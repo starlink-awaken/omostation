@@ -613,6 +613,49 @@ bets:
             sha256: sha256:fbb6175d1cfd7b3db58fc77f23d42a86d1936addae7dfedd7a720b7fb5d3e549
     overall_state: outcome_accepted
   retro: required
+- id: BET-Y1Q3-T10-44
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'projects/omo root gitlink reachability recovery'
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: '修复 root projects/omo 指向 child origin/main 之外的 gitlink divergence，恢复 fresh recursive clone 与 root governance gate 的可验证性。'
+  non_goals:
+  - 不修改 projects/omo child 源码、分支历史或其他 gitlink
+  - 不修改 BET completion/value evidence、runtime、host schedule、LaunchAgent 或 Documents 内容
+  - 不绕过 submodule reachability、governance-release-gate 或 branch protection
+  done_when:
+  - root projects/omo gitlink 等于 authoritative child origin/main 的精确 commit
+  - fresh recursive clone 能 checkout 该 gitlink，child commit 可从 child main reachability 验证
+  - check-submodule-pointer-drift.py 无 divergence/unreachable pin，governance-release-gate 通过
+  - PR 保留 before/after pointer receipt，rollback 为原 root gitlink
+  verify:
+  - cmd: 'python3 bin/gac/check-submodule-pointer-drift.py --json'
+    expect: exit 0
+  - cmd: 'python3 bin/ssot/submodule-reachability-gate.py --source head --fetch --require-main --json'
+    expect: exit 0
+  - cmd: make governance-release-gate
+    expect: exit 0
+  workflow: submodule-pointer-close
+  underlying_workflow: submodule-pointer-close
+  write_surfaces:
+  - projects/omo
+  - docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/governance-evidence/waiver-2026-08-28-t10-44-pointer-bet-bootstrap.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-44.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md
+    spec_version: 1.0.0
+    content_digest: 'sha256:74360d967424c7495cb73f71a55c87911aff0ed82b70bc60b02ed01b1716b3e2'
+    decision_ref: decision://accepted/BET-Y1Q3-T10-44
+  depends_on: []
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: '任何 child commit 不可达、其他 gitlink 意外变化、fresh clone 失败或 gate 失败立即停止并回滚。'
+  retro: required
 - id: BET-Y1Q3-T4-02
   track: T4-OUTCOME
   window: Y1Q3
