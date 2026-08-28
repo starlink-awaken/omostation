@@ -720,3 +720,12 @@ ops-metrics-unified:  ## 统一指标聚合
 
 ops-metrics-server:  ## 统一指标服务器
 	python3 bin/ops/unified_metrics.py --port 9091
+
+ops-slo:  ## SLO 追踪报告
+	python3 bin/ops/slo_tracker.py --report
+
+ops-slo-record:  ## 记录 SLO 指标
+	python3 bin/ops/slo_tracker.py --record
+
+ops-slo-json:  ## SLO JSON 输出
+	python3 bin/ops/slo_tracker.py --json
