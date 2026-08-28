@@ -87,6 +87,10 @@ def load_services() -> list[dict]:
     return (docs[-1] if docs else {}).get("services", []) or []
 
 
+def _launchd_dir() -> Path:
+    return Path.home() / "Library" / "LaunchAgents"
+
+
 def _resolve_path(p: str) -> str:
     """~ 展开、绝对路径原样、其余相对 WORKSPACE。
 
@@ -229,7 +233,8 @@ def main() -> int:
         }
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0 if report["ok"] else 1
-    launchd_dir = Path.home() / "Library" / "LaunchAgents"
+    launchd_dir = _launchd_dir()
+    launchd_observer_available = launchd_dir.is_dir()
     drifts: list[str] = []
     bad_services: list[str] = []
     for svc in services:
@@ -246,6 +251,8 @@ def main() -> int:
             for error in declaration_errors:
                 print(f"❌ {error}", file=sys.stderr)
             bad_services.extend(declaration_errors)
+            continue
+        if args.check and not launchd_observer_available:
             continue
         try:
             plist = gen_launchd_plist(svc)
@@ -280,6 +287,18 @@ def main() -> int:
             print(f"--- {svc['label']} ---")
             print(plist)
     if args.check:
+        if not launchd_observer_available:
+            report = {
+                "ok": not bad_services,
+                "skipped": True,
+                "reason": "launchd_observer_unavailable",
+                "validation_errors": bad_services,
+            }
+            if args.json:
+                print(json.dumps(report, ensure_ascii=False, indent=2))
+            else:
+                print("⏭ launchd observer unavailable; plist byte comparison skipped")
+            return 0 if report["ok"] else 1
         if args.json:
             report = {"ok": not drifts, "drift_count": len(drifts), "drifts": drifts}
             print(json.dumps(report, ensure_ascii=False, indent=2))

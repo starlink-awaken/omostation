@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 MODULE_PATH = Path(__file__).parents[1] / "bin" / "mof" / "gen-service-configs.py"
@@ -43,3 +44,37 @@ def test_generated_launchd_record_requires_label_and_program() -> None:
     assert "broken.generated: launchd generator requires label" in violations
     assert "broken.generated: launchd generator requires program.interpreter" in violations
     assert "broken.generated: launchd generator requires program.entrypoint" in violations
+
+
+def test_check_skips_byte_comparison_when_host_observer_is_unavailable(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    module = _module()
+    monkeypatch.setattr(module, "_launchd_dir", lambda: tmp_path / "missing-launchagents")
+    monkeypatch.setattr(
+        module,
+        "load_services",
+        lambda: [
+            {
+                "id": "generated.valid",
+                "enabled": True,
+                "scheduler": "launchd",
+                "label": "com.example.valid",
+                "program": {
+                    "interpreter": "stable-python3",
+                    "entrypoint": "bin/example.py",
+                },
+            }
+        ],
+    )
+    monkeypatch.setattr(module.sys, "argv", ["gen-service-configs.py", "--check", "--json"])
+
+    assert module.main() == 0
+    assert json.loads(capsys.readouterr().out) == {
+        "ok": True,
+        "skipped": True,
+        "reason": "launchd_observer_unavailable",
+        "validation_errors": [],
+    }
