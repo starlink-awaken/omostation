@@ -158,7 +158,12 @@ jobs:
         run: python3 bin/gac/check-foundry-deck-coverage.py
       - name: CR-X2-EVIDENCE-FRESHNESS — 证据新鲜度检查 (advisory)
         continue-on-error: true
-        run: python3 bin/gac/check-evidence-freshness.py
+        run: |
+          if compgen -G '.omo/_delivery/evidence-smoke/*.json' > /dev/null; then
+            python3 bin/gac/check-evidence-freshness.py --json
+          else
+            echo "SKIP evidence freshness: no immutable report in checkout"
+          fi
       - name: CR-X2-GOVERNANCE-TREND — 治理指标趋势检查 (advisory)
         continue-on-error: true
         run: python3 bin/gac/check-governance-trend.py
