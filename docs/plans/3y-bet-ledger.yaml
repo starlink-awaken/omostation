@@ -9273,7 +9273,7 @@ bets:
   title: 'minute watcher 迁移到 Workspace canonical owners'
   appetite: 1 day
   priority: P0
-  status: pending
+  status: done
   goal: '停止每分钟 Documents watch-dispatch.py 执行器，保留变更检测与 stamps，但只触发 Workspace canonical owners，不再唤醒 Documents writer。'
   non_goals:
   - 不删除 Documents watch-dispatch.py 或旧数据
@@ -9303,6 +9303,44 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:068aaaa348704204a9e2460ff90ddd0e06bbe7afd7dd99971e653303392a41ab'
     decision_ref: decision://accepted/BET-Y1Q3-T10-38
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@087d646484afea1a13b33e9deaaeed5a1d359d7d
+          tests:
+            ref: receipt://tests/test_workspace_watch_dispatch.py
+            sha256: sha256:4a22a2794c8d165647052fa777854e0e8dc86c202a89674b5783f2407eeb24cf
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-workspace-watch-owner-design.md
+            sha256: sha256:068aaaa348704204a9e2460ff90ddd0e06bbe7afd7dd99971e653303392a41ab
+          rollback:
+            ref: receipt://docs/reports/2026-08-28-workspace-watch-owner.md
+            sha256: sha256:103ba07050c323653f37670a6ab4e10f5ff209632feaec4ac885ffb73a9201a8
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-38.md
+            sha256: sha256:930948383f12f65bcbf49bf1985e0cb369bf3a1e4b20f289792eade4137e47cb
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-28-workspace-watch-owner.md
+            sha256: sha256:103ba07050c323653f37670a6ab4e10f5ff209632feaec4ac885ffb73a9201a8
+          replay:
+            ref: receipt://tests/test_workspace_watch_dispatch.py
+            sha256: sha256:4a22a2794c8d165647052fa777854e0e8dc86c202a89674b5783f2407eeb24cf
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-38.md
+            sha256: sha256:930948383f12f65bcbf49bf1985e0cb369bf3a1e4b20f289792eade4137e47cb
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  done_at: 2026-08-29
   depends_on:
   - BET-Y1Q3-T10-37
   risk_level: L1
