@@ -523,7 +523,8 @@ bets:
   title: 'service-config lifecycle-only 声明与 validator 修复'
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-08-28'
   goal: '将误标为 launchd 生成任务的 OMO lifecycle-only 服务显式设为非生成记录，并让服务注册 validator 在生成前拒绝缺 label 或 program 的 launchd 声明。'
   non_goals:
   - 不创建、修改、加载或卸载任何宿主 plist
@@ -556,6 +557,57 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:13f499958646e433e8753c4c59891f4e04d34c4d891c7aef7df51caadb17cde3'
     decision_ref: decision://accepted/BET-Y1Q3-T10-43
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9d0ede018698eec93699ff28d860242bdac4a5dc
+          tests:
+            ref: receipt://tests/test_gen_service_configs.py
+            sha256: sha256:66aec7e8d1342be519b33ef7a6ccdc820cdef8b5ef9e733e1a75a2284cdb6195
+          diff:
+            ref: receipt://bin/mof/gen-service-configs.py
+            sha256: sha256:255259670ddaff65f56f1e48d12cc2ae720bc307999dbf7e3bbb6ed71a117e8e
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
+            sha256: sha256:13f499958646e433e8753c4c59891f4e04d34c4d891c7aef7df51caadb17cde3
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_truth/registry/services.yaml
+            sha256: sha256:4a022cb164f8ba7d78583713012296cf333ebcf2c35fb987db24dae10fd8195c
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-43.md
+            sha256: sha256:a983fb43099a10bc759dfb5f949aaea5f59b29175d60163befa49e80f7295205
+          replay:
+            ref: receipt://tests/test_gen_service_configs.py
+            sha256: sha256:66aec7e8d1342be519b33ef7a6ccdc820cdef8b5ef9e733e1a75a2284cdb6195
+          cleanup:
+            ref: receipt://.omo/_truth/registry/services.yaml
+            sha256: sha256:4a022cb164f8ba7d78583713012296cf333ebcf2c35fb987db24dae10fd8195c
+      value:
+        status: ACCEPTED
+        evidence:
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-43-accept.yaml
+            sha256: sha256:a96cf3ad948467fac06e418bf1e7cae34e53979bb427fc0619b87907606bd63d
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-43-accept.yaml
+            sha256: sha256:a96cf3ad948467fac06e418bf1e7cae34e53979bb427fc0619b87907606bd63d
+          real_signal:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-43.md
+            sha256: sha256:a983fb43099a10bc759dfb5f949aaea5f59b29175d60163befa49e80f7295205
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-43.md
+            sha256: sha256:a983fb43099a10bc759dfb5f949aaea5f59b29175d60163befa49e80f7295205
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-43.md
+            sha256: sha256:a983fb43099a10bc759dfb5f949aaea5f59b29175d60163befa49e80f7295205
+    overall_state: outcome_accepted
   depends_on: []
   risk_level: L1
   human_gate: false
