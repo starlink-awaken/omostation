@@ -517,6 +517,50 @@ bets:
   - projects/omo/src/omo/workflow/lifecycle.py
   pasw_required: false
   depends_on: []
+
+- id: BET-Y1Q3-T10-48
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Resident ledger read-status lock contention repair
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Make the resident status ledger probe tolerate bounded transient SQLite contention without mutating the host ledger or runtime.
+  non_goals:
+  - No database migration, WAL checkpoint/deletion, force unlock, process signal, launchd change, or service restart.
+  - No second ledger, writer, scheduler, lock registry, or runtime authority.
+  done_when:
+  - resident status recovers after a transient lock within a bounded retry budget
+  - persistent lock returns truthful degraded status and closes all opened brokers
+  - focused tests and root governance gates pass
+  - read-only host evidence proves no database/service mutation by the status probe
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest projects/omo/tests/unit/test_resident_status.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python -m py_compile projects/omo/src/omo/resident/status.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/status.py
+  - projects/omo/tests/unit/test_resident_status.py
+  - docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md
+  - docs/reports/2026-08-29-resident-ledger-read-status.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-48.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:cd834b1d9fa347898b2bf746f93c86c4c5e2b7cd474f701450cba9c72783dea3
+    decision_ref: decision://accepted/BET-Y1Q3-T10-48
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: If the fix needs any host mutation, a second ledger authority, or an unbounded retry, stop and re-review the Spec.
+  retro: required
 - id: BET-Y1Q3-T10-43
   track: T10-MATURITY
   window: Y1Q3
