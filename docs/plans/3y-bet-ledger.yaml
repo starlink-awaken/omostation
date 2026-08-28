@@ -6479,8 +6479,20 @@ bets:
             ref: receipt://lib/capability_trace_binding.py
             sha256: sha256:7dc472b2176e6b0b8897e9f0776e60470bb8f172fc5ad42ec076bd744916fcad
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
+          replay:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
+          cleanup:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
       value:
         status: ACCEPTED
         evidence:
@@ -6499,7 +6511,7 @@ bets:
           attestation:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
             sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
-    overall_state: blocked
+    overall_state: outcome_accepted
   retro: required
 - id: BET-Y1Q1-T6-07
   track: T6-SUBTRACT
