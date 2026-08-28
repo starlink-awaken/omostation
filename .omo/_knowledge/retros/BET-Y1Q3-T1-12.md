@@ -113,3 +113,27 @@ Engineering DONE 部分=✅；Operational NOT_PROVEN（无生产拓扑正向证�
 
 ### Q5 范围变化？
 仅既有修正案 1.1.1（T8）；无新增范围。
+
+---
+
+## 2026-08-28 第三方独立验证 (claim 轮, 老王)
+
+> 定位: 对 08-26 Wave B 交付的独立复核, 非 completion 声明。value 轴仍待人工签名。
+
+### 验证证据
+
+- **sovereignty 链路实测**: capability preflight 曾挡 `start` (CAPABILITY_PREFLIGHT_PROVIDER_FAILED),
+  深挖为 worktree `.git` 为文件 → clone identity 不可读; 按 `agent-clone-onboard` 正规路径
+  建 delivery clone 后 `start` 成功 (run 20260828T072211Z-3c912d37) — Task 3 的 start-time
+  preflight 在真实执行路径上**活的**, 不是纸面声明
+- **ecos 侧**: `test_mof_compiler.py` 43/43 + `test_work_packet_compiler.py` 67/67 + ruff clean
+  (曾追加重复测试撞 F811 — 476 行 #2438 已带更完整版本, 已删除我的重复段)
+- **omo 侧**: test_orchestration_contract + test_blueprint_control + test_workflow_start_preflight
+  147/147 绿
+- 共 257 测试独立复现, 与 08-26 记录的 done_when 证据一致
+
+### 给下一个 owner
+
+- claim 面先跑 verify 再估工作量 (P73 D1 第 6 次: plan 08-24 文本 vs 08-28 实况全落地)
+- 追加测试前先 `rg "def test_工作名"`, 重名 F811 是信号不是噪音
+- retro 主分支版本必须先读再动 (本轮第 3 次覆盖事故, git checkout 自纠)
