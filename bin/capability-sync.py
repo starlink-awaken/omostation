@@ -92,6 +92,16 @@ DEFAULT_REGISTRY = ROOT / "docs" / "generated" / "capability-registry.yaml"
 CANONICAL_GENERATOR = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
 FEDERATION_AUDITOR = ROOT / "lib" / "capability_federation_audit.py"
 AGORA_SRC = ROOT / "projects" / "agora" / "src"
+_ROUTE_ADMISSION_KEYS = frozenset(
+    {
+        "capability",
+        "role",
+        "declared_values",
+        "supports_otlp",
+        "omo_audit_trail_id",
+        "capabilities",
+    }
+)
 SUPPORTED_SCHEMA_MAJOR = 1
 MAX_INPUT_JSON_BYTES = 1024 * 1024
 MAX_MESH_LOG_BYTES = 8 * 1024 * 1024
@@ -436,21 +446,36 @@ def build_native_bos_record(
     }
 
 
-def _prepare_native_router(router: Any, exact_services: Sequence[Any]) -> Any:
+def _prepare_native_router(
+    router: Any,
+    exact_services: Sequence[Any],
+    *,
+    admission_context: Mapping[str, Any] | None = None,
+) -> Any:
     """Require lifecycle catalogs before any exact route is seeded."""
     router.enable_capability_gating()
     if getattr(router, "_capability_catalog", None) is None or getattr(router, "_admission_catalog", None) is None:
         raise GatewayError("lifecycle_catalog_unavailable")
-    router.seed_from_poc(list(exact_services))
+    if admission_context is None:
+        router.seed_from_poc(list(exact_services))
+    else:
+        router.seed_from_poc(list(exact_services), admission_context=admission_context)
     return router
 
 
-def _load_native_gateway(capability_id: str) -> tuple[Any, Sequence[Any]]:
+def _load_native_gateway(
+    capability_id: str,
+    *,
+    binding: Mapping[str, Any] | None = None,
+) -> tuple[Any, Sequence[Any]]:
     """Load Agora's gateway and seed only the exact native route."""
     if str(AGORA_SRC) not in sys.path:
         sys.path.insert(0, str(AGORA_SRC))
     try:
-        from agora.capability_gateway import CapabilityInvocationGateway
+        from agora.capability_gateway import (
+            CapabilityInvocationGateway,
+            build_native_admission_context,
+        )
         from agora.mcp.bos_router import bos_router
         from agora.mcp.resolver.services import POC_SERVICES
     except Exception as exc:  # noqa: BLE001 - public boundary fails closed
@@ -459,7 +484,11 @@ def _load_native_gateway(capability_id: str) -> tuple[Any, Sequence[Any]]:
     uri = capability_id.removeprefix("bos-service:")
     exact_services = [service for service in POC_SERVICES if getattr(service, "uri", "") == uri]
     try:
-        gateway = CapabilityInvocationGateway(router=_prepare_native_router(bos_router, exact_services))
+        context = build_native_admission_context(uri, binding=binding)
+        route_context = {key: value for key, value in context.items() if key in _ROUTE_ADMISSION_KEYS}
+        gateway = CapabilityInvocationGateway(
+            router=_prepare_native_router(bos_router, exact_services, admission_context=route_context)
+        )
     except Exception as exc:  # noqa: BLE001 - public boundary fails closed
         if isinstance(exc, GatewayError):
             raise
@@ -485,7 +514,7 @@ def execute_gateway_operation(
     if operation not in {"load", "invoke"}:
         raise GatewayError("unsupported_gateway_operation")
     if gateway is None or service_catalog is None:
-        gateway, service_catalog = _load_native_gateway(capability_id)
+        gateway, service_catalog = _load_native_gateway(capability_id, binding=binding)
     record = build_native_bos_record(registry, capability_id, service_catalog)
     selector = {"capability_id": capability_id}
     if operation == "load":
