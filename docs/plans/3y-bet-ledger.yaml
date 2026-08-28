@@ -523,7 +523,8 @@ bets:
   title: 'service-config lifecycle-only 声明与 validator 修复'
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-28
   goal: '将误标为 launchd 生成任务的 OMO lifecycle-only 服务显式设为非生成记录，并让服务注册 validator 在生成前拒绝缺 label 或 program 的 launchd 声明。'
   non_goals:
   - 不创建、修改、加载或卸载任何宿主 plist
@@ -560,6 +561,57 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 'Any attempt to write host plist, ambiguous lifecycle ownership, or generated launchd contract beyond the five declared records stops this BET.'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6f473f0fde459d666cb5ed4543f395b41678e739
+          tests:
+            ref: receipt://tests/test_gen_service_configs.py
+            sha256: sha256:66aec7e8d1342be519b33ef7a6ccdc820cdef8b5ef9e733e1a75a2284cdb6195
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
+            sha256: sha256:13f499958646e433e8753c4c59891f4e04d34c4d891c7aef7df51caadb17cde3
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
+            sha256: sha256:13f499958646e433e8753c4c59891f4e04d34c4d891c7aef7df51caadb17cde3
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-43.md
+            sha256: sha256:a983fb43099a10bc759dfb5f949aaea5f59b29175d60163befa49e80f7295205
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-43.md
+            sha256: sha256:a983fb43099a10bc759dfb5f949aaea5f59b29175d60163befa49e80f7295205
+          replay:
+            ref: receipt://tests/test_gen_service_configs.py
+            sha256: sha256:66aec7e8d1342be519b33ef7a6ccdc820cdef8b5ef9e733e1a75a2284cdb6195
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
+            sha256: sha256:13f499958646e433e8753c4c59891f4e04d34c4d891c7aef7df51caadb17cde3
+      value:
+        status: ACCEPTED
+        evidence:
+          real_signal:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-43-accept.yaml
+            sha256: sha256:fbb6175d1cfd7b3db58fc77f23d42a86d1936addae7dfedd7a720b7fb5d3e549
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-43-accept.yaml
+            sha256: sha256:fbb6175d1cfd7b3db58fc77f23d42a86d1936addae7dfedd7a720b7fb5d3e549
+          revision:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-43-accept.yaml
+            sha256: sha256:fbb6175d1cfd7b3db58fc77f23d42a86d1936addae7dfedd7a720b7fb5d3e549
+          time_burden:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-43-accept.yaml
+            sha256: sha256:fbb6175d1cfd7b3db58fc77f23d42a86d1936addae7dfedd7a720b7fb5d3e549
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-43-accept.yaml
+            sha256: sha256:fbb6175d1cfd7b3db58fc77f23d42a86d1936addae7dfedd7a720b7fb5d3e549
+    overall_state: outcome_accepted
   retro: required
 - id: BET-Y1Q3-T4-02
   track: T4-OUTCOME
@@ -6316,14 +6368,14 @@ bets:
             ref: receipt://tests/test_capability_native_inspection.py
             sha256: sha256:a67e950b13e50f89db92b5f0964022694597f24e60e0be8b19f3c3e85f3b6399
       value:
-        status: NOT_PROVEN
+        status: ACCEPTED
         evidence:
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
             sha256: sha256:41b7175076f14129b5e62989042f2f97d5f2b6ffb60cdd3a0ac9d60c27c0267a
           human_verdict:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
-            sha256: sha256:f11d3224c60b3c1657ac79998e96c38cd06ce3718ac5c60de5442802c337b429
+            sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
             sha256: sha256:52a670138db2ec7565e6c13e2d62004d35413ff191301c6f2b9ea33743a4efdf
@@ -6332,8 +6384,8 @@ bets:
             sha256: sha256:52a670138db2ec7565e6c13e2d62004d35413ff191301c6f2b9ea33743a4efdf
           attestation:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
-            sha256: sha256:f11d3224c60b3c1657ac79998e96c38cd06ce3718ac5c60de5442802c337b429
-    overall_state: blocked
+            sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
+    overall_state: outcome_accepted
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
   write_surfaces:
@@ -7859,7 +7911,8 @@ bets:
   title: 'Documents freshness audit 下沉 Workspace owner'
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-28
   goal: '将 control-plane freshness 只读检查从 Documents 执行面下沉到 Workspace owner，使用 L4 registry 作为域列表 SSOT，真实反映 stale/missing/invalid，并将 evidence 写到 Workspace。'
   non_goals:
   - 不切换或删除现有 cron/LaunchAgent/Scheduled
@@ -7930,9 +7983,24 @@ bets:
             ref: receipt://docs/reports/2026-08-27-documents-freshness-owner.md
             sha256: sha256:ae2fd43289ffc7e3352ef1315e6cf349c66ccec2dd06af854c4ec93993ccedd2
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: blocked
+        status: ACCEPTED
+        evidence:
+          real_signal:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-24-accept.yaml
+            sha256: sha256:b4276350f4923226f1902f321a50bcd3438b2378905a57f940e5c2d86e46f2f8
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-24-accept.yaml
+            sha256: sha256:b4276350f4923226f1902f321a50bcd3438b2378905a57f940e5c2d86e46f2f8
+          revision:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-24-accept.yaml
+            sha256: sha256:b4276350f4923226f1902f321a50bcd3438b2378905a57f940e5c2d86e46f2f8
+          time_burden:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-24-accept.yaml
+            sha256: sha256:b4276350f4923226f1902f321a50bcd3438b2378905a57f940e5c2d86e46f2f8
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-24-accept.yaml
+            sha256: sha256:b4276350f4923226f1902f321a50bcd3438b2378905a57f940e5c2d86e46f2f8
+    overall_state: outcome_accepted
   retro: required
 - id: BET-Y1Q3-T10-25
   track: T10-MATURITY
