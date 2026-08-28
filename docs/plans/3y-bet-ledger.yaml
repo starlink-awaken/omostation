@@ -8702,7 +8702,8 @@ bets:
   title: 'bridge-refresh Documents writer 改为 Workspace preflight'
   appetite: 1 day
   priority: P0
-  status: pending
+  status: done
+  done_at: 2026-08-28
   goal: '停止 06:05 Documents bridge-refresh 写入器，切换为 Workspace-only bridge readiness preflight，保留旧 writer 与内容用于 Cockpit parity/回滚。'
   non_goals:
   - 不删除或重写 Documents DASHBOARD
@@ -8735,6 +8736,43 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:c7aad31607b824f35fca885eca6b54a7968a904aba57b7ead17e84f66ff6df1f'
     decision_ref: decision://accepted/BET-Y1Q3-T10-31
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b183e00b81d6c94df56f47c71ec71abe60e8ba23
+          tests:
+            ref: receipt://tests/test_documents_bridge_preflight.py
+            sha256: sha256:645a3e57da02a494062096c76c748906dac0b55d3f1416cbbfe1d9c06f78ee73
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-bridge-preflight-owner-design.md
+            sha256: sha256:c7aad31607b824f35fca885eca6b54a7968a904aba57b7ead17e84f66ff6df1f
+          rollback:
+            ref: receipt://docs/reports/2026-08-28-bridge-preflight-owner.md
+            sha256: sha256:ec415dea5ccc2345ffc7b35741387444e76b9a1b584a3154c23d29b8e7aa9452
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-28-bridge-preflight-owner.md
+            sha256: sha256:ec415dea5ccc2345ffc7b35741387444e76b9a1b584a3154c23d29b8e7aa9452
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-31.md
+            sha256: sha256:4427cc614c89a4c0db26f53813c7c3d5000e381a3a69b823ce7c87189e7aa20e
+          replay:
+            ref: receipt://tests/test_documents_bridge_preflight.py
+            sha256: sha256:645a3e57da02a494062096c76c748906dac0b55d3f1416cbbfe1d9c06f78ee73
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-31.md
+            sha256: sha256:4427cc614c89a4c0db26f53813c7c3d5000e381a3a69b823ce7c87189e7aa20e
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on:
   - BET-Y1Q3-T10-30
   risk_level: L1
