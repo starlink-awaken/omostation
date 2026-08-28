@@ -777,3 +777,7 @@ ops-monitor-json:  ## 健康检查 JSON 输出
 
 ops-catalog-api:  ## 服务目录 API
 	python3 bin/ops/catalog_api.py --port 8092
+
+ops-dashboard:  ## Web 仪表盘
+	@echo "Opening Service Gateway Dashboard..."
+	@open docs/observability/dashboard.html 2>/dev/null || xdg-open docs/observability/dashboard.html 2>/dev/null || echo "Open docs/observability/dashboard.html in your browser"

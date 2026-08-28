@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Gateway Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --green: #22c55e;
+            --yellow: #eab308;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --border: #334155;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header h1 { font-size: 24px; font-weight: 600; }
+        .header .timestamp { color: var(--muted); font-size: 14px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); }
+        .card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card .value { font-size: 32px; font-weight: 700; margin-top: 8px; }
+        .card .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+        .card.green { border-left: 4px solid var(--green); }
+        .card.yellow { border-left: 4px solid var(--yellow); }
+        .card.red { border-left: 4px solid var(--red); }
+        .card.blue { border-left: 4px solid var(--blue); }
+        .section { margin-bottom: 32px; }
+        .section h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: var(--muted); }
+        .services { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+        .service { background: var(--card); border-radius: 8px; padding: 16px; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        .service .icon { width: 12px; height: 12px; border-radius: 50%; }
+        .service .icon.healthy { background: var(--green); box-shadow: 0 0 8px var(--green); }
+        .service .icon.stale { background: var(--yellow); }
+        .service .icon.down { background: var(--red); }
+        .service .icon.disabled { background: var(--muted); }
+        .service .info { flex: 1; }
+        .service .name { font-weight: 500; font-size: 14px; }
+        .service .type { color: var(--muted); font-size: 12px; }
+        .service .status { font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+        .service .status.running { background: rgba(34,197,94,0.2); color: var(--green); }
+        .service .status.down { background: rgba(239,68,68,0.2); color: var(--red); }
+        .service .status.disabled { background: rgba(148,163,184,0.2); color: var(--muted); }
+        .actions { display: flex; gap: 8px; margin-top: 16px; }
+        .btn { background: var(--blue); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn:hover { opacity: 09; }
+        .btn-secondary { background: var(--border); }
+        .loading { text-align: center; padding: 40px; color: var(--muted); }
+        .error { background: rgba(239,68,68,0.1); border: 1px solid var(--red); border-radius: 8px; padding: 16px; color: var(--red); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Service Gateway Dashboard</h1>
+        <span class="timestamp" id="timestamp">Loading...</span>
+    </div>
+
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div class="grid" id="summary">
+        <div class="card blue">
+            <div class="label">Total Services</div>
+            <div class="value" id="total">-</div>
+        </div>
+        <div class="card green">
+            <div class="label">Healthy</div>
+            <div class="value" id="healthy">-</div>
+        </div>
+        <div class="card yellow">
+            <div class="label">Unhealthy</div>
+            <div class="value" id="unhealthy">-</div>
+        </div>
+        <div class="card red">
+            <div class="label">Disabled</div>
+            <div class="value" id="disabled">-</div>
+        </div>
+        <div class="card green">
+            <div class="label">Availability</div>
+            <div class="value" id="availability">-</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Services</h2>
+        <div class="services" id="services">
+            <div class="loading">Loading services...</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Dependency Graph</h2>
+        <div class="card">
+            <div id="dependencies">
+                <div class="loading">Loading dependencies...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8092';
+
+        async function fetchJSON(path) {
+            const resp = await fetch(`${API}${path}`);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            return resp.json();
+        }
+
+        function statusIcon(status) {
+            if (status === 'running') return 'healthy';
+            if (status === 'down') return 'down';
+            if (status === 'disabled') return 'disabled';
+            return 'stale';
+        }
+
+        function formatUptime(seconds) {
+            if (!seconds) return '-';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            return `${h}h ${m}m`;
+        }
+
+        async function loadDashboard() {
+            try {
+                // Load health
+                const health = await fetchJSON('/api/health');
+                document.getElementById('total').textContent = health.total;
+                document.getElementById('healthy').textContent = health.healthy;
+                document.getElementById('unhealthy').textContent = health.unhealthy;
+                document.getElementById('disabled').textContent = health.disabled;
+                document.getElementById('availability').textContent = health.availability ? `${(health.availability * 100).toFixed(1)}%` : '-';
+
+                // Load services
+                const services = await fetchJSON('/api/services');
+                const servicesEl = document.getElementById('services');
+                servicesEl.innerHTML = services.map(s => `
+                    <div class="service">
+                        <div class="icon ${statusIcon(s.status)}"></div>
+                        <div class="info">
+                            <div class="name">${s.id}</div>
+                            <div class="type">${s.scheduler}</div>
+                        </div>
+                        <span class="status ${s.status}">${s.status}</span>
+                    </div>
+                `).join('');
+
+                // Load dependencies
+                const deps = await fetchJSON('/api/dependencies');
+                const depsEl = document.getElementById('dependencies');
+                depsEl.innerHTML = `
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div>
+                            <strong>${deps.nodes.length}</strong> nodes
+                        </div>
+                        <div>
+                            <strong>${deps.edges.length}</strong> edges
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 13px; color: var(--muted);">
+                        ${deps.edges.slice(0, 10).map(e => `${e.source} → ${e.target}`).join('<br>')}
+                        ${deps.edges.length > 10 ? `<br>... and ${deps.edges.length - 10} more` : ''}
+                    </div>
+                `;
+
+                document.getElementById('timestamp').textContent = new Date().toLocaleString();
+                document.getElementById('error').style.display = 'none';
+            } catch (e) {
+                document.getElementById('error').textContent = `Error: ${e.message}`;
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        loadDashboard();
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>
