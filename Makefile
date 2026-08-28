@@ -781,3 +781,15 @@ ops-catalog-api:  ## 服务目录 API
 ops-dashboard:  ## Web 仪表盘
 	@echo "Opening Service Gateway Dashboard..."
 	@open docs/observability/dashboard.html 2>/dev/null || xdg-open docs/observability/dashboard.html 2>/dev/null || echo "Open docs/observability/dashboard.html in your browser"
+
+ops-alert:  ## 智能告警检查
+	python3 bin/ops/smart_alert.py --check
+
+ops-alert-report:  ## 告警报告
+	python3 bin/ops/smart_alert.py --report
+
+ops-capacity:  ## 容量规划报告
+	python3 bin/ops/capacity_planner.py --report
+
+ops-capacity-json:  ## 容量规划 JSON
+	python3 bin/ops/capacity_planner.py --json
