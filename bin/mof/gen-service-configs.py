@@ -220,6 +220,9 @@ def main() -> int:
         # 把 omlx 网关等 7 个 plist 写成了死路径。
         if not svc.get("generate", True):
             continue
+        # 跳过缺 label 或 program 的服务 (BET-Y1Q3-T10-43: validator 已验这些)
+        if not svc.get("label") or not svc.get("program"):
+            continue
         try:
             plist = gen_launchd_plist(svc)
         except ValueError as exc:
