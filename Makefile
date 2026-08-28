@@ -794,3 +794,12 @@ ops-capacity:  ## 容量规划报告
 
 ops-capacity-json:  ## 容量规划 JSON
 	python3 bin/ops/capacity_planner.py --json
+
+ops-templates:  ## 服务模板列表
+	python3 bin/ops/templates.py list
+
+ops-template-show:  ## 显示模板详情
+	python3 bin/ops/templates.py show
+
+ops-template-apply:  ## 应用模板创建服务
+	python3 bin/ops/templates.py apply
