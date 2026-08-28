@@ -554,7 +554,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
     spec_version: 1.0.0
-    content_digest: 'sha256:b7bea44d24199abcd7b430de007b52049bff1c8ba34b40e2aa73fb6d0ef6b2dc'
+    content_digest: 'sha256:13f499958646e433e8753c4c59891f4e04d34c4d891c7aef7df51caadb17cde3'
     decision_ref: decision://accepted/BET-Y1Q3-T10-43
   depends_on: []
   risk_level: L1
