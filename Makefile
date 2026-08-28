@@ -678,3 +678,12 @@ ops-health-cron:  ## 健康检查定时任务 (每 5 分钟)
 
 ops-dashboard:  ## Web 仪表盘
 	python3 bin/ops/dashboard.py --port 8091
+
+ops-metrics:  ## Prometheus 指标导出
+	python3 bin/ops/cli.py metrics --text
+
+ops-metrics-server:  ## Prometheus 指标服务器
+	python3 bin/ops/cli.py metrics --port 9090
+
+ops-alert:  ## 告警检查
+	python3 bin/ops/alert.py --check
