@@ -1440,3 +1440,13 @@ python3 bin/ssot/gen-capability-registry.py --check --quiet
 Commit: `fix(phase8): retire root wrapper bypass commands`.
 
 Tag: `delivery/t1-12-phase8-root-scope-20260825-v3`.
+
+## 2026-08-29 MetaOS admission-provider packaging follow-up
+
+The positive native canary reached Agora but could not load the MetaOS
+admission provider because building `projects/metaos` failed with a duplicate
+Hatch wheel entry: `packages = ["src/metaos"]` already includes `metaos/config`,
+while `force-include` added the same destination again. The fix is intentionally
+scoped to removing that packaging collision from the T1-12 write surface;
+provider installation and the positive canary remain pending until the child
+package build and admission path are reverified.
