@@ -753,3 +753,15 @@ ops-runbook-resource:  ## 资源耗尽检测
 
 ops-runbook-deps:  ## 依赖故障追踪
 	python3 bin/ops/runbook.py dependency-failure
+
+ops-env:  ## 显示当前环境配置
+	python3 bin/ops/env_config.py show
+
+ops-env-list:  ## 列出所有环境
+	python3 bin/ops/env_config.py list
+
+ops-env-apply:  ## 应用环境配置
+	python3 bin/ops/env_config.py apply
+
+ops-env-apply-dry:  ## 预览环境配置变更
+	python3 bin/ops/env_config.py apply --dry-run
