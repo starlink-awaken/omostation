@@ -8,17 +8,17 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 153 |
-| MCP 工具 | 651 |
+| CLI 命令 (含子命令) | 155 |
+| MCP 工具 | 629 |
 | MCP 服务器 | 27 |
-| BOS 服务 | 260 |
+| BOS 服务 | 262 |
 | BOS 域 | 21 |
 
 ## MCP 服务器清单
 
 | 服务器 | 层 | 工具数 | 传输 | 文件 |
 |--------|-----|--------|------|------|
-| `agora` | I0 | 121 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
+| `agora` | I0 | 99 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
 | `gbrain` | L2 | 75 | stdio | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
 | `runtime` | L1 | 50 | stdio | `projects/runtime/src/runtime/mcp_server.py` |
 | `l4-kernel` | L4 | 47 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
@@ -60,7 +60,7 @@
 | `ecos` | 10 |
 | `fabric` | 1 |
 | `forge` | 1 |
-| `governance` | 60 |
+| `governance` | 62 |
 | `l4-kernel` | 1 |
 | `memory` | 47 |
 | `meta` | 1 |
@@ -103,6 +103,7 @@
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
 | `cockpit cards` | 显示 CARDS 卡片状态 |
 | `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198/0203) |
+| `cockpit cell` | 🤖 AGE-v2 动态 Agent Cell (规划/执行/验证/治理) |
 | `cockpit challenge` | ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196) |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit client` | 以 REPL 模式连接到 MCP server |
@@ -176,6 +177,7 @@
 | `cockpit observe` | 可观测性栈（Langfuse）入口 |
 | `cockpit omo` | OMO CLI 委派 (debt/state/governance/lint/...) |
 | `cockpit onboarding` | 为 AI 构建项目全貌上下文 |
+| `cockpit ops` | 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate) |
 | `cockpit pack` | 将代码库打包为 LLM 友好格式 |
 | `cockpit panorama` | 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产) |
 | `cockpit pending` | 查看未决待办快照预览 |
