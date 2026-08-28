@@ -242,6 +242,28 @@ def _count_decision_quality(since_days: int = 30) -> dict:
     }
 
 
+
+def _read_kv_cache_stats() -> dict:
+    """Read KV cache statistics from omlxc persistence for A2 axis."""
+    cache_stats_path = Path.home() / ".omlxc" / "cache_stats.json"
+    if not cache_stats_path.exists():
+        return {"hit_rate": 0.0, "total_queries": 0, "available": False}
+    
+    try:
+        import json
+        stats = json.loads(cache_stats_path.read_text())
+        total = stats.get("l1_hits", 0) + stats.get("l2_hits", 0) + stats.get("misses", 0)
+        hit_rate = stats.get("l1_hits", 0) / total if total > 0 else 0.0
+        return {
+            "hit_rate": hit_rate,
+            "total_queries": total,
+            "l1_hits": stats.get("l1_hits", 0),
+            "l2_hits": stats.get("l2_hits", 0),
+            "available": True,
+        }
+    except Exception:
+        return {"hit_rate": 0.0, "total_queries": 0, "available": False}
+
 def compute_axes(since_days: int = 30) -> dict[str, Any]:
     """Compute the 4 axes with their scores and supporting data."""
     # A-axis: time saved
@@ -291,6 +313,11 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
     e_quality = _count_decision_quality(since_days)
     # Scale: 5 P0/P1 decisions with 100% adoption = 100
     e_score = min(100, round(20 * e_quality["p0_p1_count"] * e_quality["adoption_ratio"]))
+
+    # A2-axis: KV Cache Hit Rate (advisory)
+    a2_stats = _read_kv_cache_stats()
+    # Scale: 50% hit rate = 50, 100% hit rate = 100
+    a2_score = min(100, round(a2_stats["hit_rate"] * 100)) if a2_stats["available"] else 0
 
     # 3-axis composite (BC — main score, backward compat for strategy-check)
     weights_3axis = {"A": 0.70, "B": 0.30, "C": 0.0}
@@ -349,6 +376,12 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
                 "weight": 0.15,
                 "data": e_quality,
             },
+            "A2": {
+                "name": "KV Cache Hit Rate (advisory)",
+                "score": a2_score,
+                "weight": 0.0,
+                "data": a2_stats,
+            },
         },
         "composite": {
             "score": score_3axis,
@@ -359,6 +392,22 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
             "weights": weights_4axis,
             "advisory": True,
             "note": "A60+B20+D20; pulls 0.10 from A and 0.10 from B; aligns compass_radar↔bet_ledger.",
+        },
+        "composite_6axis": {
+            "score": round(a_score * 0.45 + b_score * 0.08 + d_score * 0.18 + e_score * 0.14 + a2_score * 0.15),
+            "weights": {"A": 0.45, "B": 0.08, "C": 0.0, "D": 0.18, "E": 0.14, "A2": 0.15},
+            "advisory": True,
+            "note": "A45+B8+D18+E14+A215; A2 adds KV cache efficiency dimension.",
+            "signpost": {
+                "5axis_vs_6axis": "6-axis adds A2 (KV cache) at 0.15 weight. When cache is cold (hit_rate=0), score drops significantly.",
+                "axis_contributions": {
+                    "A": round(a_score * 0.45, 1),
+                    "B": round(b_score * 0.08, 1),
+                    "D": round(d_score * 0.18, 1),
+                    "E": round(e_score * 0.14, 1),
+                    "A2": round(a2_score * 0.15, 1),
+                }
+            },
         },
         "composite_5axis": {
             "score": round(a_score * 0.50 + b_score * 0.10 + d_score * 0.20 + e_score * 0.15),
