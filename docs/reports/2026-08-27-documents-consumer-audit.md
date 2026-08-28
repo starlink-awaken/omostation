@@ -50,3 +50,19 @@ owner mapping or archival classification before any schedule switch.
 next implementation wave should add or verify Workspace owner commands for the
 9 live scheduled consumers, resolve the 12 unmatched references, then perform a
 separate precise confirmation before changing host schedules.
+
+## 2026-08-28 复核 (BET-Y1Q3-T10-23 claim 轮)
+
+重跑 live scan (真宿主 crontab/LaunchAgents/Scheduled/域网关引用):
+
+- total consumers: **191** (与 08-27 基线一致)
+- families: public-runtime 105 · family-dashboard-app 35 · cockpit-runtime 18 ·
+  learning-content-archives 9 · root-oneoff-assets 8 · work-runtime 3 · learning-runtime 1
+- **unmatched: 12 → 0** — 08-27 列出的 12 个 legacy 引用 (驾驶舱/scripts/*,
+  kems-cross-check.py, ecos-constraint-validator.py 等) 已全部获得 family 归类
+- forbidden_executors: 0 · workspace_read_owners: 12 · errors: []
+
+结论更新: cutover 的"unmatched 硬阻塞"已解除; 剩余前置 = 为 11 个
+live scheduled consumers (9 crontab + 1 LaunchAgent + 1 scheduled skill)
+验证 Workspace owner 命令后, 可单独精确确认切换。切换动作本身仍需
+Workspace owner (人) 批准 — 本报告仅提供硬证据。
