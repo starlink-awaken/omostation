@@ -83,9 +83,10 @@ except ImportError:
     # omit the native-execution lib set; the module must stay importable there.
     NATIVE_EXECUTION_LIBS_AVAILABLE = False
 
-# Promoted shadow -> warning on 2026-08-26 after two consecutive caller scans
-# showed zero unbound production entrypoints (docs/reports/2026-08-26-binding-enforcement-scan.md).
-BINDING_ENFORCEMENT = "warning"
+# Missing binding is now fail-closed: legacy gateway execution is never a
+# fallback for a new caller.  The receipt remains redacted and explicitly
+# records zero invocation/evidence/verification states.
+BINDING_ENFORCEMENT = "fail"
 
 DEFAULT_REGISTRY = ROOT / "docs" / "generated" / "capability-registry.yaml"
 CANONICAL_GENERATOR = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
@@ -1330,8 +1331,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
             )
             return 4
         if not bundle_present:
-            # Shadow rollout invariant: legacy responses are observed only and are
-            # never labeled native or independently verified.
+            if BINDING_ENFORCEMENT == "fail":
+                receipt = _binding_error_receipt(selector, "binding_required")
+                receipt["binding_enforcement"] = f"{BINDING_ENFORCEMENT}_missing"
+                print("capability binding is required for new callers", file=sys.stderr)
+                print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+                return 4
+            # Compatibility branch for an explicitly retained warning rollout:
+            # legacy responses are observed only and are never labeled native or
+            # independently verified.
             try:
                 registry = load_registry(args.registry)
                 payload = _read_json_payload(args.input_json) if args.command == "invoke" else None

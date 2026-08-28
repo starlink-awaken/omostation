@@ -893,7 +893,7 @@ def test_load_and_invoke_cli_require_exact_id_and_structured_input(cap_sync) -> 
         parser.parse_args(["invoke", "--id", "bos-service:x"])
 
 
-def test_invoke_cli_delegates_only_to_gateway_and_emits_safe_receipt(
+def test_unbound_invoke_rejects_before_gateway_and_emits_safe_receipt(
     cap_sync,
     registry: dict,
     tmp_path: Path,
@@ -923,12 +923,15 @@ def test_invoke_cli_delegates_only_to_gateway_and_emits_safe_receipt(
                 str(registry_path),
             ]
         )
-        == 0
+        == 4
     )
     receipt = json.loads(capsys.readouterr().out)
     encoded = json.dumps(receipt, sort_keys=True)
-    assert receipt["schema"] == "capability-invocation-receipt/v1"
-    assert receipt["status"] == "succeeded"
+    assert receipt["schema"] == "capability-resolution-receipt/v1"
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "binding_required"
+    assert receipt["states"] == {"invoked": False, "evidenced": False, "independently_verified": False}
+    assert gateway.calls == []
     assert "bounded" not in encoded
     assert str(payload_path) not in encoded
 
@@ -949,11 +952,11 @@ def test_gateway_unavailable_fails_closed_without_echoing_sensitive_selector(
     monkeypatch.setattr(cap_sync, "_load_native_gateway", unavailable)
     secret_id = "bos-service:bos://secret/private"
 
-    assert cap_sync.main(["load", "--id", secret_id, "--registry", str(registry_path)]) == 5
+    assert cap_sync.main(["load", "--id", secret_id, "--registry", str(registry_path)]) == 4
     receipt = json.loads(capsys.readouterr().out)
     encoded = json.dumps(receipt, sort_keys=True)
     assert receipt["status"] == "rejected"
-    assert receipt["error_code"] == "CAPABILITY_GATEWAY_UNAVAILABLE"
+    assert receipt["failure_code"] == "binding_required"
     assert secret_id not in encoded
 
 
@@ -2154,7 +2157,7 @@ def test_verifier_rejects_malformed_or_oversize_mesh_log_with_redacted_failure(c
     assert str(log) not in json.dumps(oversize, sort_keys=True)
 
 
-def test_unbound_invoke_is_shadow_observed_before_fail_promotion(cap_sync, monkeypatch, registry, tmp_path, capsys):
+def test_unbound_invoke_fails_closed_before_gateway(cap_sync, monkeypatch, registry, tmp_path, capsys):
     registry_file = tmp_path / "registry.yaml"
     registry_file.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
     input_file = tmp_path / "input.json"
@@ -2179,8 +2182,11 @@ def test_unbound_invoke_is_shadow_observed_before_fail_promotion(cap_sync, monke
         ]
     )
     receipt = json.loads(capsys.readouterr().out)
-    assert rc == 0
-    assert calls == 1
+    assert rc == 4
+    assert calls == 0
+    assert receipt["status"] == "rejected"
+    assert receipt["failure_code"] == "binding_required"
+    assert receipt["states"] == {"invoked": False, "evidenced": False, "independently_verified": False}
     assert receipt["binding_enforcement"] == f"{cap_sync.BINDING_ENFORCEMENT}_missing"
 
 
