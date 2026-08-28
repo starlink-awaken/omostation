@@ -8129,7 +8129,8 @@ bets:
   title: 'Documents canonical schedule candidate（不安装）'
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-28
   goal: '为已完成 owner 对等的 consumer audit 与 freshness audit 生成 Workspace canonical schedule candidate，保留原 cadence，明确未迁移任务和安装/回滚硬门。'
   non_goals:
   - 不修改宿主 crontab、LaunchAgent、Scheduled skill 或 Documents 内容
@@ -8159,6 +8160,43 @@ bets:
     spec_version: 1.0.0
     content_digest: 'sha256:5176804559aa4b769b1bdbf1b4aaba816e1d4f00e3c8e7504fbf90da77f59c11'
     decision_ref: decision://accepted/BET-Y1Q3-T10-25
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@78a49cd495d5932a44f6231996fe8ab248e1a7a5
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md
+            sha256: sha256:5176804559aa4b769b1bdbf1b4aaba816e1d4f00e3c8e7504fbf90da77f59c11
+          diff:
+            ref: receipt://.omo/cron/documents-content-plane-crontab
+            sha256: sha256:f89dfa308c7a8a432b0955982d043b91835efdb9b709c17557e4839c786fd967
+          rollback:
+            ref: receipt://docs/reports/2026-08-27-documents-canonical-schedule.md
+            sha256: sha256:4ab9303967fa297875d44f5a83f9c140d093438488539bff02d4af1a1356fff2
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-27-documents-canonical-schedule.md
+            sha256: sha256:4ab9303967fa297875d44f5a83f9c140d093438488539bff02d4af1a1356fff2
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-25.md
+            sha256: sha256:475aa8a8b61ba7014813daa5359e08b28d4111fda6a7eacf6ac704c2a72ef16b
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md
+            sha256: sha256:5176804559aa4b769b1bdbf1b4aaba816e1d4f00e3c8e7504fbf90da77f59c11
+          cleanup:
+            ref: receipt://.omo/cron/documents-content-plane-crontab
+            sha256: sha256:f89dfa308c7a8a432b0955982d043b91835efdb9b709c17557e4839c786fd967
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on:
   - BET-Y1Q3-T10-23
   - BET-Y1Q3-T10-24
