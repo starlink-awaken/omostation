@@ -313,6 +313,37 @@ def _is_running(svc: dict) -> bool:
         return False
 
 
+def topological_sort(services: list[dict]) -> list[list[str]]:
+    """Topological sort by depends_on (Kahn's algorithm). Returns layers."""
+    sid_to_svc = {s["id"]: s for s in services if "id" in s}
+    in_degree: dict[str, int] = {s["id"]: 0 for s in services if "id" in s}
+    dependents: dict[str, list[str]] = {s["id"]: [] for s in services if "id" in s}
+
+    for svc in services:
+        sid = svc.get("id")
+        if not sid:
+            continue
+        for dep in svc.get("depends_on", []):
+            if dep in sid_to_svc:
+                dependents[dep].append(sid)
+                in_degree[sid] = in_degree.get(sid, 0) + 1
+
+    layers: list[list[str]] = []
+    queue = sorted([sid for sid, deg in in_degree.items() if deg == 0])
+
+    while queue:
+        layers.append(queue)
+        next_queue: list[str] = []
+        for sid in queue:
+            for dep in dependents.get(sid, []):
+                in_degree[dep] -= 1
+                if in_degree[dep] == 0:
+                    next_queue.append(dep)
+        queue = sorted(next_queue)
+
+    return layers
+
+
 def cmd_up(args: argparse.Namespace) -> int:
     """Start services (respects dependency order via DAG)."""
     import subprocess as sp
@@ -540,6 +571,15 @@ def main() -> int:
     logs_p.add_argument("-n", "--lines", type=int, default=50, help="Number of lines")
     logs_p.set_defaults(func=cmd_logs)
 
+    # ── deps ──
+    deps_p = sub.add_parser("deps", help="Show service dependency graph (DAG)")
+    deps_p.add_argument("service", nargs="?", help="Show dependencies for specific service")
+    deps_p.set_defaults(func=cmd_deps)
+
+    # ── summary ──
+    summary_p = sub.add_parser("summary", help="Show system summary")
+    summary_p.set_defaults(func=cmd_summary)
+
     args = parser.parse_args()
 
     if not args.command:
@@ -547,6 +587,63 @@ def main() -> int:
         return 1
 
     return args.func(args)
+
+
+def cmd_summary(args: argparse.Namespace) -> int:
+    """Show system summary."""
+    services = load_services()
+    if not services:
+        print("No services registered.")
+        return 0
+
+    # Count by type
+    groups: dict[str, list[dict]] = {}
+    for svc in services:
+        t = svc.get("scheduler", "unknown")
+        groups.setdefault(t, []).append(svc)
+
+    enabled = [s for s in services if s.get("enabled", False)]
+    running = [s for s in enabled if _is_running(s)]
+    has_liveness = sum(1 for s in enabled if s.get("liveness"))
+    has_depends = sum(1 for s in enabled if s.get("depends_on"))
+    has_ports = sum(1 for s in enabled if s.get("ports"))
+
+    try:
+        from rich.console import Console
+        from rich.table import Table
+        from rich import box
+
+        console = Console()
+        table = Table(title="omostation Service Gateway — Summary", box=box.ROUNDED)
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", justify="right")
+
+        table.add_row("Total services", str(len(services)))
+        table.add_row("Enabled", str(len(enabled)))
+        table.add_row("Running", str(len(running)))
+        table.add_row("Health checks", f"{has_liveness}/{len(enabled)} ({has_liveness*100//len(enabled)}%)")
+        table.add_row("Dependencies", f"{has_depends}/{len(enabled)} ({has_depends*100//len(enabled)}%)")
+        table.add_row("Ports", f"{has_ports}/{len(enabled)} ({has_ports*100//len(enabled)}%)")
+
+        console.print(table)
+
+        # Type breakdown
+        type_table = Table(title="Services by Type", box=box.SIMPLE)
+        type_table.add_column("Type", style="cyan")
+        type_table.add_column("Count", justify="right")
+        for t, svcs in sorted(groups.items(), key=lambda x: -len(x[1])):
+            type_table.add_row(t, str(len(svcs)))
+        console.print(type_table)
+
+    except ImportError:
+        print(f"Total services: {len(services)}")
+        print(f"Enabled: {len(enabled)}")
+        print(f"Running: {len(running)}")
+        print(f"Health checks: {has_liveness}/{len(enabled)} ({has_liveness*100//len(enabled)}%)")
+        print(f"Dependencies: {has_depends}/{len(enabled)} ({has_depends*100//len(enabled)}%)")
+        print(f"Ports: {has_ports}/{len(enabled)} ({has_ports*100//len(enabled)}%)")
+
+    return 0
 
 
 if __name__ == "__main__":
