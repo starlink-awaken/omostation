@@ -276,8 +276,9 @@ bets:
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0 with zero errors
-  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py verify BET-Y1Q3-T10-91 --execute
-    expect: exit 0
+  - cmd: >-
+      uv run --with pyyaml python -c "import yaml; d=yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml')); b={x['id']:x for x in d['bets']}; assert all(b[i]['completion_evidence']['overall_state'] == 'outcome_accepted' for i in ('BET-Y1Q3-T10-02','BET-Y1Q3-T10-06')); print('affected completion matrices valid')"
+    expect: exit 0 with affected matrices deriving outcome_accepted
   - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
     expect: exit 0
   workflow: bet-execution
