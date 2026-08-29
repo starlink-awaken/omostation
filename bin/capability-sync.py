@@ -107,6 +107,7 @@ MAX_INPUT_JSON_BYTES = 1024 * 1024
 MAX_MESH_LOG_BYTES = 8 * 1024 * 1024
 VERIFICATION_SCHEMA = "capability-admission-verification-request/v1"
 VERIFICATION_RECEIPT_SCHEMA = "capability-admission-verification-receipt/v1"
+PRINCIPAL_VERIFICATION_RECEIPT_SCHEMA = "principal-authority-verification-receipt/v1"
 VERIFICATION_FIELDS = {"schema", "material", "request", "expected"}
 VERIFICATION_EXPECTED_FIELDS = {"capability_id", "operation_id", "effect_classification"}
 MESH_LOG = Path("_knowledge/workflow-mesh/events.jsonl")
@@ -1158,6 +1159,56 @@ def _delegate_to_writer(action: str, registry_path: Path) -> int:
     return subprocess.run(command, check=False).returncode
 
 
+def verify_principal_envelope(  # noqa: UP007 -- public Python 3.9 compatibility contract
+    envelope: Mapping[str, Any]  # noqa: UP007 -- Python 3.9 style
+) -> dict[str, Any]:
+    """Verify a principal against the OMO authority (BET-Y1Q3-T4-04).
+
+    Delegation contract for Cockpit: the adapter only forwards the principal
+    envelope (principal_id + credential_ref + expected receipt digest) and the
+    root verifier (here) re-derives the authority receipt via the OMO
+    sovereignty module.  Returns a verified receipt carrying the exact digest,
+    or a rejected receipt with a stable failure code.  Never stores the
+    credential secret.
+    """
+    principal_id = str(envelope.get("principal_id") or "")
+    credential_ref = str(envelope.get("credential_ref") or "")
+    expected_digest = str(envelope.get("principal_receipt_digest") or "")
+    if not principal_id or not credential_ref or not expected_digest:
+        return _verification_receipt("rejected", "native_route_unprovable")
+    try:
+        from omo.sovereignty.principal_authority import (
+            DefaultPrincipalAuthority,
+            digest_receipt,
+        )
+    except Exception:  # pragma: no cover - OMO unavailable on this host
+        return _verification_receipt("rejected", "native_route_unprovable")
+    try:
+        from datetime import UTC, datetime
+
+        authority = DefaultPrincipalAuthority()
+        receipt = authority.verify(
+            principal_id,
+            credential_ref,
+            now=datetime.now(UTC).isoformat(),
+        )
+        actual_digest = digest_receipt(receipt)
+        if actual_digest != expected_digest:
+            return _verification_receipt("rejected", "native_route_unprovable")
+        return {
+            "schema": PRINCIPAL_VERIFICATION_RECEIPT_SCHEMA,
+            "status": "verified",
+            "value_indicator_policy": False,
+            "authority": "omo-sovereignty",
+            "principal_id": principal_id,
+            "authority_ref": receipt.authority_ref,
+            "principal_receipt_digest": actual_digest,
+            "membership_version": receipt.membership_version,
+        }
+    except Exception:  # pragma: no cover - any authority failure is fail-closed
+        return _verification_receipt("rejected", "native_route_unprovable")
+
+
 def _delegate_to_federation_auditor(workspace_root: Path, *, strict: bool) -> int:
     """Run the internal read-only observer through a fixed public command."""
     command = [
@@ -1179,6 +1230,11 @@ def _parser() -> argparse.ArgumentParser:
     commands.add_parser(
         "verify-material",
         help="verify one bounded native execution material envelope against persisted Workflow Mesh admission",
+    )
+
+    commands.add_parser(
+        "verify-principal",
+        help="verify one bounded principal envelope against the OMO authority (BET-Y1Q3-T4-04)",
     )
 
     sync_parser = commands.add_parser("sync", help="delegate generation to the projection writer")
@@ -1275,6 +1331,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
             receipt = _verification_receipt("rejected", str(exc))
         else:
             receipt = verify_material_against_mesh(ROOT / ".omo", envelope)
+        print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+        return 0 if receipt.get("status") == "verified" else 4
+
+    if args.command == "verify-principal":
+        try:
+            envelope = _read_bounded_stdin_json()
+        except TraceBindingError as exc:
+            receipt = _verification_receipt("rejected", str(exc))
+        else:
+            receipt = verify_principal_envelope(envelope)
         print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
         return 0 if receipt.get("status") == "verified" else 4
 
