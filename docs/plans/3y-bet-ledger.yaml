@@ -257,6 +257,88 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-54
+  track: T10-MATURITY
+  window: Y1Q3
+  title: OMO extracted-validator UTC helper export repair
+  appetite: 0.5 day
+  priority: P0
+  status: pending
+  goal: Restore the canonical UTC helper export required by extracted OMO consumer modules so the latest OMO main passes collection.
+  non_goals:
+  - No second timestamp authority or new utility layer.
+  - No root runtime, service, governance-state, or host mutation.
+  - No T1-12 completion-evidence changes.
+  done_when:
+  - OMO child focused consumer tests collect and pass.
+  - The root gitlink points only to the verified child main commit.
+  - Root cascading tests pass after the pointer update.
+  verify:
+  - cmd: uv run pytest tests/test_engineering_delivery_consumer.py -q
+    expect: exit 0
+  - cmd: uv run pytest tests/test_omo_external_pack.py tests/test_omo_external_resources.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md
+  - docs/reports/2026-08-29-omo-validator-contracts.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-54.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:ab7d5445b96ac3526730e4b4c3ea8b6bd6cad26c394f764f34c52d2203df1e14
+    decision_ref: decision://accepted/BET-Y1Q3-T10-54
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any second timestamp authority, root runtime mutation, or unverified pointer bump stops this BET.
+  status: done
+  done_at: 2026-08-29
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@13d5af64ff864bec7e9d07ef6f747482fd1304c0
+          tests:
+            ref: receipt://docs/reports/2026-08-29-omo-validator-contracts.md
+            sha256: sha256:247513772d56d51d33fda912dcf2ada938fc9fb781a2bcf13d268679fb7bf15e
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md
+            sha256: sha256:ab7d5445b96ac3526730e4b4c3ea8b6bd6cad26c394f764f34c52d2203df1e14
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md
+            sha256: sha256:ab7d5445b96ac3526730e4b4c3ea8b6bd6cad26c394f764f34c52d2203df1e14
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-omo-validator-contracts.md
+            sha256: sha256:247513772d56d51d33fda912dcf2ada938fc9fb781a2bcf13d268679fb7bf15e
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-omo-validator-contracts.md
+            sha256: sha256:247513772d56d51d33fda912dcf2ada938fc9fb781a2bcf13d268679fb7bf15e
+          replay:
+            ref: receipt://docs/reports/2026-08-29-omo-validator-contracts.md
+            sha256: sha256:247513772d56d51d33fda912dcf2ada938fc9fb781a2bcf13d268679fb7bf15e
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md
+            sha256: sha256:ab7d5445b96ac3526730e4b4c3ea8b6bd6cad26c394f764f34c52d2203df1e14
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-52
   track: T10-MATURITY
   window: Y1Q3
