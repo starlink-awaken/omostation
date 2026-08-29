@@ -8,10 +8,10 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 155 |
+| CLI 命令 (含子命令) | 165 |
 | MCP 工具 | 629 |
 | MCP 服务器 | 27 |
-| BOS 服务 | 262 |
+| BOS 服务 | 271 |
 | BOS 域 | 21 |
 
 ## MCP 服务器清单
@@ -56,7 +56,7 @@
 | `bcos` | 3 |
 | `capability` | 44 |
 | `cockpit` | 2 |
-| `compute` | 3 |
+| `compute` | 12 |
 | `ecos` | 10 |
 | `fabric` | 1 |
 | `forge` | 1 |
@@ -79,6 +79,7 @@
 | 命令 | 描述 |
 |------|------|
 | `cockpit ack` | 确认任务完成 |
+| `cockpit add` | 手动添加决策项 |
 | `cockpit agent` | 🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout) |
 | `cockpit agent-onboard` | 🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills) |
 | `cockpit agent-runtime` | 🤖 Agent Runtime 任务执行 / HTTP server (替代独立 agent-runtime 命令) |
@@ -86,6 +87,7 @@
 | `cockpit agora` | Agora BOS 网关入口 (委派 agora CLI) |
 | `cockpit analyze` | 运行全部分析工具 |
 | `cockpit api` | 启动 API server |
+| `cockpit approve` | 批准决策 |
 | `cockpit archive` | 归档已处理完毕的 Inbox 待办文件 |
 | `cockpit ask` | 向大脑提问（知识检索 + LLM 回答） |
 | `cockpit audit` | 🔍 6 维度全方位审计 (调 bin/workspace-audit) |
@@ -100,6 +102,7 @@
 | `cockpit brief` | 会话简报 |
 | `cockpit bus` | Omni-Bus 三平面入口 |
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
+| `cockpit cache` | 检查三级分层缓存与 Radix 前缀树状态 (含基准压测) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
 | `cockpit cards` | 显示 CARDS 卡片状态 |
 | `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198/0203) |
@@ -107,7 +110,9 @@
 | `cockpit challenge` | ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196) |
 | `cockpit channels` | 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml |
 | `cockpit client` | 以 REPL 模式连接到 MCP server |
+| `cockpit cluster` | 异构三节点智能路由与拓扑诊断 |
 | `cockpit code` | 代码库分析与审查 (基于 codeanalyze) |
+| `cockpit compact` | 上下文滑动蒸馏与双区自适应量化压缩模拟 |
 | `cockpit compass` | 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理) |
 | `cockpit compute` | 算力与 LLM 网关操作 (委派 aetherforge) |
 | `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
@@ -119,7 +124,9 @@
 | `cockpit dashboard` | 打开 Web Dashboard |
 | `cockpit data` | 数据目录索引 / 类型注册 / TTL 清理 |
 | `cockpit debt` | 债务评分 (omo-debt Pattern 09 v2.1) |
+| `cockpit decide` | 📬 决策收件箱 (列出/添加/批准/拒绝) |
 | `cockpit demo` | 快速演示 |
+| `cockpit dflash` | DFlash 2 块扩散投机解码加速与集群基准 |
 | `cockpit discover` | 发现可用功能和资源 |
 | `cockpit domain-status` | 显示 Documents 域项目绑定与引导状态 |
 | `cockpit domains` | 列出 L4 所有域及其状态 |
@@ -194,6 +201,7 @@
 | `cockpit readiness` | P66: governance readiness dashboard 摘要 (4 卡片: summary/dimensions/alerts/history) |
 | `cockpit recall` | 意图路由召回（neo4j/temporal 支持 --as-of） |
 | `cockpit register` | 注册 BOS 服务 |
+| `cockpit reject` | 拒绝决策 |
 | `cockpit reload` | 重载 BOS 配置/M1 |
 | `cockpit remember` | 手动存入偏好/事实 |
 | `cockpit research` | 深度研究 |
@@ -214,10 +222,12 @@
 | `cockpit ssb` | [DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用 |
 | `cockpit stats` | 索引统计 |
 | `cockpit status` | 系统健康 |
+| `cockpit stream` | 跨节点 Chunk-level 流式协同流水线基准 |
 | `cockpit submit` | 提交控制任务 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
-| `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
+| `cockpit swarm` | 分布式跨节点 KV 共享池与超长上下文置换基准 |
 | `cockpit topics` | 列出已注册 topic |
+| `cockpit tree` | 自适应熵感知树状投机解码与多候选验证基准 |
 | `cockpit triage` | 分析 Prompt 意图复杂度分级 |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit types` | 查看已注册的数据类型 |
