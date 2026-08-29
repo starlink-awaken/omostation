@@ -92,7 +92,7 @@ def cmd_mesh(args: argparse.Namespace) -> int:
         return subprocess.call(["uv", "run", "--project", str(omlxc_root), "python", str(bench_script)])
     if subcmd in {"tree", "stream", "swarm"}:
         omlxc_root = _workspace_root() / "projects" / "omlxc"
-        bench_script = _workspace_root() / "bin" / "demo" / "live_nextgen_compute_engine_benchmark.py"
+        bench_script = omlxc_root / "examples" / "live_nextgen_compute_engine_benchmark.py"
         return subprocess.call(["uv", "run", "--project", str(omlxc_root), "python", str(bench_script)])
     if subcmd == "compact":
         model = getattr(args, "model", "coding")
