@@ -10,7 +10,7 @@ related:
 ---
 schema: scene-card/v2
 scene_type: external_resource
-lifecycle: shadow
+lifecycle: assisted
 activation: preview
 approval_state: pending_business_confirmation
 scene_id: knowledge-curation
