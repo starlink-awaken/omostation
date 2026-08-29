@@ -40,6 +40,8 @@ runtime behavior, and hardware execution were not changed.
 
 ## Boundary and remaining baseline
 
-No Documents content or runtime payload was changed. The root main baseline
-still has an unrelated missing T10-71 Spec reference and state-governance
-drift; those remain separate evidence items until their owning deliveries land.
+No Documents content or runtime payload was changed. The independently owned
+OMO state projection is now reconciled in the same root integration: planned
+`6`, total `298`, with coherence and SSOT guardian green. The only known
+pre-existing ledger lint issue is the missing T10-71 Spec on origin/main; it is
+unrelated to OMLXC route reachability.
