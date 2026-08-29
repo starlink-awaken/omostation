@@ -234,7 +234,16 @@ families:
       - "@驾驶舱/_control/async-tasks.yaml"
     rollback: "Do not remove legacy commands until crontab, Claude Scheduled, and domain gateway consumers use verified Workspace commands."
     confirmation_gate: before_write
-    status: pending
+    status: retired
+    evidence:
+      verified_at: "2026-08-29T18:10:00Z"
+      source_fingerprint: "sha256:d2c043895c524880f76c18909eb013216a0b985b81000cb912dd258032b63f29"
+      target_fingerprint: "sha256:d2c043895c524880f76c18909eb013216a0b985b81000cb912dd258032b63f29"
+      manifest_sha256: "sha256:46e7093e9046a7257a9eb3b2b30b0aae4e5f4aa2bbec4589c34a9ef99f38d949"
+      file_count: 17
+      byte_count: 80317
+      consumer_scan: "receipt://docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md"
+      rollback_ref: "docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md"
 
   - id: public-runtime
     source_globs:
