@@ -257,6 +257,51 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-74
+  track: T10-MATURITY
+  window: Y1Q3
+  title: OMLXC BOS service path reconciliation
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Reconcile five active OMLXC BOS declarations with their canonical examples paths so the evidence gate has zero unresolved script-path gaps.
+  non_goals:
+  - No URI, action, capability, transport, security, runtime, compute, Documents, or user configuration change.
+  - No new service registry, alias, dispatcher, demo implementation, or hardware execution.
+  done_when:
+  - Agora child registry points all five OMLXC actions to existing canonical example scripts.
+  - Child registry tests and root evidence-smoke report all five declarations resolvable with no new script-not-found gaps.
+  - Root gitlink points to reachable child main and no unrelated submodule pointer changes are included.
+  verify:
+  - cmd: cd projects/agora && uv run --no-project --with pyyaml --with pytest --with pydantic --with fastmcp python -m pytest tests/test_omlxc_bos_path_resolution.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/ssot/script-registry.py validate
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known baseline
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora
+  - bin/gac/evidence-smoke.py
+  - tests/test_evidence_smoke_paths.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md
+  - docs/reports/2026-08-30-omlxc-bos-path-reconciliation.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-74.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-74-bos-path-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:ec44b41cf03206c57fc3b6a424e682dd78e4276f4dfa5553264503e3be53df75
+    decision_ref: decision://accepted/BET-Y1Q3-T10-74
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any URI/behavior change, unrelated child change, hardware execution, or Documents mutation stops this repair.
+  value_indicator_policy: false
+  retro: required
 - id: BET-Y1Q3-T10-71
   track: T10-MATURITY
   window: Y1Q3
