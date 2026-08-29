@@ -4,7 +4,7 @@ status: accepted
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-29
-bet_id: BET-Y1Q3-T10-58
+bet_id: BET-Y1Q3-T10-64
 spec_version: 1.0.0
 title: T10-58 Automation Fallout Repair — Design
 type: doc
@@ -12,7 +12,7 @@ type: doc
 
 # T10-58 Automation Fallout Repair — Design
 
-Date: 2026-08-29 · Bet: BET-Y1Q3-T10-58 · Risk: L1 · Appetite: 0.5 day
+Date: 2026-08-29 · Bet: BET-Y1Q3-T10-64 · Risk: L1 · Appetite: 0.5 day
 
 ## Problem
 
