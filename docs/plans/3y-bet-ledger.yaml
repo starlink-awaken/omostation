@@ -257,6 +257,56 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-79
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents Guozhuan dangling symlink quarantine
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Move only the twelve dangling symlink objects under Documents/@工作文档/国转中心/_runtime into protected Workspace quarantine without following or restoring their missing public-runtime targets.
+  non_goals:
+  - No target-byte restoration, regular runtime move, content, contract, cache, schedule, client, or family-level retirement.
+  - No movement outside @工作文档/国转中心/_runtime.
+  done_when:
+  - A stable L4 inventory identifies exactly 12 dangling symlinks and no selected regular files.
+  - Fresh consumer evidence reports status ok, forbidden_executors=0, and unmatched=0.
+  - The no-follow transaction preserves link targets and metadata in a protected hash-valid manifest.
+  - Postflight proves source-link absence, target-link identity, manifest retention, and content/contract preservation.
+  - work-runtime remains pending and this subset is appended to progress evidence.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: git check-ignore -q runtime/quarantine/documents-guozhuan-symlinks-20260830/manifest.json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no terminal receipt error
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known T10-71 baseline
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md
+  - docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-79.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-79-guozhuan-symlink-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:ace607580fd69c0b9e215bb118c3332f754e10792e1cb841eebe9099f66aa50a
+    decision_ref: decision://accepted/BET-Y1Q3-T10-79
+  depends_on:
+  - BET-Y1Q3-T10-73
+  - BET-Y1Q3-T10-78
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any non-dangling selection, target restoration, unsafe consumer, target collision, hash mismatch, non-target Documents change, or manifest loss stops and restores the transaction.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-78
   track: T10-MATURITY
   window: Y1Q3

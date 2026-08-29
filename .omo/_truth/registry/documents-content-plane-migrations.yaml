@@ -254,6 +254,17 @@ families:
         - "@工作文档/*/_scripts/**"
         - "@工作文档/*/tools/**"
         - "@工作文档/卫健委/cleanup-commit.sh"
+      completed_subscopes:
+        - scope: "@工作文档/国转中心/_runtime dangling symlinks only"
+          verified_at: "2026-08-29T18:40:00Z"
+          source_fingerprint: "sha256:5ffd9cc38b1b6f04a350621bea1fba3e28c63fd5de76c606647bafafd92eb4a4"
+          target_fingerprint: "sha256:5ffd9cc38b1b6f04a350621bea1fba3e28c63fd5de76c606647bafafd92eb4a4"
+          manifest_sha256: "sha256:ae02a0ea6659d4548a7b4b625ebc932d2225c36be4864de4e5c7b7ffed0bc5cb"
+          node_type: symlink
+          file_count: 12
+          byte_count: 0
+          consumer_scan: "receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md"
+          rollback_ref: "docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md"
 
   - id: public-runtime
     source_globs:
