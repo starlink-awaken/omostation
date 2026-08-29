@@ -1645,7 +1645,8 @@ bets:
   title: Cockpit decide canonical inbox convergence
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Remove the legacy cockpit decide direct write path and preserve its user-facing actions through the existing canonical scenario inbox engine.
   non_goals:
   - No new storage, broker, dispatcher, schema, capability, or authority plane.
@@ -1683,6 +1684,43 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: Any new storage, raw state write, canonical engine semantic change, Documents content, host schedule, runtime state, or unrelated pointer change stops this BET.
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@96910d56043043ae19e7a8cb3787a3206197054a
+          tests:
+            ref: receipt://docs/reports/2026-08-29-cockpit-decide-canonical-inbox.md
+            sha256: sha256:78e1e168bc2bdf11fb3cbd0bf25f96efa4ac61b6db24de57f819404f19fc58b7
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
+            sha256: sha256:b689394fc2ee00578a7677c25f20f17aab0f0fc0678754e8919e48a17b46e0b6
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
+            sha256: sha256:b689394fc2ee00578a7677c25f20f17aab0f0fc0678754e8919e48a17b46e0b6
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-cockpit-decide-canonical-inbox.md
+            sha256: sha256:78e1e168bc2bdf11fb3cbd0bf25f96efa4ac61b6db24de57f819404f19fc58b7
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-cockpit-decide-canonical-inbox.md
+            sha256: sha256:78e1e168bc2bdf11fb3cbd0bf25f96efa4ac61b6db24de57f819404f19fc58b7
+          replay:
+            ref: receipt://docs/reports/2026-08-29-cockpit-decide-canonical-inbox.md
+            sha256: sha256:78e1e168bc2bdf11fb3cbd0bf25f96efa4ac61b6db24de57f819404f19fc58b7
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
+            sha256: sha256:b689394fc2ee00578a7677c25f20f17aab0f0fc0678754e8919e48a17b46e0b6
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 
 - id: BET-Y1Q3-T10-61
@@ -1928,7 +1966,8 @@ bets:
   title: L4 live Documents content-plane audit stability
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Make live content-plane evidence retryable under transient filesystem drift while remaining fail-closed for persistent instability.
   non_goals:
   - No Documents content move, delete, quarantine, or execution.
@@ -1966,6 +2005,43 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: Any Documents content mutation, classification change, migration-family status change, or route/runtime change stops this BET.
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@96910d56043043ae19e7a8cb3787a3206197054a
+          tests:
+            ref: receipt://docs/reports/2026-08-29-l4-content-audit-stability.md
+            sha256: sha256:f53b96ccc3f96d3a1fc9f82d9f4011f8a7101ecc061a6b59dff0baf2b9214784
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
+            sha256: sha256:ed2bf10beecdc8f2de09fbb289bc2af518f998a20c6ba4a3e820327c1dd537f0
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
+            sha256: sha256:ed2bf10beecdc8f2de09fbb289bc2af518f998a20c6ba4a3e820327c1dd537f0
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-l4-content-audit-stability.md
+            sha256: sha256:f53b96ccc3f96d3a1fc9f82d9f4011f8a7101ecc061a6b59dff0baf2b9214784
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-l4-content-audit-stability.md
+            sha256: sha256:f53b96ccc3f96d3a1fc9f82d9f4011f8a7101ecc061a6b59dff0baf2b9214784
+          replay:
+            ref: receipt://docs/reports/2026-08-29-l4-content-audit-stability.md
+            sha256: sha256:f53b96ccc3f96d3a1fc9f82d9f4011f8a7101ecc061a6b59dff0baf2b9214784
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
+            sha256: sha256:ed2bf10beecdc8f2de09fbb289bc2af518f998a20c6ba4a3e820327c1dd537f0
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 
 - id: BET-Y1Q3-T10-60
