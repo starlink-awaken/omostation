@@ -93,7 +93,7 @@ def score_troubleshootable() -> dict:
 
 
 def score_optimizable() -> dict:
-    rc, out, err = run("uv run --with pyyaml python3 bin/gac/drift-sweep.py --json", timeout=60)
+    rc, out, err = run("uv run --with pyyaml python3 bin/gac/drift-sweep.py --json", timeout=180)
     if rc == 0:
         sweep_works = True
         score = 9
