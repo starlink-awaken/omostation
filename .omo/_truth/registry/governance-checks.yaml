@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 533  # 2026-08-29 533→533: goal-mode-test (Phase 2.3)  # 2026-08-29 532→533: evolution-proposal-triage (Phase 2.2)  # 2026-08-28 520→528: cmd_deps + frontmatter (BET-Y1Q3-T6-05)
+    script_baseline: 534  # 2026-08-29 534→534: weekly-review (Phase 3.1)  # 2026-08-29 533→534: goal-mode-test (Phase 2.3)  # 2026-08-28 520→528: cmd_deps + frontmatter (BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
