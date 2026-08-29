@@ -72,3 +72,18 @@ last_modified_by: evolution_engine
 last_modified_at: '2026-08-19T13:00:41Z'
 lifecycle_gate:
   status: applied_by_evolution_engine
+  mini_trial:
+    threshold: 3
+    useful_count: 3
+    not_useful_count: 0
+    eligible_for_assisted: true
+    last_ts: "2026-08-29T07:27:58Z"
+    promoted_at: "2026-08-29T07:27:58Z"
+    promotion_recommendation: "mini-shadow 模式: 主人手勾 3 次 useful, 达到升级门 3. 建议升级到 assisted."
+    samples:
+      - ts: "2026-08-29T07:27:58Z"
+        outcome: useful
+      - ts: "2026-08-29T07:27:58Z"
+        outcome: useful
+      - ts: "2026-08-29T07:27:58Z"
+        outcome: useful
