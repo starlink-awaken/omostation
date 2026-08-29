@@ -2109,6 +2109,8 @@ bets:
   - docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T4-04.md
+  - bin/ssot/principal-authority-canary.py
+  - docs/reports/2026-08-29-principal-authority-canary.json
   pasw_required: true
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md
@@ -2128,25 +2130,25 @@ bets:
             sha256: sha256:e3729d1c5c0444d27d9a7d729030c55515d0d455bf8489357d3ad34190ccaec7
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
-            sha256: sha256:666fc84bb10ab95115074a18430f54f705ad91dd51494cb8a074da4707823dfb
+            sha256: sha256:0c9f45a5d152624107f66393d2a46ca455e2c8851c0a333c5f94a85ddbdc413c
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
-            sha256: sha256:666fc84bb10ab95115074a18430f54f705ad91dd51494cb8a074da4707823dfb
+            sha256: sha256:0c9f45a5d152624107f66393d2a46ca455e2c8851c0a333c5f94a85ddbdc413c
       operational:
         status: PROVEN
         evidence:
           live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
-            sha256: sha256:666fc84bb10ab95115074a18430f54f705ad91dd51494cb8a074da4707823dfb
+            ref: receipt://docs/reports/2026-08-29-principal-authority-canary.json
+            sha256: sha256:a6aaca91e86825408a6606da2ab377a8c8a9500da3da54968540d5dd7853c2dd
           fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
-            sha256: sha256:666fc84bb10ab95115074a18430f54f705ad91dd51494cb8a074da4707823dfb
+            ref: receipt://docs/reports/2026-08-29-principal-authority-canary.json
+            sha256: sha256:a6aaca91e86825408a6606da2ab377a8c8a9500da3da54968540d5dd7853c2dd
           replay:
-            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md
-            sha256: sha256:e3729d1c5c0444d27d9a7d729030c55515d0d455bf8489357d3ad34190ccaec7
+            ref: receipt://docs/reports/2026-08-29-principal-authority-canary.json
+            sha256: sha256:a6aaca91e86825408a6606da2ab377a8c8a9500da3da54968540d5dd7853c2dd
           cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
-            sha256: sha256:666fc84bb10ab95115074a18430f54f705ad91dd51494cb8a074da4707823dfb
+            ref: receipt://docs/reports/2026-08-29-principal-authority-canary.json
+            sha256: sha256:a6aaca91e86825408a6606da2ab377a8c8a9500da3da54968540d5dd7853c2dd
       value:
         status: NOT_PROVEN
         evidence: {}
