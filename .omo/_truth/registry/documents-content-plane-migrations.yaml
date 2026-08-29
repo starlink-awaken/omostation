@@ -295,6 +295,16 @@ families:
           byte_count: 18284
           consumer_scan: "receipt://.omo/evidence/20260829T193214Z-bet-execution-9df04bf3/documents-consumer-audit.json"
           rollback_ref: "docs/reports/2026-08-30-documents-guizi-tools-runtime-quarantine.md"
+        - scope: "@工作文档/tools regular runtime files only"
+          verified_at: "2026-08-29T19:48:31Z"
+          source_fingerprint: "sha256:fd72729d88ec969a9c0d1550da738abd2d1a48018e2a9dbfb93dc06107865eea"
+          target_fingerprint: "sha256:fd72729d88ec969a9c0d1550da738abd2d1a48018e2a9dbfb93dc06107865eea"
+          manifest_sha256: "sha256:48108b0d2f59bab99c027d9c22a9b4b5b7a2eb6bc3b7474e7d975f31b37f9068"
+          node_type: regular
+          file_count: 4
+          byte_count: 19848
+          consumer_scan: "receipt://.omo/evidence/20260829T194630Z-bet-execution-12a16102/documents-consumer-audit.json"
+          rollback_ref: "docs/reports/2026-08-30-documents-root-tools-runtime-quarantine.md"
 
   - id: public-runtime
     source_globs:
