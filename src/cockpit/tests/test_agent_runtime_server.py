@@ -335,3 +335,30 @@ def test_unbound_chat_does_not_execute_unrequested_tool_calls(tmp_path):
     assert response.json()["authority_state"] == "non_authoritative"
     runtime.tools.build_tool_schemas.assert_not_called()
     runtime._execute_tool.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# BET-Y1Q3-T4-04 — authority fields 只透传 (FastAPI openapi 契约)
+# ---------------------------------------------------------------------------
+
+
+def _authority_schema_props():
+    from fastapi.testclient import TestClient
+
+    from cockpit.agent_runtime_server import create_app
+
+    app = create_app()
+    client = TestClient(app)
+    schema = client.get("/openapi.json").json()
+    props = set()
+    for name, model in schema.get("components", {}).get("schemas", {}).items():
+        props |= set(model.get("properties", {}))
+    return props
+
+
+def test_task_request_schema_accepts_principal_authority():
+    assert "principal_authority" in _authority_schema_props()
+
+
+def test_chat_request_schema_accepts_principal_authority():
+    assert "principal_authority" in _authority_schema_props()

@@ -80,6 +80,8 @@ def create_app():
         tools: list = None  # type: ignore
         context: dict = None  # type: ignore
         binding_receipt: dict = None  # type: ignore
+        # BET-Y1Q3-T4-04: authority fields 只透传 (委派 OMO 验证), 不构造
+        principal_authority: dict = None  # type: ignore
 
     class ChatRequest(BaseModel):
         message: str
@@ -87,6 +89,7 @@ def create_app():
         session_id: str = ""
         context: dict = None  # type: ignore
         binding_receipt: dict = None  # type: ignore
+        principal_authority: dict = None  # type: ignore
 
     # ── 端点 ──────────────────────────────────────────────────────────────
 

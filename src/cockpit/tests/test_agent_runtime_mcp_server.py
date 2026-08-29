@@ -522,3 +522,48 @@ class TestGovernanceTools:
 
         assert json.loads(agent_runtime_mcp_server.domain_sanyi_status_consistency_status("work-weijian")) == payload
         assert seen == ["work-weijian"]
+
+
+# ---------------------------------------------------------------------------
+# BET-Y1Q3-T4-04 — authority fields 透传契约 (Cockpit 只委派不构造)
+# ---------------------------------------------------------------------------
+
+
+def test_extract_authority_fields_passthrough_exact():
+    from cockpit.agent_runtime_mcp_server import extract_authority_fields
+
+    fields = {"authority_ref": "authority:local", "receipt_digest": "sha256:" + "a" * 64}
+    out = extract_authority_fields(fields)
+    assert out == fields  # 透传保真: in == out, 无添无改
+
+
+def test_extract_authority_fields_rejects_partial_and_extra():
+    from cockpit.agent_runtime_mcp_server import extract_authority_fields
+
+    assert extract_authority_fields({"authority_ref": "authority:local"}) is None
+    assert extract_authority_fields({"receipt_digest": "sha256:" + "a" * 64}) is None
+    extra = {"authority_ref": "r", "receipt_digest": "d", "secret": "s"}
+    assert extract_authority_fields(extra) is None  # 多键 (含 secret 形态) 拒绝
+    assert extract_authority_fields(None) is None
+    assert extract_authority_fields("not-a-dict") is None
+
+
+def test_run_task_accepts_principal_authority_kwarg():
+    """run_task 签名含 principal_authority 且缺省 None (透传入口存在)。"""
+    import inspect
+
+    from cockpit import agent_runtime_mcp_server as m
+
+    sig = inspect.signature(m.run_task)
+    assert "principal_authority" in sig.parameters
+    assert sig.parameters["principal_authority"].default is None
+
+
+def test_chat_accepts_principal_authority_kwarg():
+    import inspect
+
+    from cockpit import agent_runtime_mcp_server as m
+
+    sig = inspect.signature(m.chat)
+    assert "principal_authority" in sig.parameters
+    assert sig.parameters["principal_authority"].default is None
