@@ -40,5 +40,9 @@ last-reviewed: 2026-08-29
 
 ## 剩余 (人到场)
 
-- spec 验收 4: 重放不新增 receipt 的 canary (可在 root 收口轮补)
+- ~~spec 验收 4: 重放不新增 receipt 的 canary~~ **已完成 (2026-08-29)**: 新增
+  `bin/ssot/principal-authority-canary.py` 跑真实 OMO verify → Cockpit 签发 → Agora
+  转发链路, 报告 `docs/reports/2026-08-29-principal-authority-canary.json` (digest
+  chain equal + replay idempotent + negatives zero-effect + missing fail-closed +
+  fixture rejected 全绿)
 - value 轴 NOT_PROVEN (policy=false → delivery_accepted 路径)
