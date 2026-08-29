@@ -26,7 +26,6 @@ from .scenario import (
     _decision_inbox_set_status,
 )
 
-
 _DEFAULT_SCENE_NAME = "General decisions"
 _DEFAULT_JOURNEY_NAME = "Inbox"
 
@@ -50,11 +49,7 @@ def _canonical_items(root: Path) -> tuple[list[dict[str, Any]], str | None]:
 
 def _find_item(items: list[dict[str, Any]], item_id: str) -> dict[str, Any] | None:
     return next(
-        (
-            item
-            for item in items
-            if str(item.get("id", "")).startswith(item_id) or item.get("id") == item_id
-        ),
+        (item for item in items if str(item.get("id", "")).startswith(item_id) or item.get("id") == item_id),
         None,
     )
 
