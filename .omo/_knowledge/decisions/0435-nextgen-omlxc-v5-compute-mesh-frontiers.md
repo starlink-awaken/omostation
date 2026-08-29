@@ -1,3 +1,11 @@
+---
+id: ADR-0435
+status: accepted
+lifecycle: spec
+owner: xiamingxing
+last-reviewed: 2026-08-29
+---
+
 # ADR-0435: 次世代 omlxc V5.0 主权算力织网五大战略前沿 (雷雳5 DMA、在线LoRA热插拔、共生草稿头蒸馏、视觉Patch流式直通、Cockpit HUD)
 
 - **状态**: ACCEPTED
