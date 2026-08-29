@@ -3248,10 +3248,10 @@ bets:
             sha256: sha256:e3729d1c5c0444d27d9a7d729030c55515d0d455bf8489357d3ad34190ccaec7
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
-            sha256: sha256:0c9f45a5d152624107f66393d2a46ca455e2c8851c0a333c5f94a85ddbdc413c
+            sha256: sha256:d41e00d2406bf1ba664d5f7150d1f31d5b4eec08538a6d513bbfb88911635d5f
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
-            sha256: sha256:0c9f45a5d152624107f66393d2a46ca455e2c8851c0a333c5f94a85ddbdc413c
+            sha256: sha256:d41e00d2406bf1ba664d5f7150d1f31d5b4eec08538a6d513bbfb88911635d5f
       operational:
         status: PROVEN
         evidence:
