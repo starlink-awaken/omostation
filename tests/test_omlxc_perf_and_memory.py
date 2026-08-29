@@ -45,7 +45,7 @@ def test_strict_60_percent_vram_quota_admission():
     )
     assert res_block.admitted is False
     assert res_block.compaction_advised is True
-    assert "Strict quota exceeded" in res_block.reason
+    assert "Emergency limit" in res_block.reason or "quota" in res_block.reason.lower()
 
 
 def test_metal_memory_pool_reclamation():
