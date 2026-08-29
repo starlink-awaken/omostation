@@ -257,6 +257,57 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-88
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents Weijian cleanup script runtime quarantine
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Extend the existing Documents runtime quarantine owner to safely accept one audited regular file, then move only Documents/@工作文档/卫健委/cleanup-commit.sh into protected Workspace quarantine while preserving all other health and work-content surfaces.
+  non_goals:
+  - No movement outside @工作文档/卫健委/cleanup-commit.sh.
+  - No directory-wide scan, _storage script movement, content, contract, cache, schedule, client, public-runtime, or family-level retirement.
+  done_when:
+  - A stable L4 classification identifies exactly the selected regular file as runtime without scanning/moving neighboring files.
+  - Fresh consumer evidence reports status ok, forbidden_executors=0, and unmatched=0.
+  - The owner supports a single-file source with exact lexical scope and a protected hash-valid rollback manifest.
+  - Postflight proves source absence, target hash/mode parity, manifest retention, and adjacent health/work content preservation.
+  - work-runtime becomes terminal only after this final remaining regular runtime glob is verified; other migration families remain independently pending.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: git check-ignore -q runtime/quarantine/documents-weijian-cleanup-20260830/manifest.json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no terminal receipt error
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known T10-71 baseline
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - lib/documents_runtime_quarantine.py
+  - tests/test_documents_runtime_quarantine.py
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md
+  - docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-88.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-88-cleanup-script-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b5821702f4694c728f8ba06f11222dadaa2c2e4a5b222e9eba64e044cb2f55dd
+    decision_ref: decision://accepted/BET-Y1Q3-T10-88
+  depends_on:
+  - BET-Y1Q3-T10-87
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any source expansion, non-regular selection, active consumer, target collision, hash mismatch, non-target Documents change, owner test regression, or manifest loss stops and restores the transaction.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-87
   track: T10-MATURITY
   window: Y1Q3

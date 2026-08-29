@@ -234,9 +234,15 @@ families:
       - "@驾驶舱/_control/async-tasks.yaml"
     rollback: "Do not remove legacy commands until crontab, Claude Scheduled, and domain gateway consumers use verified Workspace commands."
     confirmation_gate: before_write
-    status: pending
+    status: retired
+    evidence:
+      verified_at: "2026-08-29T21:05:26Z"
+      source_fingerprint: "sha256:05577ee2f3ac29a243d4169a540b9b17d91b86dade007d19fb9d5e57040dde4b"
+      target_fingerprint: "sha256:05577ee2f3ac29a243d4169a540b9b17d91b86dade007d19fb9d5e57040dde4b"
+      consumer_scan: "receipt://.omo/evidence/20260829T210128Z-bet-execution-cdda24a3/documents-consumer-audit.json"
+      rollback_ref: "docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md"
     progress_evidence:
-      scope_status: completed-subset
+      scope_status: completed
       scope: "@工作文档/卫健委/_runtime regular runtime files only"
       verified_at: "2026-08-29T18:10:00Z"
       source_fingerprint: "sha256:d2c043895c524880f76c18909eb013216a0b985b81000cb912dd258032b63f29"
@@ -247,13 +253,7 @@ families:
       consumer_scan: "receipt://docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md"
       rollback_ref: "docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md"
       remaining_globs:
-        - "@工作文档/_control/**"
-        - "@工作文档/tools/**"
-        - "@工作文档/*/_control/**"
-        - "@工作文档/*/_runtime/**"
-        - "@工作文档/*/_scripts/**"
-        - "@工作文档/*/tools/**"
-        - "@工作文档/卫健委/cleanup-commit.sh"
+        []
       completed_subscopes:
         - scope: "@工作文档/国转中心/_runtime dangling symlinks only"
           verified_at: "2026-08-29T18:40:00Z"
@@ -345,6 +345,16 @@ families:
           byte_count: 30041
           consumer_scan: "receipt://.omo/evidence/20260829T204720Z-bet-execution-90c98e9d/documents-consumer-audit.json"
           rollback_ref: "docs/reports/2026-08-30-documents-guizi-scripts-runtime-quarantine.md"
+        - scope: "@工作文档/卫健委/cleanup-commit.sh single regular runtime file only"
+          verified_at: "2026-08-29T21:05:26Z"
+          source_fingerprint: "sha256:875b55d2689e90bc6871a145e79283ead281e5461a48c149e225988ab873adb2"
+          target_fingerprint: "sha256:875b55d2689e90bc6871a145e79283ead281e5461a48c149e225988ab873adb2"
+          manifest_sha256: "sha256:ea6d0aa35f03a3d608effdca00b66ac21379814e594cf664e4d08b54097b4bd1"
+          node_type: regular
+          file_count: 1
+          byte_count: 3916
+          consumer_scan: "receipt://.omo/evidence/20260829T210128Z-bet-execution-cdda24a3/documents-consumer-audit.json"
+          rollback_ref: "docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md"
 
   - id: public-runtime
     source_globs:
