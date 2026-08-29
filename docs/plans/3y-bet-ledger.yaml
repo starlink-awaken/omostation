@@ -303,6 +303,53 @@ bets:
   human_gate: false
   circuit_breaker: 'Any host plist/process mutation, service semantic change, or new control-plane surface stops this BET.'
   retro: required
+- id: BET-Y1Q3-T10-50
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'Service Gateway bounded liveness scan'
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: '让 Service Gateway 的只读健康视图在大量不可达服务时仍在有界预算内返回，并保持逐服务结果真实。'
+  non_goals:
+  - 不启动、停止或重启任何服务，不修改宿主 plist 或 launchd 状态
+  - 不改变 services.yaml 注册语义、端口、调度策略或单服务探测含义
+  - 不新增服务注册表、调度器、缓存或第二控制平面
+  done_when:
+  - batch liveness checks use bounded parallelism and finite probe timeout
+  - status, score, and graph share the bounded read-only batch path
+  - timeout results are explicit and never counted healthy
+  - focused tests, syntax, and GaC pass without host mutation
+  verify:
+  - cmd: 'uv run --with pytest --with pyyaml python -m pytest tests/test_ops_cli.py tests/test_ops_liveness.py -q'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml python bin/ops/cli.py status --json'
+    expect: exit 0 or truthful non-zero within the configured budget
+  - cmd: 'python3 -m py_compile bin/ops/cli.py'
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ops/cli.py
+  - tests/test_ops_cli.py
+  - tests/test_ops_liveness.py
+  - docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-ops-liveness-budget-bootstrap.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-50.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3e69c5990b9b2462e34a9b0f9419fe8d08748ce132a1920aab31c4fd2250d2e2
+    decision_ref: decision://accepted/BET-Y1Q3-T10-50
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 'Any host mutation, registry semantic change, unbounded probe, or second control plane stops this BET.'
+  retro: required
 - id: BET-Y1Q2-T6-06
   track: T6-EVOLUTION
   window: Y1Q2
