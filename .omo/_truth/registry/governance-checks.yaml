@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 531  # 2026-08-29 531→531: probe-heartbeat-monitor + matrix (Phase 3.4)  # 2026-08-29 529→531: L4 memory bridge (Phase 3.3)  # 2026-08-28 520→528: cmd_deps + frontmatter (BET-Y1Q3-T6-05)
+    script_baseline: 538  # 2026-08-30 538→538: monthly-healthcheck v2 (Phase 3.4)  # 2026-08-29 531→538: Phase 1-3 工具增量 (BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
