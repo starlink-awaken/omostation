@@ -65,6 +65,9 @@ runtime/daily-health-preflight*.json
 runtime/kos-preflight-live-smoke.json
 runtime/predictor-preflight*.json
 runtime/quarantine/documents-bos-neural-mesh-20260828/
+# Recoverable physical-migration packages are runtime evidence, not disposable
+# untracked output; protect every package from ordinary repository cleanup.
+runtime/quarantine/*/
 runtime/task-inventory/snapshots/
 
 runtime/sandbox/decayed/
