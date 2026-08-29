@@ -23,6 +23,11 @@ SYNC_PATH = ROOT / "bin" / "capability-sync.py"
 GENERATOR_PATH = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
 
 
+def test_capability_sync_stays_below_god_module_error_threshold() -> None:
+    """The compatibility CLI must remain below the hard single-file limit."""
+    assert len(SYNC_PATH.read_text(encoding="utf-8").splitlines()) <= 1500
+
+
 def _load(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
     assert spec and spec.loader

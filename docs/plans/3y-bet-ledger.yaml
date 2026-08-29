@@ -257,6 +257,181 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-58
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Automation fallout repair (omo imports, resident noise, state-sync churn)
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Repair the 2026-08-29 unattended god-module extraction fallout in projects/omo (agent-workflow CLI import breakage, omo_audit import cycle), contain resident decision-inbox noise from provenance-free trigger events, and stop the chore(state) commit-reset churn on local main.
+  non_goals:
+  - No new god-module extractions and no second workflow dispatcher.
+  - No forced rebase/push of the diverged local omo child branch while the unattended extraction session is still active (documented follow-up instead).
+  - No T1-12 completion-evidence edits and no T4-02 scope change.
+  done_when:
+  - bin/agent-workflow.py bootstrap/status/compliance run clean at workspace root.
+  - Both import orders work for omo.omo_audit / omo.omo_audit_checks / omo.workflow.diagnostics_p74, and omo resident-decision tests pass.
+  - Resident decision loop drops provenance-free (empty trace_id) trigger drafts and emits at most one draft per (event_type, trace_id) per UTC day.
+  - commit-msg hook rejects chore(state)-genre commits on local main, steering them to the worktree+PR path.
+  - Accumulated empty-template decision-proposal drafts are dispositioned with counts recorded.
+  verify:
+  - cmd: uv run --with pyyaml python bin/agent-workflow.py status
+    expect: 'exit 0 and "agent-workflow status: ok"'
+  - cmd: cd projects/omo && uv run python -c "import omo.omo_audit_checks, omo.omo_audit, omo.workflow.diagnostics_p74"
+    expect: exit 0
+  - cmd: cd projects/omo && uv run pytest tests/unit/test_resident_decision.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond pre-existing T1-12 items
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo
+  - .githooks/**
+  - AGENTS.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+  - docs/reports/**
+  - .omo/_knowledge/decision-proposals/**
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-58.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-58-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
+    decision_ref: decision://accepted/BET-Y1Q3-T10-58
+  depends_on:
+  - BET-Y1Q3-T10-54
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: If the unattended extraction session resumes mutating projects/omo, stop the child-branch reconciliation instead of forcing it; hook and inbox guards alone still satisfy containment.
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@1a3769ca8ad9e6c3643d2df8d1e44eaadab32cd4
+          tests:
+            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
+            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+            sha256: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+            sha256: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
+            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
+            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+          replay:
+            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
+            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+            sha256: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  retro: required
+
+- id: BET-Y1Q3-T10-61
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Registry-driven meta-doctor refs-only CI binding
+  appetite: 0.25 day
+  priority: P1
+  status: candidate
+  goal: Align the canonical CI-surface registry with the existing governance-check contract so the registry-driven meta-doctor invocation validates repository references only and does not fail on stale checkout projections.
+  non_goals:
+  - No change to meta-doctor rules, exit semantics, M1 heartbeat logic, or M2 reference scanning.
+  - No change to the GitHub workflow, scheduler, runtime state, or host files.
+  - No Documents content, migration-family, or capability ownership change.
+  done_when:
+  - The active bin-gac-meta-doctor-py registry entry declares --refs-only.
+  - A regression test proves the registry-selected command consumes the exact argument.
+  - The governance-check registry runner and focused CI-surface tests pass.
+  verify:
+  - cmd: python3 bin/gac/ci-check-runner.py --workflow governance-check.yml --json
+    expect: exit 0 and meta-doctor is invoked with --refs-only
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_ci_surfaces.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0 or only pre-existing environment/known-debt findings
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/ci-surfaces.yaml
+  - tests/test_ci_surfaces.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md
+  - docs/reports/2026-08-29-meta-doctor-refs-only-registry.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-61.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-61-meta-doctor-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:746e21e338f0a914d441af381a5d47f4db0a6735c4acca7e31efabc9f19a5edd
+    decision_ref: decision://accepted/BET-Y1Q3-T10-61
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any change to meta-doctor implementation, workflow semantics, scheduler, runtime state, or Documents content stops this BET.
+  retro: required
+
+- id: BET-Y1Q3-T10-63
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Governance waiver frontmatter repair
+  appetite: 0.1 day
+  priority: P1
+  status: candidate
+  goal: Restore the Markdown frontmatter contract for the newly added T10-61 governance waiver without changing its authorization body or any governance rule.
+  non_goals:
+  - No governance rule, warning budget, workflow, BET verdict, runtime, host, child, gitlink, Documents, capability, or dispatcher change.
+  - No bulk migration of historical documents.
+  done_when:
+  - The T10-61 bootstrap waiver has valid repository-standard frontmatter and preserves its existing evidence body.
+  - The T10-63 spec, waiver, report, and retro also satisfy document lifecycle frontmatter requirements.
+  - The document governance check no longer reports the T10-61 waiver as missing frontmatter.
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0 or only pre-existing baseline findings; repaired waiver is not a missing-frontmatter finding
+  - cmd: make gac-local-gate
+    expect: exit 0 or only pre-existing environment/known-debt findings
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-61-meta-doctor-bootstrap.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-63-doc-hygiene-bootstrap.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-governance-waiver-frontmatter-repair-design.md
+  - docs/reports/2026-08-29-governance-waiver-frontmatter-repair.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-63.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-governance-waiver-frontmatter-repair-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:4510fd9040da76cd721241989ef6f962f9058c29d11f6dd80d92e560e8ddfab5
+    decision_ref: decision://accepted/BET-Y1Q3-T10-63
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any rule, budget, runtime, host, child, gitlink, Documents, capability, or bulk-document migration change stops this BET.
+  retro: required
+
 - id: BET-Y1Q3-T10-56
   track: T10-MATURITY
   window: Y1Q3
@@ -325,6 +500,184 @@ bets:
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md
             sha256: sha256:de420b2b6158d68ebf154429f7067577894b0d00a599c2dcb237650d7408e442
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  retro: required
+
+- id: BET-Y1Q3-T10-57
+  track: T10-MATURITY
+  window: Y1Q3
+  title: L4 live Documents content-plane audit stability
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: Make live content-plane evidence retryable under transient filesystem drift while remaining fail-closed for persistent instability.
+  non_goals:
+  - No Documents content move, delete, quarantine, or execution.
+  - No change to artifact classification, archive semantics, or migration-family status.
+  - No host schedule, runtime-state, L4 route, nested-L4, or capability-registry change.
+  done_when:
+  - A transient tree change is retried as a complete audit and a stable attempt returns the full classification.
+  - Persistent tree drift remains non-zero and explicitly reports bounded attempts and the stability reason.
+  - Existing L4 content-plane and CLI contract tests pass without changing their fail-closed assertions.
+  - A stable live audit is consumable by the Documents migration checker without an empty inventory caused only by one transient drift.
+  verify:
+  - cmd: cd projects/l4-kernel && uv run pytest tests/test_content_plane.py tests/test_cli_contracts.py -q
+    expect: exit 0
+  - cmd: python3 bin/gac/documents-content-plane-migration-check.py --json
+    expect: registry validation remains deterministic; no Documents mutation
+  - cmd: make gac-local-gate
+    expect: exit 0 or only pre-existing environment/known-debt findings
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/l4-kernel
+  - docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-08-29-l4-content-audit-stability.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-57.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-57-content-audit-stability-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:ed2bf10beecdc8f2de09fbb289bc2af518f998a20c6ba4a3e820327c1dd537f0
+    decision_ref: decision://accepted/BET-Y1Q3-T10-57
+  depends_on:
+  - BET-Y1Q3-T10-41
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any Documents content mutation, classification change, migration-family status change, or route/runtime change stops this BET.
+  retro: required
+
+- id: BET-Y1Q3-T10-60
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Capability-sync verification helper split
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  goal: Extract bounded capability-sync verification helpers, preserve behavior, and restore the canonical projection/god-module gates.
+  non_goals:
+  - No capability registry writer, dispatcher, provider, authority, or receipt semantic change.
+  - No Documents content, host, runtime, schedule, or submodule pointer mutation.
+  done_when:
+  - bin/capability-sync.py is at or below 1500 lines and god-module lint no longer reports it as an error.
+  - Capability-sync/native/trace targeted tests and Python 3.9 import compatibility pass.
+  - Canonical capability registry projection check passes with no semantic capability change.
+  - Extracted helper remains a library-only compatibility boundary.
+  verify:
+  - cmd: wc -l bin/capability-sync.py
+    expect: line count <= 1500
+  - cmd: python3 bin/ssot/check-god-module.py --strict --json
+    expect: capability-sync.py absent from hard errors
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_capability_sync.py tests/test_capability_native_inspection.py tests/test_capability_native_execution_receipt.py tests/test_capability_trace_binding.py -q
+    expect: exit 0
+  - cmd: make check-capability-registry
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/capability-sync.py
+  - lib/capability_sync_verification_helpers.py
+  - tests/test_capability_sync.py
+  - tests/test_agent_workflow.py
+  - docs/generated/capability-registry.yaml
+  - docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md
+  - docs/reports/2026-08-29-capability-sync-module-split.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-60.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-60-capability-split-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:87b56eac858d5c8a84fcc039d973367c261f4d37b9fb1c8fbbaa23ee7b92831d
+    decision_ref: decision://accepted/BET-Y1Q3-T10-60
+  depends_on:
+  - BET-Y1Q3-T1-12
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any capability ID, registry writer, receipt schema, admission semantics, Documents content, or runtime-state change stops this BET.
+- id: BET-Y1Q3-T10-59
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents root one-off runtime quarantine
+  appetite: 0.5 day
+  priority: P1
+  status: done
+  done_at: 2026-08-29
+  goal: Move exactly eight inactive root one-off runtime/cache objects from Documents into a recoverable Workspace quarantine, preserving hashes and rollback.
+  non_goals:
+  - No movement or deletion of Documents content, the rest of _inbox, or any domain tree.
+  - No permanent deletion of the quarantine package.
+  - No host schedule, LaunchAgent, Scheduled skill, registry semantics, or capability change.
+  done_when:
+  - The exact eight source paths are revalidated immediately before the move and have no active executable consumer.
+  - Quarantine copies, source absence, byte equality, metadata, and rollback manifest are all verified.
+  - No non-target Documents path changes and unresolved migration families remain fail-closed.
+  - Root L4/content-plane and consumer audits reflect the quarantine without a forbidden executor.
+  verify:
+  - cmd: python3 bin/gac/documents-content-plane-migration-check.py --documents-root "$HOME/Documents" --json
+    expect: exit 0 or explicit remaining-family/stability findings; no mutation by the checker
+  - cmd: python3 lib/documents_consumer_audit.py --documents-root "$HOME/Documents" --json
+    expect: no forbidden executable and no unmatched active consumer
+  - cmd: make gac-local-gate
+    expect: exit 0 or only pre-existing environment/known-debt findings
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md
+  - docs/reports/2026-08-29-root-oneoff-quarantine.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-59.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-59-root-oneoff-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:1b35aef70f44cb452ec75cb5dc5941afe8b98f40107f130ce74b2a8396450d2b
+    decision_ref: decision://accepted/BET-Y1Q3-T10-59
+  depends_on:
+  - BET-Y1Q3-T10-57
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any target drift, open handle, active executable consumer, non-target Documents change, hash mismatch, or quarantine write failure stops and restores the source.
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@7bcaa8139231252d3c116c7d32cf1b63daecbed4
+          tests:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
+          diff:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
+          replay:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-59.md
+            sha256: sha256:05f0268ad0425c1749c049a3fbaf83c0b14f1dd94a67acf795d385909fba82b4
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -1876,11 +2229,6 @@ bets:
   risk_level: L3
   human_gate: true
   circuit_breaker: 任一 root overlap、digest mismatch、replay 失败、人工确认不明或需覆盖原地恢复时立即停机
-  retro: required
-  risk_level: L2
-  human_gate: false
-  circuit_breaker: 超 4 天 → 先做 E2(锁原子性+stale 检测, 影响面更大且纯代码), E1 的 hook 强制推迟, 仅加 AGENTS.md
-    红线与 warning
   retro: required
 - id: BET-Y1Q1-T1-01
   track: T1-TRUTH
@@ -8866,7 +9214,8 @@ bets:
   title: 'Documents 两条 owner schedule 原子切换'
   appetite: 0.5 day
   priority: P0
-  status: pending
+  status: done
+  done_at: 2026-08-29
   goal: '在完整备份与精确行匹配的前提下，仅将每日 06:25 async-audit 和周一 06:35 freshness audit 切换到 Workspace owner，并完成即时验证与回滚证据。'
   non_goals:
   - 不修改其他 crontab 行、LaunchAgent、Scheduled skill 或 Documents 内容
@@ -8903,6 +9252,43 @@ bets:
   risk_level: L2
   human_gate: true
   circuit_breaker: 'missing/duplicate old line, candidate drift, owner command error, or any unrelated-line difference causes abort or rollback.'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@fb8897b9488ae28c70e8c8d478577ef2c3945775
+          tests:
+            ref: receipt://docs/reports/2026-08-27-documents-schedule-cutover.md
+            sha256: sha256:bc583d76afac47463a0eea78f53042c697bcb35e829df07e599c905ec3de9b8b
+          diff:
+            ref: receipt://docs/reports/2026-08-27-documents-schedule-cutover.md
+            sha256: sha256:bc583d76afac47463a0eea78f53042c697bcb35e829df07e599c905ec3de9b8b
+          rollback:
+            ref: receipt://docs/reports/2026-08-27-documents-schedule-cutover.md
+            sha256: sha256:bc583d76afac47463a0eea78f53042c697bcb35e829df07e599c905ec3de9b8b
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-27-documents-schedule-cutover.md
+            sha256: sha256:bc583d76afac47463a0eea78f53042c697bcb35e829df07e599c905ec3de9b8b
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-26.md
+            sha256: sha256:4906fd79280dc022145d46ac3c7f2bfffaa6052bbb0bfdbfbaed7412398dafef
+          replay:
+            ref: receipt://docs/reports/2026-08-27-documents-schedule-cutover.md
+            sha256: sha256:bc583d76afac47463a0eea78f53042c697bcb35e829df07e599c905ec3de9b8b
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-26.md
+            sha256: sha256:4906fd79280dc022145d46ac3c7f2bfffaa6052bbb0bfdbfbaed7412398dafef
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 - id: BET-Y1Q3-T10-27
   track: T10-MATURITY
@@ -9151,7 +9537,8 @@ bets:
   title: 'domain-sync 06:00 Workspace owner 切换'
   appetite: 0.5 day
   priority: P0
-  status: pending
+  status: done
+  done_at: 2026-08-29
   goal: '将每日 06:00 domain-sync 从 Documents Python 3.9 脚本切换到 accepted Workspace L4 index check，保持只读、原 cadence 与可回滚。'
   non_goals:
   - 不修改 DOMAIN-INDEX 或任何 Documents 内容
@@ -9187,6 +9574,43 @@ bets:
   risk_level: L2
   human_gate: true
   circuit_breaker: 'missing old line, unexpected writer, cadence drift, or new command error triggers immediate rollback.'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@1a3769ca8ad9e6c3643d2df8d1e44eaadab32cd4
+          tests:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+          diff:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+          rollback:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-28.md
+            sha256: sha256:020dacb123ae8b8215fcd513012e50fbc6c99b0b10427d107209297e42ac3ef0
+          replay:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-28.md
+            sha256: sha256:020dacb123ae8b8215fcd513012e50fbc6c99b0b10427d107209297e42ac3ef0
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 - id: BET-Y1Q3-T10-47
   track: T10-MATURITY
