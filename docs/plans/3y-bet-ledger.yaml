@@ -468,6 +468,51 @@ bets:
   circuit_breaker: Any Documents content mutation, classification change, migration-family status change, or route/runtime change stops this BET.
   retro: required
 
+- id: BET-Y1Q3-T10-59
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Root one-off migration registry retirement
+  appetite: 0.25 day
+  priority: P1
+  status: candidate
+  goal: Reconcile root-oneoff-assets to terminal retired using the existing hash-verified recoverable quarantine receipt, without another physical move.
+  non_goals:
+  - No physical move, deletion, or quarantine mutation.
+  - No change to any migration family except root-oneoff-assets status/evidence.
+  - No content, schedule, runtime, or capability changes.
+  done_when:
+  - root-oneoff-assets is retired with verified_at, source/target fingerprints, consumer scan, and rollback reference.
+  - The existing eight-target manifest remains complete and hash-valid with permanent deletion false.
+  - Registry validation passes and all other non-terminal families remain unchanged.
+  verify:
+  - cmd: python3 bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0; root-oneoff-assets terminal evidence valid and other families unchanged
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: no new error beyond pre-existing T1-12 workflow/write_surfaces
+  - cmd: make gac-local-gate
+    expect: exit 0 or only pre-existing environment/known-debt findings
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/superpowers/specs/2026-08-29-root-oneoff-registry-retirement-design.md
+  - docs/reports/2026-08-29-root-oneoff-registry-retirement.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-59.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-59-root-oneoff-registry-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-root-oneoff-registry-retirement-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b60c4611037c586ea72b6da2575e35c5a01b70c3d7333c7ceb489495577eb11e
+    decision_ref: decision://accepted/BET-Y1Q3-T10-59
+  depends_on:
+  - BET-Y1Q3-T10-57
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any manifest mismatch, source reappearance, other-family change, or registry validation error stops this reconciliation.
+  retro: required
+
 - id: BET-Y1Q3-T10-55
   track: T10-MATURITY
   window: Y1Q3
