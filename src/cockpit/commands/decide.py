@@ -35,10 +35,14 @@ def _load_inbox() -> dict:
 
 
 def _save_inbox(data: dict) -> None:
+    # CR-DIRECT-IO: .omo/state writes must go through the omo broker helpers,
+    # not direct Path mutation (contract_gatekeeper).
+    from omo.omo_io import ensure_parent_dir, write_text_atomic
+
     root = resolve_workspace_root()
     path = root / INBOX_PATH
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    ensure_parent_dir(path)
+    write_text_atomic(path, json.dumps(data, indent=2, ensure_ascii=False))
 
 
 def cmd_list(args: argparse.Namespace) -> int:
