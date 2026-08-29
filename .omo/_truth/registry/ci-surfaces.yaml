@@ -458,12 +458,6 @@ surfaces:
   gate: true
   triggers: []
   status: active
-- id: bin-ssot-bus-usage-report-py
-  tool: bin/ssot/bus-usage-report.py
-  workflow: (none)
-  gate: true
-  triggers: []
-  status: active
 - id: bin-ssot-check-agent-skills-py
   tool: bin/ssot/check-agent-skills.py
   workflow: ci-lint.yml
