@@ -265,6 +265,16 @@ families:
           byte_count: 0
           consumer_scan: "receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md"
           rollback_ref: "docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md"
+        - scope: "@工作文档/规自委/_runtime dangling symlinks only"
+          verified_at: "2026-08-30T00:15:00Z"
+          source_fingerprint: "sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a"
+          target_fingerprint: "sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a"
+          manifest_sha256: "sha256:7bacbae4998f693511b295a13edddd385939ec021caa7b67c7787d7c0e01f17b"
+          node_type: symlink
+          file_count: 11
+          byte_count: 0
+          consumer_scan: "receipt://.omo/evidence/20260829T184731Z-bet-execution-a848d2dc/documents-consumer-audit.json"
+          rollback_ref: "docs/reports/2026-08-30-documents-guizi-dangling-symlink-quarantine.md"
 
   - id: public-runtime
     source_globs:
