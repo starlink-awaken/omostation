@@ -20,6 +20,8 @@ no registry, dispatcher, provider, or authority was added.
 - Capability-sync, native inspection, native execution receipt, and trace
   binding targeted regressions: 252 passed; the Python 3.9 import/probe path
   passed.
+- The root workflow fixture now copies the extracted helper; the two previously
+  failing capability preflight identity tests pass (`2 passed`).
 - The existing canonical projection test was separately observed to fail in a
   partial local clone because uninitialized submodules make the generator mark
   real MCP servers as `exists:false`; the generated projection was restored and

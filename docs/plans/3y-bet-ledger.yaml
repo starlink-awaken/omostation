@@ -263,8 +263,7 @@ bets:
   title: Automation fallout repair (omo imports, resident noise, state-sync churn)
   appetite: 0.5 day
   priority: P0
-  status: done
-  done_at: 2026-08-29
+  status: candidate
   goal: Repair the 2026-08-29 unattended god-module extraction fallout in projects/omo (agent-workflow CLI import breakage, omo_audit import cycle), contain resident decision-inbox noise from provenance-free trigger events, and stop the chore(state) commit-reset churn on local main.
   non_goals:
   - No new god-module extractions and no second workflow dispatcher.
@@ -474,8 +473,7 @@ bets:
   title: Capability-sync verification helper split
   appetite: 0.5 day
   priority: P1
-  status: done
-  done_at: 2026-08-29
+  status: candidate
   goal: Extract bounded capability-sync verification helpers, preserve behavior, and restore the canonical projection/god-module gates.
   non_goals:
   - No capability registry writer, dispatcher, provider, authority, or receipt semantic change.
@@ -500,6 +498,7 @@ bets:
   - bin/capability-sync.py
   - lib/capability_sync_verification_helpers.py
   - tests/test_capability_sync.py
+  - tests/test_agent_workflow.py
   - docs/generated/capability-registry.yaml
   - docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md
   - docs/reports/2026-08-29-capability-sync-module-split.md
@@ -517,43 +516,6 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: Any capability ID, registry writer, receipt schema, admission semantics, Documents content, or runtime-state change stops this BET.
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@93c1351929f6b69919a053d41a63f2702e63034d
-          tests:
-            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
-            sha256: sha256:69c1f55ef2ee6bef04b27b1aeb389b64621dab94da071a5c1bf489fbab654876
-          diff:
-            ref: receipt://docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md
-            sha256: sha256:87b56eac858d5c8a84fcc039d973367c261f4d37b9fb1c8fbbaa23ee7b92831d
-          rollback:
-            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
-            sha256: sha256:69c1f55ef2ee6bef04b27b1aeb389b64621dab94da071a5c1bf489fbab654876
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
-            sha256: sha256:69c1f55ef2ee6bef04b27b1aeb389b64621dab94da071a5c1bf489fbab654876
-          fresh_receipt:
-            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
-            sha256: sha256:69c1f55ef2ee6bef04b27b1aeb389b64621dab94da071a5c1bf489fbab654876
-          replay:
-            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
-            sha256: sha256:69c1f55ef2ee6bef04b27b1aeb389b64621dab94da071a5c1bf489fbab654876
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-60.md
-            sha256: sha256:5ae45b51925bfa43af665ee16a76896de5d6004587cd5ba61ccd84780047d057
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-  value_indicator_policy: false
   retro: required
 
 - id: BET-Y1Q3-T10-55
