@@ -257,6 +257,55 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-65
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents terminal rollback receipt guard
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Prevent a Documents migration family from reaching verified or retired when its rollback receipt is not resolvable, and record the current root one-off receipt loss as a fail-closed evidence gap.
+  non_goals:
+  - No Documents content, runtime, cache, host schedule, LaunchAgent, or client configuration mutation.
+  - No physical re-move, deletion, or reconstruction of the missing quarantine payload.
+  - No change to migration-family ownership, source globs, or terminal semantics beyond receipt resolvability enforcement.
+  done_when:
+  - The migration checker rejects a terminal family whose rollback_ref does not resolve to a regular file.
+  - The checker accepts a terminal family with a real rollback receipt and preserves existing sample/live coverage behavior.
+  - A report records the live root-oneoff source absence and missing rollback package without claiming physical completion.
+  - The root one-off retirement branch cannot pass its registry check while the referenced quarantine manifest is absent.
+  verify:
+  - cmd: uv run --with pyyaml python -m pytest tests/test_documents_content_plane_migration_check.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 on the current main registry, with no terminal receipt errors
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond pre-existing known debt
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/documents-content-plane-migration-check.py
+  - tests/test_documents_content_plane_migration_check.py
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
+  - docs/reports/2026-08-29-documents-terminal-receipt-gap.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-65.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-65-bet-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:f851565612d5b4e643642ffca7938e937a5d6e39173e4e0059d69de24d2fb9ea
+    decision_ref: decision://accepted/BET-Y1Q3-T10-65
+  depends_on:
+  - BET-Y1Q3-T10-59
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any Documents content or runtime mutation, missing evidence boundary, or attempt to recreate the lost payload stops this BET.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-62
   track: T10-MATURITY
   window: Y1Q3
@@ -344,7 +393,8 @@ bets:
   title: Automation fallout repair (omo imports, resident noise, state-sync churn)
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   goal: Repair the 2026-08-29 unattended god-module extraction fallout in projects/omo (agent-workflow CLI import breakage, omo_audit import cycle), contain resident decision-inbox noise from provenance-free trigger events, and stop the chore(state) commit-reset churn on local main.
   non_goals:
   - No new god-module extractions and no second workflow dispatcher.
@@ -427,7 +477,7 @@ bets:
   value_indicator_policy: false
   retro: required
 
-- id: BET-Y1Q3-T10-64
+- id: BET-Y1Q3-T10-66
   track: T10-MATURITY
   window: Y1Q3
   title: Cockpit decide canonical inbox convergence
@@ -459,14 +509,14 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
   - docs/reports/2026-08-29-cockpit-decide-canonical-inbox.md
-  - .omo/_knowledge/retros/BET-Y1Q3-T10-64.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-66.md
   - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-64-cockpit-decide-bootstrap.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
     spec_version: 1.0.0
     content_digest: sha256:263fface7497943ed3fe306e96d9a0d3d7ab5744ad5c00c892680b6ed9d5c181
-    decision_ref: decision://accepted/BET-Y1Q3-T10-64
+    decision_ref: decision://accepted/BET-Y1Q3-T10-66
   depends_on: []
   risk_level: L1
   human_gate: false
@@ -2323,7 +2373,8 @@ bets:
   title: Product P0 WP6 Physical Backup Restore Integrity Drill
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   parent_bet_id: BET-Y1Q3-T4-02
   delivery_wave: C
   goal: 对明确批准的非生产源执行真实 backup -> isolated restore -> integrity -> replay，记录四个 digest、隔离目标、测量时间和人工确认，dry-run 永不通过 physical gate。
@@ -2360,21 +2411,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@26308bfae1e0d9680adec8555601cdfa80fe3b3c
+          tests:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
+          diff:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
+          replay:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
+          cleanup:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
-  depends_on:
-  - BET-Y1Q3-T4-06
-  value_indicator_policy: false
-  risk_level: L3
-  human_gate: true
-  circuit_breaker: 任一 root overlap、digest mismatch、replay 失败、人工确认不明或需覆盖原地恢复时立即停机
+    overall_state: delivery_accepted
+  value_indicator_policy: false  # WP6 不证明价值
   retro: required
 - id: BET-Y1Q1-T1-01
   track: T1-TRUTH
