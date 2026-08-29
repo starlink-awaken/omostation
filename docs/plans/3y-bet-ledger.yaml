@@ -263,7 +263,8 @@ bets:
   title: ZCode native Documents config reconciliation
   appetite: 0.25 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   goal: Reconcile the Workspace-owned Cockpit MCP projection in ~/.zcode/cli/config.json while preserving every unrelated ZCode server/model setting and leaving active Documents client state untouched.
   non_goals:
   - No movement or mutation of Documents/ZCode/.zcode state, SQLite, WAL/SHM, credentials, logs, or checkpoints.
@@ -294,6 +295,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:f42a860360c23d03981b881aac0decbd86a11d0c1c1e0daf45ffa7a162568185
     decision_ref: decision://accepted/BET-Y1Q3-T10-89
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a19ef95a9ed5f58e87eed571428fea394f2054a9
+          tests:
+            ref: receipt://docs/reports/2026-08-30-zcode-native-documents-config-reconciliation.md
+            sha256: sha256:215759d323a088df4a9fc9b30bd4414b58624c299e9a5d584d2bdede9e8a84aa
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md
+            sha256: sha256:f42a860360c23d03981b881aac0decbd86a11d0c1c1e0daf45ffa7a162568185
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md
+            sha256: sha256:f42a860360c23d03981b881aac0decbd86a11d0c1c1e0daf45ffa7a162568185
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-zcode-native-documents-config-reconciliation.md
+            sha256: sha256:215759d323a088df4a9fc9b30bd4414b58624c299e9a5d584d2bdede9e8a84aa
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-zcode-native-documents-config-reconciliation.md
+            sha256: sha256:215759d323a088df4a9fc9b30bd4414b58624c299e9a5d584d2bdede9e8a84aa
+          replay:
+            ref: receipt://docs/reports/2026-08-30-zcode-native-documents-config-reconciliation.md
+            sha256: sha256:215759d323a088df4a9fc9b30bd4414b58624c299e9a5d584d2bdede9e8a84aa
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-89.md
+            sha256: sha256:55b2baf40e8c2686c56f95b799b12e4229818271c48d5f3c5d3865d22c68dc4c
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-88
   risk_level: L2
