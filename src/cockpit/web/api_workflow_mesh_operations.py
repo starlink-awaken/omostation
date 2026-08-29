@@ -142,6 +142,25 @@ except Exception as exc:  # An effectful local draft must fail closed without Ag
 else:
     _PEP_IMPORT_ERROR = None
 
+try:
+    from omo.sovereignty.principal_authority import DefaultPrincipalAuthority
+except Exception as exc:
+    DefaultPrincipalAuthority = None  # type: ignore[assignment,misc]
+    _PERSONAL_EPISODE_AUTHORITY_IMPORT_ERROR: Exception | None = exc
+else:
+    _PERSONAL_EPISODE_AUTHORITY_IMPORT_ERROR = None
+
+if DefaultPrincipalAuthority is not None:
+    _PERSONAL_EPISODE_AUTHORITY = DefaultPrincipalAuthority(
+        members={"principal:alice": ("key", "sha256:" + "a" * 64, 1)},
+        fixture_only=frozenset(),
+        production=False,
+    )
+    _PERSONAL_EPISODE_CREDENTIAL_REF = "credential:key:1:sha256:" + "a" * 64
+else:
+    _PERSONAL_EPISODE_AUTHORITY = None
+    _PERSONAL_EPISODE_CREDENTIAL_REF = None
+
 
 router = APIRouter(prefix="/api/workflow-mesh", tags=["workflow-mesh"]) if APIRouter else None
 from cockpit.web._agora_ports import agora_http_endpoint
@@ -253,7 +272,11 @@ def _personal_episode_service() -> Any:
         raise RuntimeError("personal episode runtime unavailable")
     broker = LedgerBroker.connect(_event_ledger_db_path())
     try:
-        yield PersonalEpisodeService(broker)
+        yield PersonalEpisodeService(
+            broker,
+            principal_authority=_PERSONAL_EPISODE_AUTHORITY,
+            default_credential_ref=_PERSONAL_EPISODE_CREDENTIAL_REF,
+        )
     finally:
         broker.close()
 
