@@ -20,10 +20,11 @@ runtime behavior, and hardware execution were not changed.
 ## Evidence
 
 - Agora PR #46 is merged at child main commit
-  `61af943334f120938f6ad79eda83fbe1535a1405`; PR #47 is merged at child main
-  commit `fa3e5508b9ec6054b20058a352e30349b6ffc487`.
+  `61af943334f120938f6ad79eda83fbe1535a1405`; PR #47 and its tracker PR #49
+  are merged, with child main now at
+  `a4c65b305df1b2718489e36a49dd52dae2b4c9b9`.
 - The root `projects/agora` gitlink points to the reachable child main commit
-  `fa3e5508b9ec6054b20058a352e30349b6ffc487`.
+  `a4c65b305df1b2718489e36a49dd52dae2b4c9b9`.
 - `tests/test_omlxc_bos_path_resolution.py` passes in the child repository.
 - The five OMLXC declarations resolve against existing example files when the
   checker uses the command's `--directory projects/omlxc` context.
