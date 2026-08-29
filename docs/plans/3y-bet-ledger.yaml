@@ -257,6 +257,53 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-68
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Workspace quarantine retention guard
+  appetite: 0.25 day
+  priority: P0
+  status: candidate
+  goal: Protect recoverable physical-migration packages under runtime/quarantine from ordinary repository cleanup after the public-runtime receipt was lost.
+  non_goals:
+  - No Documents content, runtime, cache, host schedule, LaunchAgent, client configuration, or quarantine payload mutation.
+  - No restoration, reconstruction, deletion, or overwrite of the missing public-runtime package.
+  - No change to migration-family status or terminal evidence.
+  done_when:
+  - A repository-standard ignore rule protects every runtime/quarantine child package.
+  - A regression test proves a canonical quarantine manifest path is ignored by git check-ignore.
+  - A report records the retention-loss incident and confirms this BET performs no payload mutation.
+  verify:
+  - cmd: uv run --with pytest python -m pytest tests/test_quarantine_retention_policy.py -q
+    expect: exit 0
+  - cmd: git check-ignore -q runtime/quarantine/documents-public-runtime-20260829/manifest.json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - .gitignore
+  - tests/test_quarantine_retention_policy.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md
+  - docs/reports/2026-08-29-quarantine-retention-guard.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-68.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-68-retention-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d19cbfa3cbf6d5f3d04872b11ded51bdbb0bd6900f26d664db6748cf9f344901
+    decision_ref: decision://accepted/BET-Y1Q3-T10-68
+  depends_on:
+  - BET-Y1Q3-T10-65
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any payload restoration, Documents mutation, runtime quarantine mutation, or migration-family status change stops this BET.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-65
   track: T10-MATURITY
   window: Y1Q3
