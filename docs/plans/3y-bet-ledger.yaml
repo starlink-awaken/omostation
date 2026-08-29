@@ -3184,7 +3184,8 @@ bets:
   title: Product P0 WP4 Principal Authority Binding
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   parent_bet_id: BET-Y1Q3-T4-02
   delivery_wave: A
   goal: 在 effect admission 前由 OMO 唯一权威验证 principal credential/membership，让 Cockpit 只委派、Agora 只转发已验证 digest，并证明所有负例在 provider/router/tool/ledger effect 前零调用拒绝。
