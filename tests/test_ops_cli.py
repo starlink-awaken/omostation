@@ -160,14 +160,19 @@ class TestGetCmd:
     """Tests for _get_cmd function."""
 
     def test_uv_interpreter(self):
-        svc = {"program": {"interpreter": "uv", "entrypoint": "projects/omo", "args": ["omo-sync"]}}
+        svc = {"program": {"interpreter": "uv", "entrypoint": "bin/tool.py", "args": ["--check"]}}
         cmd = _get_cmd(svc)
-        assert cmd == ["uv", "run", "projects/omo", "omo-sync"]
+        assert cmd == ["uv", "run", "bin/tool.py", "--check"]
+
+    def test_uv_directory_entrypoint_uses_directory_flag(self):
+        svc = {"program": {"interpreter": "uv", "entrypoint": "projects/agora", "args": ["agora-mcp", "--sse"]}}
+        cmd = _get_cmd(svc)
+        assert cmd == ["uv", "run", "--directory", "projects/agora", "agora-mcp", "--sse"]
 
     def test_python3_interpreter(self):
         svc = {"program": {"interpreter": "stable-python3", "entrypoint": "bin/test.py", "args": []}}
         cmd = _get_cmd(svc)
-        assert cmd[0].endswith("python3")
+        assert Path(cmd[0]).name in {"python", "python3"}
         assert cmd[1] == "bin/test.py"
 
     def test_absolute_interpreter(self):

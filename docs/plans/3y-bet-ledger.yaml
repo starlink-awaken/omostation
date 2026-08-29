@@ -256,6 +256,53 @@ gates:
       AND surface <= 0.70
     on_fail: 收窄至单场景维持
 bets:
+
+- id: BET-Y1Q3-T10-49
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'Service Gateway uv directory command repair'
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: '修复 Service Gateway 对目录型 uv entrypoint 的命令编译，确保 canonical mcp.agora 命令可执行。'
+  non_goals:
+  - 不写入、加载、卸载或修改宿主 plist、launchd 状态或服务进程
+  - 不改变 services.yaml 服务语义、参数、端口或调度策略
+  - 不新增服务注册表、调度器或第二控制平面
+  done_when:
+  - directory-based uv entrypoints compile to uv run --directory argv
+  - file/module uv entrypoints preserve the existing uv run argv form
+  - mcp.agora dry-run emits a runnable command and focused tests pass
+  - host runtime remains untouched and is reported separately
+  verify:
+  - cmd: 'uv run --with pytest --with pyyaml python -m pytest tests/test_ops_cli.py -q'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml python bin/ops/cli.py up mcp.agora --dry-run'
+    expect: '输出包含 uv run --directory projects/agora agora-mcp --sse'
+  - cmd: 'python3 -m py_compile bin/ops/cli.py'
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ops/cli.py
+  - tests/test_ops_cli.py
+  - docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-ops-uv-directory-command-bootstrap.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-49.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:eb0cdaf1e8d823a4efd350a13cfb89c707afbffcbaf2834b2e12afb9efec6922
+    decision_ref: decision://accepted/BET-Y1Q3-T10-49
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 'Any host plist/process mutation, service semantic change, or new control-plane surface stops this BET.'
+  retro: required
 - id: BET-Y1Q2-T6-06
   track: T6-EVOLUTION
   window: Y1Q2
