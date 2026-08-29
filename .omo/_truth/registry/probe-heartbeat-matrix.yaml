@@ -1,0 +1,91 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-08-29
+---
+# 探测器心跳矩阵 — 所有探测器的心跳 SLA 定义
+# M3 仪式全覆盖
+
+schema: probe-heartbeat-matrix/v1
+description: "探测器心跳矩阵 — 监控所有治理探测器的活性"
+
+# 心跳检查配置
+heartbeats:
+  # 系统健康
+  - file: .omo/state/system_health.yaml
+    field: last_scan
+    sla_hours: 48
+    severity: P1
+    description: "系统健康巡检"
+
+  - file: .omo/state/health.yaml
+    field: generated_at
+    sla_hours: 72
+    severity: P2
+    description: "健康评分"
+
+  # 债务管理
+  - file: .omo/_control/debt-dashboard/current.yaml
+    field: generated_at
+    sla_hours: 336
+    severity: P2
+    description: "债务看板"
+
+  # 治理审计
+  - file: .omo/_control/governance-data.json
+    field: generated_at
+    sla_hours: 168
+    severity: P2
+    description: "治理数据投影"
+
+  # 任务状态
+  - file: .omo/state/agent-tick-daemon.jsonl
+    field: ts
+    sla_hours: 24
+    severity: P1
+    description: "Agent Tick 守护"
+
+  # 信号路由
+  - file: .omo/state/routed-signals.json
+    field: routed_at
+    sla_hours: 168
+    severity: P3
+    description: "信号路由"
+
+  # 进化引擎
+  - file: .omo/state/evolution-proposals.json
+    field: created_at
+    sla_hours: 336
+    severity: P3
+    description: "进化提案"
+
+  # 价值证明
+  - file: .omo/state/history/health.jsonl
+    field: ts
+    sla_hours: 72
+    severity: P2
+    description: "价值历史"
+
+# 告警规则
+alerting:
+  # 心跳断供 → 债务立案
+  lapsed_to_debt: true
+  # 心跳断供 → inbox 通知
+  lapsed_to_inbox: true
+  # 心跳断供 → weekly-review 卡片
+  lapsed_to_weekly_review: true
+
+# 仪式配置
+rituals:
+  # M3 仪式：每周检查所有探测器心跳
+  m3_weekly:
+    schedule: "0 9 * * 1"  # 每周一 9:00
+    script: "bin/gac/meta-doctor.py"
+    args: ["--workspace", "."]
+
+  # M1 仪式：每日同步系统状态
+  m1_daily:
+    schedule: "0 8 * * *"  # 每天 8:00
+    script: "bin/gac/sync-system-state.py"
+    args: ["--dry-run"]
