@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 536  # 2026-08-29 536→536: value-tracker (Phase 3.2) + weekly-review follow-up  # 2026-08-28 520→528: cmd_deps + frontmatter (BET-Y1Q3-T6-05)
+    script_baseline: 537  # 2026-08-29 537→537: monthly-healthcheck (Phase 3.4)  # 2026-08-29 536→537: value-tracker (Phase 3.2)  # 2026-08-28 520→528: cmd_deps + frontmatter (BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
