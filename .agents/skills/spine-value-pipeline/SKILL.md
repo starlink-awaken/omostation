@@ -34,7 +34,7 @@ description: omostation (eCOS v6) 主干真值流与署名自进化技能包。�
 * 绝不代替夏明星直接对外发送未经审阅的内容，必须由本人确认署名。
 
 ### 步骤 5：Diff 捕获与自适应记忆沉淀 (Feedback)
-* 调用 `bos://memory/mos/diff` (或执行 `bin/memory/diff_engine.py`)；
+* 调用 `bos://memory/mos/diff`；
 * 传入 `draft_text` (AI原稿) 与 `final_text` (夏明星最终署名稿)；
 * 自动提取用词/修辞偏好追加至 `~/Documents/_entities/facts/preferences.md`。
 
