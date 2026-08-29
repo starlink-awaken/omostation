@@ -40,6 +40,12 @@ from capability_native_inspection import (  # noqa: E402 -- static native source
     inspection_error_receipt,
     native_kind_requires_projection,
 )
+from capability_sync_verification_helpers import (  # noqa: E402 -- fixed local helper boundary
+    delegate_to_federation_auditor,
+    read_bounded_stdin_json,
+)
+from capability_sync_verification_helpers import verification_receipt as _verification_receipt  # noqa: E402
+from capability_sync_verification_helpers import verify_principal_envelope as _verify_principal_envelope  # noqa: E402
 from capability_trace_binding import (  # noqa: E402 -- CLI locates the local pure library first
     CANONICAL_REGISTRY_METADATA,
     CAPABILITY_SEMANTICS,
@@ -684,33 +690,6 @@ def _binding_error_receipt(selector: Mapping[str, Any], failure_code: str) -> di
     }
 
 
-_VERIFICATION_FAILURES = {
-    "source_unprovable",
-    "native_route_unprovable",
-    "admission_contradiction",
-    "admission_expired",
-    "admission_receipt_invalid",
-    "authorization_required",
-    "value_promotion_forbidden",
-}
-
-
-def _verification_receipt(
-    status: str, failure_code: Optional[str] = None, **values: Any  # noqa: UP045 -- Python 3.9 contract
-) -> dict[str, Any]:
-    receipt: dict[str, Any] = {
-        "schema": VERIFICATION_RECEIPT_SCHEMA,
-        "status": status,
-        "value_indicator_policy": False,
-    }
-    if status == "verified":
-        receipt.update(values)
-        receipt["authority"] = "omo-workflow-mesh"
-    else:
-        receipt["failure_code"] = failure_code if failure_code in _VERIFICATION_FAILURES else "native_route_unprovable"
-    return receipt
-
-
 def _mesh_stat_fingerprint(stat: Any) -> tuple[int, int, int, int, int]:
     return (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
 
@@ -819,8 +798,7 @@ def _project_verification_mesh_run(events: list[dict[str, Any]], workflow_run_id
         if payload.get("admission_id") != admission.get("admission_id"):
             raise TraceBindingError("admission_receipt_invalid")
         if not any(
-            step_run_id == admitted or step_run_id.startswith(f"{admitted}:")
-            for admitted in admission["step_run_ids"]
+            step_run_id == admitted or step_run_id.startswith(f"{admitted}:") for admitted in admission["step_run_ids"]
         ):
             raise TraceBindingError("admission_receipt_invalid")
         step_runs = snapshot["step_runs"]
@@ -863,8 +841,7 @@ def _project_verification_mesh_run(events: list[dict[str, Any]], workflow_run_id
                 }:
                     raise TraceBindingError("admission_receipt_invalid")
                 if any(
-                    worker.get(key) != payload.get(key)
-                    for key in ("packet_id", "packet_hash", "instruction_binding")
+                    worker.get(key) != payload.get(key) for key in ("packet_id", "packet_hash", "instruction_binding")
                 ):
                     raise TraceBindingError("admission_receipt_invalid")
             elif event_type == "WorkerLeaseRenewed" and worker_state not in {"acknowledged", "active"}:
@@ -996,7 +973,9 @@ def _read_mesh_snapshot(omo_dir: Path, workflow_run_id: str) -> dict[str, Any]:
     return snapshot
 
 
-def _parse_verification_envelope(envelope: Any) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+def _parse_verification_envelope(
+    envelope: Any,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
     if not isinstance(envelope, Mapping) or set(envelope) != VERIFICATION_FIELDS:
         raise TraceBindingError("native_route_unprovable")
     if envelope.get("schema") != VERIFICATION_SCHEMA:
@@ -1041,7 +1020,8 @@ def _verify_worker_context(material: Mapping[str, Any], snapshot: Mapping[str, A
 
 
 def verify_material_against_mesh(  # noqa: UP007 -- public Python 3.9 compatibility contract
-    omo_dir: Union[Path, str], envelope: Mapping[str, Any]  # noqa: UP007 -- Python 3.9 style
+    omo_dir: Union[Path, str],  # noqa: UP007 -- Python 3.9 compatibility contract
+    envelope: Mapping[str, Any],  # noqa: UP007 -- Python 3.9 style
 ) -> dict[str, Any]:
     """Verify frozen execution material against one stable, persisted Mesh read."""
     try:
@@ -1091,9 +1071,7 @@ def verify_material_against_mesh(  # noqa: UP007 -- public Python 3.9 compatibil
             not isinstance(capabilities, list)
             or not capabilities
             or any(
-                not isinstance(capability, str)
-                or not IDENTITY_RE.fullmatch(capability)
-                or ".." in capability
+                not isinstance(capability, str) or not IDENTITY_RE.fullmatch(capability) or ".." in capability
                 for capability in capabilities
             )
             or material["capability"]["id"] not in capabilities
@@ -1140,16 +1118,7 @@ def verify_material_against_mesh(  # noqa: UP007 -- public Python 3.9 compatibil
 
 
 def _read_bounded_stdin_json() -> Any:
-    try:
-        stream = getattr(sys.stdin, "buffer", sys.stdin)
-        content = stream.read(MAX_INPUT_JSON_BYTES + 1)
-        if not isinstance(content, (bytes, bytearray)) or len(content) > MAX_INPUT_JSON_BYTES:
-            raise TraceBindingError("native_route_unprovable")
-        return json.loads(content)
-    except TraceBindingError:
-        raise
-    except (OSError, UnicodeError, TypeError, ValueError) as exc:
-        raise TraceBindingError("native_route_unprovable") from exc
+    return read_bounded_stdin_json(sys.stdin, max_bytes=MAX_INPUT_JSON_BYTES)
 
 
 def _delegate_to_writer(action: str, registry_path: Path) -> int:
@@ -1159,68 +1128,14 @@ def _delegate_to_writer(action: str, registry_path: Path) -> int:
     return subprocess.run(command, check=False).returncode
 
 
-def verify_principal_envelope(  # noqa: UP007 -- public Python 3.9 compatibility contract
-    envelope: Mapping[str, Any]  # noqa: UP007 -- Python 3.9 style
-) -> dict[str, Any]:
-    """Verify a principal against the OMO authority (BET-Y1Q3-T4-04).
-
-    Delegation contract for Cockpit: the adapter only forwards the principal
-    envelope (principal_id + credential_ref + expected receipt digest) and the
-    root verifier (here) re-derives the authority receipt via the OMO
-    sovereignty module.  Returns a verified receipt carrying the exact digest,
-    or a rejected receipt with a stable failure code.  Never stores the
-    credential secret.
-    """
-    principal_id = str(envelope.get("principal_id") or "")
-    credential_ref = str(envelope.get("credential_ref") or "")
-    expected_digest = str(envelope.get("principal_receipt_digest") or "")
-    if not principal_id or not credential_ref or not expected_digest:
-        return _verification_receipt("rejected", "native_route_unprovable")
-    try:
-        from omo.sovereignty.principal_authority import (
-            DefaultPrincipalAuthority,
-            digest_receipt,
-        )
-    except Exception:  # pragma: no cover - OMO unavailable on this host
-        return _verification_receipt("rejected", "native_route_unprovable")
-    try:
-        from datetime import UTC, datetime
-
-        authority = DefaultPrincipalAuthority()
-        receipt = authority.verify(
-            principal_id,
-            credential_ref,
-            now=datetime.now(UTC).isoformat(),
-        )
-        actual_digest = digest_receipt(receipt)
-        if actual_digest != expected_digest:
-            return _verification_receipt("rejected", "native_route_unprovable")
-        return {
-            "schema": PRINCIPAL_VERIFICATION_RECEIPT_SCHEMA,
-            "status": "verified",
-            "value_indicator_policy": False,
-            "authority": "omo-sovereignty",
-            "principal_id": principal_id,
-            "authority_ref": receipt.authority_ref,
-            "principal_receipt_digest": actual_digest,
-            "membership_version": receipt.membership_version,
-        }
-    except Exception:  # pragma: no cover - any authority failure is fail-closed
-        return _verification_receipt("rejected", "native_route_unprovable")
+def verify_principal_envelope(envelope: Mapping[str, Any]) -> dict[str, Any]:
+    """Public compatibility wrapper for the extracted principal verifier."""
+    return _verify_principal_envelope(envelope)
 
 
 def _delegate_to_federation_auditor(workspace_root: Path, *, strict: bool) -> int:
-    """Run the internal read-only observer through a fixed public command."""
-    command = [
-        sys.executable,
-        str(FEDERATION_AUDITOR),
-        "--workspace-root",
-        str(workspace_root),
-        "--json",
-    ]
-    if strict:
-        command.append("--strict")
-    return subprocess.run(command, check=False).returncode
+    """Public compatibility wrapper for the fixed federation observer."""
+    return delegate_to_federation_auditor(workspace_root, auditor=FEDERATION_AUDITOR, strict=strict)
 
 
 def _parser() -> argparse.ArgumentParser:
