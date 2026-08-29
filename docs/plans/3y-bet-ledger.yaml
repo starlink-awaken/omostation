@@ -257,7 +257,88 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
-- id: BET-Y1Q3-T10-58
+- id: BET-Y1Q3-T10-62
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Authority-binding contract alignment (omo tests, ecos M2 pointers, cockpit direct-IO)
+  appetite: 0.25 day
+  priority: P0
+  status: done
+  done_at: 2026-08-29
+  goal: Land the T4-04 authority-binding contract across consumers — align the W2-03 integration suite with the principal authority gate (omo 09acf5c2, on top of the extraction-wave lint repair), adopt the ecos M2 1.1.0 authority extension (e3a14731), and route the cockpit decide-inbox through sanctioned atomic IO (cockpit 2d44b650) so the root direct-IO gate passes again.
+  non_goals:
+  - No M2 model edits (ecos #58 already shipped the additive extension).
+  - No change to the authority gate semantics shipped in omo #116.
+  - No test_blueprint_control unit-suite repair (pre-existing extraction-wave debt, tracked separately).
+  done_when:
+  - Root omo/ecos/cockpit pointers reference the verified commits.
+  - omo.cli lint direct-omo-io passes at the new cockpit pointer.
+  - W2-03 capability-enforcement suite passes 11/11 at omo 09acf5c2.
+  verify:
+  - cmd: uv run --project projects/omo python -m omo.cli lint direct-omo-io
+    expect: exit 0
+  - cmd: cd projects/omo && uv run pytest tests/integration/test_w2_03_capability_enforcement.py -q
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-t10-62-authority-contract-alignment-design.md
+  - projects/omo
+  - projects/ecos
+  - projects/cockpit
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-62.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-t10-62-authority-contract-alignment-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:a435cc228bedcbc17d7c74cabdc8e8441d8fe5d9c01f53d3cb877ac514c1d04c
+    decision_ref: decision://accepted/BET-Y1Q3-T10-62
+  depends_on:
+  - BET-Y1Q3-T10-64
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any semantic change to the authority gate or M2 schema stops this alignment and reopens T4-04.
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e3b2af67db1c9cc93d490b2a695fdfafbad17a9b
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-62-authority-contract-alignment-design.md
+            sha256: sha256:a435cc228bedcbc17d7c74cabdc8e8441d8fe5d9c01f53d3cb877ac514c1d04c
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-62-authority-contract-alignment-design.md
+            sha256: sha256:a435cc228bedcbc17d7c74cabdc8e8441d8fe5d9c01f53d3cb877ac514c1d04c
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-62-authority-contract-alignment-design.md
+            sha256: sha256:a435cc228bedcbc17d7c74cabdc8e8441d8fe5d9c01f53d3cb877ac514c1d04c
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-62-authority-contract-alignment-design.md
+            sha256: sha256:a435cc228bedcbc17d7c74cabdc8e8441d8fe5d9c01f53d3cb877ac514c1d04c
+          fresh_receipt:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-62-authority-contract-alignment-design.md
+            sha256: sha256:a435cc228bedcbc17d7c74cabdc8e8441d8fe5d9c01f53d3cb877ac514c1d04c
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-62-authority-contract-alignment-design.md
+            sha256: sha256:a435cc228bedcbc17d7c74cabdc8e8441d8fe5d9c01f53d3cb877ac514c1d04c
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-62-authority-contract-alignment-design.md
+            sha256: sha256:a435cc228bedcbc17d7c74cabdc8e8441d8fe5d9c01f53d3cb877ac514c1d04c
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  retro: required
+
+- id: BET-Y1Q3-T10-64
   track: T10-MATURITY
   window: Y1Q3
   title: Automation fallout repair (omo imports, resident noise, state-sync churn)
@@ -291,17 +372,17 @@ bets:
   - .githooks/**
   - AGENTS.md
   - docs/plans/3y-bet-ledger.yaml
-  - docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+  - docs/superpowers/specs/2026-08-29-t10-64-automation-fallout-repair-design.md
   - docs/reports/**
   - .omo/_knowledge/decision-proposals/**
-  - .omo/_knowledge/retros/BET-Y1Q3-T10-58.md
-  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-58-bootstrap.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-64.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-64-bootstrap.md
   pasw_required: false
   accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-t10-64-automation-fallout-repair-design.md
     spec_version: 1.0.0
-    content_digest: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
-    decision_ref: decision://accepted/BET-Y1Q3-T10-58
+    content_digest: sha256:485c266734af65e02fd95d09b0d4c9b617a9d50bcc83657179c98981327bc73b
+    decision_ref: decision://accepted/BET-Y1Q3-T10-64
   depends_on:
   - BET-Y1Q3-T10-54
   risk_level: L1
@@ -316,29 +397,29 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@1a3769ca8ad9e6c3643d2df8d1e44eaadab32cd4
           tests:
-            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
-            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+            ref: receipt://docs/reports/2026-08-29-t10-64-automation-fallout-repair.md
+            sha256: sha256:35240f3d0ab5df84c043c77e808b077b8f0ab79799bd0d49d763029db9dbbc96
           diff:
-            ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
-            sha256: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-64-automation-fallout-repair-design.md
+            sha256: sha256:485c266734af65e02fd95d09b0d4c9b617a9d50bcc83657179c98981327bc73b
           rollback:
-            ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
-            sha256: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-64-automation-fallout-repair-design.md
+            sha256: sha256:485c266734af65e02fd95d09b0d4c9b617a9d50bcc83657179c98981327bc73b
       operational:
         status: PROVEN
         evidence:
           live_canary:
-            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
-            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+            ref: receipt://docs/reports/2026-08-29-t10-64-automation-fallout-repair.md
+            sha256: sha256:35240f3d0ab5df84c043c77e808b077b8f0ab79799bd0d49d763029db9dbbc96
           fresh_receipt:
-            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
-            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+            ref: receipt://docs/reports/2026-08-29-t10-64-automation-fallout-repair.md
+            sha256: sha256:35240f3d0ab5df84c043c77e808b077b8f0ab79799bd0d49d763029db9dbbc96
           replay:
-            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
-            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+            ref: receipt://docs/reports/2026-08-29-t10-64-automation-fallout-repair.md
+            sha256: sha256:35240f3d0ab5df84c043c77e808b077b8f0ab79799bd0d49d763029db9dbbc96
           cleanup:
-            ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
-            sha256: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-64-automation-fallout-repair-design.md
+            sha256: sha256:485c266734af65e02fd95d09b0d4c9b617a9d50bcc83657179c98981327bc73b
       value:
         status: NOT_PROVEN
         evidence: {}
