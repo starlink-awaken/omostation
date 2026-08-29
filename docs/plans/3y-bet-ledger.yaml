@@ -10074,7 +10074,8 @@ bets:
   appetite: 2 weeks
   priority: P0
   status: candidate
-  goal: 恢复 latest main 的真实治理基线，深化 existing gac-gate 为 immutable、check-only、blocking gate，经 main canary 后以 CAS 增量加入 required contexts，并完成 repository/runtime hygiene 与显式授权的 host retention。
+  goal: >-
+    恢复 latest main 的真实治理基线，深化 existing gac-gate 为 immutable、check-only、blocking gate，经 main canary 后以 guarded double-read read-modify-write: GET A -> validate/hash -> GET B -> require digest equality -> one required_status_checks subresource PATCH -> GET C verify。The API lacks a proven server-side conditional unsafe write, so a residual GET-B/PATCH race remains and is bounded by a second human gate, receipt and context-only rollback，并完成 repository/runtime hygiene 与显式授权的 host retention。
   non_goals:
   - 不新增 workflow、dispatcher、registry、broker、缓存或第二治理控制面
   - 不接受或完成 ADR-0432，不选择互斥指标值
@@ -10084,7 +10085,8 @@ bets:
   done_when:
   - R1 merged main 在 immutable fresh clone 上通过 compile、conflict scan、script registry、ADR checks、full strict GaC 和 diff check
   - H1a merged 后目标 main SHA 的 gac-gate job 与 strict step 真实成功，且 blocking path 前后 tree/index/worktree 不变
-  - H1c CAS 只增加 gac-gate required context，并保留其它 protection 设置
+  - >-
+    H1c guarded double-read read-modify-write: GET A -> validate/hash -> GET B -> require digest equality -> one required_status_checks subresource PATCH -> GET C verify。The API lacks a proven server-side conditional unsafe write, so a residual GET-B/PATCH race remains and is bounded by a second human gate, receipt and context-only rollback；只增加 gac-gate required context，并保留其它 protection 设置
   - R2a final tree 排除批准的 runtime artifacts，treeish recurrence gate 在 PR、merge ref、main、fresh clone 通过
   - R2b 在第二次人工授权后具备 backup、digest、integrity、owner、producer stop/start 与 rollback receipt
   - engineering 与 operational 直接证据满足 value-exempt delivery_accepted，value 保持 NOT_PROVEN
@@ -10153,8 +10155,8 @@ bets:
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:afd7daded6ab2e279c5b0c5d2f9e9465263c541316d034acafb8fa0671028459
+    spec_version: 1.0.1
+    content_digest: sha256:8ca8451fc2693ef350c692b198cc7d77194204a290d3d8ec6ce6ed4d5e9ec358
     decision_ref: decision://accepted/BET-Y1Q3-T6-15
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -10173,7 +10175,8 @@ bets:
   value_indicator_policy: false
   risk_level: L3
   human_gate: true
-  circuit_breaker: latest-main failure set 漂移、immutable gate 产生写入、main canary 不完整、protection expected-before 不匹配、host retention 缺授权或直接证据、或 value-exempt completion 合同不可用时立即停止
+  circuit_breaker: >-
+    latest-main failure set 漂移、immutable gate 产生写入、main canary 不完整、protection expected-before 不匹配、guarded double-read read-modify-write: GET A -> validate/hash -> GET B -> require digest equality -> one required_status_checks subresource PATCH -> GET C verify。The API lacks a proven server-side conditional unsafe write, so a residual GET-B/PATCH race remains and is bounded by a second human gate, receipt and context-only rollback、host retention 缺授权或直接证据、或 value-exempt completion 合同不可用时立即停止
   retro: required
 
 
