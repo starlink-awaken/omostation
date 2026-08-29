@@ -206,6 +206,25 @@ principal 于 08-29 就"operational 证据标准"裁决: **测试回执不可计
   find→inspect→load→invoke 正向链, 产出 confirmed read-only native receipt
 - canary 报告更新后, operational 复评 PROVEN → complete → done
 
+## 2026-08-29 isolated canonical service canary (run 20260829T020355Z-bet-execution-b81cb278)
+
+在 full delivery clone（基于 `origin/main@d2b749bc9`）执行了 canonical
+`ops up mcp.agora` 生命周期：
+
+- 启动返回 PID 7236，实际进程为 `uv run --directory projects/agora
+  agora-mcp --sse`，监听 TCP 7433。
+- `GET http://127.0.0.1:7433/health` 返回 HTTP 200；Agora 报告
+  `status=healthy`、36/36 services healthy、audit chain `ok=true`。
+- `/v1/tools/call` 未带授权时被 Agora 默认权限层拒绝并返回 500，日志为
+  `Authorization failed`；该结果证明鉴权 fail-closed，未将拒绝伪装成成功。
+- 通过 canonical `ops down mcp.agora` 清理：PID 文件移除、7433 无监听、
+  server process 退出。
+
+本证据证明 isolated clone 中的真实启动→7433 health→鉴权拒绝→清理链，
+不是 synthetic fixture；但运行在 delivery clone，未改变 host LaunchAgent，
+也未完成 T1-12 要求的 host production topology 或 admission-to-native-receipt
+正向链。因此 `operational=NOT_PROVEN` 仍保持不变。
+
 补充拓扑校准：`7432` 对应旧版 `agora.daemon`，不是当前 canonical MCP
 入口。Workspace service SSOT 将 `agora.sse`（`7431`）标为 disabled，将
 `mcp.agora`（`7433`）标为 manual/on-demand；本机两者均未运行。因此后续
