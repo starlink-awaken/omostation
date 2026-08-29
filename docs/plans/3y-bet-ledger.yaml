@@ -263,8 +263,7 @@ bets:
   title: Automation fallout repair (omo imports, resident noise, state-sync churn)
   appetite: 0.5 day
   priority: P0
-  status: done
-  done_at: 2026-08-29
+  status: candidate
   goal: Repair the 2026-08-29 unattended god-module extraction fallout in projects/omo (agent-workflow CLI import breakage, omo_audit import cycle), contain resident decision-inbox noise from provenance-free trigger events, and stop the chore(state) commit-reset churn on local main.
   non_goals:
   - No new god-module extractions and no second workflow dispatcher.
@@ -392,6 +391,49 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: Any runtime behavior, broker routing, receipt/schema semantic, Documents content, host schedule, runtime-state, capability, or unrelated child/root pointer change stops this BET.
+- id: BET-Y1Q3-T10-61
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Registry-driven meta-doctor refs-only CI binding
+  appetite: 0.25 day
+  priority: P1
+  status: candidate
+  goal: Align the canonical CI-surface registry with the existing governance-check contract so the registry-driven meta-doctor invocation validates repository references only and does not fail on stale checkout projections.
+  non_goals:
+  - No change to meta-doctor rules, exit semantics, M1 heartbeat logic, or M2 reference scanning.
+  - No change to the GitHub workflow, scheduler, runtime state, or host files.
+  - No Documents content, migration-family, or capability ownership change.
+  done_when:
+  - The active bin-gac-meta-doctor-py registry entry declares --refs-only.
+  - A regression test proves the registry-selected command consumes the exact argument.
+  - The governance-check registry runner and focused CI-surface tests pass.
+  verify:
+  - cmd: python3 bin/gac/ci-check-runner.py --workflow governance-check.yml --json
+    expect: exit 0 and meta-doctor is invoked with --refs-only
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_ci_surfaces.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0 or only pre-existing environment/known-debt findings
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/ci-surfaces.yaml
+  - tests/test_ci_surfaces.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md
+  - docs/reports/2026-08-29-meta-doctor-refs-only-registry.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-61.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-61-meta-doctor-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:746e21e338f0a914d441af381a5d47f4db0a6735c4acca7e31efabc9f19a5edd
+    decision_ref: decision://accepted/BET-Y1Q3-T10-61
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any change to meta-doctor implementation, workflow semantics, scheduler, runtime state, or Documents content stops this BET.
   retro: required
 
 - id: BET-Y1Q3-T10-56
@@ -515,6 +557,55 @@ bets:
   circuit_breaker: Any Documents content mutation, classification change, migration-family status change, or route/runtime change stops this BET.
   retro: required
 
+- id: BET-Y1Q3-T10-60
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Capability-sync verification helper split
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  goal: Extract bounded capability-sync verification helpers, preserve behavior, and restore the canonical projection/god-module gates.
+  non_goals:
+  - No capability registry writer, dispatcher, provider, authority, or receipt semantic change.
+  - No Documents content, host, runtime, schedule, or submodule pointer mutation.
+  done_when:
+  - bin/capability-sync.py is at or below 1500 lines and god-module lint no longer reports it as an error.
+  - Capability-sync/native/trace targeted tests and Python 3.9 import compatibility pass.
+  - Canonical capability registry projection check passes with no semantic capability change.
+  - Extracted helper remains a library-only compatibility boundary.
+  verify:
+  - cmd: wc -l bin/capability-sync.py
+    expect: line count <= 1500
+  - cmd: python3 bin/ssot/check-god-module.py --strict --json
+    expect: capability-sync.py absent from hard errors
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_capability_sync.py tests/test_capability_native_inspection.py tests/test_capability_native_execution_receipt.py tests/test_capability_trace_binding.py -q
+    expect: exit 0
+  - cmd: make check-capability-registry
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/capability-sync.py
+  - lib/capability_sync_verification_helpers.py
+  - tests/test_capability_sync.py
+  - tests/test_agent_workflow.py
+  - docs/generated/capability-registry.yaml
+  - docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md
+  - docs/reports/2026-08-29-capability-sync-module-split.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-60.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-60-capability-split-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:87b56eac858d5c8a84fcc039d973367c261f4d37b9fb1c8fbbaa23ee7b92831d
+    decision_ref: decision://accepted/BET-Y1Q3-T10-60
+  depends_on:
+  - BET-Y1Q3-T1-12
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any capability ID, registry writer, receipt schema, admission semantics, Documents content, or runtime-state change stops this BET.
 - id: BET-Y1Q3-T10-58
   track: T10-MATURITY
   window: Y1Q3

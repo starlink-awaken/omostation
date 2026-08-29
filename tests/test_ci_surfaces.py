@@ -94,6 +94,32 @@ def test_script_registry_validation_is_bound_to_gac_gate() -> None:
     ]
 
 
+def test_meta_doctor_registry_binds_refs_only(monkeypatch) -> None:
+    """registry-driven governance CI must preserve the refs-only contract."""
+    runner = _load(ROOT / "bin" / "gac" / "ci-check-runner.py", "ci_check_runner_meta_doctor")
+    calls = []
+
+    class Result:
+        returncode = 0
+        stdout = ""
+        stderr = ""
+
+    def fake_run(cmd, **kwargs):
+        calls.append(list(cmd))
+        return Result()
+
+    monkeypatch.setattr(runner.subprocess, "run", fake_run)
+    report = runner.run_surfaces("governance-check.yml", cwd=ROOT)
+
+    assert report["ok"] is True
+    meta_doctor_calls = [
+        cmd for cmd in calls if len(cmd) >= 2 and cmd[1] == "bin/gac/meta-doctor.py"
+    ]
+    assert meta_doctor_calls == [
+        [runner.sys.executable, "bin/gac/meta-doctor.py", "--refs-only"]
+    ]
+
+
 def test_removed_mutators_are_not_bound_to_gac_gate() -> None:
     import yaml
 

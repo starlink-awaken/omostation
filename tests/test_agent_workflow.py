@@ -147,6 +147,7 @@ def _bet_workflow_workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
         "capability_native_inspection.py",
         "capability_native_receipt.py",
         "capability_native_sources.py",
+        "capability_sync_verification_helpers.py",
         "capability_trace_binding.py",
     ):
         shutil.copy2(ROOT / "lib" / name, lib_dir / name)
