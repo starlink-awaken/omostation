@@ -1038,7 +1038,8 @@ bets:
   title: Documents quarantine owner root anchor
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   goal: Repair the Workspace root anchor after moving the reusable Documents quarantine owner from bin/gac into lib.
   non_goals:
   - No Documents content, runtime, cache, host schedule, LaunchAgent, client configuration, or payload mutation.
@@ -1069,6 +1070,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:489243068b647b9d912d70c906a5b772540573236c6bb3d351c7f70b50120cdc
     decision_ref: decision://accepted/BET-Y1Q3-T10-71
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a19ef95a9ed5f58e87eed571428fea394f2054a9
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-71.md
+            sha256: sha256:41b2bd863545ba96be11d767897753c084023225d738e5857e365ea27bee4934
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
+            sha256: sha256:489243068b647b9d912d70c906a5b772540573236c6bb3d351c7f70b50120cdc
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
+            sha256: sha256:489243068b647b9d912d70c906a5b772540573236c6bb3d351c7f70b50120cdc
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-71.md
+            sha256: sha256:41b2bd863545ba96be11d767897753c084023225d738e5857e365ea27bee4934
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-71.md
+            sha256: sha256:41b2bd863545ba96be11d767897753c084023225d738e5857e365ea27bee4934
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-71.md
+            sha256: sha256:41b2bd863545ba96be11d767897753c084023225d738e5857e365ea27bee4934
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
+            sha256: sha256:489243068b647b9d912d70c906a5b772540573236c6bb3d351c7f70b50120cdc
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-69
   risk_level: L1
