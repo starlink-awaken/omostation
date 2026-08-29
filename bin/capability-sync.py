@@ -110,24 +110,17 @@ _ROUTE_ADMISSION_KEYS = frozenset(
 )
 SUPPORTED_SCHEMA_MAJOR = 1
 MAX_INPUT_JSON_BYTES = 1024 * 1024
-MAX_MESH_LOG_BYTES = 8 * 1024 * 1024
-VERIFICATION_SCHEMA = "capability-admission-verification-request/v1"
-VERIFICATION_RECEIPT_SCHEMA = "capability-admission-verification-receipt/v1"
-PRINCIPAL_VERIFICATION_RECEIPT_SCHEMA = "principal-authority-verification-receipt/v1"
-VERIFICATION_FIELDS = {"schema", "material", "request", "expected"}
-VERIFICATION_EXPECTED_FIELDS = {"capability_id", "operation_id", "effect_classification"}
-MESH_LOG = Path("_knowledge/workflow-mesh/events.jsonl")
-VERIFICATION_MESH_EVENT_STATES = {
-    "WorkflowRequested": "planned",
-    "WorkflowAdmitted": "admitted",
-    "StepDispatched": "dispatched",
-    "StepStarted": "running",
-    "WorkerAcknowledged": "dispatched",
-    "WorkerLeaseRenewed": "running",
-    "WorkerLeaseExpired": "unavailable",
-    "AdmissionRenewed": "dispatched",
-    "WorkerReclaimed": "running",
-}
+# T10-65: verification constants live in capability_sync_mesh (single source)
+from capability_sync_mesh import (  # noqa: E402
+    MAX_MESH_LOG_BYTES,
+    MESH_LOG,
+    PRINCIPAL_VERIFICATION_RECEIPT_SCHEMA,
+    VERIFICATION_EXPECTED_FIELDS,
+    VERIFICATION_FIELDS,
+    VERIFICATION_MESH_EVENT_STATES,
+    VERIFICATION_RECEIPT_SCHEMA,
+    VERIFICATION_SCHEMA,
+)
 
 
 class RegistryError(ValueError):
