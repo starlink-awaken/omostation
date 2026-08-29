@@ -94,6 +94,19 @@ def cmd_mesh(args: argparse.Namespace) -> int:
         omlxc_root = _workspace_root() / "projects" / "omlxc"
         bench_script = omlxc_root / "examples" / "live_nextgen_compute_engine_benchmark.py"
         return subprocess.call(["uv", "run", "--project", str(omlxc_root), "python", str(bench_script)])
+    if subcmd in {"hud", "heatmap"}:
+        try:
+            from cockpit.tui.compute_hud import render_compute_hud_panel
+
+            console.print(render_compute_hud_panel())
+            return 0
+        except Exception as exc:
+            console.print(f"[red]渲染 HUD 失败: {exc}[/red]")
+            return 1
+    if subcmd in {"dma", "lora"}:
+        omlxc_root = _workspace_root() / "projects" / "omlxc"
+        bench_script = _workspace_root() / "bin" / "demo" / "live_nextgen_compute_engine_benchmark.py"
+        return subprocess.call(["uv", "run", "--project", str(omlxc_root), "python", str(bench_script)])
     if subcmd == "compact":
         model = getattr(args, "model", "coding")
         tokens = str(getattr(args, "tokens", 32768))
@@ -112,6 +125,6 @@ def cmd_mesh(args: argparse.Namespace) -> int:
 
     console.print("[red]未知 mesh 子命令[/red]")
     console.print(
-        "可用: nodes, status, fabric, cache, dflash, cluster, tree, stream, swarm, triage <PROMPT>, vram <MODEL> <TOKENS>, compact, route --model <MODEL>, serve"
+        "可用: nodes, status, fabric, hud, heatmap, dma, lora, cache, dflash, cluster, tree, stream, swarm, triage <PROMPT>, vram <MODEL> <TOKENS>, compact, route --model <MODEL>, serve"
     )
     return 1

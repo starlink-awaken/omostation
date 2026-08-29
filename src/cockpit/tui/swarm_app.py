@@ -138,6 +138,7 @@ class SwarmObservabilityApp(App):
         Binding("2", "switch_tab('tab-agents')", "Agents & Locks", show=True),
         Binding("3", "switch_tab('tab-subs')", "Submodules Radar", show=True),
         Binding("4", "switch_tab('tab-logs')", "A2A Event Stream", show=True),
+        Binding("5", "switch_tab('tab-compute')", "Compute HUD", show=True),
         Binding("r", "refresh_now", "Refresh", show=True),
         Binding("space", "toggle_pause", "Pause/Resume", show=True),
         Binding("q", "quit", "Quit", show=True),
@@ -200,6 +201,12 @@ class SwarmObservabilityApp(App):
                 with Vertical():
                     yield Label("💬 A2A Realtime Communication Stream", classes="panel-header")
                     yield RichLog(id="log-a2a", wrap=True, highlight=True, markup=True)
+
+            with TabPane("[5] Compute HUD", id="tab-compute"):
+                from cockpit.tui.widgets.compute_hud import ComputeHUDWidget
+
+                with VerticalScroll():
+                    yield ComputeHUDWidget(id="widget-compute-hud")
 
         yield Footer()
 
