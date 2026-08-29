@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/demo/live_dflash2_benchmark.py
+name: Live Dflash2 Benchmark
+category: governance
+owner: governance-team
+description: ""
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-08-24"

@@ -10,7 +10,7 @@ last-reviewed: 2026-08-24
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **155** 个命令 (含子命令)。按场景分组如下。
+共 **163** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -229,8 +229,16 @@ last-reviewed: 2026-08-24
 
 | 命令 | 描述 |
 |------|------|
+| `cockpit add` | 手动添加决策项 |
+| `cockpit approve` | 批准决策 |
+| `cockpit cache` | 检查三级分层缓存与 Radix 前缀树状态 (含基准压测) |
 | `cockpit cell` | 🤖 AGE-v2 动态 Agent Cell (规划/执行/验证/治理) |
+| `cockpit cluster` | 异构三节点智能路由与拓扑诊断 |
+| `cockpit compact` | 上下文滑动蒸馏与双区自适应量化压缩模拟 |
+| `cockpit decide` | 📬 决策收件箱 (列出/添加/批准/拒绝) |
+| `cockpit dflash` | DFlash 2 块扩散投机解码加速与集群基准 |
 | `cockpit ops` | 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate) |
+| `cockpit reject` | 拒绝决策 |
 
 ---
 
