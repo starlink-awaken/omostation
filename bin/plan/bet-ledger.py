@@ -2522,7 +2522,11 @@ def cmd_complete(data: dict, args) -> int:
         if block_end < 0:
             block_end = len(text)
         block = text[idx:block_end]
-        if "status: done" not in block:
+        # 行首锚定匹配 (2026-08-29 bug: 朴素子串匹配会被 waiver 中文注释里的
+        # "status: done" 字样误伤, 导致 complete 跳过写盘却报成功)
+        import re as _re_done
+
+        if not _re_done.search(r"^  status: done$", block, _re_done.MULTILINE):
             block_new = block.replace("status: ", "status: done\n  done_at: ", 1) if "status:" in block else block
             # 用更精确替换: status: <old> → status: done (保留 done_at)
             import re
