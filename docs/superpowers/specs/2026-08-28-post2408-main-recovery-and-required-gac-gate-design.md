@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.0.1
 status: accepted
 lifecycle: contract
 owner: human-principal
@@ -232,7 +232,13 @@ H1a 只深化已有 gate：
 3. 在 `.omo/_truth/registry/ci-surfaces.yaml` 将 script-registry validation 绑定到 existing
    `gac-gate` workflow。当前 schema 只写受支持的 workflow-level binding；strict job/step 的传递性由
    workflow focused test 证明，禁止写无人消费的 job/step 字段。
-4. 将 `bin/gac/gac-branch-protection.sh` 深化为 compare-and-swap read-modify-write，并把 desired contexts 定义为：
+4. 将 `bin/gac/gac-branch-protection.sh` 深化为
+   guarded double-read read-modify-write: GET A -> validate/hash -> GET B ->
+   require digest equality -> one required_status_checks subresource PATCH -> GET C
+   verify. The API lacks a proven server-side conditional unsafe write, so a
+   residual GET-B/PATCH race remains and is bounded by a second human gate,
+   receipt and context-only rollback.
+   并把 desired contexts 定义为：
 
    ```text
    phase-gate
@@ -267,8 +273,13 @@ H1a 合并后必须观察 main 上由该 merge 触发的真实 `gac-gate`：
 ### 6.3 H1c live branch protection mutation
 
 只有 H1b 成功后，才允许通过深化后的 `bin/gac/gac-branch-protection.sh` 对 live main protection 做一次精确更新。
+guarded double-read read-modify-write: GET A -> validate/hash -> GET B ->
+require digest equality -> one required_status_checks subresource PATCH -> GET C
+verify. The API lacks a proven server-side conditional unsafe write, so a
+residual GET-B/PATCH race remains and is bounded by a second human gate,
+receipt and context-only rollback.
 脚本必须 GET 当前完整 protection payload，验证脱敏 digest 与 expected-before context set，
-只把 `gac-gate` 合并进 contexts，保留其它所有可写字段，再 PUT 和 GET 验证 exact after set。
+只把 `gac-gate` 合并进 contexts，保留其它所有可写字段，再 PATCH 和 GET 验证 exact after set。
 expected-before 不恰为审议时集合时必须停止，由人类重新审议；不得覆盖未知新增设置。
 
 禁止：
@@ -392,7 +403,7 @@ Wave A（WP1 + WP4）只能在下列直接证据全部存在后开始：
 
 3. **H1b/H1c 只在真实 main canary 后增量增加 existing `gac-gate` required context。**
    - 验证方式：读取 main SHA 对应成功 run；比较 live protection before/after；运行深化后的 `--check`。
-   - 证据类型：Actions run/job/step receipt、脱敏 protection payload digest、CAS receipt、check exit code。
+   - 证据类型：Actions run/job/step receipt、脱敏 protection payload digest、guarded-update receipt、check exit code。
 
 4. **R2a 从 immutable final tree 排除 forbidden runtime artifacts，且 checker 可重复读取。**
    - 验证方式：在 PR final tree、synthetic merge ref、merged main 和 fresh clone 上运行 treeish policy；
@@ -430,7 +441,7 @@ Wave A（WP1 + WP4）只能在下列直接证据全部存在后开始：
 | 2 | 新建 gate vs 复用 `gac-gate` | 复用并深化 existing job | 避免第二 CI 权威和 context 漂移 |
 | 3 | 扩大 `phase-gate` vs 保持职责单一 | 不扩大 | phase gate 只拥有阶段/owner-job 合同，不复制 full GaC |
 | 4 | CI 自修复后验证 vs immutable final-tree check | immutable、check-only、零写入 | 被 CI 临时改写的树不能代表可合并树 |
-| 5 | 全量覆盖 protection vs CAS 增量更新 | CAS，只增/删 `gac-gate` | 保留并发新增设置与既有安全属性，支持精确回滚 |
+| 5 | 全量覆盖 protection vs guarded double-read 增量更新 | guarded double-read，只增/删 `gac-gate` | 保留并发新增设置与既有安全属性，支持精确回滚 |
 | 6 | CI registry 增加 job/step 字段 vs 使用现 schema | workflow-level binding + focused test | checker 只消费 workflow 字段，禁止声明无人执行的合同 |
 | 7 | 工作树扫描 vs immutable treeish | `git ls-tree` final-tree policy | PR/merge admission 必须证明提交树，而非本地瞬态 |
 | 8 | repo untrack 同时声称宿主保全 vs R2a/R2b 分离 | 分离 | clone index 变化不能证明 live host 文件仍存在 |
