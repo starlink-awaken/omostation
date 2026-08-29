@@ -805,6 +805,7 @@ def main() -> int:
         "mesh": dispatch_mesh,
         "compute": cmd_compute,
         "intent": lambda a: __import__("cockpit.commands.intent", fromlist=["cmd_intent"]).cmd_intent(a),
+        "decide": lambda a: __import__("cockpit.commands.decide", fromlist=["cmd_decide"]).cmd_decide(a),
         "challenge": lambda a: __import__("cockpit.commands.challenge", fromlist=["cmd_challenge"]).cmd_challenge(a),
         "cartridge": lambda a: __import__("cockpit.commands.cartridge", fromlist=["cmd_cartridge"]).cmd_cartridge(a),
         "cell": lambda a: __import__("cockpit.commands.cell", fromlist=["cmd_cell"]).cmd_cell(a),

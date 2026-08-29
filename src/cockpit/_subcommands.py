@@ -969,6 +969,18 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     intent_p.add_argument("--domain", help="显式指定领域 (work-weijian, work-transfer, engineering)")
     intent_p.add_argument("--json", action="store_true", help="以 JSON 格式输出")
 
+    # ── 决策收件箱 ──────────────────────────────────────────────────
+    decide_p = sub.add_parser("decide", help="📬 决策收件箱 (列出/添加/批准/拒绝)")
+    decide_sub = decide_p.add_subparsers(dest="decide_action")
+    decide_sub.add_parser("list", help="列出待决策项")
+    decide_add = decide_sub.add_parser("add", help="手动添加决策项")
+    decide_add.add_argument("title", nargs="+", help="决策标题")
+    decide_approve = decide_sub.add_parser("approve", help="批准决策")
+    decide_approve.add_argument("id", help="决策 ID")
+    decide_reject = decide_sub.add_parser("reject", help="拒绝决策")
+    decide_reject.add_argument("id", help="决策 ID")
+    decide_sub.add_parser("status", help="收件箱状态概览")
+
     # ── V2 影子红蓝对抗审查与自动打补丁 (ADR-0196) ─────────────────────
     chall_p = sub.add_parser("challenge", help="⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196)")
     chall_p.add_argument("target", help="待审查的方案文件路径或文本")
