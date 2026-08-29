@@ -102,28 +102,93 @@ def scan_and_route(inbox: Path, dedup: bool = True) -> list:
     return routed
 
 
+CALENDAR_RULES = [
+    {"pattern": r"会议|会|meeting|calendar|日程", "scene": "meeting-supervision", "type": "meeting"},
+    {"pattern": r"deadline|截止|due|提醒|期限", "scene": "task-reminder", "type": "task"},
+    {"pattern": r"review|审查|review|审核|审批", "scene": "document-review", "type": "doc"},
+]
+
+
+def route_calendar_event(title: str, description: str = "") -> dict:
+    """Route a calendar event to appropriate scene."""
+    text = f"{title}\n{description[:500]}"
+    matched_scene = "knowledge-ingest"
+    matched_type = "unknown"
+    for rule in CALENDAR_RULES:
+        if re.search(rule["pattern"], text, re.IGNORECASE):
+            matched_scene = rule["scene"]
+            matched_type = rule["type"]
+            break
+    return {
+        "signal_id": f"cal-{hashlib.sha1(title.encode()).hexdigest()[:12]}",
+        "source": "calendar",
+        "source_scene": matched_scene,
+        "signal_type": matched_type,
+        "title": title,
+        "routed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+
+
+def scan_calendar_ics(ics_path: Path) -> list:
+    """Scan .ics calendar file and route events."""
+    if not ics_path.exists():
+        return []
+    content = ics_path.read_text(encoding="utf-8", errors="ignore")
+    events = []
+    current_event = {}
+    for line in content.splitlines():
+        line = line.strip()
+        if line == "BEGIN:VEVENT":
+            current_event = {}
+        elif line == "END:VEVENT":
+            if current_event:
+                events.append(current_event)
+            current_event = {}
+        elif line.startswith("SUMMARY:"):
+            current_event["title"] = line[8:]
+        elif line.startswith("DESCRIPTION:"):
+            current_event["description"] = line[12:]
+    routed = []
+    for event in events:
+        result = route_calendar_event(
+            event.get("title", ""),
+            event.get("description", ""),
+        )
+        routed.append(result)
+    return routed
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--inbox", default="~/Documents/@感知信号")
+    parser.add_argument("--calendar", help="Path to .ics calendar file")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
+
+    all_routed = []
+
+    # Route inbox signals
     inbox = Path(args.inbox).expanduser()
-    if not inbox.exists():
-        print(f"inbox 不存在: {inbox}")
-        return 0
-    routed = scan_and_route(inbox)
+    if inbox.exists():
+        all_routed.extend(scan_and_route(inbox))
+
+    # Route calendar events
+    if args.calendar:
+        ics_path = Path(args.calendar)
+        all_routed.extend(scan_calendar_ics(ics_path))
+
     summary = {
         "scanned_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "total_routed": len(routed),
+        "total_routed": len(all_routed),
         "by_scene": {},
     }
-    for r in routed:
+    for r in all_routed:
         summary["by_scene"].setdefault(r["source_scene"], 0)
         summary["by_scene"][r["source_scene"]] += 1
     if args.json:
-        print(json.dumps({"summary": summary, "routed": routed}, indent=2, ensure_ascii=False))
+        print(json.dumps({"summary": summary, "routed": all_routed}, indent=2, ensure_ascii=False))
     else:
-        print(f"路由 {len(routed)} 个信号:")
+        print(f"路由 {len(all_routed)} 个信号:")
         for scene, n in summary["by_scene"].items():
             print(f"  → {scene}: {n}")
 
