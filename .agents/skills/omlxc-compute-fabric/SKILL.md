@@ -59,11 +59,19 @@ $$\text{FinalScore}(p) = \text{BaseScore}(p) \times M_{\text{affinity}}(p) \time
 
 ### 3.2 常用 CLI 诊断命令
 ```bash
-# 1. 运行集群全景基准演练 (DFlash 2 + 三节点路由)
-uv run --project projects/omlxc python bin/demo/live_cluster_wide_benchmark.py
+# 1. 运行次世代主权算力织网全景演练 (树状投机 + 流式流水线 + 分布式 KV 共享池)
+uv run --project projects/omlxc python projects/omlxc/examples/live_nextgen_compute_engine_benchmark.py
+cockpit mesh tree
+cockpit mesh stream
+cockpit mesh swarm
 
-# 2. 运行上下文与三级分层缓存全景基准演练 (Radix Tree + Paged KV)
+# 2. 运行集群全景基准演练 (DFlash 2 + 三节点路由)
+uv run --project projects/omlxc python bin/demo/live_cluster_wide_benchmark.py
+cockpit mesh cluster
+
+# 3. 运行上下文与三级分层缓存全景基准演练 (Radix Tree + Paged KV)
 uv run --project projects/omlxc python bin/demo/live_context_and_cache_benchmark.py
+cockpit mesh cache
 
 # 3. 检查节点温度、已注册模型架构与缓存统计
 omlxc fabric inspect

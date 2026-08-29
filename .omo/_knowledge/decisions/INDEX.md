@@ -543,3 +543,5 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0420: BCOS evolution engine 占位决策 — **ACCEPTED** | 2026-08-20 | bcos evolution | 0420-bcos-evolution-engine.md
 - ADR-0421: BCOS 2 周落地复盘 (W1 执行+知识, W2 治理+进化) — **ACCEPTED** | 2026-08-19 | bcos retrospective | 0421-bcos-2week-retro.md
 - ADR-0422: D4 逃生口固化 — 权限类 vs fingerprint 债 — **ACCEPTED** | 2026-08-21 | swarm D4 | 0422-escape-hatch-solidification.md
+- ADR-0433: omlxc DFlash 2 块扩散投机解码、异构三节点智能调度与三级分层缓存体系 — **ACCEPTED** | 2026-08-29 | compute fabric | 0433-omlxc-dflash2-heterogeneous-cluster-and-hierarchical-cache.md
+- ADR-0434: 次世代 omlxc V4.0 主权算力织网引擎、自适应树状投机与分布式流式协同体系 — **ACCEPTED** | 2026-08-29 | compute fabric | 0434-nextgen-omlxc-sovereign-compute-engine.md
