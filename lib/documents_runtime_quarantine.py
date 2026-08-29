@@ -116,10 +116,17 @@ def build_plan(
     now: str,
 ) -> dict[str, Any]:
     documents = documents_root.expanduser().resolve()
-    source = source_root.expanduser().resolve()
+    source_lexical = source_root.expanduser().absolute()
+    try:
+        source_info = source_lexical.lstat()
+    except OSError as exc:
+        raise QuarantineError("Documents source does not exist or cannot be inspected") from exc
+    source_is_file = stat.S_ISREG(source_info.st_mode)
+    source_is_directory = stat.S_ISDIR(source_info.st_mode)
+    source = source_lexical.resolve()
     target = target_root.expanduser().resolve()
-    if not documents.is_dir() or not source.is_dir() or source.is_symlink():
-        raise QuarantineError("Documents and source roots must be regular directories")
+    if not documents.is_dir() or not (source_is_file or source_is_directory):
+        raise QuarantineError("Documents root must be a directory and source must be a regular file or directory")
     if not _inside(source, documents):
         raise QuarantineError("source root must be below Documents root")
     if _inside(target, documents) or _inside(documents, target):
@@ -139,10 +146,14 @@ def build_plan(
         if relative_path.is_absolute() or ".." in relative_path.parts or relative in seen:
             raise QuarantineError(f"runtime inventory path is unsafe or duplicated: {relative}")
         source_file = Path(path_value).expanduser().absolute()
-        if not _inside_lexical(source_file, source):
-            raise QuarantineError(f"runtime inventory escapes source root: {relative}")
-        if source_file.relative_to(source.absolute()).as_posix() != relative:
-            raise QuarantineError(f"runtime inventory path mismatch: {relative}")
+        if source_is_file:
+            if source_file != source_lexical or relative != source_lexical.name:
+                raise QuarantineError(f"runtime inventory path mismatch: {relative}")
+        else:
+            if not _inside_lexical(source_file, source):
+                raise QuarantineError(f"runtime inventory escapes source root: {relative}")
+            if source_file.relative_to(source.absolute()).as_posix() != relative:
+                raise QuarantineError(f"runtime inventory path mismatch: {relative}")
         entries.append(_entry_from_source(source_file, relative))
         seen.add(relative)
     if not entries:
@@ -276,9 +287,18 @@ def _load_l4_inventory(source_root: Path) -> list[dict[str, Any]]:
     if str(l4_src) not in sys.path:
         sys.path.insert(0, str(l4_src))
     try:
-        from l4_kernel.content_plane import audit_content_plane
+        from l4_kernel.content_plane import audit_content_plane, classify_artifact
     except ImportError as exc:
         raise QuarantineError("L4 content-plane auditor is unavailable") from exc
+    if source_root.is_file() and not source_root.is_symlink():
+        relative = source_root.name
+        before = _entry_from_source(source_root, relative)
+        artifact = classify_artifact(source_root.parent, source_root)
+        after = _entry_from_source(source_root, relative)
+        stable_fields = ("node_type", "bytes", "mode", "sha256", "link_target")
+        if any(before.get(field) != after.get(field) for field in stable_fields):
+            raise QuarantineError("scoped L4 audit was not stable: single-file source changed during audit")
+        return [artifact.to_dict()]
     report = audit_content_plane(source_root)
     if report.stability_attempts != 1:
         raise QuarantineError(f"scoped L4 audit was not stable: attempts={report.stability_attempts}")
@@ -299,7 +319,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         documents_root = args.documents_root.expanduser().resolve()
-        source_root = (documents_root / Path(args.source_relative)).resolve()
+        source_root = (documents_root / Path(args.source_relative)).expanduser().absolute()
         receipt_path = args.consumer_receipt.expanduser().resolve()
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
         if not isinstance(receipt, dict):

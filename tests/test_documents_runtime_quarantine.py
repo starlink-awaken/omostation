@@ -81,6 +81,80 @@ def test_owner_module_anchors_to_repository_root_from_lib():
     assert module.ROOT == ROOT
 
 
+def test_preflight_accepts_single_regular_runtime_file_source(tmp_path):
+    module = _load_module()
+    documents = tmp_path / "Documents"
+    source = documents / "@工作文档" / "卫健委" / "cleanup-commit.sh"
+    source.parent.mkdir(parents=True)
+    source.write_text("#!/bin/sh\necho cleanup\n", encoding="utf-8")
+
+    plan = module.build_plan(
+        documents_root=documents,
+        source_root=source,
+        target_root=tmp_path / "Workspace" / "runtime" / "quarantine",
+        inventory=[
+            {"path": str(source), "relative_path": source.name, "kind": "runtime"}
+        ],
+        consumer_receipt=_consumer_receipt(),
+        now="2026-08-29T13:00:00Z",
+    )
+
+    assert plan["summary"] == {"files": 1, "bytes": source.stat().st_size}
+    assert plan["files"][0]["relative_path"] == source.name
+    assert plan["files"][0]["node_type"] == "regular"
+
+
+def test_apply_moves_single_regular_runtime_file_source(tmp_path):
+    module = _load_module()
+    documents = tmp_path / "Documents"
+    source = documents / "@工作文档" / "卫健委" / "cleanup-commit.sh"
+    source.parent.mkdir(parents=True)
+    source.write_text("#!/bin/sh\necho cleanup\n", encoding="utf-8")
+    target = tmp_path / "Workspace" / "runtime" / "quarantine"
+
+    plan = module.build_plan(
+        documents_root=documents,
+        source_root=source,
+        target_root=target,
+        inventory=[
+            {"path": str(source), "relative_path": source.name, "kind": "runtime"}
+        ],
+        consumer_receipt=_consumer_receipt(),
+        now="2026-08-29T13:00:00Z",
+    )
+    manifest = module.apply_plan(plan)
+
+    assert not os.path.lexists(source)
+    assert (target / source.name).read_text(encoding="utf-8") == "#!/bin/sh\necho cleanup\n"
+    assert manifest["summary"]["files"] == 1
+
+
+def test_preflight_rejects_symlink_as_single_file_source(tmp_path):
+    module = _load_module()
+    documents = tmp_path / "Documents"
+    real_source = documents / "@工作文档" / "卫健委" / "cleanup-commit.sh"
+    real_source.parent.mkdir(parents=True)
+    real_source.write_text("#!/bin/sh\necho cleanup\n", encoding="utf-8")
+    source = real_source.parent / "cleanup-link.sh"
+    os.symlink(real_source.name, source)
+
+    try:
+        module.build_plan(
+            documents_root=documents,
+            source_root=source,
+            target_root=tmp_path / "Workspace" / "runtime" / "quarantine",
+            inventory=[
+                {"path": str(source), "relative_path": source.name, "kind": "runtime"}
+            ],
+            consumer_receipt=_consumer_receipt(),
+            now="2026-08-29T13:00:00Z",
+        )
+    except module.QuarantineError as exc:
+        assert "regular file or directory" in str(exc)
+    else:
+        raise AssertionError("single-file source symlink must be rejected")
+
+
 def test_preflight_accepts_dangling_symlink_without_following(tmp_path):
     module = _load_module()
     documents = tmp_path / "Documents"
