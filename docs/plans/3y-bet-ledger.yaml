@@ -7415,7 +7415,6 @@ bets:
       bdsk_proof_state: not_proven
       bdsk_failure: compute_unavailable
       classification: independent_architecture_and_scope_review
-  evidence:
     E9_mainline_synthesis_regression_recovery:
       waiver: user-explicit
       when: 2026-08-28T23:36:10Z
@@ -7452,20 +7451,6 @@ bets:
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
-  workflow: bet-execution
-  write_surfaces:
-  - .omo/_truth/registry/gate-known-debt.yaml
-  - docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
-  - docs/superpowers/plans/2026-08-24-exact-capability-binding.md
-  - docs/plans/3y-bet-ledger.yaml
-  - docs/architecture/capability-federation-contract-v1.md
-  - docs/architecture/blueprint-multi-agent-execution-control-v1.md
-  - docs/architecture/digital-twin-blueprint-v1.md
-  - docs/operations/blueprint-agent-instruction-pack-v1.md
-  - docs/CLI-REFERENCE.md
-  - docs/INDEX-MCP.md
-  - docs/generated/capability-registry.yaml
-  - docs/project-registry.yaml
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
     spec_version: 1.1.2

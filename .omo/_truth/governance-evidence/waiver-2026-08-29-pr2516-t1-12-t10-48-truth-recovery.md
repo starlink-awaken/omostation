@@ -18,6 +18,10 @@ Date: 2026-08-29
 
 `BET-Y1Q3-T10-48` was already correctly `done` on latest main with newer valid receipts from PRs #2530/#2534. This recovery did not rewrite the `BET-Y1Q3-T10-48` ledger bytes.
 
+## Execution Note
+
+The merge-parent T1-12 block carried duplicate `evidence`, `workflow`, and `write_surfaces` keys. This follow-up canonicalizes those duplicate keys into one `evidence` mapping containing E0 through E9 and one effective `workflow`/`write_surfaces` block, preserving the later full parent semantics without adding authorized surfaces or changing the completion matrix.
+
 ## Authorized Surfaces
 
 - `docs/plans/3y-bet-ledger.yaml`
