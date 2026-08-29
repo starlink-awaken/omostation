@@ -417,6 +417,16 @@ def _get_cmd(svc: dict) -> list[str]:
         return [interpreter, entry] + svc_args
 
 
+def _get_environment(svc: dict) -> dict[str, str] | None:
+    """Build a child-only environment from a service declaration."""
+    declared = svc.get("environment")
+    if not isinstance(declared, dict) or not declared:
+        return None
+    environment = os.environ.copy()
+    environment.update({str(key): str(value) for key, value in declared.items()})
+    return environment
+
+
 def _get_pid_file(sid: str) -> Path:
     """Get PID file path for a service."""
     PIDS_DIR.mkdir(parents=True, exist_ok=True)
@@ -494,7 +504,7 @@ def cmd_up(args: argparse.Namespace) -> int:
             log_file = LOGS_DIR / f"{target}.log"
             log_file.parent.mkdir(parents=True, exist_ok=True)
             with open(log_file, "a") as lf:
-                proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True)
+                proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True, env=_get_environment(svc))
             _get_pid_file(target).write_text(str(proc.pid))
             print(f"Started {target} (pid={proc.pid})")
             return 0
@@ -531,7 +541,7 @@ def cmd_up(args: argparse.Namespace) -> int:
                 log_file = LOGS_DIR / f"{sid}.log"
                 log_file.parent.mkdir(parents=True, exist_ok=True)
                 with open(log_file, "a") as lf:
-                    proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True)
+                    proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True, env=_get_environment(svc))
                 _get_pid_file(sid).write_text(str(proc.pid))
                 print(f"    [START] {sid} (pid={proc.pid})")
                 started += 1
@@ -1011,7 +1021,7 @@ def cmd_recover(args: argparse.Namespace) -> int:
             log_file = LOGS_DIR / f"{sid}.log"
             log_file.parent.mkdir(parents=True, exist_ok=True)
             with open(log_file, "a") as lf:
-                proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True)
+                        proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True, env=_get_environment(svc))
             _get_pid_file(sid).write_text(str(proc.pid))
             print(f"  [RECOVER] {sid} (pid={proc.pid}, was {liv['status']})")
             recovered += 1
@@ -1627,7 +1637,7 @@ def cmd_drift(args: argparse.Namespace) -> int:
                         log_file = LOGS_DIR / f"{sid}.log"
                         log_file.parent.mkdir(parents=True, exist_ok=True)
                         with open(log_file, "a") as lf:
-                            proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True)
+                            proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True, env=_get_environment(svc))
                         pid_file.write_text(str(proc.pid))
                         print(f"    [FIXED] Started {sid} (pid={proc.pid})")
                         drift_fixed += 1
@@ -1692,7 +1702,7 @@ def cmd_batch(args: argparse.Namespace) -> int:
                 log_file = LOGS_DIR / f"{sid}.log"
                 log_file.parent.mkdir(parents=True, exist_ok=True)
                 with open(log_file, "a") as lf:
-                    proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True)
+                    proc = sp.Popen(cmd, stdout=lf, stderr=sp.STDOUT, start_new_session=True, env=_get_environment(svc))
                 _get_pid_file(sid).write_text(str(proc.pid))
                 print(f"  [START] {sid} (pid={proc.pid})")
                 started += 1

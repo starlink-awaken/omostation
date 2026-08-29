@@ -257,6 +257,54 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-51
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'Canonical Agora MCP port contract'
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: '让已登记的 mcp.agora Service Gateway 启动环境遵守 SSOT 7433，同时保留 Agora 独立 SSE 默认 7431。'
+  non_goals:
+  - 不改变 Agora standalone 默认端口、不启用旧 7432 daemon
+  - 不修改、加载或卸载宿主 plist、launchd 状态或服务进程
+  - 不新增服务注册表、调度器或第二控制平面
+  done_when:
+  - mcp.agora declares AGORA_MCP_SSE_PORT=7433 through existing environment field
+  - Service Gateway merges declared environment only into the child process
+  - command and launch environment agree with the canonical SSOT
+  - focused tests, syntax, and GaC pass without host mutation
+  verify:
+  - cmd: 'uv run --with pytest --with pyyaml python -m pytest tests/test_ops_cli.py tests/test_ops_cli.py -q'
+    expect: exit 0
+  - cmd: 'uv run --with pyyaml python bin/ops/cli.py up mcp.agora --dry-run'
+    expect: '输出包含 uv run --directory projects/agora agora-mcp --sse 且不泄漏 secret'
+  - cmd: 'python3 -m py_compile bin/ops/cli.py'
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - .omo/_truth/registry/services.yaml
+  - bin/ops/cli.py
+  - tests/test_ops_cli.py
+  - docs/superpowers/specs/2026-08-29-agora-port-contract-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-agora-port-contract-bootstrap.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-51.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-agora-port-contract-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:7e49aeb85fe817ed690c2a908a49658c56ebb89e5c3273f1ed8385a8e8907997
+    decision_ref: decision://accepted/BET-Y1Q3-T10-51
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 'Any host mutation, default port change, old daemon activation, or second registry stops this BET.'
+  retro: required
+
 - id: BET-Y1Q3-T10-49
   track: T10-MATURITY
   window: Y1Q3

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -19,6 +20,7 @@ from bin.ops.cli import (
     check_liveness,
     topological_sort,
     _get_cmd,
+    _get_environment,
     _get_pid_file,
     _is_running,
     WORKSPACE,
@@ -179,6 +181,22 @@ class TestGetCmd:
         svc = {"program": {"interpreter": "/bin/bash", "entrypoint": "test.sh", "args": []}}
         cmd = _get_cmd(svc)
         assert cmd == ["/bin/bash", "test.sh"]
+
+    def test_environment_merges_declared_values_for_child_only(self, monkeypatch):
+        monkeypatch.setenv("OPS_INHERITED_TEST", "inherited")
+        svc = {"environment": {"AGORA_MCP_SSE_PORT": 7433}}
+
+        env = _get_environment(svc)
+
+        assert env is not None
+        assert env["OPS_INHERITED_TEST"] == "inherited"
+        assert env["AGORA_MCP_SSE_PORT"] == "7433"
+        assert "AGORA_MCP_SSE_PORT" not in os.environ
+
+    def test_mcp_agora_registry_declares_ssot_port(self):
+        svc = get_service_by_id(load_services(), "mcp.agora")
+        assert svc is not None
+        assert svc["environment"]["AGORA_MCP_SSE_PORT"] == "7433"
 
 
 class TestPidFile:

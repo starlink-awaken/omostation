@@ -494,6 +494,8 @@ services:
     args:
     - agora-mcp
     - --sse
+  environment:
+    AGORA_MCP_SSE_PORT: '7433'
   liveness:
     signal: http
     endpoint: http://localhost:7433/health
