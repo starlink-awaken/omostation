@@ -7,31 +7,32 @@ created: 2026-08-29
 last-reviewed: 2026-08-29
 bet_id: BET-Y1Q3-T10-64
 spec_version: 1.0.0
-title: Cockpit decide write-boundary recovery
+title: Cockpit decide canonical inbox convergence
 ---
 
-# T10-64: Cockpit decide write-boundary recovery
+# T10-64: Cockpit decide canonical inbox convergence
 
 ## Context
 
 `projects/cockpit/src/cockpit/commands/decide.py` is an old top-level
-`cockpit decide` entry that writes `.omo/state/decision-inbox.json`. The root
-gitlink still points to child revision `37bf989`, where the write uses direct
-`Path.mkdir` and `Path.write_text`, so the `direct-omo-io` gate rejects it.
-Child `origin/main` already contains the reviewed fix `2d44b650`, which routes
-the same compatibility write through OMO's sanctioned atomic helpers.
+`cockpit decide` entry that directly creates and writes
+`.omo/state/decision-inbox.json`. The active `cockpit scenario inbox` entry
+already delegates decision-inbox persistence to the canonical
+`bin/ssot/scene-card-decision-inbox.py` engine under `.omo/_inbox`. The two
+paths are therefore competing storage/control surfaces, and the direct write
+is correctly rejected by the `direct-omo-io` gate.
 
 ## Decision
 
-Keep `cockpit decide` and its five existing actions (`list`, `add`, `approve`,
-`reject`, `status`) for compatibility, and promote child `2d44b650` through
-the root gitlink. That child change uses `ensure_parent_dir` and
-`write_text_atomic` from the existing OMO I/O boundary, preserving the
-legacy JSON shape and CLI behavior while clearing the direct filesystem gate.
+Keep `cockpit decide` as a compatibility entry, but make it a thin adapter over
+the existing canonical scenario-inbox engine. Preserve the five user actions
+(`list`, `add`, `approve`, `reject`, `status`) and human-readable output while
+mapping them to canonical scene/intent operations. `add` may create or reuse a
+deterministic default scene and journey when none exists; approvals and
+rejections update canonical intent status. No second JSON store is retained.
 
-The legacy JSON store is not migrated to the scenario-inbox data model in this
-bounded slice. A future data-model convergence must be a separate accepted
-BET because it changes persistence semantics and user-visible identifiers.
+Add focused tests for the adapter and retain the existing direct-write
+negative coverage. The canonical engine remains the sole persistence owner.
 
 Add focused tests for the adapter and retain the existing direct-write
 negative coverage. The canonical engine remains the sole persistence owner.
@@ -39,20 +40,19 @@ negative coverage. The canonical engine remains the sole persistence owner.
 ## Non-goals
 
 - No new storage, broker, dispatcher, schema, capability, or authority plane.
-- No change to task/decision JSON shape, public action names, or user-visible
-  output semantics.
-- No scenario-inbox data-model migration in this slice.
-- No Documents content, host schedule, runtime state, or unrelated submodule
-  change.
+- No change to the canonical scene-card engine's data model or write semantics.
+- No Documents content, host schedule, runtime state, or submodule change
+  outside `projects/cockpit`.
+- No removal of the public `cockpit decide` command in this slice.
 
 ## Acceptance
 
-1. The root `projects/cockpit` gitlink points to a child-main revision that
-   contains the `2d44b650` atomic-helper fix.
-2. The root direct-omo-io gate reports no violation in `cockpit decide`.
-3. Cockpit focused tests and the root interface gate pass.
-4. The legacy JSON writer uses only the sanctioned OMO atomic helpers; no
-   direct `Path.mkdir`/`Path.write_text` remains in that module.
+1. `cockpit decide` contains no direct filesystem mutation of `.omo` or
+   `spaces`.
+2. The compatibility actions call the canonical scenario-inbox engine and
+   preserve useful list/add/status/approve/reject behavior.
+3. Cockpit focused tests and the root `direct-omo-io`/interface gate pass.
+4. No legacy `decision-inbox.json` writer remains.
 
 ## Rollback
 

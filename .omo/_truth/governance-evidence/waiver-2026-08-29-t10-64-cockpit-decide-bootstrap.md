@@ -19,10 +19,9 @@ scope:
   - docs/reports/2026-08-29-cockpit-decide-canonical-inbox.md
   - .omo/_knowledge/retros/BET-Y1Q3-T10-64.md
   - this waiver
-reason: User-authorized continuation of the Workspace capability convergence; the root cockpit gitlink is behind child main's sanctioned atomic-helper repair and the legacy decide writer blocks the root interface.
+reason: User-authorized continuation of the Workspace capability convergence; the legacy cockpit decide writer blocks the root interface and must converge onto the existing canonical scenario-inbox engine.
 constraints:
-  - Preserve the public cockpit decide actions and use the existing OMO atomic-helper boundary.
-  - Do not migrate the legacy JSON data model to scenario inbox in this bounded slice.
+  - Preserve the public cockpit decide actions and keep the existing canonical engine as the sole persistence owner.
   - No new storage, broker, dispatcher, schema, capability, authority, Documents, host, runtime, or unrelated child/root pointer change.
   - Formal workflow must be started, all write surfaces claimed, and child/root verification recorded before closeout.
 expiry: 2026-08-30T11:30:00Z
