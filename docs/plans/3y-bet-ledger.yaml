@@ -332,6 +332,52 @@ bets:
   value_indicator_policy: false
   retro: required
 
+- id: BET-Y1Q3-T10-57
+  track: T10-MATURITY
+  window: Y1Q3
+  title: L4 live Documents content-plane audit stability
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: Make live content-plane evidence retryable under transient filesystem drift while remaining fail-closed for persistent instability.
+  non_goals:
+  - No Documents content move, delete, quarantine, or execution.
+  - No change to artifact classification, archive semantics, or migration-family status.
+  - No host schedule, runtime-state, L4 route, nested-L4, or capability-registry change.
+  done_when:
+  - A transient tree change is retried as a complete audit and a stable attempt returns the full classification.
+  - Persistent tree drift remains non-zero and explicitly reports bounded attempts and the stability reason.
+  - Existing L4 content-plane and CLI contract tests pass without changing their fail-closed assertions.
+  - A stable live audit is consumable by the Documents migration checker without an empty inventory caused only by one transient drift.
+  verify:
+  - cmd: cd projects/l4-kernel && uv run pytest tests/test_content_plane.py tests/test_cli_contracts.py -q
+    expect: exit 0
+  - cmd: python3 bin/gac/documents-content-plane-migration-check.py --json
+    expect: registry validation remains deterministic; no Documents mutation
+  - cmd: make gac-local-gate
+    expect: exit 0 or only pre-existing environment/known-debt findings
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/l4-kernel
+  - docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-08-29-l4-content-audit-stability.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-57.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-57-content-audit-stability-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:ed2bf10beecdc8f2de09fbb289bc2af518f998a20c6ba4a3e820327c1dd537f0
+    decision_ref: decision://accepted/BET-Y1Q3-T10-57
+  depends_on:
+  - BET-Y1Q3-T10-41
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any Documents content mutation, classification change, migration-family status change, or route/runtime change stops this BET.
+  retro: required
+
 - id: BET-Y1Q3-T10-55
   track: T10-MATURITY
   window: Y1Q3
