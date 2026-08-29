@@ -16,6 +16,8 @@ import json
 import os
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -31,6 +33,9 @@ SERVICES_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "services.yaml"
 PORT_REGISTRY = WORKSPACE / "protocols" / "port-registry.yaml"
 LOGS_DIR = WORKSPACE / "runtime" / "logs"
 PIDS_DIR = WORKSPACE / "runtime" / "pids"
+LIVENESS_MAX_WORKERS = 64
+LIVENESS_BATCH_TIMEOUT_SECONDS = 5.0
+LIVENESS_PROBE_TIMEOUT_SECONDS = 0.5
 
 # ── Service Profiles ──
 # Define which services belong to each profile
@@ -122,11 +127,12 @@ def get_service_by_id(services: list[dict], sid: str) -> dict[str, Any] | None:
     return None
 
 
-def check_liveness(svc: dict[str, Any]) -> dict[str, Any]:
+def check_liveness(svc: dict[str, Any], *, timeout: float | None = None) -> dict[str, Any]:
     """Check liveness signal for a service (HTTP/TCP/Docker/PID/File)."""
     liveness = svc.get("liveness", {})
     signal = liveness.get("signal", "")
     max_stale = liveness.get("max_stale_hours", 24)
+    probe_timeout = max(0.001, float(timeout if timeout is not None else 5.0))
 
     result: dict[str, Any] = {
         "status": "unknown",
@@ -144,7 +150,7 @@ def check_liveness(svc: dict[str, Any]) -> dict[str, Any]:
         try:
             import urllib.request
             req = urllib.request.Request(endpoint, method="GET")
-            with urllib.request.urlopen(req, timeout=5) as resp:
+            with urllib.request.urlopen(req, timeout=probe_timeout) as resp:
                 if resp.status == 200:
                     result["status"] = "healthy"
                     result["last_seen"] = datetime.now(UTC).isoformat()
@@ -162,7 +168,7 @@ def check_liveness(svc: dict[str, Any]) -> dict[str, Any]:
         if port:
             import socket
             try:
-                with socket.create_connection(("127.0.0.1", int(port)), timeout=3):
+                with socket.create_connection(("127.0.0.1", int(port)), timeout=probe_timeout):
                     result["status"] = "healthy"
                     result["last_seen"] = datetime.now(UTC).isoformat()
             except (socket.error, OSError) as e:
@@ -180,7 +186,7 @@ def check_liveness(svc: dict[str, Any]) -> dict[str, Any]:
             try:
                 proc = sp.run(
                     ["docker", "ps", "--filter", f"name={label}", "--format", "{{.Status}}"],
-                    capture_output=True, text=True, timeout=10,
+                    capture_output=True, text=True, timeout=probe_timeout,
                 )
                 if proc.returncode == 0 and proc.stdout.strip():
                     status_str = proc.stdout.strip().lower()
@@ -261,6 +267,57 @@ def check_liveness(svc: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def collect_liveness(
+    services: list[dict[str, Any]],
+    *,
+    total_timeout: float = LIVENESS_BATCH_TIMEOUT_SECONDS,
+    probe_timeout: float = LIVENESS_PROBE_TIMEOUT_SECONDS,
+    max_workers: int = LIVENESS_MAX_WORKERS,
+) -> dict[str, dict[str, Any]]:
+    """Collect read-only liveness results within a finite batch budget.
+
+    Results are rebuilt in input order so callers remain deterministic even
+    though probes execute concurrently.  A timeout is an explicit degraded
+    result, never a healthy result.
+    """
+    if not services:
+        return {}
+
+    ordered_ids = [str(service.get("id", "?")) for service in services]
+    results: dict[str, dict[str, Any]] = {}
+    worker_count = max(1, min(int(max_workers), len(services)))
+    executor = ThreadPoolExecutor(max_workers=worker_count, thread_name_prefix="ops-liveness")
+    futures = {
+        executor.submit(check_liveness, service, timeout=probe_timeout): str(service.get("id", "?"))
+        for service in services
+    }
+    try:
+        try:
+            for future in as_completed(futures, timeout=max(0.001, float(total_timeout))):
+                service_id = futures[future]
+                try:
+                    results[service_id] = future.result()
+                except Exception as exc:  # defensive observer boundary
+                    results[service_id] = {
+                        "status": "error",
+                        "error": str(exc)[:100],
+                    }
+        except FuturesTimeoutError:
+            pass
+    finally:
+        for future in futures:
+            if not future.done():
+                future.cancel()
+        executor.shutdown(wait=False, cancel_futures=True)
+
+    for service_id in ordered_ids:
+        results.setdefault(
+            service_id,
+            {"status": "timeout", "error": "liveness_budget_exhausted"},
+        )
+    return {service_id: results[service_id] for service_id in ordered_ids}
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     """Show status of all services."""
     services = load_services()
@@ -283,6 +340,14 @@ def cmd_status(args: argparse.Namespace) -> int:
     missing = 0
     disabled = 0
 
+    enabled_services = [
+        svc
+        for service_group in groups.values()
+        for svc in service_group
+        if svc.get("enabled", False)
+    ]
+    liveness_by_id = collect_liveness(enabled_services)
+
     for svc_type, svcs in sorted(groups.items()):
         for svc in svcs:
             total += 1
@@ -294,12 +359,12 @@ def cmd_status(args: argparse.Namespace) -> int:
                 disabled += 1
                 running = False
             else:
-                liv = check_liveness(svc)
+                liv = liveness_by_id.get(sid, {"status": "timeout"})
                 status = liv["status"]
                 running = _is_running(svc)
                 if status == "healthy":
                     healthy += 1
-                elif status in ("stale", "missing"):
+                elif status in ("stale", "missing", "timeout"):
                     stale += 1
                 else:
                     missing += 1
@@ -359,6 +424,7 @@ def cmd_status(args: argparse.Namespace) -> int:
                 "stale": "[yellow]● stale[/]",
                 "missing": "[red]● missing[/]",
                 "unreachable": "[red]● unreachable[/]",
+                "timeout": "[yellow]● timeout[/]",
                 "disabled": "[dim]○ disabled[/]",
                 "unknown": "[dim]? unknown[/]",
                 "error": "[red]✗ error[/]",
@@ -1226,9 +1292,10 @@ def cmd_score(args: argparse.Namespace) -> int:
     running = 0
     has_liveness = 0
     has_deps = 0
+    liveness_by_id = collect_liveness(enabled)
 
     for svc in enabled:
-        liv = check_liveness(svc)
+        liv = liveness_by_id.get(str(svc.get("id", "?")), {"status": "timeout"})
         if liv["status"] == "healthy":
             healthy += 1
         if _is_running(svc):
@@ -1312,6 +1379,7 @@ def cmd_graph(args: argparse.Namespace) -> int:
 
     # Filter by profile
     enabled = get_profile_services(profile, services)
+    liveness_by_id = collect_liveness(enabled)
 
     # Build DOT graph
     lines: list[str] = []
@@ -1338,7 +1406,7 @@ def cmd_graph(args: argparse.Namespace) -> int:
         color = type_colors.get(scheduler, "#9E9E9E")
 
         # Check health
-        liv = check_liveness(svc)
+        liv = liveness_by_id.get(sid, {"status": "timeout"})
         status = liv["status"]
         if status == "healthy":
             color = type_colors.get(scheduler, "#4CAF50")
