@@ -257,6 +257,52 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-78
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Correct work-runtime family scope disposition
+  appetite: 0.25 day
+  priority: P0
+  status: candidate
+  goal: Correct the work-runtime migration registry so a completed Weijian sub-scope is not misreported as retirement of the entire multi-surface family.
+  non_goals:
+  - No Documents, Workspace quarantine, runtime payload, task, schedule, or client mutation.
+  - No rollback of the verified 17-file Weijian quarantine.
+  done_when:
+  - work-runtime is pending at family level with explicit completed-scope evidence.
+  - The 17-file manifest/fingerprints remain repository-resolvable and the remaining family globs are named.
+  - Migration coverage and document SSOT checks pass without a family-level overclaim.
+  verify:
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with work-runtime listed as non-terminal
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known T10-71 baseline
+  workflow: bet-execution
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md
+  - docs/reports/2026-08-29-work-runtime-family-scope-correction.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-78.md
+  - docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-77.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:26811e211c733114a4d054ffe9a72fad499a8ccf059b022ccdff597766d4f4bc
+    decision_ref: decision://accepted/BET-Y1Q3-T10-78
+  depends_on:
+  - BET-Y1Q3-T10-77
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any host/runtime mutation, rollback, or family status change outside the scoped correction stops this delivery.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-73
   track: T10-MATURITY
   window: Y1Q3
