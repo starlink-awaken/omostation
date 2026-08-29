@@ -42,8 +42,25 @@ def get_runtime():
     return _runtime
 
 
+def extract_authority_fields(principal_authority: dict | None) -> dict | None:
+    """透传式提取 (BET-Y1Q3-T4-04 spec §2): Cockpit 只接收并转发 authority fields。
+
+    不构造、不验证、不补全 — 缺键/多键/非字符串一律返回 None (拒绝形态交给
+    下游 OMO 权威验证)。credential secret 在这里就不允许出现 (spec §2)。
+    """
+    if not isinstance(principal_authority, dict):
+        return None
+    if set(principal_authority) != {"authority_ref", "receipt_digest"}:
+        return None
+    ref = principal_authority["authority_ref"]
+    digest = principal_authority["receipt_digest"]
+    if not isinstance(ref, str) or not ref or not isinstance(digest, str) or not digest:
+        return None
+    return {"authority_ref": ref, "receipt_digest": digest}
+
+
 @mcp.tool()
-def run_task(task_name: str, binding_receipt: dict = None) -> str:
+def run_task(task_name: str, binding_receipt: dict = None, principal_authority: dict = None) -> str:
     """Run a predefined task by name (e.g. WF-005, codexbar-quota, daily-summary).
 
     Tasks are loaded from task_definitions/<name>.json.
@@ -85,7 +102,7 @@ def run_task(task_name: str, binding_receipt: dict = None) -> str:
 
 
 @mcp.tool()
-def chat(message: str, history_json: str = "", binding_receipt: dict = None) -> str:
+def chat(message: str, history_json: str = "", binding_receipt: dict = None, principal_authority: dict = None) -> str:
     """Send a message to Agent Runtime and get a reply.
 
     Use this for interactive conversations where you want Agent Runtime's
