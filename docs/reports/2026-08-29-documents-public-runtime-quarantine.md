@@ -6,7 +6,7 @@ type: implementation-evidence
 owner: governance-team
 created: 2026-08-29
 last-reviewed: 2026-08-29
-bet_id: BET-Y1Q3-T10-66
+bet_id: BET-Y1Q3-T10-69
 ---
 
 # Documents public-runtime quarantine evidence and loss gap

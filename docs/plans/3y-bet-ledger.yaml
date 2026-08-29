@@ -257,7 +257,7 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
-- id: BET-Y1Q3-T10-66
+- id: BET-Y1Q3-T10-69
   track: T10-MATURITY
   window: Y1Q3
   title: Documents public runtime physical quarantine
@@ -291,14 +291,14 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md
   - docs/reports/2026-08-29-documents-public-runtime-quarantine.md
-  - .omo/_knowledge/retros/BET-Y1Q3-T10-66.md
-  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-66-public-runtime-bootstrap.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-69.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-69-public-runtime-bootstrap.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:95d054dc7513357b1293f0147adf3996e42317cafd2cf0fc63431aac19ba9c06
-    decision_ref: decision://accepted/BET-Y1Q3-T10-66
+    content_digest: sha256:6bc6a4df28e7e9ab665ab10e488faee11f8401b5de7502185bbc4c8727969ca6
+    decision_ref: decision://accepted/BET-Y1Q3-T10-69
   depends_on:
   - BET-Y1Q3-T10-38
   - BET-Y1Q3-T10-41
