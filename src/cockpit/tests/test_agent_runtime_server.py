@@ -362,3 +362,59 @@ def test_task_request_schema_accepts_principal_authority():
 
 def test_chat_request_schema_accepts_principal_authority():
     assert "principal_authority" in _authority_schema_props()
+
+
+def test_http_run_task_passes_authority_fields_to_runtime_context(tmp_path):
+    client = _client_with_tmp_log(tmp_path)
+    runtime = agent_runtime_server.AgentRuntime.return_value
+    authority = {
+        "authority_ref": "authority:omo:v1:principal:alice",
+        "receipt_digest": "sha256:" + "c" * 64,
+    }
+
+    with mock.patch.object(agent_runtime_server.capability_binding, "verify_binding_envelope", return_value=True):
+        response = client.post(
+            "/run-task",
+            json={
+                "prompt": "do it",
+                "tools": ["shell"],
+                "context": {"task_id": "authority-propagation"},
+                "binding_receipt": {"schema": "capability-admission-verification-request/v1"},
+                "principal_authority": authority,
+            },
+        )
+
+    assert response.status_code == 200
+    runtime.run_task.assert_called_once_with(
+        "do it",
+        tools_enabled=["shell"],
+        context={
+            "task_id": "authority-propagation",
+            "principal_authority_ref": authority["authority_ref"],
+            "principal_receipt_digest": authority["receipt_digest"],
+        },
+    )
+
+
+def test_http_chat_passes_authority_fields_to_runtime_request_context(tmp_path):
+    client = _client_with_tmp_log(tmp_path)
+    runtime = agent_runtime_server.AgentRuntime.return_value
+    runtime.tools.build_tool_schemas.reset_mock()
+    runtime._call_llm.reset_mock()
+    runtime._call_llm.return_value = {"content": "Hello!", "finish_reason": "stop"}
+    authority = {
+        "authority_ref": "authority:omo:v1:principal:alice",
+        "receipt_digest": "sha256:" + "d" * 64,
+    }
+
+    response = client.post("/chat", json={"message": "hi", "principal_authority": authority})
+
+    assert response.status_code == 200
+    runtime._call_llm.assert_called_once_with(
+        mock.ANY,
+        tools=[],
+        request_context={
+            "principal_authority_ref": authority["authority_ref"],
+            "principal_receipt_digest": authority["receipt_digest"],
+        },
+    )

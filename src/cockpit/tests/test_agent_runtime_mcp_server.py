@@ -567,3 +567,55 @@ def test_chat_accepts_principal_authority_kwarg():
     sig = inspect.signature(m.chat)
     assert "principal_authority" in sig.parameters
     assert sig.parameters["principal_authority"].default is None
+
+
+def test_run_task_passes_authority_fields_to_runtime_context():
+    task_def = {"prompt": "summarize the day"}
+    authority = {
+        "authority_ref": "authority:omo:v1:principal:alice",
+        "receipt_digest": "sha256:" + "a" * 64,
+    }
+    mock_rt = mock.MagicMock()
+    mock_rt.run_task.return_value = {"result": "Today was good"}
+    agent_runtime_mcp_server._runtime = mock_rt
+
+    with mock.patch("pathlib.Path.exists", return_value=True):
+        with mock.patch("pathlib.Path.read_text", return_value=json.dumps(task_def)):
+            with _verified_binding():
+                result = agent_runtime_mcp_server.run_task(
+                    "daily-summary",
+                    binding_receipt={"schema": "capability-admission-verification-request/v1"},
+                    principal_authority=authority,
+                )
+
+    assert result == "Today was good"
+    mock_rt.run_task.assert_called_once_with(
+        "summarize the day",
+        context={
+            "principal_authority_ref": authority["authority_ref"],
+            "principal_receipt_digest": authority["receipt_digest"],
+        },
+    )
+
+
+def test_chat_passes_authority_fields_to_runtime_request_context():
+    authority = {
+        "authority_ref": "authority:omo:v1:principal:alice",
+        "receipt_digest": "sha256:" + "b" * 64,
+    }
+    mock_rt = mock.MagicMock()
+    mock_rt._build_tool_schemas.return_value = []
+    mock_rt._call_llm.return_value = {"content": "Hello!", "finish_reason": "stop"}
+    agent_runtime_mcp_server._runtime = mock_rt
+
+    result = agent_runtime_mcp_server.chat("hi", principal_authority=authority)
+
+    assert result == "Hello!"
+    mock_rt._call_llm.assert_called_once_with(
+        mock.ANY,
+        tools=[],
+        request_context={
+            "principal_authority_ref": authority["authority_ref"],
+            "principal_receipt_digest": authority["receipt_digest"],
+        },
+    )

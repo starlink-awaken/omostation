@@ -101,6 +101,14 @@ def create_app():
     def chat(req: ChatRequest):
         """对话模式。"""
         t0 = time.time()
+        request_context = dict(req.context or {})
+        if req.principal_authority is not None:
+            request_context.update(
+                {
+                    "principal_authority_ref": req.principal_authority.get("authority_ref"),
+                    "principal_receipt_digest": req.principal_authority.get("receipt_digest"),
+                }
+            )
         system_prompt = (
             "你是 Agent Runtime，一个 AI 助手。你可以使用工具来完成任务。\n"
             "请用中文回复。\n"
@@ -126,7 +134,10 @@ def create_app():
         max_turns = 30
 
         for turn in range(max_turns):
-            response = runtime._call_llm(messages, tools=schemas)
+            if request_context:
+                response = runtime._call_llm(messages, tools=schemas, request_context=request_context)
+            else:
+                response = runtime._call_llm(messages, tools=schemas)
             finish = response.get("finish_reason", "stop")
             if response.get("error"):
                 return {
@@ -194,7 +205,15 @@ def create_app():
                 detail="effectful agent-runtime tools require a verified capability binding",
             )
 
-        result = runtime.run_task(prompt, tools_enabled=req.tools, context=req.context)
+        context = dict(req.context or {})
+        if req.principal_authority is not None:
+            context.update(
+                {
+                    "principal_authority_ref": req.principal_authority.get("authority_ref"),
+                    "principal_receipt_digest": req.principal_authority.get("receipt_digest"),
+                }
+            )
+        result = runtime.run_task(prompt, tools_enabled=req.tools, context=context or None)
         elapsed = time.time() - t0
 
         status = "error" if "error" in result else "ok"

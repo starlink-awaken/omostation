@@ -59,6 +59,16 @@ def extract_authority_fields(principal_authority: dict | None) -> dict | None:
     return {"authority_ref": ref, "receipt_digest": digest}
 
 
+def _authority_request_context(principal_authority: dict | None) -> dict | None:
+    fields = extract_authority_fields(principal_authority)
+    if fields is None:
+        return None
+    return {
+        "principal_authority_ref": fields["authority_ref"],
+        "principal_receipt_digest": fields["receipt_digest"],
+    }
+
+
 @mcp.tool()
 def run_task(task_name: str, binding_receipt: dict = None, principal_authority: dict = None) -> str:
     """Run a predefined task by name (e.g. WF-005, codexbar-quota, daily-summary).
@@ -85,7 +95,11 @@ def run_task(task_name: str, binding_receipt: dict = None, principal_authority: 
         return f"Task '{task_name}' has no prompt defined."
 
     t0 = time.time()
-    result = runtime.run_task(prompt)
+    request_context = _authority_request_context(principal_authority)
+    if request_context is None:
+        result = runtime.run_task(prompt)
+    else:
+        result = runtime.run_task(prompt, context=request_context)
     elapsed = time.time() - t0
 
     # 记录执行日志
@@ -146,10 +160,14 @@ def chat(message: str, history_json: str = "", binding_receipt: dict = None, pri
     messages.append({"role": "user", "content": message})
 
     schemas = runtime._build_tool_schemas() if bound else []  # type: ignore[union-attr]
+    request_context = _authority_request_context(principal_authority)
     max_turns = 30
 
     for turn in range(max_turns):
-        response = runtime._call_llm(messages, tools=schemas)
+        if request_context is None:
+            response = runtime._call_llm(messages, tools=schemas)
+        else:
+            response = runtime._call_llm(messages, tools=schemas, request_context=request_context)
         finish = response.get("finish_reason", "stop")
 
         if response.get("error"):
