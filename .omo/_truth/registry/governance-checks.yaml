@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 532  # 2026-08-29 532→532: evolution-proposal-triage (Phase 2.2)  # 2026-08-29 531→532: probe-heartbeat-monitor (Phase 3.4)  # 2026-08-28 520→528: cmd_deps + frontmatter (BET-Y1Q3-T6-05)
+    script_baseline: 533  # 2026-08-29 532→533: 登记 principal-authority-canary (T4-04 canary, SCRIPT-BASELINE-SYNC, BET-Y1Q3-T6-05)  # 2026-08-29 532→532: evolution-proposal-triage (Phase 2.2)  # 2026-08-29 531→532: probe-heartbeat-monitor (Phase 3.4)  # 2026-08-28 520→528: cmd_deps + frontmatter (BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
