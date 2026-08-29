@@ -257,6 +257,51 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-53
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 'T1-12 completion contract recovery'
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: '恢复被主线合成误删的 T1-12 workflow 与 write_surfaces 合同字段，保持完成矩阵与证据不变。'
+  non_goals:
+  - 不改变 T1-12 status、completion axes、canary report 或 principal attestation
+  - 不修复其他 BET 的历史 digest mismatch
+  - 不新增 dispatcher、registry、scheduler、runtime state 或 value writer
+  done_when:
+  - T1-12 remains bound to bet-execution with its canonical WorkPacket scope
+  - bet-ledger lint no longer reports missing workflow/write_surfaces for T1-12
+  - focused contract checks, SSOT, and GaC pass
+  verify:
+  - cmd: >-
+      python3 -c "import subprocess,sys; p=subprocess.run(['uv','run','--with','pyyaml','python','bin/plan/bet-ledger.py','lint'],capture_output=True,text=True); out=p.stdout+p.stderr; assert 'BET-Y1Q3-T1-12: 缺字段 workflow' not in out and 'BET-Y1Q3-T1-12: 缺字段 write_surfaces' not in out; print('T1-12 completion contract fields present; unrelated baseline lint=', p.returncode)"
+    expect: T1-12 missing-field errors are absent; pre-existing unrelated errors remain separately classified
+  - cmd: 'uv run --with pyyaml --with pytest python -m pytest tests/test_spec_binding_lint.py -q'
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-t1-12-completion-contract-recovery-design.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t1-12-completion-contract-recovery-bootstrap.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-53.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-t1-12-completion-contract-recovery-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:c4798cb560add295bf84507e961aad154ff84a92a0650d9af1c2c5c4f8999c13
+    decision_ref: decision://accepted/BET-Y1Q3-T10-53
+  depends_on:
+  - BET-Y1Q3-T1-12
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 'Any completion-axis mutation or historical BET cleanup stops this BET.'
+  retro: required
+
 - id: BET-Y1Q3-T10-51
   track: T10-MATURITY
   window: Y1Q3
@@ -6599,6 +6644,20 @@ bets:
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
+  workflow: bet-execution
+  write_surfaces:
+  - .omo/_truth/registry/gate-known-debt.yaml
+  - docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
+  - docs/superpowers/plans/2026-08-24-exact-capability-binding.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/architecture/capability-federation-contract-v1.md
+  - docs/architecture/blueprint-multi-agent-execution-control-v1.md
+  - docs/architecture/digital-twin-blueprint-v1.md
+  - docs/operations/blueprint-agent-instruction-pack-v1.md
+  - docs/CLI-REFERENCE.md
+  - docs/INDEX-MCP.md
+  - docs/generated/capability-registry.yaml
+  - docs/project-registry.yaml
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
     spec_version: 1.1.2

@@ -269,3 +269,11 @@ capability binding 负例或本地单元测试失败。
 - 依据: capability-sync 的 native 面设计即进程内 (bin/capability-sync.py:447 _load_native_gateway),
   daemon 并非该路径的前置; receipt 全部由真实执行产出, 无任何伪造
 - 两种标准下的证据均完整保留, 供 principal 复核
+
+## 2026-08-29 completion-contract recovery
+
+Mainline synthesis had removed T1-12's required `workflow` and `write_surfaces`
+fields while retaining `status=done`. BET-Y1Q3-T10-53 restored those fields
+from the accepted WorkPacket scope without changing the completion matrix,
+canary report, or principal attestation. This is a contract-integrity repair,
+not additional operational or value evidence.
