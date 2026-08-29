@@ -205,3 +205,19 @@ principal 于 08-29 就"operational 证据标准"裁决: **测试回执不可计
 - 下一步: 重建 binding canary driver (08-26 版为 /tmp 临时脚本未入库), 跑
   find→inspect→load→invoke 正向链, 产出 confirmed read-only native receipt
 - canary 报告更新后, operational 复评 PROVEN → complete → done
+
+## 2026-08-29 formal canary recheck (run 20260829T000443Z-bet-execution-c912b00b)
+
+本次正式 `bet-execution` run 复核了正向 canary 的前置条件。四个 exact
+capability (`skill:git-discipline`、`workflow:bet-execution`、
+`mcp-server:agora`、`bos-service:bos://governance/omo/state`) 均由
+`bin/capability-sync.py find --id` 唯一解析，返回 `status=resolved`，且
+`invocation.allowed=false` / `admission_not_evaluated`；这证明发现面可用，
+不证明执行链已接通。
+
+主机运行态仍未满足 production-topology canary：
+`launchctl print system/com.omostation.agora.daemon` 报服务不存在，TCP 7432
+无监听；可见的是 OMO MCP 进程而非 Agora daemon。按 principal 已裁决的
+“gateway-backed execution run”标准，本次不得运行或伪造正向 receipt，
+`operational=NOT_PROVEN` 保持不变。该阻断是 host topology 缺失，不是
+capability binding 负例或本地单元测试失败。
