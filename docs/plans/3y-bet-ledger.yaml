@@ -1877,11 +1877,6 @@ bets:
   human_gate: true
   circuit_breaker: 任一 root overlap、digest mismatch、replay 失败、人工确认不明或需覆盖原地恢复时立即停机
   retro: required
-  risk_level: L2
-  human_gate: false
-  circuit_breaker: 超 4 天 → 先做 E2(锁原子性+stale 检测, 影响面更大且纯代码), E1 的 hook 强制推迟, 仅加 AGENTS.md
-    红线与 warning
-  retro: required
 - id: BET-Y1Q1-T1-01
   track: T1-TRUTH
   window: Y1Q1
