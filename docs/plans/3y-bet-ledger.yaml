@@ -1670,7 +1670,8 @@ bets:
   title: Product P0 WP3 Canonical Outbox Publisher
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   parent_bet_id: BET-Y1Q3-T4-02
   delivery_wave: B
   goal: 在已有 event_outbox 上建立唯一 lease/idempotency/retry/backoff publisher，保守处理不确定传输并持久 sent/failure/dead-letter 回执。
@@ -1709,15 +1710,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@f15b4710c37fdf7f96231c46915518fd87ad909f
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-06.md
+            sha256: sha256:08466c5a0711171561e7b6b895a895c03dbeb65a2a849d4075636538acb2b665
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md
+            sha256: sha256:16ce7bf3692c6b1bf3490021d729b2ff5bee97bc3776351c32923a82634b8b26
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md
+            sha256: sha256:16ce7bf3692c6b1bf3490021d729b2ff5bee97bc3776351c32923a82634b8b26
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-06.md
+            sha256: sha256:08466c5a0711171561e7b6b895a895c03dbeb65a2a849d4075636538acb2b665
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-06.md
+            sha256: sha256:08466c5a0711171561e7b6b895a895c03dbeb65a2a849d4075636538acb2b665
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-06.md
+            sha256: sha256:08466c5a0711171561e7b6b895a895c03dbeb65a2a849d4075636538acb2b665
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md
+            sha256: sha256:16ce7bf3692c6b1bf3490021d729b2ff5bee97bc3776351c32923a82634b8b26
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T4-05
   value_indicator_policy: false
