@@ -1,0 +1,17 @@
+schema: agent-error/v1
+id: PITFALL-COO-002
+category: coordination
+severity: medium
+title: chore(state) commits on local main loop commit->push-rejected->reset
+symptom: state-sync snapshots committed directly on local main never deliver; branch
+  protection rejects push; later reset orphans them (3x on 2026-08-29)
+root_cause: ''
+solution: .githooks/commit-msg rejects chore(state) on main; use gac-worktree.sh worktree+PR
+  path (#2519 pattern); escape via SWARM_ESCAPE_ID (T10-57)
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-08-29'
+times_encountered: 1
+last_confirmed_at: '2026-08-29'
+status: active

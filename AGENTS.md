@@ -102,6 +102,7 @@ python3 bin/gac/clone-lifecycle.py onboard/snapshot/changeset/integrate/retire
 ```
 
 > **共享 checkout 并发吸收**：并发 agent 会把共享树上 staged 改动直接 `add -A && commit` 成混合 commit。处理：① 不贸然 reset — 先 `git reflog -8` + `git show <sha> --stat`；② 验证是否已合入 main；③ 已合入则 `agent-workflow close --status blocked` 记录；④ 本地 main 分叉时 **勿 reset --hard**。
+> **chore(state) 禁止直连 main (T10-57)**：state-sync / submodule-pointer 快照类提交一律走 worktree+PR（#2519 模式）。分支保护本就会拒绝 main 直推，留在本地 main 的 `chore(state)` 提交只会被 reset 成孤儿。`.githooks/commit-msg` 会在 main 上拦截该类提交（逃生口 `SWARM_ESCAPE_ID`）。
 
 ## 1.4 我该做什么 — 三年规划执行台账
 
