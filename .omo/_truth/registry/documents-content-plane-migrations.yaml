@@ -305,6 +305,16 @@ families:
           byte_count: 19848
           consumer_scan: "receipt://.omo/evidence/20260829T194630Z-bet-execution-12a16102/documents-consumer-audit.json"
           rollback_ref: "docs/reports/2026-08-30-documents-root-tools-runtime-quarantine.md"
+        - scope: "@工作文档/_control/tools regular runtime files only"
+          verified_at: "2026-08-29T20:04:48Z"
+          source_fingerprint: "sha256:c6b180fc56b26bd1bdb2fefc4764d0d79f417fd8e111e00a7d003866a2b8c14f"
+          target_fingerprint: "sha256:c6b180fc56b26bd1bdb2fefc4764d0d79f417fd8e111e00a7d003866a2b8c14f"
+          manifest_sha256: "sha256:2bf9e58ea1e4b269bd957b3656c52773af44ed02ccafe380d381c058e9a7a8fb"
+          node_type: regular
+          file_count: 4
+          byte_count: 22701
+          consumer_scan: "receipt://.omo/evidence/20260829T200256Z-bet-execution-8710fad4/documents-consumer-audit.json"
+          rollback_ref: "docs/reports/2026-08-30-documents-root-control-tools-runtime-quarantine.md"
 
   - id: public-runtime
     source_globs:
