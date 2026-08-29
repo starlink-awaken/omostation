@@ -389,6 +389,51 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: Any change to meta-doctor implementation, workflow semantics, scheduler, runtime state, or Documents content stops this BET.
+- id: BET-Y1Q3-T10-62
+  track: T10-MATURITY
+  window: Y1Q3
+  title: OMO ingress write-boundary and schema gate recovery
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  goal: Restore the clean OMO governance interface after extraction fallout by registering the new broker-owned task execution module and advancing the root gitlink to the child revision that contains the existing dead-import repair.
+  non_goals:
+  - No task execution behavior, receipt shape, broker routing, or schema semantic change.
+  - No weakening of synthetic negative tests or deletion of a governance gate.
+  - No Documents content, host schedule, runtime state, capability, or dispatcher change.
+  - No root pointer update for any child other than projects/omo.
+  done_when:
+  - OMO sensitive-governed-writes and schemas lint pass on the verified child revision.
+  - Child regression coverage proves the authorized ingress exemption while synthetic direct writes remain rejected.
+  - The root projects/omo gitlink points to the verified child commit and clean CI no longer fails on these OMO findings.
+  verify:
+  - cmd: cd projects/omo && uv run pytest tests/test_omo_direct_io_gate.py tests/test_omo_lint_schemas.py -q
+    expect: exit 0
+  - cmd: cd projects/omo && uv run python -m omo.cli lint sensitive-governed-writes
+    expect: exit 0 and direct_writes=0
+  - cmd: cd projects/omo && uv run python -m omo.cli lint schemas
+    expect: exit 0 and no dead imports or schema violations
+  - cmd: make gac-local-gate
+    expect: exit 0 or only pre-existing environment/known-debt findings
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-omo-ingress-gate-recovery-design.md
+  - docs/reports/2026-08-29-omo-ingress-gate-recovery.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-62.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-62-omo-gate-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-omo-ingress-gate-recovery-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:021c51d99187aa334aeb1b68a6f64d04553871a090247f5b71aa93f3397ea261
+    decision_ref: decision://accepted/BET-Y1Q3-T10-62
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any runtime behavior, broker routing, receipt/schema semantic, Documents content, host schedule, runtime-state, capability, or unrelated child/root pointer change stops this BET.
   retro: required
 
 - id: BET-Y1Q3-T10-56
