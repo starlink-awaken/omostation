@@ -1,330 +1,639 @@
 #!/bin/bash
-# gac-branch-protection.sh — main branch protection 设置 (ADR-0106, P2)
+# gac-branch-protection.sh — guarded required-context updates for main.
 #
-# 多 agent 并行的平台兜底: 禁 direct push main + Require PR.
-# 治本 concurrent-agent-contention (agent 绕不过平台, 被迫走 PR).
-#
-# 影响 (破坏性, 改全局流程):
-#   - 所有 agent (含老王 + 并发) direct push main 被拒
-#   - 必须走 PR (gac-worktree.sh claim → submit → merge)
-#   - 配合 worktree per session = 多 agent 真并行 (各 worktree 各 PR)
-#
-# 策略 (过渡):
-#   - Require PR (核心隔离) ✅
-#   - 禁 direct push ✅
-#   - Enforce admins ✅ (堵 admin 绕过, 治本 concurrent-agent-contention)
-#   - Required status: phase-gate (ADR-0223 阶段门硬阻断)
-#   - 0 required reviews (单人可 merge, 不阻塞)
-#
-# 用法:
-#   gac-branch-protection.sh --check        # 查 protection 状态 (解析各项, 可读)
-#   gac-branch-protection.sh --promote-gac-gate --expected-digest <sha256:...> [--yes]
-#   gac-branch-protection.sh --rollback-gac-gate --expected-digest <sha256:...> [--yes]
-#   gac-branch-protection.sh --remove       # 移除 (紧急回退, 交互)
-#   gac-branch-protection.sh --remove --yes # 移除 (非交互)
-#
-# 落地计划: docs/AGENT-ISOLATION-ROLLOUT.md (Phase 3, 需 Phase 2 eCOS 迁 PR 先行)
+# The writer only touches the required_status_checks subresource. It reads
+# the full protection payload before and immediately before the PATCH, then
+# reads it once more to prove the requested result and all protected fields.
 
-set -e
+set -euo pipefail
 
 REPO="${GAC_BRANCH_PROTECTION_REPO:-starlink-awaken/omostation}"
+PROTECTION_ENDPOINT="repos/$REPO/branches/main/protection"
+STATUS_ENDPOINT="$PROTECTION_ENDPOINT/required_status_checks"
+DEFAULT_CHECK_CONTEXTS="${GAC_CHECK_EXPECTED_CONTEXTS:-phase-gate,bet-done-transition,gac-gate}"
 
-# 解析: 第一个位置参数 = 子命令, 其余扫描 --yes
-cmd="${1:---set}"
-[ $# -gt 0 ] && shift
-AUTO_YES=false
-# F-1 修: --yes/-y 作为首参数单独用 (无 subcommand 时走默认 --set, 见 line 20 文档)
-case "$cmd" in
-  --yes|-y) AUTO_YES=true; cmd="--set" ;;
-esac
-for arg in "$@"; do
-  case "$arg" in
-    --yes|-y) AUTO_YES=true ;;
-  esac
-done
-
-if [ "$cmd" = "--rollback-gac-gate" ]; then
-  EXPECTED_CONTEXTS="${GAC_EXPECTED_CONTEXTS:-phase-gate,bet-done-transition,gac-gate}"
-elif [ "$cmd" = "--check" ]; then
-  EXPECTED_CONTEXTS="${GAC_CHECK_EXPECTED_CONTEXTS:-phase-gate,bet-done-transition,gac-gate}"
-else
-  EXPECTED_CONTEXTS="${GAC_EXPECTED_CONTEXTS:-phase-gate,bet-done-transition}"
-fi
-EXPECTED_DIGEST="${GAC_EXPECTED_PROTECTION_DIGEST:-}"
-for arg in "$@"; do
-  case "$arg" in
-    --expected-contexts=*) EXPECTED_CONTEXTS="${arg#*=}" ;;
-    --expected-digest=*) EXPECTED_DIGEST="${arg#*=}" ;;
-  esac
-done
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --expected-contexts|--expected-digest)
-      [ "$#" -ge 2 ] || { echo "❌ $1 requires a value" >&2; exit 2; }
-      if [ "$1" = "--expected-contexts" ]; then EXPECTED_CONTEXTS="$2"; else EXPECTED_DIGEST="$2"; fi
-      shift 2
-      ;;
-    *) shift ;;
-  esac
-done
-
-# 非交互模式 (--yes) 跳过 read, 否则交互确认 (agent/CI 用 --yes)
-confirm_action() {
-  local prompt="$1"
-  if [ "$AUTO_YES" = "true" ]; then
-    echo "⚡ 非交互 (--yes): $prompt"
-    return 0
-  fi
-  read -p "$prompt (yes/no): " confirm
-  [ "$confirm" = "yes" ] || { echo "取消"; exit 0; }
+usage() {
+  cat <<EOF
+Usage:
+  $0 --check [--expected-contexts CONTEXTS]
+  $0 --add-required-context gac-gate --expected-contexts CONTEXTS --receipt PATH [--yes]
+  $0 --remove-required-context gac-gate --expected-contexts CONTEXTS --receipt PATH [--yes]
+EOF
 }
 
-# H1c CAS helper. The API response contains read-only URL/check fields, so the
-# Python normalizer keeps only writable protection fields and hashes that
-# redacted representation for the expected-before check.
-cas_update_gac_gate() {
-  local action="$1"
-  local expected_contexts="$2"
-  local expected_digest="$3"
-  local snapshot payload expected_payload after_snapshot
-  snapshot=$(mktemp "${TMPDIR:-/tmp}/gac-protection.XXXXXX")
-  payload="${snapshot}.payload"
-  expected_payload="${snapshot}.expected"
-  after_snapshot="${snapshot}.after"
-  trap 'rm -f "$snapshot" "$payload" "$expected_payload" "$after_snapshot"' RETURN
+die_usage() {
+  echo "❌ $1" >&2
+  usage >&2
+  exit 2
+}
 
-  gh api --include "repos/$REPO/branches/main/protection" >"$snapshot"
-  local before_digest
-  before_digest=$(python3 - "$snapshot" "$payload" "$expected_payload" "$expected_contexts" "$expected_digest" "$action" <<'PY'
+cmd="${1:-}"
+[ "$cmd" ] || die_usage "a command is required"
+shift
+
+mode=""
+target=""
+expected_contexts=""
+expected_contexts_set=false
+receipt=""
+receipt_set=false
+auto_yes=false
+yes_set=false
+
+case "$cmd" in
+  --check)
+    mode="check"
+    expected_contexts="$DEFAULT_CHECK_CONTEXTS"
+    ;;
+  --add-required-context)
+    [ "$#" -gt 0 ] || die_usage "--add-required-context requires a context"
+    mode="add"
+    target="$1"
+    shift
+    ;;
+  --remove-required-context)
+    [ "$#" -gt 0 ] || die_usage "--remove-required-context requires a context"
+    mode="remove"
+    target="$1"
+    shift
+    ;;
+  --help|-h)
+    usage
+    exit 0
+    ;;
+  *)
+    die_usage "unsupported command: $cmd"
+    ;;
+esac
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --expected-contexts)
+      [ "$expected_contexts_set" = false ] || die_usage "--expected-contexts may be supplied only once"
+      [ "$#" -gt 1 ] || die_usage "--expected-contexts requires a value"
+      expected_contexts="$2"
+      expected_contexts_set=true
+      shift 2
+      ;;
+    --expected-contexts=*)
+      [ "$expected_contexts_set" = false ] || die_usage "--expected-contexts may be supplied only once"
+      expected_contexts="${1#*=}"
+      expected_contexts_set=true
+      shift
+      ;;
+    --receipt)
+      [ "$mode" != check ] || die_usage "--receipt is only valid for context updates"
+      [ "$receipt_set" = false ] || die_usage "--receipt may be supplied only once"
+      [ "$#" -gt 1 ] || die_usage "--receipt requires a path"
+      receipt="$2"
+      receipt_set=true
+      shift 2
+      ;;
+    --receipt=*)
+      [ "$mode" != check ] || die_usage "--receipt is only valid for context updates"
+      [ "$receipt_set" = false ] || die_usage "--receipt may be supplied only once"
+      receipt="${1#*=}"
+      receipt_set=true
+      shift
+      ;;
+    --yes|-y)
+      [ "$mode" != check ] || die_usage "--yes is not valid for --check"
+      [ "$yes_set" = false ] || die_usage "--yes may be supplied only once"
+      auto_yes=true
+      yes_set=true
+      shift
+      ;;
+    *)
+      die_usage "unsupported option: $1"
+      ;;
+  esac
+done
+
+[ "$expected_contexts" ] || die_usage "--expected-contexts requires a non-empty value"
+
+if [ "$mode" != check ]; then
+  [ "$target" = "gac-gate" ] || die_usage "only gac-gate may be changed"
+  [ "$receipt_set" = true ] || die_usage "context updates require --receipt"
+  [ "$receipt" ] || die_usage "--receipt requires a non-empty path"
+  receipt_parent="$(dirname "$receipt")"
+  [ -d "$receipt_parent" ] || die_usage "receipt parent does not exist: $receipt_parent"
+  [ ! -e "$receipt" ] || die_usage "receipt already exists: $receipt"
+fi
+
+confirm_action() {
+  local prompt="$1"
+  if [ "$auto_yes" = true ]; then
+    echo "⚡ non-interactive (--yes): $prompt"
+    return 0
+  fi
+  if ! [ -t 0 ]; then
+    echo "❌ interactive confirmation required; pass --yes" >&2
+    return 1
+  fi
+  local confirm=""
+  read -r -p "$prompt (yes/no): " confirm
+  if [ "$confirm" != yes ]; then
+    echo "cancelled" >&2
+    return 1
+  fi
+}
+
+get_protection() {
+  local destination="$1"
+  local api_rc
+  if gh api --include "$PROTECTION_ENDPOINT" >"$destination"; then
+    return 0
+  else
+    api_rc=$?
+    echo "❌ protection unreadable (API rc=$api_rc)" >&2
+    return 2
+  fi
+}
+
+# Keep parsing and normalization in one implementation so GET A, GET B, and
+# GET C use exactly the same full-protection contract. Update runs in this
+# process so the reservation descriptors remain open for the whole operation.
+python_tool() {
+  python3 - "$@" <<'PY'
+from __future__ import annotations
+
+import copy
 import hashlib
 import json
-import re
+import os
+import stat
+import subprocess
 import sys
+import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
-snapshot_path = Path(sys.argv[1])
-payload_path = Path(sys.argv[2])
-expected_path = Path(sys.argv[3])
-expected_contexts = [item for item in sys.argv[4].split(",") if item]
-expected_digest = sys.argv[5]
-action = sys.argv[6]
+
+class OperationError(Exception):
+    def __init__(self, message: str, code: int = 2) -> None:
+        super().__init__(message)
+        self.code = code
 
 
-def read_response(path: Path) -> tuple[str, dict]:
-    text = path.read_text(encoding="utf-8")
-    marker = text.find("\n{")
-    if marker < 0:
-        raise SystemExit("CAS_JSON_BODY_MISSING")
-    body = text[marker + 1 :]
-    data, _ = json.JSONDecoder().raw_decode(body.lstrip())
-    if not isinstance(data, dict):
-        raise SystemExit("CAS_JSON_BODY_INVALID")
-    return data
+class PathIdentityError(OperationError):
+    def __init__(self, message: str) -> None:
+        super().__init__(message, 1)
 
 
-def enabled(value: object) -> bool:
-    return bool(value.get("enabled")) if isinstance(value, dict) else bool(value)
+def fail(message: str, code: int = 2) -> None:
+    raise OperationError(message, code)
+
+
+def extract_response(text: str) -> dict:
+    decoder = json.JSONDecoder()
+    for offset, character in enumerate(text):
+        if character != "{":
+            continue
+        try:
+            value, _ = decoder.raw_decode(text[offset:])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict):
+            return value
+    fail("protection unreadable (invalid JSON)")
+
+
+def parse_contexts(raw: str) -> list[str]:
+    values = [item.strip() for item in raw.split(",")]
+    if not values or any(not item for item in values):
+        fail("protection unreadable (invalid expected contexts)")
+    if len(set(values)) != len(values):
+        fail("protection unreadable (duplicate expected context)")
+    return sorted(values)
+
+
+def canonical(value: object) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def digest(value: object) -> str:
+    return "sha256:" + hashlib.sha256(canonical(value)).hexdigest()
+
+
+def bool_field(data: dict, key: str) -> bool:
+    value = data.get(key)
+    if not isinstance(value, dict) or not isinstance(value.get("enabled"), bool):
+        fail(f"protection unreadable (invalid {key})")
+    return value["enabled"]
+
+
+def redacted_restrictions(value: object) -> object:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        fail("protection unreadable (invalid restrictions)")
+    result = {}
+    for key in ("users", "teams", "apps"):
+        identities = value.get(key, [])
+        if not isinstance(identities, list):
+            fail(f"protection unreadable (invalid restrictions.{key})")
+        result[key] = {"count": len(identities), "digest": digest(identities)}
+    return result
 
 
 def normalized(data: dict) -> dict:
-    reviews = data.get("required_pull_request_reviews")
-    if isinstance(reviews, dict):
-        review_payload = {
-            key: reviews[key]
-            for key in (
-                "required_approving_review_count",
-                "dismiss_stale_reviews",
-                "require_code_owner_reviews",
-                "require_last_push_approval",
-            )
-            if key in reviews
-        }
-    else:
-        review_payload = None
-
-    status = data.get("required_status_checks")
-    if isinstance(status, dict):
-        status_payload = {
-            "strict": bool(status.get("strict")),
-            "contexts": list(status.get("contexts") or []),
-        }
-    else:
-        status_payload = None
-
-    restrictions = data.get("restrictions")
-    if isinstance(restrictions, dict):
-        restrictions_payload = {
-            key: list(restrictions.get(key) or [])
-            for key in ("users", "teams", "apps")
-            if key in restrictions
-        }
-    else:
-        restrictions_payload = None
-
-    result = {
-        "required_pull_request_reviews": review_payload,
-        "enforce_admins": enabled(data.get("enforce_admins")),
-        "required_status_checks": status_payload,
-        "restrictions": restrictions_payload,
+    required = {
+        "required_status_checks", "required_pull_request_reviews", "enforce_admins",
+        "required_linear_history", "allow_force_pushes", "allow_deletions", "block_creations",
+        "required_conversation_resolution", "lock_branch", "allow_fork_syncing",
     }
-    for key in (
-        "required_linear_history",
-        "allow_force_pushes",
-        "allow_deletions",
-        "block_creations",
-        "required_conversation_resolution",
-        "lock_branch",
-        "allow_fork_syncing",
-    ):
-        if key in data:
-            result[key] = enabled(data[key])
-    return result
+    missing = sorted(required.difference(data))
+    if missing:
+        fail("protection unreadable (missing fields: " + ",".join(missing) + ")")
+
+    status = data["required_status_checks"]
+    if not isinstance(status, dict) or not isinstance(status.get("strict"), bool):
+        fail("protection unreadable (invalid required_status_checks)")
+    contexts = status.get("contexts")
+    if not isinstance(contexts, list) or any(not isinstance(item, str) for item in contexts):
+        fail("protection unreadable (invalid required_status_checks.contexts)")
+    if len(set(contexts)) != len(contexts):
+        fail("protection unreadable (duplicate required status context)")
+    reviews = data["required_pull_request_reviews"]
+    if reviews is not None and not isinstance(reviews, dict):
+        fail("protection unreadable (invalid required_pull_request_reviews)")
+    return {
+        "required_pull_request_reviews": reviews,
+        "enforce_admins": bool_field(data, "enforce_admins"),
+        "required_status_checks": {"strict": status["strict"], "contexts": sorted(contexts)},
+        "restrictions": redacted_restrictions(data.get("restrictions")),
+        "required_linear_history": bool_field(data, "required_linear_history"),
+        "allow_force_pushes": bool_field(data, "allow_force_pushes"),
+        "allow_deletions": bool_field(data, "allow_deletions"),
+        "block_creations": bool_field(data, "block_creations"),
+        "required_conversation_resolution": bool_field(data, "required_conversation_resolution"),
+        "lock_branch": bool_field(data, "lock_branch"),
+        "allow_fork_syncing": bool_field(data, "allow_fork_syncing"),
+    }
 
 
-def digest(payload: dict) -> str:
-    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
-    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+def run_gh(endpoint: str, patch_path: Path | None = None) -> str:
+    if patch_path is None:
+        argv = ["gh", "api", "--include", endpoint]
+    else:
+        argv = ["gh", "api", endpoint, "-X", "PATCH", "--input", str(patch_path)]
+    result = subprocess.run(argv, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        suffix = f" (API rc={result.returncode})"
+        raise OperationError(f"protection API failed{suffix}", 2)
+    return result.stdout
 
 
-live = read_response(snapshot_path)
-current = normalized(live)
-status = current.get("required_status_checks") or {}
-actual_contexts = list(status.get("contexts") or [])
-if sorted(actual_contexts) != sorted(expected_contexts):
-    raise SystemExit(
-        "CAS_EXPECTED_CONTEXTS_MISMATCH: "
-        + ",".join(actual_contexts)
-        + " != "
-        + ",".join(expected_contexts)
-    )
-actual_digest = digest(current)
-if not expected_digest:
-    raise SystemExit("CAS_EXPECTED_DIGEST_REQUIRED: before=" + actual_digest)
-if actual_digest != expected_digest:
-    raise SystemExit(f"CAS_EXPECTED_DIGEST_MISMATCH: before={actual_digest} expected={expected_digest}")
-
-desired = json.loads(json.dumps(current))
-desired_status = desired.get("required_status_checks") or {"strict": False, "contexts": []}
-contexts = list(desired_status.get("contexts") or [])
-if action == "promote":
-    if "gac-gate" not in contexts:
-        contexts.append("gac-gate")
-elif action == "rollback":
-    contexts = [item for item in contexts if item != "gac-gate"]
-else:
-    raise SystemExit("CAS_ACTION_INVALID")
-desired_status["contexts"] = contexts
-desired["required_status_checks"] = desired_status
-api_payload = {
-    "strict": bool(desired_status.get("strict")),
-    "contexts": contexts,
-}
-payload_path.write_text(json.dumps(api_payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-expected_path.write_text(json.dumps(desired, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-print(actual_digest)
-PY
-)
-  echo "H1c expected-before digest: $before_digest"
-  echo "H1c desired context set: ${expected_contexts},gac-gate (action=$action)"
-  # GitHub disallows conditional headers on this unsafe endpoint. PATCHing the
-  # dedicated status-check subresource minimizes the write set; the expected
-  # full-payload digest and exact-after GET provide optimistic CAS semantics.
-  gh api "repos/$REPO/branches/main/protection/required_status_checks" -X PATCH --input "$payload" >/dev/null
-  gh api --include "repos/$REPO/branches/main/protection" >"$after_snapshot"
-  python3 - "$after_snapshot" "$expected_payload" <<'PY'
-import json
-import re
-import sys
-from pathlib import Path
-
-response = Path(sys.argv[1]).read_text(encoding="utf-8")
-expected = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
-marker = response.find("\n{")
-if marker < 0:
-    raise SystemExit("CAS_AFTER_JSON_BODY_MISSING")
-actual, _ = json.JSONDecoder().raw_decode(response[marker + 1 :].lstrip())
+def read_normalized(endpoint: str) -> dict:
+    return normalized(extract_response(run_gh(endpoint)))
 
 
-def enabled(value: object) -> bool:
-    return bool(value.get("enabled")) if isinstance(value, dict) else bool(value)
+def fd_identity(descriptor: int) -> tuple[int, int] | None:
+    try:
+        descriptor_stat = os.fstat(descriptor)
+    except OSError:
+        return None
+    if not stat.S_ISREG(descriptor_stat.st_mode):
+        return None
+    return descriptor_stat.st_dev, descriptor_stat.st_ino
 
 
-def normalize(data: dict) -> dict:
-    reviews = data.get("required_pull_request_reviews")
-    review_payload = None
-    if isinstance(reviews, dict):
-        review_payload = {k: reviews[k] for k in ("required_approving_review_count", "dismiss_stale_reviews", "require_code_owner_reviews", "require_last_push_approval") if k in reviews}
-    status = data.get("required_status_checks")
-    status_payload = None if not isinstance(status, dict) else {"strict": bool(status.get("strict")), "contexts": list(status.get("contexts") or [])}
-    restrictions = data.get("restrictions")
-    restrictions_payload = None if not isinstance(restrictions, dict) else {k: list(restrictions.get(k) or []) for k in ("users", "teams", "apps") if k in restrictions}
-    result = {"required_pull_request_reviews": review_payload, "enforce_admins": enabled(data.get("enforce_admins")), "required_status_checks": status_payload, "restrictions": restrictions_payload}
-    for key in ("required_linear_history", "allow_force_pushes", "allow_deletions", "block_creations", "required_conversation_resolution", "lock_branch", "allow_fork_syncing"):
-        if key in data:
-            result[key] = enabled(data[key])
-    return result
+def path_identity(path: Path) -> tuple[int, int] | None:
+    try:
+        path_stat = os.lstat(path)
+    except OSError:
+        return None
+    if not stat.S_ISREG(path_stat.st_mode):
+        return None
+    return path_stat.st_dev, path_stat.st_ino
 
 
-if normalize(actual) != expected:
-    raise SystemExit("CAS_AFTER_PAYLOAD_MISMATCH")
-print("CAS exact-after verification: PASS")
-PY
-}
+def path_matches(path: Path, descriptor: int) -> bool:
+    descriptor_identity = fd_identity(descriptor)
+    return descriptor_identity is not None and path_identity(path) == descriptor_identity
 
-case "$cmd" in
-  --promote-gac-gate)
-    confirm_action "确认仅追加 gac-gate 到 main required contexts?"
-    cas_update_gac_gate "promote" "$EXPECTED_CONTEXTS" "$EXPECTED_DIGEST"
-    ;;
 
-  --rollback-gac-gate)
-    confirm_action "确认仅移除 gac-gate required context?"
-    cas_update_gac_gate "rollback" "$EXPECTED_CONTEXTS" "$EXPECTED_DIGEST"
-    ;;
+def write_all(descriptor: int, payload: bytes) -> None:
+    view = memoryview(payload)
+    while view:
+        count = os.write(descriptor, view)
+        if count <= 0:
+            raise OSError("short write")
+        view = view[count:]
 
-  --check)
-    echo "=== $REPO main branch protection 状态 ==="
-    set +e
-    resp=$(gh api "repos/$REPO/branches/main/protection" 2>/dev/null)
-    api_rc=$?
-    set -e
-    if [ "$api_rc" -ne 0 ]; then
-      echo "❌ protection unreadable (API rc=$api_rc)"
-      exit 2
-    fi
-    python3 - "$EXPECTED_CONTEXTS" "$resp" <<'PY'
-import json
-import sys
 
-expected = sorted(item for item in sys.argv[1].split(",") if item)
+def write_fd(descriptor: int, path: Path, payload: str, *, check_path: bool) -> None:
+    if fd_identity(descriptor) is None:
+        fail("receipt descriptor is not a regular file")
+    bound_before = path_matches(path, descriptor)
+    if check_path and not bound_before:
+        raise PathIdentityError("receipt path identity changed before write")
+    try:
+        os.fchmod(descriptor, 0o600)
+        if check_path and not path_matches(path, descriptor):
+            raise PathIdentityError("receipt path identity changed before write")
+        os.lseek(descriptor, 0, os.SEEK_SET)
+        os.ftruncate(descriptor, 0)
+        write_all(descriptor, payload.encode("utf-8"))
+        os.fsync(descriptor)
+    except PathIdentityError:
+        raise
+    except OSError as exc:
+        raise OperationError(f"receipt write failed: {exc}", 2) from exc
+    bound_after = path_matches(path, descriptor)
+    if check_path and not bound_after:
+        raise PathIdentityError("receipt path identity changed after write")
+
+
+def safe_unlink(path: Path, descriptor: int | None) -> None:
+    try:
+        if descriptor is not None and path_matches(path, descriptor):
+            os.unlink(path)
+    except OSError:
+        pass
+
+
+def close_quietly(descriptor: int | None) -> None:
+    if descriptor is None:
+        return
+    try:
+        os.close(descriptor)
+    except OSError:
+        pass
+
+
+def action_name(action: str) -> str:
+    return "add-required-context" if action == "add" else "remove-required-context"
+
+
+def incident_payload(
+    before: dict | None,
+    action: str,
+    target: str,
+    incident_type: str,
+    detail: str,
+) -> str:
+    incident = {
+        "schema": "gac-branch-protection-receipt/v1",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "repo": os.environ.get("GAC_BRANCH_PROTECTION_REPO", "starlink-awaken/omostation"),
+        "action": action_name(action),
+        "context": target,
+        "status": "incomplete",
+        "authorization_provenance": "UNPROVABLE",
+        "patch_attempted": True,
+        "before_digest": before.get("digest") if before else None,
+        "patch_body": before.get("patch_body") if before else None,
+        "incident": {"type": incident_type, "detail": detail},
+        "limitations": [
+            "mutation was attempted but final verification or receipt publication did not complete",
+            "handled writes are fsynced; SIGKILL, power loss, disk-full, or partial-write failures may still leave residual evidence",
+            "residual GET-B/PATCH race cannot be eliminated without a server-side conditional unsafe write",
+        ],
+    }
+    return json.dumps(incident, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+
+
+def write_incident(
+    receipt_path: Path,
+    receipt_descriptor: int | None,
+    sidecar_path: Path,
+    sidecar_descriptor: int | None,
+    before: dict | None,
+    action: str,
+    target: str,
+    incident_type: str,
+    detail: str,
+) -> None:
+    payload = incident_payload(before, action, target, incident_type, detail)
+    if receipt_descriptor is not None:
+        try:
+            write_fd(
+                receipt_descriptor,
+                receipt_path,
+                payload,
+                check_path=path_matches(receipt_path, receipt_descriptor),
+            )
+        except Exception:
+            pass
+    if sidecar_descriptor is not None:
+        try:
+            write_fd(
+                sidecar_descriptor,
+                sidecar_path,
+                payload,
+                check_path=path_matches(sidecar_path, sidecar_descriptor),
+            )
+        except Exception:
+            pass
+
+
+def final_payload(before: dict, after: dict, action: str, target: str) -> str:
+    receipt = {
+        "schema": "gac-branch-protection-receipt/v1",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "repo": os.environ.get("GAC_BRANCH_PROTECTION_REPO", "starlink-awaken/omostation"),
+        "action": action_name(action),
+        "context": target,
+        "before_digest": before["digest"],
+        "after_digest": digest(after),
+        "before_contexts": before["normalized"]["required_status_checks"]["contexts"],
+        "after_contexts": after["required_status_checks"]["contexts"],
+        "patch_body": before["patch_body"],
+        "preserved_fields": [
+            "required_pull_request_reviews", "enforce_admins", "restrictions",
+            "required_linear_history", "allow_force_pushes", "allow_deletions",
+            "block_creations", "required_conversation_resolution", "lock_branch",
+            "allow_fork_syncing",
+        ],
+        "authorization_provenance": "UNPROVABLE",
+        "limitations": [
+            "residual GET-B/PATCH race cannot be eliminated without a server-side conditional unsafe write",
+            "handled final writes are fsynced; SIGKILL, power loss, disk-full, or partial-write failures may leave residual evidence",
+            "no live human authorization or historical mutation provenance is asserted by this tool",
+        ],
+    }
+    return json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+
+
+def update(receipt_raw: str, expected_raw: str, action: str, target: str, protection_endpoint: str, status_endpoint: str) -> None:
+    receipt_path = Path(receipt_raw)
+    sidecar_path = Path(str(receipt_path) + ".incident")
+    receipt_descriptor: int | None = None
+    sidecar_descriptor: int | None = None
+    patch_attempted = False
+    before: dict | None = None
+
+    try:
+        try:
+            receipt_descriptor = os.open(receipt_path, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
+            os.fchmod(receipt_descriptor, 0o600)
+            sidecar_descriptor = os.open(sidecar_path, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
+            os.fchmod(sidecar_descriptor, 0o600)
+        except OSError as exc:
+            raise OperationError(f"receipt reservation failed: {exc}", 2) from exc
+
+        expected = parse_contexts(expected_raw)
+        before_normalized = read_normalized(protection_endpoint)
+        if not path_matches(receipt_path, receipt_descriptor):
+            raise PathIdentityError("receipt path identity changed before GET A verification")
+        actual = before_normalized["required_status_checks"]["contexts"]
+        if actual != expected:
+            raise OperationError(
+                "expected contexts mismatch: " + ",".join(actual) + " != " + ",".join(expected),
+                1,
+            )
+        if action == "add":
+            if target in expected:
+                fail("add expected contexts must not already contain gac-gate")
+            desired_contexts = sorted(set(actual) | {target})
+        elif action == "remove":
+            if target not in expected:
+                fail("remove expected contexts must contain gac-gate")
+            desired_contexts = sorted(set(actual) - {target})
+        else:
+            fail("invalid context update action")
+        desired = copy.deepcopy(before_normalized)
+        desired["required_status_checks"]["contexts"] = desired_contexts
+        patch_body = {
+            "strict": before_normalized["required_status_checks"]["strict"],
+            "contexts": desired_contexts,
+        }
+        before = {
+            "normalized": before_normalized,
+            "digest": digest(before_normalized),
+            "desired": desired,
+            "patch_body": patch_body,
+        }
+
+        second = read_normalized(protection_endpoint)
+        if not path_matches(receipt_path, receipt_descriptor):
+            raise PathIdentityError("receipt path identity changed before GET B verification")
+        if digest(second) != before["digest"]:
+            raise OperationError(
+                "guarded double-read mismatch: A=" + before["digest"] + " B=" + digest(second),
+                1,
+            )
+
+        payload_path: Path | None = None
+        try:
+            request_descriptor, request_name = tempfile.mkstemp(prefix="gac-branch-protection-request.")
+            payload_path = Path(request_name)
+            try:
+                os.fchmod(request_descriptor, 0o600)
+                write_all(request_descriptor, (json.dumps(patch_body, sort_keys=True, indent=2) + "\n").encode("utf-8"))
+                os.fsync(request_descriptor)
+            finally:
+                os.close(request_descriptor)
+            patch_attempted = True
+            run_gh(status_endpoint, payload_path)
+        except OperationError as exc:
+            if patch_attempted:
+                write_incident(receipt_path, receipt_descriptor, sidecar_path, sidecar_descriptor, before, action, target, "patch-failed", str(exc))
+            raise
+        except OSError as exc:
+            if patch_attempted:
+                write_incident(receipt_path, receipt_descriptor, sidecar_path, sidecar_descriptor, before, action, target, "patch-failed", f"PATCH request failed: {exc}")
+            raise OperationError(f"PATCH request preparation failed: {exc}", 2) from exc
+        finally:
+            if payload_path is not None:
+                try:
+                    os.unlink(payload_path)
+                except OSError:
+                    pass
+
+        try:
+            after = read_normalized(protection_endpoint)
+            if not path_matches(receipt_path, receipt_descriptor):
+                raise PathIdentityError("receipt path identity changed after PATCH")
+            if after != desired:
+                raise OperationError("GET C full-protection verification failed", 1)
+            write_fd(receipt_descriptor, receipt_path, final_payload(before, after, action, target), check_path=True)
+            if not path_matches(sidecar_path, sidecar_descriptor):
+                raise PathIdentityError("incident sidecar path identity changed before cleanup")
+            os.unlink(sidecar_path)
+        except OperationError as exc:
+            incident_type = "get-c-non-context-drift" if exc.code == 1 else "get-c-failed"
+            if isinstance(exc, PathIdentityError):
+                incident_type = "receipt-path-identity-mismatch"
+            write_incident(receipt_path, receipt_descriptor, sidecar_path, sidecar_descriptor, before, action, target, incident_type, str(exc))
+            raise
+        except OSError as exc:
+            write_incident(receipt_path, receipt_descriptor, sidecar_path, sidecar_descriptor, before, action, target, "receipt-publication-failed", str(exc))
+            raise OperationError(f"final receipt publication failed: {exc}", 2) from exc
+        except Exception as exc:
+            write_incident(receipt_path, receipt_descriptor, sidecar_path, sidecar_descriptor, before, action, target, "receipt-publication-failed", str(exc))
+            raise OperationError(f"final receipt publication failed: {exc}", 2) from exc
+    except OperationError:
+        if not patch_attempted:
+            safe_unlink(receipt_path, receipt_descriptor)
+            safe_unlink(sidecar_path, sidecar_descriptor)
+        raise
+    finally:
+        if not patch_attempted:
+            safe_unlink(receipt_path, receipt_descriptor)
+            safe_unlink(sidecar_path, sidecar_descriptor)
+        close_quietly(sidecar_descriptor)
+        close_quietly(receipt_descriptor)
+
+
+operation = sys.argv[1]
 try:
-    data = json.loads(sys.argv[2])
-    actual = sorted((data.get("required_status_checks") or {}).get("contexts") or [])
-except (TypeError, ValueError, AttributeError):
-    print("❌ protection unreadable (invalid JSON)")
+    if operation == "check":
+        current = normalized(extract_response(Path(sys.argv[2]).read_text(encoding="utf-8")))
+        expected = parse_contexts(sys.argv[3])
+        actual = current["required_status_checks"]["contexts"]
+        print("  Required status checks: " + (",".join(actual) or "none"))
+        print("  Expected status checks: " + (",".join(expected) or "none"))
+        if actual != expected:
+            print("❌ protection drift")
+            raise SystemExit(1)
+        print("✅ protection aligned")
+    elif operation == "update":
+        update(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7])
+        print("✅ guarded context update complete")
+    else:
+        fail("unknown parser operation")
+except OperationError as exc:
+    print(f"❌ {exc}", file=sys.stderr)
+    raise SystemExit(exc.code)
+except SystemExit:
+    raise
+except Exception as exc:
+    print(f"❌ protection tool failure: {exc}", file=sys.stderr)
     raise SystemExit(2)
-print("  Required status chks:  " + (",".join(actual) or "none"))
-print("  Expected status chks:  " + (",".join(expected) or "none"))
-if actual != expected:
-    print("❌ protection drift")
-    raise SystemExit(1)
-print("✅ protection aligned")
 PY
-    ;;
+}
 
-  --remove)
-    echo "❌ refusing legacy full protection deletion; use --rollback-gac-gate CAS subcommand" >&2
-    exit 2
-    ;;
+check_protection() {
+  local temporary rc
+  temporary="$(mktemp "${TMPDIR:-/tmp}/gac-protection-check.XXXXXX")"
+  if get_protection "$temporary"; then
+    set +e
+    python_tool check "$temporary" "$expected_contexts"
+    rc=$?
+    set -e
+  else
+    rc=$?
+  fi
+  rm -f -- "$temporary" || true
+  return "$rc"
+}
 
-  --help|-h)
-    sed -n '2,30p' "$0"
-    ;;
+guarded_update() {
+  confirm_action "confirm only $1 gac-gate required context" || return 1
+  python_tool update "$receipt" "$expected_contexts" "$1" "$target" "$PROTECTION_ENDPOINT" "$STATUS_ENDPOINT"
+}
 
+case "$mode" in
+  check)
+    check_protection
+    ;;
+  add|remove)
+    guarded_update "$mode"
+    ;;
   *)
-    echo "❌ refusing legacy full-payload branch-protection write; use explicit CAS subcommand" >&2
-    echo "   promote: $0 --promote-gac-gate --expected-digest sha256:<64-hex> --yes" >&2
-    echo "   check:   $0 --check" >&2
+    echo "❌ internal command error" >&2
     exit 2
     ;;
 esac
