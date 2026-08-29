@@ -257,6 +257,81 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-56
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Canonical ledger duplicate-key hygiene
+  appetite: 0.25 day
+  priority: P1
+  status: done
+  done_at: 2026-08-29
+  goal: Normalize the duplicate done_at key in the T10-55 ledger entry without changing its parsed state or evidence.
+  non_goals:
+  - No T1-12 edits.
+  - No implementation, runtime, host, registry, or scheduler changes.
+  done_when:
+  - T10-55 contains exactly one done_at key.
+  - Ledger lint continues to report only the two pre-existing T1-12 errors.
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond T1-12 workflow/write_surfaces
+  workflow: project-doc-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md
+  - docs/reports/2026-08-29-ledger-key-hygiene-audit.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-56.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:de420b2b6158d68ebf154429f7067577894b0d00a599c2dcb237650d7408e442
+    decision_ref: decision://accepted/BET-Y1Q3-T10-56
+  depends_on:
+  - BET-Y1Q3-T10-55
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any semantic state, evidence, T1-12, or runtime change stops this repair.
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@446524d6deb895ede95cf85a67246c35a9c57f42
+          tests:
+            ref: receipt://docs/reports/2026-08-29-ledger-key-hygiene-audit.md
+            sha256: sha256:fe95e88caef04522543a42c2bacea04c6a3b2c4706ebb778ef28678e7ccbed0b
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md
+            sha256: sha256:de420b2b6158d68ebf154429f7067577894b0d00a599c2dcb237650d7408e442
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md
+            sha256: sha256:de420b2b6158d68ebf154429f7067577894b0d00a599c2dcb237650d7408e442
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-ledger-key-hygiene-audit.md
+            sha256: sha256:fe95e88caef04522543a42c2bacea04c6a3b2c4706ebb778ef28678e7ccbed0b
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-ledger-key-hygiene-audit.md
+            sha256: sha256:fe95e88caef04522543a42c2bacea04c6a3b2c4706ebb778ef28678e7ccbed0b
+          replay:
+            ref: receipt://docs/reports/2026-08-29-ledger-key-hygiene-audit.md
+            sha256: sha256:fe95e88caef04522543a42c2bacea04c6a3b2c4706ebb778ef28678e7ccbed0b
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md
+            sha256: sha256:de420b2b6158d68ebf154429f7067577894b0d00a599c2dcb237650d7408e442
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-55
   track: T10-MATURITY
   window: Y1Q3
@@ -264,7 +339,6 @@ bets:
   appetite: 0.5 day
   priority: P0
   status: done
-  done_at: 2026-08-29
   done_at: 2026-08-29
   goal: Reconcile stale file receipt digests in twelve historical completion matrices without changing their scope or verdicts.
   non_goals:
