@@ -1,0 +1,21 @@
+{
+  "schema": "principal-authority-canary/v1",
+  "principal": "principal:xiamingxing",
+  "omo_receipt_digest": "sha256:2fd90148cbcd3a60b2c665045b9290352c742d46cb8aa79a1622d44b7b580fa8",
+  "cockpit_receipt_digest": "sha256:2fd90148cbcd3a60b2c665045b9290352c742d46cb8aa79a1622d44b7b580fa8",
+  "agora_authority_digest": "6d4409f2289237244157ab36d007b19a469a5f49852159f16cc4ce1aac72a66c",
+  "digest_chain_equal": true,
+  "replay_idempotent": true,
+  "negatives_zero_effect": true,
+  "missing_authority_fail_closed": true,
+  "fixture_rejected": true,
+  "ok": true,
+  "steps": [
+    "omo_verify",
+    "cockpit_issue",
+    "agora_forward",
+    "replay_idempotent",
+    "agora_negatives_zero_effect",
+    "missing_authority_fail_closed"
+  ]
+}
