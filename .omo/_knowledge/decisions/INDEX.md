@@ -498,6 +498,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0431: 防腐五层框架 — 人的权威分层 × 三机制 + MAPE-K 对齐 — **CANDIDATE** | 2026-08-28 | xiamingxing | 0431-anti-corrosion-five-layer-framework.md
 - ADR-0432: North Star v3 6-Axis Escalation — **ACCEPTED** | 2026-08-28 | 0432-north-star-v3-6-axis-escalation.md
 - ADR-0433: omlxc DFlash 2 块扩散投机解码、异构三节点智能调度与三级分层缓存体系 — **ACCEPTED** | 2026-08-29 | 0433-omlxc-dflash2-heterogeneous-cluster-and-hierarchical-cache.md
+- ADR-0434: Trend signals from external RSS batch — **PROPOSED** | 2026-08-29 | evolution-agent | 0434-trend-signal.md
 
 ---
 
