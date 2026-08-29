@@ -1,4 +1,12 @@
-# ADR-0401: [hacker_news] Indirect Calling of Nested Functions on GCC Without Executable Stack
+---
+id: ADR-0436
+status: proposed
+lifecycle: draft
+owner: evolution-agent
+last-reviewed: 2026-08-29
+---
+
+# ADR-0436: [hacker_news] Indirect Calling of Nested Functions on GCC Without Executable Stack
 
 - status: draft
 - date: 2026-08-29
