@@ -1229,7 +1229,8 @@ bets:
   title: Documents terminal rollback receipt guard
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Prevent a Documents migration family from reaching verified or retired when its rollback receipt is not resolvable, and record the current root one-off receipt loss as a fail-closed evidence gap.
   non_goals:
   - No Documents content, runtime, cache, host schedule, LaunchAgent, or client configuration mutation.
@@ -1269,6 +1270,43 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: Any Documents content or runtime mutation, missing evidence boundary, or attempt to recreate the lost payload stops this BET.
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@41bdb1a7e178bbd714bfc6a0d2dde6b65dea4008
+          tests:
+            ref: receipt://tests/test_documents_content_plane_migration_check.py
+            sha256: sha256:ce3b6d638ce155c307534e3b96e294b02db66718a1c479cc2762fd4134471677
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
+            sha256: sha256:f851565612d5b4e643642ffca7938e937a5d6e39173e4e0059d69de24d2fb9ea
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
+            sha256: sha256:f851565612d5b4e643642ffca7938e937a5d6e39173e4e0059d69de24d2fb9ea
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-documents-terminal-receipt-gap.md
+            sha256: sha256:d388eeff6fb33edda9625d3f2e56f87f6e888c9cb32dc54f4f7587c14dd78404
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-documents-terminal-receipt-gap.md
+            sha256: sha256:d388eeff6fb33edda9625d3f2e56f87f6e888c9cb32dc54f4f7587c14dd78404
+          replay:
+            ref: receipt://docs/reports/2026-08-29-documents-terminal-receipt-gap.md
+            sha256: sha256:d388eeff6fb33edda9625d3f2e56f87f6e888c9cb32dc54f4f7587c14dd78404
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
+            sha256: sha256:f851565612d5b4e643642ffca7938e937a5d6e39173e4e0059d69de24d2fb9ea
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   value_indicator_policy: false
   retro: required
 
