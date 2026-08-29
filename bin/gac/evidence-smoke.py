@@ -258,7 +258,14 @@ def _check_stdio(command: list[str], svc_package: str = "") -> tuple[bool, str]:
     # 路径 1: 直接脚本路径 (family-hub: projects/family-hub/mcp_server.py)
     if script:
         sp = Path(script)
-        sp = sp if sp.is_absolute() else WORKSPACE / sp
+        if not sp.is_absolute():
+            if directory:
+                directory_path = Path(directory).expanduser()
+                if not directory_path.is_absolute():
+                    directory_path = WORKSPACE / directory_path
+                sp = directory_path / sp
+            else:
+                sp = WORKSPACE / sp
         return (True, "ok (script)") if sp.exists() else (False, f"script not found: {script}")
 
     # 路径 2: --package (workspace 根跑, uv workspace 运行时解析)
