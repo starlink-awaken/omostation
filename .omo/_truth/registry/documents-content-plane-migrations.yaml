@@ -250,13 +250,8 @@ families:
       - "docs/reports/2026-08-12-documents-runtime-owner-parity-inventory.md#公共-runtime-sources"
     rollback: "Keep each source command until its registered owner command, exit-code parity, and consumer cutover are verified."
     confirmation_gate: before_write
-    status: retired
-    evidence:
-      verified_at: "2026-08-29T14:15:00Z"
-      source_fingerprint: "sha256:ef9a8195ad2c4994842ff918cbadebd2e84301d591836a3887f9a2a48cefc76c"
-      target_fingerprint: "sha256:ef9a8195ad2c4994842ff918cbadebd2e84301d591836a3887f9a2a48cefc76c"
-      consumer_scan: "receipt://docs/reports/2026-08-29-documents-public-runtime-quarantine.md"
-      rollback_ref: "docs/reports/2026-08-29-documents-public-runtime-quarantine.md"
+    status: pending
+    evidence_gap: "The 58 sources were observed absent after a successful move, but the Workspace quarantine and manifest later disappeared. Do not re-enter a terminal state until a protected, hash-valid rollback package is recreated."
 
   - id: cockpit-runtime
     source_globs:
