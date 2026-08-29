@@ -20,11 +20,17 @@ runtime behavior, and hardware execution were not changed.
 ## Evidence
 
 - Agora PR #46 is merged at child main commit
-  `61af943334f120938f6ad79eda83fbe1535a1405`.
-- The root `projects/agora` gitlink points to that reachable child main commit.
+  `61af943334f120938f6ad79eda83fbe1535a1405`; PR #47 is merged at child main
+  commit `fa3e5508b9ec6054b20058a352e30349b6ffc487`.
+- The root `projects/agora` gitlink points to the reachable child main commit
+  `fa3e5508b9ec6054b20058a352e30349b6ffc487`.
 - `tests/test_omlxc_bos_path_resolution.py` passes in the child repository.
 - The five OMLXC declarations resolve against existing example files when the
   checker uses the command's `--directory projects/omlxc` context.
+- The three legacy cache/dflash/cluster demo routes are explicitly
+  `unimplemented` and therefore excluded from the routable POC table until
+  canonical CLI parity exists; the full L2 gate reports `249/249` and
+  `real_gap=0`.
 - The actual relative command
   `uv run --directory projects/omlxc python examples/live_v5_evolution_verification.py --help`
   exits `0`; using a root-relative script argument exits `2`.
