@@ -212,6 +212,40 @@ def test_illegal_or_unproven_completion_status_fails(tmp_path):
     assert sum("terminal status requires evidence" in error for error in report["errors"]) == 2
 
 
+def test_terminal_family_requires_resolvable_rollback_receipt(tmp_path):
+    module = _load_module()
+    families = [_family("one", "one/**", "one/a.py")]
+    families[0]["status"] = "retired"
+    families[0]["evidence"] = {
+        field: "ok" for field in module._EVIDENCE_FIELDS
+    }
+    families[0]["evidence"]["rollback_ref"] = str(tmp_path / "missing-manifest.json")
+    registry = _write_registry(tmp_path / "registry.yaml", families)
+
+    report = module.check_migrations(registry)
+
+    assert report["ok"] is False
+    assert any("rollback receipt" in error for error in report["errors"])
+
+
+def test_terminal_family_accepts_resolvable_rollback_receipt(tmp_path):
+    module = _load_module()
+    receipt = tmp_path / "manifest.json"
+    receipt.write_text('{"schema": "rollback/v1"}\n', encoding="utf-8")
+    families = [_family("one", "one/**", "one/a.py")]
+    families[0]["status"] = "verified"
+    families[0]["evidence"] = {
+        field: "ok" for field in module._EVIDENCE_FIELDS
+    }
+    families[0]["evidence"]["rollback_ref"] = str(receipt)
+    registry = _write_registry(tmp_path / "registry.yaml", families)
+
+    report = module.check_migrations(registry)
+
+    assert report["ok"] is True
+    assert report["non_terminal_families"] == []
+
+
 def test_live_candidates_report_kind_and_family_counts(tmp_path):
     module = _load_module()
     registry = _write_registry(tmp_path / "registry.yaml")
