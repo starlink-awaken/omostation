@@ -9150,7 +9150,8 @@ bets:
   title: 'domain-sync 06:00 Workspace owner 切换'
   appetite: 0.5 day
   priority: P0
-  status: pending
+  status: done
+  done_at: 2026-08-29
   goal: '将每日 06:00 domain-sync 从 Documents Python 3.9 脚本切换到 accepted Workspace L4 index check，保持只读、原 cadence 与可回滚。'
   non_goals:
   - 不修改 DOMAIN-INDEX 或任何 Documents 内容
@@ -9186,6 +9187,43 @@ bets:
   risk_level: L2
   human_gate: true
   circuit_breaker: 'missing old line, unexpected writer, cadence drift, or new command error triggers immediate rollback.'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@1a3769ca8ad9e6c3643d2df8d1e44eaadab32cd4
+          tests:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+          diff:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+          rollback:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-28.md
+            sha256: sha256:020dacb123ae8b8215fcd513012e50fbc6c99b0b10427d107209297e42ac3ef0
+          replay:
+            ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
+            sha256: sha256:ee9fe51046c3f3f7c858abff4cc6ad13f50e6fef09e8a7cf46997919f535ad0e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-28.md
+            sha256: sha256:020dacb123ae8b8215fcd513012e50fbc6c99b0b10427d107209297e42ac3ef0
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 - id: BET-Y1Q3-T10-47
   track: T10-MATURITY
