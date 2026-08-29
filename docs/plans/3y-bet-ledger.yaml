@@ -302,6 +302,51 @@ bets:
   circuit_breaker: Any URI/behavior change, unrelated child change, hardware execution, or Documents mutation stops this repair.
   value_indicator_policy: false
   retro: required
+- id: BET-Y1Q3-T10-76
+  track: T10-MATURITY
+  window: Y1Q3
+  title: System task projection reconciliation
+  appetite: 0.25 day
+  priority: P0
+  status: candidate
+  goal: Reconcile stale OMO task counters through the canonical state-sync broker so current-state-coherence and SSOT guardian see the task filesystem truth.
+  non_goals:
+  - No task file, goal, Documents, runtime payload, schedule, or user configuration mutation.
+  - No direct edit to .omo/state or new state writer.
+  done_when:
+  - Broker dry-run proves planned 7→6 and total 299→298 with other counters unchanged.
+  - Brokered sync updates system.yaml and task files remain unchanged.
+  - current-state-coherence and ssot-guardian pass after the sync.
+  - Before/after hash evidence, report, and five-question retro are present.
+  verify:
+  - cmd: uv run --project projects/omo omo state sync-tasks --dry-run
+    expect: exact planned 7→6 and total 299→298 delta
+  - cmd: python3 bin/ssot/current-state-coherence.py
+    expect: exit 0
+  - cmd: make ssot-guardian
+    expect: exit 0
+  workflow: state-sync
+  underlying_workflow: state-sync
+  write_surfaces:
+  - .omo/state/system.yaml
+  - .omo/tasks/registry/INDEX.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
+  - docs/reports/2026-08-29-system-task-projection-reconciliation.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-76.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:af6cdee62795d52647f10faf590a117b14fd30725058b59b833f7b8defbc2234
+    decision_ref: decision://accepted/BET-Y1Q3-T10-76
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any task-file, Documents, runtime payload, goal, or direct-state mutation stops this sync.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-71
   track: T10-MATURITY
   window: Y1Q3
