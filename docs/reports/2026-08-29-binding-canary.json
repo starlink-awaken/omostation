@@ -1,0 +1,34 @@
+{
+ "schema": "binding-canary-report/v1",
+ "capability_id": "bos-service:bos://system/omo/debt",
+ "operation_id": "binding-canary",
+ "generated_at": "2026-08-28T23:45:11.923534+00:00",
+ "ok": true,
+ "verdict": {
+  "find": true,
+  "inspect": true,
+  "invoke_confirmed": true,
+  "replay_idempotent": true,
+  "cleanup_proved": true
+ },
+ "receipt_digest": "sha256:8de7d5c1db642949b3e3edc0ccb6553897f3624b8175f665fd9ea116a29274cf",
+ "invocation_id": "sha256:e330731e9aa17cd10aa050cc1728a9016fe54446c2c8d55a2f8874bbde83e28f",
+ "steps": [
+  {
+   "step": "find",
+   "rc": 0
+  },
+  {
+   "step": "inspect",
+   "rc": 0
+  },
+  {
+   "step": "invoke",
+   "rc": 0
+  },
+  {
+   "step": "replay",
+   "rc": 0
+  }
+ ]
+}
