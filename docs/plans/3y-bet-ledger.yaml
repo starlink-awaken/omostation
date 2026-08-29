@@ -396,6 +396,57 @@ bets:
   value_indicator_policy: false
   retro: required
 
+- id: BET-Y1Q3-T10-77
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents Weijian regular work-runtime quarantine
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Move the stable L4-classified regular runtime files under Documents/@工作文档/卫健委/_runtime into retention-protected Workspace quarantine without touching content, contracts, caches, symlinks, or other migration families.
+  non_goals:
+  - No symlink move or target restoration; dangling symlinks are owned by T10-73.
+  - No content, contract, projection, cache, invalid-archive, schedule, LaunchAgent, client, or other domain mutation.
+  - No permanent deletion or terminal status change without a hash-valid postflight manifest.
+  done_when:
+  - A stable L4 inventory selects exactly 17 regular runtime files and no other artifact kind.
+  - Fresh consumer evidence reports status ok, forbidden_executors=0, and unmatched=0.
+  - The quarantine target is empty/protected and the transaction moves exactly the selected files with hash, size, mode, and rollback evidence.
+  - Postflight proves all selected sources absent, all targets equal, non-runtime artifacts preserved, and the manifest remains present on independent recheck.
+  - The migration registry records work-runtime as retired with the repository-resolvable report and rollback reference.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: git check-ignore -q runtime/quarantine/documents-weijian-runtime-20260830/manifest.json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no terminal receipt error
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known T10-71 baseline
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-documents-work-runtime-regular-quarantine-design.md
+  - docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-77.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-77-work-runtime-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-work-runtime-regular-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d2b9c20ae9bacb94f0e54ea4502fa1dfbe16b5eb6bbb78a06eff0c58326d9eff
+    decision_ref: decision://accepted/BET-Y1Q3-T10-77
+  depends_on:
+  - BET-Y1Q3-T10-73
+  - BET-Y1Q3-T10-68
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any non-regular selection, unstable audit, unsafe consumer, target collision, hash mismatch, non-target Documents change, or manifest loss stops and restores the transaction.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-71
   track: T10-MATURITY
   window: Y1Q3
