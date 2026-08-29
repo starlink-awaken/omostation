@@ -1,11 +1,12 @@
-# ADR-0433: omlxc DFlash 2 块扩散投机解码、异构三节点智能调度与三级分层缓存体系
-
-- **状态**: Accepted
-- **日期**: 2026-08-29
-- **作者**: 夏明星, Antigravity Agent Swarm
-- **关联**: ADR-0197 (主权算力), ADR-0203 (Agent 工作流契约), ADR-0431 (五层防腐)
-
 ---
+id: ADR-0433
+status: accepted
+lifecycle: spec
+owner: xiamingxing
+last-reviewed: 2026-08-29
+---
+
+# ADR-0433: omlxc DFlash 2 块扩散投机解码、异构三节点智能调度与三级分层缓存体系
 
 ## 1. 背景与诉求 (Context & Problems)
 
