@@ -336,6 +336,7 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
   value_indicator_policy: false
+  value_indicator_policy: false  # WP6 不证明价值
   retro: required
 
 - id: BET-Y1Q3-T10-64
@@ -2277,7 +2278,8 @@ bets:
   title: Product P0 WP6 Physical Backup Restore Integrity Drill
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   parent_bet_id: BET-Y1Q3-T4-02
   delivery_wave: C
   goal: 对明确批准的非生产源执行真实 backup -> isolated restore -> integrity -> replay，记录四个 digest、隔离目标、测量时间和人工确认，dry-run 永不通过 physical gate。
@@ -2314,21 +2316,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b342110769eb2daaf9b1f7b6f3b96177bcea3521
+          tests:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
+          diff:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
+          replay:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
+          cleanup:
+            ref: receipt://docs/reports/2026-08-29-wp6-physical-recovery-drill.json
+            sha256: sha256:b4d572fd2291702bc1f0701bea90d0452467939b78587f6834f2826645782f3e
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
-  depends_on:
-  - BET-Y1Q3-T4-06
-  value_indicator_policy: false
-  risk_level: L3
-  human_gate: true
-  circuit_breaker: 任一 root overlap、digest mismatch、replay 失败、人工确认不明或需覆盖原地恢复时立即停机
+    overall_state: delivery_accepted
+  value_indicator_policy: false  # WP6 不证明价值
   retro: required
 - id: BET-Y1Q1-T1-01
   track: T1-TRUTH

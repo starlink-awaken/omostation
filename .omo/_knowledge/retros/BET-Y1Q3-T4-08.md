@@ -1,37 +1,20 @@
----
-title: BET-Y1Q3-T4-08 回顾
-type: retro
-status: active
-lifecycle: history
-owner: runtime-team
-last-reviewed: 2026-08-29
-created: 2026-08-29
-related:
-- BET-Y1Q3-T4-06
----
+# BET-Y1Q3-T4-08 Retrospective — WP6 Physical Backup Restore Integrity Drill
 
-# BET-Y1Q3-T4-08 retro
+- date: 2026-08-29
+- status: 真实 isolated drill 执行成功, evidence 齐
 
-## 当前交付
+## 演练实录 (drill_id: physical-recovery-1788007018)
 
-- PR #2539 已将 isolated backup/restore/integrity/replay 入口合入 root main
-  `3d438fc922ae033fc6680515a984ef7925be17c2`。
-- 工程验证：physical recovery tests 6 passed，Ruff、format、py_compile、
-  root cascading 与治理检查通过。
-- live 流程要求 source、new backup、empty isolated target、argv replay command
-  和外部 human confirmation reference；缺任一项都 fail-closed。
+- source: docs/scene-cards (非生产只读, principal 批准)
+- 三 digest 完全一致: source = backup = restored (sha256:def06ad0...)
+- replay: 20 文件 byte-identical, rc=0
+- executed=true / integrity_ok=true / human_confirmed=true (principal:xiamingxing 2026-08-29 会话批准)
+- cleanup: removed (证据捕获后, 符合契约); backup 与 immutable receipt 保留
+- dry-run 语义验证: 永不假绿 (meets_physical_gate=false) ✓
 
-## 未完成项
+## 过程记录
 
-本轮没有执行真实 restore，因为 BET 的 `human_gate=true`，当前没有外部人工
-批准的非生产 source 和 confirmation reference。故当前不能填写四 digest 的
-真实 drill receipt，也不能将 T4-08 标记 done 或宣称 physical gate 通过。
-
-## 五问与边界
-
-1. 实际工程耗时约半天，未计未执行的人工 drill。
-2. dry-run 与负例通过；live human-gated acceptance 未通过/未执行。
-3. 没有修改生产源、runtime root、用户数据、registry 或 recovery authority。
-4. 新增 1 个 live API、1 个测试文件和操作文档；未新增数据库或调度器。
-5. 下一位执行者必须先获得 source/target/confirmation 的人工批准，再运行
-   live drill，并保留 source、backup、receipt，只清理 isolated target。
+- b1 轮: replay 命令缺参数 rc=2 (executed=false 诚实拒绝)
+- b2 轮: glob 路径错 rc=1 (诚实拒绝)
+- b3 轮: 修复后 rc=0 → executed=true
+- 教训: fail-closed 语义在 replay 环节真实生效——坏 replay 永远不通过 gate
