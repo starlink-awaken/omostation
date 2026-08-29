@@ -206,6 +206,12 @@ principal 于 08-29 就"operational 证据标准"裁决: **测试回执不可计
   find→inspect→load→invoke 正向链, 产出 confirmed read-only native receipt
 - canary 报告更新后, operational 复评 PROVEN → complete → done
 
+补充拓扑校准：`7432` 对应旧版 `agora.daemon`，不是当前 canonical MCP
+入口。Workspace service SSOT 将 `agora.sse`（`7431`）标为 disabled，将
+`mcp.agora`（`7433`）标为 manual/on-demand；本机两者均未运行。因此后续
+修复应针对已登记的 Agora MCP service lifecycle，而不是重新启用旧 7432
+daemon 或新增第二个 gateway。
+
 ## 2026-08-29 formal canary recheck (run 20260829T000443Z-bet-execution-c912b00b)
 
 本次正式 `bet-execution` run 复核了正向 canary 的前置条件。四个 exact
