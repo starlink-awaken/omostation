@@ -250,7 +250,8 @@ families:
       - "docs/reports/2026-08-12-documents-runtime-owner-parity-inventory.md#公共-runtime-sources"
     rollback: "Keep each source command until its registered owner command, exit-code parity, and consumer cutover are verified."
     confirmation_gate: before_write
-    status: in_progress
+    status: pending
+    evidence_gap: "The 58 sources were observed absent after a successful move, but the Workspace quarantine and manifest later disappeared. Do not re-enter a terminal state until a protected, hash-valid rollback package is recreated."
 
   - id: cockpit-runtime
     source_globs:

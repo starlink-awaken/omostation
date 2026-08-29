@@ -257,6 +257,54 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-69
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents public runtime physical quarantine
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: Move the currently audited L4 runtime artifacts under Documents/@公共/_runtime, including kems-v2, into a recoverable Workspace quarantine after consumer proof, while leaving Documents content, contracts, projections, and bridges in place.
+  non_goals:
+  - No movement, rewrite, or deletion of Markdown, Office, PDF, DOMAIN, CONTENT_ARCHIVE, projection, contract, or bridge files.
+  - No permanent deletion, schedule change, LaunchAgent change, or client configuration change.
+  - No physical move when the scoped L4 audit is unstable, a forbidden consumer exists, or any target collision is present.
+  done_when:
+  - The scoped L4 audit is stable and reports the exact runtime/cache/invalid-archive inventory before the move.
+  - The live consumer receipt reports status ok, forbidden_executors=0, unmatched=0, and no public/cockpit execution-mode consumer outside content-reference.
+  - The transaction moves exactly the preflight runtime set to Workspace quarantine with source/target hashes, modes, bytes, tree fingerprints, and a rollback manifest.
+  - Postflight proves all selected sources absent, all targets byte-equal, all non-runtime Documents artifacts unchanged, and rollback remains possible.
+  - The migration registry records public-runtime as retired only with a repository-resolvable receipt and keeps all other families unchanged.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no terminal receipt error
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known debt
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - lib/documents_runtime_quarantine.py
+  - tests/test_documents_runtime_quarantine.py
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md
+  - docs/reports/2026-08-29-documents-public-runtime-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-69.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-69-public-runtime-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:6bc6a4df28e7e9ab665ab10e488faee11f8401b5de7502185bbc4c8727969ca6
+    decision_ref: decision://accepted/BET-Y1Q3-T10-69
+  depends_on:
+  - BET-Y1Q3-T10-38
+  - BET-Y1Q3-T10-41
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any unstable audit, consumer drift, target collision, hash mismatch, non-target Documents change, or rollback-manifest failure stops the transaction and restores moved sources.
 - id: BET-Y1Q3-T10-68
   track: T10-MATURITY
   window: Y1Q3
