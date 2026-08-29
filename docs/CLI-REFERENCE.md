@@ -10,7 +10,7 @@ last-reviewed: 2026-08-24
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **169** 个命令 (含子命令)。按场景分组如下。
+共 **163** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -62,7 +62,7 @@ last-reviewed: 2026-08-24
 | `cockpit onboarding` | 为 AI 构建项目全貌上下文 |
 | `cockpit panorama` | 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产) |
 | `cockpit resident` | Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...) |
-| `cockpit swarm` | 分布式跨节点 KV 共享池与超长上下文置换基准 |
+| `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
 | `cockpit wave2` | 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON) |
 | `cockpit workflow` | BOS workflow 相关 |
 
@@ -237,14 +237,8 @@ last-reviewed: 2026-08-24
 | `cockpit compact` | 上下文滑动蒸馏与双区自适应量化压缩模拟 |
 | `cockpit decide` | 📬 决策收件箱 (列出/添加/批准/拒绝) |
 | `cockpit dflash` | DFlash 2 块扩散投机解码加速与集群基准 |
-| `cockpit dma` | 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准 |
-| `cockpit heatmap` | 查看分布式 KV 内存池热力分布与投机蒸馏指标 |
-| `cockpit hud` | 查看次世代主权算力织网全景 HUD 实时状态 |
-| `cockpit lora` | 查看与测试端侧在线 LoRA 适配层热插拔 |
 | `cockpit ops` | 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate) |
 | `cockpit reject` | 拒绝决策 |
-| `cockpit stream` | 跨节点 Chunk-level 流式协同流水线基准 |
-| `cockpit tree` | 自适应熵感知树状投机解码与多候选验证基准 |
 
 ---
 
@@ -256,11 +250,11 @@ last-reviewed: 2026-08-24
 |----------|-----------|--------|
 | `cockpit omo` | `omo` | 22 |
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
-| `cockpit gbrain` | `gbrain` | 0 |
-| `cockpit model-driven` | `model-driven` | 0 |
+| `cockpit gbrain` | `gbrain` | 75 |
+| `cockpit model-driven` | `model-driven` | 28 |
 | `cockpit agora` | `agora` | 99 |
-| `cockpit family-hub` | `family-hub` | 0 |
-| `cockpit mesh` | `aetherforge` | 0 |
-| `cockpit compute` | `aetherforge` | 0 |
+| `cockpit family-hub` | `family-hub` | 6 |
+| `cockpit mesh` | `aetherforge` | 15 |
+| `cockpit compute` | `aetherforge` | 15 |
 
 *由 `bin/ssot/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*
