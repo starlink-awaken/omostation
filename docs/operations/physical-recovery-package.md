@@ -22,6 +22,21 @@ PHYSICAL_RECOVERY_HOSTS=host1,host2 bash bin/delivery/physical-recovery.sh
 
 Python twin: `bin/delivery/physical_recovery.py`.
 
+Live drill (仅限明确批准的非生产源、空隔离目标，并必须提供外部人工确认)：
+
+```bash
+python3 bin/delivery/physical_recovery.py --live \
+  --source /path/to/approved-source \
+  --backup-dir /path/to/new-backup \
+  --restore-dir /path/to/empty-isolated-target \
+  --human-confirmation-ref human://operator/recovery-YYYYMMDD \
+  --replay-command <command> [args...]
+```
+
+成功回执包含 source/backup/restored/replay 四个 digest、隔离目标、时间戳、
+人工确认引用和清理结果；`--live` 不接受 shell 字符串，replay 以 argv 方式
+执行。缺人工确认、目标重叠/非空、digest 不一致或 replay 非零退出时 fail-closed。
+
 ## What it does (dry-run default)
 
 1. **Probe** listed hosts (TCP connect, short timeout)
