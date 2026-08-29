@@ -216,9 +216,7 @@ def test_terminal_family_requires_resolvable_rollback_receipt(tmp_path):
     module = _load_module()
     families = [_family("one", "one/**", "one/a.py")]
     families[0]["status"] = "retired"
-    families[0]["evidence"] = {
-        field: "ok" for field in module._EVIDENCE_FIELDS
-    }
+    families[0]["evidence"] = {field: "ok" for field in module._EVIDENCE_FIELDS}
     families[0]["evidence"]["rollback_ref"] = str(tmp_path / "missing-manifest.json")
     registry = _write_registry(tmp_path / "registry.yaml", families)
 
@@ -234,9 +232,7 @@ def test_terminal_family_accepts_resolvable_rollback_receipt(tmp_path):
     receipt.write_text('{"schema": "rollback/v1"}\n', encoding="utf-8")
     families = [_family("one", "one/**", "one/a.py")]
     families[0]["status"] = "verified"
-    families[0]["evidence"] = {
-        field: "ok" for field in module._EVIDENCE_FIELDS
-    }
+    families[0]["evidence"] = {field: "ok" for field in module._EVIDENCE_FIELDS}
     families[0]["evidence"]["rollback_ref"] = str(receipt)
     registry = _write_registry(tmp_path / "registry.yaml", families)
 

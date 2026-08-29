@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path("/Users/xiamingxing/Workspace")
@@ -15,6 +15,7 @@ MATRIX_FILE = REPO / ".omo" / "_truth" / "registry" / "probe-heartbeat-matrix.ya
 def _load_yaml_simple(path: Path) -> dict:
     try:
         import yaml
+
         with open(path, encoding="utf-8") as f:
             docs = list(yaml.safe_load_all(f))
         body = docs[-1] if len(docs) > 1 else docs[0]
@@ -58,7 +59,7 @@ def _age_hours(ts_str: str) -> float:
         return 9999
     try:
         ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return (now - ts).total_seconds() / 3600
     except (ValueError, TypeError):
         return 9999
@@ -86,7 +87,7 @@ def check_heartbeats() -> dict:
         if not ok:
             failed.append(result)
     return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "total": len(results),
         "ok": len(results) - len(failed),
         "failed_count": len(failed),

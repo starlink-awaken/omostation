@@ -1,4 +1,5 @@
 """WP6 drill replay: restored integrity assertion (non-production)."""
+
 import glob
 import hashlib
 import sys
