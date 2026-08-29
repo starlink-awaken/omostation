@@ -403,6 +403,11 @@ def _get_cmd(svc: dict) -> list[str]:
     interpreter = program.get("interpreter", "python3")
     svc_args = program.get("args", [])
     if interpreter == "uv":
+        entry_path = Path(entry)
+        if not entry_path.is_absolute():
+            entry_path = WORKSPACE / entry_path
+        if entry_path.is_dir():
+            return ["uv", "run", "--directory", entry] + svc_args
         return ["uv", "run", entry] + svc_args
     elif interpreter == "stable-python3":
         return [sys.executable, entry] + svc_args
