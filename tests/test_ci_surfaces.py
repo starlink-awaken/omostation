@@ -39,6 +39,7 @@ def cs(monkeypatch, tmp_path):
     monkeypatch.setattr(mod, "CI_SURFACES", tmp_path / "ci-surfaces.yaml")
     monkeypatch.setattr(mod, "WORKFLOWS_DIR", tmp_path / "workflows")
     monkeypatch.setattr(mod, "SGF_POLICY", tmp_path / "sgf-policy.yaml")
+    monkeypatch.setattr(mod, "WORKSPACE", tmp_path)
     (tmp_path / "workflows").mkdir()
     (tmp_path / "scripts").mkdir()
     return mod
@@ -273,7 +274,7 @@ def test_gate_effectiveness_module_loads():
     """ADR-0384 B1: gate-effectiveness 工具可导入并产出 JSON."""
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location("gate_effectiveness_test", ROOT / "bin/gac/gate-effectiveness.py")
+    spec = importlib.util.spec_from_file_location("gate_effectiveness_test", ROOT / "bin/_archive/gate-effectiveness.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
