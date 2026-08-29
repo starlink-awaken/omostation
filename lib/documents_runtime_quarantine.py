@@ -13,7 +13,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = "documents-runtime-quarantine/v1"
 _EXECUTION_MODES = {"content-reference"}
 

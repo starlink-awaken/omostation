@@ -74,6 +74,12 @@ def test_preflight_rejects_forbidden_consumer(tmp_path):
         raise AssertionError("forbidden consumer must stop the transaction")
 
 
+def test_owner_module_anchors_to_repository_root_from_lib():
+    module = _load_module()
+
+    assert module.ROOT == ROOT
+
+
 def test_apply_moves_only_runtime_and_writes_hash_manifest(tmp_path):
     module = _load_module()
     documents = tmp_path / "Documents"
