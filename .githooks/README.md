@@ -14,6 +14,12 @@ commit 前依次运行:
 - `bin/gac-local-gate.py` (blocking)
 - `bin/ssot-guardian.py` (blocking)
 
+## commit-msg — chore(state) 禁止直连 main (T10-57)
+
+分支保护会拒绝 main 直推，`chore(state)` 类提交留在本地 main 只会被 reset 成孤儿
+（commit → push 拒 → reset 循环，2026-08-29 实测）。此 hook 在本地 main 上拦截
+该类提交，引导走 worktree+PR（如 #2519）。逃生口: `SWARM_ESCAPE_ID=<id>` (D4)。
+
 ## 安装 (新 clone 必跑)
 
 ```bash
