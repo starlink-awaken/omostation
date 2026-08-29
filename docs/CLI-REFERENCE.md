@@ -10,7 +10,7 @@ last-reviewed: 2026-08-24
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **165** 个命令 (含子命令)。按场景分组如下。
+共 **169** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -237,6 +237,10 @@ last-reviewed: 2026-08-24
 | `cockpit compact` | 上下文滑动蒸馏与双区自适应量化压缩模拟 |
 | `cockpit decide` | 📬 决策收件箱 (列出/添加/批准/拒绝) |
 | `cockpit dflash` | DFlash 2 块扩散投机解码加速与集群基准 |
+| `cockpit dma` | 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准 |
+| `cockpit heatmap` | 查看分布式 KV 内存池热力分布与投机蒸馏指标 |
+| `cockpit hud` | 查看次世代主权算力织网全景 HUD 实时状态 |
+| `cockpit lora` | 查看与测试端侧在线 LoRA 适配层热插拔 |
 | `cockpit ops` | 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate) |
 | `cockpit reject` | 拒绝决策 |
 | `cockpit stream` | 跨节点 Chunk-level 流式协同流水线基准 |

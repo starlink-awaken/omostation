@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-08-29
+---
 # resident retro 索引 (promote 自动生成)
 
 - generated_at: 2026-08-29T00:10:29Z

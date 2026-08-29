@@ -12,9 +12,9 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 629
-  bos_services: 271
+  bos_services: 275
   bos_domains: 21
-  cli_commands: 165
+  cli_commands: 169
   skills: 2
   workflows: 17
 mcp_servers:
@@ -874,7 +874,7 @@ bos_services:
     bcos: 3
     capability: 44
     cockpit: 2
-    compute: 12
+    compute: 16
     ecos: 10
     fabric: 1
     forge: 1
@@ -1355,6 +1355,22 @@ bos_services:
       status: active
     - uri: bos://compute/omlxc/swarm
       description: omlxc 分布式跨节点 KV 共享池与超长上下文置换服务 (ADR-0434)
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/hud
+      description: omlxc 主权算力织网全景 HUD 实时监控控制台 (ADR-0435)
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/heatmap
+      description: omlxc 分布式 KV 内存池热力图与投机蒸馏指标 (ADR-0435)
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/dma
+      description: omlxc 雷雳 5 跨物理机 P2P 零拷贝 DMA 通信总线服务 (ADR-0435)
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/lora
+      description: omlxc 端侧在线 LoRA 持续微调与毫秒级热插拔服务 (ADR-0435)
       transport: stdio
       status: active
     ecos:
@@ -2096,6 +2112,8 @@ cli_commands:
   description: DFlash 2 块扩散投机解码加速与集群基准
 - name: discover
   description: 发现可用功能和资源
+- name: dma
+  description: 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准
 - name: domain-status
   description: 显示 Documents 域项目绑定与引导状态
 - name: domains
@@ -2142,10 +2160,14 @@ cli_commands:
   description: 运行语义图谱分析
 - name: health
   description: 一键系统健康检查
+- name: heatmap
+  description: 查看分布式 KV 内存池热力分布与投机蒸馏指标
 - name: help
   description: 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务)
 - name: history
   description: 查看对话历史
+- name: hud
+  description: 查看次世代主权算力织网全景 HUD 实时状态
 - name: identity
   description: 导出身份封套 (IdentityEnvelope)
 - name: impact
@@ -2178,6 +2200,8 @@ cli_commands:
   description: 列债务项 (委派 omo debt)
 - name: logs
   description: 查看日志
+- name: lora
+  description: 查看与测试端侧在线 LoRA 适配层热插拔
 - name: mcp
   description: 启动 MCP server 或列出工具
 - name: memory
