@@ -301,7 +301,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
     spec_version: 1.0.0
-    content_digest: sha256:424bdbafb9c8ad05a0d23d6f2b877c88e82010790f0a52fe2db6c2a3bacc80d2
+    content_digest: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
     decision_ref: decision://accepted/BET-Y1Q3-T10-58
   depends_on:
   - BET-Y1Q3-T10-54
@@ -321,10 +321,10 @@ bets:
             sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
-            sha256: sha256:424bdbafb9c8ad05a0d23d6f2b877c88e82010790f0a52fe2db6c2a3bacc80d2
+            sha256: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
-            sha256: sha256:424bdbafb9c8ad05a0d23d6f2b877c88e82010790f0a52fe2db6c2a3bacc80d2
+            sha256: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
       operational:
         status: PROVEN
         evidence:
@@ -339,7 +339,7 @@ bets:
             sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
-            sha256: sha256:424bdbafb9c8ad05a0d23d6f2b877c88e82010790f0a52fe2db6c2a3bacc80d2
+            sha256: sha256:b09202709976e05ffba67cfa052b966d20d51484b38311d66d860271fa469390
       value:
         status: NOT_PROVEN
         evidence: {}
