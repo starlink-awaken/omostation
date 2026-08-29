@@ -11,7 +11,7 @@ related:
 schema: scene-card/v2
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
-lifecycle: shadow
+lifecycle: assisted
 activation: preview
 approval_state: confirmed
 scene_id: project-supervision
