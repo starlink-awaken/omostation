@@ -1,28 +1,24 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-doc-change
-generated_at: 2026-08-28T09:50:00Z
+generated_at: 2026-08-29T00:10:29Z
 status: candidate
 counts:
-  runs: 24
+  runs: 25
   failures: 14
-  total: 38
-failure_rate: 0.3684
+  total: 39
+failure_rate: 0.359
 failure_breakdown:
   by_event_type:
     StepFailed: 14
   trace_count: 14
-title: project-doc-change 运行复盘聚合 (resident 事件驱动)
-lifecycle: history
-owner: laowang-agent
-last-reviewed: 2026-08-28
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-28T09:50:00Z
+- generated_at: 2026-08-29T00:10:29Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 24 成功运行 + 14 失败模式 = 38 草稿
-- 失败率: 36.84%
+- sediment 覆盖: 25 成功运行 + 14 失败模式 = 39 草稿
+- 失败率: 35.90%
 
 ## 成功运行 (runs/)
 
@@ -50,6 +46,7 @@ last-reviewed: 2026-08-28
 - 20260824T013845Z-project-doc-change-3a0ec522.md
 - 20260824T075257Z-project-doc-change-ee42e0c7.md
 - 20260825T132256Z-project-doc-change-e2914012.md
+- 20260828T115730Z-project-doc-change-08be17ff.md
 
 ## 失败模式 (failures/)
 
@@ -248,6 +245,13 @@ last-reviewed: 2026-08-28
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=3
   - 指标: event_count=6, duration_s=1588.98
+- **20260828T115730Z-project-doc-change-08be17ff**
+  - 计划 (objective): [BET-Y1Q3-T10-23] Documents 宿主消费者审计与切换硬门 (Appetite: 1 day)
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=4483.473
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
