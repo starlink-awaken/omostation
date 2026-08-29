@@ -257,13 +257,88 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-55
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Historical completion receipt digest re-attestation
+  appetite: 0.5 day
+  priority: P0
+  status: done
+  done_at: 2026-08-29
+  done_at: 2026-08-29
+  goal: Reconcile stale file receipt digests in twelve historical completion matrices without changing their scope or verdicts.
+  non_goals:
+  - No T1-12 edits or principal-bound evidence changes.
+  - No implementation, runtime, host, registry, or scheduler mutation.
+  done_when:
+  - The twelve audited historical BETs have current matching receipt digests.
+  - Derived overall states are valid after digest reconciliation.
+  - T1-12 remains the only unaddressed current schema error.
+  verify:
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: no digest or overall-state error for T6-14, T10-01..10, and T10-12
+  workflow: project-doc-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md
+  - docs/reports/2026-08-29-historical-receipt-digest-audit.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-55.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:eb3ce73ee98586731f9ac979542d3f36d56b10278f4dba0159f00f5eb3fb4507
+    decision_ref: decision://accepted/BET-Y1Q3-T10-55
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any T1-12, verdict, implementation, or runtime mutation stops this repair.
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@fb410d52cac199676285b7c363e085689af8cd59
+          tests:
+            ref: receipt://docs/reports/2026-08-29-historical-receipt-digest-audit.md
+            sha256: sha256:2ed7962a182b4896fee9509956bacf343ac782ebeec122c05ba7381ddc12f71d
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md
+            sha256: sha256:eb3ce73ee98586731f9ac979542d3f36d56b10278f4dba0159f00f5eb3fb4507
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md
+            sha256: sha256:eb3ce73ee98586731f9ac979542d3f36d56b10278f4dba0159f00f5eb3fb4507
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-historical-receipt-digest-audit.md
+            sha256: sha256:2ed7962a182b4896fee9509956bacf343ac782ebeec122c05ba7381ddc12f71d
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-historical-receipt-digest-audit.md
+            sha256: sha256:2ed7962a182b4896fee9509956bacf343ac782ebeec122c05ba7381ddc12f71d
+          replay:
+            ref: receipt://docs/reports/2026-08-29-historical-receipt-digest-audit.md
+            sha256: sha256:2ed7962a182b4896fee9509956bacf343ac782ebeec122c05ba7381ddc12f71d
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md
+            sha256: sha256:eb3ce73ee98586731f9ac979542d3f36d56b10278f4dba0159f00f5eb3fb4507
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-54
   track: T10-MATURITY
   window: Y1Q3
   title: OMO extracted-validator UTC helper export repair
   appetite: 0.5 day
   priority: P0
-  status: pending
   goal: Restore the canonical UTC helper export required by extracted OMO consumer modules so the latest OMO main passes collection.
   non_goals:
   - No second timestamp authority or new utility layer.
@@ -8103,7 +8178,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T6-14-accept.yaml
             sha256: sha256:31aedebc289dcf38f88bd2ad473399d631af110bf89ba13a1ca8d516d05a714d
@@ -8314,7 +8389,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-01-accept.yaml
             sha256: sha256:d7406fd12f7745dbd16a6bbec270247bbcb295595bae600d9946aca5baa10ea0
@@ -10428,7 +10503,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-02-accept.yaml
             sha256: sha256:71a8b1ba07cdf8fd8d814e0f9ebf1fcdd1fe99d1a2ee8eb03e7f3582a03888ac
@@ -10502,22 +10577,22 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           rollback:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
       operational:
         status: PROVEN
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-03-accept.yaml
             sha256: sha256:ee49d84653365926a721b793add77e977c742f4b73c6252c392e807c5c3b238b
           live_canary:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -10532,7 +10607,7 @@ bets:
             sha256: sha256:ee49d84653365926a721b793add77e977c742f4b73c6252c392e807c5c3b238b
           real_signal:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-03.md
             sha256: sha256:33836ee1c4626ae2734a625606cc1d4754d6938c341cc24e019dd231376aacad
@@ -10586,22 +10661,22 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           rollback:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
       operational:
         status: PROVEN
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-04-accept.yaml
             sha256: sha256:67703b87331dc9d1ef857c8b61ffb22487b886449a282d9b61ae05058272aaa0
           live_canary:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -10616,7 +10691,7 @@ bets:
             sha256: sha256:67703b87331dc9d1ef857c8b61ffb22487b886449a282d9b61ae05058272aaa0
           real_signal:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-04.md
             sha256: sha256:afbfe0a86070b96a7d42b4e0cdf22c01adc46cf8327190a5ec8799b2059a93e2
@@ -10677,7 +10752,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-05-accept.yaml
             sha256: sha256:faa91257068806752d05dcb7e28027586c874afe3acbefc3f5725c3e8a78f0d5
@@ -10759,7 +10834,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-06-accept.yaml
             sha256: sha256:d31515c10b63fefdfae26715cb5bd0fcd0766555bb8287636679dcdc474b05ec
@@ -10846,7 +10921,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-07-accept.yaml
             sha256: sha256:f04ef221667cd7f50b12ebbcdd393456be586f970f0efb8ec9fa9de396d3f81a
@@ -10929,7 +11004,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-08-accept.yaml
             sha256: sha256:2a2e6ba8c1fa4687278c8d9fb2b9970c8621ceb30aebb0291e602c2557c982e4
@@ -11012,7 +11087,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-09-accept.yaml
             sha256: sha256:b3d6ca192df680c55b703da6b8e2fd58a29379a06acbcbb25bd3878670871381
@@ -11096,7 +11171,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-10-accept.yaml
             sha256: sha256:337a8e2702de957e5070a9b09a5abd35778a70a024d2bb1e618a14ac36bb0f42
@@ -11276,7 +11351,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:61b4770db7657b26b45e1cba9cc2c3de1d24f6b31150c94337b2938c201dae1b
+            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-12-accept.yaml
             sha256: sha256:903bcf976f737ad482b473b0e5dceb513bfb0aeddac1169d0b82e593abe9df0b
