@@ -257,6 +257,90 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-90
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Reconcile task state projection after planned-task reappearance
+  appetite: 0.25 day
+  priority: P0
+  status: done
+  done_at: 2026-08-29
+  goal: Reconcile the Workspace task-state projection with the tracked task directories through the OMO state-sync broker after a planned task reappeared on main.
+  non_goals:
+  - No task content, ledger semantics, Documents content, runtime payload, client state, or submodule pointer mutation.
+  - No direct manual write to .omo/state or .omo/tasks/registry/INDEX.md.
+  done_when:
+  - The broker dry-run identifies projection drift from the task directories.
+  - OMO sync-tasks refreshes the task counts and planned-task index through its registered writer.
+  - current-state-coherence returns ok after the projection refresh.
+  - The change is limited to broker-owned state projections and its evidence chain.
+  verify:
+  - cmd: uv run --project projects/omo omo state sync-tasks --dry-run
+    expect: exit 0 and preview only task-projection changes
+  - cmd: python3 bin/ssot/current-state-coherence.py
+    expect: exit 0 with state/goals/tasks aligned
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  workflow: state-sync
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/state/system.yaml
+  - .omo/tasks/registry/INDEX.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md
+  - docs/reports/2026-08-30-task-state-projection-reconciliation.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-90.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-90-state-sync-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:6bb923372637bd6d9cafb7de820fdc47a9843905ec751cdd35259304e4d47239
+    decision_ref: decision://accepted/BET-Y1Q3-T10-90
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@82ff021ba78b152859bdfb010ac8b6ab90daa99f
+          tests:
+            ref: receipt://docs/reports/2026-08-30-task-state-projection-reconciliation.md
+            sha256: sha256:696d239d4f9e389e8356c7989914e1195459afcd9dd71fc767ca5b59e69acebe
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md
+            sha256: sha256:6bb923372637bd6d9cafb7de820fdc47a9843905ec751cdd35259304e4d47239
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md
+            sha256: sha256:6bb923372637bd6d9cafb7de820fdc47a9843905ec751cdd35259304e4d47239
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-task-state-projection-reconciliation.md
+            sha256: sha256:696d239d4f9e389e8356c7989914e1195459afcd9dd71fc767ca5b59e69acebe
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-task-state-projection-reconciliation.md
+            sha256: sha256:696d239d4f9e389e8356c7989914e1195459afcd9dd71fc767ca5b59e69acebe
+          replay:
+            ref: receipt://docs/reports/2026-08-30-task-state-projection-reconciliation.md
+            sha256: sha256:696d239d4f9e389e8356c7989914e1195459afcd9dd71fc767ca5b59e69acebe
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md
+            sha256: sha256:6bb923372637bd6d9cafb7de820fdc47a9843905ec751cdd35259304e4d47239
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T10-89
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any task content change, non-broker state write, unexpected projection surface, or coherence failure stops the sync.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-89
   track: T10-MATURITY
   window: Y1Q3
