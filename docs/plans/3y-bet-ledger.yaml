@@ -311,7 +311,8 @@ bets:
   title: 'Service Gateway uv directory command repair'
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   goal: '修复 Service Gateway 对目录型 uv entrypoint 的命令编译，确保 canonical mcp.agora 命令可执行。'
   non_goals:
   - 不写入、加载、卸载或修改宿主 plist、launchd 状态或服务进程
@@ -350,6 +351,43 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 'Any host plist/process mutation, service semantic change, or new control-plane surface stops this BET.'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@694b999832a5549b71af5e7f82714408281dbdbd
+          tests:
+            ref: receipt://tests/test_ops_cli.py
+            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md
+            sha256: sha256:eb0cdaf1e8d823a4efd350a13cfb89c707afbffcbaf2834b2e12afb9efec6922
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md
+            sha256: sha256:eb0cdaf1e8d823a4efd350a13cfb89c707afbffcbaf2834b2e12afb9efec6922
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
+          fresh_receipt:
+            ref: receipt://tests/test_ops_cli.py
+            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+          replay:
+            ref: receipt://tests/test_ops_cli.py
+            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md
+            sha256: sha256:eb0cdaf1e8d823a4efd350a13cfb89c707afbffcbaf2834b2e12afb9efec6922
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 - id: BET-Y1Q3-T10-50
   track: T10-MATURITY
