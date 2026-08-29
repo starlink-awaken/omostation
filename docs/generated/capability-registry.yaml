@@ -12,9 +12,9 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 629
-  bos_services: 262
+  bos_services: 268
   bos_domains: 21
-  cli_commands: 155
+  cli_commands: 163
   skills: 2
   workflows: 17
 mcp_servers:
@@ -874,7 +874,7 @@ bos_services:
     bcos: 3
     capability: 44
     cockpit: 2
-    compute: 3
+    compute: 9
     ecos: 10
     fabric: 1
     forge: 1
@@ -1319,6 +1319,30 @@ bos_services:
       status: active
     - uri: bos://compute/aetherforge/swarm
       description: AetherForge 多智能体群体算力与复杂决策任务并发编排引擎
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/fabric
+      description: omlxc 异构算力织网、温控、显存预算与分层缓存状态
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/triage
+      description: omlxc 意图复杂度分诊 (FAST / STANDARD / REASONING)
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/vram
+      description: omlxc 动态 KV Cache 显存预算评估与 75% 阶梯准入
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/cache
+      description: omlxc Radix 动态前缀树与三级分层缓存指标与压测
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/dflash
+      description: omlxc DFlash 2 块扩散投机解码加速与集群分工
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/cluster
+      description: omlxc 异构三节点智能调度、心跳与故障自愈拓扑
       transport: stdio
       status: active
     ecos:
@@ -1962,6 +1986,8 @@ bos_services:
 cli_commands:
 - name: ack
   description: 确认任务完成
+- name: add
+  description: 手动添加决策项
 - name: agent
   description: 🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout)
 - name: agent-onboard
@@ -1976,6 +2002,8 @@ cli_commands:
   description: 运行全部分析工具
 - name: api
   description: 启动 API server
+- name: approve
+  description: 批准决策
 - name: archive
   description: 归档已处理完毕的 Inbox 待办文件
 - name: ask
@@ -2004,6 +2032,8 @@ cli_commands:
   description: Omni-Bus 三平面入口
 - name: c2g
   description: 🎯 C2G 战略罗盘 (status/pipeline)
+- name: cache
+  description: 检查三级分层缓存与 Radix 前缀树状态 (含基准压测)
 - name: capability
   description: BOS capability 域 / toolbox 外部能力
 - name: cards
@@ -2018,8 +2048,12 @@ cli_commands:
   description: 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml
 - name: client
   description: 以 REPL 模式连接到 MCP server
+- name: cluster
+  description: 异构三节点智能路由与拓扑诊断
 - name: code
   description: 代码库分析与审查 (基于 codeanalyze)
+- name: compact
+  description: 上下文滑动蒸馏与双区自适应量化压缩模拟
 - name: compass
   description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
 - name: compute
@@ -2042,8 +2076,12 @@ cli_commands:
   description: 数据目录索引 / 类型注册 / TTL 清理
 - name: debt
   description: 债务评分 (omo-debt Pattern 09 v2.1)
+- name: decide
+  description: 📬 决策收件箱 (列出/添加/批准/拒绝)
 - name: demo
   description: 快速演示
+- name: dflash
+  description: DFlash 2 块扩散投机解码加速与集群基准
 - name: discover
   description: 发现可用功能和资源
 - name: domain-status
@@ -2192,6 +2230,8 @@ cli_commands:
   description: 意图路由召回（neo4j/temporal 支持 --as-of）
 - name: register
   description: 注册 BOS 服务
+- name: reject
+  description: 拒绝决策
 - name: reload
   description: 重载 BOS 配置/M1
 - name: remember

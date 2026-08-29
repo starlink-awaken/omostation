@@ -54,8 +54,33 @@ def _load_registry(path: Path) -> tuple[dict[str, Any] | None, list[str]]:
     return raw, []
 
 
+def _workspace_root(registry_path: Path) -> Path:
+    resolved = registry_path.resolve()
+    for parent in (resolved.parent, *resolved.parents):
+        if (parent / ".git").exists() and (parent / "docs").is_dir():
+            return parent
+    return resolved.parent
+
+
+def _rollback_receipt_error(registry_path: Path, family: dict[str, Any]) -> str | None:
+    evidence = family.get("evidence")
+    if not isinstance(evidence, dict) or not _EVIDENCE_FIELDS.issubset(evidence):
+        return None
+    reference = evidence.get("rollback_ref")
+    if not isinstance(reference, str) or not reference.strip():
+        return f"family {family.get('id')} rollback receipt reference is empty"
+    candidate = Path(reference).expanduser()
+    if not candidate.is_absolute():
+        candidate = _workspace_root(registry_path) / candidate
+    if not candidate.is_file() or candidate.is_symlink():
+        return f"family {family.get('id')} rollback receipt does not resolve to a regular file: {reference}"
+    return None
+
+
 def _validate_registry(
     raw: dict[str, Any],
+    *,
+    registry_path: Path | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, str]], list[str]]:
     errors: list[str] = []
     if raw.get("apiVersion") != "workspace.omostation/v1":
@@ -118,6 +143,10 @@ def _validate_registry(
             )
             if not evidence_complete:
                 errors.append(f"{prefix} terminal status requires evidence: {', '.join(sorted(_EVIDENCE_FIELDS))}")
+            elif registry_path is not None:
+                rollback_error = _rollback_receipt_error(registry_path, item)
+                if rollback_error:
+                    errors.append(rollback_error)
         families.append(item)
 
     if len(ids) != len(set(ids)):
@@ -231,7 +260,7 @@ def check_migrations(
             "non_terminal_families": [],
             "errors": errors,
         }
-    families, samples, validation_errors = _validate_registry(raw)
+    families, samples, validation_errors = _validate_registry(raw, registry_path=registry_path)
     errors.extend(validation_errors)
 
     sample_candidates = [{"relative_path": sample["relative_path"], "kind": sample["kind"]} for sample in samples]

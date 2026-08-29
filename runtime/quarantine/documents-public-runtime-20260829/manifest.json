@@ -1,0 +1,501 @@
+{
+  "completed_at": "2026-08-29T14:15:00Z",
+  "consumer_summary": {
+    "active": 191,
+    "content_references": 179,
+    "families": {
+      "cockpit-runtime": 18,
+      "family-dashboard-app": 35,
+      "learning-content-archives": 9,
+      "learning-runtime": 1,
+      "public-runtime": 105,
+      "root-oneoff-assets": 8,
+      "work-runtime": 3
+    },
+    "forbidden_executors": 0,
+    "gateway_instructions": 179,
+    "total": 191,
+    "unmatched": 0,
+    "workspace_read_owners": 12
+  },
+  "documents_root": "/Users/xiamingxing/Documents",
+  "files": [
+    {
+      "bytes": 2378,
+      "mode": 420,
+      "relative_path": "_runtime/2026-08-02-async-audit-心跳补丁.sh",
+      "sha256": "d7309df7c52f1d3a749e1b885bc32058f3ed0e62f87afc2f6d3c2fadc8c8da38",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/2026-08-02-async-audit-心跳补丁.sh",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/2026-08-02-async-audit-心跳补丁.sh"
+    },
+    {
+      "bytes": 1803,
+      "mode": 420,
+      "relative_path": "_runtime/2026-08-02-crontab-降频.sh",
+      "sha256": "7bffaf5960a72590032ea42251991c3faf6c4b3805abf54c9c307aef0af1c6c9",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/2026-08-02-crontab-降频.sh",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/2026-08-02-crontab-降频.sh"
+    },
+    {
+      "bytes": 3656,
+      "mode": 420,
+      "relative_path": "_runtime/2026-08-02-定时任务清理.sh",
+      "sha256": "ed32414ca958b94b56f17b155e98b51de0b9659085f6a7ec8f9ca9e7dfbce8b5",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/2026-08-02-定时任务清理.sh",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/2026-08-02-定时任务清理.sh"
+    },
+    {
+      "bytes": 3967,
+      "mode": 420,
+      "relative_path": "_runtime/2026-08-02-异步任务对账修复.sh",
+      "sha256": "eab50e8708e6cb981a47390d01b7c2a457f79b94c83320000446f309de885998",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/2026-08-02-异步任务对账修复.sh",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/2026-08-02-异步任务对账修复.sh"
+    },
+    {
+      "bytes": 3057,
+      "mode": 420,
+      "relative_path": "_runtime/2026-08-02-文档治理.sh",
+      "sha256": "e02af0cafa03f5b2453fa49aaecdca960a17511b4b3ef3ff2cf9ee3cf6c188f3",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/2026-08-02-文档治理.sh",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/2026-08-02-文档治理.sh"
+    },
+    {
+      "bytes": 3484,
+      "mode": 493,
+      "relative_path": "_runtime/C2G-writeback.py",
+      "sha256": "d5c682be203c1c28792619bee99faecf1db9e760669a535fe9852c9705ff1b63",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/C2G-writeback.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/C2G-writeback.py"
+    },
+    {
+      "bytes": 5642,
+      "mode": 493,
+      "relative_path": "_runtime/M-η-audit.py",
+      "sha256": "3632dfe93a6e3d4ab9982566d1d45d5ec76ab45a4da17f6f64409ca79a824762",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/M-η-audit.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/M-η-audit.py"
+    },
+    {
+      "bytes": 5188,
+      "mode": 493,
+      "relative_path": "_runtime/M-θ-audit.py",
+      "sha256": "e4205cb74df53692adabfc3d5e1c28479ca683366db08e7bfaf20d53bd1ef8fe",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/M-θ-audit.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/M-θ-audit.py"
+    },
+    {
+      "bytes": 4044,
+      "mode": 420,
+      "relative_path": "_runtime/apple-mail-ingest.py",
+      "sha256": "f62be64a307a9680e2f06d3a3014ce802632adfb8d4aecc976fd8cea15bcfa4c",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/apple-mail-ingest.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/apple-mail-ingest.py"
+    },
+    {
+      "bytes": 11832,
+      "mode": 420,
+      "relative_path": "_runtime/async-audit.py",
+      "sha256": "5798cd1c5f791bf6450a601592ec215b45468fbd9b231d25d7d424069469bdb1",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/async-audit.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/async-audit.py"
+    },
+    {
+      "bytes": 10215,
+      "mode": 420,
+      "relative_path": "_runtime/bootstrap-domain.py",
+      "sha256": "4e7b6c27f63d10b4a0ac206989e6a7ed4e1bb8036f9d9310f0c0f7c5f4f918fa",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/bootstrap-domain.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/bootstrap-domain.py"
+    },
+    {
+      "bytes": 7483,
+      "mode": 420,
+      "relative_path": "_runtime/bridge-refresh.py",
+      "sha256": "211c73f744a85a2cf6a0f1c1de46517ce96d84ecda9dc23847b01cddfa4dbe65",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/bridge-refresh.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/bridge-refresh.py"
+    },
+    {
+      "bytes": 29636,
+      "mode": 420,
+      "relative_path": "_runtime/check-convergence.py",
+      "sha256": "d1aa77da2fd24adba769567ec107b7b79157bbb821633a9ac3e1ab25970205ad",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/check-convergence.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/check-convergence.py"
+    },
+    {
+      "bytes": 1414,
+      "mode": 457,
+      "relative_path": "_runtime/check-kems-update.py",
+      "sha256": "d824b36907a55462aa7d1fe862e987679b992421f0851b23df5784c61b237f2f",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/check-kems-update.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/check-kems-update.py"
+    },
+    {
+      "bytes": 9856,
+      "mode": 420,
+      "relative_path": "_runtime/claim-audit.py",
+      "sha256": "644defb8dc1a8c99d13f6a4c524ac9a0633b407cfb0eb439cb0da82d5b719bf3",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/claim-audit.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/claim-audit.py"
+    },
+    {
+      "bytes": 3479,
+      "mode": 420,
+      "relative_path": "_runtime/claude-registry-sync.py",
+      "sha256": "afd04f09743c292efa85bc6380e01801fde525da31fad60d2e928fc0eb5b05c0",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/claude-registry-sync.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/claude-registry-sync.py"
+    },
+    {
+      "bytes": 9529,
+      "mode": 420,
+      "relative_path": "_runtime/control-plane-freshness-audit.py",
+      "sha256": "9245896ef9b0924204d5f68ae438a97c92770cc6177ecd200d256f8dc7c2b22e",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/control-plane-freshness-audit.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/control-plane-freshness-audit.py"
+    },
+    {
+      "bytes": 2506,
+      "mode": 420,
+      "relative_path": "_runtime/deploy-scripts.sh",
+      "sha256": "8d5c1a4325be35e0cd6d6c4c56fb5f686813359ddf451dbbe0d6333916cc8033",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/deploy-scripts.sh",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/deploy-scripts.sh"
+    },
+    {
+      "bytes": 2341,
+      "mode": 420,
+      "relative_path": "_runtime/domain-protocol-translator.py",
+      "sha256": "e2bd6d07d743e350b5ea76c31c336701a2be1167f2da065718433d81b9071f4b",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/domain-protocol-translator.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/domain-protocol-translator.py"
+    },
+    {
+      "bytes": 4289,
+      "mode": 420,
+      "relative_path": "_runtime/domain-sync.py",
+      "sha256": "0c500b8b81cd14ea9fcee11e3ab2e23562f00f296d02c4e146025bb9d21e379b",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/domain-sync.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/domain-sync.py"
+    },
+    {
+      "bytes": 10386,
+      "mode": 420,
+      "relative_path": "_runtime/health-dashboard.py",
+      "sha256": "a9f2fdf90269b4ed644e0fc4447def91c723e892685e5954569be5d99ca48946",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/health-dashboard.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/health-dashboard.py"
+    },
+    {
+      "bytes": 3967,
+      "mode": 420,
+      "relative_path": "_runtime/kairon-entity-ingest.py",
+      "sha256": "931cc405a6c08449a5fbc74f78b5fad7a7fa028c259257b8ced559baa7c3ede3",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kairon-entity-ingest.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kairon-entity-ingest.py"
+    },
+    {
+      "bytes": 7943,
+      "mode": 384,
+      "relative_path": "_runtime/kems-toolkit.py",
+      "sha256": "d22d4f8d91e01c9a05cd530271a1faf7e8de41869a61a119f3fccebfb926d805",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-toolkit.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-toolkit.py"
+    },
+    {
+      "bytes": 6130,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/check-critical-path.py",
+      "sha256": "d3a63074cbfd3287a00f916d2a4367f8e9c88ee47b7b58844b30ec1bd9fe7f28",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/check-critical-path.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/check-critical-path.py"
+    },
+    {
+      "bytes": 4741,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/check-model-conformance.py",
+      "sha256": "ccced078191f2c5806653a48259345caed7ecb855bb725c1761d42746f4834d6",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/check-model-conformance.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/check-model-conformance.py"
+    },
+    {
+      "bytes": 13986,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/check-ontology-consistency.py",
+      "sha256": "af68b3c68b03bdcc84e9e07723888c9a16ce260e9c26ebbbbd93800f4a02edd5",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/check-ontology-consistency.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/check-ontology-consistency.py"
+    },
+    {
+      "bytes": 5542,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/check-ssot-sync.py",
+      "sha256": "45a47cf222ea5c9f596df2ebf25360f701a784f6b3d5f2b6b5e11ca13549f298",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/check-ssot-sync.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/check-ssot-sync.py"
+    },
+    {
+      "bytes": 4772,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/gen-report-view.py",
+      "sha256": "2e04cddab5a571ae709f2d3fc45771bc93b3401a8e7e322f9ab68f536857f55d",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/gen-report-view.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/gen-report-view.py"
+    },
+    {
+      "bytes": 4221,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/graph-query.py",
+      "sha256": "c3176de44d146b37cd25cbc0f4afa1cb00335c6911228ce77d3df83c3bf018f4",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/graph-query.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/graph-query.py"
+    },
+    {
+      "bytes": 4753,
+      "mode": 420,
+      "relative_path": "_runtime/kems-v2/kems-cross-check.py",
+      "sha256": "c7ed8f3ecfe9646fd8cb46dcd5ccf9f00a6262e7f911c758a5269fd9e1921db8",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/kems-cross-check.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/kems-cross-check.py"
+    },
+    {
+      "bytes": 9362,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/kems-init.py",
+      "sha256": "baa45d1f90f5bfa2f69bb841bf41657e943a645a5408d1ad509618e4111bab66",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/kems-init.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/kems-init.py"
+    },
+    {
+      "bytes": 5373,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/kems-snapshot.py",
+      "sha256": "c74b6a52d8e94480a35e0cb41077533955288f2e57c10ab13f117cf45dc5b9e6",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/kems-snapshot.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/kems-snapshot.py"
+    },
+    {
+      "bytes": 8080,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/kems-toolkit.py",
+      "sha256": "0e2dd8ee6d633e433ffdef1330195232529c43f73ae12fc2d2bc1d8efee26e4e",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/kems-toolkit.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/kems-toolkit.py"
+    },
+    {
+      "bytes": 6971,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/model-ask.py",
+      "sha256": "7db5cc23121e6ab358e0d76c702a0265edc916e5249ade72420b419f9a55d753",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/model-ask.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/model-ask.py"
+    },
+    {
+      "bytes": 6417,
+      "mode": 384,
+      "relative_path": "_runtime/kems-v2/refresh-indexes.py",
+      "sha256": "a3afda3b0956c31d267c3db245004636bacde774fddda57cca75c2fa8040597d",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/kems-v2/refresh-indexes.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/kems-v2/refresh-indexes.py"
+    },
+    {
+      "bytes": 2435,
+      "mode": 420,
+      "relative_path": "_runtime/mesh-dynamic-dispatcher.py",
+      "sha256": "1aae2ab9bbb128c7a3123eb262defb155b407de75a3d0599258b4109981ad2b8",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/mesh-dynamic-dispatcher.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/mesh-dynamic-dispatcher.py"
+    },
+    {
+      "bytes": 11539,
+      "mode": 420,
+      "relative_path": "_runtime/meta-model-audit.py",
+      "sha256": "be418ee88da16d75c2bcffaf40db3431d2e2799fb3991f503b5d78e56c249cb7",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/meta-model-audit.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/meta-model-audit.py"
+    },
+    {
+      "bytes": 6409,
+      "mode": 420,
+      "relative_path": "_runtime/migrate-cards-enum.py",
+      "sha256": "cd2db8cee048a663aaaf214a04d063bb1ea68783dedec202946cde23727b330e",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/migrate-cards-enum.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/migrate-cards-enum.py"
+    },
+    {
+      "bytes": 7789,
+      "mode": 420,
+      "relative_path": "_runtime/mof-seed.py",
+      "sha256": "889213e034ce54f4ec101b9a6b35facc4b8de854600be43c455194ae4cca0047",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/mof-seed.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/mof-seed.py"
+    },
+    {
+      "bytes": 4322,
+      "mode": 420,
+      "relative_path": "_runtime/netease-mailmaster-ingest.py",
+      "sha256": "a1802a04bda2164c75582b1169dcca3738d7168451340f03d641ed43330483b3",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/netease-mailmaster-ingest.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/netease-mailmaster-ingest.py"
+    },
+    {
+      "bytes": 2806,
+      "mode": 420,
+      "relative_path": "_runtime/notify-push-bridge.py",
+      "sha256": "aa6e4fa0d2360e9d4102a42d6ee012174df1cd82b42d873c5a4d5e2c6497bf2e",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/notify-push-bridge.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/notify-push-bridge.py"
+    },
+    {
+      "bytes": 3382,
+      "mode": 420,
+      "relative_path": "_runtime/omlxc-embedding-bridge.py",
+      "sha256": "d98d99729c6c8fb313d19ba0aeb48f05b997b609d6687c869d391cf0afaf4329",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/omlxc-embedding-bridge.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/omlxc-embedding-bridge.py"
+    },
+    {
+      "bytes": 1925,
+      "mode": 420,
+      "relative_path": "_runtime/opc-product-pipeline.py",
+      "sha256": "aaf03ea99ca37991a27710aa92e5ee55cdb54f89faeb469fa1bf56e3a75ddaaa",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/opc-product-pipeline.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/opc-product-pipeline.py"
+    },
+    {
+      "bytes": 6065,
+      "mode": 493,
+      "relative_path": "_runtime/pre-scan.sh",
+      "sha256": "80a07595eb750e743ea64b3c1e435a04422317482225e36f6f2a41a86717b2f6",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/pre-scan.sh",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/pre-scan.sh"
+    },
+    {
+      "bytes": 4660,
+      "mode": 420,
+      "relative_path": "_runtime/prefix-clean.py",
+      "sha256": "26399fadcd9fee6fd16de9413835a135417ec5bd00a4e199a55b7c7a7d4cec88",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/prefix-clean.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/prefix-clean.py"
+    },
+    {
+      "bytes": 3824,
+      "mode": 420,
+      "relative_path": "_runtime/principle-reality.py",
+      "sha256": "5cc089444022006d96f9036e53a6bdde1e9aa8bb199155f396868fbe31c5f721",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/principle-reality.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/principle-reality.py"
+    },
+    {
+      "bytes": 2793,
+      "mode": 420,
+      "relative_path": "_runtime/private-data-ingest.py",
+      "sha256": "92d17f1df79abf6fdc38ba946121f64ac4d26ff3278ab072aa192ebb38ffd9cd",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/private-data-ingest.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/private-data-ingest.py"
+    },
+    {
+      "bytes": 9619,
+      "mode": 493,
+      "relative_path": "_runtime/reachbridge-enterprise-gateway.py",
+      "sha256": "9cf5359f03707164b50bdee9d6a5538207648ef646839952d608ac5124586214",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/reachbridge-enterprise-gateway.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/reachbridge-enterprise-gateway.py"
+    },
+    {
+      "bytes": 5949,
+      "mode": 420,
+      "relative_path": "_runtime/seeyon-auto-login-fetch.py",
+      "sha256": "d3402ed0678e6579adfb7d786334b25430bf94d40a5a5b67d7800d53ba8e5db4",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/seeyon-auto-login-fetch.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/seeyon-auto-login-fetch.py"
+    },
+    {
+      "bytes": 4582,
+      "mode": 420,
+      "relative_path": "_runtime/seeyon-oa-cdp-ingest.py",
+      "sha256": "284e97b7a9fb59ca239474e38aebf9e2bfead4edfaee9a7cde63e8c56c64a2cd",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/seeyon-oa-cdp-ingest.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/seeyon-oa-cdp-ingest.py"
+    },
+    {
+      "bytes": 5663,
+      "mode": 420,
+      "relative_path": "_runtime/session-brief.py",
+      "sha256": "3742cb4f0e8be5faa02ec7bb3e49ed3c9c43d39c3517f857f0f960678cc185f5",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/session-brief.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/session-brief.py"
+    },
+    {
+      "bytes": 1333,
+      "mode": 493,
+      "relative_path": "_runtime/shareddisk-cleanup.sh",
+      "sha256": "3cb4486c4b447dab3debe7ffc16f682ae5c8881e5d58d93ee364e741526922ef",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/shareddisk-cleanup.sh",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/shareddisk-cleanup.sh"
+    },
+    {
+      "bytes": 4339,
+      "mode": 420,
+      "relative_path": "_runtime/signals-rotate.py",
+      "sha256": "d203053e90fd8e736ea259d71575f48fa9d114e93ab9a487cf613ea2a17bd65c",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/signals-rotate.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/signals-rotate.py"
+    },
+    {
+      "bytes": 10466,
+      "mode": 420,
+      "relative_path": "_runtime/state-substance-audit.py",
+      "sha256": "eaa785c0cf86d52d1fa25914a38c60ec2454ba7ed805cddaa66192ff57ec26ca",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/state-substance-audit.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/state-substance-audit.py"
+    },
+    {
+      "bytes": 7742,
+      "mode": 420,
+      "relative_path": "_runtime/universal-private-ingest.py",
+      "sha256": "1ab37b3c3b4e1170bbcd49b6f77e9d066d70ec083058e47fd277d99b83164500",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/universal-private-ingest.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/universal-private-ingest.py"
+    },
+    {
+      "bytes": 3573,
+      "mode": 420,
+      "relative_path": "_runtime/version-sync.py",
+      "sha256": "9b9a5079702523d5c1ee2166e94deb89fc4f5f6a7d3130fe70f90dde0f16c05a",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/version-sync.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/version-sync.py"
+    },
+    {
+      "bytes": 3455,
+      "mode": 420,
+      "relative_path": "_runtime/watch-dispatch.py",
+      "sha256": "343460b53f368e880d736200dc097e31eb79db166272db2144dd1ef0ade710b6",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/watch-dispatch.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/watch-dispatch.py"
+    },
+    {
+      "bytes": 3104,
+      "mode": 420,
+      "relative_path": "_runtime/weekly-verdict-generator.py",
+      "sha256": "d92570e4094e921ac85f04cda199cfcc8362d43ba9e9090ed53d52c6963016d1",
+      "source": "/Users/xiamingxing/Documents/@公共/_runtime/weekly-verdict-generator.py",
+      "target": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829/_runtime/weekly-verdict-generator.py"
+    }
+  ],
+  "permanent_deletion": false,
+  "planned_at": "2026-08-29T14:15:00Z",
+  "rollback": "Move each manifest target back to its recorded source path after rechecking target hashes and source absence.",
+  "schema": "documents-runtime-quarantine/v1",
+  "source_fingerprint": "sha256:ef9a8195ad2c4994842ff918cbadebd2e84301d591836a3887f9a2a48cefc76c",
+  "source_root": "/Users/xiamingxing/Documents/@公共",
+  "status": "completed",
+  "summary": {
+    "bytes": 346217,
+    "files": 58
+  },
+  "target_fingerprint": "sha256:ef9a8195ad2c4994842ff918cbadebd2e84301d591836a3887f9a2a48cefc76c",
+  "target_root": "/Users/xiamingxing/Workspace/runtime/quarantine/documents-public-runtime-20260829"
+}

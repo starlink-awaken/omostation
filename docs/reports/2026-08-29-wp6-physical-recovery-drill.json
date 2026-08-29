@@ -1,0 +1,13 @@
+{
+  "drill_id": "physical-recovery-1788007018",
+  "source_digest": "sha256:def06ad04c8868ae6c84e5998676bf8d63044c1dfa40278b0388beb03d72e233",
+  "backup_digest": "sha256:def06ad04c8868ae6c84e5998676bf8d63044c1dfa40278b0388beb03d72e233",
+  "restored_digest": "sha256:def06ad04c8868ae6c84e5998676bf8d63044c1dfa40278b0388beb03d72e233",
+  "replay_digest": "sha256:5f52b007b774f10dc237a905f25367e7387cccd85867ef14857b9a755bf4c8d3",
+  "isolated_target": "/private/tmp/wp6-drill-live-b3/restore",
+  "executed": true,
+  "integrity_ok": true,
+  "human_confirmed": true,
+  "started_at": "2026-08-29T12:36:58Z",
+  "completed_at": "2026-08-29T12:36:58Z"
+}

@@ -311,6 +311,7 @@ families:
     rollback: "Archive evidence and record hashes before any delete; restore from the rollback package if a consumer is discovered."
     confirmation_gate: before_delete
     status: pending
+    evidence_gap: "The eight source paths are absent, but the rollback manifest referenced by the historical receipt is missing from the current Workspace quarantine. Re-run physical receipt recovery before terminal retirement."
 
   - id: documents-client-state
     source_globs:

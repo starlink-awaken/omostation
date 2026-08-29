@@ -1,6 +1,6 @@
-# T10-58 Automation Fallout Repair — Delivery Report
+# T10-64 Automation Fallout Repair — Delivery Report
 
-Date: 2026-08-29 · Bet: BET-Y1Q3-T10-58 · Spec: `docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md`
+Date: 2026-08-29 · Bet: BET-Y1Q3-T10-64 · Spec: `docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md`
 
 ## What broke
 
