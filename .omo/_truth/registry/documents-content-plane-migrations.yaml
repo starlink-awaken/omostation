@@ -285,6 +285,16 @@ families:
           byte_count: 18284
           consumer_scan: "receipt://.omo/evidence/20260829T190906Z-bet-execution-4d2e9e5a/documents-consumer-audit.json"
           rollback_ref: "docs/reports/2026-08-30-documents-guozhuan-tools-runtime-quarantine.md"
+        - scope: "@工作文档/规自委/tools regular runtime files only"
+          verified_at: "2026-08-29T19:34:25Z"
+          source_fingerprint: "sha256:2f6b66f2f17a331943a66c9e6a2a1914fd3e4973d29cd9ef88d50a586ccb36f7"
+          target_fingerprint: "sha256:2f6b66f2f17a331943a66c9e6a2a1914fd3e4973d29cd9ef88d50a586ccb36f7"
+          manifest_sha256: "sha256:868c0e69fce7fb54d2bfad620b7fad7c142b1e8a5ba7b07466671ac1bfbba834"
+          node_type: regular
+          file_count: 3
+          byte_count: 18284
+          consumer_scan: "receipt://.omo/evidence/20260829T193214Z-bet-execution-9df04bf3/documents-consumer-audit.json"
+          rollback_ref: "docs/reports/2026-08-30-documents-guizi-tools-runtime-quarantine.md"
 
   - id: public-runtime
     source_globs:
