@@ -1,28 +1,24 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-generated_at: 2026-08-28T09:50:00Z
+generated_at: 2026-08-29T00:10:28Z
 status: candidate
 counts:
-  runs: 36
+  runs: 40
   failures: 25
-  total: 61
-failure_rate: 0.4098
+  total: 65
+failure_rate: 0.3846
 failure_breakdown:
   by_event_type:
     StepFailed: 25
   trace_count: 25
-title: bet-execution 运行复盘聚合 (resident 事件驱动)
-lifecycle: history
-owner: laowang-agent
-last-reviewed: 2026-08-28
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-28T09:50:00Z
+- generated_at: 2026-08-29T00:10:28Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 36 成功运行 + 25 失败模式 = 61 草稿
-- 失败率: 40.98%
+- sediment 覆盖: 40 成功运行 + 25 失败模式 = 65 草稿
+- 失败率: 38.46%
 
 ## 成功运行 (runs/)
 
@@ -62,6 +58,10 @@ last-reviewed: 2026-08-28
 - 20260827T123210Z-bet-execution-4dbe231c.md
 - 20260827T230318Z-bet-execution-aecf5cb2.md
 - 20260828T065419Z-bet-execution-2bb2b560.md
+- 20260828T095443Z-bet-execution-6f750230.md
+- 20260828T100755Z-bet-execution-ece43cd3.md
+- 20260828T113920Z-bet-execution-c67c8f30.md
+- 20260828T115530Z-bet-execution-1c4e82b0.md
 
 ## 失败模式 (failures/)
 
@@ -369,6 +369,33 @@ last-reviewed: 2026-08-28
   - 结果与证据: ok=False, status=failed, evidence_count=1
   - 失败根因: step=execute, error=workflow failed
   - 指标: event_count=6, duration_s=1527.706
+- **20260828T095443Z-bet-execution-6f750230**
+  - 计划 (objective): [BET-Y1Q3-T6-15] Post-2408 main recovery 与 required gac-gate promotion (Appetite: 2 weeks)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=243.085
+- **20260828T100755Z-bet-execution-ece43cd3**
+  - 计划 (objective): [BET-Y1Q3-T10-43] service-config lifecycle-only 声明与 validator 修复 (Appetite: 0.5 day)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=5906.517
+- **20260828T113920Z-bet-execution-c67c8f30**
+  - 计划 (objective): [BET-Y1Q3-T6-15] Post-2408 main recovery 与 required gac-gate promotion (Appetite: 2 weeks)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=421.823
+- **20260828T115530Z-bet-execution-1c4e82b0**
+  - 计划 (objective): [BET-Y1Q3-T6-15] Post-2408 main recovery 与 required gac-gate promotion (Appetite: 2 weeks)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=48.395
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
