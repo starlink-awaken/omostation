@@ -1132,6 +1132,9 @@ workflow_triggers:
   - workflow: audit-rollout-monthly.yml
     triggers: [manual, scheduled]
     path_filtered: false
+  - workflow: bet-done-gate.yml
+    triggers: [per_pr, push]
+    path_filtered: false
   - workflow: bulk-deletion-guard.yml
     triggers: [per_pr, push]
     path_filtered: false
@@ -1298,6 +1301,9 @@ workflow_triggers:
   - workflow: port-registry-enforce.yml
     triggers: [per_pr, push]
     path_filtered: false
+  - workflow: post-merge-validate.yml
+    triggers: [push]
+    path_filtered: false
   - workflow: prune-ci-runs.yml
     triggers: [manual, scheduled]
     path_filtered: false
@@ -1321,6 +1327,9 @@ workflow_triggers:
     - projects/ecos/src/**
     - projects/omlxc/src/**
     - projects/omo/src/**
+  - workflow: registry-drift-monitor.yml
+    triggers: [manual, scheduled]
+    path_filtered: false
   - workflow: repo-health-daily.yml
     triggers: [scheduled]
     path_filtered: false
@@ -1330,6 +1339,13 @@ workflow_triggers:
   - workflow: reusable-submodule-bump-pr.yml
     triggers: [callable]
     path_filtered: false
+  - workflow: service-gateway.yml
+    triggers: [per_pr, push, scheduled]
+    path_filtered: true
+    paths:
+    - .github/workflows/service-gateway.yml
+    - .omo/_truth/registry/services.yaml
+    - bin/ops/**
   - workflow: state-goals-enforce.yml
     triggers: [per_pr, push]
     path_filtered: false
@@ -1352,6 +1368,3 @@ workflow_triggers:
     - .github/workflows/worktree-hygiene.yml
     - bin/gac/worktree-hygiene-audit.py
     - tests/unit/gac/test_worktree_hygiene_audit.py
-  - workflow: registry-drift-monitor.yml
-    triggers: [manual, scheduled]
-    path_filtered: false
