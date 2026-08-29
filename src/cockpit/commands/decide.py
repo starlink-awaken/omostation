@@ -13,49 +13,122 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
-import sys
 from pathlib import Path
+from typing import Any
 
 from ..data_index import resolve_workspace_root
 from .base import _get_console
+from .scenario import (
+    _decision_inbox_add_intent,
+    _decision_inbox_create_journey,
+    _decision_inbox_create_scene,
+    _decision_inbox_list,
+    _decision_inbox_set_status,
+)
 
-INBOX_PATH = Path(".omo/state/decision-inbox.json")
+
+_DEFAULT_SCENE_NAME = "General decisions"
+_DEFAULT_JOURNEY_NAME = "Inbox"
 
 
-def _load_inbox() -> dict:
+def _canonical_items(root: Path) -> tuple[list[dict[str, Any]], str | None]:
+    result = _decision_inbox_list(root)
+    if not result.get("ok"):
+        return [], str(result.get("error") or "canonical decision inbox unavailable")
+    items: list[dict[str, Any]] = []
+    for scene in result.get("scenes", []):
+        if not isinstance(scene, dict):
+            continue
+        for journey in scene.get("journeys", []):
+            if not isinstance(journey, dict):
+                continue
+            for intent in journey.get("intents", []):
+                if isinstance(intent, dict):
+                    items.append(intent)
+    return items, None
+
+
+def _find_item(items: list[dict[str, Any]], item_id: str) -> dict[str, Any] | None:
+    return next(
+        (
+            item
+            for item in items
+            if str(item.get("id", "")).startswith(item_id) or item.get("id") == item_id
+        ),
+        None,
+    )
+
+
+def _ensure_default_target(root: Path) -> tuple[str | None, str | None, str | None]:
+    result = _decision_inbox_list(root)
+    if not result.get("ok"):
+        return None, None, str(result.get("error") or "canonical decision inbox unavailable")
+    scenes = [scene for scene in result.get("scenes", []) if isinstance(scene, dict)]
+    if not scenes:
+        created = _decision_inbox_create_scene(
+            root,
+            name=_DEFAULT_SCENE_NAME,
+            description="Compatibility entry for cockpit decide",
+            priority="P2",
+        )
+        if not created.get("ok"):
+            return None, None, str(created.get("error") or "failed to create default decision scene")
+        scenes = [created["scene"]]
+    scene = scenes[0]
+    scene_id = str(scene.get("id") or "")
+    journeys = [journey for journey in scene.get("journeys", []) if isinstance(journey, dict)]
+    if not journeys:
+        created = _decision_inbox_create_journey(root, scene_id=scene_id, name=_DEFAULT_JOURNEY_NAME)
+        if not created.get("ok"):
+            return None, None, str(created.get("error") or "failed to create default decision journey")
+        journeys = [created["journey"]]
+    journey_id = str(journeys[0].get("id") or "")
+    if not scene_id or not journey_id:
+        return None, None, "canonical decision scene or journey has no id"
+    return scene_id, journey_id, None
+
+
+def _item_title(item: dict[str, Any]) -> str:
+    structured = item.get("structured")
+    if isinstance(structured, dict) and structured.get("title"):
+        return str(structured["title"])
+    return str(item.get("raw_content") or item.get("title") or "(无标题)")
+
+
+def _update_status(console: Any, item_id: str, status: str) -> int:
     root = resolve_workspace_root()
-    path = root / INBOX_PATH
-    if not path.exists():
-        return {"items": [], "version": "1.0"}
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return {"items": [], "version": "1.0"}
-
-
-def _save_inbox(data: dict) -> None:
-    # CR-DIRECT-IO: .omo/state writes must go through the omo broker helpers,
-    # not direct Path mutation (contract_gatekeeper).
-    from omo.omo_io import ensure_parent_dir, write_text_atomic
-
-    root = resolve_workspace_root()
-    path = root / INBOX_PATH
-    ensure_parent_dir(path)
-    write_text_atomic(path, json.dumps(data, indent=2, ensure_ascii=False))
+    items, error = _canonical_items(root)
+    if error:
+        console.print(f"[red]❌ 无法读取决策收件箱:[/] {error}")
+        return 1
+    item = _find_item(items, item_id)
+    if item is None:
+        console.print(f"[red]❌ 未找到决策项: {item_id}[/]")
+        return 1
+    result = _decision_inbox_set_status(root, intent_id=str(item["id"]), status=status)
+    if not result.get("ok"):
+        console.print(f"[red]❌ 决策状态更新失败:[/] {result.get('error', 'unknown error')}")
+        return 1
+    mark = "✓" if status == "approved" else "✗"
+    color = "green" if status == "approved" else "yellow"
+    label = "已批准" if status == "approved" else "已拒绝"
+    console.print(f"[{color}]{mark} {label}:[/] {item['id']} — {_item_title(item)}")
+    return 0
 
 
 def cmd_list(args: argparse.Namespace) -> int:
     console = _get_console()
-    data = _load_inbox()
-    items = data.get("items", [])
-    pending = [i for i in items if i.get("status") == "pending"]
+    items, error = _canonical_items(resolve_workspace_root())
+    if error:
+        console.print(f"[red]❌ 无法读取决策收件箱:[/] {error}")
+        return 1
+    pending = [item for item in items if item.get("status") == "pending"]
     if not pending:
         console.print("[green]✓ 收件箱为空 — 没有待决策项[/]")
         return 0
     console.print(f"[bold]决策收件箱 ({len(pending)} 项待处理):[/]\n")
     for item in pending:
-        console.print(f"  [cyan]{item.get('id', '?')[:8]}[/] {item.get('title', '(无标题)')}")
+        console.print(f"  [cyan]{str(item.get('id', '?'))[:8]}[/] {_item_title(item)}")
         if item.get("source"):
             console.print(f"    [dim]来源: {item['source']}[/]")
     return 0
@@ -68,54 +141,41 @@ def cmd_add(args: argparse.Namespace) -> int:
         console.print("[red]❌ 缺少标题: cockpit decide add <title>[/]")
         return 1
 
-    data = _load_inbox()
-    item = {
-        "id": f"dec-{len(data.get('items', [])) + 1:04d}",
-        "title": title,
-        "status": "pending",
-        "source": "manual",
-        "created": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
-    }
-    data.setdefault("items", []).append(item)
-    _save_inbox(data)
-    console.print(f"[green]✓ 已添加决策项:[/] {item['id']} — {title}")
+    root = resolve_workspace_root()
+    scene_id, journey_id, error = _ensure_default_target(root)
+    if error:
+        console.print(f"[red]❌ 无法添加决策项:[/] {error}")
+        return 1
+    result = _decision_inbox_add_intent(
+        root,
+        scene_id=scene_id or "",
+        source="manual",
+        raw_content=title,
+        priority="P3",
+        journey_id=journey_id,
+    )
+    if not result.get("ok"):
+        console.print(f"[red]❌ 无法添加决策项:[/] {result.get('error', 'unknown error')}")
+        return 1
+    item = result.get("intent", {})
+    console.print(f"[green]✓ 已添加决策项:[/] {item.get('id', '?')} — {title}")
     return 0
 
 
 def cmd_approve(args: argparse.Namespace) -> int:
-    console = _get_console()
-    data = _load_inbox()
-    item_id = args.id
-    for item in data.get("items", []):
-        if item.get("id", "").startswith(item_id) or item.get("id") == item_id:
-            item["status"] = "approved"
-            item["decided_at"] = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
-            _save_inbox(data)
-            console.print(f"[green]✓ 已批准:[/] {item['id']} — {item.get('title', '')}")
-            return 0
-    console.print(f"[red]❌ 未找到决策项: {item_id}[/]")
-    return 1
+    return _update_status(_get_console(), str(args.id), "approved")
 
 
 def cmd_reject(args: argparse.Namespace) -> int:
-    console = _get_console()
-    data = _load_inbox()
-    item_id = args.id
-    for item in data.get("items", []):
-        if item.get("id", "").startswith(item_id) or item.get("id") == item_id:
-            item["status"] = "rejected"
-            item["decided_at"] = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
-            _save_inbox(data)
-            console.print(f"[yellow]✗ 已拒绝:[/] {item['id']} — {item.get('title', '')}")
-            return 0
-    console.print(f"[red]❌ 未找到决策项: {item_id}[/]")
-    return 1
+    return _update_status(_get_console(), str(args.id), "rejected")
 
 
 def cmd_status(args: argparse.Namespace) -> int:
     console = _get_console()
-    data = _load_inbox()
-    items = data.get("items", [])
+    items, error = _canonical_items(resolve_workspace_root())
+    if error:
+        console.print(f"[red]❌ 无法读取决策收件箱:[/] {error}")
+        return 1
     pending = [i for i in items if i.get("status") == "pending"]
     approved = [i for i in items if i.get("status") == "approved"]
     rejected = [i for i in items if i.get("status") == "rejected"]
