@@ -2,7 +2,7 @@
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Documents root one-off runtime quarantine
-bet_id: BET-Y1Q3-T10-58
+bet_id: BET-Y1Q3-T10-59
 status: accepted
 lifecycle: contract
 owner: human-principal
