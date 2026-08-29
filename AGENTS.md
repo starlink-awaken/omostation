@@ -254,6 +254,31 @@ python3 bin/ssot/governance_closed_loop.py   # 闭环端到端验证 (真实数�
 cd projects/ecos && uv run python3 bin/inference_engine.py  # DR-01~08 推理
 ```
 
+### 链路闭环工具 (Phase 1-3 新增)
+
+```bash
+# 决策收件箱
+python3 bin/cockpit decide list / add / status
+
+# 防腐管道接线 (G1/G2)
+python3 bin/gac/corrosion-pipeline-connector.py --to-inbox
+
+# 场景卡 → Journey → 价值 → 自进化
+python3 bin/gac/scene-journey-connector.py --auto-create
+python3 bin/gac/value-evolution-connector.py --feed-evolution
+
+# 内核连接桥 (MetaOS↔OMO, Model-Driven↔ECOS, L4↔记忆层)
+python3 bin/gac/kernel-bridge.py --status
+python3 bin/gac/model-ecos-bridge.py --status
+python3 bin/gac/l4-memory-bridge.py --status
+
+# 信号路由 (日历)
+python3 bin/bc-os/signal_router.py --calendar events.ics
+
+# 探测器心跳矩阵 (M3 仪式)
+python3 bin/gac/probe-heartbeat-monitor.py --status
+```
+
 See [`bin/README.md`](bin/README.md) for the full tool catalog.
 
 ## 6. Git And Submodules
