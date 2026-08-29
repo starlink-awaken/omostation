@@ -257,6 +257,55 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-81
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents Guozhuan tools runtime quarantine
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Move only the three regular runtime files under Documents/@工作文档/国转中心/tools into protected Workspace quarantine after consumer and parity preflight, while preserving Documents content and keeping work-runtime pending.
+  non_goals:
+  - No movement outside @工作文档/国转中心/tools.
+  - No content, contract, cache, schedule, client, public-runtime, or family-level retirement.
+  done_when:
+  - A stable L4 inventory identifies exactly three regular runtime files.
+  - Fresh consumer evidence reports status ok, forbidden_executors=0, and unmatched=0.
+  - The selected files have a protected hash-valid rollback manifest and no active consumer relies on the Documents copies.
+  - Postflight proves source absence, target hash parity, manifest retention, and adjacent Documents content preservation.
+  - work-runtime remains pending and this subset is appended to progress evidence.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: git check-ignore -q runtime/quarantine/documents-guozhuan-tools-20260830/manifest.json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no terminal receipt error
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known T10-71 baseline
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md
+  - docs/reports/2026-08-30-documents-guozhuan-tools-runtime-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-81.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-81-guozhuan-tools-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3c52421eeae4b0d575cb558777b03422abc5e7f27d7bdd5f6162a0378d27725f
+    decision_ref: decision://accepted/BET-Y1Q3-T10-81
+  depends_on:
+  - BET-Y1Q3-T10-80
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any non-regular selection, active consumer, target collision, hash mismatch, non-target Documents change, or manifest loss stops and restores the transaction.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-80
   track: T10-MATURITY
   window: Y1Q3
