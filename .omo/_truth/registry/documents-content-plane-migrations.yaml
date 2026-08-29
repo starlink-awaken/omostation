@@ -325,6 +325,16 @@ families:
           byte_count: 8677
           consumer_scan: "receipt://.omo/evidence/20260829T201813Z-bet-execution-ee380e96/documents-consumer-audit.json"
           rollback_ref: "docs/reports/2026-08-30-documents-contract-ocr-tools-runtime-quarantine.md"
+        - scope: "@工作文档/卫健委/_control regular runtime files only"
+          verified_at: "2026-08-29T20:34:42Z"
+          source_fingerprint: "sha256:9c81d4980702c9ebfae1e1bb77064c94242274dff0b1efeec6d8285fe4bd7423"
+          target_fingerprint: "sha256:9c81d4980702c9ebfae1e1bb77064c94242274dff0b1efeec6d8285fe4bd7423"
+          manifest_sha256: "sha256:fc87ea443ec0fd9c0ce1416cfd8849144c2c2be8ef2e471a4354a9b4394a6a41"
+          node_type: regular
+          file_count: 5
+          byte_count: 30737
+          consumer_scan: "receipt://.omo/evidence/20260829T203248Z-bet-execution-53f78041/documents-consumer-audit.json"
+          rollback_ref: "docs/reports/2026-08-30-documents-weijian-control-runtime-quarantine.md"
 
   - id: public-runtime
     source_globs:
