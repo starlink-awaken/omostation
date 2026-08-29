@@ -515,7 +515,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
     spec_version: 1.0.0
-    content_digest: sha256:263fface7497943ed3fe306e96d9a0d3d7ab5744ad5c00c892680b6ed9d5c181
+    content_digest: sha256:b689394fc2ee00578a7677c25f20f17aab0f0fc0678754e8919e48a17b46e0b6
     decision_ref: decision://accepted/BET-Y1Q3-T10-66
   depends_on: []
   risk_level: L1
