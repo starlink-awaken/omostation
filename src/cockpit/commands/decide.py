@@ -20,7 +20,6 @@ from pathlib import Path
 from ..data_index import resolve_workspace_root
 from .base import _get_console
 
-
 INBOX_PATH = Path(".omo/state/decision-inbox.json")
 
 

@@ -78,6 +78,27 @@ def cmd_mesh(args: argparse.Namespace) -> int:
         except Exception as exc:
             console.print(f"[red]路由选择失败: {exc}[/red]")
             return 1
+    if subcmd == "cache":
+        omlxc_root = _workspace_root() / "projects" / "omlxc"
+        bench_script = _workspace_root() / "bin" / "demo" / "live_context_and_cache_benchmark.py"
+        return subprocess.call(["uv", "run", "--project", str(omlxc_root), "python", str(bench_script)])
+    if subcmd == "dflash":
+        omlxc_root = _workspace_root() / "projects" / "omlxc"
+        bench_script = _workspace_root() / "bin" / "demo" / "live_cluster_wide_benchmark.py"
+        return subprocess.call(["uv", "run", "--project", str(omlxc_root), "python", str(bench_script)])
+    if subcmd == "cluster":
+        omlxc_root = _workspace_root() / "projects" / "omlxc"
+        bench_script = _workspace_root() / "bin" / "demo" / "live_cluster_wide_benchmark.py"
+        return subprocess.call(["uv", "run", "--project", str(omlxc_root), "python", str(bench_script)])
+    if subcmd == "compact":
+        model = getattr(args, "model", "coding")
+        tokens = str(getattr(args, "tokens", 32768))
+        avail = str(getattr(args, "available_mb", 4096))
+        omlxc_root = _workspace_root() / "projects" / "omlxc"
+        return subprocess.call(
+            ["uv", "run", "omlxc", "fabric", "compact", "--model", model, "--tokens", tokens, "--available-mb", avail],
+            cwd=str(omlxc_root),
+        )
     if subcmd == "serve":
         mesh_project = _workspace_root() / "projects" / "mesh" / "router.py"
         if mesh_project.exists():
@@ -86,5 +107,7 @@ def cmd_mesh(args: argparse.Namespace) -> int:
         return 1
 
     console.print("[red]未知 mesh 子命令[/red]")
-    console.print("可用: nodes, status, fabric, triage <PROMPT>, vram <MODEL> <TOKENS>, route --model <MODEL>, serve")
+    console.print(
+        "可用: nodes, status, fabric, cache, dflash, cluster, triage <PROMPT>, vram <MODEL> <TOKENS>, compact, route --model <MODEL>, serve"
+    )
     return 1
