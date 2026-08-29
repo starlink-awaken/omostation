@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "bin" / "gac" / "documents-runtime-quarantine.py"
+SCRIPT = ROOT / "lib" / "documents_runtime_quarantine.py"
 
 
 def _load_module():

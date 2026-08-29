@@ -285,8 +285,7 @@ bets:
   workflow: bet-execution
   underlying_workflow: governance-state-mutation
   write_surfaces:
-  - bin/gac/documents-runtime-quarantine.py
-  - bin/_registry/scripts/governance/documents-runtime-quarantine.yaml
+  - lib/documents_runtime_quarantine.py
   - tests/test_documents_runtime_quarantine.py
   - .omo/_truth/registry/documents-content-plane-migrations.yaml
   - docs/plans/3y-bet-ledger.yaml
