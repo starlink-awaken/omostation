@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: mini
-generated_at: 2026-08-28T09:50:00Z
+generated_at: 2026-08-29T00:10:28Z
 status: candidate
 counts:
   runs: 170
@@ -12,14 +12,10 @@ failure_breakdown:
   by_event_type:
     StepFailed: 33
   trace_count: 33
-title: mini 运行复盘聚合 (resident 事件驱动)
-lifecycle: history
-owner: laowang-agent
-last-reviewed: 2026-08-28
 ---
 # mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-28T09:50:00Z
+- generated_at: 2026-08-29T00:10:28Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 170 成功运行 + 33 失败模式 = 203 草稿
 - 失败率: 16.26%

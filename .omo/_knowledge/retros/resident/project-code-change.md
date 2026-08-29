@@ -1,28 +1,24 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-08-28T09:50:00Z
+generated_at: 2026-08-29T00:10:28Z
 status: candidate
 counts:
-  runs: 42
+  runs: 43
   failures: 19
-  total: 61
-failure_rate: 0.3115
+  total: 62
+failure_rate: 0.3065
 failure_breakdown:
   by_event_type:
     StepFailed: 19
   trace_count: 19
-title: project-code-change 运行复盘聚合 (resident 事件驱动)
-lifecycle: history
-owner: laowang-agent
-last-reviewed: 2026-08-28
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-28T09:50:00Z
+- generated_at: 2026-08-29T00:10:28Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 42 成功运行 + 19 失败模式 = 61 草稿
-- 失败率: 31.15%
+- sediment 覆盖: 43 成功运行 + 19 失败模式 = 62 草稿
+- 失败率: 30.65%
 
 ## 成功运行 (runs/)
 
@@ -68,6 +64,7 @@ last-reviewed: 2026-08-28
 - 20260828T034833Z-project-code-change-d00c41e3.md
 - 20260828T035039Z-project-code-change-165f3365.md
 - 20260828T041632Z-project-code-change-fa15f5e3.md
+- 20260828T114957Z-project-code-change-16d2131c.md
 
 ## 失败模式 (failures/)
 
@@ -396,6 +393,13 @@ last-reviewed: 2026-08-28
   - 结果与证据: ok=False, status=blocked, evidence_count=1
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=1631.424
+- **20260828T114957Z-project-code-change-16d2131c**
+  - 计划 (objective): [BET-Y1Q3-T10-23] Documents 宿主消费者审计与切换硬门 (Appetite: 1 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=workflow failed
+  - 指标: event_count=6, duration_s=283.964
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
