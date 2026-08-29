@@ -267,7 +267,13 @@ families:
       - "docs/reports/2026-08-12-documents-runtime-owner-parity-inventory.md#驾驶舱-runtime-sources"
     rollback: "Retain old projections until installed Cockpit smoke and view parity pass."
     confirmation_gate: before_write
-    status: in_progress
+    status: retired
+    evidence:
+      verified_at: "2026-08-29T15:25:00Z"
+      source_fingerprint: "sha256:b16addf2e747725ce8b8f5c41b96ca0bc4d8cd9f24a6e1c3b84221d266c357f4"
+      target_fingerprint: "sha256:b16addf2e747725ce8b8f5c41b96ca0bc4d8cd9f24a6e1c3b84221d266c357f4"
+      consumer_scan: "receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md"
+      rollback_ref: "docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md"
 
   - id: opc-tools
     source_globs:
