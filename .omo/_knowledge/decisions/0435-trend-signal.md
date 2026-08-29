@@ -1,12 +1,12 @@
 ---
-id: ADR-0436
+id: ADR-0435
 status: proposed
 lifecycle: spec
 owner: evolution-agent
 last-reviewed: 2026-08-29
 ---
 
-# ADR-0436: [hacker_news] Indirect Calling of Nested Functions on GCC Without Executable Stack
+# ADR-0435: [hacker_news] Indirect Calling of Nested Functions on GCC Without Executable Stack
 
 - status: draft
 - date: 2026-08-29
