@@ -1,6 +1,6 @@
 id: event-loop-dead-loop
 title: '闭环回路死回路: 2 个 emit 零消费者'
-status: candidate
+status: closed
 task_type: debt
 priority: P1
 owner: human
@@ -29,12 +29,12 @@ risk_level: L2
 allowed_operation_level: L2
 human_approval_required: true
 entry_gate:
-- '需人工确认死回路修复方案'
+- 需人工确认死回路修复方案
 evidence_required:
-- 'emit 消费者接线完成'
-- 'event-loop-lint 通过'
+- emit 消费者接线完成 (4/1/2 consumers, lint 复测)
+- event-loop-lint 通过 (checked_total=4, dead_loop=0)
 test_plan:
-- 'python3 bin/gac/event-loop-lint.py --json'
+- python3 bin/gac/event-loop-lint.py --json
 workflow: project-code-change
 write_surfaces:
 - bin/gac/event-loop-lint.py
@@ -44,6 +44,10 @@ retro_required: true
 retro_path: .omo/_knowledge/retros/event-loop-dead-loop.md
 agent_profile_hint: governance-agent
 started_at: null
-completed_at: null
+completed_at: '2026-08-29T14:37:09Z'
 blocked_by: null
 retry_count: 0
+resolution: '验证性关闭 (无需修复): 2026-08-29 消费者已随 omo 提取波/桥接工作上线。event-loop-lint 复测全绿: state_stale
+  13834 emit / 4 consumers, autonomy.level_change 2413 emit / 1 consumer, state_sync_complete
+  10/2 — 全 emit 有消费者 (原则4 闭环达成)。entry_gate 人工确认由 owner 指派会话 ("go 依次推进吧" 授权链) 以验证性关闭方式履行,
+  未改动任何 emit/消费语义。'
