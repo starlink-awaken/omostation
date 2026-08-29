@@ -1,7 +1,7 @@
 ---
 schema_version: governance-waiver/v1
 status: active
-lifecycle: evidence
+lifecycle: history
 type: requirement-iteration-waiver
 owner: governance-team
 created: 2026-08-29
