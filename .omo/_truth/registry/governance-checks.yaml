@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 529  # 2026-08-29 529→529: 登记 L4 memory bridge (Phase 3.3)  # 2026-08-29 528→529: 登记 binding-canary-driver (T1-12 canary)  # 2026-08-28 520→528: 固化 cmd_deps + frontmatter 治理 (BET-Y1Q3-T6-05)
+    script_baseline: 530  # 2026-08-29 530→530: 登记 probe-heartbeat-monitor (Phase 3.4)  # 2026-08-29 529→530: 登记 L4 memory bridge (Phase 3.3)  # 2026-08-28 520→528: 固化 cmd_deps + frontmatter 治理 (BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
