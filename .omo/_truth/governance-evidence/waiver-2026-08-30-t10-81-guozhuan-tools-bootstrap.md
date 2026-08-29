@@ -4,8 +4,8 @@ status: active
 lifecycle: history
 type: requirement-iteration-waiver
 owner: governance-team
-created: 2026-08-30
-last-reviewed: 2026-08-30
+created: 2026-08-29
+last-reviewed: 2026-08-29
 bet_id: BET-Y1Q3-T10-81
 ---
 

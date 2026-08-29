@@ -296,7 +296,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:3c52421eeae4b0d575cb558777b03422abc5e7f27d7bdd5f6162a0378d27725f
+    content_digest: sha256:77d10f43ca31bfa4cf0952e8f44bb3770cf196f98f2038e4239a7b5b07c708b5
     decision_ref: decision://accepted/BET-Y1Q3-T10-81
   depends_on:
   - BET-Y1Q3-T10-80
