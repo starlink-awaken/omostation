@@ -21,6 +21,17 @@ def _step(name: str) -> dict:
     return matches[0]
 
 
+def test_main_push_concurrency_is_scoped_to_immutable_sha() -> None:
+    payload = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
+    concurrency = payload["concurrency"]
+
+    assert concurrency["group"] == (
+        "${{ github.workflow }}-"
+        "${{ github.event_name == 'push' && github.sha || github.ref }}"
+    )
+    assert concurrency["cancel-in-progress"] is True
+
+
 def test_strict_gate_step_is_blocking() -> None:
     strict = _step("gac-local-gate (strict)")
 
