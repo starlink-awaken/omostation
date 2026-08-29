@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -72,6 +73,64 @@ def test_preflight_rejects_forbidden_consumer(tmp_path):
         assert "forbidden" in str(exc)
     else:
         raise AssertionError("forbidden consumer must stop the transaction")
+
+
+def test_owner_module_anchors_to_repository_root_from_lib():
+    module = _load_module()
+
+    assert module.ROOT == ROOT
+
+
+def test_preflight_accepts_dangling_symlink_without_following(tmp_path):
+    module = _load_module()
+    documents = tmp_path / "Documents"
+    source = documents / "@工作文档" / "卫健委" / "_runtime"
+    source.mkdir(parents=True)
+    link = source / "check.py"
+    os.symlink("../../../../@公共/_runtime/missing.py", link)
+
+    plan = module.build_plan(
+        documents_root=documents,
+        source_root=source,
+        target_root=tmp_path / "Workspace" / "runtime" / "quarantine",
+        inventory=[
+            {"path": str(link), "relative_path": "check.py", "kind": "runtime"}
+        ],
+        consumer_receipt=_consumer_receipt(),
+        now="2026-08-29T13:00:00Z",
+    )
+
+    assert plan["files"][0]["node_type"] == "symlink"
+    assert plan["files"][0]["link_target"] == "../../../../@公共/_runtime/missing.py"
+
+
+def test_apply_moves_dangling_symlink_and_records_link_target(tmp_path):
+    module = _load_module()
+    documents = tmp_path / "Documents"
+    source = documents / "@工作文档" / "卫健委" / "_runtime"
+    source.mkdir(parents=True)
+    link = source / "check.py"
+    os.symlink("missing.py", link)
+    target = tmp_path / "Workspace" / "runtime" / "quarantine"
+    plan = module.build_plan(
+        documents_root=documents,
+        source_root=source,
+        target_root=target,
+        inventory=[
+            {"path": str(link), "relative_path": "check.py", "kind": "runtime"}
+        ],
+        consumer_receipt=_consumer_receipt(),
+        now="2026-08-29T13:00:00Z",
+    )
+
+    manifest = module.apply_plan(plan)
+
+    assert not os.path.lexists(link)
+    moved = target / "check.py"
+    assert moved.is_symlink()
+    assert os.readlink(moved) == "missing.py"
+    assert manifest["files"][0]["node_type"] == "symlink"
+    assert manifest["files"][0]["link_target"] == "missing.py"
 
 
 def test_apply_moves_only_runtime_and_writes_hash_manifest(tmp_path):

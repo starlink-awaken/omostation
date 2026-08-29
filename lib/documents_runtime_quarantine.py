@@ -13,7 +13,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = "documents-runtime-quarantine/v1"
 _EXECUTION_MODES = {"content-reference"}
 
@@ -33,6 +33,14 @@ def _sha256(path: Path) -> str:
 def _inside(path: Path, root: Path) -> bool:
     try:
         path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def _inside_lexical(path: Path, root: Path) -> bool:
+    try:
+        Path(os.path.abspath(path)).relative_to(Path(os.path.abspath(root)))
     except ValueError:
         return False
     return True
@@ -75,11 +83,23 @@ def _entry_from_source(source: Path, relative_path: str) -> dict[str, Any]:
         info = source.lstat()
     except OSError as exc:
         raise QuarantineError(f"source cannot be inspected: {source}") from exc
-    if not stat.S_ISREG(info.st_mode) or source.is_symlink():
+    if stat.S_ISLNK(info.st_mode):
+        link_target = os.readlink(source)
+        return {
+            "source": str(source),
+            "relative_path": relative_path,
+            "node_type": "symlink",
+            "link_target": link_target,
+            "bytes": 0,
+            "mode": stat.S_IMODE(info.st_mode),
+            "sha256": hashlib.sha256(os.fsencode(link_target)).hexdigest(),
+        }
+    if not stat.S_ISREG(info.st_mode):
         raise QuarantineError(f"selected source is not a regular non-symlink file: {source}")
     return {
         "source": str(source),
         "relative_path": relative_path,
+        "node_type": "regular",
         "bytes": info.st_size,
         "mode": stat.S_IMODE(info.st_mode),
         "sha256": _sha256(source),
@@ -118,10 +138,10 @@ def build_plan(
         relative_path = Path(relative)
         if relative_path.is_absolute() or ".." in relative_path.parts or relative in seen:
             raise QuarantineError(f"runtime inventory path is unsafe or duplicated: {relative}")
-        source_file = Path(path_value).expanduser().resolve()
-        if not _inside(source_file, source):
+        source_file = Path(path_value).expanduser().absolute()
+        if not _inside_lexical(source_file, source):
             raise QuarantineError(f"runtime inventory escapes source root: {relative}")
-        if source_file.relative_to(source).as_posix() != relative:
+        if source_file.relative_to(source.absolute()).as_posix() != relative:
             raise QuarantineError(f"runtime inventory path mismatch: {relative}")
         entries.append(_entry_from_source(source_file, relative))
         seen.add(relative)
@@ -170,7 +190,7 @@ def _restore(moved: list[tuple[Path, Path]]) -> None:
     failures: list[str] = []
     for source, target in reversed(moved):
         try:
-            if not target.is_file() or target.is_symlink() or source.exists():
+            if not os.path.lexists(target) or os.path.lexists(source):
                 raise QuarantineError("rollback boundary changed")
             source.parent.mkdir(parents=True, exist_ok=True)
             os.replace(target, source)
@@ -199,13 +219,16 @@ def apply_plan(plan: dict[str, Any]) -> dict[str, Any]:
     try:
         target_root.mkdir(parents=True, exist_ok=True)
         for item in entries:
-            source = Path(str(item["source"])).expanduser().resolve()
+            source = Path(str(item["source"])).expanduser().absolute()
             relative = Path(str(item["relative_path"]))
             target = target_root / relative
             if target.exists() or target.is_symlink():
                 raise QuarantineError(f"target collision: {target}")
             current = _entry_from_source(source, relative.as_posix())
-            for field in ("bytes", "mode", "sha256"):
+            compare_fields = ("node_type", "bytes", "mode", "sha256")
+            if current["node_type"] == "symlink":
+                compare_fields += ("link_target",)
+            for field in compare_fields:
                 if current[field] != item[field]:
                     raise QuarantineError(f"source changed before move: {source}")
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -215,9 +238,16 @@ def apply_plan(plan: dict[str, Any]) -> dict[str, Any]:
         verified: list[dict[str, Any]] = []
         for item in entries:
             target = target_root / Path(str(item["relative_path"]))
-            if not target.is_file() or target.is_symlink() or _sha256(target) != item["sha256"]:
+            if item.get("node_type") == "symlink":
+                link_target = os.readlink(target) if target.is_symlink() else None
+                valid_target = link_target == item.get("link_target") and hashlib.sha256(
+                    os.fsencode(link_target or "")
+                ).hexdigest() == item["sha256"]
+            else:
+                valid_target = target.is_file() and not target.is_symlink() and _sha256(target) == item["sha256"]
+            if not valid_target:
                 raise QuarantineError(f"target verification failed: {target}")
-            if Path(str(item["source"])).exists():
+            if os.path.lexists(item["source"]):
                 raise QuarantineError(f"source remains after move: {item['source']}")
             verified.append({**item, "target": str(target)})
 

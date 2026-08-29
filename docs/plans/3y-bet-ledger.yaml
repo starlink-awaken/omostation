@@ -257,6 +257,55 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-73
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents Weijian dangling symlink quarantine
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Move only the twelve dangling symlink objects under Documents/@工作文档/卫健委/_runtime into retention-protected Workspace quarantine without following or reconstructing their missing public-runtime targets.
+  non_goals:
+  - No target-byte restoration, regular runtime move, content, contract, projection, `_storage`, schedule, LaunchAgent, client, or other domain mutation.
+  - No permanent deletion or broader work-runtime status change.
+  - No move when a symlink target is present, the audit is unstable, a consumer is unsafe, or the protected target is not empty.
+  done_when:
+  - The scoped L4 inventory is stable and identifies exactly the dangling symlink set.
+  - Fresh consumer evidence reports status ok, forbidden_executors=0, unmatched=0, and no unsafe executor for the selected paths.
+  - The transaction moves exactly those symlink objects with no-follow link-target/metadata receipts and a protected rollback manifest.
+  - Postflight proves symlink source absence, target link identity, content/regular-file preservation, and delayed manifest retention.
+  - The broader `work-runtime` family remains non-terminal until its regular files are separately processed.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: git check-ignore -q runtime/quarantine/documents-weijian-symlinks-20260829/manifest.json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known debt
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - lib/documents_runtime_quarantine.py
+  - tests/test_documents_runtime_quarantine.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md
+  - docs/reports/2026-08-29-documents-dangling-symlink-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-73.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-73-symlink-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:795707211555f8230286fd6a9638986987fc387c53ae7cdde9de3f2d9be44052
+    decision_ref: decision://accepted/BET-Y1Q3-T10-73
+  depends_on:
+  - BET-Y1Q3-T10-69
+  - BET-Y1Q3-T10-68
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any target restoration, symlink target drift, unsafe consumer, target collision, hash mismatch, non-target Documents change, or manifest loss stops and restores moved links.
+  value_indicator_policy: false
+  retro: required
 - id: BET-Y1Q3-T10-74
   track: T10-MATURITY
   window: Y1Q3
