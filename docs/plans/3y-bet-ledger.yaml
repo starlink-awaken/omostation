@@ -257,6 +257,51 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-89
+  track: T10-MATURITY
+  window: Y1Q3
+  title: ZCode native Documents config reconciliation
+  appetite: 0.25 day
+  priority: P1
+  status: candidate
+  goal: Reconcile the Workspace-owned Cockpit MCP projection in ~/.zcode/cli/config.json while preserving every unrelated ZCode server/model setting and leaving active Documents client state untouched.
+  non_goals:
+  - No movement or mutation of Documents/ZCode/.zcode state, SQLite, WAL/SHM, credentials, logs, or checkpoints.
+  - No ZCode restart, provider change, server deletion, or client-wide profile redesign.
+  done_when:
+  - Preflight records current config drift and a stable digest of unrelated settings.
+  - Workspace-owned install makes documents-zcode-config check return ok and mode 0600.
+  - Postflight proves unrelated settings are byte/structure-preserved and Documents client state is untouched.
+  - The config repair is recorded as Workspace ownership; client-state relocation remains pending until ZCode is quiesced and a full state set is identified.
+  verify:
+  - cmd: uv run --with pyyaml python bin/gac/documents-zcode-config.py check --project-registry /Users/xiamingxing/Workspace/.omo/_truth/registry/documents-domain-projects.yaml --domain-registry /Users/xiamingxing/Documents/@公共/_control/L4-DOMAIN-REGISTRY.yaml
+    expect: exit 0 with status ok
+  - cmd: uv run --with pyyaml python bin/gac/documents-domain-project-check.py --domain-registry /Users/xiamingxing/Documents/@公共/_control/L4-DOMAIN-REGISTRY.yaml --project-registry .omo/_truth/registry/documents-domain-projects.yaml --json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known T10-71 baseline
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md
+  - docs/reports/2026-08-30-zcode-native-documents-config-reconciliation.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-89.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-89-zcode-config-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:f42a860360c23d03981b881aac0decbd86a11d0c1c1e0daf45ffa7a162568185
+    decision_ref: decision://accepted/BET-Y1Q3-T10-89
+  depends_on:
+  - BET-Y1Q3-T10-88
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any unrelated setting drift, server deletion, Documents state mutation, mode failure, config check failure, or unexpected app behavior stops the install and restores the prior config.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-88
   track: T10-MATURITY
   window: Y1Q3
