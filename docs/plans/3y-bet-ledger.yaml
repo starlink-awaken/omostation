@@ -378,6 +378,89 @@ bets:
   circuit_breaker: Any Documents content mutation, classification change, migration-family status change, or route/runtime change stops this BET.
   retro: required
 
+- id: BET-Y1Q3-T10-58
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents root one-off runtime quarantine
+  appetite: 0.5 day
+  priority: P1
+  status: done
+  done_at: 2026-08-29
+  goal: Move exactly eight inactive root one-off runtime/cache objects from Documents into a recoverable Workspace quarantine, preserving hashes and rollback.
+  non_goals:
+  - No movement or deletion of Documents content, the rest of _inbox, or any domain tree.
+  - No permanent deletion of the quarantine package.
+  - No host schedule, LaunchAgent, Scheduled skill, registry semantics, or capability change.
+  done_when:
+  - The exact eight source paths are revalidated immediately before the move and have no active executable consumer.
+  - Quarantine copies, source absence, byte equality, metadata, and rollback manifest are all verified.
+  - No non-target Documents path changes and unresolved migration families remain fail-closed.
+  - Root L4/content-plane and consumer audits reflect the quarantine without a forbidden executor.
+  verify:
+  - cmd: python3 bin/gac/documents-content-plane-migration-check.py --documents-root "$HOME/Documents" --json
+    expect: exit 0 or explicit remaining-family/stability findings; no mutation by the checker
+  - cmd: python3 lib/documents_consumer_audit.py --documents-root "$HOME/Documents" --json
+    expect: no forbidden executable and no unmatched active consumer
+  - cmd: make gac-local-gate
+    expect: exit 0 or only pre-existing environment/known-debt findings
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md
+  - docs/reports/2026-08-29-root-oneoff-quarantine.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-58.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-58-root-oneoff-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:fb372d581e8fce999555bf8a04942c61b1178782922d72f0b6921e574586614a
+    decision_ref: decision://accepted/BET-Y1Q3-T10-58
+  depends_on:
+  - BET-Y1Q3-T10-57
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any target drift, open handle, active executable consumer, non-target Documents change, hash mismatch, or quarantine write failure stops and restores the source.
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@7bcaa8139231252d3c116c7d32cf1b63daecbed4
+          tests:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+          diff:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+          replay:
+            ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
+            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-58.md
+            sha256: sha256:ca3c88a974bf6ba01ccaaf9fb10506cdfac425413ebb8efbc76eba9009ae8340
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-55
   track: T10-MATURITY
   window: Y1Q3
