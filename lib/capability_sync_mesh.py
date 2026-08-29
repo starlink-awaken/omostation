@@ -4,27 +4,32 @@ Read-only extraction: materializes only persisted Mesh v1 facts consumed by
 verification.  Not a writer, registry, or independent authority.  Kept in a
 sibling module so capability-sync stays under the 1500-line god-module gate.
 """
+
 from __future__ import annotations
 
 import json
 import os
 import re
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping, Optional, Union
+from typing import Any, Optional, Union
 
+from capability_sync_verification_helpers import (  # noqa: E402
+    verification_receipt as _verification_receipt,
+)
 from capability_trace_binding import (  # noqa: E402 -- sibling module, script dir on sys.path
     IDENTITY_RE,
     TraceBindingError,
     _canonical_json,
     _digest,
 )
-from capability_sync_verification_helpers import (  # noqa: E402
-    verification_receipt as _verification_receipt,
-)
 
 try:
-    from capability_native_execution_model import NativeExecutionReceiptError
+    from capability_native_execution_model import (
+        NativeExecutionReceiptError,
+        canonical_digest,
+    )
     from capability_native_execution_receipt import validate_native_execution_material
 
     NATIVE_EXECUTION_LIBS_AVAILABLE = True
@@ -49,6 +54,7 @@ VERIFICATION_MESH_EVENT_STATES = {
     "AdmissionRenewed": "dispatched",
     "WorkerReclaimed": "running",
 }
+
 
 def _mesh_stat_fingerprint(stat: Any) -> tuple[int, int, int, int, int]:
     return (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
