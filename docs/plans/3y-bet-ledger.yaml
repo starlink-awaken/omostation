@@ -263,7 +263,6 @@ bets:
   title: Root-resolvable T10-48 completion evidence repair
   appetite: 0.25 day
   priority: P0
-  status: pending
   goal: Make the already-delivered T10-48 test and replay receipts resolvable from the root tree used by CI.
   non_goals:
   - No change to resident ledger implementation or host/runtime state.
@@ -280,6 +279,7 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - docs/reports/2026-08-29-resident-ledger-test-evidence.md
   - docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-52.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md
@@ -291,6 +291,46 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: Any implementation, host mutation, or unrelated BET cleanup stops this repair.
+  status: done
+  done_at: 2026-08-29
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e27ecd8bca19493f9254ebd6ef0c7d0fe7c7b626
+          tests:
+            ref: receipt://docs/reports/2026-08-29-resident-ledger-test-evidence.md
+            sha256: sha256:14f8c27e049330a9bda82b29551cb82c62a767b63c4e278ed76c8545f6ec82b9
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md
+            sha256: sha256:f890241d1585a22ce6bdaff17e7d28ebd99c64ef44b93a12af9da5aba5fc20bf
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md
+            sha256: sha256:f890241d1585a22ce6bdaff17e7d28ebd99c64ef44b93a12af9da5aba5fc20bf
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-resident-ledger-test-evidence.md
+            sha256: sha256:14f8c27e049330a9bda82b29551cb82c62a767b63c4e278ed76c8545f6ec82b9
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-resident-ledger-test-evidence.md
+            sha256: sha256:14f8c27e049330a9bda82b29551cb82c62a767b63c4e278ed76c8545f6ec82b9
+          replay:
+            ref: receipt://docs/reports/2026-08-29-resident-ledger-test-evidence.md
+            sha256: sha256:14f8c27e049330a9bda82b29551cb82c62a767b63c4e278ed76c8545f6ec82b9
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md
+            sha256: sha256:f890241d1585a22ce6bdaff17e7d28ebd99c64ef44b93a12af9da5aba5fc20bf
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  retro: required
 
 - id: BET-Y1Q3-T10-51
   track: T10-MATURITY
