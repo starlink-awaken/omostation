@@ -1,3 +1,14 @@
+---
+schema: workflow-waiver/v1
+status: active
+lifecycle: history
+owner: governance-team
+created: 2026-08-29
+last-reviewed: 2026-08-29
+title: T10-61 meta-doctor refs-only registry bootstrap waiver
+type: doc
+---
+
 schema_version: workflow-waiver/v1
 waiver_id: WAIVER-2026-08-29-T10-61-BOOTSTRAP
 issued_at: 2026-08-29T10:00:00Z
