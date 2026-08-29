@@ -256,11 +256,11 @@ last-reviewed: 2026-08-24
 |----------|-----------|--------|
 | `cockpit omo` | `omo` | 22 |
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
-| `cockpit gbrain` | `gbrain` | 75 |
-| `cockpit model-driven` | `model-driven` | 28 |
+| `cockpit gbrain` | `gbrain` | 0 |
+| `cockpit model-driven` | `model-driven` | 0 |
 | `cockpit agora` | `agora` | 99 |
-| `cockpit family-hub` | `family-hub` | 6 |
-| `cockpit mesh` | `aetherforge` | 15 |
-| `cockpit compute` | `aetherforge` | 15 |
+| `cockpit family-hub` | `family-hub` | 0 |
+| `cockpit mesh` | `aetherforge` | 0 |
+| `cockpit compute` | `aetherforge` | 0 |
 
 *由 `bin/ssot/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*
