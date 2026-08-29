@@ -191,7 +191,7 @@ while IFS= read -r path; do
 done < /tmp/t6-phase-claims.txt
 ```
 
-At phase completion, the phase task first creates its scoped commit. Then verify every claimed file explicitly, close the run, create a delivery tag, submit one PR, verify the merged main SHA, and retire using the exact merged PR number. This generic `closeout --status ok` flow applies to `r1`, `h1a`, `h1c-tool`, `r2a` and `closeout`. `scope` and `amendment` use the explicit blocked-closeout exceptions in Task -1 and Task 4B because each intentionally changes the active run's own WorkPacket/binding source.
+At phase completion, the phase task first creates its scoped commit. Then verify every claimed file explicitly, close the run, create a delivery tag, submit one PR, verify the merged main SHA, and retire using the exact merged PR number. This generic `closeout --status ok` flow applies to `scope`, `r1`, `h1a`, `h1c-tool`, `r2a` and `closeout`. `amendment` alone uses the explicit blocked-closeout exception in Task 4B because it intentionally changes the active run's accepted Spec binding source; its verify result is reported independently from that explicit terminal status.
 
 ```bash
 verify_args=()
@@ -344,20 +344,15 @@ git add docs/plans/3y-bet-ledger.yaml
 git commit -m "docs(plan): refine T6-15 execution surfaces"
 
 verify_args=(--file docs/plans/3y-bet-ledger.yaml)
-set +e
 uv run --with pyyaml python bin/agent-workflow.py verify "$T6_RUN_ID" \
   "${verify_args[@]}" --execute --json > /tmp/t6-scope-verify.json 2>&1
-scope_verify_rc=$?
-set -e
-test "$scope_verify_rc" -ne 0
-rg -q 'WORK_PACKET_(SOURCE_DRIFT|SCOPE_MISMATCH)' /tmp/t6-scope-verify.json
 uv run --with pyyaml python bin/agent-workflow.py closeout "$T6_RUN_ID" \
-  --status blocked "${verify_args[@]}" --json
+  --status ok "${verify_args[@]}" --json
 git tag -a "delivery/${T6_ATTEMPT}" -m "BET-Y1Q3-T6-15 scope refinement" HEAD
 git push -u origin HEAD --follow-tags
 gh pr create --base main \
   --title "docs(plan): refine T6-15 execution surfaces" \
-  --body "BET-Y1Q3-T6-15 scope-only self-binding update. Candidate state, accepted binding and completion/value evidence are unchanged."
+  --body "BET-Y1Q3-T6-15 scope-only WorkPacket refinement. Candidate state, accepted binding and completion/value evidence are unchanged."
 export PHASE_PR_NUMBER="$(gh pr view --json number --jq .number)"
 gh pr checks --required --watch --interval 10
 gh pr checks --watch --interval 15
@@ -371,7 +366,7 @@ python3 bin/gac/clone-lifecycle.py retire \
   --platform-rebased-pr "$PHASE_PR_NUMBER"
 ```
 
-Expected: verify fails closed because the active run is bound to the pre-change WorkPacket; `closeout --status blocked` releases every lock. This is the required self-binding evidence, not a gate bypass. Task 0 starts a fresh run only from main containing this scope PR.
+Expected: verify succeeds because the pre-change WorkPacket already authorizes its own ledger path and verify evaluates the claimed diff plus registered checks; `closeout --status ok` releases every lock. A later claim or explicit packet refresh against the changed source would detect WorkPacket drift, but this completed scope run performs neither. Task 0 starts a fresh run only from main containing this scope PR.
 
 ---
 
@@ -972,7 +967,7 @@ If Actions is not operational, an incident is unresolved, or the API evidence is
 
 - [ ] **Step 1: Start the exact amendment lifecycle**
 
-Set `T6_PHASE=amendment` and execute the Per-Phase Governed Delivery Lifecycle. Expected: one fresh clone, a run bound to Spec `1.0.0`, and exact claims for the Spec, T6-15 ledger entry and amendment waiver. Because the phase intentionally changes its own binding, verify/closeout must finish `blocked` after the three-path commit and release every lock; the next H1c run starts from merged Spec `1.0.1`.
+Set `T6_PHASE=amendment` and execute the Per-Phase Governed Delivery Lifecycle. Expected: one fresh clone, a run bound to Spec `1.0.0`, and exact claims for the Spec, T6-15 ledger entry and amendment waiver. Because the phase intentionally changes its own binding, verify reports the registered checks and claim coverage independently, then the run is explicitly closed `blocked` after the three-path commit and releases every lock; the next H1c run starts from merged Spec `1.0.1`.
 
 - [ ] **Step 2: Obtain an exact three-path bootstrap authorization**
 
@@ -1013,7 +1008,7 @@ Expected: the exact three-path diff is ready for independent review; no implemen
 
 - [ ] **Step 6: Commit, close blocked, and merge the unique amendment PR**
 
-Record the exact human authorization quote verbatim in the named waiver, then commit exactly the three authorized paths. The old `1.0.0` run is intentionally invalidated by its own accepted-Spec update, so verification must fail closed and the run must be closed `blocked`; this is evidence of correct binding enforcement, not permission to bypass it.
+Record the exact human authorization quote verbatim in the named waiver, then commit exactly the three authorized paths. The old `1.0.0` run is intentionally terminated after its own accepted-Spec update: current verify evaluates registered diff checks and claim coverage and may succeed, while any subsequent claim or packet refresh would fail closed on source/binding drift. Close the run explicitly as `blocked`; this is an honest bootstrap terminal state, not permission to bypass binding enforcement.
 
 ```bash
 git add \
@@ -1031,12 +1026,8 @@ AGCP_REQUIREMENT_ITERATION_GATE=0 git commit -m "docs(spec): bind guarded branch
 
 verify_args=()
 while IFS= read -r path; do verify_args+=(--file "$path"); done < /tmp/t6-phase-claims.txt
-set +e
 uv run --with pyyaml python bin/agent-workflow.py verify "$T6_RUN_ID" "${verify_args[@]}" --execute --json \
   > /tmp/t6-amendment-verify.json
-amend_verify_rc=$?
-set -e
-test "$amend_verify_rc" -ne 0
 uv run --with pyyaml python bin/agent-workflow.py closeout "$T6_RUN_ID" --status blocked "${verify_args[@]}" --json
 git tag -a "delivery/${T6_ATTEMPT}" -m "BET-Y1Q3-T6-15 amendment" HEAD
 git push -u origin HEAD --follow-tags
