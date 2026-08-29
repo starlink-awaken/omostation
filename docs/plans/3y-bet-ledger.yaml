@@ -346,6 +346,52 @@ bets:
   value_indicator_policy: false
   retro: required
 
+- id: BET-Y1Q3-T10-64
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Cockpit decide write-boundary recovery
+  appetite: 0.5 day
+  priority: P1
+  status: candidate
+  goal: Promote the existing Cockpit child atomic-helper repair so the legacy decide command preserves its behavior without violating the root direct-omo-io gate.
+  non_goals:
+  - No new storage, broker, dispatcher, schema, capability, or authority plane.
+  - No change to task/decision JSON shape, public action names, or output semantics.
+  - No scenario-inbox data-model migration in this slice.
+  - No Documents content, host schedule, runtime state, or unrelated child/root pointer change.
+  done_when:
+  - The root projects/cockpit gitlink points to a child-main revision containing the 2d44b650 atomic-helper fix.
+  - cockpit decide contains no direct Path.mkdir or Path.write_text mutation of .omo or spaces.
+  - Cockpit focused tests and the root direct-omo-io/interface gate pass.
+  - The legacy JSON writer uses the existing sanctioned OMO atomic helpers.
+  verify:
+  - cmd: cd projects/cockpit && uv run pytest src/cockpit/tests -q
+    expect: exit 0 or only pre-existing unrelated baseline findings
+  - cmd: cd projects/omo && uv run python -m omo.cli lint direct-omo-io
+    expect: exit 0 with no new direct mutation
+  - cmd: make gac-local-gate
+    expect: exit 0 or only pre-existing environment/known-debt findings
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
+  - docs/reports/2026-08-29-cockpit-decide-canonical-inbox.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-64.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-64-cockpit-decide-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:2f1b4c6dd2a70760ee9ceda0e36b9e2ee74f51dd3d0eea941127c7ea3059e967
+    decision_ref: decision://accepted/BET-Y1Q3-T10-64
+  depends_on: []
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any new storage, raw state write, canonical engine semantic change, Documents content, host schedule, runtime state, or unrelated pointer change stops this BET.
+  retro: required
+
 - id: BET-Y1Q3-T10-61
   track: T10-MATURITY
   window: Y1Q3
