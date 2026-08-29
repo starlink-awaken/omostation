@@ -257,6 +257,102 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-71
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents quarantine owner root anchor
+  appetite: 0.25 day
+  priority: P0
+  status: candidate
+  goal: Repair the Workspace root anchor after moving the reusable Documents quarantine owner from bin/gac into lib.
+  non_goals:
+  - No Documents content, runtime, cache, host schedule, LaunchAgent, client configuration, or payload mutation.
+  - No migration-family status change or physical quarantine operation.
+  done_when:
+  - The owner module resolves the repository root correctly from lib.
+  - The regression test proves the L4 auditor import path is rooted at this repository.
+  - Existing quarantine transaction tests remain green.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: uv run --with ruff ruff check lib/documents_runtime_quarantine.py tests/test_documents_runtime_quarantine.py
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - lib/documents_runtime_quarantine.py
+  - tests/test_documents_runtime_quarantine.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-71.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-71-owner-root-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:489243068b647b9d912d70c906a5b772540573236c6bb3d351c7f70b50120cdc
+    decision_ref: decision://accepted/BET-Y1Q3-T10-71
+  depends_on:
+  - BET-Y1Q3-T10-69
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any Documents or runtime payload mutation stops this corrective slice.
+  value_indicator_policy: false
+  retro: required
+
+- id: BET-Y1Q3-T10-70
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents cockpit runtime physical quarantine
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Move the stable L4-classified cockpit runtime artifacts from Documents into a retention-protected Workspace quarantine, preserving all content and projections.
+  non_goals:
+  - No movement, rewrite, or deletion of Markdown, Office, PDF, DOMAIN, CONTENT_ARCHIVE, projection, contract, bridge, or .bak files.
+  - No permanent deletion, schedule change, LaunchAgent change, or client configuration change.
+  - No move when the scoped audit is unstable, consumers are unsafe, or the protected target is not empty.
+  done_when:
+  - The scoped cockpit audit is stable and selects exactly the preflight runtime set with no cache or invalid archive artifacts.
+  - Fresh consumer evidence reports status ok, forbidden_executors=0, unmatched=0, and cockpit execution consumers are content-reference only.
+  - The transaction moves exactly the selected files with source/target hash, size, mode, tree fingerprint, and protected rollback manifest.
+  - Postflight proves all selected sources absent, all targets equal, non-runtime Documents artifacts remain present, and the manifest remains present after an independent recheck.
+  - The migration registry records cockpit-runtime as retired with a repository-resolvable receipt and all other families unchanged.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no terminal receipt error
+  - cmd: git check-ignore -q runtime/quarantine/documents-cockpit-runtime-20260829/manifest.json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known debt
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md
+  - docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-70.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-70-cockpit-runtime-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:99d28ddfff9c8cb00d57e1b3c94a9c75ed89361e8218c8436e2172bf0ce57b94
+    decision_ref: decision://accepted/BET-Y1Q3-T10-70
+  depends_on:
+  - BET-Y1Q3-T10-38
+  - BET-Y1Q3-T10-68
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any unstable audit, unsafe consumer, target collision, hash mismatch, non-target Documents change, or manifest loss stops the transaction and restores moved sources.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-69
   track: T10-MATURITY
   window: Y1Q3
