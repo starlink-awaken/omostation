@@ -395,7 +395,8 @@ bets:
   title: 'Service Gateway bounded liveness scan'
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   goal: '让 Service Gateway 的只读健康视图在大量不可达服务时仍在有界预算内返回，并保持逐服务结果真实。'
   non_goals:
   - 不启动、停止或重启任何服务，不修改宿主 plist 或 launchd 状态
@@ -435,6 +436,43 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 'Any host mutation, registry semantic change, unbounded probe, or second control plane stops this BET.'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@694b999832a5549b71af5e7f82714408281dbdbd
+          tests:
+            ref: receipt://tests/test_ops_liveness.py
+            sha256: sha256:b6d022b0ad30f5feb7d632a39034aed7716c82d3212de44a32d15ea168098652
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md
+            sha256: sha256:3e69c5990b9b2462e34a9b0f9419fe8d08748ce132a1920aab31c4fd2250d2e2
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md
+            sha256: sha256:3e69c5990b9b2462e34a9b0f9419fe8d08748ce132a1920aab31c4fd2250d2e2
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://tests/test_ops_liveness.py
+            sha256: sha256:b6d022b0ad30f5feb7d632a39034aed7716c82d3212de44a32d15ea168098652
+          fresh_receipt:
+            ref: receipt://tests/test_ops_liveness.py
+            sha256: sha256:b6d022b0ad30f5feb7d632a39034aed7716c82d3212de44a32d15ea168098652
+          replay:
+            ref: receipt://tests/test_ops_liveness.py
+            sha256: sha256:b6d022b0ad30f5feb7d632a39034aed7716c82d3212de44a32d15ea168098652
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md
+            sha256: sha256:3e69c5990b9b2462e34a9b0f9419fe8d08748ce132a1920aab31c4fd2250d2e2
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 - id: BET-Y1Q2-T6-06
   track: T6-EVOLUTION
