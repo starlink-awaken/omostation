@@ -257,6 +257,55 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-65
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Documents terminal rollback receipt guard
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Prevent a Documents migration family from reaching verified or retired when its rollback receipt is not resolvable, and record the current root one-off receipt loss as a fail-closed evidence gap.
+  non_goals:
+  - No Documents content, runtime, cache, host schedule, LaunchAgent, or client configuration mutation.
+  - No physical re-move, deletion, or reconstruction of the missing quarantine payload.
+  - No change to migration-family ownership, source globs, or terminal semantics beyond receipt resolvability enforcement.
+  done_when:
+  - The migration checker rejects a terminal family whose rollback_ref does not resolve to a regular file.
+  - The checker accepts a terminal family with a real rollback receipt and preserves existing sample/live coverage behavior.
+  - A report records the live root-oneoff source absence and missing rollback package without claiming physical completion.
+  - The root one-off retirement branch cannot pass its registry check while the referenced quarantine manifest is absent.
+  verify:
+  - cmd: uv run --with pyyaml python -m pytest tests/test_documents_content_plane_migration_check.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 on the current main registry, with no terminal receipt errors
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond pre-existing known debt
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/documents-content-plane-migration-check.py
+  - tests/test_documents_content_plane_migration_check.py
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
+  - docs/reports/2026-08-29-documents-terminal-receipt-gap.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-65.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-65-bet-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:f851565612d5b4e643642ffca7938e937a5d6e39173e4e0059d69de24d2fb9ea
+    decision_ref: decision://accepted/BET-Y1Q3-T10-65
+  depends_on:
+  - BET-Y1Q3-T10-59
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any Documents content or runtime mutation, missing evidence boundary, or attempt to recreate the lost payload stops this BET.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-62
   track: T10-MATURITY
   window: Y1Q3
