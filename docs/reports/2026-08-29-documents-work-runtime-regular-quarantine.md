@@ -48,7 +48,8 @@ projection, or schedule artifacts.
 
 ## Registry decision
 
-`work-runtime` is recorded as `retired` only for this verified physical
-runtime set; the broader migration registry retains all other family statuses
-unchanged. Rollback is manifest-driven and remains available during the
-observation window.
+The 17-file Weijian regular-runtime subset is recorded as completed progress,
+but the family-level `work-runtime` status remains `pending` because its
+registry globs also cover other Documents `_control`, `tools`, `_scripts`, and
+domain runtime surfaces. Rollback is manifest-driven and remains available
+during the observation window. No other migration-family status changed.
