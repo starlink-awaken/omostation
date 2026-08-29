@@ -561,7 +561,7 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: Any capability ID, registry writer, receipt schema, admission semantics, Documents content, or runtime-state change stops this BET.
-- id: BET-Y1Q3-T10-58
+- id: BET-Y1Q3-T10-59
   track: T10-MATURITY
   window: Y1Q3
   title: Documents root one-off runtime quarantine
@@ -592,14 +592,14 @@ bets:
   - docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md
   - docs/reports/2026-08-29-root-oneoff-quarantine.md
   - docs/plans/3y-bet-ledger.yaml
-  - .omo/_knowledge/retros/BET-Y1Q3-T10-58.md
-  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-58-root-oneoff-bootstrap.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-59.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-59-root-oneoff-bootstrap.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:fb372d581e8fce999555bf8a04942c61b1178782922d72f0b6921e574586614a
-    decision_ref: decision://accepted/BET-Y1Q3-T10-58
+    content_digest: sha256:1b35aef70f44cb452ec75cb5dc5941afe8b98f40107f130ce74b2a8396450d2b
+    decision_ref: decision://accepted/BET-Y1Q3-T10-59
   depends_on:
   - BET-Y1Q3-T10-57
   risk_level: L2
@@ -615,28 +615,28 @@ bets:
             ref: git://origin/main@7bcaa8139231252d3c116c7d32cf1b63daecbed4
           tests:
             ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
-            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
           diff:
             ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
-            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
           rollback:
             ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
-            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
-            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
           fresh_receipt:
             ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
-            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
           replay:
             ref: receipt://docs/reports/2026-08-29-root-oneoff-quarantine.md
-            sha256: sha256:20d4d7c38a93487d0e65fe8c8f88ec0983c3eeebd2e542048a05b476c7297f32
+            sha256: sha256:862ad2988d8bfd19caa1b87dc11532658efaa0d5f3c3a5e73655b099ca738876
           cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-58.md
-            sha256: sha256:ca3c88a974bf6ba01ccaaf9fb10506cdfac425413ebb8efbc76eba9009ae8340
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-59.md
+            sha256: sha256:05f0268ad0425c1749c049a3fbaf83c0b14f1dd94a67acf795d385909fba82b4
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -7272,6 +7272,12 @@ bets:
   status: done
   done_at: 2026-08-29
   started_at: 2026-08-24
+  workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/state/**
+  - .omo/goals/**
+  - bin/mof/**
+  - docs/**
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact find-load、OMO admission/dispatch
     与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误 admission、平行 dispatch 和执行回执冒充个人价值。
   non_goals:
@@ -7417,7 +7423,7 @@ bets:
             ref: git://origin/main@477e142325e36c025337b308511ac4ee70000b4a
           tests:
             ref: receipt://tests/test_capability_sync.py
-            sha256: sha256:63f4be230379a61616f8f699befe7e15e386dd18c5c1947ae72e47cad9c4a988
+            sha256: sha256:c092ea7539b2d3696cfaaf6c9867ecde8fbf38bbde7979a3fc9dfc9bae756016
           diff:
             ref: receipt://lib/capability_trace_binding.py
             sha256: sha256:7dc472b2176e6b0b8897e9f0776e60470bb8f172fc5ad42ec076bd744916fcad
