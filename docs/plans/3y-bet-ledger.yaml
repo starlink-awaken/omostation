@@ -257,6 +257,96 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-58
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Automation fallout repair (omo imports, resident noise, state-sync churn)
+  appetite: 0.5 day
+  priority: P0
+  status: done
+  done_at: 2026-08-29
+  goal: Repair the 2026-08-29 unattended god-module extraction fallout in projects/omo (agent-workflow CLI import breakage, omo_audit import cycle), contain resident decision-inbox noise from provenance-free trigger events, and stop the chore(state) commit-reset churn on local main.
+  non_goals:
+  - No new god-module extractions and no second workflow dispatcher.
+  - No forced rebase/push of the diverged local omo child branch while the unattended extraction session is still active (documented follow-up instead).
+  - No T1-12 completion-evidence edits and no T4-02 scope change.
+  done_when:
+  - bin/agent-workflow.py bootstrap/status/compliance run clean at workspace root.
+  - Both import orders work for omo.omo_audit / omo.omo_audit_checks / omo.workflow.diagnostics_p74, and omo resident-decision tests pass.
+  - Resident decision loop drops provenance-free (empty trace_id) trigger drafts and emits at most one draft per (event_type, trace_id) per UTC day.
+  - commit-msg hook rejects chore(state)-genre commits on local main, steering them to the worktree+PR path.
+  - Accumulated empty-template decision-proposal drafts are dispositioned with counts recorded.
+  verify:
+  - cmd: uv run --with pyyaml python bin/agent-workflow.py status
+    expect: 'exit 0 and "agent-workflow status: ok"'
+  - cmd: cd projects/omo && uv run python -c "import omo.omo_audit_checks, omo.omo_audit, omo.workflow.diagnostics_p74"
+    expect: exit 0
+  - cmd: cd projects/omo && uv run pytest tests/unit/test_resident_decision.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond pre-existing T1-12 items
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo
+  - .githooks/**
+  - AGENTS.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+  - docs/reports/**
+  - .omo/_knowledge/decision-proposals/**
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-58.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-29-t10-58-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:424bdbafb9c8ad05a0d23d6f2b877c88e82010790f0a52fe2db6c2a3bacc80d2
+    decision_ref: decision://accepted/BET-Y1Q3-T10-58
+  depends_on:
+  - BET-Y1Q3-T10-54
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: If the unattended extraction session resumes mutating projects/omo, stop the child-branch reconciliation instead of forcing it; hook and inbox guards alone still satisfy containment.
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@1a3769ca8ad9e6c3643d2df8d1e44eaadab32cd4
+          tests:
+            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
+            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+            sha256: sha256:424bdbafb9c8ad05a0d23d6f2b877c88e82010790f0a52fe2db6c2a3bacc80d2
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+            sha256: sha256:424bdbafb9c8ad05a0d23d6f2b877c88e82010790f0a52fe2db6c2a3bacc80d2
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
+            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
+            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+          replay:
+            ref: receipt://docs/reports/2026-08-29-t10-58-automation-fallout-repair.md
+            sha256: sha256:32a86b5c847a57d893160b64ed1c7bd61b21025e7cf9bf3b811618e382ba1b75
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-t10-58-automation-fallout-repair-design.md
+            sha256: sha256:424bdbafb9c8ad05a0d23d6f2b877c88e82010790f0a52fe2db6c2a3bacc80d2
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-56
   track: T10-MATURITY
   window: Y1Q3

@@ -1,0 +1,17 @@
+schema: agent-error/v1
+id: PITFALL-GAT-003
+category: gate
+severity: medium
+title: test fixture leaked drafts into real decision inbox (INBOX_DIR not isolated)
+symptom: 163 untracked decision-*.md placeholder drafts with fixture filenames (trace-abc/evt-fallback/event)
+  accumulating in .omo/_knowledge/decision-proposals
+root_cause: ''
+solution: isolate INBOX_DIR alongside PROPOSAL_DIR in tests/unit/test_resident_decision.py
+  fixture; delete placeholder drafts (T10-58)
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-08-29'
+times_encountered: 1
+last_confirmed_at: '2026-08-29'
+status: active

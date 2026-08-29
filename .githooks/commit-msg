@@ -1,0 +1,38 @@
+#!/bin/bash
+# commit-msg — T10-57: chore(state) commits never land on local main directly
+#
+# Background: branch protection rejects direct main pushes, so state-sync
+# snapshots committed on local main can never deliver; the observed loop was
+# commit → push rejected → reset to origin/main → repeat (orphans the commit
+# and risks absorbing unrelated staged files). The governed path is
+# worktree + PR (e.g. #2519 chore/state-sync-0829).
+#
+# Bypass: SWARM_ESCAPE_ID=<id> (D4 escape hatch, same as other swarm gates).
+# Install: make install-hooks (copy .githooks/ → .git/hooks/)
+
+set -euo pipefail
+
+MSG_FILE="$1"
+branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
+
+if [ "$branch" != "main" ] || [ -n "${SWARM_ESCAPE_ID:-}" ]; then
+  exit 0
+fi
+
+if head -1 "$MSG_FILE" | grep -qE '^chore\(state\)(\([^)]*\))?:'; then
+  cat >&2 <<'EOF'
+✋ commit-msg guard (T10-57): chore(state) commits are not allowed on local main.
+
+Branch protection will reject the push anyway, leaving an orphaned commit.
+Use the governed path instead:
+
+  bash bin/gac/gac-worktree.sh claim state-sync-<topic>
+  # commit chore(state) on the worktree branch, then:
+  bash bin/gac/gac-worktree.sh submit state-sync-<topic>
+
+Escapes: SWARM_ESCAPE_ID=<id> git commit ... (D4, recorded in swarm log).
+EOF
+  exit 1
+fi
+
+exit 0
