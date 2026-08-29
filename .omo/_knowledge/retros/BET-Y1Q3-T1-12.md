@@ -246,8 +246,6 @@ capability (`skill:git-discipline`、`workflow:bet-execution`、
 “gateway-backed execution run”标准，本次不得运行或伪造正向 receipt，
 `operational=NOT_PROVEN` 保持不变。该阻断是 host topology 缺失，不是
 capability binding 负例或本地单元测试失败。
-||||||| parent of d8252c891 (feat(governance): T1-12 正向 canary — driver 入库 + 生产执行五格全绿 + operational 复评 PROVEN (principal 裁决 B))
-
 ## 2026-08-29 正向 canary 执行成功 — operational 复评 PROVEN
 
 - driver 入库: bin/ssot/binding-canary-driver.py (binding-canary-report/v1)
