@@ -2024,20 +2024,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@1615dd7463d29c3bc68be93d6ebde62a0bc56653
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md
+            sha256: sha256:e3729d1c5c0444d27d9a7d729030c55515d0d455bf8489357d3ad34190ccaec7
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
+            sha256: sha256:666fc84bb10ab95115074a18430f54f705ad91dd51494cb8a074da4707823dfb
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
+            sha256: sha256:666fc84bb10ab95115074a18430f54f705ad91dd51494cb8a074da4707823dfb
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
+            sha256: sha256:666fc84bb10ab95115074a18430f54f705ad91dd51494cb8a074da4707823dfb
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
+            sha256: sha256:666fc84bb10ab95115074a18430f54f705ad91dd51494cb8a074da4707823dfb
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md
+            sha256: sha256:e3729d1c5c0444d27d9a7d729030c55515d0d455bf8489357d3ad34190ccaec7
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
+            sha256: sha256:666fc84bb10ab95115074a18430f54f705ad91dd51494cb8a074da4707823dfb
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
-  depends_on: []
-  value_indicator_policy: false
-  risk_level: L3
-  human_gate: true
-  circuit_breaker: 任一负例不能证明零 provider/router/tool/ledger effect，或需新身份登记表/凭证存储时立即停机
+    overall_state: delivery_accepted
+  value_indicator_policy: false  # spec §9: 本 WP 不证明价值
   retro: required
 - id: BET-Y1Q3-T4-05
   track: T4-OUTCOME
