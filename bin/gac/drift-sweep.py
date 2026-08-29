@@ -38,7 +38,7 @@ def check_ssot_pointer_drift() -> dict:
 
 
 def check_mof_capability_drift() -> dict:
-    rc, out, err = run("python3 bin/gac/mof-capabilities-drift-check.py 2>&1 | tail -20")
+    rc, out, err = run("python3 bin/mof/check-mof-capabilities-drift.py 2>&1 | tail -20")
     return {
         "check": "mof_capability_drift",
         "pass": rc == 0,

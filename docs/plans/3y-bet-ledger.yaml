@@ -1038,7 +1038,8 @@ bets:
   title: Documents quarantine owner root anchor
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   goal: Repair the Workspace root anchor after moving the reusable Documents quarantine owner from bin/gac into lib.
   non_goals:
   - No Documents content, runtime, cache, host schedule, LaunchAgent, client configuration, or payload mutation.
@@ -1069,6 +1070,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:489243068b647b9d912d70c906a5b772540573236c6bb3d351c7f70b50120cdc
     decision_ref: decision://accepted/BET-Y1Q3-T10-71
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a19ef95a9ed5f58e87eed571428fea394f2054a9
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-71.md
+            sha256: sha256:41b2bd863545ba96be11d767897753c084023225d738e5857e365ea27bee4934
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
+            sha256: sha256:489243068b647b9d912d70c906a5b772540573236c6bb3d351c7f70b50120cdc
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
+            sha256: sha256:489243068b647b9d912d70c906a5b772540573236c6bb3d351c7f70b50120cdc
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-71.md
+            sha256: sha256:41b2bd863545ba96be11d767897753c084023225d738e5857e365ea27bee4934
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-71.md
+            sha256: sha256:41b2bd863545ba96be11d767897753c084023225d738e5857e365ea27bee4934
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-71.md
+            sha256: sha256:41b2bd863545ba96be11d767897753c084023225d738e5857e365ea27bee4934
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
+            sha256: sha256:489243068b647b9d912d70c906a5b772540573236c6bb3d351c7f70b50120cdc
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-69
   risk_level: L1
@@ -1229,7 +1266,8 @@ bets:
   title: Documents terminal rollback receipt guard
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Prevent a Documents migration family from reaching verified or retired when its rollback receipt is not resolvable, and record the current root one-off receipt loss as a fail-closed evidence gap.
   non_goals:
   - No Documents content, runtime, cache, host schedule, LaunchAgent, or client configuration mutation.
@@ -1269,6 +1307,43 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: Any Documents content or runtime mutation, missing evidence boundary, or attempt to recreate the lost payload stops this BET.
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@41bdb1a7e178bbd714bfc6a0d2dde6b65dea4008
+          tests:
+            ref: receipt://tests/test_documents_content_plane_migration_check.py
+            sha256: sha256:ce3b6d638ce155c307534e3b96e294b02db66718a1c479cc2762fd4134471677
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
+            sha256: sha256:f851565612d5b4e643642ffca7938e937a5d6e39173e4e0059d69de24d2fb9ea
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
+            sha256: sha256:f851565612d5b4e643642ffca7938e937a5d6e39173e4e0059d69de24d2fb9ea
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-documents-terminal-receipt-gap.md
+            sha256: sha256:d388eeff6fb33edda9625d3f2e56f87f6e888c9cb32dc54f4f7587c14dd78404
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-documents-terminal-receipt-gap.md
+            sha256: sha256:d388eeff6fb33edda9625d3f2e56f87f6e888c9cb32dc54f4f7587c14dd78404
+          replay:
+            ref: receipt://docs/reports/2026-08-29-documents-terminal-receipt-gap.md
+            sha256: sha256:d388eeff6fb33edda9625d3f2e56f87f6e888c9cb32dc54f4f7587c14dd78404
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
+            sha256: sha256:f851565612d5b4e643642ffca7938e937a5d6e39173e4e0059d69de24d2fb9ea
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   value_indicator_policy: false
   retro: required
 
