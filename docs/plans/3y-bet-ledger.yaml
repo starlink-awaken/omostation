@@ -263,7 +263,8 @@ bets:
   title: 'Canonical Agora MCP port contract'
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-29
   goal: '让已登记的 mcp.agora Service Gateway 启动环境遵守 SSOT 7433，同时保留 Agora 独立 SSE 默认 7431。'
   non_goals:
   - 不改变 Agora standalone 默认端口、不启用旧 7432 daemon
@@ -303,6 +304,43 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 'Any host mutation, default port change, old daemon activation, or second registry stops this BET.'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6d2a6e461d2e55e5f8b92f859639e2cd78ea7efb
+          tests:
+            ref: receipt://tests/test_ops_cli.py
+            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-agora-port-contract-design.md
+            sha256: sha256:7e49aeb85fe817ed690c2a908a49658c56ebb89e5c3273f1ed8385a8e8907997
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-29-agora-port-contract-design.md
+            sha256: sha256:7e49aeb85fe817ed690c2a908a49658c56ebb89e5c3273f1ed8385a8e8907997
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
+          fresh_receipt:
+            ref: receipt://tests/test_ops_cli.py
+            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+          replay:
+            ref: receipt://tests/test_ops_cli.py
+            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-agora-port-contract-design.md
+            sha256: sha256:7e49aeb85fe817ed690c2a908a49658c56ebb89e5c3273f1ed8385a8e8907997
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 
 - id: BET-Y1Q3-T10-49
