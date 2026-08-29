@@ -12,9 +12,9 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 629
-  bos_services: 268
+  bos_services: 271
   bos_domains: 21
-  cli_commands: 163
+  cli_commands: 165
   skills: 2
   workflows: 17
 mcp_servers:
@@ -874,7 +874,7 @@ bos_services:
     bcos: 3
     capability: 44
     cockpit: 2
-    compute: 9
+    compute: 12
     ecos: 10
     fabric: 1
     forge: 1
@@ -1343,6 +1343,18 @@ bos_services:
       status: active
     - uri: bos://compute/omlxc/cluster
       description: omlxc 异构三节点智能调度、心跳与故障自愈拓扑
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/tree
+      description: omlxc 自适应熵感知树状投机解码与多候选验证服务 (ADR-0434)
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/stream
+      description: omlxc 跨节点 Chunk-level 流式协同流水线服务 (ADR-0434)
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/swarm
+      description: omlxc 分布式跨节点 KV 共享池与超长上下文置换服务 (ADR-0434)
       transport: stdio
       status: active
     ecos:
@@ -2272,14 +2284,18 @@ cli_commands:
   description: 索引统计
 - name: status
   description: 系统健康
+- name: stream
+  description: 跨节点 Chunk-level 流式协同流水线基准
 - name: submit
   description: 提交控制任务
 - name: summary
   description: 债务摘要 (委派 omo debt)
 - name: swarm
-  description: 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突)
+  description: 分布式跨节点 KV 共享池与超长上下文置换基准
 - name: topics
   description: 列出已注册 topic
+- name: tree
+  description: 自适应熵感知树状投机解码与多候选验证基准
 - name: triage
   description: 分析 Prompt 意图复杂度分级
 - name: tui
