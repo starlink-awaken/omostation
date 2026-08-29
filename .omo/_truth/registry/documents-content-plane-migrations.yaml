@@ -310,7 +310,13 @@ families:
       - "audit://documents/root-oneoff/consumer-scan-pending"
     rollback: "Archive evidence and record hashes before any delete; restore from the rollback package if a consumer is discovered."
     confirmation_gate: before_delete
-    status: pending
+    status: retired
+    evidence:
+      verified_at: "2026-08-29T08:39:05Z"
+      source_fingerprint: "sha256:ad1084bf3abb95bc870036d750b1a86192dbccd8b29e265980732a87da957142"
+      target_fingerprint: "sha256:ad1084bf3abb95bc870036d750b1a86192dbccd8b29e265980732a87da957142"
+      consumer_scan: "receipt://docs/reports/2026-08-29-root-oneoff-registry-retirement.md"
+      rollback_ref: "/Users/xiamingxing/Workspace/runtime/quarantine/documents-root-oneoff-20260829/manifest.json"
 
   - id: documents-client-state
     source_globs:
