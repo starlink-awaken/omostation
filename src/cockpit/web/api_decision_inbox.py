@@ -215,3 +215,54 @@ async def inbox_summary() -> dict[str, Any]:
         return {"ok": True, "summary": summary}
     except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
         return {"ok": False, "status": "error", "error": str(exc)}
+
+
+# ── WP5 (BET-Y1Q3-T4-07): human adjudication → OMO truth-writer ──────────────
+
+
+@router.post("/decisions/{decision_id}/adjudicate")
+async def adjudicate_decision(decision_id: str, request: Request) -> dict[str, Any]:
+    """WP5 human adjudication command — 只委派 OMO truth-writer, 不直接写 projection。
+
+    payload 必须携带 WP4 authority binding:
+      principal_id / verdict / authority_receipt_digest / scene_id / episode_id
+    qualifying 判定、幂等、durable 写入全部由 omo.omo_adjudication 承担。
+    """
+    try:
+        payload = await request.json()
+        if not isinstance(payload, dict):
+            raise ValueError("payload must be an object")
+        principal_id = payload.get("principal_id", "")
+        verdict = payload.get("verdict", "")
+        authority_receipt_digest = payload.get("authority_receipt_digest", "")
+        scene_id = payload.get("scene_id", "")
+        episode_id = payload.get("episode_id", "")
+        if not (principal_id and verdict and authority_receipt_digest and scene_id and episode_id):
+            return {
+                "ok": False,
+                "status": "invalid",
+                "error": "principal_id/verdict/authority_receipt_digest/scene_id/episode_id all required",
+            }
+        from datetime import UTC, datetime
+
+        from omo.omo_adjudication import AdjudicationStore, HumanAdjudication
+
+        adjudication = HumanAdjudication(
+            adjudication_id=f"adj-{decision_id}-{int(datetime.now(UTC).timestamp())}",
+            decision_id=decision_id,
+            principal_id=principal_id,
+            verdict=verdict,
+            source_class="real_human",
+            authority_receipt_digest=authority_receipt_digest,
+            adjudicated_at=datetime.now(UTC).isoformat(),
+        )
+        store = AdjudicationStore()
+        result = store.record_wp5_outcome(
+            adjudication,
+            scene_id=scene_id,
+            episode_id=episode_id,
+            burden_minutes=payload.get("burden_minutes"),
+        )
+        return {"ok": True, **result}
+    except (OSError, RuntimeError, ValueError, TypeError, ImportError) as exc:
+        return {"ok": False, "status": "invalid", "error": str(exc)}

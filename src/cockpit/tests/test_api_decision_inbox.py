@@ -151,3 +151,39 @@ def test_decision_inbox_unavailable_when_no_engine(monkeypatch, tmp_path):
     assert resp.status_code == 200
     assert resp.json()["ok"] is False
     assert resp.json()["status"] == "unavailable"
+
+
+# ---------------------------------------------------------------------------
+# WP5 (BET-Y1Q3-T4-07): adjudicate 端点 — 只委派 OMO truth-writer
+# ---------------------------------------------------------------------------
+
+
+def test_adjudicate_endpoint_exists_in_openapi():
+    from fastapi.testclient import TestClient
+
+    from cockpit.web.api_decision_inbox import router
+
+    app = type("App", (), {})()
+    app.routes = [router]
+    paths = {r.path for r in router.routes}
+    assert "/api/decision-inbox/decisions/{decision_id}/adjudicate" in paths
+
+
+def test_adjudicate_endpoint_rejects_partial_payload():
+    """缺 authority 字段 → 400 形态拒绝 (委派前校验)。"""
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from cockpit.web.api_decision_inbox import router
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.post(
+        "/api/decision-inbox/decisions/do-001/adjudicate",
+        json={"principal_id": "principal:x", "verdict": "accepted"},  # 缺 authority/scene/episode
+    )
+    assert resp.status_code == 200  # FastAPI 返回结构化拒绝
+    body = resp.json()
+    assert body["ok"] is False
+    assert "all required" in body["error"]
