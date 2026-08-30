@@ -263,7 +263,8 @@ bets:
   title: Converge learning L4 control-plane owners into Workspace
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Replace the remaining learning L4 control-plane and daemon wrapper executors with one Workspace-owned aggregate health/control entry, preserving truthful read-only checks, delegated decay inspection, no schedule changes, and protected reversible quarantine for the legacy implementations.
   non_goals:
   - No movement or semantic rewrite of the nine learning domain executors under _control/executors; they require a separate owner-parity wave.
@@ -304,6 +305,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:b3423973f21d211a53bd248a80ac4a51ab0eff0e4a7c718f4099c4b21e48c5da
     decision_ref: decision://accepted/BET-Y1Q3-T10-101
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bbfecdfd44547f36290dc995b2f11d79dbd2d83d
+          tests:
+            ref: receipt://docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+            sha256: sha256:4bc16a08315be3913c2ad1aab66c24af49e5aa9711e35acf551ad749930a9436
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md
+            sha256: sha256:b3423973f21d211a53bd248a80ac4a51ab0eff0e4a7c718f4099c4b21e48c5da
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+            sha256: sha256:4bc16a08315be3913c2ad1aab66c24af49e5aa9711e35acf551ad749930a9436
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+            sha256: sha256:4bc16a08315be3913c2ad1aab66c24af49e5aa9711e35acf551ad749930a9436
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+            sha256: sha256:4bc16a08315be3913c2ad1aab66c24af49e5aa9711e35acf551ad749930a9436
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-101.md
+            sha256: sha256:fad3db5d67080ca42cb1cdbc5576a1a8b207fcaf3ad361ba3a9c65f7732d841c
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md
+            sha256: sha256:b3423973f21d211a53bd248a80ac4a51ab0eff0e4a7c718f4099c4b21e48c5da
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-100
   risk_level: L2
