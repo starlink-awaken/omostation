@@ -1,7 +1,7 @@
 schema: script-registry/v1
-id: bin/gac/unified-health-score.py
-name: Unified Health Score
-category: state
+id: bin/gac/_archive/tool-governance.py
+name: Tool Governance
+category: governance
 owner: governance-team
 description: ""
 inputs: []

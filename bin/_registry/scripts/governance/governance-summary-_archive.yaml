@@ -1,5 +1,5 @@
 schema: script-registry/v1
-id: bin/gac/governance-summary.py
+id: bin/gac/_archive/governance-summary.py
 name: Governance Summary
 category: governance
 owner: governance-team
