@@ -11,8 +11,8 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 629
-  bos_services: 282
+  mcp_tools: 634
+  bos_services: 288
   bos_domains: 21
   cli_commands: 175
   skills: 2
@@ -236,11 +236,16 @@ mcp_servers:
   - bos_inbox_search
   - bos_inbox_triage
   - bos_inbox_watch
+  - bos_mesh_dma_status
   - bos_metrics_status
   - bos_middleware_status
   - bos_reload_discovery
   - bos_reload_m1
   - bos_reload_routes
+  - bos_spine_diff
+  - bos_spine_draft
+  - bos_spine_sign
+  - bos_spine_status
   - cartridge_pack
   - check_health
   - create_api_key
@@ -316,7 +321,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 99
+  tool_count: 104
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -873,8 +878,8 @@ bos_services:
     analysis: 28
     bcos: 3
     capability: 44
-    cockpit: 2
-    compute: 16
+    cockpit: 7
+    compute: 17
     ecos: 10
     fabric: 1
     forge: 1
@@ -1308,6 +1313,26 @@ bos_services:
       description: cockpit test 工具 — mof_agora_hook 路由表入口
       transport: inline
       status: active
+    - uri: bos://cockpit/spine/draft
+      description: Cockpit/Spine 本地主权草稿生成与 AetherForge/omlxc 推理代理
+      transport: stdio
+      status: active
+    - uri: bos://cockpit/spine/sign
+      description: Cockpit/Spine 夏明星署名 Diff 经纪人录入与经验回放自适应进化
+      transport: stdio
+      status: active
+    - uri: bos://cockpit/spine/diff
+      description: Cockpit/Spine 署名 Diff 对比分析与经验样本池浏览
+      transport: stdio
+      status: active
+    - uri: bos://cockpit/spine/status
+      description: Cockpit/Spine 物理算力织网与主干真值流状态监控
+      transport: stdio
+      status: active
+    - uri: bos://cockpit/spine/distill
+      description: Cockpit/Spine 触发 Mac mini M4 闲时在线 LoRA 蒸馏
+      transport: stdio
+      status: active
     compute:
     - uri: bos://compute/aetherforge/infer
       description: AetherForge 算力网关与 omlxc (Apple MLX/Local LLM) 本地量化模型通用推理调度端点
@@ -1331,6 +1356,10 @@ bos_services:
       status: active
     - uri: bos://compute/omlxc/vram
       description: omlxc 动态 KV Cache 显存预算评估与 75% 阶梯准入
+      transport: stdio
+      status: active
+    - uri: bos://compute/omlxc/replay
+      description: omlxc 经验回放池状态、水塘抽样与防遗忘混合 batch 统计
       transport: stdio
       status: active
     - uri: bos://compute/omlxc/cache
