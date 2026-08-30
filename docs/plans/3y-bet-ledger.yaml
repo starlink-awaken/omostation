@@ -257,6 +257,60 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-102
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Harden Documents consumer-audit command path tokenization
+  appetite: 0.5 day
+  priority: P0
+  status: candidate
+  goal: Make the canonical host consumer audit separate Documents executable paths from trailing argv, preserve quoted paths with spaces, and detect extensionless control executors so active Scheduled consumers cannot be falsely reported as zero forbidden executors.
+  non_goals:
+  - No modification of Claude Scheduled skills, crontab, LaunchAgents, Documents content, migration-family status, or quarantine payloads.
+  - No second consumer registry, dispatcher, parser module, or owner command.
+  - No claim that learning-runtime or Documents physical purity is complete.
+  done_when:
+  - Unquoted HOME and absolute Documents executable paths are tokenized before trailing argv.
+  - Quoted executable paths containing spaces are preserved exactly.
+  - Extensionless _control/executors and .githooks paths are treated as execution candidates through one shared predicate.
+  - Scheduled, crontab, and LaunchAgent Documents executors remain forbidden while canonical Workspace owner reads remain non-forbidden.
+  - A fresh host audit reports the live vault-daily-health Scheduled command truthfully and creates no Documents or host mutation.
+  - Focused tests, Python 3.9 parse, Ruff, ledger lint, doc SSOT, GaC, PR checks, and mainline replay pass.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_consumer_audit.py -q
+    expect: exit 0
+  - cmd: uv run --with ruff ruff check lib/documents_consumer_audit.py tests/test_documents_consumer_audit.py
+    expect: exit 0
+  - cmd: python3 -c 'import ast,pathlib; [ast.parse(pathlib.Path(p).read_text(), feature_version=(3, 9)) for p in ("lib/documents_consumer_audit.py", "tests/test_documents_consumer_audit.py")]'
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - lib/documents_consumer_audit.py
+  - tests/test_documents_consumer_audit.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md
+  - docs/superpowers/plans/2026-08-30-documents-consumer-audit-path-tokenization.md
+  - docs/reports/2026-08-30-documents-consumer-audit-path-tokenization.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-102.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-102-consumer-audit-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:fadce42e68d2986409ef33152b084e3f5f5ab4458e184d2f0765f13e70b6c7de
+    decision_ref: decision://accepted/BET-Y1Q3-T10-102
+  depends_on:
+  - BET-Y1Q3-T10-36
+  - BET-Y1Q3-T10-101
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any quoted-path truncation, Workspace owner false positive, schema/exit-code drift, source-text leakage, host mutation, Documents write, or new registry/parser authority stops this BET.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-101
   track: T10-MATURITY
   window: Y1Q3
