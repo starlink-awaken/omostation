@@ -25,3 +25,8 @@ risk: Bootstrap declarations only; no implementation code, registry mutation, or
 residual: Obtain written spec review, write the implementation plan, then use a formal BET-bound run with exact claims and test-first implementation.
 gate_bypass: 1
 no-run-id: true
+
+formal_planning:
+  run_id: 20260830T145443Z-bet-execution-91e1ffd9
+  purpose: Write and validate the approved implementation plan with exact path claims.
+  note: Implementation and host mutation require fresh formal execution runs after the design PR reaches main.
