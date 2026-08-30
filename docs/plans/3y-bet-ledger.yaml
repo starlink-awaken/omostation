@@ -1834,7 +1834,8 @@ bets:
   title: Documents Guozhuan dangling symlink quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the twelve dangling symlink objects under Documents/@工作文档/国转中心/_runtime into protected Workspace quarantine without following or restoring their missing public-runtime targets.
   non_goals:
   - No target-byte restoration, regular runtime move, content, contract, cache, schedule, client, or family-level retirement.
@@ -1869,6 +1870,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:ace607580fd69c0b9e215bb118c3332f754e10792e1cb841eebe9099f66aa50a
     decision_ref: decision://accepted/BET-Y1Q3-T10-79
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@7abb5c9f8111c8d01a7564f11d63edea9dc2323a
+          tests:
+            ref: repo://tests/test_documents_runtime_quarantine.py
+            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-79.md
+            sha256: sha256:31366caaa2289d47a8fdc65119d2ef04f32838f8fb5ceed042c1b51a18a462d1
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-79.md
+            sha256: sha256:31366caaa2289d47a8fdc65119d2ef04f32838f8fb5ceed042c1b51a18a462d1
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+            sha256: sha256:f467b92f6ec3412da48e36a349d56c00bb0a66737e260f3914619137b7f6d475
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+            sha256: sha256:f467b92f6ec3412da48e36a349d56c00bb0a66737e260f3914619137b7f6d475
+          replay:
+            ref: receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+            sha256: sha256:f467b92f6ec3412da48e36a349d56c00bb0a66737e260f3914619137b7f6d475
+          cleanup:
+            ref: receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+            sha256: sha256:f467b92f6ec3412da48e36a349d56c00bb0a66737e260f3914619137b7f6d475
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-73
   - BET-Y1Q3-T10-78
