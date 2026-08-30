@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.1
+spec_version: 1.0.2
 title: CC Switch recovery-state relocation from Documents
 bet_id: BET-Y1Q3-T10-108
 status: accepted
@@ -29,6 +29,11 @@ Documents consumer audit is green with zero forbidden executors and zero
 unmatched consumers. L4 currently classifies these extensionless database and
 backup files as `content`; that is a known classifier gap, not authority to keep
 application recovery state in Documents.
+
+The live recovery corpus contains both repaired databases and one intentionally
+retained pre-repair database whose `PRAGMA quick_check` is already non-`ok`.
+Recovery relocation preserves that evidence; it must not rewrite corruption as
+health or discard the byte-identical pre-repair sample.
 
 ## Decision
 
@@ -98,6 +103,9 @@ same atomic registry change so no source surface is double-owned or unowned.
   `forbidden_executors=0`, and `unmatched=0`.
 - Available disk space must exceed the source byte count plus manifest/staging
   overhead.
+- Every recognizable SQLite file is checked. Healthy files are recorded `ok`;
+  pre-existing failures are recorded `corrupt-preserved` with a digest of the
+  quick-check result. At least one recognizable SQLite file must be `ok`.
 
 ### Apply and publication
 
@@ -107,8 +115,10 @@ same atomic registry change so no source surface is double-owned or unowned.
    reverse order.
 3. Verify file count, byte count, mode, SHA-256, and canonical tree fingerprint.
 4. For every non-empty file whose header is `SQLite format 3`, run
-   `PRAGMA quick_check` and require `ok`; zero-byte and non-SQLite recovery
-   artifacts remain byte-preserved and are recorded as such.
+   `PRAGMA quick_check`. Require every source status and result digest to replay
+   identically after movement: healthy files remain `ok`, while known damaged
+   recovery files remain byte-identical `corrupt-preserved`. Zero-byte and
+   non-SQLite recovery artifacts remain byte-preserved.
 5. Write and fsync a `documents-client-recovery-relocation/v1` manifest, then
    atomically publish staging as the final target.
 6. Remove only now-empty source directories. Permanent deletion is forbidden.
@@ -117,8 +127,9 @@ same atomic registry change so no source surface is double-owned or unowned.
 
 `verify` fails unless every manifest target is present and byte/mode equal,
 every manifest source is absent, source roots contain no residual file, the
-target fingerprint matches, SQLite checks remain green, and the consumer audit
-still has no forbidden or unmatched consumer.
+target fingerprint matches, SQLite classifications replay exactly with at least
+one healthy database, and the consumer audit still has no forbidden or
+unmatched consumer.
 
 `rollback` is allowed only when target hashes still match and both source roots
 are absent. It moves payload files back in reverse order, re-verifies source
@@ -129,8 +140,9 @@ overwrites a newly created source path.
 
 All errors use stable machine-readable codes. Boundary drift, source drift,
 target collision, open handles, insufficient disk, malformed receipts,
-non-regular nodes, SQLite corruption, hash/mode mismatch, publication failure,
-or rollback failure returns nonzero and preserves the most recoverable state.
+non-regular nodes, missing healthy SQLite recovery, changed SQLite
+classification/result digest, hash/mode mismatch, publication failure, or
+rollback failure returns nonzero and preserves the most recoverable state.
 No `--force`, implicit overwrite, partial-success, or permanent-delete mode is
 permitted.
 
@@ -143,7 +155,8 @@ Tests must be written first and prove RED before implementation. They cover:
 - target boundary and active-data-directory rejection;
 - open-handle, disk-space, consumer-receipt, source-drift, and collision gates;
 - move, staging verification, atomic publication, and reverse-order rollback;
-- valid, corrupt, zero-byte, and non-SQLite recovery artifacts;
+- valid, pre-corrupt, zero-byte, and non-SQLite recovery artifacts, including
+  exact `corrupt-preserved` replay;
 - manifest/status/rollback idempotence and Python 3.9 compatibility;
 - registry ownership uniqueness and required CI wiring.
 
@@ -169,8 +182,9 @@ audit, and a stable full-tree Documents audit.
   migration-family projection, report, retro, and rollback contract are merged.
 - A host plan identifies exactly 21 files and 417772968 bytes unless a new
   preflight snapshot is explicitly reviewed; any drift stops apply.
-- Apply and verify prove source absence, target completeness, SQLite health for
-  recognizable databases, manifest durability, and zero forbidden/unmatched
+- Apply and verify prove source absence, target completeness, healthy SQLite
+  databases remain `ok`, known damaged recovery databases remain byte-identical
+  `corrupt-preserved`, manifest durability, and zero forbidden/unmatched
   consumers.
 - Required CI, PR merge, mainline replay, and workflow closeout pass.
 - Engineering may become `VERIFIED` and operational may become `PROVEN`; user

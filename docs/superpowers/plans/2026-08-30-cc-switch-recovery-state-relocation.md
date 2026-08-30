@@ -16,7 +16,7 @@
 - Never follow symlinks, overwrite a target/source collision, accept a partial inventory, or expose a force/permanent-delete mode.
 - Require a fresh `documents.consumer-audit.v1` receipt with `status=ok`, `forbidden_executors=0`, and `unmatched=0`.
 - Preserve every regular file byte, mode, relative path, root name, and canonical tree fingerprint.
-- Recognizable non-empty SQLite databases must pass read-only `PRAGMA quick_check`; zero-byte and non-SQLite recovery artifacts remain byte-preserved.
+- Recognizable non-empty SQLite databases must run read-only `PRAGMA quick_check`; healthy files remain `ok`, pre-existing damaged recovery files replay byte-identical as `corrupt-preserved`, and at least one database must be healthy.
 - Production code must parse and execute on `/usr/bin/python3` (Python 3.9); do not use `X | None`, `list[str]`, or APIs newer than Python 3.9.
 - Keep L4 classifier changes, `_inbox/hourly_runner*.log`, public-runtime loss, and historical root-oneoff receipt loss outside this BET.
 - Engineering, operational, and value evidence remain separate; value stays `NOT_PROVEN`.
@@ -291,16 +291,18 @@ def test_apply_rejects_source_drift_and_target_collision_without_partial_move(tm
     assert all(root.is_dir() for root in layout.source_roots)
 
 
-def test_sqlite_quick_check_rejects_corruption_but_preserves_zero_and_non_sqlite_files(tmp_path: Path) -> None:
+def test_sqlite_quick_check_records_preexisting_corruption_for_byte_preservation(tmp_path: Path) -> None:
     layout = _layout(tmp_path)
     (layout.source_roots[0] / "corrupt.db").write_bytes(b"SQLite format 3\x00broken")
-    with pytest.raises(relocation.RelocationError, match="SQLite quick_check"):
-        relocation.plan_relocation(
-            _paths(layout),
-            consumer_receipt=_consumer_receipt(),
-            source_handles=[],
-            available_bytes=10**9,
-        )
+    plan = relocation.plan_relocation(
+        _paths(layout),
+        consumer_receipt=_consumer_receipt(),
+        source_handles=[],
+        available_bytes=10**9,
+    )
+    record = next(item for item in plan["sqlite_checks"] if item["relative_path"].endswith("corrupt.db"))
+    assert record["status"] == "corrupt-preserved"
+    assert record["details_sha256"].startswith("sha256:")
 
 
 def test_verify_and_rollback_use_manifest_and_never_overwrite_source(tmp_path: Path) -> None:
@@ -678,7 +680,8 @@ uv run --project projects/l4-kernel python \
 ```
 
 Inspect the JSON and require exactly 21 files, 417772968 bytes, both exact
-source roots, target absence, source handles zero, valid SQLite checks, and
+source roots, target absence, source handles zero, six healthy SQLite checks,
+one byte-identical `corrupt-preserved` check, and
 matching source fingerprint. Any changed count/bytes requires stopping for a
 new reviewed snapshot; do not override it.
 
@@ -706,7 +709,8 @@ absent, and no staging directory.
 Regenerate the postflight consumer receipt before this command. Also run one
 stable full-tree L4 audit and record counts without claiming that L4 classifier
 semantics were fixed. Require target fingerprint parity, source absence,
-rollback available, all recognizable SQLite checks `ok`, consumer
+rollback available, six recognizable SQLite checks `ok`, the known damaged
+`current.db` check unchanged as `corrupt-preserved`, consumer
 `forbidden_executors=0`, and `unmatched=0`.
 
 - [ ] **Step 5: Write terminal evidence and completion matrix**
@@ -738,7 +742,7 @@ report = {
 }
 spec = {
     "ref": "receipt://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md",
-    "sha256": "sha256:bb513598b8c08a970b7100e5becfc73478e643ded7b2b269bcb2822c0d09579b",
+    "sha256": "sha256:2c73609e12406af70db5a0a6f82b3516e8b6c460c8759022a72494592bf32cd9",
 }
 retro = {
     "ref": "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-108.md",
