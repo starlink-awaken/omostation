@@ -263,7 +263,8 @@ bets:
   title: Establish the family dashboard Workspace owner in family-hub
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-31
   goal: Import the canonical, non-private Next.js family dashboard source into the existing family-hub owner as an independently reproducible package, with deterministic provenance, explicit Documents/runtime boundaries, disabled direct writes, and child/root mainline proof.
   non_goals:
   - No import of current app-data, household data-manifest values, SQLite, indexes, caches, logs, credentials, browser auth state, build output, or private household content into Git.
@@ -305,6 +306,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:d833693de0a212a8a00e7ab6974c8511817291bd8254c609191c71884f4e186b
     decision_ref: decision://accepted/BET-Y1Q3-T10-111
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9a4caa312b7dc0230ff7ff178b4f0e994913a244
+          tests:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+            sha256: sha256:6c7b69fb1da0b0e3a2538523f3082b4df843b6e4dc0100389a2ef145132e3cf1
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
+            sha256: sha256:d833693de0a212a8a00e7ab6974c8511817291bd8254c609191c71884f4e186b
+          rollback:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+            sha256: sha256:6c7b69fb1da0b0e3a2538523f3082b4df843b6e4dc0100389a2ef145132e3cf1
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+            sha256: sha256:6c7b69fb1da0b0e3a2538523f3082b4df843b6e4dc0100389a2ef145132e3cf1
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+            sha256: sha256:6c7b69fb1da0b0e3a2538523f3082b4df843b6e4dc0100389a2ef145132e3cf1
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-111.md
+            sha256: sha256:f0244a793f7e4b9f13e45b015e2cf04cb27af7f0a02a7678106b389b6f4c5a68
+          cleanup:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+            sha256: sha256:6c7b69fb1da0b0e3a2538523f3082b4df843b6e4dc0100389a2ef145132e3cf1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-110
   risk_level: L3
