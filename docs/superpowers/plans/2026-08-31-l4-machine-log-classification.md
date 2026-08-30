@@ -264,10 +264,12 @@ Expected: `5 passed`.
 ```bash
 uv run pytest tests/test_content_plane.py tests/test_content_archive.py tests/test_cli_contracts.py -q
 uv run ruff check src/l4_kernel/content_plane.py tests/test_content_plane.py tests/test_content_archive.py tests/test_cli_contracts.py
-uv run ruff format --check src/l4_kernel/content_plane.py tests/test_content_plane.py tests/test_content_archive.py tests/test_cli_contracts.py
+uv run ruff format --check src/l4_kernel/content_plane.py tests/test_cli_contracts.py
+git show origin/main:tests/test_content_plane.py | uv run ruff format --check --stdin-filename tests/test_content_plane.py -
+git show origin/main:tests/test_content_archive.py | uv run ruff format --check --stdin-filename tests/test_content_archive.py -
 ```
 
-Expected: all focused tests pass and Ruff reports no errors or formatting drift.
+Expected: focused tests and Ruff lint pass; changed production/CLI files are formatted. The two baseline stdin checks return nonzero and prove inherited whole-file format drift without reformatting unrelated tests.
 
 - [ ] **Step 5: Commit the minimal child implementation**
 
@@ -298,12 +300,12 @@ Expected: implementation commit contains only production code; tests remain in t
 cd projects/l4-kernel
 uv run pytest tests/ -q
 uv run ruff check src/ tests/
-uv run ruff format --check src/ tests/
+uv run ruff format --check src/l4_kernel/content_plane.py tests/test_cli_contracts.py
 git diff origin/main...HEAD --check
 git status --short
 ```
 
-Expected: full suite passes, Ruff is clean, diff check is clean, and child worktree is clean.
+Expected: full suite and Ruff lint pass, changed files are formatted, diff check is clean, and child worktree is clean. Existing whole-file format debt in `test_content_plane.py` and `test_content_archive.py` is recorded but not expanded.
 
 - [ ] **Step 2: Review exact requirements against the child diff**
 
@@ -348,17 +350,15 @@ Expected: all commands exit zero. Keep the child branch until the root gitlink P
 
 ---
 
-### Task 4: Bind the root gitlink and completion evidence
+### Task 4: Merge the root gitlink delivery before terminal claims
 
 **Files:**
 - Modify: `projects/l4-kernel` gitlink
-- Modify: `docs/plans/3y-bet-ledger.yaml`
-- Create: `docs/reports/2026-08-31-l4-machine-log-classification.md`
-- Create: `.omo/_knowledge/retros/BET-Y1Q3-T10-109.md`
+- Modify: `docs/superpowers/plans/2026-08-31-l4-machine-log-classification.md`
 
 **Interfaces:**
 - Consumes: child merge SHA from Task 3 and root main specification digest.
-- Produces: root gitlink, historical delivery report, retrospective, and `completion-evidence-matrix/v1` with engineering `VERIFIED`, operational `NOT_PROVEN`, value `NOT_PROVEN`, and overall `delivery_accepted` only if the validator derives that state.
+- Produces: a root main commit whose gitlink reaches the child authoritative-main merge. BET status remains `candidate` until this root PR is merged and replayed.
 
 - [ ] **Step 1: Update the root pointer only from child `origin/main`**
 
@@ -372,100 +372,125 @@ git diff --submodule=log -- projects/l4-kernel
 
 Expected: root pointer advances from the old gitlink to the exact child authoritative-main tip containing the merged PR.
 
-- [ ] **Step 2: Run the fresh read-only host canary**
+- [ ] **Step 2: Run root implementation verification and the read-only host canary**
 
 ```bash
+uv run --with pyyaml python bin/plan/bet-ledger.py verify BET-Y1Q3-T10-109 --execute
+uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+make ssot-guardian
+make gac-local-gate
 uv run --project projects/l4-kernel python -c "from pathlib import Path; from l4_kernel.content_plane import classify_artifact; root=Path('/Users/xiamingxing/Documents'); paths=[root/'_inbox/hourly_runner.log',root/'_inbox/hourly_runner_err.log']; before=[(p.stat().st_size,p.stat().st_mtime_ns) for p in paths]; results=[classify_artifact(root,p) for p in paths]; after=[(p.stat().st_size,p.stat().st_mtime_ns) for p in paths]; assert before==after and all(r.kind=='cache' and r.code=='L4-CONTENT-009' for r in results)"
 ```
 
-Expected: exit zero, both live paths remain byte/mtime unchanged, and both classify as existing cache issues.
+Expected: BET commands, doc SSOT, SSOT guardian, and GaC pass; both live paths remain byte/mtime unchanged and classify as existing cache issues.
 
-- [ ] **Step 3: Write report and retro with immutable evidence**
-
-The report must record child PR/merge SHA, old/new root gitlinks, RED/GREEN commands, complete child verification, live canary pre/post metadata equality, root checks, PR/check/mainline evidence, no host mutation, and inherited unrelated debt. The retro must answer intent, actual result, design changes, surface accounting, remaining T10-110 work, and value boundary.
-
-- [ ] **Step 4: Update the BET terminal state and completion matrix**
-
-Set `status: done`, `done_at: 2026-08-31`, preserve accepted specification `1.0.0`, and add a digest-valid completion matrix. Engineering evidence must resolve to merged child/root main and the report. Operational remains `NOT_PROVEN` because T10-109 does not perform cleanup; value remains `NOT_PROVEN`.
-
-- [ ] **Step 5: Commit root lanes separately**
+- [ ] **Step 3: Commit root pointer and plan lanes separately**
 
 ```bash
 git add projects/l4-kernel
 git commit -m "chore(l4): advance machine-log classifier pointer"
 
-git add docs/reports/2026-08-31-l4-machine-log-classification.md
-git commit -m "docs: report T10-109 machine-log classification"
-
-git add .omo/_knowledge/retros/BET-Y1Q3-T10-109.md
-git commit -m "chore(governance): record T10-109 retrospective"
-
-git add docs/plans/3y-bet-ledger.yaml
-git commit -m "chore(plan): close T10-109 classifier delivery"
+git add docs/superpowers/plans/2026-08-31-l4-machine-log-classification.md
+git commit -m "docs: align T10-109 evidence sequencing"
 ```
 
-Expected: no commit mixes `submodule_pointer`, `docs`, `governance_state`, or `docs_data` lanes.
+Expected: no commit mixes `submodule_pointer` and `docs` lanes.
 
----
-
-### Task 5: Verify, merge, replay, and close the root delivery
-
-**Files:**
-- Verify: every T10-109 root write surface
-- Runtime evidence: `.omo/evidence/20260830T172828Z-bet-execution-22b95054/`
-
-**Interfaces:**
-- Consumes: completed child and root commits.
-- Produces: root authoritative-main merge, mainline replay receipt, and closed workflow with released locks.
-
-- [ ] **Step 1: Run the full root acceptance matrix**
+- [ ] **Step 4: Push, review, and merge the root implementation PR**
 
 ```bash
-uv run --with pyyaml python bin/plan/bet-ledger.py verify BET-Y1Q3-T10-109 --execute
-uv run --with pyyaml python bin/agent-workflow.py verify 20260830T172828Z-bet-execution-22b95054 --from-diff --execute
-uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
-uv run --with pyyaml python bin/ssot/ssot-guardian.py
-make gac-local-gate
-git diff --check origin/main...HEAD
-git status --short
-```
-
-Expected: T10-109 commands, workflow verification, doc SSOT, SSOT guardian, GaC, and diff checks pass. Any inherited global ledger finding must be listed by exact BET and must not be represented as T10-109 success or failure.
-
-- [ ] **Step 2: Review root scope and cross-repository ancestry**
-
-```bash
-git diff --stat origin/main...HEAD
-git diff --submodule=log origin/main...HEAD
-git -C projects/l4-kernel merge-base --is-ancestor HEAD origin/main
-```
-
-Require exact T10-109 surfaces only, child authoritative-main reachability, no gitlink rewind, no Documents/host mutation, and no value overclaim.
-
-- [ ] **Step 3: Push and create the root PR**
-
-```bash
-git push -u origin agent/codex-documents-convergence--t10-109-implementation-20260831-01
+git push origin agent/codex-documents-convergence--t10-109-implementation-20260831-01
 gh pr create --base main --head agent/codex-documents-convergence--t10-109-implementation-20260831-01
-ROOT_PR="$(gh pr list --state open --head agent/codex-documents-convergence--t10-109-implementation-20260831-01 --json number --jq '.[0].number')"
-test -n "$ROOT_PR"
+ROOT_IMPL_PR="$(gh pr list --state open --head agent/codex-documents-convergence--t10-109-implementation-20260831-01 --json number --jq '.[0].number')"
+test -n "$ROOT_IMPL_PR"
+gh pr checks "$ROOT_IMPL_PR" --watch
+gh pr view "$ROOT_IMPL_PR" --json state,mergeable,mergeStateStatus,statusCheckRollup,headRefOid
+gh pr merge "$ROOT_IMPL_PR" --squash --delete-branch=false
 ```
 
-- [ ] **Step 4: Wait for current-tip required checks and squash merge**
+Expected: current-tip required checks succeed, merge state is CLEAN, and the implementation PR is merged.
 
-```bash
-gh pr checks "$ROOT_PR" --watch
-gh pr view "$ROOT_PR" --json state,mergeable,mergeStateStatus,statusCheckRollup,headRefOid
-gh pr merge "$ROOT_PR" --squash --delete-branch=false
-```
-
-Expected: current-tip required checks all succeed and root PR is `MERGED`.
-
-- [ ] **Step 5: Replay from authoritative root main and close workflow**
+- [ ] **Step 5: Prove the root implementation merge and gitlink on main**
 
 ```bash
 git fetch origin main
-gh pr view "$ROOT_PR" --json state,mergeCommit
+ROOT_IMPL_MERGE_SHA="$(gh pr view "$ROOT_IMPL_PR" --json mergeCommit --jq .mergeCommit.oid)"
+test -n "$ROOT_IMPL_MERGE_SHA"
+git merge-base --is-ancestor "$ROOT_IMPL_MERGE_SHA" origin/main
+git ls-tree origin/main projects/l4-kernel
+```
+
+Expected: root implementation merge is reachable and the main gitlink is the child merge SHA.
+
+---
+
+### Task 5: Replay main, merge terminal evidence, and close the workflow
+
+**Files:**
+- Modify: `docs/plans/3y-bet-ledger.yaml`
+- Create: `docs/reports/2026-08-31-l4-machine-log-classification.md`
+- Create: `.omo/_knowledge/retros/BET-Y1Q3-T10-109.md`
+- Runtime evidence: `.omo/evidence/20260830T172828Z-bet-execution-22b95054/`
+
+**Interfaces:**
+- Consumes: child merge and root implementation merge proven on their authoritative main branches.
+- Produces: historical report, retrospective, digest-valid completion matrix, closeout PR/mainline replay, and closed workflow with released locks.
+
+- [ ] **Step 1: Start a clean closeout branch from replayed root main**
+
+```bash
+git switch -c agent/codex-documents-convergence--t10-109-closeout-20260831-01 origin/main
+git status --short
+uv run --with pyyaml python bin/plan/bet-ledger.py verify BET-Y1Q3-T10-109 --execute
+```
+
+Expected: branch starts at root authoritative main, is clean, and mainline implementation replay passes before terminal evidence is written.
+
+- [ ] **Step 2: Write report, retro, and completion matrix from immutable evidence**
+
+The report records child PR/merge SHA, root implementation PR/merge SHA, old/new gitlinks, RED/GREEN evidence, complete child/root verification, live canary pre/post metadata equality, inherited unrelated debt, and zero Documents/host mutation. The retro answers intent, result, design changes, surface accounting, T10-110 follow-up, and value boundary.
+
+Set the BET to `done` with `done_at: 2026-08-31`, preserve specification `1.0.0`, and add `completion-evidence-matrix/v1`. Engineering is `VERIFIED`; operational classifier behavior is `PROVEN` by the live canary and mainline replay; value remains `NOT_PROVEN`. The report must state that physical cleanup is outside T10-109 and remains unproven until T10-110.
+
+- [ ] **Step 3: Commit closeout lanes separately and verify**
+
+```bash
+git add docs/reports/2026-08-31-l4-machine-log-classification.md
+git commit -m "docs: report T10-109 machine-log classification"
+git add .omo/_knowledge/retros/BET-Y1Q3-T10-109.md
+git commit -m "chore(governance): record T10-109 retrospective"
+git add docs/plans/3y-bet-ledger.yaml
+git commit -m "chore(plan): close T10-109 classifier delivery"
+
+uv run --with pyyaml python bin/plan/bet-ledger.py verify BET-Y1Q3-T10-109 --execute
+uv run --with pyyaml python bin/agent-workflow.py verify 20260830T172828Z-bet-execution-22b95054 --from-diff --execute
+uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+make ssot-guardian
+make gac-local-gate
+git diff origin/main...HEAD --check
+```
+
+Expected: T10-109 BET/workflow verification, doc SSOT, SSOT guardian, GaC, and diff checks pass. Inherited global ledger findings are listed by exact BET and not represented as T10-109 failures.
+
+- [ ] **Step 4: Push and merge the closeout PR**
+
+```bash
+git push -u origin agent/codex-documents-convergence--t10-109-closeout-20260831-01
+gh pr create --base main --head agent/codex-documents-convergence--t10-109-closeout-20260831-01
+ROOT_CLOSEOUT_PR="$(gh pr list --state open --head agent/codex-documents-convergence--t10-109-closeout-20260831-01 --json number --jq '.[0].number')"
+test -n "$ROOT_CLOSEOUT_PR"
+gh pr checks "$ROOT_CLOSEOUT_PR" --watch
+gh pr view "$ROOT_CLOSEOUT_PR" --json state,mergeable,mergeStateStatus,statusCheckRollup,headRefOid
+gh pr merge "$ROOT_CLOSEOUT_PR" --squash --delete-branch=false
+```
+
+Expected: current-tip required checks succeed, merge state is CLEAN, and closeout PR is merged.
+
+- [ ] **Step 5: Replay terminal main and close workflow**
+
+```bash
+git fetch origin main
+gh pr view "$ROOT_CLOSEOUT_PR" --json state,mergeCommit
 git show origin/main:docs/plans/3y-bet-ledger.yaml | rg -n -A 70 'BET-Y1Q3-T10-109'
 git ls-tree origin/main projects/l4-kernel
 uv run --with pyyaml python bin/plan/bet-ledger.py verify BET-Y1Q3-T10-109 --execute
