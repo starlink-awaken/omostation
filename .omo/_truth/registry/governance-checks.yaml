@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 539  # 2026-08-30 539→539: decision-inbox-sla (P1)  # 2026-08-28 520→528: cmd_deps + frontmatter (BET-Y1Q3-T6-05)
+    script_baseline: 540  # 2026-08-30 540→540: dormant-cleanup-scanner (P1)  # 2026-08-28 520→528: cmd_deps + frontmatter (BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
