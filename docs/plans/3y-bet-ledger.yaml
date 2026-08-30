@@ -12392,7 +12392,7 @@ bets:
             ref: git://origin/main@d4bcf62ac2851b18c7122f0a7077448219636d79
           tests:
             ref: receipt://tests/test_documents_consumer_audit.py
-            sha256: sha256:044af21e33b07bc1ffd899523a0490d69c5738ef448ce3cef4ecb6f3ee4be4ed
+            sha256: sha256:4644a03f3161b128c75dd654983a0e361690a6b56415da54d69962786da8d193
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md
             sha256: sha256:3bcc900177108e1abcda44620e02ea4a3b2ea8f5d6adcd43766cf68ba03c5d85
@@ -12410,7 +12410,7 @@ bets:
             sha256: sha256:985285f6020c6029694e72bd18374392f8bc04acf3d07bb75c1a475b5809f4ec
           replay:
             ref: receipt://tests/test_documents_consumer_audit.py
-            sha256: sha256:044af21e33b07bc1ffd899523a0490d69c5738ef448ce3cef4ecb6f3ee4be4ed
+            sha256: sha256:4644a03f3161b128c75dd654983a0e361690a6b56415da54d69962786da8d193
           cleanup:
             ref: receipt://docs/reports/2026-08-27-documents-consumer-audit.md
             sha256: sha256:7ae95d2340a9f3bdc49c4aa4bcc00bfe3a6d243f0456562e76c3e1cdea61b570
@@ -13712,7 +13712,7 @@ bets:
             ref: git://origin/main@c3f4a1d23b91ab4217881f4cdf5ca6bafbecda19
           tests:
             ref: receipt://tests/test_documents_consumer_audit.py
-            sha256: sha256:044af21e33b07bc1ffd899523a0490d69c5738ef448ce3cef4ecb6f3ee4be4ed
+            sha256: sha256:4644a03f3161b128c75dd654983a0e361690a6b56415da54d69962786da8d193
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-consumer-audit-modes-design.md
             sha256: sha256:6ca652906a823a8477509bbf04eae981419db3233070fa6597ae1196a09a5792
@@ -13730,7 +13730,7 @@ bets:
             sha256: sha256:9dcb09b54c0efa3c89a09c5952a569763b13740ba2f6d43642417251e02373cf
           replay:
             ref: receipt://tests/test_documents_consumer_audit.py
-            sha256: sha256:044af21e33b07bc1ffd899523a0490d69c5738ef448ce3cef4ecb6f3ee4be4ed
+            sha256: sha256:4644a03f3161b128c75dd654983a0e361690a6b56415da54d69962786da8d193
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-36.md
             sha256: sha256:f723e159df789a4e6c7eefe363d070fc00932a92b58a989a7b4de7ebf15d3e8a
