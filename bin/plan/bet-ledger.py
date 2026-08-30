@@ -2422,6 +2422,27 @@ def cmd_lint(data: dict, args) -> int:
                 )
         if transitioned_to_done and not b.get("done_at"):
             errs.append(f"{b['id']}.done_at: BET_DONE_AT_REQUIRED")
+
+    # --- Phantom write_surface detection (T10-80 / T10-73 lesson) ---
+    # A write_surface path declared in the BET that does not exist on main
+    # indicates either a date-prefix drift (08-29 vs 08-30) or a report
+    # that was never created.  Both silently fail D0 downstream.
+    for b in data["bets"]:
+        for p in b.get("write_surfaces") or []:
+            if "*" in p:
+                continue
+            if not p.startswith("docs/reports/"):
+                continue
+            exists = subprocess.run(
+                ["git", "cat-file", "-e", f"origin/main:{p}"],
+                capture_output=True, check=False,
+            ).returncode == 0
+            if not exists:
+                errs.append(
+                    f"{b['id']}.write_surface: PHANTOM_REPORT_PATH {p} "
+                    f"(path not on origin/main — date drift or never created)"
+                )
+
     if errs:
         for e in errs:
             print(f"ERROR {e}")
