@@ -144,6 +144,9 @@ def _bet_workflow_workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
     lib_dir = workspace / "lib"
     lib_dir.mkdir(parents=True, exist_ok=True)
     for name in (
+        "capability_native_cleanup.py",
+        "capability_native_execution_model.py",
+        "capability_native_execution_receipt.py",
         "capability_native_inspection.py",
         "capability_native_receipt.py",
         "capability_native_sources.py",
