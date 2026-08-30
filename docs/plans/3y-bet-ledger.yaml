@@ -3617,7 +3617,8 @@ bets:
   title: Product P0 真值链父编排与全链收口
   appetite: 4 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: 用一个父 BET 编排六个独立 WorkPacket，先修正非价值交付包的 canonical completion 语义，再把诚实场景门、权威身份、真实效果回执、outbox 发布、人类裁决价值和物理恢复收敛为可重放的 Product P0 真值链。
   non_goals:
   - 不新增第二 BET 台账、WorkPacket schema、workflow engine、dispatcher、identity registry、outbox、event bus 或 value writer
@@ -3668,28 +3669,53 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@3f01fd4c71b963a063d6909f3feeb5b15f87d106
+          tests:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          diff:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
+            sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          replay:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          cleanup:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
-  depends_on: []
-  child_bets:
-  - BET-Y1Q3-T4-03
-  - BET-Y1Q3-T4-04
-  - BET-Y1Q3-T4-05
-  - BET-Y1Q3-T4-06
-  - BET-Y1Q3-T4-07
-  - BET-Y1Q3-T4-08
-  value_indicator_policy: true
-  value_source_bet: BET-Y1Q3-T4-07
-  risk_level: L3
-  human_gate: true
-  circuit_breaker: 如需第二 completion writer、新 schema/registry/state store，或无法在不伪造价值的前提下让非价值 child 完成，立即停机并重新审查 Spec
+        status: ACCEPTED
+        evidence:
+          real_signal:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
+            sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
+          revision:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          time_burden:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
+            sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
+    overall_state: outcome_accepted
   retro: required
   evidence:
     E0_self_bootstrap_waiver:
