@@ -11,7 +11,7 @@
     "no_context_effect": "not_executed",
     "receipt_digest": "sandbox-invocation:ddb45d7d6baf4fe48e13b63cd4a6f0715dbafd85dbfe9efc8a0d034ac8f0e46f"
   },
-  "observed_at": "2026-08-30T00:20:34.292489+00:00",
+  "observed_at": "2026-08-30T00:33:04.539899+00:00",
   "ok": true,
   "omo_head": "2d36716cc2d942c55063c0a42c43c9d05951ac2a",
   "receipt_backed": true,
@@ -25,6 +25,5 @@
     "local_backend_read_only",
     "cleanup"
   ],
-  "workspace_head": "8e28748d35ec59952d27ec6816de1e6526cce53f",
   "zero_effect": true
 }

@@ -27,7 +27,7 @@
       "total": 2
     }
   },
-  "observed_at": "2026-08-30T00:27:29.280413+00:00",
+  "observed_at": "2026-08-30T00:33:04.663546+00:00",
   "ok": true,
   "omo_head": "2d36716cc2d942c55063c0a42c43c9d05951ac2a",
   "qualifying_happy_path": true,
@@ -38,6 +38,5 @@
     "negatives_not_qualifying",
     "append_only_semantics",
     "cleanup"
-  ],
-  "workspace_head": "fabdfb594a4a6bb2fecfe498aa84ef7c19f8530e"
+  ]
 }
