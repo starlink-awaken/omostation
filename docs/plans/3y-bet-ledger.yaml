@@ -9856,7 +9856,8 @@ bets:
   title: Exact Capability Binding 与 native asset receipt 消费收敛
   appetite: 5 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   started_at: 2026-08-24
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact find-load、OMO admission/dispatch
     与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误 admission、平行 dispatch 和执行回执冒充个人价值。
@@ -10006,112 +10007,53 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@30daa7869c31cae1cb584e444cf05442e3aa7e14
+          tests:
+            ref: receipt://tests/test_capability_sync.py
+            sha256: sha256:c092ea7539b2d3696cfaaf6c9867ecde8fbf38bbde7979a3fc9dfc9bae756016
+          diff:
+            ref: receipt://lib/capability_trace_binding.py
+            sha256: sha256:7dc472b2176e6b0b8897e9f0776e60470bb8f172fc5ad42ec076bd744916fcad
+          rollback:
+            ref: receipt://lib/capability_trace_binding.py
+            sha256: sha256:7dc472b2176e6b0b8897e9f0776e60470bb8f172fc5ad42ec076bd744916fcad
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
+          replay:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
+          cleanup:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
-  workflow: bet-execution
-  underlying_workflow: cognitive-governance-delivery
-  write_surfaces:
-  - .omo/_truth/registry/gate-known-debt.yaml
-  - docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
-  - docs/superpowers/plans/2026-08-24-exact-capability-binding.md
-  - docs/plans/3y-bet-ledger.yaml
-  - docs/architecture/capability-federation-contract-v1.md
-  - docs/architecture/blueprint-multi-agent-execution-control-v1.md
-  - docs/architecture/digital-twin-blueprint-v1.md
-  - docs/operations/blueprint-agent-instruction-pack-v1.md
-  - docs/CLI-REFERENCE.md
-  - docs/INDEX-MCP.md
-  - docs/generated/capability-registry.yaml
-  - docs/project-registry.yaml
-  - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-  - docs/reports/2026-08-30-t1-12-capability-binding-canary.json
-  - .github/workflows/governance-check.yml
-  - bin/_registry/scripts/governance/daemon-watchdog.yaml
-  - bin/_registry/scripts/governance/real-scenario-runner.yaml
-  - bin/agent-workflow.py
-  - bin/capability-sync.py
-  - bin/ssot/gen-capability-registry.py
-  - bin/gac/daemon-watchdog.py
-  - bin/plan/bet-ledger.py
-  - bin/ssot/real-scenario-runner.py
-  - lib/capability_federation_audit.py
-  - lib/capability_trace_binding.py
-  - lib/capability_native_receipt.py
-  - lib/capability_native_inspection.py
-  - lib/capability_native_execution_model.py
-  - lib/capability_native_execution_receipt.py
-  - tests/test_capability_sync.py
-  - tests/test_capability_federation_audit.py
-  - tests/test_capability_trace_binding.py
-  - tests/test_capability_native_inspection.py
-  - tests/test_capability_native_execution_receipt.py
-  - tests/test_agent_workflow.py
-  - tests/test_spec_binding_lint.py
-  - tests/unit/test_phase8_unified_ecosystem.py
-  - projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml
-  - projects/ecos/src/ecos/ssot/mof/compiler/api.py
-  - projects/ecos/src/ecos/ssot/mof/compiler/emitters.py
-  - projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py
-  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.schema.json
-  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control-schemas.ts
-  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.manifest.json
-  - projects/ecos/src/ecos/ssot/mof/generated/control/mof_control_models.py
-  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.sql
-  - projects/ecos/src/ecos/ssot/tools/mof-enforce.py
-  - projects/ecos/tests/test_mof_compiler.py
-  - projects/ecos/tests/test_tool_p2.py
-  - projects/ecos/tests/test_work_packet_compiler.py
-  - projects/ecos
-  - projects/omo/src/omo/blueprint_control.py
-  - projects/omo/src/omo/orchestration_contract.py
-  - projects/omo/src/omo/workflow/lifecycle.py
-  - projects/omo/src/omo/workflow_dispatch.py
-  - projects/omo/src/omo/omo_worker_core.py
-  - projects/omo/src/omo/worker_lifecycle.py
-  - projects/omo/src/omo/workflow_mesh.py
-  - projects/omo/src/omo/omo_worker_dispatch.py
-  - projects/omo/tests/test_blueprint_control.py
-  - projects/omo/tests/test_orchestration_contract.py
-  - projects/omo/tests/test_omo_worker_admission_gate.py
-  - projects/omo/tests/test_worker_lifecycle_mesh.py
-  - projects/omo/tests/test_workflow_mesh.py
-  - projects/omo
-  - projects/metaos
-  - projects/metaos/pyproject.toml
-  - projects/cockpit/src/cockpit/_subcommands.py
-  - projects/cockpit/src/cockpit/commands/bos.py
-  - projects/cockpit/src/cockpit/adapters/capability_binding.py
-  - projects/cockpit/src/cockpit/web/api_kems.py
-  - projects/cockpit/src/cockpit/agent_runtime_server.py
-  - projects/cockpit/src/cockpit/agent_runtime_mcp_server.py
-  - projects/cockpit/src/cockpit/tests/test_capability_binding_adapter.py
-  - projects/cockpit/src/cockpit/tests/test_bos_capability_invoke.py
-  - projects/cockpit/src/cockpit/tests/test_api_kems_retired.py
-  - projects/cockpit/src/cockpit/tests/test_agent_runtime_server.py
-  - projects/cockpit/src/cockpit/tests/test_agent_runtime_mcp_server.py
-  - projects/cockpit/tests/test_api_kems_dispatch.py
-  - projects/cockpit
-  - projects/agora/src/agora/capability_gateway.py
-  - projects/agora/tests/unit/test_capability_gateway.py
-  - projects/agora
-  pasw_required: false
-  depends_on:
-  - BET-Y1Q3-T4-01
-  risk_level: L2
-  human_gate: false
-  circuit_breaker: 需要新增 registry writer、scheduler、database、第二 dispatch truth，或必须放宽 WorkPacket/Spec/claim/admission/receipt
-    校验，或 verifier 需要写 OMO/Mesh/marker/cache、启动 provider/router/gateway/第二 subprocess、复制 root validator
-    到 Cockpit，或任一负例无法证明 runtime/tool/provider 零调用，或只能用 fixture/synthetic 代替 production canary 时停止实施并重新审查
-  subtraction:
-  - 删除不可达 legacy 空 capability grant 分支；无消费者则下线 KEMS 裸派工入口；不新增活动脚本、registry writer、workflow 或 database
-  retro: required
+         status: ACCEPTED
+         evidence:
+           real_signal:
+             ref: receipt://docs/reports/2026-08-29-binding-canary.json
+             sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
+           human_verdict:
+             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
+             sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
+           revision:
+             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+             sha256: sha256:120c71f02624afc1878778b896cb8903cc7b4dd4c2383ff372fa7572c4ac2272
+           time_burden:
+             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+             sha256: sha256:120c71f02624afc1878778b896cb8903cc7b4dd4c2383ff372fa7572c4ac2272
+           attestation:
+             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
+             sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
+     overall_state: outcome_accepted
 - id: BET-Y1Q1-T6-07
   track: T6-SUBTRACT
   window: Y1Q3
