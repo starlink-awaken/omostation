@@ -2372,6 +2372,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:795707211555f8230286fd6a9638986987fc387c53ae7cdde9de3f2d9be44052
     decision_ref: decision://accepted/BET-Y1Q3-T10-73
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6a90a5edd6634fc453cc3a34794106b2913d33f2
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-dangling-symlink-quarantine.md
+            sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md
+            sha256: sha256:795707211555f8230286fd6a9638986987fc387c53ae7cdde9de3f2d9be44052
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-dangling-symlink-quarantine.md
+            sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-29-t10-73-symlink-bootstrap.md
+            sha256: sha256:c56d5fb15a45a764f5cb95d29d921411d445f68c0f5d995c74863e6171f7b6ce
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-dangling-symlink-quarantine.md
+            sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-dangling-symlink-quarantine.md
+            sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-73.md
+            sha256: sha256:d8998fbf4a04465e8655c49392157a12bf0d70662e9cc4e8a7e0f15c63326f0b
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md
+            sha256: sha256:795707211555f8230286fd6a9638986987fc387c53ae7cdde9de3f2d9be44052
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-69
   - BET-Y1Q3-T10-68
