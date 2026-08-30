@@ -33,6 +33,9 @@ quarantine payload.
 - The malformed `system.yaml` projection was repaired minimally, then
   `omo state sync-tasks` recomputed task counters and the registry index with
   no count delta (`290/7/1/1/299`).
+- The generated capability projection was refreshed from the complete child
+  registry: 27 MCP servers, 629 MCP tools, 282 BOS services, and 169 CLI
+  commands.
 
 ## Verification record
 
@@ -49,6 +52,8 @@ quarantine payload.
   `ok=true`, phase/wave aligned, stored task counts aligned.
 - `uv run --with pyyaml python bin/ssot/script-registry.py validate`: 542
   registered scripts, PASS; bin quota reports `新增 0 / 删除 0`.
+- `uv run --with pyyaml python bin/ssot/gen-capability-registry.py --check
+  --quiet`: PASS with no generated projection drift.
 - `make gac-local-gate`: PASS, 57 checks executed, with only the repository's
   six pre-existing known-unavailable checks skipped.
 - Compatibility owner emits JSON under both the managed interpreter and the
