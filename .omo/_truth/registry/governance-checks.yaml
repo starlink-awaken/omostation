@@ -2226,6 +2226,82 @@ gac:
     enforcement: required
     owner: ecos-team
     expected: Check CR-AGE-EVENT-01 must pass without violations
+  - id: CR-GITLINK-BUMP-SQUASH-MAIN
+    created_at: '2026-08-30'
+    version: 1.0.0
+    lifecycle: active
+    dimension: X1
+    layer: L1
+    name: 子模块指针 bump 必须锚定子仓 origin/main
+    description: >-
+      bump gitlink 时 sha 唯一合法来源为子仓 fetch 后的 origin/main 头;
+      禁止分支头/PR head/手搓 sha。2026-08-29 双指针污染事故 (cockpit/agora)
+      根因即 bump 分支头。契约: .omo/standards/submodule-pointer-bump-contract.md
+    check_type: procedural
+    target: projects/*
+    source_ref: .omo/standards/submodule-pointer-bump-contract.md
+    executor:
+    - gac_local_gate
+    enforcement: required
+    owner: governance-team
+    adr: ADR-0431
+    added_at: '2026-08-30'
+    review_before: '2026-11-28'
+    justification: >-
+      指针污染阻塞全仓 PR 半天×2; submodule-guard 只查 fast-forward 不查来源,
+      本规则补源头纪律 (人工+review 执行, 工具化后续 BET 跟进)。
+    expected: Check CR-GITLINK-BUMP-SQUASH-MAIN must pass without violations
+  - id: CR-EVIDENCE-SHA-FRESHNESS
+    created_at: '2026-08-30'
+    version: 1.0.0
+    lifecycle: active
+    dimension: X1
+    layer: L2
+    name: completion_evidence 锚新鲜度
+    description: >-
+      evidence sha256 是写入时刻快照; 锚文件此后只增不改。complete 前重算全部
+      锚 sha; DIGEST_MISMATCH 先核实变更合法性再刷新, 禁止无脑重算。
+      契约: .omo/standards/evidence-anchor-freshness.md
+    check_type: procedural
+    target: docs/plans/3y-bet-ledger.yaml
+    source_ref: .omo/standards/evidence-anchor-freshness.md
+    executor:
+    - gac_local_gate
+    enforcement: required
+    owner: governance-team
+    adr: ADR-0431
+    added_at: '2026-08-30'
+    review_before: '2026-11-28'
+    justification: >-
+      T4-07/T4-02 收口连环 DIGEST_MISMATCH; bet-ledger 已有运行时校验,
+      本规则固化人工流程纪律。
+    expected: Check CR-EVIDENCE-SHA-FRESHNESS must pass without violations
+  - id: CR-BIN-RETIREMENT-CHECKLIST
+    created_at: '2026-08-30'
+    version: 1.0.0
+    lifecycle: active
+    dimension: X4
+    layer: L2
+    name: bin 脚本退役六层登记面
+    description: >-
+      bin/ 脚本退役必须同步六层登记面: 1) bin/_registry/scripts/ yaml
+      2) governance-checks script_baseline 3) bin-scripts-convergence-manifest
+      4) ci-surfaces.yaml 5) INDEX-TOOLS(自动) 6) ecos sgf-policy gate 引用。
+      2026-08-29 bus-usage-report 退役逐层踩齐全部六层。
+    check_type: procedural
+    target: bin/
+    source_ref: .omo/standards/submodule-pointer-bump-contract.md
+    executor:
+    - gac_local_gate
+    enforcement: required
+    owner: governance-team
+    adr: ADR-0431
+    added_at: '2026-08-30'
+    review_before: '2026-11-28'
+    justification: >-
+      退役漏层导致 registry orphan/gate-parity/missing-bin-master 三类连锁
+      失败; 固化为清单防再发, 90 天后复审可工具化。
+    expected: Check CR-BIN-RETIREMENT-CHECKLIST must pass without violations
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
