@@ -98,6 +98,11 @@ restored those fields from the prior mainline contract without changing its
 completion or value evidence, leaving the full ledger valid before T10-100
 transition.
 
+The same mainline audit found T4-07's engineering diff/rollback references
+stale relative to its current retro file. Those two evidence digests were
+refreshed to the actual tracked SHA; its value verdict and overall state were
+left unchanged.
+
 ## Boundary
 
 The migration family remains `learning-runtime: in_progress` and
