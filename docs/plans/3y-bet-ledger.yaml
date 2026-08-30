@@ -257,6 +257,63 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-109
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Detect machine-generated logs in the L4 Documents content plane
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: Close the L4 semantic blind spot that treats machine-generated operational logs as human content, using one context-aware classifier rule without mutating Documents or weakening archive authority.
+  non_goals:
+  - No global .log suffix classification and no reinterpretation of historical, arbitrary, or archive-governed logs.
+  - No Documents, host, schedule, process, application, migration-family, runner-log, or content-archive mutation.
+  - No second classifier registry, artifact ontology, dispatcher, control plane, or human entry point.
+  done_when:
+  - The existing L4 classifier identifies .log files only in exact _generated, _runtime, adjacent _control/logs, or immediate root _inbox runner contexts as cache/L4-CONTENT-009 after archive resolution.
+  - RED-to-GREEN tests prove selected regular files and safe symlinks are detected while arbitrary, nested-inbox, valid-archive, and invalid-archive logs preserve prior semantics.
+  - Existing CLI/report schemas, filesystem stability, unsafe-symlink rejection, archive authority, and Python compatibility remain unchanged.
+  - Fresh read-only live canaries classify both retired _inbox/hourly_runner log files as cache without writing, moving, truncating, or deleting either file.
+  - L4 child tests/Ruff/CI, child authoritative-main merge, root gitlink PR/CI/mainline replay, report, retro, completion matrix, and workflow closeout pass while value remains NOT_PROVEN.
+  verify:
+  - cmd: cd projects/l4-kernel && uv run pytest tests/test_content_plane.py tests/test_cli_contracts.py -q
+    expect: exit 0 with context-aware machine-log and preservation cases passing
+  - cmd: cd projects/l4-kernel && uv run pytest tests/ -q && uv run ruff check src/ tests/
+    expect: exit 0
+  - cmd: >-
+      uv run --project projects/l4-kernel python -c "from pathlib import Path;
+      from l4_kernel.content_plane import classify_artifact;
+      root=Path('/Users/xiamingxing/Documents');
+      paths=[root/'_inbox/hourly_runner.log',root/'_inbox/hourly_runner_err.log'];
+      results=[classify_artifact(root,p) for p in paths];
+      assert all(p.exists() for p in paths) and all(r.kind=='cache' and r.code=='L4-CONTENT-009' for r in results)"
+    expect: exit 0 with both live runner logs detected read-only
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/l4-kernel
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
+  - docs/superpowers/plans/2026-08-31-l4-machine-log-classification.md
+  - docs/reports/2026-08-31-l4-machine-log-classification.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-109.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-31-t10-109-bootstrap.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:06f6136f43b9128302e2ce9476d9c0e296c7a9f5c91dccecc36e4da6716f203a
+    decision_ref: decision://accepted/BET-Y1Q3-T10-109
+  depends_on:
+  - BET-Y1Q3-T10-108
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: Any global log-suffix rule, archive bypass, arbitrary or historical log reclassification, interface/schema change, Documents or host mutation, child/root ancestry mismatch, or value overclaim stops the BET and preserves current behavior.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-108
   track: T10-MATURITY
   window: Y1Q3
