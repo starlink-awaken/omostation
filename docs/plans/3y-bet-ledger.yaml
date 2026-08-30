@@ -257,6 +257,174 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-94
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Restore T10-92 mainline artifacts dropped by merge tree
+  appetite: 0.25 day
+  priority: P0
+  status: done
+  done_at: 2026-08-30
+  goal: Restore the already merged T10-92 OPC quarantine registry, ledger, and evidence artifacts dropped from the current mainline merge tree.
+  non_goals:
+  - No new OPC migration, host-side movement, owner-parity claim, runtime-state mutation, submodule change, or unrelated mainline rewrite.
+  done_when:
+  - The six T10-92 root artifacts are restored from immutable commit 78fb360d4e27d1c65b62d9fe5bf68d40fed89bc1.
+  - T10-92 remains done with a valid completion matrix and opc-tools remains in_progress with original evidence.
+  - Mainline diff is limited to the six missing T10-92 artifacts and all root governance checks pass.
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0 with zero errors
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no coverage collision
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md
+  - docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md
+  - docs/reports/2026-08-30-t10-92-mainline-artifact-recovery.md
+  - docs/reports/2026-08-30-opc-runtime-tools-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-94.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-92.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-94-mainline-recovery-bootstrap.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-92-opc-tools-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:25d144811c707065566349115c08b55b085b357ca096aba1a00b7ad0c0b10890
+    decision_ref: decision://accepted/BET-Y1Q3-T10-94
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@673c15f18fba34e7019a0ed52dd91a09878f728d
+          tests:
+            ref: receipt://docs/reports/2026-08-30-t10-92-mainline-artifact-recovery.md
+            sha256: sha256:2bd1e0ef6ac1f4ab0c2b14cd6910274b85874d3e21ca2ff3450218845598eaa5
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md
+            sha256: sha256:25d144811c707065566349115c08b55b085b357ca096aba1a00b7ad0c0b10890
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-t10-92-mainline-artifact-recovery.md
+            sha256: sha256:2bd1e0ef6ac1f4ab0c2b14cd6910274b85874d3e21ca2ff3450218845598eaa5
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-t10-92-mainline-artifact-recovery.md
+            sha256: sha256:2bd1e0ef6ac1f4ab0c2b14cd6910274b85874d3e21ca2ff3450218845598eaa5
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-t10-92-mainline-artifact-recovery.md
+            sha256: sha256:2bd1e0ef6ac1f4ab0c2b14cd6910274b85874d3e21ca2ff3450218845598eaa5
+          replay:
+            ref: receipt://docs/reports/2026-08-30-t10-92-mainline-artifact-recovery.md
+            sha256: sha256:2bd1e0ef6ac1f4ab0c2b14cd6910274b85874d3e21ca2ff3450218845598eaa5
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md
+            sha256: sha256:25d144811c707065566349115c08b55b085b357ca096aba1a00b7ad0c0b10890
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T10-91
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any change outside the six missing T10-92 artifacts, any evidence mismatch, any status/value change, or any host/runtime mutation stops the recovery.
+  value_indicator_policy: false
+  retro: required
+
+- id: BET-Y1Q3-T10-92
+  track: T10-MATURITY
+  window: Y1Q3
+  title: OPC runtime tools physical quarantine
+  appetite: 0.5 day
+  priority: P1
+  status: done
+  done_at: 2026-08-29
+  goal: Quarantine the two unconsumed executable tools under Documents/@OPC into a protected Workspace retention package while preserving a truthful pending owner-parity state.
+  non_goals:
+  - No movement or rewrite of OPC content, contracts, projections, facts, client state, or unrelated runtime surfaces.
+  - No claim that Toolbox/Workspace owner parity is complete; no permanent deletion and no automatic execution of either setup script.
+  done_when:
+  - Stable L4 audit selects exactly the two OPC runtime files and no cache or invalid archive.
+  - Fresh consumer evidence reports ok with zero forbidden executors and zero unmatched consumers for the selected family.
+  - The existing quarantine owner records source/target hashes, modes, bytes, and a protected rollback manifest.
+  - Postflight proves both Documents source paths are absent, target bytes match, and the registry advances opc-tools only to in_progress with evidence.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no family coverage collision
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md
+  - docs/reports/2026-08-30-opc-runtime-tools-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-92.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-92-opc-tools-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:7386dab0ab8ed64b53bcc357be314f4addc55653a85c11a7c2774e18774babad
+    decision_ref: decision://accepted/BET-Y1Q3-T10-92
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@82a7139752cb8b796d66fef0d820d0999329cb1b
+          tests:
+            ref: receipt://docs/reports/2026-08-30-opc-runtime-tools-quarantine.md
+            sha256: sha256:0cf4b68ab71120674a01051808f316ef3a020915199627d541e9fcaf49c2e2ff
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md
+            sha256: sha256:7386dab0ab8ed64b53bcc357be314f4addc55653a85c11a7c2774e18774babad
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-opc-runtime-tools-quarantine.md
+            sha256: sha256:0cf4b68ab71120674a01051808f316ef3a020915199627d541e9fcaf49c2e2ff
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-opc-runtime-tools-quarantine.md
+            sha256: sha256:0cf4b68ab71120674a01051808f316ef3a020915199627d541e9fcaf49c2e2ff
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-opc-runtime-tools-quarantine.md
+            sha256: sha256:0cf4b68ab71120674a01051808f316ef3a020915199627d541e9fcaf49c2e2ff
+          replay:
+            ref: receipt://docs/reports/2026-08-30-opc-runtime-tools-quarantine.md
+            sha256: sha256:0cf4b68ab71120674a01051808f316ef3a020915199627d541e9fcaf49c2e2ff
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md
+            sha256: sha256:7386dab0ab8ed64b53bcc357be314f4addc55653a85c11a7c2774e18774babad
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T10-91
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any non-OPC source movement, consumer violation, target collision, hash mismatch, permanent deletion, or owner-parity overclaim stops the transaction and restores the source.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-91
   track: T10-MATURITY
   window: Y1Q3
