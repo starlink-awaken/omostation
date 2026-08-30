@@ -1,13 +1,13 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-08-30T06:50:01Z
+generated_at: 2026-08-30T20:50:01Z
 status: candidate
 counts:
-  runs: 46
+  runs: 48
   failures: 19
-  total: 65
-failure_rate: 0.2923
+  total: 67
+failure_rate: 0.2836
 failure_breakdown:
   by_event_type:
     StepFailed: 19
@@ -15,10 +15,10 @@ failure_breakdown:
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-30T06:50:01Z
+- generated_at: 2026-08-30T20:50:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 46 成功运行 + 19 失败模式 = 65 草稿
-- 失败率: 29.23%
+- sediment 覆盖: 48 成功运行 + 19 失败模式 = 67 草稿
+- 失败率: 28.36%
 
 ## 成功运行 (runs/)
 
@@ -68,6 +68,8 @@ failure_breakdown:
 - 20260829T072021Z-project-code-change-e24f45c2.md
 - 20260829T072804Z-project-code-change-06de57c2.md
 - 20260830T000209Z-project-code-change-7d06f413.md
+- 20260830T073455Z-project-code-change-fef2989d.md
+- 20260830T080400Z-project-code-change-f420bda7.md
 
 ## 失败模式 (failures/)
 
@@ -422,6 +424,20 @@ failure_breakdown:
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=2
   - 指标: event_count=6, duration_s=19744.372
+- **20260830T073455Z-project-code-change-fef2989d**
+  - 计划 (objective): [BET-CONV-01] Phase 1 门禁建立 — 脚本分层/生命周期/状态管理/BOS URI 双向 lint (Appetite: 3 days)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1359.297
+- **20260830T080400Z-project-code-change-f420bda7**
+  - 计划 (objective): [BET-CONV-01] Phase 1 门禁建立 — 脚本分层/生命周期/状态管理/BOS URI 双向 lint (Appetite: 3 days)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=2
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=15332.293
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
