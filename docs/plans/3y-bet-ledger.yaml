@@ -10053,7 +10053,7 @@ bets:
            attestation:
              ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
              sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
-     overall_state: outcome_accepted
+    overall_state: outcome_accepted
 - id: BET-Y1Q1-T6-07
   track: T6-SUBTRACT
   window: Y1Q3
