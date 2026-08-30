@@ -82,6 +82,7 @@ try:
         build_native_execution_receipt,
         validate_native_execution_material,
     )
+    from capability_native_execution_model import EXECUTABLE_KINDS  # noqa: E402 -- CLI locates the local pure library first
 
     NATIVE_EXECUTION_LIBS_AVAILABLE = True
 except ImportError:
@@ -1374,6 +1375,29 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
             if args.effect_classification == "effectful":
                 # Fail closed until a caller-owned terminal action evidence path exists.
                 raise TraceBindingError("execution_evidence_missing")
+            if args.command == "load" and capability.get("kind") not in EXECUTABLE_KINDS:
+                # Non-executable native kinds (mcp_server) admit + probe statically:
+                # the inspection receipt already proves the exact declaration and the
+                # gateway never constructs a provider process for a server kind.
+                registry = load_registry(args.registry)
+                resolution = resolve_capability(registry, capability_id=args.capability_id)
+                if resolution.status != "resolved":
+                    raise TraceBindingError("native_route_unprovable")
+                receipt = {
+                    "schema": "capability-local-operation-receipt/v1",
+                    "status": "ready",
+                    "selector_digest": _digest(_canonical_json(selector)),
+                    "read_only": True,
+                    "executed": False,
+                    "provider_called": False,
+                    "invoked": False,
+                    "admission_bound": True,
+                    "inspection_receipt_digest": inspection.get("receipt_digest"),
+                    "invocation": {"allowed": False, "route": "native_adapter_only", "reason": "load_only"},
+                    "value_indicator_policy": False,
+                }
+                print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+                return 0
             payload = _read_json_payload(args.input_json) if args.command == "invoke" else None
             material = build_native_execution_material(
                 binding=binding,

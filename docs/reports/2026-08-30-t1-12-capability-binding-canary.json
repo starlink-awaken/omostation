@@ -1,0 +1,78 @@
+{
+  "generated_at": "2026-08-30T05:29:40Z",
+  "bet": "BET-Y1Q3-T1-12",
+  "run_id": "20260830T052439Z-bet-execution-8ddada19",
+  "clone": "agent clone xiamingxing/t1-12-canary-02 (governance profile, ready=true)",
+  "canonical_chain": {
+    "start_preflight": "PASS — capability_requirements ×4 resolve+inspect at start (clone identity gate)",
+    "mesh_admission": "PASS — WorkflowRequested carries request_identity (packet_id/packet_hash) after lifecycle fix; grant propagates request_identity+capabilities",
+    "find": "PASS ×4 — exact resolved, match_count=1",
+    "inspect": "PASS ×4 — static declaration proof",
+    "load": "PASS ×3 + 1 blocked — skill/workflow local receipt ready; mcp_server fixed to admission-bound static probe; bos-service blocked by transport"
+  },
+  "steps": {
+    "skill:git-discipline": {
+      "find": {
+        "status": "resolved",
+        "match_count": 1
+      },
+      "inspect": {
+        "status": "inspected",
+        "receipt_digest": "sha256:a9f687c439b3147185abd61fcc0ccb3b17826caa1611812516120469e7f34c42"
+      },
+      "load": "ready"
+    },
+    "workflow:bet-execution": {
+      "find": {
+        "status": "resolved",
+        "match_count": 1
+      },
+      "inspect": {
+        "status": "inspected",
+        "receipt_digest": "sha256:836c6c3e205a168be98cb70870cce652f17063ae47308f2e43459d0544e54c29"
+      },
+      "load": "ready"
+    },
+    "mcp-server:agora": {
+      "find": {
+        "status": "resolved",
+        "match_count": 1
+      },
+      "inspect": {
+        "status": "inspected",
+        "receipt_digest": "sha256:e952df714329cd0b8a84904405baacf3877c8f140cadc6a7ebbe4f2aab224eca"
+      },
+      "load": "ready"
+    },
+    "bos-service:bos://governance/omo/state": {
+      "find": {
+        "status": "resolved",
+        "match_count": 1
+      },
+      "inspect": {
+        "status": "inspected",
+        "receipt_digest": "sha256:a221b676b3d4b52ff290d4a90ec13516de56bbcc9f45e2311ab272e34910a390"
+      },
+      "load": "blocked_by_transport"
+    }
+  },
+  "invoke_blocker": {
+    "capability": "bos-service:bos://governance/omo/state",
+    "error": "bos_transport_not_internal",
+    "root_cause": "capability-registry 与 agora bos-services.yaml 声明该服务 transport=stdio (外部进程), 而 native gateway 设计上只执行 transport=internal 的 in-process 服务 (never construct a provider process)",
+    "options": [
+      "A. agora 新增 omo/state 的 internal in-process handler (真实交付工作)",
+      "B. principal 裁决改用 internal 等价服务 (如 bos://governance/omo/inspect) 修订 capability_requirements",
+      "C. spec 修订: native gateway 扩展 stdio 代理执行 (重设计, 不推荐)"
+    ]
+  },
+  "fixes_delivered": [
+    "bin/capability-sync.py: load 对非可执行 native kind (mcp_server) 走 admission-bound 静态探针, 修复 AUTHORIZATION_BY_KIND KeyError 崩溃",
+    "projects/omo lifecycle.py: start 的 mesh payload 携带 request_identity (bet_id/packet_id/packet_hash) + capabilities",
+    "projects/omo mesh_agent_events.py: admission grant 传播 request_identity/capabilities 并纳入 proof"
+  ],
+  "replay_and_negatives": {
+    "unbound_invoke_rejected": "fail-closed 验证通过 (binding_required, exit 4)",
+    "gateway_positive_invoke": "BLOCKED (见 invoke_blocker)"
+  }
+}
