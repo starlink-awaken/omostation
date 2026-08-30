@@ -1,15 +1,15 @@
 schema: script-registry/v1
-id: bin/gac/governance-dashboard.py
-name: Governance Dashboard
+id: .omo/archive/bin-scripts/governance-dashboard.py
+name: Governance-Dashboard
 category: governance
 owner: governance-team
-description: ""
+description: ''
 inputs: []
 outputs:
-  - type: exit_code
-  - type: json
+- type: exit_code
+- type: json
 dependencies: []
 triggers: []
 related: []
 maturity: draft
-last_reviewed: "2026-08-24"
+last_reviewed: '2026-08-24'
