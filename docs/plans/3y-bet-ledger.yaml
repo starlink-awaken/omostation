@@ -2871,6 +2871,42 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@3c512def94ddabcfc5eb13c2de538d7045576737
+          tests:
+            ref: repo://tests/test_documents_runtime_quarantine.py
+            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-69.md
+            sha256: sha256:3ffc9d703ced9506d7b44efd8f4282f40965952f89b504be62eb4771129a41dd
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-69.md
+            sha256: sha256:3ffc9d703ced9506d7b44efd8f4282f40965952f89b504be62eb4771129a41dd
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-documents-public-runtime-quarantine.md
+            sha256: sha256:74d444bab5bf23280436010d1e9cbeefd8ff50c8cc611babe36357c7fd0fd2b4
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-documents-public-runtime-quarantine.md
+            sha256: sha256:74d444bab5bf23280436010d1e9cbeefd8ff50c8cc611babe36357c7fd0fd2b4
+          replay:
+            ref: receipt://docs/reports/2026-08-29-documents-public-runtime-quarantine.md
+            sha256: sha256:74d444bab5bf23280436010d1e9cbeefd8ff50c8cc611babe36357c7fd0fd2b4
+          cleanup:
+            ref: receipt://docs/reports/2026-08-29-documents-public-runtime-quarantine.md
+            sha256: sha256:74d444bab5bf23280436010d1e9cbeefd8ff50c8cc611babe36357c7fd0fd2b4
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-38
   - BET-Y1Q3-T10-41
