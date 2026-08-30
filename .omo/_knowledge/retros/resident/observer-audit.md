@@ -1,13 +1,13 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-audit
-generated_at: 2026-08-30T06:50:01Z
+generated_at: 2026-08-30T12:50:13Z
 status: candidate
 counts:
-  runs: 37
+  runs: 53
   failures: 2
-  total: 39
-failure_rate: 0.0513
+  total: 55
+failure_rate: 0.0364
 failure_breakdown:
   by_event_type:
     StepFailed: 2
@@ -15,10 +15,10 @@ failure_breakdown:
 ---
 # observer-audit 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-30T06:50:01Z
+- generated_at: 2026-08-30T12:50:13Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 37 成功运行 + 2 失败模式 = 39 草稿
-- 失败率: 5.13%
+- sediment 覆盖: 53 成功运行 + 2 失败模式 = 55 草稿
+- 失败率: 3.64%
 
 ## 成功运行 (runs/)
 
@@ -59,6 +59,22 @@ failure_breakdown:
 - 20260826T013440Z-observer-audit-bebb59ed.md
 - 20260828T075909Z-observer-audit-f309a5ef.md
 - 20260828T075910Z-observer-audit-5a51e5df.md
+- 20260830T074251Z-observer-audit-2cc12505.md
+- 20260830T074253Z-observer-audit-72aa24da.md
+- 20260830T080605Z-observer-audit-60d00bdd.md
+- 20260830T080607Z-observer-audit-8b9dabed.md
+- 20260830T080826Z-observer-audit-0b81a20e.md
+- 20260830T080827Z-observer-audit-b10c09d9.md
+- 20260830T082643Z-observer-audit-29e631f6.md
+- 20260830T082643Z-observer-audit-c7ba4701.md
+- 20260830T083304Z-observer-audit-b080ce0f.md
+- 20260830T083305Z-observer-audit-171e60a0.md
+- 20260830T121312Z-observer-audit-e968b48c.md
+- 20260830T121313Z-observer-audit-abf2e565.md
+- 20260830T121411Z-observer-audit-530c1503.md
+- 20260830T121412Z-observer-audit-7234a33f.md
+- 20260830T122238Z-observer-audit-77c59084.md
+- 20260830T122240Z-observer-audit-a142c9af.md
 
 ## 失败模式 (failures/)
 
@@ -202,6 +218,54 @@ failure_breakdown:
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
 - **20260828T075910Z-observer-audit-5a51e5df**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T074251Z-observer-audit-2cc12505**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T074253Z-observer-audit-72aa24da**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T080605Z-observer-audit-60d00bdd**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T080607Z-observer-audit-8b9dabed**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T080826Z-observer-audit-0b81a20e**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T080827Z-observer-audit-b10c09d9**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T082643Z-observer-audit-29e631f6**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T082643Z-observer-audit-c7ba4701**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T083304Z-observer-audit-b080ce0f**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T083305Z-observer-audit-171e60a0**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T121312Z-observer-audit-e968b48c**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T121313Z-observer-audit-abf2e565**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T121411Z-observer-audit-530c1503**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T121412Z-observer-audit-7234a33f**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T122238Z-observer-audit-77c59084**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T122240Z-observer-audit-a142c9af**
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
 
