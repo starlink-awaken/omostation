@@ -257,6 +257,62 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-111
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Establish the family dashboard Workspace owner in family-hub
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  goal: Import the canonical, non-private Next.js family dashboard source into the existing family-hub owner as an independently reproducible package, with deterministic provenance, explicit Documents/runtime boundaries, disabled direct writes, and child/root mainline proof.
+  non_goals:
+  - No import of current app-data, household data-manifest values, SQLite, indexes, caches, logs, credentials, browser auth state, build output, or private household content into Git.
+  - No Documents mutation or deletion, host/runtime-state relocation, Cockpit or consumer cutover, deployment/port/schedule change, quest UI/API/MCP merge, or direct Documents-write enablement.
+  - No claim of production parity, migration-family completion, principal-bound value, or Documents-wide physical purity; Phase B and Phase C remain separately admitted work.
+  done_when:
+  - A tested deterministic allowlist importer produces immutable source/target receipts, rejects every forbidden/private/runtime class and unsafe node, preserves the full source tree, and establishes projects/family-hub/apps/dashboard as the canonical Git-owned Next application source.
+  - The dashboard uses explicit FAMILY_DOCUMENTS_ROOT and FAMILY_DASHBOARD_STATE_ROOT boundaries, has no implicit parent or absolute-host fallback, uses synthetic build/test fixtures, and fails closed for traversal, symlink escape, absent roots, state leakage, and all direct Documents-write paths.
+  - The imported package contains only reviewed source, static assets, required scripts/config/lockfile, synthetic fixtures, and non-private documentation; forbidden paths, real household data, credentials, generated state, and reproducible caches are absent from Git.
+  - Dashboard install, unit tests, lint, production build, and synthetic Playwright smoke pass from a clean child main checkout without live household data, while the existing family-hub Vite build and Python/FastMCP tests remain green.
+  - The family-hub child PR and root gitlink PR both pass required checks, merge, and replay from authoritative main; root main points exactly to child origin/main, and report/retro/completion evidence closes only Phase A.
+  - The old Documents application and all consumers remain unchanged, the family-dashboard-app migration family remains pending, and Phase B runtime relocation, Phase C entry cutover/retirement, and user value remain NOT_PROVEN.
+  verify:
+  - cmd: uv run pytest tests/test_dashboard_source_import.py -q
+    expect: exit 0 with deterministic allowlist, forbidden/private class, unsafe-node, drift, collision, and source-preservation cases passing
+  - cmd: bun --cwd apps/dashboard install --frozen-lockfile && bun --cwd apps/dashboard test && bun --cwd apps/dashboard run lint && bun --cwd apps/dashboard run build
+    expect: exit 0 from a clean family-hub checkout without live Documents or copied app-data
+  - cmd: bun --cwd apps/dashboard run test:e2e
+    expect: exit 0 for synthetic authentication, representative read journeys, and disabled-write behavior
+  - cmd: bun run build && uv run pytest tests -q
+    expect: exit 0 for the pre-existing family-hub Vite, Express boundary, Python, and FastMCP surfaces
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 while family-dashboard-app remains pending and no Phase B or Phase C overclaim is introduced
+  - cmd: make gac-local-gate
+    expect: exit 0 on the root gitlink/evidence PR and after merge replay from root main
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/family-hub
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
+  - docs/superpowers/plans/2026-08-31-family-dashboard-owner-migration-phase-a.md
+  - docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-111.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-31-t10-111-bootstrap.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:0d28076ef12e1d890ae1abc141bee2f4463159114b864b28ea72db65328ecb8b
+    decision_ref: decision://accepted/BET-Y1Q3-T10-111
+  depends_on:
+  - BET-Y1Q3-T10-110
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: Any source or target drift, unknown/unsafe file type, private household data or credential finding, forbidden runtime/cache import, absolute host path, destination collision, implicit Documents fallback, ungoverned write path, test/build dependency on live household data, existing family-hub regression, child/root ancestry mismatch, failed required check, consumer/host mutation, old-source mutation, or Phase B/Phase C/value overclaim stops Phase A and preserves the old application unchanged.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-110
   track: T10-MATURITY
   window: Y1Q3
