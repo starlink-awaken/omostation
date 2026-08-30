@@ -25,7 +25,20 @@ def main() -> int:
     if unknown:
         print(f"unsupported monthly-healthcheck arguments: {unknown}", file=sys.stderr)
         return 2
-    command = [sys.executable, str(WORKSPACE / "bin/gac/gac-healthcheck.py"), "--json"]
+    if sys.version_info >= (3, 11):
+        command = [sys.executable, str(WORKSPACE / "bin/gac/gac-healthcheck.py"), "--json"]
+    else:
+        # macOS system Python 3.9 cannot import datetime.UTC; use the
+        # Workspace-managed interpreter while preserving canonical exit status.
+        command = [
+            "uv",
+            "run",
+            "--with",
+            "pyyaml",
+            "python",
+            str(WORKSPACE / "bin/gac/gac-healthcheck.py"),
+            "--json",
+        ]
     return subprocess.run(command, cwd=WORKSPACE, check=False).returncode
 
 
