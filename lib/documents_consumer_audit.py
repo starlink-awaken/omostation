@@ -21,6 +21,7 @@ import yaml
 SCHEMA = "documents.consumer-audit.v1"
 _PATH_DELIMITERS = "\"'`;&)|<>\n"
 _HOME_MARKER = re.compile(r"(?:\$HOME|~)/Documents(?:/([^\"'`;&)|<>\n]+))?")
+_HOME_PREFIXES = ("$HOME/Documents", "~/Documents")
 
 
 def _load_families(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
@@ -67,8 +68,27 @@ def _is_execution_candidate(relative: str) -> bool:
     """Ignore ordinary content references; retain paths that can execute or hold state."""
     return any(
         marker in relative
-        for marker in ("/_runtime/", "/_scripts/", "/tools/", "/.kems/", "/family-dashboard-app/")
+        for marker in (
+            "/_runtime/",
+            "/_scripts/",
+            "/tools/",
+            "/.kems/",
+            "/_control/executors/",
+            "/.githooks/",
+            "/family-dashboard-app/",
+        )
     ) or relative.endswith((".py", ".py3", ".sh", ".js", ".ts", ".sqlite", ".sqlite3", ".db"))
+
+
+def _path_token_end(text: str, index: int, end: int) -> int:
+    quote = text[index - 1] if index > 0 and text[index - 1] in {"\"", "'"} else None
+    while end < len(text):
+        if quote is not None and text[end] == quote:
+            break
+        if quote is None and (text[end].isspace() or text[end] in _PATH_DELIMITERS):
+            break
+        end += 1
+    return end
 
 
 def _paths_in_text(text: str, documents_root: Path) -> Iterator[str]:
@@ -78,17 +98,23 @@ def _paths_in_text(text: str, documents_root: Path) -> Iterator[str]:
         index = text.find(root_text, start)
         if index < 0:
             break
-        end = index + len(root_text)
-        while end < len(text) and text[end] not in _PATH_DELIMITERS:
-            end += 1
+        end = _path_token_end(text, index, index + len(root_text))
         relative = _relative_path(text[index:end], documents_root)
         if relative is not None:
             yield relative
         start = end
 
-    for match in _HOME_MARKER.finditer(text):
-        relative = match.group(1) or "."
-        yield relative
+    for prefix in _HOME_PREFIXES:
+        start = 0
+        while True:
+            index = text.find(prefix, start)
+            if index < 0:
+                break
+            end = _path_token_end(text, index, index + len(prefix))
+            relative = _relative_path(text[index:end], documents_root)
+            if relative is not None:
+                yield relative
+            start = end
 
     for match in re.finditer(r"(?<![\w/])((?:@[^\s/'\"]+|_inbox)/[^\s'\"`;&)|<>]+)", text):
         relative = _relative_path(match.group(1), documents_root)
@@ -127,10 +153,7 @@ def _execution_classification(kind: str, relative: str, fragment: str) -> tuple[
     if kind == "domain-gateway":
         return "content-reference", False, False
 
-    executable_path = any(
-        marker in relative
-        for marker in ("/_runtime/", "/_scripts/", "/tools/", "/.kems/", "/family-dashboard-app/")
-    ) or relative.endswith((".py", ".py3", ".sh", ".js", ".ts"))
+    executable_path = _is_execution_candidate(relative)
     if executable_path and kind in {"crontab", "launchagent", "scheduled-skill", "domain-gateway"}:
         return "documents-executor", True, True
     return "content-reference", False, False
@@ -317,11 +340,20 @@ def audit(
     unmatched = [
         item
         for item in consumers
-        if item["family"] is None and item["execution_mode"] != "workspace-owner-read"
+        if item["family"] is None and item["execution_mode"] == "documents-executor"
+    ]
+    forbidden = [
+        item
+        for item in consumers
+        if item["active"] and item["forbidden_executor"] and item["kind"] != "domain-gateway"
     ]
     errors.extend(
         f"{item['consumer_id']}: unmatched migration family for {item['relative_path']} ({item['kind']})"
         for item in unmatched
+    )
+    errors.extend(
+        f"{item['consumer_id']}: forbidden Documents executor {item['relative_path']} ({item['kind']})"
+        for item in forbidden
     )
     status = "unavailable" if errors and not consumers else ("violations" if errors else "ok")
     return {
@@ -335,11 +367,7 @@ def audit(
             "total": len(consumers),
             "active": sum(1 for item in consumers if item["active"]),
             "unmatched": len(unmatched),
-            "forbidden_executors": sum(
-                1
-                for item in consumers
-                if item["active"] and item["forbidden_executor"] and item["kind"] != "domain-gateway"
-            ),
+            "forbidden_executors": len(forbidden),
             "gateway_instructions": sum(
                 1 for item in consumers if item["active"] and item["kind"] == "domain-gateway" and item["execution_mode"] == "content-reference"
             ),
