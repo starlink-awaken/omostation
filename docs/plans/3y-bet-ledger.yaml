@@ -1597,7 +1597,8 @@ bets:
   title: OMLXC BOS service path reconciliation
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Reconcile five active OMLXC BOS declarations with their canonical examples paths so the evidence gate has zero unresolved script-path gaps.
   non_goals:
   - No URI, action, capability, transport, security, runtime, compute, Documents, or user configuration change.
@@ -1630,6 +1631,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:ec44b41cf03206c57fc3b6a424e682dd78e4276f4dfa5553264503e3be53df75
     decision_ref: decision://accepted/BET-Y1Q3-T10-74
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a7073792e268313e5e216cb3978d10ae07ec4b07
+          tests:
+            ref: receipt://docs/reports/2026-08-30-omlxc-bos-path-reconciliation.md
+            sha256: sha256:4fdc3e322b8ee41d18f1bf16c851b7008159c7923d4264248d6dc46da317d85c
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md
+            sha256: sha256:ec44b41cf03206c57fc3b6a424e682dd78e4276f4dfa5553264503e3be53df75
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-omlxc-bos-path-reconciliation.md
+            sha256: sha256:4fdc3e322b8ee41d18f1bf16c851b7008159c7923d4264248d6dc46da317d85c
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-omlxc-bos-path-reconciliation.md
+            sha256: sha256:4fdc3e322b8ee41d18f1bf16c851b7008159c7923d4264248d6dc46da317d85c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-omlxc-bos-path-reconciliation.md
+            sha256: sha256:4fdc3e322b8ee41d18f1bf16c851b7008159c7923d4264248d6dc46da317d85c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-74.md
+            sha256: sha256:4ef9757e56ea90d6f59ed2d1af549f01bcd2f0abac2c996a4d83c355ab48e290
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md
+            sha256: sha256:ec44b41cf03206c57fc3b6a424e682dd78e4276f4dfa5553264503e3be53df75
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on: []
   risk_level: L1
   human_gate: false
@@ -1956,7 +1993,8 @@ bets:
   title: Workspace quarantine retention guard
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Protect recoverable physical-migration packages under runtime/quarantine from ordinary repository cleanup after the public-runtime receipt was lost.
   non_goals:
   - No Documents content, runtime, cache, host schedule, LaunchAgent, client configuration, or quarantine payload mutation.
@@ -1989,6 +2027,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:d19cbfa3cbf6d5f3d04872b11ded51bdbb0bd6900f26d664db6748cf9f344901
     decision_ref: decision://accepted/BET-Y1Q3-T10-68
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a7073792e268313e5e216cb3978d10ae07ec4b07
+          tests:
+            ref: receipt://docs/reports/2026-08-29-quarantine-retention-guard.md
+            sha256: sha256:b835f35de2d7b3af06f52bf9a74ffa50a407fdbe8d086e4e8fb50c3d33e34329
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md
+            sha256: sha256:d19cbfa3cbf6d5f3d04872b11ded51bdbb0bd6900f26d664db6748cf9f344901
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-quarantine-retention-guard.md
+            sha256: sha256:b835f35de2d7b3af06f52bf9a74ffa50a407fdbe8d086e4e8fb50c3d33e34329
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-quarantine-retention-guard.md
+            sha256: sha256:b835f35de2d7b3af06f52bf9a74ffa50a407fdbe8d086e4e8fb50c3d33e34329
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-quarantine-retention-guard.md
+            sha256: sha256:b835f35de2d7b3af06f52bf9a74ffa50a407fdbe8d086e4e8fb50c3d33e34329
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-68.md
+            sha256: sha256:c0cdc3d7f947e8cbe51ae01dc532ab368678ee61715b9e1fa4d08b3f34b205f9
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md
+            sha256: sha256:d19cbfa3cbf6d5f3d04872b11ded51bdbb0bd6900f26d664db6748cf9f344901
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-65
   risk_level: L1
