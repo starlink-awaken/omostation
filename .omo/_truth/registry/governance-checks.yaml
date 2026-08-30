@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 542  # 2026-08-30 541→542: retro-reference-engine (P2) added  # 2026-08-30: retro-reference-engine (P2) + decision-inbox-sla + dormant-cleanup
+    script_baseline: 542  # 2026-08-30: current mainline bin baseline; monthly-healthcheck compatibility owner lives in lib/
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -2237,7 +2237,7 @@ gac:
       bump gitlink 时 sha 唯一合法来源为子仓 fetch 后的 origin/main 头;
       禁止分支头/PR head/手搓 sha。2026-08-29 双指针污染事故 (cockpit/agora)
       根因即 bump 分支头。契约: .omo/standards/submodule-pointer-bump-contract.md
-    check_type: procedural
+    check_type: audit_chain
     target: projects/*
     source_ref: .omo/standards/submodule-pointer-bump-contract.md
     executor:
@@ -2262,7 +2262,7 @@ gac:
       evidence sha256 是写入时刻快照; 锚文件此后只增不改。complete 前重算全部
       锚 sha; DIGEST_MISMATCH 先核实变更合法性再刷新, 禁止无脑重算。
       契约: .omo/standards/evidence-anchor-freshness.md
-    check_type: procedural
+    check_type: freshness
     target: docs/plans/3y-bet-ledger.yaml
     source_ref: .omo/standards/evidence-anchor-freshness.md
     executor:
@@ -2288,7 +2288,7 @@ gac:
       2) governance-checks script_baseline 3) bin-scripts-convergence-manifest
       4) ci-surfaces.yaml 5) INDEX-TOOLS(自动) 6) ecos sgf-policy gate 引用。
       2026-08-29 bus-usage-report 退役逐层踩齐全部六层。
-    check_type: procedural
+    check_type: registry_integrity
     target: bin/
     source_ref: .omo/standards/submodule-pointer-bump-contract.md
     executor:
