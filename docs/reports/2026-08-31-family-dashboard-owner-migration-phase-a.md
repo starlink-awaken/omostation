@@ -109,6 +109,8 @@ reproducible source caches.
   state inputs.
 - Adapted import verification: `status=verified`, selected fingerprint equal,
   `excluded_source_drift=true` as adjudicated above.
+- Root BET verifier: all six registered command groups exited zero, including
+  57 blocking GaC checks.
 
 ## Completion axes before root merge
 
@@ -121,4 +123,3 @@ reproducible source caches.
 - Documents-wide physical purity: `NOT_PROVEN`.
 
 The `family-dashboard-app` migration family remains `pending`.
-
