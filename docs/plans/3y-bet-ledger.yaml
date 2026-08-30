@@ -257,6 +257,64 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-104
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Relocate ZCode client state to Workspace runtime
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: Move the complete active ZCode .zcode state out of Documents through the native dataBaseDir contract, with quiescent atomic relocation, restart proof, and executable rollback.
+  non_goals:
+  - No provider, model, MCP server, task, session, credential, Electron browser-state, or application feature change.
+  - No merge, overwrite, activation, or cleanup of the older native ~/.zcode/v2 state set beyond its bootstrap dataBaseDir field.
+  - No symlink, parallel launcher, second configuration authority, rollback-evidence deletion, or principal-bound value claim.
+  done_when:
+  - A Python 3.9-compatible Workspace transaction tool is built test-first and fails closed for active processes, open handles, incomplete critical state, target collision, cross-device movement, settings drift, and malformed manifests.
+  - Preflight records the active source, complete critical state set, setting and source fingerprints, device/inode, counts, target absence, disk state, and BDSK NOT_PROVEN boundary.
+  - With ZCode quiescent, the complete source .zcode directory is atomically moved to the Workspace runtime base and only setting.json::dataBaseDir changes.
+  - Post-restart ZCode opens relocated SQLite/WAL/SHM and state paths, exposes existing task/session continuity, and has no process or handle under Documents/ZCode/.zcode.
+  - Documents consumer audit remains green and a stable full-tree L4 audit no longer fails from ZCode directory mutation.
+  - The documents-client-state registry entry, report, retro, tests, GaC, PR checks, squash merge, mainline replay, and workflow closeout are complete while value remains NOT_PROVEN.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_zcode_state_relocation.py -q
+    expect: exit 0
+  - cmd: /usr/bin/python3 bin/gac/documents-zcode-state-relocation.py verify --source-base /Users/xiamingxing/Documents/ZCode --target-base /Users/xiamingxing/Workspace/runtime/clients/zcode-data --settings /Users/xiamingxing/.zcode/v2/setting.json --manifest /Users/xiamingxing/Workspace/runtime/quarantine/documents-zcode-state-20260830/manifest.json --json
+    expect: exit 0 with status relocated, source absent, target complete, configured target exact, no Documents handles
+  - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
+    expect: exit 0 with status ok, forbidden_executors=0, unmatched=0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - lib/documents_zcode_state_relocation.py
+  - bin/gac/documents-zcode-state-relocation.py
+  - bin/_registry/scripts/governance/documents-zcode-state-relocation.yaml
+  - tests/test_documents_zcode_state_relocation.py
+  - .github/workflows/phase-gate-enforce.yml
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md
+  - docs/superpowers/plans/2026-08-30-zcode-workspace-runtime-state-relocation.md
+  - docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-104.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-104-zcode-state-bootstrap.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3fa04c06ceec678dcfe8e7a9916c14997ffe8f3abfc9e931b5d5d0c329eba55a
+    decision_ref: decision://accepted/BET-Y1Q3-T10-104
+  depends_on:
+  - BET-Y1Q3-T10-103
+  - BET-Y1Q3-T10-89
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: Any active ZCode process or source handle, incomplete SQLite sidecars or critical state, target collision, cross-device source/target, setting/source fingerprint drift, unrelated settings change, non-atomic move, failed restart, missing task/session continuity, remaining Documents handle/write, consumer/L4 audit failure, or rollback mismatch stops the transaction and restores the prior state.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-103
   track: T10-MATURITY
   window: Y1Q3
