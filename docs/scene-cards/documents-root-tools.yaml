@@ -1,0 +1,26 @@
+---
+last-reviewed: 2026-08-30
+---
+
+schema: scene-card/v2
+lifecycle: supervised
+activation: active
+approval_state: confirmed
+scene_id: documents-root-tools
+journey_id: documents-root-tools-journey"
+goal: 根工具隔离
+trigger: 检测到 quarantine 类 documents 任务需要执行
+input_contract: 源文件路径/范围
+result_contract: 完成确认 + 证据记录
+outcome_metric: documents_quarantine_success_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+
+source_path: ~/Documents/@工作文档/tools
+target_path: ~/Workspace/runtime/quarantine/documents-root-tools-20260830
+risk_level: L2
+files_count: 4
+bet_id: BET-Y1Q3-T10-83
+category: quarantine
+---
