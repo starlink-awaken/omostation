@@ -14,7 +14,7 @@ totals:
   mcp_tools: 629
   bos_services: 282
   bos_domains: 21
-  cli_commands: 169
+  cli_commands: 175
   skills: 2
   workflows: 17
 mcp_servers:
@@ -2138,8 +2138,12 @@ cli_commands:
   description: 快速演示
 - name: dflash
   description: DFlash 2 块扩散投机解码加速与集群基准
+- name: diff
+  description: 查看待处理署名 Diff 统计
 - name: discover
   description: 发现可用功能和资源
+- name: distill
+  description: 在 Mac mini M4 触发闲时 LoRA 蒸馏
 - name: dma
   description: 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准
 - name: domain-status
@@ -2148,6 +2152,8 @@ cli_commands:
   description: 列出 L4 所有域及其状态
 - name: down
   description: 停止观测栈
+- name: draft
+  description: 从本地主权大模型请求草稿
 - name: event
   description: 导出事件封套 (EventEnvelope)
 - name: events
@@ -2300,6 +2306,8 @@ cli_commands:
   description: 重载 BOS 配置/M1
 - name: remember
   description: 手动存入偏好/事实
+- name: replay
+  description: 查看 Experience Replay 缓冲区状态
 - name: research
   description: 深度研究
 - name: resident
@@ -2324,12 +2332,16 @@ cli_commands:
   description: 全文搜 CARDS
 - name: serve
   description: stdio JSON-RPC serve mode
+- name: sign
+  description: 提交用户署名 Diff 并入队 Experience Replay
 - name: skill
   description: 运行 L4 定时技能
 - name: snapshot
   description: KV 缓存快照管理与预热
 - name: speculative-eval
   description: 本地首选投机推演评估
+- name: spine
+  description: Spine 主干真值流与署名自进化操作 (ADR-0437)
 - name: ssb
   description: '[DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用'
 - name: stats
