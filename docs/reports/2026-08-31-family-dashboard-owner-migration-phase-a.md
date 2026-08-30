@@ -3,7 +3,7 @@ status: active
 lifecycle: history
 owner: family-hub
 created: 2026-08-30
-last-reviewed: 2026-08-30
+last-reviewed: 2026-08-31
 title: Family dashboard Workspace owner migration Phase A evidence
 type: doc
 bet_id: BET-Y1Q3-T10-111
@@ -30,18 +30,21 @@ proof.
   `docs/superpowers/plans/2026-08-31-family-dashboard-owner-migration-phase-a.md`,
   root-main SHA-256
   `8d15cf73804ac3ae887ee006572bd3db20df19785a48d18ef472f54dd31b19f4`.
-- Child PR: `starlink-awaken/omostation-family-hub#3`, merged.
-- Child main commit:
+- Initial child PR: `starlink-awaken/omostation-family-hub#3`, merged at
   `8037f79cb8d9ca1aae06d8b2d2fdb29db81ac310`.
+- Receipt-provenance follow-up: `starlink-awaken/omostation-family-hub#4`,
+  merged at authoritative child main
+  `244ac31ea983328b9c4ec05c6b935bd9af2908a8`.
 - Root PR: `starlink-awaken/omostation#2787`, merged.
 - Root merge commit:
   `9a4caa312b7dc0230ff7ff178b4f0e994913a244`.
-- Current replay main: `4a96ab8a360bd31bc7e02f4a7ff82337aed0a753`,
-  which contains the root merge commit and retains the exact child gitlink.
-- Child CI: root lint, root build, Python, dashboard, and dashboard-e2e all
-  succeeded before merge.
+- Root provenance follow-up: `starlink-awaken/omostation#2796`; this unique PR
+  advances only the family-hub gitlink from `8037f79c` to `244ac31e`.
+- Child PR and post-merge CI both passed root lint, root build, Python,
+  dashboard, and dashboard-e2e. The post-merge run is `33339335063`.
 - Fresh child-main replay used an independent depth-one clone at the exact
-  child main commit.
+  initial child main commit; the provenance follow-up was replayed by child
+  main CI and the existing governed attempt03 clone.
 
 ## Import evidence
 
@@ -55,10 +58,23 @@ stored in the committed receipts.
   `7fae629fb54f4907dd500ef3d66547a2e97d047f3298faf707859d98b778e170`.
 - Selected source: 265 files, 865,326 target bytes, fingerprint
   `e6224315fe799d5a53dcdeecaf90292096a73202e1aa5d8a7452ec79ac178259`.
-- Source receipt SHA-256:
-  `7fdcab7a41796a378c4e145727df73a2e7d6de3799a52345ff127ab39f1b52a1`.
-- Target receipt SHA-256:
-  `30476789e350f840def3b1d04c571f89ec4fc21a9d8dd95221d5438902c0e274`.
+- Source receipt v2 SHA-256:
+  `b310f1d3845b7f896cd89a8f03a1ece9b7c94e69576a16abe3df786203786f2e`.
+- Target receipt v2 SHA-256:
+  `c330991e7e5425c677575bbe1cc7c41cca628d4b0d4e51b576bdf963e569d524`.
+- The source receipt binds redacted authority refs
+  `documents://family-dashboard-app` and
+  `repo://family-hub/apps/dashboard`; only path digests are stored, never the
+  raw Documents authority path.
+- The target receipt binds the exact source-receipt digest, expected imported
+  target fingerprint
+  `b750dbf7403934d9b215b81d476d74e1f71b2c554f59a53530ef03f797daf2d4`,
+  observed adapted-target fingerprint
+  `beb03026824f60b8324f52b3eb42d91b5b65429fa2af76af6e2d95e34f9d674f`,
+  verification mode `adapted-target`, and `excluded_source_drift=true`.
+- The two receipt files are excluded only from the product target fingerprint
+  to prevent self-reference; their schemas, identities, digests, mode, drift,
+  and fingerprints are validated separately and fail closed.
 - Final private-token scan: zero matches outside ignored runtime products.
 - Tracked forbidden class scan: zero paths.
 - Tracked symlink scan: zero paths.
@@ -100,8 +116,8 @@ reproducible source caches.
 
 ## Verification matrix
 
-- Importer focused tests: 17 passed; Ruff passed.
-- Child Python/FastMCP replay: 63 passed.
+- Importer focused tests: 22 passed; Ruff and format checks passed.
+- Child Python/FastMCP replay after provenance repair: 68 passed.
 - Existing Vite root: lint passed; production build passed.
 - Dashboard unit replay: 77 passed.
 - Dashboard TypeScript: zero errors.
@@ -113,7 +129,13 @@ reproducible source caches.
 - Docker Compose syntax: passed with explicit read-only Documents and writable
   state inputs.
 - Adapted import verification: `status=verified`, selected fingerprint equal,
+  v2 receipts equal, observed target fingerprint equal, and
   `excluded_source_drift=true` as adjudicated above.
+- Child post-merge CI run `33339335063`: all five jobs passed.
+- Root worktree `--require-main` reachability: 14 of 14 gitlinks passed; the
+  family-hub worktree and proposed gitlink both resolve to `244ac31e` on child
+  `origin/main`.
+- Root pre-push GaC local gate: 56 checks executed, all green.
 - Root BET verifier: all six registered command groups exited zero, including
   57 blocking GaC checks.
 
