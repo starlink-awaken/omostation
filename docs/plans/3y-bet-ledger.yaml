@@ -1477,19 +1477,20 @@ bets:
   title: System task projection reconciliation
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Reconcile stale OMO task counters through the canonical state-sync broker so current-state-coherence and SSOT guardian see the task filesystem truth.
   non_goals:
   - No task file, goal, Documents, runtime payload, schedule, or user configuration mutation.
   - No direct edit to .omo/state or new state writer.
   done_when:
-  - Broker dry-run proves planned 7→6 and total 299→298 with other counters unchanged.
+  - Broker dry-run proves planned 6→7 and total 298→299 with other counters unchanged.
   - Brokered sync updates system.yaml and task files remain unchanged.
   - current-state-coherence and ssot-guardian pass after the sync.
   - Before/after hash evidence, report, and five-question retro are present.
   verify:
   - cmd: uv run --project projects/omo omo state sync-tasks --dry-run
-    expect: exact planned 7→6 and total 299→298 delta
+    expect: exact planned 6→7 and total 298→299 delta
   - cmd: python3 bin/ssot/current-state-coherence.py
     expect: exit 0
   - cmd: make ssot-guardian
@@ -1506,9 +1507,45 @@ bets:
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:af6cdee62795d52647f10faf590a117b14fd30725058b59b833f7b8defbc2234
+    spec_version: 1.1.0
+    content_digest: sha256:49ac1eb85a24d4957394cfb44fac064b5c63c58dfa32764f26a0628886375476
     decision_ref: decision://accepted/BET-Y1Q3-T10-76
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@2f504a3b0ba103ee376023491fbc08ac59b22fd5
+          tests:
+            ref: receipt://docs/reports/2026-08-29-system-task-projection-reconciliation.md
+            sha256: sha256:4efbe7999be37cef4ec1b77a896b3a28e93e9f066fb84089291bd3f16026131f
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
+            sha256: sha256:49ac1eb85a24d4957394cfb44fac064b5c63c58dfa32764f26a0628886375476
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-system-task-projection-reconciliation.md
+            sha256: sha256:4efbe7999be37cef4ec1b77a896b3a28e93e9f066fb84089291bd3f16026131f
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-system-task-projection-reconciliation.md
+            sha256: sha256:4efbe7999be37cef4ec1b77a896b3a28e93e9f066fb84089291bd3f16026131f
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-system-task-projection-reconciliation.md
+            sha256: sha256:4efbe7999be37cef4ec1b77a896b3a28e93e9f066fb84089291bd3f16026131f
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-76.md
+            sha256: sha256:a115b6b7a815cc6eaf6b8832afb04c735951e5dd4ca307736cd63bc727824e81
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
+            sha256: sha256:49ac1eb85a24d4957394cfb44fac064b5c63c58dfa32764f26a0628886375476
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on: []
   risk_level: L1
   human_gate: false
