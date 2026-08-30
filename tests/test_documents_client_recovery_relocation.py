@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Iterable, Optional, Tuple
 
 import pytest
+import yaml
 
 from lib import documents_client_recovery_relocation as relocation
 
@@ -430,3 +431,22 @@ def test_required_phase_gate_and_script_registry_cover_recovery_cli() -> None:
     ):
         assert path in workflow
     assert registry.is_file()
+
+
+def test_cc_switch_recovery_roots_have_one_nonterminal_owner() -> None:
+    registry_path = ROOT / ".omo" / "_truth" / "registry" / "documents-content-plane-migrations.yaml"
+    registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    families = {item["id"]: item for item in registry["families"]}
+    root = families["root-oneoff-assets"]
+    client = families["cc-switch-recovery-state"]
+
+    assert ".codex-optimize-log/**" not in root["source_globs"]
+    assert client["source_globs"] == [
+        ".codex-optimize-log/**",
+        ".cc-switch-recovery2/**",
+    ]
+    assert client["disposition"] == "relocate"
+    assert client["owner"] == "cc-switch"
+    assert client["status"] == "in_progress"
+    for source_glob in client["source_globs"]:
+        assert sum(source_glob in family.get("source_globs", []) for family in registry["families"]) == 1
