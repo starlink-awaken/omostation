@@ -122,6 +122,10 @@ def main(argv: list[str] | None = None) -> int:
         from lib.documents_learning_control_plane import main as learning_control_plane_main
 
         return learning_control_plane_main(arguments[1:])
+    if arguments and arguments[0] == "client-recovery":
+        from lib.documents_client_recovery_relocation import main as client_recovery_main
+
+        return client_recovery_main(arguments[1:])
     from l4_kernel.contracts import ContractError
     from runtime.documents_plane.jobs import run_job
 
