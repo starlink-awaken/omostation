@@ -16,7 +16,7 @@ totals:
   bos_domains: 21
   cli_commands: 176
   skills: 2
-  workflows: 17
+  workflows: 18
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -2440,6 +2440,9 @@ workflows:
   exists: true
 - id: cognitive-governance-delivery
   file: .omo/_truth/registry/agent-workflows/workflows/cognitive-governance-delivery.yaml
+  exists: true
+- id: documents-consumer-audit-weekly
+  file: .omo/_truth/registry/agent-workflows/workflows/documents-consumer-audit-weekly.yaml
   exists: true
 - id: external-adapter-sync
   file: .omo/_truth/registry/agent-workflows/workflows/external-adapter-sync.yaml
