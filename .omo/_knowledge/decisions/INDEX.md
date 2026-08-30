@@ -546,6 +546,6 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0422: D4 逃生口固化 — 权限类 vs fingerprint 债 — **ACCEPTED** | 2026-08-21 | swarm D4 | 0422-escape-hatch-solidification.md
 - ADR-0434: 次世代 omlxc V4.0 主权算力织网引擎与自适应树状投机体系 — **ACCEPTED** | 2026-08-29 | omlxc v4.0.0 | 0434-nextgen-omlxc-sovereign-compute-engine.md
 - ADR-0435: launchd plist 修复必须走生成器与注册表 — **ACCEPTED** | 2026-08-30 | governance-team | 0435-launchd-plist-generator-contract.md
-- ADR-0438: 次世代 omlxc V5.0 主权算力织网五大战略前沿 (雷雳5 DMA、在线LoRA热插拔、共生草稿头蒸馏、视觉Patch流式直通、Cockpit HUD) — **ACCEPTED** | 2026-08-29 | omlxc v5.0.0 | 0436-nextgen-omlxc-v5-compute-mesh-frontiers.md
-- ADR-0439: Trend signals from external RSS batch (GCC nested functions) — **PROPOSED** | 2026-08-29 | evolution-agent | 0438-trend-signal.md
 - ADR-0437: Indirect Calling of Nested Functions on GCC Without Executable Stack — **PROPOSED** | 2026-08-29 | evolution-agent | 0437-trend-signal.md
+- ADR-0439: 次世代 omlxc V5.0 主权算力织网全生态闭环与长期治理运维体系 — **ACCEPTED** | 2026-08-30 | omlxc v5.0.0 | 0439-omlxc-v5-sovereign-compute-ecosystem-closure.md
+- ADR-0440: 全生态服务 SSOT 登记、BOS URI 全生命周期路由注册与 Agora FastMCP 主权算力工具链挂载 — **ACCEPTED** | 2026-08-30 | governance-team | 0440-ecosystem-services-registration-and-governance.md
