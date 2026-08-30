@@ -38,7 +38,13 @@ def find_broken_links(adr_dir: Path) -> list:
                         "issue": "target does not exist",
                     })
             elif target.startswith(".") or target.startswith(".."):
-                target_path = (f.parent / target).resolve()
+                # Repo-root relative fallback: many ADRs link to repo-root
+                # entries like `.agents/skills/...` or `docs/...` instead of
+                # nesting the path under the ADR file's own directory.
+                # Try REPO_ROOT first, then fall back to ADR-local resolution.
+                target_path = (REPO_ROOT / target).resolve()
+                if not target_path.exists():
+                    target_path = (f.parent / target).resolve()
                 if not target_path.exists() and not target.startswith("http"):
                     broken.append({
                         "adr": str(f.relative_to(REPO_ROOT)),
