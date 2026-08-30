@@ -4092,6 +4092,7 @@ bets:
   - projects/cockpit/src/cockpit/tests/test_api_outcomes.py
   - projects/cockpit
   - docs/superpowers/specs/2026-08-28-product-p0-wp5-human-adjudication-value-design.md
+  - docs/reports/2026-08-30-t4-07-real-human-adjudication.json
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T4-07.md
   pasw_required: true
@@ -4113,10 +4114,10 @@ bets:
             sha256: sha256:e3fbd6adb7d7f1e7b372ee6697aa61bc93345a10e9ee3d1f74c9e043685aab80
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-07.md
-            sha256: sha256:404abbc0b0460124f6496add5ff69d2c38c91b4f6abb9e50194a06c23ac0bbff
+            sha256: sha256:49cf4d534c6eccab8ebfd4f6ca2e5e78390c03eef03060df90a0612cd227a2da
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-07.md
-            sha256: sha256:404abbc0b0460124f6496add5ff69d2c38c91b4f6abb9e50194a06c23ac0bbff
+            sha256: sha256:49cf4d534c6eccab8ebfd4f6ca2e5e78390c03eef03060df90a0612cd227a2da
       operational:
         status: PROVEN
         evidence:
@@ -4136,21 +4137,21 @@ bets:
         status: ACCEPTED
         evidence:
           real_signal:
-            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
-            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+            ref: receipt://docs/reports/2026-08-30-t4-07-real-human-adjudication.json
+            sha256: sha256:da896f8e631a94812aedf9a05a9b9c07bdce36e7e009bbd986da8d60e476d0e2
           human_verdict:
-            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
-            sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
+            ref: receipt://docs/reports/2026-08-30-t4-07-real-human-adjudication.json
+            sha256: sha256:da896f8e631a94812aedf9a05a9b9c07bdce36e7e009bbd986da8d60e476d0e2
           revision:
-            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
-            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+            ref: receipt://docs/reports/2026-08-30-t4-07-real-human-adjudication.json
+            sha256: sha256:da896f8e631a94812aedf9a05a9b9c07bdce36e7e009bbd986da8d60e476d0e2
           time_burden:
-            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
-            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+            ref: receipt://docs/reports/2026-08-30-t4-07-real-human-adjudication.json
+            sha256: sha256:da896f8e631a94812aedf9a05a9b9c07bdce36e7e009bbd986da8d60e476d0e2
           attestation:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
             sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
-    overall_state: blocked
+    overall_state: outcome_accepted
   depends_on:
   - BET-Y1Q3-T4-03
   - BET-Y1Q3-T4-04
