@@ -75,6 +75,13 @@ Postflight shows `_control` runtime=9 (the nine unaddressed executors),
 `.githooks` runtime=0, and no source handles in `lsof`. The canonical root
 `runtime/quarantine/*/` ignore rule protects all manifests.
 
+## Mainline closure
+
+Root PR #2701 merged to root `origin/main` as
+`bbfecdfd44547f36290dc995b2f11d79dbd2d83d`. Required checks all completed
+successfully, including integration, gac, interface, and governance-verify.
+The root gitlink remains aligned with the already merged Runtime child main.
+
 ## Boundary
 
 The migration family remains `learning-runtime: in_progress` with
