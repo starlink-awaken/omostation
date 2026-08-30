@@ -1,0 +1,79 @@
+id: documents-consumer-audit-weekly
+run_frequency: periodic
+title: Documents 执行面周期审计（consumer audit + bridge shell sha 核验）
+purpose: 'ADR-0441 原语 3 边界仲裁的周期化：每周核验 Documents 执行面硬门
+
+  （consumer audit forbidden_executors=0 / unmatched=0 恒成立）与 bridge shell
+
+  完整性（sha256 与 registry bridge_shells 指纹一致 + 转发目标存在）。
+
+  任一失败即为控制面回流信号，须回滚或开 quarantine 事务。
+
+  '
+agents:
+  roles:
+  - governance-agent
+  observer_policy: optional
+allowed_lanes:
+- governance_state
+- governance_code
+surfaces:
+  read:
+  - lib/documents_consumer_audit.py
+  - lib/documents_runtime_quarantine.py
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - .omo/standards/documents-workspace-collab-v1.md
+  write:
+  - .omo/evidence/**
+phases:
+  preflight:
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: consumer-audit
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - lib/documents_consumer_audit.py
+    - --workspace-root
+    - .
+    - --evidence
+    - .omo/evidence/weekly-consumer-audit/receipt.json
+  - id: bridge-shell-verify
+    mode: required
+    command:
+    - python3
+    - bin/gac/bridge-shell-verify.py
+  verification:
+  - id: receipt-check
+    mode: required
+    command:
+    - python3
+    - -c
+    - import json,sys; d=json.load(open('.omo/evidence/weekly-consumer-audit/receipt.json')); s=d['summary']; sys.exit(0 if s['forbidden_executors']==0 and s['unmatched']==0 else 1)
+  closeout:
+  - id: close-run
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - closeout
+    - '{run_id}'
+lock_scopes:
+- agent-run:{run_id}
