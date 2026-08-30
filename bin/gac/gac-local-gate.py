@@ -249,7 +249,7 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-governance-ratio",
-            "command": ["bin/gac/check-governance-ratio.py"],
+            "command": ["bin/gac/governance-orchestrator.py"],
         },
         {
             "id": "check-redline-coverage",
@@ -290,7 +290,7 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-governance-trend",
-            "command": ["bin/gac/check-governance-trend.py"],
+            "command": ["bin/gac/governance-orchestrator.py"],
         },
         # P7x-bus-foundation-rollout (ADR-0180): dormant-adapter detector.
         # Catches the P71 class-A "declaration without execution" trap.
