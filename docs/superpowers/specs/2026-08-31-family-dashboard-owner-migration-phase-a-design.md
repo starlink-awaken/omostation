@@ -6,8 +6,8 @@ bet_id: BET-Y1Q3-T10-111
 status: accepted
 lifecycle: contract
 owner: family-hub
-created: 2026-08-31
-last-reviewed: 2026-08-31
+created: 2026-08-30
+last-reviewed: 2026-08-30
 ---
 
 # Family dashboard Workspace owner migration Phase A
@@ -296,4 +296,3 @@ retirement, and fresh Documents audit are proven.
 | 6 | Cut over with import or defer | Defer all consumers to Phase C | Source ownership is necessary but does not prove real-data parity or production readiness. |
 | 7 | One broad BET or staged admission | Separate A/B/C BETs | Source import, host-state relocation, and consumer retirement have different risks, rollback, and proof. |
 | 8 | PR created or merged as delivery | Require child and root merge plus mainline replay | The user explicitly requires PR merge, and branch-local evidence does not establish authoritative ownership. |
-
