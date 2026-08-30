@@ -3,13 +3,29 @@ id: bin/capability-sync.py
 name: Capability Sync
 category: governance
 owner: governance-team
-description: ""
-inputs: []
+description: >
+  Bounded capability registry reconciliation.  Declares the canonical
+  find/inspect/load/invoke/check/serve sub-commands, the native transport
+  adapter, the mesh verification helpers, the principal-authority envelope
+  and the WP4 admission chain.  See also the split-phase capability-sync
+  module-split-design spec and BET-Y1Q3-T1-12 / T10-60 ledger entries.
+inputs:
+  - type: json
+  - type: path
 outputs:
   - type: exit_code
   - type: json
-dependencies: []
-triggers: []
-related: []
-maturity: draft
-last_reviewed: "2026-08-24"
+dependencies:
+  - capability_native_execution_receipt.py
+  - capability_native_inspection.py
+  - capability_native_sources.py
+  - capability_sync_verification_helpers.py
+  - capability_trace_binding.py
+triggers:
+  - type: cron
+  - type: manual
+related:
+  - bin/plan/bet-ledger.py
+  - lib/capability_mcp_server_load.py
+maturity: active
+last_reviewed: "2026-08-30"
