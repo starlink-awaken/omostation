@@ -23,4 +23,15 @@ risk_level: L1
 files_count: variable
 bet_id: BET-Y1Q3-T10-42
 category: audit
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: internal
+  bos_uri: bos://analysis/audit
+  layer: L4 - Audit Plane
+  entry_point: lib/documents_consumer_audit.py
+  governance_surface: .omo/_truth/registry/governance-checks.yaml
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
 ---
