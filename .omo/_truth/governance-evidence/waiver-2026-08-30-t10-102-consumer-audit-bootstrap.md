@@ -25,3 +25,9 @@ risk: This waiver covers bootstrap declarations only. Production code, tests, li
 residual: A separate follow-up must cut over the live vault-daily-health Scheduled skill after this audit truthfully turns red.
 gate_bypass: 1
 no-run-id: true
+
+closeout_run:
+  run_id: 20260830T094416Z-bet-execution-45064ddb
+  status: verified
+  mainline_commit: 51b4f4c92e3dab225717e923a8deb0b0d9961772
+  note: The historical waiver remains bootstrap-only; implementation and closeout used governed runs and exact claims.
