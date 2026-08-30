@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.0.1
 title: CC Switch recovery-state relocation from Documents
 bet_id: BET-Y1Q3-T10-108
 status: accepted
@@ -58,10 +58,12 @@ No second registry, dispatcher, state authority, or human entry point is added.
 
 ### Workspace transaction primitive
 
-Add a narrow registered governance CLI backed by a focused library. The
+Deepen the existing registered `bin/gac/documents-domain-owner-job.py` entry
+with a narrow `client-recovery` subcommand backed by a focused library. The
 library owns inventory, source/target boundary checks, fingerprinting, staging,
-publication, verification, rollback, and status. The CLI provides `plan`,
-`apply`, `verify`, and `rollback` commands with JSON output.
+publication, verification, rollback, and status. The existing CLI provides
+`plan`, `apply`, `verify`, and `rollback` commands with JSON output. This keeps
+the bin quota flat and avoids a second Documents governance entry.
 
 The primitive accepts exactly two source roots and the fixed App Support target
 for this BET. It must not infer additional Documents paths or follow symlinks.
@@ -163,7 +165,7 @@ audit, and a stable full-tree Documents audit.
 
 ## Acceptance
 
-- The design, implementation plan, tests, registered Workspace capability,
+- The design, implementation plan, tests, deepened registered Workspace owner,
   migration-family projection, report, retro, and rollback contract are merged.
 - A host plan identifies exactly 21 files and 417772968 bytes unless a new
   preflight snapshot is explicitly reviewed; any drift stops apply.
