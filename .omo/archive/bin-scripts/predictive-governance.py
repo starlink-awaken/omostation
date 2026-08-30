@@ -1,235 +1,139 @@
 #!/usr/bin/env python3
-"""Predictive Governance — trend prediction + prescriptive recommendations.
+"""Predictive Governance Engine — 治理推荐引擎 (GOV-01).
 
+读 predictive-governance.yaml 配置 + metrics-store.jsonl 指标,
+聚合特征 → 匹配 trigger → 产出推荐动作.
+
+守 KISS: 用简单移动平均/moving_average (配置 fallback), 不做复杂ML.
 Usage:
-    python3 bin/gac/predictive-governance.py
-    python3 bin/gac/predictive-governance.py --registry .omo/_truth/registry/predictive-governance.yaml
-    python3 bin/gac/predictive-governance.py --simulate-threshold 5 --check check-submodule-rewind
+  python3 bin/ssot/predictive-governance.py            # 产出推荐
+  python3 bin/ssot/predictive-governance.py --json     # JSON
 """
+
+from __future__ import annotations
 
 import argparse
 import json
-import sys
-from datetime import UTC, datetime, timezone
 from pathlib import Path
+from typing import Any
 
-try:
-    import yaml
-except ImportError:
-    yaml = None  # type: ignore[assignment]
+from _shared import ROOT, load_yaml, read_jsonl, utc_now
 
-WORKSPACE = Path(__file__).resolve().parents[2]
-DEFAULT_REGISTRY = WORKSPACE / ".omo/_truth/registry/predictive-governance.yaml"
-DEFAULT_METRICS = WORKSPACE / ".omo/state/metrics-store.jsonl"
-DEFAULT_OUTPUT = WORKSPACE / ".omo/state/runtime/predictive-governance.json"
+CONFIG_PATH = ROOT / ".omo" / "_truth" / "registry" / "predictive-governance.yaml"
+METRICS_PATH = ROOT / ".omo" / "state" / "metrics-store.jsonl"
 
 
-def _now_iso() -> str:
-    return datetime.now(UTC).isoformat()
+def _load_config() -> dict[str, Any]:
+    return load_yaml(CONFIG_PATH)
 
 
-def _load_registry(registry_path: Path) -> dict:
-    if not registry_path.is_file():
+def _load_metrics() -> list[dict[str, Any]]:
+    return read_jsonl(METRICS_PATH)
+
+
+def _aggregate(entries: list[dict[str, Any]], window: int) -> dict[str, float]:
+    """Aggregate recent metrics into daily features (moving average)."""
+    from collections import defaultdict
+
+    # Bucket by day
+    daily: dict[str, dict[str, list]] = defaultdict(lambda: {"ok": [], "durations": []})
+    for e in entries[-max(window * 10, 100) :]:
+        day = str(e.get("timestamp", ""))[:10]
+        daily[day]["ok"].append(bool(e.get("ok", False)))
+        daily[day]["durations"].append(float(e.get("duration_ms", 0)))
+
+    days = sorted(daily.keys())[-window:]
+    if not days:
         return {}
-    if yaml is None:
-        return {}
-    try:
-        docs = [d for d in yaml.safe_load_all(registry_path.read_text(encoding="utf-8")) if d]
-        data = docs[-1] if docs else {}
-        return data if isinstance(data, dict) else {}
-    except Exception:
-        return {}
+
+    gate_pass = []
+    durations = []
+    for d in days:
+        oks = daily[d]["ok"]
+        if oks:
+            gate_pass.append(sum(1 for o in oks if o) / len(oks))
+        durs = daily[d]["durations"]
+        if durs:
+            durations.append(sum(durs) / len(durs))
+
+    out: dict[str, float] = {}
+    if gate_pass:
+        out["gate_pass_rate"] = sum(gate_pass) / len(gate_pass)
+    if durations:
+        out["check_duration_trend"] = sum(durations) / len(durations)
+    return out
 
 
-def _load_metrics(metrics_file: Path, window: int = 30) -> list[dict]:
-    if not metrics_file.is_file():
-        return []
-    lines = metrics_file.read_text(encoding="utf-8").splitlines()
-    entries = [json.loads(line) for line in lines if line.strip()]
-    if window > 0:
-        entries = entries[-window:]
-    return entries
+def _match_recommendations(features: dict[str, float], config: dict) -> list[dict[str, Any]]:
+    """Match aggregated features to configured recommendation triggers."""
+    recs = config.get("recommendations", [])
+    out: list[dict[str, Any]] = []
+    for rec in recs:
+        trigger = rec.get("trigger", "")
+        threshold = float(config.get("model", {}).get("confidence_threshold", 0.7))
+        matched = False
 
+        if (
+            (trigger == "gate_pass_rate_declining" and features.get("gate_pass_rate", 1.0) < threshold)
+            or (trigger == "check_duration_increasing" and features.get("check_duration_trend", 0) > 500)
+            or (trigger == "stable_healthy" and features.get("gate_pass_rate", 1.0) >= threshold)
+        ):
+            matched = True
+        # Future: debt_volume_increasing, anomaly_spike
+        # require external data sources
 
-def _daily_pass_rates(entries: list[dict]) -> dict[str, float]:
-    by_day: dict[str, dict] = {}
-    for e in entries:
-        ts = str(e.get("timestamp", ""))
-        day = ts[:10] if len(ts) >= 10 else "unknown"
-        if day not in by_day:
-            by_day[day] = {"count": 0, "ok_count": 0}
-        by_day[day]["count"] += 1
-        if e.get("ok") is True:
-            by_day[day]["ok_count"] += 1
-    return {d: (v["ok_count"] / v["count"] if v["count"] else 0.0) for d, v in by_day.items()}
-
-
-def _linear_prediction(values: list[float]) -> dict:
-    if len(values) < 2:
-        return {"error": "insufficient_history", "values": values}
-    n = len(values)
-    x_mean = sum(range(n)) / n
-    y_mean = sum(values) / n
-    numerator = sum((i - x_mean) * (values[i] - y_mean) for i in range(n))
-    denominator = sum((i - x_mean) ** 2 for i in range(n))
-    if denominator == 0:
-        return {"trend": "stable", "slope": 0.0, "values": values}
-    slope = numerator / denominator
-    intercept = y_mean - slope * x_mean
-    last_idx = n - 1
-    next_value = intercept + slope * (last_idx + 1)
-    return {
-        "slope": round(slope, 4),
-        "intercept": round(intercept, 4),
-        "current": round(values[-1], 3),
-        "next_predicted": round(next_value, 3),
-        "trend": "improving" if slope > 0.01 else "declining" if slope < -0.01 else "stable",
-        "values": [round(v, 3) for v in values],
-    }
-
-
-def _generate_recommendations(predictions: dict, registry: dict) -> list[dict]:
-    recs: list[dict] = []
-    rec_rules = registry.get("recommendations", [])
-    trend = predictions.get("trend", "stable")
-    slope = predictions.get("slope", 0.0)
-    current = predictions.get("current", 0.0)
-
-    if trend == "declining" and current < 0.7:
-        recs.append(
-            {
-                "action": "review_recent_changes",
-                "priority": "P0",
-                "reason": f"gate pass rate declining (current={current:.1%}, slope={slope:.4f})",
-                "confidence": 0.85,
-            }
-        )
-    elif trend == "declining":
-        recs.append(
-            {
-                "action": "review_recent_changes",
-                "priority": "P1",
-                "reason": f"gate pass rate declining (current={current:.1%})",
-                "confidence": 0.7,
-            }
-        )
-    elif trend == "improving":
-        recs.append(
-            {
-                "action": "maintain_current_practices",
-                "priority": "P3",
-                "reason": "governance metrics improving",
-                "confidence": 0.8,
-            }
-        )
-    else:
-        recs.append(
-            {
-                "action": "maintain_current_practices",
-                "priority": "P3",
-                "reason": "governance metrics stable",
-                "confidence": 0.6,
-            }
-        )
-
-    for rule in rec_rules:
-        trigger = rule.get("trigger", "")
-        if trigger == "check_duration_increasing" and slope > 0.01:
-            recs.append(
+        if matched:
+            out.append(
                 {
-                    "action": rule.get("action", ""),
-                    "priority": rule.get("priority", "P2"),
-                    "reason": rule.get("template", "").format(value=f"{slope * 1000:.1f}ms/day"),
-                    "confidence": 0.7,
+                    "trigger": trigger,
+                    "priority": rec.get("priority", "P3"),
+                    "action": rec.get("action", ""),
+                    "template": (rec.get("template", "")[:150] if rec.get("template") else ""),
+                    "matched_features": {k: round(v, 3) for k, v in features.items()},
                 }
             )
-
-    return recs
-
-
-def _simulate_threshold(metrics_file: Path, check: str, threshold: int, window: int = 7) -> dict:
-    entries = _load_metrics(metrics_file, window=window * 2)
-    check_entries = [e for e in entries if e.get("check") == check]
-    if not check_entries:
-        return {
-            "error": f"no data for check '{check}'",
-            "check": check,
-            "simulated_threshold": threshold,
-        }
-
-    recent = check_entries[-window:] if len(check_entries) >= window else check_entries
-    fail_count = sum(1 for e in recent if e.get("ok") is False)
-    fail_rate = fail_count / len(recent) if recent else 0.0
-
-    projected = {
-        "check": check,
-        "simulated_threshold": threshold,
-        "window": window,
-        "recent_fail_rate": round(fail_rate, 3),
-        "recent_total": len(recent),
-        "recent_fails": fail_count,
-        "would_trigger": fail_count > threshold,
-        "recommendation": (
-            f"threshold={threshold} would trigger {fail_count} failures in last {window} runs"
-            if fail_count > threshold
-            else f"threshold={threshold} safe for last {window} runs ({fail_count} failures)"
-        ),
-    }
-    return projected
+    return out
 
 
-def generate_prediction(registry: dict, metrics_file: Path) -> dict:
-    model_cfg = registry.get("model", {})
-    min_history = model_cfg.get("min_history", 5)
-    metrics = _load_metrics(metrics_file, window=30)
-    if not metrics:
-        return {"error": "no metrics data", "generated_at": _now_iso()}
+def generate_recommendations(root: Path | None = None) -> dict[str, Any]:
+    root = root or ROOT
+    config = _load_config()
+    entries = _load_metrics()
+    features = _aggregate(entries, int(config.get("model", {}).get("window", 7) or 7))
+    recs = _match_recommendations(features, config)
 
-    pass_rates = _daily_pass_rates(metrics)
-    values = [pass_rates[d] for d in sorted(pass_rates.keys())]
-    if len(values) < min_history:
-        return {
-            "error": f"insufficient_history: {len(values)} < {min_history}",
-            "values": values,
-        }
-
-    prediction = _linear_prediction(values)
-    recommendations = _generate_recommendations(prediction, registry)
     return {
-        "generated_at": _now_iso(),
-        "prediction": prediction,
-        "recommendations": recommendations,
+        "schema": "predictive-governance/v1",
+        "generated_at": utc_now(),
+        "metrics_loaded": len(entries),
+        "features": {k: round(v, 3) for k, v in features.items()},
+        "recommendations": recs,
+        "total_recommendations": len(recs),
     }
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Predictive Governance")
-    parser.add_argument(
-        "--registry",
-        default=str(DEFAULT_REGISTRY),
-        help="Predictive governance registry YAML",
-    )
-    parser.add_argument("--metrics-file", default=str(DEFAULT_METRICS), help="Metrics JSONL path")
-    parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Output JSON path")
-    parser.add_argument("--simulate-threshold", type=int, help="Simulate threshold value for a check")
-    parser.add_argument("--check", help="Check name for simulation")
-    args = parser.parse_args()
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--root", type=Path, default=ROOT)
+    args = parser.parse_args(argv)
 
-    registry = _load_registry(Path(args.registry))
-    metrics_file = Path(args.metrics_file)
+    result = generate_recommendations(args.root)
 
-    if args.simulate_threshold is not None:
-        check = args.check or "check-submodule-rewind"
-        output = _simulate_threshold(metrics_file, check, args.simulate_threshold)
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:
-        output = generate_prediction(registry, metrics_file)
-
-    out_path = Path(args.output)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(output, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps(output, indent=2, ensure_ascii=False))
+        print(
+            f"Predictive Governance: {result['total_recommendations']} "
+            f"recommendations (metrics: {result['metrics_loaded']})"
+        )
+        print(f"  features: {result['features']}")
+        for r in result["recommendations"]:
+            print(f"  [{r['priority']}] {r['action']} — trigger: {r['trigger']}")
+        if not result["recommendations"]:
+            print("  ✅ No recommendations needed (system healthy).")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

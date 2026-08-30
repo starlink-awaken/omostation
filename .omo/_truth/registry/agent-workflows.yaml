@@ -118,6 +118,7 @@ agent_profiles:
     - agent-onboarding
     - bet-execution
     - resident-runtime-observe
+    - documents-consumer-audit-weekly
     can_write_lanes:
     - docs
     - governance_code
@@ -1312,7 +1313,7 @@ projection:
   lifecycle: read_only_generated_compatibility
   schema: agent-workflow-compat-projection/v1
   source: .omo/_truth/registry/agent-workflows
-  source_digest: sha256:e41183d127abed1bb83b20c9e1931b45e7612bbc8beed4f023843423d19997c6
+  source_digest: sha256:73d64d8d611c2bedce2fd56fdfd5acd4661779c63115679701e0709f07fab517
   writer: bin/agent-workflow.py projection-sync
 requirement_iteration_policy:
   adr: ADR-0203
@@ -1901,6 +1902,86 @@ workflows:
     - docs/adr/**
     - docs/governance/**
   title: Cognitive Governance Intent-to-Delivery Lifecycle (ADR-0199)
+- agents:
+    observer_policy: optional
+    roles:
+    - governance-agent
+  allowed_lanes:
+  - governance_state
+  - governance_code
+  id: documents-consumer-audit-weekly
+  lock_scopes:
+  - agent-run:{run_id}
+  phases:
+    closeout:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - closeout
+      - '{run_id}'
+      id: close-run
+      mode: required
+    execute:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - lib/documents_consumer_audit.py
+      - --workspace-root
+      - .
+      - --evidence
+      - .omo/evidence/weekly-consumer-audit/receipt.json
+      id: consumer-audit
+      mode: required
+    - command:
+      - python3
+      - lib/bridge_shell_verify.py
+      id: bridge-shell-verify
+      mode: required
+    preflight:
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - python3
+      - -c
+      - import json,sys; d=json.load(open('.omo/evidence/weekly-consumer-audit/receipt.json')); s=d['summary']; sys.exit(0 if s['forbidden_executors']==0 and s['unmatched']==0 else 1)
+      id: receipt-check
+      mode: required
+  purpose: 'ADR-0441 原语 3 边界仲裁的周期化：每周核验 Documents 执行面硬门
+
+    （consumer audit forbidden_executors=0 / unmatched=0 恒成立）与 bridge shell
+
+    完整性（sha256 与 registry bridge_shells 指纹一致 + 转发目标存在）。
+
+    任一失败即为控制面回流信号，须回滚或开 quarantine 事务。
+
+    '
+  run_frequency: periodic
+  surfaces:
+    read:
+    - lib/documents_consumer_audit.py
+    - lib/documents_runtime_quarantine.py
+    - lib/bridge_shell_verify.py
+    - .omo/_truth/registry/documents-content-plane-migrations.yaml
+    - .omo/standards/documents-workspace-collab-v1.md
+    write:
+    - .omo/evidence/**
+  title: Documents 执行面周期审计（consumer audit + bridge shell sha 核验）
 - agents:
     observer_policy: optional
     roles:
