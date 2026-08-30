@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 541  # 2026-08-30 541: canonical baseline retained (lib/ wrapper lives outside bin/ count, T6-15 R2b)  # 2026-08-30: retro-reference-engine (P2) + decision-inbox-sla + dormant-cleanup
+    script_baseline: 542  # 2026-08-30 541→542: retro-reference-engine (P2) added  # 2026-08-30: retro-reference-engine (P2) + decision-inbox-sla + dormant-cleanup
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
