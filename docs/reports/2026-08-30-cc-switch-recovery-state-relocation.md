@@ -44,7 +44,7 @@ remains `in_progress`, and T10-108 remains `candidate`.
   owner entry.
 - Task 4 RED: the unique-owner test failed with missing
   `cc-switch-recovery-state`. GREEN: 21 focused tests passed and the migration
-  checker reported 18 samples, zero unmatched, zero multiple matches, and zero
+  checker reported 17 samples, zero unmatched, zero multiple matches, and zero
   errors.
 - Focused Ruff passed. `/usr/bin/python3` compiled the library and owner entry
   and executed `client-recovery --help`.
