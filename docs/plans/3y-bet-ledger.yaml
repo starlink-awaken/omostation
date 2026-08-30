@@ -257,6 +257,68 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-110
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Quarantine retired Documents runner logs through exact selection
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: Move exactly the two retired _inbox runner logs from Documents into the protected integration Workspace quarantine through the existing transaction primitive, with exact cache selection, non-target preservation, durable verification, and executable rollback.
+  non_goals:
+  - No movement or rewrite of any other _inbox content and no directory-wide cache/runtime quarantine.
+  - No permanent deletion, host schedule/process/application mutation, log interpretation, or repair of historical root-oneoff rollback loss.
+  - No new registry family, CLI entry point, dispatcher, ontology, control plane, or migration primitive.
+  done_when:
+  - The existing documents runtime quarantine primitive preserves all default runtime behavior while adding explicit exact include, closed runtime/cache kind selection, complete-Documents classification, non-target fingerprinting, completed verify, and collision-safe rollback.
+  - RED-to-GREEN tests prove unsafe/duplicate includes, content selection, source/non-target drift, target collision, partial failure, zero-byte entries, durable manifest, verification, and immutable-manifest rollback semantics.
+  - The capability PR, focused/full tests, Ruff, GaC, required CI, merge, and mainline replay complete before any Documents or Workspace runtime payload mutation.
+  - Fresh host preflight proves exactly hourly_runner.log and hourly_runner_err.log selected as cache, two no-handle checks, no active consumer/schedule/process, stable source and non-target fingerprints, and an absent protected target.
+  - Apply and postflight prove both sources absent, target hash/mode/fingerprint parity, all non-target _inbox nodes unchanged, fresh consumer audit green, manifest retained on delayed recheck, rollback executable, and permanent deletion false.
+  - root-oneoff-assets records only this completed transaction and remains pending with its historical missing eight-file rollback gap unchanged; report, retro, completion matrix, closeout PR, mainline replay, and workflows pass while value remains NOT_PROVEN.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py tests/test_quarantine_retention_policy.py -q
+    expect: exit 0
+  - cmd: uv run --with ruff ruff check lib/documents_runtime_quarantine.py tests/test_documents_runtime_quarantine.py tests/test_quarantine_retention_policy.py
+    expect: exit 0
+  - cmd: >-
+      /usr/bin/python3 lib/documents_runtime_quarantine.py
+      --verify-manifest /Users/xiamingxing/Workspace/runtime/quarantine/documents-root-inbox-runner-logs-20260831/manifest.json
+      --json
+    expect: exit 0 with status verified, exact two targets equal, sources absent, non-target fingerprint equal, rollback available, permanent deletion false
+  - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
+    expect: exit 0 with status ok, forbidden_executors=0, unmatched=0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - lib/documents_runtime_quarantine.py
+  - tests/test_documents_runtime_quarantine.py
+  - tests/test_quarantine_retention_policy.py
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md
+  - docs/superpowers/plans/2026-08-31-documents-runner-log-quarantine.md
+  - docs/reports/2026-08-31-documents-runner-log-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-110.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-31-t10-110-bootstrap.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b2908cf39b4c4a841c388308d678eed19c8874f0289f4d90776c22f9684eaff5
+    decision_ref: decision://accepted/BET-Y1Q3-T10-110
+  depends_on:
+  - BET-Y1Q3-T10-109
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: Any include/kind ambiguity, source or non-target drift, open handle, consumer/schedule/process discovery, unsafe node/path, target or rollback collision, manifest/fingerprint mismatch, evidence-retention loss, unrelated registry change, permanent deletion, or value/family overclaim stops the transaction and preserves the most recoverable state.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-109
   track: T10-MATURITY
   window: Y1Q3
