@@ -2427,6 +2427,7 @@ def cmd_lint(data: dict, args) -> int:
     # A write_surface path declared in the BET that does not exist on main
     # indicates either a date-prefix drift (08-29 vs 08-30) or a report
     # that was never created.  Both silently fail D0 downstream.
+    warnings: list[str] = []
     for b in data["bets"]:
         for p in b.get("write_surfaces") or []:
             if "*" in p:
@@ -2438,12 +2439,25 @@ def cmd_lint(data: dict, args) -> int:
                 capture_output=True, check=False,
             ).returncode == 0
             if not exists:
-                errs.append(
+                warnings.append(
                     f"{b['id']}.write_surface: PHANTOM_REPORT_PATH {p} "
                     f"(path not on origin/main — date drift or never created)"
                 )
 
     if errs:
+        for e in errs:
+            print(f"ERROR {e}")
+        print(f"\n{len(errs)} 个问题")
+        if warnings:
+            for w in warnings:
+                print(f"WARN  {w}")
+            print(f"+ {len(warnings)} 个 warning (不阻断)")
+        return 1
+    if warnings:
+        for w in warnings:
+            print(f"WARN  {w}")
+        print(f"\n{len(warnings)} 个 warning (不阻断)")
+    print(f"OK — {len(data['bets'])} 个 bet，{len(tracks)} 条轨道，无问题")
         for e in errs:
             print(f"ERROR {e}")
         print(f"\n{len(errs)} 个问题")
