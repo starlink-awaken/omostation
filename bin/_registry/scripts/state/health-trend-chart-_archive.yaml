@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/ssot/audit-repo-health.sh
-name: Audit Repo Health
+id: bin/gac/_archive/health-trend-chart.py
+name: Health Trend Chart
 category: state
 owner: governance-team
 description: ""

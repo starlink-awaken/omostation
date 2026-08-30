@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/governance-summarizer.py
-name: Governance Summarizer
+id: bin/gac/_archive/governance-history-insight.py
+name: Governance History Insight
 category: governance
 owner: governance-team
 description: ""

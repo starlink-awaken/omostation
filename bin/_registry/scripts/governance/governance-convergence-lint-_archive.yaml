@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/governance-history-insight.py
-name: Governance History Insight
+id: bin/gac/_archive/governance-convergence-lint.py
+name: Governance Convergence Lint
 category: governance
 owner: governance-team
 description: ""
