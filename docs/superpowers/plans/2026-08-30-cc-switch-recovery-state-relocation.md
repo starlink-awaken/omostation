@@ -4,7 +4,7 @@
 
 **Goal:** Build, merge, and operate a reversible Workspace transaction that moves the two inactive CC Switch recovery roots out of Documents into durable native App Support recovery storage.
 
-**Architecture:** A focused library owns deterministic inventory, policy checks, staged movement, manifest verification, and rollback. A registered `bin/gac` CLI exposes `plan`, `apply`, `verify`, and `rollback`; the existing migration registry remains the sole family authority. Delivery is split into an implementation PR and a later host-closeout PR so host mutation uses code already reachable from main.
+**Architecture:** A focused library owns deterministic inventory, policy checks, staged movement, manifest verification, and rollback. The existing registered `bin/gac/documents-domain-owner-job.py` entry exposes a narrow `client-recovery` subcommand with `plan`, `apply`, `verify`, and `rollback`; the existing migration registry remains the sole family authority. Delivery is split into an implementation PR and a later host-closeout PR so host mutation uses code already reachable from main.
 
 **Tech Stack:** Python 3.9-compatible standard library, pytest, YAML registries, Agent Workflow, GitHub Actions.
 
@@ -448,155 +448,73 @@ git commit --only lib/documents_client_recovery_relocation.py \
 
 ---
 
-### Task 3: Registered CLI and required CI wiring
+### Task 3: Existing owner-job CLI and required CI wiring
 
 **Files:**
-- Create: `bin/gac/documents-client-recovery.py`
-- Create: `bin/_registry/scripts/governance/documents-client-recovery.yaml`
-- Modify: `.github/workflows/phase-gate-enforce.yml`
+- Modify: `lib/documents_client_recovery_relocation.py`
+- Modify: `bin/gac/documents-domain-owner-job.py`
 - Modify: `tests/test_documents_client_recovery_relocation.py`
+- Modify: `.github/workflows/phase-gate-enforce.yml`
 
 **Interfaces:**
-- CLI commands: `plan`, `apply`, `verify`, `rollback`.
+- Existing entry: `documents-domain-owner-job.py client-recovery <command>`.
+- Commands: `plan`, `apply`, `verify`, `rollback`.
 - JSON success schema: `documents-client-recovery-relocation/v1`.
 - JSON error schema: `documents-client-recovery-relocation-error/v1` with stable `code`, `command`, and `error`.
 
-- [ ] **Step 1: Write failing CLI, registry, and phase-gate tests**
+- [ ] **Step 1: Write failing owner-dispatch and phase-gate tests**
+
+Test that the existing owner job accepts `client-recovery plan`, emits structured
+JSON without mutation, returns stable errors, dispatches the real transaction,
+and that phase-gate covers the library and focused test. Assert the existing
+`bin/_registry/scripts/governance/documents-domain-owner-job.yaml` remains the
+only script registration.
+
+- [ ] **Step 2: Run RED and confirm the subcommand/wiring is absent**
+
+Run the focused tests. Expected failures: `client-recovery` is not dispatched
+and the new library/test paths are absent from phase-gate.
+
+- [ ] **Step 3: Add library CLI main and delegate from the existing owner**
+
+The library owns argparse and JSON rendering. Add this dispatch before the
+existing generic job parser in `documents-domain-owner-job.py`:
 
 ```python
-def test_cli_plan_emits_structured_json_without_mutation(tmp_path: Path) -> None:
-    layout = _layout(tmp_path)
-    receipt = _write_consumer_receipt(tmp_path, _consumer_receipt())
-    result = _run_cli("plan", layout, receipt)
-    payload = json.loads(result.stdout)
-    assert result.returncode == 0
-    assert payload["schema"] == "documents-client-recovery-relocation/v1"
-    assert payload["status"] == "planned"
-    assert all(root.is_dir() for root in layout.source_roots)
-    assert not layout.target_root.exists()
+if arguments and arguments[0] == "client-recovery":
+    from lib.documents_client_recovery_relocation import main as client_recovery_main
 
-
-def test_cli_failure_has_stable_error_code(tmp_path: Path) -> None:
-    layout = _layout(tmp_path)
-    receipt = _write_consumer_receipt(tmp_path, _consumer_receipt(forbidden=1))
-    result = _run_cli("plan", layout, receipt)
-    payload = json.loads(result.stdout)
-    assert result.returncode == 2
-    assert payload == {
-        "schema": "documents-client-recovery-relocation-error/v1",
-        "status": "error",
-        "code": "CONSUMER_RECEIPT_UNHEALTHY",
-        "command": "plan",
-        "error": "consumer receipt forbidden_executors must equal zero",
-    }
-
-
-def test_required_phase_gate_and_script_registry_cover_recovery_cli() -> None:
-    workflow = (ROOT / ".github/workflows/phase-gate-enforce.yml").read_text()
-    registry = ROOT / "bin/_registry/scripts/governance/documents-client-recovery.yaml"
-    for path in (
-        "bin/gac/documents-client-recovery.py",
-        "lib/documents_client_recovery_relocation.py",
-        "tests/test_documents_client_recovery_relocation.py",
-    ):
-        assert path in workflow
-    assert registry.is_file()
-```
-
-- [ ] **Step 2: Run RED and confirm absent CLI/registry/wiring**
-
-Run the focused tests. Expected failures: CLI and registry files are absent and
-the phase-gate path assertions fail.
-
-- [ ] **Step 3: Implement the CLI without duplicating transaction logic**
-
-The CLI must import the library after anchoring `ROOT`, use these defaults, and
-dispatch one function per command:
-
-```python
-DEFAULT_DOCUMENTS_ROOT = Path.home() / "Documents"
-DEFAULT_SOURCE_RELATIVES = (".codex-optimize-log", ".cc-switch-recovery2")
-DEFAULT_TARGET_ROOT = (
-    Path.home() / "Library" / "Application Support" / "CC_Switch Recovery" / "2026-08-30"
-)
-DEFAULT_ROLLBACK_RECEIPT = DEFAULT_TARGET_ROOT.parent / "2026-08-30.rollback-receipt.json"
-
-
-def _paths(args: argparse.Namespace) -> RelocationPaths:
-    documents = args.documents_root.expanduser().absolute()
-    sources = tuple(documents / value for value in args.source_relative)
-    if len(sources) != 2:
-        raise RelocationError("exactly two source roots are required", code="SOURCE_ROOT_SET_INVALID")
-    return RelocationPaths(
-        documents_root=documents,
-        source_roots=(sources[0], sources[1]),
-        target_root=args.target_root.expanduser().absolute(),
-        rollback_receipt=args.rollback_receipt.expanduser().absolute(),
-    )
+    return client_recovery_main(arguments[1:])
 ```
 
 `plan` and `apply` require `--consumer-receipt`; `verify` also requires a fresh
-receipt; `rollback` does not. All failures print JSON to stdout and exit 2.
-Do not add `--force`, `--delete`, mutable source-count overrides, or arbitrary
-default source names.
+receipt; `rollback` does not. Never add `--force`, `--delete`, mutable source
+count overrides, or arbitrary default source names.
 
-- [ ] **Step 4: Register the script and wire the focused CI command**
+- [ ] **Step 4: Wire focused CI without adding a bin entry**
 
-Create a registry record matching existing governance script records with:
+Add only `lib/documents_client_recovery_relocation.py` and
+`tests/test_documents_client_recovery_relocation.py` to the Documents path
+filter, focused pytest command, and Ruff command. The existing owner job path is
+already wired and registered. Run `check-bin-quota-diff.py --base origin/main`
+and require zero net bin growth.
 
-```yaml
-id: bin/gac/documents-client-recovery.py
-path: bin/gac/documents-client-recovery.py
-owner: governance-team
-status: active
-runtime: python3
-purpose: Reversibly relocate inactive CC Switch recovery state from Documents to native App Support.
-sfop_slot: F
-dao_layer: qi
-```
-
-Add the three changed paths to the existing Documents path filter in
-`phase-gate-enforce.yml`, and add exactly this test command to the existing
-Documents required job:
-
-```bash
-uv run --with pyyaml --with pytest python -m pytest tests/test_documents_client_recovery_relocation.py -q
-```
-
-- [ ] **Step 5: Run GREEN and real Python 3.9 CLI execution**
+- [ ] **Step 5: Run GREEN and real Python 3.9 owner execution**
 
 ```bash
 uv run --with pyyaml --with pytest python -m pytest \
   tests/test_documents_client_recovery_relocation.py -q
-/usr/bin/python3 bin/gac/documents-client-recovery.py --help
-python3 bin/gac/check-script-registry.py --json
-python3 bin/gac/check-ci-surfaces.py
+/usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery --help
+python3 bin/ssot/script-registry.py validate
+python3 bin/gac/check-bin-quota-diff.py --base origin/main
 ```
 
-Expected: all commands exit 0; the help command proves Python 3.9 execution,
-not only syntax parsing.
+Expected: all commands exit 0 and the bin count remains flat.
 
-- [ ] **Step 6: Commit code/config in lane-safe commits**
+- [ ] **Step 6: Commit by lane**
 
-First commit the code lane:
-
-```bash
-git add bin/gac/documents-client-recovery.py \
-  tests/test_documents_client_recovery_relocation.py
-git commit --only bin/gac/documents-client-recovery.py \
-  tests/test_documents_client_recovery_relocation.py \
-  -m "feat(documents): expose client recovery transaction"
-```
-
-Then commit the config lane:
-
-```bash
-git add bin/_registry/scripts/governance/documents-client-recovery.yaml \
-  .github/workflows/phase-gate-enforce.yml
-git commit --only bin/_registry/scripts/governance/documents-client-recovery.yaml \
-  .github/workflows/phase-gate-enforce.yml \
-  -m "ci(documents): require client recovery relocation tests"
-```
+Commit the library/test code lane, the existing owner governance-code lane, and
+the phase-gate config lane separately. Do not create a new script registration.
 
 ---
 
@@ -604,6 +522,7 @@ git commit --only bin/_registry/scripts/governance/documents-client-recovery.yam
 
 **Files:**
 - Modify: `.omo/_truth/registry/documents-content-plane-migrations.yaml`
+- Modify: `tests/test_documents_client_recovery_relocation.py`
 - Modify: `tests/test_documents_content_plane_migration_check.py`
 - Create: `docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md`
 
@@ -634,11 +553,15 @@ def test_cc_switch_recovery_roots_have_one_nonterminal_owner() -> None:
 
 ```bash
 uv run --with pyyaml --with pytest python -m pytest \
-  tests/test_documents_content_plane_migration_check.py \
+  tests/test_documents_client_recovery_relocation.py \
   -k cc_switch_recovery_roots -q
 ```
 
 Expected: failure because `cc-switch-recovery-state` is missing.
+
+Update the existing workspace-registry expectation to keep
+`candidate_count == 17`, add `cc-switch-recovery-state` to the expected family
+set, and change `root-oneoff-assets` expected sample count from 2 to 1.
 
 - [ ] **Step 3: Add the nonterminal family and implementation report**
 
@@ -656,7 +579,7 @@ Add this registry record without terminal evidence:
   owner: cc-switch
   replacement: $HOME/Library/Application Support/CC_Switch Recovery/2026-08-30
   consumer_refs:
-  - bin/gac/documents-client-recovery.py
+  - bin/gac/documents-domain-owner-job.py
   - audit://documents/root-oneoff/consumer-scan-pending
   rollback: Use the completed manifest and rollback command; never overwrite a recreated source root.
   confirmation_gate: before_external_state
@@ -673,7 +596,7 @@ status before the live move succeeds.
 uv run --with pyyaml --with pytest python -m pytest \
   tests/test_documents_client_recovery_relocation.py \
   tests/test_documents_content_plane_migration_check.py -q
-/usr/bin/python3 bin/gac/documents-client-recovery.py --help
+/usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery --help
 uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
 uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
 make gac-local-gate
@@ -686,8 +609,10 @@ Expected: focused tests, migration check, doc SSOT, and GaC all pass.
 
 ```bash
 git add .omo/_truth/registry/documents-content-plane-migrations.yaml \
+  tests/test_documents_client_recovery_relocation.py \
   tests/test_documents_content_plane_migration_check.py
 git commit --only .omo/_truth/registry/documents-content-plane-migrations.yaml \
+  tests/test_documents_client_recovery_relocation.py \
   tests/test_documents_content_plane_migration_check.py \
   -m "governance(documents): assign CC Switch recovery ownership"
 
@@ -747,7 +672,7 @@ uv run --project projects/l4-kernel python \
   --workspace-root "$PWD" --json \
   > ".omo/evidence/$T10_108_RUN_ID/documents-consumer-audit.json"
 
-/usr/bin/python3 bin/gac/documents-client-recovery.py plan \
+/usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery plan \
   --consumer-receipt ".omo/evidence/$T10_108_RUN_ID/documents-consumer-audit.json" \
   --json > ".omo/evidence/$T10_108_RUN_ID/cc-switch-recovery-plan.json"
 ```
@@ -762,7 +687,7 @@ new reviewed snapshot; do not override it.
 Run `lsof +D` for both source roots and require no output. Then execute:
 
 ```bash
-/usr/bin/python3 bin/gac/documents-client-recovery.py apply \
+/usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery apply \
   --consumer-receipt ".omo/evidence/$T10_108_RUN_ID/documents-consumer-audit.json" \
   --json | tee ".omo/evidence/$T10_108_RUN_ID/cc-switch-recovery-apply.json"
 ```
@@ -773,7 +698,7 @@ absent, and no staging directory.
 - [ ] **Step 4: Replay verify, SQLite checks, consumer audit, and full-tree L4 audit**
 
 ```bash
-/usr/bin/python3 bin/gac/documents-client-recovery.py verify \
+/usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery verify \
   --consumer-receipt ".omo/evidence/$T10_108_RUN_ID/documents-consumer-audit-post.json" \
   --json | tee ".omo/evidence/$T10_108_RUN_ID/cc-switch-recovery-verify.json"
 ```
@@ -813,7 +738,7 @@ report = {
 }
 spec = {
     "ref": "receipt://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md",
-    "sha256": "sha256:b85c3264f03288f67d2e6cf0d6902afa90054d5e712e37ce92783c4c2e40ecf4",
+    "sha256": "sha256:bb513598b8c08a970b7100e5becfc73478e643ded7b2b269bcb2822c0d09579b",
 }
 retro = {
     "ref": "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-108.md",
@@ -859,7 +784,7 @@ Run focused tests, migration check, direct T10-108 completion-matrix validation,
 doc SSOT, SSOT guardian, GaC, and workflow verify. Commit governance state,
 docs-data ledger, and docs evidence separately. Push, open the closeout PR, wait
 for every required check, squash merge, verify the merge SHA on origin/main,
-re-run `documents-client-recovery.py verify` from mainline code, and close the
+re-run `documents-domain-owner-job.py client-recovery verify` from mainline code, and close the
 formal workflow `ok`.
 
 ---

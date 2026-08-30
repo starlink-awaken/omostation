@@ -72,9 +72,9 @@ coverage_samples:
 - relative_path: ZCode/.zcode/v2/tasks-index.sqlite
   kind: cache
   family: documents-client-state
-- relative_path: index-BYqQMscj.js
-  kind: runtime
-  family: root-oneoff-assets
+- relative_path: .codex-optimize-log/cc-switch.db.pre-fix.20260817-065833
+  kind: cache
+  family: cc-switch-recovery-state
 bridge_shells:
 - shell: '@公共/_runtime/kems-materialize.py'
   target: projects/runtime/scripts/kems-materialize.py
@@ -651,7 +651,6 @@ families:
   - cron-service-fix.sh
   - kos-index.sqlite
   - index-BYqQMscj.js
-  - .codex-optimize-log/**
   artifact_kind:
   - runtime
   - cache
@@ -672,6 +671,22 @@ families:
     byte_count: 16257
     quarantine_manifest: runtime/quarantine/documents-root-codex-tools-20260830/manifest.json
     consumer_scan: receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json
+- id: cc-switch-recovery-state
+  source_globs:
+  - .codex-optimize-log/**
+  - .cc-switch-recovery2/**
+  artifact_kind:
+  - cache
+  - runtime
+  disposition: relocate
+  owner: cc-switch
+  replacement: $HOME/Library/Application Support/CC_Switch Recovery/2026-08-30
+  consumer_refs:
+  - bin/gac/documents-domain-owner-job.py
+  - audit://documents/root-oneoff/consumer-scan-pending
+  rollback: Use the completed manifest and client-recovery rollback command; never overwrite a recreated source root.
+  confirmation_gate: before_write
+  status: in_progress
 - id: documents-client-state
   source_globs:
   - ZCode/.zcode/**

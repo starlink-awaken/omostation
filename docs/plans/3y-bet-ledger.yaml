@@ -269,7 +269,7 @@ bets:
   - No active CC Switch database, configuration, process, App Support data, iCloud copy, schema, or provider mutation.
   - No L4 classifier change, runner-log movement, historical root-oneoff/public-runtime evidence repair, deduplication, compression, pruning, or permanent deletion.
   done_when:
-  - A Python 3.9-compatible Workspace transaction capability is built test-first with plan, apply, verify, and rollback commands and stable JSON errors.
+  - A Python 3.9-compatible Workspace transaction capability is built test-first behind the existing registered Documents owner job, with plan, apply, verify, and rollback commands and stable JSON errors.
   - Preflight binds the complete two-root inventory, exact source/target boundaries, no open handles, target absence, disk capacity, fresh consumer health, file hashes/modes, and SQLite quick checks.
   - Apply uses private staging, reversible movement, complete hash/mode/fingerprint verification, durable manifest fsync, and atomic target publication without touching active or iCloud CC Switch state.
   - Postflight proves both Documents source roots absent, the App Support recovery target complete, recognizable SQLite databases healthy, rollback executable, and consumer audit forbidden=0/unmatched=0.
@@ -278,7 +278,7 @@ bets:
   verify:
   - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_client_recovery_relocation.py -q
     expect: exit 0
-  - cmd: /usr/bin/python3 bin/gac/documents-client-recovery.py verify --documents-root /Users/xiamingxing/Documents --target-root "/Users/xiamingxing/Library/Application Support/CC_Switch Recovery/2026-08-30" --json
+  - cmd: /usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery verify --documents-root /Users/xiamingxing/Documents --target-root "/Users/xiamingxing/Library/Application Support/CC_Switch Recovery/2026-08-30" --json
     expect: exit 0 with exact manifest parity, source roots absent, SQLite checks ok, and rollback available
   - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
     expect: exit 0 with status ok, forbidden_executors=0, unmatched=0
@@ -290,9 +290,9 @@ bets:
   underlying_workflow: governance-state-mutation
   write_surfaces:
   - lib/documents_client_recovery_relocation.py
-  - bin/gac/documents-client-recovery.py
-  - bin/_registry/scripts/governance/documents-client-recovery.yaml
+  - bin/gac/documents-domain-owner-job.py
   - tests/test_documents_client_recovery_relocation.py
+  - tests/test_documents_content_plane_migration_check.py
   - .github/workflows/phase-gate-enforce.yml
   - .omo/_truth/registry/documents-content-plane-migrations.yaml
   - docs/plans/3y-bet-ledger.yaml
@@ -304,8 +304,8 @@ bets:
   pasw_required: true
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:b85c3264f03288f67d2e6cf0d6902afa90054d5e712e37ce92783c4c2e40ecf4
+    spec_version: 1.0.1
+    content_digest: sha256:bb513598b8c08a970b7100e5becfc73478e643ded7b2b269bcb2822c0d09579b
     decision_ref: decision://accepted/BET-Y1Q3-T10-108
   depends_on:
   - BET-Y1Q3-T10-107
