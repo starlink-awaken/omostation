@@ -1,0 +1,22 @@
+schema: script-registry/v1
+id: bin/ssot/yaml-roundtrip-edit.py
+name: YAML Roundtrip Edit
+category: governance
+owner: governance-team
+description: "治理 SSOT 安全编辑：load → 编辑回调 → dump → 语义校验 → 原子写回；根治字符串手术事故类"
+inputs:
+  - name: --file
+    type: path
+  - name: --script
+    type: path
+outputs:
+  - type: exit_code
+dependencies:
+  - pyyaml
+triggers:
+  - manual
+  - per_pr
+related:
+  - ADR-0441
+maturity: active
+last_reviewed: "2026-08-30"
