@@ -287,22 +287,44 @@ def test_apply_rejects_source_drift_without_partial_move(tmp_path: Path) -> None
     assert not layout.target_root.exists()
 
 
-def test_sqlite_quick_check_rejects_corruption_but_preserves_other_sources(tmp_path: Path) -> None:
+def test_sqlite_quick_check_records_preexisting_corruption_for_byte_preservation(tmp_path: Path) -> None:
     layout = _layout(tmp_path)
     corrupt = layout.source_roots[0] / "corrupt.db"
     corrupt.write_bytes(b"SQLite format 3\x00broken")
 
-    with pytest.raises(relocation.RelocationError, match="SQLite quick_check"):
+    plan = relocation.plan_relocation(
+        _paths(layout),
+        consumer_receipt=_consumer_receipt(),
+        source_handles=[],
+        available_bytes=10**9,
+    )
+
+    record = next(item for item in plan["sqlite_checks"] if item["relative_path"].endswith("corrupt.db"))
+    assert record["status"] == "corrupt-preserved"
+    assert record["details_sha256"].startswith("sha256:")
+    assert sum(item["status"] == "ok" for item in plan["sqlite_checks"]) == 2
+    assert corrupt.read_bytes() == b"SQLite format 3\x00broken"
+    assert all(root.is_dir() for root in layout.source_roots)
+    assert not layout.target_root.exists()
+
+
+def test_plan_requires_at_least_one_healthy_sqlite_recovery_file(tmp_path: Path) -> None:
+    layout = _layout(tmp_path)
+    for root in layout.source_roots:
+        for path in root.rglob("*"):
+            if not path.is_file():
+                continue
+            with path.open("rb") as stream:
+                if stream.read(16) == b"SQLite format 3\x00":
+                    path.write_bytes(b"SQLite format 3\x00broken")
+
+    with pytest.raises(relocation.RelocationError, match="at least one healthy SQLite"):
         relocation.plan_relocation(
             _paths(layout),
             consumer_receipt=_consumer_receipt(),
             source_handles=[],
             available_bytes=10**9,
         )
-
-    assert corrupt.read_bytes() == b"SQLite format 3\x00broken"
-    assert all(root.is_dir() for root in layout.source_roots)
-    assert not layout.target_root.exists()
 
 
 def test_verify_rejects_manifest_target_tamper(tmp_path: Path) -> None:

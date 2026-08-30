@@ -224,6 +224,7 @@ def _sqlite_checks(entries: Iterable[Dict[str, Any]]) -> List[Dict[str, str]]:
         if header != b"SQLite format 3\x00":
             continue
         uri = "file:" + quote(str(source)) + "?mode=ro&immutable=1"
+        details = ""
         try:
             connection = sqlite3.connect(uri, uri=True)
             try:
@@ -231,10 +232,22 @@ def _sqlite_checks(entries: Iterable[Dict[str, Any]]) -> List[Dict[str, str]]:
             finally:
                 connection.close()
         except sqlite3.Error as exc:
-            raise RelocationError("SQLite quick_check failed: " + str(item["relative_path"]), code="SQLITE_CORRUPT") from exc
-        if rows != ["ok"]:
-            raise RelocationError("SQLite quick_check failed: " + str(item["relative_path"]), code="SQLITE_CORRUPT")
-        checks.append({"relative_path": str(item["relative_path"]), "status": "ok"})
+            rows = []
+            details = type(exc).__name__ + ":" + str(exc)
+        if rows == ["ok"]:
+            checks.append({"relative_path": str(item["relative_path"]), "status": "ok"})
+            continue
+        if not details:
+            details = "\n".join(rows)
+        checks.append(
+            {
+                "relative_path": str(item["relative_path"]),
+                "status": "corrupt-preserved",
+                "details_sha256": "sha256:" + hashlib.sha256(details.encode("utf-8")).hexdigest(),
+            }
+        )
+    if checks and not any(item["status"] == "ok" for item in checks):
+        raise RelocationError("at least one healthy SQLite recovery file is required", code="SQLITE_HEALTHY_REQUIRED")
     return checks
 
 
