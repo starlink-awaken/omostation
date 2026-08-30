@@ -1,0 +1,19 @@
+schema: script-registry/v1
+id: bin/gac/gate-roi-report.py
+name: Gate ROI Report
+category: governance
+owner: governance-team
+description: "ADR-0389 gate-ROI 季度报告（trend/est_hours_saved/RETIRE|NOISY|KEEP）；ADR-0443 从 _archive 复活，由 convergence-pulse-weekly 周期调度"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: report
+dependencies:
+  - pyyaml
+triggers:
+  - periodic
+related:
+  - ADR-0389
+  - ADR-0443
+maturity: active
+last_reviewed: "2026-08-30"
