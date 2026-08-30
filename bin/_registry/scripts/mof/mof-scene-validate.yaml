@@ -1,0 +1,18 @@
+schema: script-registry/v1
+id: bin/mof/mof-scene-validate.py
+name: MOF Scene Validate
+category: mof
+owner: mof-team
+description: "MOF 场景验证器：验证场景卡与 MOF 模型一致性"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers:
+  - periodic
+  - manual
+related:
+  - ADR-0443
+maturity: active
+last_reviewed: "2026-08-30"

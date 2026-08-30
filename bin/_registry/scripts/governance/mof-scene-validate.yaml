@@ -1,0 +1,13 @@
+id: bin/mof/mof-scene-validate.py
+name: mof-scene-validate
+category: governance
+owner: governance-team
+description: "场景卡 MOF 架构约束验证器"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+maturity: active
+last_reviewed: "2026-08-31"

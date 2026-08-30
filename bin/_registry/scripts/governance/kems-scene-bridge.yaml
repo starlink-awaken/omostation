@@ -1,0 +1,13 @@
+id: bin/gac/kems-scene-bridge.py
+name: kems-scene-bridge
+category: governance
+owner: governance-team
+description: "KEMS 变更检测 → 场景触发桥接"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+maturity: active
+last_reviewed: "2026-08-31"
