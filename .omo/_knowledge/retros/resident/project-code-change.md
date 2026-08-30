@@ -1,13 +1,13 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-08-29T00:10:28Z
+generated_at: 2026-08-30T01:00:01Z
 status: candidate
 counts:
-  runs: 43
+  runs: 46
   failures: 19
-  total: 62
-failure_rate: 0.3065
+  total: 65
+failure_rate: 0.2923
 failure_breakdown:
   by_event_type:
     StepFailed: 19
@@ -15,10 +15,10 @@ failure_breakdown:
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-29T00:10:28Z
+- generated_at: 2026-08-30T01:00:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 43 成功运行 + 19 失败模式 = 62 草稿
-- 失败率: 30.65%
+- sediment 覆盖: 46 成功运行 + 19 失败模式 = 65 草稿
+- 失败率: 29.23%
 
 ## 成功运行 (runs/)
 
@@ -65,6 +65,9 @@ failure_breakdown:
 - 20260828T035039Z-project-code-change-165f3365.md
 - 20260828T041632Z-project-code-change-fa15f5e3.md
 - 20260828T114957Z-project-code-change-16d2131c.md
+- 20260829T072021Z-project-code-change-e24f45c2.md
+- 20260829T072804Z-project-code-change-06de57c2.md
+- 20260830T000209Z-project-code-change-7d06f413.md
 
 ## 失败模式 (failures/)
 
@@ -400,6 +403,23 @@ failure_breakdown:
   - 结果与证据: ok=False, status=failed, evidence_count=1
   - 失败根因: step=execute, error=workflow failed
   - 指标: event_count=6, duration_s=283.964
+- **20260829T072021Z-project-code-change-e24f45c2**
+  - 计划 (objective): [BET-Y1Q3-T4-02] Product P0 真值链父编排与全链收口 (Appetite: 4 weeks)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=22.569
+- **20260829T072804Z-project-code-change-06de57c2**
+  - 计划 (objective): [BET-Y1Q3-T4-02] Product P0 真值链父编排与全链收口 (Appetite: 4 weeks)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=102.711
+- **20260830T000209Z-project-code-change-7d06f413**
+  - 计划 (objective): [BET-Y1Q3-T4-02] Product P0 真值链父编排与全链收口 (Appetite: 4 weeks)
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

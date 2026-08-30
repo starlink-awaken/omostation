@@ -12,7 +12,7 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 629
-  bos_services: 275
+  bos_services: 282
   bos_domains: 21
   cli_commands: 169
   skills: 2
@@ -878,7 +878,7 @@ bos_services:
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 62
+    governance: 69
     l4-kernel: 1
     memory: 47
     meta: 1
@@ -1672,6 +1672,34 @@ bos_services:
     - uri: bos://governance/anti-corrosion/proposal-triage
       description: 提案池质量分层 (第0段清淤) — keep/archive/invalid 三层, --dry-run 预演
       transport: stdio
+      status: active
+    - uri: bos://governance/bridge-runtime
+      description: 统一桥接运行时 (MetaOS↔OMO, Model-Driven↔ECOS, L4↔记忆层)
+      transport: cli
+      status: active
+    - uri: bos://governance/corrosion-pipeline
+      description: 防腐管道接线 (G1/G2)
+      transport: cli
+      status: active
+    - uri: bos://governance/value-tracker
+      description: 价值证明跟踪
+      transport: cli
+      status: active
+    - uri: bos://governance/self-evolution
+      description: 自进化反馈循环
+      transport: cli
+      status: active
+    - uri: bos://governance/weekly-review
+      description: 每周价值回顾
+      transport: cli
+      status: active
+    - uri: bos://governance/monthly-healthcheck
+      description: 每月架构健康检查
+      transport: cli
+      status: active
+    - uri: bos://governance/probe-heartbeat
+      description: 探测器心跳矩阵
+      transport: cli
       status: active
     l4-kernel:
     - uri: bos://l4-kernel/domains
