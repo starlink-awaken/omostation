@@ -23,4 +23,15 @@ risk_level: L2
 files_count: 17
 bet_id: BET-Y1Q3-T10-77
 category: quarantine
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: external
+  bos_uri: bos://capability/quarantine
+  layer: L4 - Content Plane
+  entry_point: runtime/documents_runtime_quarantine.py
+  governance_surface: .omo/_truth/registry/documents-content-plane-migrations.yaml
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
 ---
