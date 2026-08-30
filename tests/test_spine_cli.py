@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import subprocess
 import pytest
 
 from cockpit.commands.spine import (
@@ -19,6 +20,30 @@ from cockpit.commands.spine import (
 def test_spine_sign_and_diff(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     fake_state = tmp_path / ".omo" / "state"
     fake_state.mkdir(parents=True, exist_ok=True)
+    fake_bin_gac = tmp_path / "bin" / "gac"
+    fake_bin_gac.mkdir(parents=True, exist_ok=True)
+    fake_connector = fake_bin_gac / "value-evolution-connector.py"
+    fake_connector.touch()
+
+    def fake_subprocess_run(cmd: list[str], *args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+        if "--record-diff" in cmd:
+            buf_file = fake_state / "lora-replay-buffer.jsonl"
+            inst_idx = cmd.index("--instruction") + 1
+            signed_idx = cmd.index("--signed") + 1
+            domain_idx = cmd.index("--domain") + 1
+            payload = {
+                "instruction": cmd[inst_idx],
+                "input": "",
+                "output": cmd[signed_idx],
+                "domain": cmd[domain_idx],
+                "timestamp": 1234567890.0,
+            }
+            with buf_file.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr("cockpit.commands.spine.subprocess.run", fake_subprocess_run)
     monkeypatch.setattr("cockpit.commands.spine._ws", lambda: tmp_path)
 
     # Initially empty
