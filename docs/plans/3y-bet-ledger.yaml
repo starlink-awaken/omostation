@@ -263,7 +263,8 @@ bets:
   title: Detect machine-generated logs in the L4 Documents content plane
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-31
   goal: Close the L4 semantic blind spot that treats machine-generated operational logs as human content, using one context-aware classifier rule without mutating Documents or weakening archive authority.
   non_goals:
   - No global .log suffix classification and no reinterpretation of historical, arbitrary, or archive-governed logs.
@@ -306,6 +307,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:7f79068954581c502a63b3c39c0921c3544567f195cecda1f12ff65c415bedbf
     decision_ref: decision://accepted/BET-Y1Q3-T10-109
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b267b2b65ab9b280702fe069c77241800036f986
+          tests:
+            ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
+            sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
+            sha256: sha256:7f79068954581c502a63b3c39c0921c3544567f195cecda1f12ff65c415bedbf
+          rollback:
+            ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
+            sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
+            sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
+            sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-109.md
+            sha256: sha256:9cba8d7ac22b2f46be3c90176ae76e01936f93d7b994671d2e02ba9693fbf5ea
+          cleanup:
+            ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
+            sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-108
   risk_level: L2
