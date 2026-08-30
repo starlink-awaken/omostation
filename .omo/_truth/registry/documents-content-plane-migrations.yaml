@@ -165,7 +165,37 @@ families:
       - "audit://documents/family-runtime/consumer-scan-pending"
     rollback: "Keep legacy commands until parity and scheduled-consumer cutover evidence pass."
     confirmation_gate: before_write
-    status: pending
+    status: in_progress
+    evidence:
+      verified_at: "2026-08-29T23:57:17Z"
+      consumer_scan: "receipt://.omo/evidence/20260829T235316Z-bet-execution-0f79f21b/family-consumer-audit-post.json"
+      rollback_ref: "docs/reports/2026-08-30-family-runtime-kems-quarantine.md"
+      runtime_file_count: 13
+      runtime_bytes: 6220
+      owner_parity: pending
+    progress_evidence:
+      scope_status: partial
+      completed_subscopes:
+        - scope: "@家庭生活/_runtime dangling symlinks only"
+          verified_at: "2026-08-29T23:57:17Z"
+          source_fingerprint: "sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a"
+          target_fingerprint: "sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a"
+          manifest_sha256: "sha256:8ae620b70a7ac92a720d2e3d44803f66a6b9f3e207389a860c1a79d876b71630"
+          node_type: symlink
+          file_count: 11
+          byte_count: 0
+          consumer_scan: "receipt://.omo/evidence/20260829T235316Z-bet-execution-0f79f21b/family-consumer-audit-post.json"
+          rollback_ref: "docs/reports/2026-08-30-family-runtime-kems-quarantine.md"
+        - scope: "@家庭生活/_control/_scripts regular runtime files only"
+          verified_at: "2026-08-29T23:57:17Z"
+          source_fingerprint: "sha256:962dea7dc21946b1c9276deaeb5bdb8472c587a3a572b175145ebcdfbb368614"
+          target_fingerprint: "sha256:962dea7dc21946b1c9276deaeb5bdb8472c587a3a572b175145ebcdfbb368614"
+          manifest_sha256: "sha256:1edea8428a3d4068eb7ce9cedd9f86a10417861d621eeee0bc91b31b13c7b9f9"
+          node_type: regular
+          file_count: 2
+          byte_count: 6220
+          consumer_scan: "receipt://.omo/evidence/20260829T235316Z-bet-execution-0f79f21b/family-consumer-audit-post.json"
+          rollback_ref: "docs/reports/2026-08-30-family-runtime-kems-quarantine.md"
 
   - id: learning-content-archives
     source_globs:
