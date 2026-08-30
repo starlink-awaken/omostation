@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -72,7 +72,7 @@ def test_pulse_three_bucket_clustering(tmp_path, monkeypatch):
     esc.mkdir()
     _mk_escapes(esc)
     monkeypatch.setattr(CP, "ESCAPE_DIR", esc)
-    result = CP.collect_escapes(datetime(2026, 8, 30, tzinfo=timezone.utc), datetime(2026, 8, 31, tzinfo=timezone.utc))
+    result = CP.collect_escapes(datetime(2026, 8, 30, tzinfo=UTC), datetime(2026, 8, 31, tzinfo=UTC))
     assert result["records"] == 6
     assert result["unique_fingerprints"] == 2  # gac 指纹 + lint 指纹（正常桶）
     assert result["preflight_clean"] == 1
