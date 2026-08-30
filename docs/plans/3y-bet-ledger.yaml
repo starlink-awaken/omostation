@@ -4133,8 +4133,23 @@ bets:
             ref: receipt://docs/reports/2026-08-30-human-adjudication-canary.json
             sha256: sha256:8189aff35d9106a41dbca72e503361cd8caf2b545e81118b6f2a1370624894e6
       value:
-        status: NOT_PROVEN
-        evidence: {}
+        status: ACCEPTED
+        evidence:
+          real_signal:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
+            sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
+          revision:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          time_burden:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
+            sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
     overall_state: blocked
   depends_on:
   - BET-Y1Q3-T4-03
