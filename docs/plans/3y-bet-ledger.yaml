@@ -2799,7 +2799,8 @@ bets:
   title: Documents public runtime physical quarantine
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move the currently audited L4 runtime artifacts under Documents/@公共/_runtime, including kems-v2, into a recoverable Workspace quarantine after consumer proof, while leaving Documents content, contracts, projections, and bridges in place.
   non_goals:
   - No movement, rewrite, or deletion of Markdown, Office, PDF, DOMAIN, CONTENT_ARCHIVE, projection, contract, or bridge files.
@@ -2910,6 +2911,7 @@ bets:
   depends_on:
   - BET-Y1Q3-T10-38
   - BET-Y1Q3-T10-41
+  value_indicator_policy: false
   risk_level: L2
   human_gate: true
   circuit_breaker: Any unstable audit, consumer drift, target collision, hash mismatch, non-target Documents change, or rollback-manifest failure stops the transaction and restores moved sources.
