@@ -207,7 +207,7 @@ gac:
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-13'
     justification: '[ADR-0431 D2] CR-X4-HEALTH-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-M0-STAGE-GATE
     dimension: X4
@@ -231,7 +231,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-29'
     justification: '[ADR-0431 D2] CR-M0-STAGE-GATE — 待补存在理由 (90 天内补齐)'
   - id: CR-L0-BOS-RESOLVE
     dimension: X1
@@ -255,7 +255,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-07'
     justification: '[ADR-0431 D2] CR-L0-BOS-RESOLVE — 待补存在理由 (90 天内补齐)'
   - id: CR-L2-TASK-DELIVERABLE
     dimension: X4
@@ -278,7 +278,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-28'
     justification: '[ADR-0431 D2] CR-L2-TASK-DELIVERABLE — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-GAC-DRIFT
     dimension: X2
@@ -301,7 +301,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-24'
     justification: '[ADR-0431 D2] CR-X2-GAC-DRIFT — 待补存在理由 (90 天内补齐)'
   - id: CR-X1-AGENT-AUDIT
     dimension: X1
@@ -326,7 +326,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-16'
     justification: '[ADR-0431 D2] CR-X1-AGENT-AUDIT — 待补存在理由 (90 天内补齐)'
   - id: CR-X3-DEBT-TIER
     dimension: X3
@@ -349,7 +349,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-17'
     justification: '[ADR-0431 D2] CR-X3-DEBT-TIER — 待补存在理由 (90 天内补齐)'
   - id: CR-L1-RUNTIME-HEALTH
     dimension: X2
@@ -372,7 +372,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-20'
     justification: '[ADR-0431 D2] CR-L1-RUNTIME-HEALTH — 待补存在理由 (90 天内补齐)'
   - id: CR-L3-COCKPIT-ENTRY
     dimension: X4
@@ -395,7 +395,7 @@ gac:
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-04'
     justification: '[ADR-0431 D2] CR-L3-COCKPIT-ENTRY — 待补存在理由 (90 天内补齐)'
   - id: CR-L2-DIRECT-IO
     dimension: X1
@@ -418,7 +418,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-30'
     justification: '[ADR-0431 D2] CR-L2-DIRECT-IO — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-DOC-SSOT
     dimension: X4
@@ -445,7 +445,7 @@ gac:
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-25'
     justification: '[ADR-0431 D2] CR-X4-DOC-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-L2-SURFACES-INTEGRITY
     dimension: X4
@@ -468,7 +468,7 @@ gac:
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-16'
     justification: '[ADR-0431 D2] CR-L2-SURFACES-INTEGRITY — 待补存在理由 (90 天内补齐)'
   - id: CR-L0-PROTOCOLS-SSOT
     dimension: X4
@@ -494,7 +494,7 @@ gac:
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-21'
     justification: '[ADR-0431 D2] CR-L0-PROTOCOLS-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-GAC-BOOTSTRAP
     dimension: X2
@@ -517,7 +517,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-11-27'
     justification: '[ADR-0431 D2] CR-X2-GAC-BOOTSTRAP — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-GOVERNANCE-SEMANTIC-GATE
     dimension: X2
@@ -541,7 +541,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-08'
     justification: '[ADR-0431 D2] CR-X2-GOVERNANCE-SEMANTIC-GATE — 待补存在理由 (90 天内补齐)'
   - id: CR-X1-GOD-MODULE-LIMIT
     dimension: X1
@@ -565,7 +565,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-11-27'
     justification: '[ADR-0431 D2] CR-X1-GOD-MODULE-LIMIT — 待补存在理由 (90 天内补齐)'
   - id: CR-L0-MATRIX-PORT-CONSISTENCY
     dimension: X4
@@ -588,7 +588,7 @@ gac:
     remediation: Fix or remove broken SSOT reference
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-17'
     justification: '[ADR-0431 D2] CR-L0-MATRIX-PORT-CONSISTENCY — 待补存在理由 (90 天内补齐)'
   - id: CR-L0-SSOT-PATH-NORM
     dimension: X4
@@ -611,7 +611,7 @@ gac:
     remediation: Fix or remove broken SSOT reference
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-29'
     justification: '[ADR-0431 D2] CR-L0-SSOT-PATH-NORM — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-TEST-COVERAGE
     dimension: X3
@@ -634,7 +634,7 @@ gac:
     remediation: Add tests for uncovered code or adjust coverage threshold
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-11-30'
     justification: '[ADR-0431 D2] CR-X4-TEST-COVERAGE — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-ADR-LINKS
     dimension: X3
@@ -657,7 +657,7 @@ gac:
     remediation: 'Add or fix frontmatter: status, type, owner, lifecycle, last-reviewed'
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-25'
     justification: '[ADR-0431 D2] CR-X4-ADR-LINKS — 待补存在理由 (90 天内补齐)'
   - id: CR-L4-DOMAIN-REGISTRY-FRESHNESS
     dimension: X2
@@ -680,7 +680,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-22'
     justification: '[ADR-0431 D2] CR-L4-DOMAIN-REGISTRY-FRESHNESS — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-MOF-CAPABILITIES-DRIFT
     relates_to:
@@ -708,7 +708,7 @@ gac:
     remediation: Align declared state with actual state; update SSOT or code
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-20'
     justification: '[ADR-0431 D2] CR-X4-MOF-CAPABILITIES-DRIFT — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-DOC-CLAIMS
     relates_to:
@@ -736,7 +736,7 @@ gac:
     remediation: Align declared state with actual state; update SSOT or code
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-04'
     justification: '[ADR-0431 D2] CR-X4-DOC-CLAIMS — 待补存在理由 (90 天内补齐)'
   - id: CR-M4-BOOTSTRAP-REFLEX
     dimension: X1
@@ -760,7 +760,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-06'
     justification: '[ADR-0431 D2] CR-M4-BOOTSTRAP-REFLEX — 待补存在理由 (90 天内补齐)'
   - id: CR-M4-SUBMODULE-HYGIENE
     dimension: X1
@@ -784,7 +784,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-24'
     justification: '[ADR-0431 D2] CR-M4-SUBMODULE-HYGIENE — 待补存在理由 (90 天内补齐)'
   - id: CR-M4-MCPTOOL-INTEGRITY
     dimension: X4
@@ -807,7 +807,7 @@ gac:
     remediation: Align declared state with actual state; update SSOT or code
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-21'
     justification: '[ADR-0431 D2] CR-M4-MCPTOOL-INTEGRITY — 待补存在理由 (90 天内补齐)'
   - id: CR-FOUNDRY-MONITOR
     dimension: X2
@@ -838,7 +838,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-15'
     justification: '[ADR-0431 D2] CR-FOUNDRY-MONITOR — 待补存在理由 (90 天内补齐)'
   - id: CR-COMMIT-LLM-ASSIST
     dimension: X2
@@ -870,7 +870,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-07'
     justification: '[ADR-0431 D2] CR-COMMIT-LLM-ASSIST — 待补存在理由 (90 天内补齐)'
   - id: CR-CROSS-REPO-CONSISTENT
     dimension: X4
@@ -903,7 +903,7 @@ gac:
     remediation: Align declared state with actual state; update SSOT or code
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-13'
     justification: '[ADR-0431 D2] CR-CROSS-REPO-CONSISTENT — 待补存在理由 (90 天内补齐)'
   - id: CR-PRINCIPLE-FOLLOWED
     dimension: X1
@@ -933,7 +933,7 @@ gac:
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-04'
     justification: '[ADR-0431 D2] CR-PRINCIPLE-FOLLOWED — 待补存在理由 (90 天内补齐)'
   - id: CR-EVIDENCE-DECLARED
     dimension: X2
@@ -960,7 +960,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-10'
     justification: '[ADR-0431 D2] CR-EVIDENCE-DECLARED — 待补存在理由 (90 天内补齐)'
   - id: CR-COMMIT-ASSIST-E2E
     dimension: X4
@@ -995,7 +995,7 @@ gac:
     remediation: Align declared state with actual state; update SSOT or code
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-08'
     justification: '[ADR-0431 D2] CR-COMMIT-ASSIST-E2E — 待补存在理由 (90 天内补齐)'
   - id: CR-SEC-YAML-BYPASS
     dimension: X1
@@ -1019,7 +1019,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-22'
     justification: '[ADR-0431 D2] CR-SEC-YAML-BYPASS — 待补存在理由 (90 天内补齐)'
   - id: CR-SEC-SENSITIVE-WRITE
     dimension: X1
@@ -1043,7 +1043,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-09'
     justification: '[ADR-0431 D2] CR-SEC-SENSITIVE-WRITE — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-GOD-MODULE-EDIT
     dimension: X1
@@ -1067,7 +1067,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-05'
     justification: '[ADR-0431 D2] CR-X2-GOD-MODULE-EDIT — 待补存在理由 (90 天内补齐)'
   - id: CR-SEC-EVAL-EXEC
     dimension: X1
@@ -1091,7 +1091,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-03'
     justification: '[ADR-0431 D2] CR-SEC-EVAL-EXEC — 待补存在理由 (90 天内补齐)'
   - id: CR-PY-MUTABLE-DEFAULT
     dimension: X1
@@ -1148,7 +1148,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-14'
     justification: '[ADR-0431 D2] CR-PRINCIPLE-ENFORCEMENT — 待补存在理由 (90 天内补齐)'
   - id: CR-SUBMODULE-REWIND
     dimension: X1
@@ -1171,7 +1171,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-24'
     justification: '[ADR-0431 D2] CR-SUBMODULE-REWIND — 待补存在理由 (90 天内补齐)'
   - id: CR-P76-6-5-LLM-DEFERRAL
     dimension: X1
@@ -1194,7 +1194,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-01'
     justification: '[ADR-0431 D2] CR-P76-6-5-LLM-DEFERRAL — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-2-1-PRINCIPLE-FORMALIZATION
     dimension: X1
@@ -1217,7 +1217,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-14'
     justification: '[ADR-0431 D2] CR-P77-2-1-PRINCIPLE-FORMALIZATION — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-2-2-CATALOG-SSOT
     dimension: X1
@@ -1240,7 +1240,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-06'
     justification: '[ADR-0431 D2] CR-P77-2-2-CATALOG-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-3-2-PREFIX-PATTERN
     relates_to:
@@ -1272,7 +1272,7 @@ gac:
     remediation: Align declared state with actual state; update SSOT or code
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-09'
     justification: '[ADR-0431 D2] CR-P77-3-2-PREFIX-PATTERN — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-6-2-TIER-FALLBACK-TEST
     relates_to:
@@ -1300,7 +1300,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-04'
     justification: '[ADR-0431 D2] CR-P77-6-2-TIER-FALLBACK-TEST — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-6-3-GATEWAY-STATUS-DOC
     relates_to:
@@ -1328,7 +1328,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-10'
     justification: '[ADR-0431 D2] CR-P77-6-3-GATEWAY-STATUS-DOC — 待补存在理由 (90 天内补齐)'
   - id: CR-P79-3-FOUNDRY-DECK
     relates_to:
@@ -1361,7 +1361,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-13'
     justification: '[ADR-0431 D2] CR-P79-3-FOUNDRY-DECK — 待补存在理由 (90 天内补齐)'
   - id: CR-P79-4-CATALOG-HEALTH-METRIC
     relates_to:
@@ -1394,7 +1394,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-25'
     justification: '[ADR-0431 D2] CR-P79-4-CATALOG-HEALTH-METRIC — 待补存在理由 (90 天内补齐)'
   - id: CR-RUFF-SCOPE-STABLE
     dimension: X4
@@ -1418,7 +1418,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-13'
     justification: '[ADR-0431 D2] CR-RUFF-SCOPE-STABLE — 待补存在理由 (90 天内补齐)'
   - id: CR-L0-CONSTRAINTS-SSOT
     relates_to:
@@ -1446,7 +1446,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-07'
     justification: '[ADR-0431 D2] CR-L0-CONSTRAINTS-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X1-POLICIES-SSOT
     relates_to:
@@ -1473,7 +1473,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-11'
     justification: '[ADR-0431 D2] CR-X1-POLICIES-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-FRESHNESS-SSOT
     source_type: indexed
@@ -1498,7 +1498,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-30'
     justification: '[ADR-0431 D2] CR-X2-FRESHNESS-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-CONSISTENCY-SSOT
     relates_to:
@@ -1525,7 +1525,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-15'
     justification: '[ADR-0431 D2] CR-X4-CONSISTENCY-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-MCPTOOL-IMPL-DRIFT
     relates_to:
@@ -1554,7 +1554,7 @@ gac:
     remediation: Align declared state with actual state; update SSOT or code
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-17'
     justification: '[ADR-0431 D2] CR-X4-MCPTOOL-IMPL-DRIFT — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-SUBMODULE-POINTER-INTEGRITY
     relates_to:
@@ -1591,7 +1591,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-11-27'
     justification: '[ADR-0431 D2] CR-X4-SUBMODULE-POINTER-INTEGRITY — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-MESH-EXECUTOR-RELIABILITY
     relates_to:
@@ -1628,7 +1628,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-11'
     justification: '[ADR-0431 D2] CR-X4-MESH-EXECUTOR-RELIABILITY — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-MEMORY-OS-SURFACE-INTEGRITY
     relates_to:
@@ -1665,7 +1665,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-03'
     justification: '[ADR-0431 D2] CR-X4-MEMORY-OS-SURFACE-INTEGRITY — 待补存在理由 (90 天内补齐)'
   - id: CR-X1-EXTERNAL-AGENT-AUDIT
     relates_to:
@@ -1697,7 +1697,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-16'
     justification: '[ADR-0431 D2] CR-X1-EXTERNAL-AGENT-AUDIT — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-SWEEP-TOOL-INTEGRITY
     relates_to:
@@ -1734,7 +1734,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-08'
     justification: '[ADR-0431 D2] CR-X4-SWEEP-TOOL-INTEGRITY — 待补存在理由 (90 天内补齐)'
   - id: CR-X4-MESH-ROUTING-CONSISTENCY
     dimension: X4
@@ -1758,7 +1758,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-15'
     justification: '[ADR-0431 D2] CR-X4-MESH-ROUTING-CONSISTENCY — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-PROJECT-HEALTH-FRESHNESS
     relates_to:
@@ -1788,7 +1788,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-15'
     justification: '[ADR-0431 D2] CR-X2-PROJECT-HEALTH-FRESHNESS — 待补存在理由 (90 天内补齐)'
   - id: CR-X3-DELIVERY-VALUE-GATE
     relates_to:
@@ -1817,7 +1817,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-23'
     justification: '[ADR-0431 D2] CR-X3-DELIVERY-VALUE-GATE — 待补存在理由 (90 天内补齐)'
   - id: CR-SWEEP-INDEX-AUTO
     dimension: X4
@@ -1847,7 +1847,7 @@ gac:
     remediation: Align declared state with actual state; update SSOT or code
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-12'
     justification: '[ADR-0431 D2] CR-SWEEP-INDEX-AUTO — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-DOC-FRESHNESS-GATE
     relates_to:
@@ -1877,7 +1877,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-11'
     justification: '[ADR-0431 D2] CR-X2-DOC-FRESHNESS-GATE — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-METRIC-TREND
     relates_to:
@@ -1907,7 +1907,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-19'
     justification: '[ADR-0431 D2] CR-X2-METRIC-TREND — 待补存在理由 (90 天内补齐)'
   - id: CR-CI-SURFACE-SSOT
     relates_to:
@@ -1935,7 +1935,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-11-30'
     justification: '[ADR-0431 D2] CR-CI-SURFACE-SSOT — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-EVIDENCE-FRESHNESS
     relates_to:
@@ -1965,7 +1965,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-05'
     justification: '[ADR-0431 D2] CR-X2-EVIDENCE-FRESHNESS — 待补存在理由 (90 天内补齐)'
   - id: CR-X2-GOVERNANCE-TREND
     relates_to:
@@ -1995,7 +1995,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-10'
     justification: '[ADR-0431 D2] CR-X2-GOVERNANCE-TREND — 待补存在理由 (90 天内补齐)'
   - id: CR-LLM-GATEWAY-ONLY
     source_type: native
@@ -2019,7 +2019,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-09'
     justification: '[ADR-0431 D2] CR-LLM-GATEWAY-ONLY — 待补存在理由 (90 天内补齐)'
   - id: CR-L4-DOCUMENTS-MIGRATION-COVERAGE
     dimension: X4
@@ -2042,7 +2042,7 @@ gac:
     remediation: Fix YAML syntax or update registry entry to match schema
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-12'
     justification: '[ADR-0431 D2] CR-L4-DOCUMENTS-MIGRATION-COVERAGE — 待补存在理由 (90 天内补齐)'
   - id: CR-RESIDENT-STATUS-01
     dimension: X2
@@ -2066,7 +2066,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-11-30'
     justification: '[ADR-0431 D2] CR-RESIDENT-STATUS-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-RESIDENT-MOF-SYNC-01
     dimension: X4
@@ -2090,7 +2090,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-26'
     justification: '[ADR-0431 D2] CR-RESIDENT-MOF-SYNC-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-RESIDENT-BOS-01
     dimension: X1
@@ -2114,7 +2114,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-11-30'
     justification: '[ADR-0431 D2] CR-RESIDENT-BOS-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-AGE-BOS-01
     dimension: X1
@@ -2137,7 +2137,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-18'
     justification: '[ADR-0431 D2] CR-AGE-BOS-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-AGE-POLICY-01
     dimension: X1
@@ -2160,7 +2160,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-29'
     justification: '[ADR-0431 D2] CR-AGE-POLICY-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-AGE-MEMORY-01
     dimension: X2
@@ -2183,7 +2183,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-22'
     justification: '[ADR-0431 D2] CR-AGE-MEMORY-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-AGE-REPLAY-01
     dimension: X4
@@ -2206,7 +2206,7 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2027-01-10'
     justification: '[ADR-0431 D2] CR-AGE-REPLAY-01 — 待补存在理由 (90 天内补齐)'
   - id: CR-AGE-EVENT-01
     dimension: X3
@@ -2245,7 +2245,7 @@ gac:
     owner: governance-team
     adr: ADR-0431
     added_at: '2026-08-30'
-    review_before: '2026-11-28'
+    review_before: '2027-01-24'
     justification: 指针污染阻塞全仓 PR 半天×2; submodule-guard 只查 fast-forward 不查来源, 本规则补源头纪律 (人工+review 执行, 工具化后续 BET 跟进)。
     expected: Check CR-GITLINK-BUMP-SQUASH-MAIN must pass without violations
     remediation: bump gitlink to origin/main SHA only; use gac-worktree.sh bump-fast for safe updates.
@@ -2267,7 +2267,7 @@ gac:
     owner: governance-team
     adr: ADR-0431
     added_at: '2026-08-30'
-    review_before: '2026-11-28'
+    review_before: '2026-12-30'
     justification: T4-07/T4-02 收口连环 DIGEST_MISMATCH; bet-ledger 已有运行时校验, 本规则固化人工流程纪律。
     expected: Check CR-EVIDENCE-SHA-FRESHNESS must pass without violations
     remediation: Recompute completion_evidence sha256 after any ledger or receipt edit.
@@ -2290,7 +2290,7 @@ gac:
     owner: governance-team
     adr: ADR-0431
     added_at: '2026-08-28'
-    review_before: '2026-11-26'
+    review_before: '2026-12-22'
     justification: '[ADR-0431 D2] CR-AGE-EVENT-01 — 待补存在理由 (90 天内补齐)'
     expected: Check CR-BIN-RETIREMENT-CHECKLIST must pass without violations
     remediation: Investigate check failure and apply targeted fix
