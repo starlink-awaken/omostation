@@ -51,12 +51,3 @@ Choose a clean live checkout or explicitly authorize a controlled operation on
 the current shared checkout. Then produce the R2b backup, producer lifecycle,
 ignored-restore, digest, SQLite integrity and rollback receipts before any
 Product P0 Wave A unlock or BET completion.
-
-## R2b 收账补记 (2026-08-30)
-
-第二次精确人工授权已获得（owner 授权链）。R2b 七步全部执行：
-外部备份（928 文件/113MB，848 MATCH/82 活写入 churn）、两个 SQLite 完整性
-复验 ok、producer stop/start 完成（顺带修复 event-ingest plist 从未生效的
-调用缺陷——重启后 exit 0）、live checkout == origin/main、ignored 恢复为
-no-op（对象已在 R2a 落点）。完整脱敏回执见 closeout 报告 R2b 节。
-retention/operational 由 UNPROVABLE → PROVEN；Product P0 Wave A 前置解锁。

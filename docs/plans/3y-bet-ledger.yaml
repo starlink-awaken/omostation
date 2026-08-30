@@ -11268,8 +11268,7 @@ bets:
   title: Post-2408 main recovery 与 required gac-gate promotion
   appetite: 2 weeks
   priority: P0
-  status: done
-  done_at: 2026-08-30
+  status: candidate
   goal: >-
     恢复 latest main 的真实治理基线，深化 existing gac-gate 为 immutable、check-only、blocking gate，经 main canary 后以 guarded double-read read-modify-write: GET A -> validate/hash -> GET B -> require digest equality -> one required_status_checks subresource PATCH -> GET C verify。The API lacks a proven server-side conditional unsafe write, so a residual GET-B/PATCH race remains and is bounded by a second human gate, receipt and context-only rollback，并完成 repository/runtime hygiene 与显式授权的 host retention。
   non_goals:
@@ -11358,38 +11357,15 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@c58751a4a38c813fc39c1dfd98c7bf645e5761f8
-          tests:
-            ref: repo://tests/test_gac_gate_workflow.py
-            sha256: sha256:c228244b567a12e59ecfbaa112de62113549081d03fae00ae850b4e27331d97a
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T6-15.md
-            sha256: sha256:a76c471b05f84afb35eb92fb96d9f6a9f6566ddfd0dc15dda82bcb2ed0c1f103
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T6-15.md
-            sha256: sha256:a76c471b05f84afb35eb92fb96d9f6a9f6566ddfd0dc15dda82bcb2ed0c1f103
+        status: NOT_STARTED
+        evidence: {}
       operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:7d1bb2c7e79bab3b3c5183821a6c6bf668fa843ae70a1ba13d67393feb4f394e
-          fresh_receipt:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:7d1bb2c7e79bab3b3c5183821a6c6bf668fa843ae70a1ba13d67393feb4f394e
-          replay:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:7d1bb2c7e79bab3b3c5183821a6c6bf668fa843ae70a1ba13d67393feb4f394e
-          cleanup:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:7d1bb2c7e79bab3b3c5183821a6c6bf668fa843ae70a1ba13d67393feb4f394e
+        status: NOT_PROVEN
+        evidence: {}
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: delivery_accepted
+    overall_state: evaluating
   depends_on: []
   value_indicator_policy: false
   risk_level: L3
