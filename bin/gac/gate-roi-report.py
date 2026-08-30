@@ -45,10 +45,8 @@ COST_MODEL: dict[str, dict[str, float]] = {
     "ruff lint": {"warn_min": 8, "fail_min": 30},
     "test coverage": {"warn_min": 15, "fail_min": 45},
     "debt integrity": {"warn_min": 20, "fail_min": 60},
-    "task consistency": {"warn_min": 10, "fail_min": 30},
-    "adr links": {"warn_min": 5, "fail_min": 20},
-    "doc lifecycle": {"warn_min": 10, "fail_min": 30},
-}
+        "adr links": {"warn_min": 5, "fail_min": 20},
+    }
 DEFAULT_WARN_MIN = 10
 DEFAULT_FAIL_MIN = 30
 
@@ -114,7 +112,10 @@ def build_report(events: list[dict], trend_days: int = TREND_WINDOW) -> dict:
             st["severity_counts"][sev] += 1
             if sev != "ok":
                 st["fires"] += 1
-                if sev in ("error", "critical"):
+                # ADR-0443 v2: severity 词汇表修正——governance-history 实际词汇是
+                # ok/warn/fail（无 error/critical），原判定使 KEEP 永不可达、
+                # 判定引擎偏置 PRUNE（scout-v2 实证）。
+                if sev in ("fail", "error", "critical"):
                     st["fail_fires"] += 1
             if is_recent:
                 st["recent_total"] += 1

@@ -80,7 +80,7 @@ jobs:
       - name: Check deliverables are file paths
         run: |
           cd projects/omo
-          # audit grep task consistency 段, 找缺失 deliverables
+          # (task consistency check 已 PRUNE——ADR-0443 v2, 30d 0% ROI)
           MISSING=$(uv run omo governance audit 2>&1 | grep "missing deliverable" | wc -l | tr -d ' ')
           if [ "$MISSING" -gt 0 ]; then
             echo "Found $MISSING missing deliverables"

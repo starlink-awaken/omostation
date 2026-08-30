@@ -58,6 +58,92 @@ def _save_entry(entry: dict):
     return path
 
 
+# ADR-0443 v2 (Q8): escape 台账 → pitfall 周期喂食。
+# 对聚合 ≥3 次的正常指纹（排除 preflight-clean/unattributed 归因桶），
+# 复用 fuzzy 去重语义生成/递增 pitfall 条目，agent 标记 auto:escape-digest。
+FEED_MIN_COUNT = 3
+_SURFACE_CATEGORY = {
+    "ci-local-fast": "gate",
+    "pointer-drift": "submodule",
+    "submodule-ancestry-gate": "submodule",
+    "gac": "scoring",
+}
+
+
+def feed_from_escapes(escape_dir: Path | None = None, *, min_count: int = FEED_MIN_COUNT) -> dict[str, int]:
+    """Aggregate escape fingerprints into pitfalls (weekly-cycle entry point).
+
+    Returns counts: {"fed": 新增条目, "bumped": 递增条目, "promoted": 触发晋升草案}.
+    """
+
+    directory = escape_dir or (ROOT / ".omo/_delivery/swarm-escape")
+    if not directory.is_dir():
+        return {"fed": 0, "bumped": 0, "promoted": 0}
+    counter: dict[str, int] = {}
+    excerpt: dict[str, str] = {}
+    for path in sorted(directory.glob("*.json")):
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        key = str(record.get("fingerprint_key") or "")
+        if not key or key.startswith(("preflight-clean", "unspecified")):
+            continue
+        counter[key] = counter.get(key, 0) + 1
+        if key not in excerpt:
+            fps = record.get("fingerprints") or []
+            excerpt[key] = str(fps[0].get("output_excerpt", ""))[:200] if fps and isinstance(fps[0], dict) else key
+    entries = _load_all()
+    fed = bumped = promoted = 0
+    for key, count in counter.items():
+        if count < min_count:
+            continue
+        surface = key.split("|", 1)[0]
+        check_id = key.split("|")[1] if "|" in key else key
+        symptom = excerpt.get(key, key)
+        matched = False
+        for e in entries:
+            if e.get("status") != "active":
+                continue
+            existing_sym = str(e.get("symptom", "")).lower()
+            common = sum(1 for w in symptom.lower().split() if len(w) > 2 and w in existing_sym)
+            if common >= 3:
+                e["times_encountered"] = e.get("times_encountered", 1) + count
+                e["last_confirmed_at"] = datetime.now(UTC).strftime("%Y-%m-%d")
+                _save_entry(e)
+                bumped += 1
+                matched = True
+                break
+        if not matched:
+            category = _SURFACE_CATEGORY.get(surface, "gate")
+            seq = _next_seq(category, entries)
+            entry = {
+                "schema": "agent-error/v1",
+                "id": f"PITFALL-{category[:3].upper()}-{seq:03d}",
+                "category": category,
+                "severity": "medium",
+                "title": f"auto: {check_id} 反复豁免 ({count}x)",
+                "symptom": symptom,
+                "root_cause": "escape 台账周期喂食（ADR-0443 v2 Q8），根因待人工复盘",
+                "solution": "",
+                "prevention": "",
+                "tags": ["auto-fed", surface],
+                "discovered_by": "auto:escape-digest",
+                "discovered_at": datetime.now(UTC).strftime("%Y-%m-%d"),
+                "times_encountered": count,
+                "last_confirmed_at": datetime.now(UTC).strftime("%Y-%m-%d"),
+                "status": "active",
+            }
+            entries.append(entry)
+            _save_entry(entry)
+            fed += 1
+        # 晋升检查（周喂食直达阈值的常见路径：count>=5 首次即晋升）
+        for e in entries:
+            if e.get("times_encountered", 0) >= ESCALATION_THRESHOLD and _promote_rule_draft(e) is not None:
+                promoted += 1
+    return {"fed": fed, "bumped": bumped, "promoted": promoted}
+
+
 def cmd_lookup(args):
     entries = _load_all()
     tags = set(t.strip().lower() for t in (args.tags or "").split(",") if t.strip())
@@ -181,6 +267,12 @@ def cmd_record(args):
     return 0
 
 
+def cmd_feed_escapes(args):
+    counts = feed_from_escapes()
+    print(json.dumps({"schema": "error-knowledge.feed.v1", **counts}, ensure_ascii=False))
+    return 0
+
+
 def cmd_stats(args):
     entries = _load_all()
     by_cat, by_status, escalated = {}, {}, []
@@ -232,11 +324,12 @@ def main():
     rj = sub.add_parser("reject")
     rj.add_argument("--id", required=True)
 
+    fd = sub.add_parser("feed-escapes")
     st = sub.add_parser("stats")
     st.add_argument("--json", action="store_true")
 
     args = ap.parse_args()
-    handlers = {"lookup": cmd_lookup, "record": cmd_record, "stats": cmd_stats}
+    handlers = {"lookup": cmd_lookup, "record": cmd_record, "stats": cmd_stats, "feed-escapes": cmd_feed_escapes}
     fn = handlers.get(args.cmd)
     if fn:
         raise SystemExit(fn(args) or 0)
