@@ -130,11 +130,13 @@ Append this CLI contract test to `projects/l4-kernel/tests/test_cli_contracts.py
 def test_content_audit_json_reports_machine_log_as_existing_cache_issue(
     tmp_path, monkeypatch, capsys
 ) -> None:
-    log = tmp_path / "_inbox" / "hourly_runner.log"
+    root = tmp_path / "domain"
+    root.mkdir()
+    log = root / "_inbox" / "hourly_runner.log"
     log.parent.mkdir()
     log.write_text("", encoding="utf-8")
 
-    code, payload = invoke(monkeypatch, capsys, "content", "audit", str(tmp_path), "--json")
+    code, payload = invoke(monkeypatch, capsys, "content", "audit", str(root), "--json")
 
     assert code == 1
     assert payload["ok"] is False
