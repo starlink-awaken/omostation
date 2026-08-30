@@ -39,3 +39,9 @@ spec_amendment:
   new_digest: sha256:bb513598b8c08a970b7100e5becfc73478e643ded7b2b269bcb2822c0d09579b
   reason: GaC bin quota rejected a new governance entry; reuse the existing registered Documents owner job and keep bin surface flat.
   scope: Entry-point ownership only; transaction semantics, target, source roots, rollback, testing, and value boundaries are unchanged.
+
+work_packet_amendment:
+  authorized_quote: "全面推进吧"
+  added_surface: tests/test_documents_content_plane_migration_check.py
+  reason: The authoritative existing regression hard-codes the complete migration family set and must acknowledge the new family while preserving candidate_count 17.
+  scope: Test expectation only; no migration semantics, production code, host data, or accepted specification digest changes.
