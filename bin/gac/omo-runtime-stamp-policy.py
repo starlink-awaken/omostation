@@ -28,6 +28,7 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 RUNTIME_DIR = WORKSPACE / "runtime"
 REGISTRY = WORKSPACE / ".omo/_truth/registry/runtime-projections.yaml"
 GITIGNORE = WORKSPACE / ".gitignore"
+PROJECTION_REGISTRY_REL = ".omo/_truth/registry/runtime-projections.yaml"
 
 ALLOW_PATHS: tuple[str, ...] = (
     "runtime/README.md",
@@ -43,6 +44,23 @@ ALLOW_PATHS: tuple[str, ...] = (
     "runtime/run-continuation/**",
     "runtime/ssot-stable/**",
 )
+
+# Final-tree admission is deliberately narrower than the worktree diagnostic
+# above.  These are repository contracts, not output/cache exceptions.  A
+# tracked path outside this list is forbidden even when .gitignore would match
+# it in the checkout.
+FINAL_TREE_ALLOW_PATHS: tuple[str, ...] = (
+    "runtime/AGENTS.md",
+    "runtime/README.md",
+    "runtime/runtime-space-boundary.yaml",
+    "runtime/system-runtime-boundary.yaml",
+    "runtime/cron/**",
+    "runtime/ssot-stable/**",
+    "runtime/sandbox/**",
+    "runtime/coordination/**",
+)
+
+REGULAR_FILE_MODES = frozenset({"100644", "100755"})
 
 # Tracked runtime files (returned by `git ls-files runtime/`). These are part
 # of the watch/continuation subsystem design and should not be flagged as
@@ -68,10 +86,7 @@ def load_gitignore_patterns() -> list[str]:
     return patterns
 
 
-def load_projection_paths() -> set[str]:
-    if not REGISTRY.exists():
-        return set()
-    documents = [doc for doc in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if doc]
+def projection_paths_from_documents(documents: object) -> set[str]:
     paths: set[str] = set()
     for document in documents:
         if isinstance(document, dict) and "projections" in document:
@@ -84,6 +99,43 @@ def load_projection_paths() -> set[str]:
                             if value:
                                 paths.add(value)
     return paths
+
+
+def load_projection_paths() -> set[str]:
+    if not REGISTRY.exists():
+        return set()
+    documents = [doc for doc in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if doc]
+    return projection_paths_from_documents(documents)
+
+
+def load_treeish_projection_paths(treeish: str) -> set[str]:
+    """Read projection paths from the same immutable revision being admitted."""
+    probe = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", treeish, "--", PROJECTION_REGISTRY_REL],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if probe.returncode != 0:
+        raise ValueError(f"treeish projection registry cannot be listed: {treeish}")
+    if PROJECTION_REGISTRY_REL not in probe.stdout.splitlines():
+        return set()
+
+    result = subprocess.run(
+        ["git", "show", f"{treeish}:{PROJECTION_REGISTRY_REL}"],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise ValueError(f"treeish projection registry cannot be read: {treeish}")
+    try:
+        documents = [doc for doc in yaml.safe_load_all(result.stdout) if doc]
+    except yaml.YAMLError as exc:
+        raise ValueError(f"treeish projection registry is invalid: {treeish}") from exc
+    return projection_paths_from_documents(documents)
 
 
 def load_tracked_runtime_files() -> tuple[str, ...]:
@@ -116,49 +168,62 @@ def load_tracked_runtime_files() -> tuple[str, ...]:
     return paths
 
 
-def load_treeish_runtime_files(treeish: str) -> tuple[str, ...]:
-    """Read runtime file paths from one immutable git tree.
+def load_treeish_runtime_entries(treeish: str) -> tuple[tuple[str, str, str], ...]:
+    """Return sorted ``(mode, object_id, path)`` entries from one Git tree.
 
-    This deliberately does not inspect the checkout filesystem.  A missing or
-    invalid treeish is an unprovable final-tree claim and therefore fails closed.
+    The requested revision is the only source of runtime entries in this
+    mode.  In particular, this function never walks, stats, or resolves files
+    from the checkout filesystem.
     """
-    if not treeish or treeish.startswith("-") or any(char.isspace() for char in treeish):
+    if not isinstance(treeish, str) or not treeish or treeish.startswith("-") or any(
+        char.isspace() for char in treeish
+    ):
         raise ValueError("treeish must be a non-empty git revision")
-    revision = subprocess.run(
-        ["git", "rev-parse", "--verify", f"{treeish}^{{tree}}"],
-        cwd=WORKSPACE,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+
+    try:
+        revision = subprocess.run(
+            ["git", "rev-parse", "--verify", f"{treeish}^{{tree}}"],
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError as exc:
+        raise ValueError(f"treeish is not readable: {treeish}") from exc
     if revision.returncode != 0:
         raise ValueError(f"treeish is not resolvable: {treeish}")
-    result = subprocess.run(
-        ["git", "ls-tree", "-r", "-z", "--name-only", treeish, "--", "runtime/"],
-        cwd=WORKSPACE,
-        capture_output=True,
-        check=False,
-    )
+
+    try:
+        result = subprocess.run(
+            ["git", "ls-tree", "-r", "-z", treeish, "--", "runtime"],
+            cwd=WORKSPACE,
+            capture_output=True,
+            check=False,
+        )
+    except OSError as exc:
+        raise ValueError(f"treeish is not readable: {treeish}") from exc
     if result.returncode != 0:
         raise ValueError(f"treeish cannot be listed: {treeish}")
-    return tuple(path.decode("utf-8") for path in result.stdout.split(b"\0") if path)
 
-
-def treeish_file_size(treeish: str, rel_path: str) -> int | None:
-    """Return one blob's immutable tree size for a report, when available."""
-    result = subprocess.run(
-        ["git", "cat-file", "-s", f"{treeish}:{rel_path}"],
-        cwd=WORKSPACE,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        return None
-    try:
-        return int(result.stdout.strip())
-    except ValueError:
-        return None
+    entries: list[tuple[str, str, str]] = []
+    for raw_entry in result.stdout.split(b"\0"):
+        if not raw_entry:
+            continue
+        metadata, separator, raw_path = raw_entry.partition(b"\t")
+        if not separator:
+            raise ValueError(f"treeish contains malformed runtime entry: {treeish}")
+        fields = metadata.split()
+        if len(fields) != 3:
+            raise ValueError(f"treeish contains malformed runtime entry: {treeish}")
+        mode, _entry_type, object_id = fields
+        entries.append(
+            (
+                mode.decode("ascii"),
+                object_id.decode("ascii"),
+                raw_path.decode("utf-8", errors="surrogateescape"),
+            )
+        )
+    return tuple(sorted(entries, key=lambda entry: entry[2]))
 
 
 def _match(pattern: str, rel_path: str) -> bool:
@@ -228,6 +293,33 @@ def is_allowed(
     return False
 
 
+def is_final_tree_allowed(rel_path: str, projection_paths: set[str]) -> bool:
+    """Return whether a tracked runtime path is an explicit final-tree contract."""
+    return any(_match(pattern, rel_path) for pattern in FINAL_TREE_ALLOW_PATHS) or rel_path in projection_paths
+
+
+def evaluate_treeish(treeish: str) -> dict[str, object]:
+    """Return stable, fail-closed admission findings for one immutable tree."""
+    entries = load_treeish_runtime_entries(treeish)
+    projection_paths = load_treeish_projection_paths(treeish)
+    forbidden_tracked_paths = sorted(
+        path
+        for mode, _object_id, path in entries
+        if mode in REGULAR_FILE_MODES and not is_final_tree_allowed(path, projection_paths)
+    )
+    invalid_modes = sorted(path for mode, _object_id, path in entries if mode not in REGULAR_FILE_MODES)
+    return {
+        "ok": not forbidden_tracked_paths and not invalid_modes,
+        "treeish": treeish,
+        "tracked_runtime_count": len(entries),
+        "forbidden_tracked_paths": forbidden_tracked_paths,
+        "invalid_modes": invalid_modes,
+        # Preserve the historical human/report shape while making the exact
+        # path list above authoritative for final-tree consumers.
+        "orphan_paths": [{"path": path} for path in forbidden_tracked_paths],
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Runtime stamp policy guard")
     parser.add_argument("--json", action="store_true", help="emit JSON report")
@@ -237,6 +329,29 @@ def main() -> int:
         help="audit runtime files from an immutable git tree instead of the checkout",
     )
     args = parser.parse_args()
+
+    if args.treeish:
+        try:
+            report = evaluate_treeish(args.treeish)
+        except (OSError, ValueError) as exc:
+            print(f"[FAIL] omo-runtime-stamp-policy: {exc}", file=sys.stderr)
+            return 2
+        if args.json:
+            json.dump(report, sys.stdout, indent=2, sort_keys=True)
+            sys.stdout.write("\n")
+        else:
+            status = "OK" if report["ok"] else "FAIL"
+            forbidden = report["forbidden_tracked_paths"]
+            invalid = report["invalid_modes"]
+            print(
+                f"[{status}] omo-runtime-stamp-policy: "
+                f"{len(forbidden)} forbidden tracked path(s), {len(invalid)} invalid mode(s)"
+            )
+            for path in forbidden:
+                print(f"  - forbidden: {path}")
+            for path in invalid:
+                print(f"  - invalid mode: {path}")
+        return 0 if report["ok"] else 1
 
     if not RUNTIME_DIR.exists():
         report = {"ok": True, "runtime_dir_exists": False, "orphan_paths": []}
@@ -249,25 +364,14 @@ def main() -> int:
 
     ignore_patterns = load_gitignore_patterns()
     projection_paths = load_projection_paths()
-    if args.treeish:
-        try:
-            treeish_paths = load_treeish_runtime_files(args.treeish)
-        except (OSError, ValueError) as exc:
-            print(f"[FAIL] omo-runtime-stamp-policy: {exc}", file=sys.stderr)
-            return 2
-        tracked = set(treeish_paths)
-        candidates = [(rel_path, treeish_file_size(args.treeish, rel_path)) for rel_path in treeish_paths]
-        allow_tracked = False
-        policy_ignore_patterns: list[str] = []
-    else:
-        tracked = set(load_tracked_runtime_files())
-        candidates = [
-            (path.relative_to(WORKSPACE).as_posix(), path.stat().st_size)
-            for path in sorted(RUNTIME_DIR.rglob("*"))
-            if path.is_file()
-        ]
-        allow_tracked = True
-        policy_ignore_patterns = ignore_patterns
+    tracked = set(load_tracked_runtime_files())
+    candidates = [
+        (path.relative_to(WORKSPACE).as_posix(), path.stat().st_size)
+        for path in sorted(RUNTIME_DIR.rglob("*"))
+        if path.is_file()
+    ]
+    allow_tracked = True
+    policy_ignore_patterns = ignore_patterns
 
     orphans: list[dict[str, object]] = []
     for rel_path, size in candidates:
