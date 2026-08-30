@@ -30,3 +30,12 @@ formal_planning:
   run_id: 20260830T145443Z-bet-execution-91e1ffd9
   purpose: Write and validate the approved implementation plan with exact path claims.
   note: Implementation and host mutation require fresh formal execution runs after the design PR reaches main.
+
+spec_amendment:
+  authorized_quote: "全面推进吧"
+  from_version: 1.0.0
+  to_version: 1.0.1
+  old_digest: sha256:b85c3264f03288f67d2e6cf0d6902afa90054d5e712e37ce92783c4c2e40ecf4
+  new_digest: sha256:bb513598b8c08a970b7100e5becfc73478e643ded7b2b269bcb2822c0d09579b
+  reason: GaC bin quota rejected a new governance entry; reuse the existing registered Documents owner job and keep bin surface flat.
+  scope: Entry-point ownership only; transaction semantics, target, source roots, rollback, testing, and value boundaries are unchanged.
