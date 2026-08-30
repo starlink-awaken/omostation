@@ -556,6 +556,24 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     mesh_compact_p.add_argument("--available-mb", "-a", type=int, default=4096, help="可用显存 MB")
     mesh_sub.add_parser("serve", help="启动 mesh router HTTP server")
 
+    # ── spine ────────────────────────────────────────────────
+    spine_p = sub.add_parser("spine", help="Spine 主干真值流与署名自进化操作 (ADR-0437)")
+    spine_sub = spine_p.add_subparsers(dest="spine_command", parser_class=workspace_parser)
+    spine_draft_p = spine_sub.add_parser("draft", help="从本地主权大模型请求草稿")
+    spine_draft_p.add_argument("--prompt", "-p", required=True, help="草稿生成提示词")
+    spine_draft_p.add_argument("--model", "-m", default="qwen3.8-27b", help="模型 ID")
+    spine_sign_p = spine_sub.add_parser("sign", help="提交用户署名 Diff 并入队 Experience Replay")
+    spine_sign_p.add_argument("--original", "-o", default="", help="原始草稿内容")
+    spine_sign_p.add_argument("--signed", "-s", required=True, help="署名后的最终内容")
+    spine_sign_p.add_argument("--domain", "-d", default="signature-style", help="领域标签")
+    spine_sub.add_parser("diff", help="查看待处理署名 Diff 统计")
+    spine_sub.add_parser("status", help="查看 DMA 守护进程实时遥测状态")
+    spine_distill_p = spine_sub.add_parser("distill", help="在 Mac mini M4 触发闲时 LoRA 蒸馏")
+    spine_distill_p.add_argument("--domain", "-d", default="signature-style", help="领域标签")
+    spine_distill_p.add_argument("--epochs", "-e", type=int, default=3, help="训练轮数")
+    spine_sub.add_parser("replay", help="查看 Experience Replay 缓冲区状态")
+
+
     # ── BOS URI gateway ───────────────────────────────────────
     bos_p = sub.add_parser("bos", help="BOS URI 查询与管理")
     bos_sub = bos_p.add_subparsers(dest="bos_cmd")

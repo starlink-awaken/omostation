@@ -62,6 +62,7 @@ from .commands.importer import cmd_import
 from .commands.kairon import cmd_kairon
 from .commands.mcp import cmd_mcp
 from .commands.mesh import cmd_mesh
+from .commands.spine import cmd_spine
 from .commands.model_driven import cmd_model_driven
 from .commands.observe import cmd_observe
 from .commands.profile import cmd_profile
@@ -478,6 +479,9 @@ def main() -> int:
     def dispatch_mesh(a):
         return cmd_mesh(a)
 
+    def dispatch_spine(a):
+        return cmd_spine(a)
+
     def dispatch_scenario(a):
         from cockpit.commands.scenario import cmd_scenario
 
@@ -803,6 +807,7 @@ def main() -> int:
         "observe": dispatch_observe,
         "family-hub": dispatch_family_hub,
         "mesh": dispatch_mesh,
+        "spine": dispatch_spine,
         "compute": cmd_compute,
         "intent": lambda a: __import__("cockpit.commands.intent", fromlist=["cmd_intent"]).cmd_intent(a),
         "decide": lambda a: __import__("cockpit.commands.decide", fromlist=["cmd_decide"]).cmd_decide(a),
