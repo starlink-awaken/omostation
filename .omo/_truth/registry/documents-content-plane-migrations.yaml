@@ -671,6 +671,22 @@ families:
     byte_count: 16257
     quarantine_manifest: runtime/quarantine/documents-root-codex-tools-20260830/manifest.json
     consumer_scan: receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json
+  - scope: _inbox retired hourly runner logs exact cache transaction
+    verified_at: '2026-08-30T19:05:00Z'
+    target_root: runtime/quarantine/documents-root-inbox-runner-logs-20260831
+    file_count: 2
+    byte_count: 0
+    source_fingerprint: sha256:7a754429822f7ea9b807bd56f0da57fb789d7907eb114bf321fb7e53082918cb
+    target_fingerprint: sha256:7a754429822f7ea9b807bd56f0da57fb789d7907eb114bf321fb7e53082918cb
+    non_target_file_count: 109
+    non_target_byte_count: 1081993
+    non_target_fingerprint: sha256:07e392c19d1a690f1f9a732f89b40dfb6735cd5adcd204cd6e76caea6ed77888
+    manifest_sha256: sha256:33ddd787f1536c9a91970fcc375e2449896e542d6f1855132887ae6e40170b49
+    consumer_scan: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+    rollback_ref: docs/reports/2026-08-31-documents-runner-log-quarantine.md
+    source_paths_absent: true
+    rollback_available: true
+    permanent_deletion: false
 - id: cc-switch-recovery-state
   source_globs:
   - .codex-optimize-log/**

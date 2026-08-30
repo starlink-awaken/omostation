@@ -263,7 +263,8 @@ bets:
   title: Quarantine retired Documents runner logs through exact selection
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-31
   goal: Move exactly the two retired _inbox runner logs from Documents into the protected integration Workspace quarantine through the existing transaction primitive, with exact cache selection, non-target preservation, durable verification, and executable rollback.
   non_goals:
   - No movement or rewrite of any other _inbox content and no directory-wide cache/runtime quarantine.
@@ -311,6 +312,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:b2908cf39b4c4a841c388308d678eed19c8874f0289f4d90776c22f9684eaff5
     decision_ref: decision://accepted/BET-Y1Q3-T10-110
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@700e23f9cfc5fd9bdb3f0aff78bfe2e6898b5c89
+          tests:
+            ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+            sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md
+            sha256: sha256:b2908cf39b4c4a841c388308d678eed19c8874f0289f4d90776c22f9684eaff5
+          rollback:
+            ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+            sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+            sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+            sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-110.md
+            sha256: sha256:3c47a091ba3d4f839b5b421dbbcb6f2847cf20931bec1e0e9b8f3f10dc1efeb1
+          cleanup:
+            ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+            sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-109
   risk_level: L3
@@ -2060,7 +2097,7 @@ bets:
             ref: git://origin/main@a19ef95a9ed5f58e87eed571428fea394f2054a9
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-88.md
             sha256: sha256:2a71ec831f05b268e1abe70b68f623d294d26a515a6d2c076eb5f0574ea4706d
@@ -2146,7 +2183,7 @@ bets:
             ref: git://origin/main@ed1fcee593cdaa4131d65ad7bc78e86cb1fea411
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-87.md
             sha256: sha256:026902c39d56d800de2d278cb1de37222237d0a5148bd9691c8ce5918bab97ad
@@ -2232,7 +2269,7 @@ bets:
             ref: git://origin/main@a56a9bdb124d0d79c47f3c01221f66c3e92cc880
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-86.md
             sha256: sha256:325f35276e0a7968b5a7481afb6cd7f2e51038cf45b60adac45b0845628e81d6
@@ -2318,7 +2355,7 @@ bets:
             ref: git://origin/main@fa2ecddce3bcdcd764897f5f02cfdfda7a1cce57
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-85.md
             sha256: sha256:b183bd687c3b3ba209c0ab0b3592df86f774cfcb971ad46deb80ad39f8a15142
@@ -2404,7 +2441,7 @@ bets:
             ref: git://origin/main@762a729913ce1cf29824b8a990ca4e2c59ca1180
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-84.md
             sha256: sha256:cbf6a4cd44436260d419a9284d646689c692f3cebf5293763fa83746aac64b76
@@ -2490,7 +2527,7 @@ bets:
             ref: git://origin/main@77601669ff52f23e7af4f0a85063f54f4fae45eb
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-83.md
             sha256: sha256:45ea4780994f385f832780595381b75413dc83608da4469c9b1b235f11153b51
@@ -2576,7 +2613,7 @@ bets:
             ref: git://origin/main@1bf32800d6976745ee43e4a0f4ae5f5bedc1c14b
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-82.md
             sha256: sha256:01219de1e4505fb78e5efa9e1151062440b1cdbc6e207808e8a24eb6ce5ca0d2
@@ -2662,7 +2699,7 @@ bets:
             ref: git://origin/main@fb6a11ff5ebd96cd94d64a8e3f79f445b08a2c28
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-81.md
             sha256: sha256:d2bf50963efd21e6ded2676875cb60c9d0c93fcf7e3d2477c6d63c5ff0c57253
@@ -2748,7 +2785,7 @@ bets:
             ref: git://origin/main@a13a273ce70f6cfff39bd1a429084d2a12578409
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-80.md
             sha256: sha256:29119f71a843cae113394b155580fe45d3319fe3a7189e0a8b2babc25b4056b6
@@ -2835,7 +2872,7 @@ bets:
             ref: git://origin/main@7abb5c9f8111c8d01a7564f11d63edea9dc2323a
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-79.md
             sha256: sha256:31366caaa2289d47a8fdc65119d2ef04f32838f8fb5ceed042c1b51a18a462d1
@@ -3259,7 +3296,7 @@ bets:
             ref: git://origin/main@79c4829479b1cf3bdfa92d45c69dd5e690326058
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-77.md
             sha256: sha256:0f8a2b987986a7a99e8d1df9ca135caaf81f323a6a0efecd357453bfa512fa52
@@ -3517,7 +3554,7 @@ bets:
             ref: git://origin/main@3c512def94ddabcfc5eb13c2de538d7045576737
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-69.md
             sha256: sha256:3ffc9d703ced9506d7b44efd8f4282f40965952f89b504be62eb4771129a41dd
@@ -3553,7 +3590,7 @@ bets:
             ref: git://origin/main@3c512def94ddabcfc5eb13c2de538d7045576737
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-69.md
             sha256: sha256:3ffc9d703ced9506d7b44efd8f4282f40965952f89b504be62eb4771129a41dd
