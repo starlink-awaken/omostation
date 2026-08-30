@@ -10,7 +10,7 @@ last-reviewed: 2026-08-24
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **175** 个命令 (含子命令)。按场景分组如下。
+共 **176** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -232,6 +232,7 @@ last-reviewed: 2026-08-24
 | `cockpit add` | 手动添加决策项 |
 | `cockpit approve` | 批准决策 |
 | `cockpit cache` | 检查三级分层缓存与 Radix 前缀树状态 (含基准压测) |
+| `cockpit capabilities` | 统一能力发现入口 — 搜索/推荐/全量列出 (CLI+BOS+Scene+Journey+Governance) |
 | `cockpit cell` | 🤖 AGE-v2 动态 Agent Cell (规划/执行/验证/治理) |
 | `cockpit cluster` | 异构三节点智能路由与拓扑诊断 |
 | `cockpit compact` | 上下文滑动蒸馏与双区自适应量化压缩模拟 |
