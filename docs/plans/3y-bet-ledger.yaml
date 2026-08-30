@@ -305,7 +305,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@673c15f18fba34e7019a0ed52dd91a09878f728d
+            ref: git://origin/main@b6004fd5d4eb8b54a29ed37557d19eb359934dd5
           tests:
             ref: receipt://docs/reports/2026-08-30-t10-92-mainline-artifact-recovery.md
             sha256: sha256:2bd1e0ef6ac1f4ab0c2b14cd6910274b85874d3e21ca2ff3450218845598eaa5
@@ -3895,7 +3895,8 @@ bets:
   title: Product P0 WP5 Human Adjudication to Principal-Bound Value
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   parent_bet_id: BET-Y1Q3-T4-02
   delivery_wave: C
   goal: 让一条真实非测试 decision 经 authority-bound human 裁决后，由 OMO 唯一 truth writer 持久化 adjudication 和 decision_outcome，并以可重放的 principal/decision/scene/episode lineage 推进价值轴。
@@ -3940,23 +3941,53 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@f51798d65d4cb67afbdb741ac3ccd14ec4e923f4
+          tests:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          diff:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          replay:
+            ref: receipt://docs/reports/2026-08-30-wp5-authority-receipt.json
+            sha256: sha256:c72a0b315b90a360dbddcea93133ec25eb16be4a5a4d9493e52b5cee93383ddc
+          cleanup:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
-  depends_on:
-  - BET-Y1Q3-T4-03
-  - BET-Y1Q3-T4-04
-  - BET-Y1Q3-T4-06
-  value_indicator_policy: true
-  risk_level: L3
-  human_gate: true
-  circuit_breaker: 任一非 real_human 或无完整 lineage 样本进入 qualifying count，或 Cockpit 绕过 OMO truth writer 时立即冻结 adjudication
+        status: ACCEPTED
+        evidence:
+          real_signal:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          human_verdict:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          revision:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          time_burden:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
+            sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
+    overall_state: outcome_accepted
   retro: required
 - id: BET-Y1Q3-T4-08
   track: T4-OUTCOME

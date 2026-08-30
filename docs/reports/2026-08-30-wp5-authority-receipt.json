@@ -1,0 +1,8 @@
+{
+ "principal_id": "principal:xiamingxing",
+ "authority_ref": "authority:omo:v1:principal:xiamingxing",
+ "credential_digest": "sha256:a3bba3adae0ebc76d0c42035e9f2c45172edaf945683ccdb9b4d9e40ccaf47ed",
+ "membership_version": 1,
+ "authority_receipt_digest": "sha256:2fd90148cbcd3a60b2c665045b9290352c742d46cb8aa79a1622d44b7b580fa8",
+ "expires_at": "2026-08-30T01:30:47.540878+00:00"
+}
