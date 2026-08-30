@@ -23,4 +23,15 @@ risk_level: L1
 files_count: 5 waves
 bet_id: BET-Y1Q3-T10-21
 category: convergence
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: external
+  bos_uri: bos://capability/convergence
+  layer: L4 - Convergence
+  entry_point: bin/ssot/documents-domain-owner-job.py
+  governance_surface: .omo/_truth/registry/documents-content-plane-migrations.yaml
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
 ---
