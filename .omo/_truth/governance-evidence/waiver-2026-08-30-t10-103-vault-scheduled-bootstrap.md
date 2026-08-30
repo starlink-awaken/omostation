@@ -1,0 +1,27 @@
+---
+schema: workflow-waiver/v1
+status: active
+lifecycle: history
+owner: governance-team
+created: 2026-08-30
+last-reviewed: 2026-08-30
+title: BET-Y1Q3-T10-103 self-bootstrap waiver
+type: doc
+---
+
+# BET-Y1Q3-T10-103 self-bootstrap waiver
+
+waiver: user-explicit
+when: 2026-08-30T18:15:00+08:00
+who: xiamingxing
+quote: "全面推进吧"
+scope:
+- docs/plans/3y-bet-ledger.yaml::BET-Y1Q3-T10-103
+- docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md
+- docs/superpowers/plans/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+- .omo/_truth/governance-evidence/waiver-2026-08-30-t10-103-vault-scheduled-bootstrap.md
+reason: T10-102 newly proved the sole active forbidden Scheduled executor; the cutover BET and accepted specification must exist before start --bet can bind the host transaction.
+risk: Bootstrap declarations only. The host backup, source edit, owner canary, consumer postflight, repo commits, PR, and closeout require the governed run and circuit breaker.
+residual: The next automatic Claude 08:02 run remains a separate temporal observation; this BET proves configuration and manual owner canary only.
+gate_bypass: 1
+no-run-id: true
