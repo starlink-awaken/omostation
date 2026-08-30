@@ -263,7 +263,8 @@ bets:
   title: Establish the family dashboard Workspace owner in family-hub
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-31
   goal: Import the canonical, non-private Next.js family dashboard source into the existing family-hub owner as an independently reproducible package, with deterministic provenance, explicit Documents/runtime boundaries, disabled direct writes, and child/root mainline proof.
   non_goals:
   - No import of current app-data, household data-manifest values, SQLite, indexes, caches, logs, credentials, browser auth state, build output, or private household content into Git.
@@ -277,13 +278,13 @@ bets:
   - The family-hub child PR and root gitlink PR both pass required checks, merge, and replay from authoritative main; root main points exactly to child origin/main, and report/retro/completion evidence closes only Phase A.
   - The old Documents application and all consumers remain unchanged, the family-dashboard-app migration family remains pending, and Phase B runtime relocation, Phase C entry cutover/retirement, and user value remain NOT_PROVEN.
   verify:
-  - cmd: uv run pytest tests/test_dashboard_source_import.py -q
+  - cmd: cd projects/family-hub && uv run pytest tests/test_dashboard_import.py tests/test_dashboard_import_cli.py -q
     expect: exit 0 with deterministic allowlist, forbidden/private class, unsafe-node, drift, collision, and source-preservation cases passing
-  - cmd: bun --cwd apps/dashboard install --frozen-lockfile && bun --cwd apps/dashboard test && bun --cwd apps/dashboard run lint && bun --cwd apps/dashboard run build
+  - cmd: cd projects/family-hub/apps/dashboard && bun install --frozen-lockfile && bun run test && bun run lint && bun run build
     expect: exit 0 from a clean family-hub checkout without live Documents or copied app-data
-  - cmd: bun --cwd apps/dashboard run test:e2e
+  - cmd: cd projects/family-hub/apps/dashboard && bun run test:e2e
     expect: exit 0 for synthetic authentication, representative read journeys, and disabled-write behavior
-  - cmd: bun run build && uv run pytest tests -q
+  - cmd: cd projects/family-hub && uv run pytest tests -q && bun run build
     expect: exit 0 for the pre-existing family-hub Vite, Express boundary, Python, and FastMCP surfaces
   - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
     expect: exit 0 while family-dashboard-app remains pending and no Phase B or Phase C overclaim is introduced
@@ -305,6 +306,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:d833693de0a212a8a00e7ab6974c8511817291bd8254c609191c71884f4e186b
     decision_ref: decision://accepted/BET-Y1Q3-T10-111
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9a4caa312b7dc0230ff7ff178b4f0e994913a244
+          tests:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+            sha256: sha256:6c7b69fb1da0b0e3a2538523f3082b4df843b6e4dc0100389a2ef145132e3cf1
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
+            sha256: sha256:d833693de0a212a8a00e7ab6974c8511817291bd8254c609191c71884f4e186b
+          rollback:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+            sha256: sha256:6c7b69fb1da0b0e3a2538523f3082b4df843b6e4dc0100389a2ef145132e3cf1
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+            sha256: sha256:6c7b69fb1da0b0e3a2538523f3082b4df843b6e4dc0100389a2ef145132e3cf1
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+            sha256: sha256:6c7b69fb1da0b0e3a2538523f3082b4df843b6e4dc0100389a2ef145132e3cf1
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-111.md
+            sha256: sha256:f0244a793f7e4b9f13e45b015e2cf04cb27af7f0a02a7678106b389b6f4c5a68
+          cleanup:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+            sha256: sha256:6c7b69fb1da0b0e3a2538523f3082b4df843b6e4dc0100389a2ef145132e3cf1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-110
   risk_level: L3
@@ -17347,4 +17384,533 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 事件堆积超过 10000 条时启动丢弃策略并发出高危报警。
+  retro: required
+- id: BET-Y1Q4-T2-02
+  track: T2-PERCEPT
+  window: Y1Q4
+  title: 微信/企微/飞书即时通讯会话感知与指令式即时办结
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 接入企业微信、飞书与微信桌面端会话钩子，自动从群聊与私聊中提取夏明星关注的核心任务、审批指令与催办提醒；支持夏明星以「一句话指令」触发织星后台自动化查阅、拟稿并直接返回待发卡片。
+  non_goals:
+  - 不做未经夏明星本人确认的自动回复或静默外发
+  - 不侵犯个人隐私聊天记录，严格按白名单群组与关键词过滤
+  done_when:
+  - 即时通讯消息到达至提炼出结构化待办卡片端到端耗时 ≤2 秒
+  - 指令意图解析准确率 ≥95%，支持一句话触发查阅与拟稿
+  - 接入 bos://im/session/triage 提供统一协议网关
+  verify:
+  - cmd: uv run python -m agora.server.tools_bos.im test_session_ingress
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora/src/agora/server/tools_bos/im.py
+  - projects/cockpit/src/cockpit/commands/im_triage.py
+  - docs/reports/2026-10-05-im-session-triage.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T2-02.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q4-T2-01
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 遇到 IM 接口变更或消息解析异常时自动退回被动查阅模式。
+  retro: required
+- id: BET-Y1Q4-T2-03
+  track: T2-PERCEPT
+  window: Y1Q4
+  title: 纸质公文扫描件多模态 OCR 结构化提取与版面保真还原
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 集成 PaddleOCR / Qwen-VL 本地轻量化端侧视觉多模态模型，支持对拍照扫描件、PDF 影印件红头文件进行精准 OCR、版面分析（表格、盖章、手写签批识别）与 Markdown 结构化还原。
+  non_goals:
+  - 不上传任何红头扫描件图片至外部公网云端
+  done_when:
+  - 扫描件红头公文排版识别还原度 ≥95%，表格结构还原度 ≥90%
+  - 手写签批与印章位置精准锚定并提取文字元数据
+  - 接入 cockpit spine ingress --source ocr --file 提供命令行与服务调用
+  verify:
+  - cmd: uv run python -m agora.server.tools_bos.ocr test_document_layout
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora/src/agora/server/tools_bos/ocr.py
+  - projects/cockpit/src/cockpit/commands/spine.py
+  - docs/reports/2026-10-06-multimodal-ocr-layout.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T2-03.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-112
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 图片过大或显存吃紧时自动按切片分块处理并降低批处理并发。
+  retro: required
+- id: BET-Y1Q4-T3-02
+  track: T3-COGNI
+  window: Y1Q4
+  title: BGE-M3 / Qwen-Embedding 本地 Metal MPS 硬件加速与毫秒级 Rerank 引擎
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 彻底替换对外部公有向量 API 的依赖，在 MBP M5 Max 与 Mac mini M4 上部署 BGE-M3 多语言多粒度嵌入与 BGE-Reranker-Large 本地模型，利用 Apple Silicon MPS Graph 深度优化推理延迟。
+  non_goals:
+  - 不使用损失精度的极低量化向量模型
+  done_when:
+  - 单条文本向量化耗时 ≤15ms，Top-50 文档重排耗时 ≤30ms
+  - 支持多语言混合检索与 Dense+Sparse 稠密稀疏混合打分
+  - 100% 本地离线执行，无任何数据离境风险
+  verify:
+  - cmd: uv run python -m omlxc.dataplane.embedding_mps_benchmark
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omlxc/src/omlxc/dataplane/embedding_mps.py
+  - projects/omlxc/src/omlxc/dataplane/reranker.py
+  - docs/reports/2026-10-07-bge-m3-mps-benchmark.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T3-02.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-114
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: MPS 显存不足时自动溢出至 CPU NEON/AMX 指令集加速。
+  retro: required
+- id: BET-Y1Q4-T3-03
+  track: T3-COGNI
+  window: Y1Q4
+  title: 多模型分级协同推演（MoE / Speculative Router 意图分流与草稿初筛）
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 构建 AetherForge 层次化分级推理网络：1.5B/3B 超轻模型负责意图分类与槽位提取（<5ms），8B/14B 负责公文格式校验与草稿初筛，27B/70B 负责最终深度拟稿与政策推演，实现端到端资源利用率最优。
+  non_goals:
+  - 不在低延迟敏感任务上直接唤醒高开销大模型
+  done_when:
+  - 简单日常指令 80% 由轻量端侧模型就地秒结，核心推理延迟降低 60%
+  - 复杂政务与技术方案自动升阶路由至主力大模型
+  - 动态路由开销 <1ms，无调度抖动
+  verify:
+  - cmd: uv run python -m omlxc.dataplane.speculative_router_eval
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omlxc/src/omlxc/dataplane/speculative_router.py
+  - projects/aetherforge/src/aetherforge/gateway/router.py
+  - docs/reports/2026-10-08-speculative-router-eval.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T3-03.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-114
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 小模型分类置信度低于 70% 时自动回退至基座主力模型直接处理。
+  retro: required
+- id: BET-Y1Q4-T7-03
+  track: T7-SCENE
+  window: Y1Q4
+  title: 卫健与科技政策法规雷达、科技文献 RSS 智能研判与每日晨报
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 7x24 小时常态化巡检国家卫健委、国家医保局、工信部官方网站政策公告，结合 arXiv、bioRxiv、Nature/Lancet 数字化医疗前沿文献，夜间自动提炼要点并生成《夏明星每日业务与技术早报》。
+  non_goals:
+  - 不引入未经审核的自媒体营销号噪音资讯
+  done_when:
+  - 每日清晨 07:30 准时在 Cockpit Inbox 呈递高价值摘要与深度研判
+  - 自动打标相关业务工程条目（如医疗大模型、数据要素互联互通）
+  - 零垃圾噪音资讯，政策研判准确率 ≥90%
+  verify:
+  - cmd: uv run python -m bin.bc_os.policy_radar --generate-morning-brief
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/bc-os/policy_radar.py
+  - projects/cockpit/src/cockpit/commands/brief.py
+  - docs/reports/2026-10-09-policy-radar-morning-brief.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T7-03.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-117
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 抓取网络异常时使用最近缓存快照生成降级版早报。
+  retro: required
+- id: BET-Y1Q4-T8-02
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Mobile Cockpit 移动轻控制台（iOS / PWA 随时随地审阅与滑动署名）
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 为夏明星量身定制移动端响应式 Web PWA 与 iOS 快捷指令（Shortcuts）桥接，实现离开电脑在会议间隙、出差路上随时查看待办卡片、手机端查看左右 Diff 比对、滑动一键署名外发。
+  non_goals:
+  - 不上架公有应用商店，采用内部私有 PWA / Shortcuts 协议
+  done_when:
+  - 移动端 PWA 页面首屏加载 ≤300ms，完美适配 iPhone / iPad 触摸手势
+  - 支持生物识别（Face ID）二次鉴权后一键签署并触发本地安全外发通道
+  - 断网状态下支持本地离线审阅，联网自动静默双向同步
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run build && bun test
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit-ui/src/pages/MobileCockpit.tsx
+  - projects/cockpit/src/cockpit/web/mobile_api.py
+  - docs/reports/2026-10-10-mobile-cockpit-pwa.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-02.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-116
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 移动端网络通信受阻时将签署状态暂存本地加密队列。
+  retro: required
+- id: BET-Y1Q4-T8-03
+  track: T8-SURFACE
+  window: Y1Q4
+  title: 标准红头公文排版 DOCX、高管技术汇报 PPT 与矢量图表一键生成导出
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 构建专业排版引擎，将初稿 Markdown 一键渲染为符合国家党政机关公文格式标准（GB/T 9704-2012）的红头 DOCX/PDF，以及高管汇报风格的 16:9 技术方案 PPTX 与高保真矢量架构图。
+  non_goals:
+  - 不做未经模板校验的非标随意排版
+  done_when:
+  - 生成的 DOCX 字体（方正小标宋、仿宋_GB2312）、行间距、页边距 100% 严格符合国标
+  - PPTX 自动匹配深色商务/极简科技模板，支持一键导出打印
+  - 支持 cockpit render docx/pptx --input <md> --template standard-gov
+  verify:
+  - cmd: uv run python -m cockpit.cli render test_export_formats
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/commands/render.py
+  - projects/cockpit/src/cockpit/renderers/gov_docx.py
+  - docs/reports/2026-10-11-gov-docx-pptx-render.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-03.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-116
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 模板解析异常时自动降级输出标准干净 Markdown 与普通 PDF。
+  retro: required
+- id: BET-Y1Q4-T10-01
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 个人数据防泄密围栏（DLP）与外发敏感信息自动脱敏沙箱
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 构建本地数据防泄漏（DLP）沙箱：在外发公文、邮件或调用外部模型前，自动识别并拦截内部涉密文号、公民身份证号、手机号、机密财务预算与内部拓扑 IP，实行多级脱敏与人工确认提示。
+  non_goals:
+  - 不将未脱敏的原始涉密文本传输至任何外部公共网络
+  done_when:
+  - 敏感政务与个人隐私数据识别率 100%，零漏报
+  - 支持基于规则与 NER 模型的混合敏感词识别，判定耗时 <2ms
+  - 发现高危涉密信息时强制挂起外发并报警：“检测到机密文号，需夏明星二次确认”
+  verify:
+  - cmd: uv run python -m projects.ecos.src.ecos.governance.dlp_broker --test-dlp
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/ecos/src/ecos/governance/dlp_broker.py
+  - projects/cockpit/src/cockpit/commands/dlp_guard.py
+  - docs/reports/2026-10-12-dlp-governance-sandbox.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-01.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-116
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 命中涉密红线时完全阻断外发通道并记录本地审计日志。
+  retro: required
+- id: BET-Y2Q1-T2-01
+  track: T2-PERCEPT
+  window: Y2Q1
+  title: 语音随想/口头指示多模态实时转录、结构化润色与待办入库
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 接入 macOS 快捷键或手机端录音音频流，通过端侧 Whisper.cpp / FunASR 进行毫秒级离线语音识别，自动去除口语冗余口水词、梳理逻辑结构并分拣为架构随笔或公文待办。
+  non_goals:
+  - 不做未经确认的直接外发，仅存入草稿池
+  done_when:
+  - 1 分钟语音录音转录与语义提炼端到端耗时 ≤1.5 秒
+  - 自动区分口头指示中的任务项、时间节点与相关责任人
+  - 结构化润色后的文字自然流畅，直接入库 Cockpit Spine 备选池
+  verify:
+  - cmd: uv run python -m agora.server.tools_bos.voice test_audio_pipeline
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora/src/agora/server/tools_bos/voice.py
+  - projects/cockpit/src/cockpit/commands/voice_memo.py
+  - docs/reports/2027-01-05-voice-memo-pipeline.md
+  - .omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q4-T2-01
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 音频输入噪音过大识别率低时自动提示人工重新录制。
+  retro: required
+- id: BET-Y2Q1-T3-04
+  track: T3-COGNI
+  window: Y2Q1
+  title: 50 万字超长政务/架构全案文档树状上下文压缩与毫秒级精准问答
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 针对大型国家级卫生信息化方案、大型技术标书与历史五年全量 ADR（数十万字），构建分层树状上下文摘要与 PagedKV 块级缓存，实现超长文本秒级跨卷对比检索与逻辑矛盾检测。
+  non_goals:
+  - 不使用丢失细节信息的过度有损摘要
+  done_when:
+  - 50 万字超大文档加载首字响应（TTFT）≤50ms
+  - 精准定位跨章节政策条款冲突与前后架构矛盾
+  - 内存与显存占用恒定控制在 16GB 安全水位以内
+  verify:
+  - cmd: uv run python -m omlxc.dataplane.tree_context_eval
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omlxc/src/omlxc/dataplane/tree_context.py
+  - projects/omlxc/src/omlxc/dataplane/paged_kv.py
+  - docs/reports/2027-01-06-tree-context-compression.md
+  - .omo/_knowledge/retros/BET-Y2Q1-T3-04.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-114
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 块缓存溢出时自动触发 LRU 页面置换与分级显存腾退。
+  retro: required
+- id: BET-Y2Q1-T5-01
+  track: T5-ORCH
+  window: Y2Q1
+  title: 个人战略决策沙盘（Strategy Sandbox）与多智能体蒙特卡洛方案推演
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 针对重大技术选型、团队业务规划与资源投入，构建多智能体蒙特卡洛模拟沙盘（商业、研发、安全、财务 4 角对抗 Agent 并发推演 100 次不同场景博弈），输出收益期望与风险边界。
+  non_goals:
+  - 不做未经夏明星本人审阅的自动化投资或重大架构调整
+  done_when:
+  - 100 轮蒙特卡洛多 Agent 模拟推演在 30 秒内完成
+  - 自动输出决策收益分布图、最坏情况止损线与敏感性因子分析报告
+  - 落地 cockpit strategy simulate --proposal <file>
+  verify:
+  - cmd: uv run python -m cockpit.cli strategy simulate --demo
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/commands/strategy.py
+  - projects/agora/src/agora/orchestration/sandbox_sim.py
+  - docs/reports/2027-01-07-strategy-monte-carlo-sandbox.md
+  - .omo/_knowledge/retros/BET-Y2Q1-T5-01.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q4-T5-02
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 单次模拟耗时超过 60 秒时中断未完成分支并输出置信区间。
+  retro: required
+- id: BET-Y2Q1-T6-01
+  track: T6-EVOLUTION
+  window: Y2Q1
+  title: 跨生命周期记忆衰减与冲突消除引擎（过时政策自动标记与认知重整）
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 建立 MOS 记忆全生命周期管理：基于时间戳与权威更新动态衰减旧版规章制度（如《旧暂行办法》被《新实施细则》废止），自动消除记忆图谱中的语义冲突与陈旧过时事实。
+  non_goals:
+  - 不物理抹除历史档案，保留全量历史快照可审计
+  done_when:
+  - 新政策入库时自动扫描并标记历史废止条文，打上 deprecated 状态
+  - 检索召回时优先使用最新有效依据，杜绝引用作废条款
+  - 记忆冲突检测率 100%，消除死锁与幻觉事实
+  verify:
+  - cmd: uv run python -m bin.ssot.m0_feedback --check-decay
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ssot/m0_feedback.py
+  - projects/knowledge/kairon/src/kairon/graph/decay_manager.py
+  - docs/reports/2027-01-08-memory-lifecycle-decay.md
+  - .omo/_knowledge/retros/BET-Y2Q1-T6-01.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-117
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 出现关键条款误标记时支持一键历史版本回退。
+  retro: required
+- id: BET-Y2Q1-T7-01
+  track: T7-SCENE
+  window: Y2Q1
+  title: 组织架构与政企人脉关系图谱（深度关联来件单位、历史沟通偏好与决策背景）
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 在 KEMS-v2 中构建人脉与组织架构关系图谱，自动关联公文/邮件/会议来件涉及的部门、关键领导、行业专家、历史合作项目与对方关注点，拟稿时自动注入人际上下文与沟通偏好。
+  non_goals:
+  - 不泄露未经公开的人际关系敏感背景
+  done_when:
+  - 自动从未发公文、邮件往来中提取组织层级与人际关系链
+  - 拟稿前秒级推荐：“该部门近期重点关注数据安全，建议补充合规保障章节”
+  - 关联检索召回率 ≥95%
+  verify:
+  - cmd: uv run python -m projects.knowledge.kairon.cli org-graph --query 测试单位
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/knowledge/kairon/src/kairon/graph/org_graph.py
+  - projects/cockpit/src/cockpit/commands/org_relation.py
+  - docs/reports/2027-01-09-org-relation-graph.md
+  - .omo/_knowledge/retros/BET-Y2Q1-T7-01.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-117
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 人际关系上下文置信度低时仅作为补充参考不强行修改行文。
+  retro: required
+- id: BET-Y2Q1-T10-01
+  track: T10-MATURITY
+  window: Y2Q1
+  title: 全仓零知识物理离线冷备份与单机损毁 15 分钟灾备还原
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 构建个人业务操作系统终极物理灾备体系：每日定时自动将全仓代码、台账、KEMS 知识库、SEMA 信念、个人 LoRA 权重通过 GPG/AES-256 零知识加密并增量快照同步至外接私有存储介质；提供单键冷启动还原脚本。
+  non_goals:
+  - 不依赖任何第三方公有云存储作为必要灾备中继
+  done_when:
+  - 全量/增量加密快照秒级执行，不锁死主工作区
+  - 在全新裸机 Mac 上通过恢复脚本完成环境、依赖与全量记忆重建耗时 ≤15 分钟
+  - 100% 离线自主可控，不依赖任何第三方云服务
+  verify:
+  - cmd: bash bin/ops/cold-backup-drill.sh --verify
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ops/cold-backup-drill.sh
+  - bin/ops/restore-cold-snapshot.sh
+  - docs/reports/2027-01-10-cold-backup-disaster-recovery.md
+  - .omo/_knowledge/retros/BET-Y2Q1-T10-01.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-119
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 加密或传输校验和不一致时立即阻断备份并发出本地蜂鸣告警。
+  retro: required
+- id: BET-Y2Q2-T3-01
+  track: T3-COGNI
+  window: Y2Q2
+  title: 个人文风一致性多维雷达评估与语气自适应调节引擎
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 针对公文拟办、邮件简复、技术评审、公开演讲 4 类不同文体，建立夏明星个人文风特征雷达（用词严谨度、句式长短、情感倾向、肯定程度），生成初稿时动态调节温度与语气系数。
+  non_goals:
+  - 不在非必要场合强行套用呆板固定模板
+  done_when:
+  - 自动输出文风雷达对齐得分（0-100 分），低于 85 分自动触发局部重写
+  - 提供语气滑块调节（“更庄严稳重”、“更犀利专业”、“更柔和温和”）
+  - 历史署名文风对齐度达 95% 以上
+  verify:
+  - cmd: uv run python -m omlxc.dataplane.persona_radar_eval
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omlxc/src/omlxc/dataplane/persona_radar.py
+  - projects/cockpit/src/cockpit/commands/spine.py
+  - docs/reports/2027-04-01-persona-radar-evaluation.md
+  - .omo/_knowledge/retros/BET-Y2Q2-T3-01.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-118
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 文风失真严重时自动回退到基准平实中立模板。
+  retro: required
+- id: BET-Y2Q2-T6-01
+  track: T6-EVOLUTION
+  window: Y2Q2
+  title: SEMA 踩坑信念跨代自结晶与技能包热重载引擎
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: SEMA 引擎进化升级：从每次夏明星署名修改的 Diff 与 CI 拦截记录中自动反向萃取“防踩坑信念”，自动生成对应的 Agent Skill（如 skill-gov-audit），并在无需重启服务的情况下秒级热加载生效。
+  non_goals:
+  - 不对低频单次偶然失误进行过度泛化结晶
+  done_when:
+  - 连续发现 2 次同类人工纠偏时自动触发 SEMA 结晶管线
+  - 自动生成符合规范的 SKILL.md 与测试用例
+  - 新技能动态注入 AetherForge 与 Agora 运行态，热加载延迟 <500ms
+  verify:
+  - cmd: uv run python -m omo.resident.sema_crystallizer --test-crystallize
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/sema_crystallizer.py
+  - .agents/skills/auto-crystallized/SKILL.md
+  - docs/reports/2027-04-02-sema-skill-crystallizer.md
+  - .omo/_knowledge/retros/BET-Y2Q2-T6-01.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-115
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 结晶出的技能导致测试红时自动隔离禁用该技能包。
   retro: required

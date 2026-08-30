@@ -1,0 +1,21 @@
+schema: agent-error/v1
+id: PITFALL-GAT-005
+category: gate
+severity: medium
+title: 'auto: gac 反复豁免 (9x)'
+symptom: '── GaC local gate ────────────────────────────────────── [gac] /Users/xiamingxing/Workspace/.venv/bin/python:
+  can''t open file ''/Users/xiamingxing/Workspace/bin/gac/governance-convergence-lint.py'':
+  [Er'
+root_cause: escape 台账周期喂食（ADR-0443 v2 Q8），根因待人工复盘
+solution: ''
+prevention: ''
+tags:
+- auto-fed
+- ci-local-fast
+discovered_by: auto:escape-digest
+discovered_at: '2026-08-30'
+times_encountered: 18
+last_confirmed_at: '2026-08-30'
+status: active
+_path: /Users/xiamingxing/Workspace/.omo/_knowledge/pitfalls/gate/PITFALL-GAT-005.yaml
+_file: PITFALL-GAT-005.yaml
