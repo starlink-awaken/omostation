@@ -1,0 +1,283 @@
+# Documents Scene ↔ MOF Mapping Registry
+# ========================================
+# Maps documents domain scene cards to MOF M1 nodes, specifications, mechanisms, and governance rules.
+#
+# SSOT: .omo/_truth/registry/documents-scene-mof-map.yaml
+# Version: 1.0.0 | 2026-08-31
+
+version: "1.0.0"
+updated_at: "2026-08-31"
+
+# Mapping schema:
+#   scene_id: documents scene card ID
+#   mof:
+#     specification: M1 specification node ID
+#     mechanism: M1 mechanism node ID
+#     component: M1 component reference
+#     governance_rule: GaC rule ID
+#   kems:
+#     pipeline: KEMS pipeline name
+#     graph_entity_type: GraphStore entity type
+#   sfop_slot: K/H/P/C/S/B/J/O/F
+#   dao_layer: dao/fa/shu/qi
+
+scenes:
+  # ── QUARANTINE SCENES (17) ──
+  documents-weijian-cleanup:
+    mof: {specification: SPEC-DOCS-WEIJIAN-CLEANUP, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-weijian-control:
+    mof: {specification: SPEC-DOCS-WEIJIAN-CONTROL, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-weijian-runtime:
+    mof: {specification: SPEC-DOCS-WEIJIAN-RUNTIME, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-public-runtime:
+    mof: {specification: SPEC-DOCS-PUBLIC-RUNTIME, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-cockpit-runtime:
+    mof: {specification: SPEC-DOCS-COCKPIT-RUNTIME, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-contract-ocr:
+    mof: {specification: SPEC-DOCS-CONTRACT-OCR, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-guizi-tools:
+    mof: {specification: SPEC-DOCS-GUIZI-TOOLS, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-guizi-scripts:
+    mof: {specification: SPEC-DOCS-GUIZI-SCRIPTS, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-guizi-symlinks:
+    mof: {specification: SPEC-DOCS-GUIZI-SYMLINKS, mechanism: MECH-DOCS-QUARANTINE-SYMLINK, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-002}
+    kems: {pipeline: documents-quarantine-symlink-v1, graph_entity_type: QuarantineSymlink}
+    sfop_slot: C
+    dao_layer: shu
+  documents-guozhuan-tools:
+    mof: {specification: SPEC-DOCS-GUOZHUAN-TOOLS, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-guozhuan-symlinks:
+    mof: {specification: SPEC-DOCS-GUOZHUAN-SYMLINKS, mechanism: MECH-DOCS-QUARANTINE-SYMLINK, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-002}
+    kems: {pipeline: documents-quarantine-symlink-v1, graph_entity_type: QuarantineSymlink}
+    sfop_slot: C
+    dao_layer: shu
+  documents-root-control-tools:
+    mof: {specification: SPEC-DOCS-ROOT-CONTROL-TOOLS, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-root-tools:
+    mof: {specification: SPEC-DOCS-ROOT-TOOLS, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-root-oneoff:
+    mof: {specification: SPEC-DOCS-ROOT-ONEOFF, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-family-runtime:
+    mof: {specification: SPEC-DOCS-FAMILY-RUNTIME, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-learning-helpers:
+    mof: {specification: SPEC-DOCS-LEARNING-HELPERS, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-opc-runtime:
+    mof: {specification: SPEC-DOCS-OPC-RUNTIME, mechanism: MECH-DOCS-QUARANTINE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-QB-001}
+    kems: {pipeline: documents-quarantine-v1, graph_entity_type: QuarantineTransaction}
+    sfop_slot: C
+    dao_layer: shu
+
+  # ── OWNER/PREFLIGHT SCENES (12) ──
+  documents-owner-job:
+    mof: {specification: SPEC-DOCS-OWNER-JOB, mechanism: MECH-DOCS-OWNER, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-OWN-001}
+    kems: {pipeline: documents-owner-v1, graph_entity_type: OwnerJob}
+    sfop_slot: C
+    dao_layer: shu
+  documents-consumer-audit:
+    mof: {specification: SPEC-DOCS-CONSUMER-AUDIT, mechanism: MECH-DOCS-AUDIT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-AUD-001}
+    kems: {pipeline: documents-audit-v1, graph_entity_type: AuditReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-freshness:
+    mof: {specification: SPEC-DOCS-FRESHNESS, mechanism: MECH-DOCS-AUDIT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-AUD-001}
+    kems: {pipeline: documents-audit-v1, graph_entity_type: AuditReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-ocr-preflight:
+    mof: {specification: SPEC-DOCS-OCR-PREFLIGHT, mechanism: MECH-DOCS-PREFLIGHT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-PRE-001}
+    kems: {pipeline: documents-preflight-v1, graph_entity_type: PreflightReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-bridge-preflight:
+    mof: {specification: SPEC-DOCS-BRIDGE-PREFLIGHT, mechanism: MECH-DOCS-PREFLIGHT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-PRE-001}
+    kems: {pipeline: documents-preflight-v1, graph_entity_type: PreflightReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-controller-preflight:
+    mof: {specification: SPEC-DOCS-CONTROLLER-PREFLIGHT, mechanism: MECH-DOCS-PREFLIGHT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-PRE-001}
+    kems: {pipeline: documents-preflight-v1, graph_entity_type: PreflightReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-convergence-preflight:
+    mof: {specification: SPEC-DOCS-CONVERGENCE-PREFLIGHT, mechanism: MECH-DOCS-PREFLIGHT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-PRE-001}
+    kems: {pipeline: documents-preflight-v1, graph_entity_type: PreflightReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-signals-preflight:
+    mof: {specification: SPEC-DOCS-SIGNALS-PREFLIGHT, mechanism: MECH-DOCS-PREFLIGHT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-PRE-001}
+    kems: {pipeline: documents-preflight-v1, graph_entity_type: PreflightReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-predictor-preflight:
+    mof: {specification: SPEC-DOCS-PREDICTOR-PREFLIGHT, mechanism: MECH-DOCS-PREFLIGHT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-PRE-001}
+    kems: {pipeline: documents-preflight-v1, graph_entity_type: PreflightReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-workspace-watch:
+    mof: {specification: SPEC-DOCS-WORKSPACE-WATCH, mechanism: MECH-DOCS-PREFLIGHT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-PRE-001}
+    kems: {pipeline: documents-preflight-v1, graph_entity_type: PreflightReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-concept-weave:
+    mof: {specification: SPEC-DOCS-CONCEPT-WEAVE, mechanism: MECH-DOCS-PREFLIGHT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-PRE-001}
+    kems: {pipeline: documents-preflight-v1, graph_entity_type: PreflightReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-learning-control:
+    mof: {specification: SPEC-DOCS-LEARNING-CONTROL, mechanism: MECH-DOCS-OWNER, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-OWN-001}
+    kems: {pipeline: documents-owner-v1, graph_entity_type: OwnerJob}
+    sfop_slot: C
+    dao_layer: shu
+
+  # ── CUTOVER/RELEASE SCENES (6) ──
+  documents-accepted-release:
+    mof: {specification: SPEC-DOCS-ACCEPTED-RELEASE, mechanism: MECH-DOCS-CUTOVER, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-CUT-001}
+    kems: {pipeline: documents-cutover-v1, graph_entity_type: CutoverTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-schedule-cutover:
+    mof: {specification: SPEC-DOCS-SCHEDULE-CUTOVER, mechanism: MECH-DOCS-CUTOVER, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-CUT-001}
+    kems: {pipeline: documents-cutover-v1, graph_entity_type: CutoverTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-domain-sync:
+    mof: {specification: SPEC-DOCS-DOMAIN-SYNC, mechanism: MECH-DOCS-CUTOVER, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-CUT-001}
+    kems: {pipeline: documents-cutover-v1, graph_entity_type: CutoverTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-ocr-cutover:
+    mof: {specification: SPEC-DOCS-OCR-CUTOVER, mechanism: MECH-DOCS-CUTOVER, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-CUT-001}
+    kems: {pipeline: documents-cutover-v1, graph_entity_type: CutoverTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-release-root:
+    mof: {specification: SPEC-DOCS-RELEASE-ROOT, mechanism: MECH-DOCS-CUTOVER, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-CUT-001}
+    kems: {pipeline: documents-cutover-v1, graph_entity_type: CutoverTransaction}
+    sfop_slot: C
+    dao_layer: shu
+  documents-vault-health:
+    mof: {specification: SPEC-DOCS-VAULT-HEALTH, mechanism: MECH-DOCS-CUTOVER, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-CUT-001}
+    kems: {pipeline: documents-cutover-v1, graph_entity_type: CutoverTransaction}
+    sfop_slot: C
+    dao_layer: shu
+
+  # ── AUDIT/RETIREMENT SCENES (5) ──
+  documents-consumer-audit-modes:
+    mof: {specification: SPEC-DOCS-CONSUMER-AUDIT-MODES, mechanism: MECH-DOCS-AUDIT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-AUD-001}
+    kems: {pipeline: documents-audit-v1, graph_entity_type: AuditReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-consumer-tokenization:
+    mof: {specification: SPEC-DOCS-CONSUMER-TOKENIZATION, mechanism: MECH-DOCS-AUDIT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-AUD-001}
+    kems: {pipeline: documents-audit-v1, graph_entity_type: AuditReport}
+    sfop_slot: C
+    dao_layer: shu
+  documents-consumer-tail:
+    mof: {specification: SPEC-DOCS-CONSUMER-TAIL, mechanism: MECH-DOCS-RETIRE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-RET-001}
+    kems: {pipeline: documents-retire-v1, graph_entity_type: RetirementRecord}
+    sfop_slot: C
+    dao_layer: shu
+  documents-execution-retirement:
+    mof: {specification: SPEC-DOCS-EXECUTION-RETIREMENT, mechanism: MECH-DOCS-RETIRE, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-RET-001}
+    kems: {pipeline: documents-retire-v1, graph_entity_type: RetirementRecord}
+    sfop_slot: C
+    dao_layer: shu
+  documents-zcode-config:
+    mof: {specification: SPEC-DOCS-ZCODE-CONFIG, mechanism: MECH-DOCS-AUDIT, component: COMP-SUB-l4-kernel-kems, governance_rule: CR-AUD-001}
+    kems: {pipeline: documents-audit-v1, graph_entity_type: AuditReport}
+    sfop_slot: C
+    dao_layer: shu
+
+  # ── CONVERGENCE SCENES (3) ──
+  documents-l4-convergence:
+    mof: {specification: SPEC-DOCS-L4-CONVERGENCE, mechanism: MECH-DOCS-CONVERGE, component: COMP-WS-l4-kernel, governance_rule: CR-CON-001}
+    kems: {pipeline: documents-converge-v1, graph_entity_type: ConvergenceRecord}
+    sfop_slot: K
+    dao_layer: dao
+  documents-zcode-state:
+    mof: {specification: SPEC-DOCS-ZCODE-STATE, mechanism: MECH-DOCS-CONVERGE, component: COMP-WS-runtime, governance_rule: CR-CON-001}
+    kems: {pipeline: documents-converge-v1, graph_entity_type: ConvergenceRecord}
+    sfop_slot: B
+    dao_layer: qi
+  documents-cockpit-convergence:
+    mof: {specification: SPEC-DOCS-COCKPIT-CONVERGENCE, mechanism: MECH-DOCS-CONVERGE, component: COMP-WS-cockpit, governance_rule: CR-CON-001}
+    kems: {pipeline: documents-converge-v1, graph_entity_type: ConvergenceRecord}
+    sfop_slot: H
+    dao_layer: shu
+
+# ── Governance Rule Definitions ──
+governance_rules:
+  CR-QB-001:
+    name: "隔离事务必须可逆"
+    description: "所有隔离操作必须生成回滚清单，且回滚清单必须可验证"
+    enforcement: pre_commit
+  CR-QB-002:
+    name: "符号链接隔离不得跟随"
+    description: "符号隔离操作必须 no-follow，保留 link target"
+    enforcement: pre_commit
+  CR-OWN-001:
+    name: "Owner 任务必须只读"
+    description: "Documents owner 任务不得修改 Documents 内容"
+    enforcement: pre_commit
+  CR-AUD-001:
+    name: "审计必须生成证据"
+    description: "所有审计操作必须生成不可篡改的证据记录"
+    enforcement: post_commit
+  CR-PRE-001:
+    name: "预检必须验证依赖"
+    description: "预检操作必须验证所有依赖项可用"
+    enforcement: pre_commit
+  CR-CUT-001:
+    name: "切换必须可回滚"
+    description: "所有切换操作必须备份原状态并可回滚"
+    enforcement: pre_commit
+  CR-RET-001:
+    name: "退役必须保留证据"
+    description: "退役操作必须保留完整证据链和回滚能力"
+    enforcement: pre_commit
+  CR-CON-001:
+    name: "收敛必须保持一致性"
+    description: "收敛操作必须保持系统一致性，不得引入分裂"
+    enforcement: pre_commit
