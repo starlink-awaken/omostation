@@ -475,6 +475,84 @@ if not any(gate.get("id") == "bin-quota-diff" for gate in GATES_LIST):
         }
     )
 
+# Root-owned ledger lock check (2026-08-30, ADR-0441): bet-ledger 并发写锁健康检查.
+if not any(gate.get("id") == "ledger-lock-check" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "ledger-lock-check",
+            "command": ["bin/gac/ledger-lock-check.py", "--json"],
+            "note": "LEDGER-LOCK: bet-ledger.yaml 写锁健康检查. 检测孤儿/死锁/漂移, 提示 --break-stale/--wait (CR-LEDGER-LOCK)",
+        }
+    )
+
+# Root-owned adr-protection (2026-08-30, ADR-0442): ADR 原子编号与重名阻断.
+if not any(gate.get("id") == "adr-protection" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "adr-protection",
+            "command": ["bin/gac/adr-protection-check.py", "--json"],
+            "note": "ADR-PROTECTION: 原子取号+重名阻断, 失败吐 HINT Next-adr-id (CR-ADR-PROTECTION)",
+        }
+    )
+
+# Root-owned submodule auto drift check (2026-08-30, ADR-0443): 子模块指针漂移与可恢复性.
+if not any(gate.get("id") == "submodule-auto-check" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "submodule-auto-check",
+            "command": ["bin/gac/submodule-auto-check.py", "--check", "--json"],
+            "note": "SUBMODULE-AUTO: 子模块指针漂移检测. --fix/--apply 自动修复, reachability/verify 失败自动回滚 (CR-SUBMODULE-AUTO)",
+        }
+    )
+
+# Root-owned file lock health check (2026-08-30, ADR-0444): 高频文件写锁健康检查.
+if not any(gate.get("id") == "file-lock-check" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "file-lock-check",
+            "command": ["bin/gac/file-lock-check.py", "--json"],
+            "note": "FILE-LOCK: 高频文件写锁健康检查. 检测孤儿/死锁/漂移, 提示 --cleanup/monitor (CR-FILE-LOCK)",
+        }
+    )
+
+# Root-owned agent workflow standard check (2026-08-30, ADR-0445): Agent 工作流契约合规.
+if not any(gate.get("id") == "agent-workflow-standard-check" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "agent-workflow-standard-check",
+            "command": ["bin/gac/agent-workflow-standard-check.py", "--json"],
+            "note": "AGENT-STD: Agent 工作流标准化校验. --check-ranges/--check-locks/--check-signatures (CR-AGENT-WORKFLOW-STD)",
+        }
+    )
+
+# Root-owned bin 收敛门禁 (2026-08-30, BET-CONV-01): 防止 bin/ 脚本进一步发散.
+if not any(gate.get("id") == "check-script-sfop-declaration" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "check-script-sfop-declaration",
+            "command": ["bin/gac/check-script-sfop-declaration.py", "--check", "--json"],
+            "note": "CONV-01: 检查 bin/ 脚本是否声明 SFOP_SLOT/DAO_LAYER",
+        }
+    )
+
+if not any(gate.get("id") == "check-bin-lifecycle" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "check-bin-lifecycle",
+            "command": ["bin/gac/check-bin-lifecycle.py", "--check", "--json"],
+            "note": "CONV-01: 检查 bin/ 脚本是否在 bin/_registry/ 注册",
+        }
+    )
+
+if not any(gate.get("id") == "check-bos-uri-binding" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "check-bos-uri-binding",
+            "command": ["bin/gac/check-bos-uri-binding.py", "--check", "--json"],
+            "note": "CONV-01: 检查 BOS URI 注册表与实现双向绑定",
+        }
+    )
+
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
