@@ -2,19 +2,19 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Relocate the complete active ZCode `.zcode` client state from Documents to Workspace runtime through the application's native data-root contract.
+**Goal:** Relocate the complete active ZCode `.zcode` client state from Documents to durable macOS App Support through the application's native data-root contract.
 
-**Architecture:** Add one Workspace-owned, fail-closed transaction tool around ZCode's existing `dataBaseDir` setting. Test its pure inspection and transaction invariants first, quiesce ZCode, use a same-volume atomic rename, restart, and prove the process/file-handle cutover before updating the migration registry.
+**Architecture:** Deepen the existing Workspace-owned ZCode config owner with a fail-closed two-phase transaction. Copy the complete source into a temporary durable App Support target, verify and atomically publish it, restart against the target, then move the retained source into durable recovery. Recover the failed 1.0.0 runtime target from the healthy CLI DB backup and native seed without overclaiming purged data.
 
 **Tech Stack:** Python 3.9-compatible standard library, pytest, JSON manifests, macOS `ps`/`lsof`, ZCode 3.10.1 native settings, Documents L4 audit, GaC.
 
 ## Global constraints
 
 - Formal agent-workflow run and exact claims are required before implementation.
-- No live SQLite copy and no partial file selection.
+- No live desktop SQLite copy and no partial migration of a healthy source.
 - No merge with the existing `~/.zcode/v2` state.
 - No symlink, parallel launcher, or second configuration authority.
-- Host mutation is reversible and must retain a settings backup plus manifest.
+- Host mutation is reversible and must retain source, settings backup, payload backup, and manifest until post-restart finalize.
 
 ---
 
@@ -27,7 +27,7 @@
 - Modify: `.github/workflows/phase-gate-enforce.yml`
 
 - [ ] Write failing tests for active-process rejection, critical-state
-      completeness, target collision, cross-device rejection, settings
+      completeness, target collision, insufficient disk, copy verification, settings
       preservation, apply, inspect, verify, and rollback.
 - [ ] Implement the smallest Python 3.9-compatible transaction module and CLI
       that make the tests pass.
@@ -46,10 +46,12 @@
 
 - [ ] Capture preflight process, handle, source, target, disk, settings, and
       critical-state evidence.
+- [ ] Preserve CLI DB, native seed, surviving target, settings, and manifest in durable recovery before releasing the currently open deleted desktop DB inode.
 - [ ] Quit ZCode through its normal application lifecycle and prove quiescence.
-- [ ] Run the guarded apply transaction and validate its manifest.
+- [ ] Rebuild/publish the durable App Support target and validate its recovery manifest.
 - [ ] Restart ZCode normally; verify relocated handles, task/session continuity,
       no Documents writes, and an available rollback path.
+- [ ] Finalize by moving any retained Documents source into durable recovery; never delete it in this BET.
 
 ### Task 3: Close the Documents boundary and deliver
 
