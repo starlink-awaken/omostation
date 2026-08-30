@@ -2458,11 +2458,6 @@ def cmd_lint(data: dict, args) -> int:
             print(f"WARN  {w}")
         print(f"\n{len(warnings)} 个 warning (不阻断)")
     print(f"OK — {len(data['bets'])} 个 bet，{len(tracks)} 条轨道，无问题")
-        for e in errs:
-            print(f"ERROR {e}")
-        print(f"\n{len(errs)} 个问题")
-        return 1
-    print(f"OK — {len(data['bets'])} 个 bet，{len(tracks)} 条轨道，无问题")
     return 0
 
 
