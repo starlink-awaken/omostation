@@ -212,3 +212,135 @@ def test_plan_rejects_unhealthy_consumer_receipt(tmp_path: Path, receipt: dict) 
             source_handles=[],
             available_bytes=10**9,
         )
+
+
+def test_apply_moves_complete_snapshot_through_staging_and_publishes_manifest(tmp_path: Path) -> None:
+    layout = _layout(tmp_path)
+
+    result = relocation.apply_relocation(
+        _paths(layout),
+        consumer_receipt=_consumer_receipt(),
+        source_handles=[],
+        available_bytes=10**9,
+    )
+
+    assert result["status"] == "completed"
+    assert not any(root.exists() for root in layout.source_roots)
+    assert layout.target_root.is_dir()
+    assert not _paths(layout).staging_root.exists()
+    manifest = json.loads((layout.target_root / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["target_fingerprint"] == manifest["source_fingerprint"]
+    assert manifest["summary"]["files"] == 7
+    assert manifest["permanent_deletion"] is False
+
+
+def _raise_verification_error(*_args: object, **_kwargs: object) -> None:
+    raise relocation.RelocationError("target verification failed", code="TARGET_VERIFY_FAILED")
+
+
+def test_apply_rolls_back_every_move_when_late_verification_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    layout = _layout(tmp_path)
+    before = {
+        path.relative_to(layout.documents).as_posix(): path.read_bytes()
+        for root in layout.source_roots
+        for path in root.rglob("*")
+        if path.is_file()
+    }
+    monkeypatch.setattr(relocation, "_verify_staging", _raise_verification_error)
+
+    with pytest.raises(relocation.RelocationError, match="target verification"):
+        relocation.apply_relocation(
+            _paths(layout),
+            consumer_receipt=_consumer_receipt(),
+            source_handles=[],
+            available_bytes=10**9,
+        )
+
+    after = {
+        path.relative_to(layout.documents).as_posix(): path.read_bytes()
+        for root in layout.source_roots
+        for path in root.rglob("*")
+        if path.is_file()
+    }
+    assert after == before
+    assert not layout.target_root.exists()
+    assert not _paths(layout).staging_root.exists()
+
+
+def test_apply_rejects_source_drift_without_partial_move(tmp_path: Path) -> None:
+    layout = _layout(tmp_path)
+    plan = relocation.plan_relocation(
+        _paths(layout),
+        consumer_receipt=_consumer_receipt(),
+        source_handles=[],
+        available_bytes=10**9,
+    )
+    (layout.source_roots[0] / "late.txt").write_text("drift", encoding="utf-8")
+
+    with pytest.raises(relocation.RelocationError, match="source tree changed"):
+        relocation.apply_plan(_paths(layout), plan)
+
+    assert all(root.is_dir() for root in layout.source_roots)
+    assert not layout.target_root.exists()
+
+
+def test_sqlite_quick_check_rejects_corruption_but_preserves_other_sources(tmp_path: Path) -> None:
+    layout = _layout(tmp_path)
+    corrupt = layout.source_roots[0] / "corrupt.db"
+    corrupt.write_bytes(b"SQLite format 3\x00broken")
+
+    with pytest.raises(relocation.RelocationError, match="SQLite quick_check"):
+        relocation.plan_relocation(
+            _paths(layout),
+            consumer_receipt=_consumer_receipt(),
+            source_handles=[],
+            available_bytes=10**9,
+        )
+
+    assert corrupt.read_bytes() == b"SQLite format 3\x00broken"
+    assert all(root.is_dir() for root in layout.source_roots)
+    assert not layout.target_root.exists()
+
+
+def test_verify_rejects_manifest_target_tamper(tmp_path: Path) -> None:
+    layout = _layout(tmp_path)
+    relocation.apply_relocation(
+        _paths(layout),
+        consumer_receipt=_consumer_receipt(),
+        source_handles=[],
+        available_bytes=10**9,
+    )
+    target = layout.target_root / ".cc-switch-recovery2" / "full_dump.sql"
+    target.write_text("tampered", encoding="utf-8")
+
+    with pytest.raises(relocation.RelocationError, match="target verification"):
+        relocation.verify_relocation(_paths(layout), consumer_receipt=_consumer_receipt())
+
+
+def test_verify_and_rollback_use_manifest_and_never_overwrite_source(tmp_path: Path) -> None:
+    layout = _layout(tmp_path)
+    relocation.apply_relocation(
+        _paths(layout),
+        consumer_receipt=_consumer_receipt(),
+        source_handles=[],
+        available_bytes=10**9,
+    )
+
+    verified = relocation.verify_relocation(_paths(layout), consumer_receipt=_consumer_receipt())
+    assert verified["status"] == "verified"
+    assert verified["source_roots_absent"] is True
+    assert verified["rollback_available"] is True
+
+    layout.source_roots[0].mkdir()
+    with pytest.raises(relocation.RelocationError, match="source collision"):
+        relocation.rollback_relocation(_paths(layout), target_handles=[])
+    layout.source_roots[0].rmdir()
+
+    rolled_back = relocation.rollback_relocation(_paths(layout), target_handles=[])
+    assert rolled_back["status"] == "rolled_back"
+    assert all(root.is_dir() for root in layout.source_roots)
+    assert layout.rollback_receipt.is_file()
+    assert not layout.target_root.exists()
+    assert _fixture_bytes(layout) > 0
