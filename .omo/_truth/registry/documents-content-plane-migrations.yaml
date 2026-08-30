@@ -69,15 +69,12 @@ coverage_samples:
 - relative_path: _inbox/2026-08-03-kems-repair.py
   kind: runtime
   family: root-oneoff-assets
-- relative_path: .codex-optimize-log/cc-switch.db.pre-fix.20260817-065833
-  kind: cache
-  family: cc-switch-recovery-state
 - relative_path: ZCode/.zcode/v2/tasks-index.sqlite
   kind: cache
   family: documents-client-state
-- relative_path: index-BYqQMscj.js
-  kind: runtime
-  family: root-oneoff-assets
+- relative_path: .codex-optimize-log/cc-switch.db.pre-fix.20260817-065833
+  kind: cache
+  family: cc-switch-recovery-state
 bridge_shells:
 - shell: '@公共/_runtime/kems-materialize.py'
   target: projects/runtime/scripts/kems-materialize.py
