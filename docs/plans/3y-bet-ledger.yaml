@@ -2337,7 +2337,8 @@ bets:
   title: Documents Weijian dangling symlink quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the twelve dangling symlink objects under Documents/@工作文档/卫健委/_runtime into retention-protected Workspace quarantine without following or reconstructing their missing public-runtime targets.
   non_goals:
   - No target-byte restoration, regular runtime move, content, contract, projection, `_storage`, schedule, LaunchAgent, client, or other domain mutation.
