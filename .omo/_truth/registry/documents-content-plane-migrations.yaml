@@ -221,7 +221,7 @@ families:
     artifact_kind: [runtime, cache]
     disposition: delegate
     owner: runtime
-    replacement: "Workspace Runtime jobs plus Kairon/KOS owner calls; declarations remain in Documents"
+    replacement: "Workspace Runtime jobs plus Kairon/KOS owner calls; read-only concept decay/orphan inspections are owned by runtime documents-learning-* while declarations remain in Documents"
     consumer_refs:
       - "~/Library/LaunchAgents/com.learningevolution.concept-weave.monthly.plist"
       - "audit://claude-scheduled/vault-daily-health"
@@ -234,7 +234,14 @@ families:
       rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
       runtime_file_count: 4
       runtime_bytes: 34562
-      owner_parity: pending
+      owner_parity: partial
+      owner_parity_evidence:
+        status: read_only_modes_proven
+        jobs:
+          - documents-learning-decay
+          - documents-learning-orphans
+        receipt: "docs/reports/2026-08-30-learning-runtime-owner-parity.md"
+        writes_documents: false
     progress_evidence:
       scope_status: partial
       completed_subscopes:
