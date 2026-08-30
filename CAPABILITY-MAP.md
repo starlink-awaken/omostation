@@ -8,10 +8,10 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 165 |
+| CLI 命令 (含子命令) | 175 |
 | MCP 工具 | 629 |
 | MCP 服务器 | 27 |
-| BOS 服务 | 271 |
+| BOS 服务 | 282 |
 | BOS 域 | 21 |
 
 ## MCP 服务器清单
@@ -56,11 +56,11 @@
 | `bcos` | 3 |
 | `capability` | 44 |
 | `cockpit` | 2 |
-| `compute` | 12 |
+| `compute` | 16 |
 | `ecos` | 10 |
 | `fabric` | 1 |
 | `forge` | 1 |
-| `governance` | 62 |
+| `governance` | 69 |
 | `l4-kernel` | 1 |
 | `memory` | 47 |
 | `meta` | 1 |
@@ -127,10 +127,14 @@
 | `cockpit decide` | 📬 决策收件箱 (列出/添加/批准/拒绝) |
 | `cockpit demo` | 快速演示 |
 | `cockpit dflash` | DFlash 2 块扩散投机解码加速与集群基准 |
+| `cockpit diff` | 查看待处理署名 Diff 统计 |
 | `cockpit discover` | 发现可用功能和资源 |
+| `cockpit distill` | 在 Mac mini M4 触发闲时 LoRA 蒸馏 |
+| `cockpit dma` | 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准 |
 | `cockpit domain-status` | 显示 Documents 域项目绑定与引导状态 |
 | `cockpit domains` | 列出 L4 所有域及其状态 |
 | `cockpit down` | 停止观测栈 |
+| `cockpit draft` | 从本地主权大模型请求草稿 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
 | `cockpit events` | 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard) |
 | `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
@@ -151,8 +155,10 @@
 | `cockpit governance` | 架构治理 (委派 arcnode-*) |
 | `cockpit graph` | 运行语义图谱分析 |
 | `cockpit health` | 一键系统健康检查 |
+| `cockpit heatmap` | 查看分布式 KV 内存池热力分布与投机蒸馏指标 |
 | `cockpit help` | 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务) |
 | `cockpit history` | 查看对话历史 |
+| `cockpit hud` | 查看次世代主权算力织网全景 HUD 实时状态 |
 | `cockpit identity` | 导出身份封套 (IdentityEnvelope) |
 | `cockpit impact` | 分析符号的变更影响面 |
 | `cockpit import` | 导入外部内容 |
@@ -169,6 +175,7 @@
 | `cockpit knowledge` | 📚 KOS 知识检索 (search/status/stats) |
 | `cockpit list` | 列债务项 (委派 omo debt) |
 | `cockpit logs` | 查看日志 |
+| `cockpit lora` | 查看与测试端侧在线 LoRA 适配层热插拔 |
 | `cockpit mcp` | 启动 MCP server 或列出工具 |
 | `cockpit memory` | 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref) |
 | `cockpit memory-distill` | 记忆自蒸馏与冲突自愈 (ADR-0200) |
@@ -204,6 +211,7 @@
 | `cockpit reject` | 拒绝决策 |
 | `cockpit reload` | 重载 BOS 配置/M1 |
 | `cockpit remember` | 手动存入偏好/事实 |
+| `cockpit replay` | 查看 Experience Replay 缓冲区状态 |
 | `cockpit research` | 深度研究 |
 | `cockpit resident` | Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...) |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
@@ -216,9 +224,11 @@
 | `cockpit score` | 评分债务项 |
 | `cockpit search` | 全文搜 CARDS |
 | `cockpit serve` | stdio JSON-RPC serve mode |
+| `cockpit sign` | 提交用户署名 Diff 并入队 Experience Replay |
 | `cockpit skill` | 运行 L4 定时技能 |
 | `cockpit snapshot` | KV 缓存快照管理与预热 |
 | `cockpit speculative-eval` | 本地首选投机推演评估 |
+| `cockpit spine` | Spine 主干真值流与署名自进化操作 (ADR-0437) |
 | `cockpit ssb` | [DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用 |
 | `cockpit stats` | 索引统计 |
 | `cockpit status` | 系统健康 |
