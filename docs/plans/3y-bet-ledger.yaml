@@ -257,6 +257,61 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-100
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Converge learning content mutation owners into Workspace
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: Replace the remaining Documents learning content executors knowledge-decay mark-stale and _inbox/inbox-router with one Workspace-owned, human-gated plan/apply entry that preserves deterministic routing, optimistic source fingerprints, rollback manifests, and explicit no-op behavior for deferred cross-domain writes.
+  non_goals:
+  - No movement or rewrite of l4-kernel.sh, vault-healthcheck.sh, daemon/executor implementations, pre-commit-g18, or learning content outside the targeted inbox/concept scopes.
+  - No automatic host schedule installation, launchd mutation, client configuration change, or permanent deletion.
+  - No direct .omo mutation and no second dispatcher, registry, ontology, or control plane; reuse documents-domain-owner-job.py and existing L4/OMO governance.
+  - 'No silent bulk mutation: apply requires an explicit flag, an exact current source fingerprint, and a Workspace rollback manifest.'
+  done_when:
+  - Workspace exposes one canonical learning-control owner entry with plan/apply modes for decay mark-stale and inbox route.
+  - Dry-run plans are deterministic, report candidate paths/hashes without source text, refuse path escape/collision/fingerprint drift, and default to no mutation.
+  - Apply writes only the declared concept frontmatter or internal inbox destinations, preserves modes/bytes in rollback evidence, and restores prior mutations on failure.
+  - Targeted tests cover frontmatter insertion, orphan routing, external-domain deferral, fingerprint races, collisions, rollback, path containment, and CLI entry behavior.
+  - Fresh live dry-runs against the actual learning concept/inbox scopes succeed with truthful candidate counts; the two legacy executors are physically quarantined only after the owner canary and consumer audit pass.
+  - The migration registry records completed subscopes and keeps learning-runtime in_progress until l4-kernel/control-plane parity is delivered separately.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_learning_control.py tests/test_documents_consumer_audit.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no coverage collision
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known debt
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - lib/documents_learning_control.py
+  - bin/gac/documents-domain-owner-job.py
+  - tests/test_documents_learning_control.py
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md
+  - docs/reports/2026-08-30-learning-content-owner-convergence.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-100.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-100-learning-control-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:f4d09eb3ee6a629a4d51c610d19227ae478a470f2931cb3fc8fe0babf9749610
+    decision_ref: decision://accepted/BET-Y1Q3-T10-100
+  depends_on:
+  - BET-Y1Q3-T10-99
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any source fingerprint drift, target collision, path escape, unapproved Documents write, rollback-manifest failure, external-domain move, or consumer audit regression stops the operation and restores all already-applied changes.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-99
   track: T10-MATURITY
   window: Y1Q3

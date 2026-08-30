@@ -229,19 +229,20 @@ families:
     confirmation_gate: before_write
     status: in_progress
     evidence:
-      verified_at: "2026-08-30T01:17:01Z"
-      consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
-      rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
-      runtime_file_count: 4
-      runtime_bytes: 34562
+      verified_at: "2026-08-30T05:25:00Z"
+      consumer_scan: "receipt://.omo/evidence/20260830T052614Z-bet-execution-f82fb1a7/consumer-post.json"
+      rollback_ref: "docs/reports/2026-08-30-learning-content-owner-convergence.md"
+      runtime_file_count: 6
+      runtime_bytes: 48270
       owner_parity: partial
       owner_parity_evidence:
-        status: read_only_modes_proven
+        status: read_only_and_guarded_mutation_owner_proven
         jobs:
           - documents-learning-decay
           - documents-learning-orphans
-        receipt: "docs/reports/2026-08-30-learning-runtime-owner-parity.md"
-        writes_documents: false
+        owner_entry: "bin/gac/documents-domain-owner-job.py learning-control"
+        receipt: "docs/reports/2026-08-30-learning-content-owner-convergence.md"
+        writes_documents: explicit_apply_only
     progress_evidence:
       scope_status: partial
       completed_subscopes:
@@ -255,6 +256,27 @@ families:
           byte_count: 8020
           consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
           rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
+
+        - scope: "@学习进化/_control/scripts/knowledge-decay.sh"
+          verified_at: "2026-08-30T05:25:00Z"
+          source_fingerprint: "sha256:06e8541ec3de3ecd7258a57565baef78e3849a62ef4a2d578b1f0e3bbf3e4093"
+          target_fingerprint: "sha256:06e8541ec3de3ecd7258a57565baef78e3849a62ef4a2d578b1f0e3bbf3e4093"
+          manifest_sha256: "sha256:02bec508894192c288969959ffe1a7ebc733661fa179c1b1cfdbe3d31e41480e"
+          node_type: regular
+          file_count: 1
+          byte_count: 10037
+          consumer_scan: "receipt://.omo/evidence/20260830T052614Z-bet-execution-f82fb1a7/consumer-post.json"
+          rollback_ref: "docs/reports/2026-08-30-learning-content-owner-convergence.md"
+        - scope: "@学习进化/_inbox/inbox-router.sh"
+          verified_at: "2026-08-30T05:25:00Z"
+          source_fingerprint: "sha256:15f37f3e79347f4a896a15c7fb54b6fa57e9267582c455f1830fbe211e9ba09"
+          target_fingerprint: "sha256:15f37f3e79347f4a896a15c7fb54b6fa57e9267582c455f1830fbe211e9ba09"
+          manifest_sha256: "sha256:6cd17eb01a0d24a53b975333518285affaf522bd543d84d190254e1cabc38902"
+          node_type: regular
+          file_count: 1
+          byte_count: 3671
+          consumer_scan: "receipt://.omo/evidence/20260830T052614Z-bet-execution-f82fb1a7/consumer-post.json"
+          rollback_ref: "docs/reports/2026-08-30-learning-content-owner-convergence.md"
         - scope: "@学习进化/_control/scripts/backfill-knowledge-type.sh"
           verified_at: "2026-08-30T01:17:01Z"
           source_fingerprint: "sha256:6a399495c714b3d508b0cff94d4b430dae5e3243cfa511ebea704ac0362c4bf2"
