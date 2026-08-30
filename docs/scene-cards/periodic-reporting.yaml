@@ -10,8 +10,8 @@ related:
 schema: scene-card/v2
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
-lifecycle: shadow
-activation: preview
+lifecycle: supervised
+activation: active
 approval_state: confirmed
 scene_id: periodic-reporting
 journey_id: schedule-to-evidence

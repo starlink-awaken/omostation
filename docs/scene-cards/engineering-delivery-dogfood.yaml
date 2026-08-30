@@ -13,8 +13,8 @@ related:
 schema: scene-card/v2
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
-lifecycle: shadow
-activation: allowed
+lifecycle: supervised
+activation: active
 approval_state: confirmed
 value_indicator_policy: "本场景产出永不计入价值指标 (BET-Y1Q2-T7-01 non_goals)"
 bet: BET-Y1Q2-T7-01

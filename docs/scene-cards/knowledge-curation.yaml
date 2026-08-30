@@ -10,8 +10,8 @@ related:
 ---
 schema: scene-card/v2
 scene_type: external_resource
-lifecycle: assisted
-activation: preview
+lifecycle: supervised
+activation: active
 approval_state: pending_business_confirmation
 scene_id: knowledge-curation
 journey_id: capture-to-retrieval
