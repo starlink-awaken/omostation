@@ -492,6 +492,23 @@ def test_completed_manifest_rejects_unexpected_target_and_rollback_source_collis
     assert (target / "hourly_runner.log").exists()
 
 
+def test_completed_manifest_rejects_source_path_outside_documents_boundary(tmp_path):
+    module = _load_module()
+    _documents, _inbox, target, plan = _exact_runner_plan(module, tmp_path)
+    module.apply_plan(plan)
+    manifest_path = target / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["files"][0]["source"] = str(tmp_path / "outside.log")
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    try:
+        module.verify_completed_manifest(manifest_path)
+    except module.QuarantineError as exc:
+        assert "boundary" in str(exc) or "Documents" in str(exc)
+    else:
+        raise AssertionError("manifest source outside Documents must fail closed")
+
+
 def test_cli_exact_plan_apply_verify_and_rollback(tmp_path, capsys):
     module = _load_module()
     documents = tmp_path / "Documents"
@@ -529,13 +546,16 @@ def test_cli_exact_plan_apply_verify_and_rollback(tmp_path, capsys):
     assert json.loads(capsys.readouterr().out)["status"] == "completed"
     assert module.main(["--verify-manifest", str(target / "manifest.json"), "--json"]) == 0
     assert json.loads(capsys.readouterr().out)["status"] == "verified"
-    assert module.main(
-        [
-            "--rollback-manifest",
-            str(target / "manifest.json"),
-            "--now",
-            "2026-08-31T03:00:00Z",
-            "--json",
-        ]
-    ) == 0
+    assert (
+        module.main(
+            [
+                "--rollback-manifest",
+                str(target / "manifest.json"),
+                "--now",
+                "2026-08-31T03:00:00Z",
+                "--json",
+            ]
+        )
+        == 0
+    )
     assert json.loads(capsys.readouterr().out)["status"] == "rolled_back"
