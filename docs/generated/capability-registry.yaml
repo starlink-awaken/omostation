@@ -12,9 +12,9 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 629
-  bos_services: 275
+  bos_services: 282
   bos_domains: 21
-  cli_commands: 169
+  cli_commands: 175
   skills: 2
   workflows: 17
 mcp_servers:
@@ -878,7 +878,7 @@ bos_services:
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 62
+    governance: 69
     l4-kernel: 1
     memory: 47
     meta: 1
@@ -1673,6 +1673,34 @@ bos_services:
       description: 提案池质量分层 (第0段清淤) — keep/archive/invalid 三层, --dry-run 预演
       transport: stdio
       status: active
+    - uri: bos://governance/bridge-runtime
+      description: 统一桥接运行时 (MetaOS↔OMO, Model-Driven↔ECOS, L4↔记忆层)
+      transport: cli
+      status: active
+    - uri: bos://governance/corrosion-pipeline
+      description: 防腐管道接线 (G1/G2)
+      transport: cli
+      status: active
+    - uri: bos://governance/value-tracker
+      description: 价值证明跟踪
+      transport: cli
+      status: active
+    - uri: bos://governance/self-evolution
+      description: 自进化反馈循环
+      transport: cli
+      status: active
+    - uri: bos://governance/weekly-review
+      description: 每周价值回顾
+      transport: cli
+      status: active
+    - uri: bos://governance/monthly-healthcheck
+      description: 每月架构健康检查
+      transport: cli
+      status: active
+    - uri: bos://governance/probe-heartbeat
+      description: 探测器心跳矩阵
+      transport: cli
+      status: active
     l4-kernel:
     - uri: bos://l4-kernel/domains
       description: L4 Kernel MCP (短路径别名)
@@ -2054,6 +2082,8 @@ cli_commands:
   description: BOS Inbox 多源私有知识神经网查询与操作
 - name: brain
   description: 个人数字大脑 — 知识检索 + 记忆 + 智能问答
+- name: bridge
+  description: 🌉 统一桥接运行时 (MetaOS↔OMO, Model-Driven↔ECOS, L4↔记忆层)
 - name: brief
   description: 会话简报
 - name: bus
@@ -2096,6 +2126,8 @@ cli_commands:
   description: 控制平面：submit / ack / nack
 - name: controller-shadow
   description: 读取 Runtime 旧控制器影子迁移回执
+- name: corrosion
+  description: 🛡️ 防腐管道接线 (G1/G2)
 - name: daily
   description: 每日研究简报
 - name: dashboard
@@ -2126,6 +2158,8 @@ cli_commands:
   description: 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)
 - name: events-watch
   description: 实时监听 SSE 事件流简便入口
+- name: evolve
+  description: 🧬 自进化反馈循环
 - name: export
   description: 导出契约封套
 - name: export-research
@@ -2244,6 +2278,8 @@ cli_commands:
   description: pipeline 概览
 - name: policy
   description: ⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)
+- name: probe
+  description: 📡 探测器心跳矩阵
 - name: product-health
   description: 产品健康度检测
 - name: profile
@@ -2278,6 +2314,8 @@ cli_commands:
   description: Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)
 - name: resolve
   description: 统一 BOS URI 路由解析与目标元数据提取
+- name: review
+  description: 📊 回顾检查
 - name: route
   description: 为模型选择最优节点
 - name: run
@@ -2332,6 +2370,8 @@ cli_commands:
   description: 打印 Langfuse Web URL
 - name: validate
   description: 验证 Workspace 契约
+- name: value
+  description: 💰 价值证明跟踪
 - name: vault
   description: 搜索 L4 Vault 知识库
 - name: version
