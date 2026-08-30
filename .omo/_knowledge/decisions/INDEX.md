@@ -549,3 +549,9 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0437: Indirect Calling of Nested Functions on GCC Without Executable Stack — **PROPOSED** | 2026-08-29 | evolution-agent | 0437-trend-signal.md
 - ADR-0439: 次世代 omlxc V5.0 主权算力织网全生态闭环与长期治理运维体系 — **ACCEPTED** | 2026-08-30 | omlxc v5.0.0 | 0439-omlxc-v5-sovereign-compute-ecosystem-closure.md
 - ADR-0440: 全生态服务 SSOT 登记、BOS URI 全生命周期路由注册与 Agora FastMCP 主权算力工具链挂载 — **ACCEPTED** | 2026-08-30 | governance-team | 0440-ecosystem-services-registration-and-governance.md
+- ADR-0441: Documents-Workspace collab v1 — three-primitive contract — **ACCEPTED** | 2026-08-30 | xiamingxing | 0441-documents-workspace-collab-v1.md
+- ADR-0446: 台账写锁强约束 (bet-ledger 并发序列化) — **ACCEPTED** | 2026-08-30 | governance-team | 0446-ledger-lock-mechanism.md
+- ADR-0447: ADR 创建防护 (原子编号+重名阻断) — **ACCEPTED** | 2026-08-30 | governance-team | 0447-adr-creation-protection.md
+- ADR-0448: 子模块指针漂移自愈 (检测+可验证回滚) — **ACCEPTED** | 2026-08-30 | governance-team | 0448-submodule-pointer-automation.md
+- ADR-0449: 高频文件写锁 (SHA256 冲突检测+心跳) — **ACCEPTED** | 2026-08-30 | governance-team | 0449-high-frequency-file-write-lock.md
+- ADR-0450: Agent 工作流标准化 (范围声明+锁+签名) — **ACCEPTED** | 2026-08-30 | governance-team | 0450-agent-workflow-standardization.md
