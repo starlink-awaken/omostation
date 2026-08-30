@@ -1390,7 +1390,8 @@ bets:
   title: Documents Weijian cleanup script runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Extend the existing Documents runtime quarantine owner to safely accept one audited regular file, then move only Documents/@工作文档/卫健委/cleanup-commit.sh into protected Workspace quarantine while preserving all other health and work-content surfaces.
   non_goals:
   - No movement outside @工作文档/卫健委/cleanup-commit.sh.
