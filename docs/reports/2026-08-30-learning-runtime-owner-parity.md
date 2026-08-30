@@ -55,6 +55,16 @@ owner evidence.
 - A malformed owner payload was rejected with exit code 74 and no accepted
   evidence projection.
 
+## Mainline closure
+
+The Runtime child PR #69 merged to child main as
+`6a156a2d1621b295294341ebef0be4f33e9b6ad8`. Root PR #2685 merged to root main
+as `454679dc2d7449b9c4c9029d3e00c92f52016e97`; the root gitlink was verified
+against that child mainline commit. Root required checks were all successful,
+including the long-running `governance-verify`. The implementation was
+delivered as three root lane-separated commits because the repository gate
+forbids mixing `governance_state` with docs or submodule-pointer changes.
+
 ## Boundary and residual
 
 The migration family remains `learning-runtime: in_progress` with
