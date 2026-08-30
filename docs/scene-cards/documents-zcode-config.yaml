@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-zcode-config
-journey_id: documents-zcode-config-journey"
+journey_id: documents-zcode-config-journey
 goal: ZCode 配置协调
 trigger: 检测到 audit 类 documents 任务需要执行
 input_contract: 源文件路径/范围

@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-bridge-preflight
-journey_id: documents-bridge-preflight-journey"
+journey_id: documents-bridge-preflight-journey
 goal: Bridge 预检
 trigger: 检测到 owner 类 documents 任务需要执行
 input_contract: 源文件路径/范围
