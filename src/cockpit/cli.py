@@ -52,6 +52,7 @@ from .commands.contracts import (
     cmd_contracts_list,
     cmd_contracts_validate,
 )
+from .commands.capabilities import cmd_capabilities
 from .commands.data import cmd_data_gc, cmd_data_index, cmd_data_types
 from .commands.discover import _cmd_discover
 from .commands.family_hub import cmd_family_hub
@@ -757,6 +758,7 @@ def main() -> int:
         "health": _cmd_health,
         "brief": _cmd_brief,
         "discover": _cmd_discover,
+        "capabilities": cmd_capabilities,
         "profile": cmd_profile,
         "cards": dispatch_cards,
         "audit": cmd_audit,

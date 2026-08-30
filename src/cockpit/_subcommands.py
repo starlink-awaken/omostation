@@ -369,6 +369,21 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
 
     sub.add_parser("discover", help="发现可用功能和资源")
 
+    # ── 统一能力发现 (Agent 感知 9.5/10) ──────────────────────
+    cap_p = sub.add_parser(
+        "capabilities",
+        help="统一能力发现入口 — 搜索/推荐/全量列出 (CLI+BOS+Scene+Journey+Governance)",
+    )
+    cap_p.add_argument(
+        "capabilities_command",
+        nargs="?",
+        default="list",
+        choices=["list", "search", "recommend"],
+        help="子命令: list(全量) / search(搜索) / recommend(任务推荐)",
+    )
+    cap_p.add_argument("--query", default="", help="搜索关键词 (search 子命令)")
+    cap_p.add_argument("--task", default="", help="任务描述 (recommend 子命令)")
+
     events_p = sub.add_parser("events", help="实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)")
     events_p.add_argument(
         "--url",
