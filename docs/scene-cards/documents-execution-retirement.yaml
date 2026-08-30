@@ -1,0 +1,26 @@
+---
+last-reviewed: 2026-08-30
+---
+
+schema: scene-card/v2
+lifecycle: supervised
+activation: active
+approval_state: confirmed
+scene_id: documents-execution-retirement
+journey_id: documents-execution-retirement-journey"
+goal: 执行退役
+trigger: 检测到 audit 类 documents 任务需要执行
+input_contract: 源文件路径/范围
+result_contract: 完成确认 + 证据记录
+outcome_metric: documents_audit_success_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+
+source_path: Documents _runtime + .kems
+target_path: Workspace owners
+risk_level: L1
+files_count: all active
+bet_id: BET-Y1Q3-T10-41
+category: audit
+---

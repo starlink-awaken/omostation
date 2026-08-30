@@ -1,0 +1,26 @@
+---
+last-reviewed: 2026-08-30
+---
+
+schema: scene-card/v2
+lifecycle: supervised
+activation: active
+approval_state: confirmed
+scene_id: documents-release-root
+journey_id: documents-release-root-journey"
+goal: 发布根收敛
+trigger: 检测到 cutover 类 documents 任务需要执行
+input_contract: 源文件路径/范围
+result_contract: 完成确认 + 证据记录
+outcome_metric: documents_cutover_success_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+
+source_path: 活跃 crontab owner 条目
+target_path: accepted-20260908 release
+risk_level: L2
+files_count: variable
+bet_id: BET-Y1Q3-T10-46
+category: cutover
+---
