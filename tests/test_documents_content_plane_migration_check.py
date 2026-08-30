@@ -101,6 +101,7 @@ def test_workspace_registry_samples_pass():
         "opc-tools",
         "creative-content-archives",
         "root-oneoff-assets",
+        "cc-switch-recovery-state",
         "documents-client-state",
     }
 

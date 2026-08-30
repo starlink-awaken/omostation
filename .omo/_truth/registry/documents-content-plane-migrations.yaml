@@ -72,9 +72,9 @@ coverage_samples:
 - relative_path: ZCode/.zcode/v2/tasks-index.sqlite
   kind: cache
   family: documents-client-state
-- relative_path: index-BYqQMscj.js
-  kind: runtime
-  family: root-oneoff-assets
+- relative_path: .codex-optimize-log/cc-switch.db.pre-fix.20260817-065833
+  kind: cache
+  family: cc-switch-recovery-state
 bridge_shells:
 - shell: '@公共/_runtime/kems-materialize.py'
   target: projects/runtime/scripts/kems-materialize.py
@@ -651,7 +651,6 @@ families:
   - cron-service-fix.sh
   - kos-index.sqlite
   - index-BYqQMscj.js
-  - .codex-optimize-log/**
   artifact_kind:
   - runtime
   - cache
@@ -672,6 +671,59 @@ families:
     byte_count: 16257
     quarantine_manifest: runtime/quarantine/documents-root-codex-tools-20260830/manifest.json
     consumer_scan: receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json
+  - scope: _inbox retired hourly runner logs exact cache transaction
+    verified_at: '2026-08-30T19:05:00Z'
+    target_root: runtime/quarantine/documents-root-inbox-runner-logs-20260831
+    file_count: 2
+    byte_count: 0
+    source_fingerprint: sha256:7a754429822f7ea9b807bd56f0da57fb789d7907eb114bf321fb7e53082918cb
+    target_fingerprint: sha256:7a754429822f7ea9b807bd56f0da57fb789d7907eb114bf321fb7e53082918cb
+    non_target_file_count: 109
+    non_target_byte_count: 1081993
+    non_target_fingerprint: sha256:07e392c19d1a690f1f9a732f89b40dfb6735cd5adcd204cd6e76caea6ed77888
+    manifest_sha256: sha256:33ddd787f1536c9a91970fcc375e2449896e542d6f1855132887ae6e40170b49
+    consumer_scan: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+    rollback_ref: docs/reports/2026-08-31-documents-runner-log-quarantine.md
+    source_paths_absent: true
+    rollback_available: true
+    permanent_deletion: false
+- id: cc-switch-recovery-state
+  source_globs:
+  - .codex-optimize-log/**
+  - .cc-switch-recovery2/**
+  artifact_kind:
+  - cache
+  - runtime
+  disposition: relocate
+  owner: cc-switch
+  replacement: $HOME/Library/Application Support/CC_Switch Recovery/2026-08-30
+  consumer_refs:
+  - bin/gac/documents-domain-owner-job.py
+  - audit://documents/root-oneoff/consumer-scan-pending
+  rollback: Use the completed manifest and client-recovery rollback command; never overwrite a recreated source root.
+  confirmation_gate: before_write
+  status: verified
+  evidence:
+    verified_at: '2026-08-30T16:35:00Z'
+    source_fingerprint: sha256:6050fb3f53e99d7cfc8c85faff5be776aba06fb18fc0ab928ecab29f37898ced
+    target_fingerprint: sha256:6050fb3f53e99d7cfc8c85faff5be776aba06fb18fc0ab928ecab29f37898ced
+    consumer_scan: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+    rollback_ref: docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+  transactions:
+  - scope: complete CC Switch recovery corpus relocation
+    verified_at: '2026-08-30T16:35:00Z'
+    target_root: $HOME/Library/Application Support/CC_Switch Recovery/2026-08-30
+    file_count: 21
+    byte_count: 417772968
+    manifest_sha256: sha256:f64b1020645475a9d9e3c6ce77cfea3deefb3027ca7f3186562253c99d6ae89d
+    sqlite_ok: 6
+    sqlite_corrupt_preserved: 1
+    corrupt_relative_path: .cc-switch-recovery2/current.db
+    corrupt_sha256: sha256:df0a17b1cb391f3cf78426853269402fbf3be578f86f051bc1e280bb0431c76a
+    corrupt_check_digest: sha256:019de329b9bd09bdb76cd7d2bc987e47212a0e300b49f913354109fd9b18727a
+    source_roots_absent: true
+    rollback_available: true
+    permanent_deletion: false
 - id: documents-client-state
   source_globs:
   - ZCode/.zcode/**
@@ -679,10 +731,35 @@ families:
   - cache
   disposition: relocate
   owner: zcode
-  replacement: ZCode task state under the user's native ~/.zcode application-data root, outside Documents
+  replacement: ZCode native dataBaseDir at $HOME/Library/Application Support/ZCode Data, outside Documents and Workspace runtime
   consumer_refs:
   - bin/gac/documents-zcode-config.py
   - .omo/_truth/registry/documents-domain-projects.yaml#zcode
-  rollback: Copy and verify task state before changing any ZCode data root; retain the Documents source until a ZCode restart confirms the target.
+  rollback: Quit ZCode, restore the durable settings backup and recovery payload from $HOME/Library/Application Support/ZCode Recovery/2026-08-30, then restart and verify the selected database handles.
   confirmation_gate: before_external_config
-  status: pending
+  status: verified
+  evidence:
+    verified_at: '2026-08-30T12:45:00Z'
+    source_fingerprint: sha256:bd0ef090ff3a523cf5ea81e5c016212ad3a1366a0eb284e83e711d72e9ef6f1b
+    target_fingerprint: sha256:234f786349367b7bab586531c100e0c412b17048cbfe53aecb0f3fb5b9d277d8
+    consumer_scan: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+    rollback_ref: docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+  evidence_gap: The 1.0.0 Workspace runtime target was externally purged after a green verify. CLI message data and a native desktop seed were recovered, but current pre-purge desktop snapshots/checkpoints were not fully recoverable.
+  transactions:
+  - scope: durable App Support incident recovery and active client-state cutover
+    verified_at: '2026-08-30T12:45:00Z'
+    target_base: $HOME/Library/Application Support/ZCode Data
+    recovery_root: $HOME/Library/Application Support/ZCode Recovery/2026-08-30
+    target_file_count: 305
+    target_directory_count: 86
+    target_byte_count: 146201178
+    manifest_sha256: sha256:234f786349367b7bab586531c100e0c412b17048cbfe53aecb0f3fb5b9d277d8
+    cli_database_sha256: sha256:6a0626fa5df7f72e8894b8f879be2810fb08782d2929080eaa295161f62b62ef
+    cli_sessions: 171
+    cli_messages: 2368
+    cli_parts: 6273
+    desktop_tasks: 143
+    purged_payload_recovered: false
+    source_handle_count: 0
+    target_handle_count: 5
+    consumer_scan: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md

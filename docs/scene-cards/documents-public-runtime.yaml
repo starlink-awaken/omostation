@@ -1,0 +1,37 @@
+---
+last-reviewed: 2026-08-30
+---
+
+schema: scene-card/v2
+lifecycle: supervised
+activation: active
+approval_state: confirmed
+scene_id: documents-public-runtime
+journey_id: documents-public-runtime-journey
+goal: 公共运行时物理隔离
+trigger: 检测到 quarantine 类 documents 任务需要执行
+input_contract: 源文件路径/范围
+result_contract: 完成确认 + 证据记录
+outcome_metric: documents_quarantine_success_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+
+source_path: ~/Documents/@公共/_runtime
+target_path: ~/Workspace/runtime/quarantine/documents-public-runtime-20260829
+risk_level: L2
+files_count: variable
+bet_id: BET-Y1Q3-T10-69
+category: quarantine
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: external
+  bos_uri: bos://capability/quarantine
+  layer: L4 - Content Plane
+  entry_point: runtime/documents_runtime_quarantine.py
+  governance_surface: .omo/_truth/registry/documents-content-plane-migrations.yaml
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
+---

@@ -1,0 +1,37 @@
+---
+last-reviewed: 2026-08-30
+---
+
+schema: scene-card/v2
+lifecycle: supervised
+activation: active
+approval_state: confirmed
+scene_id: documents-ocr-cutover
+journey_id: documents-ocr-cutover-journey
+goal: OCR 计划切换
+trigger: 检测到 cutover 类 documents 任务需要执行
+input_contract: 源文件路径/范围
+result_contract: 完成确认 + 证据记录
+outcome_metric: documents_cutover_success_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+
+source_path: "@工作文档/卫健委/_runtime/cron/ocr-incremental.sh"
+target_path: Workspace ocr-preflight
+risk_level: L2
+files_count: 1
+bet_id: BET-Y1Q3-T10-30
+category: cutover
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: internal
+  bos_uri: bos://governance/omo/task
+  layer: L4 - Schedule Plane
+  entry_point: bin/gac/documents-domain-owner-job.py
+  governance_surface: .omo/_truth/registry/agent-workflows/
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
+---
