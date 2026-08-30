@@ -83,6 +83,21 @@ is now lazy for this owner route.
 - Quarantine manifests are protected by the root `runtime/quarantine/*/`
   ignore rule and permanent deletion is false.
 
+## Mainline closure
+
+Root PR #2695 merged to root `origin/main` as
+`81e1f1cba3ec1f7661013059ad435f31687a1bf8`. The merged tree retains the
+Workspace owner, active Documents pointers, migration registry, and this
+report. The completion matrix is recorded in the T10-100 ledger entry after
+this report and retrospective were finalized.
+
+During closeout lint, root main also exposed an inherited ledger regression:
+the already-done T1-12 entry had lost its canonical `workflow` and
+`write_surfaces` fields in an earlier evidence-restore merge. The closeout
+restored those fields from the prior mainline contract without changing its
+completion or value evidence, leaving the full ledger valid before T10-100
+transition.
+
 ## Boundary
 
 The migration family remains `learning-runtime: in_progress` and
