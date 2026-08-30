@@ -1459,7 +1459,7 @@ bets:
             sha256: sha256:92b45409e8ea8988004d523eb37d1e8d75d34b9800ad97c4eb4557d76b9de958
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-88.md
-            sha256: sha256:64558d6a4bcb355e05b248b57c560ffe129adefd07a5fb84283573172ab74ef1
+            sha256: sha256:79f5b0211d7746781c11b4c19e14905cf16a5d49cd58eb1b2727fdc74c8d0a46
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md
             sha256: sha256:b5821702f4694c728f8ba06f11222dadaa2c2e4a5b222e9eba64e044cb2f55dd
@@ -1548,7 +1548,7 @@ bets:
             sha256: sha256:b512f18e4675cc5605e8dedee39df91c8609f78d890c6aead6202bf406099f6a
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-87.md
-            sha256: sha256:6a72ce30ef9917f4ada2416dd0e682a27baff5af80058d69c88b97d6477983a2
+            sha256: sha256:77a06aa80f218485a43d70b9f006a1a046729c89a05051492a0f243d5f9a75c9
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-documents-guizi-scripts-runtime-quarantine-design.md
             sha256: sha256:e72884b545eea2757980a5d965620aecac289eac4398cd235b4ea4f5eae71a7b
@@ -1637,7 +1637,7 @@ bets:
             sha256: sha256:ea9af88b398f7f0b386b5a613d1e7593ec20c59a9a053141a93606c9ddf4adbd
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-86.md
-            sha256: sha256:9f048c8501f03c7ec305d338d0426504a3933ce48e2a37a78a9d4fa15fc2cd21
+            sha256: sha256:f62fa07cf58b9635edddd7a0dc37b08cce7568529365a15e2b20903e7ccaf2ef
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-documents-weijian-control-runtime-quarantine-design.md
             sha256: sha256:4f00751951c236d4a95d35ea5b18e65189fede0bc85435ad0522db2c049d3abb
@@ -1726,7 +1726,7 @@ bets:
             sha256: sha256:5ab2fa56e944d14412205ecf6bed92c41042d8cdcf83e3e3323877ee47f3a3f3
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-85.md
-            sha256: sha256:07cabf3568c987d09067a7737893cce2033139453f4a2e297e7a70dd0e26d61e
+            sha256: sha256:305e75e5c75d182772496007f16cf0fae2b6df5caabb071d8ca746e1a50b12fa
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-documents-contract-ocr-tools-runtime-quarantine-design.md
             sha256: sha256:47b7432e6e73718fa0dfb93ca97348d5cb339823902f6fe521e0bf83a93f7570
@@ -1815,7 +1815,7 @@ bets:
             sha256: sha256:f5f50a1c115ed49e0e16649b76e77e881020d1eea38ccbe7e0c4e8d2d8b18660
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-84.md
-            sha256: sha256:0c32808ae943c5ff43f36357d4f2ceedc481f5b99a9b29dd6340866875e64aa1
+            sha256: sha256:5eea3e765382df6c1f15891a2715229927f0a38323cef7ddf59206a33c60aa47
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-documents-root-control-tools-runtime-quarantine-design.md
             sha256: sha256:76854fc7ed355e2663279246d06e1c9b9b54c57519b70a06c2a5d0a6948f6571
@@ -1904,7 +1904,7 @@ bets:
             sha256: sha256:5b52a96ea2ebac4422480178d96ba3e65604edf00634760c4582fbd0fbd57767
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-83.md
-            sha256: sha256:37f9cee32e72ad85fc7f94c5d27eb1d9e565e3c6d4d8bc7f6a7a5623d48fb52b
+            sha256: sha256:44f16397fe41d50380cdbfebaa57fafd50ef5ce200fa1bfe3e1cf0a3fdee4410
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-documents-root-tools-runtime-quarantine-design.md
             sha256: sha256:30196444010b3df9a52d2acf18daf57ba95a41696378701ec68aa5fc2f5bed49
@@ -1993,7 +1993,7 @@ bets:
             sha256: sha256:3de230eec9dac48b2a42be1d48feeec5f657136a461479ec3057b08c75529e38
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-82.md
-            sha256: sha256:29e6020061645cf06ba1720052ed17f3c946cb3aa17f6f91062270cb3ab7c1ba
+            sha256: sha256:ab54e84acbd16f4b6dff2d7f00a2cd0c4e978c4b9a1d19eee8975bedf780eeba
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-documents-guizi-tools-runtime-quarantine-design.md
             sha256: sha256:8e0b3774dcc050ce592359addac4f8952ba41bdd8a3dcb8dd70ed1f643b10a95
@@ -2082,7 +2082,7 @@ bets:
             sha256: sha256:fe19ac23474dfb88306076f6a08ae715451756848b141eb6c82d87da7d6af7f5
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-81.md
-            sha256: sha256:82a1b7f7ea3e3256527e5a7714f723932ea7aaced7ced2a01517d84ad9858fca
+            sha256: sha256:303b0bc4e0a952f156a34943ae0501021c270dd68e8e45261b7adbb7c3728d15
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md
             sha256: sha256:77d10f43ca31bfa4cf0952e8f44bb3770cf196f98f2038e4239a7b5b07c708b5
@@ -2171,7 +2171,7 @@ bets:
             sha256: sha256:0b9c7b98eeae4f7c32cf701621cfe95c8473f18c6d4966fe6c79cb20151683ad
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-80.md
-            sha256: sha256:14902332d030d6af6d9dd5ac2be94d2d9a350634ace5e800deaddefc1de031ea
+            sha256: sha256:35120b112b40e71270ea0dc64e562a3b51acff88c9805c72454f62cd69e83196
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-guizi-dangling-symlink-quarantine-design.md
             sha256: sha256:40a0544068149cd8eafbee589d54a18bb85b7323395db2e5bbaafd97d35869fa
@@ -2261,7 +2261,7 @@ bets:
             sha256: sha256:f467b92f6ec3412da48e36a349d56c00bb0a66737e260f3914619137b7f6d475
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-79.md
-            sha256: sha256:05bf1b55d7c27b0a7e7b93605936f6743622945e9a775d6b950c516c352af5bc
+            sha256: sha256:11dd50ed277da9a2a4d4c3fc94eded7229c0c042aa00e0e7929a9141f55f77cc
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md
             sha256: sha256:ace607580fd69c0b9e215bb118c3332f754e10792e1cb841eebe9099f66aa50a
@@ -2434,7 +2434,7 @@ bets:
             sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-73.md
-            sha256: sha256:188cef6b025d3199898b56706e92f9868e0e28fbc4f97fc49975ac5805b6af5a
+            sha256: sha256:abcd3c84dca32a662025d37a1972393c48e8a27b85415a67cba9e14823b0431d
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md
             sha256: sha256:795707211555f8230286fd6a9638986987fc387c53ae7cdde9de3f2d9be44052
@@ -2688,7 +2688,7 @@ bets:
             sha256: sha256:5b8ea07022b6c2d08780df533af4ce64260fb27a8d1d7b5b69b54adb5b766a3e
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-77.md
-            sha256: sha256:2c33e8c4b77250bb5f1b458e8b07132235af2eaac0b2fe33a5dc99aa2e04f490
+            sha256: sha256:a0388b305140c487d9c559d7676626b678185ab994cb6f15a67b6f410de13184
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-work-runtime-regular-quarantine-design.md
             sha256: sha256:d2b9c20ae9bacb94f0e54ea4502fa1dfbe16b5eb6bbb78a06eff0c58326d9eff
@@ -2949,7 +2949,7 @@ bets:
             sha256: sha256:74d444bab5bf23280436010d1e9cbeefd8ff50c8cc611babe36357c7fd0fd2b4
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-69.md
-            sha256: sha256:0203290cb684ecd75088d6a51fc0f9bb69b6dd5986c333347ff07695234fc7e9
+            sha256: sha256:75e916fd9552107f51c37c9512fad7b6d9a4ff93f1afe1c1c615a0227d504664
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md
             sha256: sha256:6bc6a4df28e7e9ab665ab10e488faee11f8401b5de7502185bbc4c8727969ca6
