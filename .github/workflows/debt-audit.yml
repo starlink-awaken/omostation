@@ -47,7 +47,7 @@ jobs:
       
       - name: Generate governance dashboard
         continue-on-error: true
-        run: python3 bin/gac/governance-dashboard.py
+        run: python3 bin/gac/_archive/governance-dashboard.py
       
       - name: Upload audit report
         if: always()
