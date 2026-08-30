@@ -3946,17 +3946,17 @@ bets:
         status: PROVEN
         evidence:
           live_canary:
-            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
-            sha256: sha256:36fba7d92ae48832284f26872194bb4b02fe6f5c0176087ed3262481bc0b7742
+            ref: receipt://docs/reports/2026-08-30-agent-cell-effect-receipt-canary.json
+            sha256: sha256:8d3f2765c7cb2b1886a12e0628af657a4eee77648503188bfb805b2f9d0dba85
           fresh_receipt:
-            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
-            sha256: sha256:36fba7d92ae48832284f26872194bb4b02fe6f5c0176087ed3262481bc0b7742
+            ref: receipt://docs/reports/2026-08-30-agent-cell-effect-receipt-canary.json
+            sha256: sha256:8d3f2765c7cb2b1886a12e0628af657a4eee77648503188bfb805b2f9d0dba85
           replay:
-            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
-            sha256: sha256:36fba7d92ae48832284f26872194bb4b02fe6f5c0176087ed3262481bc0b7742
+            ref: receipt://docs/reports/2026-08-30-agent-cell-effect-receipt-canary.json
+            sha256: sha256:8d3f2765c7cb2b1886a12e0628af657a4eee77648503188bfb805b2f9d0dba85
           cleanup:
-            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
-            sha256: sha256:36fba7d92ae48832284f26872194bb4b02fe6f5c0176087ed3262481bc0b7742
+            ref: receipt://docs/reports/2026-08-30-agent-cell-effect-receipt-canary.json
+            sha256: sha256:8d3f2765c7cb2b1886a12e0628af657a4eee77648503188bfb805b2f9d0dba85
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -4104,15 +4104,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c3f7cff179e46433f0fded42dd14337ae427fd84
+          tests:
+            ref: repo://docs/superpowers/specs/2026-08-28-product-p0-wp5-human-adjudication-value-design.md
+            sha256: sha256:e3fbd6adb7d7f1e7b372ee6697aa61bc93345a10e9ee3d1f74c9e043685aab80
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-07.md
+            sha256: sha256:404abbc0b0460124f6496add5ff69d2c38c91b4f6abb9e50194a06c23ac0bbff
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-07.md
+            sha256: sha256:404abbc0b0460124f6496add5ff69d2c38c91b4f6abb9e50194a06c23ac0bbff
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-human-adjudication-canary.json
+            sha256: sha256:8189aff35d9106a41dbca72e503361cd8caf2b545e81118b6f2a1370624894e6
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-human-adjudication-canary.json
+            sha256: sha256:8189aff35d9106a41dbca72e503361cd8caf2b545e81118b6f2a1370624894e6
+          replay:
+            ref: receipt://docs/reports/2026-08-30-human-adjudication-canary.json
+            sha256: sha256:8189aff35d9106a41dbca72e503361cd8caf2b545e81118b6f2a1370624894e6
+          cleanup:
+            ref: receipt://docs/reports/2026-08-30-human-adjudication-canary.json
+            sha256: sha256:8189aff35d9106a41dbca72e503361cd8caf2b545e81118b6f2a1370624894e6
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: blocked
   depends_on:
   - BET-Y1Q3-T4-03
   - BET-Y1Q3-T4-04

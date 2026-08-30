@@ -1,0 +1,42 @@
+{
+  "append_only_semantics": true,
+  "bet_id": "BET-Y1Q3-T4-07",
+  "cleanup_done": true,
+  "durable_after_restart": true,
+  "generated_by": "PYTHONPATH=projects/omo/src python3 bin/ssot/human-adjudication-canary.py --json",
+  "negatives": {
+    "decision_not_persisted": "adjudication must bind a persisted decision",
+    "invalid_principal_format": "principal_id format invalid",
+    "malformed_authority_digest": "authority receipt binding missing (WP4)",
+    "missing_authority_binding": "authority receipt binding missing (WP4)",
+    "missing_episode_lineage": "scene/episode lineage required",
+    "missing_scene_lineage": "scene/episode lineage required",
+    "synthetic_source_class": "source_class must be 'real_human'"
+  },
+  "negatives_not_qualifying": true,
+  "note": "scope=mechanism: 仅验证 WP5 判定矩阵与持久化语义。裁决日志 append-only, 计数去重由 PersonalEpisodeService 的 verdict_distribution 承担; value ACCEPTED 仍需真实 non-test 裁决。",
+  "observed": {
+    "adjudication_id": "adj-0001",
+    "records_after_first": 1,
+    "records_after_second_verdict": 2,
+    "records_read_after_restart": 2,
+    "stats_after_restart": {
+      "accepted": 1,
+      "modified": 0,
+      "rejected": 1,
+      "total": 2
+    }
+  },
+  "observed_at": "2026-08-30T00:33:04.663546+00:00",
+  "ok": true,
+  "omo_head": "2d36716cc2d942c55063c0a42c43c9d05951ac2a",
+  "qualifying_happy_path": true,
+  "schema": "human-adjudication-canary/v1",
+  "scope": "mechanism",
+  "steps": [
+    "qualifying_happy_path",
+    "negatives_not_qualifying",
+    "append_only_semantics",
+    "cleanup"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "bet_id": "BET-Y1Q3-T4-05",
+  "cleanup_done": true,
+  "digest_conflict_rejected": true,
+  "generated_by": "PYTHONPATH=projects/omo/src python3 bin/ssot/agent-cell-effect-receipt-canary.py --json",
+  "observed": {
+    "conflict_error": "sandbox_tool_rejected: sandbox invocation replay changed its request",
+    "invocations_after_conflict": 1,
+    "invocations_after_first": 1,
+    "invocations_after_replay": 1,
+    "no_context_effect": "not_executed",
+    "receipt_digest": "sandbox-invocation:ddb45d7d6baf4fe48e13b63cd4a6f0715dbafd85dbfe9efc8a0d034ac8f0e46f"
+  },
+  "observed_at": "2026-08-30T00:33:04.539899+00:00",
+  "ok": true,
+  "omo_head": "2d36716cc2d942c55063c0a42c43c9d05951ac2a",
+  "receipt_backed": true,
+  "replay_idempotent": true,
+  "schema": "agent-cell-effect-receipt-canary/v1",
+  "steps": [
+    "no_context_zero_effect",
+    "admitted_context_receipt",
+    "replay_idempotent",
+    "digest_conflict_rejected",
+    "local_backend_read_only",
+    "cleanup"
+  ],
+  "zero_effect": true
+}
