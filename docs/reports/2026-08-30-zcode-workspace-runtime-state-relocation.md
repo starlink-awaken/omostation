@@ -97,3 +97,18 @@ B.D.S.K. remained `NOT_PROVEN` because the AetherForge compute hop was
 unavailable. Principal-bound value remains `NOT_PROVEN`. This report proves the
 durable client-state boundary, operational recovery, known-loss accounting, and
 Documents write-path removal.
+
+## Mainline closure
+
+Spec 1.0.1 merged through PR #2745. The final implementation and incident
+evidence merged through PR #2750 as
+`8737b24a14e2de4ca68116a3f5b52f4e2c905c18`. Its initially inherited
+capability projection blocker was repaired independently by T10-107 / PR #2753
+as `53483be5644444cb0f27b5553a8e469207016929`; #2750 then passed its complete
+second CI run.
+
+Fresh mainline replay at closeout preserved `status=relocated`, five target
+handles, zero source handles, consumer `forbidden_executors=0` and
+`unmatched=0`. The App Support process had remained healthy for 49 minutes 27
+seconds with all critical paths present and no link-count-zero target files.
+Focused tests were 39/39 and GaC was 57/57 blocking checks green.
