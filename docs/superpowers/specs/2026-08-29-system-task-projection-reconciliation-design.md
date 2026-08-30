@@ -1,11 +1,11 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.1.0
 status: accepted
 lifecycle: contract
 owner: human-principal
 created: 2026-08-29
-last-reviewed: 2026-08-29
+last-reviewed: 2026-08-30
 bet_id: BET-Y1Q3-T10-76
 risk_level: L1
 ---
@@ -21,8 +21,9 @@ task.
 
 ## Scope
 
-- Correct only the stale projection counters: planned `7` to `6` and total
-  `299` to `298`.
+- Correct only the stale projection counters: bring `planned` and `total`
+  in line with the task filesystem truth (`planned` rises from `6` to `7`,
+  `total` rises from `298` to `299` while other counters stay unchanged).
 - Preserve completed, active, and blocked counts.
 - Record before/after hashes and current-state-coherence evidence under
   Workspace evidence.
