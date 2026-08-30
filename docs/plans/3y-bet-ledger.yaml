@@ -279,9 +279,9 @@ bets:
   verify:
   - cmd: cd projects/family-hub && uv run pytest tests/test_dashboard_import.py tests/test_dashboard_import_cli.py -q
     expect: exit 0 with deterministic allowlist, forbidden/private class, unsafe-node, drift, collision, and source-preservation cases passing
-  - cmd: bun --cwd projects/family-hub/apps/dashboard install --frozen-lockfile && bun --cwd projects/family-hub/apps/dashboard run test && bun --cwd projects/family-hub/apps/dashboard run lint && bun --cwd projects/family-hub/apps/dashboard run build
+  - cmd: cd projects/family-hub/apps/dashboard && bun install --frozen-lockfile && bun run test && bun run lint && bun run build
     expect: exit 0 from a clean family-hub checkout without live Documents or copied app-data
-  - cmd: bun --cwd projects/family-hub/apps/dashboard run test:e2e
+  - cmd: cd projects/family-hub/apps/dashboard && bun run test:e2e
     expect: exit 0 for synthetic authentication, representative read journeys, and disabled-write behavior
   - cmd: cd projects/family-hub && bun run build && uv run pytest tests -q
     expect: exit 0 for the pre-existing family-hub Vite, Express boundary, Python, and FastMCP surfaces
