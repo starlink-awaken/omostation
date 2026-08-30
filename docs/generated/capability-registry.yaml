@@ -14,7 +14,7 @@ totals:
   mcp_tools: 634
   bos_services: 288
   bos_domains: 21
-  cli_commands: 175
+  cli_commands: 176
   skills: 2
   workflows: 17
 mcp_servers:
@@ -2119,6 +2119,8 @@ cli_commands:
   description: 🎯 C2G 战略罗盘 (status/pipeline)
 - name: cache
   description: 检查三级分层缓存与 Radix 前缀树状态 (含基准压测)
+- name: capabilities
+  description: 统一能力发现入口 — 搜索/推荐/全量列出 (CLI+BOS+Scene+Journey+Governance)
 - name: capability
   description: BOS capability 域 / toolbox 外部能力
 - name: cards
