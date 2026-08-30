@@ -2337,7 +2337,8 @@ bets:
   title: Documents Weijian dangling symlink quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the twelve dangling symlink objects under Documents/@工作文档/卫健委/_runtime into retention-protected Workspace quarantine without following or reconstructing their missing public-runtime targets.
   non_goals:
   - No target-byte restoration, regular runtime move, content, contract, projection, `_storage`, schedule, LaunchAgent, client, or other domain mutation.
@@ -2372,6 +2373,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:795707211555f8230286fd6a9638986987fc387c53ae7cdde9de3f2d9be44052
     decision_ref: decision://accepted/BET-Y1Q3-T10-73
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6a90a5edd6634fc453cc3a34794106b2913d33f2
+          tests:
+            ref: repo://tests/test_documents_runtime_quarantine.py
+            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-73.md
+            sha256: sha256:496a5c01a1e68a75ebaefe4da25607219d88b8e7741c81c0662bb12aaf8a7ce1
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-73.md
+            sha256: sha256:496a5c01a1e68a75ebaefe4da25607219d88b8e7741c81c0662bb12aaf8a7ce1
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-documents-dangling-symlink-quarantine.md
+            sha256: sha256:1e61ef54198b19dd23cc4df565db26cf7e1867e369af9b287e827aeecb6fae5d
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-documents-dangling-symlink-quarantine.md
+            sha256: sha256:1e61ef54198b19dd23cc4df565db26cf7e1867e369af9b287e827aeecb6fae5d
+          replay:
+            ref: receipt://docs/reports/2026-08-29-documents-dangling-symlink-quarantine.md
+            sha256: sha256:1e61ef54198b19dd23cc4df565db26cf7e1867e369af9b287e827aeecb6fae5d
+          cleanup:
+            ref: receipt://docs/reports/2026-08-29-documents-dangling-symlink-quarantine.md
+            sha256: sha256:1e61ef54198b19dd23cc4df565db26cf7e1867e369af9b287e827aeecb6fae5d
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-69
   - BET-Y1Q3-T10-68
