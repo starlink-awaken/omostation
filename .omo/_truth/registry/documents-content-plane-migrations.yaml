@@ -564,8 +564,14 @@ families:
   rollback: Keep each source command until its registered owner command, exit-code parity, and consumer cutover are verified.
   confirmation_gate: before_write
   status: pending
-  evidence_gap: The 58 sources were observed absent after a successful move, but the Workspace quarantine and manifest later disappeared. Do not re-enter a terminal state until a protected, hash-valid rollback
-    package is recreated.
+  evidence_gap: 'FINAL 2026-08-30: physical move completed in #2596 (L4 audit proves runtime=0 under @公共/_runtime; consumer gates forbidden=0/unmatched=0). Rollback package unrecoverable: kems-v2 v2.1.1
+    lost 9/12 scripts at byte level (exhaustive search: mdfind, git --all, Claude transcripts, session outputs; principal declined iCloud recently-deleted pursuit). Recovery routed to debt D-8 (kems-v2
+    v2.2.0 rebuild). Family terminal status deferred until D-8 lands or principal amends done_when.'
+  terminal_note:
+    blocked_bet: BET-Y1Q3-T10-69
+    rebuild_debt: D-8
+    decided_at: '2026-08-30'
+    decided_by: human-principal
 - id: cockpit-runtime
   source_globs:
   - '@驾驶舱/_runtime/**'

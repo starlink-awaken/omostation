@@ -47,3 +47,9 @@ bridge 薄壳模式（Documents 留指针壳，Workspace 承载执行）已在�
 - registry 已 round-trip 追加第 3 条 control_plane_transactions。
 - 教训入档：治理 SSOT 的编辑一律走 yaml round-trip（本报告期内字符串手术三连炸，
   根因均为插入内容的缩进层级与锚行后继行的实际层级不匹配）。
+
+## T10-69 终局（2026-08-30 晚）
+
+principal 放弃 iCloud 追查。物理下沉已完成并实证，recoverable 契约因数据丢失不可满足：
+T10-69 状态以 #2718 principal 批量授权的 done 为准；recoverable 缺口转 D-8 重建债（事实记录面）。
+registry public-runtime evidence_gap 更新为 FINAL 终局，重建路由 debt D-8。
