@@ -73,6 +73,7 @@ agent_profiles:
     - bet-execution
     - resident-runtime-observe
     - documents-consumer-audit-weekly
+    - convergence-pulse-weekly
     can_write_lanes:
     - docs
     - governance_code
