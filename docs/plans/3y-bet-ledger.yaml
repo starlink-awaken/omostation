@@ -263,7 +263,8 @@ bets:
   title: Restore governance and CI baseline after recent merges
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Repair the independent root governance and CI baseline defects that currently block truthful Documents migration closeout, without weakening checks or mutating Documents content/runtime.
   non_goals:
   - No Documents host movement, deletion, quarantine payload, schedule, client-state, or content mutation.
@@ -315,6 +316,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:eaaa1692af423bbdc132b98562f2378be055ba142ebb6e57571f01ac87f6e3eb
     decision_ref: decision://accepted/BET-Y1Q3-T10-98
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@af98dbf32141501f9143266419b6a5f5adf7eb90
+          tests:
+            ref: receipt://docs/reports/2026-08-30-governance-ci-baseline-repair.md
+            sha256: sha256:6e985ac86a0e285fe891daa78e3606eb6267672427fa1347e8e686bce7e40516
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-governance-ci-baseline-repair-design.md
+            sha256: sha256:eaaa1692af423bbdc132b98562f2378be055ba142ebb6e57571f01ac87f6e3eb
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-governance-ci-baseline-repair.md
+            sha256: sha256:6e985ac86a0e285fe891daa78e3606eb6267672427fa1347e8e686bce7e40516
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-governance-ci-baseline-repair.md
+            sha256: sha256:6e985ac86a0e285fe891daa78e3606eb6267672427fa1347e8e686bce7e40516
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-governance-ci-baseline-repair.md
+            sha256: sha256:6e985ac86a0e285fe891daa78e3606eb6267672427fa1347e8e686bce7e40516
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-98.md
+            sha256: sha256:57e72b46a5d1244237a4626f85f0a8f0483848ff419e216c8f8272a8ceb9cee5
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-governance-ci-baseline-repair-design.md
+            sha256: sha256:eaaa1692af423bbdc132b98562f2378be055ba142ebb6e57571f01ac87f6e3eb
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on: []
   risk_level: L2
   human_gate: false

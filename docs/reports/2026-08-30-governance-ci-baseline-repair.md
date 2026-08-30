@@ -27,6 +27,8 @@ quarantine payload.
   `23fa8295b3d01cb281953d07b263e36caa2853a3`,
   `4282a8b4d11e109f048abc615b478a4652ea3608`, and
   `13ca27a098e919bfb053477fe8d33c3ca6757b20`.
+- Root PR #2683 merged to `origin/main` as
+  `af98dbf32141501f9143266419b6a5f5adf7eb90`.
 - Agora child PR `#50` merged to child `origin/main` as
   `c30c0456905b168bbb36b1593faeb5b35a823eb5`; the root gitlink was verified
   against that child main commit.
