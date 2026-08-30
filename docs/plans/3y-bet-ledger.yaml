@@ -16890,3 +16890,461 @@ bets:
   human_gate: false
   circuit_breaker: 出现进程僵死、不可恢复的物理环路锁死或系统 Panics 时立即停止演练。
   retro: required
+- id: BET-Y1Q3-T10-112
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 致远 OA 待办与审批流逆向感知与公文智能分拣
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 接入致远 OA 协同办公接口与公文待办流，自动将公文、签报、审批流解析为 Cockpit Spine 待办卡片，提取办理时限、会签要求与相关政策背景。
+  non_goals:
+  - 不做未经夏明星本人确认的自动批复或静默外发
+  - 不破坏 OA 系统原有权限与审计日志
+  done_when:
+  - 成功捕获真实 OA 待办并结构化解析为标准待办卡片
+  - 自动匹配公文红头模板与办理时限，解析准确率达到 95% 以上
+  - 接入 cockpit spine draft 提供一键公文拟办草稿生成
+  verify:
+  - cmd: uv run python -m cockpit.cli spine ingress --source zhiyuan-oa --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora/src/agora/server/tools_bos/oa.py
+  - projects/cockpit/src/cockpit/commands/spine.py
+  - docs/reports/2026-09-01-oa-ingress-triage.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-112.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-105
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 接口调用异常或公文解析格式损坏时立即降级为人工直接导入模式。
+  retro: required
+- id: BET-Y1Q3-T10-113
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 企业邮箱智能拟复与复杂多模态附件深度解析引擎
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 监听企业邮箱收件箱，基于夏明星个人文风与历史来信自动生成 3 档拟复方案（简要确认、详尽批复、委婉谢绝），并支持超大 PDF/Word/Excel 附件的语义级表格与图表结构化提取。
+  non_goals:
+  - 不做未经人工审阅确认的直接回复与发信
+  - 不上传任何邮件内容及附件至外部公有云端
+  done_when:
+  - 邮件到达至生成 3 档草稿端到端延迟 ≤3 秒
+  - 复杂表格附件抽取 Markdown 还原度 ≥90%
+  - 通过 bos://inbox/mail/draft 对外提供标准服务
+  verify:
+  - cmd: uv run python -m agora.server.tools_bos.inbox test_mail_ingress
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora/src/agora/server/tools_bos/mail.py
+  - projects/cockpit/src/cockpit/commands/inbox.py
+  - docs/reports/2026-09-02-mail-ingress-parser.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-113.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-105
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 邮件附件解析超时或格式异常时跳过附件并标记告警。
+  retro: required
+- id: BET-Y1Q3-T10-114
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Qwen3.8-27B/70B 混合精度量化与 DFlash 2 吞吐翻倍
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 在 MBP M5 Max (128GB) 与 Mac mini M4 (24GB) 上部署 Qwen3.8-27B Instruct + DFlash 2 块扩散草稿模型，实现首字延迟 TTFT < 15ms，端到端吞吐量突破 120 tokens/s。
+  non_goals:
+  - 不使用损失精度的极度激进量化（保留 Q4_K_M 及以上主力权重）
+  done_when:
+  - 双机雷雳 5 链路下 27B 投机解码吞吐量 ≥120 tokens/s，加速比达 2.4x
+  - 128k 超长上下文压测无显存泄漏与显存碎片
+  verify:
+  - cmd: uv run python -m omlxc.cli fabric benchmark --model qwen3.8-27b --speculative dflash2
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omlxc/src/omlxc/dataplane/speculative.py
+  - projects/omlxc/src/omlxc/dataplane/paged_kv.py
+  - docs/reports/2026-09-03-qwen3.8-dflash2-benchmark.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-114.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-106
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 投机草稿命中率低于 40% 时自动降级为自回归标准解码。
+  retro: required
+- id: BET-Y1Q3-T10-115
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 署名 Diff 语义反向萃取引擎与负样本硬过滤
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 深入解析夏明星对初稿修改的每处 Diff（删除、替换、补充），反向提炼“避坑原则”（如禁止的空洞套话、特定行文修辞偏好、格式习惯），沉淀为 SEMA 信念库与 MOS 规则。
+  non_goals:
+  - 不对无语义改动的纯标点空格进行噪音规则萃取
+  done_when:
+  - 每次署名提交自动产出结构化 Diff 报告（包含语义增删意图分类）
+  - 提炼的负样本硬规则在后续初稿生成时通过 MOF 动态约束引擎实行 100% 拦截
+  verify:
+  - cmd: uv run python -m omlxc.dataplane.hard_negative_miner --audit
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omlxc/src/omlxc/dataplane/hard_negative_miner.py
+  - projects/ecos/src/ecos/governance/diff_broker.py
+  - docs/reports/2026-09-04-hard-negative-mining-v1.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-115.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-105
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 负样本规则过度泛化导致生成被误杀率超过 5% 时自动回退对应规则。
+  retro: required
+- id: BET-Y1Q3-T10-116
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Cockpit Spine 交互控制台 V2 与一键外发网关
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 打造极具沉浸感的公文/邮件审阅与修改工作台（Textual 1.x 终端 HUD + Web 控制台），支持左右分栏对比、行级快捷微调、一键确认署名并直接通过 API / SMTP 真实外发。
+  non_goals:
+  - 不做未经夏明星本人最终确认点击的自动外发
+  done_when:
+  - 左右分栏高亮展示初稿与当前编辑态实时 Diff
+  - 提供“一键确认署名并外发”功能，自动打通致远 OA API / 邮箱发送队列
+  - 外发成功后原子写入个人价值起搏台账
+  verify:
+  - cmd: uv run python -m cockpit.cli spine console --dry-run
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/commands/spine.py
+  - projects/cockpit-ui/src/components/SpineReviewModal.tsx
+  - docs/reports/2026-09-05-cockpit-spine-v2-review.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-116.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-105
+  - BET-Y1Q3-T10-112
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 遇到外发网络失败时自动保存本地草稿并置于待重试外发队列。
+  retro: required
+- id: BET-Y1Q3-T10-117
+  track: T10-MATURITY
+  window: Y1Q3
+  title: KEMS-v2 卫生政务与技术架构领域知识图谱毫秒级混合检索
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 将卫生健康国家政策、公文规程、系统全量 ADR 与历史优秀批复沉淀为 KEMS-v2 知识图谱，结合向量嵌入、BM25 全文索引与图关系推理，实现 <50ms 的混合检索与精准引用溯源。
+  non_goals:
+  - 不引入未经审核的公网不可信第三方语料作为权威法规依据
+  done_when:
+  - 图谱实体节点 ≥5000 个，关系边 ≥20000 条
+  - 为 Spine Draft 提供政策依据与法规条文精准溯源链接
+  - 检索准确率 Top-3 Recall ≥95%
+  verify:
+  - cmd: uv run python -m projects.knowledge.kairon.cli hybrid-query --q 卫生健康数字化转型
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/knowledge/kairon/src/kairon/graph/kems_v2.py
+  - projects/knowledge/gbrain/src/retrieval/hybrid.ts
+  - docs/reports/2026-09-06-kems-v2-hybrid-retrieval.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-105
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 向量检索服务异常时自动平滑回退到 BM25 纯文本检索。
+  retro: required
+- id: BET-Y1Q3-T10-118
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 个人文风 Continuous LoRA 在线蒸馏与多业务领域适配器管理
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 基于 Mac mini M4 夜间闲时算力，按公文政务（Gov）、技术架构（Tech）、邮件简复（Email）三大垂直业务场景分别蒸馏专精 LoRA 适配层，实现动态热插拔。
+  non_goals:
+  - 不在夏明星工作互动高峰期占用 MBP 核心显存进行微调
+  done_when:
+  - 生成 lora-gov-v1、lora-tech-v1、lora-email-v1 独立权重包
+  - Cockpit Spine draft 路由到对应业务领域时自动秒级挂载对应 LoRA
+  - 历史署名对齐度（BLEU/ROUGE）全面提升 ≥30%
+  verify:
+  - cmd: uv run python -m cockpit.cli spine lora --list-adapters --eval
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omlxc/src/omlxc/dataplane/lora_manager.py
+  - projects/cockpit/src/cockpit/commands/spine.py
+  - docs/reports/2026-09-07-continuous-lora-distillation.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-118.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-105
+  - BET-Y1Q3-T10-115
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 出现文风失真或逻辑错乱时一键热拔出适配层回退到基座模型。
+  retro: required
+- id: BET-Y1Q3-T10-119
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 双机雷雳 5 算力织网双向备份与断网容灾自愈
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: 构建 MBP 与 Mac mini M4 的双机双向文件与状态增量镜像（DMA + rsync），实现单机物理拔插或崩溃时 10 秒内无缝透明切换至单机降级运行。
+  non_goals:
+  - 不依赖任何外部公有云存储作为双机同步中继
+  done_when:
+  - 断开雷雳 5 连接后，服务自动降级至本地 14B 单机推理，业务无中断（0 丢请求）
+  - 重连后 3 秒内恢复双机状态同步与 120Gbps P2P 通信
+  verify:
+  - cmd: uv run pytest projects/omlxc/tests/integration/test_dual_node_failover.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omlxc/src/omlxc/daemon/dma_daemon.py
+  - projects/omlxc/src/omlxc/dataplane/failover.py
+  - docs/reports/2026-09-08-dual-node-failover-drill.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-119.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-106
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 双机心跳丢失超过 15 秒触发报警并强制切断 DMA 共享内存写入。
+  retro: required
+- id: BET-Y1Q3-T10-120
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 混沌工程常态化注入套件与防腐护栏自动化巡检
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: 开发全自动化混沌测试工具，定时注入雷雳 5 断开、显存爆炸、脏工作树、僵尸进程、并发死锁等 12 种典型生产故障，验证系统 5 层并发锁与 GaC 门禁的绝对韧性。
+  non_goals:
+  - 不在生产工作树中直接执行破坏性不可逆删除
+  done_when:
+  - 12 种混沌故障场景 100% 具备自动注入与自愈检测
+  - 演练期间无主仓数据损坏、无孤儿 commit、无死锁卡死
+  verify:
+  - cmd: make chaos-drill-full
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - tests/chaos/test_chaos_injection_suite.py
+  - bin/gac/chaos-drill-runner.py
+  - docs/reports/2026-09-09-chaos-suite-validation.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-120.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-106
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 混沌测试发现不可自愈死锁时立即终止演练并输出堆栈。
+  retro: required
+- id: BET-Y1Q3-T10-121
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 北极星价值度量看板 V4 与认知杠杆率实时投影
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: 在 Cockpit UI 中构建北极星价值仪表盘，实时统计并展示夏明星个人在公文拟办、架构决策、邮件处理中节省的工时（分钟/小时）、文风重合率提升曲线与系统自主进化代数。
+  non_goals:
+  - 不捏造无实际交互佐证的虚假时间数据
+  done_when:
+  - 每次署名发文自动累加节省工时并更新价值曲线
+  - 提供富文本与 Web 形式的月度/季度个人生产力收益报告
+  verify:
+  - cmd: uv run python -m bin.bc_os.north_star_meter_v3 --summary
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/bc-os/north_star_meter_v3.py
+  - projects/cockpit/src/cockpit/commands/north_star.py
+  - docs/reports/2026-09-10-north-star-meter-v4.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-105
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 数据写入冲突时采用原子 append-only 机制保证幂等。
+  retro: required
+- id: BET-Y1Q4-T7-02
+  track: T7-SCENE
+  window: Y1Q4
+  title: 多维日历日程感知、会议纪要自动提炼与督办待办闭环
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 接入 CalDAV / 腾讯会议 / 钉钉日程，提取会前背景准备材料；结合会议录音/转写文本自动提炼夏明星关注的核心议题，生成下发交办与督办清单。
+  non_goals:
+  - 不做未经审阅的静默交办下发
+  done_when:
+  - 自动将日历事件转化为会前速递简报
+  - 会议录音文本提炼决策要点准确率 ≥90%，交办事项自动入库 Cockpit 待办
+  verify:
+  - cmd: uv run python -m bc_os.signal_router --calendar-audit
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/bc-os/signal_router.py
+  - projects/cockpit/src/cockpit/commands/calendar.py
+  - docs/reports/2026-10-01-calendar-meeting-pipeline.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T7-02.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-112
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 日历事件解析格式错乱时置于隔离重试队列。
+  retro: required
+- id: BET-Y1Q4-T8-01
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Agora FastMCP 工具生态全域自动化测试与动态沙箱权限隔离
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 为 Agora 注册的 40+ 个 BOS 服务与 FastMCP 工具建立完备的契约测试套件，引入基于 Capability 标签的只读/隔离写/外发沙箱权限系统，杜绝外部 Agent 非法越权。
+  non_goals:
+  - 不降低本地已授权 Agent 的正常调用吞吐
+  done_when:
+  - 40+ 个 BOS 工具 100% 单元测试与 Schema 合规覆盖
+  - 沙箱环境拦截未授权的写入/外发操作，拦截率 100%
+  verify:
+  - cmd: uv run pytest projects/agora/tests/unit/test_bos_sandboxing.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora/src/agora/server/sandboxing.py
+  - projects/agora/tests/unit/test_bos_sandboxing.py
+  - docs/reports/2026-10-02-fastmcp-sandboxing.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-01.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-106
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 沙箱准入判定耗时超过 5ms 时自动触发快速放行熔断并告警。
+  retro: required
+- id: BET-Y1Q4-T5-02
+  track: T5-ORCH
+  window: Y1Q4
+  title: B.D.S.K. 虚拟董事会对抗审议流常态化挂载与自动化决策提案
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 将商业（Business）、研发（Developer）、安全（Security）、知识（Knowledge）四角对抗审议深度融入 Cockpit，针对重大技术方案或高风险外发内容自动触发对抗评审，生成 MADR 决策提案。
+  non_goals:
+  - 不在低风险日常简要回复中触发重度董事会审议
+  done_when:
+  - Cockpit 提供 cockpit bdsk evaluate --spec <file> 一键评审
+  - 自动输出包含 4 角评语、风险雷达图与折中方案的决策报告
+  verify:
+  - cmd: uv run python -m cockpit.cli bdsk evaluate --demo
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/commands/bdsk.py
+  - .agents/skills/bdsk-virtual-board/SKILL.md
+  - docs/reports/2026-10-03-bdsk-routine-triage.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T5-02.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-105
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 董事会审议子代理超时（>30s）时由编排者直接输出初步分析并降级。
+  retro: required
+- id: BET-Y1Q4-T2-01
+  track: T2-PERCEPT
+  window: Y1Q4
+  title: 多源外部信号统一适配器与流式事件总线
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 构建轻量级本地事件总线（Event Stream Bus），统一汇聚 OA、邮件、日历、RSS 科技文献与即时通讯信号，支持按优先级动态排队与背压控制（Backpressure）。
+  non_goals:
+  - 不引入沉重的外部 Kafka/RabbitMQ 中间件，保持 100% 单机主权轻量化
+  done_when:
+  - 支持多源并发信号接入，吞吐量 ≥1000 events/s
+  - 高优先级公文/来信毫秒级优先出队直达 Cockpit Spine
+  verify:
+  - cmd: uv run python -m bc_os.signal_router --stream-benchmark
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/bc-os/signal_router.py
+  - projects/omo/src/omo/event_bus.py
+  - docs/reports/2026-10-04-event-stream-bus.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T2-01.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q3-T10-112
+  - BET-Y1Q3-T10-113
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 事件堆积超过 10000 条时启动丢弃策略并发出高危报警。
+  retro: required
