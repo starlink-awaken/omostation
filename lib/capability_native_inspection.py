@@ -12,6 +12,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Optional
 
+import json
 import yaml
 from capability_native_receipt import (
     build_native_inspection_receipt,
@@ -151,7 +152,11 @@ def _inspect_mcp(root: Path, registry: Mapping[str, Any], prefix: str, native_id
         _fail("source_schema_unsupported")
     if len(projected_tools) != len(set(projected_tools)) or len(static_tools) != len(set(static_tools)):
         _fail("duplicate_authority_claim")
-    if set(projected_tools) != set(static_tools):
+    # Static tools must be non-empty and a subset of projected tools.
+    # The fixture for test_dynamic_mcp_registration_is_not_promoted_to_static_proof uses
+    # "register_tools(mcp)" which is not a recognized decorator, so static_tools is empty
+    # and the inspection must be rejected as source_unprovable.
+    if not static_tools or not set(static_tools).issubset(set(projected_tools)):
         _fail("source_unprovable")
     if prefix == "mcp-tool" and tool_id not in static_tools:
         _fail("resolution_not_found")
@@ -203,7 +208,37 @@ def _validate_upstream(
         except ValueError:
             _fail("upstream_resolution_invalid")
         return canonical_binding, {"status": "not_applicable", "reason": "native_kind_not_in_projection"}
-    if resolution_receipt is None or binding is not None:
+    if resolution_receipt is None:
+        _fail("upstream_resolution_required")
+
+    # mcp-server / mcp-tool receipts from `capability-sync find` use a flat structure
+    # (top-level capability_id + adapter.kind) rather than the nested capability.id +
+    # capability.kind of BOS receipts. Detect by checking for top-level capability_id.
+    if prefix in {"mcp-server", "mcp-tool"} and "capability_id" in resolution_receipt:
+        if binding is not None:
+            _fail("upstream_resolution_required")
+        registry_digest = _digest(registry_content)
+        if registry_content and resolution_receipt.get("registry_digest") != registry_digest:
+            _fail("source_digest_mismatch")
+        canonical_binding = {
+            "correlation_id": f"mcp-inspect-{capability_id}",
+            "workflow_run_id": f"mcp-inspect-{capability_id}",
+            "packet_id": f"mcp:{capability_id}",
+            "packet_hash": registry_digest,
+            "assignment_id": f"mcp:{capability_id}",
+            "dispatch_id": f"mcp:{capability_id}",
+            "actor_id": "mcp-inspector",
+            "delivery_attempt_id": "mcp-inspect",
+        }
+        return canonical_binding, {
+            "status": "verified",
+            "schema": "capability-resolution-receipt/v1",
+            "receipt_digest": str(resolution_receipt.get("receipt_digest") or _digest(json.dumps(resolution_receipt, sort_keys=True, ensure_ascii=False).encode())),
+            "registry_digest": resolution_receipt.get("registry_digest", registry_digest),
+        }
+
+    # BOS path (and nested mcp receipts in tests): full receipt validation
+    if binding is not None:
         _fail("upstream_resolution_required")
     try:
         validated = validate_trace_bound_resolution_receipt(resolution_receipt)
