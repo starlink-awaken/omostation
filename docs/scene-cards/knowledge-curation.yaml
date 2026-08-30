@@ -14,8 +14,8 @@ lifecycle: assisted
 activation: preview
 approval_state: pending_business_confirmation
 scene_id: knowledge-curation
-journey_id: capture-to-retrieval
-journey_unresolved: no matching file in docs/journey-specs/
+journey_id: knowledge-capture-pipeline
+journey_unresolved: null
 goal: 将工作中产生的知识 (公文经验/工程实践/会议洞察/调研发现) 沉淀为可检索、可复用的结构化知识资产
 trigger: 工作完成产生可沉淀知识 (PR merge后/公文审查后/会议结束后/调研完成后)
 input_contract: 知识片段引用 (evidence:// 或 vault://redacted/), 含上下文标签和来源场景
