@@ -50,7 +50,7 @@ feedback_alive: true
 feedback_last_ts: '2026-08-27T11:34:41+00:00'
 feedback_staleness_hours: 0.0
 freshness_score: 100
-generated_at: '2026-08-30T12:40:50Z'
+generated_at: '2026-08-30T21:56:08Z'
 governance_anomaly_score: 0
 governance_execution_surface:
   adr_renumber_events: 0
