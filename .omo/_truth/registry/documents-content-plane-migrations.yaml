@@ -227,7 +227,57 @@ families:
       - "audit://claude-scheduled/vault-daily-health"
     rollback: "Keep the legacy path inactive but intact until launchd and scheduled-client consumers are verified on the Workspace owner."
     confirmation_gate: before_write
-    status: pending
+    status: in_progress
+    evidence:
+      verified_at: "2026-08-30T01:17:01Z"
+      consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
+      rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
+      runtime_file_count: 4
+      runtime_bytes: 34562
+      owner_parity: pending
+    progress_evidence:
+      scope_status: partial
+      completed_subscopes:
+        - scope: "@学习进化/_control/scripts/backfill-knowledge-type.py"
+          verified_at: "2026-08-30T01:17:01Z"
+          source_fingerprint: "sha256:b03837b7c840986ce28f10ae503abb0ad28243fca2cecceaf57ad54579256e55"
+          target_fingerprint: "sha256:b03837b7c840986ce28f10ae503abb0ad28243fca2cecceaf57ad54579256e55"
+          manifest_sha256: "sha256:8ef8384b18ef7a85bd82343d94ddf29f06d2e3088c9a1a4d51cb10c4db6af931"
+          node_type: regular
+          file_count: 1
+          byte_count: 8020
+          consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
+          rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
+        - scope: "@学习进化/_control/scripts/backfill-knowledge-type.sh"
+          verified_at: "2026-08-30T01:17:01Z"
+          source_fingerprint: "sha256:6a399495c714b3d508b0cff94d4b430dae5e3243cfa511ebea704ac0362c4bf2"
+          target_fingerprint: "sha256:6a399495c714b3d508b0cff94d4b430dae5e3243cfa511ebea704ac0362c4bf2"
+          manifest_sha256: "sha256:2739e4c356f21e41e46db97108a98b1952020349db42842c49324617329c12dc"
+          node_type: regular
+          file_count: 1
+          byte_count: 8805
+          consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
+          rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
+        - scope: "@学习进化/_control/scripts/concept-weave.py"
+          verified_at: "2026-08-30T01:17:01Z"
+          source_fingerprint: "sha256:b4a7aa28e0a11cf31170a0d7c62399adaf41898a7dfe8b4d2c0194913b85a5d6"
+          target_fingerprint: "sha256:b4a7aa28e0a11cf31170a0d7c62399adaf41898a7dfe8b4d2c0194913b85a5d6"
+          manifest_sha256: "sha256:7a14cd9dcfd7656d324768526b6e11d25a95b912d25e820c2b563fd9363ab64c"
+          node_type: regular
+          file_count: 1
+          byte_count: 11346
+          consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
+          rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
+        - scope: "@学习进化/_control/scripts/run-monthly-weave.sh"
+          verified_at: "2026-08-30T01:17:01Z"
+          source_fingerprint: "sha256:979c63960fd50015d80900db29227940e3029eda42243cb0044f9fe07dbd0a4f"
+          target_fingerprint: "sha256:979c63960fd50015d80900db29227940e3029eda42243cb0044f9fe07dbd0a4f"
+          manifest_sha256: "sha256:af7487e0ccc48b9c7d40e035affae16f420f5a2f932193fd5dbc20e3252c71b1"
+          node_type: regular
+          file_count: 1
+          byte_count: 6391
+          consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
+          rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
 
   - id: work-content-archives
     source_globs:
