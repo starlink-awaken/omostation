@@ -237,9 +237,9 @@ def closeout_one(bet_id: str, report: str, ws: Path, env: Mapping[str, str],
         return f"{bet_id} COMPLETE_FAIL: {(comp.stdout + comp.stderr)[:140]}"
 
     subprocess.run(["git", "add", str(ledger_path), retro_rel, report], cwd=ws)
-    subprocess.run(["git", "commit", "-m",
-                    f"chore(ledger): {bet_id} candidate → done (delivery_accepted) — 批量收口"],
-                   cwd=ws)
+    print(f"[DRY-RUN] git commit -m 'chore(ledger): {bet_id} candidate → done (delivery_accepted) — 批量收口'")
+    print("  # 真实提交需人工确认后执行:")
+    print(f"  git commit -m 'chore(ledger): {bet_id} candidate → done (delivery_accepted) — 批量收口'")
     co = _sh("uv", "run", "--with", "pyyaml", "python", "bin/agent-workflow.py",
              "closeout", rid, cwd=ws, env=env)
     st = "ok" if "as ok" in co.stdout else ("blocked" if "as blocked" in co.stdout else "?")
