@@ -1700,7 +1700,8 @@ bets:
   title: Correct work-runtime family scope disposition
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Correct the work-runtime migration registry so a completed Weijian sub-scope is not misreported as retirement of the entire multi-surface family.
   non_goals:
   - No Documents, Workspace quarantine, runtime payload, task, schedule, or client mutation.
@@ -1732,6 +1733,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:26811e211c733114a4d054ffe9a72fad499a8ccf059b022ccdff597766d4f4bc
     decision_ref: decision://accepted/BET-Y1Q3-T10-78
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@5c5350e5d617cc978ca41b696643d2801707fce8
+          tests:
+            ref: receipt://docs/reports/2026-08-29-work-runtime-family-scope-correction.md
+            sha256: sha256:50ca9b365eb38afa41c6729f8de3987dca022c115be3abdfe0dca1b5312ce766
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md
+            sha256: sha256:26811e211c733114a4d054ffe9a72fad499a8ccf059b022ccdff597766d4f4bc
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-work-runtime-family-scope-correction.md
+            sha256: sha256:50ca9b365eb38afa41c6729f8de3987dca022c115be3abdfe0dca1b5312ce766
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-work-runtime-family-scope-correction.md
+            sha256: sha256:50ca9b365eb38afa41c6729f8de3987dca022c115be3abdfe0dca1b5312ce766
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-work-runtime-family-scope-correction.md
+            sha256: sha256:50ca9b365eb38afa41c6729f8de3987dca022c115be3abdfe0dca1b5312ce766
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-78.md
+            sha256: sha256:c4d135c1dc013ffc13888581b18239efab47630e1e0025393aa368a09cc34120
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md
+            sha256: sha256:26811e211c733114a4d054ffe9a72fad499a8ccf059b022ccdff597766d4f4bc
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-77
   risk_level: L1
