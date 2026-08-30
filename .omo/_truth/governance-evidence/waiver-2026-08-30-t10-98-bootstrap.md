@@ -1,6 +1,6 @@
 ---
 schema_version: waiver/v1
-status: accepted
+status: active
 lifecycle: history
 type: workflow-bootstrap-waiver
 owner: governance-team

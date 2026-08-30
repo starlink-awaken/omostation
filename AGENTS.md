@@ -290,7 +290,7 @@ python3 bin/gac/probe-heartbeat-monitor.py --status
 
 # 持续迭代
 python3 bin/gac/weekly-review.py --generate
-python3 bin/gac/monthly-healthcheck.py --full
+python3 lib/monthly_healthcheck.py --full
 ```
 
 See [`bin/README.md`](bin/README.md) for the full tool catalog.
