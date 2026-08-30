@@ -303,7 +303,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
     spec_version: 1.0.0
-    content_digest: sha256:0d28076ef12e1d890ae1abc141bee2f4463159114b864b28ea72db65328ecb8b
+    content_digest: sha256:d833693de0a212a8a00e7ab6974c8511817291bd8254c609191c71884f4e186b
     decision_ref: decision://accepted/BET-Y1Q3-T10-111
   depends_on:
   - BET-Y1Q3-T10-110
