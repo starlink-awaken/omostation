@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/_archive/unified-governance-view.py
-name: Unified Governance View
+id: bin/gac/governance-readiness.py
+name: Governance Readiness
 category: governance
 owner: governance-team
 description: ""

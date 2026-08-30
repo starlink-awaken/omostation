@@ -1,7 +1,7 @@
 schema: script-registry/v1
-id: bin/gac/_archive/governance-health-monitor.py
-name: Governance Health Monitor
-category: state
+id: bin/gac/predictive-governance.py
+name: Predictive Governance
+category: governance
 owner: governance-team
 description: ""
 inputs: []

@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/_archive/unified-health-score.py
-name: Unified Health Score
+id: bin/gac/health-trend-predictor.py
+name: Health Trend Predictor
 category: state
 owner: governance-team
 description: ""

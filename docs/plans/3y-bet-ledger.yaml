@@ -257,13 +257,101 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-103
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Cut over vault-daily-health to Workspace owner
+  appetite: 0.5 day
+  priority: P0
+  status: done
+  done_at: 2026-08-30
+  goal: Replace the sole forbidden Claude Scheduled Documents executor with the canonical Workspace learning-control-plane owner and move its heartbeat to Workspace runtime state through a hash-bound recoverable host transaction.
+  non_goals:
+  - No change to any other Claude Scheduled skill, cron, LaunchAgent, Documents content domain, owner implementation, cadence, or migration-family status.
+  - No accepted-release promotion, application restart, or claim that the next automatic 08:02 execution has occurred.
+  - No deletion of the legacy heartbeat file, source backup, or rollback manifest.
+  done_when:
+  - The exact Scheduled source has a byte-identical Workspace backup with preflight hash, mode, bytes, and rollback manifest.
+  - Only the legacy all-command block and heartbeat command change after a no-drift precondition.
+  - The exact Workspace owner command returns structured attention evidence with writes_documents=false and no unavailable modes.
+  - The Scheduled skill contains no active Documents executor path and writes heartbeat only under Workspace runtime.
+  - Fresh host consumer audit returns status=ok, forbidden_executors=0, and unmatched=0.
+  - Repo evidence, ledger lint, doc SSOT, GaC, PR checks, and mainline replay pass without overclaiming the next scheduled execution.
+  verify:
+  - cmd: python3 -c 'import json,subprocess; p=subprocess.run(["/usr/bin/python3","/Users/xiamingxing/Workspace/bin/gac/documents-domain-owner-job.py","learning-control-plane","all","--documents-root","/Users/xiamingxing/Documents","--workspace-root","/Users/xiamingxing/Workspace","--json"],capture_output=True,text=True); d=json.loads(p.stdout); assert p.returncode==1 and d["status"]=="attention" and d["writes_documents"] is False and d["summary"]["unavailable_modes"]==[]'
+    expect: exit 0
+  - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
+    expect: exit 0 with status ok, forbidden_executors=0, unmatched=0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md
+  - docs/superpowers/plans/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+  - docs/reports/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-103.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-103-vault-scheduled-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:f037b3b727d1e4312da53c70d8eb5bd47e9830ff9da640539aff43e02251f1d6
+    decision_ref: decision://accepted/BET-Y1Q3-T10-103
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@79ff4a4eccda66d4ae48811e9ba60e88592ed8d2
+          tests:
+            ref: receipt://docs/reports/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+            sha256: sha256:bad24c5845b847505b8a924c960069fb515d8e0280850a009fff312ecb95e449
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md
+            sha256: sha256:f037b3b727d1e4312da53c70d8eb5bd47e9830ff9da640539aff43e02251f1d6
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+            sha256: sha256:bad24c5845b847505b8a924c960069fb515d8e0280850a009fff312ecb95e449
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+            sha256: sha256:bad24c5845b847505b8a924c960069fb515d8e0280850a009fff312ecb95e449
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+            sha256: sha256:bad24c5845b847505b8a924c960069fb515d8e0280850a009fff312ecb95e449
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-103.md
+            sha256: sha256:7624b4783ae01da093ed5847e6ea0cdd77c7967d8499de7336a1646928c6c329
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md
+            sha256: sha256:f037b3b727d1e4312da53c70d8eb5bd47e9830ff9da640539aff43e02251f1d6
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T10-102
+  - BET-Y1Q3-T10-101
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Source fingerprint drift, backup mismatch, owner command unavailability, unexpected owner exit/schema, any second Scheduled file change, postflight forbidden/unmatched consumer, or rollback-manifest failure stops and restores the source.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-102
   track: T10-MATURITY
   window: Y1Q3
   title: Harden Documents consumer-audit command path tokenization
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Make the canonical host consumer audit separate Documents executable paths from trailing argv, preserve quoted paths with spaces, and detect extensionless control executors so active Scheduled consumers cannot be falsely reported as zero forbidden executors.
   non_goals:
   - No modification of Claude Scheduled skills, crontab, LaunchAgents, Documents content, migration-family status, or quarantine payloads.
@@ -302,6 +390,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:fadce42e68d2986409ef33152b084e3f5f5ab4458e184d2f0765f13e70b6c7de
     decision_ref: decision://accepted/BET-Y1Q3-T10-102
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@51b4f4c92e3dab225717e923a8deb0b0d9961772
+          tests:
+            ref: receipt://tests/test_documents_consumer_audit.py
+            sha256: sha256:4644a03f3161b128c75dd654983a0e361690a6b56415da54d69962786da8d193
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md
+            sha256: sha256:fadce42e68d2986409ef33152b084e3f5f5ab4458e184d2f0765f13e70b6c7de
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-consumer-audit-path-tokenization.md
+            sha256: sha256:6d862c856fa39068405d0459ff97eca4693e7b3e86cbc177f2d79df03ee48a83
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-consumer-audit-path-tokenization.md
+            sha256: sha256:6d862c856fa39068405d0459ff97eca4693e7b3e86cbc177f2d79df03ee48a83
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-consumer-audit-path-tokenization.md
+            sha256: sha256:6d862c856fa39068405d0459ff97eca4693e7b3e86cbc177f2d79df03ee48a83
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-102.md
+            sha256: sha256:037ff5db1c80ee498ac2d0ed80f8cf83e725b932f33afb0da770d2f8d0792ed4
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md
+            sha256: sha256:fadce42e68d2986409ef33152b084e3f5f5ab4458e184d2f0765f13e70b6c7de
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-36
   - BET-Y1Q3-T10-101

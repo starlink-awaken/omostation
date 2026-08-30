@@ -73,3 +73,13 @@ migration-family status. The active Scheduled command now fails the hard gate
 truthfully and must be cut over to
 `bin/gac/documents-domain-owner-job.py learning-control-plane all` in a separate
 host transaction with backup and rollback evidence.
+
+## Mainline closure
+
+Root PR #2726 was squash-merged as
+`51b4f4c92e3dab225717e923a8deb0b0d9961772`. All required checks completed
+without failure, including tests, GaC, interface, evidence, and
+governance-verify. A fresh mainline host replay preserves the exact result:
+`forbidden_executors=1`, `unmatched=0`, and only `vault-daily-health` is red.
+The replay receipt is
+`.omo/evidence/20260830T094416Z-bet-execution-45064ddb/mainline-live-consumer-audit.json`.

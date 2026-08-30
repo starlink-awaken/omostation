@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/_archive/governance-readiness.py
-name: Governance Readiness
+id: bin/gac/governance-history-stats.py
+name: Governance History Stats
 category: governance
 owner: governance-team
 description: ""

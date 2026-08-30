@@ -1,7 +1,7 @@
 schema: script-registry/v1
-id: bin/gac/_archive/governance-alert-dispatch.py
-name: Governance Alert Dispatch
-category: governance
+id: bin/gac/health-trend-chart.py
+name: Health Trend Chart
+category: state
 owner: governance-team
 description: ""
 inputs: []

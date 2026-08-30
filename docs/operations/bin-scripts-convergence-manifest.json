@@ -2024,10 +2024,10 @@
       "name": "governance_alert_dispatch",
       "bin": "bin/gac/governance-alert-dispatch.py",
       "scripts": "scripts/bin/gac/governance-alert-dispatch.py",
-      "status": "archived",
-      "action": "bin-archived",
+      "status": "retired",
+      "action": "bin-master-retired, scripts-retired",
       "owner": "gac",
-      "note": "Archived in CONV-02 wave 1: duplicate governance script",
+      "note": "Execution report confirms retirement of the scripts duplicate; bin remains the single implementation.",
       "evidence": {
         "active_files": [
           "bin/gac/governance-alert-dispatch.py"
@@ -2036,47 +2036,50 @@
         "decision_round": "round9",
         "due_date": "2026-09-15",
         "retired_files": [
-          "scripts/bin/gac/governance-alert-dispatch.py"
+          "bin/gac/governance-alert-dispatch.py"
         ],
-        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archive_path": "bin/gac/_archive/"
       }
     },
     {
       "name": "governance_convergence_lint",
       "bin": "bin/gac/governance-convergence-lint.py",
       "scripts": "scripts/bin/gac/governance-convergence-lint.py",
-      "status": "archived",
-      "action": "bin-archived",
+      "status": "retired",
+      "action": "bin-master-retired, scripts-retired",
       "owner": "governance",
-      "note": "Archived in CONV-02 wave 1: duplicate governance script",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
           "bin/gac/governance-convergence-lint.py"
         ],
         "retired_files": [
-          "scripts/bin/gac/governance-convergence-lint.py"
+          "bin/gac/governance-convergence-lint.py"
         ],
         "risk_score": 15,
-        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archive_path": "bin/gac/_archive/"
       }
     },
     {
       "name": "governance_dashboard",
       "bin": "bin/gac/governance-dashboard.py",
       "scripts": "scripts/bin/gac/governance-dashboard.py",
-      "status": "archived",
-      "action": "bin-archived",
+      "status": "retired",
+      "action": "bin-master-retired, scripts-retired",
       "owner": "governance",
-      "note": "Archived in CONV-02 wave 1: duplicate governance script",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
           "bin/gac/governance-dashboard.py"
         ],
         "retired_files": [
-          "scripts/bin/gac/governance-dashboard.py"
+          "bin/gac/governance-dashboard.py"
         ],
         "risk_score": 15,
-        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archive_path": "bin/gac/_archive/"
       }
     },
     {
@@ -2102,10 +2105,10 @@
       "name": "governance_history_insight",
       "bin": "bin/gac/governance-history-insight.py",
       "scripts": "scripts/bin/gac/governance-history-insight.py",
-      "status": "archived",
-      "action": "bin-archived",
+      "status": "retired",
+      "action": "bin-master-retired, scripts-retired",
       "owner": "gac",
-      "note": "Archived in CONV-02 wave 1: duplicate governance script",
+      "note": "Execution report confirms retirement of the scripts duplicate; bin remains the single implementation.",
       "evidence": {
         "active_files": [
           "bin/gac/governance-history-insight.py"
@@ -2114,47 +2117,50 @@
         "decision_round": "round8",
         "due_date": "2026-09-08",
         "retired_files": [
-          "scripts/bin/gac/governance-history-insight.py"
+          "bin/gac/governance-history-insight.py"
         ],
-        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archive_path": "bin/gac/_archive/"
       }
     },
     {
       "name": "governance_history_stats",
       "bin": "bin/gac/governance-history-stats.py",
       "scripts": "scripts/bin/gac/governance-history-stats.py",
-      "status": "archived",
-      "action": "bin-archived",
+      "status": "retired",
+      "action": "bin-master-retired, scripts-retired",
       "owner": "governance",
-      "note": "Archived in CONV-02 wave 1: duplicate governance script",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
           "bin/gac/governance-history-stats.py"
         ],
         "retired_files": [
-          "scripts/bin/gac/governance-history-stats.py"
+          "bin/gac/governance-history-stats.py"
         ],
         "risk_score": 15,
-        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archive_path": "bin/gac/_archive/"
       }
     },
     {
       "name": "governance_readiness",
       "bin": "bin/gac/governance-readiness.py",
       "scripts": "scripts/bin/gac/governance-readiness.py",
-      "status": "archived",
-      "action": "bin-archived",
+      "status": "retired",
+      "action": "bin-master-retired, scripts-retired",
       "owner": "governance",
-      "note": "Archived in CONV-02 wave 1: duplicate governance script",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
           "bin/gac/governance-readiness.py"
         ],
         "retired_files": [
-          "scripts/bin/gac/governance-readiness.py"
+          "bin/gac/governance-readiness.py"
         ],
         "risk_score": 15,
-        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archive_path": "bin/gac/_archive/"
       }
     },
     {
@@ -2180,19 +2186,20 @@
       "name": "governance_trend_report",
       "bin": "bin/gac/governance-trend-report.py",
       "scripts": "scripts/bin/gac/governance-trend-report.py",
-      "status": "archived",
-      "action": "bin-archived",
+      "status": "retired",
+      "action": "bin-master-retired, scripts-retired",
       "owner": "governance",
-      "note": "Archived in CONV-02 wave 1: duplicate governance script",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
           "bin/gac/governance-trend-report.py"
         ],
         "retired_files": [
-          "scripts/bin/gac/governance-trend-report.py"
+          "bin/gac/governance-trend-report.py"
         ],
         "risk_score": 15,
-        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archive_path": "bin/gac/_archive/"
       }
     },
     {
