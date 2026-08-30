@@ -96,29 +96,38 @@ def cmd_spine_sign(args: argparse.Namespace) -> int:
         console.print("[red]缺少 --signed 参数 (签名后的内容)[/red]")
         return 1
 
-    # Persist the diff pair to MOS
+    # Route diff recording via governance broker
     ws = _ws()
-    replay_path = ws / ".omo" / "state" / "lora-replay-buffer.jsonl"
-    replay_path.parent.mkdir(parents=True, exist_ok=True)
-
-    record = {
-        "sample_id": f"{domain}-{int(time.time() * 1000)}",
-        "domain": domain,
-        "instruction": original,
-        "output": signed,
-        "captured_at": time.time(),
-        "replay_count": 0,
-        "importance_weight": 1.0,
-    }
-    with replay_path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    connector = ws / "bin" / "gac" / "value-evolution-connector.py"
+    if connector.is_file():
+        cmd = [
+            sys.executable,
+            str(connector),
+            "--record-diff",
+            "--instruction",
+            original,
+            "--signed",
+            signed,
+            "--domain",
+            domain,
+        ]
+        res = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if res.returncode == 0:
+            console.print(Panel(
+                f"[green]署名 Diff 已记录[/green]\n"
+                f"Domain: {domain}\n"
+                f"[dim]通过 value-evolution-connector 经纪人写入 lora-replay-buffer[/dim]\n\n"
+                f"[dim]下次空闲 distillation 时将自动加入训练集[/dim]",
+                title="✅ Spine Sign",
+            ))
+            return 0
+        else:
+            console.print(f"[red]署名 Diff 记录失败: {res.stderr.strip()}[/red]")
+            return 1
 
     console.print(Panel(
-        f"[green]署名 Diff 已记录[/green]\n"
-        f"Domain: {domain}\n"
-        f"Sample ID: {record['sample_id']}\n"
-        f"Replay Buffer: {replay_path}\n\n"
-        f"[dim]下次空闲 distillation 时将自动加入训练集[/dim]",
+        f"[green]署名 Diff 已暂存 (broker fallback)[/green]\n"
+        f"Domain: {domain}",
         title="✅ Spine Sign",
     ))
     return 0
