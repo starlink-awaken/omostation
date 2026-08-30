@@ -1,0 +1,54 @@
+schema: journey-spec/v1
+status: active
+journey_id: documents-zcode-state-journey
+description: "ZCode 状态迁移 完整流程"
+owner: governance-team
+created: 2026-08-30
+tags: [documents, convergence]
+
+states:
+  - name: detected
+    scene: documents-zcode-state
+    description: "检测到需要处理的 documents 任务"
+    next: [preflight]
+
+  - name: preflight
+    scene: documents-zcode-state
+    description: "预检查：审计 + 消费者收据 + 哈希计算"
+    next: [executing, failed]
+    checkpoint:
+      require: consumer_receipt_ok
+      timeout_hours: 2
+
+  - name: executing
+    scene: documents-zcode-state
+    description: "执行 convergence 操作"
+    next: [verified, rollback]
+    checkpoint:
+      require: hash_verified
+      timeout_hours: 4
+
+  - name: verified
+    scene: documents-zcode-state
+    description: "验证完成，证据已记录"
+    next: [value_recorded]
+
+  - name: value_recorded
+    scene: documents-zcode-state
+    description: "价值已记录，反馈到进化引擎"
+    next: [complete]
+
+  - name: failed
+    scene: documents-zcode-state
+    description: "执行失败"
+    next: [complete]
+
+  - name: rollback
+    scene: documents-zcode-state
+    description: "已回滚到初始状态"
+    next: [complete]
+
+  - name: complete
+    scene: documents-zcode-state
+    description: "旅程完成"
+    next: []

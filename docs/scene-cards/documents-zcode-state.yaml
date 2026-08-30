@@ -1,0 +1,26 @@
+---
+last-reviewed: 2026-08-30
+---
+
+schema: scene-card/v2
+lifecycle: supervised
+activation: active
+approval_state: confirmed
+scene_id: documents-zcode-state
+journey_id: documents-zcode-state-journey"
+goal: ZCode 状态迁移
+trigger: 检测到 convergence 类 documents 任务需要执行
+input_contract: 源文件路径/范围
+result_contract: 完成确认 + 证据记录
+outcome_metric: documents_convergence_success_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+
+source_path: ~/Documents/ZCode/.zcode
+target_path: ~/Workspace/runtime/clients/zcode-data/.zcode
+risk_level: L2
+files_count: all state
+# bet_id: N/A
+category: convergence
+---
