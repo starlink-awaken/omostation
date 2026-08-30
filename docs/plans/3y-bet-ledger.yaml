@@ -290,7 +290,9 @@ bets:
   write_surfaces:
   - lib/documents_zcode_state_relocation.py
   - bin/gac/documents-zcode-state-relocation.py
+  - bin/_registry/scripts/governance/documents-zcode-state-relocation.yaml
   - tests/test_documents_zcode_state_relocation.py
+  - .github/workflows/phase-gate-enforce.yml
   - .omo/_truth/registry/documents-content-plane-migrations.yaml
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md
