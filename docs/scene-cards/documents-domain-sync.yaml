@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-domain-sync
-journey_id: documents-domain-sync-journey"
+journey_id: documents-domain-sync-journey
 goal: 域同步切换
 trigger: 检测到 cutover 类 documents 任务需要执行
 input_contract: 源文件路径/范围

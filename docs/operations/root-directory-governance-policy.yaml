@@ -62,6 +62,16 @@ local_surfaces:
     class: client-metadata
     lifecycle: local
     reason: DeepEval client cache and local state
+  .codebuddy:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: Codebuddy editor metadata and local lock files
+  .openclaude:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: OpenClaude client metadata and local state
   ecos:
     owner: ecos-team
     class: compatibility-checkout

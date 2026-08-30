@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-cockpit-convergence
-journey_id: documents-cockpit-convergence-journey"
+journey_id: documents-cockpit-convergence-journey
 goal: Cockpit 运行时隔离
 trigger: 检测到 convergence 类 documents 任务需要执行
 input_contract: 源文件路径/范围

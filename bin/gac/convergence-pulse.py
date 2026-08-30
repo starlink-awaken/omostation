@@ -55,6 +55,8 @@ def collect_escapes(start: datetime, end: datetime) -> dict[str, object]:
     if not ESCAPE_DIR.is_dir():
         return {"available": False, "records": 0, "unique_fingerprints": 0, "top_fingerprints": []}
     counter: Counter[str] = Counter()
+    preflight_clean = 0
+    unattributed = 0
     records = 0
     for path in sorted(ESCAPE_DIR.glob("*.json")):
         try:
@@ -65,12 +67,22 @@ def collect_escapes(start: datetime, end: datetime) -> dict[str, object]:
         if ts is None or not (start <= ts < end):
             continue
         records += 1
-        counter[str(record.get("fingerprint_key") or path.stem)] += 1
+        key = str(record.get("fingerprint_key") or path.stem)
+        # ADR-0443 v2 (Q4/Q6): 三桶——preflight-clean 归因、老 unspecified 降级
+        # unattributed（不回填）、其余正常指纹。
+        if key.startswith("preflight-clean"):
+            preflight_clean += 1
+        elif key.startswith("unspecified"):
+            unattributed += 1
+        else:
+            counter[key] += 1
     top = [{"fingerprint": fp, "count": n} for fp, n in counter.most_common(TOP_N)]
     return {
         "available": True,
         "records": records,
         "unique_fingerprints": len(counter),
+        "preflight_clean": preflight_clean,
+        "unattributed": unattributed,
         "top_fingerprints": top,
     }
 

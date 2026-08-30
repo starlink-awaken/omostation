@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-schedule-cutover
-journey_id: documents-schedule-cutover-journey"
+journey_id: documents-schedule-cutover-journey
 goal: 计划切换
 trigger: 检测到 cutover 类 documents 任务需要执行
 input_contract: 源文件路径/范围

@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-weijian-runtime
-journey_id: documents-weijian-runtime-journey"
+journey_id: documents-weijian-runtime-journey
 goal: 卫健委 runtime 文件隔离
 trigger: 检测到 quarantine 类 documents 任务需要执行
 input_contract: 源文件路径/范围

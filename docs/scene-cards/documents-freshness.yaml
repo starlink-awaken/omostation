@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-freshness
-journey_id: documents-freshness-journey"
+journey_id: documents-freshness-journey
 goal: Documents 保鲜审计
 trigger: 检测到 owner 类 documents 任务需要执行
 input_contract: 源文件路径/范围

@@ -36,5 +36,7 @@ formal_execution:
   - 20260830T112213Z-bet-execution-3967ee4f
   - 20260830T120055Z-bet-execution-e8fa0e5f
   recovery_run_id: 20260830T123805Z-bet-execution-ae67ed0f
-  status: active
+  closeout_run_id: 20260830T132955Z-bet-execution-49139b8d
+  implementation_main_commit: 8737b24a14e2de4ca68116a3f5b52f4e2c905c18
+  status: verified
   note: The waiver remains bootstrap-only. The durable recovery is governed by accepted Spec 1.0.1, exact claims, and a mainline amendment.
