@@ -15174,10 +15174,10 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/plan/chain_bind.py
-            sha256: sha256:e0240ffc8ee76fda6d2cf8e0395a68345f00ad42ba70a3670269df82624f63c5
+            sha256: sha256:bb3b60111abb747f1af1737a8381711b05bed81825b5fea32a2b871d2fcea201
           rollback:
             ref: receipt://bin/plan/chain_bind.py
-            sha256: sha256:e0240ffc8ee76fda6d2cf8e0395a68345f00ad42ba70a3670269df82624f63c5
+            sha256: sha256:bb3b60111abb747f1af1737a8381711b05bed81825b5fea32a2b871d2fcea201
       operational:
         status: PROVEN
         evidence:
@@ -15189,7 +15189,7 @@ bets:
             sha256: sha256:2a2e6ba8c1fa4687278c8d9fb2b9970c8621ceb30aebb0291e602c2557c982e4
           live_canary:
             ref: receipt://bin/plan/chain_bind.py
-            sha256: sha256:e0240ffc8ee76fda6d2cf8e0395a68345f00ad42ba70a3670269df82624f63c5
+            sha256: sha256:bb3b60111abb747f1af1737a8381711b05bed81825b5fea32a2b871d2fcea201
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -15204,7 +15204,7 @@ bets:
             sha256: sha256:2a2e6ba8c1fa4687278c8d9fb2b9970c8621ceb30aebb0291e602c2557c982e4
           real_signal:
             ref: receipt://bin/plan/chain_bind.py
-            sha256: sha256:e0240ffc8ee76fda6d2cf8e0395a68345f00ad42ba70a3670269df82624f63c5
+            sha256: sha256:bb3b60111abb747f1af1737a8381711b05bed81825b5fea32a2b871d2fcea201
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-08.md
             sha256: sha256:979821ee9c09288bfe7c3f2540facf997ab2c82f174b8f1b4312d222e32060c3
