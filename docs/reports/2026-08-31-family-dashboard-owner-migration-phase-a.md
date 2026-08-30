@@ -13,9 +13,9 @@ bet_id: BET-Y1Q3-T10-111
 
 ## Verdict
 
-The family-hub child repository now proves the Phase A engineering owner on its
-authoritative main branch. Root-main adoption remains pending until the root
-gitlink PR and its mainline replay complete.
+The family-hub child repository and Workspace root main now prove the Phase A
+engineering owner. Child and root PRs merged, the root gitlink equals child
+main, and current root main replay passed.
 
 This is source ownership, privacy-safe reproduction, and boundary proof. It is
 not live runtime relocation, Cockpit cutover, old-app retirement, or user-value
@@ -33,6 +33,11 @@ proof.
 - Child PR: `starlink-awaken/omostation-family-hub#3`, merged.
 - Child main commit:
   `8037f79cb8d9ca1aae06d8b2d2fdb29db81ac310`.
+- Root PR: `starlink-awaken/omostation#2787`, merged.
+- Root merge commit:
+  `9a4caa312b7dc0230ff7ff178b4f0e994913a244`.
+- Current replay main: `4a96ab8a360bd31bc7e02f4a7ff82337aed0a753`,
+  which contains the root merge commit and retains the exact child gitlink.
 - Child CI: root lint, root build, Python, dashboard, and dashboard-e2e all
   succeeded before merge.
 - Fresh child-main replay used an independent depth-one clone at the exact
@@ -112,10 +117,11 @@ reproducible source caches.
 - Root BET verifier: all six registered command groups exited zero, including
   57 blocking GaC checks.
 
-## Completion axes before root merge
+## Completion axes after root merge
 
-- Engineering child authority: `VERIFIED`.
-- Root-main adoption: `PENDING`.
+- Engineering child and root authority: `VERIFIED`.
+- Phase A operational delivery (CI, synthetic E2E, receipts, mainline replay):
+  `PROVEN`.
 - Live operational/runtime state: `NOT_PROVEN`.
 - Cockpit/consumer cutover: `NOT_PROVEN`.
 - Old Documents app retirement: `NOT_PROVEN`.
