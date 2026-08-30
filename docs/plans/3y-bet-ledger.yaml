@@ -263,7 +263,8 @@ bets:
   title: Establish Workspace owner parity for learning decay inspection
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Establish a canonical Workspace Runtime owner for the read-only learning concept lifecycle inspections currently implemented by Documents knowledge-decay scan and ls-orphan, with bounded aggregate evidence and no Documents mutation.
   non_goals:
   - No Documents content mutation, permanent deletion, schedule installation, or client configuration change.
@@ -308,6 +309,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:605891d052bb4346996d542c8c44eb5cb6d70bed19b7ab792421a9bd210f55d4
     decision_ref: decision://accepted/BET-Y1Q3-T10-99
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@454679dc2d7449b9c4c9029d3e00c92f52016e97
+          tests:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-owner-parity.md
+            sha256: sha256:f45ca90f35f859364000ac70314374e29a1995f73a25bb146d97ef763b98aae0
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-learning-runtime-owner-parity-design.md
+            sha256: sha256:605891d052bb4346996d542c8c44eb5cb6d70bed19b7ab792421a9bd210f55d4
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-owner-parity.md
+            sha256: sha256:f45ca90f35f859364000ac70314374e29a1995f73a25bb146d97ef763b98aae0
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-owner-parity.md
+            sha256: sha256:f45ca90f35f859364000ac70314374e29a1995f73a25bb146d97ef763b98aae0
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-owner-parity.md
+            sha256: sha256:f45ca90f35f859364000ac70314374e29a1995f73a25bb146d97ef763b98aae0
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-99.md
+            sha256: sha256:19ae7127cdc330b7e42164155e5c8375117dd022a5ee56859ef7cd3f7a2ebecc
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-learning-runtime-owner-parity-design.md
+            sha256: sha256:605891d052bb4346996d542c8c44eb5cb6d70bed19b7ab792421a9bd210f55d4
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-96
   risk_level: L2
