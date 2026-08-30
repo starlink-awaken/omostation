@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,7 +47,9 @@ def _mk_escapes(directory: Path) -> None:
         encoding="utf-8",
     )
     (directory / "old.json").write_text(
-        json.dumps({"ts": "2026-08-30T01:00:00Z", "fingerprint_key": "unspecified|unspecified|none", "fingerprints": []}),
+        json.dumps(
+            {"ts": "2026-08-30T01:00:00Z", "fingerprint_key": "unspecified|unspecified|none", "fingerprints": []}
+        ),
         encoding="utf-8",
     )
     (directory / "rare.json").write_text(
@@ -64,12 +66,13 @@ def _mk_escapes(directory: Path) -> None:
 
 # --- convergence-pulse 三桶 ---------------------------------------------------
 
+
 def test_pulse_three_bucket_clustering(tmp_path, monkeypatch):
     esc = tmp_path / "esc"
     esc.mkdir()
     _mk_escapes(esc)
     monkeypatch.setattr(CP, "ESCAPE_DIR", esc)
-    result = CP.collect_escapes(datetime(2026, 8, 30, tzinfo=timezone.utc), datetime(2026, 8, 31, tzinfo=timezone.utc))
+    result = CP.collect_escapes(datetime(2026, 8, 30, tzinfo=UTC), datetime(2026, 8, 31, tzinfo=UTC))
     assert result["records"] == 6
     assert result["unique_fingerprints"] == 2  # gac 指纹 + lint 指纹（正常桶）
     assert result["preflight_clean"] == 1
@@ -111,7 +114,13 @@ def test_feed_escapes_promotes_on_threshold(tmp_path, monkeypatch):
                 {
                     "ts": "2026-08-30T01:00:00Z",
                     "fingerprint_key": "pointer-drift|sub|f00d",
-                    "fingerprints": [{"surface": "pointer-drift", "check_id": "sub", "output_excerpt": "submodule pointer drift detected"}],
+                    "fingerprints": [
+                        {
+                            "surface": "pointer-drift",
+                            "check_id": "sub",
+                            "output_excerpt": "submodule pointer drift detected",
+                        }
+                    ],
                 }
             ),
             encoding="utf-8",
@@ -123,3 +132,24 @@ def test_feed_escapes_promotes_on_threshold(tmp_path, monkeypatch):
     assert counts["fed"] == 1 and counts["promoted"] == 1
     drafts = list((tmp_path / "drafts").glob("*.json"))
     assert len(drafts) == 1  # 喂食即晋升：管道第一车有货
+
+
+# --- v4: fuzzy 去重精度回归（v3 假阳性案例）-----------------------------------
+
+EK_V4 = _load("bin/gac/error-knowledge.py", "ek_v4")
+
+
+def test_v4_symptom_overlap_blocks_v3_false_positive():
+    """v3 实测：add-A symptom 以 >=3 常见词/子串误配 ENV-001（runtime gitignored）。"""
+    new = (
+        "git add -A 后 commit 含 projects/<sub> gitlink 指向 side-branch/旧 checkout；"
+        "被 submodule-guard/pointer-drift/gitlink-ancestry 拦截 指针回退 NOT on origin/main"
+    )
+    existing = "runtime/ 目录是 gitignored 但包含关键数据(event ledger)"
+    assert EK_V4.symptom_overlap(new, existing) < 3, "v3 假阳性未修复"
+
+
+def test_v4_symptom_overlap_matches_true_duplicate():
+    same_family_a = "git add -A 后 commit 含 projects/omo gitlink 指向 side-branch 指针回退"
+    same_family_b = "git add -A 后 commit 含 projects/omlxc gitlink side-branch 指针回退 origin/main"
+    assert EK_V4.symptom_overlap(same_family_a, same_family_b) >= 3, "真同坑必须命中"

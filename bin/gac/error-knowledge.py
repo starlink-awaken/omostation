@@ -4,6 +4,7 @@
 体系设计: .omo/_knowledge/pitfalls/{category}/{slug}.yaml + .index.json 缓存
 原则: 遇到问题先查这里 → 没有就解决并记录 → 有就直接复用
 """
+
 from __future__ import annotations
 
 import argparse
@@ -33,6 +34,7 @@ def _load_all() -> list[dict]:
         for f in sorted(cat_dir.glob("*.yaml")):
             try:
                 import yaml
+
                 d = yaml.safe_load(f.read_text())
                 if isinstance(d, dict) and d.get("title"):
                     d["_path"] = str(f)
@@ -53,6 +55,7 @@ def _save_entry(entry: dict):
     cat_dir = PITFALLS_DIR / entry["category"]
     cat_dir.mkdir(parents=True, exist_ok=True)
     import yaml
+
     path = cat_dir / f"{entry['id']}.yaml"
     path.write_text(yaml.dump(entry, allow_unicode=True, sort_keys=False), encoding="utf-8")
     return path
@@ -61,6 +64,28 @@ def _save_entry(entry: dict):
 # ADR-0443 v2 (Q8): escape 台账 → pitfall 周期喂食。
 # 对聚合 ≥3 次的正常指纹（排除 preflight-clean/unattributed 归因桶），
 # 复用 fuzzy 去重语义生成/递增 pitfall 条目，agent 标记 auto:escape-digest。
+# ADR-0443 v4: fuzzy 去重精度——v3 实测假阳性（"git add -A" symptom 以子串匹配
+# 误配无关 pitfall）。改词级交集 + 最小词长 + stopword，杜绝 "add"∈"additional" 类命中。
+_STOPWORDS = frozenset(
+    "the a an and or of in on at to for with without from by is are was were be been "
+    "not no but if then else when after before during this that these those it its "
+    "目录 文件 包含 指向 状态 后 含 被以 命中".split()
+)
+_MIN_TOKEN_LEN = 4
+
+
+def _tokens(text: str) -> set[str]:
+    import re as _re
+
+    return {w for w in _re.split(r"[^\w]+", text.lower()) if len(w) >= _MIN_TOKEN_LEN and w not in _STOPWORDS}
+
+
+def symptom_overlap(new_symptom: str, existing_symptom: str) -> int:
+    """词级交集数（去 stopword、len>=4）；>=3 视为同坑。"""
+
+    return len(_tokens(new_symptom) & _tokens(existing_symptom))
+
+
 FEED_MIN_COUNT = 3
 _SURFACE_CATEGORY = {
     "ci-local-fast": "gate",
@@ -105,8 +130,7 @@ def feed_from_escapes(escape_dir: Path | None = None, *, min_count: int = FEED_M
         for e in entries:
             if e.get("status") != "active":
                 continue
-            existing_sym = str(e.get("symptom", "")).lower()
-            common = sum(1 for w in symptom.lower().split() if len(w) > 2 and w in existing_sym)
+            common = symptom_overlap(symptom, str(e.get("symptom", "")))
             if common >= 3:
                 e["times_encountered"] = e.get("times_encountered", 1) + count
                 e["last_confirmed_at"] = datetime.now(UTC).strftime("%Y-%m-%d")
@@ -157,20 +181,35 @@ def cmd_lookup(args):
         score = 0
         e_tags = set(t.lower() for t in e.get("tags", []))
         score += len(tags & e_tags) * 10
-        text = f"{e.get('symptom','')} {e.get('title','')} {e.get('root_cause','')}".lower()
+        text = f"{e.get('symptom', '')} {e.get('title', '')} {e.get('root_cause', '')}".lower()
         score += sum(1 for w in symptom_words if w in text) * 5
         if score > 0:
             results.append((score, e))
     results.sort(key=lambda x: -x[0])
     top = results[: args.limit]
     if args.json:
-        print(json.dumps([{"id": e["id"], "score": s, "title": e.get("title"), "solution": e.get("solution"), "tags": e.get("tags")} for s, e in top], ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                [
+                    {
+                        "id": e["id"],
+                        "score": s,
+                        "title": e.get("title"),
+                        "solution": e.get("solution"),
+                        "tags": e.get("tags"),
+                    }
+                    for s, e in top
+                ],
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         print(f"lookup: {len(top)} matches (of {len(entries)} total)")
         for s, e in top:
             print(f"\n  [{e['id']}] ({s}pts) {e.get('title')}")
-            print(f"    symptom: {e.get('symptom','')[:80]}")
-            print(f"    solution: {e.get('solution','')[:80]}")
+            print(f"    symptom: {e.get('symptom', '')[:80]}")
+            print(f"    solution: {e.get('solution', '')[:80]}")
             print(f"    tags: {e.get('tags', [])}")
     return 0
 
@@ -229,17 +268,20 @@ def cmd_record(args):
     # dedup check: fuzzy symptom match
     symptom_lower = args.symptom.lower()
     for e in entries:
-        existing_sym = e.get("symptom", "").lower()
-        common = sum(1 for w in symptom_lower.split() if w in existing_sym)
+        common = symptom_overlap(args.symptom, str(e.get("symptom", "")))
         if common >= 3 and e.get("status") == "active":
             e["times_encountered"] = e.get("times_encountered", 1) + 1
             e["last_confirmed_at"] = datetime.now(UTC).strftime("%Y-%m-%d")
             _save_entry(e)
-            print(f"DEDUP: matched [{e['id']}] '{e.get('title')}' — times_encountered incremented to {e['times_encountered']}")
+            print(
+                f"DEDUP: matched [{e['id']}] '{e.get('title')}' — times_encountered incremented to {e['times_encountered']}"
+            )
             if e["times_encountered"] >= ESCALATION_THRESHOLD:
                 draft_path = _promote_rule_draft(e)
                 if draft_path:
-                    print(f"⚡ ESCALATION: {e['id']} ≥{ESCALATION_THRESHOLD} 次 → 规则草案已生成 {draft_path}（等人审入册）")
+                    print(
+                        f"⚡ ESCALATION: {e['id']} ≥{ESCALATION_THRESHOLD} 次 → 规则草案已生成 {draft_path}（等人审入册）"
+                    )
                 else:
                     print(f"⚡ ESCALATION: {e['id']} ≥{ESCALATION_THRESHOLD} 次（草案已在 rule-drafts，勿重复生成）")
             return 0
