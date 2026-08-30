@@ -9876,7 +9876,7 @@ bets:
   - capability_id: mcp-server:agora
     operation: load
     effect: read_only
-  - capability_id: bos-service:bos://governance/omo/state
+  - capability_id: bos-service:bos://governance/omo/inspect
     operation: invoke
     effect: read_only
   evidence:
@@ -10006,15 +10006,53 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ba36570dd819302abc6133dbb433014a6c0d260a
+          tests:
+            ref: repo://tests/test_capability_native_execution_receipt.py
+            sha256: sha256:6d7d04e9b66a4e9afc09eb09addade511e4498366609ab613ff3f5dd982d07ca
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:954b82e71c2ac6b14995cf750ca6e591ec6e64d75f54b4e0956d95ea35f0ec98
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:954b82e71c2ac6b14995cf750ca6e591ec6e64d75f54b4e0956d95ea35f0ec98
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-t1-12-capability-binding-canary.json
+            sha256: sha256:7d2a3fa3a3867fd001d262ecc72ee297a77be995bc4db808a96cf981afaed076
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-t1-12-capability-binding-canary.json
+            sha256: sha256:7d2a3fa3a3867fd001d262ecc72ee297a77be995bc4db808a96cf981afaed076
+          replay:
+            ref: receipt://docs/reports/2026-08-30-t1-12-capability-binding-canary.json
+            sha256: sha256:7d2a3fa3a3867fd001d262ecc72ee297a77be995bc4db808a96cf981afaed076
+          cleanup:
+            ref: receipt://docs/reports/2026-08-30-t1-12-capability-binding-canary.json
+            sha256: sha256:7d2a3fa3a3867fd001d262ecc72ee297a77be995bc4db808a96cf981afaed076
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        status: ACCEPTED
+        evidence:
+          real_signal:
+            ref: receipt://docs/reports/2026-08-30-t1-12-capability-binding-canary.json
+            sha256: sha256:7d2a3fa3a3867fd001d262ecc72ee297a77be995bc4db808a96cf981afaed076
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
+            sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:954b82e71c2ac6b14995cf750ca6e591ec6e64d75f54b4e0956d95ea35f0ec98
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:954b82e71c2ac6b14995cf750ca6e591ec6e64d75f54b4e0956d95ea35f0ec98
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
+            sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
+    overall_state: outcome_accepted
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
   write_surfaces:

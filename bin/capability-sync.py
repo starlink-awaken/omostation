@@ -495,7 +495,10 @@ def _load_native_gateway(
         context = build_native_admission_context(uri, binding=binding)
         route_context = {key: value for key, value in context.items() if key in _ROUTE_ADMISSION_KEYS}
         gateway = CapabilityInvocationGateway(
-            router=_prepare_native_router(bos_router, exact_services, admission_context=route_context)
+            router=_prepare_native_router(bos_router, exact_services, admission_context=route_context),
+            # In-process native handlers pay a cold-start module import on first
+            # probe; the 1.0s default misreads that as ADAPTER_NOT_READY.
+            readiness_timeout=30.0,
         )
     except Exception as exc:  # noqa: BLE001 - public boundary fails closed
         if isinstance(exc, GatewayError):
@@ -513,11 +516,15 @@ def execute_gateway_operation(
     gateway: Any = None,
     service_catalog: Optional[Sequence[Any]] = None,  # noqa: UP045 -- Python 3.9 contract
     binding: Optional[Mapping[str, Any]] = None,  # noqa: UP045 -- Python 3.9 contract
+    principal_authority: Optional[Mapping[str, Any]] = None,  # noqa: UP045 -- Python 3.9 contract
 ) -> dict[str, Any]:
     """Load or invoke through Agora; never construct a provider process.
 
     A validated ``binding`` (from capability-sync's ``--binding-json``) is
     forwarded to Agora so the invocation receipt can carry a ``binding_digest``.
+    Invoke additionally forwards the caller's WP4 ``principal_authority``
+    context (authority_ref + receipt_digest); the gateway only re-checks the
+    shape and never mints authority.
     """
     if operation not in {"load", "invoke"}:
         raise GatewayError("unsupported_gateway_operation")
@@ -527,7 +534,11 @@ def execute_gateway_operation(
     selector = {"capability_id": capability_id}
     if operation == "load":
         return dict(gateway.load(record, selector=selector, binding=binding))
-    return dict(gateway.invoke(record, payload, selector=selector, binding=binding))
+    return dict(
+        gateway.invoke(
+            record, payload, selector=selector, binding=binding, principal_authority=principal_authority
+        )
+    )
 
 
 def _gateway_error_receipt(operation: str, selector: Mapping[str, Any], reason: str) -> dict[str, Any]:
@@ -1235,6 +1246,12 @@ def _parser() -> argparse.ArgumentParser:
             choices=("read_only", "effectful"),
             help="declared effect classification recorded in the native execution material",
         )
+        target_parser.add_argument(
+            "--principal-authority-json",
+            type=Path,
+            help="bounded WP4 authority context JSON {authority_ref, receipt_digest} "
+            "required for a bound invoke (T4-04; forwarded, never minted)",
+        )
     return parser
 
 
@@ -1399,6 +1416,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
                 print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
                 return 0
             payload = _read_json_payload(args.input_json) if args.command == "invoke" else None
+            principal_authority = None
+            if args.command == "invoke":
+                if getattr(args, "principal_authority_json", None) is None:
+                    raise TraceBindingError("principal_authority_missing")
+                pa = _read_bounded_native_json(args.principal_authority_json, "principal_authority")
+                if not isinstance(pa, dict) or set(pa) != {"authority_ref", "receipt_digest"}:
+                    raise TraceBindingError("principal_authority_shape_invalid")
+                principal_authority = pa
             material = build_native_execution_material(
                 binding=binding,
                 capability=capability,
@@ -1417,9 +1442,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
             build_native_execution_marker(material)
             registry = load_registry(args.registry)
             gateway_receipt = execute_gateway_operation(
-                registry, args.command, args.capability_id, payload=payload, binding=binding
+                registry,
+                args.command,
+                args.capability_id,
+                payload=payload,
+                binding=binding,
+                principal_authority=principal_authority,
             )
-            succeeded = gateway_receipt.get("status") == "succeeded"
+            succeeded = gateway_receipt.get("status") in {"ready", "succeeded"}
             cleanup = build_native_cleanup_proof(
                 capability_kind=material["capability"]["kind"],
                 invocation_id=derive_invocation_id(material),

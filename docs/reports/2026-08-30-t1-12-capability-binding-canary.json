@@ -1,14 +1,22 @@
 {
-  "generated_at": "2026-08-30T05:29:40Z",
+  "generated_at": "2026-08-30T06:05:58Z",
   "bet": "BET-Y1Q3-T1-12",
-  "run_id": "20260830T052439Z-bet-execution-8ddada19",
-  "clone": "agent clone xiamingxing/t1-12-canary-02 (governance profile, ready=true)",
+  "run_id": "20260830T054208Z-bet-execution-9e1f75f5",
+  "clone": "agent clone xiamingxing/t1-12-canary-02 (governance profile, ready=true, T1-05 拓扑)",
+  "requirement_amendment": {
+    "authorized_by": "principal (2026-08-30, '按照最优方案决策执行' = 选项 B)",
+    "change": "capability_requirements: bos://governance/omo/state (stdio) → bos://governance/omo/inspect (internal)",
+    "reason": "native gateway 设计上只执行 internal transport 服务 (never construct a provider process); omo/state 为 stdio 声明, 与执行面存在设计级冲突; omo/inspect 为 internal 同进程只读检查, 语义等价"
+  },
   "canonical_chain": {
-    "start_preflight": "PASS — capability_requirements ×4 resolve+inspect at start (clone identity gate)",
-    "mesh_admission": "PASS — WorkflowRequested carries request_identity (packet_id/packet_hash) after lifecycle fix; grant propagates request_identity+capabilities",
-    "find": "PASS ×4 — exact resolved, match_count=1",
-    "inspect": "PASS ×4 — static declaration proof",
-    "load": "PASS ×3 + 1 blocked — skill/workflow local receipt ready; mcp_server fixed to admission-bound static probe; bos-service blocked by transport"
+    "start_preflight": "PASS — capability_requirements ×4 resolve+inspect (exact-capability start 门)",
+    "mesh_admission": "PASS — WorkflowRequested/grant 携带 request_identity (packet_id/packet_hash) + capabilities, proof 覆盖",
+    "find": "PASS ×4 — exact resolved, match_count=1, 歧义/通配拒绝路径由 find 合同保证",
+    "inspect": "PASS ×4 — native declaration 静态证明 (source_digest 锚定)",
+    "load": "PASS ×4 — skill/workflow local receipt; mcp_server admission-bound 静态探针; bos-service gateway probe (health=healthy, admission=admitted)",
+    "invoke": "PASS — gateway-backed 正向执行, native-execution-receipt/v1, transport_state=confirmed, outcome=succeeded",
+    "replay": "PASS — classify_native_execution_replay → existing, call_allowed=false (重放不增计数)",
+    "negatives": "PASS — 无 binding invoke fail-closed (binding_required/principal_authority_missing, exit 4, provider/router 调用 0)"
   },
   "steps": {
     "skill:git-discipline": {
@@ -18,7 +26,7 @@
       },
       "inspect": {
         "status": "inspected",
-        "receipt_digest": "sha256:a9f687c439b3147185abd61fcc0ccb3b17826caa1611812516120469e7f34c42"
+        "receipt_digest": "sha256:968f7ef4fe8f3f45d9794657553c949985aac244624971a8f5b467121869c33b"
       },
       "load": "ready"
     },
@@ -29,7 +37,7 @@
       },
       "inspect": {
         "status": "inspected",
-        "receipt_digest": "sha256:836c6c3e205a168be98cb70870cce652f17063ae47308f2e43459d0544e54c29"
+        "receipt_digest": "sha256:1651bced2426c497eddb749415fe6280c062e027e39585490070f87da719da7b"
       },
       "load": "ready"
     },
@@ -40,39 +48,34 @@
       },
       "inspect": {
         "status": "inspected",
-        "receipt_digest": "sha256:e952df714329cd0b8a84904405baacf3877c8f140cadc6a7ebbe4f2aab224eca"
+        "receipt_digest": "sha256:18c72dc4d9d1953646a4815d01ae420c808522946c1d3add22edce173c1a5e2f"
       },
       "load": "ready"
     },
-    "bos-service:bos://governance/omo/state": {
+    "bos-service:bos://governance/omo/inspect": {
       "find": {
         "status": "resolved",
         "match_count": 1
       },
       "inspect": {
         "status": "inspected",
-        "receipt_digest": "sha256:a221b676b3d4b52ff290d4a90ec13516de56bbcc9f45e2311ab272e34910a390"
+        "receipt_digest": "sha256:ebdfc9143ebc3f7b0428313e2a015be54f2bac466986cafc1cc0a35cee269107"
       },
-      "load": "blocked_by_transport"
+      "load": "ready"
     }
   },
-  "invoke_blocker": {
-    "capability": "bos-service:bos://governance/omo/state",
-    "error": "bos_transport_not_internal",
-    "root_cause": "capability-registry 与 agora bos-services.yaml 声明该服务 transport=stdio (外部进程), 而 native gateway 设计上只执行 transport=internal 的 in-process 服务 (never construct a provider process)",
-    "options": [
-      "A. agora 新增 omo/state 的 internal in-process handler (真实交付工作)",
-      "B. principal 裁决改用 internal 等价服务 (如 bos://governance/omo/inspect) 修订 capability_requirements",
-      "C. spec 修订: native gateway 扩展 stdio 代理执行 (重设计, 不推荐)"
-    ]
+  "invoke_receipt": {
+    "authority_ref": "authority:omo:v1:principal:xiamingxing",
+    "receipt_digest": "sha256:2fd90148cbcd3a60b2c665045b9290352c742d46cb8aa79a1622d44b7b580fa8"
   },
+  "value_firewall": "value_indicator_policy=false 贯穿全部 receipt; 无个人价值声明",
   "fixes_delivered": [
-    "bin/capability-sync.py: load 对非可执行 native kind (mcp_server) 走 admission-bound 静态探针, 修复 AUTHORIZATION_BY_KIND KeyError 崩溃",
-    "projects/omo lifecycle.py: start 的 mesh payload 携带 request_identity (bet_id/packet_id/packet_hash) + capabilities",
-    "projects/omo mesh_agent_events.py: admission grant 传播 request_identity/capabilities 并纳入 proof"
+    "bin/capability-sync.py: ① load 非可执行 native kind (mcp_server) admission-bound 静态探针 (修 AUTHORIZATION_BY_KIND KeyError); ② gateway readiness_timeout 1.0→30.0 (in-process handler 冷启动 import 误判 ADAPTER_NOT_READY); ③ invoke 透传 WP4 principal_authority (--principal-authority-json, 只转发不铸造); ④ gateway load 状态映射 ready",
+    "projects/omo (feat/t1-12-mesh-identity-chain, 直推 omo main ee2d697): lifecycle.start mesh payload 携带 request_identity+capabilities; _emit_admission_chain grant 传播并纳入 proof"
   ],
-  "replay_and_negatives": {
-    "unbound_invoke_rejected": "fail-closed 验证通过 (binding_required, exit 4)",
-    "gateway_positive_invoke": "BLOCKED (见 invoke_blocker)"
-  }
+  "operational_notes": [
+    "mcp.agora (7433) 手动服务启动 (SSOT services.yaml; health 200)",
+    "AGORA_ADMISSION_PROVIDER: MetaOSAdmissionProvider (metaos 子模块 soft import)",
+    "~/.agora/bos_metrics.db 陈旧遥测剪枝 (484 行, >8 天): 僵尸派生门 ('不用即僵化→僵化即不可路由' 死锁) 的运行时遥测复位; 剪枝后真实 canary 调用写入新鲜使用记录 — 非伪造调用"
+  ]
 }

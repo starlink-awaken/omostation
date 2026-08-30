@@ -227,3 +227,13 @@ capability (`skill:git-discipline`、`workflow:bet-execution`、
 “gateway-backed execution run”标准，本次不得运行或伪造正向 receipt，
 `operational=NOT_PROVEN` 保持不变。该阻断是 host topology 缺失，不是
 capability binding 负例或本地单元测试失败。
+
+## 2026-08-30 正向 canary 收官 (run 20260830T054208Z-bet-execution-9e1f75f5)
+
+principal 采纳选项 B: capability_requirements 修订 omo/state(stdio) → omo/inspect(internal)。
+T1-05 agent clone 拓扑 (governance profile ready) 打通 exact-capability start 门;
+正向链 find/inspect/load ×4 全绿, gateway-backed invoke 产出 native-execution-receipt/v1
+(transport=confirmed, replay 幂等, 负例 fail-closed)。交付修复:
+capability-sync (mcp_server load 探针 + readiness_timeout + WP4 authority 透传) 与
+omo mesh admission 身份链 (request_identity 传播)。完整回执见
+docs/reports/2026-08-30-t1-12-capability-binding-canary.json。
