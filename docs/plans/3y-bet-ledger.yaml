@@ -279,7 +279,7 @@ bets:
   verify:
   - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_zcode_state_relocation.py -q
     expect: exit 0
-  - cmd: /usr/bin/python3 bin/gac/documents-zcode-state-relocation.py verify --source-base /Users/xiamingxing/Documents/ZCode --target-base /Users/xiamingxing/Workspace/runtime/clients/zcode-data --settings /Users/xiamingxing/.zcode/v2/setting.json --manifest /Users/xiamingxing/Workspace/runtime/quarantine/documents-zcode-state-20260830/manifest.json --json
+  - cmd: /usr/bin/python3 bin/gac/documents-zcode-config.py state-verify --source-base /Users/xiamingxing/Documents/ZCode --target-base /Users/xiamingxing/Workspace/runtime/clients/zcode-data --state-settings /Users/xiamingxing/.zcode/v2/setting.json --manifest /Users/xiamingxing/Workspace/runtime/quarantine/documents-zcode-state-20260830/manifest.json --json
     expect: exit 0 with status relocated, source absent, target complete, configured target exact, no Documents handles
   - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
     expect: exit 0 with status ok, forbidden_executors=0, unmatched=0
@@ -289,8 +289,7 @@ bets:
   underlying_workflow: governance-state-mutation
   write_surfaces:
   - lib/documents_zcode_state_relocation.py
-  - bin/gac/documents-zcode-state-relocation.py
-  - bin/_registry/scripts/governance/documents-zcode-state-relocation.yaml
+  - bin/gac/documents-zcode-config.py
   - tests/test_documents_zcode_state_relocation.py
   - .github/workflows/phase-gate-enforce.yml
   - .omo/_truth/registry/documents-content-plane-migrations.yaml
