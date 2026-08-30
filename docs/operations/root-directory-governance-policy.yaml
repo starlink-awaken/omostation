@@ -37,6 +37,11 @@ local_surfaces:
     class: client-metadata
     lifecycle: local
     reason: Claude session and client-local metadata
+  .openclaude:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: OpenClaude session and client-local metadata
   .crush:
     owner: workspace-tooling
     class: client-cache

@@ -268,6 +268,15 @@ surfaces:
   - per_pr
   - push
   status: active
+- id: bin-gac-submodule-auto-check-py
+  tool: bin/gac/submodule-auto-check.py
+  workflow: submodule-auto-update.yml
+  gate: true
+  triggers:
+    - per_pr
+    - push
+  status: active
+
 - id: bin-gac-check-work-landed-py
   tool: bin/gac/check-work-landed.py
   workflow: (none)
@@ -1364,3 +1373,12 @@ workflow_triggers:
     - .github/workflows/worktree-hygiene.yml
     - bin/gac/worktree-hygiene-audit.py
     - tests/unit/gac/test_worktree_hygiene_audit.py
+
+- id: bin-gac-agent-workflow-standard-check-py
+  tool: bin/gac/agent-workflow-standard-check.py
+  workflow: agent-workflow-standard.yml
+  gate: true
+  triggers:
+    - per_pr
+    - push
+  status: active
