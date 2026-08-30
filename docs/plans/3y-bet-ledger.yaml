@@ -277,9 +277,9 @@ bets:
   - The family-hub child PR and root gitlink PR both pass required checks, merge, and replay from authoritative main; root main points exactly to child origin/main, and report/retro/completion evidence closes only Phase A.
   - The old Documents application and all consumers remain unchanged, the family-dashboard-app migration family remains pending, and Phase B runtime relocation, Phase C entry cutover/retirement, and user value remain NOT_PROVEN.
   verify:
-  - cmd: uv run pytest tests/test_dashboard_source_import.py -q
+  - cmd: uv run pytest tests/test_dashboard_import.py tests/test_dashboard_import_cli.py -q
     expect: exit 0 with deterministic allowlist, forbidden/private class, unsafe-node, drift, collision, and source-preservation cases passing
-  - cmd: bun --cwd apps/dashboard install --frozen-lockfile && bun --cwd apps/dashboard test && bun --cwd apps/dashboard run lint && bun --cwd apps/dashboard run build
+  - cmd: bun --cwd apps/dashboard install --frozen-lockfile && bun --cwd apps/dashboard run test && bun --cwd apps/dashboard run lint && bun --cwd apps/dashboard run build
     expect: exit 0 from a clean family-hub checkout without live Documents or copied app-data
   - cmd: bun --cwd apps/dashboard run test:e2e
     expect: exit 0 for synthetic authentication, representative read journeys, and disabled-write behavior
