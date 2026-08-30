@@ -1894,7 +1894,8 @@ bets:
   title: Documents cockpit runtime physical quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move the stable L4-classified cockpit runtime artifacts from Documents into a retention-protected Workspace quarantine, preserving all content and projections.
   non_goals:
   - No movement, rewrite, or deletion of Markdown, Office, PDF, DOMAIN, CONTENT_ARCHIVE, projection, contract, bridge, or .bak files.
@@ -1930,6 +1931,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:99d28ddfff9c8cb00d57e1b3c94a9c75ed89361e8218c8436e2172bf0ce57b94
     decision_ref: decision://accepted/BET-Y1Q3-T10-70
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@68aebea159ae3d98204e3e5aec99f28b4a229cb2
+          tests:
+            ref: receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+            sha256: sha256:a0f167421065115919ca3167747f8dd9c32a3ce169bbdabc6f294c3fbe8434ff
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md
+            sha256: sha256:99d28ddfff9c8cb00d57e1b3c94a9c75ed89361e8218c8436e2172bf0ce57b94
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+            sha256: sha256:a0f167421065115919ca3167747f8dd9c32a3ce169bbdabc6f294c3fbe8434ff
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+            sha256: sha256:a0f167421065115919ca3167747f8dd9c32a3ce169bbdabc6f294c3fbe8434ff
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+            sha256: sha256:a0f167421065115919ca3167747f8dd9c32a3ce169bbdabc6f294c3fbe8434ff
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-70.md
+            sha256: sha256:021860be9976e12790a04e948e8ad9ff13f1a13bf273524a066e90d4ecdd6fc8
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md
+            sha256: sha256:99d28ddfff9c8cb00d57e1b3c94a9c75ed89361e8218c8436e2172bf0ce57b94
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-38
   - BET-Y1Q3-T10-68
