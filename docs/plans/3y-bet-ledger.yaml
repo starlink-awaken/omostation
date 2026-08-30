@@ -2401,7 +2401,14 @@ bets:
   title: Documents public runtime physical quarantine
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: blocked
+  blocked_reentry_policy: human_approval_required
+  blocked_at: '2026-08-30'
+  blocked_reason: '物理搬迁已在 #2596 完成（L4 audit 实证 @公共/_runtime runtime=0），但 quarantine 包+manifest 事后丢失，kems-v2 v2.1.1 的 9/12 脚本字节级永久丢失（principal 2026-08-30 决定放弃 iCloud 最近删除追查）。goal 中 recoverable 契约不可满足，done_when 的 rollback 包重建不可行。终局记录见 registry public-runtime evidence_gap 与 docs/reports/2026-08-30-documents-control-plane-sink-report.md。'
+  resume_condition:
+    trigger: '任一: kems-v2 v2.2.0 重建完成 (debt D-8)；principal 修改 done_when 接受不可恢复终态'
+    verify: 'ledger lint 绿 + registry evidence_gap 解除 + 重建资产 git 托管'
+    approval: '人工批准解封(blocked_reentry_policy: human_approval_required)'
   goal: Move the currently audited L4 runtime artifacts under Documents/@公共/_runtime, including kems-v2, into a recoverable Workspace quarantine after consumer proof, while leaving Documents content, contracts, projections, and bridges in place.
   non_goals:
   - No movement, rewrite, or deletion of Markdown, Office, PDF, DOMAIN, CONTENT_ARCHIVE, projection, contract, or bridge files.
