@@ -455,7 +455,7 @@ def test_required_phase_gate_and_script_registry_cover_recovery_cli() -> None:
     assert registry.is_file()
 
 
-def test_cc_switch_recovery_roots_have_one_nonterminal_owner() -> None:
+def test_cc_switch_recovery_roots_have_one_owner_and_valid_lifecycle() -> None:
     registry_path = ROOT / ".omo" / "_truth" / "registry" / "documents-content-plane-migrations.yaml"
     registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
     families = {item["id"]: item for item in registry["families"]}
@@ -469,6 +469,16 @@ def test_cc_switch_recovery_roots_have_one_nonterminal_owner() -> None:
     ]
     assert client["disposition"] == "relocate"
     assert client["owner"] == "cc-switch"
-    assert client["status"] == "in_progress"
+    assert client["status"] in {"in_progress", "verified"}
+    if client["status"] == "verified":
+        assert {
+            "verified_at",
+            "source_fingerprint",
+            "target_fingerprint",
+            "consumer_scan",
+            "rollback_ref",
+        } <= set(client["evidence"])
+        assert client["transactions"][0]["rollback_available"] is True
+        assert client["transactions"][0]["permanent_deletion"] is False
     for source_glob in client["source_globs"]:
         assert sum(source_glob in family.get("source_globs", []) for family in registry["families"]) == 1

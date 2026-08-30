@@ -98,3 +98,44 @@ source fingerprint
 six `ok` SQLite checks, and one `corrupt-preserved` check whose result digest is
 `sha256:019de329b9bd09bdb76cd7d2bc987e47212a0e300b49f913354109fd9b18727a`.
 Permanent deletion is false and the target remains absent.
+
+## Mainline host completion
+
+Specification 1.0.2 merged through PR #2765 as
+`e72bf052af1f09d9e87502b979b97fd165777bf5`. A fresh full-profile clone replayed
+22 focused tests and generated two byte-identical plans before mutation. Both
+plans contained 21 files, 417772968 bytes, source fingerprint
+`sha256:6050fb3f53e99d7cfc8c85faff5be776aba06fb18fc0ab928ecab29f37898ced`,
+six `ok` SQLite checks, and one digest-bound `corrupt-preserved` check. Both
+source roots had zero open handles; target, staging, and rollback-receipt paths
+were absent.
+
+The mainline `client-recovery apply` transaction moved all 21 files through a
+private staging directory, verified bytes/modes/fingerprint and SQLite status,
+fsynced the manifest, atomically published the target, and removed only the two
+empty source roots. Postflight proves:
+
+- target: `~/Library/Application Support/CC_Switch Recovery/2026-08-30`;
+- manifest SHA-256:
+  `sha256:f64b1020645475a9d9e3c6ce77cfea3deefb3027ca7f3186562253c99d6ae89d`;
+- manifest mode: `0600`; payload files: 21; payload bytes: 417772968;
+- source and target fingerprints equal; both Documents roots absent;
+- six SQLite checks remain `ok`; `current.db` remains byte-identical
+  `corrupt-preserved` with the preflight result digest;
+- fresh verify reports `rollback_available=true`;
+- fresh consumer audit reports `status=ok`, `forbidden_executors=0`, and
+  `unmatched=0`; permanent deletion is false.
+
+Before and after the move, three protected active/iCloud CC Switch roots were
+hashed at file level. Of 805 files, 803 were byte-identical and both iCloud
+roots were unchanged. The active `cc-switch` PID 95716 naturally wrote its open
+`cc-switch.db` and `logs/cc-switch.log` during the observation window; those
+two paths are outside every transaction boundary and were never selected.
+
+The full Documents audit was stable in one attempt but remains non-green from
+unrelated historical debt: runtime 4907, cache 36855, invalid archive 31448,
+and 73211 total violations. This is explicit evidence that T10-108 is complete
+without claiming Documents-wide physical purity.
+
+Engineering is `VERIFIED` and the host relocation is `PROVEN`. Principal-bound
+user value remains `NOT_PROVEN`.

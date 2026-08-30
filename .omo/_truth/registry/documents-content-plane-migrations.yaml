@@ -686,7 +686,28 @@ families:
   - audit://documents/root-oneoff/consumer-scan-pending
   rollback: Use the completed manifest and client-recovery rollback command; never overwrite a recreated source root.
   confirmation_gate: before_write
-  status: in_progress
+  status: verified
+  evidence:
+    verified_at: '2026-08-30T16:35:00Z'
+    source_fingerprint: sha256:6050fb3f53e99d7cfc8c85faff5be776aba06fb18fc0ab928ecab29f37898ced
+    target_fingerprint: sha256:6050fb3f53e99d7cfc8c85faff5be776aba06fb18fc0ab928ecab29f37898ced
+    consumer_scan: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+    rollback_ref: docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+  transactions:
+  - scope: complete CC Switch recovery corpus relocation
+    verified_at: '2026-08-30T16:35:00Z'
+    target_root: $HOME/Library/Application Support/CC_Switch Recovery/2026-08-30
+    file_count: 21
+    byte_count: 417772968
+    manifest_sha256: sha256:f64b1020645475a9d9e3c6ce77cfea3deefb3027ca7f3186562253c99d6ae89d
+    sqlite_ok: 6
+    sqlite_corrupt_preserved: 1
+    corrupt_relative_path: .cc-switch-recovery2/current.db
+    corrupt_sha256: sha256:df0a17b1cb391f3cf78426853269402fbf3be578f86f051bc1e280bb0431c76a
+    corrupt_check_digest: sha256:019de329b9bd09bdb76cd7d2bc987e47212a0e300b49f913354109fd9b18727a
+    source_roots_absent: true
+    rollback_available: true
+    permanent_deletion: false
 - id: documents-client-state
   source_globs:
   - ZCode/.zcode/**

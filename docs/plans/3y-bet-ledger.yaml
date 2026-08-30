@@ -263,7 +263,8 @@ bets:
   title: Relocate CC Switch recovery state out of Documents
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-31
   goal: Move inactive CC Switch database, SQL, configuration, and recovery workspaces from hidden Documents roots into durable native App Support recovery storage through a reversible Workspace transaction.
   non_goals:
   - No active CC Switch database, configuration, process, App Support data, iCloud copy, schema, or provider mutation.
@@ -278,14 +279,32 @@ bets:
   verify:
   - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_client_recovery_relocation.py -q
     expect: exit 0
-  - cmd: /usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery verify --documents-root /Users/xiamingxing/Documents --target-root "/Users/xiamingxing/Library/Application Support/CC_Switch Recovery/2026-08-30" --json
+  - cmd: >-
+      receipt="$(mktemp)" && trap 'rm -f "$receipt"' EXIT &&
+      uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit
+      --documents-root /Users/xiamingxing/Documents
+      --registry .omo/_truth/registry/documents-content-plane-migrations.yaml
+      --launch-agents-root /Users/xiamingxing/Library/LaunchAgents
+      --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled
+      --workspace-root "$PWD" --json > "$receipt" &&
+      /usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery verify
+      --documents-root /Users/xiamingxing/Documents
+      --target-root "/Users/xiamingxing/Library/Application Support/CC_Switch Recovery/2026-08-30"
+      --consumer-receipt "$receipt" --json
     expect: exit 0 with exact manifest parity, source roots absent, six SQLite checks ok, one current.db corrupt-preserved check unchanged, and rollback available
   - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
     expect: exit 0 with status ok, forbidden_executors=0, unmatched=0
   - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
     expect: exit 0
-  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
-    expect: exit 0 or no new error beyond independently identified inherited evidence digest debt
+  - cmd: >-
+      uv run --with pyyaml python -c "import importlib.util; from pathlib import Path; import yaml;
+      s=importlib.util.spec_from_file_location('bet_ledger',Path('bin/plan/bet-ledger.py'));
+      m=importlib.util.module_from_spec(s); s.loader.exec_module(m);
+      d=yaml.safe_load(Path('docs/plans/3y-bet-ledger.yaml').read_text());
+      b=next(x for x in d['bets'] if x['id']=='BET-Y1Q3-T10-108');
+      state,errors=m.validate_completion_evidence(b['completion_evidence'],value_indicator_policy=b.get('value_indicator_policy',True),workspace=Path('.').resolve());
+      assert b['status']=='done' and state=='delivery_accepted' and not errors"
+    expect: exit 0 with T10-108 delivery_accepted and zero matrix errors
   workflow: bet-execution
   underlying_workflow: governance-state-mutation
   write_surfaces:
@@ -307,6 +326,42 @@ bets:
     spec_version: 1.0.2
     content_digest: sha256:2c73609e12406af70db5a0a6f82b3516e8b6c460c8759022a72494592bf32cd9
     decision_ref: decision://accepted/BET-Y1Q3-T10-108
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e72bf052af1f09d9e87502b979b97fd165777bf5
+          tests:
+            ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+            sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md
+            sha256: sha256:2c73609e12406af70db5a0a6f82b3516e8b6c460c8759022a72494592bf32cd9
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+            sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+            sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+            sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-108.md
+            sha256: sha256:0137f83c2ca32ddc2d34aee51109e99d573a3f61de3c298ff4fdad6c543016d0
+          cleanup:
+            ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+            sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-107
   risk_level: L3
