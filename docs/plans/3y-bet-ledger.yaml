@@ -3236,8 +3236,6 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:87b56eac858d5c8a84fcc039d973367c261f4d37b9fb1c8fbbaa23ee7b92831d
     decision_ref: decision://accepted/BET-Y1Q3-T10-60
-  depends_on:
-  - BET-Y1Q3-T1-12
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -3247,11 +3245,11 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@4da346b57463b59073ec2f94f049451e78844fb0
           tests:
-            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
-            sha256: sha256:3860092391c8b2f46b8b6514b25072f0341d3ca9149d556eb41abb9b8ece1306
+            ref: repo://tests/test_capability_sync.py
+            sha256: sha256:e333221f79daedfe24e05fdf1a30222992869eaa158166e6097d73ecc3f3ca19
           diff:
-            ref: receipt://docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md
-            sha256: sha256:87b56eac858d5c8a84fcc039d973367c261f4d37b9fb1c8fbbaa23ee7b92831d
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-60.md
+            sha256: sha256:ea7a915d810d56bca1bb72d5bb8b9fcf059e3262c81db5aa826ecc819bca436f
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-60.md
             sha256: sha256:ea7a915d810d56bca1bb72d5bb8b9fcf059e3262c81db5aa826ecc819bca436f
@@ -3265,15 +3263,17 @@ bets:
             ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
             sha256: sha256:3860092391c8b2f46b8b6514b25072f0341d3ca9149d556eb41abb9b8ece1306
           replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-60.md
-            sha256: sha256:ea7a915d810d56bca1bb72d5bb8b9fcf059e3262c81db5aa826ecc819bca436f
+            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
+            sha256: sha256:3860092391c8b2f46b8b6514b25072f0341d3ca9149d556eb41abb9b8ece1306
           cleanup:
-            ref: receipt://docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md
-            sha256: sha256:87b56eac858d5c8a84fcc039d973367c261f4d37b9fb1c8fbbaa23ee7b92831d
+            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
+            sha256: sha256:3860092391c8b2f46b8b6514b25072f0341d3ca9149d556eb41abb9b8ece1306
       value:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T1-12
   risk_level: L1
   human_gate: false
   circuit_breaker: Any capability ID, registry writer, receipt schema, admission semantics, Documents content, or runtime-state change stops this BET.
