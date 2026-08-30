@@ -73,7 +73,13 @@ fi
 if git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1; then
   echo "[submodule-guard] ℹ️ merge commit (MERGE_HEAD), 跳过 gitlink 变更检查 (G3/P79, CI 兜底)" >&2
 else
-SUBMODULE_CHECK="projects/knowledge/gbrain projects/cockpit projects/agora"
+# ADR-0443 Q16: 全量子模块覆盖（原硬编码 3 个漏掉 15 个——本月三次
+# 未-init 踩坑的类别未全覆盖）。从 .gitmodules 遍历，文件缺失时回退硬编码集。
+if [ -f "$ROOT/.gitmodules" ] && grep -q "path = " "$ROOT/.gitmodules" 2>/dev/null; then
+  SUBMODULE_CHECK=$(grep 'path = ' "$ROOT/.gitmodules" | sed 's/.*path = //' | tr '\n' ' ')
+else
+  SUBMODULE_CHECK="projects/knowledge/gbrain projects/cockpit projects/agora"
+fi
 for sub in $SUBMODULE_CHECK; do
   if git diff --cached --name-only | grep -qxF "$sub"; then
     # 获取 staged (新) 与 HEAD (基线) 的 gitlink SHA

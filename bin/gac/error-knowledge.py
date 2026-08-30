@@ -10,13 +10,14 @@ import argparse
 import fnmatch
 import json
 import sys
-from datetime import datetime, UTC
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 PITFALLS_DIR = WORKSPACE / ".omo" / "_knowledge" / "pitfalls"
 INDEX_FILE = PITFALLS_DIR / ".index.json"
 CATEGORIES = ["submodule", "cron", "gate", "scoring", "coordination", "environment", "measurement"]
+ROOT = Path(__file__).resolve().parents[2]
 ESCALATION_THRESHOLD = 5
 OBSOLETE_DAYS = 90
 
@@ -88,6 +89,50 @@ def cmd_lookup(args):
     return 0
 
 
+RULE_DRAFTS_DIR = ROOT / ".omo/_delivery/rule-drafts"
+
+
+def _promote_rule_draft(entry: dict) -> Path | None:
+    """ADR-0443 事故→规则流水线：达阈值的 pitfall 生成 GaC 规则草案等人审。
+
+    草案带 0431 生命周期契约字段（added_at/review_before/justification 引
+    pitfall 证据链）。人审后用 lib/yaml_ssot_edit.py roundtrip 入册——
+    草案本身不碰 governance-checks.yaml（HITL，0431 D4）。
+    """
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    review_before = (datetime.now(UTC) + timedelta(days=90)).strftime("%Y-%m-%d")
+    rule_id = f"CR-PITFALL-{entry['id'].removeprefix('PITFALL-')}"
+    draft = {
+        "schema": "gac-rule-draft/v1",
+        "rule_id": rule_id,
+        "source_pitfall": entry["id"],
+        "evidence": {
+            "times_encountered": entry.get("times_encountered"),
+            "first_seen": entry.get("discovered_at"),
+            "last_confirmed": entry.get("last_confirmed_at"),
+            "symptom": entry.get("symptom"),
+            "prevention": entry.get("prevention"),
+        },
+        "draft_rule": {
+            "id": rule_id,
+            "dimension": "X4",
+            "executor": "gac_local_gate",
+            "justification": f"pitfall {entry['id']} encountered {entry.get('times_encountered')} times (threshold {ESCALATION_THRESHOLD}): {entry.get('title')}",
+            "added_at": today,
+            "review_before": review_before,
+        },
+        "status": "awaiting_human_review",
+        "generated_by": "ADR-0443 incident-to-rule pipeline",
+        "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+    RULE_DRAFTS_DIR.mkdir(parents=True, exist_ok=True)
+    out = RULE_DRAFTS_DIR / f"{rule_id}.json"
+    if out.exists():
+        return None  # 草案已生成过，幂等
+    out.write_text(json.dumps(draft, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    return out
+
+
 def cmd_record(args):
     entries = _load_all()
     category = args.category
@@ -106,7 +151,11 @@ def cmd_record(args):
             _save_entry(e)
             print(f"DEDUP: matched [{e['id']}] '{e.get('title')}' — times_encountered incremented to {e['times_encountered']}")
             if e["times_encountered"] >= ESCALATION_THRESHOLD:
-                print(f"⚡ ESCALATION: {e['id']} encountered ≥{ESCALATION_THRESHOLD} times — consider GaC rule promotion")
+                draft_path = _promote_rule_draft(e)
+                if draft_path:
+                    print(f"⚡ ESCALATION: {e['id']} ≥{ESCALATION_THRESHOLD} 次 → 规则草案已生成 {draft_path}（等人审入册）")
+                else:
+                    print(f"⚡ ESCALATION: {e['id']} ≥{ESCALATION_THRESHOLD} 次（草案已在 rule-drafts，勿重复生成）")
             return 0
 
     seq = _next_seq(category, entries)
@@ -178,10 +227,13 @@ def main():
     rec.add_argument("--agent", default="")
     rec.add_argument("--draft", action="store_true")
 
-    cf = sub.add_parser("confirm"); cf.add_argument("--id", required=True)
-    rj = sub.add_parser("reject"); rj.add_argument("--id", required=True)
+    cf = sub.add_parser("confirm")
+    cf.add_argument("--id", required=True)
+    rj = sub.add_parser("reject")
+    rj.add_argument("--id", required=True)
 
-    st = sub.add_parser("stats"); st.add_argument("--json", action="store_true")
+    st = sub.add_parser("stats")
+    st.add_argument("--json", action="store_true")
 
     args = ap.parse_args()
     handlers = {"lookup": cmd_lookup, "record": cmd_record, "stats": cmd_stats}
