@@ -3196,7 +3196,8 @@ bets:
   title: Capability-sync verification helper split
   appetite: 0.5 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Extract bounded capability-sync verification helpers, preserve behavior, and restore the canonical projection/god-module gates.
   non_goals:
   - No capability registry writer, dispatcher, provider, authority, or receipt semantic change.
@@ -3234,8 +3235,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:87b56eac858d5c8a84fcc039d973367c261f4d37b9fb1c8fbbaa23ee7b92831d
     decision_ref: decision://accepted/BET-Y1Q3-T10-60
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@4da346b57463b59073ec2f94f049451e78844fb0
+          tests:
+            ref: repo://tests/test_capability_sync.py
+            sha256: sha256:e333221f79daedfe24e05fdf1a30222992869eaa158166e6097d73ecc3f3ca19
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-60.md
+            sha256: sha256:fec047a862a28f3284f4e5be0380a49865a60c72c83786f8956da19fdcd3b299
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-60.md
+            sha256: sha256:fec047a862a28f3284f4e5be0380a49865a60c72c83786f8956da19fdcd3b299
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
+            sha256: sha256:375937368d6962d800f0fd70709c794c457501c04c7a8f9c672263cd84cd37e1
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
+            sha256: sha256:375937368d6962d800f0fd70709c794c457501c04c7a8f9c672263cd84cd37e1
+          replay:
+            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
+            sha256: sha256:375937368d6962d800f0fd70709c794c457501c04c7a8f9c672263cd84cd37e1
+          cleanup:
+            ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
+            sha256: sha256:375937368d6962d800f0fd70709c794c457501c04c7a8f9c672263cd84cd37e1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T1-12
+  value_indicator_policy: false
   risk_level: L1
   human_gate: false
   circuit_breaker: Any capability ID, registry writer, receipt schema, admission semantics, Documents content, or runtime-state change stops this BET.
