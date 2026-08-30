@@ -2422,12 +2422,42 @@ def cmd_lint(data: dict, args) -> int:
                 )
         if transitioned_to_done and not b.get("done_at"):
             errs.append(f"{b['id']}.done_at: BET_DONE_AT_REQUIRED")
+
+    # --- Phantom write_surface detection (T10-80 / T10-73 lesson) ---
+    # A write_surface path declared in the BET that does not exist on main
+    # indicates either a date-prefix drift (08-29 vs 08-30) or a report
+    # that was never created.  Both silently fail D0 downstream.
+    warnings: list[str] = []
+    for b in data["bets"]:
+        for p in b.get("write_surfaces") or []:
+            if "*" in p:
+                continue
+            if not p.startswith("docs/reports/"):
+                continue
+            exists = subprocess.run(
+                ["git", "cat-file", "-e", f"origin/main:{p}"],
+                capture_output=True, check=False,
+            ).returncode == 0
+            if not exists:
+                warnings.append(
+                    f"{b['id']}.write_surface: PHANTOM_REPORT_PATH {p} "
+                    f"(path not on origin/main — date drift or never created)"
+                )
+
     if errs:
         for e in errs:
             print(f"ERROR {e}")
         print(f"\n{len(errs)} 个问题")
+        if warnings:
+            for w in warnings:
+                print(f"WARN  {w}")
+            print(f"+ {len(warnings)} 个 warning (不阻断)")
         return 1
-    print(f"OK — {len(data['bets'])} 个 bet，{len(tracks)} 条轨道，无问题")
+    if warnings:
+        for w in warnings:
+            print(f"WARN  {w}")
+        print(f"\n{len(warnings)} 个 warning (不阻断)")
+    print(f"OK — {len(data['bets"])} 个 bet，{len(tracks)} 条轨道，无问题")
     return 0
 
 
