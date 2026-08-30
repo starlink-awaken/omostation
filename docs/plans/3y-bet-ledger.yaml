@@ -4059,7 +4059,8 @@ bets:
   title: Product P0 WP5 Human Adjudication to Principal-Bound Value
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   parent_bet_id: BET-Y1Q3-T4-02
   delivery_wave: C
   goal: 让一条真实非测试 decision 经 authority-bound human 裁决后，由 OMO 唯一 truth writer 持久化 adjudication 和 decision_outcome，并以可重放的 principal/decision/scene/episode lineage 推进价值轴。
@@ -4113,10 +4114,10 @@ bets:
             sha256: sha256:e3fbd6adb7d7f1e7b372ee6697aa61bc93345a10e9ee3d1f74c9e043685aab80
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-07.md
-            sha256: sha256:404abbc0b0460124f6496add5ff69d2c38c91b4f6abb9e50194a06c23ac0bbff
+            sha256: sha256:49cf4d534c6eccab8ebfd4f6ca2e5e78390c03eef03060df90a0612cd227a2da
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-07.md
-            sha256: sha256:404abbc0b0460124f6496add5ff69d2c38c91b4f6abb9e50194a06c23ac0bbff
+            sha256: sha256:49cf4d534c6eccab8ebfd4f6ca2e5e78390c03eef03060df90a0612cd227a2da
       operational:
         status: PROVEN
         evidence:
@@ -4150,7 +4151,7 @@ bets:
           attestation:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
             sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
-    overall_state: blocked
+    overall_state: outcome_accepted
   depends_on:
   - BET-Y1Q3-T4-03
   - BET-Y1Q3-T4-04
