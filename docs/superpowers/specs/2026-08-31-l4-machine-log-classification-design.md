@@ -6,8 +6,8 @@ bet_id: BET-Y1Q3-T10-109
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-08-31
-last-reviewed: 2026-08-31
+created: 2026-08-30
+last-reviewed: 2026-08-30
 ---
 
 # L4 context-aware machine-log classification
