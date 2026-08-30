@@ -304,7 +304,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
     spec_version: 1.0.0
-    content_digest: sha256:06f6136f43b9128302e2ce9476d9c0e296c7a9f5c91dccecc36e4da6716f203a
+    content_digest: sha256:7f79068954581c502a63b3c39c0921c3544567f195cecda1f12ff65c415bedbf
     decision_ref: decision://accepted/BET-Y1Q3-T10-109
   depends_on:
   - BET-Y1Q3-T10-108
