@@ -257,6 +257,87 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-97
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Reconcile T10-02 and T10-06 completion evidence digests
+  appetite: 0.25 day
+  priority: P0
+  status: done
+  done_at: 2026-08-30
+  goal: Reconcile eight stale maturity-scorecard digest references in the completed T10-02 and T10-06 matrices without changing their completion semantics.
+  non_goals:
+  - No change to either BET status, done_at, value verdict, attestation, evidence file, Documents content, runtime payload, or unrelated ledger record.
+  done_when:
+  - The eight selected references resolve to the current maturity-scorecard.py digest.
+  - T10-02 and T10-06 both derive outcome_accepted again and bet-ledger lint is clean.
+  - The diff contains only the eight digest fields and T10-97 evidence surfaces.
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0 with zero errors
+  - cmd: >-
+      uv run --with pyyaml python -c "import yaml; d=yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml')); b={x['id']:x for x in d['bets']}; assert all(b[i]['completion_evidence']['overall_state'] == 'outcome_accepted' for i in ('BET-Y1Q3-T10-02','BET-Y1Q3-T10-06')); print('T10-02/T10-06 completion matrices valid')"
+    expect: exit 0 with both matrices deriving outcome_accepted
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md
+  - docs/reports/2026-08-30-t10-02-t10-06-completion-digest-reconciliation.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-97.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-97-digest-reconciliation-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:8de6c809e99f257d3bbdc5aef8c65473ad42f54bfb0f54c714a216fc94ec6e3b
+    decision_ref: decision://accepted/BET-Y1Q3-T10-97
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@969b2353fda02caee70b24ac313b76eb1237baa3
+          tests:
+            ref: receipt://docs/reports/2026-08-30-t10-02-t10-06-completion-digest-reconciliation.md
+            sha256: sha256:29e3ee76b2029a102993b10e0f01950b8215dc0ed2f5327a2461aaa56db09d11
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md
+            sha256: sha256:8de6c809e99f257d3bbdc5aef8c65473ad42f54bfb0f54c714a216fc94ec6e3b
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-t10-02-t10-06-completion-digest-reconciliation.md
+            sha256: sha256:29e3ee76b2029a102993b10e0f01950b8215dc0ed2f5327a2461aaa56db09d11
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-t10-02-t10-06-completion-digest-reconciliation.md
+            sha256: sha256:29e3ee76b2029a102993b10e0f01950b8215dc0ed2f5327a2461aaa56db09d11
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-t10-02-t10-06-completion-digest-reconciliation.md
+            sha256: sha256:29e3ee76b2029a102993b10e0f01950b8215dc0ed2f5327a2461aaa56db09d11
+          replay:
+            ref: receipt://docs/reports/2026-08-30-t10-02-t10-06-completion-digest-reconciliation.md
+            sha256: sha256:29e3ee76b2029a102993b10e0f01950b8215dc0ed2f5327a2461aaa56db09d11
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md
+            sha256: sha256:8de6c809e99f257d3bbdc5aef8c65473ad42f54bfb0f54c714a216fc94ec6e3b
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T10-91
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Any status/value/attestation/evidence-file mutation beyond the eight digest fields, any source-file edit, or any unrelated surface change stops the repair.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-95
   track: T10-MATURITY
   window: Y1Q3
@@ -3654,7 +3735,8 @@ bets:
   title: Product P0 真值链父编排与全链收口
   appetite: 4 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: 用一个父 BET 编排六个独立 WorkPacket，先修正非价值交付包的 canonical completion 语义，再把诚实场景门、权威身份、真实效果回执、outbox 发布、人类裁决价值和物理恢复收敛为可重放的 Product P0 真值链。
   non_goals:
   - 不新增第二 BET 台账、WorkPacket schema、workflow engine、dispatcher、identity registry、outbox、event bus 或 value writer
@@ -3705,28 +3787,53 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@3f01fd4c71b963a063d6909f3feeb5b15f87d106
+          tests:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          diff:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
+            sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          replay:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          cleanup:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
-  depends_on: []
-  child_bets:
-  - BET-Y1Q3-T4-03
-  - BET-Y1Q3-T4-04
-  - BET-Y1Q3-T4-05
-  - BET-Y1Q3-T4-06
-  - BET-Y1Q3-T4-07
-  - BET-Y1Q3-T4-08
-  value_indicator_policy: true
-  value_source_bet: BET-Y1Q3-T4-07
-  risk_level: L3
-  human_gate: true
-  circuit_breaker: 如需第二 completion writer、新 schema/registry/state store，或无法在不伪造价值的前提下让非价值 child 完成，立即停机并重新审查 Spec
+        status: ACCEPTED
+        evidence:
+          real_signal:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
+            sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
+          revision:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          time_burden:
+            ref: receipt://docs/reports/2026-08-30-wp5-first-qualifying-outcome.json
+            sha256: sha256:7c49a7ff30739839acace0830121123a9c6ebe3cf8a0a342fbbee5017c8974e0
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-07-accept.yaml
+            sha256: sha256:8800ad4b9375615b22a8053bea138c5344e48da653dd2dd22f3fa78f438f0888
+    overall_state: outcome_accepted
   retro: required
   evidence:
     E0_self_bootstrap_waiver:
@@ -13130,10 +13237,10 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:4a37b81533a2ee526ec20bbb084e06bdc2f1d06d6e8c2f6cbd07135f36724b10
+            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
           rollback:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:4a37b81533a2ee526ec20bbb084e06bdc2f1d06d6e8c2f6cbd07135f36724b10
+            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
       operational:
         status: PROVEN
         evidence:
@@ -13145,7 +13252,7 @@ bets:
             sha256: sha256:71a8b1ba07cdf8fd8d814e0f9ebf1fcdd1fe99d1a2ee8eb03e7f3582a03888ac
           live_canary:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:4a37b81533a2ee526ec20bbb084e06bdc2f1d06d6e8c2f6cbd07135f36724b10
+            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -13160,7 +13267,7 @@ bets:
             sha256: sha256:71a8b1ba07cdf8fd8d814e0f9ebf1fcdd1fe99d1a2ee8eb03e7f3582a03888ac
           real_signal:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:4a37b81533a2ee526ec20bbb084e06bdc2f1d06d6e8c2f6cbd07135f36724b10
+            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-02.md
             sha256: sha256:c9a0d2507e1d8ce5f7ce883b418f8275e6b5ceb36b4dc27357a65afdb63cff52
@@ -13461,10 +13568,10 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:4a37b81533a2ee526ec20bbb084e06bdc2f1d06d6e8c2f6cbd07135f36724b10
+            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
           rollback:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:4a37b81533a2ee526ec20bbb084e06bdc2f1d06d6e8c2f6cbd07135f36724b10
+            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
       operational:
         status: PROVEN
         evidence:
@@ -13476,7 +13583,7 @@ bets:
             sha256: sha256:d31515c10b63fefdfae26715cb5bd0fcd0766555bb8287636679dcdc474b05ec
           live_canary:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:4a37b81533a2ee526ec20bbb084e06bdc2f1d06d6e8c2f6cbd07135f36724b10
+            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -13491,7 +13598,7 @@ bets:
             sha256: sha256:d31515c10b63fefdfae26715cb5bd0fcd0766555bb8287636679dcdc474b05ec
           real_signal:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:4a37b81533a2ee526ec20bbb084e06bdc2f1d06d6e8c2f6cbd07135f36724b10
+            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-06.md
             sha256: sha256:2b40152c47fd87e76ccbd53fca1ae50fd268a78cb525eb21fa2e158bf7d70dd3

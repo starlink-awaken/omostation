@@ -169,3 +169,18 @@ def test_mof_schema_validate_has_explicit_ci_safe_timeout() -> None:
     module = _load_module()
 
     assert module._CHECK_TIMEOUTS["mof-schema-validate"] == 45
+
+
+def test_runtime_final_tree_gate_is_root_owned_and_blocking() -> None:
+    module = _load_module()
+    runtime_gates = [gate for gate in module.GATES_LIST if gate["id"] == "omo-runtime-final-tree"]
+    assert len(runtime_gates) == 1
+    assert runtime_gates[0]["command"] == [
+        "bin/gac/omo-runtime-stamp-policy.py",
+        "--treeish",
+        "HEAD",
+        "--json",
+    ]
+    assert "omo-runtime-final-tree" not in module.SOFT_CHECKS
+    assert "omo-runtime-final-tree" not in module.CI_ONLY_CHECKS
+    assert "omo-runtime-final-tree" not in module.OPS_ONLY_CHECKS
