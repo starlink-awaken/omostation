@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/gac/kems-scene-bridge.py
+name: KEMS Scene Bridge
+category: governance
+owner: governance-team
+description: "KEMS Documents 场景桥（#2786 MOF 注册配套）——并行 agent 交付，登记条目为元数据占位，owner 可在后续 PR 调整"
+inputs: []
+outputs:
+  - type: exit_code
+dependencies: []
+triggers:
+  - manual
+related: []
+maturity: draft
+last_reviewed: "2026-08-30"

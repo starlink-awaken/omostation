@@ -1,0 +1,21 @@
+schema: agent-error/v1
+id: PITFALL-GAT-004
+category: gate
+severity: medium
+title: 'auto: gac 反复豁免 (8x)'
+symptom: '── GaC local gate ────────────────────────────────────── [gac] ═══ GaC local
+  gate ═══ [gac] scope=staged change_lane_files=0 [gac] [PASS] gac-validate :: bin/gac/gac-validate.py
+  --gate [gac] [PASS] sc'
+root_cause: escape 台账周期喂食（ADR-0443 v2 Q8），根因待人工复盘
+solution: ''
+prevention: ''
+tags:
+- auto-fed
+- ci-local-fast
+discovered_by: auto:escape-digest
+discovered_at: '2026-08-30'
+times_encountered: 46
+last_confirmed_at: '2026-08-30'
+status: active
+_path: /Users/xiamingxing/Workspace/.omo/_knowledge/pitfalls/gate/PITFALL-GAT-004.yaml
+_file: PITFALL-GAT-004.yaml
