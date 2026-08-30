@@ -247,10 +247,13 @@ families:
     runtime_bytes: 68213
     owner_parity: partial
     owner_parity_evidence:
-      status: read_only_guarded_mutation_and_control_plane_owner_proven
+      status: read_only_and_explicit_apply_owners_proven
       jobs:
       - documents-learning-decay
       - documents-learning-orphans
+      - documents-learning-validate
+      - documents-rename-check
+      - documents-vault-search
       owner_entry: bin/gac/documents-domain-owner-job.py learning-control / learning-control-plane
       control_plane_entry: bin/gac/documents-domain-owner-job.py learning-control-plane all
       receipt: docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
@@ -275,6 +278,13 @@ families:
         quarantine_manifest: runtime/quarantine/documents-learning-control-runtime-t2-20260830/manifest.json
         consumer_scan: receipt://.omo/evidence/20260830T083330Z-governance-state-mutation-abbadfce/documents-consumer-audit-kemsmcp.json
       writes_documents: explicit_apply_only
+      explicit_apply_tools:
+      - runtime.documents_plane.learning_writers repair (dry-run default)
+      - runtime.documents_plane.learning_writers ingest (dry-run default)
+      not_rebuilt:
+      - v5-bootstrap (one-shot deployer, migration complete)
+      - kems-global (installer shim, superseded by Workspace owners)
+      parity_receipt: 'omostation-runtime#72 (batch1) + #73 (batch2), 22 tests green'
   progress_evidence:
     scope_status: partial
     completed_subscopes:
