@@ -675,12 +675,9 @@ services:
   interval_sec: 300
   label: com.l4.resident.event-ingest
   program:
-    interpreter: uv
-    entrypoint: projects/omo
-    args:
-    - resident
-    - ingest
-    - --once
+    interpreter: /bin/bash
+    entrypoint: lib/resident-event-ingest.sh
+    args: []
   resilience:
     keepalive: crashed
     throttle_interval: 300

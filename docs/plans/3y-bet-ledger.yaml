@@ -338,6 +338,90 @@ bets:
   value_indicator_policy: false
   retro: required
 
+- id: BET-Y1Q3-T10-96
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Learning runtime legacy helper quarantine
+  appetite: 0.5 day
+  priority: P1
+  status: done
+  done_at: 2026-08-30
+  goal: Quarantine four unconsumed learning runtime helper scripts after Workspace concept-weave preflight cutover while preserving residual owner-dependent runtime and learning content.
+  non_goals:
+  - No movement of l4-kernel.sh, vault-healthcheck.sh, knowledge-decay.sh, daemon/executor implementations, pre-commit-g18, inbox-router.sh, or learning content.
+  - No owner-parity claim, no permanent deletion, no scheduled-client rewrite, and no Documents content mutation.
+  done_when:
+  - Four scoped L4 file audits select exactly one regular runtime file each.
+  - Fresh consumer evidence reports zero forbidden executors and zero unmatched consumers.
+  - Four quarantine transactions preserve hashes, modes, bytes, and rollback manifests, with source absence and residual-runtime postflight.
+  - learning-runtime advances only to in_progress with completed helper subscopes and owner parity pending.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no coverage collision
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
+  - docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-96.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-96-learning-runtime-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:ca7cf57e9e1f5717413d442e5aa3d6ed0300d82ff03d2943222e437eac6f7aea
+    decision_ref: decision://accepted/BET-Y1Q3-T10-96
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@766a3729dae55530277f36d0ff8f1e1c2a88a29a
+          tests:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+            sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
+            sha256: sha256:ca7cf57e9e1f5717413d442e5aa3d6ed0300d82ff03d2943222e437eac6f7aea
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+            sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+            sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+            sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
+          replay:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+            sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
+            sha256: sha256:ca7cf57e9e1f5717413d442e5aa3d6ed0300d82ff03d2943222e437eac6f7aea
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T10-95
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any selected consumer, source drift, target collision, hash/mode mismatch, non-selected movement, permanent deletion, or owner-parity overclaim stops and restores the affected move.
+  value_indicator_policy: false
+  retro: required
+
+
 - id: BET-Y1Q3-T10-95
   track: T10-MATURITY
   window: Y1Q3
@@ -1513,7 +1597,8 @@ bets:
   title: OMLXC BOS service path reconciliation
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Reconcile five active OMLXC BOS declarations with their canonical examples paths so the evidence gate has zero unresolved script-path gaps.
   non_goals:
   - No URI, action, capability, transport, security, runtime, compute, Documents, or user configuration change.
@@ -1546,6 +1631,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:ec44b41cf03206c57fc3b6a424e682dd78e4276f4dfa5553264503e3be53df75
     decision_ref: decision://accepted/BET-Y1Q3-T10-74
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a7073792e268313e5e216cb3978d10ae07ec4b07
+          tests:
+            ref: receipt://docs/reports/2026-08-30-omlxc-bos-path-reconciliation.md
+            sha256: sha256:4fdc3e322b8ee41d18f1bf16c851b7008159c7923d4264248d6dc46da317d85c
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md
+            sha256: sha256:ec44b41cf03206c57fc3b6a424e682dd78e4276f4dfa5553264503e3be53df75
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-omlxc-bos-path-reconciliation.md
+            sha256: sha256:4fdc3e322b8ee41d18f1bf16c851b7008159c7923d4264248d6dc46da317d85c
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-omlxc-bos-path-reconciliation.md
+            sha256: sha256:4fdc3e322b8ee41d18f1bf16c851b7008159c7923d4264248d6dc46da317d85c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-omlxc-bos-path-reconciliation.md
+            sha256: sha256:4fdc3e322b8ee41d18f1bf16c851b7008159c7923d4264248d6dc46da317d85c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-74.md
+            sha256: sha256:4ef9757e56ea90d6f59ed2d1af549f01bcd2f0abac2c996a4d83c355ab48e290
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md
+            sha256: sha256:ec44b41cf03206c57fc3b6a424e682dd78e4276f4dfa5553264503e3be53df75
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on: []
   risk_level: L1
   human_gate: false
@@ -1773,7 +1894,8 @@ bets:
   title: Documents cockpit runtime physical quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move the stable L4-classified cockpit runtime artifacts from Documents into a retention-protected Workspace quarantine, preserving all content and projections.
   non_goals:
   - No movement, rewrite, or deletion of Markdown, Office, PDF, DOMAIN, CONTENT_ARCHIVE, projection, contract, bridge, or .bak files.
@@ -1809,6 +1931,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:99d28ddfff9c8cb00d57e1b3c94a9c75ed89361e8218c8436e2172bf0ce57b94
     decision_ref: decision://accepted/BET-Y1Q3-T10-70
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@68aebea159ae3d98204e3e5aec99f28b4a229cb2
+          tests:
+            ref: receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+            sha256: sha256:a0f167421065115919ca3167747f8dd9c32a3ce169bbdabc6f294c3fbe8434ff
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md
+            sha256: sha256:99d28ddfff9c8cb00d57e1b3c94a9c75ed89361e8218c8436e2172bf0ce57b94
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+            sha256: sha256:a0f167421065115919ca3167747f8dd9c32a3ce169bbdabc6f294c3fbe8434ff
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+            sha256: sha256:a0f167421065115919ca3167747f8dd9c32a3ce169bbdabc6f294c3fbe8434ff
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+            sha256: sha256:a0f167421065115919ca3167747f8dd9c32a3ce169bbdabc6f294c3fbe8434ff
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-70.md
+            sha256: sha256:021860be9976e12790a04e948e8ad9ff13f1a13bf273524a066e90d4ecdd6fc8
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md
+            sha256: sha256:99d28ddfff9c8cb00d57e1b3c94a9c75ed89361e8218c8436e2172bf0ce57b94
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-38
   - BET-Y1Q3-T10-68
@@ -1872,7 +2030,8 @@ bets:
   title: Workspace quarantine retention guard
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Protect recoverable physical-migration packages under runtime/quarantine from ordinary repository cleanup after the public-runtime receipt was lost.
   non_goals:
   - No Documents content, runtime, cache, host schedule, LaunchAgent, client configuration, or quarantine payload mutation.
@@ -1905,6 +2064,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:d19cbfa3cbf6d5f3d04872b11ded51bdbb0bd6900f26d664db6748cf9f344901
     decision_ref: decision://accepted/BET-Y1Q3-T10-68
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a7073792e268313e5e216cb3978d10ae07ec4b07
+          tests:
+            ref: receipt://docs/reports/2026-08-29-quarantine-retention-guard.md
+            sha256: sha256:b835f35de2d7b3af06f52bf9a74ffa50a407fdbe8d086e4e8fb50c3d33e34329
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md
+            sha256: sha256:d19cbfa3cbf6d5f3d04872b11ded51bdbb0bd6900f26d664db6748cf9f344901
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-quarantine-retention-guard.md
+            sha256: sha256:b835f35de2d7b3af06f52bf9a74ffa50a407fdbe8d086e4e8fb50c3d33e34329
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-quarantine-retention-guard.md
+            sha256: sha256:b835f35de2d7b3af06f52bf9a74ffa50a407fdbe8d086e4e8fb50c3d33e34329
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-quarantine-retention-guard.md
+            sha256: sha256:b835f35de2d7b3af06f52bf9a74ffa50a407fdbe8d086e4e8fb50c3d33e34329
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-68.md
+            sha256: sha256:c0cdc3d7f947e8cbe51ae01dc532ab368678ee61715b9e1fa4d08b3f34b205f9
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md
+            sha256: sha256:d19cbfa3cbf6d5f3d04872b11ded51bdbb0bd6900f26d664db6748cf9f344901
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-65
   risk_level: L1
@@ -10894,7 +11089,8 @@ bets:
   title: Post-2408 main recovery 与 required gac-gate promotion
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: >-
     恢复 latest main 的真实治理基线，深化 existing gac-gate 为 immutable、check-only、blocking gate，经 main canary 后以 guarded double-read read-modify-write: GET A -> validate/hash -> GET B -> require digest equality -> one required_status_checks subresource PATCH -> GET C verify。The API lacks a proven server-side conditional unsafe write, so a residual GET-B/PATCH race remains and is bounded by a second human gate, receipt and context-only rollback，并完成 repository/runtime hygiene 与显式授权的 host retention。
   non_goals:
@@ -10983,15 +11179,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c58751a4a38c813fc39c1dfd98c7bf645e5761f8
+          tests:
+            ref: repo://tests/test_gac_gate_workflow.py
+            sha256: sha256:c228244b567a12e59ecfbaa112de62113549081d03fae00ae850b4e27331d97a
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T6-15.md
+            sha256: sha256:a76c471b05f84afb35eb92fb96d9f6a9f6566ddfd0dc15dda82bcb2ed0c1f103
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T6-15.md
+            sha256: sha256:a76c471b05f84afb35eb92fb96d9f6a9f6566ddfd0dc15dda82bcb2ed0c1f103
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
+            sha256: sha256:7d1bb2c7e79bab3b3c5183821a6c6bf668fa843ae70a1ba13d67393feb4f394e
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
+            sha256: sha256:7d1bb2c7e79bab3b3c5183821a6c6bf668fa843ae70a1ba13d67393feb4f394e
+          replay:
+            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
+            sha256: sha256:7d1bb2c7e79bab3b3c5183821a6c6bf668fa843ae70a1ba13d67393feb4f394e
+          cleanup:
+            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
+            sha256: sha256:7d1bb2c7e79bab3b3c5183821a6c6bf668fa843ae70a1ba13d67393feb4f394e
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   depends_on: []
   value_indicator_policy: false
   risk_level: L3
