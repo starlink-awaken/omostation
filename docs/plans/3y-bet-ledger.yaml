@@ -263,7 +263,8 @@ bets:
   title: Converge learning content mutation owners into Workspace
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Replace the remaining Documents learning content executors knowledge-decay mark-stale and _inbox/inbox-router with one Workspace-owned, human-gated plan/apply entry that preserves deterministic routing, optimistic source fingerprints, rollback manifests, and explicit no-op behavior for deferred cross-domain writes.
   non_goals:
   - No movement or rewrite of l4-kernel.sh, vault-healthcheck.sh, daemon/executor implementations, pre-commit-g18, or learning content outside the targeted inbox/concept scopes.
@@ -304,6 +305,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:f4d09eb3ee6a629a4d51c610d19227ae478a470f2931cb3fc8fe0babf9749610
     decision_ref: decision://accepted/BET-Y1Q3-T10-100
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@81e1f1cba3ec1f7661013059ad435f31687a1bf8
+          tests:
+            ref: receipt://docs/reports/2026-08-30-learning-content-owner-convergence.md
+            sha256: sha256:85cb177d6ef63d4636b396c745ff0e25696d571ea73c26eac892f91f91c3f0ba
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md
+            sha256: sha256:f4d09eb3ee6a629a4d51c610d19227ae478a470f2931cb3fc8fe0babf9749610
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-learning-content-owner-convergence.md
+            sha256: sha256:85cb177d6ef63d4636b396c745ff0e25696d571ea73c26eac892f91f91c3f0ba
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-learning-content-owner-convergence.md
+            sha256: sha256:85cb177d6ef63d4636b396c745ff0e25696d571ea73c26eac892f91f91c3f0ba
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-learning-content-owner-convergence.md
+            sha256: sha256:85cb177d6ef63d4636b396c745ff0e25696d571ea73c26eac892f91f91c3f0ba
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-100.md
+            sha256: sha256:7633b41ad2a11f038c7743a7552a020649bccfc9b1b245c107ffa935cf70f098
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md
+            sha256: sha256:f4d09eb3ee6a629a4d51c610d19227ae478a470f2931cb3fc8fe0babf9749610
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-99
   risk_level: L2
@@ -10146,6 +10183,91 @@ bets:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
             sha256: sha256:7e3e888376f8a48fbb96b76868fe4181b39a34187aed20bd6a1474636235c9c9
     overall_state: outcome_accepted
+  workflow: bet-execution
+  underlying_workflow: cognitive-governance-delivery
+  write_surfaces:
+  - .omo/_truth/registry/gate-known-debt.yaml
+  - docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
+  - docs/superpowers/plans/2026-08-24-exact-capability-binding.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/architecture/capability-federation-contract-v1.md
+  - docs/architecture/blueprint-multi-agent-execution-control-v1.md
+  - docs/architecture/digital-twin-blueprint-v1.md
+  - docs/operations/blueprint-agent-instruction-pack-v1.md
+  - docs/CLI-REFERENCE.md
+  - docs/INDEX-MCP.md
+  - docs/generated/capability-registry.yaml
+  - docs/project-registry.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+  - .github/workflows/governance-check.yml
+  - bin/_registry/scripts/governance/daemon-watchdog.yaml
+  - bin/_registry/scripts/governance/real-scenario-runner.yaml
+  - bin/agent-workflow.py
+  - bin/capability-sync.py
+  - bin/ssot/gen-capability-registry.py
+  - bin/gac/daemon-watchdog.py
+  - bin/plan/bet-ledger.py
+  - bin/ssot/real-scenario-runner.py
+  - lib/capability_federation_audit.py
+  - lib/capability_trace_binding.py
+  - lib/capability_native_receipt.py
+  - lib/capability_native_inspection.py
+  - lib/capability_native_execution_model.py
+  - lib/capability_native_execution_receipt.py
+  - tests/test_capability_sync.py
+  - tests/test_capability_federation_audit.py
+  - tests/test_capability_trace_binding.py
+  - tests/test_capability_native_inspection.py
+  - tests/test_capability_native_execution_receipt.py
+  - tests/test_agent_workflow.py
+  - tests/test_spec_binding_lint.py
+  - tests/unit/test_phase8_unified_ecosystem.py
+  - projects/ecos/src/ecos/ssot/mof/m2/work_packet.yaml
+  - projects/ecos/src/ecos/ssot/mof/compiler/api.py
+  - projects/ecos/src/ecos/ssot/mof/compiler/emitters.py
+  - projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py
+  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.schema.json
+  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control-schemas.ts
+  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.manifest.json
+  - projects/ecos/src/ecos/ssot/mof/generated/control/mof_control_models.py
+  - projects/ecos/src/ecos/ssot/mof/generated/control/mof-control.sql
+  - projects/ecos/src/ecos/ssot/tools/mof-enforce.py
+  - projects/ecos/tests/test_mof_compiler.py
+  - projects/ecos/tests/test_tool_p2.py
+  - projects/ecos/tests/test_work_packet_compiler.py
+  - projects/ecos
+  - projects/omo/src/omo/blueprint_control.py
+  - projects/omo/src/omo/orchestration_contract.py
+  - projects/omo/src/omo/workflow/lifecycle.py
+  - projects/omo/src/omo/workflow_dispatch.py
+  - projects/omo/src/omo/omo_worker_core.py
+  - projects/omo/src/omo/worker_lifecycle.py
+  - projects/omo/src/omo/workflow_mesh.py
+  - projects/omo/src/omo/omo_worker_dispatch.py
+  - projects/omo/tests/test_blueprint_control.py
+  - projects/omo/tests/test_orchestration_contract.py
+  - projects/omo/tests/test_omo_worker_admission_gate.py
+  - projects/omo/tests/test_worker_lifecycle_mesh.py
+  - projects/omo/tests/test_workflow_mesh.py
+  - projects/omo
+  - projects/metaos
+  - projects/metaos/pyproject.toml
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - projects/cockpit/src/cockpit/commands/bos.py
+  - projects/cockpit/src/cockpit/adapters/capability_binding.py
+  - projects/cockpit/src/cockpit/web/api_kems.py
+  - projects/cockpit/src/cockpit/agent_runtime_server.py
+  - projects/cockpit/src/cockpit/agent_runtime_mcp_server.py
+  - projects/cockpit/src/cockpit/tests/test_capability_binding_adapter.py
+  - projects/cockpit/src/cockpit/tests/test_bos_capability_invoke.py
+  - projects/cockpit/src/cockpit/tests/test_api_kems_retired.py
+  - projects/cockpit/src/cockpit/tests/test_agent_runtime_server.py
+  - projects/cockpit/src/cockpit/tests/test_agent_runtime_mcp_server.py
+  - projects/cockpit/tests/test_api_kems_dispatch.py
+  - projects/cockpit
+  - projects/agora/src/agora/capability_gateway.py
+  - projects/agora/tests/unit/test_capability_gateway.py
+  - projects/agora
   retro: required
 - id: BET-Y1Q1-T6-07
   track: T6-SUBTRACT
