@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-contract-ocr
-journey_id: documents-contract-ocr-journey"
+journey_id: documents-contract-ocr-journey
 goal: 合同 OCR 工具隔离
 trigger: 检测到 quarantine 类 documents 任务需要执行
 input_contract: 源文件路径/范围

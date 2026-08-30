@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-execution-retirement
-journey_id: documents-execution-retirement-journey"
+journey_id: documents-execution-retirement-journey
 goal: 执行退役
 trigger: 检测到 audit 类 documents 任务需要执行
 input_contract: 源文件路径/范围
