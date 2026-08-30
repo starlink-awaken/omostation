@@ -26,15 +26,15 @@
 - Create: `tests/test_documents_zcode_state_relocation.py`
 - Modify: `.github/workflows/phase-gate-enforce.yml`
 
-- [ ] Write failing tests for active-process rejection, critical-state
+- [x] Write failing tests for active-process rejection, critical-state
       completeness, target collision, insufficient disk, copy verification, settings
       preservation, apply, inspect, verify, and rollback.
-- [ ] Implement the smallest Python 3.9-compatible transaction module and CLI
+- [x] Implement the smallest Python 3.9-compatible transaction module and CLI
       that make the tests pass.
-- [ ] Add `state-inspect/apply/verify/rollback` to the existing ZCode config
+- [x] Add `state-inspect/apply/verify/rollback` to the existing ZCode config
       owner and connect the focused test and Ruff surfaces to the existing
       Documents phase gate. Do not add another `bin/` entry.
-- [ ] Run focused pytest, Ruff, and Python 3.9 parse checks.
+- [x] Run focused pytest, Ruff, and Python 3.9 parse checks.
 
 ### Task 2: Execute the quiescent host transaction
 
@@ -44,14 +44,14 @@
 - Create: `/Users/xiamingxing/Workspace/runtime/clients/zcode-data/.zcode`
 - Create: `/Users/xiamingxing/Workspace/runtime/quarantine/documents-zcode-state-20260830/`
 
-- [ ] Capture preflight process, handle, source, target, disk, settings, and
+- [x] Capture preflight process, handle, source, target, disk, settings, and
       critical-state evidence.
-- [ ] Preserve CLI DB, native seed, surviving target, settings, and manifest in durable recovery before releasing the currently open deleted desktop DB inode.
-- [ ] Quit ZCode through its normal application lifecycle and prove quiescence.
-- [ ] Rebuild/publish the durable App Support target and validate its recovery manifest.
-- [ ] Restart ZCode normally; verify relocated handles, task/session continuity,
+- [x] Preserve CLI DB, native seed, surviving target, settings, and manifest in durable recovery before releasing the currently open deleted desktop DB inode.
+- [x] Quit ZCode through its normal application lifecycle and prove quiescence.
+- [x] Rebuild/publish the durable App Support target and validate its recovery manifest.
+- [x] Restart ZCode normally; verify relocated handles, task/session continuity,
       no Documents writes, and an available rollback path.
-- [ ] Finalize by moving any retained Documents source into durable recovery; never delete it in this BET.
+- [x] Finalize by moving any retained Documents source into durable recovery; never delete it in this BET.
 
 ### Task 3: Close the Documents boundary and deliver
 
@@ -61,8 +61,8 @@
 - Create: `docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md`
 - Create: `.omo/_knowledge/retros/BET-Y1Q3-T10-104.md`
 
-- [ ] Run consumer audit and a stable full Documents L4 audit.
-- [ ] Mark only `documents-client-state` complete when post-restart evidence and
+- [x] Run consumer audit and a stable full Documents L4 audit.
+- [x] Mark only `documents-client-state` complete when post-restart evidence and
       rollback evidence are both present.
 - [ ] Run ledger verification, doc SSOT, focused tests, GaC, diff review, PR
       checks, squash merge, mainline ancestry, replay, and workflow closeout.

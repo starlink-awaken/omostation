@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import stat
+import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +16,19 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from lib.documents_zcode_state_relocation import (  # noqa: E402
+    RelocationError,
+    RelocationPaths,
+    apply_relocation,
+    finalize_relocation,
+    inspect_relocation,
+    rollback_relocation,
+    verify_relocation,
+)
+
 DEFAULT_PROJECT_REGISTRY = ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml"
 DEFAULT_DOMAIN_REGISTRY = Path(
     os.environ.get(
@@ -23,6 +37,17 @@ DEFAULT_DOMAIN_REGISTRY = Path(
     )
 )
 DEFAULT_SETTINGS = Path.home() / ".zcode" / "cli" / "config.json"
+DEFAULT_STATE_SOURCE_BASE = Path.home() / "Documents" / "ZCode"
+DEFAULT_STATE_TARGET_BASE = Path.home() / "Library" / "Application Support" / "ZCode Data"
+DEFAULT_STATE_SETTINGS = Path.home() / ".zcode" / "v2" / "setting.json"
+DEFAULT_STATE_MANIFEST = (
+    Path.home()
+    / "Library"
+    / "Application Support"
+    / "ZCode Recovery"
+    / "2026-08-30"
+    / "durable-recovery-manifest.json"
+)
 
 
 class ConfigError(RuntimeError):
@@ -271,13 +296,55 @@ def _envelope(ok: bool, *, status: str, settings_path: Path, errors: list[str] |
     }
 
 
+def _run_state_command(args: argparse.Namespace) -> int:
+    paths = RelocationPaths(
+        source_base=args.source_base.expanduser().absolute(),
+        target_base=args.target_base.expanduser().absolute(),
+        settings=args.state_settings.expanduser().absolute(),
+        manifest=args.manifest.expanduser().absolute(),
+    )
+    operations = {
+        "state-inspect": inspect_relocation,
+        "state-apply": apply_relocation,
+        "state-finalize": finalize_relocation,
+        "state-verify": verify_relocation,
+        "state-rollback": rollback_relocation,
+    }
+    try:
+        payload = operations[args.command](paths)
+    except (OSError, RelocationError) as exc:
+        payload = {
+            "schema": "documents.zcode-state-relocation-error/v1",
+            "status": "error",
+            "command": args.command,
+            "error": str(exc),
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2 if args.json else None, sort_keys=True))
+        return 2
+    print(json.dumps(payload, ensure_ascii=False, indent=2 if args.json else None, sort_keys=True))
+    if args.command == "state-inspect" and payload.get("status") == "active":
+        return 1
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("render", "install", "check"))
+    parser.add_argument(
+        "command",
+        choices=("render", "install", "check", "state-inspect", "state-apply", "state-verify", "state-finalize", "state-rollback"),
+    )
     parser.add_argument("--project-registry", type=Path, default=DEFAULT_PROJECT_REGISTRY)
     parser.add_argument("--domain-registry", type=Path, default=DEFAULT_DOMAIN_REGISTRY)
     parser.add_argument("--settings-path", type=Path, default=DEFAULT_SETTINGS)
+    parser.add_argument("--source-base", type=Path, default=DEFAULT_STATE_SOURCE_BASE)
+    parser.add_argument("--target-base", type=Path, default=DEFAULT_STATE_TARGET_BASE)
+    parser.add_argument("--state-settings", type=Path, default=DEFAULT_STATE_SETTINGS)
+    parser.add_argument("--manifest", type=Path, default=DEFAULT_STATE_MANIFEST)
+    parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
+
+    if args.command.startswith("state-"):
+        return _run_state_command(args)
 
     try:
         contract = _load_contract(args.project_registry, args.domain_registry)

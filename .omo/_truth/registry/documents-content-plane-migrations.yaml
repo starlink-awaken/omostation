@@ -679,10 +679,35 @@ families:
   - cache
   disposition: relocate
   owner: zcode
-  replacement: ZCode task state under the user's native ~/.zcode application-data root, outside Documents
+  replacement: ZCode native dataBaseDir at $HOME/Library/Application Support/ZCode Data, outside Documents and Workspace runtime
   consumer_refs:
   - bin/gac/documents-zcode-config.py
   - .omo/_truth/registry/documents-domain-projects.yaml#zcode
-  rollback: Copy and verify task state before changing any ZCode data root; retain the Documents source until a ZCode restart confirms the target.
+  rollback: Quit ZCode, restore the durable settings backup and recovery payload from $HOME/Library/Application Support/ZCode Recovery/2026-08-30, then restart and verify the selected database handles.
   confirmation_gate: before_external_config
-  status: pending
+  status: verified
+  evidence:
+    verified_at: '2026-08-30T12:45:00Z'
+    source_fingerprint: sha256:bd0ef090ff3a523cf5ea81e5c016212ad3a1366a0eb284e83e711d72e9ef6f1b
+    target_fingerprint: sha256:234f786349367b7bab586531c100e0c412b17048cbfe53aecb0f3fb5b9d277d8
+    consumer_scan: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+    rollback_ref: docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+  evidence_gap: The 1.0.0 Workspace runtime target was externally purged after a green verify. CLI message data and a native desktop seed were recovered, but current pre-purge desktop snapshots/checkpoints were not fully recoverable.
+  transactions:
+  - scope: durable App Support incident recovery and active client-state cutover
+    verified_at: '2026-08-30T12:45:00Z'
+    target_base: $HOME/Library/Application Support/ZCode Data
+    recovery_root: $HOME/Library/Application Support/ZCode Recovery/2026-08-30
+    target_file_count: 305
+    target_directory_count: 86
+    target_byte_count: 146201178
+    manifest_sha256: sha256:234f786349367b7bab586531c100e0c412b17048cbfe53aecb0f3fb5b9d277d8
+    cli_database_sha256: sha256:6a0626fa5df7f72e8894b8f879be2810fb08782d2929080eaa295161f62b62ef
+    cli_sessions: 171
+    cli_messages: 2368
+    cli_parts: 6273
+    desktop_tasks: 143
+    purged_payload_recovered: false
+    source_handle_count: 0
+    target_handle_count: 5
+    consumer_scan: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
