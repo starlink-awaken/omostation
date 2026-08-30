@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 540  # 2026-08-30 540→540: dormant-cleanup-scanner (P1)  # 2026-08-28 520→528: cmd_deps + frontmatter (BET-Y1Q3-T6-05)
+    script_baseline: 541  # 2026-08-30 541: canonical baseline retained (lib/ wrapper lives outside bin/ count, T6-15 R2b)  # 2026-08-30: retro-reference-engine (P2) + decision-inbox-sla + dormant-cleanup
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
