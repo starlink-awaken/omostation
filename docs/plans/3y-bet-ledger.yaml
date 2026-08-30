@@ -1817,7 +1817,8 @@ bets:
   title: Documents root tools runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the four regular runtime files under Documents/@工作文档/tools into protected Workspace quarantine after consumer preflight, while preserving Documents content and keeping work-runtime pending.
   non_goals:
   - No movement outside @工作文档/tools.
