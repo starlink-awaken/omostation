@@ -23,9 +23,10 @@ quarantine payload.
 
 ## Implementation record
 
-- Root implementation commits: `743f01e2976b2ef46be577065b9451d6fa31c87`,
-  `8a8e1f842e90741c226756e9b3507c8eb42bd9fc`, and
-  `bc79cb4ca1dc41e30ed053f097260bc6193e8802`.
+- Root implementation commits: `c40aadae6617a8da834f579756242f50fb5a0639`,
+  `23fa8295b3d01cb281953d07b263e36caa2853a3`,
+  `4282a8b4d11e109f048abc615b478a4652ea3608`, and
+  `13ca27a098e919bfb053477fe8d33c3ca6757b20`.
 - Agora child PR `#50` merged to child `origin/main` as
   `c30c0456905b168bbb36b1593faeb5b35a823eb5`; the root gitlink was verified
   against that child main commit.
@@ -46,7 +47,7 @@ quarantine payload.
 - `uv run --with pyyaml python bin/ssot/ssot-guardian.py`: PASS.
 - `uv run --with pyyaml python bin/ssot/current-state-coherence.py --json`:
   `ok=true`, phase/wave aligned, stored task counts aligned.
-- `uv run --with pyyaml python bin/ssot/script-registry.py validate`: 541
+- `uv run --with pyyaml python bin/ssot/script-registry.py validate`: 542
   registered scripts, PASS; bin quota reports `新增 0 / 删除 0`.
 - `make gac-local-gate`: PASS, 57 checks executed, with only the repository's
   six pre-existing known-unavailable checks skipped.
