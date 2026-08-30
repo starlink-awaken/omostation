@@ -45,10 +45,8 @@ COST_MODEL: dict[str, dict[str, float]] = {
     "ruff lint": {"warn_min": 8, "fail_min": 30},
     "test coverage": {"warn_min": 15, "fail_min": 45},
     "debt integrity": {"warn_min": 20, "fail_min": 60},
-    "task consistency": {"warn_min": 10, "fail_min": 30},
-    "adr links": {"warn_min": 5, "fail_min": 20},
-    "doc lifecycle": {"warn_min": 10, "fail_min": 30},
-}
+        "adr links": {"warn_min": 5, "fail_min": 20},
+    }
 DEFAULT_WARN_MIN = 10
 DEFAULT_FAIL_MIN = 30
 
