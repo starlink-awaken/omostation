@@ -34,8 +34,7 @@ agent_profiles:
     - ssot-guardian
     - gac-local-gate
   engineering-agent:
-    purpose: Implement project-local code changes with project tests and workspace
-      gates.
+    purpose: Implement project-local code changes with project tests and workspace gates.
     allowed_workflows:
     - project-code-change
     - pyright-sweep
@@ -47,8 +46,7 @@ agent_profiles:
     - project-tests
     - gac-local-gate
   qa-agent:
-    purpose: Verify code behavior and report failures without owning broad implementation
-      changes.
+    purpose: Verify code behavior and report failures without owning broad implementation changes.
     allowed_workflows:
     - project-code-change
     - pyright-sweep
@@ -74,6 +72,7 @@ agent_profiles:
     - agent-onboarding
     - bet-execution
     - resident-runtime-observe
+    - documents-consumer-audit-weekly
     can_write_lanes:
     - docs
     - governance_code
@@ -96,8 +95,7 @@ agent_profiles:
     - state-sync-dry-run
     - agent-workflow-observe
   mof-agent:
-    purpose: Maintain MOF M1/M2/M3 model changes, schema validation, state bridge
-      alignment, and MOF version evidence.
+    purpose: Maintain MOF M1/M2/M3 model changes, schema validation, state bridge alignment, and MOF version evidence.
     allowed_workflows:
     - mof-model-change
     - mof-state-bridge-audit
@@ -111,8 +109,7 @@ agent_profiles:
     - mof-drift
     - gac-local-gate
   c2g-agent:
-    purpose: Convert strategy inputs, pitches, BMAD, or OpenSpec material into governed
-      planned tasks.
+    purpose: Convert strategy inputs, pitches, BMAD, or OpenSpec material into governed planned tasks.
     allowed_workflows:
     - governance-state-mutation
     - c2g-spec-ingress
@@ -124,8 +121,7 @@ agent_profiles:
     - ssot-guardian
     - gac-local-gate
   strategy-agent:
-    purpose: Shape upstream intent before it is materialized into C2G or OMO task
-      state.
+    purpose: Shape upstream intent before it is materialized into C2G or OMO task state.
     allowed_workflows:
     - c2g-spec-ingress
     - external-adapter-sync
@@ -135,8 +131,7 @@ agent_profiles:
     closeout_required:
     - planned-task-review
   adapter-agent:
-    purpose: Inspect and synchronize optional external tools without making them new
-      governance authorities.
+    purpose: Inspect and synchronize optional external tools without making them new governance authorities.
     allowed_workflows:
     - external-adapter-sync
     - agent-onboarding
@@ -159,8 +154,7 @@ agent_profiles:
     - reachability
     - gac-local-gate
   observer-agent:
-    purpose: Run read-only oversight for locks, run records, ledger events, and handoff
-      evidence.
+    purpose: Run read-only oversight for locks, run records, ledger events, and handoff evidence.
     allowed_workflows:
     - observer-audit
     - mof-state-bridge-audit
@@ -185,14 +179,14 @@ agent_profiles:
   sage-planner:
     purpose: 意图解构与工程规格反编译 (ADR-0195, cognitive-governance-delivery)
     allowed_workflows:
-    - "*"
+    - '*'
     can_write_lanes:
     - docs
     - governance_code
   builder-agent:
     purpose: 主权算力投机生成与代码/公文起草 (ADR-0197)
     allowed_workflows:
-    - "*"
+    - '*'
     can_write_lanes:
     - docs
     - code
@@ -201,7 +195,7 @@ agent_profiles:
   keeper-cartridge:
     purpose: 领域卡带与 SOP 资产装配 (ADR-0198)
     allowed_workflows:
-    - "*"
+    - '*'
     can_write_lanes:
     - docs
     - governance_code
@@ -209,7 +203,7 @@ agent_profiles:
   devil-challenger:
     purpose: 审计/等保/法务影子对抗审查与 Auto-Patch (ADR-0196)
     allowed_workflows:
-    - "*"
+    - '*'
     can_write_lanes:
     - docs
     - governance_code
