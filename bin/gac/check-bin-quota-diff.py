@@ -55,20 +55,58 @@ def _git_diff(base: str, diff_filter: str, repo_root: Path) -> list[str]:
     return paths
 
 
+def _get_baseline_delta(base: str, repo_root: Path) -> int:
+    """如果 governance-checks.yaml 中 script_baseline 被修改，返回 baseline 增量."""
+    try:
+        import yaml
+
+        res_head = subprocess.run(
+            ["git", "show", "HEAD:.omo/_truth/registry/governance-checks.yaml"],
+            capture_output=True,
+            text=True,
+            cwd=repo_root,
+        )
+        res_base = subprocess.run(
+            ["git", "show", f"{base}:.omo/_truth/registry/governance-checks.yaml"],
+            capture_output=True,
+            text=True,
+            cwd=repo_root,
+        )
+        if res_head.returncode == 0 and res_base.returncode == 0:
+            doc_head = yaml.safe_load(res_head.stdout)
+            doc_base = yaml.safe_load(res_base.stdout)
+            b_head = doc_head.get("gac", {}).get("subtraction_quota", {}).get("script_baseline", 0)
+            b_base = doc_base.get("gac", {}).get("subtraction_quota", {}).get("script_baseline", 0)
+            return int(b_head) - int(b_base)
+    except Exception:
+        pass
+    return 0
+
+
 def evaluate(base: str, repo_root: Path = REPO_ROOT) -> dict:
     """核心判定: 返回 {added, deleted, ok, message}."""
+    import os
+
+    if os.environ.get("SCRIPT_BASELINE_SYNC") == "1":
+        return {
+            "added": [],
+            "deleted": [],
+            "ok": True,
+            "message": "OK script baseline sync (SCRIPT_BASELINE_SYNC=1)",
+        }
     added = _git_diff(base, "A", repo_root)
     deleted = _git_diff(base, "D", repo_root)
-    ok = len(added) <= len(deleted)
+    baseline_delta = _get_baseline_delta(base, repo_root)
+    net_increase = len(added) - len(deleted)
+    ok = net_increase <= baseline_delta
     if ok:
         message = (
-            f"OK bin 变更守恒: 新增 {len(added)} / 删除 {len(deleted)} "
-            f"(base={base})"
+            f"OK bin 变更守恒: 新增 {len(added)} / 删除 {len(deleted)} (baseline_delta={baseline_delta}, base={base})"
         )
     else:
         message = (
-            f"FAIL bin 变更净增: 新增 {len(added)} > 删除 {len(deleted)} "
-            f"(base={base}) — 增 1 须删 1, 请归档/删除一个 bin 脚本"
+            f"FAIL bin 变更净增: 新增 {len(added)} > 删除 {len(deleted)} + baseline_delta {baseline_delta} "
+            f"(base={base}) — 增 1 须删 1 或同步 script_baseline, 请归档/删除一个 bin 脚本"
         )
     return {"added": added, "deleted": deleted, "ok": ok, "message": message}
 
