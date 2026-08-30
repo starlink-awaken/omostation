@@ -67,10 +67,39 @@ def observe() -> dict:
     return observations
 
 
+def _load_existing_proposals() -> list[dict]:
+    """Load existing proposals from evolution-proposals.json."""
+    proposals_file = REPO / ".omo" / "state" / "evolution-proposals.json"
+    if proposals_file.exists():
+        try:
+            return json.loads(proposals_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+    return []
+
+
+def _save_proposals(proposals: list[dict]) -> None:
+    """Save proposals to evolution-proposals.json."""
+    proposals_file = REPO / ".omo" / "state" / "evolution-proposals.json"
+    proposals_file.parent.mkdir(parents=True, exist_ok=True)
+    proposals_file.write_text(json.dumps(proposals, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def _dedup_proposals(existing: list[dict], new: list[dict]) -> list[dict]:
+    """Merge new proposals with existing, deduplicating by type+target."""
+    merged = {f"{p.get('type','')}:{p.get('target','')}": p for p in existing}
+    for p in new:
+        key = f"{p.get('type','')}:{p.get('target','')}"
+        # Only add if not already present (keep original)
+        if key not in merged:
+            merged[key] = p
+    return list(merged.values())
+
+
 def propose(observations: dict | None = None) -> list[dict]:
-    """Generate improvement proposals from observations."""
+    """Generate improvement proposals from observations (with dedup)."""
     if observations is None:
-        observations = observe()
+        observations = observations = observe()
 
     proposals = []
 
@@ -80,6 +109,7 @@ def propose(observations: dict | None = None) -> list[dict]:
         proposals.append({
             "id": "EVOLVE-HEARTBEAT",
             "type": "reliability",
+            "target": "probe-heartbeat-monitor.py",
             "title": "修复探测器心跳监控",
             "description": "部分探测器心跳异常，需要修复数据源",
             "confidence": 0.9,
@@ -92,6 +122,7 @@ def propose(observations: dict | None = None) -> list[dict]:
         proposals.append({
             "id": "EVOLVE-DRIFT",
             "type": "governance",
+            "target": "governance-checks.yaml",
             "title": "修复治理漂移",
             "description": "检测到治理规则漂移，需要同步",
             "confidence": 0.85,
@@ -104,11 +135,17 @@ def propose(observations: dict | None = None) -> list[dict]:
         proposals.append({
             "id": "EVOLVE-INBOX",
             "type": "process",
+            "target": "decision-inbox.json",
             "title": "清理决策收件箱积压",
             "description": f"收件箱积压 {inbox.get('pending', 0)} 项决策",
             "confidence": 0.8,
             "risk": "low",
         })
+
+    # Deduplicate against existing proposals
+    existing = _load_existing_proposals()
+    merged = _dedup_proposals(existing, proposals)
+    _save_proposals(merged)
 
     return proposals
 
