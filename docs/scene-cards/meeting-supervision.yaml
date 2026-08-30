@@ -5,8 +5,8 @@ last-reviewed: 2026-08-26
 schema: scene-card/v1
 scene_type: internal_pipeline
 admission_track: internal_evidence_based
-lifecycle: assisted
-activation: preview
+lifecycle: supervised
+activation: active
 approval_state: confirmed
 scene_id: meeting-supervision
 journey_id: meeting-to-delivery

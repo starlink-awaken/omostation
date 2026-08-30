@@ -12,8 +12,8 @@ related:
 ---
 schema: scene-card/v2
 scene_type: external_resource
-lifecycle: assisted
-activation: controlled
+lifecycle: supervised
+activation: active
 approval_state: confirmed
 scene_id: unified-inbox
 journey_id: inbox-to-decision
