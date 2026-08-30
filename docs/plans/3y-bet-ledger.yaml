@@ -283,7 +283,7 @@ bets:
     expect: exit 0 from a clean family-hub checkout without live Documents or copied app-data
   - cmd: cd projects/family-hub/apps/dashboard && bun run test:e2e
     expect: exit 0 for synthetic authentication, representative read journeys, and disabled-write behavior
-  - cmd: cd projects/family-hub && bun run build && uv run pytest tests -q
+  - cmd: cd projects/family-hub && uv run pytest tests -q && bun run build
     expect: exit 0 for the pre-existing family-hub Vite, Express boundary, Python, and FastMCP surfaces
   - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
     expect: exit 0 while family-dashboard-app remains pending and no Phase B or Phase C overclaim is introduced
