@@ -21,6 +21,7 @@ surfaces:
   read:
   - lib/documents_consumer_audit.py
   - lib/documents_runtime_quarantine.py
+  - lib/bridge_shell_verify.py
   - .omo/_truth/registry/documents-content-plane-migrations.yaml
   - .omo/standards/documents-workspace-collab-v1.md
   write:
@@ -55,7 +56,7 @@ phases:
     mode: required
     command:
     - python3
-    - bin/gac/bridge-shell-verify.py
+    - lib/bridge_shell_verify.py
   verification:
   - id: receipt-check
     mode: required

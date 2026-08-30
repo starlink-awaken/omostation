@@ -9,22 +9,22 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 
 import yaml
 
-REGISTRY = Path(__file__).resolve().parents[2] / ".omo/_truth/registry/documents-content-plane-migrations.yaml"
+REGISTRY = Path(__file__).resolve().parents[1] / ".omo/_truth/registry/documents-content-plane-migrations.yaml"
 
 
 def verify(registry_path: Path = REGISTRY, workspace: Path | None = None) -> int:
-    workspace = workspace or Path(__file__).resolve().parents[2]
+    workspace = workspace or Path(__file__).resolve().parents[1]
     data = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
     shells = data.get("bridge_shells") or []
     if not shells:
         print("bridge-shell-verify: no bridge_shells registered — skip")
         return 0
     # shell 在 Documents（内容面），target 在 Workspace（控制面）——ADR-0441 方向语义
-    import os
     documents_root = Path(os.environ.get("L4_DOCUMENTS_ROOT", str(Path.home() / "Documents")))
     failed = 0
     for shell in shells:

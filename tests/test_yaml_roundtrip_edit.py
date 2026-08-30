@@ -6,8 +6,9 @@ import yaml
 
 _SPEC = importlib.util.spec_from_file_location(
     "yaml_roundtrip_edit",
-    Path(__file__).resolve().parents[1] / "bin" / "ssot" / "yaml-roundtrip-edit.py",
+    Path(__file__).resolve().parents[1] / "lib" / "yaml_ssot_edit.py",
 )
+assert _SPEC and _SPEC.loader
 _mod = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_mod)
 roundtrip_edit = _mod.roundtrip_edit
