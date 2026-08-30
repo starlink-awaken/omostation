@@ -254,29 +254,43 @@ python3 bin/ssot/governance_closed_loop.py   # 闭环端到端验证 (真实数�
 cd projects/ecos && uv run python3 bin/inference_engine.py  # DR-01~08 推理
 ```
 
-### 链路闭环工具 (Phase 1-3 新增)
+### 链路闭环工具 (Phase 1-3)
 
 ```bash
 # 决策收件箱
 python3 bin/cockpit decide list / add / status
 
+# 统一桥接运行时 (MetaOS↔OMO, Model-Driven↔ECOS, L4↔记忆层)
+python3 bin/gac/bridge-runtime.py --status
+python3 bin/gac/bridge-runtime.py --delegate metaos-omo audit_log
+
 # 防腐管道接线 (G1/G2)
 python3 bin/gac/corrosion-pipeline-connector.py --to-inbox
 
-# 场景卡 → Journey → 价值 → 自进化
+# 场景卡 → Journey
 python3 bin/gac/scene-journey-connector.py --auto-create
-python3 bin/gac/value-evolution-connector.py --feed-evolution
 
-# 内核连接桥 (MetaOS↔OMO, Model-Driven↔ECOS, L4↔记忆层)
-python3 bin/gac/kernel-bridge.py --status
-python3 bin/gac/model-ecos-bridge.py --status
-python3 bin/gac/l4-memory-bridge.py --status
+# 价值证明闭环
+python3 bin/gac/value-tracker.py --record 15.5
+python3 bin/gac/value-tracker.py --update-north-star
+
+# 自进化反馈循环
+python3 bin/gac/self-evolution-loop.py --cycle
+python3 bin/bc-os/evolution-proposal-triage.py --generate
+python3 bin/bc-os/evolution-proposal-triage.py --auto-approve
+
+# Goal 模式测试
+python3 bin/gac/goal-mode-test.py --full-test
 
 # 信号路由 (日历)
 python3 bin/bc-os/signal_router.py --calendar events.ics
 
 # 探测器心跳矩阵 (M3 仪式)
 python3 bin/gac/probe-heartbeat-monitor.py --status
+
+# 持续迭代
+python3 bin/gac/weekly-review.py --generate
+python3 bin/gac/monthly-healthcheck.py --full
 ```
 
 See [`bin/README.md`](bin/README.md) for the full tool catalog.
