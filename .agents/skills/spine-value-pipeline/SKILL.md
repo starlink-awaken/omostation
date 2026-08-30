@@ -33,10 +33,10 @@ description: omostation (eCOS v6) 主干真值流与署名自进化技能包。�
 * 调用 Cockpit API (`POST /api/inbox/sign`) 或在 Web 界面呈现待办卡片；
 * 绝不代替夏明星直接对外发送未经审阅的内容，必须由本人确认署名。
 
-### 步骤 5：Diff 捕获与自适应记忆沉淀 (Feedback)
-* 调用 `bos://memory/mos/diff`；
-* 传入 `draft_text` (AI原稿) 与 `final_text` (夏明星最终署名稿)；
-* 自动提取用词/修辞偏好追加至 `~/Documents/_entities/facts/preferences.md`。
+### 步骤 5：Diff 捕获与自适应记忆沉淀 (Feedback & Continuous LoRA Adaptation)
+* 调用 `bos://memory/mos/diff` 或使用 CLI `cockpit spine sign --original <草稿> --signed <定稿>`；
+* 自动提取用词/修辞偏好追加至 `~/Documents/_entities/facts/preferences.md`；
+* 样本自动同步至 `.omo/state/lora-replay-buffer.jsonl`，在 Mac mini M4 闲时触发 LoRA 在线增量微调（30% 历史经验回放防遗忘）。
 
 ## 2. 标准 BOS 服务契约速查
 
@@ -44,6 +44,29 @@ description: omostation (eCOS v6) 主干真值流与署名自进化技能包。�
 | :--- | :--- | :--- |
 | `bos://ingress/calendar` | stdio | 获取本地系统日历 |
 | `bos://ingress/inbox` | stdio | 获取 ~/Documents/_inbox 待办 |
-| `bos://compute/omlxc/infer` | stdio / http | 本地 0ms TTFT 主权大模型推理 |
+| `bos://compute/aetherforge/infer` | stdio / http | 本地 0ms TTFT 主权大模型推理 (27B/70B) |
+| `bos://compute/omlxc/dma` | stdio | 雷雳 5 120Gbps P2P 零拷贝 DMA 跨机总线 |
+| `bos://compute/omlxc/lora` | stdio | 夏明星专属署名 Diff 闲时在线 LoRA 蒸馏 |
 | `bos://memory/mos/diff` | stdio | 提取署名 Diff 并更新偏好库 |
-| `bos://ops/health` | stdio | 全仓 336 服务健康度巡检 |
+| `bos://ops/health` | stdio | 全仓健康度巡检 |
+
+## 3. Cockpit Spine CLI 常用操作
+
+```bash
+# 1. 请求本地主权模型草稿
+cockpit spine draft --prompt "请拟定下周架构演进计划"
+
+# 2. 审议修改后一键提交署名 Diff 并记录价值
+cockpit spine sign --original "草稿文本" --signed "定稿文本" --domain "architecture"
+
+# 3. 查看署名 Diff 经验回放池状态
+cockpit spine diff
+cockpit spine replay
+
+# 4. 触发 Mac mini M4 闲时 LoRA 增量蒸馏
+cockpit spine distill --domain "architecture" --epochs 3
+
+# 5. 查看实时 DMA 链路与显存遥测
+cockpit spine status
+```
+
