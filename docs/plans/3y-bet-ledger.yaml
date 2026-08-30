@@ -263,7 +263,8 @@ bets:
   title: Sync convergence pulse capability projection
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Restore the generated capability projection after convergence-pulse-weekly entered the canonical workflow registry without projection refresh.
   non_goals:
   - No native capability, workflow, script, registry source, dispatcher, baseline, or runtime mutation.
@@ -293,6 +294,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:0db31501994e228e5b44b2713f2cf42a55f5b47067d0c8eac5a2c3fb03952bc2
     decision_ref: decision://accepted/BET-Y1Q3-T10-107
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@53483be5644444cb0f27b5553a8e469207016929
+          tests:
+            ref: receipt://docs/reports/2026-08-30-convergence-pulse-capability-projection-sync.md
+            sha256: sha256:048810a9cc83f229e72cf27a6e18799f402d22ce4af8829d29ceebcff2aff647
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md
+            sha256: sha256:0db31501994e228e5b44b2713f2cf42a55f5b47067d0c8eac5a2c3fb03952bc2
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md
+            sha256: sha256:0db31501994e228e5b44b2713f2cf42a55f5b47067d0c8eac5a2c3fb03952bc2
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-convergence-pulse-capability-projection-sync.md
+            sha256: sha256:048810a9cc83f229e72cf27a6e18799f402d22ce4af8829d29ceebcff2aff647
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-convergence-pulse-capability-projection-sync.md
+            sha256: sha256:048810a9cc83f229e72cf27a6e18799f402d22ce4af8829d29ceebcff2aff647
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-107.md
+            sha256: sha256:d058011b8e68d0c7c43c5682b30ba322068faae7a2bac4547b16c2b440e5abc2
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md
+            sha256: sha256:0db31501994e228e5b44b2713f2cf42a55f5b47067d0c8eac5a2c3fb03952bc2
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on: []
   risk_level: L1
   human_gate: false

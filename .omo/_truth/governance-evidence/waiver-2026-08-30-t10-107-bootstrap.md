@@ -27,5 +27,8 @@ no-run-id: true
 
 formal_execution:
   run_id: 20260830T130700Z-project-doc-change-2430cccc
-  status: active
-  note: The waiver remains bootstrap-only; projection generation uses the formal run and exact claims.
+  status: completed
+  closeout_run_id: 20260830T142140Z-project-doc-change-1f71468f
+  merged_pr: 2753
+  merged_commit: 53483be5644444cb0f27b5553a8e469207016929
+  note: The waiver remained bootstrap-only; projection generation and closeout used formal runs with exact claims.
