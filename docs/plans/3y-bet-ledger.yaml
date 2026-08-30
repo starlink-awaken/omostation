@@ -257,6 +257,78 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-122
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Relocate family dashboard runtime state and prove HITL Documents writes
+  appetite: 4 days
+  priority: P0
+  status: candidate
+  goal: Materialize the real family dashboard state beneath the Workspace runtime plane and replace every direct Documents mutation with Cockpit-approved, OMO-recorded, Agora-routed, family-hub CAS transactions, without performing Phase C entry cutover or legacy retirement.
+  non_goals:
+  - No Cockpit domain-app cutover, persistent production service/port/schedule, or removal of the legacy family-dashboard-app contract.
+  - No deletion, move, quarantine, or rewrite of the legacy app, app-data, manifests, caches, credentials, or existing household documents; the separately approved canary targets only a dedicated non-private canary document and rolls back to absence.
+  - No copying of .next, node_modules, browser auth, .env.local, provider credentials, raw Documents content, or legacy AI cache into active state.
+  - No second proposal registry, dispatcher, approval queue, content database, human entry, direct .omo writer, direct Dashboard Documents writer, environment bypass, or Git backup behavior.
+  - No claim of Phase C completion, production availability, principal-bound value, old-app retirement, or Documents-wide physical purity.
+  done_when:
+  - A deterministic family-hub transaction materializes six private manifests and freshly rebuilt generated products under runtime/family-hub/dashboard, starts a new cache, proves normalized parity, preserves the Documents source fingerprint, and emits immutable plan/apply/verify/rollback evidence.
+  - Generic file save, vaccine update, and milestone achievement create digest-only HITL proposals and contain no direct Documents writer; task and AI cache mutations remain state-root only and backup produces only a Workspace snapshot receipt.
+  - OMO is the unique proposal and durable HITL receipt writer, Cockpit uses server-owned human approval identity, and an uncached declarative Agora internal BOS route invokes exactly the family-hub transaction owner.
+  - Tests prove proposal idempotency, secret/body exclusion, path containment, CAS refusal, payload drift refusal, atomic apply, verified rollback, receipt collision refusal, unavailable dependency behavior, and no cached mutation replay.
+  - A read-only real-data build/parity run succeeds, consumer audit remains forbidden_executors=0, and a separately confirmed real canary is created and rolled back without touching an existing household document.
+  - Every child PR and the root gitlink PR passes required checks and merges; authoritative-main replay is green while family-dashboard-app remains non-terminal for Phase C and value/purity remain NOT_PROVEN.
+  verify:
+  - cmd: cd projects/family-hub && uv run pytest tests/test_dashboard_phase_b.py tests/test_dashboard_import.py tests/test_dashboard_import_cli.py -q && uv run pytest tests -q
+    expect: exit 0 for runtime migration, HITL transaction, importer, full Python, and FastMCP regression coverage
+  - cmd: cd projects/family-hub/apps/dashboard && bun install --frozen-lockfile && bun run test && bun run lint && bun run build && bun run test:e2e
+    expect: exit 0 with proposal-only Documents routes, state-only task/cache writes, production build, and synthetic journeys
+  - cmd: cd projects/omo && uv run pytest tests/test_omo_cockpit_bridge.py tests/test_omo_governance.py -q
+    expect: exit 0 for canonical proposal ingress, idempotency, approve/reject execution receipts, and failed-execution retention
+  - cmd: cd projects/agora && uv run pytest tests/unit/test_bos_resolver.py -q
+    expect: exit 0 for exact declarative internal BOS binding and zero-TTL mutation behavior
+  - cmd: cd projects/cockpit && uv run pytest src/cockpit/tests/test_api_proposals.py -q
+    expect: exit 0 for authenticated ingress, server-owned approver identity, BOS execution, and truthful pending/terminal responses
+  - cmd: cd projects/family-hub && uv run python -m family_hub.dashboard_phase_b verify-runtime --documents-root /Users/xiamingxing/Documents/@家庭生活 --state-root /Users/xiamingxing/Workspace/runtime/family-hub/dashboard --json
+    expect: exit 0 with canonical state, real parity, unchanged source, and complete migration receipt
+  - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
+    expect: exit 0 with forbidden_executors=0 and no unmatched family-dashboard consumer
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json && make gac-local-gate
+    expect: exit 0 with family-dashboard Phase B evidence recorded but migration family non-terminal for Phase C
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/family-hub
+  - projects/omo
+  - projects/agora
+  - projects/cockpit
+  - runtime/family-hub/dashboard
+  - .omo/state/proposals
+  - .omo/_delivery/hitl/family-dashboard
+  - .omo/_truth/registry/mutation-surfaces.yaml
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md
+  - docs/superpowers/plans/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b.md
+  - docs/reports/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-122.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-31-t10-122-bootstrap.md
+  - .omo/_truth/governance-evidence/approval-2026-08-31-t10-122-family-dashboard-canary.md
+  - tests/test_documents_content_plane_migration_check.py
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:1d76adb508dca1a13f57148d0d48f309770d141bc165b49f85a45ae2c33b85fb
+    decision_ref: decision://accepted/BET-Y1Q3-T10-122
+  depends_on:
+  - BET-Y1Q3-T10-111
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: Any unknown/non-regular source, private-content leakage, legacy cache activation, Documents source drift, state target collision, parity ambiguity, direct Dashboard or direct .omo write, client-selected approver, missing approval, cached mutation replay, unsafe target, payload drift, CAS mismatch, receipt collision, unproved rollback, existing household-document canary target, child/root ancestry mismatch, failed required check, Phase C mutation, or value/purity overclaim stops Phase B and preserves the legacy app and most recoverable state.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-111
   track: T10-MATURITY
   window: Y1Q3
