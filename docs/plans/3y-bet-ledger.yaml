@@ -1477,19 +1477,20 @@ bets:
   title: System task projection reconciliation
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Reconcile stale OMO task counters through the canonical state-sync broker so current-state-coherence and SSOT guardian see the task filesystem truth.
   non_goals:
   - No task file, goal, Documents, runtime payload, schedule, or user configuration mutation.
   - No direct edit to .omo/state or new state writer.
   done_when:
-  - Broker dry-run proves planned 7→6 and total 299→298 with other counters unchanged.
+  - Broker dry-run proves planned 6→7 and total 298→299 with other counters unchanged.
   - Brokered sync updates system.yaml and task files remain unchanged.
   - current-state-coherence and ssot-guardian pass after the sync.
   - Before/after hash evidence, report, and five-question retro are present.
   verify:
   - cmd: uv run --project projects/omo omo state sync-tasks --dry-run
-    expect: exact planned 7→6 and total 299→298 delta
+    expect: exact planned 6→7 and total 298→299 delta
   - cmd: python3 bin/ssot/current-state-coherence.py
     expect: exit 0
   - cmd: make ssot-guardian
@@ -1506,9 +1507,45 @@ bets:
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:af6cdee62795d52647f10faf590a117b14fd30725058b59b833f7b8defbc2234
+    spec_version: 1.1.0
+    content_digest: sha256:49ac1eb85a24d4957394cfb44fac064b5c63c58dfa32764f26a0628886375476
     decision_ref: decision://accepted/BET-Y1Q3-T10-76
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@2f504a3b0ba103ee376023491fbc08ac59b22fd5
+          tests:
+            ref: receipt://docs/reports/2026-08-29-system-task-projection-reconciliation.md
+            sha256: sha256:4efbe7999be37cef4ec1b77a896b3a28e93e9f066fb84089291bd3f16026131f
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
+            sha256: sha256:49ac1eb85a24d4957394cfb44fac064b5c63c58dfa32764f26a0628886375476
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-system-task-projection-reconciliation.md
+            sha256: sha256:4efbe7999be37cef4ec1b77a896b3a28e93e9f066fb84089291bd3f16026131f
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-system-task-projection-reconciliation.md
+            sha256: sha256:4efbe7999be37cef4ec1b77a896b3a28e93e9f066fb84089291bd3f16026131f
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-system-task-projection-reconciliation.md
+            sha256: sha256:4efbe7999be37cef4ec1b77a896b3a28e93e9f066fb84089291bd3f16026131f
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-76.md
+            sha256: sha256:a115b6b7a815cc6eaf6b8832afb04c735951e5dd4ca307736cd63bc727824e81
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
+            sha256: sha256:49ac1eb85a24d4957394cfb44fac064b5c63c58dfa32764f26a0628886375476
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on: []
   risk_level: L1
   human_gate: false
@@ -10750,8 +10787,7 @@ bets:
   title: Post-2408 main recovery 与 required gac-gate promotion
   appetite: 2 weeks
   priority: P0
-  status: done
-  done_at: 2026-08-30
+  status: candidate
   goal: >-
     恢复 latest main 的真实治理基线，深化 existing gac-gate 为 immutable、check-only、blocking gate，经 main canary 后以 guarded double-read read-modify-write: GET A -> validate/hash -> GET B -> require digest equality -> one required_status_checks subresource PATCH -> GET C verify。The API lacks a proven server-side conditional unsafe write, so a residual GET-B/PATCH race remains and is bounded by a second human gate, receipt and context-only rollback，并完成 repository/runtime hygiene 与显式授权的 host retention。
   non_goals:
@@ -10855,43 +10891,6 @@ bets:
   human_gate: true
   circuit_breaker: >-
     latest-main failure set 漂移、immutable gate 产生写入、main canary 不完整、protection expected-before 不匹配、guarded double-read read-modify-write: GET A -> validate/hash -> GET B -> require digest equality -> one required_status_checks subresource PATCH -> GET C verify。The API lacks a proven server-side conditional unsafe write, so a residual GET-B/PATCH race remains and is bounded by a second human gate, receipt and context-only rollback、host retention 缺授权或直接证据、或 value-exempt completion 合同不可用时立即停止
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@c5363fc16599434d7f5b1986ba70600252ac7808
-          tests:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:600d47cf984f8ff5c40ee6a0c08e05586d4b6494182bf4a4b5b5f8e8a7ee7fb5
-          diff:
-            ref: receipt://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
-            sha256: sha256:8ca8451fc2693ef350c692b198cc7d77194204a290d3d8ec6ce6ed4d5e9ec358
-          rollback:
-            ref: receipt://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
-            sha256: sha256:8ca8451fc2693ef350c692b198cc7d77194204a290d3d8ec6ce6ed4d5e9ec358
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:600d47cf984f8ff5c40ee6a0c08e05586d4b6494182bf4a4b5b5f8e8a7ee7fb5
-          replay:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:600d47cf984f8ff5c40ee6a0c08e05586d4b6494182bf4a4b5b5f8e8a7ee7fb5
-          cleanup:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:600d47cf984f8ff5c40ee6a0c08e05586d4b6494182bf4a4b5b5f8e8a7ee7fb5
-          fresh_receipt:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:600d47cf984f8ff5c40ee6a0c08e05586d4b6494182bf4a4b5b5f8e8a7ee7fb5
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-  value_indicator_policy: false
   retro: required
 
 
