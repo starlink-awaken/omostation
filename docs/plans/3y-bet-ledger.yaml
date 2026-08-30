@@ -4059,7 +4059,8 @@ bets:
   title: Product P0 WP5 Human Adjudication to Principal-Bound Value
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   parent_bet_id: BET-Y1Q3-T4-02
   delivery_wave: C
   goal: 让一条真实非测试 decision 经 authority-bound human 裁决后，由 OMO 唯一 truth writer 持久化 adjudication 和 decision_outcome，并以可重放的 principal/decision/scene/episode lineage 推进价值轴。
