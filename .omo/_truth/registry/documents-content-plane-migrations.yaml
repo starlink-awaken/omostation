@@ -3,17 +3,14 @@ kind: DocumentsContentPlaneMigrations
 id: documents-content-plane-migrations
 status: active
 owner: governance-team
-
 documents_root:
-  default: "~/Documents"
+  default: ~/Documents
   environment_override: L4_DOCUMENTS_ROOT
-
 candidate_kinds:
-  - runtime
-  - cache
-
+- runtime
+- cache
 baseline:
-  observed_at: "2026-08-12T05:58:22+08:00"
+  observed_at: '2026-08-12T05:58:22+08:00'
   l4_merge: e5d92646a114c11bb98a29a9959d2dca157029a6
   runtime: 7649
   cache: 36878
@@ -21,629 +18,655 @@ baseline:
   invalid_archive: 7
   total_violations: 44534
   note: Counts are evidence, not a frozen gate; exact-one family coverage is the gate.
-
 major_surfaces:
-  - family-dashboard-app
-  - toolbox-staging
-  - career-code-archives
-  - zotero-app-data
-
+- family-dashboard-app
+- toolbox-staging
+- career-code-archives
+- zotero-app-data
 coverage_samples:
-  - relative_path: "@家庭生活/family-dashboard-app/node_modules/pkg/index.js"
-    kind: cache
-    family: family-dashboard-app
-  - relative_path: "@学习进化/_external/toolbox-staging/DeepTutor/main.py"
-    kind: runtime
-    family: toolbox-staging
-  - relative_path: "@个人/_storage/职业历史/美团/example.js"
-    kind: runtime
-    family: career-code-archives
-  - relative_path: "Zotero/translators/example.js"
-    kind: runtime
-    family: zotero-app-data
-  - relative_path: "@家庭生活/_archive/closed-app/index.js"
-    kind: runtime
-    family: family-content-archives
-  - relative_path: "@家庭生活/_runtime/kems-init.py"
-    kind: runtime
-    family: family-runtime-kems
-  - relative_path: "@学习进化/_storage/资料库/example.py"
-    kind: runtime
-    family: learning-content-archives
-  - relative_path: "@学习进化/_control/scripts/concept-weave.py"
-    kind: runtime
-    family: learning-runtime
-  - relative_path: "@工作文档/卫健委/_storage/06-工具/example.py"
-    kind: runtime
-    family: work-content-archives
-  - relative_path: "@工作文档/卫健委/_runtime/check-kems-update.py"
-    kind: runtime
-    family: work-runtime
-  - relative_path: "@公共/_runtime/watch-dispatch.py"
-    kind: runtime
-    family: public-runtime
-  - relative_path: "@驾驶舱/_runtime/ecos-health-check.py"
-    kind: runtime
-    family: cockpit-runtime
-  - relative_path: "@OPC/setup-codebase-memory-mcp.sh"
-    kind: runtime
-    family: opc-tools
-  - relative_path: "@创意创作/_archive/example/setup.sh"
-    kind: runtime
-    family: creative-content-archives
-  - relative_path: "_inbox/2026-08-03-kems-repair.py"
-    kind: runtime
-    family: root-oneoff-assets
-  - relative_path: "ZCode/.zcode/v2/tasks-index.sqlite"
-    kind: cache
-    family: documents-client-state
-  - relative_path: "index-BYqQMscj.js"
-    kind: runtime
-    family: root-oneoff-assets
-
+- relative_path: '@家庭生活/family-dashboard-app/node_modules/pkg/index.js'
+  kind: cache
+  family: family-dashboard-app
+- relative_path: '@学习进化/_external/toolbox-staging/DeepTutor/main.py'
+  kind: runtime
+  family: toolbox-staging
+- relative_path: '@个人/_storage/职业历史/美团/example.js'
+  kind: runtime
+  family: career-code-archives
+- relative_path: Zotero/translators/example.js
+  kind: runtime
+  family: zotero-app-data
+- relative_path: '@家庭生活/_archive/closed-app/index.js'
+  kind: runtime
+  family: family-content-archives
+- relative_path: '@家庭生活/_runtime/kems-init.py'
+  kind: runtime
+  family: family-runtime-kems
+- relative_path: '@学习进化/_storage/资料库/example.py'
+  kind: runtime
+  family: learning-content-archives
+- relative_path: '@学习进化/_control/scripts/concept-weave.py'
+  kind: runtime
+  family: learning-runtime
+- relative_path: '@工作文档/卫健委/_storage/06-工具/example.py'
+  kind: runtime
+  family: work-content-archives
+- relative_path: '@工作文档/卫健委/_runtime/check-kems-update.py'
+  kind: runtime
+  family: work-runtime
+- relative_path: '@公共/_runtime/watch-dispatch.py'
+  kind: runtime
+  family: public-runtime
+- relative_path: '@驾驶舱/_runtime/ecos-health-check.py'
+  kind: runtime
+  family: cockpit-runtime
+- relative_path: '@OPC/setup-codebase-memory-mcp.sh'
+  kind: runtime
+  family: opc-tools
+- relative_path: '@创意创作/_archive/example/setup.sh'
+  kind: runtime
+  family: creative-content-archives
+- relative_path: _inbox/2026-08-03-kems-repair.py
+  kind: runtime
+  family: root-oneoff-assets
+- relative_path: ZCode/.zcode/v2/tasks-index.sqlite
+  kind: cache
+  family: documents-client-state
+- relative_path: index-BYqQMscj.js
+  kind: runtime
+  family: root-oneoff-assets
+bridge_shells:
+- shell: '@公共/_runtime/kems-materialize.py'
+  target: projects/runtime/scripts/kems-materialize.py
+  sha256: 423bf6aa40c520189bc543ae0656385ed2c8e6620e38606ef8720ef839546830
+  owner: runtime
+  adr: ADR-0441
+  verified_at: '2026-08-30T08:36:00Z'
 families:
-  - id: family-dashboard-app
-    major_surface: true
-    source_globs:
-      - "@家庭生活/family-dashboard-app/**"
-    artifact_kind: [runtime, cache]
-    disposition: migrate
-    owner: family-hub
-    replacement: "projects/family-hub/apps/dashboard plus Workspace runtime state"
-    consumer_refs:
-      - ".omo/_truth/registry/documents-content-plane-migrations.yaml#family-dashboard-app"
-      - "projects/cockpit/src/cockpit/web/api_domain_apps.py"
-    rollback: "Keep the Documents app and its fingerprint until family-hub build, E2E, and client cutover pass."
-    confirmation_gate: before_write
-    status: pending
-
-  - id: toolbox-staging
-    major_surface: true
-    source_globs:
-      - "@学习进化/_external/toolbox-staging/**"
-    artifact_kind: [runtime, cache]
-    disposition: relocate
-    owner: toolbox
-    replacement: "ToolBox managed capability staging with preserved Git remotes and HEADs"
-    consumer_refs:
-      - "docs/reports/2026-08-11-documents-content-plane-full-inventory.md#101-四个外部-git-仓"
-    rollback: "Copy first, verify Git remotes/HEAD/tree hashes, and retain the original until the target is accepted."
-    confirmation_gate: before_write
-    status: pending
-
-  - id: career-code-archives
-    major_surface: true
-    source_globs:
-      - "@个人/_storage/职业历史/**"
-    artifact_kind: [runtime, cache]
-    disposition: content_archive
-    owner: l4-kernel
-    replacement: "schema-valid CONTENT_ARCHIVE.yaml at governed career archive roots; content remains in place"
-    consumer_refs:
-      - "docs/reports/2026-08-11-documents-content-plane-full-inventory.md#3-全量基线"
-    rollback: "Remove only newly published manifests after recording their hashes; never move or delete the 16 GiB source."
-    confirmation_gate: before_write
-    status: pending
-
-  - id: zotero-app-data
-    major_surface: true
-    source_globs:
-      - "Zotero/**"
-    artifact_kind: [runtime, cache]
-    disposition: relocate
-    owner: zotero-app
-    replacement: "~/Library/Application Support/Zotero with Documents retaining readable exports or attachments only"
-    consumer_refs:
-      - "~/Library/Application Support/Zotero/Profiles/c2ap8dvs.default/prefs.js"
-    rollback: "Back up SQLite and preferences, copy before switching dataDir, and retain the original until Zotero opens the library and attachments."
-    confirmation_gate: before_external_config
-    status: pending
-
-  - id: family-content-archives
-    source_globs:
-      - "@家庭生活/_archive/**"
-      - "@家庭生活/_knowledge/**"
-    artifact_kind: [runtime, cache]
-    disposition: content_archive
-    owner: l4-kernel
-    replacement: "CONTENT_ARCHIVE.yaml or plain content after cache removal, with execution denied"
-    consumer_refs:
-      - "audit://documents/family-content/consumer-scan-pending"
-    rollback: "Preserve source bytes; revert only new declarations if validation fails."
-    confirmation_gate: before_write
-    status: pending
-
-  - id: family-runtime-kems
-    source_globs:
-      - "@家庭生活/_runtime/**"
-      - "@家庭生活/_control/**"
-    artifact_kind: [runtime, cache]
-    disposition: delegate
-    owner: runtime
-    replacement: "Runtime jobs delegating KEMS operations to Kairon/KOS and storing state outside Documents"
-    consumer_refs:
-      - "audit://documents/family-runtime/consumer-scan-pending"
-    rollback: "Keep legacy commands until parity and scheduled-consumer cutover evidence pass."
-    confirmation_gate: before_write
-    status: in_progress
-    evidence:
-      verified_at: "2026-08-29T23:57:17Z"
-      consumer_scan: "receipt://.omo/evidence/20260829T235316Z-bet-execution-0f79f21b/family-consumer-audit-post.json"
-      rollback_ref: "docs/reports/2026-08-30-family-runtime-kems-quarantine.md"
-      runtime_file_count: 13
-      runtime_bytes: 6220
-      owner_parity: pending
-    progress_evidence:
-      scope_status: partial
-      completed_subscopes:
-        - scope: "@家庭生活/_runtime dangling symlinks only"
-          verified_at: "2026-08-29T23:57:17Z"
-          source_fingerprint: "sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a"
-          target_fingerprint: "sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a"
-          manifest_sha256: "sha256:8ae620b70a7ac92a720d2e3d44803f66a6b9f3e207389a860c1a79d876b71630"
-          node_type: symlink
-          file_count: 11
-          byte_count: 0
-          consumer_scan: "receipt://.omo/evidence/20260829T235316Z-bet-execution-0f79f21b/family-consumer-audit-post.json"
-          rollback_ref: "docs/reports/2026-08-30-family-runtime-kems-quarantine.md"
-        - scope: "@家庭生活/_control/_scripts regular runtime files only"
-          verified_at: "2026-08-29T23:57:17Z"
-          source_fingerprint: "sha256:962dea7dc21946b1c9276deaeb5bdb8472c587a3a572b175145ebcdfbb368614"
-          target_fingerprint: "sha256:962dea7dc21946b1c9276deaeb5bdb8472c587a3a572b175145ebcdfbb368614"
-          manifest_sha256: "sha256:1edea8428a3d4068eb7ce9cedd9f86a10417861d621eeee0bc91b31b13c7b9f9"
-          node_type: regular
-          file_count: 2
-          byte_count: 6220
-          consumer_scan: "receipt://.omo/evidence/20260829T235316Z-bet-execution-0f79f21b/family-consumer-audit-post.json"
-          rollback_ref: "docs/reports/2026-08-30-family-runtime-kems-quarantine.md"
-
-  - id: learning-content-archives
-    source_globs:
-      - "@学习进化/_storage/**"
-      - "@学习进化/_knowledge/**"
-      - "@学习进化/.kems-repair-backups/**"
-    artifact_kind: [runtime, cache]
-    disposition: content_archive
-    owner: l4-kernel
-    replacement: "governed content archives or plain evidence; no executable consumer"
-    consumer_refs:
-      - "audit://documents/learning-content/consumer-scan-pending"
-    rollback: "Preserve source bytes and remove only declarations that fail validation."
-    confirmation_gate: before_write
-    status: pending
-
-  - id: learning-runtime
-    source_globs:
-      - "@学习进化/_control/**"
-      - "@学习进化/.githooks/**"
-      - "@学习进化/_inbox/**"
-      - "学习进化/2-knowledge/基建架构/**"
-      - "@学习进化/_knowledge/10-systems/KEMS/.kems/_scripts/**"
-    artifact_kind: [runtime, cache]
-    disposition: delegate
-    owner: runtime
-    replacement: "Workspace Runtime jobs plus Kairon/KOS owner calls; read-only concept decay/orphan inspections are owned by runtime documents-learning-* while declarations remain in Documents"
-    consumer_refs:
-      - "~/Library/LaunchAgents/com.learningevolution.concept-weave.monthly.plist"
-      - "audit://claude-scheduled/vault-daily-health"
-    rollback: "Keep the legacy path inactive but intact until launchd and scheduled-client consumers are verified on the Workspace owner."
-    confirmation_gate: before_write
-    status: in_progress
-    evidence:
-      verified_at: "2026-08-30T06:50:00Z"
-      consumer_scan: "receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json"
-      rollback_ref: "docs/reports/2026-08-30-learning-content-owner-convergence.md"
-      runtime_file_count: 11
-      runtime_bytes: 68213
-      owner_parity: partial
-      owner_parity_evidence:
-        status: read_only_guarded_mutation_and_control_plane_owner_proven
-        jobs:
-          - documents-learning-decay
-          - documents-learning-orphans
-        owner_entry: "bin/gac/documents-domain-owner-job.py learning-control / learning-control-plane"
-        control_plane_entry: "bin/gac/documents-domain-owner-job.py learning-control-plane all"
-        receipt: "docs/reports/2026-08-30-learning-control-plane-owner-convergence.md"
-        control_plane_transactions:
-          - scope: "learning _control/executors runtime files (9 files)"
-            verified_at: "2026-08-30T07:41:20Z"
-            file_count: 9
-            byte_count: 45024
-            quarantine_manifest: "runtime/quarantine/documents-learning-control-runtime-20260830/manifest.json"
-            consumer_scan: "receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json"
-          - scope: "KEMS .kems/_scripts staging toolkit (10 scripts, never deployed)"
-            verified_at: "2026-08-30T07:44:10Z"
-            file_count: 10
-            byte_count: 33617
-            quarantine_manifest: "runtime/quarantine/documents-learning-kems-scripts-20260830/manifest.json"
-            owner_adoption: "omostation-runtime#70 scripts/kems-toolkit"
-            consumer_scan: "receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json"
-        writes_documents: explicit_apply_only
-    progress_evidence:
-      scope_status: partial
-      completed_subscopes:
-        - scope: "@学习进化/_control/scripts/backfill-knowledge-type.py"
-          verified_at: "2026-08-30T01:17:01Z"
-          source_fingerprint: "sha256:b03837b7c840986ce28f10ae503abb0ad28243fca2cecceaf57ad54579256e55"
-          target_fingerprint: "sha256:b03837b7c840986ce28f10ae503abb0ad28243fca2cecceaf57ad54579256e55"
-          manifest_sha256: "sha256:8ef8384b18ef7a85bd82343d94ddf29f06d2e3088c9a1a4d51cb10c4db6af931"
-          node_type: regular
-          file_count: 1
-          byte_count: 8020
-          consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
-
-        - scope: "@学习进化/_control/scripts/knowledge-decay.sh"
-          verified_at: "2026-08-30T05:25:00Z"
-          source_fingerprint: "sha256:06e8541ec3de3ecd7258a57565baef78e3849a62ef4a2d578b1f0e3bbf3e4093"
-          target_fingerprint: "sha256:06e8541ec3de3ecd7258a57565baef78e3849a62ef4a2d578b1f0e3bbf3e4093"
-          manifest_sha256: "sha256:02bec508894192c288969959ffe1a7ebc733661fa179c1b1cfdbe3d31e41480e"
-          node_type: regular
-          file_count: 1
-          byte_count: 10037
-          consumer_scan: "receipt://.omo/evidence/20260830T052614Z-bet-execution-f82fb1a7/consumer-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-content-owner-convergence.md"
-        - scope: "@学习进化/_inbox/inbox-router.sh"
-          verified_at: "2026-08-30T05:25:00Z"
-          source_fingerprint: "sha256:15f37f3e79347f4a896a15c7fb54b6fa57e9267582c455f1830fbe211e9ba09"
-          target_fingerprint: "sha256:15f37f3e79347f4a896a15c7fb54b6fa57e9267582c455f1830fbe211e9ba09"
-          manifest_sha256: "sha256:6cd17eb01a0d24a53b975333518285affaf522bd543d84d190254e1cabc38902"
-          node_type: regular
-          file_count: 1
-          byte_count: 3671
-          consumer_scan: "receipt://.omo/evidence/20260830T052614Z-bet-execution-f82fb1a7/consumer-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-content-owner-convergence.md"
-        - scope: "@学习进化/_control/l4-kernel.sh"
-          verified_at: "2026-08-30T06:50:00Z"
-          source_fingerprint: "sha256:83e0f2a4cae30da65e14afdd06068dec8ef236da27eb56ca506c08937d1ac579"
-          target_fingerprint: "sha256:83e0f2a4cae30da65e14afdd06068dec8ef236da27eb56ca506c08937d1ac579"
-          manifest_sha256: "sha256:921b16106325717946a9e36f42db583a707a5c502d5ae713db0e337b53c46f05"
-          node_type: regular
-          file_count: 1
-          byte_count: 13735
-          consumer_scan: "receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-control-plane-owner-convergence.md"
-        - scope: "@学习进化/_control/vault-healthcheck.sh"
-          verified_at: "2026-08-30T06:50:00Z"
-          source_fingerprint: "sha256:8bfb47e1a0ab966efa0f91bc10278466765554208c8ae31a0ceea78f731efae5"
-          target_fingerprint: "sha256:8bfb47e1a0ab966efa0f91bc10278466765554208c8ae31a0ceea78f731efae5"
-          manifest_sha256: "sha256:88b67ebc77162d5224b3a897e4c0bab3d30ce2f01177979bdd2ae1326a8276c3"
-          node_type: regular
-          file_count: 1
-          byte_count: 3192
-          consumer_scan: "receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-control-plane-owner-convergence.md"
-        - scope: "@学习进化/_control/daemon/daemon-install.sh"
-          verified_at: "2026-08-30T06:50:00Z"
-          source_fingerprint: "sha256:90237684f7e3fc3e44d8a7409ff1353ecad1ef39cd3e088bf14b35e0fe205a9d"
-          target_fingerprint: "sha256:90237684f7e3fc3e44d8a7409ff1353ecad1ef39cd3e088bf14b35e0fe205a9d"
-          manifest_sha256: "sha256:c0270194f527fd83b676ab9476f3655b360a1b83f3ada4af482709f25b9d4cca"
-          node_type: regular
-          file_count: 1
-          byte_count: 877
-          consumer_scan: "receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-control-plane-owner-convergence.md"
-        - scope: "@学习进化/_control/daemon/health-daemon.sh"
-          verified_at: "2026-08-30T06:50:00Z"
-          source_fingerprint: "sha256:05d00f305500b0b201347d8b67473b0c1525125d8eefb4724afb035ce9fd3afc"
-          target_fingerprint: "sha256:05d00f305500b0b201347d8b67473b0c1525125d8eefb4724afb035ce9fd3afc"
-          manifest_sha256: "sha256:5cdaff127c276de2dd8c65032925e2e535511af9317be39c6c7f1fa810830eff"
-          node_type: regular
-          file_count: 1
-          byte_count: 1179
-          consumer_scan: "receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-control-plane-owner-convergence.md"
-        - scope: "@学习进化/.githooks/pre-commit-g18"
-          verified_at: "2026-08-30T06:50:00Z"
-          source_fingerprint: "sha256:5e78867312bedd489377510d7a1e71ffd6b6dfa1bf699f5dd33803f5ba0c16d2"
-          target_fingerprint: "sha256:5e78867312bedd489377510d7a1e71ffd6b6dfa1bf699f5dd33803f5ba0c16d2"
-          manifest_sha256: "sha256:f0e9b5a4f249fc08b6aac7e6ee0223aeb1209f3322c363c44c7708475f9cbeff"
-          node_type: regular
-          file_count: 1
-          byte_count: 960
-          consumer_scan: "receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-control-plane-owner-convergence.md"
-        - scope: "@学习进化/_control/scripts/backfill-knowledge-type.sh"
-          verified_at: "2026-08-30T01:17:01Z"
-          source_fingerprint: "sha256:6a399495c714b3d508b0cff94d4b430dae5e3243cfa511ebea704ac0362c4bf2"
-          target_fingerprint: "sha256:6a399495c714b3d508b0cff94d4b430dae5e3243cfa511ebea704ac0362c4bf2"
-          manifest_sha256: "sha256:2739e4c356f21e41e46db97108a98b1952020349db42842c49324617329c12dc"
-          node_type: regular
-          file_count: 1
-          byte_count: 8805
-          consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
-        - scope: "@学习进化/_control/scripts/concept-weave.py"
-          verified_at: "2026-08-30T01:17:01Z"
-          source_fingerprint: "sha256:b4a7aa28e0a11cf31170a0d7c62399adaf41898a7dfe8b4d2c0194913b85a5d6"
-          target_fingerprint: "sha256:b4a7aa28e0a11cf31170a0d7c62399adaf41898a7dfe8b4d2c0194913b85a5d6"
-          manifest_sha256: "sha256:7a14cd9dcfd7656d324768526b6e11d25a95b912d25e820c2b563fd9363ab64c"
-          node_type: regular
-          file_count: 1
-          byte_count: 11346
-          consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
-        - scope: "@学习进化/_control/scripts/run-monthly-weave.sh"
-          verified_at: "2026-08-30T01:17:01Z"
-          source_fingerprint: "sha256:979c63960fd50015d80900db29227940e3029eda42243cb0044f9fe07dbd0a4f"
-          target_fingerprint: "sha256:979c63960fd50015d80900db29227940e3029eda42243cb0044f9fe07dbd0a4f"
-          manifest_sha256: "sha256:af7487e0ccc48b9c7d40e035affae16f420f5a2f932193fd5dbc20e3252c71b1"
-          node_type: regular
-          file_count: 1
-          byte_count: 6391
-          consumer_scan: "receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json"
-          rollback_ref: "docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md"
-
-  - id: work-content-archives
-    source_globs:
-      - "@工作文档/*/_storage/**"
-      - "@工作文档/*/_knowledge/**"
-      - "@工作文档/*/.git/**"
-      - "@工作文档/*/.crush/**"
-    artifact_kind: [runtime, cache]
-    disposition: content_archive
-    owner: l4-kernel
-    replacement: "governed historical/tooling content archive or removable derived cache"
-    consumer_refs:
-      - "audit://documents/work-content/consumer-scan-pending"
-    rollback: "Preserve source content and snapshots; remove only new declarations or derived target copies."
-    confirmation_gate: before_write
-    status: pending
-
-  - id: work-runtime
-    source_globs:
-      - "@工作文档/_control/**"
-      - "@工作文档/tools/**"
-      - "@工作文档/*/_control/**"
-      - "@工作文档/*/_runtime/**"
-      - "@工作文档/*/_scripts/**"
-      - "@工作文档/*/tools/**"
-      - "@工作文档/卫健委/cleanup-commit.sh"
-    artifact_kind: [runtime, cache]
-    disposition: delegate
-    owner: runtime
-    replacement: "Runtime domain adapters, including runtime://documents/documents-weijian-kems-check@64e68230452e4240faeaccacd4b9d2df2a6452b0 and runtime://documents/documents-weijian-control-health@57b5d54c5e483a5a2f5c0e79b7225cf6094a6c81; KEMS delegates to Kairon/KOS, the control-health view reads the Weijian signals/facts projections, and both keep task state and receipts in Runtime/OMO"
-    consumer_refs:
-      - "crontab://weijian/check-kems-update"
-      - "@工作文档/卫健委/CLAUDE.md"
-      - "@驾驶舱/_control/async-tasks.yaml"
-    rollback: "Do not remove legacy commands until crontab, Claude Scheduled, and domain gateway consumers use verified Workspace commands."
-    confirmation_gate: before_write
-    status: retired
-    evidence:
-      verified_at: "2026-08-29T21:05:26Z"
-      source_fingerprint: "sha256:05577ee2f3ac29a243d4169a540b9b17d91b86dade007d19fb9d5e57040dde4b"
-      target_fingerprint: "sha256:05577ee2f3ac29a243d4169a540b9b17d91b86dade007d19fb9d5e57040dde4b"
-      consumer_scan: "receipt://.omo/evidence/20260829T210128Z-bet-execution-cdda24a3/documents-consumer-audit.json"
-      rollback_ref: "docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md"
-    progress_evidence:
-      scope_status: completed
-      scope: "@工作文档/卫健委/_runtime regular runtime files only"
-      verified_at: "2026-08-29T18:10:00Z"
-      source_fingerprint: "sha256:d2c043895c524880f76c18909eb013216a0b985b81000cb912dd258032b63f29"
-      target_fingerprint: "sha256:d2c043895c524880f76c18909eb013216a0b985b81000cb912dd258032b63f29"
-      manifest_sha256: "sha256:46e7093e9046a7257a9eb3b2b30b0aae4e5f4aa2bbec4589c34a9ef99f38d949"
-      file_count: 17
-      byte_count: 80317
-      consumer_scan: "receipt://docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md"
-      rollback_ref: "docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md"
-      remaining_globs:
-        []
-      completed_subscopes:
-        - scope: "@工作文档/国转中心/_runtime dangling symlinks only"
-          verified_at: "2026-08-29T18:40:00Z"
-          source_fingerprint: "sha256:5ffd9cc38b1b6f04a350621bea1fba3e28c63fd5de76c606647bafafd92eb4a4"
-          target_fingerprint: "sha256:5ffd9cc38b1b6f04a350621bea1fba3e28c63fd5de76c606647bafafd92eb4a4"
-          manifest_sha256: "sha256:ae02a0ea6659d4548a7b4b625ebc932d2225c36be4864de4e5c7b7ffed0bc5cb"
-          node_type: symlink
-          file_count: 12
-          byte_count: 0
-          consumer_scan: "receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md"
-          rollback_ref: "docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md"
-        - scope: "@工作文档/规自委/_runtime dangling symlinks only"
-          verified_at: "2026-08-30T00:15:00Z"
-          source_fingerprint: "sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a"
-          target_fingerprint: "sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a"
-          manifest_sha256: "sha256:7bacbae4998f693511b295a13edddd385939ec021caa7b67c7787d7c0e01f17b"
-          node_type: symlink
-          file_count: 11
-          byte_count: 0
-          consumer_scan: "receipt://.omo/evidence/20260829T184731Z-bet-execution-a848d2dc/documents-consumer-audit.json"
-          rollback_ref: "docs/reports/2026-08-30-documents-guizi-dangling-symlink-quarantine.md"
-        - scope: "@工作文档/国转中心/tools regular runtime files only"
-          verified_at: "2026-08-30T00:30:00Z"
-          source_fingerprint: "sha256:2f6b66f2f17a331943a66c9e6a2a1914fd3e4973d29cd9ef88d50a586ccb36f7"
-          target_fingerprint: "sha256:2f6b66f2f17a331943a66c9e6a2a1914fd3e4973d29cd9ef88d50a586ccb36f7"
-          manifest_sha256: "sha256:9907cb36a0f32aad397ddf9554131bbdb3b2639c10882c05ef6e2919e60d4c70"
-          node_type: regular
-          file_count: 3
-          byte_count: 18284
-          consumer_scan: "receipt://.omo/evidence/20260829T190906Z-bet-execution-4d2e9e5a/documents-consumer-audit.json"
-          rollback_ref: "docs/reports/2026-08-30-documents-guozhuan-tools-runtime-quarantine.md"
-        - scope: "@工作文档/规自委/tools regular runtime files only"
-          verified_at: "2026-08-29T19:34:25Z"
-          source_fingerprint: "sha256:2f6b66f2f17a331943a66c9e6a2a1914fd3e4973d29cd9ef88d50a586ccb36f7"
-          target_fingerprint: "sha256:2f6b66f2f17a331943a66c9e6a2a1914fd3e4973d29cd9ef88d50a586ccb36f7"
-          manifest_sha256: "sha256:868c0e69fce7fb54d2bfad620b7fad7c142b1e8a5ba7b07466671ac1bfbba834"
-          node_type: regular
-          file_count: 3
-          byte_count: 18284
-          consumer_scan: "receipt://.omo/evidence/20260829T193214Z-bet-execution-9df04bf3/documents-consumer-audit.json"
-          rollback_ref: "docs/reports/2026-08-30-documents-guizi-tools-runtime-quarantine.md"
-        - scope: "@工作文档/tools regular runtime files only"
-          verified_at: "2026-08-29T19:48:31Z"
-          source_fingerprint: "sha256:fd72729d88ec969a9c0d1550da738abd2d1a48018e2a9dbfb93dc06107865eea"
-          target_fingerprint: "sha256:fd72729d88ec969a9c0d1550da738abd2d1a48018e2a9dbfb93dc06107865eea"
-          manifest_sha256: "sha256:48108b0d2f59bab99c027d9c22a9b4b5b7a2eb6bc3b7474e7d975f31b37f9068"
-          node_type: regular
-          file_count: 4
-          byte_count: 19848
-          consumer_scan: "receipt://.omo/evidence/20260829T194630Z-bet-execution-12a16102/documents-consumer-audit.json"
-          rollback_ref: "docs/reports/2026-08-30-documents-root-tools-runtime-quarantine.md"
-        - scope: "@工作文档/_control/tools regular runtime files only"
-          verified_at: "2026-08-29T20:04:48Z"
-          source_fingerprint: "sha256:c6b180fc56b26bd1bdb2fefc4764d0d79f417fd8e111e00a7d003866a2b8c14f"
-          target_fingerprint: "sha256:c6b180fc56b26bd1bdb2fefc4764d0d79f417fd8e111e00a7d003866a2b8c14f"
-          manifest_sha256: "sha256:2bf9e58ea1e4b269bd957b3656c52773af44ed02ccafe380d381c058e9a7a8fb"
-          node_type: regular
-          file_count: 4
-          byte_count: 22701
-          consumer_scan: "receipt://.omo/evidence/20260829T200256Z-bet-execution-8710fad4/documents-consumer-audit.json"
-          rollback_ref: "docs/reports/2026-08-30-documents-root-control-tools-runtime-quarantine.md"
-        - scope: "@工作文档/合同法规/_control/tools regular runtime files only"
-          verified_at: "2026-08-29T20:20:02Z"
-          source_fingerprint: "sha256:0a9fc292f100c2b7b62306ba10f2d3f1954926bb1acc5ea9058e3db750fc26a2"
-          target_fingerprint: "sha256:0a9fc292f100c2b7b62306ba10f2d3f1954926bb1acc5ea9058e3db750fc26a2"
-          manifest_sha256: "sha256:2d9bfe2f727cc8a46226757e52274e46b271eb423e44a6731372ed064a63a3e8"
-          node_type: regular
-          file_count: 2
-          byte_count: 8677
-          consumer_scan: "receipt://.omo/evidence/20260829T201813Z-bet-execution-ee380e96/documents-consumer-audit.json"
-          rollback_ref: "docs/reports/2026-08-30-documents-contract-ocr-tools-runtime-quarantine.md"
-        - scope: "@工作文档/卫健委/_control regular runtime files only"
-          verified_at: "2026-08-29T20:34:42Z"
-          source_fingerprint: "sha256:9c81d4980702c9ebfae1e1bb77064c94242274dff0b1efeec6d8285fe4bd7423"
-          target_fingerprint: "sha256:9c81d4980702c9ebfae1e1bb77064c94242274dff0b1efeec6d8285fe4bd7423"
-          manifest_sha256: "sha256:fc87ea443ec0fd9c0ce1416cfd8849144c2c2be8ef2e471a4354a9b4394a6a41"
-          node_type: regular
-          file_count: 5
-          byte_count: 30737
-          consumer_scan: "receipt://.omo/evidence/20260829T203248Z-bet-execution-53f78041/documents-consumer-audit.json"
-          rollback_ref: "docs/reports/2026-08-30-documents-weijian-control-runtime-quarantine.md"
-        - scope: "@工作文档/规自委/_scripts regular runtime files only"
-          verified_at: "2026-08-29T20:49:03Z"
-          source_fingerprint: "sha256:216880c682722355cbaa6d54f06f23079cdfb7b59b526d9eca13dc8e9a420881"
-          target_fingerprint: "sha256:216880c682722355cbaa6d54f06f23079cdfb7b59b526d9eca13dc8e9a420881"
-          manifest_sha256: "sha256:7bd52420a07367d654ee0ea1afc33706d01bb1e9e7d43f762207075d0e5be15e"
-          node_type: regular
-          file_count: 5
-          byte_count: 30041
-          consumer_scan: "receipt://.omo/evidence/20260829T204720Z-bet-execution-90c98e9d/documents-consumer-audit.json"
-          rollback_ref: "docs/reports/2026-08-30-documents-guizi-scripts-runtime-quarantine.md"
-        - scope: "@工作文档/卫健委/cleanup-commit.sh single regular runtime file only"
-          verified_at: "2026-08-29T21:05:26Z"
-          source_fingerprint: "sha256:875b55d2689e90bc6871a145e79283ead281e5461a48c149e225988ab873adb2"
-          target_fingerprint: "sha256:875b55d2689e90bc6871a145e79283ead281e5461a48c149e225988ab873adb2"
-          manifest_sha256: "sha256:ea6d0aa35f03a3d608effdca00b66ac21379814e594cf664e4d08b54097b4bd1"
-          node_type: regular
-          file_count: 1
-          byte_count: 3916
-          consumer_scan: "receipt://.omo/evidence/20260829T210128Z-bet-execution-cdda24a3/documents-consumer-audit.json"
-          rollback_ref: "docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md"
-
-  - id: public-runtime
-    source_globs:
-      - "@公共/_runtime/**"
-      - "@公共/kems-v2/**"
-    artifact_kind: [runtime, cache]
-    disposition: delegate
-    owner: runtime
-    replacement: "Runtime jobs calling the existing L4, Cockpit, OMO, ECOS, Agora, and Kairon owners"
-    consumer_refs:
-      - "crontab://documents-public-governance"
-      - "audit://claude-scheduled/l4-governance-weekly"
-      - "docs/reports/2026-08-12-documents-runtime-owner-parity-inventory.md#公共-runtime-sources"
-    rollback: "Keep each source command until its registered owner command, exit-code parity, and consumer cutover are verified."
-    confirmation_gate: before_write
-    status: pending
-    evidence_gap: "The 58 sources were observed absent after a successful move, but the Workspace quarantine and manifest later disappeared. Do not re-enter a terminal state until a protected, hash-valid rollback package is recreated."
-
-  - id: cockpit-runtime
-    source_globs:
-      - "@驾驶舱/_runtime/**"
-      - "驾驶舱/scripts/**"
-    artifact_kind: [runtime, cache]
-    disposition: delegate
-    owner: cockpit
-    replacement: "accepted Cockpit CLI/Web/MCP projections and generated non-SSOT views"
-    consumer_refs:
-      - "@驾驶舱/CLAUDE.md"
-      - "@驾驶舱/_control/async-tasks.yaml"
-      - "docs/reports/2026-08-12-documents-runtime-owner-parity-inventory.md#驾驶舱-runtime-sources"
-    rollback: "Retain old projections until installed Cockpit smoke and view parity pass."
-    confirmation_gate: before_write
-    status: retired
-    evidence:
-      verified_at: "2026-08-29T15:25:00Z"
-      source_fingerprint: "sha256:b16addf2e747725ce8b8f5c41b96ca0bc4d8cd9f24a6e1c3b84221d266c357f4"
-      target_fingerprint: "sha256:b16addf2e747725ce8b8f5c41b96ca0bc4d8cd9f24a6e1c3b84221d266c357f4"
-      consumer_scan: "receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md"
-      rollback_ref: "docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md"
-
-  - id: opc-tools
-    source_globs:
-      - "@OPC/**"
-    artifact_kind: [runtime, cache]
-    disposition: delegate
-    owner: toolbox
-    replacement: "Workspace setup capability plus pointer-only Documents guidance"
-    consumer_refs:
-      - "audit://documents/opc/consumer-scan-pending"
-    rollback: "Keep setup scripts until the Workspace capability is installed and documented."
-    confirmation_gate: before_write
-    status: in_progress
-    evidence:
-      verified_at: "2026-08-29T23:30:34Z"
-      source_fingerprint: "sha256:26102e4e70a990528e847e285e1955e72b63868cd749892c2e3ca383d5ea7ab7"
-      target_fingerprint: "sha256:26102e4e70a990528e847e285e1955e72b63868cd749892c2e3ca383d5ea7ab7"
-      consumer_scan: "receipt://.omo/evidence/20260829T232906Z-bet-execution-3a13ca35/opc-consumer-audit.json"
-      rollback_ref: "docs/reports/2026-08-30-opc-runtime-tools-quarantine.md"
-      quarantine_manifest: "runtime/quarantine/documents-opc-tools-20260830/manifest.json"
-      runtime_file_count: 2
-      runtime_bytes: 6403
-      owner_parity: pending
-
-  - id: creative-content-archives
-    source_globs:
-      - "@创意创作/**"
-    artifact_kind: [runtime, cache]
-    disposition: content_archive
-    owner: l4-kernel
-    replacement: "governed creative examples/templates with execution denied"
-    consumer_refs:
-      - "audit://documents/creative/consumer-scan-pending"
-    rollback: "Preserve source bytes and revert only new archive declarations."
-    confirmation_gate: before_write
-    status: pending
-
-  - id: root-oneoff-assets
-    source_globs:
-      - "_inbox/**"
-      - "cron-service-db-fix.py"
-      - "cron-service-error-reset.py"
-      - "cron-service-fix.sh"
-      - "kos-index.sqlite"
-      - "index-BYqQMscj.js"
-      - ".codex-optimize-log/**"
-    artifact_kind: [runtime, cache]
-    disposition: retire
-    owner: governance-team
-    replacement: "immutable evidence document or existing Workspace owner command; no executable/cache remains at Documents root"
-    consumer_refs:
-      - "audit://documents/root-oneoff/consumer-scan-pending"
-    rollback: "Archive evidence and record hashes before any delete; restore from the rollback package if a consumer is discovered."
-    confirmation_gate: before_delete
-    status: pending
-    evidence_gap: "The eight source paths are absent, but the rollback manifest referenced by the historical receipt is missing from the current Workspace quarantine. Re-run physical receipt recovery before terminal retirement."
-
-    transactions:
-      - scope: ".codex-optimize-log oneoff fix scripts (3 files)"
-        verified_at: "2026-08-30T07:39:50Z"
-        file_count: 3
-        byte_count: 16257
-        quarantine_manifest: "runtime/quarantine/documents-root-codex-tools-20260830/manifest.json"
-        consumer_scan: "receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json"
-
-  - id: documents-client-state
-    source_globs:
-      - "ZCode/.zcode/**"
-    artifact_kind: [cache]
-    disposition: relocate
-    owner: zcode
-    replacement: "ZCode task state under the user's native ~/.zcode application-data root, outside Documents"
-    consumer_refs:
-      - "bin/gac/documents-zcode-config.py"
-      - ".omo/_truth/registry/documents-domain-projects.yaml#zcode"
-    rollback: "Copy and verify task state before changing any ZCode data root; retain the Documents source until a ZCode restart confirms the target."
-    confirmation_gate: before_external_config
-    status: pending
+- id: family-dashboard-app
+  major_surface: true
+  source_globs:
+  - '@家庭生活/family-dashboard-app/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: migrate
+  owner: family-hub
+  replacement: projects/family-hub/apps/dashboard plus Workspace runtime state
+  consumer_refs:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml#family-dashboard-app
+  - projects/cockpit/src/cockpit/web/api_domain_apps.py
+  rollback: Keep the Documents app and its fingerprint until family-hub build, E2E, and client cutover pass.
+  confirmation_gate: before_write
+  status: pending
+- id: toolbox-staging
+  major_surface: true
+  source_globs:
+  - '@学习进化/_external/toolbox-staging/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: relocate
+  owner: toolbox
+  replacement: ToolBox managed capability staging with preserved Git remotes and HEADs
+  consumer_refs:
+  - docs/reports/2026-08-11-documents-content-plane-full-inventory.md#101-四个外部-git-仓
+  rollback: Copy first, verify Git remotes/HEAD/tree hashes, and retain the original until the target is accepted.
+  confirmation_gate: before_write
+  status: pending
+- id: career-code-archives
+  major_surface: true
+  source_globs:
+  - '@个人/_storage/职业历史/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: content_archive
+  owner: l4-kernel
+  replacement: schema-valid CONTENT_ARCHIVE.yaml at governed career archive roots; content remains in place
+  consumer_refs:
+  - docs/reports/2026-08-11-documents-content-plane-full-inventory.md#3-全量基线
+  rollback: Remove only newly published manifests after recording their hashes; never move or delete the 16 GiB source.
+  confirmation_gate: before_write
+  status: pending
+- id: zotero-app-data
+  major_surface: true
+  source_globs:
+  - Zotero/**
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: relocate
+  owner: zotero-app
+  replacement: ~/Library/Application Support/Zotero with Documents retaining readable exports or attachments only
+  consumer_refs:
+  - ~/Library/Application Support/Zotero/Profiles/c2ap8dvs.default/prefs.js
+  rollback: Back up SQLite and preferences, copy before switching dataDir, and retain the original until Zotero opens the library and attachments.
+  confirmation_gate: before_external_config
+  status: pending
+- id: family-content-archives
+  source_globs:
+  - '@家庭生活/_archive/**'
+  - '@家庭生活/_knowledge/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: content_archive
+  owner: l4-kernel
+  replacement: CONTENT_ARCHIVE.yaml or plain content after cache removal, with execution denied
+  consumer_refs:
+  - audit://documents/family-content/consumer-scan-pending
+  rollback: Preserve source bytes; revert only new declarations if validation fails.
+  confirmation_gate: before_write
+  status: pending
+- id: family-runtime-kems
+  source_globs:
+  - '@家庭生活/_runtime/**'
+  - '@家庭生活/_control/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: delegate
+  owner: runtime
+  replacement: Runtime jobs delegating KEMS operations to Kairon/KOS and storing state outside Documents
+  consumer_refs:
+  - audit://documents/family-runtime/consumer-scan-pending
+  rollback: Keep legacy commands until parity and scheduled-consumer cutover evidence pass.
+  confirmation_gate: before_write
+  status: in_progress
+  evidence:
+    verified_at: '2026-08-29T23:57:17Z'
+    consumer_scan: receipt://.omo/evidence/20260829T235316Z-bet-execution-0f79f21b/family-consumer-audit-post.json
+    rollback_ref: docs/reports/2026-08-30-family-runtime-kems-quarantine.md
+    runtime_file_count: 13
+    runtime_bytes: 6220
+    owner_parity: pending
+  progress_evidence:
+    scope_status: partial
+    completed_subscopes:
+    - scope: '@家庭生活/_runtime dangling symlinks only'
+      verified_at: '2026-08-29T23:57:17Z'
+      source_fingerprint: sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a
+      target_fingerprint: sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a
+      manifest_sha256: sha256:8ae620b70a7ac92a720d2e3d44803f66a6b9f3e207389a860c1a79d876b71630
+      node_type: symlink
+      file_count: 11
+      byte_count: 0
+      consumer_scan: receipt://.omo/evidence/20260829T235316Z-bet-execution-0f79f21b/family-consumer-audit-post.json
+      rollback_ref: docs/reports/2026-08-30-family-runtime-kems-quarantine.md
+    - scope: '@家庭生活/_control/_scripts regular runtime files only'
+      verified_at: '2026-08-29T23:57:17Z'
+      source_fingerprint: sha256:962dea7dc21946b1c9276deaeb5bdb8472c587a3a572b175145ebcdfbb368614
+      target_fingerprint: sha256:962dea7dc21946b1c9276deaeb5bdb8472c587a3a572b175145ebcdfbb368614
+      manifest_sha256: sha256:1edea8428a3d4068eb7ce9cedd9f86a10417861d621eeee0bc91b31b13c7b9f9
+      node_type: regular
+      file_count: 2
+      byte_count: 6220
+      consumer_scan: receipt://.omo/evidence/20260829T235316Z-bet-execution-0f79f21b/family-consumer-audit-post.json
+      rollback_ref: docs/reports/2026-08-30-family-runtime-kems-quarantine.md
+- id: learning-content-archives
+  source_globs:
+  - '@学习进化/_storage/**'
+  - '@学习进化/_knowledge/**'
+  - '@学习进化/.kems-repair-backups/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: content_archive
+  owner: l4-kernel
+  replacement: governed content archives or plain evidence; no executable consumer
+  consumer_refs:
+  - audit://documents/learning-content/consumer-scan-pending
+  rollback: Preserve source bytes and remove only declarations that fail validation.
+  confirmation_gate: before_write
+  status: pending
+- id: learning-runtime
+  source_globs:
+  - '@学习进化/_control/**'
+  - '@学习进化/.githooks/**'
+  - '@学习进化/_inbox/**'
+  - 学习进化/2-knowledge/基建架构/**
+  - '@学习进化/_knowledge/10-systems/KEMS/.kems/_scripts/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: delegate
+  owner: runtime
+  replacement: Workspace Runtime jobs plus Kairon/KOS owner calls; read-only concept decay/orphan inspections are owned by runtime documents-learning-* while declarations remain in Documents
+  consumer_refs:
+  - ~/Library/LaunchAgents/com.learningevolution.concept-weave.monthly.plist
+  - audit://claude-scheduled/vault-daily-health
+  rollback: Keep the legacy path inactive but intact until launchd and scheduled-client consumers are verified on the Workspace owner.
+  confirmation_gate: before_write
+  status: in_progress
+  evidence:
+    verified_at: '2026-08-30T06:50:00Z'
+    consumer_scan: receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json
+    rollback_ref: docs/reports/2026-08-30-learning-content-owner-convergence.md
+    runtime_file_count: 11
+    runtime_bytes: 68213
+    owner_parity: partial
+    owner_parity_evidence:
+      status: read_only_guarded_mutation_and_control_plane_owner_proven
+      jobs:
+      - documents-learning-decay
+      - documents-learning-orphans
+      owner_entry: bin/gac/documents-domain-owner-job.py learning-control / learning-control-plane
+      control_plane_entry: bin/gac/documents-domain-owner-job.py learning-control-plane all
+      receipt: docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+      control_plane_transactions:
+      - scope: learning _control/executors runtime files (9 files)
+        verified_at: '2026-08-30T07:41:20Z'
+        file_count: 9
+        byte_count: 45024
+        quarantine_manifest: runtime/quarantine/documents-learning-control-runtime-20260830/manifest.json
+        consumer_scan: receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json
+      - scope: KEMS .kems/_scripts staging toolkit (10 scripts, never deployed)
+        verified_at: '2026-08-30T07:44:10Z'
+        file_count: 10
+        byte_count: 33617
+        quarantine_manifest: runtime/quarantine/documents-learning-kems-scripts-20260830/manifest.json
+        owner_adoption: omostation-runtime#70 scripts/kems-toolkit
+        consumer_scan: receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json
+      - scope: learning executors/kems-mcp single file (shebang runtime, post l4-kernel#9/#10 classifier fixes)
+        verified_at: '2026-08-30T08:47:30Z'
+        file_count: 1
+        byte_count: 5112
+        quarantine_manifest: runtime/quarantine/documents-learning-control-runtime-t2-20260830/manifest.json
+        consumer_scan: receipt://.omo/evidence/20260830T083330Z-governance-state-mutation-abbadfce/documents-consumer-audit-kemsmcp.json
+      writes_documents: explicit_apply_only
+  progress_evidence:
+    scope_status: partial
+    completed_subscopes:
+    - scope: '@学习进化/_control/scripts/backfill-knowledge-type.py'
+      verified_at: '2026-08-30T01:17:01Z'
+      source_fingerprint: sha256:b03837b7c840986ce28f10ae503abb0ad28243fca2cecceaf57ad54579256e55
+      target_fingerprint: sha256:b03837b7c840986ce28f10ae503abb0ad28243fca2cecceaf57ad54579256e55
+      manifest_sha256: sha256:8ef8384b18ef7a85bd82343d94ddf29f06d2e3088c9a1a4d51cb10c4db6af931
+      node_type: regular
+      file_count: 1
+      byte_count: 8020
+      consumer_scan: receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+    - scope: '@学习进化/_control/scripts/knowledge-decay.sh'
+      verified_at: '2026-08-30T05:25:00Z'
+      source_fingerprint: sha256:06e8541ec3de3ecd7258a57565baef78e3849a62ef4a2d578b1f0e3bbf3e4093
+      target_fingerprint: sha256:06e8541ec3de3ecd7258a57565baef78e3849a62ef4a2d578b1f0e3bbf3e4093
+      manifest_sha256: sha256:02bec508894192c288969959ffe1a7ebc733661fa179c1b1cfdbe3d31e41480e
+      node_type: regular
+      file_count: 1
+      byte_count: 10037
+      consumer_scan: receipt://.omo/evidence/20260830T052614Z-bet-execution-f82fb1a7/consumer-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-content-owner-convergence.md
+    - scope: '@学习进化/_inbox/inbox-router.sh'
+      verified_at: '2026-08-30T05:25:00Z'
+      source_fingerprint: sha256:15f37f3e79347f4a896a15c7fb54b6fa57e9267582c455f1830fbe211e9ba09
+      target_fingerprint: sha256:15f37f3e79347f4a896a15c7fb54b6fa57e9267582c455f1830fbe211e9ba09
+      manifest_sha256: sha256:6cd17eb01a0d24a53b975333518285affaf522bd543d84d190254e1cabc38902
+      node_type: regular
+      file_count: 1
+      byte_count: 3671
+      consumer_scan: receipt://.omo/evidence/20260830T052614Z-bet-execution-f82fb1a7/consumer-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-content-owner-convergence.md
+    - scope: '@学习进化/_control/l4-kernel.sh'
+      verified_at: '2026-08-30T06:50:00Z'
+      source_fingerprint: sha256:83e0f2a4cae30da65e14afdd06068dec8ef236da27eb56ca506c08937d1ac579
+      target_fingerprint: sha256:83e0f2a4cae30da65e14afdd06068dec8ef236da27eb56ca506c08937d1ac579
+      manifest_sha256: sha256:921b16106325717946a9e36f42db583a707a5c502d5ae713db0e337b53c46f05
+      node_type: regular
+      file_count: 1
+      byte_count: 13735
+      consumer_scan: receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+    - scope: '@学习进化/_control/vault-healthcheck.sh'
+      verified_at: '2026-08-30T06:50:00Z'
+      source_fingerprint: sha256:8bfb47e1a0ab966efa0f91bc10278466765554208c8ae31a0ceea78f731efae5
+      target_fingerprint: sha256:8bfb47e1a0ab966efa0f91bc10278466765554208c8ae31a0ceea78f731efae5
+      manifest_sha256: sha256:88b67ebc77162d5224b3a897e4c0bab3d30ce2f01177979bdd2ae1326a8276c3
+      node_type: regular
+      file_count: 1
+      byte_count: 3192
+      consumer_scan: receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+    - scope: '@学习进化/_control/daemon/daemon-install.sh'
+      verified_at: '2026-08-30T06:50:00Z'
+      source_fingerprint: sha256:90237684f7e3fc3e44d8a7409ff1353ecad1ef39cd3e088bf14b35e0fe205a9d
+      target_fingerprint: sha256:90237684f7e3fc3e44d8a7409ff1353ecad1ef39cd3e088bf14b35e0fe205a9d
+      manifest_sha256: sha256:c0270194f527fd83b676ab9476f3655b360a1b83f3ada4af482709f25b9d4cca
+      node_type: regular
+      file_count: 1
+      byte_count: 877
+      consumer_scan: receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+    - scope: '@学习进化/_control/daemon/health-daemon.sh'
+      verified_at: '2026-08-30T06:50:00Z'
+      source_fingerprint: sha256:05d00f305500b0b201347d8b67473b0c1525125d8eefb4724afb035ce9fd3afc
+      target_fingerprint: sha256:05d00f305500b0b201347d8b67473b0c1525125d8eefb4724afb035ce9fd3afc
+      manifest_sha256: sha256:5cdaff127c276de2dd8c65032925e2e535511af9317be39c6c7f1fa810830eff
+      node_type: regular
+      file_count: 1
+      byte_count: 1179
+      consumer_scan: receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+    - scope: '@学习进化/.githooks/pre-commit-g18'
+      verified_at: '2026-08-30T06:50:00Z'
+      source_fingerprint: sha256:5e78867312bedd489377510d7a1e71ffd6b6dfa1bf699f5dd33803f5ba0c16d2
+      target_fingerprint: sha256:5e78867312bedd489377510d7a1e71ffd6b6dfa1bf699f5dd33803f5ba0c16d2
+      manifest_sha256: sha256:f0e9b5a4f249fc08b6aac7e6ee0223aeb1209f3322c363c44c7708475f9cbeff
+      node_type: regular
+      file_count: 1
+      byte_count: 960
+      consumer_scan: receipt://.omo/evidence/20260830T064454Z-bet-execution-3d86d956/consumer-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+    - scope: '@学习进化/_control/scripts/backfill-knowledge-type.sh'
+      verified_at: '2026-08-30T01:17:01Z'
+      source_fingerprint: sha256:6a399495c714b3d508b0cff94d4b430dae5e3243cfa511ebea704ac0362c4bf2
+      target_fingerprint: sha256:6a399495c714b3d508b0cff94d4b430dae5e3243cfa511ebea704ac0362c4bf2
+      manifest_sha256: sha256:2739e4c356f21e41e46db97108a98b1952020349db42842c49324617329c12dc
+      node_type: regular
+      file_count: 1
+      byte_count: 8805
+      consumer_scan: receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+    - scope: '@学习进化/_control/scripts/concept-weave.py'
+      verified_at: '2026-08-30T01:17:01Z'
+      source_fingerprint: sha256:b4a7aa28e0a11cf31170a0d7c62399adaf41898a7dfe8b4d2c0194913b85a5d6
+      target_fingerprint: sha256:b4a7aa28e0a11cf31170a0d7c62399adaf41898a7dfe8b4d2c0194913b85a5d6
+      manifest_sha256: sha256:7a14cd9dcfd7656d324768526b6e11d25a95b912d25e820c2b563fd9363ab64c
+      node_type: regular
+      file_count: 1
+      byte_count: 11346
+      consumer_scan: receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+    - scope: '@学习进化/_control/scripts/run-monthly-weave.sh'
+      verified_at: '2026-08-30T01:17:01Z'
+      source_fingerprint: sha256:979c63960fd50015d80900db29227940e3029eda42243cb0044f9fe07dbd0a4f
+      target_fingerprint: sha256:979c63960fd50015d80900db29227940e3029eda42243cb0044f9fe07dbd0a4f
+      manifest_sha256: sha256:af7487e0ccc48b9c7d40e035affae16f420f5a2f932193fd5dbc20e3252c71b1
+      node_type: regular
+      file_count: 1
+      byte_count: 6391
+      consumer_scan: receipt://.omo/evidence/20260830T011432Z-bet-execution-49ce5800/learning-consumer-audit-post.json
+      rollback_ref: docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+- id: work-content-archives
+  source_globs:
+  - '@工作文档/*/_storage/**'
+  - '@工作文档/*/_knowledge/**'
+  - '@工作文档/*/.git/**'
+  - '@工作文档/*/.crush/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: content_archive
+  owner: l4-kernel
+  replacement: governed historical/tooling content archive or removable derived cache
+  consumer_refs:
+  - audit://documents/work-content/consumer-scan-pending
+  rollback: Preserve source content and snapshots; remove only new declarations or derived target copies.
+  confirmation_gate: before_write
+  status: pending
+- id: work-runtime
+  source_globs:
+  - '@工作文档/_control/**'
+  - '@工作文档/tools/**'
+  - '@工作文档/*/_control/**'
+  - '@工作文档/*/_runtime/**'
+  - '@工作文档/*/_scripts/**'
+  - '@工作文档/*/tools/**'
+  - '@工作文档/卫健委/cleanup-commit.sh'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: delegate
+  owner: runtime
+  replacement: Runtime domain adapters, including runtime://documents/documents-weijian-kems-check@64e68230452e4240faeaccacd4b9d2df2a6452b0 and runtime://documents/documents-weijian-control-health@57b5d54c5e483a5a2f5c0e79b7225cf6094a6c81;
+    KEMS delegates to Kairon/KOS, the control-health view reads the Weijian signals/facts projections, and both keep task state and receipts in Runtime/OMO
+  consumer_refs:
+  - crontab://weijian/check-kems-update
+  - '@工作文档/卫健委/CLAUDE.md'
+  - '@驾驶舱/_control/async-tasks.yaml'
+  rollback: Do not remove legacy commands until crontab, Claude Scheduled, and domain gateway consumers use verified Workspace commands.
+  confirmation_gate: before_write
+  status: retired
+  evidence:
+    verified_at: '2026-08-29T21:05:26Z'
+    source_fingerprint: sha256:05577ee2f3ac29a243d4169a540b9b17d91b86dade007d19fb9d5e57040dde4b
+    target_fingerprint: sha256:05577ee2f3ac29a243d4169a540b9b17d91b86dade007d19fb9d5e57040dde4b
+    consumer_scan: receipt://.omo/evidence/20260829T210128Z-bet-execution-cdda24a3/documents-consumer-audit.json
+    rollback_ref: docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md
+  progress_evidence:
+    scope_status: completed
+    scope: '@工作文档/卫健委/_runtime regular runtime files only'
+    verified_at: '2026-08-29T18:10:00Z'
+    source_fingerprint: sha256:d2c043895c524880f76c18909eb013216a0b985b81000cb912dd258032b63f29
+    target_fingerprint: sha256:d2c043895c524880f76c18909eb013216a0b985b81000cb912dd258032b63f29
+    manifest_sha256: sha256:46e7093e9046a7257a9eb3b2b30b0aae4e5f4aa2bbec4589c34a9ef99f38d949
+    file_count: 17
+    byte_count: 80317
+    consumer_scan: receipt://docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md
+    rollback_ref: docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md
+    remaining_globs: []
+    completed_subscopes:
+    - scope: '@工作文档/国转中心/_runtime dangling symlinks only'
+      verified_at: '2026-08-29T18:40:00Z'
+      source_fingerprint: sha256:5ffd9cc38b1b6f04a350621bea1fba3e28c63fd5de76c606647bafafd92eb4a4
+      target_fingerprint: sha256:5ffd9cc38b1b6f04a350621bea1fba3e28c63fd5de76c606647bafafd92eb4a4
+      manifest_sha256: sha256:ae02a0ea6659d4548a7b4b625ebc932d2225c36be4864de4e5c7b7ffed0bc5cb
+      node_type: symlink
+      file_count: 12
+      byte_count: 0
+      consumer_scan: receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+      rollback_ref: docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+    - scope: '@工作文档/规自委/_runtime dangling symlinks only'
+      verified_at: '2026-08-30T00:15:00Z'
+      source_fingerprint: sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a
+      target_fingerprint: sha256:16c51b28b55af10f8608e31dbc043978d4275146be6cf596c5876cc8fbe26e0a
+      manifest_sha256: sha256:7bacbae4998f693511b295a13edddd385939ec021caa7b67c7787d7c0e01f17b
+      node_type: symlink
+      file_count: 11
+      byte_count: 0
+      consumer_scan: receipt://.omo/evidence/20260829T184731Z-bet-execution-a848d2dc/documents-consumer-audit.json
+      rollback_ref: docs/reports/2026-08-30-documents-guizi-dangling-symlink-quarantine.md
+    - scope: '@工作文档/国转中心/tools regular runtime files only'
+      verified_at: '2026-08-30T00:30:00Z'
+      source_fingerprint: sha256:2f6b66f2f17a331943a66c9e6a2a1914fd3e4973d29cd9ef88d50a586ccb36f7
+      target_fingerprint: sha256:2f6b66f2f17a331943a66c9e6a2a1914fd3e4973d29cd9ef88d50a586ccb36f7
+      manifest_sha256: sha256:9907cb36a0f32aad397ddf9554131bbdb3b2639c10882c05ef6e2919e60d4c70
+      node_type: regular
+      file_count: 3
+      byte_count: 18284
+      consumer_scan: receipt://.omo/evidence/20260829T190906Z-bet-execution-4d2e9e5a/documents-consumer-audit.json
+      rollback_ref: docs/reports/2026-08-30-documents-guozhuan-tools-runtime-quarantine.md
+    - scope: '@工作文档/规自委/tools regular runtime files only'
+      verified_at: '2026-08-29T19:34:25Z'
+      source_fingerprint: sha256:2f6b66f2f17a331943a66c9e6a2a1914fd3e4973d29cd9ef88d50a586ccb36f7
+      target_fingerprint: sha256:2f6b66f2f17a331943a66c9e6a2a1914fd3e4973d29cd9ef88d50a586ccb36f7
+      manifest_sha256: sha256:868c0e69fce7fb54d2bfad620b7fad7c142b1e8a5ba7b07466671ac1bfbba834
+      node_type: regular
+      file_count: 3
+      byte_count: 18284
+      consumer_scan: receipt://.omo/evidence/20260829T193214Z-bet-execution-9df04bf3/documents-consumer-audit.json
+      rollback_ref: docs/reports/2026-08-30-documents-guizi-tools-runtime-quarantine.md
+    - scope: '@工作文档/tools regular runtime files only'
+      verified_at: '2026-08-29T19:48:31Z'
+      source_fingerprint: sha256:fd72729d88ec969a9c0d1550da738abd2d1a48018e2a9dbfb93dc06107865eea
+      target_fingerprint: sha256:fd72729d88ec969a9c0d1550da738abd2d1a48018e2a9dbfb93dc06107865eea
+      manifest_sha256: sha256:48108b0d2f59bab99c027d9c22a9b4b5b7a2eb6bc3b7474e7d975f31b37f9068
+      node_type: regular
+      file_count: 4
+      byte_count: 19848
+      consumer_scan: receipt://.omo/evidence/20260829T194630Z-bet-execution-12a16102/documents-consumer-audit.json
+      rollback_ref: docs/reports/2026-08-30-documents-root-tools-runtime-quarantine.md
+    - scope: '@工作文档/_control/tools regular runtime files only'
+      verified_at: '2026-08-29T20:04:48Z'
+      source_fingerprint: sha256:c6b180fc56b26bd1bdb2fefc4764d0d79f417fd8e111e00a7d003866a2b8c14f
+      target_fingerprint: sha256:c6b180fc56b26bd1bdb2fefc4764d0d79f417fd8e111e00a7d003866a2b8c14f
+      manifest_sha256: sha256:2bf9e58ea1e4b269bd957b3656c52773af44ed02ccafe380d381c058e9a7a8fb
+      node_type: regular
+      file_count: 4
+      byte_count: 22701
+      consumer_scan: receipt://.omo/evidence/20260829T200256Z-bet-execution-8710fad4/documents-consumer-audit.json
+      rollback_ref: docs/reports/2026-08-30-documents-root-control-tools-runtime-quarantine.md
+    - scope: '@工作文档/合同法规/_control/tools regular runtime files only'
+      verified_at: '2026-08-29T20:20:02Z'
+      source_fingerprint: sha256:0a9fc292f100c2b7b62306ba10f2d3f1954926bb1acc5ea9058e3db750fc26a2
+      target_fingerprint: sha256:0a9fc292f100c2b7b62306ba10f2d3f1954926bb1acc5ea9058e3db750fc26a2
+      manifest_sha256: sha256:2d9bfe2f727cc8a46226757e52274e46b271eb423e44a6731372ed064a63a3e8
+      node_type: regular
+      file_count: 2
+      byte_count: 8677
+      consumer_scan: receipt://.omo/evidence/20260829T201813Z-bet-execution-ee380e96/documents-consumer-audit.json
+      rollback_ref: docs/reports/2026-08-30-documents-contract-ocr-tools-runtime-quarantine.md
+    - scope: '@工作文档/卫健委/_control regular runtime files only'
+      verified_at: '2026-08-29T20:34:42Z'
+      source_fingerprint: sha256:9c81d4980702c9ebfae1e1bb77064c94242274dff0b1efeec6d8285fe4bd7423
+      target_fingerprint: sha256:9c81d4980702c9ebfae1e1bb77064c94242274dff0b1efeec6d8285fe4bd7423
+      manifest_sha256: sha256:fc87ea443ec0fd9c0ce1416cfd8849144c2c2be8ef2e471a4354a9b4394a6a41
+      node_type: regular
+      file_count: 5
+      byte_count: 30737
+      consumer_scan: receipt://.omo/evidence/20260829T203248Z-bet-execution-53f78041/documents-consumer-audit.json
+      rollback_ref: docs/reports/2026-08-30-documents-weijian-control-runtime-quarantine.md
+    - scope: '@工作文档/规自委/_scripts regular runtime files only'
+      verified_at: '2026-08-29T20:49:03Z'
+      source_fingerprint: sha256:216880c682722355cbaa6d54f06f23079cdfb7b59b526d9eca13dc8e9a420881
+      target_fingerprint: sha256:216880c682722355cbaa6d54f06f23079cdfb7b59b526d9eca13dc8e9a420881
+      manifest_sha256: sha256:7bd52420a07367d654ee0ea1afc33706d01bb1e9e7d43f762207075d0e5be15e
+      node_type: regular
+      file_count: 5
+      byte_count: 30041
+      consumer_scan: receipt://.omo/evidence/20260829T204720Z-bet-execution-90c98e9d/documents-consumer-audit.json
+      rollback_ref: docs/reports/2026-08-30-documents-guizi-scripts-runtime-quarantine.md
+    - scope: '@工作文档/卫健委/cleanup-commit.sh single regular runtime file only'
+      verified_at: '2026-08-29T21:05:26Z'
+      source_fingerprint: sha256:875b55d2689e90bc6871a145e79283ead281e5461a48c149e225988ab873adb2
+      target_fingerprint: sha256:875b55d2689e90bc6871a145e79283ead281e5461a48c149e225988ab873adb2
+      manifest_sha256: sha256:ea6d0aa35f03a3d608effdca00b66ac21379814e594cf664e4d08b54097b4bd1
+      node_type: regular
+      file_count: 1
+      byte_count: 3916
+      consumer_scan: receipt://.omo/evidence/20260829T210128Z-bet-execution-cdda24a3/documents-consumer-audit.json
+      rollback_ref: docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md
+- id: public-runtime
+  source_globs:
+  - '@公共/_runtime/**'
+  - '@公共/kems-v2/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: delegate
+  owner: runtime
+  replacement: Runtime jobs calling the existing L4, Cockpit, OMO, ECOS, Agora, and Kairon owners
+  consumer_refs:
+  - crontab://documents-public-governance
+  - audit://claude-scheduled/l4-governance-weekly
+  - docs/reports/2026-08-12-documents-runtime-owner-parity-inventory.md#公共-runtime-sources
+  rollback: Keep each source command until its registered owner command, exit-code parity, and consumer cutover are verified.
+  confirmation_gate: before_write
+  status: pending
+  evidence_gap: The 58 sources were observed absent after a successful move, but the Workspace quarantine and manifest later disappeared. Do not re-enter a terminal state until a protected, hash-valid rollback
+    package is recreated.
+- id: cockpit-runtime
+  source_globs:
+  - '@驾驶舱/_runtime/**'
+  - 驾驶舱/scripts/**
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: delegate
+  owner: cockpit
+  replacement: accepted Cockpit CLI/Web/MCP projections and generated non-SSOT views
+  consumer_refs:
+  - '@驾驶舱/CLAUDE.md'
+  - '@驾驶舱/_control/async-tasks.yaml'
+  - docs/reports/2026-08-12-documents-runtime-owner-parity-inventory.md#驾驶舱-runtime-sources
+  rollback: Retain old projections until installed Cockpit smoke and view parity pass.
+  confirmation_gate: before_write
+  status: retired
+  evidence:
+    verified_at: '2026-08-29T15:25:00Z'
+    source_fingerprint: sha256:b16addf2e747725ce8b8f5c41b96ca0bc4d8cd9f24a6e1c3b84221d266c357f4
+    target_fingerprint: sha256:b16addf2e747725ce8b8f5c41b96ca0bc4d8cd9f24a6e1c3b84221d266c357f4
+    consumer_scan: receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+    rollback_ref: docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
+- id: opc-tools
+  source_globs:
+  - '@OPC/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: delegate
+  owner: toolbox
+  replacement: Workspace setup capability plus pointer-only Documents guidance
+  consumer_refs:
+  - audit://documents/opc/consumer-scan-pending
+  rollback: Keep setup scripts until the Workspace capability is installed and documented.
+  confirmation_gate: before_write
+  status: in_progress
+  evidence:
+    verified_at: '2026-08-29T23:30:34Z'
+    source_fingerprint: sha256:26102e4e70a990528e847e285e1955e72b63868cd749892c2e3ca383d5ea7ab7
+    target_fingerprint: sha256:26102e4e70a990528e847e285e1955e72b63868cd749892c2e3ca383d5ea7ab7
+    consumer_scan: receipt://.omo/evidence/20260829T232906Z-bet-execution-3a13ca35/opc-consumer-audit.json
+    rollback_ref: docs/reports/2026-08-30-opc-runtime-tools-quarantine.md
+    quarantine_manifest: runtime/quarantine/documents-opc-tools-20260830/manifest.json
+    runtime_file_count: 2
+    runtime_bytes: 6403
+    owner_parity: pending
+- id: creative-content-archives
+  source_globs:
+  - '@创意创作/**'
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: content_archive
+  owner: l4-kernel
+  replacement: governed creative examples/templates with execution denied
+  consumer_refs:
+  - audit://documents/creative/consumer-scan-pending
+  rollback: Preserve source bytes and revert only new archive declarations.
+  confirmation_gate: before_write
+  status: pending
+- id: root-oneoff-assets
+  source_globs:
+  - _inbox/**
+  - cron-service-db-fix.py
+  - cron-service-error-reset.py
+  - cron-service-fix.sh
+  - kos-index.sqlite
+  - index-BYqQMscj.js
+  - .codex-optimize-log/**
+  artifact_kind:
+  - runtime
+  - cache
+  disposition: retire
+  owner: governance-team
+  replacement: immutable evidence document or existing Workspace owner command; no executable/cache remains at Documents root
+  consumer_refs:
+  - audit://documents/root-oneoff/consumer-scan-pending
+  rollback: Archive evidence and record hashes before any delete; restore from the rollback package if a consumer is discovered.
+  confirmation_gate: before_delete
+  status: pending
+  evidence_gap: The eight source paths are absent, but the rollback manifest referenced by the historical receipt is missing from the current Workspace quarantine. Re-run physical receipt recovery before
+    terminal retirement.
+  transactions:
+  - scope: .codex-optimize-log oneoff fix scripts (3 files)
+    verified_at: '2026-08-30T07:39:50Z'
+    file_count: 3
+    byte_count: 16257
+    quarantine_manifest: runtime/quarantine/documents-root-codex-tools-20260830/manifest.json
+    consumer_scan: receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json
+- id: documents-client-state
+  source_globs:
+  - ZCode/.zcode/**
+  artifact_kind:
+  - cache
+  disposition: relocate
+  owner: zcode
+  replacement: ZCode task state under the user's native ~/.zcode application-data root, outside Documents
+  consumer_refs:
+  - bin/gac/documents-zcode-config.py
+  - .omo/_truth/registry/documents-domain-projects.yaml#zcode
+  rollback: Copy and verify task state before changing any ZCode data root; retain the Documents source until a ZCode restart confirms the target.
+  confirmation_gate: before_external_config
+  status: pending

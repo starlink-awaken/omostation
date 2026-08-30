@@ -1,12 +1,12 @@
 ---
-id: ADR-0444
+id: ADR-0449
 status: accepted
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-30
 ---
 
-# ADR-0444: High-Frequency File Write Lock
+# ADR-0449: High-Frequency File Write Lock
 
 - **Status**: ACCEPTED
 - **Date**: 2026-08-30

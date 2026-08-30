@@ -1,12 +1,12 @@
 ---
-id: ADR-0442
+id: ADR-0447
 status: accepted
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-30
 ---
 
-# ADR-0442: ADR Creation Protection
+# ADR-0447: ADR Creation Protection
 
 - **Status**: ACCEPTED
 - **Date**: 2026-08-30

@@ -1,12 +1,12 @@
 ---
-id: ADR-0445
+id: ADR-0450
 status: accepted
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-30
 ---
 
-# ADR-0445: Agent Workflow Standardization
+# ADR-0450: Agent Workflow Standardization
 
 - **Status**: ACCEPTED
 - **Date**: 2026-08-30

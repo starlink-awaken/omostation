@@ -1,12 +1,12 @@
 ---
-id: ADR-0443
+id: ADR-0448
 status: accepted
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-30
 ---
 
-# ADR-0443: Submodule Pointer Automation
+# ADR-0448: Submodule Pointer Automation
 
 - **Status**: ACCEPTED
 - **Date**: 2026-08-30

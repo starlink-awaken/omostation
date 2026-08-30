@@ -1,12 +1,12 @@
 ---
-id: ADR-0441
+id: ADR-0446
 status: accepted
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-30
 ---
 
-# ADR-0441: Ledger Lock Mechanism
+# ADR-0446: Ledger Lock Mechanism
 
 - **Status**: ACCEPTED
 - **Date**: 2026-08-30
