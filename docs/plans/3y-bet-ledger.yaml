@@ -257,13 +257,376 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-111
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Establish the family dashboard Workspace owner in family-hub
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  goal: Import the canonical, non-private Next.js family dashboard source into the existing family-hub owner as an independently reproducible package, with deterministic provenance, explicit Documents/runtime boundaries, disabled direct writes, and child/root mainline proof.
+  non_goals:
+  - No import of current app-data, household data-manifest values, SQLite, indexes, caches, logs, credentials, browser auth state, build output, or private household content into Git.
+  - No Documents mutation or deletion, host/runtime-state relocation, Cockpit or consumer cutover, deployment/port/schedule change, quest UI/API/MCP merge, or direct Documents-write enablement.
+  - No claim of production parity, migration-family completion, principal-bound value, or Documents-wide physical purity; Phase B and Phase C remain separately admitted work.
+  done_when:
+  - A tested deterministic allowlist importer produces immutable source/target receipts, rejects every forbidden/private/runtime class and unsafe node, preserves the full source tree, and establishes projects/family-hub/apps/dashboard as the canonical Git-owned Next application source.
+  - The dashboard uses explicit FAMILY_DOCUMENTS_ROOT and FAMILY_DASHBOARD_STATE_ROOT boundaries, has no implicit parent or absolute-host fallback, uses synthetic build/test fixtures, and fails closed for traversal, symlink escape, absent roots, state leakage, and all direct Documents-write paths.
+  - The imported package contains only reviewed source, static assets, required scripts/config/lockfile, synthetic fixtures, and non-private documentation; forbidden paths, real household data, credentials, generated state, and reproducible caches are absent from Git.
+  - Dashboard install, unit tests, lint, production build, and synthetic Playwright smoke pass from a clean child main checkout without live household data, while the existing family-hub Vite build and Python/FastMCP tests remain green.
+  - The family-hub child PR and root gitlink PR both pass required checks, merge, and replay from authoritative main; root main points exactly to child origin/main, and report/retro/completion evidence closes only Phase A.
+  - The old Documents application and all consumers remain unchanged, the family-dashboard-app migration family remains pending, and Phase B runtime relocation, Phase C entry cutover/retirement, and user value remain NOT_PROVEN.
+  verify:
+  - cmd: uv run pytest tests/test_dashboard_source_import.py -q
+    expect: exit 0 with deterministic allowlist, forbidden/private class, unsafe-node, drift, collision, and source-preservation cases passing
+  - cmd: bun --cwd apps/dashboard install --frozen-lockfile && bun --cwd apps/dashboard test && bun --cwd apps/dashboard run lint && bun --cwd apps/dashboard run build
+    expect: exit 0 from a clean family-hub checkout without live Documents or copied app-data
+  - cmd: bun --cwd apps/dashboard run test:e2e
+    expect: exit 0 for synthetic authentication, representative read journeys, and disabled-write behavior
+  - cmd: bun run build && uv run pytest tests -q
+    expect: exit 0 for the pre-existing family-hub Vite, Express boundary, Python, and FastMCP surfaces
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 while family-dashboard-app remains pending and no Phase B or Phase C overclaim is introduced
+  - cmd: make gac-local-gate
+    expect: exit 0 on the root gitlink/evidence PR and after merge replay from root main
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/family-hub
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
+  - docs/superpowers/plans/2026-08-31-family-dashboard-owner-migration-phase-a.md
+  - docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-111.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-31-t10-111-bootstrap.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d833693de0a212a8a00e7ab6974c8511817291bd8254c609191c71884f4e186b
+    decision_ref: decision://accepted/BET-Y1Q3-T10-111
+  depends_on:
+  - BET-Y1Q3-T10-110
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: Any source or target drift, unknown/unsafe file type, private household data or credential finding, forbidden runtime/cache import, absolute host path, destination collision, implicit Documents fallback, ungoverned write path, test/build dependency on live household data, existing family-hub regression, child/root ancestry mismatch, failed required check, consumer/host mutation, old-source mutation, or Phase B/Phase C/value overclaim stops Phase A and preserves the old application unchanged.
+  value_indicator_policy: false
+  retro: required
+
+- id: BET-Y1Q3-T10-110
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Quarantine retired Documents runner logs through exact selection
+  appetite: 1 day
+  priority: P0
+  status: done
+  done_at: 2026-08-31
+  goal: Move exactly the two retired _inbox runner logs from Documents into the protected integration Workspace quarantine through the existing transaction primitive, with exact cache selection, non-target preservation, durable verification, and executable rollback.
+  non_goals:
+  - No movement or rewrite of any other _inbox content and no directory-wide cache/runtime quarantine.
+  - No permanent deletion, host schedule/process/application mutation, log interpretation, or repair of historical root-oneoff rollback loss.
+  - No new registry family, CLI entry point, dispatcher, ontology, control plane, or migration primitive.
+  done_when:
+  - The existing documents runtime quarantine primitive preserves all default runtime behavior while adding explicit exact include, closed runtime/cache kind selection, complete-Documents classification, non-target fingerprinting, completed verify, and collision-safe rollback.
+  - RED-to-GREEN tests prove unsafe/duplicate includes, content selection, source/non-target drift, target collision, partial failure, zero-byte entries, durable manifest, verification, and immutable-manifest rollback semantics.
+  - The capability PR, focused/full tests, Ruff, GaC, required CI, merge, and mainline replay complete before any Documents or Workspace runtime payload mutation.
+  - Fresh host preflight proves exactly hourly_runner.log and hourly_runner_err.log selected as cache, two no-handle checks, no active consumer/schedule/process, stable source and non-target fingerprints, and an absent protected target.
+  - Apply and postflight prove both sources absent, target hash/mode/fingerprint parity, all non-target _inbox nodes unchanged, fresh consumer audit green, manifest retained on delayed recheck, rollback executable, and permanent deletion false.
+  - root-oneoff-assets records only this completed transaction and remains pending with its historical missing eight-file rollback gap unchanged; report, retro, completion matrix, closeout PR, mainline replay, and workflows pass while value remains NOT_PROVEN.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py tests/test_quarantine_retention_policy.py -q
+    expect: exit 0
+  - cmd: uv run --with ruff ruff check lib/documents_runtime_quarantine.py tests/test_documents_runtime_quarantine.py tests/test_quarantine_retention_policy.py
+    expect: exit 0
+  - cmd: >-
+      /usr/bin/python3 lib/documents_runtime_quarantine.py
+      --verify-manifest /Users/xiamingxing/Workspace/runtime/quarantine/documents-root-inbox-runner-logs-20260831/manifest.json
+      --json
+    expect: exit 0 with status verified, exact two targets equal, sources absent, non-target fingerprint equal, rollback available, permanent deletion false
+  - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
+    expect: exit 0 with status ok, forbidden_executors=0, unmatched=0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - lib/documents_runtime_quarantine.py
+  - tests/test_documents_runtime_quarantine.py
+  - tests/test_quarantine_retention_policy.py
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md
+  - docs/superpowers/plans/2026-08-31-documents-runner-log-quarantine.md
+  - docs/reports/2026-08-31-documents-runner-log-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-110.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-31-t10-110-bootstrap.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b2908cf39b4c4a841c388308d678eed19c8874f0289f4d90776c22f9684eaff5
+    decision_ref: decision://accepted/BET-Y1Q3-T10-110
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@700e23f9cfc5fd9bdb3f0aff78bfe2e6898b5c89
+          tests:
+            ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+            sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md
+            sha256: sha256:b2908cf39b4c4a841c388308d678eed19c8874f0289f4d90776c22f9684eaff5
+          rollback:
+            ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+            sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+            sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+            sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-110.md
+            sha256: sha256:3c47a091ba3d4f839b5b421dbbcb6f2847cf20931bec1e0e9b8f3f10dc1efeb1
+          cleanup:
+            ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
+            sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T10-109
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: Any include/kind ambiguity, source or non-target drift, open handle, consumer/schedule/process discovery, unsafe node/path, target or rollback collision, manifest/fingerprint mismatch, evidence-retention loss, unrelated registry change, permanent deletion, or value/family overclaim stops the transaction and preserves the most recoverable state.
+  value_indicator_policy: false
+  retro: required
+
+- id: BET-Y1Q3-T10-109
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Detect machine-generated logs in the L4 Documents content plane
+  appetite: 1 day
+  priority: P0
+  status: done
+  done_at: 2026-08-31
+  goal: Close the L4 semantic blind spot that treats machine-generated operational logs as human content, using one context-aware classifier rule without mutating Documents or weakening archive authority.
+  non_goals:
+  - No global .log suffix classification and no reinterpretation of historical, arbitrary, or archive-governed logs.
+  - No Documents, host, schedule, process, application, migration-family, runner-log, or content-archive mutation.
+  - No second classifier registry, artifact ontology, dispatcher, control plane, or human entry point.
+  done_when:
+  - The existing L4 classifier identifies .log files only in exact _generated, _runtime, adjacent _control/logs, or immediate root _inbox runner contexts as cache/L4-CONTENT-009 after archive resolution.
+  - RED-to-GREEN tests prove selected regular files and safe symlinks are detected while arbitrary, nested-inbox, valid-archive, and invalid-archive logs preserve prior semantics.
+  - Existing CLI/report schemas, filesystem stability, unsafe-symlink rejection, archive authority, and Python compatibility remain unchanged.
+  - Fresh read-only live canaries classify both retired _inbox/hourly_runner log files as cache without writing, moving, truncating, or deleting either file.
+  - L4 child tests/Ruff/CI, child authoritative-main merge, root gitlink PR/CI/mainline replay, report, retro, completion matrix, and workflow closeout pass while value remains NOT_PROVEN.
+  verify:
+  - cmd: cd projects/l4-kernel && uv run pytest tests/test_content_plane.py tests/test_cli_contracts.py -q
+    expect: exit 0 with context-aware machine-log and preservation cases passing
+  - cmd: cd projects/l4-kernel && uv run pytest tests/ -q && uv run ruff check src/ tests/
+    expect: exit 0
+  - cmd: >-
+      uv run --project projects/l4-kernel python -c "from pathlib import Path;
+      from l4_kernel.content_plane import classify_artifact;
+      root=Path('/Users/xiamingxing/Documents');
+      paths=[root/'_inbox/hourly_runner.log',root/'_inbox/hourly_runner_err.log'];
+      results=[classify_artifact(root,p) for p in paths];
+      assert all(p.exists() for p in paths) and all(r.kind=='cache' and r.code=='L4-CONTENT-009' for r in results)"
+    expect: exit 0 with both live runner logs detected read-only
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/l4-kernel
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
+  - docs/superpowers/plans/2026-08-31-l4-machine-log-classification.md
+  - docs/reports/2026-08-31-l4-machine-log-classification.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-109.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-31-t10-109-bootstrap.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:7f79068954581c502a63b3c39c0921c3544567f195cecda1f12ff65c415bedbf
+    decision_ref: decision://accepted/BET-Y1Q3-T10-109
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b267b2b65ab9b280702fe069c77241800036f986
+          tests:
+            ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
+            sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
+            sha256: sha256:7f79068954581c502a63b3c39c0921c3544567f195cecda1f12ff65c415bedbf
+          rollback:
+            ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
+            sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
+            sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
+            sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-109.md
+            sha256: sha256:9cba8d7ac22b2f46be3c90176ae76e01936f93d7b994671d2e02ba9693fbf5ea
+          cleanup:
+            ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
+            sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T10-108
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: Any global log-suffix rule, archive bypass, arbitrary or historical log reclassification, interface/schema change, Documents or host mutation, child/root ancestry mismatch, or value overclaim stops the BET and preserves current behavior.
+  value_indicator_policy: false
+  retro: required
+
+- id: BET-Y1Q3-T10-108
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Relocate CC Switch recovery state out of Documents
+  appetite: 1 day
+  priority: P0
+  status: done
+  done_at: 2026-08-31
+  goal: Move inactive CC Switch database, SQL, configuration, and recovery workspaces from hidden Documents roots into durable native App Support recovery storage through a reversible Workspace transaction.
+  non_goals:
+  - No active CC Switch database, configuration, process, App Support data, iCloud copy, schema, or provider mutation.
+  - No L4 classifier change, runner-log movement, historical root-oneoff/public-runtime evidence repair, deduplication, compression, pruning, or permanent deletion.
+  done_when:
+  - A Python 3.9-compatible Workspace transaction capability is built test-first behind the existing registered Documents owner job, with plan, apply, verify, and rollback commands and stable JSON errors.
+  - Preflight binds the complete two-root inventory, exact source/target boundaries, no open handles, target absence, disk capacity, fresh consumer health, file hashes/modes, six healthy SQLite checks, and one digest-bound pre-existing corrupt recovery check.
+  - Apply uses private staging, reversible movement, complete hash/mode/fingerprint verification, durable manifest fsync, and atomic target publication without touching active or iCloud CC Switch state.
+  - Postflight proves both Documents source roots absent, the App Support recovery target complete, healthy SQLite databases remain ok, the known damaged current.db remains byte-identical corrupt-preserved, rollback executable, and consumer audit forbidden=0/unmatched=0.
+  - The existing migration registry uniquely assigns the two recovery roots to cc-switch without weakening or falsely closing root-oneoff-assets.
+  - Spec, plan, report, retro, tests, GaC, required CI, squash merge, mainline replay, and workflow closeout pass while value remains NOT_PROVEN.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_client_recovery_relocation.py -q
+    expect: exit 0
+  - cmd: >-
+      receipt="$(mktemp)" && trap 'rm -f "$receipt"' EXIT &&
+      uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit
+      --documents-root /Users/xiamingxing/Documents
+      --registry .omo/_truth/registry/documents-content-plane-migrations.yaml
+      --launch-agents-root /Users/xiamingxing/Library/LaunchAgents
+      --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled
+      --workspace-root "$PWD" --json > "$receipt" &&
+      /usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery verify
+      --documents-root /Users/xiamingxing/Documents
+      --target-root "/Users/xiamingxing/Library/Application Support/CC_Switch Recovery/2026-08-30"
+      --consumer-receipt "$receipt" --json
+    expect: exit 0 with exact manifest parity, source roots absent, six SQLite checks ok, one current.db corrupt-preserved check unchanged, and rollback available
+  - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
+    expect: exit 0 with status ok, forbidden_executors=0, unmatched=0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0
+  - cmd: >-
+      uv run --with pyyaml python -c "import importlib.util; from pathlib import Path; import yaml;
+      s=importlib.util.spec_from_file_location('bet_ledger',Path('bin/plan/bet-ledger.py'));
+      m=importlib.util.module_from_spec(s); s.loader.exec_module(m);
+      d=yaml.safe_load(Path('docs/plans/3y-bet-ledger.yaml').read_text());
+      b=next(x for x in d['bets'] if x['id']=='BET-Y1Q3-T10-108');
+      state,errors=m.validate_completion_evidence(b['completion_evidence'],value_indicator_policy=b.get('value_indicator_policy',True),workspace=Path('.').resolve());
+      assert b['status']=='done' and state=='delivery_accepted' and not errors"
+    expect: exit 0 with T10-108 delivery_accepted and zero matrix errors
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - lib/documents_client_recovery_relocation.py
+  - bin/gac/documents-domain-owner-job.py
+  - tests/test_documents_client_recovery_relocation.py
+  - tests/test_documents_content_plane_migration_check.py
+  - .github/workflows/phase-gate-enforce.yml
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md
+  - docs/superpowers/plans/2026-08-30-cc-switch-recovery-state-relocation.md
+  - docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-108.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-108-bootstrap.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md
+    spec_version: 1.0.2
+    content_digest: sha256:2c73609e12406af70db5a0a6f82b3516e8b6c460c8759022a72494592bf32cd9
+    decision_ref: decision://accepted/BET-Y1Q3-T10-108
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e72bf052af1f09d9e87502b979b97fd165777bf5
+          tests:
+            ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+            sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md
+            sha256: sha256:2c73609e12406af70db5a0a6f82b3516e8b6c460c8759022a72494592bf32cd9
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+            sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+            sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+            sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-108.md
+            sha256: sha256:0137f83c2ca32ddc2d34aee51109e99d573a3f61de3c298ff4fdad6c543016d0
+          cleanup:
+            ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
+            sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T10-107
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: Any source/target boundary drift, active source handle, non-regular node, source mutation, target collision, insufficient disk, malformed consumer receipt, missing healthy SQLite recovery, changed SQLite classification/result digest, hash/mode/fingerprint mismatch, active or iCloud CC Switch mutation, publication failure, rollback failure, or permanent deletion stops the transaction and preserves the most recoverable state.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-107
   track: T10-MATURITY
   window: Y1Q3
   title: Sync convergence pulse capability projection
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Restore the generated capability projection after convergence-pulse-weekly entered the canonical workflow registry without projection refresh.
   non_goals:
   - No native capability, workflow, script, registry source, dispatcher, baseline, or runtime mutation.
@@ -293,6 +656,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:0db31501994e228e5b44b2713f2cf42a55f5b47067d0c8eac5a2c3fb03952bc2
     decision_ref: decision://accepted/BET-Y1Q3-T10-107
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@53483be5644444cb0f27b5553a8e469207016929
+          tests:
+            ref: receipt://docs/reports/2026-08-30-convergence-pulse-capability-projection-sync.md
+            sha256: sha256:048810a9cc83f229e72cf27a6e18799f402d22ce4af8829d29ceebcff2aff647
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md
+            sha256: sha256:0db31501994e228e5b44b2713f2cf42a55f5b47067d0c8eac5a2c3fb03952bc2
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md
+            sha256: sha256:0db31501994e228e5b44b2713f2cf42a55f5b47067d0c8eac5a2c3fb03952bc2
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-convergence-pulse-capability-projection-sync.md
+            sha256: sha256:048810a9cc83f229e72cf27a6e18799f402d22ce4af8829d29ceebcff2aff647
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-convergence-pulse-capability-projection-sync.md
+            sha256: sha256:048810a9cc83f229e72cf27a6e18799f402d22ce4af8829d29ceebcff2aff647
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-107.md
+            sha256: sha256:d058011b8e68d0c7c43c5682b30ba322068faae7a2bac4547b16c2b440e5abc2
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md
+            sha256: sha256:0db31501994e228e5b44b2713f2cf42a55f5b47067d0c8eac5a2c3fb03952bc2
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on: []
   risk_level: L1
   human_gate: false
@@ -306,7 +705,8 @@ bets:
   title: Relocate ZCode client state to durable App Support
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Copy, verify, and finalize the complete active ZCode .zcode state out of Documents through the native dataBaseDir contract into durable macOS App Support, with restart proof, incident recovery, and executable rollback.
   non_goals:
   - No provider, model, MCP server, task, session, credential, Electron browser-state, or application feature change.
@@ -349,6 +749,42 @@ bets:
     spec_version: 1.0.1
     content_digest: sha256:dca78f80616a14c4f034987088c10c352d092651541e76b11bab74cbeb3a53a1
     decision_ref: decision://accepted/BET-Y1Q3-T10-104
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@8737b24a14e2de4ca68116a3f5b52f4e2c905c18
+          tests:
+            ref: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+            sha256: sha256:03daaa2b54971e98a3dc5cff9c6f4ceb95766371b09c7a06b5eb8af621af60df
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md
+            sha256: sha256:dca78f80616a14c4f034987088c10c352d092651541e76b11bab74cbeb3a53a1
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+            sha256: sha256:03daaa2b54971e98a3dc5cff9c6f4ceb95766371b09c7a06b5eb8af621af60df
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+            sha256: sha256:03daaa2b54971e98a3dc5cff9c6f4ceb95766371b09c7a06b5eb8af621af60df
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+            sha256: sha256:03daaa2b54971e98a3dc5cff9c6f4ceb95766371b09c7a06b5eb8af621af60df
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-104.md
+            sha256: sha256:5906a2a5a513d432974a6599c422fde7082b500511b45f23f1a4f9ca43bfbb81
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md
+            sha256: sha256:dca78f80616a14c4f034987088c10c352d092651541e76b11bab74cbeb3a53a1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-103
   - BET-Y1Q3-T10-89
@@ -1717,7 +2153,7 @@ bets:
             ref: git://origin/main@a19ef95a9ed5f58e87eed571428fea394f2054a9
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-88.md
             sha256: sha256:2a71ec831f05b268e1abe70b68f623d294d26a515a6d2c076eb5f0574ea4706d
@@ -1803,7 +2239,7 @@ bets:
             ref: git://origin/main@ed1fcee593cdaa4131d65ad7bc78e86cb1fea411
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-87.md
             sha256: sha256:026902c39d56d800de2d278cb1de37222237d0a5148bd9691c8ce5918bab97ad
@@ -1889,7 +2325,7 @@ bets:
             ref: git://origin/main@a56a9bdb124d0d79c47f3c01221f66c3e92cc880
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-86.md
             sha256: sha256:325f35276e0a7968b5a7481afb6cd7f2e51038cf45b60adac45b0845628e81d6
@@ -1975,7 +2411,7 @@ bets:
             ref: git://origin/main@fa2ecddce3bcdcd764897f5f02cfdfda7a1cce57
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-85.md
             sha256: sha256:b183bd687c3b3ba209c0ab0b3592df86f774cfcb971ad46deb80ad39f8a15142
@@ -2061,7 +2497,7 @@ bets:
             ref: git://origin/main@762a729913ce1cf29824b8a990ca4e2c59ca1180
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-84.md
             sha256: sha256:cbf6a4cd44436260d419a9284d646689c692f3cebf5293763fa83746aac64b76
@@ -2147,7 +2583,7 @@ bets:
             ref: git://origin/main@77601669ff52f23e7af4f0a85063f54f4fae45eb
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-83.md
             sha256: sha256:45ea4780994f385f832780595381b75413dc83608da4469c9b1b235f11153b51
@@ -2233,7 +2669,7 @@ bets:
             ref: git://origin/main@1bf32800d6976745ee43e4a0f4ae5f5bedc1c14b
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-82.md
             sha256: sha256:01219de1e4505fb78e5efa9e1151062440b1cdbc6e207808e8a24eb6ce5ca0d2
@@ -2319,7 +2755,7 @@ bets:
             ref: git://origin/main@fb6a11ff5ebd96cd94d64a8e3f79f445b08a2c28
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-81.md
             sha256: sha256:d2bf50963efd21e6ded2676875cb60c9d0c93fcf7e3d2477c6d63c5ff0c57253
@@ -2405,7 +2841,7 @@ bets:
             ref: git://origin/main@a13a273ce70f6cfff39bd1a429084d2a12578409
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-80.md
             sha256: sha256:29119f71a843cae113394b155580fe45d3319fe3a7189e0a8b2babc25b4056b6
@@ -2492,7 +2928,7 @@ bets:
             ref: git://origin/main@7abb5c9f8111c8d01a7564f11d63edea9dc2323a
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-79.md
             sha256: sha256:31366caaa2289d47a8fdc65119d2ef04f32838f8fb5ceed042c1b51a18a462d1
@@ -2916,7 +3352,7 @@ bets:
             ref: git://origin/main@79c4829479b1cf3bdfa92d45c69dd5e690326058
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-77.md
             sha256: sha256:0f8a2b987986a7a99e8d1df9ca135caaf81f323a6a0efecd357453bfa512fa52
@@ -3174,7 +3610,7 @@ bets:
             ref: git://origin/main@3c512def94ddabcfc5eb13c2de538d7045576737
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-69.md
             sha256: sha256:3ffc9d703ced9506d7b44efd8f4282f40965952f89b504be62eb4771129a41dd
@@ -3210,7 +3646,7 @@ bets:
             ref: git://origin/main@3c512def94ddabcfc5eb13c2de538d7045576737
           tests:
             ref: repo://tests/test_documents_runtime_quarantine.py
-            sha256: sha256:98a2bbb16884c75313fcd627210a76c1c33296a5670bd1804b5521393146e3a1
+            sha256: sha256:1922ac30011d0952ba9972583af6fb19435e86057e0850858f0559f131788969
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-69.md
             sha256: sha256:3ffc9d703ced9506d7b44efd8f4282f40965952f89b504be62eb4771129a41dd
@@ -16382,7 +16818,8 @@ bets:
   title: 双机异构主权算力常态化守护与雷雳5 DMA 容灾演练
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: 将 omlxc.dma_daemon 与 resident.daemon 正式挂载至 macOS 用户级 launchd 常驻运行；实施雷雳 5 物理拔插、显存溢出阈值（75%）超载与 Mac mini 离线断网混沌演练，验证毫秒级降级与自愈完整性。
   non_goals:
   - 不修改 macOS 系统核心内核扩展，仅使用用户空间 POSIX DMA 与 BSD Sockets
