@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/governance-dashboard.py
-name: Governance Dashboard
+id: bin/gac/_archive/governance-summarizer.py
+name: Governance Summarizer
 category: governance
 owner: governance-team
 description: ""
