@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 547
+    script_baseline: 557  # 2026-08-30: sync to 557 (agent-optimization 5 gates + fix)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -2366,6 +2366,117 @@ gac:
     justification: '[ADR-0431 D2] CR-AGE-EVENT-01 — 待补存在理由 (90 天内补齐)'
     expected: Check CR-BIN-RETIREMENT-CHECKLIST must pass without violations
     remediation: Investigate check failure and apply targeted fix
+    related_runbooks: []
+  - id: CR-LEDGER-LOCK
+    created_at: '2026-08-30'
+    version: 1.0.0
+    lifecycle: active
+    dimension: X1
+    layer: L2
+    name: 台账写锁强约束 (bet-ledger 并发序列化)
+    description: 'bet-ledger.yaml 写操作必须经 LedgerLock (fcntl + 心跳/续约), 30s 获取超时/10s 续约/60s 死锁告警/120s 僵死自愈. 工具: lib/ledger_lock.py + bin/gac/ledger-lock-check.py'
+    check_type: audit_chain
+    target: docs/plans/3y-bet-ledger.yaml
+    source_ref: lib/ledger_lock.py
+    executor:
+    - gac_local_gate
+    enforcement: required
+    owner: governance-team
+    adr: ADR-0441
+    added_at: '2026-08-30'
+    review_before: '2026-11-28'
+    justification: 124次/天并发冲突归零; --break-stale/--wait 强提示, 无锁写直接阻断
+    expected: Check CR-LEDGER-LOCK must pass without violations
+    remediation: 'HINT: ledger 锁被占 → bin/gac/ledger-lock-check.py --json 查看占用; 僵死锁 → --break-stale; 等待释放 → --wait'
+    related_runbooks: []
+  - id: CR-ADR-PROTECTION
+    created_at: '2026-08-30'
+    version: 1.0.0
+    lifecycle: active
+    dimension: X4
+    layer: L2
+    name: ADR 创建防护 (原子编号+重名阻断)
+    description: 'ADR 创建前查重(编号/标题相似度/INDEX 一致性), 原子分配 O_CREAT|O_EXCL. 工具: lib/adr_protection.py + bin/adr/next-adr-id.py + bin/gac/adr-protection-check.py'
+    check_type: registry_integrity
+    target: .omo/_knowledge/decisions/
+    source_ref: lib/adr_protection.py
+    executor:
+    - gac_local_gate
+    enforcement: required
+    owner: governance-team
+    adr: ADR-0442
+    added_at: '2026-08-30'
+    review_before: '2026-11-28'
+    justification: 31次/天重复创建归零; 同号/相似标题直接 FAIL, INDEX 漂移告警
+    expected: Check CR-ADR-PROTECTION must pass without violations
+    remediation: 'HINT: adr-protection FAIL → bin/gac/adr-protection-check.py --json 查看重复/相似; 用 bin/adr/next-adr-id.py 原子取号'
+    related_runbooks: []
+  - id: CR-SUBMODULE-AUTO
+    created_at: '2026-08-30'
+    version: 1.0.0
+    lifecycle: active
+    dimension: X1
+    layer: L1
+    name: 子模块指针漂移自愈 (检测+可验证回滚)
+    description: '检测子模块指针漂移(behind/ahead/diverged/shallow), --fix/--apply 自动修复, reachability/verify 失败自动回滚. 工具: lib/submodule_auto.py + bin/gac/submodule-auto-check.py'
+    check_type: audit_chain
+    target: projects/*/.git
+    source_ref: lib/submodule_auto.py
+    executor:
+    - gac_local_gate
+    - radar_cron
+    enforcement: required
+    owner: governance-team
+    adr: ADR-0443
+    added_at: '2026-08-30'
+    review_before: '2026-11-28'
+    justification: 111次/天指针修复归零; --integrity 校验, dry-run 预览, 失败回滚强约束
+    expected: Check CR-SUBMODULE-AUTO must pass without violations
+    remediation: 'HINT: drift 检出 → bin/gac/submodule-auto-check.py --check --json; 修复 → --fix (dry-run) / --apply; 校验 → --integrity'
+    related_runbooks: []
+  - id: CR-FILE-LOCK
+    created_at: '2026-08-30'
+    version: 1.0.0
+    lifecycle: active
+    dimension: X1
+    layer: L2
+    name: 高频文件写锁 (SHA256 冲突检测+心跳)
+    description: '9 个高频文件经 file_lock 序列化, SHA256 冲突检测 + 心跳存活 + 死锁阈值. 工具: lib/file_lock.py + lib/high_frequency_files.py + bin/gac/file-lock-check.py'
+    check_type: audit_chain
+    target: .omo/state/system.yaml
+    source_ref: lib/file_lock.py
+    executor:
+    - gac_local_gate
+    enforcement: required
+    owner: governance-team
+    adr: ADR-0444
+    added_at: '2026-08-30'
+    review_before: '2026-11-28'
+    justification: 40次/天并发冲突归零; orphan/deadlock/contention 分级提示, integrity 校验
+    expected: Check CR-FILE-LOCK must pass without violations
+    remediation: 'HINT: file-lock FAIL → bin/gac/file-lock-check.py status --json; orphan → --cleanup; contention → monitor 子命令'
+    related_runbooks: []
+  - id: CR-AGENT-WORKFLOW-STD
+    created_at: '2026-08-30'
+    version: 1.0.0
+    lifecycle: active
+    dimension: X1
+    layer: L2
+    name: Agent 工作流标准化 (范围声明+锁+签名)
+    description: 'Agent 写操作必须: 1) 范围声明(RangeDeclaration) 2) 文件锁(LockStatus) 3) 修改可验证 4) 签名校验. 工具: lib/agent_workflow_standard.py + bin/gac/agent-workflow-standard-check.py'
+    check_type: audit_chain
+    target: bin/agent-workflow.py
+    source_ref: lib/agent_workflow_standard.py
+    executor:
+    - gac_local_gate
+    enforcement: required
+    owner: governance-team
+    adr: ADR-0445
+    added_at: '2026-08-30'
+    review_before: '2026-11-28'
+    justification: 50% 并发冲突下降; --check-ranges/--check-locks/--check-signatures 强提示, 越界写直接阻断
+    expected: Check CR-AGENT-WORKFLOW-STD must pass without violations
+    remediation: 'HINT: agent-std FAIL → bin/gac/agent-workflow-standard-check.py --all --json 查看详情; 范围外写 → 先声明 --check-ranges'
     related_runbooks: []
   drift:
     schedule: daily
