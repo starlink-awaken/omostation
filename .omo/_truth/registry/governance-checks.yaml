@@ -2295,6 +2295,22 @@ gac:
     expected: Check CR-BIN-RETIREMENT-CHECKLIST must pass without violations
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
+  - id: CR-GIT-STAGE-SUBMODULE-PIN
+    dimension: X4
+    layer: L2
+    name: 子模块指针暂存纪律
+    description: 主仓暂存禁用 git add -A / add .（带入子仓 gitlink 侧分支状态）；变更须 add 具体路径，涉子模块先核对 gitlink 指向 origin/main
+    check_type: gate
+    target: .githooks/pre-commit + git-discipline skill §1
+    executor:
+    - gac_local_gate
+    - pre_commit_hook
+    justification: 'pitfall PITFALL-COO-003 encountered 3 times (threshold 5): git add -A 误 stage 子仓旧指针——同型三次（cockpit/omlxc/omo）均被 gate 拦截；事故→规则流水线首例人工入册（ADR-0443 v3）'
+    added_at: '2026-08-31'
+    review_before: '2026-11-29'
+    created_at: '2026-08-31'
+    version: 1
+    lifecycle: active
   drift:
     schedule: daily
     auto_heal: false
