@@ -257,6 +257,67 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-98
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Restore governance and CI baseline after recent merges
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: Repair the independent root governance and CI baseline defects that currently block truthful Documents migration closeout, without weakening checks or mutating Documents content/runtime.
+  non_goals:
+  - No Documents host movement, deletion, quarantine payload, schedule, client-state, or content mutation.
+  - No new dispatcher, ontology, or parallel governance control plane.
+  - No change to the semantic completion or value verdict of any existing BET.
+  done_when:
+  - gac-mof-validate accepts every active governance rule using the canonical existing M2 check-type enum.
+  - ADR coverage accounts for ADR-0435 in the canonical decisions directory and index with valid frontmatter.
+  - The state/goals CI job runs from a clean root checkout without recursive private-submodule failure.
+  - BOS evidence has no real missing root entrypoint and resident BOS routing is aligned with the authoritative Agora origin/main gitlink.
+  - The root local gate and focused regression tests pass with no real gap hidden as a warning or deprecated alias.
+  verify:
+  - cmd: python3 bin/gac/gac-mof-validate.py --json
+    expect: exit 0 and ok=true
+  - cmd: python3 bin/adr/adr-coverage.py --json
+    expect: exit 0 with no missing, duplicate, frontmatter, or index findings
+  - cmd: python3 bin/gac/check-resident-bos.py
+    expect: exit 0
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_current_state_coherence.py tests/test_evidence_smoke_paths.py tests/test_adr_coverage_regex.py -q
+    expect: exit 0
+  - cmd: "rg -n 'submodules: false' .github/workflows/state-goals-enforce.yml"
+    expect: one root-only checkout declaration
+  - cmd: python3 bin/gac/monthly-healthcheck.py --json
+    expect: exit 0 with a JSON health result
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .github/workflows/state-goals-enforce.yml
+  - bin/gac/monthly-healthcheck.py
+  - bin/_registry/scripts/state/monthly-healthcheck.yaml
+  - .omo/_truth/registry/governance-checks.yaml
+  - .omo/_knowledge/decisions/0435-launchd-plist-generator-contract.md
+  - .omo/_knowledge/decisions/INDEX.md
+  - projects/agora
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-governance-ci-baseline-repair-design.md
+  - docs/reports/2026-08-30-governance-ci-baseline-repair.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-98.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-98-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-governance-ci-baseline-repair-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:39bc568d585c2810dfa32c5e2302dfe90b1572fbc2e6d2ef1655f6f590aec5c0
+    decision_ref: decision://accepted/BET-Y1Q3-T10-98
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: Any Documents mutation, check weakening, hidden real gap, unverified gitlink source, or unrelated scope expansion stops this delivery.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-97
   track: T10-MATURITY
   window: Y1Q3
