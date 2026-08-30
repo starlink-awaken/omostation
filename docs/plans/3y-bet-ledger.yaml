@@ -292,6 +292,7 @@ bets:
   - lib/documents_client_recovery_relocation.py
   - bin/gac/documents-domain-owner-job.py
   - tests/test_documents_client_recovery_relocation.py
+  - tests/test_documents_content_plane_migration_check.py
   - .github/workflows/phase-gate-enforce.yml
   - .omo/_truth/registry/documents-content-plane-migrations.yaml
   - docs/plans/3y-bet-ledger.yaml
