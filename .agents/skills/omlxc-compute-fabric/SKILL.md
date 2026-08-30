@@ -7,7 +7,7 @@ last-reviewed: 2026-08-29---
 # omlxc Compute Fabric — 本地异构算力织网与智能调度操作体系
 
 > **SSOT**: `projects/omlxc/docs/ARCHITECTURE-FABRIC.md`  
-> **版本**: `omlxc v5.0.0` / `ADR-0435 Active` / `AetherForge Active`  
+> **版本**: `omlxc v5.1.0` / `ADR-0439 Active` / `AetherForge Active`  
 > **核心定位**: 私有化本地异构集群 (Apple Silicon 统一内存 + NVIDIA CUDA) 的 **L4/L7 智能算力网关与 Kubernetes Scheduler for LLM**。
 
 ---
@@ -17,9 +17,10 @@ last-reviewed: 2026-08-29---
 在任意 Agent（如 OpenCode、Claude Code、Cursor、AetherForge Swarm、Kilo Code 等）遇到以下情况时，应当调用本技能：
 1. **长上下文推理与显存安全准入**：在向本地模型发送 $>16\text{k}$ Token 的超长上下文前，需基于 75%（96GB）阶梯显存安全门禁与双区自适应 KV 量化预估显存，保障恒定为 macOS 预留 25GB~32GB 物理内存，杜绝 Swap 顿挫。
 2. **极速投机解码与在线共生蒸馏**：调用 `qwen-3.8-27b-dflash` 享受 104+ tok/s 满血生成，在线共生草稿头蒸馏将命中率推升至 91.8%+。
-3. **雷雳 5 跨物理机 P2P 零拷贝 DMA**：利用 120Gbps 极速总线在 MBP 与 Mac mini 间实现 <0.15ms 的 2MB KV 块迁移，无缝构建 152GB 统一虚拟 NUMA 内存池。
+3. **雷雳 5 跨物理机 P2P 零拷贝 DMA 守护进程**：利用 `omlxc.daemon.dma_daemon` 自动探活 120Gbps 总线，在 MBP 与 Mac mini 间实现 <0.21ms 的 2MB KV 块迁移，并提供 launchd 原生守护。
 4. **多模态 ViT Patch 特征流式直通**：Y7000P 提取视觉 Patch 特征分块直推 MBP 交叉注意力层，“边看边推”缩短 70%+ 首字延迟 (TTFT)。
-5. **夏明星专属署名 Diff 闲时 LoRA 热插拔**：Mac mini 闲时自动微调 16MB 专属 LoRA 适配层，MBP <0.35ms 毫秒级动态挂载。
+5. **夏明星专属署名 Diff 闲时 LoRA 热插拔与经验回放**：基于 30% 历史回放 + 70% 新鲜样本的水塘抽样机制（`experience_replay.py`），杜绝灾难性遗忘。
+6. **Cockpit Spine 全流程闭环**：通过 `cockpit spine draft/sign/diff/status/distill` 驱动主干真值流。
 6. **硬件异构三节点路由**：
    - 向量化/重排序/闲时蒸馏 ➔ 自动路由至 Mac mini M4 (24G)；
    - 视觉/语音流/ViT特征 ➔ 自动路由至 Y7000P (RTX4070 8G CUDA)；
@@ -58,18 +59,28 @@ $$\text{FinalScore}(p) = \text{BaseScore}(p) \times M_{\text{affinity}}(p) \time
 
 ### 3.2 常用 CLI 诊断命令
 ```bash
-# 1. 查看次世代主权算力全景 HUD 实时控制台
+# 1. 查看次世代主权算力全景 HUD 实时控制台与 Spine 状态
 cockpit mesh hud
 cockpit mesh heatmap
+cockpit spine status
 
 # 2. 启动 Textual 1.x 全屏多智能体与算力互动大盘 (按 5 切换到 Compute HUD)
 make omo-top
 
-# 3. 运行次世代 V5.0 五大战略前沿端到端真实场景全景实测
+# 3. 运行 DMA 守护进程或生成 launchd 配置
+python3 -m omlxc.daemon.dma_daemon --generate-plist
+python3 -m omlxc.daemon.dma_daemon --probe-interval 1.0
+
+# 4. 提交署名 Diff 并触发闲时 LoRA 蒸馏
+cockpit spine sign --original "草稿" --signed "署名定稿" --domain signature-style
+cockpit spine diff
+cockpit spine distill --domain signature-style
+
+# 5. 运行次世代 V5.0 五大战略前沿端到端真实场景全景实测
 uv run --project projects/omlxc python projects/omlxc/examples/live_v5_evolution_verification.py
 
-# 4. 运行全量单元测试套件
-uv run --directory projects/omlxc pytest tests/unit/test_v5_compute_fabric.py -v
+# 6. 运行全量单元测试套件
+uv run --directory projects/omlxc pytest tests/unit/test_dma_daemon.py tests/unit/test_experience_replay.py -v
 ```
 
 ---

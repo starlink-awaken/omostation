@@ -10,7 +10,7 @@ last-reviewed: 2026-08-24
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **163** 个命令 (含子命令)。按场景分组如下。
+共 **175** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -62,7 +62,7 @@ last-reviewed: 2026-08-24
 | `cockpit onboarding` | 为 AI 构建项目全貌上下文 |
 | `cockpit panorama` | 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产) |
 | `cockpit resident` | Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...) |
-| `cockpit swarm` | 🤖 多 agent 实时活动监控 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
+| `cockpit swarm` | 分布式跨节点 KV 共享池与超长上下文置换基准 |
 | `cockpit wave2` | 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON) |
 | `cockpit workflow` | BOS workflow 相关 |
 
@@ -237,8 +237,20 @@ last-reviewed: 2026-08-24
 | `cockpit compact` | 上下文滑动蒸馏与双区自适应量化压缩模拟 |
 | `cockpit decide` | 📬 决策收件箱 (列出/添加/批准/拒绝) |
 | `cockpit dflash` | DFlash 2 块扩散投机解码加速与集群基准 |
+| `cockpit diff` | 查看待处理署名 Diff 统计 |
+| `cockpit distill` | 在 Mac mini M4 触发闲时 LoRA 蒸馏 |
+| `cockpit dma` | 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准 |
+| `cockpit draft` | 从本地主权大模型请求草稿 |
+| `cockpit heatmap` | 查看分布式 KV 内存池热力分布与投机蒸馏指标 |
+| `cockpit hud` | 查看次世代主权算力织网全景 HUD 实时状态 |
+| `cockpit lora` | 查看与测试端侧在线 LoRA 适配层热插拔 |
 | `cockpit ops` | 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate) |
 | `cockpit reject` | 拒绝决策 |
+| `cockpit replay` | 查看 Experience Replay 缓冲区状态 |
+| `cockpit sign` | 提交用户署名 Diff 并入队 Experience Replay |
+| `cockpit spine` | Spine 主干真值流与署名自进化操作 (ADR-0437) |
+| `cockpit stream` | 跨节点 Chunk-level 流式协同流水线基准 |
+| `cockpit tree` | 自适应熵感知树状投机解码与多候选验证基准 |
 
 ---
 

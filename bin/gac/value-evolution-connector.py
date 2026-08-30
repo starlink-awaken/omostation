@@ -18,19 +18,55 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-REPO = Path("/Users/xiamingxing/Workspace")
+
+def _detect_repo() -> Path:
+    for p in Path(__file__).resolve().parents:
+        if (p / "docs" / "project-registry.yaml").is_file():
+            return p
+    return Path("/Users/xiamingxing/Workspace")
+
+
+REPO = _detect_repo()
 NORTH_STAR = REPO / "bin" / "bc-os" / "north_star_meter_v3.py"
 EVOLUTION = REPO / "bin" / "bc-os" / "evolution_engine.py"
 VALUE_LOG = REPO / ".omo" / "state" / "value-executions.json"
+LORA_REPLAY_LOG = REPO / ".omo" / "state" / "lora-replay-buffer.jsonl"
+
+
+def record_signature_diff(
+    instruction: str,
+    output: str,
+    domain: str = "signature-style",
+    task_id: str = "",
+) -> dict:
+    """Record signature diff into LoRA replay buffer and associate value execution."""
+    sample_id = f"{domain}-{int(datetime.now(UTC).timestamp() * 1000)}"
+    entry = {
+        "sample_id": sample_id,
+        "domain": domain,
+        "instruction": instruction,
+        "output": output,
+        "captured_at": datetime.now(UTC).timestamp(),
+        "replay_count": 0,
+        "importance_weight": 1.0,
+        "task_id": task_id,
+    }
+    LORA_REPLAY_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with LORA_REPLAY_LOG.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    # Record 5 minutes saved per signature iteration by default
+    record_execution_value(5.0, task_id=task_id or sample_id)
+    return {"ok": True, "recorded": entry}
 
 
 def record_execution_value(minutes_saved: float, task_id: str = "") -> dict:
     """Record execution value to north_star."""
     entry = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "minutes_saved": minutes_saved,
         "task_id": task_id,
         "axis": "A",
@@ -71,7 +107,7 @@ def feed_evolution() -> dict:
         "source": "north_star_v3",
         "score": score,
         "provable": provable,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
     # Write evolution input
@@ -109,14 +145,34 @@ def main() -> int:
     parser.add_argument("--task-id", default="", help="Associated task ID")
     parser.add_argument("--feed-evolution", action="store_true", help="Feed north_star data to evolution")
     parser.add_argument("--auto-evolve", action="store_true", help="Auto-execute high-confidence proposals")
+    parser.add_argument("--record-diff", action="store_true", help="Record signature diff into LoRA buffer")
+    parser.add_argument("--instruction", default="", help="Original draft or instruction")
+    parser.add_argument("--signed", default="", help="Signed final content")
+    parser.add_argument("--domain", default="signature-style", help="Domain tag")
     args = parser.parse_args()
+
+    if args.record_diff:
+        if not args.signed:
+            print("✗ 缺少 --signed 参数")
+            return 1
+        result = record_signature_diff(
+            instruction=args.instruction,
+            output=args.signed,
+            domain=args.domain,
+            task_id=args.task_id,
+        )
+        if result.get("ok"):
+            print(f"✓ 已记录署名 Diff: sample_id={result['recorded']['sample_id']}, domain={args.domain}")
+            return 0
+        print("✗ 署名 Diff 记录失败")
+        return 1
 
     if args.record_value is not None:
         result = record_execution_value(args.record_value, args.task_id)
         if result.get("ok"):
             print(f"✓ 已记录价值: {args.record_value} 分钟")
             return 0
-        print(f"✗ 记录失败")
+        print("✗ 记录失败")
         return 1
 
     if args.feed_evolution:
