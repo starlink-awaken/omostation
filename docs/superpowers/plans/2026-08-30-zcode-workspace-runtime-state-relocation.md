@@ -22,8 +22,7 @@
 
 **Files:**
 - Create: `lib/documents_zcode_state_relocation.py`
-- Create: `bin/gac/documents-zcode-state-relocation.py`
-- Create: `bin/_registry/scripts/governance/documents-zcode-state-relocation.yaml`
+- Modify: `bin/gac/documents-zcode-config.py`
 - Create: `tests/test_documents_zcode_state_relocation.py`
 - Modify: `.github/workflows/phase-gate-enforce.yml`
 
@@ -32,8 +31,9 @@
       preservation, apply, inspect, verify, and rollback.
 - [ ] Implement the smallest Python 3.9-compatible transaction module and CLI
       that make the tests pass.
-- [ ] Register the CLI and connect the focused test and Ruff surfaces to the
-      existing Documents phase gate.
+- [ ] Add `state-inspect/apply/verify/rollback` to the existing ZCode config
+      owner and connect the focused test and Ruff surfaces to the existing
+      Documents phase gate. Do not add another `bin/` entry.
 - [ ] Run focused pytest, Ruff, and Python 3.9 parse checks.
 
 ### Task 2: Execute the quiescent host transaction
