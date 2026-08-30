@@ -3210,8 +3210,9 @@ bets:
   verify:
   - cmd: wc -l bin/capability-sync.py
     expect: line count <= 1500
-  - cmd: python3 bin/ssot/check-god-module.py --strict --json
-    expect: capability-sync.py absent from hard errors
+  - cmd: >-
+      python3 -c 'import json,subprocess; result=subprocess.run(["python3","bin/ssot/check-god-module.py","--strict","--json"],capture_output=True,text=True); report=json.loads(result.stdout); assert not any(item["file"]=="bin/capability-sync.py" for item in report["error"]); print("capability-sync.py absent from hard errors")'
+    expect: capability-sync.py absent from hard errors; unrelated global god-module debt may remain
   - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_capability_sync.py tests/test_capability_native_inspection.py tests/test_capability_native_execution_receipt.py tests/test_capability_trace_binding.py -q
     expect: exit 0
   - cmd: make check-capability-registry
@@ -3248,35 +3249,36 @@ bets:
             sha256: sha256:e333221f79daedfe24e05fdf1a30222992869eaa158166e6097d73ecc3f3ca19
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-60.md
-            sha256: sha256:fec047a862a28f3284f4e5be0380a49865a60c72c83786f8956da19fdcd3b299
+            sha256: sha256:ea7a915d810d56bca1bb72d5bb8b9fcf059e3262c81db5aa826ecc819bca436f
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-60.md
-            sha256: sha256:fec047a862a28f3284f4e5be0380a49865a60c72c83786f8956da19fdcd3b299
+            sha256: sha256:ea7a915d810d56bca1bb72d5bb8b9fcf059e3262c81db5aa826ecc819bca436f
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
-            sha256: sha256:375937368d6962d800f0fd70709c794c457501c04c7a8f9c672263cd84cd37e1
+            sha256: sha256:3860092391c8b2f46b8b6514b25072f0341d3ca9149d556eb41abb9b8ece1306
           fresh_receipt:
             ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
-            sha256: sha256:375937368d6962d800f0fd70709c794c457501c04c7a8f9c672263cd84cd37e1
+            sha256: sha256:3860092391c8b2f46b8b6514b25072f0341d3ca9149d556eb41abb9b8ece1306
           replay:
             ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
-            sha256: sha256:375937368d6962d800f0fd70709c794c457501c04c7a8f9c672263cd84cd37e1
+            sha256: sha256:3860092391c8b2f46b8b6514b25072f0341d3ca9149d556eb41abb9b8ece1306
           cleanup:
             ref: receipt://docs/reports/2026-08-29-capability-sync-module-split.md
-            sha256: sha256:375937368d6962d800f0fd70709c794c457501c04c7a8f9c672263cd84cd37e1
+            sha256: sha256:3860092391c8b2f46b8b6514b25072f0341d3ca9149d556eb41abb9b8ece1306
       value:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T1-12
-  value_indicator_policy: false
   risk_level: L1
   human_gate: false
   circuit_breaker: Any capability ID, registry writer, receipt schema, admission semantics, Documents content, or runtime-state change stops this BET.
+  value_indicator_policy: false
+  retro: required
 - id: BET-Y1Q3-T10-59
   track: T10-MATURITY
   window: Y1Q3
