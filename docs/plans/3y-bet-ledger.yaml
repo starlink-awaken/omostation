@@ -263,7 +263,8 @@ bets:
   title: Harden Documents consumer-audit command path tokenization
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Make the canonical host consumer audit separate Documents executable paths from trailing argv, preserve quoted paths with spaces, and detect extensionless control executors so active Scheduled consumers cannot be falsely reported as zero forbidden executors.
   non_goals:
   - No modification of Claude Scheduled skills, crontab, LaunchAgents, Documents content, migration-family status, or quarantine payloads.
@@ -302,6 +303,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:fadce42e68d2986409ef33152b084e3f5f5ab4458e184d2f0765f13e70b6c7de
     decision_ref: decision://accepted/BET-Y1Q3-T10-102
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@51b4f4c92e3dab225717e923a8deb0b0d9961772
+          tests:
+            ref: receipt://tests/test_documents_consumer_audit.py
+            sha256: sha256:4644a03f3161b128c75dd654983a0e361690a6b56415da54d69962786da8d193
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md
+            sha256: sha256:fadce42e68d2986409ef33152b084e3f5f5ab4458e184d2f0765f13e70b6c7de
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-consumer-audit-path-tokenization.md
+            sha256: sha256:6d862c856fa39068405d0459ff97eca4693e7b3e86cbc177f2d79df03ee48a83
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-consumer-audit-path-tokenization.md
+            sha256: sha256:6d862c856fa39068405d0459ff97eca4693e7b3e86cbc177f2d79df03ee48a83
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-consumer-audit-path-tokenization.md
+            sha256: sha256:6d862c856fa39068405d0459ff97eca4693e7b3e86cbc177f2d79df03ee48a83
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-102.md
+            sha256: sha256:037ff5db1c80ee498ac2d0ed80f8cf83e725b932f33afb0da770d2f8d0792ed4
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md
+            sha256: sha256:fadce42e68d2986409ef33152b084e3f5f5ab4458e184d2f0765f13e70b6c7de
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-36
   - BET-Y1Q3-T10-101
