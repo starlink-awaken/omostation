@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-l4-convergence
-journey_id: documents-l4-convergence-journey"
+journey_id: documents-l4-convergence-journey
 goal: L4 收敛
 trigger: 检测到 convergence 类 documents 任务需要执行
 input_contract: 源文件路径/范围
