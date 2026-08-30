@@ -1,0 +1,20 @@
+[
+  {
+    "id": "EVOLVE-HEARTBEAT",
+    "type": "reliability",
+    "target": "probe-heartbeat-monitor.py",
+    "title": "修复探测器心跳监控",
+    "description": "部分探测器心跳异常，需要修复数据源",
+    "confidence": 0.9,
+    "risk": "low"
+  },
+  {
+    "id": "EVOLVE-DRIFT",
+    "type": "governance",
+    "target": "governance-checks.yaml",
+    "title": "修复治理漂移",
+    "description": "检测到治理规则漂移，需要同步",
+    "confidence": 0.85,
+    "risk": "low"
+  }
+]

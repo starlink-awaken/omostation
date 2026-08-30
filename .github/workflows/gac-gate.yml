@@ -114,7 +114,7 @@ jobs:
       - name: CR-X2-PROJECT-HEALTH-FRESHNESS — 项目健康分新鲜度检查 (advisory)
         # 项目健康分必须定期更新, 非阻塞 advisory
         continue-on-error: true
-        run: python3 bin/gac/check-project-health-freshness.py
+        run: python3 bin/gac/maturity-scorecard.py
       - name: CR-X3-DELIVERY-VALUE-GATE — 交付 X3 价值门禁检查 (advisory)
         # 交付文件必须有 X3 价值标注, 非阻塞 advisory
         continue-on-error: true
@@ -134,11 +134,11 @@ jobs:
       - name: CR-P79-4-CATALOG-HEALTH-METRIC — Catalog 健康指标检查 (advisory)
         # GaC 规则数作为可观测指标, 非阻塞 advisory
         continue-on-error: true
-        run: python3 bin/gac/check-catalog-health.py
+        run: python3 bin/gac/maturity-scorecard.py
       - name: CR-X-META-HEALTH — GaC 治理系统自检 (advisory)
         # 治理系统自身健康度: 规则数 ≤ freeze, 无重复 ID, 无过期 draft
         continue-on-error: true
-        run: python3 bin/gac/check-meta-health.py
+        run: python3 bin/gac/maturity-scorecard.py
       - name: CR-X2-GAC-DRIFT — GaC drift 自检 (注册表 vs 实际执行)
         run: python3 bin/gac/gac-drift.py
       - name: CR-M4-HEALTH-SCORE — M4 Health Score 量化 (advisory)
