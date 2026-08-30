@@ -45,3 +45,14 @@ work_packet_amendment:
   added_surface: tests/test_documents_content_plane_migration_check.py
   reason: The authoritative existing regression hard-codes the complete migration family set and must acknowledge the new family while preserving candidate_count 17.
   scope: Test expectation only; no migration semantics, production code, host data, or accepted specification digest changes.
+
+recovery_corpus_amendment:
+  authorized_quote: "全面推进吧"
+  from_version: 1.0.1
+  to_version: 1.0.2
+  old_digest: sha256:bb513598b8c08a970b7100e5becfc73478e643ded7b2b269bcb2822c0d09579b
+  new_digest: sha256:2c73609e12406af70db5a0a6f82b3516e8b6c460c8759022a72494592bf32cd9
+  observed_file: .cc-switch-recovery2/current.db
+  observed_sha256: sha256:df0a17b1cb391f3cf78426853269402fbf3be578f86f051bc1e280bb0431c76a
+  reason: The recovery corpus intentionally retains a pre-repair corrupt database while six other recognizable SQLite recovery files are healthy; relocation must preserve both facts byte-identically.
+  scope: SQLite evidence classification only; source roots, target, movement, rollback, active/iCloud exclusions, and value boundary are unchanged.

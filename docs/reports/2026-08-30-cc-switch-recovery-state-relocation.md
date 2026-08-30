@@ -72,3 +72,29 @@ Merge the implementation PR with required checks, replay tests from main, then
 use a fresh full-profile mainline clone for the 21-file/417772968-byte host
 plan, apply, verify, full-tree audit, completion matrix, closeout PR, and final
 workflow closeout. Value remains `NOT_PROVEN`.
+
+## Mainline host preflight incident
+
+Mainline implementation `898e5f6ee0878ad218333693a0cc40a73326a1ef`
+replayed 21 focused tests, 25 prior tests, migration coverage, and workflow
+health before host planning. The first no-write plan halted with
+`SQLITE_CORRUPT`; no source or target was mutated.
+
+Read-only enumeration found seven recognizable SQLite recovery files. Six pass
+`PRAGMA quick_check`: the three `.codex-optimize-log` backups, `rebuilt2.db`,
+`tiny_test.db`, and `tiny_test2.db`. Only the deliberately retained pre-repair
+`.cc-switch-recovery2/current.db` is damaged; it is 69353472 bytes with SHA-256
+`df0a17b1cb391f3cf78426853269402fbf3be578f86f051bc1e280bb0431c76a`.
+
+Specification 1.0.2 therefore records healthy SQLite files as `ok` and the
+known damaged recovery sample as digest-bound `corrupt-preserved`. File hash,
+mode, path, aggregate fingerprint, and classification replay remain blocking;
+at least one healthy SQLite recovery file is required. Host apply remains
+pending until this amendment and regression reach main.
+
+The amended no-write plan succeeds with exactly 21 files, 417772968 bytes,
+source fingerprint
+`sha256:6050fb3f53e99d7cfc8c85faff5be776aba06fb18fc0ab928ecab29f37898ced`,
+six `ok` SQLite checks, and one `corrupt-preserved` check whose result digest is
+`sha256:019de329b9bd09bdb76cd7d2bc987e47212a0e300b49f913354109fd9b18727a`.
+Permanent deletion is false and the target remains absent.

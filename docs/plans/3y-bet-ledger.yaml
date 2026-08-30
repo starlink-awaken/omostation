@@ -270,16 +270,16 @@ bets:
   - No L4 classifier change, runner-log movement, historical root-oneoff/public-runtime evidence repair, deduplication, compression, pruning, or permanent deletion.
   done_when:
   - A Python 3.9-compatible Workspace transaction capability is built test-first behind the existing registered Documents owner job, with plan, apply, verify, and rollback commands and stable JSON errors.
-  - Preflight binds the complete two-root inventory, exact source/target boundaries, no open handles, target absence, disk capacity, fresh consumer health, file hashes/modes, and SQLite quick checks.
+  - Preflight binds the complete two-root inventory, exact source/target boundaries, no open handles, target absence, disk capacity, fresh consumer health, file hashes/modes, six healthy SQLite checks, and one digest-bound pre-existing corrupt recovery check.
   - Apply uses private staging, reversible movement, complete hash/mode/fingerprint verification, durable manifest fsync, and atomic target publication without touching active or iCloud CC Switch state.
-  - Postflight proves both Documents source roots absent, the App Support recovery target complete, recognizable SQLite databases healthy, rollback executable, and consumer audit forbidden=0/unmatched=0.
+  - Postflight proves both Documents source roots absent, the App Support recovery target complete, healthy SQLite databases remain ok, the known damaged current.db remains byte-identical corrupt-preserved, rollback executable, and consumer audit forbidden=0/unmatched=0.
   - The existing migration registry uniquely assigns the two recovery roots to cc-switch without weakening or falsely closing root-oneoff-assets.
   - Spec, plan, report, retro, tests, GaC, required CI, squash merge, mainline replay, and workflow closeout pass while value remains NOT_PROVEN.
   verify:
   - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_client_recovery_relocation.py -q
     expect: exit 0
   - cmd: /usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery verify --documents-root /Users/xiamingxing/Documents --target-root "/Users/xiamingxing/Library/Application Support/CC_Switch Recovery/2026-08-30" --json
-    expect: exit 0 with exact manifest parity, source roots absent, SQLite checks ok, and rollback available
+    expect: exit 0 with exact manifest parity, source roots absent, six SQLite checks ok, one current.db corrupt-preserved check unchanged, and rollback available
   - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
     expect: exit 0 with status ok, forbidden_executors=0, unmatched=0
   - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
@@ -304,14 +304,14 @@ bets:
   pasw_required: true
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md
-    spec_version: 1.0.1
-    content_digest: sha256:bb513598b8c08a970b7100e5becfc73478e643ded7b2b269bcb2822c0d09579b
+    spec_version: 1.0.2
+    content_digest: sha256:2c73609e12406af70db5a0a6f82b3516e8b6c460c8759022a72494592bf32cd9
     decision_ref: decision://accepted/BET-Y1Q3-T10-108
   depends_on:
   - BET-Y1Q3-T10-107
   risk_level: L3
   human_gate: true
-  circuit_breaker: Any source/target boundary drift, active source handle, non-regular node, source mutation, target collision, insufficient disk, malformed consumer receipt, SQLite corruption, hash/mode/fingerprint mismatch, active or iCloud CC Switch mutation, publication failure, rollback failure, or permanent deletion stops the transaction and preserves the most recoverable state.
+  circuit_breaker: Any source/target boundary drift, active source handle, non-regular node, source mutation, target collision, insufficient disk, malformed consumer receipt, missing healthy SQLite recovery, changed SQLite classification/result digest, hash/mode/fingerprint mismatch, active or iCloud CC Switch mutation, publication failure, rollback failure, or permanent deletion stops the transaction and preserves the most recoverable state.
   value_indicator_policy: false
   retro: required
 
