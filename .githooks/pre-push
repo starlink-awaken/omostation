@@ -156,7 +156,7 @@ payload.setdefault("failures", []).append({
     "signature": hashlib.sha256(excerpt.encode()).hexdigest()[:16],
     "kind": "preflight",
     "producer": "pointer-drift",
-    "output_excerpt": " ".join(excerpt.split())[:240],
+    "output_excerpt": (" | ".join([l.strip() for l in excerpt.splitlines() if any(m in l for m in ("\u274c", "FAIL", "Error", "DIVERGED"))][:3]) or " ".join(excerpt.split()))[:240],
 })
 payload["ok"] = False
 open(path, "w", encoding="utf-8").write(json.dumps(payload, indent=2) + "\n")

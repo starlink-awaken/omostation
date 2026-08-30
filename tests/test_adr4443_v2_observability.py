@@ -153,3 +153,27 @@ def test_v4_symptom_overlap_matches_true_duplicate():
     same_family_a = "git add -A 后 commit 含 projects/omo gitlink 指向 side-branch 指针回退"
     same_family_b = "git add -A 后 commit 含 projects/omlxc gitlink side-branch 指针回退 origin/main"
     assert EK_V4.symptom_overlap(same_family_a, same_family_b) >= 3, "真同坑必须命中"
+
+
+# --- v6: excerpt 定向提取 -----------------------------------------------------
+
+CF = _load("bin/gac/ci-local-fast.py", "cf_v6")
+
+
+def test_v6_failure_excerpt_targets_failure_line_not_banner():
+    sample = (
+        "── GaC local gate ──────\n"
+        "[gac] [PASS] gac-validate :: bin/gac/gac-validate.py --gate\n"
+        "[gac] [PASS] script-registry-validate\n"
+        "[gac] [FAIL] bin-quota-diff :: 脚本减法配额违规\n"
+        "[gac] ❌ 1 错误: bin/ 活跃脚本超基线\n"
+        "修复指引: 归档一个 bin 脚本"
+    )
+    r = CF.classify_preflight_failure("gac", sample)
+    assert "FAIL" in r["output_excerpt"] and "配额" in r["output_excerpt"]
+    assert "gac-validate" not in r["output_excerpt"]  # 头部 PASS 被剔
+
+
+def test_v6_failure_excerpt_fallback_when_clean():
+    r = CF.classify_preflight_failure("gac", "全绿输出 无失败标记")
+    assert r["output_excerpt"].startswith("全绿输出")

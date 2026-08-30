@@ -134,6 +134,13 @@ def feed_from_escapes(escape_dir: Path | None = None, *, min_count: int = FEED_M
             if common >= 3:
                 e["times_encountered"] = e.get("times_encountered", 1) + count
                 e["last_confirmed_at"] = datetime.now(UTC).strftime("%Y-%m-%d")
+                # ADR-0443 v6: 定向提取后的新观测若含失败标记而旧 symptom 无
+                # （v5 旧头部截断遗留），以最新观测更新 symptom —— 语义是
+                # "最近一次观测"，非伪造历史。
+                if any(m in symptom for m in ("FAIL", "\u274c", "Error")) and not any(
+                    m in str(e.get("symptom", "")) for m in ("FAIL", "\u274c", "Error")
+                ):
+                    e["symptom"] = symptom[:240]
                 _save_entry(e)
                 bumped += 1
                 matched = True
