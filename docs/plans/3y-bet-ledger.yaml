@@ -306,7 +306,8 @@ bets:
   title: Relocate ZCode client state to durable App Support
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Copy, verify, and finalize the complete active ZCode .zcode state out of Documents through the native dataBaseDir contract into durable macOS App Support, with restart proof, incident recovery, and executable rollback.
   non_goals:
   - No provider, model, MCP server, task, session, credential, Electron browser-state, or application feature change.
@@ -349,6 +350,42 @@ bets:
     spec_version: 1.0.1
     content_digest: sha256:dca78f80616a14c4f034987088c10c352d092651541e76b11bab74cbeb3a53a1
     decision_ref: decision://accepted/BET-Y1Q3-T10-104
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@8737b24a14e2de4ca68116a3f5b52f4e2c905c18
+          tests:
+            ref: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+            sha256: sha256:03daaa2b54971e98a3dc5cff9c6f4ceb95766371b09c7a06b5eb8af621af60df
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md
+            sha256: sha256:dca78f80616a14c4f034987088c10c352d092651541e76b11bab74cbeb3a53a1
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+            sha256: sha256:03daaa2b54971e98a3dc5cff9c6f4ceb95766371b09c7a06b5eb8af621af60df
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+            sha256: sha256:03daaa2b54971e98a3dc5cff9c6f4ceb95766371b09c7a06b5eb8af621af60df
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
+            sha256: sha256:03daaa2b54971e98a3dc5cff9c6f4ceb95766371b09c7a06b5eb8af621af60df
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-104.md
+            sha256: sha256:5906a2a5a513d432974a6599c422fde7082b500511b45f23f1a4f9ca43bfbb81
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md
+            sha256: sha256:dca78f80616a14c4f034987088c10c352d092651541e76b11bab74cbeb3a53a1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-103
   - BET-Y1Q3-T10-89

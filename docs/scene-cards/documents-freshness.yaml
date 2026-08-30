@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-freshness
-journey_id: documents-freshness-journey"
+journey_id: documents-freshness-journey
 goal: Documents 保鲜审计
 trigger: 检测到 owner 类 documents 任务需要执行
 input_contract: 源文件路径/范围
@@ -23,4 +23,15 @@ risk_level: L1
 files_count: all domains
 bet_id: BET-Y1Q3-T10-24
 category: owner
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: internal
+  bos_uri: bos://governance/omo/audit
+  layer: L4 - Control Plane
+  entry_point: bin/gac/documents-domain-owner-job.py
+  governance_surface: .omo/_truth/registry/governance-checks.yaml
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
 ---

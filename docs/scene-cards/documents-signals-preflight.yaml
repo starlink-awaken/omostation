@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-signals-preflight
-journey_id: documents-signals-preflight-journey"
+journey_id: documents-signals-preflight-journey
 goal: 信号预检
 trigger: 检测到 owner 类 documents 任务需要执行
 input_contract: 源文件路径/范围
@@ -17,10 +17,21 @@ consumer: xiamingxing
 approver: business-governance
 owner: xiamingxing
 
-source_path: @公共/_runtime/signals-rotate.py + @_control/SIGNALS.md
+source_path: "@公共/_runtime/signals-rotate.py + @_control/SIGNALS.md"
 target_path: Workspace evidence
 risk_level: L1
 files_count: variable
 bet_id: BET-Y1Q3-T10-33
 category: owner
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: internal
+  bos_uri: bos://governance/omo/audit
+  layer: L4 - Control Plane
+  entry_point: bin/gac/documents-domain-owner-job.py
+  governance_surface: .omo/_truth/registry/governance-checks.yaml
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
 ---

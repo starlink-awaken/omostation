@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-root-oneoff
-journey_id: documents-root-oneoff-journey"
+journey_id: documents-root-oneoff-journey
 goal: 根一次性运行时隔离
 trigger: 检测到 quarantine 类 documents 任务需要执行
 input_contract: 源文件路径/范围
@@ -23,4 +23,15 @@ risk_level: L2
 files_count: 8
 bet_id: BET-Y1Q3-T10-59
 category: quarantine
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: external
+  bos_uri: bos://capability/quarantine
+  layer: L4 - Content Plane
+  entry_point: runtime/documents_runtime_quarantine.py
+  governance_surface: .omo/_truth/registry/documents-content-plane-migrations.yaml
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
 ---

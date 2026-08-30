@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-zcode-state
-journey_id: documents-zcode-state-journey"
+journey_id: documents-zcode-state-journey
 goal: ZCode 状态迁移
 trigger: 检测到 convergence 类 documents 任务需要执行
 input_contract: 源文件路径/范围
@@ -23,4 +23,15 @@ risk_level: L2
 files_count: all state
 # bet_id: N/A
 category: convergence
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: external
+  bos_uri: bos://capability/convergence
+  layer: L4 - Convergence
+  entry_point: bin/ssot/documents-domain-owner-job.py
+  governance_surface: .omo/_truth/registry/documents-content-plane-migrations.yaml
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
 ---
