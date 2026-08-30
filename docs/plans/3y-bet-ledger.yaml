@@ -10379,7 +10379,8 @@ bets:
   title: Post-2408 main recovery 与 required gac-gate promotion
   appetite: 2 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: >-
     恢复 latest main 的真实治理基线，深化 existing gac-gate 为 immutable、check-only、blocking gate，经 main canary 后以 guarded double-read read-modify-write: GET A -> validate/hash -> GET B -> require digest equality -> one required_status_checks subresource PATCH -> GET C verify。The API lacks a proven server-side conditional unsafe write, so a residual GET-B/PATCH race remains and is bounded by a second human gate, receipt and context-only rollback，并完成 repository/runtime hygiene 与显式授权的 host retention。
   non_goals:
@@ -10483,6 +10484,43 @@ bets:
   human_gate: true
   circuit_breaker: >-
     latest-main failure set 漂移、immutable gate 产生写入、main canary 不完整、protection expected-before 不匹配、guarded double-read read-modify-write: GET A -> validate/hash -> GET B -> require digest equality -> one required_status_checks subresource PATCH -> GET C verify。The API lacks a proven server-side conditional unsafe write, so a residual GET-B/PATCH race remains and is bounded by a second human gate, receipt and context-only rollback、host retention 缺授权或直接证据、或 value-exempt completion 合同不可用时立即停止
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c5363fc16599434d7f5b1986ba70600252ac7808
+          tests:
+            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
+            sha256: sha256:600d47cf984f8ff5c40ee6a0c08e05586d4b6494182bf4a4b5b5f8e8a7ee7fb5
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
+            sha256: sha256:8ca8451fc2693ef350c692b198cc7d77194204a290d3d8ec6ce6ed4d5e9ec358
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
+            sha256: sha256:8ca8451fc2693ef350c692b198cc7d77194204a290d3d8ec6ce6ed4d5e9ec358
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
+            sha256: sha256:600d47cf984f8ff5c40ee6a0c08e05586d4b6494182bf4a4b5b5f8e8a7ee7fb5
+          replay:
+            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
+            sha256: sha256:600d47cf984f8ff5c40ee6a0c08e05586d4b6494182bf4a4b5b5f8e8a7ee7fb5
+          cleanup:
+            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
+            sha256: sha256:600d47cf984f8ff5c40ee6a0c08e05586d4b6494182bf4a4b5b5f8e8a7ee7fb5
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
+            sha256: sha256:600d47cf984f8ff5c40ee6a0c08e05586d4b6494182bf4a4b5b5f8e8a7ee7fb5
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 
 
