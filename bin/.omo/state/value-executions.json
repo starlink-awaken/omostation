@@ -19,5 +19,26 @@
     "task_id": "signal-chain",
     "description": "",
     "axis": "A"
+  },
+  {
+    "timestamp": "2026-08-30T06:41:32.360657+00:00",
+    "minutes_saved": 20.0,
+    "task_id": "doc-review",
+    "description": "",
+    "axis": "A"
+  },
+  {
+    "timestamp": "2026-08-30T06:41:32.642321+00:00",
+    "minutes_saved": 45.0,
+    "task_id": "meeting-minutes",
+    "description": "",
+    "axis": "A"
+  },
+  {
+    "timestamp": "2026-08-30T06:41:32.905887+00:00",
+    "minutes_saved": 60.0,
+    "task_id": "research-digest",
+    "description": "",
+    "axis": "A"
   }
 ]
