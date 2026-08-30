@@ -131,6 +131,20 @@ UNINIT_MARKERS = (
 )
 INNER_BASELINE_KEYS = frozenset({"ruff"})
 
+# ADR-0443 v6: 定向失败行提取——v5 人审退回草案的直接根因是头部 240 截断
+# 只装得下 banner+PASS 段，失败核心丢失。改为优先抓失败行及其后 2 行
+# （gate 的修复指引通常紧跟），无失败标记才回退头部截断（旧行为）。
+FAILURE_MARKERS = ("\u274c", "FAIL", "Error", "error:", "\u9519\u8bef")
+
+
+def failure_excerpt(text: str, limit: int = 240) -> str:
+    lines = [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+    for i, ln in enumerate(lines):
+        if any(m in ln for m in FAILURE_MARKERS):
+            joined = " | ".join(lines[i : i + 3])
+            return " ".join(joined.split())[:limit]
+    return " ".join(" ".join(lines).split())[:limit]
+
 
 def classify_preflight_failure(check_key: str, output: str) -> dict[str, Any]:
     """Map a ci-local-fast producer failure to a skip-layer fingerprint."""
@@ -146,8 +160,8 @@ def classify_preflight_failure(check_key: str, output: str) -> dict[str, Any]:
     else:
         kind = "preflight"
         check_id = producer
-    excerpt = " ".join(text.split())[:240]
-    signature = hashlib.sha256(f"{producer}\n{excerpt}".encode("utf-8")).hexdigest()[:16]
+    excerpt = failure_excerpt(text)
+    signature = hashlib.sha256(f"{producer}\n{excerpt}".encode()).hexdigest()[:16]
     return {
         "surface": "ci-local-fast",
         "check_id": check_id,
@@ -242,6 +256,7 @@ def _normalize_ruff_message(message: str) -> str:
     # F811: "Redefinition of unused `xxx` from line 27: `xxx` redefined here"
     # → "Redefinition of unused `xxx`"
     import re
+
     m = re.match(r"(.+?)\s+from line \d+:.*", message)
     if m:
         return m.group(1)
@@ -289,11 +304,13 @@ def _ruff_json(policy: dict[str, Any], *, root: Path, debt: bool) -> list[dict[s
     if missing:
         # BET-Y1Q3-T10-09: worktree 环境感知 — 未 init 子模块时降级 skip 非 fail.
         # 判据: .git 指向 worktrees/ 子目录 = fresh worktree, 非主仓遗漏.
-        git_dir = (root / ".git")
+        git_dir = root / ".git"
         is_worktree = git_dir.is_file() and "worktrees" in git_dir.read_text()
         if is_worktree:
-            print(f"SKIP: ruff (worktree scope dirs not initialized: {', '.join(missing)}). "
-                  f"Run: bash bin/gac/worktree-init.sh --minimal")
+            print(
+                f"SKIP: ruff (worktree scope dirs not initialized: {', '.join(missing)}). "
+                f"Run: bash bin/gac/worktree-init.sh --minimal"
+            )
             return []  # 空 diagnostics → compare_ruff_diagnostics 得 new=0, 降级 skip 非 fail (T10-09)
         raise RuntimeError(f"Ruff scope is not initialized: {', '.join(missing)}")
 
@@ -410,10 +427,13 @@ def build_checks(*, root: Path = WORKSPACE) -> tuple[Check, ...]:
 def _agent_collision_check() -> None:
     """BET-Y1Q3-T10-09 后续: push 前检查其他 agent 是否锁定了相同文件."""
     import subprocess as _sp
+
     try:
         changed = _sp.run(
             ["git", "diff", "--name-only", "--diff-filter=M", "origin/main", "HEAD"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         ).stdout.splitlines()
         if not changed:
             return
@@ -421,6 +441,7 @@ def _agent_collision_check() -> None:
         if not presence.is_dir():
             return
         import time as _t
+
         now = _t.time()
         for p in sorted(presence.glob("*.json")):
             if now - p.stat().st_mtime > 300:
@@ -429,10 +450,13 @@ def _agent_collision_check() -> None:
             their = set(d.get("locked_files", []))
             my = set(changed)
             import fnmatch as _fm
+
             overlap = {mf for mf in my for tf in their if _fm.fnmatch(mf, tf)}
             if overlap:
-                print(f"⚠️ agent-collision: {p.stem} (branch={d.get('branch','?')}) "
-                      f"锁定重叠文件: {sorted(overlap)[:5]}", file=sys.stderr)
+                print(
+                    f"⚠️ agent-collision: {p.stem} (branch={d.get('branch', '?')}) 锁定重叠文件: {sorted(overlap)[:5]}",
+                    file=sys.stderr,
+                )
     except Exception:
         pass  # 碰撞检测失败不阻断
 
