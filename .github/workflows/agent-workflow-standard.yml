@@ -75,6 +75,8 @@ jobs:
           AGENT_WORKFLOW_STANDARD_MODE: 'true'
 
       - name: Verify backward compatibility
+        env:
+          PYTHONPATH: projects/omo/src
         run: |
           # Ensure existing agent-workflow.py still works
           python3 bin/agent-workflow.py --help
