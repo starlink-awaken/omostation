@@ -10031,6 +10031,7 @@ bets:
   - docs/generated/capability-registry.yaml
   - docs/project-registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+  - docs/reports/2026-08-30-t1-12-capability-binding-canary.json
   - .github/workflows/governance-check.yml
   - bin/_registry/scripts/governance/daemon-watchdog.yaml
   - bin/_registry/scripts/governance/real-scenario-runner.yaml
