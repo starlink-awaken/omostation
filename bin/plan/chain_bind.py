@@ -20,7 +20,14 @@ EXEMPT_WORKFLOWS = frozenset({"observer-audit"})
 # G8 (T10-08): 治理演进类 workflow — 自进化改进治理机制本身, 由治理 bet (T10-MATURITY)
 # 承载 vision→run→retro 闭环, closeout 无需业务 bet 绑定.
 GOVERNANCE_EVOLVE_WORKFLOWS = frozenset(
-    {"governance-audit", "governance-state-mutation", "governance-phase-closeout"}
+    {
+        "governance-audit",
+        "governance-state-mutation",
+        "governance-phase-closeout",
+        # ADR-0441 原语 3 周期执行面: Documents 执行面巡检由治理线承载,
+        # per-run 无业务 bet 语义 (forbidden=0 硬门监控, 非 delivery).
+        "documents-consumer-audit-weekly",
+    }
 )
 GATE_ENV = "AGCP_REQUIREMENT_ITERATION_GATE"
 RETRO_REL = ".omo/_knowledge/retros"
