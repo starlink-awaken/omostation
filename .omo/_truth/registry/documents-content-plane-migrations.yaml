@@ -81,6 +81,13 @@ coverage_samples:
     kind: runtime
     family: root-oneoff-assets
 
+bridge_shells:
+  - shell: "@公共/_runtime/kems-materialize.py"
+    target: "projects/runtime/scripts/kems-materialize.py"
+    sha256: "423bf6aa40c520189bc543ae0656385ed2c8e6620e38606ef8720ef839546830"
+    owner: runtime
+    adr: ADR-0441
+    verified_at: "2026-08-30T08:36:00Z"
 families:
   - id: family-dashboard-app
     major_surface: true
