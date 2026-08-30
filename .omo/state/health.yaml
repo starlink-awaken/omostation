@@ -1,5 +1,5 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-08-27T11:32:50Z
+generated_at: 2026-08-30T07:42:08Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5, 'drift': 0.1, 'staleness': 0.1, 'alignment': 0.1}

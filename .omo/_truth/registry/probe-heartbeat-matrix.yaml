@@ -47,7 +47,7 @@ heartbeats:
     description: "信号路由"
 
   - file: .omo/state/evolution-proposals.json
-    field: created_at
+    field: generated_at
     sla_hours: 336
     severity: P3
     description: "进化提案"
