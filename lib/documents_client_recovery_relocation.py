@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import os
@@ -181,10 +182,13 @@ def _validate_consumer_receipt(receipt: Dict[str, Any]) -> None:
 
 
 def _open_handles(roots: Sequence[Path]) -> List[str]:
+    lsof = shutil.which("lsof")
+    if not lsof:
+        raise RelocationError("lsof is required for handle inspection", code="HANDLE_INSPECTOR_UNAVAILABLE")
     handles: List[str] = []
     for root in roots:
         completed = subprocess.run(
-            ["/usr/sbin/lsof", "+D", str(root)],
+            [lsof, "+D", str(root)],
             check=False,
             capture_output=True,
             text=True,
@@ -573,3 +577,85 @@ def rollback_relocation(
         if isinstance(exc, RelocationError):
             raise
         raise RelocationError("rollback failed: " + str(exc), code="ROLLBACK_FAILED") from exc
+
+
+DEFAULT_DOCUMENTS_ROOT = Path.home() / "Documents"
+DEFAULT_SOURCE_RELATIVES = SOURCE_NAMES
+DEFAULT_TARGET_ROOT = (
+    Path.home() / "Library" / "Application Support" / TARGET_PARENT_NAME / TARGET_NAME
+)
+DEFAULT_ROLLBACK_RECEIPT = DEFAULT_TARGET_ROOT.parent / (TARGET_NAME + ".rollback-receipt.json")
+
+
+def _load_json_mapping(path: Path, label: str) -> Dict[str, Any]:
+    try:
+        metadata = path.lstat()
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise RelocationError(label + " is unavailable or malformed", code="CONSUMER_RECEIPT_INVALID") from exc
+    if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISREG(metadata.st_mode) or not isinstance(payload, dict):
+        raise RelocationError(label + " must be a regular JSON object", code="CONSUMER_RECEIPT_INVALID")
+    return payload
+
+
+def _cli_paths(args: argparse.Namespace) -> RelocationPaths:
+    documents = args.documents_root.expanduser().absolute()
+    relative_values: Sequence[str] = args.source_relative or DEFAULT_SOURCE_RELATIVES
+    sources = tuple(documents / value for value in relative_values)
+    if len(sources) != 2:
+        raise RelocationError("exactly two source roots are required", code="SOURCE_ROOT_SET_INVALID")
+    return RelocationPaths(
+        documents_root=documents,
+        source_roots=(sources[0], sources[1]),
+        target_root=args.target_root.expanduser().absolute(),
+        rollback_receipt=args.rollback_receipt.expanduser().absolute(),
+    )
+
+
+def _cli_consumer_receipt(args: argparse.Namespace) -> Dict[str, Any]:
+    if args.consumer_receipt is None:
+        raise RelocationError("consumer receipt is required", code="CONSUMER_RECEIPT_REQUIRED")
+    return _load_json_mapping(args.consumer_receipt.expanduser().absolute(), "consumer receipt")
+
+
+def _execute_cli(args: argparse.Namespace) -> Dict[str, Any]:
+    paths = _cli_paths(args)
+    if args.command == "plan":
+        return plan_relocation(paths, consumer_receipt=_cli_consumer_receipt(args))
+    if args.command == "apply":
+        return apply_relocation(paths, consumer_receipt=_cli_consumer_receipt(args))
+    if args.command == "verify":
+        return verify_relocation(paths, consumer_receipt=_cli_consumer_receipt(args))
+    if args.command == "rollback":
+        return rollback_relocation(paths)
+    raise RelocationError("unknown command", code="COMMAND_INVALID")
+
+
+def _error_payload(command: str, error: Exception) -> Dict[str, Any]:
+    code = error.code if isinstance(error, RelocationError) else "RELOCATION_FAILED"
+    return {
+        "schema": ERROR_SCHEMA,
+        "status": "error",
+        "code": code,
+        "command": command,
+        "error": str(error),
+    }
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("command", choices=("plan", "apply", "verify", "rollback"))
+    parser.add_argument("--documents-root", type=Path, default=DEFAULT_DOCUMENTS_ROOT)
+    parser.add_argument("--source-relative", action="append")
+    parser.add_argument("--target-root", type=Path, default=DEFAULT_TARGET_ROOT)
+    parser.add_argument("--rollback-receipt", type=Path, default=DEFAULT_ROLLBACK_RECEIPT)
+    parser.add_argument("--consumer-receipt", type=Path)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    try:
+        payload = _execute_cli(args)
+    except (OSError, RelocationError) as exc:
+        print(json.dumps(_error_payload(args.command, exc), ensure_ascii=False, indent=2, sort_keys=True))
+        return 2
+    print(json.dumps(payload, ensure_ascii=False, indent=2 if args.json else None, sort_keys=True))
+    return 0

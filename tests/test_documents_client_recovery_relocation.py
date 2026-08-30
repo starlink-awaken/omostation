@@ -1,4 +1,4 @@
-# ruff: noqa: UP006, UP035 -- fixtures mirror the Python 3.9 production API.
+# ruff: noqa: UP006, UP035, UP045 -- fixtures mirror the Python 3.9 production API.
 
 from __future__ import annotations
 
@@ -9,14 +9,14 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import Iterable, Optional, Tuple
 
 import pytest
 
 from lib import documents_client_recovery_relocation as relocation
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "bin" / "gac" / "documents-client-recovery.py"
+SCRIPT = ROOT / "bin" / "gac" / "documents-domain-owner-job.py"
 
 
 @dataclass(frozen=True)
@@ -344,3 +344,89 @@ def test_verify_and_rollback_use_manifest_and_never_overwrite_source(tmp_path: P
     assert layout.rollback_receipt.is_file()
     assert not layout.target_root.exists()
     assert _fixture_bytes(layout) > 0
+
+
+def _write_consumer_receipt(tmp_path: Path, receipt: dict) -> Path:
+    path = tmp_path / "consumer.json"
+    path.write_text(json.dumps(receipt), encoding="utf-8")
+    return path
+
+
+def _run_cli(command: str, layout: Layout, receipt: Optional[Path] = None) -> subprocess.CompletedProcess:
+    arguments = [
+        sys.executable,
+        str(SCRIPT),
+        "client-recovery",
+        command,
+        "--documents-root",
+        str(layout.documents),
+        "--target-root",
+        str(layout.target_root),
+        "--rollback-receipt",
+        str(layout.rollback_receipt),
+        "--json",
+    ]
+    if receipt is not None:
+        arguments.extend(("--consumer-receipt", str(receipt)))
+    return subprocess.run(arguments, check=False, capture_output=True, text=True)
+
+
+def test_cli_plan_emits_structured_json_without_mutation(tmp_path: Path) -> None:
+    layout = _layout(tmp_path)
+    receipt = _write_consumer_receipt(tmp_path, _consumer_receipt())
+
+    result = _run_cli("plan", layout, receipt)
+
+    payload = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert payload["schema"] == "documents-client-recovery-relocation/v1"
+    assert payload["status"] == "planned"
+    assert all(root.is_dir() for root in layout.source_roots)
+    assert not layout.target_root.exists()
+
+
+def test_cli_failure_has_stable_error_code(tmp_path: Path) -> None:
+    layout = _layout(tmp_path)
+    receipt = _write_consumer_receipt(tmp_path, _consumer_receipt(forbidden=1))
+
+    result = _run_cli("plan", layout, receipt)
+
+    payload = json.loads(result.stdout)
+    assert result.returncode == 2
+    assert payload == {
+        "schema": "documents-client-recovery-relocation-error/v1",
+        "status": "error",
+        "code": "CONSUMER_RECEIPT_UNHEALTHY",
+        "command": "plan",
+        "error": "consumer receipt forbidden_executors must equal zero",
+    }
+
+
+def test_cli_apply_verify_and_rollback_dispatch_real_transaction(tmp_path: Path) -> None:
+    layout = _layout(tmp_path)
+    receipt = _write_consumer_receipt(tmp_path, _consumer_receipt())
+
+    applied = _run_cli("apply", layout, receipt)
+    assert applied.returncode == 0
+    assert json.loads(applied.stdout)["status"] == "completed"
+
+    verified = _run_cli("verify", layout, receipt)
+    assert verified.returncode == 0
+    assert json.loads(verified.stdout)["status"] == "verified"
+
+    rolled_back = _run_cli("rollback", layout)
+    assert rolled_back.returncode == 0
+    assert json.loads(rolled_back.stdout)["status"] == "rolled_back"
+
+
+def test_required_phase_gate_and_script_registry_cover_recovery_cli() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "phase-gate-enforce.yml").read_text(encoding="utf-8")
+    registry = ROOT / "bin" / "_registry" / "scripts" / "governance" / "documents-domain-owner-job.yaml"
+
+    for path in (
+        "bin/gac/documents-domain-owner-job.py",
+        "lib/documents_client_recovery_relocation.py",
+        "tests/test_documents_client_recovery_relocation.py",
+    ):
+        assert path in workflow
+    assert registry.is_file()
