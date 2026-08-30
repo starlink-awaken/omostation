@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 542
+    script_baseline: 544
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -2292,7 +2292,7 @@ gac:
     enforcement: required
     owner: ecos-team
     expected: Check CR-AGE-EVENT-01 must pass without violations
-    remediation: Follow existing remediation pattern for this check type.
+    remediation: Add missing event subscriptions to cell_handler.py.
     related_runbooks: []
   - id: CR-GITLINK-BUMP-SQUASH-MAIN
     created_at: '2026-08-30'
@@ -2316,7 +2316,8 @@ gac:
     justification: 指针污染阻塞全仓 PR 半天×2; submodule-guard 只查 fast-forward 不查来源, 本规则补源头纪律
       (人工+review 执行, 工具化后续 BET 跟进)。
     expected: Check CR-GITLINK-BUMP-SQUASH-MAIN must pass without violations
-    remediation: Follow existing remediation pattern for this check type.
+    remediation: bump gitlink to origin/main SHA only; use gac-worktree.sh bump-fast
+      for safe updates.
     related_runbooks: []
   - id: CR-EVIDENCE-SHA-FRESHNESS
     created_at: '2026-08-30'
@@ -2339,7 +2340,8 @@ gac:
     review_before: '2026-11-28'
     justification: T4-07/T4-02 收口连环 DIGEST_MISMATCH; bet-ledger 已有运行时校验, 本规则固化人工流程纪律。
     expected: Check CR-EVIDENCE-SHA-FRESHNESS must pass without violations
-    remediation: Follow existing remediation pattern for this check type.
+    remediation: Recompute completion_evidence sha256 after any ledger or receipt
+      edit.
     related_runbooks: []
   - id: CR-BIN-RETIREMENT-CHECKLIST
     created_at: '2026-08-30'
