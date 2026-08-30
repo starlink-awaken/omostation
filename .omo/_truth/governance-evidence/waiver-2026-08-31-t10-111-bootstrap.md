@@ -3,8 +3,8 @@ schema: workflow-waiver/v1
 status: active
 lifecycle: history
 owner: governance-team
-created: 2026-08-31
-last-reviewed: 2026-08-31
+created: 2026-08-30
+last-reviewed: 2026-08-30
 title: BET-Y1Q3-T10-111 self-bootstrap waiver
 type: doc
 ---
@@ -26,4 +26,3 @@ risk: Bootstrap declarations only. This waiver does not authorize importing priv
 residual: Merge and replay the bootstrap PR, obtain written specification review, then use formal BET-bound child and root workflows with exact claims, test-first implementation, child-before-root PR ordering, required CI, mainline replay, and separate Phase B and Phase C admission.
 gate_bypass: 1
 no-run-id: true
-
