@@ -523,6 +523,7 @@ the phase-gate config lane separately. Do not create a new script registration.
 **Files:**
 - Modify: `.omo/_truth/registry/documents-content-plane-migrations.yaml`
 - Modify: `tests/test_documents_client_recovery_relocation.py`
+- Modify: `tests/test_documents_content_plane_migration_check.py`
 - Create: `docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md`
 
 **Interfaces:**
@@ -558,6 +559,10 @@ uv run --with pyyaml --with pytest python -m pytest \
 
 Expected: failure because `cc-switch-recovery-state` is missing.
 
+Update the existing workspace-registry expectation to keep
+`candidate_count == 17`, add `cc-switch-recovery-state` to the expected family
+set, and change `root-oneoff-assets` expected sample count from 2 to 1.
+
 - [ ] **Step 3: Add the nonterminal family and implementation report**
 
 Add this registry record without terminal evidence:
@@ -589,7 +594,8 @@ status before the live move succeeds.
 
 ```bash
 uv run --with pyyaml --with pytest python -m pytest \
-  tests/test_documents_client_recovery_relocation.py -q
+  tests/test_documents_client_recovery_relocation.py \
+  tests/test_documents_content_plane_migration_check.py -q
 /usr/bin/python3 bin/gac/documents-domain-owner-job.py client-recovery --help
 uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
 uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
@@ -603,9 +609,11 @@ Expected: focused tests, migration check, doc SSOT, and GaC all pass.
 
 ```bash
 git add .omo/_truth/registry/documents-content-plane-migrations.yaml \
-  tests/test_documents_client_recovery_relocation.py
+  tests/test_documents_client_recovery_relocation.py \
+  tests/test_documents_content_plane_migration_check.py
 git commit --only .omo/_truth/registry/documents-content-plane-migrations.yaml \
   tests/test_documents_client_recovery_relocation.py \
+  tests/test_documents_content_plane_migration_check.py \
   -m "governance(documents): assign CC Switch recovery ownership"
 
 git add docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
