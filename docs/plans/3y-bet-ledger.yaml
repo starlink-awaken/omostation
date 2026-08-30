@@ -3559,7 +3559,8 @@ bets:
   title: Product P0 WP2 Honest Agent Cell Effect Receipt
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   parent_bet_id: BET-Y1Q3-T4-02
   delivery_wave: B
   goal: 移除 resident Executor 的 fixed-success effect 分支，只允许已绑定 principal 且已准入的 canonical effect adapter 在持久 durable receipt 后返回成功。
@@ -3596,15 +3597,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@673c15f18fba34e7019a0ed52dd91a09878f728d
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-05.md
+            sha256: sha256:beeda751a629c25a45112ebda14dba941afd59e49790f24683ca469211a79d82
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
+            sha256: sha256:36fba7d92ae48832284f26872194bb4b02fe6f5c0176087ed3262481bc0b7742
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
+            sha256: sha256:36fba7d92ae48832284f26872194bb4b02fe6f5c0176087ed3262481bc0b7742
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
+            sha256: sha256:36fba7d92ae48832284f26872194bb4b02fe6f5c0176087ed3262481bc0b7742
+          fresh_receipt:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
+            sha256: sha256:36fba7d92ae48832284f26872194bb4b02fe6f5c0176087ed3262481bc0b7742
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
+            sha256: sha256:36fba7d92ae48832284f26872194bb4b02fe6f5c0176087ed3262481bc0b7742
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
+            sha256: sha256:36fba7d92ae48832284f26872194bb4b02fe6f5c0176087ed3262481bc0b7742
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T4-04
   value_indicator_policy: false
