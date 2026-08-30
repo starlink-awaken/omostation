@@ -13,6 +13,7 @@
 	omo-status omo-top swarm-activity observability-events observability-adapters observability-trace log-rotate \
 	agent-workflows agent-workflow-bootstrap agent-workflow-lint agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-integrations agent-workflow-adapters agent-workflow-status \
 	mof-bootstrap m4-health m4-health-compare registry-drift gac-healthcheck gac-drift gac-validate \
+	bridge-runtime corrosion-pipeline scene-journey value-tracker self-evolution weekly-review monthly-healthcheck probe-heartbeat goal-mode-test \
 	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
 	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest \
 	bcos-evolve bcos-signals bcos-north-star \
@@ -143,6 +144,35 @@ m4-health-compare:  ## M4 health score 对比
 
 registry-drift:  ## 注册表漂移检测
 	$(PY) bin/mof/gen-project-registry.py
+
+# ── 🔗 链路闭环工具 (Phase 1-3) ──────────────────────────────────────────────
+
+bridge-runtime:  ## 统一桥接运行时状态
+	$(PY) bin/gac/bridge-runtime.py --status
+
+corrosion-pipeline:  ## 防腐管道接线 (G1/G2)
+	$(PY) bin/gac/corrosion-pipeline-connector.py --dry-run
+
+scene-journey:  ## 场景卡 → Journey 接线
+	$(PY) bin/gac/scene-journey-connector.py --list
+
+value-tracker:  ## 价值证明记录
+	$(PY) bin/gac/value-tracker.py --report
+
+self-evolution:  ## 自进化循环
+	$(PY) bin/gac/self-evolution-loop.py --cycle
+
+weekly-review:  ## 每周价值回顾
+	$(PY) bin/gac/weekly-review.py --generate
+
+monthly-healthcheck:  ## 每月架构健康检查
+	$(PY) bin/gac/monthly-healthcheck.py --full
+
+probe-heartbeat:  ## 探测器心跳矩阵
+	$(PY) bin/gac/probe-heartbeat-monitor.py --status
+
+goal-mode-test:  ## Goal 模式全流程测试
+	$(PY) bin/gac/goal-mode-test.py --full-test
 
 # ── 🧪 测试与代码质量 (Test Suites & QA) ───────────────────────────────────────
 
