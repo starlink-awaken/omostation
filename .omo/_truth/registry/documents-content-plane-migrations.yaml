@@ -218,6 +218,7 @@ families:
       - "@学习进化/.githooks/**"
       - "@学习进化/_inbox/**"
       - "学习进化/2-knowledge/基建架构/**"
+      - "@学习进化/_knowledge/10-systems/KEMS/.kems/_scripts/**"
     artifact_kind: [runtime, cache]
     disposition: delegate
     owner: runtime
@@ -243,6 +244,20 @@ families:
         owner_entry: "bin/gac/documents-domain-owner-job.py learning-control / learning-control-plane"
         control_plane_entry: "bin/gac/documents-domain-owner-job.py learning-control-plane all"
         receipt: "docs/reports/2026-08-30-learning-control-plane-owner-convergence.md"
+        control_plane_transactions:
+          - scope: "learning _control/executors runtime files (9 files)"
+            verified_at: "2026-08-30T07:41:20Z"
+            file_count: 9
+            byte_count: 45024
+            quarantine_manifest: "runtime/quarantine/documents-learning-control-runtime-20260830/manifest.json"
+            consumer_scan: "receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json"
+          - scope: "KEMS .kems/_scripts staging toolkit (10 scripts, never deployed)"
+            verified_at: "2026-08-30T07:44:10Z"
+            file_count: 10
+            byte_count: 33617
+            quarantine_manifest: "runtime/quarantine/documents-learning-kems-scripts-20260830/manifest.json"
+            owner_adoption: "omostation-runtime#70 scripts/kems-toolkit"
+            consumer_scan: "receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json"
         writes_documents: explicit_apply_only
     progress_evidence:
       scope_status: partial
@@ -599,6 +614,7 @@ families:
       - "cron-service-fix.sh"
       - "kos-index.sqlite"
       - "index-BYqQMscj.js"
+      - ".codex-optimize-log/**"
     artifact_kind: [runtime, cache]
     disposition: retire
     owner: governance-team
@@ -609,6 +625,14 @@ families:
     confirmation_gate: before_delete
     status: pending
     evidence_gap: "The eight source paths are absent, but the rollback manifest referenced by the historical receipt is missing from the current Workspace quarantine. Re-run physical receipt recovery before terminal retirement."
+
+    transactions:
+      - scope: ".codex-optimize-log oneoff fix scripts (3 files)"
+        verified_at: "2026-08-30T07:39:50Z"
+        file_count: 3
+        byte_count: 16257
+        quarantine_manifest: "runtime/quarantine/documents-root-codex-tools-20260830/manifest.json"
+        consumer_scan: "receipt://.omo/evidence/20260830T065121Z-bet-execution-c648875e/documents-consumer-audit-t4-root.json"
 
   - id: documents-client-state
     source_globs:
