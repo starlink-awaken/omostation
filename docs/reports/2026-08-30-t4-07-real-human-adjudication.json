@@ -1,0 +1,116 @@
+{
+  "generated_at": "2026-08-30T01:18:26Z",
+  "bet": "BET-Y1Q3-T4-07",
+  "principal_verdict_channel": "用户选项 A (真实裁决), AskUserQuestion 应答 adopt×3",
+  "real_signal": {
+    "source": "corrosion-pipeline (bin/gac/corrosion-pipeline-connector.py 真实探测)",
+    "legacy_ids": [
+      "MDEAD-HB-SYSTEM-HEALTH-YAML",
+      "MDEAD-REF-CORE-DAEMON-PY",
+      "MDEAD-REF-SENTINEL-DAEMON-PY"
+    ],
+    "scene_id": "scene-a89d2021944e",
+    "journey_id": "journey-547ffc15206e",
+    "intent_ids": {
+      "MDEAD-HB-SYSTEM-HEALTH-YAML": "intent-a4369a2aff7c",
+      "MDEAD-REF-CORE-DAEMON-PY": "intent-51705acefae2",
+      "MDEAD-REF-SENTINEL-DAEMON-PY": "intent-ed5dde2a7af3"
+    },
+    "inbox_state": ".omo/_inbox/corrosion-supervision.json"
+  },
+  "human_verdict": {
+    "principal_id": "principal:xiamingxing",
+    "verdicts": {
+      "MDEAD-HB-SYSTEM-HEALTH-YAML": "accepted",
+      "MDEAD-REF-CORE-DAEMON-PY": "accepted",
+      "MDEAD-REF-SENTINEL-DAEMON-PY": "accepted"
+    }
+  },
+  "authority": {
+    "authority_ref": "authority:omo:v1:principal:xiamingxing",
+    "credential_digest": "sha256:a3bba3adae0ebc76d0c42035e9f2c45172edaf945683ccdb9b4d9e40ccaf47ed",
+    "membership_version": 1,
+    "authority_receipt_digest": "sha256:2fd90148cbcd3a60b2c665045b9290352c742d46cb8aa79a1622d44b7b580fa8",
+    "expires_at": "2026-08-30T02:18:26+00:00",
+    "verification": "omo.sovereignty.principal_authority.DefaultPrincipalAuthority(production=True)"
+  },
+  "episode_ledger": {
+    "db": "runtime/omo/t4-07-sovereignty-ledger.db",
+    "episode_ids": {
+      "MDEAD-HB-SYSTEM-HEALTH-YAML": "episode_98d211b7cb0a",
+      "MDEAD-REF-CORE-DAEMON-PY": "episode_a2e4e011e0c8",
+      "MDEAD-REF-SENTINEL-DAEMON-PY": "episode_c1957e684ed4"
+    }
+  },
+  "decision_outcome": {
+    "truth_writer": "omo.omo_adjudication.AdjudicationStore.record_wp5_outcome",
+    "log": ".omo/_delivery/outcomes/adjudications.jsonl",
+    "qualifying_count_after": 4,
+    "replay_check": {
+      "qualifying": true,
+      "replayed": true,
+      "adjudication_id": "adj-wp5-intent-a4369a2aff7c",
+      "qualifying_count": 4
+    },
+    "lineage": [
+      {
+        "adjudication_id": "adj-wp5-t402-closeout-semantics-001",
+        "decision_id": "intent-8a5f0b5311da",
+        "principal_id": "principal:xiamingxing",
+        "scene_id": "engineering-delivery",
+        "episode_id": "product-p0-truth-loop",
+        "verdict": "accepted"
+      },
+      {
+        "adjudication_id": "adj-wp5-intent-a4369a2aff7c",
+        "decision_id": "intent-a4369a2aff7c",
+        "principal_id": "principal:xiamingxing",
+        "scene_id": "scene-a89d2021944e",
+        "episode_id": "episode_98d211b7cb0a",
+        "verdict": "accepted"
+      },
+      {
+        "adjudication_id": "adj-wp5-intent-51705acefae2",
+        "decision_id": "intent-51705acefae2",
+        "principal_id": "principal:xiamingxing",
+        "scene_id": "scene-a89d2021944e",
+        "episode_id": "episode_a2e4e011e0c8",
+        "verdict": "accepted"
+      },
+      {
+        "adjudication_id": "adj-wp5-intent-ed5dde2a7af3",
+        "decision_id": "intent-ed5dde2a7af3",
+        "principal_id": "principal:xiamingxing",
+        "scene_id": "scene-a89d2021944e",
+        "episode_id": "episode_c1957e684ed4",
+        "verdict": "accepted"
+      }
+    ]
+  },
+  "results": [
+    {
+      "mdead_id": "MDEAD-HB-SYSTEM-HEALTH-YAML",
+      "title": "[防腐] .omo/state/system_health.yaml 的 last_scan 已过期 49.7h (SLA: 48h)",
+      "qualifying": true,
+      "replayed": false,
+      "adjudication_id": "adj-wp5-intent-a4369a2aff7c",
+      "qualifying_count": 2
+    },
+    {
+      "mdead_id": "MDEAD-REF-CORE-DAEMON-PY",
+      "title": "[防腐] launchd:com.omostation.core 引用 /Users/xiamingxing/Workspace/bin/ops/core-daemon.py 失效",
+      "qualifying": true,
+      "replayed": false,
+      "adjudication_id": "adj-wp5-intent-51705acefae2",
+      "qualifying_count": 3
+    },
+    {
+      "mdead_id": "MDEAD-REF-SENTINEL-DAEMON-PY",
+      "title": "[防腐] launchd:com.omostation.sentinel 引用 /Users/xiamingxing/Workspace/bin/ops/sentinel-daemon.py 失效",
+      "qualifying": true,
+      "replayed": false,
+      "adjudication_id": "adj-wp5-intent-ed5dde2a7af3",
+      "qualifying_count": 4
+    }
+  ]
+}
