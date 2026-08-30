@@ -1390,7 +1390,8 @@ bets:
   title: Documents Weijian cleanup script runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Extend the existing Documents runtime quarantine owner to safely accept one audited regular file, then move only Documents/@工作文档/卫健委/cleanup-commit.sh into protected Workspace quarantine while preserving all other health and work-content surfaces.
   non_goals:
   - No movement outside @工作文档/卫健委/cleanup-commit.sh.
@@ -1427,6 +1428,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:b5821702f4694c728f8ba06f11222dadaa2c2e4a5b222e9eba64e044cb2f55dd
     decision_ref: decision://accepted/BET-Y1Q3-T10-88
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md
+            sha256: sha256:92b45409e8ea8988004d523eb37d1e8d75d34b9800ad97c4eb4557d76b9de958
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md
+            sha256: sha256:b5821702f4694c728f8ba06f11222dadaa2c2e4a5b222e9eba64e044cb2f55dd
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md
+            sha256: sha256:92b45409e8ea8988004d523eb37d1e8d75d34b9800ad97c4eb4557d76b9de958
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-30-t10-88-cleanup-script-bootstrap.md
+            sha256: sha256:f4958930aeb140c074795ea91726071a0a33b8d2ee89af6cf500238752b934c7
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md
+            sha256: sha256:92b45409e8ea8988004d523eb37d1e8d75d34b9800ad97c4eb4557d76b9de958
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine.md
+            sha256: sha256:92b45409e8ea8988004d523eb37d1e8d75d34b9800ad97c4eb4557d76b9de958
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-88.md
+            sha256: sha256:64558d6a4bcb355e05b248b57c560ffe129adefd07a5fb84283573172ab74ef1
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md
+            sha256: sha256:b5821702f4694c728f8ba06f11222dadaa2c2e4a5b222e9eba64e044cb2f55dd
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-87
   risk_level: L2
@@ -1441,7 +1481,8 @@ bets:
   title: Documents Guizi scripts runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the five regular runtime files under Documents/@工作文档/规自委/_scripts into protected Workspace quarantine after consumer preflight, while retaining the directory README and keeping work-runtime pending.
   non_goals:
   - No movement outside @工作文档/规自委/_scripts.
@@ -1476,6 +1517,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:e72884b545eea2757980a5d965620aecac289eac4398cd235b4ea4f5eae71a7b
     decision_ref: decision://accepted/BET-Y1Q3-T10-87
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-scripts-runtime-quarantine.md
+            sha256: sha256:b512f18e4675cc5605e8dedee39df91c8609f78d890c6aead6202bf406099f6a
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-guizi-scripts-runtime-quarantine-design.md
+            sha256: sha256:e72884b545eea2757980a5d965620aecac289eac4398cd235b4ea4f5eae71a7b
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-scripts-runtime-quarantine.md
+            sha256: sha256:b512f18e4675cc5605e8dedee39df91c8609f78d890c6aead6202bf406099f6a
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-30-t10-87-guizi-scripts-bootstrap.md
+            sha256: sha256:e96c72078be831e4f31de7dd056e6d09e06c24a117751825e03a5df376818ea4
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-scripts-runtime-quarantine.md
+            sha256: sha256:b512f18e4675cc5605e8dedee39df91c8609f78d890c6aead6202bf406099f6a
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-scripts-runtime-quarantine.md
+            sha256: sha256:b512f18e4675cc5605e8dedee39df91c8609f78d890c6aead6202bf406099f6a
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-87.md
+            sha256: sha256:6a72ce30ef9917f4ada2416dd0e682a27baff5af80058d69c88b97d6477983a2
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-guizi-scripts-runtime-quarantine-design.md
+            sha256: sha256:e72884b545eea2757980a5d965620aecac289eac4398cd235b4ea4f5eae71a7b
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-86
   risk_level: L2
@@ -1490,7 +1570,8 @@ bets:
   title: Documents Weijian control runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the five regular runtime files under Documents/@工作文档/卫健委/_control into protected Workspace quarantine after consumer preflight, while preserving the health control content/projection/contract surface and keeping work-runtime pending.
   non_goals:
   - No movement outside @工作文档/卫健委/_control.
@@ -1525,6 +1606,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:4f00751951c236d4a95d35ea5b18e65189fede0bc85435ad0522db2c049d3abb
     decision_ref: decision://accepted/BET-Y1Q3-T10-86
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-weijian-control-runtime-quarantine.md
+            sha256: sha256:ea9af88b398f7f0b386b5a613d1e7593ec20c59a9a053141a93606c9ddf4adbd
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-weijian-control-runtime-quarantine-design.md
+            sha256: sha256:4f00751951c236d4a95d35ea5b18e65189fede0bc85435ad0522db2c049d3abb
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-weijian-control-runtime-quarantine.md
+            sha256: sha256:ea9af88b398f7f0b386b5a613d1e7593ec20c59a9a053141a93606c9ddf4adbd
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-30-t10-86-weijian-control-bootstrap.md
+            sha256: sha256:79665d2a30cf6af48ed461925cf27dcc116aa280be03d152a77feaa4f7342b25
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-weijian-control-runtime-quarantine.md
+            sha256: sha256:ea9af88b398f7f0b386b5a613d1e7593ec20c59a9a053141a93606c9ddf4adbd
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-weijian-control-runtime-quarantine.md
+            sha256: sha256:ea9af88b398f7f0b386b5a613d1e7593ec20c59a9a053141a93606c9ddf4adbd
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-86.md
+            sha256: sha256:9f048c8501f03c7ec305d338d0426504a3933ce48e2a37a78a9d4fa15fc2cd21
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-weijian-control-runtime-quarantine-design.md
+            sha256: sha256:4f00751951c236d4a95d35ea5b18e65189fede0bc85435ad0522db2c049d3abb
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-85
   risk_level: L2
@@ -1539,7 +1659,8 @@ bets:
   title: Documents contract OCR tools runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the two regular runtime files under Documents/@工作文档/合同法规/_control/tools into protected Workspace quarantine after consumer preflight, while preserving Documents control/content artifacts and keeping work-runtime pending.
   non_goals:
   - No movement outside @工作文档/合同法规/_control/tools.
@@ -1574,6 +1695,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:47b7432e6e73718fa0dfb93ca97348d5cb339823902f6fe521e0bf83a93f7570
     decision_ref: decision://accepted/BET-Y1Q3-T10-85
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-contract-ocr-tools-runtime-quarantine.md
+            sha256: sha256:5ab2fa56e944d14412205ecf6bed92c41042d8cdcf83e3e3323877ee47f3a3f3
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-contract-ocr-tools-runtime-quarantine-design.md
+            sha256: sha256:47b7432e6e73718fa0dfb93ca97348d5cb339823902f6fe521e0bf83a93f7570
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-contract-ocr-tools-runtime-quarantine.md
+            sha256: sha256:5ab2fa56e944d14412205ecf6bed92c41042d8cdcf83e3e3323877ee47f3a3f3
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-30-t10-85-contract-ocr-bootstrap.md
+            sha256: sha256:32f2cb218e92caebfb3281ce3b3657eb5b93786cc5ef42207979a10a0a2558e4
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-contract-ocr-tools-runtime-quarantine.md
+            sha256: sha256:5ab2fa56e944d14412205ecf6bed92c41042d8cdcf83e3e3323877ee47f3a3f3
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-contract-ocr-tools-runtime-quarantine.md
+            sha256: sha256:5ab2fa56e944d14412205ecf6bed92c41042d8cdcf83e3e3323877ee47f3a3f3
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-85.md
+            sha256: sha256:07cabf3568c987d09067a7737893cce2033139453f4a2e297e7a70dd0e26d61e
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-contract-ocr-tools-runtime-quarantine-design.md
+            sha256: sha256:47b7432e6e73718fa0dfb93ca97348d5cb339823902f6fe521e0bf83a93f7570
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-84
   risk_level: L2
@@ -1588,7 +1748,8 @@ bets:
   title: Documents root control tools runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the four regular runtime files under Documents/@工作文档/_control/tools into protected Workspace quarantine after consumer preflight, while preserving Documents control/content artifacts and keeping work-runtime pending.
   non_goals:
   - No movement outside @工作文档/_control/tools.
@@ -1623,6 +1784,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:76854fc7ed355e2663279246d06e1c9b9b54c57519b70a06c2a5d0a6948f6571
     decision_ref: decision://accepted/BET-Y1Q3-T10-84
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-root-control-tools-runtime-quarantine.md
+            sha256: sha256:f5f50a1c115ed49e0e16649b76e77e881020d1eea38ccbe7e0c4e8d2d8b18660
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-root-control-tools-runtime-quarantine-design.md
+            sha256: sha256:76854fc7ed355e2663279246d06e1c9b9b54c57519b70a06c2a5d0a6948f6571
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-root-control-tools-runtime-quarantine.md
+            sha256: sha256:f5f50a1c115ed49e0e16649b76e77e881020d1eea38ccbe7e0c4e8d2d8b18660
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-30-t10-84-root-control-tools-bootstrap.md
+            sha256: sha256:a3e7a13d95394b716052194e9deedcb5980d7f00b3ceed44a25b0e6f5dc0d5b3
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-root-control-tools-runtime-quarantine.md
+            sha256: sha256:f5f50a1c115ed49e0e16649b76e77e881020d1eea38ccbe7e0c4e8d2d8b18660
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-root-control-tools-runtime-quarantine.md
+            sha256: sha256:f5f50a1c115ed49e0e16649b76e77e881020d1eea38ccbe7e0c4e8d2d8b18660
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-84.md
+            sha256: sha256:0c32808ae943c5ff43f36357d4f2ceedc481f5b99a9b29dd6340866875e64aa1
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-root-control-tools-runtime-quarantine-design.md
+            sha256: sha256:76854fc7ed355e2663279246d06e1c9b9b54c57519b70a06c2a5d0a6948f6571
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-83
   risk_level: L2
@@ -1637,7 +1837,8 @@ bets:
   title: Documents root tools runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the four regular runtime files under Documents/@工作文档/tools into protected Workspace quarantine after consumer preflight, while preserving Documents content and keeping work-runtime pending.
   non_goals:
   - No movement outside @工作文档/tools.
@@ -1672,6 +1873,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:30196444010b3df9a52d2acf18daf57ba95a41696378701ec68aa5fc2f5bed49
     decision_ref: decision://accepted/BET-Y1Q3-T10-83
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-root-tools-runtime-quarantine.md
+            sha256: sha256:5b52a96ea2ebac4422480178d96ba3e65604edf00634760c4582fbd0fbd57767
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-root-tools-runtime-quarantine-design.md
+            sha256: sha256:30196444010b3df9a52d2acf18daf57ba95a41696378701ec68aa5fc2f5bed49
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-root-tools-runtime-quarantine.md
+            sha256: sha256:5b52a96ea2ebac4422480178d96ba3e65604edf00634760c4582fbd0fbd57767
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-30-t10-83-root-tools-bootstrap.md
+            sha256: sha256:4e906457f711a0a2fb744dda8577052a53a88dbfb28425d6f0e7bacc608d692e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-root-tools-runtime-quarantine.md
+            sha256: sha256:5b52a96ea2ebac4422480178d96ba3e65604edf00634760c4582fbd0fbd57767
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-root-tools-runtime-quarantine.md
+            sha256: sha256:5b52a96ea2ebac4422480178d96ba3e65604edf00634760c4582fbd0fbd57767
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-83.md
+            sha256: sha256:37f9cee32e72ad85fc7f94c5d27eb1d9e565e3c6d4d8bc7f6a7a5623d48fb52b
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-root-tools-runtime-quarantine-design.md
+            sha256: sha256:30196444010b3df9a52d2acf18daf57ba95a41696378701ec68aa5fc2f5bed49
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-82
   risk_level: L2
@@ -1686,7 +1926,8 @@ bets:
   title: Documents Guizi tools runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the three regular runtime files under Documents/@工作文档/规自委/tools into protected Workspace quarantine after consumer and parity preflight, while preserving Documents content and keeping work-runtime pending.
   non_goals:
   - No movement outside @工作文档/规自委/tools.
@@ -1721,6 +1962,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:8e0b3774dcc050ce592359addac4f8952ba41bdd8a3dcb8dd70ed1f643b10a95
     decision_ref: decision://accepted/BET-Y1Q3-T10-82
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-tools-runtime-quarantine.md
+            sha256: sha256:3de230eec9dac48b2a42be1d48feeec5f657136a461479ec3057b08c75529e38
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-guizi-tools-runtime-quarantine-design.md
+            sha256: sha256:8e0b3774dcc050ce592359addac4f8952ba41bdd8a3dcb8dd70ed1f643b10a95
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-tools-runtime-quarantine.md
+            sha256: sha256:3de230eec9dac48b2a42be1d48feeec5f657136a461479ec3057b08c75529e38
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-30-t10-82-guizi-tools-bootstrap.md
+            sha256: sha256:d4d9bd2adf40a83109b800348d11adf8fd74bc553dd8aad6bd4c0be23e89dc67
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-tools-runtime-quarantine.md
+            sha256: sha256:3de230eec9dac48b2a42be1d48feeec5f657136a461479ec3057b08c75529e38
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-tools-runtime-quarantine.md
+            sha256: sha256:3de230eec9dac48b2a42be1d48feeec5f657136a461479ec3057b08c75529e38
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-82.md
+            sha256: sha256:29e6020061645cf06ba1720052ed17f3c946cb3aa17f6f91062270cb3ab7c1ba
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-guizi-tools-runtime-quarantine-design.md
+            sha256: sha256:8e0b3774dcc050ce592359addac4f8952ba41bdd8a3dcb8dd70ed1f643b10a95
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-81
   risk_level: L2
@@ -1735,7 +2015,8 @@ bets:
   title: Documents Guozhuan tools runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the three regular runtime files under Documents/@工作文档/国转中心/tools into protected Workspace quarantine after consumer and parity preflight, while preserving Documents content and keeping work-runtime pending.
   non_goals:
   - No movement outside @工作文档/国转中心/tools.
@@ -1770,6 +2051,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:77d10f43ca31bfa4cf0952e8f44bb3770cf196f98f2038e4239a7b5b07c708b5
     decision_ref: decision://accepted/BET-Y1Q3-T10-81
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-guozhuan-tools-runtime-quarantine.md
+            sha256: sha256:fe19ac23474dfb88306076f6a08ae715451756848b141eb6c82d87da7d6af7f5
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md
+            sha256: sha256:77d10f43ca31bfa4cf0952e8f44bb3770cf196f98f2038e4239a7b5b07c708b5
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-guozhuan-tools-runtime-quarantine.md
+            sha256: sha256:fe19ac23474dfb88306076f6a08ae715451756848b141eb6c82d87da7d6af7f5
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-30-t10-81-guozhuan-tools-bootstrap.md
+            sha256: sha256:160aae067ceb1c27cc8c63355769a080be8d7f1a481398174493084696b0a508
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-guozhuan-tools-runtime-quarantine.md
+            sha256: sha256:fe19ac23474dfb88306076f6a08ae715451756848b141eb6c82d87da7d6af7f5
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-guozhuan-tools-runtime-quarantine.md
+            sha256: sha256:fe19ac23474dfb88306076f6a08ae715451756848b141eb6c82d87da7d6af7f5
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-81.md
+            sha256: sha256:82a1b7f7ea3e3256527e5a7714f723932ea7aaced7ced2a01517d84ad9858fca
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md
+            sha256: sha256:77d10f43ca31bfa4cf0952e8f44bb3770cf196f98f2038e4239a7b5b07c708b5
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-80
   risk_level: L2
@@ -1784,7 +2104,8 @@ bets:
   title: Documents Guizi dangling symlink quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the eleven dangling symlink objects under Documents/@工作文档/规自委/_runtime into protected Workspace quarantine without following or restoring their missing public-runtime targets.
   non_goals:
   - No target-byte restoration, regular runtime move, content, contract, cache, schedule, client, or family-level retirement.
@@ -1819,6 +2140,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:40a0544068149cd8eafbee589d54a18bb85b7323395db2e5bbaafd97d35869fa
     decision_ref: decision://accepted/BET-Y1Q3-T10-80
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-dangling-symlink-quarantine.md
+            sha256: sha256:0b9c7b98eeae4f7c32cf701621cfe95c8473f18c6d4966fe6c79cb20151683ad
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-guizi-dangling-symlink-quarantine-design.md
+            sha256: sha256:40a0544068149cd8eafbee589d54a18bb85b7323395db2e5bbaafd97d35869fa
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-dangling-symlink-quarantine.md
+            sha256: sha256:0b9c7b98eeae4f7c32cf701621cfe95c8473f18c6d4966fe6c79cb20151683ad
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-29-t10-80-guizi-symlink-bootstrap.md
+            sha256: sha256:09efb42b3a057c31081b33464a873f9ef03027aba6c58ca817063b074779784e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-dangling-symlink-quarantine.md
+            sha256: sha256:0b9c7b98eeae4f7c32cf701621cfe95c8473f18c6d4966fe6c79cb20151683ad
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-guizi-dangling-symlink-quarantine.md
+            sha256: sha256:0b9c7b98eeae4f7c32cf701621cfe95c8473f18c6d4966fe6c79cb20151683ad
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-80.md
+            sha256: sha256:14902332d030d6af6d9dd5ac2be94d2d9a350634ace5e800deaddefc1de031ea
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-guizi-dangling-symlink-quarantine-design.md
+            sha256: sha256:40a0544068149cd8eafbee589d54a18bb85b7323395db2e5bbaafd97d35869fa
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-79
   - BET-Y1Q3-T10-78
@@ -1834,7 +2194,8 @@ bets:
   title: Documents Guozhuan dangling symlink quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the twelve dangling symlink objects under Documents/@工作文档/国转中心/_runtime into protected Workspace quarantine without following or restoring their missing public-runtime targets.
   non_goals:
   - No target-byte restoration, regular runtime move, content, contract, cache, schedule, client, or family-level retirement.
@@ -1869,6 +2230,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:ace607580fd69c0b9e215bb118c3332f754e10792e1cb841eebe9099f66aa50a
     decision_ref: decision://accepted/BET-Y1Q3-T10-79
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+            sha256: sha256:f467b92f6ec3412da48e36a349d56c00bb0a66737e260f3914619137b7f6d475
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md
+            sha256: sha256:ace607580fd69c0b9e215bb118c3332f754e10792e1cb841eebe9099f66aa50a
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+            sha256: sha256:f467b92f6ec3412da48e36a349d56c00bb0a66737e260f3914619137b7f6d475
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-29-t10-79-guozhuan-symlink-bootstrap.md
+            sha256: sha256:2be9204f65f65ec18010e8495304b23b4d7e540fab39bb542849294ed66223f8
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+            sha256: sha256:f467b92f6ec3412da48e36a349d56c00bb0a66737e260f3914619137b7f6d475
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-documents-guozhuan-dangling-symlink-quarantine.md
+            sha256: sha256:f467b92f6ec3412da48e36a349d56c00bb0a66737e260f3914619137b7f6d475
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-79.md
+            sha256: sha256:05bf1b55d7c27b0a7e7b93605936f6743622945e9a775d6b950c516c352af5bc
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md
+            sha256: sha256:ace607580fd69c0b9e215bb118c3332f754e10792e1cb841eebe9099f66aa50a
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-73
   - BET-Y1Q3-T10-78
@@ -1967,7 +2367,8 @@ bets:
   title: Documents Weijian dangling symlink quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move only the twelve dangling symlink objects under Documents/@工作文档/卫健委/_runtime into retention-protected Workspace quarantine without following or reconstructing their missing public-runtime targets.
   non_goals:
   - No target-byte restoration, regular runtime move, content, contract, projection, `_storage`, schedule, LaunchAgent, client, or other domain mutation.
@@ -2002,6 +2403,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:795707211555f8230286fd6a9638986987fc387c53ae7cdde9de3f2d9be44052
     decision_ref: decision://accepted/BET-Y1Q3-T10-73
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-30-documents-dangling-symlink-quarantine.md
+            sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md
+            sha256: sha256:795707211555f8230286fd6a9638986987fc387c53ae7cdde9de3f2d9be44052
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-documents-dangling-symlink-quarantine.md
+            sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-29-t10-73-symlink-bootstrap.md
+            sha256: sha256:c56d5fb15a45a764f5cb95d29d921411d445f68c0f5d995c74863e6171f7b6ce
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-documents-dangling-symlink-quarantine.md
+            sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-documents-dangling-symlink-quarantine.md
+            sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-73.md
+            sha256: sha256:188cef6b025d3199898b56706e92f9868e0e28fbc4f97fc49975ac5805b6af5a
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md
+            sha256: sha256:795707211555f8230286fd6a9638986987fc387c53ae7cdde9de3f2d9be44052
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-69
   - BET-Y1Q3-T10-68
@@ -2180,7 +2620,8 @@ bets:
   title: Documents Weijian regular work-runtime quarantine
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move the stable L4-classified regular runtime files under Documents/@工作文档/卫健委/_runtime into retention-protected Workspace quarantine without touching content, contracts, caches, symlinks, or other migration families.
   non_goals:
   - No symlink move or target restoration; dangling symlinks are owned by T10-73.
@@ -2216,6 +2657,45 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:d2b9c20ae9bacb94f0e54ea4502fa1dfbe16b5eb6bbb78a06eff0c58326d9eff
     decision_ref: decision://accepted/BET-Y1Q3-T10-77
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md
+            sha256: sha256:5b8ea07022b6c2d08780df533af4ce64260fb27a8d1d7b5b69b54adb5b766a3e
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-work-runtime-regular-quarantine-design.md
+            sha256: sha256:d2b9c20ae9bacb94f0e54ea4502fa1dfbe16b5eb6bbb78a06eff0c58326d9eff
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md
+            sha256: sha256:5b8ea07022b6c2d08780df533af4ce64260fb27a8d1d7b5b69b54adb5b766a3e
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-29-t10-77-work-runtime-bootstrap.md
+            sha256: sha256:d6f1af68816d6e50449488c8b113dce571b69f21886ec7763dd150b9f245a284
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md
+            sha256: sha256:5b8ea07022b6c2d08780df533af4ce64260fb27a8d1d7b5b69b54adb5b766a3e
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-documents-work-runtime-regular-quarantine.md
+            sha256: sha256:5b8ea07022b6c2d08780df533af4ce64260fb27a8d1d7b5b69b54adb5b766a3e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-77.md
+            sha256: sha256:2c33e8c4b77250bb5f1b458e8b07132235af2eaac0b2fe33a5dc99aa2e04f490
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-work-runtime-regular-quarantine-design.md
+            sha256: sha256:d2b9c20ae9bacb94f0e54ea4502fa1dfbe16b5eb6bbb78a06eff0c58326d9eff
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-73
   - BET-Y1Q3-T10-68
@@ -2401,7 +2881,8 @@ bets:
   title: Documents public runtime physical quarantine
   appetite: 1 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Move the currently audited L4 runtime artifacts under Documents/@公共/_runtime, including kems-v2, into a recoverable Workspace quarantine after consumer proof, while leaving Documents content, contracts, projections, and bridges in place.
   non_goals:
   - No movement, rewrite, or deletion of Markdown, Office, PDF, DOMAIN, CONTENT_ARCHIVE, projection, contract, or bridge files.
@@ -2437,6 +2918,46 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:6bc6a4df28e7e9ab665ab10e488faee11f8401b5de7502185bbc4c8727969ca6
     decision_ref: decision://accepted/BET-Y1Q3-T10-69
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91d464156358e25406fa0dc4a9b38c5e55df7441
+          tests:
+            ref: receipt://docs/reports/2026-08-29-documents-public-runtime-quarantine.md
+            sha256: sha256:74d444bab5bf23280436010d1e9cbeefd8ff50c8cc611babe36357c7fd0fd2b4
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md
+            sha256: sha256:6bc6a4df28e7e9ab665ab10e488faee11f8401b5de7502185bbc4c8727969ca6
+          rollback:
+            ref: receipt://docs/reports/2026-08-29-documents-public-runtime-quarantine.md
+            sha256: sha256:74d444bab5bf23280436010d1e9cbeefd8ff50c8cc611babe36357c7fd0fd2b4
+          waiver:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-08-29-t10-69-public-runtime-bootstrap.md
+            sha256: sha256:2d155d584491b508690bcf9ee90b779204aecc8f588f7af947744efd1b4832d1
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-documents-public-runtime-quarantine.md
+            sha256: sha256:74d444bab5bf23280436010d1e9cbeefd8ff50c8cc611babe36357c7fd0fd2b4
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-documents-public-runtime-quarantine.md
+            sha256: sha256:74d444bab5bf23280436010d1e9cbeefd8ff50c8cc611babe36357c7fd0fd2b4
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-69.md
+            sha256: sha256:0203290cb684ecd75088d6a51fc0f9bb69b6dd5986c333347ff07695234fc7e9
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md
+            sha256: sha256:6bc6a4df28e7e9ab665ab10e488faee11f8401b5de7502185bbc4c8727969ca6
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on:
   - BET-Y1Q3-T10-38
   - BET-Y1Q3-T10-41
