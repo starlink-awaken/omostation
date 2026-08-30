@@ -3656,6 +3656,8 @@ bets:
   - docs/superpowers/plans/2026-08-28-product-p0-wp5-human-adjudication-value.md
   - docs/superpowers/plans/2026-08-28-product-p0-wp6-physical-recovery-drill.md
   - docs/reports/2026-08-28-product-p0-truth-loop-closeout.md
+  - docs/reports/2026-08-30-t4-07-real-human-adjudication.json
+  - docs/operations/human-attestations/BET-Y1Q3-T4-02-accept.yaml
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T4-02.md
   pasw_required: false
@@ -3668,15 +3670,53 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@969b2353fda02caee70b24ac313b76eb1237baa3
+          tests:
+            ref: repo://tests/test_spec_binding_lint.py
+            sha256: sha256:bc7889eb13059278efb4812fa16e31a1b5f229d54f40f794775b3913fc950110
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-02.md
+            sha256: sha256:9ba969f5f97e55a5ac6c677ffdf66a4582c847b68e6f00b9d97668697b598a0a
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-02.md
+            sha256: sha256:9ba969f5f97e55a5ac6c677ffdf66a4582c847b68e6f00b9d97668697b598a0a
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-29-principal-authority-canary.json
+            sha256: sha256:a6aaca91e86825408a6606da2ab377a8c8a9500da3da54968540d5dd7853c2dd
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-agent-cell-effect-receipt-canary.json
+            sha256: sha256:8d3f2765c7cb2b1886a12e0628af657a4eee77648503188bfb805b2f9d0dba85
+          replay:
+            ref: receipt://docs/reports/2026-08-30-human-adjudication-canary.json
+            sha256: sha256:8189aff35d9106a41dbca72e503361cd8caf2b545e81118b6f2a1370624894e6
+          cleanup:
+            ref: receipt://docs/reports/2026-08-30-t4-07-real-human-adjudication.json
+            sha256: sha256:da896f8e631a94812aedf9a05a9b9c07bdce36e7e009bbd986da8d60e476d0e2
       value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        status: ACCEPTED
+        evidence:
+          real_signal:
+            ref: receipt://docs/reports/2026-08-30-t4-07-real-human-adjudication.json
+            sha256: sha256:da896f8e631a94812aedf9a05a9b9c07bdce36e7e009bbd986da8d60e476d0e2
+          human_verdict:
+            ref: receipt://docs/reports/2026-08-30-t4-07-real-human-adjudication.json
+            sha256: sha256:da896f8e631a94812aedf9a05a9b9c07bdce36e7e009bbd986da8d60e476d0e2
+          revision:
+            ref: receipt://docs/reports/2026-08-30-t4-07-real-human-adjudication.json
+            sha256: sha256:da896f8e631a94812aedf9a05a9b9c07bdce36e7e009bbd986da8d60e476d0e2
+          time_burden:
+            ref: receipt://docs/reports/2026-08-30-t4-07-real-human-adjudication.json
+            sha256: sha256:da896f8e631a94812aedf9a05a9b9c07bdce36e7e009bbd986da8d60e476d0e2
+          attestation:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T4-02-accept.yaml
+            sha256: sha256:b5f1a0f8c8b8e3977f79381ec23b0466a9269bd9e166bcbd0158d29b16cf8a73
+    overall_state: outcome_accepted
   depends_on: []
   child_bets:
   - BET-Y1Q3-T4-03
