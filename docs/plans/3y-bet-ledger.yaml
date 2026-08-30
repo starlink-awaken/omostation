@@ -257,6 +257,61 @@ gates:
     on_fail: 收窄至单场景维持
 bets:
 
+- id: BET-Y1Q3-T10-101
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Converge learning L4 control-plane owners into Workspace
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: Replace the remaining learning L4 control-plane and daemon wrapper executors with one Workspace-owned aggregate health/control entry, preserving truthful read-only checks, delegated decay inspection, no schedule changes, and protected reversible quarantine for the legacy implementations.
+  non_goals:
+  - No movement or semantic rewrite of the nine learning domain executors under _control/executors; they require a separate owner-parity wave.
+  - No launchd/cron installation, unload/load, schedule change, client configuration change, or permanent deletion.
+  - No Documents content mutation, direct .omo write, second dispatcher, second registry, or new ontology.
+  - No claim that learning-runtime is retired; executor parity remains pending after this control-plane slice.
+  done_when:
+  - Workspace exposes one canonical learning-control-plane entry with aggregate JSON modes for check, health, control-loop, signals, bus, sync, lessons, decay, and all.
+  - The owner is path-contained, system-Python compatible, read-only, delegates decay to the existing Workspace learning owner, and preserves truthful attention/unavailable exit semantics without emitting source text.
+  - Tests cover every mode, invalid roots, no Documents writes, delegated decay, aggregate all-mode, and the installed canonical entry.
+  - Fresh live canaries run against the actual learning domain; consumer audit remains forbidden=0 and unmatched=0.
+  - Exactly five legacy control-plane files are moved to canonical Workspace quarantine with source/target hashes, modes, bytes, manifest receipts, and postflight L4 runtime=0 for the selected scopes.
+  - The migration registry records these completed subscopes and keeps learning-runtime in_progress with executor parity explicitly pending.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_learning_control_plane.py tests/test_documents_consumer_audit.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no coverage collision
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new error beyond known debt
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - lib/documents_learning_control_plane.py
+  - bin/gac/documents-domain-owner-job.py
+  - tests/test_documents_learning_control_plane.py
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md
+  - docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-101.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-101-control-plane-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b3423973f21d211a53bd248a80ac4a51ab0eff0e4a7c718f4099c4b21e48c5da
+    decision_ref: decision://accepted/BET-Y1Q3-T10-101
+  depends_on:
+  - BET-Y1Q3-T10-100
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any executor scope collision, active consumer, path escape, source drift, schedule mutation, nonzero rollback gap, Documents content change, or owner semantic overclaim stops the transaction and preserves all source files.
+  value_indicator_policy: false
+  retro: required
+
 - id: BET-Y1Q3-T10-100
   track: T10-MATURITY
   window: Y1Q3
