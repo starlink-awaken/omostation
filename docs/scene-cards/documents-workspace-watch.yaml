@@ -7,7 +7,7 @@ lifecycle: supervised
 activation: active
 approval_state: confirmed
 scene_id: documents-workspace-watch
-journey_id: documents-workspace-watch-journey"
+journey_id: documents-workspace-watch-journey
 goal: Workspace 监视
 trigger: 检测到 owner 类 documents 任务需要执行
 input_contract: 源文件路径/范围
