@@ -8,7 +8,7 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 175 |
+| CLI 命令 (含子命令) | 176 |
 | MCP 工具 | 634 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 288 |
@@ -103,6 +103,7 @@
 | `cockpit bus` | Omni-Bus 三平面入口 |
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit cache` | 检查三级分层缓存与 Radix 前缀树状态 (含基准压测) |
+| `cockpit capabilities` | 统一能力发现入口 — 搜索/推荐/全量列出 (CLI+BOS+Scene+Journey+Governance) |
 | `cockpit capability` | BOS capability 域 / toolbox 外部能力 |
 | `cockpit cards` | 显示 CARDS 卡片状态 |
 | `cockpit cartridge` | 👁️ 长尾领域治理卡带工坊 (ADR-0198/0203) |
