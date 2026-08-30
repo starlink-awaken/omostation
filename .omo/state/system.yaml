@@ -3,7 +3,6 @@ current_wave: W1
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
 health_score_evidence_generated_at: '2026-08-30T00:39:50.381820+00:00'
-_source: bin/gac/evidence-smoke.py
 completed_tasks: 290
 planned_tasks: 7
 active_tasks: 1
