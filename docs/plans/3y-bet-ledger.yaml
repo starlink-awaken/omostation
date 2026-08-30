@@ -16818,7 +16818,8 @@ bets:
   title: 双机异构主权算力常态化守护与雷雳5 DMA 容灾演练
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: 将 omlxc.dma_daemon 与 resident.daemon 正式挂载至 macOS 用户级 launchd 常驻运行；实施雷雳 5 物理拔插、显存溢出阈值（75%）超载与 Mac mini 离线断网混沌演练，验证毫秒级降级与自愈完整性。
   non_goals:
   - 不修改 macOS 系统核心内核扩展，仅使用用户空间 POSIX DMA 与 BSD Sockets
