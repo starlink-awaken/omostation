@@ -130,6 +130,34 @@ services:
     endpoint: http://localhost:7432/health
     max_stale_hours: 24
   depends_on: []
+- id: omlxc.dma_daemon
+  enabled: true
+  generate: false
+  config_source: projects/omlxc/packaging/launchd/com.omostation.omlxc-dma-daemon.plist
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.omlxc-dma-daemon
+  program:
+    interpreter: /usr/bin/env
+    entrypoint: uv
+    args:
+    - run
+    - --directory
+    - projects/omlxc
+    - python
+    - -m
+    - omlxc.daemon.dma_daemon
+  transport: internal
+  resilience:
+    keepalive: crashed
+  run_at_load: true
+  notes: omlxc 雷雳 5 DMA P2P 物理总线探活与跨机 Paged KV 显存溢出守护进程 (ADR-0437/0440)。
+  ports: []
+  liveness:
+    signal: file
+    endpoint: .omo/state/mesh-telemetry.json
+    max_stale_hours: 24
+  depends_on: []
 - id: omlx.gateway
   enabled: false
   lifecycle: retired
