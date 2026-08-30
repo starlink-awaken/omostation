@@ -3617,7 +3617,8 @@ bets:
   title: Product P0 真值链父编排与全链收口
   appetite: 4 weeks
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: 用一个父 BET 编排六个独立 WorkPacket，先修正非价值交付包的 canonical completion 语义，再把诚实场景门、权威身份、真实效果回执、outbox 发布、人类裁决价值和物理恢复收敛为可重放的 Product P0 真值链。
   non_goals:
   - 不新增第二 BET 台账、WorkPacket schema、workflow engine、dispatcher、identity registry、outbox、event bus 或 value writer
