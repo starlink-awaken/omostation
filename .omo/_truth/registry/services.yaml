@@ -676,7 +676,7 @@ services:
   label: com.l4.resident.event-ingest
   program:
     interpreter: /bin/bash
-    entrypoint: bin/ssot/resident-event-ingest.sh
+    entrypoint: lib/resident-event-ingest.sh
     args: []
   resilience:
     keepalive: crashed
