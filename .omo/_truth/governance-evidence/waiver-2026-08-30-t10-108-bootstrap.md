@@ -56,3 +56,12 @@ recovery_corpus_amendment:
   observed_sha256: sha256:df0a17b1cb391f3cf78426853269402fbf3be578f86f051bc1e280bb0431c76a
   reason: The recovery corpus intentionally retains a pre-repair corrupt database while six other recognizable SQLite recovery files are healthy; relocation must preserve both facts byte-identically.
   scope: SQLite evidence classification only; source roots, target, movement, rollback, active/iCloud exclusions, and value boundary are unchanged.
+
+formal_execution:
+  implementation_pr: 2763
+  implementation_commit: 898e5f6ee0878ad218333693a0cc40a73326a1ef
+  recovery_amendment_pr: 2765
+  recovery_amendment_commit: e72bf052af1f09d9e87502b979b97fd165777bf5
+  host_run_id: 20260830T163244Z-bet-execution-5affab11
+  status: host-verified
+  note: Final ledger closeout and workflow closeout remain in the closeout PR.
