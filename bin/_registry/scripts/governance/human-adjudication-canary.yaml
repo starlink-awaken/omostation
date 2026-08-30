@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ssot/human-adjudication-canary.py
+name: Human Adjudication Canary
+category: governance
+owner: governance-team
+description: "T4-07 WP5 authority-bound 裁决 canary: qualifying 判定矩阵 + 负例拒绝 + durable 重启可读 + append-only 语义"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - bin/ssot/agent-cell-effect-receipt-canary.py
+maturity: draft
+last_reviewed: "2026-08-30"
