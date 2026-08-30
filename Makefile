@@ -166,7 +166,7 @@ weekly-review:  ## 每周价值回顾
 	$(PY) bin/gac/weekly-review.py --generate
 
 monthly-healthcheck:  ## 每月架构健康检查
-	$(PY) bin/gac/monthly-healthcheck.py --full
+	$(PY) lib/monthly_healthcheck.py --full
 
 probe-heartbeat:  ## 探测器心跳矩阵
 	$(PY) bin/gac/probe-heartbeat-monitor.py --status

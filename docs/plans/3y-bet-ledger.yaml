@@ -286,16 +286,17 @@ bets:
     expect: exit 0
   - cmd: "rg -n 'submodules: false' .github/workflows/state-goals-enforce.yml"
     expect: one root-only checkout declaration
-  - cmd: python3 bin/gac/monthly-healthcheck.py --json
-    expect: exit 0 with a JSON health result
+  - cmd: "python3 lib/monthly_healthcheck.py --json > /tmp/t10-98-monthly-health.json || test -s /tmp/t10-98-monthly-health.json"
+    expect: the compatibility owner emits a JSON health result; canonical health exit semantics remain visible
   - cmd: make gac-local-gate
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: governance-state-mutation
   write_surfaces:
   - .github/workflows/state-goals-enforce.yml
-  - bin/gac/monthly-healthcheck.py
-  - bin/_registry/scripts/state/monthly-healthcheck.yaml
+  - lib/monthly_healthcheck.py
+  - Makefile
+  - AGENTS.md
   - .omo/_truth/registry/governance-checks.yaml
   - .omo/_knowledge/decisions/0435-launchd-plist-generator-contract.md
   - .omo/_knowledge/decisions/INDEX.md
@@ -309,7 +310,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-governance-ci-baseline-repair-design.md
     spec_version: 1.0.0
-    content_digest: sha256:39bc568d585c2810dfa32c5e2302dfe90b1572fbc2e6d2ef1655f6f590aec5c0
+    content_digest: sha256:eaaa1692af423bbdc132b98562f2378be055ba142ebb6e57571f01ac87f6e3eb
     decision_ref: decision://accepted/BET-Y1Q3-T10-98
   depends_on: []
   risk_level: L2

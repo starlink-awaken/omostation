@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 542  # 2026-08-30 542: restore the registered monthly-healthcheck compatibility owner
+    script_baseline: 541  # 2026-08-30: monthly-healthcheck compatibility owner lives in lib/; bin quota remains net-zero
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

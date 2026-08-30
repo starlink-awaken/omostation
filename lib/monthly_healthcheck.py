@@ -2,7 +2,7 @@
 """Compatibility entrypoint for the canonical GaC healthcheck.
 
 The historical monthly command remains a stable BOS/Make target, but health
-logic has one owner: ``bin/gac/gac-healthcheck.py``.  This adapter accepts the
+logic has one owner: ``bin/gac/gac-healthcheck.py``. This adapter accepts the
 legacy flags and forwards them without creating a second health database or
 writing state in Documents.
 """
@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 
-WORKSPACE = Path(__file__).resolve().parents[2]
+WORKSPACE = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:

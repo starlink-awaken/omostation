@@ -1,7 +1,7 @@
 ---
 schema_version: specification/v1
 status: accepted
-lifecycle: entry
+lifecycle: spec
 type: design
 owner: governance-team
 created: 2026-08-30
