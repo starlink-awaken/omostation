@@ -306,6 +306,8 @@ bets:
   - docs/reports/2026-08-30-governance-ci-baseline-repair.md
   - .omo/_knowledge/retros/BET-Y1Q3-T10-98.md
   - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-98-bootstrap.md
+  - .omo/state/system.yaml
+  - .omo/tasks/registry/INDEX.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-governance-ci-baseline-repair-design.md
