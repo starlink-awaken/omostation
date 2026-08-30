@@ -436,7 +436,17 @@ families:
       - "audit://documents/opc/consumer-scan-pending"
     rollback: "Keep setup scripts until the Workspace capability is installed and documented."
     confirmation_gate: before_write
-    status: pending
+    status: in_progress
+    evidence:
+      verified_at: "2026-08-29T23:30:34Z"
+      source_fingerprint: "sha256:26102e4e70a990528e847e285e1955e72b63868cd749892c2e3ca383d5ea7ab7"
+      target_fingerprint: "sha256:26102e4e70a990528e847e285e1955e72b63868cd749892c2e3ca383d5ea7ab7"
+      consumer_scan: "receipt://.omo/evidence/20260829T232906Z-bet-execution-3a13ca35/opc-consumer-audit.json"
+      rollback_ref: "docs/reports/2026-08-30-opc-runtime-tools-quarantine.md"
+      quarantine_manifest: "runtime/quarantine/documents-opc-tools-20260830/manifest.json"
+      runtime_file_count: 2
+      runtime_bytes: 6403
+      owner_parity: pending
 
   - id: creative-content-archives
     source_globs:
