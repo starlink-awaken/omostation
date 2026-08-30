@@ -16231,3 +16231,87 @@ bets:
             sha256: sha256:f8c5f688d68039bd36ed8771d610a4bab40c5b6b2b6be1a66b831190570b1e61
     overall_state: outcome_accepted
   depends_on: []
+- id: BET-Y1Q3-T10-105
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 主干真值流业务实战与夏明星个人文风 LoRA 首期结晶
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 贯通外部真实信号到 Cockpit Spine 拟办草稿生成、夏明星署名 Diff 录入、Experience Replay 水塘样本沉淀（目标≥30条真实样本），并在 Mac mini M4 上完成首个个人文风在线 LoRA 适配层蒸馏与热插拔验证。
+  non_goals:
+  - 不引入云端第三方未授权大模型训练，保持 100% 本地主权
+  - 不做未经夏明星本人审议确认的自动外发或直接批复
+  done_when:
+  - 经验回放水塘 lora-replay-buffer.jsonl 沉淀有效夏明星署名修改样本达到 30 条以上
+  - cockpit spine distill 成功在 Mac mini M4 上完成 LoRA 微调训练并生成 adapter-xiamingxing-v1
+  - cockpit spine draft 成功加载该 LoRA 适配层，生成的拟办草稿文风与夏明星历史署名对齐度（BLEU/ROUGE）提升 ≥25%
+  - 全流程通过 value-tracker 记录个人价值增量
+  verify:
+  - cmd: uv run python -m omlxc.cli fabric replay --json
+    expect: exit 0
+  - cmd: uv run python -m cockpit.cli spine distill --domain document-review
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - .omo/state/lora-replay-buffer.jsonl
+  - projects/omlxc/src/omlxc/dataplane/experience_replay.py
+  - projects/cockpit/src/cockpit/commands/spine.py
+  - docs/reports/2026-08-31-spine-lora-distillation-v1.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-105.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-spine-value-flow-and-persona-lora-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:70e4ad4532ffe2e798edae70e9385389c763972651feb94e29f82c897253114b
+    decision_ref: decision://accepted/BET-Y1Q3-T10-105
+  depends_on:
+  - BET-Y1Q3-T10-60
+  - BET-Y1Q3-T1-12
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 出现灾难性遗忘、通用推理能力下降超过 10% 或生成内容偏离事实时立即回滚 LoRA 适配器。
+  retro: required
+- id: BET-Y1Q3-T10-106
+  track: T10-MATURITY
+  window: Y1Q3
+  title: 双机异构主权算力常态化守护与雷雳5 DMA 容灾演练
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: 将 omlxc.dma_daemon 与 resident.daemon 正式挂载至 macOS 用户级 launchd 常驻运行；实施雷雳 5 物理拔插、显存溢出阈值（75%）超载与 Mac mini 离线断网混沌演练，验证毫秒级降级与自愈完整性。
+  non_goals:
+  - 不修改 macOS 系统核心内核扩展，仅使用用户空间 POSIX DMA 与 BSD Sockets
+  done_when:
+  - com.omostation.omlxc-dma-daemon.plist 在 launchd 成功注册且持续 24 小时心跳保鲜（mesh-telemetry.json）
+  - 混沌演练测试脚本模拟物理断链时，自动降级至 10GbE TCP 耗时 ≤50ms，重连时恢复 120Gbps DMA 耗时 ≤1.5s
+  - 显存超载压测成功触发 Paged KV 向 Mac mini 溢出迁移且无 OOM 崩溃
+  verify:
+  - cmd: launchctl list | grep omostation
+    expect: exit 0
+  - cmd: uv run pytest projects/omlxc/tests/unit/test_dma_daemon.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omlxc/packaging/launchd/com.omostation.omlxc-dma-daemon.plist
+  - projects/omlxc/src/omlxc/daemon/dma_daemon.py
+  - docs/reports/2026-08-31-dma-daemon-chaos-drill.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-106.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-sovereign-mesh-daemon-sre-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:74d0bef270e716bbef038f3a3e9d77cd850147669571f42dab2eed8886c2b6f4
+    decision_ref: decision://accepted/BET-Y1Q3-T10-106
+  depends_on:
+  - BET-Y1Q3-T10-105
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 出现进程僵死、不可恢复的物理环路锁死或系统 Panics 时立即停止演练。
+  retro: required
