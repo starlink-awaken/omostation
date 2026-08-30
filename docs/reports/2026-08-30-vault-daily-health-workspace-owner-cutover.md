@@ -81,3 +81,13 @@ owner, so this transaction uses the current `/Users/xiamingxing/Workspace`
 execution root rather than pretending the accepted release has parity. The
 next automatic Claude 08:02 execution and its UI history remain temporally
 unproven; this report proves configuration, owner canary, and consumer cutover.
+
+## Mainline closure
+
+Root PR #2731 was squash-merged as
+`79ff4a4eccda66d4ae48811e9ba60e88592ed8d2`. Required tests, GaC,
+interface, evidence, and governance-verify checks completed successfully. A
+fresh mainline replay preserves owner `writes_documents=false` and consumer
+`status=ok`, `forbidden_executors=0`, `unmatched=0`; receipts are under
+`.omo/evidence/20260830T103527Z-bet-execution-e97a9763/` in the closeout
+clone.

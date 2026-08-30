@@ -25,3 +25,9 @@ risk: Bootstrap declarations only. The host backup, source edit, owner canary, c
 residual: The next automatic Claude 08:02 run remains a separate temporal observation; this BET proves configuration and manual owner canary only.
 gate_bypass: 1
 no-run-id: true
+
+closeout_run:
+  run_id: 20260830T103527Z-bet-execution-e97a9763
+  status: verified
+  mainline_commit: 79ff4a4eccda66d4ae48811e9ba60e88592ed8d2
+  note: The historical waiver remains bootstrap-only; the host transaction and closeout used governed runs and exact claims.

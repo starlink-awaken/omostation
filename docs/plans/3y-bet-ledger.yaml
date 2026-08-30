@@ -263,7 +263,8 @@ bets:
   title: Cut over vault-daily-health to Workspace owner
   appetite: 0.5 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-30
   goal: Replace the sole forbidden Claude Scheduled Documents executor with the canonical Workspace learning-control-plane owner and move its heartbeat to Workspace runtime state through a hash-bound recoverable host transaction.
   non_goals:
   - No change to any other Claude Scheduled skill, cron, LaunchAgent, Documents content domain, owner implementation, cadence, or migration-family status.
@@ -298,6 +299,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:f037b3b727d1e4312da53c70d8eb5bd47e9830ff9da640539aff43e02251f1d6
     decision_ref: decision://accepted/BET-Y1Q3-T10-103
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@79ff4a4eccda66d4ae48811e9ba60e88592ed8d2
+          tests:
+            ref: receipt://docs/reports/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+            sha256: sha256:bad24c5845b847505b8a924c960069fb515d8e0280850a009fff312ecb95e449
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md
+            sha256: sha256:f037b3b727d1e4312da53c70d8eb5bd47e9830ff9da640539aff43e02251f1d6
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+            sha256: sha256:bad24c5845b847505b8a924c960069fb515d8e0280850a009fff312ecb95e449
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+            sha256: sha256:bad24c5845b847505b8a924c960069fb515d8e0280850a009fff312ecb95e449
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+            sha256: sha256:bad24c5845b847505b8a924c960069fb515d8e0280850a009fff312ecb95e449
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-103.md
+            sha256: sha256:7624b4783ae01da093ed5847e6ea0cdd77c7967d8499de7336a1646928c6c329
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md
+            sha256: sha256:f037b3b727d1e4312da53c70d8eb5bd47e9830ff9da640539aff43e02251f1d6
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-102
   - BET-Y1Q3-T10-101
