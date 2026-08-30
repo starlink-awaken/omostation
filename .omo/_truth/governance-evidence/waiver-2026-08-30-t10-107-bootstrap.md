@@ -24,3 +24,8 @@ risk: Bootstrap declarations only; the generated projection requires the formal 
 residual: Merge projection repair, update downstream PR, and retain no second capability source.
 gate_bypass: 1
 no-run-id: true
+
+formal_execution:
+  run_id: 20260830T130700Z-project-doc-change-2430cccc
+  status: active
+  note: The waiver remains bootstrap-only; projection generation uses the formal run and exact claims.
