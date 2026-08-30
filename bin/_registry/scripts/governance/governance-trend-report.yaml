@@ -1,5 +1,5 @@
 schema: script-registry/v1
-id: bin/gac/governance-trend-report.py
+id: bin/gac/_archive/governance-trend-report.py
 name: Governance Trend Report
 category: governance
 owner: governance-team

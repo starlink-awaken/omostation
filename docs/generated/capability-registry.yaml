@@ -12,11 +12,11 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 634
-  bos_services: 288
+  bos_services: 285
   bos_domains: 21
   cli_commands: 176
   skills: 2
-  workflows: 17
+  workflows: 18
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -879,7 +879,7 @@ bos_services:
     bcos: 3
     capability: 44
     cockpit: 7
-    compute: 17
+    compute: 14
     ecos: 10
     fabric: 1
     forge: 1
@@ -1362,18 +1362,6 @@ bos_services:
       description: omlxc 经验回放池状态、水塘抽样与防遗忘混合 batch 统计
       transport: stdio
       status: active
-    - uri: bos://compute/omlxc/cache
-      description: '[UNIMPLEMENTED] omlxc Radix 动态前缀树与三级分层缓存指标与压测（旧 demo 已不存在，待 canonical CLI parity）'
-      transport: stdio
-      status: unimplemented
-    - uri: bos://compute/omlxc/dflash
-      description: '[UNIMPLEMENTED] omlxc DFlash 2 块扩散投机解码加速与集群分工（旧 demo 已不存在，待 canonical CLI parity）'
-      transport: stdio
-      status: unimplemented
-    - uri: bos://compute/omlxc/cluster
-      description: '[UNIMPLEMENTED] omlxc 异构三节点智能调度、心跳与故障自愈拓扑（旧 demo 已不存在，待 canonical CLI parity）'
-      transport: stdio
-      status: unimplemented
     - uri: bos://compute/omlxc/tree
       description: omlxc 自适应熵感知树状投机解码与多候选验证服务 (ADR-0434)
       transport: stdio
@@ -2440,6 +2428,9 @@ workflows:
   exists: true
 - id: cognitive-governance-delivery
   file: .omo/_truth/registry/agent-workflows/workflows/cognitive-governance-delivery.yaml
+  exists: true
+- id: documents-consumer-audit-weekly
+  file: .omo/_truth/registry/agent-workflows/workflows/documents-consumer-audit-weekly.yaml
   exists: true
 - id: external-adapter-sync
   file: .omo/_truth/registry/agent-workflows/workflows/external-adapter-sync.yaml

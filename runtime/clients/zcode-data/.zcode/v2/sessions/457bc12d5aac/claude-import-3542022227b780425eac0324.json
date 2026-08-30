@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "taskId": "claude-import-3542022227b780425eac0324",
+    "traceId": "9c801578-ade2-49fa-bc46-0b72fc736230",
+    "title": "CONTEXT:\nUser:  \n             \n             \nUser:...",
+    "workspacePath": "/Users/xiamingxing/Workspace",
+    "createdAt": 1787738138068,
+    "updatedAt": 1787738138068,
+    "migrationSource": "claudeCode",
+    "status": "completed"
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content": "CONTEXT:\nUser:  \n             \n             \nUser:  \nUser: 继续吧。现在咋弄\nUser: <task-notification>\n<task-type>artifact-watch-lifecycle</task-type>\n<summary>Stopped watching Artifact: \"办公网链路总图\" (could not reconnect)</summary>\n<event>Watch on https://claude.ai/code/artifact/d83769\nUser: [Request interrupted by user]\n\nCURRENT MESSAGE:\n继续吧。现在咋弄",
+      "timestamp": 1787738138068,
+      "turnIndex": 0
+    }
+  ]
+}

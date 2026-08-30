@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "taskId": "claude-import-e336c0070389e0c99f198cb0",
+    "traceId": "3e82af59-86a7-406c-8377-57194ee36c5b",
+    "title": "You are working inside Orca, a multi-agent IDE. Yo...",
+    "workspacePath": "/Users/xiamingxing/Workspace",
+    "createdAt": 1787681165449,
+    "updatedAt": 1787681169987,
+    "migrationSource": "claudeCode",
+    "status": "completed"
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content": "You are working inside Orca, a multi-agent IDE. You are a dispatched worker. Your coordinator's terminal handle is: term_8dc72d05-f483-4118-acac-1d0cbeb701b9 Your task ID is: task_ed8c09bdc144 You talk to the coordinator only through the CLI commands below. Do not use Slack, GitHub comments, or any other channel to reach a human during the run. === CLI COMMANDS === # Report the terminal task outcome (REQUIRED exactly once). # # RULE: --body must be a 3-sentence executive summary (what you did, # what you found, what's left). Never send an empty body; the coordinator # reads the body first and only opens artifacts if it needs more detail. # If you produced a long-form artifact, include its path as # payload.reportPath so the coordinator can find it without a file search. # # RULE: send worker_done exactly once. Use --outcome succeeded when the # requested work is done, or replace it with --outcome failed when it is not. # Never encode failure only in prose and never silently exit. # Inc",
+      "timestamp": 1787681165449,
+      "turnIndex": 0
+    },
+    {
+      "role": "assistant",
+      "content": "There's an issue with the selected model (glm-5.2[1M]). It may not exist or you may not have access to it. Run --model to pick a different model.",
+      "timestamp": 1787681169987,
+      "turnIndex": 0
+    }
+  ]
+}

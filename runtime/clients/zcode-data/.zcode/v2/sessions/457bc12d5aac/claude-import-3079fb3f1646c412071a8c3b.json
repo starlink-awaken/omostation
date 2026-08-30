@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "taskId": "claude-import-3079fb3f1646c412071a8c3b",
+    "traceId": "7341d9d8-4ff0-4863-b050-3e7b2e3c2d79",
+    "title": "CONTEXT:\nUser: 规则数放宽到180吧\nUser: [Request interrupt...",
+    "workspacePath": "/Users/xiamingxing/Workspace",
+    "createdAt": 1787819582419,
+    "updatedAt": 1787819585357,
+    "migrationSource": "claudeCode",
+    "status": "completed"
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content": "CONTEXT:\nUser: 规则数放宽到180吧\nUser: [Request interrupted by user]\nUser:  \n             \n             \nUser:  \nUser: 继续\n\nCURRENT MESSAGE:\npr合并提交，修复存在的问题，优化",
+      "timestamp": 1787819582419,
+      "turnIndex": 0
+    },
+    {
+      "role": "assistant",
+      "content": "There's an issue with the selected model (glm-5.2[1M]). It may not exist or you may not have access to it. Run --model to pick a different model.",
+      "timestamp": 1787819585357,
+      "turnIndex": 0
+    }
+  ]
+}
