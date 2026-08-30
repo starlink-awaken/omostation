@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/tool-governance.py
-name: Tool Governance
+id: bin/gac/_archive/governance-dashboard.py
+name: Governance Dashboard
 category: governance
 owner: governance-team
 description: ""

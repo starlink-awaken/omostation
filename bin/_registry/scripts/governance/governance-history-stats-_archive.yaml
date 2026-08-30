@@ -1,7 +1,7 @@
 schema: script-registry/v1
-id: bin/gac/governance_health_monitor.py
-name: Governance Health Monitor
-category: state
+id: bin/gac/_archive/governance-history-stats.py
+name: Governance History Stats
+category: governance
 owner: governance-team
 description: ""
 inputs: []
