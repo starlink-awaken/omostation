@@ -350,3 +350,192 @@ def test_apply_restores_moved_sources_when_manifest_write_fails(tmp_path, monkey
         raise AssertionError("manifest failure must stop and roll back")
     assert runtime.read_bytes() == b"runtime\n"
     assert not (target / "_runtime/job.py").exists()
+
+
+def _exact_runner_plan(module, tmp_path):
+    documents = tmp_path / "Documents"
+    inbox = documents / "_inbox"
+    inbox.mkdir(parents=True)
+    (inbox / "hourly_runner.log").write_bytes(b"")
+    (inbox / "hourly_runner_err.log").write_bytes(b"")
+    (inbox / "note.md").write_text("human content\n", encoding="utf-8")
+    target = tmp_path / "Workspace" / "runtime" / "quarantine" / "runner-logs"
+    exact = ["hourly_runner.log", "hourly_runner_err.log"]
+    inventory = module._load_exact_inventory(documents, inbox, exact)
+    plan = module.build_plan(
+        documents_root=documents,
+        source_root=inbox,
+        target_root=target,
+        inventory=inventory,
+        consumer_receipt=_consumer_receipt(),
+        now="2026-08-31T02:30:00Z",
+        selected_kinds={"cache"},
+        exact_relative_paths=exact,
+    )
+    return documents, inbox, target, plan
+
+
+def test_exact_cache_plan_uses_full_documents_context_and_guards_non_targets(tmp_path):
+    module = _load_module()
+
+    _documents, _inbox, _target, plan = _exact_runner_plan(module, tmp_path)
+
+    assert [item["relative_path"] for item in plan["files"]] == [
+        "hourly_runner.log",
+        "hourly_runner_err.log",
+    ]
+    assert plan["selection_mode"] == "exact"
+    assert plan["selected_kinds"] == ["cache"]
+    assert plan["expected_relative_paths"] == ["hourly_runner.log", "hourly_runner_err.log"]
+    assert plan["summary"] == {"files": 2, "bytes": 0}
+    assert plan["non_target_guard"]["files"] == 1
+    assert plan["non_target_guard"]["bytes"] == len("human content\n")
+
+
+def test_exact_inventory_rejects_unsafe_duplicate_missing_and_content_paths(tmp_path):
+    module = _load_module()
+    documents = tmp_path / "Documents"
+    inbox = documents / "_inbox"
+    inbox.mkdir(parents=True)
+    (inbox / "hourly_runner.log").write_bytes(b"")
+    (inbox / "note.md").write_text("human\n", encoding="utf-8")
+
+    for relative_paths in (["../escape.log"], ["/absolute.log"], ["missing.log"], ["hourly_runner.log"] * 2):
+        try:
+            module._load_exact_inventory(documents, inbox, relative_paths)
+        except module.QuarantineError:
+            pass
+        else:
+            raise AssertionError(f"unsafe exact paths must fail: {relative_paths}")
+
+    inventory = module._load_exact_inventory(documents, inbox, ["note.md"])
+    try:
+        module.build_plan(
+            documents_root=documents,
+            source_root=inbox,
+            target_root=tmp_path / "target",
+            inventory=inventory,
+            consumer_receipt=_consumer_receipt(),
+            now="2026-08-31T02:30:00Z",
+            selected_kinds={"cache"},
+            exact_relative_paths=["note.md"],
+        )
+    except module.QuarantineError as exc:
+        assert "exact" in str(exc) or "selected" in str(exc)
+    else:
+        raise AssertionError("content cannot satisfy exact cache selection")
+
+
+def test_exact_apply_stops_and_preserves_sources_on_non_target_drift(tmp_path):
+    module = _load_module()
+    _documents, inbox, target, plan = _exact_runner_plan(module, tmp_path)
+    (inbox / "note.md").write_text("changed human content\n", encoding="utf-8")
+
+    try:
+        module.apply_plan(plan)
+    except module.QuarantineError as exc:
+        assert "non-target" in str(exc)
+    else:
+        raise AssertionError("non-target drift must stop exact apply")
+
+    assert (inbox / "hourly_runner.log").exists()
+    assert (inbox / "hourly_runner_err.log").exists()
+    assert not target.exists()
+
+
+def test_completed_manifest_verifies_and_rolls_back_without_mutating_manifest(tmp_path):
+    module = _load_module()
+    _documents, inbox, target, plan = _exact_runner_plan(module, tmp_path)
+    module.apply_plan(plan)
+    manifest_path = target / "manifest.json"
+    manifest_before = manifest_path.read_bytes()
+
+    verification = module.verify_completed_manifest(manifest_path)
+
+    assert verification["status"] == "verified"
+    assert verification["summary"] == {"files": 2, "bytes": 0}
+    assert verification["rollback_available"] is True
+    assert verification["permanent_deletion"] is False
+
+    receipt = module.rollback_completed_manifest(manifest_path, now="2026-08-31T03:00:00Z")
+
+    assert receipt["schema"] == "documents-runtime-quarantine-rollback/v1"
+    assert receipt["status"] == "rolled_back"
+    assert (inbox / "hourly_runner.log").exists()
+    assert (inbox / "hourly_runner_err.log").exists()
+    assert manifest_path.read_bytes() == manifest_before
+    assert json.loads((target / "rollback.json").read_text(encoding="utf-8"))["status"] == "rolled_back"
+
+
+def test_completed_manifest_rejects_unexpected_target_and_rollback_source_collision(tmp_path):
+    module = _load_module()
+    _documents, inbox, target, plan = _exact_runner_plan(module, tmp_path)
+    module.apply_plan(plan)
+    manifest_path = target / "manifest.json"
+    (target / "unexpected.txt").write_text("unexpected\n", encoding="utf-8")
+
+    try:
+        module.verify_completed_manifest(manifest_path)
+    except module.QuarantineError as exc:
+        assert "target" in str(exc)
+    else:
+        raise AssertionError("unexpected target must fail verification")
+
+    (target / "unexpected.txt").unlink()
+    (inbox / "hourly_runner.log").write_text("collision\n", encoding="utf-8")
+    try:
+        module.rollback_completed_manifest(manifest_path, now="2026-08-31T03:00:00Z")
+    except module.QuarantineError as exc:
+        assert "collision" in str(exc) or "source" in str(exc)
+    else:
+        raise AssertionError("rollback source collision must fail before overwrite")
+    assert (target / "hourly_runner.log").exists()
+
+
+def test_cli_exact_plan_apply_verify_and_rollback(tmp_path, capsys):
+    module = _load_module()
+    documents = tmp_path / "Documents"
+    inbox = documents / "_inbox"
+    inbox.mkdir(parents=True)
+    (inbox / "hourly_runner.log").write_bytes(b"")
+    (inbox / "hourly_runner_err.log").write_bytes(b"")
+    (inbox / "note.md").write_text("human\n", encoding="utf-8")
+    target = tmp_path / "Workspace" / "runtime" / "quarantine" / "runner-logs"
+    receipt_path = tmp_path / "consumer.json"
+    receipt_path.write_text(json.dumps(_consumer_receipt()), encoding="utf-8")
+    common = [
+        "--documents-root",
+        str(documents),
+        "--source-relative",
+        "_inbox",
+        "--target-root",
+        str(target),
+        "--consumer-receipt",
+        str(receipt_path),
+        "--include-relative",
+        "hourly_runner.log",
+        "--include-relative",
+        "hourly_runner_err.log",
+        "--artifact-kind",
+        "cache",
+        "--now",
+        "2026-08-31T02:30:00Z",
+        "--json",
+    ]
+
+    assert module.main(common) == 0
+    assert json.loads(capsys.readouterr().out)["status"] == "planned"
+    assert module.main([*common, "--apply"]) == 0
+    assert json.loads(capsys.readouterr().out)["status"] == "completed"
+    assert module.main(["--verify-manifest", str(target / "manifest.json"), "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["status"] == "verified"
+    assert module.main(
+        [
+            "--rollback-manifest",
+            str(target / "manifest.json"),
+            "--now",
+            "2026-08-31T03:00:00Z",
+            "--json",
+        ]
+    ) == 0
+    assert json.loads(capsys.readouterr().out)["status"] == "rolled_back"
