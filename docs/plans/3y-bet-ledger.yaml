@@ -338,6 +338,90 @@ bets:
   value_indicator_policy: false
   retro: required
 
+- id: BET-Y1Q3-T10-96
+  track: T10-MATURITY
+  window: Y1Q3
+  title: Learning runtime legacy helper quarantine
+  appetite: 0.5 day
+  priority: P1
+  status: done
+  done_at: 2026-08-30
+  goal: Quarantine four unconsumed learning runtime helper scripts after Workspace concept-weave preflight cutover while preserving residual owner-dependent runtime and learning content.
+  non_goals:
+  - No movement of l4-kernel.sh, vault-healthcheck.sh, knowledge-decay.sh, daemon/executor implementations, pre-commit-g18, inbox-router.sh, or learning content.
+  - No owner-parity claim, no permanent deletion, no scheduled-client rewrite, and no Documents content mutation.
+  done_when:
+  - Four scoped L4 file audits select exactly one regular runtime file each.
+  - Fresh consumer evidence reports zero forbidden executors and zero unmatched consumers.
+  - Four quarantine transactions preserve hashes, modes, bytes, and rollback manifests, with source absence and residual-runtime postflight.
+  - learning-runtime advances only to in_progress with completed helper subscopes and owner parity pending.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_runtime_quarantine.py -q
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with no coverage collision
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
+  - docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-96.md
+  - .omo/_truth/governance-evidence/waiver-2026-08-30-t10-96-learning-runtime-bootstrap.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:ca7cf57e9e1f5717413d442e5aa3d6ed0300d82ff03d2943222e437eac6f7aea
+    decision_ref: decision://accepted/BET-Y1Q3-T10-96
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@766a3729dae55530277f36d0ff8f1e1c2a88a29a
+          tests:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+            sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
+            sha256: sha256:ca7cf57e9e1f5717413d442e5aa3d6ed0300d82ff03d2943222e437eac6f7aea
+          rollback:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+            sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+            sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+            sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
+          replay:
+            ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
+            sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
+            sha256: sha256:ca7cf57e9e1f5717413d442e5aa3d6ed0300d82ff03d2943222e437eac6f7aea
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  depends_on:
+  - BET-Y1Q3-T10-95
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Any selected consumer, source drift, target collision, hash/mode mismatch, non-selected movement, permanent deletion, or owner-parity overclaim stops and restores the affected move.
+  value_indicator_policy: false
+  retro: required
+
+
 - id: BET-Y1Q3-T10-95
   track: T10-MATURITY
   window: Y1Q3
