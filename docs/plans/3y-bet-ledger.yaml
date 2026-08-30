@@ -16118,7 +16118,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:03b208d3ffd45a88109f92c65c09a1ecb07cfbbda44ed33e055fe591888fabd9
+            sha256: sha256:4c73812b3cfc892174f0c1340d19248532634263f540f49bd593305dde662fce
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T10-12-accept.yaml
             sha256: sha256:903bcf976f737ad482b473b0e5dceb513bfb0aeddac1169d0b82e593abe9df0b
