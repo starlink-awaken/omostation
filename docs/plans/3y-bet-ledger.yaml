@@ -16367,6 +16367,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:74d0bef270e716bbef038f3a3e9d77cd850147669571f42dab2eed8886c2b6f4
     decision_ref: decision://accepted/BET-Y1Q3-T10-106
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@71176717eff24d23fcf45add5e2287b78cc718b5
+          tests:
+            ref: receipt://docs/reports/2026-08-31-dma-daemon-chaos-drill.md
+            sha256: sha256:b7d3d1013f423ca9466f8c1885eff5570fdac73b9af04c8576493815f800553b
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-sovereign-mesh-daemon-sre-design.md
+            sha256: sha256:74d0bef270e716bbef038f3a3e9d77cd850147669571f42dab2eed8886c2b6f4
+          rollback:
+            ref: receipt://docs/reports/2026-08-31-dma-daemon-chaos-drill.md
+            sha256: sha256:b7d3d1013f423ca9466f8c1885eff5570fdac73b9af04c8576493815f800553b
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-31-dma-daemon-chaos-drill.md
+            sha256: sha256:b7d3d1013f423ca9466f8c1885eff5570fdac73b9af04c8576493815f800553b
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-31-dma-daemon-chaos-drill.md
+            sha256: sha256:b7d3d1013f423ca9466f8c1885eff5570fdac73b9af04c8576493815f800553b
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-106.md
+            sha256: sha256:99bc36936e882176bebb4bbc69e8aa7ce5b30703438cd70552507520e8e15aef
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-30-sovereign-mesh-daemon-sre-design.md
+            sha256: sha256:74d0bef270e716bbef038f3a3e9d77cd850147669571f42dab2eed8886c2b6f4
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   depends_on:
   - BET-Y1Q3-T10-105
   risk_level: L1
