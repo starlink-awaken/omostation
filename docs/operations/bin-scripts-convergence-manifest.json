@@ -4013,8 +4013,8 @@
     }
   ],
   "reconciliation": {
-    "source": "docs/operations/bin-scripts-close-duplicate-exec.md",
-    "scripts_retired_count": 167,
-    "source_mode": "archive-recon-no-exec"
+    "deduplicated_entries": 0,
+    "retired_entries": 0,
+    "source": "/Users/xiamingxing/Workspace/docs/operations/bin-scripts-close-duplicate-exec.md"
   }
 }
