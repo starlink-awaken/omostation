@@ -23,4 +23,15 @@ risk_level: L2
 files_count: 1
 bet_id: BET-Y1Q3-T10-28
 category: cutover
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: internal
+  bos_uri: bos://governance/omo/task
+  layer: L4 - Schedule Plane
+  entry_point: bin/gac/documents-domain-owner-job.py
+  governance_surface: .omo/_truth/registry/agent-workflows/
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
 ---
