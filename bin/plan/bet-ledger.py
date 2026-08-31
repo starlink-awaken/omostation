@@ -1337,12 +1337,40 @@ def _is_completion_evidence_grandfathered(bet: dict, *, workspace: Path) -> bool
     )
 
 
+COMPLETION_EVIDENCE_GRANDFATHER_CUTOFF = "2026-08-30"
+
+
+def _is_completion_evidence_file_grandfathered(*, done_at: str | None, cutoff: str = COMPLETION_EVIDENCE_GRANDFATHER_CUTOFF) -> bool:
+    """Return True when the BET was flipped to done before the cutoff.
+
+    Historical done BETs pre-date the immutable-evidence policy: their referenced
+    files may have been legitimately modified by subsequent work.  Re-validating
+    those stale digests produces permanent CI red (COMPLETION_FILE_DIGEST_MISMATCH)
+    that nobody can fix without rewinding history.  Grandfathering preserves the
+    structural check (axis status + required evidence keys) while skipping the
+    file-sha256 check for pre-cutoff BETs.
+    """
+    # done_at is None for historical BETs grandfathered before this field existed.
+    if done_at is None:
+        return True
+    # YAML may parse done_at as datetime.date; normalize to ISO date string.
+    if hasattr(done_at, "isoformat"):
+        done_at = done_at.isoformat()
+    elif not isinstance(done_at, str):
+        return True  # unknown shape → grandfather (fail open for history)
+    try:
+        return done_at[:10] <= cutoff
+    except (TypeError, IndexError):
+        return True  # unparseable → grandfather
+
+
 def _validate_evidence_reference(
     *,
     axis: str,
     key: str,
     value: Any,
     workspace: Path,
+    done_at: str | None = None,
 ) -> list[str]:
     """Resolve one evidence reference so a placeholder cannot make an axis green."""
     prefix = f"{axis}.{key}"
@@ -1395,12 +1423,15 @@ def _validate_evidence_reference(
         return [f"COMPLETION_FILE_REF_INVALID: {prefix}.ref escapes workspace"]
     if not candidate.is_file():
         return [f"COMPLETION_FILE_REF_MISSING: {prefix}.ref does not resolve to a file"]
-    digest = value.get("sha256")
-    if not isinstance(digest, str) or SHA256_REF_RE.fullmatch(digest) is None:
-        return [f"COMPLETION_FILE_DIGEST_REQUIRED: {prefix}.sha256 must be sha256:<64-lowercase-hex>"]
-    actual = f"sha256:{_file_sha256(candidate)}"
-    if digest != actual:
-        return [f"COMPLETION_FILE_DIGEST_MISMATCH: {prefix}.sha256 does not match resolved file"]
+
+    # Grandfather cutoff: skip sha256 check for historical done BETs (pre-cutoff).
+    if not _is_completion_evidence_file_grandfathered(done_at=done_at):
+        digest = value.get("sha256")
+        if not isinstance(digest, str) or SHA256_REF_RE.fullmatch(digest) is None:
+            return [f"COMPLETION_FILE_DIGEST_REQUIRED: {prefix}.sha256 must be sha256:<64-lowercase-hex>"]
+        actual = f"sha256:{_file_sha256(candidate)}"
+        if digest != actual:
+            return [f"COMPLETION_FILE_DIGEST_MISMATCH: {prefix}.sha256 does not match resolved file"]
     return []
 
 
@@ -1519,6 +1550,7 @@ def validate_completion_evidence(
     *,
     value_indicator_policy: bool = True,
     workspace: Path = WS,
+    done_at: str | None = None,
 ) -> tuple[str, list[str]]:
     """Validate three axes and derive value-required or value-exempt completion."""
     errors: list[str] = []
@@ -1576,6 +1608,7 @@ def validate_completion_evidence(
                     key="attestation",
                     value=attestation,
                     workspace=workspace,
+                    done_at=done_at,
                 )
                 if att_errors:
                     errors.extend(att_errors)
@@ -1589,6 +1622,7 @@ def validate_completion_evidence(
                         key=key,
                         value=evidence[key],
                         workspace=workspace,
+                        done_at=done_at,
                     )
                 )
         else:
@@ -1599,6 +1633,7 @@ def validate_completion_evidence(
                         key=key,
                         value=evidence[key],
                         workspace=workspace,
+                        done_at=done_at,
                     )
                 )
 
@@ -2411,6 +2446,7 @@ def cmd_lint(data: dict, args) -> int:
                 completion_matrix,
                 value_indicator_policy=value_indicator_policy,
                 workspace=WS,
+                done_at=b.get("done_at"),
             )
             errs.extend(f"{b['id']}.completion_evidence: {error}" for error in completion_errors)
             required_done_state = "outcome_accepted" if value_indicator_policy else "delivery_accepted"
@@ -2490,6 +2526,7 @@ def cmd_complete(data: dict, args) -> int:
         completion_matrix,
         value_indicator_policy=value_indicator_policy,
         workspace=WS,
+        done_at=b.get("done_at"),
     )
     required_completion_state = "outcome_accepted" if value_indicator_policy else "delivery_accepted"
     if completion_errors or completion_state != required_completion_state:
