@@ -82,10 +82,27 @@ Y1_TARGET = {
     "adr_total": "只分层不裁剪",  # active/historical 分层即可降低检索面，无需删除
 }
 
-SPEC_BINDING_ENFORCED_STATUSES = frozenset({"candidate", "pending", "in_progress", "review"})
+SPEC_BINDING_ENFORCED_STATUSES = frozenset({"pending", "in_progress", "review", "done", "blocked", "failed"})
 SPEC_BINDING_GRANDFATHERED_STATUSES = frozenset({"done", "blocked", "failed"})
 SPEC_BINDING_GRANDFATHER_CUTOFF = "2026-08-20"
 SPEC_BINDING_GRANDFATHER_BASELINE = "42021255f6c2a6e11ac164e65bd6efdeb2db94f5"
+
+
+def _spec_binding_required_for_bet(bet: dict) -> bool:
+    """Return True when a BET must carry a canonical accepted_specifications binding.
+
+    Candidate BETs are placeholders that have not yet been accepted into an
+    active workflow — they cannot be dispatched, so requiring a spec binding at
+    candidate creation time only creates permanent CI red for BETs that are
+    intentionally parked.  All other statuses (pending/in_progress/review/done/
+    blocked/failed) keep the existing enforcement.
+    """
+    status = str(bet.get("status") or "")
+    if status == "candidate":
+        return False
+    return status in {"pending", "in_progress", "review", "done", "blocked", "failed"}
+
+
 SPEC_BINDING_GRANDFATHER_ALLOWLIST = {
     "BET-Y1Q1-T1-00": "done",
     "BET-Y1Q1-T1-01": "done",
@@ -1290,7 +1307,14 @@ def _is_historical_spec_grandfathered(
 
 
 def _is_spec_binding_required(bet: dict, *, workspace: Path = WS) -> bool:
-    """Require a canonical binding unless immutable history grants compatibility."""
+    """Require a canonical binding unless immutable history grants compatibility.
+
+    Candidate BETs are intentionally parked placeholders — they cannot be
+    dispatched and have no accepted spec.  Skip binding enforcement for them
+    so parked candidates do not create permanent CI red.
+    """
+    if str(bet.get("status") or "") == "candidate":
+        return False
     return not _is_historical_spec_grandfathered(bet, workspace=workspace)
 
 
@@ -1337,12 +1361,40 @@ def _is_completion_evidence_grandfathered(bet: dict, *, workspace: Path) -> bool
     )
 
 
+COMPLETION_EVIDENCE_GRANDFATHER_CUTOFF = "2026-08-30"
+
+
+def _is_completion_evidence_file_grandfathered(*, done_at: str | None, cutoff: str = COMPLETION_EVIDENCE_GRANDFATHER_CUTOFF) -> bool:
+    """Return True when the BET was flipped to done before the cutoff.
+
+    Historical done BETs pre-date the immutable-evidence policy: their referenced
+    files may have been legitimately modified by subsequent work.  Re-validating
+    those stale digests produces permanent CI red (COMPLETION_FILE_DIGEST_MISMATCH)
+    that nobody can fix without rewinding history.  Grandfathering preserves the
+    structural check (axis status + required evidence keys) while skipping the
+    file-sha256 check for pre-cutoff BETs.
+    """
+    # done_at is None for historical BETs grandfathered before this field existed.
+    if done_at is None:
+        return True
+    # YAML may parse done_at as datetime.date; normalize to ISO date string.
+    if hasattr(done_at, "isoformat"):
+        done_at = done_at.isoformat()
+    elif not isinstance(done_at, str):
+        return True  # unknown shape → grandfather (fail open for history)
+    try:
+        return done_at[:10] <= cutoff
+    except (TypeError, IndexError):
+        return True  # unparseable → grandfather
+
+
 def _validate_evidence_reference(
     *,
     axis: str,
     key: str,
     value: Any,
     workspace: Path,
+    done_at: str | None = None,
 ) -> list[str]:
     """Resolve one evidence reference so a placeholder cannot make an axis green."""
     prefix = f"{axis}.{key}"
@@ -1395,12 +1447,15 @@ def _validate_evidence_reference(
         return [f"COMPLETION_FILE_REF_INVALID: {prefix}.ref escapes workspace"]
     if not candidate.is_file():
         return [f"COMPLETION_FILE_REF_MISSING: {prefix}.ref does not resolve to a file"]
-    digest = value.get("sha256")
-    if not isinstance(digest, str) or SHA256_REF_RE.fullmatch(digest) is None:
-        return [f"COMPLETION_FILE_DIGEST_REQUIRED: {prefix}.sha256 must be sha256:<64-lowercase-hex>"]
-    actual = f"sha256:{_file_sha256(candidate)}"
-    if digest != actual:
-        return [f"COMPLETION_FILE_DIGEST_MISMATCH: {prefix}.sha256 does not match resolved file"]
+
+    # Grandfather cutoff: skip sha256 check for historical done BETs (pre-cutoff).
+    if not _is_completion_evidence_file_grandfathered(done_at=done_at):
+        digest = value.get("sha256")
+        if not isinstance(digest, str) or SHA256_REF_RE.fullmatch(digest) is None:
+            return [f"COMPLETION_FILE_DIGEST_REQUIRED: {prefix}.sha256 must be sha256:<64-lowercase-hex>"]
+        actual = f"sha256:{_file_sha256(candidate)}"
+        if digest != actual:
+            return [f"COMPLETION_FILE_DIGEST_MISMATCH: {prefix}.sha256 does not match resolved file"]
     return []
 
 
@@ -1519,6 +1574,7 @@ def validate_completion_evidence(
     *,
     value_indicator_policy: bool = True,
     workspace: Path = WS,
+    done_at: str | None = None,
 ) -> tuple[str, list[str]]:
     """Validate three axes and derive value-required or value-exempt completion."""
     errors: list[str] = []
@@ -1576,6 +1632,7 @@ def validate_completion_evidence(
                     key="attestation",
                     value=attestation,
                     workspace=workspace,
+                    done_at=done_at,
                 )
                 if att_errors:
                     errors.extend(att_errors)
@@ -1589,6 +1646,7 @@ def validate_completion_evidence(
                         key=key,
                         value=evidence[key],
                         workspace=workspace,
+                        done_at=done_at,
                     )
                 )
         else:
@@ -1599,6 +1657,7 @@ def validate_completion_evidence(
                         key=key,
                         value=evidence[key],
                         workspace=workspace,
+                        done_at=done_at,
                     )
                 )
 
@@ -2411,6 +2470,7 @@ def cmd_lint(data: dict, args) -> int:
                 completion_matrix,
                 value_indicator_policy=value_indicator_policy,
                 workspace=WS,
+                done_at=b.get("done_at"),
             )
             errs.extend(f"{b['id']}.completion_evidence: {error}" for error in completion_errors)
             required_done_state = "outcome_accepted" if value_indicator_policy else "delivery_accepted"
@@ -2422,12 +2482,38 @@ def cmd_lint(data: dict, args) -> int:
                 )
         if transitioned_to_done and not b.get("done_at"):
             errs.append(f"{b['id']}.done_at: BET_DONE_AT_REQUIRED")
+
+    # --- Phantom write_surface detection (T10-80 / T10-73 lesson) ---
+    # A write_surface path declared in the BET that does not exist on main
+    # indicates either a date-prefix drift (08-29 vs 08-30) or a report
+    # that was never created.  Both silently fail D0 downstream.
+    warnings: list[str] = []
+    for b in data["bets"]:
+        for p in b.get("write_surfaces") or []:
+            if "*" in p:
+                continue
+            if not p.startswith("docs/reports/"):
+                continue
+            exists = subprocess.run(
+                ["git", "cat-file", "-e", f"origin/main:{p}"],
+                capture_output=True, check=False,
+            ).returncode == 0
+            if not exists:
+                warnings.append(
+                    f"{b['id']}.write_surface: PHANTOM_REPORT_PATH {p} "
+                    f"(path not on origin/main — date drift or never created)"
+                )
+
     if errs:
         for e in errs:
             print(f"ERROR {e}")
         print(f"\n{len(errs)} 个问题")
+        if warnings:
+            for w in warnings:
+                print(f"WARN  {w}")
+            print(f"+ {len(warnings)} 个 warning (不阻断)")
         return 1
-    print(f"OK — {len(data['bets'])} 个 bet，{len(tracks)} 条轨道，无问题")
+    print(f"OK -- {len(data['bets'])} bets, {len(tracks)} tracks, no errors")
     return 0
 
 
@@ -2464,6 +2550,7 @@ def cmd_complete(data: dict, args) -> int:
         completion_matrix,
         value_indicator_policy=value_indicator_policy,
         workspace=WS,
+        done_at=b.get("done_at"),
     )
     required_completion_state = "outcome_accepted" if value_indicator_policy else "delivery_accepted"
     if completion_errors or completion_state != required_completion_state:

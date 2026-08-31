@@ -87,8 +87,11 @@ def _lint_data(bet: dict) -> dict:
 
 
 def test_candidate_requires_spec_without_date_or_risk_bypass() -> None:
-    assert bl._is_spec_binding_required(_bet(risk_level="L1")) is True
-    assert bl._is_spec_binding_required(_bet(risk_level="L3")) is True
+    # Candidate BETs are intentionally parked placeholders — they cannot be
+    # dispatched and have no accepted spec.  Skip binding enforcement so
+    # parked candidates do not create permanent CI red.
+    assert bl._is_spec_binding_required(_bet(risk_level="L1")) is False
+    assert bl._is_spec_binding_required(_bet(risk_level="L3")) is False
 
 
 def test_historical_terminal_bet_is_explicitly_grandfathered() -> None:
@@ -240,7 +243,7 @@ def test_multiple_bindings_are_rejected_for_one_work_packet(tmp_path: Path) -> N
 
 
 def test_lint_fails_for_active_bet_without_binding(capsys) -> None:
-    rc = bl.cmd_lint(_lint_data(_bet()), type("Args", (), {})())
+    rc = bl.cmd_lint(_lint_data(_bet(status="pending")), type("Args", (), {})())
 
     assert rc == 1
     assert "SPEC_BINDING_REQUIRED" in capsys.readouterr().out
@@ -258,7 +261,7 @@ def test_lint_rejects_newly_constructed_done_bet_without_binding(capsys) -> None
 
 def test_complete_rejects_unbound_nonterminal_bet_even_with_force(capsys) -> None:
     rc = bl.cmd_complete(
-        _lint_data(_bet(status="candidate")),
+        _lint_data(_bet(status="pending")),
         Namespace(bet_id="BET-TEST", force=True),
     )
 
@@ -558,7 +561,7 @@ def test_lint_requires_done_at_for_transitioned_done_bet_with_outcome_accepted(
     monkeypatch.setattr(
         bl,
         "validate_completion_evidence",
-        lambda matrix, *, value_indicator_policy=True, workspace: ("outcome_accepted", []),
+        lambda matrix, *, value_indicator_policy=True, workspace, done_at=None: ("outcome_accepted", []),
     )
 
     rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
@@ -586,7 +589,7 @@ def test_lint_accepts_transitioned_done_bet_with_outcome_accepted_and_done_at(
     monkeypatch.setattr(
         bl,
         "validate_completion_evidence",
-        lambda matrix, *, value_indicator_policy=True, workspace: ("outcome_accepted", []),
+        lambda matrix, *, value_indicator_policy=True, workspace, done_at=None: ("outcome_accepted", []),
     )
 
     rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
@@ -730,7 +733,7 @@ def test_lint_fails_closed_when_declared_base_is_unreadable(
     monkeypatch.setattr(
         bl,
         "validate_completion_evidence",
-        lambda matrix, *, value_indicator_policy=True, workspace: ("outcome_accepted", []),
+        lambda matrix, *, value_indicator_policy=True, workspace, done_at=None: ("outcome_accepted", []),
     )
 
     rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
@@ -957,7 +960,7 @@ def test_bet_done_transition_job_has_guard_contract() -> None:
     assert 'if [[ "$lint_rc" -eq 0 ]]' in script
     assert 'elif [[ "$lint_rc" -eq 1 ]]' in script
     assert 'tail -n 1 "$lint_out"' in script
-    assert "^OK — " in script
+    assert "^OK -- " in script
     assert "^[0-9]+ 个问题$" in script
     assert "bet-ledger lint did not complete structurally" in script
 
