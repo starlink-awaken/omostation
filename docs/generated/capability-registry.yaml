@@ -12,7 +12,7 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 634
-  bos_services: 288
+  bos_services: 289
   bos_domains: 21
   cli_commands: 176
   skills: 3
@@ -883,7 +883,7 @@ bos_services:
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 69
+    governance: 70
     l4-kernel: 1
     memory: 47
     meta: 1
@@ -1454,6 +1454,10 @@ bos_services:
       transport: inline
       status: active
     governance:
+    - uri: bos://governance/hitl/execute/family_dashboard_document_write
+      description: Execute one Cockpit-approved family Documents CAS transaction through the family-hub owner.
+      transport: internal
+      status: active
     - uri: bos://governance/metaos/decide
       description: MetaOS 决策门控
       transport: stdio
