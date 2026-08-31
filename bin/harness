@@ -28,7 +28,7 @@ def ledger_add(args):
     # append minimal candidate bet
     new_bet = {
         "id": bet,
-        "track": bet.split("-")[2],
+        "track": {"T1": "T1-TRUTH", "T10": "T10-MATURITY"}.get(bet.split("-")[2], bet.split("-")[2]),
         "window": bet.split("-")[1],
         "title": args.title or f"{bet} auto-added via harness",
         "appetite": "0.5 day",
