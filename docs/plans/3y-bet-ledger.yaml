@@ -17099,6 +17099,7 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T8-02
   track: T8-SURFACE
   window: Y1Q4
