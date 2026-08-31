@@ -3,13 +3,13 @@
 # 维度体系标准，定义系统所有度量维度及其指标。
 #
 # SSOT: .omo/standards/dimension-system.yaml
-# Version: 1.0.0 | 2026-08-31
+# Version: 2.0.0 | 2026-08-31
 
 schema: dimension-system/v1
 
-# 核心维度 (5+4+1-1 中的 4 横切面)
+# 官方 12 维度定义 (5+4+1-1 中的 4 横切面 + 8 业务/运营)
 dimensions:
-  # ── 治理维度 (X1-X4) ──
+  # ── 治理维度 (4) ──
   X1_audit:
     name: "审计/边界"
     description: "审计日志、边界控制、写入守护"
@@ -54,7 +54,7 @@ dimensions:
         target: 100
         unit: "%"
 
-  # ── 业务维度 (九维战略) ──
+  # ── 业务维度 (5) ──
   D1_scene:
     name: "场景"
     description: "业务场景覆盖和活跃度"
@@ -98,6 +98,7 @@ dimensions:
         target: 88
         unit: "/100"
 
+  # ── 运营维度 (3) ──
   D6_operations:
     name: "运营"
     description: "长期运营健康度"
@@ -114,41 +115,30 @@ dimensions:
         target: 100
         unit: "%"
 
-  D8_anticorrosion:
-    name: "防腐"
-    description: "抗腐蚀能力"
+  D8_harness:
+    name: "Harness"
+    description: "自进化 Harness 治理 (防腐+约束+进化+信任)"
     metrics:
-      - name: "rot_defense_coverage"
+      - name: "harness_implementation_rate"
         target: 100
         unit: "%"
-
-  D9_constraint:
-    name: "约束"
-    description: "约束和限制管理"
-    metrics:
-      - name: "constraint_health"
+        description: "harness-policy 声明功能的实现比例"
+      - name: "harness_event_coverage"
         target: 100
         unit: "%"
-
-  # ── 新增维度 ──
-  D10_evolution:
-    name: "进化"
-    description: "系统自我改进能力"
-    metrics:
-      - name: "proposal_adoption_rate"
-        target: 70
+        description: "7 类探针事件的实际发射覆盖"
+      - name: "dag_completion_rate"
+        target: 95
         unit: "%"
-      - name: "auto_implementation_rate"
-        target: 80
+        description: "8 阶段 DAG 成功完成率"
+      - name: "surface_growth_net"
+        target: 0
+        unit: "count"
+        description: "表面积净增长 (负值=减少)"
+      - name: "rule_budget_compliance"
+        target: 100
         unit: "%"
-
-  D11_trust:
-    name: "信任"
-    description: "主人对系统的信任度"
-    metrics:
-      - name: "scene_calibration_rate"
-        target: 80
-        unit: "%"
+        description: "GaC 规则不超 85 条预算"
 
 # 度量框架
 measurement_framework:
