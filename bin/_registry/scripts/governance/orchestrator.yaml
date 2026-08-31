@@ -1,8 +1,8 @@
-id: bin/ssot/scene-card-lifecycle.py
-name: scene-card-lifecycle
+id: bin/gac/orchestrator.py
+name: orchestrator
 category: governance
 owner: governance-team
-description: "场景卡生命周期管理工具，支持验证和升级"
+description: "统一编排器入口，合并 signal/governance/maintenance/value 4 条链"
 inputs: []
 outputs:
   - type: exit_code
