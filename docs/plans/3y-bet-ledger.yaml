@@ -12419,6 +12419,8 @@ bets:
   - bin/ssot/proposal-to-adr.py
   - tests/unit/ssot/test_proposal_to_adr_status.py
   - .github/workflows/gac-gate.yml
+  - .github/workflows/architecture-check.yml
+  - tests/test_architecture_workflow.py
   - .omo/_truth/registry/ci-surfaces.yaml
   - bin/gac/gac-branch-protection.sh
   - bin/gac/gac-local-gate.py
