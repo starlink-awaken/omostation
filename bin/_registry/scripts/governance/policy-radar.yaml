@@ -1,0 +1,21 @@
+schema: script-registry/v1
+id: bin/bc-os/policy_radar.py
+name: Policy Radar Morning Brief
+category: governance
+owner: governance-team
+description: "BET-Y1Q4-T7-03：政策法规雷达与每日晨报引擎（白名单 5 源→规则打标→评分→JSON/MD+缓存降级）——数字大脑 P0 管线首站"
+inputs:
+  - name: --generate-morning-brief
+    type: flag
+outputs:
+  - type: exit_code
+  - type: json
+  - type: markdown
+dependencies: []
+triggers:
+  - manual
+  - periodic
+related:
+  - BET-Y1Q4-T7-03
+maturity: active
+last_reviewed: "2026-08-31"
