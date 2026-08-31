@@ -17069,26 +17069,36 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          spec:
-            ref: docs/superpowers/specs/2026-08-31-t7-03-policy-radar-morning-brief-design.md
-            sha256: sha256:13940d58c5a8526deafb4dec34d40899d82eed8313a93d9a855cc9bd0ecba55b
           merged_reachable_commit:
             ref: git://origin/main@c77cc4d60f6ab9fd41552907d06e80d590a42097
           tests:
-            ref: tests/test_policy_radar.py
-            result: 7/7 passed
+            ref: receipt://docs/reports/2026-08-31-policy-radar-morning-brief.md
+            sha256: sha256:2c3b9d13047c73e6f17306358f86a994b7eaf0ea28c243ddb90e5ce8ce9af63d
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-31-t7-03-policy-radar-morning-brief-design.md
+            sha256: sha256:13940d58c5a8526deafb4dec34d40899d82eed8313a93d9a855cc9bd0ecba55b
           rollback:
-            ref: docs/reports/2026-08-31-policy-radar-morning-brief.md
+            ref: receipt://docs/reports/2026-08-31-policy-radar-morning-brief.md
+            sha256: sha256:2c3b9d13047c73e6f17306358f86a994b7eaf0ea28c243ddb90e5ce8ce9af63d
       operational:
         status: PROVEN
         evidence:
-          verify_cmd: python3 bin/bc-os/policy_radar.py --generate-morning-brief
-          result: exit 0（首跑生产验证：gov.cn 源不可达自动缓存降级，arXiv 源正常抓取——circuit_breaker 契约实战）
+          live_canary:
+            ref: receipt://docs/reports/2026-08-31-policy-radar-morning-brief.md
+            sha256: sha256:2c3b9d13047c73e6f17306358f86a994b7eaf0ea28c243ddb90e5ce8ce9af63d
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-31-policy-radar-morning-brief.md
+            sha256: sha256:2c3b9d13047c73e6f17306358f86a994b7eaf0ea28c243ddb90e5ce8ce9af63d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-03.md
+            sha256: sha256:e045c716f96d116c1f254f7c15209e8b1f9c80626a3ca5b91aba74fee7e09c11
+          cleanup:
+            ref: receipt://docs/reports/2026-08-31-policy-radar-morning-brief.md
+            sha256: sha256:2c3b9d13047c73e6f17306358f86a994b7eaf0ea28c243ddb90e5ce8ce9af63d
       value:
-        status: ACCEPTED
-        evidence:
-          note: 数字大脑 P0 管线首站交付（principal 批准 A 方案：'可以，依次吧执行吧' 2026-08-31）；命令面交付完整，07:30 调度随 T2-01
-          ref: task://P0-pipeline-station-1-approved
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-T8-02
   track: T8-SURFACE
   window: Y1Q4
