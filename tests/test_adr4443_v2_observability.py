@@ -177,3 +177,25 @@ def test_v6_failure_excerpt_targets_failure_line_not_banner():
 def test_v6_failure_excerpt_fallback_when_clean():
     r = CF.classify_preflight_failure("gac", "全绿输出 无失败标记")
     assert r["output_excerpt"].startswith("全绿输出")
+
+
+# --- v9: PUSH_RANGE own-commit-range ------------------------------------------
+
+import os
+import subprocess
+
+
+def test_v9_push_range_overrides_staged(monkeypatch, tmp_path):
+    """pre-push 场景：PUSH_RANGE 存在时检查 commit 范围而非共享 staged。"""
+    repo = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, cwd=ROOT
+    ).stdout.strip()
+    monkeypatch.setenv("PUSH_RANGE", "HEAD~1..HEAD")
+    # 直接驱动 changed_paths（绕过 main 的 argparse）
+    LC = _load("bin/change-lane-check.py", "lc_v9")
+    paths = LC.changed_paths(staged=True)
+    assert paths, "range 模式必须看到 commit 范围文件（HEAD~1..HEAD 非空）"
+    # 无 env 时保持 staged 语义（可能为空列表——工作区干净）
+    monkeypatch.delenv("PUSH_RANGE")
+    staged_paths = LC.changed_paths(staged=True)
+    assert isinstance(staged_paths, list)

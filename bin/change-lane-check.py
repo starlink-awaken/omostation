@@ -44,7 +44,16 @@ def submodule_paths() -> set[str]:
 def changed_paths(staged: bool, files: list[str] | None = None) -> list[str]:
     if files:
         return files
-    cmd = ["git", "diff", "--cached", "--name-only"] if staged else ["git", "diff", "--name-only"]
+    # ADR-4443 v9 (PUSH_RANGE): pre-push 场景下检查"本次 push 的 commit 范围"
+    # 而非共享 staged——多 agent 共享 worktree 的 index 互相卡死根治（swarm
+    # retro A6）。环境变量由 pre-push hook 从 stdin 的 ref 对导出。
+    push_range = os.environ.get("PUSH_RANGE", "").strip()
+    if push_range and ".." in push_range:
+        cmd = ["git", "diff", "--name-only", push_range]
+    elif staged:
+        cmd = ["git", "diff", "--cached", "--name-only"]
+    else:
+        cmd = ["git", "diff", "--name-only"]
     result = run(cmd)
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
