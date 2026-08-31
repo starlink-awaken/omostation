@@ -12894,8 +12894,7 @@ bets:
   title: Post-2408 main recovery 与 required gac-gate promotion
   appetite: 2 weeks
   priority: P0
-  status: done
-  done_at: 2026-08-30
+  status: candidate
   goal: >-
     恢复 latest main 的真实治理基线，深化 existing gac-gate 为 immutable、check-only、blocking gate，经 main canary 后以 guarded double-read read-modify-write: GET A -> validate/hash -> GET B -> require digest equality -> one required_status_checks subresource PATCH -> GET C verify。The API lacks a proven server-side conditional unsafe write, so a residual GET-B/PATCH race remains and is bounded by a second human gate, receipt and context-only rollback，并完成 repository/runtime hygiene 与显式授权的 host retention。
   non_goals:
@@ -12984,38 +12983,15 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@669451c338dc792d96d497da1fdee9441c0a1415
-          tests:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:a1025654a3b4ab3fd6dd4791cc25120da0e7daa711a6c9bb4af5003b1c568833
-          diff:
-            ref: receipt://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
-            sha256: sha256:8ca8451fc2693ef350c692b198cc7d77194204a290d3d8ec6ce6ed4d5e9ec358
-          rollback:
-            ref: receipt://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
-            sha256: sha256:8ca8451fc2693ef350c692b198cc7d77194204a290d3d8ec6ce6ed4d5e9ec358
+        status: NOT_STARTED
+        evidence: {}
       operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:a1025654a3b4ab3fd6dd4791cc25120da0e7daa711a6c9bb4af5003b1c568833
-          fresh_receipt:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:a1025654a3b4ab3fd6dd4791cc25120da0e7daa711a6c9bb4af5003b1c568833
-          replay:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:a1025654a3b4ab3fd6dd4791cc25120da0e7daa711a6c9bb4af5003b1c568833
-          cleanup:
-            ref: receipt://docs/reports/2026-08-28-post2408-main-recovery-closeout.md
-            sha256: sha256:a1025654a3b4ab3fd6dd4791cc25120da0e7daa711a6c9bb4af5003b1c568833
+        status: NOT_PROVEN
+        evidence: {}
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: delivery_accepted
+    overall_state: evaluating
   depends_on: []
   value_indicator_policy: false
   risk_level: L3
