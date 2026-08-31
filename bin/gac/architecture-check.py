@@ -392,7 +392,6 @@ def check_anti_corrosion_budget(data: dict | None) -> tuple[list[str], list[str]
                 f"{budget_name}: alert_threshold 必须在 0 到 1 之间，实际为 {raw_alert_threshold!r}"
             )
             continue
-
         if current > max_count:
             errors.append(f"{budget_name}: 当前 {raw_current} 超出预算 {raw_max_count}")
         elif current > max_count * alert_threshold:
