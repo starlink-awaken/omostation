@@ -85,39 +85,12 @@ entries:
   range: origin/main..followup/agora-pointer-fix-20260827
   recorded_at: '2026-08-27T00:00:00Z'
   active: true
-- fingerprint: gitlink-ancestry|submodule-ancestry-gate|a34066c68f8c6513
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|31b54c6ca791433e
   surface: gitlink-ancestry
   check_id: submodule-ancestry-gate
-  signature: a34066c68f8c6513
+  signature: 31b54c6ca791433e
   kind: gitlink-regress
-  reason: submodule projects/agora pointer 2ad3f95226e7 rewinds 0f188fa3cf69
-  range: origin/main..e98750b11141
-  recorded_at: '2026-08-31T03:28:31.114204+00:00'
-  active: true
-- fingerprint: gitlink-ancestry|submodule-ancestry-gate|21fa53a19eda1b94
-  surface: gitlink-ancestry
-  check_id: submodule-ancestry-gate
-  signature: 21fa53a19eda1b94
-  kind: gitlink-regress
-  reason: submodule projects/cockpit pointer 4501ca905f5c rewinds dc2f5e73ca2b
-  range: origin/main..e98750b11141
-  recorded_at: '2026-08-31T03:28:31.114204+00:00'
-  active: true
-- fingerprint: gitlink-ancestry|submodule-ancestry-gate|44719a2144cfc79b
-  surface: gitlink-ancestry
-  check_id: submodule-ancestry-gate
-  signature: 44719a2144cfc79b
-  kind: gitlink-regress
-  reason: submodule projects/ecos pointer e3a14731c40c rewinds cb42b9859992
-  range: origin/main..e98750b11141
-  recorded_at: '2026-08-31T03:28:31.114204+00:00'
-  active: true
-- fingerprint: gitlink-ancestry|submodule-ancestry-gate|078f42897dc2e281
-  surface: gitlink-ancestry
-  check_id: submodule-ancestry-gate
-  signature: 078f42897dc2e281
-  kind: gitlink-regress
-  reason: submodule projects/omo pointer 73fc3b9cf504 rewinds 13b6cdf81fe0
-  range: origin/main..e98750b11141
-  recorded_at: '2026-08-31T03:28:31.114204+00:00'
+  reason: submodule projects/omo pointer bf8e34c23439 rewinds 13b6cdf81fe0
+  range: origin/main..cba632800665
+  recorded_at: '2026-08-31T03:07:08.361860+00:00'
   active: true
