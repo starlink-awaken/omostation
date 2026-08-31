@@ -98,7 +98,17 @@ families:
   - projects/cockpit/src/cockpit/web/api_domain_apps.py
   rollback: Keep the Documents app and its fingerprint until family-hub build, E2E, and client cutover pass.
   confirmation_gate: before_write
-  status: pending
+  status: in_progress
+  progress_evidence:
+    phase_b:
+      runtime_owner: family-hub
+      proposal_owner: omo
+      approval_entry: cockpit
+      route: bos://governance/hitl/execute/family_dashboard_document_write
+      runtime_state_ref: runtime/family-hub/dashboard
+      spec_ref: docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md
+      plan_ref: docs/superpowers/plans/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b.md
+      phase_c_pending: true
 - id: toolbox-staging
   major_surface: true
   source_globs:
