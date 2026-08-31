@@ -13,6 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Initialize architecture check consumers
+        run: >-
+          git submodule update --init
+          projects/ecos
+          projects/cockpit
+          projects/family-hub
+          projects/aetherforge
+          projects/omlxc
+          projects/runtime
+          projects/metaos
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
