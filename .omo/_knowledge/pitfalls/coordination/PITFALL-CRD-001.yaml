@@ -1,0 +1,22 @@
+id: PITFALL-CRD-001
+name: ADR 快速迭代导致治理管道不稳定
+severity: high
+times_encountered: 1
+first_seen: "2026-08-29"
+last_seen: "2026-08-29"
+description: >
+  ADR-4443 在 ~3 小时内从 v4 迭代到 v8 (5 轮 PR)，每次迭代触发 gate 检查
+  但无法阻止快速迭代。导致 PITFALL-GAT-004/005 反复豁免 (46+18 次)。
+root_cause: >
+  ADR 文件修改无速率限制，单个 Agent 可在短时间内反复修改同一 ADR，
+  每次修改触发 gate 但 gate 只验证格式不验证速率。
+impact: >
+  治理管道在短时间内产生大量版本，gate 检查频率激增但实际保护效果下降，
+  豁免记录堆积影响治理质量度量。
+prevention: >
+  check-adr-iteration-rate gate: 1 小时内 ADR 文件修改 >2 次则阻断。
+  运维绕过: ADR_ITERATION_APPROVAL=<reason>。
+related_rules:
+  - CR-X4-ADR-ITERATION-RATE
+related_adrs:
+  - ADR-4443

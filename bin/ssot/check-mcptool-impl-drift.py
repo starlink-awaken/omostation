@@ -29,6 +29,7 @@ REPO = Path(__file__).resolve().parents[2]
 MCPTOOL_DIR = REPO / "projects/ecos/src/ecos/ssot/mof/m1/mcptool"
 
 # server -> (实现命令, MCPTOOL 文件前缀)
+# AGORA uses source-based extraction (no --list-tools command)
 SERVERS: dict[str, dict] = {
     "COCKPIT": {
         "cmd": [
@@ -41,6 +42,11 @@ SERVERS: dict[str, dict] = {
             "--list-tools",
         ],
         "prefix": "MCPTOOL-COCKPIT-",
+    },
+    "AGORA": {
+        "cmd": [],  # source_extract used instead
+        "prefix": "MCPTOOL-AGORA-",
+        "source_extract": True,
     },
 }
 
@@ -59,9 +65,45 @@ def load_declared_tools() -> dict[str, set[str]]:
     return declared
 
 
+def _extract_agora_tools_from_source() -> set[str]:
+    """Extract AGORA MCP tool names from @mcp.tool() decorators in source."""
+    import re
+
+    server_dir = REPO / "projects/agora/src/agora/server"
+    tools: set[str] = set()
+    for py_file in sorted(server_dir.rglob("*.py")):
+        if "agent_cell" in py_file.name:
+            continue
+        lines = py_file.read_text(encoding="utf-8").splitlines()
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped.startswith("@mcp.tool"):
+                for j in range(i + 1, min(i + 4, len(lines))):
+                    func_line = lines[j].strip()
+                    m = re.match(r"(?:async\s+)?def\s+(\w+)", func_line)
+                    if m:
+                        tools.add(m.group(1))
+                        break
+            m = re.search(r'mcp\.tool\(name=["\'](\w+)["\']\)', stripped)
+            if m:
+                tools.add(m.group(1))
+            m = re.match(r"mcp\.tool\(\)\((\w+)\)", stripped)
+            if m:
+                tools.add(m.group(1))
+    return tools
+
+
 def load_implemented_tools(server: str) -> set[str]:
-    """跑 cockpit mcp --list-tools 解析工具名 (执行面)."""
-    cmd = SERVERS[server]["cmd"]
+    """Load implemented tools for a server.
+
+    For servers with source_extract=True, parse @mcp.tool() decorators from source.
+    Otherwise, run the server command and parse output.
+    """
+    cfg = SERVERS[server]
+    if cfg.get("source_extract"):
+        return _extract_agora_tools_from_source()
+
+    cmd = cfg["cmd"]
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(REPO), timeout=60)
     tools: set[str] = set()
     for line in result.stdout.splitlines():

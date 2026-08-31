@@ -1,0 +1,57 @@
+# governance-health-thresholds.yaml — 治理健康指标阈值标准
+# SSOT: 治理健康度量阈值定义
+# 用法: governance-health-metrics.py 读取此文件判定 status
+
+version: "1.0"
+description: 治理健康度量阈值
+
+metrics:
+  adr_iteration_rate:
+    name: ADR 版本速率
+    unit: changes/hour
+    description: 1 小时内 ADR 文件修改次数
+    thresholds:
+      target: 1
+      warn: 2
+      critical: 3
+    related_rule: CR-X4-ADR-ITERATION-RATE
+    related_pitfall: PITFALL-CRD-001
+
+  gate_escape_rate:
+    name: Gate 逃逸率
+    unit: "‰"
+    description: 门禁未拦截的违规事件千分率
+    thresholds:
+      target: 20
+      warn: 50
+      critical: 100
+
+  capability_chain_coverage:
+    name: 能力链覆盖率
+    unit: "%"
+    description: MOF 声明 ↔ 实现 ↔ inspect/invoke 链路完整率
+    thresholds:
+      target: 100
+      warn: 95
+      critical: 90
+    related_rule: CR-X4-CAPABILITY-CHAIN-BOUNDARY
+
+  quota_headroom:
+    name: 配额剩余空间
+    unit: "%"
+    description: 治理规则/脚本配额剩余空间百分比
+    thresholds:
+      target: 20
+      warn: 15
+      critical: 5
+    related_rule: CR-X4-QUOTA-PRESSURE
+
+  silent_loss_count:
+    name: 静默丢失
+    unit: count
+    description: 涉及治理文件的 PR 被关闭但无吸收痕迹
+    thresholds:
+      target: 0
+      warn: 0
+      critical: 1
+    related_rule: CR-X4-PR-LIFECYCLE-VISIBILITY
