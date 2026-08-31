@@ -231,8 +231,8 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-12-29'
-    justification: '[ADR-0431 D2] CR-M0-STAGE-GATE — 待补存在理由 (90 天内补齐)'
+    review_before: '2026-11-29'
+    justification: '[v10 评审 keep] check_type=mof_stage_gate | 代码引用 427 处（如 lib/documents_signals_preflight.py, .github/workflows/task-schema-enforce.yml）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-L0-BOS-RESOLVE
     dimension: X1
     layer: L0
@@ -255,8 +255,8 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-12-07'
-    justification: '[ADR-0431 D2] CR-L0-BOS-RESOLVE — 待补存在理由 (90 天内补齐)'
+    review_before: '2026-11-29'
+    justification: '[v10 评审 keep] check_type=bos_resolve | 代码引用 686 处（如 bin/plan/closeout-audit.py, lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-L2-TASK-DELIVERABLE
     dimension: X4
     layer: L2
@@ -301,8 +301,8 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2027-01-24'
-    justification: '[ADR-0431 D2] CR-X2-GAC-DRIFT — 待补存在理由 (90 天内补齐)'
+    review_before: '2026-11-29'
+    justification: '[v10 评审 keep] check_type=drift_audit | 代码引用 198 处（如 lib/batch_bet_closeout.py, lib/documents_zcode_state_relocation.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X1-AGENT-AUDIT
     dimension: X1
     layer: meta
@@ -326,8 +326,8 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2027-01-16'
-    justification: '[ADR-0431 D2] CR-X1-AGENT-AUDIT — 待补存在理由 (90 天内补齐)'
+    review_before: '2026-11-29'
+    justification: '[v10 评审 keep] check_type=audit_chain | 代码引用 526 处（如 .githooks/pre-commit, lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X3-DEBT-TIER
     dimension: X3
     layer: L2
@@ -395,8 +395,8 @@ gac:
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-12-04'
-    justification: '[ADR-0431 D2] CR-L3-COCKPIT-ENTRY — 待补存在理由 (90 天内补齐)'
+    review_before: '2026-11-29'
+    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 348 处（如 .githooks/pre-commit, lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-L2-DIRECT-IO
     dimension: X1
     layer: L2
@@ -418,8 +418,8 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-12-30'
-    justification: '[ADR-0431 D2] CR-L2-DIRECT-IO — 待补存在理由 (90 天内补齐)'
+    review_before: '2026-11-29'
+    justification: '[v10 评审 keep] check_type=direct_io_gate | 代码引用 549 处（如 lib/documents_signals_preflight.py, lib/documents_predictor_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X4-DOC-SSOT
     dimension: X4
     layer: meta
@@ -445,8 +445,8 @@ gac:
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2027-01-25'
-    justification: '[ADR-0431 D2] CR-X4-DOC-SSOT — 待补存在理由 (90 天内补齐)'
+    review_before: '2026-11-29'
+    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 1283 处（如 .githooks/pre-commit, bin/sync-submodules.sh）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-L2-SURFACES-INTEGRITY
     dimension: X4
     layer: L2
@@ -494,8 +494,8 @@ gac:
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2027-01-21'
-    justification: '[ADR-0431 D2] CR-L0-PROTOCOLS-SSOT — 待补存在理由 (90 天内补齐)'
+    review_before: '2026-11-29'
+    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 67 处（如 lib/documents_learning_control_plane.py, .github/workflows/mof-update.yml）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X2-GAC-BOOTSTRAP
     dimension: X2
     layer: meta
@@ -517,8 +517,8 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2026-11-27'
-    justification: '[ADR-0431 D2] CR-X2-GAC-BOOTSTRAP — 待补存在理由 (90 天内补齐)'
+    review_before: '2026-11-29'
+    justification: '[v10 评审 keep] check_type=drift_audit | 代码引用 1103 处（如 lib/documents_signals_preflight.py, lib/monthly_healthcheck.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X2-GOVERNANCE-SEMANTIC-GATE
     dimension: X2
     layer: meta
@@ -541,8 +541,8 @@ gac:
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
     added_at: '2026-08-28'
-    review_before: '2027-01-08'
-    justification: '[ADR-0431 D2] CR-X2-GOVERNANCE-SEMANTIC-GATE — 待补存在理由 (90 天内补齐)'
+    review_before: '2026-11-29'
+    justification: '[v10 评审 keep] check_type=schema_integrity | 代码引用 1148 处（如 lib/documents_signals_preflight.py, lib/documents_kos_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X1-GOD-MODULE-LIMIT
     dimension: X1
     layer: L2
