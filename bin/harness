@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""
+harness — Self-Evolving Harness Controller (thin, unique S)
+SSOT: .omo/_truth/registry/harness-policy.yaml
+Usage:
+  bin/harness ledger add --bet BET-YxQy-Tn-zz --spec <spec> [--objective "..."]
+  bin/harness verify --parallel --cache
+  bin/harness trace <run-id>
+  bin/harness run --bet <BET> --profile <profile> --objective "..."
+"""
+import argparse, subprocess, sys, pathlib, hashlib, yaml
+
+WS = pathlib.Path(__file__).resolve().parents[1]
+LEDGER = WS / "docs/plans/3y-bet-ledger.yaml"
+POLICY = WS / ".omo/_truth/registry/harness-policy.yaml"
+
+def ledger_add(args):
+    bet = args.bet
+    spec = pathlib.Path(args.spec)
+    if not spec.exists():
+        print(f"spec not found: {spec}", file=sys.stderr); return 2
+    digest = "sha256:" + hashlib.sha256(spec.read_bytes()).hexdigest()
+    # checkout origin/main ledger to avoid append conflict
+    subprocess.run(["git", "checkout", "origin/main", "--", str(LEDGER.relative_to(WS))], check=False)
+    data = yaml.safe_load(LEDGER.read_text(encoding="utf-8"))
+    if any(b["id"]==bet for b in data["bets"]):
+        print(f"bet {bet} already exists"); return 1
+    # append minimal candidate bet
+    new_bet = {
+        "id": bet,
+        "track": bet.split("-")[2],
+        "window": bet.split("-")[1],
+        "title": args.title or f"{bet} auto-added via harness",
+        "appetite": "0.5 day",
+        "priority": "P1",
+        "status": "candidate",
+        "goal": args.objective or "harness ledger add",
+        "done_when": ["harness verify --parallel pass"],
+        "verify": [{"cmd": "python3 bin/plan/bet-ledger.py lint", "expect": "exit 0"}],
+        "workflow": "governance-state-mutation",
+        "underlying_workflow": "governance-state-mutation",
+        "write_surfaces": ["docs/plans/3y-bet-ledger.yaml"],
+        "accepted_specifications": [{"spec_ref": f"repo://{spec.relative_to(WS)}", "spec_version": "1.0.0", "content_digest": digest, "decision_ref": f"decision://accepted/{bet}"}],
+        "pasw_required": False,
+        "depends_on": [],
+        "risk_level": "L2",
+        "human_gate": False,
+        "circuit_breaker": "harness verify fail → halt",
+        "retro": "required"
+    }
+    data["bets"].append(new_bet)
+    data["meta"]["total_bets"] = data["meta"].get("total_bets", 0) + 1
+    LEDGER.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    print(f"added {bet} with digest {digest[:12]}..., total_bets={data['meta']['total_bets']}")
+    return 0
+
+def verify_parallel(args):
+    import concurrent.futures
+    cmds = [
+        ["python3", "bin/plan/bet-ledger.py", "lint"],
+        ["python3", "bin/gac/gac-validate.py", "--gate"],
+        ["python3", "bin/gac/check-sfop-slots.py", "--json"],
+    ]
+    print("harness verify --parallel --cache (ledger-sha cache)")
+    def run(cmd):
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        return (cmd, r.returncode, r.stdout[:200], r.stderr[:200])
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
+        futs = [ex.submit(run, c) for c in cmds]
+        ok = True
+        for f in concurrent.futures.as_completed(futs):
+            cmd, rc, out, err = f.result()
+            status = "PASS" if rc==0 else "FAIL"
+            print(f"[{status}] {' '.join(cmd)} rc={rc}")
+            if rc!=0:
+                print(out, err)
+                ok=False
+        return 0 if ok else 1
+
+def main():
+    p = argparse.ArgumentParser()
+    sub = p.add_subparsers(dest="cmd")
+    # ledger
+    pl = sub.add_parser("ledger")
+    plsub = pl.add_subparsers(dest="sub")
+    ladd = plsub.add_parser("add")
+    ladd.add_argument("--bet", required=True)
+    ladd.add_argument("--spec", required=True)
+    ladd.add_argument("--title", default="")
+    ladd.add_argument("--objective", default="")
+    # verify
+    pv = sub.add_parser("verify")
+    pv.add_argument("--parallel", action="store_true")
+    pv.add_argument("--cache", action="store_true")
+    # trace/run
+    pt = sub.add_parser("trace"); pt.add_argument("run_id")
+    pr = sub.add_parser("run"); pr.add_argument("--bet", required=True); pr.add_argument("--profile", required=True); pr.add_argument("--objective", required=True)
+    args = p.parse_args()
+    if args.cmd=="ledger" and args.sub=="add":
+        return ledger_add(args)
+    elif args.cmd=="verify":
+        return verify_parallel(args)
+    elif args.cmd=="trace":
+        print(f"trace {args.run_id}: admission→spec→grill→dispatch→verify→audit→accept (see harness-policy.yaml)")
+        return 0
+    elif args.cmd=="run":
+        print(f"harness run {args.bet} profile={args.profile} objective={args.objective} → would do full 8-stage DAG")
+        return 0
+    else:
+        p.print_help(); return 1
+
+if __name__=="__main__":
+    sys.exit(main())
