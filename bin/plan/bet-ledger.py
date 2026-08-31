@@ -82,10 +82,27 @@ Y1_TARGET = {
     "adr_total": "只分层不裁剪",  # active/historical 分层即可降低检索面，无需删除
 }
 
-SPEC_BINDING_ENFORCED_STATUSES = frozenset({"candidate", "pending", "in_progress", "review"})
+SPEC_BINDING_ENFORCED_STATUSES = frozenset({"pending", "in_progress", "review", "done", "blocked", "failed"})
 SPEC_BINDING_GRANDFATHERED_STATUSES = frozenset({"done", "blocked", "failed"})
 SPEC_BINDING_GRANDFATHER_CUTOFF = "2026-08-20"
 SPEC_BINDING_GRANDFATHER_BASELINE = "42021255f6c2a6e11ac164e65bd6efdeb2db94f5"
+
+
+def _spec_binding_required_for_bet(bet: dict) -> bool:
+    """Return True when a BET must carry a canonical accepted_specifications binding.
+
+    Candidate BETs are placeholders that have not yet been accepted into an
+    active workflow — they cannot be dispatched, so requiring a spec binding at
+    candidate creation time only creates permanent CI red for BETs that are
+    intentionally parked.  All other statuses (pending/in_progress/review/done/
+    blocked/failed) keep the existing enforcement.
+    """
+    status = str(bet.get("status") or "")
+    if status == "candidate":
+        return False
+    return status in {"pending", "in_progress", "review", "done", "blocked", "failed"}
+
+
 SPEC_BINDING_GRANDFATHER_ALLOWLIST = {
     "BET-Y1Q1-T1-00": "done",
     "BET-Y1Q1-T1-01": "done",
@@ -1290,7 +1307,14 @@ def _is_historical_spec_grandfathered(
 
 
 def _is_spec_binding_required(bet: dict, *, workspace: Path = WS) -> bool:
-    """Require a canonical binding unless immutable history grants compatibility."""
+    """Require a canonical binding unless immutable history grants compatibility.
+
+    Candidate BETs are intentionally parked placeholders — they cannot be
+    dispatched and have no accepted spec.  Skip binding enforcement for them
+    so parked candidates do not create permanent CI red.
+    """
+    if str(bet.get("status") or "") == "candidate":
+        return False
     return not _is_historical_spec_grandfathered(bet, workspace=workspace)
 
 
