@@ -833,3 +833,9 @@ ops-template-show:  ## 显示模板详情
 
 ops-template-apply:  ## 应用模板创建服务
 	python3 bin/ops/templates.py apply
+
+architecture-check:  ## 架构合规检查
+	$(PY) bin/gac/architecture-check.py --strict
+
+architecture-check-quick:  ## 快速架构检查
+	$(PY) bin/gac/architecture-check.py --quick
