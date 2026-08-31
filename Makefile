@@ -18,7 +18,8 @@
 	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest \
 	bcos-evolve bcos-signals bcos-north-star \
 	swarm-status swarm-chaos swarm-decide swarm-audit swarm-demo \
-	ast-bootstrap ast-blast ast-audit
+	ast-bootstrap ast-blast ast-audit \
+	adr-iteration-rate quota-pressure gov-health-metrics capability-chain-boundary pr-lifecycle
 
 PY := uv run --with pyyaml python
 PY_STDLIB := bin/gac/managed-python run --profile stdlib --
@@ -156,6 +157,21 @@ architecture-auto-fix:  ## 架构自动修复 (dry-run)
 
 script-registry-validate:  ## 验证全域脚本 444 是否悉数挂号
 	$(PY) bin/ssot/script-registry.py validate
+
+adr-iteration-rate:  ## ADR 迭代速率限制 (ADR-4443 教训)
+	python3 bin/gac/check-adr-iteration-rate.py
+
+quota-pressure:  ## 治理配额压力监控
+	python3 bin/gac/check-quota-pressure.py
+
+gov-health-metrics:  ## 治理健康度量聚合
+	python3 bin/gac/governance-health-metrics.py
+
+capability-chain-boundary:  ## MCP 能力链端到端覆盖
+	python3 bin/gac/check-capability-chain-boundary.py
+
+pr-lifecycle:  ## PR 生命周期可见性
+	python3 bin/gac/check-pr-lifecycle.py
 
 m4-health:  ## M4 health score
 	$(PY) bin/mof/m4-health-score.py --emit
