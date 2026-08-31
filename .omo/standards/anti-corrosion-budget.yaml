@@ -1,0 +1,28 @@
+# Anti-Corrosion Budget Standard
+# =================================
+# 防腐预算控制标准，限制规则/脚本/场景卡的增长.
+#
+# SSOT: .omo/standards/anti-corrosion-budget.yaml
+# Version: 1.0.0 | 2026-08-31
+
+schema: anti-corrosion-budget/v1
+
+budgets:
+  governance_rules:
+    max_count: 85
+    alert_threshold: 0.9  # 90% 触发告警
+
+  bin_scripts:
+    max_count: 560
+    alert_threshold: 0.95
+
+  scene_cards:
+    max_count: 100
+    alert_threshold: 0.8
+
+auto_fix:
+  enabled: true
+  rules:
+    - "过期场景卡自动降级"
+    - "重复脚本自动归档"
+    - "漂移文档自动标记"

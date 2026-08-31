@@ -1,0 +1,13 @@
+id: bin/gac/architecture-auto-fix.py
+name: architecture-auto-fix
+category: governance
+owner: governance-team
+description: "架构自动修复 (dry-run/apply)"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+maturity: active
+last_reviewed: "2026-08-31"

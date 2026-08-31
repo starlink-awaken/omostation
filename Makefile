@@ -133,6 +133,27 @@ gac-drift:  ## GaC 规则漂移检测
 gac-validate:  ## GaC 规则验证 (--gate)
 	$(PY) bin/gac/gac-validate.py --gate
 
+architecture-check:  ## 架构合规检查
+	$(PY) bin/gac/architecture-check.py --strict
+
+architecture-check-quick:  ## 快速架构检查 (pre-commit)
+	$(PY) bin/gac/architecture-check.py --quick
+
+architecture-report:  ## 生成架构报告 (JSON)
+	$(PY) bin/gac/architecture-check.py --json > .omo/_delivery/architecture/report.json
+
+scene-card-registry:  ## 场景卡注册校验
+	$(PY) bin/ssot/scene-card-registry.py --validate --all
+
+dimension-health:  ## 维度健康度采集
+	$(PY) bin/gac/dimension-health.py --report
+
+architecture-drift:  ## 架构漂移检测
+	$(PY) bin/gac/architecture-drift.py --check
+
+architecture-auto-fix:  ## 架构自动修复 (dry-run)
+	$(PY) bin/gac/architecture-auto-fix.py --dry-run
+
 script-registry-validate:  ## 验证全域脚本 444 是否悉数挂号
 	$(PY) bin/ssot/script-registry.py validate
 

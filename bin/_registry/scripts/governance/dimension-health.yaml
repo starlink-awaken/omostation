@@ -1,0 +1,13 @@
+id: bin/gac/dimension-health.py
+name: dimension-health
+category: governance
+owner: governance-team
+description: "维度健康度采集 (12 维度评分)"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+maturity: active
+last_reviewed: "2026-08-31"
