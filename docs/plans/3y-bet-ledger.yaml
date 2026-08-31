@@ -17030,7 +17030,7 @@ bets:
   title: 卫健与科技政策法规雷达、科技文献 RSS 智能研判与每日晨报
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
   goal: 7x24 小时常态化巡检国家卫健委、国家医保局、工信部官方网站政策公告，结合 arXiv、bioRxiv、Nature/Lancet 数字化医疗前沿文献，夜间自动提炼要点并生成《夏明星每日业务与技术早报》。
   non_goals:
   - 不引入未经审核的自媒体营销号噪音资讯
@@ -17062,6 +17062,33 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:13940d58c5a8526deafb4dec34d40899d82eed8313a93d9a855cc9bd0ecba55b
     decision_ref: decision://accepted/BET-Y1Q4-T7-03
+  done_at: '2026-08-31'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          spec:
+            ref: docs/superpowers/specs/2026-08-31-t7-03-policy-radar-morning-brief-design.md
+            sha256: sha256:13940d58c5a8526deafb4dec34d40899d82eed8313a93d9a855cc9bd0ecba55b
+          merged_reachable_commit:
+            ref: git://origin/main@c77cc4d60f6ab9fd41552907d06e80d590a42097
+          tests:
+            ref: tests/test_policy_radar.py
+            result: 7/7 passed
+          rollback:
+            ref: docs/reports/2026-08-31-policy-radar-morning-brief.md
+      operational:
+        status: PROVEN
+        evidence:
+          verify_cmd: python3 bin/bc-os/policy_radar.py --generate-morning-brief
+          result: exit 0（首跑生产验证：gov.cn 源不可达自动缓存降级，arXiv 源正常抓取——circuit_breaker 契约实战）
+      value:
+        status: ACCEPTED
+        evidence:
+          note: 数字大脑 P0 管线首站交付（principal 批准 A 方案：'可以，依次吧执行吧' 2026-08-31）；命令面交付完整，07:30 调度随 T2-01
+          ref: task://P0-pipeline-station-1-approved
 - id: BET-Y1Q4-T8-02
   track: T8-SURFACE
   window: Y1Q4
