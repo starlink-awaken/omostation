@@ -166,8 +166,29 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--inbox", default="~/Documents/@感知信号")
     parser.add_argument("--calendar", help="Path to .ics calendar file")
+    parser.add_argument(
+        "--stream-benchmark",
+        action="store_true",
+        help="T2-01 基准：多源并发吞吐 >=1000/s + 高优延迟 <10ms 断言",
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
+
+    if args.stream_benchmark:
+        import asyncio
+        import sys as _sys
+
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "projects/omo/src"))
+        from omo.event_bus import stream_benchmark
+
+        result = asyncio.run(stream_benchmark())
+        print(json.dumps(result, ensure_ascii=False, indent=1))
+        ok = result["throughput_ok"] and result["high_priority_ok"]
+        print(
+            f"benchmark: {'PASS' if ok else 'FAIL'} "
+            f"({result['events_per_s']} eps, high<={result['high_priority_latency_max_ms']}ms)"
+        )
+        return 0 if ok else 1
 
     all_routed = []
 

@@ -2,18 +2,26 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-28
+last-reviewed: 2026-08-31
 ---
 
 version: "1.0"
 status: active
-updated_at: "2026-06-19T00:00:00Z"
+updated_at: "2026-08-31T00:00:00Z"
 owner: governance
 runtime_ref: projects/omo/src/omo/omo_governance_surfaces.py:_mutation_surface_registry_snapshot
 execution_entrypoints:
   - omo governance surfaces --json
   - workspace governance verify
 surfaces:
+  - name: omo-hitl-family-dashboard-documents
+    entrypoint: Cockpit /api/v1/proposals -> OMO omo_cockpit_bridge
+    runtime_ref: projects/omo/src/omo/omo_cockpit_bridge.py:record_hitl_proposal + approve_hitl_proposal_async
+    mutation_target: Documents family content through approved family-hub CAS owner
+    broker_ref: projects/omo/src/omo/omo_cockpit_bridge.py
+    delivery_artifact_root: .omo/_delivery/hitl/family-dashboard/ + runtime/family-hub/dashboard/mutations/
+    mode: brokered
+    category: governance_ingress
   - name: omo-governance-ingress-goal
     entrypoint: omo governance ingress-goal
     runtime_ref: projects/omo/src/omo/omo_governance.py:main (command=ingress-goal)
