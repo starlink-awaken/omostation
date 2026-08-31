@@ -1,0 +1,218 @@
+# Harness Controller Policy Registry — 收束所有治理的唯一运行时
+# SSOT: .omo/_truth/registry/harness-policy.yaml
+# Owner: harness-controller (COMP-WS-omo, DFSQ S slot)
+# ADR: ADR-0444 Self-Evolving Harness (Heterogeneous Eco) — T1-13 试点
+version: 1.0
+description: Harness作为唯一S的运行时收束：136 GaC + X1-X4 + MOF + DFSQ/SFOP + Resident/Bus 的执行引擎
+
+harness:
+  controller: COMP-WS-omo
+  sfop_slot: S
+  dao_layer: S
+  entry: harness run --bet <BET> --profile <profile> --objective "..."
+  # agent-workflow.py 保留为兼容马甲：harness run → 内部调 agent-workflow start/claim/verify/closeout
+
+# ──────────────────────────────────────────────────────────────
+# 1. Admission — 起跑前准入（硬拦截，不可逃生）
+# ──────────────────────────────────────────────────────────────
+admission:
+  require_worktree_clean: true
+  require_bet_claimable: true
+  deny_concurrent_claim: "same BET && same track"
+  max_concurrent_per_track: 1
+  require_grill: "appetite>=1d || risk_level>=L2 || human_gate==true"
+  grill_template: .agents/skills/grill-me/QA_5.md  # 边界/反模式/容量/回滚/可观测
+  sfop_check: check-sfop-slots.py --json  # S 唯一校验
+
+# ──────────────────────────────────────────────────────────────
+# 2. Spec — 带指标的契约（硬拦截）
+# ──────────────────────────────────────────────────────────────
+spec:
+  required: true  # candidate/pending/in_progress/review 强制
+  frontmatter_keys: [schema_version, spec_version, status, bet_id, risk_level, human_gate]
+  frontmatter_bet_match: true  # bet_id == BET.id
+  content_digest: "sha256:$(sha256sum spec)"  # 自动计算，非手填
+  template: docs/superpowers/specs/TEMPLATE.md  # objective/contract/done_when/metrics/non_goals
+
+# ──────────────────────────────────────────────────────────────
+# 3. Execution — Step 级护栏
+# ──────────────────────────────────────────────────────────────
+execution:
+  worktree:
+    lease: true  # DCA 并发 main conflict=0 由 Harness 持有
+    isolated_clone: "~/agents/<actor>/attempts/<attempt>/ws"
+  write_surfaces: strict  # 越权写直接 halt，非事后 audit
+  appetite:
+    max_overrun: 1.5
+    halt_on_overrun: true
+  loop_break: "same_error x2 → halt + switch strategy"
+  container_executor: projects/agora/etc/container-executor-profiles.yaml  # local/docker 隔离
+
+# ──────────────────────────────────────────────────────────────
+# 4. Verify — DAG 编排 + 缓存（核心优化点）
+# ──────────────────────────────────────────────────────────────
+verify:
+  parallel: true
+  cache_key: "ledger-sha + file-sha"  # pre-push 22s → <5s
+  dag:
+    blocking:  # 硬拦截，失败即 halt
+      - lint  # bet-ledger lint (spec binding + frontmatter)
+      - gac-validate  # 12 blocking: bos_resolve, mof_stage_gate, ssot_pointer (port/vault), health_ssot, etc.
+      - pointer-drift  # submodule pointer drift
+      - mass-deletion  # file count drop > threshold
+      - gitlink-ancestry  # pointer rewind
+      - layer-contract  # docs/layer-contract.yaml
+      - mof-drift
+      - execution-chain
+      - sfop-slots
+    advisory:  # WARN，不拦 push，进 panorama
+      - bet-retro-due  # 17 T10-xxx 存量债，P0 先 advisory
+      - ruff-format
+      - doc-freshness  # X2
+      - hygiene-patrol
+      - god-module  # >800L WARN, >1500L blocking 已在 blocking 另算
+  # 136 GaC 全量映射：blocking 12 + advisory 44 + 其余 80 按 dimension 挂在 audit
+
+# ──────────────────────────────────────────────────────────────
+# 5. Audit — 设计期推演 + 静态校验
+# ──────────────────────────────────────────────────────────────
+audit:
+  design_review:
+    enabled: "risk>=L2 || appetite>=1d"
+    council: 3  # 平台/产品/风险 三角色辩论 → review.md
+    redteam: 8  # 8 点攻击 → risk register
+    output: docs/superpowers/specs/<bet>-review.md
+    gate: "review.status != pass → halt"
+  static:
+    - sfop-slots
+    - execution-chain
+    - mof-drift
+    - dimension-health  # 12 维
+    - architecture-drift
+    - capability-ownership
+    - derived-only-fast-track
+    - auto-fix-loop
+
+# ──────────────────────────────────────────────────────────────
+# 6. Accept — 分级验收（替代一刀切 closeout）
+# ──────────────────────────────────────────────────────────────
+accept:
+  levels:
+    L0_self:
+      requires: [lint, gac-validate]
+      description: "lint+gac 全绿"
+    L1_tech:
+      requires: [L0, completion_evidence.engineering==VERIFIED, completion_evidence.operational==PROVEN, test==pass]
+      description: "三轴 + test"
+    L2_business:
+      requires: [L1, completion_evidence.value==ACCEPTED, human_verdict!="self-asserted", attestation=="ssh -Y sign"]
+      description: "human_gate=true 时必选，ssh attestation 非自证"
+  closeout: "check Lx 级别，不再一刀切 done"
+
+# ──────────────────────────────────────────────────────────────
+# 7. 感知探针 — 7 类 Event 标准化（自进化源头）
+# ──────────────────────────────────────────────────────────────
+probes:
+  arch_upgrade:
+    source: [mof-drift, sfop-slots, architecture-drift]
+    threshold: "drift>0"
+    event_type: arch_upgrade
+  feature_add:
+    source: [c2g pitch, bet-ledger candidate]
+    threshold: "new pitch"
+    event_type: feature_add
+  bug_fix:
+    source: [CI fail, gac fail, gac-local-gate fail]
+    threshold: "blocking_fail>0"
+    event_type: bug_fix
+  experience:
+    source: [lighthouse, NFR]
+    threshold: "score<90"
+    event_type: experience
+  doc_governance:
+    source: [doc-freshness, hygiene-patrol, doc-ssot-lint]
+    threshold: "stale>14d"
+    event_type: doc_governance
+  toolchain:
+    source: [bin-scripts-convergence-audit, capability-ownership]
+    threshold: "drift"
+    event_type: toolchain
+  business_process:
+    source: [cockpit journey, panorama value_gap]
+    threshold: "value_gap"
+    event_type: business_process
+  # 统一 Event Bus
+  bus: bus-foundation  # Data/Event/Control 3 平面，9 后端
+  payload_schema: {spec_ref, metrics, north_star_link, context, event_type}
+
+# ──────────────────────────────────────────────────────────────
+# 8. 12 维度全量挂载
+# ──────────────────────────────────────────────────────────────
+dimensions:
+  # X1-X4 治理4维
+  X1_audit: {harness: Verify, checks: [audit_chain, direct_io_gate, god_module], blocking: true}
+  X2_freshness: {harness: "感知 probe + hygiene-patrol 14d", blocking: false}
+  X3_value: {harness: Accept.L2, checks: [value_roi, debt_tier], blocking: true}
+  X4_consistency: {harness: Verify, checks: [matrix-consistency, execution-chain], blocking: true}
+  # 业务7维
+  scene: {harness: Audit, standard: scene-card-lifecycle.yaml, lifecycle: [draft, shadow, assisted, supervised, routine]}
+  function: {harness: Dispatch, check: write_surfaces}
+  journey: {harness: Audit, check: journey-validate}
+  experience: {harness: "感知 experience probe"}
+  vision: {harness: "全景 North Star", link: docs/PANORAMA.md}
+  operation: {harness: "运营", check: probe-heartbeat-monitor}
+  ops: {harness: "运维", check: observability}
+  # 新增2维
+  anticorrosion: {harness: Verify, checks: [capability-ownership, derived-only-fast-track]}
+  constraint: {harness: Verify, checks: [layer-contract, port-registry]}
+  evolution: {harness: "复盘 Agent → 新 BET/C2G", trigger: "every 10 BET"}
+  trust: {harness: Accept, check: attestation}
+
+# ──────────────────────────────────────────────────────────────
+# 9. 5 阶段价值循环显式编排
+# ──────────────────────────────────────────────────────────────
+value_loop:
+  standard: .omo/standards/value-loop-standard.yaml
+  dag: [感知, 分类, 旅程执行, 价值记录, 进化反馈]
+  bus: bus-foundation
+  store: AppendOnlyLog  # .omo/_control/governance-data.json
+  retro: retros/<bet>.md  # Q1-Q5
+  metrics: [lead_time, rework_rate, lint_first_pass, grill_escape, harness_escape_rate]
+
+# ──────────────────────────────────────────────────────────────
+# 10. 已知债与逃生收口
+# ──────────────────────────────────────────────────────────────
+known_debt:
+  registry: .omo/_truth/registry/gate-known-debt.yaml
+  growth_policy: shrink_only  # 只追加指纹，不扩权限
+  escape:
+    allow: "SWARM_ESCAPE_ID=local-preflight-preexisting && human_gate"
+    must_commit_fingerprint: true
+    warn_on_use: true
+    target_rate: "<5%"
+
+# ──────────────────────────────────────────────────────────────
+# 11. 可观测
+# ──────────────────────────────────────────────────────────────
+observability:
+  trace: "harness trace <run-id>  # 一行回放 admission→grill→build→verify→audit→accept"
+  explain: "harness explain <run-id> # 为什么熔断，哪条 policy，哪条 known-debt"
+  panorama: "cockpit panorama + make omo-top"
+  metrics_sink: .omo/state/system.yaml::health_score  # 唯一 SSOT
+
+# ──────────────────────────────────────────────────────────────
+# 12. 分阶段落地（蓝图一次锁死，执行分期）
+# ──────────────────────────────────────────────────────────────
+rollout:
+  P0_two_weeks:
+    goal: "增量 PR 不再逃生，PR 冲突率 70%→10%，pre-push 22s→5s"
+    deliver: [harness-policy.yaml, "harness verify --parallel --cache", "harness ledger add 原语"]
+    pilot: T1-14
+  P1_one_month:
+    goal: "rework_rate 减半，grill_escape 可度量"
+    deliver: ["感知 Agent 7探针 + Event Bus 7 Topic", "Grill/Audit 接入 admission", "State Machine 显式化"]
+  P2_quarter:
+    goal: "harness trace 一行定位，lead_time 方差 -50%"
+    deliver: ["复盘 Agent 自建 BET", "愿景-目标双向绑定", "cockpit harness trace 唯一可观测", "bin/gac/* 收敛为 harness 子调用"]
+
+# 校验：make architecture-check 必须全绿（scene-card-lifecycle + dimension-health + architecture-drift + capability-ownership）
