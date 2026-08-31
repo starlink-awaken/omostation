@@ -32,7 +32,11 @@ STANDARDS = {
     "dimension_system": WORKSPACE / ".omo" / "standards" / "dimension-system.yaml",
     "value_loop": WORKSPACE / ".omo" / "standards" / "value-loop-standard.yaml",
     "ssot_index": WORKSPACE / ".omo" / "standards" / "architecture-ssot-index.yaml",
+    "anti_corrosion_budget": WORKSPACE / ".omo" / "standards" / "anti-corrosion-budget.yaml",
 }
+
+# ── Harness 策略路径 ──
+HARNESS_POLICY = WORKSPACE / ".omo" / "_truth" / "registry" / "harness-policy.yaml"
 
 # ── 核心文档路径 (SSOT 索引声明) ──
 CORE_DOCS = {
@@ -261,6 +265,95 @@ def check_ssot_index(data: dict | None) -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
+def check_harness_policy() -> tuple[list[str], list[str]]:
+    """检查 harness-policy.yaml 合规性 (12 章节完整性 + 实现率)."""
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if not HARNESS_POLICY.exists():
+        return ["harness-policy.yaml 不存在"], []
+
+    data = _load_yaml(HARNESS_POLICY)
+    if not data:
+        return ["harness-policy.yaml 无法解析"], []
+
+    # 检查 12 章节完整性
+    expected_sections = [
+        "admission", "spec", "execution", "verify",
+        "audit", "accept", "probes", "dimensions",
+        "value_loop", "known_debt", "observability", "rollout",
+    ]
+
+    for section in expected_sections:
+        if section not in data:
+            warnings.append(f"缺少章节: {section}")
+
+    # 检查 SFOP S 槽位声明
+    harness = data.get("harness", {})
+    if harness.get("sfop_slot") != "S":
+        warnings.append("harness sfop_slot 应为 S")
+    if harness.get("controller") != "COMP-WS-omo":
+        warnings.append("harness controller 应为 COMP-WS-omo")
+
+    # 检查实现率 (声明 vs 实际)
+    # harness run 应该调用 agent-workflow
+    entry = harness.get("entry", "")
+    if "agent-workflow" not in entry and "harness run" in entry:
+        warnings.append("harness run 应内部调用 agent-workflow")
+
+    return errors, warnings
+
+
+def check_runtime_consistency() -> tuple[list[str], list[str]]:
+    """运行时一致性检查: SFOP S 槽位唯一性."""
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    # 检查 SFOP S 槽位唯一性
+    sfop_check = Path(__file__).parent / "check-sfop-slots.py"
+    if sfop_check.exists():
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, str(sfop_check), "--json"],
+            capture_output=True, text=True, cwd=str(WORKSPACE),
+        )
+        if result.returncode != 0:
+            # 解析输出检查 S 槽位
+            if "S" in result.stdout and "unique" in result.stdout.lower():
+                warnings.append("SFOP S 槽位唯一性检查失败")
+
+    return errors, warnings
+
+
+def check_anti_corrosion_budget(data: dict | None) -> tuple[list[str], list[str]]:
+    """检查防腐预算合规性."""
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if data is None:
+        return ["anti-corrosion-budget.yaml 不存在或无法解析"], []
+
+    budgets = data.get("budgets", {})
+    if not budgets:
+        errors.append("budgets 节点缺失")
+        return errors, warnings
+
+    # 检查各项预算
+    for budget_name, budget_info in budgets.items():
+        if not isinstance(budget_info, dict):
+            continue
+        max_count = budget_info.get("max_count", 0)
+        current = budget_info.get("current", 0)
+        alert_threshold = budget_info.get("alert_threshold", 0.9)
+
+        if current > max_count:
+            errors.append(f"{budget_name}: 当前 {current} 超出预算 {max_count}")
+        elif current > max_count * alert_threshold:
+            warnings.append(f"{budget_name}: 当前 {current} 接近预算 {max_count} (阈值 {alert_threshold:.0%})")
+
+    return errors, warnings
+
+
 def validate() -> tuple[int, list[str], list[str], dict]:
     """主校验. 返回 (exit_code, errors, warnings, details)."""
     all_errors: list[str] = []
@@ -273,20 +366,46 @@ def validate() -> tuple[int, list[str], list[str], dict]:
         ("dimension_system", check_dimension_system),
         ("value_loop", check_value_loop),
         ("ssot_index", check_ssot_index),
+        ("anti_corrosion_budget", check_anti_corrosion_budget),
     ]
 
     for name, check_fn in checks:
-        path = STANDARDS[name]
-        data = _load_yaml(path)
+        path = STANDARDS.get(name)
+        if path:
+            data = _load_yaml(path)
+        else:
+            data = None
         errs, warns = check_fn(data)
         details[name] = {
-            "path": str(path.relative_to(WORKSPACE)),
-            "exists": path.exists(),
+            "path": str(path.relative_to(WORKSPACE)) if path else "N/A",
+            "exists": path.exists() if path else False,
             "errors": errs,
             "warnings": warns,
         }
         all_errors.extend(errs)
         all_warnings.extend(warns)
+
+    # Harness 策略检查 (独立)
+    errs, warns = check_harness_policy()
+    details["harness_policy"] = {
+        "path": str(HARNESS_POLICY.relative_to(WORKSPACE)),
+        "exists": HARNESS_POLICY.exists(),
+        "errors": errs,
+        "warnings": warns,
+    }
+    all_errors.extend(errs)
+    all_warnings.extend(warns)
+
+    # 运行时一致性检查
+    errs, warns = check_runtime_consistency()
+    details["runtime_consistency"] = {
+        "path": "runtime",
+        "exists": True,
+        "errors": errs,
+        "warnings": warns,
+    }
+    all_errors.extend(errs)
+    all_warnings.extend(warns)
 
     return (1 if all_errors else 0, all_errors, all_warnings, details)
 
