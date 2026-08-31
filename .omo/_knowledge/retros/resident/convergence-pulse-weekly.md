@@ -1,27 +1,28 @@
 ---
 schema: resident-retro-candidate/v1
-topic: handoff-resume
+topic: convergence-pulse-weekly
 generated_at: 2026-08-31T06:30:02Z
 status: candidate
 counts:
-  runs: 1
+  runs: 2
   failures: 0
-  total: 1
+  total: 2
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
 ---
-# handoff-resume 运行复盘聚合 (resident 事件驱动)
+# convergence-pulse-weekly 运行复盘聚合 (resident 事件驱动)
 
 - generated_at: 2026-08-31T06:30:02Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 1 成功运行 + 0 失败模式 = 1 草稿
+- sediment 覆盖: 2 成功运行 + 0 失败模式 = 2 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
-- 20260823T085002Z-handoff-resume-5432aed0.md
+- 20260830T220813Z-convergence-pulse-weekly-aca8bf55.md
+- 20260830T221348Z-convergence-pulse-weekly-ae1537e8.md
 
 ## 失败模式 (failures/)
 
@@ -33,13 +34,14 @@ failure_breakdown:
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
-- **20260823T085002Z-handoff-resume-5432aed0**
-  - 计划 (objective): Maturity audit handoff
-  - workflow: handoff-resume
+- **20260830T220813Z-convergence-pulse-weekly-aca8bf55**
+  - workflow: convergence-pulse-weekly
+  - 指标: event_count=1, duration_s=0.0
+- **20260830T221348Z-convergence-pulse-weekly-ae1537e8**
+  - workflow: convergence-pulse-weekly
   - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=1
-  - 失败根因: step=execute, error=workflow failed
-  - 指标: event_count=6, duration_s=171690.919
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=36.695
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
