@@ -12411,6 +12411,13 @@ bets:
   - .omo/_truth/governance-evidence/waiver-2026-08-28-product-p0-spec-bootstrap.md
   - .omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md
   - .omo/_knowledge/decisions/INDEX.md
+  - .omo/_knowledge/decisions/0401-insufficient-cards.md
+  - .omo/_knowledge/decisions/0405-insufficient-cards.md
+  - .omo/_knowledge/decisions/0429-trend-signal.md
+  - .omo/_knowledge/decisions/0437-trend-signal.md
+  - .omo/_knowledge/decisions/0438-trend-signal.md
+  - .omo/_knowledge/decisions/0401-unhealthy-service.md
+  - .omo/_knowledge/decisions/0444-unhealthy-service.md
   - .github/workflows/gac-gate.yml
   - .omo/_truth/registry/ci-surfaces.yaml
   - bin/gac/gac-branch-protection.sh
