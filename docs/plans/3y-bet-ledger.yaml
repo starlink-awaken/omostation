@@ -11707,6 +11707,8 @@ bets:
   - projects/agora/tests/unit/test_capability_gateway.py
   - projects/agora
   - lib/capability_mcp_server_load.py
+  - tests/test_capability_mcp_server_load.py
+  - lib/capability_sync_verification_helpers.py
   pasw_required: false
   depends_on:
   - BET-Y1Q3-T4-01
