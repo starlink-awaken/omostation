@@ -1,6 +1,6 @@
 meta:
   horizon: 2026H2-2029
-  total_bets: 148
+  total_bets: 149
   windows:
   - Y1Q1
   - Y1Q2
@@ -14537,3 +14537,40 @@ bets:
             sha256: sha256:f8c5f688d68039bd36ed8771d610a4bab40c5b6b2b6be1a66b831190570b1e61
     overall_state: outcome_accepted
   depends_on: []
+- id: BET-Y1Q3-T1-13
+  track: T1-TRUTH
+  window: Y1Q3
+  title: 'T4-07 closeout — 子模块指针同步与 agora index 恢复'
+  appetite: 0.25 day
+  priority: P0
+  status: candidate
+  note: 'closeout repair: T4-07 Human Adjudication merge 后父仓库 HEAD 指向新的 agora/cockpit/omo commits；恢复 agora index 并将三个子模块对齐到父 HEAD，父仓库 git status --short 为空。'
+  goal: '修复 T4-07 merge 后的工作树真值漂移：恢复 projects/agora 子模块 index，并将 projects/agora、projects/cockpit、projects/omo 同步到父仓库 HEAD 记录的 commit，确保父仓库工作树与 HEAD 一致。'
+  non_goals:
+  - 不修改子模块内部业务代码
+  - 不新增或删除子模块
+  - 不改变 T4-07 Human Adjudication 业务逻辑或结果
+  done_when:
+  - 'projects/agora 子模块 index 已恢复，工作区文件全部存在'
+  - 'projects/agora/cockpit/omo 子模块 commit 与父仓库 HEAD 指针一致'
+  - '父仓库 git status --short 返回空'
+  verify:
+  - cmd: git status --short
+    expect: 空
+  - cmd: git submodule status -- projects/agora projects/cockpit projects/omo
+    expect: 无 + 前缀
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-08-31-t1-13-submodule-pointer-alignment.md
+    spec_version: 1.0.0
+    content_digest: sha256:baf8f7ac25aec367e94561e8a9a9f9e4d6d1e7b2445348b8e241cc3444b19414
+    decision_ref: decision://accepted/BET-Y1Q3-T1-13
+  pasw_required: false
+  depends_on: []
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 子模块对齐后若父仓库仍有未跟踪变更或子模块内部出现本地修改 → 暂停提交并人工检查
+  retro: required
