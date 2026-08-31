@@ -344,6 +344,13 @@ python3 bin/bc-os/evolution_engine.py --json     # 四阶段 JSON 输出
 
 主仓 main 变更走 **per-session worktree + PR**。工具:`bin/gac/gac-worktree.sh`。
 
+> **主树只读纪律（ADR-4443 v8 / P96，2026-08-31 起）**：workspace 根目录（主树）
+> 不再作为任何 agent 的工作落点——只用于基线同步（`git pull --ff-only`）与
+> gitignore 运行时区（台账/state/pitfalls）。所有编辑、commit、push 一律在专属
+> worktree 执行。实证（2026-08-31 swarm retro，14 起 A 类事故）：主树曾被并行
+> agent 分支接管 4 次、共享 index 卡 push、merge 污染分支——专属 worktree 是
+> 零成本方案，gate 拦截是 5 分钟成本方案，主树工作是无上限成本方案。
+
 ```bash
 bash bin/gac/gac-worktree.sh claim <session>   # 起隔离 worktree
 bash bin/gac/gac-worktree.sh submit <session>   # push 分支 + 开 PR
