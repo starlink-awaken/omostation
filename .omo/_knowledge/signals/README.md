@@ -7,3 +7,5 @@
 - 迁入记录（2026-08-30，ADR-0443 Q12）：0401/0405（insufficient-cards）、
   0429/0437/0438（trend-signal；其中 0437/0438 为同一新闻重复生成）
 - 编号处理：原编号随之退役不回收（历史引用不断链），新决策从 0444 起占号
+- 2026-08-31 修复：`proposal-to-adr.py` 保留兼容命令名，但新 draft 只写本目录、
+  使用 `signal://evolution/*` 身份；误入 decisions 的 `unhealthy_service` draft 已迁回。
