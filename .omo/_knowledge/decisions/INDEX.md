@@ -277,6 +277,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0196 | omo acl plan --acl 命名 ACE 干跑 | ACCEPTED | 2026-07-15 | governance-team | 0196-omo-acl-plan-named-ace.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
+| 0443 | 产出/收敛平衡框架 | ACCEPTED | 2026-08-30 | xiamingxing | 0443-production-convergence-balance-framework.md |
 | 0444 | 自进化 Harness 异构生态收束 | ACCEPTED | 2026-08-31 | xiamingxing | 0444-self-evolving-harness.md |
 
 ---
@@ -453,11 +454,9 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0397: 运行时状态文件不进 git — 运行时投影面由生成器负责, 不入版本库 — **ACCEPTED** | 2026-08-08 | Runtime state not tracked | 0397-runtime-state-not-tracked.md
 - ADR-0403: Agent 本体与模型驱动约束架构 — MOF M2 模型 + 门禁后移 — **ACCEPTED** | 2026-08-08 | Agent ontology | 0403-agent-ontology-model-driven-architecture.md
 - ADR-0402: 门禁后移与自主审查架构 — DoD 联动 + 自主 review 分级 — **ACCEPTED** | 2026-08-08 | Gate shift autonomous review | 0402-gate-shift-autonomous-review.md
-- ADR-0401: Only 9 scene cards — 场景卡覆盖度评估 (draft) — **DRAFT** | 2026-08-08 | Scene card coverage | 0401-insufficient-cards.md
 - ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成) — **ACCEPTED** | 2026-08-08 | DoD gate | 0400-definition-of-done-task-verify.md
 - ADR-0399: 治本 E — 子模块 stale 自动 pull + PASW 漂移检测增强 — **PROPOSED** | 2026-08-08 | Submodule stale auto-pull | 0399-submodule-stale-auto-pull.md
 - ADR-0391: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐 — **PROPOSED** | 2026-08-07 | Layer contract direction SSOT | 0391-layer-contract-direction-ssot.md
-- ADR-0405: Only 9 scene cards — 场景卡覆盖度评估 (draft, 重编号避撞) — **DRAFT** | 2026-08-08 | Scene card coverage | 0405-insufficient-cards.md
 - ADR-0394: scripts/ 子模块镜像债治理 — 已退役并迁移到 root bin/ — **SUPERSEDED** | 2026-08-22 | Scripts submodule archived | 0394-scripts-submodule-mirror-debt.md
 - ADR-0393: god-module 大文件治理计划 — 3 个 >1500L 债的拆分路径 — **ACCEPTED** | 2026-08-08 | God-module debt plan | 0393-god-module-debt-plan.md
 - ADR-0392: CI 修复 + 主仓 dirty 提交 — drafts persistence_mode + runtime state 同步 — **ACCEPTED** | 2026-08-08 | CI fix + dirty commit | 0392-ci-fix-and-dirty-commit.md
@@ -494,12 +493,10 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0426: AST 语义级合流防腐、SEMA 自动结晶与蜂群常驻看护架构 — **ACCEPTED** | 2026-08-25 | 0426-ast-merge-mesh-sema-crystallization-and-swarm-supervision.md
 - ADR-0427: 根级环境解析器、自愈看门狗与真实领域业务卡带架构 — **ACCEPTED** | 2026-08-25 | 0427-root-environment-resolver-autonomous-watchdog-and-real-domain-scenarios.md
 - ADR-0428: L3 单一人类入口收敛与 Cockpit 全域网关固化 — **ACCEPTED** | 2026-08-26 | Cockpit entrypoint convergence | 0428-single-human-entrypoint-convergence-to-cockpit.md
-- ADR-0429: [hacker_news] Meta reaches $16.68B settlement over social media harms to children — **DRAFT** | 2026-08-26 | Evolution proposal | 0429-trend-signal.md
 - ADR-0430: Reserved slot — **RESERVED** | 2026-08-28 | governance-team | 0430-reserved.md
 - ADR-0431: 防腐五层框架 — 人的权威分层 × 三机制 + MAPE-K 对齐 — **CANDIDATE** | 2026-08-28 | xiamingxing | 0431-anti-corrosion-five-layer-framework.md
 - ADR-0432: North Star v3 6-Axis Escalation — **ACCEPTED** | 2026-08-28 | 0432-north-star-v3-6-axis-escalation.md
 - ADR-0433: omlxc DFlash 2 块扩散投机解码、异构三节点智能调度与三级分层缓存体系 — **ACCEPTED** | 2026-08-29 | 0433-omlxc-dflash2-heterogeneous-cluster-and-hierarchical-cache.md
-- ADR-0437: Indirect Calling of Nested Functions on GCC Without Executable Stack — **PROPOSED** | 2026-08-29 | evolution-agent | 0437-trend-signal.md
 
 ---
 
@@ -548,8 +545,6 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0434: 次世代 omlxc V4.0 主权算力织网引擎与自适应树状投机体系 — **ACCEPTED** | 2026-08-29 | omlxc v4.0.0 | 0434-nextgen-omlxc-sovereign-compute-engine.md
 - ADR-0435: launchd plist 修复必须走生成器与注册表 — **ACCEPTED** | 2026-08-30 | governance-team | 0435-launchd-plist-generator-contract.md
 - ADR-0436: 次世代 omlxc V5.0 主权算力织网五大战略前沿 — **ACCEPTED** | 2026-08-29 | xiamingxing | 0436-nextgen-omlxc-v5-compute-mesh-frontiers.md
-- ADR-0437: Indirect Calling of Nested Functions on GCC Without Executable Stack — **PROPOSED** | 2026-08-29 | evolution-agent | 0437-trend-signal.md
-- ADR-0438: Indirect Calling of Nested Functions on GCC Without Executable Stack — **PROPOSED** | 2026-08-29 | evolution-agent | 0438-trend-signal.md
 - ADR-0439: 次世代 omlxc V5.0 主权算力织网全生态闭环与长期治理运维体系 — **ACCEPTED** | 2026-08-30 | omlxc v5.0.0 | 0439-omlxc-v5-sovereign-compute-ecosystem-closure.md
 - ADR-0440: 全生态服务 SSOT 登记、BOS URI 全生命周期路由注册与 Agora FastMCP 主权算力工具链挂载 — **ACCEPTED** | 2026-08-30 | governance-team | 0440-ecosystem-services-registration-and-governance.md
 - ADR-0441: Documents↔Workspace 协同机制 v1（DW 三原语） — **ACCEPTED** | 2026-08-30 | xiamingxing | 0441-documents-workspace-collab-v1.md

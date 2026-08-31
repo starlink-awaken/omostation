@@ -1,4 +1,13 @@
-# ADR-0401: Address: unhealthy_service
+---
+id: signal://evolution/2026-08-30-unhealthy-service
+status: draft
+lifecycle: signal
+owner: evolution-agent
+last-reviewed: 2026-08-31
+source: evolution-proposal
+---
+
+# Signal: Address: unhealthy_service
 
 - status: draft
 - date: 2026-08-30
@@ -36,15 +45,11 @@ Total proposals in batch: 4
 - Action: `research_task`
 - Severity: low
 
-## Decision
+## Triage
 
 _Pending human review. Auto-generated draft — do not merge without review._
-
-## Consequences
-
-- TBD (reviewer to fill)
 
 ## Follow-ups
 
 - [ ] Human review
-- [ ] Decision (accept/reject/defer)
+- [ ] Promote to a newly numbered ADR only after a real decision is accepted
