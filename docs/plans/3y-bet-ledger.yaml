@@ -10962,7 +10962,8 @@ bets:
   title: Exact Capability Binding 与 native asset receipt 消费收敛
   appetite: 5 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-08-31
   started_at: 2026-08-24
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact find-load、OMO admission/dispatch 与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误 admission、平行 dispatch 和执行回执冒充个人价值。
   non_goals:
@@ -11099,15 +11100,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@837ea8b5b4831a8c5e7f5868c344ae323091def8
+          tests:
+            ref: repo://tests/test_capability_native_inspection.py
+            sha256: sha256:a67e950b13e50f89db92b5f0964022694597f24e60e0be8b19f3c3e85f3b6399
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:d2dcd4da777c2abd64d1e68321033a382456f646a427f4175f8bd901f23b1366
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:d2dcd4da777c2abd64d1e68321033a382456f646a427f4175f8bd901f23b1366
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-26-capability-binding-canary.md
+            sha256: sha256:1680c12826c2bb092a0ba3343c2d47a5585870a4fb33c54cd078115ec4b2f8f6
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-29-binding-canary.json
+            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:d2dcd4da777c2abd64d1e68321033a382456f646a427f4175f8bd901f23b1366
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
+            sha256: sha256:41b7175076f14129b5e62989042f2f97d5f2b6ffb60cdd3a0ac9d60c27c0267a
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
   write_surfaces:
