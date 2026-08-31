@@ -372,9 +372,12 @@ def main() -> int:
             print(f"  ⚠️  {w}")
 
     script_quota_errors = _check_script_quota(REGISTRY)
+    # ADR-4443 v8: script-baseline 超限降级 advisory——gate-ROI NOISY 判定的
+    # 首次实际执行。历史实证拦截面全是"合法新增+忘同步"（main 反复红主因
+    # #2145/#2148/#2146），从未拦住"该减没减"。信号保留（warn 可见），
+    # 摩擦移除（不阻 push）；总量趋势由 gate-roi 季度报告审视。
     if script_quota_errors:
-        errors = list(errors) + script_quota_errors
-        print(f"\n❌ 脚本减法配额违规 ({len(script_quota_errors)}):")
+        print(f"\n⚠️  脚本基线提示 (advisory, {len(script_quota_errors)}):")
         for e in script_quota_errors:
             print(f"  - {e}")
 
