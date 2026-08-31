@@ -1,0 +1,38 @@
+# Scene Card Lifecycle Standard
+# ===========================================
+# 5-level lifecycle for all scene cards, aligned with project-strategy-v1.
+#
+# SSOT: .omo/standards/scene-card-lifecycle.yaml
+# Version: 1.0.0 | 2026-08-31
+
+schema: scene-card-lifecycle/v1
+
+lifecycle:
+  draft:
+    description: "设计阶段，未开始验证"
+    order: 0
+    can_execute: false
+  shadow:
+    description: "Mini-shadow 模式：3-sample 升级门"
+    order: 1
+    can_execute: false
+    min_samples: 3
+  assisted:
+    description: "30-sample 校准门"
+    order: 2
+    can_execute: true
+    min_samples: 30
+    min_calibration: 0.6
+  supervised:
+    description: "受信运行：主人可观察、可干预"
+    order: 3
+    can_execute: true
+  routine:
+    description: "无人值守常态化运行"
+    order: 4
+    can_execute: true
+
+activation:
+  preview: "仅预览，不触发"
+  controlled: "受控触发，需主人确认"
+  active: "自动触发"
