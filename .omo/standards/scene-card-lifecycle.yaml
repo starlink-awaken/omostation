@@ -1,0 +1,64 @@
+# Scene Card Lifecycle Standard (ADR-XXXX)
+# ===========================================
+# 5-level lifecycle for all scene cards, aligned with project-strategy-v1.
+#
+# SSOT: .omo/standards/scene-card-lifecycle.yaml
+# Version: 1.0.0 | 2026-08-31
+
+schema: scene-card-lifecycle/v1
+
+# 5-level lifecycle
+lifecycle:
+  draft:
+    description: "设计阶段，未开始验证"
+    order: 0
+    can_execute: false
+    evidence_required: false
+
+  shadow:
+    description: "Mini-shadow 模式：3-sample 升级门"
+    order: 1
+    can_execute: false
+    evidence_required: true
+    min_samples: 3
+    promotion_criteria: "useful_count >= 3"
+
+  assisted:
+    description: "30-sample 校准门"
+    order: 2
+    can_execute: true
+    evidence_required: true
+    min_samples: 30
+    min_calibration: 0.6
+    promotion_criteria: "calibration >= 0.6 AND samples >= 30"
+
+  supervised:
+    description: "受信运行：主人可观察、可干预"
+    order: 3
+    can_execute: true
+    evidence_required: true
+    promotion_criteria: "主人确认"
+
+  routine:
+    description: "无人值守常态化运行"
+    order: 4
+    can_execute: true
+    evidence_required: false
+    promotion_criteria: "连续 30 天无异常 + 主人确认"
+
+# Activation levels (independent of lifecycle)
+activation:
+  preview: "仅预览，不触发"
+  controlled: "受控触发，需主人确认"
+  active: "自动触发"
+
+# Promotion evidence schema
+promotion_evidence:
+  required_fields:
+    - promoted_at: ISO timestamp
+    - promoted_by: "human|system"
+    - from_level: lifecycle level
+    - to_level: lifecycle level
+    - evidence: "path to evidence file"
+    - samples: number (if applicable)
+    - calibration: float (if applicable)
