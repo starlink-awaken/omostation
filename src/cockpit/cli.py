@@ -43,7 +43,7 @@ from .commands.bos import (
     cmd_bos_workflow,
 )
 from .commands.brain import cmd_brain
-from .commands.brief import _cmd_brief
+from .commands.brief import _cmd_brief, _cmd_brief_morning
 from .commands.bus import cmd_bus
 from .commands.contracts import (
     cmd_contracts_export_event,
@@ -756,7 +756,7 @@ def main() -> int:
         "context": _c_context,
         "version": _c_version,
         "health": _cmd_health,
-        "brief": _cmd_brief,
+        "brief": lambda a: _cmd_brief_morning(a) if getattr(a, "morning", False) else _cmd_brief(a),
         "discover": _cmd_discover,
         "capabilities": cmd_capabilities,
         "profile": cmd_profile,

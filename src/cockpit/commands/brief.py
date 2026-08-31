@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from argparse import Namespace
 from datetime import datetime
+from pathlib import Path
 
 from rich.console import Console
 
@@ -59,4 +61,32 @@ def _cmd_brief(args: Namespace) -> int:
         console.print(f"[yellow]⚠ Brief generation limited: {e}[/]")
         return 1
 
+    return 0
+
+
+def _cmd_brief_morning(args: Namespace) -> int:
+    """每日业务与技术早报 (BET-Y1Q4-T7-03): 渲染 policy_radar 当日 JSON。"""
+    console.print(_panel("[bold cyan]🌅 每日业务与技术早报[/]", "cyan"))
+    root = Path(__file__).resolve().parents[4]
+    day = datetime.now().strftime("%Y%m%d")
+    brief_path = root / ".omo/state/policy-radar" / f"brief-{day}.json"
+    if not brief_path.exists():
+        console.print("[yellow]⚠ 今日晨报未生成 — 先跑: python -m bin.bc-os.policy_radar --generate-morning-brief[/]")
+        return 1
+    brief = json.loads(brief_path.read_text(encoding="utf-8"))
+    if brief.get("is_degraded"):
+        console.print(f"[yellow]⚠ 缓存快照降级版（源不可达: {', '.join(brief.get('degraded_sources', []))}）[/]")
+    items = brief.get("items") or []
+    if not items:
+        console.print("今日无高价值条目（白名单零命中）。")
+        return 0
+    by_tag: dict[str, list[dict]] = {}
+    for it in items:
+        for tag in it.get("tags", []):
+            by_tag.setdefault(tag, []).append(it)
+    for tag in sorted(by_tag):
+        console.print(f"\n[bold]📌 {tag}[/]")
+        for it in by_tag[tag][:4]:
+            console.print(f"  ▪ [{it.get('source','?')}] {str(it.get('title',''))[:64]}")
+    console.print(f"\n[dim]{brief.get('date','')} · {len(items)} 条 · 生成 {str(brief.get('generated_at',''))[:16]}[/]")
     return 0

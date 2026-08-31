@@ -354,8 +354,9 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         help="全栈检查 (含 Agora 服务健康 + Runtime Matrix + OMO 债务)",
     )
 
-    brief_p = sub.add_parser("brief", help="会话简报")
+    brief_p = sub.add_parser("brief", help="会话简报 / 每日早报 (--morning)")
     brief_p.add_argument("--force", action="store_true", help="强制重新生成")
+    brief_p.add_argument("--morning", action="store_true", help="渲染每日业务与技术早报 (T7-03)")
 
     search_p = sub.add_parser("search", help="跨源搜索 (数据库 + BOS 知识引擎)")
     search_p.add_argument("query", help="搜索关键词")
