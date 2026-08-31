@@ -1,0 +1,82 @@
+# Business Domain Classification Standard
+# =========================================
+# 业务域分类标准，用于场景卡和 Journey 的组织与编排。
+#
+# SSOT: .omo/standards/business-domains.yaml
+# Version: 1.0.0 | 2026-08-31
+
+schema: business-domains/v1
+
+# 业务域定义
+domains:
+  work:
+    name: "工作域"
+    description: "日常办公、公文处理、文档治理"
+    color: "blue"
+    scenes:
+      - admin-*
+      - documents-*
+      - meeting-supervision
+      - project-supervision
+    entry_point: "cockpit work"
+    kems_pipeline: "documents-quarantine-v1"
+
+  health:
+    name: "健康域"
+    description: "个人与家庭健康管理"
+    color: "green"
+    scenes:
+      - health-*
+    entry_point: "cockpit health"
+    kems_pipeline: "documents-owner-v1"
+
+  research:
+    name: "研究域"
+    description: "调研与学术研究"
+    color: "purple"
+    scenes:
+      - research-pipeline
+    entry_point: "cockpit research"
+    kems_pipeline: "documents-preflight-v1"
+
+  knowledge:
+    name: "知识域"
+    description: "知识沉淀与学习"
+    color: "orange"
+    scenes:
+      - knowledge-curation
+      - knowledge-ingest
+    entry_point: "cockpit knowledge"
+    kems_pipeline: "documents-owner-v1"
+
+  governance:
+    name: "治理域"
+    description: "系统治理与合规"
+    color: "red"
+    scenes:
+      - governance-*
+    entry_point: "cockpit governance"
+    kems_pipeline: "documents-audit-v1"
+
+# 域间编排规则
+orchestration:
+  # 工作域 → 知识域: 公文审查后沉淀知识
+  work_to_knowledge:
+    source: work
+    target: knowledge
+    trigger: "document-review completed"
+    action: "knowledge-curation journey"
+
+  # 研究域 → 知识域: 调研完成后沉淀
+  research_to_knowledge:
+    source: research
+    target: knowledge
+    trigger: "research-pipeline completed"
+    action: "knowledge-capture-pipeline journey"
+
+  # 健康域 → 工作域: 健康状况影响工作安排
+  health_to_work:
+    source: health
+    target: work
+    trigger: "health-visit completed"
+    action: "admin-notification-workflow"
