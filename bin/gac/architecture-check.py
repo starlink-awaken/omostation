@@ -342,9 +342,18 @@ def check_anti_corrosion_budget(data: dict | None) -> tuple[list[str], list[str]
     for budget_name, budget_info in budgets.items():
         if not isinstance(budget_info, dict):
             continue
-        max_count = budget_info.get("max_count", 0)
-        current = budget_info.get("current", 0)
-        alert_threshold = budget_info.get("alert_threshold", 0.9)
+        try:
+            max_count = int(str(budget_info.get("max_count", "0")).replace("~", ""))
+        except (ValueError, TypeError):
+            max_count = 0
+        try:
+            current = int(str(budget_info.get("current", "0")).replace("~", ""))
+        except (ValueError, TypeError):
+            current = 0
+        try:
+            alert_threshold = float(budget_info.get("alert_threshold", 0.9))
+        except (ValueError, TypeError):
+            alert_threshold = 0.9
 
         if current > max_count:
             errors.append(f"{budget_name}: 当前 {current} 超出预算 {max_count}")
