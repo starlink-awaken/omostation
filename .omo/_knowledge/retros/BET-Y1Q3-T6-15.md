@@ -52,17 +52,11 @@ the current shared checkout. Then produce the R2b backup, producer lifecycle,
 ignored-restore, digest, SQLite integrity and rollback receipts before any
 Product P0 Wave A unlock or BET completion.
 
+## R2b 收账补记 (2026-08-30)
 
-## R2b 收账补记 (2026-08-30, #2666 后被并发合并回滚, 本次重新落账)
-
-第二次精确人工授权已获得（owner 授权链）。R2b 七步全部执行完毕（备份/完整性/
-producer stop-start/回执），event-ingest plist 修复经 ADR-0435 + wrapper 方案
-永久化并已在 canonical checkout 验证 exit 0。retention/operational
-UNPROVABLE → PROVEN；Product P0 Wave A 前置解锁。
-
-## R2b 收账重落账 (2026-08-30)
-
-#2666 的收账被并发 ledger 合并回滚（status 与报告节丢失）。本次基于最新 main
-重新落账：R2b 七步回执内容不变（备份 928 文件/113MB、SQLite 四重完整性 ok、
-producer 修复经 ADR-0435 wrapper 方案、event-ingest canonical 验证 exit 0）。
-retention/operational PROVEN 维持。
+第二次精确人工授权已获得（owner 授权链）。R2b 七步全部执行：
+外部备份（928 文件/113MB，848 MATCH/82 活写入 churn）、两个 SQLite 完整性
+复验 ok、producer stop/start 完成（顺带修复 event-ingest plist 从未生效的
+调用缺陷——重启后 exit 0）、live checkout == origin/main、ignored 恢复为
+no-op（对象已在 R2a 落点）。完整脱敏回执见 closeout 报告 R2b 节。
+retention/operational 由 UNPROVABLE → PROVEN；Product P0 Wave A 前置解锁。
