@@ -1,0 +1,13 @@
+id: bin/gac/architecture-check.py
+name: architecture-check
+category: governance
+owner: governance-team
+description: "架构合规检查: 场景卡生命周期 + 业务域 + 脚本配额"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+maturity: active
+last_reviewed: "2026-08-31"
