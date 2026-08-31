@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -71,7 +72,13 @@ def check_heartbeats() -> dict:
     failed = []
     for hb in heartbeats:
         file_path = REPO / hb["file"]
-        ts_str = _read_json_field(file_path, hb["field"])
+        # 根据文件扩展名选择读取方式 (.json 和 .jsonl 用 JSON 解析)
+        if file_path.suffix in (".json", ".jsonl"):
+            ts_str = _read_json_field(file_path, hb["field"])
+        else:
+            data = _load_yaml_simple(file_path)
+            ts_str = data.get(hb["field"]) if isinstance(data, dict) else None
+            ts_str = str(ts_str) if ts_str is not None else None
         age = _age_hours(ts_str) if ts_str else 9999
         ok = age <= hb["sla_hours"]
         result = {

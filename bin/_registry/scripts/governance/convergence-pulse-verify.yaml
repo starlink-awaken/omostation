@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/gac/convergence-pulse-verify.py
+name: Convergence Pulse Verify
+category: governance
+owner: governance-team
+description: "ADR-0443 v5：周期 workflow 的 verification 硬门独立脚本（替代 v1 内联引号嵌套——run 快照不可变，新 run 生效）"
+inputs: []
+outputs:
+  - type: exit_code
+dependencies: []
+triggers:
+  - periodic
+related:
+  - ADR-0443
+maturity: active
+last_reviewed: "2026-08-30"

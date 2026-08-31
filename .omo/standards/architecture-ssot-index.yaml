@@ -1,0 +1,75 @@
+# Architecture SSOT Index
+# =========================
+# 架构 SSOT 统一索引，收敛 14 份分散的架构文档为 3 份核心文档 + 标准库。
+#
+# SSOT: .omo/standards/architecture-ssot-index.yaml
+# Version: 1.0.0 | 2026-08-31
+
+schema: architecture-ssot-index/v1
+
+# ── 3 份核心文档 ──
+core_documents:
+  ARCHITECTURE.md:
+    path: "ARCHITECTURE.md"
+    role: "稳定架构契约 (层/路由/边界)"
+    update_frequency: "仅架构变更时"
+    owns:
+      - 层模型 (L0-L8)
+      - BOS URI 域
+      - 入口架构
+      - 端口注册表
+      - 治理面
+
+  PANORAMA.md:
+    path: "docs/PANORAMA.md"
+    role: "全景导航 (5+4+1-1 总图)"
+    update_frequency: "月度"
+    owns:
+      - 5+4+1-1 分层总图
+      - 九维战略矩阵
+      - 项目注册表
+
+  STATE.md:
+    path: ".omo/state/system.yaml"
+    role: "运行时状态 (健康/指标/趋势)"
+    update_frequency: "实时"
+    owns:
+      - 系统健康
+      - 运行时指标
+      - 探测器状态
+
+# ── 标准库 (新建) ──
+standards:
+  scene_card_lifecycle:
+    path: ".omo/standards/scene-card-lifecycle.yaml"
+    role: "场景卡 5 级生命周期标准"
+
+  business_domains:
+    path: ".omo/standards/business-domains.yaml"
+    role: "业务域分类标准"
+
+  dimension_system:
+    path: ".omo/standards/dimension-system.yaml"
+    role: "维度系统标准 (12 维度)"
+
+  value_loop:
+    path: ".omo/standards/value-loop-standard.yaml"
+    role: "价值循环标准"
+
+# ── 注册表索引 ──
+registries:
+  governance: ".omo/_truth/registry/governance-checks.yaml"
+  capabilities: ".omo/_truth/registry/mof-capabilities.yaml"
+  scene_cards: "projects/ecos/src/ecos/ssot/registry/scene-cards.yaml"
+  scene_binding: "projects/ecos/src/ecos/ssot/registry/scene-binding-contract.yaml"
+  documents_scene_mof: ".omo/_truth/registry/documents-scene-mof-map.yaml"
+
+# ── 废弃/合并列表 ──
+deprecated:
+  - path: "docs/architecture/2026-08-28-five-dimension-review.md"
+    replaced_by: ".omo/standards/dimension-system.yaml"
+    reason: "五维审议内容已纳入维度系统标准"
+
+  - path: "docs/architecture/2026-08-28-value-flow-deep-analysis.md"
+    replaced_by: ".omo/standards/value-loop-standard.yaml"
+    reason: "价值流分析已纳入价值循环标准"

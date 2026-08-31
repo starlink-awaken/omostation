@@ -38,6 +38,8 @@ jobs:
               bin/gac/documents-codex-profile.py|\
               bin/gac/documents-zed-profile.py|\
               bin/gac/documents-zcode-config.py|\
+              lib/documents_zcode_state_relocation.py|\
+              lib/documents_client_recovery_relocation.py|\
               bin/gac/documents-chatgpt-tunnel.py|\
               bin/gac/documents-domain-index.py|\
               bin/gac/documents-domain-project-check.py|\
@@ -47,6 +49,8 @@ jobs:
               tests/test_documents_codex_profile.py|\
               tests/test_documents_zed_profile.py|\
               tests/test_documents_zcode_config.py|\
+              tests/test_documents_zcode_state_relocation.py|\
+              tests/test_documents_client_recovery_relocation.py|\
               tests/test_documents_chatgpt_tunnel.py|\
               tests/test_documents_domain_index.py|\
               tests/test_documents_domain_project_check.py|\
@@ -79,6 +83,8 @@ jobs:
           tests/test_documents_codex_profile.py
           tests/test_documents_zed_profile.py
           tests/test_documents_zcode_config.py
+          tests/test_documents_zcode_state_relocation.py
+          tests/test_documents_client_recovery_relocation.py
           tests/test_documents_chatgpt_tunnel.py
           tests/test_documents_domain_index.py
           tests/test_documents_domain_project_check.py
@@ -91,6 +97,8 @@ jobs:
           bin/gac/documents-codex-profile.py
           bin/gac/documents-zed-profile.py
           bin/gac/documents-zcode-config.py
+          lib/documents_zcode_state_relocation.py
+          lib/documents_client_recovery_relocation.py
           bin/gac/documents-chatgpt-tunnel.py
           bin/gac/documents-domain-index.py
           bin/gac/documents-domain-owner-job.py
@@ -100,6 +108,8 @@ jobs:
           tests/test_documents_codex_profile.py
           tests/test_documents_zed_profile.py
           tests/test_documents_zcode_config.py
+          tests/test_documents_zcode_state_relocation.py
+          tests/test_documents_client_recovery_relocation.py
           tests/test_documents_chatgpt_tunnel.py
           tests/test_documents_domain_index.py
           tests/test_documents_domain_owner_job.py

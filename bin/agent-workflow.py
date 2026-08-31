@@ -135,7 +135,21 @@ def _validate_packet_run(
 
 
 def _clone_identity_for_preflight(workspace: Path) -> dict[str, str]:
-    identity_path = workspace / ".git" / "agent-clone-identity.json"
+    git_entry = workspace / ".git"
+    if git_entry.is_file():
+        try:
+            content = git_entry.read_text(encoding="utf-8").strip()
+            if content.startswith("gitdir:"):
+                git_dir = Path(content[7:].strip())
+                if not git_dir.is_absolute():
+                    git_dir = (workspace / git_dir).resolve()
+            else:
+                git_dir = git_entry
+        except OSError:
+            git_dir = git_entry
+    else:
+        git_dir = git_entry
+    identity_path = git_dir / "agent-clone-identity.json"
     try:
         identity = json.loads(identity_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:

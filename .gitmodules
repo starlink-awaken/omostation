@@ -13,6 +13,7 @@
 [submodule "projects/agora"]
 	path = projects/agora
 	url = https://github.com/starlink-awaken/omostation-agora.git
+	branch = main
 [submodule "projects/cockpit"]
 	path = projects/cockpit
 	url = https://github.com/starlink-awaken/omostation-cockpit.git

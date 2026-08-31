@@ -20,6 +20,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SYNC_PATH = ROOT / "bin" / "capability-sync.py"
+HELPERS_PATH = ROOT / "lib" / "capability_sync_verification_helpers.py"
 GENERATOR_PATH = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
 
 
@@ -40,6 +41,14 @@ def _load(name: str, path: Path):
 @pytest.fixture(scope="module")
 def cap_sync():
     return _load("capability_sync_contract", SYNC_PATH)
+
+
+@pytest.fixture(scope="module")
+def helpers(cap_sync):
+    """The exact helper-module instance the CLI imported (same patch surface)."""
+    import capability_sync_verification_helpers
+
+    return sys.modules["capability_sync_verification_helpers"]
 
 
 @pytest.fixture(scope="module")
@@ -1638,7 +1647,9 @@ def test_verifier_rejects_each_exact_persisted_worker_identity_mismatch(
 
 
 def test_root_mesh_projector_never_imports_omo_or_mutates_import_state(
-    cap_sync, monkeypatch: pytest.MonkeyPatch
+    cap_sync,
+    monkeypatch: pytest.MonkeyPatch,
+    helpers,
 ) -> None:
     material, _request, events = _verification_context(effect="effectful", state="active")
     monkeypatch.delitem(sys.modules, "omo", raising=False)
@@ -1654,7 +1665,7 @@ def test_root_mesh_projector_never_imports_omo_or_mutates_import_state(
     before_path = list(sys.path)
     before_dont_write_bytecode = sys.dont_write_bytecode
 
-    projector = cap_sync._load_workflow_mesh_projection()
+    projector = helpers._load_workflow_mesh_projection()
     snapshot = projector(events, material["binding"]["workflow_run_id"])
 
     assert callable(projector)
@@ -1725,6 +1736,7 @@ def test_verifier_requires_proceed_acknowledgement_for_live_worker_context(
     ack_decision: str,
     status: str,
     failure_code: str | None,
+    helpers,
 ) -> None:
     material, request, events = _verification_context(effect="effectful", state=worker_state)
     acknowledgement = next(event for event in events if event["event_type"] == "WorkerAcknowledged")
@@ -1732,7 +1744,7 @@ def test_verifier_requires_proceed_acknowledgement_for_live_worker_context(
     omo_dir = tmp_path / ".omo"
     _write_mesh(omo_dir, events)
 
-    projector = cap_sync._load_workflow_mesh_projection()
+    projector = helpers._load_workflow_mesh_projection()
     snapshot = projector(events, material["binding"]["workflow_run_id"])
     receipt = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
 
@@ -1784,13 +1796,13 @@ def test_verifier_requires_a_live_projected_worker_lease_and_rejects_replaced_di
 
 
 def test_verifier_preserves_source_unprovable_when_lazy_mesh_projector_cannot_load(
-    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, helpers
 ) -> None:
     material, request, events = _verification_context()
     omo_dir = tmp_path / ".omo"
     _write_mesh(omo_dir, events)
     monkeypatch.setattr(
-        cap_sync,
+        helpers,
         "_load_workflow_mesh_projection",
         lambda: (_ for _ in ()).throw(cap_sync.TraceBindingError("source_unprovable")),
     )
@@ -1897,19 +1909,19 @@ def _forbid_verifier_gateways(cap_sync, monkeypatch: pytest.MonkeyPatch) -> dict
     return calls
 
 
-def test_verifier_is_python39_safe_and_legacy_import_does_not_load_omo(cap_sync, registry: dict, tmp_path: Path, monkeypatch) -> None:
+def test_verifier_is_python39_safe_and_legacy_import_does_not_load_omo(cap_sync, registry: dict, tmp_path: Path, monkeypatch, helpers) -> None:
     source = SYNC_PATH.read_text(encoding="utf-8")
     ast.parse(source, filename=str(SYNC_PATH), feature_version=(3, 9))
     assert "from datetime import UTC" not in source
     assert "omo.workflow_mesh" not in source
     assert "Path | str" not in source
     assert "OMO_SRC" not in source
-    assert callable(cap_sync._load_workflow_mesh_projection)
+    assert callable(helpers._load_workflow_mesh_projection)
 
     registry_path = tmp_path / "registry.yaml"
     registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
     monkeypatch.setattr(
-        cap_sync,
+        helpers,
         "_load_workflow_mesh_projection",
         lambda: (_ for _ in ()).throw(AssertionError("legacy command loaded OMO")),
     )
@@ -1964,7 +1976,7 @@ raise SystemExit(0 if receipt.get("status") == "verified" else 1)
 
 
 def test_mesh_reader_uses_separate_log_bound_and_rejects_path_replacement(
-    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, helpers
 ) -> None:
     material, request, events = _verification_context()
     omo_dir = tmp_path / ".omo"
@@ -1987,7 +1999,7 @@ def test_mesh_reader_uses_separate_log_bound_and_rejects_path_replacement(
             replacement.replace(log)
         return path.stat()
 
-    monkeypatch.setattr(cap_sync, "_mesh_path_stat", replace_after_open)
+    monkeypatch.setattr(helpers, "_mesh_path_stat", replace_after_open)
     rejected = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
     assert rejected == {
         "schema": "capability-admission-verification-receipt/v1",
@@ -2046,13 +2058,14 @@ def test_verifier_rejects_bound_admission_and_material_mismatches_without_writes
 
 
 def test_verifier_rejects_when_native_verifier_is_unavailable_without_outbound_calls(
-    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, helpers
 ) -> None:
     material, request, events = _verification_context()
     omo_dir = tmp_path / ".omo"
     _write_mesh(omo_dir, events)
     calls = _forbid_verifier_gateways(cap_sync, monkeypatch)
     monkeypatch.setattr(cap_sync, "NATIVE_EXECUTION_LIBS_AVAILABLE", False)
+    monkeypatch.setattr(helpers, "NATIVE_EXECUTION_LIBS_AVAILABLE", False)
 
     assert cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request)) == {
         "schema": "capability-admission-verification-receipt/v1",
@@ -2065,13 +2078,13 @@ def test_verifier_rejects_when_native_verifier_is_unavailable_without_outbound_c
 
 @pytest.mark.parametrize("state", ["dispatched", "running"])
 def test_verifier_requires_exact_step_run_projection_for_dispatched_paths(
-    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, state: str
+    cap_sync, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, state: str, helpers
 ) -> None:
     material, request, events = _verification_context(effect="read_only", state=state)
     admission = events[1]["payload"]["admission"]
     omo_dir = tmp_path / ".omo"
     _write_mesh(omo_dir, events)
-    monkeypatch.setattr(cap_sync, "_load_workflow_mesh_projection", lambda: lambda _events, _run_id: {
+    monkeypatch.setattr(helpers, "_load_workflow_mesh_projection", lambda: lambda _events, _run_id: {
         "workflow_run_id": material["binding"]["workflow_run_id"],
         "state": state,
         "admission": admission,
@@ -2145,7 +2158,7 @@ def test_verifier_rejects_expected_material_mismatch(cap_sync, tmp_path: Path, f
     assert receipt["failure_code"] == "native_route_unprovable"
 
 
-def test_verifier_rejects_malformed_or_oversize_mesh_log_with_redacted_failure(cap_sync, tmp_path: Path, monkeypatch) -> None:
+def test_verifier_rejects_malformed_or_oversize_mesh_log_with_redacted_failure(cap_sync, tmp_path: Path, monkeypatch, helpers) -> None:
     material, request, events = _verification_context()
     omo_dir = tmp_path / ".omo"
     _write_mesh(omo_dir, events)
@@ -2157,6 +2170,7 @@ def test_verifier_rejects_malformed_or_oversize_mesh_log_with_redacted_failure(c
 
     _write_mesh(omo_dir, events)
     monkeypatch.setattr(cap_sync, "MAX_MESH_LOG_BYTES", 1)
+    monkeypatch.setattr(helpers, "MAX_MESH_LOG_BYTES", 1)
     oversize = cap_sync.verify_material_against_mesh(omo_dir, _verification_envelope(material, request))
     assert oversize["failure_code"] == "source_unprovable"
     assert str(log) not in json.dumps(oversize, sort_keys=True)

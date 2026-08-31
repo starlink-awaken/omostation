@@ -1,0 +1,39 @@
+id: "D-8"
+title: "kems-v2 工具链 v2.2.0 重建（v2.1.1 字节级丢失后）"
+dimension: "capability"
+subdimension: "toolchain"
+domain: "kems"
+scope: "workspace"
+severity: "medium"
+weight: 0.06
+entropy_class: "medium"
+lifecycle_state: "open"
+owner: "runtime"
+affected_roots:
+  - "projects/runtime/scripts"
+evidence_refs:
+  - "docs/reports/2026-08-29-documents-public-runtime-quarantine.md"
+  - "docs/reports/2026-08-30-documents-control-plane-sink-report.md"
+  - ".omo/_truth/registry/documents-content-plane-migrations.yaml#public-runtime"
+mitigation_refs:
+  - "omostation-runtime#70 scripts/kems-toolkit（6 月部署版工具集，已 git 托管）"
+opened_at: "2026-08-30"
+last_reviewed_at: "2026-08-30"
+gate_level: "P2"
+x3_tier: "Capability"
+description: |
+  kems-v2 v2.1.1（12 脚本，四域单点维护设计）随 #2596 搬迁后 quarantine 包丢失，
+  9 个脚本字节级永久丢失（mdfind 全盘/git 全历史/Claude session transcripts 均无副本；
+  iCloud 最近删除 principal 于 2026-08-30 决定不再追查）。
+  可恢复资产：gen-report-view.py + kems-cross-check.py（transcript Write 记录全文）、
+  kems-toolkit.py（session outputs 6 副本）。
+  消费者现状：forbidden_executors=0，无活跃执行者，生产 KEMS 链路
+  （kems_production_* 在 projects/runtime/scripts）不受影响。
+rebuild_plan: |
+  v2.2.0 为新版本语义（非字节恢复，诚实重建）：
+  1. 位置 projects/runtime/scripts/kems-v2/（git 托管 + 远端，终结单点裸奔设计）
+  2. 按 kems-v2/CHANGELOG v2.1.1 蓝本重写 9 个丢失脚本
+  3. 3 个可恢复脚本作字节参考，fingerprint 记录
+  4. 四域不再用 symlink 指向 Documents——消费者直接走 Workspace owner 命令
+  5. 验收：kems-cross-check 跨域巡检语义在 Workspace 侧重建并测试
+acceptance_criteria: "scripts/kems-v2/ 入库 + 12 脚本功能对齐 CHANGELOG v2.1.1 + 四域语义测试绿 + 无 Documents 路径依赖"

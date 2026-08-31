@@ -1,0 +1,85 @@
+id: convergence-pulse-weekly
+run_frequency: periodic
+title: 收敛脉搏周报（ADR-0443 产出/收敛平衡 + 防腐三巡检接线）
+purpose: |
+  ADR-0443 框架的周期执行面：采集产出/收敛事件（v1 事件口径），并接线三个
+  失联防腐工具（rules-lifecycle 规则生命周期 / escape-digest 指纹聚类 /
+  gate-roi-report 门禁 ROI——侦察实证三者工具在、数据流活、零调度）。
+  一个 execute 相位依次执行四个动作，产出落 SSOT 供人读与后续 resident
+  monitor 订阅（演进路径见 ADR-0443）。
+agents:
+  roles:
+  - governance-agent
+  observer_policy: optional
+allowed_lanes:
+- governance_state
+surfaces:
+  read:
+  - .omo/_knowledge/governance-history.jsonl
+  - .omo/_delivery/swarm-escape/**
+  - .omo/_truth/registry/governance-checks.yaml
+  - .omo/_knowledge/decisions/**
+  - .omo/_knowledge/signals/**
+  - .omo/debt/items/**
+  write:
+  - .omo/state/convergence-pulse-*.json
+lock_scopes:
+- agent-run:{run_id}
+phases:
+  preflight:
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: convergence-pulse
+    mode: required
+    command:
+    - python3
+    - bin/gac/convergence-pulse.py
+  - id: rules-lifecycle
+    mode: required
+    command:
+    - python3
+    - bin/gac/rules-lifecycle.py
+  - id: escape-digest
+    mode: required
+    command:
+    - python3
+    - bin/gac/escape-digest.py
+  - id: pitfall-feed
+    mode: required
+    command:
+    - python3
+    - bin/gac/error-knowledge.py
+    - feed-escapes
+  - id: gate-roi-report
+    mode: required
+    command:
+    - python3
+    - bin/gac/gate-roi-report.py
+  verification:
+  - id: pulse-check
+    mode: required
+    command:
+    - python3
+    - -c
+    - "import sys; sys.path.insert(0, 'bin/gac'); from importlib import util; spec = util.spec_from_file_location('cp', 'bin/gac/convergence-pulse.py'); m = util.module_from_spec(spec); spec.loader.exec_module(m); from pathlib import Path; from datetime import date; p = m.collect_pulse(since=date.today(), until=date.today()); sys.exit(0 if p['schema'] == 'governance.convergence-pulse.v1' else 1)"
+  closeout:
+  - id: close-run
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - closeout
+    - '{run_id}'

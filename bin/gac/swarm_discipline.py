@@ -1033,11 +1033,15 @@ def evaluate_escape(
     flag = flag.strip().lower().replace("-", "_")
     agent_id = agent_id if agent_id is not None else (os.environ.get("AGENT_ID") or "")
     fps = [fp for fp in (fingerprints or []) if isinstance(fp, dict)]
+    # ADR-0443 v2 (Q6): 空指纹的 SKIP 记录归因 preflight-clean（预检全绿时
+    # observe-then-skip 的占位写入），不再用 unspecified —— 保留"SKIP 且干净"
+    # 语义，供 CI_LOCAL_SKIP 滥用监控。白名单检查在 fps 为空时跳过，此处
+    # 改值无豁免影响。
     primary = fps[0] if fps else {
-        "surface": "unspecified",
-        "check_id": "unspecified",
+        "surface": "preflight-clean",
+        "check_id": "skip",
         "signature": "none",
-        "kind": "unspecified",
+        "kind": "preflight-clean",
     }
     result: dict[str, Any] = {
         "ok": False,

@@ -59,7 +59,7 @@ jobs:
         run: cd projects/ecos && WORKSPACE_ROOT=$GITHUB_WORKSPACE uv run python3 src/ecos/observability/dashboard.py --check
       - name: Governance alert dispatch (advisory)
         continue-on-error: true
-        run: python3 bin/gac/governance-alert-dispatch.py --dry-run 2>/dev/null || true
+        run: python3 bin/gac/_archive/governance-alert-dispatch.py --dry-run 2>/dev/null || true
       - name: Anti-corruption audit (advisory)
         continue-on-error: true
         run: python3 bin/gac/anti-corruption.py 2>/dev/null || true

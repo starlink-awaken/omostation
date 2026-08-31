@@ -56,13 +56,13 @@ runtime/wechat-main.png
 
 # BET-Y1Q3-T6-15 R2a: approved runtime output/cache/snapshot artifacts remain
 # local-only after repository untracking; contracts and runtime code stay visible.
-runtime/bos-neural-mesh-owner-*.json
-runtime/bos-neural-mesh-state.sqlite
-runtime/concept-weave-preflight.json
+runtime/bos-neural-mesh-*
+runtime/concept-weave-preflight*.json
 runtime/consumer-audit-*.json
 runtime/control/evidence/documents-weijian-*/
 runtime/daily-health-preflight*.json
-runtime/kos-preflight-live-smoke.json
+runtime/heartbeats/weijian-*
+runtime/kos-preflight-*.json
 runtime/predictor-preflight*.json
 runtime/quarantine/documents-bos-neural-mesh-20260828/
 # Recoverable physical-migration packages are runtime evidence, not disposable
@@ -156,6 +156,8 @@ node_modules/
 #    以下仅保留项目特有的忽略规则。
 # ---------------------------------------------------------------------------
 .metaos/
+.codebuddy/
+.openclaude/
 config/
 *.local.json
 

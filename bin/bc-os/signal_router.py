@@ -105,7 +105,11 @@ def scan_and_route(inbox: Path, dedup: bool = True) -> list:
 CALENDAR_RULES = [
     {"pattern": r"会议|会|meeting|calendar|日程", "scene": "meeting-supervision", "type": "meeting"},
     {"pattern": r"deadline|截止|due|提醒|期限", "scene": "task-reminder", "type": "task"},
-    {"pattern": r"review|审查|review|审核|审批", "scene": "document-review", "type": "doc"},
+    {"pattern": r"review|审查|审核|审批|公文|格式", "scene": "document-review", "type": "doc"},
+    {"pattern": r"research|调研|研究|query|论文|paper", "scene": "research-pipeline", "type": "research"},
+    {"pattern": r"code|代码|review|pr_|merge|提交|commit", "scene": "engineering-delivery", "type": "code"},
+    {"pattern": r"project|项目|进度|里程碑|milestone", "scene": "project-supervision", "type": "project"},
+    {"pattern": r"knowledge|知识|笔记|沉淀|整理", "scene": "knowledge-curation", "type": "knowledge"},
 ]
 
 

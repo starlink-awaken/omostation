@@ -1,0 +1,37 @@
+---
+last-reviewed: 2026-08-30
+---
+
+schema: scene-card/v2
+lifecycle: supervised
+activation: active
+approval_state: confirmed
+scene_id: documents-consumer-audit-modes
+journey_id: documents-consumer-audit-modes-journey
+goal: 消费者审计模式
+trigger: 检测到 audit 类 documents 任务需要执行
+input_contract: 源文件路径/范围
+result_contract: 完成确认 + 证据记录
+outcome_metric: documents_audit_success_rate
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+
+source_path: ~/Documents
+target_path: 增强版审计 JSON
+risk_level: L1
+files_count: all consumers
+bet_id: BET-Y1Q3-T10-36
+category: audit
+
+# Architecture Alignment (ADR-0387 dual-track admission)
+architecture:
+  admission_track: internal
+  bos_uri: bos://analysis/audit
+  layer: L4 - Audit Plane
+  entry_point: lib/documents_consumer_audit.py
+  governance_surface: .omo/_truth/registry/governance-checks.yaml
+  dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
+  evidence_plane: ".omo/_delivery/"
+
+---

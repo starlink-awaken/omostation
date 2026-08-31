@@ -387,3 +387,27 @@ def test_gen_agent_redlines_includes_vision_to_retro(tmp_path: Path) -> None:
     text = out.read_text(encoding="utf-8")
     assert "vision-to-retro-chain" in text
     assert "bin/plan/chain-bind-check.py" in text
+
+
+def test_weekly_documents_audit_closeout_is_governance_exempt(tmp_path, monkeypatch):
+    """documents-consumer-audit-weekly (ADR-0441 primitive 3) rides the governance-evolve lane."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "docs/plans").mkdir(parents=True)
+    (tmp_path / "docs/plans/3y-bet-ledger.yaml").write_text(
+        "bets:\n  - id: BET-Y1Q3-T10-69\n    track: T10-MATURITY\n", encoding="utf-8"
+    )
+    run = {"workflow_id": "documents-consumer-audit-weekly", "bet_id": ""}
+    verdict = BIND.evaluate_closeout(run, tmp_path, status="ok")
+    assert verdict.ok, f"weekly audit must be governance-exempt, got {verdict.reasons}"
+
+
+def test_convergence_pulse_closeout_is_governance_exempt(tmp_path, monkeypatch):
+    """convergence-pulse-weekly (ADR-0443) rides the governance-evolve lane."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "docs/plans").mkdir(parents=True)
+    (tmp_path / "docs/plans/3y-bet-ledger.yaml").write_text(
+        "bets:\n  - id: BET-Y1Q3-T10-69\n    track: T10-MATURITY\n", encoding="utf-8"
+    )
+    run = {"workflow_id": "convergence-pulse-weekly", "bet_id": ""}
+    verdict = BIND.evaluate_closeout(run, tmp_path, status="ok")
+    assert verdict.ok, f"convergence pulse must be governance-exempt, got {verdict.reasons}"

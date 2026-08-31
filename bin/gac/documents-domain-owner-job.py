@@ -7,6 +7,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 
@@ -19,10 +20,8 @@ for source_root in (RUNTIME_SRC, L4_SRC):
     if str(source_root) not in sys.path:
         sys.path.insert(0, str(source_root))
 
-from documents_domain_jobs import get_manifest_validation_job
-from l4_kernel.contracts import ContractError
-from l4_kernel.manifest_registry import ManifestRegistry
-from runtime.documents_plane.jobs import JobRegistry, JobSpec, run_job
+if TYPE_CHECKING:
+    from runtime.documents_plane.jobs import JobRegistry, JobSpec
 
 
 def _relative_documents_path(path: Path, documents_root: Path, label: str) -> str:
@@ -53,6 +52,10 @@ def _build_job(
     project_registry_path: Path,
     l4_executable: Path,
 ) -> tuple[JobRegistry, JobSpec]:
+    from documents_domain_jobs import get_manifest_validation_job
+    from l4_kernel.manifest_registry import ManifestRegistry
+    from runtime.documents_plane.jobs import JobRegistry, JobSpec
+
     documents = documents_root.expanduser().resolve()
     domain_registry = domain_registry_path.expanduser().resolve()
     project = _project_registry(project_registry_path.expanduser().resolve())
@@ -111,6 +114,21 @@ def _build_job(
 
 def main(argv: list[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments and arguments[0] == "learning-control":
+        from lib.documents_learning_control import main as learning_control_main
+
+        return learning_control_main(arguments[1:])
+    if arguments and arguments[0] == "learning-control-plane":
+        from lib.documents_learning_control_plane import main as learning_control_plane_main
+
+        return learning_control_plane_main(arguments[1:])
+    if arguments and arguments[0] == "client-recovery":
+        from lib.documents_client_recovery_relocation import main as client_recovery_main
+
+        return client_recovery_main(arguments[1:])
+    from l4_kernel.contracts import ContractError
+    from runtime.documents_plane.jobs import run_job
+
     if arguments and arguments[0] == "consumer-audit":
         from lib.documents_consumer_audit import main as consumer_audit_main
 

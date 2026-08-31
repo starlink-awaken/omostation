@@ -68,6 +68,15 @@ make omo-status        # 或 bin/omo-status：<0.2s 秒级 Rich 快照 (Agent心
 make omo-top           # 或 bin/omo-top：Textual 实时 4 象限互动大盘
 ```
 
+### Step B.0.5 · 架构约束检查 (每次编辑会话)
+
+编辑架构相关文件前，必须检查以下约束:
+
+1. **场景卡生命周期**: 必须按 draft→shadow→assisted→supervised→routine 顺序升级
+2. **业务域分类**: 每个场景卡必须有 domain 字段 (work/health/research/knowledge/governance)
+3. **脚本配额**: 新增 bin/ 脚本必须同步归档旧脚本 (add 1 = delete 1)
+4. **SSOT 引用**: 优先引用 `.omo/standards/` 下的标准文件，不要硬编码运行时值
+
 ### Step B.1 · 需求迭代强制 Workflow（ADR-0203）
 
 所有需求迭代必须先 `start` 再改文件。详见 [`AGENTS.md` §1.1](AGENTS.md)。

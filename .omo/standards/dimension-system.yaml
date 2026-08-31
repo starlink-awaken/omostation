@@ -1,0 +1,164 @@
+# Dimension System Standard
+# ============================
+# 维度体系标准，定义系统所有度量维度及其指标。
+#
+# SSOT: .omo/standards/dimension-system.yaml
+# Version: 1.0.0 | 2026-08-31
+
+schema: dimension-system/v1
+
+# 核心维度 (5+4+1-1 中的 4 横切面)
+dimensions:
+  # ── 治理维度 (X1-X4) ──
+  X1_audit:
+    name: "审计/边界"
+    description: "审计日志、边界控制、写入守护"
+    metrics:
+      - name: "audit_coverage"
+        target: 100
+        unit: "%"
+      - name: "boundary_violations"
+        target: 0
+        unit: "count"
+
+  X2_freshness:
+    name: "保鲜/抗熵"
+    description: "文档新鲜度、抗熵增"
+    metrics:
+      - name: "doc_freshness_score"
+        target: 95
+        unit: "%"
+      - name: "stale_docs"
+        target: 0
+        unit: "count"
+
+  X3_value:
+    name: "价值/成本"
+    description: "价值证明、成本归因"
+    metrics:
+      - name: "time_saved_minutes"
+        target: 30
+        unit: "min/task"
+      - name: "decision_throughput"
+        target: 80
+        unit: "score"
+
+  X4_consistency:
+    name: "一致性/SSOT"
+    description: "SSOT 一致性、收敛"
+    metrics:
+      - name: "ssot_drift_count"
+        target: 0
+        unit: "count"
+      - name: "registry_sync_rate"
+        target: 100
+        unit: "%"
+
+  # ── 业务维度 (九维战略) ──
+  D1_scene:
+    name: "场景"
+    description: "业务场景覆盖和活跃度"
+    metrics:
+      - name: "active_scenes"
+        target: 50
+        unit: "count"
+      - name: "scene_trigger_rate"
+        target: 50
+        unit: "%"
+
+  D2_function:
+    name: "功能"
+    description: "功能完整性和成熟度"
+    metrics:
+      - name: "maturity_score"
+        target: 9.5
+        unit: "/10"
+
+  D3_journey:
+    name: "旅程"
+    description: "Journey 执行和完成率"
+    metrics:
+      - name: "journey_completion_rate"
+        target: 80
+        unit: "%"
+
+  D4_experience:
+    name: "体验"
+    description: "用户体验和满意度"
+    metrics:
+      - name: "daemon_stability"
+        target: 99
+        unit: "%"
+
+  D5_vision:
+    name: "愿景"
+    description: "战略愿景达成度"
+    metrics:
+      - name: "north_star_score"
+        target: 88
+        unit: "/100"
+
+  D6_operations:
+    name: "运营"
+    description: "长期运营健康度"
+    metrics:
+      - name: "bet_completion_rate"
+        target: 95
+        unit: "%"
+
+  D7_maintenance:
+    name: "运维"
+    description: "系统运维成熟度"
+    metrics:
+      - name: "probe_health_rate"
+        target: 100
+        unit: "%"
+
+  D8_anticorrosion:
+    name: "防腐"
+    description: "抗腐蚀能力"
+    metrics:
+      - name: "rot_defense_coverage"
+        target: 100
+        unit: "%"
+
+  D9_constraint:
+    name: "约束"
+    description: "约束和限制管理"
+    metrics:
+      - name: "constraint_health"
+        target: 100
+        unit: "%"
+
+  # ── 新增维度 ──
+  D10_evolution:
+    name: "进化"
+    description: "系统自我改进能力"
+    metrics:
+      - name: "proposal_adoption_rate"
+        target: 70
+        unit: "%"
+      - name: "auto_implementation_rate"
+        target: 80
+        unit: "%"
+
+  D11_trust:
+    name: "信任"
+    description: "主人对系统的信任度"
+    metrics:
+      - name: "scene_calibration_rate"
+        target: 80
+        unit: "%"
+
+# 度量框架
+measurement_framework:
+  score_range: [0, 10]
+  target_score: 9.5
+  evidence_required: true
+  trend_tracking: true
+
+  levels:
+    critical: [0, 4)    # 需要立即处理
+    warning: [4, 7)     # 需要关注
+    healthy: [7, 9)     # 健康
+    excellent: [9, 10]  # 优秀

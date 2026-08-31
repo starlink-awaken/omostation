@@ -350,6 +350,15 @@ for _root_gate in (
         "id": "bin-scripts-convergence-audit",
         "command": ["bin/ssot/bin-scripts-convergence-audit.py", "--check", "--json"],
     },
+    {
+        "id": "omo-runtime-final-tree",
+        "command": [
+            "bin/gac/omo-runtime-stamp-policy.py",
+            "--treeish",
+            "HEAD",
+            "--json",
+        ],
+    },
 ):
     if not any(gate.get("id") == _root_gate["id"] for gate in GATES_LIST):
         GATES_LIST.append(_root_gate)

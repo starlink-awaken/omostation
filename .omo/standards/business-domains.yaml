@@ -1,0 +1,49 @@
+# Business Domain Classification Standard
+# =========================================
+# 业务域分类标准，用于场景卡和 Journey 的组织与编排。
+#
+# SSOT: .omo/standards/business-domains.yaml
+# Version: 1.0.0 | 2026-08-31
+
+schema: business-domains/v1
+
+domains:
+  work:
+    name: "工作域"
+    description: "日常办公、公文处理、文档治理"
+    scenes:
+      - admin-*
+      - documents-*
+      - meeting-supervision
+      - project-supervision
+  health:
+    name: "健康域"
+    description: "个人与家庭健康管理"
+    scenes:
+      - health-*
+  research:
+    name: "研究域"
+    description: "调研与学术研究"
+    scenes:
+      - research-pipeline
+  knowledge:
+    name: "知识域"
+    description: "知识沉淀与学习"
+    scenes:
+      - knowledge-curation
+      - knowledge-ingest
+  governance:
+    name: "治理域"
+    description: "系统治理与合规"
+    scenes:
+      - governance-*
+
+orchestration:
+  work_to_knowledge:
+    source: work
+    target: knowledge
+    trigger: "document-review completed"
+  research_to_knowledge:
+    source: research
+    target: knowledge
+    trigger: "research-pipeline completed"

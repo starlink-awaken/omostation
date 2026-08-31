@@ -1,0 +1,18 @@
+schema: script-registry/v1
+id: bin/gac/convergence-pulse.py
+name: Convergence Pulse
+category: governance
+owner: governance-team
+description: "ADR-0443 收敛脉搏采集器：产出/收敛事件口径 v1 周级汇总（escape 指纹聚类 + gate 历史分布 + ADR/debt 变更），只数 SSOT 事件排除 self-data"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers:
+  - periodic
+  - manual
+related:
+  - ADR-0443
+maturity: active
+last_reviewed: "2026-08-30"

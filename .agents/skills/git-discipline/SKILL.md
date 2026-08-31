@@ -317,3 +317,31 @@ grep -nP '^\s*[^#].*\$[A-Za-z_][A-Za-z0-9_]*[^\x00-\x7F]' <script>
 ## 7. 一句话总则
 
 **违反任何一条，先停下报告，不要"补救"** —— 补救动作本身通常就是下一次事故。
+
+---
+
+## 2026-08-30 增补：多 Agent 撞车与指针纪律（T4-04/T4-05 战役实录）
+
+### 撞车检测（claim 前必查）
+
+同 BET 多 agent 并行时，动手前先查 main 最新 commit：
+```bash
+git fetch origin main -q && git log origin/main --oneline -5 | grep -i "<bet关键词>"
+```
+发现并行实现已合入 → **关闭自己的 PR 交叉验证对方**，绝不重复交付（T4-04 #115 vs #116 实录：关闭重复 PR 是正确动作）。
+
+### 指针 bump 纪律（指针污染 ×2 根治）
+
+见 `.omo/standards/submodule-pointer-bump-contract.md`（强约束）。
+一句话版：**bump sha 唯一来源 = 子仓 fetch 后的 origin/main 头**。
+
+### Diverged 分支假 diff 检测
+
+分支基于旧 main 时，`git diff origin/main..HEAD` 会出现"删除别人文件"的假 diff。
+push 前必查：diff 中出现**大量删除且非你删的** → 先 rebase 再推。
+
+### 治理工具自身 bug 的报告纪律
+
+complete/lint 等 gate 工具报错时：先本地最小复现（手动 git 命令对照），
+确认是工具 bug 而非交付问题后修工具（T4-07 complete 子串匹配 bug 实录——
+waiver 注释文本触发误判）。工具 bug 修复与交付同 PR 记录，不静默绕过。

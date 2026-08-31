@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ssot/agent-cell-effect-receipt-canary.py
+name: Agent Cell Effect Receipt Canary
+category: governance
+owner: governance-team
+description: "T4-05 honest agent cell receipt canary: 无 admitted context 零副作用 + sandbox receipt + 重放幂等 + digest conflict 拒绝"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - bin/ssot/principal-authority-canary.py
+maturity: draft
+last_reviewed: "2026-08-30"
