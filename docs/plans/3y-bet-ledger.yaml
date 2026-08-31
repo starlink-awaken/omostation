@@ -13612,6 +13612,12 @@ bets:
   - .omo/_knowledge/decisions/0438-trend-signal.md
   - .omo/_knowledge/decisions/0401-unhealthy-service.md
   - .omo/_knowledge/decisions/0444-unhealthy-service.md
+  - .omo/_knowledge/signals/README.md
+  - .omo/_knowledge/signals/2026-08-30-unhealthy-service.md
+  - bin/adr/adr-coverage.py
+  - tests/test_adr_coverage_regex.py
+  - bin/ssot/proposal-to-adr.py
+  - tests/unit/ssot/test_proposal_to_adr_status.py
   - .github/workflows/gac-gate.yml
   - .omo/_truth/registry/ci-surfaces.yaml
   - bin/gac/gac-branch-protection.sh
