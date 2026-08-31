@@ -32,9 +32,18 @@ def test_architecture_job_initializes_ecos_before_gate() -> None:
         "submodules": False,
         "token": "${{ secrets.CROSS_REPO_TOKEN }}",
     }
-    command = shlex.split(init_step["run"])
-    assert command[:4] == ["git", "submodule", "update", "--init"]
-    assert set(command[4:]) == {
+    assert init_step["env"] == {
+        "CROSS_REPO_TOKEN": "${{ secrets.CROSS_REPO_TOKEN }}",
+    }
+    script = init_step["run"]
+    assert "x-access-token:%s" in script
+    assert "http.https://github.com/.extraheader" in script
+    assert "https://x-access-token:" not in script
+    command_line = next(line.strip() for line in script.splitlines() if "submodule update --init" in line)
+    command = shlex.split(command_line)
+    submodule_index = command.index("submodule")
+    assert command[submodule_index : submodule_index + 3] == ["submodule", "update", "--init"]
+    assert set(command[submodule_index + 3 :]) == {
         "projects/ecos",
         "projects/cockpit",
         "projects/family-hub",
