@@ -19,7 +19,7 @@ def test_research_help_includes_restore_option(monkeypatch, capsys):
         cli.main()
     captured = capsys.readouterr()
     assert exc.value.code == 0
-    assert "--restore" in captured.out
+    assert "restore" in captured.out
 
 
 def test_cmd_research_restore_requires_ids(monkeypatch):

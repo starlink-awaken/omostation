@@ -19,7 +19,7 @@ def test_research_help_includes_timeline_option(monkeypatch, capsys):
         cli.main()
     captured = capsys.readouterr()
     assert exc.value.code == 0
-    assert "--timeline" in captured.out
+    assert "timeline" in captured.out
 
 
 def test_cmd_research_timeline_renders_events(monkeypatch):

@@ -21,7 +21,7 @@ def test_research_help_includes_audit_option(monkeypatch, capsys):
 
     captured = capsys.readouterr()
     assert exc.value.code == 0
-    assert "--audit" in captured.out
+    assert "audit" in captured.out
 
 
 def test_cmd_research_audit_reports_no_issues(monkeypatch):

@@ -301,7 +301,23 @@ def main() -> int:
 
     register_subcommands(sub, WorkspaceParser)
 
-    args = parser.parse_args()
+    # ── Pre-process: research 默认 create 模式 ──────────────────
+    # argparse 子 parser 会贪婪匹配首参为子命令名, 导致 `cockpit research "topic"`
+    # 报错. 修复: 若 research 后首参不是已知子命令, 插入 "create" 子命令.
+    _research_subcmds = {
+        "create", "list", "open", "publish", "dossier", "timeline", "tag", "rename",
+        "archive", "unarchive", "export", "ask", "search", "compare", "merge", "digest",
+        "audit", "quarantine", "restore", "heatmap", "follow-up", "health", "batch",
+        "backup", "backup-restore",
+    }
+    _argv = sys.argv[1:]
+    if len(_argv) >= 2 and _argv[0] == "research":
+        _next = _argv[1]
+        # 若首参不是子命令也不是以 - 开头, 则插入 "create"
+        if not _next.startswith("-") and _next not in _research_subcmds:
+            _argv = [_argv[0], "create"] + _argv[1:]
+
+    args, unknown = parser.parse_known_args(_argv)
 
     # ── Phase 2: --output tui 全自动分流路由 ──
     if getattr(args, "global_output", None) == "tui":
@@ -334,7 +350,6 @@ def main() -> int:
                 "  [cyan]cockpit agora[/]            — BOS 服务网关\n"
                 "  [cyan]cockpit kairon[/]            — 知识引擎 monorepo\n"
                 "  [cyan]cockpit gbrain[/]            — Postgres 知识库\n"
-                "  [cyan]cockpit model-driven[/]      — 生命周期 / OKR\n"
                 "  [cyan]cockpit bus[/]               — Omni-Bus 三平面\n"
                 "  [cyan]cockpit observe[/]           — Langfuse 可观测性\n"
                 "  [cyan]cockpit family-hub[/]        — 家庭数字枢纽\n"
@@ -360,59 +375,96 @@ def main() -> int:
         )
         return 0
 
-    def dispatch_research(a):
-        if getattr(a, "batch", False) and getattr(a, "topic", []):
-            if len(a.topic) >= 2:
-                return _cmd_research_batch(a)
-        if getattr(a, "search", False):
-            return cmd_research_search(a)
-        if getattr(a, "compare", False):
-            return cmd_research_compare(a)
-        if getattr(a, "merge", False):
-            return cmd_research_merge(a)
-        if getattr(a, "digest", False):
-            return cmd_research_digest(a)
-        if getattr(a, "audit", False):
-            return cmd_research_audit(a)
-        if getattr(a, "quarantine", False):
-            return cmd_research_quarantine(a)
-        if getattr(a, "restore", False):
-            return cmd_research_restore(a)
-        if getattr(a, "heatmap", False):
-            return cmd_research_heatmap(a)
-        if getattr(a, "follow_up", False):
-            return cmd_research_follow_up(a)
-        if getattr(a, "health", False):
-            return cmd_research_health(a)
-        if getattr(a, "backup", None) is not None:
-            a.output = a.backup or None
-            return cmd_research_backup(a)
-        if getattr(a, "backup_restore", False):
-            return cmd_research_backup_restore(a)
-        if getattr(a, "agent", False):
-            return cmd_research_agent(a)
-        if getattr(a, "list", False):
+    def dispatch_research(a, unknown_args=None):
+        """子命令路由: 优先 research_command, 否则回退到 topic (create 模式).
+
+        unknown_args: parse_known_args 返回的未消费参数, 用于默认 create 模式.
+        将新属性名映射回 handler 期望的旧属性名, 避免大规模修改 research.py.
+        """
+        cmd = getattr(a, "research_command", None)
+        # 辅助: 将新 id 映射到旧属性名 (各 handler 用不同名)
+        _id = getattr(a, "id", None)
+        _ids = getattr(a, "ids", [])
+
+        if cmd == "create":
+            a.topic = getattr(a, "topic", [])
+            return cmd_research(a)
+        if cmd == "list":
             return cmd_research_list(a)
-        if getattr(a, "dossier", False):
-            return cmd_research_dossier(a)
-        if getattr(a, "timeline", False):
-            return cmd_research_timeline(a)
-        if getattr(a, "tag", False):
-            return cmd_research_tag(a)
-        if getattr(a, "rename", False):
-            return cmd_research_rename(a)
-        if getattr(a, "archive", False) or getattr(a, "all_active", False):
-            return cmd_research_archive(a)
-        if getattr(a, "unarchive", False):
-            return cmd_research_unarchive(a)
-        if getattr(a, "publish", False):
-            return cmd_research_publish(a)
-        if getattr(a, "export", False):
-            return cmd_research_export(a)
-        if getattr(a, "open", False):
+        if cmd == "open":
+            a.open = _id
             return cmd_research_open(a)
-        if getattr(a, "ask", False):
+        if cmd == "publish":
+            a.publish = _id
+            return cmd_research_publish(a)
+        if cmd == "dossier":
+            a.dossier = _id
+            return cmd_research_dossier(a)
+        if cmd == "timeline":
+            a.timeline = _id
+            return cmd_research_timeline(a)
+        if cmd == "tag":
+            a.tag = _id
+            return cmd_research_tag(a)
+        if cmd == "rename":
+            a.rename = _id
+            return cmd_research_rename(a)
+        if cmd == "archive":
+            a.archive = _ids or None
+            a.all_active = getattr(a, "all_active", False)
+            return cmd_research_archive(a)
+        if cmd == "unarchive":
+            a.unarchive = _ids or None
+            a.all_active = getattr(a, "all_active", False)
+            return cmd_research_unarchive(a)
+        if cmd == "export":
+            a.export = getattr(a, "format", "markdown")
+            a.open = _id  # export 用 --open 传 id
+            return cmd_research_export(a)
+        if cmd == "ask":
+            a.ask = _id
             return cmd_research_ask(a)
+        if cmd == "search":
+            a.search = getattr(a, "keyword", "")
+            a.limit = getattr(a, "limit", 10)
+            return cmd_research_search(a)
+        if cmd == "compare":
+            a.compare = _ids
+            return cmd_research_compare(a)
+        if cmd == "merge":
+            a.merge = _ids
+            return cmd_research_merge(a)
+        if cmd == "digest":
+            a.digest = _ids
+            return cmd_research_digest(a)
+        if cmd == "audit":
+            return cmd_research_audit(a)
+        if cmd == "quarantine":
+            a.quarantine = _ids
+            return cmd_research_quarantine(a)
+        if cmd == "restore":
+            a.restore = _ids
+            return cmd_research_restore(a)
+        if cmd == "heatmap":
+            return cmd_research_heatmap(a)
+        if cmd == "follow-up":
+            a.follow_up = True
+            return cmd_research_follow_up(a)
+        if cmd == "health":
+            a.health = True
+            return cmd_research_health(a)
+        if cmd == "batch":
+            a.topic = getattr(a, "topics", [])
+            a.batch = True
+            return _cmd_research_batch(a)
+        if cmd == "backup":
+            a.backup = getattr(a, "output", None) or ""
+            return cmd_research_backup(a)
+        if cmd == "backup-restore":
+            a.backup_restore = getattr(a, "path", None)
+            return cmd_research_backup_restore(a)
+        # 无子命令: 默认 create 模式 (unknown_args 即 topic)
+        a.topic = unknown_args or getattr(a, "topic", [])
         return cmd_research(a)
 
     def dispatch_code(a):
@@ -424,8 +476,17 @@ def main() -> int:
             from cockpit.commands.code import cmd_code_base
 
             return cmd_code_base(a)
-        # Fallback: print help via parser (code_p not available after SRP split)
-        console.print("[yellow]试试:[/] [cyan]cockpit code analyze[/] 或 [cyan]cockpit code workflow impact[/]")
+        # Fallback: 给出用法提示
+        console.print(
+            "[yellow]缺少子命令。[/]\n"
+            "[dim]用法: cockpit code {analyze|graph|pack|dashboard|workflow}[/]\n"
+            "  [cyan]analyze[/]    运行全部分析工具\n"
+            "  [cyan]graph[/]      运行语义图谱分析\n"
+            "  [cyan]pack[/]       将代码库打包为 LLM 友好格式\n"
+            "  [cyan]dashboard[/]  启动交互式知识图谱仪表盘\n"
+            "  [cyan]workflow[/]   高级分析工作流 (impact/onboarding)\n"
+            "[dim]详情: cockpit code --help[/]"
+        )
         return 1
 
     def dispatch_cards(a):
@@ -586,11 +647,16 @@ def main() -> int:
         return 0
 
     def dispatch_journey(a):
+        """Journey 状态图校验 — 直接运行 journey-runner."""
         import subprocess
 
         ws_root = (_SCRIPT_DIR.parent.parent.parent.parent.parent).resolve()
         runner = str(ws_root / "bin" / "ssot" / "journey-runner.py")
-        return subprocess.call(["python3", runner, "--help"])
+        # 无额外参数时跑 validate, 有参数则透传
+        args = getattr(a, "journey_args", [])
+        if not args:
+            return subprocess.call(["python3", runner, "validate"])
+        return subprocess.call(["python3", runner, *args])
 
     def dispatch_panorama(a):
         import subprocess
@@ -671,7 +737,12 @@ def main() -> int:
         if getattr(a, "data_command", "") == "gc":
             return cmd_data_gc(a)
         console.print(
-            "[yellow]试试: [cyan]cockpit data index[/] 或 [cyan]cockpit data types[/] 或 [cyan]cockpit data gc[/][/]"
+            "[yellow]缺少子命令。[/]\n"
+            "[dim]用法: cockpit data {index|types|gc}[/]\n"
+            "  [cyan]index[/]  刷新 data/_index 元数据\n"
+            "  [cyan]types[/]  查看已注册的数据类型\n"
+            "  [cyan]gc[/]     清理 data/tmp 过期文件\n"
+            "[dim]详情: cockpit data --help[/]"
         )
         return 1
 
@@ -688,12 +759,15 @@ def main() -> int:
             elif getattr(a, "contracts_export_type", "") == "event":
                 return cmd_contracts_export_event(a)
         # 裸 `cockpit contracts` / 未知子命令: 给出用法而非静默 rc=1
-        print(
-            "用法: cockpit contracts {validate|list|export-research <ID>|export identity|export event}\n"
-            "  validate          验证 Workspace 契约\n"
-            "  list              列出所有已注册 Schema\n"
-            "  export-research   将研究对象导出为 WorkspaceObject JSON\n"
-            "  export identity/event  导出契约封套"
+        console.print(
+            "[yellow]缺少子命令。[/]\n"
+            "[dim]用法: cockpit contracts {validate|list|export-research|export}[/]\n"
+            "  [cyan]validate[/]          验证 Workspace 契约\n"
+            "  [cyan]list[/]              列出所有已注册 Schema\n"
+            "  [cyan]export-research[/]   将研究对象导出为 WorkspaceObject JSON\n"
+            "  [cyan]export identity[/]   导出身份封套\n"
+            "  [cyan]export event[/]      导出事件封套\n"
+            "[dim]详情: cockpit contracts --help[/]"
         )
         return 1
 
@@ -768,7 +842,7 @@ def main() -> int:
         "vault": _c_vault,
         "bos": dispatch_bos,
         "code": dispatch_code,
-        "research": dispatch_research,
+        "research": lambda a: dispatch_research(a, unknown),
         "scenario": dispatch_scenario,
         "iterate": dispatch_iterate,
         "compass": dispatch_compass,
@@ -864,7 +938,7 @@ def main() -> int:
     if handler:
         if (
             global_output == "text"
-            and args.command not in ("tui", "completion", "help", "demo")
+            and args.command not in ("tui", "help", "demo")
             and sys.stdout.isatty()
         ):
             try:

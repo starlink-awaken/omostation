@@ -19,7 +19,7 @@ def test_research_help_includes_digest_option(monkeypatch, capsys):
         cli.main()
     captured = capsys.readouterr()
     assert exc.value.code == 0
-    assert "--digest" in captured.out
+    assert "digest" in captured.out
 
 
 def test_cmd_research_digest_requires_at_least_two_ids(monkeypatch):

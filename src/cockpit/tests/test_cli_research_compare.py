@@ -21,7 +21,7 @@ def test_research_help_includes_compare_option(monkeypatch, capsys):
 
     captured = capsys.readouterr()
     assert exc.value.code == 0
-    assert "--compare" in captured.out
+    assert "compare" in captured.out
 
 
 def test_cmd_research_compare_requires_at_least_two_ids(monkeypatch):

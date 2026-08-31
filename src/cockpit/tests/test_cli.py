@@ -129,33 +129,33 @@ def test_daily_with_days():
 
 
 def test_research_list_command():
-    """cockpit research --list should return 0."""
+    """cockpit research list should return 0."""
     _setup_mock()
-    with patch("sys.argv", ["workspace", "research", "--list"]):
+    with patch("sys.argv", ["workspace", "research", "list"]):
         rc = main()
     assert rc == 0
 
 
 def test_research_search_command():
-    """cockpit research --search keyword should return 0."""
+    """cockpit research search keyword should return 0."""
     _setup_mock()
-    with patch("sys.argv", ["workspace", "research", "--search", "llm"]):
+    with patch("sys.argv", ["workspace", "research", "search", "llm"]):
         rc = main()
     assert rc == 0
 
 
 def test_research_health_command():
-    """cockpit research --health should return 0."""
+    """cockpit research health should return 0."""
     _setup_mock()
-    with patch("sys.argv", ["workspace", "research", "--health"]):
+    with patch("sys.argv", ["workspace", "research", "health"]):
         rc = main()
     assert rc == 0
 
 
 def test_research_follow_up_command():
-    """cockpit research --follow-up should return 0."""
+    """cockpit research follow-up should return 0."""
     _setup_mock()
-    with patch("sys.argv", ["workspace", "research", "--follow-up"]):
+    with patch("sys.argv", ["workspace", "research", "follow-up"]):
         rc = main()
     assert rc == 0
 

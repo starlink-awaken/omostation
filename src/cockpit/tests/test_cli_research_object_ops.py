@@ -19,10 +19,10 @@ def test_research_help_includes_object_ops(monkeypatch, capsys):
         cli.main()
     captured = capsys.readouterr()
     assert exc.value.code == 0
-    assert "--tag" in captured.out
-    assert "--rename" in captured.out
-    assert "--archive" in captured.out
-    assert "--unarchive" in captured.out
+    assert "tag" in captured.out
+    assert "rename" in captured.out
+    assert "archive" in captured.out
+    assert "unarchive" in captured.out
 
 
 def test_cmd_research_tag_updates_tags(monkeypatch):

@@ -24,56 +24,127 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     """
 
     # ── research ──────────────────────────────────────────────
-    r = sub.add_parser("research", help="深度研究")
-    r.add_argument("topic", nargs="*", help="研究主题")
-    r.add_argument("--list", action="store_true", help="查看研究历史")
-    r.add_argument("--open", type=int, metavar="ID", help="打开研究全文")
-    r.add_argument("--publish", type=int, metavar="ID", help="发布研究为正式 Markdown 报告")
-    r.add_argument("--style", choices=["brief", "report", "memo"], default="report", help="publish 的输出风格")
-    r.add_argument("--dossier", type=int, metavar="ID", help="查看研究的关系与产物视图")
-    r.add_argument("--timeline", type=int, metavar="ID", help="查看研究的演化时间线")
-    r.add_argument("--tag", type=int, metavar="ID", help="为研究添加/覆盖标签")
-    r.add_argument("--labels", nargs="+", help="tag 操作使用的标签列表")
-    r.add_argument("--rename", type=int, metavar="ID", help="重命名研究标题")
-    r.add_argument("--new-title", nargs="+", help="rename 操作使用的新标题")
-    r.add_argument("--archive", type=int, nargs="+", metavar="ID", help="归档研究记录")
-    r.add_argument("--unarchive", type=int, nargs="+", metavar="ID", help="恢复已归档研究记录")
-    r.add_argument(
-        "--all-active",
-        action="store_true",
-        help="对全部活跃研究执行 --archive/--unarchive 操作",
+    # 子命令化: 将 20+ 布尔 flag 拆为独立子命令, 提升可发现性与帮助质量
+    r = sub.add_parser(
+        "research",
+        help="深度研究 — 创建/查询/管理研究对象",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "子命令:\n"
+            "  (默认)           创建新研究 (直接传 topic)\n"
+            "  list            查看研究历史\n"
+            "  open            打开研究全文\n"
+            "  publish         发布研究为正式 Markdown 报告\n"
+            "  dossier         查看研究的关系与产物视图\n"
+            "  timeline        查看研究的演化时间线\n"
+            "  tag             为研究添加/覆盖标签\n"
+            "  rename          重命名研究标题\n"
+            "  archive         归档研究记录\n"
+            "  unarchive       恢复已归档研究记录\n"
+            "  export          导出研究 (markdown/text/json)\n"
+            "  ask             对指定研究发起追问\n"
+            "  search          全文搜索\n"
+            "  compare         对比多个研究结果\n"
+            "  merge           合并多个研究结果为新研究\n"
+            "  digest          提炼多个研究结果\n"
+            "  audit           扫描可疑研究记录\n"
+            "  quarantine      隔离可疑研究记录\n"
+            "  restore         恢复已隔离研究记录\n"
+            "  heatmap         显示研究活跃度热力图\n"
+            "  follow-up       查看追问工作台\n"
+            "  health          查看研究健康报告\n"
+            "  batch           批量研究模式\n"
+            "  backup          全量备份研究数据\n"
+            "  backup-restore  从备份恢复研究数据\n"
+            "示例:\n"
+            '  cockpit research "attention mechanism"\n'
+            "  cockpit research list --limit 20\n"
+            "  cockpit research open 5\n"
+            "  cockpit research publish 5 --style report"
+        ),
     )
-    r.add_argument("--export", type=str, metavar="FORMAT", help="导出研究 (markdown/text/json)")
-    r.add_argument("--ask", type=int, metavar="ID", help="对指定研究发起追问，后接问题")
-    r.add_argument("--search", type=str, metavar="KEYWORD", help="全文搜索")
-    r.add_argument("--compare", type=int, nargs="+", metavar="ID", help="对比多个研究结果")
-    r.add_argument("--merge", type=int, nargs="+", metavar="ID", help="合并多个研究结果为新研究")
-    r.add_argument("--digest", type=int, nargs="+", metavar="ID", help="提炼多个研究结果为 digest")
-    r.add_argument("--audit", action="store_true", help="扫描可疑研究记录")
-    r.add_argument("--quarantine", type=int, nargs="+", metavar="ID", help="隔离可疑研究记录")
-    r.add_argument("--restore", type=int, nargs="+", metavar="ID", help="恢复已隔离研究记录")
-    r.add_argument("--limit", type=int, default=10)
-    r.add_argument(
-        "--status",
-        choices=["active", "archived", "all"],
-        default="all",
-        help="研究列表筛选（默认 all）",
-    )
-    r.add_argument("--agent", type=str, metavar="NAME", help="标记/查询处理 Agent (如 minerva, sophia)")
-    r.add_argument("--heatmap", action="store_true", help="显示研究活跃度热力图")
-    r.add_argument("--follow-up", action="store_true", help="查看追问工作台（待追问/已回答统计）")
-    r.add_argument("--health", action="store_true", help="查看研究健康报告（衰减状态/保鲜建议）")
-    r.add_argument("--batch", action="store_true", help="批量研究模式: 逐个处理多个 topic，汇总结果")
-    r.add_argument("--stream", action="store_true", help="流式输出 (ollama 逐 token 打印)")
-    r.add_argument(
-        "--backup",
-        nargs="?",
-        const="",
-        metavar="OUTPUT",
-        help="全量备份研究数据到 JSON 文件（默认 ~/Desktop/workspace_backup.json）",
-    )
-    r.add_argument("--backup-restore", type=str, metavar="PATH", help="从备份 JSON 文件恢复研究数据")
-    r.add_argument("--json", action="store_true", help="以 JSON 格式输出（--list 和 --open 模式可用）")
+    r_sub = r.add_subparsers(dest="research_command", parser_class=workspace_parser)
+
+    # create: 默认模式 (无子命令时通过 dispatch_research 回退)
+    r_create = r_sub.add_parser("create", help="创建新研究")
+    r_create.add_argument("topic", nargs="*", help="研究主题")
+    r_create.add_argument("--agent", type=str, metavar="NAME", help="标记处理 Agent (如 minerva, sophia)")
+    r_create.add_argument("--stream", action="store_true", help="流式输出 (ollama 逐 token 打印)")
+
+    # list
+    r_list = r_sub.add_parser("list", help="查看研究历史")
+    r_list.add_argument("--limit", type=int, default=10, help="显示条数 (默认 10)")
+    r_list.add_argument("--status", choices=["active", "archived", "all"], default="all", help="筛选状态")
+    r_list.add_argument("--json", action="store_true", help="JSON 格式输出")
+
+    # open
+    r_open = r_sub.add_parser("open", help="打开研究全文")
+    r_open.add_argument("id", type=int, metavar="ID", help="研究 ID")
+    r_open.add_argument("--json", action="store_true", help="JSON 格式输出")
+
+    # publish
+    r_publish = r_sub.add_parser("publish", help="发布研究为正式 Markdown 报告")
+    r_publish.add_argument("id", type=int, metavar="ID", help="研究 ID")
+    r_publish.add_argument("--style", choices=["brief", "report", "memo"], default="report", help="输出风格")
+
+    # dossier / timeline
+    r_sub.add_parser("dossier", help="查看研究的关系与产物视图").add_argument("id", type=int, metavar="ID")
+    r_sub.add_parser("timeline", help="查看研究的演化时间线").add_argument("id", type=int, metavar="ID")
+
+    # tag / rename
+    r_tag = r_sub.add_parser("tag", help="为研究添加/覆盖标签")
+    r_tag.add_argument("id", type=int, metavar="ID", help="研究 ID")
+    r_tag.add_argument("--labels", nargs="+", required=True, help="标签列表")
+    r_rename = r_sub.add_parser("rename", help="重命名研究标题")
+    r_rename.add_argument("id", type=int, metavar="ID", help="研究 ID")
+    r_rename.add_argument("--new-title", nargs="+", required=True, help="新标题")
+
+    # archive / unarchive
+    r_archive = r_sub.add_parser("archive", help="归档研究记录")
+    r_archive.add_argument("ids", type=int, nargs="*", metavar="ID", help="研究 ID (省略时需 --all-active)")
+    r_archive.add_argument("--all-active", action="store_true", help="归档全部活跃研究")
+    r_unarchive = r_sub.add_parser("unarchive", help="恢复已归档研究记录")
+    r_unarchive.add_argument("ids", type=int, nargs="*", metavar="ID", help="研究 ID")
+    r_unarchive.add_argument("--all-active", action="store_true", help="恢复全部活跃研究")
+
+    # export / ask
+    r_export = r_sub.add_parser("export", help="导出研究 (markdown/text/json)")
+    r_export.add_argument("id", type=int, metavar="ID", help="研究 ID")
+    r_export.add_argument("--format", choices=["markdown", "text", "json"], default="markdown", help="导出格式")
+    r_ask = r_sub.add_parser("ask", help="对指定研究发起追问")
+    r_ask.add_argument("id", type=int, metavar="ID", help="研究 ID")
+
+    # search / compare / merge / digest
+    r_sub.add_parser("search", help="全文搜索").add_argument("keyword", type=str, metavar="KEYWORD")
+    r_compare = r_sub.add_parser("compare", help="对比多个研究结果")
+    r_compare.add_argument("ids", type=int, nargs="+", metavar="ID", help="研究 ID 列表")
+    r_merge = r_sub.add_parser("merge", help="合并多个研究结果为新研究")
+    r_merge.add_argument("ids", type=int, nargs="+", metavar="ID", help="研究 ID 列表")
+    r_digest = r_sub.add_parser("digest", help="提炼多个研究结果")
+    r_digest.add_argument("ids", type=int, nargs="+", metavar="ID", help="研究 ID 列表")
+
+    # audit / quarantine / restore
+    r_sub.add_parser("audit", help="扫描可疑研究记录")
+    r_quarantine = r_sub.add_parser("quarantine", help="隔离可疑研究记录")
+    r_quarantine.add_argument("ids", type=int, nargs="+", metavar="ID", help="研究 ID 列表")
+    r_restore = r_sub.add_parser("restore", help="恢复已隔离研究记录")
+    r_restore.add_argument("ids", type=int, nargs="+", metavar="ID", help="研究 ID 列表")
+
+    # heatmap / follow-up / health
+    r_sub.add_parser("heatmap", help="显示研究活跃度热力图")
+    r_sub.add_parser("follow-up", help="查看追问工作台（待追问/已回答统计）")
+    r_sub.add_parser("health", help="查看研究健康报告（衰减状态/保鲜建议）")
+
+    # batch
+    r_batch = r_sub.add_parser("batch", help="批量研究模式: 逐个处理多个 topic，汇总结果")
+    r_batch.add_argument("topics", nargs="*", help="多个研究主题")
+    r_batch.add_argument("--agent", type=str, metavar="NAME", help="标记处理 Agent")
+
+    # backup / backup-restore
+    r_backup = r_sub.add_parser("backup", help="全量备份研究数据到 JSON 文件")
+    r_backup.add_argument("--output", "-o", nargs="?", const="", metavar="OUTPUT", help="输出路径")
+    r_bkrestore = r_sub.add_parser("backup-restore", help="从备份 JSON 文件恢复研究数据")
+    r_bkrestore.add_argument("path", type=str, metavar="PATH", help="备份文件路径")
 
     # ── import / status / readiness ───────────────────────────
     import_p = sub.add_parser("import", help="导入外部内容")
@@ -184,10 +255,14 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     data_gc_p.add_argument("--max-age-hours", type=float, default=24.0, help="TTL 小时数（默认 24）")
     data_gc_p.add_argument("--json", action="store_true", help="以 JSON 输出清理结果")
 
-    # ── ADR-0200~0202 记忆/审计/算力 (stub, 待实现) ───────────
-    sub.add_parser("memory-distill", help="记忆自蒸馏与冲突自愈 (ADR-0200)")
-    sub.add_parser("audit-ledger", help="密码学级 Merkle 审计账本 (ADR-0201)")
-    sub.add_parser("fabric-mesh", help="局域网边缘算力漫游网格 (ADR-0202)")
+    # ── ADR-0200~0202 记忆/审计/算力 ──────────────────────────
+    # 保留注册以兼容历史引用, 但标记为隐藏 (不在 help 中展示), 调用时提示
+    _mem_distill = sub.add_parser("memory-distill", help=argparse.SUPPRESS)
+    _mem_distill.add_argument("args", nargs=argparse.REMAINDER)
+    _audit_ledger = sub.add_parser("audit-ledger", help=argparse.SUPPRESS)
+    _audit_ledger.add_argument("args", nargs=argparse.REMAINDER)
+    _fabric_mesh = sub.add_parser("fabric-mesh", help=argparse.SUPPRESS)
+    _fabric_mesh.add_argument("args", nargs=argparse.REMAINDER)
 
     # ── contracts ─────────────────────────────────────────────
     contracts_p = sub.add_parser("contracts", help="契约验证")
@@ -220,13 +295,10 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         default="llama3.2",
         help="默认拉取的 LLM 模型名（默认 llama3.2）",
     )
+    # init: quickstart 的别名 (共享 handler)
     init_p = sub.add_parser("init", help="🚀 初始化向导（同 quickstart）")
     init_p.add_argument("--fix", action="store_true", help="自动检测并修复常见问题")
-    init_p.add_argument(
-        "--model",
-        default="llama3.2",
-        help="默认拉取的 LLM 模型名（默认 llama3.2）",
-    )
+    init_p.add_argument("--model", default="llama3.2", help="默认拉取的 LLM 模型名")
     profile_p = sub.add_parser("profile", help="查看/编辑身份档案 (L4 入口)")
     profile_p.add_argument("--edit", action="store_true", help="编辑身份档案")
 
@@ -422,9 +494,10 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     qcheck_p.add_argument("--json", action="store_true", help="JSON 格式输出")
 
     # ── SSB / MOF / Agora / model-driven ──────────────────────
+    # SSB: 已弃用, 隐藏帮助但保留调用兼容
     ssb_p = sub.add_parser(
         "ssb",
-        help="[DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用",
+        help=argparse.SUPPRESS,
         epilog="子命令 (源自 ecos-ssb): publish / query / state / recover / events / stats\n示例: cockpit ssb stats",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -450,9 +523,10 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         help="传递给 agora CLI 的参数",
     )
 
+    # model-driven: 已弃用 (ADR-0240 D1), 隐藏帮助但保留调用兼容
     model_driven_p = sub.add_parser(
         "model-driven",
-        help="[DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行",
+        help=argparse.SUPPRESS,
         epilog="子命令: lifecycle / spec / adr / okr / tool / mcp\n示例: cockpit model-driven lifecycle dashboard",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -869,7 +943,8 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     bdsk_p.add_argument("topic", nargs="?", default="架构决策与技术选型", help="辩论主题或决策方案")
 
     # ── journey / panorama / project / monitor ────────────────
-    sub.add_parser("journey", help="🗺️ Journey State Graph 状态表达校验器")
+    journey_p = sub.add_parser("journey", help="🗺️ Journey State Graph 状态表达校验器")
+    journey_p.add_argument("journey_args", nargs=argparse.REMAINDER, help="透传 journey-runner 的参数")
     sub.add_parser(
         "panorama",
         help="🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)",
@@ -990,14 +1065,18 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     mem_cons.add_argument("--role", default=None)
     mem_cons.add_argument("--agent-profile", dest="agent_profile", default=None)
     mem_cons.add_argument("--json", action="store_true")
-    for kref_name in ("knowledge-ref", "kref"):
-        mem_kref = memory_sub.add_parser(kref_name, help="ADR-0315 引用元数据 (无正文)")
-        mem_kref.add_argument("query", nargs="?", help="查询")
-        mem_kref.add_argument("--intent", default=None)
-        mem_kref.add_argument("--limit", type=int, default=5)
-        mem_kref.add_argument("--principal-id", dest="principal_id", default=None)
-        mem_kref.add_argument("--role", default=None)
-        mem_kref.add_argument("--json", action="store_true")
+    # knowledge-ref (别名 kref): ADR-0315 引用元数据
+    mem_kref = memory_sub.add_parser(
+        "knowledge-ref",
+        aliases=["kref"],
+        help="ADR-0315 引用元数据 (无正文)",
+    )
+    mem_kref.add_argument("query", nargs="?", help="查询")
+    mem_kref.add_argument("--intent", default=None)
+    mem_kref.add_argument("--limit", type=int, default=5)
+    mem_kref.add_argument("--principal-id", dest="principal_id", default=None)
+    mem_kref.add_argument("--role", default=None)
+    mem_kref.add_argument("--json", action="store_true")
 
     kems_p = sub.add_parser("kems", help="🧬 KEMS 域治理 (domains/status/scan)")
     kems_sub = kems_p.add_subparsers(dest="kems_command")

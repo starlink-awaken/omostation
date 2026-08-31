@@ -75,7 +75,7 @@ class TestE2EJourney:
 
     def test_research_list(self):
         """用户旅程 9: 研究列表"""
-        r = _cockpit("research", "--list")
+        r = _cockpit("research", "list")
         assert r.returncode == 0
 
     def test_status_workbench(self):

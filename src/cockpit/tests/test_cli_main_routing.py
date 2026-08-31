@@ -22,31 +22,33 @@ RouteCase = tuple[list[str], str | None, int | None, int | str]
 @pytest.mark.parametrize(
     "argv,target,expected_code_or_signal,expected_note",
     [
-        # ── research 路由 (22) ──
-        (["workspace", "research", "--search", "AI"], "cmd_research_search", 0, ""),
-        (["workspace", "research", "--compare", "1", "2"], "cmd_research_compare", 0, ""),
-        (["workspace", "research", "--merge", "1", "2"], "cmd_research_merge", 0, ""),
-        (["workspace", "research", "--digest", "1", "2"], "cmd_research_digest", 0, ""),
-        (["workspace", "research", "--audit"], "cmd_research_audit", 0, ""),
-        (["workspace", "research", "--quarantine", "1"], "cmd_research_quarantine", 0, ""),
-        (["workspace", "research", "--restore", "1"], "cmd_research_restore", 0, ""),
-        (["workspace", "research", "--heatmap"], "cmd_research_heatmap", 0, ""),
-        (["workspace", "research", "--agent", "Alice"], "cmd_research_agent", 0, ""),
-        (["workspace", "research", "--list"], "cmd_research_list", 0, ""),
-        (["workspace", "research", "--dossier", "1"], "cmd_research_dossier", 0, ""),
-        (["workspace", "research", "--timeline", "1"], "cmd_research_timeline", 0, ""),
-        (["workspace", "research", "--tag", "1", "--labels", "AI"], "cmd_research_tag", 0, ""),
-        (["workspace", "research", "--rename", "1", "--new-title", "New"], "cmd_research_rename", 0, ""),
-        (["workspace", "research", "--archive", "1"], "cmd_research_archive", 0, ""),
-        (["workspace", "research", "--unarchive", "1"], "cmd_research_unarchive", 0, ""),
-        (["workspace", "research", "--publish", "1"], "cmd_research_publish", 0, ""),
-        (["workspace", "research", "--export", "markdown", "--open", "1"], "cmd_research_export", 0, ""),
-        (["workspace", "research", "--export", "markdown"], None, 1, "export 缺 --open"),
-        (["workspace", "research", "--open", "1"], "cmd_research_open", 0, ""),
-        (["workspace", "research", "--ask", "1", "追问"], "cmd_research_ask", 0, ""),
-        (["workspace", "research", "我的主题"], "cmd_research", 0, ""),
-        (["workspace", "research", "--backup"], "cmd_research_backup", 0, ""),
-        (["workspace", "research", "--backup-restore", "bk.json"], "cmd_research_backup_restore", 0, ""),
+        # ── research 路由 (子命令化) ──
+        (["workspace", "research", "search", "AI"], "cmd_research_search", 0, ""),
+        (["workspace", "research", "compare", "1", "2"], "cmd_research_compare", 0, ""),
+        (["workspace", "research", "merge", "1", "2"], "cmd_research_merge", 0, ""),
+        (["workspace", "research", "digest", "1", "2"], "cmd_research_digest", 0, ""),
+        (["workspace", "research", "audit"], "cmd_research_audit", 0, ""),
+        (["workspace", "research", "quarantine", "1"], "cmd_research_quarantine", 0, ""),
+        (["workspace", "research", "restore", "1"], "cmd_research_restore", 0, ""),
+        (["workspace", "research", "heatmap"], "cmd_research_heatmap", 0, ""),
+        (["workspace", "research", "create", "--agent", "Alice"], "cmd_research", 0, "create --agent"),
+        (["workspace", "research", "list"], "cmd_research_list", 0, ""),
+        (["workspace", "research", "list", "--limit", "20"], "cmd_research_list", 0, "list --limit"),
+        (["workspace", "research", "dossier", "1"], "cmd_research_dossier", 0, ""),
+        (["workspace", "research", "timeline", "1"], "cmd_research_timeline", 0, ""),
+        (["workspace", "research", "tag", "1", "--labels", "AI"], "cmd_research_tag", 0, ""),
+        (["workspace", "research", "rename", "1", "--new-title", "New"], "cmd_research_rename", 0, ""),
+        (["workspace", "research", "archive", "1"], "cmd_research_archive", 0, ""),
+        (["workspace", "research", "unarchive", "1"], "cmd_research_unarchive", 0, ""),
+        (["workspace", "research", "publish", "1"], "cmd_research_publish", 0, ""),
+        (["workspace", "research", "export", "1", "--format", "markdown"], "cmd_research_export", 0, ""),
+        (["workspace", "research", "export"], None, 1, "export 缺 id"),
+        (["workspace", "research", "open", "1"], "cmd_research_open", 0, ""),
+        (["workspace", "research", "ask", "1"], "cmd_research_ask", 0, ""),
+        (["workspace", "research", "我的主题"], "cmd_research", 0, "默认 create"),
+        (["workspace", "research", "batch", "t1", "t2"], "_cmd_research_batch", 0, "batch"),
+        (["workspace", "research", "backup"], "cmd_research_backup", 0, ""),
+        (["workspace", "research", "backup-restore", "bk.json"], "cmd_research_backup_restore", 0, ""),
         # ── contracts 路由 (7) ──
         (["workspace", "contracts", "validate"], "cmd_contracts_validate", 0, ""),
         (["workspace", "contracts", "list"], "cmd_contracts_list", 0, ""),
@@ -100,10 +102,11 @@ def test_main_routing(
             cli.main()
         assert exc.value.code == expected_code_or_signal
 
-    elif target is None and expected_note == "export 缺 --open":
-        # --export 缺 --open → 直接 return 1
-        code = cli.main()
-        assert code == 1
+    elif target is None and expected_note == "export 缺 id":
+        # export 缺 id → argparse 报错
+        with pytest.raises(SystemExit) as exc:
+            cli.main()
+        assert exc.value.code == 2
 
     elif target is None and expected_note == "contracts 无子命令":
         # contracts 无子命令 → 直接 return 1

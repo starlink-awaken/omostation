@@ -19,7 +19,7 @@ def test_research_help_includes_merge_option(monkeypatch, capsys):
         cli.main()
     captured = capsys.readouterr()
     assert exc.value.code == 0
-    assert "--merge" in captured.out
+    assert "merge" in captured.out
 
 
 def test_cmd_research_merge_requires_at_least_two_ids(monkeypatch):

@@ -20,7 +20,7 @@ def test_research_help_includes_publish_option(monkeypatch, capsys):
         cli.main()
     captured = capsys.readouterr()
     assert exc.value.code == 0
-    assert "--publish" in captured.out
+    assert "publish" in captured.out
     assert "--style" in captured.out
 
 

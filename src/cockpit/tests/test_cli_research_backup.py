@@ -216,11 +216,11 @@ class TestBackupCliDispatch:
         assert code == 0
 
     def test_backup_restore_route_via_main(self, monkeypatch):
-        """--backup-restore 通过 cli.main() 正确路由到 cmd_research_backup_restore"""
+        """backup-restore 通过 cli.main() 正确路由到 cmd_research_backup_restore"""
         from cockpit import cli as _cli
 
         monkeypatch.setattr("cockpit.commands.research._get_data_access", mock.Mock())
         monkeypatch.setattr(_cli, "cmd_research_backup_restore", mock.Mock(return_value=0))
-        monkeypatch.setattr(sys, "argv", ["workspace", "research", "--backup-restore", "/tmp/bk.json"])
+        monkeypatch.setattr(sys, "argv", ["workspace", "research", "backup-restore", "/tmp/bk.json"])
         code = _cli.main()
         assert code == 0
