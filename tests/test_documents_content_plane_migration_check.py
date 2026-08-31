@@ -106,6 +106,20 @@ def test_workspace_registry_samples_pass():
     }
 
 
+def test_family_dashboard_phase_b_is_registered_but_non_terminal():
+    registry_path = ROOT / ".omo" / "_truth" / "registry" / "documents-content-plane-migrations.yaml"
+    registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    family = next(item for item in registry["families"] if item["id"] == "family-dashboard-app")
+
+    assert family["status"] == "in_progress"
+    phase_b = family["progress_evidence"]["phase_b"]
+    assert phase_b["runtime_owner"] == "family-hub"
+    assert phase_b["proposal_owner"] == "omo"
+    assert phase_b["approval_entry"] == "cockpit"
+    assert phase_b["route"] == "bos://governance/hitl/execute/family_dashboard_document_write"
+    assert phase_b["phase_c_pending"] is True
+
+
 def test_workspace_registry_covers_weijian_cleanup_commit_script():
     module = _load_module()
     registry = ROOT / ".omo" / "_truth" / "registry" / "documents-content-plane-migrations.yaml"
