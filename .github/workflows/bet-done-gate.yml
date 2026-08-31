@@ -38,7 +38,7 @@ jobs:
           cat "$lint_out"
           echo "bet-ledger lint exit code: $lint_rc (informational unless guard findings)"
           if [[ "$lint_rc" -eq 0 ]]; then
-            if ! tail -n 1 "$lint_out" | grep -q '^OK — '; then
+            if ! tail -n 1 "$lint_out" | grep -q '^OK -- '; then
               echo "::error::bet-ledger lint did not complete structurally (rc=$lint_rc)"
               exit 1
             fi
