@@ -11,7 +11,7 @@
 | CLI 命令 (含子命令) | 176 |
 | MCP 工具 | 634 |
 | MCP 服务器 | 27 |
-| BOS 服务 | 288 |
+| BOS 服务 | 289 |
 | BOS 域 | 21 |
 
 ## MCP 服务器清单
@@ -60,7 +60,7 @@
 | `ecos` | 10 |
 | `fabric` | 1 |
 | `forge` | 1 |
-| `governance` | 69 |
+| `governance` | 70 |
 | `l4-kernel` | 1 |
 | `memory` | 47 |
 | `meta` | 1 |
@@ -99,7 +99,7 @@
 | `cockpit bos-capability` | BOS capability / toolbox 外部能力 |
 | `cockpit bos-inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
 | `cockpit brain` | 个人数字大脑 — 知识检索 + 记忆 + 智能问答 |
-| `cockpit brief` | 会话简报 |
+| `cockpit brief` | 会话简报 / 每日早报 (--morning) |
 | `cockpit bus` | Omni-Bus 三平面入口 |
 | `cockpit c2g` | 🎯 C2G 战略罗盘 (status/pipeline) |
 | `cockpit cache` | 检查三级分层缓存与 Radix 前缀树状态 (含基准压测) |
