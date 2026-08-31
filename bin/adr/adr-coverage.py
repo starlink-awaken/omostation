@@ -2,7 +2,7 @@
 """P85 R2: ADR coverage check tool.
 
 校验 .omo/_knowledge/decisions/ 目录:
-- ADR 编号连续性 (0001-0078 期望)
+- ADR 编号连续性（ADR-0443 已迁入 signals/ 的原编号视为退役，不算 gap）
 - 每个 ADR 文件 frontmatter 完整 (status, lifecycle, owner, last-reviewed)
 - INDEX.md 引用所有 ADR 文件
 - INDEX.md 不引用不存在的文件
@@ -27,6 +27,7 @@ from _lib import duplicate_adr_numbers, list_adrs
 
 REQUIRED_FRONTMATTER = ["status", "lifecycle", "owner", "last-reviewed"]
 HISTORICAL_STATUSES = {"superseded", "archived", "done", "deprecated", "withdrawn"}
+ADR_FILENAME_PATTERN = re.compile(r"^(\d{4})-")
 
 
 def classify_layer(frontmatter: dict) -> str:
@@ -67,6 +68,28 @@ def parse_index(index_path: Path) -> dict:
     return {"adrs": sorted(refs), "raw": content}
 
 
+def retired_signal_numbers(decisions_dir: Path) -> set[int]:
+    """Return ADR numbers retired by ADR-0443 signal-tier migration.
+
+    Signal files may retain their former numeric filename for historical
+    traceability, but they no longer occupy a canonical decision slot.
+    """
+
+    signals_dir = decisions_dir.parent / "signals"
+    if not signals_dir.is_dir():
+        return set()
+    retired: set[int] = set()
+    for path in signals_dir.glob("*.md"):
+        match = ADR_FILENAME_PATTERN.match(path.name)
+        if not match:
+            continue
+        number = int(match.group(1))
+        signal_id = str(parse_frontmatter(path).get("id", "")).strip().upper()
+        if signal_id == f"ADR-{number:04d}":
+            retired.add(number)
+    return retired
+
+
 def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
     """检查 ADR 覆盖度."""
     adrs = list_adrs(decisions_dir)
@@ -83,6 +106,7 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
     expected = set(range(min_n, max_n + 1))
     actual = set(numbers)
     missing_nums_all = sorted(expected - actual)
+    retired_numbers = retired_signal_numbers(decisions_dir)
     # 区分: P28 (1-99) 和 P50+ (50-999) 的命名约定
     # 占号中 (adr-claims 存在) 的号不算缺失 — session 在写 ADR (G-CONV.7 D1)
     claims: dict[int, dict] = {}
@@ -106,6 +130,9 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
         # 239-248 区间是 P82→P83 之间历史跳号 (task #9 任务#4, 2026-07-28 容忍)
         # 真工程: 改 CI 容忍历史 gap (与 9-49 同理), 非建 RESERVED 占位 gaming
         if 239 <= n <= 248:
+            continue
+        # ADR-0443: signal/draft 从 decisions/ 迁出后，原编号退役且不回收。
+        if n in retired_numbers:
             continue
         # 占号中 (claim 存在) = session 在写, 不算缺失
         if n in claims:
@@ -163,6 +190,7 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
         "min_number": min_n,
         "max_number": max_n,
         "missing_numbers": missing_nums,
+        "retired_signal_numbers": sorted(retired_numbers),
         "duplicate_numbers": duplicates,
         "frontmatter_issues": fm_issues,
         "id_mismatches": id_mismatches,
@@ -235,6 +263,9 @@ def main() -> int:
     print()
     if result["missing_numbers"]:
         print(f"❌ 缺失编号: {result['missing_numbers']}")
+    elif result["retired_signal_numbers"]:
+        retired = ", ".join(f"{n:04d}" for n in result["retired_signal_numbers"])
+        print(f"✅ 无未解释编号 gap（ADR-0443 signal 退役号: {retired}）")
     else:
         print(f"✅ 编号连续 ({result['max_number'] - result['min_number'] + 1} 范围无 gap)")
     if result["duplicate_numbers"]:
