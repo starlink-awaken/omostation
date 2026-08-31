@@ -158,7 +158,7 @@ measurement_framework:
   trend_tracking: true
 
   levels:
-    critical: [0, 4)    # 需要立即处理
-    warning: [4, 7)     # 需要关注
-    healthy: [7, 9)     # 健康
-    excellent: [9, 10]  # 优秀
+    critical: "[0, 4)"    # 需要立即处理
+    warning: "[4, 7)"     # 需要关注
+    healthy: "[7, 9)"     # 健康
+    excellent: "[9, 10]"  # 优秀

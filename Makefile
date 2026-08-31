@@ -133,6 +133,27 @@ gac-drift:  ## GaC 规则漂移检测
 gac-validate:  ## GaC 规则验证 (--gate)
 	$(PY) bin/gac/gac-validate.py --gate
 
+architecture-check:  ## 架构合规校验 (场景卡/业务域/维度/价值循环/SSOT)
+	$(PY) bin/gac/architecture-check.py --gate
+
+scene-card-registry:  ## 场景卡注册校验 (必填字段/生命周期/Journey 结构)
+	$(PY) bin/ssot/scene-card-registry.py --gate
+
+journey-validator:  ## Journey 状态机校验 (节点/边/可达性)
+	$(PY) bin/ssot/journey-validator.py
+
+dimension-health:  ## 维度健康度采集 (12 维度得分)
+	$(PY) bin/gac/dimension-health.py
+
+architecture-drift:  ## 架构漂移检测 (生命周期/注册表/维度覆盖)
+	$(PY) bin/gac/architecture-drift.py
+
+architecture-auto-fix:  ## 架构自动修复 (dry-run)
+	$(PY) bin/gac/architecture-auto-fix.py
+
+architecture-auto-fix-apply:  ## 架构自动修复 (实际执行)
+	$(PY) bin/gac/architecture-auto-fix.py --apply
+
 script-registry-validate:  ## 验证全域脚本 444 是否悉数挂号
 	$(PY) bin/ssot/script-registry.py validate
 

@@ -1,0 +1,39 @@
+name: Architecture Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".omo/standards/*.yaml"
+      - "ARCHITECTURE.md"
+      - "docs/PANORAMA.md"
+      - ".omo/state/system.yaml"
+      - "bin/gac/architecture-check.py"
+      - ".github/workflows/architecture-check.yml"
+  pull_request:
+    paths:
+      - ".omo/standards/*.yaml"
+      - "ARCHITECTURE.md"
+      - "docs/PANORAMA.md"
+      - ".omo/state/system.yaml"
+      - "bin/gac/architecture-check.py"
+      - ".github/workflows/architecture-check.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  architecture-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install pyyaml
+      - name: Run architecture check
+        run: python3 bin/gac/architecture-check.py --gate

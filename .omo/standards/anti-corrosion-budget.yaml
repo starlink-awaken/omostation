@@ -1,0 +1,85 @@
+# Anti-Corrosion Budget Standard
+# ==================================
+# 防腐预算控制标准，限制系统复杂度增长，强制减法配额。
+#
+# SSOT: .omo/standards/anti-corrosion-budget.yaml
+# Version: 1.0.0 | 2026-08-31
+
+schema: anti-corrosion-budget/v1
+
+# ── 预算配额 ──
+budgets:
+  # 脚本配额: 新增 1 个必须归档 1 个
+  scripts:
+    max_active: 560
+    baseline: 557
+    enforcement: advisory  # advisory | strict
+    archive_dir: "bin/_archive"
+
+  # 场景卡配额: 控制场景膨胀
+  scene_cards:
+    max_total: 200
+    max_shadow: 20
+    max_draft: 50
+    promotion_required: true
+
+  # 标准文件配额: 防止标准泛滥
+  standards:
+    max_files: 80
+    review_cycle_days: 90
+    stale_archive: true
+
+  # 注册表配额
+  registries:
+    max_entries: 500
+    orphan_cleanup: true
+
+  # CI 工作流配额
+  workflows:
+    max_count: 60
+    max_triggers_per_workflow: 15
+
+# ── 腐蚀信号阈值 ──
+corrosion_signals:
+  # 脚本活跃度: 超过 N 天未使用的脚本标记为候选归档
+  script_stale_days: 90
+
+  # 场景卡升级停滞
+  scene_stale_days:
+    shadow: 30
+    assisted: 60
+    supervised: 180
+
+  # 文档新鲜度
+  doc_stale_days: 90
+
+  # 注册表孤立条目
+  registry_orphan_days: 30
+
+# ── 自动修复策略 ──
+auto_fix:
+  enabled: true
+  max_fixes_per_run: 5
+  require_approval_above: 3
+  strategies:
+    - name: "archive_stale_scripts"
+      trigger: "script_stale_days exceeded"
+      action: "move to bin/_archive"
+      auto: false
+
+    - name: "flag_stale_scene_cards"
+      trigger: "scene_stale_days exceeded"
+      action: "add stale warning annotation"
+      auto: true
+
+    - name: "sync_baseline"
+      trigger: "script count exceeds baseline"
+      action: "update governance-checks script_baseline"
+      auto: true
+
+# ── 报告配置 ──
+reporting:
+  output: ".omo/state/runtime/anti-corrosion-report.json"
+  frequency: "weekly"
+  alert_channels:
+    - "governance-alert-dispatch"
