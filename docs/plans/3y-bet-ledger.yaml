@@ -17048,7 +17048,7 @@ bets:
   write_surfaces:
   - bin/bc-os/policy_radar.py
   - projects/cockpit/src/cockpit/commands/brief.py
-  - docs/reports/2026-10-09-policy-radar-morning-brief.md
+  - docs/reports/2026-08-31-policy-radar-morning-brief.md
   - .omo/_knowledge/retros/BET-Y1Q4-T7-03.md
   pasw_required: false
   depends_on:
