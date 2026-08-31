@@ -1,0 +1,104 @@
+# Value Loop Standard
+# =====================
+# 价值循环标准，定义从信号到价值产出的完整闭环。
+#
+# SSOT: .omo/standards/value-loop-standard.yaml
+# Version: 1.0.0 | 2026-08-31
+
+schema: value-loop-standard/v1
+
+# 价值循环 5 阶段
+stages:
+  signal:
+    name: "信号感知"
+    description: "从外部源捕获信号"
+    sources:
+      - calendar: "日历事件"
+      - email: "邮件"
+      - oa: "OA 系统"
+      - im: "即时消息"
+    output: "signal_event"
+
+  perception:
+    name: "信号分类"
+    description: "对信号进行分类和优先级排序"
+    rules:
+      - "公文 → document-review"
+      - "会议 → meeting-supervision"
+      - "调研 → research-pipeline"
+      - "默认 → knowledge-ingest"
+    output: "classified_intent"
+
+  journey:
+    name: "旅程执行"
+    description: "通过 Journey 执行业务流程"
+    state_machine: "detected → preflight → executing → verified → complete"
+    evidence: "每个状态转换记录证据"
+    output: "journey_result"
+
+  value:
+    name: "价值记录"
+    description: "记录执行产生的价值"
+    metrics:
+      - "time_saved_minutes: 节省时间"
+      - "decision_quality: 决策质量"
+      - "error_reduction: 错误减少"
+    output: "value_record"
+
+  evolution:
+    name: "进化反馈"
+    description: "将价值数据反馈到进化引擎"
+    actions:
+      - "生成进化提案"
+      - "自动实施高置信提案"
+      - "度量实施效果"
+    output: "evolution_feedback"
+
+# 价值度量 (北极星 v3)
+north_star:
+  axis_a_time:
+    name: "时间账本"
+    weight: 70
+    unit: "minutes_saved"
+    target: 30  # min per task
+    measurement: "value-tracker.py --record"
+
+  axis_b_decision:
+    name: "决策吞吐"
+    weight: 30
+    unit: "score"
+    target: 80
+    measurement: "decision-inbox throughput"
+
+  axis_c_project:
+    name: "项目推进力"
+    weight: 0  # 佐证
+    unit: "bet_completion_rate"
+    target: 95
+
+# 断链修复
+broken_chains:
+  chain_1_knowledge_to_value:
+    problem: "964 提案 0 采纳"
+    fix: "高置信提案自动执行路径"
+    priority: P0
+
+  chain_2_swarm_to_work:
+    problem: "6/6 心跳但 claims 停摆"
+    fix: "蜂群任务 → OMO 任务绑定"
+    priority: P0
+
+  chain_3_event_to_decision:
+    problem: "96% 心跳噪音"
+    fix: "P0 事件自动通知+修复"
+    priority: P1
+
+  chain_4_cell_to_everything:
+    problem: "10 个模块 dormant"
+    fix: "Cell DAG 首 DAG 试点"
+    priority: P2
+
+  chain_5_signal_to_loop:
+    problem: "仅邮件单源"
+    fix: "日历+OA 信号接入"
+    priority: P1
