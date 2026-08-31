@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: false
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
       - name: Initialize architecture check consumers
         run: >-
           git submodule update --init
