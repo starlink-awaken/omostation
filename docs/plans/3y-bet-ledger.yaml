@@ -17114,28 +17114,28 @@ bets:
             ref: git://origin/main@8ac2135387705b3baac8c7d6f29c5d7f9cce83d3
           tests:
             ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
-            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+            sha256: sha256:d9a335dc32a8bff661221f1c6bf9031705cdd04fbc5819f1158ebc4fb7feaaf8
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md
             sha256: sha256:6e6425abcacb39d3e42032ec1332b0b74e68e344c9a3dac4d31ee2ea64b8da6f
           rollback:
             ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
-            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+            sha256: sha256:d9a335dc32a8bff661221f1c6bf9031705cdd04fbc5819f1158ebc4fb7feaaf8
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
-            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+            sha256: sha256:d9a335dc32a8bff661221f1c6bf9031705cdd04fbc5819f1158ebc4fb7feaaf8
           fresh_receipt:
             ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
-            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+            sha256: sha256:d9a335dc32a8bff661221f1c6bf9031705cdd04fbc5819f1158ebc4fb7feaaf8
           replay:
             ref: receipt://tests/test_embedding_mps.py
             sha256: sha256:0f40de2b30f8cef8e3c2ec3afaa0b4f28d72050643bade404abafb199ec0fa79
           cleanup:
             ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
-            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+            sha256: sha256:d9a335dc32a8bff661221f1c6bf9031705cdd04fbc5819f1158ebc4fb7feaaf8
       value:
         status: NOT_PROVEN
         evidence: {}
