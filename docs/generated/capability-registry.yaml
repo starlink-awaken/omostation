@@ -11,7 +11,7 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 634
+  mcp_tools: 584
   bos_services: 298
   bos_domains: 22
   cli_commands: 200
@@ -587,59 +587,9 @@ mcp_servers:
   layer: L1
   file: projects/runtime/src/runtime/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - handle_agent_chat
-  - handle_agent_execute
-  - handle_agent_list
-  - handle_agent_list_tools
-  - handle_agent_run_task
-  - handle_agent_status
-  - handle_agent_task_status
-  - handle_brief
-  - handle_cartridge_inspect
-  - handle_cartridge_list
-  - handle_documents_audit
-  - handle_documents_guardrails
-  - handle_domain_compliance_audit
-  - handle_governance_explain
-  - handle_governance_guardrails
-  - handle_governance_preflight
-  - handle_health
-  - handle_intent_compile
-  - handle_kv_get
-  - handle_matrix_list
-  - handle_ontology
-  - handle_pitfall_check
-  - handle_protocol_get
-  - handle_protocol_list
-  - handle_shadow_challenge
-  - runtime_agent_chat
-  - runtime_agent_execute
-  - runtime_agent_list
-  - runtime_agent_list_tools
-  - runtime_agent_run_task
-  - runtime_agent_status
-  - runtime_agent_task_status
-  - runtime_brief
-  - runtime_cartridge_inspect
-  - runtime_cartridge_list
-  - runtime_documents_audit
-  - runtime_documents_guardrails
-  - runtime_domain_compliance_audit
-  - runtime_governance_explain
-  - runtime_governance_guardrails
-  - runtime_governance_preflight
-  - runtime_health
-  - runtime_intent_compile
-  - runtime_kv_get
-  - runtime_matrix_list
-  - runtime_ontology_get
-  - runtime_pitfall_check
-  - runtime_protocol_get
-  - runtime_protocol_list
-  - runtime_shadow_challenge
-  tool_count: 50
+  exists: false
+  tools: []
+  tool_count: 0
 - id: iris
   name: Iris
   layer: L2
