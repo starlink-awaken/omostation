@@ -12400,6 +12400,7 @@ bets:
   - tests/test_architecture_workflow.py
   - bin/gac/architecture-check.py
   - tests/test_architecture_check.py
+  - docs/generated/capability-registry.yaml
   - .omo/_truth/registry/ci-surfaces.yaml
   - bin/gac/gac-branch-protection.sh
   - bin/gac/gac-local-gate.py
