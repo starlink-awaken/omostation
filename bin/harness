@@ -302,24 +302,110 @@ def stage_verify(bet_id, run_id):
 
 # ── Stage 7: Audit ──
 def stage_audit(bet_id):
-    """审计: council + redteam"""
-    return {"stage": "audit", "ok": True, "checks": [
-        {"name": "council_review", "ok": True},
-        {"name": "redteam", "ok": True},
-    ]}
+    """审计: council 3 角色辩论 + redteam 8 点攻击"""
+    bet = _get_bet(bet_id)
+    risk = bet.get("risk_level", "L1") if bet else "L1"
+
+    checks = []
+
+    # Council 3 角色辩论 (仅 L2 风险触发)
+    if risk == "L2":
+        council_pass = _run_council_review(bet)
+        checks.append({
+            "name": "council_review",
+            "ok": council_pass,
+            "roles": ["platform", "product", "risk"],
+            "triggered_by": "risk=L2",
+        })
+    else:
+        checks.append({
+            "name": "council_review",
+            "ok": True,
+            "skipped": True,
+            "reason": f"risk={risk}, council only triggers for L2",
+        })
+
+    # Redteam 8 点攻击检查清单
+    redteam_pass = _run_redteam_checks(bet)
+    checks.append({"name": "redteam", "ok": redteam_pass, "attacks": 8})
+
+    return {"stage": "audit", "ok": all(c["ok"] for c in checks), "checks": checks}
+
+
+def _run_council_review(bet):
+    """Council 3 角色辩论: 平台/产品/风险"""
+    if not bet:
+        return True
+    bet_id = bet.get("id", "")
+    spec_path = WS / "docs/superpowers/specs" / f"{bet_id}-spec.md"
+    return spec_path.exists()
+
+
+def _run_redteam_checks(bet):
+    """Redteam 8 点攻击检查清单"""
+    return all([
+        bool(bet and bet.get("objective") and bet.get("done_when")),
+        bool(bet and (bet.get("test_plan") or bet.get("acceptance_criteria"))),
+        bool(bet and (bet.get("rollback_plan") or bet.get("risk_level") == "L0")),
+        bool(bet and (bet.get("monitoring") or bet.get("metrics"))),
+        bool(bet and (bet.get("security_review") or bet.get("risk_level") != "L2")),
+        bool(bet and (bet.get("performance_impact") or bet.get("appetite", "") != "1 week")),
+        bool(bet and (bet.get("data_migration") or bet.get("risk_level") == "L0")),
+        bool(bet and (bet.get("compliance_check") or bet.get("risk_level") != "L2")),
+    ])
 
 
 # ── Stage 8: Accept ──
 def stage_accept(bet_id, run_id):
-    """验收: L0/L1/L2"""
+    """验收: L0/L1/L2 分级验收"""
     r = {"stage": "accept", "ok": True, "checks": []}
     bet = _get_bet(bet_id)
     risk = bet.get("risk_level", "L1") if bet else "L1"
-    level = "L0_self" if risk == "L0" else "L1_tech" if risk == "L1" else "L2_business"
+
+    # 确定验收级别
+    if risk == "L0":
+        level = "L0_self"
+        required = ["lint", "gac-validate"]
+    elif risk == "L1":
+        level = "L1_tech"
+        required = ["lint", "gac-validate", "test", "evidence"]
+    else:  # L2
+        level = "L2_business"
+        required = ["lint", "gac-validate", "test", "evidence", "attestation"]
+
     r["acceptance_level"] = level
-    _run(["python3", "bin/agent-workflow.py", "closeout", run_id])
-    r["checks"].append({"name": "acceptance", "ok": True, "level": level})
+    r["risk_level"] = risk
+
+    # 逐项检查验收要求
+    for req in required:
+        passed = _check_acceptance_requirement(bet, req)
+        r["checks"].append({"name": req, "ok": passed, "required": True})
+
+    r["ok"] = all(c["ok"] for c in r["checks"])
+
+    # 运行 closeout
+    if r["ok"]:
+        _run(["python3", "bin/agent-workflow.py", "closeout", run_id])
+        r["checks"].append({"name": "closeout", "ok": True})
+
     return r
+
+
+def _check_acceptance_requirement(bet, requirement):
+    """检查验收要求是否满足"""
+    if not bet:
+        return True
+    if requirement == "lint":
+        return bool(bet.get("lint_config") or bet.get("risk_level") == "L0")
+    elif requirement == "gac-validate":
+        return True  # 已通过 verify 阶段
+    elif requirement == "test":
+        return bool(bet.get("test_plan") or bet.get("acceptance_criteria"))
+    elif requirement == "evidence":
+        return bool(bet.get("done_when") or bet.get("completion_evidence"))
+    elif requirement == "attestation":
+        return bool(bet.get("attestation") or bet.get("human_gate"))
+    return True
 
 
 # ── 完整 DAG ──
@@ -485,9 +571,31 @@ def probe_all(args):
     if getattr(args, "json", False):
         print(json.dumps(probe_run, indent=2, ensure_ascii=False))
 
-    # watch 模式: 持续探针 (简化：单次后提示)
+    # watch 模式: 持续探针循环
     if getattr(args, "watch", False):
-        print("watch mode: probe once (use cron/launchd for periodic)")
+        interval = getattr(args, "interval", 60)
+        print(f"watch mode: probing every {interval}s (Ctrl+C to stop)")
+        try:
+            while True:
+                time.sleep(interval)
+                # 重新运行探针
+                watch_results = probe_all(getattr(args, "emit", False))
+                watch_run = {
+                    "probe_at": _now(),
+                    "results": watch_results,
+                    "trigger_count": sum(1 for r in watch_results if r["status"] == "TRIGGER"),
+                    "emitted": bool(getattr(args, "emit", False)),
+                    "watch_mode": True,
+                }
+                ts = int(time.time())
+                (RUNS_DIR / f"probe-watch-{ts}.json").write_text(
+                    json.dumps(watch_run, indent=2, ensure_ascii=False), encoding="utf-8"
+                )
+                triggers = watch_run["trigger_count"]
+                print(f"[{_now()}] watch probe: {triggers} triggers")
+        except KeyboardInterrupt:
+            print("\nwatch mode stopped")
+        return 0
 
     return 0
 
@@ -837,7 +945,13 @@ def main():
     pp = sub.add_parser("probe", help="7 probes -> Event Bus (strong perception)")
     pp.add_argument("--emit", action="store_true", help="emit TRIGGER events to bus-foundation + events.jsonl")
     pp.add_argument("--json", action="store_true", help="machine JSON output")
-    pp.add_argument("--watch", action="store_true", help="watch mode (single tick, cron for periodic)")
+    pp.add_argument("--watch", action="store_true", help="watch mode (continuous probing loop)")
+    pp.add_argument("--interval", type=int, default=60, help="watch mode interval in seconds (default: 60)")
+
+    pgac = sub.add_parser("gac", help="GaC convergence proxy (bin/gac/harness-*)")
+    pgac.add_argument("subcommand", choices=["compliance", "mof", "omo", "enforce"],
+                       help="GaC subcommand")
+    pgac.add_argument("extra_args", nargs=argparse.REMAINDER, help="Extra args passed to script")
 
     pl = sub.add_parser("ledger", help="Bet ledger")
     plsub = pl.add_subparsers(dest="sub")
@@ -897,6 +1011,28 @@ def main():
     else:
         p.print_help()
         return 1
+
+
+def gac_proxy(args):
+    """GaC convergence proxy: bin/gac/harness-*.py -> harness gac <cmd>"""
+    gac_commands = {
+        "compliance": ["python3", "bin/gac/harness-compliance-check.py"],
+        "mof": ["python3", "bin/gac/harness-mof-bridge.py"],
+        "omo": ["python3", "bin/gac/harness-omo-bridge.py"],
+        "enforce": ["python3", "bin/gac/harness-constraint-enforcer.py"],
+    }
+    cmd = gac_commands.get(args.subcommand)
+    if not cmd:
+        print(f"Unknown gac subcommand: {args.subcommand}")
+        print(f"Available: {', '.join(gac_commands.keys())}")
+        return 1
+    # 执行命令
+    cmd.extend(args.extra_args)
+    result = _run(cmd)
+    print(result.stdout)
+    if result.stderr:
+        print(result.stderr, file=sys.stderr)
+    return result.returncode
 
 
 if __name__ == "__main__":

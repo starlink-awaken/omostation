@@ -144,3 +144,15 @@ entries:
   submodule: ecos
   recorded_at: '2026-09-01T05:00:00.000000+00:00'
   active: true
+# ── Cell 模块激活 (需 omo submodule) ──
+- fingerprint: cell-module|activation|10-modules-dormant
+  surface: cell-dashboard
+  check_id: cell-module-activation
+  signature: cell-10-dormant
+  kind: cell-gap
+  reason: "10 个 Cell 模块 dormant (需 omo submodule 激活)"
+  remediation: "初始化 omo submodule 后，逐个激活或归档 Cell 模块"
+  priority: P2
+  submodule: omo
+  recorded_at: '2026-09-01T06:00:00.000000+00:00'
+  active: true
