@@ -180,6 +180,9 @@ gac:
     check_type: advisory
     rule_baseline: 180
     script_baseline: 567
+    # 2026-09-01: +3 T10-122 solidification tools (canary, BOS check, cascading local)
+    # -3 duplicate cleanup (doc_auto_update, governance_health_monitor, anti_corrosion_detector)
+    # net change: 0, baseline unchanged
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
