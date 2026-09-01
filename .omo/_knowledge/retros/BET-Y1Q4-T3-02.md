@@ -37,8 +37,11 @@ solution: median-of-N 稳态测量 + HF_HUB_OFFLINE 代码级红线
 1. **P2 ✅ 已完成**：模型齐 + FlagEmbedding sparse 激活，full tier 多语言 top-1
    验证通过（中文 0.64 > 英文 0.50 > 无关）。reranker cross-encoder 首载慢，
    dense fallback 契约内达标且原因可观测。
-2. **P3 Mac mini 部署**：M4 当前不在线。开机后注册 mesh 嵌入节点
-   （cluster_coordinator 现成骨架），BOS: bos://compute/omlxc/embed。
+2. **P3 Mac mini 部署（前置已解除 2026-09-01）**：tailscale 排查确认 Mac mini
+   实际在线（CLI 错 socket 误诊，见 omlxc #48/#49）；SSH 通（uptime 9d），
+   LM Studio 池活（gemma-4-e4b + qwythos-9b IDLE）。剩余部署动作：Mac mini
+   装 python venv + sentence-transformers + bge 模型缓存（24GB 内存足够），
+   经 cluster_coordinator 注册 bos://compute/omlxc/embed。
 
 ## 模板病计数
 
