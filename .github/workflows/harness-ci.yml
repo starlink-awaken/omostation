@@ -1,0 +1,62 @@
+name: Harness Lifecycle
+
+on:
+  pull_request:
+    paths:
+      - '.omo/_truth/registry/harness-policy.yaml'
+      - 'bin/gac/harness*.py'
+      - '.githooks/pre-edit-architecture.sh'
+      - 'bin/harness'
+      - '.omo/standards/**'
+      - 'docs/scene-cards/**'
+      - 'docs/journey-specs/**'
+
+jobs:
+  harness-compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Harness Compliance Check (12 章节)
+        run: python3 bin/gac/harness-compliance-check.py --gate
+
+      - name: Harness MOF Bridge (8 条约束)
+        run: python3 bin/gac/harness-mof-bridge.py --gate
+
+      - name: Harness OMO Bridge (状态同步)
+        continue-on-error: true
+        run: python3 bin/gac/harness-omo-bridge.py
+
+      - name: Constraint Enforcer (CI mode)
+        continue-on-error: true
+        run: python3 bin/gac/harness-constraint-enforcer.py --ci
+
+  pre-edit-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Pre-edit Architecture Check
+        run: |
+          chmod +x .githooks/pre-edit-architecture.sh
+          .githooks/pre-edit-architecture.sh
