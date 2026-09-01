@@ -12,11 +12,17 @@ budgets:
   # 治理规则 (GaC)
   governance_rules:
     max_count: 85
-    current: 81
+    current: 91
     alert_threshold: 0.9  # 90% (76 条) 触发告警
     actions:
       warn: "规则接近预算上限，建议合并或退役"
       halt: "规则超出预算，禁止新增除非同步删除"
+    # Phase 8 新增 10 条 CR-HARNESS-* 规则，需合并 6 条以回退到 ≤85
+    merge_candidates:
+      - "CR-HARNESS-SECTION-COMPLETENESS + CR-HARNESS-DIMENSION-COVERAGE → CR-HARNESS-STRUCTURE"
+      - "CR-HARNESS-SFOP-SLOT + CR-HARNESS-MOF-CONSTRAINT → CR-HARNESS-MOF-INTEGRATION"
+      - "CR-HARNESS-IMPL-RATE → fold into CR-HARNESS-STRUCTURE"
+      - "CR-HARNESS-OMO-SYNC → fold into CR-HARNESS-KNOWN-DEBT"
 
   # Bin 脚本
   bin_scripts:
