@@ -48,5 +48,6 @@
       "status": "healthy",
       "debt_count": 0
     }
-  }
+  },
+  "gac_rules_count": 85
 }

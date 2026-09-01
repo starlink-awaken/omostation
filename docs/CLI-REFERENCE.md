@@ -10,7 +10,7 @@ last-reviewed: 2026-08-24
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **194** 个命令 (含子命令)。按场景分组如下。
+共 **200** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -249,25 +249,31 @@ last-reviewed: 2026-08-24
 | `cockpit digest` | 提炼多个研究结果 |
 | `cockpit distill` | 在 Mac mini M4 触发闲时 LoRA 蒸馏 |
 | `cockpit dma` | 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准 |
+| `cockpit docx` | 渲染为 GB/T 9704-2012 红头公文 DOCX |
 | `cockpit draft` | 从本地主权大模型请求草稿 |
 | `cockpit follow-up` | 查看追问工作台（待追问/已回答统计） |
 | `cockpit heatmap` | 显示研究活跃度热力图 |
 | `cockpit hud` | 查看次世代主权算力织网全景 HUD 实时状态 |
+| `cockpit im-triage` | 渲染 IM 会话感知待办卡片 (bos://im/session/triage) |
 | `cockpit ingress` | 感知源接入 Spine 管线 (T2-03: OCR 扫描件) |
 | `cockpit knowledge-ref` | ADR-0315 引用元数据 (无正文) |
 | `cockpit lora` | 查看与测试端侧在线 LoRA 适配层热插拔 |
 | `cockpit merge` | 合并多个研究结果为新研究 |
 | `cockpit open` | 打开研究全文 |
 | `cockpit ops` | 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate) |
+| `cockpit pptx` | 渲染为 16:9 高管技术汇报 PPTX |
 | `cockpit quarantine` | 隔离可疑研究记录 |
 | `cockpit reject` | 拒绝决策 |
 | `cockpit rename` | 重命名研究标题 |
+| `cockpit render` | 初稿 Markdown 一键渲染导出 (GB/T 9704 DOCX / 16:9 PPTX / 矢量图) |
 | `cockpit replay` | 查看 Experience Replay 缓冲区状态 |
 | `cockpit restore` | 恢复已隔离研究记录 |
 | `cockpit sign` | 提交用户署名 Diff 并入队 Experience Replay |
 | `cockpit spine` | Spine 主干真值流与署名自进化操作 (ADR-0437) |
 | `cockpit stream` | 跨节点 Chunk-level 流式协同流水线基准 |
+| `cockpit svg` | 渲染 ```diagram 代码块为矢量架构图 SVG |
 | `cockpit tag` | 为研究添加/覆盖标签 |
+| `cockpit test_export_formats` | 离线自测: 三格式导出 + GB/T 参数断言 |
 | `cockpit tree` | 自适应熵感知树状投机解码与多候选验证基准 |
 | `cockpit unarchive` | 恢复已归档研究记录 |
 
@@ -279,13 +285,13 @@ last-reviewed: 2026-08-24
 
 | CLI 命令 | MCP 服务器 | 工具数 |
 |----------|-----------|--------|
-| `cockpit omo` | `omo` | 0 |
+| `cockpit omo` | `omo` | 22 |
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
-| `cockpit gbrain` | `gbrain` | 0 |
-| `cockpit model-driven` | `model-driven` | 0 |
+| `cockpit gbrain` | `gbrain` | 75 |
+| `cockpit model-driven` | `model-driven` | 28 |
 | `cockpit agora` | `agora` | 104 |
-| `cockpit family-hub` | `family-hub` | 0 |
-| `cockpit mesh` | `aetherforge` | 0 |
-| `cockpit compute` | `aetherforge` | 0 |
+| `cockpit family-hub` | `family-hub` | 6 |
+| `cockpit mesh` | `aetherforge` | 15 |
+| `cockpit compute` | `aetherforge` | 15 |
 
 *由 `bin/ssot/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*

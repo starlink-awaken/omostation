@@ -2406,7 +2406,7 @@ gac:
       rationale: 剩余 22 槽位按需分配, 优先 X4 一致性检查和新维度扩展.
     exemption_process: ADR + governance-team approval
     review_trigger: 剩余槽位 < 5 或每季度末
-    reason: 'Phase 8 合并完成 — 10 条 CR-HARNESS-* 合并为 4 条 (STRUCTURE/MOF-INTEGRATION/OPERATIONS/GOVERNANCE). 当前 85 active, 预算内.'
+    reason: 'Phase 8 整合完成 — 10 条 CR-HARNESS-* 合并为 4 条. 当前 85 active, 预算 100.'
   lifecycle:
     draft_to_active_days: 7
     deprecated_to_removed_days: 28
