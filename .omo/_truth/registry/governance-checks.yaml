@@ -179,7 +179,10 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 568
+    script_baseline: 567
+    # 2026-09-01: +3 T10-122 solidification tools (canary, BOS check, cascading local)
+    # -3 duplicate cleanup (doc_auto_update, governance_health_monitor, anti_corrosion_detector)
+    # net change: 0, baseline unchanged
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -203,8 +206,7 @@ gac:
     enforcement: required
     source_ref: bin/mof/m4-health-score.py
     owner: governance-team
-    expected: .omo/state/system.yaml::health_score is the unique source of truth;
-      no markdown or other file may duplicate this value
+    expected: .omo/state/system.yaml::health_score is the unique source of truth; no markdown or other file may duplicate this value
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
@@ -233,9 +235,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=mof_stage_gate | 代码引用 427 处（如 lib/documents_signals_preflight.py,
-      .github/workflows/task-schema-enforce.yml）| history fire=0（drift/ssot 型检查，fire
-      非其活性指标）——活跃规则，非死规则'
+    justification: '[v10 评审 keep] check_type=mof_stage_gate | 代码引用 427 处（如 lib/documents_signals_preflight.py, .github/workflows/task-schema-enforce.yml）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-L0-BOS-RESOLVE
     dimension: X1
     layer: L0
@@ -259,8 +259,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=bos_resolve | 代码引用 686 处（如 bin/plan/closeout-audit.py,
-      lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: '[v10 评审 keep] check_type=bos_resolve | 代码引用 686 处（如 bin/plan/closeout-audit.py, lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-L2-TASK-DELIVERABLE
     dimension: X4
     layer: L2
@@ -306,9 +305,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=drift_audit | 代码引用 198 处（如 lib/batch_bet_closeout.py,
-      lib/documents_zcode_state_relocation.py）| history fire=0（drift/ssot 型检查，fire
-      非其活性指标）——活跃规则，非死规则'
+    justification: '[v10 评审 keep] check_type=drift_audit | 代码引用 198 处（如 lib/batch_bet_closeout.py, lib/documents_zcode_state_relocation.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X1-AGENT-AUDIT
     dimension: X1
     layer: meta
@@ -333,8 +330,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=audit_chain | 代码引用 526 处（如 .githooks/pre-commit,
-      lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: '[v10 评审 keep] check_type=audit_chain | 代码引用 526 处（如 .githooks/pre-commit, lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X3-DEBT-TIER
     dimension: X3
     layer: L2
@@ -398,14 +394,12 @@ gac:
     enforcement: advisory
     source_ref: projects/cockpit/
     owner: cockpit-team
-    expected: projects/cockpit (唯一入口) is the unique source of truth; no markdown or
-      other file may duplicate this value
+    expected: projects/cockpit (唯一入口) is the unique source of truth; no markdown or other file may duplicate this value
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 348 处（如 .githooks/pre-commit,
-      lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 348 处（如 .githooks/pre-commit, lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-L2-DIRECT-IO
     dimension: X1
     layer: L2
@@ -428,14 +422,12 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=direct_io_gate | 代码引用 549 处（如 lib/documents_signals_preflight.py,
-      lib/documents_predictor_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: '[v10 评审 keep] check_type=direct_io_gate | 代码引用 549 处（如 lib/documents_signals_preflight.py, lib/documents_predictor_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X4-DOC-SSOT
     dimension: X4
     layer: meta
     name: 文档 SSOT (markdown 禁硬编码项目元数据, 引用 project-registry)
-    description: markdown 禁硬编码 (包数/版本/Phase/健康分), 引用 docs/project-registry.yaml (bin/ssot/doc-ssot-lint.py
-      扫描)
+    description: markdown 禁硬编码 (包数/版本/Phase/健康分), 引用 docs/project-registry.yaml (bin/ssot/doc-ssot-lint.py 扫描)
     check_type: ssot_pointer
     target: docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py 扫描范围
     forbid_copy_in:
@@ -452,20 +444,17 @@ gac:
     enforcement: advisory
     source_ref: .omo/standards/doc-ssot-contract.md
     owner: governance-team
-    expected: docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py 扫描范围 is the unique
-      source of truth; no markdown or other file may duplicate this value
+    expected: docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py 扫描范围 is the unique source of truth; no markdown or other file may duplicate this value
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 1283 处（如 .githooks/pre-commit,
-      bin/sync-submodules.sh）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 1283 处（如 .githooks/pre-commit, bin/sync-submodules.sh）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-L2-SURFACES-INTEGRITY
     dimension: X4
     layer: L2
     name: governance surfaces 面定义完整 (state/kernel/ingress plane)
-    description: omo-governance-surfaces.yaml 面定义权威 (plane 资产归属), GaC 引用不复制; omo governance
-      surfaces 校验完整
+    description: omo-governance-surfaces.yaml 面定义权威 (plane 资产归属), GaC 引用不复制; omo governance surfaces 校验完整
     check_type: ssot_pointer
     target: .omo/_truth/registry/omo-governance-surfaces.yaml::governance_stack
     executor:
@@ -478,9 +467,7 @@ gac:
     enforcement: advisory
     source_ref: .omo/_truth/registry/omo-governance-surfaces.yaml
     owner: omo-team
-    expected: .omo/_truth/registry/omo-governance-surfaces.yaml::governance_stack
-      is the unique source of truth; no markdown or other file may duplicate this
-      value
+    expected: .omo/_truth/registry/omo-governance-surfaces.yaml::governance_stack is the unique source of truth; no markdown or other file may duplicate this value
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
@@ -490,8 +477,7 @@ gac:
     dimension: X4
     layer: L0
     name: protocols 注册表 SSOT (端口/vault/x-axis 禁硬编码)
-    description: protocols/{port,vault-paths,x-axis}-registry.yaml 协议层 SSOT, markdown/代码禁硬编码端口号;
-      scripts/check-vault-paths.py CI 校验
+    description: protocols/{port,vault-paths,x-axis}-registry.yaml 协议层 SSOT, markdown/代码禁硬编码端口号; scripts/check-vault-paths.py CI 校验
     check_type: ssot_pointer
     target: protocols/port-registry.yaml + vault-paths.yaml + x-axis-registry.yaml
     forbid_copy_in:
@@ -507,21 +493,17 @@ gac:
     enforcement: required
     source_ref: protocols/
     owner: ecos-team
-    expected: protocols/port-registry.yaml + vault-paths.yaml + x-axis-registry.yaml
-      is the unique source of truth; no markdown or other file may duplicate this
-      value
+    expected: protocols/port-registry.yaml + vault-paths.yaml + x-axis-registry.yaml is the unique source of truth; no markdown or other file may duplicate this value
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 67 处（如 lib/documents_learning_control_plane.py,
-      .github/workflows/mof-update.yml）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 67 处（如 lib/documents_learning_control_plane.py, .github/workflows/mof-update.yml）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X2-GAC-BOOTSTRAP
     dimension: X2
     layer: meta
     name: GaC 自举递归 (工具活/indexed 完整/exec 有效/schema 自洽)
-    description: 'GaC 治一切, GaC 自己也要被治 (NORTH-STAR 元治理递归); bin/gac/gac-bootstrap.py
-      检测 4 层: 工具活/死 + indexed source_ref 完整 + executor 执行有效 + schema 自洽'
+    description: 'GaC 治一切, GaC 自己也要被治 (NORTH-STAR 元治理递归); bin/gac/gac-bootstrap.py 检测 4 层: 工具活/死 + indexed source_ref 完整 + executor 执行有效 + schema 自洽'
     check_type: drift_audit
     target: bin/gac/gac-bootstrap.py (GaC 自身完整性自检)
     executor:
@@ -539,15 +521,13 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=drift_audit | 代码引用 1103 处（如 lib/documents_signals_preflight.py,
-      lib/monthly_healthcheck.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: '[v10 评审 keep] check_type=drift_audit | 代码引用 1103 处（如 lib/documents_signals_preflight.py, lib/monthly_healthcheck.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X2-GOVERNANCE-SEMANTIC-GATE
     dimension: X2
     layer: meta
     name: 治理语义门禁统一契约
-    description: '防声明/执行语义错位: 本地 gate 不只看 exit code, 还消费 gac-bootstrap/gac-executor/gac-mof-validate/mof-schema/adr-coverage/AGCP/package
-      的 JSON ok 字段; release 模式硬挡 active runs 和 release package 未决. PR #17 落地工具 (bin/gac/governance-semantic-gate.py),
-      M1 实例同步派生, 但 registry SSOT 漏登记 — 本 commit 补.'
+    description: '防声明/执行语义错位: 本地 gate 不只看 exit code, 还消费 gac-bootstrap/gac-executor/gac-mof-validate/mof-schema/adr-coverage/AGCP/package 的 JSON ok 字段; release 模式硬挡 active runs 和 release package 未决. PR
+      #17 落地工具 (bin/gac/governance-semantic-gate.py), M1 实例同步派生, 但 registry SSOT 漏登记 — 本 commit 补.'
     check_type: schema_integrity
     target: bin/gac/governance-semantic-gate.py (统一消费治理工具 JSON 语义)
     executor:
@@ -565,16 +545,13 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=schema_integrity | 代码引用 1148 处（如 lib/documents_signals_preflight.py,
-      lib/documents_kos_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: '[v10 评审 keep] check_type=schema_integrity | 代码引用 1148 处（如 lib/documents_signals_preflight.py, lib/documents_kos_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
   - id: CR-X1-GOD-MODULE-LIMIT
     dimension: X1
     layer: L2
     name: god-module 文件行数上限 (新代码 > 1500L 阻塞)
-    description: '防 god module 漂移: 当前已知 7 文件 > 1500L (gbrain 重灾区) + 51 文件 > 800L,
-      大多数是历史累积. 新代码不许引入 > 1500L 文件 (P0 audit 2026-07-02). 实现: bin/ssot/check-god-module.py
-      扩展 --strict 模式, 新加文件 > 1500L 返回 exit 1. 已有 god module 走 ADR-0115 渐进拆分 (单仓 /
-      跨仓分别由对应模块 owner 实施)'
+    description: '防 god module 漂移: 当前已知 7 文件 > 1500L (gbrain 重灾区) + 51 文件 > 800L, 大多数是历史累积. 新代码不许引入 > 1500L 文件 (P0 audit 2026-07-02). 实现: bin/ssot/check-god-module.py 扩展 --strict 模式, 新加文件 > 1500L 返回 exit
+      1. 已有 god module 走 ADR-0115 渐进拆分 (单仓 / 跨仓分别由对应模块 owner 实施)'
     check_type: god_module
     target: bin/ssot/check-god-module.py --strict (新文件 > 1500L 阻塞, 已有文件仅 warn)
     executor:
@@ -597,9 +574,7 @@ gac:
     dimension: X4
     layer: meta
     name: matrix.yaml port 与 port-registry.yaml 一致性
-    description: '防 SSOT 漂移: matrix.yaml 中配了 port 的服务, port 必须在 port-registry.yaml
-      注册; stdio/scheduled 类型不应配 port (除非有 health_url). 实现: bin/ssot/matrix-consistency-lint.py
-      R2/R3'
+    description: '防 SSOT 漂移: matrix.yaml 中配了 port 的服务, port 必须在 port-registry.yaml 注册; stdio/scheduled 类型不应配 port (除非有 health_url). 实现: bin/ssot/matrix-consistency-lint.py R2/R3'
     check_type: ssot_lint
     target: ~/runtime/matrix.yaml + protocols/port-registry.yaml
     executor:
@@ -622,9 +597,7 @@ gac:
     dimension: X4
     layer: meta
     name: SSOT 路径与 broker 写入路径一致
-    description: '防 P71 Class A (路径错位): SSOT 声明路径必须与 broker 实际写入路径一致. 案例: dependency-baseline
-      从 .omo/ 迁到 runtime/omo/ (gitignored) 导致 CI 拿不到. 实现: bin/gac/governance-convergence-lint.py
-      --rule ssot-path-norm'
+    description: '防 P71 Class A (路径错位): SSOT 声明路径必须与 broker 实际写入路径一致. 案例: dependency-baseline 从 .omo/ 迁到 runtime/omo/ (gitignored) 导致 CI 拿不到. 实现: bin/gac/governance-convergence-lint.py --rule ssot-path-norm'
     check_type: ssot_lint
     target: .omo/_truth/ + broker 写入路径
     executor:
@@ -874,8 +847,7 @@ gac:
     dimension: X2
     layer: meta
     name: LLM-assisted commit (advisory 硬门)
-    description: 'LLM 永远不能 auto-commit. 必须通过 bin/gac/commit-assist.py, 必须 write .commit-suggestion
-      (侧车)
+    description: 'LLM 永远不能 auto-commit. 必须通过 bin/gac/commit-assist.py, 必须 write .commit-suggestion (侧车)
 
       然后用户显式 git commit -F .commit-suggestion 接受.
 
@@ -907,8 +879,7 @@ gac:
     dimension: X4
     layer: meta
     name: 跨仓 BOS URI / port-registry 一致性 (hard, P77 Phase 3 治本后)
-    description: '对比 projects/agora/etc/bos-services.yaml (BOS URI SSOT) 与 projects/*/src/
-      中
+    description: '对比 projects/agora/etc/bos-services.yaml (BOS URI SSOT) 与 projects/*/src/ 中
 
       bos:// 引用. unregistered (referenced but not in SSOT) 应 = 0 (Phase 3 治本, hard).
 
@@ -961,8 +932,7 @@ gac:
     created_at: '2026-07-07'
     adr: ADR-0165
     owner: omo-team
-    expected: .omo/standards/p76-principles.md is the unique source of truth; no markdown
-      or other file may duplicate this value
+    expected: .omo/standards/p76-principles.md is the unique source of truth; no markdown or other file may duplicate this value
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
@@ -1161,8 +1131,7 @@ gac:
     dimension: X1
     layer: meta
     name: 原则执行化
-    description: 'governance audit 每月 dry-run, 验证工程原则是否被工具/流程执行. 实现: bin/gac/check-principle-enforcement.py
-      (gac-gate CI advisory)'
+    description: 'governance audit 每月 dry-run, 验证工程原则是否被工具/流程执行. 实现: bin/gac/check-principle-enforcement.py (gac-gate CI advisory)'
     check_type: audit_chain
     executor:
     - omo_audit
@@ -1188,8 +1157,7 @@ gac:
     dimension: X1
     layer: meta
     name: 子模块指针回退检测
-    description: '检测子模块指针是否被意外回退: 对比 index 当前指针与上一次 commit 的指针, 当前指针 NOT ancestor
-      of 上一次指针 → rewind. 防止 Phase 4 等变更被意外撤销. 实施: bin/gac/check-submodule-rewind.py'
+    description: '检测子模块指针是否被意外回退: 对比 index 当前指针与上一次 commit 的指针, 当前指针 NOT ancestor of 上一次指针 → rewind. 防止 Phase 4 等变更被意外撤销. 实施: bin/gac/check-submodule-rewind.py'
     check_type: audit_chain
     target: projects/*/ (submodule gitlink pointer)
     source_ref: bin/gac/check-submodule-rewind.py::main
@@ -1242,8 +1210,7 @@ gac:
     lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-PRINCIPLE-FOLLOWED,CR-PRINCIPLE-ENFORCEMENT
-    superseded_reason: 被 CR-PRINCIPLE-FOLLOWED 和 CR-PRINCIPLE-ENFORCEMENT (active)
-      取代, 原则形式化已通过 ADR §2 引用实现
+    superseded_reason: 被 CR-PRINCIPLE-FOLLOWED 和 CR-PRINCIPLE-ENFORCEMENT (active) 取代, 原则形式化已通过 ADR §2 引用实现
     version: 0.1.0
     created_at: 2026-07-08
     adr: ADR-0165
@@ -1254,8 +1221,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-14'
-    justification: '[ADR-0431 D2] CR-P77-2-1-PRINCIPLE-FORMALIZATION — 待补存在理由 (90
-      天内补齐)'
+    justification: '[ADR-0431 D2] CR-P77-2-1-PRINCIPLE-FORMALIZATION — 待补存在理由 (90 天内补齐)'
   - id: CR-P77-2-2-CATALOG-SSOT
     dimension: X1
     layer: meta
@@ -1267,8 +1233,7 @@ gac:
     lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-PRINCIPLE-FOLLOWED
-    superseded_reason: 被 CR-PRINCIPLE-FOLLOWED (active) 取代, 原则 catalog 已通过 .omo/standards/p76-principles.md
-      SSOT 实现
+    superseded_reason: 被 CR-PRINCIPLE-FOLLOWED (active) 取代, 原则 catalog 已通过 .omo/standards/p76-principles.md SSOT 实现
     version: 0.1.0
     created_at: 2026-07-08
     adr: ADR-0165
@@ -1291,8 +1256,7 @@ gac:
     dimension: X4
     layer: X
     name: URI 前缀模式
-    description: 'URI 末尾 / 表 routing prefix, 不需具体服务注册. 对应 P77-3-2 (prefix-pattern-allowed).
-      实现: bin/gac/check-uri-prefix-pattern.py (gac-gate CI, advisory)'
+    description: 'URI 末尾 / 表 routing prefix, 不需具体服务注册. 对应 P77-3-2 (prefix-pattern-allowed). 实现: bin/gac/check-uri-prefix-pattern.py (gac-gate CI, advisory)'
     check_type: consistency_drift
     executor:
     - ci_gate
@@ -1320,8 +1284,7 @@ gac:
     dimension: X2
     layer: meta
     name: 层级 fallback 测试
-    description: '每级 fallback 都必须有测试证明不崩溃. 对应 P77-6-2 (tier-test-for-fallback). 实现:
-      bin/gac/check-fallback-test-coverage.py (gac-gate CI, advisory)'
+    description: '每级 fallback 都必须有测试证明不崩溃. 对应 P77-6-2 (tier-test-for-fallback). 实现: bin/gac/check-fallback-test-coverage.py (gac-gate CI, advisory)'
     check_type: schema_integrity
     executor:
     - ci_gate
@@ -1349,8 +1312,7 @@ gac:
     dimension: X2
     layer: meta
     name: Gateway 状态文档化
-    description: '外部 LLM gateway 不可达时, 必须文档化不可达状态. 对应 P77-6-3 (gateway-status-documentation).
-      实现: bin/gac/check-gateway-status-doc.py (gac-local-gate)'
+    description: '外部 LLM gateway 不可达时, 必须文档化不可达状态. 对应 P77-6-3 (gateway-status-documentation). 实现: bin/gac/check-gateway-status-doc.py (gac-local-gate)'
     check_type: schema_integrity
     executor:
     - omo_audit
@@ -1382,8 +1344,7 @@ gac:
     dimension: X1
     layer: meta
     name: 治理轴 Foundry Deck
-    description: '每治理轴对应一个 foundry deck. 对应 P79-3 (foundry-deck-per-governance-axis).
-      实现: bin/gac/check-foundry-deck-coverage.py (gac-local-gate)'
+    description: '每治理轴对应一个 foundry deck. 对应 P79-3 (foundry-deck-per-governance-axis). 实现: bin/gac/check-foundry-deck-coverage.py (gac-local-gate)'
     check_type: audit_chain
     executor:
     - omo_audit
@@ -1416,8 +1377,7 @@ gac:
     dimension: X1
     layer: meta
     name: Catalog 健康指标
-    description: '原则数和 GaC 规则数作为可观测指标写入 foundry. 对应 P79-4 (catalog-health-metric).
-      实现: bin/gac/check-catalog-health.py (gac-gate CI, advisory)'
+    description: '原则数和 GaC 规则数作为可观测指标写入 foundry. 对应 P79-4 (catalog-health-metric). 实现: bin/gac/check-catalog-health.py (gac-gate CI, advisory)'
     check_type: audit_chain
     executor:
     - ci_gate
@@ -1443,8 +1403,7 @@ gac:
     dimension: X4
     layer: X
     name: Ruff Scope 稳定
-    description: '防止 X-Plane 项目改变 ruff scope 导致 lint 面漂移. 实现: bin/gac/check-ruff-scope-stable.py
-      (gac-gate CI)'
+    description: '防止 X-Plane 项目改变 ruff scope 导致 lint 面漂移. 实现: bin/gac/check-ruff-scope-stable.py (gac-gate CI)'
     check_type: schema_integrity
     executor:
     - ci_gate
@@ -1472,10 +1431,8 @@ gac:
     dimension: X4
     layer: L0
     name: L0 约束集 SSOT (GaC 索引)
-    description: 'L0-constraints.yaml 中所有约束的 GaC 索引. 源文件包含: constraint, protocol_registry,
-      trigger_constraints, opc_cadence_constraints, mof_schema_validate_constraints,
-      c2g_v3_constraints, c2g_v4_constraints, omni_bus_constraints, debt_constraints,
-      governance_closure_constraints 等集合.'
+    description: 'L0-constraints.yaml 中所有约束的 GaC 索引. 源文件包含: constraint, protocol_registry, trigger_constraints, opc_cadence_constraints, mof_schema_validate_constraints, c2g_v3_constraints, c2g_v4_constraints,
+      omni_bus_constraints, debt_constraints, governance_closure_constraints 等集合.'
     check_type: legacy_index
     executor:
     - omo_audit
@@ -1502,9 +1459,8 @@ gac:
     dimension: X1
     layer: meta
     name: X1 治理策略 SSOT (GaC 索引)
-    description: 'x1-governance-policies.yaml 中所有策略的 GaC 索引. 源文件包含: omni_bus_routing,
-      governance_surfaces, direct_mutation_gate, arch_merge_llmgateway, debt_evidence_closure,
-      cross_project_lint_enforce, aud_commit_loop 等策略.'
+    description: 'x1-governance-policies.yaml 中所有策略的 GaC 索引. 源文件包含: omni_bus_routing, governance_surfaces, direct_mutation_gate, arch_merge_llmgateway, debt_evidence_closure, cross_project_lint_enforce,
+      aud_commit_loop 等策略.'
     check_type: legacy_index
     executor:
     - omo_audit
@@ -1528,10 +1484,8 @@ gac:
     dimension: X2
     layer: meta
     name: X2 新鲜度规则 SSOT (GaC 索引)
-    description: 'x2-freshness-rules.yaml 中所有规则的 GaC 索引. 源文件包含: governance_surfaces,
-      evidence_alias, archived_llmgateway, merge_checklist, debt_evidence_integrity,
-      cross_project_lint, mof_version_bump, doc_lifecycle, commit_fatigue, omo_lint_size,
-      gov_dashboard, adr_drift 等规则.'
+    description: 'x2-freshness-rules.yaml 中所有规则的 GaC 索引. 源文件包含: governance_surfaces, evidence_alias, archived_llmgateway, merge_checklist, debt_evidence_integrity, cross_project_lint, mof_version_bump,
+      doc_lifecycle, commit_fatigue, omo_lint_size, gov_dashboard, adr_drift 等规则.'
     check_type: legacy_index
     executor:
     - omo_audit
@@ -1557,9 +1511,7 @@ gac:
     dimension: X4
     layer: meta
     name: X4 一致性规则 SSOT (GaC 索引)
-    description: 'x4-consistency-rules.yaml 中所有规则的 GaC 索引. 源文件包含: governance_surfaces,
-      llmgateway_archived, p43_closed_loop_ssot, debt_gitignore_boundary, drift_vs_governance
-      等规则.'
+    description: 'x4-consistency-rules.yaml 中所有规则的 GaC 索引. 源文件包含: governance_surfaces, llmgateway_archived, p43_closed_loop_ssot, debt_gitignore_boundary, drift_vs_governance 等规则.'
     check_type: legacy_index
     executor:
     - mof_validate
@@ -1624,9 +1576,7 @@ gac:
     dimension: X4
     layer: meta
     name: 子模块指针完整性
-    description: '子模块指针必须与远程同步: 禁止超前指针 (未推送的 submodule commit), 禁止指针漂移 (submodule
-      commit 被 rebase/drop). 实现: bin/gac/check-submodule-pointer-integrity.py (gac-gate
-      CI)'
+    description: '子模块指针必须与远程同步: 禁止超前指针 (未推送的 submodule commit), 禁止指针漂移 (submodule commit 被 rebase/drop). 实现: bin/gac/check-submodule-pointer-integrity.py (gac-gate CI)'
     check_type: hygiene_case
     executor:
     - ci_gate
@@ -1663,9 +1613,7 @@ gac:
     dimension: X4
     layer: meta
     name: Mesh executor 可靠性
-    description: 'mesh executor 脚本必须有: 超时控制 (timeout/retry), 错误处理 (try/except), 日志记录
-      (logging). 防止 iris→mesh 自动化管道无声失败. 实现: bin/gac/check-mesh-executor-reliability.py
-      (gac-gate CI, advisory)'
+    description: 'mesh executor 脚本必须有: 超时控制 (timeout/retry), 错误处理 (try/except), 日志记录 (logging). 防止 iris→mesh 自动化管道无声失败. 实现: bin/gac/check-mesh-executor-reliability.py (gac-gate CI, advisory)'
     check_type: hygiene_case
     executor:
     - ci_gate
@@ -1702,9 +1650,7 @@ gac:
     dimension: X4
     layer: meta
     name: Memory-OS surface 一致性
-    description: 'Memory OS light gate: SSOT/ports/env.example/help catalog/smoke
-      surfaces 必须齐全. 实现: bin/gac/check-memory-os-surfaces.py (gac-gate CI blocking;
-      make memory-os-check)'
+    description: 'Memory OS light gate: SSOT/ports/env.example/help catalog/smoke surfaces 必须齐全. 实现: bin/gac/check-memory-os-surfaces.py (gac-gate CI blocking; make memory-os-check)'
     check_type: hygiene_case
     executor:
     - ci_gate
@@ -1735,9 +1681,7 @@ gac:
     dimension: X1
     layer: meta
     name: 外部 agent 接入审计
-    description: '外部 agent 接入必须: 1) 注册 MCP 工具入口 2) 审计链记录操作 3) 不绕过 .omo ingress. 扩展
-      CR-X1-AGENT-AUDIT 覆盖外部 agent 场景. 实现: bin/gac/check-external-agent-audit.py (gac-gate
-      CI, advisory)'
+    description: '外部 agent 接入必须: 1) 注册 MCP 工具入口 2) 审计链记录操作 3) 不绕过 .omo ingress. 扩展 CR-X1-AGENT-AUDIT 覆盖外部 agent 场景. 实现: bin/gac/check-external-agent-audit.py (gac-gate CI, advisory)'
     check_type: audit_chain
     executor:
     - ci_gate
@@ -1775,8 +1719,7 @@ gac:
     dimension: X4
     layer: meta
     name: Sweep 工具完整性
-    description: 'sweep 工具链 (bin/sweep/) 必须有测试覆盖和 CI 集成. 对应 ADR-0367. 实现: bin/gac/check-sweep-tool-integrity.py
-      (gac-gate CI, advisory)'
+    description: 'sweep 工具链 (bin/sweep/) 必须有测试覆盖和 CI 集成. 对应 ADR-0367. 实现: bin/gac/check-sweep-tool-integrity.py (gac-gate CI, advisory)'
     check_type: hygiene_case
     executor:
     - ci_gate
@@ -1800,8 +1743,7 @@ gac:
     dimension: X4
     layer: meta
     name: Mesh 路由一致性
-    description: 'mesh 路由必须遵循 BOS URI 标准, 确保路由注册与声明一致. 实现: bin/gac/check-mesh-routing-consistency.py
-      (gac-gate CI, advisory)'
+    description: 'mesh 路由必须遵循 BOS URI 标准, 确保路由注册与声明一致. 实现: bin/gac/check-mesh-routing-consistency.py (gac-gate CI, advisory)'
     check_type: mesh_routing
     executor:
     - ci_gate
@@ -1831,8 +1773,7 @@ gac:
     dimension: X2
     layer: meta
     name: 项目健康分新鲜度
-    description: '项目健康分 (system.yaml health_score) 必须定期更新, 不超过 48h. 实现: bin/gac/check-project-health-freshness.py
-      (gac-gate CI, advisory)'
+    description: '项目健康分 (system.yaml health_score) 必须定期更新, 不超过 48h. 实现: bin/gac/check-project-health-freshness.py (gac-gate CI, advisory)'
     check_type: freshness
     executor:
     - ci_gate
@@ -1861,8 +1802,7 @@ gac:
     dimension: X3
     layer: meta
     name: 交付 X3 价值门禁
-    description: '交付文件必须有 X3 价值标注 (x3_tier/value/roi), 确保投入产出可量化. 平衡 X3 维度覆盖. 实现:
-      bin/gac/check-delivery-value-gate.py (gac-gate CI, advisory)'
+    description: '交付文件必须有 X3 价值标注 (x3_tier/value/roi), 确保投入产出可量化. 平衡 X3 维度覆盖. 实现: bin/gac/check-delivery-value-gate.py (gac-gate CI, advisory)'
     check_type: value_roi
     executor:
     - ci_gate
@@ -1922,8 +1862,7 @@ gac:
     dimension: X2
     layer: meta
     name: 文档新鲜度门禁
-    description: '检查 docs/ 下 md 文件是否在 90 天内更新过. 平衡 X2 维度覆盖. 实现: bin/gac/check-doc-freshness-gate.py
-      (gac-gate CI, advisory)'
+    description: '检查 docs/ 下 md 文件是否在 90 天内更新过. 平衡 X2 维度覆盖. 实现: bin/gac/check-doc-freshness-gate.py (gac-gate CI, advisory)'
     check_type: freshness
     executor:
     - ci_gate
@@ -1953,8 +1892,7 @@ gac:
     dimension: X2
     layer: meta
     name: 治理指标趋势
-    description: '检查 governance-evolution 指标趋势, 确认关键指标未恶化. 平衡 X2 维度覆盖. 实现: bin/gac/check-metric-trend.py
-      (gac-gate CI, advisory)'
+    description: '检查 governance-evolution 指标趋势, 确认关键指标未恶化. 平衡 X2 维度覆盖. 实现: bin/gac/check-metric-trend.py (gac-gate CI, advisory)'
     check_type: freshness
     executor:
     - ci_gate
@@ -1982,9 +1920,8 @@ gac:
     dimension: X1
     layer: meta
     name: CI 平面检查登记 SSOT (ADR-0379 E-1)
-    description: 'ci-surfaces.yaml 是 CI 平面检查接线登记 SSOT. 所有 workflow / sgf-policy 中执行的
-      check 类工具必须登记; bin/gac/check-ci-surfaces.py 检测 unregistered / gate-parity /
-      orphan / overlap / double-trigger (on: [push, pull_request] 双跑).'
+    description: 'ci-surfaces.yaml 是 CI 平面检查接线登记 SSOT. 所有 workflow / sgf-policy 中执行的 check 类工具必须登记; bin/gac/check-ci-surfaces.py 检测 unregistered / gate-parity / orphan / overlap / double-trigger (on: [push,
+      pull_request] 双跑).'
     check_type: legacy_index
     executor:
     - ci_gate
@@ -2013,8 +1950,7 @@ gac:
     dimension: X2
     layer: meta
     name: 证据新鲜度检查
-    description: 'evidence-smoke 报告必须 7 天内生成, 分数不低于 90. 实现: bin/gac/check-evidence-freshness.py
-      (gac-local-gate)'
+    description: 'evidence-smoke 报告必须 7 天内生成, 分数不低于 90. 实现: bin/gac/check-evidence-freshness.py (gac-local-gate)'
     check_type: freshness
     executor:
     - gac_local_gate
@@ -2044,8 +1980,7 @@ gac:
     dimension: X2
     layer: meta
     name: 治理指标趋势检查
-    description: '治理指标在合理范围内: 规则数 ≤ freeze, ADR 100%, 无过期 draft. 实现: bin/gac/check-governance-trend.py
-      (gac-local-gate)'
+    description: '治理指标在合理范围内: 规则数 ≤ freeze, ADR 100%, 无过期 draft. 实现: bin/gac/check-governance-trend.py (gac-local-gate)'
     check_type: freshness
     executor:
     - gac_local_gate
@@ -2070,8 +2005,7 @@ gac:
     dimension: X2
     layer: meta
     name: LLM 推理统一接入层
-    description: '禁止业务代码直连 ollama (11434) / 裸 OpenAI 端点; 必须走 llm-router / AetherForge
-      网关. 静态源码扫描, --warn 迁移期仅告警. 实现: bin/gac/check-llm-gateway-only.py'
+    description: '禁止业务代码直连 ollama (11434) / 裸 OpenAI 端点; 必须走 llm-router / AetherForge 网关. 静态源码扫描, --warn 迁移期仅告警. 实现: bin/gac/check-llm-gateway-only.py'
     check_type: drift_audit
     target: projects/**
     source_ref: bin/gac/check-llm-gateway-only.py::--warn
@@ -2112,14 +2046,12 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-12'
-    justification: '[ADR-0431 D2] CR-L4-DOCUMENTS-MIGRATION-COVERAGE — 待补存在理由 (90
-      天内补齐)'
+    justification: '[ADR-0431 D2] CR-L4-DOCUMENTS-MIGRATION-COVERAGE — 待补存在理由 (90 天内补齐)'
   - id: CR-RESIDENT-STATUS-01
     dimension: X2
     layer: meta
     name: resident daemon 水位活性
-    description: resident 体系活性以 daemon 角色水位判断 (cron --once 下无常驻进程, 进程退出正常). 水位新鲜 ≤30min,
-      超阈值 → degraded. 排除订阅层 resident-sub.json 防误判. 对齐 L0 CR-RESIDENT-STATUS-01.
+    description: resident 体系活性以 daemon 角色水位判断 (cron --once 下无常驻进程, 进程退出正常). 水位新鲜 ≤30min, 超阈值 → degraded. 排除订阅层 resident-sub.json 防误判. 对齐 L0 CR-RESIDENT-STATUS-01.
     check_type: freshness
     target: .omo/_delivery/resident-orchestrator/watermarks/resident-*.json
     source_ref: bin/gac/check-resident-status.py
@@ -2143,8 +2075,7 @@ gac:
     dimension: X4
     layer: L0
     name: resident 角色双份对齐
-    description: resident 五类角色 (sediment/decision/execute/monitor/heartbeat) 必须同时注册在
-      roles.py (SSOT) 与 MOF m1 DigitalAgent (AGENT-RESIDENT-*), 零漂移. 对齐 L0 CR-RESIDENT-MOF-SYNC-01.
+    description: resident 五类角色 (sediment/decision/execute/monitor/heartbeat) 必须同时注册在 roles.py (SSOT) 与 MOF m1 DigitalAgent (AGENT-RESIDENT-*), 零漂移. 对齐 L0 CR-RESIDENT-MOF-SYNC-01.
     check_type: drift_audit
     target: projects/omo/src/omo/resident/roles.py vs projects/ecos/src/ecos/ssot/mof/m1/agent/AGENT-RESIDENT-ROLES.yaml
     source_ref: bin/gac/check-resident-mof-sync.py
@@ -2168,8 +2099,7 @@ gac:
     dimension: X1
     layer: L2
     name: resident 接口 BOS 路由
-    description: resident 接口 (status/roles/daemon/decision/execute) 必须经 bos://resident/*
-      暴露, 禁止绕过 BOS 直连 resident 内部数据面 (events.jsonl / sediment / ledger). 对齐 L0 CR-RESIDENT-BOS-01.
+    description: resident 接口 (status/roles/daemon/decision/execute) 必须经 bos://resident/* 暴露, 禁止绕过 BOS 直连 resident 内部数据面 (events.jsonl / sediment / ledger). 对齐 L0 CR-RESIDENT-BOS-01.
     check_type: bos_resolve
     target: projects/agora/etc/bos-services.yaml::bos://resident/*
     source_ref: bin/gac/check-resident-bos.py
@@ -2193,8 +2123,7 @@ gac:
     dimension: X1
     layer: L2
     name: AGE-v2 Cell 核心链路 BOS 路由
-    description: AGE-v2 Cell 核心接口 (plan/execute/verify/govern) 必须经 bos://agent-cell/*
-      暴露, 禁止绕过 BOS 直连 Cell 内部数据面 (cell_states.json / handoff_log). 对齐 L0 CR-AGE-BOS-01.
+    description: AGE-v2 Cell 核心接口 (plan/execute/verify/govern) 必须经 bos://agent-cell/* 暴露, 禁止绕过 BOS 直连 Cell 内部数据面 (cell_states.json / handoff_log). 对齐 L0 CR-AGE-BOS-01.
     check_type: bos_resolve
     target: projects/agora/etc/bos-services.yaml::bos://agent-cell/*
     source_ref: bin/gac/check-age-bos.py
@@ -2217,8 +2146,7 @@ gac:
     dimension: X1
     layer: L2
     name: AGE-v2 Cell PDP/PEP 策略执行
-    description: Cell 高风险动作 (R2/R3) 必须经 PDP 评估 + PEP 强制执行, 禁止绕过策略引擎直接执行. PDP 评估记录必须写入
-      Cell handoff_log 证据链. 对齐 L0 CR-AGE-POLICY-01.
+    description: Cell 高风险动作 (R2/R3) 必须经 PDP 评估 + PEP 强制执行, 禁止绕过策略引擎直接执行. PDP 评估记录必须写入 Cell handoff_log 证据链. 对齐 L0 CR-AGE-POLICY-01.
     check_type: ssot_lint
     target: projects/omo/src/omo/resident/pdp_pep.py
     source_ref: bin/gac/check-age-policy.py
@@ -2241,8 +2169,7 @@ gac:
     dimension: X2
     layer: L2
     name: AGE-v2 Cell 记忆管道活性
-    description: Cell Memory Pipeline 必须维持 candidate → conflict → consolidate → forget
-      四阶段运转, 禁止跳过 conflict 检测直接写入记忆. 对齐 L0 CR-AGE-MEMORY-01.
+    description: Cell Memory Pipeline 必须维持 candidate → conflict → consolidate → forget 四阶段运转, 禁止跳过 conflict 检测直接写入记忆. 对齐 L0 CR-AGE-MEMORY-01.
     check_type: file_exists
     target: projects/omo/src/omo/resident/memory_pipeline.py
     source_ref: bin/gac/check-age-memory.py
@@ -2265,8 +2192,7 @@ gac:
     dimension: X4
     layer: L2
     name: AGE-v2 Cell 回放框架完整性
-    description: Cell Replay Framework 必须同时支持 replay / shadow / eval 三种模式, 禁止仅实现部分模式.
-      对齐 L0 CR-AGE-REPLAY-01.
+    description: Cell Replay Framework 必须同时支持 replay / shadow / eval 三种模式, 禁止仅实现部分模式. 对齐 L0 CR-AGE-REPLAY-01.
     check_type: ssot_lint
     target: projects/omo/src/omo/resident/replay.py
     source_ref: bin/gac/check-age-replay.py
@@ -2289,8 +2215,7 @@ gac:
     dimension: X3
     layer: L2
     name: AGE-v2 Cell 事件驱动路由
-    description: Cell Handler 必须订阅 WorkflowClosed / ExecutionRequested / WorkflowFailed
-      / StepTimeout 四类事件, 禁止选择性订阅. 对齐 L0 CR-AGE-EVENT-01.
+    description: Cell Handler 必须订阅 WorkflowClosed / ExecutionRequested / WorkflowFailed / StepTimeout 四类事件, 禁止选择性订阅. 对齐 L0 CR-AGE-EVENT-01.
     check_type: ssot_lint
     target: projects/omo/src/omo/resident/cell_handler.py
     source_ref: bin/gac/check-age-event.py
@@ -2313,8 +2238,7 @@ gac:
     dimension: X1
     layer: L1
     name: 子模块指针 bump 必须锚定子仓 origin/main
-    description: 'bump gitlink 时 sha 唯一合法来源为子仓 fetch 后的 origin/main 头; 禁止分支头/PR head/手搓
-      sha。2026-08-29 双指针污染事故 (cockpit/agora) 根因即 bump 分支头。契约: .omo/standards/submodule-pointer-bump-contract.md'
+    description: 'bump gitlink 时 sha 唯一合法来源为子仓 fetch 后的 origin/main 头; 禁止分支头/PR head/手搓 sha。2026-08-29 双指针污染事故 (cockpit/agora) 根因即 bump 分支头。契约: .omo/standards/submodule-pointer-bump-contract.md'
     check_type: audit_chain
     target: projects/*
     source_ref: .omo/standards/submodule-pointer-bump-contract.md
@@ -2325,11 +2249,9 @@ gac:
     adr: ADR-0431
     added_at: '2026-08-30'
     review_before: '2027-01-24'
-    justification: 指针污染阻塞全仓 PR 半天×2; submodule-guard 只查 fast-forward 不查来源, 本规则补源头纪律
-      (人工+review 执行, 工具化后续 BET 跟进)。
+    justification: 指针污染阻塞全仓 PR 半天×2; submodule-guard 只查 fast-forward 不查来源, 本规则补源头纪律 (人工+review 执行, 工具化后续 BET 跟进)。
     expected: Check CR-GITLINK-BUMP-SQUASH-MAIN must pass without violations
-    remediation: bump gitlink to origin/main SHA only; use gac-worktree.sh bump-fast
-      for safe updates.
+    remediation: bump gitlink to origin/main SHA only; use gac-worktree.sh bump-fast for safe updates.
     related_runbooks: []
   - id: CR-EVIDENCE-SHA-FRESHNESS
     created_at: '2026-08-30'
@@ -2338,8 +2260,7 @@ gac:
     dimension: X1
     layer: L2
     name: completion_evidence 锚新鲜度
-    description: 'evidence sha256 是写入时刻快照; 锚文件此后只增不改。complete 前重算全部 锚 sha; DIGEST_MISMATCH
-      先核实变更合法性再刷新, 禁止无脑重算。 契约: .omo/standards/evidence-anchor-freshness.md'
+    description: 'evidence sha256 是写入时刻快照; 锚文件此后只增不改。complete 前重算全部 锚 sha; DIGEST_MISMATCH 先核实变更合法性再刷新, 禁止无脑重算。 契约: .omo/standards/evidence-anchor-freshness.md'
     check_type: freshness
     target: docs/plans/3y-bet-ledger.yaml
     source_ref: .omo/standards/evidence-anchor-freshness.md
@@ -2352,8 +2273,7 @@ gac:
     review_before: '2026-12-30'
     justification: T4-07/T4-02 收口连环 DIGEST_MISMATCH; bet-ledger 已有运行时校验, 本规则固化人工流程纪律。
     expected: Check CR-EVIDENCE-SHA-FRESHNESS must pass without violations
-    remediation: Recompute completion_evidence sha256 after any ledger or receipt
-      edit.
+    remediation: Recompute completion_evidence sha256 after any ledger or receipt edit.
     related_runbooks: []
   - id: CR-BIN-RETIREMENT-CHECKLIST
     created_at: '2026-08-30'
@@ -2362,9 +2282,8 @@ gac:
     dimension: X4
     layer: L2
     name: bin 脚本退役六层登记面
-    description: 'bin/ 脚本退役必须同步六层登记面: 1) bin/_registry/scripts/ yaml 2) governance-checks
-      script_baseline 3) bin-scripts-convergence-manifest 4) ci-surfaces.yaml 5) INDEX-TOOLS(自动)
-      6) ecos sgf-policy gate 引用。 2026-08-29 bus-usage-report 退役逐层踩齐全部六层。'
+    description: 'bin/ 脚本退役必须同步六层登记面: 1) bin/_registry/scripts/ yaml 2) governance-checks script_baseline 3) bin-scripts-convergence-manifest 4) ci-surfaces.yaml 5) INDEX-TOOLS(自动) 6) ecos sgf-policy gate
+      引用。 2026-08-29 bus-usage-report 退役逐层踩齐全部六层。'
     check_type: registry_integrity
     target: bin/
     source_ref: .omo/standards/submodule-pointer-bump-contract.md
@@ -2383,37 +2302,31 @@ gac:
     dimension: X4
     layer: L2
     name: 子模块指针暂存纪律
-    description: 主仓暂存禁用 git add -A / add .（带入子仓 gitlink 侧分支状态）；变更须 add 具体路径，涉子模块先核对
-      gitlink 指向 origin/main
+    description: 主仓暂存禁用 git add -A / add .（带入子仓 gitlink 侧分支状态）；变更须 add 具体路径，涉子模块先核对 gitlink 指向 origin/main
     check_type: audit_chain
     target: .githooks/pre-commit + git-discipline skill §1
     executor:
     - gac_local_gate
     - hook_pre_edit
-    justification: 'pitfall PITFALL-COO-003 encountered 3 times (threshold 5): git
-      add -A 误 stage 子仓旧指针——同型三次（cockpit/omlxc/omo）均被 gate 拦截；事故→规则流水线首例人工入册（ADR-0443
-      v3）'
+    justification: 'pitfall PITFALL-COO-003 encountered 3 times (threshold 5): git add -A 误 stage 子仓旧指针——同型三次（cockpit/omlxc/omo）均被 gate 拦截；事故→规则流水线首例人工入册（ADR-0443 v3）'
     added_at: '2026-08-31'
     review_before: '2026-11-29'
     created_at: '2026-08-31'
     version: 1
     lifecycle: active
+  # ── Harness 全生命周期合规 (Phase 8: Agent 感知增强, 合并后 4 条) ──
   - id: CR-HARNESS-STRUCTURE
     dimension: X4
     layer: L2
     name: Harness 结构完整性 (章节 + 维度 + 实现率)
-    description: harness-policy.yaml 必须包含 12 必现章节 + 12 维度全量挂载 + entry 指向脚本存在且调用 agent-workflow；合并自
-      CR-HARNESS-SECTION-COMPLETENESS + CR-HARNESS-DIMENSION-COVERAGE + CR-HARNESS-IMPL-RATE
+    description: harness-policy.yaml 必须包含 12 必现章节 + 12 维度全量挂载 + entry 指向脚本存在且调用 agent-workflow；合并自 CR-HARNESS-SECTION-COMPLETENESS + CR-HARNESS-DIMENSION-COVERAGE + CR-HARNESS-IMPL-RATE
     check_type: schema_integrity
     target: .omo/_truth/registry/harness-policy.yaml
     executor:
     - gac_local_gate
     - ci_gate
-    relates_to:
-    - CR-HARNESS-SECTION-COMPLETENESS
-    - CR-HARNESS-DIMENSION-COVERAGE
-    - CR-HARNESS-IMPL-RATE
-    justification: Phase 8 合并 — 结构完整性统一检查 (章节 + 维度 + 实现率)
+    relates_to: [CR-HARNESS-SECTION-COMPLETENESS, CR-HARNESS-DIMENSION-COVERAGE, CR-HARNESS-IMPL-RATE]
+    justification: 'Phase 8 合并 — 结构完整性统一检查 (章节 + 维度 + 实现率)'
     added_at: '2026-09-01'
     review_before: '2026-12-01'
     created_at: '2026-09-01'
@@ -2423,18 +2336,15 @@ gac:
     dimension: X4
     layer: L2
     name: Harness MOF 集成 (S 槽位 + MOF 约束)
-    description: harness sfop_slot 必须为 S + controller 为 COMP-WS-omo；编辑 MOF 文件前必须影响分析
-      + 编辑后 schema 校验；合并自 CR-HARNESS-SFOP-SLOT + CR-HARNESS-MOF-CONSTRAINT
+    description: harness sfop_slot 必须为 S + controller 为 COMP-WS-omo；编辑 MOF 文件前必须影响分析 + 编辑后 schema 校验；合并自 CR-HARNESS-SFOP-SLOT + CR-HARNESS-MOF-CONSTRAINT
     check_type: mof_stage_gate
     target: .omo/_truth/registry/harness-policy.yaml
     executor:
     - gac_local_gate
     - ci_gate
     - hook_pre_edit
-    relates_to:
-    - CR-HARNESS-SFOP-SLOT
-    - CR-HARNESS-MOF-CONSTRAINT
-    justification: Phase 8 合并 — MOF 集成统一检查 (S 槽位 + MOF 约束)
+    relates_to: [CR-HARNESS-SFOP-SLOT, CR-HARNESS-MOF-CONSTRAINT]
+    justification: 'Phase 8 合并 — MOF 集成统一检查 (S 槽位 + MOF 约束)'
     added_at: '2026-09-01'
     review_before: '2026-12-01'
     created_at: '2026-09-01'
@@ -2444,17 +2354,14 @@ gac:
     dimension: X1
     layer: L2
     name: Harness 运营 (Probe + 价值循环)
-    description: harness probes 必须声明 7 类 Event + 统一 bus；value_loop 必须声明 5 阶段 DAG +
-      bus + store；合并自 CR-HARNESS-PROBE-STANDARDIZATION + CR-HARNESS-VALUE-LOOP
+    description: harness probes 必须声明 7 类 Event + 统一 bus；value_loop 必须声明 5 阶段 DAG + bus + store；合并自 CR-HARNESS-PROBE-STANDARDIZATION + CR-HARNESS-VALUE-LOOP
     check_type: audit_chain
     target: .omo/_truth/registry/harness-policy.yaml
     executor:
     - gac_local_gate
     - omo_audit
-    relates_to:
-    - CR-HARNESS-PROBE-STANDARDIZATION
-    - CR-HARNESS-VALUE-LOOP
-    justification: Phase 8 合并 — 运营统一检查 (Probe + 价值循环)
+    relates_to: [CR-HARNESS-PROBE-STANDARDIZATION, CR-HARNESS-VALUE-LOOP]
+    justification: 'Phase 8 合并 — 运营统一检查 (Probe + 价值循环)'
     added_at: '2026-09-01'
     review_before: '2026-12-01'
     created_at: '2026-09-01'
@@ -2464,19 +2371,14 @@ gac:
     dimension: X1
     layer: L2
     name: Harness 治理 (已知债 + OMO 同步 + 防腐)
-    description: known_debt.growth_policy=shrink_only + escape 收口；Harness 状态同步 OMO
-      system.yaml；脚本配额遵守 anti-corrosion-budget；合并自 CR-HARNESS-KNOWN-DEBT + CR-HARNESS-OMO-SYNC
-      + CR-HARNESS-ANTI-CORROSION
+    description: known_debt.growth_policy=shrink_only + escape 收口；Harness 状态同步 OMO system.yaml；脚本配额遵守 anti-corrosion-budget；合并自 CR-HARNESS-KNOWN-DEBT + CR-HARNESS-OMO-SYNC + CR-HARNESS-ANTI-CORROSION
     check_type: audit_chain
     target: .omo/_truth/registry/harness-policy.yaml
     executor:
     - gac_local_gate
     - omo_audit
-    relates_to:
-    - CR-HARNESS-KNOWN-DEBT
-    - CR-HARNESS-OMO-SYNC
-    - CR-HARNESS-ANTI-CORROSION
-    justification: Phase 8 合并 — 治理统一检查 (已知债 + OMO 同步 + 防腐)
+    relates_to: [CR-HARNESS-KNOWN-DEBT, CR-HARNESS-OMO-SYNC, CR-HARNESS-ANTI-CORROSION]
+    justification: 'Phase 8 合并 — 治理统一检查 (已知债 + OMO 同步 + 防腐)'
     added_at: '2026-09-01'
     review_before: '2026-12-01'
     created_at: '2026-09-01'
@@ -2507,7 +2409,7 @@ gac:
       rationale: 剩余 22 槽位按需分配, 优先 X4 一致性检查和新维度扩展.
     exemption_process: ADR + governance-team approval
     review_trigger: 剩余槽位 < 5 或每季度末
-    reason: Phase 8 整合完成 — 10 条 CR-HARNESS-* 合并为 4 条. 当前 85 active, 预算 100.
+    reason: 'Phase 8 合并完成 — 10 条 CR-HARNESS-* 合并为 4 条 (STRUCTURE/MOF-INTEGRATION/OPERATIONS/GOVERNANCE). 当前 85 active, 预算内.'
   lifecycle:
     draft_to_active_days: 7
     deprecated_to_removed_days: 28
