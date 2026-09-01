@@ -529,6 +529,50 @@ Do not paste the full rule inventory into `AGENTS.md`; keep this file as an oper
 
 <!-- GaC-RULES-END -->
 
+## Harness 集成 (Phase 8)
+
+> SSOT: `.omo/_truth/registry/harness-policy.yaml`
+> Skill: `.agents/skills/harness-compliance/SKILL.md`
+
+### 核心入口
+
+- **Cockpit CLI**: `cockpit harness <command>` (12 子命令)
+- **MCP Tool**: `harness_compliance_check`, `harness_run`, `harness_verify`, `harness_probe`
+- **BOS URI**: `bos://harness/*` (9 个服务)
+- **直接调用**: `bin/harness run/verify/probe/audit/closeout`
+
+### 8 阶段 DAG
+
+```
+admission → spec → grill → dispatch → execute → verify → audit → accept
+```
+
+### 强制约束
+
+- Hook 层: 6 个 exit 1 拦截点 (pre-commit)
+- GaC 规则: 32 个强制/高优先级规则
+- Harness 策略: 19 个强制约束 (blocking/halt/deny/require)
+- Agent 约束: 16 个 enforcement 点
+
+### 检查命令
+
+```bash
+# 全量合规检查
+python3 bin/gac/harness-compliance-check.py --report
+
+# MOF 约束联动
+python3 bin/gac/harness-mof-bridge.py
+
+# OMO 状态同步
+python3 bin/gac/harness-omo-bridge.py
+
+# 统一约束驱动 (CI 模式)
+python3 bin/gac/harness-constraint-enforcer.py --ci
+
+# Cockpit 入口
+cockpit harness compliance|mof|omo|enforce|full|status
+```
+
 ## 归档/收敛项目说明 (project-registry-ssot 契约)
 
 - agora-dashboard 独立入口已收敛 (历史快照, 能力并入 cockpit/agora)

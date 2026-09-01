@@ -117,6 +117,30 @@ python3 bin/gac/harness-constraint-enforcer.py --pre-push
 | OMO 同步失败 | 检查 system.yaml 和 governance-data.json 可写 |
 | 实现率不足 | 确保 harness entry 指向的脚本存在且调用 agent-workflow |
 
+## MCP 工具映射
+
+| MCP Tool | 功能 | 调用方式 |
+|----------|------|----------|
+| harness_compliance_check | 12 章节合规检查 | `{"mode": "full"}` |
+| harness_status | 合规状态总览 | `{}` |
+| harness_run | 8 阶段 DAG 运行 | `{"bet_id": "...", "profile": "..."}` |
+| harness_verify | 并行校验 | `{}` |
+| harness_probe | 7 探针 + Event Bus | `{}` |
+
+## BOS URI 路由
+
+| BOS URI | 功能 |
+|---------|------|
+| bos://harness/compliance/check | 12 章节合规检查 |
+| bos://harness/mof/bridge | MOF 约束联动 |
+| bos://harness/omo/bridge | OMO 状态同步 |
+| bos://harness/constraint/enforce | 统一约束驱动 |
+| bos://harness/architecture/perceive | 架构感知预编辑 |
+| bos://harness/compliance/full | 全量合规检查 |
+| bos://harness/run | 8 阶段 DAG 运行 |
+| bos://harness/verify | 并行校验 |
+| bos://harness/probe | 7 探针 + Event Bus |
+
 ## 相关文件
 
 - 策略 SSOT: `.omo/_truth/registry/harness-policy.yaml`
