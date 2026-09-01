@@ -2311,6 +2311,165 @@ gac:
     created_at: '2026-08-31'
     version: 1
     lifecycle: active
+  # ── Harness 全生命周期合规 (Phase 8: Agent 感知增强) ──
+  - id: CR-HARNESS-SECTION-COMPLETENESS
+    dimension: X4
+    layer: L2
+    name: Harness 12 章节完整性
+    description: harness-policy.yaml 必须包含 12 必现章节 (admission/spec/execution/verify/audit/accept/probes/dimensions/value_loop/known_debt/observability/rollout)，缺失任一章节视为结构不合规
+    check_type: schema_integrity
+    target: .omo/_truth/registry/harness-policy.yaml
+    executor:
+    - gac_local_gate
+    - ci_gate
+    justification: 'Phase 8 Agent 感知增强 — Harness 作为唯一 S 槽位收束点，12 章节完整性是治理基础'
+    added_at: '2026-09-01'
+    review_before: '2026-12-01'
+    created_at: '2026-09-01'
+    version: 1
+    lifecycle: active
+  - id: CR-HARNESS-SFOP-SLOT
+    dimension: X4
+    layer: L2
+    name: Harness SFOP S 槽位唯一性
+    description: harness sfop_slot 必须为 S，controller 必须为 COMP-WS-omo；禁止其他组件声明 S 槽位
+    check_type: mof_stage_gate
+    target: .omo/_truth/registry/harness-policy.yaml
+    executor:
+    - gac_local_gate
+    - ci_gate
+    justification: 'Phase 8 Agent 感知增强 — SFOP S 槽位唯一性是 DFSQ 道法术器架构铁律'
+    added_at: '2026-09-01'
+    review_before: '2026-12-01'
+    created_at: '2026-09-01'
+    version: 1
+    lifecycle: active
+  - id: CR-HARNESS-DIMENSION-COVERAGE
+    dimension: X4
+    layer: L2
+    name: Harness 12 维度全量挂载
+    description: harness dimensions 节点必须覆盖 12+ 维度 (X1-X4 + scene/function/journey/experience/vision/operation/ops/anticorrosion/constraint/evolution/trust)
+    check_type: schema_integrity
+    target: .omo/_truth/registry/harness-policy.yaml
+    executor:
+    - gac_local_gate
+    justification: 'Phase 8 Agent 感知增强 — 12 维度全量挂载确保治理无死角'
+    added_at: '2026-09-01'
+    review_before: '2026-12-01'
+    created_at: '2026-09-01'
+    version: 1
+    lifecycle: active
+  - id: CR-HARNESS-PROBE-STANDARDIZATION
+    dimension: X1
+    layer: L2
+    name: Harness 7 类 Probe 标准化
+    description: harness probes 必须声明 7 类 Event (arch_upgrade/feature_add/bug_fix/experience/doc_governance/toolchain/business_process) + 统一 bus
+    check_type: audit_chain
+    target: .omo/_truth/registry/harness-policy.yaml
+    executor:
+    - gac_local_gate
+    - omo_audit
+    justification: 'Phase 8 Agent 感知增强 — 7 类 Probe 标准化是自进化数据源头'
+    added_at: '2026-09-01'
+    review_before: '2026-12-01'
+    created_at: '2026-09-01'
+    version: 1
+    lifecycle: active
+  - id: CR-HARNESS-VALUE-LOOP
+    dimension: X3
+    layer: L2
+    name: Harness 5 阶段价值循环
+    description: harness value_loop 必须声明 5 阶段 DAG (signal/perception/journey/value/evolution) + bus + store
+    check_type: value_roi
+    target: .omo/_truth/registry/harness-policy.yaml
+    executor:
+    - gac_local_gate
+    justification: 'Phase 8 Agent 感知增强 — 5 阶段价值循环确保投入产出可度量'
+    added_at: '2026-09-01'
+    review_before: '2026-12-01'
+    created_at: '2026-09-01'
+    version: 1
+    lifecycle: active
+  - id: CR-HARNESS-KNOWN-DEBT
+    dimension: X1
+    layer: L2
+    name: Harness 已知债 shrink_only 策略
+    description: harness known_debt.growth_policy 必须为 shrink_only；escape 必须收口到 SWARM_ESCAPE_ID + human_gate
+    check_type: audit_chain
+    target: .omo/_truth/registry/harness-policy.yaml
+    executor:
+    - gac_local_gate
+    - omo_audit
+    justification: 'Phase 8 Agent 感知增强 — 已知债只减不增是治理底线'
+    added_at: '2026-09-01'
+    review_before: '2026-12-01'
+    created_at: '2026-09-01'
+    version: 1
+    lifecycle: active
+  - id: CR-HARNESS-IMPL-RATE
+    dimension: X4
+    layer: L2
+    name: Harness 实现率校验
+    description: harness entry 指向的脚本必须存在且内部调用 agent-workflow 或 harness；声明 vs 实际一致性
+    check_type: registry_integrity
+    target: .omo/_truth/registry/harness-policy.yaml
+    executor:
+    - gac_local_gate
+    - ci_gate
+    justification: 'Phase 8 Agent 感知增强 — 防止声明与实际不一致的治理空心化'
+    added_at: '2026-09-01'
+    review_before: '2026-12-01'
+    created_at: '2026-09-01'
+    version: 1
+    lifecycle: active
+  - id: CR-HARNESS-MOF-CONSTRAINT
+    dimension: X4
+    layer: L2
+    name: Harness MOF 约束联动
+    description: 编辑 MOF 相关文件前必须运行影响分析 + 状态转换合法性；编辑后必须 schema 校验 + SSOT 完整性
+    check_type: mof_stage_gate
+    target: projects/ecos/src/ecos/ssot/mof/
+    executor:
+    - hook_pre_edit
+    - gac_local_gate
+    justification: 'Phase 8 Agent 感知增强 — MOF 约束接入 Harness 全生命周期'
+    added_at: '2026-09-01'
+    review_before: '2026-12-01'
+    created_at: '2026-09-01'
+    version: 1
+    lifecycle: active
+  - id: CR-HARNESS-OMO-SYNC
+    dimension: X4
+    layer: L2
+    name: Harness OMO 状态同步
+    description: Harness 运行状态必须同步到 OMO state/system.yaml；GaC 规则变更必须同步到 governance-data.json
+    check_type: consistency_drift
+    target: .omo/state/system.yaml + .omo/_control/governance-data.json
+    executor:
+    - gac_local_gate
+    - omo_audit
+    justification: 'Phase 8 Agent 感知增强 — Harness 与 OMO 状态平面必须一致'
+    added_at: '2026-09-01'
+    review_before: '2026-12-01'
+    created_at: '2026-09-01'
+    version: 1
+    lifecycle: active
+  - id: CR-HARNESS-ANTI-CORROSION
+    dimension: X4
+    layer: L2
+    name: Harness 防腐预算遵守
+    description: Harness 脚本配额不得超出 anti-corrosion-budget.yaml 声明的 max_count；新增脚本必须归档等量旧脚本
+    check_type: mutation_surface
+    target: bin/gac/harness*.py
+    executor:
+    - gac_local_gate
+    - ci_gate
+    justification: 'Phase 8 Agent 感知增强 — 防腐预算控制防止治理脚本膨胀'
+    added_at: '2026-09-01'
+    review_before: '2026-12-01'
+    created_at: '2026-09-01'
+    version: 1
+    lifecycle: active
   drift:
     schedule: daily
     auto_heal: false
@@ -2326,17 +2485,17 @@ gac:
       X1: 38
       X2: 35
       X3: 38
-      X4: 55
-      rationale: 各维度上限确保均衡覆盖, 防止单维度主导. X4 上限最高因其一致性检查需求最大.
+      X4: 60
+      rationale: 各维度上限确保均衡覆盖, 防止单维度主导. X4 上限最高因其一致性检查需求最大 (含 Harness 合规).
     slot_reservation:
-      X4: 6
+      X4: 8
       X1: 5
       X3: 5
       X2: 4
-      rationale: 剩余 20 槽位按需分配, 优先 X4 一致性检查和新维度扩展.
+      rationale: 剩余 22 槽位按需分配, 优先 X4 一致性检查和新维度扩展.
     exemption_process: ADR + governance-team approval
     review_trigger: 剩余槽位 < 5 或每季度末
-    reason: '治理合并后封顶 — 210→115 条规则, 预留 35 条扩展空间. 当前 126 active, 维度均衡: X1=30 X2=26 X3=32 X4=38.'
+    reason: 'Phase 8 Harness 合规扩展 — 新增 10 条 CR-HARNESS-* 规则. 当前 136 active, 维度均衡: X1=32 X2=26 X3=33 X4=45.'
   lifecycle:
     draft_to_active_days: 7
     deprecated_to_removed_days: 28
