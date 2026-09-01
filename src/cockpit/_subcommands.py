@@ -662,7 +662,9 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     spine_distill_p.add_argument("--domain", "-d", default="signature-style", help="领域标签")
     spine_distill_p.add_argument("--epochs", "-e", type=int, default=3, help="训练轮数")
     spine_sub.add_parser("replay", help="查看 Experience Replay 缓冲区状态")
-
+    spine_ingress_p = spine_sub.add_parser("ingress", help="感知源接入 Spine 管线 (T2-03: OCR 扫描件)")
+    spine_ingress_p.add_argument("--source", required=True, help="感知源类型 (当前支持: ocr)")
+    spine_ingress_p.add_argument("--file", required=True, help="扫描件图片/PDF 路径")
 
     # ── BOS URI gateway ───────────────────────────────────────
     bos_p = sub.add_parser("bos", help="BOS URI 查询与管理")

@@ -8,6 +8,7 @@ Provides the `cockpit spine` command group for the sovereign compute + signature
   distill -- Trigger idle LoRA distillation on Mac mini M4.
   replay  -- Show experience replay buffer stats per domain.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -69,13 +70,15 @@ def cmd_spine_draft(args: argparse.Namespace) -> int:
         console.print("[red]缺少 --prompt 参数[/red]")
         return 1
     model = getattr(args, "model", "qwen3.8-27b")
-    console.print(Panel(
-        f"[cyan]Spine Draft[/cyan]\n"
-        f"Prompt: {prompt[:80]}...\n"
-        f"Model: {model}\n"
-        f"BOS: [yellow]bos://compute/aetherforge/infer[/yellow]",
-        title="⚡ Sovereign Draft",
-    ))
+    console.print(
+        Panel(
+            f"[cyan]Spine Draft[/cyan]\n"
+            f"Prompt: {prompt[:80]}...\n"
+            f"Model: {model}\n"
+            f"BOS: [yellow]bos://compute/aetherforge/infer[/yellow]",
+            title="⚡ Sovereign Draft",
+        )
+    )
     # Delegate to cockpit compute gateway
     ws_root = _ws()
     omlxc_root = ws_root / "projects" / "omlxc"
@@ -113,23 +116,26 @@ def cmd_spine_sign(args: argparse.Namespace) -> int:
         ]
         res = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if res.returncode == 0:
-            console.print(Panel(
-                f"[green]署名 Diff 已记录[/green]\n"
-                f"Domain: {domain}\n"
-                f"[dim]通过 value-evolution-connector 经纪人写入 lora-replay-buffer[/dim]\n\n"
-                f"[dim]下次空闲 distillation 时将自动加入训练集[/dim]",
-                title="✅ Spine Sign",
-            ))
+            console.print(
+                Panel(
+                    f"[green]署名 Diff 已记录[/green]\n"
+                    f"Domain: {domain}\n"
+                    f"[dim]通过 value-evolution-connector 经纪人写入 lora-replay-buffer[/dim]\n\n"
+                    f"[dim]下次空闲 distillation 时将自动加入训练集[/dim]",
+                    title="✅ Spine Sign",
+                )
+            )
             return 0
         else:
             console.print(f"[red]署名 Diff 记录失败: {res.stderr.strip()}[/red]")
             return 1
 
-    console.print(Panel(
-        f"[green]署名 Diff 已暂存 (broker fallback)[/green]\n"
-        f"Domain: {domain}",
-        title="✅ Spine Sign",
-    ))
+    console.print(
+        Panel(
+            f"[green]署名 Diff 已暂存 (broker fallback)[/green]\nDomain: {domain}",
+            title="✅ Spine Sign",
+        )
+    )
     return 0
 
 
@@ -162,20 +168,22 @@ def cmd_spine_status(args: argparse.Namespace) -> int:
     vram_pct = tel.get("mbp_vram_used_pct", 0.0)
     vram_color = "green" if vram_pct < 65 else ("yellow" if vram_pct < 75 else "red")
 
-    console.print(Panel(
-        f"[bold]DMA Link:[/bold] [{link_color}]{tel.get('active_transport', 'N/A')}[/{link_color}]  "
-        f"Speed: {tel.get('link_speed_gbps', 0):.0f} Gbps  "
-        f"Latency: {tel.get('avg_dma_latency_ms', 0):.3f} ms\n"
-        f"[bold]VRAM:[/bold] [{vram_color}]{vram_pct:.1f}%[/{vram_color}]  "
-        f"Used: {tel.get('mbp_vram_used_mb', 0):.0f} MB\n"
-        f"[bold]KV Spillover:[/bold] {'ON' if tel.get('kv_spillover_active') else 'OFF'}  "
-        f"Blocks migrated: {tel.get('total_blocks_migrated', 0)}\n"
-        f"[bold]NUMA Pool:[/bold] {tel.get('numa_pool_size_gb', 0):.0f} GB  "
-        f"Uptime: {tel.get('daemon_uptime_s', 0):.0f}s\n"
-        f"[bold]Active LoRA:[/bold] {tel.get('lora_active_adapter', 'none')}\n"
-        f"[dim]{tel.get('timestamp_utc', '')}[/dim]",
-        title="⚡ omlxc V5.0 Mesh Telemetry",
-    ))
+    console.print(
+        Panel(
+            f"[bold]DMA Link:[/bold] [{link_color}]{tel.get('active_transport', 'N/A')}[/{link_color}]  "
+            f"Speed: {tel.get('link_speed_gbps', 0):.0f} Gbps  "
+            f"Latency: {tel.get('avg_dma_latency_ms', 0):.3f} ms\n"
+            f"[bold]VRAM:[/bold] [{vram_color}]{vram_pct:.1f}%[/{vram_color}]  "
+            f"Used: {tel.get('mbp_vram_used_mb', 0):.0f} MB\n"
+            f"[bold]KV Spillover:[/bold] {'ON' if tel.get('kv_spillover_active') else 'OFF'}  "
+            f"Blocks migrated: {tel.get('total_blocks_migrated', 0)}\n"
+            f"[bold]NUMA Pool:[/bold] {tel.get('numa_pool_size_gb', 0):.0f} GB  "
+            f"Uptime: {tel.get('daemon_uptime_s', 0):.0f}s\n"
+            f"[bold]Active LoRA:[/bold] {tel.get('lora_active_adapter', 'none')}\n"
+            f"[dim]{tel.get('timestamp_utc', '')}[/dim]",
+            title="⚡ omlxc V5.0 Mesh Telemetry",
+        )
+    )
     return 0
 
 
@@ -191,15 +199,17 @@ def cmd_spine_distill(args: argparse.Namespace) -> int:
         console.print(f"[yellow]域 '{domain}' 无样本，无法执行 distillation[/yellow]")
         return 1
 
-    console.print(Panel(
-        f"[cyan]触发 LoRA Distillation[/cyan]\n"
-        f"Domain: {domain}\n"
-        f"Samples: {n_samples}\n"
-        f"Epochs: {epochs}\n"
-        f"Target Node: MacMini-M4 (BOS: [yellow]bos://compute/omlxc/lora[/yellow])\n\n"
-        f"[dim]在 Mac mini M4 空闲算力上运行，不影响当前推理。[/dim]",
-        title="🔬 Spine Distill",
-    ))
+    console.print(
+        Panel(
+            f"[cyan]触发 LoRA Distillation[/cyan]\n"
+            f"Domain: {domain}\n"
+            f"Samples: {n_samples}\n"
+            f"Epochs: {epochs}\n"
+            f"Target Node: MacMini-M4 (BOS: [yellow]bos://compute/omlxc/lora[/yellow])\n\n"
+            f"[dim]在 Mac mini M4 空闲算力上运行，不影响当前推理。[/dim]",
+            title="🔬 Spine Distill",
+        )
+    )
     # In a real deployment, this would dispatch a BOS job to bos://compute/omlxc/lora
     # Here we simulate the job scheduling acknowledgment
     console.print(f"[green]✅ Distillation job queued: ft-job-{int(time.time())}[/green]")
@@ -209,6 +219,61 @@ def cmd_spine_distill(args: argparse.Namespace) -> int:
 def cmd_spine_replay(args: argparse.Namespace) -> int:
     """Show experience replay buffer statistics per domain."""
     return cmd_spine_diff(args)
+
+
+def cmd_spine_ingress(args: argparse.Namespace) -> int:
+    """Ingest perception sources into the Spine pipeline (T2-03: OCR)."""
+    source = getattr(args, "source", "")
+    file_path = getattr(args, "file", "")
+    if source != "ocr":
+        console.print(f"[red]未知 ingress source: {source}[/red] (当前支持: ocr)")
+        return 1
+    if not file_path:
+        console.print("[red]缺少 --file 参数 (扫描件路径)[/red]")
+        return 1
+
+    ws = _ws()
+    result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "--directory",
+            str(ws / "projects" / "agora"),
+            "python",
+            "-m",
+            "agora.server.tools_bos.ocr",
+            "extract",
+            "--file",
+            file_path,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=180,
+    )
+    if result.returncode != 0:
+        console.print(f"[red]OCR ingress 失败: {result.stderr.strip() or result.stdout.strip()}[/red]")
+        return 1
+
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        console.print(Panel(result.stdout[:2000], title="🧾 OCR Ingress (raw)"))
+        return 0
+
+    console.print(
+        Panel(
+            f"[cyan]OCR Ingress[/cyan]\n"
+            f"File: {data.get('file', file_path)}\n"
+            f"Boxes: {len(data.get('boxes', []))}  Tables: {len(data.get('layout', {}).get('tables', []))}\n"
+            f"Seals: {len(data.get('layout', {}).get('seals', []))}  "
+            f"Handwriting: {len(data.get('layout', {}).get('handwriting', []))}",
+            title="🧾 Spine Ingress (bos://perception/agora/ocr)",
+        )
+    )
+    md = data.get("markdown", "")
+    if md:
+        console.print(Panel(md[:4000], title="📄 Layout Markdown"))
+    return 0
 
 
 def cmd_spine(args: argparse.Namespace) -> int:
@@ -221,6 +286,7 @@ def cmd_spine(args: argparse.Namespace) -> int:
         "status": cmd_spine_status,
         "distill": cmd_spine_distill,
         "replay": cmd_spine_replay,
+        "ingress": cmd_spine_ingress,
     }
     if subcmd in dispatch:
         return dispatch[subcmd](args)
@@ -228,6 +294,6 @@ def cmd_spine(args: argparse.Namespace) -> int:
     console.print("[red]未知 spine 子命令[/red]")
     console.print(
         "可用: draft --prompt <PROMPT>  |  sign --original <> --signed <> --domain <>  |  "
-        "diff  |  status  |  distill --domain <>  |  replay"
+        "diff  |  status  |  distill --domain <>  |  replay  |  ingress --source ocr --file <PATH>"
     )
     return 1
