@@ -28,9 +28,13 @@ bet: BET-Y1Q4-T3-02
 
 - **P1 引擎面 ✅**：bge-small-zh（本地缓存）真基准全过；median-of-N 测量方法学
   （warmup 后稳态时延——冷启动 757ms 是服务预热开销，不是契约对象）。
-- **P2 满配模型 🔄**：BGE-M3 快照下载中（已 6.58GB 含多格式文件）；BGE-Reranker-Large
-  随后。下载完成后 `tier="full"` 即启用 learned sparse 权重 + 多语言 top-1 断言。
-  当前 reranker 走 dense-fallback（degraded 标注，契约 29.46ms 达标）。
+- **P2 满配模型 ✅**：BGE-M3（9.17GB 快照）+ BGE-Reranker-Large（2.12GB）下载完成；
+  FlagEmbedding learned sparse 通道激活——**full tier 多语言混合检索 top-1 正确**
+  （中文目标 0.6403 > 英文相关 0.4974 > 无关垫底），4 检查全过。
+  分层语义固化：fast tier 拥有 ≤15ms 时延契约（11.06ms）；full tier（568M 参数）
+  拥有多语言+sparse 能力契约（单条 ~33ms 是大模型物理边界，非契约对象）。
+  reranker cross-encoder 首次 MPS 加载慢（2.2GB），dense-fallback 29.51ms 契约内达标，
+  fallback 原因已可观测（fallback_reason 字段）。
 - **P3 mesh 服务化 ⏸ 部署待办**：Mac mini M4 当前不在线（DNS 不可达），
   需开机后经 cluster_coordinator 注册 `bos://compute/omlxc/embed` 节点。
 

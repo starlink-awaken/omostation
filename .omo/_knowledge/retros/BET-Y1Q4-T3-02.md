@@ -34,8 +34,9 @@ solution: median-of-N 稳态测量 + HF_HUB_OFFLINE 代码级红线
 
 ## 待办（诚实边界）
 
-1. **P2 完成确认**：BGE-M3/Reranker-Large 下载完成后跑 `tier="full"` 基准，
-   启用 FlagEmbedding learned sparse + 多语言 top-1 断言（15 分钟收尾）。
+1. **P2 ✅ 已完成**：模型齐 + FlagEmbedding sparse 激活，full tier 多语言 top-1
+   验证通过（中文 0.64 > 英文 0.50 > 无关）。reranker cross-encoder 首载慢，
+   dense fallback 契约内达标且原因可观测。
 2. **P3 Mac mini 部署**：M4 当前不在线。开机后注册 mesh 嵌入节点
    （cluster_coordinator 现成骨架），BOS: bos://compute/omlxc/embed。
 
