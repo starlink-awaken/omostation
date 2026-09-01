@@ -381,6 +381,10 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         help="传递给 arcnode-* 脚本的额外参数",
     )
 
+    # ── Harness 全生命周期合规 (Phase 8) ─────────────────────
+    from cockpit.commands.harness import register_harness_subcommand
+    register_harness_subcommand(sub)
+
     # ── L4 Bridge commands ────────────────────────────────────
     sub.add_parser("context", help="显示系统上下文 (Phase/CARDS/约束/引导)")
     cards_p = sub.add_parser("cards", help="显示 CARDS 卡片状态")
