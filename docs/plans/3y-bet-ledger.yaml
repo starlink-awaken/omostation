@@ -16918,7 +16918,8 @@ bets:
   title: 微信/企微/飞书即时通讯会话感知与指令式即时办结
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-01
   goal: 接入企业微信、飞书与微信桌面端会话钩子，自动从群聊与私聊中提取夏明星关注的核心任务、审批指令与催办提醒；支持夏明星以「一句话指令」触发织星后台自动化查阅、拟稿并直接返回待发卡片。
   non_goals:
   - 不做未经夏明星本人确认的自动回复或静默外发
@@ -16937,7 +16938,7 @@ bets:
   write_surfaces:
   - projects/agora/src/agora/server/tools_bos/im.py
   - projects/cockpit/src/cockpit/commands/im_triage.py
-  - docs/reports/2026-10-05-im-session-triage.md
+  - docs/reports/2026-09-01-im-session-triage.md
   - .omo/_knowledge/retros/BET-Y1Q4-T2-02.md
   pasw_required: false
   depends_on:
@@ -16946,6 +16947,48 @@ bets:
   human_gate: true
   circuit_breaker: 遇到 IM 接口变更或消息解析异常时自动退回被动查阅模式。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-01-t2-02-im-session-triage-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:9d84f751f287b393294496c73bf92eeff0ad4557e12ca3fc5d6cecacafad21e0
+    decision_ref: decision://accepted/BET-Y1Q4-T2-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@1436639a4d3acc4076108f66486f0f0a18c6ac3f
+          tests:
+            ref: receipt://docs/reports/2026-09-01-im-session-triage.md
+            sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-01-t2-02-im-session-triage-design.md
+            sha256: sha256:9d84f751f287b393294496c73bf92eeff0ad4557e12ca3fc5d6cecacafad21e0
+          rollback:
+            ref: receipt://docs/reports/2026-09-01-im-session-triage.md
+            sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-01-im-session-triage.md
+            sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-01-im-session-triage.md
+            sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
+          replay:
+            ref: receipt://tests/test_im_triage.py
+            sha256: sha256:4a1fdac5ca7c6f25279346a7f189f561cdfe775f6577cffaccbd1a59d6e8dd06
+          cleanup:
+            ref: receipt://docs/reports/2026-09-01-im-session-triage.md
+            sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T2-03
   track: T2-PERCEPT
   window: Y1Q4
