@@ -11,12 +11,11 @@
 #   bin/gac/harness-cli.sh status        # 显示 Harness 合规状态总览
 #
 # BOS URI 映射:
-#   bos://harness/compliance/check  → harness-cli.sh compliance
-#   bos://harness/mof/bridge         → harness-cli.sh mof
-#   bos://harness/omo/bridge         → harness-cli.sh omo
-#   bos://harness/enforce            → harness-cli.sh enforce
-#   bos://harness/perceive           → harness-cli.sh perceive
-#   bos://compliance/full            → harness-cli.sh full
+#   bos://harness/compliance/check   → harness-cli.sh compliance
+#   bos://harness/mof/bridge          → harness-cli.sh mof
+#   bos://harness/omo/bridge          → harness-cli.sh omo
+#   bos://harness/constraint/enforce  → harness-cli.sh enforce
+#   bos://harness/architecture/perceive → harness-cli.sh perceive
 
 set -euo pipefail
 
