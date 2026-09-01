@@ -20,3 +20,22 @@ next_planned_tasks:
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
 updated_at: '2026-08-30T03:30:23Z'
+
+# ── Harness 运行状态 (Phase 5: OMO 同步) ──
+harness:
+  last_run: null
+  last_status: null
+  last_score: null
+  total_runs: 0
+  success_rate: 0.0
+  compliance_passed: 0
+  compliance_failed: 0
+
+# ── 自进化状态 (Phase 5: OMO 同步) ──
+self_evolution:
+  total_cycles: 0
+  last_cycle: null
+  success_rate: 0.0
+  proposals_pending: 0
+  proposals_approved: 0
+  proposals_executed: 0

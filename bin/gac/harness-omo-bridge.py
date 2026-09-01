@@ -12,6 +12,7 @@
   python3 bin/gac/harness-omo-bridge.py --status     # 仅状态同步
   python3 bin/gac/harness-omo-bridge.py --gac       # 仅 GaC 同步
   python3 bin/gac/harness-omo-bridge.py --arch      # 仅架构漂移
+  python3 bin/gac/harness-omo-bridge.py --closeout  # Harness closeout 后同步
   python3 bin/gac/harness-omo-bridge.py --json      # JSON 输出
 
 CI 可移植: Path(__file__).resolve().parents[2] 定位 workspace.
@@ -169,6 +170,44 @@ def sync_known_debt() -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
+def sync_harness_closeout(run_id: str = "") -> tuple[list[str], list[str]]:
+    """Harness closeout 后同步状态到 OMO.
+
+    在 Harness run 完成后调用，将运行结果同步到 system.yaml 和 governance-data.json.
+    """
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    # 更新 system.yaml 中的 harness 状态
+    try:
+        import yaml
+        state_data = _load_yaml(OMO_STATE) or {}
+        harness_state = state_data.get("harness", {})
+
+        # 更新运行统计
+        harness_state["last_run"] = run_id or "unknown"
+        harness_state["last_status"] = "completed"
+        harness_state["total_runs"] = harness_state.get("total_runs", 0) + 1
+        harness_state["compliance_passed"] = harness_state.get("compliance_passed", 0) + 1
+
+        state_data["harness"] = harness_state
+        OMO_STATE.write_text(yaml.dump(state_data, default_flow_style=False, allow_unicode=True), encoding="utf-8")
+    except Exception as e:
+        warnings.append(f"同步 system.yaml 失败: {e}")
+
+    # 更新 governance-data.json
+    try:
+        gd_data = _load_json(OMO_GOVERNANCE_DATA) or {}
+        gd_data["harness_last_run"] = run_id or "unknown"
+        gd_data["harness_last_sync"] = datetime.now(timezone.utc).isoformat()
+        gd_data["harness_total_runs"] = gd_data.get("harness_total_runs", 0) + 1
+        _save_json(OMO_GOVERNANCE_DATA, gd_data)
+    except Exception as e:
+        warnings.append(f"同步 governance-data.json 失败: {e}")
+
+    return errors, warnings
+
+
 def validate(mode: str = "full") -> tuple[int, list[str], list[str], dict]:
     """主校验. 返回 (exit_code, errors, warnings, details)."""
     all_errors: list[str] = []
@@ -210,6 +249,27 @@ def main() -> int:
         mode = "gac"
     elif "--arch" in args:
         mode = "arch"
+
+    # ── Closeout 模式: Harness run 完成后同步 ──
+    if "--closeout" in args:
+        run_id = ""
+        if "--run-id" in args:
+            idx = args.index("--run-id")
+            if idx + 1 < len(args):
+                run_id = args[idx + 1]
+        errors, warnings = sync_harness_closeout(run_id)
+        if json_mode:
+            print(json.dumps({"ok": not errors, "errors": errors, "warnings": warnings}, ensure_ascii=False, indent=2))
+        else:
+            print("=== Harness Closeout 同步 ===")
+            print(f"Run ID: {run_id or 'unknown'}")
+            for e in errors:
+                print(f"  ❌ {e}")
+            for w in warnings:
+                print(f"  ⚠️  {w}")
+            if not errors and not warnings:
+                print("✅ Closeout 同步完成")
+        return 1 if errors else 0
 
     _exit_code, errors, warnings, details = validate(mode)
 
