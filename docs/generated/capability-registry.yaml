@@ -15,7 +15,7 @@ totals:
   bos_services: 298
   bos_domains: 22
   cli_commands: 200
-  skills: 5
+  skills: 3
   workflows: 19
 mcp_servers:
 - id: omo
@@ -2518,14 +2518,8 @@ skills:
 - id: git-discipline
   file: .agents/skills/git-discipline/SKILL.md
   exists: true
-- id: harness-compliance
-  file: .agents/skills/harness-compliance/SKILL.md
-  exists: true
 - id: spine-value-pipeline
   file: .agents/skills/spine-value-pipeline/SKILL.md
-  exists: true
-- id: workflow:bet-execution
-  file: .agents/skills/workflow:bet-execution/SKILL.md
   exists: true
 workflows:
 - id: agent-onboarding
