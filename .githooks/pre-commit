@@ -150,4 +150,14 @@ if [ -f "$CONFLICT_CHECK" ]; then
   run_py "$CONFLICT_CHECK" || exit 1
 fi
 
+# --- architecture perception pre-edit check (Phase 8) ---
+# 编辑架构相关文件时自动检查合规性 (场景卡/Journey/标准/Harness)
+PRE_EDIT_ARCH="$(git rev-parse --show-toplevel)/.githooks/pre-edit-architecture.sh"
+if [ -f "$PRE_EDIT_ARCH" ]; then
+  # 仅在有 staged files 时运行 (避免无意义执行)
+  if [ -n "$(git diff --cached --name-only 2>/dev/null)" ]; then
+    bash "$PRE_EDIT_ARCH" 2>&1 | sed 's/^/[pre-edit] /' >&2 || true
+  fi
+fi
+
 exit 0
