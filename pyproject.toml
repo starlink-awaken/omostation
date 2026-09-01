@@ -15,6 +15,9 @@ keywords = ["research", "workspace", "knowledge-management", "cli", "cockpit", "
 dependencies = [
     "rich>=13.0",
     "pyyaml>=6.0.3",
+    # BET-Y1Q4-T8-03: GB/T 9704-2012 DOCX + 16:9 PPTX rendering
+    "python-docx>=1.1",
+    "python-pptx>=1.0",
     "httpx>=0.28.0",
     "fastapi[standard]>=0.128.8",
     "python-multipart>=0.0.20",

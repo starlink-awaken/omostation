@@ -670,6 +670,23 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     spine_ingress_p.add_argument("--source", required=True, help="感知源类型 (当前支持: ocr)")
     spine_ingress_p.add_argument("--file", required=True, help="扫描件图片/PDF 路径")
 
+    # ── render ───────────────────────────────────────────────
+    # BET-Y1Q4-T8-03: 一键导出 DOCX/PPTX/SVG
+    render_p = sub.add_parser("render", help="初稿 Markdown 一键渲染导出 (GB/T 9704 DOCX / 16:9 PPTX / 矢量图)")
+    render_sub = render_p.add_subparsers(dest="render_command", required=True)
+    render_docx_p = render_sub.add_parser("docx", help="渲染为 GB/T 9704-2012 红头公文 DOCX")
+    render_docx_p.add_argument("--input", "-i", required=True, help="输入 Markdown 文件")
+    render_docx_p.add_argument("--output", "-o", default=None, help="输出 DOCX 路径 (默认同名 .docx)")
+    render_docx_p.add_argument("--template", "-t", default="standard-gov", help="模板 (standard-gov)")
+    render_pptx_p = render_sub.add_parser("pptx", help="渲染为 16:9 高管技术汇报 PPTX")
+    render_pptx_p.add_argument("--input", "-i", required=True, help="输入 Markdown 文件")
+    render_pptx_p.add_argument("--output", "-o", default=None, help="输出 PPTX 路径 (默认同名 .pptx)")
+    render_pptx_p.add_argument("--template", "-t", default="dark-business", help="模板 (dark-business | minimal-tech)")
+    render_svg_p = render_sub.add_parser("svg", help="渲染 ```diagram 代码块为矢量架构图 SVG")
+    render_svg_p.add_argument("--input", "-i", required=True, help="输入 Markdown 文件")
+    render_svg_p.add_argument("--output", "-o", default=None, help="输出 SVG 路径 (默认同名 .svg)")
+    render_sub.add_parser("test_export_formats", help="离线自测: 三格式导出 + GB/T 参数断言")
+
     # ── BOS URI gateway ───────────────────────────────────────
     bos_p = sub.add_parser("bos", help="BOS URI 查询与管理")
     bos_sub = bos_p.add_subparsers(dest="bos_cmd")

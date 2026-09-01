@@ -544,6 +544,11 @@ def main() -> int:
     def dispatch_spine(a):
         return cmd_spine(a)
 
+    def dispatch_render(a):
+        from cockpit.commands.render import cmd_render
+
+        return cmd_render(a)
+
     def dispatch_scenario(a):
         from cockpit.commands.scenario import cmd_scenario
 
@@ -884,6 +889,7 @@ def main() -> int:
         "family-hub": dispatch_family_hub,
         "mesh": dispatch_mesh,
         "spine": dispatch_spine,
+        "render": dispatch_render,
         "compute": cmd_compute,
         "intent": lambda a: __import__("cockpit.commands.intent", fromlist=["cmd_intent"]).cmd_intent(a),
         "decide": lambda a: __import__("cockpit.commands.decide", fromlist=["cmd_decide"]).cmd_decide(a),
