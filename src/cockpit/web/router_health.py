@@ -39,6 +39,10 @@ ROUTER_MODULES = (
     "cockpit.web.api_outcomes",
     "cockpit.web.api_journeys",
     "cockpit.web.api_unified_inbox",
+    "cockpit.web.api_commands",
+    "cockpit.web.api_chains",
+    "cockpit.web.api_command_audit",
+    "cockpit.web.api_reflection",
 )
 
 ROUTER_LOAD_REPORT: list[dict[str, object]] = []
