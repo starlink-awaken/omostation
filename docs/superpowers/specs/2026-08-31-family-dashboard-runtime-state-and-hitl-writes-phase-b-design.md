@@ -1,13 +1,13 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.1.0
 title: Family dashboard runtime-state and HITL writes Phase B
 bet_id: BET-Y1Q3-T10-122
 status: accepted
 lifecycle: contract
 owner: family-hub
 created: 2026-08-30
-last-reviewed: 2026-08-30
+last-reviewed: 2026-09-01
 risk_level: L3
 human_gate: true
 ---
@@ -96,9 +96,11 @@ bypassing Cockpit and OMO.
 Documents family content (read-only for build)
               |
               v
-family-hub runtime planner -> staging -> verify/parity -> atomic promote
-              |                              |
-              |                              v
+family-hub runtime planner -> staging A + staging B -> fresh-build parity
+              |                         |                    |
+              |                         v                    v
+              |                 legacy-delta receipt -> atomic promote A
+              |                                              |
               +----------------> Workspace/runtime/family-hub/dashboard
 
 Dashboard write request
@@ -143,22 +145,61 @@ digests, statuses, and error classes; they contain no body fragments.
 
 ### Migration transaction
 
-1. **Plan:** inventory exactly six `data-manifest/*.yaml` files and the legacy
-   generated JSON set; reject non-regular nodes, collisions, unreadable files,
-   path escapes, insufficient disk, or source drift.
-2. **Stage:** create a new sibling staging root. Copy only the six manifests;
-   do not copy legacy generated data or cache into active state.
-3. **Build:** run the family-hub builders with the real family Documents root
-   mounted read-only and staging as `FAMILY_DASHBOARD_STATE_ROOT`.
-4. **Parity:** compare normalized JSON digests against legacy `app-data` while
-   ignoring only declared volatile fields such as `build-meta.builtAt`.
-   Differences are explicit findings, never silently accepted.
-5. **Promote:** after all required products parse and path verification passes,
-   rename the staging root atomically to the absent canonical root.
-6. **Verify:** replay representative read journeys against the canonical state,
-   prove source fingerprints unchanged, and write the final receipt.
-7. **Rollback:** before Phase C, rollback removes only a failed/new target root;
-   it never edits the preserved legacy source.
+1. **Plan:** inventory exactly six `data-manifest/*.yaml` files, the legacy
+   generated JSON set, and the regular builder input closure beneath
+   `_knowledge`, `_archive`, and `_control`; reject non-regular nodes,
+   collisions, unreadable files, path escapes, insufficient disk, or source
+   drift. The public plan stores only counts, relative-path digests, aggregate
+   digests, sizes, and modes; it never stores document bodies or absolute
+   private paths.
+2. **Stage:** create two new sibling staging roots. Copy only the six manifests
+   into each root; do not copy legacy generated data or cache into active state.
+3. **Build:** run the pinned family-hub builders independently against staging A
+   and staging B with the real family Documents root mounted read-only. Compute
+   the private input-closure digest before build A, between the builds, and
+   after build B; any change blocks promotion.
+4. **Fresh-build parity:** require the two isolated builds to produce the same
+   exact product set and equal normalized JSON digests after removing only the
+   declared volatile fields. Missing, extra, malformed, nondeterministic, or
+   schema-invalid products block promotion.
+5. **Legacy delta:** compare staging A with legacy `app-data` and write an
+   explicit per-product `equal` or `different` observation plus aggregate
+   digests. A value difference does not block promotion because legacy
+   `app-data` is a preserved derived snapshot, not content truth. A missing or
+   malformed legacy product, product-set mismatch, or unreadable baseline still
+   blocks. No waiver or hidden allowlist is introduced.
+6. **Promote:** after input stability, fresh-build parity, required-product
+   parsing, path verification, and legacy-delta recording pass, remove staging B
+   and atomically rename staging A to the absent canonical root.
+7. **Verify:** replay representative read journeys against the canonical state,
+   prove the transaction-bound input digest and source fingerprints were
+   unchanged, and write the final receipt.
+8. **Rollback:** before Phase C, rollback removes only failed/new staging and
+   target roots; it never edits the preserved legacy source.
+
+### Derived parity amendment (2026-09-01)
+
+The first real materialization proved that the original legacy-equality gate
+confused a derived snapshot with its source of truth. All builders completed,
+but current Documents truth legitimately produced newer search, task, timeline,
+and domain projections than the preserved legacy `app-data`. Rewriting that
+snapshot would violate the Phase B non-goal, while silently accepting arbitrary
+differences would destroy the parity guarantee.
+
+The selected correction is therefore **deterministic double-build parity with
+an explicit legacy-delta receipt**:
+
+- Documents remains the immutable content authority during the transaction;
+- family-hub remains the single builder/runtime owner;
+- equality between two fresh isolated builds is the blocking reproducibility
+  proof;
+- legacy comparison remains visible evidence, but not a false truth plane; and
+- no second dispatcher, content store, approval path, or waiver mechanism is
+  added.
+
+Rejected alternatives are: rewriting legacy `app-data` inside Documents to
+manufacture equality, retaining a permanently impossible legacy-equality gate,
+or adding a human waiver that bypasses arbitrary parity differences.
 
 Legacy AI summaries are naming-incompatible with the new hashed cache and may
 contain private excerpts. They remain in the legacy app for Phase C retirement
@@ -272,8 +313,10 @@ The proposal API never reports `saved` before the OMO terminal receipt exists.
 
 ### Real evidence
 
-- Read-only real-data build and normalized parity run against the current
-  family Documents root.
+- Two read-only real-data builds against the current family Documents root,
+  with stable input-closure digests and equal normalized fresh products.
+- A privacy-safe legacy-delta receipt records every preserved `app-data`
+  comparison without copying or rewriting the legacy products.
 - Consumer audit remains `forbidden_executors=0`, and source tree fingerprints
   remain unchanged.
 - A real write canary is a separately confirmed danger-gate operation. It
@@ -298,8 +341,9 @@ The proposal API never reports `saved` before the OMO terminal receipt exists.
 Phase B is complete only when all of the following are proven:
 
 1. canonical Workspace runtime state exists with six private manifests,
-   rebuilt generated products, empty/new cache, verified parity, immutable
-   migration receipt, and unchanged Documents source;
+   rebuilt generated products, empty/new cache, stable input-closure evidence,
+   equal normalized double-build parity, an explicit legacy-delta receipt,
+   immutable migration receipt, and unchanged Documents source;
 2. Dashboard write routes return proposals and contain no direct Documents
    writer or environment bypass;
 3. Cockpit approval invokes the exact uncached BOS route and the family-hub
