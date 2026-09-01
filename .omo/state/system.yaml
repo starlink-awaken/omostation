@@ -1,8 +1,8 @@
 current_phase: 29
 current_wave: W1
-health_score_evidence: 100.0
+health_score_evidence: 81.7
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-08-30T02:05:29.780918+00:00'
+health_score_evidence_generated_at: '2026-09-01T02:45:15.763308+00:00'
 completed_tasks: 290
 planned_tasks: 7
 active_tasks: 1
@@ -20,8 +20,6 @@ next_planned_tasks:
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
 updated_at: '2026-08-30T03:30:23Z'
-
-# ── Harness 运行状态 (Phase 5: OMO 同步) ──
 harness:
   last_run: null
   last_status: null
@@ -30,8 +28,6 @@ harness:
   success_rate: 0.0
   compliance_passed: 0
   compliance_failed: 0
-
-# ── 自进化状态 (Phase 5: OMO 同步) ──
 self_evolution:
   total_cycles: 0
   last_cycle: null
