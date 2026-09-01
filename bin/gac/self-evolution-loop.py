@@ -183,7 +183,69 @@ def _generate_proposals() -> list[dict]:
         except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
             pass
 
+    # ── Data Source 5: GaC governance trend ──
+    governance_trend = REPO / "bin" / "gac" / "check-governance-trend.py"
+    if governance_trend.exists():
+        try:
+            import subprocess
+            result = subprocess.run(
+                [sys.executable, str(governance_trend), "--json"],
+                capture_output=True, text=True, cwd=str(REPO), timeout=30,
+            )
+            if result.stdout:
+                trend_data = json.loads(result.stdout)
+                if not trend_data.get("ok"):
+                    for finding in trend_data.get("findings", []):
+                        proposals.append({
+                            "id": f"PROP-GOV-{finding.upper().replace(' ', '_')[:30]}",
+                            "type": "doc_governance",
+                            "source": "probe.doc_governance",
+                            "target": "governance",
+                            "description": f"治理修复: {finding}",
+                            "confidence": 0.75,
+                            "risk": "low",
+                        })
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+            pass
+
     return proposals
+
+
+def sync_evolution_state() -> dict:
+    """同步自进化状态到 OMO system.yaml."""
+    state = _load_state()
+    cycles = state.get("cycles", [])
+
+    # 计算统计
+    total_cycles = len(cycles)
+    last_cycle = cycles[-1] if cycles else None
+    executed = sum(c.get("executed", 0) for c in cycles)
+    approved = sum(c.get("approved", 0) for c in cycles)
+    success_rate = executed / approved if approved > 0 else 0.0
+
+    # 更新 OMO state
+    try:
+        import yaml
+        state_file = REPO / ".omo" / "state" / "system.yaml"
+        if state_file.exists():
+            data = yaml.safe_load(state_file.read_text(encoding="utf-8")) or {}
+            data["self_evolution"] = {
+                "total_cycles": total_cycles,
+                "last_cycle": last_cycle.get("cycle_id") if last_cycle else None,
+                "success_rate": round(success_rate, 2),
+                "proposals_pending": approved - executed,
+                "proposals_approved": approved,
+                "proposals_executed": executed,
+            }
+            state_file.write_text(yaml.dump(data, default_flow_style=False, allow_unicode=True), encoding="utf-8")
+    except Exception:
+        pass
+
+    return {
+        "total_cycles": total_cycles,
+        "success_rate": success_rate,
+        "proposals_executed": executed,
+    }
 
 
 def _triage(proposals: list[dict]) -> dict:
@@ -260,6 +322,14 @@ def check_data_sources() -> dict:
         "status": "ok" if omo_bridge.exists() else "missing",
     }
 
+    # GaC governance trend
+    gov_trend = REPO / "bin" / "gac" / "check-governance-trend.py"
+    sources["probe.doc_governance"] = {
+        "path": str(gov_trend.relative_to(REPO)),
+        "exists": gov_trend.exists(),
+        "status": "ok" if gov_trend.exists() else "missing",
+    }
+
     # MOF bridge
     mof_bridge = REPO / "bin" / "gac" / "harness-mof-bridge.py"
     sources["probe.feature_add"] = {
@@ -277,11 +347,17 @@ def main() -> int:
     parser.add_argument("--status", action="store_true", help="Show status")
     parser.add_argument("--feedback", action="store_true", help="Show feedback")
     parser.add_argument("--data-sources", action="store_true", help="列出数据源健康度")
+    parser.add_argument("--sync-omo", action="store_true", help="同步自进化状态到 OMO system.yaml")
     args = parser.parse_args()
 
     if args.cycle:
         result = run_cycle()
         print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.sync_omo:
+        result = sync_evolution_state()
+        print(json.dumps({"ok": True, "sync": result}, indent=2, ensure_ascii=False))
         return 0
 
     if args.data_sources:
