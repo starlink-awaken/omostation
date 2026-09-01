@@ -8,8 +8,8 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 194 |
-| MCP 工具 | 634 |
+| CLI 命令 (含子命令) | 199 |
+| MCP 工具 | 584 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 289 |
 | BOS 域 | 21 |
@@ -20,7 +20,6 @@
 |--------|-----|--------|------|------|
 | `agora` | I0 | 104 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
 | `gbrain` | L2 | 75 | stdio | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
-| `runtime` | L1 | 50 | stdio | `projects/runtime/src/runtime/mcp_server.py` |
 | `l4-kernel` | L4 | 47 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `kos` | L2 | 44 | stdio | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
@@ -45,6 +44,7 @@
 | `aetherforge-gateway` | X | 3 | stdio | `projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py` |
 | `c2g` | X | 3 | stdio | `projects/omo/src/omo/_vendored/c2g/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | `projects/model-driven/src/model_driven/fastmcp_server.py` |
+| `runtime` | L1 | 0 | stdio | `projects/runtime/src/runtime/mcp_server.py` ⚠️未找到 |
 
 ## BOS 服务域分布
 
@@ -138,6 +138,7 @@
 | `cockpit discover` | 发现可用功能和资源 |
 | `cockpit distill` | 在 Mac mini M4 触发闲时 LoRA 蒸馏 |
 | `cockpit dma` | 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准 |
+| `cockpit docx` | 渲染为 GB/T 9704-2012 红头公文 DOCX |
 | `cockpit domain-status` | 显示 Documents 域项目绑定与引导状态 |
 | `cockpit domains` | 列出 L4 所有域及其状态 |
 | `cockpit dossier` | 查看研究的关系与产物视图 |
@@ -210,6 +211,7 @@
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit pipeline` | pipeline 概览 |
 | `cockpit policy` | ⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*) |
+| `cockpit pptx` | 渲染为 16:9 高管技术汇报 PPTX |
 | `cockpit product-health` | 产品健康度检测 |
 | `cockpit profile` | 查看/编辑身份档案 (L4 入口) |
 | `cockpit project` | 🔍 17 项目全景 4D 体检与诊断 |
@@ -226,6 +228,7 @@
 | `cockpit reload` | 重载 BOS 配置/M1 |
 | `cockpit remember` | 手动存入偏好/事实 |
 | `cockpit rename` | 重命名研究标题 |
+| `cockpit render` | 初稿 Markdown 一键渲染导出 (GB/T 9704 DOCX / 16:9 PPTX / 矢量图) |
 | `cockpit replay` | 查看 Experience Replay 缓冲区状态 |
 | `cockpit research` | 深度研究 — 创建/查询/管理研究对象 |
 | `cockpit resident` | Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...) |
@@ -251,8 +254,10 @@
 | `cockpit stream` | 跨节点 Chunk-level 流式协同流水线基准 |
 | `cockpit submit` | 提交控制任务 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
+| `cockpit svg` | 渲染 ```diagram 代码块为矢量架构图 SVG |
 | `cockpit swarm` | 分布式跨节点 KV 共享池与超长上下文置换基准 |
 | `cockpit tag` | 为研究添加/覆盖标签 |
+| `cockpit test_export_formats` | 离线自测: 三格式导出 + GB/T 参数断言 |
 | `cockpit timeline` | 查看研究的演化时间线 |
 | `cockpit topics` | 列出已注册 topic |
 | `cockpit tree` | 自适应熵感知树状投机解码与多候选验证基准 |
