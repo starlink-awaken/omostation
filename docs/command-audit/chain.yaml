@@ -1,0 +1,72 @@
+meta:
+  cmd_path: chain
+  category: 🔧 通用 (General)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 5
+    evidence: list/show/run/validate/init + --dry-run/--resume/--force-rerun/--non-interactive/--param (Phase C 新增, --help
+      实测)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 命令链编排新入口
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: help 明确; resume 语义注明跳过 succeeded
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: dry-run 先行设计好
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: 新模块, 输出格式待观察
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: 顺序执行无并行
+    suggestion: ''
+  stability:
+    score: 4
+    evidence: resume + force-rerun 处理失败恢复
+    suggestion: ''
+  observability:
+    score: 4
+    evidence: run_id 贯穿可追踪
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: dry-run 计划打印
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: init 脚手架 + validate 校验
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 独立 cockpit/chain 模块
+    suggestion: ''
+  extensibility:
+    score: 5
+    evidence: --param K=V 参数化链路
+    suggestion: ''
+  evolvability:
+    score: 5
+    evidence: Phase C 刚落地, 活跃演进
+    suggestion: ''
+  agent_friendliness:
+    score: 5
+    evidence: non-interactive 模式专为自动化
+    suggestion: ''
+  state_memory:
+    score: 5
+    evidence: resume RUN_ID 即 checkpoint 持久化
+    suggestion: ''
+summary:
+  grade: null

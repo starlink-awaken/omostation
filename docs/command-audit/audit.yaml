@@ -1,0 +1,72 @@
+meta:
+  cmd_path: audit
+  category: 🛠️ 系统 (System)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 5
+    evidence: 7 个维度 (governance/lint/radar/ssot/gitlink/ops) + --dim 选择 + markdown/json + --output + --since (audit.py:44,
+      --help 实测)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 治理审计主入口
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: 维度命名清晰; all 默认合理
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: --dim 粒度可选
+    suggestion: ''
+  io_readability:
+    score: 5
+    evidence: markdown/json 双格式 + 落盘 --output
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: all 模式串行多维度, 无耗时统计
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: 单维度失败对整体的影响未见隔离
+    suggestion: ''
+  observability:
+    score: 4
+    evidence: radar/ssot 维度本身即观察面
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: 报告输出但无告警分级
+    suggestion: ''
+  operability:
+    score: 5
+    evidence: --output + --json 可直接入 CI
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 3.9K 薄编排
+    suggestion: ''
+  extensibility:
+    score: 4
+    evidence: --dim choices 加新维度即可
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: 7 维已多次扩展
+    suggestion: ''
+  agent_friendliness:
+    score: 5
+    evidence: --format json 供 agent 消费
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: --since 时间窗但无基线对比
+    suggestion: ''
+summary:
+  grade: null

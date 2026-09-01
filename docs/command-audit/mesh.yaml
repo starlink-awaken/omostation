@@ -1,0 +1,71 @@
+meta:
+  cmd_path: mesh
+  category: 🖥️ 基础设施 (Infra)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 5
+    evidence: 18 个子命令覆盖 nodes/route/cache/serve 及 dflash/dma/lora 等前沿特性 (mesh 组, --help 实测)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 算力网格调优偏专家场景
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: '子命令摘要具体 (route: 为模型选择最优节点)'
+    suggestion: ''
+  usability:
+    score: 3
+    evidence: 18 子命令认知负担大
+    suggestion: 加二级分组
+  io_readability:
+    score: 3
+    evidence: 多为面板/hud 可视化
+    suggestion: 基准类输出加 --json
+  performance:
+    score: 4
+    evidence: 本身就是性能优化域 (warm 0ms TTFT/cache 分层)
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: 跨节点操作失败面大, 未见重试策略
+    suggestion: ''
+  observability:
+    score: 5
+    evidence: hud/heatmap/status 实时观察
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: triage 分级即一种告警前置
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: serve 常驻 + discover
+    suggestion: ''
+  maintainability:
+    score: 3
+    evidence: 18 子命令聚合
+    suggestion: 按域拆分
+  extensibility:
+    score: 4
+    evidence: 子命令持续新增
+    suggestion: ''
+  evolvability:
+    score: 5
+    evidence: dflash/lora/dma 前沿持续演进
+    suggestion: ''
+  agent_friendliness:
+    score: 3
+    evidence: 专家向
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: cache/heatmap 有运行态
+    suggestion: ''
+summary:
+  grade: null

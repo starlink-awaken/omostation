@@ -1,0 +1,72 @@
+meta:
+  cmd_path: gac
+  category: 🛠️ 系统 (System)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 5
+    evidence: 8 个治理子命令 drift/validate/arch-drift/pre-pr/ci-fast/coverage/hygiene/readiness (gac_group.py 薄委派 bin/gac/*, --help
+      实测)
+    suggestion: ''
+  use_case:
+    score: 5
+    evidence: 提交前自检 pre-pr 高频
+    suggestion: ''
+  goal_clarity:
+    score: 5
+    evidence: 每子命令一行精准中文描述
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 透传式, 参数看下游脚本
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: 输出格式由下游脚本决定, cockpit 层未统一
+    suggestion: 下游统一 --json
+  performance:
+    score: 3
+    evidence: 委派 subprocess 启动开销
+    suggestion: ''
+  stability:
+    score: 4
+    evidence: 'subprocess.call 保留生产者退出码 (help: ci-fast 注明)'
+    suggestion: ''
+  observability:
+    score: 3
+    evidence: drift/coverage 即治理观察面, 但无指标汇总
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: 依赖下游
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: ci-fast 即本地 CI 门
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 3.6K 薄委派 + SPECS 单源派生 catalog
+    suggestion: ''
+  extensibility:
+    score: 5
+    evidence: 加子命令只需加 DelegatedSpec
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: Phase B1 刚完成子命令化, 演进活跃
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: REMAINDER 透传 + reclaim_unknown 修复 --help 透传 (delegation.py:184)
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: 无
+    suggestion: ''
+summary:
+  grade: null

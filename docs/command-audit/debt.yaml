@@ -1,0 +1,71 @@
+meta:
+  cmd_path: debt
+  category: 📋 项目 (Project)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: score/list/summary 三面 (debt_scoring.py:17 + omo 委派, --help 实测)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 债务治理高频
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: '子命令摘要注明委派目标 (help: ''委派 omo debt'')'
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 清晰
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: score 本地输出, list/summary 透传 omo
+    suggestion: 统一 --json
+  performance:
+    score: 3
+    evidence: list/summary 走 uv 子进程
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: omo 项目不存在时路径解析失败未处理
+    suggestion: 启动前检查路径
+  observability:
+    score: 3
+    evidence: score 即债务观察
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: 债务台账可运营
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 2.0K + 薄委派
+    suggestion: ''
+  extensibility:
+    score: 4
+    evidence: 加子命令加 spec
+    suggestion: ''
+  evolvability:
+    score: 3
+    evidence: 口径稳定
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: agent 可读债务做规划
+    suggestion: ''
+  state_memory:
+    score: 4
+    evidence: 债务台账持久化于 .omo
+    suggestion: ''
+summary:
+  grade: null

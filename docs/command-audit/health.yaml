@@ -1,0 +1,71 @@
+meta:
+  cmd_path: health
+  category: 🛠️ 系统 (System)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: --json + --full 全栈检查 (Agora+Runtime Matrix+OMO debt) (health.py:37 实测 json 分支)
+    suggestion: ''
+  use_case:
+    score: 5
+    evidence: 一键系统健康是高频入口 (cli.py 首屏推荐)
+    suggestion: ''
+  goal_clarity:
+    score: 5
+    evidence: 两个 flag, 语义一目了然
+    suggestion: ''
+  usability:
+    score: 5
+    evidence: 零参数可用, --full 扩展
+    suggestion: ''
+  io_readability:
+    score: 4
+    evidence: --json 支持 (health.py:37)
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: --full 串行全栈检查可能慢, 无耗时打点
+    suggestion: 各检查项计时
+  stability:
+    score: 4
+    evidence: 单项失败不影响整体输出面
+    suggestion: ''
+  observability:
+    score: 5
+    evidence: 本身就是可观察性入口
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: 结果展示但无阈值告警
+    suggestion: 可加 exit code 分级
+  operability:
+    score: 4
+    evidence: 适合 cron 巡检 (--json 消费)
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 9.0K 模块独立
+    suggestion: ''
+  extensibility:
+    score: 3
+    evidence: 检查项内联, 加项需改源码
+    suggestion: 检查项插件化
+  evolvability:
+    score: 4
+    evidence: --full 已分层扩展
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: --json 机器可读
+    suggestion: ''
+  state_memory:
+    score: 2
+    evidence: 无历史快照对比
+    suggestion: 可存最近 N 次结果做趋势
+summary:
+  grade: null

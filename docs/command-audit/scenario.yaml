@@ -1,0 +1,72 @@
+meta:
+  cmd_path: scenario
+  category: 📋 项目 (Project)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 5
+    evidence: 10 个场景子命令 radar/assistant/health/inbox/intake/task/approval/connector/review/domain (scenario.py 49.5K, --help
+      实测)
+    suggestion: ''
+  use_case:
+    score: 5
+    evidence: P5 场景卡执行闭环主入口
+    suggestion: ''
+  goal_clarity:
+    score: 5
+    evidence: 'help 注明 P5-F1..F9 编号与隐私级别 (health: privacy=confidential)'
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 全局 --json + 默认人类面板双轨 (help 注明)
+    suggestion: ''
+  io_readability:
+    score: 4
+    evidence: --json 原始 JSON 供管道消费
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: 49.5K 单文件, 场景重逻辑无耗时打点
+    suggestion: ''
+  stability:
+    score: 4
+    evidence: approval HITL 流有证据面板兜底
+    suggestion: ''
+  observability:
+    score: 4
+    evidence: review 每周复盘 + 试点报告
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: console.print 渲染为主
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: review/approval 即运营面
+    suggestion: ''
+  maintainability:
+    score: 3
+    evidence: 49.5K 巨型文件
+    suggestion: 按 F1-F9 拆模块
+  extensibility:
+    score: 4
+    evidence: 子命令模式易加场景
+    suggestion: ''
+  evolvability:
+    score: 5
+    evidence: F1-F9 编号显示分阶段持续演进
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: --json + 场景卡协议
+    suggestion: ''
+  state_memory:
+    score: 4
+    evidence: inbox/task 生命周期持久
+    suggestion: ''
+summary:
+  grade: null

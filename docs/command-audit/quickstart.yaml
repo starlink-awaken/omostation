@@ -1,0 +1,71 @@
+meta:
+  cmd_path: quickstart
+  category: 👤 用户 (User)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: 检测+--fix 自动修复+--model 选型 (quickstart.py 21.0K)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 新手引导
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: 语义清晰
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: --fix 减少手动
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: 面板文本
+    suggestion: 加 --json
+  performance:
+    score: 3
+    evidence: 多项检测串行
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: 修复操作有风险面, 未见 dry-run
+    suggestion: --fix 加确认
+  observability:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: 环境初始化可复跑
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 独立模块
+    suggestion: ''
+  extensibility:
+    score: 3
+    evidence: 检测项内联
+    suggestion: 检测项列表化
+  evolvability:
+    score: 4
+    evidence: 21.0K 显示多次迭代
+    suggestion: ''
+  agent_friendliness:
+    score: 3
+    evidence: 输出人类向
+    suggestion: ''
+  state_memory:
+    score: 2
+    evidence: 无
+    suggestion: ''
+summary:
+  grade: null

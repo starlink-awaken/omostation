@@ -1,0 +1,71 @@
+meta:
+  cmd_path: compass
+  category: 📋 项目 (Project)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: '委派 c2g: brainstorm/draft/bet/radar/gc/outcome/suggest 7 子命令 (--help 实测 c2g usage)'
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 战略管线 (Concept-to-Goal)
+    suggestion: ''
+  goal_clarity:
+    score: 3
+    evidence: cockpit compass help 显示下游 c2g 英文 usage, cockpit 层未本地化说明
+    suggestion: 加中文层 help
+  usability:
+    score: 3
+    evidence: 双名 (compass/c2g) 可能困惑
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: 下游输出
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: 委派
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: --adapter {ecos,local} 有后端选择降级
+    suggestion: ''
+  observability:
+    score: 2
+    evidence: radar 审计算观察
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: bet/gc 生命周期管理
+    suggestion: ''
+  maintainability:
+    score: 3
+    evidence: compass.py 3.4K 包装 + c2g 3.3K
+    suggestion: ''
+  extensibility:
+    score: 3
+    evidence: 受 c2g 限制
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: outcome/suggest 标注 NEW 活跃
+    suggestion: ''
+  agent_friendliness:
+    score: 3
+    evidence: 交互向导多
+    suggestion: ''
+  state_memory:
+    score: 4
+    evidence: bet/outcome 追踪持久
+    suggestion: ''
+summary:
+  grade: null

@@ -1,0 +1,71 @@
+meta:
+  cmd_path: research
+  category: 📚 研究 (Research)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 5
+    evidence: 26 个子命令覆盖 create/list/open/publish/export/audit/quarantine/heatmap 等全生命周期 (research.py 57.8K, --help 实测)
+    suggestion: ''
+  use_case:
+    score: 5
+    evidence: 深度研究主入口, cli.py epilog 与首屏面板均首推 research (cli.py:300)
+    suggestion: ''
+  goal_clarity:
+    score: 5
+    evidence: help 每个子命令一行中文摘要, 目标即'发起/管理研究'
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 默认裸 research 即 create 模式 (cli.py research 预处理插 create), 降低记忆负担; 但 26 子命令略多
+    suggestion: 可提供常用子命令 alias 分组
+  io_readability:
+    score: 4
+    evidence: export 支持 markdown/text/json (research.py:985-990), list 支持 --json (research.py:291)
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: 未见耗时打点/缓存; list/heatmap 全量扫描
+    suggestion: 对 list 类查询加索引或分页
+  stability:
+    score: 4
+    evidence: 有 quarantine/restore/backup 机制兜底可疑记录, 设计考虑了失败面
+    suggestion: ''
+  observability:
+    score: 3
+    evidence: audit 子命令可扫可疑记录, 但运行时无指标暴露
+    suggestion: 补 tracing 埋点
+  logging_alerting:
+    score: 3
+    evidence: research.py 仅 6 处 console.print, 无分级日志
+    suggestion: 引入 logging 分级
+  operability:
+    score: 3
+    evidence: 有 backup/backup-restore, 但无告警/巡检面
+    suggestion: 接入 daily 巡检
+  maintainability:
+    score: 3
+    evidence: 单文件 57.8K (26 子命令内联), 模块化不足
+    suggestion: 按子命令拆分模块
+  extensibility:
+    score: 4
+    evidence: 子命令经 _subcommands 注册, registry COMMAND_CATALOG 有元数据
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: audit/quarantine/heatmap 显示可持续演进中
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: --json 输出 + research_command 子命令路由, agent 可编程消费
+    suggestion: ''
+  state_memory:
+    score: 4
+    evidence: 研究记录持久化 + timeline/tag/dossier 演化视图
+    suggestion: ''
+summary:
+  grade: null

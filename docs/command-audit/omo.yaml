@@ -1,0 +1,71 @@
+meta:
+  cmd_path: omo
+  category: 📄 专项工具 (Domain)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: '通用 omo CLI 委派: debt/state/governance/lint (omo.py cmd_omo), 透传 omo_args'
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: OMO 治理内核入口
+    suggestion: ''
+  goal_clarity:
+    score: 3
+    evidence: 'cockpit 层 help 未列子命令; --help 未透传 (实测 ''Unknown subcommand: --help'')'
+    suggestion: 修复 --help 透传 (reclaim 白名单)
+  usability:
+    score: 2
+    evidence: --help 不透传, 用户看不到用法 (实测失败)
+    suggestion: P0 修复
+  io_readability:
+    score: 3
+    evidence: 透传输出
+    suggestion: ''
+  performance:
+    score: 2
+    evidence: uv run --directory 冷启动慢
+    suggestion: ''
+  stability:
+    score: 4
+    evidence: subprocess 隔离
+    suggestion: ''
+  observability:
+    score: 3
+    evidence: 依赖 omo CLI
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: 透传
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: omo debt/state 即治理运维
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 1.7K 薄包装
+    suggestion: ''
+  extensibility:
+    score: 4
+    evidence: REMAINDER 全透传
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: 跟着 omo 项目演进
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: agent 通过 REMAINDER 组合
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: 状态在 .omo/ 目录
+    suggestion: ''
+summary:
+  grade: null

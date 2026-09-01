@@ -1,0 +1,71 @@
+meta:
+  cmd_path: data
+  category: 📦 数据 (Data)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: index/types/gc 三面 (data.py:14/32/51)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 数据目录元数据维护
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: 简洁
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 零参数 gc/types 可用
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: 默认文本
+    suggestion: --json
+  performance:
+    score: 4
+    evidence: 本地文件操作轻量
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: gc 删除操作未见 dry-run
+    suggestion: gc 加 --dry-run
+  observability:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: gc 适合定期清理
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 2.6K
+    suggestion: ''
+  extensibility:
+    score: 3
+    evidence: 类型注册表可扩
+    suggestion: ''
+  evolvability:
+    score: 3
+    evidence: 稳定
+    suggestion: ''
+  agent_friendliness:
+    score: 3
+    evidence: 文本输出为主
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: _index 元数据持久
+    suggestion: ''
+summary:
+  grade: null

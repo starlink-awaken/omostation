@@ -1,7 +1,13 @@
-"""Cockpit CLI product map — grouped command catalog for `cockpit help` / `--help`.
+"""Cockpit CLI product map — `cockpit help` / `--help` 的产品地图 (Phase A3 SSOT 化).
 
-Keeps human-facing navigation SSOT for CLI discovery (not a substitute for
-per-command --help). Update when adding top-level commands in cli.py.
+SSOT 原则 (Phase A3 修复):
+  命令清单不再内联维护, 运行时从 ``commands.registry.COMMAND_CATALOG`` 按 category
+  分组生成 (含 Phase B 薄委派组, 经 ``delegation.ensure_delegated_catalog`` 并入);
+  分组顺序/颜色来自 ``registry.CATEGORY_GROUPS``。
+
+  本文件只保留两类人工内容 (引导文案, 非数据源):
+    · ``GUIDE_SECTIONS``  — 跨命令选择引导 ("记忆与检索怎么选" 等)
+    · ``BLURB_OVERRIDES`` — 个别命令的口语化一句简介 (fallback 到 catalog summary)
 """
 
 from __future__ import annotations
@@ -23,150 +29,69 @@ class CmdRow:
     example: str = ""
 
 
-# ── Catalog (top-level only; keep blurb short) ───────────────────────────────
+# ── 人工引导内容 (不是命令数据源) ─────────────────────────────────────────────
 
-GROUPS: list[tuple[str, str, list[CmdRow]]] = [
-    (
-        "🚀 入门",
-        "bright_green",
-        [
-            CmdRow("quickstart", "环境核验 + 上手向导 (init 同义)", "cockpit quickstart"),
-            CmdRow("demo", "5 分钟产品闭环演示", "cockpit demo"),
-            CmdRow("help", "本产品地图；help <词> 模糊搜", "cockpit help memory"),
-            CmdRow("discover", "发现已安装能力", "cockpit discover"),
-            CmdRow("version", "版本信息", "cockpit version"),
-            CmdRow("quickstart-check", "环境核验状态快查", "cockpit quickstart-check"),
-        ],
-    ),
-    (
-        "📚 研究与知识",
-        "cyan",
-        [
-            CmdRow("research", "深度研究 (create/list/open/publish/...)", 'cockpit research "主题"'),
-            CmdRow("import", "导入网页/文档素材", "cockpit import ./note.md"),
-            CmdRow("search", "跨源搜索 (本地+BOS)", 'cockpit search "关键词" --all'),
-            CmdRow("vault", "L4 Vault 知识库搜索", 'cockpit vault "笔记"'),
-            CmdRow("knowledge", "KOS 检索 search/status/stats", "cockpit knowledge search …"),
-            CmdRow("memory", "Memory OS 统一记忆控制面", "cockpit memory status --json"),
-            CmdRow("brain", "个人数字大脑问答", "cockpit brain …"),
-            CmdRow("gbrain", "gbrain 知识库 CLI 委派", "cockpit gbrain search …"),
-            CmdRow("kairon", "kairon monorepo 聚合", "cockpit kairon …"),
-            CmdRow("daily", "每日研究简报", "cockpit daily"),
-            CmdRow("brief", "会话简报", "cockpit brief"),
-        ],
-    ),
+# 个别命令的口语化覆写 (fallback: catalog summary)
+BLURB_OVERRIDES: dict[str, str] = {
+    "research": "深度研究 (create/list/open/publish/…)",
+    "quickstart": "环境核验 + 上手向导 (init 同义)",
+    "agent-workflow": "Agent 治理流程 (agent 同义)",
+}
+
+# 跨命令选择引导段 (原内联分组的引导语义, 保留为静态段)
+GUIDE_SECTIONS: list[tuple[str, list[tuple[str, str]]]] = [
     (
         "🧠 记忆与检索怎么选",
-        "magenta",
         [
-            CmdRow("memory", "默认记忆入口 (write/recall/forget/consolidate)", "cockpit memory"),
-            CmdRow("knowledge", "结构化 KOS 索引检索", "cockpit knowledge search q"),
-            CmdRow("vault", "本地笔记/精读最快", 'cockpit vault "q"'),
-            CmdRow("search", "跨源聚合", 'cockpit search "q" --all'),
-            CmdRow("bos", "任意 BOS URI (含 mos/*)", "cockpit bos resolve bos://memory/mos/status"),
-        ],
-    ),
-    (
-        "🛠️ 系统与可观测",
-        "blue",
-        [
-            CmdRow("status", "工作台 / 系统健康", "cockpit status"),
-            CmdRow("health", "一键健康检查", "cockpit health --full"),
-            CmdRow("product-health", "产品健康度", "cockpit product-health"),
-            CmdRow("dashboard", "Web 控制台", "cockpit dashboard"),
-            CmdRow("tui", "全屏终端 TUI", "cockpit tui"),
-            CmdRow("monitor", "C2G Pipeline 实时大盘", "cockpit monitor"),
-            CmdRow("events", "Agora SSE 事件流", "cockpit events"),
-            CmdRow("events-watch", "SSE 简便监听", "cockpit events-watch"),
-            CmdRow("observe", "Langfuse 可观测入口", "cockpit observe"),
-            CmdRow("runtime", "runtime Matrix/Scheduler/KEI", "cockpit runtime …"),
-            CmdRow("readiness", "治理 readiness 四卡片", "cockpit readiness"),
-            CmdRow("journey", "Journey 状态图校验", "cockpit journey"),
-            CmdRow("panorama", "7 维全景可观测", "cockpit panorama"),
-            CmdRow("project", "17 项目 4D 体检", "cockpit project inspect"),
-        ],
-    ),
-    (
-        "🧠 认知操作系统与主权治理 (V3.0 ADR-0195~0203)",
-        "bright_cyan",
-        [
-            CmdRow("intent", "🧠 意图解构与工程规格编译器 (ADR-0195)", 'cockpit intent "卫健委立项方案"'),
-            CmdRow("challenge", "⚡️ 影子红蓝对抗审查与自动打补丁 (ADR-0196)", "cockpit challenge 方案.md --auto-patch"),
-            CmdRow("cartridge", "👁️ 领域卡带打包与沙箱运行 (ADR-0203)", "cockpit cartridge list"),
-            CmdRow("fabric", "🧑‍💻 主权混合算力与 KV 缓存快照 (ADR-0197)", "cockpit fabric inspect"),
-            CmdRow("cell", "🤖 AGE-v2 动态 Agent Cell", "cockpit cell plan"),
-        ],
-    ),
-    (
-        "⚖️ 治理与 GaC",
-        "yellow",
-        [
-            CmdRow("omo", "OMO debt/state/governance/lint", "cockpit omo state sync"),
-            CmdRow("debt", "债务评分 list/summary/score", "cockpit debt list"),
-            CmdRow("gac", "GaC 健康检查", "cockpit gac"),
-            CmdRow("governance", "arcnode 校准/审计/巡检", "cockpit governance …"),
-            CmdRow("audit", "六维审计", "cockpit audit"),
-            CmdRow("cards", "CARDS 状态", "cockpit cards"),
-            CmdRow("context", "Phase/CARDS/约束上下文", "cockpit context"),
-            CmdRow("mof", "MOF 元模型 CLI", "cockpit mof …"),
-            CmdRow("bdsk", "虚拟董事会 4角辩论", "cockpit bdsk debate 主题"),
-            CmdRow("kems", "KEMS 域治理", "cockpit kems status"),
-            CmdRow("agent-workflow", "Agent 治理流程 (agent 同义)", "cockpit agent-workflow status"),
-        ],
-    ),
-    (
-        "🤖 Agent / 战略 / 协作",
-        "bright_magenta",
-        [
-            CmdRow("agent-onboard", "Agent 入职 checklist", "cockpit agent-onboard"),
-            CmdRow("agent-runtime", "任务执行 / HTTP server", "cockpit agent-runtime …"),
-            CmdRow("swarm", "多 agent 活动监控", "cockpit swarm"),
-            CmdRow("compass", "C2G 战略罗盘", "cockpit compass"),
-            CmdRow("iterate", "C2G 双擎迭代", "cockpit iterate …"),
-            CmdRow("c2g", "战略 status/pipeline", "cockpit c2g status"),
-            CmdRow("wave2", "预测治理面板", "cockpit wave2"),
-            CmdRow("workflow", "工作流编排 MetaOS/ecos", "cockpit workflow …"),
-            CmdRow("channels", "External channels 清单", "cockpit channels"),
-        ],
-    ),
-    (
-        "🔌 总线 / 项目入口",
-        "bright_blue",
-        [
-            CmdRow("bos", "BOS URI 列表/解析/读取", "cockpit bos list"),
-            CmdRow("bos-capability", "Toolbox 外部能力", "cockpit bos-capability …"),
-            CmdRow("bos-inbox", "Inbox 多源神经网", "cockpit bos-inbox status"),
-            CmdRow("agora", "Agora 网关 CLI 委派", "cockpit agora …"),
-            CmdRow("mcp", "MCP server / 列工具", "cockpit mcp --list"),
-            CmdRow("bus", "Omni-Bus 三平面", "cockpit bus …"),
-            CmdRow("mesh", "omlx 算力网格", "cockpit mesh …"),
-            CmdRow("compute", "LLM 网关 aetherforge", "cockpit compute …"),
-            CmdRow("code", "代码库分析 codeanalyze", "cockpit code analyze"),
-            CmdRow("family-hub", "家庭数字枢纽", "cockpit family-hub …"),
-        ],
-    ),
-    (
-        "🌿 生活场景",
-        "green",
-        [
-            CmdRow("gongwen", "公文写作门户", "cockpit gongwen"),
-            CmdRow("finance", "个人财务门户", "cockpit finance"),
-            CmdRow("scenario", "radar/assistant/health", "cockpit scenario …"),
-            CmdRow("profile", "身份档案 L4", "cockpit profile"),
-            CmdRow("domains", "L4 域列表", "cockpit domains"),
-            CmdRow("skill", "L4 定时技能", "cockpit skill …"),
-        ],
-    ),
-    (
-        "⚙️ 数据与契约",
-        "white",
-        [
-            CmdRow("data", "index / types / gc", "cockpit data index"),
-            CmdRow("contracts", "validate / export", "cockpit contracts validate"),
-            CmdRow("dashboard", "Web Dashboard", "cockpit dashboard"),
+            ("memory", "默认记忆入口 (write/recall/forget/consolidate) — cockpit memory"),
+            ("knowledge", "结构化 KOS 索引检索 — cockpit knowledge search q"),
+            ("vault", "本地笔记/精读最快 — cockpit vault \"q\""),
+            ("search", "跨源聚合 — cockpit search \"q\" --all"),
+            ("bos", "任意 BOS URI (含 mos/*) — cockpit bos resolve bos://memory/mos/status"),
         ],
     ),
 ]
+
+# 引导段引用的命令必须存在于 catalog (test_help_map_ssot 校验, 防悬空)
+GUIDE_REFERENCED_COMMANDS: tuple[str, ...] = (
+    "memory", "knowledge", "vault", "search", "bos",
+)
+
+
+# ── SSOT: 从 COMMAND_CATALOG 生成分组 ────────────────────────────────────────
+
+def _build_groups() -> list[tuple[str, str, list[CmdRow]]]:
+    from cockpit.commands.delegation import category_color, category_order, ensure_delegated_catalog
+    from cockpit.commands.registry import COMMAND_CATALOG
+
+    ensure_delegated_catalog()  # 并入 Phase B 薄委派组 (幂等)
+
+    by_category: dict[str, list] = {}
+    for meta in COMMAND_CATALOG.values():
+        by_category.setdefault(meta.category, []).append(meta)
+
+    groups: list[tuple[str, str, list[CmdRow]]] = []
+    for category in sorted(by_category, key=category_order):
+        metas = sorted(by_category[category], key=lambda m: m.name)
+        rows = [
+            CmdRow(
+                name=m.name,
+                blurb=BLURB_OVERRIDES.get(m.name, m.summary),
+                example=m.example,
+            )
+            for m in metas
+        ]
+        groups.append((category, category_color(category), rows))
+    return groups
+
+
+GROUPS: list[tuple[str, str, list[CmdRow]]] = _build_groups()
+
+
+def rebuild_groups() -> None:
+    """测试/热更新用: 从 catalog 重建 GROUPS."""
+    global GROUPS
+    GROUPS = _build_groups()
 
 
 SCENARIOS: list[tuple[str, str]] = [
@@ -175,7 +100,9 @@ SCENARIOS: list[tuple[str, str]] = [
     ("统一记忆", 'source bin/memory-os-env.sh → cockpit memory status → cockpit memory recall "…"'),
     ("知识检索", 'cockpit knowledge search "q" · cockpit vault "q" · cockpit search "q" --all'),
     ("治理巡检", "cockpit gac · cockpit omo state sync · cockpit audit"),
+    ("链路编排", "cockpit chain list → cockpit chain run governance-patrol --dry-run"),
     ("Agent 协作", "cockpit agent-onboard · cockpit swarm · cockpit agent status"),
+    ("命令审查", "cockpit command-audit lint · cockpit command-audit report"),
     ("BOS 调用", "cockpit bos resolve bos://memory/mos/status · cockpit bos list"),
     ("Web 控制台", "cockpit dashboard → http://localhost:8090/overview"),
 ]
@@ -228,6 +155,23 @@ def render_product_map(console: Console) -> None:
         console.print(_group_table(title, style, rows))
         console.print()
 
+    # 跨命令引导段 (SSOT: 引用校验由 test_help_map_ssot 保障)
+    for section_title, pairs in GUIDE_SECTIONS:
+        t = Table(
+            title=f"[bold magenta]{section_title}[/]",
+            box=box.SIMPLE_HEAD,
+            show_header=False,
+            expand=True,
+            pad_edge=False,
+            title_justify="left",
+        )
+        t.add_column("命令", style="cyan", no_wrap=True, min_width=14)
+        t.add_column("什么时候用", style="white", ratio=3)
+        for name, guidance in pairs:
+            t.add_row(name, guidance)
+        console.print(t)
+        console.print()
+
     # Scenarios
     scen = Table(box=box.ROUNDED, title="[bold yellow]💡 典型场景[/]", title_justify="left", expand=True)
     scen.add_column("场景", style="bold yellow", width=12)
@@ -236,14 +180,6 @@ def render_product_map(console: Console) -> None:
         scen.add_row(name, path)
     console.print(scen)
     console.print()
-
-    # Journey
-    journey = (
-        "[bold]研究旅程[/]  import → research → open → ask → publish → dossier → daily\n"
-        "[bold]记忆旅程[/]  memory-os-env → neo4j-up → memory status → recall/write → bos resolve\n"
-        "[bold]治理旅程[/]  agent-workflow bootstrap → start → claim → verify → closeout"
-    )
-    console.print(Panel(journey, title="[bold]🔄 用户旅程[/]", border_style="dim", padding=(0, 2)))
 
     docs = Table(box=box.SIMPLE, show_header=False, expand=True, pad_edge=False)
     docs.add_column(style="cyan", width=14)
@@ -260,7 +196,7 @@ def render_product_map(console: Console) -> None:
 
 
 def render_compact_help(console: Console) -> None:
-    """Shorter view for `cockpit --help` (avoid 70-cmd wall of text)."""
+    """Shorter view for `cockpit --help` (avoid cmd wall of text)."""
     console.print(
         Panel.fit(
             "[bold bright_cyan]cockpit[/] — Workspace L3 统一入口\n\n"
@@ -269,6 +205,7 @@ def render_compact_help(console: Console) -> None:
             "[bold]记忆[/]      [cyan]cockpit memory[/] · [cyan]cockpit memory status --json[/]\n"
             '[bold]研究[/]      [cyan]cockpit research "主题"[/] · [cyan]cockpit demo[/]\n'
             "[bold]治理[/]      [cyan]cockpit gac[/] · [cyan]cockpit agent status[/]\n"
+            "[bold]链路[/]      [cyan]cockpit chain list[/] · [cyan]cockpit chain run <id> --dry-run[/]\n"
             "[bold]BOS[/]       [cyan]cockpit bos resolve bos://memory/mos/status[/]\n"
             "[bold]上手[/]      [cyan]cockpit quickstart[/]\n\n"
             "[dim]完整分组目录 → cockpit help · 子命令详情 → cockpit <cmd> --help[/]",
@@ -297,7 +234,7 @@ def render_discover_map(console: Console) -> None:
     """Command map for `cockpit discover` — same GROUPS SSOT as `cockpit help`."""
     n = len(all_command_names())
     g = len(GROUPS)
-    console.print(f"[bold]命令地图[/] ([cyan]{n}[/] 个命令 · [cyan]{g}[/] 组 · 与 [cyan]cockpit help[/] 同源)")
+    console.print(f"[bold]命令地图[/] ([cyan]{n}[/] 个命令 · [cyan]{g}[/] 组 · 与 [cyan]cockpit help[/] 同源 (COMMAND_CATALOG))")
     t = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold green", expand=True, pad_edge=False)
     t.add_column("分组", style="bold green", min_width=16)
     t.add_column("命令", style="cyan")
@@ -305,7 +242,6 @@ def render_discover_map(console: Console) -> None:
         names = " · ".join(r.name for r in rows)
         t.add_row(title, names)
     console.print(t)
-    # Explicit Memory OS callout for discover consistency with help
     console.print(
         "\n[bold magenta]🧠 Memory OS[/]  "
         "[cyan]cockpit memory[/] · [cyan]status/recall/write/forget/consolidate[/] · "

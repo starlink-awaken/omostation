@@ -1,0 +1,72 @@
+meta:
+  cmd_path: ops
+  category: 🖥️ 基础设施 (Infra)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 5
+    evidence: 10 子命令 status/up/down/deploy/deps/logs/summary/discover/validate/generate + --profile/--format/--dry-run (ops.py:17,
+      --help 实测)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 基础设施运维入口
+    suggestion: ''
+  goal_clarity:
+    score: 5
+    evidence: 'flag 语义全部明确 (dry-run: 不实际执行)'
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 默认 status
+    suggestion: ''
+  io_readability:
+    score: 4
+    evidence: --json 支持
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: 子进程编排
+    suggestion: ''
+  stability:
+    score: 4
+    evidence: validate/deps 前置检查
+    suggestion: ''
+  observability:
+    score: 4
+    evidence: status/logs/summary
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: logs 有限行数 -n
+    suggestion: ''
+  operability:
+    score: 5
+    evidence: deploy/generate 双格式运维产出
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 2.8K 薄编排
+    suggestion: ''
+  extensibility:
+    score: 4
+    evidence: services.yaml 注册制
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: --update 服务注册演进
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: --json + --dry-run 安全试运行
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: services.yaml 持久
+    suggestion: ''
+summary:
+  grade: null

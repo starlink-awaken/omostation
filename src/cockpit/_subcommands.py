@@ -175,6 +175,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     omo_p = sub.add_parser(
         "omo",
         help="OMO CLI 委派 (debt/state/governance/lint/...)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1); 空参显示下游 --help
     )
     omo_p.add_argument(
         "omo_args",
@@ -187,6 +188,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     resident_p = sub.add_parser(
         "resident",
         help="Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
     )
     resident_p.add_argument(
         "resident_args",
@@ -199,6 +201,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     bcos_p = sub.add_parser(
         "bcos",
         help="BCOS 业务域系统 (evolve/signals/north-star)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
     )
     bcos_p.add_argument(
         "bcos_args",
@@ -229,6 +232,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     runtime_p = sub.add_parser(
         "runtime",
         help="runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
     )
     runtime_p.add_argument(
         "runtime_args",
@@ -502,6 +506,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     ssb_p = sub.add_parser(
         "ssb",
         help=argparse.SUPPRESS,
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
         epilog="子命令 (源自 ecos-ssb): publish / query / state / recover / events / stats\n示例: cockpit ssb stats",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -510,6 +515,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     mof_p = sub.add_parser(
         "mof",
         help="MOF 元模型操作 (委派 mof CLI)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
         epilog="子命令 (源自 mof 引擎): validate / audit / derive / bridge-sync\n示例: cockpit mof validate",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -518,6 +524,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     agora_p = sub.add_parser(
         "agora",
         help="Agora BOS 网关入口 (委派 agora CLI)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
         epilog="子命令: register / unregister / list / discover / health / pipeline / repo / mcp\n示例: cockpit agora list",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -559,6 +566,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     gbrain_p = sub.add_parser(
         "gbrain",
         help="Postgres-native 知识库入口 (委派 gbrain CLI)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
         epilog="子命令: search / import / stats / admin\n示例: cockpit gbrain search 'attention'",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -571,6 +579,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     kairon_p = sub.add_parser(
         "kairon",
         help="kairon 知识引擎 monorepo 聚合入口",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
         epilog="package: kos / eidos / iris / code / ontoderive / minerva / kronos / sophia\n示例: cockpit kairon kronos fetch https://example.com",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -836,6 +845,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     agent_wf_p = sub.add_parser(
         "agent-workflow",
         help="🤖 Agent 可执行治理流程 (委派 root bin/agent-workflow.py)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
         epilog=(
             "示例:\n"
             "  cockpit agent-workflow list\n"
@@ -853,6 +863,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     agent_p = sub.add_parser(
         "agent",
         help="🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
         epilog=(
             "示例:\n"
             "  cockpit agent\n"
@@ -919,6 +930,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     compass_p = sub.add_parser(
         "compass",
         help="🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
         epilog=(
             "子命令 (源自 c2g 引擎):\n"
             '  brainstorm "主题"  发散想法生成 Pitch\n'
@@ -1189,7 +1201,11 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     watchdog_p.add_argument("--interval", type=float, default=5.0, help="守护巡检间隔秒数 (默认 5.0)")
 
     # ── policy ────────────────────────────────────────────────
-    policy_p = sub.add_parser("policy", help="⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)")
+    policy_p = sub.add_parser(
+        "policy",
+        help="⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)",
+        add_help=False,  # --help 透传下游 CLI (Phase A1)
+    )
     policy_p.add_argument("policy_args", nargs=argparse.REMAINDER, help="传递给 ecos-constraint policy 的参数")
 
     # ── ops (Service Gateway) ─────────────────────────────────
@@ -1213,3 +1229,24 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     ops_p.add_argument("--output", "-o", help="输出文件路径")
     ops_p.add_argument("--update", action="store_true", help="更新 services.yaml")
     ops_p.add_argument("-n", "--lines", type=int, default=50, help="日志行数")
+
+    # ── Phase B: 薄委派命令组挂载 (gac/adr/sweep/project_cli/root_bin) ─────────
+    # 各组模块自带 SPECS/register, 此处一次性聚合接线; 组模块未落地时静默跳过。
+    from cockpit.commands import delegation as _delegation
+
+    _delegation.register_all(sub, workspace_parser)
+    _delegation.ensure_delegated_catalog()
+
+    # ── Phase C/D: chain / command-audit 命令组 (模块自注册, 未落地时跳过) ────
+    try:
+        from cockpit.chain import register_chain
+
+        register_chain(sub, workspace_parser)
+    except ImportError:
+        pass
+    try:
+        from cockpit.commands.command_audit import register as _register_ca
+
+        _register_ca(sub, workspace_parser)
+    except ImportError:
+        pass

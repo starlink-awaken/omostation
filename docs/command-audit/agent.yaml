@@ -1,0 +1,71 @@
+meta:
+  cmd_path: agent
+  category: 📋 项目 (Project)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: 委派 bin/agent-workflow.py 全量 26 子命令 (--help 实测), cockpit 层默认 bootstrap
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: agent 治理入口, 但与 agent-workflow 语义重叠
+    suggestion: 明确 agent vs agent-workflow 分工
+  goal_clarity:
+    score: 3
+    evidence: 名字泛化, help 透传下游英文 help, cockpit 层无中文说明
+    suggestion: 加中文摘要
+  usability:
+    score: 3
+    evidence: uv run 子进程启动慢 (--help 输出前有 VIRTUAL_ENV warning)
+    suggestion: 缓存或常驻
+  io_readability:
+    score: 3
+    evidence: 输出由下游决定, 透传原样
+    suggestion: ''
+  performance:
+    score: 2
+    evidence: 每次 uv run --with pyyaml 冷启动秒级
+    suggestion: 直接 import 或预装依赖
+  stability:
+    score: 4
+    evidence: subprocess 隔离, 保留退出码
+    suggestion: ''
+  observability:
+    score: 3
+    evidence: 下游有 observe/trace, cockpit 层无
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: 透传
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: 下游 bootstrap/context 即 agent 运维上下文
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: agent_workflow.py 818B 极薄
+    suggestion: ''
+  extensibility:
+    score: 4
+    evidence: REMAINDER 全透传, 下游扩展即得
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: 下游 26 子命令持续演进
+    suggestion: ''
+  agent_friendliness:
+    score: 5
+    evidence: 本命令就是为 agent 设计的治理面
+    suggestion: ''
+  state_memory:
+    score: 4
+    evidence: 下游 run/resume/checkpoint 状态持久化
+    suggestion: ''
+summary:
+  grade: null

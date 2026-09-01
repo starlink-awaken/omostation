@@ -1,0 +1,71 @@
+meta:
+  cmd_path: daily
+  category: 📚 研究 (Research)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: --days N 回顾 + --json (status.py:672 cutoff 实测)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 每日回顾场景明确
+    suggestion: ''
+  goal_clarity:
+    score: 5
+    evidence: 一个动词 + 两个 flag
+    suggestion: ''
+  usability:
+    score: 5
+    evidence: 零参数即用
+    suggestion: ''
+  io_readability:
+    score: 4
+    evidence: --json 支持
+    suggestion: ''
+  performance:
+    score: 4
+    evidence: 按 days 截断窗口, 计算轻
+    suggestion: ''
+  stability:
+    score: 4
+    evidence: 依赖 status 数据面, 已复用
+    suggestion: ''
+  observability:
+    score: 3
+    evidence: 无
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: 适合每日 cron
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 复用 status.py 逻辑, 无重复实现
+    suggestion: ''
+  extensibility:
+    score: 3
+    evidence: 口径固定
+    suggestion: 支持 --since/--until
+  evolvability:
+    score: 3
+    evidence: 未见迭代痕迹
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: --json
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: 读取历史但自身无状态
+    suggestion: ''
+summary:
+  grade: null

@@ -1,0 +1,71 @@
+meta:
+  cmd_path: dashboard
+  category: 🖥️ 基础设施 (Infra)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 3
+    evidence: 无参数启动 Web 驾驶舱, 无 --port/--no-open 等控制 (--help 实测仅 -h)
+    suggestion: 加 --port/--json/--no-open
+  use_case:
+    score: 4
+    evidence: 可视化入口
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: 一词一义
+    suggestion: ''
+  usability:
+    score: 3
+    evidence: 零参数可用但不可配置
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: Web UI
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: 未测
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: 端口冲突处理未知
+    suggestion: ''
+  observability:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: 服务进程管理
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 薄入口
+    suggestion: ''
+  extensibility:
+    score: 2
+    evidence: 无参数面
+    suggestion: ''
+  evolvability:
+    score: 3
+    evidence: 稳定
+    suggestion: ''
+  agent_friendliness:
+    score: 2
+    evidence: 面向人类 GUI
+    suggestion: ''
+  state_memory:
+    score: 2
+    evidence: 无
+    suggestion: ''
+summary:
+  grade: null

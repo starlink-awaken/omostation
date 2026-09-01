@@ -1,0 +1,38 @@
+id: governance-patrol
+version: 1
+name: 治理巡检
+description: 每日治理巡查 — GAC 规则 / ADR 漂移 / 分层依赖 / submodule gitlink / cockpit 就绪度, 全链容错汇总
+owner: cockpit
+tags: [governance, patrol, daily]
+params: {}
+timeout: 600
+on_chain_failure: continue
+steps:
+  - name: gac
+    title: GaC 规则检查
+    command: cockpit gac
+    on_failure: continue
+  - name: adr-drift
+    title: ADR 漂移检查
+    command: cockpit adr-drift-check
+    on_failure: continue
+  - name: layer-deps
+    title: 分层依赖检查
+    command: cockpit layer-dependency-check
+    on_failure: continue
+  - name: submodule-gitlink
+    title: Submodule gitlink 检查
+    command: cockpit submodule-gitlink-check
+    on_failure: continue
+  - name: readiness
+    title: Cockpit 就绪度
+    command: cockpit cockpit-readiness
+    on_failure: continue
+  - name: summary
+    title: 汇总快照
+    command: cockpit health
+    args: ["--json"]
+    when: "true"
+    on_failure: continue
+    capture_output_to: summary
+hitl: []

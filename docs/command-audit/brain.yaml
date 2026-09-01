@@ -1,0 +1,71 @@
+meta:
+  cmd_path: brain
+  category: 🧠 知识引擎 (BOS)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: ask/context/remember/history 四面 + weekly/gongwen 隐藏能力 (brain.py:223-500)
+    suggestion: help 暴露 weekly
+  use_case:
+    score: 4
+    evidence: LLM 终端问答助手
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: help 含中文示例
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 示例降低上手成本
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: 对话式文本
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: LLM 调用延迟无打点
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: LLM 服务异常处理未见
+    suggestion: 加超时与重试
+  observability:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: history 可审计
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 17.1K 分 handler 清晰
+    suggestion: ''
+  extensibility:
+    score: 4
+    evidence: 子命令模式
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: gongwen 显示领域扩展
+    suggestion: ''
+  agent_friendliness:
+    score: 3
+    evidence: 面向人类对话
+    suggestion: ''
+  state_memory:
+    score: 4
+    evidence: remember/history 持久记忆
+    suggestion: ''
+summary:
+  grade: null

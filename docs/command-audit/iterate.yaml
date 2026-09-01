@@ -1,0 +1,71 @@
+meta:
+  cmd_path: iterate
+  category: 📋 项目 (Project)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: 主题探索 + --mock 测试数据门控 (iterate.py:16)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 迭代探索场景
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: 简洁
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: topic 可选 + mock 自测
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: 文本
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: LLM 依赖
+    suggestion: ''
+  stability:
+    score: 4
+    evidence: --mock 无副作用测试路径
+    suggestion: ''
+  observability:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: mock 可验证部署
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 6.4K
+    suggestion: ''
+  extensibility:
+    score: 3
+    evidence: 单主题模式
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: 门控机制演进
+    suggestion: ''
+  agent_friendliness:
+    score: 3
+    evidence: 交互式
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: 探索记录
+    suggestion: ''
+summary:
+  grade: null

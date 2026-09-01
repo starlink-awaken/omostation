@@ -1,0 +1,71 @@
+meta:
+  cmd_path: memory
+  category: 📚 研究 (Research)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 5
+    evidence: status/recall/write/forget/consolidate/knowledge-ref 六面完整 Memory OS 控制面 (memory.py 9.0K, --help 实测)
+    suggestion: ''
+  use_case:
+    score: 5
+    evidence: cli.py 首屏'记忆控制面'核心入口
+    suggestion: ''
+  goal_clarity:
+    score: 5
+    evidence: help 含 BOS URI 映射 + Examples + Docs 链接, 定位最清晰
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 示例齐全; recall 参数组合较多需查文档
+    suggestion: ''
+  io_readability:
+    score: 4
+    evidence: status --json 明确支持 (help Examples)
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: consolidate 默认 dry-run 防误操作, 但无耗时打点
+    suggestion: ''
+  stability:
+    score: 4
+    evidence: '双轨写入 + Neo4j 可选, 有降级路径 (help: MOS_LIVE_* 可选)'
+    suggestion: ''
+  observability:
+    score: 4
+    evidence: status 面板含 neo4j/rbac/adapters 健康
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: memory.py 14 处 console.print, 无分级日志
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: docs/architecture/memory-os.md + .omo/standards/memory-os-ops.md 运维文档齐备
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 9.0K 单文件职责单一, 薄委派 BOS
+    suggestion: ''
+  extensibility:
+    score: 4
+    evidence: 'BOS: bos://memory/mos/* 协议化路由, 可换后端'
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: ADR-0315 knowledge-ref 显示持续演进
+    suggestion: ''
+  agent_friendliness:
+    score: 5
+    evidence: BOS URI + --json + 意图路由 recall, 为 agent 设计
+    suggestion: ''
+  state_memory:
+    score: 5
+    evidence: '本身就是记忆系统: temporal --as-of 时点召回'
+    suggestion: ''
+summary:
+  grade: null

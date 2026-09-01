@@ -1,0 +1,71 @@
+meta:
+  cmd_path: knowledge
+  category: 📚 研究 (Research)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: search/status/stats 三面 (knowledge.py:62/149/177), 覆盖查询与健康, 无写入面
+    suggestion: 写入走 BOS/gbrain, 可在 help 注明
+  use_case:
+    score: 4
+    evidence: KOS 知识检索入口, 常用
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: help 简洁, 每子命令一行摘要
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 三个子命令结构清晰
+    suggestion: ''
+  io_readability:
+    score: 4
+    evidence: stats/status 输出结构化摘要
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: 未见分页/超时控制
+    suggestion: search 加 --limit
+  stability:
+    score: 3
+    evidence: 依赖 KOS 服务在线, 未见降级提示
+    suggestion: 服务不可达时给出 next-action
+  observability:
+    score: 4
+    evidence: status 子命令即服务健康检查
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: 无分级日志
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: 无运维文档链接
+    suggestion: help 补 KOS ops 文档
+  maintainability:
+    score: 4
+    evidence: 8.9K 职责单一
+    suggestion: ''
+  extensibility:
+    score: 3
+    evidence: 子命令较少, 扩展靠 BOS 域
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: 挂接 KOS 演进
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: 语义搜索可被 agent 组合调用
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: 只读, 状态在外部 KOS
+    suggestion: ''
+summary:
+  grade: null

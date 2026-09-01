@@ -1,0 +1,71 @@
+meta:
+  cmd_path: search
+  category: 📚 研究 (Research)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: --all 跨源 (本地 SQLite + BOS kos/gbrain) + --json + --limit (--help 实测)
+    suggestion: ''
+  use_case:
+    score: 5
+    evidence: 跨源搜索高频
+    suggestion: ''
+  goal_clarity:
+    score: 5
+    evidence: help 三行说清
+    suggestion: ''
+  usability:
+    score: 5
+    evidence: 单关键词即用
+    suggestion: ''
+  io_readability:
+    score: 5
+    evidence: --json 输出 P2 memory spine 统一格式
+    suggestion: ''
+  performance:
+    score: 4
+    evidence: --limit 每源限流 (默认10)
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: BOS 源不可达时的降级未见说明
+    suggestion: ''
+  observability:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: 可入脚本
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 薄入口
+    suggestion: ''
+  extensibility:
+    score: 4
+    evidence: --all 源列表可扩
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: 已统一 P2 spine 格式
+    suggestion: ''
+  agent_friendliness:
+    score: 5
+    evidence: 统一 JSON 是 agent 检索基座
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: 无状态
+    suggestion: ''
+summary:
+  grade: null

@@ -1,0 +1,71 @@
+meta:
+  cmd_path: workflow
+  category: 📋 项目 (Project)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: REMAINDER 透传 MetaOS plan/run/history/approve + ecos 引擎 (help 示例实测)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: 工作流执行入口
+    suggestion: ''
+  goal_clarity:
+    score: 3
+    evidence: 'help 简陋: ''workflow 子命令和参数'', 双引擎 (MetaOS|ecos) 语义未在参数面说明'
+    suggestion: 子命令化或补 help
+  usability:
+    score: 3
+    evidence: 透传式无补全
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: 下游决定
+    suggestion: ''
+  performance:
+    score: 2
+    evidence: 透传子进程
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: approve HITL 有治理
+    suggestion: ''
+  observability:
+    score: 3
+    evidence: history 可查
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: plan/run 生命周期
+    suggestion: ''
+  maintainability:
+    score: 3
+    evidence: 双引擎耦合在一个透传口
+    suggestion: ''
+  extensibility:
+    score: 3
+    evidence: 受下游限制
+    suggestion: ''
+  evolvability:
+    score: 3
+    evidence: ecos 引擎接入是新演进
+    suggestion: ''
+  agent_friendliness:
+    score: 3
+    evidence: 无 --json 层
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: history 持久
+    suggestion: ''
+summary:
+  grade: null

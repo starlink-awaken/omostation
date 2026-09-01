@@ -1,0 +1,71 @@
+meta:
+  cmd_path: status
+  category: 🛠️ 系统 (System)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: 工作台总览 + --watch 持续监控 + --interval (status.py:339 sleep loop 实测)
+    suggestion: ''
+  use_case:
+    score: 5
+    evidence: 高频日常入口
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: help 简洁; --watch 刷新语义清晰
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 默认面板即用
+    suggestion: ''
+  io_readability:
+    score: 4
+    evidence: --json 双路支持 (status.py:250 兼容 global_output==json)
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: status.py:317 每次 sleep(0.1) 轮询, watch 全量重绘
+    suggestion: 增量刷新
+  stability:
+    score: 3
+    evidence: 38.3K 大文件, 子进程探测失败面广
+    suggestion: ''
+  observability:
+    score: 3
+    evidence: 展示状态但自身无指标
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: 0 处 console.print 计数说明用 Panel/Table 渲染, 无日志
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: --watch --json 可入监控脚本
+    suggestion: ''
+  maintainability:
+    score: 3
+    evidence: 38.3K 单文件
+    suggestion: 拆分面板组件
+  extensibility:
+    score: 3
+    evidence: 面板内联
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: 已支持 watch/global_output 演进
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: --json 输出
+    suggestion: ''
+  state_memory:
+    score: 3
+    evidence: 展示时间线但不存历史
+    suggestion: ''
+summary:
+  grade: null

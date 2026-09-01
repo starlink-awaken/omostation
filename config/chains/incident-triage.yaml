@@ -1,0 +1,42 @@
+id: incident-triage
+version: 1
+name: 故障排查闭环
+description: 状态快照 → 健康检查 → 按 status 条件分支 (degraded 走 IM 分诊, 正常走 ops 状态) → watchdog 探活
+owner: cockpit
+tags: [ops, incident]
+params: {}
+timeout: 600
+on_chain_failure: abort
+steps:
+  - name: status
+    title: 系统状态快照
+    command: cockpit status
+    args: ["--json"]
+    on_failure: abort
+    retry:
+      max: 1
+      backoff: 2
+    capture_output_to: status
+  - name: health
+    title: 治理健康检查
+    command: cockpit health
+    args: ["--json"]
+    on_failure: abort
+    capture_output_to: health
+  - name: im-triage
+    title: degraded 分支 — IM 分诊
+    command: cockpit im-triage
+    when: "steps.health.json.status == 'degraded'"
+    on_failure: continue
+  - name: ops-status
+    title: 正常分支 — 服务网关状态
+    command: cockpit ops
+    args: ["status"]
+    when: "steps.health.json.status != 'degraded'"
+    on_failure: continue
+  - name: watchdog
+    title: Watchdog 探活
+    command: cockpit watchdog
+    args: ["--probe"]
+    on_failure: continue
+hitl: []

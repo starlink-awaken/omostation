@@ -1,0 +1,71 @@
+meta:
+  cmd_path: journey
+  category: 🛠️ 系统 (System)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 3
+    evidence: 'REMAINDER 透传 journey-runner (help: ''透传 journey-runner 的参数'')'
+    suggestion: 子命令化 run/resume/check
+  use_case:
+    score: 4
+    evidence: journey spec 执行入口
+    suggestion: ''
+  goal_clarity:
+    score: 3
+    evidence: help 仅一句, 用法依赖下游文档
+    suggestion: 列出常用下游命令
+  usability:
+    score: 2
+    evidence: 无参数提示, 无补全, 新手无法发现 run/resume
+    suggestion: P1 改进
+  io_readability:
+    score: 3
+    evidence: 下游决定
+    suggestion: ''
+  performance:
+    score: 2
+    evidence: python 子进程
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: 下游有 checkpoint 恢复
+    suggestion: ''
+  observability:
+    score: 3
+    evidence: runner 有 run 状态
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: dry-run/live 双模 (根仓文档)
+    suggestion: ''
+  maintainability:
+    score: 3
+    evidence: 透传层薄但黑盒
+    suggestion: ''
+  extensibility:
+    score: 2
+    evidence: 无自身扩展点
+    suggestion: ''
+  evolvability:
+    score: 3
+    evidence: 跟着 journey spec 演进
+    suggestion: ''
+  agent_friendliness:
+    score: 3
+    evidence: 可脚本化但无 --json
+    suggestion: ''
+  state_memory:
+    score: 4
+    evidence: checkpoint 持久化
+    suggestion: ''
+summary:
+  grade: null

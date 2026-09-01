@@ -1,0 +1,71 @@
+meta:
+  cmd_path: spine
+  category: 📚 研究 (Research)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: null
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: null
+    evidence: ''
+    suggestion: ''
+  use_case:
+    score: null
+    evidence: ''
+    suggestion: ''
+  goal_clarity:
+    score: null
+    evidence: ''
+    suggestion: ''
+  usability:
+    score: null
+    evidence: ''
+    suggestion: ''
+  io_readability:
+    score: null
+    evidence: ''
+    suggestion: ''
+  performance:
+    score: null
+    evidence: ''
+    suggestion: ''
+  stability:
+    score: null
+    evidence: ''
+    suggestion: ''
+  observability:
+    score: null
+    evidence: ''
+    suggestion: ''
+  logging_alerting:
+    score: null
+    evidence: ''
+    suggestion: ''
+  operability:
+    score: null
+    evidence: ''
+    suggestion: ''
+  maintainability:
+    score: null
+    evidence: ''
+    suggestion: ''
+  extensibility:
+    score: null
+    evidence: ''
+    suggestion: ''
+  evolvability:
+    score: null
+    evidence: ''
+    suggestion: ''
+  agent_friendliness:
+    score: null
+    evidence: ''
+    suggestion: ''
+  state_memory:
+    score: null
+    evidence: ''
+    suggestion: ''
+summary:
+  grade: null

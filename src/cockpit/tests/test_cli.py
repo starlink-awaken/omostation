@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -174,25 +174,31 @@ def test_omo_subcommand_registered():
     前次 bug: dispatch dict 有 "omo": lambda cmd_omo 但缺 add_parser("omo") →
     `cockpit omo debt list` 报 invalid choice 'omo'. 后端 cockpit.commands.omo.cmd_omo
     齐全, 只缺前端 argparse 注册. 关联 omo CLI argv 签名修复 (PR#122) 同源问题.
-    """
-    import pytest
 
+    Phase A1 起 --help 不再被壳 parser 拦截而是透传下游 omo CLI;
+    意图保持更新: mock 子进程, 断言 (a) 已注册 (b) --help 到达下游 argv。
+    """
     _setup_mock()
     with patch("sys.argv", ["workspace", "omo", "--help"]):
-        with pytest.raises(SystemExit) as exc:
-            main()
-        assert exc.value.code == 0  # --help 正常退出 = 已注册 (invalid choice 会 code=2)
+        with patch("cockpit.commands.omo.subprocess.call", new=MagicMock(return_value=0)) as call:
+            rc = main()
+    assert rc == 0
+    argv = call.call_args[0][0]
+    assert "--help" in argv, "--help 必须透传到下游 omo CLI"
 
 
 def test_runtime_subcommand_registered():
-    """cockpit runtime 必须注册到 argparse (同 omo 鸿沟)."""
-    import pytest
+    """cockpit runtime 必须注册到 argparse (同 omo 鸿沟).
 
+    Phase A1 意图保持更新: --help 透传下游 runtime CLI (mock 子进程断言)。
+    """
     _setup_mock()
     with patch("sys.argv", ["workspace", "runtime", "--help"]):
-        with pytest.raises(SystemExit) as exc:
-            main()
-        assert exc.value.code == 0
+        with patch("cockpit.commands.runtime.subprocess.call", new=MagicMock(return_value=0)) as call:
+            rc = main()
+    assert rc == 0
+    argv = call.call_args[0][0]
+    assert "--help" in argv
 
 
 def test_domain_status_json_propagates_ok_status(monkeypatch, capsys):

@@ -1,0 +1,33 @@
+id: agent-collab
+version: 1
+name: Agent 协作链
+description: Agent 入职清单 → 委派预检 → HITL 确认 → 工作流清单 → ops 状态
+owner: cockpit
+tags: [agent, collab, hitl]
+params: {}
+timeout: 300
+on_chain_failure: abort
+steps:
+  - name: onboard
+    title: Agent 入职清单
+    command: cockpit agent-onboard
+    args: ["--json"]
+    on_failure: abort
+  - name: preflight
+    title: 委派预检
+    command: cockpit delegation-preflight
+    on_failure: abort
+  - name: approve-plan
+    title: HITL 确认点
+    command: cockpit agent-workflow
+    args: ["list"]
+    on_failure: abort
+  - name: ops-status
+    title: 服务网关状态
+    command: cockpit ops
+    args: ["status", "--json"]
+    on_failure: continue
+hitl:
+  - at: approve-plan
+    prompt: "确认继续执行 agent-workflow list? (y/n)"
+    on_timeout: abort

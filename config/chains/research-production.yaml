@@ -1,0 +1,31 @@
+id: research-production
+version: 1
+name: 研究生产流水线
+description: "从选题到落库 — 创建研究条目 / 列最近产出 / 检查知识健康度 (变量传递演示: params.topic)"
+owner: cockpit
+tags: [research, knowledge]
+params:
+  topic:
+    type: str
+    default: "attention mechanism 2026 综述"
+    help: 研究主题
+timeout: 300
+on_chain_failure: abort
+steps:
+  - name: create
+    title: 创建研究条目
+    command: cockpit research
+    args: ["create", "{{params.topic}}"]
+    on_failure: abort
+    capture_output_to: create
+  - name: list
+    title: 最近研究产出
+    command: cockpit research
+    args: ["list", "--limit", "5"]
+    on_failure: continue
+  - name: health
+    title: 知识库健康度
+    command: cockpit research
+    args: ["health"]
+    on_failure: continue
+hitl: []

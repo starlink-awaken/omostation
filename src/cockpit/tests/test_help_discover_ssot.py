@@ -17,9 +17,16 @@ from cockpit.commands.help_map import (
 
 
 def test_catalog_commands_are_registered_in_cli():
-    """Every help_map catalog name must be a top-level sub.add_parser in cli.py."""
+    """Every help_map catalog name must be registered (cli.py/_subcommands.py 源码或委派组).
+
+    Phase B 起薄委派命令经组模块运行时注册 (delegation.register_all → add_parser),
+    源码 regex 集合并入 delegation 派生键集; 不变量意图不变: catalog ⊆ 实际注册。
+    """
+    from cockpit.commands.delegation import ensure_delegated_catalog
+
     catalog = set(all_command_names())
     registered = top_level_cli_names_from_source()
+    registered |= set(ensure_delegated_catalog().keys())  # 委派组模块派生键集 (同源)
     missing = sorted(catalog - registered)
     assert not missing, f"help_map catalog lists commands not registered as sub.add_parser in cli.py: {missing}"
     # Sanity: memory must be in both

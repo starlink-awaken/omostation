@@ -1,0 +1,71 @@
+meta:
+  cmd_path: capabilities
+  category: 🛠️ 系统 (System)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 4
+    evidence: list/search/recommend 三模式 + --query/--task (capabilities.py:240)
+    suggestion: ''
+  use_case:
+    score: 4
+    evidence: MOF 能力发现
+    suggestion: ''
+  goal_clarity:
+    score: 4
+    evidence: 子命令与 flag 对应明确
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 默认 list
+    suggestion: ''
+  io_readability:
+    score: 3
+    evidence: 表格输出
+    suggestion: 加 --json
+  performance:
+    score: 3
+    evidence: 全量 list 无分页
+    suggestion: ''
+  stability:
+    score: 3
+    evidence: 注册表读取, 依赖 SSOT 文件
+    suggestion: ''
+  observability:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: 无
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: 能力盘点
+    suggestion: ''
+  maintainability:
+    score: 4
+    evidence: 11.5K
+    suggestion: ''
+  extensibility:
+    score: 4
+    evidence: mof-capabilities.yaml 驱动
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: recommend 智能推荐是新能力
+    suggestion: ''
+  agent_friendliness:
+    score: 4
+    evidence: 能力发现供 agent 选型
+    suggestion: ''
+  state_memory:
+    score: 2
+    evidence: 无
+    suggestion: ''
+summary:
+  grade: null

@@ -1,0 +1,71 @@
+meta:
+  cmd_path: help
+  category: 👤 用户 (User)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 5
+    evidence: 产品地图 + 关键词搜 CLI/MCP/BOS 双模式 (help_map.py:198 render_compact_help)
+    suggestion: ''
+  use_case:
+    score: 5
+    evidence: 发现入口, cli.py error 引导全部指向它
+    suggestion: ''
+  goal_clarity:
+    score: 5
+    evidence: help 与 help <keyword> 两态清晰
+    suggestion: ''
+  usability:
+    score: 5
+    evidence: 零门槛
+    suggestion: ''
+  io_readability:
+    score: 4
+    evidence: Rich 紧凑分组地图
+    suggestion: 可加 --json 机器目录
+  performance:
+    score: 4
+    evidence: 本地 catalog 渲染快
+    suggestion: ''
+  stability:
+    score: 4
+    evidence: registry SSOT 单源驱动
+    suggestion: ''
+  observability:
+    score: 2
+    evidence: N/A
+    suggestion: ''
+  logging_alerting:
+    score: 2
+    evidence: N/A
+    suggestion: ''
+  operability:
+    score: 3
+    evidence: N/A
+    suggestion: ''
+  maintainability:
+    score: 5
+    evidence: COMMAND_CATALOG SSOT (registry.py docstring 明确零重复)
+    suggestion: ''
+  extensibility:
+    score: 5
+    evidence: 加命令自动进地图
+    suggestion: ''
+  evolvability:
+    score: 5
+    evidence: SSOT 化即 ADR 演进产物
+    suggestion: ''
+  agent_friendliness:
+    score: 3
+    evidence: 面向人类; agent 应读 registry
+    suggestion: ''
+  state_memory:
+    score: 2
+    evidence: 无
+    suggestion: ''
+summary:
+  grade: null

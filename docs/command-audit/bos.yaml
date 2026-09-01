@@ -1,0 +1,71 @@
+meta:
+  cmd_path: bos
+  category: 🧠 知识引擎 (BOS)
+  owner: cockpit
+  maturity: stable
+  delegated_target: null
+  last_audited: '2026-09-01'
+  auditor: agent:worker-d-audit
+dimensions:
+  functionality:
+    score: 5
+    evidence: 13 个子命令覆盖 list/discover/resolve/read/mutate/register/workflow/inbox/capability (bos.py 28.1K, --help 实测)
+    suggestion: ''
+  use_case:
+    score: 5
+    evidence: BOS URI 统一路由是架构核心 (ARCHITECTURE §4)
+    suggestion: ''
+  goal_clarity:
+    score: 5
+    evidence: 每子命令一行摘要, list 注明默认 routable/--all
+    suggestion: ''
+  usability:
+    score: 4
+    evidence: 子命令多但分组清晰
+    suggestion: ''
+  io_readability:
+    score: 4
+    evidence: resolve/read 返回结构化元数据
+    suggestion: ''
+  performance:
+    score: 3
+    evidence: read 走网关无缓存说明
+    suggestion: 热 URI 加缓存
+  stability:
+    score: 4
+    evidence: health/backends 子命令做健康与降级
+    suggestion: ''
+  observability:
+    score: 5
+    evidence: status/health/inbox 构成完整观察面
+    suggestion: ''
+  logging_alerting:
+    score: 3
+    evidence: bos.py 25 处 console.print, 无分级
+    suggestion: ''
+  operability:
+    score: 4
+    evidence: reload/register 支持在线运维
+    suggestion: ''
+  maintainability:
+    score: 3
+    evidence: 28.1K 单文件
+    suggestion: inbox/capability 已拆 bos_inbox.py, 继续拆
+  extensibility:
+    score: 4
+    evidence: register 子命令即扩展点
+    suggestion: ''
+  evolvability:
+    score: 4
+    evidence: capability/inbox 为近期新增
+    suggestion: ''
+  agent_friendliness:
+    score: 5
+    evidence: BOS URI 即 agent 统一寻址协议
+    suggestion: ''
+  state_memory:
+    score: 4
+    evidence: inbox 面向持久知识神经网
+    suggestion: ''
+summary:
+  grade: null

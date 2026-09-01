@@ -24,6 +24,40 @@ class CommandMeta:
     summary: str
     category: str = "🔧 通用 (General)"
     aliases: tuple[str, ...] = field(default_factory=tuple)
+    # ── 治理字段 (Phase A2, 全部带默认值, 存量条目零改动) ──
+    example: str = ""  # help_map 产品地图示例
+    owner: str = "cockpit"
+    maturity: str = "stable"  # stable | beta | experimental | deprecated
+    risk: str = "low"  # low | medium | high
+    delegated_target: str | None = None  # 委派目标, 如 "bin/gac/gac-drift.py"
+    chain_enabled: bool = True  # 是否允许进入 chain 编排 (high-risk 默认 False)
+    audit_ref: str | None = None  # 指向 docs/command-audit/<path>.yaml
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# CATEGORY_GROUPS: category → (展示顺序, 颜色)。help_map 产品地图分组的唯一顺序来源。
+# ──────────────────────────────────────────────────────────────────────────────
+
+CATEGORY_GROUPS: dict[str, tuple[int, str]] = {
+    "🚀 入门 (Onboarding)": (10, "bright_green"),
+    "📚 研究 (Research)": (20, "cyan"),
+    "🧠 知识引擎 (BOS)": (30, "bright_cyan"),
+    "📋 项目 (Project)": (40, "yellow"),
+    "🤖 Agent 协作": (50, "bright_magenta"),
+    "🛡️ 治理工具 (Governance Tools)": (60, "bright_yellow"),
+    "🏛️ 治理 (Governance)": (61, "yellow"),
+    "🧹 代码质量 (Code Quality)": (70, "green"),
+    "🖥️ 基础设施 (Infra)": (80, "bright_blue"),
+    "📡 通讯 (Messaging)": (90, "blue"),
+    "🔌 项目 CLI (Project CLIs)": (100, "bright_blue"),
+    "🧰 工具集 (Utilities)": (110, "white"),
+    "📦 数据 (Data)": (120, "white"),
+    "🛠️ 系统 (System)": (130, "blue"),
+    "👤 用户 (User)": (140, "magenta"),
+    "📄 专项工具 (Domain)": (150, "white"),
+    "🔌 总线接入 (ECCP)": (160, "bright_blue"),
+    "🔧 通用 (General)": (900, "white"),
+}
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -409,5 +443,124 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
         name="demo",
         category="👤 用户 (User)",
         summary="快速演示",
+    ),
+    # ── Phase A2 补齐: handlers 已注册但 catalog 缺失的 23 条 ─────────────────
+    "domain-status": CommandMeta(
+        name="domain-status",
+        category="🏛️ 治理 (Governance)",
+        summary="显示 Documents 域项目绑定与引导状态",
+    ),
+    "facts-audit": CommandMeta(
+        name="facts-audit",
+        category="🏛️ 治理 (Governance)",
+        summary="审计 Documents 文档域 facts 文件",
+    ),
+    "facts-validation": CommandMeta(
+        name="facts-validation",
+        category="🏛️ 治理 (Governance)",
+        summary="读取 Runtime Facts 审计回执",
+    ),
+    "model-freshness": CommandMeta(
+        name="model-freshness",
+        category="🏛️ 治理 (Governance)",
+        summary="读取 Runtime 模型新鲜度回执",
+    ),
+    "sanyi-status": CommandMeta(
+        name="sanyi-status",
+        category="🏛️ 治理 (Governance)",
+        summary="读取 Runtime 三医状态一致性回执",
+    ),
+    "controller-shadow": CommandMeta(
+        name="controller-shadow",
+        category="🏛️ 治理 (Governance)",
+        summary="读取 Runtime 旧控制器影子迁移回执",
+    ),
+    "policy": CommandMeta(
+        name="policy",
+        category="🏛️ 治理 (Governance)",
+        summary="⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)",
+        delegated_target="ecos.cli.constraint policy",
+    ),
+    "resident": CommandMeta(
+        name="resident",
+        category="🤖 Agent 协作",
+        summary="Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)",
+        delegated_target="omo resident",
+    ),
+    "cell": CommandMeta(
+        name="cell",
+        category="🤖 Agent 协作",
+        summary="🤖 AGE-v2 动态 Agent Cell (规划/执行/验证/治理)",
+    ),
+    "bcos": CommandMeta(
+        name="bcos",
+        category="📋 项目 (Project)",
+        summary="BCOS 业务域系统 (evolve/signals/north-star)",
+        delegated_target="bin/bc-os/*.py",
+    ),
+    "capabilities": CommandMeta(
+        name="capabilities",
+        category="🛠️ 系统 (System)",
+        summary="统一能力发现入口 — 搜索/推荐/全量列出 (CLI+BOS+Scene+Journey)",
+    ),
+    "intent": CommandMeta(
+        name="intent",
+        category="📄 专项工具 (Domain)",
+        summary="🧠 自然语言意图解构与工程规格编译器 (ADR-0195)",
+    ),
+    "decide": CommandMeta(
+        name="decide",
+        category="📄 专项工具 (Domain)",
+        summary="📬 决策收件箱 (列出/添加/批准/拒绝)",
+    ),
+    "challenge": CommandMeta(
+        name="challenge",
+        category="📄 专项工具 (Domain)",
+        summary="⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196)",
+    ),
+    "cartridge": CommandMeta(
+        name="cartridge",
+        category="📄 专项工具 (Domain)",
+        summary="👁️ 长尾领域治理卡带工坊 (ADR-0198/0203)",
+    ),
+    "render": CommandMeta(
+        name="render",
+        category="📄 专项工具 (Domain)",
+        summary="渲染输出",
+    ),
+    "im-triage": CommandMeta(
+        name="im-triage",
+        category="📄 专项工具 (Domain)",
+        summary="IM 消息分诊",
+    ),
+    "fabric": CommandMeta(
+        name="fabric",
+        category="🖥️ 基础设施 (Infra)",
+        summary="🧑‍💻 主权混合算力与 KV 缓存快照 (ADR-0197)",
+    ),
+    "ops": CommandMeta(
+        name="ops",
+        category="🖥️ 基础设施 (Infra)",
+        summary="🔧 Service Gateway — 统一运维控制面",
+    ),
+    "watchdog": CommandMeta(
+        name="watchdog",
+        category="🖥️ 基础设施 (Infra)",
+        summary="🐕 自治守护犬与自愈探针 (Agora Bus / Resident 监视器)",
+    ),
+    "ask": CommandMeta(
+        name="ask",
+        category="🧠 知识引擎 (BOS)",
+        summary="快速大模型对话问答 (AetherForge)",
+    ),
+    "proxy-env": CommandMeta(
+        name="proxy-env",
+        category="🛠️ 系统 (System)",
+        summary="输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE)",
+    ),
+    "spine": CommandMeta(
+        name="spine",
+        category="📚 研究 (Research)",
+        summary="Spine 主干真值流与署名自进化操作 (ADR-0437)",
     ),
 }

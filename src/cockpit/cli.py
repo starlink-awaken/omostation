@@ -45,6 +45,7 @@ from .commands.bos import (
 from .commands.brain import cmd_brain
 from .commands.brief import _cmd_brief, _cmd_brief_morning
 from .commands.bus import cmd_bus
+from .commands.capabilities import cmd_capabilities
 from .commands.contracts import (
     cmd_contracts_export_event,
     cmd_contracts_export_identity,
@@ -52,7 +53,6 @@ from .commands.contracts import (
     cmd_contracts_list,
     cmd_contracts_validate,
 )
-from .commands.capabilities import cmd_capabilities
 from .commands.data import cmd_data_gc, cmd_data_index, cmd_data_types
 from .commands.discover import _cmd_discover
 from .commands.family_hub import cmd_family_hub
@@ -63,7 +63,6 @@ from .commands.importer import cmd_import
 from .commands.kairon import cmd_kairon
 from .commands.mcp import cmd_mcp
 from .commands.mesh import cmd_mesh
-from .commands.spine import cmd_spine
 from .commands.model_driven import cmd_model_driven
 from .commands.observe import cmd_observe
 from .commands.profile import cmd_profile
@@ -98,6 +97,7 @@ from .commands.research import (
     cmd_research_unarchive,
 )
 from .commands.search import _cmd_search
+from .commands.spine import cmd_spine
 from .commands.status import (
     _render_workbench,
     cmd_daily,
@@ -218,14 +218,12 @@ def _c_version(a):
     return 0
 
 
-def main() -> int:
-    try:
-        from kairon_observability.tracing import setup_tracing  # type: ignore[import-not-found]
+def create_parser() -> tuple[argparse.ArgumentParser, argparse._SubParsersAction, type]:
+    """构建完整 CLI parser (含全部子命令注册), 供 main() 与 command-audit 共用.
 
-        setup_tracing("cockpit-cli")
-    except ImportError:
-        pass  # Skip if observability package isn't installed
-
+    Returns:
+        (parser, sub, WorkspaceParserClass)
+    """
     class WorkspaceParser(argparse.ArgumentParser):
         def error(self, message):
             parser_console = Console()
@@ -300,6 +298,18 @@ def main() -> int:
     from ._subcommands import register_subcommands
 
     register_subcommands(sub, WorkspaceParser)
+    return parser, sub, WorkspaceParser
+
+
+def main() -> int:
+    try:
+        from kairon_observability.tracing import setup_tracing  # type: ignore[import-not-found]
+
+        setup_tracing("cockpit-cli")
+    except ImportError:
+        pass  # Skip if observability package isn't installed
+
+    parser, sub, _workspace_parser_cls = create_parser()
 
     # ── Pre-process: research 默认 create 模式 ──────────────────
     # argparse 子 parser 会贪婪匹配首参为子命令名, 导致 `cockpit research "topic"`
@@ -318,6 +328,11 @@ def main() -> int:
             _argv = [_argv[0], "create"] + _argv[1:]
 
     args, unknown = parser.parse_known_args(_argv)
+    # Phase A1: argparse REMAINDER 不捕获前导 option (--help 落入 unknown),
+    # 对委派命令拼回 REMAINDER 实现真正透传。
+    from .commands.delegation import reclaim_unknown_for_delegation
+
+    unknown = reclaim_unknown_for_delegation(args, unknown)
 
     # ── Phase 2: --output tui 全自动分流路由 ──
     if getattr(args, "global_output", None) == "tui":
@@ -940,11 +955,29 @@ def main() -> int:
         "policy": lambda a: __import__("ecos.cli.constraint", fromlist=["main"]).main(
             ["policy"] + getattr(a, "policy_args", [])
         ),
+        # Phase C/D: chain / command-audit (延迟 import, 模块未落地时 parser 侧已跳过注册)
+        "chain": lambda a: __import__("cockpit.chain", fromlist=["cmd_chain"]).cmd_chain(a),
+        "command-audit": lambda a: __import__(
+            "cockpit.commands.command_audit", fromlist=["cmd_command_audit"]
+        ).cmd_command_audit(a),
     }
+    # Phase B: 并入薄委派命令组 handlers (gac/adr/sweep/project_cli/root_bin)
+    from .commands.delegation import DELEGATED_COMMANDS, inject_empty_help
+
+    handlers.update(DELEGATED_COMMANDS)
+
+    # Phase A1: 存量 REMAINDER 委派命令空参回退 → 注入 --help (裸命令显示下游帮助)
+    inject_empty_help(args)
 
     global_output = getattr(args, "global_output", "text")
     if global_output == "tui":
         return __import__("cockpit.tui", fromlist=["launch"]).launch(args)
+
+    # Phase A4: --output json 探测式分发 (JSON_CAPABLE 内命令注入 --json, 不静默)
+    if global_output == "json":
+        from .commands.output_mode import apply_json_mode
+
+        apply_json_mode(args)
 
     handler = handlers.get(args.command)
     if handler:
