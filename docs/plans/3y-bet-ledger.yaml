@@ -16952,7 +16952,8 @@ bets:
   title: 纸质公文扫描件多模态 OCR 结构化提取与版面保真还原
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-01
   goal: 集成 PaddleOCR / Qwen-VL 本地轻量化端侧视觉多模态模型，支持对拍照扫描件、PDF 影印件红头文件进行精准 OCR、版面分析（表格、盖章、手写签批识别）与 Markdown 结构化还原。
   non_goals:
   - 不上传任何红头扫描件图片至外部公网云端
@@ -16970,7 +16971,7 @@ bets:
   write_surfaces:
   - projects/agora/src/agora/server/tools_bos/ocr.py
   - projects/cockpit/src/cockpit/commands/spine.py
-  - docs/reports/2026-10-06-multimodal-ocr-layout.md
+  - docs/reports/2026-09-01-multimodal-ocr-layout.md
   - .omo/_knowledge/retros/BET-Y1Q4-T2-03.md
   pasw_required: false
   depends_on:
@@ -16979,6 +16980,48 @@ bets:
   human_gate: false
   circuit_breaker: 图片过大或显存吃紧时自动按切片分块处理并降低批处理并发。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:2d67191f4aa58a7b92c8daa94f27ee2899e59bff88e631f0f637eacd9e315472
+    decision_ref: decision://accepted/BET-Y1Q4-T2-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@526e24a322eef119cb4d85198e01743e20247260
+          tests:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md
+            sha256: sha256:2d67191f4aa58a7b92c8daa94f27ee2899e59bff88e631f0f637eacd9e315472
+          rollback:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+          replay:
+            ref: receipt://tests/test_ocr_layout.py
+            sha256: sha256:aed3a63c032d8f5eb22203bf5d64f57a4bbffbff08fa3b6c45ff934fa8e8135f
+          cleanup:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T3-02
   track: T3-COGNI
   window: Y1Q4
