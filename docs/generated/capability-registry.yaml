@@ -11,10 +11,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 634
+  mcp_tools: 584
   bos_services: 289
   bos_domains: 21
-  cli_commands: 176
+  cli_commands: 195
   skills: 3
   workflows: 19
 mcp_servers:
@@ -587,59 +587,9 @@ mcp_servers:
   layer: L1
   file: projects/runtime/src/runtime/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - handle_agent_chat
-  - handle_agent_execute
-  - handle_agent_list
-  - handle_agent_list_tools
-  - handle_agent_run_task
-  - handle_agent_status
-  - handle_agent_task_status
-  - handle_brief
-  - handle_cartridge_inspect
-  - handle_cartridge_list
-  - handle_documents_audit
-  - handle_documents_guardrails
-  - handle_domain_compliance_audit
-  - handle_governance_explain
-  - handle_governance_guardrails
-  - handle_governance_preflight
-  - handle_health
-  - handle_intent_compile
-  - handle_kv_get
-  - handle_matrix_list
-  - handle_ontology
-  - handle_pitfall_check
-  - handle_protocol_get
-  - handle_protocol_list
-  - handle_shadow_challenge
-  - runtime_agent_chat
-  - runtime_agent_execute
-  - runtime_agent_list
-  - runtime_agent_list_tools
-  - runtime_agent_run_task
-  - runtime_agent_status
-  - runtime_agent_task_status
-  - runtime_brief
-  - runtime_cartridge_inspect
-  - runtime_cartridge_list
-  - runtime_documents_audit
-  - runtime_documents_guardrails
-  - runtime_domain_compliance_audit
-  - runtime_governance_explain
-  - runtime_governance_guardrails
-  - runtime_governance_preflight
-  - runtime_health
-  - runtime_intent_compile
-  - runtime_kv_get
-  - runtime_matrix_list
-  - runtime_ontology_get
-  - runtime_pitfall_check
-  - runtime_protocol_get
-  - runtime_protocol_list
-  - runtime_shadow_challenge
-  tool_count: 50
+  exists: false
+  tools: []
+  tool_count: 0
 - id: iris
   name: Iris
   layer: L2
@@ -2094,15 +2044,21 @@ cli_commands:
 - name: approve
   description: 批准决策
 - name: archive
-  description: 归档已处理完毕的 Inbox 待办文件
+  description: 归档研究记录
 - name: ask
-  description: 向大脑提问（知识检索 + LLM 回答）
+  description: 对指定研究发起追问
 - name: audit
-  description: 🔍 6 维度全方位审计 (调 bin/workspace-audit)
+  description: 扫描可疑研究记录
 - name: audit-ledger
-  description: 密码学级 Merkle 审计账本 (ADR-0201)
+  description: ''
 - name: backends
   description: 列出 BOS 后端
+- name: backup
+  description: 全量备份研究数据到 JSON 文件
+- name: backup-restore
+  description: 从备份 JSON 文件恢复研究数据
+- name: batch
+  description: '批量研究模式: 逐个处理多个 topic，汇总结果'
 - name: bcos
   description: BCOS 业务域系统 (evolve/signals/north-star)
 - name: bdsk
@@ -2145,6 +2101,8 @@ cli_commands:
   description: 代码库分析与审查 (基于 codeanalyze)
 - name: compact
   description: 上下文滑动蒸馏与双区自适应量化压缩模拟
+- name: compare
+  description: 对比多个研究结果
 - name: compass
   description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
 - name: compute
@@ -2159,6 +2117,8 @@ cli_commands:
   description: 控制平面：submit / ack / nack
 - name: controller-shadow
   description: 读取 Runtime 旧控制器影子迁移回执
+- name: create
+  description: 创建新研究
 - name: daily
   description: 每日研究简报
 - name: dashboard
@@ -2175,6 +2135,8 @@ cli_commands:
   description: DFlash 2 块扩散投机解码加速与集群基准
 - name: diff
   description: 查看待处理署名 Diff 统计
+- name: digest
+  description: 提炼多个研究结果
 - name: discover
   description: 发现可用功能和资源
 - name: distill
@@ -2185,6 +2147,8 @@ cli_commands:
   description: 显示 Documents 域项目绑定与引导状态
 - name: domains
   description: 列出 L4 所有域及其状态
+- name: dossier
+  description: 查看研究的关系与产物视图
 - name: down
   description: 停止观测栈
 - name: draft
@@ -2196,13 +2160,13 @@ cli_commands:
 - name: events-watch
   description: 实时监听 SSE 事件流简便入口
 - name: export
-  description: 导出契约封套
+  description: 导出研究 (markdown/text/json)
 - name: export-research
   description: 将研究对象导出为 WorkspaceObject JSON
 - name: fabric
   description: 检查 omlxc 智能算力织网 (温控/分诊/显存/缓存)
 - name: fabric-mesh
-  description: 局域网边缘算力漫游网格 (ADR-0202)
+  description: ''
 - name: facts-audit
   description: 审计 Documents 文档域 facts 文件
 - name: facts-validation
@@ -2211,6 +2175,8 @@ cli_commands:
   description: 家庭数字枢纽入口
 - name: finance
   description: 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域)
+- name: follow-up
+  description: 查看追问工作台（待追问/已回答统计）
 - name: forget
   description: 遗忘传播
 - name: gac
@@ -2227,10 +2193,12 @@ cli_commands:
   description: 架构治理 (委派 arcnode-*)
 - name: graph
   description: 运行语义图谱分析
+- name: harness
+  description: Harness 8-stage DAG 唯一可观测 (trace/verify/probe/gac/retro)
 - name: health
-  description: 一键系统健康检查
+  description: 查看研究健康报告（衰减状态/保鲜建议）
 - name: heatmap
-  description: 查看分布式 KV 内存池热力分布与投机蒸馏指标
+  description: 显示研究活跃度热力图
 - name: help
   description: 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务)
 - name: history
@@ -2247,6 +2215,8 @@ cli_commands:
   description: BOS Inbox 多源私有知识神经网查询与操作
 - name: index
   description: 刷新 data/_index 元数据
+- name: ingress
+  description: '感知源接入 Spine 管线 (T2-03: OCR 扫描件)'
 - name: init
   description: 🚀 初始化向导（同 quickstart）
 - name: inspect
@@ -2265,8 +2235,10 @@ cli_commands:
   description: 🧬 KEMS 域治理 (domains/status/scan)
 - name: knowledge
   description: 📚 KOS 知识检索 (search/status/stats)
+- name: knowledge-ref
+  description: ADR-0315 引用元数据 (无正文)
 - name: list
-  description: 列债务项 (委派 omo debt)
+  description: 查看研究历史
 - name: logs
   description: 查看日志
 - name: lora
@@ -2276,13 +2248,15 @@ cli_commands:
 - name: memory
   description: 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)
 - name: memory-distill
-  description: 记忆自蒸馏与冲突自愈 (ADR-0200)
+  description: ''
+- name: merge
+  description: 合并多个研究结果为新研究
 - name: mesh
   description: omlx 算力网格路由入口
 - name: metrics
   description: 查看 bus metrics 快照
 - name: model-driven
-  description: '[DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行'
+  description: ''
 - name: model-freshness
   description: 读取 Runtime 模型新鲜度回执
 - name: mof
@@ -2301,6 +2275,8 @@ cli_commands:
   description: OMO CLI 委派 (debt/state/governance/lint/...)
 - name: onboarding
   description: 为 AI 构建项目全貌上下文
+- name: open
+  description: 打开研究全文
 - name: ops
   description: 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate)
 - name: pack
@@ -2322,7 +2298,9 @@ cli_commands:
 - name: proxy-env
   description: 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE)
 - name: publish
-  description: 发布事件
+  description: 发布研究为正式 Markdown 报告
+- name: quarantine
+  description: 隔离可疑研究记录
 - name: quickstart
   description: 🚀 新用户快速上手向导（环境核验 + 上手指引）
 - name: quickstart-check
@@ -2341,14 +2319,18 @@ cli_commands:
   description: 重载 BOS 配置/M1
 - name: remember
   description: 手动存入偏好/事实
+- name: rename
+  description: 重命名研究标题
 - name: replay
   description: 查看 Experience Replay 缓冲区状态
 - name: research
-  description: 深度研究
+  description: 深度研究 — 创建/查询/管理研究对象
 - name: resident
   description: Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)
 - name: resolve
   description: 统一 BOS URI 路由解析与目标元数据提取
+- name: restore
+  description: 恢复已隔离研究记录
 - name: route
   description: 为模型选择最优节点
 - name: run
@@ -2364,7 +2346,7 @@ cli_commands:
 - name: score
   description: 评分债务项
 - name: search
-  description: 全文搜 CARDS
+  description: 全文搜索
 - name: serve
   description: stdio JSON-RPC serve mode
 - name: sign
@@ -2378,7 +2360,7 @@ cli_commands:
 - name: spine
   description: Spine 主干真值流与署名自进化操作 (ADR-0437)
 - name: ssb
-  description: '[DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用'
+  description: ''
 - name: stats
   description: 索引统计
 - name: status
@@ -2391,6 +2373,10 @@ cli_commands:
   description: 债务摘要 (委派 omo debt)
 - name: swarm
   description: 分布式跨节点 KV 共享池与超长上下文置换基准
+- name: tag
+  description: 为研究添加/覆盖标签
+- name: timeline
+  description: 查看研究的演化时间线
 - name: topics
   description: 列出已注册 topic
 - name: tree
@@ -2401,6 +2387,8 @@ cli_commands:
   description: 极客终端交互控制台 (Textual 全屏 TUI)
 - name: types
   description: 查看已注册的数据类型
+- name: unarchive
+  description: 恢复已归档研究记录
 - name: up
   description: 启动观测栈
 - name: url
