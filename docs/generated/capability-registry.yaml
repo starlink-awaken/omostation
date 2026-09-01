@@ -12,9 +12,9 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 634
-  bos_services: 288
-  bos_domains: 21
-  cli_commands: 176
+  bos_services: 298
+  bos_domains: 22
+  cli_commands: 200
   skills: 3
   workflows: 19
 mcp_servers:
@@ -883,7 +883,8 @@ bos_services:
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 69
+    governance: 70
+    harness: 9
     l4-kernel: 1
     memory: 47
     meta: 1
@@ -1454,6 +1455,10 @@ bos_services:
       transport: inline
       status: active
     governance:
+    - uri: bos://governance/hitl/execute/family_dashboard_document_write
+      description: Execute one Cockpit-approved family Documents CAS transaction through the family-hub owner.
+      transport: internal
+      status: active
     - uri: bos://governance/metaos/decide
       description: MetaOS 决策门控
       transport: stdio
@@ -1728,6 +1733,43 @@ bos_services:
       status: active
     - uri: bos://governance/probe-heartbeat
       description: 探测器心跳矩阵
+      transport: stdio
+      status: active
+    harness:
+    - uri: bos://harness/compliance/check
+      description: Harness 12 章节全生命周期合规检查 (Phase 8)
+      transport: stdio
+      status: active
+    - uri: bos://harness/mof/bridge
+      description: Harness MOF 约束联动检查 (8 条 Agent-MOF 规则)
+      transport: stdio
+      status: active
+    - uri: bos://harness/omo/bridge
+      description: Harness OMO 状态同步检查 (Harness/GaC/漂移/已知债)
+      transport: stdio
+      status: active
+    - uri: bos://harness/constraint/enforce
+      description: Harness 统一约束与驱动 (整合 4 引擎 CI 模式)
+      transport: stdio
+      status: active
+    - uri: bos://harness/architecture/perceive
+      description: Harness 架构感知预编辑检查 (场景卡/Journey/标准/Harness)
+      transport: stdio
+      status: active
+    - uri: bos://harness/compliance/full
+      description: 全量合规检查 (arch + compliance + mof + omo)
+      transport: stdio
+      status: active
+    - uri: bos://harness/run
+      description: 'Harness 全生命周期运行 (8 阶段 DAG: admission → spec → execute → verify → audit → accept)'
+      transport: stdio
+      status: active
+    - uri: bos://harness/verify
+      description: Harness 并行校验 (DAG + 缓存)
+      transport: stdio
+      status: active
+    - uri: bos://harness/probe
+      description: Harness 7 探针 + Event Bus 发射
       transport: stdio
       status: active
     l4-kernel:
@@ -2090,15 +2132,21 @@ cli_commands:
 - name: approve
   description: 批准决策
 - name: archive
-  description: 归档已处理完毕的 Inbox 待办文件
+  description: 归档研究记录
 - name: ask
-  description: 向大脑提问（知识检索 + LLM 回答）
+  description: 对指定研究发起追问
 - name: audit
-  description: 🔍 6 维度全方位审计 (调 bin/workspace-audit)
+  description: 扫描可疑研究记录
 - name: audit-ledger
-  description: 密码学级 Merkle 审计账本 (ADR-0201)
+  description: ''
 - name: backends
   description: 列出 BOS 后端
+- name: backup
+  description: 全量备份研究数据到 JSON 文件
+- name: backup-restore
+  description: 从备份 JSON 文件恢复研究数据
+- name: batch
+  description: '批量研究模式: 逐个处理多个 topic，汇总结果'
 - name: bcos
   description: BCOS 业务域系统 (evolve/signals/north-star)
 - name: bdsk
@@ -2141,6 +2189,8 @@ cli_commands:
   description: 代码库分析与审查 (基于 codeanalyze)
 - name: compact
   description: 上下文滑动蒸馏与双区自适应量化压缩模拟
+- name: compare
+  description: 对比多个研究结果
 - name: compass
   description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
 - name: compute
@@ -2155,6 +2205,8 @@ cli_commands:
   description: 控制平面：submit / ack / nack
 - name: controller-shadow
   description: 读取 Runtime 旧控制器影子迁移回执
+- name: create
+  description: 创建新研究
 - name: daily
   description: 每日研究简报
 - name: dashboard
@@ -2171,16 +2223,22 @@ cli_commands:
   description: DFlash 2 块扩散投机解码加速与集群基准
 - name: diff
   description: 查看待处理署名 Diff 统计
+- name: digest
+  description: 提炼多个研究结果
 - name: discover
   description: 发现可用功能和资源
 - name: distill
   description: 在 Mac mini M4 触发闲时 LoRA 蒸馏
 - name: dma
   description: 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准
+- name: docx
+  description: 渲染为 GB/T 9704-2012 红头公文 DOCX
 - name: domain-status
   description: 显示 Documents 域项目绑定与引导状态
 - name: domains
   description: 列出 L4 所有域及其状态
+- name: dossier
+  description: 查看研究的关系与产物视图
 - name: down
   description: 停止观测栈
 - name: draft
@@ -2192,13 +2250,13 @@ cli_commands:
 - name: events-watch
   description: 实时监听 SSE 事件流简便入口
 - name: export
-  description: 导出契约封套
+  description: 导出研究 (markdown/text/json)
 - name: export-research
   description: 将研究对象导出为 WorkspaceObject JSON
 - name: fabric
   description: 检查 omlxc 智能算力织网 (温控/分诊/显存/缓存)
 - name: fabric-mesh
-  description: 局域网边缘算力漫游网格 (ADR-0202)
+  description: ''
 - name: facts-audit
   description: 审计 Documents 文档域 facts 文件
 - name: facts-validation
@@ -2207,6 +2265,8 @@ cli_commands:
   description: 家庭数字枢纽入口
 - name: finance
   description: 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域)
+- name: follow-up
+  description: 查看追问工作台（待追问/已回答统计）
 - name: forget
   description: 遗忘传播
 - name: gac
@@ -2224,9 +2284,9 @@ cli_commands:
 - name: graph
   description: 运行语义图谱分析
 - name: health
-  description: 一键系统健康检查
+  description: 查看研究健康报告（衰减状态/保鲜建议）
 - name: heatmap
-  description: 查看分布式 KV 内存池热力分布与投机蒸馏指标
+  description: 显示研究活跃度热力图
 - name: help
   description: 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务)
 - name: history
@@ -2235,6 +2295,8 @@ cli_commands:
   description: 查看次世代主权算力织网全景 HUD 实时状态
 - name: identity
   description: 导出身份封套 (IdentityEnvelope)
+- name: im-triage
+  description: 渲染 IM 会话感知待办卡片 (bos://im/session/triage)
 - name: impact
   description: 分析符号的变更影响面
 - name: import
@@ -2243,6 +2305,8 @@ cli_commands:
   description: BOS Inbox 多源私有知识神经网查询与操作
 - name: index
   description: 刷新 data/_index 元数据
+- name: ingress
+  description: '感知源接入 Spine 管线 (T2-03: OCR 扫描件)'
 - name: init
   description: 🚀 初始化向导（同 quickstart）
 - name: inspect
@@ -2261,8 +2325,10 @@ cli_commands:
   description: 🧬 KEMS 域治理 (domains/status/scan)
 - name: knowledge
   description: 📚 KOS 知识检索 (search/status/stats)
+- name: knowledge-ref
+  description: ADR-0315 引用元数据 (无正文)
 - name: list
-  description: 列债务项 (委派 omo debt)
+  description: 查看研究历史
 - name: logs
   description: 查看日志
 - name: lora
@@ -2272,13 +2338,15 @@ cli_commands:
 - name: memory
   description: 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)
 - name: memory-distill
-  description: 记忆自蒸馏与冲突自愈 (ADR-0200)
+  description: ''
+- name: merge
+  description: 合并多个研究结果为新研究
 - name: mesh
   description: omlx 算力网格路由入口
 - name: metrics
   description: 查看 bus metrics 快照
 - name: model-driven
-  description: '[DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行'
+  description: ''
 - name: model-freshness
   description: 读取 Runtime 模型新鲜度回执
 - name: mof
@@ -2297,6 +2365,8 @@ cli_commands:
   description: OMO CLI 委派 (debt/state/governance/lint/...)
 - name: onboarding
   description: 为 AI 构建项目全貌上下文
+- name: open
+  description: 打开研究全文
 - name: ops
   description: 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate)
 - name: pack
@@ -2309,6 +2379,8 @@ cli_commands:
   description: pipeline 概览
 - name: policy
   description: ⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)
+- name: pptx
+  description: 渲染为 16:9 高管技术汇报 PPTX
 - name: product-health
   description: 产品健康度检测
 - name: profile
@@ -2318,7 +2390,9 @@ cli_commands:
 - name: proxy-env
   description: 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE)
 - name: publish
-  description: 发布事件
+  description: 发布研究为正式 Markdown 报告
+- name: quarantine
+  description: 隔离可疑研究记录
 - name: quickstart
   description: 🚀 新用户快速上手向导（环境核验 + 上手指引）
 - name: quickstart-check
@@ -2337,14 +2411,20 @@ cli_commands:
   description: 重载 BOS 配置/M1
 - name: remember
   description: 手动存入偏好/事实
+- name: rename
+  description: 重命名研究标题
+- name: render
+  description: 初稿 Markdown 一键渲染导出 (GB/T 9704 DOCX / 16:9 PPTX / 矢量图)
 - name: replay
   description: 查看 Experience Replay 缓冲区状态
 - name: research
-  description: 深度研究
+  description: 深度研究 — 创建/查询/管理研究对象
 - name: resident
   description: Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)
 - name: resolve
   description: 统一 BOS URI 路由解析与目标元数据提取
+- name: restore
+  description: 恢复已隔离研究记录
 - name: route
   description: 为模型选择最优节点
 - name: run
@@ -2360,7 +2440,7 @@ cli_commands:
 - name: score
   description: 评分债务项
 - name: search
-  description: 全文搜 CARDS
+  description: 全文搜索
 - name: serve
   description: stdio JSON-RPC serve mode
 - name: sign
@@ -2374,7 +2454,7 @@ cli_commands:
 - name: spine
   description: Spine 主干真值流与署名自进化操作 (ADR-0437)
 - name: ssb
-  description: '[DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用'
+  description: ''
 - name: stats
   description: 索引统计
 - name: status
@@ -2385,8 +2465,16 @@ cli_commands:
   description: 提交控制任务
 - name: summary
   description: 债务摘要 (委派 omo debt)
+- name: svg
+  description: 渲染 ```diagram 代码块为矢量架构图 SVG
 - name: swarm
   description: 分布式跨节点 KV 共享池与超长上下文置换基准
+- name: tag
+  description: 为研究添加/覆盖标签
+- name: test_export_formats
+  description: '离线自测: 三格式导出 + GB/T 参数断言'
+- name: timeline
+  description: 查看研究的演化时间线
 - name: topics
   description: 列出已注册 topic
 - name: tree
@@ -2397,6 +2485,8 @@ cli_commands:
   description: 极客终端交互控制台 (Textual 全屏 TUI)
 - name: types
   description: 查看已注册的数据类型
+- name: unarchive
+  description: 恢复已归档研究记录
 - name: up
   description: 启动观测栈
 - name: url
