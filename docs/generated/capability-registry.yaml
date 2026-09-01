@@ -1410,11 +1410,11 @@ bos_services:
       description: Harness OMO 状态同步检查 (Harness/GaC/漂移/已知债)
       transport: stdio
       status: active
-    - uri: bos://harness/enforce
+    - uri: bos://harness/constraint/enforce
       description: Harness 统一约束与驱动 (整合 4 引擎 CI 模式)
       transport: stdio
       status: active
-    - uri: bos://harness/perceive
+    - uri: bos://harness/architecture/perceive
       description: Harness 架构感知预编辑检查 (场景卡/Journey/标准/Harness)
       transport: stdio
       status: active
