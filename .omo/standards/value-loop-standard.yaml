@@ -76,29 +76,57 @@ north_star:
     unit: "bet_completion_rate"
     target: 95
 
-# 断链修复
+# 断链修复 (Phase 8 整合后更新)
 broken_chains:
   chain_1_knowledge_to_value:
     problem: "964 提案 0 采纳"
     fix: "高置信提案自动执行路径"
+    fix_steps:
+      - "self-evolution-loop.py 新增 5 数据源 (Phase 6 已完成)"
+      - "高置信度提案 (confidence>0.9, risk=low) 自动触发 harness ledger add"
+      - "BCOS evolution-proposal-triage.py 联动 BET 创建"
     priority: P0
+    status: "fix_in_progress"
+    phase8_data_sources: [heartbeat, arch_upgrade, toolchain, business_process, doc_governance]
 
   chain_2_swarm_to_work:
     problem: "6/6 心跳但 claims 停摆"
     fix: "蜂群任务 → OMO 任务绑定"
+    fix_steps:
+      - "agent-workflow.py claim 阶段增加 OMO task 绑定"
+      - "harness-compliance-check.py 检查 claim 状态一致性"
+      - "SWARM_ESCAPE_ID 逃生口与 OMO task 状态联动"
     priority: P0
+    status: "fix_pending"
 
   chain_3_event_to_decision:
     problem: "96% 心跳噪音"
     fix: "P0 事件自动通知+修复"
+    fix_steps:
+      - "harness-policy.yaml probes 7 类 Event 标准化 (Phase 8 已完成)"
+      - "调整 probe 阈值: drift>0 → drift>0.1"
+      - "Event Bus 7 Topic 过滤噪音 (arch_upgrade/feature_add/bug_fix/experience/doc_governance/toolchain/business_process)"
     priority: P1
+    status: "fix_partial"
+    phase8_probes: [arch_upgrade, feature_add, bug_fix, experience, doc_governance, toolchain, business_process]
 
   chain_4_cell_to_everything:
     problem: "10 个模块 dormant"
     fix: "Cell DAG 首 DAG 试点"
+    fix_steps:
+      - "Cell 模块逐个激活或归档"
+      - "harness verify DAG 接入 Cell 模块检查"
+      - "Cell 状态同步到 OMO system.yaml"
     priority: P2
+    status: "fix_pending"
 
   chain_5_signal_to_loop:
     problem: "仅邮件单源"
     fix: "日历+OA 信号接入"
+    fix_steps:
+      - "bin/bc-os/signal_router.py 扩展日历信号 (已完成)"
+      - "harness-omo-bridge.py 同步信号状态到 OMO (Phase 5 已完成)"
+      - "新增 OA/企业微信信号源"
     priority: P1
+    status: "fix_partial"
+    phase8_sync: [harness_closeout, self_evolution_state]

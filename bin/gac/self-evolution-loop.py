@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
-"""Self-Evolution Loop — 自进化反馈循环.
+"""Self-Evolution Loop — 数据驱动的自进化反馈循环.
 
-proposals → triage → BCOS → approve → execute → evaluate → feedback → new proposals
+数据源 (Harness 7 探针 + GaC + 架构检查 + OMO 状态):
+  - heartbeat failures → fix proposals
+  - architecture drift → arch upgrade proposals
+  - GaC rule violations → governance proposals
+  - harness compliance gaps → harness enhancement proposals
+  - OMO state inconsistencies → sync proposals
+
+Pipeline: proposals → triage → BCOS → approve → execute → evaluate → feedback → new proposals
 
 Usage:
     python3 bin/gac/self-evolution-loop.py --cycle
     python3 bin/gac/self-evolution-loop.py --status
     python3 bin/gac/self-evolution-loop.py --feedback
+    python3 bin/gac/self-evolution-loop.py --data-sources   # 列出数据源健康度
 """
 
 from __future__ import annotations
@@ -77,10 +85,10 @@ def run_cycle() -> dict:
 
 
 def _generate_proposals() -> list[dict]:
-    """Generate proposals from system data."""
+    """Generate proposals from system data (Harness 7 probes + GaC + Arch + OMO)."""
     proposals = []
 
-    # From heartbeat failures
+    # ── Data Source 1: Heartbeat failures ──
     heartbeat_file = REPO / ".omo" / "_state" / "goal-mode-test-result.json"
     if heartbeat_file.exists():
         try:
@@ -91,7 +99,7 @@ def _generate_proposals() -> list[dict]:
                     proposals.append({
                         "id": f"PROP-FIX-{name.upper()}",
                         "type": "fix",
-                        "source": "heartbeat",
+                        "source": "probe.heartbeat",
                         "target": name,
                         "description": f"修复 {name} 检查失败",
                         "confidence": 0.9,
@@ -100,7 +108,144 @@ def _generate_proposals() -> list[dict]:
         except (json.JSONDecodeError, OSError):
             pass
 
+    # ── Data Source 2: Architecture drift ──
+    arch_check = REPO / "bin" / "gac" / "architecture-check.py"
+    if arch_check.exists():
+        try:
+            import subprocess
+            result = subprocess.run(
+                [sys.executable, str(arch_check), "--json"],
+                capture_output=True, text=True, cwd=str(REPO), timeout=30,
+            )
+            if result.stdout:
+                arch_data = json.loads(result.stdout)
+                for detail_name, detail in arch_data.get("details", {}).items():
+                    for err in detail.get("errors", []):
+                        proposals.append({
+                            "id": f"PROP-ARCH-{detail_name.upper()}",
+                            "type": "arch_upgrade",
+                            "source": "probe.arch_upgrade",
+                            "target": detail_name,
+                            "description": f"架构修复: {err}",
+                            "confidence": 0.85,
+                            "risk": "low",
+                        })
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+            pass
+
+    # ── Data Source 3: Harness compliance gaps ──
+    harness_check = REPO / "bin" / "gac" / "harness-compliance-check.py"
+    if harness_check.exists():
+        try:
+            import subprocess
+            result = subprocess.run(
+                [sys.executable, str(harness_check), "--json"],
+                capture_output=True, text=True, cwd=str(REPO), timeout=30,
+            )
+            if result.stdout:
+                harness_data = json.loads(result.stdout)
+                for detail_name, detail in harness_data.get("details", {}).items():
+                    for err in detail.get("errors", []):
+                        proposals.append({
+                            "id": f"PROP-HARNESS-{detail_name.upper()}",
+                            "type": "harness_enhance",
+                            "source": "probe.toolchain",
+                            "target": detail_name,
+                            "description": f"Harness 合规修复: {err}",
+                            "confidence": 0.8,
+                            "risk": "medium",
+                        })
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+            pass
+
+    # ── Data Source 4: OMO state inconsistencies ──
+    omo_bridge = REPO / "bin" / "gac" / "harness-omo-bridge.py"
+    if omo_bridge.exists():
+        try:
+            import subprocess
+            result = subprocess.run(
+                [sys.executable, str(omo_bridge), "--json"],
+                capture_output=True, text=True, cwd=str(REPO), timeout=30,
+            )
+            if result.stdout:
+                omo_data = json.loads(result.stdout)
+                for detail_name, detail in omo_data.get("details", {}).items():
+                    for warn in detail.get("warnings", []):
+                        proposals.append({
+                            "id": f"PROP-OMO-{detail_name.upper()}",
+                            "type": "sync",
+                            "source": "probe.business_process",
+                            "target": detail_name,
+                            "description": f"OMO 同步: {warn}",
+                            "confidence": 0.7,
+                            "risk": "low",
+                        })
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+            pass
+
+    # ── Data Source 5: GaC governance trend ──
+    governance_trend = REPO / "bin" / "gac" / "check-governance-trend.py"
+    if governance_trend.exists():
+        try:
+            import subprocess
+            result = subprocess.run(
+                [sys.executable, str(governance_trend), "--json"],
+                capture_output=True, text=True, cwd=str(REPO), timeout=30,
+            )
+            if result.stdout:
+                trend_data = json.loads(result.stdout)
+                if not trend_data.get("ok"):
+                    for finding in trend_data.get("findings", []):
+                        proposals.append({
+                            "id": f"PROP-GOV-{finding.upper().replace(' ', '_')[:30]}",
+                            "type": "doc_governance",
+                            "source": "probe.doc_governance",
+                            "target": "governance",
+                            "description": f"治理修复: {finding}",
+                            "confidence": 0.75,
+                            "risk": "low",
+                        })
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+            pass
+
     return proposals
+
+
+def sync_evolution_state() -> dict:
+    """同步自进化状态到 OMO system.yaml."""
+    state = _load_state()
+    cycles = state.get("cycles", [])
+
+    # 计算统计
+    total_cycles = len(cycles)
+    last_cycle = cycles[-1] if cycles else None
+    executed = sum(c.get("executed", 0) for c in cycles)
+    approved = sum(c.get("approved", 0) for c in cycles)
+    success_rate = executed / approved if approved > 0 else 0.0
+
+    # 更新 OMO state
+    try:
+        import yaml
+        state_file = REPO / ".omo" / "state" / "system.yaml"
+        if state_file.exists():
+            data = yaml.safe_load(state_file.read_text(encoding="utf-8")) or {}
+            data["self_evolution"] = {
+                "total_cycles": total_cycles,
+                "last_cycle": last_cycle.get("cycle_id") if last_cycle else None,
+                "success_rate": round(success_rate, 2),
+                "proposals_pending": approved - executed,
+                "proposals_approved": approved,
+                "proposals_executed": executed,
+            }
+            state_file.write_text(yaml.dump(data, default_flow_style=False, allow_unicode=True), encoding="utf-8")
+    except Exception:
+        pass
+
+    return {
+        "total_cycles": total_cycles,
+        "success_rate": success_rate,
+        "proposals_executed": executed,
+    }
 
 
 def _triage(proposals: list[dict]) -> dict:
@@ -141,16 +286,88 @@ def _evaluate_and_feedback(executed: list[dict]) -> dict:
     }
 
 
+def check_data_sources() -> dict:
+    """Check health of all data sources (Harness 7 probes)."""
+    sources = {}
+
+    # Heartbeat
+    heartbeat_file = REPO / ".omo" / "_state" / "goal-mode-test-result.json"
+    sources["probe.heartbeat"] = {
+        "path": str(heartbeat_file.relative_to(REPO)),
+        "exists": heartbeat_file.exists(),
+        "status": "ok" if heartbeat_file.exists() else "missing",
+    }
+
+    # Architecture check
+    arch_check = REPO / "bin" / "gac" / "architecture-check.py"
+    sources["probe.arch_upgrade"] = {
+        "path": str(arch_check.relative_to(REPO)),
+        "exists": arch_check.exists(),
+        "status": "ok" if arch_check.exists() else "missing",
+    }
+
+    # Harness compliance
+    harness_check = REPO / "bin" / "gac" / "harness-compliance-check.py"
+    sources["probe.toolchain"] = {
+        "path": str(harness_check.relative_to(REPO)),
+        "exists": harness_check.exists(),
+        "status": "ok" if harness_check.exists() else "missing",
+    }
+
+    # OMO bridge
+    omo_bridge = REPO / "bin" / "gac" / "harness-omo-bridge.py"
+    sources["probe.business_process"] = {
+        "path": str(omo_bridge.relative_to(REPO)),
+        "exists": omo_bridge.exists(),
+        "status": "ok" if omo_bridge.exists() else "missing",
+    }
+
+    # GaC governance trend
+    gov_trend = REPO / "bin" / "gac" / "check-governance-trend.py"
+    sources["probe.doc_governance"] = {
+        "path": str(gov_trend.relative_to(REPO)),
+        "exists": gov_trend.exists(),
+        "status": "ok" if gov_trend.exists() else "missing",
+    }
+
+    # MOF bridge
+    mof_bridge = REPO / "bin" / "gac" / "harness-mof-bridge.py"
+    sources["probe.feature_add"] = {
+        "path": str(mof_bridge.relative_to(REPO)),
+        "exists": mof_bridge.exists(),
+        "status": "ok" if mof_bridge.exists() else "missing",
+    }
+
+    return sources
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Self-Evolution Loop")
+    parser = argparse.ArgumentParser(description="Self-Evolution Loop (数据驱动)")
     parser.add_argument("--cycle", action="store_true", help="Run one cycle")
     parser.add_argument("--status", action="store_true", help="Show status")
     parser.add_argument("--feedback", action="store_true", help="Show feedback")
+    parser.add_argument("--data-sources", action="store_true", help="列出数据源健康度")
+    parser.add_argument("--sync-omo", action="store_true", help="同步自进化状态到 OMO system.yaml")
     args = parser.parse_args()
 
     if args.cycle:
         result = run_cycle()
         print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.sync_omo:
+        result = sync_evolution_state()
+        print(json.dumps({"ok": True, "sync": result}, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.data_sources:
+        sources = check_data_sources()
+        print(json.dumps({
+            "ok": all(s["exists"] for s in sources.values()),
+            "sources": sources,
+            "total": len(sources),
+            "healthy": sum(1 for s in sources.values() if s["exists"]),
+        }, indent=2, ensure_ascii=False))
         return 0
 
     if args.status or args.feedback:

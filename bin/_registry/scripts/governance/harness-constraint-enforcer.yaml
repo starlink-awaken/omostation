@@ -1,0 +1,31 @@
+schema: script-registry/v1
+id: bin/gac/harness-constraint-enforcer.py
+name: Harness Constraint Enforcer
+category: governance
+owner: governance-team
+description: "统一约束与驱动 (整合 4 引擎: arch + compliance + mof + omo)"
+inputs:
+  - type: flag
+    name: "--ci"
+    description: "CI mode"
+  - type: flag
+    name: "--pre-edit"
+    description: "Pre-edit mode"
+  - type: flag
+    name: "--pre-commit"
+    description: "Pre-commit mode"
+  - type: flag
+    name: "--pre-push"
+    description: "Pre-push mode"
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - bin/gac/architecture-check.py
+  - bin/gac/harness-compliance-check.py
+  - bin/gac/harness-mof-bridge.py
+  - bin/gac/harness-omo-bridge.py
+triggers:
+  - ci_gate
+maturity: active
+last_reviewed: "2026-09-01"
