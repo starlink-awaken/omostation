@@ -16984,6 +16984,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:2d67191f4aa58a7b92c8daa94f27ee2899e59bff88e631f0f637eacd9e315472
     decision_ref: decision://accepted/BET-Y1Q4-T2-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@526e24a322eef119cb4d85198e01743e20247260
+          tests:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md
+            sha256: sha256:2d67191f4aa58a7b92c8daa94f27ee2899e59bff88e631f0f637eacd9e315472
+          rollback:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+          replay:
+            ref: receipt://tests/test_ocr_layout.py
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+          cleanup:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T3-02
   track: T3-COGNI
   window: Y1Q4
