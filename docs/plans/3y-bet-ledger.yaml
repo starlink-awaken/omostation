@@ -11108,6 +11108,7 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+  value_indicator_policy: false
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
   write_surfaces:
@@ -11198,6 +11199,7 @@ bets:
   - lib/capability_sync_verification_helpers.py
   - projects/agora/src/agora/server/mcp.py
   - projects/agora/tests/test_mcp_stdio_inventory_probe.py
+  - projects/agora/.github/workflows/ci.yml
   pasw_required: false
   depends_on:
   - BET-Y1Q3-T4-01
