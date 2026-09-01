@@ -1,0 +1,33 @@
+schema: script-registry/v1
+id: bin/gac/harness-compliance-check.py
+name: Harness Compliance Check
+category: governance
+owner: governance-team
+description: "Harness 全生命周期合规 (12 章节 + SFOP + 维度 + 探针 + 价值循环 + 已知债 + 实现率 + 防腐)"
+inputs:
+  - type: flag
+    name: "--gate"
+    description: "CI gate mode"
+  - type: flag
+    name: "--strict"
+    description: "Strict mode (warnings fail)"
+  - type: flag
+    name: "--json"
+    description: "JSON output"
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - .omo/_truth/registry/harness-policy.yaml
+  - .omo/standards/mof-agent-constraints.yaml
+  - .omo/standards/anti-corrosion-budget.yaml
+triggers:
+  - ci_gate
+  - gac_local_gate
+related:
+  - CR-HARNESS-STRUCTURE
+  - CR-HARNESS-MOF-INTEGRATION
+  - CR-HARNESS-OPERATIONS
+  - CR-HARNESS-GOVERNANCE
+maturity: active
+last_reviewed: "2026-09-01"

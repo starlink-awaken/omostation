@@ -1,0 +1,22 @@
+schema: script-registry/v1
+id: bin/gac/harness-cli.sh
+name: Harness CLI
+category: governance
+owner: governance-team
+description: "Harness 统一 CLI 入口 (7 命令: compliance/mof/omo/enforce/perceive/full/status)"
+inputs:
+  - type: arg
+    name: "command"
+    description: "Command to execute"
+outputs:
+  - type: exit_code
+  - type: stdout
+dependencies:
+  - bin/gac/harness-compliance-check.py
+  - bin/gac/harness-mof-bridge.py
+  - bin/gac/harness-omo-bridge.py
+  - bin/gac/harness-constraint-enforcer.py
+triggers:
+  - manual
+maturity: active
+last_reviewed: "2026-09-01"
