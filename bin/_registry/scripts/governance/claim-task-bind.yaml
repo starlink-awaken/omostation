@@ -1,0 +1,24 @@
+schema: script-registry/v1
+id: bin/gac/claim-task-bind.py
+name: Claim-Task Bind
+category: governance
+owner: governance-team
+description: "chain_2 修复: 将 agent-workflow claim 绑定到 OMO task"
+inputs:
+  - type: arg
+    name: "--run-id"
+    description: "Harness run ID"
+  - type: arg
+    name: "--bet-id"
+    description: "BET ID"
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - .omo/_delivery/harness-runs/
+triggers:
+  - post_claim
+related:
+  - chain_2_swarm_to_work
+maturity: active
+last_reviewed: "2026-09-01"

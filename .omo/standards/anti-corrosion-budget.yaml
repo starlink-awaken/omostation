@@ -11,12 +11,18 @@ schema: anti-corrosion-budget/v1
 budgets:
   # 治理规则 (GaC)
   governance_rules:
-    max_count: 85
-    current: 81
-    alert_threshold: 0.9  # 90% (76 条) 触发告警
+    max_count: 100
+    current: 85
+    alert_threshold: 0.9  # 90% (90 条) 触发告警
     actions:
       warn: "规则接近预算上限，建议合并或退役"
       halt: "规则超出预算，禁止新增除非同步删除"
+    # Phase 8 合并完成: 10 → 4 条 (STRUCTURE + MOF-INTEGRATION + OPERATIONS + GOVERNANCE)
+    merged:
+      - "SECTION + DIMENSION + IMPL-RATE → STRUCTURE"
+      - "SFOP + MOF-CONSTRAINT → MOF-INTEGRATION"
+      - "PROBE + VALUE-LOOP → OPERATIONS"
+      - "KNOWN-DEBT + OMO-SYNC + ANTI-CORROSION → GOVERNANCE"
 
   # Bin 脚本
   bin_scripts:

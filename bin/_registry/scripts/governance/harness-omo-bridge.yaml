@@ -1,0 +1,33 @@
+schema: script-registry/v1
+id: bin/gac/harness-omo-bridge.py
+name: Harness OMO Bridge
+category: governance
+owner: governance-team
+description: "OMO 状态同步 (Harness + GaC + 漂移 + 已知债同步)"
+inputs:
+  - type: flag
+    name: "--status"
+    description: "Harness state only"
+  - type: flag
+    name: "--gac"
+    description: "GaC rules only"
+  - type: flag
+    name: "--arch"
+    description: "Architecture drift only"
+  - type: flag
+    name: "--closeout"
+    description: "Closeout sync mode"
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - .omo/state/system.yaml
+  - .omo/_control/governance-data.json
+  - .omo/_truth/registry/governance-checks.yaml
+triggers:
+  - ci_gate
+  - omo_audit
+related:
+  - CR-HARNESS-GOVERNANCE
+maturity: active
+last_reviewed: "2026-09-01"

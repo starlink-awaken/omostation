@@ -9,7 +9,14 @@ source: evolution-proposal
 
 # Signal: Address: unhealthy_service
 
-- status: draft
+---
+id: ADR-0401
+status: draft
+lifecycle: signal
+owner: evolution-agent
+last-reviewed: 2026-08-30
+---
+
 - date: 2026-08-30
 - owner: evolution-agent
 - source: evolution-proposal (2026-08-30)

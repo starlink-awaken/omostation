@@ -23,11 +23,11 @@ import yaml
 WORKSPACE = Path(__file__).resolve().parents[2]
 BOS_YAML = WORKSPACE / "projects/agora/etc/bos-services.yaml"
 REGISTRY = WORKSPACE / ".omo/_knowledge/bos-registry.json"
-CLASSIC_DOMAINS = frozenset({"memory", "governance", "analysis", "persona", "capability", "resident", "bcos"})
+CLASSIC_DOMAINS = frozenset({"memory", "governance", "analysis", "persona", "capability", "resident", "bcos", "harness"})
 KEEP_STATUS = frozenset({"active", "unimplemented"})
 # omo smoke / BOS CLI validate 4-segment kebab (package) + optional underscore action
 _OMO_URI = re.compile(
-    r"^bos://(memory|governance|analysis|persona|capability|resident|bcos)/"
+    r"^bos://(memory|governance|analysis|persona|capability|resident|bcos|harness)/"
     r"[a-z][a-z0-9-]*"
     r"/[a-z][a-z0-9_-]*$"
 )
@@ -152,7 +152,10 @@ def main() -> int:
         out.sort(key=lambda x: x.get("uri", ""))
         return out
 
-    drifted = _canon(current) != _canon(fresh)
+    # mirror 只约束 CLASSIC_DOMAINS 域; 其他域 (如 harness, Phase 8 ADR-2863
+    # 手工扩展面) 属人工登记, 不参与 yaml 镜像对比 — 否则 check 永久 drift.
+    current_mirror = [r for r in current if r.get("domain") in CLASSIC_DOMAINS]
+    drifted = _canon(current_mirror) != _canon(fresh)
     print(
         f"bos-registry: live={len(fresh)} file={len(current)} "
         f"drift={'YES' if drifted else 'no'} raw_yaml={len(services)} "

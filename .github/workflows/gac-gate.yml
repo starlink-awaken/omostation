@@ -147,6 +147,21 @@ jobs:
       - name: CR-L0-ENFORCE — L0 协议约束 CI 校验 (required)
         # 校验 X1-C01/CS-10/X2-C01/X2-C03/X4-C01, 任一 FAIL 则 CI 红
         run: python3 bin/gac/check-l0-constraints.py
+      # ── Phase 8: Harness 全生命周期合规 (ADR-0444) ──
+      - name: CR-HARNESS-SECTION — Harness 12 章节完整性 (required)
+        # harness-policy.yaml 必须包含 12 必现章节 + SFOP S 槽位唯一
+        run: python3 bin/gac/harness-compliance-check.py --gate
+      - name: CR-HARNESS-MOF — MOF 约束联动检查 (required)
+        # 8 条 Agent-MOF 规则接入 Harness 全生命周期
+        run: python3 bin/gac/harness-mof-bridge.py --state
+      - name: CR-HARNESS-OMO — OMO 状态同步检查 (advisory)
+        # Harness 运行状态同步到 OMO system.yaml, 非阻塞
+        continue-on-error: true
+        run: python3 bin/gac/harness-omo-bridge.py
+      - name: CR-HARNESS-ENFORCE — 统一约束与驱动 (advisory)
+        # 整合 4 引擎 (arch + compliance + mof + omo), CI 模式
+        continue-on-error: true
+        run: python3 bin/gac/harness-constraint-enforcer.py --ci
       - name: CR-P76-7-4-EVIDENCE-HONEST-CLOSURE — 任务关闭需真证据 (advisory)
         continue-on-error: true
         run: python3 bin/gac/check-evidence-honest-closure.py

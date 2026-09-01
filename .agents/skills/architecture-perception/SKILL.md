@@ -39,7 +39,7 @@ cat .omo/standards/architecture-ssot-index.yaml
 python3 bin/gac/architecture-check.py --quick
 
 # 场景卡生命周期检查
-python3 bin/ssot/scene-card-lifecycle.py --validate --all
+uv run --with pyyaml python "bin/ssot/scene-card-lifecycle.py" validate --all
 
 # 维度健康度报告
 python3 bin/gac/dimension-health.py --report

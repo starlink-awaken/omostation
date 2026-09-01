@@ -87,6 +87,10 @@ FLEX_OVERRIDE_WORKFLOWS = {
     "project-code-change",
     "project-doc-change",
     "submodule-pointer-close",
+    # BET 功能交付属 flex: 其 .omo locks (spec/retro/report 写面) 是交付附属,
+    # 不是治理本体 — 无此 override 时功能 BET 全被 locks 判成 governance,
+    # 30 天窗口治理占比虚高 (实测 2026-09-01: bet-execution run 被误计)。
+    "bet-execution",
     # pyright-sweep: Python 类型/风格质量扫描 (engineering-agent), 非治理重写规则。
     # 虽可能锁 .omo/_truth/registry 等路径 (扫描参考), 但属工程交付而非治理开销。
     "pyright-sweep",

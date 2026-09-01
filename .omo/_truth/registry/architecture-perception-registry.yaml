@@ -1,0 +1,145 @@
+# Architecture Perception Registry
+# ===================================
+# Agent 发现架构标准的统一入口 — 强感知 SSOT.
+#
+# SSOT: .omo/_truth/registry/architecture-perception-registry.yaml
+# Version: 1.0.0 | 2026-09-01
+
+schema: architecture-perception-registry/v1
+version: "1.0.0"
+updated_at: "2026-09-01"
+
+# ── 标准库索引 ──
+standards:
+  scene_card_lifecycle:
+    path: ".omo/standards/scene-card-lifecycle.yaml"
+    description: "场景卡 5 级生命周期 (draft→shadow→assisted→supervised→routine)"
+    category: lifecycle
+
+  business_domains:
+    path: ".omo/standards/business-domains.yaml"
+    description: "5 业务域分类 (work/health/research/knowledge/governance)"
+    category: domain
+
+  dimension_system:
+    path: ".omo/standards/dimension-system.yaml"
+    description: "12 维度度量体系 (X1-X4 + D1-D8)"
+    category: measurement
+
+  value_loop:
+    path: ".omo/standards/value-loop-standard.yaml"
+    description: "5 阶段价值循环 (感知→分类→执行→记录→进化)"
+    category: flow
+
+  architecture_ssot_index:
+    path: ".omo/standards/architecture-ssot-index.yaml"
+    description: "SSOT 收敛索引 (3 核心文档 + 标准库)"
+    category: ssoT
+
+  anti_corrosion_budget:
+    path: ".omo/standards/anti-corrosion-budget.yaml"
+    description: "防腐预算控制 (规则/脚本/场景卡/Harness 配额)"
+    category: governance
+
+  mof_agent_constraints:
+    path: ".omo/standards/mof-agent-constraints.yaml"
+    description: "Agent 修改 MOF 的 8 条约束规则"
+    category: mof
+
+# ── 校验引擎索引 ──
+check_engines:
+  architecture_check:
+    path: "bin/gac/architecture-check.py"
+    description: "架构合规校验 (7 项标准文件)"
+    triggers:
+      - "docs/scene-cards/**"
+      - "docs/journey-specs/**"
+      - ".omo/standards/**"
+
+  harness_compliance:
+    path: "bin/gac/harness-compliance-check.py"
+    description: "Harness 全生命周期合规"
+    triggers:
+      - "bin/harness"
+      - ".omo/_truth/registry/harness-policy.yaml"
+
+  mof_validation:
+    path: "projects/ecosys/src/ecos/ssot/mof/compiler/api.py"
+    description: "MOF M1/M2 schema 校验"
+    triggers:
+      - "projects/ecos/src/ecos/ssot/mof/**"
+
+  gac_validation:
+    path: "bin/gac/gac-validate.py"
+    description: "GaC 规则 schema 校验"
+    triggers:
+      - ".omo/_truth/registry/governance-checks.yaml"
+
+  sfop_slots:
+    path: "bin/gac/check-sfop-slots.py"
+    description: "SFOP 槽位唯一性 (S 槽 = COMP-WS-omo)"
+    triggers:
+      - "bin/gac/check-sfop-slots.py"
+
+# ── Agent 感知触发器 ──
+triggers:
+  # 编辑前检查 (pre-edit hook)
+  pre_edit:
+    - pattern: "docs/scene-cards/*.yaml"
+      checks: [scene_card_lifecycle, business_domains]
+      description: "场景卡生命周期和域检查"
+
+    - pattern: "docs/journey-specs/*.yaml"
+      checks: [scene_card_lifecycle]
+      description: "Journey 状态机合法性"
+
+    - pattern: "bin/harness"
+      checks: [harness_compliance, mof_agent_constraints]
+      description: "Harness 8 阶段完整性和 MOF 约束"
+
+    - pattern: ".omo/standards/*.yaml"
+      checks: [architecture_check]
+      description: "架构标准一致性"
+
+    - pattern: ".omo/_truth/registry/harness-policy.yaml"
+      checks: [harness_compliance]
+      description: "Harness 策略合规"
+
+  # 提交前检查 (pre-commit hook)
+  pre_commit:
+    - pattern: "*"
+      checks: [architecture_check, gac_validation]
+      description: "全量架构和 GaC 检查"
+
+  # Push 前检查 (pre-push hook)
+  pre_push:
+    - pattern: "*"
+      checks: [harness_compliance, mof_validation, sfop_slots]
+      description: "Harness/MOF/SFOP 深度校验"
+
+# ── 感知能力清单 ──
+perception_capabilities:
+  - id: "PERCEIVE-STANDARDS"
+    name: "自动发现架构标准"
+    description: "扫描 .omo/standards/ 自动加载最新标准"
+    automation: full
+
+  - id: "PERCEIVE-REALTIME"
+    name: "实时校验合规性"
+    description: "编辑时实时检查违反架构约束的行为"
+    automation: full
+
+  - id: "PERCEIVE-IMPACT"
+    name: "变更影响分析"
+    description: "变更前评估对所有 12 维度的影响"
+    automation: partial
+
+  - id: "PERCEIVE-SUGGEST"
+    name: "修正建议生成"
+    description: "基于差距分析生成修正建议"
+    automation: partial
+
+  - id: "PERCEIVE-EVOLUTION"
+    name: "架构漂移检测"
+    description: "检测代码与架构文档的不一致"
+    automation: full

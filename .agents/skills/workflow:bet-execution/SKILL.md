@@ -1,26 +1,47 @@
 ---
 name: workflow:bet-execution
-description: SEMA 自动结晶技能包 — 基于 2 条 MOS 物理踩坑信念反向萃取
+description: SEMA 自动结晶技能包 — 基于 3 条 MOS 踩坑信念反向萃取
 category: SEMA-Crystallized-Skill
+---
 
-last-reviewed: 2026-08-26---
+# Skill: workflow:bet-execution
 
-# 🛡️ 技能包: workflow:bet-execution
+> Auto-crystallized by SEMA engine from agent pitfall experience.
+> Source: .omo/state/agent-beliefs/index.yaml
 
-> 本 Skill 由 SEMA (Self-Evolving Multi-Agent) 自动结晶引擎基于 Agent 踩坑经验生成。
+## Pitfalls & Solutions
 
-## 1. 💡 历史踩坑与避坑指南 (Lessons & Pitfalls)
+### #1 [warning]
+- **Pitfall**: Unverified workflow closeout
+- **Solution**: Executed agent-workflow verify & observe pass
 
-### 踩坑纪录 #1: belief-0001
-* **信念陈述**: N/A
-* **常见坑点**: N/A
-* **推荐解法**: N/A
+### #2 [warning]
+- **Pitfall**: Unverified workflow closeout
+- **Solution**: Executed agent-workflow verify & observe pass
 
-### 踩坑纪录 #2: belief-0002
-* **信念陈述**: N/A
-* **常见坑点**: Direct edit without agent-workflow claim triggers compliance gate halt
-* **推荐解法**: Always run agent-workflow start and claim before editing requirement files
+### #3 [warning]
+- **Pitfall**: Unverified workflow closeout
+- **Solution**: Executed agent-workflow verify & observe pass
 
-## 2. ⚡️ 标准执行流程 (Standard Workflow)
-1. 遵循 `make gac-local-gate` 42 Checks 100% ALL GREEN PASS 门禁。
-2. 针对 `workflow:bet-execution` 相关变更，强制走物理隔离工作区。
+## Beliefs
+
+### #1 belief-0005
+- **Belief**: Workflow run 20260901T010516Z-bet-execution-c2125a72 achieved objective: [BET-Y1Q4-T2-03] 纸质公文扫描件多模态 OCR 结构化提取与版面保真还原 (Appetite: 2 days)
+
+### #2 belief-0006
+- **Belief**: Workflow run 20260901T030710Z-bet-execution-7949aad4 achieved objective: [BET-Y1Q4-T8-03] 标准红头公文排版 DOCX、高管技术汇报 PPT 与矢量图表一键生成导出 (Appetite: 2 days)
+
+### #3 belief-0007
+- **Belief**: Workflow run 20260901T053633Z-bet-execution-d17d23a1 achieved objective: [BET-Y1Q4-T2-02] 微信/企微/飞书即时通讯会话感知与指令式即时办结 (Appetite: 2 days)
+
+## Applicable Scope
+
+- `.omo/_delivery/agent-workflows/runs/20260901T010516Z-bet-execution-c2125a72.yaml`
+- `.omo/_delivery/agent-workflows/runs/20260901T030710Z-bet-execution-7949aad4.yaml`
+- `.omo/_delivery/agent-workflows/runs/20260901T053633Z-bet-execution-d17d23a1.yaml`
+
+## Standard Workflow
+
+1. Run `make gac-local-gate` — all checks must pass.
+2. For `workflow:bet-execution` changes, use isolated worktree.
+3. Verify with targeted tests before expanding scope.

@@ -11108,6 +11108,7 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+  value_indicator_policy: false
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
   write_surfaces:
@@ -11198,6 +11199,7 @@ bets:
   - lib/capability_sync_verification_helpers.py
   - projects/agora/src/agora/server/mcp.py
   - projects/agora/tests/test_mcp_stdio_inventory_probe.py
+  - projects/agora/.github/workflows/ci.yml
   pasw_required: false
   depends_on:
   - BET-Y1Q3-T4-01
@@ -16916,7 +16918,8 @@ bets:
   title: 微信/企微/飞书即时通讯会话感知与指令式即时办结
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-01
   goal: 接入企业微信、飞书与微信桌面端会话钩子，自动从群聊与私聊中提取夏明星关注的核心任务、审批指令与催办提醒；支持夏明星以「一句话指令」触发织星后台自动化查阅、拟稿并直接返回待发卡片。
   non_goals:
   - 不做未经夏明星本人确认的自动回复或静默外发
@@ -16935,7 +16938,7 @@ bets:
   write_surfaces:
   - projects/agora/src/agora/server/tools_bos/im.py
   - projects/cockpit/src/cockpit/commands/im_triage.py
-  - docs/reports/2026-10-05-im-session-triage.md
+  - docs/reports/2026-09-01-im-session-triage.md
   - .omo/_knowledge/retros/BET-Y1Q4-T2-02.md
   pasw_required: false
   depends_on:
@@ -16944,13 +16947,56 @@ bets:
   human_gate: true
   circuit_breaker: 遇到 IM 接口变更或消息解析异常时自动退回被动查阅模式。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-01-t2-02-im-session-triage-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:9d84f751f287b393294496c73bf92eeff0ad4557e12ca3fc5d6cecacafad21e0
+    decision_ref: decision://accepted/BET-Y1Q4-T2-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@1436639a4d3acc4076108f66486f0f0a18c6ac3f
+          tests:
+            ref: receipt://docs/reports/2026-09-01-im-session-triage.md
+            sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-01-t2-02-im-session-triage-design.md
+            sha256: sha256:9d84f751f287b393294496c73bf92eeff0ad4557e12ca3fc5d6cecacafad21e0
+          rollback:
+            ref: receipt://docs/reports/2026-09-01-im-session-triage.md
+            sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-01-im-session-triage.md
+            sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-01-im-session-triage.md
+            sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
+          replay:
+            ref: receipt://tests/test_im_triage.py
+            sha256: sha256:4a1fdac5ca7c6f25279346a7f189f561cdfe775f6577cffaccbd1a59d6e8dd06
+          cleanup:
+            ref: receipt://docs/reports/2026-09-01-im-session-triage.md
+            sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T2-03
   track: T2-PERCEPT
   window: Y1Q4
   title: 纸质公文扫描件多模态 OCR 结构化提取与版面保真还原
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-01
   goal: 集成 PaddleOCR / Qwen-VL 本地轻量化端侧视觉多模态模型，支持对拍照扫描件、PDF 影印件红头文件进行精准 OCR、版面分析（表格、盖章、手写签批识别）与 Markdown 结构化还原。
   non_goals:
   - 不上传任何红头扫描件图片至外部公网云端
@@ -16968,7 +17014,7 @@ bets:
   write_surfaces:
   - projects/agora/src/agora/server/tools_bos/ocr.py
   - projects/cockpit/src/cockpit/commands/spine.py
-  - docs/reports/2026-10-06-multimodal-ocr-layout.md
+  - docs/reports/2026-09-01-multimodal-ocr-layout.md
   - .omo/_knowledge/retros/BET-Y1Q4-T2-03.md
   pasw_required: false
   depends_on:
@@ -16977,13 +17023,56 @@ bets:
   human_gate: false
   circuit_breaker: 图片过大或显存吃紧时自动按切片分块处理并降低批处理并发。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:2d67191f4aa58a7b92c8daa94f27ee2899e59bff88e631f0f637eacd9e315472
+    decision_ref: decision://accepted/BET-Y1Q4-T2-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@526e24a322eef119cb4d85198e01743e20247260
+          tests:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md
+            sha256: sha256:2d67191f4aa58a7b92c8daa94f27ee2899e59bff88e631f0f637eacd9e315472
+          rollback:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+          replay:
+            ref: receipt://tests/test_ocr_layout.py
+            sha256: sha256:aed3a63c032d8f5eb22203bf5d64f57a4bbffbff08fa3b6c45ff934fa8e8135f
+          cleanup:
+            ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
+            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T3-02
   track: T3-COGNI
   window: Y1Q4
   title: BGE-M3 / Qwen-Embedding 本地 Metal MPS 硬件加速与毫秒级 Rerank 引擎
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-01
   goal: 彻底替换对外部公有向量 API 的依赖，在 MBP M5 Max 与 Mac mini M4 上部署 BGE-M3 多语言多粒度嵌入与 BGE-Reranker-Large 本地模型，利用 Apple Silicon MPS Graph 深度优化推理延迟。
   non_goals:
   - 不使用损失精度的极低量化向量模型
@@ -17001,7 +17090,7 @@ bets:
   write_surfaces:
   - projects/omlxc/src/omlxc/dataplane/embedding_mps.py
   - projects/omlxc/src/omlxc/dataplane/reranker.py
-  - docs/reports/2026-10-07-bge-m3-mps-benchmark.md
+  - docs/reports/2026-09-01-bge-m3-mps-benchmark.md
   - .omo/_knowledge/retros/BET-Y1Q4-T3-02.md
   pasw_required: false
   depends_on:
@@ -17010,6 +17099,48 @@ bets:
   human_gate: false
   circuit_breaker: MPS 显存不足时自动溢出至 CPU NEON/AMX 指令集加速。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:6e6425abcacb39d3e42032ec1332b0b74e68e344c9a3dac4d31ee2ea64b8da6f
+    decision_ref: decision://accepted/BET-Y1Q4-T3-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@8ac2135387705b3baac8c7d6f29c5d7f9cce83d3
+          tests:
+            ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
+            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md
+            sha256: sha256:6e6425abcacb39d3e42032ec1332b0b74e68e344c9a3dac4d31ee2ea64b8da6f
+          rollback:
+            ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
+            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
+            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
+            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+          replay:
+            ref: receipt://tests/test_embedding_mps.py
+            sha256: sha256:0f40de2b30f8cef8e3c2ec3afaa0b4f28d72050643bade404abafb199ec0fa79
+          cleanup:
+            ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
+            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T3-03
   track: T3-COGNI
   window: Y1Q4
@@ -17158,7 +17289,8 @@ bets:
   title: 标准红头公文排版 DOCX、高管技术汇报 PPT 与矢量图表一键生成导出
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-01
   goal: 构建专业排版引擎，将初稿 Markdown 一键渲染为符合国家党政机关公文格式标准（GB/T 9704-2012）的红头 DOCX/PDF，以及高管汇报风格的 16:9 技术方案 PPTX 与高保真矢量架构图。
   non_goals:
   - 不做未经模板校验的非标随意排版
@@ -17176,7 +17308,7 @@ bets:
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/render.py
   - projects/cockpit/src/cockpit/renderers/gov_docx.py
-  - docs/reports/2026-10-11-gov-docx-pptx-render.md
+  - docs/reports/2026-09-01-gov-docx-pptx-render.md
   - .omo/_knowledge/retros/BET-Y1Q4-T8-03.md
   pasw_required: false
   depends_on:
@@ -17185,6 +17317,48 @@ bets:
   human_gate: false
   circuit_breaker: 模板解析异常时自动降级输出标准干净 Markdown 与普通 PDF。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-01-t8-03-gov-docx-pptx-render-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:bd22e0fbe433584f9cccbdcf9c313cead95f5a8445fecb8374e8f547631c171c
+    decision_ref: decision://accepted/BET-Y1Q4-T8-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@94979ee48a4ed949ef174648d90cfe224299c2da
+          tests:
+            ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
+            sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-01-t8-03-gov-docx-pptx-render-design.md
+            sha256: sha256:bd22e0fbe433584f9cccbdcf9c313cead95f5a8445fecb8374e8f547631c171c
+          rollback:
+            ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
+            sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
+            sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
+            sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
+          replay:
+            ref: receipt://tests/test_render_formats.py
+            sha256: sha256:80458df949609c71e021cfaa707a0cfdd979c6b73289685f6af12a3a7983fe00
+          cleanup:
+            ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
+            sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T10-01
   track: T10-MATURITY
   window: Y1Q4

@@ -1,0 +1,47 @@
+{
+ "schema": "agora.bos.im.v1",
+ "gateway": "bos://im/session/triage",
+ "cards": [
+  {
+   "message_id": "m1",
+   "platform": "wecom",
+   "chat_id": "wecom:work-core",
+   "sender": "同事A",
+   "action": "urge",
+   "payload": "对方单位的回函，明天截止",
+   "priority": "high",
+   "deadline_hint_days": 1.0,
+   "status": "pending_approval",
+   "created_at": 1788241155.831014
+  },
+  {
+   "message_id": "m2",
+   "platform": "feishu",
+   "chat_id": "feishu:proj-digitalbrain",
+   "sender": "同事B",
+   "action": "draft",
+   "payload": "帮我 一份给卫健委的复函",
+   "priority": "high",
+   "deadline_hint_days": null,
+   "status": "pending_approval",
+   "created_at": 1788241155.831075
+  },
+  {
+   "message_id": "m3",
+   "platform": "wechat",
+   "chat_id": "wechat:dm-xiamingxing",
+   "sender": "领导",
+   "action": "query",
+   "payload": "上季度报销进度",
+   "priority": "normal",
+   "deadline_hint_days": null,
+   "status": "pending_approval",
+   "created_at": 1788241155.831088
+  }
+ ],
+ "passive": [],
+ "dropped": [],
+ "elapsed_ms": 0.2,
+ "within_e2e_budget": true,
+ "red_line": "all cards pending_approval — no auto outbound"
+}

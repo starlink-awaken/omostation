@@ -1,0 +1,26 @@
+# Drift Log Registry — 架构漂移记录
+# SSOT: .omo/_truth/registry/drift-log.yaml
+# Version: 1.0 | 2026-09-01
+
+schema: drift-log/v1
+version: "1.0"
+updated_at: "2026-09-01"
+
+# 漂移记录
+drifts: []
+
+# 统计摘要
+summary:
+  total_drifts: 0
+  resolved_drifts: 0
+  pending_drifts: 0
+
+# 漂移检测配置
+detection:
+  sources:
+    - architecture-check.py
+    - sfop-slots
+    - mof-drift
+    - dimension-health
+  schedule: daily
+  auto_heal: false
