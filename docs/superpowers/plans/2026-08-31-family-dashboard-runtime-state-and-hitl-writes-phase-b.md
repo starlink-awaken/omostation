@@ -33,6 +33,7 @@ spec_digest: sha256:0a82d770edcca8d6a21b6b32e1798270b34c1c0b8e72a2518f2baa8ce0e7
 - The mutation BOS prefix has `cache_ttl: 0`; a successful mutation response may never be replayed from cache.
 - Runtime roots must be absolute, outside Git/Documents, non-symlink, private-mode, and collision-free.
 - Runtime promotion requires one stable privacy-safe input-closure digest observed before build A, between builds, and after build B, plus equal normalized fresh product digests.
+- The macOS build subprocess is wrapped by `/usr/bin/sandbox-exec` and denied every write beneath the resolved Documents root. This is process-scoped: approved mutation execution remains separately capability-bound to its exact target and is not globally disabled.
 - Legacy `app-data` value differences are recorded per product and never silently hidden; missing, malformed, unreadable, or product-set-incompatible legacy baselines remain blocking.
 - `.next`, `node_modules`, `.env.local`, credentials, browser auth, raw Documents content, and legacy AI cache are never copied into active state or Git.
 - Direct Documents writes, direct `.omo` writes, environment bypasses, parent-directory fallback, and Git backup behavior are prohibited.
@@ -2378,9 +2379,10 @@ Push root branch, open PR, wait required CI, squash merge, and replay exact chil
 - Modify: `projects/family-hub/tests/test_dashboard_phase_b.py`
 
 **Interfaces:**
-- Consumes: existing `plan_runtime`, `_fingerprint`, `_sha`, `MANIFEST_NAMES`, and `PhaseBError`.
+- Consumes: existing `plan_runtime`, `_fingerprint`, `_sha`, `MANIFEST_NAMES`, `plan_fingerprint`, and `PhaseBError`.
 - Produces: `builder_input_closure(documents_root: Path, legacy_app_root: Path) -> dict[str, Any]`, `normalized_product_digest(path: Path) -> str`, and `product_digest_map(directory: Path) -> dict[str, str]`.
 - Produces plan field: `input_closure` with schema `family-dashboard-input-closure/v1`, pathless entries, file count, and aggregate digest.
+- Produces one canonical full-plan fingerprint that excludes only the `fingerprint` field and is recomputed by `plan_fingerprint`.
 
 - [ ] **Step 1: Write failing input-closure and normalization tests**
 
@@ -2577,6 +2579,10 @@ def product_digest_map(directory: Path) -> dict[str, str]:
     return {path.name: normalized_product_digest(path) for path in products}
 ```
 
+Replace the legacy `_entry` representation too: its public output uses
+`path_digest`, never `relative_path`. Fixed manifest/product names are only
+in-memory logical inputs to the digest and never appear in `plan.json`.
+
 In `plan_runtime`, compute the closure before disk sizing and bind it into the
 fingerprint exactly as follows:
 
@@ -2597,9 +2603,10 @@ required_bytes = (
 )
 ```
 
-Return `input_closure` in the plan and set `fingerprint` to
-`_fingerprint(fingerprint_entries)`. Do not expose the logical paths used to
-produce `path_digest`.
+Return `input_closure` in the plan and set `fingerprint` to the canonical digest
+of the complete plan payload excluding only the `fingerprint` field.
+`plan_fingerprint(plan)` recomputes the value and rejects any embedded mismatch.
+Do not expose logical paths used to produce `path_digest`.
 
 - [ ] **Step 4: Run focused and existing Phase B tests**
 
@@ -2632,6 +2639,9 @@ git commit -m "feat: bind dashboard builder input closure"
 - Consumes: `builder_input_closure`, `normalized_product_digest`, `product_digest_map`, `apply_runtime`, and `verify_runtime`.
 - Produces parity schema `family-dashboard-parity/v2` with `input_closure`, `fresh_build`, and `legacy_delta` sections.
 - Produces runtime receipt fields `input_closure_digest`, `fresh_build_parity`, `legacy_delta_status`, and `legacy_delta_count`.
+- Produces a fail-closed macOS build runner that executes every Bun build/validator command under a sandbox policy denying `file-write*` beneath `FAMILY_DOCUMENTS_ROOT`; it does not change approved mutation permissions.
+- Produces declared root-container schemas for known products and rejects unknown names, scalar/wrong-container products, malformed JSON, and incompatible legacy baselines.
+- Produces full parity evidence recomputation: current promoted/legacy maps, exact sets, aggregates, closure binding, counts, results, and status labels must equal the canonical parity-v2 payload.
 
 - [ ] **Step 1: Replace the stale-legacy blocking test with RED double-build tests**
 
@@ -2905,6 +2915,31 @@ The returned receipt must include:
 "legacy_delta_count": parity["legacy_delta"]["different_count"],
 ```
 
+Do not stop at status checks. Recompute the promoted and legacy product maps,
+validate every known product's declared root-container schema, rebuild the
+canonical parity-v2 payload, and require exact equality with the stored receipt.
+Any forged closure, aggregate digest, count, result map, status, unknown
+product, or wrong JSON shape blocks verification.
+
+- [ ] **Step 4A: Enforce process-scoped read-only Documents access**
+
+In `dashboard_phase_b.py`, make `_bun_build_runner` resolve the Documents root
+from its environment and wrap `verify-paths`, `build-all`, `verify-summary`, and
+`verify-domain-data` with `/usr/bin/sandbox-exec`. The generated policy must
+deny `file-write*` for the resolved Documents subtree while allowing writes to
+the private staging root. Reject control characters in the policy path and fail
+closed when the host is not Darwin, the sandbox executable is missing or not a
+regular file, or any sandboxed command fails.
+
+This sandbox applies only to the build runner. Do not alter
+`execute_approved_mutation`: Cockpit/OMO-approved writes continue to use their
+exact target, registered write ceiling, CAS, atomic replace, and rollback
+contract.
+
+Add tests that inspect all four wrapped commands, prove unavailable sandbox
+conditions fail closed, and on macOS execute a real sandboxed child that cannot
+create or modify a file under the test Documents root.
+
 - [ ] **Step 5: Run focused, full Python, and formatting verification**
 
 ```bash
@@ -3117,6 +3152,7 @@ cd "$OWNED_ROOT/projects/family-hub"
 uv run python -m family_hub.dashboard_phase_b verify-runtime \
   --documents-root /Users/xiamingxing/Documents/@家庭生活 \
   --state-root /Users/xiamingxing/Workspace/runtime/family-hub/dashboard \
+  --expected-fingerprint "$EXPECTED_FINGERPRINT" \
   --json | tee "../../.omo/evidence/$RUN_ID/family-dashboard-runtime-verify.json"
 ```
 
