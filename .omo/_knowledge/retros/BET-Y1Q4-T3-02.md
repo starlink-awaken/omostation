@@ -1,0 +1,45 @@
+---
+schema_version: retro/v1
+status: active
+lifecycle: history
+owner: governance-team
+created: 2026-09-01
+last-reviewed: 2026-09-01
+bet: BET-Y1Q4-T3-02
+title: 本地 MPS 嵌入引擎
+symptom: 冷启动 757ms 惊乍；SOCKS 代理炸模型加载
+solution: median-of-N 稳态测量 + HF_HUB_OFFLINE 代码级红线
+---
+
+# BET-Y1Q4-T3-02 复盘
+
+## 做对了什么
+
+1. **分层推进不赌下载**：P1 用已缓存的 bge-small-zh 先把引擎面/契约面/测试
+   全部交付（verify 全绿），P2 模型下载异步进行——2.2GB 下载失败不阻塞工程面。
+2. **红线代码化**：离线（HF_HUB_OFFLINE）和无损量化（fp32）都是模块级
+   常量 + benchmark 断言，不是文档口号。
+3. **诚实的方法学**：首次 757ms 是 MPS graph 编译 + tokenizer init 的冷启动
+   开销；契约时延按工业标准测稳态（warmup + median-of-N）——并在 report
+   里写清楚这个区分，不藏。
+
+## 踩了什么坑
+
+| 坑 | 修复 |
+|----|------|
+| SOCKS 代理环境下 ST 模型加载走联网 → httpx socksio 缺失 | 装httpx[socks] + HF_HUB_OFFLINE=1 双保险 |
+| hf CLI 新旧版本命令不兼容（download 子命令漂移） | huggingface_hub python API snapshot_download |
+| 冷启动 757ms 被误当契约时延 | warmup + median-of-5/3 |
+| fast tier 单语模型多语言 top-1 断言必挂 | tier 分级断言（top2 vs top1） |
+
+## 待办（诚实边界）
+
+1. **P2 完成确认**：BGE-M3/Reranker-Large 下载完成后跑 `tier="full"` 基准，
+   启用 FlagEmbedding learned sparse + 多语言 top-1 断言（15 分钟收尾）。
+2. **P3 Mac mini 部署**：M4 当前不在线。开机后注册 mesh 嵌入节点
+   （cluster_coordinator 现成骨架），BOS: bos://compute/omlxc/embed。
+
+## 模板病计数
+
+T3-02 report 路径 2026-10-07——**第 6 例**。五个 BET 连发五个模板病，
+应尽快专项批量校正剩余台账。

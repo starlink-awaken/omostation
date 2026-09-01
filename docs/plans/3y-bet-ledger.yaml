@@ -17071,7 +17071,8 @@ bets:
   title: BGE-M3 / Qwen-Embedding 本地 Metal MPS 硬件加速与毫秒级 Rerank 引擎
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-01
   goal: 彻底替换对外部公有向量 API 的依赖，在 MBP M5 Max 与 Mac mini M4 上部署 BGE-M3 多语言多粒度嵌入与 BGE-Reranker-Large 本地模型，利用 Apple Silicon MPS Graph 深度优化推理延迟。
   non_goals:
   - 不使用损失精度的极低量化向量模型
@@ -17103,6 +17104,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:6e6425abcacb39d3e42032ec1332b0b74e68e344c9a3dac4d31ee2ea64b8da6f
     decision_ref: decision://accepted/BET-Y1Q4-T3-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@8ac2135387705b3baac8c7d6f29c5d7f9cce83d3
+          tests:
+            ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
+            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md
+            sha256: sha256:6e6425abcacb39d3e42032ec1332b0b74e68e344c9a3dac4d31ee2ea64b8da6f
+          rollback:
+            ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
+            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
+            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
+            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+          replay:
+            ref: receipt://tests/test_embedding_mps.py
+            sha256: sha256:0f40de2b30f8cef8e3c2ec3afaa0b4f28d72050643bade404abafb199ec0fa79
+          cleanup:
+            ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
+            sha256: sha256:643d21adaa09106f07cc72d1c9ce0316cfb59ec62f732adaac9cbaba659e3957
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T3-03
   track: T3-COGNI
   window: Y1Q4
