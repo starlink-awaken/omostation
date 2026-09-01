@@ -870,3 +870,16 @@ ops-template-show:  ## 显示模板详情
 
 ops-template-apply:  ## 应用模板创建服务
 	python3 bin/ops/templates.py apply
+
+# ── Git Hooks 安装 ──────────────────────────────────────────────────────────────
+
+install-hooks:  ## 安装 Git hooks (.githooks/ → .git/hooks/)
+	@mkdir -p .git/hooks
+	cp .githooks/pre-commit .git/hooks/pre-commit
+	cp .githooks/pre-push .git/hooks/pre-push
+	cp .githooks/commit-msg .git/hooks/commit-msg
+	cp .githooks/post-commit .git/hooks/post-commit
+	cp .githooks/prepare-commit-msg-commit-assist .git/hooks/prepare-commit-msg
+	cp .githooks/pre-edit-architecture.sh .git/hooks/pre-edit-architecture
+	chmod +x .git/hooks/pre-commit .git/hooks/pre-push .git/hooks/commit-msg .git/hooks/post-commit .git/hooks/prepare-commit-msg .git/hooks/pre-edit-architecture
+	@echo "✅ Git hooks installed (including pre-edit-architecture)"

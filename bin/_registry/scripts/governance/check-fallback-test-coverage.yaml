@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/gac/check-fallback-test-coverage.py
+name: Check Fallback Test Coverage
+category: governance
+owner: governance-team
+description: "CR-P77-6-2: 层级 fallback 测试覆盖检查 (advisory)"
+inputs: []
+outputs:
+  - type: exit_code
+dependencies: []
+triggers:
+  - ci_gate
+related:
+  - CR-P77-6-2
+maturity: active
+last_reviewed: "2026-09-01"

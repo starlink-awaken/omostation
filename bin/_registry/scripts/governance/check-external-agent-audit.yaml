@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/gac/check-external-agent-audit.py
+name: Check External Agent Audit
+category: governance
+owner: governance-team
+description: "CR-X1-EXTERNAL-AGENT-AUDIT: 外部 agent 审计检查 (advisory)"
+inputs: []
+outputs:
+  - type: exit_code
+dependencies: []
+triggers:
+  - ci_gate
+related:
+  - CR-X1-EXTERNAL-AGENT-AUDIT
+maturity: active
+last_reviewed: "2026-09-01"

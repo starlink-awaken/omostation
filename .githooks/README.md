@@ -20,13 +20,25 @@ commit 前依次运行:
 （commit → push 拒 → reset 循环，2026-08-29 实测）。此 hook 在本地 main 上拦截
 该类提交，引导走 worktree+PR（如 #2519）。逃生口: `SWARM_ESCAPE_ID=<id>` (D4)。
 
+## pre-edit-architecture — 架构感知预编辑钩子 (Phase 8)
+
+编辑架构相关文件前自动检查合规性:
+- 场景卡生命周期 (5 级门控 + promotion_evidence)
+- Journey 规范 (状态机 + initial_state)
+- 架构标准一致性 (调用 architecture-check.py)
+- Harness 策略合规 (调用 harness-compliance-check.py)
+
+**触发条件**: 编辑 `docs/scene-cards/`, `docs/journey-specs/`, `.omo/standards/`, `bin/harness` 时
+
+**逃生口**: `SKIP_PRE_EDIT_ARCH=1 git commit ...`
+
 ## 安装 (新 clone 必跑)
 
 ```bash
 make install-hooks
 ```
 
-从 `.githooks/pre-push` / `.githooks/pre-commit` 复制到 `.git/hooks/`。
+从 `.githooks/` 复制所有 hook 到 `.git/hooks/` (包括 pre-edit-architecture)。
 
 同步逻辑 SSOT：[`bin/ssot/sync-submodules-push.sh`](../bin/ssot/sync-submodules-push.sh)  
 兼容入口：[`bin/sync-submodules-push.sh`](../bin/sync-submodules-push.sh)（薄 wrapper）。  
