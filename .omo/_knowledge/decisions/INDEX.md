@@ -277,6 +277,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0196 | omo acl plan --acl 命名 ACE 干跑 | ACCEPTED | 2026-07-15 | governance-team | 0196-omo-acl-plan-named-ace.md |
 | STRAT-P76 | P76 战略 5-phase 路线图 (12周) | ACCEPTED | 2026-07-07 | governance-team | STRAT-P76-strategic-roadmap.md |
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
+| 0443 | 产出/收敛平衡框架 | ACCEPTED | 2026-08-30 | xiamingxing | 0443-production-convergence-balance-framework.md |
 | 0444 | 自进化 Harness 异构生态收束 | ACCEPTED | 2026-08-31 | xiamingxing | 0444-self-evolving-harness.md |
 
 ---

@@ -65,6 +65,28 @@ def test_parse_index_handcrafted_minimal():
     assert "2026-07-06.md" not in data["adrs"]
 
 
+def test_check_coverage_treats_signal_numbers_as_retired(adr_coverage, tmp_path: Path):
+    """ADR-0443: a draft moved to signals retires its old number without creating a decisions gap."""
+    decisions = tmp_path / "decisions"
+    signals = tmp_path / "signals"
+    decisions.mkdir()
+    signals.mkdir()
+    frontmatter = "---\nstatus: accepted\nlifecycle: spec\nowner: test\nlast-reviewed: 2026-08-31\n---\n"
+    (decisions / "0001-first.md").write_text(f"{frontmatter.replace('---\\n', '---\\nid: ADR-0001\\n', 1)}# first\n")
+    (decisions / "0003-third.md").write_text(f"{frontmatter.replace('---\\n', '---\\nid: ADR-0003\\n', 1)}# third\n")
+    (signals / "0002-retired-draft.md").write_text("---\nid: ADR-0002\n---\n# signal only\n")
+    (signals / "2026-08-30-note.md").write_text(
+        "---\nid: signal://evolution/date-note\n---\n# date-prefixed signal\n"
+    )
+    index = decisions / "INDEX.md"
+    index.write_text("0001-first.md\n0003-third.md\n")
+
+    result = adr_coverage.check_coverage(decisions, index)
+
+    assert result["retired_signal_numbers"] == [2]
+    assert result["missing_numbers"] == []
+
+
 def _parse_text(mod, text: str):
     """Wrap parse_index to accept string instead of path."""
     import tempfile

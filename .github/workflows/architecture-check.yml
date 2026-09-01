@@ -13,6 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: false
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - name: Initialize architecture check consumers
+        env:
+          CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+        run: |
+          auth_header="$(printf 'x-access-token:%s' "$CROSS_REPO_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth_header" submodule update --init projects/ecos projects/cockpit projects/family-hub projects/aetherforge projects/omlxc projects/runtime projects/metaos
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

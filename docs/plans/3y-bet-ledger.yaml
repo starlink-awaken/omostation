@@ -10962,8 +10962,7 @@ bets:
   title: Exact Capability Binding 与 native asset receipt 消费收敛
   appetite: 5 days
   priority: P0
-  status: done
-  done_at: 2026-08-31
+  status: candidate
   started_at: 2026-08-24
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact find-load、OMO admission/dispatch 与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误 admission、平行 dispatch 和执行回执冒充个人价值。
   non_goals:
@@ -11100,38 +11099,15 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@837ea8b5b4831a8c5e7f5868c344ae323091def8
-          tests:
-            ref: repo://tests/test_capability_native_inspection.py
-            sha256: sha256:a67e950b13e50f89db92b5f0964022694597f24e60e0be8b19f3c3e85f3b6399
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:d2dcd4da777c2abd64d1e68321033a382456f646a427f4175f8bd901f23b1366
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:d2dcd4da777c2abd64d1e68321033a382456f646a427f4175f8bd901f23b1366
+        status: IN_PROGRESS
+        evidence: {}
       operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://docs/reports/2026-08-26-capability-binding-canary.md
-            sha256: sha256:1680c12826c2bb092a0ba3343c2d47a5585870a4fb33c54cd078115ec4b2f8f6
-          fresh_receipt:
-            ref: receipt://docs/reports/2026-08-29-binding-canary.json
-            sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:d2dcd4da777c2abd64d1e68321033a382456f646a427f4175f8bd901f23b1366
-          cleanup:
-            ref: receipt://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
-            sha256: sha256:41b7175076f14129b5e62989042f2f97d5f2b6ffb60cdd3a0ac9d60c27c0267a
+        status: NOT_PROVEN
+        evidence: {}
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: delivery_accepted
+    overall_state: evaluating
   value_indicator_policy: false
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
@@ -11221,6 +11197,9 @@ bets:
   - lib/capability_mcp_server_load.py
   - tests/test_capability_mcp_server_load.py
   - lib/capability_sync_verification_helpers.py
+  - projects/agora/src/agora/server/mcp.py
+  - projects/agora/tests/test_mcp_stdio_inventory_probe.py
+  - projects/agora/.github/workflows/ci.yml
   pasw_required: false
   depends_on:
   - BET-Y1Q3-T4-01
@@ -12411,7 +12390,19 @@ bets:
   - .omo/_truth/governance-evidence/waiver-2026-08-28-product-p0-spec-bootstrap.md
   - .omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md
   - .omo/_knowledge/decisions/INDEX.md
+  - .omo/_knowledge/decisions/0401-unhealthy-service.md
+  - .omo/_knowledge/signals/README.md
+  - .omo/_knowledge/signals/2026-08-30-unhealthy-service.md
+  - bin/adr/adr-coverage.py
+  - tests/test_adr_coverage_regex.py
+  - bin/ssot/proposal-to-adr.py
+  - tests/unit/ssot/test_proposal_to_adr_status.py
   - .github/workflows/gac-gate.yml
+  - .github/workflows/architecture-check.yml
+  - tests/test_architecture_workflow.py
+  - bin/gac/architecture-check.py
+  - tests/test_architecture_check.py
+  - docs/generated/capability-registry.yaml
   - .omo/_truth/registry/ci-surfaces.yaml
   - bin/gac/gac-branch-protection.sh
   - bin/gac/gac-local-gate.py

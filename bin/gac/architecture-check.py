@@ -10,7 +10,8 @@
 
 用法:
   python3 bin/gac/architecture-check.py              # 校验, exit 0=pass, 1=有错
-  python3 bin/gac/architecture-check.py --gate       # CI gate 模式 (warning 也 fail)
+  python3 bin/gac/architecture-check.py --gate       # CI gate (error/structural warning fail)
+  python3 bin/gac/architecture-check.py --strict     # 严格模式 (warning 也 fail)
   python3 bin/gac/architecture-check.py --json       # JSON 输出 (仪表盘数据源)
   python3 bin/gac/architecture-check.py --report     # 详细报告
 
@@ -20,6 +21,7 @@ CI 可移植: Path(__file__).resolve().parents[2] 定位 workspace (无硬编码
 from __future__ import annotations
 
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -32,7 +34,11 @@ STANDARDS = {
     "dimension_system": WORKSPACE / ".omo" / "standards" / "dimension-system.yaml",
     "value_loop": WORKSPACE / ".omo" / "standards" / "value-loop-standard.yaml",
     "ssot_index": WORKSPACE / ".omo" / "standards" / "architecture-ssot-index.yaml",
+    "anti_corrosion_budget": WORKSPACE / ".omo" / "standards" / "anti-corrosion-budget.yaml",
 }
+
+# ── Harness 策略路径 ──
+HARNESS_POLICY = WORKSPACE / ".omo" / "_truth" / "registry" / "harness-policy.yaml"
 
 # ── 核心文档路径 (SSOT 索引声明) ──
 CORE_DOCS = {
@@ -66,7 +72,7 @@ def check_scene_card_lifecycle(data: dict | None) -> tuple[list[str], list[str]]
     warnings: list[str] = []
 
     if data is None:
-        return [f"scene-card-lifecycle.yaml 不存在或无法解析"], []
+        return ["scene-card-lifecycle.yaml 不存在或无法解析"], []
 
     lifecycle = data.get("lifecycle", {})
     if not lifecycle:
@@ -149,16 +155,11 @@ def check_dimension_system(data: dict | None) -> tuple[list[str], list[str]]:
         if x not in dimensions:
             errors.append(f"dimensions 缺少治理维度 {x}")
 
-    # 业务维度 D1-D9
+    # 业务/运营维度 D1-D8（dimension-system v2.0.0 官方 12 维度）
     for d in ["D1_scene", "D2_function", "D3_journey", "D4_experience",
-              "D5_vision", "D6_operations", "D7_maintenance"]:
+              "D5_vision", "D6_operations", "D7_maintenance", "D8_harness"]:
         if d not in dimensions:
             errors.append(f"dimensions 缺少业务维度 {d}")
-
-    # 新增维度 D8-D11
-    for d in ["D8_anticorrosion", "D9_constraint", "D10_evolution", "D11_trust"]:
-        if d not in dimensions:
-            warnings.append(f"dimensions 缺少新增维度 {d}")
 
     # 度量框架
     framework = data.get("measurement_framework", {})
@@ -261,6 +262,147 @@ def check_ssot_index(data: dict | None) -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
+def check_harness_policy() -> tuple[list[str], list[str]]:
+    """检查 harness-policy.yaml 合规性 (12 章节完整性 + 实现率)."""
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if not HARNESS_POLICY.exists():
+        return ["harness-policy.yaml 不存在"], []
+
+    data = _load_yaml(HARNESS_POLICY)
+    if not data:
+        return ["harness-policy.yaml 无法解析"], []
+
+    # 检查 12 章节完整性
+    expected_sections = [
+        "admission", "spec", "execution", "verify",
+        "audit", "accept", "probes", "dimensions",
+        "value_loop", "known_debt", "observability", "rollout",
+    ]
+
+    for section in expected_sections:
+        if section not in data:
+            warnings.append(f"缺少章节: {section}")
+
+    # 检查 SFOP S 槽位声明
+    harness = data.get("harness", {})
+    if harness.get("sfop_slot") != "S":
+        warnings.append("harness sfop_slot 应为 S")
+    if harness.get("controller") != "COMP-WS-omo":
+        warnings.append("harness controller 应为 COMP-WS-omo")
+
+    # 检查实现率 (声明 vs 实际): harness run 应该调用 agent-workflow。
+    entry = harness.get("entry", "")
+    if "harness run" in entry:
+        entry_name = entry.split()[0]
+        candidates = (WORKSPACE / entry_name, WORKSPACE / "bin" / entry_name)
+        entry_path = next((path for path in candidates if path.is_file()), candidates[0])
+        try:
+            entry_source = entry_path.read_text(encoding="utf-8")
+        except OSError:
+            warnings.append(f"harness entry 不可读: {entry_path.relative_to(WORKSPACE)}")
+        else:
+            if "bin/agent-workflow.py" not in entry_source:
+                warnings.append("harness run 应内部调用 agent-workflow")
+
+    return errors, warnings
+
+
+def check_runtime_consistency() -> tuple[list[str], list[str]]:
+    """运行时一致性检查: SFOP S 槽位唯一性."""
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    # 检查 SFOP S 槽位唯一性
+    sfop_check = Path(__file__).parent / "check-sfop-slots.py"
+    if sfop_check.exists():
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, str(sfop_check), "--json"],
+            capture_output=True, text=True, cwd=str(WORKSPACE),
+        )
+        if result.returncode != 0:
+            # 解析输出检查 S 槽位
+            if "S" in result.stdout and "unique" in result.stdout.lower():
+                warnings.append("SFOP S 槽位唯一性检查失败")
+
+    return errors, warnings
+
+
+def check_anti_corrosion_budget(data: dict | None) -> tuple[list[str], list[str]]:
+    """检查防腐预算合规性."""
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if data is None:
+        return ["anti-corrosion-budget.yaml 不存在或无法解析"], []
+
+    budgets = data.get("budgets", {})
+    if not budgets:
+        errors.append("budgets 节点缺失")
+        return errors, warnings
+
+    # 检查各项预算
+    for budget_name, budget_info in budgets.items():
+        if not isinstance(budget_info, dict):
+            continue
+        raw_max_count = budget_info.get("max_count", 0)
+        raw_current = budget_info.get("current", 0)
+        raw_alert_threshold = budget_info.get("alert_threshold", 0.9)
+
+        def as_number(value: object) -> float | None:
+            if isinstance(value, bool):
+                return None
+            if isinstance(value, (int, float)):
+                number = float(value)
+                return number if math.isfinite(number) else None
+            if isinstance(value, str):
+                candidate = value.strip().removeprefix("~").strip()
+                try:
+                    number = float(candidate)
+                except ValueError:
+                    return None
+                return number if math.isfinite(number) else None
+            return None
+
+        max_count = as_number(raw_max_count)
+        current = as_number(raw_current)
+        alert_threshold = as_number(raw_alert_threshold)
+        invalid = False
+        for field, raw_value, parsed in (
+            ("max_count", raw_max_count, max_count),
+            ("current", raw_current, current),
+            ("alert_threshold", raw_alert_threshold, alert_threshold),
+        ):
+            if parsed is None:
+                errors.append(f"{budget_name}: {field} 必须是数值，实际为 {raw_value!r}")
+                invalid = True
+        if invalid:
+            continue
+        assert max_count is not None and current is not None and alert_threshold is not None
+        if max_count < 0:
+            errors.append(f"{budget_name}: max_count 必须大于等于 0，实际为 {raw_max_count!r}")
+            continue
+        if current < 0:
+            errors.append(f"{budget_name}: current 必须大于等于 0，实际为 {raw_current!r}")
+            continue
+        if not 0 <= alert_threshold <= 1:
+            errors.append(
+                f"{budget_name}: alert_threshold 必须在 0 到 1 之间，实际为 {raw_alert_threshold!r}"
+            )
+            continue
+
+        if current > max_count:
+            errors.append(f"{budget_name}: 当前 {raw_current} 超出预算 {raw_max_count}")
+        elif current > max_count * alert_threshold:
+            warnings.append(
+                f"{budget_name}: 当前 {raw_current} 接近预算 {raw_max_count} (阈值 {alert_threshold:.0%})"
+            )
+
+    return errors, warnings
+
+
 def validate() -> tuple[int, list[str], list[str], dict]:
     """主校验. 返回 (exit_code, errors, warnings, details)."""
     all_errors: list[str] = []
@@ -273,31 +415,72 @@ def validate() -> tuple[int, list[str], list[str], dict]:
         ("dimension_system", check_dimension_system),
         ("value_loop", check_value_loop),
         ("ssot_index", check_ssot_index),
+        ("anti_corrosion_budget", check_anti_corrosion_budget),
     ]
 
     for name, check_fn in checks:
-        path = STANDARDS[name]
-        data = _load_yaml(path)
+        path = STANDARDS.get(name)
+        if path:
+            data = _load_yaml(path)
+        else:
+            data = None
         errs, warns = check_fn(data)
         details[name] = {
-            "path": str(path.relative_to(WORKSPACE)),
-            "exists": path.exists(),
+            "path": str(path.relative_to(WORKSPACE)) if path else "N/A",
+            "exists": path.exists() if path else False,
             "errors": errs,
             "warnings": warns,
         }
         all_errors.extend(errs)
         all_warnings.extend(warns)
 
+    # Harness 策略检查 (独立)
+    errs, warns = check_harness_policy()
+    details["harness_policy"] = {
+        "path": str(HARNESS_POLICY.relative_to(WORKSPACE)),
+        "exists": HARNESS_POLICY.exists(),
+        "errors": errs,
+        "warnings": warns,
+    }
+    all_errors.extend(errs)
+    all_warnings.extend(warns)
+
+    # 运行时一致性检查
+    errs, warns = check_runtime_consistency()
+    details["runtime_consistency"] = {
+        "path": "runtime",
+        "exists": True,
+        "errors": errs,
+        "warnings": warns,
+    }
+    all_errors.extend(errs)
+    all_warnings.extend(warns)
+
     return (1 if all_errors else 0, all_errors, all_warnings, details)
+
+
+def result_exit_code(errors: list[str], warnings: list[str], *, gate: bool, strict: bool) -> int:
+    """Map findings to status while keeping budget alerts advisory in CI."""
+
+    if errors:
+        return 1
+    if strict and warnings:
+        return 1
+    if gate:
+        blocking_warnings = [warning for warning in warnings if "接近预算" not in warning]
+        if blocking_warnings:
+            return 1
+    return 0
 
 
 def main() -> int:
     args = sys.argv[1:]
     gate_mode = "--gate" in args
+    strict_mode = "--strict" in args
     json_mode = "--json" in args
     report_mode = "--report" in args
 
-    exit_code, errors, warnings, details = validate()
+    _exit_code, errors, warnings, details = validate()
 
     if json_mode:
         print(json.dumps(
@@ -310,7 +493,7 @@ def main() -> int:
             ensure_ascii=False,
             indent=2,
         ))
-        return 1 if (gate_mode and (errors or warnings)) else exit_code
+        return result_exit_code(errors, warnings, gate=gate_mode, strict=strict_mode)
 
     print("=== Architecture Check (架构合规校验) ===")
     print(f"校验标准数: {len(STANDARDS)}")
@@ -321,7 +504,7 @@ def main() -> int:
         rel_path = detail["path"]
         print(f"[{status}] {name} ({rel_path})")
         if not detail["exists"]:
-            print(f"  ⚠️  文件不存在")
+            print("  ⚠️  文件不存在")
         for e in detail["errors"]:
             print(f"  ❌ {e}")
         for w in detail["warnings"]:
@@ -341,9 +524,7 @@ def main() -> int:
     if not errors and not warnings:
         print("✅ Architecture Check 通过 (0 error, 0 warning)")
 
-    if gate_mode and (errors or warnings):
-        return 1
-    return exit_code
+    return result_exit_code(errors, warnings, gate=gate_mode, strict=strict_mode)
 
 
 if __name__ == "__main__":

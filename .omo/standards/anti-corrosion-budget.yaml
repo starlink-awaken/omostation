@@ -3,26 +3,74 @@
 # 防腐预算控制标准，限制规则/脚本/场景卡的增长.
 #
 # SSOT: .omo/standards/anti-corrosion-budget.yaml
-# Version: 1.0.0 | 2026-08-31
+# Version: 2.0.0 | 2026-08-31
 
 schema: anti-corrosion-budget/v1
 
+# 预算定义
 budgets:
+  # 治理规则 (GaC)
   governance_rules:
     max_count: 85
-    alert_threshold: 0.9  # 90% 触发告警
+    current: 81
+    alert_threshold: 0.9  # 90% (76 条) 触发告警
+    actions:
+      warn: "规则接近预算上限，建议合并或退役"
+      halt: "规则超出预算，禁止新增除非同步删除"
 
+  # Bin 脚本
   bin_scripts:
     max_count: 560
-    alert_threshold: 0.95
+    current: ~400
+    alert_threshold: 0.95  # 532 条触发告警
+    actions:
+      warn: "脚本接近预算上限，建议归档旧脚本"
+      halt: "脚本超出预算，禁止新增除非同步归档"
 
+  # Harness 脚本 (新增独立预算)
+  harness_scripts:
+    max_count: 20
+    current: 1
+    alert_threshold: 0.8  # 16 条触发告警
+    actions:
+      warn: "Harness 脚本接近上限"
+      halt: "Harness 脚本超出预算"
+
+  # 场景卡
   scene_cards:
     max_count: 100
-    alert_threshold: 0.8
+    current: 63
+    alert_threshold: 0.8  # 80 张触发告警
+    actions:
+      warn: "场景卡接近上限，建议合并相似场景"
+      halt: "场景卡超出预算，禁止新增除非同步合并"
 
+# 自动防腐
 auto_fix:
   enabled: true
   rules:
-    - "过期场景卡自动降级"
-    - "重复脚本自动归档"
-    - "漂移文档自动标记"
+    - name: "过期场景卡自动降级"
+      trigger: "scene_card 90天未升级"
+      action: "降级到上一 lifecycle 级别"
+    - name: "重复脚本自动归档"
+      trigger: "脚本功能重复度 > 0.8"
+      action: "归档重复脚本到 _archive/"
+    - name: "漂移文档自动标记"
+      trigger: "文档与 SSOT 不一致"
+      action: "标记为 stale 并通知 owner"
+    - name: "规则自动退役"
+      trigger: "规则 180 天未触发"
+      action: "标记为 candidate_retirement"
+
+# 表面积监控
+surface_monitoring:
+  # 每周检查表面积增长
+  weekly_check: true
+  # 净增长必须 ≤ 0 (只减不增)
+  net_growth_target: 0
+  # 增长来源追踪
+  track_sources:
+    - "新增脚本"
+    - "新增规则"
+    - "新增场景卡"
+    - "新增文档"
