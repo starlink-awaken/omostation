@@ -13,7 +13,7 @@ totals:
   mcp_servers: 27
   mcp_tools: 290
   bos_services: 295
-  bos_domains: 23
+  bos_domains: 22
   cli_commands: 194
   skills: 4
   workflows: 19
@@ -535,13 +535,12 @@ bos_services:
     bcos: 3
     capability: 44
     cockpit: 7
-    compliance: 1
     compute: 17
     ecos: 10
     fabric: 1
     forge: 1
     governance: 70
-    harness: 5
+    harness: 6
     l4-kernel: 1
     memory: 47
     meta: 1
@@ -991,11 +990,6 @@ bos_services:
       description: Cockpit/Spine 触发 Mac mini M4 闲时在线 LoRA 蒸馏
       transport: stdio
       status: active
-    compliance:
-    - uri: bos://compliance/full
-      description: 全量合规检查 (arch + compliance + mof + omo)
-      transport: stdio
-      status: active
     compute:
     - uri: bos://compute/aetherforge/infer
       description: AetherForge 算力网关与 omlxc (Apple MLX/Local LLM) 本地量化模型通用推理调度端点
@@ -1416,6 +1410,10 @@ bos_services:
       status: active
     - uri: bos://harness/architecture/perceive
       description: Harness 架构感知预编辑检查 (场景卡/Journey/标准/Harness)
+      transport: stdio
+      status: active
+    - uri: bos://harness/compliance/full
+      description: 全量合规检查 (arch + compliance + mof + omo)
       transport: stdio
       status: active
     l4-kernel:
