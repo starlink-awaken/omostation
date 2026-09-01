@@ -876,6 +876,49 @@ def explain_impl(args):
     return 0
 
 
+def gac_proxy(args):
+    """Harness 收敛 bin/gac/*：单一入口代理 (P4)."""
+    gac_dir = WS / "bin/gac"
+    # --list 模式
+    if getattr(args, "list", False) or not args.gac_cmd:
+        scripts = sorted(gac_dir.glob("*.py"))
+        print("harness gac --list: available gac commands (proxied via harness)")
+        for s in scripts:
+            name = s.stem
+            # 去掉 gac- 前缀展示简名，去掉 .py
+            short = name[4:] if name.startswith("gac-") else name
+            print(f"  {short:30} -> bin/gac/{name}.py")
+        print(f"\nTotal: {len(scripts)} scripts. Usage: harness gac <cmd> [args]")
+        print("Example: harness gac validate --gate  ==  python3 bin/gac/gac-validate.py --gate")
+        return 0
+
+    cmd_name = args.gac_cmd
+    gac_args = getattr(args, "gac_args", []) or []
+    # 候选路径：优先 gac-<name>.py，其次 <name>.py
+    candidates = [
+        gac_dir / f"gac-{cmd_name}.py",
+        gac_dir / f"{cmd_name}.py",
+        gac_dir / f"gac_{cmd_name}.py",
+    ]
+    script = next((p for p in candidates if p.exists()), None)
+    # 也尝试直接匹配 stem 忽略前缀
+    if not script:
+        for p in gac_dir.glob("*.py"):
+            if p.stem == cmd_name or p.stem == f"gac-{cmd_name}":
+                script = p
+                break
+
+    if not script or not script.exists():
+        print(f"harness gac: unknown command '{cmd_name}'", file=sys.stderr)
+        print(f"  try: harness gac --list", file=sys.stderr)
+        return 2
+
+    print(f"harness gac {cmd_name} -> {script.relative_to(WS)} {' '.join(gac_args)}")
+    # 透传执行，继承 stdio
+    result = subprocess.run(["python3", str(script)] + gac_args, cwd=str(WS))
+    return result.returncode
+
+
 # ── CLI ──
 def main():
     p = argparse.ArgumentParser(description="Harness 8-stage DAG controller (P3 strong perception + self-evolution)")
@@ -926,6 +969,12 @@ def main():
     pc = sub.add_parser("closeout", help="L0/L1/L2 acceptance")
     pc.add_argument("--bet", required=True)
     pc.add_argument("--level", choices=["L0", "L1", "L2"], default="L0")
+    # ── P4: gac 收敛为 harness 子调用 (bin/gac/* 统一入口) ──
+    pgac = sub.add_parser("gac", help="Proxy bin/gac/* via harness (single entry)")
+    pgac.add_argument("gac_cmd", nargs="?", default="", help="gac subcommand (validate/drift/gate/healthcheck etc) or --list")
+    pgac.add_argument("gac_args", nargs=argparse.REMAINDER, help="args forwarded to gac script")
+    pgac.add_argument("--list", action="store_true", help="list available gac commands")
+
     prt = sub.add_parser("retro", help="Retro clustering -> auto BET (self-evolution)")
     prt.add_argument("--auto-bet", action="store_true", help="every 10 BETs -> cluster -> ledger add")
     prt.add_argument("--dry-run", action="store_true", help="preview without creating BET")
