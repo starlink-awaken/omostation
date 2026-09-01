@@ -17203,7 +17203,8 @@ bets:
   title: 标准红头公文排版 DOCX、高管技术汇报 PPT 与矢量图表一键生成导出
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-01
   goal: 构建专业排版引擎，将初稿 Markdown 一键渲染为符合国家党政机关公文格式标准（GB/T 9704-2012）的红头 DOCX/PDF，以及高管汇报风格的 16:9 技术方案 PPTX 与高保真矢量架构图。
   non_goals:
   - 不做未经模板校验的非标随意排版
@@ -17221,7 +17222,7 @@ bets:
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/render.py
   - projects/cockpit/src/cockpit/renderers/gov_docx.py
-  - docs/reports/2026-10-11-gov-docx-pptx-render.md
+  - docs/reports/2026-09-01-gov-docx-pptx-render.md
   - .omo/_knowledge/retros/BET-Y1Q4-T8-03.md
   pasw_required: false
   depends_on:
@@ -17230,6 +17231,48 @@ bets:
   human_gate: false
   circuit_breaker: 模板解析异常时自动降级输出标准干净 Markdown 与普通 PDF。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-01-t8-03-gov-docx-pptx-render-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:bd22e0fbe433584f9cccbdcf9c313cead95f5a8445fecb8374e8f547631c171c
+    decision_ref: decision://accepted/BET-Y1Q4-T8-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@94979ee48a4ed949ef174648d90cfe224299c2da
+          tests:
+            ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
+            sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-01-t8-03-gov-docx-pptx-render-design.md
+            sha256: sha256:bd22e0fbe433584f9cccbdcf9c313cead95f5a8445fecb8374e8f547631c171c
+          rollback:
+            ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
+            sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
+            sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
+            sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
+          replay:
+            ref: receipt://tests/test_render_formats.py
+            sha256: sha256:80458df949609c71e021cfaa707a0cfdd979c6b73289685f6af12a3a7983fe00
+          cleanup:
+            ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
+            sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T10-01
   track: T10-MATURITY
   window: Y1Q4
