@@ -11,11 +11,11 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 290
-  bos_services: 295
+  mcp_tools: 634
+  bos_services: 298
   bos_domains: 22
-  cli_commands: 194
-  skills: 4
+  cli_commands: 200
+  skills: 5
   workflows: 19
 mcp_servers:
 - id: omo
@@ -23,9 +23,31 @@ mcp_servers:
   layer: L2
   file: projects/omo/src/omo/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - acquire_lock
+  - agent_host_tick
+  - cards_check
+  - cards_create
+  - cards_search
+  - cards_status
+  - cards_update
+  - check_gac_rule
+  - check_lock
+  - journey_run_dag
+  - list_locks
+  - omo_bridge
+  - omo_debt_list
+  - omo_debt_summary
+  - omo_gc
+  - omo_metacognition
+  - omo_worker_dispatch
+  - omo_worker_reclaim
+  - omo_yield_task
+  - release_lock
+  - scene_card_status
+  - validate_task
+  tool_count: 22
 - id: kos
   name: KOS Knowledge Retrieval
   layer: L2
@@ -135,12 +157,59 @@ mcp_servers:
   layer: L4
   file: projects/l4-kernel/src/l4_kernel/mcp_server.py
   transport: stdio/http/sse
-  exists: false
+  exists: true
   ports:
     http: 7455
     sse: 7456
-  tools: []
-  tool_count: 0
+  tools:
+  - l4_cards_check
+  - l4_cards_compliance
+  - l4_cards_get
+  - l4_cards_list
+  - l4_cards_search
+  - l4_claude_validate
+  - l4_config_read
+  - l4_contract_validate
+  - l4_cross_search
+  - l4_dashboard
+  - l4_domain_create
+  - l4_domain_freeze
+  - l4_domain_info
+  - l4_domain_migrate
+  - l4_domain_unfreeze
+  - l4_domain_validate
+  - l4_domains_list
+  - l4_engine_check
+  - l4_engine_logs
+  - l4_entrypoint_read
+  - l4_evolution_status
+  - l4_evolution_tasks
+  - l4_evolution_trigger
+  - l4_files_list
+  - l4_freshness
+  - l4_harness_run
+  - l4_health
+  - l4_kems_validate
+  - l4_memory_read
+  - l4_models_list
+  - l4_plugin_actions
+  - l4_plugin_run_action
+  - l4_plugin_run_mechanism
+  - l4_plugin_specs
+  - l4_plugin_workflows
+  - l4_reload
+  - l4_rules_read
+  - l4_search
+  - l4_signal_emit
+  - l4_signal_patterns
+  - l4_signals_list
+  - l4_state_read
+  - l4_status_read
+  - l4_storage_usage
+  - l4_timeline_list
+  - l4_tools_list
+  - l4_workspace_search
+  tool_count: 47
 - id: agora
   name: Agora Service Convergence Hub
   layer: I0
@@ -258,89 +327,239 @@ mcp_servers:
   layer: L0
   file: projects/ecos/src/ecos/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - domain_list
+  - domain_read
+  - domain_resolve
+  - domain_search
+  - domain_stats
+  - domain_tree
+  - domain_validate
+  - ecos_brief
+  - ecos_health
+  - ssot_check
+  - ssot_compile
+  - ssot_derive
+  - ssot_evolve
+  - ssot_extract
+  - ssot_stats
+  - ssot_sync
+  - workflow_actions
+  - workflow_backends
+  - workflow_cache_invalidate
+  - workflow_cache_status
+  - workflow_circuit_breaker_reset
+  - workflow_circuit_breaker_status
+  - workflow_list
+  - workflow_logs
+  - workflow_run
+  - workflow_show
+  - workflow_test
+  - workflow_validate
+  tool_count: 28
 - id: ecos-ssot
   name: eCOS L0 SSOT
   layer: L0
   file: projects/ecos/src/ecos/l0/ssot/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - check
+  - compile
+  - derive
+  - evolve
+  - extract_from_file
+  - handle_message
+  - ssot-kernel
+  - stats
+  - sync
+  tool_count: 9
 - id: ecos-integration
   name: eCOS Integration
   layer: L0
   file: projects/ecos/src/ecos/services/integration/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - bos_routes
+  - domain_list
+  - domain_read
+  - domain_resolve
+  - domain_search
+  - domain_stats
+  - domain_tree
+  - domain_validate
+  - ecos_brief
+  - ecos_health
+  - handle_bos_routes
+  - handle_domain_list
+  - handle_domain_stats
+  - handle_domain_tree
+  - handle_domain_validate
+  - handle_ecos_brief
+  - handle_ecos_health
+  - handle_read
+  - handle_resolve
+  - handle_search
+  - handle_workflow_list
+  - handle_workflow_relations
+  - handle_workflow_show
+  - workflow_list
+  - workflow_relations
+  - workflow_show
+  tool_count: 26
 - id: metaos
   name: MetaOS Orchestration
   layer: L2
   file: projects/metaos/src/metaos/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - handle_day
+  - handle_device_orchestrator
+  - handle_evening
+  - handle_family_brief
+  - handle_gate
+  - handle_health
+  - handle_morning
+  - handle_request
+  - handle_review
+  - handle_ssot
+  - handle_status
+  - handle_trace
+  - metaos-engine
+  - metaos_day
+  - metaos_device_orchestrator
+  - metaos_evening
+  - metaos_family_brief
+  - metaos_gate
+  - metaos_health
+  - metaos_morning
+  - metaos_review
+  - metaos_ssot
+  - metaos_status
+  - metaos_trace
+  tool_count: 24
 - id: aetherforge
   name: AetherForge Compute
   layer: X
   file: projects/aetherforge/src/aetherforge/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - forge_cost_report
+  - forge_fabric_compact
+  - forge_fabric_inspect
+  - forge_fabric_vram
+  - forge_fabric_warm
+  - forge_generate
+  - forge_generate_mesh
+  - forge_health_check
+  - forge_list_nodes
+  - forge_mesh_status
+  - forge_swarm_run
+  - forge_triage
+  - forge_triage_batch
+  - forge_triage_consensus
+  - forge_triage_status
+  tool_count: 15
 - id: aetherforge-gateway
   name: AetherForge LLM Gateway
   layer: X
   file: projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - gateway_generate
+  - gateway_health
+  - llm_generate
+  tool_count: 3
 - id: aetherforge-mesh
   name: AetherForge Compute Mesh
   layer: X
   file: projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - mesh_cost_report
+  - mesh_generate
+  - mesh_health_check
+  - mesh_list_nodes
+  - mesh_status
+  - mesh_wakeup
+  tool_count: 6
 - id: model-driven
   name: Model-Driven Lifecycle
   layer: M0
   file: projects/model-driven/src/model_driven/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - adr-create
+  - adr-list
+  - audit-record
+  - collab-assign
+  - collab-create
+  - collab-status
+  - cross-stage-check
+  - debt-register
+  - lifecycle-advance
+  - lifecycle-blockers
+  - lifecycle-create
+  - lifecycle-dashboard
+  - lifecycle-status
+  - model-execute
+  - model-tools
+  - okr-create
+  - okr-progress
+  - spec-create
+  - spec-list
+  - ssot-drift-check
+  - task-create
+  - trigger-dashboard
+  - trigger-derive
+  - trigger-drift
+  - trigger-heal
+  - trigger-list
+  - trigger-status
+  - value-roi
+  tool_count: 28
 - id: model-driven-fastmcp
   name: Model-Driven FastMCP
   layer: M0
   file: projects/model-driven/src/model_driven/fastmcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - model_tool_execute
+  - model_tools_list
+  tool_count: 2
 - id: c2g
   name: C2G Strategy Compass
   layer: X
   file: projects/omo/src/omo/_vendored/c2g/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - c2g_bet
+  - c2g_gc
+  - c2g_radar
+  tool_count: 3
 - id: family-hub
   name: Family Hub
   layer: X
   file: projects/family-hub/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - complete_quest
+  - create_quest
+  - generate_smart_quests
+  - get_active_quests
+  - get_health
+  - get_profiles
+  tool_count: 6
 - id: agent-runtime
   name: Cockpit Agent Runtime
   layer: L3
@@ -368,9 +587,59 @@ mcp_servers:
   layer: L1
   file: projects/runtime/src/runtime/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - handle_agent_chat
+  - handle_agent_execute
+  - handle_agent_list
+  - handle_agent_list_tools
+  - handle_agent_run_task
+  - handle_agent_status
+  - handle_agent_task_status
+  - handle_brief
+  - handle_cartridge_inspect
+  - handle_cartridge_list
+  - handle_documents_audit
+  - handle_documents_guardrails
+  - handle_domain_compliance_audit
+  - handle_governance_explain
+  - handle_governance_guardrails
+  - handle_governance_preflight
+  - handle_health
+  - handle_intent_compile
+  - handle_kv_get
+  - handle_matrix_list
+  - handle_ontology
+  - handle_pitfall_check
+  - handle_protocol_get
+  - handle_protocol_list
+  - handle_shadow_challenge
+  - runtime_agent_chat
+  - runtime_agent_execute
+  - runtime_agent_list
+  - runtime_agent_list_tools
+  - runtime_agent_run_task
+  - runtime_agent_status
+  - runtime_agent_task_status
+  - runtime_brief
+  - runtime_cartridge_inspect
+  - runtime_cartridge_list
+  - runtime_documents_audit
+  - runtime_documents_guardrails
+  - runtime_domain_compliance_audit
+  - runtime_governance_explain
+  - runtime_governance_guardrails
+  - runtime_governance_preflight
+  - runtime_health
+  - runtime_intent_compile
+  - runtime_kv_get
+  - runtime_matrix_list
+  - runtime_ontology_get
+  - runtime_pitfall_check
+  - runtime_protocol_get
+  - runtime_protocol_list
+  - runtime_shadow_challenge
+  tool_count: 50
 - id: iris
   name: Iris
   layer: L2
@@ -524,9 +793,84 @@ mcp_servers:
   layer: L2
   file: projects/knowledge/gbrain/src/core/operations/exports.ts
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - add_link
+  - add_tag
+  - add_timeline_entry
+  - cancel_job
+  - code_blast
+  - code_callees
+  - code_callers
+  - code_def
+  - code_flow
+  - code_refs
+  - code_traversal_cache_clear
+  - delete_page
+  - extract_facts
+  - file_list
+  - file_upload
+  - file_url
+  - find_anomalies
+  - find_contradictions
+  - find_experts
+  - find_orphans
+  - find_trajectory
+  - forget_fact
+  - get_backlinks
+  - get_brain_identity
+  - get_calibration_profile
+  - get_chunks
+  - get_health
+  - get_ingest_log
+  - get_job
+  - get_job_progress
+  - get_links
+  - get_page
+  - get_raw_data
+  - get_recent_salience
+  - get_recent_transcripts
+  - get_stats
+  - get_tags
+  - get_timeline
+  - get_versions
+  - list_jobs
+  - list_pages
+  - log_ingest
+  - memory_tree
+  - pause_job
+  - purge_deleted_pages
+  - put_page
+  - put_raw_data
+  - query
+  - recall
+  - remove_link
+  - remove_tag
+  - replay_job
+  - resolve_slugs
+  - restore_page
+  - resume_job
+  - retry_job
+  - revert_version
+  - run_doctor
+  - search
+  - search_by_image
+  - send_job_message
+  - sources_add
+  - sources_list
+  - sources_remove
+  - sources_status
+  - submit_agent
+  - submit_job
+  - sync_brain
+  - takes_calibration
+  - takes_list
+  - takes_scorecard
+  - takes_search
+  - think
+  - traverse_graph
+  - whoami
+  tool_count: 75
 bos_services:
   _domain_counts:
     agent-cell: 23
@@ -540,7 +884,7 @@ bos_services:
     fabric: 1
     forge: 1
     governance: 70
-    harness: 6
+    harness: 9
     l4-kernel: 1
     memory: 47
     meta: 1
@@ -1416,6 +1760,18 @@ bos_services:
       description: 全量合规检查 (arch + compliance + mof + omo)
       transport: stdio
       status: active
+    - uri: bos://harness/run
+      description: 'Harness 全生命周期运行 (8 阶段 DAG: admission → spec → execute → verify → audit → accept)'
+      transport: stdio
+      status: active
+    - uri: bos://harness/verify
+      description: Harness 并行校验 (DAG + 缓存)
+      transport: stdio
+      status: active
+    - uri: bos://harness/probe
+      description: Harness 7 探针 + Event Bus 发射
+      transport: stdio
+      status: active
     l4-kernel:
     - uri: bos://l4-kernel/domains
       description: L4 Kernel MCP (短路径别名)
@@ -1875,6 +2231,8 @@ cli_commands:
   description: 在 Mac mini M4 触发闲时 LoRA 蒸馏
 - name: dma
   description: 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准
+- name: docx
+  description: 渲染为 GB/T 9704-2012 红头公文 DOCX
 - name: domain-status
   description: 显示 Documents 域项目绑定与引导状态
 - name: domains
@@ -1937,6 +2295,8 @@ cli_commands:
   description: 查看次世代主权算力织网全景 HUD 实时状态
 - name: identity
   description: 导出身份封套 (IdentityEnvelope)
+- name: im-triage
+  description: 渲染 IM 会话感知待办卡片 (bos://im/session/triage)
 - name: impact
   description: 分析符号的变更影响面
 - name: import
@@ -2019,6 +2379,8 @@ cli_commands:
   description: pipeline 概览
 - name: policy
   description: ⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)
+- name: pptx
+  description: 渲染为 16:9 高管技术汇报 PPTX
 - name: product-health
   description: 产品健康度检测
 - name: profile
@@ -2051,6 +2413,8 @@ cli_commands:
   description: 手动存入偏好/事实
 - name: rename
   description: 重命名研究标题
+- name: render
+  description: 初稿 Markdown 一键渲染导出 (GB/T 9704 DOCX / 16:9 PPTX / 矢量图)
 - name: replay
   description: 查看 Experience Replay 缓冲区状态
 - name: research
@@ -2101,10 +2465,14 @@ cli_commands:
   description: 提交控制任务
 - name: summary
   description: 债务摘要 (委派 omo debt)
+- name: svg
+  description: 渲染 ```diagram 代码块为矢量架构图 SVG
 - name: swarm
   description: 分布式跨节点 KV 共享池与超长上下文置换基准
 - name: tag
   description: 为研究添加/覆盖标签
+- name: test_export_formats
+  description: '离线自测: 三格式导出 + GB/T 参数断言'
 - name: timeline
   description: 查看研究的演化时间线
 - name: topics
@@ -2155,6 +2523,9 @@ skills:
   exists: true
 - id: spine-value-pipeline
   file: .agents/skills/spine-value-pipeline/SKILL.md
+  exists: true
+- id: workflow:bet-execution
+  file: .agents/skills/workflow:bet-execution/SKILL.md
   exists: true
 workflows:
 - id: agent-onboarding

@@ -17089,7 +17089,7 @@ bets:
   write_surfaces:
   - projects/omlxc/src/omlxc/dataplane/embedding_mps.py
   - projects/omlxc/src/omlxc/dataplane/reranker.py
-  - docs/reports/2026-10-07-bge-m3-mps-benchmark.md
+  - docs/reports/2026-09-01-bge-m3-mps-benchmark.md
   - .omo/_knowledge/retros/BET-Y1Q4-T3-02.md
   pasw_required: false
   depends_on:
@@ -17098,6 +17098,11 @@ bets:
   human_gate: false
   circuit_breaker: MPS 显存不足时自动溢出至 CPU NEON/AMX 指令集加速。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:6e6425abcacb39d3e42032ec1332b0b74e68e344c9a3dac4d31ee2ea64b8da6f
+    decision_ref: decision://accepted/BET-Y1Q4-T3-02
 - id: BET-Y1Q4-T3-03
   track: T3-COGNI
   window: Y1Q4
