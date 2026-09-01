@@ -2940,6 +2940,29 @@ Add tests that inspect all four wrapped commands, prove unavailable sandbox
 conditions fail closed, and on macOS execute a real sandboxed child that cannot
 create or modify a file under the test Documents root.
 
+- [ ] **Step 4B: Close the staging trust boundary**
+
+Before promotion, validate both staging roots against an exact allowlist:
+
+- top-level directories are exactly `manifests`, `generated`, `cache`, and
+  `migration`;
+- manifests are exactly the six regular, non-symlink YAML files and every
+  digest equals the unchanged canonical source;
+- generated files equal the already validated fresh product set;
+- cache is empty;
+- staging B migration contains only `plan.json`;
+- staging A migration contains only `plan.json` and `parity.json`.
+
+Any unknown file/directory, changed manifest, non-regular node, or premature
+`receipt.json` blocks promotion. After `os.replace`, track promotion and final
+receipt success in memory. Any exception before successful return removes the
+new target regardless of files a builder may have planted; never use receipt
+file presence as rollback authority and never remove a pre-existing collision.
+
+Add adversarial tests for manifest modification, unknown staging state,
+premature receipt creation, post-promotion verification failure, and final
+receipt-write failure.
+
 - [ ] **Step 5: Run focused, full Python, and formatting verification**
 
 ```bash
