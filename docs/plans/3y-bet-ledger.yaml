@@ -16953,6 +16953,7 @@ bets:
   appetite: 2 days
   priority: P1
   status: done
+  done_at: 2026-09-01
   goal: 集成 PaddleOCR / Qwen-VL 本地轻量化端侧视觉多模态模型，支持对拍照扫描件、PDF 影印件红头文件进行精准 OCR、版面分析（表格、盖章、手写签批识别）与 Markdown 结构化还原。
   non_goals:
   - 不上传任何红头扫描件图片至外部公网云端
@@ -17012,7 +17013,7 @@ bets:
             sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
           replay:
             ref: receipt://tests/test_ocr_layout.py
-            sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
+            sha256: sha256:aed3a63c032d8f5eb22203bf5d64f57a4bbffbff08fa3b6c45ff934fa8e8135f
           cleanup:
             ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
             sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
