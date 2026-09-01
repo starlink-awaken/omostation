@@ -180,7 +180,7 @@ last-reviewed: 2026-08-24
 
 | 命令 | 描述 |
 |------|------|
-| `cockpit brief` | 会话简报 |
+| `cockpit brief` | 会话简报 / 每日早报 (--morning) |
 | `cockpit context` | 显示系统上下文 (Phase/CARDS/约束/引导) |
 | `cockpit dashboard` | 打开 Web Dashboard |
 | `cockpit health` | 一键系统健康检查 |

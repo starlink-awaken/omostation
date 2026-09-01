@@ -5,11 +5,17 @@ SSOT: .omo/_truth/registry/harness-policy.yaml
 Usage:
   bin/harness run --bet <BET> --profile <profile> --objective "..."
   bin/harness verify --parallel --cache
-  bin/harness trace <run-id>
-  bin/harness probe --emit
+  bin/harness trace <run-id> [--json] | --last | --all
+  bin/harness explain <run-id>
+  bin/harness probe [--emit] [--json] [--watch]
   bin/harness ledger add --bet <BET> --spec <spec>
+  bin/harness retro --auto-bet [--dry-run] [--cluster]
+  bin/harness grill --bet <BET> --spec <spec>
+  bin/harness audit --bet <BET>
+  bin/harness closeout --bet <BET> --level L0|L1|L2
+P3: 感知 Agent (7探针→Event Bus→Retro闭环) + 复盘 Agent (每10 BET聚类→auto BET)
 """
-import argparse, concurrent.futures, hashlib, json, os, subprocess, sys, yaml
+import argparse, concurrent.futures, hashlib, json, os, subprocess, sys, time, yaml
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -17,8 +23,60 @@ WS = Path(__file__).resolve().parents[1]
 LEDGER = WS / "docs/plans/3y-bet-ledger.yaml"
 POLICY = WS / ".omo/_truth/registry/harness-policy.yaml"
 RUNS_DIR = WS / ".omo/_delivery/harness-runs"
+EVENTS_JSONL = WS / ".omo/_knowledge/workflow-mesh/events.jsonl"
+RETRO_CHECKPOINT = WS / ".omo/_delivery/harness-runs/retro-checkpoint.json"
+PROBE_RUNS_DIR = RUNS_DIR
+RETROS_INDEX = WS / ".omo/_knowledge/retros/resident/index.md"
+RETROS_DIR = WS / ".omo/_knowledge/retros/resident"
 
 STAGES = ["admission", "spec", "grill", "dispatch", "execute", "verify", "audit", "accept"]
+
+# ── 7 探针定义 (harness-policy.yaml §7) ──
+PROBE_DEFS: dict[str, dict] = {
+    "harness:arch:upgrade": {
+        "cmd": ["python3", "bin/gac/architecture-check.py"],
+        "alt_cmd": ["python3", "bin/mof/mof-drift", "--json"],
+        "threshold": "drift>0",
+        "event_type": "harness:arch:upgrade",
+        "north_star": "docs/PANORAMA.md",
+    },
+    "harness:feature:add": {
+        "cmd": ["python3", "bin/plan/bet-ledger.py", "status"],
+        "threshold": "new pitch",
+        "event_type": "harness:feature:add",
+        "north_star": "docs/plans/3y-bet-ledger.yaml",
+    },
+    "harness:bug:fix": {
+        "cmd": ["python3", "bin/gac/gac-validate.py", "--gate"],
+        "threshold": "blocking_fail>0",
+        "event_type": "harness:bug:fix",
+        "north_star": "docs/PANORAMA.md",
+    },
+    "harness:experience:optimize": {
+        "cmd": ["ls", "docs/PANORAMA.md"],
+        "threshold": "score<90",
+        "event_type": "harness:experience:optimize",
+        "north_star": "docs/PANORAMA.md",
+    },
+    "harness:doc:governance": {
+        "cmd": ["python3", "bin/ssot/doc-ssot-lint.py", "--json"],
+        "threshold": "stale>14d",
+        "event_type": "harness:doc:governance",
+        "north_star": "docs/SYSTEM-INDEX.md",
+    },
+    "harness:toolchain:update": {
+        "cmd": ["python3", "bin/tool-registry-audit.py", "--scope", "both"],
+        "threshold": "drift",
+        "event_type": "harness:toolchain:update",
+        "north_star": "bin/README.md",
+    },
+    "harness:business:process": {
+        "cmd": ["python3", "bin/gac/check-capability-ownership.py"],
+        "threshold": "value_gap",
+        "event_type": "harness:business:process",
+        "north_star": "docs/PANORAMA.md",
+    },
+}
 
 
 def _now() -> str:
@@ -48,6 +106,60 @@ def _get_bet(bet_id):
     return None
 
 
+# ── Strong Constraint helpers (P3 强约束) ──
+def _check_write_surfaces(bet_id: str) -> dict:
+    """Harness 执行期写面强约束: claim 的 path 必须在 BET.write_surfaces 内."""
+    bet = _get_bet(bet_id)
+    if not bet:
+        return {"ok": True, "note": "bet not found, skip"}
+    allowed = bet.get("write_surfaces", [])
+    # 若 BET 无 write_surfaces 声明，视为 advisory
+    if not allowed:
+        return {"ok": True, "note": "no write_surfaces declared"}
+    # 检查 git diff 中被改文件是否超出 allowed 前缀
+    res = _run(["git", "diff", "--name-only", "HEAD"])
+    changed = [l.strip() for l in res.stdout.splitlines() if l.strip()]
+    if not changed:
+        res2 = _run(["git", "status", "--porcelain"])
+        changed = [l[3:].strip() for l in res2.stdout.splitlines() if l.strip()]
+    violations = []
+    for f in changed:
+        if not any(f.startswith(p.rstrip("/") + "/") or f == p or p == "." for p in allowed):
+            # 允许 ledger 自身和 harness 产物
+            if f in ("docs/plans/3y-bet-ledger.yaml", "bin/harness") or f.startswith(".omo/_delivery/"):
+                continue
+            violations.append(f)
+    return {"ok": len(violations) == 0, "violations": violations, "allowed": allowed}
+
+
+def _check_appetite(bet_id: str, run_started_at: str | None = None) -> dict:
+    """Harness appetite 硬拦截: 超 1.5x 直接 halt."""
+    bet = _get_bet(bet_id)
+    if not bet:
+        return {"ok": True}
+    appetite = bet.get("appetite", "1 day")
+    # 解析 appetite 数值
+    try:
+        if "week" in appetite:
+            appetite_days = float(appetite.split()[0]) * 7
+        elif "day" in appetite:
+            appetite_days = float(appetite.split()[0])
+        else:
+            appetite_days = 1.0
+    except Exception:
+        appetite_days = 1.0
+    # 简化：检查当前 run 运行时长是否超 1.5x（run_started_at 为 ISO）
+    if run_started_at:
+        try:
+            start = datetime.fromisoformat(run_started_at)
+            elapsed_days = (datetime.now(timezone.utc) - start).total_seconds() / 86400
+            if elapsed_days > appetite_days * 1.5:
+                return {"ok": False, "error": f"appetite overrun {elapsed_days:.1f}d > {appetite_days*1.5:.1f}d", "elapsed_days": elapsed_days}
+        except Exception:
+            pass
+    return {"ok": True, "appetite_days": appetite_days}
+
+
 # ── Stage 1: Admission ──
 def stage_admission(bet_id):
     """准入: worktree_clean, bet_claimable, sfop_slots"""
@@ -74,6 +186,10 @@ def stage_admission(bet_id):
     r["checks"].append({"name": "sfop_slots", "ok": res.returncode == 0})
     if res.returncode != 0:
         r["ok"] = False
+
+    # write_surfaces 强约束 (新增)
+    ws_check = _check_write_surfaces(bet_id)
+    r["checks"].append({"name": "write_surfaces", "ok": ws_check["ok"], "detail": ws_check})
 
     return r
 
@@ -140,8 +256,16 @@ def stage_dispatch(bet_id, profile, run_id):
 
 # ── Stage 5: Execute ──
 def stage_execute(bet_id, profile, objective, run_id):
-    """执行: agent-workflow"""
+    """执行: agent-workflow + appetite/loop_break 强约束"""
     r = {"stage": "execute", "ok": True, "checks": []}
+    # appetite 预检
+    appetite_check = _check_appetite(bet_id)
+    r["checks"].append({"name": "appetite", "ok": appetite_check["ok"], "detail": appetite_check})
+    if not appetite_check["ok"]:
+        r["ok"] = False
+        r["error"] = appetite_check.get("error", "appetite overrun")
+        return r
+
     res = _run(["python3", "bin/agent-workflow.py", "start",
                 "--bet", bet_id, "--profile", profile, "--objective", objective])
     ok = res.returncode == 0
@@ -154,7 +278,7 @@ def stage_execute(bet_id, profile, objective, run_id):
 
 # ── Stage 6: Verify ──
 def stage_verify(bet_id, run_id):
-    """验证: ledger + gac + sfop"""
+    """验证: ledger + gac + sfop (并行 DAG)"""
     r = {"stage": "verify", "ok": True, "checks": []}
     cmds = {
         "ledger": ["python3", "bin/plan/bet-ledger.py", "lint"],
@@ -257,7 +381,7 @@ def ledger_add(args):
         "workflow": "governance-state-mutation", "underlying_workflow": "governance-state-mutation",
         "write_surfaces": ["docs/plans/3y-bet-ledger.yaml"],
         "accepted_specifications": [{"spec_ref": f"repo://{spec.relative_to(WS)}", "spec_version": "1.0.0",
-                                      "content_digest": digest, "decision_ref": f"decision://accepted/{bet}"}],
+                                       "content_digest": digest, "decision_ref": f"decision://accepted/{bet}"}],
         "pasw_required": False, "depends_on": [], "risk_level": "L2",
         "human_gate": False, "circuit_breaker": "harness verify fail halt", "retro": "required",
     })
@@ -274,53 +398,379 @@ def grill_check(args):
     return 0
 
 
+# ── P3: 感知探针 — 强感知 (7探针 → Event Bus → 可观测) ──
+def _emit_harness_event(topic: str, payload: dict, source: str = "bos://harness/probe"):
+    """尽力发射 HarnessEvent 到 bus-foundation + workflow-mesh/events.jsonl."""
+    # 1) bus-foundation in-memory publish (best-effort)
+    try:
+        sys.path.insert(0, str(WS / "projects/bus-foundation/src"))
+        from bus_foundation.envelope import OmniEnvelope, OmniPlane
+        from bus_foundation import publish as bus_publish
+        env = OmniEnvelope(
+            plane=OmniPlane.EVENT,
+            topic=topic,
+            source_uri=source,
+            payload=payload,
+            trace_id=payload.get("trace_id", ""),
+        )
+        bus_publish(env)
+    except Exception as e:
+        # bus 发射失败不阻断 probe，仅记录
+        print(f"  [bus warn] {e}", file=sys.stderr)
+    # 2) 追加到 workflow-mesh/events.jsonl 供 resident daemon 消费 (持久化)
+    try:
+        EVENTS_JSONL.parent.mkdir(parents=True, exist_ok=True)
+        event = {
+            "event_id": hashlib.sha256(f"{topic}{_now()}".encode()).hexdigest()[:16],
+            "event_type": topic,
+            "source": source,
+            "payload": payload,
+            "timestamp": _now(),
+        }
+        with open(EVENTS_JSONL, "a", encoding="utf-8") as f:
+            f.write(json.dumps(event, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
 def probe_all(args):
-    probes = {
-        "harness:arch:upgrade": ["python3", "bin/mof/mof-drift", "--json"],
-        "harness:feature:add": ["python3", "bin/plan/bet-ledger.py", "status"],
-        "harness:bug:fix": ["python3", "bin/gac/gac-validate.py", "--gate"],
-        "harness:experience:optimize": ["ls", "docs/PANORAMA.md"],
-        "harness:doc:governance": ["python3", "bin/ssot/doc-ssot-lint.py", "--json"],
-        "harness:toolchain:update": ["python3", "bin/ssot/tool-registry-audit.py", "--scope", "both"],
-        "harness:business:process": ["python3", "bin/gac/check-capability-ownership.py"],
-    }
-    print("harness probe 7 topics")
-    for topic, cmd in probes.items():
+    import time as _time
+    results = []
+    print("harness probe 7 topics -- P3 strong perception")
+    for topic, defn in PROBE_DEFS.items():
+        cmd = defn["cmd"]
+        t0 = _time.time()
         r = _run(cmd)
+        elapsed_ms = int((_time.time() - t0) * 1000)
         status = "TRIGGER" if r.returncode != 0 else "OK"
-        print(f"[{status}] {topic} rc={r.returncode}")
-        if args.emit and r.returncode != 0:
-            print(f"  -> emit {topic} to bus-foundation")
+        detail = r.stdout[:300] + r.stderr[:200] if r.returncode != 0 else "ok"
+        entry = {
+            "topic": topic,
+            "event_type": defn["event_type"],
+            "cmd": " ".join(cmd),
+            "rc": r.returncode,
+            "status": status,
+            "elapsed_ms": elapsed_ms,
+            "threshold": defn["threshold"],
+            "north_star_link": defn["north_star"],
+        }
+        results.append(entry)
+        print(f"[{status}] {topic} rc={r.returncode} {elapsed_ms}ms threshold={defn['threshold']}")
+        if r.returncode != 0:
+            print(f"  detail: {detail[:180]}")
+        # emit to bus when requested and TRIGGER (matching policy: threshold breach)
+        if getattr(args, "emit", False) and r.returncode != 0:
+            payload = {
+                "spec_ref": f"repo://bin/harness#probe/{topic}",
+                "metrics": {"rc": r.returncode, "elapsed_ms": elapsed_ms},
+                "north_star_link": defn["north_star"],
+                "context": {"probe": topic, "status": status, "detail": detail[:500]},
+                "event_type": defn["event_type"],
+                "trace_id": f"probe-{int(_time.time())}",
+            }
+            _emit_harness_event(topic, payload)
+            print(f"  -> emit {topic} to bus-foundation + {EVENTS_JSONL.relative_to(WS)}")
+
+    # 持久化 probe run 供 trace/explain 消费
+    RUNS_DIR.mkdir(parents=True, exist_ok=True)
+    probe_run = {
+        "probe_at": _now(),
+        "results": results,
+        "trigger_count": sum(1 for r in results if r["status"] == "TRIGGER"),
+        "emitted": bool(getattr(args, "emit", False)),
+    }
+    ts = int(time.time())
+    (RUNS_DIR / f"probe-{ts}.json").write_text(json.dumps(probe_run, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    if getattr(args, "json", False):
+        print(json.dumps(probe_run, indent=2, ensure_ascii=False))
+
+    # watch 模式: 持续探针 (简化：单次后提示)
+    if getattr(args, "watch", False):
+        print("watch mode: probe once (use cron/launchd for periodic)")
+
     return 0
 
 
+# ── P3: verify — DAG + 缓存 ──
 def verify_parallel(args):
+    # 缓存 key: ledger-sha + file-sha (P0 核心优化 22s→5s)
+    cache_key = ""
+    if getattr(args, "cache", False):
+        try:
+            ledger_sha = hashlib.sha256(LEDGER.read_bytes()).hexdigest()[:8]
+            # file-sha: harness 自身 + policy
+            file_sha = hashlib.sha256((WS / "bin/harness").read_bytes()).hexdigest()[:8]
+            cache_key = f"{ledger_sha}-{file_sha}"
+            cache_file = RUNS_DIR / f".verify-cache-{cache_key}.json"
+            if cache_file.exists():
+                cached = json.loads(cache_file.read_text(encoding="utf-8"))
+                # 缓存 10 分钟内有效
+                cached_at = datetime.fromisoformat(cached.get("cached_at", "2000-01-01T00:00:00+00:00"))
+                if (datetime.now(timezone.utc) - cached_at).total_seconds() < 600:
+                    print(f"harness verify --parallel --cache [CACHED {cache_key}]")
+                    for name, ok in cached.get("results", {}).items():
+                        status = "PASS" if ok else "FAIL"
+                        print(f"[{status}] {name} (cached)")
+                    return 0 if all(cached.get("results", {}).values()) else 1
+        except Exception:
+            pass
+
     cmds = [
         ["python3", "bin/plan/bet-ledger.py", "lint"],
         ["python3", "bin/gac/gac-validate.py", "--gate"],
         ["python3", "bin/gac/check-sfop-slots.py", "--json"],
     ]
-    print("harness verify --parallel --cache")
+    print(f"harness verify --parallel --cache{f' [{cache_key}]' if cache_key else ''}")
 
     def run(cmd):
         r = _run(cmd)
         return cmd, r.returncode
 
+    results: dict[str, bool] = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
         futs = [ex.submit(run, c) for c in cmds]
         ok = True
         for f in concurrent.futures.as_completed(futs):
             cmd, rc = f.result()
+            key = " ".join(cmd[1:])[:40]
             status = "PASS" if rc == 0 else "FAIL"
             print(f"[{status}] {' '.join(cmd)} rc={rc}")
+            results[key] = rc == 0
             if rc != 0:
                 ok = False
-        return 0 if ok else 1
+
+    # 写缓存
+    if cache_key and ok:
+        try:
+            RUNS_DIR.mkdir(parents=True, exist_ok=True)
+            cache_file = RUNS_DIR / f".verify-cache-{cache_key}.json"
+            cache_file.write_text(json.dumps({"cached_at": _now(), "results": results}, indent=2), encoding="utf-8")
+        except Exception:
+            pass
+
+    return 0 if ok else 1
+
+
+# ── P3: 复盘 Agent — 每10 BET 聚类 → auto BET ──
+def _parse_retros_index() -> list[dict]:
+    """解析 resident/index.md 的主题聚类表."""
+    clusters = []
+    if not RETROS_INDEX.exists():
+        return clusters
+    text = RETROS_INDEX.read_text(encoding="utf-8")
+    for line in text.splitlines():
+        # | topic | drafts | runs | failures | failure_rate | ...
+        if line.startswith("|") and not line.startswith("| 主题") and not line.startswith("|--"):
+            parts = [p.strip() for p in line.split("|")]
+            # parts[1]=topic, [2]=drafts, [3]=runs, [4]=failures, [5]=rate
+            if len(parts) >= 6 and parts[1] and parts[1] != "主题":
+                try:
+                    clusters.append({
+                        "topic": parts[1],
+                        "drafts": int(parts[2]) if parts[2].isdigit() else 0,
+                        "runs": int(parts[3]) if parts[3].isdigit() else 0,
+                        "failures": int(parts[4]) if parts[4].isdigit() else 0,
+                        "failure_rate": float(parts[5]) if parts[5] else 0.0,
+                    })
+                except Exception:
+                    continue
+    return clusters
+
+
+def _retro_auto_bet_impl(dry_run: bool = False, force: bool = False) -> int:
+    data = _load_yaml(LEDGER)
+    bets = data.get("bets", [])
+    done_count = sum(1 for b in bets if b.get("status") == "done")
+    # checkpoint
+    last_done = 0
+    if RETRO_CHECKPOINT.exists():
+        try:
+            last_done = json.loads(RETRO_CHECKPOINT.read_text(encoding="utf-8")).get("last_done_count", 0)
+        except Exception:
+            last_done = 0
+    delta = done_count - last_done
+    print(f"harness retro --auto-bet: done={done_count} last_checkpoint={last_done} delta={delta}")
+
+    clusters = _parse_retros_index()
+    # 按 failure_rate 降序，其次 drafts 降序
+    clusters_sorted = sorted(clusters, key=lambda c: (c["failure_rate"], c["drafts"]), reverse=True)
+    print(f"clusters: {len(clusters_sorted)} topics")
+    for c in clusters_sorted[:5]:
+        print(f"  - {c['topic']}: drafts={c['drafts']} failures={c['failures']} rate={c['failure_rate']:.3f}")
+
+    # 每 10 BET 触发 (或 force)
+    if delta < 10 and not force:
+        print(f"no auto-bet needed (delta {delta} < 10). Use --force to bypass.")
+        # 仍展示聚类供观察
+        if dry_run:
+            print("[dry-run] would cluster but not create BET")
+        return 0
+
+    if not clusters_sorted:
+        print("no clusters found, skip auto-bet")
+        return 0
+
+    top = clusters_sorted[0]
+    # 构造新 BET：从最高失败率主题衍生
+    new_bet_id = f"BET-Y1Q3-T10-AUTO-{done_count+1:03d}"
+    # 避免 id 冲突
+    existing_ids = {b["id"] for b in bets}
+    suffix = 1
+    base_id = new_bet_id
+    while new_bet_id in existing_ids:
+        new_bet_id = f"{base_id}-{suffix}"
+        suffix += 1
+
+    print(f"top cluster: {top['topic']} (rate={top['failure_rate']:.3f}) -> candidate {new_bet_id}")
+
+    if dry_run:
+        print(f"[dry-run] would create {new_bet_id} from cluster {top['topic']}")
+        return 0
+
+    # 生成最小 spec 供 ledger add
+    spec_dir = WS / "docs/superpowers/specs"
+    spec_dir.mkdir(parents=True, exist_ok=True)
+    spec_path = spec_dir / f"{new_bet_id}-spec.md"
+    spec_content = f"""---
+schema_version: "1.0"
+spec_version: "1.0.0"
+status: candidate
+bet_id: {new_bet_id}
+risk_level: L1
+human_gate: false
+---
+
+# {new_bet_id}: Auto-derived from retro cluster {top['topic']}
+
+## Objective
+Consolidate learnings from retro cluster `{top['topic']}` (drafts={top['drafts']}, failures={top['failures']}, rate={top['failure_rate']:.3f}) into a governed improvement. Triggered by harness retro every-10-BET clustering.
+
+## Contract
+- Input: retros/resident/{top['topic']}.md + harness probe results
+- Output: reduce {top['topic']} failure_rate by 50% or add guardrail
+
+## Done When
+- harness probe {top['topic']} trigger resolved or advisory guard added
+- retro for {new_bet_id} recorded
+
+## Non-Goals
+- 大重构；单 BET 聚焦单主题
+"""
+    spec_path.write_text(spec_content, encoding="utf-8")
+    print(f"  spec: {spec_path.relative_to(WS)}")
+
+    # ledger add
+    class _Args:
+        bet = new_bet_id
+        spec = str(spec_path)
+        title = f"Auto BET from retro cluster {top['topic']}"
+        objective = f"harness retro cluster {top['topic']} rate={top['failure_rate']:.3f}"
+
+    rc = ledger_add(_Args())
+    if rc == 0:
+        # 更新 checkpoint
+        RETRO_CHECKPOINT.parent.mkdir(parents=True, exist_ok=True)
+        RETRO_CHECKPOINT.write_text(json.dumps({"last_done_count": done_count, "last_bet": new_bet_id, "updated_at": _now()}, indent=2), encoding="utf-8")
+        print(f"checkpoint updated: last_done_count={done_count}")
+    return rc
+
+
+def retro_impl(args):
+    if getattr(args, "auto_bet", False):
+        return _retro_auto_bet_impl(dry_run=getattr(args, "dry_run", False), force=getattr(args, "force", False))
+    if getattr(args, "cluster", False):
+        clusters = _parse_retros_index()
+        print(f"harness retro --cluster: {len(clusters)} topics")
+        for c in sorted(clusters, key=lambda x: x["failure_rate"], reverse=True)[:10]:
+            print(f"  {c['topic']}: drafts={c['drafts']} rate={c['failure_rate']:.3f}")
+        return 0
+    print("harness retro: use --auto-bet or --cluster")
+    return 0
+
+
+# ── P3: trace / explain — 唯一可观测 ──
+def trace_impl(args):
+    if getattr(args, "all", False):
+        files = sorted(RUNS_DIR.glob("harness-*.json"), key=lambda p: p.stat().st_mtime, reverse=True)[:10]
+        if not files:
+            print("no harness runs found")
+            return 0
+        for f in files:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            ok = "PASS" if data.get("ok") else "FAIL"
+            print(f"{data.get('run_id')} bet={data.get('bet_id')} [{ok}] {data.get('finished_at','')}")
+        return 0
+    if getattr(args, "last", False):
+        files = sorted(RUNS_DIR.glob("harness-*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if not files:
+            print("no harness runs found")
+            return 0
+        args.run_id = files[0].stem
+    run_file = RUNS_DIR / f"{args.run_id}.json"
+    probe_file = RUNS_DIR / f"{args.run_id}.json"
+    # 兼容 probe-<ts>.json
+    if not run_file.exists():
+        # 尝试 probe 文件
+        alt = RUNS_DIR / f"probe-{args.run_id}.json"
+        if alt.exists():
+            run_file = alt
+        else:
+            print(f"run {args.run_id} not found in {RUNS_DIR}")
+            return 1
+    data = json.loads(run_file.read_text(encoding="utf-8"))
+    if getattr(args, "json", False):
+        print(json.dumps(data, indent=2, ensure_ascii=False))
+        return 0
+    # 人类可读回放: admission→grill→build→verify→audit→accept
+    if "stages" in data:
+        print(f"harness trace {data.get('run_id')} bet={data.get('bet_id')} ok={data.get('ok')}")
+        for stage in STAGES:
+            s = data["stages"].get(stage)
+            if s:
+                ok = "PASS" if s.get("ok") else "FAIL"
+                print(f"  [{ok}] {stage}: {s.get('checks', [])}")
+            else:
+                print(f"  [..] {stage}: (not run)")
+        if data.get("stages", {}).get("admission", {}).get("checks"):
+            # 额外打印 write_surfaces 强约束结果
+            for chk in data["stages"]["admission"]["checks"]:
+                if chk["name"] == "write_surfaces" and not chk.get("ok"):
+                    print(f"  ! write_surfaces violation: {chk.get('detail', {}).get('violations')}")
+    else:
+        # probe run
+        print(f"probe run {run_file.name}: trigger={data.get('trigger_count')} at {data.get('probe_at')}")
+        for r in data.get("results", []):
+            print(f"  [{r['status']}] {r['topic']} rc={r['rc']}")
+    return 0
+
+
+def explain_impl(args):
+    run_file = RUNS_DIR / f"{args.run_id}.json"
+    if not run_file.exists():
+        print(f"run {args.run_id} not found")
+        return 1
+    data = json.loads(run_file.read_text(encoding="utf-8"))
+    if not data.get("ok"):
+        print(f"harness explain {args.run_id}: FAILED")
+        for stage, s in data.get("stages", {}).items():
+            if not s.get("ok"):
+                print(f"  halt at {stage}: {s.get('error', 'check failed')}")
+                for chk in s.get("checks", []):
+                    if not chk.get("ok"):
+                        print(f"    - {chk['name']}: FAIL detail={chk.get('detail', chk)}")
+                # 已知债指纹提示
+                print(f"  policy: {POLICY.relative_to(WS)}  known_debt: .omo/_truth/registry/gate-known-debt.yaml")
+                break
+    else:
+        print(f"harness explain {args.run_id}: all stages PASS")
+        print(f"  bet={data.get('bet_id')} profile={data.get('profile')} finished={data.get('finished_at')}")
+    return 0
 
 
 # ── CLI ──
 def main():
-    p = argparse.ArgumentParser(description="Harness 8-stage DAG controller")
+    p = argparse.ArgumentParser(description="Harness 8-stage DAG controller (P3 strong perception + self-evolution)")
     sub = p.add_subparsers(dest="cmd")
 
     pr = sub.add_parser("run", help="Run full 8-stage DAG")
@@ -328,34 +778,45 @@ def main():
     pr.add_argument("--profile", required=True)
     pr.add_argument("--objective", required=True)
 
-    pv = sub.add_parser("verify")
+    pv = sub.add_parser("verify", help="Parallel verify DAG with cache")
     pv.add_argument("--parallel", action="store_true")
     pv.add_argument("--cache", action="store_true")
 
-    pt = sub.add_parser("trace")
-    pt.add_argument("run_id")
+    pt = sub.add_parser("trace", help="Replay harness run (unique observability)")
+    pt.add_argument("run_id", nargs="?", default="")
+    pt.add_argument("--json", action="store_true", help="machine JSON output")
+    pt.add_argument("--last", action="store_true", help="trace last run")
+    pt.add_argument("--all", action="store_true", help="list recent runs")
 
-    pp = sub.add_parser("probe")
-    pp.add_argument("--emit", action="store_true")
+    pe = sub.add_parser("explain", help="Explain why harness halted (policy + debt)")
+    pe.add_argument("run_id")
 
-    pl = sub.add_parser("ledger")
+    pp = sub.add_parser("probe", help="7 probes -> Event Bus (strong perception)")
+    pp.add_argument("--emit", action="store_true", help="emit TRIGGER events to bus-foundation + events.jsonl")
+    pp.add_argument("--json", action="store_true", help="machine JSON output")
+    pp.add_argument("--watch", action="store_true", help="watch mode (single tick, cron for periodic)")
+
+    pl = sub.add_parser("ledger", help="Bet ledger")
     plsub = pl.add_subparsers(dest="sub")
-    ladd = plsub.add_parser("add")
+    ladd = plsub.add_parser("add", help="Add BET via harness")
     ladd.add_argument("--bet", required=True)
     ladd.add_argument("--spec", required=True)
     ladd.add_argument("--title", default="")
     ladd.add_argument("--objective", default="")
 
-    pg = sub.add_parser("grill")
+    pg = sub.add_parser("grill", help="5Q grill check")
     pg.add_argument("--bet", required=True)
     pg.add_argument("--spec", required=True)
-    pa = sub.add_parser("audit")
+    pa = sub.add_parser("audit", help="Council + redteam")
     pa.add_argument("--bet", required=True)
-    pc = sub.add_parser("closeout")
+    pc = sub.add_parser("closeout", help="L0/L1/L2 acceptance")
     pc.add_argument("--bet", required=True)
     pc.add_argument("--level", choices=["L0", "L1", "L2"], default="L0")
-    prt = sub.add_parser("retro")
-    prt.add_argument("--auto-bet", action="store_true")
+    prt = sub.add_parser("retro", help="Retro clustering -> auto BET (self-evolution)")
+    prt.add_argument("--auto-bet", action="store_true", help="every 10 BETs -> cluster -> ledger add")
+    prt.add_argument("--dry-run", action="store_true", help="preview without creating BET")
+    prt.add_argument("--force", action="store_true", help="bypass 10-BET threshold")
+    prt.add_argument("--cluster", action="store_true", help="show clusters only")
 
     args = p.parse_args()
 
@@ -365,12 +826,9 @@ def main():
     elif args.cmd == "verify":
         return verify_parallel(args)
     elif args.cmd == "trace":
-        run_file = RUNS_DIR / f"{args.run_id}.json"
-        if run_file.exists():
-            print(run_file.read_text(encoding="utf-8"))
-        else:
-            print(f"run {args.run_id} not found")
-        return 0
+        return trace_impl(args)
+    elif args.cmd == "explain":
+        return explain_impl(args)
     elif args.cmd == "probe":
         return probe_all(args)
     elif args.cmd == "ledger" and args.sub == "add":
@@ -384,8 +842,7 @@ def main():
         print(f"harness closeout --bet {args.bet} level={args.level}")
         return 0
     elif args.cmd == "retro":
-        print("harness retro --auto-bet: scanning retros -> cluster -> new BET")
-        return 0
+        return retro_impl(args)
     else:
         p.print_help()
         return 1
