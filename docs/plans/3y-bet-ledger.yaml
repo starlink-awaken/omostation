@@ -264,16 +264,16 @@ bets:
   - No second proposal registry, dispatcher, approval queue, content database, human entry, direct .omo writer, direct Dashboard Documents writer, environment bypass, or Git backup behavior.
   - No claim of Phase C completion, production availability, principal-bound value, old-app retirement, or Documents-wide physical purity.
   done_when:
-  - A deterministic family-hub transaction materializes six private manifests and freshly rebuilt generated products under runtime/family-hub/dashboard, starts a new cache, proves normalized parity, preserves
-    the Documents source fingerprint, and emits immutable plan/apply/verify/rollback evidence.
+  - A deterministic family-hub transaction materializes six private manifests and freshly rebuilt generated products under runtime/family-hub/dashboard, starts a new cache, proves stable input closure and
+    equal normalized double-build parity, records the privacy-safe legacy delta, preserves the Documents source fingerprint, and emits immutable plan/apply/verify/rollback evidence.
   - Generic file save, vaccine update, and milestone achievement create digest-only HITL proposals and contain no direct Documents writer; task and AI cache mutations remain state-root only and backup produces
     only a Workspace snapshot receipt.
   - OMO is the unique proposal and durable HITL receipt writer, Cockpit uses server-owned human approval identity, and an uncached declarative Agora internal BOS route invokes exactly the family-hub transaction
     owner.
   - Tests prove proposal idempotency, secret/body exclusion, path containment, CAS refusal, payload drift refusal, atomic apply, verified rollback, receipt collision refusal, unavailable dependency behavior,
     and no cached mutation replay.
-  - A read-only real-data build/parity run succeeds, consumer audit remains forbidden_executors=0, and a separately confirmed real canary is created and rolled back without touching an existing household
-    document.
+  - Two read-only real-data builds prove stable input closure and equal normalized fresh products, the legacy delta is explicitly recorded, consumer audit remains forbidden_executors=0, and a separately
+    confirmed real canary is created and rolled back without touching an existing household document.
   - Every child PR and the root gitlink PR passes required checks and merges; authoritative-main replay is green while family-dashboard-app remains non-terminal for Phase C and value/purity remain NOT_PROVEN.
   verify:
   - cmd: cd projects/family-hub && uv run pytest tests/test_dashboard_phase_b.py tests/test_dashboard_import.py tests/test_dashboard_import_cli.py -q && uv run pytest tests -q
@@ -288,7 +288,7 @@ bets:
     expect: exit 0 for authenticated ingress, server-owned approver identity, BOS execution, and truthful pending/terminal responses
   - cmd: cd projects/family-hub && uv run python -m family_hub.dashboard_phase_b verify-runtime --documents-root /Users/xiamingxing/Documents/@家庭生活 --state-root /Users/xiamingxing/Workspace/runtime/family-hub/dashboard
       --json
-    expect: exit 0 with canonical state, real parity, unchanged source, and complete migration receipt
+    expect: exit 0 with canonical state, equal normalized double-build parity, explicit legacy delta, unchanged source, and complete migration receipt
   - cmd: uv run --project projects/l4-kernel python bin/gac/documents-domain-owner-job.py consumer-audit --documents-root /Users/xiamingxing/Documents --registry .omo/_truth/registry/documents-content-plane-migrations.yaml
       --launch-agents-root /Users/xiamingxing/Library/LaunchAgents --scheduled-root /Users/xiamingxing/Documents/Claude/Scheduled --workspace-root "$PWD" --json
     expect: exit 0 with forbidden_executors=0 and no unmatched family-dashboard consumer
@@ -317,8 +317,8 @@ bets:
   pasw_required: true
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:1d76adb508dca1a13f57148d0d48f309770d141bc165b49f85a45ae2c33b85fb
+    spec_version: 1.1.0
+    content_digest: sha256:0a82d770edcca8d6a21b6b32e1798270b34c1c0b8e72a2518f2baa8ce0e7c809
     decision_ref: decision://accepted/BET-Y1Q3-T10-122
   depends_on:
   - BET-Y1Q3-T10-111
