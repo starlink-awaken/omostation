@@ -160,34 +160,73 @@ def _check_appetite(bet_id: str, run_started_at: str | None = None) -> dict:
     return {"ok": True, "appetite_days": appetite_days}
 
 
+# resident daemon 持续脏路径 + harness 自身操作路径（不阻塞 admission）
+EXCLUDED_DIRTY_PATHS = [
+    ".omo/_knowledge/retros/",
+    ".omo/_knowledge/workflow-mesh/",
+    ".omo/_delivery/",
+    ".omo/_truth/registry/",
+    "bin/harness",
+]
+
+# BET 状态机合法转换
+VALID_BET_TRANSITIONS = {
+    "candidate": ["pending"],
+    "pending": ["in_progress", "candidate"],
+    "in_progress": ["review", "blocked", "failed"],
+    "review": ["done", "in_progress", "failed"],
+    "blocked": ["in_progress", "failed"],
+    "failed": ["candidate"],
+}
+
+
+def _is_excluded_dirty(line: str) -> bool:
+    path = line[3:].strip() if len(line) > 3 else line.strip()
+    return any(path.startswith(p) or path == p.rstrip("/") for p in EXCLUDED_DIRTY_PATHS)
+
+
 # ── Stage 1: Admission ──
 def stage_admission(bet_id):
-    """准入: worktree_clean, bet_claimable, sfop_slots"""
+    """准入: worktree_clean(排除常驻脏), bet_claimable, bet_status_transition, sfop_slots"""
     r = {"stage": "admission", "ok": True, "checks": []}
 
-    # Worktree clean
     res = _run(["git", "status", "--porcelain"])
-    clean = len(res.stdout.strip()) == 0
-    r["checks"].append({"name": "worktree_clean", "ok": clean})
+    raw_lines = [l for l in res.stdout.strip().splitlines() if l.strip()]
+    violations = [l for l in raw_lines if not _is_excluded_dirty(l)]
+    clean = len(violations) == 0
+    excluded_count = len(raw_lines) - len(violations)
+    r["checks"].append({
+        "name": "worktree_clean", "ok": clean,
+        "total_dirty": len(raw_lines), "excluded": excluded_count, "violations": violations[:5],
+    })
     if not clean:
         r["ok"] = False
-        r["error"] = "worktree not clean"
+        r["error"] = f"worktree not clean ({len(violations)} violations, {excluded_count} excluded)"
 
-    # BET claimable
     bet = _get_bet(bet_id)
-    claimable = bet and bet.get("status") in ["candidate", "pending"]
+    claimable = bet and bet.get("status") in ["candidate", "pending", "in_progress"]
     r["checks"].append({"name": "bet_claimable", "ok": claimable})
     if not claimable:
         r["ok"] = False
         r["error"] = f"bet {bet_id} not claimable"
 
-    # SFOP slots
+    if bet:
+        status = bet.get("status", "unknown")
+        valid_next = VALID_BET_TRANSITIONS.get(status, [])
+        transition_ok = bool(valid_next)
+        r["checks"].append({
+            "name": "bet_status_transition", "ok": transition_ok,
+            "current_status": status, "valid_next": valid_next,
+        })
+        if not transition_ok:
+            r["ok"] = False
+            r["error"] = f"bet {bet_id} status '{status}' has no valid transitions"
+
     res = _run(["python3", "bin/gac/check-sfop-slots.py", "--json"])
     r["checks"].append({"name": "sfop_slots", "ok": res.returncode == 0})
     if res.returncode != 0:
         r["ok"] = False
 
-    # write_surfaces 强约束 (新增)
     ws_check = _check_write_surfaces(bet_id)
     r["checks"].append({"name": "write_surfaces", "ok": ws_check["ok"], "detail": ws_check})
 
@@ -681,9 +720,11 @@ def retro_impl(args):
         return _retro_auto_bet_impl(dry_run=getattr(args, "dry_run", False), force=getattr(args, "force", False))
     if getattr(args, "cluster", False):
         clusters = _parse_retros_index()
-        print(f"harness retro --cluster: {len(clusters)} topics")
-        for c in sorted(clusters, key=lambda x: x["failure_rate"], reverse=True)[:10]:
-            print(f"  {c['topic']}: drafts={c['drafts']} rate={c['failure_rate']:.3f}")
+        min_f = getattr(args, "min_failures", 0) or 0
+        filtered = [c for c in clusters if c["failures"] >= min_f] if min_f > 0 else clusters
+        print(f"harness retro --cluster: {len(filtered)}/{len(clusters)} topics (min_failures={min_f})")
+        for c in sorted(filtered, key=lambda x: x["failure_rate"], reverse=True)[:10]:
+            print(f"  {c['topic']}: drafts={c['drafts']} failures={c['failures']} rate={c['failure_rate']:.3f}")
         return 0
     print("harness retro: use --auto-bet or --cluster")
     return 0
@@ -751,6 +792,26 @@ def explain_impl(args):
         print(f"run {args.run_id} not found")
         return 1
     data = json.loads(run_file.read_text(encoding="utf-8"))
+
+    if getattr(args, "json", False):
+        explanation = {
+            "run_id": data.get("run_id"), "bet_id": data.get("bet_id"),
+            "ok": data.get("ok"), "halted_at": None, "failure_checks": [],
+            "policy_ref": str(POLICY.relative_to(WS)),
+            "known_debt_ref": ".omo/_truth/registry/gate-known-debt.yaml",
+        }
+        if not data.get("ok"):
+            for stage, s in data.get("stages", {}).items():
+                if not s.get("ok"):
+                    explanation["halted_at"] = stage
+                    explanation["failure_checks"] = [
+                        {"name": c["name"], "ok": c["ok"], "detail": c.get("detail")}
+                        for c in s.get("checks", []) if not c.get("ok")
+                    ]
+                    break
+        print(json.dumps(explanation, indent=2, ensure_ascii=False))
+        return 0
+
     if not data.get("ok"):
         print(f"harness explain {args.run_id}: FAILED")
         for stage, s in data.get("stages", {}).items():
@@ -833,11 +894,12 @@ def main():
 
     pe = sub.add_parser("explain", help="Explain why harness halted (policy + debt)")
     pe.add_argument("run_id")
+    pe.add_argument("--json", action="store_true", help="machine JSON output")
 
     pp = sub.add_parser("probe", help="7 probes -> Event Bus (strong perception)")
     pp.add_argument("--emit", action="store_true", help="emit TRIGGER events to bus-foundation + events.jsonl")
     pp.add_argument("--json", action="store_true", help="machine JSON output")
-    pp.add_argument("--watch", action="store_true", help="watch mode (single tick, cron for periodic)")
+    pp.add_argument("--continuous", type=int, default=0, help="continuous mode: N ticks (default 0 = single tick)")
 
     pl = sub.add_parser("ledger", help="Bet ledger")
     plsub = pl.add_subparsers(dest="sub")
@@ -865,6 +927,7 @@ def main():
     prt.add_argument("--auto-bet", action="store_true", help="every 10 BETs -> cluster -> ledger add")
     prt.add_argument("--dry-run", action="store_true", help="preview without creating BET")
     prt.add_argument("--force", action="store_true", help="bypass 10-BET threshold")
+    prt.add_argument("--min-failures", type=int, default=0, help="filter clusters by minimum failure count")
     prt.add_argument("--cluster", action="store_true", help="show clusters only")
 
     args = p.parse_args()

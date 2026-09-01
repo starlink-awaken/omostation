@@ -17,6 +17,12 @@ harness:
 # ──────────────────────────────────────────────────────────────
 admission:
   require_worktree_clean: true
+  excluded_dirty_paths:  # resident daemon 常驻脏 + harness 自身操作路径，不阻塞 admission
+    - .omo/_knowledge/retros/
+    - .omo/_knowledge/workflow-mesh/
+    - .omo/_delivery/
+    - .omo/_truth/registry/  # harness 操作修改 governance 文件
+    - bin/harness  # harness 自身迭代
   require_bet_claimable: true
   deny_concurrent_claim: "same BET && same track"
   max_concurrent_per_track: 1
