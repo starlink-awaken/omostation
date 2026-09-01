@@ -687,6 +687,10 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     render_svg_p.add_argument("--output", "-o", default=None, help="输出 SVG 路径 (默认同名 .svg)")
     render_sub.add_parser("test_export_formats", help="离线自测: 三格式导出 + GB/T 参数断言")
 
+    # ── im-triage ─────────────────────────────────────────────
+    # BET-Y1Q4-T2-02: IM 会话感知待办卡片渲染
+    im_triage_p = sub.add_parser("im-triage", help="渲染 IM 会话感知待办卡片 (bos://im/session/triage)")
+
     # ── BOS URI gateway ───────────────────────────────────────
     bos_p = sub.add_parser("bos", help="BOS URI 查询与管理")
     bos_sub = bos_p.add_subparsers(dest="bos_cmd")
