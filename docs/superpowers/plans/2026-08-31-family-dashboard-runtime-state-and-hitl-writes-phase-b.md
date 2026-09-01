@@ -2447,11 +2447,20 @@ def test_normalized_product_digest_removes_only_declared_fields(tmp_path: Path) 
     first = tmp_path / "summary.json"
     second = tmp_path / "other" / "summary.json"
     second.parent.mkdir()
-    first.write_text('{"updatedAt":"first","value":1}\n', encoding="utf-8")
-    second.write_text('{"updatedAt":"second","value":1}\n', encoding="utf-8")
+    first.write_text(
+        '{"meta":{"generatedAt":"first"},"updatedAt":"first","value":1}\n',
+        encoding="utf-8",
+    )
+    second.write_text(
+        '{"meta":{"generatedAt":"second"},"updatedAt":"second","value":1}\n',
+        encoding="utf-8",
+    )
     assert runtime.normalized_product_digest(first) == runtime.normalized_product_digest(second)
 
-    second.write_text('{"updatedAt":"second","value":2}\n', encoding="utf-8")
+    second.write_text(
+        '{"meta":{"generatedAt":"second"},"updatedAt":"second","value":2}\n',
+        encoding="utf-8",
+    )
     assert runtime.normalized_product_digest(first) != runtime.normalized_product_digest(second)
 ```
 
@@ -2480,12 +2489,12 @@ INPUT_CLOSURE_SCHEMA: Final = "family-dashboard-input-closure/v1"
 INPUT_TREE_NAMES: Final = ("_knowledge", "_archive", "_control")
 VOLATILE_FIELDS_BY_PRODUCT: Final = {
     "build-meta.json": frozenset({"builtAt"}),
-    "summary.json": frozenset({"updatedAt"}),
-    "members.json": frozenset({"updatedAt"}),
-    "health.json": frozenset({"updatedAt"}),
-    "growth.json": frozenset({"updatedAt"}),
-    "daily.json": frozenset({"updatedAt"}),
-    "assets.json": frozenset({"updatedAt"}),
+    "summary.json": frozenset({"updatedAt", "generatedAt"}),
+    "members.json": frozenset({"updatedAt", "generatedAt"}),
+    "health.json": frozenset({"updatedAt", "generatedAt"}),
+    "growth.json": frozenset({"updatedAt", "generatedAt"}),
+    "daily.json": frozenset({"updatedAt", "generatedAt"}),
+    "assets.json": frozenset({"updatedAt", "generatedAt"}),
 }
 
 
