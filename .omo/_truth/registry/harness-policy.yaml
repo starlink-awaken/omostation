@@ -215,4 +215,46 @@ rollout:
     goal: "harness trace 一行定位，lead_time 方差 -50%"
     deliver: ["复盘 Agent 自建 BET", "愿景-目标双向绑定", "cockpit harness trace 唯一可观测", "bin/gac/* 收敛为 harness 子调用"]
 
+# ──────────────────────────────────────────────────────────────
+# 13. MOF/L0 深度联动 (Phase 4)
+# ──────────────────────────────────────────────────────────────
+mof_mapping:
+  # MOF M1 节点 → Harness 策略映射
+  m1_nodes:
+    - id: harness-controller
+      type: Component
+      harness_ref: harness.controller
+      description: "Harness 控制器 (COMP-WS-omo, S 槽位)"
+    - id: harness-lifecycle
+      type: Component
+      harness_ref: value_loop
+      description: "Harness 5 阶段价值循环"
+    - id: harness-verify
+      type: Component
+      harness_ref: verify
+      description: "Harness verify DAG 编排"
+  # MOF M2 schema → Harness 维度映射
+  m2_schemas:
+    - id: harness-dimension
+      type: Schema
+      harness_ref: dimensions
+      description: "12 维度全量挂载"
+    - id: harness-probe
+      type: Schema
+      harness_ref: probes
+      description: "7 类 Probe 标准化"
+
+# L0 checker → Harness verify DAG 接入
+l0_integration:
+  # L0 约束在 verify DAG 中的位置
+  verify_dag_blocking:
+    - l0-constraints  # L0 协议约束 (X1-C01/CS-10/X2-C01/X2-C03/X4-C01)
+    - harness-compliance  # Harness 12 章节合规
+  # L0 checker → Harness 阶段映射
+  stage_mapping:
+    admission: [sfop_check, bet_claim_check]
+    verify: [l0_constraints, harness_compliance, mof_drift, execution_chain, sfop_slots]
+    audit: [dimension_health, architecture_drift, capability_ownership]
+    accept: [test_coverage, evidence_freshness]
+
 # 校验：make architecture-check 必须全绿（scene-card-lifecycle + dimension-health + architecture-drift + capability-ownership）
