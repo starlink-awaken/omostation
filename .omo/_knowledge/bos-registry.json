@@ -2059,7 +2059,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Harness 12 章节全生命周期合规检查 (Phase 8)",
-    "registered_at": "2026-09-01T01:00:00.000000+00:00",
+    "registered_at": "2026-09-01T02:38:25.946121+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2072,7 +2072,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Harness MOF 约束联动检查 (8 条 Agent-MOF 规则)",
-    "registered_at": "2026-09-01T01:00:00.000000+00:00",
+    "registered_at": "2026-09-01T02:38:25.946332+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2085,7 +2085,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Harness OMO 状态同步检查 (Harness/GaC/漂移/已知债)",
-    "registered_at": "2026-09-01T01:00:00.000000+00:00",
+    "registered_at": "2026-09-01T02:38:25.946336+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2098,7 +2098,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Harness 统一约束与驱动 (整合 4 引擎 CI 模式)",
-    "registered_at": "2026-09-01T01:00:00.000000+00:00",
+    "registered_at": "2026-09-01T02:38:25.946339+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2111,7 +2111,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Harness 架构感知预编辑检查 (场景卡/Journey/标准/Harness)",
-    "registered_at": "2026-09-01T01:00:00.000000+00:00",
+    "registered_at": "2026-09-01T02:38:25.946340+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2124,7 +2124,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "全量合规检查 (arch + compliance + mof + omo)",
-    "registered_at": "2026-09-01T01:00:00.000000+00:00",
+    "registered_at": "2026-09-01T02:38:25.946341+00:00",
     "registered_by": "bin/ssot/sync-bos-registry.py"
   }
 ]
