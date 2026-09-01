@@ -14,7 +14,7 @@ from capability_trace_binding import validate_trace_binding
 MATERIAL_SCHEMA = "native-execution-material/v1"
 SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 SAFE_ID_RE = re.compile(r"^[A-Za-z0-9._:@/-]{1,256}$")
-EXECUTABLE_KINDS = {"workflow", "mcp_server", "mcp_tool", "bos_service"}
+EXECUTABLE_KINDS = {"workflow", "mcp_tool", "bos_service"}
 AUTHORIZATION_BY_KIND = {
     "workflow": "workflow-controller",
     "mcp_server": "mcp-pep",
