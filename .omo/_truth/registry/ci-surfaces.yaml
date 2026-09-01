@@ -1107,6 +1107,47 @@ surfaces:
   triggers:
   - scheduled
   status: active
+- id: bin-gac-architecture-check-py
+  tool: bin/gac/architecture-check.py
+  workflow: architecture-check.yml
+  gate: true
+  triggers:
+  - pull_request
+  status: active
+  note: 架构约束检查 (main 预存未登记, CI 面补登)
+- id: bin-gac-harness-compliance-check-py
+  tool: bin/gac/harness-compliance-check.py
+  workflow: harness-ci.yml
+  gate: true
+  triggers:
+  - pull_request
+  status: active
+  note: Harness 合规检查 (Phase 8, #2863)
+- id: bin-gac-harness-constraint-enforcer-py
+  tool: bin/gac/harness-constraint-enforcer.py
+  workflow: harness-ci.yml
+  gate: true
+  triggers:
+  - pull_request
+  status: active
+  note: Harness 约束执行器 (Phase 8, #2863)
+- id: bin-gac-harness-mof-bridge-py
+  tool: bin/gac/harness-mof-bridge.py
+  workflow: harness-ci.yml
+  gate: true
+  triggers:
+  - pull_request
+  status: active
+  note: Harness MOF 桥 (Phase 8, #2863)
+- id: bin-gac-harness-omo-bridge-py
+  tool: bin/gac/harness-omo-bridge.py
+  workflow: harness-ci.yml
+  gate: true
+  triggers:
+  - pull_request
+  status: active
+  note: Harness OMO 桥 (Phase 8, #2863)
+
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:
