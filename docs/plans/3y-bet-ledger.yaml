@@ -302,6 +302,7 @@ bets:
   - projects/agora
   - projects/cockpit
   - runtime/family-hub/dashboard
+  - runtime/family-hub/.dashboard.recovery-*
   - .omo/state/proposals
   - .omo/_delivery/hitl/family-dashboard
   - .omo/_truth/registry/mutation-surfaces.yaml
@@ -317,8 +318,8 @@ bets:
   pasw_required: true
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md
-    spec_version: 1.1.0
-    content_digest: sha256:0a82d770edcca8d6a21b6b32e1798270b34c1c0b8e72a2518f2baa8ce0e7c809
+    spec_version: 1.2.0
+    content_digest: sha256:46f904e4f299ea02a1491fbfbfee2e271f2999e7c84786632e770de7c1212926
     decision_ref: decision://accepted/BET-Y1Q3-T10-122
   depends_on:
   - BET-Y1Q3-T10-111
