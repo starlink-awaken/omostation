@@ -1,13 +1,13 @@
 ---
 schema_version: specification/v1
-spec_version: 1.1.0
+spec_version: 1.2.0
 title: Family dashboard runtime-state and HITL writes Phase B
 bet_id: BET-Y1Q3-T10-122
 status: accepted
 lifecycle: contract
 owner: family-hub
 created: 2026-08-30
-last-reviewed: 2026-09-01
+last-reviewed: 2026-09-02
 risk_level: L3
 human_gate: true
 ---
@@ -138,6 +138,14 @@ runtime/family-hub/dashboard/
     parity.json
 ```
 
+When an interrupted or externally damaged target contains only an unbound,
+partial runtime (that is, it has no `migration/plan.json`), the only additional
+runtime surface is a sibling quarantine directory with the exact generated
+name `runtime/family-hub/.dashboard.recovery-<source-fingerprint-prefix>-<partial-inventory-prefix>/`.
+It is not an active runtime root, is never read by Dashboard, and remains
+private-mode until a separately authorized cleanup action. No wildcarded
+parent-directory write is permitted.
+
 The active root must be outside Git and Documents, must not be a symlink, and
 must not already contain unknown state. Every directory and file is created
 with private modes. Receipts contain only relative paths, modes, byte counts,
@@ -176,6 +184,39 @@ digests, statuses, and error classes; they contain no body fragments.
    unchanged, and write the final receipt.
 8. **Rollback:** before Phase C, rollback removes only failed/new staging and
    target roots; it never edits the preserved legacy source.
+
+### Partial runtime recovery amendment (2026-09-02)
+
+Recovery is a narrow continuation of the migration transaction, not a second
+builder, truth plane, or cleanup mechanism. It is available only when a target
+is non-empty yet unbound: `migration/plan.json` must be absent. A target that
+contains a bound plan is an existing canonical or otherwise governed state and
+is rejected without movement.
+
+1. **Preflight:** recompute the privacy-safe source plan and require its exact
+   reviewed fingerprint. Reject source drift, a symlink, an empty target,
+   unsafe nodes, an existing recovery sibling, or any target containing a bound
+   plan.
+2. **Inventory:** enumerate only regular partial-target files, recording their
+   relative path, mode, byte count, and SHA-256 in a pathless aggregate digest.
+   No body or absolute private path enters recovery evidence.
+3. **Isolate atomically:** rename the entire partial target to the one exact
+   sibling quarantine path derived from the approved source fingerprint and
+   partial inventory digest. There is no delete, merge, or overwrite operation.
+4. **Rebuild and compare:** call the ordinary absent-target migration path,
+   then require the newly built `generated/tasks.json` digest to equal the
+   preserved partial task digest. A mismatch is a recovery failure rather than
+   a migration waiver.
+5. **Commit or restore:** after full normal verification, write a private
+   `migration/recovery.json` that names only fingerprints, inventory/task
+   digests, and status. On any build, parity, comparison, or receipt failure,
+   remove only the newly created target and atomically restore the quarantine
+   directory to its original target name.
+
+Recovery never writes Documents, never runs the real write canary, never
+changes proposal/HITL semantics, and never authorizes removal of the preserved
+partial sibling. It proves recoverability and runtime continuity only; Phase B
+remains non-terminal until the separately gated canary and final evidence.
 
 ### Derived parity amendment (2026-09-01)
 

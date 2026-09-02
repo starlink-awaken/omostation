@@ -3,13 +3,13 @@ status: active
 lifecycle: plan
 owner: family-hub
 created: 2026-08-30
-last-reviewed: 2026-09-01
+last-reviewed: 2026-09-02
 title: Family dashboard runtime-state and HITL writes Phase B implementation plan
 type: doc
 bet_id: BET-Y1Q3-T10-122
 spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md
-spec_version: 1.1.0
-spec_digest: sha256:0a82d770edcca8d6a21b6b32e1798270b34c1c0b8e72a2518f2baa8ce0e7c809
+spec_version: 1.2.0
+spec_digest: sha256:46f904e4f299ea02a1491fbfbfee2e271f2999e7c84786632e770de7c1212926
 ---
 
 # Family Dashboard Runtime-State and HITL Writes Phase B Implementation Plan
@@ -18,13 +18,13 @@ spec_digest: sha256:0a82d770edcca8d6a21b6b32e1798270b34c1c0b8e72a2518f2baa8ce0e7
 
 **Goal:** Materialize the real family dashboard state in Workspace and replace every direct Documents mutation with a Cockpit-approved, OMO-recorded, uncached Agora-routed, family-hub CAS transaction.
 
-**Architecture:** Delivery is child-first and split around the authority chain. The already-merged baseline establishes family-hub runtime/mutation ownership, OMO proposal truth, Agora routing, and Cockpit approval. The 1.1 amendment adds a privacy-safe builder input closure and two isolated fresh builds in family-hub; only equal normalized fresh products may promote, while preserved legacy differences remain explicit observations. Root adopts only the merged child-main commit, then executes real read-only state migration; the reversible write canary remains separately confirmed.
+**Architecture:** Delivery is child-first and split around the authority chain. The already-merged baseline establishes family-hub runtime/mutation ownership, OMO proposal truth, Agora routing, and Cockpit approval. The 1.1 amendment adds a privacy-safe builder input closure and two isolated fresh builds in family-hub; only equal normalized fresh products may promote, while preserved legacy differences remain explicit observations. The 1.2 amendment adds a fail-closed, atomic recovery path for an unbound partial runtime target. Root adopts only merged child-main commits, then executes real read-only state migration or the bounded recovery; the reversible write canary remains separately confirmed.
 
 **Tech Stack:** Python 3.13, pytest, Pydantic/PyYAML, TypeScript, Bun/Vitest/Playwright, FastAPI, OMO atomic YAML IO, Agora BOS internal resolver, Git submodules, GitHub required checks.
 
 ## Global Constraints
 
-- Source specification is immutable at `sha256:0a82d770edcca8d6a21b6b32e1798270b34c1c0b8e72a2518f2baa8ce0e7c809` (`spec_version: 1.1.0`).
+- Source specification is immutable at the bound `spec_digest` in this plan (`spec_version: 1.2.0`).
 - Documents is the content plane; Workspace owns execution, runtime, state, proposal payloads, receipts, and rollback bytes.
 - Dashboard never opens a Documents file for writing.
 - Cockpit is the only human approval entry; callers may not choose `approved_by`.
@@ -33,6 +33,7 @@ spec_digest: sha256:0a82d770edcca8d6a21b6b32e1798270b34c1c0b8e72a2518f2baa8ce0e7
 - The mutation BOS prefix has `cache_ttl: 0`; a successful mutation response may never be replayed from cache.
 - Runtime roots must be absolute, outside Git/Documents, non-symlink, private-mode, and collision-free.
 - Runtime promotion requires one stable privacy-safe input-closure digest observed before build A, between builds, and after build B, plus equal normalized fresh product digests.
+- Recovery is allowed only for a non-empty target without `migration/plan.json`, after exact source-fingerprint verification. It atomically quarantines that target to the one derived `runtime/family-hub/.dashboard.recovery-*` sibling, rebuilds by the ordinary absent-target path, compares the preserved and rebuilt tasks digests, and atomically restores the original target on every failure. The quarantine is retained; it is not a cleanup authorization.
 - The macOS build subprocess is wrapped by `/usr/bin/sandbox-exec` and denied every write beneath the resolved Documents root. This is process-scoped: approved mutation execution remains separately capability-bound to its exact target and is not globally disabled.
 - Legacy `app-data` value differences are recorded per product and never silently hidden; missing, malformed, unreadable, or product-set-incompatible legacy baselines remain blocking.
 - `.next`, `node_modules`, `.env.local`, credentials, browser auth, raw Documents content, and legacy AI cache are never copied into active state or Git.
@@ -45,9 +46,9 @@ spec_digest: sha256:0a82d770edcca8d6a21b6b32e1798270b34c1c0b8e72a2518f2baa8ce0e7
 
 | Owner | File | Responsibility |
 |---|---|---|
-| family-hub | `src/family_hub/dashboard_runtime.py` | pathless input closure, double staging/build parity, legacy delta, promote, verify |
+| family-hub | `src/family_hub/dashboard_runtime.py` | pathless input closure, double staging/build parity, legacy delta, promote, verify, atomic partial-target recovery |
 | family-hub | `src/family_hub/dashboard_mutation.py` | private payload staging and approved CAS mutation/rollback |
-| family-hub | `src/family_hub/dashboard_phase_b.py` | stable CLI for plan/apply/verify runtime and canary |
+| family-hub | `src/family_hub/dashboard_phase_b.py` | stable CLI for plan/apply/verify/recover runtime and canary |
 | family-hub | `tests/test_dashboard_phase_b.py` | Python runtime/mutation contract tests |
 | family-hub dashboard | `src/lib/hitl-proposals.ts` | stage payload and call authenticated Cockpit proposal ingress |
 | family-hub dashboard | `src/app/api/file/save/route.ts` | HTTP 202 proposal-only file-save route |
@@ -66,6 +67,7 @@ spec_digest: sha256:0a82d770edcca8d6a21b6b32e1798270b34c1c0b8e72a2518f2baa8ce0e7
 | root | `.omo/_truth/registry/documents-content-plane-migrations.yaml` | Phase B progress evidence, still non-terminal |
 | root | `tests/test_documents_content_plane_migration_check.py` | non-terminal Phase B registry contract |
 | runtime | `runtime/family-hub/dashboard/**` | private real state, payload, mutation and migration receipts |
+| runtime | `runtime/family-hub/.dashboard.recovery-*` | exact derived sibling quarantine for an unbound partial target; retained, never active |
 
 ## Specification 1.1 Amendment Routing
 
@@ -78,6 +80,15 @@ Task 12 remains non-terminal until that canary and all final evidence exist.
 The amendment changes only family-hub runtime planning/application and the root
 family-hub gitlink. OMO, Agora, Cockpit, proposal semantics, mutation semantics,
 Documents content, and Phase C contracts are unchanged.
+
+## Specification 1.2 Recovery Amendment Routing
+
+Task 10R applies only after the recovery-capable family-hub child commit and
+its root gitlink are merged, and only when live preflight proves the target is
+an unbound partial runtime. It does not replay Tasks 9A–9C, does not alter
+Documents, OMO, Agora, Cockpit, or the canary contract, and cannot promote the
+BET to done. If `migration/plan.json` exists, the task stops: it is not a
+repair authorization for canonical runtime state.
 
 ## Execution Topology
 
@@ -3249,6 +3260,73 @@ final BET retro/canary gate is still absent; release the runtime lock with an
 evidence note that materialization is verified but T10-122 remains non-terminal.
 Do not update the ledger to `done`, do not claim Phase C, and do not claim
 principal-bound value or Documents-wide purity.
+
+---
+
+### Task 10R: Fail-Closed Recovery of an Unbound Partial Runtime Target
+
+**Files:**
+- Modify at runtime: `runtime/family-hub/dashboard/**`
+- Create at runtime: `runtime/family-hub/.dashboard.recovery-<source-fingerprint-prefix>-<partial-inventory-prefix>/**`
+- Create evidence: `.omo/evidence/$RUN_ID/family-dashboard-runtime-recovery.json`
+
+**Interfaces:**
+- Consumes: merged root main at the recovery-capable family-hub gitlink, an
+  exact reviewed source fingerprint, and a non-empty target with no
+  `migration/plan.json`.
+- Produces: an atomically preserved partial target, an ordinary verified fresh
+  runtime, a task-digest equivalence proof, and a private recovery receipt.
+
+- [ ] **Step 1: Start a fresh recovery-only governed run and preflight the live target**
+
+Create a fresh full-profile root delivery attempt from authoritative root main.
+Run `bootstrap`, `status`, and start `bet-execution` with the
+`engineering-agent` profile and a recovery-specific objective. Generate an
+affected-graph receipt with `workspace-root runtime`; claim only the canonical
+runtime target and the exact derived recovery sibling after calculating its
+pathless partial inventory digest.
+
+The target must be non-empty, non-symlink, and contain no
+`migration/plan.json`. Recompute the source plan from the Documents root and
+require the previously reviewed `EXPECTED_FINGERPRINT` byte-for-byte. Do not
+invoke recovery for a canonical/bound target, an empty target, source drift,
+unknown node, or an occupied recovery sibling.
+
+- [ ] **Step 2: Rebuild atomically through the managed owner capability**
+
+Install the owned dashboard build dependencies before invocation, then use the
+new family-hub CLI only; do not move, delete, or merge runtime files manually:
+
+```bash
+set -o pipefail
+cd "$OWNED_ROOT/projects/family-hub"
+uv run python -m family_hub.dashboard_phase_b recover-runtime \
+  --documents-root /Users/xiamingxing/Documents/@家庭生活 \
+  --legacy-app-root /Users/xiamingxing/Documents/@家庭生活/family-dashboard-app \
+  --state-root /Users/xiamingxing/Workspace/runtime/family-hub/dashboard \
+  --app-root "$OWNED_ROOT/projects/family-hub/apps/dashboard" \
+  --expected-fingerprint "$EXPECTED_FINGERPRINT" \
+  --json | tee "$OWNED_ROOT/.omo/evidence/$RUN_ID/family-dashboard-runtime-recovery.json"
+```
+
+Expected behavior: the partial target is renamed atomically to the exact
+derived sibling, ordinary apply/verify runs against the absent canonical path,
+and the rebuilt task digest equals the preserved task digest. Any failure
+removes only a newly created target and atomically restores the original
+partial target. The CLI must not write Documents.
+
+- [ ] **Step 3: Verify recovery without deleting preserved evidence**
+
+Run `verify-runtime` with the same expected fingerprint. Verify six manifests,
+fresh-build parity, legacy delta, private modes, and `migration/recovery.json`.
+Verify that its source fingerprint, partial inventory digest, and preserved and
+rebuilt task digests agree with the CLI result. Check the sibling is present
+and private-mode; it is retained rather than deleted. Run the representative
+read-only dashboard health canary from Task 10 only after runtime verification.
+
+Close this phase run as `blocked` while the write-canary approval and final
+retro remain absent. Record recovery as runtime continuity evidence only; do
+not mark the BET done, claim Documents purity, or execute Task 11.
 
 ---
 
