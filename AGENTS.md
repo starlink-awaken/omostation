@@ -91,7 +91,7 @@ POST /api/knowledge/search → 网络解析 AGORA_HTTP_ENDPOINT/bos/resolve
 ### SSOT 决策
 
 - 架构决策: [`../../.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md`](../../.omo/_knowledge/decisions/0294-knowledge-gateway-decoupling-and-event-pipeline.md)
-- 操作手册: [`../../docs/operations/knowledge-foundry-sop.md`](../../docs/operations/knowledge-foundry-sop.md) §5
+- 操作手册: [`../../docs/architecture/knowledge-foundry-cron.md`](../../docs/architecture/knowledge-foundry-cron.md) §5
 - BOS 域越界登记: [`../../.omo/standards/bos-uri-domain-standard.md`](../../.omo/standards/bos-uri-domain-standard.md)
 
 > ⚠️ Producer 已规范为 `bos://memory/events/card_updated`；Consumer dual-accept 遗留 `bos://brain/events/card_updated`（ADR-0372 D5 / ADR-0294）。
