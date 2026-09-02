@@ -615,6 +615,13 @@ chaos-drill:  ## 运行全域混沌注入与红蓝对抗演练 (ADR-0194)
 chaos-drill-strict:  ## 严格模式运行全域混沌演练 (发现未通过项即失败)
 	python3 bin/ssot/chaos-governance-drill.py --strict
 
+chaos-drill-full:  ## 12 项全套混沌演练 (BET-Y1Q3-T10-120: strict + JSON report + 防腐护栏巡检)
+	@echo "── 12 项全套混沌演练 + 防腐护栏自动化巡检 ────────────────"
+	python3 bin/ssot/chaos-governance-drill.py --strict --json | tee docs/reports/2026-09-09-chaos-suite-validation.md
+	@echo "── 防腐护栏 GaC 巡检 ──────────────────────────────────────"
+	make gac-local-gate
+	@echo "── chaos-drill-full COMPLETE ────────────────────────────────"
+
 canvas-serve:  ## 启动 Dual-Plane Truth Canvas Web 事实大盘 (ADR-0194)
 	uv run --project projects/ecos ecos-constraint facts serve --port 8765
 

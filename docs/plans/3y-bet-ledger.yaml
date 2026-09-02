@@ -16726,7 +16726,10 @@ bets:
   title: 混沌工程常态化注入套件与防腐护栏自动化巡检
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  closed_at: 2026-09-02
+  closed_by: xiamingxing
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q3-T10-120.md
   goal: 开发全自动化混沌测试工具，定时注入雷雳 5 断开、显存爆炸、脏工作树、僵尸进程、并发死锁等 12 种典型生产故障，验证系统 5 层并发锁与 GaC 门禁的绝对韧性。
   non_goals:
   - 不在生产工作树中直接执行破坏性不可逆删除
@@ -16751,6 +16754,11 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 混沌测试发现不可自愈死锁时立即终止演练并输出堆栈。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-02-chaos-injection-suite-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:5bf73732120525a603c41477bdd791aca1e4a74e11d8b9cb43a21f2c9319cb6a
+    decision_ref: decision://accepted/BET-Y1Q3-T10-120
   retro: required
 - id: BET-Y1Q3-T10-121
   track: T10-MATURITY
