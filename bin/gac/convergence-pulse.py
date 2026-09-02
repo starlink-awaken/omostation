@@ -185,6 +185,19 @@ def collect_health(until: date) -> dict[str, object]:
     else:
         state["morning_brief"] = "not_due_yet"
 
+    sup_state = ROOT / ".omo" / "state" / "pipeline-supervisor-state.json"
+    if sup_state.is_file():
+        try:
+            sup = json.loads(sup_state.read_text(encoding="utf-8"))
+            recent_alerts = [a for a in sup.get("alerts", []) if str(a.get("ts", ""))[:10] == until.isoformat()]
+            state["pipeline_supervisor"] = f"ok" if not recent_alerts else f"alerts={len(recent_alerts)}"
+            for a in recent_alerts[:3]:
+                alerts.append(f"管线 supervisor 降级: {a.get('kind')} stations={a.get('stations')}")
+        except (OSError, ValueError):
+            state["pipeline_supervisor"] = "unreadable"
+    else:
+        state["pipeline_supervisor"] = "missing"
+
     try:
         import urllib.request
 
