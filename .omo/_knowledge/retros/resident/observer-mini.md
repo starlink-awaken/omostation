@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-mini
-generated_at: 2026-09-02T13:10:01Z
+generated_at: 2026-09-02T14:10:01Z
 status: candidate
 counts:
   runs: 24
@@ -14,7 +14,7 @@ failure_breakdown:
 ---
 # observer-mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-02T13:10:01Z
+- generated_at: 2026-09-02T14:10:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 24 成功运行 + 0 失败模式 = 24 草稿
 - 失败率: 0.00%
