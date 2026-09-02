@@ -16549,6 +16549,11 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 投机草稿命中率低于 40% 时自动降级为自回归标准解码。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:e9cd768a52d5b9b703012671c5283202586cadad777ff667f5c080970866acaf
+    decision_ref: decision://accepted/BET-Y1Q3-T10-114
   retro: required
 - id: BET-Y1Q3-T10-115
   track: T10-MATURITY

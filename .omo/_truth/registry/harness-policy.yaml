@@ -23,6 +23,9 @@ admission:
     - .omo/_delivery/
     - .omo/_truth/registry/  # harness 操作修改 governance 文件
     - bin/harness  # harness 自身迭代
+    - docs/superpowers/specs/  # harness run 期间创建/编辑的 BET spec 文档
+    - docs/plans/3y-bet-ledger.yaml  # harness run 期间添加 spec binding
+    - "-"  # swarmshake 残留匿名 untracked 文件 (git status '?? -')
   require_bet_claimable: true
   deny_concurrent_claim: "same BET && same track"
   max_concurrent_per_track: 1

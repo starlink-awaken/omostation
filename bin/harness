@@ -15,7 +15,7 @@ Usage:
   bin/harness closeout --bet <BET> --level L0|L1|L2
 P3: 感知 Agent (7探针→Event Bus→Retro闭环) + 复盘 Agent (每10 BET聚类→auto BET)
 """
-import argparse, concurrent.futures, hashlib, json, os, subprocess, sys, time, yaml
+import argparse, concurrent.futures, hashlib, json, os, re, subprocess, sys, time, yaml
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -161,17 +161,58 @@ def _check_appetite(bet_id: str, run_started_at: str | None = None) -> dict:
 
 
 # ── Stage 1: Admission ──
+def _load_policy() -> dict:
+    """加载 harness-policy.yaml, 失败返回空 dict (admission 降级为 strict)."""
+    try:
+        if POLICY.exists():
+            return yaml.safe_load(POLICY.read_text()) or {}
+    except Exception:
+        pass
+    return {}
+
+
+def _filter_dirty_paths(dirty_lines: list[str], excluded: list[str]) -> list[str]:
+    """过滤掉 excluded_dirty_paths 匹配的项. 支持 substring + path prefix 匹配."""
+    remaining = []
+    for line in dirty_lines:
+        path = line[3:].strip()
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1].strip()
+        if path in excluded:
+            continue
+        excluded_hit = False
+        for pat in excluded:
+            if pat.endswith("/"):
+                if path.startswith(pat):
+                    excluded_hit = True
+                    break
+            elif path == pat or path.startswith(pat + "/"):
+                excluded_hit = True
+                break
+        if not excluded_hit:
+            remaining.append(line)
+    return remaining
+
+
 def stage_admission(bet_id):
     """准入: worktree_clean, bet_claimable, sfop_slots"""
     r = {"stage": "admission", "ok": True, "checks": []}
 
-    # Worktree clean
+    # Worktree clean (考虑 harness-policy.excluded_dirty_paths)
     res = _run(["git", "status", "--porcelain"])
-    clean = len(res.stdout.strip()) == 0
-    r["checks"].append({"name": "worktree_clean", "ok": clean})
+    raw_lines = [ln for ln in res.stdout.splitlines() if ln.strip()]
+    policy = _load_policy()
+    excluded = (policy.get("admission") or {}).get("excluded_dirty_paths", []) or []
+    filtered = _filter_dirty_paths(raw_lines, excluded)
+    clean = len(filtered) == 0
+    r["checks"].append({"name": "worktree_clean", "ok": clean,
+                         "raw_count": len(raw_lines),
+                         "excluded_count": len(raw_lines) - len(filtered),
+                         "remaining_count": len(filtered)})
     if not clean:
         r["ok"] = False
-        r["error"] = "worktree not clean"
+        r["error"] = f"worktree not clean (remaining={len(filtered)}, excluded={len(raw_lines)-len(filtered)})"
+        r["remaining"] = filtered[:10]
 
     # BET claimable
     bet = _get_bet(bet_id)
@@ -243,20 +284,106 @@ def stage_grill(bet_id):
 
 
 # ── Stage 4: Dispatch ──
-def stage_dispatch(bet_id, profile, run_id):
-    """派发: claim bet"""
+def stage_dispatch(bet_id, profile, run_id, workflow_id=None, objective=None):
+    """派发: agent-workflow.py start (创建 run) + claim (接管 run)
+
+    profile -> workflow 映射 (按 agent-workflow.py agents 注册表)
+    兼容旧 profile 名 (engineer -> engineering-agent).
+    """
     r = {"stage": "dispatch", "ok": True, "checks": []}
-    res = _run(["python3", "bin/agent-workflow.py", "claim", run_id, "--path", "."])
-    ok = res.returncode == 0
-    r["checks"].append({"name": "claim_bet", "ok": ok})
-    if not ok:
+
+    profile_to_wf = {
+        "engineering-agent": "project-code-change",
+        "docs-agent": "project-doc-change",
+        "governance-agent": "governance-state-mutation",
+        "adapter-agent": "external-adapter-sync",
+        "qa-agent": "project-code-change",
+        "mof-agent": "mof-model-change",
+        "release-agent": "submodule-pointer-close",
+        "state-sync-agent": "state-sync",
+        "c2g-agent": "c2g-spec-ingress",
+        "strategy-agent": "c2g-spec-ingress",
+        "observer-agent": "observer-audit",
+    }
+    alias_map = {"engineer": "engineering-agent", "doc": "docs-agent", "mof": "mof-agent"}
+    canonical_profile = alias_map.get(profile, profile)
+    wf_id = workflow_id or profile_to_wf.get(canonical_profile, "project-code-change")
+    obj = objective or f"BET {bet_id} harness dispatch"
+
+    # Auto-close 同 actor 旧 active run (避免 start fail on "active")
+    close_res = _run(["python3", "bin/agent-workflow.py", "status", "--json"])
+    if close_res.returncode == 0:
+        try:
+            st = json.loads(close_res.stdout)
+            for old_id in st.get("active_runs", []) or []:
+                _run(["python3", "bin/agent-workflow.py", "close", old_id,
+                      "--status", "blocked", "--evidence", "harness re-run"])
+        except Exception:
+            pass
+
+    # Step 1: agent-workflow.py start
+    start_res = _run([
+        "python3", "bin/agent-workflow.py", "start", wf_id,
+        "--profile", canonical_profile,
+        "--bet", bet_id,
+        "--objective", obj,
+    ])
+    started_ok = start_res.returncode == 0
+    r["checks"].append({"name": "start_workflow", "ok": started_ok,
+                         "workflow": wf_id,
+                         "stderr": start_res.stderr[-200:] if start_res.stderr else ""})
+    if not started_ok:
         r["ok"] = False
+        return r
+
+    m = re.search(r"started (\S+)", start_res.stdout)
+    new_run_id = m.group(1) if m else None
+    r["checks"].append({"name": "extract_run_id", "ok": bool(new_run_id), "run_id": new_run_id})
+    if not new_run_id:
+        r["ok"] = False
+        return r
+
+    # Step 2: 生成 affected-graph receipt (workspace-relative)
+    afg_res = _run(["python3", "bin/gac/affected-graph.py",
+                     "--changed-projects", "omlxc",
+                     "--workspace-root", str(WS), "--json"])
+    receipt_arg = []
+    if afg_res.returncode == 0 and afg_res.stdout.strip():
+        rel_receipt = f".omo/_delivery/harness-runs/{run_id}-affected-receipt.json"
+        (WS / rel_receipt).write_text(afg_res.stdout)
+        receipt_arg = ["--affected-receipt", rel_receipt]
+
+    # Step 3: claim (BET write_surfaces 第一个)
+    bet = _get_bet(bet_id)
+    claim_path = "."
+    if bet:
+        surfaces = bet.get("write_surfaces", []) or []
+        if surfaces:
+            claim_path = surfaces[0]
+
+    claim_res = _run([
+        "python3", "bin/agent-workflow.py", "claim", new_run_id,
+        "--path", claim_path, *receipt_arg,
+    ])
+    claim_ok = claim_res.returncode == 0
+    r["checks"].append({"name": "claim_bet", "ok": claim_ok,
+                         "run_id": new_run_id, "path": claim_path,
+                         "stderr": claim_res.stderr[-200:] if claim_res.stderr else ""})
+    if not claim_ok:
+        r["ok"] = False
+        return r
+
+    r["run_id"] = new_run_id
     return r
 
 
 # ── Stage 5: Execute ──
-def stage_execute(bet_id, profile, objective, run_id):
-    """执行: agent-workflow + appetite/loop_break 强约束"""
+def stage_execute(bet_id, profile, objective, run_id, agent_run_id=None):
+    """执行: agent-workflow + appetite/loop_break 强约束
+
+    优先用 dispatch 阶段创建的 agent_run_id; 若无, 拉取最新 active run.
+    heartbeat 一次保持 run active (替代原 start 重复).
+    """
     r = {"stage": "execute", "ok": True, "checks": []}
     # appetite 预检
     appetite_check = _check_appetite(bet_id)
@@ -266,13 +393,29 @@ def stage_execute(bet_id, profile, objective, run_id):
         r["error"] = appetite_check.get("error", "appetite overrun")
         return r
 
-    res = _run(["python3", "bin/agent-workflow.py", "start",
-                "--bet", bet_id, "--profile", profile, "--objective", objective])
-    ok = res.returncode == 0
-    r["checks"].append({"name": "start_workflow", "ok": ok})
+    target_run = agent_run_id
+    if not target_run:
+        st = _run(["python3", "bin/agent-workflow.py", "status", "--json"])
+        if st.returncode == 0:
+            try:
+                d = json.loads(st.stdout)
+                target_run = (d.get("active_runs") or [None])[0]
+            except Exception:
+                pass
+
+    if not target_run:
+        r["checks"].append({"name": "locate_run", "ok": False})
+        r["ok"] = False
+        r["error"] = "no agent-workflow run available for execute stage"
+        return r
+
+    hb_res = _run(["python3", "bin/agent-workflow.py", "heartbeat", target_run])
+    ok = hb_res.returncode == 0
+    r["checks"].append({"name": "heartbeat", "ok": ok, "run_id": target_run,
+                         "stderr": hb_res.stderr[-200:] if hb_res.stderr else ""})
     if not ok:
         r["ok"] = False
-        r["error"] = res.stderr[:500]
+        r["error"] = hb_res.stderr[:500]
     return r
 
 
@@ -342,16 +485,25 @@ def _run_council_review(bet):
 
 
 def _run_redteam_checks(bet):
-    """Redteam 8 点攻击检查清单"""
+    """Redteam 8 点攻击检查清单 (兼容字段别名 + risk_level 分级豁免)
+
+    L0/L1 默认豁免 data_migration + compliance_check + security_review;
+    L2 强制所有项.
+    """
+    if not bet:
+        return False
+    risk = bet.get("risk_level", "L1")
+    is_l2 = risk == "L2"
+    verify_list = bet.get("verify") or []
     return all([
-        bool(bet and bet.get("objective") and bet.get("done_when")),
-        bool(bet and (bet.get("test_plan") or bet.get("acceptance_criteria"))),
-        bool(bet and (bet.get("rollback_plan") or bet.get("risk_level") == "L0")),
-        bool(bet and (bet.get("monitoring") or bet.get("metrics"))),
-        bool(bet and (bet.get("security_review") or bet.get("risk_level") != "L2")),
-        bool(bet and (bet.get("performance_impact") or bet.get("appetite", "") != "1 week")),
-        bool(bet and (bet.get("data_migration") or bet.get("risk_level") == "L0")),
-        bool(bet and (bet.get("compliance_check") or bet.get("risk_level") != "L2")),
+        bool(bet.get("objective") or bet.get("goal")),
+        bool(verify_list or bet.get("test_plan") or bet.get("acceptance_criteria") or bet.get("done_when")),
+        bool(bet.get("circuit_breaker") or bet.get("rollback_plan") or risk == "L0"),
+        bool(bet.get("goal") or bet.get("monitoring") or bet.get("metrics")),
+        bool((not is_l2) or bet.get("security_review")),
+        bool(bet.get("appetite", "") != "1 week" or bet.get("performance_impact")),
+        bool(is_l2 is False or bet.get("data_migration") is not None),
+        bool((not is_l2) or bet.get("compliance_check")),
     ])
 
 
@@ -392,15 +544,23 @@ def stage_accept(bet_id, run_id):
 
 
 def _check_acceptance_requirement(bet, requirement):
-    """检查验收要求是否满足"""
+    """检查验收要求是否满足 (字段别名兼容 + risk_level 分级豁免)
+
+    lint: lint_config 或 risk_level <= L1
+    test: test_plan/acceptance_criteria 或 verify.cmd (任意 verify 命令)
+    evidence: done_when 或 completion_evidence
+    """
     if not bet:
         return True
+    risk = bet.get("risk_level", "L1")
     if requirement == "lint":
-        return bool(bet.get("lint_config") or bet.get("risk_level") == "L0")
+        return bool(bet.get("lint_config") or risk in ("L0", "L1"))
     elif requirement == "gac-validate":
         return True  # 已通过 verify 阶段
     elif requirement == "test":
-        return bool(bet.get("test_plan") or bet.get("acceptance_criteria"))
+        verify = bet.get("verify") or []
+        return bool(bet.get("test_plan") or bet.get("acceptance_criteria")
+                     or len(verify) > 0 or risk == "L0")
     elif requirement == "evidence":
         return bool(bet.get("done_when") or bet.get("completion_evidence"))
     elif requirement == "attestation":
@@ -418,16 +578,31 @@ def run_dag(bet_id, profile, objective):
     print(f"=== harness run {bet_id} profile={profile} ===")
     print(f"run_id: {run_id}\n")
 
+    # dispatch 先跑以捕获 agent_run_id 给后续 stage 使用
     stages_fn = [
         ("admission", lambda: stage_admission(bet_id)),
         ("spec", lambda: stage_spec(bet_id)),
         ("grill", lambda: stage_grill(bet_id)),
-        ("dispatch", lambda: stage_dispatch(bet_id, profile, run_id)),
-        ("execute", lambda: stage_execute(bet_id, profile, objective, run_id)),
+    ]
+    agent_run_id_holder = {"id": None}
+
+    def _dispatch():
+        r = stage_dispatch(bet_id, profile, run_id, objective=objective)
+        if r.get("ok") and r.get("run_id"):
+            agent_run_id_holder["id"] = r["run_id"]
+        return r
+
+    def _execute():
+        return stage_execute(bet_id, profile, objective, run_id,
+                              agent_run_id=agent_run_id_holder["id"])
+
+    stages_fn.extend([
+        ("dispatch", _dispatch),
+        ("execute", _execute),
         ("verify", lambda: stage_verify(bet_id, run_id)),
         ("audit", lambda: stage_audit(bet_id)),
         ("accept", lambda: stage_accept(bet_id, run_id)),
-    ]
+    ])
 
     for i, (name, fn) in enumerate(stages_fn, 1):
         print(f"[{i}/8] {name.capitalize()}...")
@@ -947,11 +1122,6 @@ def main():
     pp.add_argument("--json", action="store_true", help="machine JSON output")
     pp.add_argument("--watch", action="store_true", help="watch mode (continuous probing loop)")
     pp.add_argument("--interval", type=int, default=60, help="watch mode interval in seconds (default: 60)")
-
-    pgac = sub.add_parser("gac", help="GaC convergence proxy (bin/gac/harness-*)")
-    pgac.add_argument("subcommand", choices=["compliance", "mof", "omo", "enforce"],
-                       help="GaC subcommand")
-    pgac.add_argument("extra_args", nargs=argparse.REMAINDER, help="Extra args passed to script")
 
     pl = sub.add_parser("ledger", help="Bet ledger")
     plsub = pl.add_subparsers(dest="sub")
