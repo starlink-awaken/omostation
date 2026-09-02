@@ -153,6 +153,51 @@ def collect_production(since: date, until: date) -> dict[str, object]:
     }
 
 
+def collect_health(until: date) -> dict[str, object]:
+    """运行时健康面 (阶段0 告警闭环, 2026-09-02): 断产出告警进周报.
+
+    Sources: tailscale 心跳 (bin/health/tailscale-heartbeat.sh 产物) /
+    晨报断更 (当日 brief 缺失且已过 08:00) / embed node 探活 (Mac mini :18700).
+    """
+    alerts: list[str] = []
+    state = {"tailscale": "unknown", "morning_brief": "unknown", "embed_node": "unknown"}
+
+    hb_path = ROOT / ".omo" / "state" / "tailscale-heartbeat.json"
+    if hb_path.is_file():
+        try:
+            hb = json.loads(hb_path.read_text(encoding="utf-8"))
+            state["tailscale"] = "ok" if hb.get("ok") else ("zombie" if hb.get("zombie_interface") else "down")
+            if not hb.get("ok"):
+                alerts.append(f"tailscale 心跳失败 (zombie={hb.get('zombie_interface')}, checked_at={hb.get('checked_at')})")
+        except (OSError, ValueError):
+            state["tailscale"] = "unreadable"
+            alerts.append("tailscale 心跳产物不可读")
+    else:
+        state["tailscale"] = "missing"
+        alerts.append("tailscale 心跳产物缺失 (LaunchAgent 未跑?)")
+
+    brief = ROOT / ".omo" / "state" / "policy-radar" / f"brief-{until.strftime('%Y%m%d')}.json"
+    now_h = datetime.now(UTC).hour + datetime.now(UTC).minute / 60
+    if now_h >= 8.0:  # 晨报预算 07:30, 08:00 后缺产物即断更
+        state["morning_brief"] = "ok" if brief.is_file() else "stale"
+        if not brief.is_file():
+            alerts.append(f"晨报断更: {brief.name} 缺失 (已过 08:00 UTC)")
+    else:
+        state["morning_brief"] = "not_due_yet"
+
+    try:
+        import urllib.request
+
+        req = urllib.request.Request("http://100.99.210.78:18700/health", headers={"User-Agent": "convergence-pulse/1.0"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            state["embed_node"] = "ok" if resp.status == 200 else f"http_{resp.status}"
+    except Exception as exc:
+        state["embed_node"] = "down"
+        alerts.append(f"embed node 不可达 (Mac mini :18700): {type(exc).__name__}")
+
+    return {"alerts": alerts, "sources": state, "alert_count": len(alerts)}
+
+
 def collect_pulse(*, since: date, until: date, generated_at: datetime | None = None) -> dict[str, object]:
     start, end = _window(since, until)
     return {
@@ -165,6 +210,7 @@ def collect_pulse(*, since: date, until: date, generated_at: datetime | None = N
             "escapes": collect_escapes(start, end),
             "history": collect_history(start, end),
         },
+        "health": collect_health(until),
     }
 
 
