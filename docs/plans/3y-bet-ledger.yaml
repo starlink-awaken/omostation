@@ -17359,6 +17359,75 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
   value_indicator_policy: false
+- id: BET-Y1Q4-T2-04
+  track: T2-PERCEPT
+  window: Y1Q4
+  title: 统一邮箱连接器 (Apple Mail 本地 + 邮箱大师导出 + IMAP 预留)
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: 专门连接器多源汇聚邮件信号（主题/发件人/正文摘要）喂 T7-03 雷达站，本地解析零凭证优先。
+  non_goals:
+  - 不在无授权情况下拉取任何云端邮箱
+  done_when:
+  - Apple Mail .eml 本地扫描产出结构化邮件事件 ≥3 字段（from/subject/date）
+  - 导出目录监听通道复用同一解析面
+  - 邮件事件汇入 event_bus（T2-01 总线）normal 优先级
+  verify:
+  - cmd: uv run python -m omo.mail_connector test_parse
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/mail_connector.py
+  - docs/reports/2026-09-02-mail-connector.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T2-04.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q4-T2-01
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 邮箱解析异常跳过单封并计数，不中断批次。
+  retro: required
+- id: BET-Y1Q4-T2-05
+  track: T2-PERCEPT
+  window: Y1Q4
+  title: 数字大脑管线 supervisor 常驻化 (Resident execute 角色)
+  appetite: 1.5 days
+  priority: P0
+  status: candidate
+  goal: 全管线（雷达→总线→嵌入→渲染）注册为 Resident Agent execute 角色常驻：定时通道（每日 07:30 全链晨报）+ 文件监听通道（~/Inbox/ocr-inbound/ 新扫描件→OCR→待办卡片），单站失败降级不中断 + 告警进 convergence-pulse health。
+  non_goals:
+  - 不做 IM 指令触发通道（human gate 缓推）
+  done_when:
+  - resident-routes.yaml 规则级路由订阅落地，supervisor cell 可查询（resident status）
+  - 定时通道连续 3 天自动产出晨报（真实闸门）
+  - 文件监听通道真实扫描件触发 OCR→嵌入→卡片全链
+  - 单站 kill 后降级续跑 + health 告警可见
+  verify:
+  - cmd: make resident-status
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/resident-routes.yaml
+  - projects/omo/src/omo/pipeline_supervisor.py
+  - docs/reports/2026-09-02-pipeline-supervisor.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T2-05.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q4-T2-01
+  - BET-Y1Q4-T7-03
+  - BET-Y1Q4-T2-03
+  - BET-Y1Q4-T8-03
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 单站失败标记 degraded 续跑下游可行站，全链告警写 .omo/state/convergence-pulse 事件源。
+  retro: required
 - id: BET-Y1Q4-T10-01
   track: T10-MATURITY
   window: Y1Q4

@@ -2488,12 +2488,27 @@ def cmd_lint(data: dict, args) -> int:
     # indicates either a date-prefix drift (08-29 vs 08-30) or a report
     # that was never created.  Both silently fail D0 downstream.
     warnings: list[str] = []
+    from datetime import date as _date
+
+    _today = _date.today()
     for b in data["bets"]:
+        _bet_done = b.get("status") in ("done", "in_progress", "delivery_accepted")
         for p in b.get("write_surfaces") or []:
             if "*" in p:
                 continue
             if not p.startswith("docs/reports/"):
                 continue
+            # 模板病根治 (2026-09-02, 7 病例后): done BET 的 report 路径日期不得
+            # 晚于当日 — 计划期预填的未来日期必须在交付时对齐真实开工日。
+            m = re.match(r"docs/reports/(\d{4})-(\d{2})-(\d{2})-", p)
+            if _bet_done and m:
+                _d = _date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                if _d > _today:
+                    errs.append(
+                        f"{b['id']}.write_surface: FUTURE_DATED_REPORT_PATH {p} "
+                        f"(status={b.get('status')} 但日期晚于今日 — 模板病, 须对齐真实交付日)"
+                    )
+                    continue
             exists = subprocess.run(
                 ["git", "cat-file", "-e", f"origin/main:{p}"],
                 capture_output=True, check=False,
