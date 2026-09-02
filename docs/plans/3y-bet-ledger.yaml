@@ -16148,7 +16148,7 @@ bets:
   title: resident 决策采纳闭环 (提案状态机 + ADR 草稿自动化 + north_star 知识消费轴)
   appetite: 1 day
   priority: P1
-  status: done
+  status: blocked
   done_at: '2026-08-27'
   note: 'closeout ok (run 20260826T132250Z-project-code-change-6cbb5114): 主仓 PR #2286 MERGED (39a6db62) — proposal-to-adr.py 提案状态机 (new/drafted/adopted/executed/verified + --mark-status 枚举迁移校验) + convert
     处理最新 new→ADR 草稿标记 drafted (不自动采纳) + north_star_meter_v2 knowledge_consumption 轴 (proposal_total/adoption_rate/retro_referenced) + CRON_PROPOSAL_ADR (每天 01:00); 测试 7 用例绿 + ci-local-fast 57 ALL GREEN;
@@ -16237,7 +16237,7 @@ bets:
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-19.md
             sha256: sha256:e2ee6548d01392940e16d9e61b5479118e8e95ed93d4d2f5c7e588f0b99b0b1b
-    overall_state: outcome_accepted
+    overall_state: blocked
   depends_on: []
 - id: BET-Y1Q3-T10-20
   track: T10-MATURITY
@@ -16245,7 +16245,7 @@ bets:
   title: resident 规格文档对齐 (CLI 全量收录 + Agent Cell 子系统状态标记)
   appetite: 0.5 day
   priority: P2
-  status: done
+  status: blocked
   done_at: '2026-08-27'
   note: 'closeout ok: 主仓 PR #2299 MERGED (4b45e8fc, 原 #2291 因 CI runner 拥堵超时关闭后重开) — resident-agent-system-v1.md 2.1 CLI 补 inbox/monitor/heartbeat + promote 五问注释 + 新增 §3.1 Agent Cell 子系统状态标记 (不归档不提前接线,
     T1-12 合流后重评) + §4 运维/数据面更新 (CRON_PROPOSAL_ADR + retros/resident + evolution-proposals) + known-debt service-config-drift 指纹 + ecos gitlink 修正 (afcb377c 孤儿→e5327d3a, [gitlink-regress]); 台账升 done (outcome_accepted)
@@ -16326,7 +16326,7 @@ bets:
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-20.md
             sha256: sha256:f8c5f688d68039bd36ed8771d610a4bab40c5b6b2b6be1a66b831190570b1e61
-    overall_state: outcome_accepted
+    overall_state: blocked
   depends_on: []
 - id: BET-Y1Q3-T10-105
   track: T10-MATURITY
