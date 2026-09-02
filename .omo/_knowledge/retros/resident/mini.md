@@ -1,13 +1,13 @@
 ---
 schema: resident-retro-candidate/v1
 topic: mini
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-02T07:10:01Z
 status: candidate
 counts:
-  runs: 188
+  runs: 192
   failures: 33
-  total: 221
-failure_rate: 0.1493
+  total: 225
+failure_rate: 0.1467
 failure_breakdown:
   by_event_type:
     StepFailed: 33
@@ -15,10 +15,10 @@ failure_breakdown:
 ---
 # mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-02T07:10:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 188 成功运行 + 33 失败模式 = 221 草稿
-- 失败率: 14.93%
+- sediment 覆盖: 192 成功运行 + 33 失败模式 = 225 草稿
+- 失败率: 14.67%
 
 ## 成功运行 (runs/)
 
@@ -210,6 +210,10 @@ failure_breakdown:
 - 20260830T122408Z-mini-bbc3c102.md
 - 20260830T221223Z-mini-5f78f913.md
 - 20260830T221224Z-mini-1e2fdbb0.md
+- 20260901T025615Z-mini-7152d312.md
+- 20260901T025616Z-mini-be1cdf34.md
+- 20260901T025827Z-mini-e34942f6.md
+- 20260901T025828Z-mini-1d2a37f2.md
 
 ## 失败模式 (failures/)
 
@@ -1476,6 +1480,32 @@ failure_breakdown:
   - 结果与证据: ok=False, status=failed, evidence_count=0
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=0.308
+- **20260901T025615Z-mini-7152d312**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.363
+- **20260901T025616Z-mini-be1cdf34**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.363
+- **20260901T025827Z-mini-e34942f6**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.424
+- **20260901T025828Z-mini-1d2a37f2**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.412
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

@@ -1,13 +1,13 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-02T07:10:01Z
 status: candidate
 counts:
-  runs: 41
+  runs: 42
   failures: 25
-  total: 66
-failure_rate: 0.3788
+  total: 67
+failure_rate: 0.3731
 failure_breakdown:
   by_event_type:
     StepFailed: 25
@@ -15,10 +15,10 @@ failure_breakdown:
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-02T07:10:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 41 成功运行 + 25 失败模式 = 66 草稿
-- 失败率: 37.88%
+- sediment 覆盖: 42 成功运行 + 25 失败模式 = 67 草稿
+- 失败率: 37.31%
 
 ## 成功运行 (runs/)
 
@@ -63,6 +63,7 @@ failure_breakdown:
 - 20260828T113920Z-bet-execution-c67c8f30.md
 - 20260828T115530Z-bet-execution-1c4e82b0.md
 - 20260831T062756Z-bet-execution-3f66970c.md
+- 20260902T030349Z-bet-execution-70a88720.md
 
 ## 失败模式 (failures/)
 
@@ -398,6 +399,13 @@ failure_breakdown:
   - 结果与证据: ok=True, status=ok, evidence_count=1
   - 指标: event_count=6, duration_s=48.395
 - **20260831T062756Z-bet-execution-3f66970c**
+  - 计划 (objective): [BET-Y1Q3-T10-122] Relocate family dashboard runtime state and prove HITL Documents writes (Appetite: 4 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=74038.202
+- **20260902T030349Z-bet-execution-70a88720**
   - 计划 (objective): [BET-Y1Q3-T10-122] Relocate family dashboard runtime state and prove HITL Documents writes (Appetite: 4 days)
   - workflow: bet-execution
   - 指标: event_count=1, duration_s=0.0
