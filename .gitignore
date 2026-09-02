@@ -297,3 +297,4 @@ projects/omo-debt/
 .omo/state/attestations/
 .kb/
 .kb/
+.benchmarks
