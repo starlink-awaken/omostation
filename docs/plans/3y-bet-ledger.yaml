@@ -16746,7 +16746,7 @@ bets:
   write_surfaces:
   - tests/chaos/test_chaos_injection_suite.py
   - bin/gac/chaos-drill-runner.py
-  - docs/reports/2026-09-09-chaos-suite-validation.md
+  - docs/reports/2026-09-02-chaos-suite-validation.md
   - .omo/_knowledge/retros/BET-Y1Q3-T10-120.md
   pasw_required: false
   depends_on:
@@ -16754,11 +16754,48 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 混沌测试发现不可自愈死锁时立即终止演练并输出堆栈。
+  value_indicator_policy: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-02-chaos-injection-suite-design.md
     spec_version: 1.0.0
     content_digest: sha256:5bf73732120525a603c41477bdd791aca1e4a74e11d8b9cb43a21f2c9319cb6a
     decision_ref: decision://accepted/BET-Y1Q3-T10-120
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6eafb3123dd559d4570b2d74ac3e871fcd04d81b
+          tests:
+            ref: receipt://docs/reports/2026-09-02-chaos-suite-validation.md
+            sha256: sha256:2dca4c6e584fa850d5aba2fde2d0224933b9d3039f01fe10a32949681d7508a0
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-02-chaos-injection-suite-design.md
+            sha256: sha256:5bf73732120525a603c41477bdd791aca1e4a74e11d8b9cb43a21f2c9319cb6a
+          rollback:
+            ref: receipt://docs/reports/2026-09-02-chaos-suite-validation.md
+            sha256: sha256:2dca4c6e584fa850d5aba2fde2d0224933b9d3039f01fe10a32949681d7508a0
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-02-chaos-suite-validation.md
+            sha256: sha256:2dca4c6e584fa850d5aba2fde2d0224933b9d3039f01fe10a32949681d7508a0
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-120.md
+            sha256: sha256:1083caaf0f9e3da4a569605a49db9707aa35e6a5eea5a0977fde93cdfa6ff8b1
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-120.md
+            sha256: sha256:1083caaf0f9e3da4a569605a49db9707aa35e6a5eea5a0977fde93cdfa6ff8b1
+          cleanup:
+            ref: receipt://docs/reports/2026-09-02-chaos-suite-validation.md
+            sha256: sha256:2dca4c6e584fa850d5aba2fde2d0224933b9d3039f01fe10a32949681d7508a0
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   retro: required
 - id: BET-Y1Q3-T10-121
   track: T10-MATURITY
