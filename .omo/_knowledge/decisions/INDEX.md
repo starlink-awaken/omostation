@@ -210,8 +210,8 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | 0292 | check-work-landed SHA detection fix + M3 grace baseline | ACCEPTED | 2026-07-30 | governance-agent | 0292-check-work-landed-sha-fix.md |
 | 0293 | Phase 45 governance observability layer | ACCEPTED | 2026-07-29 | governance-agent | 0293-phase45-governance-observability.md |
 | 0294 | 知识网关解耦与增量事件索引管道 | ACCEPTED | 2026-08-01 | engineering-agent | 0294-knowledge-gateway-decoupling-and-event-pipeline.md |
-| 0295 | Wave 2 (C2G + OMO) — Completed & Archived | ACCEPTED | 2026-08-01 | governance-agent | 0295-wave2-c2g-omo-completed-archived.md |
-| 0296 | C2G Predictive Outcomes to Knowledge Graph Pipeline | ACCEPTED | 2026-08-02 | engineering-agent | 0296-c2g-predictive-outcomes-to-knowledge-graph.md |
+| 0445 | Wave 2 (C2G + OMO) — Completed & Archived | ACCEPTED | 2026-08-01 | governance-agent | 0445-wave2-c2g-omo-completed-archived.md |
+| 0446 | C2G Predictive Outcomes to Knowledge Graph Pipeline | ACCEPTED | 2026-08-02 | engineering-agent | 0446-c2g-predictive-outcomes-to-knowledge-graph.md |
 | 0297 | 收敛产品真相与外部连接织层 | ACCEPTED | 2026-08-02 | architecture-governance | 0297-external-connection-fabric-and-product-truth.md |
 | 0298 | 外部连接织层运行时边界与 Workflow Mesh 回执 | ACCEPTED | 2026-08-02 | architecture-governance | 0298-external-connection-fabric-runtime-boundary.md |
 | 0299 | Workflow Mesh worker 租约、失效与接管证据 | ACCEPTED | 2026-08-02 | architecture-governance | 0299-workflow-mesh-worker-lease-and-reclaim.md |
