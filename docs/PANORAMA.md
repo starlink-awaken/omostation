@@ -337,7 +337,7 @@ script / wrapper / cron
 | aetherforge-swarm-ext | X | **ARCHIVED** — 快照在 `/_archived/aetherforge-swarm-ext/`，扩展已并入 [aetherforge/packages/swarm/src/swarm_engine/ext](../projects/aetherforge/packages/swarm/src/swarm_engine/ext/) |
 | agora-dashboard | L3 | **LEGACY SNAPSHOT** — 独立入口已收敛；快照在 `_archived/agora-dashboard/` |
 | bus-foundation | X | [ARCHITECTURE.md](../projects/bus-foundation/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/bus-foundation/CALLCHAIN.md) · [BOUNDARY.md](../projects/bus-foundation/BOUNDARY.md) |
-| c2g | X | [ARCHITECTURE.md](../projects/c2g/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/c2g/CALLCHAIN.md) · [BOUNDARY.md](../projects/c2g/BOUNDARY.md) |
+| c2g | X | **LOCAL-ONLY** — 未在 `.gitmodules` 注册，仅部分成员本地 clone（CI 跳过，见 `kairon-ci.yml` 注释） |
 | compute-mesh | L1 | **ARCHIVED** — 快照在 `/_archived/compute-mesh/`，能力已并入 [aetherforge/packages/mesh](../projects/aetherforge/packages/mesh/) |
 | family-hub | X | [ARCHITECTURE.md](../projects/family-hub/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/family-hub/CALLCHAIN.md) · [BOUNDARY.md](../projects/family-hub/BOUNDARY.md) |
 | hermes-console | L3 | **ARCHIVED** — 项目已移除（L3 入口能力已收敛到 cockpit/agora）；历史 projects/hermes-console/ARCHITECTURE.md |
@@ -346,7 +346,7 @@ script / wrapper / cron
 | model-driven | M0 | [ARCHITECTURE.md](../projects/model-driven/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/model-driven/CALLCHAIN.md) · [BOUNDARY.md](../projects/model-driven/BOUNDARY.md) |
 | observability | X | [ARCHITECTURE.md](../projects/observability/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/observability/CALLCHAIN.md) · [BOUNDARY.md](../projects/observability/BOUNDARY.md) |
 | toolbox | X | **EXTERNAL** — 非 git 子模块，通过 `bos://capability/` 暴露 3 个 L3 实例 (见 project-registry.yaml) |
-| omo-debt | L2 | [ARCHITECTURE.md](../projects/omo-debt/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/omo-debt/CALLCHAIN.md) · [BOUNDARY.md](../projects/omo-debt/BOUNDARY.md) |
+| omo-debt | L2 | **LOCAL-ONLY** — 未在 `.gitmodules` 注册，仅部分成员本地 clone（CI 跳过） |
 | spaces | L0/L1 | [ARCHITECTURE.md](../spaces/ARCHITECTURE.md) · [CALLCHAIN.md](../spaces/CALLCHAIN.md) · [BOUNDARY.md](../spaces/BOUNDARY.md) |
 | swarm-engine | X | **ARCHIVED** — 快照在 `/_archived/swarm-engine/`，能力已并入 [aetherforge/packages/swarm](../projects/aetherforge/packages/swarm/) |
 
