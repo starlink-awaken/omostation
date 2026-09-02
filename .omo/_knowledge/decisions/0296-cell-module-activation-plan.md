@@ -1,3 +1,11 @@
+---
+id: ADR-0296
+status: active
+lifecycle: spec
+owner: governance-agent
+last-reviewed: 2026-09-01
+---
+
 # Cell 模块激活方案 (chain_4 修复)
 
 > SSOT: .omo/_knowledge/decisions/0296-cell-module-activation-plan.md

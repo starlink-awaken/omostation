@@ -160,18 +160,58 @@ def _check_appetite(bet_id: str, run_started_at: str | None = None) -> dict:
     return {"ok": True, "appetite_days": appetite_days}
 
 
+def _load_policy() -> dict:
+    """加载 harness-policy.yaml, 失败返回空 dict (admission 降级为 strict)."""
+    try:
+        if POLICY.exists():
+            return yaml.safe_load(POLICY.read_text()) or {}
+    except Exception:
+        pass
+    return {}
+
+
+def _filter_dirty_paths(dirty_lines: list[str], excluded: list[str]) -> list[str]:
+    """过滤掉 excluded_dirty_paths 匹配的项. 支持 substring + path prefix 匹配."""
+    remaining = []
+    for line in dirty_lines:
+        path = line[3:].strip().split(" -> ")[0].strip()
+        # 状态字符 (XY) + space + path
+        if path in excluded:
+            continue
+        excluded_hit = False
+        for pat in excluded:
+            if pat.endswith("/"):
+                if path.startswith(pat):
+                    excluded_hit = True
+                    break
+            elif path == pat or path.startswith(pat + "/"):
+                excluded_hit = True
+                break
+        if not excluded_hit:
+            remaining.append(line)
+    return remaining
+
+
 # ── Stage 1: Admission ──
 def stage_admission(bet_id):
     """准入: worktree_clean, bet_claimable, sfop_slots"""
     r = {"stage": "admission", "ok": True, "checks": []}
 
-    # Worktree clean
+    # Worktree clean (考虑 harness-policy.excluded_dirty_paths)
     res = _run(["git", "status", "--porcelain"])
-    clean = len(res.stdout.strip()) == 0
-    r["checks"].append({"name": "worktree_clean", "ok": clean})
+    raw_lines = [ln for ln in res.stdout.splitlines() if ln.strip()]
+    policy = _load_policy()
+    excluded = (policy.get("admission") or {}).get("excluded_dirty_paths", []) or []
+    filtered = _filter_dirty_paths(raw_lines, excluded)
+    clean = len(filtered) == 0
+    r["checks"].append({"name": "worktree_clean", "ok": clean,
+                         "raw_count": len(raw_lines),
+                         "excluded_count": len(raw_lines) - len(filtered),
+                         "remaining_count": len(filtered)})
     if not clean:
         r["ok"] = False
-        r["error"] = "worktree not clean"
+        r["error"] = f"worktree not clean (remaining={len(filtered)}, excluded={len(raw_lines)-len(filtered)})"
+        r["remaining"] = filtered[:10]
 
     # BET claimable
     bet = _get_bet(bet_id)
@@ -947,11 +987,6 @@ def main():
     pp.add_argument("--json", action="store_true", help="machine JSON output")
     pp.add_argument("--watch", action="store_true", help="watch mode (continuous probing loop)")
     pp.add_argument("--interval", type=int, default=60, help="watch mode interval in seconds (default: 60)")
-
-    pgac = sub.add_parser("gac", help="GaC convergence proxy (bin/gac/harness-*)")
-    pgac.add_argument("subcommand", choices=["compliance", "mof", "omo", "enforce"],
-                       help="GaC subcommand")
-    pgac.add_argument("extra_args", nargs=argparse.REMAINDER, help="Extra args passed to script")
 
     pl = sub.add_parser("ledger", help="Bet ledger")
     plsub = pl.add_subparsers(dest="sub")

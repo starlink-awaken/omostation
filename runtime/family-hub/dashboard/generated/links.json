@@ -1,0 +1,800 @@
+{
+  "links": {
+    "_knowledge-02.医疗健康-夏维桢-医疗汇总": [
+      {
+        "source": "_knowledge/02.医疗健康/夏维桢/医疗汇总.md",
+        "sourceTitle": "夏维桢医疗记录汇总（出生~7.5月龄）",
+        "target": "屈光发育档案",
+        "targetTitle": "屈光发育档案",
+        "text": "屈光发育档案"
+      },
+      {
+        "source": "_knowledge/02.医疗健康/夏维桢/医疗汇总.md",
+        "sourceTitle": "夏维桢医疗记录汇总（出生~7.5月龄）",
+        "target": "data-correct",
+        "targetTitle": "data-correct",
+        "text": "data-correct"
+      },
+      {
+        "source": "_knowledge/02.医疗健康/夏维桢/医疗汇总.md",
+        "sourceTitle": "夏维桢医疗记录汇总（出生~7.5月龄）",
+        "target": "data-sync",
+        "targetTitle": "data-sync",
+        "text": "data-sync"
+      }
+    ],
+    "_knowledge-04.家庭日常-README": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "_knowledge/04.家庭日常/岳父母养老规划",
+        "targetTitle": "_knowledge/04.家庭日常/岳父母养老规划",
+        "text": "岳父母养老规划"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "./岳父母养老规划",
+        "targetTitle": "./岳父母养老规划",
+        "text": "岳父母养老规划"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "_knowledge/04.家庭日常/07.服务通讯录/家庭住址",
+        "targetTitle": "_knowledge/04.家庭日常/07.服务通讯录/家庭住址",
+        "text": "家庭住址"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "./07.服务通讯录/家庭住址",
+        "targetTitle": "./07.服务通讯录/家庭住址",
+        "text": "家庭住址"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "_knowledge/04.家庭日常/04.家庭财务/物业费_2026-2027",
+        "targetTitle": "_knowledge/04.家庭日常/04.家庭财务/物业费_2026-2027",
+        "text": "物业费"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "./04.家庭财务/物业费_2026-2027",
+        "targetTitle": "./04.家庭财务/物业费_2026-2027",
+        "text": "物业费"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "_knowledge/05.资产设备/车辆",
+        "targetTitle": "_knowledge/05.资产设备/车辆",
+        "text": "车辆相关"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "../05.资产设备/车辆/",
+        "targetTitle": "../05.资产设备/车辆/",
+        "text": "车辆相关"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "_knowledge/04.家庭日常/AI副业待研究",
+        "targetTitle": "_knowledge/04.家庭日常/AI副业待研究",
+        "text": "AI副业待研究"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "./AI副业待研究",
+        "targetTitle": "./AI副业待研究",
+        "text": "AI副业待研究"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "_knowledge/05.资产设备/车辆/2026-06-13_购车配套事务",
+        "targetTitle": "_knowledge/05.资产设备/车辆/2026-06-13_购车配套事务",
+        "text": "购车配套事务"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "../05.资产设备/车辆/2026-06-13_购车配套事务",
+        "targetTitle": "../05.资产设备/车辆/2026-06-13_购车配套事务",
+        "text": "购车配套事务"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "_knowledge/04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "targetTitle": "_knowledge/04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "text": "猫咪行为调整方案"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "./01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "targetTitle": "./01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "text": "猫咪行为调整方案"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "_knowledge/04.家庭日常/07.服务通讯录/家庭紧急联系人协议",
+        "targetTitle": "_knowledge/04.家庭日常/07.服务通讯录/家庭紧急联系人协议",
+        "text": "家庭紧急联系人协议"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "target": "./07.服务通讯录/家庭紧急联系人协议",
+        "targetTitle": "./07.服务通讯录/家庭紧急联系人协议",
+        "text": "家庭紧急联系人协议"
+      }
+    ],
+    "_knowledge-04.家庭日常-02.孩子教育-README": [
+      {
+        "source": "_knowledge/04.家庭日常/02.孩子教育/README.md",
+        "sourceTitle": "README",
+        "target": "_knowledge/04.家庭日常/02.孩子教育/英语规划/01.秦张瑶·成人英语回归计划",
+        "targetTitle": "_knowledge/04.家庭日常/02.孩子教育/英语规划/01.秦张瑶·成人英语回归计划",
+        "text": "秦张瑶·成人英语回归计划"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/02.孩子教育/README.md",
+        "sourceTitle": "README",
+        "target": "英语规划/01.秦张瑶·成人英语回归计划",
+        "targetTitle": "英语规划/01.秦张瑶·成人英语回归计划",
+        "text": "秦张瑶·成人英语回归计划"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/02.孩子教育/README.md",
+        "sourceTitle": "README",
+        "target": "_knowledge/04.家庭日常/02.孩子教育/英语规划/02.夏维桢·英语启蒙路线（0-6岁）",
+        "targetTitle": "_knowledge/04.家庭日常/02.孩子教育/英语规划/02.夏维桢·英语启蒙路线（0-6岁）",
+        "text": "夏维桢·英语启蒙路线"
+      },
+      {
+        "source": "_knowledge/04.家庭日常/02.孩子教育/README.md",
+        "sourceTitle": "README",
+        "target": "英语规划/02.夏维桢·英语启蒙路线（0-6岁）",
+        "targetTitle": "英语规划/02.夏维桢·英语启蒙路线（0-6岁）",
+        "text": "夏维桢·英语启蒙路线"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-理想i6": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "_knowledge/05.资产设备/车辆/指标确认通知书_理想i6.jpg",
+        "targetTitle": "_knowledge/05.资产设备/车辆/指标确认通知书_理想i6.jpg",
+        "text": "`指标确认通知书_理想i6.jpg`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "指标确认通知书_理想i6.jpg",
+        "targetTitle": "指标确认通知书_理想i6.jpg",
+        "text": "`指标确认通知书_理想i6.jpg`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "_knowledge/05.资产设备/车辆/购车发票_理想i6",
+        "targetTitle": "_knowledge/05.资产设备/车辆/购车发票_理想i6",
+        "text": "`购车发票_理想i6.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "购车发票_理想i6",
+        "targetTitle": "购车发票_理想i6",
+        "text": "`购车发票_理想i6.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "_knowledge/05.资产设备/车辆/购车发票.png",
+        "targetTitle": "_knowledge/05.资产设备/车辆/购车发票.png",
+        "text": "`购车发票.png`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "购车发票.png",
+        "targetTitle": "购车发票.png",
+        "text": "`购车发票.png`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "_knowledge/05.资产设备/车辆/保险_理想i6_2026-2027",
+        "targetTitle": "_knowledge/05.资产设备/车辆/保险_理想i6_2026-2027",
+        "text": "`保险_理想i6_2026-2027.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "保险_理想i6_2026-2027",
+        "targetTitle": "保险_理想i6_2026-2027",
+        "text": "`保险_理想i6_2026-2027.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "_knowledge/05.资产设备/车辆/交强险_理想i6_2026-2027.pdf",
+        "targetTitle": "_knowledge/05.资产设备/车辆/交强险_理想i6_2026-2027.pdf",
+        "text": "`交强险_理想i6_2026-2027.pdf`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "交强险_理想i6_2026-2027.pdf",
+        "targetTitle": "交强险_理想i6_2026-2027.pdf",
+        "text": "`交强险_理想i6_2026-2027.pdf`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "_knowledge/05.资产设备/车辆/商业险_理想i6_2026-2027.pdf",
+        "targetTitle": "_knowledge/05.资产设备/车辆/商业险_理想i6_2026-2027.pdf",
+        "text": "`商业险_理想i6_2026-2027.pdf`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "商业险_理想i6_2026-2027.pdf",
+        "targetTitle": "商业险_理想i6_2026-2027.pdf",
+        "text": "`商业险_理想i6_2026-2027.pdf`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "_knowledge/05.资产设备/车辆/驾乘意外险_理想i6_2026-2027.pdf",
+        "targetTitle": "_knowledge/05.资产设备/车辆/驾乘意外险_理想i6_2026-2027.pdf",
+        "text": "`驾乘意外险_理想i6_2026-2027.pdf`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "驾乘意外险_理想i6_2026-2027.pdf",
+        "targetTitle": "驾乘意外险_理想i6_2026-2027.pdf",
+        "text": "`驾乘意外险_理想i6_2026-2027.pdf`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "_knowledge/05.资产设备/车辆/保险_理想i6_2026-2027",
+        "targetTitle": "_knowledge/05.资产设备/车辆/保险_理想i6_2026-2027",
+        "text": "`保险_理想i6_2026-2027.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "保险_理想i6_2026-2027",
+        "targetTitle": "保险_理想i6_2026-2027",
+        "text": "`保险_理想i6_2026-2027.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "_knowledge/05.资产设备/车辆/购车发票_理想i6",
+        "targetTitle": "_knowledge/05.资产设备/车辆/购车发票_理想i6",
+        "text": "`购车发票_理想i6.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "target": "购车发票_理想i6",
+        "targetTitle": "购车发票_理想i6",
+        "text": "`购车发票_理想i6.md`"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-购车发票_理想i6": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "target": "_knowledge/05.资产设备/车辆/理想i6",
+        "targetTitle": "_knowledge/05.资产设备/车辆/理想i6",
+        "text": "理想i6.md"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "target": "理想i6",
+        "targetTitle": "理想i6",
+        "text": "理想i6.md"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "target": "_knowledge/05.资产设备/车辆/理想i6",
+        "targetTitle": "_knowledge/05.资产设备/车辆/理想i6",
+        "text": "理想i6.md"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "target": "理想i6",
+        "targetTitle": "理想i6",
+        "text": "理想i6.md"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "target": "_knowledge/05.资产设备/车辆/保险_理想i6_2026-2027",
+        "targetTitle": "_knowledge/05.资产设备/车辆/保险_理想i6_2026-2027",
+        "text": "保险_理想i6_2026-2027.md"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "target": "保险_理想i6_2026-2027",
+        "targetTitle": "保险_理想i6_2026-2027",
+        "text": "保险_理想i6_2026-2027.md"
+      }
+    ],
+    "_knowledge-01.成员档案-宠物-点点": [
+      {
+        "source": "_knowledge/01.成员档案/宠物/点点.md",
+        "sourceTitle": "点点",
+        "target": "_knowledge/04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "targetTitle": "_knowledge/04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "text": "05-31猫咪行为调整方案"
+      },
+      {
+        "source": "_knowledge/01.成员档案/宠物/点点.md",
+        "sourceTitle": "点点",
+        "target": "../../04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "targetTitle": "../../04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "text": "05-31猫咪行为调整方案"
+      }
+    ],
+    "_knowledge-01.成员档案-宠物-小白": [
+      {
+        "source": "_knowledge/01.成员档案/宠物/小白.md",
+        "sourceTitle": "小白",
+        "target": "_knowledge/04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "targetTitle": "_knowledge/04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "text": "05-31猫咪行为调整方案"
+      },
+      {
+        "source": "_knowledge/01.成员档案/宠物/小白.md",
+        "sourceTitle": "小白",
+        "target": "../../04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "targetTitle": "../../04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案",
+        "text": "05-31猫咪行为调整方案"
+      }
+    ],
+    "_archive-2026-08-01-免值班结项-已办结-附录_支撑材料清单": [
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+        "sourceTitle": "附录_支撑材料清单",
+        "target": "_archive/2026-08-01-免值班结项-已办结/附录_夏维桢生长记录数据表",
+        "targetTitle": "_archive/2026-08-01-免值班结项-已办结/附录_夏维桢生长记录数据表",
+        "text": "附录_夏维桢生长记录数据表.md"
+      },
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+        "sourceTitle": "附录_支撑材料清单",
+        "target": "./附录_夏维桢生长记录数据表",
+        "targetTitle": "./附录_夏维桢生长记录数据表",
+        "text": "附录_夏维桢生长记录数据表.md"
+      },
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+        "sourceTitle": "附录_支撑材料清单",
+        "target": "_archive/2026-08-01-免值班结项-已办结/附录_FLT4基因变异背景说明",
+        "targetTitle": "_archive/2026-08-01-免值班结项-已办结/附录_FLT4基因变异背景说明",
+        "text": "附录_FLT4基因变异背景说明.md"
+      },
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+        "sourceTitle": "附录_支撑材料清单",
+        "target": "./附录_FLT4基因变异背景说明",
+        "targetTitle": "./附录_FLT4基因变异背景说明",
+        "text": "附录_FLT4基因变异背景说明.md"
+      }
+    ],
+    "_archive-2026-08-01-免值班结项-已办结-2026-07-03_免值班申请资料汇总": [
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/2026-07-03_免值班申请资料汇总.md",
+        "sourceTitle": "2026-07-03_免值班申请资料汇总",
+        "target": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单",
+        "targetTitle": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单",
+        "text": "`附录_支撑材料清单.md`"
+      },
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/2026-07-03_免值班申请资料汇总.md",
+        "sourceTitle": "2026-07-03_免值班申请资料汇总",
+        "target": "./附录_支撑材料清单",
+        "targetTitle": "./附录_支撑材料清单",
+        "text": "`附录_支撑材料清单.md`"
+      }
+    ]
+  },
+  "backlinks": {
+    "屈光发育档案": [
+      {
+        "source": "_knowledge/02.医疗健康/夏维桢/医疗汇总.md",
+        "sourceTitle": "夏维桢医疗记录汇总（出生~7.5月龄）",
+        "text": "屈光发育档案"
+      }
+    ],
+    "data-correct": [
+      {
+        "source": "_knowledge/02.医疗健康/夏维桢/医疗汇总.md",
+        "sourceTitle": "夏维桢医疗记录汇总（出生~7.5月龄）",
+        "text": "data-correct"
+      }
+    ],
+    "data-sync": [
+      {
+        "source": "_knowledge/02.医疗健康/夏维桢/医疗汇总.md",
+        "sourceTitle": "夏维桢医疗记录汇总（出生~7.5月龄）",
+        "text": "data-sync"
+      }
+    ],
+    "_knowledge-04.家庭日常-岳父母养老规划": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "岳父母养老规划"
+      }
+    ],
+    ".-岳父母养老规划": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "岳父母养老规划"
+      }
+    ],
+    "_knowledge-04.家庭日常-07.服务通讯录-家庭住址": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "家庭住址"
+      }
+    ],
+    ".-07.服务通讯录-家庭住址": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "家庭住址"
+      }
+    ],
+    "_knowledge-04.家庭日常-04.家庭财务-物业费_2026-2027": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "物业费"
+      }
+    ],
+    ".-04.家庭财务-物业费_2026-2027": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "物业费"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "车辆相关"
+      }
+    ],
+    "..-05.资产设备-车辆-": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "车辆相关"
+      }
+    ],
+    "_knowledge-04.家庭日常-AI副业待研究": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "AI副业待研究"
+      }
+    ],
+    ".-AI副业待研究": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "AI副业待研究"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-2026-06-13_购车配套事务": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "购车配套事务"
+      }
+    ],
+    "..-05.资产设备-车辆-2026-06-13_购车配套事务": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "购车配套事务"
+      }
+    ],
+    "_knowledge-04.家庭日常-01.健康管理-宠物-2026-05-31猫咪行为调整方案": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "猫咪行为调整方案"
+      },
+      {
+        "source": "_knowledge/01.成员档案/宠物/点点.md",
+        "sourceTitle": "点点",
+        "text": "05-31猫咪行为调整方案"
+      },
+      {
+        "source": "_knowledge/01.成员档案/宠物/小白.md",
+        "sourceTitle": "小白",
+        "text": "05-31猫咪行为调整方案"
+      }
+    ],
+    ".-01.健康管理-宠物-2026-05-31猫咪行为调整方案": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "猫咪行为调整方案"
+      }
+    ],
+    "_knowledge-04.家庭日常-07.服务通讯录-家庭紧急联系人协议": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "家庭紧急联系人协议"
+      }
+    ],
+    ".-07.服务通讯录-家庭紧急联系人协议": [
+      {
+        "source": "_knowledge/04.家庭日常/README.md",
+        "sourceTitle": "README",
+        "text": "家庭紧急联系人协议"
+      }
+    ],
+    "_knowledge-04.家庭日常-02.孩子教育-英语规划-01.秦张瑶·成人英语回归计划": [
+      {
+        "source": "_knowledge/04.家庭日常/02.孩子教育/README.md",
+        "sourceTitle": "README",
+        "text": "秦张瑶·成人英语回归计划"
+      }
+    ],
+    "英语规划-01.秦张瑶·成人英语回归计划": [
+      {
+        "source": "_knowledge/04.家庭日常/02.孩子教育/README.md",
+        "sourceTitle": "README",
+        "text": "秦张瑶·成人英语回归计划"
+      }
+    ],
+    "_knowledge-04.家庭日常-02.孩子教育-英语规划-02.夏维桢·英语启蒙路线（0-6岁）": [
+      {
+        "source": "_knowledge/04.家庭日常/02.孩子教育/README.md",
+        "sourceTitle": "README",
+        "text": "夏维桢·英语启蒙路线"
+      }
+    ],
+    "英语规划-02.夏维桢·英语启蒙路线（0-6岁）": [
+      {
+        "source": "_knowledge/04.家庭日常/02.孩子教育/README.md",
+        "sourceTitle": "README",
+        "text": "夏维桢·英语启蒙路线"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-指标确认通知书_理想i6.jpg": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`指标确认通知书_理想i6.jpg`"
+      }
+    ],
+    "指标确认通知书_理想i6.jpg": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`指标确认通知书_理想i6.jpg`"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-购车发票_理想i6": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`购车发票_理想i6.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`购车发票_理想i6.md`"
+      }
+    ],
+    "购车发票_理想i6": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`购车发票_理想i6.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`购车发票_理想i6.md`"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-购车发票.png": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`购车发票.png`"
+      }
+    ],
+    "购车发票.png": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`购车发票.png`"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-保险_理想i6_2026-2027": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`保险_理想i6_2026-2027.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`保险_理想i6_2026-2027.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "text": "保险_理想i6_2026-2027.md"
+      }
+    ],
+    "保险_理想i6_2026-2027": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`保险_理想i6_2026-2027.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`保险_理想i6_2026-2027.md`"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "text": "保险_理想i6_2026-2027.md"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-交强险_理想i6_2026-2027.pdf": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`交强险_理想i6_2026-2027.pdf`"
+      }
+    ],
+    "交强险_理想i6_2026-2027.pdf": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`交强险_理想i6_2026-2027.pdf`"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-商业险_理想i6_2026-2027.pdf": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`商业险_理想i6_2026-2027.pdf`"
+      }
+    ],
+    "商业险_理想i6_2026-2027.pdf": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`商业险_理想i6_2026-2027.pdf`"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-驾乘意外险_理想i6_2026-2027.pdf": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`驾乘意外险_理想i6_2026-2027.pdf`"
+      }
+    ],
+    "驾乘意外险_理想i6_2026-2027.pdf": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/理想i6.md",
+        "sourceTitle": "理想 i6 — 家庭新能源车",
+        "text": "`驾乘意外险_理想i6_2026-2027.pdf`"
+      }
+    ],
+    "_knowledge-05.资产设备-车辆-理想i6": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "text": "理想i6.md"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "text": "理想i6.md"
+      }
+    ],
+    "理想i6": [
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "text": "理想i6.md"
+      },
+      {
+        "source": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+        "sourceTitle": "理想 i6 购车发票",
+        "text": "理想i6.md"
+      }
+    ],
+    "..-..-04.家庭日常-01.健康管理-宠物-2026-05-31猫咪行为调整方案": [
+      {
+        "source": "_knowledge/01.成员档案/宠物/点点.md",
+        "sourceTitle": "点点",
+        "text": "05-31猫咪行为调整方案"
+      },
+      {
+        "source": "_knowledge/01.成员档案/宠物/小白.md",
+        "sourceTitle": "小白",
+        "text": "05-31猫咪行为调整方案"
+      }
+    ],
+    "_archive-2026-08-01-免值班结项-已办结-附录_夏维桢生长记录数据表": [
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+        "sourceTitle": "附录_支撑材料清单",
+        "text": "附录_夏维桢生长记录数据表.md"
+      }
+    ],
+    ".-附录_夏维桢生长记录数据表": [
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+        "sourceTitle": "附录_支撑材料清单",
+        "text": "附录_夏维桢生长记录数据表.md"
+      }
+    ],
+    "_archive-2026-08-01-免值班结项-已办结-附录_FLT4基因变异背景说明": [
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+        "sourceTitle": "附录_支撑材料清单",
+        "text": "附录_FLT4基因变异背景说明.md"
+      }
+    ],
+    ".-附录_FLT4基因变异背景说明": [
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+        "sourceTitle": "附录_支撑材料清单",
+        "text": "附录_FLT4基因变异背景说明.md"
+      }
+    ],
+    "_archive-2026-08-01-免值班结项-已办结-附录_支撑材料清单": [
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/2026-07-03_免值班申请资料汇总.md",
+        "sourceTitle": "2026-07-03_免值班申请资料汇总",
+        "text": "`附录_支撑材料清单.md`"
+      }
+    ],
+    ".-附录_支撑材料清单": [
+      {
+        "source": "_archive/2026-08-01-免值班结项-已办结/2026-07-03_免值班申请资料汇总.md",
+        "sourceTitle": "2026-07-03_免值班申请资料汇总",
+        "text": "`附录_支撑材料清单.md`"
+      }
+    ]
+  }
+}

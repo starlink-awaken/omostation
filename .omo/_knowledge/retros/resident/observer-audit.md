@@ -1,13 +1,13 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-audit
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-02T01:30:03Z
 status: candidate
 counts:
-  runs: 55
+  runs: 59
   failures: 2
-  total: 57
-failure_rate: 0.0351
+  total: 61
+failure_rate: 0.0328
 failure_breakdown:
   by_event_type:
     StepFailed: 2
@@ -15,10 +15,10 @@ failure_breakdown:
 ---
 # observer-audit 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-02T01:30:03Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 55 成功运行 + 2 失败模式 = 57 草稿
-- 失败率: 3.51%
+- sediment 覆盖: 59 成功运行 + 2 失败模式 = 61 草稿
+- 失败率: 3.28%
 
 ## 成功运行 (runs/)
 
@@ -77,6 +77,10 @@ failure_breakdown:
 - 20260830T122240Z-observer-audit-a142c9af.md
 - 20260830T221125Z-observer-audit-a7312260.md
 - 20260830T221127Z-observer-audit-5bbd5f98.md
+- 20260901T025504Z-observer-audit-5fc97449.md
+- 20260901T025505Z-observer-audit-fd3f460f.md
+- 20260901T025719Z-observer-audit-4dc2c5d6.md
+- 20260901T025720Z-observer-audit-c66d21d4.md
 
 ## 失败模式 (failures/)
 
@@ -274,6 +278,18 @@ failure_breakdown:
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
 - **20260830T221127Z-observer-audit-5bbd5f98**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260901T025504Z-observer-audit-5fc97449**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260901T025505Z-observer-audit-fd3f460f**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260901T025719Z-observer-audit-4dc2c5d6**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260901T025720Z-observer-audit-c66d21d4**
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
 

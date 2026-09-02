@@ -1,0 +1,962 @@
+{
+  "tags": {
+    "2026": {
+      "count": 4,
+      "docIds": [
+        "_knowledge-05.资产设备-充电桩归档-2026-07-21",
+        "_knowledge-00.规则与模板-重要纪念日",
+        "_knowledge-00.规则与模板-家庭旅行相册",
+        "_knowledge-00.规则与模板-家庭年度规划模板"
+      ]
+    },
+    "2026H2": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-2026H2-家庭目标"
+      ]
+    },
+    "保单": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭合同清单"
+      ]
+    },
+    "保险": {
+      "count": 1,
+      "docIds": [
+        "_archive-复盘_2026-06-05_代位追偿与车辆事故"
+      ]
+    },
+    "被动": {
+      "count": 1,
+      "docIds": [
+        "_archive-superseded-design-docs-2026-06-30-executor-rules"
+      ]
+    },
+    "财务": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭账目规则"
+      ]
+    },
+    "菜谱": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭菜谱库"
+      ]
+    },
+    "车辆": {
+      "count": 2,
+      "docIds": [
+        "_knowledge-04.家庭日常-07.服务通讯录-家庭紧急联系人协议",
+        "_archive-复盘_2026-06-05_代位追偿与车辆事故"
+      ]
+    },
+    "成长档案": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-孩子成长档案"
+      ]
+    },
+    "充电桩": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-05.资产设备-充电桩归档-2026-07-21"
+      ]
+    },
+    "传感器": {
+      "count": 1,
+      "docIds": [
+        "_archive-superseded-design-docs-2026-06-30-sensors"
+      ]
+    },
+    "代位追偿": {
+      "count": 1,
+      "docIds": [
+        "_archive-复盘_2026-06-05_代位追偿与车辆事故"
+      ]
+    },
+    "档案": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭健康档案"
+      ]
+    },
+    "电动汽车": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-05.资产设备-充电桩归档-2026-07-21"
+      ]
+    },
+    "复盘": {
+      "count": 2,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭月度复盘模板",
+        "_archive-复盘_2026-06-05_代位追偿与车辆事故"
+      ]
+    },
+    "购物": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭购物清单"
+      ]
+    },
+    "关系": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭亲友图谱"
+      ]
+    },
+    "归档": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-影像归档规则"
+      ]
+    },
+    "规划": {
+      "count": 3,
+      "docIds": [
+        "_knowledge-00.规则与模板-2026H2-家庭目标",
+        "_knowledge-00.规则与模板-家庭旅行模板",
+        "_knowledge-00.规则与模板-家庭用车规划"
+      ]
+    },
+    "规则": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭账目规则"
+      ]
+    },
+    "孩子": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-孩子成长档案"
+      ]
+    },
+    "合同": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭合同清单"
+      ]
+    },
+    "纪念日": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-重要纪念日"
+      ]
+    },
+    "家庭生活": {
+      "count": 22,
+      "docIds": [
+        "_knowledge-00.规则与模板-2026H2-家庭目标",
+        "_knowledge-00.规则与模板-家庭合同清单",
+        "_knowledge-00.规则与模板-家庭阅读清单",
+        "_knowledge-00.规则与模板-六平面-SSOT",
+        "_knowledge-00.规则与模板-孩子成长档案",
+        "_knowledge-00.规则与模板-影像归档规则",
+        "_knowledge-00.规则与模板-家庭旅行模板",
+        "_knowledge-00.规则与模板-家庭亲友图谱",
+        "_knowledge-00.规则与模板-重要纪念日",
+        "_knowledge-00.规则与模板-家庭月度复盘模板",
+        "_knowledge-00.规则与模板-家庭应急预案",
+        "_knowledge-00.规则与模板-家庭用车规划",
+        "_knowledge-00.规则与模板-家庭菜谱库",
+        "_knowledge-00.规则与模板-INDEX",
+        "_knowledge-00.规则与模板-家庭账目规则",
+        "_knowledge-00.规则与模板-家庭购物清单",
+        "_knowledge-00.规则与模板-家庭旅行相册",
+        "_knowledge-00.规则与模板-家庭年度规划模板",
+        "_knowledge-00.规则与模板-家庭健康档案",
+        "_archive-superseded-design-docs-2026-06-30-l4-kernel",
+        "_archive-superseded-design-docs-2026-06-30-sensors",
+        "_archive-superseded-design-docs-2026-06-30-executor-rules"
+      ]
+    },
+    "家庭资产": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-05.资产设备-充电桩归档-2026-07-21"
+      ]
+    },
+    "健康": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭健康档案"
+      ]
+    },
+    "决策": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭用车规划"
+      ]
+    },
+    "控制面": {
+      "count": 1,
+      "docIds": [
+        "_archive-superseded-design-docs-2026-06-30-control-rules"
+      ]
+    },
+    "控制器": {
+      "count": 1,
+      "docIds": [
+        "_archive-superseded-design-docs-2026-06-30-control-rules"
+      ]
+    },
+    "联系人": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-04.家庭日常-07.服务通讯录-家庭紧急联系人协议"
+      ]
+    },
+    "六平面": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-六平面-SSOT"
+      ]
+    },
+    "旅行": {
+      "count": 2,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭旅行模板",
+        "_knowledge-00.规则与模板-家庭旅行相册"
+      ]
+    },
+    "模板": {
+      "count": 4,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭旅行模板",
+        "_knowledge-00.规则与模板-家庭月度复盘模板",
+        "_knowledge-00.规则与模板-家庭购物清单",
+        "_knowledge-00.规则与模板-家庭年度规划模板"
+      ]
+    },
+    "目标": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-2026H2-家庭目标"
+      ]
+    },
+    "年度规划": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭年度规划模板"
+      ]
+    },
+    "亲友": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭亲友图谱"
+      ]
+    },
+    "轻量": {
+      "count": 1,
+      "docIds": [
+        "_archive-superseded-design-docs-2026-06-30-sensors"
+      ]
+    },
+    "清单": {
+      "count": 3,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭合同清单",
+        "_knowledge-00.规则与模板-家庭阅读清单",
+        "_knowledge-00.规则与模板-家庭购物清单"
+      ]
+    },
+    "日常": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭菜谱库"
+      ]
+    },
+    "索引": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-INDEX"
+      ]
+    },
+    "提醒": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-重要纪念日"
+      ]
+    },
+    "维护": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭亲友图谱"
+      ]
+    },
+    "夏维桢": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-孩子成长档案"
+      ]
+    },
+    "相册": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭旅行相册"
+      ]
+    },
+    "学习": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭阅读清单"
+      ]
+    },
+    "应急": {
+      "count": 2,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭应急预案",
+        "_knowledge-00.规则与模板-家庭健康档案"
+      ]
+    },
+    "应急救援": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-04.家庭日常-07.服务通讯录-家庭紧急联系人协议"
+      ]
+    },
+    "影像": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-影像归档规则"
+      ]
+    },
+    "映射": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-六平面-SSOT"
+      ]
+    },
+    "用车": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭用车规划"
+      ]
+    },
+    "预案": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭应急预案"
+      ]
+    },
+    "月度": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭月度复盘模板"
+      ]
+    },
+    "阅读": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭阅读清单"
+      ]
+    },
+    "长辈": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-04.家庭日常-07.服务通讯录-家庭紧急联系人协议"
+      ]
+    },
+    "账目": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-家庭账目规则"
+      ]
+    },
+    "知识库": {
+      "count": 1,
+      "docIds": [
+        "_knowledge-00.规则与模板-INDEX"
+      ]
+    },
+    "执行器": {
+      "count": 1,
+      "docIds": [
+        "_archive-superseded-design-docs-2026-06-30-executor-rules"
+      ]
+    },
+    "iCloud": {
+      "count": 5,
+      "docIds": [
+        "_knowledge-00.规则与模板-影像归档规则",
+        "_knowledge-00.规则与模板-INDEX",
+        "_archive-superseded-design-docs-2026-06-30-l4-kernel",
+        "_archive-superseded-design-docs-2026-06-30-sensors",
+        "_archive-superseded-design-docs-2026-06-30-executor-rules"
+      ]
+    },
+    "KEMS-v7.1": {
+      "count": 1,
+      "docIds": [
+        "_archive-superseded-design-docs-2026-06-30-l4-kernel"
+      ]
+    },
+    "KEMS-v7.2": {
+      "count": 1,
+      "docIds": [
+        "_archive-superseded-design-docs-2026-06-30-l4-kernel"
+      ]
+    },
+    "l4-kernel": {
+      "count": 1,
+      "docIds": [
+        "_archive-superseded-design-docs-2026-06-30-l4-kernel"
+      ]
+    }
+  },
+  "docs": {
+    "_knowledge-02.医疗健康-秦张瑶-医疗汇总": {
+      "title": "秦张瑶 孕期医疗记录汇总",
+      "path": "_knowledge/02.医疗健康/秦张瑶/医疗汇总.md",
+      "tags": []
+    },
+    "_knowledge-02.医疗健康-夏维桢-屈光发育档案": {
+      "title": "屈光发育档案",
+      "path": "_knowledge/02.医疗健康/夏维桢/屈光发育档案.md",
+      "tags": []
+    },
+    "_knowledge-02.医疗健康-夏维桢-疫苗接种计划": {
+      "title": "夏维桢疫苗接种计划",
+      "path": "_knowledge/02.医疗健康/夏维桢/疫苗接种计划.md",
+      "tags": []
+    },
+    "_knowledge-02.医疗健康-夏维桢-医疗汇总": {
+      "title": "夏维桢医疗记录汇总（出生~7.5月龄）",
+      "path": "_knowledge/02.医疗健康/夏维桢/医疗汇总.md",
+      "tags": []
+    },
+    "_knowledge-02.医疗健康-夏维桢-入托体检_视力筛查_20260529": {
+      "title": "入托体检视力筛查结果（2026-05-29）",
+      "path": "_knowledge/02.医疗健康/夏维桢/入托体检_视力筛查_20260529.md",
+      "tags": []
+    },
+    "_knowledge-02.医疗健康-报告单-README": {
+      "title": "README",
+      "path": "_knowledge/02.医疗健康/报告单/README.md",
+      "tags": []
+    },
+    "_knowledge-02.医疗健康-夏明星-医疗汇总": {
+      "title": "夏明星医疗记录汇总",
+      "path": "_knowledge/02.医疗健康/夏明星/医疗汇总.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-06.日历与纪念日-README": {
+      "title": "README",
+      "path": "_knowledge/04.家庭日常/06.日历与纪念日/README.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-01.健康管理-README": {
+      "title": "README",
+      "path": "_knowledge/04.家庭日常/01.健康管理/README.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-01.健康管理-宠物-2026-05-31猫咪行为调整方案": {
+      "title": "2026-05-31猫咪行为调整方案",
+      "path": "_knowledge/04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-05.理财-README": {
+      "title": "README",
+      "path": "_knowledge/04.家庭日常/05.理财/README.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-03.旅游-README": {
+      "title": "README",
+      "path": "_knowledge/04.家庭日常/03.旅游/README.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-岳父母养老规划": {
+      "title": "岳父母养老规划",
+      "path": "_knowledge/04.家庭日常/岳父母养老规划.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-07.服务通讯录-家庭住址": {
+      "title": "家庭住址与房产",
+      "path": "_knowledge/04.家庭日常/07.服务通讯录/家庭住址.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-07.服务通讯录-README": {
+      "title": "README",
+      "path": "_knowledge/04.家庭日常/07.服务通讯录/README.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-07.服务通讯录-家庭紧急联系人协议": {
+      "title": "家庭紧急联系人协议",
+      "path": "_knowledge/04.家庭日常/07.服务通讯录/家庭紧急联系人协议.md",
+      "tags": [
+        "车辆",
+        "应急救援",
+        "长辈",
+        "联系人"
+      ]
+    },
+    "_knowledge-04.家庭日常-AI副业待研究": {
+      "title": "AI副业机会 — 待研究清单",
+      "path": "_knowledge/04.家庭日常/AI副业待研究.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-README": {
+      "title": "README",
+      "path": "_knowledge/04.家庭日常/README.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-04.家庭财务-物业费_2026-2027": {
+      "title": "物业费缴纳记录 — 2026-2027年度",
+      "path": "_knowledge/04.家庭日常/04.家庭财务/物业费_2026-2027.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-04.家庭财务-README": {
+      "title": "README",
+      "path": "_knowledge/04.家庭日常/04.家庭财务/README.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-02.孩子教育-阶段路线-00-2岁·每日执行手册": {
+      "title": "00-2岁·每日执行手册",
+      "path": "_knowledge/04.家庭日常/02.孩子教育/阶段路线/00-2岁·每日执行手册.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-02.孩子教育-英语规划-01.秦张瑶·成人英语回归计划": {
+      "title": "01.秦张瑶·成人英语回归计划",
+      "path": "_knowledge/04.家庭日常/02.孩子教育/英语规划/01.秦张瑶·成人英语回归计划.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-02.孩子教育-英语规划-02.夏维桢·英语启蒙路线（0-12岁）": {
+      "title": "02.夏维桢·英语启蒙路线（0-12岁）",
+      "path": "_knowledge/04.家庭日常/02.孩子教育/英语规划/02.夏维桢·英语启蒙路线（0-12岁）.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-02.孩子教育-README": {
+      "title": "README",
+      "path": "_knowledge/04.家庭日常/02.孩子教育/README.md",
+      "tags": []
+    },
+    "_knowledge-04.家庭日常-02.孩子教育-教育总纲-夏维桢教育总纲": {
+      "title": "夏维桢教育总纲",
+      "path": "_knowledge/04.家庭日常/02.孩子教育/教育总纲/夏维桢教育总纲.md",
+      "tags": []
+    },
+    "_knowledge-03.育儿成长-转二段奶粉_多维度对比分析_20260603": {
+      "title": "二段奶粉多维度对比分析",
+      "path": "_knowledge/03.育儿成长/转二段奶粉_多维度对比分析_20260603.md",
+      "tags": []
+    },
+    "_knowledge-03.育儿成长-家庭教育原则与家规": {
+      "title": "家庭教育原则与家规",
+      "path": "_knowledge/03.育儿成长/家庭教育原则与家规.md",
+      "tags": []
+    },
+    "_knowledge-03.育儿成长-规划文档-爱蓓乐托育计划": {
+      "title": "爱蓓乐托育 — 入托计划",
+      "path": "_knowledge/03.育儿成长/规划文档/爱蓓乐托育计划.md",
+      "tags": []
+    },
+    "_knowledge-03.育儿成长-【给妈妈看】夏维桢二段奶粉转奶方案_20260603": {
+      "title": "【给妈妈看】夏维桢二段奶粉转奶方案_20260603",
+      "path": "_knowledge/03.育儿成长/【给妈妈看】夏维桢二段奶粉转奶方案_20260603.md",
+      "tags": []
+    },
+    "_knowledge-03.育儿成长-夏维桢发育里程碑": {
+      "title": "夏维桢发育里程碑（0-3岁）",
+      "path": "_knowledge/03.育儿成长/夏维桢发育里程碑.md",
+      "tags": []
+    },
+    "_knowledge-03.育儿成长-家庭教育系统模型": {
+      "title": "家庭教育系统模型",
+      "path": "_knowledge/03.育儿成长/家庭教育系统模型.md",
+      "tags": []
+    },
+    "_knowledge-03.育儿成长-转二段奶粉方案_20260603": {
+      "title": "夏维桢转二段奶粉方案",
+      "path": "_knowledge/03.育儿成长/转二段奶粉方案_20260603.md",
+      "tags": []
+    },
+    "_knowledge-05.资产设备-充电桩归档-2026-07-21": {
+      "title": "充电桩2026-相关文件归档",
+      "path": "_knowledge/05.资产设备/充电桩归档-2026-07-21.md",
+      "tags": [
+        "家庭资产",
+        "充电桩",
+        "电动汽车",
+        "2026"
+      ]
+    },
+    "_knowledge-05.资产设备-车辆-2026-06-13_购车配套事务": {
+      "title": "2026-06-13_购车配套事务",
+      "path": "_knowledge/05.资产设备/车辆/2026-06-13_购车配套事务.md",
+      "tags": []
+    },
+    "_knowledge-05.资产设备-车辆-保险_理想i6_2026-2027": {
+      "title": "理想i6车辆保险 — 2026-2027年度",
+      "path": "_knowledge/05.资产设备/车辆/保险_理想i6_2026-2027.md",
+      "tags": []
+    },
+    "_knowledge-05.资产设备-车辆-理想i6": {
+      "title": "理想 i6 — 家庭新能源车",
+      "path": "_knowledge/05.资产设备/车辆/理想i6.md",
+      "tags": []
+    },
+    "_knowledge-05.资产设备-车辆-购车发票_理想i6": {
+      "title": "理想 i6 购车发票",
+      "path": "_knowledge/05.资产设备/车辆/购车发票_理想i6.md",
+      "tags": []
+    },
+    "_knowledge-00.规则与模板-2026H2-家庭目标": {
+      "title": "2026 H2 家庭生活目标",
+      "path": "_knowledge/00.规则与模板/2026H2-家庭目标.md",
+      "tags": [
+        "家庭生活",
+        "目标",
+        "2026H2",
+        "规划"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭合同清单": {
+      "title": "家庭合同与保险清单 v1",
+      "path": "_knowledge/00.规则与模板/家庭合同清单.md",
+      "tags": [
+        "家庭生活",
+        "合同",
+        "保单",
+        "清单"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭阅读清单": {
+      "title": "家庭学习与阅读清单 v1",
+      "path": "_knowledge/00.规则与模板/家庭阅读清单.md",
+      "tags": [
+        "家庭生活",
+        "学习",
+        "阅读",
+        "清单"
+      ]
+    },
+    "_knowledge-00.规则与模板-六平面-SSOT": {
+      "title": "家庭六平面 SSOT v1",
+      "path": "_knowledge/00.规则与模板/六平面-SSOT.md",
+      "tags": [
+        "家庭生活",
+        "六平面",
+        "映射"
+      ]
+    },
+    "_knowledge-00.规则与模板-孩子成长档案": {
+      "title": "孩子成长档案 v1",
+      "path": "_knowledge/00.规则与模板/孩子成长档案.md",
+      "tags": [
+        "家庭生活",
+        "孩子",
+        "成长档案",
+        "夏维桢"
+      ]
+    },
+    "_knowledge-00.规则与模板-影像归档规则": {
+      "title": "影像归档规则 v1",
+      "path": "_knowledge/00.规则与模板/影像归档规则.md",
+      "tags": [
+        "家庭生活",
+        "影像",
+        "iCloud",
+        "归档"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭旅行模板": {
+      "title": "家庭旅行规划模板 v1",
+      "path": "_knowledge/00.规则与模板/家庭旅行模板.md",
+      "tags": [
+        "家庭生活",
+        "旅行",
+        "规划",
+        "模板"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭亲友图谱": {
+      "title": "家庭亲友关系图谱 v1",
+      "path": "_knowledge/00.规则与模板/家庭亲友图谱.md",
+      "tags": [
+        "家庭生活",
+        "关系",
+        "维护",
+        "亲友"
+      ]
+    },
+    "_knowledge-00.规则与模板-重要纪念日": {
+      "title": "重要纪念日 2026",
+      "path": "_knowledge/00.规则与模板/重要纪念日.md",
+      "tags": [
+        "家庭生活",
+        "纪念日",
+        "提醒",
+        "2026"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭月度复盘模板": {
+      "title": "家庭月度复盘模板 v1",
+      "path": "_knowledge/00.规则与模板/家庭月度复盘模板.md",
+      "tags": [
+        "家庭生活",
+        "复盘",
+        "月度",
+        "模板"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭应急预案": {
+      "title": "家庭应急预案 v1",
+      "path": "_knowledge/00.规则与模板/家庭应急预案.md",
+      "tags": [
+        "家庭生活",
+        "应急",
+        "预案"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭用车规划": {
+      "title": "家庭用车规划 v1",
+      "path": "_knowledge/00.规则与模板/家庭用车规划.md",
+      "tags": [
+        "家庭生活",
+        "用车",
+        "规划",
+        "决策"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭菜谱库": {
+      "title": "家庭日常菜谱库 v1",
+      "path": "_knowledge/00.规则与模板/家庭菜谱库.md",
+      "tags": [
+        "家庭生活",
+        "菜谱",
+        "日常"
+      ]
+    },
+    "_knowledge-00.规则与模板-INDEX": {
+      "title": "家庭生活语义库 — @家庭生活",
+      "path": "_knowledge/00.规则与模板/INDEX.md",
+      "tags": [
+        "知识库",
+        "家庭生活",
+        "iCloud",
+        "索引"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭账目规则": {
+      "title": "家庭账目管理规则 v1",
+      "path": "_knowledge/00.规则与模板/家庭账目规则.md",
+      "tags": [
+        "家庭生活",
+        "账目",
+        "财务",
+        "规则"
+      ]
+    },
+    "_knowledge-00.规则与模板-_test_edit": {
+      "title": "_test_edit",
+      "path": "_knowledge/00.规则与模板/_test_edit.md",
+      "tags": []
+    },
+    "_knowledge-00.规则与模板-家庭购物清单": {
+      "title": "家庭购物清单模板 v1",
+      "path": "_knowledge/00.规则与模板/家庭购物清单.md",
+      "tags": [
+        "家庭生活",
+        "购物",
+        "模板",
+        "清单"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭旅行相册": {
+      "title": "家庭年度旅行相册模板",
+      "path": "_knowledge/00.规则与模板/家庭旅行相册.md",
+      "tags": [
+        "家庭生活",
+        "旅行",
+        "相册",
+        "2026"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭年度规划模板": {
+      "title": "家庭年度规划模板 2026",
+      "path": "_knowledge/00.规则与模板/家庭年度规划模板.md",
+      "tags": [
+        "家庭生活",
+        "年度规划",
+        "模板",
+        "2026"
+      ]
+    },
+    "_knowledge-00.规则与模板-家庭健康档案": {
+      "title": "家庭健康档案 v1",
+      "path": "_knowledge/00.规则与模板/家庭健康档案.md",
+      "tags": [
+        "家庭生活",
+        "健康",
+        "档案",
+        "应急"
+      ]
+    },
+    "_knowledge-01.成员档案-秦张瑶-归档-360-工作-周计划-本周工作（4.23-4.28）": {
+      "title": "本周工作（4.23-4.28）",
+      "path": "_knowledge/01.成员档案/秦张瑶/归档/360/工作/周计划/本周工作（4.23-4.28）.md",
+      "tags": []
+    },
+    "_knowledge-01.成员档案-秦张瑶-归档-360-工作-周计划-本周工作（5.7-5.11）": {
+      "title": "本周工作（5.7-5.11）",
+      "path": "_knowledge/01.成员档案/秦张瑶/归档/360/工作/周计划/本周工作（5.7-5.11）.md",
+      "tags": []
+    },
+    "_knowledge-01.成员档案-秦张瑶-归档-360-工作-周计划-本周工作（4.9-4.14）": {
+      "title": "本周工作（4.9-4.14）",
+      "path": "_knowledge/01.成员档案/秦张瑶/归档/360/工作/周计划/本周工作（4.9-4.14）.md",
+      "tags": []
+    },
+    "_knowledge-01.成员档案-秦张瑶-归档-360-工作-周计划-本周工作（4.16-4.20）": {
+      "title": "本周工作（4.16-4.20）",
+      "path": "_knowledge/01.成员档案/秦张瑶/归档/360/工作/周计划/本周工作（4.16-4.20）.md",
+      "tags": []
+    },
+    "_knowledge-01.成员档案-家庭证件-SENSITIVE": {
+      "title": "SENSITIVE",
+      "path": "_knowledge/01.成员档案/家庭证件/SENSITIVE.md",
+      "tags": []
+    },
+    "_knowledge-01.成员档案-宠物-点点": {
+      "title": "点点",
+      "path": "_knowledge/01.成员档案/宠物/点点.md",
+      "tags": []
+    },
+    "_knowledge-01.成员档案-宠物-小白": {
+      "title": "小白",
+      "path": "_knowledge/01.成员档案/宠物/小白.md",
+      "tags": []
+    },
+    "_knowledge-01.成员档案-夏明星-家族谱系": {
+      "title": "夏明星家族谱系",
+      "path": "_knowledge/01.成员档案/夏明星/家族谱系.md",
+      "tags": []
+    },
+    "_knowledge-01.成员档案-夏明星-个人时间线": {
+      "title": "夏明星个人时间线",
+      "path": "_knowledge/01.成员档案/夏明星/个人时间线.md",
+      "tags": []
+    },
+    "_archive-2026-05-22待办": {
+      "title": "今日待办 — 2026-05-23 周六",
+      "path": "_archive/2026-05-22待办.md",
+      "tags": []
+    },
+    "_archive-复盘_2026-06-05_深度": {
+      "title": "复盘_2026-06-05_深度",
+      "path": "_archive/复盘_2026-06-05_深度.md",
+      "tags": []
+    },
+    "_archive-2026-08-01-免值班结项-已办结-附录_支撑材料清单": {
+      "title": "附录_支撑材料清单",
+      "path": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+      "tags": []
+    },
+    "_archive-2026-08-01-免值班结项-已办结-2026-07-03_免值班申请资料汇总": {
+      "title": "2026-07-03_免值班申请资料汇总",
+      "path": "_archive/2026-08-01-免值班结项-已办结/2026-07-03_免值班申请资料汇总.md",
+      "tags": []
+    },
+    "_archive-2026-08-01-免值班结项-已办结-2026-07-03_免值班全面分析报告": {
+      "title": "免值班问题全面分析报告",
+      "path": "_archive/2026-08-01-免值班结项-已办结/2026-07-03_免值班全面分析报告.md",
+      "tags": []
+    },
+    "_archive-2026-08-01-免值班结项-已办结-附录_夏维桢生长记录数据表": {
+      "title": "附录_夏维桢生长记录数据表",
+      "path": "_archive/2026-08-01-免值班结项-已办结/附录_夏维桢生长记录数据表.md",
+      "tags": []
+    },
+    "_archive-2026-08-01-免值班结项-已办结-关于申请不参与值班工作的报告": {
+      "title": "关于申请不参与值班工作的报告",
+      "path": "_archive/2026-08-01-免值班结项-已办结/关于申请不参与值班工作的报告.md",
+      "tags": []
+    },
+    "_archive-2026-08-01-免值班结项-已办结-附录_FLT4基因变异背景说明": {
+      "title": "附录_FLT4基因变异背景说明",
+      "path": "_archive/2026-08-01-免值班结项-已办结/附录_FLT4基因变异背景说明.md",
+      "tags": []
+    },
+    "_archive-每周维护报告_2026-05-25": {
+      "title": "每周维护报告_2026-05-25",
+      "path": "_archive/每周维护报告_2026-05-25.md",
+      "tags": []
+    },
+    "_archive-superseded-design-docs-2026-06-30-STATUS": {
+      "title": "STATUS",
+      "path": "_archive/superseded-design-docs-2026-06-30/STATUS.md",
+      "tags": []
+    },
+    "_archive-superseded-design-docs-2026-06-30-l4-kernel": {
+      "title": "l4-kernel — @家庭生活",
+      "path": "_archive/superseded-design-docs-2026-06-30/l4-kernel.md",
+      "tags": [
+        "l4-kernel",
+        "KEMS-v7.2",
+        "家庭生活",
+        "iCloud",
+        "KEMS-v7.1"
+      ]
+    },
+    "_archive-superseded-design-docs-2026-06-30-README": {
+      "title": "README",
+      "path": "_archive/superseded-design-docs-2026-06-30/README.md",
+      "tags": []
+    },
+    "_archive-superseded-design-docs-2026-06-30-sensors": {
+      "title": "传感器 — @家庭生活",
+      "path": "_archive/superseded-design-docs-2026-06-30/sensors.md",
+      "tags": [
+        "传感器",
+        "iCloud",
+        "家庭生活",
+        "轻量"
+      ]
+    },
+    "_archive-superseded-design-docs-2026-06-30-control-rules": {
+      "title": "控制规则",
+      "path": "_archive/superseded-design-docs-2026-06-30/control-rules.md",
+      "tags": [
+        "控制面",
+        "控制器"
+      ]
+    },
+    "_archive-superseded-design-docs-2026-06-30-executor-rules": {
+      "title": "执行器 — @家庭生活",
+      "path": "_archive/superseded-design-docs-2026-06-30/executor-rules.md",
+      "tags": [
+        "执行器",
+        "iCloud",
+        "家庭生活",
+        "被动"
+      ]
+    },
+    "_archive-待办_0528-0611": {
+      "title": "近两周待办清单（5/28 ~ 6/11）",
+      "path": "_archive/待办_0528-0611.md",
+      "tags": []
+    },
+    "_archive-复盘_2026-06-05_全会话": {
+      "title": "复盘_2026-06-05_全会话",
+      "path": "_archive/复盘_2026-06-05_全会话.md",
+      "tags": []
+    },
+    "_archive-2026-07-02-教育文档废弃-02.夏维桢·英语启蒙路线（0-6岁）": {
+      "title": "02.夏维桢·英语启蒙路线（0-6岁）",
+      "path": "_archive/2026-07-02-教育文档废弃/02.夏维桢·英语启蒙路线（0-6岁）.md",
+      "tags": []
+    },
+    "_archive-复盘_2026-06-05_代位追偿与车辆事故": {
+      "title": "复盘 — 理想i6事故与代位追偿",
+      "path": "_archive/复盘_2026-06-05_代位追偿与车辆事故.md",
+      "tags": [
+        "车辆",
+        "保险",
+        "代位追偿",
+        "复盘"
+      ]
+    }
+  }
+}

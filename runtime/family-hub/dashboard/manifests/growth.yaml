@@ -1,0 +1,188 @@
+title: 育儿成长
+description: 托育安排、喂养方案与成长规划
+focus:
+  - id: growth-focus-daycare
+    title: 爱蓓乐托育计划
+    sourcePath: _knowledge/03.育儿成长/规划文档/爱蓓乐托育计划.md
+    sourceTitle: 托育安排
+nextActions: []
+links:
+  - title: 查看重点原文
+    href: /doc?path=_knowledge/03.育儿成长/规划文档/爱蓓乐托育计划.md
+growthSections:
+  heroDescription: 这里集中看孩子所处阶段、近期养育重点和长期成长路线。它更像一张有陪伴感的家庭总览台，帮助家里知道现在先照看什么、下周继续跟什么，而不是把育儿拆成冰冷的项目表。
+  heroSummaries:
+    - label: 当前阶段
+      value: 7.5 月龄
+      subtitle: 0-3 岁感知期
+    - label: 最近重点
+      value: 入托适应
+      subtitle: 母亲上午陪同
+    - label: 第一任务
+      value: 稳住喂养
+      subtitle: 过渡二段奶粉
+  overviewStrip:
+    summary: 当前养育精力主要压在入托适应、二段奶粉过渡和生长放缓观察上；教育路线暂不追求"提早推进"，而是先把英语语感、阅读习惯和数学感知放进稳定日常。
+    tags:
+      - 先稳节奏
+    meterSteps:
+      - label: 托育适应
+        description: 当前最高
+        active: true
+      - label: 喂养过渡
+        description: 连续跟进
+        active: false
+      - label: 发育观察
+        description: 每周复盘
+        active: false
+      - label: 启蒙路线
+        description: 稳步铺开
+        active: false
+    miniCards:
+      - label: 最近判断
+        value: 先接得住
+        subtitle: 优先降低入托和复工交接的摩擦感。
+      - label: 近期主用
+        value: 托育计划
+        subtitle: 接送分工与适应安排要跟计划同步。
+      - label: 长期方向
+        value: 方向已定
+        subtitle: 英语、数学、阅读按日常节奏慢慢长出来。
+  stageCards:
+    - id: stage-daycare
+      icon: baby
+      title: 托育适应
+      subtitle: 爱蓓乐 · 乳儿班
+      badge: 优先
+      badgeStyle: warning
+      tags:
+        - 6 月 1 日入托
+        - 上午陪同
+      description: 现在：体检已完成，手续与费用已有着落，当前要把适应期安排和接送分工说透。
+      nextStep: 围绕午睡、分离情绪和接送缓冲，给家里留出一份清晰接力表。
+    - id: stage-feeding
+      icon: utensils-crossed
+      title: 喂养过渡
+      subtitle: 二段奶粉方案
+      badge: 持续
+      badgeStyle: primary-soft
+      tags:
+        - 7.5 月龄
+        - 复工前切换
+      description: 现在：喂养不主动和生长放缓是最重要约束，二段奶粉过渡节奏需要更稳，不适合一步切太快。
+      nextStep: 优先保住摄入量和耐受感，再决定配方侧重点，不让入托叠加喂养冲击。
+    - id: stage-development
+      icon: activity
+      title: 发育观察
+      subtitle: 体重 · 皮肤 · 视力
+      badge: 观察
+      badgeStyle: info
+      tags:
+        - 生长放缓
+        - 皮肤敏感
+      description: 现在：需要把体重、喂养反馈、皮肤反应和近视风险放在同一组观察里看，不分散判断。
+      nextStep: 每周只看少数关键指标，记录趋势而不是被单次波动牵着走。
+    - id: stage-education
+      icon: book-open
+      title: 启蒙路线
+      subtitle: 英语 · 数感 · 阅读
+      badge: 已定
+      badgeStyle: success
+      tags:
+        - 英语语感
+        - 阅读习惯
+      description: 现在：家庭已经形成 0-3 岁阶段方向，不需要再反复摇摆目标，重点是把路线种进日常陪伴。
+      nextStep: 把英语耳濡、数学感知和阅读时间做得轻一点、稳一点，不追赶式上量。
+  signals:
+    - id: sig-daycare
+      icon: heart-handshake
+      iconStyle: warning
+      title: 入托接力
+      description: 谁送、谁接、谁安抚，要提前说清楚。
+    - id: sig-feeding
+      icon: utensils-crossed
+      iconStyle: primary-soft
+      title: 二段过渡
+      description: 过渡节奏要跟耐受反馈一起看，不只看配方名。
+    - id: sig-back-to-work
+      icon: users
+      iconStyle: info
+      title: 复工衔接
+      description: 6 月底母亲复工后，日常安排要提前顺一遍。
+    - id: sig-eating
+      icon: utensils-crossed
+      iconStyle: primary-soft
+      title: 喂养偏慢
+      description: 先看主动性变化，再决定是否加大干预。
+    - id: sig-growth
+      icon: activity
+      iconStyle: primary-soft
+      title: 生长观察
+      description: 把体重、皮肤和睡眠放回同一张趋势里看。
+    - id: sig-reading
+      icon: book-open
+      iconStyle: success
+      title: 阅读启蒙
+      description: 每天留一点稳定阅读时间，比偶尔冲量更重要。
+  timeline:
+    - id: tl-early
+      icon: clock-3
+      iconStyle: warning
+      title: 周初接住
+      badge: 先稳入托
+      badgeStyle: warning
+      description: 记录孩子送托后的情绪、食欲和午睡反馈，及时调整上午陪同和离园后的缓冲节奏。
+    - id: tl-mid
+      icon: calendar-clock
+      iconStyle: primary-soft
+      title: 周中观察
+      badge: 喂养复盘
+      badgeStyle: primary-soft
+      description: 把二段奶粉过渡、摄入量和皮肤反馈放在一起看，别把问题拆散判断。
+    - id: tl-align
+      icon: users
+      iconStyle: info
+      title: 周中对齐
+      badge: 复工衔接
+      badgeStyle: info
+      description: 把母亲复工后的上午安排、接送补位和日常照看分工提前说清楚。
+    - id: tl-weekend
+      icon: book-open
+      iconStyle: success
+      title: 周末收口
+      badge: 方向再确认
+      badgeStyle: success
+      description: 用家庭教育总纲回看本周陪伴，确认英语语感、阅读习惯和数学感知有没有真正落到日常里。
+  stableItems:
+    - title: 入托体检
+      description: 体检已经完成，当前重心转到真实适应过程。
+    - title: 报名手续
+      description: 爱蓓乐入托基础手续和每月费用已明确。
+    - title: 成长方向
+      description: 英语、数感、阅读三条长期线已经形成共识。
+    - title: 路线口径
+      description: 不做追赶式育儿，先稳作息与陪伴，再慢慢加深内容。
+  planEntries:
+    - icon: baby
+      title: 托育计划
+      description: 查看入托安排、接送分工和适应期缓冲方案。
+      href: /doc?path=_knowledge/03.育儿成长/规划文档/爱蓓乐托育计划.md
+    - icon: utensils-crossed
+      title: 奶粉方案
+      description: 查看二段奶粉节奏、优先事项和行动清单。
+      href: /doc?path=_knowledge/03.育儿成长/转二段奶粉方案_20260603.md
+    - icon: book-open
+      title: 教育总纲
+      description: 查看 0-3 岁感知期的长期路线和家庭分工口径。
+      href: /doc?path=_knowledge/03.育儿成长/规划文档/爱蓓乐托育计划.md
+    - icon: scan-search
+      title: 专项分析
+      description: 查看奶粉对比、生长放缓和入托约束的专项判断。
+      href: /doc?path=_knowledge/03.育儿成长/转二段奶粉_多维度对比分析_20260603.md
+  footer:
+    title: 育儿成长总览
+    description: 用阶段、信号、节奏和计划入口把育儿这件事接成一条温和但清晰的路径。
+    tags:
+      - 温和可信
+      - 陪伴视角
+      - 便于接续
