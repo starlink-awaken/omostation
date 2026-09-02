@@ -3231,6 +3231,7 @@ FAMILY_DASHBOARD_STATE_ROOT=/Users/xiamingxing/Workspace/runtime/family-hub/dash
 Then start one temporary read-only server:
 
 ```bash
+umask 077
 DASHBOARD_CANARY_PORT="$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')"
 cd "$OWNED_ROOT/projects/family-hub/apps/dashboard"
 FAMILY_DOCUMENTS_ROOT=/Users/xiamingxing/Documents/@家庭生活 \
