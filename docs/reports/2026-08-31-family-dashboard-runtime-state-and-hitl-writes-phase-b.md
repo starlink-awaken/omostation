@@ -58,7 +58,7 @@ The current canonical artifact digests are:
 - `migration/plan.json`: `sha256:0ec564392038b093631be51b3ee818eff38a3125681e4354e9067c764377ea31`.
 - `migration/receipt.json`: `sha256:97510525f11df32f8af6afc0967db030249547934ebea82a17996393aff95c7b`.
 - `migration/parity.json`: `sha256:866e1890ed8ab31f9ee0d935f4749976730c2814f1fa4464795f8e82e5dc13e5`.
-- `migration/recovery.json`: `sha256:df9e8695be7b98a49bab80db54f34c1b72f8d0c84a2b44cd7fafe4f5d23b9e45`.
+- `migration/recovery.json`: `sha256:b53f2a42f5deaee1cf4bc456cb72702e87b9fdd0a2731a142ca8c85c515bf179`.
 - Workflow run `20260901T095453Z-bet-execution-81135886` plan evidence:
   `sha256:3737503abb8e97b0c276f97ddc739a119fecb9b2b5c66f14f22b93377c1772c1`.
 - Its apply and final verify evidence both digest to
@@ -90,6 +90,15 @@ to match exactly:
 
 The sibling remains private-mode and intentionally retained. It is evidence of
 recoverability, not an active runtime root or a cleanup authorization.
+
+A later canary preflight observed a second unbound partial target with the
+same task digest but a changed private canary-log digest. Its distinct inventory
+digest `sha256:7327248d885f555d897a92de3fae0f66cb681438af2bd9caf93e87e226c26a0e`
+therefore produced a second retained sibling:
+`runtime/family-hub/.dashboard.recovery-a8e2f11c48b1-7327248d885f`.
+The managed recovery was rerun in a persistent session (so interruption could
+not be mistaken for a build failure), restored a verified canonical runtime,
+and again proved the identical task digest and `writes_documents=false`.
 
 ## Read-only operational checks
 

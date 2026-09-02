@@ -17403,7 +17403,8 @@ bets:
   title: 数字大脑管线 supervisor 常驻化 (Resident execute 角色)
   appetite: 1.5 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-02
   goal: 全管线（雷达→总线→嵌入→渲染）注册为 Resident Agent execute 角色常驻：定时通道（每日 07:30 全链晨报）+ 文件监听通道（~/Inbox/ocr-inbound/ 新扫描件→OCR→待办卡片），单站失败降级不中断 + 告警进 convergence-pulse health。
   non_goals:
   - 不做 IM 指令触发通道（human gate 缓推）
@@ -17434,6 +17435,48 @@ bets:
   human_gate: false
   circuit_breaker: 单站失败标记 degraded 续跑下游可行站，全链告警写 .omo/state/convergence-pulse 事件源。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-02-t2-05-pipeline-supervisor-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:dae4d2070e97d98097cef38f9d177214374c9c86821bb1abcb59a258a1c908ec
+    decision_ref: decision://accepted/BET-Y1Q4-T2-05
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@2692d74131434307496997250e0cc005a849e17e
+          tests:
+            ref: receipt://docs/reports/2026-09-02-pipeline-supervisor.md
+            sha256: sha256:333eb45ac28cb09d2c3970034d15cf956e3d746f3cc8dd6ea64fa9eaec6d5776
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-02-t2-05-pipeline-supervisor-design.md
+            sha256: sha256:dae4d2070e97d98097cef38f9d177214374c9c86821bb1abcb59a258a1c908ec
+          rollback:
+            ref: receipt://docs/reports/2026-09-02-pipeline-supervisor.md
+            sha256: sha256:333eb45ac28cb09d2c3970034d15cf956e3d746f3cc8dd6ea64fa9eaec6d5776
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-02-pipeline-supervisor.md
+            sha256: sha256:333eb45ac28cb09d2c3970034d15cf956e3d746f3cc8dd6ea64fa9eaec6d5776
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-02-pipeline-supervisor.md
+            sha256: sha256:333eb45ac28cb09d2c3970034d15cf956e3d746f3cc8dd6ea64fa9eaec6d5776
+          replay:
+            ref: receipt://tests/test_pipeline_supervisor.py
+            sha256: sha256:2eb90b4317e2623c54d8b63cc972706d34ca5eb2590d892502ace6dcd470c504
+          cleanup:
+            ref: receipt://docs/reports/2026-09-02-pipeline-supervisor.md
+            sha256: sha256:333eb45ac28cb09d2c3970034d15cf956e3d746f3cc8dd6ea64fa9eaec6d5776
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T10-01
   track: T10-MATURITY
   window: Y1Q4
