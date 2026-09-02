@@ -1,0 +1,72 @@
+{
+  "run_id": "chain-20260901-203806-9812",
+  "chain_id": "governance-patrol",
+  "started_at": "2026-09-01T12:38:06.614102+00:00",
+  "params": {},
+  "steps_state": {
+    "gac": {
+      "name": "gac",
+      "status": "failed",
+      "exit_code": 1,
+      "stdout": "═══ GaC 体系健康检查 (2026-09-01T12:38:06Z) ═══\n\n▶ 核心文件: ❌ 24/27 (缺: ['.omo/cron/opc-closeout-crontab', 'bin/gac/gac-ingest-legacy.py', 'scripts/check-doc-ssot-snapshots.py'])\n▶ gac-validate (机制2/5/6): ✅ rules=81 errors=0 warnings=0\n▶ gac-drift (机制4): ✅ drift_count=0 (闭环归零)\n▶ 覆盖: 81 规则 | dimension ✅ {'X4': 30, 'X1': 27, 'X2': 19, 'X3': 5} | layer {'L2': 22, 'M0': 1, 'L0': 5, 'meta': 46, 'L1': 2, 'L3': 1, 'L4': 2, 'X': 2}\n▶ ADR 引用一致: ✅ (0104 残留=0)\n▶ GacRule M2 (机制7): ✅ fields=0 状态机=5 机制=7 drift=PASS\n▶ doc-ssot (CR-X4-DOC-SSOT): ✅ 扫描=186 冲突=0\n▶ doc-snapshots (禁止运行时快照): ❌\n▶ doc-links (入口文档链接): ✅ 扫描=43 死链=0\n▶ submodule-reachability (gitlink远端可达): ✅ 检查=14 失败=0\n▶ hygiene (CR-HYG-01/02): ✅ 0字节=0 大小写冲突=0\n▶ registry-drift (代码→SSOT): ❌ 扫描=16 drift=1\n▶ legacy-drift (收敛同步): ❌ 源=0 indexed=0 missing=0 ghost=0\n▶ bootstrap (GaC 治 GaC): ✅ 工具=0/0 indexed缺=0 exec错=0 schema错=0\n▶ executor-drift (声明vs实际): ✅ executor=10 missing=0 受影响规则=0\n▶ M1实例drift (机制7): ❌ registry=81 M1=136 缺=13 多余=68 过期=4\n▶ CI平面 (ADR-0379): ❌ surfaces=136 wired=113 errors=1 warns=4\n    ❌ unregistered-check: workflow architecture-check.yml 执行了未登记的检查 bin/gac/architecture-check.py (CR-CI-SURFACE-SSOT)\n    ⚠️  trigger-drift: architecture-check.yml 未登记在 ci-surfaces workflow_triggers\n    ⚠️  overlap: bin/gac/gac-local-gate.py 在 2 个 workflow 执行: gac-gate.yml,governance-check.yml\n    ⚠️  overlap: bin/ssot/submodule-reachability-gate.py 在 4 个 workflow 执行: gac-gate.yml,post-merge-validate.yml,submodule-freshness-gatekeeper.yml,workspace.yml\n    ⚠️  overlap: scripts/check-vault-paths.py 在 2 个 workflow 执行: mof-update.yml,port-registry-enforce.yml\n▶ SSOT使用率 (ADR-0385): ❌ files=52 stale=12\n\n═══ 总体: ❌ 有红 (见上) ═══\n\n",
+      "stderr": "",
+      "attempts": 1,
+      "started_at": "2026-09-01T12:38:06.614289+00:00",
+      "ended_at": "2026-09-01T12:38:15.316717+00:00"
+    },
+    "adr-drift": {
+      "name": "adr-drift",
+      "status": "succeeded",
+      "exit_code": 0,
+      "stdout": "usage: adr-drift-check.py [-h] [--decisions DECISIONS] [--root ROOT]\n                          [--adr ADR] [--json]\n\nP89: ADR drift check\n\noptions:\n  -h, --help            show this help message and exit\n  --decisions DECISIONS\n  --root ROOT\n  --adr ADR             仅检查单条 ADR (按文件名前缀或编号)\n  --json\n",
+      "stderr": "",
+      "attempts": 1,
+      "started_at": "2026-09-01T12:38:15.317287+00:00",
+      "ended_at": "2026-09-01T12:38:15.600302+00:00"
+    },
+    "layer-deps": {
+      "name": "layer-deps",
+      "status": "succeeded",
+      "exit_code": 0,
+      "stdout": "usage: layer-dependency-check.py [-h] [--contract CONTRACT]\n                                 [--project PROJECT] [--json]\n\nLayer dependency checker\n\noptions:\n  -h, --help           show this help message and exit\n  --contract CONTRACT  Path to layer contract file\n  --project PROJECT    Check only a single project\n  --json               Output in JSON format\n",
+      "stderr": "",
+      "attempts": 1,
+      "started_at": "2026-09-01T12:38:15.600737+00:00",
+      "ended_at": "2026-09-01T12:38:15.865087+00:00"
+    },
+    "submodule-gitlink": {
+      "name": "submodule-gitlink",
+      "status": "succeeded",
+      "exit_code": 0,
+      "stdout": "ℹ️ 无 submodule\n",
+      "stderr": "",
+      "attempts": 1,
+      "started_at": "2026-09-01T12:38:15.865533+00:00",
+      "ended_at": "2026-09-01T12:38:16.215287+00:00"
+    },
+    "readiness": {
+      "name": "readiness",
+      "status": "succeeded",
+      "exit_code": 0,
+      "stdout": "usage: cockpit-readiness.py [-h] [--format {json,text}] [--output OUTPUT]\n\nP65: cockpit readiness wrapper (委派 bin/gac/governance-dashboard.py\n--readiness-summary)\n\noptions:\n  -h, --help            show this help message and exit\n  --format {json,text}  输出格式 (默认 json)\n  --output OUTPUT       输出文件路径 (默认 stdout)\n",
+      "stderr": "",
+      "attempts": 1,
+      "started_at": "2026-09-01T12:38:16.216361+00:00",
+      "ended_at": "2026-09-01T12:38:16.478056+00:00"
+    },
+    "summary": {
+      "name": "summary",
+      "status": "failed",
+      "exit_code": 1,
+      "stdout": "{\"schema\": \"cockpit.governance-context.v1\", \"status\": \"degraded\", \"available\": true, \"workspace_root\": \"/Users/xiamingxing/Workspace\", \"phase\": 29, \"phase_status\": null, \"theme\": \"Phase 49 — 认知基底 + 场景面净化 (意图模型注入 + 四元组物理化)\", \"current_wave\": \"W1\", \"active_goals\": [{\"id\": \"KOS-Q-GROWTH\", \"title\": \"KOS 季度扩量（跃迁期长交期前置）\", \"desc\": \"G-CONV.6 后续持续加码：按季度提升 kos-index documents，服务跃迁期个人大脑\", \"status\": \"active\", \"progress\": 100.0}, {\"id\": \"G-Y1Q1-GITSHIM\", \"title\": \"git 入口收口 — shim 强制走 swarm-git\", \"desc\": \"agent 环境 git → swarm-git 强制路由，拦 --no-verify + 高危操作\", \"status\": \"in_progress\", \"progress\": 50.0}], \"domains\": [{\"id\": \"shared\", \"name\": \"@公共\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@公共\", \"bos_uri\": \"bos://shared/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"personal\", \"name\": \"@个人\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@个人\", \"bos_uri\": \"bos://personal/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"vault\", \"name\": \"@学习进化\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@学习进化\", \"bos_uri\": \"bos://vault/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"family\", \"name\": \"@家庭生活\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@家庭生活\", \"bos_uri\": \"bos://family/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"creative\", \"name\": \"@创意创作\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@创意创作\", \"bos_uri\": \"bos://creative/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"opc\", \"name\": \"@OPC\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@OPC\", \"bos_uri\": \"bos://opc/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"work-docs\", \"name\": \"@工作文档\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@工作文档\", \"bos_uri\": \"bos://work-docs/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"work-weijian\", \"name\": \"@工作文档/卫健委\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@工作文档/卫健委\", \"bos_uri\": \"bos://work-weijian/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"work-guozhuan\", \"name\": \"@工作文档/国转中心\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@工作文档/国转中心\", \"bos_uri\": \"bos://work-guozhuan/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"work-liyongke\", \"name\": \"@工作文档/规自委\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@工作文档/规自委\", \"bos_uri\": \"bos://work-liyongke/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"work-contracts\", \"name\": \"@工作文档/合同法规\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@工作文档/合同法规\", \"bos_uri\": \"bos://work-contracts/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}, {\"id\": \"cockpit\", \"name\": \"@驾驶舱\", \"type\": \"document\", \"path\": \"/Users/xiamingxing/Documents/@驾驶舱\", \"bos_uri\": \"bos://cockpit/**\", \"capabilities\": [\"knowledge.read\", \"knowledge.validate\"], \"exists\": true}], \"domain_summary\": {\"total\": 12, \"existing\": 12}, \"cards_summary\": {\"status\": \"unavailable\", \"active\": 0, \"total\": 0, \"p0_open\": 0, \"p0_titles\": []}, \"sources\": {\"workspace\": {\"status\": \"ok\", \"available\": true, \"phase\": 29, \"phase_status\": null, \"theme\": \"Phase 49 — 认知基底 + 场景面净化 (意图模型注入 + 四元组物理化)\", \"current_wave\": \"W1\", \"active_goals\": [{\"id\": \"KOS-Q-GROWTH\", \"title\": \"KOS 季度扩量（跃迁期长交期前置）\", \"desc\": \"G-CONV.6 后续持续加码：按季度提升 kos-index documents，服务跃迁期个人大脑\", \"status\": \"active\", \"progress\": 100.0}, {\"id\": \"G-Y1Q1-GITSHIM\", \"title\": \"git 入口收口 — shim 强制走 swarm-git\", \"desc\": \"agent 环境 git → swarm-git 强制路由，拦 --no-verify + 高危操作\", \"status\": \"in_progress\", \"progress\": 50.0}], \"sources\": {\"system\": \"/Users/xiamingxing/Workspace/.omo/state/system.yaml\", \"goals\": \"/Users/xiamingxing/Workspace/.omo/_truth/goals/current.yaml\"}, \"errors\": []}, \"domains\": {\"status\": \"ok\", \"available\": true, \"owner\": \"l4-kernel\", \"source\": \"/Users/xiamingxing/Documents/@公共/_control/L4-DOMAIN-REGISTRY.yaml\"}, \"cards\": {\"status\": \"unavailable\", \"available\": false, \"owner\": \"omo\", \"returncode\": 1, \"error\": \"Traceback (most recent call last):\\n  File \\\"<frozen runpy>\\\", line 203, in _run_module_as_main\\n  File \\\"<frozen runpy>\\\", line 88, in _run_code\\n  File \\\"/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_cards.py\\\", line 136, in <module>\\n    from .omo_cards_migrate import cmd_migrate  # noqa: F401 -- re-export\\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_cards_migrate.py\\\", line 8, in <module>\\n    from .omo_cards import _get_db, _now, _record_history\\n  File \\\"/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_cards.py\\\", line 136, in <module>\\n    from .omo_cards_migrate import cmd_migrate  # noqa: F401 -- re-export\\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\nImportError: cannot import name 'cmd_migrate' from partially initialized module 'omo.omo_cards_migrate' (most likely due to a circular import) (/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_cards_migrate.py)\"}}}\n",
+      "stderr": "",
+      "attempts": 1,
+      "started_at": "2026-09-01T12:38:16.478650+00:00",
+      "ended_at": "2026-09-01T12:38:16.769662+00:00"
+    },
+    "ref:summary": "summary"
+  },
+  "status": "failed",
+  "ended_at": "2026-09-01T12:38:16.770053+00:00",
+  "final_rc": 1
+}
