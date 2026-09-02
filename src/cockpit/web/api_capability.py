@@ -93,6 +93,22 @@ async def capability_cli() -> JSONResponse:
     return JSONResponse({"commands": commands, "count": len(commands)})
 
 
+@router.get("/workflows")
+async def capability_workflows() -> JSONResponse:
+    """工作流列表."""
+    reg = _load_registry()
+    workflows = reg.get("workflows", [])
+    return JSONResponse({"workflows": workflows, "count": len(workflows)})
+
+
+@router.get("/skills")
+async def capability_skills() -> JSONResponse:
+    """技能列表."""
+    reg = _load_registry()
+    skills = reg.get("skills", [])
+    return JSONResponse({"skills": skills, "count": len(skills)})
+
+
 @router.get("/search")
 async def capability_search(
     q: str = Query(..., description="搜索关键词 (匹配工具名/命令名/服务 URI)"),
