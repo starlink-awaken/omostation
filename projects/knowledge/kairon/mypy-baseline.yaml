@@ -1,6 +1,6 @@
 version: '1.0'
 status: active
-updated_at: '2026-08-16T20:49:36Z'
+updated_at: '2026-09-02T12:23:04Z'
 owner: governance
 invocation: MYPYPATH=src mypy src --namespace-packages --explicit-package-bases --exclude tests/ (per-package)
 policy: regression-only
@@ -19,7 +19,7 @@ note: '[2026-06-23 已付清 ✅] total_errors=0, 16/16 包全绿 (make typechec
 
   '
 totals:
-  total_errors: 246
+  total_errors: 261
   packages_with_errors: 8
   packages_clean: 8
 entries:
@@ -33,7 +33,7 @@ entries:
   kairon-pipeline: 2
   kairon-plugin-sdk: 0
   kairon-utils: 0
-  kos: 217
+  kos: 232
   kronos: 3
   minerva: 5
   mos: 6
