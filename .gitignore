@@ -152,14 +152,27 @@ node_modules/
 # 7. 本地工具、Agent 与 IDE 配置
 #    AI 编码工具目录 (.claude/.crush/.serena/.reasonix/.grok/.hermes/.husky/
 #    .antigravitycli/.mimocode/.qoder/.deepeval/.idea) 已由
-#    ~/.gitignore_global 统一忽略, 此处不再重复。
-#    以下仅保留项目特有的忽略规则。
+#    ~/.gitignore_global 统一忽略, 此处为主仓显式兜底（防 global 未配置）。
+#    以下仅保留项目特有的忽略规则；本地面一律不入仓。
 # ---------------------------------------------------------------------------
+.claude/
+.mimocode/worktrees/
+.mimocode/logs/
+.mimocode/sessions/
+.mimocode/state/
+.mimocode/notepads/
+.mimocode/plans/
+.omc/notepads/
+.omc/logs/
+.openclaude/logs/
 .metaos/
 .codebuddy/
 .openclaude/
 config/
 *.local.json
+.cursor/
+.vscode/
+.idea/
 
 # ---------------------------------------------------------------------------
 # 8. 本地开发沙箱与一次性脚本
