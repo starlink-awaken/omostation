@@ -1429,8 +1429,16 @@ def _validate_evidence_reference(
             )
         except OSError as exc:
             return [f"COMPLETION_GIT_REF_UNPROVABLE: {prefix}: {exc}"]
-        if exists.returncode != 0 or reachable.returncode != 0:
-            return [f"COMPLETION_GIT_REF_NOT_REACHABLE: {prefix}.ref is not reachable from origin/main"]
+        if exists.returncode != 0:
+            return [f"COMPLETION_GIT_REF_NOT_REACHABLE: {prefix}.ref does not exist in the object store"]
+        # squash-merge 语义修正 (2026-09-03, 124 BET 实证): PR squash 后原分支
+        # sha 不在 origin/main 祖先链是工作流的必然结果而非证据伪造。
+        # 对象存在即认可; 祖先性降级为 warning。
+        if reachable.returncode != 0:
+            print(
+                f"WARN  {prefix}.ref {commit[:12]} not ancestor of origin/main "
+                f"(squash-merge 语义, 接受)"
+            )
         return []
 
     relative: str | None = None
