@@ -12355,6 +12355,8 @@ bets:
   - docs/generated/capability-registry.yaml
   - docs/project-registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+  - docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
+  - docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md
   - .github/workflows/governance-check.yml
   - bin/_registry/scripts/governance/daemon-watchdog.yaml
   - bin/_registry/scripts/governance/real-scenario-runner.yaml
