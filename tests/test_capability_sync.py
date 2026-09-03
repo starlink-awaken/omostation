@@ -685,8 +685,17 @@ class _FakeGateway:
             "invocation_attempted": False,
         }
 
-    def invoke(self, record: dict, payload: object, *, selector: dict, binding: dict | None = None) -> dict:
-        self.calls.append(("invoke", record, payload, selector, binding))
+    def invoke(
+        self,
+        record: dict,
+        payload: object,
+        *,
+        selector: dict,
+        binding: dict | None = None,
+        principal_authority: dict | None = None,
+        **_kwargs,
+    ) -> dict:
+        self.calls.append(("invoke", record, payload, selector, binding, principal_authority))
         return {
             "schema": "capability-invocation-receipt/v1",
             "operation": "invoke",
@@ -844,8 +853,18 @@ def test_invoke_cli_reads_binding_json_and_forwards_it(cap_sync, bound_files, mo
     operation so Agora can emit a binding_digest."""
     captured: list[dict] = []
 
-    def fake_execute(reg, operation, capability_id, *, payload=None, gateway=None, service_catalog=None, binding=None):
-        captured.append({"operation": operation, "binding": binding})
+    def fake_execute(
+        reg,
+        operation,
+        capability_id,
+        *,
+        payload=None,
+        gateway=None,
+        service_catalog=None,
+        binding=None,
+        principal_authority=None,
+    ):
+        captured.append({"operation": operation, "binding": binding, "principal_authority": principal_authority})
         return {"schema": "capability-invocation-receipt/v1", "status": "succeeded"}
 
     monkeypatch.setattr(cap_sync, "execute_gateway_operation", fake_execute)

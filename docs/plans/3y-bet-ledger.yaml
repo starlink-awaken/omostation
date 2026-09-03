@@ -12162,7 +12162,7 @@ bets:
   - capability_id: mcp-server:agora
     operation: load
     effect: read_only
-  - capability_id: bos-service:bos://governance/omo/state
+  - capability_id: bos-service:bos://system/omo/debt
     operation: invoke
     effect: read_only
   evidence:
@@ -12312,10 +12312,31 @@ bets:
     axes:
       engineering:
         status: IN_PROGRESS
-        evidence: {}
+        evidence:
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:51eeac95e815f5a3523e5b0732fc9a182f42fe8b1b9523d7241b49424e5c6df8
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:51eeac95e815f5a3523e5b0732fc9a182f42fe8b1b9523d7241b49424e5c6df8
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:51eeac95e815f5a3523e5b0732fc9a182f42fe8b1b9523d7241b49424e5c6df8
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
+          fresh_receipt:
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
+            sha256: sha256:9df83d6d80741cb04730ffb9d75951230c103139129775e28e14f409ecd4a079
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -12337,6 +12358,8 @@ bets:
   - docs/generated/capability-registry.yaml
   - docs/project-registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+  - docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
+  - docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md
   - .github/workflows/governance-check.yml
   - bin/_registry/scripts/governance/daemon-watchdog.yaml
   - bin/_registry/scripts/governance/real-scenario-runner.yaml
