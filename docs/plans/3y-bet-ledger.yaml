@@ -19062,6 +19062,7 @@ bets:
   write_surfaces:
   - projects/cockpit-ui/**
   - projects/cockpit/src/cockpit/web/**
+  - projects/cockpit
   - projects/cockpit/tests/**
   - projects/omo/src/omo/**
   - projects/omo/tests/**
