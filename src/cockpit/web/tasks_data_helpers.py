@@ -330,6 +330,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "scene_binding": _scene_binding_projection(task_data),
                         "workflow_request": _workflow_request_projection(str(task_data.get("id", task_file.stem))),
                         "execution_contract": _execution_contract(task_data),
+                        "work_case": task_data.get("work_case"),
                     }
                 )
             except Exception as exc:  # defensive fallback
@@ -358,6 +359,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "scene_binding": _scene_binding_projection(task_data),
                         "workflow_request": _workflow_request_projection(str(task_data.get("id", task_file.stem))),
                         "execution_contract": _execution_contract(task_data),
+                        "work_case": task_data.get("work_case"),
                     }
                 )
             except Exception as exc:  # defensive fallback
@@ -386,6 +388,7 @@ def get_tasks_from_omo() -> list[dict]:
                         "scene_binding": _scene_binding_projection(task_data),
                         "workflow_request": _workflow_request_projection(str(task_data.get("id", task_file.stem))),
                         "execution_contract": _execution_contract(task_data),
+                        "work_case": task_data.get("work_case"),
                     }
                 )
             except Exception as exc:  # defensive fallback
