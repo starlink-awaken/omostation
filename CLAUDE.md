@@ -131,7 +131,7 @@ The authoritative SSOT map (all fact types, sources, and boundaries) lives in [`
 
 1. For work with more than a couple of steps, keep a visible todo list.
 2. Read the target project `AGENTS.md` / `CLAUDE.md` before editing that project.
-3. Use `rg` for text discovery; for callers/impact prefer codebase-memory MCP (see [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md)).
+3. Use `rg` for text discovery; for callers/impact prefer codebase-memory MCP (see [`.omo/_archive/operations-2026H1/codebase-memory.md`](.omo/_archive/operations-2026H1/codebase-memory.md)).
 4. Use the available file-editing tools (Edit, Create, MultiEdit, or `apply_patch`) for manual edits.
 5. Do not delete, reset, move, commit, or push unless explicitly confirmed. See [`AGENTS.md` §6](AGENTS.md#6-git-and-submodules) for the full git and submodule policy.
 6. If a governance protocol demands a commit but the current user/session policy does not authorize one, finish the working-tree changes, report the exact files, and ask for explicit commit confirmation.
@@ -160,7 +160,7 @@ The authoritative SSOT map (fact types → sources) lives in [`ARCHITECTURE.md` 
 | Agent skills & setup | [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) |
 | System navigation hub | [`docs/SYSTEM-INDEX.md`](docs/SYSTEM-INDEX.md) |
 | Scene cards & journeys | [`docs/scene-cards/`](docs/scene-cards/) · [`docs/journey-specs/`](docs/journey-specs/) |
-| Code callers / impact | [`docs/operations/codebase-memory.md`](docs/operations/codebase-memory.md) |
+| Code callers / impact | [`.omo/_archive/operations-2026H1/codebase-memory.md`](.omo/_archive/operations-2026H1/codebase-memory.md) |
 
 For task-level routing (BOS, governance, ports, ADRs, main landing, scene admission), see [`ARCHITECTURE.md` §1](ARCHITECTURE.md) and the INDEX docs above.
 
