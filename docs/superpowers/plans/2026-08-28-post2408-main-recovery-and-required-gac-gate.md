@@ -3,7 +3,7 @@ status: planned
 lifecycle: plan
 owner: governance-team
 created: 2026-08-28
-last-reviewed: 2026-08-28
+last-reviewed: 2026-09-02
 bet_id: BET-Y1Q3-T6-15
 value_indicator_policy: false
 ---
@@ -17,6 +17,17 @@ value_indicator_policy: false
 **Architecture:** Reuse the existing GaC checklist, CI registry, branch-protection script, runtime policy, Agent Workflow and BET completion writer. Deliver in strict order `R1 -> H1a -> H1b -> H1c -> R2a -> R2b`; repository PRs and live-host operations remain separate authorities. No new workflow, registry, dispatcher, state store or control plane is introduced.
 
 **Tech Stack:** Python 3.13, Bash, PyYAML, pytest, Git/GitHub CLI, GitHub Actions, Agent Workflow, `bin/gac/gac-local-gate.py`, `bin/plan/bet-ledger.py`.
+
+## 2026-09-02 Self-Hosting Recovery Slice
+
+Before the historical R1 steps, restore only the three archive files whose
+canonical paths are still hard-bound by the workflow runner and blocking gate.
+Verify each restored file is byte-identical to its archive source. Then repair
+the `projects/ecos` `ConstraintL0` M2 parent and missing M1 `rule`/`violation`
+properties in a child PR, merge the child, and update the root gitlink plus
+`.omo/_truth/registry/mof-capabilities.yaml` M1 count. Do not classify ignored
+local directories as source, delete them, or use an escape to bypass an
+immutable failure.
 
 ## 2026-08-28 Latest-Main Rebaseline
 

@@ -1,11 +1,11 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.1
+spec_version: 1.0.2
 status: accepted
 lifecycle: contract
 owner: human-principal
 created: 2026-08-28
-last-reviewed: 2026-08-28
+last-reviewed: 2026-09-02
 bet_id: BET-Y1Q3-T6-15
 risk_level: L3
 human_gate: true
@@ -85,6 +85,11 @@ R1 baseline recovery
 - 从 Git index 移除误跟踪 runtime artifacts，同时保留本机数据。
 - 扩展已有 runtime/root hygiene 机制，阻止同类 tracked artifact 再次进入 final tree。
 - 做与本次污染直接相关的机械 whitespace 清理。
+- 恢复被 archive 但仍被 Workflow、台账和 blocking gate 硬绑定的 canonical
+  instruction pack、bin convergence manifest 与 root-directory policy；恢复必须
+  与 archive 源字节一致。
+- 修复 `ConstraintL0` 的既有 M2/M1 schema 一致性及 root M1 统计漂移，并以
+  子仓先合、根 gitlink 后合的顺序恢复 latest-main admission。
 
 ### 3.2 Explicitly out of scope
 
@@ -97,6 +102,20 @@ R1 baseline recovery
 - 不修改任何 BET 状态、completion evidence、value evidence 或 principal-bound value。
 - 不做全仓 blanket cleanup，不顺手修复与执行时直接 failure set 无关的历史债。
 - 不在 R1/H1/R2a/R2b 完成前启动 Product P0 Wave A writer。
+
+### 3.3 2026-09-02 self-hosting recovery amendment
+
+一次 archive move 将仍有 active consumers 的 operations contracts 移出其
+canonical path，造成 `agent-workflow start` 与 `bin-scripts-convergence-audit`
+同时 fail-closed。该 amendment 只恢复三个逐字节 archive 副本，并显式处理
+因此暴露的 `ConstraintL0` parent/required-property/计数漂移。它不恢复其它
+archive 文档、不登记广泛本机临时目录、也不把共享工作树的 ignored state
+纳入 Git。
+
+交付顺序固定为：bootstrap contract restore → normal T6-15 workflow → ecos
+child schema repair and CI → root stats/gitlink adoption → fresh-clone GaC
+replay。任一阶段出现 source drift、child CI 失败或新的 immutable failure
+即停止，不以 escape 代替修复。
 
 ## 4. 交付拓扑与状态机
 
@@ -459,3 +478,4 @@ Wave A（WP1 + WP4）只能在下列直接证据全部存在后开始：
 | 日期 | 变更内容 | 变更人 |
 |---|---|---|
 | 2026-08-28 | 初始 draft；吸收双 reviewer 对 immutable CI、CAS protection、treeish policy 和 host retention 的审查 | Codex / human-principal authorized |
+| 2026-09-02 | 1.0.2：增加 archive self-hosting restoration 与 ConstraintL0 cross-repo recovery 顺序 | xiamingxing authorized |
