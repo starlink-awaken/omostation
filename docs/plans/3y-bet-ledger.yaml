@@ -19654,7 +19654,8 @@ bets:
   title: T4-07 closeout — 子模块指针同步与 agora index 恢复
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: "2026-09-03"
   note: 'closeout repair: T4-07 Human Adjudication merge 后父仓库 HEAD 指向新的 agora/cockpit/omo
     commits；恢复 agora index 并将三个子模块对齐到父 HEAD，父仓库 git status --short 为空。'
   goal: 修复 T4-07 merge 后的工作树真值漂移：恢复 projects/agora 子模块 index，并将 projects/agora、projects/cockpit、projects/omo
@@ -19676,6 +19677,44 @@ bets:
   underlying_workflow: governance-state-mutation
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T1-13.md
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: "git://origin/main@5bde635f12d3b9a9f4ef9ffb92cd4a6b04c88846"
+          tests:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md"
+            sha256: "sha256:3fa45fd0b201c831d6b88fe5bb7372e3126c3ac3c45bd686cfdc6bcde68f146e"
+          diff:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md"
+            sha256: "sha256:3fa45fd0b201c831d6b88fe5bb7372e3126c3ac3c45bd686cfdc6bcde68f146e"
+          rollback:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md"
+            sha256: "sha256:3fa45fd0b201c831d6b88fe5bb7372e3126c3ac3c45bd686cfdc6bcde68f146e"
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md"
+            sha256: "sha256:3fa45fd0b201c831d6b88fe5bb7372e3126c3ac3c45bd686cfdc6bcde68f146e"
+          fresh_receipt:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md"
+            sha256: "sha256:3fa45fd0b201c831d6b88fe5bb7372e3126c3ac3c45bd686cfdc6bcde68f146e"
+          replay:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md"
+            sha256: "sha256:3fa45fd0b201c831d6b88fe5bb7372e3126c3ac3c45bd686cfdc6bcde68f146e"
+          cleanup:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md"
+            sha256: "sha256:3fa45fd0b201c831d6b88fe5bb7372e3126c3ac3c45bd686cfdc6bcde68f146e"
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-t1-13-submodule-pointer-alignment.md
     spec_version: 1.0.0
