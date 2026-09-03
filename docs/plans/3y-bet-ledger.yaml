@@ -18779,7 +18779,8 @@ bets:
   title: 统一邮箱连接器 (Apple Mail 本地 + 邮箱大师导出 + IMAP 预留)
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-03
   goal: 专门连接器多源汇聚邮件信号（主题/发件人/正文摘要）喂 T7-03 雷达站，本地解析零凭证优先。
   non_goals:
   - 不在无授权情况下拉取任何云端邮箱
@@ -18796,6 +18797,7 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - projects/omo/src/omo/mail_connector.py
+  - docs/reports/2026-09-03-mail-connector.md
   - .omo/_knowledge/retros/BET-Y1Q4-T2-04.md
   pasw_required: false
   depends_on:
@@ -18804,6 +18806,48 @@ bets:
   human_gate: false
   circuit_breaker: 邮箱解析异常跳过单封并计数，不中断批次。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:49a6764fbc05e2750810562738a507f75a1cbb3f518964f50a6f8d89a62023ca
+    decision_ref: decision://accepted/BET-Y1Q4-T2-04
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a8391f6c8c6599ed5e298078f798d512ca35e7d4
+          tests:
+            ref: receipt://docs/reports/2026-09-03-mail-connector.md
+            sha256: sha256:d87b07940be97d0f804cb8a083dd040a146e7bfe2f15bc61ab8b2db7b2cf7a87
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md
+            sha256: sha256:0000000000000000000000000000000000000000000000000000000000000000
+          rollback:
+            ref: receipt://docs/reports/2026-09-03-mail-connector.md
+            sha256: sha256:d87b07940be97d0f804cb8a083dd040a146e7bfe2f15bc61ab8b2db7b2cf7a87
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-03-mail-connector.md
+            sha256: sha256:d87b07940be97d0f804cb8a083dd040a146e7bfe2f15bc61ab8b2db7b2cf7a87
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-03-mail-connector.md
+            sha256: sha256:d87b07940be97d0f804cb8a083dd040a146e7bfe2f15bc61ab8b2db7b2cf7a87
+          replay:
+            ref: receipt://docs/reports/2026-09-03-mail-connector.md
+            sha256: sha256:d87b07940be97d0f804cb8a083dd040a146e7bfe2f15bc61ab8b2db7b2cf7a87
+          cleanup:
+            ref: receipt://docs/reports/2026-09-03-mail-connector.md
+            sha256: sha256:d87b07940be97d0f804cb8a083dd040a146e7bfe2f15bc61ab8b2db7b2cf7a87
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T2-05
   track: T2-PERCEPT
   window: Y1Q4
