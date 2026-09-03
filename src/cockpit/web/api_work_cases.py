@@ -6,9 +6,16 @@ is registered.  It must never fabricate operational cases for the Cockpit UI.
 
 from fastapi import APIRouter, HTTPException, Query
 
-from cockpit.web.api_tasks_data import get_tasks_from_omo
+from cockpit.web.api_tasks_data import WORKSPACE_DIR, get_tasks_from_omo
 
 router = APIRouter(tags=["work-cases"])
+
+
+def create_work_case_draft(omo_dir, *, case_id: str, title: str, source_ref: str):
+    """Late-bind the OMO ingress so a missing dependency fails closed."""
+    from omo.work_case import create_work_case_draft as create_draft
+
+    return create_draft(omo_dir, case_id=case_id, title=title, source_ref=source_ref)
 
 
 @router.get("/api/work-cases")
@@ -37,3 +44,17 @@ async def list_work_cases(scope: str = Query(default="active")) -> dict[str, obj
             }
         )
     return {"items": items}
+
+
+@router.post("/api/work-cases/drafts")
+async def create_work_case_draft_endpoint(payload: dict[str, object]) -> dict[str, object]:
+    case_id = str(payload.get("case_id") or "").strip()
+    title = str(payload.get("title") or "").strip()
+    source_ref = str(payload.get("source_ref") or "").strip()
+    if not case_id or not title or not source_ref:
+        raise HTTPException(status_code=422, detail="case_id, title, and source_ref are required")
+    try:
+        created = create_work_case_draft(WORKSPACE_DIR / ".omo", case_id=case_id, title=title, source_ref=source_ref)
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="work-case ingress is unavailable") from exc
+    return {"id": created["id"], "status": created["work_case"]["status"]}

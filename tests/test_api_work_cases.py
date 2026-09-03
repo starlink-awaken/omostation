@@ -63,3 +63,24 @@ def test_work_cases_endpoint_projects_only_omo_tasks_marked_as_cases(monkeypatch
             "submission_version_count": 3,
         }
     ]
+
+
+def test_work_case_draft_endpoint_delegates_to_omo_ingress(monkeypatch):
+    seen = {}
+
+    def fake_draft(omo_dir, *, case_id, title, source_ref):
+        seen.update(omo_dir=omo_dir, case_id=case_id, title=title, source_ref=source_ref)
+        return {"id": case_id, "title": title, "work_case": {"status": "draft"}}
+
+    monkeypatch.setattr(api_work_cases, "create_work_case_draft", fake_draft)
+    app = FastAPI()
+    app.include_router(router)
+
+    response = TestClient(app).post(
+        "/api/work-cases/drafts",
+        json={"case_id": "CASE-001", "title": "数据调查", "source_ref": "oa://task-1"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "draft"
+    assert seen["source_ref"] == "oa://task-1"
