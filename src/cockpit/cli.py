@@ -569,6 +569,11 @@ def main() -> int:
 
         return cmd_im_triage(a)
 
+    def dispatch_dlp_guard(a):
+        from cockpit.commands.dlp_guard import cmd_dlp_guard
+
+        return cmd_dlp_guard(a)
+
     def dispatch_scenario(a):
         from cockpit.commands.scenario import cmd_scenario
 
@@ -911,6 +916,7 @@ def main() -> int:
         "spine": dispatch_spine,
         "render": dispatch_render,
         "im-triage": dispatch_im_triage,
+        "dlp-guard": dispatch_dlp_guard,
         "compute": cmd_compute,
         "intent": lambda a: __import__("cockpit.commands.intent", fromlist=["cmd_intent"]).cmd_intent(a),
         "decide": lambda a: __import__("cockpit.commands.decide", fromlist=["cmd_decide"]).cmd_decide(a),

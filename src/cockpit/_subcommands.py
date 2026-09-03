@@ -679,6 +679,13 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     spine_ingress_p.add_argument("--source", required=True, help="感知源类型 (当前支持: ocr)")
     spine_ingress_p.add_argument("--file", required=True, help="扫描件图片/PDF 路径")
 
+    # ── dlp-guard ─────────────────────────────────────────────
+    # BET-Y1Q4-T10-01: 外发前 DLP 扫描
+    dlp_p = sub.add_parser("dlp-guard", help="外发前防泄密扫描 (敏感识别+挂起+脱敏)")
+    dlp_p.add_argument("--file", "-f", default=None, help="待扫描文件 (md/txt)")
+    dlp_p.add_argument("--text", "-t", default="", help="待扫描文本")
+    dlp_p.add_argument("--sanitize", "-s", default=None, choices=["partial", "mask", "redact"], help="输出脱敏版")
+
     # ── render ───────────────────────────────────────────────
     # BET-Y1Q4-T8-03: 一键导出 DOCX/PPTX/SVG
     render_p = sub.add_parser("render", help="初稿 Markdown 一键渲染导出 (GB/T 9704 DOCX / 16:9 PPTX / 矢量图)")
