@@ -1,7 +1,7 @@
 # 文档索引 (自动生成)
 
-> 生成时间: 2026-09-03 17:20
-> 总文档数: 4743
+> 生成时间: 2026-09-03 18:51
+> 总文档数: 4754
 > 本文件由 `bin/ssot/generate-docs-index.py` 自动维护，不要手动编辑。
 
 ## 统计
@@ -11,7 +11,7 @@
 | SSOT | 266 |
 | derived | 4 |
 | ephemeral | 131 |
-| untyped | 3201 |
+| untyped | 3210 |
 
 ## SSOT 清单
 
@@ -42,7 +42,7 @@
 | docs/ARCHITECTURE-DETAILED-MAP.md | governance-team | 2026-09-03 | 612 |
 | docs/ARCHITECTURE-DIAGRAM.md | architecture-team | 2026-09-03 | 144 |
 | docs/ARCHITECTURE-EVOLUTION.md | governance-team | 2026-09-03 | 89 |
-| docs/CLI-REFERENCE.md | auto-fix-loop | 2026-09-03 | 299 |
+| docs/CLI-REFERENCE.md | auto-fix-loop | 2026-09-03 | 300 |
 | docs/DEBT-CLEANUP-ROLLOUT.md | governance-team | 2026-09-03 | 77 |
 | docs/ENGINEERING-OPTIMIZATION-ROADMAP.md | governance-team | 2026-09-03 | 109 |
 | docs/FUNCTIONAL-CAPABILITY-MAP.md | governance-team | 2026-09-03 | 357 |
@@ -56,7 +56,6 @@
 | docs/I0-AGORA-CALLCHAIN.md | governance-team | 2026-09-03 | 306 |
 | docs/INDEX-AGENTS.md | governance-team | 2026-09-03 | 100 |
 | docs/INDEX-KNOWLEDGE.md | governance-team | 2026-09-03 | 190 |
-| docs/INDEX-MCP.md | governance-team | 2026-09-03 | 154 |
 | docs/INDEX-PROJECTS.md | governance-team | 2026-09-03 | 102 |
 | docs/INDEX-TOOLS.md | governance-team | 2026-09-03 | 293 |
 | docs/KEMS-PILOT-ROADMAP.md | governance-team | 2026-09-03 | 91 |
@@ -113,13 +112,14 @@
 | docs/governance/bin-and-scripts-architecture.md | governance-team | 2026-09-03 | 80 |
 | docs/local-compute/compute-fabric-workflow.md | governance-team | 2026-09-03 | 100 |
 | docs/local-compute/omlx-cluster-architecture.md | architecture-team | 2026-09-03 | 147 |
-| docs/notes/closeout-template-5min-dev.md | governance-team | 2026-09-03 | 59 |
-| docs/notes/closeout-template-5min.md | governance-team | 2026-09-03 | 110 |
-| docs/notes/governance-runtime-convergence-closeout-20260814.md | governance-team | 2026-09-03 | 48 |
-| docs/notes/governance-runtime-convergence-rca-20260814.md | governance-team | 2026-09-03 | 55 |
-| docs/notes/mechanism-convergence-retrospective-20260815.md | governance-team | 2026-09-03 | 196 |
+| docs/notes/closeout-template-5min-dev.md | governance-team | 2026-09-03 | 60 |
+| docs/notes/closeout-template-5min.md | governance-team | 2026-09-03 | 111 |
+| docs/notes/governance-runtime-convergence-closeout-20260814.md | governance-team | 2026-09-03 | 49 |
+| docs/notes/governance-runtime-convergence-rca-20260814.md | governance-team | 2026-09-03 | 56 |
+| docs/notes/mechanism-convergence-retrospective-20260815.md | governance-team | 2026-09-03 | 197 |
 | docs/observability-unified-architecture.md | governance-team | 2026-09-03 | 257 |
 | docs/overview/cross-package-api-map.md | architecture-team | 2026-09-03 | 89 |
+| docs/plans/2026-09-03-t1-02-squash-retirement-tdd-plan.md | governance-team | 2026-09-03 | 171 |
 | docs/superpowers/plans/2026-08-27-governance-optimization.md | auto-fix-loop | 2026-09-03 | 580 |
 | docs/superpowers/plans/2026-08-28-post2408-main-recovery-and-required-gac-gate.md | governance-team | 2026-09-03 | 1986 |
 | docs/superpowers/plans/2026-08-28-product-p0-truth-loop.md | auto-fix-loop | 2026-09-03 | 594 |
@@ -429,7 +429,7 @@
 | docs/reports/weekly-strategy-health-2026-07-23.md | active | - |
 | docs/templates/ephemeral-template.md | active | completed | archived | - |
 
-## 合规问题 (3201)
+## 合规问题 (3210)
 
 - [UNTYPED] locks/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] locks/AGENTS.md: 未声明 type (建议添加 frontmatter)
@@ -468,6 +468,7 @@
 - [UNTYPED] .kilo/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .kilo/AGENTS.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/SYSTEM-INDEX.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/INDEX-MCP.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/G-DEL-3-WIRED-REMEASURE.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/AUTO-PR-REVIEW-ISA.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .github/PULL_REQUEST_TEMPLATE.md: 未声明 type (建议添加 frontmatter)
@@ -499,7 +500,15 @@
 - [UNTYPED] docs/generated/doc-inventory.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/isa/debt-remediation-isa.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/reports/2026-09-03-t10-119-failover-validation.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-dogfood-canary-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-projections-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-milestone-vision-gates-design.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-vision-to-bet-portfolio-v2-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] aetherforge-archive/swarm/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] aetherforge-archive/swarm/MERGE-NOTES.md: 未声明 type (建议添加 frontmatter)
@@ -3633,7 +3642,7 @@
 - [UNTYPED] .subtrees/bus-foundation/.omo/_delivery/r75-final-close-2026-06-13.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .subtrees/bus-foundation/.omo/_delivery/r70-monthly-evidence-2027-07-12.md: 未声明 type (建议添加 frontmatter)
 
-## 孤立文档 (3196)
+## 孤立文档 (3205)
 
 > 未声明 type，也不引用任何 SSOT。
 
@@ -3674,6 +3683,7 @@
 - .kilo/README.md
 - .kilo/AGENTS.md
 - docs/SYSTEM-INDEX.md
+- docs/INDEX-MCP.md
 - docs/G-DEL-3-WIRED-REMEASURE.md
 - docs/AUTO-PR-REVIEW-ISA.md
 - .github/PULL_REQUEST_TEMPLATE.md
@@ -3686,5 +3696,4 @@
 - data/AGENTS.md
 - protocols/README.md
 - protocols/AGENTS.md
-- protocols/append-only-log-rollout.md
-- ... 和另外 3146 个文档
+- ... 和另外 3155 个文档
