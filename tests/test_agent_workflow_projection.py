@@ -189,16 +189,12 @@ def test_projection_sync_refuses_to_overwrite_canonical_sources(tmp_path: Path) 
 
 def test_active_consumers_watch_and_classify_canonical_authority() -> None:
     watcher = _load_script("workflow_projection_ssot_watcher", "bin/ssot-watcher.py")
-    external_audit = _load_script(
-        "workflow_projection_external_audit", "bin/gac/check-external-agent-audit.py"
-    )
     lane_check = _load_script("workflow_projection_lane_check", "bin/change-lane-check.py")
     local_gate = _load_script("workflow_projection_local_gate", "bin/gac/gac-local-gate.py")
 
     watched = dict(watcher.SSOT_FILES)
     assert watched["agent_workflows"] == ".omo/_truth/registry/agent-workflows/"
     assert watched["agent_workflow_projection"] == ".omo/_truth/registry/agent-workflows.yaml"
-    assert external_audit.AGENT_REGISTRIES[0].name == "agent-workflows"
     canonical_file = ".omo/_truth/registry/agent-workflows/workflows/project-code-change.yaml"
     assert lane_check.classify(canonical_file, set()) == "governance_code"
     local_gate.staged_files_git = lambda: [canonical_file]

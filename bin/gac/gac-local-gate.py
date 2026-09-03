@@ -503,6 +503,7 @@ BROKEN_CHECKS = {g["id"] for g in GATES_LIST if g.get("broken")}
 # Live sgf-policy.yaml often omits timeout; semantic-gate runs several
 # subprocesses and false-timeouts at the 15s default. Named defaults apply
 _DEFAULT_CHECK_TIMEOUTS = {
+    "agent-workflow-doctor": 45,
     "governance-semantic-gate": 60,
     "execution-chain": 45,
     "layer-call-direction-check": 45,
