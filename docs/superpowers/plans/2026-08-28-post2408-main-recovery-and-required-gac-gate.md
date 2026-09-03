@@ -20,14 +20,14 @@ value_indicator_policy: false
 
 ## 2026-09-02 Self-Hosting Recovery Slice
 
-Before the historical R1 steps, restore only the three archive files whose
-canonical paths are still hard-bound by the workflow runner and blocking gate.
-Verify each restored file is byte-identical to its archive source. Then repair
-the `projects/ecos` `ConstraintL0` M2 parent and missing M1 `rule`/`violation`
-properties in a child PR, merge the child, and update the root gitlink plus
-`.omo/_truth/registry/mof-capabilities.yaml` M1 count. Do not classify ignored
-local directories as source, delete them, or use an escape to bypass an
-immutable failure.
+Before the historical R1 steps, restore only the five archive files whose
+canonical paths are still hard-bound by the workflow runner, blocking gate, or
+strict document-link validation. Verify each restored file matches its archive
+source except any line-ending whitespace rejected by `git diff --check`. Then repair the `projects/ecos` `ConstraintL0` M2 parent
+and missing M1 `rule`/`violation` properties in a child PR, merge the child,
+and update the root gitlink plus `.omo/_truth/registry/mof-capabilities.yaml`
+M1 count. Do not classify ignored local directories as source, delete them, or
+use an escape to bypass an immutable failure.
 
 ## 2026-08-28 Latest-Main Rebaseline
 

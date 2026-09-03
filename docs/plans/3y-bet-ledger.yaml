@@ -13579,6 +13579,8 @@ bets:
   - docs/operations/blueprint-agent-instruction-pack-v1.md
   - docs/operations/bin-scripts-convergence-manifest.json
   - docs/operations/root-directory-governance-policy.yaml
+  - docs/operations/codebase-memory.md
+  - docs/operations/knowledge-foundry-sop.md
   - .omo/_knowledge/retros/BET-Y1Q3-T6-15.md
   - .omo/_truth/governance-evidence/waiver-2026-09-02-workflow-self-hosting-restore.md
   - .omo/_truth/registry/mof-capabilities.yaml
@@ -13634,8 +13636,8 @@ bets:
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
-    spec_version: 1.0.2
-    content_digest: sha256:e0e88e308fc7df7428d469c9de78ccec9f3ad27bfd7873539c1806a0c2f4f30d
+    spec_version: 1.0.3
+    content_digest: sha256:8180b0fad4bf41f6033001622c05c8335803100acc9cab0ad475ca6102f21626
     decision_ref: decision://accepted/BET-Y1Q3-T6-15
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
