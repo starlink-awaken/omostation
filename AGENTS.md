@@ -1,7 +1,30 @@
 # AGENTS.md — Workspace Development Guide
 
-> 最后更新: 2026-08-28
+> 最后更新: 2026-09-02
 > Root operating guide for AI coding agents and developers. Keep this file operational. Put runtime facts in SSOT files, not here.
+
+## 0. Worktree Policy (Mandatory)
+
+> **Main workspace is read-only. Every new change starts from an isolated worktree.**
+
+| Action | Required |
+|--------|----------|
+| New feature / fix / cleanup | `gac-worktree.sh claim <session>` |
+| Submodule work | Child worktree via PASW |
+| Direct commit to main | ❌ Prohibited |
+
+```bash
+# Create isolated worktree
+bash bin/gac/gac-worktree.sh claim <session-name>
+cd /Users/xiamingxing/ws-<session-name>
+
+# After PR merged, retire
+bash bin/gac/gac-worktree.sh retire <session-name>
+```
+
+**Full policy**: [`GOVERNANCE.md`](GOVERNANCE.md) § Worktree Isolation Policy
+
+---
 
 ## 1. Read This First
 
