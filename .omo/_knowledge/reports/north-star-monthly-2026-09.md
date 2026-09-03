@@ -1,3 +1,12 @@
+---
+schema_version: report/v1
+type: report
+title: 北极星价值报告 (monthly) — 2026-09-03
+period: monthly
+generated_at: 2026-09-03
+owner: governance-team
+---
+
 # 北极星价值报告 (monthly) — 2026-09-03
 
 > 状态: **low** | 3-axis composite: 24 | 4-axis: 16
