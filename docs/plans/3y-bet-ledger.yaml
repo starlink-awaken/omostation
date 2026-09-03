@@ -457,7 +457,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
     spec_version: 1.0.0
-    content_digest: sha256:d833693de0a212a8a00e7ab6974c8511817291bd8254c609191c71884f4e186b
+    content_digest: sha256:a49afeb598ebbea03518912cbd95062f4f21771739048288684d732921ce8aea
     decision_ref: decision://accepted/BET-Y1Q3-T10-111
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -472,7 +472,7 @@ bets:
             sha256: sha256:e9193779ef15e3b3f955104850316ef0b8044377947bdbbe0b4faf1f3b1b5e1d
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
-            sha256: sha256:d833693de0a212a8a00e7ab6974c8511817291bd8254c609191c71884f4e186b
+            sha256: sha256:a49afeb598ebbea03518912cbd95062f4f21771739048288684d732921ce8aea
           rollback:
             ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
             sha256: sha256:e9193779ef15e3b3f955104850316ef0b8044377947bdbbe0b4faf1f3b1b5e1d
@@ -585,7 +585,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:b2908cf39b4c4a841c388308d678eed19c8874f0289f4d90776c22f9684eaff5
+    content_digest: sha256:2de65560f35ce3768d0459bba70663a6128fc6615be48c64eecacad0c7e141fc
     decision_ref: decision://accepted/BET-Y1Q3-T10-110
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -600,7 +600,7 @@ bets:
             sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md
-            sha256: sha256:b2908cf39b4c4a841c388308d678eed19c8874f0289f4d90776c22f9684eaff5
+            sha256: sha256:2de65560f35ce3768d0459bba70663a6128fc6615be48c64eecacad0c7e141fc
           rollback:
             ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
             sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
@@ -695,7 +695,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
     spec_version: 1.0.0
-    content_digest: sha256:7f79068954581c502a63b3c39c0921c3544567f195cecda1f12ff65c415bedbf
+    content_digest: sha256:51593d43d0aee61f444af84048e0f0c1bc46b2cd1aa31aa96c67d1bc057572e2
     decision_ref: decision://accepted/BET-Y1Q3-T10-109
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -710,7 +710,7 @@ bets:
             sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
-            sha256: sha256:7f79068954581c502a63b3c39c0921c3544567f195cecda1f12ff65c415bedbf
+            sha256: sha256:51593d43d0aee61f444af84048e0f0c1bc46b2cd1aa31aa96c67d1bc057572e2
           rollback:
             ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
             sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
@@ -824,7 +824,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md
     spec_version: 1.0.2
-    content_digest: sha256:2c73609e12406af70db5a0a6f82b3516e8b6c460c8759022a72494592bf32cd9
+    content_digest: sha256:2c14a53173cbe025ae0f549cfe0fdf829716c83ecfda3fe27f29e2d4dea2b191
     decision_ref: decision://accepted/BET-Y1Q3-T10-108
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -839,7 +839,7 @@ bets:
             sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md
-            sha256: sha256:2c73609e12406af70db5a0a6f82b3516e8b6c460c8759022a72494592bf32cd9
+            sha256: sha256:2c14a53173cbe025ae0f549cfe0fdf829716c83ecfda3fe27f29e2d4dea2b191
           rollback:
             ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
             sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
@@ -9492,7 +9492,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
     spec_version: 1.0.0
-    content_digest: sha256:c2ca365b1ea140da9be3b577617db0b329a059dd06fc43e3232fb5c570f6aba0
+    content_digest: sha256:26939fcf63ae224a9c4dec77cfffd131f28646c6f57078d4ee15b9cbe66ed257
     decision_ref: decision://accepted/BET-Y1Q2-T1-19
   goal: 在不改变 OMO/ECOS 任务、事件和验收真相的前提下，将 Codex 本地 worker 从 Orca/cli_prompt 人工生产路径迁移到固定版本的
     ACP v1 stdio，通过 WorkPacket、verified independent clone、active claim 和 canonical
