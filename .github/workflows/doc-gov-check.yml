@@ -25,8 +25,8 @@ jobs:
       - name: 生成文档索引
         run: python3 bin/ssot/generate-docs-index.py
 
-      - name: 合规检查 (strict, UNTYPED 不阻塞)
-        run: python3 bin/ssot/generate-docs-index.py --check --strict
+      - name: 合规检查 (UNTYPED 不阻塞)
+        run: python3 bin/ssot/generate-docs-index.py --check
 
       - name: 检查索引文件是否最新
         run: |

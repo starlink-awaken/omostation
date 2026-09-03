@@ -270,12 +270,18 @@ def main():
             )
         )
 
-    if args.check and issues:
-        print(f"\n[doc-index] FAIL: {len(issues)} 个合规问题")
-        sys.exit(1)
-
     if args.check:
-        print("[doc-index] PASS")
+        # --strict: 全量问题 (含 UNTYPED 软信号) 均阻塞; 非 strict: 仅硬合规问题阻塞,
+        # UNTYPED 只报告不判 FAIL (与 --help 语义一致)。
+        blocking = issues if args.strict else [i for i in issues if not i.startswith("[UNTYPED]")]
+        soft_skipped = len(issues) - len(blocking)
+        if blocking:
+            print(f"\n[doc-index] FAIL: {len(blocking)} 个合规问题")
+            sys.exit(1)
+        if soft_skipped:
+            print(f"[doc-index] PASS ({soft_skipped} 个 UNTYPED 软信号已报告但不阻塞; 用 --strict 纳入判定)")
+        else:
+            print("[doc-index] PASS")
 
 
 if __name__ == "__main__":
