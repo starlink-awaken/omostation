@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ssot
 ---
 # ADR-0192: 领域智能体事实萃取、长程显存自愈与全域自动化治理巡检体系
 
