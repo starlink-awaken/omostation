@@ -18726,7 +18726,8 @@ bets:
   title: 多模型分级协同推演（MoE / Speculative Router 意图分流与草稿初筛）
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-03
   goal: 构建 AetherForge 层次化分级推理网络：1.5B/3B 超轻模型负责意图分类与槽位提取（<5ms），8B/14B 负责公文格式校验与草稿初筛，27B/70B
     负责最终深度拟稿与政策推演，实现端到端资源利用率最优。
   non_goals:
@@ -18753,6 +18754,48 @@ bets:
   human_gate: false
   circuit_breaker: 小模型分类置信度低于 70% 时自动回退至基座主力模型直接处理。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-t3-03-tiered-router-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:127430c03bc9df59e903e5a13f78920186a3352e807e1f6d6b2c9a27ac5a9f1a
+    decision_ref: decision://accepted/BET-Y1Q4-T3-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ccd6d1bb7e13a10af2fc1e19b3f7d7415ee71b3e
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T3-03.md
+            sha256: sha256:72f308deccfb48b4bcb87cc4645e5c18596bf763d9b73e5f4a7e86bac5fe9df1
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-t3-03-tiered-router-design.md
+            sha256: sha256:127430c03bc9df59e903e5a13f78920186a3352e807e1f6d6b2c9a27ac5a9f1a
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T3-03.md
+            sha256: sha256:72f308deccfb48b4bcb87cc4645e5c18596bf763d9b73e5f4a7e86bac5fe9df1
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T3-03.md
+            sha256: sha256:72f308deccfb48b4bcb87cc4645e5c18596bf763d9b73e5f4a7e86bac5fe9df1
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T3-03.md
+            sha256: sha256:72f308deccfb48b4bcb87cc4645e5c18596bf763d9b73e5f4a7e86bac5fe9df1
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T3-03.md
+            sha256: sha256:72f308deccfb48b4bcb87cc4645e5c18596bf763d9b73e5f4a7e86bac5fe9df1
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T3-03.md
+            sha256: sha256:72f308deccfb48b4bcb87cc4645e5c18596bf763d9b73e5f4a7e86bac5fe9df1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T7-03
   track: T7-SCENE
   window: Y1Q4
