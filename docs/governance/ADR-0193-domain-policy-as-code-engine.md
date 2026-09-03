@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ssot
 ---
 # ADR-0193: Domain Policy-as-Code 业务规则引擎与公文红线治理架构
 

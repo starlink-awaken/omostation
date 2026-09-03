@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # Harness 体系全面架构分析
 
 > 创建时间: 2026-09-01

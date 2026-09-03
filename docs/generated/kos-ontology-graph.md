@@ -1,3 +1,9 @@
+---
+type: derived
+source: bin/ssot/kos-ontology-graph.py
+last_synced: 2026-09-03
+---
+
 # eCOS v6 物理拓扑与架构依赖图谱
 
 > **自动刷新时间**: 2026-07-06 15:44:53
