@@ -55,7 +55,7 @@ jobs:
             echo "::error::bet-ledger lint did not complete structurally (rc=$lint_rc)"
             exit 1
           fi
-          if grep -qE 'BASE_LEDGER_UNREADABLE|BET_DONE_[A-Z]' "$lint_out"; then
-            echo "::error::BET done-transition findings present (BASE_LEDGER_UNREADABLE / BET_DONE_*)"
+          if grep -qE 'BASE_LEDGER_UNREADABLE|BET_DONE_' "$lint_out"; then
+            echo "::error::BET done-transition findings present (BASE_LEDGER_UNREADABLE / BET_DONE_)"
             exit 1
           fi
