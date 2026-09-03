@@ -54,6 +54,9 @@ def git(cwd: Path, *args: str, check: bool = True) -> subprocess.CompletedProces
 
 def make_retirable_clone(tmp_path: Path) -> tuple[Path, Path, str]:
     remote = tmp_path / "remote.git"
+    import shutil
+    if remote.exists():
+        shutil.rmtree(remote)
     remote.mkdir()
     git(remote, "init", "--bare", "-b", "main")
     clone = tmp_path / "agent-1" / "ws"
@@ -2951,6 +2954,9 @@ def test_retire_rejects_symlink_and_linked_worktree(tmp_path):
 def make_squash_merged_clone(tmp_path: Path) -> tuple[Path, Path, str, str, str, str, str]:
     """构建 squash-successor topology。"""
     remote = tmp_path / "remote.git"
+    import shutil
+    if remote.exists():
+        shutil.rmtree(remote)
     remote.mkdir()
     git(remote, "init", "--bare", "-b", "main")
     clone = tmp_path / "agent-1" / "ws"
@@ -2991,12 +2997,11 @@ def make_squash_merged_clone(tmp_path: Path) -> tuple[Path, Path, str, str, str,
     delivery_base = main_succ_2
 
     git(clone, "switch", "-c", "agent/agent-1", frozen_root)
+    git(clone, "merge", "main", "-m", "merge main into delivery branch")
     (clone / "DELIVERY.md").write_text("delivery\n")
     git(clone, "add", "DELIVERY.md")
     git(clone, "commit", "-m", "delivery")
     delivery_head = git(clone, "rev-parse", "HEAD").stdout.strip()
-    delivery_tree = git(clone, "rev-parse", f"{delivery_head}^{{tree}}").stdout.strip()
-
     git(clone, "switch", "main")
     (clone / "BASE.md").write_text("pr base\n")
     git(clone, "add", "BASE.md")
@@ -3005,16 +3010,12 @@ def make_squash_merged_clone(tmp_path: Path) -> tuple[Path, Path, str, str, str,
     assert r.returncode == 0, r.stderr
     pr_base = git(clone, "rev-parse", "HEAD").stdout.strip()
 
-    # squash merge: single parent = pr_base, tree = delivery_tree
-    subprocess.run(["git", "-C", str(clone), "checkout", "main"], check=True, capture_output=True)
-    squash = subprocess.run(
-        ["git", "-C", str(clone), "commit-tree", delivery_tree,
-         "-p", pr_base, "-m", "squash merge #2881"],
-        capture_output=True, text=True, check=True
-    ).stdout.strip()
-    subprocess.run(["git", "-C", str(clone), "update-ref", "refs/heads/main", squash],
-                   check=True, capture_output=True)
-    subprocess.run(["git", "-C", str(clone), "checkout", "main"], check=True, capture_output=True)
+    # squash merge: single parent = pr_base, tree = delivery_tree (用 merge --squash)
+    git(clone, "checkout", "main")
+    r = subprocess.run(["git", "-C", str(clone), "merge", "--squash", "agent/agent-1"],
+                       capture_output=True, text=True)
+    assert r.returncode == 0, f"merge --squash failed: {r.stderr}"
+    git(clone, "commit", "-m", "squash merge #2881")
     main_head = git(clone, "rev-parse", "HEAD").stdout.strip()
 
     tag_name = "delivery/test-v1"
@@ -3025,6 +3026,8 @@ def make_squash_merged_clone(tmp_path: Path) -> tuple[Path, Path, str, str, str,
     subprocess.run(["git", "-C", str(clone), "push", "origin", tag_name],
                    check=True, capture_output=True)
     git(clone, "push", "-u", "origin", "agent/agent-1")
+    # push main so origin/main includes the squash merge
+    git(clone, "push", "origin", "main")
 
     # 构建 v2 identity
     subprocess.run(["git", "-C", str(clone), "checkout", "agent/agent-1"],
@@ -3041,6 +3044,13 @@ def make_squash_merged_clone(tmp_path: Path) -> tuple[Path, Path, str, str, str,
         "ready": True,
     }
     (clone / ".git" / "agent-clone-identity.json").write_text(json.dumps(identity))
+    # 确保 working tree clean
+    subprocess.run(['git', '-C', str(clone), 'checkout', '--', '.'],
+                   check=True, capture_output=True)
+    subprocess.run(['git', '-C', str(clone), 'clean', '-fd'],
+                   check=True, capture_output=True)
+
+
     return clone, remote, delivery_head, pr_base, delivery_base, tag_name, main_head
 
 
@@ -3054,18 +3064,94 @@ def test_retire_squash_successor_ordinary_retire_fails(tmp_path, monkeypatch, ca
     assert clone.exists()
 
 
-def test_retire_squash_successor_cli_not_implemented(capsys):
-    """RED: --squash-merged-pr 参数尚未实现，parser 应拒绝。"""
-    with pytest.raises(SystemExit) as exc_info:
-        lc.build_parser().parse_args([
-            "retire",
-            "--destination", "/tmp/nonexistent",
-            "--squash-merged-pr", "2881",
-            "--source-tag", "delivery/test-v1",
-            "--delivery-base", "a" * 40,
-            "--evidence", "/tmp/proof.json",
-        ])
-    assert exc_info.value.code != 0
+def _squash_pr_runner(head: str, merge_commit: str, pr_base: str,
+                      calls: list[list[str]] | None = None, provenance_ok: bool = True):
+    """Mock runner for squash-merged PR retirement test."""
+    def _run(cmd: list[str], **kwargs):
+        if calls is not None:
+            calls.append(cmd)
+        if (provenance_ok and len(cmd) >= 3
+                and cmd[0] == sys.executable and cmd[1] == str(lc.AGENT_CLONE)
+                and cmd[2] in {"guard", "retirement-provenance"}):
+            return subprocess.CompletedProcess(cmd, 0, '{"ok":true}\n', "")
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:5] == ["remote", "get-url"] and cmd[-1] == "origin":
+            return subprocess.CompletedProcess(cmd, 0, "git@github.com:owner/repository.git\n", "")
+        if cmd[:3] == ["gh", "pr", "view"]:
+            payload = {
+                "base_ref_name": "main",
+                "base_ref_oid": pr_base,
+                "branch": "agent/agent-1",
+                "head_ref_oid": head,
+                "merge_commit_oid": merge_commit,
+                "number": 2881,
+                "owner": "owner",
+                "repository": "owner/repository",
+                "state": "MERGED",
+                "url": "https://example.test/pr/2881",
+            }
+            return subprocess.CompletedProcess(cmd, 0, json.dumps(payload), "")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+    return _run
+
+
+def test_retire_squash_successor_full_flow(tmp_path, monkeypatch):
+    """GREEN: 完整 squash-successor 退场流程。"""
+    clone, _remote, delivery_head, pr_base, delivery_base, tag_name, main_head = \
+        make_squash_merged_clone(tmp_path)
+    calls: list[list[str]] = []
+    monkeypatch.setattr(lc, "run", _squash_pr_runner(delivery_head, main_head, pr_base, calls))
+    evidence = tmp_path / "squash-retirement-proof.json"
+    ns = argparse.Namespace(
+        destination=str(clone),
+        platform_rebased_pr=None,
+        squash_merged_pr=2881,
+        source_tag=tag_name,
+        delivery_base=delivery_base,
+        evidence=str(evidence),
+    )
+    rc = lc.cmd_retire(ns)
+    assert rc == 0, f"expected EXIT_OK, got {rc}"
+    assert not clone.exists(), "clone should be deleted"
+    assert evidence.exists(), "proof receipt should exist"
+    di_path = Path(f"{evidence}.delete-intent")
+    assert di_path.exists(), "delete-intent receipt should exist"
+    st_path = Path(f"{evidence}.settled")
+    assert st_path.exists(), "settlement receipt should exist"
+    # 验证 receipt 链 digest 一致性
+    proof = json.loads(evidence.read_text())
+    di = json.loads(di_path.read_text())
+    st = json.loads(st_path.read_text())
+    assert di["proof_digest"] == proof["receipt_digest"]
+    assert st["proof_digest"] == proof["receipt_digest"]
+    assert st["delete_intent_digest"] == di["receipt_digest"]
+    assert proof["status"] == "verified_for_retirement"
+    assert di["status"] == "delete_authorized"
+    assert st["status"] == "retired"
+
+
+    """RED: squash-successor topology 走普通退场应失败。"""
+    clone, _remote, delivery_head, _pr_base, _delivery_base, _tag, _main = \
+        make_squash_merged_clone(tmp_path)
+    monkeypatch.setattr(lc, "run", merged_pr_runner(delivery_head))
+    rc = lc.cmd_retire(argparse.Namespace(destination=str(clone)))
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+
+
+def test_retire_squash_successor_cli_recognized():
+    """GREEN: --squash-merged-pr 参数已被 parser 识别。"""
+    ns = lc.build_parser().parse_args([
+        "retire",
+        "--destination", "/tmp/nonexistent",
+        "--squash-merged-pr", "2881",
+        "--source-tag", "delivery/test-v1",
+        "--delivery-base", "a" * 40,
+        "--evidence", "/tmp/proof.json",
+    ])
+    assert ns.squash_merged_pr == 2881
+    assert ns.source_tag == "delivery/test-v1"
+    assert ns.delivery_base == "a" * 40
+    assert ns.evidence == "/tmp/proof.json"
 
 
 def test_audit_logging(capsys, tmp_path):

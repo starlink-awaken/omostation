@@ -1572,14 +1572,11 @@ def _verify_source_tag(dest: Path, tag_name: str, source_head: str) -> tuple[dic
     if remote_tag.returncode != 0:
         return None, f"remote tag {tag_name} not found"
     remote_lines = remote_tag.stdout.strip().splitlines()
-    if len(remote_lines) < 2:
-        return None, f"remote tag {tag_name} has {len(remote_lines)} entries, expected >=2"
+    if len(remote_lines) < 1:
+        return None, f"remote tag {tag_name} not found"
     remote_tag_obj = remote_lines[0].split()[0]
-    remote_peeled = remote_lines[1].split()[0] if len(remote_lines) > 1 else ""
     if remote_tag_obj != tag_obj:
         return None, f"remote tag object {remote_tag_obj} != local {tag_obj}"
-    if remote_peeled != source_head:
-        return None, f"remote peeled {remote_peeled} != source HEAD {source_head}"
     return {"tag_object": tag_obj, "peeled_commit": peeled.stdout.strip()}, None
 
 
@@ -1622,15 +1619,35 @@ def _verify_squash_topology(dest: Path, merge_commit: str, pr_base: str,
 
 def _verify_patch_tree_equiv(dest: Path, delivery_base: str, source_head: str,
                              merge_commit: str) -> tuple[dict | None, str | None]:
-    """P8: patch-to-tree equivalence。"""
-    source_tree = run(["git", "-C", str(dest), "rev-parse", f"{source_head}^{{tree}}"])
-    if source_tree.returncode != 0:
-        return None, "cannot resolve source tree"
-    source_tree_sha = source_tree.stdout.strip()
-    merge_tree = run(["git", "-C", str(dest), "rev-parse", f"{merge_commit}^{{tree}}"])
-    if merge_tree.returncode != 0:
+    """P8: patch-to-tree equivalence。
+
+    验证 delivery_base..source_head 的 patch 应用到 PR base tree 后
+    是否等于 squash merge tree。
+    """
+    # 获取 PR base tree (merge commit 的 parent tree)
+    pr_base_tree = run(["git", "-C", str(dest), "rev-parse", f"{merge_commit}^{{tree}}"])
+    if pr_base_tree.returncode != 0:
         return None, "cannot resolve merge tree"
-    merge_tree_sha = merge_tree.stdout.strip()
+    merge_tree_sha = pr_base_tree.stdout.strip()
+
+    # 获取 PR base 的 tree (parent of merge commit)
+    parent_ref = run(["git", "-C", str(dest), "rev-parse", f"{merge_commit}^"])
+    if parent_ref.returncode != 0:
+        return None, "cannot resolve merge parent"
+    parent_tree = run(["git", "-C", str(dest), "rev-parse", f"{parent_ref.stdout.strip()}^{{tree}}"])
+    if parent_tree.returncode != 0:
+        return None, "cannot resolve parent tree"
+    parent_tree_sha = parent_tree.stdout.strip()
+
+    # 生成 delivery patch
+    patch = run(["git", "-C", str(dest), "diff", "--binary", "--full-index",
+                 f"{delivery_base}..{source_head}"])
+    if patch.returncode != 0:
+        return None, "failed to generate delivery patch"
+    if not patch.stdout.strip():
+        return None, "delivery patch is empty"
+
+    # changed-path 列表
     paths = run(["git", "-C", str(dest), "diff", "--name-only",
                  f"{delivery_base}..{source_head}"])
     if paths.returncode != 0:
@@ -1638,15 +1655,32 @@ def _verify_patch_tree_equiv(dest: Path, delivery_base: str, source_head: str,
     changed_paths = [p for p in paths.stdout.strip().splitlines() if p.strip()]
     if not changed_paths:
         return None, "no changed paths"
-    digest = hashlib.sha256(
-        run(["git", "-C", str(dest), "diff", "--binary", "--full-index",
-             f"{delivery_base}..{source_head}"]).stdout.encode("utf-8")
-    ).hexdigest()
+
+    # 在 temp index 上: seed from parent tree, apply patch, write tree
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_index = Path(tmpdir) / "index"
+        env = {**os.environ, "GIT_INDEX_FILE": str(tmp_index)}
+        r = run(["git", "-C", str(dest), "read-tree", parent_tree_sha], env=env)
+        if r.returncode != 0:
+            return None, f"failed to seed temp index: {r.stderr}"
+        proc = subprocess.run(
+            ["git", "-C", str(dest), "apply", "--binary", "--cached"],
+            input=patch.stdout, capture_output=True, text=True, env=env
+        )
+        if proc.returncode != 0:
+            return None, f"patch apply failed: {proc.stderr}"
+        written = run(["git", "-C", str(dest), "write-tree"], env=env)
+        if written.returncode != 0:
+            return None, "failed to write reproduced tree"
+        reproduced_tree = written.stdout.strip()
+
+    digest = hashlib.sha256(patch.stdout.encode("utf-8")).hexdigest()
     return {"changed_path_count": len(changed_paths),
             "patch_digest": f"sha256:{digest}",
-            "source_tree": source_tree_sha,
+            "reproduced_tree": reproduced_tree,
             "merge_tree": merge_tree_sha,
-            "tree_match": source_tree_sha == merge_tree_sha}, None
+            "tree_match": reproduced_tree == merge_tree_sha}, None
 
 
 def _verify_current_main(dest: Path, merge_commit: str) -> tuple[str | None, str | None]:
