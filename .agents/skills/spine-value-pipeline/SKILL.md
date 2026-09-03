@@ -4,8 +4,6 @@ description: omostation (eCOS v6) 主干真值流与署名自进化技能包。�
 type: ssot
 owner: agent-skills-team
 last_updated: 2026-09-03
-last-reviewed: 2026-09-03
-
 ---
 
 # 主干真值流与署名自进化技能 (Spine Value Pipeline Skill)

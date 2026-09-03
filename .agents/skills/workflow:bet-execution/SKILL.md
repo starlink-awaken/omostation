@@ -5,8 +5,6 @@ category: SEMA-Crystallized-Skill
 type: ssot
 owner: agent-skills-team
 last_updated: 2026-09-03
-last-reviewed: 2026-09-03
-
 ---
 
 # Skill: workflow:bet-execution
