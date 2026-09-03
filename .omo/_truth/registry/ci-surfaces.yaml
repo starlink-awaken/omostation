@@ -328,6 +328,16 @@ surfaces:
   - scheduled
   status: active
   note: Root-owned guard for untracked or unregistered root shadow surfaces.
+- id: bin-ssot-check-hardcoded-ports-py
+  tool: bin/ssot/check-hardcoded-ports.py
+  workflow: mof-update.yml
+  also_in:
+  - port-registry-enforce.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
 - id: bin-ssot-bin-scripts-convergence-audit-py
   tool: bin/ssot/bin-scripts-convergence-audit.py
   workflow: gac-gate.yml
