@@ -12267,8 +12267,8 @@ bets:
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:208898d141fe920882a426b76b32d148734fe87c734acaf59fecc9c5df330cb5
+    spec_version: 1.0.1
+    content_digest: sha256:c8bc7fa145402867a5ab5d06b6031e305a0f2ff41c3f91c08e43b45670b585e1
     decision_ref: decision://accepted/BET-Y1Q4-T1-04
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
