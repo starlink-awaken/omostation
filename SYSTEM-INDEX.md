@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # SYSTEM-INDEX.md — Workspace 全景导航
 
 > 维护: governance-team | 更新: 重大架构变更时 | 验证: 所有指针路径存在

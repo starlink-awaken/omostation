@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-19
+type: ssot
 ---
 # Agent Capability Gap Matrix — 对齐 AGT 能力基线
 

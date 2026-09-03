@@ -1,5 +1,5 @@
 name: interfaces-enforce
-# P47+: 接口契约 + 端口冲突 enforce. 复用 scripts/check-interfaces.py.
+# P47+: 接口契约 + 端口冲突 enforce. 复用 bin/ssot/check-interfaces.py.
 on:
   push:
     branches: [main]

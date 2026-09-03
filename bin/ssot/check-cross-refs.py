@@ -96,16 +96,7 @@ def resolve_link(source: Path, link: str, root: Path) -> Path | None:
         return None
 
     # 根仓绝对路径 (以 .omo/ 或 docs/ 开头): 相对根解析, 不是相对源文件
-    if link.startswith((".omo/", "docs/", "scripts/", "bin/", "tests/")):
-        # 跳过 scripts/omo_*.py / scripts/omc_*.py / scripts/omo/*.py 引用
-        # (脚本已从 scripts/ 迁到 bin/, 治根 F-3 ADR-0122 S1 2026-07-02)
-        if (
-            link.startswith("scripts/omo_")
-            or link.startswith("scripts/omc_")
-            or link.startswith("scripts/omo/")
-            or link == "scripts/omo_rules.py"
-        ):
-            return None
+    if link.startswith((".omo/", "docs/", "bin/", "tests/")):
         candidate = (root / link).resolve()
         return candidate
 

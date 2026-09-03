@@ -1,6 +1,12 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # AGENTS.md — Workspace Development Guide
 
-> 最后更新: 2026-09-02
+> 最后更新: 2026-09-03
 > Root operating guide for AI coding agents and developers. Keep this file operational. Put runtime facts in SSOT files, not here.
 
 ## 0. Worktree Policy (Mandatory)

@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ssot
 ---
 # ADR-0197: Sovereign Hybrid Compute & KV Cache Binary Snapshots
 

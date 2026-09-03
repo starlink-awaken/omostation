@@ -1,6 +1,12 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # ARCHITECTURE.md — eCOS v6 Architecture Contracts
 
-> 最后更新: 2026-08-22
+> 最后更新: 2026-09-03
 > This document owns stable architecture concepts: layers, dependency direction, routing contracts, and governance boundaries.
 > It does not own runtime facts, current phase, health score, test counts, tool counts, service counts, or ports.
 
