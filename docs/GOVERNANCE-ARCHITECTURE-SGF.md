@@ -5,6 +5,7 @@ owner: governance-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 # Starlit Self-Governance Framework (SGF-v1) — 大仓全栈自律治理框架设计书
 
