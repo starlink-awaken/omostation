@@ -297,3 +297,5 @@ projects/omo-debt/
 .omo/state/attestations/
 .kb/
 .kb/
+# Local archive directories (aetherforge-archive: bundled code samples, not source)
+aetherforge-archive
