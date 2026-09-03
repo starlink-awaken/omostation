@@ -87,23 +87,12 @@ def sign_card(payload: dict[str, Any]) -> dict[str, Any]:
     except Exception:
         dlp_flagged = False  # DLP 不可达时不阻塞署名 (本地 PWA 语义), 记录可见
 
-    ledger = ws / ".omo" / "state" / "mobile-sign-ledger.jsonl"
-    record = {
-        "ts": datetime.now(UTC).isoformat(),
-        "message_id": message_id,
-        "webauthn": "verified" if assertion else "degraded-confirm",
-        "dlp_flagged": dlp_flagged,
-        "status": "quarantined" if dlp_flagged else "signed",
-    }
-    ledger.parent.mkdir(parents=True, exist_ok=True)
-    with ledger.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
-
     if dlp_flagged:
         return {
             "ok": False,
             "status": "quarantined",
             "alert": "检测到高危涉密内容，需夏明星在桌面端二次确认后处置",
         }
-    # 置 signed: 从 triage 文件移除该卡 (同步 PWA 列表)
-    return {"ok": True, "status": "signed", "record": record}
+    # 移动端只能完成本地身份确认；真实批准、发送和证据回写由桌面 OMO 动作链处理。
+    del assertion
+    return {"ok": False, "status": "awaiting_desktop_confirmation", "message_id": message_id}
