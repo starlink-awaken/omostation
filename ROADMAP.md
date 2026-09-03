@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-03
+---
+
 # ROADMAP — Python 质量扫描基础设施规模化
 
 > ADR-0367 / `governance-evolution-roadmap.yaml::sweep-tooling-scaling`
