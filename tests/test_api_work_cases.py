@@ -123,3 +123,40 @@ def test_submission_endpoint_delegates_only_summary_fields(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {"id": "CASE-001", "status": "submission_recorded"}
     assert seen == {"omo_dir": api_work_cases.WORKSPACE_DIR / ".omo", "case_id": "CASE-001", "unit_id": "unit-a", "digest": "sha256:reply-v1", "valid": True}
+
+
+def test_external_actions_endpoint_projects_only_pending_case_metadata(monkeypatch):
+    monkeypatch.setattr(
+        api_work_cases,
+        "list_work_case_external_action_proposals",
+        lambda omo_dir, *, case_id: [
+            {
+                "id": "work-case-action:action-1",
+                "status": "pending",
+                "action_type": "email_send",
+                "recipient_count": 2,
+                "attachment_count": 1,
+                "action_snapshot_digest": "sha256:snapshot",
+                "created_at": "2026-09-03T10:00:00Z",
+            }
+        ],
+    )
+    app = FastAPI()
+    app.include_router(router)
+
+    response = TestClient(app).get("/api/work-cases/CASE-001/external-actions")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "items": [
+            {
+                "id": "work-case-action:action-1",
+                "status": "pending",
+                "action_type": "email_send",
+                "recipient_count": 2,
+                "attachment_count": 1,
+                "action_snapshot_digest": "sha256:snapshot",
+                "created_at": "2026-09-03T10:00:00Z",
+            }
+        ]
+    }

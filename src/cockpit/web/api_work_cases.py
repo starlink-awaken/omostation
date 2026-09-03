@@ -30,6 +30,28 @@ def record_work_case_submission(omo_dir, *, case_id: str, unit_id: str, digest: 
     return record_submission(omo_dir, case_id=case_id, unit_id=unit_id, digest=digest, valid=valid)
 
 
+def list_work_case_external_action_proposals(omo_dir, *, case_id: str) -> list[dict[str, object]]:
+    """Project only pending, privacy-safe work-case action metadata from OMO."""
+    from omo.omo_cockpit_bridge import list_hitl_proposals
+
+    fields = (
+        "id",
+        "status",
+        "action_type",
+        "recipient_count",
+        "attachment_count",
+        "action_snapshot_digest",
+        "created_at",
+    )
+    return [
+        {field: proposal.get(field) for field in fields}
+        for proposal in list_hitl_proposals(omo_dir)
+        if proposal.get("type") == "work_case_external_action"
+        and proposal.get("debt_id") == case_id
+        and proposal.get("status") == "pending"
+    ]
+
+
 @router.get("/api/work-cases")
 async def list_work_cases(scope: str = Query(default="active")) -> dict[str, object]:
     """Project only OMO tasks explicitly marked as work cases."""
@@ -96,3 +118,13 @@ async def record_work_case_submission_endpoint(case_id: str, payload: dict[str, 
     except ImportError as exc:
         raise HTTPException(status_code=503, detail="work-case submission ingress is unavailable") from exc
     return {"id": case_id, "status": "submission_recorded"}
+
+
+@router.get("/api/work-cases/{case_id}/external-actions")
+async def list_work_case_external_actions_endpoint(case_id: str) -> dict[str, object]:
+    """Expose a read-only pending action queue; this endpoint cannot approve or execute."""
+    try:
+        items = list_work_case_external_action_proposals(WORKSPACE_DIR / ".omo", case_id=case_id)
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="work-case action queue is unavailable") from exc
+    return {"items": items}
