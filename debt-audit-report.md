@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-03
+---
+
 # 债务审计报告
 
 > 生成时间: 2026-07-02 10:58:53

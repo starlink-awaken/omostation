@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-03
+---
+
 # 文档系统性重构总结
 
 ## 概述
