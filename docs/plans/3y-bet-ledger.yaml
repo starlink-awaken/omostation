@@ -12337,7 +12337,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: blocked
+    overall_state: evaluating
   value_indicator_policy: false
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
