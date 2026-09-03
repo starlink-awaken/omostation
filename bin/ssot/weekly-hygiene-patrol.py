@@ -18,7 +18,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -47,7 +47,7 @@ def main() -> int:
     parser.add_argument("--output", help="Explicit path to write Markdown report")
     args = parser.parse_args()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     now_iso = now.strftime("%Y-%m-%d %H:%M:%S UTC")
     date_str = now.strftime("%Y%m%d")
 
@@ -187,7 +187,7 @@ def main() -> int:
     out_file = args.output
     if not out_file:
         out_file = str(REPO_ROOT / ".omo" / "reports" / "hygiene" / f"patrol-{date_str}.md")
-    
+
     try:
         p_out = Path(out_file)
         p_out.parent.mkdir(parents=True, exist_ok=True)

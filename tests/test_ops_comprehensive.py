@@ -212,8 +212,8 @@ class TestCatalogAPI:
 
     def test_catalog_api_endpoints(self):
         """Test that catalog API endpoints return valid JSON."""
-        import urllib.request
         import time
+        import urllib.request
 
         # Start API server in background
         proc = subprocess.Popen(

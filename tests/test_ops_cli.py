@@ -4,26 +4,27 @@ from __future__ import annotations
 
 import json
 import os
+
+# Add workspace to path for imports
+import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-# Add workspace to path for imports
-import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from bin.ops.cli import (
-    load_services,
-    get_service_by_id,
-    check_liveness,
-    topological_sort,
+    WORKSPACE,
     _get_cmd,
     _get_environment,
     _get_pid_file,
     _is_running,
-    WORKSPACE,
+    check_liveness,
+    get_service_by_id,
+    load_services,
+    topological_sort,
 )
 
 

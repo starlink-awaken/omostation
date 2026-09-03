@@ -22,7 +22,7 @@ import importlib.util
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -31,7 +31,7 @@ HEARTBEAT_FILE = HEARTBEAT_DIR / "weekly-review.json"
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def _import_by_path(path: Path, module_name: str):
@@ -228,9 +228,10 @@ def render_card_plain(card: dict) -> str:
 def render_card_rich(card: dict) -> str:
     """Render card using rich library (if available)."""
     try:
+        from io import StringIO
+
         from rich.console import Console
         from rich.table import Table
-        from io import StringIO
 
         console = Console(file=StringIO(), width=72)
         console.print("[bold cyan]📋 主人必读周报 (Weekly Review)[/bold cyan]")

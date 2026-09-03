@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import difflib
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any
+
 from knowledge.models import KnowledgeDocument
 
 
@@ -25,7 +26,7 @@ class ConflictResolutionProposal:
     recommended_action: str  # keep_newer, merge_facts, deprecate_older, manual_review
     rationale: str
     merged_content: str | None = None
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return {

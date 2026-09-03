@@ -45,7 +45,7 @@ def _last_reviewed_age_days(text: str) -> float | None:
     for line in text.splitlines()[:20]:
         match = re.search(r"last-reviewed:\s*['\"]?(\d{4}-\d{2}-\d{2})", line)
         if match:
-            from datetime import datetime, UTC
+            from datetime import UTC, datetime
             reviewed = datetime.strptime(match.group(1), "%Y-%m-%d").replace(tzinfo=UTC)
             age = (datetime.now(UTC) - reviewed).days
             return float(age)
@@ -139,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.summary:
         print(f"checked={summary['checked']} clean={summary['clean']} stale={summary['stale']} total_issues={total_issues}")
     else:
-        print(f"═══ Knowledge Staleness Check ═══")
+        print("═══ Knowledge Staleness Check ═══")
         print(f"   checked: {summary['checked']}  clean: {summary['clean']}  stale: {summary['stale']}")
         print(f"   total issues: {total_issues}")
         print()

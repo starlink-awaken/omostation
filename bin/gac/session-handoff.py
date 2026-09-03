@@ -11,8 +11,12 @@
 也可由 agent-workflow closeout 自动调用.
 """
 from __future__ import annotations
-import argparse, json, subprocess, sys
-from datetime import datetime, timezone
+
+import argparse
+import json
+import subprocess
+import sys
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -34,7 +38,7 @@ def main():
     args = ap.parse_args()
 
     changed = _git_changed_files()
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    now = datetime.now(UTC).isoformat(timespec="seconds")
 
     handoff = {
         "session_id": args.session,

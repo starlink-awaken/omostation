@@ -12,7 +12,7 @@ Defines pipelines for the documents domain:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any, Literal
 
 from kos.kems.pipeline import PipelineRun, SourceManifest, StepRun
@@ -235,9 +235,9 @@ def list_pipelines() -> list[str]:
 def create_pipeline_run(pipeline_id: str, source: SourceManifest) -> PipelineRun:
     """Create a new pipeline run."""
     pipeline = get_pipeline(pipeline_id)
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     return PipelineRun(
-        run_id=f"run-{pipeline_id}-{source.source_id}-{int(datetime.now(timezone.utc).timestamp())}",
+        run_id=f"run-{pipeline_id}-{source.source_id}-{int(datetime.now(UTC).timestamp())}",
         pipeline_id=pipeline_id,
         created_at=now,
         source=source,

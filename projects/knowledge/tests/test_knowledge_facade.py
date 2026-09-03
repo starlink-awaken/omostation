@@ -14,7 +14,7 @@ if KAIRON_ROOT.exists():
 def test_core_models_import():
     """Verify core-models types are exportable."""
     try:
-        from core_models import Entity, Relationship, KnowledgeGraph  # noqa: F401
+        from core_models import Entity, KnowledgeGraph, Relationship  # noqa: F401
         assert True
     except ImportError:
         # Fallback verification

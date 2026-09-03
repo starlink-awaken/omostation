@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -199,7 +199,7 @@ def sync_harness_closeout(run_id: str = "") -> tuple[list[str], list[str]]:
     try:
         gd_data = _load_json(OMO_GOVERNANCE_DATA) or {}
         gd_data["harness_last_run"] = run_id or "unknown"
-        gd_data["harness_last_sync"] = datetime.now(timezone.utc).isoformat()
+        gd_data["harness_last_sync"] = datetime.now(UTC).isoformat()
         gd_data["harness_total_runs"] = gd_data.get("harness_total_runs", 0) + 1
         _save_json(OMO_GOVERNANCE_DATA, gd_data)
     except Exception as e:

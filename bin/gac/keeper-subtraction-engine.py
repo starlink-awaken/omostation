@@ -70,7 +70,7 @@ class KeeperSubtractionEngine:
             "domain": "compute_fabric",
             "reason": "算力网格路由已收敛至 AetherForge (ADR-0411)，该脚本零活跃引用",
             "recommended_action": "archive_to_bin_archive",
-            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "created_at": datetime.datetime.now(datetime.UTC).isoformat(),
             "status": "pending_human_decision",  # 'pending_human_decision', 'approved', 'rejected'
         }
 
@@ -103,7 +103,7 @@ class KeeperSubtractionEngine:
         for p in proposals:
             if p["id"] == proposal_id:
                 p["status"] = action
-                p["decided_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                p["decided_at"] = datetime.datetime.now(datetime.UTC).isoformat()
                 found = True
                 break
         if found:
@@ -124,7 +124,7 @@ class KeeperSubtractionEngine:
                     dest_path = archive_dir / target_path.name
                     target_path.rename(dest_path)
                     p["status"] = "archived"
-                    p["archived_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                    p["archived_at"] = datetime.datetime.now(datetime.UTC).isoformat()
                     p["archived_dest"] = str(dest_path.relative_to(self.root))
                     executed.append(p)
                 elif p.get("status") == "approved":

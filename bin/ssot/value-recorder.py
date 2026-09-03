@@ -11,7 +11,7 @@
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -19,7 +19,7 @@ EVIDENCE_FILE = REPO / ".omo/_delivery/ingress/value-evidence.jsonl"
 
 
 def record_episode(review_seconds: int, saved_seconds: int, verdict: str) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     episode = {
         "schema": "value-evidence/v1",
         "timestamp": now.isoformat(),

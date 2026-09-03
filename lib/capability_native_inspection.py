@@ -8,11 +8,11 @@ the native source must independently prove the selected declaration.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Optional
 
-import json
 import yaml
 from capability_native_receipt import (
     build_native_inspection_receipt,

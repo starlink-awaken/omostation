@@ -10,8 +10,8 @@ Usage:
 import argparse
 import json
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 RUNBOOK_DIR = REPO_ROOT / "docs" / "operations"

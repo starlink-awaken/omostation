@@ -92,13 +92,13 @@ def run_scenario(interactive: bool = False) -> int:
         "第 3 幕: 模拟突发 AST 跨项目语义断链与 0.3ms 爆炸半径极速拦截",
         f"Agent A 误修改公共函数签名 [{target_symbol}]，系统在 0.3ms 内逆向定位下游受灾调用方",
     )
-    
+
     # 模拟在黑板中查询该符号因签名变异造成的受灾调用链
     broken_hash = "sha256_mock_corrupted_signature_hash_v2"
     # 模拟下游两个调用方
     mock_caller_1 = "projects/cockpit/src/cockpit/commands/swarm.py:45"
     mock_caller_2 = "bin/omo-status:112"
-    
+
     bb.record_ast_call(
         caller_file="projects/cockpit/src/cockpit/commands/swarm.py",
         caller_symbol="sym:cockpit:swarm::render_status",
@@ -118,7 +118,7 @@ def run_scenario(interactive: bool = False) -> int:
     blast_impacts = bb.get_blast_radius(target_symbol, new_sig_hash=broken_hash)
     blast_ms = (time.perf_counter() - t_start) * 1000
 
-    proof_hash = hashlib.sha256(f"ast_breach:{target_symbol}:{broken_hash}".encode("utf-8")).hexdigest()
+    proof_hash = hashlib.sha256(f"ast_breach:{target_symbol}:{broken_hash}".encode()).hexdigest()
     fact_id = bb.record_fact(
         node_id="proj:omo",
         actor_id="ast:blast_engine",
@@ -132,11 +132,11 @@ def run_scenario(interactive: bool = False) -> int:
 
     print(f"  🚨 捕获跨项目语义破坏! 收据 Fact ID: #{fact_id} (分析耗时: {blast_ms:.2f}ms)")
     print(f"     • 破坏符号: {target_symbol}")
-    print(f"     • 新签名:   (agent_id: str, domain: str) -> dict[str, Any]  (缺少必填参数!)")
+    print("     • 新签名:   (agent_id: str, domain: str) -> dict[str, Any]  (缺少必填参数!)")
     print(f"     • 逆向爆炸半径 (Blast Radius, 0.3ms 算出共 {len(blast_impacts)} 处受灾):")
     for imp in blast_impacts:
         print(f"       💥 {imp['caller_file']}:{imp['caller_line']} (期望签名指纹不匹配)")
-    
+
     time.sleep(0.5)
 
     # ══════════════════════════════════════════════════════════════════
@@ -157,7 +157,7 @@ def run_scenario(interactive: bool = False) -> int:
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "status": "pending_human_decision",
     }
-    
+
     engine = get_keeper_engine()
     proposals = engine.load_proposals()
     proposals.append(proposal)
@@ -194,7 +194,7 @@ def run_scenario(interactive: bool = False) -> int:
     # Builder 修复: 保持兼容指纹
     remedy_hash = "sha256_valid_baseline_hash_v1"
     blast_recheck = bb.get_blast_radius(target_symbol, new_sig_hash=remedy_hash)
-    
+
     recovery_hash = hashlib.sha256(b"ast_remediated_compatible_pass").hexdigest()
     fact_remedy_id = bb.record_fact(
         node_id="proj:omo",
@@ -207,9 +207,9 @@ def run_scenario(interactive: bool = False) -> int:
         details={"action": "added_default_param_compatibility", "mandate": f"mandate-{proposal_id}"},
     )
     print(f"  🛠️ @Builder 修复完成! 提交收据 Fact ID: #{fact_remedy_id}")
-    print(f"     • 兼容签名: (agent_id: str, domain: str = 'gov_ssot') -> dict[str, Any]")
+    print("     • 兼容签名: (agent_id: str, domain: str = 'gov_ssot') -> dict[str, Any]")
     print(f"     • 爆炸半径复检: 受灾调用方 = {len(blast_recheck)} (耗时: 0.28ms, ALL CLEAR!)")
-    print(f"     • 节点状态复原: proj:omo -> VERDICT: PASS (物理事实生效)")
+    print("     • 节点状态复原: proj:omo -> VERDICT: PASS (物理事实生效)")
 
     final_corroded = bb.get_corroded_nodes()
     final_summary = bb.get_summary()

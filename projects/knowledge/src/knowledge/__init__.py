@@ -15,6 +15,12 @@ if KAIRON_PACKAGES.exists():
             if pkg_src not in sys.path:
                 sys.path.insert(0, pkg_src)
 
+from knowledge.adapter import AdapterHealth, BaseKnowledgeAdapter
+from knowledge.distillation import (
+    ConflictResolutionProposal,
+    ConflictResolver,
+    MemoryDistillationEngine,
+)
 from knowledge.models import (
     KnowledgeDocument,
     KnowledgeEntity,
@@ -22,13 +28,7 @@ from knowledge.models import (
     RetrievalResult,
     SyncEvent,
 )
-from knowledge.adapter import BaseKnowledgeAdapter, AdapterHealth
 from knowledge.retrieval import UnifiedKnowledgeRetriever
-from knowledge.distillation import (
-    ConflictResolver,
-    ConflictResolutionProposal,
-    MemoryDistillationEngine,
-)
 
 __version__ = "1.1.0"
 __all__ = [

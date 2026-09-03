@@ -16,7 +16,7 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -186,7 +186,7 @@ def compute_service_costs(services: list[dict]) -> dict[str, Any]:
     total_api_cost = sum(api_costs.values())
 
     return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "per_service": per_service,
         "api_costs": api_costs,
         "summary": {
@@ -253,7 +253,7 @@ def main() -> int:
 
     if args.record:
         COST_DIR.mkdir(parents=True, exist_ok=True)
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
         record_file = COST_DIR / f"{today}.jsonl"
         with open(record_file, "a") as f:
             f.write(json.dumps(costs, ensure_ascii=False) + "\n")

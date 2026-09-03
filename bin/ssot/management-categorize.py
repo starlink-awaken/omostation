@@ -22,7 +22,6 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-
 CATEGORY_RULES = {
     "workflows": [
         "audit", "closeout", "hardening", "triage",

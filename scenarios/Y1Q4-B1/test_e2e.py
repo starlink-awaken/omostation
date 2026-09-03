@@ -2,6 +2,7 @@
 import time
 from pathlib import Path
 
+
 def test_knowledge_flow_latency():
     start = time.time()
     _ = Path("docs/SYSTEM-INDEX.md").read_text()[:1000]

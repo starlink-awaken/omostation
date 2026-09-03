@@ -13,7 +13,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -59,7 +59,7 @@ def trigger_scene(scene_id: str, context: dict | None = None) -> dict:
     """Trigger a scene journey."""
     return {
         "scene_id": scene_id,
-        "triggered_at": datetime.now(timezone.utc).isoformat(),
+        "triggered_at": datetime.now(UTC).isoformat(),
         "entry_state": SCENE_JOURNEY_ENTRY.get(scene_id, "detected"),
         "context": context or {},
         "ok": True,
@@ -76,7 +76,7 @@ def check_and_trigger() -> dict:
         if scene_id:
             triggered.append(trigger_scene(scene_id, {"scope": scope}))
     return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "kems_result": kems_result,
         "triggered_scenes": triggered,
         "ok": True,

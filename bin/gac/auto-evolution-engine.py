@@ -23,7 +23,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -58,7 +58,7 @@ def _save_state(data: dict) -> None:
 def observe() -> dict:
     """Observe system state and collect data."""
     observations = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "heartbeat": _run(["python3", str(REPO / "bin/gac/probe-heartbeat-monitor.py"), "--status"]),
         "drift": _run(["python3", str(REPO / "bin/gac/gac-drift.py")]),
         "corrosion": _run(["python3", str(REPO / "bin/gac/corrosion-pipeline-connector.py"), "--dry-run"]),
@@ -165,7 +165,7 @@ def evaluate(proposals: list[dict]) -> list[dict]:
             **p,
             "bcos_phase": "evaluate",
             "approved": approved,
-            "evaluated_at": datetime.now(timezone.utc).isoformat(),
+            "evaluated_at": datetime.now(UTC).isoformat(),
         })
 
     return evaluated
@@ -228,7 +228,7 @@ def run_cycle() -> dict:
     # Save state
     state = _load_state()
     cycle_record = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "observations": {k: isinstance(v, dict) and v.get("ok", False) for k, v in observations.items()},
         "proposals": len(proposals),
         "approved": len(approved),
@@ -270,7 +270,7 @@ def main() -> int:
     if args.status:
         state = _load_state()
         cycles = state.get("cycles", [])
-        print(f"自动进化引擎状态")
+        print("自动进化引擎状态")
         print(f"  总循环数: {len(cycles)}")
         if cycles:
             latest = cycles[-1]
