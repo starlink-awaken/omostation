@@ -328,6 +328,15 @@ surfaces:
   - scheduled
   status: active
   note: Root-owned guard for untracked or unregistered root shadow surfaces.
+- id: bin-gac-perception-coverage-py
+  tool: bin/gac/perception-coverage.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: Perception coverage report generator (7 probes + 25 routes + 17 data sources).
 - id: bin-ssot-check-hardcoded-ports-py
   tool: bin/ssot/check-hardcoded-ports.py
   workflow: mof-update.yml
