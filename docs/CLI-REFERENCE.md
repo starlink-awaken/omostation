@@ -11,7 +11,7 @@ type: ssot
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **200** 个命令 (含子命令)。按场景分组如下。
+共 **201** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -249,6 +249,7 @@ type: ssot
 | `cockpit diff` | 查看待处理署名 Diff 统计 |
 | `cockpit digest` | 提炼多个研究结果 |
 | `cockpit distill` | 在 Mac mini M4 触发闲时 LoRA 蒸馏 |
+| `cockpit dlp-guard` | 外发前防泄密扫描 (敏感识别+挂起+脱敏) |
 | `cockpit dma` | 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准 |
 | `cockpit docx` | 渲染为 GB/T 9704-2012 红头公文 DOCX |
 | `cockpit draft` | 从本地主权大模型请求草稿 |
