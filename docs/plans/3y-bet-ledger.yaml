@@ -13688,7 +13688,6 @@ bets:
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-02-local-repository-reconciliation-design.md
-  - docs/reports/2026-09-02-local-repository-reconciliation.md
   - .omo/_knowledge/retros/BET-Y1Q3-T6-16.md
   pasw_required: true
   depends_on:
