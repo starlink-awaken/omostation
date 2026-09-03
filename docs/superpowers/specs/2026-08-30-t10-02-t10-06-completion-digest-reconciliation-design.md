@@ -10,6 +10,7 @@ created: 2026-08-30
 last-reviewed: 2026-08-30
 risk_level: L1
 human_gate: false
+type: ssot
 ---
 
 # Reconcile current completion evidence digests for T10-02 and T10-06

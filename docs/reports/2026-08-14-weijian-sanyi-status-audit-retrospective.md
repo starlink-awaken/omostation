@@ -2,6 +2,7 @@
 status: active
 owner: runtime-control
 scope: documents-read-only-audit
+type: ephemeral
 ---
 
 # CR08 卫健委三医态势安装态审计复盘

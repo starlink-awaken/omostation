@@ -2,6 +2,7 @@
 title: Historical completion receipt digest audit
 date: 2026-08-29
 status: verified
+type: ephemeral
 ---
 
 # 历史 completion receipt digest 审计

@@ -8,6 +8,7 @@ lifecycle: contract
 owner: governance-team
 created: 2026-08-29
 last-reviewed: 2026-08-29
+type: ssot
 ---
 
 # Documents dangling symlink quarantine

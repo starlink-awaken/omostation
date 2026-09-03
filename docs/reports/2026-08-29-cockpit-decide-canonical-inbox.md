@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # T10-64 Cockpit decide write-boundary recovery — Delivery Report
 
 Date: 2026-08-29 · Bet: `BET-Y1Q3-T10-64` · Spec:

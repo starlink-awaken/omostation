@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Agora canonical L4 route evidence
 
 ## Scope

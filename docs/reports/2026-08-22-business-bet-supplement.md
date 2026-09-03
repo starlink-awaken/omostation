@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # 业务 BET 补位方案 — D-7 闭环 2026-08-22
 
 > debt: D-7 业务/治理 23% → 补 2 真业务 BET 关债，健康 45→52

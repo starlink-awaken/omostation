@@ -4,6 +4,7 @@ status: archived
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-15
+type: ssot
 ---
 
 # 复盘（RCA）：Governance Runtime Convergence（2026-08-14）

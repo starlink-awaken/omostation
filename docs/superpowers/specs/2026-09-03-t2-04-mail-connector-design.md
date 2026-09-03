@@ -8,6 +8,7 @@ lifecycle: contract
 owner: governance-team
 created: 2026-09-03
 last-reviewed: 2026-09-03
+type: ssot
 ---
 
 # Unified mail connector (T2-04)

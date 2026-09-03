@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Documents Runtime Source/Owner Parity Inventory
 
 > Date: 2026-08-12

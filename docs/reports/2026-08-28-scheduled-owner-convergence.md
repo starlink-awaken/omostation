@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # monday-vault-health Scheduled owner convergence — 2026-08-29
 
 ## Scope

@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-29
+type: ssot
 ---
 # Product P0 WP1 Honest Scene Gate Implementation Plan
 

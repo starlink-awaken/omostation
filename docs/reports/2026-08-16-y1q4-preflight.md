@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Y1Q4 六 Bet 可行性预检报告
 
 **类型**: report

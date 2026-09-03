@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Concept weave preflight owner evidence — 2026-08-28
 
 The monthly LaunchAgent currently executes a Documents shell writer that

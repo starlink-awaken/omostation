@@ -9,6 +9,7 @@ last-reviewed: 2026-08-30
 bet_id: BET-Y1Q3-T10-106
 risk_level: L1
 human_gate: false
+type: ssot
 ---
 
 # Sovereign Mesh Daemon SRE & Thunderbolt 5 Chaos Drill Design Specification

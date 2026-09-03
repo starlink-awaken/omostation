@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Documents Runtime Source/Owner Parity Inventory — Task 7B (work-weijian)
 
 > Date: 2026-08-27

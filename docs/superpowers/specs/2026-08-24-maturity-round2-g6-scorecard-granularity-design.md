@@ -7,6 +7,7 @@ last-reviewed: 2026-08-24
 schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-06
+type: ssot
 ---
 
 # Maturity Round 2 — G6: Scorecard 检测粒度升级 (9/10 档, overall 9.0 可达)

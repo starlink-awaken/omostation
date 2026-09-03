@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Signals preflight owner evidence — 2026-08-28
 
 The legacy `@公共/_runtime/signals-rotate.py` rewrites Documents

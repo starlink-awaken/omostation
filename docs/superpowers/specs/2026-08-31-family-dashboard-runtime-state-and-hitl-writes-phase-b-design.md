@@ -10,6 +10,7 @@ created: 2026-08-30
 last-reviewed: 2026-09-02
 risk_level: L3
 human_gate: true
+type: ssot
 ---
 
 # Family dashboard runtime-state and HITL writes Phase B

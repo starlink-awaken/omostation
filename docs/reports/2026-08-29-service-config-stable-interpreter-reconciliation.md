@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Service-config stable interpreter reconciliation — 2026-08-29
 
 ## Finding

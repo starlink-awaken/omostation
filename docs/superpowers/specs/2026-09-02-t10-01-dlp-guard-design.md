@@ -8,6 +8,7 @@ lifecycle: contract
 owner: governance-team
 created: 2026-09-02
 last-reviewed: 2026-09-02
+type: ssot
 ---
 
 # DLP quarantine sandbox & auto-sanitize (T10-01)

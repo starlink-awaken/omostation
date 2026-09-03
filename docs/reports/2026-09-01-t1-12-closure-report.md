@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # T1-12 BET-Y1Q3-T1-12 closure report
 
 > Date: 2026-09-01

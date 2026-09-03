@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # Contributing to omostation / 贡献指南
 
 > Welcome! 欢迎贡献。本文档提供参与 omostation 项目的完整指引。

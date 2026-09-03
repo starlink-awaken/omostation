@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 {
   "timestamp": "2026-09-02 07:09:07 UTC",
   "all_passed": true,

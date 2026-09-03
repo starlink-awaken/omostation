@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+type: ssot
 ---
 
 # Y1Q4 业务 BET 最小闭环 — B1/B2

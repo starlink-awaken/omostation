@@ -3,6 +3,7 @@ status: active
 lifecycle: active
 owner: governance-team
 last-reviewed: 2026-08-27
+type: ephemeral
 ---
 
 # AGE-v2 Agent Cell — 全面架构分析与复盘

@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Workspace watch owner evidence — 2026-08-29
 
 The legacy minute watcher executed Documents `domain-sync`, `bridge-refresh`,

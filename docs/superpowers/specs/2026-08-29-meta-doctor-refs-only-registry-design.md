@@ -8,6 +8,7 @@ last-reviewed: 2026-08-29
 bet_id: BET-Y1Q3-T10-61
 spec_version: 1.0.0
 title: Registry-driven meta-doctor refs-only CI binding
+type: ssot
 ---
 
 # T10-61: Registry-driven meta-doctor refs-only binding

@@ -8,6 +8,7 @@ created: 2026-08-28
 last-reviewed: 2026-08-27
 bet_id: BET-Y1Q3-T10-30
 risk_level: L2
+type: ssot
 ---
 
 # OCR preflight schedule cutover

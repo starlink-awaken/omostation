@@ -9,6 +9,7 @@ last-reviewed: 2026-08-29
 bet_id: BET-Y1Q3-T10-79
 risk_level: L2
 human_gate: true
+type: ssot
 ---
 
 # Documents Guozhuan dangling-symlink quarantine

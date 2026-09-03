@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+type: ephemeral
 ---
 
 # Knowledge Indexing Plan — #7 from Architectural Review

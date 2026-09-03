@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # 算力路由双 Owner 收敛决策 — BET-Y1Q3-T1-06
 
 > 日期: 2026-08-16 · Owner: governance-team · Status: accepted
