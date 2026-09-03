@@ -1,5 +1,3 @@
-# UNSIGNED DRAFT — principal must sign before value axis ACCEPTED.
-# Do not set status=done until signature verifies.
 schema_version: human-attestation/v1
 principal_id: principal:xiamingxing
 verdict: accept
@@ -7,4 +5,4 @@ episode_id: episode_bet_y1q3_t1_12
 signal_event_id: evt_accept_bet_y1q3_t1_12
 observed_at: '2026-09-03T07:12:13Z'
 signer_identity: xiamingxing
-# signature_b64: <fill after ssh-keygen -Y sign>
+signature_b64: LS0tLS1CRUdJTiBTU0ggU0lHTkFUVVJFLS0tLS0KVTFOSVUwbEhBQUFBQVFBQUFETUFBQUFMYzNOb0xXVmtNalUxTVRrQUFBQWc3UE44L3pUWUlVSDZLcEZsNElaUnQzSmVucAp5K2hlcERtbDVrRWRON0hTUUFBQUFjYjIxdmMzUmhkR2x2Ymkxb2RXMWhiaTFoZEhSbGMzUmhkR2x2YmdBQUFBQUFBQUFHCmMyaGhOVEV5QUFBQVV3QUFBQXR6YzJndFpXUXlOVFV4T1FBQUFFRFdYQ1V4N3N0RHM0SFZzRTd2SmtJWVZveHd5WCsxRFAKbHE4NUlHMXZWMWZ5OVBDRjFTazlyZEJTTnJHem5WWnJXeWcwSGM2MUVuRis4RjdxemdGTTRFCi0tLS0tRU5EIFNTSCBTSUdOQVRVUkUtLS0tLQo=

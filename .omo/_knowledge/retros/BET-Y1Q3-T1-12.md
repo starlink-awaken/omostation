@@ -279,3 +279,10 @@ actor/attempt：`governance-agent` / `t112-canary-20260903`
 - closeout 前确认是否要求 `verify-principal` 真值再把 operational 升 PROVEN
 - 若要固化 driver：把真实 binding/admission/principal 参数化进 `bin/ssot/binding-canary-driver.py`（需扩 write_surfaces）
 - 不要再把 `governance/omo/state` 或 zombie catalog 服务当作 native canary 默认目标
+
+## 2026-09-03 signed attestation + value-exempt closeout path
+
+- Attestation signed and verified locally (`ssh-keygen -Y` / `validate_human_attestation` OK).
+- BET has `value_indicator_policy=false`, so value axis stays `NOT_PROVEN` (cannot ACCEPTED).
+- Done path is `engineering=VERIFIED` + `operational=PROVEN` + `value=NOT_PROVEN` → `overall_state=delivery_accepted`.
+- Attestation file retained as operational `fresh_receipt` evidence, not as value ACCEPTED.

@@ -12315,10 +12315,13 @@ bets:
         evidence:
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:51eeac95e815f5a3523e5b0732fc9a182f42fe8b1b9523d7241b49424e5c6df8
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:51eeac95e815f5a3523e5b0732fc9a182f42fe8b1b9523d7241b49424e5c6df8
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:51eeac95e815f5a3523e5b0732fc9a182f42fe8b1b9523d7241b49424e5c6df8
       operational:
         status: PROVEN
         evidence:
@@ -12326,8 +12329,8 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
             sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
           fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
+            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
+            sha256: sha256:9df83d6d80741cb04730ffb9d75951230c103139129775e28e14f409ecd4a079
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
             sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
