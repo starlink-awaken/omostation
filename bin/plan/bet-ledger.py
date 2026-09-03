@@ -256,6 +256,9 @@ SPEC_FRONTMATTER_GRANDFATHER_ALLOWLIST = {
     "BET-Y1Q2-T1-19": {
         "spec_ref": "repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md",
         "spec_version": "1.0.0",
+        # 2026-09-03 同步: #2968 给 spec 加 type: ssot frontmatter 后文件 digest 变化,
+        # allowlist 身份绑定跟文件走 (台账 declared digest 已同步重算为当前实际值)
+        # (与 #2974 撞车修复收敛: 双侧独立得出同一新值)
         "content_digest": "sha256:26939fcf63ae224a9c4dec77cfffd131f28646c6f57078d4ee15b9cbe66ed257",
         "decision_ref": "decision://accepted/BET-Y1Q2-T1-19",
     }
