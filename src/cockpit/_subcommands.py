@@ -705,7 +705,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
 
     # ── im-triage ─────────────────────────────────────────────
     # BET-Y1Q4-T2-02: IM 会话感知待办卡片渲染
-    im_triage_p = sub.add_parser("im-triage", help="渲染 IM 会话感知待办卡片 (bos://im/session/triage)")
+    sub.add_parser("im-triage", help="渲染 IM 会话感知待办卡片 (bos://im/session/triage)")
 
     # ── BOS URI gateway ───────────────────────────────────────
     bos_p = sub.add_parser("bos", help="BOS URI 查询与管理")

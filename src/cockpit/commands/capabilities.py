@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from argparse import Namespace
 from pathlib import Path
@@ -87,7 +88,8 @@ def _collect_scene_cards() -> list[dict[str, str]]:
             docs = list(yaml.safe_load_all(text))
             # 找到包含 scene_id 的文档, 否则用第一个
             data = next((d for d in docs if isinstance(d, dict) and "scene_id" in d), docs[0] if docs else None)
-        except Exception:
+        except Exception as exc:
+            logging.debug("Skip malformed scene-card %s: %s", f.name, exc)
             continue
         if not isinstance(data, dict):
             continue
@@ -115,7 +117,8 @@ def _collect_journeys() -> list[dict[str, str]]:
             text = f.read_text(encoding="utf-8")
             docs = list(yaml.safe_load_all(text))
             data = next((d for d in docs if isinstance(d, dict) and "journey_id" in d), docs[0] if docs else None)
-        except Exception:
+        except Exception as exc:
+            logging.debug("Skip malformed journey %s: %s", f.name, exc)
             continue
         if not isinstance(data, dict):
             continue
@@ -140,7 +143,8 @@ def _collect_governance_tools() -> list[dict[str, str]]:
             continue
         try:
             text = f.read_text(encoding="utf-8", errors="ignore")
-        except Exception:
+        except Exception as exc:
+            logging.debug("Skip unreadable governance tool %s: %s", f.name, exc)
             continue
         # 提取 docstring 第一行作为描述
         m = re.search(r'"""(.*?)"""', text, re.DOTALL)
