@@ -9492,7 +9492,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md
     spec_version: 1.0.0
-    content_digest: sha256:c2ca365b1ea140da9be3b577617db0b329a059dd06fc43e3232fb5c570f6aba0
+    content_digest: sha256:26939fcf63ae224a9c4dec77cfffd131f28646c6f57078d4ee15b9cbe66ed257
     decision_ref: decision://accepted/BET-Y1Q2-T1-19
   goal: 在不改变 OMO/ECOS 任务、事件和验收真相的前提下，将 Codex 本地 worker 从 Orca/cli_prompt 人工生产路径迁移到固定版本的
     ACP v1 stdio，通过 WorkPacket、verified independent clone、active claim 和 canonical
