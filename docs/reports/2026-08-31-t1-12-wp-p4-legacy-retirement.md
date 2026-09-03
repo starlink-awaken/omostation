@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # T1-12 WP-P4 legacy retirement verification report
 
 > Date: 2026-08-31

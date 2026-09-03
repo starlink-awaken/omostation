@@ -10,6 +10,7 @@ created: 2026-08-30
 last-reviewed: 2026-08-30
 risk_level: L1
 human_gate: false
+type: ssot
 ---
 
 # Restore T10-92 artifacts dropped from the mainline merge tree

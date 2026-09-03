@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # agora × toolbox 修复清单（P0/P1）
 
 > **创建时间**：2026-08-02

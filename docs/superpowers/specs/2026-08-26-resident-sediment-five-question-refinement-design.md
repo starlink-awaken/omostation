@@ -7,6 +7,7 @@ last-reviewed: 2026-08-26
 schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-17
+type: ssot
 ---
 
 # Resident sediment 五问提炼：确定性骨架 + 半自动完善入口

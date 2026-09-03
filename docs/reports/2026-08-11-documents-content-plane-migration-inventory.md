@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Documents 内容主权面迁移台账
 
 日期：2026-08-11

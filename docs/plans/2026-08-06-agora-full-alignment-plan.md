@@ -3,6 +3,7 @@ status: active
 lifecycle: plan
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ephemeral
 ---
 # agora 全面规划与方案设计 (2026-08-06)
 

@@ -9,6 +9,7 @@ last-reviewed: 2026-08-30
 bet_id: BET-Y1Q3-T10-105
 risk_level: L1
 human_gate: true
+type: ssot
 ---
 
 # Spine Value Flow & Persona LoRA Distillation v1 Design Specification

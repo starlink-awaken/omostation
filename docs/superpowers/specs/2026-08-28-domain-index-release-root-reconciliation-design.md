@@ -9,6 +9,7 @@ last-reviewed: 2026-08-28
 bet_id: BET-Y1Q3-T10-45
 risk_level: L1
 human_gate: true
+type: ssot
 ---
 
 # Domain-index owner release-root reconciliation

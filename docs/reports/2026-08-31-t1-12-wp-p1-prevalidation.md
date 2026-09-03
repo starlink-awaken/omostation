@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # T1-12 WP-P1 OMO StepDispatched pre-validation delivery report
 
 > Date: 2026-08-31

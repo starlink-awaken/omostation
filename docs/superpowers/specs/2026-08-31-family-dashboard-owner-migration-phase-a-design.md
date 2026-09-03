@@ -8,6 +8,7 @@ lifecycle: contract
 owner: family-hub
 created: 2026-08-30
 last-reviewed: 2026-08-30
+type: ssot
 ---
 
 # Family dashboard Workspace owner migration Phase A

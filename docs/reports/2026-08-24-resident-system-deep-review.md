@@ -3,6 +3,7 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-25
+type: ephemeral
 ---
 
 # resident 常驻体系与治理接线深度复盘

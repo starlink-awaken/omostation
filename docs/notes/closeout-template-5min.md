@@ -4,6 +4,7 @@ status: active
 lifecycle: entry
 owner: governance-team
 last-reviewed: 2026-08-15
+type: ssot
 ---
 
 # Closeout 模板（5 分钟）

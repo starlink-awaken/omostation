@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Post-2408 Main Recovery — R1/H1/R2a evidence
 
 ## Immutable mainline evidence

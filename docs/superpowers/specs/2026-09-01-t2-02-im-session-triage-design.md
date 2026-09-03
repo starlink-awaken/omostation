@@ -8,6 +8,7 @@ lifecycle: contract
 owner: governance-team
 created: 2026-09-01
 last-reviewed: 2026-09-01
+type: ssot
 ---
 
 # IM session perception & one-shot directive triage (T2-02)

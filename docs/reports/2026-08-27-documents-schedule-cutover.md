@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Documents schedule cutover evidence — 2026-08-27
 
 This report records the attempted exact two-line host schedule cutover from

@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Bridge preflight owner evidence — 2026-08-28
 
 The live bridge-refresh cron previously wrote Documents Dashboard projections.

@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # agora 全面优化报告（2026-08-02）
 
 > **创建时间**：2026-08-02

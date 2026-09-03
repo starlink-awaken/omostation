@@ -9,6 +9,7 @@ last-reviewed: 2026-08-24
 
 
 bet_id: BET-Y1Q3-T1-10
+type: ssot
 ---
 
 # Resident 体系全面接线 — 配置/文档/治理/CI/MCP/BOS URI 感知

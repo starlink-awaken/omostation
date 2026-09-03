@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+type: ephemeral
 ---
 
 # Instruction Binding 全链移除方案(独立 BET 候选)

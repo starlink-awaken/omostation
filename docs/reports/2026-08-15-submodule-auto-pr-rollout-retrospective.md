@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # 2026-08-15 系统落地复盘：全仓子模块秒级更新与 Auto-PR 自动化流水线
 
 > **责任模块**：CI/CD 协作流水线 & 多子仓治理 (BET-Y1Q2-T1-20 & BET-Y1Q1-T1-08)  

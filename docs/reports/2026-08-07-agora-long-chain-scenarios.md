@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # agora 超长链路场景验证报告 (2026-08-07)
 
 > 验证方式: 从 agora 工作领域构造 5 个超长链路场景, 每个含多轮/多步, 经真实 SSE 网关

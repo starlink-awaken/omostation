@@ -8,6 +8,7 @@ lifecycle: contract
 owner: governance-team
 created: 2026-08-30
 last-reviewed: 2026-08-30
+type: ssot
 ---
 
 # L4 context-aware machine-log classification

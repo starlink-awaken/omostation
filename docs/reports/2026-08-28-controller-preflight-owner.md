@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Controller preflight owner evidence — 2026-08-28
 
 The legacy Weijian `controller.py` writes a daily report beneath Documents and

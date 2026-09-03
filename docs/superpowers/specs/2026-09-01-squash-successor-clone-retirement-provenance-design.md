@@ -10,6 +10,7 @@ bet_id: BET-Y1Q4-T1-02
 risk_level: L2
 human_gate: true
 value_indicator_policy: false
+type: ssot
 ---
 
 # Squash-Successor Clone Retirement Provenance Design

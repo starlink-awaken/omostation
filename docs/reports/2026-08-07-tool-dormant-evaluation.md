@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # B2: Dormant Tool Evaluation — bin/ssot/ 94 tools audit
 
 > 2026-08-07 | Path B (减法收敛) | Tool: `make tool-audit`

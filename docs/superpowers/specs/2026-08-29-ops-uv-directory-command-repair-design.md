@@ -8,6 +8,7 @@ created: 2026-08-29
 last-reviewed: 2026-08-29
 bet_id: BET-Y1Q3-T10-49
 risk_level: L1
+type: ssot
 ---
 
 # Service Gateway uv directory command repair

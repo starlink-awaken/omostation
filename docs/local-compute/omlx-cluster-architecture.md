@@ -4,6 +4,7 @@ lifecycle: contract
 owner: architecture-team
 last-reviewed: 2026-08-12
 review-state: verified-v3
+type: ssot
 ---
 # omlxc v3 × AetherForge 本地算力中枢
 

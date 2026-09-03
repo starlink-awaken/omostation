@@ -4,6 +4,7 @@ lifecycle: history
 owner: auto-fix-loop
 last-reviewed: 2026-08-25
 superseded-by: docs/plans/2026-08-25-y1-value-loop-phase.md
+type: ephemeral
 ---
 
 # Two-Week System Integration & Forward Plan

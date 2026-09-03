@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # Contributor Covenant Code of Conduct
 
 ## Our Pledge
