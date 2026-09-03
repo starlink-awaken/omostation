@@ -1,0 +1,10 @@
+# UNSIGNED DRAFT — principal must sign before value axis ACCEPTED.
+# Do not set status=done until signature verifies.
+schema_version: human-attestation/v1
+principal_id: principal:xiamingxing
+verdict: accept
+episode_id: episode_bet_y1q3_t1_12
+signal_event_id: evt_accept_bet_y1q3_t1_12
+observed_at: '2026-09-03T07:12:13Z'
+signer_identity: xiamingxing
+# signature_b64: <fill after ssh-keygen -Y sign>
