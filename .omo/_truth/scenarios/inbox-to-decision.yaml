@@ -1,0 +1,21 @@
+schema: scene-card/v1
+scene_id: inbox-to-decision
+lifecycle: assisted
+journey_id: inbox-to-decision
+goal: "统一收件箱消息自动分类、审查、决策、沉淀"
+trigger: "新消息进入 unified-inbox"
+input_contract: "InboxMessage[] (sender, subject, body, attachments)"
+result_contract: "Decision | Task | Knowledge | Archived"
+outcome_metric: "auto_resolution_rate >= 0.6"
+owner: governance-team
+failure_cost: low
+data_classification: internal
+data_scope: workspace-inbox
+operator: omo-resident
+permission_ref: "bos://resident/inbox/read"
+rollback_plan: "消息保留原状，仅标记不执行"
+sample_refs:
+  - ".omo/state/scene-cards/inbox-to-decision/samples/sample-1.json"
+  - ".omo/state/scene-cards/inbox-to-decision/samples/sample-2.json"
+  - ".omo/state/scene-cards/inbox-to-decision/samples/sample-3.json"
+calibration: 0.65
