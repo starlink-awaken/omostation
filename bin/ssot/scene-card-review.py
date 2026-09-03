@@ -14,11 +14,15 @@ Engine: bin/ssot/scene-card-review.py
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
+import json
 import sys
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 
 def _now_iso() -> str:
@@ -173,6 +177,80 @@ def _parse_time(ts: str) -> datetime | None:
         return None
 
 
+def validate_scene_card(workspace_root: Path, scene_id: str) -> dict[str, Any]:
+    """Validate a scene card's field completeness."""
+    scene_file = workspace_root / ".omo" / "_truth" / "scenarios" / f"{scene_id}.yaml"
+    if not scene_file.exists():
+        return {"valid": False, "error": f"Scene card not found: {scene_file}"}
+
+    import yaml
+    data = yaml.safe_load(scene_file.read_text())
+
+    required = [
+        "scene_id", "journey_id", "goal", "trigger",
+        "input_contract", "result_contract", "outcome_metric",
+    ]
+    shadow_required = required  # shadow only needs core fields
+    assisted_required = required + ["owner", "failure_cost", "data_classification", "rollback_plan"]
+
+    lifecycle = data.get("lifecycle", "draft")
+    required_fields = assisted_required if lifecycle in ("assisted", "supervised", "routine") else shadow_required
+
+    missing = [f for f in required_fields if not data.get(f)]
+    return {
+        "valid": len(missing) == 0,
+        "scene_id": scene_id,
+        "lifecycle": lifecycle,
+        "missing_fields": missing,
+        "field_count": len(required_fields) - len(missing),
+        "total_fields": len(required_fields),
+    }
+
+
+def promote_scene_card(workspace_root: Path, scene_id: str, target_lifecycle: str) -> dict[str, Any]:
+    """Promote a scene card to a higher lifecycle."""
+    valid_order = ["draft", "shadow", "assisted", "supervised", "routine"]
+    if target_lifecycle not in valid_order:
+        return {"success": False, "error": f"Invalid lifecycle: {target_lifecycle}"}
+
+    scene_file = workspace_root / ".omo" / "_truth" / "scenarios" / f"{scene_id}.yaml"
+    if not scene_file.exists():
+        return {"success": False, "error": f"Scene card not found: {scene_file}"}
+
+    import yaml
+    data = yaml.safe_load(scene_file.read_text())
+    current = data.get("lifecycle", "draft")
+
+    if valid_order.index(target_lifecycle) <= valid_order.index(current):
+        return {"success": False, "error": f"Cannot promote from {current} to {target_lifecycle}"}
+
+    # Validate before promotion
+    validation = validate_scene_card(workspace_root, scene_id)
+    if not validation["valid"]:
+        return {"success": False, "error": f"Validation failed: {validation['missing_fields']}"}
+
+    data["lifecycle"] = target_lifecycle
+    scene_file.write_text(yaml.dump(data, default_flow_style=False, allow_unicode=True))
+    return {"success": True, "scene_id": scene_id, "lifecycle": target_lifecycle}
+
+
+def status_scene_card(workspace_root: Path, scene_id: str) -> dict[str, Any]:
+    """Get scene card status."""
+    scene_file = workspace_root / ".omo" / "_truth" / "scenarios" / f"{scene_id}.yaml"
+    if not scene_file.exists():
+        return {"error": f"Scene card not found: {scene_file}"}
+
+    import yaml
+    data = yaml.safe_load(scene_file.read_text())
+    return {
+        "scene_id": data.get("scene_id", scene_id),
+        "lifecycle": data.get("lifecycle", "draft"),
+        "journey_id": data.get("journey_id"),
+        "goal": data.get("goal"),
+        "owner": data.get("owner", "unspecified"),
+    }
+
+
 def generate_pilot_report(workspace_root: Path) -> dict[str, Any]:
     """Generate the 4-week pilot summary report.
 
@@ -229,3 +307,65 @@ def generate_pilot_report(workspace_root: Path) -> dict[str, Any]:
         "intents": sorted(all_intents, key=lambda x: x["created_at"], reverse=True)[:100],
         "weekly_reviews": weekly_reviews,
     }
+
+
+# ── CLI ───────────────────────────────────────────────────────────────────────
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Scene Card Review — 场景卡生命周期管理")
+    sub = parser.add_subparsers(dest="command")
+
+    # validate
+    p_validate = sub.add_parser("validate", help="校验场景卡字段完整度")
+    p_validate.add_argument("scene_id", help="场景 ID")
+
+    # promote
+    p_promote = sub.add_parser("promote", help="升级场景卡生命周期")
+    p_promote.add_argument("scene_id", help="场景 ID")
+    p_promote.add_argument("--to", required=True, choices=["draft", "shadow", "assisted", "supervised", "routine"])
+
+    # status
+    p_status = sub.add_parser("status", help="查看场景卡状态")
+    p_status.add_argument("scene_id", help="场景 ID")
+
+    # weekly-review
+    p_weekly = sub.add_parser("weekly-review", help="生成周统计报告")
+    p_weekly.add_argument("--weeks", type=int, default=1)
+
+    # pilot-report
+    sub.add_parser("pilot-report", help="生成 4 周试点总结")
+
+    args = parser.parse_args()
+    import sys
+    ws = Path.cwd()
+
+    if args.command == "validate":
+        result = validate_scene_card(ws, args.scene_id)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        sys.exit(0 if result["valid"] else 1)
+
+    elif args.command == "promote":
+        result = promote_scene_card(ws, args.scene_id, args.to)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        sys.exit(0 if result["success"] else 1)
+
+    elif args.command == "status":
+        result = status_scene_card(ws, args.scene_id)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+
+    elif args.command == "weekly-review":
+        result = generate_weekly_review(ws, weeks=args.weeks)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+
+    elif args.command == "pilot-report":
+        result = generate_pilot_report(ws)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+
+    else:
+        parser.print_help()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
