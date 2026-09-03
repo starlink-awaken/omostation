@@ -5,6 +5,7 @@ owner: governance-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 # G-DEL.2b / 5b 运维入口
 

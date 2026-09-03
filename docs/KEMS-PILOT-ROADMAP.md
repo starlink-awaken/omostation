@@ -6,6 +6,7 @@ last-reviewed: 2026-07-31
 review-state: content-reviewed
 content-reviewed-at: 2026-07-31
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 
 # KEMS 分阶段落地路线

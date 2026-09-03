@@ -6,6 +6,7 @@ triggers:
   - 创建/修改场景卡时
   - 新增 bin/ 脚本时
   - 架构变更时
+type: ssot
 ---
 
 # Skill: architecture-perception

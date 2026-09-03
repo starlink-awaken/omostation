@@ -5,6 +5,7 @@ owner: governance-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 
 # 剩余债务清理专项 (DEBT-CLEANUP-2026-07-01)
