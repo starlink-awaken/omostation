@@ -2,6 +2,8 @@
 name: spine-value-pipeline
 description: omostation (eCOS v6) 主干真值流与署名自进化技能包。指导 AI Agent 如何通过标准 bos:// 服务感知外部信号、驱动 Journey 状态机、调用本地主权算力生成草稿、在 Cockpit 呈递待办并捕获夏明星署名修改的 Diff 进行自适应学习。
 type: ssot
+owner: agent-skills-team
+last_updated: 2026-09-03
 ---
 
 # 主干真值流与署名自进化技能 (Spine Value Pipeline Skill)

@@ -8,6 +8,7 @@ schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-19
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Resident 决策采纳闭环：提案状态机 + ADR 自动化 + north_star 知识消费轴

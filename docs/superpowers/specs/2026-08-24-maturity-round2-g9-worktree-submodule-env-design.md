@@ -8,6 +8,7 @@ schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-09
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Maturity Round 2 — G9: worktree submodule init 策略 + gate 环境感知

@@ -6,6 +6,7 @@ last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 type: ssot
+last_updated: 2026-09-03
 ---
 # Submodule PR 反向 Review Guide (ADR-0150, Round 5e)
 

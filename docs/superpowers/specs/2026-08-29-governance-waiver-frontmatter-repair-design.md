@@ -9,6 +9,7 @@ bet_id: BET-Y1Q3-T10-63
 spec_version: 1.0.0
 title: Governance waiver frontmatter repair
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # T10-63: Governance waiver frontmatter repair

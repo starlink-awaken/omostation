@@ -6,6 +6,7 @@ last-reviewed: 2026-08-02
 review-state: scenario-first-converged
 metadata-migrated-at: 2026-07-31
 type: ssot
+last_updated: 2026-09-03
 ---
 # eCOS v6 愿景与 Roadmap
 

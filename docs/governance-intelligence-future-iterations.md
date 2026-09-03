@@ -4,6 +4,7 @@ lifecycle: entry
 owner: governance-team
 last-reviewed: 2026-08-18
 type: ssot
+last_updated: 2026-09-03
 ---
 # 治理智能未来迭代 — 全面架构设计与落地路径
 

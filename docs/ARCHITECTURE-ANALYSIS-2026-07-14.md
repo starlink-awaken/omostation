@@ -6,6 +6,7 @@ last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 type: ssot
+last_updated: 2026-09-03
 ---
 # eCOS v6 系统性架构分析 (2026-07-14)
 

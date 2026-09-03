@@ -7,6 +7,8 @@ triggers:
   - 新增 bin/ 脚本时
   - 架构变更时
 type: ssot
+owner: agent-skills-team
+last_updated: 2026-09-03
 ---
 
 # Skill: architecture-perception

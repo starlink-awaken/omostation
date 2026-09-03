@@ -10,6 +10,7 @@ bet_id: BET-Y1Q3-T4-03
 risk_level: L1
 human_gate: false
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Product P0 WP1 — Honest Scene Card Gate

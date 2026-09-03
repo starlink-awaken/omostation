@@ -9,6 +9,7 @@ stale-reason: >
   "5 缺口全修复" snapshot is 2026-06-28. BOS domain count in §11 must follow
   ARCHITECTURE.md / LAYER-INDEX.md / PANORAMA.md (5 normative domains), not 9.
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # omostation 全量功能能力地图

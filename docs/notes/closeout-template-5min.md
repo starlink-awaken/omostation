@@ -5,6 +5,7 @@ lifecycle: entry
 owner: governance-team
 last-reviewed: 2026-08-15
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Closeout 模板（5 分钟）

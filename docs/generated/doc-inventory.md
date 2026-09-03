@@ -1,26 +1,26 @@
 # 文档索引 (自动生成)
 
-> 生成时间: 2026-09-03 15:06
-> 总文档数: 4013
+> 生成时间: 2026-09-03 17:00
+> 总文档数: 3939
 > 本文件由 `bin/ssot/generate-docs-index.py` 自动维护，不要手动编辑。
 
 ## 统计
 
 | 类型 | 数量 |
 |------|------|
-| SSOT | 264 |
+| SSOT | 266 |
 | derived | 4 |
-| ephemeral | 126 |
-| untyped | 2526 |
+| ephemeral | 131 |
+| untyped | 2441 |
 
 ## SSOT 清单
 
 | 路径 | Owner | 最后更新 | 行数 |
 |------|-------|----------|------|
-| .agents/skills/architecture-perception/SKILL.md | - | 2026-09-03 | 89 |
-| .agents/skills/git-discipline/SKILL.md | - | 2026-09-03 | 349 |
-| .agents/skills/spine-value-pipeline/SKILL.md | - | 2026-09-03 | 74 |
-| .agents/skills/workflow:bet-execution/SKILL.md | - | 2026-09-03 | 49 |
+| .agents/skills/architecture-perception/SKILL.md | agent-skills-team | 2026-09-03 | 91 |
+| .agents/skills/git-discipline/SKILL.md | agent-skills-team | 2026-09-03 | 351 |
+| .agents/skills/spine-value-pipeline/SKILL.md | agent-skills-team | 2026-09-03 | 76 |
+| .agents/skills/workflow:bet-execution/SKILL.md | agent-skills-team | 2026-09-03 | 51 |
 | AGENTS.md | governance-team | 2026-09-03 | 609 |
 | ARCHITECTURE.md | governance-team | 2026-09-03 | 203 |
 | BRIEF.md | governance-team | 2026-09-03 | 53 |
@@ -33,53 +33,53 @@
 | SECURITY.md | governance-team | 2026-09-03 | 18 |
 | SUPPORT.md | governance-team | 2026-09-03 | 11 |
 | SYSTEM-INDEX.md | governance-team | 2026-09-03 | 79 |
-| docs/2026-07-10-bus-foundation-r89-r97-spec.md | governance-team | 2026-09-03 | 580 |
-| docs/2026-07-10-bus-foundation-r89-r97.md | governance-team | 2026-09-03 | 520 |
-| docs/2026-07-13-P7X-IMPROVEMENTS-SUMMARY.md | governance-team | 2026-09-03 | 127 |
-| docs/AGENT-ISOLATION-ROLLOUT.md | governance-team | 2026-09-03 | 179 |
-| docs/AGENTS.md | governance-team | 2026-09-03 | 31 |
-| docs/ARCHITECTURE-ANALYSIS-2026-07-14.md | architecture-team | 2026-09-03 | 134 |
-| docs/ARCHITECTURE-DETAILED-MAP.md | governance-team | 2026-09-03 | 611 |
-| docs/ARCHITECTURE-DIAGRAM.md | architecture-team | 2026-09-03 | 143 |
-| docs/ARCHITECTURE-EVOLUTION.md | governance-team | 2026-09-03 | 88 |
-| docs/CLI-REFERENCE.md | auto-fix-loop | 2026-09-03 | 298 |
-| docs/DEBT-CLEANUP-ROLLOUT.md | governance-team | 2026-09-03 | 76 |
-| docs/ENGINEERING-OPTIMIZATION-ROADMAP.md | governance-team | 2026-09-03 | 108 |
-| docs/FUNCTIONAL-CAPABILITY-MAP.md | governance-team | 2026-09-03 | 356 |
-| docs/G-DEL-2b5b-OPS.md | governance-team | 2026-09-03 | 54 |
-| docs/G-DEL-4-CALLCHAIN.md | governance-team | 2026-09-03 | 72 |
-| docs/G-DEL-PHASE2-BOARD.md | governance-team | 2026-09-03 | 51 |
-| docs/GOVERNANCE-ARCHITECTURE-SGF.md | governance-team | 2026-09-03 | 100 |
-| docs/GOVERNANCE-EVOLUTION-ROADMAP.md | governance-team | 2026-09-03 | 103 |
-| docs/GOVERNANCE-MATURITY-ISA.md | governance-team | 2026-09-03 | 133 |
-| docs/GOVERNANCE-META-ROADMAP.md | governance-team | 2026-09-03 | 72 |
-| docs/I0-AGORA-CALLCHAIN.md | governance-team | 2026-09-03 | 305 |
+| docs/2026-07-10-bus-foundation-r89-r97-spec.md | governance-team | 2026-09-03 | 581 |
+| docs/2026-07-10-bus-foundation-r89-r97.md | governance-team | 2026-09-03 | 521 |
+| docs/2026-07-13-P7X-IMPROVEMENTS-SUMMARY.md | governance-team | 2026-09-03 | 128 |
+| docs/AGENT-ISOLATION-ROLLOUT.md | governance-team | 2026-09-03 | 180 |
+| docs/AGENTS.md | governance-team | 2026-09-03 | 32 |
+| docs/ARCHITECTURE-ANALYSIS-2026-07-14.md | architecture-team | 2026-09-03 | 135 |
+| docs/ARCHITECTURE-DETAILED-MAP.md | governance-team | 2026-09-03 | 612 |
+| docs/ARCHITECTURE-DIAGRAM.md | architecture-team | 2026-09-03 | 144 |
+| docs/ARCHITECTURE-EVOLUTION.md | governance-team | 2026-09-03 | 89 |
+| docs/CLI-REFERENCE.md | auto-fix-loop | 2026-09-03 | 299 |
+| docs/DEBT-CLEANUP-ROLLOUT.md | governance-team | 2026-09-03 | 77 |
+| docs/ENGINEERING-OPTIMIZATION-ROADMAP.md | governance-team | 2026-09-03 | 109 |
+| docs/FUNCTIONAL-CAPABILITY-MAP.md | governance-team | 2026-09-03 | 357 |
+| docs/G-DEL-2b5b-OPS.md | governance-team | 2026-09-03 | 55 |
+| docs/G-DEL-4-CALLCHAIN.md | governance-team | 2026-09-03 | 73 |
+| docs/G-DEL-PHASE2-BOARD.md | governance-team | 2026-09-03 | 52 |
+| docs/GOVERNANCE-ARCHITECTURE-SGF.md | governance-team | 2026-09-03 | 101 |
+| docs/GOVERNANCE-EVOLUTION-ROADMAP.md | governance-team | 2026-09-03 | 104 |
+| docs/GOVERNANCE-MATURITY-ISA.md | governance-team | 2026-09-03 | 134 |
+| docs/GOVERNANCE-META-ROADMAP.md | governance-team | 2026-09-03 | 73 |
+| docs/I0-AGORA-CALLCHAIN.md | governance-team | 2026-09-03 | 306 |
 | docs/INDEX-AGENTS.md | governance-team | 2026-09-03 | 100 |
 | docs/INDEX-KNOWLEDGE.md | governance-team | 2026-09-03 | 190 |
 | docs/INDEX-MCP.md | governance-team | 2026-09-03 | 154 |
 | docs/INDEX-PROJECTS.md | governance-team | 2026-09-03 | 102 |
 | docs/INDEX-TOOLS.md | governance-team | 2026-09-03 | 293 |
-| docs/KEMS-PILOT-ROADMAP.md | governance-team | 2026-09-03 | 90 |
-| docs/KEMS-PRODUCTION-PLAN.md | governance-team | 2026-09-03 | 477 |
-| docs/KOS-MCP-INTEGRATION.md | kems-team | 2026-09-03 | 85 |
-| docs/LOCAL-RUNTIME-STARTUP.md | runtime-team | 2026-09-03 | 97 |
-| docs/M4-DECISIONS-INDEX.md | governance-team | 2026-09-03 | 186 |
-| docs/M4-GAC-INTEGRATION-PLAN.md | governance-team | 2026-09-03 | 364 |
-| docs/M4-ROADMAP.md | governance-team | 2026-09-03 | 367 |
-| docs/M4-report-p1s2-l0-migration.md | governance-team | 2026-09-03 | 58 |
-| docs/MCPTOOL-ADDER-GUIDE.md | governance-team | 2026-09-03 | 220 |
-| docs/METAOS-ECOS-SCHEME-C.md | governance-team | 2026-09-03 | 155 |
-| docs/OMO-CLI-PHASE5-PLAN.md | governance-team | 2026-09-03 | 76 |
-| docs/PANORAMA.md | governance-team | 2026-09-03 | 355 |
-| docs/PROJECT-COMPLETE-GUIDE.md | governance-team | 2026-09-03 | 303 |
-| docs/README.md | governance-team | 2026-09-03 | 31 |
-| docs/SOP-GOD-MODULE-SPLIT.md | governance-team | 2026-09-03 | 129 |
-| docs/SUBMODULE-PR-REVIEW-GUIDE.md | governance-team | 2026-09-03 | 275 |
-| docs/SUBMODULE-PR-STRATEGY.md | governance-team | 2026-09-03 | 106 |
-| docs/SYSTEM-INDEX-DESIGN.md | governance-team | 2026-09-03 | 897 |
-| docs/USER-JOURNEY-SOP.md | governance-team | 2026-09-03 | 810 |
-| docs/VISION-ROADMAP.md | governance-team | 2026-09-03 | 470 |
-| docs/WORKFLOW-MESH-IMPLEMENTATION.md | engineering-team | 2026-09-03 | 1219 |
+| docs/KEMS-PILOT-ROADMAP.md | governance-team | 2026-09-03 | 91 |
+| docs/KEMS-PRODUCTION-PLAN.md | governance-team | 2026-09-03 | 478 |
+| docs/KOS-MCP-INTEGRATION.md | kems-team | 2026-09-03 | 86 |
+| docs/LOCAL-RUNTIME-STARTUP.md | runtime-team | 2026-09-03 | 98 |
+| docs/M4-DECISIONS-INDEX.md | governance-team | 2026-09-03 | 187 |
+| docs/M4-GAC-INTEGRATION-PLAN.md | governance-team | 2026-09-03 | 365 |
+| docs/M4-ROADMAP.md | governance-team | 2026-09-03 | 368 |
+| docs/M4-report-p1s2-l0-migration.md | governance-team | 2026-09-03 | 59 |
+| docs/MCPTOOL-ADDER-GUIDE.md | governance-team | 2026-09-03 | 221 |
+| docs/METAOS-ECOS-SCHEME-C.md | governance-team | 2026-09-03 | 156 |
+| docs/OMO-CLI-PHASE5-PLAN.md | governance-team | 2026-09-03 | 77 |
+| docs/PANORAMA.md | governance-team | 2026-09-03 | 356 |
+| docs/PROJECT-COMPLETE-GUIDE.md | governance-team | 2026-09-03 | 304 |
+| docs/README.md | governance-team | 2026-09-03 | 32 |
+| docs/SOP-GOD-MODULE-SPLIT.md | governance-team | 2026-09-03 | 130 |
+| docs/SUBMODULE-PR-REVIEW-GUIDE.md | governance-team | 2026-09-03 | 276 |
+| docs/SUBMODULE-PR-STRATEGY.md | governance-team | 2026-09-03 | 107 |
+| docs/SYSTEM-INDEX-DESIGN.md | governance-team | 2026-09-03 | 898 |
+| docs/USER-JOURNEY-SOP.md | governance-team | 2026-09-03 | 811 |
+| docs/VISION-ROADMAP.md | governance-team | 2026-09-03 | 471 |
+| docs/WORKFLOW-MESH-IMPLEMENTATION.md | engineering-team | 2026-09-03 | 1220 |
 | docs/adr/ADR-0190-mof-dynamic-constraint-engine.md | governance-team | 2026-09-03 | 116 |
 | docs/adr/ADR-0191-workspace-documents-dual-plane-architecture.md | governance-team | 2026-09-03 | 82 |
 | docs/adr/ADR-0192-domain-agent-fact-extraction-and-hygiene-patrol.md | governance-team | 2026-09-03 | 96 |
@@ -93,11 +93,11 @@
 | docs/adr/ADR-0200-y1q4-code-loc-gate-rebaseline.md | governance-team | 2026-09-03 | 74 |
 | docs/architecture/90pct-maturity-architecture.md | governance-team | 2026-09-03 | 19 |
 | docs/architecture/harness-comprehensive-analysis.md | governance-team | 2026-09-03 | 379 |
-| docs/business/Y1Q4/README.md | auto-fix-loop | 2026-09-03 | 23 |
-| docs/ci-architecture.md | governance-team | 2026-09-03 | 95 |
-| docs/ci-plane-change-template.md | governance-team | 2026-09-03 | 56 |
-| docs/external-adapter-integration-pattern.md | governance-team | 2026-09-03 | 117 |
-| docs/governance-intelligence-future-iterations.md | governance-team | 2026-09-03 | 625 |
+| docs/business/Y1Q4/README.md | auto-fix-loop | 2026-09-03 | 24 |
+| docs/ci-architecture.md | governance-team | 2026-09-03 | 96 |
+| docs/ci-plane-change-template.md | governance-team | 2026-09-03 | 57 |
+| docs/external-adapter-integration-pattern.md | governance-team | 2026-09-03 | 118 |
+| docs/governance-intelligence-future-iterations.md | governance-team | 2026-09-03 | 626 |
 | docs/governance/ADR-0190-mof-dynamic-constraint-engine.md | governance-team | 2026-09-03 | 116 |
 | docs/governance/ADR-0191-workspace-documents-dual-plane-architecture.md | governance-team | 2026-09-03 | 82 |
 | docs/governance/ADR-0192-domain-agent-fact-extraction-and-hygiene-patrol.md | governance-team | 2026-09-03 | 96 |
@@ -111,175 +111,177 @@
 | docs/governance/ADR-0200-y1q4-code-loc-gate-rebaseline.md | governance-team | 2026-09-03 | 74 |
 | docs/governance/agent-capability-gap-matrix.md | governance-team | 2026-09-03 | 59 |
 | docs/governance/bin-and-scripts-architecture.md | governance-team | 2026-09-03 | 80 |
-| docs/local-compute/compute-fabric-workflow.md | governance-team | 2026-09-03 | 98 |
-| docs/local-compute/omlx-cluster-architecture.md | architecture-team | 2026-09-03 | 145 |
-| docs/notes/closeout-template-5min-dev.md | governance-team | 2026-09-03 | 58 |
-| docs/notes/closeout-template-5min.md | governance-team | 2026-09-03 | 109 |
-| docs/notes/governance-runtime-convergence-closeout-20260814.md | governance-team | 2026-09-03 | 47 |
-| docs/notes/governance-runtime-convergence-rca-20260814.md | governance-team | 2026-09-03 | 54 |
-| docs/notes/mechanism-convergence-retrospective-20260815.md | governance-team | 2026-09-03 | 195 |
-| docs/observability-unified-architecture.md | governance-team | 2026-09-03 | 256 |
-| docs/overview/cross-package-api-map.md | architecture-team | 2026-09-03 | 87 |
-| docs/superpowers/plans/2026-08-27-governance-optimization.md | auto-fix-loop | 2026-09-03 | 579 |
-| docs/superpowers/plans/2026-08-28-post2408-main-recovery-and-required-gac-gate.md | governance-team | 2026-09-03 | 1985 |
-| docs/superpowers/plans/2026-08-28-product-p0-truth-loop.md | auto-fix-loop | 2026-09-03 | 593 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp1-honest-scene-gate.md | auto-fix-loop | 2026-09-03 | 270 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp2-honest-agent-cell-receipt.md | auto-fix-loop | 2026-09-03 | 408 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp3-canonical-outbox-publisher.md | auto-fix-loop | 2026-09-03 | 389 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp4-principal-authority-binding.md | auto-fix-loop | 2026-09-03 | 401 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp5-human-adjudication-value.md | auto-fix-loop | 2026-09-03 | 376 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp6-physical-recovery-drill.md | auto-fix-loop | 2026-09-03 | 386 |
+| docs/local-compute/compute-fabric-workflow.md | governance-team | 2026-09-03 | 99 |
+| docs/local-compute/omlx-cluster-architecture.md | architecture-team | 2026-09-03 | 146 |
+| docs/notes/closeout-template-5min-dev.md | governance-team | 2026-09-03 | 59 |
+| docs/notes/closeout-template-5min.md | governance-team | 2026-09-03 | 110 |
+| docs/notes/governance-runtime-convergence-closeout-20260814.md | governance-team | 2026-09-03 | 48 |
+| docs/notes/governance-runtime-convergence-rca-20260814.md | governance-team | 2026-09-03 | 55 |
+| docs/notes/mechanism-convergence-retrospective-20260815.md | governance-team | 2026-09-03 | 196 |
+| docs/observability-unified-architecture.md | governance-team | 2026-09-03 | 257 |
+| docs/overview/cross-package-api-map.md | architecture-team | 2026-09-03 | 88 |
+| docs/superpowers/plans/2026-08-27-governance-optimization.md | auto-fix-loop | 2026-09-03 | 580 |
+| docs/superpowers/plans/2026-08-28-post2408-main-recovery-and-required-gac-gate.md | governance-team | 2026-09-03 | 1986 |
+| docs/superpowers/plans/2026-08-28-product-p0-truth-loop.md | auto-fix-loop | 2026-09-03 | 594 |
+| docs/superpowers/plans/2026-08-28-product-p0-wp1-honest-scene-gate.md | auto-fix-loop | 2026-09-03 | 271 |
+| docs/superpowers/plans/2026-08-28-product-p0-wp2-honest-agent-cell-receipt.md | auto-fix-loop | 2026-09-03 | 409 |
+| docs/superpowers/plans/2026-08-28-product-p0-wp3-canonical-outbox-publisher.md | auto-fix-loop | 2026-09-03 | 390 |
+| docs/superpowers/plans/2026-08-28-product-p0-wp4-principal-authority-binding.md | auto-fix-loop | 2026-09-03 | 402 |
+| docs/superpowers/plans/2026-08-28-product-p0-wp5-human-adjudication-value.md | auto-fix-loop | 2026-09-03 | 377 |
+| docs/superpowers/plans/2026-08-28-product-p0-wp6-physical-recovery-drill.md | auto-fix-loop | 2026-09-03 | 387 |
 | docs/superpowers/plans/2026-08-30-cc-switch-recovery-state-relocation.md | governance-team | 2026-09-03 | 812 |
 | docs/superpowers/plans/2026-08-30-documents-consumer-audit-path-tokenization.md | governance-team | 2026-09-03 | 149 |
 | docs/superpowers/plans/2026-08-30-vault-daily-health-workspace-owner-cutover.md | governance-team | 2026-09-03 | 109 |
 | docs/superpowers/plans/2026-08-30-zcode-workspace-runtime-state-relocation.md | governance-team | 2026-09-03 | 75 |
-| docs/superpowers/plans/2026-08-31-family-dashboard-owner-migration-phase-a.md | family-hub | 2026-09-03 | 1304 |
-| docs/superpowers/specs/2026-08-12-documents-owner-job-design.md | governance-team | 2026-09-03 | 50 |
-| docs/superpowers/specs/2026-08-13-codex-exec-worker-design.md | governance-team | 2026-09-03 | 117 |
-| docs/superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md | governance-team | 2026-09-03 | 140 |
-| docs/superpowers/specs/2026-08-13-personal-capability-mainline-restore.md | governance-team | 2026-09-03 | 107 |
-| docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md | governance-team | 2026-09-03 | 164 |
-| docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md | governance-team | 2026-09-03 | 219 |
-| docs/superpowers/specs/2026-08-14-weijian-sanyi-status-consistency-design.md | governance-team | 2026-09-03 | 124 |
-| docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md | human-principal | 2026-09-03 | 323 |
-| docs/superpowers/specs/2026-08-21-escape-hatch-solidification-design.md | governance-team | 2026-09-03 | 91 |
-| docs/superpowers/specs/2026-08-22-engineering-delivery-shadow-observer-design.md | human-principal | 2026-09-03 | 47 |
-| docs/superpowers/specs/2026-08-23-resident-wiring-design.md | governance-team | 2026-09-03 | 96 |
-| docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md | human-principal | 2026-09-03 | 406 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g1-script-registry-design.md | governance-team | 2026-09-03 | 72 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g10-calibration-alignment-design.md | governance-team | 2026-09-03 | 61 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g2-maturity-design-doc-design.md | governance-team | 2026-09-03 | 52 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g3-adr-link-fix-design.md | governance-team | 2026-09-03 | 73 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g4-governance-owner-migration-design.md | governance-team | 2026-09-03 | 72 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g5-compass-radar-sixth-axis-design.md | governance-team | 2026-09-03 | 75 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g6-scorecard-granularity-design.md | governance-team | 2026-09-03 | 89 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g7-runid-placeholder-design.md | governance-team | 2026-09-03 | 56 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g8-governance-bet-binding-design.md | governance-team | 2026-09-03 | 67 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g9-worktree-submodule-env-design.md | governance-team | 2026-09-03 | 61 |
-| docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md | governance-team | 2026-09-03 | 34 |
-| docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md | human-principal | 2026-09-03 | 35 |
-| docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md | resident | 2026-09-03 | 59 |
-| docs/superpowers/specs/2026-08-25-resident-decision-observability-design.md | resident | 2026-09-03 | 149 |
-| docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md | resident | 2026-09-03 | 145 |
-| docs/superpowers/specs/2026-08-25-resident-inbox-folder-signal-design.md | resident | 2026-09-03 | 62 |
-| docs/superpowers/specs/2026-08-25-resident-sediment-promotion-pipeline-design.md | resident | 2026-09-03 | 117 |
-| docs/superpowers/specs/2026-08-26-health-domain-p1-design.md | human-principal | 2026-09-03 | 94 |
-| docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md | resident | 2026-09-03 | 95 |
-| docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md | resident | 2026-09-03 | 101 |
-| docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md | resident | 2026-09-03 | 121 |
-| docs/superpowers/specs/2026-08-26-resident-sediment-five-question-refinement-design.md | resident | 2026-09-03 | 119 |
-| docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md | resident | 2026-09-03 | 63 |
-| docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md | human-principal | 2026-09-03 | 52 |
-| docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md | human-principal | 2026-09-03 | 41 |
-| docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md | human-principal | 2026-09-03 | 43 |
-| docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md | human-principal | 2026-09-03 | 51 |
-| docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md | human-principal | 2026-09-03 | 42 |
-| docs/superpowers/specs/2026-08-27-documents-schedule-cutover-design.md | human-principal | 2026-09-03 | 49 |
-| docs/superpowers/specs/2026-08-27-domain-sync-owner-cutover-design.md | human-principal | 2026-09-03 | 33 |
-| docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md | human-principal | 2026-09-03 | 62 |
-| docs/superpowers/specs/2026-08-27-ocr-preflight-owner-design.md | human-principal | 2026-09-03 | 32 |
-| docs/superpowers/specs/2026-08-28-bridge-preflight-owner-design.md | human-principal | 2026-09-03 | 33 |
-| docs/superpowers/specs/2026-08-28-concept-weave-preflight-owner-design.md | human-principal | 2026-09-03 | 30 |
-| docs/superpowers/specs/2026-08-28-consumer-audit-modes-design.md | human-principal | 2026-09-03 | 49 |
-| docs/superpowers/specs/2026-08-28-controller-preflight-owner-design.md | human-principal | 2026-09-03 | 48 |
-| docs/superpowers/specs/2026-08-28-convergence-preflight-owner-design.md | human-principal | 2026-09-03 | 50 |
-| docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md | human-principal | 2026-09-03 | 38 |
-| docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md | human-principal | 2026-09-03 | 72 |
-| docs/superpowers/specs/2026-08-28-domain-index-release-root-reconciliation-design.md | human-principal | 2026-09-03 | 53 |
-| docs/superpowers/specs/2026-08-28-ocr-preflight-cutover-design.md | human-principal | 2026-09-03 | 32 |
-| docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md | human-principal | 2026-09-03 | 60 |
-| docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md | human-principal | 2026-09-03 | 51 |
-| docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md | human-principal | 2026-09-03 | 499 |
-| docs/superpowers/specs/2026-08-28-predictor-preflight-owner-design.md | human-principal | 2026-09-03 | 31 |
-| docs/superpowers/specs/2026-08-28-product-p0-truth-loop-design.md | human-principal | 2026-09-03 | 207 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md | human-principal | 2026-09-03 | 72 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md | human-principal | 2026-09-03 | 109 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md | human-principal | 2026-09-03 | 108 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md | human-principal | 2026-09-03 | 116 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp5-human-adjudication-value-design.md | human-principal | 2026-09-03 | 126 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp6-physical-recovery-drill-design.md | human-principal | 2026-09-03 | 99 |
-| docs/superpowers/specs/2026-08-28-scheduled-owner-convergence-design.md | human-principal | 2026-09-03 | 33 |
-| docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md | governance-team | 2026-09-03 | 46 |
-| docs/superpowers/specs/2026-08-28-session-brief-workspace-owner-design.md | human-principal | 2026-09-03 | 42 |
-| docs/superpowers/specs/2026-08-28-signals-preflight-owner-design.md | human-principal | 2026-09-03 | 46 |
-| docs/superpowers/specs/2026-08-28-workspace-watch-owner-design.md | human-principal | 2026-09-03 | 32 |
-| docs/superpowers/specs/2026-08-29-agora-port-contract-design.md | human-principal | 2026-09-03 | 39 |
-| docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md | governance-team | 2026-09-03 | 42 |
-| docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md | governance-team | 2026-09-03 | 62 |
-| docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md | governance-team | 2026-09-03 | 41 |
-| docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md | governance-team | 2026-09-03 | 42 |
-| docs/superpowers/specs/2026-08-29-documents-guizi-dangling-symlink-quarantine-design.md | human-principal | 2026-09-03 | 49 |
-| docs/superpowers/specs/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md | human-principal | 2026-09-03 | 50 |
-| docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md | governance-team | 2026-09-03 | 47 |
-| docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md | governance-team | 2026-09-03 | 29 |
-| docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md | governance-team | 2026-09-03 | 42 |
-| docs/superpowers/specs/2026-08-29-documents-work-runtime-regular-quarantine-design.md | human-principal | 2026-09-03 | 53 |
-| docs/superpowers/specs/2026-08-29-governance-waiver-frontmatter-repair-design.md | governance-team | 2026-09-03 | 53 |
-| docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md | governance-team | 2026-09-03 | 35 |
-| docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md | governance-team | 2026-09-03 | 42 |
-| docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md | governance-team | 2026-09-03 | 31 |
-| docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md | governance-team | 2026-09-03 | 58 |
-| docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md | governance-team | 2026-09-03 | 34 |
-| docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md | human-principal | 2026-09-03 | 39 |
-| docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md | human-principal | 2026-09-03 | 40 |
-| docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md | governance-team | 2026-09-03 | 31 |
-| docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md | governance-team | 2026-09-03 | 55 |
-| docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md | human-principal | 2026-09-03 | 59 |
-| docs/superpowers/specs/2026-08-29-root-oneoff-registry-retirement-design.md | governance-team | 2026-09-03 | 50 |
-| docs/superpowers/specs/2026-08-29-service-config-stable-interpreter-reconciliation-design.md | human-principal | 2026-09-03 | 40 |
-| docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md | human-principal | 2026-09-03 | 48 |
-| docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md | governance-team | 2026-09-03 | 31 |
-| docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md | human-principal | 2026-09-03 | 42 |
-| docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md | governance-team | 2026-09-03 | 193 |
-| docs/superpowers/specs/2026-08-30-completion-evidence-digest-reconciliation-design.md | governance-team | 2026-09-03 | 40 |
-| docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md | governance-team | 2026-09-03 | 36 |
-| docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md | governance-team | 2026-09-03 | 61 |
-| docs/superpowers/specs/2026-08-30-documents-contract-ocr-tools-runtime-quarantine-design.md | human-principal | 2026-09-03 | 51 |
-| docs/superpowers/specs/2026-08-30-documents-guizi-scripts-runtime-quarantine-design.md | human-principal | 2026-09-03 | 52 |
-| docs/superpowers/specs/2026-08-30-documents-guizi-tools-runtime-quarantine-design.md | human-principal | 2026-09-03 | 51 |
-| docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md | human-principal | 2026-09-03 | 51 |
-| docs/superpowers/specs/2026-08-30-documents-root-control-tools-runtime-quarantine-design.md | human-principal | 2026-09-03 | 51 |
-| docs/superpowers/specs/2026-08-30-documents-root-tools-runtime-quarantine-design.md | human-principal | 2026-09-03 | 51 |
-| docs/superpowers/specs/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md | human-principal | 2026-09-03 | 54 |
-| docs/superpowers/specs/2026-08-30-documents-weijian-control-runtime-quarantine-design.md | human-principal | 2026-09-03 | 52 |
-| docs/superpowers/specs/2026-08-30-family-runtime-kems-quarantine-design.md | governance-team | 2026-09-03 | 44 |
-| docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md | governance-team | 2026-09-03 | 77 |
-| docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md | governance-team | 2026-09-03 | 61 |
-| docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md | governance-team | 2026-09-03 | 48 |
-| docs/superpowers/specs/2026-08-30-learning-runtime-owner-parity-design.md | runtime-team | 2026-09-03 | 78 |
-| docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md | governance-team | 2026-09-03 | 31 |
-| docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md | governance-team | 2026-09-03 | 41 |
-| docs/superpowers/specs/2026-08-30-sovereign-mesh-daemon-sre-design.md | human-principal | 2026-09-03 | 30 |
-| docs/superpowers/specs/2026-08-30-spine-value-flow-and-persona-lora-design.md | human-principal | 2026-09-03 | 30 |
-| docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md | governance-team | 2026-09-03 | 44 |
-| docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md | governance-team | 2026-09-03 | 47 |
-| docs/superpowers/specs/2026-08-30-t10-93-ledger-mainline-recovery-design.md | governance-team | 2026-09-03 | 44 |
-| docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md | governance-team | 2026-09-03 | 39 |
-| docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md | governance-team | 2026-09-03 | 67 |
-| docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md | human-principal | 2026-09-03 | 50 |
-| docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md | governance-team | 2026-09-03 | 115 |
-| docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md | governance-team | 2026-09-03 | 273 |
-| docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md | family-hub | 2026-09-03 | 300 |
-| docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md | family-hub | 2026-09-03 | 408 |
-| docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md | governance-team | 2026-09-03 | 173 |
-| docs/superpowers/specs/2026-08-31-t1-13-submodule-pointer-alignment.md | human-principal | 2026-09-03 | 37 |
-| docs/superpowers/specs/2026-08-31-t1-14-harness-e2e-verification.md | xiamingxing | 2026-09-03 | 46 |
-| docs/superpowers/specs/2026-08-31-t2-01-event-stream-bus-design.md | governance-team | 2026-09-03 | 43 |
-| docs/superpowers/specs/2026-08-31-t7-03-policy-radar-morning-brief-design.md | governance-team | 2026-09-03 | 57 |
-| docs/superpowers/specs/2026-09-01-squash-successor-clone-retirement-provenance-design.md | human-principal | 2026-09-03 | 618 |
-| docs/superpowers/specs/2026-09-01-t2-02-im-session-triage-design.md | governance-team | 2026-09-03 | 56 |
-| docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md | governance-team | 2026-09-03 | 64 |
-| docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md | governance-team | 2026-09-03 | 67 |
-| docs/superpowers/specs/2026-09-01-t8-03-gov-docx-pptx-render-design.md | governance-team | 2026-09-03 | 67 |
-| docs/superpowers/specs/2026-09-02-chaos-injection-suite-design.md | ml-platform | 2026-09-03 | 71 |
-| docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md | ml-platform | 2026-09-03 | 61 |
-| docs/superpowers/specs/2026-09-02-t10-01-dlp-guard-design.md | governance-team | 2026-09-03 | 45 |
-| docs/superpowers/specs/2026-09-02-t2-05-pipeline-supervisor-design.md | governance-team | 2026-09-03 | 61 |
-| docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md | governance-team | 2026-09-03 | 41 |
-| docs/superpowers/specs/2026-09-03-t3-03-tiered-router-design.md | governance-team | 2026-09-03 | 19 |
-| docs/superpowers/specs/2026-09-03-t8-02-mobile-pwa-design.md | governance-team | 2026-09-03 | 48 |
-| docs/superpowers/specs/README.md | governance-team | 2026-09-03 | 65 |
-| docs/superpowers/specs/templates/_TEMPLATE.md | @YOUR_NAME | 2026-09-03 | 56 |
+| docs/superpowers/plans/2026-08-31-family-dashboard-owner-migration-phase-a.md | family-hub | 2026-09-03 | 1305 |
+| docs/superpowers/specs/2026-08-12-documents-owner-job-design.md | governance-team | 2026-09-03 | 51 |
+| docs/superpowers/specs/2026-08-13-codex-exec-worker-design.md | governance-team | 2026-09-03 | 118 |
+| docs/superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md | governance-team | 2026-09-03 | 141 |
+| docs/superpowers/specs/2026-08-13-personal-capability-mainline-restore.md | governance-team | 2026-09-03 | 108 |
+| docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md | governance-team | 2026-09-03 | 165 |
+| docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md | governance-team | 2026-09-03 | 220 |
+| docs/superpowers/specs/2026-08-14-weijian-sanyi-status-consistency-design.md | governance-team | 2026-09-03 | 125 |
+| docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md | human-principal | 2026-09-03 | 324 |
+| docs/superpowers/specs/2026-08-21-escape-hatch-solidification-design.md | governance-team | 2026-09-03 | 92 |
+| docs/superpowers/specs/2026-08-22-engineering-delivery-shadow-observer-design.md | human-principal | 2026-09-03 | 48 |
+| docs/superpowers/specs/2026-08-23-resident-wiring-design.md | governance-team | 2026-09-03 | 97 |
+| docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md | human-principal | 2026-09-03 | 407 |
+| docs/superpowers/specs/2026-08-24-maturity-round2-g1-script-registry-design.md | governance-team | 2026-09-03 | 73 |
+| docs/superpowers/specs/2026-08-24-maturity-round2-g10-calibration-alignment-design.md | governance-team | 2026-09-03 | 62 |
+| docs/superpowers/specs/2026-08-24-maturity-round2-g2-maturity-design-doc-design.md | governance-team | 2026-09-03 | 53 |
+| docs/superpowers/specs/2026-08-24-maturity-round2-g3-adr-link-fix-design.md | governance-team | 2026-09-03 | 74 |
+| docs/superpowers/specs/2026-08-24-maturity-round2-g4-governance-owner-migration-design.md | governance-team | 2026-09-03 | 73 |
+| docs/superpowers/specs/2026-08-24-maturity-round2-g5-compass-radar-sixth-axis-design.md | governance-team | 2026-09-03 | 76 |
+| docs/superpowers/specs/2026-08-24-maturity-round2-g6-scorecard-granularity-design.md | governance-team | 2026-09-03 | 90 |
+| docs/superpowers/specs/2026-08-24-maturity-round2-g7-runid-placeholder-design.md | governance-team | 2026-09-03 | 57 |
+| docs/superpowers/specs/2026-08-24-maturity-round2-g8-governance-bet-binding-design.md | governance-team | 2026-09-03 | 68 |
+| docs/superpowers/specs/2026-08-24-maturity-round2-g9-worktree-submodule-env-design.md | governance-team | 2026-09-03 | 62 |
+| docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md | governance-team | 2026-09-03 | 35 |
+| docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md | human-principal | 2026-09-03 | 36 |
+| docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md | resident | 2026-09-03 | 60 |
+| docs/superpowers/specs/2026-08-25-resident-decision-observability-design.md | resident | 2026-09-03 | 150 |
+| docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md | resident | 2026-09-03 | 146 |
+| docs/superpowers/specs/2026-08-25-resident-inbox-folder-signal-design.md | resident | 2026-09-03 | 63 |
+| docs/superpowers/specs/2026-08-25-resident-sediment-promotion-pipeline-design.md | resident | 2026-09-03 | 118 |
+| docs/superpowers/specs/2026-08-26-health-domain-p1-design.md | human-principal | 2026-09-03 | 95 |
+| docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md | resident | 2026-09-03 | 96 |
+| docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md | resident | 2026-09-03 | 102 |
+| docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md | resident | 2026-09-03 | 122 |
+| docs/superpowers/specs/2026-08-26-resident-sediment-five-question-refinement-design.md | resident | 2026-09-03 | 120 |
+| docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md | resident | 2026-09-03 | 64 |
+| docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md | human-principal | 2026-09-03 | 53 |
+| docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md | human-principal | 2026-09-03 | 42 |
+| docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md | human-principal | 2026-09-03 | 44 |
+| docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md | human-principal | 2026-09-03 | 52 |
+| docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md | human-principal | 2026-09-03 | 43 |
+| docs/superpowers/specs/2026-08-27-documents-schedule-cutover-design.md | human-principal | 2026-09-03 | 50 |
+| docs/superpowers/specs/2026-08-27-domain-sync-owner-cutover-design.md | human-principal | 2026-09-03 | 34 |
+| docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md | human-principal | 2026-09-03 | 63 |
+| docs/superpowers/specs/2026-08-27-ocr-preflight-owner-design.md | human-principal | 2026-09-03 | 33 |
+| docs/superpowers/specs/2026-08-28-bridge-preflight-owner-design.md | human-principal | 2026-09-03 | 34 |
+| docs/superpowers/specs/2026-08-28-concept-weave-preflight-owner-design.md | human-principal | 2026-09-03 | 31 |
+| docs/superpowers/specs/2026-08-28-consumer-audit-modes-design.md | human-principal | 2026-09-03 | 50 |
+| docs/superpowers/specs/2026-08-28-controller-preflight-owner-design.md | human-principal | 2026-09-03 | 49 |
+| docs/superpowers/specs/2026-08-28-convergence-preflight-owner-design.md | human-principal | 2026-09-03 | 51 |
+| docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md | human-principal | 2026-09-03 | 39 |
+| docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md | human-principal | 2026-09-03 | 73 |
+| docs/superpowers/specs/2026-08-28-domain-index-release-root-reconciliation-design.md | human-principal | 2026-09-03 | 54 |
+| docs/superpowers/specs/2026-08-28-ocr-preflight-cutover-design.md | human-principal | 2026-09-03 | 33 |
+| docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md | human-principal | 2026-09-03 | 61 |
+| docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md | human-principal | 2026-09-03 | 52 |
+| docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md | human-principal | 2026-09-03 | 500 |
+| docs/superpowers/specs/2026-08-28-predictor-preflight-owner-design.md | human-principal | 2026-09-03 | 32 |
+| docs/superpowers/specs/2026-08-28-product-p0-truth-loop-design.md | human-principal | 2026-09-03 | 208 |
+| docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md | human-principal | 2026-09-03 | 73 |
+| docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md | human-principal | 2026-09-03 | 110 |
+| docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md | human-principal | 2026-09-03 | 109 |
+| docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md | human-principal | 2026-09-03 | 117 |
+| docs/superpowers/specs/2026-08-28-product-p0-wp5-human-adjudication-value-design.md | human-principal | 2026-09-03 | 127 |
+| docs/superpowers/specs/2026-08-28-product-p0-wp6-physical-recovery-drill-design.md | human-principal | 2026-09-03 | 100 |
+| docs/superpowers/specs/2026-08-28-scheduled-owner-convergence-design.md | human-principal | 2026-09-03 | 34 |
+| docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md | governance-team | 2026-09-03 | 47 |
+| docs/superpowers/specs/2026-08-28-session-brief-workspace-owner-design.md | human-principal | 2026-09-03 | 43 |
+| docs/superpowers/specs/2026-08-28-signals-preflight-owner-design.md | human-principal | 2026-09-03 | 47 |
+| docs/superpowers/specs/2026-08-28-workspace-watch-owner-design.md | human-principal | 2026-09-03 | 33 |
+| docs/superpowers/specs/2026-08-29-agora-port-contract-design.md | human-principal | 2026-09-03 | 40 |
+| docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md | governance-team | 2026-09-03 | 43 |
+| docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md | governance-team | 2026-09-03 | 63 |
+| docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md | governance-team | 2026-09-03 | 42 |
+| docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md | governance-team | 2026-09-03 | 43 |
+| docs/superpowers/specs/2026-08-29-documents-guizi-dangling-symlink-quarantine-design.md | human-principal | 2026-09-03 | 50 |
+| docs/superpowers/specs/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md | human-principal | 2026-09-03 | 51 |
+| docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md | governance-team | 2026-09-03 | 48 |
+| docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md | governance-team | 2026-09-03 | 30 |
+| docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md | governance-team | 2026-09-03 | 43 |
+| docs/superpowers/specs/2026-08-29-documents-work-runtime-regular-quarantine-design.md | human-principal | 2026-09-03 | 54 |
+| docs/superpowers/specs/2026-08-29-governance-waiver-frontmatter-repair-design.md | governance-team | 2026-09-03 | 54 |
+| docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md | governance-team | 2026-09-03 | 36 |
+| docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md | governance-team | 2026-09-03 | 43 |
+| docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md | governance-team | 2026-09-03 | 32 |
+| docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md | governance-team | 2026-09-03 | 59 |
+| docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md | governance-team | 2026-09-03 | 35 |
+| docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md | human-principal | 2026-09-03 | 40 |
+| docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md | human-principal | 2026-09-03 | 41 |
+| docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md | governance-team | 2026-09-03 | 32 |
+| docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md | governance-team | 2026-09-03 | 56 |
+| docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md | human-principal | 2026-09-03 | 60 |
+| docs/superpowers/specs/2026-08-29-root-oneoff-registry-retirement-design.md | governance-team | 2026-09-03 | 51 |
+| docs/superpowers/specs/2026-08-29-service-config-stable-interpreter-reconciliation-design.md | human-principal | 2026-09-03 | 41 |
+| docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md | human-principal | 2026-09-03 | 49 |
+| docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md | governance-team | 2026-09-03 | 32 |
+| docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md | human-principal | 2026-09-03 | 43 |
+| docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md | governance-team | 2026-09-03 | 194 |
+| docs/superpowers/specs/2026-08-30-completion-evidence-digest-reconciliation-design.md | governance-team | 2026-09-03 | 41 |
+| docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md | governance-team | 2026-09-03 | 37 |
+| docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md | governance-team | 2026-09-03 | 62 |
+| docs/superpowers/specs/2026-08-30-documents-contract-ocr-tools-runtime-quarantine-design.md | human-principal | 2026-09-03 | 52 |
+| docs/superpowers/specs/2026-08-30-documents-guizi-scripts-runtime-quarantine-design.md | human-principal | 2026-09-03 | 53 |
+| docs/superpowers/specs/2026-08-30-documents-guizi-tools-runtime-quarantine-design.md | human-principal | 2026-09-03 | 52 |
+| docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md | human-principal | 2026-09-03 | 52 |
+| docs/superpowers/specs/2026-08-30-documents-root-control-tools-runtime-quarantine-design.md | human-principal | 2026-09-03 | 52 |
+| docs/superpowers/specs/2026-08-30-documents-root-tools-runtime-quarantine-design.md | human-principal | 2026-09-03 | 52 |
+| docs/superpowers/specs/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md | human-principal | 2026-09-03 | 55 |
+| docs/superpowers/specs/2026-08-30-documents-weijian-control-runtime-quarantine-design.md | human-principal | 2026-09-03 | 53 |
+| docs/superpowers/specs/2026-08-30-family-runtime-kems-quarantine-design.md | governance-team | 2026-09-03 | 45 |
+| docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md | governance-team | 2026-09-03 | 78 |
+| docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md | governance-team | 2026-09-03 | 62 |
+| docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md | governance-team | 2026-09-03 | 49 |
+| docs/superpowers/specs/2026-08-30-learning-runtime-owner-parity-design.md | runtime-team | 2026-09-03 | 79 |
+| docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md | governance-team | 2026-09-03 | 32 |
+| docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md | governance-team | 2026-09-03 | 42 |
+| docs/superpowers/specs/2026-08-30-sovereign-mesh-daemon-sre-design.md | human-principal | 2026-09-03 | 31 |
+| docs/superpowers/specs/2026-08-30-spine-value-flow-and-persona-lora-design.md | human-principal | 2026-09-03 | 31 |
+| docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md | governance-team | 2026-09-03 | 45 |
+| docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md | governance-team | 2026-09-03 | 48 |
+| docs/superpowers/specs/2026-08-30-t10-93-ledger-mainline-recovery-design.md | governance-team | 2026-09-03 | 45 |
+| docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md | governance-team | 2026-09-03 | 40 |
+| docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md | governance-team | 2026-09-03 | 68 |
+| docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md | human-principal | 2026-09-03 | 51 |
+| docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md | governance-team | 2026-09-03 | 116 |
+| docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md | governance-team | 2026-09-03 | 274 |
+| docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md | family-hub | 2026-09-03 | 301 |
+| docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md | family-hub | 2026-09-03 | 409 |
+| docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md | governance-team | 2026-09-03 | 174 |
+| docs/superpowers/specs/2026-08-31-t1-13-submodule-pointer-alignment.md | human-principal | 2026-09-03 | 38 |
+| docs/superpowers/specs/2026-08-31-t1-14-harness-e2e-verification.md | xiamingxing | 2026-09-03 | 47 |
+| docs/superpowers/specs/2026-08-31-t2-01-event-stream-bus-design.md | governance-team | 2026-09-03 | 44 |
+| docs/superpowers/specs/2026-08-31-t7-03-policy-radar-morning-brief-design.md | governance-team | 2026-09-03 | 58 |
+| docs/superpowers/specs/2026-09-01-squash-successor-clone-retirement-provenance-design.md | human-principal | 2026-09-03 | 619 |
+| docs/superpowers/specs/2026-09-01-t2-02-im-session-triage-design.md | governance-team | 2026-09-03 | 57 |
+| docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md | governance-team | 2026-09-03 | 65 |
+| docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md | governance-team | 2026-09-03 | 68 |
+| docs/superpowers/specs/2026-09-01-t8-03-gov-docx-pptx-render-design.md | governance-team | 2026-09-03 | 68 |
+| docs/superpowers/specs/2026-09-02-chaos-injection-suite-design.md | ml-platform | 2026-09-03 | 72 |
+| docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md | ml-platform | 2026-09-03 | 62 |
+| docs/superpowers/specs/2026-09-02-t10-01-dlp-guard-design.md | governance-team | 2026-09-03 | 46 |
+| docs/superpowers/specs/2026-09-02-t2-05-pipeline-supervisor-design.md | governance-team | 2026-09-03 | 62 |
+| docs/superpowers/specs/2026-09-03-cockpit-work-case-mvp-design.md | human-principal | 2026-09-03 | 78 |
+| docs/superpowers/specs/2026-09-03-docdate-freshness-batch1-spec.md | governance-team | 2026-09-03 | 53 |
+| docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md | governance-team | 2026-09-03 | 42 |
+| docs/superpowers/specs/2026-09-03-t3-03-tiered-router-design.md | governance-team | 2026-09-03 | 20 |
+| docs/superpowers/specs/2026-09-03-t8-02-mobile-pwa-design.md | governance-team | 2026-09-03 | 49 |
+| docs/superpowers/specs/README.md | governance-team | 2026-09-03 | 66 |
+| docs/superpowers/specs/templates/_TEMPLATE.md | @YOUR_NAME | 2026-09-03 | 57 |
 | docs/templates/ssot-template.md | <team-or-role> | 2026-09-03 | 41 |
 
 ## 派生文档
@@ -296,9 +298,14 @@
 | 路径 | 状态 | 创建日期 |
 |------|------|----------|
 | .omo/_knowledge/docs-audit/2026-09-03-phase5-final-report.md | completed | - |
+| DOC_REFACTOR_SUMMARY.md | completed | - |
+| ECCP-HANDOFF.md | completed | - |
+| ROADMAP.md | completed | - |
+| debt-audit-report.md | completed | - |
 | docs/evidence/BET-Y1Q2-T1-09-orca-crush-e2e.md | active | - |
 | docs/evidence/BET-Y1Q2-T1-10-agent-pool-observe.md | active | - |
 | docs/evidence/t1-18-codex-dogfood-canary.md | experimental | - |
+| docs/operations/scene-activation-playbook.md | active | - |
 | docs/plans/2026-08-06-agora-full-alignment-plan.md | active | - |
 | docs/plans/2026-08-06-agora-p2-deepening-plan.md | active | - |
 | docs/plans/2026-08-07-agora-p5-p8-plan.md | active | - |
@@ -422,12 +429,8 @@
 | docs/reports/weekly-strategy-health-2026-07-23.md | active | - |
 | docs/templates/ephemeral-template.md | active | completed | archived | - |
 
-## 合规问题 (2746)
+## 合规问题 (2441)
 
-- [UNTYPED] debt-audit-report.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] ECCP-HANDOFF.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] ROADMAP.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] DOC_REFACTOR_SUMMARY.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] locks/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] locks/AGENTS.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] artifacts/README.md: 未声明 type (建议添加 frontmatter)
@@ -464,56 +467,9 @@
 - [UNTYPED] spaces/CALLCHAIN.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .kilo/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .kilo/AGENTS.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-DATE] docs/ci-plane-change-template.md: SSOT 缺少 last_updated
 - [UNTYPED] docs/SYSTEM-INDEX.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-DATE] docs/SUBMODULE-PR-REVIEW-GUIDE.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/DEBT-CLEANUP-ROLLOUT.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/2026-07-13-P7X-IMPROVEMENTS-SUMMARY.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/KOS-MCP-INTEGRATION.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/AGENT-ISOLATION-ROLLOUT.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/M4-report-p1s2-l0-migration.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/SUBMODULE-PR-STRATEGY.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/observability-unified-architecture.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/ci-architecture.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/ARCHITECTURE-ANALYSIS-2026-07-14.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/I0-AGORA-CALLCHAIN.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/GOVERNANCE-MATURITY-ISA.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/M4-ROADMAP.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/ENGINEERING-OPTIMIZATION-ROADMAP.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/LOCAL-RUNTIME-STARTUP.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/MCPTOOL-ADDER-GUIDE.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/USER-JOURNEY-SOP.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/FUNCTIONAL-CAPABILITY-MAP.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/PANORAMA.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/SOP-GOD-MODULE-SPLIT.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/OMO-CLI-PHASE5-PLAN.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/external-adapter-integration-pattern.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/ARCHITECTURE-EVOLUTION.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/README.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/G-DEL-PHASE2-BOARD.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/G-DEL-2b5b-OPS.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/VISION-ROADMAP.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/2026-07-10-bus-foundation-r89-r97-spec.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/ARCHITECTURE-DETAILED-MAP.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/G-DEL-4-CALLCHAIN.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/SYSTEM-INDEX-DESIGN.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/KEMS-PRODUCTION-PLAN.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/ARCHITECTURE-DIAGRAM.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/KEMS-PILOT-ROADMAP.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/METAOS-ECOS-SCHEME-C.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/WORKFLOW-MESH-IMPLEMENTATION.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/CLI-REFERENCE.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/AGENTS.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/2026-07-10-bus-foundation-r89-r97.md: SSOT 缺少 last_updated
 - [UNTYPED] docs/G-DEL-3-WIRED-REMEASURE.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-DATE] docs/PROJECT-COMPLETE-GUIDE.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/GOVERNANCE-EVOLUTION-ROADMAP.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/governance-intelligence-future-iterations.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/GOVERNANCE-META-ROADMAP.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/GOVERNANCE-ARCHITECTURE-SGF.md: SSOT 缺少 last_updated
 - [UNTYPED] docs/AUTO-PR-REVIEW-ISA.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-DATE] docs/M4-DECISIONS-INDEX.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/M4-GAC-INTEGRATION-PLAN.md: SSOT 缺少 last_updated
 - [UNTYPED] .github/PULL_REQUEST_TEMPLATE.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .github/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .github/AGENTS.md: 未声明 type (建议添加 frontmatter)
@@ -542,171 +498,8 @@
 - [UNTYPED] docs/generated/doc-gov-framework.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/generated/doc-inventory.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/isa/debt-remediation-isa.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-DATE] docs/local-compute/compute-fabric-workflow.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/local-compute/omlx-cluster-architecture.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/notes/governance-runtime-convergence-closeout-20260814.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/notes/mechanism-convergence-retrospective-20260815.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/notes/governance-runtime-convergence-rca-20260814.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/notes/closeout-template-5min-dev.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/notes/closeout-template-5min.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/overview/cross-package-api-map.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/plans/2026-08-28-post2408-main-recovery-and-required-gac-gate.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/plans/2026-08-28-product-p0-wp5-human-adjudication-value.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/plans/2026-08-28-product-p0-truth-loop.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/plans/2026-08-28-product-p0-wp6-physical-recovery-drill.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/plans/2026-08-28-product-p0-wp3-canonical-outbox-publisher.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/plans/2026-08-28-product-p0-wp4-principal-authority-binding.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/plans/2026-08-31-family-dashboard-owner-migration-phase-a.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/plans/2026-08-28-product-p0-wp1-honest-scene-gate.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/plans/2026-08-27-governance-optimization.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/plans/2026-08-28-product-p0-wp2-honest-agent-cell-receipt.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-maturity-round2-g3-adr-link-fix-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-signals-preflight-owner-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-01-t2-02-im-session-triage-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-documents-contract-ocr-tools-runtime-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-13-codex-exec-worker-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-documents-guizi-tools-runtime-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-documents-guizi-scripts-runtime-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-23-resident-wiring-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-31-t2-01-event-stream-bus-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-documents-weijian-control-runtime-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-sovereign-mesh-daemon-sre-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-maturity-round2-g2-maturity-design-doc-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-14-weijian-sanyi-status-consistency-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-31-t1-14-harness-e2e-verification.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-03-t8-02-mobile-pwa-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-maturity-round2-g10-calibration-alignment-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-root-oneoff-registry-retirement-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-25-resident-decision-observability-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-documents-root-control-tools-runtime-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-maturity-round2-g7-runid-placeholder-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-13-personal-capability-mainline-restore.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-31-t7-03-policy-radar-morning-brief-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-controller-preflight-owner-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-02-chaos-injection-suite-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-documents-work-runtime-regular-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-t10-93-ledger-mainline-recovery-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-predictor-preflight-owner-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-scheduled-owner-convergence-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-31-t1-13-submodule-pointer-alignment.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-maturity-round2-g6-scorecard-granularity-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-25-resident-inbox-folder-signal-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-27-domain-sync-owner-cutover-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-ocr-preflight-cutover-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-convergence-preflight-owner-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-product-p0-truth-loop-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-26-resident-sediment-five-question-refinement-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-25-resident-sediment-promotion-pipeline-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-learning-runtime-owner-parity-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-completion-evidence-digest-reconciliation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-agora-port-contract-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-consumer-audit-modes-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/README.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-session-brief-workspace-owner-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-22-engineering-delivery-shadow-observer-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-documents-guizi-dangling-symlink-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-maturity-round2-g4-governance-owner-migration-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-21-escape-hatch-solidification-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-12-documents-owner-job-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-governance-waiver-frontmatter-repair-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-03-t3-03-tiered-router-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-workspace-watch-owner-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-01-squash-successor-clone-retirement-provenance-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-domain-index-release-root-reconciliation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-bridge-preflight-owner-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-product-p0-wp5-human-adjudication-value-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-01-t8-03-gov-docx-pptx-render-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-26-health-domain-p1-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-maturity-round2-g8-governance-bet-binding-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-maturity-round2-g1-script-registry-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-maturity-round2-g5-compass-radar-sixth-axis-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-product-p0-wp6-physical-recovery-drill-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-family-runtime-kems-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-service-config-stable-interpreter-reconciliation-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-documents-root-tools-runtime-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-27-ocr-preflight-owner-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-24-maturity-round2-g9-worktree-submodule-env-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-concept-weave-preflight-owner-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-02-t10-01-dlp-guard-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-27-documents-schedule-cutover-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-30-spine-value-flow-and-persona-lora-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-09-02-t2-05-pipeline-supervisor-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/superpowers/specs/templates/_TEMPLATE.md: SSOT 缺少 last_updated
-- [SSOT-NO-DATE] docs/business/Y1Q4/README.md: SSOT 缺少 last_updated
+- [UNTYPED] docs/superpowers/specs/2026-09-03-north-star-v4-realtime-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] aetherforge-archive/swarm/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] aetherforge-archive/swarm/MERGE-NOTES.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .kilo/commands/omostation-context.md: 未声明 type (建议添加 frontmatter)
@@ -730,16 +523,10 @@
 - [UNTYPED] .agents/skills/governance-ssot-edit/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/domain-cartridge-governance/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/bet-execution/SKILL.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] .agents/skills/git-discipline/SKILL.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/skills/git-discipline/SKILL.md: SSOT 缺少 last_updated
 - [UNTYPED] .agents/skills/worktree-ci-isolate/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/system-index-distill/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/project-governance/SKILL.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] .agents/skills/architecture-perception/SKILL.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/skills/architecture-perception/SKILL.md: SSOT 缺少 last_updated
 - [UNTYPED] .agents/skills/workflow:governance-state-mutation/SKILL.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] .agents/skills/workflow:bet-execution/SKILL.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/skills/workflow:bet-execution/SKILL.md: SSOT 缺少 last_updated
 - [UNTYPED] .agents/skills/workflow-silence-detection/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/bdsk-virtual-board/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/bos-service-discovery/SKILL.md: 未声明 type (建议添加 frontmatter)
@@ -748,8 +535,6 @@
 - [UNTYPED] .agents/skills/agent-onboarding/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/nextgen-cognitive-mesh/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/a2a-coordination/SKILL.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] .agents/skills/spine-value-pipeline/SKILL.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/skills/spine-value-pipeline/SKILL.md: SSOT 缺少 last_updated
 - [UNTYPED] .agents/skills/grill-me/QA_5.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/bos-contract-fix/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/workflow:project-doc-change/SKILL.md: 未声明 type (建议添加 frontmatter)
@@ -1406,86 +1191,6 @@
 - [UNTYPED] projects/agora/examples/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/agora/src/agora/bus/RETRY-OWNERSHIP.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/agora/src/agora/bus/README.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/README.zh.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/CODE_OF_CONDUCT.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/ARCHITECTURE.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/CHANGELOG.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/MAINTAINERS.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/GOVERNANCE.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/README.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/SUPPORT.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/RELEASE.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/CONTRIBUTORS.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/CONTRIBUTING.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/BOUNDARY.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/ACKNOWLEDGMENTS.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/AGENTS.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/CAPABILITY-MAP.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/CLAUDE.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/SECURITY.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/CALLCHAIN.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/README.zh.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/CODE_OF_CONDUCT.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/ARCHITECTURE.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/API.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/COMPARISON.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/CHANGELOG.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/MAINTAINERS.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/GOVERNANCE.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/README.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/AUDIT.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/SUPPORT.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/RELEASE.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/RESEARCH.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/ROADMAP-L0.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/CONTRIBUTORS.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/CONTRIBUTING.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/ARCHITECTURE-v2.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/BOUNDARY.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/ACKNOWLEDGMENTS.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/AGENTS.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/ARCHITECTURE-SCHEDULING.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/CAPABILITY-MAP.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/OMO.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/CLAUDE.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/ARCHITECTURE-GATEWAY.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/SECURITY.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/CALLCHAIN.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/j1-j4-sensitive-stream-binary-triage-conclusion.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/ARCHITECTURE.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/func-01-s0-s3-execution.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/API.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/TROUBLESHOOTING.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/quickstart.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/FAQ.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/MIGRATION.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/README.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/index.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/omlx-dead-models-registry.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/S0-model-selection.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/DEVELOPMENT.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/tailscale-remote-setup.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/BEST_PRACTICES.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/examples/README.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/.github/README.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/packages/mesh/README.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/packages/swarm/README.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/packages/swarm/MERGE-NOTES.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/packages/gateway/MERGE-CHECKLIST.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/packages/gateway/src/llm_gateway/SCHEDULING.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/guide/swarm.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/guide/gateway.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/guide/mesh.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/aetherforge/docs/superpowers/specs/2026-06-round1-design.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/docs/EXAMPLES.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/docs/ARCHITECTURE.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/docs/API.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/docs/TROUBLESHOOTING.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/docs/FAQ.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/docs/MIGRATION.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/docs/README.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/docs/DEVELOPMENT.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] projects/agora/projects/l4-kernel/docs/BEST_PRACTICES.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/agora/bin/ssot/PACKS/INDEX.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/agora/bin/ssot/PACKS/dormant-adapter/VERIFY.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/agora/bin/ssot/PACKS/dormant-adapter/INSTALL.md: 未声明 type (建议添加 frontmatter)
@@ -2527,6 +2232,7 @@
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T10-99.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T10-101.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T2-04.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T8-02.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T8-03.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T10-60.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T2-01.md: 未声明 type (建议添加 frontmatter)
@@ -2534,6 +2240,7 @@
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T4-08.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T2-02.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T10-57.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T1-13.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T2-03.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T4-02.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T7-03.md: 未声明 type (建议添加 frontmatter)
@@ -2698,11 +2405,6 @@
 - [UNTYPED] .omo/_knowledge/superpowers/specs/2026-06-02-debt-campaign-coordination-design.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/superpowers/specs/2026-06-03-omo-promotion-readiness-design.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/superpowers/specs/2026-06-03-omo-governance-overlay-launch-contract-design.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] .omo/_knowledge/sediment/runs/20260903T055524Z-bet-execution-cfe32ec0.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] .omo/_knowledge/sediment/runs/20260903T023650Z-bet-execution-6d58d825.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] .omo/_knowledge/sediment/runs/20260902T064552Z-bet-execution-c53245b4.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] .omo/_knowledge/sediment/runs/20260903T023604Z-bet-execution-466f71f9.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] .omo/_knowledge/sediment/runs/20260903T023323Z-bet-execution-396b5166.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/summaries/phase24/phase20-25-residual-analysis.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/summaries/phase12/phase12-pilot-closeout.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/summaries/phase12/phase12-closeout.md: 未声明 type (建议添加 frontmatter)
@@ -3171,14 +2873,10 @@
 - [UNTYPED] .omo/_control/obsidian-vault/CLAUDE.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_control/debt-dashboard/health-trend.md: 未声明 type (建议添加 frontmatter)
 
-## 孤立文档 (2521)
+## 孤立文档 (2436)
 
 > 未声明 type，也不引用任何 SSOT。
 
-- debt-audit-report.md
-- ECCP-HANDOFF.md
-- ROADMAP.md
-- DOC_REFACTOR_SUMMARY.md
 - locks/README.md
 - locks/AGENTS.md
 - artifacts/README.md
@@ -3225,4 +2923,8 @@
 - lib/README.md
 - lib/AGENTS.md
 - data/README.md
-- ... 和另外 2471 个文档
+- data/AGENTS.md
+- protocols/README.md
+- protocols/AGENTS.md
+- protocols/append-only-log-rollout.md
+- ... 和另外 2386 个文档

@@ -7,6 +7,7 @@ last-reviewed: 2026-09-02
 bet_id: BET-Y1Q3-T6-15
 value_indicator_policy: false
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Post-2408 Main Recovery and Required GaC Gate Implementation Plan

@@ -11,6 +11,7 @@ related:
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # SOP: God-Module 渐进拆分
