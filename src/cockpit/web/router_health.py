@@ -14,6 +14,7 @@ ROUTER_MODULES = (
     "cockpit.web.api_memory",
     "cockpit.web.api_bos",
     "cockpit.web.api_proposals",
+    "cockpit.web.mobile_api",
     "cockpit.web.api_metaos",
     "cockpit.web.api_agora",
     "cockpit.web.api_sandbox",
