@@ -35,7 +35,7 @@
 .omc/
 
 projects/.omc/
-projects/cockpit-ui/
+# projects/cockpit-ui/ 移出忽略 (BET-Y1Q4-T8-02: PWA 前端入主仓跟踪)
 projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml
 
 spaces/*.db
