@@ -1,17 +1,17 @@
 # 文档索引 (自动生成)
 
-> 生成时间: 2026-09-03 16:22
-> 总文档数: 4737
+> 生成时间: 2026-09-03 17:20
+> 总文档数: 4743
 > 本文件由 `bin/ssot/generate-docs-index.py` 自动维护，不要手动编辑。
 
 ## 统计
 
 | 类型 | 数量 |
 |------|------|
-| SSOT | 264 |
+| SSOT | 266 |
 | derived | 4 |
-| ephemeral | 130 |
-| untyped | 3199 |
+| ephemeral | 131 |
+| untyped | 3201 |
 
 ## SSOT 清单
 
@@ -111,15 +111,15 @@
 | docs/governance/ADR-0200-y1q4-code-loc-gate-rebaseline.md | governance-team | 2026-09-03 | 74 |
 | docs/governance/agent-capability-gap-matrix.md | governance-team | 2026-09-03 | 59 |
 | docs/governance/bin-and-scripts-architecture.md | governance-team | 2026-09-03 | 80 |
-| docs/local-compute/compute-fabric-workflow.md | governance-team | 2026-09-03 | 99 |
-| docs/local-compute/omlx-cluster-architecture.md | architecture-team | 2026-09-03 | 146 |
+| docs/local-compute/compute-fabric-workflow.md | governance-team | 2026-09-03 | 100 |
+| docs/local-compute/omlx-cluster-architecture.md | architecture-team | 2026-09-03 | 147 |
 | docs/notes/closeout-template-5min-dev.md | governance-team | 2026-09-03 | 59 |
 | docs/notes/closeout-template-5min.md | governance-team | 2026-09-03 | 110 |
 | docs/notes/governance-runtime-convergence-closeout-20260814.md | governance-team | 2026-09-03 | 48 |
 | docs/notes/governance-runtime-convergence-rca-20260814.md | governance-team | 2026-09-03 | 55 |
 | docs/notes/mechanism-convergence-retrospective-20260815.md | governance-team | 2026-09-03 | 196 |
 | docs/observability-unified-architecture.md | governance-team | 2026-09-03 | 257 |
-| docs/overview/cross-package-api-map.md | architecture-team | 2026-09-03 | 88 |
+| docs/overview/cross-package-api-map.md | architecture-team | 2026-09-03 | 89 |
 | docs/superpowers/plans/2026-08-27-governance-optimization.md | auto-fix-loop | 2026-09-03 | 580 |
 | docs/superpowers/plans/2026-08-28-post2408-main-recovery-and-required-gac-gate.md | governance-team | 2026-09-03 | 1986 |
 | docs/superpowers/plans/2026-08-28-product-p0-truth-loop.md | auto-fix-loop | 2026-09-03 | 594 |
@@ -275,6 +275,8 @@
 | docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md | ml-platform | 2026-09-03 | 62 |
 | docs/superpowers/specs/2026-09-02-t10-01-dlp-guard-design.md | governance-team | 2026-09-03 | 46 |
 | docs/superpowers/specs/2026-09-02-t2-05-pipeline-supervisor-design.md | governance-team | 2026-09-03 | 62 |
+| docs/superpowers/specs/2026-09-03-cockpit-work-case-mvp-design.md | human-principal | 2026-09-03 | 78 |
+| docs/superpowers/specs/2026-09-03-docdate-freshness-batch1-spec.md | governance-team | 2026-09-03 | 53 |
 | docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md | governance-team | 2026-09-03 | 42 |
 | docs/superpowers/specs/2026-09-03-t3-03-tiered-router-design.md | governance-team | 2026-09-03 | 20 |
 | docs/superpowers/specs/2026-09-03-t8-02-mobile-pwa-design.md | governance-team | 2026-09-03 | 49 |
@@ -303,6 +305,7 @@
 | docs/evidence/BET-Y1Q2-T1-09-orca-crush-e2e.md | active | - |
 | docs/evidence/BET-Y1Q2-T1-10-agent-pool-observe.md | active | - |
 | docs/evidence/t1-18-codex-dogfood-canary.md | experimental | - |
+| docs/operations/scene-activation-playbook.md | active | - |
 | docs/plans/2026-08-06-agora-full-alignment-plan.md | active | - |
 | docs/plans/2026-08-06-agora-p2-deepening-plan.md | active | - |
 | docs/plans/2026-08-07-agora-p5-p8-plan.md | active | - |
@@ -426,7 +429,7 @@
 | docs/reports/weekly-strategy-health-2026-07-23.md | active | - |
 | docs/templates/ephemeral-template.md | active | completed | archived | - |
 
-## 合规问题 (3199)
+## 合规问题 (3201)
 
 - [UNTYPED] locks/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] locks/AGENTS.md: 未声明 type (建议添加 frontmatter)
@@ -497,6 +500,7 @@
 - [UNTYPED] docs/isa/debt-remediation-isa.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/reports/2026-09-03-t10-119-failover-validation.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] aetherforge-archive/swarm/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] aetherforge-archive/swarm/MERGE-NOTES.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .kilo/commands/omostation-context.md: 未声明 type (建议添加 frontmatter)
@@ -2237,6 +2241,7 @@
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T4-08.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T2-02.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T10-57.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T1-13.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T2-03.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T4-02.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T7-03.md: 未声明 type (建议添加 frontmatter)
@@ -3628,7 +3633,7 @@
 - [UNTYPED] .subtrees/bus-foundation/.omo/_delivery/r75-final-close-2026-06-13.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .subtrees/bus-foundation/.omo/_delivery/r70-monthly-evidence-2027-07-12.md: 未声明 type (建议添加 frontmatter)
 
-## 孤立文档 (3194)
+## 孤立文档 (3196)
 
 > 未声明 type，也不引用任何 SSOT。
 
@@ -3682,4 +3687,4 @@
 - protocols/README.md
 - protocols/AGENTS.md
 - protocols/append-only-log-rollout.md
-- ... 和另外 3144 个文档
+- ... 和另外 3146 个文档
