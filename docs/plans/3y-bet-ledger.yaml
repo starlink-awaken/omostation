@@ -18388,6 +18388,52 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 数据写入冲突时采用原子 append-only 机制保证幂等。
+  value_indicator_policy: false
+  status: done
+  done_at: 2026-09-03
+  closed_by: xiamingxing
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-north-star-v4-realtime-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:24c87a762282b6e0da3aa27ae7ba09e83011f94ffc9bb39fda04cb25407fb9e1
+    decision_ref: decision://accepted/BET-Y1Q3-T10-121
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6eafb3123dd559d4570b2d74ac3e871fcd04d81b
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-north-star-v4-realtime-design.md
+            sha256: sha256:24c87a762282b6e0da3aa27ae7ba09e83011f94ffc9bb39fda04cb25407fb9e1
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   retro: required
 - id: BET-Y1Q4-T7-02
   track: T7-SCENE
