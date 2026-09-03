@@ -18832,6 +18832,12 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 双机心跳丢失超过 15 秒触发报警并强制切断 DMA 共享内存写入。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:2e975a34bd3c99c7da143d73db97c3deaca216d4e6ff70e8214d1d76378e287f
+    decision_ref: decision://accepted/BET-Y1Q3-T10-119
+  value_indicator_policy: false
   retro: required
 - id: BET-Y1Q3-T10-120
   track: T10-MATURITY
