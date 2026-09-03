@@ -507,6 +507,8 @@ Expected: one untracked, content-digested receipt; no repository file changes.
 - Modify: `.omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-binding.md`
 - Modify: `.omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md`
 - Modify: `.omo/_knowledge/decisions/INDEX.md`
+- Modify when R1 regression proves it necessary: `tests/test_agent_workflow.py`
+- Modify when R1 regression proves it necessary: `tests/test_agent_workflow_projection.py`
 - Read-only guard: `bin/_registry/scripts/governance/templates.yaml`
 - Read-only guard: `.omo/_truth/registry/governance-checks.yaml`
 
@@ -643,7 +645,7 @@ Expected: both pass without edits. The execution baseline already contains `temp
 
 - [ ] **Step 7: Run GREEN and commit only if R1 required a repair**
 
-If and only if execution-time R1 required a scoped repair, append a dated section to the existing R1 report and retro; do not rewrite their earlier partial evidence. Record execution-time main SHA, exact RED finding, minimal diff, full strict result and the statement that H1/R2/value remain unproven. If every check is already green, leave all files untouched and take the Step 8 no-op closeout path.
+If and only if execution-time R1 required a scoped repair, append a dated section to the existing R1 report and retro; do not rewrite their earlier partial evidence. Record execution-time main SHA, exact RED finding, minimal diff, full strict result and the statement that H1/R2/value remain unproven. A root workflow regression may repair only its direct fixture or stale assertion after an accepted scope amendment; it must not change production Mesh or advisory-audit behavior. If every check is already green, leave all files untouched and take the Step 8 no-op closeout path.
 
 ```bash
 uv run --python 3.13 --with pyyaml python bin/adr/adr-coverage.py --json

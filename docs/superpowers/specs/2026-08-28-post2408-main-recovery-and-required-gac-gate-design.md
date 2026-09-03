@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.3
+spec_version: 1.0.4
 status: accepted
 lifecycle: contract
 owner: human-principal
@@ -91,6 +91,9 @@ R1 baseline recovery
   仅可移除被 `git diff --check` 拒绝的无语义行尾空白。
 - 修复 `ConstraintL0` 的既有 M2/M1 schema 一致性及 root M1 统计漂移，并以
   子仓先合、根 gitlink 后合的顺序恢复 latest-main admission。
+- 修复 R1 直接触发的 root Agent Workflow 测试 harness 漂移：测试必须使用
+  OMO 项目依赖环境，并且不再把已退役的 advisory external-agent audit 常量
+  当作 canonical authority。
 
 ### 3.2 Explicitly out of scope
 
@@ -118,6 +121,15 @@ ignored state 纳入 Git。
 child schema repair and CI → root stats/gitlink adoption → fresh-clone GaC
 replay。任一阶段出现 source drift、child CI 失败或新的 immutable failure
 即停止，不以 escape 代替修复。
+
+### 3.4 2026-09-03 R1 workflow-regression amendment
+
+fresh-main R1 对 `bin/gac/gac-local-gate.py` 的 timeout repair 触发了 root
+Agent Workflow regression。该 regression 暴露两个既有 test harness 漂移：root
+wrapper fixture 只安装 PyYAML，无法加载 exact Mesh admission 所需的 OMO project
+dependencies；projection test 仍断言已退役的 advisory audit implementation detail。
+本 amendment 仅把这两个直接失败的 root tests 纳入 write surface，保持生产
+workflow、Mesh authority 与 external-audit advisory 行为不变。
 
 ## 4. 交付拓扑与状态机
 
@@ -482,3 +494,4 @@ Wave A（WP1 + WP4）只能在下列直接证据全部存在后开始：
 | 2026-08-28 | 初始 draft；吸收双 reviewer 对 immutable CI、CAS protection、treeish policy 和 host retention 的审查 | Codex / human-principal authorized |
 | 2026-09-02 | 1.0.2：增加 archive self-hosting restoration 与 ConstraintL0 cross-repo recovery 顺序 | xiamingxing authorized |
 | 2026-09-03 | 1.0.3：strict CI 复现两条仍被 active documents 引用的 archive 断链，补入最小恢复面；仅移除 Git 质量门拒绝的行尾空白 | xiamingxing authorized |
+| 2026-09-03 | 1.0.4：R1 strict gate timeout 修复暴露两个 root workflow regression test harness 漂移，纳入最小测试面 | xiamingxing authorized |

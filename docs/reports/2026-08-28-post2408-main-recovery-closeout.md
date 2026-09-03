@@ -63,3 +63,23 @@ restore or cleanup was performed, so no host-data preservation claim is made.
 - Sanitization: digests and plane roots only; no credential or user-content paths.
 
 R2b evidence complete: retention and operational axes move from `UNPROVABLE` to PROVEN.
+
+## R1 fresh-main revalidation — 2026-09-03
+
+- Immutable clone `HEAD` and the GitHub `main` ref both resolved to
+  `a8391f6c8c6599ed5e298078f798d512ca35e7d4`.
+- The original clean-clone strict failure was reproducible: the full
+  `agent-workflow doctor` completed successfully but needed about 28 seconds,
+  while `gac-local-gate` used its implicit 15-second timeout for that check.
+- The narrow repair gives `agent-workflow-doctor` an explicit 45-second default
+  timeout and adds a focused regression test. The doctor, focused test, full
+  strict GaC, conflict scan, script registry, and `git diff --check` passed.
+- Receipt: `/tmp/post2408-preflight-20260903T025553Z-bet-execution-fb8f3947.json`
+  (ephemeral; it records command and output digests only).
+
+This revalidation proves only the repository-side R1 gate repair at the stated
+main SHA. It does not adopt, repeat, roll back, or newly prove any H1c live
+branch-protection operation or R2b host operation. The authoritative ledger
+continues to keep `BET-Y1Q3-T6-15` in `candidate`/`evaluating`, with engineering
+`NOT_STARTED` and operational/value `NOT_PROVEN`; those states override no
+historical narrative in this report.
