@@ -12140,7 +12140,8 @@ bets:
   title: Exact Capability Binding 与 native asset receipt 消费收敛
   appetite: 5 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-09-03'
   started_at: 2026-08-24
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact
     find-load、OMO admission/dispatch 与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误
@@ -12305,42 +12306,44 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
     spec_version: 1.1.2
-    content_digest: sha256:41b7175076f14129b5e62989042f2f97d5f2b6ffb60cdd3a0ac9d60c27c0267a
+    content_digest: sha256:2a4c078903735d465a763e2ae1691b77babc99abf7eb7031aa2a1b3ec8efba24
     decision_ref: decision://accepted/BET-Y1Q3-T1-12
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
+        status: VERIFIED
         evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@538a3bff81a6defd6d00c0187613f2f6a3a740e7
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:51eeac95e815f5a3523e5b0732fc9a182f42fe8b1b9523d7241b49424e5c6df8
+            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:51eeac95e815f5a3523e5b0732fc9a182f42fe8b1b9523d7241b49424e5c6df8
+            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:51eeac95e815f5a3523e5b0732fc9a182f42fe8b1b9523d7241b49424e5c6df8
+            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
+            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
           fresh_receipt:
             ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
             sha256: sha256:9df83d6d80741cb04730ffb9d75951230c103139129775e28e14f409ecd4a079
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
+            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
+            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   value_indicator_policy: false
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
