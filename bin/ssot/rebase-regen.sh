@@ -56,7 +56,7 @@ log "  gen-help-docs ok"
 
 log "▶ Step 5/7: ruff --fix on bin/ scripts/"
 uv run ruff check --fix --select E4,E7,E9,F --ignore F401,F821,E402,E722,F841,F541 \
-    $(git ls-files 'bin/*.py' 'scripts/*.py') > /tmp/rebase-regen-ruff.log 2>&1 || true
+    $(git ls-files 'bin/*.py') > /tmp/rebase-regen-ruff.log 2>&1 || true
 ruff_changed=$(git status --short | grep -cE "^\s*M.*\.py$" || true)
 log "  ruff --fix touched $ruff_changed files"
 

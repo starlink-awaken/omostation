@@ -53,7 +53,7 @@ CORE_FILES = {
     "executor": "bin/gac/gac-executor.py",
     "local_gate": "bin/gac/gac-local-gate.py",
     "doc_link_check": "bin/ssot/doc-link-check.py",
-    "doc_snapshot_check": "scripts/check-doc-ssot-snapshots.py",
+    "doc_snapshot_check": "bin/ssot/doc-governance-check.py",
     "change_lane_check": "bin/change-lane-check.py",
     "submodule_reachability": "bin/ssot/submodule-reachability-gate.py",
     "submodule_transaction": "bin/ssot/submodule-pointer-transaction.sh",
@@ -211,7 +211,7 @@ def healthcheck() -> dict:
     }
 
     # 7b. doc snapshot hardcoding guard (entry docs must point to SSOT)
-    snap_code, _snap_out = run_tool("scripts/check-doc-ssot-snapshots.py", [])
+    snap_code, _snap_out = run_tool("bin/ssot/doc-governance-check.py", [])
     report["doc_snapshots"] = {
         "ok": snap_code == 0,
     }
