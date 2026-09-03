@@ -7,6 +7,7 @@ review-state: content-reviewed
 content-reviewed-at: 2026-07-31
 metadata-migrated-at: 2026-07-31
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # KEMS 生产化实施方案

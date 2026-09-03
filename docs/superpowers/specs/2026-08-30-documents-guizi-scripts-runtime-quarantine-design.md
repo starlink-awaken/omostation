@@ -10,6 +10,7 @@ bet_id: BET-Y1Q3-T10-87
 risk_level: L2
 human_gate: true
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Documents Guizi scripts runtime quarantine

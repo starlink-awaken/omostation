@@ -13,6 +13,7 @@ human_gate: true
 accepted_at: 2026-08-20T04:10:00Z
 accepted_authority: delegated-strategic-director
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # 真实个人价值证据脊柱与战略事实重基线设计

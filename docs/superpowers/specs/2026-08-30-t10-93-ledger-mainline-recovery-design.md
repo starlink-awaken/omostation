@@ -11,6 +11,7 @@ last-reviewed: 2026-08-30
 risk_level: L1
 human_gate: false
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Restore T10-93 ledger entry dropped from the mainline merge tree

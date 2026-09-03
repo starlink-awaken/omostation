@@ -8,6 +8,7 @@ schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-20
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Resident 规格文档对齐：CLI 全量收录 + Agent Cell 子系统状态标记

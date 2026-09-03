@@ -10,6 +10,7 @@ bet_id: BET-Y1Q3-T4-06
 risk_level: L2
 human_gate: false
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Product P0 WP3 — Canonical Outbox Publisher

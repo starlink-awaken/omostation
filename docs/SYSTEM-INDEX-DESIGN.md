@@ -7,6 +7,7 @@ review-state: content-reviewed-20260817
 implemented-variant: SYSTEM-INDEX.md + 4 专题 INDEX-*.md (全部实测存在)
 review-note: 2026-08-17 矛盾解除 — "1 件已实施 vs 5 文件方案"实测为两者皆实施
 type: ssot
+last_updated: 2026-09-03
 ---
 # 系统索引体系设计方案 — 全景调研 + 架构设计
 

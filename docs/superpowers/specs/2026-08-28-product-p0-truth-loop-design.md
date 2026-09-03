@@ -10,6 +10,7 @@ bet_id: BET-Y1Q3-T4-02
 risk_level: L3
 human_gate: true
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Product P0 Truth Loop 总体设计

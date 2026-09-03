@@ -4,6 +4,7 @@ lifecycle: entry
 owner: governance-team
 last-reviewed: 2026-08-18
 type: ssot
+last_updated: 2026-09-03
 ---
 # docs — 文档治理入口
 

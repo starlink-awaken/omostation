@@ -6,6 +6,7 @@ last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 type: ssot
+last_updated: 2026-09-03
 ---
 # L0-constraints v1 → v2 Migration Report
 **Date**: 2026-07-06

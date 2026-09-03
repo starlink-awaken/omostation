@@ -11,6 +11,7 @@ last-reviewed: 2026-08-24
 risk_level: L1
 human_gate: false
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # 工程交付 dogfood shadow 决策样本观测
