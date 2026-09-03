@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-03
+---
+
 # ECCP N1-N10 收尾 Handoff
 
 > 创建: 2026-08-05 | 最后更新: 2026-08-05 (P0 完整闭环交付) | **14 PR MERGED + 3 零代码**
