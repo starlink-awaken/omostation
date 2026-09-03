@@ -5,6 +5,7 @@ owner: runtime-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 # eCOS v6 本地运行时一键启动
 

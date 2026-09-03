@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -141,7 +141,7 @@ def diagnose_high_latency(svc: dict) -> dict[str, Any]:
 def check_resource_exhaustion() -> dict[str, Any]:
     """Check for resource exhaustion across all services."""
     result = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "issues": [],
         "top_consumers": [],
     }
@@ -257,7 +257,7 @@ def generate_runbook_report(results: list[dict]) -> str:
     lines = []
     lines.append("=" * 60)
     lines.append("Automated Runbook Report")
-    lines.append(f"Generated: {datetime.now(timezone.utc).isoformat()}")
+    lines.append(f"Generated: {datetime.now(UTC).isoformat()}")
     lines.append("=" * 60)
     lines.append("")
 

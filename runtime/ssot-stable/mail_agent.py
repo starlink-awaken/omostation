@@ -96,9 +96,9 @@ def classify_mail(mail: Mail) -> dict[str, Any]:
         for h in hist
     )
     prompt = (
-        f"你是邮件分类助手。请将以下邮件分类为:\n"
-        f"- 通知 (上级通知/政策文件/会议通知)\n- 任务 (需要执行: 收集数据/提交报告/转发文件)\n"
-        f"- 参考 (资讯/学术)\n- 垃圾 (广告)\n- 个人\n\n"
+        "你是邮件分类助手。请将以下邮件分类为:\n"
+        "- 通知 (上级通知/政策文件/会议通知)\n- 任务 (需要执行: 收集数据/提交报告/转发文件)\n"
+        "- 参考 (资讯/学术)\n- 垃圾 (广告)\n- 个人\n\n"
         + (f"该发件人历史分类(保持一致性):\n{hist_lines}\n\n" if hist_lines else "")
         + f"标题: {mail.subject}\n发件人: {mail.sender}\n正文: {mail.body[:300]}\n\n"
         f'输出 JSON: {{"category":"...","priority":"high/medium/low","summary":"摘要","action_needed":"动作或空"}}'

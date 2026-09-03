@@ -65,7 +65,7 @@ class AstBlastRadiusEngine:
     def analyze_diff(self, staged_only: bool = True) -> dict[str, Any]:
         """Analyze all git diff/staged Python files."""
         start_t = time.perf_counter()
-        
+
         # Git diff list files
         cmd = ["git", "diff", "--name-only"]
         if staged_only:
@@ -131,7 +131,7 @@ def main(argv=None) -> int:
 
     if args.selftest:
         ok = engine.run_selftest()
-        print(f"✅ AST Blast Radius Engine 自检通过 (PASS, 0.3ms 极速反查)" if ok else "❌ 自检失败")
+        print("✅ AST Blast Radius Engine 自检通过 (PASS, 0.3ms 极速反查)" if ok else "❌ 自检失败")
         return 0 if ok else 1
 
     if args.symbol:

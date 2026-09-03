@@ -97,5 +97,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '❌ omo governance audit 失败. 请跑 `./scripts/ci_local.sh` 本地检查.'
+              body: '❌ omo governance audit 失败. 请跑 `python3 bin/gac/ci-local-fast.py` 本地检查.'
             })

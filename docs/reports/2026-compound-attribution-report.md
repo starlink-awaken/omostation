@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # 3Y 战略三轴事实归因报告
 
 > 报告时间: 2026-08-20T04:58:00Z

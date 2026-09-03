@@ -328,6 +328,25 @@ surfaces:
   - scheduled
   status: active
   note: Root-owned guard for untracked or unregistered root shadow surfaces.
+- id: bin-gac-perception-coverage-py
+  tool: bin/gac/perception-coverage.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: Perception coverage report generator (7 probes + 25 routes + 17 data sources).
+- id: bin-ssot-check-hardcoded-ports-py
+  tool: bin/ssot/check-hardcoded-ports.py
+  workflow: mof-update.yml
+  also_in:
+  - port-registry-enforce.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
 - id: bin-ssot-bin-scripts-convergence-audit-py
   tool: bin/ssot/bin-scripts-convergence-audit.py
   workflow: gac-gate.yml
@@ -1148,6 +1167,14 @@ surfaces:
   status: active
   note: Harness OMO 桥 (Phase 8, #2863)
 
+- id: bin-ssot-generate-docs-index-py
+  tool: bin/ssot/generate-docs-index.py
+  workflow: doc-gov-check.yml
+  gate: true
+  triggers:
+  - pull_request
+  status: active
+  note: 文档索引生成 (并行新增补登, 2026-09-03)
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:

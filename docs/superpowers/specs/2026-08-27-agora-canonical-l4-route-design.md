@@ -8,6 +8,7 @@ created: 2026-08-27
 last-reviewed: 2026-08-27
 bet_id: BET-Y1Q3-T10-22
 risk_level: L2
+type: ssot
 ---
 
 # Agora canonical L4 route 设计

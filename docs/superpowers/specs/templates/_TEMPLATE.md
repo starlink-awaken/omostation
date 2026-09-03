@@ -4,6 +4,7 @@ lifecycle: spec
 owner: @YOUR_NAME
 created: YYYY-MM-DD
 last-reviewed: YYYY-MM-DD
+type: ssot
 ---
 
 # [spec 标题]

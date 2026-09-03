@@ -19,12 +19,12 @@ import fnmatch
 import json
 import os
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
 
-POLICY_RELATIVE_PATH = Path("docs/operations/root-directory-governance-policy.yaml")
+POLICY_RELATIVE_PATH = Path(".omo/_archive/operations-2026H1/root-directory-governance-policy.yaml")
 README_NAMES = {
     "readme.md",
     "README.md",
@@ -329,7 +329,7 @@ def main() -> int:
     rows = rank_and_tag(
         scan_root(root, include_untracked=not args.tracked_only, policy=policy)
     )
-    generated_at = datetime.now(timezone.utc).isoformat()
+    generated_at = datetime.now(UTC).isoformat()
     violations = [row for row in rows if row["violation"]]
 
     if args.json:

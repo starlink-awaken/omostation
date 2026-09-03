@@ -9,6 +9,7 @@ last-reviewed: 2026-08-28
 bet_id: BET-Y1Q3-T4-08
 risk_level: L3
 human_gate: true
+type: ssot
 ---
 
 # Product P0 WP6 — Physical Backup, Restore and Integrity Drill

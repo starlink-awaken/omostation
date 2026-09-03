@@ -1,15 +1,16 @@
 ---
 schema_version: specification/v1
-spec_version: 0.1.0
-status: draft
+spec_version: 1.0.0
+status: accepted
 lifecycle: contract
 owner: human-principal
 created: 2026-09-01
-last-reviewed: 2026-09-01
-bet_id: unbound
+last-reviewed: 2026-09-03
+bet_id: BET-Y1Q4-T1-02
 risk_level: L2
 human_gate: true
 value_indicator_policy: false
+type: ssot
 ---
 
 # Squash-Successor Clone Retirement Provenance Design
@@ -531,7 +532,10 @@ accepted binding:
 - keep engineering `NOT_STARTED`, operational/value `NOT_PROVEN`, overall
   `evaluating`, and `value_indicator_policy=false`;
 - declare only the accepted Spec, plan, ledger, waiver, two implementation
-  files, retro, and the exact external proof path as authorized surfaces.
+  files, and retro as repository `write_surfaces`;
+- record the exact external proof path separately as the future Phase 4
+  operation surface. It is outside the repository and therefore is not a
+  workflow claim surface.
 
 ### Phase 2 — writing-plans
 
@@ -541,7 +545,7 @@ merged. No code implementation occurs during binding.
 ### Phase 3 — implementation
 
 - start a fresh BET-bound workflow in a fresh independent clone;
-- claim every exact path;
+- claim every exact repository `write_surface`;
 - complete real RED before production edits;
 - implement only the accepted contract;
 - run focused/full verification and independent Orca review;
@@ -550,7 +554,8 @@ merged. No code implementation occurs during binding.
 
 ### Phase 4 — operational canary and cleanup
 
-Only after implementation post-merge success:
+Only after implementation post-merge success and a separate,
+operation-specific principal authorization:
 
 - invoke the new mode against the retained motivating clone with the exact PR,
   tag, delivery base, destination, and external evidence path;
@@ -593,17 +598,20 @@ cleanup:
 - any later completion transition requires its own completion matrix, retro,
   and principal acceptance.
 
-## 15. Draft review gate
+## 15. Accepted review record
 
-This Spec is deliberately `draft` and `unbound`. Principal review must
-explicitly accept or amend:
+The principal reviewed the draft at SHA-256
+`222106b0f3f0f24c35901b44f1cab3004e257c9f9a3cbbf655daf2b528c44f5a`
+and, on 2026-09-03, approved recommended authorization package Sections 1
+through 4. That review accepted:
 
 - the dedicated CLI mode;
 - the exact proof predicates;
 - unchanged `agent-clone.py` and existing retirement modes;
 - the external evidence model;
 - the negative/race test boundary;
-- the proposed `BET-Y1Q4-T1-02` binding and value isolation.
+- the `BET-Y1Q4-T1-02` binding and value isolation.
 
-Until that review is complete, no ledger binding, implementation plan, code,
-test, runtime operation, receipt write, or clone deletion is authorized.
+This accepted transition authorizes only the Spec, candidate binding, and
+waiver described in Phase 1. It does not itself authorize an implementation
+plan, code, test, runtime operation, receipt write, or clone deletion.

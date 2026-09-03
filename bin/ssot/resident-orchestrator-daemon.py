@@ -19,8 +19,9 @@ import signal
 import sys
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 DEFAULT_LEDGER = WORKSPACE / "runtime" / "omo" / "event-ledger.sqlite3"
@@ -271,8 +272,9 @@ def _register_default_handlers() -> None:
 
 def _connect_with_retry(ledger: Path, *, attempts: int = 5) -> Any:
     """Connect to the ledger with retry (SQLite cross-process init lock)."""
-    from omo.event_ledger.broker import LedgerBroker  # noqa: PLC0415
     import sqlite3  # noqa: PLC0415
+
+    from omo.event_ledger.broker import LedgerBroker  # noqa: PLC0415
 
     last_exc: Exception | None = None
     for attempt in range(attempts):

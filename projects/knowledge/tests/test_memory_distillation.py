@@ -1,9 +1,9 @@
 """Tests for Memory Self-Distillation and Conflict Resolution (ADR-0200)."""
 
 import pytest
-from knowledge.models import KnowledgeDocument
-from knowledge.distillation import ConflictResolver, MemoryDistillationEngine
 from knowledge import KnowledgeComplex, get_knowledge_facade
+from knowledge.distillation import ConflictResolver, MemoryDistillationEngine
+from knowledge.models import KnowledgeDocument
 
 
 def test_conflict_resolver_temporal_staleness():

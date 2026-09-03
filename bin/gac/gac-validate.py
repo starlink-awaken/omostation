@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import sys
 from collections import Counter
+from datetime import UTC
 from pathlib import Path
 
 # CI 可移植: __file__ 定位 workspace (CLAUDE.md 硬编码清规则)
@@ -178,9 +179,10 @@ def _check_subtraction_quota(path: Path, current_rules: int) -> list[str]:
 def _check_review_by_expiry(path: Path = REGISTRY) -> list[str]:
     """M4 日落条款: governance-checks.yaml 规则带 review_by 过期即 warn."""
     try:
-        import yaml
         from datetime import datetime, timezone
-        now = datetime.now(timezone.utc)
+
+        import yaml
+        now = datetime.now(UTC)
         warns = []
         for doc in yaml.safe_load_all(path.read_text(encoding="utf-8")):
             if not doc:

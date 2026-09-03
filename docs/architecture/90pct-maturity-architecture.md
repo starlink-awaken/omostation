@@ -3,7 +3,9 @@ status: superseded
 lifecycle: redirect
 owner: governance-team
 last-reviewed: 2026-09-02
+last_updated: 2026-09-03
 superseded_by: docs/plans/90pct-maturity-architecture.md
+type: ssot
 ---
 
 # 90% 架构成熟度设计方案 — 已迁移

@@ -2,6 +2,7 @@
 title: T10-56 ledger key hygiene audit
 date: 2026-08-29
 status: verified
+type: ephemeral
 ---
 
 # T10-56 ledger key hygiene audit

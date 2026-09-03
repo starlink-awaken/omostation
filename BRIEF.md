@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # BRIEF.md — 织星状态简报与决策收件箱
 
 > **Generated**: `2026-08-27T11:19:54.162777Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `75/100`

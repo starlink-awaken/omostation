@@ -3,9 +3,10 @@ status: planned
 lifecycle: plan
 owner: governance-team
 created: 2026-08-28
-last-reviewed: 2026-08-28
+last-reviewed: 2026-09-02
 bet_id: BET-Y1Q3-T6-15
 value_indicator_policy: false
+type: ssot
 ---
 
 # Post-2408 Main Recovery and Required GaC Gate Implementation Plan
@@ -17,6 +18,17 @@ value_indicator_policy: false
 **Architecture:** Reuse the existing GaC checklist, CI registry, branch-protection script, runtime policy, Agent Workflow and BET completion writer. Deliver in strict order `R1 -> H1a -> H1b -> H1c -> R2a -> R2b`; repository PRs and live-host operations remain separate authorities. No new workflow, registry, dispatcher, state store or control plane is introduced.
 
 **Tech Stack:** Python 3.13, Bash, PyYAML, pytest, Git/GitHub CLI, GitHub Actions, Agent Workflow, `bin/gac/gac-local-gate.py`, `bin/plan/bet-ledger.py`.
+
+## 2026-09-02 Self-Hosting Recovery Slice
+
+Before the historical R1 steps, restore only the five archive files whose
+canonical paths are still hard-bound by the workflow runner, blocking gate, or
+strict document-link validation. Verify each restored file matches its archive
+source except any line-ending whitespace rejected by `git diff --check`. Then repair the `projects/ecos` `ConstraintL0` M2 parent
+and missing M1 `rule`/`violation` properties in a child PR, merge the child,
+and update the root gitlink plus `.omo/_truth/registry/mof-capabilities.yaml`
+M1 count. Do not classify ignored local directories as source, delete them, or
+use an escape to bypass an immutable failure.
 
 ## 2026-08-28 Latest-Main Rebaseline
 
@@ -496,6 +508,8 @@ Expected: one untracked, content-digested receipt; no repository file changes.
 - Modify: `.omo/_truth/governance-evidence/waiver-2026-08-28-post2408-recovery-gac-required-binding.md`
 - Modify: `.omo/_knowledge/decisions/0432-north-star-v3-6-axis-escalation.md`
 - Modify: `.omo/_knowledge/decisions/INDEX.md`
+- Modify when R1 regression proves it necessary: `tests/test_agent_workflow.py`
+- Modify when R1 regression proves it necessary: `tests/test_agent_workflow_projection.py`
 - Read-only guard: `bin/_registry/scripts/governance/templates.yaml`
 - Read-only guard: `.omo/_truth/registry/governance-checks.yaml`
 
@@ -632,7 +646,7 @@ Expected: both pass without edits. The execution baseline already contains `temp
 
 - [ ] **Step 7: Run GREEN and commit only if R1 required a repair**
 
-If and only if execution-time R1 required a scoped repair, append a dated section to the existing R1 report and retro; do not rewrite their earlier partial evidence. Record execution-time main SHA, exact RED finding, minimal diff, full strict result and the statement that H1/R2/value remain unproven. If every check is already green, leave all files untouched and take the Step 8 no-op closeout path.
+If and only if execution-time R1 required a scoped repair, append a dated section to the existing R1 report and retro; do not rewrite their earlier partial evidence. Record execution-time main SHA, exact RED finding, minimal diff, full strict result and the statement that H1/R2/value remain unproven. A root workflow regression may repair only its direct fixture or stale assertion after an accepted scope amendment; it must not change production Mesh or advisory-audit behavior. If every check is already green, leave all files untouched and take the Step 8 no-op closeout path.
 
 ```bash
 uv run --python 3.13 --with pyyaml python bin/adr/adr-coverage.py --json

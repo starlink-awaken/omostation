@@ -28,3 +28,11 @@ def test_semantic_gate_timeout_is_at_least_60_seconds() -> None:
         if gate["id"] == "governance-semantic-gate"
     )
     assert fallback.get("timeout") == 60
+
+
+def test_agent_workflow_doctor_has_explicit_full_integration_timeout() -> None:
+    """The full doctor probes multiple project integrations sequentially."""
+    module = _load_module()
+
+    assert module._DEFAULT_CHECK_TIMEOUTS["agent-workflow-doctor"] == 45
+    assert module._CHECK_TIMEOUTS["agent-workflow-doctor"] >= 45

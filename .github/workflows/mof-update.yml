@@ -96,7 +96,7 @@ jobs:
           WORKSPACE_ROOT: ${{ github.workspace }}
         run: |
           # 反 sed 扫路径 + 端口硬编码,任一命中→ 失败
-          python3 scripts/check-vault-paths.py --all | tee ../../vault-paths-check.txt
+          python3 bin/ssot/check-hardcoded-ports.py --all | tee ../../vault-paths-check.txt
           echo "## check-vault-paths" >> $GITHUB_STEP_SUMMARY
           cat ../../vault-paths-check.txt >> $GITHUB_STEP_SUMMARY
 

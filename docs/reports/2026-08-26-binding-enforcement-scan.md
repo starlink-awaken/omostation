@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Binding enforcement caller scans — shadow → warning promotion evidence
 
 Method: inventory every production entrypoint that invokes

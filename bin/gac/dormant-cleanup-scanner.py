@@ -15,7 +15,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -46,7 +46,7 @@ def _last_commit(path: Path) -> datetime | None:
         )
         if result.returncode == 0 and result.stdout.strip():
             ts = int(result.stdout.strip())
-            return datetime.fromtimestamp(ts, tz=timezone.utc)
+            return datetime.fromtimestamp(ts, tz=UTC)
     except (ValueError, OSError):
         pass
     return None
@@ -70,7 +70,7 @@ def _count_references(name: str) -> int:
 def scan_dormant(threshold_days: int = 90) -> list[dict]:
     """Scan for dormant modules."""
     dormant = []
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cutoff = now - timedelta(days=threshold_days)
 
     for scan_dir in SCAN_DIRS:
@@ -103,7 +103,7 @@ def generate_report(dormant: list[dict]) -> dict:
     review_needed = [d for d in dormant if not d["should_archive"]]
 
     return {
-        "scan_date": datetime.now(timezone.utc).isoformat(),
+        "scan_date": datetime.now(UTC).isoformat(),
         "threshold_days": 90,
         "total_dormant": len(dormant),
         "should_archive": len(should_archive),

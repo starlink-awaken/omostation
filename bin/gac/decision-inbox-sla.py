@@ -19,7 +19,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -52,7 +52,7 @@ def add_decision(title: str, priority: str = "P2", sla_hours: int = 0, source: s
     inbox = _load_inbox()
     item_id = f"DEC-{len(inbox.get('items', [])) + 1:04d}"
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     item = {
         "id": item_id,
         "title": title,
@@ -75,7 +75,7 @@ def list_pending() -> list[dict]:
     inbox = _load_inbox()
     pending = [i for i in inbox.get("items", []) if i.get("status") == "pending"]
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for item in pending:
         due = datetime.fromisoformat(item["sla_due"])
         hours_left = (due - now).total_seconds() / 3600
@@ -88,7 +88,7 @@ def list_pending() -> list[dict]:
 def escalate_overdue() -> list[dict]:
     """Escalate overdue decisions."""
     inbox = _load_inbox()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     escalated = []
 
     for item in inbox.get("items", []):
@@ -119,7 +119,7 @@ def calculate_metrics() -> dict:
     escalated = len([i for i in items if i.get("status") == "escalated"])
 
     # B axis = decisions made per month
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     this_month = [i for i in items if i.get("created_at", "")[:7] == now.strftime("%Y-%m")]
     decisions_this_month = len([i for i in this_month if i.get("status") in ("approved", "rejected")])
 

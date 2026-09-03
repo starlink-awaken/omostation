@@ -3,6 +3,7 @@ status: active
 lifecycle: plan
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ephemeral
 ---
 # agora 用量计费/配额方案 (遗留-3, 2026-08-07)
 

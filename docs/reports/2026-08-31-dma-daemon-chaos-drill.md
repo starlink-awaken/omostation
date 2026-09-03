@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # T10-106 DMA Daemon Chaos Drill Report
 
 > Date: 2026-08-31 (chaos drill executed)

@@ -8,6 +8,7 @@ created: 2026-08-27
 last-reviewed: 2026-08-27
 bet_id: BET-Y1Q3-T10-42
 risk_level: L1
+type: ssot
 ---
 
 # Documents consumer tail retirement

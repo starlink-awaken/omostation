@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # 三年规划台账快照 — 2026-08-22
 
 - schema: bet-ledger-snapshot/v1

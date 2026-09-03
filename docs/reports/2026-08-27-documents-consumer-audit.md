@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Documents consumer audit — 2026-08-27
 
 入口：`bin/gac/documents-domain-owner-job.py consumer-audit`；实现位于

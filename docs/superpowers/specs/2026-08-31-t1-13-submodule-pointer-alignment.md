@@ -9,6 +9,7 @@ last-reviewed: 2026-08-31
 bet_id: BET-Y1Q3-T1-13
 risk_level: L2
 human_gate: false
+type: ssot
 ---
 
 # T4-07 closeout — 子模块指针同步与 agora index 恢复

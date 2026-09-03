@@ -7,6 +7,7 @@ last-reviewed: 2026-08-24
 schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-01
+type: ssot
 ---
 
 # Maturity Round 2 — G1: Script Registry 全量登记 (evolvable 6→8)

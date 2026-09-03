@@ -10,6 +10,7 @@ created: 2026-08-30
 last-reviewed: 2026-08-30
 risk_level: L2
 human_gate: true
+type: ssot
 ---
 
 # Quarantine unconsumed learning runtime helper scripts

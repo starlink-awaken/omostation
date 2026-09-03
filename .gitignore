@@ -35,7 +35,7 @@
 .omc/
 
 projects/.omc/
-projects/cockpit-ui/
+# projects/cockpit-ui/ 移出忽略 (BET-Y1Q4-T8-02: PWA 前端入主仓跟踪)
 projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml
 
 spaces/*.db
@@ -115,7 +115,7 @@ data/驾驶舱/documents.db
 # ---------------------------------------------------------------------------
 # 5. 生成文档与缓存
 # ---------------------------------------------------------------------------
-docs/generated/
+docs/generated/*
 # GEN-FORCE (差距治理 S1): 已跟踪生成物是"受保护生成物契约" —
 # CI check-docs-drift 依赖它们随 commit 同步提交. 从忽略中排除,
 # 使 git add/status 直接可见, 无需 -f 强制提交.
@@ -124,6 +124,10 @@ docs/generated/
 !docs/generated/capability-registry.yaml
 !docs/generated/kos-ontology-graph.md
 !docs/generated/project-layer-index.md
+# DOC-GOV Phase 5: 文档治理框架产物 (受跟踪生成物)
+!docs/generated/doc-gov-framework.md
+!docs/generated/ssot-map.md
+!docs/generated/doc-inventory.md
 graphify-out/
 agent-runtime/
 _derivation_logs/

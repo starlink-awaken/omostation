@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-29
+type: ssot
 ---
 # Product P0 WP4 Principal Authority Binding Implementation Plan
 

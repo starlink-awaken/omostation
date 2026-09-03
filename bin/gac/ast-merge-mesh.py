@@ -6,6 +6,7 @@ import ast
 import sys
 from pathlib import Path
 
+
 def semantic_ast_merge(base_code: str, local_code: str, remote_code: str) -> str | None:
     """Parse python code into AST and attempt node-level collisionless fusion."""
     try:

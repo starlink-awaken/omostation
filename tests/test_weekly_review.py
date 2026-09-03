@@ -5,7 +5,7 @@ import importlib.util
 import json
 import sys
 import tempfile
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -177,7 +177,7 @@ def test_check_ritual_missing_heartbeat(tmp_ws, meta_doctor_mod):
 def test_check_ritual_stale_heartbeat(tmp_ws, meta_doctor_mod):
     """Heartbeat older than 336h (14 days) → returns T1 debt proposal."""
     hb_path = tmp_ws / ".omo" / "state" / "heartbeats" / "weekly-review.json"
-    stale_time = datetime.now(timezone.utc) - timedelta(hours=337)
+    stale_time = datetime.now(UTC) - timedelta(hours=337)
     hb_path.write_text(
         json.dumps({"generated_at": stale_time.isoformat(), "ok": True}),
         encoding="utf-8",
@@ -191,7 +191,7 @@ def test_check_ritual_stale_heartbeat(tmp_ws, meta_doctor_mod):
 def test_check_ritual_fresh_heartbeat(tmp_ws, meta_doctor_mod):
     """Fresh heartbeat (< 336h) → no proposals."""
     hb_path = tmp_ws / ".omo" / "state" / "heartbeats" / "weekly-review.json"
-    fresh_time = datetime.now(timezone.utc) - timedelta(hours=1)
+    fresh_time = datetime.now(UTC) - timedelta(hours=1)
     hb_path.write_text(
         json.dumps({"generated_at": fresh_time.isoformat(), "ok": True}),
         encoding="utf-8",

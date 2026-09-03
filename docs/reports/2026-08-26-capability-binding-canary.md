@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Production-topology canary — exact capability binding (2026-08-26)
 
 Scope-honest execution receipt for plan Task 7 step 3. Driver: real subprocess

@@ -121,14 +121,13 @@ entries:
   range: origin/main..e98750b11141
   recorded_at: '2026-08-31T03:28:31.114204+00:00'
   active: true
-# ── MOF 节点修复 (需 ecos submodule) ──
 - fingerprint: mof-node|depends-on|10-nodes-missing
   surface: harness-mof-bridge
   check_id: mof-dependency-declaration
   signature: mof-depends-10
   kind: mof-gap
-  reason: "10 MOF 节点缺少 relations.depends_on (需 ecos submodule 修复)"
-  remediation: "初始化 ecos submodule 后，为每个节点添加 depends_on 声明"
+  reason: 10 MOF 节点缺少 relations.depends_on (需 ecos submodule 修复)
+  remediation: 初始化 ecos submodule 后，为每个节点添加 depends_on 声明
   priority: P2
   submodule: ecos
   recorded_at: '2026-09-01T05:00:00.000000+00:00'
@@ -138,21 +137,29 @@ entries:
   check_id: mof-value-evaluation
   signature: mof-value-8
   kind: mof-gap
-  reason: "8 MOF 节点缺少 value_metrics/cost_model (需 ecos submodule 修复)"
-  remediation: "初始化 ecos submodule 后，为每个节点添加 value_metrics 和 cost_model"
+  reason: 8 MOF 节点缺少 value_metrics/cost_model (需 ecos submodule 修复)
+  remediation: 初始化 ecos submodule 后，为每个节点添加 value_metrics 和 cost_model
   priority: P2
   submodule: ecos
   recorded_at: '2026-09-01T05:00:00.000000+00:00'
   active: true
-# ── Cell 模块激活 (需 omo submodule) ──
 - fingerprint: cell-module|activation|10-modules-dormant
   surface: cell-dashboard
   check_id: cell-module-activation
   signature: cell-10-dormant
   kind: cell-gap
-  reason: "10 个 Cell 模块 dormant (需 omo submodule 激活)"
-  remediation: "初始化 omo submodule 后，逐个激活或归档 Cell 模块"
+  reason: 10 个 Cell 模块 dormant (需 omo submodule 激活)
+  remediation: 初始化 omo submodule 后，逐个激活或归档 Cell 模块
   priority: P2
   submodule: omo
   recorded_at: '2026-09-01T06:00:00.000000+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|06c0ff77ef484c44
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 06c0ff77ef484c44
+  kind: gitlink-regress
+  reason: submodule projects/cockpit pointer 3dce4e487057 rewinds 49a79fb626e6
+  range: origin/main..5a1b1ebddc0c
+  recorded_at: '2026-09-03T08:43:07.538253+00:00'
   active: true

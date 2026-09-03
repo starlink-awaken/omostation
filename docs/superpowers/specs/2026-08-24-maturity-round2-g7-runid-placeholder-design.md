@@ -7,6 +7,7 @@ last-reviewed: 2026-08-24
 schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-07
+type: ssot
 ---
 
 # Maturity Round 2 — G7: Droid-Shield run-id 误报治理

@@ -4,6 +4,7 @@ status: observed
 owner: governance-team
 observed_at: 2026-08-27
 bet_id: BET-Y1Q3-T10-21
+type: ephemeral
 ---
 
 # L4 实例与 Documents 边界盘点

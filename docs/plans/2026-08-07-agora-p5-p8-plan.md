@@ -3,6 +3,7 @@ status: active
 lifecycle: plan
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ephemeral
 ---
 # agora P5-P8 战略深化方案 (2026-08-07)
 

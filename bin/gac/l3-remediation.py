@@ -154,7 +154,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(summary, ensure_ascii=False, indent=2))
     else:
-        print(f"═══ L3 Remediation Plan ═══")
+        print("═══ L3 Remediation Plan ═══")
         print(f"   total L3 tasks:  {len(report)}")
         print(f"   actionable:      {actionable_count}")
         print()
@@ -164,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"     status: {t['status']}  owner: {t['owner']}  risk: {t['risk_level']}")
             if t["actionable"]:
                 print(f"     reason: {t['reason']}")
-                print(f"     plan:")
+                print("     plan:")
                 for step in t["remediation"]:
                     print(f"       - {step}")
             else:

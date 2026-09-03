@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Phase 3 Retrospective — Documents Migration Registry and Coverage Gate
 
 > Date: 2026-08-12

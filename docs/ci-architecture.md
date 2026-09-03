@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ssot
 ---
 # 🏗️ Monorepo CI/CD Architecture & Multi-Tier Governance Specification
 

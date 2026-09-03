@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import argparse
 import json
-from typing import Any
 from collections import Counter
 from pathlib import Path
+from typing import Any
 
-DEFAULT_MANIFEST = Path("docs/operations/bin-scripts-convergence-manifest.json")
-DEFAULT_EXECUTION_REPORT = Path("docs/operations/bin-scripts-close-duplicate-exec.md")
+DEFAULT_MANIFEST = Path(".omo/_archive/operations-2026H1/bin-scripts-convergence-manifest.json")
+DEFAULT_EXECUTION_REPORT = Path(".omo/_archive/operations-2026H1/bin-scripts-close-duplicate-exec.md")
 
 
 def parse_execution_report(path: Path) -> dict[str, dict[str, str]]:

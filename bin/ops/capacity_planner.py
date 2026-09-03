@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -48,7 +48,7 @@ def load_services() -> list[dict]:
 def get_system_resources() -> dict[str, Any]:
     """Get current system resource usage."""
     resources = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "cpu": {},
         "memory": {},
         "storage": {},
@@ -116,7 +116,7 @@ def load_historical_metrics(days: int = 30) -> list[dict]:
     if not METRICS_DIR.exists():
         return []
 
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
     metrics = []
 
     for f in sorted(METRICS_DIR.glob("*.jsonl")):
@@ -166,7 +166,7 @@ def forecast_capacity(resources: dict[str, Any], trends: dict[str, Any], days: i
     """Forecast future capacity needs."""
     forecast = {
         "days": days,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "recommendations": [],
     }
 

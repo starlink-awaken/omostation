@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # agora 生产就绪深化 — 全面深度复盘报告 (2026-08-06)
 
 > 复盘范围: P1 → P2 → 复盘修复 → 架构对齐 全链路 (6+1 PR)。

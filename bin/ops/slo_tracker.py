@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -79,7 +79,7 @@ def check_service_availability(svc: dict) -> dict[str, Any]:
                 if isinstance(data, dict) and attr in data:
                     ts_str = data[attr]
                     ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-                    now = datetime.now(timezone.utc)
+                    now = datetime.now(UTC)
                     staleness_hours = (now - ts).total_seconds() / 3600
                     max_stale = liveness.get("max_stale_hours", 24)
                     return {
@@ -136,7 +136,7 @@ def compute_slo_metrics(services: list[dict]) -> dict[str, Any]:
     availability = (healthy / checked) if checked > 0 else None
 
     return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "total_services": total,
         "checked": checked,
         "healthy": healthy,
@@ -180,7 +180,7 @@ def get_historical_metrics(days: int = 7) -> list[dict]:
     if not SLO_DIR.exists():
         return []
 
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
     history = []
 
     for f in sorted(SLO_DIR.glob("*.jsonl")):
@@ -264,7 +264,7 @@ def main() -> int:
 
     if args.record:
         SLO_DIR.mkdir(parents=True, exist_ok=True)
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
         record_file = SLO_DIR / f"{today}.jsonl"
         with open(record_file, "a") as f:
             f.write(json.dumps(metrics, ensure_ascii=False) + "\n")

@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ephemeral
 ---
 # BET-Y1Q2-T1-10 Agent Pool Observation Evidence
 

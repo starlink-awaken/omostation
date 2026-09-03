@@ -256,7 +256,10 @@ SPEC_FRONTMATTER_GRANDFATHER_ALLOWLIST = {
     "BET-Y1Q2-T1-19": {
         "spec_ref": "repo://docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md",
         "spec_version": "1.0.0",
-        "content_digest": "sha256:c2ca365b1ea140da9be3b577617db0b329a059dd06fc43e3232fb5c570f6aba0",
+        # 2026-09-03 同步: #2968 给 spec 加 type: ssot frontmatter 后文件 digest 变化,
+        # allowlist 身份绑定跟文件走 (台账 declared digest 已同步重算为当前实际值)
+        # (与 #2974 撞车修复收敛: 双侧独立得出同一新值)
+        "content_digest": "sha256:26939fcf63ae224a9c4dec77cfffd131f28646c6f57078d4ee15b9cbe66ed257",
         "decision_ref": "decision://accepted/BET-Y1Q2-T1-19",
     }
 }
@@ -1429,8 +1432,16 @@ def _validate_evidence_reference(
             )
         except OSError as exc:
             return [f"COMPLETION_GIT_REF_UNPROVABLE: {prefix}: {exc}"]
-        if exists.returncode != 0 or reachable.returncode != 0:
-            return [f"COMPLETION_GIT_REF_NOT_REACHABLE: {prefix}.ref is not reachable from origin/main"]
+        if exists.returncode != 0:
+            return [f"COMPLETION_GIT_REF_NOT_REACHABLE: {prefix}.ref does not exist in the object store"]
+        # squash-merge 语义修正 (2026-09-03, 124 BET 实证): PR squash 后原分支
+        # sha 不在 origin/main 祖先链是工作流的必然结果而非证据伪造。
+        # 对象存在即认可; 祖先性降级为 warning。
+        if reachable.returncode != 0:
+            print(
+                f"WARN  {prefix}.ref {commit[:12]} not ancestor of origin/main "
+                f"(squash-merge 语义, 接受)"
+            )
         return []
 
     relative: str | None = None

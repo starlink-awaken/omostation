@@ -7,6 +7,7 @@ last-reviewed: 2026-08-25
 schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-15
+type: ssot
 ---
 
 # Resident 多信号源扩流：感知文件夹 (inbox_folder) 接入事件流

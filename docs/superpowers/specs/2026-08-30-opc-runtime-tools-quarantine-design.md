@@ -10,6 +10,7 @@ created: 2026-08-29
 last-reviewed: 2026-08-29
 risk_level: L2
 human_gate: true
+type: ssot
 ---
 
 # OPC runtime tools physical quarantine

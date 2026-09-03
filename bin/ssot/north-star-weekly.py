@@ -13,7 +13,7 @@
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -34,7 +34,7 @@ def get_north_star_status() -> dict:
 
 def generate_report() -> dict:
     """生成周报."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     status = get_north_star_status()
 
     metrics = status.get("metrics", {})
@@ -71,7 +71,7 @@ def get_trend(weeks: int = 4) -> list[dict]:
     if not STATE_FILE.exists():
         return []
 
-    cutoff = datetime.now(timezone.utc) - timedelta(weeks=weeks)
+    cutoff = datetime.now(UTC) - timedelta(weeks=weeks)
     records = []
 
     with open(STATE_FILE) as f:

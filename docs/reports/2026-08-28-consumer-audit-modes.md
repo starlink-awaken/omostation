@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Documents consumer audit modes — 2026-08-28
 
 The consumer audit now separates active execution from read-only content

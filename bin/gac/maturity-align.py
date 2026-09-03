@@ -49,7 +49,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 WS_ROOT = Path(__file__).resolve().parent.parent.parent
 
 

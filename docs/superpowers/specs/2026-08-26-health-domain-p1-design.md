@@ -8,6 +8,7 @@ created: 2026-08-26
 last-reviewed: 2026-08-26
 bet_id: BET-Y1Q3-T7-02
 risk_level: L1
+type: ssot
 ---
 
 # Health Domain P1 Design — 健康域最小契约闭环

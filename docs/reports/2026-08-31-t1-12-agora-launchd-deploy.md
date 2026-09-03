@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # T1-12 agora-daemon launchd deployment evidence
 
 > Date: 2026-08-31

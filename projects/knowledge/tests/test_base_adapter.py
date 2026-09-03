@@ -1,7 +1,7 @@
 """Tests for BaseKnowledgeAdapter and Circuit Breaker logic."""
 
 import pytest
-from knowledge.adapter import BaseKnowledgeAdapter, AdapterHealth
+from knowledge.adapter import AdapterHealth, BaseKnowledgeAdapter
 from knowledge.models import KnowledgeDocument
 
 

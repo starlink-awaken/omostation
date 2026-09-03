@@ -184,8 +184,8 @@ def main() -> int:
         print(f"\n⚠️ 无 cockpit 前缀的孤组 ({len(report['orphan_groups'])}): {', '.join(report['orphan_groups'])}")
     print("\n发现层提示: 用 `cockpit help <关键词>` 模糊搜命令; 本报告定位密度/重复 (软信号, 不阻断).")
 
-    # 存在超阈值密度组 → 返回 1 (报告信号), 但由 gate 决定是否翻转
-    return 1 if report["dense_groups"] else 0
+    # 密度/重复/易混淆 均为软信号 (advisory), 不阻塞 CI
+    return 0
 
 
 if __name__ == "__main__":

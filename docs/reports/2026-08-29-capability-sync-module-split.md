@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # T10-60 capability-sync verification helper split — mainline closeout
 
 ## Result

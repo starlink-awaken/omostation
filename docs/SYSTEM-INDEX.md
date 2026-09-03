@@ -45,6 +45,7 @@
 | 端口分配 | `protocols/port-registry.yaml` | 边界层 |
 | 治理规则 | `.omo/_truth/registry/governance-checks.yaml` | 事实层 |
 | 文档治理 | `.omo/_truth/registry/document-governance.yaml` | 事实层 |
+| 文档模板 | [`templates/`](templates/) (ssot/derived/ephemeral 三类) | 架构层 |
 | ADR 决策 | `.omo/_knowledge/decisions/INDEX.md` | 知识层 |
 | BOS 服务 | `projects/agora/etc/bos-services.yaml` | 边界层 |
 | L0 约束 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 协议层 |

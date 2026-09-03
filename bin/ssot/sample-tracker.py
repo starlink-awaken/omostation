@@ -3,7 +3,7 @@
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -44,7 +44,7 @@ def load_state() -> dict:
 
 def save_state(state: dict):
     SAMPLE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    state["last_updated"] = datetime.now(timezone.utc).isoformat()
+    state["last_updated"] = datetime.now(UTC).isoformat()
     with open(SAMPLE_FILE, "a") as f:
         f.write(json.dumps(state, ensure_ascii=False) + "\n")
 

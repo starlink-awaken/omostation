@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Accepted Workspace release evidence — 2026-08-28 refresh
 
 ## Release

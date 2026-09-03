@@ -10,6 +10,7 @@ created: 2026-08-29
 last-reviewed: 2026-08-29
 risk_level: L1
 human_gate: false
+type: ssot
 ---
 
 # Completion evidence digest reconciliation

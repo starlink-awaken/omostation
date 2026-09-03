@@ -14,7 +14,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 REQUIRED_POE_FIELDS = [
     "actor_id",
     "target_node",

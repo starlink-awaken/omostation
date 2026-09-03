@@ -5,6 +5,7 @@ owner: governance-team
 last-reviewed: 2026-08-06
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 # I0 织层 — BOS URI 派发调用链
 
