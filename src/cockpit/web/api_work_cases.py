@@ -18,6 +18,12 @@ def create_work_case_draft(omo_dir, *, case_id: str, title: str, source_ref: str
     return create_draft(omo_dir, case_id=case_id, title=title, source_ref=source_ref)
 
 
+def request_work_case_plan_confirmation(omo_dir, *, case_id: str, plan_digest: str):
+    from omo.work_case import request_work_case_plan_confirmation as request_plan
+
+    return request_plan(omo_dir, case_id=case_id, plan_digest=plan_digest)
+
+
 @router.get("/api/work-cases")
 async def list_work_cases(scope: str = Query(default="active")) -> dict[str, object]:
     """Project only OMO tasks explicitly marked as work cases."""
@@ -58,3 +64,15 @@ async def create_work_case_draft_endpoint(payload: dict[str, object]) -> dict[st
     except ImportError as exc:
         raise HTTPException(status_code=503, detail="work-case ingress is unavailable") from exc
     return {"id": created["id"], "status": created["work_case"]["status"]}
+
+
+@router.post("/api/work-cases/{case_id}/plan-requests")
+async def request_work_case_plan_endpoint(case_id: str, payload: dict[str, object]) -> dict[str, object]:
+    plan_digest = str(payload.get("plan_digest") or "").strip()
+    if not plan_digest:
+        raise HTTPException(status_code=422, detail="plan_digest is required")
+    try:
+        request_work_case_plan_confirmation(WORKSPACE_DIR / ".omo", case_id=case_id, plan_digest=plan_digest)
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="work-case plan ingress is unavailable") from exc
+    return {"id": case_id, "status": "awaiting_confirmation"}

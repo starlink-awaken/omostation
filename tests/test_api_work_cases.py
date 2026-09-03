@@ -84,3 +84,21 @@ def test_work_case_draft_endpoint_delegates_to_omo_ingress(monkeypatch):
     assert response.status_code == 200
     assert response.json()["status"] == "draft"
     assert seen["source_ref"] == "oa://task-1"
+
+
+def test_plan_request_endpoint_delegates_only_the_plan_digest(monkeypatch):
+    seen = {}
+
+    def fake_request(omo_dir, *, case_id, plan_digest):
+        seen.update(omo_dir=omo_dir, case_id=case_id, plan_digest=plan_digest)
+        return {"id": case_id}
+
+    monkeypatch.setattr(api_work_cases, "request_work_case_plan_confirmation", fake_request)
+    app = FastAPI()
+    app.include_router(router)
+
+    response = TestClient(app).post("/api/work-cases/CASE-001/plan-requests", json={"plan_digest": "sha256:plan-v1"})
+
+    assert response.status_code == 200
+    assert response.json() == {"id": "CASE-001", "status": "awaiting_confirmation"}
+    assert seen["plan_digest"] == "sha256:plan-v1"
