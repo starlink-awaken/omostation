@@ -975,6 +975,14 @@ def main() -> int:
     # Phase A1: 存量 REMAINDER 委派命令空参回退 → 注入 --help (裸命令显示下游帮助)
     inject_empty_help(args)
 
+    # help-passthrough 修复: 下游不支持 --help 的委派命令 (bcos/mof/runtime/
+    # gbrain/l4-kernel/kairon) → --help/空参 由壳层直接输出用法引导, 不 spawn 子进程
+    from .commands.delegation import shell_help_if_requested
+
+    _shell_rc = shell_help_if_requested(args)
+    if _shell_rc is not None:
+        return _shell_rc
+
     global_output = getattr(args, "global_output", "text")
     if global_output == "tui":
         return __import__("cockpit.tui", fromlist=["launch"]).launch(args)

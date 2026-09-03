@@ -165,6 +165,62 @@ EMPTY_FALLBACK_OVERRIDES: dict[str, list[str] | None] = {
     "resident": None,  # 委派 omo resident, 同 omo
 }
 
+# ── 壳层帮助接管 (Phase: help-passthrough 修复) ─────────────────────────────
+# 下游 CLI 顶层不支持 --help 的委派命令: ``cockpit <cmd> --help`` / 裸命令
+# 不再 spawn 子进程 (下游会报错/输出版本号/dry-run), 改为壳层直接打印用法引导。
+SHELL_HELP: dict[str, str] = {
+    "kairon": (
+        "用法: cockpit kairon <package> <sub> [args...]\n"
+        "示例: cockpit kairon codeanalyze status\n"
+        "说明: kairon 是知识引擎 monorepo 聚合入口, 顶层不接受 --help。\n"
+        "完整帮助: uv run --project projects/knowledge/kairon kairon --help"
+    ),
+    "gbrain": (
+        "用法: cockpit gbrain <sub> [args...]\n"
+        "子命令: search / import / stats\n"
+        "示例: cockpit gbrain search \"关键词\""
+    ),
+    "l4-kernel": (
+        "用法: cockpit l4-kernel <sub> [args...]\n"
+        "说明: L4 自我层管理面 (委派 projects/l4-kernel CLI)。"
+    ),
+    "bcos": (
+        "用法: cockpit bcos <sub> [args...]\n"
+        "子命令: evolve / signals / north-star\n"
+        "示例: cockpit bcos evolve --dry-run · cockpit bcos north-star"
+    ),
+    "mof": (
+        "用法: cockpit mof <sub> [args...]\n"
+        "说明: mof 独立 CLI 已弃用, 日常请使用 cockpit 替代命令\n"
+        "      (cockpit mof-contract-lint / cockpit mof-contract-agent)。"
+    ),
+    "runtime": (
+        "用法: cockpit runtime <sub> [args...]\n"
+        "说明: 委派 runtime 项目 CLI (projects/runtime)。"
+    ),
+}
+
+_HELP_MARKER = ("--help", "-h")
+
+
+def shell_help_if_requested(args: argparse.Namespace) -> int | None:
+    """下游不支持 --help 的委派命令: --help/空参 → 壳层帮助 (不 spawn 子进程).
+
+    返回 0 表示已输出帮助 (调用方直接 return); 返回 None 表示继续正常分发。
+    """
+    cmd = getattr(args, "command", "")
+    text = SHELL_HELP.get(cmd)
+    if text is None:
+        return None
+    attr = EXISTING_REMAINDER_DELEGATIONS.get(cmd)
+    if attr is None:
+        return None
+    passthrough = list(getattr(args, attr, []) or [])
+    if not passthrough or passthrough[0] in _HELP_MARKER:
+        print(text)
+        return 0
+    return None
+
 
 def inject_empty_help(args: argparse.Namespace) -> None:
     """空 REMAINDER → 注入 --help (在 cli.py 分发前调用一次).
@@ -272,6 +328,7 @@ __all__ = [
     "spec_to_meta",
     "add_delegation_parser",
     "inject_empty_help",
+    "shell_help_if_requested",
     "register_all",
     "ensure_delegated_catalog",
 ]

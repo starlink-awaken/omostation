@@ -4,8 +4,8 @@ meta:
   owner: cockpit
   maturity: stable
   delegated_target: bin/bc-os/*.py
-  last_audited: null
-  auditor: agent:worker-d-audit
+  last_audited: '2026-09-03'
+  auditor: agent:lead-help-passthrough-fix
 dimensions:
   functionality:
     score: null
@@ -20,12 +20,12 @@ dimensions:
     evidence: ''
     suggestion: ''
   usability:
-    score: null
-    evidence: ''
+    score: 4
+    evidence: --help 与裸命令均显示结构化用法引导; 真实参数透传行为不变
     suggestion: ''
   io_readability:
-    score: null
-    evidence: ''
+    score: 4
+    evidence: '壳层帮助接管已修复: --help/-h/空参 由 SHELL_HELP 拦截层输出用法引导(子命令+示例+下游帮助入口), 不再透传产生报错/版本号/dry-run'
     suggestion: ''
   performance:
     score: null
