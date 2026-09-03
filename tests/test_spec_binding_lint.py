@@ -959,7 +959,10 @@ def test_bet_done_transition_job_has_guard_contract() -> None:
     # structural terminal shapes emitted by cmd_lint are accepted.
     assert 'if [[ "$lint_rc" -eq 0 ]]' in script
     assert 'elif [[ "$lint_rc" -eq 1 ]]' in script
-    assert 'tail -n 1 "$lint_out"' in script
+    # 2026-09-02 修复: 容忍 main 125 个 pre-existing lint 错误导致 'tail -n 1'
+    # 匹配 warning 行失败 → 改为 'tail -n 5 | grep -Eq' 检查末尾 5 行内的
+    # 合法收尾 (计数行 / warning 行 / OK 行)
+    assert 'tail -n 5 "$lint_out"' in script
     assert "^OK -- " in script
     assert "^[0-9]+ 个问题$" in script
     assert "bet-ledger lint did not complete structurally" in script
