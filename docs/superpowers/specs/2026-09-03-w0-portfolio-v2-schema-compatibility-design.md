@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.0.1
 status: accepted
 lifecycle: contract
 owner: human-principal
@@ -13,7 +13,7 @@ value_indicator_policy: false
 source_design_sha256: cbdee89004d0156e262daa63a1c38cfd660c0d5efbf0fce1a8eec8a92027c30b
 source_proposal_sha256: 26bd1b3df552e693f2ac2684df255436522ff816d7844459523fafe130587100
 source_amendment_sha256: 5b1bb03274d8f7383b67f88953cf0c7074a571a9a1d5aebb1ab68bb234042409
-implementation_authorized: false
+implementation_authorized: true
 ---
 
 # W0 Portfolio v2 Schema and Compatibility Design
@@ -114,10 +114,26 @@ not delete v2 data or rewrite historical evidence.
 
 ## 8. Authority boundary
 
-This accepted Spec establishes binding identity only. It does not authorize
-writing-plans, code, tests, Ledger self-binding, status changes, projections,
-runtime operations, W1-W6, or value evidence. Writing-plans requires a
-separate post-binding authorization.
+Version 1.0.0 established binding identity only. The principal's continuing
+BET-execution authorization recorded on 2026-09-03 now authorizes this
+specific child implementation, subject to a fresh BET-bound workflow, exact
+claims, independent review, required checks, and exact-SHA post-merge
+verification.
+
+This authorization is limited to the first implementation delivery described
+by the approved plan: `bin/plan/portfolio_contract.py`,
+`bin/plan/bet-ledger.py`, and `tests/test_bet_portfolio_contract.py`. It
+permits a pure additive validator, a compatibility-only CLI command, and the
+specified RED-to-GREEN and no-side-effect tests. A later execution run must
+still preserve all existing BET objects semantically and must stop if it needs
+a service, database, dispatcher, destructive migration, or v1-incompatible
+behavior.
+
+This authorization does not authorize Ledger self-binding, the one-field
+`meta.total_bets` repair, strict full-Ledger enforcement, projections, runtime
+operations, W1-W6, any other W0 child, status changes, completion/value
+evidence, or a terminal transition. Each remains a separately claimed and
+fresh-workflow boundary.
 
 ## 9. 验收标准
 
