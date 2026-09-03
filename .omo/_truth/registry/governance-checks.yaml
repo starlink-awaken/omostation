@@ -179,7 +179,8 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 568
+    script_baseline: 571
+    # 2026-09-03: sync to origin/main baseline
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
