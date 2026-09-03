@@ -103,6 +103,7 @@ def scan_md_files() -> list[dict]:
                 "owner": fm.get("owner", ""),
                 "status": fm.get("status", ""),
                 "last_updated": fm.get("last_updated", ""),
+                "last-reviewed": fm.get("last-reviewed", ""),
                 "mtime": mtime.isoformat()[:10],
                 "size": stat.st_size,
                 "lines": content.count("\n") + 1,
@@ -124,8 +125,10 @@ def check_compliance(files: list[dict]) -> list[str]:
         if f["type"] == "ssot":
             if not f["owner"]:
                 issues.append(f"[SSOT-NO-OWNER] {path}: SSOT 缺少 owner")
-            if not f["last_updated"]:
-                issues.append(f"[SSOT-NO-DATE] {path}: SSOT 缺少 last_updated")
+            # last_updated 或 last-reviewed 均可满足保鲜要求
+            has_date = f["last_updated"] or f.get("last-reviewed")
+            if not has_date:
+                issues.append(f"[SSOT-NO-DATE] {path}: SSOT 缺少 last_updated 或 last-reviewed")
             elif f["mtime"]:
                 try:
                     mtime = datetime.strptime(f["mtime"], "%Y-%m-%d")
