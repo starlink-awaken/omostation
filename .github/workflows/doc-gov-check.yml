@@ -1,0 +1,35 @@
+name: doc-gov-check
+on:
+  pull_request:
+    paths:
+      - "**.md"
+      - "bin/ssot/generate-docs-index.py"
+      - "docs/**"
+  push:
+    branches: [main]
+    paths:
+      - "**.md"
+      - "bin/ssot/generate-docs-index.py"
+      - "docs/**"
+
+jobs:
+  doc-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 生成文档索引
+        run: python3 bin/ssot/generate-docs-index.py
+
+      - name: 合规检查 (strict, UNTYPED 不阻塞)
+        run: python3 bin/ssot/generate-docs-index.py --check --strict
+
+      - name: 检查索引文件是否最新
+        run: |
+          if [ -n "$(git status --porcelain docs/generated/doc-inventory.md)" ]; then
+            echo "::warning::doc-inventory.md 需要更新，请运行: python3 bin/ssot/generate-docs-index.py"
+          fi
