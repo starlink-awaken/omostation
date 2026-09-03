@@ -228,6 +228,7 @@ def generate_inventory(files: list[dict], issues: list[str], orphans: list[str])
 def main():
     parser = argparse.ArgumentParser(description="文档索引生成器")
     parser.add_argument("--check", action="store_true", help="合规检查模式，有问题时 exit 1")
+    parser.add_argument("--strict", action="store_true", help="严格模式 (UNTYPED 等软信号也计入失败)")
     parser.add_argument("--json", action="store_true", help="输出 JSON 格式")
     args = parser.parse_args()
 
