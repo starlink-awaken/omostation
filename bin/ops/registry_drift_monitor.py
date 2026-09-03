@@ -22,7 +22,7 @@ import json
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 # Workspace root = repo root (parents: bin/ops/registry_drift_monitor.py → bin → root)
@@ -66,7 +66,7 @@ def check(root: Path, *, register: bool = False, as_json: bool = False) -> dict:
 
     result: dict = {
         "main": main_sha,
-        "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "checked_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "script_registry": {"ok": False, "missing": [], "detail": ""},
         "gac_validate": {"ok": False, "detail": ""},
     }

@@ -20,7 +20,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -57,7 +57,7 @@ def main() -> int:
     workdir = WORKDIR
     workdir.mkdir(exist_ok=True)
 
-    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     binding = {
         "correlation_id": f"corr-canary-{ts}",
         "workflow_run_id": "20260828T072211Z-bet-execution-3c912d37",
@@ -123,7 +123,7 @@ def main() -> int:
         "schema": "binding-canary-report/v1",
         "capability_id": capability_id,
         "operation_id": args.operation_id,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "ok": all(verdict.values()),
         "verdict": verdict,
         "receipt_digest": invoke_receipt.get("receipt_digest"),

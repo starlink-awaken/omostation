@@ -1,6 +1,7 @@
 """Hybrid Search Engine Resilience and Circuit Breaker Tests."""
 
 from unittest.mock import MagicMock
+
 import pytest
 
 

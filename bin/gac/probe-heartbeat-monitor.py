@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path("/Users/xiamingxing/Workspace")
@@ -59,7 +59,7 @@ def _age_hours(ts_str: str) -> float:
         return 9999
     try:
         ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return (now - ts).total_seconds() / 3600
     except (ValueError, TypeError):
         return 9999
@@ -93,7 +93,7 @@ def check_heartbeats() -> dict:
         if not ok:
             failed.append(result)
     return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "total": len(results),
         "ok": len(results) - len(failed),
         "failed_count": len(failed),

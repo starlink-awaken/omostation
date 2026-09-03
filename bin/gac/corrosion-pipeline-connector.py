@@ -16,7 +16,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path("/Users/xiamingxing/Workspace")
@@ -90,7 +90,7 @@ def push_to_cockpit_inbox(proposals: list[dict]) -> dict:
             "source": "corrosion-pipeline",
             "severity": p.get("severity", "P2"),
             "auto_fixable": p.get("auto_fixable", False),
-            "created": datetime.now(timezone.utc).isoformat(),
+            "created": datetime.now(UTC).isoformat(),
         }
         # Avoid duplicates
         existing_ids = {i.get("id") for i in inbox.get("items", [])}
@@ -131,7 +131,7 @@ def main() -> int:
     ref_proposals = convert_reference_to_proposals(data)
     all_proposals = hb_proposals + ref_proposals
 
-    print(f"防腐管道接线器 — {datetime.now(timezone.utc).isoformat()}")
+    print(f"防腐管道接线器 — {datetime.now(UTC).isoformat()}")
     print(f"  心跳异常: {len(hb_proposals)}")
     print(f"  引用失效: {len(ref_proposals)}")
     print(f"  总提案数: {len(all_proposals)}")

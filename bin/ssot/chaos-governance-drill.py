@@ -15,7 +15,7 @@ import json
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -75,7 +75,7 @@ def run_drill_2_stale_and_corrupt_facts() -> dict[str, Any]:
 
         # 2. Stale fact (60 days old)
         f_stale = facts_dir / "fact_stale.yaml"
-        old_dt = (datetime.now(timezone.utc) - timedelta(days=60)).strftime("%Y-%m-%d")
+        old_dt = (datetime.now(UTC) - timedelta(days=60)).strftime("%Y-%m-%d")
         stale_content = f"""schema_version: v1.0
 entity_id: FACT-WJ-2026-STALE
 domain: work-weijian
@@ -257,7 +257,7 @@ def run_drill_7_thunderbolt5_link_disconnect() -> dict[str, Any]:
     模拟对端链路断开 + 显存不可用, 验证 omlxc edge mesh 不漫游到该 peer.
     """
     with tempfile.TemporaryDirectory(prefix="chaos-tb5-") as tmp:
-        script = f"""
+        script = """
 import sys
 sys.path.insert(0, 'projects/omlxc/src')
 from omlxc.mesh import MeshDiscoveryEngine, MeshNodeInfo, RoamingComputeRouter
@@ -276,7 +276,7 @@ router = RoamingComputeRouter(engine, 'local-fixture-7')
 decision = router.route_job('j-chaos-7', 'qwen3.8-27b', 'P0')
 # 不能选到 disconnected peer
 avoided_disconnected = decision.target_node_id != 'peer-A-disconnected'
-print(f'RESULT:{{avoided_disconnected}}')
+print(f'RESULT:{avoided_disconnected}')
 """
         rc, out = run_cmd(["uv", "run", "--project", "projects/omlxc", "python3", "-c", script])
         success = rc == 0 and "RESULT:True" in out
@@ -347,15 +347,15 @@ def run_drill_9_zombie_lock_injection() -> dict[str, Any]:
             content = f.read()
         has_expires = "expires_at: 2026-08-01T01:00:00Z" in content
         # 解析过去时间
-        past = dt.datetime(2026, 8, 1, 1, 0, 0, tzinfo=dt.timezone.utc)
-        now = dt.datetime.now(dt.timezone.utc)
+        past = dt.datetime(2026, 8, 1, 1, 0, 0, tzinfo=dt.UTC)
+        now = dt.datetime.now(dt.UTC)
         is_stale = (now - past).total_seconds() > 0
         success = has_expires and is_stale
         return {
             "drill_name": "Zombie Lock Injection & Stale Cleanup",
             "category": "Concurrency Lock",
             "passed": success,
-            "detail": f"stale lock injected (expires_at=past): "
+            "detail": "stale lock injected (expires_at=past): "
                       + ("detected" if success else "missing or not stale"),
         }
 
@@ -471,7 +471,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Output summary as JSON")
     args = parser.parse_args()
 
-    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    now_iso = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     drills = [
         run_drill_1_documents_invasion(),
@@ -506,7 +506,7 @@ def main() -> int:
         )
     else:
         print("\n⚡️ ─────────────────────────────────────────────────────────────")
-        print(f"   omostation 全域混沌演练与红蓝对抗大盘 (Chaos & Red-Teaming)")
+        print("   omostation 全域混沌演练与红蓝对抗大盘 (Chaos & Red-Teaming)")
         print(f"   演练时间: {now_iso}   状态: {'🟢 ALL PASS (全域坚韧)' if all_passed else '🔴 DRILL FAILED'}")
         print("─────────────────────────────────────────────────────────────────\n")
         for d in drills:

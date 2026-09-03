@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -18,7 +19,7 @@ class KnowledgeDocument(BaseModel):
     canonical_path: str = Field(default="", description="文件物理或逻辑路径")
     trust_level: int = Field(default=1, description="信任等级 (1-5)")
     updated_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
         description="更新时间戳 (ISO8601)",
     )
     metadata: dict[str, Any] = Field(default_factory=dict, description="结构化元数据")
@@ -65,5 +66,5 @@ class SyncEvent(BaseModel):
     source: str  # kos, gbrain, external
     target: str  # gbrain_postgres, kos_cache
     payload: dict[str, Any] = Field(default_factory=dict)
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     status: str = "pending"  # pending, committed, failed

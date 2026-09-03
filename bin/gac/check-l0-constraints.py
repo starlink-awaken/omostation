@@ -239,7 +239,7 @@ def check_x3_c03():
         missing = {"state_plane", "kernel_plane", "ingress_plane"} - layers
         if missing:
             return False, f"governance_stack: missing {missing}"
-        return True, f"governance_stack: 3 layers OK"
+        return True, "governance_stack: 3 layers OK"
     except Exception as e:
         return True, f"parse error: {e}"
 

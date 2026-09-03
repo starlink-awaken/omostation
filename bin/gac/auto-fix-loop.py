@@ -36,6 +36,7 @@ import argparse
 import json
 import subprocess
 import sys
+from datetime import UTC
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -217,9 +218,11 @@ def detect_drifts() -> list[Drift]:
         cell_state_file = WORKSPACE / ".omo" / "state" / "agent-cell" / "cell_states.json"
         if cell_state_file.exists():
             import json as _json
-            from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+            from datetime import datetime as _dt
+            from datetime import timedelta as _td
+            from datetime import timezone as _tz
             data = _json.loads(cell_state_file.read_text())
-            now = _dt.now(_tz.utc)
+            now = _dt.now(UTC)
             stale_count = 0
             for state in data.values():
                 saved = state.get("saved_at", "")

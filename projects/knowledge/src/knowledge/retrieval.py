@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from typing import Any
+
 from knowledge.models import RetrievalResult
 
 logger = logging.getLogger("knowledge.retrieval")
@@ -12,7 +13,7 @@ logger = logging.getLogger("knowledge.retrieval")
 
 class UnifiedKnowledgeRetriever:
     """双擎协同统一检索器 (Unified Knowledge Retriever).
-    
+
     调度流程:
     1. 意图与领域分析 (Domain & Intent Routing)
     2. 三路自适应混合召回:

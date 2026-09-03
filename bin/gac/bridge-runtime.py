@@ -17,7 +17,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -104,7 +104,7 @@ def delegate(bridge_id: str, function: str, *args, **kwargs) -> dict:
     state = _load_state()
     state.setdefault("bridges", {}).setdefault(bridge_id, {})[function] = {
         "enabled": True,
-        "delegated_at": datetime.now(timezone.utc).isoformat(),
+        "delegated_at": datetime.now(UTC).isoformat(),
     }
     _save_state(state)
 

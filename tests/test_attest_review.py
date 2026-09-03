@@ -8,7 +8,7 @@ import os
 import sqlite3
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from io import StringIO
 from pathlib import Path
 from types import SimpleNamespace
@@ -196,7 +196,7 @@ class TestConfirmFlow:
         AR.write_attestation(state_dir, draft, est_type, est_minutes, verdict="accept")
 
         attest_dir = state_dir / "attestations"
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
         attest_file = attest_dir / f"{today}.json"
         assert attest_file.exists()
 
@@ -218,7 +218,7 @@ class TestConfirmFlow:
             est_minutes = AR.get_est_minutes(est_type)
             AR.write_attestation(state_dir, d, est_type, est_minutes, verdict="accept")
 
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
         attest_file = state_dir / "attestations" / f"{today}.json"
         data = json.loads(attest_file.read_text())
         assert len(data) == 3

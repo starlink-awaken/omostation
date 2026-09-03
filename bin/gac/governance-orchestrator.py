@@ -21,7 +21,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -64,7 +64,7 @@ def compliance_check() -> dict:
     total = len(checks)
 
     return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "checks": {k: v.get("ok", False) for k, v in checks.items()},
         "passed": passed,
         "total": total,
@@ -93,7 +93,7 @@ def auto_remediate() -> dict:
     results.append({"action": "heartbeat_refresh", **r})
 
     return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "results": results,
         "remediated": sum(1 for r in results if r.get("ok")),
         "total": len(results),
@@ -110,7 +110,7 @@ def generate_governance_report() -> dict:
     scripts = _run(["find", str(REPO / "bin"), "-name", "*.py", "-o", "-name", "*.sh"])
 
     report = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "compliance": compliance,
         "remediation": remediation,
         "stats": {
@@ -157,14 +157,14 @@ def full_governance_cycle() -> dict:
     # Save state
     state = _load_state()
     state.setdefault("cycles", []).append({
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "compliance_rate": compliance["compliance_rate"],
         "remediated": remediation["remediated"],
     })
     _save_state(state)
 
     print(f"\n{'=' * 60}")
-    print(f"治理循环完成")
+    print("治理循环完成")
 
     return {"compliance": compliance, "remediation": remediation, "report": report}
 
@@ -200,7 +200,7 @@ def main() -> int:
     if args.status:
         state = _load_state()
         cycles = state.get("cycles", [])
-        print(f"治理编排器状态")
+        print("治理编排器状态")
         print(f"  总循环数: {len(cycles)}")
         if cycles:
             latest = cycles[-1]

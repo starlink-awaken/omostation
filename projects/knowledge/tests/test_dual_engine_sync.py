@@ -1,6 +1,7 @@
 """Dual Engine (KOS <-> gbrain) Sync & Consistency Test."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
+
 import pytest
 
 
@@ -17,7 +18,7 @@ def test_write_through_sync_record():
         },
         "source": "kos",
         "target": "gbrain_postgres",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "status": "committed",
     }
 

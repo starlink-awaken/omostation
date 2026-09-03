@@ -16,7 +16,7 @@ import signal
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -148,7 +148,7 @@ class ServiceMonitor:
     def run_health_checks(self) -> dict[str, Any]:
         """Run health checks on all enabled services."""
         services = self.load_services()
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
 
         results = []
         healthy = 0
@@ -186,7 +186,7 @@ class ServiceMonitor:
     def record_metrics(self, summary: dict[str, Any]) -> None:
         """Record metrics to history file."""
         METRICS_DIR.mkdir(parents=True, exist_ok=True)
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
         metrics_file = METRICS_DIR / f"{today}.jsonl"
 
         with open(metrics_file, "a") as f:
@@ -278,7 +278,7 @@ def main() -> int:
         if args.json:
             print(json.dumps(summary, indent=2, ensure_ascii=False))
         else:
-            print(f"Health Check Summary:")
+            print("Health Check Summary:")
             print(f"  Total: {summary['total']}")
             print(f"  Healthy: {summary['healthy']}")
             print(f"  Unhealthy: {summary['unhealthy']}")

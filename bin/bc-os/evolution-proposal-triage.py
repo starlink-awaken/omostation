@@ -19,7 +19,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -62,7 +62,7 @@ def generate_proposals() -> list[dict]:
                     "description": f"修复 {failure['description']}: {failure['age_hours']}h / {failure['sla_hours']}h",
                     "confidence": 0.9,  # High confidence - clear SLA violation
                     "risk": "low",
-                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "generated_at": datetime.now(UTC).isoformat(),
                     "status": "new",
                 })
     except (json.JSONDecodeError, OSError):
@@ -77,7 +77,7 @@ def generate_proposals() -> list[dict]:
         "description": "同步 script_baseline 与实际脚本数",
         "confidence": 0.8,
         "risk": "low",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "status": "new",
     })
 
@@ -114,7 +114,7 @@ def run_bcos(proposals: list[dict]) -> list[dict]:
             **p,
             "bcos_phase": "evaluate",
             "approved": approved,
-            "evaluated_at": datetime.now(timezone.utc).isoformat(),
+            "evaluated_at": datetime.now(UTC).isoformat(),
         }
         results.append(result)
 
@@ -163,7 +163,7 @@ def main() -> int:
         for p in proposals:
             if p.get("confidence", 0) > 0.8 and p.get("risk") == "low":
                 p["status"] = "approved"
-                p["approved_at"] = datetime.now(timezone.utc).isoformat()
+                p["approved_at"] = datetime.now(UTC).isoformat()
                 approved_count += 1
         _save_proposals(proposals)
         print(f"✓ Auto-approved {approved_count} proposals")

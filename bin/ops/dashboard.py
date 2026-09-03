@@ -15,7 +15,7 @@ import subprocess
 import sys
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 SERVICES_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "services.yaml"

@@ -12,7 +12,7 @@
 
 import json
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]  # bin/gac/ → Workspace/
@@ -92,7 +92,7 @@ def check_doc_decay(quota: dict) -> dict:
         return {"ok": True, "message": "No docs directory"}
 
     max_stale_ratio = quota.get("quota", {}).get("docs", {}).get("max_stale_ratio", 0.1)
-    stale_threshold = datetime.now(timezone.utc) - timedelta(days=30)
+    stale_threshold = datetime.now(UTC) - timedelta(days=30)
 
     total = 0
     stale = 0
@@ -185,7 +185,7 @@ def main():
         print("Warning: subtraction-quota.yaml not found", file=sys.stderr)
 
     results = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "checks": {},
         "violations": [],
         "ok": True,

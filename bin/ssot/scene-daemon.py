@@ -13,7 +13,7 @@ import json
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -55,7 +55,7 @@ def poll_signal(source: dict) -> list[dict]:
                         "source_id": source.get("id"),
                         "type": "file_change",
                         "path": str(p),
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     })
                     source["_last_poll"] = mtime
             except Exception:
@@ -154,7 +154,7 @@ def run_once(dry_run: bool = False) -> dict:
                     })
 
     return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "sources_polled": len(sources),
         "matches": len(results),
         "results": results,

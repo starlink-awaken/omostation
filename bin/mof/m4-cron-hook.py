@@ -29,10 +29,9 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
-
 
 WS = Path(__file__).resolve().parents[2]
 DERIVED_HEALTH = WS / "projects/ecos/.omo/_derived/m4-health.json"
@@ -43,7 +42,7 @@ OMOCRON_HOOK_MARK = "M4_HOOK_MARK"
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _load_health() -> dict | None:

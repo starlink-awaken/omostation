@@ -18,7 +18,7 @@ import re
 import sqlite3
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -56,7 +56,7 @@ def _collect_ledger(db_path: Path, since_days: int = 7) -> list[dict[str, Any]]:
     if not db_path.exists():
         return []
 
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=since_days)).isoformat()
+    cutoff = (datetime.now(UTC) - timedelta(days=since_days)).isoformat()
     uri = f"file:{db_path}?mode=ro"
     conn = sqlite3.connect(uri, uri=True)
     conn.row_factory = sqlite3.Row
@@ -388,7 +388,7 @@ def _write_heartbeat():
     """Write execution heartbeat for meta-doctor M1 monitoring."""
     hb_dir = WORKSPACE / ".omo" / "state" / "heartbeats"
     hb_dir.mkdir(parents=True, exist_ok=True)
-    from datetime import datetime, UTC
+    from datetime import UTC, datetime
     (hb_dir / "episode-source-aggregator.json").write_text(
         json.dumps({"generated_at": datetime.now(UTC).isoformat(), "ok": True}, indent=2) + "\n"
     )

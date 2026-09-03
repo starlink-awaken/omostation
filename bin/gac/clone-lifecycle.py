@@ -1354,6 +1354,7 @@ PLATFORM_PR_FIELDS = {
     "base_ref_oid",
     "branch",
     "head_ref_oid",
+    "merge_commit_oid",
     "number",
     "owner",
     "repository",
@@ -1373,12 +1374,13 @@ def query_platform_rebased_pr(repo_slug: str, pr_number: int) -> tuple[dict | No
             "--repo",
             repo_slug,
             "--json",
-            "number,url,state,baseRefName,baseRefOid,headRefOid,headRefName,headRepository,headRepositoryOwner",
+            "number,url,state,baseRefName,baseRefOid,headRefOid,headRefName,headRepository,headRepositoryOwner,mergeCommit",
             "--jq",
             (
                 "{number:.number,url:.url,state:.state,base_ref_name:.baseRefName,"
                 "base_ref_oid:.baseRefOid,head_ref_oid:.headRefOid,branch:.headRefName,"
-                "repository:.headRepository.nameWithOwner,owner:.headRepositoryOwner.login}"
+                "repository:.headRepository.nameWithOwner,owner:.headRepositoryOwner.login,"
+                "merge_commit_oid:.mergeCommit.oid}"
             ),
         ]
     )
@@ -1397,6 +1399,7 @@ def query_platform_rebased_pr(repo_slug: str, pr_number: int) -> tuple[dict | No
         or any(not isinstance(payload[field], str) or not payload[field] for field in scalar_string_fields)
         or not re.fullmatch(r"[0-9a-f]{40}", payload["base_ref_oid"])
         or not re.fullmatch(r"[0-9a-f]{40}", payload["head_ref_oid"])
+        or not re.fullmatch(r"[0-9a-f]{40}", payload.get("merge_commit_oid") or "")
     ):
         return None, "gh pr view returned invalid field types or values"
     return payload, None
@@ -1499,11 +1502,471 @@ def build_platform_rebased_source_proof(
     return proof, None, None
 
 
+# T1-02 squash-successor 退场 receipt schema 常量
+_SQUASH_PROOF_SCHEMA = "clone-squash-successor-retirement-proof/v1"
+_SQUASH_DELETE_INTENT_SCHEMA = "clone-squash-successor-retirement-delete-intent/v1"
+_SQUASH_SETTLEMENT_SCHEMA = "clone-squash-successor-retirement-settlement/v1"
+
+
+def _persist_receipt_atomically(path: Path, payload: dict) -> tuple[bool, str | None]:
+    """原子写入 receipt 文件: O_CREAT|O_EXCL|O_NOFOLLOW + fsync。"""
+    payload_bytes = (json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
+    parent = path.resolve().parent
+    for p in [parent] + list(parent.parents):
+        if p.is_symlink():
+            return False, f"parent chain contains symlink: {p}"
+        if p == Path("/"):
+            break
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_WRONLY, 0o644)
+    except FileExistsError:
+        try:
+            existing = path.read_bytes()
+            if existing == payload_bytes:
+                return True, None
+            return False, f"receipt already exists with different content: {path}"
+        except OSError as e:
+            return False, f"cannot read existing receipt: {e}"
+    except OSError as e:
+        return False, f"cannot create receipt: {e}"
+    try:
+        os.write(fd, payload_bytes)
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    try:
+        dir_fd = os.open(parent, os.O_RDONLY | os.O_NOFOLLOW)
+        try:
+            os.fsync(dir_fd)
+        finally:
+            os.close(dir_fd)
+    except OSError:
+        pass
+    return True, None
+
+
+def _read_external_receipt(path: Path) -> tuple[dict | None, str | None]:
+    """安全读取外部 receipt 文件。"""
+    if not path.is_file():
+        return None, None
+    if path.is_symlink():
+        return None, f"receipt is symlink: {path}"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        return None, f"cannot read receipt: {e}"
+    return data, None
+
+
+def _verify_source_tag(dest: Path, tag_name: str, source_head: str) -> tuple[dict | None, str | None]:
+    """P4: exact annotated source tag。"""
+    tag_ref = run(["git", "-C", str(dest), "rev-parse", f"refs/tags/{tag_name}^{{tag}}"])
+    if tag_ref.returncode != 0:
+        return None, f"tag {tag_name} is not an annotated tag object"
+    tag_obj = tag_ref.stdout.strip()
+    peeled = run(["git", "-C", str(dest), "rev-parse", f"refs/tags/{tag_name}^{{commit}}"])
+    if peeled.returncode != 0 or peeled.stdout.strip() != source_head:
+        return None, f"tag {tag_name} peeled to {peeled.stdout.strip()}, expected {source_head}"
+    remote_tag = run(["git", "-C", str(dest), "ls-remote", "--exit-code", "--tags",
+                       "origin", f"refs/tags/{tag_name}"])
+    if remote_tag.returncode != 0:
+        return None, f"remote tag {tag_name} not found"
+    remote_lines = remote_tag.stdout.strip().splitlines()
+    if len(remote_lines) < 1:
+        return None, f"remote tag {tag_name} not found"
+    remote_tag_obj = remote_lines[0].split()[0]
+    if remote_tag_obj != tag_obj:
+        return None, f"remote tag object {remote_tag_obj} != local {tag_obj}"
+    return {"tag_object": tag_obj, "peeled_commit": peeled.stdout.strip()}, None
+
+
+def _verify_delivery_base(dest: Path, source_head: str, pr_base: str,
+                          delivery_base: str, frozen_root: str) -> tuple[bool, str | None]:
+    """P5: explicit delivery base。"""
+    mb = run(["git", "-C", str(dest), "merge-base", source_head, pr_base])
+    if mb.returncode != 0:
+        return False, "merge-base failed"
+    if mb.stdout.strip() != delivery_base:
+        return False, f"merge-base = {mb.stdout.strip()}, expected {delivery_base}"
+    anc = run(["git", "-C", str(dest), "merge-base", "--is-ancestor", frozen_root, delivery_base])
+    if anc.returncode != 0:
+        return False, "frozen_root is not ancestor of delivery_base"
+    anc2 = run(["git", "-C", str(dest), "merge-base", "--is-ancestor", delivery_base, pr_base])
+    if anc2.returncode != 0:
+        return False, "delivery_base is not ancestor of pr_base"
+    rng = run(["git", "-C", str(dest), "rev-list", "--count", f"{delivery_base}..{source_head}"])
+    if rng.returncode != 0 or int(rng.stdout.strip()) == 0:
+        return False, "delivery_base..source_head is empty"
+    return True, None
+
+
+def _verify_squash_topology(dest: Path, merge_commit: str, pr_base: str,
+                            source_head: str) -> tuple[bool, str | None]:
+    """P7: one-parent squash topology。"""
+    cat = run(["git", "-C", str(dest), "cat-file", "-t", merge_commit])
+    if cat.returncode != 0 or cat.stdout.strip() != "commit":
+        return False, f"merge commit {merge_commit[:12]} not found"
+    parents = run(["git", "-C", str(dest), "rev-parse", f"{merge_commit}^@"])
+    if parents.returncode != 0:
+        return False, "cannot read merge commit parents"
+    parent_list = parents.stdout.strip().splitlines()
+    if len(parent_list) != 1:
+        return False, f"merge commit has {len(parent_list)} parents, expected 1"
+    if parent_list[0] != pr_base:
+        return False, f"merge parent {parent_list[0][:12]} != PR base {pr_base[:12]}"
+    return True, None
+
+
+def _verify_patch_tree_equiv(dest: Path, delivery_base: str, source_head: str,
+                             merge_commit: str) -> tuple[dict | None, str | None]:
+    """P8: patch-to-tree equivalence。
+
+    验证 delivery_base..source_head 的 patch 应用到 PR base tree 后
+    是否等于 squash merge tree。
+    """
+    # 获取 PR base tree (merge commit 的 parent tree)
+    pr_base_tree = run(["git", "-C", str(dest), "rev-parse", f"{merge_commit}^{{tree}}"])
+    if pr_base_tree.returncode != 0:
+        return None, "cannot resolve merge tree"
+    merge_tree_sha = pr_base_tree.stdout.strip()
+
+    # 获取 PR base 的 tree (parent of merge commit)
+    parent_ref = run(["git", "-C", str(dest), "rev-parse", f"{merge_commit}^"])
+    if parent_ref.returncode != 0:
+        return None, "cannot resolve merge parent"
+    parent_tree = run(["git", "-C", str(dest), "rev-parse", f"{parent_ref.stdout.strip()}^{{tree}}"])
+    if parent_tree.returncode != 0:
+        return None, "cannot resolve parent tree"
+    parent_tree_sha = parent_tree.stdout.strip()
+
+    # 生成 delivery patch
+    patch = run(["git", "-C", str(dest), "diff", "--binary", "--full-index",
+                 f"{delivery_base}..{source_head}"])
+    if patch.returncode != 0:
+        return None, "failed to generate delivery patch"
+    if not patch.stdout.strip():
+        return None, "delivery patch is empty"
+
+    # changed-path 列表
+    paths = run(["git", "-C", str(dest), "diff", "--name-only",
+                 f"{delivery_base}..{source_head}"])
+    if paths.returncode != 0:
+        return None, "failed to enumerate changed paths"
+    changed_paths = [p for p in paths.stdout.strip().splitlines() if p.strip()]
+    if not changed_paths:
+        return None, "no changed paths"
+
+    # 在 temp index 上: seed from parent tree, apply patch, write tree
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_index = Path(tmpdir) / "index"
+        env = {**os.environ, "GIT_INDEX_FILE": str(tmp_index)}
+        r = run(["git", "-C", str(dest), "read-tree", parent_tree_sha], env=env)
+        if r.returncode != 0:
+            return None, f"failed to seed temp index: {r.stderr}"
+        proc = subprocess.run(
+            ["git", "-C", str(dest), "apply", "--binary", "--cached"],
+            input=patch.stdout, capture_output=True, text=True, env=env
+        )
+        if proc.returncode != 0:
+            return None, f"patch apply failed: {proc.stderr}"
+        written = run(["git", "-C", str(dest), "write-tree"], env=env)
+        if written.returncode != 0:
+            return None, "failed to write reproduced tree"
+        reproduced_tree = written.stdout.strip()
+
+    digest = hashlib.sha256(patch.stdout.encode("utf-8")).hexdigest()
+    return {"changed_path_count": len(changed_paths),
+            "patch_digest": f"sha256:{digest}",
+            "reproduced_tree": reproduced_tree,
+            "merge_tree": merge_tree_sha,
+            "tree_match": reproduced_tree == merge_tree_sha}, None
+
+
+def _verify_current_main(dest: Path, merge_commit: str) -> tuple[str | None, str | None]:
+    """P9: current remote main。"""
+    main_ref = run(["git", "-C", str(dest), "rev-parse", "origin/main"])
+    if main_ref.returncode != 0:
+        return None, "cannot resolve origin/main"
+    main_sha = main_ref.stdout.strip()
+    anc = run(["git", "-C", str(dest), "merge-base", "--is-ancestor", merge_commit, main_sha])
+    if anc.returncode != 0:
+        return None, "merge commit is not ancestor of origin/main"
+    main_ref2 = run(["git", "-C", str(dest), "rev-parse", "origin/main"])
+    if main_ref2.returncode != 0 or main_ref2.stdout.strip() != main_sha:
+        return None, "origin/main changed during verification (race)"
+    return main_sha, None
+
+
+def _retire_squash_successor(args: argparse.Namespace, dest: Path,
+                              squash_pr: int, squash_tag: str,
+                              squash_base: str, evidence_path: Path) -> int:
+    """T1-02 squash-successor 退场 mode: P1-P11 proof + receipt 链 + fail-closed 退场。"""
+    resolved = dest.resolve()
+
+    # 幂等已缺席处理
+    if not os.path.lexists(dest):
+        return _retire_squash_replay_absent(dest, resolved, squash_pr, squash_tag,
+                                             squash_base, evidence_path)
+
+    # P1: clone identity / local state
+    if not dest.is_dir() or dest.is_symlink():
+        return reject("retire", "invalid_destination", f"invalid destination: {dest}")
+    git_dir = dest / ".git"
+    if not git_dir.is_dir():
+        return reject("retire", "independent_clone_required", f"independent clone required: {dest}")
+    common = run(["git", "-C", str(dest), "rev-parse", "--path-format=absolute", "--git-common-dir"])
+    if common.returncode != 0 or Path(common.stdout.strip()).resolve() != git_dir.resolve():
+        return reject("retire", "linked_worktree", "git common dir is not clone-local")
+    identity_path = git_dir / "agent-clone-identity.json"
+    try:
+        identity = json.loads(identity_path.read_text())
+    except (OSError, json.JSONDecodeError) as e:
+        return reject("retire", "identity_unreadable", str(e))
+    if identity.get("ready") is not True or identity.get("canonical_root") != str(resolved):
+        return reject("retire", "identity_mismatch", "identity does not match destination")
+    frozen_root = identity.get("frozen_root_sha")
+    branch = identity.get("working_branch")
+    head_sha = run(["git", "-C", str(dest), "rev-parse", "HEAD"]).stdout.strip()
+    status = run(["git", "-C", str(dest), "status", "--porcelain", "--ignore-submodules=none"])
+    if status.returncode != 0 or status.stdout.strip():
+        return reject("retire", "clone_dirty", "clone is dirty")
+    locks, active_runs, state_errors = workflow_activity(dest)
+    if locks or active_runs or state_errors:
+        return reject("retire", "active_lease_or_lock", "workflow locks present")
+
+    # P2: repository / origin
+    repo_slug, prov_error = bound_repository_slug(dest, identity)
+    if repo_slug is None:
+        return reject("retire", "github_repository_unbound", prov_error or "repository unbound")
+    owner = repo_slug.split("/", 1)[0]
+
+    # P3: exact merged PR
+    pr = query_platform_rebased_pr(repo_slug, squash_pr)
+    if pr[0] is None:
+        return reject("retire", "squash_pr_invalid", pr[1] or "PR query failed")
+    pr = pr[0]
+    if pr.get("state") != "MERGED":
+        return reject("retire", "squash_pr_not_merged", f"PR state={pr.get('state')}")
+    if pr.get("base_ref_name") != "main" or pr.get("repository") != repo_slug:
+        return reject("retire", "squash_pr_identity_mismatch", "PR identity mismatch")
+    if pr.get("head_ref_oid") != head_sha or pr.get("branch") != branch:
+        return reject("retire", "squash_pr_head_mismatch", "PR head mismatch")
+
+    # P4: annotated source tag
+    tag_info, tag_error = _verify_source_tag(dest, squash_tag, head_sha)
+    if tag_info is None:
+        return reject("retire", "squash_tag_invalid", tag_error or "tag verification failed")
+
+    # P5: explicit delivery base
+    ok, base_error = _verify_delivery_base(dest, head_sha, pr["base_ref_oid"], squash_base, frozen_root)
+    if not ok:
+        return reject("retire", "squash_delivery_base_invalid", base_error or "delivery base invalid")
+
+    # P6: delivery-only author/committer identity
+    guarded, guard_error = run_provenance_guard(dest, identity,
+                                                 platform_base=squash_base, platform_head=head_sha)
+    if not guarded:
+        return reject("retire", "clone_provenance_mismatch", guard_error or "provenance guard failed")
+
+    # P7: one-parent squash topology
+    merge_commit = pr["merge_commit_oid"]
+    ok, topo_error = _verify_squash_topology(dest, merge_commit, pr["base_ref_oid"], head_sha)
+    if not ok:
+        return reject("retire", "squash_topology_invalid", topo_error or "topology invalid")
+
+    # P8: patch-to-tree equivalence
+    tree_info, tree_error = _verify_patch_tree_equiv(dest, squash_base, head_sha, merge_commit)
+    if tree_info is None:
+        return reject("retire", "squash_tree_mismatch", tree_error or"tree mismatch")
+    if not tree_info["tree_match"]:
+        return reject("retire", "squash_tree_mismatch",
+                      f"source_tree={tree_info['source_tree'][:12]} != merge_tree={tree_info['merge_tree'][:12]}")
+
+    # P9: current remote main
+    main_sha, main_error = _verify_current_main(dest, merge_commit)
+    if main_sha is None:
+        return reject("retire", "squash_main_invalid", main_error or"main invalid")
+
+    # P10: surviving source branch
+    remote_ref = f"refs/heads/{branch}"
+    remote = run(["git", "-C", str(dest), "ls-remote", "--exit-code", "--heads", "origin", remote_ref])
+    remote_lines = [line.split() for line in remote.stdout.splitlines() if line.strip()]
+    if remote.returncode == 0 and (len(remote_lines) != 1 or remote_lines[0][0] != head_sha):
+        return reject("retire", "squash_remote_branch_contradiction", "remote branch contradicts HEAD")
+
+    # P11: external receipt chain — proof
+    merge_tree_sha = run(["git", "-C", str(dest), "rev-parse", f"{merge_commit}^{{tree}}"]).stdout.strip()
+    proof_payload = {
+        "schema": _SQUASH_PROOF_SCHEMA,
+        "canonical_repository": repo_slug,
+        "pr_number": squash_pr,
+        "branch": branch,
+        "owner": owner,
+        "destination": str(resolved),
+        "frozen_root": frozen_root,
+        "delivery_base": squash_base,
+        "source_head": head_sha,
+        "tag_name": squash_tag,
+        "tag_object": tag_info["tag_object"],
+        "peeled_tag_target": tag_info["peeled_commit"],
+        "pr_base": pr["base_ref_oid"],
+        "squash_commit": merge_commit,
+        "squash_parent": pr["base_ref_oid"],
+        "squash_tree": merge_tree_sha,
+        "current_main": main_sha,
+        "changed_path_count": tree_info["changed_path_count"],
+        "patch_digest": tree_info["patch_digest"],
+        "actor": identity.get("actor_id", ""),
+        "delivery_attempt_id": identity.get("delivery_attempt_id", ""),
+        "status": "verified_for_retirement",
+    }
+    proof_payload["receipt_digest"] = _canonical_json_digest(proof_payload)
+    ok, proof_error = _persist_receipt_atomically(evidence_path, proof_payload)
+    if not ok:
+        return reject("retire", "squash_proof_persist_failed", proof_error or"proof persist failed")
+
+    # Quarantine + deletion
+    initial_stat = dest.lstat()
+    removed, removal_detail = quarantine_remove_verified(dest, initial_stat, head_sha)
+    if not removed:
+        return reject("retire", "destination_raced", removal_detail)
+
+    # delete-intent
+    di_path = Path(f"{evidence_path}.delete-intent")
+    di_payload = {
+        "schema": _SQUASH_DELETE_INTENT_SCHEMA,
+        "proof_digest": proof_payload["receipt_digest"],
+        "destination": str(resolved),
+        "repository": repo_slug,
+        "actor": identity.get("actor_id", ""),
+        "delivery_attempt_id": identity.get("delivery_attempt_id", ""),
+        "pr_number": squash_pr,
+        "merge_commit": merge_commit,
+        "source_head": head_sha,
+        "status": "delete_authorized",
+    }
+    di_payload["receipt_digest"] = _canonical_json_digest(di_payload)
+    ok, di_error = _persist_receipt_atomically(di_path, di_payload)
+    if not ok:
+        return reject("retire", "squash_delete_intent_failed", di_error or"delete-intent failed")
+
+    # settlement
+    st_path = Path(f"{evidence_path}.settled")
+    st_payload = {
+        "schema": _SQUASH_SETTLEMENT_SCHEMA,
+        "proof_digest": proof_payload["receipt_digest"],
+        "delete_intent_digest": di_payload["receipt_digest"],
+        "destination": str(resolved),
+        "repository": repo_slug,
+        "actor": identity.get("actor_id", ""),
+        "delivery_attempt_id": identity.get("delivery_attempt_id", ""),
+        "pr_number": squash_pr,
+        "merge_commit": merge_commit,
+        "source_head": head_sha,
+        "status": "retired",
+    }
+    st_payload["receipt_digest"] = _canonical_json_digest(st_payload)
+    ok, st_error = _persist_receipt_atomically(st_path, st_payload)
+    if not ok:
+        audit("retire_settlement_pending", f"settlement failed: {st_error}")
+        print(json.dumps({"ok": False, "status": "settlement_pending",
+                          "settlement_path": str(st_path), "error": st_error}))
+        return EXIT_POLICY
+
+    audit("retire_ok", f"squash-successor retired {dest}")
+    print(json.dumps({"ok": True, "removed": str(dest), "head_sha": head_sha,
+                      "merged_pr": pr.get("url", ""), "pr_number": squash_pr,
+                      "evidence": str(evidence_path), "settlement": str(st_path)}))
+    return EXIT_OK
+
+
+def _retire_squash_replay_absent(dest: Path, resolved: Path, squash_pr: int,
+                                  squash_tag: str, squash_base: str,
+                                  evidence_path: Path) -> int:
+    """幂等已缺席处理: 检查 receipt 链状态并恢复/确认。"""
+    proof, _ = _read_external_receipt(evidence_path)
+    di_path = Path(f"{evidence_path}.delete-intent")
+    delete_intent, _ = _read_external_receipt(di_path)
+    st_path = Path(f"{evidence_path}.settled")
+    settlement, _ = _read_external_receipt(st_path)
+
+    # Case 1: settled → 已完整退场
+    if (proof and delete_intent and settlement
+            and proof.get("schema") == _SQUASH_PROOF_SCHEMA
+            and delete_intent.get("schema") == _SQUASH_DELETE_INTENT_SCHEMA
+            and settlement.get("schema") == _SQUASH_SETTLEMENT_SCHEMA
+            and delete_intent.get("proof_digest") == proof.get("receipt_digest")
+            and settlement.get("proof_digest") == proof.get("receipt_digest")
+            and settlement.get("delete_intent_digest") == delete_intent.get("receipt_digest")
+            and proof.get("pr_number") == squash_pr
+            and proof.get("delivery_base") == squash_base
+            and proof.get("destination") == str(resolved)):
+        audit("retire_ok", f"squash already retired (settled): {dest}")
+        return EXIT_OK
+
+    # Case 2: crash after delete, before settlement → 写 settlement
+    if (proof and delete_intent and not settlement
+            and proof.get("schema") == _SQUASH_PROOF_SCHEMA
+            and delete_intent.get("schema") == _SQUASH_DELETE_INTENT_SCHEMA
+            and delete_intent.get("proof_digest") == proof.get("receipt_digest")):
+        st_payload = {
+            "schema": _SQUASH_SETTLEMENT_SCHEMA,
+            "proof_digest": proof["receipt_digest"],
+            "delete_intent_digest": delete_intent["receipt_digest"],
+            "destination": str(resolved),
+            "repository": proof.get("canonical_repository", ""),
+            "actor": proof.get("actor", ""),
+            "delivery_attempt_id": proof.get("delivery_attempt_id", ""),
+            "pr_number": proof.get("pr_number", squash_pr),
+            "merge_commit": proof.get("squash_commit", ""),
+            "source_head": proof.get("source_head", ""),
+            "status": "retired",
+        }
+        st_payload["receipt_digest"] = _canonical_json_digest(st_payload)
+        ok, st_error = _persist_receipt_atomically(st_path, st_payload)
+        if not ok:
+            audit("retire_settlement_pending", f"replay settlement failed: {st_error}")
+            return EXIT_POLICY
+        audit("retire_ok", f"squash settlement replay: {dest}")
+        return EXIT_OK
+
+    return reject("retire", "squash_replay_unsettled",
+                  "destination absent but receipt chain incomplete or mismatched")
+
 def cmd_retire(args: argparse.Namespace) -> int:
     """清理 clone + 释放资源."""
     raw_dest = Path(args.destination).expanduser().absolute()
     dest = raw_dest
     audit("retire_start", f"dest={dest}")
+
+    # T1-02 squash-successor 退场: 参数校验（必须在 already_absent 之前）
+    squash_pr = getattr(args, "squash_merged_pr", None)
+    squash_tag = getattr(args, "source_tag", None)
+    squash_base = getattr(args, "delivery_base", None)
+    squash_evidence = getattr(args, "evidence", None)
+    squash_args = [squash_pr, squash_tag, squash_base, squash_evidence]
+    if any(a is not None for a in squash_args):
+        if not all(a is not None for a in squash_args):
+            return reject("retire", "squash_args_incomplete",
+                          "squash-merged-pr / source-tag / delivery-base / evidence 必须同时提供")
+        if getattr(args, "platform_rebased_pr", None) is not None:
+            return reject("retire", "squash_platform_exclusive",
+                          "squash-merged-pr 与 platform-rebased-pr 互斥")
+        if not re.fullmatch(r"[0-9a-f]{40}", squash_base):
+            return reject("retire", "delivery_base_invalid",
+                          f"delivery-base 必须 40-hex: {squash_base!r}")
+        evidence_path = Path(squash_evidence).expanduser().absolute()
+        if evidence_path.is_symlink():
+            return reject("retire", "evidence_symlink", f"evidence 不能是 symlink: {evidence_path}")
+        try:
+            evidence_path.relative_to(raw_dest)
+            return reject("retire", "evidence_inside_clone",
+                          f"evidence 必须在 clone 外部: {evidence_path}")
+        except ValueError:
+            pass
+        return _retire_squash_successor(args, dest, squash_pr, squash_tag, squash_base, evidence_path)
+
     if not os.path.lexists(dest):
         audit("retire_ok", f"already_absent {dest}")
         print(json.dumps({"ok": True, "already_absent": str(dest)}))
@@ -1872,6 +2335,15 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         help="exact merged PR number whose server-side rebase rewrote the source commit",
     )
+    # T1-02 squash-successor 退场 mode
+    sp.add_argument("--squash-merged-pr", type=int,
+                    help="exact merged PR number for one-parent squash merge (T1-02)")
+    sp.add_argument("--source-tag",
+                    help="annotated source tag for squash-successor retirement")
+    sp.add_argument("--delivery-base",
+                    help="40-hex commit SHA: merge-base(source_head, pr_base)")
+    sp.add_argument("--evidence",
+                    help="external proof receipt path outside clone")
     sp.set_defaults(func=cmd_retire)
     # abort-unready -- intentionally separate from ready-clone retirement.
     sp = sub.add_parser("abort-unready", help="双读清理从未获 writer admission 的降级 clone")
