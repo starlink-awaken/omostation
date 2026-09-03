@@ -18924,7 +18924,8 @@ bets:
   title: Mobile Cockpit 移动轻控制台（iOS / PWA 随时随地审阅与滑动署名）
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-03
   goal: 为夏明星量身定制移动端响应式 Web PWA 与 iOS 快捷指令（Shortcuts）桥接，实现离开电脑在会议间隙、出差路上随时查看待办卡片、手机端查看左右
     Diff 比对、滑动一键署名外发。
   non_goals:
@@ -18951,6 +18952,48 @@ bets:
   human_gate: true
   circuit_breaker: 移动端网络通信受阻时将签署状态暂存本地加密队列。
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-t8-02-mobile-pwa-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d5b327f7d99a64df03008d2a205bef41da4a989151fc0cb72de96cdb30e1e31d
+    decision_ref: decision://accepted/BET-Y1Q4-T8-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@92ac5d0ba6adfd7bb2d5ad7906ddfa7356ee6367
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
+            sha256: sha256:0d7aaccb0a068ad1a9be9dc6d35d024140d0085228be36b78576aa963c465c2f
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-t8-02-mobile-pwa-design.md
+            sha256: sha256:d5b327f7d99a64df03008d2a205bef41da4a989151fc0cb72de96cdb30e1e31d
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
+            sha256: sha256:0d7aaccb0a068ad1a9be9dc6d35d024140d0085228be36b78576aa963c465c2f
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
+            sha256: sha256:0d7aaccb0a068ad1a9be9dc6d35d024140d0085228be36b78576aa963c465c2f
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
+            sha256: sha256:0d7aaccb0a068ad1a9be9dc6d35d024140d0085228be36b78576aa963c465c2f
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
+            sha256: sha256:0d7aaccb0a068ad1a9be9dc6d35d024140d0085228be36b78576aa963c465c2f
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
+            sha256: sha256:0d7aaccb0a068ad1a9be9dc6d35d024140d0085228be36b78576aa963c465c2f
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
 - id: BET-Y1Q4-T8-03
   track: T8-SURFACE
   window: Y1Q4
