@@ -217,10 +217,16 @@ SHELL_HELP: dict[str, str] = {
         "说明: omlxc 工具目录 CLI (Click 框架, 完整帮助: cockpit omlxc --help)。\n"
         "      注意: 下游不认 -h 短旗标, 本条目仅接管 -h。"
     ),
+    "submodule-gitlink-check": (
+        "用法: cockpit submodule-gitlink-check [--json]\n"
+        "说明: 校验主仓 gitlink 与子仓实际 HEAD 一致 (防指针漂移)。\n"
+        "      下游脚本不解析 --help (会直接跑检查), 故由壳层接管。"
+    ),
 }
 
-# 仅拦截显式 --help/-h、空参保持原行为的命令 (omo/resident 空参委派下游是既有约定)
-SHELL_HELP_HELP_ONLY: frozenset[str] = frozenset({"omo", "resident", "ssb"})
+# 仅拦截显式 --help/-h、空参保持原行为的命令
+# (omo/resident 空参委派下游是既有约定; submodule-gitlink-check 空参默认跑检查)
+SHELL_HELP_HELP_ONLY: frozenset[str] = frozenset({"omo", "resident", "ssb", "submodule-gitlink-check"})
 
 # 仅拦截 -h 短旗标的命令 (--help 仍透传; Click 系下游不认 -h 但认 --help)
 SHELL_HELP_SHORT_ONLY: frozenset[str] = frozenset({"omlxc"})
@@ -261,8 +267,12 @@ def inject_empty_help(args: argparse.Namespace) -> None:
     """空 REMAINDER → 注入 --help (在 cli.py 分发前调用一次).
 
     EMPTY_FALLBACK_OVERRIDES[cmd] 为 None 时不注入; 为 list 时注入该参数。
+    SHELL_HELP_HELP_ONLY 内命令不注入 (空参保持既有委派行为, 由 handler 自身
+    的空参回退决定下游收到什么; 否则注入的 --help 会让壳层帮助接管误判为显式请求)。
     """
     cmd = getattr(args, "command", "")
+    if cmd in SHELL_HELP_HELP_ONLY:
+        return
     attr = EXISTING_REMAINDER_DELEGATIONS.get(cmd)
     if attr is None or list(getattr(args, attr, []) or []):
         return
