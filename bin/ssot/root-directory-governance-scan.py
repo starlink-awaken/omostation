@@ -24,7 +24,7 @@ from pathlib import Path
 
 import yaml
 
-POLICY_RELATIVE_PATH = Path("docs/operations/root-directory-governance-policy.yaml")
+POLICY_RELATIVE_PATH = Path(".omo/_archive/operations-2026H1/root-directory-governance-policy.yaml")
 README_NAMES = {
     "readme.md",
     "README.md",
