@@ -13576,7 +13576,13 @@ bets:
   - docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
   - docs/superpowers/plans/2026-08-28-post2408-main-recovery-and-required-gac-gate.md
   - docs/reports/2026-08-28-post2408-main-recovery-closeout.md
+  - docs/operations/blueprint-agent-instruction-pack-v1.md
+  - docs/operations/bin-scripts-convergence-manifest.json
+  - docs/operations/root-directory-governance-policy.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T6-15.md
+  - .omo/_truth/governance-evidence/waiver-2026-09-02-workflow-self-hosting-restore.md
+  - .omo/_truth/registry/mof-capabilities.yaml
+  - projects/ecos
   - bin/ops/cli.py
   - bin/_registry/scripts/governance/templates.yaml
   - .omo/_truth/registry/governance-checks.yaml
@@ -13628,8 +13634,8 @@ bets:
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
-    spec_version: 1.0.1
-    content_digest: sha256:8ca8451fc2693ef350c692b198cc7d77194204a290d3d8ec6ce6ed4d5e9ec358
+    spec_version: 1.0.2
+    content_digest: sha256:e0e88e308fc7df7428d469c9de78ccec9f3ad27bfd7873539c1806a0c2f4f30d
     decision_ref: decision://accepted/BET-Y1Q3-T6-15
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -13655,6 +13661,42 @@ bets:
     so a residual GET-B/PATCH race remains and is bounded by a second human gate,
     receipt and context-only rollback、host retention 缺授权或直接证据、或 value-exempt completion
     合同不可用时立即停止'
+  retro: required
+- id: BET-Y1Q3-T6-16
+  track: T6-SUBTRACT
+  window: Y1Q3
+  title: 多仓本地分支、脏工作树与未合并交付的保护性收敛
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  goal: 在不丢弃并发工作、不强推、不重置共享树的前提下，盘点根仓及子仓本地分支、未提交状态和开放 PR，按 owner、可达性、测试与合并状态形成可执行的收敛序列。
+  non_goals:
+  - 不批量删除、reset、clean、stash 或强推任何未知工作。
+  - 不把 runtime、.omc、缓存、锁或密钥作为业务交付提交。
+  - 不重复 T6-15 的 immutable GaC 修复或 T10-122 的 Documents canary。
+  done_when:
+  - 每个根仓/子仓 dirty surface 被标记为 owner-owned、generated、unknown 或已恢复，并有对应处置。
+  - 可证明 child-main 可达且 required checks 通过的用户署名交付按 child-first PR 顺序合入；其余分支保留并记录阻断原因。
+  - 根仓 integration PR 不以 escape 绕过自身引入的 gate 失败，且最终 main/child gitlink 关系可复核。
+  verify:
+  - cmd: git -C /Users/xiamingxing/Workspace status --short && git -C /Users/xiamingxing/Workspace submodule status --recursive
+    expect: 输出可归因，不使用 destructive cleanup
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: candidate BET 结构合法
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-02-local-repository-reconciliation-design.md
+  - docs/reports/2026-09-02-local-repository-reconciliation.md
+  - .omo/_knowledge/retros/BET-Y1Q3-T6-16.md
+  pasw_required: true
+  depends_on:
+  - BET-Y1Q3-T6-15
+  risk_level: L3
+  human_gate: true
+  circuit_breaker: 发现不明 owner、不可达 gitlink、失败 required check、scope 外写面或共享树需 destructive cleanup 时立即停止并保留原状。
+  value_indicator_policy: false
   retro: required
 - id: BET-Y1Q3-T10-01
   track: T10-MATURITY
