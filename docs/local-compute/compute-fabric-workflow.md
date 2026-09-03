@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: governance-team
 last-reviewed: 2026-08-18
+last_updated: 2026-09-03
 type: ssot
 ---
 # 🛠️ omlxc Compute Fabric 运维与多 Agent 协作工作流 (Runbook & Workflow)
