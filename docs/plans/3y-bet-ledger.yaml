@@ -12063,11 +12063,11 @@ bets:
   priority: P0
   status: candidate
   note: 'Accepted binding only. At base dfb4f755dbc45d2947d9d9a10d9a02755a4f0fee,
-    prepare_bet_execution remains globally blocked by INSTRUCTION_PACK_MISSING:
-    docs/operations/blueprint-agent-instruction-pack-v1.md. Phase 2 must not start
-    until that canonical baseline is restored or superseded in a separately governed
-    change.'
-  goal: 为包含合法 main successor、最终由单父 squash commit 合并的独立 clone 建立专用且 fail-closed 的规范退役模式，在不放宽现有退役语义的前提下保全外部 proof、delete-intent 与 settlement 证据链。
+    prepare_bet_execution remains globally blocked by INSTRUCTION_PACK_MISSING: docs/operations/blueprint-agent-instruction-pack-v1.md.
+    Phase 2 must not start until that canonical baseline is restored or superseded
+    in a separately governed change.'
+  goal: 为包含合法 main successor、最终由单父 squash commit 合并的独立 clone 建立专用且 fail-closed 的规范退役模式，在不放宽现有退役语义的前提下保全外部
+    proof、delete-intent 与 settlement 证据链。
   non_goals:
   - 不改变 ordinary 或 platform-rebased retirement 语义
   - 不修改 agent-clone.py、registry、CI、branch protection 或任何运行态
@@ -12075,12 +12075,16 @@ bets:
   - 不标记本 BET done，不证明 operational/value，不写个人价值指标
   done_when:
   - 新模式仅在 exact PR、annotated source tag、delivery base 与 external evidence 四项同时给出时可选
-  - 完整校验 repository、PR、source range、squash parent/tree、current main、actor、attempt、destination 与 receipt digests
-  - proof、post-quarantine delete-intent、post-delete settlement 形成 durable digest chain，race/crash 分支全部 fail-closed 或可恢复
+  - 完整校验 repository、PR、source range、squash parent/tree、current main、actor、attempt、destination
+    与 receipt digests
+  - proof、post-quarantine delete-intent、post-delete settlement 形成 durable digest chain，race/crash
+    分支全部 fail-closed 或可恢复
   - ordinary 与 platform-rebased retirement 回归行为保持不变，focused negative/race tests 全绿
-  - 实现 PR required contexts 与 exact-SHA post-merge Governance Check 通过后，仅通过 canonical lifecycle 退役目标 clone
+  - 实现 PR required contexts 与 exact-SHA post-merge Governance Check 通过后，仅通过 canonical
+    lifecycle 退役目标 clone
   verify:
-  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tests/test_clone_lifecycle.py
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pytest --with pyyaml python -m pytest
+      -q -p no:cacheprovider tests/test_clone_lifecycle.py
     expect: exit 0
   - cmd: uv run ruff check bin/gac/clone-lifecycle.py tests/test_clone_lifecycle.py
     expect: exit 0
@@ -12132,7 +12136,8 @@ bets:
   value_indicator_policy: false
   risk_level: L2
   human_gate: true
-  circuit_breaker: 任何证明谓词、外部证据持久化、竞态恢复、scope、测试或 required check 无法保持 fail-closed 时停止，不退役目标 clone
+  circuit_breaker: 任何证明谓词、外部证据持久化、竞态恢复、scope、测试或 required check 无法保持 fail-closed 时停止，不退役目标
+    clone
   retro: required
 - id: BET-Y1Q3-T1-12
   track: T1-TRUTH
@@ -13577,7 +13582,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T6-14-accept.yaml
             sha256: sha256:31aedebc289dcf38f88bd2ad473399d631af110bf89ba13a1ca8d516d05a714d
@@ -13788,7 +13793,8 @@ bets:
   - 可证明 child-main 可达且 required checks 通过的用户署名交付按 child-first PR 顺序合入；其余分支保留并记录阻断原因。
   - 根仓 integration PR 不以 escape 绕过自身引入的 gate 失败，且最终 main/child gitlink 关系可复核。
   verify:
-  - cmd: git -C /Users/xiamingxing/Workspace status --short && git -C /Users/xiamingxing/Workspace submodule status --recursive
+  - cmd: git -C /Users/xiamingxing/Workspace status --short && git -C /Users/xiamingxing/Workspace
+      submodule status --recursive
     expect: 输出可归因，不使用 destructive cleanup
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: candidate BET 结构合法
@@ -13803,7 +13809,8 @@ bets:
   - BET-Y1Q3-T6-15
   risk_level: L3
   human_gate: true
-  circuit_breaker: 发现不明 owner、不可达 gitlink、失败 required check、scope 外写面或共享树需 destructive cleanup 时立即停止并保留原状。
+  circuit_breaker: 发现不明 owner、不可达 gitlink、失败 required check、scope 外写面或共享树需 destructive
+    cleanup 时立即停止并保留原状。
   value_indicator_policy: false
   retro: required
 - id: BET-Y1Q3-T10-01
@@ -13862,7 +13869,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-01-accept.yaml
             sha256: sha256:d7406fd12f7745dbd16a6bbec270247bbcb295595bae600d9946aca5baa10ea0
@@ -16191,7 +16198,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-02-accept.yaml
             sha256: sha256:71a8b1ba07cdf8fd8d814e0f9ebf1fcdd1fe99d1a2ee8eb03e7f3582a03888ac
@@ -16265,22 +16272,22 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           rollback:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
       operational:
         status: PROVEN
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-03-accept.yaml
             sha256: sha256:ee49d84653365926a721b793add77e977c742f4b73c6252c392e807c5c3b238b
           live_canary:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -16295,7 +16302,7 @@ bets:
             sha256: sha256:ee49d84653365926a721b793add77e977c742f4b73c6252c392e807c5c3b238b
           real_signal:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-03.md
             sha256: sha256:33836ee1c4626ae2734a625606cc1d4754d6938c341cc24e019dd231376aacad
@@ -16349,22 +16356,22 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           rollback:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
       operational:
         status: PROVEN
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-04-accept.yaml
             sha256: sha256:67703b87331dc9d1ef857c8b61ffb22487b886449a282d9b61ae05058272aaa0
           live_canary:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -16379,7 +16386,7 @@ bets:
             sha256: sha256:67703b87331dc9d1ef857c8b61ffb22487b886449a282d9b61ae05058272aaa0
           real_signal:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-04.md
             sha256: sha256:afbfe0a86070b96a7d42b4e0cdf22c01adc46cf8327190a5ec8799b2059a93e2
@@ -16439,7 +16446,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-05-accept.yaml
             sha256: sha256:faa91257068806752d05dcb7e28027586c874afe3acbefc3f5725c3e8a78f0d5
@@ -16520,7 +16527,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-06-accept.yaml
             sha256: sha256:d31515c10b63fefdfae26715cb5bd0fcd0766555bb8287636679dcdc474b05ec
@@ -16606,7 +16613,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-07-accept.yaml
             sha256: sha256:f04ef221667cd7f50b12ebbcdd393456be586f970f0efb8ec9fa9de396d3f81a
@@ -16688,7 +16695,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-08-accept.yaml
             sha256: sha256:2a2e6ba8c1fa4687278c8d9fb2b9970c8621ceb30aebb0291e602c2557c982e4
@@ -16770,7 +16777,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-09-accept.yaml
             sha256: sha256:b3d6ca192df680c55b703da6b8e2fd58a29379a06acbcbb25bd3878670871381
@@ -16853,7 +16860,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-10-accept.yaml
             sha256: sha256:337a8e2702de957e5070a9b09a5abd35778a70a024d2bb1e618a14ac36bb0f42
@@ -17040,7 +17047,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-12-accept.yaml
             sha256: sha256:903bcf976f737ad482b473b0e5dceb513bfb0aeddac1169d0b82e593abe9df0b
@@ -18286,7 +18293,8 @@ bets:
   priority: P1
   status: done
   done_at: 2026-09-03
-  goal: 开发全自动化混沌测试工具，定时注入雷雳 5 断开、显存爆炸、脏工作树、僵尸进程、并发死锁等 12 种典型生产故障，验证系统 5 层并发锁与 GaC 门禁的绝对韧性。
+  goal: 开发全自动化混沌测试工具，定时注入雷雳 5 断开、显存爆炸、脏工作树、僵尸进程、并发死锁等 12 种典型生产故障，验证系统 5 层并发锁与 GaC
+    门禁的绝对韧性。
   non_goals:
   - 不在生产工作树中直接执行破坏性不可逆删除
   done_when:
@@ -18982,7 +18990,8 @@ bets:
   appetite: 3 weeks
   priority: P0
   status: candidate
-  goal: 将 Cockpit 收敛为夏明星个人工作案件台，先跑通 OA 任务读取、调查包分发与回收、催办、汇总、上报草稿、自动归档和受控 OA 结案；OMO 保持唯一流程、审批、动作与回执真值。
+  goal: 将 Cockpit 收敛为夏明星个人工作案件台，先跑通 OA 任务读取、调查包分发与回收、催办、汇总、上报草稿、自动归档和受控 OA 结案；OMO
+    保持唯一流程、审批、动作与回执真值。
   non_goals:
   - 不新建第二任务、工作流、凭据或知识真值
   - 不做未经最终确认的邮件、微信、OA 回写或向上报送
@@ -18993,7 +19002,8 @@ bets:
   - 高敏或不确定内容不离开本地，Cockpit 只消费凭据引用且不可显示原始密钥
   - Cockpit 默认导航收敛为今日、案件、工作台、知识与归档、系统与连接，技术页面降级为专家工具
   verify:
-  - cmd: cd projects/cockpit-ui && bun run typecheck && bun run test:unit && bun run build
+  - cmd: cd projects/cockpit-ui && bun run typecheck && bun run test:unit && bun run
+      build
     expect: exit 0
   - cmd: cd projects/omo && uv run pytest tests -k work_case
     expect: exit 0
