@@ -24,6 +24,12 @@ def request_work_case_plan_confirmation(omo_dir, *, case_id: str, plan_digest: s
     return request_plan(omo_dir, case_id=case_id, plan_digest=plan_digest)
 
 
+def record_work_case_submission(omo_dir, *, case_id: str, unit_id: str, digest: str, valid: bool):
+    from omo.work_case import record_work_case_submission as record_submission
+
+    return record_submission(omo_dir, case_id=case_id, unit_id=unit_id, digest=digest, valid=valid)
+
+
 @router.get("/api/work-cases")
 async def list_work_cases(scope: str = Query(default="active")) -> dict[str, object]:
     """Project only OMO tasks explicitly marked as work cases."""
@@ -76,3 +82,17 @@ async def request_work_case_plan_endpoint(case_id: str, payload: dict[str, objec
     except ImportError as exc:
         raise HTTPException(status_code=503, detail="work-case plan ingress is unavailable") from exc
     return {"id": case_id, "status": "awaiting_confirmation"}
+
+
+@router.post("/api/work-cases/{case_id}/submissions")
+async def record_work_case_submission_endpoint(case_id: str, payload: dict[str, object]) -> dict[str, object]:
+    unit_id = str(payload.get("unit_id") or "").strip()
+    digest = str(payload.get("digest") or "").strip()
+    valid = payload.get("valid") is True
+    if not unit_id or not digest:
+        raise HTTPException(status_code=422, detail="unit_id and digest are required")
+    try:
+        record_work_case_submission(WORKSPACE_DIR / ".omo", case_id=case_id, unit_id=unit_id, digest=digest, valid=valid)
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="work-case submission ingress is unavailable") from exc
+    return {"id": case_id, "status": "submission_recorded"}

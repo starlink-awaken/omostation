@@ -102,3 +102,24 @@ def test_plan_request_endpoint_delegates_only_the_plan_digest(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {"id": "CASE-001", "status": "awaiting_confirmation"}
     assert seen["plan_digest"] == "sha256:plan-v1"
+
+
+def test_submission_endpoint_delegates_only_summary_fields(monkeypatch):
+    seen = {}
+
+    def fake_submission(omo_dir, *, case_id, unit_id, digest, valid):
+        seen.update(omo_dir=omo_dir, case_id=case_id, unit_id=unit_id, digest=digest, valid=valid)
+        return {"id": case_id}
+
+    monkeypatch.setattr(api_work_cases, "record_work_case_submission", fake_submission)
+    app = FastAPI()
+    app.include_router(router)
+
+    response = TestClient(app).post(
+        "/api/work-cases/CASE-001/submissions",
+        json={"unit_id": "unit-a", "digest": "sha256:reply-v1", "valid": True},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"id": "CASE-001", "status": "submission_recorded"}
+    assert seen == {"omo_dir": api_work_cases.WORKSPACE_DIR / ".omo", "case_id": "CASE-001", "unit_id": "unit-a", "digest": "sha256:reply-v1", "valid": True}
