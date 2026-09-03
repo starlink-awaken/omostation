@@ -13702,6 +13702,8 @@ bets:
   - tests/test_omo_runtime_stamp_policy.py
   - tests/unit/gac/test_gac_local_gate_purity.py
   - tests/unit/gac/test_gac_local_gate_timeouts.py
+  - tests/test_agent_workflow.py
+  - tests/test_agent_workflow_projection.py
   - runtime/bos-neural-mesh-*
   - runtime/concept-weave-preflight*.json
   - runtime/consumer-audit-*.json
@@ -13715,8 +13717,8 @@ bets:
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
-    spec_version: 1.0.3
-    content_digest: sha256:8180b0fad4bf41f6033001622c05c8335803100acc9cab0ad475ca6102f21626
+    spec_version: 1.0.4
+    content_digest: sha256:652491bd7bfabffd757aca386eb01886cb961a9f3de4c6fecc3c3c7bf760fc7a
     decision_ref: decision://accepted/BET-Y1Q3-T6-15
   completion_evidence:
     schema_version: completion-evidence-matrix/v1

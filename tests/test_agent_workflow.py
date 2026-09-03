@@ -205,7 +205,17 @@ def _run_root_workflow_strict(
     env["AGCP_REQUIREMENT_ITERATION_GATE"] = "1"
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     return subprocess.run(
-        ["uv", "run", "--with", "pyyaml", "python", str(workspace / "bin/agent-workflow.py"), *args],
+        [
+            "uv",
+            "run",
+            "--project",
+            str(ROOT / "projects/omo"),
+            "--with",
+            "pyyaml",
+            "python",
+            str(workspace / "bin/agent-workflow.py"),
+            *args,
+        ],
         cwd=workspace,
         capture_output=True,
         text=True,
