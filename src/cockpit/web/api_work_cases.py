@@ -22,6 +22,8 @@ async def list_work_cases(scope: str = Query(default="active")) -> dict[str, obj
         work_case = task.get("work_case")
         if not isinstance(work_case, dict):
             continue
+        submissions = [item for item in work_case.get("submissions", []) if isinstance(item, dict)]
+        valid_submission_units = {str(item.get("unit_id")) for item in submissions if item.get("valid") is True}
         items.append(
             {
                 "id": task["id"],
@@ -29,6 +31,9 @@ async def list_work_cases(scope: str = Query(default="active")) -> dict[str, obj
                 "status": work_case.get("status", "planned"),
                 "risk": work_case.get("risk", "medium"),
                 "next_action": work_case.get("next_action", "等待案件方案生成"),
+                "plan_confirmed": work_case.get("plan_confirmed") is True,
+                "valid_submission_count": len(valid_submission_units),
+                "submission_version_count": len(submissions),
             }
         )
     return {"items": items}

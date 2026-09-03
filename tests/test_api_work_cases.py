@@ -34,6 +34,12 @@ def test_work_cases_endpoint_projects_only_omo_tasks_marked_as_cases(monkeypatch
                     "status": "awaiting_confirmation",
                     "risk": "high",
                     "next_action": "确认发送批次",
+                    "plan_confirmed": True,
+                    "submissions": [
+                        {"unit_id": "unit-a", "version": 1, "valid": True},
+                        {"unit_id": "unit-a", "version": 2, "valid": True},
+                        {"unit_id": "unit-b", "version": 1, "valid": False},
+                    ],
                 },
             },
             {"id": "TASK-OTHER", "title": "普通任务", "status": "in_progress"},
@@ -52,5 +58,8 @@ def test_work_cases_endpoint_projects_only_omo_tasks_marked_as_cases(monkeypatch
             "status": "awaiting_confirmation",
             "risk": "high",
             "next_action": "确认发送批次",
+            "plan_confirmed": True,
+            "valid_submission_count": 1,
+            "submission_version_count": 3,
         }
     ]
