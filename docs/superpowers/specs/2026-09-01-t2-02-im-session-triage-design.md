@@ -9,6 +9,7 @@ owner: governance-team
 created: 2026-09-01
 last-reviewed: 2026-09-01
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # IM session perception & one-shot directive triage (T2-02)

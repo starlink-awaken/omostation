@@ -9,6 +9,7 @@ owner: governance-team
 created: 2026-08-29
 last-reviewed: 2026-08-29
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # T10-48 根仓证据可解析性修复

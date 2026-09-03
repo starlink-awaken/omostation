@@ -10,6 +10,7 @@ bet_id: BET-Y1Q3-T1-14
 risk_level: L2
 human_gate: false
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # T1-14 Harness E2E 真实场景验证 — 强约束强感知

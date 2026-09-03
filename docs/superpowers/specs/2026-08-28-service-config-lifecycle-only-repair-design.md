@@ -9,6 +9,7 @@ last-reviewed: 2026-08-28
 bet_id: BET-Y1Q3-T10-43
 risk_level: L1
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Service declaration lifecycle-only repair

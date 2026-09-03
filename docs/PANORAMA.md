@@ -13,6 +13,7 @@ review-note: >
 metadata-migrated-at: 2026-07-31
 stale-reason: body frozen 2026-06-30; metadata-only review 2026-07-31; not a strategy mainline
 type: ssot
+last_updated: 2026-09-03
 ---
 # PANORAMA.md — eCOS 系统全景架构
 

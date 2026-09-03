@@ -4,6 +4,7 @@ lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-13
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # 编排器无关交付合同 MVP 设计

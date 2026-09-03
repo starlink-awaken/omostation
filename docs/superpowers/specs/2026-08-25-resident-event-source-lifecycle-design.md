@@ -8,6 +8,7 @@ schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-12
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Resident 事件源接入 workflow 生命周期 (消费端补全 + 重放)

@@ -9,6 +9,7 @@ owner: governance-team
 created: 2026-08-30
 last-reviewed: 2026-08-29
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # OMLXC BOS service path reconciliation

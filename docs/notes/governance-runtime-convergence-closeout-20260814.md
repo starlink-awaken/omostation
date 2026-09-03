@@ -6,6 +6,7 @@ owner: governance-team
 last-reviewed: 2026-08-15
 last_updated: 2026-09-03
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # 交付闭环说明：governance-runtime-convergence

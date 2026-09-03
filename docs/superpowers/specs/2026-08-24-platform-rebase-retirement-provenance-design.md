@@ -9,6 +9,7 @@ bet_id: BET-Y1Q3-T1-11
 risk_level: L1
 human_gate: false
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # platform-rebase 退役溯源收敛设计
