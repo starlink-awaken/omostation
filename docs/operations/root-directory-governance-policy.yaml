@@ -11,12 +11,19 @@ scope: workspace-root
 allowed_ignored_dirs:
   - .artifacts
   - .codebase-memory
+  - .claude
+  - .crush
+  - .deepeval
+  - .idea
+  - .omc
+  - .openclaude
   - .pytest_cache
+  - .qoder
   - .ruff_cache
   - .serena
+  - .subtrees
   - .venv
   - .worktrees
-  - .subtrees
   - agent-runtime
   - artifacts
   - archive-*
