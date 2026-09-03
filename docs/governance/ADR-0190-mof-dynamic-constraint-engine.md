@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: governance-team
 last-reviewed: 2026-08-18
+last_updated: 2026-09-03
 type: ssot
 ---
 # ADR-0190: MOF 动态约束与 Agent 实时治理体系 (MOF Dynamic Constraint Governance Architecture)
