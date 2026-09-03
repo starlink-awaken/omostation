@@ -1,0 +1,26 @@
+schema: script-registry/v1
+id: bin/gac/chaos-drill-runner.py
+name: Chaos Drill Runner
+category: governance
+owner: ml-platform
+description: Wrapper around chaos-governance-drill.py providing batched 12-drill invocation, per-drill filtering, and structured output for CI integration.
+inputs:
+  - name: --drill
+    type: int
+    description: "Run only drill N (1-12)"
+  - name: --strict
+    type: flag
+    description: Exit non-zero on any drill failure
+  - name: --json
+    type: flag
+    description: Machine-readable JSON output
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - bin/ssot/chaos-governance-drill.py
+triggers: []
+related:
+  - bin/ssot/chaos-governance-drill.py
+maturity: draft
+last_reviewed: "2026-09-03"
