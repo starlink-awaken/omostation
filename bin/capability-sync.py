@@ -497,6 +497,7 @@ def execute_gateway_operation(
     gateway: Any = None,
     service_catalog: Optional[Sequence[Any]] = None,  # noqa: UP045 -- Python 3.9 contract
     binding: Optional[Mapping[str, Any]] = None,  # noqa: UP045 -- Python 3.9 contract
+    principal_authority: Optional[Mapping[str, Any]] = None,  # noqa: UP045 -- Python 3.9 contract
 ) -> dict[str, Any]:
     """Load or invoke through Agora; never construct a provider process.
 
@@ -511,7 +512,15 @@ def execute_gateway_operation(
     selector = {"capability_id": capability_id}
     if operation == "load":
         return dict(gateway.load(record, selector=selector, binding=binding))
-    return dict(gateway.invoke(record, payload, selector=selector, binding=binding))
+    return dict(
+        gateway.invoke(
+            record,
+            payload,
+            selector=selector,
+            binding=binding,
+            principal_authority=principal_authority,
+        )
+    )
 
 
 def _gateway_error_receipt(operation: str, selector: Mapping[str, Any], reason: str) -> dict[str, Any]:
@@ -792,6 +801,11 @@ def _parser() -> argparse.ArgumentParser:
             choices=("read_only", "effectful"),
             help="declared effect classification recorded in the native execution material",
         )
+        target_parser.add_argument(
+            "--principal-authority-json",
+            type=Path,
+            help="BET-Y1Q3-T4-04 principal authority envelope {authority_ref, receipt_digest}",
+        )
     return parser
 
 
@@ -950,8 +964,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # noqa: UP045 -- Python 
             # Derivation-only marker: durable persistence stays caller-owned.
             build_native_execution_marker(material)
             registry = load_registry(args.registry)
+            principal_authority = None
+            if getattr(args, "principal_authority_json", None) is not None:
+                principal_authority = _read_bounded_native_json(
+                    args.principal_authority_json, "principal_authority"
+                )
             gateway_receipt = execute_gateway_operation(
-                registry, args.command, args.capability_id, payload=payload, binding=binding
+                registry,
+                args.command,
+                args.capability_id,
+                payload=payload,
+                binding=binding,
+                principal_authority=principal_authority,
             )
             succeeded = gateway_receipt.get("status") == "succeeded"
             cleanup = build_native_cleanup_proof(

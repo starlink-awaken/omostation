@@ -2,7 +2,7 @@
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-31
+last-reviewed: 2026-09-03
 title: BET-Y1Q3-T1-12 复盘（premature completion invalidated）
 type: retro
 ---
@@ -227,3 +227,62 @@ capability (`skill:git-discipline`、`workflow:bet-execution`、
 “gateway-backed execution run”标准，本次不得运行或伪造正向 receipt，
 `operational=NOT_PROVEN` 保持不变。该阻断是 host topology 缺失，不是
 capability binding 负例或本地单元测试失败。
+
+---
+
+## 2026-09-03 production canary（run 20260903T065111Z-bet-execution-5273a7b4）
+
+独立 clone：`~/agents/governance-agent/attempts/t112-canary-20260903/ws`  
+actor/attempt：`governance-agent` / `t112-canary-20260903`
+
+### 做了什么
+
+1. 用 agent-clone v2 身份成功 `agent-workflow start`，落盘真实 `WorkflowAdmitted`
+2. 发现并排除两条错误 canary 目标：
+   - `bos://governance/omo/state` → `transport: stdio` → `bos_transport_not_internal`
+   - `bos://memory/local/all-search` → capability catalog `deprecated/zombie` → route None
+3. 将 BET `capability_requirements` 收敛到 `bos-service:bos://system/omo/debt`（internal + active）
+4. 修复 `bin/capability-sync.py`：`execute_gateway_operation` / invoke CLI 转发 T4-04 `principal_authority`
+5. 跑通 find → inspect → invoke → replay，产出 `native-execution-receipt/v1`
+
+### Canary 结果（binding-canary-report/v1）
+
+- capability：`bos-service:bos://system/omo/debt`
+- `ok=true`
+- verdict：find/inspect/invoke_confirmed/replay_idempotent/cleanup_proved 全 true
+- `transport_state=confirmed`
+- `invocation_id=sha256:037be67c40bdfa3e0af7e255de12f1e3203c2b4dfc23a5d3916b6310380784e3`
+- `receipt_digest=sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2`
+- 报告：`.omo/evidence/t112-canary-20260903/canary-report.json`（gitignore 运行时证据；副本 `/tmp/canary-materials-t112c/canary-report.json`）
+
+### 诚实边界
+
+- `principal_authority` 仅为 shape-valid 转发（满足 gateway T4-04 结构门），**未**跑通 `verify-principal` 独立校验
+- 本次 canary 走进程内 Agora native gateway + MetaOS admission provider，不是独立 TCP MCP daemon 拓扑
+- value 轴仍不由本 canary 自动提升；禁止把 fixture/测试/自评计入个人价值
+
+### 五问更新（本轮）
+
+**Q1** appetite 5 days；本轮从初始化到 canary 约数小时，历史累计远超 appetite（多轮 premature/降级/重建）。
+
+**Q2** production canary 正向链已绿；仍需：台账 completion 复评、正式 closeout、human value attestation（若仍要求）、PR 合入。
+
+**Q3 打假**
+- 旧 BET 默认 BOS `governance/omo/state` 不能作为 native canary 目标（stdio）
+- `memory/local/all-search` 虽 internal，但 catalog 标 deprecated/zombie，会被 capability gating 拦掉
+- Agora `invoke` 强制 `principal_authority`，而 `capability-sync` 此前未转发 → 表现为 `INVALID_RECORD`/`principal_authority_shape_invalid`
+- `binding-canary-driver.py` 仍硬编码假 binding，不能直接当 production canary（本次用手写真实 admission binding）
+
+**Q4** 净增：`bin/capability-sync.py` 约 +26 行（principal 转发）；台账 1 行 capability 替换。净减：0。未新增脚本/规则/ADR。
+
+**Q5** 下一任：
+- closeout 前确认是否要求 `verify-principal` 真值再把 operational 升 PROVEN
+- 若要固化 driver：把真实 binding/admission/principal 参数化进 `bin/ssot/binding-canary-driver.py`（需扩 write_surfaces）
+- 不要再把 `governance/omo/state` 或 zombie catalog 服务当作 native canary 默认目标
+
+## 2026-09-03 signed attestation + value-exempt closeout path
+
+- Attestation signed and verified locally (`ssh-keygen -Y` / `validate_human_attestation` OK).
+- BET has `value_indicator_policy=false`, so value axis stays `NOT_PROVEN` (cannot ACCEPTED).
+- Done path is `engineering=VERIFIED` + `operational=PROVEN` + `value=NOT_PROVEN` → `overall_state=delivery_accepted`.
+- Attestation file retained as operational `fresh_receipt` evidence, not as value ACCEPTED.
