@@ -10,6 +10,7 @@ related:
   - ARCHITECTURE.md
   - .omo/standards/agent-workflow-contract.md
   - .omo/standards/external-connection-fabric.md
+type: ssot
 ---
 
 # Workflow Mesh 实施架构与交付路线

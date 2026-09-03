@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+type: ssot
 ---
 
 # Cockpit CLI 命令参考

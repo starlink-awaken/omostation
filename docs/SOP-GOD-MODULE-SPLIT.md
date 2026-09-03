@@ -10,6 +10,7 @@ related:
   - CR-X1-GOD-MODULE-LIMIT (governance-checks)
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 
 # SOP: God-Module 渐进拆分

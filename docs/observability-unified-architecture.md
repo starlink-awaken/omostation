@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ssot
 ---
 # 统一可观测性架构 — 可观测 × 事件 × 治理三体系联动设计
 

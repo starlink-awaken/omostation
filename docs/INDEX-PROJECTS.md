@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # INDEX-PROJECTS.md — 项目索引
 
 > **维护规则**

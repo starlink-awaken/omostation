@@ -12,6 +12,7 @@ review-note: >
   三入口 (README/SYSTEM-INDEX/ARCHITECTURE) 仍引用, 保留。
 metadata-migrated-at: 2026-07-31
 stale-reason: body frozen 2026-06-30; metadata-only review 2026-07-31; not a strategy mainline
+type: ssot
 ---
 # PANORAMA.md — eCOS 系统全景架构
 
