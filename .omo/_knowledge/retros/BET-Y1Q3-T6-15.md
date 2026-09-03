@@ -60,3 +60,36 @@ Product P0 Wave A unlock or BET completion.
 调用缺陷——重启后 exit 0）、live checkout == origin/main、ignored 恢复为
 no-op（对象已在 R2a 落点）。完整脱敏回执见 closeout 报告 R2b 节。
 retention/operational 由 UNPROVABLE → PROVEN；Product P0 Wave A 前置解锁。
+
+## R1 fresh-main revalidation addendum — 2026-09-03
+
+### What changed
+
+`agent-workflow-doctor` now has an explicit 45-second strict-gate timeout plus
+a focused regression test. The prior implicit 15-second timeout could not
+accommodate the complete integration-health probe in a fresh, fully initialized
+independent clone.
+
+### What evidence is new
+
+GitHub `main` and immutable clone `HEAD` both resolved to `a8391f6c8c6599ed5e298078f798d512ca35e7d4`.
+The doctor, focused timeout test, full strict GaC, script registry, conflict
+scan, and `git diff --check` passed. The ephemeral digest receipt is
+`/tmp/post2408-preflight-20260903T025553Z-bet-execution-fb8f3947.json`.
+
+### What remains unproven
+
+This R1 slice does not ratify historical H1c live-protection or R2b host claims.
+It does not change the ledger's `candidate`/`evaluating` state, engineering
+`NOT_STARTED`, or operational/value `NOT_PROVEN` disposition.
+
+### What to preserve
+
+Treat a green CI run that skips a local-only diagnostic as insufficient proof
+that the same strict gate is reproducible in a fresh clone. Keep the timeout
+budget explicit and covered by a test.
+
+### Next admissible action
+
+Proceed only with a separately scoped H1a/H1b assessment. H1c and any host
+operation still require their operation-specific human authorization.
