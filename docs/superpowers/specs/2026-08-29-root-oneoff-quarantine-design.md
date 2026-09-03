@@ -8,6 +8,7 @@ lifecycle: contract
 owner: human-principal
 created: 2026-08-29
 last-reviewed: 2026-08-29
+type: ssot
 ---
 
 # Documents root one-off runtime quarantine

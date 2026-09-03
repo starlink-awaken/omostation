@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # metaos / c2g / broadcast 收敛 — D-3/D-4/D-6 闭环 2026-08-22
 
 > debts: D-3 metaos 漂移 + D-4 c2g並入 + D-6 broadcast 未接线 → 决议收敛

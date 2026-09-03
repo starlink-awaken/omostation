@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Phase 2 Retrospective — Cockpit Governance Context and Domain Bindings
 
 > Date: 2026-08-11

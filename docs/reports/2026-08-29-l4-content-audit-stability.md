@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # T10-57 L4 live Documents content-plane audit stability
 
 ## Scope

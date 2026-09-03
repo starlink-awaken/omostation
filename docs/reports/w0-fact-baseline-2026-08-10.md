@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # W0 Fact Baseline Report — 2026-08-10
 
 > **Type**: Evidence-backed baseline inventory · Read-only probe results

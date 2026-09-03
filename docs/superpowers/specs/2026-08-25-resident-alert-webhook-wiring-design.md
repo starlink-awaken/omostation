@@ -7,6 +7,7 @@ last-reviewed: 2026-08-25
 schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-14
+type: ssot
 ---
 
 # Resident 告警外发渠道接线 (alert webhook 接线 + forwarder 修复)

@@ -8,6 +8,7 @@ last-reviewed: 2026-08-29
 bet_id: BET-Y1Q3-T10-66
 spec_version: 1.0.0
 title: Cockpit decide canonical inbox convergence
+type: ssot
 ---
 
 # T10-64: Cockpit decide canonical inbox convergence

@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # OCR preflight owner evidence — 2026-08-27
 
 The former active OCR cron points at a missing Documents work directory:

@@ -10,6 +10,7 @@ bet_id: BET-Y1Q3-T6-15
 risk_level: L3
 human_gate: true
 value_indicator_policy: false
+type: ssot
 ---
 
 # Post-2408 Main Recovery 与 Required GaC Gate 设计

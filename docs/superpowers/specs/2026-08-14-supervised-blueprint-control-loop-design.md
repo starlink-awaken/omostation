@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-13
+type: ssot
 ---
 
 # 受监督 Blueprint 控制闭环设计

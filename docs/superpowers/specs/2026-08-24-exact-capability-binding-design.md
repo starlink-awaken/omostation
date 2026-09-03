@@ -9,6 +9,7 @@ last-reviewed: 2026-08-26
 bet_id: BET-Y1Q3-T1-12
 risk_level: L2
 human_gate: false
+type: ssot
 ---
 
 # Wave B Exact Capability Binding 设计

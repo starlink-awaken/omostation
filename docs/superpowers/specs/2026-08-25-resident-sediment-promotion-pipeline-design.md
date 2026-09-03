@@ -7,6 +7,7 @@ last-reviewed: 2026-08-25
 schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-11
+type: ssot
 ---
 
 # Resident sediment 草稿→完整知识晋升管线 (promote 增强 + 自动化)

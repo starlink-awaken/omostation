@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Documents Domain Projects — Phase 7 Full Rollout Retrospective
 
 Date: 2026-08-12

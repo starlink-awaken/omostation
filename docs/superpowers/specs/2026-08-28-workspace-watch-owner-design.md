@@ -8,6 +8,7 @@ created: 2026-08-28
 last-reviewed: 2026-08-27
 bet_id: BET-Y1Q3-T10-38
 risk_level: L1
+type: ssot
 ---
 
 # Workspace watcher owner design

@@ -9,6 +9,7 @@ last-reviewed: 2026-08-28
 bet_id: BET-Y1Q3-T10-46
 risk_level: L2
 human_gate: true
+type: ssot
 ---
 
 # Installed owner release-root convergence

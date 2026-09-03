@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Phase 4 Retrospective — Kairon/KOS KEMS Content Operations
 
 > Date: 2026-08-12

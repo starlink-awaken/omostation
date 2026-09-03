@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Phase 5 Retrospective — Runtime Documents Plane
 
 > Date: 2026-08-12

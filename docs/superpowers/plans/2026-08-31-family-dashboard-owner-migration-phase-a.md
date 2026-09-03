@@ -6,6 +6,7 @@ created: 2026-08-30
 last-reviewed: 2026-08-30
 bet_id: BET-Y1Q3-T10-111
 spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
+type: ssot
 ---
 
 # Family Dashboard Workspace Owner Migration Phase A Implementation Plan

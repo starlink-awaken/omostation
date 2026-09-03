@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-03
+---
+
 # Domain sync owner cutover evidence — 2026-08-27
 
 ## Result: PASS

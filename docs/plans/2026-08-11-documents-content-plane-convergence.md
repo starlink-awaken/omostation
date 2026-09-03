@@ -3,6 +3,7 @@ status: active
 lifecycle: plan
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ephemeral
 ---
 # Documents Content Plane Convergence Implementation Plan
 

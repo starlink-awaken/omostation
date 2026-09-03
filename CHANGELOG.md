@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # omostation Changelog
 
 > 多仓库统一发布. 工作区根 VERSION 文件权威.

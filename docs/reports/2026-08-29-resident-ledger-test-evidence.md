@@ -2,6 +2,7 @@
 title: T10-48 resident ledger test and replay evidence
 date: 2026-08-29
 status: verified
+type: ephemeral
 ---
 
 # T10-48 测试与回放证据
