@@ -18867,7 +18867,7 @@ bets:
             sha256: sha256:d87b07940be97d0f804cb8a083dd040a146e7bfe2f15bc61ab8b2db7b2cf7a87
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md
-            sha256: sha256:0000000000000000000000000000000000000000000000000000000000000000
+            sha256: sha256:49a6764fbc05e2750810562738a507f75a1cbb3f518964f50a6f8d89a62023ca
           rollback:
             ref: receipt://docs/reports/2026-09-03-mail-connector.md
             sha256: sha256:d87b07940be97d0f804cb8a083dd040a146e7bfe2f15bc61ab8b2db7b2cf7a87
