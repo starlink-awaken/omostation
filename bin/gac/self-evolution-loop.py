@@ -24,7 +24,7 @@ import json
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 STATE_FILE = REPO / ".omo" / "state" / "self-evolution-loop.json"
 
 
@@ -290,52 +290,52 @@ def check_data_sources() -> dict:
     """Check health of all data sources (Harness 7 probes)."""
     sources = {}
 
-    # Heartbeat
-    heartbeat_file = REPO / ".omo" / "_state" / "goal-mode-test-result.json"
+    # Heartbeat - use resident-status check
+    heartbeat_check = REPO / "bin" / "gac" / "check-resident-status.py"
     sources["probe.heartbeat"] = {
-        "path": str(heartbeat_file.relative_to(REPO)),
-        "exists": heartbeat_file.exists(),
-        "status": "ok" if heartbeat_file.exists() else "missing",
+        "path": str(heartbeat_check.relative_to(REPO)),
+        "exists": heartbeat_check.exists(),
+        "status": "ok" if heartbeat_check.exists() else "missing",
     }
 
-    # Architecture check
-    arch_check = REPO / "bin" / "gac" / "architecture-check.py"
+    # Architecture drift
+    arch_check = REPO / "bin" / "gac" / "architecture-drift.py"
     sources["probe.arch_upgrade"] = {
         "path": str(arch_check.relative_to(REPO)),
         "exists": arch_check.exists(),
         "status": "ok" if arch_check.exists() else "missing",
     }
 
-    # Harness compliance
-    harness_check = REPO / "bin" / "gac" / "harness-compliance-check.py"
+    # Toolchain - bin-scripts convergence
+    toolchain_check = REPO / "bin" / "ssot" / "bin-scripts-convergence-audit.py"
     sources["probe.toolchain"] = {
-        "path": str(harness_check.relative_to(REPO)),
-        "exists": harness_check.exists(),
-        "status": "ok" if harness_check.exists() else "missing",
+        "path": str(toolchain_check.relative_to(REPO)),
+        "exists": toolchain_check.exists(),
+        "status": "ok" if toolchain_check.exists() else "missing",
     }
 
-    # OMO bridge
-    omo_bridge = REPO / "bin" / "gac" / "harness-omo-bridge.py"
+    # Business process - journey validator
+    journey_check = REPO / "bin" / "ssot" / "journey-validator.py"
     sources["probe.business_process"] = {
-        "path": str(omo_bridge.relative_to(REPO)),
-        "exists": omo_bridge.exists(),
-        "status": "ok" if omo_bridge.exists() else "missing",
+        "path": str(journey_check.relative_to(REPO)),
+        "exists": journey_check.exists(),
+        "status": "ok" if journey_check.exists() else "missing",
     }
 
-    # GaC governance trend
-    gov_trend = REPO / "bin" / "gac" / "check-governance-trend.py"
+    # Doc governance - doc-governance-check
+    doc_check = REPO / "bin" / "ssot" / "doc-governance-check.py"
     sources["probe.doc_governance"] = {
-        "path": str(gov_trend.relative_to(REPO)),
-        "exists": gov_trend.exists(),
-        "status": "ok" if gov_trend.exists() else "missing",
+        "path": str(doc_check.relative_to(REPO)),
+        "exists": doc_check.exists(),
+        "status": "ok" if doc_check.exists() else "missing",
     }
 
-    # MOF bridge
-    mof_bridge = REPO / "bin" / "gac" / "harness-mof-bridge.py"
+    # Feature add - bet-ledger status
+    bet_check = REPO / "bin" / "plan" / "bet-ledger.py"
     sources["probe.feature_add"] = {
-        "path": str(mof_bridge.relative_to(REPO)),
-        "exists": mof_bridge.exists(),
-        "status": "ok" if mof_bridge.exists() else "missing",
+        "path": str(bet_check.relative_to(REPO)),
+        "exists": bet_check.exists(),
+        "status": "ok" if bet_check.exists() else "missing",
     }
 
     return sources
