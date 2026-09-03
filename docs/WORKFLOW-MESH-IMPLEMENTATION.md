@@ -11,6 +11,7 @@ related:
   - .omo/standards/agent-workflow-contract.md
   - .omo/standards/external-connection-fabric.md
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Workflow Mesh 实施架构与交付路线

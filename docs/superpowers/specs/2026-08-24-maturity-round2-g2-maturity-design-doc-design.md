@@ -8,6 +8,7 @@ schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-02
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Maturity Round 2 — G2: 90pct-maturity-design.md 落盘 (iterable 6→8)

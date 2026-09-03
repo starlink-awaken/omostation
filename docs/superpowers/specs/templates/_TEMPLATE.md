@@ -5,6 +5,7 @@ owner: @YOUR_NAME
 created: YYYY-MM-DD
 last-reviewed: YYYY-MM-DD
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # [spec 标题]

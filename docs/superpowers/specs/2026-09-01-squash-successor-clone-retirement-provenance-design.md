@@ -11,6 +11,7 @@ risk_level: L2
 human_gate: true
 value_indicator_policy: false
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Squash-Successor Clone Retirement Provenance Design

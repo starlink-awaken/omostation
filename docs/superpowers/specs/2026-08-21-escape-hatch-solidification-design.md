@@ -10,6 +10,7 @@ last-reviewed: 2026-08-24
 
 bet_id: BET-Y1Q3-T1-09
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Escape-hatch solidification — permission class vs fingerprint debt

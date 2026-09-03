@@ -11,6 +11,7 @@ last-reviewed: 2026-08-30
 risk_level: L2
 human_gate: true
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Workspace owner parity for learning decay inspection

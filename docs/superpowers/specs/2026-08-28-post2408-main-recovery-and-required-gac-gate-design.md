@@ -11,6 +11,7 @@ risk_level: L3
 human_gate: true
 value_indicator_policy: false
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Post-2408 Main Recovery 与 Required GaC Gate 设计

@@ -8,6 +8,7 @@ schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-13
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Resident 决策提案可观测出口 (decision 提案收件箱 + CLI 审计)

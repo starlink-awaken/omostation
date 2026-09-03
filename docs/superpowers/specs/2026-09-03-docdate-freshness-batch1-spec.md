@@ -9,6 +9,7 @@ owner: governance-team
 created: 2026-09-03
 last-reviewed: 2026-09-03
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # docs last_updated保鲜 batch1-6（BET-Y1Q3-T10-200）

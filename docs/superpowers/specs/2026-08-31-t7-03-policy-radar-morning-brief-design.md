@@ -9,6 +9,7 @@ owner: governance-team
 created: 2026-08-31
 last-reviewed: 2026-08-31
 type: ssot
+last_updated: 2026-09-03
 ---
 
 # Policy radar & morning brief (T7-03)
