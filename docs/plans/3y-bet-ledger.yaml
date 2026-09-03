@@ -363,7 +363,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md
     spec_version: 1.2.0
-    content_digest: sha256:dd20da316d8ee856220a5ca12d84daeebb21f0e477e14585e8cf06d7eb4474e7
+    content_digest: sha256:66bfa238c8d59050f406b88ef0b63345efaf0a07495a3d2c8af301aa4ea732c1
     decision_ref: decision://accepted/BET-Y1Q3-T10-122
   depends_on:
   - BET-Y1Q3-T10-111
@@ -457,7 +457,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
     spec_version: 1.0.0
-    content_digest: sha256:289b39af16a8b40416a46b664ff8dd77c5edfb440d2b390f757acd68fe303574
+    content_digest: sha256:a49afeb598ebbea03518912cbd95062f4f21771739048288684d732921ce8aea
     decision_ref: decision://accepted/BET-Y1Q3-T10-111
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -472,7 +472,7 @@ bets:
             sha256: sha256:e9193779ef15e3b3f955104850316ef0b8044377947bdbbe0b4faf1f3b1b5e1d
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
-            sha256: sha256:289b39af16a8b40416a46b664ff8dd77c5edfb440d2b390f757acd68fe303574
+            sha256: sha256:a49afeb598ebbea03518912cbd95062f4f21771739048288684d732921ce8aea
           rollback:
             ref: receipt://docs/reports/2026-08-31-family-dashboard-owner-migration-phase-a.md
             sha256: sha256:e9193779ef15e3b3f955104850316ef0b8044377947bdbbe0b4faf1f3b1b5e1d
@@ -585,7 +585,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:86600cea960060d92dbb2cebebd7d364eb3f5a5132d4e54edf01178fa34ccbc5
+    content_digest: sha256:2de65560f35ce3768d0459bba70663a6128fc6615be48c64eecacad0c7e141fc
     decision_ref: decision://accepted/BET-Y1Q3-T10-110
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -600,7 +600,7 @@ bets:
             sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md
-            sha256: sha256:86600cea960060d92dbb2cebebd7d364eb3f5a5132d4e54edf01178fa34ccbc5
+            sha256: sha256:2de65560f35ce3768d0459bba70663a6128fc6615be48c64eecacad0c7e141fc
           rollback:
             ref: receipt://docs/reports/2026-08-31-documents-runner-log-quarantine.md
             sha256: sha256:d64eb205fff7315066ac921afa6bc9fe61d10d8d6a38558b7046966fed65f7d3
@@ -695,7 +695,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
     spec_version: 1.0.0
-    content_digest: sha256:71fb303f9f1353c4c2093da3e77c1e2416f28795fbf8e8e4225e85243bbd5fc2
+    content_digest: sha256:51593d43d0aee61f444af84048e0f0c1bc46b2cd1aa31aa96c67d1bc057572e2
     decision_ref: decision://accepted/BET-Y1Q3-T10-109
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -710,7 +710,7 @@ bets:
             sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md
-            sha256: sha256:71fb303f9f1353c4c2093da3e77c1e2416f28795fbf8e8e4225e85243bbd5fc2
+            sha256: sha256:51593d43d0aee61f444af84048e0f0c1bc46b2cd1aa31aa96c67d1bc057572e2
           rollback:
             ref: receipt://docs/reports/2026-08-31-l4-machine-log-classification.md
             sha256: sha256:2e3bf6d3e3da421160307f75be4521f22cd41d0443b92287dc753468475412a0
@@ -824,7 +824,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md
     spec_version: 1.0.2
-    content_digest: sha256:6dd7fba78df707700fddcf0d9241685a81958d8ac03d657a27330b65264aece8
+    content_digest: sha256:2c14a53173cbe025ae0f549cfe0fdf829716c83ecfda3fe27f29e2d4dea2b191
     decision_ref: decision://accepted/BET-Y1Q3-T10-108
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -839,7 +839,7 @@ bets:
             sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md
-            sha256: sha256:6dd7fba78df707700fddcf0d9241685a81958d8ac03d657a27330b65264aece8
+            sha256: sha256:2c14a53173cbe025ae0f549cfe0fdf829716c83ecfda3fe27f29e2d4dea2b191
           rollback:
             ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
             sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
@@ -913,7 +913,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md
     spec_version: 1.0.0
-    content_digest: sha256:26c0d7ef4b9fd47e4583b6ccdb178c2addfdbb3f0e2605351215079886d3ac50
+    content_digest: sha256:6e7ff296d8953d3f216786de579c6d3683f26bf29b80c7fd88944e25d273f398
     decision_ref: decision://accepted/BET-Y1Q3-T10-107
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -928,10 +928,10 @@ bets:
             sha256: sha256:048810a9cc83f229e72cf27a6e18799f402d22ce4af8829d29ceebcff2aff647
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md
-            sha256: sha256:26c0d7ef4b9fd47e4583b6ccdb178c2addfdbb3f0e2605351215079886d3ac50
+            sha256: sha256:6e7ff296d8953d3f216786de579c6d3683f26bf29b80c7fd88944e25d273f398
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md
-            sha256: sha256:26c0d7ef4b9fd47e4583b6ccdb178c2addfdbb3f0e2605351215079886d3ac50
+            sha256: sha256:6e7ff296d8953d3f216786de579c6d3683f26bf29b80c7fd88944e25d273f398
       operational:
         status: PROVEN
         evidence:
@@ -946,7 +946,7 @@ bets:
             sha256: sha256:d058011b8e68d0c7c43c5682b30ba322068faae7a2bac4547b16c2b440e5abc2
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md
-            sha256: sha256:26c0d7ef4b9fd47e4583b6ccdb178c2addfdbb3f0e2605351215079886d3ac50
+            sha256: sha256:6e7ff296d8953d3f216786de579c6d3683f26bf29b80c7fd88944e25d273f398
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -1033,7 +1033,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md
     spec_version: 1.0.1
-    content_digest: sha256:70c7e0eeddd8bf3fa85ee36e3b9a1e49ca2ab12a74fb0959cf0610b2daee8980
+    content_digest: sha256:5ed3b99f86613af419a6337dec311f08a3cf4432e75dc1fdc208af5ae4f7da7e
     decision_ref: decision://accepted/BET-Y1Q3-T10-104
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -1048,7 +1048,7 @@ bets:
             sha256: sha256:03daaa2b54971e98a3dc5cff9c6f4ceb95766371b09c7a06b5eb8af621af60df
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md
-            sha256: sha256:70c7e0eeddd8bf3fa85ee36e3b9a1e49ca2ab12a74fb0959cf0610b2daee8980
+            sha256: sha256:5ed3b99f86613af419a6337dec311f08a3cf4432e75dc1fdc208af5ae4f7da7e
           rollback:
             ref: receipt://docs/reports/2026-08-30-zcode-workspace-runtime-state-relocation.md
             sha256: sha256:03daaa2b54971e98a3dc5cff9c6f4ceb95766371b09c7a06b5eb8af621af60df
@@ -1066,7 +1066,7 @@ bets:
             sha256: sha256:5906a2a5a513d432974a6599c422fde7082b500511b45f23f1a4f9ca43bfbb81
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md
-            sha256: sha256:70c7e0eeddd8bf3fa85ee36e3b9a1e49ca2ab12a74fb0959cf0610b2daee8980
+            sha256: sha256:5ed3b99f86613af419a6337dec311f08a3cf4432e75dc1fdc208af5ae4f7da7e
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -1137,7 +1137,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md
     spec_version: 1.0.0
-    content_digest: sha256:a60f95874fed8788e59644868d18c0beff457a40a7226fa7fdbad008f3dfae09
+    content_digest: sha256:b8b84d4df28f006a8d557529c92f3a90cbc7355b253bc6cef519783e3dd2038a
     decision_ref: decision://accepted/BET-Y1Q3-T10-103
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -1152,7 +1152,7 @@ bets:
             sha256: sha256:bad24c5845b847505b8a924c960069fb515d8e0280850a009fff312ecb95e449
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md
-            sha256: sha256:a60f95874fed8788e59644868d18c0beff457a40a7226fa7fdbad008f3dfae09
+            sha256: sha256:b8b84d4df28f006a8d557529c92f3a90cbc7355b253bc6cef519783e3dd2038a
           rollback:
             ref: receipt://docs/reports/2026-08-30-vault-daily-health-workspace-owner-cutover.md
             sha256: sha256:bad24c5845b847505b8a924c960069fb515d8e0280850a009fff312ecb95e449
@@ -1170,7 +1170,7 @@ bets:
             sha256: sha256:7624b4783ae01da093ed5847e6ea0cdd77c7967d8499de7336a1646928c6c329
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md
-            sha256: sha256:a60f95874fed8788e59644868d18c0beff457a40a7226fa7fdbad008f3dfae09
+            sha256: sha256:b8b84d4df28f006a8d557529c92f3a90cbc7355b253bc6cef519783e3dd2038a
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -1240,7 +1240,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md
     spec_version: 1.0.0
-    content_digest: sha256:28da2b97d9b2a76e4188afcb3b4e66da52cc500ead7bc5bd8cf7f345bfbd28c1
+    content_digest: sha256:d98c286c3e3b1b2e1d829347aefe9c39f3b73bd026207c01c2503e7edc487536
     decision_ref: decision://accepted/BET-Y1Q3-T10-102
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -1255,7 +1255,7 @@ bets:
             sha256: sha256:4644a03f3161b128c75dd654983a0e361690a6b56415da54d69962786da8d193
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md
-            sha256: sha256:28da2b97d9b2a76e4188afcb3b4e66da52cc500ead7bc5bd8cf7f345bfbd28c1
+            sha256: sha256:d98c286c3e3b1b2e1d829347aefe9c39f3b73bd026207c01c2503e7edc487536
           rollback:
             ref: receipt://docs/reports/2026-08-30-documents-consumer-audit-path-tokenization.md
             sha256: sha256:6d862c856fa39068405d0459ff97eca4693e7b3e86cbc177f2d79df03ee48a83
@@ -1273,7 +1273,7 @@ bets:
             sha256: sha256:037ff5db1c80ee498ac2d0ed80f8cf83e725b932f33afb0da770d2f8d0792ed4
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md
-            sha256: sha256:28da2b97d9b2a76e4188afcb3b4e66da52cc500ead7bc5bd8cf7f345bfbd28c1
+            sha256: sha256:d98c286c3e3b1b2e1d829347aefe9c39f3b73bd026207c01c2503e7edc487536
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -1352,7 +1352,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md
     spec_version: 1.0.0
-    content_digest: sha256:c7aef7b906093bc0d966750b8752c2c3742a137f29cfe2911a7989d9dae47e9a
+    content_digest: sha256:d9a0c4329d380b354b2e4b427c7f00ba8db70c9f8ef52be4d58aa6fe45d3fd2c
     decision_ref: decision://accepted/BET-Y1Q3-T10-101
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -1367,7 +1367,7 @@ bets:
             sha256: sha256:4bc16a08315be3913c2ad1aab66c24af49e5aa9711e35acf551ad749930a9436
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md
-            sha256: sha256:c7aef7b906093bc0d966750b8752c2c3742a137f29cfe2911a7989d9dae47e9a
+            sha256: sha256:d9a0c4329d380b354b2e4b427c7f00ba8db70c9f8ef52be4d58aa6fe45d3fd2c
           rollback:
             ref: receipt://docs/reports/2026-08-30-learning-control-plane-owner-convergence.md
             sha256: sha256:4bc16a08315be3913c2ad1aab66c24af49e5aa9711e35acf551ad749930a9436
@@ -1385,7 +1385,7 @@ bets:
             sha256: sha256:fad3db5d67080ca42cb1cdbc5576a1a8b207fcaf3ad361ba3a9c65f7732d841c
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md
-            sha256: sha256:c7aef7b906093bc0d966750b8752c2c3742a137f29cfe2911a7989d9dae47e9a
+            sha256: sha256:d9a0c4329d380b354b2e4b427c7f00ba8db70c9f8ef52be4d58aa6fe45d3fd2c
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -1462,7 +1462,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md
     spec_version: 1.0.0
-    content_digest: sha256:a5fecdc22c380a1fed1247c14a2d5fa1e053966a6eea114be6f91fc28b323d46
+    content_digest: sha256:e645aa8975e9df31bec7d734eab70ed0345f4f343665836d880677edaabb201e
     decision_ref: decision://accepted/BET-Y1Q3-T10-100
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -1477,7 +1477,7 @@ bets:
             sha256: sha256:4ae46aa45a99231579aa13260466d75671d872c641138513054a5061393b98ca
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md
-            sha256: sha256:a5fecdc22c380a1fed1247c14a2d5fa1e053966a6eea114be6f91fc28b323d46
+            sha256: sha256:e645aa8975e9df31bec7d734eab70ed0345f4f343665836d880677edaabb201e
           rollback:
             ref: receipt://docs/reports/2026-08-30-learning-content-owner-convergence.md
             sha256: sha256:4ae46aa45a99231579aa13260466d75671d872c641138513054a5061393b98ca
@@ -1495,7 +1495,7 @@ bets:
             sha256: sha256:f6ccfa13e8bb3e814a86b3fb4380d58e2a822dd78664c29a370090a708eaf04a
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md
-            sha256: sha256:a5fecdc22c380a1fed1247c14a2d5fa1e053966a6eea114be6f91fc28b323d46
+            sha256: sha256:e645aa8975e9df31bec7d734eab70ed0345f4f343665836d880677edaabb201e
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -1573,7 +1573,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-learning-runtime-owner-parity-design.md
     spec_version: 1.0.0
-    content_digest: sha256:448e378fbc33df615fd22597daddca3552b73234fb27a7ccdd557b3cccc318ed
+    content_digest: sha256:db000408c5501ac10790b1e581ba2778ed491fe54993cdb8d4ff44a15336e8f0
     decision_ref: decision://accepted/BET-Y1Q3-T10-99
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -1588,7 +1588,7 @@ bets:
             sha256: sha256:f45ca90f35f859364000ac70314374e29a1995f73a25bb146d97ef763b98aae0
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-learning-runtime-owner-parity-design.md
-            sha256: sha256:448e378fbc33df615fd22597daddca3552b73234fb27a7ccdd557b3cccc318ed
+            sha256: sha256:db000408c5501ac10790b1e581ba2778ed491fe54993cdb8d4ff44a15336e8f0
           rollback:
             ref: receipt://docs/reports/2026-08-30-learning-runtime-owner-parity.md
             sha256: sha256:f45ca90f35f859364000ac70314374e29a1995f73a25bb146d97ef763b98aae0
@@ -1606,7 +1606,7 @@ bets:
             sha256: sha256:19ae7127cdc330b7e42164155e5c8375117dd022a5ee56859ef7cd3f7a2ebecc
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-learning-runtime-owner-parity-design.md
-            sha256: sha256:448e378fbc33df615fd22597daddca3552b73234fb27a7ccdd557b3cccc318ed
+            sha256: sha256:db000408c5501ac10790b1e581ba2778ed491fe54993cdb8d4ff44a15336e8f0
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -1772,7 +1772,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md
     spec_version: 1.0.0
-    content_digest: sha256:0a78b305cf091a1d84664e9dd3b2c9ab5e892f8c4c0620fdc70f090c5d281236
+    content_digest: sha256:d69fecfd4d70ba44203d7ecd1b2495d0b9963251a41e932511f991ccb40d46fa
     decision_ref: decision://accepted/BET-Y1Q3-T10-97
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -1787,7 +1787,7 @@ bets:
             sha256: sha256:29e3ee76b2029a102993b10e0f01950b8215dc0ed2f5327a2461aaa56db09d11
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md
-            sha256: sha256:0a78b305cf091a1d84664e9dd3b2c9ab5e892f8c4c0620fdc70f090c5d281236
+            sha256: sha256:d69fecfd4d70ba44203d7ecd1b2495d0b9963251a41e932511f991ccb40d46fa
           rollback:
             ref: receipt://docs/reports/2026-08-30-t10-02-t10-06-completion-digest-reconciliation.md
             sha256: sha256:29e3ee76b2029a102993b10e0f01950b8215dc0ed2f5327a2461aaa56db09d11
@@ -1805,7 +1805,7 @@ bets:
             sha256: sha256:29e3ee76b2029a102993b10e0f01950b8215dc0ed2f5327a2461aaa56db09d11
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md
-            sha256: sha256:0a78b305cf091a1d84664e9dd3b2c9ab5e892f8c4c0620fdc70f090c5d281236
+            sha256: sha256:d69fecfd4d70ba44203d7ecd1b2495d0b9963251a41e932511f991ccb40d46fa
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -1864,7 +1864,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:11193a9681e630c0185403d0d619bd24cba0329844d22097cb1f8ab9b2997511
+    content_digest: sha256:37115b3f3b297d698152f143f59b81bf5fbb532827d51db3309a106aab107ac8
     decision_ref: decision://accepted/BET-Y1Q3-T10-96
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -1879,7 +1879,7 @@ bets:
             sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
-            sha256: sha256:11193a9681e630c0185403d0d619bd24cba0329844d22097cb1f8ab9b2997511
+            sha256: sha256:37115b3f3b297d698152f143f59b81bf5fbb532827d51db3309a106aab107ac8
           rollback:
             ref: receipt://docs/reports/2026-08-30-learning-runtime-legacy-helper-quarantine.md
             sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
@@ -1897,7 +1897,7 @@ bets:
             sha256: sha256:0fd2c1af84f07ff08741d507521c581ca8e6f3c3f066b1a63e88134767337491
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md
-            sha256: sha256:11193a9681e630c0185403d0d619bd24cba0329844d22097cb1f8ab9b2997511
+            sha256: sha256:37115b3f3b297d698152f143f59b81bf5fbb532827d51db3309a106aab107ac8
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -1951,7 +1951,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-t10-93-ledger-mainline-recovery-design.md
     spec_version: 1.0.0
-    content_digest: sha256:2153a6d95e9e36841951f1f0c77b4182ab3c497a1aac6eac284d3ff0459404a8
+    content_digest: sha256:f6ff8c7b06b38e8cfedf45e86f57df6efea7db5442ff4bc54027dbb982d418c5
     decision_ref: decision://accepted/BET-Y1Q3-T10-95
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -1966,7 +1966,7 @@ bets:
             sha256: sha256:3320930728d985f8512938ed58fbd6ba69fc6b1ef8025abb04320b5b32a5ad12
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-t10-93-ledger-mainline-recovery-design.md
-            sha256: sha256:2153a6d95e9e36841951f1f0c77b4182ab3c497a1aac6eac284d3ff0459404a8
+            sha256: sha256:f6ff8c7b06b38e8cfedf45e86f57df6efea7db5442ff4bc54027dbb982d418c5
           rollback:
             ref: receipt://docs/reports/2026-08-30-t10-93-ledger-mainline-recovery.md
             sha256: sha256:3320930728d985f8512938ed58fbd6ba69fc6b1ef8025abb04320b5b32a5ad12
@@ -1984,7 +1984,7 @@ bets:
             sha256: sha256:3320930728d985f8512938ed58fbd6ba69fc6b1ef8025abb04320b5b32a5ad12
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-t10-93-ledger-mainline-recovery-design.md
-            sha256: sha256:2153a6d95e9e36841951f1f0c77b4182ab3c497a1aac6eac284d3ff0459404a8
+            sha256: sha256:f6ff8c7b06b38e8cfedf45e86f57df6efea7db5442ff4bc54027dbb982d418c5
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -2045,7 +2045,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-family-runtime-kems-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:e71081088150ae7d09b4f678cc9aa1c69078c0063e0846cffc5e16bab88f5993
+    content_digest: sha256:9dea020299e8ee023addeaa3edec5933f86db26d5bd07f0345397560c1660212
     decision_ref: decision://accepted/BET-Y1Q3-T10-93
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -2060,7 +2060,7 @@ bets:
             sha256: sha256:330942117c30294f6d6dba9608373f111f4b624f97402a034cce25e6febcd316
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-family-runtime-kems-quarantine-design.md
-            sha256: sha256:e71081088150ae7d09b4f678cc9aa1c69078c0063e0846cffc5e16bab88f5993
+            sha256: sha256:9dea020299e8ee023addeaa3edec5933f86db26d5bd07f0345397560c1660212
           rollback:
             ref: receipt://docs/reports/2026-08-30-family-runtime-kems-quarantine.md
             sha256: sha256:330942117c30294f6d6dba9608373f111f4b624f97402a034cce25e6febcd316
@@ -2078,7 +2078,7 @@ bets:
             sha256: sha256:330942117c30294f6d6dba9608373f111f4b624f97402a034cce25e6febcd316
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-family-runtime-kems-quarantine-design.md
-            sha256: sha256:e71081088150ae7d09b4f678cc9aa1c69078c0063e0846cffc5e16bab88f5993
+            sha256: sha256:9dea020299e8ee023addeaa3edec5933f86db26d5bd07f0345397560c1660212
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -2136,7 +2136,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md
     spec_version: 1.0.0
-    content_digest: sha256:90284dc7504590fc95be1e49d9bf2627a7bf5c1da714ada7cb5eb7e04180cd33
+    content_digest: sha256:585ac0121b48d8666afe62f94367fd67d7444263dbb49b941598d748e61c2f9a
     decision_ref: decision://accepted/BET-Y1Q3-T10-94
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -2151,7 +2151,7 @@ bets:
             sha256: sha256:2bd1e0ef6ac1f4ab0c2b14cd6910274b85874d3e21ca2ff3450218845598eaa5
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md
-            sha256: sha256:90284dc7504590fc95be1e49d9bf2627a7bf5c1da714ada7cb5eb7e04180cd33
+            sha256: sha256:585ac0121b48d8666afe62f94367fd67d7444263dbb49b941598d748e61c2f9a
           rollback:
             ref: receipt://docs/reports/2026-08-30-t10-92-mainline-artifact-recovery.md
             sha256: sha256:2bd1e0ef6ac1f4ab0c2b14cd6910274b85874d3e21ca2ff3450218845598eaa5
@@ -2169,7 +2169,7 @@ bets:
             sha256: sha256:2bd1e0ef6ac1f4ab0c2b14cd6910274b85874d3e21ca2ff3450218845598eaa5
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md
-            sha256: sha256:90284dc7504590fc95be1e49d9bf2627a7bf5c1da714ada7cb5eb7e04180cd33
+            sha256: sha256:585ac0121b48d8666afe62f94367fd67d7444263dbb49b941598d748e61c2f9a
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -2229,7 +2229,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:a099ac6b34230ecbd847e046acaf0f607c1ff85622c2acb42e7bfe5cbe072a9c
+    content_digest: sha256:58905ed5746468ef11d5e721b7d8a2733a8c9efb8b9b1e156cb710174472a543
     decision_ref: decision://accepted/BET-Y1Q3-T10-92
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -2244,7 +2244,7 @@ bets:
             sha256: sha256:0cf4b68ab71120674a01051808f316ef3a020915199627d541e9fcaf49c2e2ff
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md
-            sha256: sha256:a099ac6b34230ecbd847e046acaf0f607c1ff85622c2acb42e7bfe5cbe072a9c
+            sha256: sha256:58905ed5746468ef11d5e721b7d8a2733a8c9efb8b9b1e156cb710174472a543
           rollback:
             ref: receipt://docs/reports/2026-08-30-opc-runtime-tools-quarantine.md
             sha256: sha256:0cf4b68ab71120674a01051808f316ef3a020915199627d541e9fcaf49c2e2ff
@@ -2262,7 +2262,7 @@ bets:
             sha256: sha256:0cf4b68ab71120674a01051808f316ef3a020915199627d541e9fcaf49c2e2ff
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md
-            sha256: sha256:a099ac6b34230ecbd847e046acaf0f607c1ff85622c2acb42e7bfe5cbe072a9c
+            sha256: sha256:58905ed5746468ef11d5e721b7d8a2733a8c9efb8b9b1e156cb710174472a543
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -2319,7 +2319,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-completion-evidence-digest-reconciliation-design.md
     spec_version: 1.0.0
-    content_digest: sha256:aa88e156b4040a7abdfe7ad118f6b968b19b5398626e21965a04c744ac703ff9
+    content_digest: sha256:e56e5c85f44f31418dc96434e93f64a37ecc9a0f4b3c7d166699abc6f5c01e26
     decision_ref: decision://accepted/BET-Y1Q3-T10-91
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -2334,10 +2334,10 @@ bets:
             sha256: sha256:01b9529a6f42030eaac2764c1f5f35b5228b1a73d27df7c4adf2e6cc1c6a4679
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-completion-evidence-digest-reconciliation-design.md
-            sha256: sha256:aa88e156b4040a7abdfe7ad118f6b968b19b5398626e21965a04c744ac703ff9
+            sha256: sha256:e56e5c85f44f31418dc96434e93f64a37ecc9a0f4b3c7d166699abc6f5c01e26
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-30-completion-evidence-digest-reconciliation-design.md
-            sha256: sha256:aa88e156b4040a7abdfe7ad118f6b968b19b5398626e21965a04c744ac703ff9
+            sha256: sha256:e56e5c85f44f31418dc96434e93f64a37ecc9a0f4b3c7d166699abc6f5c01e26
       operational:
         status: PROVEN
         evidence:
@@ -2352,7 +2352,7 @@ bets:
             sha256: sha256:01b9529a6f42030eaac2764c1f5f35b5228b1a73d27df7c4adf2e6cc1c6a4679
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-completion-evidence-digest-reconciliation-design.md
-            sha256: sha256:aa88e156b4040a7abdfe7ad118f6b968b19b5398626e21965a04c744ac703ff9
+            sha256: sha256:e56e5c85f44f31418dc96434e93f64a37ecc9a0f4b3c7d166699abc6f5c01e26
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -2406,7 +2406,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md
     spec_version: 1.0.0
-    content_digest: sha256:56339bc7fa9840a683cf8932f01e0de402aab0f9b88fa0ba9ea63fbc8cb2cd70
+    content_digest: sha256:9fb529a038919ae41b59679598058fbbd1c85e5975ed0499661838edf5766422
     decision_ref: decision://accepted/BET-Y1Q3-T10-90
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -2421,10 +2421,10 @@ bets:
             sha256: sha256:696d239d4f9e389e8356c7989914e1195459afcd9dd71fc767ca5b59e69acebe
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md
-            sha256: sha256:56339bc7fa9840a683cf8932f01e0de402aab0f9b88fa0ba9ea63fbc8cb2cd70
+            sha256: sha256:9fb529a038919ae41b59679598058fbbd1c85e5975ed0499661838edf5766422
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md
-            sha256: sha256:56339bc7fa9840a683cf8932f01e0de402aab0f9b88fa0ba9ea63fbc8cb2cd70
+            sha256: sha256:9fb529a038919ae41b59679598058fbbd1c85e5975ed0499661838edf5766422
       operational:
         status: PROVEN
         evidence:
@@ -2439,7 +2439,7 @@ bets:
             sha256: sha256:696d239d4f9e389e8356c7989914e1195459afcd9dd71fc767ca5b59e69acebe
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md
-            sha256: sha256:56339bc7fa9840a683cf8932f01e0de402aab0f9b88fa0ba9ea63fbc8cb2cd70
+            sha256: sha256:9fb529a038919ae41b59679598058fbbd1c85e5975ed0499661838edf5766422
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -2498,7 +2498,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md
     spec_version: 1.0.0
-    content_digest: sha256:cacfb31e1f624155beac675ed68a1f056f444ab5f15d77fcdfd3b865b78b3ca6
+    content_digest: sha256:b482d45815cf12991226fb8e1df9bfb25fe47d12fcbc293266838ac402f19192
     decision_ref: decision://accepted/BET-Y1Q3-T10-89
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -2513,10 +2513,10 @@ bets:
             sha256: sha256:215759d323a088df4a9fc9b30bd4414b58624c299e9a5d584d2bdede9e8a84aa
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md
-            sha256: sha256:cacfb31e1f624155beac675ed68a1f056f444ab5f15d77fcdfd3b865b78b3ca6
+            sha256: sha256:b482d45815cf12991226fb8e1df9bfb25fe47d12fcbc293266838ac402f19192
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md
-            sha256: sha256:cacfb31e1f624155beac675ed68a1f056f444ab5f15d77fcdfd3b865b78b3ca6
+            sha256: sha256:b482d45815cf12991226fb8e1df9bfb25fe47d12fcbc293266838ac402f19192
       operational:
         status: PROVEN
         evidence:
@@ -2597,7 +2597,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:47ad2f63ff7392f06e5a0f09b9769deeeebc795df6147b3a8d4e4cdf98aeb473
+    content_digest: sha256:c6a05f61885a55ffaedd8d714e336e6343a83e41489b7040d6275df4392af429
     decision_ref: decision://accepted/BET-Y1Q3-T10-88
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -2691,7 +2691,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-guizi-scripts-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:cf92d60890410ebc74cb0bb0245bf49ee7bad55afd782edc311018a566e3bf39
+    content_digest: sha256:c76d39169dbed54f93d76bfdcf74b5063f9a96a8b20b6fe9959dd68f13772400
     decision_ref: decision://accepted/BET-Y1Q3-T10-87
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -2786,7 +2786,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-weijian-control-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:dacd6fdfe6d8dbd543c94a499e4a4e01f40edc57fd91436f9ebda209ebbd1343
+    content_digest: sha256:91f59654b6a89c543502a2128c883aeccf1e4c53dc2fad28fe3d57561c671abb
     decision_ref: decision://accepted/BET-Y1Q3-T10-86
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -2880,7 +2880,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-contract-ocr-tools-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:8dacb938be9a68245aafdc1be90fc899e17151d91c6f460f736887677d65b3fc
+    content_digest: sha256:f9470984cfc72db9a46abf5b76b23dbc3c21d82c7e1e01ab9e02c68deb012ec8
     decision_ref: decision://accepted/BET-Y1Q3-T10-85
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -2974,7 +2974,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-root-control-tools-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:736741751cd0cf148d1b7ef1584f714a4391d8ef31e0f005de848678ae8d32f9
+    content_digest: sha256:8257e2cc540f29ac035cb9898a625e7a0aaf1ef217b92fbe1fe3bfad8c51d1fc
     decision_ref: decision://accepted/BET-Y1Q3-T10-84
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3068,7 +3068,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-root-tools-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:c40bb8d3e4f3670363792944fddb5532ef5eed09d53996c29dd77cd9e8046eae
+    content_digest: sha256:1a540e431f8e8cd3fdcb314979ba68c03b00540d4269c07d5b0c2a18670f230a
     decision_ref: decision://accepted/BET-Y1Q3-T10-83
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3162,7 +3162,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-guizi-tools-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:6412e5fe09c021d2098263d3ba5f5ed54980661eca97d262ba96a230607e2c04
+    content_digest: sha256:5144d86e026350e5ce122b1406dceb69cce8f7ef98a64a08b269786db75c955f
     decision_ref: decision://accepted/BET-Y1Q3-T10-82
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3256,7 +3256,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:d7894ca5ea3979bf879ba16bbd8550ae2580c0502a62f0fe67c86fa702c1b58b
+    content_digest: sha256:7ecc5d829eeac115e2f7b15851f1e8faff205fb9caf5a48f64ec3e888f793143
     decision_ref: decision://accepted/BET-Y1Q3-T10-81
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3351,7 +3351,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-guizi-dangling-symlink-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:678f798b64957d52d6f8709ad5ef18b4f09e25709706685b95e1f2cc36eac860
+    content_digest: sha256:26425361a5e592d99af20205ac3c33da2f09683c50e07e16445c309483037aef
     decision_ref: decision://accepted/BET-Y1Q3-T10-80
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3447,7 +3447,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:d60b40ef85f86871a0fb84890b995df30c70952f1dd15251956cf19360834ec1
+    content_digest: sha256:2540712d91232f599a651ecfe4e3523c06060e2afddec81719d9eb00b0a2da54
     decision_ref: decision://accepted/BET-Y1Q3-T10-79
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3536,7 +3536,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md
     spec_version: 1.0.0
-    content_digest: sha256:4d0c008c79bb853ea3cff2c92e518d5168a36c4c00c0c570d7069d17db335efa
+    content_digest: sha256:5ef5430c13e67787cc45f2623e0b9b7f080613690c182cb17eb06dedcb74a745
     decision_ref: decision://accepted/BET-Y1Q3-T10-78
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3551,7 +3551,7 @@ bets:
             sha256: sha256:50ca9b365eb38afa41c6729f8de3987dca022c115be3abdfe0dca1b5312ce766
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md
-            sha256: sha256:4d0c008c79bb853ea3cff2c92e518d5168a36c4c00c0c570d7069d17db335efa
+            sha256: sha256:5ef5430c13e67787cc45f2623e0b9b7f080613690c182cb17eb06dedcb74a745
           rollback:
             ref: receipt://docs/reports/2026-08-29-work-runtime-family-scope-correction.md
             sha256: sha256:50ca9b365eb38afa41c6729f8de3987dca022c115be3abdfe0dca1b5312ce766
@@ -3569,7 +3569,7 @@ bets:
             sha256: sha256:c4d135c1dc013ffc13888581b18239efab47630e1e0025393aa368a09cc34120
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md
-            sha256: sha256:4d0c008c79bb853ea3cff2c92e518d5168a36c4c00c0c570d7069d17db335efa
+            sha256: sha256:5ef5430c13e67787cc45f2623e0b9b7f080613690c182cb17eb06dedcb74a745
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -3632,7 +3632,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:d5d3a90f36622096862a0cdd73f64ee4f895b105552df54e8c3778a133133620
+    content_digest: sha256:1205b40cf1ff93f10a55d7b84274d5a53035ed35be308c7f49ec250b8dc48a51
     decision_ref: decision://accepted/BET-Y1Q3-T10-73
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3647,7 +3647,7 @@ bets:
             sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md
-            sha256: sha256:d5d3a90f36622096862a0cdd73f64ee4f895b105552df54e8c3778a133133620
+            sha256: sha256:1205b40cf1ff93f10a55d7b84274d5a53035ed35be308c7f49ec250b8dc48a51
           rollback:
             ref: receipt://docs/reports/2026-08-30-documents-dangling-symlink-quarantine.md
             sha256: sha256:192c40ca05cbedfa572d051523862be0cfab87489d19a5478445060992a844ca
@@ -3668,7 +3668,7 @@ bets:
             sha256: sha256:d8998fbf4a04465e8655c49392157a12bf0d70662e9cc4e8a7e0f15c63326f0b
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md
-            sha256: sha256:d5d3a90f36622096862a0cdd73f64ee4f895b105552df54e8c3778a133133620
+            sha256: sha256:1205b40cf1ff93f10a55d7b84274d5a53035ed35be308c7f49ec250b8dc48a51
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -3728,7 +3728,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md
     spec_version: 1.0.0
-    content_digest: sha256:8f06c45575cface7e25d0056065bd5a41337eb486776a8fdd21c0c717fd1d9fd
+    content_digest: sha256:edb0228a2ee514dcc9ba125168457e6d360ff27e78f45a298303e752e6b21aa1
     decision_ref: decision://accepted/BET-Y1Q3-T10-74
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3743,7 +3743,7 @@ bets:
             sha256: sha256:4fdc3e322b8ee41d18f1bf16c851b7008159c7923d4264248d6dc46da317d85c
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md
-            sha256: sha256:8f06c45575cface7e25d0056065bd5a41337eb486776a8fdd21c0c717fd1d9fd
+            sha256: sha256:edb0228a2ee514dcc9ba125168457e6d360ff27e78f45a298303e752e6b21aa1
           rollback:
             ref: receipt://docs/reports/2026-08-30-omlxc-bos-path-reconciliation.md
             sha256: sha256:4fdc3e322b8ee41d18f1bf16c851b7008159c7923d4264248d6dc46da317d85c
@@ -3761,7 +3761,7 @@ bets:
             sha256: sha256:4ef9757e56ea90d6f59ed2d1af549f01bcd2f0abac2c996a4d83c355ab48e290
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md
-            sha256: sha256:8f06c45575cface7e25d0056065bd5a41337eb486776a8fdd21c0c717fd1d9fd
+            sha256: sha256:edb0228a2ee514dcc9ba125168457e6d360ff27e78f45a298303e752e6b21aa1
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -3812,7 +3812,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
     spec_version: 1.1.0
-    content_digest: sha256:a70d3cc8c86374fe7dcaca2991adcc715199980048c528e9f57ce271f7b86586
+    content_digest: sha256:531e0ef09e435520f9dde83262ad2bc85ab49fa0248357b3c8f521763d66b3e2
     decision_ref: decision://accepted/BET-Y1Q3-T10-76
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3827,7 +3827,7 @@ bets:
             sha256: sha256:4efbe7999be37cef4ec1b77a896b3a28e93e9f066fb84089291bd3f16026131f
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
-            sha256: sha256:a70d3cc8c86374fe7dcaca2991adcc715199980048c528e9f57ce271f7b86586
+            sha256: sha256:531e0ef09e435520f9dde83262ad2bc85ab49fa0248357b3c8f521763d66b3e2
           rollback:
             ref: receipt://docs/reports/2026-08-29-system-task-projection-reconciliation.md
             sha256: sha256:4efbe7999be37cef4ec1b77a896b3a28e93e9f066fb84089291bd3f16026131f
@@ -3845,7 +3845,7 @@ bets:
             sha256: sha256:a115b6b7a815cc6eaf6b8832afb04c735951e5dd4ca307736cd63bc727824e81
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md
-            sha256: sha256:a70d3cc8c86374fe7dcaca2991adcc715199980048c528e9f57ce271f7b86586
+            sha256: sha256:531e0ef09e435520f9dde83262ad2bc85ab49fa0248357b3c8f521763d66b3e2
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -3908,7 +3908,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-work-runtime-regular-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:ee6a0ad89a537c77de044df05aeb143bc42fe4a5ea3614478aac19498e4d10a4
+    content_digest: sha256:13d7c4d2067808e3b5bf40e20e9c603b0f927d85e51f4397d9e0c1c1ef869777
     decision_ref: decision://accepted/BET-Y1Q3-T10-77
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -3995,7 +3995,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
     spec_version: 1.0.0
-    content_digest: sha256:f95fe3db9867d6eeb8dbae4c16ef70db8a855109fb05ed5ed8b4969a86598a5f
+    content_digest: sha256:fc20c1a27e6e1786eb36f292c783060d7d79bf0155535ff8dfe00e97abb79e6c
     decision_ref: decision://accepted/BET-Y1Q3-T10-71
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -4010,10 +4010,10 @@ bets:
             sha256: sha256:41b2bd863545ba96be11d767897753c084023225d738e5857e365ea27bee4934
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
-            sha256: sha256:f95fe3db9867d6eeb8dbae4c16ef70db8a855109fb05ed5ed8b4969a86598a5f
+            sha256: sha256:fc20c1a27e6e1786eb36f292c783060d7d79bf0155535ff8dfe00e97abb79e6c
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
-            sha256: sha256:f95fe3db9867d6eeb8dbae4c16ef70db8a855109fb05ed5ed8b4969a86598a5f
+            sha256: sha256:fc20c1a27e6e1786eb36f292c783060d7d79bf0155535ff8dfe00e97abb79e6c
       operational:
         status: PROVEN
         evidence:
@@ -4028,7 +4028,7 @@ bets:
             sha256: sha256:41b2bd863545ba96be11d767897753c084023225d738e5857e365ea27bee4934
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md
-            sha256: sha256:f95fe3db9867d6eeb8dbae4c16ef70db8a855109fb05ed5ed8b4969a86598a5f
+            sha256: sha256:fc20c1a27e6e1786eb36f292c783060d7d79bf0155535ff8dfe00e97abb79e6c
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -4094,7 +4094,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:134dede57c702fb8648162a2bed1226ac9a79e1f326218fe03faec522f95579d
+    content_digest: sha256:576215265b84c97a2c8df40aa022c9c864c0bed1db8da11823b80a44d8bf18db
     decision_ref: decision://accepted/BET-Y1Q3-T10-70
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -4109,7 +4109,7 @@ bets:
             sha256: sha256:a0f167421065115919ca3167747f8dd9c32a3ce169bbdabc6f294c3fbe8434ff
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md
-            sha256: sha256:134dede57c702fb8648162a2bed1226ac9a79e1f326218fe03faec522f95579d
+            sha256: sha256:576215265b84c97a2c8df40aa022c9c864c0bed1db8da11823b80a44d8bf18db
           rollback:
             ref: receipt://docs/reports/2026-08-29-documents-cockpit-runtime-quarantine.md
             sha256: sha256:a0f167421065115919ca3167747f8dd9c32a3ce169bbdabc6f294c3fbe8434ff
@@ -4127,7 +4127,7 @@ bets:
             sha256: sha256:021860be9976e12790a04e948e8ad9ff13f1a13bf273524a066e90d4ecdd6fc8
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md
-            sha256: sha256:134dede57c702fb8648162a2bed1226ac9a79e1f326218fe03faec522f95579d
+            sha256: sha256:576215265b84c97a2c8df40aa022c9c864c0bed1db8da11823b80a44d8bf18db
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -4195,7 +4195,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:da9aa736c299685314498cf1a8bb58b1e6a03decc3b4418df2aaa33e98e05daf
+    content_digest: sha256:214df436911bed657ac793bde7d8cd9d26c47d2302c7bf952cbc852e323494cb
     decision_ref: decision://accepted/BET-Y1Q3-T10-69
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -4286,7 +4286,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md
     spec_version: 1.0.0
-    content_digest: sha256:8ef28aa310467e1b69379403f63a38d5aa09d38dfe49b48bf17db9faae49ef25
+    content_digest: sha256:12701cef515f1c0ad6b60a481d7f1448319040f0e1748107540e3740eeba76ba
     decision_ref: decision://accepted/BET-Y1Q3-T10-68
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -4301,7 +4301,7 @@ bets:
             sha256: sha256:b835f35de2d7b3af06f52bf9a74ffa50a407fdbe8d086e4e8fb50c3d33e34329
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md
-            sha256: sha256:8ef28aa310467e1b69379403f63a38d5aa09d38dfe49b48bf17db9faae49ef25
+            sha256: sha256:12701cef515f1c0ad6b60a481d7f1448319040f0e1748107540e3740eeba76ba
           rollback:
             ref: receipt://docs/reports/2026-08-29-quarantine-retention-guard.md
             sha256: sha256:b835f35de2d7b3af06f52bf9a74ffa50a407fdbe8d086e4e8fb50c3d33e34329
@@ -4319,7 +4319,7 @@ bets:
             sha256: sha256:c0cdc3d7f947e8cbe51ae01dc532ab368678ee61715b9e1fa4d08b3f34b205f9
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md
-            sha256: sha256:8ef28aa310467e1b69379403f63a38d5aa09d38dfe49b48bf17db9faae49ef25
+            sha256: sha256:12701cef515f1c0ad6b60a481d7f1448319040f0e1748107540e3740eeba76ba
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -4382,7 +4382,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
     spec_version: 1.0.0
-    content_digest: sha256:57dc1ecbb22fe085975232a6e722b229bdfaf0249d60d5926d9586e3d330707b
+    content_digest: sha256:60fd60f7d2f5777cc4a37c743680ec72df742c9e5c0550cd86870d09baaf10bf
     decision_ref: decision://accepted/BET-Y1Q3-T10-65
   depends_on:
   - BET-Y1Q3-T10-59
@@ -4404,10 +4404,10 @@ bets:
             sha256: sha256:b14d9aa1f963811ccf26ab7d51daea734f5ab72bccfe2c85777f26e791a65831
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
-            sha256: sha256:57dc1ecbb22fe085975232a6e722b229bdfaf0249d60d5926d9586e3d330707b
+            sha256: sha256:60fd60f7d2f5777cc4a37c743680ec72df742c9e5c0550cd86870d09baaf10bf
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
-            sha256: sha256:57dc1ecbb22fe085975232a6e722b229bdfaf0249d60d5926d9586e3d330707b
+            sha256: sha256:60fd60f7d2f5777cc4a37c743680ec72df742c9e5c0550cd86870d09baaf10bf
       operational:
         status: PROVEN
         evidence:
@@ -4422,7 +4422,7 @@ bets:
             sha256: sha256:d388eeff6fb33edda9625d3f2e56f87f6e888c9cb32dc54f4f7587c14dd78404
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md
-            sha256: sha256:57dc1ecbb22fe085975232a6e722b229bdfaf0249d60d5926d9586e3d330707b
+            sha256: sha256:60fd60f7d2f5777cc4a37c743680ec72df742c9e5c0550cd86870d09baaf10bf
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -4657,7 +4657,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
     spec_version: 1.0.0
-    content_digest: sha256:05c247faf0c8e1ec5a20bd6014832ac36117af4a68a9ee085f418b709e56f04b
+    content_digest: sha256:6acead1deba738fbc52712b14757c4161426e0bfa14057750521b204a6b777a6
     decision_ref: decision://accepted/BET-Y1Q3-T10-66
   depends_on: []
   risk_level: L1
@@ -4678,10 +4678,10 @@ bets:
             sha256: sha256:753850ad158d1d563dac828c25c8ccb38dfd67a1de783829528f013356ede720
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
-            sha256: sha256:05c247faf0c8e1ec5a20bd6014832ac36117af4a68a9ee085f418b709e56f04b
+            sha256: sha256:6acead1deba738fbc52712b14757c4161426e0bfa14057750521b204a6b777a6
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
-            sha256: sha256:05c247faf0c8e1ec5a20bd6014832ac36117af4a68a9ee085f418b709e56f04b
+            sha256: sha256:6acead1deba738fbc52712b14757c4161426e0bfa14057750521b204a6b777a6
       operational:
         status: PROVEN
         evidence:
@@ -4696,7 +4696,7 @@ bets:
             sha256: sha256:753850ad158d1d563dac828c25c8ccb38dfd67a1de783829528f013356ede720
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md
-            sha256: sha256:05c247faf0c8e1ec5a20bd6014832ac36117af4a68a9ee085f418b709e56f04b
+            sha256: sha256:6acead1deba738fbc52712b14757c4161426e0bfa14057750521b204a6b777a6
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -4745,7 +4745,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md
     spec_version: 1.0.0
-    content_digest: sha256:7b330a3aed8ae6e01f1733887e61e1aafccca733273dfdd4fe3f202092ba229c
+    content_digest: sha256:1ff4401631524ba19c9c45c6bccb4971f2b5607992d3302dc4be913e7ea1ef65
     decision_ref: decision://accepted/BET-Y1Q3-T10-61
   depends_on: []
   risk_level: L1
@@ -4765,10 +4765,10 @@ bets:
             sha256: sha256:ad23d6da4f9a420bb974463119a4ed8b6b0b817913e639a74fc6a88f90c6c95b
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md
-            sha256: sha256:7b330a3aed8ae6e01f1733887e61e1aafccca733273dfdd4fe3f202092ba229c
+            sha256: sha256:1ff4401631524ba19c9c45c6bccb4971f2b5607992d3302dc4be913e7ea1ef65
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md
-            sha256: sha256:7b330a3aed8ae6e01f1733887e61e1aafccca733273dfdd4fe3f202092ba229c
+            sha256: sha256:1ff4401631524ba19c9c45c6bccb4971f2b5607992d3302dc4be913e7ea1ef65
       operational:
         status: PROVEN
         evidence:
@@ -4783,7 +4783,7 @@ bets:
             sha256: sha256:c71b5b4b8953e8fea94e2b7a51614db2fac6f4c81261b0c96abf27395032590f
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md
-            sha256: sha256:7b330a3aed8ae6e01f1733887e61e1aafccca733273dfdd4fe3f202092ba229c
+            sha256: sha256:1ff4401631524ba19c9c45c6bccb4971f2b5607992d3302dc4be913e7ea1ef65
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -4829,7 +4829,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-governance-waiver-frontmatter-repair-design.md
     spec_version: 1.0.0
-    content_digest: sha256:7a2f9093b9c72ad1fac2377b7ebeb827694a6ed7aa3c9f3a7cd6f7b173dac462
+    content_digest: sha256:84857ae66dc329ef5a4148b200c5a652d026bcc618db5e19c26713f09a35175c
     decision_ref: decision://accepted/BET-Y1Q3-T10-63
   depends_on: []
   risk_level: L1
@@ -4849,10 +4849,10 @@ bets:
             sha256: sha256:6ee371fd0257d1a1df656d4278b24dfbc1774cd2f16124765c6b49fc6d3d6cad
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-governance-waiver-frontmatter-repair-design.md
-            sha256: sha256:7a2f9093b9c72ad1fac2377b7ebeb827694a6ed7aa3c9f3a7cd6f7b173dac462
+            sha256: sha256:84857ae66dc329ef5a4148b200c5a652d026bcc618db5e19c26713f09a35175c
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-governance-waiver-frontmatter-repair-design.md
-            sha256: sha256:7a2f9093b9c72ad1fac2377b7ebeb827694a6ed7aa3c9f3a7cd6f7b173dac462
+            sha256: sha256:84857ae66dc329ef5a4148b200c5a652d026bcc618db5e19c26713f09a35175c
       operational:
         status: PROVEN
         evidence:
@@ -4867,7 +4867,7 @@ bets:
             sha256: sha256:6ee371fd0257d1a1df656d4278b24dfbc1774cd2f16124765c6b49fc6d3d6cad
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-governance-waiver-frontmatter-repair-design.md
-            sha256: sha256:7a2f9093b9c72ad1fac2377b7ebeb827694a6ed7aa3c9f3a7cd6f7b173dac462
+            sha256: sha256:84857ae66dc329ef5a4148b200c5a652d026bcc618db5e19c26713f09a35175c
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -4904,7 +4904,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md
     spec_version: 1.0.0
-    content_digest: sha256:5c7ceac0b7f5e06eca5e93589cbc457d8a4d48ff680eacd04378551f46d3de8e
+    content_digest: sha256:052a68f6ccd0a96fda3ff8b7e598168a544d2972b32092891714380458383944
     decision_ref: decision://accepted/BET-Y1Q3-T10-56
   depends_on:
   - BET-Y1Q3-T10-55
@@ -4925,10 +4925,10 @@ bets:
             sha256: sha256:a2d2ede426853bf066232fdc5c8047907195725fc178bec620dbf8ddd35562ee
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md
-            sha256: sha256:5c7ceac0b7f5e06eca5e93589cbc457d8a4d48ff680eacd04378551f46d3de8e
+            sha256: sha256:052a68f6ccd0a96fda3ff8b7e598168a544d2972b32092891714380458383944
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md
-            sha256: sha256:5c7ceac0b7f5e06eca5e93589cbc457d8a4d48ff680eacd04378551f46d3de8e
+            sha256: sha256:052a68f6ccd0a96fda3ff8b7e598168a544d2972b32092891714380458383944
       operational:
         status: PROVEN
         evidence:
@@ -4943,7 +4943,7 @@ bets:
             sha256: sha256:a2d2ede426853bf066232fdc5c8047907195725fc178bec620dbf8ddd35562ee
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md
-            sha256: sha256:5c7ceac0b7f5e06eca5e93589cbc457d8a4d48ff680eacd04378551f46d3de8e
+            sha256: sha256:052a68f6ccd0a96fda3ff8b7e598168a544d2972b32092891714380458383944
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -4994,7 +4994,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
     spec_version: 1.0.0
-    content_digest: sha256:b02209a66e37f91a9493bb626828e9456c54a7141a4849379aa6b68c483ffcaa
+    content_digest: sha256:aaabdcfb4c7b8f27ca405bf31c340f980393e5b24cc1d697ee6eb26fda839498
     decision_ref: decision://accepted/BET-Y1Q3-T10-57
   depends_on:
   - BET-Y1Q3-T10-41
@@ -5015,10 +5015,10 @@ bets:
             sha256: sha256:ca977a68525fdc10660cb9ed0e678bdf86c6ab4e36158194d45737825697cab2
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
-            sha256: sha256:b02209a66e37f91a9493bb626828e9456c54a7141a4849379aa6b68c483ffcaa
+            sha256: sha256:aaabdcfb4c7b8f27ca405bf31c340f980393e5b24cc1d697ee6eb26fda839498
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
-            sha256: sha256:b02209a66e37f91a9493bb626828e9456c54a7141a4849379aa6b68c483ffcaa
+            sha256: sha256:aaabdcfb4c7b8f27ca405bf31c340f980393e5b24cc1d697ee6eb26fda839498
       operational:
         status: PROVEN
         evidence:
@@ -5033,7 +5033,7 @@ bets:
             sha256: sha256:ca977a68525fdc10660cb9ed0e678bdf86c6ab4e36158194d45737825697cab2
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md
-            sha256: sha256:b02209a66e37f91a9493bb626828e9456c54a7141a4849379aa6b68c483ffcaa
+            sha256: sha256:aaabdcfb4c7b8f27ca405bf31c340f980393e5b24cc1d697ee6eb26fda839498
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -5093,7 +5093,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md
     spec_version: 1.0.0
-    content_digest: sha256:76e887d0ebeb670e88c6ffc8c0b4908f9ac9e8441a3274d3660d8456b7e60abf
+    content_digest: sha256:064003293d6145ed6c9348ec9cbd1c129bd2d54e39c305bd7335ae410dcb9acb
     decision_ref: decision://accepted/BET-Y1Q3-T10-60
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -5186,7 +5186,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md
     spec_version: 1.0.0
-    content_digest: sha256:1de071876de906a59a248133456d14386bce8df32f1093df930ee4d6c01df154
+    content_digest: sha256:cae33c2a348793f7028342e16d97194273ed2e4528da5fd91387b2fcaf3565c2
     decision_ref: decision://accepted/BET-Y1Q3-T10-59
   depends_on:
   - BET-Y1Q3-T10-57
@@ -5264,7 +5264,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md
     spec_version: 1.0.0
-    content_digest: sha256:b0d5aeffe3e5b07725e234a167ceca3d1b115d32039cd1624545745c4e658ed1
+    content_digest: sha256:fed8748f273cf6daef1f8879d93c52e5fc564286a81f0665f626c3178f38297b
     decision_ref: decision://accepted/BET-Y1Q3-T10-55
   depends_on: []
   risk_level: L1
@@ -5284,10 +5284,10 @@ bets:
             sha256: sha256:3a0f6659be6d3ff82ca3f95fdb6b84f5772136269179f0bca7769ad74b8f75a7
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md
-            sha256: sha256:b0d5aeffe3e5b07725e234a167ceca3d1b115d32039cd1624545745c4e658ed1
+            sha256: sha256:fed8748f273cf6daef1f8879d93c52e5fc564286a81f0665f626c3178f38297b
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md
-            sha256: sha256:b0d5aeffe3e5b07725e234a167ceca3d1b115d32039cd1624545745c4e658ed1
+            sha256: sha256:fed8748f273cf6daef1f8879d93c52e5fc564286a81f0665f626c3178f38297b
       operational:
         status: PROVEN
         evidence:
@@ -5302,7 +5302,7 @@ bets:
             sha256: sha256:3a0f6659be6d3ff82ca3f95fdb6b84f5772136269179f0bca7769ad74b8f75a7
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md
-            sha256: sha256:b0d5aeffe3e5b07725e234a167ceca3d1b115d32039cd1624545745c4e658ed1
+            sha256: sha256:fed8748f273cf6daef1f8879d93c52e5fc564286a81f0665f626c3178f38297b
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -5345,7 +5345,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md
     spec_version: 1.0.0
-    content_digest: sha256:ec9ab13bace8ad5aceacba504e17774d4372bf3a55fc1c7ad22dfdd0c2a7e559
+    content_digest: sha256:977e1665edba340e1fe921308fc379506c55babc01cd888e112ee7ea4faaac9e
     decision_ref: decision://accepted/BET-Y1Q3-T10-54
   depends_on: []
   risk_level: L1
@@ -5367,10 +5367,10 @@ bets:
             sha256: sha256:cb9be9736c4d4c6663fc28a38479b26c52f28db076ffb75ff7417e2a2c5c9504
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md
-            sha256: sha256:ec9ab13bace8ad5aceacba504e17774d4372bf3a55fc1c7ad22dfdd0c2a7e559
+            sha256: sha256:977e1665edba340e1fe921308fc379506c55babc01cd888e112ee7ea4faaac9e
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md
-            sha256: sha256:ec9ab13bace8ad5aceacba504e17774d4372bf3a55fc1c7ad22dfdd0c2a7e559
+            sha256: sha256:977e1665edba340e1fe921308fc379506c55babc01cd888e112ee7ea4faaac9e
       operational:
         status: PROVEN
         evidence:
@@ -5385,7 +5385,7 @@ bets:
             sha256: sha256:cb9be9736c4d4c6663fc28a38479b26c52f28db076ffb75ff7417e2a2c5c9504
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md
-            sha256: sha256:ec9ab13bace8ad5aceacba504e17774d4372bf3a55fc1c7ad22dfdd0c2a7e559
+            sha256: sha256:977e1665edba340e1fe921308fc379506c55babc01cd888e112ee7ea4faaac9e
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -5420,7 +5420,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md
     spec_version: 1.0.0
-    content_digest: sha256:ae6b1c3577b4369c7d9cce8aecc46cd7fc712daf16fbf514f4289b7192c627b1
+    content_digest: sha256:125b1d33bbd3238349b1021db145dbda8a424fa167dfddf0478c6d8a989e2016
     decision_ref: decision://accepted/BET-Y1Q3-T10-52
   depends_on:
   - BET-Y1Q3-T10-48
@@ -5443,10 +5443,10 @@ bets:
             sha256: sha256:1ecda7aba55efd4e372012e7ce03ac3e8d1d27e625f84fd14c78e1da310f32ae
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md
-            sha256: sha256:ae6b1c3577b4369c7d9cce8aecc46cd7fc712daf16fbf514f4289b7192c627b1
+            sha256: sha256:125b1d33bbd3238349b1021db145dbda8a424fa167dfddf0478c6d8a989e2016
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md
-            sha256: sha256:ae6b1c3577b4369c7d9cce8aecc46cd7fc712daf16fbf514f4289b7192c627b1
+            sha256: sha256:125b1d33bbd3238349b1021db145dbda8a424fa167dfddf0478c6d8a989e2016
       operational:
         status: PROVEN
         evidence:
@@ -5461,7 +5461,7 @@ bets:
             sha256: sha256:1ecda7aba55efd4e372012e7ce03ac3e8d1d27e625f84fd14c78e1da310f32ae
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md
-            sha256: sha256:ae6b1c3577b4369c7d9cce8aecc46cd7fc712daf16fbf514f4289b7192c627b1
+            sha256: sha256:125b1d33bbd3238349b1021db145dbda8a424fa167dfddf0478c6d8a989e2016
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -5510,7 +5510,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-agora-port-contract-design.md
     spec_version: 1.0.0
-    content_digest: sha256:a65cf7ccc6bb33d14758482bf6b2d24cf8487f2f7c6928384dd73accb26720fb
+    content_digest: sha256:cbba85198a6bd2470bebe7253d849bbe6297e99e439acb33f7e6e44117205e99
     decision_ref: decision://accepted/BET-Y1Q3-T10-51
   depends_on: []
   risk_level: L1
@@ -5527,13 +5527,13 @@ bets:
             ref: git://origin/main@6d2a6e461d2e55e5f8b92f859639e2cd78ea7efb
           tests:
             ref: receipt://tests/test_ops_cli.py
-            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+            sha256: sha256:81cf13b3b301a29d712929e7a696a22181f1aa78e21c71219a579eb146fd01f2
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-agora-port-contract-design.md
-            sha256: sha256:a65cf7ccc6bb33d14758482bf6b2d24cf8487f2f7c6928384dd73accb26720fb
+            sha256: sha256:cbba85198a6bd2470bebe7253d849bbe6297e99e439acb33f7e6e44117205e99
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-agora-port-contract-design.md
-            sha256: sha256:a65cf7ccc6bb33d14758482bf6b2d24cf8487f2f7c6928384dd73accb26720fb
+            sha256: sha256:cbba85198a6bd2470bebe7253d849bbe6297e99e439acb33f7e6e44117205e99
       operational:
         status: PROVEN
         evidence:
@@ -5542,13 +5542,13 @@ bets:
             sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
           fresh_receipt:
             ref: receipt://tests/test_ops_cli.py
-            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+            sha256: sha256:81cf13b3b301a29d712929e7a696a22181f1aa78e21c71219a579eb146fd01f2
           replay:
             ref: receipt://tests/test_ops_cli.py
-            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+            sha256: sha256:81cf13b3b301a29d712929e7a696a22181f1aa78e21c71219a579eb146fd01f2
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-agora-port-contract-design.md
-            sha256: sha256:a65cf7ccc6bb33d14758482bf6b2d24cf8487f2f7c6928384dd73accb26720fb
+            sha256: sha256:cbba85198a6bd2470bebe7253d849bbe6297e99e439acb33f7e6e44117205e99
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -5596,7 +5596,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md
     spec_version: 1.0.0
-    content_digest: sha256:05de55f6bddf76f15d3c54c6374f1a478c41a3f130dabdc8d8d410b126ab96ce
+    content_digest: sha256:60082eab779527c817a1b4f0f3c2108c041be74ff1c8034a2f5734d8a192a18b
     decision_ref: decision://accepted/BET-Y1Q3-T10-49
   depends_on: []
   risk_level: L1
@@ -5613,13 +5613,13 @@ bets:
             ref: git://origin/main@694b999832a5549b71af5e7f82714408281dbdbd
           tests:
             ref: receipt://tests/test_ops_cli.py
-            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+            sha256: sha256:81cf13b3b301a29d712929e7a696a22181f1aa78e21c71219a579eb146fd01f2
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md
-            sha256: sha256:05de55f6bddf76f15d3c54c6374f1a478c41a3f130dabdc8d8d410b126ab96ce
+            sha256: sha256:60082eab779527c817a1b4f0f3c2108c041be74ff1c8034a2f5734d8a192a18b
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md
-            sha256: sha256:05de55f6bddf76f15d3c54c6374f1a478c41a3f130dabdc8d8d410b126ab96ce
+            sha256: sha256:60082eab779527c817a1b4f0f3c2108c041be74ff1c8034a2f5734d8a192a18b
       operational:
         status: PROVEN
         evidence:
@@ -5628,13 +5628,13 @@ bets:
             sha256: sha256:6fe960a6fa283d3253988f135eb150c31e78be9687569706430b6b9800f5d55c
           fresh_receipt:
             ref: receipt://tests/test_ops_cli.py
-            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+            sha256: sha256:81cf13b3b301a29d712929e7a696a22181f1aa78e21c71219a579eb146fd01f2
           replay:
             ref: receipt://tests/test_ops_cli.py
-            sha256: sha256:3cd17ac7df54e79685a156877d30fb838db1e9a946f568e2b9db4bf849e19663
+            sha256: sha256:81cf13b3b301a29d712929e7a696a22181f1aa78e21c71219a579eb146fd01f2
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md
-            sha256: sha256:05de55f6bddf76f15d3c54c6374f1a478c41a3f130dabdc8d8d410b126ab96ce
+            sha256: sha256:60082eab779527c817a1b4f0f3c2108c041be74ff1c8034a2f5734d8a192a18b
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -5683,7 +5683,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md
     spec_version: 1.0.0
-    content_digest: sha256:b16921943f6cf4311461cf9e8859193ddc7efbf125b07c4a72b0796cd8fabbd5
+    content_digest: sha256:fbc799f5c8fc7240495f50fef7a97560c42965f8689de8af42a65be0a3810af6
     decision_ref: decision://accepted/BET-Y1Q3-T10-50
   depends_on: []
   risk_level: L1
@@ -5703,10 +5703,10 @@ bets:
             sha256: sha256:b6d022b0ad30f5feb7d632a39034aed7716c82d3212de44a32d15ea168098652
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md
-            sha256: sha256:b16921943f6cf4311461cf9e8859193ddc7efbf125b07c4a72b0796cd8fabbd5
+            sha256: sha256:fbc799f5c8fc7240495f50fef7a97560c42965f8689de8af42a65be0a3810af6
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md
-            sha256: sha256:b16921943f6cf4311461cf9e8859193ddc7efbf125b07c4a72b0796cd8fabbd5
+            sha256: sha256:fbc799f5c8fc7240495f50fef7a97560c42965f8689de8af42a65be0a3810af6
       operational:
         status: PROVEN
         evidence:
@@ -5721,7 +5721,7 @@ bets:
             sha256: sha256:b6d022b0ad30f5feb7d632a39034aed7716c82d3212de44a32d15ea168098652
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md
-            sha256: sha256:b16921943f6cf4311461cf9e8859193ddc7efbf125b07c4a72b0796cd8fabbd5
+            sha256: sha256:fbc799f5c8fc7240495f50fef7a97560c42965f8689de8af42a65be0a3810af6
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -6030,7 +6030,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md
     spec_version: 1.0.0
-    content_digest: sha256:421b03a679407a1fad3d781f7995de80abe3ce7289ec54b8b93259fa9b7ba82a
+    content_digest: sha256:cba73e50cad31af43d221b06613f2f436db54368ec7e63dcd2739bcf290de748
     decision_ref: decision://accepted/BET-Y1Q3-T10-48
   depends_on: []
   risk_level: L1
@@ -6050,10 +6050,10 @@ bets:
             sha256: sha256:1ecda7aba55efd4e372012e7ce03ac3e8d1d27e625f84fd14c78e1da310f32ae
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md
-            sha256: sha256:421b03a679407a1fad3d781f7995de80abe3ce7289ec54b8b93259fa9b7ba82a
+            sha256: sha256:cba73e50cad31af43d221b06613f2f436db54368ec7e63dcd2739bcf290de748
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md
-            sha256: sha256:421b03a679407a1fad3d781f7995de80abe3ce7289ec54b8b93259fa9b7ba82a
+            sha256: sha256:cba73e50cad31af43d221b06613f2f436db54368ec7e63dcd2739bcf290de748
       operational:
         status: PROVEN
         evidence:
@@ -6068,7 +6068,7 @@ bets:
             sha256: sha256:1ecda7aba55efd4e372012e7ce03ac3e8d1d27e625f84fd14c78e1da310f32ae
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md
-            sha256: sha256:421b03a679407a1fad3d781f7995de80abe3ce7289ec54b8b93259fa9b7ba82a
+            sha256: sha256:cba73e50cad31af43d221b06613f2f436db54368ec7e63dcd2739bcf290de748
       value:
         status: ACCEPTED
         evidence:
@@ -6130,7 +6130,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
     spec_version: 1.0.0
-    content_digest: sha256:0ac141f319e9c890a4f3539fd5061410efcc061d96a0b5037cbc3540c5c918b7
+    content_digest: sha256:361c2b1c7880041a6235e1e5c9512ed8bab77b9b25c026aa86af65417ee5bc31
     decision_ref: decision://accepted/BET-Y1Q3-T10-43
   depends_on: []
   risk_level: L1
@@ -6150,10 +6150,10 @@ bets:
             sha256: sha256:38b45428b8393ee6b878017078eb3aea6b90cfae54c551d8fba5b7b2a56fc313
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
-            sha256: sha256:0ac141f319e9c890a4f3539fd5061410efcc061d96a0b5037cbc3540c5c918b7
+            sha256: sha256:361c2b1c7880041a6235e1e5c9512ed8bab77b9b25c026aa86af65417ee5bc31
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
-            sha256: sha256:0ac141f319e9c890a4f3539fd5061410efcc061d96a0b5037cbc3540c5c918b7
+            sha256: sha256:361c2b1c7880041a6235e1e5c9512ed8bab77b9b25c026aa86af65417ee5bc31
       operational:
         status: PROVEN
         evidence:
@@ -6168,7 +6168,7 @@ bets:
             sha256: sha256:38b45428b8393ee6b878017078eb3aea6b90cfae54c551d8fba5b7b2a56fc313
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md
-            sha256: sha256:0ac141f319e9c890a4f3539fd5061410efcc061d96a0b5037cbc3540c5c918b7
+            sha256: sha256:361c2b1c7880041a6235e1e5c9512ed8bab77b9b25c026aa86af65417ee5bc31
       value:
         status: ACCEPTED
         evidence:
@@ -6231,7 +6231,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md
     spec_version: 1.0.0
-    content_digest: sha256:1a4eb1d8b464b28a288caa742546a41aad7576f019c3b0e43726400b3aea15b2
+    content_digest: sha256:f1f99de3dbebcd29ea2b3ff7d95bcd50155d6668a05d1688ba7624d0eaf7c04d
     decision_ref: decision://accepted/BET-Y1Q3-T10-44
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -6243,10 +6243,10 @@ bets:
             ref: git://origin/main@4e05745aa7c90c179cb2756d7636c8f39f88ee2c
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md
-            sha256: sha256:1a4eb1d8b464b28a288caa742546a41aad7576f019c3b0e43726400b3aea15b2
+            sha256: sha256:f1f99de3dbebcd29ea2b3ff7d95bcd50155d6668a05d1688ba7624d0eaf7c04d
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md
-            sha256: sha256:1a4eb1d8b464b28a288caa742546a41aad7576f019c3b0e43726400b3aea15b2
+            sha256: sha256:f1f99de3dbebcd29ea2b3ff7d95bcd50155d6668a05d1688ba7624d0eaf7c04d
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-44.md
             sha256: sha256:c06eb804c1cf7b73be41c100883103a20b350117ad9fa5d6e8c4493fb84a4fde
@@ -6261,7 +6261,7 @@ bets:
             sha256: sha256:c06eb804c1cf7b73be41c100883103a20b350117ad9fa5d6e8c4493fb84a4fde
           replay:
             ref: receipt://docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md
-            sha256: sha256:1a4eb1d8b464b28a288caa742546a41aad7576f019c3b0e43726400b3aea15b2
+            sha256: sha256:f1f99de3dbebcd29ea2b3ff7d95bcd50155d6668a05d1688ba7624d0eaf7c04d
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-44.md
             sha256: sha256:c06eb804c1cf7b73be41c100883103a20b350117ad9fa5d6e8c4493fb84a4fde
@@ -6335,7 +6335,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-product-p0-truth-loop-design.md
     spec_version: 1.0.0
-    content_digest: sha256:8a394a10162aa5e5cfe829cfcbc210f11e0daeac5e0bda91427e757b408feb93
+    content_digest: sha256:e5437ffb3738dc7f604d364d4fe9c115f5e630b7958698198e58a63734366f8e
     decision_ref: decision://accepted/BET-Y1Q3-T4-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -6446,7 +6446,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
     spec_version: 1.0.0
-    content_digest: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+    content_digest: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
     decision_ref: decision://accepted/BET-Y1Q3-T4-03
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -6461,10 +6461,10 @@ bets:
             sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
       operational:
         status: PROVEN
         evidence:
@@ -6554,7 +6554,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md
     spec_version: 1.0.0
-    content_digest: sha256:3667c16811eb57eaa10f7b60ca9750b0d6ef8832e8f736ac0dd70c0401a9bb43
+    content_digest: sha256:8d5576f64aa9b73909647bf88e8bce1fd3d5fef18d4f152056d90a3aa8245ba4
     decision_ref: decision://accepted/BET-Y1Q3-T4-04
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -6566,7 +6566,7 @@ bets:
             ref: git://origin/main@1615dd7463d29c3bc68be93d6ebde62a0bc56653
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md
-            sha256: sha256:3667c16811eb57eaa10f7b60ca9750b0d6ef8832e8f736ac0dd70c0401a9bb43
+            sha256: sha256:8d5576f64aa9b73909647bf88e8bce1fd3d5fef18d4f152056d90a3aa8245ba4
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-04.md
             sha256: sha256:d41e00d2406bf1ba664d5f7150d1f31d5b4eec08538a6d513bbfb88911635d5f
@@ -6635,7 +6635,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
     spec_version: 1.0.0
-    content_digest: sha256:26ac74be63d9a5b1f93552cd4b88155ec33059aba6dd50597ac7473946f5f90a
+    content_digest: sha256:a2d6eb3f2075102bb91a07ce7fd46f7636a906543858591d37c0daed9d2df6c2
     decision_ref: decision://accepted/BET-Y1Q3-T4-05
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -6650,10 +6650,10 @@ bets:
             sha256: sha256:beeda751a629c25a45112ebda14dba941afd59e49790f24683ca469211a79d82
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
-            sha256: sha256:26ac74be63d9a5b1f93552cd4b88155ec33059aba6dd50597ac7473946f5f90a
+            sha256: sha256:a2d6eb3f2075102bb91a07ce7fd46f7636a906543858591d37c0daed9d2df6c2
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md
-            sha256: sha256:26ac74be63d9a5b1f93552cd4b88155ec33059aba6dd50597ac7473946f5f90a
+            sha256: sha256:a2d6eb3f2075102bb91a07ce7fd46f7636a906543858591d37c0daed9d2df6c2
       operational:
         status: PROVEN
         evidence:
@@ -6724,7 +6724,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md
     spec_version: 1.0.0
-    content_digest: sha256:02ddf0347cadb86992ef08efff9efe28e6a2c56697fee897ed80afcb416bd02a
+    content_digest: sha256:edfd43d56a29508f2315a0c0169444e24f3278fa3b5af9598ef0ae9f88de438d
     decision_ref: decision://accepted/BET-Y1Q3-T4-06
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -6739,10 +6739,10 @@ bets:
             sha256: sha256:08466c5a0711171561e7b6b895a895c03dbeb65a2a849d4075636538acb2b665
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md
-            sha256: sha256:02ddf0347cadb86992ef08efff9efe28e6a2c56697fee897ed80afcb416bd02a
+            sha256: sha256:edfd43d56a29508f2315a0c0169444e24f3278fa3b5af9598ef0ae9f88de438d
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md
-            sha256: sha256:02ddf0347cadb86992ef08efff9efe28e6a2c56697fee897ed80afcb416bd02a
+            sha256: sha256:edfd43d56a29508f2315a0c0169444e24f3278fa3b5af9598ef0ae9f88de438d
       operational:
         status: PROVEN
         evidence:
@@ -6757,7 +6757,7 @@ bets:
             sha256: sha256:08466c5a0711171561e7b6b895a895c03dbeb65a2a849d4075636538acb2b665
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md
-            sha256: sha256:02ddf0347cadb86992ef08efff9efe28e6a2c56697fee897ed80afcb416bd02a
+            sha256: sha256:edfd43d56a29508f2315a0c0169444e24f3278fa3b5af9598ef0ae9f88de438d
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -6822,7 +6822,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-product-p0-wp5-human-adjudication-value-design.md
     spec_version: 1.0.0
-    content_digest: sha256:5b6cf9c25a955ed9c871207a6097a1e7d31413ba4e1eaee549765a0719e27330
+    content_digest: sha256:dd587b0cf52dc4a7cf023040dfcf56d87ce6ee32e2c5b489480ef5acdeb3b987
     decision_ref: decision://accepted/BET-Y1Q3-T4-07
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -6834,7 +6834,7 @@ bets:
             ref: git://origin/main@c3f7cff179e46433f0fded42dd14337ae427fd84
           tests:
             ref: repo://docs/superpowers/specs/2026-08-28-product-p0-wp5-human-adjudication-value-design.md
-            sha256: sha256:5b6cf9c25a955ed9c871207a6097a1e7d31413ba4e1eaee549765a0719e27330
+            sha256: sha256:dd587b0cf52dc4a7cf023040dfcf56d87ce6ee32e2c5b489480ef5acdeb3b987
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T4-07.md
             sha256: sha256:152b702341599d0377370f351495e2906ff9a0202914c13cb0ea4fc634bc9598
@@ -6926,7 +6926,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-product-p0-wp6-physical-recovery-drill-design.md
     spec_version: 1.0.0
-    content_digest: sha256:10295799973277958311492051c87fcee38e182f819778c6ec38a1f73adcc9b3
+    content_digest: sha256:8563a3646904c5fe5c3806a4bb490b7822443752a1fe608595ee2cb9a8b1e297
     decision_ref: decision://accepted/BET-Y1Q3-T4-08
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -9110,7 +9110,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md
     spec_version: 1.0.0
-    content_digest: sha256:194f7d0e8a75956a42e07241abf4eedaa4b684b02d553877928238d023f90d45
+    content_digest: sha256:fef64315f9f5a11a713fc2b13b25e0a5f4d518b939a531e8d428022a533ef14f
   goal: 复用 ECOS 既有 WorkPacket、CompletionManifest 与 VerificationReceipt，建立外部编排器候选交付
     到 OMO EvidenceRecorded、独立验证和 WorkflowVerified 的最小生产链；Orca、Kandev、Multica、 Ruflo
     只作为可替换运输层，Workspace 继续拥有任务、范围、证据与完成判定。
@@ -9245,7 +9245,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-13-personal-capability-mainline-restore.md
     spec_version: 1.0.0
-    content_digest: sha256:ed694614ac5dba56f80f6496eaa5828a42d3a88d3bcb3c93180e8b231652e6ab
+    content_digest: sha256:45d4b588981d266933dcca436bbc12421c149af941bdd3d035540408be2ced0d
   goal: 把已完成的 T2-01/T2-02/T4-02 个人信号、可信本地 dogfood 与 Outcome 观测能力正式合入 OMO/Cockpit 子仓
     main，再更新根 gitlink；同时让新的根子模块指针事务拒绝仅存在于 feature branch 而未进入子仓 main 的提交，消除 done 声明与当前可部署能力的漂移。
   non_goals:
@@ -9321,7 +9321,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-13-codex-exec-worker-design.md
     spec_version: 1.0.0
-    content_digest: sha256:1b1adc8f9d61a9588a3d39abca3de5caa9d119411d3ad8b3c89ac99d72bbf550
+    content_digest: sha256:0c5e7a4a2478ec77d93c6e0d17c4f34569c264f2e9f35946571a8c2b6b3ba241
   goal: 以受治理的 bounded adapter 将 Codex `exec --approve-for-me` 接入 OMO worker admission
     与 Orca supervised Dispatch，使 L1 代码任务可在独立 clone 中运行；自动 review 仍可能升级为 人工确认，同时保留
     workspace-write 沙箱、任务写面、父进程超时回收、脱敏回执和独立完成判定。
@@ -9395,7 +9395,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md
     spec_version: 1.0.0
-    content_digest: sha256:53b32d4d9c89a7ec267c181bab1895ee79190aec1aa19cea231d26878a795adb
+    content_digest: sha256:1e443261f7a12f5fcab93fb736ffb1d87fc4d9047a64d435cae42578ed67527b
   goal: 将已落地的 ECOS WorkPacket/CompletionManifest/VerificationReceipt、OMO admission/Workflow
     Mesh、 Orca 托管的交互 Codex TUI 接成一条人工确认的生产纵切：candidate BET 确定性编译、 人工 release、同一 terminal
     手点 provider approval、真实模型输出、实际 diff/receipt 收集、 独立验证，以及 reject 后可证明的补偿回滚。
@@ -9609,7 +9609,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-22-engineering-delivery-shadow-observer-design.md
     spec_version: 1.0.0
-    content_digest: sha256:e7706263fd4dd96ff4a70fd8fcfa505590523c54b1bb79c96d972913a3249476
+    content_digest: sha256:1cd6a0faeb9386637963573bc55781a901a303bc46e1fff252a70d25400b907f
     decision_ref: decision://accepted/BET-Y1Q2-T7-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -9624,7 +9624,7 @@ bets:
             sha256: sha256:03b0d2834473433de955f82e002a648b4c4ac58620f6e193e7ece880b368a5dc
           diff:
             ref: receipt://bin/ssot/engineering-delivery-candidate-importer.py
-            sha256: sha256:3133ef83fadc11479ba7124d2af510c84b1d9a95a1122dca9287bcebd0b18f7b
+            sha256: sha256:cb25a43b04e36448f2917a4bc63a823734ee00925f42de89459d7f3a4304145a
           rollback:
             ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
             sha256: sha256:03b0d2834473433de955f82e002a648b4c4ac58620f6e193e7ece880b368a5dc
@@ -10026,7 +10026,7 @@ bets:
   circuit_breaker: 场景卡校验失败 → 降级为纯 spec 不带卡
   retro: required
   accepted_specifications:
-  - content_digest: sha256:256a6e954b97b0d21379819866d0c9155f0b3e3fd0958735eff6a4ac1ea84787
+  - content_digest: sha256:02ccd67d2fe02ccfe8eeab0835752fc19270720e42c1c5e049bef4480e5a3b9f
     decision_ref: decision://accepted/BET-Y1Q3-T7-02
     spec_ref: repo://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
     spec_version: 1.0.0
@@ -10040,13 +10040,13 @@ bets:
             ref: git://origin/main@a9ed961a4585fb713a44003006da3bc94b4244eb
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
-            sha256: sha256:256a6e954b97b0d21379819866d0c9155f0b3e3fd0958735eff6a4ac1ea84787
+            sha256: sha256:02ccd67d2fe02ccfe8eeab0835752fc19270720e42c1c5e049bef4480e5a3b9f
           diff:
             ref: receipt://docs/journey-specs/health-medical-workflow.yaml
             sha256: sha256:5d7f9733d2c59e080baf5686cd3d6ce06915c76d8bacca78cde8b58f7cb81703
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
-            sha256: sha256:256a6e954b97b0d21379819866d0c9155f0b3e3fd0958735eff6a4ac1ea84787
+            sha256: sha256:02ccd67d2fe02ccfe8eeab0835752fc19270720e42c1c5e049bef4480e5a3b9f
       operational:
         status: PROVEN
         evidence:
@@ -10073,13 +10073,13 @@ bets:
             sha256: sha256:4421d2e9d5afe9ee6680c4addcf6a158aeb2b5ed2964f56f6ae0327284b87923
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
-            sha256: sha256:256a6e954b97b0d21379819866d0c9155f0b3e3fd0958735eff6a4ac1ea84787
+            sha256: sha256:02ccd67d2fe02ccfe8eeab0835752fc19270720e42c1c5e049bef4480e5a3b9f
           revision:
             ref: receipt://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
-            sha256: sha256:256a6e954b97b0d21379819866d0c9155f0b3e3fd0958735eff6a4ac1ea84787
+            sha256: sha256:02ccd67d2fe02ccfe8eeab0835752fc19270720e42c1c5e049bef4480e5a3b9f
           time_burden:
             ref: receipt://docs/superpowers/specs/2026-08-26-health-domain-p1-design.md
-            sha256: sha256:256a6e954b97b0d21379819866d0c9155f0b3e3fd0958735eff6a4ac1ea84787
+            sha256: sha256:02ccd67d2fe02ccfe8eeab0835752fc19270720e42c1c5e049bef4480e5a3b9f
     overall_state: outcome_accepted
 - id: BET-Y1Q3-T2-01
   track: T2-PERCEPT
@@ -11748,7 +11748,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-21-escape-hatch-solidification-design.md
     spec_version: 1.0.0
-    content_digest: sha256:02e0a270c9ada75f6d41e95b640e27a3918874172e67266370732112f3b56ed3
+    content_digest: sha256:9900b8f85156d114b4dcf36d08a4b229629d20cec5013b9653eb49af90293205
     decision_ref: decision://accepted/BET-Y1Q3-T1-09
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -11763,10 +11763,10 @@ bets:
             sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
       operational:
         status: PROVEN
         evidence:
@@ -11887,7 +11887,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-23-resident-wiring-design.md
     spec_version: 1.0.0
-    content_digest: sha256:0dba37c9cd06506302aa66b4f4b22ca50c40aaec57930cd7a36e7b4340b7bcdc
+    content_digest: sha256:4687488d5fa10ba63845a2c8afd595c71d1083128a44ad54dc30926761e2d8dc
     decision_ref: decision://accepted/BET-Y1Q3-T1-10
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -11902,10 +11902,10 @@ bets:
             sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
       operational:
         status: PROVEN
         evidence:
@@ -11998,7 +11998,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md
     spec_version: 1.0.0
-    content_digest: sha256:e6d81c93b9adefbb5895ecaeb10694ba09602faa568b743b15652f04efb2250e
+    content_digest: sha256:0feea8be930fb64e2ec44b2714abcedfe10e533d3fcddaa1e5321cad24f02e29
     decision_ref: decision://accepted/BET-Y1Q3-T1-11
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -12013,10 +12013,10 @@ bets:
             sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
       operational:
         status: PROVEN
         evidence:
@@ -12112,7 +12112,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-01-squash-successor-clone-retirement-provenance-design.md
     spec_version: 1.0.0
-    content_digest: sha256:11ac0f6921abf41b6f580a783927015c1d9faf810ad3f1f8bf46f1d08497140c
+    content_digest: sha256:de42a98faf6db2b57d1ae4f931f2861527fc0bccace4dbbb902c5494e158394d
     decision_ref: decision://accepted/BET-Y1Q4-T1-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -12140,8 +12140,7 @@ bets:
   title: Exact Capability Binding 与 native asset receipt 消费收敛
   appetite: 5 days
   priority: P0
-  status: done
-  done_at: '2026-09-03'
+  status: candidate
   started_at: 2026-08-24
   goal: 将 accepted Spec/BET/WorkPacket、agent-workflow、Skill/Workflow/MCP/BOS exact
     find-load、OMO admission/dispatch 与 B4 native execution receipt 收敛为同一身份链；阻断无 binding、错误
@@ -12163,7 +12162,7 @@ bets:
   - capability_id: mcp-server:agora
     operation: load
     effect: read_only
-  - capability_id: bos-service:bos://system/omo/debt
+  - capability_id: bos-service:bos://governance/omo/state
     operation: invoke
     effect: read_only
   evidence:
@@ -12306,44 +12305,21 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md
     spec_version: 1.1.2
-    content_digest: sha256:2a4c078903735d465a763e2ae1691b77babc99abf7eb7031aa2a1b3ec8efba24
+    content_digest: sha256:8a9323f1346bed64dcf4302db7635b1802e3f20deb82c2ddedec8e47c0788db6
     decision_ref: decision://accepted/BET-Y1Q3-T1-12
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@538a3bff81a6defd6d00c0187613f2f6a3a740e7
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
+        status: IN_PROGRESS
+        evidence: {}
       operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
-          fresh_receipt:
-            ref: receipt://docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
-            sha256: sha256:9df83d6d80741cb04730ffb9d75951230c103139129775e28e14f409ecd4a079
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-            sha256: sha256:2f75b4004543342702ad1f287fea4b0c5a50ce884a7570f75c06e5f77badb389
+        status: NOT_PROVEN
+        evidence: {}
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: delivery_accepted
+    overall_state: evaluating
   value_indicator_policy: false
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
@@ -12361,8 +12337,6 @@ bets:
   - docs/generated/capability-registry.yaml
   - docs/project-registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
-  - docs/operations/human-attestations/BET-Y1Q3-T1-12-accept.yaml
-  - docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md
   - .github/workflows/governance-check.yml
   - bin/_registry/scripts/governance/daemon-watchdog.yaml
   - bin/_registry/scripts/governance/real-scenario-runner.yaml
@@ -13293,7 +13267,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md
     spec_version: 1.0.0
-    content_digest: sha256:9f86958c5b70b7447315cbddd3f5962aff586485f66da86cc4ff4a1fd14dd087
+    content_digest: sha256:1bcc7dc24eae7a2b18a6742023224188c8e3e66b769d4074bec35081f9af0335
     decision_ref: decision://accepted/BET-Y1Q3-T4-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -13553,7 +13527,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md
     spec_version: 1.0.0
-    content_digest: sha256:deab9922236c02fc4fd3dad171df2876f426a9178eb04d2eb8de85a9d9a45ec6
+    content_digest: sha256:f0283bc8c3b4a18cf04e3d0702e35f6758b5c68dbe82fb7419456677e94f2268
     decision_ref: decision://accepted/BET-Y1Q3-T6-14
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -13577,7 +13551,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T6-14-accept.yaml
             sha256: sha256:31aedebc289dcf38f88bd2ad473399d631af110bf89ba13a1ca8d516d05a714d
@@ -13744,7 +13718,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md
     spec_version: 1.0.4
-    content_digest: sha256:4d1771ef6db54180b2987fb12d702b06251e8226cbd36a6eddb8dda0c29a3ab1
+    content_digest: sha256:e78cb0703cb2ba6bae2d00788d38af4e5d07f820a207fd383c8cf66c43566d00
     decision_ref: decision://accepted/BET-Y1Q3-T6-15
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -13838,7 +13812,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g1-script-registry-design.md
     spec_version: 1.0.0
-    content_digest: sha256:ff8f519f176754ab1d67d33e4511c51d3055992f473df4123d5cb8c0e061cd4b
+    content_digest: sha256:4e3086f61bcbfb48d8d949c3bc4078cd9052d93f9fe207741e050f9049080679
     decision_ref: decision://accepted/BET-Y1Q3-T10-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -13862,7 +13836,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-01-accept.yaml
             sha256: sha256:d7406fd12f7745dbd16a6bbec270247bbcb295595bae600d9946aca5baa10ea0
@@ -13940,7 +13914,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md
     spec_version: 1.0.0
-    content_digest: sha256:be5ec87bb058edf1a3ce9fbdc085267b9b1aba1788ab8cf377c7a53e5a6c1ba2
+    content_digest: sha256:33afc85f7aace892ee2137ba8e2d9e2da995086586805d2dfed4611517454753
     decision_ref: decision://accepted/BET-Y1Q3-T10-23
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -13955,10 +13929,10 @@ bets:
             sha256: sha256:4644a03f3161b128c75dd654983a0e361690a6b56415da54d69962786da8d193
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md
-            sha256: sha256:be5ec87bb058edf1a3ce9fbdc085267b9b1aba1788ab8cf377c7a53e5a6c1ba2
+            sha256: sha256:33afc85f7aace892ee2137ba8e2d9e2da995086586805d2dfed4611517454753
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md
-            sha256: sha256:be5ec87bb058edf1a3ce9fbdc085267b9b1aba1788ab8cf377c7a53e5a6c1ba2
+            sha256: sha256:33afc85f7aace892ee2137ba8e2d9e2da995086586805d2dfed4611517454753
       operational:
         status: PROVEN
         evidence:
@@ -14029,7 +14003,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md
     spec_version: 1.0.0
-    content_digest: sha256:adeb20aeed1fb81a5b4e8ea4e2780bafe77a2bbf5b086d8cd1d305f28e51b4b6
+    content_digest: sha256:ea70e832b568006f1c755cae5aa4d5b931a41af219d53fc1ee76c34f2a163236
     decision_ref: decision://accepted/BET-Y1Q3-T10-24
   depends_on: []
   risk_level: L1
@@ -14049,10 +14023,10 @@ bets:
             sha256: sha256:d7ecdd4b60559c53b5658e1beffb4025d63f252d19a2057b493718f71f73bac7
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md
-            sha256: sha256:adeb20aeed1fb81a5b4e8ea4e2780bafe77a2bbf5b086d8cd1d305f28e51b4b6
+            sha256: sha256:ea70e832b568006f1c755cae5aa4d5b931a41af219d53fc1ee76c34f2a163236
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md
-            sha256: sha256:adeb20aeed1fb81a5b4e8ea4e2780bafe77a2bbf5b086d8cd1d305f28e51b4b6
+            sha256: sha256:ea70e832b568006f1c755cae5aa4d5b931a41af219d53fc1ee76c34f2a163236
       operational:
         status: PROVEN
         evidence:
@@ -14125,7 +14099,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md
     spec_version: 1.0.0
-    content_digest: sha256:909b2acabc1a993c1bdfde936927ade62f85b27622071ef319f91b378a2b11f4
+    content_digest: sha256:7c8d6338fc3e631726583191f4c04c0133bb5513756638647d3ce7ef68a57362
     decision_ref: decision://accepted/BET-Y1Q3-T10-25
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -14137,7 +14111,7 @@ bets:
             ref: git://origin/main@78a49cd495d5932a44f6231996fe8ab248e1a7a5
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md
-            sha256: sha256:909b2acabc1a993c1bdfde936927ade62f85b27622071ef319f91b378a2b11f4
+            sha256: sha256:7c8d6338fc3e631726583191f4c04c0133bb5513756638647d3ce7ef68a57362
           diff:
             ref: receipt://.omo/cron/documents-content-plane-crontab
             sha256: sha256:5fe6d0d5973d7e5b00d5043e3ee2eada895a56435978589019cd832dada206d5
@@ -14155,7 +14129,7 @@ bets:
             sha256: sha256:475aa8a8b61ba7014813daa5359e08b28d4111fda6a7eacf6ac704c2a72ef16b
           replay:
             ref: receipt://docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md
-            sha256: sha256:909b2acabc1a993c1bdfde936927ade62f85b27622071ef319f91b378a2b11f4
+            sha256: sha256:7c8d6338fc3e631726583191f4c04c0133bb5513756638647d3ce7ef68a57362
           cleanup:
             ref: receipt://.omo/cron/documents-content-plane-crontab
             sha256: sha256:5fe6d0d5973d7e5b00d5043e3ee2eada895a56435978589019cd832dada206d5
@@ -14213,7 +14187,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-27-documents-schedule-cutover-design.md
     spec_version: 1.0.0
-    content_digest: sha256:4706234219315b84ad5fd529a721cf0f1806c769dc4336cbf964b125bda843a9
+    content_digest: sha256:cc0a3d3ddd12e691e62cd6dfa4d3c63b292b28b4cf763204f0488bc54977d976
     decision_ref: decision://accepted/BET-Y1Q3-T10-26
   depends_on:
   - BET-Y1Q3-T10-25
@@ -14300,7 +14274,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md
     spec_version: 1.0.0
-    content_digest: sha256:1a9f9f18f026afac824243bad7d94543482120d74699bafe4e3ee4780496544a
+    content_digest: sha256:14b65923ee41c146a8cd1976cd264f17f508d133c653cf7de240eef880b3d0c9
     decision_ref: decision://accepted/BET-Y1Q3-T10-27
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -14312,7 +14286,7 @@ bets:
             ref: git://origin/main@c7b703084b0e55d844b466209cb353a242714049
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md
-            sha256: sha256:1a9f9f18f026afac824243bad7d94543482120d74699bafe4e3ee4780496544a
+            sha256: sha256:14b65923ee41c146a8cd1976cd264f17f508d133c653cf7de240eef880b3d0c9
           diff:
             ref: receipt://.omo/cron/documents-content-plane-crontab
             sha256: sha256:5fe6d0d5973d7e5b00d5043e3ee2eada895a56435978589019cd832dada206d5
@@ -14330,7 +14304,7 @@ bets:
             sha256: sha256:e3e7f01e9c3da3f53a034c66f99ed23881e404f42a5cd8e1567a367ed7f156fd
           replay:
             ref: receipt://docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md
-            sha256: sha256:1a9f9f18f026afac824243bad7d94543482120d74699bafe4e3ee4780496544a
+            sha256: sha256:14b65923ee41c146a8cd1976cd264f17f508d133c653cf7de240eef880b3d0c9
           cleanup:
             ref: receipt://.omo/cron/documents-content-plane-crontab
             sha256: sha256:5fe6d0d5973d7e5b00d5043e3ee2eada895a56435978589019cd832dada206d5
@@ -14384,7 +14358,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-domain-index-release-root-reconciliation-design.md
     spec_version: 1.0.0
-    content_digest: sha256:23760b6e5779f5d985f2f7bb0ee14509715e6da51202333f984f1d3a4942896f
+    content_digest: sha256:7c4d2125ea618ea492327a7e826a5a7bba09a64aecfd4c0db9e56bbda30f888f
     decision_ref: decision://accepted/BET-Y1Q3-T10-45
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -14396,7 +14370,7 @@ bets:
             ref: git://origin/main@57065c194e0e814031ea9d4a12f4c22f698cf6bc
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-28-domain-index-release-root-reconciliation-design.md
-            sha256: sha256:23760b6e5779f5d985f2f7bb0ee14509715e6da51202333f984f1d3a4942896f
+            sha256: sha256:7c4d2125ea618ea492327a7e826a5a7bba09a64aecfd4c0db9e56bbda30f888f
           diff:
             ref: receipt://docs/reports/2026-08-27-domain-sync-owner-cutover.md
             sha256: sha256:6afc25753458e082d8dccc0c1f52fa46cc693c35691cf64ba19e6d972e6981bc
@@ -14414,7 +14388,7 @@ bets:
             sha256: sha256:c5b1fb4bd8dcfb86ec03b6cc7120a1d2d62f8d018f4142fddebd9d1771fa0b90
           replay:
             ref: receipt://docs/superpowers/specs/2026-08-28-domain-index-release-root-reconciliation-design.md
-            sha256: sha256:23760b6e5779f5d985f2f7bb0ee14509715e6da51202333f984f1d3a4942896f
+            sha256: sha256:7c4d2125ea618ea492327a7e826a5a7bba09a64aecfd4c0db9e56bbda30f888f
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-45.md
             sha256: sha256:c5b1fb4bd8dcfb86ec03b6cc7120a1d2d62f8d018f4142fddebd9d1771fa0b90
@@ -14468,7 +14442,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md
     spec_version: 1.0.0
-    content_digest: sha256:3c719f63f267f1ea22eb3cc6e57e1217534576869efbcea597636615ca634a42
+    content_digest: sha256:3e6f6cfff892f6a9335e1d2f7dda7a94decc1dee11aa86f641ae9b6b19efe8f3
     decision_ref: decision://accepted/BET-Y1Q3-T10-46
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -14480,7 +14454,7 @@ bets:
             ref: git://origin/main@7f32db85abe144d47675d75f44f43a31236a003c
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md
-            sha256: sha256:3c719f63f267f1ea22eb3cc6e57e1217534576869efbcea597636615ca634a42
+            sha256: sha256:3e6f6cfff892f6a9335e1d2f7dda7a94decc1dee11aa86f641ae9b6b19efe8f3
           diff:
             ref: receipt://docs/reports/2026-08-28-owner-release-root-convergence.md
             sha256: sha256:a61e0f875daa46bdd6be564b05cc12db5584452e10e299a89f9c963cc39b8b3c
@@ -14498,7 +14472,7 @@ bets:
             sha256: sha256:009773a092f8f75b3b392c63d6fdef9f7533f5eb38d0a331e5615d09083ec480
           replay:
             ref: receipt://docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md
-            sha256: sha256:3c719f63f267f1ea22eb3cc6e57e1217534576869efbcea597636615ca634a42
+            sha256: sha256:3e6f6cfff892f6a9335e1d2f7dda7a94decc1dee11aa86f641ae9b6b19efe8f3
           cleanup:
             ref: receipt://docs/reports/2026-08-28-owner-release-root-convergence.md
             sha256: sha256:a61e0f875daa46bdd6be564b05cc12db5584452e10e299a89f9c963cc39b8b3c
@@ -14550,7 +14524,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-27-domain-sync-owner-cutover-design.md
     spec_version: 1.0.0
-    content_digest: sha256:db199bcccf288b5db21ab4525f6a7a6dd83dee083712a09ac92f91f965aecf1a
+    content_digest: sha256:b3276535ae1de6e65077836b19b9334e1ee8e00e4bec03104f25892ebf6efed1
     decision_ref: decision://accepted/BET-Y1Q3-T10-28
   depends_on:
   - BET-Y1Q3-T10-26
@@ -14639,7 +14613,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-29-service-config-stable-interpreter-reconciliation-design.md
     spec_version: 1.0.0
-    content_digest: sha256:ab046cb5b0973b7ab69a6a76693adfa29a25824442b9807bd366e20e5b93389f
+    content_digest: sha256:4f636ef159e6ccf568cd34018e387747f2d2d099424987d14f7bc2d09ff416fe
     decision_ref: decision://accepted/BET-Y1Q3-T10-47
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -14654,7 +14628,7 @@ bets:
             sha256: sha256:38b45428b8393ee6b878017078eb3aea6b90cfae54c551d8fba5b7b2a56fc313
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-29-service-config-stable-interpreter-reconciliation-design.md
-            sha256: sha256:ab046cb5b0973b7ab69a6a76693adfa29a25824442b9807bd366e20e5b93389f
+            sha256: sha256:4f636ef159e6ccf568cd34018e387747f2d2d099424987d14f7bc2d09ff416fe
           rollback:
             ref: receipt://docs/reports/2026-08-29-service-config-stable-interpreter-reconciliation.md
             sha256: sha256:99011681d2f1681bbe1fc3ad87a1b64898bf8663a7cd190ccff2f71ee01dec72
@@ -14727,7 +14701,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-27-ocr-preflight-owner-design.md
     spec_version: 1.0.0
-    content_digest: sha256:d042990daeb7610700ce5e8357bae5d507ceb6e7df4a1338079b52b8a62de975
+    content_digest: sha256:9e8fd0114778b8776279cfdc3d0f95cde867ca7e7558adc83b1ad65c905985d0
     decision_ref: decision://accepted/BET-Y1Q3-T10-29
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -14742,7 +14716,7 @@ bets:
             sha256: sha256:e4d598719ccbfd8821ef0a422f1c20b338093f1a827a2d26725cd9eb1847164f
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-27-ocr-preflight-owner-design.md
-            sha256: sha256:d042990daeb7610700ce5e8357bae5d507ceb6e7df4a1338079b52b8a62de975
+            sha256: sha256:9e8fd0114778b8776279cfdc3d0f95cde867ca7e7558adc83b1ad65c905985d0
           rollback:
             ref: receipt://docs/reports/2026-08-27-ocr-preflight-owner.md
             sha256: sha256:0b2989afe028519c2e6f1f91b7085addd02680a71de15fe4b539a20158a787cb
@@ -14811,7 +14785,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-ocr-preflight-cutover-design.md
     spec_version: 1.0.0
-    content_digest: sha256:ea3b4f6a217409db61eb6e21c0a7d4b13e10a118ef3e45dea7dd73ada81f5fd2
+    content_digest: sha256:9499f71c8f3fc1b4b8e519e8e70c0a9cfe36a53671192bc74dfa86d5ac65c56a
     decision_ref: decision://accepted/BET-Y1Q3-T10-30
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -14826,7 +14800,7 @@ bets:
             sha256: sha256:e4d598719ccbfd8821ef0a422f1c20b338093f1a827a2d26725cd9eb1847164f
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-ocr-preflight-cutover-design.md
-            sha256: sha256:ea3b4f6a217409db61eb6e21c0a7d4b13e10a118ef3e45dea7dd73ada81f5fd2
+            sha256: sha256:9499f71c8f3fc1b4b8e519e8e70c0a9cfe36a53671192bc74dfa86d5ac65c56a
           rollback:
             ref: receipt://docs/reports/2026-08-28-ocr-preflight-cutover.md
             sha256: sha256:21692b00f71e7c0efc80eb0f5fcdbeadd4ec57bad03f535daf2de326c05ee234
@@ -14899,7 +14873,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-bridge-preflight-owner-design.md
     spec_version: 1.0.0
-    content_digest: sha256:24da21ff2523a2d519e0b1dd2aab0297e29114c3d431c485df3024c24474870d
+    content_digest: sha256:4af0531e82854403e1839de9445da5c45eef70933b4d7e93bfa7b4f81f550334
     decision_ref: decision://accepted/BET-Y1Q3-T10-31
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -14914,7 +14888,7 @@ bets:
             sha256: sha256:645a3e57da02a494062096c76c748906dac0b55d3f1416cbbfe1d9c06f78ee73
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-bridge-preflight-owner-design.md
-            sha256: sha256:24da21ff2523a2d519e0b1dd2aab0297e29114c3d431c485df3024c24474870d
+            sha256: sha256:4af0531e82854403e1839de9445da5c45eef70933b4d7e93bfa7b4f81f550334
           rollback:
             ref: receipt://docs/reports/2026-08-28-bridge-preflight-owner.md
             sha256: sha256:1cc761ec52e3bc4bf724116e0d84b94e6955d62aa77c235a2387769e3e19fd1e
@@ -14990,7 +14964,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-convergence-preflight-owner-design.md
     spec_version: 1.0.0
-    content_digest: sha256:2ce4831e62d8450fa230da806692892951509bba1ae11c94f77214a83cb1283d
+    content_digest: sha256:627474f5f281e149273a2868b5b0a0aa914905933538226087af7e175293c891
     decision_ref: decision://accepted/BET-Y1Q3-T10-32
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15005,7 +14979,7 @@ bets:
             sha256: sha256:7cc7dadcdab07a25e4136a189ac71b00447e82e3d715908de4f12b81c91f3548
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-convergence-preflight-owner-design.md
-            sha256: sha256:2ce4831e62d8450fa230da806692892951509bba1ae11c94f77214a83cb1283d
+            sha256: sha256:627474f5f281e149273a2868b5b0a0aa914905933538226087af7e175293c891
           rollback:
             ref: receipt://docs/reports/2026-08-28-convergence-preflight-owner.md
             sha256: sha256:353b5cb76f98064cae5312f1f19a31a1593b8ce6481d4bd604cf83ab7f2a2970
@@ -15080,7 +15054,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-signals-preflight-owner-design.md
     spec_version: 1.0.0
-    content_digest: sha256:a99777eb3ddc262104bf7127447c37137b5bb4e50076401863f04336b3b03025
+    content_digest: sha256:54bd3feccc1e8ead75bdd686aa8ad288dc839a345ca4dfb2939d34a3cbd7279a
     decision_ref: decision://accepted/BET-Y1Q3-T10-33
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15095,7 +15069,7 @@ bets:
             sha256: sha256:3c60d87cee8c980acb1888452dd9111a429663713620ecdb256e314459f585ba
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-signals-preflight-owner-design.md
-            sha256: sha256:a99777eb3ddc262104bf7127447c37137b5bb4e50076401863f04336b3b03025
+            sha256: sha256:54bd3feccc1e8ead75bdd686aa8ad288dc839a345ca4dfb2939d34a3cbd7279a
           rollback:
             ref: receipt://docs/reports/2026-08-28-signals-preflight-owner.md
             sha256: sha256:e951fe70dc4299313f37273216570c4ab82465a4f5e635918a5fa00413db03ed
@@ -15169,7 +15143,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-session-brief-workspace-owner-design.md
     spec_version: 1.0.0
-    content_digest: sha256:fb65eac0c24bc07518f88968336de8ad9c44c80e7d80c2f5313dea2451540f81
+    content_digest: sha256:67c4d5edf9740bdbc74237f64d6d164d5248335815fce16b6bbdb0ac65791ee7
     decision_ref: decision://accepted/BET-Y1Q3-T10-34
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15184,7 +15158,7 @@ bets:
             sha256: sha256:da5d754977d8ca1e26207ee560fe16beb6d33a084ed21695223997e6424be4a9
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-session-brief-workspace-owner-design.md
-            sha256: sha256:fb65eac0c24bc07518f88968336de8ad9c44c80e7d80c2f5313dea2451540f81
+            sha256: sha256:67c4d5edf9740bdbc74237f64d6d164d5248335815fce16b6bbdb0ac65791ee7
           rollback:
             ref: receipt://docs/reports/2026-08-28-session-brief-workspace-owner.md
             sha256: sha256:c7fc640174374c820b03679d4d178563454df3e1c519aa890c4c2c6b7e10a31d
@@ -15259,7 +15233,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-controller-preflight-owner-design.md
     spec_version: 1.0.0
-    content_digest: sha256:217f96681a71b9d0a7cf899a1168e1b480ffe4372a217ddc27b4b8c297015846
+    content_digest: sha256:778d67a0928fc9e1805155800c5cca097f6f71fd3a105e7a3fc0f0d47752790b
     decision_ref: decision://accepted/BET-Y1Q3-T10-35
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15274,7 +15248,7 @@ bets:
             sha256: sha256:10fba582f16414a99bd1b63e81bc24225a03127f9c3ff24607d67a8838eae9f9
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-controller-preflight-owner-design.md
-            sha256: sha256:217f96681a71b9d0a7cf899a1168e1b480ffe4372a217ddc27b4b8c297015846
+            sha256: sha256:778d67a0928fc9e1805155800c5cca097f6f71fd3a105e7a3fc0f0d47752790b
           rollback:
             ref: receipt://docs/reports/2026-08-28-controller-preflight-owner.md
             sha256: sha256:08b1ce7d6c8747f7dfdddea6c86a9ca8aabff260e6b1515703c866e1b3b8136e
@@ -15344,7 +15318,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-consumer-audit-modes-design.md
     spec_version: 1.0.0
-    content_digest: sha256:1bf818acb45525f93eaa4b294787b8685c0a114360bb1bcba88f416ec04e5792
+    content_digest: sha256:f77c152f1f1d3824e6ff9616f4e0039deeffb15a135f2b0f117ee0b06cfb4829
     decision_ref: decision://accepted/BET-Y1Q3-T10-36
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15359,7 +15333,7 @@ bets:
             sha256: sha256:4644a03f3161b128c75dd654983a0e361690a6b56415da54d69962786da8d193
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-consumer-audit-modes-design.md
-            sha256: sha256:1bf818acb45525f93eaa4b294787b8685c0a114360bb1bcba88f416ec04e5792
+            sha256: sha256:f77c152f1f1d3824e6ff9616f4e0039deeffb15a135f2b0f117ee0b06cfb4829
           rollback:
             ref: receipt://docs/reports/2026-08-28-consumer-audit-modes.md
             sha256: sha256:c7eadfd110897f08e19e3f88372e58cf3afa23777bc9152f6787831e5c5042b4
@@ -15430,7 +15404,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-scheduled-owner-convergence-design.md
     spec_version: 1.0.0
-    content_digest: sha256:c7890d4976d6bc35184caa0869d8fb4eee18487f716b470083fd0a0545db8482
+    content_digest: sha256:2324ee848fd6f58a319507afc1d0fd8234ce006cacb56a9b026e2d36d58bf3bf
     decision_ref: decision://accepted/BET-Y1Q3-T10-37
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15445,7 +15419,7 @@ bets:
             sha256: sha256:4c3ee3d2a87115cc142dfb9e5be89429ea633a60311f4e9ad7bbeb250033c374
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-scheduled-owner-convergence-design.md
-            sha256: sha256:c7890d4976d6bc35184caa0869d8fb4eee18487f716b470083fd0a0545db8482
+            sha256: sha256:2324ee848fd6f58a319507afc1d0fd8234ce006cacb56a9b026e2d36d58bf3bf
           rollback:
             ref: receipt://docs/reports/2026-08-28-scheduled-owner-convergence.md
             sha256: sha256:4c3ee3d2a87115cc142dfb9e5be89429ea633a60311f4e9ad7bbeb250033c374
@@ -15516,7 +15490,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-workspace-watch-owner-design.md
     spec_version: 1.0.0
-    content_digest: sha256:b66c052c916c20dc642f2cd90e5cb25efd56ceb1537fbde5d47396c63fb32e21
+    content_digest: sha256:54452ea4c0e0eb01e125f5f33924957826d0fc35c2304f2c5ffc0e501e2fc0c6
     decision_ref: decision://accepted/BET-Y1Q3-T10-38
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15531,7 +15505,7 @@ bets:
             sha256: sha256:4a22a2794c8d165647052fa777854e0e8dc86c202a89674b5783f2407eeb24cf
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-workspace-watch-owner-design.md
-            sha256: sha256:b66c052c916c20dc642f2cd90e5cb25efd56ceb1537fbde5d47396c63fb32e21
+            sha256: sha256:54452ea4c0e0eb01e125f5f33924957826d0fc35c2304f2c5ffc0e501e2fc0c6
           rollback:
             ref: receipt://docs/reports/2026-08-28-workspace-watch-owner.md
             sha256: sha256:33a1ad83660dcd7eeb731651b0be58537ec1b9ba7a990eaba61b20304704074b
@@ -15602,7 +15576,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-concept-weave-preflight-owner-design.md
     spec_version: 1.0.0
-    content_digest: sha256:ea909b3a9136780cc1d7246c6e3a8c981ca8d66989416593a57d63c5f72e34c3
+    content_digest: sha256:c838f9e427343c2a7b09beeda91312b964bcb3c9664e78bf075eb4e86c8ed4d2
     decision_ref: decision://accepted/BET-Y1Q3-T10-39
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15617,7 +15591,7 @@ bets:
             sha256: sha256:639804826c121201f1677de9c5bebe00fbc7b0e873febf387be3adfed9c7225e
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-concept-weave-preflight-owner-design.md
-            sha256: sha256:ea909b3a9136780cc1d7246c6e3a8c981ca8d66989416593a57d63c5f72e34c3
+            sha256: sha256:c838f9e427343c2a7b09beeda91312b964bcb3c9664e78bf075eb4e86c8ed4d2
           rollback:
             ref: receipt://docs/reports/2026-08-28-concept-weave-preflight-owner.md
             sha256: sha256:f774d048b3e873d9801eaeba0eaedb4a8ebcdb923c0f30e9152bae21687f7706
@@ -15690,7 +15664,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-predictor-preflight-owner-design.md
     spec_version: 1.0.0
-    content_digest: sha256:428f7c7f005b01ed9b22ef52f3416e3e50fb71582c220b421d7e4359db4acb90
+    content_digest: sha256:3a936fbb6eb63d481bc587fdf000cc27a8fa7c7aacc65deb441b0f6e993a279d
     decision_ref: decision://accepted/BET-Y1Q3-T10-40
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15705,7 +15679,7 @@ bets:
             sha256: sha256:3ab6e0e26c06742c5d1bb83b1237c599c4237489a66ff66adc49486f0f1aa033
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-predictor-preflight-owner-design.md
-            sha256: sha256:428f7c7f005b01ed9b22ef52f3416e3e50fb71582c220b421d7e4359db4acb90
+            sha256: sha256:3a936fbb6eb63d481bc587fdf000cc27a8fa7c7aacc65deb441b0f6e993a279d
           rollback:
             ref: receipt://docs/reports/2026-08-28-predictor-preflight-owner.md
             sha256: sha256:9eb4f9709712292e07552bc9ffe7cd5af0f6e9f9547fc416df1a3993cacf74ec
@@ -15794,7 +15768,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md
     spec_version: 1.0.0
-    content_digest: sha256:8712669fb5b58c872a0fe4c923c9d1c0677f511577a3307d2dd6a123426cfe8f
+    content_digest: sha256:f9e48072c5b44bc970079d88b50881a9a9df2820d030e44afde2d655478e5a5a
     decision_ref: decision://accepted/BET-Y1Q3-T10-41
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15809,7 +15783,7 @@ bets:
             sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md
-            sha256: sha256:8712669fb5b58c872a0fe4c923c9d1c0677f511577a3307d2dd6a123426cfe8f
+            sha256: sha256:f9e48072c5b44bc970079d88b50881a9a9df2820d030e44afde2d655478e5a5a
           rollback:
             ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
             sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
@@ -15880,7 +15854,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md
     spec_version: 1.0.0
-    content_digest: sha256:b966f0662738b7af258a3109c5373e62d1d2a0581a16df8e72d944739b1cfa34
+    content_digest: sha256:0fbdc96373f0dcef21ab46525a22280fc174131d7fbfd2a9049d76c06e98b4de
     decision_ref: decision://accepted/BET-Y1Q3-T10-42
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15895,7 +15869,7 @@ bets:
             sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md
-            sha256: sha256:b966f0662738b7af258a3109c5373e62d1d2a0581a16df8e72d944739b1cfa34
+            sha256: sha256:0fbdc96373f0dcef21ab46525a22280fc174131d7fbfd2a9049d76c06e98b4de
           rollback:
             ref: receipt://docs/reports/2026-08-28-documents-execution-retirement.md
             sha256: sha256:8e2ed7c6bcccd009f42ed535985b4f019547ee95315201e7babd5fb92c315aa4
@@ -15973,7 +15947,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md
     spec_version: 1.0.0
-    content_digest: sha256:5f51488886b1fb1878cfc23fcdb0d5351bad6203f704a4eb2c51bb1cef79ab07
+    content_digest: sha256:fa99a9153fabbc17d9b00def44d9230c2e666cd91489f4adb908024254d121e5
     decision_ref: decision://accepted/BET-Y1Q3-T10-22
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -15985,7 +15959,7 @@ bets:
             ref: git://origin/main@5e0feb2162fdbe4f412a1c6bc4dc6c5408cc0c12
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md
-            sha256: sha256:5f51488886b1fb1878cfc23fcdb0d5351bad6203f704a4eb2c51bb1cef79ab07
+            sha256: sha256:fa99a9153fabbc17d9b00def44d9230c2e666cd91489f4adb908024254d121e5
           diff:
             ref: receipt://docs/reports/2026-08-27-agora-l4-route-evidence.md
             sha256: sha256:d0640921ab0d81fd2552b40e5248024720f97f357a6d0542610d36e2c54732ac
@@ -16003,7 +15977,7 @@ bets:
             sha256: sha256:6354f95f34b16fba67a35e1724f72c6c8a2c670ee020084aabb7cdc9565ad550
           replay:
             ref: receipt://docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md
-            sha256: sha256:5f51488886b1fb1878cfc23fcdb0d5351bad6203f704a4eb2c51bb1cef79ab07
+            sha256: sha256:fa99a9153fabbc17d9b00def44d9230c2e666cd91489f4adb908024254d121e5
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-22.md
             sha256: sha256:3885d63fe059613f4eb79eea28eae1214c4a0fcd99be0cb4fb67ea24346907a3
@@ -16018,7 +15992,7 @@ bets:
             sha256: sha256:6354f95f34b16fba67a35e1724f72c6c8a2c670ee020084aabb7cdc9565ad550
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md
-            sha256: sha256:5f51488886b1fb1878cfc23fcdb0d5351bad6203f704a4eb2c51bb1cef79ab07
+            sha256: sha256:fa99a9153fabbc17d9b00def44d9230c2e666cd91489f4adb908024254d121e5
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-22.md
             sha256: sha256:3885d63fe059613f4eb79eea28eae1214c4a0fcd99be0cb4fb67ea24346907a3
@@ -16083,7 +16057,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md
     spec_version: 1.0.0
-    content_digest: sha256:c9ce8c9e720289ef670313274c9ae33d52bf2fcdf3f6d9a553c97ea96082fcd6
+    content_digest: sha256:92ea31dca774505bc36a3eeb8d1c81f3f8df5d30e042d3c4f3fb5c5640dc079d
     decision_ref: decision://accepted/BET-Y1Q3-T10-21
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16095,7 +16069,7 @@ bets:
             ref: git://origin/main@80fce6d5284651b9b64316b59673a0541cd7d2c0
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md
-            sha256: sha256:c9ce8c9e720289ef670313274c9ae33d52bf2fcdf3f6d9a553c97ea96082fcd6
+            sha256: sha256:92ea31dca774505bc36a3eeb8d1c81f3f8df5d30e042d3c4f3fb5c5640dc079d
           diff:
             ref: receipt://docs/architecture/l4-documents-agora-convergence-v1.md
             sha256: sha256:55ba92e1b6b82d6f85814fbd17318c1f215ea3e381d41bdd7b66d47d25750ca9
@@ -16128,7 +16102,7 @@ bets:
             sha256: sha256:93052fb05515c5daa2a0f3fa5c11dfdc2ba34c18864e5d4e103499a259f5a8db
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md
-            sha256: sha256:c9ce8c9e720289ef670313274c9ae33d52bf2fcdf3f6d9a553c97ea96082fcd6
+            sha256: sha256:92ea31dca774505bc36a3eeb8d1c81f3f8df5d30e042d3c4f3fb5c5640dc079d
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-21.md
             sha256: sha256:3cd1d8dc28d9000af11d4d80ffe171b80f533b65a48d042e82500a342841e4bc
@@ -16167,7 +16141,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g2-maturity-design-doc-design.md
     spec_version: 1.0.0
-    content_digest: sha256:8721e8b86f4716103c9580b302f8e8e0a41fde3edb86a8e5c8fe5f5f475d39c0
+    content_digest: sha256:146c048e0b5a99c5ca3ef444ff68ee70350098ea146f9737a8e8d4597ee6c157
     decision_ref: decision://accepted/BET-Y1Q3-T10-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16182,22 +16156,22 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
+            sha256: sha256:cd27b8620eca6886fc7d7c91388613bdaec56305d0f8503bca415c7858c523b9
           rollback:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
+            sha256: sha256:cd27b8620eca6886fc7d7c91388613bdaec56305d0f8503bca415c7858c523b9
       operational:
         status: PROVEN
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-02-accept.yaml
             sha256: sha256:71a8b1ba07cdf8fd8d814e0f9ebf1fcdd1fe99d1a2ee8eb03e7f3582a03888ac
           live_canary:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
+            sha256: sha256:cd27b8620eca6886fc7d7c91388613bdaec56305d0f8503bca415c7858c523b9
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -16212,7 +16186,7 @@ bets:
             sha256: sha256:71a8b1ba07cdf8fd8d814e0f9ebf1fcdd1fe99d1a2ee8eb03e7f3582a03888ac
           real_signal:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
+            sha256: sha256:cd27b8620eca6886fc7d7c91388613bdaec56305d0f8503bca415c7858c523b9
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-02.md
             sha256: sha256:c9a0d2507e1d8ce5f7ce883b418f8275e6b5ceb36b4dc27357a65afdb63cff52
@@ -16250,7 +16224,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g3-adr-link-fix-design.md
     spec_version: 1.0.0
-    content_digest: sha256:f43507e40bf6c9573d6a9f5c22378d93a9f2095a971bf43c4b2c8e7122db9fa3
+    content_digest: sha256:c31c9fab54b84e9cb3d2102855dbeebf910d2abd2880b601c059c8a0053e53ad
     decision_ref: decision://accepted/BET-Y1Q3-T10-03
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16265,22 +16239,22 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           rollback:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
       operational:
         status: PROVEN
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-03-accept.yaml
             sha256: sha256:ee49d84653365926a721b793add77e977c742f4b73c6252c392e807c5c3b238b
           live_canary:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -16295,7 +16269,7 @@ bets:
             sha256: sha256:ee49d84653365926a721b793add77e977c742f4b73c6252c392e807c5c3b238b
           real_signal:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-03.md
             sha256: sha256:33836ee1c4626ae2734a625606cc1d4754d6938c341cc24e019dd231376aacad
@@ -16334,7 +16308,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g4-governance-owner-migration-design.md
     spec_version: 1.0.0
-    content_digest: sha256:87aa79dfe96ba9464133d5e2159267584971be250c258374bd1c3f26a2f22eb9
+    content_digest: sha256:9ac54893aeae436705366fb69e8cff0b793e0a78e2addfe9abc0a3c64029ab72
     decision_ref: decision://accepted/BET-Y1Q3-T10-04
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16349,22 +16323,22 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           rollback:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
       operational:
         status: PROVEN
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-04-accept.yaml
             sha256: sha256:67703b87331dc9d1ef857c8b61ffb22487b886449a282d9b61ae05058272aaa0
           live_canary:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -16379,7 +16353,7 @@ bets:
             sha256: sha256:67703b87331dc9d1ef857c8b61ffb22487b886449a282d9b61ae05058272aaa0
           real_signal:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-04.md
             sha256: sha256:afbfe0a86070b96a7d42b4e0cdf22c01adc46cf8327190a5ec8799b2059a93e2
@@ -16415,7 +16389,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g5-compass-radar-sixth-axis-design.md
     spec_version: 1.0.0
-    content_digest: sha256:eaf953bee3bae4c791175c5bbd6607e9d2c2eda8ed0ac898c603ae322acab4d0
+    content_digest: sha256:055566e2b2724327f68940f1f81bc15f3e02e33e436487a9abe8743be366bfe4
     decision_ref: decision://accepted/BET-Y1Q3-T10-05
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16430,22 +16404,22 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/compass_radar.py
-            sha256: sha256:4b370084acca7dbc84b61ad780e30fca2dba86498666727c5bcb1f5e792c34a8
+            sha256: sha256:0ec25740d0e69c0e848fd24548e7de349a865ed060a3bfe765ad16010470a6d8
           rollback:
             ref: receipt://bin/compass_radar.py
-            sha256: sha256:4b370084acca7dbc84b61ad780e30fca2dba86498666727c5bcb1f5e792c34a8
+            sha256: sha256:0ec25740d0e69c0e848fd24548e7de349a865ed060a3bfe765ad16010470a6d8
       operational:
         status: PROVEN
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-05-accept.yaml
             sha256: sha256:faa91257068806752d05dcb7e28027586c874afe3acbefc3f5725c3e8a78f0d5
           live_canary:
             ref: receipt://bin/compass_radar.py
-            sha256: sha256:4b370084acca7dbc84b61ad780e30fca2dba86498666727c5bcb1f5e792c34a8
+            sha256: sha256:0ec25740d0e69c0e848fd24548e7de349a865ed060a3bfe765ad16010470a6d8
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -16460,7 +16434,7 @@ bets:
             sha256: sha256:faa91257068806752d05dcb7e28027586c874afe3acbefc3f5725c3e8a78f0d5
           real_signal:
             ref: receipt://bin/compass_radar.py
-            sha256: sha256:4b370084acca7dbc84b61ad780e30fca2dba86498666727c5bcb1f5e792c34a8
+            sha256: sha256:0ec25740d0e69c0e848fd24548e7de349a865ed060a3bfe765ad16010470a6d8
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-05.md
             sha256: sha256:32464f230ed751c376c73910a21ef9630843a43ee9a4ef3fa9eb2eddeed76411
@@ -16496,7 +16470,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g6-scorecard-granularity-design.md
     spec_version: 1.0.0
-    content_digest: sha256:31630bfede57b861270f0b7038afc08d7de4f4409a126d7c40eb76741aa7cf59
+    content_digest: sha256:4c2878a54116d72695e29af62deaa644553bbd821f8102558255194a223c7a01
     decision_ref: decision://accepted/BET-Y1Q3-T10-06
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16511,22 +16485,22 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
+            sha256: sha256:cd27b8620eca6886fc7d7c91388613bdaec56305d0f8503bca415c7858c523b9
           rollback:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
+            sha256: sha256:cd27b8620eca6886fc7d7c91388613bdaec56305d0f8503bca415c7858c523b9
       operational:
         status: PROVEN
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-06-accept.yaml
             sha256: sha256:d31515c10b63fefdfae26715cb5bd0fcd0766555bb8287636679dcdc474b05ec
           live_canary:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
+            sha256: sha256:cd27b8620eca6886fc7d7c91388613bdaec56305d0f8503bca415c7858c523b9
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -16541,7 +16515,7 @@ bets:
             sha256: sha256:d31515c10b63fefdfae26715cb5bd0fcd0766555bb8287636679dcdc474b05ec
           real_signal:
             ref: receipt://bin/gac/maturity-scorecard.py
-            sha256: sha256:a61b2f15db48047571a58aa507248b35690018b729495ef3dfa7d801ed5ca636
+            sha256: sha256:cd27b8620eca6886fc7d7c91388613bdaec56305d0f8503bca415c7858c523b9
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-06.md
             sha256: sha256:2b40152c47fd87e76ccbd53fca1ae50fd268a78cb525eb21fa2e158bf7d70dd3
@@ -16582,7 +16556,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g7-runid-placeholder-design.md
     spec_version: 1.0.0
-    content_digest: sha256:8537f830a5d894efe4f2f994587e56ab558e3346c758b8ca6ee29b49cf61cbe8
+    content_digest: sha256:b2ea443a6b098700c2937e16abd5bb732251dddb19e7f347eab6a5db0720eb8b
     decision_ref: decision://accepted/BET-Y1Q3-T10-07
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16606,7 +16580,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-07-accept.yaml
             sha256: sha256:f04ef221667cd7f50b12ebbcdd393456be586f970f0efb8ec9fa9de396d3f81a
@@ -16664,7 +16638,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g8-governance-bet-binding-design.md
     spec_version: 1.0.0
-    content_digest: sha256:aa2800e795cbc246e2e248bf39754935d1f952c9186b7247744ab02dcae48d01
+    content_digest: sha256:dcf1b93f089d6eadedf2d8d95aa4aaa07e3def2cc41fcda3bb77b098f8b1e1e1
     decision_ref: decision://accepted/BET-Y1Q3-T10-08
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16688,7 +16662,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-08-accept.yaml
             sha256: sha256:2a2e6ba8c1fa4687278c8d9fb2b9970c8621ceb30aebb0291e602c2557c982e4
@@ -16746,7 +16720,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g9-worktree-submodule-env-design.md
     spec_version: 1.0.0
-    content_digest: sha256:138b3bd96a2f8e5b7aa095bf5cb141c88368987d25f5edfbd329ef4b15bf5a8e
+    content_digest: sha256:9907f0770908f296a897ca22639998b8cbe3c0c9c61d1ddc06b3990fb9847a37
     decision_ref: decision://accepted/BET-Y1Q3-T10-09
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16770,7 +16744,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-09-accept.yaml
             sha256: sha256:b3d6ca192df680c55b703da6b8e2fd58a29379a06acbcbb25bd3878670871381
@@ -16829,7 +16803,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-24-maturity-round2-g10-calibration-alignment-design.md
     spec_version: 1.0.0
-    content_digest: sha256:c129c6e4ff32961a41e5ff36d2fd8c1ec84d901a14c627c27a985a8040ec23d0
+    content_digest: sha256:45116d41849b06f05231838fc5f017dc7bfe7d0334f532c8bd644bfdd4840d06
     decision_ref: decision://accepted/BET-Y1Q3-T10-10
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16844,22 +16818,22 @@ bets:
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
           diff:
             ref: receipt://docs/GOVERNANCE-EVOLUTION-ROADMAP.md
-            sha256: sha256:98b2824577d86c339d64ea3f36cdb47b204a10f7c7a9d6f0dc5b8a7807b145c1
+            sha256: sha256:96c6a90a25559358c98bb8551bbc4676d7ff83bdd387808eca520720b8caa19a
           rollback:
             ref: receipt://docs/GOVERNANCE-EVOLUTION-ROADMAP.md
-            sha256: sha256:98b2824577d86c339d64ea3f36cdb47b204a10f7c7a9d6f0dc5b8a7807b145c1
+            sha256: sha256:96c6a90a25559358c98bb8551bbc4676d7ff83bdd387808eca520720b8caa19a
       operational:
         status: PROVEN
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-10-accept.yaml
             sha256: sha256:337a8e2702de957e5070a9b09a5abd35778a70a024d2bb1e618a14ac36bb0f42
           live_canary:
             ref: receipt://docs/GOVERNANCE-EVOLUTION-ROADMAP.md
-            sha256: sha256:98b2824577d86c339d64ea3f36cdb47b204a10f7c7a9d6f0dc5b8a7807b145c1
+            sha256: sha256:96c6a90a25559358c98bb8551bbc4676d7ff83bdd387808eca520720b8caa19a
           replay:
             ref: receipt://bin/plan/chain-bind-check.py
             sha256: sha256:2132c62e2f57aeaf7e0bc7b81c7fae5e6ab194579416dc906dd41961c04991f4
@@ -16874,7 +16848,7 @@ bets:
             sha256: sha256:337a8e2702de957e5070a9b09a5abd35778a70a024d2bb1e618a14ac36bb0f42
           real_signal:
             ref: receipt://docs/GOVERNANCE-EVOLUTION-ROADMAP.md
-            sha256: sha256:98b2824577d86c339d64ea3f36cdb47b204a10f7c7a9d6f0dc5b8a7807b145c1
+            sha256: sha256:96c6a90a25559358c98bb8551bbc4676d7ff83bdd387808eca520720b8caa19a
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-10.md
             sha256: sha256:7fd069dd319cad0159acd342031e51a8fc7cb4dee4a1b824664f0a1d8d376cae
@@ -16924,7 +16898,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-sediment-promotion-pipeline-design.md
     spec_version: 1.0.0
-    content_digest: sha256:e61c111c7f742567a2f8afda0921ad9c3ac14e925f296edbac846ab750ffaa3f
+    content_digest: sha256:51bcd98cd1348ab2a12c54cc8b6779abc053a41d1274c25c7865ac1e9d93a965
     decision_ref: decision://accepted/BET-Y1Q3-T10-11
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -16939,10 +16913,10 @@ bets:
             sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
       operational:
         status: PROVEN
         evidence:
@@ -17016,7 +16990,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md
     spec_version: 1.0.0
-    content_digest: sha256:eae590101491e0ea6abb2fc9573e8c86f59973113deaf1594927736f11673156
+    content_digest: sha256:17b036481331a8bc651d7ebe0c1c52104f7998231bb3b6082a280819a3e5cdc1
     decision_ref: decision://accepted/BET-Y1Q3-T10-12
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -17040,7 +17014,7 @@ bets:
         evidence:
           cleanup:
             ref: receipt://bin/plan/bet-ledger.py
-            sha256: sha256:31a5354a76811f1b885e84a6d51b7383e3bc83c2890b42eb0477679c9c581235
+            sha256: sha256:60bd142781cc855bb96ddecbfe8d65764ec874193184ff40efc3e67a8a6f36df
           fresh_receipt:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q3-T10-12-accept.yaml
             sha256: sha256:903bcf976f737ad482b473b0e5dceb513bfb0aeddac1169d0b82e593abe9df0b
@@ -17113,7 +17087,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-decision-observability-design.md
     spec_version: 1.0.0
-    content_digest: sha256:5eb159bee23329fcbddb98763ae7a8e3170d4c3d32fb11ed01f78f576611eb34
+    content_digest: sha256:b90a74240c5fc38db7950cd11200f23d869e006948241979f1312f9cfff60165
     decision_ref: decision://accepted/BET-Y1Q3-T10-13
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -17128,10 +17102,10 @@ bets:
             sha256: sha256:8f7b9cda390f850895f1d3c6bceeef3f857defd97cf5bde2b3e8b25614773c4a
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
           rollback:
             ref: receipt://docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md
-            sha256: sha256:ca81b11952f3d7ac48d41c7f9bbbd437f5c793a711c76b5e0f385b13689e358f
+            sha256: sha256:0630ed831369eace589b7bda541aa3a9df2958a6e0ad0e3a867f4c00667efe11
       operational:
         status: PROVEN
         evidence:
@@ -17196,7 +17170,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md
     spec_version: 1.0.0
-    content_digest: sha256:d6c9607d5e8a72aba936e10d5c4356af744c9750f7274623ac80b4dee08ee800
+    content_digest: sha256:99c93a9dd9235f8e1c8e4ebf8f370c6410d2102bf370d165f9e750a50720e829
     decision_ref: decision://accepted/BET-Y1Q3-T10-14
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -17241,7 +17215,7 @@ bets:
             sha256: sha256:cda501a3b42d674732a1b555fd7c44b3742fa61a2148a3b47f85351a45c02b3d
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md
-            sha256: sha256:d6c9607d5e8a72aba936e10d5c4356af744c9750f7274623ac80b4dee08ee800
+            sha256: sha256:99c93a9dd9235f8e1c8e4ebf8f370c6410d2102bf370d165f9e750a50720e829
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-14.md
             sha256: sha256:7df0d74bcaf532f515acd88ccbeb5f7a17dde5bb6830c4d4027ae2938851b4ba
@@ -17302,7 +17276,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-25-resident-inbox-folder-signal-design.md
     spec_version: 1.0.0
-    content_digest: sha256:9dbbc98496ced2802b9380b4129586a87d8cd8b788393b680ca1da78c6cabc3f
+    content_digest: sha256:7188cc1f2914fc1ffa9c80512f1f8a44287888f162e537ecce97b42557b3fd3c
     decision_ref: decision://accepted/BET-Y1Q3-T10-15
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -17347,7 +17321,7 @@ bets:
             sha256: sha256:e1e3200b02355bfe3ca2f843d90f7687ec877d42e38c70553b28ccad8380c7a1
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-25-resident-inbox-folder-signal-design.md
-            sha256: sha256:9dbbc98496ced2802b9380b4129586a87d8cd8b788393b680ca1da78c6cabc3f
+            sha256: sha256:7188cc1f2914fc1ffa9c80512f1f8a44287888f162e537ecce97b42557b3fd3c
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-15.md
             sha256: sha256:8f2c59b0d5f32928c6fc71d685a521d7c74292ce24cee6ea6b21dcea6337a2d9
@@ -17418,7 +17392,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md
     spec_version: 1.0.0
-    content_digest: sha256:d2f799fe01cab9752ace40324350d0b4f502a928e15b93b3455db27134404564
+    content_digest: sha256:a536757b3a80fcd09e09bf338c09b588f8f8733f1bf543a9d40b00f25edf31ba
     decision_ref: decision://accepted/BET-Y1Q3-T10-16
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -17463,7 +17437,7 @@ bets:
             sha256: sha256:8c562b3513a3242e623d58d072900d1c7e24beecfa70b50fafba0d76d8f8bc43
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md
-            sha256: sha256:d2f799fe01cab9752ace40324350d0b4f502a928e15b93b3455db27134404564
+            sha256: sha256:a536757b3a80fcd09e09bf338c09b588f8f8733f1bf543a9d40b00f25edf31ba
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-16.md
             sha256: sha256:b4224dc576f63b6c62777e6406490508378d62816daaed0d8c9b4b8915d045f0
@@ -17527,7 +17501,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-26-resident-sediment-five-question-refinement-design.md
     spec_version: 1.0.0
-    content_digest: sha256:fe23af7d163a437e767c9e7b7e098f0bec246499c13330d2f78e395065cf6776
+    content_digest: sha256:b5b81f46399520638e76c90b8dcf11e94060e92b775a4c8887e5b8f93e25c548
     decision_ref: decision://accepted/BET-Y1Q3-T10-17
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -17539,10 +17513,10 @@ bets:
             ref: git://origin/main@3e296f77f5331f93779d7aa43a690f4941ebfd2b
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-sediment-five-question-refinement-design.md
-            sha256: sha256:fe23af7d163a437e767c9e7b7e098f0bec246499c13330d2f78e395065cf6776
+            sha256: sha256:b5b81f46399520638e76c90b8dcf11e94060e92b775a4c8887e5b8f93e25c548
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-sediment-five-question-refinement-design.md
-            sha256: sha256:fe23af7d163a437e767c9e7b7e098f0bec246499c13330d2f78e395065cf6776
+            sha256: sha256:b5b81f46399520638e76c90b8dcf11e94060e92b775a4c8887e5b8f93e25c548
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-17.md
             sha256: sha256:ededff30e3ff7080635c17c1b9b7c4f608c5a660d62f04cd78ef69bf8b1ff2e0
@@ -17557,10 +17531,10 @@ bets:
             sha256: sha256:964dd987b4c32b6695ebd846405d5acfd242d22b9e86e5a0f30535bb1a11b88c
           replay:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-sediment-five-question-refinement-design.md
-            sha256: sha256:fe23af7d163a437e767c9e7b7e098f0bec246499c13330d2f78e395065cf6776
+            sha256: sha256:b5b81f46399520638e76c90b8dcf11e94060e92b775a4c8887e5b8f93e25c548
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-sediment-five-question-refinement-design.md
-            sha256: sha256:fe23af7d163a437e767c9e7b7e098f0bec246499c13330d2f78e395065cf6776
+            sha256: sha256:b5b81f46399520638e76c90b8dcf11e94060e92b775a4c8887e5b8f93e25c548
       value:
         status: ACCEPTED
         evidence:
@@ -17572,7 +17546,7 @@ bets:
             sha256: sha256:964dd987b4c32b6695ebd846405d5acfd242d22b9e86e5a0f30535bb1a11b88c
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-sediment-five-question-refinement-design.md
-            sha256: sha256:fe23af7d163a437e767c9e7b7e098f0bec246499c13330d2f78e395065cf6776
+            sha256: sha256:b5b81f46399520638e76c90b8dcf11e94060e92b775a4c8887e5b8f93e25c548
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-17.md
             sha256: sha256:ededff30e3ff7080635c17c1b9b7c4f608c5a660d62f04cd78ef69bf8b1ff2e0
@@ -17634,7 +17608,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md
     spec_version: 1.0.0
-    content_digest: sha256:ef78293265cb3ef0bf459d30fd2a58b828fcae45f70829e1522e861e79c61f49
+    content_digest: sha256:128cf011e0005ec55c39636e8472536dac0ac5be4193e61e7a0368d19cf5c8cd
     decision_ref: decision://accepted/BET-Y1Q3-T10-18
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -17646,10 +17620,10 @@ bets:
             ref: git://origin/main@2a580067eb16418d315e287316563e12e1e2bcef
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md
-            sha256: sha256:ef78293265cb3ef0bf459d30fd2a58b828fcae45f70829e1522e861e79c61f49
+            sha256: sha256:128cf011e0005ec55c39636e8472536dac0ac5be4193e61e7a0368d19cf5c8cd
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md
-            sha256: sha256:ef78293265cb3ef0bf459d30fd2a58b828fcae45f70829e1522e861e79c61f49
+            sha256: sha256:128cf011e0005ec55c39636e8472536dac0ac5be4193e61e7a0368d19cf5c8cd
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-18.md
             sha256: sha256:f1f5ee666e1f5590426209d003e579760e1f3ad2eee187dd9ef1d0e4025db8e2
@@ -17664,10 +17638,10 @@ bets:
             sha256: sha256:fd3565587a9ffa9cad73288864f0c32e10079b59d35bc944e7af5e6892a5000f
           replay:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md
-            sha256: sha256:ef78293265cb3ef0bf459d30fd2a58b828fcae45f70829e1522e861e79c61f49
+            sha256: sha256:128cf011e0005ec55c39636e8472536dac0ac5be4193e61e7a0368d19cf5c8cd
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md
-            sha256: sha256:ef78293265cb3ef0bf459d30fd2a58b828fcae45f70829e1522e861e79c61f49
+            sha256: sha256:128cf011e0005ec55c39636e8472536dac0ac5be4193e61e7a0368d19cf5c8cd
       value:
         status: ACCEPTED
         evidence:
@@ -17679,7 +17653,7 @@ bets:
             sha256: sha256:fd3565587a9ffa9cad73288864f0c32e10079b59d35bc944e7af5e6892a5000f
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md
-            sha256: sha256:ef78293265cb3ef0bf459d30fd2a58b828fcae45f70829e1522e861e79c61f49
+            sha256: sha256:128cf011e0005ec55c39636e8472536dac0ac5be4193e61e7a0368d19cf5c8cd
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-18.md
             sha256: sha256:f1f5ee666e1f5590426209d003e579760e1f3ad2eee187dd9ef1d0e4025db8e2
@@ -17739,7 +17713,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md
     spec_version: 1.0.0
-    content_digest: sha256:a5f6ddc712cc0e943d1b42ae500a81ab056fb209bc636dfb111b7e6b24e2540d
+    content_digest: sha256:4c75deae24d794b549c0ac445e284933ca8462e4edee091e2bdde13dca452386
     decision_ref: decision://accepted/BET-Y1Q3-T10-19
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -17751,10 +17725,10 @@ bets:
             ref: git://origin/main@39a6db62761156e9992196f930cc6a7f5b3e8b7e
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md
-            sha256: sha256:a5f6ddc712cc0e943d1b42ae500a81ab056fb209bc636dfb111b7e6b24e2540d
+            sha256: sha256:4c75deae24d794b549c0ac445e284933ca8462e4edee091e2bdde13dca452386
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md
-            sha256: sha256:a5f6ddc712cc0e943d1b42ae500a81ab056fb209bc636dfb111b7e6b24e2540d
+            sha256: sha256:4c75deae24d794b549c0ac445e284933ca8462e4edee091e2bdde13dca452386
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-19.md
             sha256: sha256:e2ee6548d01392940e16d9e61b5479118e8e95ed93d4d2f5c7e588f0b99b0b1b
@@ -17769,10 +17743,10 @@ bets:
             sha256: sha256:18a3ba2883bb8ff13f4bcca4ef370d9c4a240b429358fbc63c60ed372fbb6de4
           replay:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md
-            sha256: sha256:a5f6ddc712cc0e943d1b42ae500a81ab056fb209bc636dfb111b7e6b24e2540d
+            sha256: sha256:4c75deae24d794b549c0ac445e284933ca8462e4edee091e2bdde13dca452386
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md
-            sha256: sha256:a5f6ddc712cc0e943d1b42ae500a81ab056fb209bc636dfb111b7e6b24e2540d
+            sha256: sha256:4c75deae24d794b549c0ac445e284933ca8462e4edee091e2bdde13dca452386
       value:
         status: ACCEPTED
         evidence:
@@ -17784,7 +17758,7 @@ bets:
             sha256: sha256:18a3ba2883bb8ff13f4bcca4ef370d9c4a240b429358fbc63c60ed372fbb6de4
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md
-            sha256: sha256:a5f6ddc712cc0e943d1b42ae500a81ab056fb209bc636dfb111b7e6b24e2540d
+            sha256: sha256:4c75deae24d794b549c0ac445e284933ca8462e4edee091e2bdde13dca452386
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-19.md
             sha256: sha256:e2ee6548d01392940e16d9e61b5479118e8e95ed93d4d2f5c7e588f0b99b0b1b
@@ -17832,7 +17806,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md
     spec_version: 1.0.0
-    content_digest: sha256:e70297266f1b6a16154a08d9e899e76ea021e856ef24387b687f17b3cdbedaaa
+    content_digest: sha256:f212e6008da3d377ab5599ee545c2833d241f519cc0cfd606a96c51b4a25ca92
     decision_ref: decision://accepted/BET-Y1Q3-T10-20
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -17844,10 +17818,10 @@ bets:
             ref: git://origin/main@4b45e8fcc6b11d80730e673b07210c75e15fb828
           tests:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md
-            sha256: sha256:e70297266f1b6a16154a08d9e899e76ea021e856ef24387b687f17b3cdbedaaa
+            sha256: sha256:f212e6008da3d377ab5599ee545c2833d241f519cc0cfd606a96c51b4a25ca92
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md
-            sha256: sha256:e70297266f1b6a16154a08d9e899e76ea021e856ef24387b687f17b3cdbedaaa
+            sha256: sha256:f212e6008da3d377ab5599ee545c2833d241f519cc0cfd606a96c51b4a25ca92
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-20.md
             sha256: sha256:f8c5f688d68039bd36ed8771d610a4bab40c5b6b2b6be1a66b831190570b1e61
@@ -17862,10 +17836,10 @@ bets:
             sha256: sha256:f597a8dda301dec3b6f7e27870c0c9a36a3fd559d9d1632a22e6f13547465e8a
           replay:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md
-            sha256: sha256:e70297266f1b6a16154a08d9e899e76ea021e856ef24387b687f17b3cdbedaaa
+            sha256: sha256:f212e6008da3d377ab5599ee545c2833d241f519cc0cfd606a96c51b4a25ca92
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md
-            sha256: sha256:e70297266f1b6a16154a08d9e899e76ea021e856ef24387b687f17b3cdbedaaa
+            sha256: sha256:f212e6008da3d377ab5599ee545c2833d241f519cc0cfd606a96c51b4a25ca92
       value:
         status: ACCEPTED
         evidence:
@@ -17877,7 +17851,7 @@ bets:
             sha256: sha256:f597a8dda301dec3b6f7e27870c0c9a36a3fd559d9d1632a22e6f13547465e8a
           real_signal:
             ref: receipt://docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md
-            sha256: sha256:e70297266f1b6a16154a08d9e899e76ea021e856ef24387b687f17b3cdbedaaa
+            sha256: sha256:f212e6008da3d377ab5599ee545c2833d241f519cc0cfd606a96c51b4a25ca92
           revision:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-20.md
             sha256: sha256:f8c5f688d68039bd36ed8771d610a4bab40c5b6b2b6be1a66b831190570b1e61
@@ -17921,7 +17895,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-spine-value-flow-and-persona-lora-design.md
     spec_version: 1.0.0
-    content_digest: sha256:c98c095327aadecd82d8f5ed5c04869e07876d3bbebd22fe2f60ea07254fcf60
+    content_digest: sha256:ae9322ba7019888baadcaf10be6d2751e2db7977e538a145ca477dfdc3eeefe0
     decision_ref: decision://accepted/BET-Y1Q3-T10-105
   depends_on:
   - BET-Y1Q3-T10-60
@@ -17964,7 +17938,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-sovereign-mesh-daemon-sre-design.md
     spec_version: 1.0.0
-    content_digest: sha256:8250ffa3385341fd57aae0900a41f4e5408cd2bfe1268032761a5534474b099e
+    content_digest: sha256:38cd5511e943a86128c643ed22abf5c34751bb73b2c5e16c0cf0188e215d60d1
     decision_ref: decision://accepted/BET-Y1Q3-T10-106
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -17979,7 +17953,7 @@ bets:
             sha256: sha256:58e28da77a63a923eec6fc62df8673403b5e827f02f5e7cb28b361de9cde6cb2
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-30-sovereign-mesh-daemon-sre-design.md
-            sha256: sha256:8250ffa3385341fd57aae0900a41f4e5408cd2bfe1268032761a5534474b099e
+            sha256: sha256:38cd5511e943a86128c643ed22abf5c34751bb73b2c5e16c0cf0188e215d60d1
           rollback:
             ref: receipt://docs/reports/2026-08-31-dma-daemon-chaos-drill.md
             sha256: sha256:58e28da77a63a923eec6fc62df8673403b5e827f02f5e7cb28b361de9cde6cb2
@@ -17997,7 +17971,7 @@ bets:
             sha256: sha256:99bc36936e882176bebb4bbc69e8aa7ce5b30703438cd70552507520e8e15aef
           cleanup:
             ref: receipt://docs/superpowers/specs/2026-08-30-sovereign-mesh-daemon-sre-design.md
-            sha256: sha256:8250ffa3385341fd57aae0900a41f4e5408cd2bfe1268032761a5534474b099e
+            sha256: sha256:38cd5511e943a86128c643ed22abf5c34751bb73b2c5e16c0cf0188e215d60d1
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -18111,7 +18085,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md
     spec_version: 1.0.0
-    content_digest: sha256:7212ed4174f73535100853de0d8770addc96d2a08cb354fbec212c0b84f22718
+    content_digest: sha256:acdd5c976c68aeab228bb941d235d81d74b191bcb30cc7e5d79a351ca42af722
     decision_ref: decision://accepted/BET-Y1Q3-T10-114
   retro: required
 - id: BET-Y1Q3-T10-115
@@ -18277,12 +18251,6 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 双机心跳丢失超过 15 秒触发报警并强制切断 DMA 共享内存写入。
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:2e975a34bd3c99c7da143d73db97c3deaca216d4e6ff70e8214d1d76378e287f
-    decision_ref: decision://accepted/BET-Y1Q3-T10-119
-  value_indicator_policy: false
   retro: required
 - id: BET-Y1Q3-T10-120
   track: T10-MATURITY
@@ -18319,7 +18287,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-02-chaos-injection-suite-design.md
     spec_version: 1.0.0
-    content_digest: sha256:999e2e0bbaa868aaf5fc4ae765643ca32e1f328ed46c43544bfce00d932ee138
+    content_digest: sha256:81520fc2ff3fd1c372e60a1248a1739d7611d40d62538474277f07b1070e76ac
     decision_ref: decision://accepted/BET-Y1Q3-T10-120
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -18334,7 +18302,7 @@ bets:
             sha256: sha256:b2af0db1e15ddf162784ad4074b534cf814a4f3aa9d6ee4f8568a48a79bd15af
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-02-chaos-injection-suite-design.md
-            sha256: sha256:999e2e0bbaa868aaf5fc4ae765643ca32e1f328ed46c43544bfce00d932ee138
+            sha256: sha256:81520fc2ff3fd1c372e60a1248a1739d7611d40d62538474277f07b1070e76ac
           rollback:
             ref: receipt://docs/reports/2026-09-02-chaos-suite-validation.md
             sha256: sha256:b2af0db1e15ddf162784ad4074b534cf814a4f3aa9d6ee4f8568a48a79bd15af
@@ -18388,6 +18356,52 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 数据写入冲突时采用原子 append-only 机制保证幂等。
+  value_indicator_policy: false
+  status: done
+  done_at: 2026-09-03
+  closed_by: xiamingxing
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-north-star-v4-realtime-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:24c87a762282b6e0da3aa27ae7ba09e83011f94ffc9bb39fda04cb25407fb9e1
+    decision_ref: decision://accepted/BET-Y1Q3-T10-121
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6eafb3123dd559d4570b2d74ac3e871fcd04d81b
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-north-star-v4-realtime-design.md
+            sha256: sha256:24c87a762282b6e0da3aa27ae7ba09e83011f94ffc9bb39fda04cb25407fb9e1
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-121.md
+            sha256: sha256:532418e362d9282b499671dc6fea7aef2f24e7399dd1cb04cf888c6d6d3af6d9
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   retro: required
 - id: BET-Y1Q4-T7-02
   track: T7-SCENE
@@ -18519,7 +18533,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-t2-01-event-stream-bus-design.md
     spec_version: 1.0.0
-    content_digest: sha256:c9fc3b62fd7740f64c349ade8df44244f01257bd94a86901ed421e2aa4681d70
+    content_digest: sha256:121985a6eae0693b03a2dc0aaddd16269f5a1dc139718a060a6ab2882e7cf348
     decision_ref: decision://accepted/BET-Y1Q4-T2-01
 - id: BET-Y1Q4-T2-02
   track: T2-PERCEPT
@@ -18559,7 +18573,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-01-t2-02-im-session-triage-design.md
     spec_version: 1.0.0
-    content_digest: sha256:bc211b27ef4997ab45255a481b91a47a0571179409c9f21e8f978e309ad3bd28
+    content_digest: sha256:48312db642732b92052b6571addd50b45815ecabdaa3740423d4e5d1a06fe843
     decision_ref: decision://accepted/BET-Y1Q4-T2-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -18574,7 +18588,7 @@ bets:
             sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-01-t2-02-im-session-triage-design.md
-            sha256: sha256:bc211b27ef4997ab45255a481b91a47a0571179409c9f21e8f978e309ad3bd28
+            sha256: sha256:48312db642732b92052b6571addd50b45815ecabdaa3740423d4e5d1a06fe843
           rollback:
             ref: receipt://docs/reports/2026-09-01-im-session-triage.md
             sha256: sha256:425ef12e34dde84423bd997100271f8dff26d37cc86d430a9989dee4ace59ff1
@@ -18636,7 +18650,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md
     spec_version: 1.0.0
-    content_digest: sha256:2bc8d4a156821fb818d9d7f9fd8edfa636c3f5294ee407814d3ee3fcb8bc22aa
+    content_digest: sha256:4544a6d166e48baef3a7ac1fadfb809c6c782789cd50011920c5ac89b9906aee
     decision_ref: decision://accepted/BET-Y1Q4-T2-03
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -18651,7 +18665,7 @@ bets:
             sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md
-            sha256: sha256:2bc8d4a156821fb818d9d7f9fd8edfa636c3f5294ee407814d3ee3fcb8bc22aa
+            sha256: sha256:4544a6d166e48baef3a7ac1fadfb809c6c782789cd50011920c5ac89b9906aee
           rollback:
             ref: receipt://docs/reports/2026-09-01-multimodal-ocr-layout.md
             sha256: sha256:54b3ff629347b4f3d1485cade914053ef44ce8e51c88536bce08765cc3e58e93
@@ -18713,7 +18727,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md
     spec_version: 1.0.0
-    content_digest: sha256:ee369d195cf1745889efaa11bf450c9c05525ff931cfebc27daf77c38fb38395
+    content_digest: sha256:b45ca861cad3eab881c5a79be069bf46f584c183d7fcf7303dec8f6cef45629f
     decision_ref: decision://accepted/BET-Y1Q4-T3-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -18728,7 +18742,7 @@ bets:
             sha256: sha256:d9a335dc32a8bff661221f1c6bf9031705cdd04fbc5819f1158ebc4fb7feaaf8
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md
-            sha256: sha256:ee369d195cf1745889efaa11bf450c9c05525ff931cfebc27daf77c38fb38395
+            sha256: sha256:b45ca861cad3eab881c5a79be069bf46f584c183d7fcf7303dec8f6cef45629f
           rollback:
             ref: receipt://docs/reports/2026-09-01-bge-m3-mps-benchmark.md
             sha256: sha256:d9a335dc32a8bff661221f1c6bf9031705cdd04fbc5819f1158ebc4fb7feaaf8
@@ -18789,7 +18803,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-t3-03-tiered-router-design.md
     spec_version: 1.0.0
-    content_digest: sha256:607f985bc875d19b2ccaea56bae8f9c81451b3165fade43a2af3b7ba0fa84848
+    content_digest: sha256:aa76f7f262b37a0abc6a95663246c7fdd78b2124bf8955b07cbe0da2a9209420
     decision_ref: decision://accepted/BET-Y1Q4-T3-03
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -18804,7 +18818,7 @@ bets:
             sha256: sha256:72f308deccfb48b4bcb87cc4645e5c18596bf763d9b73e5f4a7e86bac5fe9df1
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-03-t3-03-tiered-router-design.md
-            sha256: sha256:607f985bc875d19b2ccaea56bae8f9c81451b3165fade43a2af3b7ba0fa84848
+            sha256: sha256:aa76f7f262b37a0abc6a95663246c7fdd78b2124bf8955b07cbe0da2a9209420
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T3-03.md
             sha256: sha256:72f308deccfb48b4bcb87cc4645e5c18596bf763d9b73e5f4a7e86bac5fe9df1
@@ -18864,7 +18878,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-t7-03-policy-radar-morning-brief-design.md
     spec_version: 1.0.0
-    content_digest: sha256:f83bf74936abf8b1d981bac3aaf1eab2eb94f32b6685360bc4658dce35b76605
+    content_digest: sha256:7f2ba1b1d6fcf50b3a12936fb54900445c0b4e4098b921d53845970bb6c0a767
     decision_ref: decision://accepted/BET-Y1Q4-T7-03
   done_at: '2026-08-31'
   completion_evidence:
@@ -18880,7 +18894,7 @@ bets:
             sha256: sha256:2c3b9d13047c73e6f17306358f86a994b7eaf0ea28c243ddb90e5ce8ce9af63d
           diff:
             ref: receipt://docs/superpowers/specs/2026-08-31-t7-03-policy-radar-morning-brief-design.md
-            sha256: sha256:f83bf74936abf8b1d981bac3aaf1eab2eb94f32b6685360bc4658dce35b76605
+            sha256: sha256:7f2ba1b1d6fcf50b3a12936fb54900445c0b4e4098b921d53845970bb6c0a767
           rollback:
             ref: receipt://docs/reports/2026-08-31-policy-radar-morning-brief.md
             sha256: sha256:2c3b9d13047c73e6f17306358f86a994b7eaf0ea28c243ddb90e5ce8ce9af63d
@@ -18941,7 +18955,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-t8-02-mobile-pwa-design.md
     spec_version: 1.0.0
-    content_digest: sha256:d5b327f7d99a64df03008d2a205bef41da4a989151fc0cb72de96cdb30e1e31d
+    content_digest: sha256:d08910bde219173bb70c4042e00ea076a752033c58009053e401fca9659b73fa
     decision_ref: decision://accepted/BET-Y1Q4-T8-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -18956,7 +18970,7 @@ bets:
             sha256: sha256:0d7aaccb0a068ad1a9be9dc6d35d024140d0085228be36b78576aa963c465c2f
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-03-t8-02-mobile-pwa-design.md
-            sha256: sha256:d5b327f7d99a64df03008d2a205bef41da4a989151fc0cb72de96cdb30e1e31d
+            sha256: sha256:d08910bde219173bb70c4042e00ea076a752033c58009053e401fca9659b73fa
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
             sha256: sha256:0d7aaccb0a068ad1a9be9dc6d35d024140d0085228be36b78576aa963c465c2f
@@ -18979,56 +18993,6 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
-  value_indicator_policy: false
-- id: BET-Y1Q4-T8-04
-  track: T8-SURFACE
-  window: Y1Q4
-  title: Cockpit 个人工作案件台 MVP（调查闭环与受控外部动作）
-  appetite: 3 weeks
-  priority: P0
-  status: candidate
-  goal: 将 Cockpit 收敛为夏明星个人工作案件台，先跑通 OA 任务读取、调查包分发与回收、催办、汇总、上报草稿、自动归档和受控 OA 结案；OMO 保持唯一流程、审批、动作与回执真值。
-  non_goals:
-  - 不新建第二任务、工作流、凭据或知识真值
-  - 不做未经最终确认的邮件、微信、OA 回写或向上报送
-  - 不在 MVP 上线多租户、多人协作、公开应用商店客户端或新的调度器
-  done_when:
-  - 脱敏演练案件可完整跑通 OA 读取、方案、混合调查包、补交、催办、汇总、上报草稿、归档和 OA 回读
-  - 所有外部动作均经有效批准快照、执行后回读和可定位的每收件人回执
-  - 高敏或不确定内容不离开本地，Cockpit 只消费凭据引用且不可显示原始密钥
-  - Cockpit 默认导航收敛为今日、案件、工作台、知识与归档、系统与连接，技术页面降级为专家工具
-  verify:
-  - cmd: cd projects/cockpit-ui && bun run typecheck && bun run test:unit && bun run build
-    expect: exit 0
-  - cmd: cd projects/omo && uv run pytest tests -k work_case
-    expect: exit 0
-  - cmd: cd projects/cockpit && uv run pytest tests -k work_case
-    expect: exit 0
-  - cmd: make gac-local-gate
-    expect: exit 0
-  workflow: bet-execution
-  underlying_workflow: project-code-change
-  write_surfaces:
-  - projects/cockpit-ui/**
-  - projects/cockpit/src/cockpit/web/**
-  - projects/cockpit/tests/**
-  - projects/omo/src/omo/**
-  - projects/omo/tests/**
-  - projects/knowledge/kairon/packages/iris/src/iris/connectors/seeyon_oa.py
-  - projects/agora/src/agora/server/tools_bos/im.py
-  - docs/superpowers/specs/2026-09-03-cockpit-work-case-mvp-design.md
-  - .omo/_knowledge/retros/BET-Y1Q4-T8-04.md
-  pasw_required: true
-  depends_on: []
-  risk_level: L3
-  human_gate: true
-  circuit_breaker: 发现任一未批准外部写入、回读失败或敏感数据外泄风险时，立即将所有通道降级为只读和人工操作卡。
-  retro: required
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-03-cockpit-work-case-mvp-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:b970e1e7c304eee77910040561f2896ed91324aa3b659411669675f75f4add36
-    decision_ref: decision://accepted/BET-Y1Q4-T8-04
   value_indicator_policy: false
 - id: BET-Y1Q4-T8-03
   track: T8-SURFACE
@@ -19068,7 +19032,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-01-t8-03-gov-docx-pptx-render-design.md
     spec_version: 1.0.0
-    content_digest: sha256:eb4dbab2c432e938b6fc017d22a82fa37f749ede2bcda6efc212efe73df7bd75
+    content_digest: sha256:0ab544dcd819ad41a76f7c701ea80afb5410b1a7509b8cad81bac4674b02dce9
     decision_ref: decision://accepted/BET-Y1Q4-T8-03
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -19083,7 +19047,7 @@ bets:
             sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-01-t8-03-gov-docx-pptx-render-design.md
-            sha256: sha256:eb4dbab2c432e938b6fc017d22a82fa37f749ede2bcda6efc212efe73df7bd75
+            sha256: sha256:0ab544dcd819ad41a76f7c701ea80afb5410b1a7509b8cad81bac4674b02dce9
           rollback:
             ref: receipt://docs/reports/2026-09-01-gov-docx-pptx-render.md
             sha256: sha256:035c0351b346285f2cec71b4c7c134dc7ed9568af026323b01673684788080cf
@@ -19143,7 +19107,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md
     spec_version: 1.0.0
-    content_digest: sha256:4f6d4a99acbadde9c31a2a5175f8088e1928c5c55844338d1832566423134095
+    content_digest: sha256:5d234e637c101f3df1d3aad20c4fb8706d30145b801ac41e529e1b371e23ec01
     decision_ref: decision://accepted/BET-Y1Q4-T2-04
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -19158,7 +19122,7 @@ bets:
             sha256: sha256:d87b07940be97d0f804cb8a083dd040a146e7bfe2f15bc61ab8b2db7b2cf7a87
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md
-            sha256: sha256:4f6d4a99acbadde9c31a2a5175f8088e1928c5c55844338d1832566423134095
+            sha256: sha256:5d234e637c101f3df1d3aad20c4fb8706d30145b801ac41e529e1b371e23ec01
           rollback:
             ref: receipt://docs/reports/2026-09-03-mail-connector.md
             sha256: sha256:d87b07940be97d0f804cb8a083dd040a146e7bfe2f15bc61ab8b2db7b2cf7a87
@@ -19224,7 +19188,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-02-t2-05-pipeline-supervisor-design.md
     spec_version: 1.0.0
-    content_digest: sha256:a681cf60948d7e6d298a502581c8593113aac508a52dfa595004cff69053e117
+    content_digest: sha256:6aabe474aa56d900d917a6ac300b60bb84c5e16653fbeed3d0db04592793cc9d
     decision_ref: decision://accepted/BET-Y1Q4-T2-05
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -19239,7 +19203,7 @@ bets:
             sha256: sha256:333eb45ac28cb09d2c3970034d15cf956e3d746f3cc8dd6ea64fa9eaec6d5776
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-02-t2-05-pipeline-supervisor-design.md
-            sha256: sha256:a681cf60948d7e6d298a502581c8593113aac508a52dfa595004cff69053e117
+            sha256: sha256:6aabe474aa56d900d917a6ac300b60bb84c5e16653fbeed3d0db04592793cc9d
           rollback:
             ref: receipt://docs/reports/2026-09-02-pipeline-supervisor.md
             sha256: sha256:333eb45ac28cb09d2c3970034d15cf956e3d746f3cc8dd6ea64fa9eaec6d5776
@@ -19298,7 +19262,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-02-t10-01-dlp-guard-design.md
     spec_version: 1.0.0
-    content_digest: sha256:6480e978ba044c8344c8c69b9312a5d2866510c2990cdd4d2f14e5f3e67a3ab7
+    content_digest: sha256:85329b989da434c19b227a5984f1f5457b93b56a9d3c358c1a22c2ff6ea07e9b
     decision_ref: decision://accepted/BET-Y1Q4-T10-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -19313,7 +19277,7 @@ bets:
             sha256: sha256:4a4d9289bb121ae691ac045cd06c5c8e28719954785a1b1ea47edd8817bdb22d
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-02-t10-01-dlp-guard-design.md
-            sha256: sha256:6480e978ba044c8344c8c69b9312a5d2866510c2990cdd4d2f14e5f3e67a3ab7
+            sha256: sha256:85329b989da434c19b227a5984f1f5457b93b56a9d3c358c1a22c2ff6ea07e9b
           rollback:
             ref: receipt://docs/reports/2026-09-02-dlp-governance-sandbox.md
             sha256: sha256:4a4d9289bb121ae691ac045cd06c5c8e28719954785a1b1ea47edd8817bdb22d
@@ -19627,54 +19591,11 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-t1-13-submodule-pointer-alignment.md
     spec_version: 1.0.0
-    content_digest: sha256:6d567a68c3868a1b1586e32a3d493f42d0dd3315e7ed1c437d10592149e6a3f7
+    content_digest: sha256:bfd71bda9cf5ab10a988532be4f5076190e2c5017d9f8c86c9768b5c4a508bd7
     decision_ref: decision://accepted/BET-Y1Q3-T1-13
   pasw_required: false
   depends_on: []
   risk_level: L2
   human_gate: false
   circuit_breaker: 子模块对齐后若父仓库仍有未跟踪变更或子模块内部出现本地修改 → 暂停提交并人工检查
-  retro: required
-- id: BET-Y1Q3-T10-200
-  track: T10-MATURITY
-  window: Y1Q3
-  title: docs last_updated保鲜batch1-6
-  appetite: 0.5 day
-  priority: P2
-  status: candidate
-  goal: 给 3 个点名 docs 加 last_updated 并跑 batch1-6 保鲜，验证 docdate 扫描口径可用，不碰业务逻辑。
-  non_goals:
-  - 不改文档正文语义，只补 last_updated 保鲜字段
-  - 不碰业务代码与治理门禁逻辑
-  - 不一次全量改 165 个文件，本 bet 只做 batch1-6
-  done_when:
-  - docs/local-compute/compute-fabric-workflow.md、docs/local-compute/omlx-cluster-architecture.md、docs/overview/cross-package-api-map.md 均有 last_updated 且格式合法
-  - docdate 扫描对上述 3 文件不再报缺失
-  - ledger lint 通过
-  verify:
-  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
-    expect: exit 0，BET-Y1Q3-T10-200 结构合法
-  - cmd: grep -n last_updated docs/local-compute/compute-fabric-workflow.md docs/local-compute/omlx-cluster-architecture.md docs/overview/cross-package-api-map.md
-    expect: 3 文件均有输出
-  workflow: bet-execution
-  underlying_workflow: project-code-change
-  write_surfaces:
-  - docs/local-compute/compute-fabric-workflow.md
-  - docs/local-compute/omlx-cluster-architecture.md
-  - docs/overview/cross-package-api-map.md
-  - docs/notes/**
-  - docs/superpowers/plans/**
-  - docs/superpowers/specs/2026-09-03-docdate-freshness-batch1-spec.md
-  - docs/plans/3y-bet-ledger.yaml
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-03-docdate-freshness-batch1-spec.md
-    spec_version: 1.0.0
-    content_digest: sha256:c4aad51e62106b46bfaff709fd2df931b5a156b16ee1c9f0e0f081800858e14f
-    decision_ref: decision://accepted/BET-Y1Q3-T10-200
-  pasw_required: false
-  depends_on: []
-  risk_level: L4
-  human_gate: false
-  circuit_breaker: 发现正文语义需改或扫描口径争议时停手，只保留 last_updated 改动并上报。
-  value_indicator_policy: false
   retro: required

@@ -1,0 +1,99 @@
+{
+  "axes": {
+    "axes": {
+      "A": {
+        "name": "时间账本 (3-axis 0.70)",
+        "score": 0,
+        "weight": 0.7,
+        "data": {
+          "compass_radar_run": 0,
+          "drift_sweep_run": 0,
+          "signal_poll": 0,
+          "agent_tick": 0,
+          "maturity_scorecard_run": 0,
+          "document_review_sample": 0,
+          "knowledge_curation": 0,
+          "staleness_check": 0
+        },
+        "total_minutes_saved": 0
+      },
+      "B": {
+        "name": "决策吞吐 (3-axis 0.30)",
+        "score": 80,
+        "weight": 0.3,
+        "decisions_in_window": 8,
+        "decisions_per_month": 8.0,
+        "cadence": "medium"
+      },
+      "C": {
+        "name": "BET done rate (advisory, 0.00)",
+        "score": 87.8,
+        "weight": 0.0,
+        "pct": 87.8
+      },
+      "D": {
+        "name": "知识消费 (4-axis 0.20)",
+        "score": 0,
+        "weight": 0.2,
+        "data": {
+          "evidence": 0,
+          "workflow_succeeded": 0,
+          "total": 0
+        },
+        "events_per_month": 0.0,
+        "cadence": "zero"
+      },
+      "E": {
+        "name": "决策质量 (5-axis advisory)",
+        "score": 0,
+        "data": {
+          "p0_p1_count": 0,
+          "adoption_ratio": 0.0
+        }
+      },
+      "A2": {
+        "name": "KV cache hit rate (advisory)",
+        "score": 0,
+        "available": false
+      },
+      "D2": {
+        "name": "认知杠杆率 (V4 新增, advisory)",
+        "score": 50,
+        "leverage_ratio": 0.0,
+        "explanation": "D events / A events, 1.0=balanced, >1=杠杆放大, <1=单点忙"
+      }
+    },
+    "weights_3axis": {
+      "A": 0.7,
+      "B": 0.3,
+      "C": 0.0
+    },
+    "weights_4axis": {
+      "A": 0.6,
+      "B": 0.2,
+      "C": 0.0,
+      "D": 0.2
+    },
+    "score_3axis": 24,
+    "score_4axis": 16,
+    "status": "low",
+    "window_days": 30,
+    "generated_at": "2026-09-03T06:46:49.997749+00:00"
+  },
+  "realtime": {
+    "scope": "realtime",
+    "since": "2026-09-03T00:00:00+00:00",
+    "until": "2026-09-03T06:46:49.998020+00:00",
+    "axes_realtime": {
+      "A_minutes_today": 0,
+      "B_decisions_today": 0,
+      "D_knowledge_today": 0,
+      "counts": {
+        "compass_radar_run": 0,
+        "signal_poll": 0,
+        "agent_tick": 0
+      }
+    },
+    "status": "live"
+  }
+}

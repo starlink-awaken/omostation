@@ -5,7 +5,6 @@ description: "多 agent 并行下的 git 纪律：隔离工作树、交付三段
 last-reviewed: 2026-08-26
 type: ssot
 owner: agent-skills-team
-
 last_updated: 2026-09-03
 ---
 
