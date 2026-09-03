@@ -24,7 +24,7 @@ _COCKPIT_SRC = _ROOT / "projects" / "cockpit" / "src"
 if _COCKPIT_SRC.is_dir() and str(_COCKPIT_SRC) not in sys.path:
     sys.path.insert(0, str(_COCKPIT_SRC))
 
-from cockpit.env_resolver import setup_workspace_paths, get_workspace_root  # noqa: E402
+from cockpit.env_resolver import get_workspace_root, setup_workspace_paths  # noqa: E402
 
 _ROOT = setup_workspace_paths()
 

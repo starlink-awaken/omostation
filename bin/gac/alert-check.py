@@ -15,7 +15,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]  # bin/gac/ → Workspace/
@@ -111,7 +111,7 @@ def main():
     parser.add_argument("--enforce", action="store_true", help="exit 1 on P0/P1")
     args = parser.parse_args()
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     # 执行所有检查
     constraints = check_constraints()

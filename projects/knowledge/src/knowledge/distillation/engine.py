@@ -10,8 +10,9 @@ import logging
 import time
 from pathlib import Path
 from typing import Any
+
+from knowledge.distillation.conflict_resolver import ConflictResolutionProposal, ConflictResolver
 from knowledge.models import KnowledgeDocument
-from knowledge.distillation.conflict_resolver import ConflictResolver, ConflictResolutionProposal
 
 logger = logging.getLogger("knowledge.distillation")
 

@@ -184,38 +184,38 @@ def _count_decision_quality(since_days: int = 30) -> dict:
     decisions_path = WS_ROOT / ".omo" / "notepads" / "delegation-guardrails" / "decisions.md"
     if not decisions_path.exists():
         return {"p0_p1_count": 0, "p2_count": 0, "total": 0, "adopted_count": 0, "adoption_ratio": 0.0}
-    
-    cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=since_days)
-    
+
+    cutoff = dt.datetime.now(dt.UTC) - dt.timedelta(days=since_days)
+
     try:
         text = decisions_path.read_text(encoding="utf-8")
     except OSError:
         return {"p0_p1_count": 0, "p2_count": 0, "total": 0, "adopted_count": 0, "adoption_ratio": 0.0}
-    
+
     # Split into decision blocks
     blocks = re.split(r"## \[", text)
-    
+
     p0_p1_count = 0
     p2_count = 0
     total = 0
     adopted_count = 0
     p0_p1_adoption = 0
-    
+
     for block in blocks[1:]:  # Skip first empty part
         # Extract date
         date_match = re.match(r"(\d{4}-\d{2}-\d{2})", block)
         if not date_match:
             continue
-        
+
         try:
             block_date = dt.datetime.fromisoformat(date_match.group(1) + "T00:00:00+00:00")
             if block_date < cutoff:
                 continue
         except ValueError:
             continue
-        
+
         total += 1
-        
+
         # Check priority
         if re.search(r"P0:", block):
             p0_p1_count += 1
@@ -223,15 +223,15 @@ def _count_decision_quality(since_days: int = 30) -> dict:
             p0_p1_count += 1
         elif re.search(r"P2:", block):
             p2_count += 1
-        
+
         # Check adoption (has verification section)
         if re.search(r"验证|已实施|已合并|已部署|已上线", block):
             adopted_count += 1
             if re.search(r"P0:|P1:", block):
                 p0_p1_adoption += 1
-    
+
     adoption_ratio = adopted_count / total if total > 0 else 0.0
-    
+
     return {
         "p0_p1_count": p0_p1_count,
         "p2_count": p2_count,
@@ -248,7 +248,7 @@ def _read_kv_cache_stats() -> dict:
     cache_stats_path = Path.home() / ".omlxc" / "cache_stats.json"
     if not cache_stats_path.exists():
         return {"hit_rate": 0.0, "total_queries": 0, "available": False}
-    
+
     try:
         import json
         stats = json.loads(cache_stats_path.read_text())

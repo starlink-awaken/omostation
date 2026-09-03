@@ -23,7 +23,6 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "projects" / "omo" / "src"))
 from omo.blackboard.client import BlackboardClient
 
-
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DB_PATH = WORKSPACE_ROOT / "runtime" / "omo" / "architecture_graph.sqlite3"
 
@@ -61,7 +60,7 @@ class DevilChaosRunner:
 
         exec_ms = int((time.perf_counter() - start_t) * 1000)
         verdict = "pass" if detected else "corroded"
-        proof_hash = hashlib.sha256(f"dead_ref:{detected}:{time.time()}".encode("utf-8")).hexdigest()
+        proof_hash = hashlib.sha256(f"dead_ref:{detected}:{time.time()}".encode()).hexdigest()
 
         fact_id = self.bb.record_fact(
             node_id=target_rule,
@@ -110,7 +109,7 @@ class DevilChaosRunner:
 
         exec_ms = int((time.perf_counter() - start_t) * 1000)
         verdict = "pass" if detected else "corroded"
-        proof_hash = hashlib.sha256(f"port_collision:{detected}:{time.time()}".encode("utf-8")).hexdigest()
+        proof_hash = hashlib.sha256(f"port_collision:{detected}:{time.time()}".encode()).hexdigest()
 
         fact_id = self.bb.record_fact(
             node_id=target_rule,
@@ -155,7 +154,7 @@ class DevilChaosRunner:
 
         exec_ms = int((time.perf_counter() - start_t) * 1000)
         verdict = "pass" if detected else "corroded"
-        proof_hash = hashlib.sha256(f"stale_rule:{detected}:{time.time()}".encode("utf-8")).hexdigest()
+        proof_hash = hashlib.sha256(f"stale_rule:{detected}:{time.time()}".encode()).hexdigest()
 
         fact_id = self.bb.record_fact(
             node_id=target_rule,
@@ -198,7 +197,7 @@ class DevilChaosRunner:
 
         exec_ms = int((time.perf_counter() - start_t) * 1000)
         verdict = "pass" if detected else "corroded"
-        proof_hash = hashlib.sha256(f"bos_timeout:{detected}:{time.time()}".encode("utf-8")).hexdigest()
+        proof_hash = hashlib.sha256(f"bos_timeout:{detected}:{time.time()}".encode()).hexdigest()
 
         fact_id = self.bb.record_fact(
             node_id=target_rule,
@@ -241,7 +240,7 @@ class DevilChaosRunner:
 
         exec_ms = int((time.perf_counter() - start_t) * 1000)
         verdict = "pass" if detected else "corroded"
-        proof_hash = hashlib.sha256(f"blackboard_corrosion:{detected}:{time.time()}".encode("utf-8")).hexdigest()
+        proof_hash = hashlib.sha256(f"blackboard_corrosion:{detected}:{time.time()}".encode()).hexdigest()
 
         fact_id = self.bb.record_fact(
             node_id=target_rule,

@@ -17,7 +17,7 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 WORKSPACE = Path(os.environ.get("OMO_WORKSPACE_ROOT", Path(__file__).resolve().parents[2]))

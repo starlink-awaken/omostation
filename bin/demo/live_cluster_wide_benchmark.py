@@ -12,6 +12,7 @@ WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(WORKSPACE_ROOT / "projects" / "omlxc" / "src"))
 
 from omlxc.dataplane.cluster_partition import HeterogeneousClusterRouter
+from omlxc.dataplane.dflash_backend import DFlashBackendManager
 from omlxc.dataplane.power_profile import PowerProfileGovernor, PowerSource
 from omlxc.dataplane.priority_queue import PriorityVRAMScheduler, QueuedInferenceRequest, TaskPriority
 from omlxc.dataplane.vram_budget import (
@@ -20,7 +21,6 @@ from omlxc.dataplane.vram_budget import (
     enforce_tiered_headroom_admission,
     reclaim_metal_memory_pool,
 )
-from omlxc.dataplane.dflash_backend import DFlashBackendManager
 
 
 def run_full_cluster_benchmark():

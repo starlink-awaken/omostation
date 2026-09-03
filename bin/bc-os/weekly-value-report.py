@@ -172,7 +172,7 @@ def main():
             sign = "+" if d >= 0 else ""
             print(f"  Trend: {sign}{d}h vs last week")
         if report.get("recommendations"):
-            print(f"  Recommendations:")
+            print("  Recommendations:")
             for r in report["recommendations"]:
                 print(f"    - {r}")
 

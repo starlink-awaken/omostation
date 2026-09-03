@@ -14,7 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -63,7 +63,7 @@ def create_binding(run_id: str, bet_id: str) -> dict:
         "bet_id": bet_id,
         "claimed_paths": claimed_paths,
         "omo_task_bound": False,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "status": "pending",
     }
 

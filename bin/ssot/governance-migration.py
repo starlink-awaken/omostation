@@ -113,25 +113,25 @@ def infer_expected(check_id: str, check_type: str, target: str) -> str:
     if "import_nucleus" in ct:
         return f"Imports from {target or 'higher layers'} are prohibited unless explicitly exempted"
     if "direct_omo_io" in ct:
-        return f"Direct .omo/ writes are prohibited; all mutations must flow through approved brokers"
+        return "Direct .omo/ writes are prohibited; all mutations must flow through approved brokers"
     if "broad_except" in ct:
-        return f"Broad except clauses must not swallow all exceptions without logging"
+        return "Broad except clauses must not swallow all exceptions without logging"
     if "state_plane_asset" in ct:
-        return f"Runtime assets must not be stored in state plane directories"
+        return "Runtime assets must not be stored in state plane directories"
     if "mutation_surface" in ct:
-        return f"Mutation surfaces must be registered and audited"
+        return "Mutation surfaces must be registered and audited"
     if "doc_lifecycle" in ct:
-        return f"Documents must have valid frontmatter and lifecycle metadata"
+        return "Documents must have valid frontmatter and lifecycle metadata"
     if "layer_contract" in ct:
-        return f"Cross-layer imports must comply with layer-contract.yaml"
+        return "Cross-layer imports must comply with layer-contract.yaml"
     if "test_coverage" in ct:
-        return f"Test coverage must meet project thresholds"
+        return "Test coverage must meet project thresholds"
     if "ssot_lint" in ct:
-        return f"SSOT references in markdown must point to valid files"
+        return "SSOT references in markdown must point to valid files"
     if "registry_integrity" in ct:
-        return f"Registry files must be valid YAML and match schema"
+        return "Registry files must be valid YAML and match schema"
     if "consistency_drift" in ct:
-        return f"No unexplained drift between declared and actual state"
+        return "No unexplained drift between declared and actual state"
     return f"Check {check_id} must pass without violations"
 
 

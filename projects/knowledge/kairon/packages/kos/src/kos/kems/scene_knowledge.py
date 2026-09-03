@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +35,7 @@ class SceneKnowledgeGraph:
             evidence_span=json.dumps(scene_card.get("architecture", {})),
             confidence=1.0,
             review_state="machine",
-            valid_from=datetime.now(timezone.utc).isoformat(),
+            valid_from=datetime.now(UTC).isoformat(),
             valid_to=None,
         )
         return self.store.upsert_entity(entity)

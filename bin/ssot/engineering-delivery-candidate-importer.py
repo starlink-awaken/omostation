@@ -101,7 +101,7 @@ def main() -> int:
 
     prs = _gh_json(
         [
-            "repos/{repo}/pulls?state=closed&sort=created&direction=desc&per_page=100".format(repo=repo),
+            f"repos/{repo}/pulls?state=closed&sort=created&direction=desc&per_page=100",
         ]
     )
     merged = [p for p in prs if p.get("merged_at") and p.get("merged_at") >= since]

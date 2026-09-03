@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -70,7 +70,7 @@ def run_cycle() -> dict:
 
     cycle = {
         "cycle_id": cycle_id,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "proposals_generated": len(proposals_generated),
         "triaged_high": len(triaged.get("high", [])),
         "approved": len(approved),
@@ -271,7 +271,7 @@ def _execute_proposal(proposal: dict) -> dict:
     return {
         "proposal_id": proposal.get("id"),
         "status": "executed",
-        "executed_at": datetime.now(timezone.utc).isoformat(),
+        "executed_at": datetime.now(UTC).isoformat(),
         "result": f"Executed: {proposal.get('description', '')}",
     }
 
@@ -373,7 +373,7 @@ def main() -> int:
     if args.status or args.feedback:
         state = _load_state()
         cycles = state.get("cycles", [])
-        print(f"自进化循环状态")
+        print("自进化循环状态")
         print(f"  总循环数: {len(cycles)}")
         if cycles:
             latest = cycles[-1]

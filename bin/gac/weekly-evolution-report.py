@@ -11,10 +11,10 @@
 Usage:
     python3 bin/gac/weekly-evolution-report.py [--apply]
 """
-import subprocess
 import json
+import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -30,7 +30,7 @@ def run(cmd, timeout=60):
 
 
 def main():
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     report = {"generated_at": now, "checks": {}, "proposals": []}
 
     # 1. GaC drift

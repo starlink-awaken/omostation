@@ -21,7 +21,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -57,7 +57,7 @@ def claim_bet() -> dict:
     state = _load_state()
     state["bet"] = TEST_BET
     state["status"] = "claimed"
-    state["steps"].append({"step": "claim", "at": datetime.now(timezone.utc).isoformat()})
+    state["steps"].append({"step": "claim", "at": datetime.now(UTC).isoformat()})
     _save_state(state)
     return {"ok": True, "bet_id": TEST_BET["id"], "status": "claimed"}
 
@@ -71,7 +71,7 @@ def execute_task() -> dict:
     # Create deliverable
     deliverable = {
         "bet_id": TEST_BET["id"],
-        "executed_at": datetime.now(timezone.utc).isoformat(),
+        "executed_at": datetime.now(UTC).isoformat(),
         "result": "Goal mode test executed successfully",
         "checks": {
             "bridge_runtime": _check_command(["python3", str(REPO / "bin/gac/bridge-runtime.py"), "--status"]),
@@ -84,7 +84,7 @@ def execute_task() -> dict:
     deliverable_path.write_text(json.dumps(deliverable, indent=2, ensure_ascii=False), encoding="utf-8")
 
     state["status"] = "executed"
-    state["steps"].append({"step": "execute", "at": datetime.now(timezone.utc).isoformat()})
+    state["steps"].append({"step": "execute", "at": datetime.now(UTC).isoformat()})
     _save_state(state)
 
     return {"ok": True, "deliverable": str(deliverable_path)}
@@ -110,7 +110,7 @@ def verify_result() -> dict:
     all_passed = all(v.get("ok") for v in checks.values() if isinstance(v, dict))
 
     state["status"] = "verified"
-    state["steps"].append({"step": "verify", "at": datetime.now(timezone.utc).isoformat(), "passed": all_passed})
+    state["steps"].append({"step": "verify", "at": datetime.now(UTC).isoformat(), "passed": all_passed})
     _save_state(state)
 
     return {"ok": True, "passed": all_passed, "checks": list(checks.keys())}
@@ -123,7 +123,7 @@ def closeout_bet() -> dict:
         return {"ok": False, "error": "BET not verified yet"}
 
     state["status"] = "done"
-    state["steps"].append({"step": "closeout", "at": datetime.now(timezone.utc).isoformat()})
+    state["steps"].append({"step": "closeout", "at": datetime.now(UTC).isoformat()})
     _save_state(state)
 
     return {"ok": True, "bet_id": TEST_BET["id"], "status": "done"}

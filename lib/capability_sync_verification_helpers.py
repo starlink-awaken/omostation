@@ -112,12 +112,12 @@ import hashlib  # noqa: E402
 import os  # noqa: E402
 import re  # noqa: E402
 
-from capability_trace_binding import IDENTITY_RE, _canonical_json, _digest  # noqa: E402
 from capability_native_execution_model import canonical_digest  # noqa: E402
 from capability_native_execution_receipt import (  # noqa: E402
     NativeExecutionReceiptError,
     validate_native_execution_material,
 )
+from capability_trace_binding import IDENTITY_RE, _canonical_json, _digest  # noqa: E402
 
 # The helper library only exists where the native-execution lib set is present;
 # the CLI's conditional-import fallback never applies at this boundary.

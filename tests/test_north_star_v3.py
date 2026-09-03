@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+from datetime import UTC
 from pathlib import Path
 
 import pytest
@@ -58,9 +59,9 @@ def test_read_jsonl_events_returns_zero_for_missing_file(tool, tmp_path):
 
 
 def test_read_jsonl_events_counts_recent(tool, tmp_path):
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timedelta, timezone
     p = tmp_path / "events.jsonl"
-    cutoff = datetime.now(timezone.utc) - timedelta(days=10)
+    cutoff = datetime.now(UTC) - timedelta(days=10)
     p.write_text(
         json.dumps({"ts": cutoff.isoformat()}) + "\n"
         + json.dumps({"ts": "2020-01-01T00:00:00Z"}) + "\n"
@@ -101,9 +102,9 @@ def test_count_knowledge_consumption_returns_zeros_for_missing_file(tool, tmp_pa
 
 
 def test_count_knowledge_consumption_counts_recent_events(tool, tmp_path, monkeypatch):
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timedelta, timezone
     p = tmp_path / "events.jsonl"
-    cutoff = datetime.now(timezone.utc) - timedelta(days=10)
+    cutoff = datetime.now(UTC) - timedelta(days=10)
     recent_iso = cutoff.isoformat()
     p.write_text(
         json.dumps({"event_type": "EvidenceRecorded", "occurred_at": recent_iso}) + "\n"
@@ -122,7 +123,7 @@ def test_compute_axes_d_axis_score_capped(tool, tmp_path, monkeypatch):
     """D score caps at 100 even when events_per_month > 30."""
     from datetime import datetime, timezone
     p = tmp_path / "events.jsonl"
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     lines = "\n".join(
         json.dumps({"event_type": "EvidenceRecorded", "occurred_at": now}) for _ in range(100)
     )
@@ -204,8 +205,8 @@ def test_count_decision_quality_returns_dict(tool):
 
 def test_count_decision_quality_empty_when_no_file(tool):
     """Test returns empty when decisions.md doesn't exist."""
-    import tempfile
     import os
+    import tempfile
     with tempfile.TemporaryDirectory() as tmpdir:
         # Create a temporary WS_ROOT without decisions.md
         original = tool.WS_ROOT
@@ -222,10 +223,10 @@ def test_count_decision_quality_empty_when_no_file(tool):
 
 def test_count_decision_quality_counts_recent(tool):
     """Test that only recent decisions are counted."""
-    import tempfile
     import os
-    from datetime import datetime, timezone, timedelta
-    
+    import tempfile
+    from datetime import datetime, timedelta, timezone
+
     with tempfile.TemporaryDirectory() as tmpdir:
         original = tool.WS_ROOT
         tool.WS_ROOT = Path(tmpdir)
@@ -234,13 +235,13 @@ def test_count_decision_quality_counts_recent(tool):
             decisions_dir = Path(tmpdir) / ".omo" / "notepads" / "delegation-guardrails"
             decisions_dir.mkdir(parents=True)
             decisions_path = decisions_dir / "decisions.md"
-            
-            recent_date = (datetime.now(timezone.utc) - timedelta(days=5)).strftime("%Y-%m-%d")
+
+            recent_date = (datetime.now(UTC) - timedelta(days=5)).strftime("%Y-%m-%d")
             decisions_path.write_text(f"""## [{recent_date}] P1: Test decision
 - **决策**: test
 - **验证**: implemented
 """)
-            
+
             result = tool._count_decision_quality(since_days=30)
             assert result["total"] == 1
             assert result["p0_p1_count"] == 1

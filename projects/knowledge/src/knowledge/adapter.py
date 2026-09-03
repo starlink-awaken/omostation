@@ -5,7 +5,9 @@ from __future__ import annotations
 import logging
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
+
 from knowledge.models import KnowledgeDocument, SyncEvent
 
 logger = logging.getLogger("knowledge.adapter")
@@ -33,7 +35,7 @@ class AdapterHealth:
 
 class BaseKnowledgeAdapter(ABC):
     """统一知识工程适配器抽象基类 (BaseKnowledgeAdapter).
-    
+
     统一收敛外源接入 (iris)、方法论编译 (sophia)、长文本抽取 (minerva) 与工具编排 (forge) 的样板逻辑：
     - 标准初始化与健康检查
     - 安全容灾执行与降级重试 (Circuit Breaker Safe Execution)

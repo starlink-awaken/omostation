@@ -1,7 +1,7 @@
 # 文档索引 (自动生成)
 
-> 生成时间: 2026-09-03 15:06
-> 总文档数: 4013
+> 生成时间: 2026-09-03 15:21
+> 总文档数: 4015
 > 本文件由 `bin/ssot/generate-docs-index.py` 自动维护，不要手动编辑。
 
 ## 统计
@@ -10,8 +10,8 @@
 |------|------|
 | SSOT | 264 |
 | derived | 4 |
-| ephemeral | 126 |
-| untyped | 2526 |
+| ephemeral | 130 |
+| untyped | 2523 |
 
 ## SSOT 清单
 
@@ -296,6 +296,10 @@
 | 路径 | 状态 | 创建日期 |
 |------|------|----------|
 | .omo/_knowledge/docs-audit/2026-09-03-phase5-final-report.md | completed | - |
+| DOC_REFACTOR_SUMMARY.md | completed | - |
+| ECCP-HANDOFF.md | completed | - |
+| ROADMAP.md | completed | - |
+| debt-audit-report.md | completed | - |
 | docs/evidence/BET-Y1Q2-T1-09-orca-crush-e2e.md | active | - |
 | docs/evidence/BET-Y1Q2-T1-10-agent-pool-observe.md | active | - |
 | docs/evidence/t1-18-codex-dogfood-canary.md | experimental | - |
@@ -422,12 +426,8 @@
 | docs/reports/weekly-strategy-health-2026-07-23.md | active | - |
 | docs/templates/ephemeral-template.md | active | completed | archived | - |
 
-## 合规问题 (2746)
+## 合规问题 (2743)
 
-- [UNTYPED] debt-audit-report.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] ECCP-HANDOFF.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] ROADMAP.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] DOC_REFACTOR_SUMMARY.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] locks/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] locks/AGENTS.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] artifacts/README.md: 未声明 type (建议添加 frontmatter)
@@ -2527,6 +2527,7 @@
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T10-99.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T10-101.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T2-04.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T8-02.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T8-03.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T10-60.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T2-01.md: 未声明 type (建议添加 frontmatter)
@@ -3171,14 +3172,10 @@
 - [UNTYPED] .omo/_control/obsidian-vault/CLAUDE.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_control/debt-dashboard/health-trend.md: 未声明 type (建议添加 frontmatter)
 
-## 孤立文档 (2521)
+## 孤立文档 (2518)
 
 > 未声明 type，也不引用任何 SSOT。
 
-- debt-audit-report.md
-- ECCP-HANDOFF.md
-- ROADMAP.md
-- DOC_REFACTOR_SUMMARY.md
 - locks/README.md
 - locks/AGENTS.md
 - artifacts/README.md
@@ -3225,4 +3222,8 @@
 - lib/README.md
 - lib/AGENTS.md
 - data/README.md
-- ... 和另外 2471 个文档
+- data/AGENTS.md
+- protocols/README.md
+- protocols/AGENTS.md
+- protocols/append-only-log-rollout.md
+- ... 和另外 2468 个文档

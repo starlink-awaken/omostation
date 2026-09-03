@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path("/Users/xiamingxing/Workspace")
@@ -60,14 +60,14 @@ def main() -> int:
 
     if args.sync_domains:
         state = _load_state()
-        state.setdefault("last_sync", {})["domains"] = datetime.now(timezone.utc).isoformat()
+        state.setdefault("last_sync", {})["domains"] = datetime.now(UTC).isoformat()
         _save_state(state)
         print("✓ Domain sync completed")
         return 0
 
     if args.sync_content:
         state = _load_state()
-        state.setdefault("last_sync", {})["content"] = datetime.now(timezone.utc).isoformat()
+        state.setdefault("last_sync", {})["content"] = datetime.now(UTC).isoformat()
         _save_state(state)
         print("✓ Content sync completed")
         return 0

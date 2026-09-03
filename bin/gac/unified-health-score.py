@@ -16,7 +16,7 @@
 
 import json
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -170,7 +170,7 @@ def score_docs() -> float:
 
     total = 0
     fresh = 0
-    stale_threshold = datetime.now(timezone.utc) - timedelta(days=30)
+    stale_threshold = datetime.now(UTC) - timedelta(days=30)
 
     for f in sorted(docs_dir.rglob("*.md")):
         try:
@@ -278,7 +278,7 @@ def record_history(uhs: float, scores: dict[str, float]):
     """记录健康分历史."""
     HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
     record = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "uhs": uhs,
         **scores,
     }
@@ -291,7 +291,7 @@ def get_trend(days: int = 30) -> list[dict]:
     if not HISTORY_FILE.exists():
         return []
 
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
     records = []
 
     with open(HISTORY_FILE) as f:
@@ -361,7 +361,7 @@ def main():
 
     if args.json:
         print(json.dumps({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "uhs": uhs,
             "grade": g,
             "scores": scores,

@@ -3,7 +3,7 @@
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -69,7 +69,7 @@ def run_calibration(n: int = 5) -> list[dict]:
             "actor": "calibration-runner",
             "notes": notes,
             "source_ref": sample,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         OUTCOME_FILE.parent.mkdir(parents=True, exist_ok=True)
         with open(OUTCOME_FILE, "a") as f:
@@ -101,9 +101,9 @@ def main():
             print(f"  Calibration: {outcomes['calibration'] or 'N/A'}")
             if outcomes['total'] >= 30:
                 if outcomes['calibration'] and outcomes['calibration'] >= 0.6:
-                    print(f"  ✓ Target met (≥0.60)")
+                    print("  ✓ Target met (≥0.60)")
                 else:
-                    print(f"  ✗ Target not met (need ≥0.60)")
+                    print("  ✗ Target not met (need ≥0.60)")
         return
 
     if args.run:

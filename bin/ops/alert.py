@@ -15,7 +15,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 try:
@@ -97,7 +97,7 @@ def check_service_health(svc: dict) -> dict:
                     ts_str = data[attr]
                     if isinstance(ts_str, str):
                         ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-                        now = datetime.now(timezone.utc)
+                        now = datetime.now(UTC)
                         stale = (now - ts).total_seconds() / 3600
                         result["status"] = "healthy" if stale < max_stale else "stale"
                     else:
@@ -111,8 +111,8 @@ def check_service_health(svc: dict) -> dict:
     else:
         fp = WORKSPACE / signal
         if fp.exists():
-            mtime = datetime.fromtimestamp(fp.stat().st_mtime, tz=timezone.utc)
-            now = datetime.now(timezone.utc)
+            mtime = datetime.fromtimestamp(fp.stat().st_mtime, tz=UTC)
+            now = datetime.now(UTC)
             stale = (now - mtime).total_seconds() / 3600
             result["status"] = "healthy" if stale < max_stale else "stale"
         else:
@@ -123,7 +123,7 @@ def check_service_health(svc: dict) -> dict:
 
 def send_alert(service_id: str, status: str, previous_status: str | None = None) -> None:
     """Send alert for a service status change."""
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
 
     alert = {
         "timestamp": timestamp,

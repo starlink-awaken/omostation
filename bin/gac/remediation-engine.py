@@ -20,7 +20,7 @@
 
 import json
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -74,7 +74,7 @@ REMEDIATION_STRATEGIES = {
 def detect_stale_docs() -> list[dict]:
     """检测过期文档."""
     stale = []
-    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+    cutoff = datetime.now(UTC) - timedelta(days=30)
 
     if not DOCS_DIR.exists():
         return stale
@@ -179,7 +179,7 @@ def detect_health_degradation() -> list[dict]:
         return []
 
     # 读取最近 7 天的记录
-    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+    cutoff = datetime.now(UTC) - timedelta(days=7)
     recent = []
 
     with open(history_file) as f:
@@ -383,7 +383,7 @@ def generate_health_degradation(degradation: list[dict], dry_run: bool = True) -
 def run_remediation(strategy_filter: str = None, dry_run: bool = True) -> dict:
     """运行修复引擎."""
     results = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "dry_run": dry_run,
         "strategies": [],
         "total_issues": 0,

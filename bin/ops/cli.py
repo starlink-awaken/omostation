@@ -171,7 +171,7 @@ def check_liveness(svc: dict[str, Any], *, timeout: float | None = None) -> dict
                 with socket.create_connection(("127.0.0.1", int(port)), timeout=probe_timeout):
                     result["status"] = "healthy"
                     result["last_seen"] = datetime.now(UTC).isoformat()
-            except (socket.error, OSError) as e:
+            except OSError as e:
                 result["status"] = "unreachable"
                 result["error"] = str(e)[:100]
         else:
@@ -920,8 +920,8 @@ def main() -> int:
 
 def cmd_discover(args: argparse.Namespace) -> int:
     """Auto-discover running services."""
-    import subprocess as sp
     import re
+    import subprocess as sp
 
     services = load_services()
     existing_ids = {s["id"] for s in services}
@@ -1120,48 +1120,48 @@ def cmd_generate(args: argparse.Namespace) -> int:
             lines.append(f"    image: omostation/{sid}:latest")
             if port_str:
                 lines.append(f"    ports:{port_str}")
-            lines.append(f"    restart: unless-stopped")
+            lines.append("    restart: unless-stopped")
             lines.append("")
     elif fmt == "systemd":
         for svc in enabled[:10]:
             sid = svc.get("id", "").replace(".", "-")
             entry = svc.get("program", {}).get("entrypoint", "")
-            lines.append(f"[Unit]")
+            lines.append("[Unit]")
             lines.append(f"Description=omostation {sid}")
-            lines.append(f"After=network.target")
+            lines.append("After=network.target")
             lines.append("")
-            lines.append(f"[Service]")
-            lines.append(f"Type=simple")
+            lines.append("[Service]")
+            lines.append("Type=simple")
             lines.append(f"ExecStart=/usr/bin/env {entry}")
             lines.append(f"WorkingDirectory={WORKSPACE}")
-            lines.append(f"Restart=on-failure")
+            lines.append("Restart=on-failure")
             lines.append("")
-            lines.append(f"[Install]")
-            lines.append(f"WantedBy=multi-user.target")
+            lines.append("[Install]")
+            lines.append("WantedBy=multi-user.target")
             lines.append("")
     elif fmt == "launchd":
         for svc in enabled[:10]:
             sid = svc.get("id", "").replace(".", "_")
             entry = svc.get("program", {}).get("entrypoint", "")
-            lines.append(f"<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
-            lines.append(f"<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">")
-            lines.append(f"<plist version=\"1.0\">")
-            lines.append(f"<dict>")
-            lines.append(f"    <key>Label</key>")
+            lines.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+            lines.append("<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">")
+            lines.append("<plist version=\"1.0\">")
+            lines.append("<dict>")
+            lines.append("    <key>Label</key>")
             lines.append(f"    <string>com.omostation.{sid}</string>")
-            lines.append(f"    <key>ProgramArguments</key>")
-            lines.append(f"    <array>")
-            lines.append(f"        <string>/usr/bin/env</string>")
+            lines.append("    <key>ProgramArguments</key>")
+            lines.append("    <array>")
+            lines.append("        <string>/usr/bin/env</string>")
             lines.append(f"        <string>{entry}</string>")
-            lines.append(f"    </array>")
-            lines.append(f"    <key>WorkingDirectory</key>")
+            lines.append("    </array>")
+            lines.append("    <key>WorkingDirectory</key>")
             lines.append(f"    <string>{WORKSPACE}</string>")
-            lines.append(f"    <key>RunAtLoad</key>")
-            lines.append(f"    <true/>")
-            lines.append(f"    <key>KeepAlive</key>")
-            lines.append(f"    <true/>")
-            lines.append(f"</dict>")
-            lines.append(f"</plist>")
+            lines.append("    <key>RunAtLoad</key>")
+            lines.append("    <true/>")
+            lines.append("    <key>KeepAlive</key>")
+            lines.append("    <true/>")
+            lines.append("</dict>")
+            lines.append("</plist>")
             lines.append("")
 
     content = "\n".join(lines)
@@ -1569,7 +1569,7 @@ def cmd_history(args: argparse.Namespace) -> int:
             return 1
 
         entries = []
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.now(UTC) - timedelta(days=days)
         with open(history_file) as f:
             for line in f:
                 try:
@@ -1601,7 +1601,7 @@ def cmd_history(args: argparse.Namespace) -> int:
         for hf in history_files:
             sid = hf.stem
             entries = []
-            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            cutoff = datetime.now(UTC) - timedelta(days=days)
             with open(hf) as f:
                 for line in f:
                     try:
@@ -1629,7 +1629,7 @@ def record_health_history(svc_id: str, status: str) -> None:
     history_file = history_dir / f"{svc_id}.jsonl"
 
     entry = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "service": svc_id,
         "status": status,
     }
@@ -1640,8 +1640,8 @@ def record_health_history(svc_id: str, status: str) -> None:
 
 def cmd_drift(args: argparse.Namespace) -> int:
     """Configuration drift detection — compare manifest vs running state."""
-    import subprocess as sp
     import re
+    import subprocess as sp
 
     services = load_services()
     fix = getattr(args, "fix", False)
@@ -1854,7 +1854,7 @@ def cmd_metrics(args: argparse.Namespace) -> int:
         return 0
 
     # Serve metrics via HTTP
-    from http.server import HTTPServer, BaseHTTPRequestHandler
+    from http.server import BaseHTTPRequestHandler, HTTPServer
 
     class MetricsHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -1896,9 +1896,9 @@ def cmd_summary(args: argparse.Namespace) -> int:
     has_ports = sum(1 for s in enabled if s.get("ports"))
 
     try:
+        from rich import box
         from rich.console import Console
         from rich.table import Table
-        from rich import box
 
         console = Console()
         table = Table(title="omostation Service Gateway — Summary", box=box.ROUNDED)
