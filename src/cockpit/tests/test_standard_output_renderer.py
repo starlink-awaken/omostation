@@ -133,6 +133,12 @@ def test_all_catalog_commands_registered_in_parser():
     # 从组模块派生键集合兜底 —— 与 register_all 注册的 handlers 同源同集。
     delegated_catalog = ensure_delegated_catalog()  # 并入委派组 catalog 条目 (幂等)
     handler_keys |= set(delegated_catalog.keys())
+    # 运行时兜底: 直接构建 parser 收集真实注册面 (涵盖 set_defaults(func=...) 载体,
+    # 如 harness 经 register_harness_subcommand 接线, regex 无法静态识别)。
+    from cockpit.cli import create_parser
+
+    _parser, _sub, _ws = create_parser()
+    handler_keys |= set(_sub.choices.keys())
     catalog_keys = set(COMMAND_CATALOG.keys())
     missing_in_handlers = catalog_keys - handler_keys - {"tui"}  # tui 独立判断
     assert not missing_in_handlers, f"发现 COMMAND_CATALOG 声明但未注册 Handler 的子命令: {missing_in_handlers}"

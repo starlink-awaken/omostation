@@ -563,4 +563,40 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
         category="📚 研究 (Research)",
         summary="Spine 主干真值流与署名自进化操作 (ADR-0437)",
     ),
+    # ── 双旗标审计补齐 (parser 已注册但 catalog 缺条目) ──────────────────────
+    "chain": CommandMeta(
+        name="chain",
+        category="🖥️ 基础设施 (Infra)",
+        summary="多命令联动链路编排 (list/show/run/validate/init, YAML 声明式)",
+    ),
+    "command-audit": CommandMeta(
+        name="command-audit",
+        category="🏛️ 治理 (Governance)",
+        summary="15 维命令评分卡管理 (init/validate/report/lint)",
+    ),
+    "harness": CommandMeta(
+        name="harness",
+        category="🏛️ 治理 (Governance)",
+        summary="Harness 全生命周期合规 (trace/verify/gac/compliance/…)",
+    ),
+    "audit-ledger": CommandMeta(
+        name="audit-ledger",
+        category="🏛️ 治理 (Governance)",
+        summary="治理审计账本查询 (隐藏运维面)",
+    ),
+    "fabric-mesh": CommandMeta(
+        name="fabric-mesh",
+        category="🖥️ 基础设施 (Infra)",
+        summary="算力网格 fabric 检视 (隐藏运维面)",
+    ),
+    "dlp-guard": CommandMeta(
+        name="dlp-guard",
+        category="🏛️ 治理 (Governance)",
+        summary="外发前防泄密扫描 (敏感识别+挂起+脱敏)",
+    ),
+    "memory-distill": CommandMeta(
+        name="memory-distill",
+        category="📚 研究 (Research)",
+        summary="记忆蒸馏 (隐藏运维面)",
+    ),
 }

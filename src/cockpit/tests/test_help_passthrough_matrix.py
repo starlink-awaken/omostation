@@ -19,13 +19,17 @@ from cockpit.commands.delegation import (
     EXISTING_REMAINDER_DELEGATIONS,
     SHELL_HELP,
     SHELL_HELP_HELP_ONLY,
+    SHELL_HELP_SHORT_ONLY,
     shell_help_if_requested,
 )
 
-# 9 个壳层接管命令
+# 10 个壳层接管命令
 SHELL_HELP_CMDS = sorted(SHELL_HELP.keys())
-# 全拦截命令 (空参也接管); help-only 命令 (omo/resident/ssb) 空参保持原行为
-FULL_INTERCEPT_CMDS = sorted(set(SHELL_HELP_CMDS) - SHELL_HELP_HELP_ONLY)
+# 全拦截命令 (空参也接管); 排除 help-only (omo/resident/ssb 空参保持原行为)
+# 与 short-only (omlxc 仅拦 -h, --help 透传 Click)
+FULL_INTERCEPT_CMDS = sorted(
+    set(SHELL_HELP_CMDS) - SHELL_HELP_HELP_ONLY - SHELL_HELP_SHORT_ONLY
+)
 
 
 def _get_attr(cmd: str) -> str:
@@ -57,15 +61,30 @@ def _make_args(cmd: str, attr: str, passthrough: list[str]) -> argparse.Namespac
 class TestShellHelpIntercept:
     """shell_help_if_requested 单元测试 (无子进程)."""
 
-    @pytest.mark.parametrize("cmd", SHELL_HELP_CMDS)
+    @pytest.mark.parametrize("cmd", sorted(set(SHELL_HELP_CMDS) - SHELL_HELP_SHORT_ONLY))
     def test_help_flag_shows_shell_help(self, cmd: str, capsys: pytest.CaptureFixture):
-        """--help → 壳层帮助, 返回 0."""
+        """--help → 壳层帮助, 返回 0 (SHORT_ONLY 的 omlxc 除外, 其 --help 透传 Click)."""
         attr = _get_attr(cmd)
         ns = _make_args(cmd, attr, ["--help"])
         rc = shell_help_if_requested(ns)
         assert rc == 0, f"{cmd} --help 应由壳层接管 (rc=0)"
         out = capsys.readouterr().out
         assert "用法" in out, f"{cmd} 壳层帮助应包含 '用法'"
+
+    @pytest.mark.parametrize("cmd", sorted(SHELL_HELP_SHORT_ONLY))
+    def test_short_only_h_intercepted(self, cmd: str, capsys: pytest.CaptureFixture):
+        """SHORT_ONLY (omlxc): -h 由壳层接管 (下游 Click 不认 -h)."""
+        attr = _get_attr(cmd)
+        ns = _make_args(cmd, attr, ["-h"])
+        assert shell_help_if_requested(ns) == 0
+        assert "用法" in capsys.readouterr().out
+
+    @pytest.mark.parametrize("cmd", sorted(SHELL_HELP_SHORT_ONLY))
+    def test_short_only_help_passthrough(self, cmd: str):
+        """SHORT_ONLY (omlxc): --help 仍透传下游 Click 完整帮助 (不接管)."""
+        attr = _get_attr(cmd)
+        ns = _make_args(cmd, attr, ["--help"])
+        assert shell_help_if_requested(ns) is None
 
     @pytest.mark.parametrize("cmd", SHELL_HELP_CMDS)
     def test_h_flag_shows_shell_help(self, cmd: str):

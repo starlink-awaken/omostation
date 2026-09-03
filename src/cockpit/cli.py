@@ -218,6 +218,13 @@ def _c_version(a):
     return 0
 
 
+def _cmd_adr_stub(a, name: str, plan: str) -> int:
+    """ADR-0200~0202 stub 命令统一出口: parser 已注册, 功能待实现."""
+    console.print(f"[yellow]⚠ {name} 尚未实现[/] — 规划: {plan}")
+    console.print("[dim]该命令为 stub 注册 (声明面先于执行面), 功能实现后此提示移除。[/]")
+    return 1
+
+
 def create_parser() -> tuple[argparse.ArgumentParser, argparse._SubParsersAction, type]:
     """构建完整 CLI parser (含全部子命令注册), 供 main() 与 command-audit 共用.
 
@@ -917,6 +924,10 @@ def main() -> int:
         "render": dispatch_render,
         "im-triage": dispatch_im_triage,
         "dlp-guard": dispatch_dlp_guard,
+        # ADR-0200~0202 stub 命令 (parser 已注册, 功能待实现 — 输出规划说明)
+        "memory-distill": lambda a: _cmd_adr_stub(a, "memory-distill", "ADR-0200 记忆自蒸馏与冲突自愈"),
+        "audit-ledger": lambda a: _cmd_adr_stub(a, "audit-ledger", "ADR-0201 密码学级 Merkle 审计账本"),
+        "fabric-mesh": lambda a: _cmd_adr_stub(a, "fabric-mesh", "ADR-0202 局域网边缘算力漫游网格"),
         "compute": cmd_compute,
         "intent": lambda a: __import__("cockpit.commands.intent", fromlist=["cmd_intent"]).cmd_intent(a),
         "decide": lambda a: __import__("cockpit.commands.decide", fromlist=["cmd_decide"]).cmd_decide(a),

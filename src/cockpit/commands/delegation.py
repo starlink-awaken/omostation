@@ -212,10 +212,18 @@ SHELL_HELP: dict[str, str] = {
         "子命令: publish / query / state / recover / events / stats\n"
         "(委派 ssb-client, 下游 --help 返回码非 0 故由壳层接管)。"
     ),
+    "omlxc": (
+        "用法: cockpit omlxc <COMMAND> [ARGS]...\n"
+        "说明: omlxc 工具目录 CLI (Click 框架, 完整帮助: cockpit omlxc --help)。\n"
+        "      注意: 下游不认 -h 短旗标, 本条目仅接管 -h。"
+    ),
 }
 
 # 仅拦截显式 --help/-h、空参保持原行为的命令 (omo/resident 空参委派下游是既有约定)
 SHELL_HELP_HELP_ONLY: frozenset[str] = frozenset({"omo", "resident", "ssb"})
+
+# 仅拦截 -h 短旗标的命令 (--help 仍透传; Click 系下游不认 -h 但认 --help)
+SHELL_HELP_SHORT_ONLY: frozenset[str] = frozenset({"omlxc"})
 
 _HELP_MARKER = ("--help", "-h")
 
@@ -224,7 +232,8 @@ def shell_help_if_requested(args: argparse.Namespace) -> int | None:
     """下游不支持 --help 的委派命令: --help/空参 → 壳层帮助 (不 spawn 子进程).
 
     返回 0 表示已输出帮助 (调用方直接 return); 返回 None 表示继续正常分发。
-    SHELL_HELP_HELP_ONLY 内命令仅拦截显式 --help/-h (空参保持既有委派行为)。
+    SHELL_HELP_HELP_ONLY 内命令仅拦截显式 --help/-h (空参保持既有委派行为);
+    SHELL_HELP_SHORT_ONLY 内命令仅拦截 -h (--help 仍透传下游完整帮助)。
     """
     cmd = getattr(args, "command", "")
     text = SHELL_HELP.get(cmd)
@@ -234,6 +243,11 @@ def shell_help_if_requested(args: argparse.Namespace) -> int | None:
     if attr is None:
         return None
     passthrough = list(getattr(args, attr, []) or [])
+    if cmd in SHELL_HELP_SHORT_ONLY:
+        if passthrough and passthrough[0] == "-h":
+            print(text)
+            return 0
+        return None
     if passthrough and passthrough[0] in _HELP_MARKER:
         print(text)
         return 0
@@ -352,6 +366,7 @@ __all__ = [
     "shell_help_if_requested",
     "SHELL_HELP",
     "SHELL_HELP_HELP_ONLY",
+    "SHELL_HELP_SHORT_ONLY",
     "register_all",
     "ensure_delegated_catalog",
 ]
