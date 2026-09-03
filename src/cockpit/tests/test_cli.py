@@ -175,30 +175,31 @@ def test_omo_subcommand_registered():
     `cockpit omo debt list` 报 invalid choice 'omo'. 后端 cockpit.commands.omo.cmd_omo
     齐全, 只缺前端 argparse 注册. 关联 omo CLI argv 签名修复 (PR#122) 同源问题.
 
-    Phase A1 起 --help 不再被壳 parser 拦截而是透传下游 omo CLI;
-    意图保持更新: mock 子进程, 断言 (a) 已注册 (b) --help 到达下游 argv。
+    Phase: help-passthrough 意图保持更新 — omo 顶层不支持 --help (透传会
+    exit 1 + VIRTUAL_ENV 警告), --help 改由壳层 SHELL_HELP 接管;
+    不变量: (a) 已注册 (b) 用户获得帮助输出且 rc==0。
     """
     _setup_mock()
     with patch("sys.argv", ["workspace", "omo", "--help"]):
         with patch("cockpit.commands.omo.subprocess.call", new=MagicMock(return_value=0)) as call:
             rc = main()
     assert rc == 0
-    argv = call.call_args[0][0]
-    assert "--help" in argv, "--help 必须透传到下游 omo CLI"
+    call.assert_not_called(), "omo --help 应由壳层 SHELL_HELP 接管, 不 spawn 下游"
 
 
-def test_runtime_subcommand_registered():
+def test_runtime_subcommand_registered(capsys):
     """cockpit runtime 必须注册到 argparse (同 omo 鸿沟).
 
-    Phase A1 意图保持更新: --help 透传下游 runtime CLI (mock 子进程断言)。
+    Phase: help-passthrough 意图保持更新 — runtime 下游不支持 --help (输出版本行),
+    --help 改由壳层 SHELL_HELP 接管输出用法引导; 不变量: 用户获得帮助输出且 rc==0。
     """
     _setup_mock()
     with patch("sys.argv", ["workspace", "runtime", "--help"]):
         with patch("cockpit.commands.runtime.subprocess.call", new=MagicMock(return_value=0)) as call:
             rc = main()
     assert rc == 0
-    argv = call.call_args[0][0]
-    assert "--help" in argv
+    call.assert_not_called(), "runtime --help 应由壳层 SHELL_HELP 接管, 不 spawn 下游"
+    assert "用法" in capsys.readouterr().out, "壳层帮助应包含 '用法'"
 
 
 def test_domain_status_json_propagates_ok_status(monkeypatch, capsys):

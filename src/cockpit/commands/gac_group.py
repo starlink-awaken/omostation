@@ -68,8 +68,13 @@ def dispatch_gac_group(args: argparse.Namespace) -> int:
         )
         print(r.stdout or r.stderr or "(无输出)")
         return 0 if r.returncode == 0 else 1
-    target, _ = GAC_SUBCOMMANDS[sub_name]
-    passthrough = list(getattr(args, "gac_pass_args", []) or []) or ["--help"]
+    target, desc = GAC_SUBCOMMANDS[sub_name]
+    passthrough = list(getattr(args, "gac_pass_args", []) or [])
+    # help 拦截: --help/-h/空参 → 壳层输出用法引导 (部分下游脚本误处理 --help
+    # 会直接跑检查, 如 coverage/readiness); 统一壳层帮助保证一致性
+    if not passthrough or passthrough[0] in ("--help", "-h"):
+        print(f"用法: cockpit gac {sub_name} [args...]\n说明: {desc}\n下游: {' '.join(target)}")
+        return 0
     resolved = [str(_GAC_WS_ROOT / a[len("<ws>/"):]) if a.startswith("<ws>/") else a for a in target]
     return subprocess.call(resolved + passthrough, env=delegation.clean_env())
 

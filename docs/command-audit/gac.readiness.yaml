@@ -4,8 +4,8 @@ meta:
   owner: cockpit
   maturity: stable
   delegated_target: null
-  last_audited: null
-  auditor: agent:worker-d-audit
+  last_audited: '2026-09-03'
+  auditor: agent:lead-help-passthrough-fix
 dimensions:
   functionality:
     score: null
@@ -20,12 +20,13 @@ dimensions:
     evidence: ''
     suggestion: ''
   usability:
-    score: null
-    evidence: ''
+    score: 4
+    evidence: --help 输出用法+说明+下游路径
     suggestion: ''
   io_readability:
-    score: null
-    evidence: ''
+    score: 4
+    evidence: 'gac 组 help 拦截已修复: --help/-h/空参 由 dispatch_gac_group 输出用法+说明+下游路径 (此前
+      coverage/readiness 误处理 --help 直接跑检查)'
     suggestion: ''
   performance:
     score: null

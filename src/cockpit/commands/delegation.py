@@ -198,7 +198,24 @@ SHELL_HELP: dict[str, str] = {
         "用法: cockpit runtime <sub> [args...]\n"
         "说明: 委派 runtime 项目 CLI (projects/runtime)。"
     ),
+    "omo": (
+        "用法: cockpit omo <sub> [args...]\n"
+        "说明: OMO Agent OS CLI (治理/任务/证据面)。omo 顶层不支持 --help,\n"
+        "      子命令级帮助: cockpit omo <sub> --help。"
+    ),
+    "resident": (
+        "用法: cockpit resident <sub> [args...]\n"
+        "子命令: status / roles / daemon 等 (委派 omo resident)。"
+    ),
+    "ssb": (
+        "用法: cockpit ssb <sub> [options]\n"
+        "子命令: publish / query / state / recover / events / stats\n"
+        "(委派 ssb-client, 下游 --help 返回码非 0 故由壳层接管)。"
+    ),
 }
+
+# 仅拦截显式 --help/-h、空参保持原行为的命令 (omo/resident 空参委派下游是既有约定)
+SHELL_HELP_HELP_ONLY: frozenset[str] = frozenset({"omo", "resident", "ssb"})
 
 _HELP_MARKER = ("--help", "-h")
 
@@ -207,6 +224,7 @@ def shell_help_if_requested(args: argparse.Namespace) -> int | None:
     """下游不支持 --help 的委派命令: --help/空参 → 壳层帮助 (不 spawn 子进程).
 
     返回 0 表示已输出帮助 (调用方直接 return); 返回 None 表示继续正常分发。
+    SHELL_HELP_HELP_ONLY 内命令仅拦截显式 --help/-h (空参保持既有委派行为)。
     """
     cmd = getattr(args, "command", "")
     text = SHELL_HELP.get(cmd)
@@ -216,7 +234,10 @@ def shell_help_if_requested(args: argparse.Namespace) -> int | None:
     if attr is None:
         return None
     passthrough = list(getattr(args, attr, []) or [])
-    if not passthrough or passthrough[0] in _HELP_MARKER:
+    if passthrough and passthrough[0] in _HELP_MARKER:
+        print(text)
+        return 0
+    if not passthrough and cmd not in SHELL_HELP_HELP_ONLY:
         print(text)
         return 0
     return None
@@ -329,6 +350,8 @@ __all__ = [
     "add_delegation_parser",
     "inject_empty_help",
     "shell_help_if_requested",
+    "SHELL_HELP",
+    "SHELL_HELP_HELP_ONLY",
     "register_all",
     "ensure_delegated_catalog",
 ]

@@ -4,8 +4,8 @@ meta:
   owner: cockpit
   maturity: stable
   delegated_target: null
-  last_audited: '2026-09-01'
-  auditor: agent:worker-d-audit
+  last_audited: '2026-09-03'
+  auditor: agent:lead-help-passthrough-fix
 dimensions:
   functionality:
     score: 4
@@ -20,12 +20,13 @@ dimensions:
     evidence: 'cockpit 层 help 未列子命令; --help 未透传 (实测 ''Unknown subcommand: --help'')'
     suggestion: 修复 --help 透传 (reclaim 白名单)
   usability:
-    score: 2
-    evidence: --help 不透传, 用户看不到用法 (实测失败)
+    score: 4
+    evidence: --help 输出结构化用法引导; 真实参数透传行为不变
     suggestion: P0 修复
   io_readability:
-    score: 3
-    evidence: 透传输出
+    score: 4
+    evidence: '壳层帮助接管已修复: --help/-h 由 SHELL_HELP 拦截输出用法引导 (omo 顶层不支持 --help, 透传会 exit
+      1 + VIRTUAL_ENV 警告)'
     suggestion: ''
   performance:
     score: 2

@@ -18,11 +18,14 @@ import pytest
 from cockpit.commands.delegation import (
     EXISTING_REMAINDER_DELEGATIONS,
     SHELL_HELP,
+    SHELL_HELP_HELP_ONLY,
     shell_help_if_requested,
 )
 
-# 6 个壳层接管命令
+# 9 个壳层接管命令
 SHELL_HELP_CMDS = sorted(SHELL_HELP.keys())
+# 全拦截命令 (空参也接管); help-only 命令 (omo/resident/ssb) 空参保持原行为
+FULL_INTERCEPT_CMDS = sorted(set(SHELL_HELP_CMDS) - SHELL_HELP_HELP_ONLY)
 
 
 def _get_attr(cmd: str) -> str:
@@ -71,12 +74,19 @@ class TestShellHelpIntercept:
         ns = _make_args(cmd, attr, ["-h"])
         assert shell_help_if_requested(ns) == 0
 
-    @pytest.mark.parametrize("cmd", SHELL_HELP_CMDS)
+    @pytest.mark.parametrize("cmd", FULL_INTERCEPT_CMDS)
     def test_empty_remainder_shows_shell_help(self, cmd: str):
-        """空 REMAINDER (裸命令) → 壳层帮助."""
+        """空 REMAINDER (裸命令) → 壳层帮助 (全拦截命令)."""
         attr = _get_attr(cmd)
         ns = _make_args(cmd, attr, [])
         assert shell_help_if_requested(ns) == 0
+
+    @pytest.mark.parametrize("cmd", sorted(SHELL_HELP_HELP_ONLY))
+    def test_help_only_empty_remainder_not_intercepted(self, cmd: str):
+        """help-only 命令 (omo/resident/ssb): 空参保持既有委派行为, 不接管."""
+        attr = _get_attr(cmd)
+        ns = _make_args(cmd, attr, [])
+        assert shell_help_if_requested(ns) is None
 
     @pytest.mark.parametrize("cmd", SHELL_HELP_CMDS)
     def test_real_args_pass_through(self, cmd: str):
@@ -86,8 +96,8 @@ class TestShellHelpIntercept:
         assert shell_help_if_requested(ns) is None
 
     def test_non_shell_help_command_untouched(self):
-        """非 SHELL_HELP 命令 (如 omo) → 永不接管."""
-        ns = _make_args("omo", "omo_args", ["--help"])
+        """非 SHELL_HELP 命令 (如 compass) → 永不接管 (--help 仍透传下游)."""
+        ns = _make_args("compass", "compass_args", ["--help"])
         assert shell_help_if_requested(ns) is None
 
     def test_unknown_command_untouched(self):
@@ -126,6 +136,8 @@ SMOKE_SAMPLE = [
     "memory",
     "research",
     "gac",
+    "gac coverage",
+    "gac readiness",
     "adr-coverage",
     "sweep-ruff",
     "agent",
@@ -142,7 +154,7 @@ class TestSubprocessSmokeMatrix:
     @pytest.mark.parametrize("cmd", SMOKE_SAMPLE)
     def test_help_exit_zero(self, cmd: str):
         result = subprocess.run(
-            [sys.executable, "-m", "cockpit", cmd, "--help"],
+            [sys.executable, "-m", "cockpit", *cmd.split(), "--help"],
             capture_output=True,
             text=True,
             timeout=60,
