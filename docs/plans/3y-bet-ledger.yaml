@@ -12162,7 +12162,7 @@ bets:
   - capability_id: mcp-server:agora
     operation: load
     effect: read_only
-  - capability_id: bos-service:bos://governance/omo/state
+  - capability_id: bos-service:bos://system/omo/debt
     operation: invoke
     effect: read_only
   evidence:
@@ -12312,14 +12312,32 @@ bets:
     axes:
       engineering:
         status: IN_PROGRESS
-        evidence: {}
+        evidence:
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+            sha256: sha256:02b5c14708fd60eddc3c24441331faa700a9363e7eb1b220fefa0a1e7652fea2
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: blocked
   value_indicator_policy: false
   workflow: bet-execution
   underlying_workflow: cognitive-governance-delivery
