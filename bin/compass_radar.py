@@ -1151,7 +1151,8 @@ def build_system_projection_updates(workspace_root: Path, report: dict[str, Any]
 
 def _collect_maturity_health(ws_root):
     try:
-        import subprocess, json
+        import json
+        import subprocess
         res = subprocess.run(
             ["uv", "run", "--with", "pyyaml", "python3", "bin/gac/maturity-scorecard.py", "--json", "--skip-observable"],
             cwd=ws_root, capture_output=True, text=True, check=True

@@ -155,7 +155,7 @@ def main() -> int:
         ))
         return 1 if errors else 0
 
-    print(f"=== Harness Constraint Enforcer (统一约束与驱动) ===")
+    print("=== Harness Constraint Enforcer (统一约束与驱动) ===")
     print(f"模式: {mode}")
     print()
 

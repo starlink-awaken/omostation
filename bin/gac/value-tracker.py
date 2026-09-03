@@ -14,7 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -43,7 +43,7 @@ def record_value(minutes: float, task_id: str = "", description: str = "") -> di
         log = log.get("executions", [])
 
     entry = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "minutes_saved": minutes,
         "task_id": task_id,
         "description": description,
@@ -65,7 +65,7 @@ def generate_report() -> dict:
         return {"ok": True, "total_minutes": 0, "entries": 0}
 
     total_minutes = sum(e.get("minutes_saved", 0) for e in log)
-    today = datetime.now(timezone.utc).date().isoformat()
+    today = datetime.now(UTC).date().isoformat()
     today_minutes = sum(
         e.get("minutes_saved", 0)
         for e in log
@@ -87,7 +87,7 @@ def update_north_star() -> dict:
 
     north_star_data = {
         "source": "value-tracker",
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
         "axis_a": {
             "total_minutes_saved": report.get("total_minutes", 0),
             "today_minutes_saved": report.get("today_minutes", 0),

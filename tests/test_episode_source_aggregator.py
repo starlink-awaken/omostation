@@ -89,7 +89,7 @@ def _make_debt_item(tmp_path: Path, item_id: str, title: str,
         f'id: "{item_id}"',
         f'title: "{title}"',
         f'lifecycle_state: "{state}"',
-        f'opened_at: "2026-08-01"',
+        'opened_at: "2026-08-01"',
     ]
     if closed_at:
         lines.append(f'closed_at: "{closed_at}"')

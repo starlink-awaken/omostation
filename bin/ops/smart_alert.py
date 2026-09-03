@@ -20,7 +20,7 @@ import json
 import os
 import smtplib
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from email.mime.text import MIMEText
 from pathlib import Path
 from typing import Any
@@ -98,7 +98,7 @@ def deduplicate_alerts(alerts: list[dict], window_seconds: int = 60) -> list[dic
     if not alerts:
         return []
     state = load_alert_state()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     deduped = []
     for alert in alerts:
         alert_id = generate_alert_id(alert)
@@ -244,7 +244,7 @@ def check_alert_rules(services: list[dict]) -> list[dict]:
 def generate_alert_report(hours: int = 24) -> dict[str, Any]:
     if not ALERT_HISTORY_FILE.exists():
         return {"total": 0, "by_severity": {}, "by_service": {}}
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    cutoff = datetime.now(UTC) - timedelta(hours=hours)
     alerts = []
     with open(ALERT_HISTORY_FILE) as f:
         for line in f:

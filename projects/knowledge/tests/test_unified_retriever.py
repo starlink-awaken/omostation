@@ -1,8 +1,8 @@
 """Tests for UnifiedKnowledgeRetriever facade."""
 
 import pytest
-from knowledge.retrieval import UnifiedKnowledgeRetriever
 from knowledge import KnowledgeComplex, get_knowledge_facade
+from knowledge.retrieval import UnifiedKnowledgeRetriever
 
 
 def test_unified_retriever_query():

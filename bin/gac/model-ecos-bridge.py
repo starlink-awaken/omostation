@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path("/Users/xiamingxing/Workspace")
@@ -69,16 +69,16 @@ def main() -> int:
 
     if args.sync_stages:
         state = _load_state()
-        state.setdefault("last_sync", {})["stages"] = datetime.now(timezone.utc).isoformat()
+        state.setdefault("last_sync", {})["stages"] = datetime.now(UTC).isoformat()
         _save_state(state)
         print(f"✓ Stage sync: {len(STAGE_MOF_MAP)} stages")
         return 0
 
     if args.sync_mof:
         state = _load_state()
-        state.setdefault("last_sync", {})["mof"] = datetime.now(timezone.utc).isoformat()
+        state.setdefault("last_sync", {})["mof"] = datetime.now(UTC).isoformat()
         _save_state(state)
-        print(f"✓ MOF sync: m0-m3 layers")
+        print("✓ MOF sync: m0-m3 layers")
         return 0
 
     parser.print_help()

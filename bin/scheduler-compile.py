@@ -11,7 +11,10 @@
   python3 bin/scheduler-compile.py --generate crontab > output.txt
 """
 from __future__ import annotations
-import argparse, json, sys
+
+import argparse
+import json
+import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -107,6 +110,7 @@ def check_drift():
 
 
 import json as _json
+
 if __name__ == "__main__":
     # 覆写: 使用完整逻辑而非简化版
     jobs = _load_jobs()

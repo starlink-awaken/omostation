@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path("/Users/xiamingxing/Workspace")
@@ -66,7 +66,7 @@ def main() -> int:
         state = _load_state()
         state.setdefault("delegations", {})[args.delegate] = {
             "enabled": True,
-            "delegated_at": datetime.now(timezone.utc).isoformat(),
+            "delegated_at": datetime.now(UTC).isoformat(),
         }
         _save_state(state)
         print(f"✓ Delegated: {args.delegate}")

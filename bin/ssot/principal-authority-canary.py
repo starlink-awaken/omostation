@@ -21,8 +21,9 @@ import argparse
 import hashlib
 import json
 import sys
-from datetime import datetime, timezone
-from typing import Any, Mapping
+from collections.abc import Mapping
+from datetime import UTC, datetime, timezone
+from typing import Any
 
 # 真实注册的本地 principal (单用户本地权威, 见 principal_authority._DEFAULT_MEMBERS)
 PRINCIPAL = "principal:xiamingxing"
@@ -64,7 +65,7 @@ def _run_canary() -> dict[str, Any]:
     from agora.mcp.bos_router import BOSRouter
     from omo.sovereignty.principal_authority import DefaultPrincipalAuthority, digest_receipt
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     # ── Step 1: OMO 权威验证 (唯一验证方) ──────────────────────────────
     authority = DefaultPrincipalAuthority(production=True)

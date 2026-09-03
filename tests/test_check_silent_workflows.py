@@ -127,7 +127,7 @@ def test_exit_zero_when_no_silent_workflows(script_mod, fake_workspace):
 
 def test_exit_zero_when_recent_run(script_mod, fake_workspace):
     """Workflow with no diff_check but a recent run → not silent."""
-    from datetime import datetime, UTC, timedelta
+    from datetime import UTC, datetime, timedelta
 
     _write_registry(
         fake_workspace,

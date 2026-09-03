@@ -1,8 +1,8 @@
 """End-to-End Knowledge Retrieval Benchmark & Precision Verification Suite."""
 
 import pytest
-from knowledge.retrieval import UnifiedKnowledgeRetriever
 from knowledge import KnowledgeComplex
+from knowledge.retrieval import UnifiedKnowledgeRetriever
 
 
 @pytest.fixture

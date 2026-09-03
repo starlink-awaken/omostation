@@ -20,7 +20,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -43,7 +43,7 @@ def _run_cmd(cmd: list[str]) -> dict:
 
 def generate_review() -> dict:
     """Generate weekly review."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # 1. System health
     heartbeat = _run_cmd(["python3", str(REPO / "bin/gac/probe-heartbeat-monitor.py"), "--status"])

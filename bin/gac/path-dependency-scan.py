@@ -22,11 +22,11 @@ def scan(parent: str = "bin") -> list[dict]:
     hits: list[dict] = []
     for py in BIN_DIR.rglob("*.py"):
         text = py.read_text(encoding="utf-8", errors="ignore")
-        if f'parents[1]' in text or f'"{parent}"' in text or f"'{parent}'" in text:
+        if 'parents[1]' in text or f'"{parent}"' in text or f"'{parent}'" in text:
             hits.append(
                 {
                     "file": str(py.relative_to(WORKSPACE)),
-                    "matches": text.count(f'parents[1]'),
+                    "matches": text.count('parents[1]'),
                 }
             )
     return hits

@@ -52,7 +52,7 @@ def score_observable() -> dict:
     rc, out, err = run("uv run --with pyyaml python3 bin/compass_radar.py --dry-run 2>&1", timeout=300)
     has_output = rc == 0 and len((out or "").strip()) > 0
     has_maturity = has_output and "maturity_score:" in out
-    
+
     score = 7
     evidence = "compass_radar.py output unclear"
     if has_maturity:

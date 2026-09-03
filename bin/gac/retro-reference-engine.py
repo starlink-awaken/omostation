@@ -20,7 +20,7 @@ import json
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -131,7 +131,7 @@ def link_retro_to_target(retro_id: str, target_id: str) -> dict:
     link = {
         "retro_id": retro_id,
         "target_id": target_id,
-        "linked_at": datetime.now(timezone.utc).isoformat(),
+        "linked_at": datetime.now(UTC).isoformat(),
     }
 
     metrics.setdefault("links", []).append(link)

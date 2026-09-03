@@ -238,6 +238,7 @@ def merged_pr_runner(
                 "repository": platform_repo,
                 "state": platform_state,
                 "url": f"https://example.test/pr/{platform_pr}",
+                "merge_commit_oid": "a" * 40,
             }
             return subprocess.CompletedProcess(cmd, 0, json.dumps(payload), "")
         return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
@@ -2940,6 +2941,131 @@ def test_retire_rejects_symlink_and_linked_worktree(tmp_path):
     assert (linked / ".git").is_file()
     assert lc.cmd_retire(argparse.Namespace(destination=str(linked))) == lc.EXIT_POLICY
     assert linked.exists()
+
+
+# ---------------------------------------------------------------------------
+# T1-02 squash-successor clone retirement — Phase 3 TDD tests
+# ---------------------------------------------------------------------------
+
+
+def make_squash_merged_clone(tmp_path: Path) -> tuple[Path, Path, str, str, str, str, str]:
+    """构建 squash-successor topology。"""
+    remote = tmp_path / "remote.git"
+    remote.mkdir()
+    git(remote, "init", "--bare", "-b", "main")
+    clone = tmp_path / "agent-1" / "ws"
+    clone.mkdir(parents=True)
+    git(clone, "init", "-b", "main")
+    (clone / "README.md").write_text("root\n")
+    policy = clone / ".omo" / "_truth" / "registry" / "swarm-coordination.yaml"
+    policy.parent.mkdir(parents=True)
+    policy.write_text("topology_migration:\n  integration_root: 'x'\n")
+    git(clone, "add", "README.md", str(policy.relative_to(clone)))
+    git(clone, "commit", "-m", "initial")
+    git(clone, "remote", "add", "origin", str(remote))
+    git(clone, "push", "origin", "HEAD:refs/heads/main")
+    frozen_root = git(clone, "rev-parse", "HEAD").stdout.strip()
+
+    foreign_env = {
+        **os.environ,
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_AUTHOR_NAME": "platform",
+        "GIT_AUTHOR_EMAIL": "platform@example.com",
+        "GIT_COMMITTER_NAME": "platform",
+        "GIT_COMMITTER_EMAIL": "platform@example.com",
+    }
+    (clone / "MAIN1.md").write_text("main succ 1\n")
+    git(clone, "add", "MAIN1.md")
+    r = subprocess.run(["git", "-C", str(clone), "commit", "-m", "main successor 1"],
+                       capture_output=True, text=True, env=foreign_env)
+    assert r.returncode == 0, r.stderr
+    main_succ_1 = git(clone, "rev-parse", "HEAD").stdout.strip()
+
+    (clone / "MAIN2.md").write_text("main succ 2\n")
+    git(clone, "add", "MAIN2.md")
+    r = subprocess.run(["git", "-C", str(clone), "commit", "-m", "main successor 2"],
+                       capture_output=True, text=True, env=foreign_env)
+    assert r.returncode == 0, r.stderr
+    main_succ_2 = git(clone, "rev-parse", "HEAD").stdout.strip()
+    delivery_base = main_succ_2
+
+    git(clone, "switch", "-c", "agent/agent-1", frozen_root)
+    (clone / "DELIVERY.md").write_text("delivery\n")
+    git(clone, "add", "DELIVERY.md")
+    git(clone, "commit", "-m", "delivery")
+    delivery_head = git(clone, "rev-parse", "HEAD").stdout.strip()
+    delivery_tree = git(clone, "rev-parse", f"{delivery_head}^{{tree}}").stdout.strip()
+
+    git(clone, "switch", "main")
+    (clone / "BASE.md").write_text("pr base\n")
+    git(clone, "add", "BASE.md")
+    r = subprocess.run(["git", "-C", str(clone), "commit", "-m", "pr base"],
+                       capture_output=True, text=True, env=foreign_env)
+    assert r.returncode == 0, r.stderr
+    pr_base = git(clone, "rev-parse", "HEAD").stdout.strip()
+
+    # squash merge: single parent = pr_base, tree = delivery_tree
+    subprocess.run(["git", "-C", str(clone), "checkout", "main"], check=True, capture_output=True)
+    squash = subprocess.run(
+        ["git", "-C", str(clone), "commit-tree", delivery_tree,
+         "-p", pr_base, "-m", "squash merge #2881"],
+        capture_output=True, text=True, check=True
+    ).stdout.strip()
+    subprocess.run(["git", "-C", str(clone), "update-ref", "refs/heads/main", squash],
+                   check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(clone), "checkout", "main"], check=True, capture_output=True)
+    main_head = git(clone, "rev-parse", "HEAD").stdout.strip()
+
+    tag_name = "delivery/test-v1"
+    subprocess.run(
+        ["git", "-C", str(clone), "tag", "-a", tag_name, delivery_head, "-m", "delivery tag"],
+        check=True, capture_output=True
+    )
+    subprocess.run(["git", "-C", str(clone), "push", "origin", tag_name],
+                   check=True, capture_output=True)
+    git(clone, "push", "-u", "origin", "agent/agent-1")
+
+    # 构建 v2 identity
+    subprocess.run(["git", "-C", str(clone), "checkout", "agent/agent-1"],
+                   check=True, capture_output=True)
+    identity = {
+        "schema": "agent-clone-identity/v2",
+        "agent_id": "agent-1",
+        "actor_id": "agent-1",
+        "delivery_attempt_id": "t1-02-fixture",
+        "canonical_root": str(clone.resolve()),
+        "source_url": str(remote.resolve()),
+        "frozen_root_sha": frozen_root,
+        "working_branch": "agent/agent-1",
+        "ready": True,
+    }
+    (clone / ".git" / "agent-clone-identity.json").write_text(json.dumps(identity))
+    return clone, remote, delivery_head, pr_base, delivery_base, tag_name, main_head
+
+
+def test_retire_squash_successor_ordinary_retire_fails(tmp_path, monkeypatch, capsys):
+    """RED: squash-successor topology 走普通退场应失败。"""
+    clone, _remote, delivery_head, _pr_base, _delivery_base, _tag, _main = \
+        make_squash_merged_clone(tmp_path)
+    monkeypatch.setattr(lc, "run", merged_pr_runner(delivery_head))
+    rc = lc.cmd_retire(argparse.Namespace(destination=str(clone)))
+    assert rc == lc.EXIT_POLICY
+    assert clone.exists()
+
+
+def test_retire_squash_successor_cli_not_implemented(capsys):
+    """RED: --squash-merged-pr 参数尚未实现，parser 应拒绝。"""
+    with pytest.raises(SystemExit) as exc_info:
+        lc.build_parser().parse_args([
+            "retire",
+            "--destination", "/tmp/nonexistent",
+            "--squash-merged-pr", "2881",
+            "--source-tag", "delivery/test-v1",
+            "--delivery-base", "a" * 40,
+            "--evidence", "/tmp/proof.json",
+        ])
+    assert exc_info.value.code != 0
 
 
 def test_audit_logging(capsys, tmp_path):

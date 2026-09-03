@@ -16,7 +16,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 REPO = Path("/Users/xiamingxing/Workspace")
@@ -95,7 +95,7 @@ def create_journey(scene_id: str) -> dict:
     mapping = {
         "scene_id": scene_id,
         "journey_id": journey_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "status": "created",
     }
     state.setdefault("mappings", []).append(mapping)

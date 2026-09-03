@@ -88,7 +88,8 @@ def audit_docs() -> dict:
 
 
 def main():
-    import argparse, json as _json
+    import argparse
+    import json as _json
     parser = argparse.ArgumentParser()
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--enforce", action="store_true")

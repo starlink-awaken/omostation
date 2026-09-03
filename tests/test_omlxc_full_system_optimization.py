@@ -2,31 +2,32 @@
 omlxc 全栈算力体系性能优化与柔性显存治理单元/集成测试 (ADR-0205)
 """
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(WORKSPACE_ROOT / "projects" / "omlxc" / "src"))
 
-from omlxc.dataplane.vram_budget import (
-    VRAMPressureTier,
-    enforce_tiered_headroom_admission,
-    enforce_strict_headroom_admission,
+from omlxc.dataplane.cluster_partition import (
+    HeterogeneousClusterRouter,
+    NodePlacementDecision,
+)
+from omlxc.dataplane.power_profile import (
+    PowerProfileGovernor,
+    PowerScalingProfile,
+    PowerSource,
 )
 from omlxc.dataplane.priority_queue import (
     PriorityVRAMScheduler,
     QueuedInferenceRequest,
     TaskPriority,
 )
-from omlxc.dataplane.power_profile import (
-    PowerProfileGovernor,
-    PowerSource,
-    PowerScalingProfile,
-)
-from omlxc.dataplane.cluster_partition import (
-    HeterogeneousClusterRouter,
-    NodePlacementDecision,
+from omlxc.dataplane.vram_budget import (
+    VRAMPressureTier,
+    enforce_strict_headroom_admission,
+    enforce_tiered_headroom_admission,
 )
 
 

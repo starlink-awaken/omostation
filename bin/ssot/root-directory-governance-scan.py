@@ -19,7 +19,7 @@ import fnmatch
 import json
 import os
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -329,7 +329,7 @@ def main() -> int:
     rows = rank_and_tag(
         scan_root(root, include_untracked=not args.tracked_only, policy=policy)
     )
-    generated_at = datetime.now(timezone.utc).isoformat()
+    generated_at = datetime.now(UTC).isoformat()
     violations = [row for row in rows if row["violation"]]
 
     if args.json:
