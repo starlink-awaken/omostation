@@ -1,24 +1,23 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-audit
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-03T07:20:01Z
 status: candidate
 counts:
-  runs: 55
-  failures: 2
-  total: 57
-failure_rate: 0.0351
+  runs: 60
+  failures: 0
+  total: 60
+failure_rate: 0.0
 failure_breakdown:
   by_event_type:
-    StepFailed: 2
-  trace_count: 2
+  trace_count: 0
 ---
 # observer-audit 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-03T07:20:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 55 成功运行 + 2 失败模式 = 57 草稿
-- 失败率: 3.51%
+- sediment 覆盖: 60 成功运行 + 0 失败模式 = 60 草稿
+- 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
@@ -77,18 +76,19 @@ failure_breakdown:
 - 20260830T122240Z-observer-audit-a142c9af.md
 - 20260830T221125Z-observer-audit-a7312260.md
 - 20260830T221127Z-observer-audit-5bbd5f98.md
+- 20260901T025504Z-observer-audit-5fc97449.md
+- 20260901T025505Z-observer-audit-fd3f460f.md
+- 20260901T025719Z-observer-audit-4dc2c5d6.md
+- 20260901T025720Z-observer-audit-c66d21d4.md
+- 20260902T064728Z-observer-audit-391c5bd4.md
 
 ## 失败模式 (failures/)
 
-- 20260820T011510Z-observer-audit-eb97e197-3ed115a2.md
-- 20260820T023100Z-observer-audit-a808c027-8d3c26e5.md
+- (无)
 
 ## 失败根因画像 (确定性启发式)
 
-- StepFailed: 2 篇
-- 关联工作流溯源: 2 个 (trace_id 见下)
-  - `20260820T011510Z-observer-audit-eb97e197`
-  - `20260820T023100Z-observer-audit-a808c027`
+- (无失败模式沉淀)
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
@@ -276,6 +276,25 @@ failure_breakdown:
 - **20260830T221127Z-observer-audit-5bbd5f98**
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
+- **20260901T025504Z-observer-audit-5fc97449**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260901T025505Z-observer-audit-fd3f460f**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260901T025719Z-observer-audit-4dc2c5d6**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260901T025720Z-observer-audit-c66d21d4**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260902T064728Z-observer-audit-391c5bd4**
+  - 计划 (objective): [BET-Y1Q3-T1-13] T4-07 closeout — 子模块指针同步与 agora index 恢复 (Appetite: 0.25 day)
+  - workflow: observer-audit
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=380.51
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

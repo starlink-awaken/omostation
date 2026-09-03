@@ -1,24 +1,23 @@
 ---
 schema: resident-retro-candidate/v1
 topic: mini
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-03T07:20:01Z
 status: candidate
 counts:
-  runs: 188
-  failures: 33
-  total: 221
-failure_rate: 0.1493
+  runs: 192
+  failures: 0
+  total: 192
+failure_rate: 0.0
 failure_breakdown:
   by_event_type:
-    StepFailed: 33
-  trace_count: 33
+  trace_count: 0
 ---
 # mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-03T07:20:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 188 成功运行 + 33 失败模式 = 221 草稿
-- 失败率: 14.93%
+- sediment 覆盖: 192 成功运行 + 0 失败模式 = 192 草稿
+- 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
@@ -210,80 +209,18 @@ failure_breakdown:
 - 20260830T122408Z-mini-bbc3c102.md
 - 20260830T221223Z-mini-5f78f913.md
 - 20260830T221224Z-mini-1e2fdbb0.md
+- 20260901T025615Z-mini-7152d312.md
+- 20260901T025616Z-mini-be1cdf34.md
+- 20260901T025827Z-mini-e34942f6.md
+- 20260901T025828Z-mini-1d2a37f2.md
 
 ## 失败模式 (failures/)
 
-- 20260803T064037Z-mini-f0665748-468892a6.md
-- 20260803T064149Z-mini-2bee6ef9-92191eb1.md
-- 20260803T064343Z-mini-65ca19ed-0aacc177.md
-- 20260803T064525Z-mini-1de11393-40ffb620.md
-- 20260803T064620Z-mini-ed0220c7-69c90f09.md
-- 20260803T064739Z-mini-9df60609-b643a31c.md
-- 20260803T064921Z-mini-1a0a21e2-14d06166.md
-- 20260804T082422Z-mini-1e525a96-647dd8d9.md
-- 20260804T082541Z-mini-e4724756-39c41221.md
-- 20260804T082701Z-mini-bd06ae2a-d95ef0aa.md
-- 20260804T102040Z-mini-02f3abcb-85663ee0.md
-- 20260804T105445Z-mini-705ff4e5-de937743.md
-- 20260804T105609Z-mini-d3ce8de7-9554a0c0.md
-- 20260805T012012Z-mini-f8708bda-2b35a748.md
-- 20260805T012640Z-mini-4094b0a2-dc22e010.md
-- 20260805T110903Z-mini-50a79a67-300330c7.md
-- 20260805T124458Z-mini-4dd01f93-61bc6ba4.md
-- 20260805T124823Z-mini-0c0d1edb-35dcd0ae.md
-- 20260808T014348Z-mini-0414dc9a-77535d54.md
-- 20260808T023807Z-mini-e21b827f-9222135f.md
-- 20260808T051019Z-mini-8e0d16fd-6b7448be.md
-- 20260808T051107Z-mini-678292a2-c9314dd8.md
-- 20260808T051157Z-mini-27d55782-6acaf932.md
-- 20260808T051236Z-mini-1d095fee-7cdf40b2.md
-- 20260809T015906Z-mini-c28e37c0-33e29163.md
-- 20260817T012939Z-mini-5df015d4-60b95b82.md
-- 20260817T013219Z-mini-277e8f73-8a37fed6.md
-- 20260817T013435Z-mini-b9479fe3-5a52d898.md
-- 20260817T013554Z-mini-40c210c2-2c7e4235.md
-- 20260817T013657Z-mini-2ceba203-906a78f2.md
-- 20260821T064929Z-mini-7291b4ff-10e76f35.md
-- 20260821T065056Z-mini-63717be9-cf5b5d9e.md
-- 20260821T104327Z-mini-b1e3e8c0-786a5244.md
+- (无)
 
 ## 失败根因画像 (确定性启发式)
 
-- StepFailed: 33 篇
-- 关联工作流溯源: 33 个 (trace_id 见下)
-  - `20260803T064037Z-mini-f0665748`
-  - `20260803T064149Z-mini-2bee6ef9`
-  - `20260803T064343Z-mini-65ca19ed`
-  - `20260803T064525Z-mini-1de11393`
-  - `20260803T064620Z-mini-ed0220c7`
-  - `20260803T064739Z-mini-9df60609`
-  - `20260803T064921Z-mini-1a0a21e2`
-  - `20260804T082422Z-mini-1e525a96`
-  - `20260804T082541Z-mini-e4724756`
-  - `20260804T082701Z-mini-bd06ae2a`
-  - `20260804T102040Z-mini-02f3abcb`
-  - `20260804T105445Z-mini-705ff4e5`
-  - `20260804T105609Z-mini-d3ce8de7`
-  - `20260805T012012Z-mini-f8708bda`
-  - `20260805T012640Z-mini-4094b0a2`
-  - `20260805T110903Z-mini-50a79a67`
-  - `20260805T124458Z-mini-4dd01f93`
-  - `20260805T124823Z-mini-0c0d1edb`
-  - `20260808T014348Z-mini-0414dc9a`
-  - `20260808T023807Z-mini-e21b827f`
-  - `20260808T051019Z-mini-8e0d16fd`
-  - `20260808T051107Z-mini-678292a2`
-  - `20260808T051157Z-mini-27d55782`
-  - `20260808T051236Z-mini-1d095fee`
-  - `20260809T015906Z-mini-c28e37c0`
-  - `20260817T012939Z-mini-5df015d4`
-  - `20260817T013219Z-mini-277e8f73`
-  - `20260817T013435Z-mini-b9479fe3`
-  - `20260817T013554Z-mini-40c210c2`
-  - `20260817T013657Z-mini-2ceba203`
-  - `20260821T064929Z-mini-7291b4ff`
-  - `20260821T065056Z-mini-63717be9`
-  - `20260821T104327Z-mini-b1e3e8c0`
+- (无失败模式沉淀)
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
@@ -1476,6 +1413,32 @@ failure_breakdown:
   - 结果与证据: ok=False, status=failed, evidence_count=0
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=0.308
+- **20260901T025615Z-mini-7152d312**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.363
+- **20260901T025616Z-mini-be1cdf34**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.363
+- **20260901T025827Z-mini-e34942f6**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.424
+- **20260901T025828Z-mini-1d2a37f2**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.412
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
