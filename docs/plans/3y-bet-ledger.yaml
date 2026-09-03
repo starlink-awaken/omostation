@@ -12055,6 +12055,85 @@ bets:
   subtraction:
   - 不新增活动脚本、规则或 ADR；归档一个零消费者旧 loader 并在退役后清理旧 attempt
   retro: required
+- id: BET-Y1Q4-T1-02
+  track: T1-TRUTH
+  window: Y1Q4
+  title: squash-successor 独立 clone 退役 provenance 收敛
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  note: 'Accepted binding only. At base dfb4f755dbc45d2947d9d9a10d9a02755a4f0fee,
+    prepare_bet_execution remains globally blocked by INSTRUCTION_PACK_MISSING:
+    docs/operations/blueprint-agent-instruction-pack-v1.md. Phase 2 must not start
+    until that canonical baseline is restored or superseded in a separately governed
+    change.'
+  goal: 为包含合法 main successor、最终由单父 squash commit 合并的独立 clone 建立专用且 fail-closed 的规范退役模式，在不放宽现有退役语义的前提下保全外部 proof、delete-intent 与 settlement 证据链。
+  non_goals:
+  - 不改变 ordinary 或 platform-rebased retirement 语义
+  - 不修改 agent-clone.py、registry、CI、branch protection 或任何运行态
+  - 不通过手工 quarantine、递归删除或历史 provenance 重绑退役 clone
+  - 不标记本 BET done，不证明 operational/value，不写个人价值指标
+  done_when:
+  - 新模式仅在 exact PR、annotated source tag、delivery base 与 external evidence 四项同时给出时可选
+  - 完整校验 repository、PR、source range、squash parent/tree、current main、actor、attempt、destination 与 receipt digests
+  - proof、post-quarantine delete-intent、post-delete settlement 形成 durable digest chain，race/crash 分支全部 fail-closed 或可恢复
+  - ordinary 与 platform-rebased retirement 回归行为保持不变，focused negative/race tests 全绿
+  - 实现 PR required contexts 与 exact-SHA post-merge Governance Check 通过后，仅通过 canonical lifecycle 退役目标 clone
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tests/test_clone_lifecycle.py
+    expect: exit 0
+  - cmd: uv run ruff check bin/gac/clone-lifecycle.py tests/test_clone_lifecycle.py
+    expect: exit 0
+  - cmd: PYTHONDONTWRITEBYTECODE=1 python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("bin/gac/clone-lifecycle.py").read_text())'
+    expect: exit 0
+  - cmd: python3 bin/gac/clone-lifecycle.py retire --help
+    expect: exit 0
+  - cmd: python3 bin/gac/gac-validate.py --gate
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/superpowers/specs/2026-09-01-squash-successor-clone-retirement-provenance-design.md
+  - docs/superpowers/plans/2026-09-03-squash-successor-clone-retirement-provenance.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/governance-evidence/waiver-2026-09-03-squash-successor-retirement-binding.md
+  - bin/gac/clone-lifecycle.py
+  - tests/test_clone_lifecycle.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-02.md
+  evidence:
+    future_external_operation_surface:
+      path: /Users/xiamingxing/agents/blueprint-governance-skill-maintenance/attempts/architecture-perception-command-20260901-01/squash-retirement-proof.json
+      phase: post-implementation-operational-canary
+      workflow_claim_surface: false
+      authority: separate-operation-specific-principal-authorization
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-01-squash-successor-clone-retirement-provenance-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:328581a3578c8d780acf39638e5fa0cb2e616a03b5ec73195112ae11c9099ae9
+    decision_ref: decision://accepted/BET-Y1Q4-T1-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on:
+  - BET-Y1Q3-T1-11
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 任何证明谓词、外部证据持久化、竞态恢复、scope、测试或 required check 无法保持 fail-closed 时停止，不退役目标 clone
+  retro: required
 - id: BET-Y1Q3-T1-12
   track: T1-TRUTH
   window: Y1Q3
