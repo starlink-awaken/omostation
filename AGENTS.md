@@ -26,7 +26,7 @@ last_updated: 2026-09-04
 1. Read [`CLAUDE.md`](CLAUDE.md) for session startup context.
 2. Read the target project `AGENTS.md` / `CLAUDE.md`.
 3. Check `git status --short`.
-4. **需求迭代强制 Workflow（ADR-0203）** — Run `bootstrap → start --profile → claim` before any requirement delivery edit.
+4. **需求迭代强制 Workflow（ADR-0203）** — Run `bootstrap → start --profile → claim` before any requirement delivery edit. Use `bin/agent-workflow.py compliance` for compliance audit.
 5. For governed state, use OMO/C2G brokers instead of direct `.omo` writes.
 6. For multi-file or high-risk changes, explain the edit surface before applying patches.
 7. All local/edge LLM inference MUST route through **AetherForge (`bos://compute/aetherforge/infer`)**.
@@ -103,6 +103,7 @@ Project layer placement: [`docs/generated/project-layer-index.md`](docs/generate
 
 ```bash
 uv run --with "pyyaml" python "bin/agent-workflow.py" bootstrap
+uv run --with "pyyaml" python "bin/agent-workflow.py" compliance
 uv run --with "pyyaml" python "bin/agent-workflow.py" start <workflow-id> --profile <agent-profile> --bet <BET-ID> --objective "<summary>"
 uv run --with "pyyaml" python "bin/agent-workflow.py" claim <run-id> --path <path>
 uv run --with "pyyaml" python "bin/agent-workflow.py" closeout <run-id>
