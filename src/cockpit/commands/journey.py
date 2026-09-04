@@ -12,8 +12,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-from cockpit.domain.exit_codes import ExitCode
 from rich.console import Console
+
+from cockpit.domain.exit_codes import ExitCode
 
 console = Console()
 
@@ -48,7 +49,7 @@ def cmd_journey(args: argparse.Namespace) -> int:
         if as_json:
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
-            console.print(f"[bold cyan]🔍 [Dry-Run] 预检 Journey 状态机环境[/]")
+            console.print("[bold cyan]🔍 [Dry-Run] 预检 Journey 状态机环境[/]")
             console.print(f"  • 执行器: [green]就绪[/] ({runner.name})")
             console.print(f"  • 已发现旅程规范: [cyan]{len(specs)}[/] 个")
             for s in specs[:5]:
