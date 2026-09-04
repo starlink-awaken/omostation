@@ -20670,6 +20670,11 @@ bets:
   circuit_breaker: 协议校验失败阻断
   retro: required
 - id: BET-Y1Q4-T8-18
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-w0-sovereign-tui-2.0-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:e3190347bfeaa0a5121094927f7ffb4f0ab85df20b4b9467357c3d3edcd7fcb3
+    decision_ref: decision://accepted/BET-Y1Q4-T8-18
   track: T8-SURFACE
   window: Y1Q4
   title: Sovereign TUI 2.0 旗舰多窗格终端控制台融合重构
