@@ -20956,6 +20956,43 @@ bets:
   circuit_breaker: 自动 kill 进程前需确认进程已僵死（CPU time < 1% over 5min）
   retro: required
 
+- id: BET-Y1Q4-T10-03
+  track: T10-MATURITY
+  window: Y1Q4
+  title: omostation 架构分析与需求收敛：主线架构/协作机制/执行后端盘点
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 在不进行大规模代码重构的前提下，对 omostation 的主线架构、多 Agent 协作机制、BOS 与执行后端关系进行系统梳理，输出一份可执行的架构优化方案与需求文档，并将结论固化进 BET 记录和 PR 流程。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-architecture-analysis-requirements-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:5da176133069d2b226780ce869b4e9bb7fbc7687ca0b4b2bb1eafe05e151c267
+    decision_ref: decision://accepted/BET-Y1Q4-T10-03
+  non_goals:
+  - 不在本 BET 中做大范围生产代码重构
+  - 不引入第二控制面或并行 OS 设计
+  - 不将专项 adapter 伪装成主线架构
+  done_when:
+  - 对项目定位、L0-L4 层级、治理门禁、workflow、resident agent、BOS route 和执行后端做出结论并落盘
+  - 形成结构化需求文档，覆盖功能需求、非功能需求、治理需求、风险与验收标准
+  - 产出明确的架构优化方案（短中长期路线与优先级）
+  - 该结论写入 docs/plans 下的结构化文档，并在 bet ledger 中可追踪
+  verify:
+  - cmd: python3 -c "import yaml, pathlib; p = pathlib.Path('docs/plans/3y-bet-ledger.yaml'); yaml.safe_load(p.read_text(encoding='utf-8')); print('yaml_ok')"
+    expect: exit 0
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - docs/plans/2026-09-04-architecture-analysis-and-requirements-consolidation.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-04-architecture-analysis-requirements-spec.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 若定位与源码/SSOT 因果不一致，必须回到文档基线重新修正，不得继续推进实现
+  retro: required
+
 - id: BET-Y1Q4-T10-02
   track: T10-MATURITY
   window: Y1Q4
