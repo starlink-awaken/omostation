@@ -20278,22 +20278,22 @@ bets:
             sha256: sha256:0dcb84b615b337d94ee787a4ef65cab5f9f1b2d6ae07ab6c676b9323e84a630e
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
-            sha256: sha256:5ad053a72520dcfc732837b36b2fd707d31f26c44f7a7317dc6ccdbb3cd131c0
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
-            sha256: sha256:5ad053a72520dcfc732837b36b2fd707d31f26c44f7a7317dc6ccdbb3cd131c0
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
-            sha256: sha256:5ad053a72520dcfc732837b36b2fd707d31f26c44f7a7317dc6ccdbb3cd131c0
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
-            sha256: sha256:5ad053a72520dcfc732837b36b2fd707d31f26c44f7a7317dc6ccdbb3cd131c0
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
-            sha256: sha256:5ad053a72520dcfc732837b36b2fd707d31f26c44f7a7317dc6ccdbb3cd131c0
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
       value:
         status: NOT_PROVEN
         evidence: {}
