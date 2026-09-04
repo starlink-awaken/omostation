@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 294
+  total_bets: 295
   windows:
   - Y1Q1
   - Y1Q2
