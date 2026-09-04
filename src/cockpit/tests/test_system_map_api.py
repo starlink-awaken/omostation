@@ -379,8 +379,20 @@ def test_stopped_runtime_projects_expose_documented_start_actions():
 
     assert not any(action["id"] == "copy-start-command" for action in projects["bus-foundation"]["actions"])
     assert not any(action["id"] == "copy-start-command" for action in projects["mesh-router"]["actions"])
-    # AetherForge is no longer a standalone project in the root registry.
-    assert "aetherforge" not in projects
+    # aetherforge 是否在 system_map，跟随主仓 registry 实际注册状态
+    # （独立环境无主仓 registry 时 projects 为空，自动回退到 not in）
+    _reg_path = compat.WORKSPACE_ROOT / "docs" / "project-registry.yaml"
+    if _reg_path.exists():
+        import yaml
+
+        _reg = yaml.safe_load(_reg_path.read_text(encoding="utf-8")) or {}
+        _expect_aetherforge = "aetherforge" in (_reg.get("projects") or {})
+    else:
+        _expect_aetherforge = False
+    if _expect_aetherforge:
+        assert "aetherforge" in projects
+    else:
+        assert "aetherforge" not in projects
 
 
 def test_mesh_router_verify_normalization_requires_exact_script_basename():
@@ -418,7 +430,19 @@ def test_system_map_conflict_diagnostics_clear_after_port_alignment():
         project = projects[project_id]
         assert project["runtime"]["port_conflicts"] == []
         assert all(not port.get("conflict_projects") for port in project["runtime"]["ports"])
-    assert "aetherforge" not in projects
+    # aetherforge 是否在 system_map，跟随主仓 registry 实际注册状态
+    _reg_path = compat.WORKSPACE_ROOT / "docs" / "project-registry.yaml"
+    if _reg_path.exists():
+        import yaml
+
+        _reg = yaml.safe_load(_reg_path.read_text(encoding="utf-8")) or {}
+        _expect_aetherforge = "aetherforge" in (_reg.get("projects") or {})
+    else:
+        _expect_aetherforge = False
+    if _expect_aetherforge:
+        assert "aetherforge" in projects
+    else:
+        assert "aetherforge" not in projects
 
 
 def test_bus_foundation_metrics_is_optional_embedded_runtime():
