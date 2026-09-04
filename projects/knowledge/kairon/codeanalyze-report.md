@@ -2,9 +2,9 @@
 > 生成时间: ... | 路径: /Users/xiamingxing/Workspace/projects/knowledge/kairon
 
 ## 📦 项目概览
-- Python 文件: 1,092
-- 源码行数: ~179,424
-- 目录总文件: 1,355
+- Python 文件: 1,091
+- 源码行数: ~179,355
+- 目录总文件: 1,323
 
 ## 🌐 Graphify 语义图谱
   ❌ graphify: /Users/xiamingxing/Workspace/projects/knowledge/kairon/.venv/bin/python3: No module named graphify
@@ -14,15 +14,16 @@
   ⏭️ None
 
 ## 🔗 GitNexus 依赖图
-  ❌ unknown error
+  ⏭️ 未安装
+  💡 npm install -g gitnexus
 
 ## 🔍 Serena 符号级分析
-  ✅ 已索引 **1** 个符号
-  🔧 12 个 MCP 工具: find_symbol, find_referencing_symbols, find_implementations, find_declaration, get_symbols_overview, get_diagnostics_for_file
-    ... 还有 6 个
-  💡 在对话中直接调用 MCP 工具进行符号级查询
+  ⏭️ 未安装
+  💡 pip install serena-agent
 
 ## 💡 建议
+  - 安装 GitNexus: npm install -g gitnexus
+  - 安装 Serena MCP 获取符号级编辑能力
   - 安装 code-review-graph: npm install -g code-review-graph
 
 ## 🔬 洞察分析
@@ -30,7 +31,7 @@
     tests/__init__.py
     packages/eidos/src/eidos/adapters/__init__.py
     packages/codeanalyze/src/codeanalyze/analyzers/__init__.py
-  💡 **[文档覆盖]** 文档覆盖率: 75% (723/966)
+  💡 **[文档覆盖]** 文档覆盖率: 75% (722/965)
     文档覆盖良好
   💡 **[架构]** 层级依赖检查已跳过
     pyproject.toml 未配置 [tool.codeanalyze.layers]，跳过架构层级检查

@@ -301,3 +301,8 @@ projects/omo-debt/
 .omo/state/attestations/
 .kb/
 .kb/
+projects/cockpit-ui
+
+# tool caches (root-governance allowed)
+.benchmarks/
+.deepeval/
