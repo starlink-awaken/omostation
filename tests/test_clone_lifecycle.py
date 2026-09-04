@@ -3129,6 +3129,41 @@ def test_retire_squash_successor_full_flow(tmp_path, monkeypatch):
     assert st["status"] == "retired"
 
 
+def test_retire_squash_successor_defers_bound_provenance_until_pr_base(
+    tmp_path, monkeypatch
+):
+    """Squash mode must not use the ordinary provenance range before P3/P5."""
+    clone, _remote, delivery_head, pr_base, delivery_base, tag_name, main_head = \
+        make_squash_merged_clone(tmp_path)
+    monkeypatch.setattr(
+        lc,
+        "run",
+        _squash_pr_runner(delivery_head, main_head, pr_base),
+    )
+    monkeypatch.setattr(
+        lc,
+        "bound_repository_slug",
+        lambda *_args: pytest.fail(
+            "squash retirement must resolve live origin before it knows the PR base"
+        ),
+    )
+    evidence = tmp_path / "squash-retirement-proof.json"
+    rc = lc.cmd_retire(
+        argparse.Namespace(
+            destination=str(clone),
+            platform_rebased_pr=None,
+            squash_merged_pr=2881,
+            source_tag=tag_name,
+            delivery_base=delivery_base,
+            evidence=str(evidence),
+        )
+    )
+
+    assert rc == lc.EXIT_OK
+    assert not clone.exists()
+    assert Path(f"{evidence}.settled").exists()
+
+
     """RED: squash-successor topology 走普通退场应失败。"""
     clone, _remote, delivery_head, _pr_base, _delivery_base, _tag, _main = \
         make_squash_merged_clone(tmp_path)
