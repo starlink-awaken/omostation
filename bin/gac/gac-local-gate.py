@@ -522,6 +522,7 @@ SOFT_CHECKS = {
     "ci-surfaces-check",  # CI Surface 重叠软警告
     "derived-only-fast-track",  # GOV-REBAL (S5): 纯派生文档 fast-track 建议, 非阻断
     "command-discovery",  # UX-NOISE (S5): 命令密度/重复定位, 非阻断
+    "resident-bos-check",  # CR-RESIDENT-BOS-01: agora bos-services.yaml 缺 resident 域, 非阻断
 }
 
 
