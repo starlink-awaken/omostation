@@ -1,7 +1,7 @@
 ---
 name: kos-cold-start
 title: KOS Cold Start
-description: "KOS 冷启动 skill：从零初始化 Knowledge Operating System，包括目录结构、SSOT 种子和首次索引"
+description: KOS 冷启动协议 - 加载 BRIEF.md/ADR/entities 上下文对齐
 type: skill
 owner: governance-team
 version: "1.0"

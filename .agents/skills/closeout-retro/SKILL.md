@@ -1,7 +1,7 @@
 ---
 name: closeout-retro
 title: Closeout & Retrospective
-description: "关闭与回溯 skill：负责 workflow 收尾、retro 归档、evidence 记录和 closeout 报告生成"
+description: 闭环收尾与复盘 - 将 AGENTS.md §8 Closeout Checklist + P78 复盘固化为可执行 skill
 type: skill
 owner: governance-team
 version: "1.0"

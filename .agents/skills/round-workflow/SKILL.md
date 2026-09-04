@@ -1,7 +1,7 @@
 ---
 name: round-workflow
 title: Round Workflow
-description: "轮次工作流 skill：管理多轮 agent 迭代的 workflow 状态机，包括 round 启动、执行、收尾"
+description: 标准轮次工作流 - 7 步实施 (baseline → single-worktree → deliver → tests → self-reflex → ADR → health-check)
 type: skill
 owner: governance-team
 version: "1.0"

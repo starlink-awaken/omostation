@@ -1,7 +1,7 @@
 ---
 name: swarm-escape
 title: Swarm Escape
-description: "Swarm 逃逸处理 skill：检测并处理多 agent swarm 中的死锁、资源竞争和异常退出"
+description: 多 agent 共享树并发吸收的逃生口使用规范
 type: skill
 owner: governance-team
 version: "1.0"
