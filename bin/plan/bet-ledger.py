@@ -2592,6 +2592,25 @@ def cmd_portfolio(data: dict, args) -> int:
             return 0
         return 1
 
+    if args.portfolio_cmd == "project-goals":
+        import importlib.util
+        import sys
+
+        mod_path = Path(__file__).resolve().parent / "portfolio_projection.py"
+        spec = importlib.util.spec_from_file_location("portfolio_projection", mod_path)
+        assert spec and spec.loader
+        proj = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = proj
+        spec.loader.exec_module(proj)
+        argv = ["--workspace", str(WS)]
+        if getattr(args, "check", False):
+            argv.append("--check")
+        if getattr(args, "json", False):
+            argv.append("--json")
+        if getattr(args, "apply_markdown", False):
+            argv.append("--apply-markdown")
+        return int(proj.main(argv))
+
     graph_mod = _portfolio_graph_module()
     graph = graph_mod.build_graph(data)
     if args.portfolio_cmd == "coverage":
@@ -2788,6 +2807,10 @@ def main() -> int:
     portfolio_coverage.add_argument("--strict", action="store_true")
     portfolio_critical = portfolio_sub.add_parser("critical-path")
     portfolio_critical.add_argument("--json", action="store_true")
+    portfolio_goals = portfolio_sub.add_parser("project-goals")
+    portfolio_goals.add_argument("--check", action="store_true")
+    portfolio_goals.add_argument("--json", action="store_true")
+    portfolio_goals.add_argument("--apply-markdown", action="store_true")
     pc = sub.add_parser("complete")
     pc.add_argument("bet_id")
     pc.add_argument("--force", action="store_true")
