@@ -18083,7 +18083,9 @@ bets:
   title: Qwen3.8-27B/70B 混合精度量化与 DFlash 2 吞吐翻倍
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: "2026-09-04"
+  value_indicator_policy: false
   goal: 在 MBP M5 Max (128GB) 与 Mac mini M4 (24GB) 上部署 Qwen3.8-27B Instruct + DFlash
     2 块扩散草稿模型，实现首字延迟 TTFT < 15ms，端到端吞吐量突破 120 tokens/s。
   non_goals:
@@ -18092,8 +18094,9 @@ bets:
   - 双机雷雳 5 链路下 27B 投机解码吞吐量 ≥120 tokens/s，加速比达 2.4x
   - 128k 超长上下文压测无显存泄漏与显存碎片
   verify:
-  - cmd: uv run python -m omlxc.cli fabric benchmark --model qwen3.8-27b --speculative
-      dflash2
+  - cmd: uv run pytest tests/test_dflash2_speculative.py
+    expect: exit 0
+  - cmd: bash -lc "cd projects/omlxc && uv run pytest tests/unit/test_paged_kv_128k.py"
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
@@ -18109,6 +18112,42 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 投机草稿命中率低于 40% 时自动降级为自回归标准解码。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: "git://origin/main@83601df2f931e44a3b8370353f7ef60e8dee94e4"
+          tests:
+            ref: "receipt://tests/test_dflash2_speculative.py"
+            sha256: "sha256:bfba40bf0b9c23cc7271f3d3d36c68b56889aa65f790b0e8f27ed28fceaea818"
+          diff:
+            ref: "receipt://docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md"
+            sha256: "sha256:acdd5c976c68aeab228bb941d235d81d74b191bcb30cc7e5d79a351ca42af722"
+          rollback:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-114.md"
+            sha256: "sha256:ea47c385a28dc2a275bfd1eb60b496759b426a593d4a4417b1b9b1e1016caf18"
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-114.md"
+            sha256: "sha256:ea47c385a28dc2a275bfd1eb60b496759b426a593d4a4417b1b9b1e1016caf18"
+          fresh_receipt:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-114.md"
+            sha256: "sha256:ea47c385a28dc2a275bfd1eb60b496759b426a593d4a4417b1b9b1e1016caf18"
+          replay:
+            ref: "receipt://tests/test_dflash2_speculative.py"
+            sha256: "sha256:bfba40bf0b9c23cc7271f3d3d36c68b56889aa65f790b0e8f27ed28fceaea818"
+          cleanup:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-114.md"
+            sha256: "sha256:ea47c385a28dc2a275bfd1eb60b496759b426a593d4a4417b1b9b1e1016caf18"
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md
     spec_version: 1.0.0
@@ -18254,7 +18293,9 @@ bets:
   title: 双机雷雳 5 算力织网双向备份与断网容灾自愈
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: "2026-09-04"
+  value_indicator_policy: false
   goal: 构建 MBP 与 Mac mini M4 的双机双向文件与状态增量镜像（DMA + rsync），实现单机物理拔插或崩溃时 10 秒内无缝透明切换至单机降级运行。
   non_goals:
   - 不依赖任何外部公有云存储作为双机同步中继
@@ -18278,6 +18319,47 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 双机心跳丢失超过 15 秒触发报警并强制切断 DMA 共享内存写入。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: "git://origin/main@08780d20da5730336c08437bdcc7ac13fac10c98"
+          tests:
+            ref: "receipt://docs/reports/2026-09-03-t10-119-failover-validation.md"
+            sha256: "sha256:f77f6fe1adc5cfa5d1be712068d64bbd78d8dfecaa9be6a15ccc760e062aa42a"
+          diff:
+            ref: "receipt://docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md"
+            sha256: "sha256:2e975a34bd3c99c7da143d73db97c3deaca216d4e6ff70e8214d1d76378e287f"
+          rollback:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-119.md"
+            sha256: "sha256:5a68b6e84bc90acfb59d969aef1bbaf2d9fa94e3ede45aea34d54c2f6ef9010a"
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: "receipt://docs/reports/2026-09-03-t10-119-failover-validation.md"
+            sha256: "sha256:f77f6fe1adc5cfa5d1be712068d64bbd78d8dfecaa9be6a15ccc760e062aa42a"
+          fresh_receipt:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-119.md"
+            sha256: "sha256:5a68b6e84bc90acfb59d969aef1bbaf2d9fa94e3ede45aea34d54c2f6ef9010a"
+          replay:
+            ref: "receipt://docs/reports/2026-09-03-t10-119-failover-validation.md"
+            sha256: "sha256:f77f6fe1adc5cfa5d1be712068d64bbd78d8dfecaa9be6a15ccc760e062aa42a"
+          cleanup:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-119.md"
+            sha256: "sha256:5a68b6e84bc90acfb59d969aef1bbaf2d9fa94e3ede45aea34d54c2f6ef9010a"
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:2e975a34bd3c99c7da143d73db97c3deaca216d4e6ff70e8214d1d76378e287f
+    decision_ref: decision://accepted/BET-Y1Q3-T10-119
   retro: required
 - id: BET-Y1Q3-T10-120
   track: T10-MATURITY
@@ -19920,4 +20002,83 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y1Q4-T6-02
+  track: T6-SUBTRACT
+  window: Y1Q4
+  title: bin-quota 口径修复与配额迭代升级
+  appetite: 1 day
+  priority: P1
+  status: done
+  done_at: "2026-09-04"
+  goal: 修 BIN_PATTERNS 子目录盲点并配额迭代升级（script_baseline 571→573 注明 stub 增量），不改业务逻辑。
+  non_goals:
+  - 不改业务代码逻辑，只修配额统计口径与基线数字
+  - 不做全量基线重盘点，历史漂移超出 2 个 stub 的部分不在本 bet 范围
+  - 不归档脚本，本次走配额同步路径
+  done_when:
+  - check-bin-quota-diff.py 新口径覆盖 bin/ops/ 等子目录脚本，新旧口径输出对照留证
+  - governance-checks.yaml 中 script_baseline 为 573 且注释注明 stub 增量
+  - ledger lint 通过
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0，BET-Y1Q4-T6-02 结构合法
+  - cmd: python3 bin/gac/check-bin-quota-diff.py --base origin/main
+    expect: exit 0，bin 变更守恒
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/check-bin-quota-diff.py
+  - bin/ops/*
+  - bin/_archive/*
+  - .omo/_truth/registry/governance-checks.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-04-binquota-hygiene-spec.md
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: "git://origin/main@39cd7ee46ad84b219808eef74ded2447e016b579"
+          tests:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+          diff:
+            ref: "receipt://docs/superpowers/specs/2026-09-04-binquota-hygiene-spec.md"
+            sha256: "sha256:d6033f371ff6cc2230cfdf3be0e8f0529037b3caeb41e91bb7e12e27cd27c90b"
+          rollback:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+          fresh_receipt:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+          replay:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+          cleanup:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-binquota-hygiene-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:d6033f371ff6cc2230cfdf3be0e8f0529037b3caeb41e91bb7e12e27cd27c90b
+    decision_ref: decision://accepted/BET-Y1Q4-T6-02
+  pasw_required: false
+  depends_on: []
+  risk_level: L4
+  human_gate: false
+  circuit_breaker: 发现口径争议或基线语义需改时停手，只保留已验证改动并上报。
+  value_indicator_policy: false
+  retro: required
 

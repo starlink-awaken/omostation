@@ -43,6 +43,3 @@
 	path = projects/omlxc
 	url = https://github.com/starlink-awaken/omostation-omlxc.git
 	branch = main
-[submodule "projects/cockpit-ui"]
-	path = projects/cockpit-ui
-	url = https://github.com/starlink-awaken/omostation-hermes-console.git
