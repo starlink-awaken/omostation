@@ -393,6 +393,28 @@ def stage_execute(bet_id, profile, objective, run_id, agent_run_id=None):
         r["error"] = appetite_check.get("error", "appetite overrun")
         return r
 
+    # HITL gate check — if BET requires human approval, generate proposal
+    hitl_res = _run(["python3", "bin/hitl-proposal.py", "check", "--bet-id", bet_id])
+    if hitl_res.returncode == 0 and "HITL_REQUIRED" in hitl_res.stdout:
+        create_res = _run([
+            "python3", "bin/hitl-proposal.py", "create",
+            "--bet-id", bet_id, "--run-id", run_id,
+            "--title", f"Execute: {objective[:60]}",
+            "--description", f"Human approval required for BET {bet_id}. Objective: {objective}",
+        ])
+        if create_res.returncode == 0:
+            pid_line = [l for l in create_res.stdout.splitlines() if l.startswith("Created:")]
+            proposal_id = pid_line[0].split(":")[1].strip() if pid_line else "unknown"
+            r["checks"].append({"name": "hitl_proposal", "ok": True, "proposal_id": proposal_id})
+            print(f"  HITL proposal created: {proposal_id}")
+            print(f"  Run: cockpit decide approve {proposal_id}")
+        else:
+            # Circuit breaker: creation failed → downgrade
+            r["checks"].append({"name": "hitl_proposal", "ok": True, "skipped": True,
+                                 "reason": "creation failed, downgraded"})
+    else:
+        r["checks"].append({"name": "hitl_proposal", "ok": True, "skipped": True})
+
     target_run = agent_run_id
     if not target_run:
         st = _run(["python3", "bin/agent-workflow.py", "status", "--json"])
