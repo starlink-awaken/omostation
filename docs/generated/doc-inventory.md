@@ -1,6 +1,6 @@
 # 文档索引 (自动生成)
 
-> 生成时间: 2026-09-04 18:51
+> 生成时间: 2026-09-04 17:22
 > 总文档数: 4006
 > 本文件由 `bin/ssot/generate-docs-index.py` 自动维护，不要手动编辑。
 
@@ -8,52 +8,21 @@
 
 | 类型 | 数量 |
 |------|------|
-| SSOT | 1143 |
-| derived | 64 |
-| ephemeral | 144 |
-| untyped | 1632 |
+| SSOT | 983 |
+| derived | 57 |
+| ephemeral | 139 |
+| untyped | 1804 |
 
 ## SSOT 清单
 
 | 路径 | Owner | 最后更新 | 行数 |
 |------|-------|----------|------|
-| .agents/AGENTS.md | - | 2026-09-04 | 18 |
-| .agents/ORIGINAL_REQUEST.md | - | 2026-09-04 | 49 |
-| .agents/README.md | - | 2026-09-04 | 12 |
-| .agents/orchestrator/BRIEFING.md | - | 2026-09-04 | 94 |
-| .agents/orchestrator/ORIGINAL_REQUEST.md | - | 2026-09-04 | 28 |
-| .agents/orchestrator/plan.md | - | 2026-09-04 | 79 |
-| .agents/orchestrator/progress.md | - | 2026-09-04 | 28 |
-| .agents/sentinel/BRIEFING.md | - | 2026-09-04 | 36 |
-| .agents/sentinel/handoff.md | - | 2026-09-04 | 26 |
 | .agents/skills/architecture-perception/SKILL.md | agent-skills-team | 2026-09-04 | 91 |
-| .agents/skills/bet-execution/SKILL.md | - | 2026-09-04 | 221 |
-| .agents/skills/cognitive-governance/SKILL.md | - | 2026-09-04 | 77 |
-| .agents/skills/delegation-guardrails/SKILL.md | - | 2026-09-04 | 117 |
-| .agents/skills/domain-cartridge-governance/SKILL.md | - | 2026-09-04 | 51 |
 | .agents/skills/git-discipline/SKILL.md | agent-skills-team | 2026-09-04 | 351 |
-| .agents/skills/grill-me/QA_5.md | - | 2026-09-04 | 31 |
 | .agents/skills/harness-compliance/SKILL.md | governance-team | 2026-09-04 | 154 |
-| .agents/skills/nextgen-cognitive-mesh/SKILL.md | - | 2026-09-04 | 67 |
-| .agents/skills/omlxc-compute-fabric/SKILL.md | - | 2026-09-04 | 94 |
 | .agents/skills/spine-value-pipeline/SKILL.md | agent-skills-team | 2026-09-04 | 76 |
 | .agents/skills/workflow:bet-execution/SKILL.md | agent-skills-team | 2026-09-04 | 51 |
-| .githooks/AGENTS.md | - | 2026-09-04 | 18 |
-| .githooks/README.md | - | 2026-09-04 | 64 |
-| .github/AGENTS.md | - | 2026-09-04 | 23 |
-| .github/ISSUE_TEMPLATE/bug_report.md | - | 2026-09-04 | 32 |
-| .github/ISSUE_TEMPLATE/feature_request.md | - | 2026-09-04 | 24 |
-| .github/ISSUE_TEMPLATE/task.md | - | 2026-09-04 | 46 |
-| .github/PULL_REQUEST_TEMPLATE.md | - | 2026-09-04 | 28 |
-| .github/README.md | - | 2026-09-04 | 12 |
-| .github/workflows/README.md | - | 2026-09-04 | 84 |
-| .kilo/AGENTS.md | - | 2026-09-04 | 28 |
-| .kilo/README.md | - | 2026-09-04 | 22 |
 | .kilo/commands/omostation-context.md | governance-team | 2026-09-04 | 12 |
-| .mimocode/AGENTS.md | - | 2026-09-04 | 22 |
-| .mimocode/README.md | - | 2026-09-04 | 19 |
-| .mimocode/commands/design-self-critique.md | - | 2026-09-04 | 99 |
-| .mimocode/commands/trajectory-distill.md | - | 2026-09-04 | 115 |
 | .omo/_archive/docs-migration-2026-09/2026-07-10-bus-foundation-r89-r97-spec.md | governance-team | 2026-09-04 | 581 |
 | .omo/_archive/docs-migration-2026-09/2026-07-10-bus-foundation-r89-r97.md | governance-team | 2026-09-04 | 521 |
 | .omo/_archive/docs-migration-2026-09/2026-07-13-P7X-IMPROVEMENTS-SUMMARY.md | governance-team | 2026-09-04 | 127 |
@@ -78,28 +47,10 @@
 | CODE_OF_CONDUCT.md | governance-team | 2026-09-03 | 71 |
 | CONTRIBUTING.md | governance-team | 2026-09-03 | 128 |
 | GOVERNANCE.md | governance-team | 2026-09-03 | 109 |
-| Plans/AGENTS.md | - | 2026-09-04 | 17 |
-| Plans/README.md | - | 2026-09-04 | 12 |
 | README.md | governance-team | 2026-09-04 | 199 |
 | SECURITY.md | governance-team | 2026-09-03 | 18 |
 | SUPPORT.md | governance-team | 2026-09-03 | 11 |
 | SYSTEM-INDEX.md | governance-team | 2026-09-03 | 79 |
-| aetherforge-archive/swarm/MERGE-NOTES.md | - | 2026-09-04 | 110 |
-| aetherforge-archive/swarm/README.md | - | 2026-09-04 | 13 |
-| artifacts/AGENTS.md | - | 2026-09-04 | 17 |
-| artifacts/README.md | - | 2026-09-04 | 12 |
-| bin/AGENTS.md | - | 2026-09-04 | 29 |
-| bin/README.md | governance-team | 2026-09-04 | 240 |
-| bin/_registry/quickstart.md | - | 2026-09-04 | 39 |
-| bin/gac/SECURITY.md | - | 2026-09-04 | 22 |
-| bin/meta/README.md | - | 2026-09-04 | 13 |
-| bin/ssot/PACKS/INDEX.md | - | 2026-09-04 | 46 |
-| bin/ssot/PACKS/dormant-adapter/INSTALL.md | - | 2026-09-04 | 89 |
-| bin/ssot/PACKS/dormant-adapter/VERIFY.md | - | 2026-09-04 | 72 |
-| bin/sweep/README.md | - | 2026-09-04 | 82 |
-| data/AGENTS.md | - | 2026-09-04 | 33 |
-| data/README.md | - | 2026-09-04 | 29 |
-| data/驾驶舱/CARDS/README.md | - | 2026-09-04 | 11 |
 | docs/2026-07-10-bus-foundation-r89-r97-spec.md | governance-team | 2026-09-04 | 581 |
 | docs/2026-07-10-bus-foundation-r89-r97.md | governance-team | 2026-09-04 | 521 |
 | docs/2026-07-13-P7X-IMPROVEMENTS-SUMMARY.md | governance-team | 2026-09-04 | 128 |
@@ -109,13 +60,11 @@
 | docs/ARCHITECTURE-DETAILED-MAP.md | governance-team | 2026-09-04 | 612 |
 | docs/ARCHITECTURE-DIAGRAM.md | architecture-team | 2026-09-04 | 144 |
 | docs/ARCHITECTURE-EVOLUTION.md | governance-team | 2026-09-04 | 89 |
-| docs/AUTO-PR-REVIEW-ISA.md | governance-team | 2026-09-04 | 252 |
 | docs/CLI-REFERENCE.md | auto-fix-loop | 2026-09-04 | 300 |
 | docs/DEBT-CLEANUP-ROLLOUT.md | governance-team | 2026-09-04 | 77 |
 | docs/ENGINEERING-OPTIMIZATION-ROADMAP.md | governance-team | 2026-09-04 | 109 |
 | docs/FUNCTIONAL-CAPABILITY-MAP.md | governance-team | 2026-09-04 | 357 |
 | docs/G-DEL-2b5b-OPS.md | governance-team | 2026-09-04 | 55 |
-| docs/G-DEL-3-WIRED-REMEASURE.md | governance-team | 2026-09-04 | 52 |
 | docs/G-DEL-4-CALLCHAIN.md | governance-team | 2026-09-04 | 73 |
 | docs/G-DEL-PHASE2-BOARD.md | governance-team | 2026-09-04 | 52 |
 | docs/GOVERNANCE-ARCHITECTURE-SGF.md | governance-team | 2026-09-04 | 101 |
@@ -125,7 +74,6 @@
 | docs/I0-AGORA-CALLCHAIN.md | governance-team | 2026-09-04 | 306 |
 | docs/INDEX-AGENTS.md | governance-team | 2026-09-04 | 100 |
 | docs/INDEX-KNOWLEDGE.md | governance-team | 2026-09-04 | 190 |
-| docs/INDEX-MCP.md | - | 2026-09-04 | 152 |
 | docs/INDEX-PROJECTS.md | governance-team | 2026-09-04 | 102 |
 | docs/INDEX-TOOLS.md | governance-team | 2026-09-04 | 293 |
 | docs/KEMS-PILOT-ROADMAP.md | governance-team | 2026-09-04 | 91 |
@@ -146,7 +94,6 @@
 | docs/SUBMODULE-PR-REVIEW-GUIDE.md | governance-team | 2026-09-04 | 276 |
 | docs/SUBMODULE-PR-STRATEGY.md | governance-team | 2026-09-04 | 107 |
 | docs/SYSTEM-INDEX-DESIGN.md | governance-team | 2026-09-04 | 898 |
-| docs/SYSTEM-INDEX.md | - | 2026-09-04 | 291 |
 | docs/USER-JOURNEY-SOP.md | governance-team | 2026-09-04 | 811 |
 | docs/VISION-ROADMAP.md | governance-team | 2026-09-04 | 471 |
 | docs/WORKFLOW-MESH-IMPLEMENTATION.md | engineering-team | 2026-09-04 | 1220 |
@@ -181,7 +128,6 @@
 | docs/governance/ADR-0200-y1q4-code-loc-gate-rebaseline.md | governance-team | 2026-09-04 | 74 |
 | docs/governance/agent-capability-gap-matrix.md | governance-team | 2026-09-04 | 59 |
 | docs/governance/bin-and-scripts-architecture.md | governance-team | 2026-09-04 | 80 |
-| docs/isa/debt-remediation-isa.md | governance-team | 2026-09-04 | 291 |
 | docs/local-compute/compute-fabric-workflow.md | governance-team | 2026-09-04 | 100 |
 | docs/local-compute/omlx-cluster-architecture.md | architecture-team | 2026-09-04 | 147 |
 | docs/notes/closeout-template-5min-dev.md | governance-team | 2026-09-04 | 60 |
@@ -190,7 +136,6 @@
 | docs/notes/governance-runtime-convergence-rca-20260814.md | governance-team | 2026-09-04 | 56 |
 | docs/notes/mechanism-convergence-retrospective-20260815.md | governance-team | 2026-09-04 | 197 |
 | docs/observability-unified-architecture.md | governance-team | 2026-09-04 | 257 |
-| docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md | - | 2026-09-04 | 101 |
 | docs/overview/cross-package-api-map.md | architecture-team | 2026-09-04 | 89 |
 | docs/plans/2026-09-03-t1-02-squash-retirement-tdd-plan.md | governance-team | 2026-09-04 | 171 |
 | docs/superpowers/plans/2026-08-27-governance-optimization.md | auto-fix-loop | 2026-09-04 | 580 |
@@ -350,38 +295,14 @@
 | docs/superpowers/specs/2026-09-02-t2-05-pipeline-supervisor-design.md | governance-team | 2026-09-04 | 62 |
 | docs/superpowers/specs/2026-09-03-cockpit-work-case-mvp-design.md | human-principal | 2026-09-04 | 78 |
 | docs/superpowers/specs/2026-09-03-docdate-freshness-batch1-spec.md | governance-team | 2026-09-04 | 53 |
-| docs/superpowers/specs/2026-09-03-north-star-v4-realtime-design.md | governance-team | 2026-09-04 | 56 |
-| docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md | ml-platform | 2026-09-04 | 56 |
 | docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md | governance-team | 2026-09-04 | 42 |
 | docs/superpowers/specs/2026-09-03-t3-03-tiered-router-design.md | governance-team | 2026-09-04 | 20 |
 | docs/superpowers/specs/2026-09-03-t8-02-mobile-pwa-design.md | governance-team | 2026-09-04 | 49 |
-| docs/superpowers/specs/2026-09-03-vision-to-bet-portfolio-v2-design.md | human-principal | 2026-09-04 | 1018 |
-| docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md | human-principal | 2026-09-04 | 114 |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md | human-principal | 2026-09-04 | 129 |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-dogfood-canary-design.md | human-principal | 2026-09-04 | 131 |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md | human-principal | 2026-09-04 | 117 |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-milestone-vision-gates-design.md | human-principal | 2026-09-04 | 117 |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-projections-design.md | human-principal | 2026-09-04 | 110 |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md | human-principal | 2026-09-04 | 175 |
-| docs/superpowers/specs/2026-09-04-agora-fastmcp-sandboxing-design.md | agora-team | 2026-09-04 | 55 |
 | docs/superpowers/specs/2026-09-04-binquota-hygiene-spec.md | governance-team | 2026-09-04 | 44 |
 | docs/superpowers/specs/2026-09-04-docdate-freshness-batch3-spec.md | governance-team | 2026-09-04 | 70 |
-| docs/superpowers/specs/2026-09-04-zhiyuan-oa-triage-design.md | omo-platform-team | 2026-09-04 | 66 |
 | docs/superpowers/specs/README.md | governance-team | 2026-09-04 | 66 |
 | docs/superpowers/specs/templates/_TEMPLATE.md | @YOUR_NAME | 2026-09-04 | 57 |
 | docs/templates/ssot-template.md | <team-or-role> | 2026-09-04 | 41 |
-| domains/README.md | - | 2026-09-04 | 9 |
-| domains/family-hub/knowledge/finance_health_spec.md | - | 2026-09-04 | 16 |
-| domains/weijian-governance/knowledge/standard_checklist.md | - | 2026-09-04 | 22 |
-| evidence/AGENTS.md | - | 2026-09-04 | 17 |
-| evidence/README.md | - | 2026-09-04 | 12 |
-| evidence/gap-closeout.md | - | 2026-09-04 | 44 |
-| lib/AGENTS.md | - | 2026-09-04 | 16 |
-| lib/README.md | - | 2026-09-04 | 29 |
-| locks/AGENTS.md | - | 2026-09-04 | 17 |
-| locks/README.md | - | 2026-09-04 | 12 |
-| projects/AGENTS.md | - | 2026-09-04 | 142 |
-| projects/README.md | - | 2026-09-04 | 37 |
 | projects/aetherforge/ACKNOWLEDGMENTS.md | governance-team | 2026-09-03 | 21 |
 | projects/aetherforge/AGENTS.md | governance-team | 2026-09-04 | 59 |
 | projects/aetherforge/API.md | governance-team | 2026-09-03 | 486 |
@@ -569,33 +490,11 @@
 | projects/bus-foundation/docs/PERFORMANCE-SLA.md | governance-team | 2026-09-03 | 47 |
 | projects/bus-foundation/docs/TROUBLESHOOTING.md | governance-team | 2026-09-03 | 29 |
 | projects/bus-foundation/src/bus_foundation/RETRY-OWNERSHIP.md | governance-team | 2026-09-03 | 34 |
-| projects/cockpit-ui/AGENTS.md | - | 2026-09-04 | 57 |
-| projects/cockpit-ui/ARCHITECTURE.md | - | 2026-09-04 | 51 |
-| projects/cockpit-ui/BOUNDARY.md | - | 2026-09-04 | 39 |
-| projects/cockpit-ui/CALLCHAIN.md | - | 2026-09-04 | 36 |
-| projects/cockpit-ui/CAPABILITY-MAP.md | - | 2026-09-04 | 57 |
-| projects/cockpit-ui/CHANGELOG.md | - | 2026-09-04 | 51 |
-| projects/cockpit-ui/CLAUDE.md | - | 2026-09-04 | 48 |
-| projects/cockpit-ui/CODE_OF_CONDUCT.md | - | 2026-09-04 | 69 |
-| projects/cockpit-ui/CONTRIBUTING.md | - | 2026-09-04 | 43 |
-| projects/cockpit-ui/CONTRIBUTORS.md | - | 2026-09-04 | 22 |
-| projects/cockpit-ui/DESIGN.md | - | 2026-09-04 | 123 |
-| projects/cockpit-ui/Plans/cockpit-web-indexed-falcon.md | - | 2026-09-04 | 139 |
-| projects/cockpit-ui/README.md | - | 2026-09-04 | 56 |
-| projects/cockpit-ui/SECURITY.md | - | 2026-09-04 | 34 |
-| projects/cockpit-ui/docs/API.md | - | 2026-09-04 | 28 |
-| projects/cockpit-ui/docs/ARCHITECTURE.md | - | 2026-09-04 | 24 |
-| projects/cockpit-ui/docs/FAQ.md | - | 2026-09-04 | 35 |
-| projects/cockpit-ui/docs/PHASE1-DETAILS.md | - | 2026-09-04 | 513 |
-| projects/cockpit-ui/docs/README.md | - | 2026-09-04 | 36 |
-| projects/cockpit-ui/docs/REDESIGN.md | - | 2026-09-04 | 621 |
-| projects/cockpit-ui/docs/TROUBLESHOOTING.md | - | 2026-09-04 | 27 |
 | projects/cockpit/ACKNOWLEDGMENTS.md | governance-team | 2026-09-04 | 22 |
 | projects/cockpit/AGENTS.md | governance-team | 2026-09-04 | 101 |
 | projects/cockpit/ARCHITECTURE.md | governance-team | 2026-09-04 | 72 |
 | projects/cockpit/BOUNDARY.md | governance-team | 2026-09-04 | 49 |
 | projects/cockpit/CALLCHAIN.md | governance-team | 2026-09-04 | 41 |
-| projects/cockpit/CAPABILITY-MAP.md | - | 2026-09-04 | 289 |
 | projects/cockpit/CHANGELOG.md | governance-team | 2026-09-04 | 40 |
 | projects/cockpit/CLAUDE.md | governance-team | 2026-09-04 | 52 |
 | projects/cockpit/CODE_OF_CONDUCT.md | governance-team | 2026-09-04 | 72 |
@@ -699,8 +598,6 @@
 | projects/family-hub/docs/MIGRATION.md | governance-team | 2026-09-04 | 25 |
 | projects/family-hub/docs/ROADMAP.md | governance-team | 2026-09-04 | 67 |
 | projects/family-hub/docs/TROUBLESHOOTING.md | governance-team | 2026-09-04 | 29 |
-| projects/knowledge/AGENTS.md | - | 2026-09-04 | 40 |
-| projects/knowledge/README.md | - | 2026-09-04 | 22 |
 | projects/knowledge/gbrain/.github/ISSUE_TEMPLATE/bug_report.md | governance-team | 2026-09-04 | 32 |
 | projects/knowledge/gbrain/.github/ISSUE_TEMPLATE/feature_request.md | governance-team | 2026-09-04 | 19 |
 | projects/knowledge/gbrain/.github/PULL_REQUEST_TEMPLATE/tier5-queries.md | governance-team | 2026-09-03 | 46 |
@@ -1013,36 +910,6 @@
 | projects/observability/docs/FAQ.md | governance-team | 2026-09-03 | 37 |
 | projects/observability/docs/MIGRATION.md | governance-team | 2026-09-03 | 25 |
 | projects/observability/docs/TROUBLESHOOTING.md | governance-team | 2026-09-03 | 29 |
-| projects/omlxc/AGENTS.md | - | 2026-09-04 | 28 |
-| projects/omlxc/CHANGELOG.md | - | 2026-09-04 | 235 |
-| projects/omlxc/CLAUDE.md | - | 2026-09-04 | 12 |
-| projects/omlxc/CONTRIBUTING.md | - | 2026-09-04 | 27 |
-| projects/omlxc/SECURITY.md | - | 2026-09-04 | 15 |
-| projects/omlxc/conf/agent-client.md | - | 2026-09-04 | 75 |
-| projects/omlxc/conf/launchd-proposal.md | - | 2026-09-04 | 87 |
-| projects/omlxc/docs/ARCHITECTURE-FABRIC.md | - | 2026-09-04 | 85 |
-| projects/omlxc/docs/local-openai-client-integration.md | - | 2026-09-04 | 539 |
-| projects/omlxc/docs/model-audit-2026-08-10.md | - | 2026-09-04 | 102 |
-| projects/omlxc/docs/operations/2026-08-20-optimization-summary.md | - | 2026-09-04 | 170 |
-| projects/omlxc/docs/operations/2026-08-22-architecture-review-and-roadmap.md | - | 2026-09-04 | 181 |
-| projects/omlxc/docs/operations/2026-08-22-deep-audit-and-hardening.md | - | 2026-09-04 | 159 |
-| projects/omlxc/docs/operations/2026-08-22-strategic-plan-four-pillars.md | - | 2026-09-04 | 237 |
-| projects/omlxc/docs/operations/2026-08-23-performance-stability-scenario-summary.md | - | 2026-09-04 | 176 |
-| projects/omlxc/docs/operations/2026-08-24-compute-fabric-four-fixes.md | - | 2026-09-04 | 92 |
-| projects/omlxc/docs/operations/2026-08-24-roadmap-compute-to-brain.md | - | 2026-09-04 | 164 |
-| projects/omlxc/docs/operations/2026-08-25-gateway-inprocess-dispatch-debug-notes.md | - | 2026-09-04 | 246 |
-| projects/omlxc/docs/operations/2026-08-25-iris-cockpit-migration-decision.md | - | 2026-09-04 | 34 |
-| projects/omlxc/docs/operations/2026-08-25-live-journey-seven-steps-graduation.md | - | 2026-09-04 | 78 |
-| projects/omlxc/docs/operations/2026-08-25-retrospective.md | - | 2026-09-04 | 106 |
-| projects/omlxc/docs/operations/2026-08-25-task-landscape-five-layers.md | - | 2026-09-04 | 85 |
-| projects/omlxc/docs/operations/2026-08-26-multi-agent-collaboration-protocol-proposal.md | - | 2026-09-04 | 82 |
-| projects/omlxc/docs/operations/2026-09-01-tailscale-recurrence.md | xiamingxing | 2026-09-04 | 67 |
-| projects/omlxc/docs/operations/2026-09-02-todo-ledger.md | - | 2026-09-04 | 27 |
-| projects/omlxc/docs/operations/compute-pool-optimization-2026-08-20.md | - | 2026-09-04 | 107 |
-| projects/omlxc/docs/superpowers/specs/2026-08-11-omlxc-local-compute-hub-redesign.md | - | 2026-09-04 | 691 |
-| projects/omlxc/docs/superpowers/specs/2026-08-12-omlxc-cli-guidance-design.md | - | 2026-09-04 | 203 |
-| projects/omlxc/scratch/2026-08-22-audit-leaderboard.md | - | 2026-09-04 | 69 |
-| projects/omlxc/scratch/benchmark_leaderboard.md | - | 2026-09-04 | 157 |
 | projects/omo/.omo/debt/action-packet/current.md | governance-team | 2026-09-04 | 37 |
 | projects/omo/.omo/debt/campaign/current.md | governance-team | 2026-09-04 | 19 |
 | projects/omo/.omo/debt/campaign/runs/2026-06-05T09-35-00Z/current.md | governance-team | 2026-09-04 | 19 |
@@ -1133,33 +1000,6 @@
 | projects/runtime/protocols/task-object-v1.md | governance-team | 2026-09-03 | 234 |
 | projects/runtime/scripts/kems-v2/CHANGELOG.md | governance-team | 2026-09-03 | 22 |
 | projects/runtime/scripts/redteam-round2-plan.md | governance-team | 2026-09-03 | 277 |
-| protocols/AGENTS.md | - | 2026-09-04 | 17 |
-| protocols/README.md | - | 2026-09-04 | 12 |
-| protocols/append-only-log-rollout.md | - | 2026-09-04 | 201 |
-| runtime/AGENTS.md | - | 2026-09-04 | 27 |
-| runtime/README.md | - | 2026-09-04 | 25 |
-| runtime/sandbox/pitches/Idea-Cognitive-Cartridges.md | - | 2026-09-04 | 21 |
-| runtime/sandbox/pitches/Idea-iterate非交互环境EOFError健壮性修复.md | - | 2026-09-04 | 18 |
-| runtime/sandbox/pitches/Idea-优化首页体验.md | - | 2026-09-04 | 18 |
-| runtime/sandbox/pitches/Idea-修复-4-项-closure-漂移-为-deferred-项.md | - | 2026-09-04 | 29 |
-| runtime/sandbox/pitches/Pitch-Cybernetic-Strategy.md | - | 2026-09-04 | 50 |
-| runtime/sandbox/pitches/Pitch-L0-Scheduling-And-Lock-Abstraction.md | - | 2026-09-04 | 32 |
-| runtime/sandbox/pitches/Pitch-Orphan.md | - | 2026-09-04 | 6 |
-| runtime/sandbox/pitches/Pitch-Valid.md | - | 2026-09-04 | 8 |
-| runtime/sandbox/pitches/Pitch-c2g-brainstorm-derust.md | - | 2026-09-04 | 43 |
-| runtime/sandbox/pitches/Pitch-v3-workspace-naming-ssot.md | - | 2026-09-04 | 31 |
-| runtime/sandbox/pitches/TestPitch.md | - | 2026-09-04 | 9 |
-| runtime/ssot-stable/README.md | - | 2026-09-04 | 23 |
-| scenarios/README.md | - | 2026-09-04 | 9 |
-| scenarios/Y1Q4-B1/README.md | - | 2026-09-04 | 19 |
-| scenarios/Y1Q4-B2/README.md | - | 2026-09-04 | 16 |
-| spaces/AGENTS.md | - | 2026-09-04 | 66 |
-| spaces/ARCHITECTURE.md | - | 2026-09-04 | 49 |
-| spaces/BOUNDARY.md | - | 2026-09-04 | 37 |
-| spaces/CALLCHAIN.md | - | 2026-09-04 | 36 |
-| spaces/README.md | - | 2026-09-04 | 46 |
-| tools/AGENTS.md | - | 2026-09-04 | 17 |
-| tools/README.md | - | 2026-09-04 | 12 |
 
 ## 派生文档
 
@@ -1168,13 +1008,7 @@
 | docs/generated/agent-gac-rules.md | bin/gac/gac-export-agents.py | - |
 | docs/generated/agent-redlines.md | bin/mof/gen-agent-redlines.py → .omo/_truth/registry/governance-checks.yaml::gac.rules | - |
 | docs/generated/architecture-deep-analysis.md | bin/ssot/architecture-deep-analysis.py | - |
-| docs/generated/doc-gov-framework.md | - | - |
-| docs/generated/doc-inventory.md | - | - |
-| docs/generated/ecosystem-health.md | - | - |
 | docs/generated/kos-ontology-graph.md | bin/ssot/kos-ontology-graph.py | - |
-| docs/generated/project-docs-analysis-2026-09-04.md | - | - |
-| docs/generated/project-layer-index.md | - | - |
-| docs/generated/ssot-map.md | - | - |
 | docs/templates/derived-template.md | <SSOT 路径> | - |
 | projects/aetherforge/.github/README.md | projects/aetherforge | 2026-09-03 |
 | projects/aetherforge/README.md | projects/aetherforge | 2026-09-03 |
@@ -1222,7 +1056,6 @@
 | projects/observability/README.md | projects/observability | 2026-09-03 |
 | projects/observability/docs/README.md | projects/observability | 2026-09-03 |
 | projects/omlxc/README.md | projects/omlxc | 2026-09-03 |
-| projects/omlxc/docs/generated/doc-inventory.md | - | - |
 | projects/omlxc/scripts/asr/README.md | projects/omlxc | 2026-09-03 |
 | projects/omlxc/tests/README.md | projects/omlxc | 2026-09-03 |
 | projects/runtime/README.md | projects/runtime | 2026-09-03 |
@@ -1358,8 +1191,6 @@
 | docs/reports/2026-08-31-t1-12-wp-p4-legacy-retirement.md | active | - |
 | docs/reports/2026-09-01-t1-12-closure-report.md | active | - |
 | docs/reports/2026-09-02-chaos-suite-validation.md | active | - |
-| docs/reports/2026-09-03-t10-119-failover-validation.md | - | - |
-| docs/reports/2026-09-04-portfolio-v2-ledger-truth-restore.md | - | - |
 | docs/reports/2026-compound-attribution-report.md | active | - |
 | docs/reports/adr-0390-verification.md | active | - |
 | docs/reports/adr-0412-merge-dedup-list.md | active | - |
@@ -1375,159 +1206,114 @@
 | projects/family-hub/apps/dashboard/tests/fixtures/documents/_knowledge/00.规则与模板/家庭账目规则.md | - | 2026-09-03 |
 | projects/family-hub/apps/dashboard/tests/fixtures/documents/_knowledge/02.医疗健康/Synthetic Member 02/疫苗接种计划.md | - | 2026-09-03 |
 | projects/family-hub/apps/dashboard/tests/fixtures/documents/_knowledge/03.育儿成长/Synthetic Member 02发育里程碑.md | - | 2026-09-03 |
-| projects/omlxc/docs/superpowers/plans/2026-08-11-omlxc-local-compute-hub-implementation.md | - | - |
-| tests/AGENTS.md | - | - |
-| tests/README.md | - | - |
 
-## 合规问题 (1919)
+## 合规问题 (1804)
 
-- [SSOT-NO-OWNER] locks/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] locks/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] locks/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] locks/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] artifacts/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] artifacts/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] artifacts/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] artifacts/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .githooks/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .githooks/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .githooks/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .githooks/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] tools/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] tools/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] tools/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] tools/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
+- [UNTYPED] locks/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] locks/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] artifacts/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] artifacts/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .githooks/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .githooks/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] tools/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] tools/AGENTS.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/DOC-LIFECYCLE.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/INDEX.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/AGENTS.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] domains/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] domains/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] evidence/gap-closeout.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] evidence/gap-closeout.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] evidence/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] evidence/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] evidence/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] evidence/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] bin/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] bin/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] Plans/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] Plans/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] Plans/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] Plans/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .agents/ORIGINAL_REQUEST.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/ORIGINAL_REQUEST.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .agents/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .agents/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] spaces/ARCHITECTURE.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] spaces/ARCHITECTURE.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] spaces/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] spaces/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] spaces/BOUNDARY.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] spaces/BOUNDARY.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] spaces/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] spaces/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] spaces/CALLCHAIN.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] spaces/CALLCHAIN.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .kilo/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .kilo/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .kilo/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .kilo/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] docs/SYSTEM-INDEX.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] docs/SYSTEM-INDEX.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] docs/INDEX-MCP.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] docs/INDEX-MCP.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .github/PULL_REQUEST_TEMPLATE.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .github/PULL_REQUEST_TEMPLATE.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .github/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .github/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .github/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .github/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] scenarios/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] scenarios/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] lib/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] lib/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] lib/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] lib/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] data/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] data/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] data/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] data/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] protocols/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] protocols/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] protocols/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] protocols/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] protocols/append-only-log-rollout.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] protocols/append-only-log-rollout.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .mimocode/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .mimocode/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .mimocode/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .mimocode/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .mimocode/commands/trajectory-distill.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .mimocode/commands/trajectory-distill.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .mimocode/commands/design-self-critique.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .mimocode/commands/design-self-critique.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] data/驾驶舱/CARDS/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] data/驾驶舱/CARDS/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] scenarios/Y1Q4-B2/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] scenarios/Y1Q4-B2/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] scenarios/Y1Q4-B1/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] scenarios/Y1Q4-B1/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .github/workflows/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .github/workflows/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .github/ISSUE_TEMPLATE/feature_request.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .github/ISSUE_TEMPLATE/feature_request.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .github/ISSUE_TEMPLATE/bug_report.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .github/ISSUE_TEMPLATE/bug_report.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .github/ISSUE_TEMPLATE/task.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .github/ISSUE_TEMPLATE/task.md: SSOT 缺少 last_updated 或 last-reviewed
-- [DERIVED-NO-SOURCE] docs/generated/project-layer-index.md: derived 类型缺少 source
-- [DERIVED-NO-SOURCE] docs/generated/project-docs-analysis-2026-09-04.md: derived 类型缺少 source
-- [DERIVED-NO-SOURCE] docs/generated/ssot-map.md: derived 类型缺少 source
-- [DERIVED-NO-SOURCE] docs/generated/doc-gov-framework.md: derived 类型缺少 source
-- [DERIVED-NO-SOURCE] docs/generated/doc-inventory.md: derived 类型缺少 source
-- [DERIVED-NO-SOURCE] docs/generated/ecosystem-health.md: derived 类型缺少 source
-- [SSOT-NO-OWNER] docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] aetherforge-archive/swarm/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] aetherforge-archive/swarm/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] aetherforge-archive/swarm/MERGE-NOTES.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] aetherforge-archive/swarm/MERGE-NOTES.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .agents/sentinel/BRIEFING.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/sentinel/BRIEFING.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .agents/sentinel/handoff.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/sentinel/handoff.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .agents/orchestrator/ORIGINAL_REQUEST.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/orchestrator/ORIGINAL_REQUEST.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .agents/orchestrator/BRIEFING.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/orchestrator/BRIEFING.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .agents/orchestrator/progress.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/orchestrator/progress.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .agents/orchestrator/plan.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/orchestrator/plan.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] .agents/skills/omlxc-compute-fabric/SKILL.md: SSOT 缺少 owner
+- [UNTYPED] domains/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] evidence/gap-closeout.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] evidence/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] evidence/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] bin/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] bin/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] Plans/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] Plans/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] tests/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] tests/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/ORIGINAL_REQUEST.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] spaces/ARCHITECTURE.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] spaces/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] spaces/BOUNDARY.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] spaces/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] spaces/CALLCHAIN.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .kilo/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .kilo/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/SYSTEM-INDEX.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/INDEX-MCP.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/G-DEL-3-WIRED-REMEASURE.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/AUTO-PR-REVIEW-ISA.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .github/PULL_REQUEST_TEMPLATE.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .github/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .github/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] scenarios/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] lib/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] lib/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] data/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] data/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] protocols/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] protocols/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] protocols/append-only-log-rollout.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .mimocode/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .mimocode/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .mimocode/commands/trajectory-distill.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .mimocode/commands/design-self-critique.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] data/驾驶舱/CARDS/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] scenarios/Y1Q4-B2/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] scenarios/Y1Q4-B1/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .github/workflows/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .github/ISSUE_TEMPLATE/feature_request.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .github/ISSUE_TEMPLATE/bug_report.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .github/ISSUE_TEMPLATE/task.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/generated/project-layer-index.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/generated/project-docs-analysis-2026-09-04.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/generated/ssot-map.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/generated/doc-gov-framework.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/generated/doc-inventory.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/generated/ecosystem-health.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/isa/debt-remediation-isa.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/reports/2026-09-03-t10-119-failover-validation.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/reports/2026-09-04-portfolio-v2-ledger-truth-restore.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-04-agora-fastmcp-sandboxing-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-04-zhiyuan-oa-triage-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-dogfood-canary-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-projections-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-north-star-v4-realtime-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-milestone-vision-gates-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-vision-to-bet-portfolio-v2-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] aetherforge-archive/swarm/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] aetherforge-archive/swarm/MERGE-NOTES.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/sentinel/BRIEFING.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/sentinel/handoff.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/orchestrator/ORIGINAL_REQUEST.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/orchestrator/BRIEFING.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/orchestrator/progress.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/orchestrator/plan.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/skills/omlxc-compute-fabric/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/memory-recall/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/external-agent-attach/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/ci-red-triage/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/governance-phase-orchestrator/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/workflow:project-code-change/SKILL.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] .agents/skills/cognitive-governance/SKILL.md: SSOT 缺少 owner
-- [SSOT-NO-OWNER] .agents/skills/delegation-guardrails/SKILL.md: SSOT 缺少 owner
+- [UNTYPED] .agents/skills/cognitive-governance/SKILL.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/skills/delegation-guardrails/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/agent-quickstart/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/ecos-test-cycle/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/governance-ssot-edit/SKILL.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] .agents/skills/domain-cartridge-governance/SKILL.md: SSOT 缺少 owner
-- [SSOT-NO-OWNER] .agents/skills/bet-execution/SKILL.md: SSOT 缺少 owner
+- [UNTYPED] .agents/skills/domain-cartridge-governance/SKILL.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/skills/bet-execution/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/worktree-ci-isolate/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/system-index-distill/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/project-governance/SKILL.md: 未声明 type (建议添加 frontmatter)
@@ -1538,78 +1324,44 @@
 - [UNTYPED] .agents/skills/workflow:mini/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/omo-audit-baseline/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/agent-onboarding/SKILL.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] .agents/skills/nextgen-cognitive-mesh/SKILL.md: SSOT 缺少 owner
+- [UNTYPED] .agents/skills/nextgen-cognitive-mesh/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/a2a-coordination/SKILL.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] .agents/skills/grill-me/QA_5.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] .agents/skills/grill-me/QA_5.md: SSOT 缺少 last_updated 或 last-reviewed
+- [UNTYPED] .agents/skills/grill-me/QA_5.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/bos-contract-fix/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/workflow:project-doc-change/SKILL.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] runtime/ssot-stable/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/ssot-stable/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/Idea-Cognitive-Cartridges.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/Idea-Cognitive-Cartridges.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/Pitch-L0-Scheduling-And-Lock-Abstraction.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/Pitch-L0-Scheduling-And-Lock-Abstraction.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/Pitch-Valid.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/Pitch-Valid.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/Idea-优化首页体验.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/Idea-优化首页体验.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/TestPitch.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/TestPitch.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/Pitch-v3-workspace-naming-ssot.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/Pitch-v3-workspace-naming-ssot.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/Pitch-Orphan.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/Pitch-Orphan.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/Pitch-c2g-brainstorm-derust.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/Pitch-c2g-brainstorm-derust.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/Pitch-Cybernetic-Strategy.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/Pitch-Cybernetic-Strategy.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/Idea-iterate非交互环境EOFError健壮性修复.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/Idea-iterate非交互环境EOFError健壮性修复.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] runtime/sandbox/pitches/Idea-修复-4-项-closure-漂移-为-deferred-项.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] runtime/sandbox/pitches/Idea-修复-4-项-closure-漂移-为-deferred-项.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/CHANGELOG.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/CHANGELOG.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/CONTRIBUTING.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/CONTRIBUTING.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/CLAUDE.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/CLAUDE.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/SECURITY.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/SECURITY.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/CODE_OF_CONDUCT.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/CODE_OF_CONDUCT.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/ARCHITECTURE.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/ARCHITECTURE.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/CHANGELOG.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/CHANGELOG.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/CONTRIBUTORS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/CONTRIBUTORS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/CONTRIBUTING.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/CONTRIBUTING.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/BOUNDARY.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/BOUNDARY.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/DESIGN.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/DESIGN.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/CAPABILITY-MAP.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/CAPABILITY-MAP.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/CLAUDE.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/CLAUDE.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/SECURITY.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/SECURITY.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/CALLCHAIN.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/CALLCHAIN.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit/CAPABILITY-MAP.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit/CAPABILITY-MAP.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/knowledge/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/knowledge/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/knowledge/AGENTS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/knowledge/AGENTS.md: SSOT 缺少 last_updated 或 last-reviewed
+- [UNTYPED] runtime/ssot-stable/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/Idea-Cognitive-Cartridges.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/Pitch-L0-Scheduling-And-Lock-Abstraction.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/Pitch-Valid.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/Idea-优化首页体验.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/TestPitch.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/Pitch-v3-workspace-naming-ssot.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/Pitch-Orphan.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/Pitch-c2g-brainstorm-derust.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/Pitch-Cybernetic-Strategy.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/Idea-iterate非交互环境EOFError健壮性修复.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] runtime/sandbox/pitches/Idea-修复-4-项-closure-漂移-为-deferred-项.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/CHANGELOG.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/CONTRIBUTING.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/CLAUDE.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/SECURITY.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/CODE_OF_CONDUCT.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/ARCHITECTURE.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/CHANGELOG.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/CONTRIBUTORS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/CONTRIBUTING.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/BOUNDARY.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/DESIGN.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/CAPABILITY-MAP.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/CLAUDE.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/SECURITY.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/CALLCHAIN.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit/CAPABILITY-MAP.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/knowledge/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/knowledge/AGENTS.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/knowledge/gbrain/recipes/calendar-to-brain.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/knowledge/gbrain/recipes/credential-gateway.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/knowledge/gbrain/recipes/ngrok-tunnel.md: 未声明 type (建议添加 frontmatter)
@@ -1645,71 +1397,41 @@
 - [UNTYPED] projects/knowledge/gbrain/skills/skillpack-harvest/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/knowledge/gbrain/skills/media-ingest/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/runtime/.omo/_knowledge/decisions/STRAT-P81-MASTER-DECISION-INBOX-2026-07-24.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] projects/cockpit-ui/Plans/cockpit-web-indexed-falcon.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/Plans/cockpit-web-indexed-falcon.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/docs/ARCHITECTURE.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/docs/ARCHITECTURE.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/docs/API.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/docs/API.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/docs/TROUBLESHOOTING.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/docs/TROUBLESHOOTING.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/docs/PHASE1-DETAILS.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/docs/PHASE1-DETAILS.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/docs/REDESIGN.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/docs/REDESIGN.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/docs/FAQ.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/docs/FAQ.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/cockpit-ui/docs/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/cockpit-ui/docs/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/model-audit-2026-08-10.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/model-audit-2026-08-10.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/local-openai-client-integration.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/local-openai-client-integration.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/ARCHITECTURE-FABRIC.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/ARCHITECTURE-FABRIC.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/scratch/benchmark_leaderboard.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/scratch/benchmark_leaderboard.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/scratch/2026-08-22-audit-leaderboard.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/scratch/2026-08-22-audit-leaderboard.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/conf/launchd-proposal.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/conf/launchd-proposal.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/conf/agent-client.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/conf/agent-client.md: SSOT 缺少 last_updated 或 last-reviewed
-- [DERIVED-NO-SOURCE] projects/omlxc/docs/generated/doc-inventory.md: derived 类型缺少 source
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-25-live-journey-seven-steps-graduation.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-25-live-journey-seven-steps-graduation.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-26-multi-agent-collaboration-protocol-proposal.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-26-multi-agent-collaboration-protocol-proposal.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-22-deep-audit-and-hardening.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-22-deep-audit-and-hardening.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/compute-pool-optimization-2026-08-20.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/compute-pool-optimization-2026-08-20.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-09-02-todo-ledger.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-09-02-todo-ledger.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-25-task-landscape-five-layers.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-25-task-landscape-five-layers.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-25-retrospective.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-25-retrospective.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-24-roadmap-compute-to-brain.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-24-roadmap-compute-to-brain.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-20-optimization-summary.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-20-optimization-summary.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-22-strategic-plan-four-pillars.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-22-strategic-plan-four-pillars.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-23-performance-stability-scenario-summary.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-23-performance-stability-scenario-summary.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-24-compute-fabric-four-fixes.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-24-compute-fabric-four-fixes.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-25-gateway-inprocess-dispatch-debug-notes.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-25-gateway-inprocess-dispatch-debug-notes.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-22-architecture-review-and-roadmap.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-22-architecture-review-and-roadmap.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/operations/2026-08-25-iris-cockpit-migration-decision.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/operations/2026-08-25-iris-cockpit-migration-decision.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/superpowers/specs/2026-08-12-omlxc-cli-guidance-design.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/superpowers/specs/2026-08-12-omlxc-cli-guidance-design.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] projects/omlxc/docs/superpowers/specs/2026-08-11-omlxc-local-compute-hub-redesign.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] projects/omlxc/docs/superpowers/specs/2026-08-11-omlxc-local-compute-hub-redesign.md: SSOT 缺少 last_updated 或 last-reviewed
+- [UNTYPED] projects/cockpit-ui/Plans/cockpit-web-indexed-falcon.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/docs/ARCHITECTURE.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/docs/API.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/docs/TROUBLESHOOTING.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/docs/PHASE1-DETAILS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/docs/REDESIGN.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/docs/FAQ.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/cockpit-ui/docs/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/model-audit-2026-08-10.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/local-openai-client-integration.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/ARCHITECTURE-FABRIC.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/scratch/benchmark_leaderboard.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/scratch/2026-08-22-audit-leaderboard.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/conf/launchd-proposal.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/conf/agent-client.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/generated/doc-inventory.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-25-live-journey-seven-steps-graduation.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-26-multi-agent-collaboration-protocol-proposal.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-22-deep-audit-and-hardening.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/compute-pool-optimization-2026-08-20.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-09-02-todo-ledger.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-25-task-landscape-five-layers.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-25-retrospective.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-24-roadmap-compute-to-brain.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-09-01-tailscale-recurrence.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-20-optimization-summary.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-22-strategic-plan-four-pillars.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-23-performance-stability-scenario-summary.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-24-compute-fabric-four-fixes.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-25-gateway-inprocess-dispatch-debug-notes.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-22-architecture-review-and-roadmap.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/operations/2026-08-25-iris-cockpit-migration-decision.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/superpowers/plans/2026-08-11-omlxc-local-compute-hub-implementation.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/superpowers/specs/2026-08-12-omlxc-cli-guidance-design.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/superpowers/specs/2026-08-11-omlxc-local-compute-hub-redesign.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/agora/bin/ssot/PACKS/dormant-adapter/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/agora/.omo/_delivery/phase-a1-milestone-2026-06-12.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/agora/.omo/_delivery/r66-monthly-evidence-2027-04-12.md: 未声明 type (建议添加 frontmatter)
@@ -1725,25 +1447,16 @@
 - [UNTYPED] projects/agora/.omo/_delivery/r63-monthly-evidence-2027-01-12.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/omo/.claude/skills/omo-srp-refactor/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/omo/tests/fixtures/.omo-test/.omo/debt/reviews/current.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] bin/meta/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] bin/meta/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] bin/gac/SECURITY.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] bin/gac/SECURITY.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] bin/sweep/README.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] bin/sweep/README.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] bin/_registry/quickstart.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] bin/_registry/quickstart.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] bin/ssot/PACKS/INDEX.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] bin/ssot/PACKS/INDEX.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] bin/ssot/PACKS/dormant-adapter/VERIFY.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] bin/ssot/PACKS/dormant-adapter/VERIFY.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] bin/ssot/PACKS/dormant-adapter/INSTALL.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] bin/ssot/PACKS/dormant-adapter/INSTALL.md: SSOT 缺少 last_updated 或 last-reviewed
+- [UNTYPED] bin/meta/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] bin/gac/SECURITY.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] bin/sweep/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] bin/_registry/quickstart.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] bin/ssot/PACKS/INDEX.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] bin/ssot/PACKS/dormant-adapter/VERIFY.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] bin/ssot/PACKS/dormant-adapter/INSTALL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] bin/ssot/PACKS/dormant-adapter/SKILL.md: 未声明 type (建议添加 frontmatter)
-- [SSOT-NO-OWNER] domains/weijian-governance/knowledge/standard_checklist.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] domains/weijian-governance/knowledge/standard_checklist.md: SSOT 缺少 last_updated 或 last-reviewed
-- [SSOT-NO-OWNER] domains/family-hub/knowledge/finance_health_spec.md: SSOT 缺少 owner
-- [SSOT-NO-DATE] domains/family-hub/knowledge/finance_health_spec.md: SSOT 缺少 last_updated 或 last-reviewed
+- [UNTYPED] domains/weijian-governance/knowledge/standard_checklist.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] domains/family-hub/knowledge/finance_health_spec.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_control/2026-07-29-human-delegated-decisions.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_control/north-star.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_control/INDEX.md: 未声明 type (建议添加 frontmatter)
@@ -3301,58 +3014,58 @@
 - [UNTYPED] .omo/_control/obsidian-vault/CLAUDE.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_control/debt-dashboard/health-trend.md: 未声明 type (建议添加 frontmatter)
 
-## 孤立文档 (1627)
+## 孤立文档 (1799)
 
 > 未声明 type，也不引用任何 SSOT。
 
+- locks/README.md
+- locks/AGENTS.md
+- artifacts/README.md
+- artifacts/AGENTS.md
+- .githooks/README.md
+- .githooks/AGENTS.md
+- tools/README.md
+- tools/AGENTS.md
 - .omo/README.md
 - .omo/DOC-LIFECYCLE.md
 - .omo/INDEX.md
 - .omo/AGENTS.md
-- .agents/skills/memory-recall/SKILL.md
-- .agents/skills/external-agent-attach/SKILL.md
-- .agents/skills/ci-red-triage/SKILL.md
-- .agents/skills/governance-phase-orchestrator/SKILL.md
-- .agents/skills/workflow:project-code-change/SKILL.md
-- .agents/skills/agent-quickstart/SKILL.md
-- .agents/skills/ecos-test-cycle/SKILL.md
-- .agents/skills/governance-ssot-edit/SKILL.md
-- .agents/skills/worktree-ci-isolate/SKILL.md
-- .agents/skills/system-index-distill/SKILL.md
-- .agents/skills/project-governance/SKILL.md
-- .agents/skills/workflow:governance-state-mutation/SKILL.md
-- .agents/skills/workflow-silence-detection/SKILL.md
-- .agents/skills/bdsk-virtual-board/SKILL.md
-- .agents/skills/bos-service-discovery/SKILL.md
-- .agents/skills/workflow:mini/SKILL.md
-- .agents/skills/omo-audit-baseline/SKILL.md
-- .agents/skills/agent-onboarding/SKILL.md
-- .agents/skills/a2a-coordination/SKILL.md
-- .agents/skills/bos-contract-fix/SKILL.md
-- .agents/skills/workflow:project-doc-change/SKILL.md
-- projects/knowledge/gbrain/recipes/calendar-to-brain.md
-- projects/knowledge/gbrain/recipes/credential-gateway.md
-- projects/knowledge/gbrain/recipes/ngrok-tunnel.md
-- projects/knowledge/gbrain/recipes/restart-sweep.md
-- projects/knowledge/gbrain/recipes/x-to-brain.md
-- projects/knowledge/gbrain/recipes/meeting-sync.md
-- projects/knowledge/gbrain/recipes/email-to-brain.md
-- projects/knowledge/gbrain/recipes/twilio-voice-brain.md
-- projects/knowledge/gbrain/skills/voice-note-ingest/SKILL.md
-- projects/knowledge/gbrain/skills/minion-orchestrator/SKILL.md
-- projects/knowledge/gbrain/skills/migrations/v0.18.0.md
-- projects/knowledge/gbrain/skills/migrations/v0.23.0.md
-- projects/knowledge/gbrain/skills/migrations/v0.22.14.md
-- projects/knowledge/gbrain/skills/migrations/v0.10.3.md
-- projects/knowledge/gbrain/skills/citation-fixer/SKILL.md
-- projects/knowledge/gbrain/skills/eiirp/SKILL.md
-- projects/knowledge/gbrain/skills/ingest/SKILL.md
-- projects/knowledge/gbrain/skills/brain-ops/SKILL.md
-- projects/knowledge/gbrain/skills/skillpack-check/SKILL.md
-- projects/knowledge/gbrain/skills/signal-detector/SKILL.md
-- projects/knowledge/gbrain/skills/skillify/SKILL.md
-- projects/knowledge/gbrain/skills/maintain/SKILL.md
-- projects/knowledge/gbrain/skills/testing/SKILL.md
-- projects/knowledge/gbrain/skills/cold-start/SKILL.md
-- projects/knowledge/gbrain/skills/functional-area-resolver/SKILL.md
-- ... 和另外 1577 个文档
+- domains/README.md
+- evidence/gap-closeout.md
+- evidence/README.md
+- evidence/AGENTS.md
+- bin/README.md
+- bin/AGENTS.md
+- Plans/README.md
+- Plans/AGENTS.md
+- projects/README.md
+- projects/AGENTS.md
+- runtime/README.md
+- runtime/AGENTS.md
+- tests/README.md
+- tests/AGENTS.md
+- .agents/ORIGINAL_REQUEST.md
+- .agents/README.md
+- .agents/AGENTS.md
+- spaces/ARCHITECTURE.md
+- spaces/README.md
+- spaces/BOUNDARY.md
+- spaces/AGENTS.md
+- spaces/CALLCHAIN.md
+- .kilo/README.md
+- .kilo/AGENTS.md
+- docs/SYSTEM-INDEX.md
+- docs/INDEX-MCP.md
+- docs/G-DEL-3-WIRED-REMEASURE.md
+- docs/AUTO-PR-REVIEW-ISA.md
+- .github/PULL_REQUEST_TEMPLATE.md
+- .github/README.md
+- .github/AGENTS.md
+- scenarios/README.md
+- lib/README.md
+- lib/AGENTS.md
+- data/README.md
+- data/AGENTS.md
+- protocols/README.md
+- protocols/AGENTS.md
+- ... 和另外 1749 个文档

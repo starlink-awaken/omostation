@@ -1,6 +1,7 @@
 meta:
+  schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 149
+  total_bets: 293
   windows:
   - Y1Q1
   - Y1Q2
@@ -256,6 +257,116 @@ gates:
     pass: weekly_accepted >= 5 AND acceptance_rate >= 0.40 AND edit_rate_drop >= 0.40
       AND surface <= 0.70
     on_fail: 收窄至单场景维持
+vision:
+  id: VISION-2029
+  statement: >-
+    把外部信号变成夏明星愿意署名发出的成果，并记住每次修改。
+  owner: human-principal
+  horizon_end: 2029-06-30
+  strategy_ref: repo://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+  required_objectives:
+  - OBJ-TRUST
+  - OBJ-HOLDABILITY
+
+objectives:
+- id: OBJ-TRUST
+  statement: 愿景到交付的证据链可审计、可复现，禁止虚假完成
+  owner: human-principal
+  required: true
+  key_results:
+  - id: KR-TRUST-CHAIN-COVERAGE
+    metric: vision_to_bet_chain_coverage
+    baseline:
+      value: null
+      status: unmeasured
+    target:
+      operator: gte
+      value: 1.0
+    status: unmeasured
+    evidence_refs: []
+- id: OBJ-HOLDABILITY
+  statement: 非终态 BET 可被单一 SSOT 持有与治理，减少孤儿与漂移
+  owner: human-principal
+  required: true
+  key_results:
+  - id: KR-HOLDABILITY-ORPHAN-BETS
+    metric: orphan_nonterminal_bets
+    baseline:
+      value: null
+      status: unmeasured
+    target:
+      operator: lte
+      value: 0
+    status: unmeasured
+    evidence_refs: []
+
+campaigns:
+- id: CMP-W0-PORTFOLIO-TRUTH
+  title: Portfolio/BET v2 机制升级
+  objective_refs:
+  - OBJ-TRUST
+  - OBJ-HOLDABILITY
+  owner: portfolio-governance
+  target_window: Y1Q4
+  required_milestones:
+  - MS-W0-CONTRACT
+  - MS-W0-MIGRATION
+  - MS-W0-PRODUCT
+  - MS-W0-CANARY
+  max_parallel_writers: 2
+  status: derived
+
+milestones:
+- id: MS-W0-CONTRACT
+  campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+  required_bets:
+  - BET-Y1Q4-T1-04
+  - BET-Y1Q4-T1-05
+  - BET-Y1Q4-T1-06
+  required_krs:
+  - KR-TRUST-CHAIN-COVERAGE
+  - KR-HOLDABILITY-ORPHAN-BETS
+  exit_gate:
+    all_required_bets_terminal: true
+    all_required_krs_proven: true
+    p0_guardrail_breaches: 0
+  status: derived
+- id: MS-W0-MIGRATION
+  campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+  required_bets:
+  - BET-Y1Q4-T1-07
+  - BET-Y1Q4-T1-08
+  required_krs:
+  - KR-HOLDABILITY-ORPHAN-BETS
+  exit_gate:
+    all_required_bets_terminal: true
+    all_required_krs_proven: true
+    p0_guardrail_breaches: 0
+  status: derived
+- id: MS-W0-PRODUCT
+  campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+  required_bets:
+  - BET-Y1Q4-T8-05
+  required_krs:
+  - KR-TRUST-CHAIN-COVERAGE
+  exit_gate:
+    all_required_bets_terminal: true
+    all_required_krs_proven: true
+    p0_guardrail_breaches: 0
+  status: derived
+- id: MS-W0-CANARY
+  campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+  required_bets:
+  - BET-Y1Q4-T1-09
+  required_krs:
+  - KR-TRUST-CHAIN-COVERAGE
+  - KR-HOLDABILITY-ORPHAN-BETS
+  exit_gate:
+    all_required_bets_terminal: true
+    all_required_krs_proven: true
+    p0_guardrail_breaches: 0
+  status: derived
+
 bets:
 - id: BET-Y1Q3-T10-122
   track: T10-MATURITY
@@ -20136,9 +20247,9 @@ bets:
   appetite: 18 days
   priority: P0
   status: candidate
-  note: Initial v1-compatible self-bootstrap. portfolio_binding is declaration-only
-    until BET-Y1Q4-T1-04 implements and a separately governed self-binding amendment
-    enables Portfolio v2 enforcement.
+  note: W0 Portfolio v2 self-binding applied 2026-09-04. portfolio_binding.schema_state=enforced;
+    top-level vision/objectives/campaigns/milestones present. Status/depends_on/accepted
+    bindings/completion/value evidence unchanged.
   goal: 编排七个 child BET，证明 3y-bet-ledger 能以唯一机器 SSOT 表达并验证 Vision→Objective/KR→Campaign/Milestone→BET→Spec/WorkPacket→Run→Evidence/Outcome→Retro 全链，且不创建第二真值面。
   non_goals:
   - 不实施或批量写入 W1-W6
@@ -20202,7 +20313,7 @@ bets:
     overall_state: evaluating
   depends_on: []
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: null
     objective_refs:
@@ -20211,6 +20322,12 @@ bets:
     kr_refs:
     - KR-TRUST-CHAIN-COVERAGE
     - KR-HOLDABILITY-ORPHAN-BETS
+    milestone_refs:
+    - MS-W0-CONTRACT
+    - MS-W0-MIGRATION
+    - MS-W0-PRODUCT
+    - MS-W0-CANARY
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: true
@@ -20222,8 +20339,9 @@ bets:
   title: Portfolio v2 schema 与兼容 validator
   appetite: 3 days
   priority: P0
-  status: candidate
-  note: "Initial v1-compatible self-bootstrap; Portfolio v2 enforcement is not yet active. human_gate released 2026-09-04 by principal for Wave A1 implementation."
+  status: done
+  done_at: 2026-09-04T09:37:52Z
+  note: "Wave A1 delivered via #3066+#3072; human_gate released 2026-09-04; meta.total_bets repaired; portfolio lint --strict green."
   goal: 以 additive contract 扩展现有 Ledger，使其表达 Vision、Objective、KR、Campaign、Milestone、parent/child、coverage、hypothesis、gate、guardrail 与 replacement，同时保持全部 v1 消费者和历史对象语义不变。
   non_goals:
   - 不创建新服务、数据库、dispatcher 或独立状态库
@@ -20253,7 +20371,6 @@ bets:
   - docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
   - docs/superpowers/plans/2026-09-03-w0-portfolio-v2-schema-compatibility.md
   - docs/plans/3y-bet-ledger.yaml
-  - docs/plans/3y-bet-ledger.yaml::meta.total_bets
   - .omo/_knowledge/retros/BET-Y1Q4-T1-04.md
   pasw_required: false
   accepted_specifications:
@@ -20263,24 +20380,50 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T1-04
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d2106d5b86dbc03c1ffc1f148e1786c41b2d9a63
+          tests:
+            ref: receipt://tests/test_bet_portfolio_contract.py
+            sha256: sha256:043a53c176735fc6afdecdcb0eb6483d48adff0a40f40a679f4ec03b8f8d6e17
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
+            sha256: sha256:0dcb84b615b337d94ee787a4ef65cab5f9f1b2d6ae07ab6c676b9323e84a630e
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
   depends_on: []
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE, KR-HOLDABILITY-ORPHAN-BETS]
+    milestone_refs:
+    - MS-W0-CONTRACT
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: false
@@ -20292,8 +20435,9 @@ bets:
   title: Objective/KR/BET coverage graph 与 critical path
   appetite: 2 days
   priority: P0
-  status: candidate
-  note: Initial v1-compatible self-bootstrap; Portfolio v2 enforcement is not yet active.
+  status: done
+  done_at: 2026-09-04T10:04:58Z
+  note: "Delivered via #3075; human_gate released 2026-09-04; coverage graph + critical-path CLI green."
   goal: 用 depends_on 与 covers 两类机器边建立确定性组合图，保证 required KR 覆盖守恒并输出真实关键路径，不以 done BET 数量计算进度。
   non_goals:
   - 不新增图数据库或独立 graph truth
@@ -20314,38 +20458,67 @@ bets:
   - bin/plan/portfolio_graph.py
   - bin/plan/bet-ledger.py
   - tests/test_bet_portfolio_graph.py
+  - bin/_registry/scripts/governance/portfolio_graph.yaml
   - docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md
   - docs/superpowers/plans/2026-09-03-w0-portfolio-coverage-graph-critical-path.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/governance-checks.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T1-05.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md
     spec_version: 1.0.0
-    content_digest: sha256:27b93936399c3d7ff895c82ffe85855bd3b1ce895af43737b92ab9e922b35806
+    content_digest: sha256:96fc21376953def89fc4b53418efcb2029424f602e43720ac8fc418226f496a2
     decision_ref: decision://accepted/BET-Y1Q4-T1-05
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@f25b5b97b133fe6965d18a7210d4ad0b638d77ac
+          tests:
+            ref: receipt://tests/test_bet_portfolio_graph.py
+            sha256: sha256:7f46c8708fee650729008efe75d28cb40a4d87814cab8064bb6727c6b591d3f1
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md
+            sha256: sha256:96fc21376953def89fc4b53418efcb2029424f602e43720ac8fc418226f496a2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-05.md
+            sha256: sha256:cb10f15d95a7dab62344376a121f3ad131b2c19c4119879499609a0bc24e3bf4
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-05.md
+            sha256: sha256:cb10f15d95a7dab62344376a121f3ad131b2c19c4119879499609a0bc24e3bf4
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-05.md
+            sha256: sha256:cb10f15d95a7dab62344376a121f3ad131b2c19c4119879499609a0bc24e3bf4
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-05.md
+            sha256: sha256:cb10f15d95a7dab62344376a121f3ad131b2c19c4119879499609a0bc24e3bf4
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-05.md
+            sha256: sha256:cb10f15d95a7dab62344376a121f3ad131b2c19c4119879499609a0bc24e3bf4
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
   depends_on: [BET-Y1Q4-T1-04]
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE]
+    milestone_refs:
+    - MS-W0-CONTRACT
+
   value_indicator_policy: false
   risk_level: L2
-  human_gate: true
+  human_gate: false
   circuit_breaker: 需要新图数据库、无法稳定排序或以 raw BET count 冒充进度时停止
   retro: required
 - id: BET-Y1Q4-T1-06
@@ -20355,7 +20528,7 @@ bets:
   appetite: 3 days
   priority: P0
   status: candidate
-  note: Initial v1-compatible self-bootstrap; Portfolio v2 enforcement is not yet active.
+  note: "human_gate released 2026-09-04 by principal sequential Wave A1 advance after T1-05 done."
   goal: 在现有 chain-bind 上增加 BET、Milestone、Campaign、Objective、Vision 五级纯派生完成谓词，阻止 leaf done、工程 delivery 或代理指标冒充战略完成。
   non_goals:
   - 不允许 Agent 或 projection 直接写 KR proven
@@ -20402,14 +20575,17 @@ bets:
     overall_state: evaluating
   depends_on: [BET-Y1Q4-T1-04, BET-Y1Q4-T1-05]
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE]
+    milestone_refs:
+    - MS-W0-CONTRACT
+
   value_indicator_policy: false
   risk_level: L2
-  human_gate: true
+  human_gate: false
   circuit_breaker: 任何 higher-level 状态需手工写入、value firewall 可被绕过或破坏现有 chain-bind 时停止
   retro: required
 - id: BET-Y1Q4-T1-07
@@ -20418,8 +20594,9 @@ bets:
   title: 现有 BET 只读组合分类与分批迁移合同
   appetite: 2 days
   priority: P0
-  status: candidate
-  note: Initial v1-compatible self-bootstrap; implementation produces a read-only manifest only.
+  status: done
+  done_at: 2026-09-04 11:04:56+00:00
+  note: "Delivered Wave A2 migration manifest; human_gate released 2026-09-04 after self-binding #3085; write_surfaces expanded for registry/ledger/baseline."
   goal: 对执行时的全部 Ledger BET 生成 deterministic reuse/continue/merge/defer/stop 分类 manifest，历史 terminal 只引用不重写，任何 apply 仅在独立授权的至多8对象批次发生。
   non_goals:
   - 不在本 BET apply 现有对象迁移
@@ -20440,38 +20617,67 @@ bets:
   - bin/plan/portfolio_migration.py
   - tests/test_bet_portfolio_migration.py
   - docs/generated/bet-portfolio-migration-manifest.yaml
+  - bin/_registry/scripts/governance/portfolio_migration.yaml
   - docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md
   - docs/superpowers/plans/2026-09-03-w0-portfolio-legacy-bet-migration.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/governance-checks.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T1-07.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:a9d0986b151f031ea4ebf2762d309623a7cf718f59076693391ae6caeaeae009
+    spec_version: 1.0.1
+    content_digest: sha256:f80a6ccfe642a4f0c0ec3bbc1f9b2aaa25217facb4988f9d79c96a62c7786d15
     decision_ref: decision://accepted/BET-Y1Q4-T1-07
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md
+            sha256: sha256:f80a6ccfe642a4f0c0ec3bbc1f9b2aaa25217facb4988f9d79c96a62c7786d15
+          tests:
+            ref: receipt://tests/test_bet_portfolio_migration.py
+            sha256: sha256:a102452bcbe994fc12accf475fe3e7cd325d00a56b7cf44a7b64fa60935978c2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+            sha256: sha256:1cc6d98bdb50bf3da45014edaa773b4269607e6f314a518f8070c1082790aa38
+          merged_reachable_commit:
+            ref: git://origin/main@3b14c2504a22647dd5381934b9f6017e2edb42cc
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+            sha256: sha256:1cc6d98bdb50bf3da45014edaa773b4269607e6f314a518f8070c1082790aa38
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+            sha256: sha256:1cc6d98bdb50bf3da45014edaa773b4269607e6f314a518f8070c1082790aa38
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+            sha256: sha256:1cc6d98bdb50bf3da45014edaa773b4269607e6f314a518f8070c1082790aa38
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+            sha256: sha256:1cc6d98bdb50bf3da45014edaa773b4269607e6f314a518f8070c1082790aa38
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   depends_on: [BET-Y1Q4-T1-04]
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-HOLDABILITY]
     kr_refs: [KR-HOLDABILITY-ORPHAN-BETS]
+    milestone_refs:
+    - MS-W0-MIGRATION
+
   value_indicator_policy: false
   risk_level: L2
-  human_gate: true
+  human_gate: false
   circuit_breaker: 需要改写 terminal evidence、自动决定业务去留、无 source digest 或单批超过8对象时停止
   retro: required
 - id: BET-Y1Q4-T1-08
@@ -20529,11 +20735,14 @@ bets:
     overall_state: evaluating
   depends_on: [BET-Y1Q4-T1-04, BET-Y1Q4-T1-07]
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE, KR-HOLDABILITY-ORPHAN-BETS]
+    milestone_refs:
+    - MS-W0-MIGRATION
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: true
@@ -20592,11 +20801,14 @@ bets:
     overall_state: evaluating
   depends_on: [BET-Y1Q4-T1-05, BET-Y1Q4-T1-08]
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE]
+    milestone_refs:
+    - MS-W0-PRODUCT
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: true
@@ -20668,13 +20880,139 @@ bets:
   - BET-Y1Q4-T1-08
   - BET-Y1Q4-T8-05
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE, KR-HOLDABILITY-ORPHAN-BETS]
+    milestone_refs:
+    - MS-W0-CANARY
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: true
   circuit_breaker: 任一 negative case 假绿、mutable-ref 依赖、value 轴变化、W1-W6 出现或 clone cleanup 无法证明时停止 W0 closeout
+  retro: required
+
+# === 衍生扩展 BET (2026-09-04 系统治理恢复会话新增) ===
+
+- id: BET-Y1Q4-T6-03
+  track: T6-EVOLUTION
+  window: Y1Q4
+  title: 子模块 gitlink 漂移自动防护 + sync-check 机制强化
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: 建立子模块 gitlink 漂移的自动检测与修复机制，防止 P97 squash-SHA 悬空和本地未提交改动导致的 gitlink 不一致。强化 sync-check hook 在 submodule pointer 变更时的自动同步能力。
+  non_goals:
+  - 不改变现有 submodule-guard 的 fast-forward 校验逻辑
+  - 不自动 push 子模块变更（仍需人工确认）
+  done_when:
+  - pre-commit hook 增加 gitlink drift 快速检测（本地 vs gitlink SHA 不一致时告警）
+  - sync-check hook 增加自动 fast-forward 子模块到 gitlink SHA 的能力
+  - 文档记录 submodule 同步 SOP
+  verify:
+  - cmd: python3 bin/ssot/submodule-reachability-gate.py --source index
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ssot/submodule-reachability-gate.py
+  - docs/architecture/submodule-sync-sop.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: fast-forward 校验失败时停止，不强制更新
+  retro: required
+
+- id: BET-Y1Q4-T8-04
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Scene card bet/falsifier 全量补全 + 生命周期推进
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 63 张 scene card 补全 bet 和 falsifier 必填字段，推进 draft→shadow→assisted→supervised→routine 生命周期，消除 validate --all 的 FAIL。
+  non_goals:
+  - 不改变现有 scene card 的 goal/trigger/input/output 核心字段
+  - 不自动激活（每张卡仍需人工确认）
+  done_when:
+  - validate --all 全量 PASS（无 bet/falsifier 缺失）
+  - 至少 5 张 draft 卡推进到 shadow 或更高级别
+  - 每张卡关联到具体 BET ID
+  verify:
+  - cmd: python3 bin/ssot/scene-card-lifecycle.py validate --all
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/scene-cards/*.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-04.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 单卡推进需人工确认，不批量自动升级
+  retro: required
+
+- id: BET-Y1Q4-T9-01
+  track: T9-OBSERV
+  window: Y1Q4
+  title: Resident agent ledger 锁监控与自动恢复机制
+  appetite: 1 day
+  priority: P2
+  status: candidate
+  goal: 建立 resident agent ledger SQLite 锁的监控与自动恢复机制，防止数据库锁死导致记账功能持续不可用。增加 WAL checkpoint 定期执行和锁超时自动释放。
+  non_goals:
+  - 不替换 SQLite 为其他数据库
+  - 不改变现有 ledger 数据结构
+  done_when:
+  - ledger 锁超时（>5min）自动检测并触发 checkpoint
+  - 连续 3 次 checkpoint 失败则 kill 持有锁的僵死进程
+  - resident-status 增加 ledger 锁年龄指标
+  verify:
+  - cmd: make resident-status
+    expect: health=recovered or ok
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/ledger_check.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T9-01.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 自动 kill 进程前需确认进程已僵死（CPU time < 1% over 5min）
+  retro: required
+
+- id: BET-Y1Q4-T10-02
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 子模块 doc frontmatter 批量迁移收尾 + doc-index 合规收口
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 完成所有子模块的 doc frontmatter 迁移（type/owner/last_updated），使 doc-index 合规问题从 1402 降至 legacy warning 预算内（≤800）。同步更新主仓 gitlink 确保所有子模块指针一致。
+  non_goals:
+  - 不改变现有文档内容（仅添加 YAML frontmatter）
+  - 不处理 untyped 软信号（1819 个为已知存量）
+  done_when:
+  - doc-index 合规问题 ≤800（仅 legacy warnings）
+  - 所有子模块 frontmatter 覆盖率 ≥95%
+  - gitlink drift = 0（本地与 gitlink SHA 完全一致）
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/generate-docs-index.py --check
+    expect: 合规问题 <= 800
+  - cmd: python3 bin/ssot/submodule-reachability-gate.py --source index
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/*/ACKNOWLEDGMENTS.md
+  - projects/*/AGENTS.md
+  - projects/*/ARCHITECTURE.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-01.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 单模块 frontmatter 迁移冲突时跳过该模块，不阻塞整体
   retro: required

@@ -33,6 +33,7 @@ def _setup_task(tmp_path: Path) -> None:
                     {
                         "id": "worker-a",
                         "enabled": True,
+                        "admission_state": "admitted",
                         "transports": {"cli_prompt": {"command": "worker-a"}},
                     }
                 ]

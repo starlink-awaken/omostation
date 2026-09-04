@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # Knowledge Engineering Complex (知识工程复合体)
 
 > **Layer**: L2  

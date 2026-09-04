@@ -18,6 +18,6 @@ type: derived
 | L1 | 运行时 (runtime / omlxc) | `omlxc`, `runtime` |
 | L0 | 协议层 (ecos) | `ecos`, `mesh-router` |
 | M0 | 横切框架 (model-driven) | `model-driven` |
-| X | 横切扩展 (bus-foundation / observability / family-hub; aetherforge/c2g/omo-debt 已内包 runtime+omo, ADR-0412+T6-01+Y1Q4-T6-01) | `bus-foundation`, `observability` |
+| X | 横切扩展 (bus-foundation / observability / family-hub; aetherforge/c2g/omo-debt 已内包 runtime+omo, ADR-0412+T6-01+Y1Q4-T6-01) | `aetherforge`, `bus-foundation`, `observability` |
 | L1-L3 |  | `toolbox` |
 

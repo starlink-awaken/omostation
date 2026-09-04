@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # AGENTS.md — knowledge
 
 ## Scope

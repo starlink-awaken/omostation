@@ -49,6 +49,7 @@ LEDGER_RELATIVE_PATH = "docs/plans/3y-bet-ledger.yaml"
 LEDGER = WS / LEDGER_RELATIVE_PATH
 RETRO_DIR = WS / ".omo" / "_knowledge" / "retros"
 _PORTFOLIO_VALIDATOR = None
+_PORTFOLIO_GRAPH = None
 
 
 def _validate_portfolio(ledger: dict, *, strict: bool):
@@ -64,6 +65,21 @@ def _validate_portfolio(ledger: dict, *, strict: bool):
         spec.loader.exec_module(module)
         _PORTFOLIO_VALIDATOR = module.validate_portfolio
     return _PORTFOLIO_VALIDATOR(ledger, strict=strict)
+
+
+def _portfolio_graph_module():
+    """Lazy-load the coverage-graph sibling module."""
+    global _PORTFOLIO_GRAPH
+    if _PORTFOLIO_GRAPH is None:
+        module_path = Path(__file__).with_name("portfolio_graph.py")
+        spec = importlib.util.spec_from_file_location("_bet_ledger_portfolio_graph", module_path)
+        if spec is None or spec.loader is None:  # pragma: no cover - filesystem failure
+            raise RuntimeError("PORTFOLIO_GRAPH_UNAVAILABLE")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        _PORTFOLIO_GRAPH = module
+    return _PORTFOLIO_GRAPH
 
 
 # 2026-08-06 实测基线 — git tracked 口径（含子模块）
@@ -2562,20 +2578,65 @@ def cmd_lint(data: dict, args) -> int:
 
 
 def cmd_portfolio(data: dict, args) -> int:
-    """Run the optional Portfolio v2 contract after the legacy Ledger lint."""
-    if args.portfolio_cmd != "lint":  # pragma: no cover - argparse constrains this
-        raise ValueError(f"unknown portfolio command: {args.portfolio_cmd}")
-    if cmd_lint(data, args) != 0:
+    """Portfolio v2 lint / coverage / critical-path read-only commands."""
+    if args.portfolio_cmd == "lint":
+        if cmd_lint(data, args) != 0:
+            return 1
+        result = _validate_portfolio(data, strict=args.strict)
+        for warning in result.warnings:
+            print(f"WARN  {warning}")
+        for error in result.errors:
+            print(f"ERROR {error}")
+        if result.ok:
+            print("OK -- Portfolio v2 compatibility contract")
+            return 0
         return 1
-    result = _validate_portfolio(data, strict=args.strict)
-    for warning in result.warnings:
-        print(f"WARN  {warning}")
-    for error in result.errors:
-        print(f"ERROR {error}")
-    if result.ok:
-        print("OK -- Portfolio v2 compatibility contract")
+
+    graph_mod = _portfolio_graph_module()
+    graph = graph_mod.build_graph(data)
+    if args.portfolio_cmd == "coverage":
+        result = graph_mod.validate_coverage(graph)
+        payload = {
+            "ok": result.ok,
+            "errors": list(result.errors),
+            "warnings": list(result.warnings),
+            "required_kr_ids": list(graph.required_kr_ids),
+            "depends_on_edges": len(graph.depends_on),
+            "covers_edges": len(graph.covers),
+        }
+        if getattr(args, "json", False):
+            print(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+        else:
+            for warning in result.warnings:
+                print(f"WARN  {warning}")
+            for error in result.errors:
+                # Live ledger is bootstrap_unenforced: report but do not fail unless --strict
+                print(f"INFO  {error}" if not getattr(args, "strict", False) else f"ERROR {error}")
+            print(
+                f"OK -- Portfolio coverage graph "
+                f"(depends_on={payload['depends_on_edges']}, covers={payload['covers_edges']})"
+            )
+        if getattr(args, "strict", False) and not result.ok:
+            return 1
+        # Structural graph errors (missing dep / cycle) still halt even in bootstrap mode
+        structural = [e for e in graph.errors if e.startswith(("DEPENDENCY_REF_MISSING", "DEPENDENCY_CYCLE"))]
+        if structural:
+            for error in structural:
+                print(f"ERROR {error}")
+            return 1
         return 0
-    return 1
+
+    if args.portfolio_cmd == "critical-path":
+        report = graph_mod.critical_path(graph)
+        if getattr(args, "json", False):
+            print(json.dumps(report, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+        else:
+            print(f"ready_bets={len(report['ready_bets'])} blocked_descendants={report['blocked_descendant_count']}")
+            for bid in report["ready_bets"][:20]:
+                print(f"  - {bid}")
+        return 0
+
+    raise ValueError(f"unknown portfolio command: {args.portfolio_cmd}")
 
 
 def cmd_complete(data: dict, args) -> int:
@@ -2722,6 +2783,11 @@ def main() -> int:
     portfolio_sub = portfolio.add_subparsers(dest="portfolio_cmd", required=True)
     portfolio_lint = portfolio_sub.add_parser("lint")
     portfolio_lint.add_argument("--strict", action="store_true")
+    portfolio_coverage = portfolio_sub.add_parser("coverage")
+    portfolio_coverage.add_argument("--json", action="store_true")
+    portfolio_coverage.add_argument("--strict", action="store_true")
+    portfolio_critical = portfolio_sub.add_parser("critical-path")
+    portfolio_critical.add_argument("--json", action="store_true")
     pc = sub.add_parser("complete")
     pc.add_argument("bet_id")
     pc.add_argument("--force", action="store_true")

@@ -179,12 +179,13 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 576
+    script_baseline: 578
     # 2026-09-03: +1 perception-coverage
     # 2026-09-03: +2 ops-cron-install + weekly-evolution-report
     # 2026-09-04: +2 T10-105 work branch net bin diff baseline
     # 2026-09-04: +2 ops stubs (lighthouse-stub.py + nfr-stub.py, #3044 欠账同步, BET-Y1Q4-T6-02)
     # 2026-09-04: +1 portfolio_contract.py (BET-Y1Q4-T1-04 Wave A1 validator)
+    # 2026-09-04: +1 portfolio_graph.py (BET-Y1Q4-T1-05 coverage graph)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

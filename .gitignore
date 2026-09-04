@@ -305,3 +305,6 @@ projects/omo-debt/
 # tool caches (root-governance allowed)
 .benchmarks/
 .deepeval/
+
+# 运行时 worktree 锁目录 (PASW/并发 agent 产物, 不入库)
+.omo/locks/

@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 ---
 
 # AGENTS.md — Workspace Development Guide
@@ -148,7 +148,7 @@ SSOT [`docs/plans/3y-bet-ledger.yaml`](docs/plans/3y-bet-ledger.yaml) · 视图 
 
 1. **7D 终极可观测**：`cockpit panorama` / `make panorama`
 2. **8D 全景追溯**：`cockpit compass trace <GOAL-ID>` / `make compass-trace`
-3. **17 项目 4D 体检**：`cockpit project inspect <PROJ>` / `make project-inspect`
+3. **16 项目 4D 体检**：`cockpit project inspect <PROJ>` / `make project-inspect`
 4. **场景卡与 Journey 校验**：`cockpit journey` / `make journey-validate`
 5. **常态化守护**：必须维持 `make gac-local-gate` ALL GREEN PASS
 

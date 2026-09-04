@@ -9,12 +9,12 @@ created: 2026-09-03
 last-reviewed: 2026-09-03
 bet_id: BET-Y1Q4-T1-05
 risk_level: L2
-human_gate: true
+human_gate: false
 value_indicator_policy: false
 source_design_sha256: cbdee89004d0156e262daa63a1c38cfd660c0d5efbf0fce1a8eec8a92027c30b
 source_proposal_sha256: 26bd1b3df552e693f2ac2684df255436522ff816d7844459523fafe130587100
 source_amendment_sha256: 5b1bb03274d8f7383b67f88953cf0c7074a571a9a1d5aebb1ab68bb234042409
-implementation_authorized: false
+implementation_authorized: true
 ---
 
 # W0 Portfolio Coverage Graph and Critical Path Design

@@ -76,3 +76,16 @@ PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/bet-ledger.py por
 - run: `20260904T074355Z-project-code-change-30805980`
 - branch: `work/bet-y1q4-t1-04`
 - human_gate release: 2026-09-04 principal Wave A1
+
+## Addendum — meta.total_bets single-field repair (2026-09-04)
+
+- Claimed path: `docs/plans/3y-bet-ledger.yaml::meta.total_bets`
+- Change: `149 → 289` (= `len(bets)`); BET ids/statuses/bindings untouched
+- Verify: `bet-ledger.py portfolio lint --strict` → exit 0 (no META_TOTAL_BETS_DRIFT)
+- run: `20260904T081421Z-project-code-change-fea38c0e`
+
+## Addendum — status done (2026-09-04)
+
+- `completion_evidence.overall_state=delivery_accepted` (value_indicator_policy=false)
+- merged_reachable_commit: `git://origin/main@d2106d5b86dbc03c1ffc1f148e1786c41b2d9a63` (#3072 tip after #3066)
+- Downstream T1-05 human_gate released for sequential Wave A1

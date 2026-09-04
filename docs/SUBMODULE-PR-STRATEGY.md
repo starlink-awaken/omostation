@@ -23,7 +23,7 @@ PR 工作流下主仓走 PR(`work/<session>` → main),但主仓 PR 含**子模�
 ## 2. 现状机制(已就绪)
 
 `bin/ssot/sync-submodules-push.sh`(主仓 `.git/hooks/pre-push` 调用):
-- 遍历 `.gitmodules` 17 个子模块
+- 遍历 `.gitmodules` 16 个子模块
 - 检测每个子模块"本地领先远程"的 commit(`@{u}..HEAD`)
 - `git push --no-verify origin <branch>` direct push(跳子模块 pre-push,避免容器化 e2e 挂死)
 - 任一失败 → exit 1 阻断主仓 push
@@ -34,8 +34,8 @@ PR 工作流下主仓走 PR(`work/<session>` → main),但主仓 PR 含**子模�
 
 | 仓库 | 策略 | 依据 |
 |:---|:---|:---|
-| **主仓 main** | branch protection(走 PR) | 多 agent 撞车主战场(GaC doctor/compliance/verify worktree-wide);17 域变更汇聚于此 |
-| **子模块 main ×17** | **不保护**(保持 direct push) | 独立 repo,每个专注一域,撞车概率低;复用 sync-submodules 零改造 |
+| **主仓 main** | branch protection(走 PR) | 多 agent 撞车主战场(GaC doctor/compliance/verify worktree-wide);16 域变更汇聚于此 |
+| **子模块 main ×16** | **不保护**(保持 direct push) | 独立 repo,每个专注一域,撞车概率低;复用 sync-submodules 零改造 |
 
 **决策依据**:
 - Phase 1 验证 + commit 死循环治本都指向**主仓共享 worktree**是撞车根因,子模块非痛点

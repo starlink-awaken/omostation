@@ -225,7 +225,7 @@ last_updated: 2026-09-03
 | `cockpit help` | 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务) |
 | `cockpit init` | 🚀 初始化向导（同 quickstart） |
 | `cockpit model-driven` | — |
-| `cockpit project` | 🔍 17 项目全景 4D 体检与诊断 |
+| `cockpit project` | 🔍 16 项目全景 4D 体检与诊断 |
 | `cockpit quickstart` | 🚀 新用户快速上手向导（环境核验 + 上手指引） |
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
 
