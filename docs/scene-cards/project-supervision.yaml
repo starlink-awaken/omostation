@@ -2,6 +2,8 @@ title: Project Supervision Scene Card (项目监督与决策支持)
 status: pilot
 type: scene-card
 owner: product-architecture
+bet: BET-Y1Q4-T8-04
+falsifier: "若 30 天内无 project supervision 触发，则场景无实际价值"
 last-reviewed: 2026-08-07
 related:
 - ./periodic-reporting.yaml

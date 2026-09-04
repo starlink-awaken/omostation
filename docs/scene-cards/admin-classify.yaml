@@ -7,6 +7,9 @@ related:
 - ./admin-inbox.yaml
 ---
 schema: scene-card/v2
+lifecycle: draft
+bet: BET-Y1Q4-T8-04
+falsifier: "若 30 天内无 admin 类任务触发，则场景无实际价值"
 scene_id: admin-classify
 journey_id: admin-notification-workflow
 goal: 对已判定为任务的邮件做 LLM 任务分解, 识别转发需求/任务类型/截止时间/转发对象

@@ -19,7 +19,8 @@ owner: xiamingxing
 target_path: $HOME/.local/share/omostation/accepted-20260827
 risk_level: L2
 files_count: release
-bet_id: BET-Y1Q3-T10-27
+bet: BET-Y1Q3-T10-27
+falsifier: "若 shadow 期间无 cutover 类 documents 任务被处理，则场景无实际价值"
 category: cutover
 
 # Architecture Alignment (ADR-0387 dual-track admission)

@@ -1,6 +1,7 @@
 ---
 last-reviewed: 2026-08-30
----
+bet: BET-Y1Q4-T8-04
+falsifier: 若 shadow 期间无文档被处理，则场景无实际价值
 
 schema: scene-card/v2
 lifecycle: supervised
@@ -21,7 +22,6 @@ source_path: ~/Documents/@公共/_runtime
 target_path: ~/Workspace/runtime/quarantine/documents-public-runtime-20260829
 risk_level: L2
 files_count: variable
-bet_id: BET-Y1Q3-T10-69
 category: quarantine
 
 # Architecture Alignment (ADR-0387 dual-track admission)
@@ -34,4 +34,3 @@ architecture:
   dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
   evidence_plane: ".omo/_delivery/"
 
----

@@ -7,6 +7,8 @@ related:
 - ./admin-forward.yaml
 ---
 schema: scene-card/v2
+bet: BET-Y1Q4-T8-04
+falsifier: "若 30 天内无 admin 类任务触发，则场景无实际价值"
 scene_id: admin-collect
 journey_id: admin-notification-workflow
 goal: 向 deadline_tracker 注册任务截止追踪, 进入等待回复状态
