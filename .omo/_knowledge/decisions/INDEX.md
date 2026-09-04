@@ -560,3 +560,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0440: 全生态服务 SSOT 登记、BOS URI 全生命周期路由注册与 Agora FastMCP 主权算力工具链挂载 — **ACCEPTED** | 2026-08-30 | governance-team | 0440-ecosystem-services-registration-and-governance.md
 - ADR-0441: Documents↔Workspace 协同机制 v1（DW 三原语） — **ACCEPTED** | 2026-08-30 | xiamingxing | 0441-documents-workspace-collab-v1.md
 - ADR-0442: 次世代主权智能体全域常态化运营、业务真值流演进与全生命周期自进化治理架构 — **ACCEPTED** | 2026-08-30 | governance-team | 0442-nextgen-sovereign-business-os-and-evolution-architecture.md
+- ADR-0450: cockpit-ui 以 submodule 形态回归主仓（第 15 子模块，gitlink 版本锚定） — **ACCEPTED** | 2026-09-04 | xiamingxing | 0450-cockpit-ui-submodule-reintegration.md
