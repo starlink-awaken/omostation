@@ -21022,6 +21022,11 @@ bets:
   - bin/ssot/submodule-reachability-gate.py
   - docs/architecture/submodule-sync-sop.md
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-submodule-gitlink-drift-guard-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:5237b2a18d2e8cbc92994cf92b98c417fe8969b649a75c908f092e8ad84b9958
+    decision_ref: decision://accepted/BET-Y1Q4-T6-03
   risk_level: L1
   human_gate: false
   circuit_breaker: fast-forward 校验失败时停止，不强制更新
