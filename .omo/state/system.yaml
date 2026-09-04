@@ -1,8 +1,8 @@
 current_phase: 29
 current_wave: W1
-health_score_evidence: 81.7
+health_score_evidence: 77.3
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-09-01T02:45:15.763308+00:00'
+health_score_evidence_generated_at: '2026-09-04T03:02:39.137917+00:00'
 completed_tasks: 290
 planned_tasks: 7
 active_tasks: 1
