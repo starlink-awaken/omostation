@@ -20128,3 +20128,551 @@ bets:
   value_indicator_policy: false
   retro: required
 
+- id: BET-Y1Q4-T1-03
+  track: T1-TRUTH
+  window: Y1Q4
+  title: Vision-to-BET Portfolio v2 组合真值收敛
+  appetite: 18 days
+  priority: P0
+  status: candidate
+  note: Initial v1-compatible self-bootstrap. portfolio_binding is declaration-only
+    until BET-Y1Q4-T1-04 implements and a separately governed self-binding amendment
+    enables Portfolio v2 enforcement.
+  goal: 编排七个 child BET，证明 3y-bet-ledger 能以唯一机器 SSOT 表达并验证 Vision→Objective/KR→Campaign/Milestone→BET→Spec/WorkPacket→Run→Evidence/Outcome→Retro 全链，且不创建第二真值面。
+  non_goals:
+  - 不实施或批量写入 W1-W6
+  - 不创建 Portfolio 服务、数据库、dispatcher、workflow engine 或 event ledger
+  - 不重写历史 terminal BET、completion/value evidence 或 retro
+  - 不以 BET 数量、PR、CI、测试或 Agent 自评证明个人价值
+  done_when:
+  - T1-04/T1-05/T1-06/T1-07/T1-08/T8-05/T1-09 七个 child 全部完成各自合同
+  - W0 Contract、Migration、Product、Canary 四个 Milestone 均由验证器派生为 met
+  - v1 compatibility、v2 fail-closed、coverage graph、projection drift 与 negative fixtures 全绿
+  - 一个 value-exempt dogfood BET 完整走通且没有 W1-W6 或个人价值写入
+  - child-first/root-last、required checks、exact-SHA replay 与 canonical clone cleanup 有直接证据
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0 or zero-new-finding delta against immutable base
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/chain-bind-check.py self-check
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/superpowers/specs/2026-09-03-vision-to-bet-portfolio-v2-design.md
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-milestone-vision-gates-design.md
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-projections-design.md
+  - docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-dogfood-canary-design.md
+  - docs/superpowers/plans/2026-09-03-vision-to-bet-portfolio-v2.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-v2-schema-compatibility.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-coverage-graph-critical-path.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-milestone-vision-gates.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-legacy-bet-migration.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-projections.md
+  - docs/superpowers/plans/2026-09-03-w0-cockpit-portfolio-view.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-dogfood-canary.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/governance-evidence/waiver-2026-09-03-w0-portfolio-v2-accepted-binding.md
+  - .omo/_truth/governance-evidence/waiver-2026-09-03-w0-portfolio-v2-self-binding.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-03.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-vision-to-bet-portfolio-v2-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:21edafde541cde6473c27bbc330ffb9beda072e1fd7952cb7f7f21df40b4fc52
+    decision_ref: decision://accepted/BET-Y1Q4-T1-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
+  portfolio_binding:
+    schema_state: bootstrap_unenforced
+    campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+    parent_bet: null
+    objective_refs:
+    - OBJ-TRUST
+    - OBJ-HOLDABILITY
+    kr_refs:
+    - KR-TRUST-CHAIN-COVERAGE
+    - KR-HOLDABILITY-ORPHAN-BETS
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 需要第二真值面、破坏 v1 读取、重写历史证据、W1-W6 越界或超过20个有效工作日仍无法完成核心 Contract+Gate 时停止并重审范围
+  retro: required
+- id: BET-Y1Q4-T1-04
+  track: T1-TRUTH
+  window: Y1Q4
+  title: Portfolio v2 schema 与兼容 validator
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  note: Initial v1-compatible self-bootstrap; Portfolio v2 enforcement is not yet active.
+  goal: 以 additive contract 扩展现有 Ledger，使其表达 Vision、Objective、KR、Campaign、Milestone、parent/child、coverage、hypothesis、gate、guardrail 与 replacement，同时保持全部 v1 消费者和历史对象语义不变。
+  non_goals:
+  - 不创建新服务、数据库、dispatcher 或独立状态库
+  - 不批量迁移现有 BET
+  - 不修改现有 status、binding、dependency、completion 或 value evidence
+  done_when:
+  - current full v1 Ledger 在 v2 parser 下可读且所有既有 BET 对象语义等价
+  - valid v2 fixture 通过，缺失/重复实体、错误引用、metric shape、枚举和 policy type 均 typed fail
+  - compatibility mode 对既有 meta.total_bets 与 len(bets) 的差异产生 typed warning，且不阻断 v1 读取
+  - focused v2 fixtures 从 RED 到 GREEN 严格执行 meta.total_bets 等于 len(bets)
+  - validator 合并后、full-Ledger strict mode 启用前，以独立 claim 将 meta.total_bets 单字段派生修复为该 immutable tree 的 len(bets)
+  - 单字段修复不改变任何 BET object、status、binding、dependency、completion 或 value evidence
+  - 单字段修复后 full Ledger strict mode 全绿，新或修改的 non-terminal v2 BET 必须完整绑定组合字段
+  - validator 无 import-time 或 filesystem write side effect
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml --with pytest python -m pytest tests/test_bet_portfolio_contract.py -q
+    expect: exit 0
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/bet-ledger.py portfolio lint
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/plan/portfolio_contract.py
+  - bin/plan/bet-ledger.py
+  - tests/test_bet_portfolio_contract.py
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-v2-schema-compatibility.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/plans/3y-bet-ledger.yaml::meta.total_bets
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
+    spec_version: 1.0.1
+    content_digest: sha256:c8bc7fa145402867a5ab5d06b6031e305a0f2ff41c3f91c08e43b45670b585e1
+    decision_ref: decision://accepted/BET-Y1Q4-T1-04
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: []
+  portfolio_binding:
+    schema_state: bootstrap_unenforced
+    campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+    parent_bet: BET-Y1Q4-T1-03
+    objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
+    kr_refs: [KR-TRUST-CHAIN-COVERAGE, KR-HOLDABILITY-ORPHAN-BETS]
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 需要数据库、新服务、第二 dispatcher、破坏 v1 CLI、strict mode 先于单字段 meta.total_bets 修复启用，或无法保持历史 BET 对象语义等价时停止
+  retro: required
+- id: BET-Y1Q4-T1-05
+  track: T1-TRUTH
+  window: Y1Q4
+  title: Objective/KR/BET coverage graph 与 critical path
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  note: Initial v1-compatible self-bootstrap; Portfolio v2 enforcement is not yet active.
+  goal: 用 depends_on 与 covers 两类机器边建立确定性组合图，保证 required KR 覆盖守恒并输出真实关键路径，不以 done BET 数量计算进度。
+  non_goals:
+  - 不新增图数据库或独立 graph truth
+  - 不从 parent_bet 隐式生成执行依赖
+  - 不自动创建 replacement、dependency 或 evidence
+  done_when:
+  - dependency graph 保持无 missing ID、无 cycle
+  - required KR 零覆盖、failed leaf 无 replacement 与非终态 BET 无 Campaign/Objective/KR 均 fail-closed
+  - fixed fixture 的 critical-path JSON byte-stable，包含 blocker、descendant 和 writer-lane 信息
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml --with pytest python -m pytest tests/test_bet_portfolio_graph.py -q
+    expect: exit 0
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/bet-ledger.py portfolio coverage
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/plan/portfolio_graph.py
+  - bin/plan/bet-ledger.py
+  - tests/test_bet_portfolio_graph.py
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-coverage-graph-critical-path.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-05.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:27b93936399c3d7ff895c82ffe85855bd3b1ce895af43737b92ab9e922b35806
+    decision_ref: decision://accepted/BET-Y1Q4-T1-05
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: [BET-Y1Q4-T1-04]
+  portfolio_binding:
+    schema_state: bootstrap_unenforced
+    campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+    parent_bet: BET-Y1Q4-T1-03
+    objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
+    kr_refs: [KR-TRUST-CHAIN-COVERAGE]
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 需要新图数据库、无法稳定排序或以 raw BET count 冒充进度时停止
+  retro: required
+- id: BET-Y1Q4-T1-06
+  track: T1-TRUTH
+  window: Y1Q4
+  title: Milestone/Vision 派生完成门与 chain-bind v2
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  note: Initial v1-compatible self-bootstrap; Portfolio v2 enforcement is not yet active.
+  goal: 在现有 chain-bind 上增加 BET、Milestone、Campaign、Objective、Vision 五级纯派生完成谓词，阻止 leaf done、工程 delivery 或代理指标冒充战略完成。
+  non_goals:
+  - 不允许 Agent 或 projection 直接写 KR proven
+  - 不让 value-exempt delivery 推进个人价值
+  - 不改变现有 run/retro/evidence 真值所有权
+  done_when:
+  - all leaf done 但 required KR 未证明时 Milestone close 必须失败
+  - value-exempt、synthetic、少于12周和缺 human final verdict 的 Vision close 全部失败
+  - completed replacement 可保持覆盖且现有 chain-bind fixtures 兼容
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml --with pytest python -m pytest tests/test_chain_bind.py tests/test_bet_portfolio_completion.py -q
+    expect: exit 0
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/chain-bind-check.py self-check
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/plan/chain_bind.py
+  - bin/plan/chain-bind-check.py
+  - bin/plan/bet-ledger.py
+  - tests/test_chain_bind.py
+  - tests/test_bet_portfolio_completion.py
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-milestone-vision-gates-design.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-milestone-vision-gates.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-06.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-milestone-vision-gates-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3f3eb26334abf51949c2f259876b22741ae4aafad2b0c89f62b5ff26b2e66ce7
+    decision_ref: decision://accepted/BET-Y1Q4-T1-06
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: [BET-Y1Q4-T1-04, BET-Y1Q4-T1-05]
+  portfolio_binding:
+    schema_state: bootstrap_unenforced
+    campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+    parent_bet: BET-Y1Q4-T1-03
+    objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
+    kr_refs: [KR-TRUST-CHAIN-COVERAGE]
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 任何 higher-level 状态需手工写入、value firewall 可被绕过或破坏现有 chain-bind 时停止
+  retro: required
+- id: BET-Y1Q4-T1-07
+  track: T1-TRUTH
+  window: Y1Q4
+  title: 现有 BET 只读组合分类与分批迁移合同
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  note: Initial v1-compatible self-bootstrap; implementation produces a read-only manifest only.
+  goal: 对执行时的全部 Ledger BET 生成 deterministic reuse/continue/merge/defer/stop 分类 manifest，历史 terminal 只引用不重写，任何 apply 仅在独立授权的至多8对象批次发生。
+  non_goals:
+  - 不在本 BET apply 现有对象迁移
+  - 不自动改变 candidate、blocked、done 或 failed
+  - 不补造历史 completion/value evidence
+  done_when:
+  - manifest 覆盖执行时全部 BET 恰好一次并绑定 immutable source digest
+  - terminal/blocked 对象语义不变，所有 non-terminal 有唯一分类与理由
+  - dry-run 零 mutation，apply 缺批次授权或超过8对象时 fail-closed
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml --with pytest python -m pytest tests/test_bet_portfolio_migration.py -q
+    expect: exit 0
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/portfolio_migration.py --dry-run --json
+    expect: exit 0 and working tree unchanged
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/plan/portfolio_migration.py
+  - tests/test_bet_portfolio_migration.py
+  - docs/generated/bet-portfolio-migration-manifest.yaml
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-legacy-bet-migration.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:a9d0986b151f031ea4ebf2762d309623a7cf718f59076693391ae6caeaeae009
+    decision_ref: decision://accepted/BET-Y1Q4-T1-07
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: [BET-Y1Q4-T1-04]
+  portfolio_binding:
+    schema_state: bootstrap_unenforced
+    campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+    parent_bet: BET-Y1Q4-T1-03
+    objective_refs: [OBJ-HOLDABILITY]
+    kr_refs: [KR-HOLDABILITY-ORPHAN-BETS]
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 需要改写 terminal evidence、自动决定业务去留、无 source digest 或单批超过8对象时停止
+  retro: required
+- id: BET-Y1Q4-T1-08
+  track: T1-TRUTH
+  window: Y1Q4
+  title: Goals/Markdown/control projection 生成与漂移门
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  note: Initial v1-compatible self-bootstrap; .omo outputs remain broker-owned.
+  goal: 从唯一 Ledger 单向生成 goals/current、3Y-BET-PORTFOLIO.md 与 portfolio-status.json，三者同 digest、确定性且不可反向写回组合真值。
+  non_goals:
+  - 不允许 projection 成为第二 writer
+  - 不直接写 .omo/goals 或 .omo/_control
+  - 不从 dirty runtime 推测完成状态
+  done_when:
+  - 三份 projection source digest 一致且相同输入两次生成 byte-identical
+  - 任一字节 drift 被 --check 检出，missing/stale input 显示 unavailable
+  - .omo 两输出仅由 registered broker 原子写入且 direct-I/O negative tests 通过
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml --with pytest python -m pytest tests/test_bet_portfolio_projection.py -q
+    expect: exit 0
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/bet-ledger.py portfolio project-goals --check
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/plan/portfolio_projection.py
+  - bin/plan/bet-ledger.py
+  - tests/test_bet_portfolio_projection.py
+  - .omo/goals/current.yaml
+  - .omo/_control/portfolio-status.json
+  - docs/plans/3Y-BET-PORTFOLIO.md
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-projections-design.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-projections.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-08.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-projections-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:1233f50db2aeeac24619653a4b501cfa0fe231c240e8d5ba52737f13c840047e
+    decision_ref: decision://accepted/BET-Y1Q4-T1-08
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: [BET-Y1Q4-T1-04, BET-Y1Q4-T1-07]
+  portfolio_binding:
+    schema_state: bootstrap_unenforced
+    campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+    parent_bet: BET-Y1Q4-T1-03
+    objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
+    kr_refs: [KR-TRUST-CHAIN-COVERAGE, KR-HOLDABILITY-ORPHAN-BETS]
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 任一 projection 可反向写 Ledger、直接写受治理 .omo 路径或相同输入非确定性时停止
+  retro: required
+- id: BET-Y1Q4-T8-05
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Cockpit Portfolio 只读组合视图
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  note: Initial v1-compatible self-bootstrap; Cockpit remains a read-only consumer.
+  goal: 在现有 Cockpit 单入口呈现 Objective、KR、Milestone、critical path、blocker 与 unavailable evidence，不暴露内部 workflow/gitlink 术语且不成为组合 writer。
+  non_goals:
+  - 不直接读写 Ledger、Goals 或 OMO state
+  - 不完成 BET、KR、Milestone、Campaign 或 Vision
+  - 不新增顶级 UI、dispatcher 或 truth plane
+  done_when:
+  - cockpit portfolio status/objectives/critical-path/blockers 消费同一 digest-bound projection
+  - missing/stale/digest mismatch 显示 unavailable 且无推断 fallback
+  - child PR/CI/main/tag 先完成，root 仅以独立 pointer PR 更新 child-main reachable gitlink
+  verify:
+  - cmd: cd projects/cockpit && uv run --with pytest python -m pytest -q
+    expect: focused portfolio tests exit 0
+  - cmd: python3 bin/ssot/submodule-reachability-gate.py --source index --require-main projects/cockpit
+    expect: exit 0 after root pointer close
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/commands/portfolio.py
+  - projects/cockpit/tests/test_portfolio_command.py
+  - projects/cockpit/INTERFACE.yaml
+  - projects/cockpit
+  - docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md
+  - docs/superpowers/plans/2026-09-03-w0-cockpit-portfolio-view.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-05.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:cf5ffa9eabedbe7eb1152906627b86e344c8cfd064479c9652f7529d2138fb3c
+    decision_ref: decision://accepted/BET-Y1Q4-T8-05
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on: [BET-Y1Q4-T1-05, BET-Y1Q4-T1-08]
+  portfolio_binding:
+    schema_state: bootstrap_unenforced
+    campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+    parent_bet: BET-Y1Q4-T1-03
+    objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
+    kr_refs: [KR-TRUST-CHAIN-COVERAGE]
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: Cockpit 需直接写组合真值、建立新入口或 child-first/root-last 无法保持时停止
+  retro: required
+- id: BET-Y1Q4-T1-09
+  track: T1-TRUTH
+  window: Y1Q4
+  title: Portfolio v2 dogfood canary 与 W0 收口
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  note: Initial v1-compatible self-bootstrap; canary is value-exempt and W1-W6 remain absent.
+  goal: 用一个 value-exempt 机制 BET 端到端验证 Vision→Objective/KR→Campaign/Milestone→BET→Spec/WorkPacket→Run→Evidence/Outcome→Retro→projection，全量负例 fail-closed 后才允许 W0 收口。
+  non_goals:
+  - 不创建或启动 W1-W6
+  - 不产生个人 decision_outcome 或价值样本
+  - 不用 mutable ref、PR/CI 或 worker_done 替代真实链路证据
+  done_when:
+  - positive chain 在 immutable tree 完整通过且 CLI/Cockpit projection digest 一致
+  - Objective/KR、coverage、Spec digest、WorkPacket、Run、verify、completion、retro、projection 任一破坏均 typed fail
+  - parent close 在任一 implementation child 未完成或 Milestone 未 met 时失败
+  - required checks、post-merge exact-SHA replay 与 canonical clone cleanup 成功
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml --with pytest python -m pytest tests/test_bet_portfolio_canary.py -q
+    expect: exit 0
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/bet-ledger.py portfolio status
+    expect: W0 milestones derived met; W1-W6 absent
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - tests/test_bet_portfolio_canary.py
+  - docs/reports/2026-09-03-w0-portfolio-v2-dogfood-canary.md
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-dogfood-canary-design.md
+  - docs/superpowers/plans/2026-09-03-w0-portfolio-dogfood-canary.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-03.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-05.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-06.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-08.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-05.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-09.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-dogfood-canary-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:740d5a36d1506fde38ef0f95b2aa2a3aad47c9924d9494bec7a54fb08b936992
+    decision_ref: decision://accepted/BET-Y1Q4-T1-09
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  depends_on:
+  - BET-Y1Q4-T1-04
+  - BET-Y1Q4-T1-05
+  - BET-Y1Q4-T1-06
+  - BET-Y1Q4-T1-07
+  - BET-Y1Q4-T1-08
+  - BET-Y1Q4-T8-05
+  portfolio_binding:
+    schema_state: bootstrap_unenforced
+    campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+    parent_bet: BET-Y1Q4-T1-03
+    objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
+    kr_refs: [KR-TRUST-CHAIN-COVERAGE, KR-HOLDABILITY-ORPHAN-BETS]
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 任一 negative case 假绿、mutable-ref 依赖、value 轴变化、W1-W6 出现或 clone cleanup 无法证明时停止 W0 closeout
+  retro: required
