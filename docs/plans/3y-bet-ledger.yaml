@@ -20595,6 +20595,7 @@ bets:
   appetite: 2 days
   priority: P0
   status: done
+  done_at: 2026-09-04 11:04:56+00:00
   note: "Delivered Wave A2 migration manifest; human_gate released 2026-09-04 after self-binding #3085; write_surfaces expanded for registry/ledger/baseline."
   goal: 对执行时的全部 Ledger BET 生成 deterministic reuse/continue/merge/defer/stop 分类 manifest，历史 terminal 只引用不重写，任何 apply 仅在独立授权的至多8对象批次发生。
   non_goals:
@@ -20644,10 +20645,22 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-07.md
             sha256: sha256:1cc6d98bdb50bf3da45014edaa773b4269607e6f314a518f8070c1082790aa38
           merged_reachable_commit:
-            ref: git://origin/main@dd42f0a793418c892af00b3002260b5a7ceb4753
+            ref: git://origin/main@3b14c2504a22647dd5381934b9f6017e2edb42cc
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+            sha256: sha256:1cc6d98bdb50bf3da45014edaa773b4269607e6f314a518f8070c1082790aa38
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+            sha256: sha256:1cc6d98bdb50bf3da45014edaa773b4269607e6f314a518f8070c1082790aa38
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+            sha256: sha256:1cc6d98bdb50bf3da45014edaa773b4269607e6f314a518f8070c1082790aa38
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-07.md
+            sha256: sha256:1cc6d98bdb50bf3da45014edaa773b4269607e6f314a518f8070c1082790aa38
       value:
         status: NOT_PROVEN
         evidence: {}
