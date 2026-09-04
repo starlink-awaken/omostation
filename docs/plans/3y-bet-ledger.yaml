@@ -20712,7 +20712,7 @@ bets:
   appetite: 3 days
   priority: P0
   status: candidate
-  note: Initial v1-compatible self-bootstrap; .omo outputs remain broker-owned.
+  note: "human_gate released 2026-09-04 by principal sequential Wave auth; Spec 1.0.1 authorized; write_surfaces expanded for registry/ledger/baseline."
   goal: 从唯一 Ledger 单向生成 goals/current、3Y-BET-PORTFOLIO.md 与 portfolio-status.json，三者同 digest、确定性且不可反向写回组合真值。
   non_goals:
   - 不允许 projection 成为第二 writer
@@ -20739,11 +20739,14 @@ bets:
   - docs/superpowers/specs/2026-09-03-w0-portfolio-projections-design.md
   - docs/superpowers/plans/2026-09-03-w0-portfolio-projections.md
   - .omo/_knowledge/retros/BET-Y1Q4-T1-08.md
+  - bin/_registry/scripts/governance/portfolio_projection.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/governance-checks.yaml
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-projections-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:1233f50db2aeeac24619653a4b501cfa0fe231c240e8d5ba52737f13c840047e
+    spec_version: 1.0.1
+    content_digest: sha256:fb1be6b06dbb47c23d0f72e2ff96155c2f736a08e355c511a1062df0562344e5
     decision_ref: decision://accepted/BET-Y1Q4-T1-08
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -20770,7 +20773,7 @@ bets:
 
   value_indicator_policy: false
   risk_level: L2
-  human_gate: true
+  human_gate: false
   circuit_breaker: 任一 projection 可反向写 Ledger、直接写受治理 .omo 路径或相同输入非确定性时停止
   retro: required
 - id: BET-Y1Q4-T8-05
@@ -20780,7 +20783,7 @@ bets:
   appetite: 3 days
   priority: P0
   status: candidate
-  note: Initial v1-compatible self-bootstrap; Cockpit remains a read-only consumer.
+  note: "human_gate released 2026-09-04 by principal sequential Wave auth; Spec 1.0.1 authorized."
   goal: 在现有 Cockpit 单入口呈现 Objective、KR、Milestone、critical path、blocker 与 unavailable evidence，不暴露内部 workflow/gitlink 术语且不成为组合 writer。
   non_goals:
   - 不直接读写 Ledger、Goals 或 OMO state
@@ -20805,11 +20808,12 @@ bets:
   - docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md
   - docs/superpowers/plans/2026-09-03-w0-cockpit-portfolio-view.md
   - .omo/_knowledge/retros/BET-Y1Q4-T8-05.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: true
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:cf5ffa9eabedbe7eb1152906627b86e344c8cfd064479c9652f7529d2138fb3c
+    spec_version: 1.0.1
+    content_digest: sha256:fb72395f9361c39830480ca7895828baecc3fe64bdaae41c3e1dcbbbadf2437f
     decision_ref: decision://accepted/BET-Y1Q4-T8-05
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -20836,7 +20840,7 @@ bets:
 
   value_indicator_policy: false
   risk_level: L2
-  human_gate: true
+  human_gate: false
   circuit_breaker: Cockpit 需直接写组合真值、建立新入口或 child-first/root-last 无法保持时停止
   retro: required
 - id: BET-Y1Q4-T1-09
@@ -20846,7 +20850,7 @@ bets:
   appetite: 3 days
   priority: P0
   status: candidate
-  note: Initial v1-compatible self-bootstrap; canary is value-exempt and W1-W6 remain absent.
+  note: "human_gate released 2026-09-04 by principal sequential Wave auth; Spec 1.0.1 authorized."
   goal: 用一个 value-exempt 机制 BET 端到端验证 Vision→Objective/KR→Campaign/Milestone→BET→Spec/WorkPacket→Run→Evidence/Outcome→Retro→projection，全量负例 fail-closed 后才允许 W0 收口。
   non_goals:
   - 不创建或启动 W1-W6
@@ -20881,8 +20885,8 @@ bets:
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-dogfood-canary-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:740d5a36d1506fde38ef0f95b2aa2a3aad47c9924d9494bec7a54fb08b936992
+    spec_version: 1.0.1
+    content_digest: sha256:01a55448c6a923ce5366ee53099308aefa47d8ff951aeb4e6b0797c5ad092e51
     decision_ref: decision://accepted/BET-Y1Q4-T1-09
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -20915,7 +20919,7 @@ bets:
 
   value_indicator_policy: false
   risk_level: L2
-  human_gate: true
+  human_gate: false
   circuit_breaker: 任一 negative case 假绿、mutable-ref 依赖、value 轴变化、W1-W6 出现或 clone cleanup 无法证明时停止 W0 closeout
   retro: required
 
