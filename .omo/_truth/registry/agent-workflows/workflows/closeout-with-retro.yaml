@@ -1,0 +1,35 @@
+id: closeout-with-retro
+run_frequency: on_demand
+title: Closeout with mandatory retrospective
+purpose: >
+  闭环收尾 + 强制复盘。
+  解决当前 agent-workflow closeout 不强制 retro 导致教训流失的问题。
+agents:
+  roles:
+  - any-agent
+  observer_policy: optional
+allowed_lanes:
+- docs
+- governance_code
+lock_scopes:
+- closeout:{run_id}
+surfaces:
+  read:
+  - .agents/skills/closeout-retro/SKILL.md
+  - .omo/_knowledge/patterns/p78-triple-axis-diagnostic-pattern.md
+  write:
+  - .omo/_knowledge/retros/**
+phases:
+  preflight:
+  - id: basic_closeout
+    command: git status --short && make gac-local-gate
+    expect: exit 0
+  execute:
+  - id: p78_diagnostic
+    command: answer P78 4-question diagnostic
+  verify:
+  - id: three_layer_solidify
+    command: solidify across memory/protocol/harness layers
+evidence_required:
+- p78_answers
+- solidification_actions

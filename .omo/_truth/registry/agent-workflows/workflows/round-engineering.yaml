@@ -1,0 +1,65 @@
+id: round-engineering
+run_frequency: on_demand
+title: Round engineering lifecycle
+purpose: >
+  M4 时代工程闭环 — commit → ADR → 测 → closeout。
+  每轮 (Round X) 严格按 7 步执行，回答 P72/P52/P74 三门槛。
+agents:
+  roles:
+  - engineering-agent
+  - governance-agent
+  observer_policy: optional
+allowed_lanes:
+- docs
+- code
+- governance_code
+- governance_state
+- config
+lock_scopes:
+- round:{round_id}
+- root-gate
+surfaces:
+  read:
+  - AGENTS.md
+  - .agents/skills/round-workflow/SKILL.md
+  - .agents/skills/round-gate-check/SKILL.md
+  - .agents/skills/closeout-retro/SKILL.md
+  - docs/architecture/
+  - bin/mof/mof-bootstrap.py
+  write:
+  - docs/M4-DECISIONS-INDEX.md
+  - .omo/_knowledge/retros/**
+phases:
+  preflight:
+  - id: baseline
+    command: make m4-health
+    expect: exit 0
+  - id: worktree
+    command: bash bin/gac/gac-worktree.sh claim round-{round_id}
+    expect: exit 0
+  - id: gate_check
+    command: .agents/skills/round-gate-check/SKILL.md
+    expect: PASS
+  execute:
+  - id: deliver
+    command: agent deliver N deliverables (1 per PR)
+  - id: tests
+    command: run T-X regression tests
+  verify:
+  - id: self_reflex
+    command: bin/mof/mof-bootstrap.py all
+    expect: exit 0
+  - id: adr
+    command: write new ADR
+  - id: health_compare
+    command: make m4-health-compare
+    expect: delta >= 0
+  closeout:
+  - id: decisions_index
+    command: write docs/M4-DECISIONS-INDEX.md
+  - id: retro
+    command: .agents/skills/closeout-retro/SKILL.md
+evidence_required:
+- adr_ref
+- health_delta
+- test_results

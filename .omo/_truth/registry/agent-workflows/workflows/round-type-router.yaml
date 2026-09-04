@@ -1,0 +1,29 @@
+id: round-type-router
+run_frequency: on_demand
+title: Round type recommendation
+purpose: >
+  根据 diff 自动推荐 Round 类型 (R-patch/R-feature/R-meta/R-archive)。
+  减少人工判断成本。
+agents:
+  roles:
+  - any-agent
+  observer_policy: none
+allowed_lanes:
+- docs
+lock_scopes:
+- round_type:{round_id}
+surfaces:
+  read:
+  - AGENTS.md
+  - .agents/skills/round-workflow/SKILL.md
+  write: []
+phases:
+  preflight:
+  - id: analyze_diff
+    command: git diff --stat origin/main...HEAD
+  execute:
+  - id: recommend_type
+    command: analyze changed files and recommend R-patch/R-feature/R-meta/R-archive
+evidence_required:
+- diff_analysis
+- type_recommendation
