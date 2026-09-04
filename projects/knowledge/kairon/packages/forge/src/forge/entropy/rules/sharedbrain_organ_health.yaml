@@ -1,4 +1,0 @@
-rules:
-  organ_timeout: "sharedbrain/genesis/heal --organ {organ} --reason timeout"
-  organ_memory_leak: "sharedbrain/genesis/heal --organ {organ} --reason memory"
-  organ_cpu_spike: "sharedbrain/genesis/cool-down --organ {organ}"
