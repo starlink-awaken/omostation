@@ -2,6 +2,7 @@
 卫健委领域插件
 继承 BaseController/BaseExtractor/BasePredictor，复用通用能力
 """
+
 from pathlib import Path
 
 from tools.base import BaseController, BaseExtractor, BasePredictor
@@ -14,15 +15,12 @@ class HealthCommissionController(BaseController):
         """卫健委特有的项目督导扫描"""
         return {
             "project_types": ["信息化", "三医联动", "绩效评价", "工作督导"],
-            "scan_targets": ["项目进度", "资金使用", "验收情况"]
+            "scan_targets": ["项目进度", "资金使用", "验收情况"],
         }
 
     def domain_specific_eval(self) -> dict:
         """卫健委特有的绩效评价"""
-        return {
-            "eval_dimensions": ["项目完成率", "资金使用率", "验收通过率"],
-            "metrics": {}
-        }
+        return {"eval_dimensions": ["项目完成率", "资金使用率", "验收通过率"], "metrics": {}}
 
 
 class HealthCommissionExtractor(BaseExtractor):
@@ -41,11 +39,11 @@ class HealthCommissionExtractor(BaseExtractor):
         """提取卫健委特有实体"""
         entities = {}
         # 项目编号
-        proj_ids = re.findall(r'项目编号[：:]?\s*([A-Za-z0-9\-]+)', text)
+        proj_ids = re.findall(r"项目编号[：:]?\s*([A-Za-z0-9\-]+)", text)
         if proj_ids:
             entities["project_ids"] = proj_ids
         # 资金金额
-        amounts = re.findall(r'(\d+[\.,，]*\d*\s*(万元|亿元))', text)
+        amounts = re.findall(r"(\d+[\.,，]*\d*\s*(万元|亿元))", text)
         if amounts:
             entities["amounts"] = [f"{a[0]}{a[1]}" for a in amounts]
         return entities
@@ -56,17 +54,11 @@ class HealthCommissionPredictor(BasePredictor):
 
     def predict_domain_trend(self) -> dict:
         """预测卫健委项目趋势"""
-        return {
-            "trend": "信息化项目持续增长",
-            "predictions": ["电子票据", "紧密型医共体", "互联互通"]
-        }
+        return {"trend": "信息化项目持续增长", "predictions": ["电子票据", "紧密型医共体", "互联互通"]}
 
     def detect_domain_risks(self) -> dict:
         """检测卫健委特有风险"""
-        return {
-            "risk_areas": ["项目延期", "资金不到位", "验收不通过"],
-            "alerts": []
-        }
+        return {"risk_areas": ["项目延期", "资金不到位", "验收不通过"], "alerts": []}
 
 
 import re
