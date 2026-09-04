@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 293
+  total_bets: 294
   windows:
   - Y1Q1
   - Y1Q2
@@ -20389,28 +20389,28 @@ bets:
             ref: git://origin/main@d2106d5b86dbc03c1ffc1f148e1786c41b2d9a63
           tests:
             ref: receipt://tests/test_bet_portfolio_contract.py
-            sha256: sha256:043a53c176735fc6afdecdcb0eb6483d48adff0a40f40a679f4ec03b8f8d6e17
+            sha256: sha256:440f7e415dd3dd69f87a46f5ef02542b5c9f413dff609ac115b030116a7c9832
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
             sha256: sha256:0dcb84b615b337d94ee787a4ef65cab5f9f1b2d6ae07ab6c676b9323e84a630e
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
-            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+            sha256: sha256:36d3ccb2b2e0543ae66730d691a464e86a24ab5f9babff674e24bf54d0b13f0d
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
-            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+            sha256: sha256:36d3ccb2b2e0543ae66730d691a464e86a24ab5f9babff674e24bf54d0b13f0d
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
-            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+            sha256: sha256:36d3ccb2b2e0543ae66730d691a464e86a24ab5f9babff674e24bf54d0b13f0d
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
-            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+            sha256: sha256:36d3ccb2b2e0543ae66730d691a464e86a24ab5f9babff674e24bf54d0b13f0d
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
-            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+            sha256: sha256:36d3ccb2b2e0543ae66730d691a464e86a24ab5f9babff674e24bf54d0b13f0d
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -21077,4 +21077,65 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 单模块 frontmatter 迁移冲突时跳过该模块，不阻塞整体
+  retro: required
+- id: BET-Y1Q4-T1-10
+  track: T1-TRUTH
+  window: Y1Q4
+  title: Portfolio v2 validator 全 §6 校验扩展 (follow-up)
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 将 T1-04 Wave A1 的 validator 扩展到 spec §6 全量校验面：实体 ID 唯一性 (vision/objective/KR/campaign/milestone/bet)、跨实体引用存在性 (campaign_ref/objective_refs/kr_refs/parent_bet)、metric shape、bet_type 枚举、boolean policy、ISO-8601 时间戳、typed error contract；保持 v1 兼容与无副作用。
+  non_goals:
+  - 不创建新服务、数据库、dispatcher 或独立状态库
+  - 不修改现有 BET 的 status、binding、dependency、completion 或 value evidence
+  - 不启用 full-Ledger strict mode（仍受 T1-04 合同边界约束）
+  - 不新增 migration、projection、coverage 或 cockpit 消费
+  done_when:
+  - 全 §6 校验面由 18 tests 覆盖且全部 GREEN
+  - valid v2 fixture 通过；缺失/重复实体 ID、错误引用、metric shape、枚举、boolean policy、时间戳均 typed fail
+  - v1 兼容模式对既有 ledger 保持零语义变化 (portfolio lint exit 0)
+  - strict 模式对 meta.total_bets != len(bets) 出 typed error (exit 1)
+  - validator 无 import-time 或 filesystem write side effect
+  - 新 bet 条目自身登记完成 (meta.total_bets 同步为 len(bets))
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml --with pytest python -m pytest
+      tests/test_bet_portfolio_contract.py -q
+    expect: exit 0
+  - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/bet-ledger.py
+      portfolio lint
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/plan/portfolio_contract.py
+  - docs/superpowers/specs/2026-09-03-w0-portfolio-v2-validator-full-s6-design.md
+  - tests/test_bet_portfolio_contract.py
+  - docs/plans/3y-bet-ledger.yaml
+  - .gitignore
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-10.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-validator-full-s6-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:7125cff02fa8082fd95979d442f216995f82051f725a40595f62ef01e873e640
+    decision_ref: decision://accepted/BET-Y1Q4-T1-10
+  depends_on:
+  - BET-Y1Q4-T1-04
+  portfolio_binding:
+    schema_state: enforced
+    campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+    parent_bet: BET-Y1Q4-T1-03
+    objective_refs:
+    - OBJ-TRUST
+    - OBJ-HOLDABILITY
+    kr_refs:
+    - KR-TRUST-CHAIN-COVERAGE
+    - KR-HOLDABILITY-ORPHAN-BETS
+    milestone_refs:
+    - MS-W0-CONTRACT
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 需要数据库、新服务、第二 dispatcher、破坏 v1 CLI、strict mode 先于单字段 meta.total_bets 修复启用，或无法保持历史 BET 对象语义等价时停止
   retro: required
