@@ -18254,7 +18254,9 @@ bets:
   title: 双机雷雳 5 算力织网双向备份与断网容灾自愈
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: "2026-09-04"
+  value_indicator_policy: false
   goal: 构建 MBP 与 Mac mini M4 的双机双向文件与状态增量镜像（DMA + rsync），实现单机物理拔插或崩溃时 10 秒内无缝透明切换至单机降级运行。
   non_goals:
   - 不依赖任何外部公有云存储作为双机同步中继
@@ -18278,6 +18280,47 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 双机心跳丢失超过 15 秒触发报警并强制切断 DMA 共享内存写入。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: "git://origin/main@08780d20da5730336c08437bdcc7ac13fac10c98"
+          tests:
+            ref: "receipt://docs/reports/2026-09-03-t10-119-failover-validation.md"
+            sha256: "sha256:f77f6fe1adc5cfa5d1be712068d64bbd78d8dfecaa9be6a15ccc760e062aa42a"
+          diff:
+            ref: "receipt://docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md"
+            sha256: "sha256:2e975a34bd3c99c7da143d73db97c3deaca216d4e6ff70e8214d1d76378e287f"
+          rollback:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-119.md"
+            sha256: "sha256:5a68b6e84bc90acfb59d969aef1bbaf2d9fa94e3ede45aea34d54c2f6ef9010a"
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: "receipt://docs/reports/2026-09-03-t10-119-failover-validation.md"
+            sha256: "sha256:f77f6fe1adc5cfa5d1be712068d64bbd78d8dfecaa9be6a15ccc760e062aa42a"
+          fresh_receipt:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-119.md"
+            sha256: "sha256:5a68b6e84bc90acfb59d969aef1bbaf2d9fa94e3ede45aea34d54c2f6ef9010a"
+          replay:
+            ref: "receipt://docs/reports/2026-09-03-t10-119-failover-validation.md"
+            sha256: "sha256:f77f6fe1adc5cfa5d1be712068d64bbd78d8dfecaa9be6a15ccc760e062aa42a"
+          cleanup:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-119.md"
+            sha256: "sha256:5a68b6e84bc90acfb59d969aef1bbaf2d9fa94e3ede45aea34d54c2f6ef9010a"
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:2e975a34bd3c99c7da143d73db97c3deaca216d4e6ff70e8214d1d76378e287f
+    decision_ref: decision://accepted/BET-Y1Q3-T10-119
   retro: required
 - id: BET-Y1Q3-T10-120
   track: T10-MATURITY
