@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/ssot/bus-usage-report.py
+name: Bus Usage Report
+category: governance
+owner: governance-team
+description: "Round 5 P74 dormant-adapter detector. Scans workspace for projects that declare bus-foundation in dependencies but whose production code does not actually call bus-foundation APIs."
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: stable
+last_reviewed: "2026-09-04"
