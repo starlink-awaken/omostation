@@ -18258,7 +18258,8 @@ bets:
   title: 混沌工程常态化注入套件与防腐护栏自动化巡检
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-02
   goal: 开发全自动化混沌测试工具，定时注入雷雳 5 断开、显存爆炸、脏工作树、僵尸进程、并发死锁等 12 种典型生产故障，验证系统 5 层并发锁与 GaC 门禁的绝对韧性。
   non_goals:
   - 不在生产工作树中直接执行破坏性不可逆删除
