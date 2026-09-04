@@ -378,7 +378,8 @@ def stage_dispatch(bet_id, profile, run_id, workflow_id=None, objective=None):
 
 
 # ── Stage 5: Execute ──
-def stage_execute(bet_id, profile, objective, run_id, agent_run_id=None):
+def stage_execute(bet_id, profile, objective, run_id, agent_run_id=None,
+                  hitl_wait=False, hitl_timeout=86400):
     """执行: agent-workflow + appetite/loop_break 强约束
 
     优先用 dispatch 阶段创建的 agent_run_id; 若无, 拉取最新 active run.
@@ -395,6 +396,7 @@ def stage_execute(bet_id, profile, objective, run_id, agent_run_id=None):
 
     # HITL gate check — if BET requires human approval, generate proposal
     hitl_res = _run(["python3", "bin/hitl-proposal.py", "check", "--bet-id", bet_id])
+    proposal_id = None
     if hitl_res.returncode == 0 and "HITL_REQUIRED" in hitl_res.stdout:
         create_res = _run([
             "python3", "bin/hitl-proposal.py", "create",
@@ -404,10 +406,39 @@ def stage_execute(bet_id, profile, objective, run_id, agent_run_id=None):
         ])
         if create_res.returncode == 0:
             pid_line = [l for l in create_res.stdout.splitlines() if l.startswith("Created:")]
-            proposal_id = pid_line[0].split(":")[1].strip() if pid_line else "unknown"
+            proposal_id = pid_line[0].split(":")[1].strip() if pid_line else None
             r["checks"].append({"name": "hitl_proposal", "ok": True, "proposal_id": proposal_id})
             print(f"  HITL proposal created: {proposal_id}")
             print(f"  Run: cockpit decide approve {proposal_id}")
+
+            # v1.1: block on proposal resolution
+            if hitl_wait and proposal_id:
+                print(f"  Waiting for human approval (timeout: {hitl_timeout}s)...")
+                wait_res = _run([
+                    "python3", "bin/hitl-proposal.py", "wait",
+                    proposal_id, "--timeout", str(hitl_timeout), "--interval", "5",
+                ])
+                # Re-fetch to get final state
+                get_res = _run(["python3", "bin/hitl-proposal.py", "get", proposal_id])
+                if get_res.returncode == 0:
+                    final_status = "unknown"
+                    for line in get_res.stdout.splitlines():
+                        if line.startswith("status:"):
+                            final_status = line.split(":", 1)[1].strip()
+                            break
+                    r["checks"].append({"name": "hitl_wait", "ok": final_status == "approved",
+                                         "final_status": final_status})
+                    if final_status == "rejected":
+                        r["ok"] = False
+                        r["error"] = f"HITL proposal {proposal_id} was rejected"
+                        return r
+                    elif final_status == "expired":
+                        # Circuit breaker: TTL expired → continue as direct execution
+                        r["checks"].append({"name": "hitl_circuit_breaker", "ok": True,
+                                             "reason": "expired, downgraded to direct execution"})
+                        print(f"  HITL proposal expired, continuing with direct execution")
+                    elif final_status == "approved":
+                        print(f"  HITL proposal approved, continuing")
         else:
             # Circuit breaker: creation failed → downgrade
             r["checks"].append({"name": "hitl_proposal", "ok": True, "skipped": True,
@@ -591,11 +622,12 @@ def _check_acceptance_requirement(bet, requirement):
 
 
 # ── 完整 DAG ──
-def run_dag(bet_id, profile, objective):
+def run_dag(bet_id, profile, objective, hitl_wait=False, hitl_timeout=86400):
     run_id = f"harness-{bet_id}-{int(datetime.now(timezone.utc).timestamp())}"
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
     result = {"run_id": run_id, "bet_id": bet_id, "profile": profile,
-              "objective": objective, "started_at": _now(), "stages": {}, "ok": True}
+              "objective": objective, "started_at": _now(), "stages": {}, "ok": True,
+              "hitl_wait": hitl_wait, "hitl_timeout": hitl_timeout}
 
     print(f"=== harness run {bet_id} profile={profile} ===")
     print(f"run_id: {run_id}\n")
@@ -616,7 +648,8 @@ def run_dag(bet_id, profile, objective):
 
     def _execute():
         return stage_execute(bet_id, profile, objective, run_id,
-                              agent_run_id=agent_run_id_holder["id"])
+                              agent_run_id=agent_run_id_holder["id"],
+                              hitl_wait=hitl_wait, hitl_timeout=hitl_timeout)
 
     stages_fn.extend([
         ("dispatch", _dispatch),
@@ -1125,6 +1158,10 @@ def main():
     pr.add_argument("--bet", required=True)
     pr.add_argument("--profile", required=True)
     pr.add_argument("--objective", required=True)
+    pr.add_argument("--hitl-wait", action="store_true",
+                    help="Block on HITL proposal resolution (v1.1). Default: create proposal and continue (v1.0)")
+    pr.add_argument("--hitl-timeout", type=int, default=86400,
+                    help="Max seconds to wait for HITL approval (default 24h, matches TTL)")
 
     pv = sub.add_parser("verify", help="Parallel verify DAG with cache")
     pv.add_argument("--parallel", action="store_true")
@@ -1176,7 +1213,11 @@ def main():
     args = p.parse_args()
 
     if args.cmd == "run":
-        result = run_dag(args.bet, args.profile, args.objective)
+        result = run_dag(
+            args.bet, args.profile, args.objective,
+            hitl_wait=getattr(args, "hitl_wait", False),
+            hitl_timeout=getattr(args, "hitl_timeout", 86400),
+        )
         return 0 if result["ok"] else 1
     elif args.cmd == "verify":
         return verify_parallel(args)

@@ -11,6 +11,7 @@ import argparse
 import fcntl
 import os
 import secrets
+import subprocess
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
@@ -19,7 +20,7 @@ from typing import Any
 
 import yaml
 
-PROPOSALS_DIR = Path(".omo/_knowledge/hitl-proposals")
+PROPOSALS_DIR = Path(os.environ.get("HITL_PROPOSALS_DIR", ".omo/_knowledge/hitl-proposals"))
 DEFAULT_TTL_HOURS = 24
 SCHEMA_VERSION = "hitl-proposal/v1"
 
@@ -36,6 +37,29 @@ def _generate_id() -> str:
     ts = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     rand = secrets.token_hex(3)
     return f"hitl-{ts}-{rand}"
+
+
+def _detect_actor() -> str:
+    """Detect the current actor from git config or environment.
+
+    Returns user.name@user.email if available, otherwise USER env var, otherwise 'human'.
+    """
+    try:
+        name = subprocess.run(
+            ["git", "config", "--get", "user.name"],
+            capture_output=True, text=True, check=False, timeout=2,
+        ).stdout.strip()
+        email = subprocess.run(
+            ["git", "config", "--get", "user.email"],
+            capture_output=True, text=True, check=False, timeout=2,
+        ).stdout.strip()
+        if name and email:
+            return f"{name} <{email}>"
+        if name:
+            return name
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+    return os.environ.get("USER") or os.environ.get("USERNAME") or "human"
 
 
 def _atomic_write(path: Path, data: dict[str, Any]) -> None:
@@ -264,7 +288,8 @@ def cmd_get(args: argparse.Namespace) -> int:
 
 
 def cmd_approve(args: argparse.Namespace) -> int:
-    result = update_status(args.proposal_id, "approved", actor=args.actor, option="approve")
+    actor = args.actor if args.actor != "human" else _detect_actor()
+    result = update_status(args.proposal_id, "approved", actor=actor, option="approve")
     if result is None:
         print(f"Proposal not found: {args.proposal_id}", file=sys.stderr)
         return 1
@@ -273,7 +298,8 @@ def cmd_approve(args: argparse.Namespace) -> int:
 
 
 def cmd_reject(args: argparse.Namespace) -> int:
-    result = update_status(args.proposal_id, "rejected", actor=args.actor, option="reject")
+    actor = args.actor if args.actor != "human" else _detect_actor()
+    result = update_status(args.proposal_id, "rejected", actor=actor, option="reject")
     if result is None:
         print(f"Proposal not found: {args.proposal_id}", file=sys.stderr)
         return 1
@@ -296,6 +322,21 @@ def cmd_check(args: argparse.Namespace) -> int:
         print("HITL_REQUIRED")
         return 0
     return 0
+
+
+def cmd_wait(args: argparse.Namespace) -> int:
+    """Block until proposal is resolved. Returns 0 if approved, 1 if rejected/timeout."""
+    proposal = wait_for_decision(
+        args.proposal_id,
+        poll_interval=getattr(args, "interval", 5.0),
+        timeout=getattr(args, "timeout", None),
+    )
+    if proposal is None:
+        print(f"Proposal not found: {args.proposal_id}", file=sys.stderr)
+        return 1
+    status = proposal.get("status", "unknown")
+    print(f"Final status: {status}")
+    return 0 if status == "approved" else 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -337,6 +378,14 @@ def main(argv: list[str] | None = None) -> int:
     p_check = sub.add_parser("check", help="Check if BET requires HITL approval")
     p_check.add_argument("--bet-id", required=True)
     p_check.set_defaults(func=cmd_check)
+
+    p_wait = sub.add_parser("wait", help="Block until proposal resolved (v1.1)")
+    p_wait.add_argument("proposal_id")
+    p_wait.add_argument("--timeout", type=float, default=None,
+                        help="Max seconds to wait (default: no timeout)")
+    p_wait.add_argument("--interval", type=float, default=5.0,
+                        help="Poll interval in seconds (default: 5)")
+    p_wait.set_defaults(func=cmd_wait)
 
     args = parser.parse_args(argv)
     return args.func(args)
