@@ -23,18 +23,18 @@ Ledger BET before any separately authorized migration apply batch.
 
 ### Task 1: Build RED fixtures for immutable inventory
 
-- [ ] Fixture a Ledger with terminal, blocked, candidate, malformed and
+- [x] Fixture a Ledger with terminal, blocked, candidate, malformed and
   non-terminal entries; assert every ID receives exactly one disposition.
-- [ ] Assert terminal/blocked objects are byte/semantic equal after dry-run;
+- [x] Assert terminal/blocked objects are byte/semantic equal after dry-run;
   assert missing disposition or disallowed migration scope fails with
   `MIGRATION_SCOPE_DRIFT`, and source digest drift fails with
   `PORTFOLIO_CONCURRENT_UPDATE`.
-- [ ] Assert the exact error partition: unclassified object or disallowed batch
+- [x] Assert the exact error partition: unclassified object or disallowed batch
   scope returns `MIGRATION_SCOPE_DRIFT`; source digest drift returns
   `PORTFOLIO_CONCURRENT_UPDATE`; every `--apply` invocation returns
   `MIGRATION_APPLY_NOT_AUTHORIZED` and performs zero mutation. Separately
   assert a request for nine mutations is rejected before any source write.
-- [ ] Run RED exactly:
+- [x] Run RED exactly:
 
 ```bash
 uv run --with pyyaml --with pytest python -m pytest \
@@ -43,19 +43,19 @@ uv run --with pyyaml --with pytest python -m pytest \
 
 ### Task 2: Implement deterministic manifest generation
 
-- [ ] Implement `inventory(ledger_bytes)`, `classify(entry)`, and
+- [x] Implement `inventory(ledger_bytes)`, `classify(entry)`, and
   `render_manifest(entries, source_digest)` as pure functions.
-- [ ] Generate one canonical row per ID with disposition, rationale, source
+- [x] Generate one canonical row per ID with disposition, rationale, source
   digest, and no execution/value outcome fields.
-- [ ] Provide `--dry-run` JSON/YAML output; make `--apply` unconditionally
+- [x] Provide `--dry-run` JSON/YAML output; make `--apply` unconditionally
   reject in this module. A separately authorized migration-batch BET may add
   an apply interface later, but it must not be enabled by this plan.
 
 ### Task 3: Verify immutability and repeatability
 
-- [ ] Hash the source Ledger and generated manifest twice; assert source bytes
+- [x] Hash the source Ledger and generated manifest twice; assert source bytes
   unchanged and manifest bytes identical.
-- [ ] Run GREEN exactly:
+- [x] Run GREEN exactly:
 
 ```bash
 uv run --with pyyaml --with pytest python -m pytest \
