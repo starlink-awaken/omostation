@@ -1,6 +1,6 @@
 schema: scene-card/v1
 scene_id: inbox-to-decision
-lifecycle: shadow
+lifecycle: assisted
 journey_id: inbox-to-decision
 goal: "统一收件箱消息自动分类、审查、决策、沉淀"
 trigger: "新消息进入 unified-inbox"
@@ -14,3 +14,8 @@ data_scope: workspace-inbox
 operator: omo-resident
 permission_ref: "bos://resident/inbox/read"
 rollback_plan: "消息保留原状，仅标记不执行"
+sample_refs:
+  - ".omo/state/scene-cards/inbox-to-decision/samples/sample-1.json"
+  - ".omo/state/scene-cards/inbox-to-decision/samples/sample-2.json"
+  - ".omo/state/scene-cards/inbox-to-decision/samples/sample-3.json"
+calibration: 0.65
