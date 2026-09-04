@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.0.1
 status: accepted
 lifecycle: contract
 owner: human-principal
@@ -8,18 +8,23 @@ created: 2026-09-03
 last-reviewed: 2026-09-03
 bet_id: BET-Y1Q4-T8-05
 risk_level: L2
-human_gate: true
+human_gate: false
 value_indicator_policy: false
 source_design_sha256: cbdee89004d0156e262daa63a1c38cfd660c0d5efbf0fce1a8eec8a92027c30b
 source_proposal_sha256: 26bd1b3df552e693f2ac2684df255436522ff816d7844459523fafe130587100
 source_amendment_sha256: 5b1bb03274d8f7383b67f88953cf0c7074a571a9a1d5aebb1ab68bb234042409
 source_id_collision_amendment_sha256: 1a6a63d4fc20b6d3f385b27518018fdb633e5cd38ee9c171db1c08773eecd992
-implementation_authorized: false
+implementation_authorized: true
 ---
 
 # W0 Cockpit Portfolio Read-Only View Design
 
 ## 1. Decision
+
+### Implementation authorization (1.0.1)
+
+Principal session authorization 2026-09-04 ("go，先pr合并提交。然后依次推进吧，需要人类的，我给你授权") releases human_gate and authorizes implementation for remaining W0 Portfolio children in safer order. T8-05 Cockpit remains a read-only consumer.
+
 
 Expose Portfolio status through the existing Cockpit entry point. Cockpit
 reads the digest-bound control projection and never becomes a Ledger, Goals,
