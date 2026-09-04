@@ -18,6 +18,8 @@ __all__ = [
     "launch_swarm_top",
     "render_swarm_status",
     "SwarmStateCollector",
+    "SovereignCockpitApp",
+    "CockpitTUIApp",
 ]
 
 
