@@ -317,3 +317,9 @@ projects/omo-debt/
 
 # 运行时 worktree 锁目录 (PASW/并发 agent 产物, 不入库)
 .omo/locks/
+
+# 运行时 decision-proposal 收件箱 (resident agent 产物, 不入库; 已跟踪历史文件例外保留)
+.omo/_knowledge/decision-proposals/
+
+# 运行时 bin/.omo 状态 (resident 运行时 _state, 不入库)
+bin/.omo/
