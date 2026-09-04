@@ -225,8 +225,11 @@ SHELL_HELP: dict[str, str] = {
 }
 
 # 仅拦截显式 --help/-h、空参保持原行为的命令
-# (omo/resident 空参委派下游是既有约定; submodule-gitlink-check 空参默认跑检查)
-SHELL_HELP_HELP_ONLY: frozenset[str] = frozenset({"omo", "resident", "ssb", "submodule-gitlink-check"})
+# (omo/resident 空参委派下游是既有约定; submodule-gitlink-check / gac <sub>
+#  空参默认执行检查 —— 与 bin/gac-local-gate.py 调用方式一致)
+SHELL_HELP_HELP_ONLY: frozenset[str] = frozenset(
+    {"omo", "resident", "ssb", "submodule-gitlink-check", "gac"}
+)
 
 # 仅拦截 -h 短旗标的命令 (--help 仍透传; Click 系下游不认 -h 但认 --help)
 SHELL_HELP_SHORT_ONLY: frozenset[str] = frozenset({"omlxc"})
