@@ -1533,3 +1533,39 @@ workflow_triggers:
   - .github/workflows/worktree-hygiene.yml
   - bin/gac/worktree-hygiene-audit.py
   - tests/unit/gac/test_worktree_hygiene_audit.py
+- id: bin-gac-resident-lock-monitor-py
+  tool: bin/gac/resident-lock-monitor.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: Resident Agent lock monitor (stale/orphan/deadlock detection).
+- id: bin-gac-gitlink-drift-protect-py
+  tool: bin/gac/gitlink-drift-protect.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: Submodule gitlink drift detection and auto-fix.
+- id: bin-gac-advisory-checks-upgrade-py
+  tool: bin/gac/advisory-checks-upgrade.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: Advisory constraint upgrade checker (20 rules).
+- id: bin-plan-chain-bind-audit-py
+  tool: bin/plan/chain-bind-audit.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: BET chain-bind compliance audit.
