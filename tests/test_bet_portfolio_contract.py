@@ -8,7 +8,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).parents[1]
 LEDGER_CLI = ROOT / "bin" / "plan" / "bet-ledger.py"
 CONTRACT_PATH = ROOT / "bin" / "plan" / "portfolio_contract.py"
