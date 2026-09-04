@@ -183,7 +183,6 @@ def validate_scene_card(workspace_root: Path, scene_id: str) -> dict[str, Any]:
     if not scene_file.exists():
         return {"valid": False, "error": f"Scene card not found: {scene_file}"}
 
-    import yaml
     data = yaml.safe_load(scene_file.read_text())
 
     required = [
@@ -217,7 +216,6 @@ def promote_scene_card(workspace_root: Path, scene_id: str, target_lifecycle: st
     if not scene_file.exists():
         return {"success": False, "error": f"Scene card not found: {scene_file}"}
 
-    import yaml
     data = yaml.safe_load(scene_file.read_text())
     current = data.get("lifecycle", "draft")
 
@@ -240,7 +238,6 @@ def status_scene_card(workspace_root: Path, scene_id: str) -> dict[str, Any]:
     if not scene_file.exists():
         return {"error": f"Scene card not found: {scene_file}"}
 
-    import yaml
     data = yaml.safe_load(scene_file.read_text())
     return {
         "scene_id": data.get("scene_id", scene_id),
@@ -312,7 +309,6 @@ def generate_pilot_report(workspace_root: Path) -> dict[str, Any]:
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def main():
-    import argparse
     parser = argparse.ArgumentParser(description="Scene Card Review — 场景卡生命周期管理")
     sub = parser.add_subparsers(dest="command")
 
