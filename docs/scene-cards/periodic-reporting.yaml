@@ -2,6 +2,8 @@ title: Periodic Reporting Scene Card (周期报送与绩效证据包)
 status: pilot
 type: scene-card
 owner: product-architecture
+bet: BET-Y1Q4-T8-04
+falsifier: "若 30 天内无 periodic report 触发，则场景无实际价值"
 last-reviewed: 2026-08-07
 related:
 - ./meeting-supervision.yaml

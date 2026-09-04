@@ -2,6 +2,8 @@ title: Agora BOS Gateway Scene Card
 status: active
 type: scene-card
 owner: platform-architecture
+bet: BET-Y1Q4-T8-04
+falsifier: "若 shadow 期间无任何触发记录，则场景无实际价值"
 last-reviewed: 2026-08-06
 related:
 - ../../projects/agora/AGENTS.md
