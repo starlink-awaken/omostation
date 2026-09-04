@@ -33,3 +33,10 @@ dependencies:
   dev: [pytest]
 
 tests: 498  # as_of 2026-07-28, 见 pytest tests/ (CI 守, 不硬编码)
+
+# BET-Y1Q4-T8-05 — read-only Portfolio projection consumer
+portfolio:
+  entry: cockpit portfolio {status|objectives|critical-path|blockers}
+  authority: read-only control projection (.omo/_control/portfolio-status.json)
+  non_goals:
+    - never writes Ledger / Goals / OMO state
