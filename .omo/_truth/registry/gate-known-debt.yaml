@@ -190,3 +190,57 @@ entries:
   range: origin/main..dd1d8c3ff9ff
   recorded_at: '2026-09-04T10:41:10.331968+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|ef73132fddb8bf49
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: ef73132fddb8bf49
+  kind: gitlink-regress
+  reason: submodule projects/aetherforge pointer 3175666274d0 rewinds 09e96346d59a
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|0742d6436b294381
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 0742d6436b294381
+  kind: gitlink-regress
+  reason: submodule projects/agora pointer 0d48285869e4 rewinds 8638c05fb5f5
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|98b339062db21987
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 98b339062db21987
+  kind: gitlink-regress
+  reason: submodule projects/family-hub pointer c17f54d562d8 rewinds 38982e393541
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|a56a52ff0ff1fcb8
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: a56a52ff0ff1fcb8
+  kind: gitlink-regress
+  reason: submodule projects/metaos pointer 257cd8874753 rewinds af7f76305e52
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|49dd44f170e301e1
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 49dd44f170e301e1
+  kind: gitlink-regress
+  reason: submodule projects/omo pointer 75071607ebd0 rewinds e448efd3ffcc
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|b8af39363d70c8a3
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: b8af39363d70c8a3
+  kind: gitlink-regress
+  reason: submodule projects/runtime pointer b7b8cb1a36c7 rewinds ebf27ef3ab90
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
