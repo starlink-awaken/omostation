@@ -12,7 +12,7 @@ last-reviewed: 2026-09-04
 
 # BET-Y1Q4-T8-05 Closeout Retro
 
-> **TL;DR**: Child-first PASW delivery. Cockpit `portfolio` consumes only digest-bound `.omo/_control/portfolio-status.json`. Live status is `unavailable` / `missing_control_projection` (T1-08 broker gap). Root pointer → `fd884f36` on child main.
+> **TL;DR**: Child-first PASW delivery. Cockpit `portfolio` consumes only digest-bound `.omo/_control/portfolio-status.json`. Live status is `unavailable` / `missing_control_projection` (T1-08 broker gap). Child tip on root main is `e7d6f576` (includes #131 + dashboard follow-up); delivery SHA `fd884f36`.
 
 ## Deliverables
 - Child PR: starlink-awaken/omostation-cockpit#131 (squash → `fd884f36`)

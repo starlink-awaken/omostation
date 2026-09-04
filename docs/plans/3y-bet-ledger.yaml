@@ -20851,10 +20851,10 @@ bets:
             sha256: sha256:fb72395f9361c39830480ca7895828baecc3fe64bdaae41c3e1dcbbbadf2437f
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
-            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
+            sha256: sha256:721698d76fdfe1231b2b77bf29e52d460e825f4fe55a73fb1a49c9b1273c0b9e
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
-            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
+            sha256: sha256:721698d76fdfe1231b2b77bf29e52d460e825f4fe55a73fb1a49c9b1273c0b9e
           merged_reachable_commit:
             ref: git://origin/main@2b4158970cc05bdafe2ea48feb714e56e33f4788
       operational:
@@ -20862,16 +20862,16 @@ bets:
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
-            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
+            sha256: sha256:721698d76fdfe1231b2b77bf29e52d460e825f4fe55a73fb1a49c9b1273c0b9e
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
-            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
+            sha256: sha256:721698d76fdfe1231b2b77bf29e52d460e825f4fe55a73fb1a49c9b1273c0b9e
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
-            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
+            sha256: sha256:721698d76fdfe1231b2b77bf29e52d460e825f4fe55a73fb1a49c9b1273c0b9e
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
-            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
+            sha256: sha256:721698d76fdfe1231b2b77bf29e52d460e825f4fe55a73fb1a49c9b1273c0b9e
       value:
         status: NOT_PROVEN
         evidence: {}
