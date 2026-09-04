@@ -1,3 +1,7 @@
+---
+type: derived
+---
+
 # SSOT 文档地图
 
 > 自动生成: 2026-09-03 | 由 `bin/ssot/generate-docs-index.py` 维护

@@ -1,3 +1,7 @@
+---
+type: derived
+---
+
 # 文档治理框架 (DocGov Framework)
 
 > SSOT: docs/generated/doc-gov-framework.md
