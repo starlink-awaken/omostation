@@ -20711,8 +20711,9 @@ bets:
   title: Goals/Markdown/control projection 生成与漂移门
   appetite: 3 days
   priority: P0
-  status: candidate
-  note: "human_gate released 2026-09-04 by principal sequential Wave auth; Spec 1.0.1 authorized; write_surfaces expanded for registry/ledger/baseline."
+  status: done
+  done_at: 2026-09-04 11:36:57+00:00
+  note: "Delivered Markdown projection; .omo targets unavailable pending broker amendment (PORTFOLIO_BROKER_OWNER_MISSING for portfolio-status.json)."
   goal: 从唯一 Ledger 单向生成 goals/current、3Y-BET-PORTFOLIO.md 与 portfolio-status.json，三者同 digest、确定性且不可反向写回组合真值。
   non_goals:
   - 不允许 projection 成为第二 writer
@@ -20752,15 +20753,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-projections-design.md
+            sha256: sha256:fb1be6b06dbb47c23d0f72e2ff96155c2f736a08e355c511a1062df0562344e5
+          tests:
+            ref: receipt://tests/test_bet_portfolio_projection.py
+            sha256: sha256:41e3aef75de14570fb8e63e7b58bfba168c0f0055a7d437c28ff1620a4ca6ddc
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-08.md
+            sha256: sha256:3025179e5fe92b1537c0218d371c880256ec70564193b83a8d66dc9fc78a92e2
+          merged_reachable_commit:
+            ref: git://origin/main@6298e37d79a481b27775ba50e04c40565c287232
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-08.md
+            sha256: sha256:3025179e5fe92b1537c0218d371c880256ec70564193b83a8d66dc9fc78a92e2
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-08.md
+            sha256: sha256:3025179e5fe92b1537c0218d371c880256ec70564193b83a8d66dc9fc78a92e2
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-08.md
+            sha256: sha256:3025179e5fe92b1537c0218d371c880256ec70564193b83a8d66dc9fc78a92e2
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-08.md
+            sha256: sha256:3025179e5fe92b1537c0218d371c880256ec70564193b83a8d66dc9fc78a92e2
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   depends_on: [BET-Y1Q4-T1-04, BET-Y1Q4-T1-07]
   portfolio_binding:
     schema_state: enforced
