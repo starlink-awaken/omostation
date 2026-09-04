@@ -10,7 +10,7 @@ requires-python = ">=3.13"
 # doctor 断言被该 warning 击穿, #1640/#1633/#1647 三轮实证)。不定义 dependencies,
 # 各子模块各自 pyproject 不受影响。
 [tool.ruff]
-exclude = ["bin/_archive"]
+exclude = ["bin/_archive", "projects", "tools"]
 target-version = "py313"
 line-length = 120
 [tool.ruff.lint]
