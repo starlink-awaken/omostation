@@ -76,3 +76,10 @@ PYTHONDONTWRITEBYTECODE=1 uv run --with pyyaml python bin/plan/bet-ledger.py por
 - run: `20260904T074355Z-project-code-change-30805980`
 - branch: `work/bet-y1q4-t1-04`
 - human_gate release: 2026-09-04 principal Wave A1
+
+## Addendum — meta.total_bets single-field repair (2026-09-04)
+
+- Claimed path: `docs/plans/3y-bet-ledger.yaml::meta.total_bets`
+- Change: `149 → 289` (= `len(bets)`); BET ids/statuses/bindings untouched
+- Verify: `bet-ledger.py portfolio lint --strict` → exit 0 (no META_TOTAL_BETS_DRIFT)
+- run: `20260904T081421Z-project-code-change-fea38c0e`
