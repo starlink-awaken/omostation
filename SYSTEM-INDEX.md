@@ -76,3 +76,5 @@ X  扩展   ─ aetherforge, c2g, bus-foundation, omo-debt, observability, famil
 | [`CLAUDE.md`](CLAUDE.md) | 操作层 | AI 会话协议 |
 | [`README.md`](README.md) | 入口层 | 快速开始 |
 | [`PANORAMA.md`](docs/PANORAMA.md) | 架构层 | 全景架构图 |
+| [`docs/command-audit/_REPORT.md`](docs/command-audit/_REPORT.md) | 评估层 | 命令体系 15 维全景评估审计报告 |
+| [`.omo/standards/cli-behavior-contract.md`](.omo/standards/cli-behavior-contract.md) | 契约层 | Sovereign CLI 与交互终端行为契约 |
