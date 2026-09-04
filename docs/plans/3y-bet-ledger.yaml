@@ -21049,8 +21049,6 @@ bets:
   circuit_breaker: 任一 negative case 假绿、mutable-ref 依赖、value 轴变化、W1-W6 出现或 clone cleanup 无法证明时停止 W0 closeout
   retro: required
 
-# === 衍生扩展 BET (2026-09-04 系统治理恢复会话新增) ===
-
 - id: BET-Y1Q4-T6-03
   track: T6-EVOLUTION
   window: Y1Q4
@@ -21207,6 +21205,66 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 单模块 frontmatter 迁移冲突时跳过该模块，不阻塞整体
+- id: BET-Y1Q4-HITL-01
+  track: T1-TRUTH
+  window: Y1Q4
+  title: HITL Proposal System — harness 层人类审批提案生成与 Cockpit 集成
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: Build a standalone HITL proposal system that auto-generates approval proposals when a BET has human_gate=true, stores them as atomic YAML files, and integrates with cockpit decide commands for human approval. The agent-workflow execute stage waits for approval before proceeding; expired proposals auto-downgrade to direct execution (circuit breaker).
+  non_goals:
+  - 不替换现有 agent-workflow 的 claim/verify 流程
+  - 不改变现有 BET 状态机
+  - 不实现自动审批 (必须人工)
+  - 不引入数据库依赖 (file-based storage only)
+  done_when:
+  - bin/hitl-proposal.py 支持 create/list/get/approve/reject/expire/check 七个子命令
+  - Proposal YAML 原子写入 (.omo/_knowledge/hitl-proposals/<id>.yaml)
+  - bin/harness stage_execute 在 human_gate=true 时自动创建 proposal
+  - cockpit decide list 显示 pending HITL proposals
+  - cockpit decide approve/reject 更新 HITL proposal 状态
+  - 24h TTL 过期自动降级为 direct execution
+  - 8 单元测试全部通过
+  verify:
+  - cmd: python3 bin/hitl-proposal.py --help
+    expect: exit 0
+  - cmd: python3 -m pytest tests/test_hitl_proposal.py -q
+    expect: exit 0, 8/8 PASS
+  - cmd: make gac-local-gate
+    expect: 全绿
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  human_gate: true
+  risk_level: L2
+  write_surfaces:
+  - bin/hitl-proposal.py
+  - bin/harness
+  - projects/cockpit/src/cockpit/commands/decide.py
+  - tests/test_hitl_proposal.py
+  - .omo/_knowledge/hitl-proposals/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
+    spec_version: 1.0.0
+    content_digest: PENDING
+    decision_ref: decision://accepted/BET-Y1Q4-HITL-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  value_indicator_policy: false
+  circuit_breaker: Proposal 生成失败或模块导入异常时降级为 direct execution (无 HITL)
   retro: required
 - id: BET-Y1Q4-T1-10
   track: T1-TRUTH

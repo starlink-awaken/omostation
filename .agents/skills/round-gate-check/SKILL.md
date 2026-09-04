@@ -1,7 +1,7 @@
 ---
 name: round-gate-check
 title: Round Gate Check
-description: "轮次门检 skill：在每轮 agent 工作完成后执行 gate 检查，验证产出完整性和合规性"
+description: 轮次门禁检查 - P72/P52/P74 三门槛验证
 type: skill
 owner: governance-team
 version: "1.0"

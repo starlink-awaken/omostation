@@ -172,4 +172,21 @@ entries:
     force-push dropped 695c9b5edd3b
   range: origin/main..HEAD
   recorded_at: '2026-09-04T12:16:06.155397+00:00'
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|e757f9545b8a8198
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: e757f9545b8a8198
+  kind: gitlink-regress
+  reason: submodule projects/cockpit pointer 3ade4ac68a19 rewinds b768037f5d95
+  range: origin/main..dd1d8c3ff9ff
+  recorded_at: '2026-09-04T10:41:10.331968+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|bd4a1bf3966438e1
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: bd4a1bf3966438e1
+  kind: gitlink-regress
+  reason: submodule projects/runtime pointer 9db8cda8c803 rewinds b7b8cb1a36c7
+  range: origin/main..dd1d8c3ff9ff
+  recorded_at: '2026-09-04T10:41:10.331968+00:00'
   active: true

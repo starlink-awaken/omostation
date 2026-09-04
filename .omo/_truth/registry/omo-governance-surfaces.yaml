@@ -157,6 +157,21 @@ assets:
     consumed_by:
       - auditors
     status: active
+  - id: OMO-LOCKS
+    ref: .omo/locks/
+    plane: state_plane
+    asset_type: runtime_locks
+    persistence_mode: operational
+    retention_mode: session_only
+    truth_owner: governance
+    write_via:
+      - clone_guard
+      - hook_scripts
+    consumed_by:
+      - clone_guard
+      - git_hooks
+    status: active
+    runtime: true
   - id: OMO-TASKS
     ref: .omo/tasks/
     plane: state_plane
