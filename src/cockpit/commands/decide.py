@@ -1,6 +1,7 @@
 """cockpit.commands.decide — 决策收件箱 CLI 入口.
 
 与 agent 运行时对齐的决策收件箱: 收集多渠道意图 → 结构化决策列表 → 驱动生命周期.
+HITL proposals (.omo/_knowledge/hitl-proposals/hitl-*.yaml) 也纳入 decide list/approve/reject.
 
 Usage:
     cockpit decide list               — 列出待决策项
@@ -13,8 +14,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from ..data_index import resolve_workspace_root
 from .base import _get_console
@@ -118,14 +123,35 @@ def cmd_list(args: argparse.Namespace) -> int:
         console.print(f"[red]❌ 无法读取决策收件箱:[/] {error}")
         return 1
     pending = [item for item in items if item.get("status") == "pending"]
-    if not pending:
+
+    # Also scan HITL proposals
+    proposals_dir = resolve_workspace_root() / ".omo" / "_knowledge" / "hitl-proposals"
+    hitl_pending: list[dict[str, Any]] = []
+    if proposals_dir.exists():
+        for f in sorted(proposals_dir.glob("hitl-*.yaml")):
+            try:
+                p = yaml.safe_load(f.read_text())
+                if p and p.get("status") == "pending":
+                    hitl_pending.append(p)
+            except Exception:
+                continue
+
+    if not pending and not hitl_pending:
         console.print("[green]✓ 收件箱为空 — 没有待决策项[/]")
         return 0
-    console.print(f"[bold]决策收件箱 ({len(pending)} 项待处理):[/]\n")
-    for item in pending:
-        console.print(f"  [cyan]{str(item.get('id', '?'))[:8]}[/] {_item_title(item)}")
-        if item.get("source"):
-            console.print(f"    [dim]来源: {item['source']}[/]")
+
+    if pending:
+        console.print(f"[bold]决策收件箱 ({len(pending)} 项待处理):[/]\n")
+        for item in pending:
+            console.print(f"  [cyan]{str(item.get('id', '?'))[:8]}[/] {_item_title(item)}")
+            if item.get("source"):
+                console.print(f"    [dim]来源: {item['source']}[/]")
+
+    if hitl_pending:
+        console.print(f"\n[bold]HITL 待审批提案 ({len(hitl_pending)} 项):[/]\n")
+        for p in hitl_pending:
+            console.print(f"  [magenta]{p['proposal_id'][:18]}[/] {p.get('title', '(untitled)')}")
+            console.print(f"    [dim]bet={p.get('bet_id')} expires={p.get('expires_at')}[/]")
     return 0
 
 
@@ -157,12 +183,46 @@ def cmd_add(args: argparse.Namespace) -> int:
     return 0
 
 
+def _is_hitl_id(item_id: str) -> bool:
+    """Check if an ID matches a HITL proposal file on disk."""
+    proposals_dir = resolve_workspace_root() / ".omo" / "_knowledge" / "hitl-proposals"
+    if not proposals_dir.exists():
+        return False
+    matches = list(proposals_dir.glob(f"{item_id}*.yaml"))
+    return len(matches) > 0
+
+
+def _hitl_update(proposal_id: str, action: str) -> int:
+    """Delegate approve/reject to hitl-proposal CLI."""
+    console = _get_console()
+    root = resolve_workspace_root()
+    hitl_script = root / "bin" / "hitl-proposal.py"
+    if not hitl_script.exists():
+        console.print("[red]❌ hitl-proposal.py not found in bin/[/]")
+        return 1
+    result = subprocess.run(
+        [sys.executable, str(hitl_script), action, proposal_id],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        console.print(f"[red]❌ HITL {action} failed:[/] {result.stderr.strip()}")
+        return 1
+    console.print(f"[green]✓ HITL {action}d:[/] {result.stdout.strip()}")
+    return 0
+
+
 def cmd_approve(args: argparse.Namespace) -> int:
-    return _update_status(_get_console(), str(args.id), "approved")
+    item_id = str(args.id)
+    if item_id.startswith("hitl-") or _is_hitl_id(item_id):
+        return _hitl_update(item_id, "approve")
+    return _update_status(_get_console(), item_id, "approved")
 
 
 def cmd_reject(args: argparse.Namespace) -> int:
-    return _update_status(_get_console(), str(args.id), "rejected")
+    item_id = str(args.id)
+    if item_id.startswith("hitl-") or _is_hitl_id(item_id):
+        return _hitl_update(item_id, "reject")
+    return _update_status(_get_console(), item_id, "rejected")
 
 
 def cmd_status(args: argparse.Namespace) -> int:
@@ -171,6 +231,24 @@ def cmd_status(args: argparse.Namespace) -> int:
     if error:
         console.print(f"[red]❌ 无法读取决策收件箱:[/] {error}")
         return 1
+
+    # HITL proposals
+    proposals_dir = resolve_workspace_root() / ".omo" / "_knowledge" / "hitl-proposals"
+    hitl_pending = hitl_approved = hitl_rejected = 0
+    if proposals_dir.exists():
+        for f in proposals_dir.glob("hitl-*.yaml"):
+            try:
+                p = yaml.safe_load(f.read_text())
+                s = p.get("status", "")
+                if s == "pending":
+                    hitl_pending += 1
+                elif s == "approved":
+                    hitl_approved += 1
+                elif s in ("rejected", "expired"):
+                    hitl_rejected += 1
+            except Exception:
+                continue
+
     pending = [i for i in items if i.get("status") == "pending"]
     approved = [i for i in items if i.get("status") == "approved"]
     rejected = [i for i in items if i.get("status") == "rejected"]
@@ -180,6 +258,8 @@ def cmd_status(args: argparse.Namespace) -> int:
     console.print(f"  已批准: [green]{len(approved)}[/]")
     console.print(f"  已拒绝: [red]{len(rejected)}[/]")
     console.print(f"  总计: {len(items)}")
+    if hitl_pending or hitl_approved or hitl_rejected:
+        console.print(f"\n[HITL 提案] 待审批: [yellow]{hitl_pending}[/]  已批准: [green]{hitl_approved}[/]  已拒绝/过期: [red]{hitl_rejected}[/]")
     return 0
 
 
