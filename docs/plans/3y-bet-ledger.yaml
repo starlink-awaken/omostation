@@ -20528,7 +20528,7 @@ bets:
   appetite: 3 days
   priority: P0
   status: candidate
-  note: "human_gate released 2026-09-04 by principal sequential Wave A1 advance after T1-05 done."
+  note: "Spec 1.0.1 implementation authorized 2026-09-04 after self-binding+#3087; write_surfaces include ledger."
   goal: 在现有 chain-bind 上增加 BET、Milestone、Campaign、Objective、Vision 五级纯派生完成谓词，阻止 leaf done、工程 delivery 或代理指标冒充战略完成。
   non_goals:
   - 不允许 Agent 或 projection 直接写 KR proven
@@ -20553,12 +20553,13 @@ bets:
   - tests/test_bet_portfolio_completion.py
   - docs/superpowers/specs/2026-09-03-w0-portfolio-milestone-vision-gates-design.md
   - docs/superpowers/plans/2026-09-03-w0-portfolio-milestone-vision-gates.md
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T1-06.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-milestone-vision-gates-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:3f3eb26334abf51949c2f259876b22741ae4aafad2b0c89f62b5ff26b2e66ce7
+    spec_version: 1.0.1
+    content_digest: sha256:16f6b8115b8ffe5c1a53a7f758aaa8e09b037bb329dd33276331c89a644cf488
     decision_ref: decision://accepted/BET-Y1Q4-T1-06
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
