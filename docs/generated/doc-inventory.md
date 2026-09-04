@@ -1,14 +1,14 @@
 # 文档索引 (自动生成)
 
-> 生成时间: 2026-09-04 15:10
-> 总文档数: 4083
+> 生成时间: 2026-09-04 15:16
+> 总文档数: 4078
 > 本文件由 `bin/ssot/generate-docs-index.py` 自动维护，不要手动编辑。
 
 ## 统计
 
 | 类型 | 数量 |
 |------|------|
-| SSOT | 1010 |
+| SSOT | 1005 |
 | derived | 57 |
 | ephemeral | 157 |
 | untyped | 1744 |
@@ -31,6 +31,21 @@
 | .kilo/commands/omostation-context.md | governance-team | 2026-09-04 | 12 |
 | .mimocode/commands/design-self-critique.md | governance-team | 2026-09-04 | 101 |
 | .mimocode/commands/trajectory-distill.md | governance-team | 2026-09-04 | 117 |
+| .omo/_archive/docs-migration-2026-09/2026-07-10-bus-foundation-r89-r97-spec.md | governance-team | 2026-09-04 | 581 |
+| .omo/_archive/docs-migration-2026-09/2026-07-10-bus-foundation-r89-r97.md | governance-team | 2026-09-04 | 521 |
+| .omo/_archive/docs-migration-2026-09/2026-07-13-P7X-IMPROVEMENTS-SUMMARY.md | governance-team | 2026-09-04 | 128 |
+| .omo/_archive/docs-migration-2026-09/AGENT-ISOLATION-ROLLOUT.md | governance-team | 2026-09-04 | 180 |
+| .omo/_archive/docs-migration-2026-09/ARCHITECTURE-EVOLUTION.md | governance-team | 2026-09-04 | 89 |
+| .omo/_archive/docs-migration-2026-09/DEBT-CLEANUP-ROLLOUT.md | governance-team | 2026-09-04 | 77 |
+| .omo/_archive/docs-migration-2026-09/KEMS-PILOT-ROADMAP.md | governance-team | 2026-09-04 | 91 |
+| .omo/_archive/docs-migration-2026-09/KEMS-PRODUCTION-PLAN.md | governance-team | 2026-09-04 | 478 |
+| .omo/_archive/docs-migration-2026-09/KOS-MCP-INTEGRATION.md | kems-team | 2026-09-04 | 86 |
+| .omo/_archive/docs-migration-2026-09/M4-DECISIONS-INDEX.md | governance-team | 2026-09-04 | 187 |
+| .omo/_archive/docs-migration-2026-09/M4-GAC-INTEGRATION-PLAN.md | governance-team | 2026-09-04 | 365 |
+| .omo/_archive/docs-migration-2026-09/M4-ROADMAP.md | governance-team | 2026-09-04 | 368 |
+| .omo/_archive/docs-migration-2026-09/M4-report-p1s2-l0-migration.md | governance-team | 2026-09-04 | 59 |
+| .omo/_archive/docs-migration-2026-09/OMO-CLI-PHASE5-PLAN.md | governance-team | 2026-09-04 | 77 |
+| .omo/_archive/docs-migration-2026-09/SYSTEM-INDEX-DESIGN.md | governance-team | 2026-09-04 | 898 |
 | .omo/_knowledge/decisions/0450-cockpit-ui-submodule-reintegration.md | xiamingxing | 2026-09-04 | 41 |
 | .omo/_knowledge/patterns/p97-squash-submodule-sha-dangling-pattern.md | governance-team | 2026-09-04 | 64 |
 | .omo/_knowledge/retros/2026-09-04-p96-worktree-war-retro.md | governance-team | 2026-09-04 | 59 |
@@ -42,58 +57,20 @@
 | CODE_OF_CONDUCT.md | governance-team | 2026-09-03 | 71 |
 | CONTRIBUTING.md | governance-team | 2026-09-03 | 128 |
 | GOVERNANCE.md | governance-team | 2026-09-03 | 109 |
+| Plans/engineering-optimization.md | governance-team | 2026-09-04 | 109 |
 | README.md | governance-team | 2026-09-03 | 199 |
 | SECURITY.md | governance-team | 2026-09-03 | 18 |
 | SUPPORT.md | governance-team | 2026-09-03 | 11 |
 | SYSTEM-INDEX.md | governance-team | 2026-09-03 | 79 |
 | bin/README.md | governance-team | 2026-09-04 | 240 |
 | bin/git-hooks/README.md | governance-team | 2026-09-04 | 23 |
-| docs/2026-07-10-bus-foundation-r89-r97-spec.md | governance-team | 2026-09-04 | 581 |
-| docs/2026-07-10-bus-foundation-r89-r97.md | governance-team | 2026-09-04 | 521 |
-| docs/2026-07-13-P7X-IMPROVEMENTS-SUMMARY.md | governance-team | 2026-09-04 | 128 |
-| docs/AGENT-ISOLATION-ROLLOUT.md | governance-team | 2026-09-04 | 180 |
 | docs/AGENTS.md | governance-team | 2026-09-04 | 32 |
-| docs/ARCHITECTURE-ANALYSIS-2026-07-14.md | architecture-team | 2026-09-04 | 135 |
-| docs/ARCHITECTURE-DETAILED-MAP.md | governance-team | 2026-09-04 | 612 |
-| docs/ARCHITECTURE-DIAGRAM.md | architecture-team | 2026-09-04 | 144 |
-| docs/ARCHITECTURE-EVOLUTION.md | governance-team | 2026-09-04 | 89 |
 | docs/CLI-REFERENCE.md | auto-fix-loop | 2026-09-04 | 300 |
-| docs/DEBT-CLEANUP-ROLLOUT.md | governance-team | 2026-09-04 | 77 |
-| docs/ENGINEERING-OPTIMIZATION-ROADMAP.md | governance-team | 2026-09-04 | 109 |
-| docs/FUNCTIONAL-CAPABILITY-MAP.md | governance-team | 2026-09-04 | 357 |
-| docs/G-DEL-2b5b-OPS.md | governance-team | 2026-09-04 | 55 |
-| docs/G-DEL-4-CALLCHAIN.md | governance-team | 2026-09-04 | 73 |
-| docs/G-DEL-PHASE2-BOARD.md | governance-team | 2026-09-04 | 52 |
-| docs/GOVERNANCE-ARCHITECTURE-SGF.md | governance-team | 2026-09-04 | 101 |
-| docs/GOVERNANCE-EVOLUTION-ROADMAP.md | governance-team | 2026-09-04 | 104 |
-| docs/GOVERNANCE-MATURITY-ISA.md | governance-team | 2026-09-04 | 134 |
-| docs/GOVERNANCE-META-ROADMAP.md | governance-team | 2026-09-04 | 73 |
-| docs/I0-AGORA-CALLCHAIN.md | governance-team | 2026-09-04 | 306 |
-| docs/INDEX-AGENTS.md | governance-team | 2026-09-03 | 100 |
-| docs/INDEX-KNOWLEDGE.md | governance-team | 2026-09-03 | 190 |
-| docs/INDEX-PROJECTS.md | governance-team | 2026-09-03 | 102 |
-| docs/INDEX-TOOLS.md | governance-team | 2026-09-03 | 293 |
-| docs/KEMS-PILOT-ROADMAP.md | governance-team | 2026-09-04 | 91 |
-| docs/KEMS-PRODUCTION-PLAN.md | governance-team | 2026-09-04 | 478 |
-| docs/KOS-MCP-INTEGRATION.md | kems-team | 2026-09-04 | 86 |
-| docs/LOCAL-RUNTIME-STARTUP.md | runtime-team | 2026-09-04 | 98 |
-| docs/M4-DECISIONS-INDEX.md | governance-team | 2026-09-04 | 187 |
-| docs/M4-GAC-INTEGRATION-PLAN.md | governance-team | 2026-09-04 | 365 |
-| docs/M4-ROADMAP.md | governance-team | 2026-09-04 | 368 |
-| docs/M4-report-p1s2-l0-migration.md | governance-team | 2026-09-04 | 59 |
-| docs/MCPTOOL-ADDER-GUIDE.md | governance-team | 2026-09-04 | 221 |
-| docs/METAOS-ECOS-SCHEME-C.md | governance-team | 2026-09-04 | 156 |
-| docs/OMO-CLI-PHASE5-PLAN.md | governance-team | 2026-09-04 | 77 |
 | docs/PANORAMA.md | governance-team | 2026-09-04 | 356 |
-| docs/PROJECT-COMPLETE-GUIDE.md | governance-team | 2026-09-04 | 304 |
 | docs/README.md | governance-team | 2026-09-04 | 32 |
-| docs/SOP-GOD-MODULE-SPLIT.md | governance-team | 2026-09-04 | 130 |
 | docs/SUBMODULE-PR-REVIEW-GUIDE.md | governance-team | 2026-09-04 | 276 |
 | docs/SUBMODULE-PR-STRATEGY.md | governance-team | 2026-09-04 | 107 |
-| docs/SYSTEM-INDEX-DESIGN.md | governance-team | 2026-09-04 | 898 |
 | docs/USER-JOURNEY-SOP.md | governance-team | 2026-09-04 | 811 |
-| docs/VISION-ROADMAP.md | governance-team | 2026-09-04 | 471 |
-| docs/WORKFLOW-MESH-IMPLEMENTATION.md | engineering-team | 2026-09-04 | 1220 |
 | docs/adr/ADR-0190-mof-dynamic-constraint-engine.md | governance-team | 2026-09-03 | 116 |
 | docs/adr/ADR-0191-workspace-documents-dual-plane-architecture.md | governance-team | 2026-09-03 | 82 |
 | docs/adr/ADR-0192-domain-agent-fact-extraction-and-hygiene-patrol.md | governance-team | 2026-09-03 | 96 |
@@ -106,12 +83,17 @@
 | docs/adr/ADR-0199-unified-bos-cockpit-and-cognitive-workflow.md | governance-team | 2026-09-03 | 38 |
 | docs/adr/ADR-0200-y1q4-code-loc-gate-rebaseline.md | governance-team | 2026-09-03 | 74 |
 | docs/architecture/90pct-maturity-architecture.md | governance-team | 2026-09-03 | 19 |
+| docs/architecture/agora-callchain.md | governance-team | 2026-09-04 | 306 |
+| docs/architecture/analysis/ARCHITECTURE-ANALYSIS-2026-07-14.md | architecture-team | 2026-09-04 | 135 |
+| docs/architecture/capability-map.md | governance-team | 2026-09-04 | 357 |
+| docs/architecture/detailed-map.md | governance-team | 2026-09-04 | 612 |
+| docs/architecture/diagram.md | architecture-team | 2026-09-04 | 144 |
 | docs/architecture/harness-comprehensive-analysis.md | governance-team | 2026-09-03 | 379 |
+| docs/architecture/metaos-ecos-scheme.md | governance-team | 2026-09-04 | 156 |
+| docs/architecture/observability-unified.md | governance-team | 2026-09-04 | 257 |
 | docs/business/Y1Q4/README.md | auto-fix-loop | 2026-09-04 | 24 |
 | docs/ci-architecture.md | governance-team | 2026-09-04 | 96 |
 | docs/ci-plane-change-template.md | governance-team | 2026-09-04 | 57 |
-| docs/external-adapter-integration-pattern.md | governance-team | 2026-09-04 | 118 |
-| docs/governance-intelligence-future-iterations.md | governance-team | 2026-09-04 | 626 |
 | docs/governance/ADR-0190-mof-dynamic-constraint-engine.md | governance-team | 2026-09-03 | 116 |
 | docs/governance/ADR-0191-workspace-documents-dual-plane-architecture.md | governance-team | 2026-09-03 | 82 |
 | docs/governance/ADR-0192-domain-agent-fact-extraction-and-hygiene-patrol.md | governance-team | 2026-09-03 | 96 |
@@ -123,8 +105,17 @@
 | docs/governance/ADR-0198-domain-cartridge-factory.md | governance-team | 2026-09-03 | 31 |
 | docs/governance/ADR-0199-unified-bos-cockpit-and-cognitive-workflow.md | governance-team | 2026-09-03 | 38 |
 | docs/governance/ADR-0200-y1q4-code-loc-gate-rebaseline.md | governance-team | 2026-09-03 | 74 |
+| docs/governance/GOVERNANCE-ARCHITECTURE-SGF.md | governance-team | 2026-09-04 | 101 |
+| docs/governance/GOVERNANCE-EVOLUTION-ROADMAP.md | governance-team | 2026-09-04 | 104 |
+| docs/governance/GOVERNANCE-MATURITY-ISA.md | governance-team | 2026-09-04 | 134 |
+| docs/governance/GOVERNANCE-META-ROADMAP.md | governance-team | 2026-09-04 | 73 |
 | docs/governance/agent-capability-gap-matrix.md | governance-team | 2026-09-03 | 59 |
 | docs/governance/bin-and-scripts-architecture.md | governance-team | 2026-09-03 | 80 |
+| docs/governance/g-del/G-DEL-2b5b-OPS.md | governance-team | 2026-09-04 | 55 |
+| docs/governance/g-del/G-DEL-4-CALLCHAIN.md | governance-team | 2026-09-04 | 73 |
+| docs/governance/g-del/G-DEL-PHASE2-BOARD.md | governance-team | 2026-09-04 | 52 |
+| docs/governance/governance-intelligence-future-iterations.md | governance-team | 2026-09-04 | 626 |
+| docs/governance/vision-roadmap.md | governance-team | 2026-09-04 | 471 |
 | docs/local-compute/compute-fabric-workflow.md | governance-team | 2026-09-04 | 100 |
 | docs/local-compute/omlx-cluster-architecture.md | architecture-team | 2026-09-04 | 147 |
 | docs/notes/closeout-template-5min-dev.md | governance-team | 2026-09-04 | 60 |
@@ -132,171 +123,175 @@
 | docs/notes/governance-runtime-convergence-closeout-20260814.md | governance-team | 2026-09-04 | 49 |
 | docs/notes/governance-runtime-convergence-rca-20260814.md | governance-team | 2026-09-04 | 56 |
 | docs/notes/mechanism-convergence-retrospective-20260815.md | governance-team | 2026-09-04 | 197 |
-| docs/observability-unified-architecture.md | governance-team | 2026-09-04 | 257 |
+| docs/operations/external-adapter-integration.md | governance-team | 2026-09-04 | 118 |
+| docs/operations/god-module-split.md | governance-team | 2026-09-04 | 130 |
+| docs/operations/local-runtime-startup.md | runtime-team | 2026-09-04 | 98 |
+| docs/operations/project-complete-guide.md | governance-team | 2026-09-04 | 304 |
+| docs/operations/workflow-mesh/WORKFLOW-MESH-IMPLEMENTATION.md | engineering-team | 2026-09-04 | 1220 |
 | docs/overview/cross-package-api-map.md | architecture-team | 2026-09-04 | 89 |
 | docs/plans/2026-09-03-t1-02-squash-retirement-tdd-plan.md | governance-team | 2026-09-04 | 171 |
-| docs/superpowers/plans/2026-08-27-governance-optimization.md | auto-fix-loop | 2026-09-04 | 580 |
-| docs/superpowers/plans/2026-08-28-post2408-main-recovery-and-required-gac-gate.md | governance-team | 2026-09-04 | 1986 |
-| docs/superpowers/plans/2026-08-28-product-p0-truth-loop.md | auto-fix-loop | 2026-09-04 | 594 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp1-honest-scene-gate.md | auto-fix-loop | 2026-09-04 | 271 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp2-honest-agent-cell-receipt.md | auto-fix-loop | 2026-09-04 | 409 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp3-canonical-outbox-publisher.md | auto-fix-loop | 2026-09-04 | 390 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp4-principal-authority-binding.md | auto-fix-loop | 2026-09-04 | 402 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp5-human-adjudication-value.md | auto-fix-loop | 2026-09-04 | 377 |
-| docs/superpowers/plans/2026-08-28-product-p0-wp6-physical-recovery-drill.md | auto-fix-loop | 2026-09-04 | 387 |
-| docs/superpowers/plans/2026-08-30-cc-switch-recovery-state-relocation.md | governance-team | 2026-09-03 | 812 |
-| docs/superpowers/plans/2026-08-30-documents-consumer-audit-path-tokenization.md | governance-team | 2026-09-03 | 149 |
-| docs/superpowers/plans/2026-08-30-vault-daily-health-workspace-owner-cutover.md | governance-team | 2026-09-03 | 109 |
-| docs/superpowers/plans/2026-08-30-zcode-workspace-runtime-state-relocation.md | governance-team | 2026-09-03 | 75 |
-| docs/superpowers/plans/2026-08-31-family-dashboard-owner-migration-phase-a.md | family-hub | 2026-09-04 | 1305 |
-| docs/superpowers/specs/2026-08-12-documents-owner-job-design.md | governance-team | 2026-09-04 | 51 |
-| docs/superpowers/specs/2026-08-13-codex-exec-worker-design.md | governance-team | 2026-09-04 | 118 |
-| docs/superpowers/specs/2026-08-13-orchestration-contract-mvp-design.md | governance-team | 2026-09-04 | 141 |
-| docs/superpowers/specs/2026-08-13-personal-capability-mainline-restore.md | governance-team | 2026-09-04 | 108 |
-| docs/superpowers/specs/2026-08-14-codex-acp-stdio-cutover-design.md | governance-team | 2026-09-04 | 165 |
-| docs/superpowers/specs/2026-08-14-supervised-blueprint-control-loop-design.md | governance-team | 2026-09-04 | 220 |
-| docs/superpowers/specs/2026-08-14-weijian-sanyi-status-consistency-design.md | governance-team | 2026-09-04 | 125 |
-| docs/superpowers/specs/2026-08-20-value-proof-truth-rebaseline-design.md | human-principal | 2026-09-04 | 324 |
-| docs/superpowers/specs/2026-08-21-escape-hatch-solidification-design.md | governance-team | 2026-09-04 | 92 |
-| docs/superpowers/specs/2026-08-22-engineering-delivery-shadow-observer-design.md | human-principal | 2026-09-04 | 48 |
-| docs/superpowers/specs/2026-08-23-resident-wiring-design.md | governance-team | 2026-09-04 | 97 |
-| docs/superpowers/specs/2026-08-24-exact-capability-binding-design.md | human-principal | 2026-09-04 | 407 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g1-script-registry-design.md | governance-team | 2026-09-04 | 73 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g10-calibration-alignment-design.md | governance-team | 2026-09-04 | 62 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g2-maturity-design-doc-design.md | governance-team | 2026-09-04 | 53 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g3-adr-link-fix-design.md | governance-team | 2026-09-04 | 74 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g4-governance-owner-migration-design.md | governance-team | 2026-09-04 | 73 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g5-compass-radar-sixth-axis-design.md | governance-team | 2026-09-04 | 76 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g6-scorecard-granularity-design.md | governance-team | 2026-09-04 | 90 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g7-runid-placeholder-design.md | governance-team | 2026-09-04 | 57 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g8-governance-bet-binding-design.md | governance-team | 2026-09-04 | 68 |
-| docs/superpowers/specs/2026-08-24-maturity-round2-g9-worktree-submodule-env-design.md | governance-team | 2026-09-04 | 62 |
-| docs/superpowers/specs/2026-08-24-platform-rebase-retirement-provenance-design.md | governance-team | 2026-09-04 | 35 |
-| docs/superpowers/specs/2026-08-24-resident-system-deep-review-design.md | human-principal | 2026-09-04 | 36 |
-| docs/superpowers/specs/2026-08-25-resident-alert-webhook-wiring-design.md | resident | 2026-09-04 | 60 |
-| docs/superpowers/specs/2026-08-25-resident-decision-observability-design.md | resident | 2026-09-04 | 150 |
-| docs/superpowers/specs/2026-08-25-resident-event-source-lifecycle-design.md | resident | 2026-09-04 | 146 |
-| docs/superpowers/specs/2026-08-25-resident-inbox-folder-signal-design.md | resident | 2026-09-04 | 63 |
-| docs/superpowers/specs/2026-08-25-resident-sediment-promotion-pipeline-design.md | resident | 2026-09-04 | 118 |
-| docs/superpowers/specs/2026-08-26-health-domain-p1-design.md | human-principal | 2026-09-04 | 95 |
-| docs/superpowers/specs/2026-08-26-resident-decision-adoption-closure.md | resident | 2026-09-04 | 96 |
-| docs/superpowers/specs/2026-08-26-resident-knowledge-realization.md | resident | 2026-09-04 | 102 |
-| docs/superpowers/specs/2026-08-26-resident-monitor-heartbeat-wiring-design.md | resident | 2026-09-04 | 122 |
-| docs/superpowers/specs/2026-08-26-resident-sediment-five-question-refinement-design.md | resident | 2026-09-04 | 120 |
-| docs/superpowers/specs/2026-08-26-resident-spec-docs-alignment.md | resident | 2026-09-04 | 64 |
-| docs/superpowers/specs/2026-08-27-agora-canonical-l4-route-design.md | human-principal | 2026-09-04 | 53 |
-| docs/superpowers/specs/2026-08-27-documents-accepted-release-design.md | human-principal | 2026-09-04 | 42 |
-| docs/superpowers/specs/2026-08-27-documents-canonical-schedule-design.md | human-principal | 2026-09-04 | 44 |
-| docs/superpowers/specs/2026-08-27-documents-consumer-audit-design.md | human-principal | 2026-09-04 | 52 |
-| docs/superpowers/specs/2026-08-27-documents-freshness-owner-design.md | human-principal | 2026-09-04 | 43 |
-| docs/superpowers/specs/2026-08-27-documents-schedule-cutover-design.md | human-principal | 2026-09-04 | 50 |
-| docs/superpowers/specs/2026-08-27-domain-sync-owner-cutover-design.md | human-principal | 2026-09-04 | 34 |
-| docs/superpowers/specs/2026-08-27-l4-documents-agora-convergence-design.md | human-principal | 2026-09-04 | 63 |
-| docs/superpowers/specs/2026-08-27-ocr-preflight-owner-design.md | human-principal | 2026-09-04 | 33 |
-| docs/superpowers/specs/2026-08-28-bridge-preflight-owner-design.md | human-principal | 2026-09-04 | 34 |
-| docs/superpowers/specs/2026-08-28-concept-weave-preflight-owner-design.md | human-principal | 2026-09-04 | 31 |
-| docs/superpowers/specs/2026-08-28-consumer-audit-modes-design.md | human-principal | 2026-09-04 | 50 |
-| docs/superpowers/specs/2026-08-28-controller-preflight-owner-design.md | human-principal | 2026-09-04 | 49 |
-| docs/superpowers/specs/2026-08-28-convergence-preflight-owner-design.md | human-principal | 2026-09-04 | 51 |
-| docs/superpowers/specs/2026-08-28-documents-consumer-tail-retirement-design.md | human-principal | 2026-09-04 | 39 |
-| docs/superpowers/specs/2026-08-28-documents-execution-retirement-design.md | human-principal | 2026-09-04 | 73 |
-| docs/superpowers/specs/2026-08-28-domain-index-release-root-reconciliation-design.md | human-principal | 2026-09-04 | 54 |
-| docs/superpowers/specs/2026-08-28-ocr-preflight-cutover-design.md | human-principal | 2026-09-04 | 33 |
-| docs/superpowers/specs/2026-08-28-omo-gitlink-reachability-recovery-design.md | human-principal | 2026-09-04 | 61 |
-| docs/superpowers/specs/2026-08-28-owner-release-root-convergence-design.md | human-principal | 2026-09-04 | 52 |
-| docs/superpowers/specs/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md | human-principal | 2026-09-04 | 500 |
-| docs/superpowers/specs/2026-08-28-predictor-preflight-owner-design.md | human-principal | 2026-09-04 | 32 |
-| docs/superpowers/specs/2026-08-28-product-p0-truth-loop-design.md | human-principal | 2026-09-04 | 208 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp1-honest-scene-gate-design.md | human-principal | 2026-09-04 | 73 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md | human-principal | 2026-09-04 | 110 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md | human-principal | 2026-09-04 | 109 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp4-principal-authority-binding-design.md | human-principal | 2026-09-04 | 117 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp5-human-adjudication-value-design.md | human-principal | 2026-09-04 | 127 |
-| docs/superpowers/specs/2026-08-28-product-p0-wp6-physical-recovery-drill-design.md | human-principal | 2026-09-04 | 100 |
-| docs/superpowers/specs/2026-08-28-scheduled-owner-convergence-design.md | human-principal | 2026-09-04 | 34 |
-| docs/superpowers/specs/2026-08-28-service-config-lifecycle-only-repair-design.md | governance-team | 2026-09-04 | 47 |
-| docs/superpowers/specs/2026-08-28-session-brief-workspace-owner-design.md | human-principal | 2026-09-04 | 43 |
-| docs/superpowers/specs/2026-08-28-signals-preflight-owner-design.md | human-principal | 2026-09-04 | 47 |
-| docs/superpowers/specs/2026-08-28-workspace-watch-owner-design.md | human-principal | 2026-09-04 | 33 |
-| docs/superpowers/specs/2026-08-29-agora-port-contract-design.md | human-principal | 2026-09-04 | 40 |
-| docs/superpowers/specs/2026-08-29-capability-sync-module-split-design.md | governance-team | 2026-09-04 | 43 |
-| docs/superpowers/specs/2026-08-29-cockpit-decide-canonical-inbox-design.md | governance-team | 2026-09-04 | 63 |
-| docs/superpowers/specs/2026-08-29-documents-cockpit-runtime-quarantine-design.md | governance-team | 2026-09-04 | 42 |
-| docs/superpowers/specs/2026-08-29-documents-dangling-symlink-quarantine-design.md | governance-team | 2026-09-04 | 43 |
-| docs/superpowers/specs/2026-08-29-documents-guizi-dangling-symlink-quarantine-design.md | human-principal | 2026-09-04 | 50 |
-| docs/superpowers/specs/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md | human-principal | 2026-09-04 | 51 |
-| docs/superpowers/specs/2026-08-29-documents-public-runtime-quarantine-design.md | governance-team | 2026-09-04 | 48 |
-| docs/superpowers/specs/2026-08-29-documents-quarantine-owner-root-design.md | governance-team | 2026-09-04 | 30 |
-| docs/superpowers/specs/2026-08-29-documents-terminal-receipt-guard-design.md | governance-team | 2026-09-04 | 43 |
-| docs/superpowers/specs/2026-08-29-documents-work-runtime-regular-quarantine-design.md | human-principal | 2026-09-04 | 54 |
-| docs/superpowers/specs/2026-08-29-governance-waiver-frontmatter-repair-design.md | governance-team | 2026-09-04 | 54 |
-| docs/superpowers/specs/2026-08-29-historical-receipt-digest-reattestation-design.md | governance-team | 2026-09-04 | 36 |
-| docs/superpowers/specs/2026-08-29-l4-content-audit-stability-design.md | governance-team | 2026-09-04 | 43 |
-| docs/superpowers/specs/2026-08-29-ledger-key-hygiene-design.md | governance-team | 2026-09-04 | 32 |
-| docs/superpowers/specs/2026-08-29-meta-doctor-refs-only-registry-design.md | governance-team | 2026-09-04 | 59 |
-| docs/superpowers/specs/2026-08-29-omo-validator-utc-export-design.md | governance-team | 2026-09-04 | 35 |
-| docs/superpowers/specs/2026-08-29-ops-liveness-budget-design.md | human-principal | 2026-09-04 | 40 |
-| docs/superpowers/specs/2026-08-29-ops-uv-directory-command-repair-design.md | human-principal | 2026-09-04 | 41 |
-| docs/superpowers/specs/2026-08-29-quarantine-retention-guard-design.md | governance-team | 2026-09-04 | 32 |
-| docs/superpowers/specs/2026-08-29-resident-ledger-read-status-design.md | governance-team | 2026-09-04 | 56 |
-| docs/superpowers/specs/2026-08-29-root-oneoff-quarantine-design.md | human-principal | 2026-09-04 | 60 |
-| docs/superpowers/specs/2026-08-29-root-oneoff-registry-retirement-design.md | governance-team | 2026-09-04 | 51 |
-| docs/superpowers/specs/2026-08-29-service-config-stable-interpreter-reconciliation-design.md | human-principal | 2026-09-04 | 41 |
-| docs/superpowers/specs/2026-08-29-system-task-projection-reconciliation-design.md | human-principal | 2026-09-04 | 49 |
-| docs/superpowers/specs/2026-08-29-t10-48-evidence-repair-design.md | governance-team | 2026-09-04 | 32 |
-| docs/superpowers/specs/2026-08-29-work-runtime-family-scope-correction-design.md | human-principal | 2026-09-04 | 43 |
-| docs/superpowers/specs/2026-08-30-cc-switch-recovery-state-relocation-design.md | governance-team | 2026-09-04 | 194 |
-| docs/superpowers/specs/2026-08-30-completion-evidence-digest-reconciliation-design.md | governance-team | 2026-09-04 | 41 |
-| docs/superpowers/specs/2026-08-30-convergence-pulse-capability-projection-sync-design.md | governance-team | 2026-09-04 | 37 |
-| docs/superpowers/specs/2026-08-30-documents-consumer-audit-path-tokenization-design.md | governance-team | 2026-09-04 | 62 |
-| docs/superpowers/specs/2026-08-30-documents-contract-ocr-tools-runtime-quarantine-design.md | human-principal | 2026-09-04 | 52 |
-| docs/superpowers/specs/2026-08-30-documents-guizi-scripts-runtime-quarantine-design.md | human-principal | 2026-09-04 | 53 |
-| docs/superpowers/specs/2026-08-30-documents-guizi-tools-runtime-quarantine-design.md | human-principal | 2026-09-04 | 52 |
-| docs/superpowers/specs/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md | human-principal | 2026-09-04 | 52 |
-| docs/superpowers/specs/2026-08-30-documents-root-control-tools-runtime-quarantine-design.md | human-principal | 2026-09-04 | 52 |
-| docs/superpowers/specs/2026-08-30-documents-root-tools-runtime-quarantine-design.md | human-principal | 2026-09-04 | 52 |
-| docs/superpowers/specs/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md | human-principal | 2026-09-04 | 55 |
-| docs/superpowers/specs/2026-08-30-documents-weijian-control-runtime-quarantine-design.md | human-principal | 2026-09-04 | 53 |
-| docs/superpowers/specs/2026-08-30-family-runtime-kems-quarantine-design.md | governance-team | 2026-09-04 | 45 |
-| docs/superpowers/specs/2026-08-30-learning-content-owner-convergence-design.md | governance-team | 2026-09-04 | 78 |
-| docs/superpowers/specs/2026-08-30-learning-control-plane-owner-convergence-design.md | governance-team | 2026-09-04 | 62 |
-| docs/superpowers/specs/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md | governance-team | 2026-09-04 | 49 |
-| docs/superpowers/specs/2026-08-30-learning-runtime-owner-parity-design.md | runtime-team | 2026-09-04 | 79 |
-| docs/superpowers/specs/2026-08-30-omlxc-bos-path-reconciliation-design.md | governance-team | 2026-09-04 | 32 |
-| docs/superpowers/specs/2026-08-30-opc-runtime-tools-quarantine-design.md | governance-team | 2026-09-04 | 42 |
-| docs/superpowers/specs/2026-08-30-sovereign-mesh-daemon-sre-design.md | human-principal | 2026-09-04 | 31 |
-| docs/superpowers/specs/2026-08-30-spine-value-flow-and-persona-lora-design.md | human-principal | 2026-09-04 | 31 |
-| docs/superpowers/specs/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md | governance-team | 2026-09-04 | 45 |
-| docs/superpowers/specs/2026-08-30-t10-92-mainline-artifact-recovery-design.md | governance-team | 2026-09-04 | 48 |
-| docs/superpowers/specs/2026-08-30-t10-93-ledger-mainline-recovery-design.md | governance-team | 2026-09-04 | 45 |
-| docs/superpowers/specs/2026-08-30-task-state-projection-reconciliation-design.md | governance-team | 2026-09-04 | 40 |
-| docs/superpowers/specs/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md | governance-team | 2026-09-04 | 68 |
-| docs/superpowers/specs/2026-08-30-zcode-native-documents-config-reconciliation-design.md | human-principal | 2026-09-04 | 51 |
-| docs/superpowers/specs/2026-08-30-zcode-workspace-runtime-state-relocation-design.md | governance-team | 2026-09-04 | 116 |
-| docs/superpowers/specs/2026-08-31-documents-runner-log-quarantine-design.md | governance-team | 2026-09-04 | 274 |
-| docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md | family-hub | 2026-09-04 | 301 |
-| docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md | family-hub | 2026-09-04 | 409 |
-| docs/superpowers/specs/2026-08-31-l4-machine-log-classification-design.md | governance-team | 2026-09-04 | 174 |
-| docs/superpowers/specs/2026-08-31-t1-13-submodule-pointer-alignment.md | human-principal | 2026-09-04 | 38 |
-| docs/superpowers/specs/2026-08-31-t1-14-harness-e2e-verification.md | xiamingxing | 2026-09-04 | 47 |
-| docs/superpowers/specs/2026-08-31-t2-01-event-stream-bus-design.md | governance-team | 2026-09-04 | 44 |
-| docs/superpowers/specs/2026-08-31-t7-03-policy-radar-morning-brief-design.md | governance-team | 2026-09-04 | 58 |
-| docs/superpowers/specs/2026-09-01-squash-successor-clone-retirement-provenance-design.md | human-principal | 2026-09-04 | 619 |
-| docs/superpowers/specs/2026-09-01-t2-02-im-session-triage-design.md | governance-team | 2026-09-04 | 57 |
-| docs/superpowers/specs/2026-09-01-t2-03-multimodal-ocr-layout-design.md | governance-team | 2026-09-04 | 65 |
-| docs/superpowers/specs/2026-09-01-t3-02-bge-m3-mps-design.md | governance-team | 2026-09-04 | 68 |
-| docs/superpowers/specs/2026-09-01-t8-03-gov-docx-pptx-render-design.md | governance-team | 2026-09-04 | 68 |
-| docs/superpowers/specs/2026-09-02-chaos-injection-suite-design.md | ml-platform | 2026-09-04 | 72 |
-| docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md | ml-platform | 2026-09-04 | 62 |
-| docs/superpowers/specs/2026-09-02-t10-01-dlp-guard-design.md | governance-team | 2026-09-04 | 46 |
-| docs/superpowers/specs/2026-09-02-t2-05-pipeline-supervisor-design.md | governance-team | 2026-09-04 | 62 |
-| docs/superpowers/specs/2026-09-03-cockpit-work-case-mvp-design.md | human-principal | 2026-09-04 | 78 |
-| docs/superpowers/specs/2026-09-03-docdate-freshness-batch1-spec.md | governance-team | 2026-09-04 | 53 |
-| docs/superpowers/specs/2026-09-03-t2-04-mail-connector-design.md | governance-team | 2026-09-04 | 42 |
-| docs/superpowers/specs/2026-09-03-t3-03-tiered-router-design.md | governance-team | 2026-09-04 | 20 |
-| docs/superpowers/specs/2026-09-03-t8-02-mobile-pwa-design.md | governance-team | 2026-09-04 | 49 |
-| docs/superpowers/specs/2026-09-04-binquota-hygiene-spec.md | governance-team | 2026-09-04 | 44 |
-| docs/superpowers/specs/2026-09-04-docdate-freshness-batch3-spec.md | governance-team | 2026-09-04 | 70 |
+| docs/superpowers/plans/2026-W35/2026-08-27-governance-optimization.md | auto-fix-loop | 2026-09-04 | 580 |
+| docs/superpowers/plans/2026-W35/2026-08-28-post2408-main-recovery-and-required-gac-gate.md | governance-team | 2026-09-04 | 1986 |
+| docs/superpowers/plans/2026-W35/2026-08-28-product-p0-truth-loop.md | auto-fix-loop | 2026-09-04 | 594 |
+| docs/superpowers/plans/2026-W35/2026-08-28-product-p0-wp1-honest-scene-gate.md | auto-fix-loop | 2026-09-04 | 271 |
+| docs/superpowers/plans/2026-W35/2026-08-28-product-p0-wp2-honest-agent-cell-receipt.md | auto-fix-loop | 2026-09-04 | 409 |
+| docs/superpowers/plans/2026-W35/2026-08-28-product-p0-wp3-canonical-outbox-publisher.md | auto-fix-loop | 2026-09-04 | 390 |
+| docs/superpowers/plans/2026-W35/2026-08-28-product-p0-wp4-principal-authority-binding.md | auto-fix-loop | 2026-09-04 | 402 |
+| docs/superpowers/plans/2026-W35/2026-08-28-product-p0-wp5-human-adjudication-value.md | auto-fix-loop | 2026-09-04 | 377 |
+| docs/superpowers/plans/2026-W35/2026-08-28-product-p0-wp6-physical-recovery-drill.md | auto-fix-loop | 2026-09-04 | 387 |
+| docs/superpowers/plans/2026-W35/2026-08-30-cc-switch-recovery-state-relocation.md | governance-team | 2026-09-03 | 812 |
+| docs/superpowers/plans/2026-W35/2026-08-30-documents-consumer-audit-path-tokenization.md | governance-team | 2026-09-03 | 149 |
+| docs/superpowers/plans/2026-W35/2026-08-30-vault-daily-health-workspace-owner-cutover.md | governance-team | 2026-09-03 | 109 |
+| docs/superpowers/plans/2026-W35/2026-08-30-zcode-workspace-runtime-state-relocation.md | governance-team | 2026-09-03 | 75 |
+| docs/superpowers/plans/2026-W36/2026-08-31-family-dashboard-owner-migration-phase-a.md | family-hub | 2026-09-04 | 1305 |
+| docs/superpowers/specs/2026-W33/2026-08-12-documents-owner-job-design.md | governance-team | 2026-09-04 | 51 |
+| docs/superpowers/specs/2026-W33/2026-08-13-codex-exec-worker-design.md | governance-team | 2026-09-04 | 118 |
+| docs/superpowers/specs/2026-W33/2026-08-13-orchestration-contract-mvp-design.md | governance-team | 2026-09-04 | 141 |
+| docs/superpowers/specs/2026-W33/2026-08-13-personal-capability-mainline-restore.md | governance-team | 2026-09-04 | 108 |
+| docs/superpowers/specs/2026-W33/2026-08-14-codex-acp-stdio-cutover-design.md | governance-team | 2026-09-04 | 165 |
+| docs/superpowers/specs/2026-W33/2026-08-14-supervised-blueprint-control-loop-design.md | governance-team | 2026-09-04 | 220 |
+| docs/superpowers/specs/2026-W33/2026-08-14-weijian-sanyi-status-consistency-design.md | governance-team | 2026-09-04 | 125 |
+| docs/superpowers/specs/2026-W34/2026-08-20-value-proof-truth-rebaseline-design.md | human-principal | 2026-09-04 | 324 |
+| docs/superpowers/specs/2026-W34/2026-08-21-escape-hatch-solidification-design.md | governance-team | 2026-09-04 | 92 |
+| docs/superpowers/specs/2026-W34/2026-08-22-engineering-delivery-shadow-observer-design.md | human-principal | 2026-09-04 | 48 |
+| docs/superpowers/specs/2026-W34/2026-08-23-resident-wiring-design.md | governance-team | 2026-09-04 | 97 |
+| docs/superpowers/specs/2026-W34/2026-08-24-exact-capability-binding-design.md | human-principal | 2026-09-04 | 407 |
+| docs/superpowers/specs/2026-W34/2026-08-24-maturity-round2-g1-script-registry-design.md | governance-team | 2026-09-04 | 73 |
+| docs/superpowers/specs/2026-W34/2026-08-24-maturity-round2-g10-calibration-alignment-design.md | governance-team | 2026-09-04 | 62 |
+| docs/superpowers/specs/2026-W34/2026-08-24-maturity-round2-g2-maturity-design-doc-design.md | governance-team | 2026-09-04 | 53 |
+| docs/superpowers/specs/2026-W34/2026-08-24-maturity-round2-g3-adr-link-fix-design.md | governance-team | 2026-09-04 | 74 |
+| docs/superpowers/specs/2026-W34/2026-08-24-maturity-round2-g4-governance-owner-migration-design.md | governance-team | 2026-09-04 | 73 |
+| docs/superpowers/specs/2026-W34/2026-08-24-maturity-round2-g5-compass-radar-sixth-axis-design.md | governance-team | 2026-09-04 | 76 |
+| docs/superpowers/specs/2026-W34/2026-08-24-maturity-round2-g6-scorecard-granularity-design.md | governance-team | 2026-09-04 | 90 |
+| docs/superpowers/specs/2026-W34/2026-08-24-maturity-round2-g7-runid-placeholder-design.md | governance-team | 2026-09-04 | 57 |
+| docs/superpowers/specs/2026-W34/2026-08-24-maturity-round2-g8-governance-bet-binding-design.md | governance-team | 2026-09-04 | 68 |
+| docs/superpowers/specs/2026-W34/2026-08-24-maturity-round2-g9-worktree-submodule-env-design.md | governance-team | 2026-09-04 | 62 |
+| docs/superpowers/specs/2026-W34/2026-08-24-platform-rebase-retirement-provenance-design.md | governance-team | 2026-09-04 | 35 |
+| docs/superpowers/specs/2026-W34/2026-08-24-resident-system-deep-review-design.md | human-principal | 2026-09-04 | 36 |
+| docs/superpowers/specs/2026-W35/2026-08-25-resident-alert-webhook-wiring-design.md | resident | 2026-09-04 | 60 |
+| docs/superpowers/specs/2026-W35/2026-08-25-resident-decision-observability-design.md | resident | 2026-09-04 | 150 |
+| docs/superpowers/specs/2026-W35/2026-08-25-resident-event-source-lifecycle-design.md | resident | 2026-09-04 | 146 |
+| docs/superpowers/specs/2026-W35/2026-08-25-resident-inbox-folder-signal-design.md | resident | 2026-09-04 | 63 |
+| docs/superpowers/specs/2026-W35/2026-08-25-resident-sediment-promotion-pipeline-design.md | resident | 2026-09-04 | 118 |
+| docs/superpowers/specs/2026-W35/2026-08-26-health-domain-p1-design.md | human-principal | 2026-09-04 | 95 |
+| docs/superpowers/specs/2026-W35/2026-08-26-resident-decision-adoption-closure.md | resident | 2026-09-04 | 96 |
+| docs/superpowers/specs/2026-W35/2026-08-26-resident-knowledge-realization.md | resident | 2026-09-04 | 102 |
+| docs/superpowers/specs/2026-W35/2026-08-26-resident-monitor-heartbeat-wiring-design.md | resident | 2026-09-04 | 122 |
+| docs/superpowers/specs/2026-W35/2026-08-26-resident-sediment-five-question-refinement-design.md | resident | 2026-09-04 | 120 |
+| docs/superpowers/specs/2026-W35/2026-08-26-resident-spec-docs-alignment.md | resident | 2026-09-04 | 64 |
+| docs/superpowers/specs/2026-W35/2026-08-27-agora-canonical-l4-route-design.md | human-principal | 2026-09-04 | 53 |
+| docs/superpowers/specs/2026-W35/2026-08-27-documents-accepted-release-design.md | human-principal | 2026-09-04 | 42 |
+| docs/superpowers/specs/2026-W35/2026-08-27-documents-canonical-schedule-design.md | human-principal | 2026-09-04 | 44 |
+| docs/superpowers/specs/2026-W35/2026-08-27-documents-consumer-audit-design.md | human-principal | 2026-09-04 | 52 |
+| docs/superpowers/specs/2026-W35/2026-08-27-documents-freshness-owner-design.md | human-principal | 2026-09-04 | 43 |
+| docs/superpowers/specs/2026-W35/2026-08-27-documents-schedule-cutover-design.md | human-principal | 2026-09-04 | 50 |
+| docs/superpowers/specs/2026-W35/2026-08-27-domain-sync-owner-cutover-design.md | human-principal | 2026-09-04 | 34 |
+| docs/superpowers/specs/2026-W35/2026-08-27-l4-documents-agora-convergence-design.md | human-principal | 2026-09-04 | 63 |
+| docs/superpowers/specs/2026-W35/2026-08-27-ocr-preflight-owner-design.md | human-principal | 2026-09-04 | 33 |
+| docs/superpowers/specs/2026-W35/2026-08-28-bridge-preflight-owner-design.md | human-principal | 2026-09-04 | 34 |
+| docs/superpowers/specs/2026-W35/2026-08-28-concept-weave-preflight-owner-design.md | human-principal | 2026-09-04 | 31 |
+| docs/superpowers/specs/2026-W35/2026-08-28-consumer-audit-modes-design.md | human-principal | 2026-09-04 | 50 |
+| docs/superpowers/specs/2026-W35/2026-08-28-controller-preflight-owner-design.md | human-principal | 2026-09-04 | 49 |
+| docs/superpowers/specs/2026-W35/2026-08-28-convergence-preflight-owner-design.md | human-principal | 2026-09-04 | 51 |
+| docs/superpowers/specs/2026-W35/2026-08-28-documents-consumer-tail-retirement-design.md | human-principal | 2026-09-04 | 39 |
+| docs/superpowers/specs/2026-W35/2026-08-28-documents-execution-retirement-design.md | human-principal | 2026-09-04 | 73 |
+| docs/superpowers/specs/2026-W35/2026-08-28-domain-index-release-root-reconciliation-design.md | human-principal | 2026-09-04 | 54 |
+| docs/superpowers/specs/2026-W35/2026-08-28-ocr-preflight-cutover-design.md | human-principal | 2026-09-04 | 33 |
+| docs/superpowers/specs/2026-W35/2026-08-28-omo-gitlink-reachability-recovery-design.md | human-principal | 2026-09-04 | 61 |
+| docs/superpowers/specs/2026-W35/2026-08-28-owner-release-root-convergence-design.md | human-principal | 2026-09-04 | 52 |
+| docs/superpowers/specs/2026-W35/2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md | human-principal | 2026-09-04 | 500 |
+| docs/superpowers/specs/2026-W35/2026-08-28-predictor-preflight-owner-design.md | human-principal | 2026-09-04 | 32 |
+| docs/superpowers/specs/2026-W35/2026-08-28-product-p0-truth-loop-design.md | human-principal | 2026-09-04 | 208 |
+| docs/superpowers/specs/2026-W35/2026-08-28-product-p0-wp1-honest-scene-gate-design.md | human-principal | 2026-09-04 | 73 |
+| docs/superpowers/specs/2026-W35/2026-08-28-product-p0-wp2-honest-agent-cell-receipt-design.md | human-principal | 2026-09-04 | 110 |
+| docs/superpowers/specs/2026-W35/2026-08-28-product-p0-wp3-canonical-outbox-publisher-design.md | human-principal | 2026-09-04 | 109 |
+| docs/superpowers/specs/2026-W35/2026-08-28-product-p0-wp4-principal-authority-binding-design.md | human-principal | 2026-09-04 | 117 |
+| docs/superpowers/specs/2026-W35/2026-08-28-product-p0-wp5-human-adjudication-value-design.md | human-principal | 2026-09-04 | 127 |
+| docs/superpowers/specs/2026-W35/2026-08-28-product-p0-wp6-physical-recovery-drill-design.md | human-principal | 2026-09-04 | 100 |
+| docs/superpowers/specs/2026-W35/2026-08-28-scheduled-owner-convergence-design.md | human-principal | 2026-09-04 | 34 |
+| docs/superpowers/specs/2026-W35/2026-08-28-service-config-lifecycle-only-repair-design.md | governance-team | 2026-09-04 | 47 |
+| docs/superpowers/specs/2026-W35/2026-08-28-session-brief-workspace-owner-design.md | human-principal | 2026-09-04 | 43 |
+| docs/superpowers/specs/2026-W35/2026-08-28-signals-preflight-owner-design.md | human-principal | 2026-09-04 | 47 |
+| docs/superpowers/specs/2026-W35/2026-08-28-workspace-watch-owner-design.md | human-principal | 2026-09-04 | 33 |
+| docs/superpowers/specs/2026-W35/2026-08-29-agora-port-contract-design.md | human-principal | 2026-09-04 | 40 |
+| docs/superpowers/specs/2026-W35/2026-08-29-capability-sync-module-split-design.md | governance-team | 2026-09-04 | 43 |
+| docs/superpowers/specs/2026-W35/2026-08-29-cockpit-decide-canonical-inbox-design.md | governance-team | 2026-09-04 | 63 |
+| docs/superpowers/specs/2026-W35/2026-08-29-documents-cockpit-runtime-quarantine-design.md | governance-team | 2026-09-04 | 42 |
+| docs/superpowers/specs/2026-W35/2026-08-29-documents-dangling-symlink-quarantine-design.md | governance-team | 2026-09-04 | 43 |
+| docs/superpowers/specs/2026-W35/2026-08-29-documents-guizi-dangling-symlink-quarantine-design.md | human-principal | 2026-09-04 | 50 |
+| docs/superpowers/specs/2026-W35/2026-08-29-documents-guozhuan-dangling-symlink-quarantine-design.md | human-principal | 2026-09-04 | 51 |
+| docs/superpowers/specs/2026-W35/2026-08-29-documents-public-runtime-quarantine-design.md | governance-team | 2026-09-04 | 48 |
+| docs/superpowers/specs/2026-W35/2026-08-29-documents-quarantine-owner-root-design.md | governance-team | 2026-09-04 | 30 |
+| docs/superpowers/specs/2026-W35/2026-08-29-documents-terminal-receipt-guard-design.md | governance-team | 2026-09-04 | 43 |
+| docs/superpowers/specs/2026-W35/2026-08-29-documents-work-runtime-regular-quarantine-design.md | human-principal | 2026-09-04 | 54 |
+| docs/superpowers/specs/2026-W35/2026-08-29-governance-waiver-frontmatter-repair-design.md | governance-team | 2026-09-04 | 54 |
+| docs/superpowers/specs/2026-W35/2026-08-29-historical-receipt-digest-reattestation-design.md | governance-team | 2026-09-04 | 36 |
+| docs/superpowers/specs/2026-W35/2026-08-29-l4-content-audit-stability-design.md | governance-team | 2026-09-04 | 43 |
+| docs/superpowers/specs/2026-W35/2026-08-29-ledger-key-hygiene-design.md | governance-team | 2026-09-04 | 32 |
+| docs/superpowers/specs/2026-W35/2026-08-29-meta-doctor-refs-only-registry-design.md | governance-team | 2026-09-04 | 59 |
+| docs/superpowers/specs/2026-W35/2026-08-29-omo-validator-utc-export-design.md | governance-team | 2026-09-04 | 35 |
+| docs/superpowers/specs/2026-W35/2026-08-29-ops-liveness-budget-design.md | human-principal | 2026-09-04 | 40 |
+| docs/superpowers/specs/2026-W35/2026-08-29-ops-uv-directory-command-repair-design.md | human-principal | 2026-09-04 | 41 |
+| docs/superpowers/specs/2026-W35/2026-08-29-quarantine-retention-guard-design.md | governance-team | 2026-09-04 | 32 |
+| docs/superpowers/specs/2026-W35/2026-08-29-resident-ledger-read-status-design.md | governance-team | 2026-09-04 | 56 |
+| docs/superpowers/specs/2026-W35/2026-08-29-root-oneoff-quarantine-design.md | human-principal | 2026-09-04 | 60 |
+| docs/superpowers/specs/2026-W35/2026-08-29-root-oneoff-registry-retirement-design.md | governance-team | 2026-09-04 | 51 |
+| docs/superpowers/specs/2026-W35/2026-08-29-service-config-stable-interpreter-reconciliation-design.md | human-principal | 2026-09-04 | 41 |
+| docs/superpowers/specs/2026-W35/2026-08-29-system-task-projection-reconciliation-design.md | human-principal | 2026-09-04 | 49 |
+| docs/superpowers/specs/2026-W35/2026-08-29-t10-48-evidence-repair-design.md | governance-team | 2026-09-04 | 32 |
+| docs/superpowers/specs/2026-W35/2026-08-29-work-runtime-family-scope-correction-design.md | human-principal | 2026-09-04 | 43 |
+| docs/superpowers/specs/2026-W35/2026-08-30-cc-switch-recovery-state-relocation-design.md | governance-team | 2026-09-04 | 194 |
+| docs/superpowers/specs/2026-W35/2026-08-30-completion-evidence-digest-reconciliation-design.md | governance-team | 2026-09-04 | 41 |
+| docs/superpowers/specs/2026-W35/2026-08-30-convergence-pulse-capability-projection-sync-design.md | governance-team | 2026-09-04 | 37 |
+| docs/superpowers/specs/2026-W35/2026-08-30-documents-consumer-audit-path-tokenization-design.md | governance-team | 2026-09-04 | 62 |
+| docs/superpowers/specs/2026-W35/2026-08-30-documents-contract-ocr-tools-runtime-quarantine-design.md | human-principal | 2026-09-04 | 52 |
+| docs/superpowers/specs/2026-W35/2026-08-30-documents-guizi-scripts-runtime-quarantine-design.md | human-principal | 2026-09-04 | 53 |
+| docs/superpowers/specs/2026-W35/2026-08-30-documents-guizi-tools-runtime-quarantine-design.md | human-principal | 2026-09-04 | 52 |
+| docs/superpowers/specs/2026-W35/2026-08-30-documents-guozhuan-tools-runtime-quarantine-design.md | human-principal | 2026-09-04 | 52 |
+| docs/superpowers/specs/2026-W35/2026-08-30-documents-root-control-tools-runtime-quarantine-design.md | human-principal | 2026-09-04 | 52 |
+| docs/superpowers/specs/2026-W35/2026-08-30-documents-root-tools-runtime-quarantine-design.md | human-principal | 2026-09-04 | 52 |
+| docs/superpowers/specs/2026-W35/2026-08-30-documents-weijian-cleanup-script-runtime-quarantine-design.md | human-principal | 2026-09-04 | 55 |
+| docs/superpowers/specs/2026-W35/2026-08-30-documents-weijian-control-runtime-quarantine-design.md | human-principal | 2026-09-04 | 53 |
+| docs/superpowers/specs/2026-W35/2026-08-30-family-runtime-kems-quarantine-design.md | governance-team | 2026-09-04 | 45 |
+| docs/superpowers/specs/2026-W35/2026-08-30-learning-content-owner-convergence-design.md | governance-team | 2026-09-04 | 78 |
+| docs/superpowers/specs/2026-W35/2026-08-30-learning-control-plane-owner-convergence-design.md | governance-team | 2026-09-04 | 62 |
+| docs/superpowers/specs/2026-W35/2026-08-30-learning-runtime-legacy-helper-quarantine-design.md | governance-team | 2026-09-04 | 49 |
+| docs/superpowers/specs/2026-W35/2026-08-30-learning-runtime-owner-parity-design.md | runtime-team | 2026-09-04 | 79 |
+| docs/superpowers/specs/2026-W35/2026-08-30-omlxc-bos-path-reconciliation-design.md | governance-team | 2026-09-04 | 32 |
+| docs/superpowers/specs/2026-W35/2026-08-30-opc-runtime-tools-quarantine-design.md | governance-team | 2026-09-04 | 42 |
+| docs/superpowers/specs/2026-W35/2026-08-30-sovereign-mesh-daemon-sre-design.md | human-principal | 2026-09-04 | 31 |
+| docs/superpowers/specs/2026-W35/2026-08-30-spine-value-flow-and-persona-lora-design.md | human-principal | 2026-09-04 | 31 |
+| docs/superpowers/specs/2026-W35/2026-08-30-t10-02-t10-06-completion-digest-reconciliation-design.md | governance-team | 2026-09-04 | 45 |
+| docs/superpowers/specs/2026-W35/2026-08-30-t10-92-mainline-artifact-recovery-design.md | governance-team | 2026-09-04 | 48 |
+| docs/superpowers/specs/2026-W35/2026-08-30-t10-93-ledger-mainline-recovery-design.md | governance-team | 2026-09-04 | 45 |
+| docs/superpowers/specs/2026-W35/2026-08-30-task-state-projection-reconciliation-design.md | governance-team | 2026-09-04 | 40 |
+| docs/superpowers/specs/2026-W35/2026-08-30-vault-daily-health-workspace-owner-cutover-design.md | governance-team | 2026-09-04 | 68 |
+| docs/superpowers/specs/2026-W35/2026-08-30-zcode-native-documents-config-reconciliation-design.md | human-principal | 2026-09-04 | 51 |
+| docs/superpowers/specs/2026-W35/2026-08-30-zcode-workspace-runtime-state-relocation-design.md | governance-team | 2026-09-04 | 116 |
+| docs/superpowers/specs/2026-W36/2026-08-31-documents-runner-log-quarantine-design.md | governance-team | 2026-09-04 | 274 |
+| docs/superpowers/specs/2026-W36/2026-08-31-family-dashboard-owner-migration-phase-a-design.md | family-hub | 2026-09-04 | 301 |
+| docs/superpowers/specs/2026-W36/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md | family-hub | 2026-09-04 | 409 |
+| docs/superpowers/specs/2026-W36/2026-08-31-l4-machine-log-classification-design.md | governance-team | 2026-09-04 | 174 |
+| docs/superpowers/specs/2026-W36/2026-08-31-t1-13-submodule-pointer-alignment.md | human-principal | 2026-09-04 | 38 |
+| docs/superpowers/specs/2026-W36/2026-08-31-t1-14-harness-e2e-verification.md | xiamingxing | 2026-09-04 | 47 |
+| docs/superpowers/specs/2026-W36/2026-08-31-t2-01-event-stream-bus-design.md | governance-team | 2026-09-04 | 44 |
+| docs/superpowers/specs/2026-W36/2026-08-31-t7-03-policy-radar-morning-brief-design.md | governance-team | 2026-09-04 | 58 |
+| docs/superpowers/specs/2026-W36/2026-09-01-squash-successor-clone-retirement-provenance-design.md | human-principal | 2026-09-04 | 619 |
+| docs/superpowers/specs/2026-W36/2026-09-01-t2-02-im-session-triage-design.md | governance-team | 2026-09-04 | 57 |
+| docs/superpowers/specs/2026-W36/2026-09-01-t2-03-multimodal-ocr-layout-design.md | governance-team | 2026-09-04 | 65 |
+| docs/superpowers/specs/2026-W36/2026-09-01-t3-02-bge-m3-mps-design.md | governance-team | 2026-09-04 | 68 |
+| docs/superpowers/specs/2026-W36/2026-09-01-t8-03-gov-docx-pptx-render-design.md | governance-team | 2026-09-04 | 68 |
+| docs/superpowers/specs/2026-W36/2026-09-02-chaos-injection-suite-design.md | ml-platform | 2026-09-04 | 72 |
+| docs/superpowers/specs/2026-W36/2026-09-02-qwen3.8-dflash2-throughput-design.md | ml-platform | 2026-09-04 | 62 |
+| docs/superpowers/specs/2026-W36/2026-09-02-t10-01-dlp-guard-design.md | governance-team | 2026-09-04 | 46 |
+| docs/superpowers/specs/2026-W36/2026-09-02-t2-05-pipeline-supervisor-design.md | governance-team | 2026-09-04 | 62 |
+| docs/superpowers/specs/2026-W36/2026-09-03-cockpit-work-case-mvp-design.md | human-principal | 2026-09-04 | 78 |
+| docs/superpowers/specs/2026-W36/2026-09-03-docdate-freshness-batch1-spec.md | governance-team | 2026-09-04 | 53 |
+| docs/superpowers/specs/2026-W36/2026-09-03-t2-04-mail-connector-design.md | governance-team | 2026-09-04 | 42 |
+| docs/superpowers/specs/2026-W36/2026-09-03-t3-03-tiered-router-design.md | governance-team | 2026-09-04 | 20 |
+| docs/superpowers/specs/2026-W36/2026-09-03-t8-02-mobile-pwa-design.md | governance-team | 2026-09-04 | 49 |
+| docs/superpowers/specs/2026-W36/2026-09-04-binquota-hygiene-spec.md | governance-team | 2026-09-04 | 44 |
+| docs/superpowers/specs/2026-W36/2026-09-04-docdate-freshness-batch3-spec.md | governance-team | 2026-09-04 | 70 |
 | docs/superpowers/specs/README.md | governance-team | 2026-09-04 | 66 |
 | docs/superpowers/specs/templates/_TEMPLATE.md | @YOUR_NAME | 2026-09-04 | 57 |
 | docs/templates/ssot-template.md | <team-or-role> | 2026-09-03 | 41 |
@@ -1102,11 +1097,10 @@
 | ECCP-HANDOFF.md | completed | - |
 | ROADMAP.md | completed | - |
 | debt-audit-report.md | completed | - |
-| docs/AUTO-PR-REVIEW-ISA.md | active | - |
-| docs/G-DEL-3-WIRED-REMEASURE.md | active | - |
 | docs/evidence/BET-Y1Q2-T1-09-orca-crush-e2e.md | active | - |
 | docs/evidence/BET-Y1Q2-T1-10-agent-pool-observe.md | active | - |
 | docs/evidence/t1-18-codex-dogfood-canary.md | experimental | - |
+| docs/governance/g-del/G-DEL-3-WIRED-REMEASURE.md | active | - |
 | docs/isa/debt-remediation-isa.md | active | - |
 | docs/operations/scene-activation-playbook.md | active | - |
 | docs/plans/2026-08-06-agora-full-alignment-plan.md | active | - |
@@ -1230,18 +1224,19 @@
 | docs/reports/gate-roi-2026-08.md | active | - |
 | docs/reports/w0-fact-baseline-2026-08-10.md | active | - |
 | docs/reports/weekly-strategy-health-2026-07-23.md | active | - |
-| docs/superpowers/specs/2026-09-03-north-star-v4-realtime-design.md | accepted | - |
-| docs/superpowers/specs/2026-09-03-t10-119-dual-node-failover-design.md | accepted | - |
-| docs/superpowers/specs/2026-09-03-vision-to-bet-portfolio-v2-design.md | accepted | - |
-| docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md | accepted | - |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md | accepted | - |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-dogfood-canary-design.md | accepted | - |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md | accepted | - |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-milestone-vision-gates-design.md | accepted | - |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-projections-design.md | accepted | - |
-| docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md | accepted | - |
-| docs/superpowers/specs/2026-09-04-agora-fastmcp-sandboxing-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-03-north-star-v4-realtime-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-03-t10-119-dual-node-failover-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-03-vision-to-bet-portfolio-v2-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-03-w0-cockpit-portfolio-view-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-03-w0-portfolio-dogfood-canary-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-03-w0-portfolio-legacy-bet-migration-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-03-w0-portfolio-milestone-vision-gates-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-03-w0-portfolio-projections-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md | accepted | - |
+| docs/superpowers/specs/2026-W36/2026-09-04-agora-fastmcp-sandboxing-design.md | accepted | - |
 | docs/templates/ephemeral-template.md | active | completed | archived | - |
+| isa/auto-pr-review.md | active | - |
 | projects/aetherforge/docs/func-01-s0-s3-execution.md | active | - |
 | projects/aetherforge/docs/j1-j4-sensitive-stream-binary-triage-conclusion.md | active | - |
 | projects/aetherforge/docs/omlx-dead-models-registry.md | active | - |

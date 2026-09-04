@@ -15,7 +15,7 @@ totals:
   bos_services: 298
   bos_domains: 22
   cli_commands: 201
-  skills: 5
+  skills: 11
   workflows: 19
 mcp_servers:
 - id: omo
@@ -2517,11 +2517,29 @@ skills:
 - id: architecture-perception
   file: .agents/skills/architecture-perception/SKILL.md
   exists: true
+- id: bet-execution
+  file: .agents/skills/bet-execution/SKILL.md
+  exists: true
+- id: cognitive-governance
+  file: .agents/skills/cognitive-governance/SKILL.md
+  exists: true
+- id: delegation-guardrails
+  file: .agents/skills/delegation-guardrails/SKILL.md
+  exists: true
+- id: domain-cartridge-governance
+  file: .agents/skills/domain-cartridge-governance/SKILL.md
+  exists: true
 - id: git-discipline
   file: .agents/skills/git-discipline/SKILL.md
   exists: true
 - id: harness-compliance
   file: .agents/skills/harness-compliance/SKILL.md
+  exists: true
+- id: nextgen-cognitive-mesh
+  file: .agents/skills/nextgen-cognitive-mesh/SKILL.md
+  exists: true
+- id: omlxc-compute-fabric
+  file: .agents/skills/omlxc-compute-fabric/SKILL.md
   exists: true
 - id: spine-value-pipeline
   file: .agents/skills/spine-value-pipeline/SKILL.md
