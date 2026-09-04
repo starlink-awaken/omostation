@@ -19963,4 +19963,46 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y1Q4-T6-02
+  track: T6-SUBTRACT
+  window: Y1Q4
+  title: bin-quota 口径修复与配额迭代升级
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: 修 BIN_PATTERNS 子目录盲点并配额迭代升级（script_baseline 571→573 注明 stub 增量），不改业务逻辑。
+  non_goals:
+  - 不改业务代码逻辑，只修配额统计口径与基线数字
+  - 不做全量基线重盘点，历史漂移超出 2 个 stub 的部分不在本 bet 范围
+  - 不归档脚本，本次走配额同步路径
+  done_when:
+  - check-bin-quota-diff.py 新口径覆盖 bin/ops/ 等子目录脚本，新旧口径输出对照留证
+  - governance-checks.yaml 中 script_baseline 为 573 且注释注明 stub 增量
+  - ledger lint 通过
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0，BET-Y1Q4-T6-02 结构合法
+  - cmd: python3 bin/gac/check-bin-quota-diff.py --base origin/main
+    expect: exit 0，bin 变更守恒
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/check-bin-quota-diff.py
+  - bin/ops/*
+  - bin/_archive/*
+  - .omo/_truth/registry/governance-checks.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-04-binquota-hygiene-spec.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-binquota-hygiene-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:d6033f371ff6cc2230cfdf3be0e8f0529037b3caeb41e91bb7e12e27cd27c90b
+    decision_ref: decision://accepted/BET-Y1Q4-T6-02
+  pasw_required: false
+  depends_on: []
+  risk_level: L4
+  human_gate: false
+  circuit_breaker: 发现口径争议或基线语义需改时停手，只保留已验证改动并上报。
+  value_indicator_policy: false
+  retro: required
 
