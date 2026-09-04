@@ -39,6 +39,9 @@ agent_profiles:
     - project-code-change
     - pyright-sweep
     - bet-execution
+    - round-engineering
+    - round-type-router
+    - closeout-with-retro
     can_write_lanes:
     - code
     - config
@@ -50,6 +53,7 @@ agent_profiles:
     allowed_workflows:
     - project-code-change
     - pyright-sweep
+    - closeout-with-retro
     can_write_lanes:
     - code
     closeout_required:
@@ -74,6 +78,11 @@ agent_profiles:
     - resident-runtime-observe
     - documents-consumer-audit-weekly
     - convergence-pulse-weekly
+    - round-engineering
+    - round-type-router
+    - closeout-with-retro
+    - scene-card-promotion
+    - submodule-pointer-bump
     can_write_lanes:
     - docs
     - governance_code

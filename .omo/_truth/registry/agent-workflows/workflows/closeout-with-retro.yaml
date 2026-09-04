@@ -41,7 +41,14 @@ phases:
     - python3
     - bin/gac/p78-diagnostic-prescan.py
   verification:
-  - id: three_layer_solidify
+  - id: retro_analysis
+    mode: required
+    command:
+    - python3
+    - bin/gac/p78-diagnostic-prescan.py
+    - --json
+  closeout:
+  - id: solidify
     mode: manual
     command:
     - agent

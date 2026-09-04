@@ -33,6 +33,18 @@ phases:
     command:
     - python3
     - bin/gac/skill-recommender.py
+  verification:
+  - id: validate_recommendation
+    mode: advisory
+    command:
+    - echo
+    - "validate round type recommendation"
+  closeout:
+  - id: record_recommendation
+    mode: advisory
+    command:
+    - echo
+    - "record round type"
 evidence_required:
 - diff_analysis
 - type_recommendation
