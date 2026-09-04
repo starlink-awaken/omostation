@@ -1,5 +1,7 @@
 ---
+name: closeout-retro
 title: Closeout & Retrospective
+description: "关闭与回溯 skill：负责 workflow 收尾、retro 归档、evidence 记录和 closeout 报告生成"
 type: skill
 owner: governance-team
 version: "1.0"

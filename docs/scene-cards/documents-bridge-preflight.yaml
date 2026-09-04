@@ -1,7 +1,5 @@
 ---
 last-reviewed: 2026-08-30
----
-
 schema: scene-card/v2
 lifecycle: supervised
 activation: active
@@ -16,12 +14,13 @@ outcome_metric: documents_owner_success_rate
 consumer: xiamingxing
 approver: business-governance
 owner: xiamingxing
+bet: BET-Y1Q3-T10-31
+falsifier: "若 shadow 期间无 owner 类 documents 任务被处理，则场景无实际价值"
 
 source_path: Documents DASHBOARD + Workspace state
 target_path: Workspace evidence
 risk_level: L1
 files_count: 5
-bet_id: BET-Y1Q3-T10-31
 category: owner
 
 # Architecture Alignment (ADR-0387 dual-track admission)
@@ -33,5 +32,3 @@ architecture:
   governance_surface: .omo/_truth/registry/governance-checks.yaml
   dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
   evidence_plane: ".omo/_delivery/"
-
----

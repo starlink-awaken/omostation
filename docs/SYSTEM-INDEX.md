@@ -244,6 +244,7 @@
 -→ [ADR 镜像](adr/) — `docs/adr/` ADR 决策镜像 (同 .omo/_knowledge/decisions)
 -→ [交付证据](evidence/) — `docs/evidence/` bet 级验证回执
 -→ [治理文档](governance/) — `docs/governance/` 治理架构与 bin/scripts 规划
+-→ [命令审计](command-audit/) — `docs/command-audit/` 15 维命令体系评估与审计报告
 -→ [superpowers 计划](superpowers/plans/) — `docs/superpowers/plans/` 增强工作流计划
 -→ [superpowers 规格](superpowers/specs/) — `docs/superpowers/specs/` 增强工作流设计规格
 ## docs/ 根目录平铺文档
