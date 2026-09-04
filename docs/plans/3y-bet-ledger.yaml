@@ -18530,6 +18530,47 @@ bets:
   human_gate: false
   circuit_breaker: 事件堆积超过 10000 条时启动丢弃策略并发出高危报警。
   retro: required
+  value_indicator_policy: false
+  status: done
+  done_at: 2026-09-03
+  closed_by: xiamingxing
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T2-01.md
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@17492320264595b08667603fe678e8ed8d63d7cd
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-01.md
+            sha256: sha256:60cde69331346467e0e9558fd3b1168a12ffcffe12a61feefc9854a1d97ed11e
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-31-t2-01-event-stream-bus-design.md
+            sha256: sha256:121985a6eae0693b03a2dc0aaddd16269f5a1dc139718a060a6ab2882e7cf348
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-01.md
+            sha256: sha256:60cde69331346467e0e9558fd3b1168a12ffcffe12a61feefc9854a1d97ed11e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-01.md
+            sha256: sha256:60cde69331346467e0e9558fd3b1168a12ffcffe12a61feefc9854a1d97ed11e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-01.md
+            sha256: sha256:60cde69331346467e0e9558fd3b1168a12ffcffe12a61feefc9854a1d97ed11e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-01.md
+            sha256: sha256:60cde69331346467e0e9558fd3b1168a12ffcffe12a61feefc9854a1d97ed11e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-01.md
+            sha256: sha256:60cde69331346467e0e9558fd3b1168a12ffcffe12a61feefc9854a1d97ed11e
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-t2-01-event-stream-bus-design.md
     spec_version: 1.0.0
