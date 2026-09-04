@@ -1,24 +1,23 @@
 ---
 schema: resident-retro-candidate/v1
 topic: external-adapter-sync
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-04T13:40:00Z
 status: candidate
 counts:
   runs: 3
-  failures: 2
-  total: 5
-failure_rate: 0.4
+  failures: 0
+  total: 3
+failure_rate: 0.0
 failure_breakdown:
   by_event_type:
-    StepFailed: 2
-  trace_count: 2
+  trace_count: 0
 ---
 # external-adapter-sync 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-04T13:40:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 3 成功运行 + 2 失败模式 = 5 草稿
-- 失败率: 40.00%
+- sediment 覆盖: 3 成功运行 + 0 失败模式 = 3 草稿
+- 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
@@ -28,15 +27,11 @@ failure_breakdown:
 
 ## 失败模式 (failures/)
 
-- 20260806T121548Z-external-adapter-sync-b1051f60-6dc777bb.md
-- 20260808T235233Z-external-adapter-sync-78b17bff-f4a2eb0f.md
+- (无)
 
 ## 失败根因画像 (确定性启发式)
 
-- StepFailed: 2 篇
-- 关联工作流溯源: 2 个 (trace_id 见下)
-  - `20260806T121548Z-external-adapter-sync-b1051f60`
-  - `20260808T235233Z-external-adapter-sync-78b17bff`
+- (无失败模式沉淀)
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 

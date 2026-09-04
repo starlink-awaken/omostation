@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-09-04T13:53:57.513123+00:00",
+  "week": 36,
+  "year": 2026,
+  "system_health": {
+    "heartbeat_ok": false,
+    "details": {
+      "ok": false,
+      "error": "python3: can't open file '/Users/xiamingxing/Workspace/bin/bin/gac/probe-heartbeat-monitor.py': [Errno 2] No such file or directory\n"
+    }
+  },
+  "north_star": {
+    "ok": false,
+    "error": "python3: can't open file '/Users/xiamingxing/Workspace/bin/bin/bc-os/north_star_meter_v3.py': [Errno 2] No such file or directory\n"
+  },
+  "corrosion": {
+    "ok": false,
+    "error": "python3: can't open file '/Users/xiamingxing/Workspace/bin/bin/gac/corrosion-pipeline-connector.py': [Errno 2] No such file or directory\n"
+  },
+  "decision_inbox": {
+    "ok": false,
+    "error": "python3: can't open file '/Users/xiamingxing/Workspace/bin/bin/cockpit': [Errno 2] No such file or directory\n"
+  },
+  "evolution": {
+    "ok": false,
+    "error": "python3: can't open file '/Users/xiamingxing/Workspace/bin/bin/bc-os/evolution-proposal-triage.py': [Errno 2] No such file or directory\n"
+  },
+  "summary": {
+    "total_proposals": 0,
+    "pending_decisions": 0
+  }
+}

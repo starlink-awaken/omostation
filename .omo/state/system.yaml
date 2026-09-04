@@ -1,13 +1,13 @@
 current_phase: 29
 current_wave: W1
-health_score_evidence: 77.3
+health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-09-04T03:02:39.137917+00:00'
-completed_tasks: 290
+health_score_evidence_generated_at: '2026-09-04T13:57:14.610521+00:00'
+completed_tasks: 292
 planned_tasks: 7
 active_tasks: 1
 blocked_tasks: 1
-total_tasks: 299
+total_tasks: 301
 next_active_tasks:
 - kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 next_planned_tasks:
@@ -19,7 +19,7 @@ next_planned_tasks:
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
-updated_at: '2026-08-30T03:30:23Z'
+updated_at: '2026-09-04T13:56:42Z'
 harness:
   last_run: null
   last_status: null
@@ -35,3 +35,17 @@ self_evolution:
   proposals_pending: 0
   proposals_approved: 0
   proposals_executed: 0
+health_score: 52
+governance_anomaly_score: 0
+service_online_ratio: 0.5
+health_score_source: compass_radar_composite_isc3
+health_score_generated_at: '2026-09-04T13:53:10Z'
+runtime_health_summary:
+  online_services: 2
+  total_services: 4
+  ratio: 0.5
+  health_score: 52
+  last_scan: '2026-09-04T13:53:10Z'
+  source: compass_radar_isc3_daemon_ratio
+  degraded: []
+governance_feedback_last_run: '2026-09-04T13:53:10Z'

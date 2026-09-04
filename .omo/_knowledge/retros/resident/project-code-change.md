@@ -1,24 +1,23 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-04T13:40:00Z
 status: candidate
 counts:
-  runs: 48
-  failures: 19
-  total: 67
-failure_rate: 0.2836
+  runs: 52
+  failures: 0
+  total: 52
+failure_rate: 0.0
 failure_breakdown:
   by_event_type:
-    StepFailed: 19
-  trace_count: 19
+  trace_count: 0
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-04T13:40:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 48 成功运行 + 19 失败模式 = 67 草稿
-- 失败率: 28.36%
+- sediment 覆盖: 52 成功运行 + 0 失败模式 = 52 草稿
+- 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
@@ -70,52 +69,18 @@ failure_breakdown:
 - 20260830T000209Z-project-code-change-7d06f413.md
 - 20260830T073455Z-project-code-change-fef2989d.md
 - 20260830T080400Z-project-code-change-f420bda7.md
+- 20260904T031540Z-project-code-change-1cfeb9be.md
+- 20260904T032430Z-project-code-change-b4505378.md
+- 20260904T033036Z-project-code-change-0555d21b.md
+- 20260904T113658Z-project-code-change-9c689ebd.md
 
 ## 失败模式 (failures/)
 
-- 20260806T045517Z-project-code-change-bcde97d4-512f277d.md
-- 20260807T032328Z-project-code-change-09c74847-0ca2de7b.md
-- 20260808T111928Z-project-code-change-aa88e96d-4eca71fe.md
-- 20260813T113527Z-project-code-change-09d36fb5-21fd864b.md
-- 20260814T120902Z-project-code-change-af83b5b6-4c39d5b0.md
-- 20260816T032059Z-project-code-change-48e654fa-1997b710.md
-- 20260816T115049Z-project-code-change-0fdaac1f-cbc5c4af.md
-- 20260816T121722Z-project-code-change-7e7891ec-1428aec9.md
-- 20260820T023451Z-project-code-change-a9f457f1-a5fe09a7.md
-- 20260822T160521Z-project-code-change-6d6b79e3-8658f9e2.md
-- 20260822T180030Z-project-code-change-9d21d909-01ec2f6c.md
-- 20260822T180114Z-project-code-change-2d58c960-e676a645.md
-- 20260822T180231Z-project-code-change-0ff37015-4b0bbeaf.md
-- 20260822T190929Z-project-code-change-b97cf92a-a48b5726.md
-- 20260822T193706Z-project-code-change-7bd3cdd2-caaccd5e.md
-- 20260822T204103Z-project-code-change-6fcbcd58-a43bc989.md
-- 20260822T204128Z-project-code-change-7b1cd904-7c4682a5.md
-- 20260822T204217Z-project-code-change-9e7f7076-8d25d42e.md
-- 20260822T215855Z-project-code-change-fdf192e5-9044dbbf.md
+- (无)
 
 ## 失败根因画像 (确定性启发式)
 
-- StepFailed: 19 篇
-- 关联工作流溯源: 19 个 (trace_id 见下)
-  - `20260806T045517Z-project-code-change-bcde97d4`
-  - `20260807T032328Z-project-code-change-09c74847`
-  - `20260808T111928Z-project-code-change-aa88e96d`
-  - `20260813T113527Z-project-code-change-09d36fb5`
-  - `20260814T120902Z-project-code-change-af83b5b6`
-  - `20260816T032059Z-project-code-change-48e654fa`
-  - `20260816T115049Z-project-code-change-0fdaac1f`
-  - `20260816T121722Z-project-code-change-7e7891ec`
-  - `20260820T023451Z-project-code-change-a9f457f1`
-  - `20260822T160521Z-project-code-change-6d6b79e3`
-  - `20260822T180030Z-project-code-change-9d21d909`
-  - `20260822T180114Z-project-code-change-2d58c960`
-  - `20260822T180231Z-project-code-change-0ff37015`
-  - `20260822T190929Z-project-code-change-b97cf92a`
-  - `20260822T193706Z-project-code-change-7bd3cdd2`
-  - `20260822T204103Z-project-code-change-6fcbcd58`
-  - `20260822T204128Z-project-code-change-7b1cd904`
-  - `20260822T204217Z-project-code-change-9e7f7076`
-  - `20260822T215855Z-project-code-change-fdf192e5`
+- (无失败模式沉淀)
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
@@ -438,6 +403,33 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=2
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=15332.293
+- **20260904T031540Z-project-code-change-1cfeb9be**
+  - 计划 (objective): [BET-Y1Q4-T1-02] squash-successor 独立 clone 退役 provenance 收敛 (Appetite: 2 days)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=396.036
+- **20260904T032430Z-project-code-change-b4505378**
+  - 计划 (objective): [BET-Y1Q4-T1-02] squash-successor 独立 clone 退役 provenance 收敛 (Appetite: 2 days)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=312.894
+- **20260904T033036Z-project-code-change-0555d21b**
+  - 计划 (objective): [BET-Y1Q4-T1-02] squash-successor 独立 clone 退役 provenance 收敛 (Appetite: 2 days)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=656.64
+- **20260904T113658Z-project-code-change-9c689ebd**
+  - 计划 (objective): [BET-Y1Q4-T1-02] squash-successor 独立 clone 退役 provenance 收敛 (Appetite: 2 days)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=795.315
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

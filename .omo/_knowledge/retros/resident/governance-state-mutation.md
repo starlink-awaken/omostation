@@ -1,24 +1,23 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-state-mutation
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-04T13:40:00Z
 status: candidate
 counts:
-  runs: 27
-  failures: 13
-  total: 40
-failure_rate: 0.325
+  runs: 29
+  failures: 0
+  total: 29
+failure_rate: 0.0
 failure_breakdown:
   by_event_type:
-    StepFailed: 13
-  trace_count: 13
+  trace_count: 0
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-04T13:40:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 27 成功运行 + 13 失败模式 = 40 草稿
-- 失败率: 32.50%
+- sediment 覆盖: 29 成功运行 + 0 失败模式 = 29 草稿
+- 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
@@ -49,40 +48,16 @@ failure_breakdown:
 - 20260828T034834Z-governance-state-mutation-4a8001e1.md
 - 20260828T035040Z-governance-state-mutation-44a204d2.md
 - 20260828T044529Z-governance-state-mutation-69537635.md
+- 20260902T030204Z-governance-state-mutation-3e16beaa.md
+- 20260902T064532Z-governance-state-mutation-fa484a9f.md
 
 ## 失败模式 (failures/)
 
-- 20260803T063243Z-governance-state-mutation-0fd89888-e5ab3f01.md
-- 20260806T121548Z-governance-state-mutation-91ec746f-15ad6389.md
-- 20260808T052927Z-governance-state-mutation-73470fcc-2debb7cc.md
-- 20260808T093225Z-governance-state-mutation-0af3aeab-d8c05bff.md
-- 20260808T094047Z-governance-state-mutation-71fc9960-d4eec045.md
-- 20260809T233419Z-governance-state-mutation-d4c98b62-d9589717.md
-- 20260820T021725Z-governance-state-mutation-1d1600c1-20cb9637.md
-- 20260820T073454Z-governance-state-mutation-2d39fe5c-df786e88.md
-- 20260821T010715Z-governance-state-mutation-bf1e6b14-913c9975.md
-- 20260821T132222Z-governance-state-mutation-2d082c75-eebd25a6.md
-- 20260822T005042Z-governance-state-mutation-70f1c966-917f4ef3.md
-- 20260822T040703Z-governance-state-mutation-19cbf869-b901a51a.md
-- 20260822T081119Z-governance-state-mutation-91f0fc58-7d61e9f3.md
+- (无)
 
 ## 失败根因画像 (确定性启发式)
 
-- StepFailed: 13 篇
-- 关联工作流溯源: 13 个 (trace_id 见下)
-  - `20260803T063243Z-governance-state-mutation-0fd89888`
-  - `20260806T121548Z-governance-state-mutation-91ec746f`
-  - `20260808T052927Z-governance-state-mutation-73470fcc`
-  - `20260808T093225Z-governance-state-mutation-0af3aeab`
-  - `20260808T094047Z-governance-state-mutation-71fc9960`
-  - `20260809T233419Z-governance-state-mutation-d4c98b62`
-  - `20260820T021725Z-governance-state-mutation-1d1600c1`
-  - `20260820T073454Z-governance-state-mutation-2d39fe5c`
-  - `20260821T010715Z-governance-state-mutation-bf1e6b14`
-  - `20260821T132222Z-governance-state-mutation-2d082c75`
-  - `20260822T005042Z-governance-state-mutation-70f1c966`
-  - `20260822T040703Z-governance-state-mutation-19cbf869`
-  - `20260822T081119Z-governance-state-mutation-91f0fc58`
+- (无失败模式沉淀)
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
@@ -265,6 +240,20 @@ failure_breakdown:
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=1
   - 指标: event_count=6, duration_s=738.012
+- **20260902T030204Z-governance-state-mutation-3e16beaa**
+  - 计划 (objective): [BET-Y1Q3-T1-13] T4-07 closeout — 子模块指针同步与 agora index 恢复 (Appetite: 0.25 day)
+  - workflow: governance-state-mutation
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=80061.771
+- **20260902T064532Z-governance-state-mutation-fa484a9f**
+  - 计划 (objective): [BET-Y1Q3-T1-13] T4-07 closeout — 子模块指针同步与 agora index 恢复 (Appetite: 0.25 day)
+  - workflow: governance-state-mutation
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=67.442
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

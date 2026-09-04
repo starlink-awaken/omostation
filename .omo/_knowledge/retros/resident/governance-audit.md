@@ -1,24 +1,23 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-audit
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-04T13:40:00Z
 status: candidate
 counts:
   runs: 9
-  failures: 4
-  total: 13
-failure_rate: 0.3077
+  failures: 0
+  total: 9
+failure_rate: 0.0
 failure_breakdown:
   by_event_type:
-    StepFailed: 4
-  trace_count: 4
+  trace_count: 0
 ---
 # governance-audit 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-04T13:40:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 9 成功运行 + 4 失败模式 = 13 草稿
-- 失败率: 30.77%
+- sediment 覆盖: 9 成功运行 + 0 失败模式 = 9 草稿
+- 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
@@ -34,19 +33,11 @@ failure_breakdown:
 
 ## 失败模式 (failures/)
 
-- 20260809T054134Z-governance-audit-e14a9bd8-c65abe6e.md
-- 20260810T144332Z-governance-audit-e558e4a2-2670da5b.md
-- 20260817T075007Z-governance-audit-91e33ced-91b92c0f.md
-- 20260820T011659Z-governance-audit-d64a741e-7ca24b67.md
+- (无)
 
 ## 失败根因画像 (确定性启发式)
 
-- StepFailed: 4 篇
-- 关联工作流溯源: 4 个 (trace_id 见下)
-  - `20260809T054134Z-governance-audit-e14a9bd8`
-  - `20260810T144332Z-governance-audit-e558e4a2`
-  - `20260817T075007Z-governance-audit-91e33ced`
-  - `20260820T011659Z-governance-audit-d64a741e`
+- (无失败模式沉淀)
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 

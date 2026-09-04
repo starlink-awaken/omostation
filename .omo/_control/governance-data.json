@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "generated_at": "2026-08-31T06:23:56.422747+00:00",
+  "generated_at": "2026-09-04T13:56:42.243468+00:00",
   "governance": {
-    "health_score": 73,
-    "health_score_raw": 88.0,
-    "debt_weight": 1.0,
-    "debt_health": 100.0
+    "health_score": 52,
+    "health_score_raw": 100,
+    "debt_weight": 0,
+    "debt_health": 0
   },
   "debt": {
     "resolved_count": 0,
@@ -48,6 +48,5 @@
       "status": "healthy",
       "debt_count": 0
     }
-  },
-  "gac_rules_count": 85
+  }
 }
