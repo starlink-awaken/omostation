@@ -1,4 +1,5 @@
 meta:
+  schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
   total_bets: 289
   windows:
@@ -256,6 +257,116 @@ gates:
     pass: weekly_accepted >= 5 AND acceptance_rate >= 0.40 AND edit_rate_drop >= 0.40
       AND surface <= 0.70
     on_fail: 收窄至单场景维持
+vision:
+  id: VISION-2029
+  statement: >-
+    把外部信号变成夏明星愿意署名发出的成果，并记住每次修改。
+  owner: human-principal
+  horizon_end: 2029-06-30
+  strategy_ref: repo://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+  required_objectives:
+  - OBJ-TRUST
+  - OBJ-HOLDABILITY
+
+objectives:
+- id: OBJ-TRUST
+  statement: 愿景到交付的证据链可审计、可复现，禁止虚假完成
+  owner: human-principal
+  required: true
+  key_results:
+  - id: KR-TRUST-CHAIN-COVERAGE
+    metric: vision_to_bet_chain_coverage
+    baseline:
+      value: null
+      status: unmeasured
+    target:
+      operator: gte
+      value: 1.0
+    status: unmeasured
+    evidence_refs: []
+- id: OBJ-HOLDABILITY
+  statement: 非终态 BET 可被单一 SSOT 持有与治理，减少孤儿与漂移
+  owner: human-principal
+  required: true
+  key_results:
+  - id: KR-HOLDABILITY-ORPHAN-BETS
+    metric: orphan_nonterminal_bets
+    baseline:
+      value: null
+      status: unmeasured
+    target:
+      operator: lte
+      value: 0
+    status: unmeasured
+    evidence_refs: []
+
+campaigns:
+- id: CMP-W0-PORTFOLIO-TRUTH
+  title: Portfolio/BET v2 机制升级
+  objective_refs:
+  - OBJ-TRUST
+  - OBJ-HOLDABILITY
+  owner: portfolio-governance
+  target_window: Y1Q4
+  required_milestones:
+  - MS-W0-CONTRACT
+  - MS-W0-MIGRATION
+  - MS-W0-PRODUCT
+  - MS-W0-CANARY
+  max_parallel_writers: 2
+  status: derived
+
+milestones:
+- id: MS-W0-CONTRACT
+  campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+  required_bets:
+  - BET-Y1Q4-T1-04
+  - BET-Y1Q4-T1-05
+  - BET-Y1Q4-T1-06
+  required_krs:
+  - KR-TRUST-CHAIN-COVERAGE
+  - KR-HOLDABILITY-ORPHAN-BETS
+  exit_gate:
+    all_required_bets_terminal: true
+    all_required_krs_proven: true
+    p0_guardrail_breaches: 0
+  status: derived
+- id: MS-W0-MIGRATION
+  campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+  required_bets:
+  - BET-Y1Q4-T1-07
+  - BET-Y1Q4-T1-08
+  required_krs:
+  - KR-HOLDABILITY-ORPHAN-BETS
+  exit_gate:
+    all_required_bets_terminal: true
+    all_required_krs_proven: true
+    p0_guardrail_breaches: 0
+  status: derived
+- id: MS-W0-PRODUCT
+  campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+  required_bets:
+  - BET-Y1Q4-T8-05
+  required_krs:
+  - KR-TRUST-CHAIN-COVERAGE
+  exit_gate:
+    all_required_bets_terminal: true
+    all_required_krs_proven: true
+    p0_guardrail_breaches: 0
+  status: derived
+- id: MS-W0-CANARY
+  campaign_ref: CMP-W0-PORTFOLIO-TRUTH
+  required_bets:
+  - BET-Y1Q4-T1-09
+  required_krs:
+  - KR-TRUST-CHAIN-COVERAGE
+  - KR-HOLDABILITY-ORPHAN-BETS
+  exit_gate:
+    all_required_bets_terminal: true
+    all_required_krs_proven: true
+    p0_guardrail_breaches: 0
+  status: derived
+
 bets:
 - id: BET-Y1Q3-T10-122
   track: T10-MATURITY
@@ -20136,9 +20247,9 @@ bets:
   appetite: 18 days
   priority: P0
   status: candidate
-  note: Initial v1-compatible self-bootstrap. portfolio_binding is declaration-only
-    until BET-Y1Q4-T1-04 implements and a separately governed self-binding amendment
-    enables Portfolio v2 enforcement.
+  note: W0 Portfolio v2 self-binding applied 2026-09-04. portfolio_binding.schema_state=enforced;
+    top-level vision/objectives/campaigns/milestones present. Status/depends_on/accepted
+    bindings/completion/value evidence unchanged.
   goal: 编排七个 child BET，证明 3y-bet-ledger 能以唯一机器 SSOT 表达并验证 Vision→Objective/KR→Campaign/Milestone→BET→Spec/WorkPacket→Run→Evidence/Outcome→Retro 全链，且不创建第二真值面。
   non_goals:
   - 不实施或批量写入 W1-W6
@@ -20202,7 +20313,7 @@ bets:
     overall_state: evaluating
   depends_on: []
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: null
     objective_refs:
@@ -20211,6 +20322,12 @@ bets:
     kr_refs:
     - KR-TRUST-CHAIN-COVERAGE
     - KR-HOLDABILITY-ORPHAN-BETS
+    milestone_refs:
+    - MS-W0-CONTRACT
+    - MS-W0-MIGRATION
+    - MS-W0-PRODUCT
+    - MS-W0-CANARY
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: true
@@ -20299,11 +20416,14 @@ bets:
         evidence: {}
   depends_on: []
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE, KR-HOLDABILITY-ORPHAN-BETS]
+    milestone_refs:
+    - MS-W0-CONTRACT
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: false
@@ -20388,11 +20508,14 @@ bets:
         evidence: {}
   depends_on: [BET-Y1Q4-T1-04]
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE]
+    milestone_refs:
+    - MS-W0-CONTRACT
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: false
@@ -20452,11 +20575,14 @@ bets:
     overall_state: evaluating
   depends_on: [BET-Y1Q4-T1-04, BET-Y1Q4-T1-05]
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE]
+    milestone_refs:
+    - MS-W0-CONTRACT
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: false
@@ -20514,11 +20640,14 @@ bets:
     overall_state: evaluating
   depends_on: [BET-Y1Q4-T1-04]
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-HOLDABILITY]
     kr_refs: [KR-HOLDABILITY-ORPHAN-BETS]
+    milestone_refs:
+    - MS-W0-MIGRATION
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: true
@@ -20579,11 +20708,14 @@ bets:
     overall_state: evaluating
   depends_on: [BET-Y1Q4-T1-04, BET-Y1Q4-T1-07]
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE, KR-HOLDABILITY-ORPHAN-BETS]
+    milestone_refs:
+    - MS-W0-MIGRATION
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: true
@@ -20642,11 +20774,14 @@ bets:
     overall_state: evaluating
   depends_on: [BET-Y1Q4-T1-05, BET-Y1Q4-T1-08]
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE]
+    milestone_refs:
+    - MS-W0-PRODUCT
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: true
@@ -20718,11 +20853,14 @@ bets:
   - BET-Y1Q4-T1-08
   - BET-Y1Q4-T8-05
   portfolio_binding:
-    schema_state: bootstrap_unenforced
+    schema_state: enforced
     campaign_ref: CMP-W0-PORTFOLIO-TRUTH
     parent_bet: BET-Y1Q4-T1-03
     objective_refs: [OBJ-TRUST, OBJ-HOLDABILITY]
     kr_refs: [KR-TRUST-CHAIN-COVERAGE, KR-HOLDABILITY-ORPHAN-BETS]
+    milestone_refs:
+    - MS-W0-CANARY
+
   value_indicator_policy: false
   risk_level: L2
   human_gate: true
