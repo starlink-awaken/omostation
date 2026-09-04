@@ -2577,8 +2577,74 @@ def cmd_lint(data: dict, args) -> int:
     return 0
 
 
+
+def _portfolio_status(data: dict, args) -> int:
+    """Read-only W0 portfolio status: derived milestones + W1-W6 absence."""
+    import importlib.util
+    import sys
+
+    chain_path = Path(__file__).resolve().parent / "chain_bind.py"
+    spec = importlib.util.spec_from_file_location("chain_bind_status", chain_path)
+    assert spec and spec.loader
+    cb = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = cb
+    spec.loader.exec_module(cb)
+
+    milestones = [m for m in (data.get("milestones") or []) if isinstance(m, dict)]
+    w0 = [m for m in milestones if str(m.get("id") or "").startswith("MS-W0-")]
+    other_waves = [
+        m for m in milestones
+        if str(m.get("id") or "").startswith(("MS-W1-", "MS-W2-", "MS-W3-", "MS-W4-", "MS-W5-", "MS-W6-"))
+    ]
+    campaigns = [c for c in (data.get("campaigns") or []) if isinstance(c, dict)]
+    w1_w6_campaigns = [
+        c for c in campaigns
+        if str(c.get("id") or "").startswith(("CMP-W1-", "CMP-W2-", "CMP-W3-", "CMP-W4-", "CMP-W5-", "CMP-W6-"))
+    ]
+
+    derived = []
+    all_met = True
+    for ms in w0:
+        verdict = cb.evaluate_milestone(ms, data, {})
+        entry = {
+            "id": ms.get("id"),
+            "ok": bool(verdict.ok),
+            "code": verdict.code,
+            "reasons": list(verdict.reasons),
+        }
+        derived.append(entry)
+        if not verdict.ok:
+            all_met = False
+
+    payload = {
+        "ok": all_met and not other_waves and not w1_w6_campaigns,
+        "w0_milestones_derived_met": all_met,
+        "w1_w6_absent": not other_waves and not w1_w6_campaigns,
+        "milestones": derived,
+        "foreign_milestones": [m.get("id") for m in other_waves],
+        "foreign_campaigns": [c.get("id") for c in w1_w6_campaigns],
+    }
+    if getattr(args, "json", False):
+        print(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+    else:
+        print(
+            f"w0_milestones_derived_met={payload['w0_milestones_derived_met']} "
+            f"w1_w6_absent={payload['w1_w6_absent']}"
+        )
+        for entry in derived:
+            mark = "MET" if entry["ok"] else "UNMET"
+            print(f"  [{mark}] {entry['id']} ({entry['code']})")
+            for reason in entry["reasons"][:5]:
+                print(f"    - {reason}")
+        if payload["ok"]:
+            print("OK -- W0 milestones derived met; W1-W6 absent")
+        else:
+            print("INFO -- W0 portfolio status incomplete (see reasons)")
+    return 0 if payload["ok"] else 1
+
+
 def cmd_portfolio(data: dict, args) -> int:
-    """Portfolio v2 lint / coverage / critical-path read-only commands."""
+    """Portfolio v2 lint / coverage / critical-path / status read-only commands."""
     if args.portfolio_cmd == "lint":
         if cmd_lint(data, args) != 0:
             return 1
@@ -2644,6 +2710,10 @@ def cmd_portfolio(data: dict, args) -> int:
                 print(f"ERROR {error}")
             return 1
         return 0
+
+
+    if args.portfolio_cmd == "status":
+        return _portfolio_status(data, args)
 
     if args.portfolio_cmd == "critical-path":
         report = graph_mod.critical_path(graph)
@@ -2811,6 +2881,8 @@ def main() -> int:
     portfolio_goals.add_argument("--check", action="store_true")
     portfolio_goals.add_argument("--json", action="store_true")
     portfolio_goals.add_argument("--apply-markdown", action="store_true")
+    portfolio_status = portfolio_sub.add_parser("status")
+    portfolio_status.add_argument("--json", action="store_true")
     pc = sub.add_parser("complete")
     pc.add_argument("bet_id")
     pc.add_argument("--force", action="store_true")
