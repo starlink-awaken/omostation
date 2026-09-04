@@ -7,6 +7,8 @@ related:
 - ./health-visit-prep.yaml
 ---
 schema: scene-card/v2
+bet: BET-Y1Q4-T8-04
+falsifier: "若 30 天内无 health 类任务触发，则场景无实际价值"
 scene_id: health-visit
 journey_id: health-medical-workflow
 goal: 就诊结束后记录诊断/处方/医嘱, 形成就诊结构化档案

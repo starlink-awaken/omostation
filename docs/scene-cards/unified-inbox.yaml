@@ -2,6 +2,8 @@ title: Unified Inbox Scene Card (统一工作收件箱)
 status: active
 type: scene-card
 owner: product-architecture
+bet: BET-Y1Q4-T8-04
+falsifier: "若 30 天内无 inbox 类任务触发，则场景无实际价值"
 last-reviewed: 2026-08-19
 integrated_via: signal_router (W1-D2)
 trigger: 4 signal_sources → signal_router → downstream scenes

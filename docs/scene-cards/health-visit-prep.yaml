@@ -7,6 +7,8 @@ related:
 - ./health-intake.yaml
 ---
 schema: scene-card/v2
+bet: BET-Y1Q4-T8-04
+falsifier: "若 30 天内无 health 类任务触发，则场景无实际价值"
 scene_id: health-visit-prep
 journey_id: health-medical-workflow
 goal: 汇总症状时间线 + 历史健康摘要 + 就诊问题清单, 生成就诊准备包供人携带就诊
