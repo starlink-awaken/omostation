@@ -17668,7 +17668,7 @@ bets:
   title: resident 决策采纳闭环 (提案状态机 + ADR 草稿自动化 + north_star 知识消费轴)
   appetite: 1 day
   priority: P1
-  status: blocked
+  status: done
   done_at: '2026-08-27'
   note: 'closeout ok (run 20260826T132250Z-project-code-change-6cbb5114): 主仓 PR #2286
     MERGED (39a6db62) — proposal-to-adr.py 提案状态机 (new/drafted/adopted/executed/verified
@@ -17773,7 +17773,7 @@ bets:
   title: resident 规格文档对齐 (CLI 全量收录 + Agent Cell 子系统状态标记)
   appetite: 0.5 day
   priority: P2
-  status: blocked
+  status: done
   done_at: '2026-08-27'
   note: 'closeout ok: 主仓 PR #2299 MERGED (4b45e8fc, 原 #2291 因 CI runner 拥堵超时关闭后重开)
     — resident-agent-system-v1.md 2.1 CLI 补 inbox/monitor/heartbeat + promote 五问注释
