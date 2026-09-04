@@ -1,6 +1,6 @@
 # 3Y BET Portfolio (projection)
 
-<!-- source_digest: sha256:59aa9716b77d4be6435b6e00e4028d396c3915b14b1c8cca2f5779891e90a6c2 -->
+<!-- source_digest: sha256:d255e4476884e07511fc5b522400748d6fe302d2e140a8480bd22c2c5a6b0966 -->
 
 Generated one-way from `docs/plans/3y-bet-ledger.yaml`. Not a writer.
 
@@ -12,11 +12,11 @@ Generated one-way from `docs/plans/3y-bet-ledger.yaml`. Not a writer.
 
 ### OBJ-TRUST
 
-- `KR-TRUST-CHAIN-COVERAGE` — status=`unmeasured`
+- `KR-TRUST-CHAIN-COVERAGE` — status=`proven`
 
 ### OBJ-HOLDABILITY
 
-- `KR-HOLDABILITY-ORPHAN-BETS` — status=`unmeasured`
+- `KR-HOLDABILITY-ORPHAN-BETS` — status=`proven`
 
 ## Campaigns
 
@@ -48,5 +48,5 @@ Generated one-way from `docs/plans/3y-bet-ledger.yaml`. Not a writer.
 - `BET-Y1Q4-T1-06` — `done` gate=False
 - `BET-Y1Q4-T1-07` — `done` gate=False
 - `BET-Y1Q4-T1-08` — `done` gate=False
-- `BET-Y1Q4-T8-05` — `candidate` gate=False
-- `BET-Y1Q4-T1-09` — `candidate` gate=False
+- `BET-Y1Q4-T8-05` — `done` gate=False
+- `BET-Y1Q4-T1-09` — `done` gate=False

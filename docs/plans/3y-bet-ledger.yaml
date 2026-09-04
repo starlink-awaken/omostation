@@ -282,8 +282,11 @@ objectives:
     target:
       operator: gte
       value: 1.0
-    status: unmeasured
-    evidence_refs: []
+    status: proven
+    evidence_refs:
+    - receipt://docs/reports/2026-09-03-w0-portfolio-v2-dogfood-canary.md
+    - receipt://tests/test_bet_portfolio_canary.py
+    - receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-09.md
 - id: OBJ-HOLDABILITY
   statement: 非终态 BET 可被单一 SSOT 持有与治理，减少孤儿与漂移
   owner: human-principal
@@ -297,8 +300,11 @@ objectives:
     target:
       operator: lte
       value: 0
-    status: unmeasured
-    evidence_refs: []
+    status: proven
+    evidence_refs:
+    - receipt://docs/reports/2026-09-03-w0-portfolio-v2-dogfood-canary.md
+    - receipt://tests/test_bet_portfolio_canary.py
+    - receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-09.md
 
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
@@ -20922,8 +20928,9 @@ bets:
   title: Portfolio v2 dogfood canary 与 W0 收口
   appetite: 3 days
   priority: P0
-  status: candidate
-  note: "human_gate released 2026-09-04 by principal sequential Wave auth; Spec 1.0.1 authorized."
+  status: done
+  done_at: 2026-09-04 13:50:29+00:00
+  note: "Canary 12 passed; KRs proven on infrastructure evidence; control projection still unavailable (broker gap)."
   goal: 用一个 value-exempt 机制 BET 端到端验证 Vision→Objective/KR→Campaign/Milestone→BET→Spec/WorkPacket→Run→Evidence/Outcome→Retro→projection，全量负例 fail-closed 后才允许 W0 收口。
   non_goals:
   - 不创建或启动 W1-W6
@@ -20965,15 +20972,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-dogfood-canary-design.md
+            sha256: sha256:01a55448c6a923ce5366ee53099308aefa47d8ff951aeb4e6b0797c5ad092e51
+          tests:
+            ref: receipt://tests/test_bet_portfolio_canary.py
+            sha256: sha256:8abdd474b1813d086d4ecd31df6866446e4cc928c2cd83ce556c7a9d0391074b
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-09.md
+            sha256: sha256:762b7fec029e838b35b7504917a62b6ef768d5983ea4a31048a7a950387786aa
+          merged_reachable_commit:
+            ref: git://origin/main@09df963bfdd654b783c64cc22b41c68dec5e4c8c
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-03-w0-portfolio-v2-dogfood-canary.md
+            sha256: sha256:b9af9a1330b13632ac051739ea611801047af697a3f9b207dec09f0fdca30eb1
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-03-w0-portfolio-v2-dogfood-canary.md
+            sha256: sha256:b9af9a1330b13632ac051739ea611801047af697a3f9b207dec09f0fdca30eb1
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-09.md
+            sha256: sha256:762b7fec029e838b35b7504917a62b6ef768d5983ea4a31048a7a950387786aa
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-09.md
+            sha256: sha256:762b7fec029e838b35b7504917a62b6ef768d5983ea4a31048a7a950387786aa
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q4-T1-04
   - BET-Y1Q4-T1-05
