@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 294
+  total_bets: 305
   windows:
   - Y1Q1
   - Y1Q2
@@ -21138,4 +21138,311 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: 需要数据库、新服务、第二 dispatcher、破坏 v1 CLI、strict mode 先于单字段 meta.total_bets 修复启用，或无法保持历史 BET 对象语义等价时停止
+
+- id: BET-Y1Q4-T8-11
+  track: T8-SURFACE
+  window: Y1Q4
+  title: 8大正交一级领域树与双轨无感知兼容路由器
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  done_at: 2026-09-04 11:00:00+00:00
+  note: Delivered in Project Sovereign Command (PSC v1)
+  goal: 建立 ORTHOGONAL_DOMAINS 8 大正交一级领域树模型，实现双轨透明预处理路由器，保持全仓存量调用 100% 零破坏兼容。
+  non_goals:
+  - 不破坏存量无前缀命令调用
+  done_when:
+  - 8 大正交领域树建立并在 help 中清晰展现
+  - 双轨无感知路由器透明拦截并映射旧命令
+  - 单测全部通过
+  verify:
+  - cmd: uv run --project projects/cockpit pytest projects/cockpit/tests/test_command_hierarchy.py
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - projects/cockpit/src/cockpit/commands/
+  - projects/cockpit/tests/test_command_hierarchy.py
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 命令冲突阻断
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-11.md
+  retro: required
+
+- id: BET-Y1Q4-T8-12
+  track: T8-SURFACE
+  window: Y1Q4
+  title: 全局行为契约与 ExitCode/Trace-ID/机器纯净度规范
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  done_at: 2026-09-04 11:00:00+00:00
+  note: Delivered in Project Sovereign Command (PSC v1)
+  goal: 确立 ExitCode IntEnum 规范 (0..5)，消除非 TTY 环境下 ANSI 终端彩色污染，全域注入 trace_id 实现调用链追踪。
+  non_goals:
+  - 不改变底层业务执行结果
+  done_when:
+  - ExitCode 统一收敛至 ExitCode 规范
+  - 机器输出 (--json) 达到 0 ANSI 纯净度
+  - trace_id 全链路贯穿
+  verify:
+  - cmd: uv run --project projects/cockpit pytest projects/cockpit/tests/test_cli_contract.py
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/cli.py
+  - projects/cockpit/src/cockpit/output.py
+  - projects/cockpit/tests/test_cli_contract.py
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 机器输出混杂 ANSI 字符阻断
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-12.md
+  retro: required
+
+- id: BET-Y1Q4-T8-13
+  track: T8-SURFACE
+  window: Y1Q4
+  title: 低分 P0 核心命令群体验重构与参数面补全
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  done_at: 2026-09-04 11:00:00+00:00
+  note: Delivered in Project Sovereign Command (PSC v1)
+  goal: 重构 9 大核心高频命令群 (dashboard, quickstart, journey, capabilities, data, iterate, workflow, compass, brain)，全面支持 --dry-run、-o json 与容错自愈。
+  non_goals:
+  - 不改动非 P0 存量命令
+  done_when:
+  - 9 大命令均支持 -o json 与 --dry-run
+  - 格式一致性校验全部通过
+  - 单测覆盖率达标
+  verify:
+  - cmd: uv run --project projects/cockpit pytest projects/cockpit/tests/test_core_commands.py
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/commands/
+  - projects/cockpit/tests/test_core_commands.py
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 核心命令回归失败阻断
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+  retro: required
+
+- id: BET-Y1Q4-T8-14
+  track: T8-SURFACE
+  window: Y1Q4
+  title: 生产级结构化分级日志、Tracing 贯穿与 Prometheus 埋点底座
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  done_at: 2026-09-04 11:00:00+00:00
+  note: Delivered in Project Sovereign Command (PSC v1)
+  goal: 引入 MetricsCollector 环形缓冲区，支持 Prometheus exposition 格式导出，新增 cockpit telemetry 命令与结构化日志轮转。
+  non_goals:
+  - 不部署重型独立 TSDB 守护进程
+  done_when:
+  - 支持 cockpit telemetry 指标查询与导出
+  - 错误与警告自动进入诊断环形缓冲区
+  - 单测全部通过
+  verify:
+  - cmd: uv run --project projects/cockpit pytest projects/cockpit/tests/test_telemetry.py
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/telemetry.py
+  - projects/cockpit/tests/test_telemetry.py
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 监控指标采集阻塞正常执行阻断
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+  retro: required
+
+- id: BET-Y1Q4-T8-15
+  track: T8-SURFACE
+  window: Y1Q4
+  title: CLI 亚百毫秒极致冷启动加速与高频 BOS 传输优化
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  done_at: 2026-09-04 11:00:00+00:00
+  note: Delivered in Project Sovereign Command (PSC v1)
+  goal: 实现 Fast-path 直通分发、全域 Lazy Import 与 Flags 层级继承，使高频命令冷启动耗时大幅压降至 <150ms。
+  non_goals:
+  - 不引入编译型二进制预热服务
+  done_when:
+  - 核心命令冷启动耗时优化 >50%
+  - 未触发的模块绝不被贪婪加载
+  - 性能基准测试通过
+  verify:
+  - cmd: uv run --project projects/cockpit pytest projects/cockpit/tests/test_fast_path.py
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/cli.py
+  - projects/cockpit/tests/test_fast_path.py
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 延迟回退阻断
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+  retro: required
+
+- id: BET-Y1Q4-T8-16
+  track: T8-SURFACE
+  window: Y1Q4
+  title: 顶级开源 DX：Shell 自动补全、交互纠错与统一使用手册
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  done_at: 2026-09-04 11:00:00+00:00
+  note: Delivered in Project Sovereign Command (PSC v1)
+  goal: 打造顶级开源开发者体验：原生 completion 生成器 (bash/zsh/fish)、基于 Levenshtein 距离的 typo 智能纠错建议，以及全自动单源生成 docs/CLI-REFERENCE.md。
+  non_goals:
+  - 不人工手写维护 CLI 参考手册
+  done_when:
+  - cockpit completion 产生合法 shell 补全脚本
+  - 输错命令时提供准确 Did you mean 提示
+  - 自动生成 1400+ 行全量 CLI-REFERENCE.md
+  verify:
+  - cmd: uv run --project projects/cockpit pytest projects/cockpit/tests/test_completion_and_typo.py
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/commands/completion.py
+  - projects/cockpit/tests/test_completion_and_typo.py
+  - bin/ssot/gen-help-docs.py
+  - docs/CLI-REFERENCE.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 补全语法错误阻断
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-16.md
+  retro: required
+
+- id: BET-Y1Q4-T8-17
+  track: T8-SURFACE
+  window: Y1Q4
+  title: 统一表面协议 (USP v1) 与通用交互卡片元语模型规范
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  goal: 建立全终端统一的抽象数据与交互契约（USP v1），定义 MetricGrid, DataTable, LogStream, DagGraph, ActionPanel 5 大通用交互卡片元语，彻底解耦底层 BOS/Agora 数据源与终端展示层。
+  non_goals:
+  - 不重写现有后端业务存储逻辑
+  - 不直接替换原有低层通信协议
+  done_when:
+  - 定义 Surface Envelope 协议标准与数据校验 Schema
+  - 实现通用卡片元语抽象与序列化/反序列化工具
+  - 编写单元测试验证协议纯净性与可解析度
+  verify:
+  - cmd: uv run --project projects/cockpit pytest projects/cockpit/tests/test_surface_protocol.py
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/surface/protocol.py
+  - projects/cockpit/src/cockpit/surface/cards.py
+  - projects/cockpit/tests/test_surface_protocol.py
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 协议校验失败阻断
+  retro: required
+
+- id: BET-Y1Q4-T8-18
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Sovereign TUI 2.0 旗舰多窗格终端控制台融合重构
+  appetite: 4 days
+  priority: P0
+  status: candidate
+  goal: 打破 app.py、swarm_app.py 与 compute_hud 碎片化孤岛，基于 Textual 1.x 打造对标 k9s/lazygit 的一站式 8 领域多窗格极客终端控制台，支持全键盘 Vim 流、8 领域左侧树、卡片甲板与底部事件流抽屉。
+  non_goals:
+  - 不引入 Python 外的重型编译依赖 (如 Rust ratatui 二进制)
+  - 不破坏存量 omo-top / omo-status 脚本直接调用
+  done_when:
+  - 实现 SovereignCockpitApp 多窗格架构与 8 领域导航树
+  - 融合 Swarm 监控与 Compute 算力热力图为正交领域子卡片
+  - 集成实时日志抽屉与交互式命令面板 (ctrl+p)
+  verify:
+  - cmd: uv run --project projects/cockpit pytest projects/cockpit/tests/test_tui_app.py
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/tui/app.py
+  - projects/cockpit/src/cockpit/tui/adapters/
+  - projects/cockpit/src/cockpit/tui/__init__.py
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: TUI 启动异常优雅降级至静态版面
+  retro: required
+
+- id: BET-Y1Q4-T8-19
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Web UI (cockpit-ui) 8 大正交一级领域重组与包体瘦身
+  appetite: 4 days
+  priority: P1
+  status: candidate
+  goal: 重构 cockpit-ui 信息架构，将 42 个散乱路由归纳至 8 大正交一级领域；引入细粒度路由 Code-Splitting 消除 >1MB 单 Chunk 警告 (压降至 <300KB)；修复无头测试环境下的 DOM 拦截报错。
+  non_goals:
+  - 不重写整个 React 前端框架
+  - 不更换 Tailwind CSS 基础设计系统
+  done_when:
+  - routes.tsx 按照 8 大正交领域完全重组
+  - vite.config.ts 实现分包，消除 Chunk 超大报警
+  - 修复测试环境 DOM 模拟器拦截报错，保证 CI 顺利通过
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run build
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit-ui/src/routes.tsx
+  - projects/cockpit-ui/vite.config.ts
+  - projects/cockpit-ui/src/components/
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 构建失败阻断
+  retro: required
+
+- id: BET-Y1Q4-T8-20
+  track: T8-SURFACE
+  window: Y1Q4
+  title: 声明式卡片扩展 SDK 与外部业务域即插即用挂载
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 研发声明式卡片工坊，支持外部子项目通过编写 surface.manifest.yaml 声明自定义卡片与操作，实现 CLI / TUI / Web UI 全端自动扫描与动态挂载。
+  non_goals:
+  - 不支持非沙箱环境的任意原生二进制插件执行
+  done_when:
+  - 实现 surface.manifest.yaml 规范与解析加载器
+  - 在 family-hub 与 compute 域成功挂载声明式卡片
+  - 双端 (TUI 与 Web) 均能正确渲染声明式卡片内容
+  verify:
+  - cmd: uv run --project projects/cockpit pytest projects/cockpit/tests/test_surface_manifest.py
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/surface/loader.py
+  - projects/family-hub/surface.manifest.yaml
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: Manifest 校验失败跳过该扩展并告警
   retro: required
