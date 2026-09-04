@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.1
+spec_version: 1.0.2
 status: accepted
 lifecycle: contract
 owner: human-principal
@@ -80,6 +80,7 @@ Each new or modified v2 BET must declare:
 - `bin/plan/portfolio_contract.py`
 - `bin/plan/bet-ledger.py`
 - `tests/test_bet_portfolio_contract.py`
+- `bin/_registry/scripts/governance/portfolio_contract.yaml`
 - this Spec and its future implementation plan/retro
 - `docs/plans/3y-bet-ledger.yaml`, limited to this child, the separately
   authorized W0 self-binding amendment, and the separately claimed single
@@ -134,6 +135,11 @@ This authorization does not authorize Ledger self-binding, the one-field
 operations, W1-W6, any other W0 child, status changes, completion/value
 evidence, or a terminal transition. Each remains a separately claimed and
 fresh-workflow boundary.
+
+The script-registry declaration above is required because the repository's
+strict GaC validates every tracked `bin/` Python entry. It is limited to the
+new validator's registry record and must be claimed in a fresh implementation
+run; it does not expand the delivery to any additional behavior or state.
 
 ## 9. 验收标准
 
