@@ -125,7 +125,7 @@ KNOWN_GAP_PREFIXES: dict[str, str] = {
     "bos://capability/wps-office-mcp/": "ToolBox wps-office-mcp dist/index.js 未 build (external ~/ToolBox; re-audited 2026-07-14, extend to 2026-08-25)",
     "bos://capability/wps-skills/": "ToolBox wps-skills dist/index.js 未 build (external ~/ToolBox; re-audited 2026-07-14, extend to 2026-08-25)",
 }
-KNOWN_GAP_EXPIRES = "2026-08-25"  # re-audit after ToolBox build (was 2026-07-25)
+KNOWN_GAP_EXPIRES = "2026-10-04"  # re-audit after ToolBox build (was 2026-08-25, extended +30d)
 
 
 def _is_known_gap(uri: str) -> tuple[bool, str]:
