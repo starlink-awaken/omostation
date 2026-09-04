@@ -74,7 +74,9 @@ def check_impact_analysis() -> tuple[list[str], list[str]]:
         return errors, warnings
 
     # 抽样检查: 每个 M1 节点应有 relations 或 depends_on
-    for m1_file in m1_files[:10]:  # 抽样前 10 个
+    # 阈值采样: drift≥5 时全量扫描，否则抽查前 20 个
+    sample_limit = len(m1_files) if len(warnings) >= 5 else min(20, len(m1_files))
+    for m1_file in m1_files[:sample_limit]:
         try:
             data = _load_yaml(m1_file)
             if not data or not isinstance(data, dict):
