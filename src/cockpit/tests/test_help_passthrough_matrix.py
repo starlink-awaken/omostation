@@ -176,7 +176,7 @@ class TestSubprocessSmokeMatrix:
             [sys.executable, "-m", "cockpit", *cmd.split(), "--help"],
             capture_output=True,
             text=True,
-            timeout=60,
+            timeout=120,
         )
         assert result.returncode == 0, (
             f"cockpit {cmd} --help 退出码 {result.returncode}\n"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import time
 from datetime import datetime
@@ -11,6 +12,8 @@ from pathlib import Path
 from rich import box
 from rich.panel import Panel
 from rich.table import Table
+
+from cockpit.domain.exit_codes import ExitCode
 
 from .base import (
     _discover_services,
@@ -865,21 +868,21 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
         pass
 
     if is_dry_run:
-        payload = {"dry_run": True, "url": url, "port": str(port), "alive": alive}
+        payload = {"dry_run": True, "url": url, "port": str(port), "alive": alive, "ready": True}
         if is_json:
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
             c.print(f"[bold cyan]🔍 [Dry-Run] 预检 Dashboard: {url} (alive={alive})[/]")
-        return 0
+        return ExitCode.SUCCESS
 
     if status_only:
-        payload = {"alive": alive, "url": url, "port": str(port)}
+        payload = {"alive": alive, "running": alive, "url": url, "port": int(port)}
         if is_json:
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
             status_text = "[green]已在运行[/]" if alive else "[dim]未运行[/]"
             c.print(f"Dashboard 状态: {status_text} ({url})")
-        return 0 if alive else 1
+        return ExitCode.SUCCESS if alive else ExitCode.SERVICE_UNAVAILABLE
 
     if alive:
         if is_json:
@@ -888,7 +891,7 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
             if not no_open:
                 webbrowser.open(url)
             c.print(f"[green]✅ Dashboard 已运行: [cyan]{url}[/][/]")
-        return 0
+        return ExitCode.SUCCESS
 
     if not is_json:
         c.print(f"[dim]正在启动 Cockpit Dashboard (port {port})...[/]")
