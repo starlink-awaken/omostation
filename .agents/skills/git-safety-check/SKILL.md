@@ -1,5 +1,7 @@
 ---
+name: git-safety-check
 title: Git Safety Check
+description: "Git 安全检查 skill：在 push/commit 前检测敏感信息泄漏、大文件、不规范提交等安全风险"
 type: skill
 owner: governance-team
 version: "1.0"
