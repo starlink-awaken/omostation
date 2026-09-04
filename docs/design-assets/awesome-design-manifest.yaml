@@ -1,0 +1,32 @@
+schema: design-asset-manifest/v1
+source_type: external_design_corpus
+access_mode: read-only
+layer: X/forge
+governance:
+  control_plane: omostation
+  rules:
+    - read-only asset ingestion
+    - forge owns style matching and prompt orchestration
+    - l4 remains self-governance only
+source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+assets:
+  - id: stripe
+    brand: stripe
+    title: Stripe
+    source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+    source_path: design-md/stripe/DESIGN.md
+    layer: forge
+    access_mode: read-only
+    platform: web
+    style_family: premium-editorial
+    layout_pattern: landing-page
+    palette_tokens:
+      - "#635bff"
+      - "#0f172a"
+    tags:
+      - Product
+      - Dashboard
+    governance:
+      context: external design corpus only
+      read_only: true
+      allowed_usage: prompt-injection for UI generation and style matching
