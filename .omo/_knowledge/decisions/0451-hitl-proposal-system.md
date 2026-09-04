@@ -1,5 +1,5 @@
 ---
-id: ADR-0460
+id: ADR-0451
 status: accepted
 lifecycle: contract
 owner: xiamingxing
@@ -7,7 +7,7 @@ last-reviewed: 2026-09-04
 type: ssot
 ---
 
-# ADR-0460: HITL Proposal System — file-based approval gate for harness stage_execute
+# ADR-0451: HITL Proposal System — file-based approval gate for harness stage_execute
 
 ## 背景
 
