@@ -421,19 +421,30 @@ def stage_execute(bet_id, profile, objective, run_id, agent_run_id=None):
 
 # ── Stage 6: Verify ──
 def stage_verify(bet_id, run_id):
-    """验证: ledger + gac + sfop (并行 DAG)"""
+    """验证: 9  blocking checks (并行 DAG)
+
+    对齐 harness-policy.yaml §4 verify.blocking:
+    lint / gac-validate / pointer-drift / mass-deletion /
+    gitlink-ancestry / layer-contract / mof-drift / execution-chain / sfop-slots
+    """
     r = {"stage": "verify", "ok": True, "checks": []}
     cmds = {
-        "ledger": ["python3", "bin/plan/bet-ledger.py", "lint"],
-        "gac": ["python3", "bin/gac/gac-validate.py", "--gate"],
-        "sfop": ["python3", "bin/gac/check-sfop-slots.py", "--json"],
+        "lint": ["python3", "bin/plan/bet-ledger.py", "lint"],
+        "gac-validate": ["python3", "bin/gac/gac-validate.py", "--gate"],
+        "sfop-slots": ["python3", "bin/gac/check-sfop-slots.py", "--json"],
+        "pointer-drift": ["python3", "bin/gac/check-submodule-pointer-drift.py", "--json"],
+        "mass-deletion": ["python3", "bin/gac/mass-deletion-gate.py", "--threshold", "10"],
+        "gitlink-ancestry": ["python3", "bin/gac/check-submodule-rewind.py"],
+        "layer-contract": ["python3", "bin/layer-dependency-check.py"],
+        "mof-drift": ["python3", "bin/mof/mof-drift", "--json"],
+        "execution-chain": ["python3", "bin/gac/check-execution-chain.py", "--json"],
     }
 
     def run_cmd(name, cmd):
         res = _run(cmd)
         return name, res.returncode == 0
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=9) as ex:
         futs = [ex.submit(run_cmd, n, c) for n, c in cmds.items()]
         for f in concurrent.futures.as_completed(futs):
             name, ok = f.result()
