@@ -18042,6 +18042,52 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 接口调用异常或公文解析格式损坏时立即降级为人工直接导入模式。
+  value_indicator_policy: false
+  status: done
+  done_at: 2026-09-04
+  closed_by: xiamingxing
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q3-T10-112.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-zhiyuan-oa-triage-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d9a6800a32acf87ce619fd40c241b7fe7e7f04e6e87f53a14e7d62b8521ed9b5
+    decision_ref: decision://accepted/BET-Y1Q3-T10-112
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@17492320264595b08667603fe678e8ed8d63d7cd
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-112.md
+            sha256: sha256:eb6f546dab180190243be62471645cefdf58ae07d49a21a66432bbb61fb18d3b
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-zhiyuan-oa-triage-design.md
+            sha256: sha256:d9a6800a32acf87ce619fd40c241b7fe7e7f04e6e87f53a14e7d62b8521ed9b5
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-112.md
+            sha256: sha256:eb6f546dab180190243be62471645cefdf58ae07d49a21a66432bbb61fb18d3b
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-112.md
+            sha256: sha256:eb6f546dab180190243be62471645cefdf58ae07d49a21a66432bbb61fb18d3b
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-112.md
+            sha256: sha256:eb6f546dab180190243be62471645cefdf58ae07d49a21a66432bbb61fb18d3b
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-112.md
+            sha256: sha256:eb6f546dab180190243be62471645cefdf58ae07d49a21a66432bbb61fb18d3b
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-112.md
+            sha256: sha256:eb6f546dab180190243be62471645cefdf58ae07d49a21a66432bbb61fb18d3b
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   retro: required
 - id: BET-Y1Q3-T10-113
   track: T10-MATURITY
