@@ -16,6 +16,8 @@
 .omo/_knowledge/workflow-mesh/
 # 通用锁文件 (git 不追踪 .lock)
 **/*.lock
+# 运行时 worktree 锁目录 (PASW/并发 agent 产物, 不入库)
+.omo/locks/
 .omo/_control/evolution/drift-history/*.json.lock
 .omo/capabilities/
 # debt/ 派生产物 (dashboard/dispatch/action-packet/review-queue/owner-routing/reviews/
