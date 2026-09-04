@@ -1,6 +1,6 @@
 # 3Y BET Portfolio (projection)
 
-<!-- source_digest: sha256:f298025d957383b68d0b93f10fd0cdc5f6e788e6e7d66ffa9ac9debe80a91c7b -->
+<!-- source_digest: sha256:59aa9716b77d4be6435b6e00e4028d396c3915b14b1c8cca2f5779891e90a6c2 -->
 
 Generated one-way from `docs/plans/3y-bet-ledger.yaml`. Not a writer.
 
@@ -47,6 +47,6 @@ Generated one-way from `docs/plans/3y-bet-ledger.yaml`. Not a writer.
 - `BET-Y1Q4-T1-05` — `done` gate=False
 - `BET-Y1Q4-T1-06` — `done` gate=False
 - `BET-Y1Q4-T1-07` — `done` gate=False
-- `BET-Y1Q4-T1-08` — `candidate` gate=False
+- `BET-Y1Q4-T1-08` — `done` gate=False
 - `BET-Y1Q4-T8-05` — `candidate` gate=False
 - `BET-Y1Q4-T1-09` — `candidate` gate=False
