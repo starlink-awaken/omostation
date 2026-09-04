@@ -1,4 +1,5 @@
 ---
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 北极星价值度量看板 V4 与认知杠杆率实时投影

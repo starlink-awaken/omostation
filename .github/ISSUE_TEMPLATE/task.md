@@ -1,4 +1,5 @@
 ---
+type: ephemeral
 name: 📋 Task
 about: 创建一个待办任务
 title: '[TASK] '

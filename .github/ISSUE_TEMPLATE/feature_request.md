@@ -1,4 +1,5 @@
 ---
+type: ephemeral
 name: Feature Request
 about: 为新功能或改进提出建议
 title: '[Feature] '

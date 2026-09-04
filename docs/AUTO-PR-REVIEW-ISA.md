@@ -1,4 +1,5 @@
 ---
+type: ephemeral
 task: "AI PR review + 分级 auto-merge 闭环"
 slug: 20260701-auto-pr-review-merge
 effort: E3

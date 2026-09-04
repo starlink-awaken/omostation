@@ -1,4 +1,5 @@
 ---
+type: ssot
 name: nextgen-cognitive-mesh
 description: "Master governance skill for OMOStation Next-Gen Cognitive Mesh V3.0 (ADR-0200~0203). Guides memory self-distillation, cryptographic Merkle action ledgering, zero-config local edge compute roaming, and domain cartridge capsule packaging."
 

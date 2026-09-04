@@ -1,4 +1,5 @@
 ---
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 双机雷雳 5 算力织网双向备份与断网容灾自愈

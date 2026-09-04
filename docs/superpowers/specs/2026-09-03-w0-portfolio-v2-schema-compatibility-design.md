@@ -1,4 +1,5 @@
 ---
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.1
 status: accepted

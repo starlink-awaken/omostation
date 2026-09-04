@@ -1,4 +1,5 @@
 ---
+type: ssot
 name: harness-compliance
 description: Harness 全生命周期合规检查 — 12 章节完整性 + MOF 约束联动 + OMO 状态同步
 triggers:

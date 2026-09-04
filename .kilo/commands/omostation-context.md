@@ -1,4 +1,5 @@
 ---
+type: ssot
 description: Get omostation workspace context
 agent: code
 ---
