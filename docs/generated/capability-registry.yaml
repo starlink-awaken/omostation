@@ -14,8 +14,8 @@ totals:
   mcp_tools: 634
   bos_services: 298
   bos_domains: 22
-  cli_commands: 200
-  skills: 3
+  cli_commands: 201
+  skills: 5
   workflows: 19
 mcp_servers:
 - id: omo
@@ -2229,6 +2229,8 @@ cli_commands:
   description: 发现可用功能和资源
 - name: distill
   description: 在 Mac mini M4 触发闲时 LoRA 蒸馏
+- name: dlp-guard
+  description: 外发前防泄密扫描 (敏感识别+挂起+脱敏)
 - name: dma
   description: 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准
 - name: docx
@@ -2518,8 +2520,14 @@ skills:
 - id: git-discipline
   file: .agents/skills/git-discipline/SKILL.md
   exists: true
+- id: harness-compliance
+  file: .agents/skills/harness-compliance/SKILL.md
+  exists: true
 - id: spine-value-pipeline
   file: .agents/skills/spine-value-pipeline/SKILL.md
+  exists: true
+- id: workflow:bet-execution
+  file: .agents/skills/workflow:bet-execution/SKILL.md
   exists: true
 workflows:
 - id: agent-onboarding
