@@ -1,7 +1,5 @@
 ---
 last-reviewed: 2026-08-30
----
-
 schema: scene-card/v2
 lifecycle: supervised
 activation: active
@@ -33,5 +31,3 @@ architecture:
   governance_surface: .omo/_truth/registry/agent-workflows/
   dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
   evidence_plane: ".omo/_delivery/"
-
----
