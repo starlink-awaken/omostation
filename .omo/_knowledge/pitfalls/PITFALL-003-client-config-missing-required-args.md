@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 # PITFALL-003: 客户端 MCP 同步脚本缺失核心参数
 

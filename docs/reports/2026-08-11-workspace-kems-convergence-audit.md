@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-11
+last_updated: 2026-08-11
 snapshot-kind: derived-report
 implementation-status: mixed
 canonical-source: /Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/基建架构/10-Workspace-KEMS整体架构分析-2026-08-11.md

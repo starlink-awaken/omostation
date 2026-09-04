@@ -2,7 +2,7 @@
 status: superseded
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-22
+last_updated: 2026-08-22
 type: ephemeral
 ---
 

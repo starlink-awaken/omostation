@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-17
+last_updated: 2026-08-17
 review-state: content-reviewed-20260817
 review-note: 2026-06-12 内容主体保留 (旅程设计 SOP 仍有效), 补 scene-cards/journey-specs 交叉引用 (T6-07 r3)
 type: ssot

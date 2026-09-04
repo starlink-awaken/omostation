@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: "2026-07-29"
+last_updated: "2026-07-29"
 ---
 # Z1-Z4: baseline 冻回 + baseline 受保护 + 观察窗 + 产能如实
 

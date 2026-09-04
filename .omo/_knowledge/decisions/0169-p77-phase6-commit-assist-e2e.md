@@ -3,7 +3,7 @@ id: ADR-0169
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - 0163-p76-phase9a-commit-assist-hook.md
   - 0165-p77-phase2-evolution-guardrails.md

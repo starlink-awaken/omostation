@@ -7,7 +7,7 @@ status: accepted
 lifecycle: contract
 owner: runtime-team
 created: 2026-08-30
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 risk_level: L2
 human_gate: true
 type: ssot

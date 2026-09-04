@@ -1,9 +1,8 @@
 ---
 id: ADR-0406
-status: active
 lifecycle: spec
 owner: '@Builder'
-last-reviewed: '2026-08-09'
+last_updated: '2026-08-09'
 ---
 
 # ADR-0406: model-driven (M0) 维持子模块形态

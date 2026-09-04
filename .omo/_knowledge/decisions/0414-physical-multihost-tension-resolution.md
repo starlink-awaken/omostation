@@ -5,7 +5,7 @@ status: archived
 lifecycle: spec
 owner: governance-team
 created: 2026-08-17
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 deciders:
   - 夏明星 (最终确认 pending)
   - governance-agent (起草)

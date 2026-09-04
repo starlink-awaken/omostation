@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-15
+last_updated: 2026-08-15
 related:
   - ./digital-twin-blueprint-v1.md
   - ./blueprint-multi-agent-execution-control-v1.md

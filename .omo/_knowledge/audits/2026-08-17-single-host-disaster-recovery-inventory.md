@@ -1,14 +1,13 @@
 ---
 title: 单机灾难恢复清单 (OPS-INFRA 任务 4)
 type: audit
-status: active
 owner: governance-agent
 created: 2026-08-17
 bet: BET-Y1Q1-T6-08
 related:
   - docs/OPS-INFRA-GOVERNANCE-LONGTERM-BLUEPRINT-2026-08.md
   - docs/operations/hermes-governance-boundary.md
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 ---
 

@@ -6,7 +6,7 @@ status: archived
 lifecycle: spec
 owner: governance-team
 date: 2026-08-24
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 tags: [convergence, conv3, gap-governance, project-registry, mesh-router, family-hub, metaos]
 related:
   - docs/operations/convergence-decision-cards-2026-08-24.md (决策卡)

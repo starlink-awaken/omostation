@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # 深度系统性分析：P43 → P59 治理收敛全景复盘

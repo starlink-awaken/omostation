@@ -6,7 +6,7 @@ status: archived
 lifecycle: spec
 owner: governance-team
 date: 2026-08-21
-last-reviewed: 2026-08-21
+last_updated: 2026-08-21
 tags: [d4, escape-hatch, swarm, gac]
 related:
   - ADR-0220 (swarm coordination D4)

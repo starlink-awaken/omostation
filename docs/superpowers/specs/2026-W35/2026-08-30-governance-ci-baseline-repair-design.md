@@ -5,7 +5,7 @@ lifecycle: spec
 type: design
 owner: governance-team
 created: 2026-08-30
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 bet_id: BET-Y1Q3-T10-98
 spec_version: 1.0.0
 ---

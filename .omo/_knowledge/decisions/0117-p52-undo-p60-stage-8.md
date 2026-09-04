@@ -1,9 +1,8 @@
 ---
 id: ADR-0117
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-30
+last_updated: 2026-06-30
 ---
 
 # ADR-0117: 撤销 P60 GOVERNANCE_MAINTENANCE 阶段 (P52 真治本)

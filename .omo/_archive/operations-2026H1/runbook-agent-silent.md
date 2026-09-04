@@ -1,10 +1,9 @@
 ---
 title: "runbook-agent-silent"
-status: active
 type: runbook
 owner: governance-team
 lifecycle: history
-last-reviewed: 2026-08-23
+last_updated: 2026-08-23
 ---
 # Runbook: Agent 静默排查
 

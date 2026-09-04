@@ -1,6 +1,5 @@
 ---
 title: 多 Agent 共享运行时状态的缺口——为什么「拓扑改造」不够
-status: draft
 type: analysis-and-strategy
 owner: 夏明星
 created: 2026-08-14

@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 last_updated: 2026-09-03
 title: Phase 4 Federalization Implementation Plan
 type: doc

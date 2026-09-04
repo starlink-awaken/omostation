@@ -3,7 +3,7 @@ id: ADR-0147
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
+last_updated: 2026-07-06
 related:
   - 0145-mcptool-collection-skip.md
   - 0140-m4-health-score.md

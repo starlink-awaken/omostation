@@ -3,7 +3,7 @@ id: ADR-0249
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-26
+last_updated: 2026-07-26
 related:
   - 0247-strategic-pivot-collab-first-physical-deferred.md
 supersedes: []

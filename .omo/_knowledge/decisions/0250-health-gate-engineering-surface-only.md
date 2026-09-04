@@ -3,7 +3,7 @@ id: ADR-0250
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-27
+last_updated: 2026-07-27
 related:
   - 0249-governance-budget-cap-40-40-20.md
   - 0247-strategic-pivot-collab-first-physical-deferred.md

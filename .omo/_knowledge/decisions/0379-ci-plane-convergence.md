@@ -4,7 +4,7 @@ title: CI plane convergence — surface SSOT, observability, dedup, registry-dri
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last_updated: 2026-08-05
 ---
 
 # 0379 — CI Plane Convergence Round

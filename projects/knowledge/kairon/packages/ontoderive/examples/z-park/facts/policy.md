@@ -1,7 +1,6 @@
 ---
 title: policy
 type: doc
-status: active
 ---
 
 | 编号 | 政策 | 发布主体 | 日期 |

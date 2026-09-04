@@ -3,7 +3,7 @@ id: ADR-0173
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
+last_updated: 2026-07-08
 related:
   - 0172-p78-port-registry-convergence.md
   - 0160-p76-phase6-foundry-runtime.md

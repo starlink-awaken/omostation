@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: W0-04 Convergence Map — Legacy Entrances, Duplicate Writers,
 type: doc
 ---

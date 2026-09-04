@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # P68 — 告警抑制时间窗 + 告警历史趋势报告 收口

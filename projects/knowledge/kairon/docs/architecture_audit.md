@@ -1,7 +1,6 @@
 ---
 title: architecture_audit
 type: doc
-status: active
 ---
 
 # Kairon Architecture Audit v3

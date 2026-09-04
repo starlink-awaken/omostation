@@ -1,14 +1,13 @@
 ---
 title: bin/scripts 收敛审计复盘
 type: retro
-status: active
 owner: governance-team
 created: 2026-08-16
 context: >-
   bin/ 与 scripts/ 全量审计完成，第一波交付治理计划、审计基线和 manifest 机制。
   bet_id unbound，按审计/治理复盘处理。
 lifecycle: history
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # bin/scripts 收敛审计复盘

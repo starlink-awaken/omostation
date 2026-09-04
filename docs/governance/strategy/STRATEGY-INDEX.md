@@ -1,12 +1,11 @@
 ---
 title: 长期战略与执行索引
-status: active
 type: strategy-index
 owner: 夏明星
 created: 2026-07-15
 updated: 2026-08-15
 lifecycle: contract
-last-reviewed: 2026-08-17
+last_updated: 2026-08-17
 review-state: plan-mainline-adr-0410
 note: >
   从愿景、战略、ADR、执行任务到运行证据的一页导航。动态事实必须读取对应 SSOT，

@@ -1,7 +1,6 @@
 ---
 title: Documents KEMS legacy parity
 type: analysis
-status: active
 ---
 
 # Documents KEMS legacy parity

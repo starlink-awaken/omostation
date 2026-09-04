@@ -2,7 +2,7 @@
 status: retired
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-20
+last_updated: 2026-08-20
 title: Coordination Layer Recovery Runbook — BET-Y1Q1-T1-05A
 type: doc
 ---

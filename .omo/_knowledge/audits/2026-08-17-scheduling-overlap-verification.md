@@ -1,13 +1,12 @@
 ---
 title: 三处调度重叠核实报告 (OPS-INFRA 任务 2)
 type: audit
-status: active
 owner: governance-agent
 created: 2026-08-17
 bet: BET-Y1Q1-T6-08
 related:
   - docs/OPS-INFRA-GOVERNANCE-LONGTERM-BLUEPRINT-2026-08.md
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 ---
 

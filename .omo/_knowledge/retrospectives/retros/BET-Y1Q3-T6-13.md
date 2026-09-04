@@ -2,7 +2,7 @@
 bet_id: BET-Y1Q3-T6-13
 date: 2026-08-20
 lifecycle: history
-last-reviewed: 2026-08-20
+last_updated: 2026-08-20
 status: archived
 owner: governance-team
 title: BET-Y1Q3-T6-13 Retro — 归档 bin/bc-os/ 无外部引用的 speculative 脚本

@@ -1,7 +1,6 @@
 ---
 title: README
 type: doc
-status: active
 ---
 
 # ToolForge — 思维工具匹配模块

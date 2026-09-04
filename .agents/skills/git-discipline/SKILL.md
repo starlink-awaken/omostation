@@ -2,7 +2,7 @@
 name: git-discipline
 description: "多 agent 并行下的 git 纪律：隔离工作树、交付三段式（add/commit/tag）、逃生口、子模块、僵尸锁、合并型交付补 claim、agent 自身 git 写能力自检。当你要提交代码、切换分支、碰子模块、做分支合并、遇到门禁拦截或 claim 冲突、或发现自己的文件消失 / git 行为诡异时使用。Triggers on: git commit, git merge, git checkout, 合并, 分支被切走, 文件消失, 提交丢了, claim 失败, 锁被占, index.lock, Operation not permitted, no-verify, 门禁拦截, D3, swarm-d3, submodule, 子模块, worktree, PASW, swarm-git, escape, unbound variable。"
 
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 type: ssot
 owner: agent-skills-team
 last_updated: 2026-09-03

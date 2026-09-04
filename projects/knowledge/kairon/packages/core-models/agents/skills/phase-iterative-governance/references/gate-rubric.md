@@ -1,7 +1,6 @@
 ---
 title: gate-rubric
 type: doc
-status: active
 ---
 
 # Gate Rubric

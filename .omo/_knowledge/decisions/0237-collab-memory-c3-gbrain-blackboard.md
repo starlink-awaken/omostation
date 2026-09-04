@@ -3,7 +3,7 @@ id: ADR-0237
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-25
+last_updated: 2026-07-25
 related:
   - 0235-role-catalog-c1-research-delivery.md
   - 0236-collab-protocol-c2-deepening.md

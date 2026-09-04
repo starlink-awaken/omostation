@@ -3,7 +3,7 @@ id: ADR-0222
 status: ACCEPTED
 lifecycle: spec
 owner: 架构师
-last-reviewed: 2026-07-18
+last_updated: 2026-07-18
 related:
   - 0210-three-year-strategy-execution-convergence.md
   - 0220-swarm-coordination-discipline-m1-gate.md

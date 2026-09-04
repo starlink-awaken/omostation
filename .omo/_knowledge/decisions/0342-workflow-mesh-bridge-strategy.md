@@ -5,7 +5,7 @@ status: archived
 type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last_updated: 2026-08-03
 date: 2026-08-02
 deciders: architecture-governance
 supersedes: []

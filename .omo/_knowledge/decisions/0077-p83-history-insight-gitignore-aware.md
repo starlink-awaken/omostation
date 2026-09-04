@@ -1,9 +1,8 @@
 ---
 id: ADR-0077
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0077: P83 历史数据洞察 + cross-ref gitignore 感知

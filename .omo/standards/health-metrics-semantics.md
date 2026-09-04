@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-22
+last_updated: 2026-06-22
 ---
 
 # Health 指标语义统一 (产品走查 v3 #19 架构师)

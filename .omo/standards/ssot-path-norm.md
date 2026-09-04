@@ -1,7 +1,6 @@
 ---
 type: standard
 version: "1.0"
-status: active
 owner: governance-team
 last_updated: 2026-09-04
 ---

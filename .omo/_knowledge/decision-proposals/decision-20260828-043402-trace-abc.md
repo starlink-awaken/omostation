@@ -1,6 +1,5 @@
 ---
 schema: resident-decision/v1
-status: draft
 trigger_event_type: WorkflowFailed
 trace_id: trace-abc
 workflow_run_id: run-1

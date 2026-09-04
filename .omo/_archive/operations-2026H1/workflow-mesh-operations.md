@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: Workflow Mesh 运营投影与复盘队列
 type: doc
 ---

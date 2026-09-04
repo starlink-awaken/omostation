@@ -3,7 +3,7 @@ id: ADR-0443
 status: accepted
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 ---
 
 # ADR-0443: 产出/收敛平衡框架

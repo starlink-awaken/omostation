@@ -15,7 +15,7 @@ out_of_scope: |
   General code quality checks (use lint instead).
   Cross-repository dependency management.
 owner: governance-team
-last-reviewed: 2026-07-09
+last_updated: 2026-07-09
 related:
   - TELOS.md#beliefs (B1: dormant code is dead code)
   - ../../gac-local-gate.py (the bus-usage-report gate)

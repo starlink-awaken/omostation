@@ -3,7 +3,7 @@ id: ADR-0131
 status: superseded
 lifecycle: spec
 owner: none
-last-reviewed: 2026-07-06
+last_updated: 2026-07-06
 ---
 # ADR 0131: Reserved
 

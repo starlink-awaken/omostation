@@ -3,7 +3,7 @@ id: ADR-0292
 status: ACCEPTED
 lifecycle: spec
 owner: governance-agent
-last-reviewed: 2026-07-30
+last_updated: 2026-07-30
 related:
   - 0293-phase45-governance-observability.md
 ---

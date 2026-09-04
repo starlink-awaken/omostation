@@ -5,7 +5,7 @@ type: audit
 stage: batch2-closeout
 strat: STRAT-P81
 run: 20260724T064622Z-governance-state-mutation-5246576d (verify 以 CI 为准, 见下)
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

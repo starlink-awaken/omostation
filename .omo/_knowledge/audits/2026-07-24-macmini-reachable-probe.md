@@ -6,7 +6,7 @@ strat: STRAT-P81
 related_cards:
   - needs-human-p80-physical-hosts
   - needs-human-batch2-physical-recovery-checklist
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

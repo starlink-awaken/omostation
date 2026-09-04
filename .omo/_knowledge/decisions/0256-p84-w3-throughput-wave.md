@@ -3,7 +3,7 @@ id: ADR-0256
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-28
+last_updated: 2026-07-28
 related:
   - .omo/plans/strat-p84-scenario-driven-longplan.md
   - 0252-metaos-d1d4-aaaa-phase12.md

@@ -1,6 +1,5 @@
 ---
 title: 多 Agent 并行的 Git 拓扑分析与根治方案
-status: draft
 type: analysis-and-strategy
 owner: 夏明星
 created: 2026-08-06

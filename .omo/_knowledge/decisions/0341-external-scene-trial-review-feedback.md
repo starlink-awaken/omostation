@@ -6,7 +6,7 @@ type: adr
 date: 2026-08-03
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last_updated: 2026-08-03
 decision: "把 observation-only 场景试运行的人工评审固化为 OMO proposal-only 回执，并通过 Cockpit 只读投影和受限写入口形成可审计反馈闭环；不把评审当作执行或业务结果。"
 ---
 

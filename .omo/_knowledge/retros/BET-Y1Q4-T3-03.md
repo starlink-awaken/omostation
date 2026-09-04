@@ -1,10 +1,9 @@
 ---
 schema_version: retro/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-09-03
-last-reviewed: 2026-09-03
+last_updated: 2026-09-03
 bet: BET-Y1Q4-T3-03
 title: 三层投机路由
 symptom: squash 语义修复两次被并行覆盖 (commit 从未落库); 工作树材料被 checkout 挤掉

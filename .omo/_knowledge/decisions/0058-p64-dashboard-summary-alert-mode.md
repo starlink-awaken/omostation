@@ -1,9 +1,8 @@
 ---
 id: ADR-0058
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0058: P64 dashboard 数据源 + 异常自动告警 (--alert mode)

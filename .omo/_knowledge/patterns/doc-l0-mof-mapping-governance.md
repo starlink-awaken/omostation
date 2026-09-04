@@ -1,9 +1,8 @@
 ---
 title: 文档 ↔ L0 ↔ MOF 映射治理方案
-status: active
 lifecycle: pattern
 owner: governance
-last-reviewed: 2026-08-08
+last_updated: 2026-08-08
 surface: L3
 dimension: X1
 ---

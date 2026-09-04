@@ -1,9 +1,8 @@
 ---
 id: ADR-0079
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0079: P85 X2 rule lint + ADR coverage check + COMMIT-FATIGUE 修正

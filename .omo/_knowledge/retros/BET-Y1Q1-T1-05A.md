@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: Retro — BET-Y1Q1-T1-05A 共享运行时协调层 (shadow)
 type: retro
 ---

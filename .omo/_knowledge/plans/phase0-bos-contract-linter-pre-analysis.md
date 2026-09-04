@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: plan
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 ---
 
 # BOS Contract Linter Phase 0 — 预部署分析与评估

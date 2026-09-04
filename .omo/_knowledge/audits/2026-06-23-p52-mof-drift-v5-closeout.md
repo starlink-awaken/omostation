@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 phase: '52'
 task: P52-MDRIFT-CLOSURE
 ---

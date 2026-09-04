@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: laowang
-last-reviewed: 2026-06-27
+last_updated: 2026-06-27
 ---
 
 # omostation 任务池 (2026-06-27)

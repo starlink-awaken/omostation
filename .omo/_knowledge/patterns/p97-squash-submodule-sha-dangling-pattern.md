@@ -2,9 +2,8 @@
 schema_version: pattern/v1
 pattern_id: P97
 title: squash-merge × submodule SHA 悬空模式
-status: active
 owner: governance-team
-last-reviewed: 2026-09-04
+last_updated: 2026-09-04
 type: ssot
 ---
 

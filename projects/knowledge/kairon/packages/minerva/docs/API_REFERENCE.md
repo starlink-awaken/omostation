@@ -1,7 +1,6 @@
 ---
 title: API_REFERENCE
 type: doc
-status: active
 ---
 
 # Minerva — MCP & API Reference

@@ -3,7 +3,7 @@ id: ADR-0154
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-06
+last_updated: 2026-07-06
 related:
   - 0152-m4-gac-rules.md
   - 0153-m4-agent-workflows-tools.md

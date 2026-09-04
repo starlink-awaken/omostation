@@ -3,7 +3,7 @@ id: ADR-0196
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 ---
 
 # ADR-0196 — `omo acl plan --acl` 命名 ACE 干跑脚本

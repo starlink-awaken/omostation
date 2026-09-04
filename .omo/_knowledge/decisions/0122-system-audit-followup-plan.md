@@ -1,9 +1,8 @@
 ---
 id: ADR-0122
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-02
+last_updated: 2026-07-02
 related:
   - ../audits/2026-07-02-system-comprehensive-audit.md
   - ../patterns/p71-baseline-recovery-pattern.md

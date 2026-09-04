@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
+last_updated: 2026-07-31
 ---
 
 # management/ INDEX — P77 物理迁移后结构

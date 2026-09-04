@@ -1,9 +1,8 @@
 ---
 id: ADR-0087
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0087: P93 ADR drift 自动归类 + governance 6 类别对比分析

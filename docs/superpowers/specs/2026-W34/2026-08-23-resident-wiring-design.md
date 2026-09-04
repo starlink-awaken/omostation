@@ -4,7 +4,7 @@ spec_version: 1.0.0
 status: accepted
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 
 
 

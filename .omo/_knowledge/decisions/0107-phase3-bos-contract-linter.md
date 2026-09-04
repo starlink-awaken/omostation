@@ -1,9 +1,8 @@
 ---
 id: ADR-0107
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0107: Phase 3 BOS Contract Linter v0.3 (mof-contract-agent + /quest fix-bos-contract skill)

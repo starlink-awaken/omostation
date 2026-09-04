@@ -1,10 +1,9 @@
 ---
 schema_version: retro/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-09-01
-last-reviewed: 2026-09-01
+last_updated: 2026-09-01
 bet: BET-Y1Q4-T2-02
 title: IM 会话感知协议面
 symptom: 首测暴露白名单 gate 语义漏洞（可解析指令被关键词闸误杀）

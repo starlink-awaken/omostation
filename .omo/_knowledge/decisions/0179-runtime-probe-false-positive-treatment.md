@@ -3,7 +3,7 @@ id: ADR-0179
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-10
+last_updated: 2026-07-10
 related:
   - 0178-p79-phase5-closeout.md
   - ../patterns/p76-launcher-zombie-false-positive.md

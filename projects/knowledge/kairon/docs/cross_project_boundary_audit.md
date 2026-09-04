@@ -1,7 +1,6 @@
 ---
 title: cross_project_boundary_audit
 type: doc
-status: active
 ---
 
 # Kairon Cross-Project Boundary Audit

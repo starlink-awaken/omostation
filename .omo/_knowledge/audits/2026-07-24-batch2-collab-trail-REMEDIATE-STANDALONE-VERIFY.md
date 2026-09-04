@@ -5,7 +5,7 @@ type: collab-trail
 batch: 2
 task_id: REMEDIATE-STANDALONE-VERIFY
 task_path: .omo/tasks/remediation/REMEDIATE-STANDALONE-VERIFY.yaml
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

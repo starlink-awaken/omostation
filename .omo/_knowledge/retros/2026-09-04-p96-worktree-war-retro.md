@@ -2,9 +2,8 @@
 schema_version: retro/v1
 bet_ref: N/A (周期级复盘)
 title: P96 共享 worktree 战役复盘 — 12 案时间线与机制化路线
-status: active
 owner: governance-team
-last-reviewed: 2026-09-04
+last_updated: 2026-09-04
 type: ssot
 ---
 

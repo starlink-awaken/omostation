@@ -1,7 +1,6 @@
 ---
 title: SECURITY
 type: doc
-status: active
 ---
 
 # Security Policy

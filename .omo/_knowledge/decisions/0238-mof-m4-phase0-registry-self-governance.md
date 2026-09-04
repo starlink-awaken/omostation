@@ -3,7 +3,7 @@ id: ADR-0238
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-25
+last_updated: 2026-07-25
 related:
   - docs/proposals/2026-07-25-mof-m4-governance-optimization-plan.md
   - 0152-m4-gac-rules.md

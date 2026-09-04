@@ -1,7 +1,6 @@
 ---
 title: 多仓库 × 多子仓 × 多 Agent 协作复盘 v2 — 差量与决策
 type: report
-status: active
 owner: governance-team
 created: 2026-08-15
 lifecycle: history

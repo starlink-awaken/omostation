@@ -1,7 +1,6 @@
 ---
 title: README
 type: doc
-status: active
 ---
 
 # kairon-observability

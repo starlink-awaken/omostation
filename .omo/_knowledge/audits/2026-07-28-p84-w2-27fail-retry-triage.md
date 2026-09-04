@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-07-28
+last_updated: 2026-07-28
 ---
 # P84 W2 能力轨 27 失败二次归因（三分类）
 

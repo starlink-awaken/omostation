@@ -3,7 +3,7 @@ id: ADR-0148
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
+last_updated: 2026-07-06
 related:
   - 0146-8stage-stability-declaration.md
   - 0147-mcptool-adder-guide.md

@@ -15,7 +15,7 @@ context: >
   LOC 快照 (os.walk 按扩展名累计, 排除 .git/node_modules/__pycache__/.venv/dist)。
   两口径统计范围不同 (surface 用 git tracked 口径, 现状快照含工作树全部文件),
   数字不直接可比, 差额如实标注。
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 ---
 
 # 表面积暴涨溯源 — 2026-08-15

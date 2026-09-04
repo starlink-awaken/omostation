@@ -1,7 +1,6 @@
 ---
 title: kairon-issue-ledger
 type: doc
-status: active
 ---
 
 # 5+4+1+1 架构全量分析 · 最终关闭

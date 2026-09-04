@@ -10,7 +10,7 @@ triggers:
   - PR 提交前
   - CI 失败排查时
 owner: governance-team
-last-reviewed: 2026-09-04
+last_updated: 2026-09-04
 ---
 
 # Skill: harness-compliance

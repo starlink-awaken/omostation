@@ -3,7 +3,7 @@ id: ADR-0144
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-06
+last_updated: 2026-07-06
 related:
   - 0121-governance-convergence-initiative.md
   - 0140-m4-health-score.md

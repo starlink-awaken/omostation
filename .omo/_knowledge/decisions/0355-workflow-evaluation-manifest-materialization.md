@@ -5,7 +5,7 @@ status: archived
 type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last_updated: 2026-08-03
 type: decision
 scope: workflow mesh evaluation and KEMS persistence
 date: 2026-08-03

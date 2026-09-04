@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # `.omo/_knowledge/architecture/` — 审计/治理架构文档

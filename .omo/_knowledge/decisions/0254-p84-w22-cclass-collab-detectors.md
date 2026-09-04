@@ -3,7 +3,7 @@ id: ADR-0254
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-28
+last_updated: 2026-07-28
 related:
   - 0253-p84-collab-mode-routing-after-k4.md
   - .omo/_knowledge/audits/2026-07-28-p84-w2-27fail-retry-triage.md

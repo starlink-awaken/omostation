@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: runtime-team
-last-reviewed: 2026-07-31
+last_updated: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 title: Iris 连接器凭据矩阵

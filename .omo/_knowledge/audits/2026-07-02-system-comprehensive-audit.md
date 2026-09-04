@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-07-02
+last_updated: 2026-07-02
 related:
   - ../patterns/p71-baseline-recovery-pattern.md
   - 0115-bin-governance-rationalize.md

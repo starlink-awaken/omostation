@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 type: ephemeral
 ---
 # agora P2 + 深层落地方案 (2026-08-06)

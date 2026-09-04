@@ -1,7 +1,6 @@
 ---
 title: CONTRIBUTING
 type: doc
-status: active
 ---
 
 # Contributing to kairon

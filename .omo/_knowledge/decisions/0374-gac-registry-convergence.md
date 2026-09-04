@@ -4,7 +4,7 @@ title: GaC Registry Convergence — indexed-drift fix, m1 orphan purge, stat aut
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last_updated: 2026-08-05
 ---
 
 # 0374 — GaC Registry Convergence Round

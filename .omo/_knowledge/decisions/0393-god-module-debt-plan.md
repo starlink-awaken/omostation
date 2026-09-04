@@ -4,7 +4,7 @@ title: god-module 大文件治理计划 — 3 个 >1500L 债的拆分路径
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-08
+last_updated: 2026-08-08
 ---
 
 # ADR-0393 Decision: god-module 大文件治理计划

@@ -1,8 +1,7 @@
 ---
-status: draft
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-06-27
+last_updated: 2026-06-27
 adr: ADR-0106
 related-rules: CR-L2-DIRECT-IO
 review-state: metadata-only

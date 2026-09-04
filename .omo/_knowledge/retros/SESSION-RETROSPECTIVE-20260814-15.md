@@ -1,10 +1,9 @@
 ---
 title: 会话级系统性复盘 — T1-05A 协调层 × 信任修复 × 乙流清欠
 type: retro
-status: active
 owner: governance-team
 created: 2026-08-15
-last-reviewed: 2026-08-15
+last_updated: 2026-08-15
 lifecycle: history
 related:
   - docs/plans/3y-bet-ledger.yaml

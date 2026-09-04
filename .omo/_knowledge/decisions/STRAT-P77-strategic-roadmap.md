@@ -1,8 +1,7 @@
 ---
-status: draft
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - ../../../.omo/_knowledge/decisions/0163-p76-phase9a-commit-assist-hook.md (Phase 9A 上游)
   - ../../../.omo/_knowledge/decisions/0162-p76-phase8-real-engineering.md (P76 Phase 8 上游)

@@ -1,10 +1,9 @@
 ---
 schema_version: retro/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-09-02
-last-reviewed: 2026-09-02
+last_updated: 2026-09-02
 bet: BET-Y1Q4-T2-05
 title: 管线 supervisor 常驻化
 symptom: _run 截断致 OCR JSON 解析失败; resident-status 卡 ledger/watermark 初始化

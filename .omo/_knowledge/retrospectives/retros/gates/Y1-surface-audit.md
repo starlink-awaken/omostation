@@ -9,7 +9,7 @@ related:
   - docs/plans/annual-gate-rebaseline-2026Q4.md
   - docs/adr/ADR-0200-y1q4-code-loc-gate-rebaseline.md
 lifecycle: history
-last-reviewed: 2026-08-19
+last_updated: 2026-08-19
 ---
 
 # Y1 表面积盘点 (BET-Y1Q4-T1-01)

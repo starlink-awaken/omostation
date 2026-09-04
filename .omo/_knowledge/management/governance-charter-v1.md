@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: deprecated
 owner: governance-team
-last-reviewed: 2026-07-02
+last_updated: 2026-07-02
 note: "P77 migrated to workflows/governance-charter-v1.md; keep stub for backward compat"
 ---
 

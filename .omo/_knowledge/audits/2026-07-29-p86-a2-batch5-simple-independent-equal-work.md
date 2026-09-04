@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: "2026-07-29"
+last_updated: "2026-07-29"
 ---
 
 # P86 A2 批次5: scenario_lib 等量并行微基准（已降级）

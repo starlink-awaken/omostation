@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: plan
 owner: engineering-team
-last-reviewed: 2026-08-05
+last_updated: 2026-08-05
 related:
   - ./memory-os-phase6-retro.md
   - ./memory-os-phase10-retro.md

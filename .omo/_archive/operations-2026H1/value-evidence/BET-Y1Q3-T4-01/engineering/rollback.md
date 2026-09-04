@@ -7,10 +7,9 @@ rollback_strategy: git_revert
 revertible_commits: 
 rollback_verification: git revert --no-commit <sha> 可干净回退(无冲突)
 verified_at: 2026-08-22
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 ---
 
 last-reviewed: 2026-08-26

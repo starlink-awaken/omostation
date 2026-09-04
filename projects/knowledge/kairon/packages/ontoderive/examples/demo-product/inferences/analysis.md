@@ -1,7 +1,6 @@
 ---
 title: analysis
 type: doc
-status: active
 ---
 
 ## INF-L1：产品稳定性是当前最紧迫问题

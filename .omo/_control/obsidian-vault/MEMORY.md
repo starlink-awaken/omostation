@@ -5,7 +5,7 @@ status: 已采纳
 type: canonical
 owner: 未指定
 created: 2026-06-08
-last-reviewed: 2026-06-08
+last_updated: 2026-06-08
 tags: [控制面]
 ---
 

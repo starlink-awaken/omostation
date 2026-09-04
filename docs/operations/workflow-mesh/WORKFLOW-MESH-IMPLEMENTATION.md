@@ -1,9 +1,8 @@
 ---
 title: Workflow Mesh 实施架构与交付路线
-status: active
 lifecycle: plan
 owner: engineering-team
-last-reviewed: 2026-08-03
+last_updated: 2026-08-03
 review-state: evidence-refreshed
 related:
   - docs/STRATEGY-3YEAR-PANORAMA.md

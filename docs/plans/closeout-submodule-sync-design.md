@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 type: ephemeral
 ---
 # 子模块漂移治理 — 深度设计方案

@@ -11,7 +11,7 @@ bet_ref: BET-c87a (c2g:bet:BET-c87a)
 warning: |
   Evidence-only. 不修改代码、不重定义 transport、不动 cockpit-ui 源码。
   立项后启动收尾工程。
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: plan
 ---
 

@@ -1,7 +1,6 @@
 ---
 title: agora-mcp-gateway-p1-p3
 type: doc
-status: active
 ---
 
 # agora MCP Gateway P1-P3 专项 — 2026-07-14

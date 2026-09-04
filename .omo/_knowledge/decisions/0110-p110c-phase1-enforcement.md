@@ -1,9 +1,8 @@
 ---
 id: ADR-0110
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0110: P110-C Phase 1 BOS Contract Linter 强制接入 (3 交付物)

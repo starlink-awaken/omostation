@@ -1,7 +1,6 @@
 ---
 title: roles
 type: doc
-status: active
 ---
 
 # Agent Role Registry

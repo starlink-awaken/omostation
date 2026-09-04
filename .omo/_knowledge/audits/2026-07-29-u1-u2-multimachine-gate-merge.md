@@ -2,7 +2,7 @@
 status: needs-human
 lifecycle: history
 owner: governance-team
-last-reviewed: "2026-07-29"
+last_updated: "2026-07-29"
 ---
 # U1/U2: #592 多机违规 + 合并门真接
 

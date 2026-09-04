@@ -1,9 +1,8 @@
 ---
 id: ADR-0076
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0076: P82 cross-ref scope-aware + status-aware + 死链治理收口

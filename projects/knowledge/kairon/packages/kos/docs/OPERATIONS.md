@@ -1,7 +1,6 @@
 ---
 title: OPERATIONS
 type: doc
-status: active
 ---
 
 # KOS 运维手册

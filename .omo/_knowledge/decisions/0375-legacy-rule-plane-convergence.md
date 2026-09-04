@@ -4,7 +4,7 @@ title: Legacy Rule Plane Convergence — container-semantics drift fix + project
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last_updated: 2026-08-05
 ---
 
 # 0375 — Legacy Rule Plane Convergence Round

@@ -3,7 +3,7 @@ id: ADR-0205
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 ---
 
 # ADR-0205 — 5b Docker image digest pin + macOS ACL host validation evidence

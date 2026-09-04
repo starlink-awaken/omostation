@@ -1,7 +1,6 @@
 ---
 title: ACKNOWLEDGMENTS
 type: doc
-status: active
 ---
 
 # Acknowledgments

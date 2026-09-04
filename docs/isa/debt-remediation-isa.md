@@ -11,10 +11,9 @@ started: 2026-07-01T14:30:00Z
 updated: 2026-07-01T14:30:00Z
 tier_floor_note: "E4 declared; ISC count 48 < floor 128 — show-your-math in Decisions"
 governance_binding: "omostation AGENTS.md/CLAUDE.md; .omo/ mutations via agent-workflow governance-state-mutation + governance-agent profile"
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
+last_updated: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---

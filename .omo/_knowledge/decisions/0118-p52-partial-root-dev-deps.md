@@ -1,9 +1,8 @@
 ---
 id: ADR-0118
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-30
+last_updated: 2026-06-30
 ---
 
 # ADR-0118: 根仓 dev-deps 统一 — 部分真治本 + P3 follow-up

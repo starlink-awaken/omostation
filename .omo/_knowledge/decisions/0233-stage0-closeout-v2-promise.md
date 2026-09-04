@@ -4,7 +4,7 @@ title: "STRAT-P81 Stage 0 closeout v2 占位"
 status: SUPERSEDED
 lifecycle: spec
 date: 2026-07-24
-last-reviewed: 2026-07-24
+last_updated: 2026-07-24
 owner: governance-team
 supersedes: null
 superseded_by: 0234-bet-c87a-closeout

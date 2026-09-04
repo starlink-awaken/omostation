@@ -2,7 +2,7 @@
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 archived-since: 2026-06-23
 migration-from: .omo/_knowledge/design/plans/dbo-archive/
 note: "P54 R1: 整体迁移自 design/plans/dbo-archive/, 因 DBOS Phase 0 已冻结 (2026-05-14), 内容价值保留但定位改为归档。"

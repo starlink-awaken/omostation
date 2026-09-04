@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 title: Workflow waiver 证据 — BET-Y1Q3-T1-12 Task 4A Agora native sou
 type: doc
 ---

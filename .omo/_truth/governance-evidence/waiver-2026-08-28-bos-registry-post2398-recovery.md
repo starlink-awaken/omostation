@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-28
+last_updated: 2026-08-28
 title: Post-#2398 BOS registry mirror recovery waiver
 type: doc
 ---

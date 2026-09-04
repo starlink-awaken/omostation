@@ -1,7 +1,6 @@
 ---
 title: actors
 type: doc
-status: active
 ---
 
 | 实体 | 类型 | 角色 | 数量 |

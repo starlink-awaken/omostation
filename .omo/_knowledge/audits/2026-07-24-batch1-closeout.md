@@ -5,7 +5,7 @@ type: audit
 stage: batch1
 workorder: .omo/plans/strat-p81-batch1-workorder.md
 pr: https://github.com/starlink-awaken/omostation/pull/483
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

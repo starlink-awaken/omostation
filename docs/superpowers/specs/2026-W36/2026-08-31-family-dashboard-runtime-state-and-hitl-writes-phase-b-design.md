@@ -7,7 +7,7 @@ status: accepted
 lifecycle: contract
 owner: family-hub
 created: 2026-08-30
-last-reviewed: 2026-09-02
+last_updated: 2026-09-02
 risk_level: L3
 human_gate: true
 type: ssot

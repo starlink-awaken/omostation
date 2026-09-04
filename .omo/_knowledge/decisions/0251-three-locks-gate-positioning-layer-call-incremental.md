@@ -3,7 +3,7 @@ id: ADR-0251
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-28
+last_updated: 2026-07-28
 related:
   - 0250-health-gate-engineering-surface-only.md
   - 0249-governance-budget-cap-40-40-20.md

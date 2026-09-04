@@ -3,7 +3,7 @@ id: ADR-0432
 status: candidate
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-28
+last_updated: 2026-08-28
 ---
 
 # ADR-0432: North Star v3 6-Axis Escalation

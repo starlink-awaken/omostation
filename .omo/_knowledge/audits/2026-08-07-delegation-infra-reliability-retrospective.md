@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-07
+last_updated: 2026-08-07
 related:
   - ../patterns/delegation-infra-diagnosis-pattern.md
   - ../../plans/delegation-infra-reliability.md

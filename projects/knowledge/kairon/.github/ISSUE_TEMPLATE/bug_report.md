@@ -1,7 +1,6 @@
 ---
 title: bug_report
 type: doc
-status: active
 ---
 
 ---

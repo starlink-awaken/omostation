@@ -3,7 +3,7 @@ id: ADR-0146
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
+last_updated: 2026-07-06
 related:
   - 0117-p52-undo-p60-stage-8.md
   - 0139-model-driven-8stage-revival-rejected.md

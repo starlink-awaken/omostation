@@ -1,7 +1,6 @@
 ---
 title: DESIGN
 type: doc
-status: active
 ---
 
 # Minerva — Detailed Technical Design

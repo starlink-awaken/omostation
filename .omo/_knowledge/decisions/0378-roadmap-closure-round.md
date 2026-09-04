@@ -4,7 +4,7 @@ title: Roadmap closure round — verify and close all delivered governance initi
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last_updated: 2026-08-05
 ---
 
 # 0378 — Roadmap Closure Round (R-archive)

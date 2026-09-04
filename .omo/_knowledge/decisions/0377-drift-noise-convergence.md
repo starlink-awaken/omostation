@@ -4,7 +4,7 @@ title: Drift-noise convergence — runtime-derived plane exclusion + release_rea
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last_updated: 2026-08-05
 ---
 
 # 0377 — Drift-Noise Convergence Round

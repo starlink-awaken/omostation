@@ -1,10 +1,9 @@
 ---
 schema_version: governance-waiver-evidence/v1
-status: active
 owner: human-principal
 lifecycle: history
 created: 2026-08-30
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 title: T10-69 final blocked disposition
 type: doc
 ---

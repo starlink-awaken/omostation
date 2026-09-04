@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: "2026-07-29"
+last_updated: "2026-07-29"
 ---
 
 # P86 A/B/C/D 关闭审计

@@ -1,10 +1,9 @@
 ---
 title: "runbook-state-freshness"
-status: active
 type: runbook
 owner: governance-team
 lifecycle: contract
-last-reviewed: 2026-08-23
+last_updated: 2026-08-23
 ---
 # Runbook: State Freshness Expired
 

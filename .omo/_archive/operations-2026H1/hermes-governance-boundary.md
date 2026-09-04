@@ -1,10 +1,9 @@
 ---
 title: Hermes 治理边界声明 (OPS-INFRA 任务 3)
-status: active
 type: contract
 owner: xiamingxing + governance-team
 created: 2026-08-17
-last-reviewed: 2026-08-17
+last_updated: 2026-08-17
 related:
   - docs/OPS-INFRA-GOVERNANCE-LONGTERM-BLUEPRINT-2026-08.md
 lifecycle: contract

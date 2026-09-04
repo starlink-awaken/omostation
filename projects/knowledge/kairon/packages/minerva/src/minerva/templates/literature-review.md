@@ -1,7 +1,6 @@
 ---
 title: literature-review
 type: doc
-status: active
 ---
 
 # Literature Review

@@ -3,7 +3,6 @@ id: STRAT-P81-MASTER-DECISION-INBOX
 title: STRAT-P81 兑现期入场决策单（7 卡 · 人类拍板）
 owner: 夏明星
 created_at: 2026-07-24T08:50:00Z
-status: active
 ssot_refs:
   - .omo/_knowledge/decisions/STRAT-P81-strategic-roadmap.md
   - .omo/_knowledge/audits/2026-07-24-p81-stage0-closeout.md
@@ -13,7 +12,7 @@ warning: |
   本卡是 7 张 needs-human 卡的「决策汇总看板」。
   决策顺序: 共阻塞 → 自持性 → 范围扩张。
   Agent 不得在拍板前自宣进入兑现期。
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: plan
 ---
 

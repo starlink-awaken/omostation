@@ -1,7 +1,6 @@
 ---
 title: README
 type: doc
-status: active
 ---
 
 # 中关村科学城服务平台方案 — OntoDerive 完整示例

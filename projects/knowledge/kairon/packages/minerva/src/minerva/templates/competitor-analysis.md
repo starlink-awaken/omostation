@@ -1,7 +1,6 @@
 ---
 title: competitor-analysis
 type: doc
-status: active
 ---
 
 # Competitor Analysis

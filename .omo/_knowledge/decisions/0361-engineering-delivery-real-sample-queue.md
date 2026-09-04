@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-04
 owner: governance-team
 lifecycle: spec
-last-reviewed: 2026-08-04
+last_updated: 2026-08-04
 ---
 
 # ADR-0361: Engineering Delivery 真实复核元数据进入 KEMS 双人标注队列

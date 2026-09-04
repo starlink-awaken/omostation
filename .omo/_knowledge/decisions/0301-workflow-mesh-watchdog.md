@@ -5,7 +5,7 @@ status: archived
 type: decision
 owner: architecture-governance
 lifecycle: spec
-last-reviewed: 2026-08-02
+last_updated: 2026-08-02
 related:
   - ../../standards/agent-cli-worker-collaboration.md
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

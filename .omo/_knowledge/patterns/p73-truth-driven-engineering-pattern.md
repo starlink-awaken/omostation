@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-03
+last_updated: 2026-07-03
 related:
   - ../../../.agents/skills/governance-ssot-edit/SKILL.md
   - ../../../docs/AGENT-ISOLATION-ROLLOUT.md

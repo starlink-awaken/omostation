@@ -1,9 +1,8 @@
 ---
 title: Swarm Protocol — 多twin协作标准
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-08
+last_updated: 2026-08-08
 ---
 
 # Swarm Protocol — 多twin协作标准

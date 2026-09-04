@@ -3,7 +3,7 @@ id: ADR-0155
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - STRAT-P76-strategic-roadmap.md
   - 0152-m4-gac-rules.md

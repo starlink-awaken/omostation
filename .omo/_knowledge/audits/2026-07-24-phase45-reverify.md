@@ -3,7 +3,7 @@ title: Phase 45 W1-W3 re-verify — 7 acceptance endpoints (STRAT-P80 T1.2)
 date: 2026-07-24
 type: audit
 front: T1.2
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

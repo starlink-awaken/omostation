@@ -1,7 +1,6 @@
 ---
 title: CONTRIBUTORS
 type: doc
-status: active
 ---
 
 # kairon Contributors

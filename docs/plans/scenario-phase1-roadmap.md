@@ -1,8 +1,7 @@
 ---
-status: draft
 lifecycle: plan
 owner: system-owner
-last-reviewed: 2026-08-07
+last_updated: 2026-08-07
 type: ephemeral
 ---
 

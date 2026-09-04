@@ -3,7 +3,7 @@ category: playbooks
 status: deprecated
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 deprecated-since: 2026-06-23
 original-path: "/Users/xiamingxing/Documents/学习进化/2-knowledge/基建架构/eCOS-v5-Architecture-SSOT.md"
 break-reason: "P55 R1: 外部 symlink 断链 (目标文件已移至 phase6-完成化/pat-45-eCOS-v5-architecture.md, 实际位置已不可达)"

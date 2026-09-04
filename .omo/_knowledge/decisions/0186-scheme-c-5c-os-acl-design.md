@@ -3,7 +3,7 @@ id: ADR-0186
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 ---
 
 # ADR-0186 — Scheme C Phase 5c: OS 写面 ACL 设计（design-only）

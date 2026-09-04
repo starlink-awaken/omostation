@@ -1,6 +1,5 @@
 ---
 title: 织星 / eCOS 三年全面规划 2026H2–2029 — 从能力体积到可持有性
-status: active
 type: strategy-plan
 owner: 夏明星
 created: 2026-08-06
@@ -18,7 +17,7 @@ decision: .omo/_knowledge/decisions/0410-strategy-mainline-plan-supersedes-panor
 note: >
   2026-08-15 ADR-0410 采纳为主线。体量数据仍以文中标注日期的实测为准，
   运行时规模读 .omo/state/system.yaml，不在本文追更数字。
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # 织星 / eCOS 三年全面规划（2026H2 – 2029）

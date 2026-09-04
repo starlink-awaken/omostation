@@ -1,9 +1,8 @@
 ---
 id: ADR-0295
-status: active
 lifecycle: spec
 owner: governance-agent
-last-reviewed: 2026-09-01
+last_updated: 2026-09-01
 ---
 
 # 断链修复方案 (Phase 8 联动)

@@ -12,7 +12,7 @@ related:
   - docs/plans/annual-gate-decision-summary-2026Q4.md
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: "BET-Y1Q3-T1-04 Retro: Y1Q4 年度门修订评审 — code_loc 重基线"
 ---
 

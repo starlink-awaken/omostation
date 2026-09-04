@@ -2,7 +2,7 @@
 bet_id: BET-Y3H2-T7-01
 date: 2026-08-20
 lifecycle: history
-last-reviewed: 2026-08-20
+last_updated: 2026-08-20
 status: archived
 owner: governance-team
 title: BET-Y3H2-T7-01 Retro — 公文场景 routine (限格式类)

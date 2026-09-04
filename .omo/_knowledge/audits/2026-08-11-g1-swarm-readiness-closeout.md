@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-11
+last_updated: 2026-08-11
 related:
   - ../decisions/0408-g1-swarm-readiness-gate-close.md
   - ../decisions/0407-truthful-ci-local-fast.md

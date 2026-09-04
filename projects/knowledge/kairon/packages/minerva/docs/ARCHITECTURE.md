@@ -1,7 +1,6 @@
 ---
 title: ARCHITECTURE
 type: doc
-status: active
 ---
 
 # Minerva Architecture v0.5.0

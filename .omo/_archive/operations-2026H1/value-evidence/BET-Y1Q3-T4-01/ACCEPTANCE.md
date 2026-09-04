@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 ---
 
 # BET-Y1Q3-T4-01 价值轴证据清单（非 closeout）

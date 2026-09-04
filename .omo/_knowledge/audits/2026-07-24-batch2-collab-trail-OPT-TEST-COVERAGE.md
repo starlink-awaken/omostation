@@ -5,7 +5,7 @@ type: collab-trail
 batch: 2
 task_id: OPT-TEST-COVERAGE
 task_path: .omo/tasks/planned/vision-roadmap/OPT-TEST-COVERAGE.yaml
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

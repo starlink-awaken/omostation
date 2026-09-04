@@ -3,7 +3,7 @@ category: workflows
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-22
+last_updated: 2026-06-22
 archived-since: 2026-06-22
 note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: opc-p7-t1-governance-hardening-2026-06-11.md

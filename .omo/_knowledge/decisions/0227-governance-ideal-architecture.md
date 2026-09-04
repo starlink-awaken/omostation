@@ -3,7 +3,7 @@ id: ADR-0227
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-21
+last_updated: 2026-07-21
 related:
   - 0220-swarm-coordination-discipline-m1-gate.md
   - 0218-agent-isolation-p0-verify-and-hygiene.md

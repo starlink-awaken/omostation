@@ -1,7 +1,6 @@
 ---
 title: README
 type: doc
-status: active
 ---
 
 # CodeAnalyze (代码分析核心引擎)

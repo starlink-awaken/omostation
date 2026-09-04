@@ -1,9 +1,8 @@
 ---
 id: ADR-0403
-status: active
 lifecycle: spec
 owner: '@Builder'
-last-reviewed: '2026-08-09'
+last_updated: '2026-08-09'
 ---
 
 # ADR-0403: Agent本体与模型驱动约束架构

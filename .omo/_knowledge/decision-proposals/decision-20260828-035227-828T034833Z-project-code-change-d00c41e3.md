@@ -1,6 +1,5 @@
 ---
 schema: resident-decision/v1
-status: draft
 trigger_event_type: StepFailed
 trace_id: 20260828T034833Z-project-code-change-d00c41e3
 workflow_run_id: 20260828T034833Z-project-code-change-d00c41e3

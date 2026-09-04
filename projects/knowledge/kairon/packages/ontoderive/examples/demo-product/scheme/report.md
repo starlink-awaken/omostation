@@ -1,7 +1,6 @@
 ---
 title: report
 type: doc
-status: active
 ---
 
 # 产品技术策略分析

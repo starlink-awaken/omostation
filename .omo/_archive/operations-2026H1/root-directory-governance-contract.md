@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: runtime-team
-last-reviewed: 2026-08-17
+last_updated: 2026-08-17
 review-state: maintained
 title: 根目录治理契约
 type: doc

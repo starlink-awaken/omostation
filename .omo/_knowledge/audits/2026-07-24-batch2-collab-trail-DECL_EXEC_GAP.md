@@ -5,7 +5,7 @@ type: collab-trail
 batch: 2
 task_id: DECL_EXEC_GAP
 task_path: .omo/debt/items/DECL_EXEC_GAP.yaml
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

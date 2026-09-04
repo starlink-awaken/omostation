@@ -6,10 +6,9 @@ revision_receipt_schema: revision-receipt/v1
 candidate_ref: evidence://personal-draft/sha256:bf98089ffae238ffb3e242f837f368ef11fa99094a1842f3349c97cd05e1ee90
 revision_digest: sha256:bf98089ffae238ffb3e242f837f368ef11fa99094a1842f3349c97cd05e1ee90
 changed_fields: []
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 ---
 
 last-reviewed: 2026-08-26

@@ -4,7 +4,7 @@ title: CI 修复 + 主仓 dirty 提交 — drafts persistence_mode + runtime sta
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-08
+last_updated: 2026-08-08
 ---
 
 # ADR-0392 Decision: CI 修复 + 主仓 dirty 提交

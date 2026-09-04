@@ -6,7 +6,6 @@ tags: [audit, agora, architecture, health]
 type: audit
 layer: L2
 phase: Phase6
-status: active
 version: v1.0.0
 ---
 

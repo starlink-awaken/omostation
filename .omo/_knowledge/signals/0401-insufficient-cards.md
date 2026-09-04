@@ -1,9 +1,8 @@
 ---
 id: ADR-0401
-status: active
 lifecycle: spec
 owner: '@Builder'
-last-reviewed: '2026-08-09'
+last_updated: '2026-08-09'
 ---
 
 # ADR-0401: Only 9 scene cards — consider adding more domain coverage

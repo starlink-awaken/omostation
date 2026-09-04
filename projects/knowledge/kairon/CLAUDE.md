@@ -1,7 +1,6 @@
 ---
 title: CLAUDE
 type: doc
-status: active
 ---
 
 # CLAUDE.md — kairon AI Context

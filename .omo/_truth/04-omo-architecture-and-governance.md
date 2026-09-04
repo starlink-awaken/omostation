@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-22
+last_updated: 2026-06-22
 ---
 
 # OMO 4.0 架构分析、审计与治理报告 (Architecture Audit & Governance)

@@ -1,14 +1,13 @@
 ---
 title: T6-01 去重清单终版 — gbrain + kairon → knowledge
 type: evidence
-status: draft
 owner: engineering-agent
 created: 2026-08-16
 bet: BET-Y1Q3-T6-01
 related:
   - docs/plans/2026-08-16-t6-01-knowledge-merge-spec.md
 lifecycle: plan
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # T6-01 去重清单终版（逐项可复核）

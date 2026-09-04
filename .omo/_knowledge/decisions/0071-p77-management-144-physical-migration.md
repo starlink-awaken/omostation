@@ -1,9 +1,8 @@
 ---
 id: ADR-0071
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0071: P77 management 144 物理迁移 (workflows/playbooks/guides)

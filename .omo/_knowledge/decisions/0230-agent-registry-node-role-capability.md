@@ -3,7 +3,7 @@ id: ADR-0230
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-24
+last_updated: 2026-07-24
 related:
   - 0228-m1-acceptance-physical-deferred-reorder.md
   - 0225-g-del-physical-multihost-gate-caliber.md

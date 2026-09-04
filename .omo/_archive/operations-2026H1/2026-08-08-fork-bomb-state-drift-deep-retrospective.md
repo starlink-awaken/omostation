@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-agent
-last-reviewed: 2026-08-08
+last_updated: 2026-08-08
 session-span: 2026-08-07 ~ 2026-08-08
 related-bets: [BET-Y1Q1-T1-07]
 related-prs: ["#1082", "#1085", "#1088", "#1131", "#1133"]

@@ -1,7 +1,6 @@
 ---
 title: SKILL
 type: doc
-status: active
 ---
 
 # Skill: Agent Handoff

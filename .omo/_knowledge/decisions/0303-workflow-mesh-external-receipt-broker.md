@@ -6,7 +6,7 @@ type: decision
 owner: architecture-governance
 lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
+last_updated: 2026-08-02
 related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - ../../standards/external-connection-fabric.md

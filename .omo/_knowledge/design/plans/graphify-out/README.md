@@ -2,7 +2,7 @@
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 note: "P54 R2: graphify 生成产物 (2026-06-03), 133 文件 1811 edges。属临时图谱产物, 不属于活跃计划。"
 generated-at: 2026-06-03
 generator: graphify (Phase 2 ~ Phase 17 知识图谱)

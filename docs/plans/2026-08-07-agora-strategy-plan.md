@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 type: ephemeral
 ---
 # agora 系统性分析与战略规划 (2026-08-07)

@@ -1,7 +1,6 @@
 ---
 title: governance_plan
 type: doc
-status: active
 ---
 
 # Kairon Remediation Roadmap

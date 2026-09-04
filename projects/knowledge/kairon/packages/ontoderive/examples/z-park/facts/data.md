@@ -1,7 +1,6 @@
 ---
 title: data
 type: doc
-status: active
 ---
 
 | 编号 | 数据 | 数值 | 来源 |

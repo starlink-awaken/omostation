@@ -3,7 +3,7 @@ id: ADR-0220
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-17
+last_updated: 2026-07-17
 related:
   - 0210-three-year-strategy-execution-convergence.md
   - 0218-agent-isolation-p0-verify-and-hygiene.md

@@ -1,9 +1,8 @@
 ---
 id: ADR-0078
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0078: P84 M2 coverage 修正 + X2 freshness check + rule 修正

@@ -1,7 +1,6 @@
 ---
 title: operating-checklist
 type: doc
-status: active
 ---
 
 # Operating Checklist

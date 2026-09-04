@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 # PITFALL-001: Gatekeeper / Compiler 直接写盘触发静态 AST 拦截
 

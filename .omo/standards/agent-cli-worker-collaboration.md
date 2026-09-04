@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-14
+last_updated: 2026-08-14
 ---
 
 # Agent CLI Worker Collaboration Standard

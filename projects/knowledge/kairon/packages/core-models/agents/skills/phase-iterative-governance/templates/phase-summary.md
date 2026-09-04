@@ -1,7 +1,6 @@
 ---
 title: phase-summary
 type: doc
-status: active
 ---
 
 # Phase Summary (Skill Template)

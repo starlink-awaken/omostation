@@ -1,7 +1,6 @@
 ---
 title: FAQ
 type: doc
-status: active
 ---
 
 # kairon FAQ

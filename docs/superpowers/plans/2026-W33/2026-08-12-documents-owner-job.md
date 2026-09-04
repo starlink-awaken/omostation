@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 last_updated: 2026-09-03
 title: Documents Owner Job MVP Implementation Plan
 type: doc

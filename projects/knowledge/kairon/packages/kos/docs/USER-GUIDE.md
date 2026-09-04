@@ -1,7 +1,6 @@
 ---
 title: USER-GUIDE
 type: doc
-status: active
 ---
 
 # KOS 用户指南

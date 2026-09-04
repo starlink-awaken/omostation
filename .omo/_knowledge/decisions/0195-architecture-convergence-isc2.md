@@ -1,9 +1,8 @@
 ---
 id: ADR-0195
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 ---
 
 # ADR-0195 — Architecture Convergence (ISC-2): 声明/执行鸿沟收敛

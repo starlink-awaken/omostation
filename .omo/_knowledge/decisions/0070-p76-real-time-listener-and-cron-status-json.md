@@ -1,9 +1,8 @@
 ---
 id: ADR-0070
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0070: P76 P0 listener 实时 API + governance-agent cron 完整安装

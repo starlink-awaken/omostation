@@ -1,7 +1,6 @@
 ---
 title: CHANGELOG
 type: doc
-status: active
 ---
 
 # Changelog

@@ -7,7 +7,7 @@ status: accepted
 lifecycle: contract
 owner: ml-platform
 created: 2026-09-02
-last-reviewed: 2026-09-02
+last_updated: 2026-09-02
 type: ssot
 last_updated: 2026-09-03
 ---

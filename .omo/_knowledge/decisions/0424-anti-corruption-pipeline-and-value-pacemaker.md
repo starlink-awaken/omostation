@@ -6,7 +6,7 @@ status: archived
 lifecycle: spec
 owner: governance-team
 date: 2026-08-24
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 tags: [anti-corruption, value-pacemaker, uhs, governance, multi-agent, north-star]
 related:
   - docs/operations/engineering-golden-rules.md (SCRIPT-BASELINE-SYNC)

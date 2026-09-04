@@ -1,11 +1,10 @@
 ---
 schema_version: report/v1
-status: active
 lifecycle: history
 type: review-evidence
 owner: governance-team
 created: 2026-08-31
-last-reviewed: 2026-08-31
+last_updated: 2026-08-31
 adr: ADR-0443
 supersedes: docs/reports/2026-08-31-subtraction-review-method-v0.md
 ---

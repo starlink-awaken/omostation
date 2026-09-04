@@ -2,7 +2,7 @@
 status: needs-human
 lifecycle: history
 owner: governance-team
-last-reviewed: "2026-07-29"
+last_updated: "2026-07-29"
 ---
 # Y1-Y4: main 绿确认 + 场景库降级 + W 波观察 + 产能去污
 

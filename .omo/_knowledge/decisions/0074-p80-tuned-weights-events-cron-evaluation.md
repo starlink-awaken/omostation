@@ -1,9 +1,8 @@
 ---
 id: ADR-0074
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0074: P80 dim-weight 集成到 readiness + 跨子仓 event 联动订阅器 + cron 评估

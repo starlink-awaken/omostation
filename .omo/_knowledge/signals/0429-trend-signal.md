@@ -1,9 +1,8 @@
 ---
 id: ADR-0429
-status: draft
 lifecycle: spec
 owner: evolution-agent
-last-reviewed: 2026-08-27
+last_updated: 2026-08-27
 ---
 
 # ADR-0429: [hacker_news] Meta reaches $16.68B settlement over social media harms to children

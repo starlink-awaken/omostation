@@ -1,6 +1,5 @@
 ---
 type: ephemeral
-status: active
 created: 2026-09-03
 owner: governance-team
 ---

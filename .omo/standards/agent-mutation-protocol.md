@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-29
+last_updated: 2026-06-29
 ---
 
 # Agent Mutation Protocol — 自治代理写入协议

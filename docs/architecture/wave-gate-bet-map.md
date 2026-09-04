@@ -1,6 +1,5 @@
 ---
 title: Wave/Gate ↔ BET 台账差异对齐
-status: active
 type: architecture-map
 owner: governance-team
 created: 2026-08-15
@@ -12,7 +11,7 @@ ssot:
   gates: docs/architecture/blueprint-multi-agent-execution-control-v1.md
   bets: docs/plans/3y-bet-ledger.yaml
   north_star: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # Wave / Gate ↔ BET 映射

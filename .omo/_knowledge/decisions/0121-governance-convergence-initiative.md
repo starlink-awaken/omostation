@@ -1,9 +1,8 @@
 ---
 id: ADR-0121
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-02
+last_updated: 2026-07-02
 ---
 
 # ADR-0121: Governance Convergence Special Initiative (GCSI) — 治理收敛专项

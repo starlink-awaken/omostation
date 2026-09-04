@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: entry
 owner: agora-gateway
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 related:
 - ../../projects/agora/src/agora/server/mcp_entry.py
 - ../../projects/agora/src/agora/server/tools_auth.py

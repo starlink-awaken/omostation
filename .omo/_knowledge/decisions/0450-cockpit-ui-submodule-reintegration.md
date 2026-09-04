@@ -3,7 +3,7 @@ id: ADR-0450
 status: accepted
 lifecycle: contract
 owner: xiamingxing
-last-reviewed: 2026-09-04
+last_updated: 2026-09-04
 type: ssot
 ---
 

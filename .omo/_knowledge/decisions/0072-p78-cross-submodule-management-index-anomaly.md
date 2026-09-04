@@ -1,9 +1,8 @@
 ---
 id: ADR-0072
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0072: P78 跨子仓联动 + management INDEX + alert-history 自动洞察

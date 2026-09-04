@@ -1,7 +1,6 @@
 ---
 title: SUPPORT
 type: doc
-status: active
 ---
 
 # Support

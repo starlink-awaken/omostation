@@ -3,7 +3,7 @@ id: ADR-0289
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-29
+last_updated: 2026-07-29
 related:
   - 0288-p86-abcd-skeptic-honest-map-and-target15.md
   - 0287-p86-abcd-wave-closeout.md

@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: 2026-08-07 合流接手 + 冲突标记 gate 落地 — 复盘
 type: doc
 ---

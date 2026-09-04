@@ -1,10 +1,9 @@
 ---
 schema_version: retro/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-09-01
-last-reviewed: 2026-09-01
+last_updated: 2026-09-01
 bet: BET-Y1Q4-T8-03
 title: 红头 DOCX/PPTX/SVG 渲染引擎
 symptom: 无（按计划交付）；外围 gate 债务两处随车清理

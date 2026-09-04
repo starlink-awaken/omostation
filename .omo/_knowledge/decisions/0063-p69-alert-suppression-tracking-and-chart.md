@@ -1,9 +1,8 @@
 ---
 id: ADR-0063
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0063: P69 抑制标记精确统计 + alert-history ASCII 趋势图

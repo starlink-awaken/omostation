@@ -1,10 +1,9 @@
 ---
 title: "runbook-ci-red"
-status: active
 type: runbook
 owner: governance-team
 lifecycle: history
-last-reviewed: 2026-08-23
+last_updated: 2026-08-23
 ---
 # Runbook: CI 红了怎么办
 

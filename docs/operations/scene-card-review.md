@@ -1,9 +1,8 @@
 ---
 title: Scene Card 候选人工评审运行手册
-status: active
 type: runbook
 owner: product-architecture
-last-reviewed: 2026-08-02
+last_updated: 2026-08-02
 related:
   - ./WORKFLOW-MESH-IMPLEMENTATION.md
   - ./scene-card-candidate-seeds.yaml

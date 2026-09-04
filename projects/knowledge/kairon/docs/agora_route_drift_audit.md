@@ -1,7 +1,6 @@
 ---
 title: agora_route_drift_audit
 type: doc
-status: active
 ---
 
 # Agora Route Drift Audit

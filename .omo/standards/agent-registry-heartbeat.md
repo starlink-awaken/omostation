@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-22
+last_updated: 2026-06-22
 ---
 
 # Agent Registry Heartbeat, Cache & Identity Gate — M2.2

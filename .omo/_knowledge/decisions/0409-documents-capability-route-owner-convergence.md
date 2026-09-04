@@ -4,7 +4,7 @@ title: Documents capability routes converge on Workspace owners
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-13
+last_updated: 2026-08-13
 related:
   - ADR-0342
 ---

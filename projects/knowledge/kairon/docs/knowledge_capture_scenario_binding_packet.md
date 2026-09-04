@@ -1,7 +1,6 @@
 ---
 title: knowledge_capture_scenario_binding_packet
 type: doc
-status: active
 ---
 
 # Knowledge Capture Scenario Binding Packet

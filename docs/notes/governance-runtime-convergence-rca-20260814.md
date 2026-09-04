@@ -3,7 +3,7 @@ title: "RCA：Governance Runtime Convergence（2026-08-14）"
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-15
+last_updated: 2026-08-15
 last_updated: 2026-09-03
 type: ssot
 last_updated: 2026-09-03

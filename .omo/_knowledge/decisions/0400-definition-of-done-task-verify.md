@@ -1,9 +1,8 @@
 ---
 id: ADR-0400
-status: active
 lifecycle: spec
 owner: '@Builder'
-last-reviewed: '2026-08-09'
+last_updated: '2026-08-09'
 ---
 
 # ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成)

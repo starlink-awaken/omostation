@@ -1,9 +1,8 @@
 ---
 type: ssot
-status: active
 lifecycle: index
 owner: governance-team
-last-reviewed: 2026-06-29
+last_updated: 2026-06-29
 ---
 
 # bin/ — 治理工具入口层

@@ -1,7 +1,6 @@
 ---
 title: api_reference
 type: doc
-status: active
 ---
 
 # kairon API 参考

@@ -4,7 +4,7 @@ title: CI 平面减法收官 — workflow retire + 内联 paths 检测盲区修�
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-07
+last_updated: 2026-08-07
 ---
 
 # ADR-0388 Decision: CI 平面减法收官

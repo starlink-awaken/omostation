@@ -1,10 +1,9 @@
 ---
 schema_version: retro/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-09-03
-last-reviewed: 2026-09-03
+last_updated: 2026-09-03
 bet: BET-Y1Q4-T2-04
 title: 统一邮箱连接器
 symptom: 手写 B64 fixture 错值; 垃圾字节流被宽容解析成空壳邮件

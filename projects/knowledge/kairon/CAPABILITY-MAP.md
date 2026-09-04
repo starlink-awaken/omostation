@@ -1,7 +1,6 @@
 ---
 title: CAPABILITY-MAP
 type: doc
-status: active
 ---
 
 # kairon 能力地图

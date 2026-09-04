@@ -3,7 +3,7 @@ schema_version: specification/v1
 status: accepted
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-29
+last_updated: 2026-08-29
 bet_id: BET-Y1Q3-T10-62
 spec_version: 1.0.0
 title: T10-62 Authority-Binding Contract Alignment — Design

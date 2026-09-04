@@ -1,7 +1,6 @@
 ---
 title: ai-zhoubao-2026-06-01
 type: doc
-status: active
 ---
 
 # AI 洞察周报 — 2026-06-01

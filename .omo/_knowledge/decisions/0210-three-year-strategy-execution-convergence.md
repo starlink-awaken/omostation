@@ -3,7 +3,7 @@ id: ADR-0210
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-19
+last_updated: 2026-07-19
 related:
   - 0202-fake-green-prevention.md
   - 0179-runtime-probe-false-positive-treatment.md

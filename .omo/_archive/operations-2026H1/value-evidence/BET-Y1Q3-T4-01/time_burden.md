@@ -5,10 +5,9 @@ episode_id: episode_088af4df0c0ed55f204e2bae
 review_duration_seconds: 30
 estimated_time_saved_seconds: 120
 burden_is_below_saved: true
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 ---
 
 last-reviewed: 2026-08-26

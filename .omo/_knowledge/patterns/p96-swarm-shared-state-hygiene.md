@@ -1,10 +1,9 @@
 ---
 id: P96
-status: active
 lifecycle: pattern
 owner: governance-team
 created: 2026-08-31
-last-reviewed: 2026-08-31
+last_updated: 2026-08-31
 related:
 - ADR-0443
 - CR-GIT-STAGE-SUBMODULE-PIN

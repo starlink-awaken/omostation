@@ -3,7 +3,7 @@ id: ADR-0441
 status: accepted
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 ---
 
 # ADR-0441: Documents↔Workspace 协同机制 v1（DW 三原语）

@@ -1,9 +1,8 @@
 ---
 title: "开发任务 Closeout 模板（5分钟）"
-status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-08-15
+last_updated: 2026-08-15
 last_updated: 2026-09-03
 type: ssot
 last_updated: 2026-09-03

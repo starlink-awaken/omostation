@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-10
+last_updated: 2026-07-10
 related:
   - ../decisions/0179-runtime-probe-false-positive-treatment.md
   - ../../projects/runtime/src/runtime/scheduler.py

@@ -2,7 +2,7 @@
 schema_version: architecture/v1
 status: proposed
 owner: governance-team
-last-reviewed: 2026-08-27
+last_updated: 2026-08-27
 bet_id: BET-Y1Q3-T10-21
 title: L4 / Documents / Agora 单实例收敛架构 v1
 type: doc

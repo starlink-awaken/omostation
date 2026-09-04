@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-29
+last_updated: 2026-06-29
 related:
   - 2026-06-29-l0-ssot-m0-mof-alignment.md
   - ../standards/doc-ssot-contract.md

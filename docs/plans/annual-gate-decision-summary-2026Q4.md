@@ -1,8 +1,7 @@
 ---
-status: draft
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 type: ephemeral
 ---
 # T1-04 年度门重基线 — 决策摘要

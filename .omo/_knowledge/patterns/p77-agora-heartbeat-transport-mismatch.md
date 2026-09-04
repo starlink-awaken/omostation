@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 related:
   - p76-launcher-zombie-false-positive.md
   - decl-exec-gap-meta-pattern.md

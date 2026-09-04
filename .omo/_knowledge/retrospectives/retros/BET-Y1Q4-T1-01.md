@@ -1,7 +1,6 @@
 ---
 title: BET-Y1Q4-T1-01 retro — Y1 表面积盘点与年度门
 type: retro
-status: active
 owner: governance-agent
 created: 2026-08-18
 bet: BET-Y1Q4-T1-01
@@ -9,7 +8,7 @@ related:
   - .omo/_knowledge/retros/gates/Y1-surface-audit.md
   - docs/adr/ADR-0200-y1q4-code-loc-gate-rebaseline.md
 lifecycle: history
-last-reviewed: 2026-08-19
+last_updated: 2026-08-19
 ---
 
 # BET-Y1Q4-T1-01 复盘（五问）

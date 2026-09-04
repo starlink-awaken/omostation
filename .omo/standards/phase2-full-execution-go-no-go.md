@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-22
+last_updated: 2026-06-22
 ---
 
 # Phase 2 Full Execution Go/No-Go Standard

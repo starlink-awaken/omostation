@@ -5,7 +5,7 @@ status: ACCEPTED
 date: 2026-08-04
 owner: governance-team
 lifecycle: spec
-last-reviewed: 2026-08-04
+last_updated: 2026-08-04
 workflow_run: 20260804T115206Z-project-doc-change-7e6535ab
 session: memory-os-p0
 related:

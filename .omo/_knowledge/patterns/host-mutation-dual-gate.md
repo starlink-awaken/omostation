@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 related:
   - ../decisions/0186-scheme-c-5c-os-acl-design.md
   - ../decisions/0189-scheme-c-5c-l2-acl-plan-apply.md

@@ -5,7 +5,7 @@ type: collab-trail
 batch: 2
 task_id: REMEDIATE-WF-CONV-P0-DISPATCHER
 task_path: .omo/tasks/remediation/REMEDIATE-WF-CONV-P0-DISPATCHER.yaml
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

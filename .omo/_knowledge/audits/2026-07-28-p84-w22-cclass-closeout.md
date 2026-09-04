@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-07-28
+last_updated: 2026-07-28
 ---
 # P84 W2.2 C/S 类检测器 closeout
 

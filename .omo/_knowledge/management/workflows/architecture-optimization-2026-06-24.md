@@ -1,9 +1,8 @@
 ---
 category: workflows
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-24
+last_updated: 2026-06-24
 migrated_to: architecture-optimization-2026-06-24.md
 deprecated-since: 2026-06-23
 

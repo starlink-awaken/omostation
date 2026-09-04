@@ -1,7 +1,6 @@
 ---
 title: mcp-strategy
 type: doc
-status: active
 ---
 
 # MCP Strategy

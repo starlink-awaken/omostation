@@ -1,8 +1,7 @@
 ---
-status: draft
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - ../../../.omo/_knowledge/decisions/STRAT-P76-strategic-roadmap.md
   - ../../../.omo/_knowledge/audits/2026-07-02-system-comprehensive-audit.md

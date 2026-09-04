@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-30
+last_updated: 2026-06-30
 ---
 
 # P52 真治本范式 — Guide for Future Phases

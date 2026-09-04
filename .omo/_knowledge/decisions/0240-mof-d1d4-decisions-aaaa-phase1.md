@@ -3,7 +3,7 @@ id: ADR-0240
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-28
+last_updated: 2026-07-28
 related:
   - 0238-mof-m4-phase0-registry-self-governance.md
   - docs/proposals/2026-07-25-mof-m4-governance-optimization-plan.md

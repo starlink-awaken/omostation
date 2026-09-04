@@ -1,7 +1,6 @@
 ---
 title: BET-Y1Q4-T6-01 retro — aetherforge 减法 + 归档 (L3 停审 PR-A)
 type: retro
-status: active
 owner: engineering-agent
 created: 2026-08-18
 bet: BET-Y1Q4-T6-01
@@ -9,7 +8,7 @@ related:
   - docs/plans/2026-08-18-y1q4-t6-01-dedup-ledger.md
   - .omo/_knowledge/retros/BET-Y1Q3-T6-01.md
 lifecycle: history
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # BET-Y1Q4-T6-01 复盘（五问）— PR-A 停审版

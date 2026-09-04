@@ -2,7 +2,7 @@
 status: deprecated
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 deprecated-since: 2026-06-23
 migrated-to: .omo/_knowledge/design/specs/memtheta-operators.md
 migration-date: 2026-06-23

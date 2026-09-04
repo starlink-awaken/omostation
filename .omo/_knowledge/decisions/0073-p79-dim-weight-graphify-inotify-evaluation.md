@@ -1,9 +1,8 @@
 ---
 id: ADR-0073
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0073: P79 dim-weight 真实调优 + graphify --report-only + inotify 评估

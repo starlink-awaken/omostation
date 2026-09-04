@@ -1,9 +1,8 @@
 ---
 id: ADR-0067
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0067: P73 governance-agent 8 步闭环 + P0 mock 集成 + cron --test 模式

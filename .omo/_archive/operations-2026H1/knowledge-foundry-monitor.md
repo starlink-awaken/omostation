@@ -1,8 +1,7 @@
 ---
-status: draft
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - ../../../.omo/_knowledge/decisions/0160-p76-phase6-foundry-runtime.md
   - ../../../.omo/_knowledge/decisions/0159-p76-phase5-foundry.md

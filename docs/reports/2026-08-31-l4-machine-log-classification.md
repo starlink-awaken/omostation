@@ -1,9 +1,8 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-08-30
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 title: T10-109 L4 machine-log classification delivery report
 type: doc
 ---

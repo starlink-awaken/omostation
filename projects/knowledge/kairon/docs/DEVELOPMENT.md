@@ -1,7 +1,6 @@
 ---
 title: DEVELOPMENT
 type: doc
-status: active
 ---
 
 # Development Guide

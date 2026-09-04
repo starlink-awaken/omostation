@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-05
+last_updated: 2026-08-05
 related:
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
   - ../../.omo/_truth/registry/memory-os.yaml

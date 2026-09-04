@@ -1,7 +1,6 @@
 ---
 title: knowledge_capture_run_record_spec
 type: doc
-status: active
 ---
 
 # Knowledge Capture Run Record Spec

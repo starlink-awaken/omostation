@@ -3,7 +3,7 @@ id: ADR-0293
 status: ACCEPTED
 lifecycle: spec
 owner: governance-agent
-last-reviewed: 2026-07-30
+last_updated: 2026-07-30
 related:
   - 0247-strategic-pivot-collab-first-physical-deferred.md
   - 0291-p86-abcd-final-closeout.md

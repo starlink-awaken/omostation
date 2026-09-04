@@ -3,7 +3,7 @@ id: ADR-0445
 status: accepted
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-09-01
+last_updated: 2026-09-01
 ---
 
 # ADR-0445: cockpit 薄委派命令体系与 --help 透传

@@ -4,7 +4,7 @@ title: Sweep-tooling Convergence — A4 / C5 / D3 / B2 / E2 plus GaC iteration
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last_updated: 2026-08-05
 ---
 
 # 0373 — Sweep-tooling Convergence Round

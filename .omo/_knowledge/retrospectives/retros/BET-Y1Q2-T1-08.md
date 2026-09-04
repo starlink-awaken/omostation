@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: BET-Y1Q2-T1-08 复盘：个人 Episode 与本地草稿黄金切片
 type: retro
 ---

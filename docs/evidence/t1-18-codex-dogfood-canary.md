@@ -2,7 +2,7 @@
 status: experimental
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-13
+last_updated: 2026-08-13
 type: ephemeral
 ---
 

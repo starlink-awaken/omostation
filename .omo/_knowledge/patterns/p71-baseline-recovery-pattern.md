@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-02
+last_updated: 2026-07-02
 related:
   - 0114-l4-gac-exemption.md
   - 0115-bin-governance-rationalize.md

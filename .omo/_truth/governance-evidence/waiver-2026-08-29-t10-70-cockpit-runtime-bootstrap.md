@@ -1,11 +1,10 @@
 ---
 schema_version: governance-waiver/v1
-status: active
 lifecycle: history
 type: requirement-iteration-waiver
 owner: governance-team
 created: 2026-08-29
-last-reviewed: 2026-08-29
+last_updated: 2026-08-29
 bet_id: BET-Y1Q3-T10-70
 ---
 

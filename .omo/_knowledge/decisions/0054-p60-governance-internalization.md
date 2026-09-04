@@ -1,9 +1,8 @@
 ---
 id: ADR-0054
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0054: P60 治理方法论内化 — L/X/M/L4/cockpit/Skill 6 层落地

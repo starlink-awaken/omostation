@@ -6,7 +6,7 @@ type: decision
 owner: architecture-governance
 lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
+last_updated: 2026-08-02
 related:
   - ../../../docs/KEMS-PRODUCTION-PLAN.md
   - ../../../docs/KEMS-PILOT-ROADMAP.md

@@ -10,7 +10,7 @@ related_runs:
   - 20260724T123554Z-governance-state-mutation-a80749a7
   - 20260724T234622Z-submodule-pointer-close-07c79661
   - 20260725T004310Z-governance-state-mutation-af63978e
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

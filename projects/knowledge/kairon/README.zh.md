@@ -1,7 +1,6 @@
 ---
 title: README.zh
 type: doc
-status: active
 ---
 
 # Kairon

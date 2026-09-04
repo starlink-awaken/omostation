@@ -6,7 +6,7 @@ status: ACCEPTED
 date: 2026-08-04
 owner: governance-team
 lifecycle: spec
-last-reviewed: 2026-08-04
+last_updated: 2026-08-04
 ---
 
 # ADR-0362: KEMS runtime health and verified SQLite recovery

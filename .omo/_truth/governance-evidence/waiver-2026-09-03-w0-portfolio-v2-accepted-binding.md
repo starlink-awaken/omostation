@@ -1,10 +1,9 @@
 ---
 schema_version: governance-waiver-evidence/v1
-status: active
 owner: human-principal
 lifecycle: history
 created: 2026-09-03
-last-reviewed: 2026-09-03
+last_updated: 2026-09-03
 value_indicator_policy: false
 title: W0 Portfolio/BET v2 accepted binding bootstrap waiver
 type: doc

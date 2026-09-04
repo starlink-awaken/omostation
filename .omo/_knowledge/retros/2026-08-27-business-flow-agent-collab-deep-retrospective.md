@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: engineering-agent
-last-reviewed: 2026-08-27
+last_updated: 2026-08-27
 title: 深度复盘：业务流程全链路 × Agent 协作机制 (2026-08-27)
 type: retro
 ---

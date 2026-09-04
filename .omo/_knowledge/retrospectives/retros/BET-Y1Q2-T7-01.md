@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 title: BET-Y1Q2-T7-01 Retro — 工程交付 dogfood 开 shadow
 type: retro
 ---

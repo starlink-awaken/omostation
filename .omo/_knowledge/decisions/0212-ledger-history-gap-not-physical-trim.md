@@ -3,7 +3,7 @@ id: ADR-0212
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 omo_task_ref: null
 agent_workflow_run: 20260715T083144Z-governance-audit-7f6b088e
 supersedes: []

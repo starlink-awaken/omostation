@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: engineering-team
-last-reviewed: 2026-08-04
+last_updated: 2026-08-04
 related:
   - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
   - ./memory-os-phase1-retro.md

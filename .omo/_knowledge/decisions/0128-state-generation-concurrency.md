@@ -3,7 +3,7 @@ id: ADR-0128
 status: proposed
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-03
+last_updated: 2026-07-03
 related:
   - ../patterns/p73-truth-driven-engineering-pattern.md
   - ../../.omo/standards/omo-governance-surfaces.md

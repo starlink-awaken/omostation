@@ -3,7 +3,7 @@ id: ADR-0449
 status: ACCEPTED
 lifecycle: spec
 owner: governance-agent
-last-reviewed: 2026-08-02
+last_updated: 2026-08-02
 ---
 
 # ADR-0296: C2G Predictive Outcomes to Knowledge Graph Pipeline (Wave 2 Phase C)

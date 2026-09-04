@@ -2,7 +2,7 @@
 status: stale
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-17
+last_updated: 2026-08-17
 review-state: content-reviewed-20260817
 metadata-migrated-at: 2026-07-31
 stale-reason: >

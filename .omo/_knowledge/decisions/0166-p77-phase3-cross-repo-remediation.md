@@ -3,7 +3,7 @@ id: ADR-0166
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - 0164-p77-phase1-cross-repo-consistency.md
   - 0165-p77-phase2-evolution-guardrails.md

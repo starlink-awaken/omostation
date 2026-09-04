@@ -5,7 +5,7 @@ status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-08-28
-last-reviewed: 2026-08-28
+last_updated: 2026-08-28
 bet_id: BET-Y1Q3-T10-43
 risk_level: L1
 type: ssot

@@ -3,7 +3,7 @@ id: ADR-0242
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-26
+last_updated: 2026-07-26
 related:
   - 0238-mof-m4-phase0-registry-self-governance.md
   - .omo/plans/metaos-governance-batch-workorder.md

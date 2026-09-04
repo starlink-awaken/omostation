@@ -1,10 +1,9 @@
 ---
 title: 织星中段蓝图迭代 — 日历重同步、四面一脊与 Y1 收口
-status: active
 lifecycle: plan
 owner: 夏明星
 created: 2026-08-25
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 type: phase-blueprint
 horizon: 2026-08 → 2027-07 (Y1 日历剩余) · 2027H2 仅在 Y1 总门通过后解冻
 supersedes:

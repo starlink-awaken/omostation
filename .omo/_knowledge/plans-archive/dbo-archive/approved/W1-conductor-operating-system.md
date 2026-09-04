@@ -1,7 +1,6 @@
 ---
 id: W0-01
 title: Conductor Operating System
-status: active
 owner_role: Conductor
 created_at: 2026-05-14
 updated_at: 2026-05-14
@@ -9,7 +8,7 @@ phase: Phase 0
 wave: W1
 lifecycle: history
 owner: kems-team
-last-reviewed: 2026-07-31
+last_updated: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---

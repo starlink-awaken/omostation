@@ -4,7 +4,7 @@ title: scripts/ 子模块镜像债治理 — 已退役并迁移到 root bin/
 status: superseded
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-22
+last_updated: 2026-08-22
 superseded_by: 迁移已完成 (PR #1839 + scripts PR #27/#28)
 ---
 

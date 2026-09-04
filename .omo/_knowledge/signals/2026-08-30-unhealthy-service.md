@@ -1,9 +1,8 @@
 ---
 id: signal://evolution/2026-08-30-unhealthy-service
-status: draft
 lifecycle: signal
 owner: evolution-agent
-last-reviewed: 2026-08-31
+last_updated: 2026-08-31
 source: evolution-proposal
 ---
 

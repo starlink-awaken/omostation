@@ -1,7 +1,6 @@
 ---
 title: GOVERNANCE
 type: doc
-status: active
 ---
 
 # Governance

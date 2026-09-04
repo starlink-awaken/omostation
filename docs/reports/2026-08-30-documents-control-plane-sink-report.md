@@ -1,11 +1,10 @@
 ---
 schema_version: report/v1
-status: active
 lifecycle: history
 type: implementation-evidence
 owner: governance-team
 created: 2026-08-30
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 ---
 
 # Documents 控制面残留下沉 — implementation evidence（④②① 三事务）

@@ -1,9 +1,8 @@
 ---
 id: ADR-0202
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 related:
   - 0179-runtime-probe-false-positive-treatment.md
   - 0195-architecture-convergence-isc2.md

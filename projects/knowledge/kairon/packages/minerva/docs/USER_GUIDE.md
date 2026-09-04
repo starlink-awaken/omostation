@@ -1,7 +1,6 @@
 ---
 title: USER_GUIDE
 type: doc
-status: active
 ---
 
 # Minerva — 用户使用指南

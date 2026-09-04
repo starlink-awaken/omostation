@@ -3,7 +3,7 @@ id: ADR-0141
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
+last_updated: 2026-07-06
 related:
   - 0132-l0-mof-m4-metamodel.md
   - 0136-m3-yaml-extension-p5.md

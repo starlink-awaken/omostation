@@ -1,9 +1,8 @@
 ---
 id: ADR-0126
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-03
+last_updated: 2026-07-03
 related:
   - ../decisions/0122-system-audit-followup-plan.md
   - 0125-s2-followup-retrospective.md

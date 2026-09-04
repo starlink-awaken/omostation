@@ -3,7 +3,7 @@ title: "governance-runtime-convergence 交付闭环说明"
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-15
+last_updated: 2026-08-15
 last_updated: 2026-09-03
 type: ssot
 last_updated: 2026-09-03

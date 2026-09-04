@@ -6,7 +6,7 @@ bet_id: BET-Y1Q4-T8-01
 status: closed
 owner: agora-team
 created: 2026-09-04
-last-reviewed: 2026-09-04
+last_updated: 2026-09-04
 ---
 
 # BET-Y1Q4-T8-01 Closeout Retro

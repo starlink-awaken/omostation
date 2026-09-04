@@ -1,14 +1,13 @@
 ---
 title: BET-Y1Q3-T3-03 复盘 — mem0/memtheta 退役 (核实性收口)
 type: retro
-status: active
 owner: governance-team
 created: 2026-08-16
 context: >-
   human_gate: false。三 done_when 两条已被早前轮次解决 (partial_simulation 移除 +
   mem0 shadow 默认 OFF), 本轮完成退役标记与审计文档更新。
 lifecycle: history
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # BET-Y1Q3-T3-03 复盘 (核实性收口)

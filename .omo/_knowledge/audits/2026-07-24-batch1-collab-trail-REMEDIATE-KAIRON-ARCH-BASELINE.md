@@ -5,7 +5,7 @@ type: collab-trail
 backlog: true
 task_id: REMEDIATE-KAIRON-ARCH-BASELINE
 task_path: .omo/tasks/remediation/REMEDIATE-KAIRON-ARCH-BASELINE.yaml
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

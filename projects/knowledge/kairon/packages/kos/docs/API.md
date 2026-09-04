@@ -1,7 +1,6 @@
 ---
 title: API
 type: doc
-status: active
 ---
 
 # KOS API 参考

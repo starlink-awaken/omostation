@@ -1,8 +1,7 @@
 ---
 type: ssot
 version: "1.0"
-status: active
-owner: <team-or-role>
+owner: governance-team
 last_updated: <YYYY-MM-DD>
 ---
 

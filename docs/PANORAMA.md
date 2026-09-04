@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-17
+last_updated: 2026-08-17
 review-state: content-reviewed-20260817
 review-note: >
   2026-08-17 内容级重读 (T6-07 r3): 全文 341 行通读。分层表/项目链接已随 T6-01

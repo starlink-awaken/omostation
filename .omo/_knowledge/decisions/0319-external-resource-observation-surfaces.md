@@ -6,7 +6,7 @@ date: 2026-08-03
 owner: architecture-governance
 scope: Workflow Mesh / Cockpit / External Connection Fabric
 lifecycle: spec
-last-reviewed: 2026-08-03
+last_updated: 2026-08-03
 ---
 
 # ADR-0319: External Connection Fabric 观察与候选评审产品边界

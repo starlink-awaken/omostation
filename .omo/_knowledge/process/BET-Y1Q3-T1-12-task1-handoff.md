@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 type: task-handoff
 related-retro: .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
 ---

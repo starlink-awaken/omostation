@@ -1,10 +1,9 @@
 ---
 title: BET-Y1Q3-T1-08 Retro — 退役 coordination-daemon 独立 clone 部署
 type: retro
-status: active
 lifecycle: history
 owner: laowang-agent
-last-reviewed: 2026-08-20
+last_updated: 2026-08-20
 created: 2026-08-20
 related: []
 ---

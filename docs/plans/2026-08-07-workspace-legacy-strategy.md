@@ -5,7 +5,7 @@ owner: 夏明星
 created: 2026-08-07
 archived: 2026-08-15
 superseded-by: docs/STRATEGY-CONVERGENCE-MASTER-2026-08.md
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 type: ephemeral
 ---
 # 工作区遗留项目架构战略规划 + 战术落地 Roadmap (2026-08-07)

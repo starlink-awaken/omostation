@@ -1,14 +1,13 @@
 ---
 title: BET-Y1Q3-T2-01 复盘 — 感知面第二根管子 (邮箱大师)
 type: retro
-status: active
 owner: governance-team
 created: 2026-08-16
 context: >-
   08-12 曾 reopen (登记≠运行)。本轮实测定位真因并修复: 容器真名 com.netease.macmail,
   注册表写 mailmaster — 路径永远不匹配。
 lifecycle: history
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # BET-Y1Q3-T2-01 复盘

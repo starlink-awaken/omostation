@@ -1,5 +1,5 @@
 ---
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 ---
 
 # 信息分诊心智模型 (Information Triage Mental Model)

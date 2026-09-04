@@ -1,7 +1,6 @@
 ---
 title: KEMS-ADJUDICATION-OPERATOR
 type: doc
-status: active
 ---
 
 # KEMS Adjudication Operator Runbook

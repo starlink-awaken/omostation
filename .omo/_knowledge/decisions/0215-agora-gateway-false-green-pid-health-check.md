@@ -3,7 +3,7 @@ id: ADR-0215
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 related:
   - 0202-fake-green-prevention.md
   - 0179-runtime-probe-false-positive-treatment.md

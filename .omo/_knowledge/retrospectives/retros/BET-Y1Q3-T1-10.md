@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 title: BET-Y1Q3-T1-10 Retro
 type: retro
 ---

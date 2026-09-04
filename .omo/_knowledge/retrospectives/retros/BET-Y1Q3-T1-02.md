@@ -1,10 +1,9 @@
 ---
 title: BET-Y1Q3-T1-02 复盘
-status: active
 owner: governance-team
 created: 2026-08-15
 lifecycle: history
-last-reviewed: 2026-08-15
+last_updated: 2026-08-15
 type: retro
 ---
 

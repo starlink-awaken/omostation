@@ -1,9 +1,8 @@
 ---
 id: ADR-0119
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-01
+last_updated: 2026-07-01
 ---
 
 # ADR-0119: Workspace 系统性优化 Roadmap (2026 H2)

@@ -1,7 +1,6 @@
 ---
 title: MIGRATION
 type: doc
-status: active
 ---
 
 # Migration Guide

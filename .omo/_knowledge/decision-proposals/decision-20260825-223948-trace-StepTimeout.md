@@ -1,6 +1,5 @@
 ---
 schema: resident-decision/v1
-status: draft
 trigger_event_type: StepTimeout
 trace_id: trace-StepTimeout
 workflow_run_id: 

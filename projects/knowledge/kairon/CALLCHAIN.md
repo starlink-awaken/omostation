@@ -1,7 +1,6 @@
 ---
 title: CALLCHAIN
 type: doc
-status: active
 ---
 
 # kairon — Call Chain

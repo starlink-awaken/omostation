@@ -6,10 +6,9 @@ evidence_key: tests
 test_files: 
 ci_status: all_green
 verified_at: 2026-08-22
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 ---
 
 last-reviewed: 2026-08-26

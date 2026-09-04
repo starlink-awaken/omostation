@@ -5,7 +5,7 @@ status: accepted
 lifecycle: contract
 owner: human-principal
 created: 2026-08-31
-last-reviewed: 2026-08-31
+last_updated: 2026-08-31
 bet_id: BET-Y1Q3-T1-13
 risk_level: L2
 human_gate: false

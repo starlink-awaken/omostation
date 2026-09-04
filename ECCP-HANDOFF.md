@@ -1,6 +1,5 @@
 ---
 type: ephemeral
-status: completed
 created: 2026-09-03
 ---
 

@@ -1,10 +1,9 @@
 ---
 title: BET-Y1Q2-T9-01 复盘（追溯补记）
-status: active
 owner: governance-team
 created: 2026-08-15
 lifecycle: history
-last-reviewed: 2026-08-15
+last_updated: 2026-08-15
 type: retro
 ---
 

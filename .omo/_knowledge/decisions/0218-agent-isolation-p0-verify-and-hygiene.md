@@ -3,7 +3,7 @@ id: ADR-0218
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 related:
   - 0210-three-year-strategy-execution-convergence.md
   - 0202-fake-green-prevention.md

@@ -3,7 +3,7 @@ id: ADR-0156
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - 0155-p76-phase1-cleanup.md
   - STRAT-P76-strategic-roadmap.md

@@ -3,7 +3,7 @@ id: ADR-0253
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-28
+last_updated: 2026-07-28
 related:
   - .omo/_knowledge/audits/2026-07-28-p84-k4-batch2-control-experiment.md
   - .omo/plans/strat-p84-scenario-driven-longplan.md

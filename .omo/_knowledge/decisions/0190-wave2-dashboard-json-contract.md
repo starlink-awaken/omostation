@@ -3,7 +3,7 @@ id: ADR-0190
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 ---
 
 # ADR-0190 — Wave2 dashboard JSON v1 + cockpit entry

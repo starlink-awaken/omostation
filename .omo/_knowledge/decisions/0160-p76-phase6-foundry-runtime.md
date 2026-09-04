@@ -3,7 +3,7 @@ id: ADR-0160
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - 0159-p76-phase5-foundry.md
   - 0158-p76-phase4-promotion.md

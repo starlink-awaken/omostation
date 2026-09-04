@@ -1,7 +1,6 @@
 ---
 title: scenario-coverage-audit
 type: doc
-status: active
 ---
 
 # kairon 场景覆盖审计

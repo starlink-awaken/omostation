@@ -1,9 +1,8 @@
 ---
 id: ADR-0102
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0102: P108 omo_governance_surfaces 8 子模块化 (556→443L, 黄金值 400-500L 首次达成)

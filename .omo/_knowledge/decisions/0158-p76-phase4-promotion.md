@@ -3,7 +3,7 @@ id: ADR-0158
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - 0157-p76-phase3-self-meta.md
   - 0156-p76-phase2-call-direction.md

@@ -1,7 +1,6 @@
 ---
 title: knowledge_capture_binding_walkthrough
 type: doc
-status: active
 ---
 
 # Kairon Knowledge Capture Binding Walkthrough

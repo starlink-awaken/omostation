@@ -2,7 +2,7 @@
 status: PROPOSED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-24
+last_updated: 2026-07-24
 related:
   - 0210-three-year-strategy-execution-convergence.md
   - 0225-g-del-physical-multihost-gate-caliber.md

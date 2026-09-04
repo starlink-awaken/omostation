@@ -3,7 +3,7 @@ id: ADR-0129
 status: proposed
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-03
+last_updated: 2026-07-03
 related:
   - 0128-state-generation-concurrency.md
   - ../../.omo/standards/omo-governance-surfaces.md

@@ -1,10 +1,9 @@
 ---
 schema: workflow-waiver/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-08-31
-last-reviewed: 2026-08-31
+last_updated: 2026-08-31
 title: BET-Y1Q3-T1-12 MCP-load current-main scope convergence waiver
 type: doc
 value_indicator_policy: false

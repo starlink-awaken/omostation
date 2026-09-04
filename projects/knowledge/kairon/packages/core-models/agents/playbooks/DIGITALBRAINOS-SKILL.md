@@ -1,7 +1,6 @@
 ---
 title: DIGITALBRAINOS-SKILL
 type: doc
-status: active
 ---
 
 # DigitalBrainOS Skill

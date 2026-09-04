@@ -1,14 +1,13 @@
 ---
 title: BET-Y1Q3-T1-07 retro — clone 迁移量产完成
 type: retro
-status: active
 owner: governance-agent
 created: 2026-08-19
 bet: BET-Y1Q3-T1-07
 related:
   - docs/plans/3y-bet-ledger.yaml#BET-Y1Q3-T1-07
 lifecycle: history
-last-reviewed: 2026-08-19
+last_updated: 2026-08-19
 ---
 
 # BET-Y1Q3-T1-07 复盘（五问）

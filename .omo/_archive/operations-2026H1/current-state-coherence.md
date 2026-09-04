@@ -1,9 +1,8 @@
 ---
 title: Current State Coherence 操作合同
-status: active
 type: operations-standard
 owner: governance-team
-last-reviewed: 2026-08-02
+last_updated: 2026-08-02
 related:
   - ../../bin/ssot/current-state-coherence.py
   - ../../.omo/_truth/registry/agent-workflows/_root.yaml

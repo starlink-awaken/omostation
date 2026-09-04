@@ -18,7 +18,7 @@ scope:
   - gbrain src
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: "BET-Y1Q3-T6-04 Retro: gbrain god-module SRP 拆分"
 ---
 

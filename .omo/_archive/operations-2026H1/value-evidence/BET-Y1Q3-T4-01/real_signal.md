@@ -7,10 +7,9 @@ episode_id: episode_088af4df0c0ed55f204e2bae
 observed_at: 2026-08-21T12:48:23Z
 content_sha256: sha256:c2c072f23357e3a1c638c93ad8e05ac14a3dd46b7a40980eaf71ac46ec0f453e
 title: 跨仓耦合机制半删的观察
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 ---
 
 last-reviewed: 2026-08-26

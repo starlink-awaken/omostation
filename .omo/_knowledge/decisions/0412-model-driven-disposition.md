@@ -5,7 +5,7 @@ status: archived
 lifecycle: spec
 owner: governance-team
 created: 2026-08-16
-last-reviewed: 2026-08-16
+last_updated: 2026-08-16
 related:
   - ./0399-blueprint-consolidation.md
   - ../../../docs/plans/3y-bet-ledger.yaml#BET-Y1Q2-T1-02

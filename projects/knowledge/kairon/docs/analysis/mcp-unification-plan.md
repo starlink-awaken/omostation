@@ -1,7 +1,6 @@
 ---
 title: mcp-unification-plan
 type: doc
-status: active
 ---
 
 # MCP 统一规划 — 2026-07-13

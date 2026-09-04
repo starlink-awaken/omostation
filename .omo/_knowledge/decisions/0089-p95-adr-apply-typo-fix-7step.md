@@ -1,9 +1,8 @@
 ---
 id: ADR-0089
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0089: P95 adr-drift-apply --apply + adr-typo-fix + 7-step roadmap

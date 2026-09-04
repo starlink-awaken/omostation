@@ -1,7 +1,6 @@
 ---
 title: _toolforge_guide
 type: doc
-status: active
 ---
 
 # ToolForge → OntoDerive 推导指导

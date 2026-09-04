@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 title: OMOStation 90% 成熟度与机器自治自愈总纲 (Phase 4)
 type: doc
 ---

@@ -2,7 +2,7 @@
 schema_version: standard/v1
 standard: incident-to-rule-pipeline
 created: 2026-08-30
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 owner: governance-team
 adr: ADR-0443
 ---

@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: stable
 owner: governance-team
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 title: omostation 项目级战略架构 v1 (2026-08-24)
 type: doc
 ---

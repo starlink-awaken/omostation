@@ -12,7 +12,7 @@ scope:
   - docs/plans
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: "BET-Y1Q3-T6-06 Retro: 文档治理减负 — 维护模式"
 ---
 

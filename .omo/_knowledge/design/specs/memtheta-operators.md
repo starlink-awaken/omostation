@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: agentmesh-architecture-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 migrated-from: .omo/_knowledge/designs/2026-06-13-memtheta-operators.md
 migration-date: 2026-06-23
 migration-reason: "P54 R2: 解决 designs/ 孤儿单文件命名冲突, 真迁移到 design/specs/ 统一设计契约区"

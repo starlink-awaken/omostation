@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-29
+last_updated: 2026-06-29
 ---
 
 # 自动生成产物治理标准

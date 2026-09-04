@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: 子模块指针自动化 PR 运维与标准化指南
 type: doc
 ---

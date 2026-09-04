@@ -1,10 +1,9 @@
 ---
 title: BET-Y1Q3-T4-03 回顾 — Honest Scene Card Gate
 type: retro
-status: active
 lifecycle: history
 owner: laowang-agent
-last-reviewed: 2026-08-28
+last_updated: 2026-08-28
 created: 2026-08-28
 related: []
 ---

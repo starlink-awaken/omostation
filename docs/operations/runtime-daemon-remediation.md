@@ -1,6 +1,5 @@
 ---
 title: 收敛期 P0 · L1 runtime daemon 整改盘点
-status: active
 type: remediation-spec
 owner: 夏明星
 created: 2026-07-15
@@ -13,7 +12,7 @@ note: >
   daemon 在线率 0.6 的根因盘点。运行时数字为 2026-07-15 沙箱实测快照，
   权威源 .omo/state/system_health.yaml。整改代码/PR 在授权 dev 环境执行。
 lifecycle: contract
-last-reviewed: 2026-07-31
+last_updated: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---

@@ -3,7 +3,7 @@ id: ADR-0181
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-14
+last_updated: 2026-07-14
 ---
 
 # ADR-0181: metaos × ecos 方案 C — 三平面契约化

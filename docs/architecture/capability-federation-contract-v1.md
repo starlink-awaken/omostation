@@ -1,9 +1,8 @@
 ---
 title: Capability Federation Contract v1
-status: active
 lifecycle: contract
 owner: architecture-governance
-last-reviewed: 2026-08-23
+last_updated: 2026-08-23
 type: doc
 ---
 

@@ -1,9 +1,8 @@
 ---
 id: ADR-0080
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0080: P86 pre-commit 集成 4 治理工具 + governance dashboard

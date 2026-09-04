@@ -3,7 +3,7 @@ type: ephemeral
 status: archived
 lifecycle: history
 created: 2026-09-03
-last-reviewed: 2026-09-03
+last_updated: 2026-09-03
 owner: doc-gov-team
 ---
 

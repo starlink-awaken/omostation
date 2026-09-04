@@ -1,7 +1,6 @@
 ---
 title: BET-Y1Q3-T6-03 复盘 — mof-deepen 测试面补齐
 type: retro
-status: active
 owner: engineering-agent
 created: 2026-08-16
 related:
@@ -11,7 +10,7 @@ context: >-
   参考 test_signal_poller.py 的 importlib.util.spec_from_file_location 模式
   处理带连字符的模块文件名。
 lifecycle: history
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # BET-Y1Q3-T6-03 复盘

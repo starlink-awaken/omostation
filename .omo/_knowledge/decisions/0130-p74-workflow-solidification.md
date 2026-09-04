@@ -1,9 +1,8 @@
 ---
 id: ADR-0130
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-03
+last_updated: 2026-07-03
 related:
   - 0128-state-generation-concurrency.md
   - 0129-state-projection-plane-phase3.md

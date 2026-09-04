@@ -3,7 +3,7 @@ id: ADR-0226
 status: ACCEPTED
 lifecycle: spec
 owner: 架构师
-last-reviewed: 2026-07-19
+last_updated: 2026-07-19
 related:
   - 0414-physical-multihost-tension-resolution.md
   - 0210-three-year-strategy-execution-convergence.md

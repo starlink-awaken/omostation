@@ -8,10 +8,9 @@ estimated_time_saved_seconds: 120
 outcome_feedback_schema: outcome-feedback/v1
 credential: ssh-ed25519 SHA256:OEfesj1+Ll2UT1xCKWvbdo4xNNZvqQUnNsFtYLQfRKw
 attested_at: 2026-08-21T12:50:00Z
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 ---
 
 last-reviewed: 2026-08-26

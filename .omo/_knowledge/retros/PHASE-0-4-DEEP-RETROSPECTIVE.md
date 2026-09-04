@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: Phase 0-4 深度复盘 — 数字生命体全面实施
 type: retro
 ---

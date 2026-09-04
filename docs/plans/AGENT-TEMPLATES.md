@@ -1,6 +1,5 @@
 ---
 title: Agent 指令模板 — 按轨道分工推进三年规划
-status: draft
 type: agent-prompt-templates
 owner: 夏明星
 created: 2026-08-06
@@ -14,7 +13,7 @@ related:
 note: >
   每个模板 = 【通用序言】+【轨道段】，直接复制粘贴给对应 agent。
   bet 清单是运行时事实，模板里只给筛选命令，不硬编码（守 doc-ssot-contract）。
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # Agent 指令模板

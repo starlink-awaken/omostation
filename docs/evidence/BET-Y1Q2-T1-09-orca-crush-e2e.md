@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 type: ephemeral
 ---
 # BET-Y1Q2-T1-09 Orca + Crush 脱敏 E2E 回执

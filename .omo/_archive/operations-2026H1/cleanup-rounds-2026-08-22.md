@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 title: Cleanup Rounds 2026-08-22 — Retrospective & How to Recover f
 type: doc
 ---

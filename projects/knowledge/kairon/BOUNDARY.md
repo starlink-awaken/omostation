@@ -1,7 +1,6 @@
 ---
 title: BOUNDARY
 type: doc
-status: active
 ---
 
 # kairon — System Boundary

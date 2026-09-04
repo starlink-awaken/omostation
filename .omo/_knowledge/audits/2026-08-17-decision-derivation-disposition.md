@@ -1,13 +1,12 @@
 ---
 title: 决策推演文档落地处置报告 (DECISION-SCENARIO-DERIVATION)
 type: audit
-status: active
 owner: governance-agent
 created: 2026-08-17
 related:
   - /Users/xiamingxing/Downloads/DECISION-SCENARIO-DERIVATION-CONFIRMATION-2026-08.md
   - docs/ARCHITECTURE-STRATEGY-OUTLOOK-2026-08.md
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 ---
 

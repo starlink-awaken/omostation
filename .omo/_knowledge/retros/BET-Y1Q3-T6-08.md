@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 title: "Retro — BET-Y1Q3-T6-08: GaC 本地门禁剩余债务清理"
 type: retro
 ---

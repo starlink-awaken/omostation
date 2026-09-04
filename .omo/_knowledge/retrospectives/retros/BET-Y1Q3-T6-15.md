@@ -1,10 +1,9 @@
 ---
 schema: bet-retro/v1
 bet_id: BET-Y1Q3-T6-15
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-28
+last_updated: 2026-08-28
 ---
 
 # BET-Y1Q3-T6-15 retro — R1 through R2a

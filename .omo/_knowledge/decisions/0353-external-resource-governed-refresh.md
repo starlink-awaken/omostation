@@ -5,7 +5,7 @@ status: archived
 type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last_updated: 2026-08-03
 type: decision
 scope: external connection fabric and cockpit operations
 date: 2026-08-03

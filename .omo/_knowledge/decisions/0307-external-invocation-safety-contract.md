@@ -6,7 +6,7 @@ type: decision
 owner: architecture-governance
 lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
+last_updated: 2026-08-02
 related:
   - ../../../.omo/standards/external-connection-fabric.md
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md

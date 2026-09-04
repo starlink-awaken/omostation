@@ -1,7 +1,6 @@
 ---
 title: G-1 Swarm Readiness Gate 证据包
 type: audit
-status: active
 owner: governance-team
 created: 2026-08-15
 lifecycle: history
@@ -11,7 +10,7 @@ related:
 context: >-
   蓝图 §18 红线: SR-01~06 全过之前禁止开业务蜂群。本包为 SR-01~05 机器证据;
   SR-06 双轮演练 (reject→rollback / accept) 另行执行后回填。
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 ---
 
 # G-1 Swarm Readiness Gate 证据包 — 2026-08-15

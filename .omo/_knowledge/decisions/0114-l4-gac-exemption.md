@@ -1,9 +1,8 @@
 ---
 id: ADR-0114
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-29
+last_updated: 2026-06-29
 next-review-date: '2026-10-29'  # ISC-26: 配合 Revisit triggers, 3 个月后评估 L4 是否需补规则
 ---
 

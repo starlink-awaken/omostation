@@ -1,5 +1,5 @@
 ---
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 ---
 
 # BOS stdio 迁移 Phase 2 实施方案

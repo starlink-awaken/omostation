@@ -1,7 +1,6 @@
 ---
 title: ADR-0003-ontology-inference
 type: doc
-status: active
 ---
 
 # ADR-0003: 本体推理策略

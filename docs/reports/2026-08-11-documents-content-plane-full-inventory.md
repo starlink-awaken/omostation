@@ -1,10 +1,9 @@
 ---
 title: Documents 内容主权面全面迁移审计与资产清单
 type: audit-report
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-11
+last_updated: 2026-08-11
 snapshot-kind: derived-report
 baseline-root-commit: 35bd0757dbbb332e88b07ea51f3f19147dc0c831
 captured-at: 2026-08-11T14:34:10+08:00

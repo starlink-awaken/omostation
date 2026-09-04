@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 # Sweep 扫描历史归档 (A5, ADR-0367 + ADR-0373)
 

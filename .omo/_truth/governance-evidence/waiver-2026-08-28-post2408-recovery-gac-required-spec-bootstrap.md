@@ -1,16 +1,15 @@
 ---
 schema_version: governance-waiver-evidence/v1
-status: active
 owner: human-principal
 lifecycle: contract
-last-reviewed: 2026-08-28
+last_updated: 2026-08-28
 created: 2026-08-28
 expires_when: bootstrap PR merges or closes
 value_indicator_policy: false
 title: Post-2408 Recovery and Required GaC Gate Spec Bootstrap Waiv
 type: doc
 lifecycle: history
-last-reviewed: 2026-08-28
+last_updated: 2026-08-28
 ---
 
 # Post-2408 Recovery and Required GaC Gate Spec Bootstrap Waiver

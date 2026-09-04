@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-29
+last_updated: 2026-06-29
 note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 active"
 ---
 

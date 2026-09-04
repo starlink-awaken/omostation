@@ -3,7 +3,7 @@ id: ADR-0431
 status: candidate
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-28
+last_updated: 2026-08-28
 ---
 
 # ADR-0431: 防腐五层框架 — 人的权威分层 × 三机制 + MAPE-K 对齐

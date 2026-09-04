@@ -1,8 +1,7 @@
 ---
-status: draft
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-02
+last_updated: 2026-07-02
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---

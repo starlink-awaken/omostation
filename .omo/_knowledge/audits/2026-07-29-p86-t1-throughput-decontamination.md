@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: "2026-07-29"
+last_updated: "2026-07-29"
 violation: P84-§0-highest-redline
 ---
 # P86 T1: 产能轨去污 + 红线违规定性 (最高优先)

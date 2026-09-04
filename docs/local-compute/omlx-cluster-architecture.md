@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: architecture-team
-last-reviewed: 2026-08-12
+last_updated: 2026-08-12
 last_updated: 2026-09-03
 review-state: verified-v3
 type: ssot

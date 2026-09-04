@@ -3,7 +3,7 @@ type: ssot
 name: cognitive-governance
 description: V2.0 Cognitive OS & Sovereign Governance Skill. Enables agents to deconstruct vague human intents into structured execution DAGs, bind regulatory policies, warm KV cache snapshots (0ms TTFT), mount vertical domain cartridges, and run adversarial shadow challenge with auto-patching before final delivery.
 
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 owner: governance-team
 ---
 

@@ -3,7 +3,7 @@ id: ADR-0258
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-28
+last_updated: 2026-07-28
 related:
   - 0256-p84-w3-throughput-wave.md
   - 0257-p84-w3-wave2-mof-d4-l0-debt.md

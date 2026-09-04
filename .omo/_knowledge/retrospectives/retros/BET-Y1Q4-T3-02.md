@@ -1,10 +1,9 @@
 ---
 schema_version: retro/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-09-01
-last-reviewed: 2026-09-01
+last_updated: 2026-09-01
 bet: BET-Y1Q4-T3-02
 title: 本地 MPS 嵌入引擎
 symptom: 冷启动 757ms 惊乍；SOCKS 代理炸模型加载

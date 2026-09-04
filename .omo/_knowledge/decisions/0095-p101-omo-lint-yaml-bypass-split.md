@@ -1,9 +1,8 @@
 ---
 id: ADR-0095
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0095: P101 omo_lint yaml-bypass 子模块拆分 (800→731L, 校正 P102-P103 顺序)

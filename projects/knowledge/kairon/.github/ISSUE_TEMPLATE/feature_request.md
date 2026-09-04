@@ -1,7 +1,6 @@
 ---
 title: feature_request
 type: doc
-status: active
 ---
 
 ---

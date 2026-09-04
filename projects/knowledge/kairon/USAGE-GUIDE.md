@@ -1,7 +1,6 @@
 ---
 title: USAGE-GUIDE
 type: doc
-status: active
 ---
 
 # kairon 使用指南

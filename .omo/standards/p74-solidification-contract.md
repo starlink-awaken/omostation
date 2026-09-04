@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-03
+last_updated: 2026-07-03
 related:
   - ../_knowledge/decisions/0130-p74-workflow-solidification.md
   - ../_knowledge/patterns/p74-workflow-solidification-pattern.md

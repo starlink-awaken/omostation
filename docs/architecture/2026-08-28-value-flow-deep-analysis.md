@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: spec
 owner: engineering-agent
-last-reviewed: 2026-08-28
+last_updated: 2026-08-28
 title: 全生态价值流深度分析 — 断链诊断与串联方案 (2026-08-28)
 type: doc
 ---

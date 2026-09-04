@@ -3,7 +3,7 @@ id: ADR-0433
 status: accepted
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-29
+last_updated: 2026-08-29
 ---
 
 # ADR-0433: omlxc DFlash 2 块扩散投机解码、异构三节点智能调度与三级分层缓存体系

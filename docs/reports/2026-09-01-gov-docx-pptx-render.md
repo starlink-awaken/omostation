@@ -1,11 +1,10 @@
 ---
 schema_version: report/v1
-status: active
 lifecycle: history
 type: delivery-report
 owner: governance-team
 created: 2026-09-01
-last-reviewed: 2026-09-01
+last_updated: 2026-09-01
 bet: BET-Y1Q4-T8-03
 ---
 

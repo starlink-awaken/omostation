@@ -1,10 +1,9 @@
 ---
 schema_version: governance-waiver-evidence/v1
-status: active
 owner: human-principal
 lifecycle: history
 created: 2026-09-01
-last-reviewed: 2026-09-01
+last_updated: 2026-09-01
 value_indicator_policy: false
 title: Architecture perception managed command contract bootstrap waiver
 type: doc

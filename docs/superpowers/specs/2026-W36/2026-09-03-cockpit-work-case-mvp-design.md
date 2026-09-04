@@ -5,7 +5,7 @@ status: accepted
 lifecycle: contract
 owner: human-principal
 created: 2026-09-03
-last-reviewed: 2026-09-03
+last_updated: 2026-09-03
 bet_id: BET-Y1Q4-T8-04
 risk_level: L3
 type: ssot

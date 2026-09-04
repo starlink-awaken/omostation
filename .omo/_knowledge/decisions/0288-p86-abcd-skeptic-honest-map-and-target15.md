@@ -3,7 +3,7 @@ id: ADR-0288
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-29
+last_updated: 2026-07-29
 related:
   - 0287-p86-abcd-wave-closeout.md
   - 0247-strategic-pivot-collab-first-physical-deferred.md

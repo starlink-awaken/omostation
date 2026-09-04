@@ -7,7 +7,7 @@ lifecycle: spec
 type: adr
 owner: governance-team
 date: 2026-08-19
-last-reviewed: 2026-08-20
+last_updated: 2026-08-20
 tags: [business, knowledge-ingest, shadow-mode, signal-sources]
 supersedes: []
 related:

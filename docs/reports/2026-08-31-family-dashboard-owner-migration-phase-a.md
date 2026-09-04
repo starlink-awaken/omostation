@@ -1,9 +1,8 @@
 ---
-status: active
 lifecycle: history
 owner: family-hub
 created: 2026-08-30
-last-reviewed: 2026-08-31
+last_updated: 2026-08-31
 title: Family dashboard Workspace owner migration Phase A evidence
 type: doc
 bet_id: BET-Y1Q3-T10-111

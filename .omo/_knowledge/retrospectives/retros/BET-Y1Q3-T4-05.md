@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 title: BET-Y1Q3-T4-05 WP2 Honest Agent Cell Effect Receipt retro
 type: retro
 ---

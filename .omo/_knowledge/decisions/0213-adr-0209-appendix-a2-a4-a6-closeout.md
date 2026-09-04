@@ -3,7 +3,7 @@ id: ADR-0213
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 related:
   - 0209-ledger-trim-and-adr-ssot-renumbering.md
   - 0203-requirement-iteration-workflow-mandatory.md

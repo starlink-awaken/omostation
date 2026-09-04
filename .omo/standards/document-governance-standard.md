@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
+last_updated: 2026-07-31
 ssot: .omo/_truth/registry/document-governance.yaml
 verifier: bin/ssot/doc-governance-check.py
 review-state: content-reviewed

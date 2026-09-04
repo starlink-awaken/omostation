@@ -1,7 +1,6 @@
 ---
 title: CONTRACTS
 type: doc
-status: active
 ---
 
 # Minerva Shared Data Contracts

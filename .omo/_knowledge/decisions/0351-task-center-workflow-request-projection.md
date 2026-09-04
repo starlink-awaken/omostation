@@ -5,7 +5,7 @@ status: archived
 type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last_updated: 2026-08-03
 type: decision
 scope: cockpit task center and workflow mesh operations
 date: 2026-08-03

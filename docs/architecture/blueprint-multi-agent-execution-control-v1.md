@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: strategy-team
-last-reviewed: 2026-08-09
+last_updated: 2026-08-09
 related:
   - ../../ARCHITECTURE.md
   - ./digital-twin-blueprint-v1.md

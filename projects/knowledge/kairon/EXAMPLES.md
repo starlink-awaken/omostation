@@ -1,7 +1,6 @@
 ---
 title: EXAMPLES
 type: doc
-status: active
 ---
 
 # Examples

@@ -6,7 +6,7 @@ type: decision
 owner: architecture-governance
 date: 2026-08-07
 lifecycle: spec
-last-reviewed: 2026-08-07
+last_updated: 2026-08-07
 related:
   - 0297-external-connection-fabric-and-product-truth.md
   - 0326-external-activation-preflight.md

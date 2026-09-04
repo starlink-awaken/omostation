@@ -1,9 +1,8 @@
 ---
 id: ADR-0111
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0111: P110-D TS AST 工具升级 (ts-morph 替代, 10 TS god-module 解锁)

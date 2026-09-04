@@ -1,9 +1,8 @@
 ---
-status: active
 lifecycle: history
 owner: engineering-agent
 bet: BET-Y1Q3-T7-02
-last-reviewed: 2026-08-27
+last_updated: 2026-08-27
 title: 复盘：CI 存量债清理战役 (2026-08-26 → 08-27)
 type: retro
 ---

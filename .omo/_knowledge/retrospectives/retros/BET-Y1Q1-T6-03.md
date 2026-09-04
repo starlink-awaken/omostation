@@ -1,9 +1,8 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
 bet: BET-Y1Q1-T6-03
-last-reviewed: 2026-08-16
+last_updated: 2026-08-16
 title: BET-Y1Q1-T6-03 复盘
 type: retro
 ---

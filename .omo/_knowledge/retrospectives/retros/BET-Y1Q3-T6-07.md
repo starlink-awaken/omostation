@@ -2,7 +2,7 @@
 bet_id: BET-Y1Q3-T6-07
 date: 2026-08-19
 lifecycle: history
-last-reviewed: 2026-08-19
+last_updated: 2026-08-19
 status: archived
 owner: governance-team
 title: BET-Y1Q3-T6-07 Retro — 根目录与项目废弃面清理

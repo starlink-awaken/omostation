@@ -1,13 +1,12 @@
 ---
 schema: resident-decision/v1
-status: draft
 trigger_event_type: StepFailed
 trace_id: 20260824T064614Z-project-code-change-c59578bf
 workflow_run_id: 20260824T064614Z-project-code-change-c59578bf
 event_id: d4745be09fdc47bb996646eec93c009a
 proposal_count: 1
 generated_at: 2026-08-25T08:34:11Z
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 ---
 
 # 决策提案收件箱 (T10-13)

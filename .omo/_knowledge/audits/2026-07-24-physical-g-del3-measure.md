@@ -9,7 +9,7 @@ related_cards:
   - needs-human-batch2-physical-recovery-checklist
 evidence:
   - .omo/_knowledge/audits/2026-07-24-physical-g-del3-quick.json
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

@@ -1,10 +1,9 @@
 ---
 schema: workflow-waiver/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-08-30
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 title: BET-Y1Q3-T10-107 self-bootstrap waiver
 type: doc
 ---

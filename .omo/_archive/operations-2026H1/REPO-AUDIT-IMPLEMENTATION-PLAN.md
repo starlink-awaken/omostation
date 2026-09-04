@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 title: 多仓库治理健康度审计 — 实现计划
 type: doc
 ---

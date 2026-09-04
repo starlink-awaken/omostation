@@ -1,9 +1,8 @@
 ---
 id: ADR-0091
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0091: P97 TYPO 实际应用 + apply/rollback 集成测试 + X2-FRESH-ADR-TYPO

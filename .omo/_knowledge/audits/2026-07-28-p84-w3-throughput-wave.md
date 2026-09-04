@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-07-28
+last_updated: 2026-07-28
 ---
 # P84 W3 产能轨波次（真实任务, 不造假）
 

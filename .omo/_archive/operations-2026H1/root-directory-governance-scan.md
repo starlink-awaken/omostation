@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: runtime-team
-last-reviewed: 2026-08-17
+last_updated: 2026-08-17
 review-state: generated-report
 title: 主仓目录治理表面扫描
 type: doc

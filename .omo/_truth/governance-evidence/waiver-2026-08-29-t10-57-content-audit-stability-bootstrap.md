@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: xiamingxing
-last-reviewed: 2026-08-29
+last_updated: 2026-08-29
 title: T10-57 L4 content audit stability self-bootstrap waiver
 type: doc
 ---

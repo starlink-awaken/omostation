@@ -3,7 +3,7 @@ type: ephemeral
 status: active | completed | archived
 created: <YYYY-MM-DD>
 expires: <YYYY-MM-DD | "completion">
-owner: <role>
+owner: governance-team
 ---
 
 # <标题>

@@ -2,7 +2,7 @@
 status: archived
 lifecycle: history
 owner: kems-team
-last-reviewed: 2026-07-31
+last_updated: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---

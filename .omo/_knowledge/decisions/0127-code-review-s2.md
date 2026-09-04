@@ -1,9 +1,8 @@
 ---
 id: ADR-0127
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-03
+last_updated: 2026-07-03
 related:
   - ../decisions/0126-s2-final-analysis.md
   - ../../.omo/_knowledge/decisions/0126-s2-final-analysis.md

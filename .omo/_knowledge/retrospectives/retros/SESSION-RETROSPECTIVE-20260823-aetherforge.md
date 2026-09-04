@@ -1,10 +1,9 @@
 ---
 title: 会话级复盘 — AetherForge 网关深度重构(流式/工具链路/凭据自治/预算)
 type: retro
-status: active
 owner: governance-team
 created: 2026-08-23
-last-reviewed: 2026-08-23
+last_updated: 2026-08-23
 lifecycle: history
 related:
   - projects/aetherforge (submodule)

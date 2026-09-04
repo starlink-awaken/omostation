@@ -3,7 +3,7 @@ id: ADR-0172
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
+last_updated: 2026-07-08
 related:
   - 0170-p77-phase7-env-var-port-migration.md
   - 0168-p77-phase5-hardcoded-ports.md

@@ -3,7 +3,7 @@ id: ADR-0208
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 ---
 
 # ADR-0208 — macOS group ACE via `OMO_ACL_GROUP=staff`（无 sudo 路径）

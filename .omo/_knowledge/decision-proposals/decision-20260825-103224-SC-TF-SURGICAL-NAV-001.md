@@ -4,7 +4,7 @@ status: accepted
 lifecycle: proposal
 owner: resident
 created: '2026-08-25'
-last-reviewed: '2026-08-25'
+last_updated: '2026-08-25'
 scenario_id: SC-TF-SURGICAL-NAV-001
 domain: work-transfer
 verdict: APPROVED

@@ -1,8 +1,7 @@
 ---
-status: draft
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - ../../../.omo/_knowledge/decisions/0158-p76-phase4-promotion.md
   - ../../../.omo/_knowledge/decisions/STRAT-P76-strategic-roadmap.md

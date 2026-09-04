@@ -1,9 +1,8 @@
 ---
 id: ADR-0103
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0103: P109 治理赋能三件套 (验证模板 + 智能化 + TS 工具)

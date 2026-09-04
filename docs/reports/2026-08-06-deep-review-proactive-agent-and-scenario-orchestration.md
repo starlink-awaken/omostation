@@ -1,6 +1,5 @@
 ---
 title: 织星 / eCOS v6 深度 Review — 主动 Agent 心智模型与业务场景编排
-status: draft
 type: review
 owner: 夏明星
 created: 2026-08-06

@@ -1,11 +1,10 @@
 ---
 schema_version: report/v1
-status: active
 lifecycle: history
 type: deep-retrospective
 owner: governance-team
 created: 2026-08-31
-last-reviewed: 2026-08-31
+last_updated: 2026-08-31
 adr: ADR-0443
 scope: multi-agent collaboration failure modes (session 2026-08-30/31, ADR-443 v1-v7)
 ---

@@ -7,10 +7,9 @@ primary_diff: 9c4978c4bb680a214df4c2d4d2212454adba0a7d
 diff_scope: 
 merged: true
 verified_at: 2026-08-22
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 ---
 
 last-reviewed: 2026-08-26

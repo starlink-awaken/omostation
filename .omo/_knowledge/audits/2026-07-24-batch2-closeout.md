@@ -4,7 +4,7 @@ date: 2026-07-24
 type: audit
 stage: batch2
 workorder: .omo/plans/strat-p81-batch2-workorder.md
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

@@ -5,7 +5,7 @@ status: archived
 lifecycle: spec
 owner: 夏明星
 created: 2026-08-18
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 deciders:
   - 夏明星 (最终确认)
   - governance-agent (起草)

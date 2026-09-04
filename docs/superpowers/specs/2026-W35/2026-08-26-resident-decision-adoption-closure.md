@@ -3,7 +3,7 @@ status: accepted
 lifecycle: spec
 owner: resident
 created: 2026-08-26
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-19

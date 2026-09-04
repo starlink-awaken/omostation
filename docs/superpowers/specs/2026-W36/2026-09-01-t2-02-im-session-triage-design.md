@@ -7,7 +7,7 @@ status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-09-01
-last-reviewed: 2026-09-01
+last_updated: 2026-09-01
 type: ssot
 last_updated: 2026-09-03
 ---

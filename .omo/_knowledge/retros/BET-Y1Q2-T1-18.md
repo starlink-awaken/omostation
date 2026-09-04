@@ -1,7 +1,6 @@
 ---
 title: BET-Y1Q2-T1-18 复盘 — Supervised Blueprint Control Loop × SR-06
 type: retro
-status: active
 owner: governance-team
 created: 2026-08-16
 related:
@@ -11,7 +10,7 @@ context: >-
   T1-18 解冻 (blocked→in_progress, 08-16) 后, SR-06 六轮生产链 canary 全部完成,
   bet 主体交付闭环。轮次详情见 G-1 证据包 §6。
 lifecycle: history
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # BET-Y1Q2-T1-18 复盘

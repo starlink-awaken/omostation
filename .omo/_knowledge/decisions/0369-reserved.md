@@ -4,7 +4,7 @@ title: Reserved slot
 status: reserved
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-04
+last_updated: 2026-08-04
 ---
 # ADR 0369: Reserved
 

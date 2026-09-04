@@ -1,7 +1,6 @@
 ---
 title: BET-Y1Q1-T6-07 retro — 战略收敛 r3 剩余件
 type: retro
-status: active
 owner: governance-agent
 created: 2026-08-17
 bet: BET-Y1Q1-T6-07
@@ -10,7 +9,7 @@ related:
   - .omo/_knowledge/decisions/0413-gbrain-kairon-merge-disposition.md
   - .omo/_knowledge/decisions/0414-physical-multihost-tension-resolution.md
 lifecycle: history
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # BET-Y1Q1-T6-07 复盘 — 战略收敛第三轮派工

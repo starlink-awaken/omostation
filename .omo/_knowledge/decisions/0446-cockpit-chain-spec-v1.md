@@ -3,7 +3,7 @@ id: ADR-0446
 status: accepted
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-09-01
+last_updated: 2026-09-01
 ---
 
 # ADR-0446: cockpit chain 声明式多命令链路 (spec v1)

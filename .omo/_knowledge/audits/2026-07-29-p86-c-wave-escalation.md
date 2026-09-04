@@ -2,7 +2,7 @@
 status: needs-human
 lifecycle: history
 owner: governance-team
-last-reviewed: "2026-07-29"
+last_updated: "2026-07-29"
 escalation_target: 人类决策者
 ---
 

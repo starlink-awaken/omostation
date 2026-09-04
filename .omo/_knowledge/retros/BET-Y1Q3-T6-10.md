@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 title: "Retro — BET-Y1Q3-T6-10: SEMA 结晶 skill 入仓与台账修复"
 type: retro
 ---

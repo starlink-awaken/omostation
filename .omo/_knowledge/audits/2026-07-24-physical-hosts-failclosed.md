@@ -3,7 +3,7 @@ title: Physical hosts + G-DEL.3 fail-closed (STRAT-P80 T2)
 date: 2026-07-24
 type: audit
 needs-human: true
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

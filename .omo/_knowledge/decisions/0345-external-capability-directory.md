@@ -4,7 +4,7 @@ title: External Capability Directory 只读能力地图
 status: ACCEPTED
 date: 2026-08-03
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last_updated: 2026-08-03
 lifecycle: spec
 scope: Workflow Mesh external connection fabric
 ---

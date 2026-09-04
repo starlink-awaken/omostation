@@ -5,7 +5,7 @@ type: collab-trail
 batch: 2
 task_id: L1_HEALTH_PROBES
 task_path: .omo/debt/items/L1_HEALTH_PROBES.yaml
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

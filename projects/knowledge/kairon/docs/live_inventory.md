@@ -1,7 +1,6 @@
 ---
 title: live_inventory
 type: doc
-status: active
 ---
 
 # Kairon Live Inventory

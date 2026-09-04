@@ -1,9 +1,8 @@
 ---
 id: ADR-0052
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0052: P54-P55 知识面深度收敛 — 设计契约区建立 + frontmatter 100% 全覆盖

@@ -1,9 +1,8 @@
 ---
-status: draft
 lifecycle: spec
-owner: @YOUR_NAME
+owner: governance-team
 created: YYYY-MM-DD
-last-reviewed: YYYY-MM-DD
+last_updated: YYYY-MM-DD
 type: ssot
 last_updated: 2026-09-03
 ---

@@ -3,7 +3,7 @@ id: ADR-0137
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
+last_updated: 2026-07-06
 related:
   - 0129-state-projection-plane-phase3.md
   - 0132-l0-mof-m4-metamodel.md

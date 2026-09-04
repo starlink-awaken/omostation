@@ -1,6 +1,5 @@
 ---
 title: G-DEL.2a 角色框架 + 协作协议契约（仅 spec）
-status: active
 type: contract
 bet: BET-664e3
 gate: G-DEL.2a
@@ -15,7 +14,7 @@ note: >
   Pre-M1 allowed. Spec/interfaces only — no multi-machine registry, scheduler,
   or collab runtime. Implements nothing of G-DEL.1/3/5.
 lifecycle: contract
-last-reviewed: 2026-07-31
+last_updated: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---

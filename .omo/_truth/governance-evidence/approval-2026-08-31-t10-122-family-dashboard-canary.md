@@ -1,12 +1,11 @@
 ---
 schema_version: family-dashboard-canary-approval/v1
 bet_id: BET-Y1Q3-T10-122
-status: active
 approved_at: 2026-09-02T07:34:24Z
 expires_at: 2026-09-03T07:34:24Z
 owner: human
 lifecycle: history
-last-reviewed: 2026-09-02
+last_updated: 2026-09-02
 ---
 
 # Family dashboard Phase B Documents write canary approval

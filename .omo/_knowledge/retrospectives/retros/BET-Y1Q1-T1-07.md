@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-agent
-last-reviewed: 2026-08-08
+last_updated: 2026-08-08
 bet: BET-Y1Q1-T1-07
 track: T1-TRUTH
 window: Y1Q1

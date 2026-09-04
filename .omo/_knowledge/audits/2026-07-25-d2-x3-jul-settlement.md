@@ -7,7 +7,7 @@ related_cards:
   - strat-p81-batch3-workorder
 related_runs:
   - D3 closeout (#501)
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

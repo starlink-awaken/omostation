@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-31
+last_updated: 2026-08-31
 title: BET-Y1Q3-T1-12 复盘（premature completion invalidated）
 type: retro
 ---

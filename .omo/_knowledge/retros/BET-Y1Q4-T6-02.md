@@ -2,7 +2,7 @@
 status: closed
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-04
+last_updated: 2026-09-04
 title: BET-Y1Q4-T6-02 复盘
 type: retro
 ---

@@ -1,7 +1,6 @@
 ---
 title: exit-evidence-pack
 type: doc
-status: active
 ---
 
 # Exit Evidence Pack (Skill Template)

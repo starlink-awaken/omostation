@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-29
+last_updated: 2026-06-29
 related:
   - doc-ssot-contract.md
   - ssot-7-domain-schema.md

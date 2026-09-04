@@ -3,7 +3,7 @@ title: Batch2 D2 X3 delivery sprint snapshot
 date: 2026-07-24
 type: audit
 batch: 2
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: history
 owner: unassigned
 ---

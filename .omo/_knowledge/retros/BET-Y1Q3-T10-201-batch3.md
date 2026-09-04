@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-04
+last_updated: 2026-09-04
 title: BET-Y1Q3-T10-201 复盘 batch3
 type: retro
 bet: BET-Y1Q3-T10-201

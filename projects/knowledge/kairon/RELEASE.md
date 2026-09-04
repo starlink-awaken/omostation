@@ -1,7 +1,6 @@
 ---
 title: RELEASE
 type: doc
-status: active
 ---
 
 # Release Process

@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-15
+last_updated: 2026-07-15
 related:
   - ../../bin/ssot/sync-submodules-push.sh
 source: learner-2026-07-15-stack-retro

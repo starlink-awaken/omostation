@@ -1,7 +1,6 @@
 ---
 title: ARCHITECTURE
 type: doc
-status: active
 ---
 
 # KOS — Knowledge Operating System Architecture

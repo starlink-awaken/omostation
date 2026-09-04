@@ -2,7 +2,7 @@
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 archived-since: 2026-08-18
 note: "2026-08-18 文档与配置全面治理 closeout (RISE 循环)"
 ---

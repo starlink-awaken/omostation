@@ -3,7 +3,7 @@ id: ADR-0132
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
+last_updated: 2026-07-06
 related:
   - ../audits/2026-06-29-l0-ssot-m0-mof-alignment.md
   - ../audits/2026-06-28-comprehensive-system-audit.md

@@ -3,7 +3,7 @@ id: ADR-0152
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
+last_updated: 2026-07-06
 related:
   - 0106-gac-governance-as-code.md
   - 0150-submodule-pr-reverse-review.md

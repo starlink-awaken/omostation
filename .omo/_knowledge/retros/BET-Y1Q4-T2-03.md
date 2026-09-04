@@ -1,10 +1,9 @@
 ---
 schema_version: retro/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-09-01
-last-reviewed: 2026-09-01
+last_updated: 2026-09-01
 bet: BET-Y1Q4-T2-03
 title: 纸质公文扫描件 OCR 版面还原
 symptom: 无（按计划交付，无故障）

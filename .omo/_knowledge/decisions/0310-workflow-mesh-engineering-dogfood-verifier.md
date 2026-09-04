@@ -5,7 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: engineering-team
 date: 2026-08-02
-last-reviewed: 2026-08-02
+last_updated: 2026-08-02
 related:
   - docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - docs/scene-cards/engineering-delivery-dogfood.yaml

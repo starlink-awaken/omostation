@@ -1,7 +1,6 @@
 ---
 title: BET-Y1Q3-T9-01 复盘 — 复盘制度落地四件套
 type: retro
-status: active
 owner: governance-team
 created: 2026-08-15
 related:
@@ -10,7 +9,7 @@ context: >-
   会话复盘六大失败模式中四个制度缺口的落地轮。PR #1524 (2 commits 链: e90be29+bcc5825
   子模块, 主仓 8713be8b9)。
 lifecycle: history
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # BET-Y1Q3-T9-01 复盘

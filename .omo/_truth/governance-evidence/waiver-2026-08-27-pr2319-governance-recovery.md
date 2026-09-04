@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: xiamingxing
-last-reviewed: 2026-08-27
+last_updated: 2026-08-27
 review-state: user-authorized
 title: #2319 post-merge governance baseline recovery waiver
 type: doc

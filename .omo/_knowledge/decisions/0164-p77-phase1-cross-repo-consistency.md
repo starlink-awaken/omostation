@@ -3,7 +3,7 @@ id: ADR-0164
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
+last_updated: 2026-07-07
 related:
   - STRAT-P77-strategic-roadmap.md
   - ../../../../../bin/check-cross-repo-consistency.py

@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-22
+last_updated: 2026-06-22
 ---
 
 # OMO v4.0 架构元反思：超越四平面与动态演化机制

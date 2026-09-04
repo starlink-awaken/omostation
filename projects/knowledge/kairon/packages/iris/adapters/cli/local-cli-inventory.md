@@ -1,7 +1,6 @@
 ---
 title: local-cli-inventory
 type: doc
-status: active
 ---
 
 # Local CLI Inventory

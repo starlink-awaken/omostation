@@ -3,7 +3,7 @@ id: ADR-0260
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-29
+last_updated: 2026-07-29
 related:
   - 0259-p84-w3-wave4-close-gap.md
   - 0254-p84-w22-cclass-collab-detectors.md

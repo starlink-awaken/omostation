@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: stable
 owner: governance-team
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 title: North Star v3 — 复合制价值证明设计
 type: doc
 ---

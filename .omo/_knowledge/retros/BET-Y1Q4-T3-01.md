@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-09
+last_updated: 2026-08-09
 title: BET-Y1Q4-T3-01 复盘
 type: retro
 ---

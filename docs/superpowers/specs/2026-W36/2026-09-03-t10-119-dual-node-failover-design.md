@@ -8,7 +8,7 @@ status: accepted
 lifecycle: contract
 owner: ml-platform
 created: 2026-09-03
-last-reviewed: 2026-09-03
+last_updated: 2026-09-03
 ---
 
 # 双机雷雳 5 算力织网双向备份与断网容灾自愈

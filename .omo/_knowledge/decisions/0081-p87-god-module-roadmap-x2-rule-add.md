@@ -1,9 +1,8 @@
 ---
 id: ADR-0081
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last_updated: 2026-06-25
 ---
 
 # ADR-0081: P87 god-module 拆解 roadmap + X2 rule 交互式添加

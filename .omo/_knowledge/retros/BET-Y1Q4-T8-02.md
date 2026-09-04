@@ -1,10 +1,9 @@
 ---
 schema_version: retro/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-09-03
-last-reviewed: 2026-09-03
+last_updated: 2026-09-03
 bet: BET-Y1Q4-T8-02
 title: Mobile Cockpit PWA 滑动署名
 symptom: cockpit-ui 台账前瞻但物理不存在; workflow start 未落 run 文件

@@ -1,6 +1,5 @@
 ---
 title: 战略-治理-场景收敛总纲 · 落地包（草案）
-status: active
 type: landing-package
 owner: 夏明星（人类执行）
 created: 2026-08-15
@@ -12,7 +11,7 @@ bet: BET-Y1Q1-T6-01
 note: >
   2026-08-15 按 grill Q1–Q7 在隔离 worktree 执行。
   原稿 does_not_change 仅描述云端起草阶段，不约束本次落地。
-last-reviewed: 2026-08-18
+last_updated: 2026-08-18
 ---
 
 # 说明

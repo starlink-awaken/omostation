@@ -3,7 +3,7 @@ type: ssot
 name: delegation-guardrails
 description: "委托机制加固的两条硬规则：①「只叙述不落盘」是模型路由故障信号（不是 worker 偷懒）——只叙述不改文件 = 错误/不可达模型端点返回空内容，禁止 blind retry，必须跑 5 步诊断序列；② 终验波次子代理结论矛盾时，编排者用直接测量（read/grep/wc/stat）仲裁，不信报告质量。当 spawned worker 只叙述不改文件、委托返回空内容、subagent 没落盘、终验子代理结论矛盾、或需要跑 delegation preflight 时使用。Triggers on: 只叙述不落盘, narrate-without-edit, 委托故障, delegation failure, subagent 没落盘, delegation preflight, 终验矛盾, final verification wave, direct measurement, 空内容, empty content, model routing fault, model-scheduler, 调度器。"
 
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 owner: governance-team
 ---
 

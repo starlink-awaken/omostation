@@ -11,10 +11,9 @@ source_ref: omo-state:sync
 artifact: runtime/omo/_delivery/ingress/state/system-projection-2026-08-21T06-51-01Z.yaml
 freshness: < 24h
 verified_at: 2026-08-22
-status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 ---
 
 last-reviewed: 2026-08-26

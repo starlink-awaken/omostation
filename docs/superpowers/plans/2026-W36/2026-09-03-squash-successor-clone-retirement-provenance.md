@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-09-04
+last_updated: 2026-09-04
 last_updated: 2026-09-04
 type: doc
 ---

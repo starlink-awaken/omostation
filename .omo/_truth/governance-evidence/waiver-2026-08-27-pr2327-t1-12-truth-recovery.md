@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: xiamingxing
-last-reviewed: 2026-08-27
+last_updated: 2026-08-27
 review-state: user-authorized
 title: #2327 T1-12 premature done/value truth recovery waiver
 type: doc

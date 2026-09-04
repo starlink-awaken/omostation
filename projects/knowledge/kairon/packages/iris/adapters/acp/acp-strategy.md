@@ -1,7 +1,6 @@
 ---
 title: acp-strategy
 type: doc
-status: active
 ---
 
 # ACP Strategy

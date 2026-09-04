@@ -1,8 +1,7 @@
 ---
-status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 ---
 
 # 多 Agent 共享工作区协作标准 (Multi-Agent Worktree Collaboration)

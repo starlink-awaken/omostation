@@ -5,7 +5,7 @@ type: management
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 archived-since: 2026-06-23
 freshness: 2026-05-31
 maintainer: reasonix

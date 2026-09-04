@@ -3,7 +3,7 @@ type: ssot
 name: domain-cartridge-governance
 description: "Master governance and execution skill for domain-specific .cartridge capsules (ADR-0203). Guides packaging, cryptographic verification, intent extraction, and sandboxed policy-compliant execution for Sovereign Health and Family Hub workflows."
 
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 owner: governance-team
 ---
 

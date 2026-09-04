@@ -1,8 +1,7 @@
 ---
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 title: omostation / eCOS v6 — 项目粒度架构与战略深度复盘（2026-08-24 续）
 type: doc
-status: active
 lifecycle: history
 owner: laowang-agent
 ---

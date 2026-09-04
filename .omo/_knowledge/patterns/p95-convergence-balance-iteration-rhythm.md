@@ -1,10 +1,9 @@
 ---
 id: P95
-status: active
 lifecycle: pattern
 owner: governance-team
 created: 2026-08-30
-last-reviewed: 2026-08-30
+last_updated: 2026-08-30
 related:
 - ADR-0443
 - ADR-0431

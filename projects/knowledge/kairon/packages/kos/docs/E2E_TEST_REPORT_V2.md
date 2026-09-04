@@ -1,7 +1,6 @@
 ---
 title: E2E_TEST_REPORT_V2
 type: doc
-status: active
 ---
 
 # KOS 跨项目端到端测试报告

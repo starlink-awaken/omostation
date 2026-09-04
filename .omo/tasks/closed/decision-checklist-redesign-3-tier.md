@@ -2,7 +2,7 @@
 status: accepted
 lifecycle: proposal
 owner: governance-team
-last-reviewed: 2026-07-28
+last_updated: 2026-07-28
 ---
 # 决策清单三档重切 — 已人类确认 (2026-07-28)
 

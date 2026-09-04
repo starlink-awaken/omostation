@@ -1,10 +1,9 @@
 ---
 title: 会话级复盘 — Y1Q3 架构成熟度 6.8→9.0 + T10 人类 attestation 验收收尾
 type: retro
-status: active
 owner: governance-team
 created: 2026-08-24
-last-reviewed: 2026-08-24
+last_updated: 2026-08-24
 lifecycle: history
 related:
   - docs/plans/3y-bet-ledger.yaml

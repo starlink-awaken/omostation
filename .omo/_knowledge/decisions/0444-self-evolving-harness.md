@@ -3,7 +3,7 @@ id: ADR-0444
 status: accepted
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-31
+last_updated: 2026-08-31
 ---
 
 # ADR-0444: 自进化 Harness 异构生态收束

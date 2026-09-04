@@ -1,10 +1,9 @@
 ---
 schema: workflow-waiver/v1
-status: active
 lifecycle: history
 owner: governance-team
 created: 2026-08-28
-last-reviewed: 2026-08-28
+last_updated: 2026-08-28
 ---
 
 # T10-46 BET bootstrap waiver

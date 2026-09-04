@@ -1,9 +1,8 @@
 ---
 title: External Connection Fabric Standard
-status: active
 type: standard
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last_updated: 2026-08-03
 related:
   - ../_truth/registry/external-connection-fabric.yaml
   - ../../ARCHITECTURE.md

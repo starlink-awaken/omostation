@@ -1,8 +1,7 @@
 ---
 title: Knowledge to Action 运转契约
-status: active
 owner: engineering-team
-last-reviewed: 2026-08-02
+last_updated: 2026-08-02
 lifecycle: contract
 type: doc
 ---

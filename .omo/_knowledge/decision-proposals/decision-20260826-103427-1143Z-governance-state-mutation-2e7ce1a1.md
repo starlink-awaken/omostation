@@ -1,6 +1,5 @@
 ---
 schema: resident-decision/v1
-status: draft
 trigger_event_type: StepFailed
 trace_id: 20260825T101143Z-governance-state-mutation-2e7ce1a1
 workflow_run_id: 20260825T101143Z-governance-state-mutation-2e7ce1a1

@@ -1,7 +1,7 @@
 ---
 type: derived
 source: bin/mof/gen-agent-redlines.py → .omo/_truth/registry/governance-checks.yaml::gac.rules
-last-reviewed: 2026-08-26
+last_updated: 2026-08-26
 ---
 
 # Agent 红线/灰线清单 (宪法 Wave 1)

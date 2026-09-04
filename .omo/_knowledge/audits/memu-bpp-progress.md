@@ -2,7 +2,7 @@
 status: complete
 lifecycle: history
 owner: laowang
-last-reviewed: 2026-06-28
+last_updated: 2026-06-28
 related-task: memu-engine-bpp
 completed: 2026-06-28
 ---

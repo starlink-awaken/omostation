@@ -1,9 +1,8 @@
 ---
 id: ADR-0050
-status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last_updated: 2026-06-23
 ---
 
 # ADR-0050: gbrain 53 TODOs 4 类决策 (P50 R2)

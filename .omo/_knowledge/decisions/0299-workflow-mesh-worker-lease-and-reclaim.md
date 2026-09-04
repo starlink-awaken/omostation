@@ -5,7 +5,7 @@ status: ACCEPTED
 type: decision
 owner: architecture-governance
 created: 2026-08-02
-last-reviewed: 2026-08-02
+last_updated: 2026-08-02
 lifecycle: spec
 related:
   - ../../standards/agent-cli-worker-collaboration.md

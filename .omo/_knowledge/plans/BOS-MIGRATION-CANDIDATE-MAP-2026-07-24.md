@@ -12,7 +12,7 @@ source: projects/agora/etc/bos-services.yaml
 warning: |
   Stage 0 evidence 包。仅在 P81 S0.4 (bos_stdio 真实迁移) 立项后启用。
   Agent 不得在立项前自行修改 bos-services.yaml 的 transport 字段。
-last-reviewed: 2026-08-25
+last_updated: 2026-08-25
 lifecycle: plan
 ---
 

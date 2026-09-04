@@ -1,10 +1,9 @@
 ---
 schema_version: governance-waiver-evidence/v1
-status: active
 lifecycle: history
 owner: human-principal
 created: 2026-09-02
-last-reviewed: 2026-09-02
+last_updated: 2026-09-02
 expires_when: bootstrap restoration PR merges or closes
 value_indicator_policy: false
 title: Workflow self-hosting archive restoration waiver
