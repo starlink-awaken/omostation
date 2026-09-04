@@ -1,6 +1,9 @@
 ---
+type: ssot
 description: Get omostation workspace context
 agent: code
+owner: governance-team
+last-reviewed: 2026-09-04
 ---
 Get the current omostation workspace context: phase, active goals, CARDS summary, and governance constraints.
 
