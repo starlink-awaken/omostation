@@ -1,6 +1,7 @@
 ---
 type: ssot
 last-reviewed: 2026-08-26
+owner: governance-team
 ---
 
 # LLM 引擎统一接入架构设计 (LLM-ENGINE-ARCHITECTURE)

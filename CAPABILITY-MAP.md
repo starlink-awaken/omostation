@@ -1,9 +1,3 @@
----
-type: ssot
-owner: governance-team
-last_updated: 2026-09-03
----
-
 # Cockpit 能力地图
 
 > 自动生成于 1970-01-01T00:00:00Z | 版本 1.0.0
@@ -14,11 +8,11 @@ last_updated: 2026-09-03
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 199 |
-| MCP 工具 | 584 |
+| CLI 命令 (含子命令) | 201 |
+| MCP 工具 | 634 |
 | MCP 服务器 | 27 |
-| BOS 服务 | 289 |
-| BOS 域 | 21 |
+| BOS 服务 | 298 |
+| BOS 域 | 22 |
 
 ## MCP 服务器清单
 
@@ -26,6 +20,7 @@ last_updated: 2026-09-03
 |--------|-----|--------|------|------|
 | `agora` | I0 | 104 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
 | `gbrain` | L2 | 75 | stdio | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
+| `runtime` | L1 | 50 | stdio | `projects/runtime/src/runtime/mcp_server.py` |
 | `l4-kernel` | L4 | 47 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
 | `kos` | L2 | 44 | stdio | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
@@ -50,7 +45,6 @@ last_updated: 2026-09-03
 | `aetherforge-gateway` | X | 3 | stdio | `projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py` |
 | `c2g` | X | 3 | stdio | `projects/omo/src/omo/_vendored/c2g/mcp_server.py` |
 | `model-driven-fastmcp` | M0 | 2 | stdio | `projects/model-driven/src/model_driven/fastmcp_server.py` |
-| `runtime` | L1 | 0 | stdio | `projects/runtime/src/runtime/mcp_server.py` ⚠️未找到 |
 
 ## BOS 服务域分布
 
@@ -67,6 +61,7 @@ last_updated: 2026-09-03
 | `fabric` | 1 |
 | `forge` | 1 |
 | `governance` | 70 |
+| `harness` | 9 |
 | `l4-kernel` | 1 |
 | `memory` | 47 |
 | `meta` | 1 |
@@ -143,6 +138,7 @@ last_updated: 2026-09-03
 | `cockpit digest` | 提炼多个研究结果 |
 | `cockpit discover` | 发现可用功能和资源 |
 | `cockpit distill` | 在 Mac mini M4 触发闲时 LoRA 蒸馏 |
+| `cockpit dlp-guard` | 外发前防泄密扫描 (敏感识别+挂起+脱敏) |
 | `cockpit dma` | 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准 |
 | `cockpit docx` | 渲染为 GB/T 9704-2012 红头公文 DOCX |
 | `cockpit domain-status` | 显示 Documents 域项目绑定与引导状态 |
@@ -176,6 +172,7 @@ last_updated: 2026-09-03
 | `cockpit history` | 查看对话历史 |
 | `cockpit hud` | 查看次世代主权算力织网全景 HUD 实时状态 |
 | `cockpit identity` | 导出身份封套 (IdentityEnvelope) |
+| `cockpit im-triage` | 渲染 IM 会话感知待办卡片 (bos://im/session/triage) |
 | `cockpit impact` | 分析符号的变更影响面 |
 | `cockpit import` | 导入外部内容 |
 | `cockpit inbox` | BOS Inbox 多源私有知识神经网查询与操作 |
