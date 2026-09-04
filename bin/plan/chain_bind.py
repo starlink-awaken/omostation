@@ -321,3 +321,202 @@ def print_perception(fields: dict[str, Any]) -> None:
 def inject_perception(report: dict[str, Any], workspace: Path) -> dict[str, Any]:
     report["chain"] = perception_fields(workspace)
     return report
+
+
+@dataclass(frozen=True)
+class PortfolioVerdict:
+    """Read-only higher-level completion predicate (T1-06). Never mutates state."""
+
+    ok: bool
+    code: str
+    reasons: list[str] = field(default_factory=list)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"ok": self.ok, "code": self.code, "reasons": list(self.reasons)}
+
+
+def _bet_index(ledger: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    for bet in ledger.get("bets") or []:
+        if isinstance(bet, dict) and isinstance(bet.get("id"), str):
+            out[bet["id"]] = bet
+    return out
+
+
+def _kr_status(ledger: dict[str, Any], kr_id: str) -> str | None:
+    for objective in ledger.get("objectives") or []:
+        if not isinstance(objective, dict):
+            continue
+        for kr in objective.get("key_results") or []:
+            if isinstance(kr, dict) and kr.get("id") == kr_id:
+                status = kr.get("status")
+                return status if isinstance(status, str) else None
+    return None
+
+
+def _replacement_covers_failed(bet: dict[str, Any], index: dict[str, dict[str, Any]]) -> bool:
+    """A failed BET may be conserved when a completed replacement references it."""
+    if bet.get("status") != "failed":
+        return False
+    bet_id = str(bet.get("id") or "")
+    for other in index.values():
+        if other.get("status") != "done":
+            continue
+        if other.get("replacement_of") == bet_id or bet_id in (other.get("replaces") or []):
+            return True
+        # also accept explicit replaced_by on the failed leaf
+    replaced_by = bet.get("replaced_by")
+    if isinstance(replaced_by, str) and replaced_by in index and index[replaced_by].get("status") == "done":
+        return True
+    return False
+
+
+def evaluate_milestone(
+    milestone: dict[str, Any],
+    ledger: dict[str, Any],
+    evidence: dict[str, Any] | None = None,
+) -> PortfolioVerdict:
+    """Derived Milestone close predicate. Read-only; never writes status."""
+    evidence = evidence or {}
+    reasons: list[str] = []
+    index = _bet_index(ledger)
+
+    for bid in milestone.get("required_bets") or []:
+        if not isinstance(bid, str):
+            reasons.append("MILESTONE_FALSE_CLOSE: required_bets entry invalid")
+            continue
+        bet = index.get(bid)
+        if bet is None:
+            reasons.append(f"MILESTONE_FALSE_CLOSE: missing required bet {bid}")
+            continue
+        status = bet.get("status")
+        if status == "done":
+            continue
+        if status == "failed" and _replacement_covers_failed(bet, index):
+            continue
+        reasons.append(f"MILESTONE_FALSE_CLOSE: required bet {bid} not terminal/replaced (status={status!r})")
+
+    for kr_id in milestone.get("required_krs") or []:
+        if not isinstance(kr_id, str):
+            reasons.append("MILESTONE_FALSE_CLOSE: required_krs entry invalid")
+            continue
+        status = _kr_status(ledger, kr_id)
+        if status != "proven":
+            reasons.append(f"MILESTONE_FALSE_CLOSE: required KR {kr_id} not proven (status={status!r})")
+
+    if evidence.get("unresolved_blocker"):
+        reasons.append("MILESTONE_FALSE_CLOSE: unresolved blocker present")
+    if int(evidence.get("p0_guardrail_breaches") or 0) > 0:
+        reasons.append("MILESTONE_FALSE_CLOSE: p0 guardrail breach")
+
+    # Campaign / Objective parents must also be met when declared on evidence envelope
+    for cid in evidence.get("required_campaigns_unmet") or []:
+        reasons.append(f"MILESTONE_FALSE_CLOSE: required campaign unmet {cid}")
+    for oid in evidence.get("required_objectives_unmet") or []:
+        reasons.append(f"MILESTONE_FALSE_CLOSE: required objective unmet {oid}")
+
+    if reasons:
+        return PortfolioVerdict(False, "MILESTONE_FALSE_CLOSE", reasons)
+    return PortfolioVerdict(True, "MILESTONE_MET", [])
+
+
+def _is_proxy_or_synthetic(sample: dict[str, Any]) -> bool:
+    partition = str(sample.get("partition") or sample.get("evidence_partition") or "").lower()
+    if partition in {"test", "synthetic", "proxy"}:
+        return True
+    if sample.get("proxy") is True:
+        return True
+    if sample.get("synthetic") is True:
+        return True
+    return False
+
+
+def _is_principal_bound(sample: dict[str, Any]) -> bool:
+    if sample.get("principal_bound") is True:
+        return True
+    if sample.get("human_verdict_bound") is True:
+        return True
+    att = sample.get("attestation")
+    return isinstance(att, dict) and bool(att.get("ref"))
+
+
+def evaluate_vision(
+    vision: dict[str, Any],
+    objectives: list[PortfolioVerdict] | list[dict[str, Any]],
+    window: list[dict[str, Any]],
+    *,
+    evidence: dict[str, Any] | None = None,
+) -> PortfolioVerdict:
+    """Derived Vision close predicate. Read-only; never writes status."""
+    evidence = evidence or {}
+    reasons: list[str] = []
+
+    # Required objectives must all be met
+    for obj in objectives:
+        if isinstance(obj, PortfolioVerdict):
+            ok, code = obj.ok, obj.code
+        elif isinstance(obj, dict):
+            ok, code = bool(obj.get("ok")), str(obj.get("code") or "")
+        else:
+            reasons.append("MILESTONE_FALSE_CLOSE: objective verdict invalid")
+            continue
+        if not ok:
+            reasons.append(f"MILESTONE_FALSE_CLOSE: required objective unmet ({code})")
+
+    for cid in evidence.get("required_campaigns_unmet") or []:
+        reasons.append(f"MILESTONE_FALSE_CLOSE: required campaign unmet {cid}")
+
+    if len(window) < 12:
+        reasons.append(f"VISION_WINDOW_INCOMPLETE: weeks={len(window)} need>=12")
+
+    for sample in window:
+        if not isinstance(sample, dict):
+            reasons.append("VALUE_PROXY_REJECTED: window sample not a mapping")
+            continue
+        if _is_proxy_or_synthetic(sample):
+            reasons.append("VALUE_PROXY_REJECTED: synthetic/proxy evidence partition")
+        if not _is_principal_bound(sample):
+            reasons.append("VALUE_PROXY_REJECTED: human evidence not principal-bound")
+
+    # Weekly thresholds (optional keys on evidence)
+    min_accepted = evidence.get("min_accepted_outputs_per_week")
+    if isinstance(min_accepted, (int, float)):
+        for sample in window:
+            if isinstance(sample, dict) and sample.get("accepted_outputs") is not None:
+                if float(sample["accepted_outputs"]) < float(min_accepted):
+                    reasons.append("VISION_WINDOW_INCOMPLETE: accepted_outputs below threshold")
+                    break
+    min_rate = evidence.get("min_acceptance_rate")
+    if isinstance(min_rate, (int, float)):
+        for sample in window:
+            if isinstance(sample, dict) and sample.get("acceptance_rate") is not None:
+                if float(sample["acceptance_rate"]) < float(min_rate):
+                    reasons.append("VISION_WINDOW_INCOMPLETE: acceptance_rate below threshold")
+                    break
+    if evidence.get("edit_burden_improved") is False:
+        reasons.append("VISION_WINDOW_INCOMPLETE: edit-burden did not improve")
+
+    if not evidence.get("human_final_verdict"):
+        reasons.append("VISION_WINDOW_INCOMPLETE: missing human final verdict")
+
+    # Value-exempt delivery cannot advance value KRs
+    if evidence.get("value_exempt_attempted_value_kr"):
+        reasons.append("VALUE_PROXY_REJECTED: value_indicator_policy=false delivery cannot advance value KR")
+
+    # Deduplicate while preserving order
+    dedup: list[str] = []
+    seen: set[str] = set()
+    for r in reasons:
+        if r not in seen:
+            seen.add(r)
+            dedup.append(r)
+
+    if any(r.startswith("VALUE_PROXY_REJECTED") for r in dedup):
+        code = "VALUE_PROXY_REJECTED"
+    elif any(r.startswith("VISION_WINDOW_INCOMPLETE") for r in dedup):
+        code = "VISION_WINDOW_INCOMPLETE"
+    elif dedup:
+        code = "MILESTONE_FALSE_CLOSE"
+    else:
+        return PortfolioVerdict(True, "VISION_MET", [])
+    return PortfolioVerdict(False, code, dedup)
