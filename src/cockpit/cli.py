@@ -257,7 +257,7 @@ def create_parser(active_argv: list[str] | None = None) -> tuple[argparse.Argume
             parser_console.print(f"\n[bold red]✗[/] {message}")
 
             if suggestions:
-                parser_console.print(f"\n[bold cyan]💡 您是不是想输入以下命令之一？[/]")
+                parser_console.print("\n[bold cyan]💡 您是不是想输入以下命令之一？[/]")
                 for sug in suggestions:
                     parser_console.print(f"  • [green]cockpit {sug}[/]")
 

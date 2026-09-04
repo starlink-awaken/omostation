@@ -114,7 +114,7 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
         if as_json:
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
-            console.print(f"[bold cyan]🔍 [Dry-Run] 预检 Dashboard 启动环境[/]")
+            console.print("[bold cyan]🔍 [Dry-Run] 预检 Dashboard 启动环境[/]")
             console.print(f"  • 目标地址: [cyan]{url}[/]")
             status_text = "[green]已在运行[/]" if alive else "[dim]未运行[/]"
             port_text = "[green]可用[/]" if port_free else "[yellow]已占用[/]"
