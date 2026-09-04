@@ -40,3 +40,71 @@ type: retro
 2. 任何退役失败重放需按 fail-closed 路径回滚，仅在 proof/delete-intent/settlement 全链路一致时转为已退役。
 3. 保持 ordinary 与 platform-rebased 退役策略作为默认路径，不可新增 fallback。
 
+## T1-02 Phase B — portfolio-v2 两 attempt 清理 evidence
+
+> 操作时间: 2026-09-04
+> 操作类型: controlled_block（退役不可自动执行，记录状态）
+> 操作人: agent-session (subagent for T1-02)
+
+### Attempt A: w0-t1-04-schema-implementation-20260903-01
+
+```yaml
+controlled_block:
+  action: retire_attempt_cleanup
+  status: BLOCKED
+  reason: agent-clone-identity.json missing; no merged PR; no delivery tags
+  workspace: ~/agents/portfolio-v2-governance/attempts/w0-t1-04-schema-implementation-20260903-01/ws
+  branch: codex/w0-t1-04-schema-implementation-20260903-01
+  commits_ahead_of_main: 1
+  ahead_commits:
+    - dfba06d6c feat(portfolio): add compatibility validator
+  delivery_tags: 0
+  pr_on_github: none
+  merged_to_main: false
+  disk_size: 211M
+  untracked_receipts:
+    - .omo/state/affected-graph-receipts/w0-t1-04-schema-implementation.json
+  retirement_blockers:
+    - no agent-clone-identity.json (clone-lifecycle.py retire requires provenance)
+    - no merged PR (cannot map squash-successor)
+    - no delivery tags (cannot map source-tag / delivery-base)
+  manual_cleanup_recommended: true
+```
+
+### Attempt B: w0-t1-04-script-registry-amendment-20260903-01
+
+```yaml
+controlled_block:
+  action: retire_attempt_cleanup
+  status: BLOCKED
+  reason: agent-clone-identity.json missing; no merged PR; no delivery tags
+  workspace: ~/agents/portfolio-v2-governance/attempts/w0-t1-04-script-registry-amendment-20260903-01/ws
+  branch: codex/w0-t1-04-script-registry-amendment-20260903-01
+  commits_ahead_of_main: 1
+  ahead_commits:
+    - 3bff4064c docs(portfolio): authorize T1-04 script registry surface
+  delivery_tags: 0
+  pr_on_github: none
+  merged_to_main: false
+  disk_size: 212M
+  untracked_receipts:
+    - .omo/state/affected-graph-receipts/w0-t1-04-script-registry-amendment.json
+  retirement_blockers:
+    - no agent-clone-identity.json (clone-lifecycle.py retire requires provenance)
+    - no merged PR (cannot map squash-successor)
+    - no delivery tags (cannot map source-tag / delivery-base)
+  manual_cleanup_recommended: true
+```
+
+### 决策记录
+
+两 attempt 均为孤立 clone（`.git` 为 directory，非 worktree），由 agent 会话创建但未通过标准交付流程（无 PR、无 tag、无 identity 追踪）。
+
+**退役阻塞原因**：`clone-lifecycle.py retire` 需要 `--destination` + identity provenance，两者均缺失。
+
+**推荐后续操作**：
+1. 确认 `dfba06d6c`（compatibility validator）和 `3bff4064c`（script registry surface）是否为有价值的未交付代码
+2. 若有价值：rebase 到新分支，走标准 PR 流程重新交付，然后手动删除旧 clone
+3. 若无价值：直接 `rm -rf ~/agents/portfolio-v2-governance/attempts/w0-t1-04-*` 手动清理（需人工确认）
+4. 释放磁盘：211M + 212M = 423M
+
