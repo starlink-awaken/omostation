@@ -44,3 +44,9 @@ Appetite 2 days. Implementation ~2h after T1-04 done/gate release.
 1. T1-06 Milestone/Vision completion predicates (`chain_bind` / `test_bet_portfolio_completion`) — still ★ until released.
 2. Do not treat ready_bets length as progress.
 3. New bin scripts need registry + baseline companions (same as T1-04).
+
+## Addendum — status done (2026-09-04)
+
+- `completion_evidence.overall_state=delivery_accepted`
+- merged_reachable_commit: `git://origin/main@f25b5b97b133fe6965d18a7210d4ad0b638d77ac` (#3075)
+- Downstream T1-06 human_gate released for sequential Wave A1
