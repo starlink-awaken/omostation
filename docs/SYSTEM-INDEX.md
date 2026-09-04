@@ -14,8 +14,8 @@
 
 1. 读本文 → 了解全局结构
 2. 读目标项目 `AGENTS.md` → 了解操作规则
-3. 查 `INDEX-TOOLS.md` → 找可用工具
-4. 查 `INDEX-KNOWLEDGE.md` → 查历史决策
+3. 查 `SYSTEM-INDEX.md` → 找可用工具
+4. 查 `SYSTEM-INDEX.md` → 查历史决策
 
 ---
 
@@ -59,13 +59,13 @@
 
 ## 分类索引
 
-→ [项目索引](INDEX-PROJECTS.md) — 项目按层/栈/状态分类（见 `docs/project-registry.yaml`）
+→ [项目索引](SYSTEM-INDEX.md) — 项目按层/栈/状态分类（见 `docs/project-registry.yaml`）
 
 → [跨包 API 地图](overview/cross-package-api-map.md) — Kairon BOS 路由与跨包接口（生成物）
 
-→ [工具索引](INDEX-TOOLS.md) — bin/ + .agents/skills 统一目录
+→ [工具索引](SYSTEM-INDEX.md) — bin/ + .agents/skills 统一目录
 
-→ [知识索引](INDEX-KNOWLEDGE.md) — ADR + 审计 + 模式 + 总结交叉索引
+→ [知识索引](SYSTEM-INDEX.md) — ADR + 审计 + 模式 + 总结交叉索引
 → [计划与决策台账](plans/) — 3Y-BET-LEDGER 等计划/台账文档
 
 ### 场景执行架构 (四面一脊)
@@ -78,7 +78,7 @@
 → [Permission Scope Vocabulary](../.omo/standards/permission-scope-vocabulary.yaml) — RBAC scope 受控词表
 → [Signal Sources](../.omo/_truth/registry/signal-sources.yaml) — 感知面信号源注册表
 
-→ [Agent 能力索引](INDEX-AGENTS.md) — 当前 agent 配置 + 技能清单
+→ [Agent 能力索引](SYSTEM-INDEX.md) — 当前 agent 配置 + 技能清单
 
 → [Closeout 记录](closeout/) — 各轮关闭记录和复盘（详见 `docs/closeout/`）
 
@@ -150,18 +150,18 @@
 ```
 第 1 步: 读 SYSTEM-INDEX.md（了解全局）
 第 2 步: 读目标项目 AGENTS.md（了解操作规则）
-第 3 步: 按需查 INDEX-TOOLS.md（找工具）
-第 4 步: 按需查 INDEX-KNOWLEDGE.md（查历史决策）
+第 3 步: 按需查 SYSTEM-INDEX.md（找工具）
+第 4 步: 按需查 SYSTEM-INDEX.md（查历史决策）
 ```
 
 #### 查找特定信息
 
 | 我想找什么 | 去哪里 |
 |-----------|--------|
-| 某个项目在哪个层 | INDEX-PROJECTS.md → 按层分类 |
-| 某个工具怎么用 | INDEX-TOOLS.md → 按用途分类 |
-| 某个主题有哪些决策 | INDEX-KNOWLEDGE.md → 按主题索引 |
-| 当前 agent 有哪些技能 | INDEX-AGENTS.md → 技能分布 |
+| 某个项目在哪个层 | SYSTEM-INDEX.md → 按层分类 |
+| 某个工具怎么用 | SYSTEM-INDEX.md → 按用途分类 |
+| 某个主题有哪些决策 | SYSTEM-INDEX.md → 按主题索引 |
+| 当前 agent 有哪些技能 | SYSTEM-INDEX.md → 技能分布 |
 | 端口号是多少 | protocols/port-registry.yaml（不经过索引） |
 | 当前 Phase 是多少 | .omo/state/system.yaml（不经过索引） |
 
@@ -200,7 +200,7 @@
 | Resident 常驻 Agent | resident-status resident-roles resident-daemon | Makefile (`omo resident`) |
 | BCOS 业务域 | bcos-evolve bcos-signals bcos-north-star | Makefile (`bin/bc-os/`) |
 
-详见 `INDEX-TOOLS.md` 获取完整工具目录。
+详见 `SYSTEM-INDEX.md` 获取完整工具目录。
 
 ---
 
@@ -213,7 +213,7 @@
 | 模式总结 | `.omo/_knowledge/patterns/` |
 | 管理文档 | `.omo/_knowledge/management/` |
 
-详见 `INDEX-KNOWLEDGE.md` 获取完整知识索引。
+详见 `SYSTEM-INDEX.md` 获取完整知识索引。
 
 ---
 
@@ -250,7 +250,7 @@
 
 历史专题与顶层参考 (架构/战略/治理/G-DEL 系列等) 平铺于 docs/ 目录下,
 按文件名检索: ARCHITECTURE-*.md, STRATEGY-*.md, GOVERNANCE-*.md,
-G-DEL-*.md, INDEX-MCP.md, CLI-REFERENCE.md, M4-*.md, KEMS-*.md,
+G-DEL-*.md, SYSTEM-INDEX.md, CLI-REFERENCE.md, M4-*.md, KEMS-*.md,
 KOS-*.md, SOP-*.md, VISION-ROADMAP.md 等。
 
 
