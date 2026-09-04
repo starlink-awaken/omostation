@@ -14,9 +14,9 @@ totals:
   mcp_tools: 634
   bos_services: 298
   bos_domains: 22
-  cli_commands: 201
+  cli_commands: 207
   skills: 5
-  workflows: 19
+  workflows: 24
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -2193,6 +2193,8 @@ cli_commands:
   description: 对比多个研究结果
 - name: compass
   description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
+- name: completion
+  description: 生成 Shell 自动补全脚本
 - name: compute
   description: 算力与 LLM 网关操作 (委派 aetherforge)
 - name: consolidate
@@ -2210,7 +2212,7 @@ cli_commands:
 - name: daily
   description: 每日研究简报
 - name: dashboard
-  description: 打开 Web Dashboard
+  description: 打开 Web 运维与全景仪表盘 (Web Dashboard)
 - name: data
   description: 数据目录索引 / 类型注册 / TTL 清理
 - name: debt
@@ -2233,6 +2235,8 @@ cli_commands:
   description: 外发前防泄密扫描 (敏感识别+挂起+脱敏)
 - name: dma
   description: 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准
+- name: docs
+  description: 📚 CLI 参考手册生成与导出
 - name: docx
   description: 渲染为 GB/T 9704-2012 红头公文 DOCX
 - name: domain-status
@@ -2320,7 +2324,7 @@ cli_commands:
 - name: iterate
   description: ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)
 - name: journey
-  description: 🗺️ Journey State Graph 状态表达校验器
+  description: 🗺️ Journey State Graph 业务场景旅程与状态图校验器
 - name: kairon
   description: kairon 知识引擎 monorepo 聚合入口
 - name: kems
@@ -2388,7 +2392,7 @@ cli_commands:
 - name: profile
   description: 查看/编辑身份档案 (L4 入口)
 - name: project
-  description: 🔍 17 项目全景 4D 体检与诊断
+  description: 'inspect|list (default: inspect)'
 - name: proxy-env
   description: 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE)
 - name: publish
@@ -2439,6 +2443,8 @@ cli_commands:
   description: 平面扫描
 - name: scenario
   description: P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review)
+- name: scene
+  description: 🗺️ 业务场景正交领域 (scenario/journey/gongwen/brief/family-hub)
 - name: score
   description: 评分债务项
 - name: search
@@ -2471,8 +2477,12 @@ cli_commands:
   description: 渲染 ```diagram 代码块为矢量架构图 SVG
 - name: swarm
   description: 分布式跨节点 KV 共享池与超长上下文置换基准
+- name: system
+  description: 🖥️ 系统与运维正交领域 (status/health/dashboard/readiness/runtime)
 - name: tag
   description: 为研究添加/覆盖标签
+- name: telemetry
+  description: 命令遥测与 Prometheus 指标导出
 - name: test_export_formats
   description: '离线自测: 三格式导出 + GB/T 参数断言'
 - name: timeline
@@ -2493,6 +2503,8 @@ cli_commands:
   description: 启动观测栈
 - name: url
   description: 打印 Langfuse Web URL
+- name: user
+  description: 👤 用户体验与向导正交领域 (quickstart/help/demo/init/profile/completion)
 - name: validate
   description: 验证 Workspace 契约
 - name: vault
@@ -2539,6 +2551,9 @@ workflows:
 - id: c2g-spec-ingress
   file: .omo/_truth/registry/agent-workflows/workflows/c2g-spec-ingress.yaml
   exists: true
+- id: closeout-with-retro
+  file: .omo/_truth/registry/agent-workflows/workflows/closeout-with-retro.yaml
+  exists: true
 - id: cognitive-governance-delivery
   file: .omo/_truth/registry/agent-workflows/workflows/cognitive-governance-delivery.yaml
   exists: true
@@ -2581,8 +2596,20 @@ workflows:
 - id: resident-runtime-observe
   file: .omo/_truth/registry/agent-workflows/workflows/resident-runtime-observe.yaml
   exists: true
+- id: round-engineering
+  file: .omo/_truth/registry/agent-workflows/workflows/round-engineering.yaml
+  exists: true
+- id: round-type-router
+  file: .omo/_truth/registry/agent-workflows/workflows/round-type-router.yaml
+  exists: true
+- id: scene-card-promotion
+  file: .omo/_truth/registry/agent-workflows/workflows/scene-card-promotion.yaml
+  exists: true
 - id: state-sync
   file: .omo/_truth/registry/agent-workflows/workflows/state-sync.yaml
+  exists: true
+- id: submodule-pointer-bump
+  file: .omo/_truth/registry/agent-workflows/workflows/submodule-pointer-bump.yaml
   exists: true
 - id: submodule-pointer-close
   file: .omo/_truth/registry/agent-workflows/workflows/submodule-pointer-close.yaml
