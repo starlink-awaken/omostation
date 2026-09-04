@@ -25,6 +25,7 @@ import argparse
 import base64
 import fnmatch
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -47,6 +48,23 @@ WS = Path(__file__).resolve().parents[2]
 LEDGER_RELATIVE_PATH = "docs/plans/3y-bet-ledger.yaml"
 LEDGER = WS / LEDGER_RELATIVE_PATH
 RETRO_DIR = WS / ".omo" / "_knowledge" / "retros"
+_PORTFOLIO_VALIDATOR = None
+
+
+def _validate_portfolio(ledger: dict, *, strict: bool):
+    """Load the sibling validator when this script is run or file-imported."""
+    global _PORTFOLIO_VALIDATOR
+    if _PORTFOLIO_VALIDATOR is None:
+        module_path = Path(__file__).with_name("portfolio_contract.py")
+        spec = importlib.util.spec_from_file_location("_bet_ledger_portfolio_contract", module_path)
+        if spec is None or spec.loader is None:  # pragma: no cover - filesystem failure
+            raise RuntimeError("PORTFOLIO_CONTRACT_UNAVAILABLE")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        _PORTFOLIO_VALIDATOR = module.validate_portfolio
+    return _PORTFOLIO_VALIDATOR(ledger, strict=strict)
+
 
 # 2026-08-06 实测基线 — git tracked 口径（含子模块）
 #
@@ -2543,6 +2561,23 @@ def cmd_lint(data: dict, args) -> int:
     return 0
 
 
+def cmd_portfolio(data: dict, args) -> int:
+    """Run the optional Portfolio v2 contract after the legacy Ledger lint."""
+    if args.portfolio_cmd != "lint":  # pragma: no cover - argparse constrains this
+        raise ValueError(f"unknown portfolio command: {args.portfolio_cmd}")
+    if cmd_lint(data, args) != 0:
+        return 1
+    result = _validate_portfolio(data, strict=args.strict)
+    for warning in result.warnings:
+        print(f"WARN  {warning}")
+    for error in result.errors:
+        print(f"ERROR {error}")
+    if result.ok:
+        print("OK -- Portfolio v2 compatibility contract")
+        return 0
+    return 1
+
+
 def cmd_complete(data: dict, args) -> int:
     """台账完成: 校验 verify D0 入库 + retro 后置 status=done.
 
@@ -2683,6 +2718,10 @@ def main() -> int:
     sub.add_parser("surface")
     sub.add_parser("gate").add_argument("window")
     sub.add_parser("lint")
+    portfolio = sub.add_parser("portfolio")
+    portfolio_sub = portfolio.add_subparsers(dest="portfolio_cmd", required=True)
+    portfolio_lint = portfolio_sub.add_parser("lint")
+    portfolio_lint.add_argument("--strict", action="store_true")
     pc = sub.add_parser("complete")
     pc.add_argument("bet_id")
     pc.add_argument("--force", action="store_true")
@@ -2699,6 +2738,7 @@ def main() -> int:
         "surface": cmd_surface,
         "gate": cmd_gate,
         "lint": cmd_lint,
+        "portfolio": cmd_portfolio,
         "complete": cmd_complete,
     }[args.cmd](data, args)
 

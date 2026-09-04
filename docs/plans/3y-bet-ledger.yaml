@@ -20223,7 +20223,7 @@ bets:
   appetite: 3 days
   priority: P0
   status: candidate
-  note: Initial v1-compatible self-bootstrap; Portfolio v2 enforcement is not yet active.
+  note: "Initial v1-compatible self-bootstrap; Portfolio v2 enforcement is not yet active. human_gate released 2026-09-04 by principal for Wave A1 implementation."
   goal: 以 additive contract 扩展现有 Ledger，使其表达 Vision、Objective、KR、Campaign、Milestone、parent/child、coverage、hypothesis、gate、guardrail 与 replacement，同时保持全部 v1 消费者和历史对象语义不变。
   non_goals:
   - 不创建新服务、数据库、dispatcher 或独立状态库
@@ -20249,6 +20249,7 @@ bets:
   - bin/plan/portfolio_contract.py
   - bin/plan/bet-ledger.py
   - tests/test_bet_portfolio_contract.py
+  - bin/_registry/scripts/governance/portfolio_contract.yaml
   - docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
   - docs/superpowers/plans/2026-09-03-w0-portfolio-v2-schema-compatibility.md
   - docs/plans/3y-bet-ledger.yaml
@@ -20257,8 +20258,8 @@ bets:
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
-    spec_version: 1.0.1
-    content_digest: sha256:c8bc7fa145402867a5ab5d06b6031e305a0f2ff41c3f91c08e43b45670b585e1
+    spec_version: 1.0.2
+    content_digest: sha256:0dcb84b615b337d94ee787a4ef65cab5f9f1b2d6ae07ab6c676b9323e84a630e
     decision_ref: decision://accepted/BET-Y1Q4-T1-04
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -20282,7 +20283,7 @@ bets:
     kr_refs: [KR-TRUST-CHAIN-COVERAGE, KR-HOLDABILITY-ORPHAN-BETS]
   value_indicator_policy: false
   risk_level: L2
-  human_gate: true
+  human_gate: false
   circuit_breaker: 需要数据库、新服务、第二 dispatcher、破坏 v1 CLI、strict mode 先于单字段 meta.total_bets 修复启用，或无法保持历史 BET 对象语义等价时停止
   retro: required
 - id: BET-Y1Q4-T1-05

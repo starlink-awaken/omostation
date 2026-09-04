@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/plan/portfolio_contract.py
+name: Portfolio Contract Validator
+category: governance
+owner: governance-team
+description: Additive Portfolio v2 compatibility validator for 3y-bet-ledger (BET-Y1Q4-T1-04)
+inputs: []
+outputs:
+- type: exit_code
+- type: json
+dependencies: []
+triggers: []
+related:
+- bin/plan/bet-ledger.py
+maturity: alpha
+last_reviewed: '2026-09-04'
