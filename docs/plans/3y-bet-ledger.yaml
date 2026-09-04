@@ -18468,7 +18468,6 @@ bets:
   title: Agora FastMCP 工具生态全域自动化测试与动态沙箱权限隔离
   appetite: 2 days
   priority: P1
-  status: candidate
   goal: 为 Agora 注册的 40+ 个 BOS 服务与 FastMCP 工具建立完备的契约测试套件，引入基于 Capability 标签的只读/隔离写/外发沙箱权限系统，杜绝外部
     Agent 非法越权。
   non_goals:
@@ -18493,6 +18492,52 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 沙箱准入判定耗时超过 5ms 时自动触发快速放行熔断并告警。
+  value_indicator_policy: false
+  status: done
+  done_at: 2026-09-04
+  closed_by: xiamingxing
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-01.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-agora-fastmcp-sandboxing-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:496b963535f0ddbc85009685e5b3d74b95168c2e0095d79db2ed6075cce702f4
+    decision_ref: decision://accepted/BET-Y1Q4-T8-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6fbcc58c65573502db21a05f13d0c1d0108a4e99
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-01.md
+            sha256: sha256:c79c241570e16e8273c593a82396e7cb8035958c363d1edd9f97705641dcafa0
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-agora-fastmcp-sandboxing-design.md
+            sha256: sha256:496b963535f0ddbc85009685e5b3d74b95168c2e0095d79db2ed6075cce702f4
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-01.md
+            sha256: sha256:c79c241570e16e8273c593a82396e7cb8035958c363d1edd9f97705641dcafa0
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-01.md
+            sha256: sha256:c79c241570e16e8273c593a82396e7cb8035958c363d1edd9f97705641dcafa0
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-01.md
+            sha256: sha256:c79c241570e16e8273c593a82396e7cb8035958c363d1edd9f97705641dcafa0
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-01.md
+            sha256: sha256:c79c241570e16e8273c593a82396e7cb8035958c363d1edd9f97705641dcafa0
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-01.md
+            sha256: sha256:c79c241570e16e8273c593a82396e7cb8035958c363d1edd9f97705641dcafa0
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   retro: required
 - id: BET-Y1Q4-T5-02
   track: T5-ORCH
