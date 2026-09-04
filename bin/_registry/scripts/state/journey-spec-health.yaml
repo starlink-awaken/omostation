@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/ssot/journey-spec-health.py
+name: Journey Spec Health
+category: state
+owner: governance-team
+description: ""
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-08-24"

@@ -1,0 +1,64 @@
+id: scene-card-promotion
+run_frequency: on_demand
+title: Scene card lifecycle promotion
+purpose: >
+  5 级场景卡生命周期晋升 — draft → shadow → assisted → supervised → routine。
+  每级有明确的 sample 数量和 calibration 门槛。
+agents:
+  roles:
+  - governance-agent
+  observer_policy: optional
+allowed_lanes:
+- governance_state
+- docs
+- config
+lock_scopes:
+- scene:{scene_id}
+surfaces:
+  read:
+  - .omo/standards/scene-card-lifecycle.yaml
+  - .agents/skills/scene-shadow-activate/SKILL.md
+  - bin/ssot/scene-card-review.py
+  - bin/ssot/journey-runner.py
+  write:
+  - .omo/_truth/scenarios/{scene_id}.yaml
+phases:
+  preflight:
+  - id: validate_schema
+    mode: required
+    command:
+    - python3
+    - bin/ssot/scene-card-review.py
+    - validate
+    - <scene_id>
+  execute:
+  - id: promote
+    mode: manual
+    command:
+    - python3
+    - bin/ssot/scene-card-review.py
+    - promote
+    - <scene_id>
+  verification:
+  - id: check_samples
+    mode: required
+    command:
+    - python3
+    - bin/ssot/journey-runner.py
+    - validate
+    - <scene_id>
+  - id: check_calibration
+    mode: advisory
+    command:
+    - echo
+    - check_calibration
+  closeout:
+  - id: record_promotion
+    mode: required
+    command:
+    - echo
+    - record_promotion
+evidence_required:
+- promotion_evidence
+- sample_refs
+- calibration_score

@@ -1,0 +1,72 @@
+id: submodule-pointer-bump
+run_frequency: on_demand
+title: Submodule pointer safe bump
+purpose: >
+  子模块指针安全更新 — 防止直通 main 和指针污染。
+  强制 4 步流程: check → update → verify → push。
+agents:
+  roles:
+  - governance-agent
+  observer_policy: required
+allowed_lanes:
+- submodule_pointer
+- config
+lock_scopes:
+- submodule:{sub_name}
+- root-gate
+surfaces:
+  read:
+  - .omo/standards/submodule-pointer-bump-contract.md
+  - bin/ssot/submodule-reachability-gate.py
+  write:
+  - projects/{sub_name}
+phases:
+  preflight:
+  - id: check_ff
+    mode: required
+    cwd: projects/{sub_name}
+    command:
+    - git
+    - pull
+    - --rebase
+    - origin
+    - main
+  - id: check_reachability
+    mode: required
+    command:
+    - python3
+    - bin/ssot/submodule-reachability-gate.py
+  execute:
+  - id: bump_pointer
+    mode: manual
+    command:
+    - bash
+    - bin/ssot/submodule-pointer-transaction.sh
+    - --message
+    - "{message}"
+  verification:
+  - id: verify_ancestry
+    mode: required
+    cwd: projects/{sub_name}
+    command:
+    - git
+    - log
+    - --oneline
+    - "-3"
+  - id: push_submodule
+    mode: manual
+    cwd: projects/{sub_name}
+    command:
+    - git
+    - push
+    - origin
+    - main
+  closeout:
+  - id: push_root
+    mode: manual
+    command:
+    - bash
+    - bin/ssot/sync-submodule-pointers.sh
+evidence_required:
+- transaction_log
+- ancestry_verification

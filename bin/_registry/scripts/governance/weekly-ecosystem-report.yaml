@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/gac/weekly-ecosystem-report.py
+name: Weekly Ecosystem Report
+category: governance
+owner: governance-team
+description: ""
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-08-24"

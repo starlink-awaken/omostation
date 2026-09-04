@@ -1,0 +1,50 @@
+id: round-type-router
+run_frequency: on_demand
+title: Round type recommendation
+purpose: >
+  根据 diff 自动推荐 Round 类型 (R-patch/R-feature/R-meta/R-archive)。
+  减少人工判断成本。
+agents:
+  roles:
+  - engineering-agent
+  - governance-agent
+  observer_policy: none
+allowed_lanes:
+- docs
+lock_scopes:
+- round_type:{round_id}
+surfaces:
+  read:
+  - AGENTS.md
+  - .agents/skills/round-workflow/SKILL.md
+  write: []
+phases:
+  preflight:
+  - id: analyze_diff
+    mode: required
+    command:
+    - git
+    - diff
+    - --stat
+    - origin/main...HEAD
+  execute:
+  - id: recommend_type
+    mode: advisory
+    command:
+    - python3
+    - bin/gac/skill-recommender.py
+  verification:
+  - id: validate_recommendation
+    mode: advisory
+    command:
+    - echo
+    - "validate round type recommendation"
+  closeout:
+  - id: record_recommendation
+    mode: advisory
+    command:
+    - echo
+    - "record round type"
+evidence_required:
+- diff_analysis
+- type_recommendation
