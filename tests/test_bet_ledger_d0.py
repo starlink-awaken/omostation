@@ -159,7 +159,7 @@ def test_complete_accepts_index_pinned_submodule_surface(
     monkeypatch.setattr(
         BET_LEDGER,
         "validate_completion_evidence",
-        lambda matrix, *, workspace: ("outcome_accepted", []),
+        lambda matrix, *, workspace, value_indicator_policy, done_at=None: ("outcome_accepted", []),
     )
     monkeypatch.setitem(
         sys.modules,
