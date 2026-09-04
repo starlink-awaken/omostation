@@ -19608,7 +19608,8 @@ bets:
   title: T4-07 closeout — 子模块指针同步与 agora index 恢复
   appetite: 0.25 day
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-04
   note: 'closeout repair: T4-07 Human Adjudication merge 后父仓库 HEAD 指向新的 agora/cockpit/omo
     commits；恢复 agora index 并将三个子模块对齐到父 HEAD，父仓库 git status --short 为空。'
   goal: 修复 T4-07 merge 后的工作树真值漂移：恢复 projects/agora 子模块 index，并将 projects/agora、projects/cockpit、projects/omo
@@ -19630,14 +19631,52 @@ bets:
   underlying_workflow: governance-state-mutation
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T1-13.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-31-t1-13-submodule-pointer-alignment.md
     spec_version: 1.0.0
     content_digest: sha256:bfd71bda9cf5ab10a988532be4f5076190e2c5017d9f8c86c9768b5c4a508bd7
     decision_ref: decision://accepted/BET-Y1Q3-T1-13
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b716de20043cdd0137c5c15299a4760cc61f14d6
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md
+            sha256: sha256:c527ca98ad71ee348d8420dc87c2494e3f3a7e6d3cf93b753bfa91c0284ede28
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-31-t1-13-submodule-pointer-alignment.md
+            sha256: sha256:bfd71bda9cf5ab10a988532be4f5076190e2c5017d9f8c86c9768b5c4a508bd7
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md
+            sha256: sha256:c527ca98ad71ee348d8420dc87c2494e3f3a7e6d3cf93b753bfa91c0284ede28
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md
+            sha256: sha256:c527ca98ad71ee348d8420dc87c2494e3f3a7e6d3cf93b753bfa91c0284ede28
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md
+            sha256: sha256:c527ca98ad71ee348d8420dc87c2494e3f3a7e6d3cf93b753bfa91c0284ede28
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md
+            sha256: sha256:c527ca98ad71ee348d8420dc87c2494e3f3a7e6d3cf93b753bfa91c0284ede28
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T1-13.md
+            sha256: sha256:c527ca98ad71ee348d8420dc87c2494e3f3a7e6d3cf93b753bfa91c0284ede28
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   pasw_required: false
   depends_on: []
   risk_level: L2
+  value_indicator_policy: false
   human_gate: false
   circuit_breaker: 子模块对齐后若父仓库仍有未跟踪变更或子模块内部出现本地修改 → 暂停提交并人工检查
   retro: required
