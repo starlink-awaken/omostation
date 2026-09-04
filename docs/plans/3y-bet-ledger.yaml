@@ -20347,7 +20347,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md
     spec_version: 1.0.0
-    content_digest: sha256:27b93936399c3d7ff895c82ffe85855bd3b1ce895af43737b92ab9e922b35806
+    content_digest: sha256:96fc21376953def89fc4b53418efcb2029424f602e43720ac8fc418226f496a2
     decision_ref: decision://accepted/BET-Y1Q4-T1-05
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
