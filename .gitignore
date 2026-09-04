@@ -72,6 +72,11 @@ runtime/task-inventory/snapshots/
 
 runtime/sandbox/decayed/
 runtime/sandbox/pitches/
+
+# T10-122: family-hub dashboard generated artifacts — runtime-only, not tracked
+runtime/family-hub/dashboard/generated/
+runtime/family-hub/dashboard/manifests/
+runtime/family-hub/dashboard/migration/
 runtime/omo/
 runtime/agent-sessions/
 
