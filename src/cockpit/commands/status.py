@@ -834,7 +834,123 @@ def cmd_daily(args: argparse.Namespace) -> int:
 
 
 def cmd_dashboard(args: argparse.Namespace) -> int:
-    from .dashboard import cmd_dashboard as _modern_dashboard
+    import os
+    import sys
+    import webbrowser
+    from urllib import request as urlrequest
 
-    return _modern_dashboard(args)
+    c = _get_console()
+    port = getattr(args, "port", None) or os.environ.get("COCKPIT_DASHBOARD_PORT", "8090")
+    url = f"http://localhost:{port}/bos"
+    workspace_root = Path(__file__).resolve().parents[4]
+
+    is_dry_run = getattr(args, "dry_run", False)
+    is_json = getattr(args, "json", False) or getattr(args, "global_output", "text") == "json"
+    status_only = getattr(args, "status_only", False)
+    no_open = getattr(args, "no_open", False)
+
+    def _print_dashboard_fixes() -> None:
+        c.print("[yellow]试试:[/]")
+        c.print("  [cyan]uv run cockpit-dashboard[/]  — 手动启动")
+        c.print("  [cyan]cockpit status[/]            — 检查服务状态")
+        c.print("  [cyan]cockpit demo[/]              — 在 CLI 中体验")
+
+    # 若 Dashboard 已在运行，直接打开
+    alive = False
+    try:
+        r = urlrequest.urlopen(url, timeout=2)
+        if getattr(r, "status", 200) == 200:
+            alive = True
+    except Exception:
+        pass
+
+    if is_dry_run:
+        payload = {"dry_run": True, "url": url, "port": str(port), "alive": alive}
+        if is_json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            c.print(f"[bold cyan]🔍 [Dry-Run] 预检 Dashboard: {url} (alive={alive})[/]")
+        return 0
+
+    if status_only:
+        payload = {"alive": alive, "url": url, "port": str(port)}
+        if is_json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            status_text = "[green]已在运行[/]" if alive else "[dim]未运行[/]"
+            c.print(f"Dashboard 状态: {status_text} ({url})")
+        return 0 if alive else 1
+
+    if alive:
+        if is_json:
+            print(json.dumps({"ok": True, "running": True, "url": url, "port": str(port)}, ensure_ascii=False))
+        else:
+            if not no_open:
+                webbrowser.open(url)
+            c.print(f"[green]✅ Dashboard 已运行: [cyan]{url}[/][/]")
+        return 0
+
+    if not is_json:
+        c.print(f"[dim]正在启动 Cockpit Dashboard (port {port})...[/]")
+    cmd = [sys.executable, "-m", "cockpit.dashboard_server"]
+    child_env = os.environ.copy()
+    try:
+        from cockpit.web.memory_env import apply_memory_os_env
+
+        apply_memory_os_env()
+        child_env = os.environ.copy()
+    except Exception:
+        pass
+
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(workspace_root),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env=child_env,
+        )
+    except FileNotFoundError:
+        if is_json:
+            print(json.dumps({"ok": False, "error": "无法启动 Dashboard"}))
+        else:
+            c.print("[red]❌ 无法启动 Dashboard[/]")
+            _print_dashboard_fixes()
+        return 1
+
+    time.sleep(2)
+    try:
+        r = urlrequest.urlopen(url, timeout=3)
+        if getattr(r, "status", 200) != 200:
+            if is_json:
+                print(json.dumps({"ok": False, "error": f"HTTP {r.status}"}))
+            else:
+                c.print(f"[red]Dashboard returned HTTP {r.status}[/]")
+                _print_dashboard_fixes()
+            proc.terminate()
+            return 1
+    except Exception:
+        if is_json:
+            print(json.dumps({"ok": False, "error": f"无法连接到 Dashboard :{port}"}))
+        else:
+            c.print(f"[red]无法连接到 Dashboard :{port}[/]")
+            _print_dashboard_fixes()
+        proc.terminate()
+        return 1
+
+    if is_json:
+        print(json.dumps({"ok": True, "running": True, "url": url, "port": str(port), "pid": proc.pid}, ensure_ascii=False))
+        return 0
+
+    if not no_open:
+        webbrowser.open(url)
+    c.print(f"[green]✅ Dashboard 已启动: [cyan]{url}[/][/]")
+    c.print("[dim]按 Ctrl+C 停止服务[/]")
+    try:
+        proc.wait()
+    except KeyboardInterrupt:
+        proc.terminate()
+        c.print("\n[yellow]Dashboard 已停止[/]")
+    return 0
+
 

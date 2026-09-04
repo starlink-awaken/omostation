@@ -79,6 +79,11 @@ def cmd_data(args: argparse.Namespace) -> int:
     from cockpit.domain.exit_codes import ExitCode
 
     sub = getattr(args, "data_command", "")
+    import sys
+    cli_mod = sys.modules.get("cockpit.cli")
+    cli_target = getattr(cli_mod, f"cmd_data_{sub}", None) if cli_mod else None
+    if cli_target is not None and cli_target not in (cmd_data_index, cmd_data_types, cmd_data_gc):
+        return cli_target(args)
     if sub == "index":
         return cmd_data_index(args)
     if sub == "types":

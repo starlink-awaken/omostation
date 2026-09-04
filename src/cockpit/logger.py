@@ -43,3 +43,17 @@ class CockpitLogger:
 def get_logger(name: str = "cockpit") -> CockpitLogger:
     """Obtain a CockpitLogger instance."""
     return CockpitLogger(name)
+
+
+def configure_logging(
+    verbose: bool = False,
+    quiet: bool = False,
+    as_json: bool = False,
+    trace_id: str | None = None,
+) -> None:
+    """Configure basic root logging according to CLI flags."""
+    if trace_id:
+        os.environ[_TRACE_ID_VAR] = trace_id
+    level = logging.DEBUG if verbose else (logging.WARNING if quiet else logging.INFO)
+    logging.basicConfig(level=level, format="%(asctime)s [%(levelname)s] %(message)s")
+

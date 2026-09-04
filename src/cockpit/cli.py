@@ -469,7 +469,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # ── 初始化结构化分级日志 ──
     try:
-        from cockpit.logging.logger import configure_logging
+        from cockpit.logger import configure_logging
         configure_logging(
             verbose=getattr(args, "verbose", False),
             quiet=getattr(args, "quiet", False),
