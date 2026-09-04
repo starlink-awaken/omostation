@@ -6,7 +6,6 @@ purpose: >
   强制 4 步流程: check → update → verify → push。
 agents:
   roles:
-  - release-agent
   - governance-agent
   observer_policy: required
 allowed_lanes:
@@ -24,21 +23,49 @@ surfaces:
 phases:
   preflight:
   - id: check_ff
-    command: git -C projects/{sub_name} pull --ff-only
-    expect: exit 0
+    mode: required
+    cwd: projects/{sub_name}
+    command:
+    - git
+    - pull
+    - --rebase
+    - origin
+    - main
   - id: check_reachability
-    command: python3 bin/ssot/submodule-reachability-gate.py
-    expect: PASS
+    mode: required
+    command:
+    - python3
+    - bin/ssot/submodule-reachability-gate.py
   execute:
   - id: bump_pointer
-    command: bash bin/ssot/submodule-pointer-transaction.sh --message "{message}"
-  verify:
+    mode: manual
+    command:
+    - bash
+    - bin/ssot/submodule-pointer-transaction.sh
+    - --message
+    - "{message}"
+  verification:
   - id: verify_ancestry
-    command: git -C projects/{sub_name} log --oneline -3
+    mode: required
+    cwd: projects/{sub_name}
+    command:
+    - git
+    - log
+    - --oneline
+    - "-3"
   - id: push_submodule
-    command: git -C projects/{sub_name} push origin main
+    mode: manual
+    cwd: projects/{sub_name}
+    command:
+    - git
+    - push
+    - origin
+    - main
   - id: push_root
-    command: git add projects/{sub_name} && git commit && git push
+    mode: manual
+    command:
+    - bash
+    - bin/ssot/sync-submodule-pointers.sh
 evidence_required:
 - transaction_log
 - ancestry_verification

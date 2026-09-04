@@ -6,7 +6,8 @@ purpose: >
   减少人工判断成本。
 agents:
   roles:
-  - any-agent
+  - engineering-agent
+  - governance-agent
   observer_policy: none
 allowed_lanes:
 - docs
@@ -20,10 +21,18 @@ surfaces:
 phases:
   preflight:
   - id: analyze_diff
-    command: git diff --stat origin/main...HEAD
+    mode: required
+    command:
+    - git
+    - diff
+    - --stat
+    - origin/main...HEAD
   execute:
   - id: recommend_type
-    command: analyze changed files and recommend R-patch/R-feature/R-meta/R-archive
+    mode: advisory
+    command:
+    - python3
+    - bin/gac/skill-recommender.py
 evidence_required:
 - diff_analysis
 - type_recommendation

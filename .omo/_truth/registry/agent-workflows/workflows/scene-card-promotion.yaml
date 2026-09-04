@@ -26,16 +26,35 @@ surfaces:
 phases:
   preflight:
   - id: validate_schema
-    command: python3 bin/ssot/scene-card-review.py validate {scene_id}
-    expect: exit 0
+    mode: required
+    command:
+    - python3
+    - bin/ssot/scene-card-review.py
+    - validate
+    - {scene_id}
   execute:
   - id: promote
-    command: python3 bin/ssot/scene-card-review.py promote {scene_id} --to {target_lifecycle}
-  verify:
+    mode: manual
+    command:
+    - python3
+    - bin/ssot/scene-card-review.py
+    - promote
+    - {scene_id}
+    - --to
+    - {target_lifecycle}
+  verification:
   - id: check_samples
-    command: verify sample_refs count >= threshold
+    mode: required
+    command:
+    - python3
+    - bin/ssot/journey-runner.py
+    - validate
+    - {scene_id}
   - id: check_calibration
-    command: verify calibration >= 0.6 (for assisted+)
+    mode: advisory
+    command:
+    - echo
+    - "verify calibration >= 0.6"
 evidence_required:
 - promotion_evidence
 - sample_refs

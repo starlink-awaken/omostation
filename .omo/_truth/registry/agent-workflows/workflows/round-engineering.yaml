@@ -8,7 +8,7 @@ agents:
   roles:
   - engineering-agent
   - governance-agent
-  observer_policy: optional
+  observer_policy: use_for_high_blast_radius_or_unattended_runs
 allowed_lanes:
 - docs
 - code
@@ -32,33 +32,62 @@ surfaces:
 phases:
   preflight:
   - id: baseline
-    command: make m4-health
-    expect: exit 0
+    mode: required
+    command:
+    - make
+    - m4-health
   - id: worktree
-    command: bash bin/gac/gac-worktree.sh claim round-{round_id}
-    expect: exit 0
+    mode: required
+    command:
+    - bash
+    - bin/gac/gac-worktree.sh
+    - claim
+    - round-{round_id}
   - id: gate_check
-    command: .agents/skills/round-gate-check/SKILL.md
-    expect: PASS
+    mode: required
+    command:
+    - python3
+    - bin/gac/round-gate-check.py
   execute:
   - id: deliver
-    command: agent deliver N deliverables (1 per PR)
+    mode: manual
+    command:
+    - agent
+    - deliver
   - id: tests
-    command: run T-X regression tests
-  verify:
+    mode: manual
+    command:
+    - agent
+    - run-tests
+  verification:
   - id: self_reflex
-    command: bin/mof/mof-bootstrap.py all
-    expect: exit 0
+    mode: required
+    command:
+    - python3
+    - bin/mof/mof-bootstrap.py
+    - all
   - id: adr
-    command: write new ADR
+    mode: manual
+    command:
+    - agent
+    - write-adr
   - id: health_compare
-    command: make m4-health-compare
-    expect: delta >= 0
+    mode: required
+    command:
+    - make
+    - m4-health-compare
   closeout:
   - id: decisions_index
-    command: write docs/M4-DECISIONS-INDEX.md
+    mode: required
+    command:
+    - agent
+    - write-docs
+    - docs/M4-DECISIONS-INDEX.md
   - id: retro
-    command: .agents/skills/closeout-retro/SKILL.md
+    mode: required
+    command:
+    - python3
+    - bin/gac/p78-diagnostic-prescan.py
 evidence_required:
 - adr_ref
 - health_delta

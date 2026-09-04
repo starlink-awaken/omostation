@@ -6,7 +6,9 @@ purpose: >
   解决当前 agent-workflow closeout 不强制 retro 导致教训流失的问题。
 agents:
   roles:
-  - any-agent
+  - engineering-agent
+  - qa-agent
+  - governance-agent
   observer_policy: optional
 allowed_lanes:
 - docs
@@ -22,14 +24,28 @@ surfaces:
 phases:
   preflight:
   - id: basic_closeout
-    command: git status --short && make gac-local-gate
-    expect: exit 0
+    mode: required
+    command:
+    - git
+    - status
+    - --short
+  - id: gac_gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
   execute:
   - id: p78_diagnostic
-    command: answer P78 4-question diagnostic
-  verify:
+    mode: required
+    command:
+    - python3
+    - bin/gac/p78-diagnostic-prescan.py
+  verification:
   - id: three_layer_solidify
-    command: solidify across memory/protocol/harness layers
+    mode: manual
+    command:
+    - agent
+    - solidify-retro
 evidence_required:
 - p78_answers
 - solidification_actions

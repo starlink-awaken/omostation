@@ -1,36 +1,28 @@
 # 文档索引 (自动生成)
 
-> 生成时间: 2026-09-04 16:05
-> 总文档数: 4002
+> 生成时间: 2026-09-04 17:22
+> 总文档数: 4006
 > 本文件由 `bin/ssot/generate-docs-index.py` 自动维护，不要手动编辑。
 
 ## 统计
 
 | 类型 | 数量 |
 |------|------|
-| SSOT | 991 |
+| SSOT | 983 |
 | derived | 57 |
 | ephemeral | 139 |
-| untyped | 1793 |
+| untyped | 1804 |
 
 ## SSOT 清单
 
 | 路径 | Owner | 最后更新 | 行数 |
 |------|-------|----------|------|
 | .agents/skills/architecture-perception/SKILL.md | agent-skills-team | 2026-09-04 | 91 |
-| .agents/skills/bet-execution/SKILL.md | governance-team | 2026-09-04 | 223 |
-| .agents/skills/cognitive-governance/SKILL.md | governance-team | 2026-09-04 | 79 |
-| .agents/skills/delegation-guardrails/SKILL.md | governance-team | 2026-09-04 | 119 |
-| .agents/skills/domain-cartridge-governance/SKILL.md | governance-team | 2026-09-04 | 53 |
 | .agents/skills/git-discipline/SKILL.md | agent-skills-team | 2026-09-04 | 351 |
 | .agents/skills/harness-compliance/SKILL.md | governance-team | 2026-09-04 | 154 |
-| .agents/skills/nextgen-cognitive-mesh/SKILL.md | governance-team | 2026-09-04 | 69 |
-| .agents/skills/omlxc-compute-fabric/SKILL.md | governance-team | 2026-09-04 | 96 |
 | .agents/skills/spine-value-pipeline/SKILL.md | agent-skills-team | 2026-09-04 | 76 |
 | .agents/skills/workflow:bet-execution/SKILL.md | agent-skills-team | 2026-09-04 | 51 |
 | .kilo/commands/omostation-context.md | governance-team | 2026-09-04 | 12 |
-| .mimocode/commands/design-self-critique.md | governance-team | 2026-09-04 | 101 |
-| .mimocode/commands/trajectory-distill.md | governance-team | 2026-09-04 | 117 |
 | .omo/_archive/docs-migration-2026-09/2026-07-10-bus-foundation-r89-r97-spec.md | governance-team | 2026-09-04 | 581 |
 | .omo/_archive/docs-migration-2026-09/2026-07-10-bus-foundation-r89-r97.md | governance-team | 2026-09-04 | 521 |
 | .omo/_archive/docs-migration-2026-09/2026-07-13-P7X-IMPROVEMENTS-SUMMARY.md | governance-team | 2026-09-04 | 127 |
@@ -1215,7 +1207,7 @@
 | projects/family-hub/apps/dashboard/tests/fixtures/documents/_knowledge/02.医疗健康/Synthetic Member 02/疫苗接种计划.md | - | 2026-09-03 |
 | projects/family-hub/apps/dashboard/tests/fixtures/documents/_knowledge/03.育儿成长/Synthetic Member 02发育里程碑.md | - | 2026-09-03 |
 
-## 合规问题 (1793)
+## 合规问题 (1804)
 
 - [UNTYPED] locks/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] locks/AGENTS.md: 未声明 type (建议添加 frontmatter)
@@ -1270,6 +1262,8 @@
 - [UNTYPED] protocols/append-only-log-rollout.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .mimocode/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .mimocode/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .mimocode/commands/trajectory-distill.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .mimocode/commands/design-self-critique.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] data/驾驶舱/CARDS/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] scenarios/Y1Q4-B2/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] scenarios/Y1Q4-B1/README.md: 未声明 type (建议添加 frontmatter)
@@ -1282,6 +1276,7 @@
 - [UNTYPED] docs/generated/ssot-map.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/generated/doc-gov-framework.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/generated/doc-inventory.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/generated/ecosystem-health.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/isa/debt-remediation-isa.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/reports/2026-09-03-t10-119-failover-validation.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/reports/2026-09-04-portfolio-v2-ledger-truth-restore.md: 未声明 type (建议添加 frontmatter)
@@ -1306,14 +1301,19 @@
 - [UNTYPED] .agents/orchestrator/BRIEFING.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/orchestrator/progress.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/orchestrator/plan.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/skills/omlxc-compute-fabric/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/memory-recall/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/external-agent-attach/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/ci-red-triage/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/governance-phase-orchestrator/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/workflow:project-code-change/SKILL.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/skills/cognitive-governance/SKILL.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/skills/delegation-guardrails/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/agent-quickstart/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/ecos-test-cycle/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/governance-ssot-edit/SKILL.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/skills/domain-cartridge-governance/SKILL.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/skills/bet-execution/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/worktree-ci-isolate/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/system-index-distill/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/project-governance/SKILL.md: 未声明 type (建议添加 frontmatter)
@@ -1324,6 +1324,7 @@
 - [UNTYPED] .agents/skills/workflow:mini/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/omo-audit-baseline/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/agent-onboarding/SKILL.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .agents/skills/nextgen-cognitive-mesh/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/a2a-coordination/SKILL.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/grill-me/QA_5.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .agents/skills/bos-contract-fix/SKILL.md: 未声明 type (建议添加 frontmatter)
@@ -1411,6 +1412,7 @@
 - [UNTYPED] projects/omlxc/scratch/2026-08-22-audit-leaderboard.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/omlxc/conf/launchd-proposal.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/omlxc/conf/agent-client.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] projects/omlxc/docs/generated/doc-inventory.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/omlxc/docs/operations/2026-08-25-live-journey-seven-steps-graduation.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/omlxc/docs/operations/2026-08-26-multi-agent-collaboration-protocol-proposal.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] projects/omlxc/docs/operations/2026-08-22-deep-audit-and-hardening.md: 未声明 type (建议添加 frontmatter)
@@ -1448,6 +1450,7 @@
 - [UNTYPED] bin/meta/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] bin/gac/SECURITY.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] bin/sweep/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] bin/_registry/quickstart.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] bin/ssot/PACKS/INDEX.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] bin/ssot/PACKS/dormant-adapter/VERIFY.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] bin/ssot/PACKS/dormant-adapter/INSTALL.md: 未声明 type (建议添加 frontmatter)
@@ -3011,7 +3014,7 @@
 - [UNTYPED] .omo/_control/obsidian-vault/CLAUDE.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_control/debt-dashboard/health-trend.md: 未声明 type (建议添加 frontmatter)
 
-## 孤立文档 (1788)
+## 孤立文档 (1799)
 
 > 未声明 type，也不引用任何 SSOT。
 
@@ -3065,4 +3068,4 @@
 - data/AGENTS.md
 - protocols/README.md
 - protocols/AGENTS.md
-- ... 和另外 1738 个文档
+- ... 和另外 1749 个文档
