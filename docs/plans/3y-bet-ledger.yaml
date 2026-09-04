@@ -20389,7 +20389,7 @@ bets:
             ref: git://origin/main@d2106d5b86dbc03c1ffc1f148e1786c41b2d9a63
           tests:
             ref: receipt://tests/test_bet_portfolio_contract.py
-            sha256: sha256:440f7e415dd3dd69f87a46f5ef02542b5c9f413dff609ac115b030116a7c9832
+            sha256: sha256:2dd7fecb9bbd74de1c660a30ac566a7631c6bde9c9c4bd445a2d14b1af60c5da
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
             sha256: sha256:0dcb84b615b337d94ee787a4ef65cab5f9f1b2d6ae07ab6c676b9323e84a630e
@@ -20806,8 +20806,9 @@ bets:
   title: Cockpit Portfolio 只读组合视图
   appetite: 3 days
   priority: P0
-  status: candidate
-  note: "human_gate released 2026-09-04 by principal sequential Wave auth; Spec 1.0.1 authorized."
+  status: done
+  done_at: 2026-09-04 11:59:07+00:00
+  note: "Child #131 → fd884f36; live portfolio unavailable (missing_control_projection) until T1-08 broker amendment."
   goal: 在现有 Cockpit 单入口呈现 Objective、KR、Milestone、critical path、blocker 与 unavailable evidence，不暴露内部 workflow/gitlink 术语且不成为组合 writer。
   non_goals:
   - 不直接读写 Ledger、Goals 或 OMO state
@@ -20818,9 +20819,9 @@ bets:
   - missing/stale/digest mismatch 显示 unavailable 且无推断 fallback
   - child PR/CI/main/tag 先完成，root 仅以独立 pointer PR 更新 child-main reachable gitlink
   verify:
-  - cmd: cd projects/cockpit && uv run --with pytest python -m pytest -q
+  - cmd: cd projects/cockpit && uv run --with pytest python -m pytest -q tests/test_portfolio_command.py
     expect: focused portfolio tests exit 0
-  - cmd: python3 bin/ssot/submodule-reachability-gate.py --source index --require-main projects/cockpit
+  - cmd: python3 bin/ssot/submodule-reachability-gate.py --source index --require-main
     expect: exit 0 after root pointer close
   workflow: project-code-change
   underlying_workflow: project-code-change
@@ -20843,15 +20844,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md
+            sha256: sha256:fb72395f9361c39830480ca7895828baecc3fe64bdaae41c3e1dcbbbadf2437f
+          tests:
+            ref: receipt://projects/cockpit/tests/test_portfolio_command.py
+            sha256: sha256:f6b00828da75d61dae830abdc86097a8c79ac45a3010fc2dd8fc3cc9e6e0611e
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
+            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
+          merged_reachable_commit:
+            ref: git://origin/main@a7ac3ba4d87b5c030656f233c13dcd2222120992
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
+            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
+            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
+            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
+            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   depends_on: [BET-Y1Q4-T1-05, BET-Y1Q4-T1-08]
   portfolio_binding:
     schema_state: enforced
