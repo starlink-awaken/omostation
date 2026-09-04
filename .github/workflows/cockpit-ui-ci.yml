@@ -26,12 +26,21 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
+      # cockpit-ui 现为独立仓 (omostation-hermes-console, 自带 CI)。
+      # 主仓检出不含该目录时优雅跳过, 不再让主仓 PR 永远挂在 cd 失败上。
+      - id: guard
+        name: Detect cockpit-ui presence
+        run: echo "present=$([ -d projects/cockpit-ui ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
+        if: steps.guard.outputs.present == 'true'
         with:
           node-version: 20
       - name: Install dependencies
+        if: steps.guard.outputs.present == 'true'
         run: cd projects/cockpit-ui && npm install
       - name: Lint
+        if: steps.guard.outputs.present == 'true'
         run: cd projects/cockpit-ui && npm run lint || true
       - name: Build
+        if: steps.guard.outputs.present == 'true'
         run: cd projects/cockpit-ui && npm run build
