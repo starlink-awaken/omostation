@@ -37,8 +37,8 @@ DATA_SOURCES = {
     "CI-fail": "healthy",
     "gac-fail": "healthy",
     "gac-local-gate-fail": "healthy",
-    "lighthouse": "missing",
-    "NFR": "missing",
+    "lighthouse": "partial",
+    "NFR": "partial",
     "doc-freshness": "healthy",
     "hygiene-patrol": "healthy",
     "doc-ssot-lint": "healthy",
@@ -57,20 +57,24 @@ def generate_json() -> dict:
     for probe in PROBES:
         results = [DATA_SOURCES.get(s, "unknown") for s in probe["sources"]]
         healthy = sum(1 for r in results if r == "healthy")
+        partial = sum(1 for r in results if r == "partial")
         total = len(probe["sources"])
+        coverage = (healthy + partial * 0.5) / total if total else 0
         probes_status.append({
             "id": probe["id"],
             "topic": probe["topic"],
             "healthy": healthy,
+            "partial": partial,
             "total": total,
-            "coverage": round(healthy / total, 2) if total else 0,
+            "coverage": round(coverage, 2),
         })
 
     healthy_sources = sum(1 for s in DATA_SOURCES.values() if s == "healthy")
+    partial_sources = sum(1 for s in DATA_SOURCES.values() if s == "partial")
     total_sources = len(DATA_SOURCES)
     healthy_probes = sum(1 for p in probes_status if p["coverage"] >= 0.5)
 
-    source_score = (healthy_sources / total_sources) * 5 if total_sources else 0
+    source_score = ((healthy_sources + partial_sources * 0.5) / total_sources) * 5 if total_sources else 0
     probe_score = (healthy_probes / len(PROBES)) * 3 if PROBES else 0
     overall = round(source_score + probe_score + 2, 1)
 
