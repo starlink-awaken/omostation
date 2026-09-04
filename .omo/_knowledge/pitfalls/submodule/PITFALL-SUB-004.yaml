@@ -1,0 +1,20 @@
+schema: agent-error/v1
+id: PITFALL-SUB-004
+category: submodule
+severity: high
+title: .git/config 子模块 URL 覆盖错误导致 init 404 (kairon)
+symptom: git submodule init/update 报 404 (unable to access ...omostation-kairon.git), 子模块无法 clone
+root_cause: 根仓 .git/config 存在 submodule.<path>.url 覆盖值, 与 .gitmodules 正确 URL 不一致 (如 omostation-kairon vs kairon), init 使用 config 覆盖值访问错误仓库
+solution: 'git submodule sync <path> 使 config 与 .gitmodules 对齐后 update; 若 .gitmodules 本身错误则须修正并随 PR 提交 (如 fix/submodule-gitlink-sync 分支最终通过 .gitmodules 修正合并解决)'
+prevention: 'init 前对比 git config --get submodule.<path>.url 与 .gitmodules; 修复须落盘 .gitmodules 而非只改本地 config'
+tags:
+- submodule
+- config
+- url
+- 404
+- kairon
+discovered_by: bet-execution-session
+discovered_at: '2026-09-04'
+times_encountered: 2
+last_confirmed_at: '2026-09-04'
+status: active
