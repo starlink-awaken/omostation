@@ -28,7 +28,7 @@ def find_workspace_root() -> Path:
     """从当前脚本位置回溯找到 workspace 根 (含 .omo/ 目录)."""
     current = Path(__file__).resolve().parent
     for _ in range(5):  # 最多向上 5 层
-        if (current / ".omo").exists():
+        if (current / ".omo" / "_truth").exists():
             return current
         current = current.parent
     # fallback: 假设 PWD 是 workspace
