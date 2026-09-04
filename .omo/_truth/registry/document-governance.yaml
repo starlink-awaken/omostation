@@ -66,6 +66,7 @@ surfaces:
       - .omo/_knowledge/decision-proposals/**
     owner: governance-team
     lifecycle: history
+    ssot: docs/INDEX-KNOWLEDGE.md
     verifier: bin/ssot/doc-governance-check.py
     metadata: frontmatter
     required_frontmatter: [status, lifecycle, owner, last-reviewed]
