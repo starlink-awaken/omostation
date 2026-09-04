@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # `.mimocode` Agent Guide
 
 ## 用途

@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # 真实场景 — Y1Q4 B1 知识流动最小闭环端到端
 
 > 链路：`cockpit research "主题" → vault → knowledge search <800ms → daily 7日留存`

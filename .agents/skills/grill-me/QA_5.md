@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # Grill 5Q — 边界/反模式/容量/回滚/可观测
 
 > SSOT: .omo/_truth/registry/harness-policy.yaml :: admission.require_grill

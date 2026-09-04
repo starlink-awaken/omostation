@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # Git Hooks (主仓)
 
 ## pre-push — 子模块自动同步硬门

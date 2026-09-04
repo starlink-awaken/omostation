@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # `.mimocode` 命令资产
 
 `.mimocode/` 是本地 Mimocode 会话分析与工作流蒸馏资产目录，不是运行时代码目录，也不是主仓公共 CLI 的替代入口。

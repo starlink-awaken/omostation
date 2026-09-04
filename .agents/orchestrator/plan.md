@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # Project Plan: eCOS Architecture Convergence (eCOS 架构收敛与整合)
 
 本计划旨在重构 AetherForge 与 ECOS 的跨层 subprocess 直连为 Agora I0 网格的 BOS 协议通信，以真实的 `bus-foundation` 替换 Swarm 底层 Mock Stub，并打通算力网格与 OMO 任务/稳态配置的自适应闭环控制。

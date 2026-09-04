@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # 真实场景 — Y1Q4 B2 可观测自愈最小闭环
 
 > 链路：`runtime Matrix 重启 <30s` + `aetherforge 熔断 0 误杀`

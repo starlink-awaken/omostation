@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # data/
 
 `data/` is the workspace home for the **shared data substrate**.

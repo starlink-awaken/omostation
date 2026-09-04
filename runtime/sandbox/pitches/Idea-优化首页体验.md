@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # 优化首页体验
 
 > **Upstream**: (待填 — bet 前必须声明北极星, 否则 CR-STRATEGY-01 孤儿拦截)

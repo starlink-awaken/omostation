@@ -1,4 +1,5 @@
 ---
+type: ssot
 name: Bug Report
 about: 提交 Bug 以帮助我们改进
 title: '[Bug] '

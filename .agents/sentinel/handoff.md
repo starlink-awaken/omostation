@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # Sentinel Initialization Handoff Report
 
 ## Observation

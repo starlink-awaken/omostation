@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 #!/usr/bin/env bash
 # VERIFY: Dormant Adapter Detector Pack
 #

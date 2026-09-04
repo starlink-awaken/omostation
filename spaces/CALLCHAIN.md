@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # spaces — Call Chain
 
 > 本文档描述 spaces 内部最核心的一条调用链 / 数据流。

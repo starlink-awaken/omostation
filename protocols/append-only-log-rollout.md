@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # AppendOnlyLog 模式 — 跨仓推广指南 (Round 16 P2)
 
 > **状态**: 指南草稿 (Round 16 P0 落地)

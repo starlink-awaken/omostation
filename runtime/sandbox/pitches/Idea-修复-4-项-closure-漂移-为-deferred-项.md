@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # 修复 4 项 closure 漂移 + 为 deferred 项打 Next-Action
 
 > **Upstream**: P42-W0-W1-COMBO (omo 治理面 SSOT 同步纪元)

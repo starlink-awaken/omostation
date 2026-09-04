@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # Gap 清零证据包 — Phase 0-4 实施
 
 > 创建: 2026-08-08 | 验证: task-verify --strict + gap-verify

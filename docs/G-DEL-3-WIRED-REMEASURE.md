@@ -1,4 +1,5 @@
 ---
+type: ssot
 status: active
 lifecycle: contract
 owner: governance-team

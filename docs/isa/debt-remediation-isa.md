@@ -1,4 +1,5 @@
 ---
+type: ssot
 task: "Remediate omostation debt across measurement, sync, backlog, architecture"
 slug: 20260701-143000_debt-rootcause-remediation
 effort: deep

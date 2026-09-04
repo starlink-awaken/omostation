@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # CARDS — 自动生成视图
 
 > ⚠️ 此目录下的所有 .md 文件由 `cards generate` 从 SQLite 自动生成。

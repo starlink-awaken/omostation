@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # .github — 仓库协作配置入口
 
 存放仓库协作与 CI 配置（workflow、PR、issue 模板）。

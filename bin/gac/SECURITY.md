@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # mesh-router 安全合同
 
 ## 边界

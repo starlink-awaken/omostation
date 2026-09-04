@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 ## PR Checklist (omo governance audit 自动跑)
 
 - [ ] 跑过本地 CI: `./scripts/ci_local.sh`

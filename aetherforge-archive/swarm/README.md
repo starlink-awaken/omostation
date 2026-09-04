@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # AetherForge Swarm [LIBRARY-ONLY]
 
 > **Note:** This package is **[LIBRARY-ONLY]**. 

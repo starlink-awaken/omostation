@@ -1,4 +1,5 @@
 ---
+type: ssot
 description: "Query the mimocode trajectory database to find repeated manual workflows worth packaging into skills/agents/commands. Read-only SQLite analysis — never modifies the database."
 ---
 

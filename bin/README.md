@@ -1,4 +1,5 @@
 ---
+type: ssot
 status: active
 lifecycle: index
 owner: governance-team

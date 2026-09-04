@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # 修真 c2g brainstorm — 从 Mock print 到真 Pitch 生成
 
 > **Upstream**: MS-PRODUCT-WALKTHROUGH-V1 (个人全场景产品走查, 让 c2g 真能驱动持续迭代)

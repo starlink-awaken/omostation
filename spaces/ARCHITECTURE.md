@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # spaces — Architecture
 
 > **Layer**: L0/L1 跨切  

@@ -1,3 +1,7 @@
+---
+type: ephemeral
+---
+
 # AGENTS.md — tests
 
 ## Scope

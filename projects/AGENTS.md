@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # AGENTS.md — projects/ Directory Guide
 
 > Scope: the `projects/` container and its child repositories.

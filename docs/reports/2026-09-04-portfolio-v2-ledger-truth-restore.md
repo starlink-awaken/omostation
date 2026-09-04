@@ -1,3 +1,7 @@
+---
+type: ephemeral
+---
+
 # Portfolio v2 Ledger Truth Restore
 
 ## Finding

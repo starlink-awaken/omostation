@@ -1,4 +1,5 @@
 ---
+type: ssot
 description: "Review a design document against existing contracts (doc-ssot-contract, GaC rules, NORTH-STAR invariants) and produce a simplified version. Anti-over-engineering pattern."
 ---
 

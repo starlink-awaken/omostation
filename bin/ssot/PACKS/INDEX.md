@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # PACKS/INDEX.md — Skills System Catalog
 
 This directory contains standardized Packs — modular units of

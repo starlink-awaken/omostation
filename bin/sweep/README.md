@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # bin/sweep — Python 质量扫描工具链
 
 > ADR-0367 主题 A / `governance-evolution-roadmap.yaml::sweep-tooling-scaling`

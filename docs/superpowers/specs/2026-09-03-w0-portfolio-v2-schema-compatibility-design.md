@@ -1,4 +1,5 @@
 ---
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.2
 status: accepted

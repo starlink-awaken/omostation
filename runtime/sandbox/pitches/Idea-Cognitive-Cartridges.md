@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # 实现动态认知卡带 (Cognitive Frameworks)
 
 > **Upstream**: 完善 eCOS 架构执行期能力 (Execution Adaptability)

@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # spaces/
 
 `spaces/` is the workspace home for **user-space and tenant-space manifests**.

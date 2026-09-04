@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # ssot-stable — mail-daemon 运行时稳定副本 (2026-08-25)
 
 ## 为什么存在

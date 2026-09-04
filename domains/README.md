@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # domains/
 
 业务域装配区：按 BOS 业务域组织的 cartridge/组件（family-hub、weijian-governance 等）。

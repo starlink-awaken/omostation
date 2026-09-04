@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # Original User Request
 
 ## Initial Request — 2026-06-23T10:26:11+08:00

@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # BRIEFING — 2026-06-23T10:26:11+08:00
 
 ## Mission

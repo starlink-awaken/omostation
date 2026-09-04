@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # workspace→cockpit 命名 SSOT 统一 (架构师视角系统性债)
 
 > **Upstream**: MS-PRODUCT-WALKTHROUGH-V3 (双视角走查, 架构师维度: 命名 SSOT 碎片根治)

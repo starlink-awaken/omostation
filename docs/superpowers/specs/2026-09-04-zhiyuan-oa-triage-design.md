@@ -1,4 +1,5 @@
 ---
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 致远 OA 待办与审批流逆向感知与公文智能分拣

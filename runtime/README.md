@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # runtime/
 
 `runtime/` is the workspace home for **ephemeral runtime residue**.

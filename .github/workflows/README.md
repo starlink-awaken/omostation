@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # CI Workflows
 
 > 37 个 GitHub Actions workflow。按类型分组。

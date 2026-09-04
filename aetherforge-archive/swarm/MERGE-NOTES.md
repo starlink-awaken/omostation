@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # Swarm-Engine → AetherForge Swarm Merge Notes
 
 ## Date

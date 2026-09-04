@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # Install: Dormant Adapter Detector
 
 ## 1. System Analysis

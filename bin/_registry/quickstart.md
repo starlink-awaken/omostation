@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # Agent Quickstart — omostation
 
 ## Before You Start

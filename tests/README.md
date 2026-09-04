@@ -1,3 +1,7 @@
+---
+type: ephemeral
+---
+
 # tests/ — Root-Level Tests
 
 > Root workspace tests. Project-level tests live in each `projects/*/tests/`.

@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # SYSTEM-INDEX.md — Workspace 全景导航
 
 > **维护规则**

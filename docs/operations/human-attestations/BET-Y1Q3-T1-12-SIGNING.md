@@ -1,3 +1,7 @@
+---
+type: ssot
+---
+
 # BET-Y1Q3-T1-12 value attestation 签名步骤
 
 Agent 不能代签。按下列命令由 principal 本地签名后，把 `signature_b64` 写回
