@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 ---
 
 # omostation Changelog
@@ -34,6 +34,13 @@ last_updated: 2026-09-03
 - **SSOT Map 扩展** (ARCHITECTURE.md): §1 9→17 条目 (+vault-paths/x-axis-registry/governance-checks/agent-workflows/debt/task-lifecycle/ADR/registry-index).
 - **文档地图补全** (README.md + ARCHITECTURE.md): +4 文档条目 (ARCHITECTURE-DETAILED-MAP/FUNCTIONAL-CAPABILITY-MAP/I0-AGORA-CALLCHAIN/VISION-ROADMAP) EN+CN.
 - **CLAUDE.md §5 routing** (CLAUDE.md): +5 docs/ 路由条目.
+
+### Fixed (2026-09-04 仓库体系化梳理 + cockpit 项目数动态化)
+- **submodule 注册清点** (workspace, #3068): 16 个 submodule 全量核验注册完整（含 kairon 转正 gitlink e777becf）；project-registry.yaml total_submodules 19→16、total_projects 18→16；补缺失的 aetherforge 条目（layer X, v1.0.0）；16 子模块全部补 submodule:true+repository（原仅 kairon）；移除 scripts 残留（ADR-0394 已删）；submodule_policy 补 cockpit-ui→feature、gbrain→stable；重新生成 project-layer-index.md.
+- **项目数文档对齐 17→16** (workspace): SUBMODULE-PR-STRATEGY.md（3 处）、AGENTS.md（16 项目 4D 体检）、CLI-REFERENCE.md（cockpit project 全景）.
+- **cockpit 项目数硬编码动态化** (cockpit #127 + 主仓 #3076): `submodule_count()` 动态读主仓 .gitmodules；cockpit project help/summary f-string 动态化（17→16）；CAPABILITY-MAP.md 17→16. 杜绝再次漂移.
+- **test_system_map_api 自适应 aetherforge 断言** (cockpit #128): 原断言 aetherforge not in projects 因 #3068 补 registry 条目而过时 → 改为按主仓 registry 实际注册状态断言（主仓/独立两环境自适应）.
+- **移除误提交运行时 .omo/locks** (workspace, #3076): `.omo/locks/checkout-log.tsv`（PASW/并发 agent 锁目录）被 #3070 误提交且未注册 governance surface → governance-check interface-check FAIL；git rm + .gitignore 治本.
 
 ## [Unreleased] - 2026-06-24
 
