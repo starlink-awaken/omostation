@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 289
+  total_bets: 293
   windows:
   - Y1Q1
   - Y1Q2
@@ -20595,7 +20595,7 @@ bets:
   appetite: 2 days
   priority: P0
   status: candidate
-  note: Initial v1-compatible self-bootstrap; implementation produces a read-only manifest only.
+  note: "human_gate released 2026-09-04 by principal safer Wave order after self-binding #3085; write_surfaces expanded for registry/ledger/baseline."
   goal: 对执行时的全部 Ledger BET 生成 deterministic reuse/continue/merge/defer/stop 分类 manifest，历史 terminal 只引用不重写，任何 apply 仅在独立授权的至多8对象批次发生。
   non_goals:
   - 不在本 BET apply 现有对象迁移
@@ -20616,14 +20616,17 @@ bets:
   - bin/plan/portfolio_migration.py
   - tests/test_bet_portfolio_migration.py
   - docs/generated/bet-portfolio-migration-manifest.yaml
+  - bin/_registry/scripts/governance/portfolio_migration.yaml
   - docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md
   - docs/superpowers/plans/2026-09-03-w0-portfolio-legacy-bet-migration.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/governance-checks.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T1-07.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-legacy-bet-migration-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:a9d0986b151f031ea4ebf2762d309623a7cf718f59076693391ae6caeaeae009
+    spec_version: 1.0.1
+    content_digest: sha256:f80a6ccfe642a4f0c0ec3bbc1f9b2aaa25217facb4988f9d79c96a62c7786d15
     decision_ref: decision://accepted/BET-Y1Q4-T1-07
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -20650,7 +20653,7 @@ bets:
 
   value_indicator_policy: false
   risk_level: L2
-  human_gate: true
+  human_gate: false
   circuit_breaker: 需要改写 terminal evidence、自动决定业务去留、无 source digest 或单批超过8对象时停止
   retro: required
 - id: BET-Y1Q4-T1-08
