@@ -1,0 +1,259 @@
+title: 家庭成员
+description: 成员档案与家庭角色线索
+focus:
+  - id: members-focus-xiamingxing
+    title: 夏明星
+    sourcePath: _knowledge/01.成员档案/夏明星/个人时间线.md
+    sourceTitle: 个人时间线
+nextActions: []
+links:
+  - title: 查看重点原文
+    href: /doc?path=_knowledge/01.成员档案/夏明星/个人时间线.md
+membersSections:
+  heroDescription: 这里集中看每个核心对象的近况、角色分工、当下关注点与常用档案入口。重点不是罗列资料，而是帮助你判断这周该先照看谁、该从哪一份档案继续深入。
+  overviewCards:
+    - label: 当前主焦
+      value: 夏维桢
+      subtitle: 入托适应期
+    - label: 额外关照
+      value: 2 组
+      subtitle: 长辈、资产
+    - label: 档案覆盖
+      value: 5 / 5
+      subtitle: 主要对象已建档
+  focusStrip:
+    primaryPerson: 夏维桢
+    primaryDesc: 当前主焦仍是夏维桢的入托适应，其次是长辈养老准备与新车相关资料收口。成员档案已覆盖主要对象，适合从这一页继续接力日常照看。
+    extraCareCount: 2 组
+    extraCareDesc: 长辈、资产
+    archiveCoverage: 5 / 5
+    archiveDesc: 主要对象已建档
+  signalCards:
+    - id: signal-xiamingxing
+      avatarChar: 夏
+      name: 夏明星
+      tagline: 统筹与承接
+      statusLabel: 稳中偏忙
+      intensity: 中高
+      intensityStyle: primary
+      percentage: 76
+      barColor: primary
+      description: 要稳住排期和资料收口，避免细节散掉。
+    - id: signal-qinzhangyao
+      avatarChar: 秦
+      name: 秦张瑶
+      tagline: 协同与照应
+      statusLabel: 需要分担
+      intensity: 中高
+      intensityStyle: primary
+      percentage: 72
+      barColor: primary
+      description: 接送与日常照料占比高，需要留出缓冲。
+    - id: signal-xiaweizhen
+      avatarChar: 桢
+      name: 夏维桢
+      tagline: 成长与适应
+      statusLabel: 重点跟进
+      intensity: 最高
+      intensityStyle: warning
+      percentage: 88
+      barColor: warning
+      description: 观察入托后的睡眠、食欲和情绪波动。
+    - id: signal-parents
+      avatarChar: 长
+      name: 长辈
+      tagline: 养老与健康
+      statusLabel: 慢热长线
+      intensity: 中段
+      intensityStyle: info
+      percentage: 58
+      barColor: info
+      description: 体检、养老准备与支持方式需要慢慢收齐。
+    - id: signal-pets
+      avatarChar: 家
+      name: 宠物与资产
+      tagline: 维护与凭证
+      statusLabel: 待同步
+      intensity: 中段
+      intensityStyle: primary
+      percentage: 62
+      barColor: primary
+      description: 新车材料、宠物档案和保修资料要放在同一入口。
+  coreCards:
+    - id: core-xiamingxing
+      avatarChar: 夏
+      name: 夏明星
+      tagline: 家庭主理与系统承接
+      statusLabel: 在统筹
+      statusStyle: primary
+      roleTags:
+        - "角色：推进主轴"
+        - "标签：接得住"
+      description: 当前状态：多线并行，但还能保持主线判断。当前关注：把入托、长辈与资料归档串成一个可续接的节奏。
+      focus: 家庭排期与资料系统
+      next: 入托与长辈规划
+      archiveLabel: 看档案
+      sourcePath: _knowledge/01.成员档案/夏明星/个人时间线.md
+    - id: core-qinzhangyao
+      avatarChar: 秦
+      name: 秦张瑶
+      tagline: 家庭协同与日常照应
+      statusLabel: 在承接
+      statusStyle: primary
+      roleTags:
+        - "角色：生活协作"
+        - "标签：稳住日常"
+      description: 当前状态：近期承担了更多接送与生活安排。当前关注：需要在照看孩子和维持日常之间留出休息空当。
+      focus: 育儿与生活安排
+      next: 入托接送与休息
+      archiveLabel: 看档案
+      sourcePath: _knowledge/02.医疗健康/秦张瑶/医疗汇总.md
+    - id: core-xiaweizhen
+      avatarChar: 桢
+      name: 夏维桢
+      tagline: 育儿成长与健康观察
+      statusLabel: 在适应
+      statusStyle: warning
+      roleTags:
+        - "角色：成长主角"
+        - "标签：先稳作息"
+      description: 当前状态：处在入托适应的连续观察期。当前关注：情绪波动、睡眠节奏和每日接送后的恢复状态。
+      focus: 入托适应观察
+      next: 睡眠与情绪记录
+      archiveLabel: 看成长
+      sourcePath: _knowledge/03.育儿成长/规划文档/爱蓓乐托育计划.md
+    - id: core-parents
+      avatarChar: 长
+      name: 长辈
+      tagline: 养老准备与健康支持
+      statusLabel: 在准备
+      statusStyle: info
+      roleTags:
+        - "角色：长期照看"
+        - "标签：先收资料"
+      description: 当前状态：信息分散，需要先把健康与养老脉络串起来。当前关注：体检结果、养老预算、居住安排与支持方式。
+      focus: 养老准备与体检
+      next: 体检资料归档
+      archiveLabel: 看准备
+      sourcePath: _knowledge/04.家庭日常/岳父母养老规划.md
+    - id: core-xiaobai
+      avatarChar: 白
+      name: 小白
+      tagline: 宠物 · 白猫
+      statusLabel: 性格敏感
+      statusStyle: primary
+      roleTags:
+        - "品种：白猫"
+        - "标签：行为关注"
+      description: 小白是家庭成员之一，近期有行为调整方案跟进。关注点包括免疫、进食习惯和应激管理。
+      focus: 行为调整与健康
+      next: 定期免疫
+      archiveLabel: 看档案
+      sourcePath: _knowledge/01.成员档案/宠物/小白.md
+    - id: core-diandian
+      avatarChar: 点
+      name: 点点
+      tagline: 宠物 · 狗
+      statusLabel: 需要关注
+      statusStyle: info
+      roleTags:
+        - "品种：狗"
+        - "标签：家人放心上"
+      description: 点点是家庭宠物成员。近期关注健康管理与日常照看安排，确保免疫和体检跟上节奏。
+      focus: 健康管理
+      next: 免疫更新
+      archiveLabel: 看档案
+      sourcePath: _knowledge/01.成员档案/宠物/点点.md
+  signalItems:
+    - id: signal-childcare
+      icon: baby
+      iconStyle: warning
+      title: 孩子入托
+      description: 接送分工、情绪安抚与睡眠记录是本周核心。
+    - id: signal-parents-care
+      icon: heart-pulse
+      iconStyle: info
+      title: 长辈养老
+      description: 先把体检、保险与未来支持方式放进同一张脉络图。
+    - id: signal-driving
+      icon: car-front
+      iconStyle: primary-soft
+      title: 驾驶适应
+      description: 新车保险、儿童座椅与停车习惯要同步成套。
+    - id: signal-health
+      icon: activity
+      iconStyle: success
+      title: 健康追踪
+      description: 孩子作息与长辈体检需要一轻一重两条记录节奏。
+  rhythmEntries:
+    - day: 周一
+      title: 复盘入托
+      description: 复盘入托第一轮反馈，记录睡眠与情绪变化。
+      badge: 先看孩子
+    - day: 周三
+      title: 整理长辈
+      description: 整理长辈体检资料和养老准备提要。
+      badge: 再看长辈
+    - day: 周末
+      title: 归档资产
+      description: 补齐车辆单据与宠物档案，把资产口收拢。
+      badge: 最后归档
+  timeline:
+    - id: tl-childcare
+      icon: baby
+      iconStyle: warning
+      title: 入托适应
+      badge: 本周先做
+      badgeStyle: warning
+      description: 记录接送后的情绪、饮食和午睡变化，让下周接力的人也能快速接上。
+    - id: tl-driving
+      icon: car-front
+      iconStyle: primary-soft
+      title: 驾驶适应
+      badge: 本周推进
+      badgeStyle: primary-soft
+      description: 把保险、车位、儿童座椅与日常停车经验写进同一条资料链，减少重复确认。
+    - id: tl-parents
+      icon: heart-pulse
+      iconStyle: info
+      title: 养老准备
+      badge: 月内接续
+      badgeStyle: info
+      description: 体检、保险、居住安排与子女支持方式先做脉络图，再慢慢补齐细节。
+    - id: tl-health
+      icon: folder-sync
+      iconStyle: success
+      title: 健康追踪
+      badge: 持续维护
+      badgeStyle: success
+      description: 把孩子成长记录和长辈健康摘要做成持续可翻阅的更新流。
+  archives:
+    - title: 个人时间线
+      description: 按成员看关键节点与关系变化
+      href: /doc?path=_knowledge/01.成员档案/夏明星/个人时间线.md
+    - title: 医疗汇总
+      description: 体检、就诊与药物记录集中查看
+      href: /doc?path=_knowledge/02.医疗健康/夏明星/医疗汇总.md
+    - title: 教育规划
+      description: 入托、成长陪伴与下一阶段安排
+      href: /doc?path=_knowledge/03.育儿成长/规划文档/爱蓓乐托育计划.md
+    - title: 家族谱系
+      description: 家庭关系、称谓与照看脉络
+      href: /doc?path=_knowledge/01.成员档案/夏明星/家族谱系.md
+    - title: 宠物档案
+      description: 免疫、就诊、用品与照看事项
+      href: /doc?path=_knowledge/01.成员档案/宠物/小白.md
+  recentUpdates:
+    - timeLabel: 今天
+      description: 补记了夏维桢本周午睡和接送后的情绪变化。
+    - timeLabel: 昨天
+      description: 长辈体检资料被归到统一入口，养老准备不再分散。
+    - timeLabel: 三天前
+      description: 车辆保险、维保与宠物档案开始按同一规则命名归位。
+  footer:
+    title: 家庭成员总览
+    description: 用状态、信号、时间线和档案入口把"照看家庭"这件事接成一条顺手的路径。
+    tags:
+      - 温和可信
+      - 信息密集
+      - 便于接续

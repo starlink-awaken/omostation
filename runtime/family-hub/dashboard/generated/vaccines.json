@@ -1,0 +1,388 @@
+{
+  "childName": "Synthetic Member 02",
+  "birthDate": "2025-10-16",
+  "vaccines": [
+    {
+      "id": "vac-卡介苗-(BCG)-出生",
+      "monthLabel": "出生",
+      "name": "卡介苗 (BCG)",
+      "dose": "1/1",
+      "plannedDate": "2025-10-16",
+      "actualDate": null,
+      "status": "确认",
+      "note": "住院期间是否接种需确认",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-乙肝疫苗-(HepB)-出生",
+      "monthLabel": "出生",
+      "name": "乙肝疫苗 (HepB)",
+      "dose": "1/3",
+      "plannedDate": "2025-10-16",
+      "actualDate": null,
+      "status": "确认",
+      "note": "住院期间是否接种需确认",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-乙肝疫苗-(HepB)-1-月",
+      "monthLabel": "1 月",
+      "name": "乙肝疫苗 (HepB)",
+      "dose": "2/3",
+      "plannedDate": "2025-11-16",
+      "actualDate": null,
+      "status": "确认",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-脊灰灭活疫苗-(IPV)-2-月",
+      "monthLabel": "2 月",
+      "name": "脊灰灭活疫苗 (IPV)",
+      "dose": "1/4",
+      "plannedDate": "2025-12-16",
+      "actualDate": null,
+      "status": "确认",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-百白破疫苗-(DTaP)-3-月",
+      "monthLabel": "3 月",
+      "name": "百白破疫苗 (DTaP)",
+      "dose": "1/4",
+      "plannedDate": "2026-01-16",
+      "actualDate": null,
+      "status": "确认",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-脊灰灭活疫苗-(IPV)-3-月",
+      "monthLabel": "3 月",
+      "name": "脊灰灭活疫苗 (IPV)",
+      "dose": "2/4",
+      "plannedDate": "2026-01-16",
+      "actualDate": null,
+      "status": "确认",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-百白破疫苗-(DTaP)-4-月",
+      "monthLabel": "4 月",
+      "name": "百白破疫苗 (DTaP)",
+      "dose": "2/4",
+      "plannedDate": "2026-02-16",
+      "actualDate": null,
+      "status": "确认",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-百白破疫苗-(DTaP)-5-月",
+      "monthLabel": "5 月",
+      "name": "百白破疫苗 (DTaP)",
+      "dose": "3/4",
+      "plannedDate": "2026-03-16",
+      "actualDate": null,
+      "status": "确认",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-乙肝疫苗-(HepB)-6-月",
+      "monthLabel": "6 月",
+      "name": "乙肝疫苗 (HepB)",
+      "dose": "3/3",
+      "plannedDate": "2026-04-16",
+      "actualDate": null,
+      "status": "确认",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-A群流脑多糖疫苗-(MPV-A)-6-月",
+      "monthLabel": "6 月",
+      "name": "A群流脑多糖疫苗 (MPV-A)",
+      "dose": "1/2",
+      "plannedDate": "2026-04-16",
+      "actualDate": null,
+      "status": "确认",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-麻腮风疫苗-(MMR)-8-月",
+      "monthLabel": "8 月",
+      "name": "麻腮风疫苗 (MMR)",
+      "dose": "1/2",
+      "plannedDate": "2026-06-16",
+      "actualDate": "2026-07-02",
+      "status": "确认",
+      "note": "已补种",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-乙脑减毒活疫苗-(JE-L)-8-月",
+      "monthLabel": "8 月",
+      "name": "乙脑减毒活疫苗 (JE-L)",
+      "dose": "1/2",
+      "plannedDate": "2026-06-16",
+      "actualDate": null,
+      "status": "到期",
+      "note": "可与麻腮风同时接种",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-A群流脑多糖疫苗-(MPV-A)-9-月",
+      "monthLabel": "9 月",
+      "name": "A群流脑多糖疫苗 (MPV-A)",
+      "dose": "2/2",
+      "plannedDate": "2026-07-16",
+      "actualDate": null,
+      "status": "即将到期",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-百白破疫苗-(DTaP)-18-月",
+      "monthLabel": "18 月",
+      "name": "百白破疫苗 (DTaP)",
+      "dose": "4/4",
+      "plannedDate": "2027-04-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-麻腮风疫苗-(MMR)-18-月",
+      "monthLabel": "18 月",
+      "name": "麻腮风疫苗 (MMR)",
+      "dose": "2/2",
+      "plannedDate": "2027-04-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-甲肝减毒活疫苗-(HepA-L)-18-月",
+      "monthLabel": "18 月",
+      "name": "甲肝减毒活疫苗 (HepA-L)",
+      "dose": "1/1",
+      "plannedDate": "2027-04-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-乙脑减毒活疫苗-(JE-L)-2-岁",
+      "monthLabel": "2 岁",
+      "name": "乙脑减毒活疫苗 (JE-L)",
+      "dose": "2/2",
+      "plannedDate": "2027-10-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-甲肝灭活疫苗-(HepA-I)-加强-2-岁",
+      "monthLabel": "2 岁",
+      "name": "甲肝灭活疫苗 (HepA-I) 加强",
+      "dose": "2/2",
+      "plannedDate": "2027-10-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "如选用灭活则需加强",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-A+C群流脑多糖疫苗-(MPV-AC)-3-岁",
+      "monthLabel": "3 岁",
+      "name": "A+C群流脑多糖疫苗 (MPV-AC)",
+      "dose": "1/2",
+      "plannedDate": "2028-10-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-脊灰疫苗-(IPV/bOPV)-4-岁",
+      "monthLabel": "4 岁",
+      "name": "脊灰疫苗 (IPV/bOPV)",
+      "dose": "4/4",
+      "plannedDate": "2029-10-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-白破疫苗-(DT)-6-岁",
+      "monthLabel": "6 岁",
+      "name": "白破疫苗 (DT)",
+      "dose": "1/1",
+      "plannedDate": "2031-10-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    },
+    {
+      "id": "vac-A+C群流脑多糖疫苗-(MPV-AC)-6-岁",
+      "monthLabel": "6 岁",
+      "name": "A+C群流脑多糖疫苗 (MPV-AC)",
+      "dose": "2/2",
+      "plannedDate": "2031-10-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "",
+      "isOptional": false,
+      "freeStatus": "免费"
+    }
+  ],
+  "optionalVaccines": [
+    {
+      "id": "vac-13价肺炎球菌结合疫苗-(PCV13)-2/4/6-月",
+      "monthLabel": "2/4/6 月",
+      "name": "13价肺炎球菌结合疫苗 (PCV13)",
+      "dose": "1-3/4",
+      "plannedDate": "超期",
+      "actualDate": null,
+      "status": "超期",
+      "note": "已过首剂窗口（7月龄前第1针），如需接种可咨询补种方案",
+      "isOptional": true,
+      "freeStatus": "自费"
+    },
+    {
+      "id": "vac-口服五价轮状病毒疫苗-(RV5)-2/4/6-月",
+      "monthLabel": "2/4/6 月",
+      "name": "口服五价轮状病毒疫苗 (RV5)",
+      "dose": "1-3/3",
+      "plannedDate": "超期",
+      "actualDate": null,
+      "status": "超期",
+      "note": "已过首剂窗口（12周龄前第1针）",
+      "isOptional": true,
+      "freeStatus": "自费"
+    },
+    {
+      "id": "vac-流感疫苗-(IIV3/IIV4)-6-月+",
+      "monthLabel": "6 月+",
+      "name": "流感疫苗 (IIV3/IIV4)",
+      "dose": "2/2",
+      "plannedDate": "2026-09~10",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "🔔 秋冬季重点推荐，2026年9月前后接种",
+      "isOptional": true,
+      "freeStatus": "自费"
+    },
+    {
+      "id": "vac-水痘减毒活疫苗-(VarV)-12-月",
+      "monthLabel": "12 月",
+      "name": "水痘减毒活疫苗 (VarV)",
+      "dose": "1/2",
+      "plannedDate": "2026-10-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "推荐",
+      "isOptional": true,
+      "freeStatus": "自费"
+    },
+    {
+      "id": "vac-水痘减毒活疫苗-(VarV)-4-岁",
+      "monthLabel": "4 岁",
+      "name": "水痘减毒活疫苗 (VarV)",
+      "dose": "2/2",
+      "plannedDate": "2029-10-16",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "推荐",
+      "isOptional": true,
+      "freeStatus": "自费"
+    },
+    {
+      "id": "vac-EV71-灭活疫苗-6-月+",
+      "monthLabel": "6 月+",
+      "name": "EV71 灭活疫苗",
+      "dose": "2/2",
+      "plannedDate": "6 月龄+",
+      "actualDate": null,
+      "status": "待接种",
+      "note": "用于预防手足口病重症，可考虑",
+      "isOptional": true,
+      "freeStatus": "自费"
+    }
+  ],
+  "checkups": [
+    {
+      "monthLabel": "3 月龄",
+      "items": "第二次儿保 + 体格测量",
+      "suggestedDate": "2026-01-16",
+      "status": "✅ 已做"
+    },
+    {
+      "monthLabel": "9 月龄",
+      "items": "第三次儿保（发育筛查 + 血常规）",
+      "suggestedDate": "2026-07-16 前后",
+      "status": "🔴 建议尽快预约"
+    },
+    {
+      "monthLabel": "12 月龄",
+      "items": "一岁儿保（全面体检 + 发育评估）",
+      "suggestedDate": "2026-10-16 前后",
+      "status": "⏳"
+    },
+    {
+      "monthLabel": "18 月龄",
+      "items": "语言评估",
+      "suggestedDate": "2027-04-16 前后",
+      "status": "⏳"
+    },
+    {
+      "monthLabel": "24 月龄",
+      "items": "两岁儿保（全面发育评估）",
+      "suggestedDate": "2027-10-16 前后",
+      "status": "⏳"
+    },
+    {
+      "monthLabel": "30 月龄",
+      "items": "30 月龄儿保",
+      "suggestedDate": "2028-04-16 前后",
+      "status": "⏳"
+    },
+    {
+      "monthLabel": "36 月龄",
+      "items": "三岁儿保（入托体检）",
+      "suggestedDate": "2028-10-16 前后",
+      "status": "⏳"
+    }
+  ]
+}

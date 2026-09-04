@@ -1,0 +1,712 @@
+{
+  "meta": {
+    "schemaVersion": "v1",
+    "generatedAt": "2026-09-04T10:59:57.314Z",
+    "sources": [
+      "_archive/待办_0528-0611.md",
+      "_knowledge/04.家庭日常/06.日历与纪念日/README.md",
+      "_knowledge/04.家庭日常/01.健康管理/README.md",
+      "_knowledge/04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案.md",
+      "_knowledge/04.家庭日常/05.理财/README.md",
+      "_knowledge/04.家庭日常/03.旅游/README.md",
+      "_knowledge/04.家庭日常/岳父母养老规划.md",
+      "_knowledge/04.家庭日常/07.服务通讯录/家庭住址.md",
+      "_knowledge/04.家庭日常/07.服务通讯录/README.md",
+      "_knowledge/04.家庭日常/07.服务通讯录/家庭紧急联系人协议.md",
+      "_knowledge/04.家庭日常/AI副业待研究.md",
+      "_knowledge/04.家庭日常/README.md",
+      "_knowledge/04.家庭日常/04.家庭财务/物业费_2026-2027.md",
+      "_knowledge/04.家庭日常/04.家庭财务/README.md",
+      "_knowledge/04.家庭日常/02.孩子教育/阶段路线/00-2岁·每日执行手册.md",
+      "_knowledge/04.家庭日常/02.孩子教育/英语规划/01.秦张瑶·成人英语回归计划.md",
+      "_knowledge/04.家庭日常/02.孩子教育/英语规划/02.夏维桢·英语启蒙路线（0-12岁）.md",
+      "_knowledge/04.家庭日常/02.孩子教育/README.md",
+      "_knowledge/04.家庭日常/02.孩子教育/教育总纲/夏维桢教育总纲.md",
+      "_archive/2026-05-22待办.md",
+      "_archive/复盘_2026-06-05_深度.md",
+      "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+      "_archive/2026-08-01-免值班结项-已办结/2026-07-03_免值班申请资料汇总.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/pako/CHANGELOG.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/pako/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/@types/node/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/process-nextick-args/license.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/process-nextick-args/readme.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/core-util-is/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/nanoid/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/sax/LICENSE.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/sax/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/string_decoder/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/safe-buffer/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/inherits/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/undici-types/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/immediate/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/xml-js/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/xml/readme.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/util-deprecate/History.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/util-deprecate/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/jszip/CHANGES.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/jszip/sponsors.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/lie/license.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/lie/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/minimalistic-assert/readme.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/isarray/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/hash.js/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/docx/README.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/readable-stream/GOVERNANCE.md",
+      "_archive/2026-08-01-免值班结项-已办结/node_modules/readable-stream/README.md"
+    ]
+  },
+  "overview": {
+    "title": "家庭日常",
+    "description": "日常待办、计划与家庭运转事项",
+    "totalCount": 50,
+    "sourceCount": 51
+  },
+  "focus": [
+    {
+      "id": "daily-focus-todo",
+      "title": "阶段待办",
+      "summary": "2026-05-28 生成，涵盖 5/28 ~ 6/11。2026-05-31 更新：车辆5条待办线重构。 · 注意： 指标核验预计6/2完成，缴税不需要等修车，可以提前线上办。 · 但线上选号必须在修好车后办理（12123选号有效期仅3…",
+      "sourcePath": "_archive/待办_0528-0611.md",
+      "sourceTitle": "待办清单",
+      "sensitivity": "private"
+    }
+  ],
+  "nextActions": [],
+  "links": [
+    {
+      "title": "查看重点原文",
+      "href": "/doc?path=_archive/待办_0528-0611.md"
+    }
+  ],
+  "items": [
+    {
+      "id": "item-9b066831-30",
+      "title": "README",
+      "summary": "家庭全年时间线 · 生日·纪念日·定期事务",
+      "sourcePath": "_knowledge/04.家庭日常/06.日历与纪念日/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-953213d4-31",
+      "title": "README",
+      "summary": "家庭层面健康运营入口（个人医疗记录见 02.医疗健康/）",
+      "sourcePath": "_knowledge/04.家庭日常/01.健康管理/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-cfcf2f78-32",
+      "title": "05 31猫咪行为调整方案",
+      "summary": "建档时间：2026-05-31 · 最近更新：2026-05-31 v2（修正：已有猫爬架和隐蔽角落；核心动作改为位置接应+酶解清洁）",
+      "sourcePath": "_knowledge/04.家庭日常/01.健康管理/宠物/2026-05-31猫咪行为调整方案.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-c800bffe-33",
+      "title": "README",
+      "summary": "投资理财管理 · 区别于家庭财务概览，此目录聚焦钱生钱",
+      "sourcePath": "_knowledge/04.家庭日常/05.理财/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-d2f91fa8-34",
+      "title": "README",
+      "summary": "家庭出行规划入口 · 亲子游/短途/长途",
+      "sourcePath": "_knowledge/04.家庭日常/03.旅游/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-4cd29789-35",
+      "title": "岳父母养老规划",
+      "summary": "秦联合、张秀英现居保定，长远来京养老的初步思考",
+      "sourcePath": "_knowledge/04.家庭日常/岳父母养老规划.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-b517f094-36",
+      "title": "家庭住址",
+      "summary": "家庭住址、户口登记信息、车位信息",
+      "sourcePath": "_knowledge/04.家庭日常/07.服务通讯录/家庭住址.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-5f69e9b5-37",
+      "title": "README",
+      "summary": "你俩共用的家庭服务联系清单 · 2026-07-02 从通讯录提取 · 遇到紧急事不用翻聊天记录，直接翻这里。",
+      "sourcePath": "_knowledge/04.家庭日常/07.服务通讯录/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-966a646a-38",
+      "title": "家庭紧急联系人协议",
+      "summary": "状态: 待定稿——v2.0（2026-07-02）已从家庭 SSOT 填入成员/车辆/保险信息， · 仅剩 ☎ 标记的电话号码需家庭会议现场确认后填写，随后打印一份放理想 i6 手套箱。 · 关联债务: DEBT-2026-06-05-0…",
+      "sourcePath": "_knowledge/04.家庭日常/07.服务通讯录/家庭紧急联系人协议.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-5fa22eb3-39",
+      "title": "AI副业待研究",
+      "summary": "2026-05-22 调研后沉淀的AI副业方向，后续有空时深入",
+      "sourcePath": "_knowledge/04.家庭日常/AI副业待研究.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-1a90b0b3-40",
+      "title": "README",
+      "summary": "家庭运营知识域 · v2.0 · 已归档：08.免值班结项 项目已于 2026-08-01 办结（长期免值班获批），全套材料移至 _archive/2026-08-01-免值班结项-已办结/。本域当前为 01-07 七个活跃支柱。",
+      "sourcePath": "_knowledge/04.家庭日常/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-2524d859-41",
+      "title": "物业费 2026 2027",
+      "summary": "北京金海燕物业，6-1-1-402，¥…，周期2026.06-2027.06",
+      "sourcePath": "_knowledge/04.家庭日常/04.家庭财务/物业费_2026-2027.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-cce1000c-42",
+      "title": "README",
+      "summary": "家庭财务概览 · 收支·资产·负债·保险 · 新车落地合计（不含裸车）：约 ¥…（保险+税+车衣+车膜+充电桩+流媒体） · 新车落地合计（含裸车）：约 ¥…",
+      "sourcePath": "_knowledge/04.家庭日常/04.家庭财务/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-4dc4ba0d-43",
+      "title": "2岁·每日执行手册",
+      "summary": "适用月龄：8个月（当前）→ 24个月 · 本文件写的是每天怎么落地 · 不讲道理，只写动作",
+      "sourcePath": "_knowledge/04.家庭日常/02.孩子教育/阶段路线/00-2岁·每日执行手册.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-21e951db-44",
+      "title": "秦张瑶·成人英语回归计划",
+      "summary": "目标：从高考130+底子 → 能日常对话·能给孩子读绘本·能做英语亲子互动 · ⏰ 时间框架：白天上班碎片时间学 → 下班带娃时输出 · 👶 当前适配：夏维桢 0-2 岁阶段 → 妈妈学的是 \"储备\"，孩子需要的是 \"输入环境\" · 关…",
+      "sourcePath": "_knowledge/04.家庭日常/02.孩子教育/英语规划/01.秦张瑶·成人英语回归计划.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-8df9db04-45",
+      "title": "夏维桢·英语启蒙路线（0 12岁）",
+      "summary": "🎯 战略目标：初一（约12岁）达到高考英语 130+ 水平，把时间省下来给理科。",
+      "sourcePath": "_knowledge/04.家庭日常/02.孩子教育/英语规划/02.夏维桢·英语启蒙路线（0-12岁）.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-8a3ef13f-46",
+      "title": "README",
+      "summary": "夏维桢教育规划入口 · 从托育到小学的时间线",
+      "sourcePath": "_knowledge/04.家庭日常/02.孩子教育/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-20a7d021-47",
+      "title": "夏维桢教育总纲",
+      "summary": "本文件是夏维桢 0-18 岁教育的全局战略 · 2026-07-02 制定 · 每年修订一次",
+      "sourcePath": "_knowledge/04.家庭日常/02.孩子教育/教育总纲/夏维桢教育总纲.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-96f055ba-48",
+      "title": "05 22待办",
+      "summary": "提车前一天",
+      "sourcePath": "_archive/2026-05-22待办.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-0bfd3c41-49",
+      "title": "复盘 2026 06 05 深度",
+      "summary": "类型: 战略级复盘 | 跨度: 12h 实际时间 → 家庭事故·CARDS v2.0·CL控制面重构·元数据收敛 · 日期: 2026-06-05 | 卡片数: 30 · 历史条目: 60 · 校验: 42/42",
+      "sourcePath": "_archive/复盘_2026-06-05_深度.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-090bd1ea-50",
+      "title": "附录 支撑材料清单",
+      "summary": "免值班申请配套证据材料索引 | 编制日期：2026-07-03 · 用途：口头沟通后提交书面申请时，附上以下材料的复印件/打印件",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/附录_支撑材料清单.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-f2614110-51",
+      "title": "07 03 免值班申请资料汇总",
+      "summary": "申请人：夏明星 | 编制日期：2026-07-03 · 状态：✅ 已办结（2026-08-01 长期免值班获批）",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/2026-07-03_免值班申请资料汇总.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-af31cb19-52",
+      "title": "CHANGELOG",
+      "summary": "All notable changes to this project will be documented in this file.",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/pako/CHANGELOG.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-97ad0d9a-53",
+      "title": "README",
+      "summary": "pako",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/pako/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-314a05a0-54",
+      "title": "README",
+      "summary": "npm install --save @types/node",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/@types/node/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-eb5a4ebb-55",
+      "title": "license",
+      "summary": "Permission is hereby granted, free of charge, to any person obtaining a copy",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/process-nextick-args/license.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-08061f99-56",
+      "title": "readme",
+      "summary": "process-nextick-args",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/process-nextick-args/readme.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-1ba87825-57",
+      "title": "README",
+      "summary": "The util.is* functions introduced in Node v0.12.",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/core-util-is/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-1d131cf8-58",
+      "title": "README",
+      "summary": "<img src=\"https://ai.github.io/nanoid/logo.svg\" align=\"right\"",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/nanoid/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-1e326f7a-59",
+      "title": "LICENSE",
+      "summary": "Version 1.0.0",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/sax/LICENSE.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-9688bf86-60",
+      "title": "README",
+      "summary": "A sax-style parser for XML and HTML.",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/sax/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-57588722-61",
+      "title": "README",
+      "summary": "*Node-core v8.9.4 string_decoder for userland*",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/string_decoder/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-714ecab1-62",
+      "title": "README",
+      "summary": "[travis-image]: https://img.shields.io/travis/feross/safe-buffer/master.svg",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/safe-buffer/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-e8730b6d-63",
+      "title": "README",
+      "summary": "Browser-friendly inheritance fully compatible with standard node.js",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/inherits/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-27ba4840-64",
+      "title": "README",
+      "summary": "This package is a dual-publish of the undici library types. The undici package still contains types. This package is fo…",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/undici-types/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-cd54d271-65",
+      "title": "README",
+      "summary": "npm install immediate --save",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/immediate/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-be9eab85-66",
+      "title": "README",
+      "summary": "Convert XML text to Javascript object / JSON text (and vice versa).",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/xml-js/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-8cfdd9cd-67",
+      "title": "readme",
+      "summary": "!NPM",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/xml/readme.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-bbd4990f-68",
+      "title": "History",
+      "summary": "1.0.2 / 2015-10-07",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/util-deprecate/History.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-9ecd58e4-69",
+      "title": "README",
+      "summary": "util-deprecate",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/util-deprecate/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-0583a74e-70",
+      "title": "CHANGES",
+      "summary": "Add sponsorship files.",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/jszip/CHANGES.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-233730a8-71",
+      "title": "sponsors",
+      "summary": "JSZip was created in 2009 by Stuart. Since then it has received well over 600 million downloads, is depended on by over…",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/jszip/sponsors.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-eb63d624-72",
+      "title": "license",
+      "summary": "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentat…",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/lie/license.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-d15b66d7-73",
+      "title": "README",
+      "summary": "<a href=\"http://promises-aplus.github.com/promises-spec\">",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/lie/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-f2d35e12-74",
+      "title": "readme",
+      "summary": "minimalistic-assert",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/minimalistic-assert/readme.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-a3e3dd84-75",
+      "title": "README",
+      "summary": "Array#isArray for older browsers.",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/isarray/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-b199c5ed-76",
+      "title": "README",
+      "summary": "Just a bike-shed.",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/hash.js/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-345af51b-77",
+      "title": "README",
+      "summary": "<p align=\"center\">",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/docx/README.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-5cbaa783-78",
+      "title": "GOVERNANCE",
+      "summary": "The Node.js Streams is jointly governed by a Working Group",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/readable-stream/GOVERNANCE.md",
+      "sensitivity": "private"
+    },
+    {
+      "id": "item-96f6131a-79",
+      "title": "README",
+      "summary": "*Node-core v8.17.0 streams for userland* !Build Status",
+      "sourcePath": "_archive/2026-08-01-免值班结项-已办结/node_modules/readable-stream/README.md",
+      "sensitivity": "private"
+    }
+  ],
+  "updatedAt": "2026-09-04T10:59:57.314Z",
+  "dailySections": {
+    "heroTags": [
+      "家庭日常"
+    ],
+    "heroDescription": "这里是家庭最近生活事务的总览台。它帮助家里快速知道哪些生活线正在推进、哪些地方还卡着、今天先处理什么，以及该从哪个共用入口继续往下走。",
+    "heroSummaries": [
+      {
+        "label": "今日状态",
+        "value": "忙但稳",
+        "subtitle": "适合先做关键项"
+      },
+      {
+        "label": "本周重点",
+        "value": "入托衔接",
+        "subtitle": "接送与适应并行"
+      },
+      {
+        "label": "今日先手",
+        "value": "对齐接送",
+        "subtitle": "再补应急电话"
+      }
+    ],
+    "overviewSummary": "最近的生活精力主要压在入托衔接、车辆落地和长辈安排上。物业与国网申请已稳住，应急协议结构也已经成形，现在更需要把卡点一件件接过去。",
+    "overviewTags": [
+      "先稳入托"
+    ],
+    "heatSteps": [
+      {
+        "label": "入托",
+        "description": "最高",
+        "active": true
+      },
+      {
+        "label": "车辆",
+        "description": "次高",
+        "active": false
+      },
+      {
+        "label": "长辈",
+        "description": "中段",
+        "active": false
+      },
+      {
+        "label": "应急",
+        "description": "收口中",
+        "active": false
+      }
+    ],
+    "overviewMiniCards": [
+      {
+        "label": "在跑事项",
+        "value": "6 项",
+        "description": "只保留真正在推进的生活线，不把零散想法全挤进来。"
+      },
+      {
+        "label": "已稳事项",
+        "value": "4 项",
+        "description": "物业费、国网申请和体检手续已从焦点区移开。"
+      },
+      {
+        "label": "当前主压",
+        "value": "入托衔接",
+        "description": "重点在接送分工、午睡适应和当天恢复。"
+      },
+      {
+        "label": "下个卡点",
+        "value": "补完电话",
+        "description": "家庭会议后打印车载应急卡，避免协议只停在文档里。"
+      }
+    ],
+    "opsCards": [
+      {
+        "id": "ops-childcare",
+        "icon": "baby",
+        "title": "入托衔接",
+        "subtitle": "孩子适应与接送配合",
+        "badge": "优先",
+        "badgeStyle": "warning",
+        "tags": [
+          "接送分工",
+          "午睡观察"
+        ],
+        "currentBlock": "谁接谁送、临时变动时谁补位，还没有完全说透。",
+        "nextStep": "先把本周接送表和应急替补先对齐，再看情绪与睡眠反馈。"
+      },
+      {
+        "id": "ops-car",
+        "icon": "car-front",
+        "title": "车辆推进",
+        "subtitle": "维修上牌与配套补齐",
+        "badge": "推进中",
+        "badgeStyle": "info",
+        "tags": [
+          "选号维修",
+          "充电桩"
+        ],
+        "currentBlock": "提车后配套还零散分布，维修、贴膜和儿童座椅容易互相打断。",
+        "nextStep": "先排维修与选号，再把充电桩安装和车衣车膜合成一条清单。"
+      },
+      {
+        "id": "ops-emergency",
+        "icon": "triangle-alert",
+        "title": "家庭应急",
+        "subtitle": "协议补完与车载卡片",
+        "badge": "待补完",
+        "badgeStyle": "primary-soft",
+        "tags": [
+          "家庭会议",
+          "打印应急卡"
+        ],
+        "currentBlock": "结构已经有了，但电话号码还没在家庭会议里补齐。",
+        "nextStep": "补全号码、确认联系人排序，然后把车载应急卡打印出来。"
+      },
+      {
+        "id": "ops-parents",
+        "icon": "heart-handshake",
+        "title": "长辈安排",
+        "subtitle": "养老方案与沟通节奏",
+        "badge": "初步规划",
+        "badgeStyle": "surface-2",
+        "tags": [
+          "北京方案",
+          "预算评估"
+        ],
+        "currentBlock": "路径知道要看什么，但还缺和长辈本人意愿的深一点沟通。",
+        "nextStep": "先做预算和方案草图，再安排一次不着急的沟通会。"
+      }
+    ],
+    "priorityItems": [
+      {
+        "id": "prio-1",
+        "index": 1,
+        "title": "对齐接送",
+        "description": "把入托接送分工、补位人选和当天反馈方式定下来。",
+        "timeLabel": "今天先做",
+        "isPrimary": true
+      },
+      {
+        "id": "prio-2",
+        "index": 2,
+        "title": "维修选号",
+        "description": "把理想 i6 的维修与选号放到同一条推进线上，减少来回切换。",
+        "timeLabel": "两天内",
+        "isPrimary": false
+      },
+      {
+        "id": "prio-3",
+        "index": 3,
+        "title": "装充电桩",
+        "description": "衔接物业、国网和安装时间，把已完成手续真正落到可使用状态。",
+        "timeLabel": "本周推进",
+        "isPrimary": false
+      },
+      {
+        "id": "prio-4",
+        "index": 4,
+        "title": "备端午行",
+        "description": "围绕保定安排，把出行节奏、车辆准备和孩子用品先打包好。",
+        "timeLabel": "节前完成",
+        "isPrimary": false
+      },
+      {
+        "id": "prio-5",
+        "index": 5,
+        "title": "补完电话",
+        "description": "家庭会议里补全应急电话，然后打印车载卡片和家中版本。",
+        "timeLabel": "本周收口",
+        "isPrimary": false
+      }
+    ],
+    "timeline": [
+      {
+        "id": "tl-early",
+        "icon": "baby",
+        "iconStyle": "warning",
+        "title": "周初接住",
+        "badge": "孩子优先",
+        "badgeStyle": "warning",
+        "description": "先把入托接送和当天恢复节奏接稳，避免孩子状态波动时家里临时找人补位。"
+      },
+      {
+        "id": "tl-mid-car",
+        "icon": "car-front",
+        "iconStyle": "primary-soft",
+        "title": "周中推进",
+        "badge": "车辆主线",
+        "badgeStyle": "primary-soft",
+        "description": "维修、选号和充电桩安装顺着一条线往下走，不再把车膜、座椅和腰靠拆成散点。"
+      },
+      {
+        "id": "tl-mid-trip",
+        "icon": "calendar-range",
+        "iconStyle": "info",
+        "title": "周中顺带",
+        "badge": "假期准备",
+        "badgeStyle": "info",
+        "description": "端午保定安排和车辆出行准备一起做，顺手把孩子用品和路上补给打包好。"
+      },
+      {
+        "id": "tl-weekend",
+        "icon": "heart-handshake",
+        "iconStyle": "primary-soft",
+        "title": "周末再谈",
+        "badge": "长辈安排",
+        "badgeStyle": "primary-soft",
+        "description": "把北京养老方案、预算估计和长辈意愿拉回同一张桌上，先听再定方向。"
+      },
+      {
+        "id": "tl-close",
+        "icon": "shield-check",
+        "iconStyle": "success",
+        "title": "最后收口",
+        "badge": "应急落地",
+        "badgeStyle": "success",
+        "description": "家庭会议里补全号码，再把车载应急卡和家中版一起打印出来，真正让协议能用。"
+      }
+    ],
+    "stableItems": [
+      {
+        "title": "物业费已交",
+        "description": "物业盖章和缴费已经完成，不再占据本周注意力。"
+      },
+      {
+        "title": "国网已申",
+        "description": "充电桩申请路径已经打通，剩下的是排安装和现场推进。"
+      },
+      {
+        "title": "入托体检",
+        "description": "前置手续已完成，现在更看重真实适应和接送协作。"
+      },
+      {
+        "title": "协议结构已定",
+        "description": "家庭紧急联系人协议骨架已经完成，只待补齐号码并落地打印。"
+      }
+    ],
+    "sharedEntries": [
+      {
+        "icon": "phone-call",
+        "title": "服务通讯录",
+        "description": "保留物业、维修、儿科、快递和常用联系人。",
+        "href": "/doc?path=_knowledge%2F04.%E5%AE%B6%E5%BA%AD%E6%97%A5%E5%B8%B8%2F07.%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%AE%AF%E5%BD%95%2FREADME.md"
+      },
+      {
+        "icon": "car-front",
+        "title": "物业车辆",
+        "description": "汇总物业事项、停车、维修、上牌与充电桩。",
+        "href": "/doc?path=_knowledge%2F05.%E8%B5%84%E4%BA%A7%E8%AE%BE%E5%A4%87%2F%E8%BD%A6%E8%BE%86%2F2026-06-13_%E8%B4%AD%E8%BD%A6%E9%85%8D%E5%A5%97%E4%BA%8B%E5%8A%A1.md"
+      },
+      {
+        "icon": "heart-handshake",
+        "title": "养老规划",
+        "description": "进入北京养老方案、预算测算和沟通记录。",
+        "href": "/doc?path=_knowledge%2F04.%E5%AE%B6%E5%BA%AD%E6%97%A5%E5%B8%B8%2F%E5%B2%B3%E7%88%B6%E6%AF%8D%E5%85%BB%E8%80%81%E8%A7%84%E5%88%92.md"
+      },
+      {
+        "icon": "calendar-range",
+        "title": "家庭日历",
+        "description": "看纪念日、接送安排、出行计划和本周推进节点。",
+        "href": "/calendar"
+      },
+      {
+        "icon": "shield-check",
+        "title": "应急协议",
+        "description": "查看紧急联系人协议、打印版本和车载卡片说明。",
+        "href": "/doc?path=_knowledge%2F04.%E5%AE%B6%E5%BA%AD%E6%97%A5%E5%B8%B8%2F07.%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%AE%AF%E5%BD%95%2F%E5%AE%B6%E5%BA%AD%E7%B4%A7%E6%80%A5%E8%81%94%E7%B3%BB%E4%BA%BA%E5%8D%8F%E8%AE%AE.md"
+      }
+    ],
+    "footer": {
+      "title": "家庭日常总览",
+      "description": "围绕正在推进的生活线、近期节奏和共用支持入口组织，让家庭运转更容易接上。",
+      "tags": [
+        "温和可信",
+        "事务清晰",
+        "适合日用"
+      ]
+    }
+  }
+}
