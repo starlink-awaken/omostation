@@ -49,7 +49,7 @@ TIME_PER_EVENT_MIN = {
 
 
 def _utc_now() -> dt.datetime:
-    return dt.datetime.now(dt.timezone.utc)
+    return dt.datetime.now(dt.UTC)
 
 
 def _today_start_utc() -> dt.datetime:
@@ -83,7 +83,7 @@ def _read_jsonl_events(path: Path, since: dt.datetime) -> list[dict]:
                 except (ValueError, TypeError):
                     continue
                 if event_dt.tzinfo is None:
-                    event_dt = event_dt.replace(tzinfo=dt.timezone.utc)
+                    event_dt = event_dt.replace(tzinfo=dt.UTC)
                 if event_dt >= since:
                     out.append(obj)
     except OSError:

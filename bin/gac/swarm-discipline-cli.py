@@ -119,10 +119,10 @@ def cmd_claim_check(args: argparse.Namespace) -> int:
 def cmd_escape_digest(args: argparse.Namespace) -> int:
     root = root_from_cwd()
     if args.dir:
-        from pathlib import Path as _P
+        from pathlib import Path as path_cls
 
         records: list = []
-        d = _P(args.dir)
+        d = path_cls(args.dir)
         if d.is_dir():
             for path in sorted(d.glob("*.json")):
                 if path.parent.name == "tokens":

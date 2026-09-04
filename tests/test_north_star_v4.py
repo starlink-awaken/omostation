@@ -59,7 +59,7 @@ def test_realtime_window_uses_today_start():
     rt = v4.compute_realtime()
     assert rt["scope"] == "realtime"
     since = dt.datetime.fromisoformat(rt["since"].replace("Z", "+00:00"))
-    today = dt.datetime.now(dt.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today = dt.datetime.now(dt.UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     assert since == today
     assert "axes_realtime" in rt
     assert "A_minutes_today" in rt["axes_realtime"]

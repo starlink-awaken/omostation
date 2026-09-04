@@ -191,7 +191,7 @@ def _format_mini_trial_inner(mini: dict[str, Any]) -> str:
         return ""
     samples = mini.get("samples") or []
     lines: list[str] = []
-    lines.append("    threshold: %d" % MINI_THRESHOLD)
+    lines.append(f"    threshold: {MINI_THRESHOLD}")
     lines.append(f"    useful_count: {mini.get('useful_count', 0)}")
     lines.append(f"    not_useful_count: {mini.get('not_useful_count', 0)}")
     lines.append(f"    eligible_for_assisted: {str(mini.get('eligible_for_assisted', False)).lower()}")

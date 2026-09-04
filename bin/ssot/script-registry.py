@@ -14,6 +14,8 @@ import os
 import sys
 from pathlib import Path
 
+import yaml
+
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 REGISTRY_DIR = REPO_ROOT / "bin" / "_registry" / "scripts"
 SCHEMA_DIR = REPO_ROOT / "bin" / "_registry" / "schemas" / "script-registry" / "v1"

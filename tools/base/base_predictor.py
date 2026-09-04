@@ -6,7 +6,6 @@ import json
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 class BasePredictor(ABC):

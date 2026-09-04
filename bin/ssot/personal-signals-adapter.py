@@ -43,9 +43,9 @@ def _file_digest(path: Path) -> str:
 def _publish(topic: str, payload: dict[str, Any], trace_id: str) -> bool:
     try:
         import sys as _sys  # noqa: PLC0415
-        from pathlib import Path as _P  # noqa: PLC0415
+        from pathlib import Path as path_cls  # noqa: PLC0415
 
-        ws = _P(__file__).resolve().parents[2]
+        ws = path_cls(__file__).resolve().parents[2]
         cand = ws / "projects" / "bus-foundation" / "src"
         if cand.is_dir() and str(cand) not in _sys.path:
             _sys.path.insert(0, str(cand))

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -27,8 +28,10 @@ def scenario_document_review() -> dict:
     results = {"scenario": "document-review", "steps": []}
 
     doc_content = "关于进一步加强网络安全工作的通知\n各部门：\n1.提高安全意识\n2.完善防护措施"
-    doc_file = Path(tempfile.mktemp(suffix=".md"))
+    fd, doc_path = tempfile.mkstemp(suffix=".md")
+    doc_file = Path(doc_path)
     doc_file.write_text(doc_content, encoding="utf-8")
+    os.close(fd)
     results["steps"].append({"name": "create_document", "ok": True})
 
     r = run_cmd(["python3", str(REPO / "bin/gac/signal-scene-connector.py"), "--scene", "document-review"])

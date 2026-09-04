@@ -1344,7 +1344,7 @@ def cmd_score(args: argparse.Namespace) -> int:
             "dependency": round(dependency_score, 1),
             "total_services": total,
             "healthy": healthy,
-            "running": running,
+            "running_count": running,
             "with_liveness": has_liveness,
             "with_dependencies": has_deps,
         }
