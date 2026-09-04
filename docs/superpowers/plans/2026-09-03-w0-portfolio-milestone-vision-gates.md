@@ -26,21 +26,21 @@ authorization; planning authority never permits completion/value edits.
 
 ### Task 1: Write false-close RED cases
 
-- [ ] Add fixtures where all leaves are done but one required KR is unproven,
+- [x] Add fixtures where all leaves are done but one required KR is unproven,
   a value-exempt BET attempts to advance value, a replacement covers a failed
   leaf, an eleven-week window attempts Vision close, weekly accepted-output
   or acceptance-rate thresholds are missed, edit-burden fails to improve, and
   a human verdict is absent; add a Milestone fixture with an unresolved blocker
   and assert `MILESTONE_FALSE_CLOSE`, zero source/state mutation, and no
   derived met result.
-- [ ] Add false-close fixtures where a required Campaign is unmet and where a
+- [x] Add false-close fixtures where a required Campaign is unmet and where a
   required Objective is unmet; assert each blocks its parent predicate even
   when every leaf BET is terminal.
-- [ ] Add independent synthetic-evidence and principal-unbound-human-evidence
+- [x] Add independent synthetic-evidence and principal-unbound-human-evidence
   fixtures; both must fail before any Ledger/OMO/evidence write occurs.
-- [ ] Assert exact failures: `MILESTONE_FALSE_CLOSE`,
+- [x] Assert exact failures: `MILESTONE_FALSE_CLOSE`,
   `VISION_WINDOW_INCOMPLETE`, and `VALUE_PROXY_REJECTED`.
-- [ ] Run RED exactly:
+- [x] Run RED exactly:
 
 ```bash
 uv run --with pyyaml --with pytest python -m pytest \
@@ -49,27 +49,27 @@ uv run --with pyyaml --with pytest python -m pytest \
 
 ### Task 2: Implement read-only derivation
 
-- [ ] Add pure functions returning structured predicates, not status mutation:
+- [x] Add pure functions returning structured predicates, not status mutation:
 
 ```python
 def evaluate_milestone(milestone: dict, ledger: dict, evidence: dict) -> Verdict: ...
 def evaluate_vision(vision: dict, objectives: list[Verdict], window: list[dict]) -> Verdict: ...
 ```
 
-- [ ] Require mandatory BET completion/replacement, proven KRs, zero unresolved
+- [x] Require mandatory BET completion/replacement, proven KRs, zero unresolved
   blocker, zero P0 breach,
   every mandatory Campaign and Objective derived met, real-only evidence
   partition, twelve consecutive weeks, weekly accepted
   output threshold, acceptance-rate threshold, edit-burden improvement, and
   final human verdict for Vision.
-- [ ] Preserve existing BET `evaluate_complete` behavior and completion-axis
+- [x] Preserve existing BET `evaluate_complete` behavior and completion-axis
   semantics; no helper writes Ledger, OMO state, or evidence.
 
 ### Task 3: CLI and regression proof
 
-- [ ] Add a read-only `chain-bind-check` portfolio command returning canonical
+- [x] Add a read-only `chain-bind-check` portfolio command returning canonical
   JSON verdicts and typed reasons.
-- [ ] Run GREEN exactly:
+- [x] Run GREEN exactly:
 
 ```bash
 uv run --with pyyaml --with pytest python -m pytest \

@@ -20527,8 +20527,9 @@ bets:
   title: Milestone/Vision 派生完成门与 chain-bind v2
   appetite: 3 days
   priority: P0
-  status: candidate
-  note: "Spec 1.0.1 implementation authorized 2026-09-04 after self-binding+#3087; write_surfaces include ledger."
+  status: done
+  done_at: 2026-09-04 11:16:31+00:00
+  note: "Delivered Milestone/Vision derived gates (Wave B half); Spec 1.0.1 authorized 2026-09-04."
   goal: 在现有 chain-bind 上增加 BET、Milestone、Campaign、Objective、Vision 五级纯派生完成谓词，阻止 leaf done、工程 delivery 或代理指标冒充战略完成。
   non_goals:
   - 不允许 Agent 或 projection 直接写 KR proven
@@ -20565,15 +20566,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-milestone-vision-gates-design.md
+            sha256: sha256:16f6b8115b8ffe5c1a53a7f758aaa8e09b037bb329dd33276331c89a644cf488
+          tests:
+            ref: receipt://tests/test_bet_portfolio_completion.py
+            sha256: sha256:fa846ceac2531ba686af4a99d9fc690cf391365317d4c4fad4e53190636a5f9a
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-06.md
+            sha256: sha256:efaa0e8d4a6f8c6618e8fd8c8737155d7a4c265588cf3aaa0caf10877735b65d
+          merged_reachable_commit:
+            ref: git://origin/main@05c32c74e822d2477d2e67157eab23a4c026ad39
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-06.md
+            sha256: sha256:efaa0e8d4a6f8c6618e8fd8c8737155d7a4c265588cf3aaa0caf10877735b65d
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-06.md
+            sha256: sha256:efaa0e8d4a6f8c6618e8fd8c8737155d7a4c265588cf3aaa0caf10877735b65d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-06.md
+            sha256: sha256:efaa0e8d4a6f8c6618e8fd8c8737155d7a4c265588cf3aaa0caf10877735b65d
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-06.md
+            sha256: sha256:efaa0e8d4a6f8c6618e8fd8c8737155d7a4c265588cf3aaa0caf10877735b65d
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   depends_on: [BET-Y1Q4-T1-04, BET-Y1Q4-T1-05]
   portfolio_binding:
     schema_state: enforced
