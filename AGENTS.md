@@ -93,6 +93,20 @@ Full command catalog: [bin/README.md](bin/README.md)
 - Runtime slots: [docs/architecture/os-operating-pattern-v1.md](docs/architecture/os-operating-pattern-v1.md)
 - Patterns: [.omo/_knowledge/patterns/](.omo/_knowledge/patterns/)
 
+## 8. Closeout & Retrospective
+
+1. Review `git diff --stat`
+2. Run verification appropriate for change surface
+3. Prefer `make agent-workflow-closeout RUN_ID=<run-id>` for governed runs
+4. Mention files changed and checks run
+5. Do not create commits unless explicitly requested
+
+**复盘+固化 (P74 精神)** — 触发条件: 系统性分析/方案任务 / 多轮返工 / Stop hook 反馈后:
+- 诊断前置 4 问: ①反证找了吗 ②查运行时实证了吗 ③读相关 ADR 了吗 ④扫了 bin/ssot + .github/workflows 确认"缺的"真缺
+- 三层固化: 教训写 memory + AGENTS.md/CLAUDE.md (协议层) + hook (harness 层)
+
+**Round Workflow**: 详见 [.omo/_knowledge/decisions/0148-round-trip-playbook.md](.omo/_knowledge/decisions/0148-round-trip-playbook.md)
+
 ---
 
-> **Pyramid principle**: This file owns **entry + pointers only**. Detailed operational content lives in dedicated docs. No duplication.
+> **Pyramid principle**: This file owns **entry + pointers only**. Detailed operational content lives in dedicated docs. No duplication. All original information preserved.

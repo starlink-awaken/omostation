@@ -53,7 +53,14 @@ This file answers: what to read first, which files are authoritative, which oper
 
 Authoritative SSOT map (fact types → sources): [ARCHITECTURE.md §1](ARCHITECTURE.md)
 
-## 4. Routing Hints
+## 4. Working Discipline
+
+1. Keep a visible todo list for multi-step work
+2. Use `rg` for text discovery; codebase-memory MCP for callers/impact
+3. Use file-editing tools (Edit, Create, MultiEdit, apply_patch) for manual edits
+4. If governance demands commit but policy doesn't authorize, finish changes + report files + ask for confirmation
+
+## 5. Routing Hints
 
 | Need | Route |
 |------|-------|
@@ -76,3 +83,11 @@ Full checklist: [AGENTS.md §9](AGENTS.md)
 ---
 
 > **Pyramid principle**: Navigation layer only. All operational details live in AGENTS.md or dedicated docs.
+
+## 6. Onboarding & Patterns
+
+New agent? Read these historical patterns to avoid known pitfalls:
+- [P74 Workflow Solidification](.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md)
+- [P73 Truth-Driven Engineering](.omo/_knowledge/patterns/p73-truth-driven-engineering-pattern.md)
+
+Anti-corrosion framework: [.omo/_knowledge/decisions/0431-anti-corrosion-five-layer-framework.md](.omo/_knowledge/decisions/0431-anti-corrosion-five-layer-framework.md)
