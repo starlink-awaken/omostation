@@ -881,7 +881,7 @@ PYEOF
     echo "  onboard <session>    新 Agent 入职引导 (claim + 环境 + 引导)"
     echo "  cleanup              回收 TTL 过期 worktree (PASW_TTL_HOURS, 默认 24h)"
     echo ""
-    echo "PASW 隔离子模块: $ISOLATED_SUBS"
+    echo "PASW 隔离子模块: ${ISOLATED_SUBS:-}"
     echo "session 命名: 只允许 [a-z0-9-] (如 fix-route-bug)"
     exit 1
     ;;
