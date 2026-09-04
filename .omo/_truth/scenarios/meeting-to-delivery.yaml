@@ -1,6 +1,6 @@
 schema: scene-card/v1
 scene_id: meeting-to-delivery
-lifecycle: shadow
+lifecycle: assisted
 journey_id: meeting-to-delivery
 goal: "会议结束后的行动项提取与任务自动创建"
 trigger: "会议日历事件结束"
@@ -14,3 +14,8 @@ data_scope: workspace-meeting
 operator: omo-resident
 permission_ref: "bos://resident/meeting/read"
 rollback_plan: "行动项草稿保留但不派发"
+sample_refs:
+  - ".omo/state/scene-cards/meeting-to-delivery/samples/sample-1.json"
+  - ".omo/state/scene-cards/meeting-to-delivery/samples/sample-2.json"
+  - ".omo/state/scene-cards/meeting-to-delivery/samples/sample-3.json"
+calibration: 0.65
