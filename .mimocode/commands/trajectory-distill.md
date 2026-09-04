@@ -1,6 +1,8 @@
 ---
 type: ssot
 description: "Query the mimocode trajectory database to find repeated manual workflows worth packaging into skills/agents/commands. Read-only SQLite analysis — never modifies the database."
+owner: governance-team
+last-reviewed: 2026-09-04
 ---
 
 # Trajectory Distill Pass — 从历史会话蒸馏可复用工作流
