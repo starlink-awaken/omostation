@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-04
+---
 # Architecture Analysis & Requirements Consolidation
 
 ## 1. 背景与目的
