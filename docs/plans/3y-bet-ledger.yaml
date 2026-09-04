@@ -20222,8 +20222,9 @@ bets:
   title: Portfolio v2 schema 与兼容 validator
   appetite: 3 days
   priority: P0
-  status: candidate
-  note: "Initial v1-compatible self-bootstrap; Portfolio v2 enforcement is not yet active. human_gate released 2026-09-04 by principal for Wave A1 implementation."
+  status: done
+  done_at: 2026-09-04T09:37:52Z
+  note: "Wave A1 delivered via #3066+#3072; human_gate released 2026-09-04; meta.total_bets repaired; portfolio lint --strict green."
   goal: 以 additive contract 扩展现有 Ledger，使其表达 Vision、Objective、KR、Campaign、Milestone、parent/child、coverage、hypothesis、gate、guardrail 与 replacement，同时保持全部 v1 消费者和历史对象语义不变。
   non_goals:
   - 不创建新服务、数据库、dispatcher 或独立状态库
@@ -20253,7 +20254,6 @@ bets:
   - docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
   - docs/superpowers/plans/2026-09-03-w0-portfolio-v2-schema-compatibility.md
   - docs/plans/3y-bet-ledger.yaml
-  - docs/plans/3y-bet-ledger.yaml::meta.total_bets
   - .omo/_knowledge/retros/BET-Y1Q4-T1-04.md
   pasw_required: false
   accepted_specifications:
@@ -20263,17 +20263,40 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T1-04
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d2106d5b86dbc03c1ffc1f148e1786c41b2d9a63
+          tests:
+            ref: receipt://tests/test_bet_portfolio_contract.py
+            sha256: sha256:043a53c176735fc6afdecdcb0eb6483d48adff0a40f40a679f4ec03b8f8d6e17
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-schema-compatibility-design.md
+            sha256: sha256:0dcb84b615b337d94ee787a4ef65cab5f9f1b2d6ae07ab6c676b9323e84a630e
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-04.md
+            sha256: sha256:6d8c24d88b7323b39d7e69176ef266a9dc16f81f64a3ba125a606f1554d6f538
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
   depends_on: []
   portfolio_binding:
     schema_state: bootstrap_unenforced
@@ -20293,7 +20316,7 @@ bets:
   appetite: 2 days
   priority: P0
   status: candidate
-  note: Initial v1-compatible self-bootstrap; Portfolio v2 enforcement is not yet active.
+  note: "human_gate released 2026-09-04 by principal sequential Wave A1 advance after T1-04 done."
   goal: 用 depends_on 与 covers 两类机器边建立确定性组合图，保证 required KR 覆盖守恒并输出真实关键路径，不以 done BET 数量计算进度。
   non_goals:
   - 不新增图数据库或独立 graph truth
@@ -20314,14 +20337,17 @@ bets:
   - bin/plan/portfolio_graph.py
   - bin/plan/bet-ledger.py
   - tests/test_bet_portfolio_graph.py
+  - bin/_registry/scripts/governance/portfolio_graph.yaml
   - docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md
   - docs/superpowers/plans/2026-09-03-w0-portfolio-coverage-graph-critical-path.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/governance-checks.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T1-05.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-coverage-graph-critical-path-design.md
     spec_version: 1.0.0
-    content_digest: sha256:27b93936399c3d7ff895c82ffe85855bd3b1ce895af43737b92ab9e922b35806
+    content_digest: sha256:96fc21376953def89fc4b53418efcb2029424f602e43720ac8fc418226f496a2
     decision_ref: decision://accepted/BET-Y1Q4-T1-05
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -20345,7 +20371,7 @@ bets:
     kr_refs: [KR-TRUST-CHAIN-COVERAGE]
   value_indicator_policy: false
   risk_level: L2
-  human_gate: true
+  human_gate: false
   circuit_breaker: 需要新图数据库、无法稳定排序或以 raw BET count 冒充进度时停止
   retro: required
 - id: BET-Y1Q4-T1-06
