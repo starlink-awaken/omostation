@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 305
+  total_bets: 307
   windows:
   - Y1Q1
   - Y1Q2
@@ -20307,7 +20307,9 @@ bets:
   title: HITL Proposal System — harness 层人类审批提案生成与 Cockpit 集成
   appetite: 2 days
   priority: P1
-  status: active
+  status: candidate
+  done_at: 2026-09-04 14:30:00+00:00
+  note: Delivered in PR #3077 + PR #129 + PR #3119
   goal: Build a standalone HITL proposal system that auto-generates approval proposals when a BET has human_gate=true, stores
     them as atomic YAML files, and integrates with cockpit decide commands for human approval. The agent-workflow execute
     stage waits for approval before proceeding; expired proposals auto-downgrade to direct execution (circuit breaker).
@@ -20343,46 +20345,8 @@ bets:
   - .omo/_knowledge/hitl-proposals/
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
-    spec_version: 1.0.0
-    content_digest: PENDING
-    decision_ref: decision://accepted/BET-Y1Q4-HITL-01
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: PROVEN
-        evidence:
-          commits: 16
-          prs_merged: 3
-          prs:
-          - omostation#3077
-          - omostation-cockpit#129
-          - omostation#3119
-          tests_passed: 17/17 (8 original + 9 subprocess delegation)
-          spec_binding: docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md v1.0.0
-          adr: ADR-0460
-          patterns:
-          - P97
-          - P98
-          - P99
-          retro: .omo/_knowledge/retros/BET-Y1Q4-HITL-01.md
-      operational:
-        status: PROVEN
-        evidence:
-          e2e_verified: check->create->list->approve->status flow with BET-Y1Q4-T1-02 (L2, human_gate=true)
-          cockpit_native_integration: 'post PR #3119 merge, bin/cockpit decide list natively shows HITL proposals'
-          circuit_breaker_tested: 24h TTL via ttl_hours=-1 in test_06
-          fcntl_lock_tested: test_subprocess_concurrent_approval_safety
-      value:
-        status: POTENTIAL
-        evidence:
-          bets_unlocked: 118 L2/L0 human_gate BETs can now be properly gated
-          pattern_unlocked: P97/P98/P99 patterns for cross-repo submodule + governance surfaces + hook hygiene
-    overall_state: closing
-  value_indicator_policy: false
   circuit_breaker: Proposal 生成失败或模块导入异常时降级为 direct execution (无 HITL)
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-HITL-01.md
   retro: required
 - id: BET-Y1Q4-T1-10
   track: T1-TRUTH
@@ -20671,6 +20635,11 @@ bets:
   close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-16.md
   retro: required
 - id: BET-Y1Q4-T8-17
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-w0-unified-surface-protocol-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:248269b03910ea9693b4a499cd4a66c070408773d33fbc4709a40ff0cb1677c4
+    decision_ref: decision://accepted/BET-Y1Q4-T8-17
   track: T8-SURFACE
   window: Y1Q4
   title: 统一表面协议 (USP v1) 与通用交互卡片元语模型规范
@@ -20830,28 +20799,7 @@ bets:
   - .omo/_knowledge/hitl-proposals/ (add notified_at field, backward-compat)
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-04-hitl-proposal-system-v1.1-design.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-04-hitl-proposal-system-v1.1-design.md
-    spec_version: 0.1.0-draft
-    content_digest: PENDING
-    decision_ref: decision://accepted/BET-Y1Q4-HITL-02
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: NOT_STARTED
-        evidence: {}
-      operational:
-        status: NOT_PROVEN
-        evidence: {}
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
-  value_indicator_policy: false
   circuit_breaker: 通知失败/分布式锁失败时退化为 v1.0 producer-only 模式, 不阻断 execution
   retro: required
   depends_on:
   - BET-Y1Q4-HITL-01
-  - PR-3077 (HITL v1.0)
-  - PR-129 (cockpit HITL awareness)

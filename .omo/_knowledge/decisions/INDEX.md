@@ -561,3 +561,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0441: Documents↔Workspace 协同机制 v1（DW 三原语） — **ACCEPTED** | 2026-08-30 | xiamingxing | 0441-documents-workspace-collab-v1.md
 - ADR-0442: 次世代主权智能体全域常态化运营、业务真值流演进与全生命周期自进化治理架构 — **ACCEPTED** | 2026-08-30 | governance-team | 0442-nextgen-sovereign-business-os-and-evolution-architecture.md
 - ADR-0450: cockpit-ui 以 submodule 形态回归主仓（第 15 子模块，gitlink 版本锚定） — **ACCEPTED** | 2026-09-04 | xiamingxing | 0450-cockpit-ui-submodule-reintegration.md
+- ADR-0451: HITL Proposal System — file-based approval gate for harness stage_execute — **ACCEPTED** | 2026-09-04 | xiamingxing | 0451-hitl-proposal-system.md
