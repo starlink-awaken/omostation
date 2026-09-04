@@ -31,7 +31,8 @@ def get_docstring(filepath: Path) -> str:
             lines = filepath.read_text().splitlines()
             docs = []
             for line in lines:
-                if line.startswith("#!"): continue
+                if line.startswith("#!"):
+                    continue
                 if line.startswith("#"):
                     docs.append(line.lstrip("#").strip())
                 elif line.strip() != "":
@@ -59,7 +60,8 @@ def is_dead(filepath: Path) -> bool:
 
     valid_refs = []
     for ref in refs:
-        if not ref.strip(): continue
+        if not ref.strip():
+            continue
         if str(rel_path) in ref or "bin/_registry/scripts/" in ref:
             continue
         valid_refs.append(ref)
@@ -82,8 +84,10 @@ def main():
     if projects_dir.exists():
         for p in projects_dir.iterdir():
             if p.is_dir() and (p / "bin").exists():
-                for s in (p / "bin").rglob("*.py"): targets.append(s)
-                for s in (p / "bin").rglob("*.sh"): targets.append(s)
+                for s in (p / "bin").rglob("*.py"):
+                    targets.append(s)
+                for s in (p / "bin").rglob("*.sh"):
+                    targets.append(s)
 
     dead_count = 0
     survivors = []

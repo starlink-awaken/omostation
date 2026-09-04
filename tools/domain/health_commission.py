@@ -3,7 +3,6 @@
 继承 BaseController/BaseExtractor/BasePredictor，复用通用能力
 """
 from pathlib import Path
-from typing import Dict, List
 
 from tools.base import BaseController, BaseExtractor, BasePredictor
 
