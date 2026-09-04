@@ -71,6 +71,8 @@ projects:
         version: "1.0.0"
         role: "知识引擎 monorepo"
         src_dir: "src/"
+        submodule: true
+        repository: "https://github.com/starlink-awaken/kairon.git"
         packages: 16                 # ls packages/*/ | wc -l
         package_list:
             - codeanalyze
