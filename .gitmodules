@@ -48,4 +48,4 @@
 	url = git@github.com:starlink-awaken/omostation-cockpit-ui.git
 [submodule "projects/knowledge/kairon"]
 	path = projects/knowledge/kairon
-	url = https://github.com/starlink-awaken/omostation-kairon.git
+	url = https://github.com/starlink-awaken/kairon.git
