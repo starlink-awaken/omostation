@@ -1,13 +1,19 @@
-current_phase: 29
-current_wave: W1
-health_score_evidence: 77.3
-health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-09-04T03:02:39.137917+00:00'
-completed_tasks: 290
-planned_tasks: 7
 active_tasks: 1
 blocked_tasks: 1
-total_tasks: 299
+completed_tasks: 292
+current_phase: 29
+current_wave: W1
+harness:
+  compliance_failed: 0
+  compliance_passed: 0
+  last_run: null
+  last_score: null
+  last_status: null
+  success_rate: 0.0
+  total_runs: 0
+health_score_evidence: 100.0
+health_score_evidence_generated_at: '2026-09-04T14:17:28.383801+00:00'
+health_score_evidence_source: bin/gac/evidence-smoke.py
 next_active_tasks:
 - kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 next_planned_tasks:
@@ -19,19 +25,13 @@ next_planned_tasks:
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
-updated_at: '2026-08-30T03:30:23Z'
-harness:
-  last_run: null
-  last_status: null
-  last_score: null
-  total_runs: 0
-  success_rate: 0.0
-  compliance_passed: 0
-  compliance_failed: 0
+planned_tasks: 7
 self_evolution:
-  total_cycles: 0
   last_cycle: null
-  success_rate: 0.0
-  proposals_pending: 0
   proposals_approved: 0
   proposals_executed: 0
+  proposals_pending: 0
+  success_rate: 0.0
+  total_cycles: 0
+total_tasks: 301
+updated_at: '2026-08-30T03:30:23Z'
