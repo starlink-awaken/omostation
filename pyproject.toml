@@ -94,6 +94,7 @@ dev = [
     "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
     "rich>=14.3.4",
+    "textual>=0.80.0",
 ]
 
 [tool.pyright]

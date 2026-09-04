@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+pytest.importorskip("textual")
+
 from cockpit.surface.protocol import SurfaceDomain
 from cockpit.tui.adapters import (
     AgentAdapter,

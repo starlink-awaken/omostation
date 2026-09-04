@@ -13,22 +13,49 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from textual import on
-from textual.app import App, ComposeResult
-from textual.binding import Binding
-from textual.containers import Container, Horizontal, Vertical, VerticalScroll
-from textual.message import Message
-from textual.widgets import (
-    Button,
-    DataTable,
-    Footer,
-    Header,
-    Label,
-    ListItem,
-    ListView,
-    RichLog,
-    Static,
-)
+try:
+    from textual import on
+    from textual.app import App, ComposeResult
+    from textual.binding import Binding
+    from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+    from textual.message import Message
+    from textual.widgets import (
+        Button,
+        DataTable,
+        Footer,
+        Header,
+        Label,
+        ListItem,
+        ListView,
+        RichLog,
+        Static,
+    )
+    HAS_TEXTUAL = True
+except ImportError:
+    HAS_TEXTUAL = False
+
+    def on(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
+        def decorator(fn: Any) -> Any:
+            return fn
+        return decorator
+
+    App = object  # type: ignore[misc,assignment]
+    ComposeResult = Any  # type: ignore[misc,assignment]
+    Binding = object  # type: ignore[misc,assignment]
+    Container = object  # type: ignore[misc,assignment]
+    Horizontal = object  # type: ignore[misc,assignment]
+    Vertical = object  # type: ignore[misc,assignment]
+    VerticalScroll = object  # type: ignore[misc,assignment]
+    Message = object  # type: ignore[misc,assignment]
+    Button = object  # type: ignore[misc,assignment]
+    DataTable = object  # type: ignore[misc,assignment]
+    Footer = object  # type: ignore[misc,assignment]
+    Header = object  # type: ignore[misc,assignment]
+    Label = object  # type: ignore[misc,assignment]
+    ListItem = object  # type: ignore[misc,assignment]
+    ListView = object  # type: ignore[misc,assignment]
+    RichLog = object  # type: ignore[misc,assignment]
+    Static = object  # type: ignore[misc,assignment]
 
 from cockpit.surface.cards import (
     ActionPanelCard,
