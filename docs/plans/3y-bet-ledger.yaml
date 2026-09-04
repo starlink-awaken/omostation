@@ -20008,7 +20008,8 @@ bets:
   title: bin-quota 口径修复与配额迭代升级
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: "2026-09-04"
   goal: 修 BIN_PATTERNS 子目录盲点并配额迭代升级（script_baseline 571→573 注明 stub 增量），不改业务逻辑。
   non_goals:
   - 不改业务代码逻辑，只修配额统计口径与基线数字
@@ -20032,6 +20033,42 @@ bets:
   - .omo/_truth/registry/governance-checks.yaml
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-04-binquota-hygiene-spec.md
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: "git://origin/main@39cd7ee46ad84b219808eef74ded2447e016b579"
+          tests:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+          diff:
+            ref: "receipt://docs/superpowers/specs/2026-09-04-binquota-hygiene-spec.md"
+            sha256: "sha256:d6033f371ff6cc2230cfdf3be0e8f0529037b3caeb41e91bb7e12e27cd27c90b"
+          rollback:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+          fresh_receipt:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+          replay:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+          cleanup:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-02.md"
+            sha256: "sha256:a01f3377e75f07aa53bd7ff0689a6fae605d9bbf4bff3d401e95ea634af2e368"
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-04-binquota-hygiene-spec.md
     spec_version: 1.0.0

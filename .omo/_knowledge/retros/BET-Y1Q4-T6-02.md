@@ -1,5 +1,5 @@
 ---
-status: active
+status: closed
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-04
@@ -57,3 +57,15 @@ appetite 1 day；单会话内完成（spec → implement → verify → PR），
 - verify: `uv run --with pyyaml python bin/plan/bet-ledger.py verify BET-Y1Q4-T6-02 --execute` → exit 0（2026-09-04 worktree 实测）
 - workflow verify: `agent-workflow.py verify 20260904T043725Z-bet-execution-5fdd70c7 --from-diff --execute` → ok, files=4 checks=1
 - PR: https://github.com/starlink-awaken/omostation/pull/3050
+
+
+## Truth-closure addendum (2026-09-04)
+
+### 打假
+交付物已在 #3050（`39cd7ee46`）合入 main：BIN_PATTERNS 子目录覆盖、`script_baseline 571→573`、spec、retro 均在 tip。
+台账 `status` 仍为 `candidate`（forget-to-flip / 与 T10-114/119 同款）。本 PR 只做 ledger → `done` + `delivery_accepted`，不改业务代码。
+
+### 复核
+- `check-bin-quota-diff.py --base origin/main` → OK 守恒
+- `make gac-local-gate` ALL GREEN
+- `bet-ledger.py lint` OK
