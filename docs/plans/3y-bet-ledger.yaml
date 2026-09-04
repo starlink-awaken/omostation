@@ -20728,3 +20728,126 @@ bets:
   human_gate: true
   circuit_breaker: 任一 negative case 假绿、mutable-ref 依赖、value 轴变化、W1-W6 出现或 clone cleanup 无法证明时停止 W0 closeout
   retro: required
+
+# === 衍生扩展 BET (2026-09-04 系统治理恢复会话新增) ===
+
+- id: BET-Y1Q4-T6-03
+  track: T6-EVOLUTION
+  window: Y1Q4
+  title: 子模块 gitlink 漂移自动防护 + sync-check 机制强化
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  goal: 建立子模块 gitlink 漂移的自动检测与修复机制，防止 P97 squash-SHA 悬空和本地未提交改动导致的 gitlink 不一致。强化 sync-check hook 在 submodule pointer 变更时的自动同步能力。
+  non_goals:
+  - 不改变现有 submodule-guard 的 fast-forward 校验逻辑
+  - 不自动 push 子模块变更（仍需人工确认）
+  done_when:
+  - pre-commit hook 增加 gitlink drift 快速检测（本地 vs gitlink SHA 不一致时告警）
+  - sync-check hook 增加自动 fast-forward 子模块到 gitlink SHA 的能力
+  - 文档记录 submodule 同步 SOP
+  verify:
+  - cmd: python3 bin/ssot/submodule-reachability-gate.py --source index
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ssot/submodule-reachability-gate.py
+  - docs/architecture/submodule-sync-sop.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: fast-forward 校验失败时停止，不强制更新
+  retro: required
+
+- id: BET-Y1Q4-T8-04
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Scene card bet/falsifier 全量补全 + 生命周期推进
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 63 张 scene card 补全 bet 和 falsifier 必填字段，推进 draft→shadow→assisted→supervised→routine 生命周期，消除 validate --all 的 FAIL。
+  non_goals:
+  - 不改变现有 scene card 的 goal/trigger/input/output 核心字段
+  - 不自动激活（每张卡仍需人工确认）
+  done_when:
+  - validate --all 全量 PASS（无 bet/falsifier 缺失）
+  - 至少 5 张 draft 卡推进到 shadow 或更高级别
+  - 每张卡关联到具体 BET ID
+  verify:
+  - cmd: python3 bin/ssot/scene-card-lifecycle.py validate --all
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/scene-cards/*.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-04.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 单卡推进需人工确认，不批量自动升级
+  retro: required
+
+- id: BET-Y1Q4-T9-01
+  track: T9-OBSERV
+  window: Y1Q4
+  title: Resident agent ledger 锁监控与自动恢复机制
+  appetite: 1 day
+  priority: P2
+  status: candidate
+  goal: 建立 resident agent ledger SQLite 锁的监控与自动恢复机制，防止数据库锁死导致记账功能持续不可用。增加 WAL checkpoint 定期执行和锁超时自动释放。
+  non_goals:
+  - 不替换 SQLite 为其他数据库
+  - 不改变现有 ledger 数据结构
+  done_when:
+  - ledger 锁超时（>5min）自动检测并触发 checkpoint
+  - 连续 3 次 checkpoint 失败则 kill 持有锁的僵死进程
+  - resident-status 增加 ledger 锁年龄指标
+  verify:
+  - cmd: make resident-status
+    expect: health=recovered or ok
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/ledger_check.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T9-01.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 自动 kill 进程前需确认进程已僵死（CPU time < 1% over 5min）
+  retro: required
+
+- id: BET-Y1Q4-T10-02
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 子模块 doc frontmatter 批量迁移收尾 + doc-index 合规收口
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 完成所有子模块的 doc frontmatter 迁移（type/owner/last_updated），使 doc-index 合规问题从 1402 降至 legacy warning 预算内（≤800）。同步更新主仓 gitlink 确保所有子模块指针一致。
+  non_goals:
+  - 不改变现有文档内容（仅添加 YAML frontmatter）
+  - 不处理 untyped 软信号（1819 个为已知存量）
+  done_when:
+  - doc-index 合规问题 ≤800（仅 legacy warnings）
+  - 所有子模块 frontmatter 覆盖率 ≥95%
+  - gitlink drift = 0（本地与 gitlink SHA 完全一致）
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/generate-docs-index.py --check
+    expect: 合规问题 <= 800
+  - cmd: python3 bin/ssot/submodule-reachability-gate.py --source index
+    expect: exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/*/ACKNOWLEDGMENTS.md
+  - projects/*/AGENTS.md
+  - projects/*/ARCHITECTURE.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-01.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 单模块 frontmatter 迁移冲突时跳过该模块，不阻塞整体
+  retro: required
