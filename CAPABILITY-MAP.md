@@ -217,7 +217,7 @@
 | `cockpit pptx` | 渲染为 16:9 高管技术汇报 PPTX |
 | `cockpit product-health` | 产品健康度检测 |
 | `cockpit profile` | 查看/编辑身份档案 (L4 入口) |
-| `cockpit project` | 🔍 17 项目全景 4D 体检与诊断 |
+| `cockpit project` | 🔍 16 项目全景 4D 体检与诊断 |
 | `cockpit proxy-env` | 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE) |
 | `cockpit publish` | 发布研究为正式 Markdown 报告 |
 | `cockpit quarantine` | 隔离可疑研究记录 |

@@ -34,6 +34,32 @@ class CommandMeta:
     audit_ref: str | None = None  # 指向 docs/command-audit/<path>.yaml
 
 
+def submodule_count() -> str:
+    """主仓注册的子模块数（动态读取 .gitmodules，避免硬编码漂移）。
+
+    向上定位主仓根（含 docs/project-registry.yaml），统计 `[submodule "path"]`
+    条目数。非主仓环境或读取失败时返回空串，调用方应优雅降级
+    （help/summary 不显示数字，而不是展示过期计数）。
+    """
+    from pathlib import Path
+
+    cur = Path(__file__).resolve()
+    for parent in cur.parents:
+        if (parent / "docs" / "project-registry.yaml").is_file():
+            gm = parent / ".gitmodules"
+            try:
+                return str(
+                    sum(
+                        1
+                        for ln in gm.read_text(encoding="utf-8").splitlines()
+                        if ln.strip().startswith("[submodule")
+                    )
+                )
+            except OSError:
+                return ""
+    return ""
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # CATEGORY_GROUPS: category → (展示顺序, 颜色)。help_map 产品地图分组的唯一顺序来源。
 # ──────────────────────────────────────────────────────────────────────────────
@@ -259,7 +285,7 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
     "project": CommandMeta(
         name="project",
         category="🛠️ 系统 (System)",
-        summary="17 项目全景 4D 体检与诊断",
+        summary=f"{submodule_count()} 项目全景 4D 体检与诊断",
     ),
     # ── 数据与导入 (Data / Import) ───────────────────────────────────────────
     "import": CommandMeta(

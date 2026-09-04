@@ -14,6 +14,8 @@ import argparse
 import os
 from pathlib import Path
 
+from cockpit.commands.registry import submodule_count
+
 
 def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type[argparse.ArgumentParser]) -> None:
     """Register all cockpit subcommands on the given sub-parser.
@@ -996,7 +998,7 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         help="🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)",
     )
 
-    proj_p = sub.add_parser("project", help="🔍 17 项目全景 4D 体检与诊断")
+    proj_p = sub.add_parser("project", help=f"🔍 {submodule_count()} 项目全景 4D 体检与诊断")
     proj_p.add_argument("project_subcmd", nargs="?", default="inspect", help="inspect|list (default: inspect)")
     proj_p.add_argument("project_name", nargs="?", default="", help="指定项目名称")
     proj_p.add_argument("--json", action="store_true", help="JSON 输出")
