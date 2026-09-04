@@ -17918,6 +17918,7 @@ bets:
   - projects/omlxc/src/omlxc/dataplane/experience_replay.py
   - projects/cockpit/src/cockpit/commands/spine.py
   - .omo/_knowledge/retros/BET-Y1Q3-T10-105.md
+  - projects/omlxc/tests/unit/test_experience_replay.py
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-08-30-spine-value-flow-and-persona-lora-design.md
