@@ -71,6 +71,9 @@ agent_profiles:
     - project-code-change
     - pyright-sweep
     - bet-execution
+    - round-engineering
+    - round-type-router
+    - closeout-with-retro
     can_write_lanes:
     - code
     - config
@@ -120,6 +123,11 @@ agent_profiles:
     - resident-runtime-observe
     - documents-consumer-audit-weekly
     - convergence-pulse-weekly
+    - round-engineering
+    - round-type-router
+    - closeout-with-retro
+    - scene-card-promotion
+    - submodule-pointer-bump
     can_write_lanes:
     - docs
     - governance_code
@@ -167,6 +175,7 @@ agent_profiles:
     allowed_workflows:
     - project-code-change
     - pyright-sweep
+    - closeout-with-retro
     can_write_lanes:
     - code
     closeout_required:
@@ -1314,7 +1323,7 @@ projection:
   lifecycle: read_only_generated_compatibility
   schema: agent-workflow-compat-projection/v1
   source: .omo/_truth/registry/agent-workflows
-  source_digest: sha256:694b9a4718b3aa3f00bef005a95047ecf4ce8d703c2f4131a48b95e9e13464df
+  source_digest: sha256:7ee086272e8275fcc8e8304b8175e338fbcfdf27482e3f3b225ac21e162a4abe
   writer: bin/agent-workflow.py projection-sync
 requirement_iteration_policy:
   adr: ADR-0203
@@ -1769,6 +1778,64 @@ workflows:
     - runtime/omo/_delivery/ingress/**
   title: C2G external spec ingress
 - agents:
+    observer_policy: optional
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+  allowed_lanes:
+  - docs
+  - governance_code
+  evidence_required:
+  - p78_answers
+  - solidification_actions
+  id: closeout-with-retro
+  lock_scopes:
+  - closeout:{run_id}
+  phases:
+    closeout:
+    - command:
+      - agent
+      - solidify-retro
+      id: solidify
+      mode: manual
+    execute:
+    - command:
+      - python3
+      - bin/gac/p78-diagnostic-prescan.py
+      id: p78_diagnostic
+      mode: required
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: basic_closeout
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac_gate
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/gac/p78-diagnostic-prescan.py
+      - --json
+      id: retro_analysis
+      mode: required
+  purpose: '闭环收尾 + 强制复盘。 解决当前 agent-workflow closeout 不强制 retro 导致教训流失的问题。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .agents/skills/closeout-retro/SKILL.md
+    - .omo/_knowledge/patterns/p78-triple-axis-diagnostic-pattern.md
+    write:
+    - .omo/_knowledge/retros/**
+  title: Closeout with mandatory retrospective
+- agents:
     observer_policy: required
     roles:
     - sage-planner
@@ -1940,6 +2007,12 @@ workflows:
       - python3
       - bin/gac/escape-digest.py
       id: escape-digest
+      mode: required
+    - command:
+      - python3
+      - bin/gac/error-knowledge.py
+      - feed-escapes
+      id: pitfall-feed
       mode: required
     - command:
       - python3
@@ -3001,6 +3074,214 @@ workflows:
     write: []
   title: Resident runtime observe
 - agents:
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+    roles:
+    - engineering-agent
+    - governance-agent
+  allowed_lanes:
+  - docs
+  - code
+  - governance_code
+  - governance_state
+  - config
+  evidence_required:
+  - adr_ref
+  - health_delta
+  - test_results
+  id: round-engineering
+  lock_scopes:
+  - round:{round_id}
+  - root-gate
+  phases:
+    closeout:
+    - command:
+      - agent
+      - write-docs
+      - docs/M4-DECISIONS-INDEX.md
+      id: decisions_index
+      mode: required
+    - command:
+      - python3
+      - bin/gac/p78-diagnostic-prescan.py
+      id: retro
+      mode: required
+    execute:
+    - command:
+      - agent
+      - deliver
+      id: deliver
+      mode: manual
+    - command:
+      - agent
+      - run-tests
+      id: tests
+      mode: manual
+    preflight:
+    - command:
+      - make
+      - m4-health
+      id: baseline
+      mode: required
+    - command:
+      - bash
+      - bin/gac/gac-worktree.sh
+      - claim
+      - round-{round_id}
+      id: worktree
+      mode: required
+    - command:
+      - python3
+      - bin/gac/round-gate-check.py
+      id: gate_check
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/mof/mof-bootstrap.py
+      - all
+      id: self_reflex
+      mode: required
+    - command:
+      - agent
+      - write-adr
+      id: adr
+      mode: manual
+    - command:
+      - make
+      - m4-health-compare
+      id: health_compare
+      mode: required
+  purpose: 'M4 时代工程闭环 — commit → ADR → 测 → closeout。 每轮 (Round X) 严格按 7 步执行，回答 P72/P52/P74 三门槛。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - AGENTS.md
+    - .agents/skills/round-workflow/SKILL.md
+    - .agents/skills/round-gate-check/SKILL.md
+    - .agents/skills/closeout-retro/SKILL.md
+    - docs/architecture/
+    - bin/mof/mof-bootstrap.py
+    write:
+    - docs/M4-DECISIONS-INDEX.md
+    - .omo/_knowledge/retros/**
+  title: Round engineering lifecycle
+- agents:
+    observer_policy: none
+    roles:
+    - engineering-agent
+    - governance-agent
+  allowed_lanes:
+  - docs
+  evidence_required:
+  - diff_analysis
+  - type_recommendation
+  id: round-type-router
+  lock_scopes:
+  - round_type:{round_id}
+  phases:
+    closeout:
+    - command:
+      - echo
+      - record round type
+      id: record_recommendation
+      mode: advisory
+    execute:
+    - command:
+      - python3
+      - bin/gac/skill-recommender.py
+      id: recommend_type
+      mode: advisory
+    preflight:
+    - command:
+      - git
+      - diff
+      - --stat
+      - origin/main...HEAD
+      id: analyze_diff
+      mode: required
+    verification:
+    - command:
+      - echo
+      - validate round type recommendation
+      id: validate_recommendation
+      mode: advisory
+  purpose: '根据 diff 自动推荐 Round 类型 (R-patch/R-feature/R-meta/R-archive)。 减少人工判断成本。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - AGENTS.md
+    - .agents/skills/round-workflow/SKILL.md
+    write: []
+  title: Round type recommendation
+- agents:
+    observer_policy: optional
+    roles:
+    - governance-agent
+  allowed_lanes:
+  - governance_state
+  - docs
+  - config
+  evidence_required:
+  - promotion_evidence
+  - sample_refs
+  - calibration_score
+  id: scene-card-promotion
+  lock_scopes:
+  - scene:{scene_id}
+  phases:
+    closeout:
+    - command:
+      - echo
+      - record_promotion
+      id: record_promotion
+      mode: required
+    execute:
+    - command:
+      - python3
+      - bin/ssot/scene-card-review.py
+      - promote
+      - <scene_id>
+      id: promote
+      mode: manual
+    preflight:
+    - command:
+      - python3
+      - bin/ssot/scene-card-review.py
+      - validate
+      - <scene_id>
+      id: validate_schema
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/ssot/journey-runner.py
+      - validate
+      - <scene_id>
+      id: check_samples
+      mode: required
+    - command:
+      - echo
+      - check_calibration
+      id: check_calibration
+      mode: advisory
+  purpose: '5 级场景卡生命周期晋升 — draft → shadow → assisted → supervised → routine。 每级有明确的 sample 数量和 calibration 门槛。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .omo/standards/scene-card-lifecycle.yaml
+    - .agents/skills/scene-shadow-activate/SKILL.md
+    - bin/ssot/scene-card-review.py
+    - bin/ssot/journey-runner.py
+    write:
+    - .omo/_truth/scenarios/{scene_id}.yaml
+  title: Scene card lifecycle promotion
+- agents:
     observer_policy: recommended_for_unattended_runs
     roles:
     - state-sync-agent
@@ -3101,6 +3382,78 @@ workflows:
     - BRIEF.md
     - runtime/omo/_delivery/ingress/state/**
   title: Runtime state projection sync
+- agents:
+    observer_policy: required
+    roles:
+    - governance-agent
+  allowed_lanes:
+  - submodule_pointer
+  - config
+  evidence_required:
+  - transaction_log
+  - ancestry_verification
+  id: submodule-pointer-bump
+  lock_scopes:
+  - submodule:{sub_name}
+  - root-gate
+  phases:
+    closeout:
+    - command:
+      - bash
+      - bin/ssot/sync-submodule-pointers.sh
+      id: push_root
+      mode: manual
+    execute:
+    - command:
+      - bash
+      - bin/ssot/submodule-pointer-transaction.sh
+      - --message
+      - '{message}'
+      id: bump_pointer
+      mode: manual
+    preflight:
+    - command:
+      - git
+      - pull
+      - --rebase
+      - origin
+      - main
+      cwd: projects/{sub_name}
+      id: check_ff
+      mode: required
+    - command:
+      - python3
+      - bin/ssot/submodule-reachability-gate.py
+      id: check_reachability
+      mode: required
+    verification:
+    - command:
+      - git
+      - log
+      - --oneline
+      - '-3'
+      cwd: projects/{sub_name}
+      id: verify_ancestry
+      mode: required
+    - command:
+      - git
+      - push
+      - origin
+      - main
+      cwd: projects/{sub_name}
+      id: push_submodule
+      mode: manual
+  purpose: '子模块指针安全更新 — 防止直通 main 和指针污染。 强制 4 步流程: check → update → verify → push。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .omo/standards/submodule-pointer-bump-contract.md
+    - bin/ssot/submodule-reachability-gate.py
+    write:
+    - projects/{sub_name}
+  title: Submodule pointer safe bump
 - agents:
     observer_policy: recommended_for_multi_submodule_updates
     roles:
