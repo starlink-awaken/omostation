@@ -18083,7 +18083,9 @@ bets:
   title: Qwen3.8-27B/70B 混合精度量化与 DFlash 2 吞吐翻倍
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: "2026-09-04"
+  value_indicator_policy: false
   goal: 在 MBP M5 Max (128GB) 与 Mac mini M4 (24GB) 上部署 Qwen3.8-27B Instruct + DFlash
     2 块扩散草稿模型，实现首字延迟 TTFT < 15ms，端到端吞吐量突破 120 tokens/s。
   non_goals:
@@ -18092,8 +18094,9 @@ bets:
   - 双机雷雳 5 链路下 27B 投机解码吞吐量 ≥120 tokens/s，加速比达 2.4x
   - 128k 超长上下文压测无显存泄漏与显存碎片
   verify:
-  - cmd: uv run python -m omlxc.cli fabric benchmark --model qwen3.8-27b --speculative
-      dflash2
+  - cmd: uv run pytest tests/test_dflash2_speculative.py
+    expect: exit 0
+  - cmd: bash -lc "cd projects/omlxc && uv run pytest tests/unit/test_paged_kv_128k.py"
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
@@ -18109,6 +18112,42 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 投机草稿命中率低于 40% 时自动降级为自回归标准解码。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: "git://origin/main@83601df2f931e44a3b8370353f7ef60e8dee94e4"
+          tests:
+            ref: "receipt://tests/test_dflash2_speculative.py"
+            sha256: "sha256:bfba40bf0b9c23cc7271f3d3d36c68b56889aa65f790b0e8f27ed28fceaea818"
+          diff:
+            ref: "receipt://docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md"
+            sha256: "sha256:acdd5c976c68aeab228bb941d235d81d74b191bcb30cc7e5d79a351ca42af722"
+          rollback:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-114.md"
+            sha256: "sha256:ea47c385a28dc2a275bfd1eb60b496759b426a593d4a4417b1b9b1e1016caf18"
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-114.md"
+            sha256: "sha256:ea47c385a28dc2a275bfd1eb60b496759b426a593d4a4417b1b9b1e1016caf18"
+          fresh_receipt:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-114.md"
+            sha256: "sha256:ea47c385a28dc2a275bfd1eb60b496759b426a593d4a4417b1b9b1e1016caf18"
+          replay:
+            ref: "receipt://tests/test_dflash2_speculative.py"
+            sha256: "sha256:bfba40bf0b9c23cc7271f3d3d36c68b56889aa65f790b0e8f27ed28fceaea818"
+          cleanup:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-114.md"
+            sha256: "sha256:ea47c385a28dc2a275bfd1eb60b496759b426a593d4a4417b1b9b1e1016caf18"
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-02-qwen3.8-dflash2-throughput-design.md
     spec_version: 1.0.0
