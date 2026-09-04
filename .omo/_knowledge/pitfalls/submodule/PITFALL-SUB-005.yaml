@@ -1,0 +1,20 @@
+schema: agent-error/v1
+id: PITFALL-SUB-005
+category: submodule
+severity: medium
+title: 空壳子模块 — .git 存在但内容为空, update --init 不生效
+symptom: 子模块目录只有 .git 文件无内容 (ls -A 空), git submodule status 无 +/- 标记但目录空; 依赖该子模块的 gate (check-cockpit-ui-dist / resident BOS / L0 约束) 报 ENOENT / roles.py not found
+root_cause: claim/init 中途失败 (如 URL 404) 留下半初始化状态, .git 已建但 checkout 未完成; git submodule update --init 认为已 init 而不重填
+solution: 'git submodule update --force --init <sub> 强制重新克隆; 注意 --force --init 可能 checkout 到分支头而非 gitlink, 需再 git submodule update --checkout 归位到 gitlink 才能消除根仓幽灵 M (index==HEAD 却报 M projects/<sub>)'
+prevention: 'init 后检查 ls -A 是否非空; 幽灵 M 判据: 子模块内部 HEAD != 根仓 gitlink SHA'
+tags:
+- submodule
+- empty-shell
+- phantom-M
+- checkout
+- force-init
+discovered_by: bet-execution-session
+discovered_at: '2026-09-04'
+times_encountered: 2
+last_confirmed_at: '2026-09-04'
+status: active
