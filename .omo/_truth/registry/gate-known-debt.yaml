@@ -163,3 +163,13 @@ entries:
   range: origin/main..5a1b1ebddc0c
   recorded_at: '2026-09-03T08:43:07.538253+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|214c3294bad7e89f
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 214c3294bad7e89f
+  kind: gitlink-regress
+  reason: submodule projects/omlxc pointer 0f50b8bdcebb realigns after child origin/main
+    force-push dropped 695c9b5edd3b
+  range: origin/main..HEAD
+  recorded_at: '2026-09-04T12:16:06.155397+00:00'
+  active: true
