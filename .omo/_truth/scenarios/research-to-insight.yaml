@@ -1,6 +1,6 @@
 schema: scene-card/v1
 scene_id: research-to-insight
-lifecycle: shadow
+lifecycle: assisted
 journey_id: research-to-insight
 goal: "研究任务完成后的知识沉淀与关联发现"
 trigger: "研究任务状态变为 completed"
@@ -14,3 +14,8 @@ data_scope: workspace-research
 operator: omo-resident
 permission_ref: "bos://resident/research/read"
 rollback_plan: "洞察草稿保留但不发布"
+sample_refs:
+  - ".omo/state/scene-cards/research-to-insight/samples/sample-1.json"
+  - ".omo/state/scene-cards/research-to-insight/samples/sample-2.json"
+  - ".omo/state/scene-cards/research-to-insight/samples/sample-3.json"
+calibration: 0.65

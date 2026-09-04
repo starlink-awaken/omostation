@@ -1736,7 +1736,10 @@ def _retire_squash_successor(args: argparse.Namespace, dest: Path,
         return reject("retire", "active_lease_or_lock", "workflow locks present")
 
     # P2: repository / origin
-    repo_slug, prov_error = bound_repository_slug(dest, identity)
+    # Squash successors have no PR base in the source branch ancestry.  Resolve
+    # the live origin for the PR lookup first; P6 below re-enters the
+    # provenance guard with the exact PR base and source head.
+    repo_slug, prov_error = live_origin_repository_slug(dest)
     if repo_slug is None:
         return reject("retire", "github_repository_unbound", prov_error or "repository unbound")
     owner = repo_slug.split("/", 1)[0]
