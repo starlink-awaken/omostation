@@ -4,11 +4,13 @@ on:
   push:
     branches: [main]
     paths:
+      - 'projects/cockpit-ui'
       - 'projects/cockpit-ui/**'
       - '.github/workflows/cockpit-ui-ci.yml'
   pull_request:
     branches: [main]
     paths:
+      - 'projects/cockpit-ui'
       - 'projects/cockpit-ui/**'
       - '.github/workflows/cockpit-ui-ci.yml'
 concurrency:
@@ -26,7 +28,7 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
-      # cockpit-ui 现为独立仓 (omostation-hermes-console, 自带 CI)。
+      # cockpit-ui 为独立仓 omostation-cockpit-ui, 以 submodule 挂载主仓 (ADR 见 decisions)。
       # 主仓检出不含该目录时优雅跳过, 不再让主仓 PR 永远挂在 cd 失败上。
       - id: guard
         name: Detect cockpit-ui presence
