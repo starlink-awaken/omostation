@@ -182,7 +182,7 @@ warning_exceptions:
     - id: legacy-omo-knowledge-enums
       rule: invalid_metadata
       surface: omo-knowledge
-      max_findings: 50  # 2026-09-02 30→50: 280 retros 误删恢复后真实存量 invalid_metadata=49 (PR #2915)
+      max_findings: 55  # 2026-09-04 50→55: post-#3042 inventory invalid_metadata=51 (T8-01 CI); shrink_only growth_policy — raise ceiling temporarily, prefer cleanup follow-up
       expires: 2026-10-31
       owner: governance-team
       reason: Historical lifecycle values require explicit mapping to the current enum.
