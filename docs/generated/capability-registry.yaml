@@ -15,7 +15,7 @@ totals:
   bos_services: 298
   bos_domains: 22
   cli_commands: 207
-  skills: 5
+  skills: 12
   workflows: 24
 mcp_servers:
 - id: omo
@@ -2529,14 +2529,35 @@ skills:
 - id: architecture-perception
   file: .agents/skills/architecture-perception/SKILL.md
   exists: true
+- id: closeout-retro
+  file: .agents/skills/closeout-retro/SKILL.md
+  exists: true
 - id: git-discipline
   file: .agents/skills/git-discipline/SKILL.md
+  exists: true
+- id: git-safety-check
+  file: .agents/skills/git-safety-check/SKILL.md
   exists: true
 - id: harness-compliance
   file: .agents/skills/harness-compliance/SKILL.md
   exists: true
+- id: kos-cold-start
+  file: .agents/skills/kos-cold-start/SKILL.md
+  exists: true
+- id: round-gate-check
+  file: .agents/skills/round-gate-check/SKILL.md
+  exists: true
+- id: round-workflow
+  file: .agents/skills/round-workflow/SKILL.md
+  exists: true
+- id: scene-shadow-activate
+  file: .agents/skills/scene-shadow-activate/SKILL.md
+  exists: true
 - id: spine-value-pipeline
   file: .agents/skills/spine-value-pipeline/SKILL.md
+  exists: true
+- id: swarm-escape
+  file: .agents/skills/swarm-escape/SKILL.md
   exists: true
 - id: workflow:bet-execution
   file: .agents/skills/workflow:bet-execution/SKILL.md
