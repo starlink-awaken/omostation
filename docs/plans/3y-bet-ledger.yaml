@@ -20274,7 +20274,8 @@ bets:
   title: 子模块 doc frontmatter 批量迁移收尾 + doc-index 合规收口
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-04
   goal: 完成所有子模块的 doc frontmatter 迁移（type/owner/last_updated），使 doc-index 合规问题从 1402 降至 legacy warning 预算内（≤800）。同步更新主仓 gitlink
     确保所有子模块指针一致。
   non_goals:
@@ -20301,6 +20302,43 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 单模块 frontmatter 迁移冲突时跳过该模块，不阻塞整体
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@2268c75a07a29cfcbe157fb26c83c0728f8f5b96
+          tests:
+            ref: receipt://docs/reports/2026-09-04-doc-frontmatter-migration-closeout.md
+            sha256: sha256:b9a929e1d672e70839c3aaed0866793639255d495febf0fd894a9b0c3d476fda
+          diff:
+            ref: receipt://docs/reports/2026-09-04-doc-frontmatter-migration-closeout.md
+            sha256: sha256:b9a929e1d672e70839c3aaed0866793639255d495febf0fd894a9b0c3d476fda
+          rollback:
+            ref: receipt://docs/reports/2026-09-04-doc-frontmatter-migration-closeout.md
+            sha256: sha256:b9a929e1d672e70839c3aaed0866793639255d495febf0fd894a9b0c3d476fda
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-04-doc-frontmatter-migration-closeout.md
+            sha256: sha256:b9a929e1d672e70839c3aaed0866793639255d495febf0fd894a9b0c3d476fda
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-04-doc-frontmatter-migration-closeout.md
+            sha256: sha256:b9a929e1d672e70839c3aaed0866793639255d495febf0fd894a9b0c3d476fda
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-02.md
+            sha256: sha256:3749ff80f23eb26c4f7a226d23e82131188b6261d74f172c31c77c19df0bdec4
+          cleanup:
+            ref: receipt://docs/reports/2026-09-04-doc-frontmatter-migration-closeout.md
+            sha256: sha256:b9a929e1d672e70839c3aaed0866793639255d495febf0fd894a9b0c3d476fda
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-HITL-01
   track: T1-TRUTH
   window: Y1Q4
@@ -20670,6 +20708,11 @@ bets:
   circuit_breaker: 协议校验失败阻断
   retro: required
 - id: BET-Y1Q4-T8-18
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-w0-sovereign-tui-2.0-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:e3190347bfeaa0a5121094927f7ffb4f0ab85df20b4b9467357c3d3edcd7fcb3
+    decision_ref: decision://accepted/BET-Y1Q4-T8-18
   track: T8-SURFACE
   window: Y1Q4
   title: Sovereign TUI 2.0 旗舰多窗格终端控制台融合重构
