@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # Cockpit 命令评分卡报告 (command-audit)
 
 > 生成: 2026-09-04 · 节点总数: 326 · 评分卡: 326 · 覆盖率: 100%

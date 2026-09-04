@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # Cockpit 能力地图
 
 > 自动生成于 1970-01-01T00:00:00Z | 版本 1.0.0
