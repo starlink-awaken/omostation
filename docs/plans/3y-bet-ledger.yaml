@@ -12172,7 +12172,8 @@ bets:
   title: squash-successor 独立 clone 退役 provenance 收敛
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-09-04'
   note: 'Accepted binding only. At base dfb4f755dbc45d2947d9d9a10d9a02755a4f0fee,
     prepare_bet_execution remains globally blocked by INSTRUCTION_PACK_MISSING:
     docs/operations/blueprint-agent-instruction-pack-v1.md. Phase 2 must not start
@@ -12190,6 +12191,43 @@ bets:
   - proof、post-quarantine delete-intent、post-delete settlement 形成 durable digest chain，race/crash 分支全部 fail-closed 或可恢复
   - ordinary 与 platform-rebased retirement 回归行为保持不变，focused negative/race tests 全绿
   - 实现 PR required contexts 与 exact-SHA post-merge Governance Check 通过后，仅通过 canonical lifecycle 退役目标 clone
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: 'git://origin/main@f74392225d80cd24721b66bce7b88bcf8975448e'
+          tests:
+            ref: 'receipt://docs/reports/2026-09-04-t1-02-verify.md'
+            sha256: 'sha256:bf00a073acecb80bc807d9a1ab8433c7190c9800d26b552fa3c87b253dcffc09'
+          diff:
+            ref: 'receipt://bin/gac/clone-lifecycle.py'
+            sha256: 'sha256:3a49fa04b23c341b3907ac6f96a018444cb2b024622648df72df4fc63bff3bcb'
+          rollback:
+            ref: 'receipt://bin/gac/clone-lifecycle.py'
+            sha256: 'sha256:3a49fa04b23c341b3907ac6f96a018444cb2b024622648df72df4fc63bff3bcb'
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: 'receipt://bin/gac/clone-lifecycle.py'
+            sha256: 'sha256:3a49fa04b23c341b3907ac6f96a018444cb2b024622648df72df4fc63bff3bcb'
+          fresh_receipt:
+            ref: 'receipt://bin/gac/clone-lifecycle.py'
+            sha256: 'sha256:3a49fa04b23c341b3907ac6f96a018444cb2b024622648df72df4fc63bff3bcb'
+          replay:
+            ref: 'receipt://bin/gac/clone-lifecycle.py'
+            sha256: 'sha256:3a49fa04b23c341b3907ac6f96a018444cb2b024622648df72df4fc63bff3bcb'
+          cleanup:
+            ref: 'receipt://bin/gac/clone-lifecycle.py'
+            sha256: 'sha256:3a49fa04b23c341b3907ac6f96a018444cb2b024622648df72df4fc63bff3bcb'
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   verify:
   - cmd: PYTHONDONTWRITEBYTECODE=1 uv run --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tests/test_clone_lifecycle.py
     expect: exit 0
@@ -12225,19 +12263,6 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:de42a98faf6db2b57d1ae4f931f2861527fc0bccace4dbbb902c5494e158394d
     decision_ref: decision://accepted/BET-Y1Q4-T1-02
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: NOT_STARTED
-        evidence: {}
-      operational:
-        status: NOT_PROVEN
-        evidence: {}
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
   depends_on:
   - BET-Y1Q3-T1-11
   value_indicator_policy: false
