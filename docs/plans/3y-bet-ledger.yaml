@@ -20850,8 +20850,8 @@ bets:
             ref: receipt://docs/superpowers/specs/2026-09-03-w0-cockpit-portfolio-view-design.md
             sha256: sha256:fb72395f9361c39830480ca7895828baecc3fe64bdaae41c3e1dcbbbadf2437f
           tests:
-            ref: receipt://projects/cockpit/tests/test_portfolio_command.py
-            sha256: sha256:f6b00828da75d61dae830abdc86097a8c79ac45a3010fc2dd8fc3cc9e6e0611e
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
+            sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-05.md
             sha256: sha256:13d8e4e92dd3659a5b92d20069304508a51d6cfb834a50afcc46964f6633a560
