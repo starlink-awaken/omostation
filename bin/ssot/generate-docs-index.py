@@ -113,6 +113,43 @@ def scan_md_files() -> list[dict]:
     return results
 
 
+def fix_missing_metadata(files: list[dict], owner: str, date: str) -> int:
+    """--fix 模式: 对 type: ssot 缺 owner / 缺 last_updated+last-reviewed 的文档,
+    在 frontmatter 块内追加缺失键 (文本级最小 diff, 不重排文件)。
+    返回修复的文件数。判定与 check_compliance 完全一致。"""
+    fixed = 0
+    for f in files:
+        if f["type"] != "ssot":
+            continue
+        need_owner = not f["owner"]
+        need_date = not (f["last_updated"] or f.get("last-reviewed"))
+        if not need_owner and not need_date:
+            continue
+        path = ROOT / f["path"]
+        try:
+            content = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if not content.startswith("---"):
+            continue
+        end = content.find("---", 3)
+        if end == -1:
+            continue
+        block = content[3:end]
+        additions = []
+        if need_owner:
+            additions.append(f"owner: {owner}")
+        if need_date:
+            additions.append(f"last-reviewed: {date}")
+        # 块末尾补齐换行, 追加缺失键, 保持原键序不动
+        if block and not block.endswith("\n"):
+            block += "\n"
+        block += "\n".join(additions) + "\n"
+        path.write_text(content[:3] + block + content[end:], encoding="utf-8")
+        fixed += 1
+    return fixed
+
+
 def check_compliance(files: list[dict]) -> list[str]:
     """合规检查，返回问题列表"""
     issues = []
@@ -233,7 +270,23 @@ def main():
     parser.add_argument("--check", action="store_true", help="合规检查模式，有问题时 exit 1")
     parser.add_argument("--strict", action="store_true", help="严格模式 (UNTYPED 等软信号也计入失败)")
     parser.add_argument("--json", action="store_true", help="输出 JSON 格式")
+    parser.add_argument("--fix", action="store_true",
+                        help="自愈模式: 批量补 type:ssot 缺失的 owner/last-reviewed (文本级最小 diff)")
+    parser.add_argument("--owner", default="governance-team", help="--fix 模式补写的 owner 值")
+    parser.add_argument("--date", default=datetime.now().strftime("%Y-%m-%d"),
+                        help="--fix 模式补写的 last-reviewed 日期 (默认今天)")
     args = parser.parse_args()
+
+    if args.fix:
+        files = scan_md_files()
+        fixed = fix_missing_metadata(files, args.owner, args.date)
+        # 修复后重扫验证: 硬阻塞应归零 (仅统计本轮判定范围)
+        files2 = scan_md_files()
+        hard_after = [i for i in check_compliance(files2) if not i.startswith("[UNTYPED]")]
+        print(f"[doc-index --fix] 修复 {fixed} 个文件; 剩余硬阻塞 {len(hard_after)}")
+        for i in hard_after[:10]:
+            print(f"  残留: {i[:110]}")
+        return 0
 
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
