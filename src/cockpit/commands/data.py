@@ -49,16 +49,23 @@ def cmd_data_types(args: argparse.Namespace) -> int:
 
 
 def cmd_data_gc(args: argparse.Namespace) -> int:
+    is_dry_run = getattr(args, "dry_run", False)
     try:
-        result = sweep_tmp_data(
-            _root_from_args(args),
-            max_age_seconds=int(float(getattr(args, "max_age_hours", 24)) * 60 * 60),
-        )
+        if is_dry_run:
+            result = {"dry_run": True, "deleted_paths": [], "ready": True}
+        else:
+            result = sweep_tmp_data(
+                _root_from_args(args),
+                max_age_seconds=int(float(getattr(args, "max_age_hours", 24)) * 60 * 60),
+            )
     except FileNotFoundError as exc:
         _get_err().print(f"[red]❌ {exc}[/red]")
         return 1
     if getattr(args, "json", False):
-        _get_console().print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+    if is_dry_run:
+        _get_console().print("[bold cyan]🔍 [Dry-Run] 预检临时文件清理 (未实际删除)[/]")
         return 0
     _get_console().print(f"[green]✅ 已清理 {len(result['deleted_paths'])} 个临时文件[/green]")
     if result["deleted_paths"]:
@@ -67,8 +74,54 @@ def cmd_data_gc(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_data(args: argparse.Namespace) -> int:
+    """统一数据平面入口 — 自动聚合摘要 / 子命令路由。"""
+    from cockpit.domain.exit_codes import ExitCode
+
+    sub = getattr(args, "data_command", "")
+    if sub == "index":
+        return cmd_data_index(args)
+    if sub == "types":
+        return cmd_data_types(args)
+    if sub == "gc":
+        return cmd_data_gc(args)
+
+    as_json = getattr(args, "json", False) or getattr(args, "global_output", "text") == "json"
+    root = _root_from_args(args)
+
+    try:
+        types = load_type_registry(root)
+    except Exception:
+        types = []
+
+    data_dir = root / "data" if root else Path("data")
+    tmp_dir = data_dir / "tmp"
+    tmp_count = len(list(tmp_dir.glob("*"))) if tmp_dir.is_dir() else 0
+
+    payload = {
+        "status": "ok",
+        "data_dir": str(data_dir),
+        "registered_types_count": len(types),
+        "tmp_files_count": tmp_count,
+        "available_commands": ["index", "types", "gc"],
+    }
+
+    if as_json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return ExitCode.SUCCESS
+
+    c = _get_console()
+    c.print("[bold cyan]📦 Workspace 数据目录概览 (Data Plane)[/]")
+    c.print(f"  • 数据目录: [dim]{data_dir}[/]")
+    c.print(f"  • 已注册数据类型: [green]{len(types)}[/] 种 (查看详情: [cyan]cockpit data types[/])")
+    c.print(f"  • 待清理临时文件: [yellow]{tmp_count}[/] 个 (清理命令: [cyan]cockpit data gc[/])")
+    c.print("\n[dim]提示: 常用子命令: index(刷新索引) · types(查看类型) · gc(清理临时文件)[/dim]")
+    return ExitCode.SUCCESS
+
+
 def _root_from_args(args: argparse.Namespace) -> Path | None:
     explicit_root = getattr(args, "root", None)
     if explicit_root:
         return Path(explicit_root)
     return resolve_workspace_root()
+

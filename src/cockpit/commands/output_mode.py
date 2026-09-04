@@ -17,6 +17,18 @@ import argparse
 # 声明支持结构化 JSON 输出的顶级命令 (各命令自带 --json / --format json)
 JSON_CAPABLE: frozenset[str] = frozenset({
     "status",          # status --json
+    "dashboard",       # dashboard --json
+    "journey",         # journey --json
+    "quickstart",      # quickstart --json
+    "init",            # init --json
+    "capabilities",    # capabilities --json
+    "iterate",         # iterate --json
+    "telemetry",       # telemetry --json
+    "completion",      # completion --json
+    "docs",            # docs --json
+    "workflow",        # workflow --json
+    "compass",         # compass --json
+    "brain",           # brain --json
     "daily",           # daily --json
     "health",          # health --json
     "data",            # data index/types/gc --json
@@ -39,6 +51,7 @@ JSON_CAPABLE: frozenset[str] = frozenset({
     "events-watch",
 })
 
+
 # --format json 型命令 (注入 format=json 而非 json=True)
 FORMAT_JSON_COMMANDS: frozenset[str] = frozenset({"readiness", "audit"})
 
@@ -49,12 +62,15 @@ def apply_json_mode(args: argparse.Namespace) -> None:
     JSON_CAPABLE 内命令注入 json/format 属性; 其余明确提示不静默。
     """
     cmd = getattr(args, "command", "")
+    if getattr(args, "json", False):
+        return
     if cmd in FORMAT_JSON_COMMANDS:
         setattr(args, "format", "json")
         return
     if cmd in JSON_CAPABLE:
         setattr(args, "json", True)
         return
+
     # 未适配命令: 明确提示 (stderr), 按原样执行
     import sys
 

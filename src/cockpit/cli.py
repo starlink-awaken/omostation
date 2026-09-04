@@ -225,17 +225,43 @@ def _cmd_adr_stub(a, name: str, plan: str) -> int:
     return 1
 
 
-def create_parser() -> tuple[argparse.ArgumentParser, argparse._SubParsersAction, type]:
+def create_parser(active_argv: list[str] | None = None) -> tuple[argparse.ArgumentParser, argparse._SubParsersAction, type]:
     """构建完整 CLI parser (含全部子命令注册), 供 main() 与 command-audit 共用.
 
     Returns:
         (parser, sub, WorkspaceParserClass)
     """
+    current_argv = active_argv if active_argv is not None else sys.argv
+
     class WorkspaceParser(argparse.ArgumentParser):
         def error(self, message):
+            import json
+            import re
+            from cockpit.domain.fuzzy_matcher import find_closest_commands
+
+            suggestions = []
+            m = re.search(r"invalid choice: '([^']+)'", message)
+            if m:
+                bad_word = m.group(1)
+                suggestions = find_closest_commands(bad_word)
+
+            is_json = "--json" in current_argv or "--output=json" in current_argv or ("--output" in current_argv and "json" in current_argv)
+            if is_json:
+                payload = {"ok": False, "error": message, "exit_code": 2}
+                if suggestions:
+                    payload["suggestions"] = suggestions
+                print(json.dumps(payload, ensure_ascii=False))
+                sys.exit(2)
+
             parser_console = Console()
             parser_console.print(f"\n[bold red]✗[/] {message}")
-            parser_console.print("[yellow]试试:[/]")
+
+            if suggestions:
+                parser_console.print(f"\n[bold cyan]💡 您是不是想输入以下命令之一？[/]")
+                for sug in suggestions:
+                    parser_console.print(f"  • [green]cockpit {sug}[/]")
+
+            parser_console.print("\n[yellow]试试:[/]")
             parser_console.print("  [cyan]cockpit help[/]              — 产品地图（分组目录）")
             parser_console.print("  [cyan]cockpit help memory[/]       — 搜命令/MCP/BOS")
             parser_console.print("  [cyan]cockpit quickstart[/]        — 上手向导")
@@ -244,6 +270,7 @@ def create_parser() -> tuple[argparse.ArgumentParser, argparse._SubParsersAction
             parser_console.print("  [cyan]cockpit demo[/]              — 5 分钟演示")
             parser_console.print()
             sys.exit(2)
+
 
         def print_help(self, file=None):
             """Rich 紧凑帮助仅用于顶层; 子命令显示自身参数 (标准 argparse help).
@@ -261,8 +288,13 @@ def create_parser() -> tuple[argparse.ArgumentParser, argparse._SubParsersAction
             # 仍打印全局 flags（output 等）
             c.print("[bold]全局选项[/]")
             c.print("  [cyan]-h, --help[/]                 显示本帮助")
+            c.print("  [cyan]--json[/]                     以纯净 JSON 格式输出 (禁用终端富文本)")
+            c.print("  [cyan]--dry-run[/]                  预检模式，仅校验参数与环境不产生写入")
+            c.print("  [cyan]-q, --quiet[/]                静默模式，仅输出关键结果")
+            c.print("  [cyan]-v, --verbose[/]              详细模式，输出调试链路")
             c.print("  [cyan]--output[/] {text,json,tui,markdown}  输出模式")
             c.print()
+
             c.print("[dim]完整分组目录: [cyan]cockpit help[/] · 搜能力: [cyan]cockpit help <关键词>[/][/dim]")
 
     parser = WorkspaceParser(
@@ -299,7 +331,45 @@ def create_parser() -> tuple[argparse.ArgumentParser, argparse._SubParsersAction
         default="text",
         help="控制全局输出模式 (传 tui 启动极客终端交互控制台)",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="以纯净 JSON 格式输出 (等价于 --output json, 禁用富文本转义码)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="预检模式，验证参数与环境连通性，不产生实际写入/破坏操作",
+    )
+    parser.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="静默模式，仅输出关键结果或错误信息",
+    )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="详细日志模式，输出执行链路与诊断细节",
+    )
+    parser.add_argument(
+        "--trace-id",
+        type=str,
+        default=None,
+        help="链路追踪 ID (Trace ID)，贯穿 OpenTelemetry / Langfuse",
+    )
+    from cockpit import __version__
+
+    parser.add_argument(
+        "--version",
+        "-V",
+        action="version",
+        version=f"cockpit v{__version__}",
+        help="显示版本信息",
+    )
     sub = parser.add_subparsers(dest="command", parser_class=WorkspaceParser)
+
 
     # Register all subcommands (extracted to cli/_subcommands.py for SRP, T6-10)
     from ._subcommands import register_subcommands
@@ -308,7 +378,32 @@ def create_parser() -> tuple[argparse.ArgumentParser, argparse._SubParsersAction
     return parser, sub, WorkspaceParser
 
 
-def main() -> int:
+def handle_domain_help(domain: str) -> int:
+    """展示正交一级领域的聚合帮助与功能清单"""
+    from rich.table import Table
+    from cockpit.commands.registry import ORTHOGONAL_DOMAINS, LEGACY_COMMAND_MAPPING, COMMAND_CATALOG
+
+    domain_desc = ORTHOGONAL_DOMAINS.get(domain, domain)
+    table = Table(title=f"正交一级领域: {domain_desc}", border_style="cyan")
+    table.add_column("子命令", style="bold cyan")
+    table.add_column("功能摘要", style="white")
+    table.add_column("调用示例", style="dim")
+
+    matched_cmds = [
+        cmd for cmd, (d, subcmd) in LEGACY_COMMAND_MAPPING.items() if d == domain
+    ]
+    for cmd in sorted(matched_cmds):
+        meta = COMMAND_CATALOG.get(cmd)
+        summary = meta.summary if meta else "领域功能"
+        example = f"cockpit {domain} {cmd}"
+        table.add_row(cmd, summary, example)
+
+    console.print(table)
+    console.print(f"\n[dim]💡 提示: 存量命令 [cyan]cockpit <cmd>[/] 与正交一级域 [cyan]cockpit {domain} <cmd>[/] 完全等价兼容。[/dim]")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
     try:
         from kairon_observability.tracing import setup_tracing  # type: ignore[import-not-found]
 
@@ -316,7 +411,33 @@ def main() -> int:
     except ImportError:
         pass  # Skip if observability package isn't installed
 
-    parser, sub, _workspace_parser_cls = create_parser()
+    _argv = list(sys.argv[1:] if argv is None else argv)
+
+    # ── Fast-path: 极速冷启动 (--version / -V) ──
+    if len(_argv) == 1 and _argv[0] in ("--version", "-V"):
+        from cockpit import __version__
+        print(f"cockpit v{__version__}")
+        return 0
+
+    # ── 双轨正交领域预处理 (Dual-Track Pre-processing) ──
+    from cockpit.commands.registry import ORTHOGONAL_DOMAINS, LEGACY_COMMAND_MAPPING
+
+    if _argv and _argv[0] in ORTHOGONAL_DOMAINS:
+        domain = _argv[0]
+        rest = _argv[1:]
+        # 纯正交一级域 (如 system, compute, bus, scene, user) 或显式请求 --help
+        if not rest or rest[0] in ("-h", "--help"):
+            if domain in ("system", "compute", "bus", "scene", "user"):
+                return handle_domain_help(domain)
+        elif rest:
+            candidate_cmd = rest[0]
+            if candidate_cmd in LEGACY_COMMAND_MAPPING:
+                mapped_d, actual_cmd = LEGACY_COMMAND_MAPPING[candidate_cmd]
+                if mapped_d == domain:
+                    _argv = [actual_cmd] + rest[1:]
+
+    parser, sub, _workspace_parser_cls = create_parser(active_argv=_argv)
+
 
     # ── Pre-process: research 默认 create 模式 ──────────────────
     # argparse 子 parser 会贪婪匹配首参为子命令名, 导致 `cockpit research "topic"`
@@ -327,7 +448,6 @@ def main() -> int:
         "audit", "quarantine", "restore", "heatmap", "follow-up", "health", "batch",
         "backup", "backup-restore",
     }
-    _argv = sys.argv[1:]
     if len(_argv) >= 2 and _argv[0] == "research":
         _next = _argv[1]
         # 若首参不是子命令也不是以 - 开头, 则插入 "create"
@@ -335,11 +455,36 @@ def main() -> int:
             _argv = [_argv[0], "create"] + _argv[1:]
 
     args, unknown = parser.parse_known_args(_argv)
+
+    # ── 全局 Flags 级联同步 ──
+    if getattr(args, "json", False) or "--json" in _argv or "--output=json" in _argv or ("--output" in _argv and "json" in _argv):
+        args.json = True
+        args.global_output = "json"
+    if getattr(args, "dry_run", False) or "--dry-run" in _argv:
+        args.dry_run = True
+    if getattr(args, "quiet", False) or "-q" in _argv or "--quiet" in _argv:
+        args.quiet = True
+    if getattr(args, "verbose", False) or "-v" in _argv or "--verbose" in _argv:
+        args.verbose = True
+
+    # ── 初始化结构化分级日志 ──
+    try:
+        from cockpit.logging.logger import configure_logging
+        configure_logging(
+            verbose=getattr(args, "verbose", False),
+            quiet=getattr(args, "quiet", False),
+            as_json=getattr(args, "global_output", "text") == "json",
+            trace_id=getattr(args, "trace_id", None),
+        )
+    except Exception:
+        pass
+
     # Phase A1: argparse REMAINDER 不捕获前导 option (--help 落入 unknown),
     # 对委派命令拼回 REMAINDER 实现真正透传。
     from .commands.delegation import reclaim_unknown_for_delegation
 
     unknown = reclaim_unknown_for_delegation(args, unknown)
+
 
     # ── Phase 2: --output tui 全自动分流路由 ──
     if getattr(args, "global_output", None) == "tui":
@@ -625,23 +770,9 @@ def main() -> int:
         return agent_runtime_cli.run_agent_runtime(argv)
 
     def dispatch_compass(a):
-        import subprocess
+        from cockpit.commands.compass import cmd_compass
 
-        workspace_root = _SCRIPT_DIR.parents[4].resolve()
-        omo_project_path = (workspace_root / "projects" / "omo").resolve()
-        cmd = [
-            "uv",
-            "run",
-            "--project",
-            str(omo_project_path),
-            "c2g",
-            "--adapter",
-            "ecos",
-            *getattr(a, "compass_args", []),
-        ]
-        # 清 VIRTUAL_ENV 避免 uv venv 冲突 (cockpit → c2g subprocess 继承父环境)
-        env = {k: v for k, v in os.environ.items() if not k.startswith("VIRTUAL_ENV") and k != "PYTHONHOME"}
-        return subprocess.call(cmd, cwd=str(workspace_root), env=env)
+        return cmd_compass(a)
 
     def dispatch_bdsk(a):
         subcmd = getattr(a, "bdsk_subcmd", "debate")
@@ -684,16 +815,10 @@ def main() -> int:
         return 0
 
     def dispatch_journey(a):
-        """Journey 状态图校验 — 直接运行 journey-runner."""
-        import subprocess
+        from cockpit.commands.journey import cmd_journey
 
-        ws_root = (_SCRIPT_DIR.parent.parent.parent.parent.parent).resolve()
-        runner = str(ws_root / "bin" / "ssot" / "journey-runner.py")
-        # 无额外参数时跑 validate, 有参数则透传
-        args = getattr(a, "journey_args", [])
-        if not args:
-            return subprocess.call(["python3", runner, "validate"])
-        return subprocess.call(["python3", runner, *args])
+        return cmd_journey(a)
+
 
     def dispatch_panorama(a):
         import subprocess
@@ -749,7 +874,7 @@ def main() -> int:
             return cmd_workflow_mesh(mesh_args)
         from cockpit.commands.workflow import handle_workflow
 
-        return handle_workflow(wf_args)
+        return handle_workflow(wf_args, a)
 
     def dispatch_agent_workflow(a):
         from cockpit.commands.agent_workflow import cmd_agent_workflow
@@ -767,21 +892,25 @@ def main() -> int:
         return cmd_monitor(a)
 
     def dispatch_data(a):
-        if getattr(a, "data_command", "") == "index":
-            return cmd_data_index(a)
-        if getattr(a, "data_command", "") == "types":
-            return cmd_data_types(a)
-        if getattr(a, "data_command", "") == "gc":
-            return cmd_data_gc(a)
-        console.print(
-            "[yellow]缺少子命令。[/]\n"
-            "[dim]用法: cockpit data {index|types|gc}[/]\n"
-            "  [cyan]index[/]  刷新 data/_index 元数据\n"
-            "  [cyan]types[/]  查看已注册的数据类型\n"
-            "  [cyan]gc[/]     清理 data/tmp 过期文件\n"
-            "[dim]详情: cockpit data --help[/]"
-        )
-        return 1
+        from cockpit.commands.data import cmd_data
+
+        return cmd_data(a)
+
+    def dispatch_telemetry(a):
+        from cockpit.commands.telemetry import cmd_telemetry
+
+        return cmd_telemetry(a)
+
+    def dispatch_completion(a):
+        from cockpit.commands.completion import cmd_completion
+
+        return cmd_completion(a)
+
+    def dispatch_docs(a):
+        from cockpit.commands.docs import cmd_docs
+
+        return cmd_docs(a)
+
 
     def dispatch_contracts(a):
         if getattr(a, "contracts_command", "") == "validate":
@@ -895,6 +1024,9 @@ def main() -> int:
         "agent-runtime": dispatch_agent_runtime,
         "monitor": dispatch_monitor,
         "data": dispatch_data,
+        "telemetry": dispatch_telemetry,
+        "completion": dispatch_completion,
+        "docs": dispatch_docs,
         "contracts": dispatch_contracts,
         "product-health": cmd_product_health,
         "gongwen": lambda a: __import__("cockpit.commands.gongwen", fromlist=["cmd_gongwen"]).cmd_gongwen(a),
@@ -1004,6 +1136,8 @@ def main() -> int:
 
         apply_json_mode(args)
 
+    from cockpit.domain.exit_codes import ExitCode
+
     handler = handlers.get(args.command)
     if handler:
         if (
@@ -1020,12 +1154,58 @@ def main() -> int:
                 render_command_header(title=title, category=meta.category if meta else "SYSTEM")
             except Exception:
                 pass
-        return handler(args)
+        import time
+        start_time = time.perf_counter()
+        ret = ExitCode.SUCCESS.value
+        err_msg = None
+        try:
+            rc = handler(args)
+            if rc is None:
+                ret = ExitCode.SUCCESS.value
+            elif hasattr(rc, "value"):
+                ret = rc.value
+            else:
+                ret = int(rc)
+            return ret
+        except KeyboardInterrupt:
+            if global_output != "json":
+                console.print("\n[yellow]操作已被用户取消[/]")
+            ret = 130
+            err_msg = "KeyboardInterrupt"
+            return ret
+        except Exception as e:
+            if global_output == "json":
+                import json
+                print(json.dumps({"ok": False, "error": str(e), "command": args.command}, ensure_ascii=False))
+            else:
+                console.print(f"[red]❌ 执行错误: {e}[/]")
+                if getattr(args, "verbose", False):
+                    import traceback
+                    traceback.print_exc()
+            ret = ExitCode.GENERAL_ERROR.value
+            err_msg = str(e)
+            return ret
+        finally:
+            duration = time.perf_counter() - start_time
+            try:
+                from cockpit.telemetry.metrics import record_command_metric
+                from cockpit.commands.registry import LEGACY_COMMAND_MAPPING
 
-    console.print(f"[red]未知命令: {args.command}[/]")
-    parser.print_help()
-    return 1
+                cmd_name = getattr(args, "command", "unknown") or "unknown"
+                domain = LEGACY_COMMAND_MAPPING.get(cmd_name, ("unknown", cmd_name))[0]
+                record_command_metric(cmd_name, domain, ret, duration, error=err_msg)
+            except Exception:
+                pass
+
+    if global_output == "json":
+        import json
+        print(json.dumps({"ok": False, "error": f"未知命令: {args.command}", "exit_code": ExitCode.INVALID_ARGS.value}, ensure_ascii=False))
+    else:
+        console.print(f"[red]未知命令: {args.command}[/]")
+        parser.print_help()
+    return ExitCode.INVALID_ARGS.value
 
 
 if __name__ == "__main__":
     sys.exit(main())
+

@@ -243,32 +243,62 @@ def _recommend_for_task(items: list[dict[str, str]], task: str) -> list[dict[str
 
 def cmd_capabilities(args: Namespace) -> int:
     """统一能力发现入口 — 搜索 / 推荐 / 全量列出。"""
+    from cockpit.domain.exit_codes import ExitCode
+
     console = Console()
     subcmd = getattr(args, "capabilities_command", "list")
-    output_format = getattr(args, "global_output", "tty") or "tty"
+    as_json = getattr(args, "json", False) or getattr(args, "global_output", "text") == "json"
+    is_dry_run = getattr(args, "dry_run", False)
     query = getattr(args, "query", "") or ""
     task = getattr(args, "task", "") or ""
+    source = getattr(args, "source", "") or ""
+    limit = getattr(args, "limit", None) or 50
 
     items = _collect_all()
+
+    # 统计各源数量
+    src_counts: dict[str, int] = {}
+    for it in items:
+        src_counts[it.get("source", "?")] = src_counts.get(it.get("source", "?"), 0) + 1
+
+    # 预检模式
+    if is_dry_run:
+        payload = {
+            "dry_run": True,
+            "total_capabilities": len(items),
+            "source_distribution": src_counts,
+            "ready": True,
+        }
+        if as_json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            console.print("[bold cyan]🔍 [Dry-Run] 预检系统统一能力分布[/]")
+            console.print(f"  • 总计能力项: [cyan]{len(items)}[/]")
+            for src, cnt in sorted(src_counts.items()):
+                console.print(f"    - [green]{src}[/]: {cnt} 项")
+        return ExitCode.SUCCESS
+
+    if source:
+        items = [it for it in items if it.get("source") == source]
 
     if subcmd == "search" and query:
         items = _search_capabilities(items, query)
     elif subcmd == "recommend" and task:
         items = _recommend_for_task(items, task)
 
+    # 截取 limit
+    items = items[:limit]
+
     # JSON 输出 (Agent 消费)
-    if output_format == "json":
+    if as_json:
         print(json.dumps({
             "total": len(items),
             "query": query or task,
+            "source_filter": source or None,
             "capabilities": items,
         }, ensure_ascii=False, indent=2))
-        return 0
+        return ExitCode.SUCCESS
 
-    # TTY 输出
-    src_counts: dict[str, int] = {}
-    for it in items:
-        src_counts[it.get("source", "?")] = src_counts.get(it.get("source", "?"), 0) + 1
 
     console.print(
         Panel.fit(

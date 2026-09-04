@@ -249,7 +249,10 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     daily_p.add_argument("--days", type=int, default=1, help="回顾最近 N 天")
     daily_p.add_argument("--json", action="store_true", help="以 JSON 格式输出")
     data_p = sub.add_parser("data", help="数据目录索引 / 类型注册 / TTL 清理")
+    data_p.add_argument("--json", action="store_true", help="以结构化 JSON 输出数据平面概览")
+    data_p.add_argument("--dry-run", action="store_true", help="预检模式，不执行真实索引写入或清理")
     data_sub = data_p.add_subparsers(dest="data_command", parser_class=workspace_parser)
+
     data_index_p = data_sub.add_parser("index", help="刷新 data/_index 元数据")
     data_index_p.add_argument("--root", help="显式指定 workspace root")
     data_index_p.add_argument("--json", action="store_true", help="以 JSON 输出索引结果")
@@ -288,7 +291,14 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     export_event_p.add_argument("--output", "-o", help="写入目标文件")
 
     # ── dashboard / help / quickstart / init / profile ────────
-    sub.add_parser("dashboard", help="打开 Web Dashboard")
+    dash_p = sub.add_parser("dashboard", help="打开 Web 运维与全景仪表盘 (Web Dashboard)")
+    dash_p.add_argument("--port", "-p", type=int, default=None, help="指定监听端口 (默认 8090, 冲突时自愈探测)")
+    dash_p.add_argument("--host", default="127.0.0.1", help="指定监听主机 (默认 127.0.0.1)")
+    dash_p.add_argument("--no-open", action="store_true", help="启动后不自动唤起系统默认浏览器")
+    dash_p.add_argument("--status-only", action="store_true", help="仅探测 Dashboard 运行健康状态并退出")
+    dash_p.add_argument("--dry-run", action="store_true", help="预检端口与运行环境，不启动真实服务")
+    dash_p.add_argument("--json", action="store_true", help="以结构化 JSON 输出运行与探测状态")
+
     help_p = sub.add_parser(
         "help",
         help="查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务)",
@@ -296,6 +306,9 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     help_p.add_argument("keyword", nargs="?", help="可选搜索关键词")
     qs_p = sub.add_parser("quickstart", help="🚀 新用户快速上手向导（环境核验 + 上手指引）")
     qs_p.add_argument("--fix", action="store_true", help="自动检测并修复常见问题")
+    qs_p.add_argument("--check", action="store_true", help="仅执行环境核验状态检测")
+    qs_p.add_argument("--dry-run", action="store_true", help="预检模式，不修改任何文件与数据库")
+    qs_p.add_argument("--json", action="store_true", help="以结构化 JSON 输出核验结果")
     qs_p.add_argument(
         "--model",
         default="llama3.2",
@@ -304,7 +317,11 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     # init: quickstart 的别名 (共享 handler)
     init_p = sub.add_parser("init", help="🚀 初始化向导（同 quickstart）")
     init_p.add_argument("--fix", action="store_true", help="自动检测并修复常见问题")
+    init_p.add_argument("--check", action="store_true", help="仅执行环境核验状态检测")
+    init_p.add_argument("--dry-run", action="store_true", help="预检模式，不修改任何文件与数据库")
+    init_p.add_argument("--json", action="store_true", help="以结构化 JSON 输出核验结果")
     init_p.add_argument("--model", default="llama3.2", help="默认拉取的 LLM 模型名")
+
     profile_p = sub.add_parser("profile", help="查看/编辑身份档案 (L4 入口)")
     profile_p.add_argument("--edit", action="store_true", help="编辑身份档案")
 
@@ -466,6 +483,11 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     )
     cap_p.add_argument("--query", default="", help="搜索关键词 (search 子命令)")
     cap_p.add_argument("--task", default="", help="任务描述 (recommend 子命令)")
+    cap_p.add_argument("--source", default="", help="按能力来源过滤 (cli / bos / scene-card / journey / governance)")
+    cap_p.add_argument("--limit", type=int, default=50, help="展示数量上限 (默认 50)")
+    cap_p.add_argument("--dry-run", action="store_true", help="预检模式，仅输出各来源能力统计摘要")
+    cap_p.add_argument("--json", action="store_true", help="以结构化 JSON 输出能力列表")
+
 
     events_p = sub.add_parser("events", help="实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)")
     events_p.add_argument(
@@ -935,6 +957,23 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         action="store_true",
         help="是否模拟生成带 TODO 的测试数据以触发门控",
     )
+    iterate_p.add_argument(
+        "--fast-track",
+        dest="fast_track",
+        action="store_true",
+        default=None,
+        help="显式指定采用 Mode B Fast-Track 免签快车道 (跳过交互询问)",
+    )
+    iterate_p.add_argument(
+        "--no-fast-track",
+        dest="fast_track",
+        action="store_false",
+        help="显式指定走标准 C2G 审查流",
+    )
+    iterate_p.add_argument("--dry-run", action="store_true", help="预检模式，仅生成任务结构不落盘")
+    iterate_p.add_argument("--json", action="store_true", help="以结构化 JSON 输出任务元数据")
+    iterate_p.add_argument("--non-interactive", action="store_true", help="非交互模式 (无 TTY 时默认采用)")
+
 
     compass_p = sub.add_parser(
         "compass",
@@ -991,8 +1030,11 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     bdsk_p.add_argument("topic", nargs="?", default="架构决策与技术选型", help="辩论主题或决策方案")
 
     # ── journey / panorama / project / monitor ────────────────
-    journey_p = sub.add_parser("journey", help="🗺️ Journey State Graph 状态表达校验器")
-    journey_p.add_argument("journey_args", nargs=argparse.REMAINDER, help="透传 journey-runner 的参数")
+    journey_p = sub.add_parser("journey", help="🗺️ Journey State Graph 业务场景旅程与状态图校验器")
+    journey_p.add_argument("--dry-run", action="store_true", help="预检模式，检测旅程规范文件与 runner 就绪状态")
+    journey_p.add_argument("--json", action="store_true", help="以结构化 JSON 输出校验与运行结果")
+    journey_p.add_argument("journey_args", nargs=argparse.REMAINDER, help="透传 journey-runner 的子命令与参数 (validate/run/templates)")
+
     sub.add_parser(
         "panorama",
         help="🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)",
@@ -1259,3 +1301,64 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
         _register_ca(sub, workspace_parser)
     except ImportError:
         pass
+
+    # ── PSC v1 (BET-Y1Q4-T8-11): 8 大正交一级领域树挂载 ────────────
+    # 1. system: status, health, dashboard, readiness, runtime
+    system_p = sub.add_parser("system", help="🖥️ 系统与运维正交领域 (status/health/dashboard/readiness/runtime)")
+    system_sub = system_p.add_subparsers(dest="system_command", parser_class=workspace_parser)
+    system_sub.add_parser("status", help="系统健康仪表盘")
+    system_sub.add_parser("health", help="一键系统健康检查")
+    system_dash = system_sub.add_parser("dashboard", help="打开 Web Dashboard")
+    system_dash.add_argument("--port", "-p", type=int, default=None)
+    system_dash.add_argument("--dry-run", action="store_true")
+    system_dash.add_argument("--status-only", action="store_true")
+    system_dash.add_argument("--no-open", action="store_true")
+    system_dash.add_argument("--json", action="store_true")
+    system_sub.add_parser("readiness", help="治理成熟度检查")
+    system_sub.add_parser("runtime", help="运行时沙箱管理")
+    system_tel = system_sub.add_parser("telemetry", help="命令遥测与 Prometheus 指标导出")
+    system_tel.add_argument("telemetry_action", nargs="?", choices=["status", "export", "reset"], default="status")
+    system_tel.add_argument("--json", action="store_true")
+    system_tel.add_argument("--dry-run", action="store_true")
+
+    # 2. scene: scenario, journey, gongwen, brief, family-hub
+    scene_p = sub.add_parser("scene", help="🗺️ 业务场景正交领域 (scenario/journey/gongwen/brief/family-hub)")
+    scene_sub = scene_p.add_subparsers(dest="scene_command", parser_class=workspace_parser)
+    scene_sub.add_parser("scenario", help="场景卡生命周期")
+    scene_jy = scene_sub.add_parser("journey", help="业务旅程状态机校验")
+    scene_jy.add_argument("--dry-run", action="store_true")
+    scene_jy.add_argument("--json", action="store_true")
+    scene_sub.add_parser("gongwen", help="政企公文流转")
+    scene_sub.add_parser("brief", help="每日简报")
+    scene_sub.add_parser("family-hub", help="家庭数字中心")
+
+    # 3. user: quickstart, help, demo, init, profile, completion
+    user_p = sub.add_parser("user", help="👤 用户体验与向导正交领域 (quickstart/help/demo/init/profile/completion)")
+    user_sub = user_p.add_subparsers(dest="user_command", parser_class=workspace_parser)
+    user_qs = user_sub.add_parser("quickstart", help="上手向导")
+    user_qs.add_argument("--json", action="store_true")
+    user_qs.add_argument("--dry-run", action="store_true")
+    user_sub.add_parser("help", help="产品地图")
+    user_sub.add_parser("demo", help="5 分钟演示")
+    user_comp = user_sub.add_parser("completion", help="生成 Shell 自动补全脚本")
+    user_comp.add_argument("shell", choices=["bash", "zsh", "fish"], help="目标 Shell (bash|zsh|fish)")
+    user_comp.add_argument("--json", action="store_true")
+    user_comp.add_argument("--dry-run", action="store_true")
+
+    # ── 顶级常用命令直接快捷方式挂载 ──
+    tel_p = sub.add_parser("telemetry", help="📊 命令全生命周期遥测与 Prometheus 指标导出")
+    tel_p.add_argument("telemetry_action", nargs="?", choices=["status", "export", "reset"], default="status", help="操作类型 (status|export|reset)")
+    tel_p.add_argument("--json", action="store_true", help="以纯净 JSON 格式输出")
+    tel_p.add_argument("--dry-run", action="store_true", help="预检模式")
+
+    comp_p = sub.add_parser("completion", help="🐚 生成 Shell 自动补全脚本 (bash/zsh/fish)")
+    comp_p.add_argument("shell", choices=["bash", "zsh", "fish"], help="目标 Shell (bash|zsh|fish)")
+    comp_p.add_argument("--json", action="store_true", help="以纯净 JSON 格式输出")
+    comp_p.add_argument("--dry-run", action="store_true", help="预检模式")
+
+    docs_p = sub.add_parser("docs", help="📚 CLI 参考手册生成与导出")
+    docs_p.add_argument("docs_action", nargs="?", choices=["export", "show"], default="export", help="操作类型 (export|show)")
+    docs_p.add_argument("--output", "-o", type=str, default=None, help="目标 Markdown 文件路径")
+    docs_p.add_argument("--json", action="store_true", help="以纯净 JSON 格式输出")
+    docs_p.add_argument("--dry-run", action="store_true", help="预检模式")
+

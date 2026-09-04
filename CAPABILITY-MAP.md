@@ -8,7 +8,7 @@
 
 | 通道 | 数量 |
 |------|------|
-| CLI 命令 (含子命令) | 201 |
+| CLI 命令 (含子命令) | 207 |
 | MCP 工具 | 634 |
 | MCP 服务器 | 27 |
 | BOS 服务 | 298 |
@@ -120,6 +120,7 @@
 | `cockpit compact` | 上下文滑动蒸馏与双区自适应量化压缩模拟 |
 | `cockpit compare` | 对比多个研究结果 |
 | `cockpit compass` | 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理) |
+| `cockpit completion` | 生成 Shell 自动补全脚本 |
 | `cockpit compute` | 算力与 LLM 网关操作 (委派 aetherforge) |
 | `cockpit consolidate` | sleep-time 巩固 (默认 dry-run) |
 | `cockpit context` | 显示系统上下文 (Phase/CARDS/约束/引导) |
@@ -128,7 +129,7 @@
 | `cockpit controller-shadow` | 读取 Runtime 旧控制器影子迁移回执 |
 | `cockpit create` | 创建新研究 |
 | `cockpit daily` | 每日研究简报 |
-| `cockpit dashboard` | 打开 Web Dashboard |
+| `cockpit dashboard` | 打开 Web 运维与全景仪表盘 (Web Dashboard) |
 | `cockpit data` | 数据目录索引 / 类型注册 / TTL 清理 |
 | `cockpit debt` | 债务评分 (omo-debt Pattern 09 v2.1) |
 | `cockpit decide` | 📬 决策收件箱 (列出/添加/批准/拒绝) |
@@ -140,6 +141,7 @@
 | `cockpit distill` | 在 Mac mini M4 触发闲时 LoRA 蒸馏 |
 | `cockpit dlp-guard` | 外发前防泄密扫描 (敏感识别+挂起+脱敏) |
 | `cockpit dma` | 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准 |
+| `cockpit docs` | 📚 CLI 参考手册生成与导出 |
 | `cockpit docx` | 渲染为 GB/T 9704-2012 红头公文 DOCX |
 | `cockpit domain-status` | 显示 Documents 域项目绑定与引导状态 |
 | `cockpit domains` | 列出 L4 所有域及其状态 |
@@ -183,7 +185,7 @@
 | `cockpit intent` | 🧠 自然语言意图解构与工程规格编译器 (ADR-0195) |
 | `cockpit invoke` | 通过治理网关调用 exact native BOS capability |
 | `cockpit iterate` | ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行) |
-| `cockpit journey` | 🗺️ Journey State Graph 状态表达校验器 |
+| `cockpit journey` | 🗺️ Journey State Graph 业务场景旅程与状态图校验器 |
 | `cockpit kairon` | kairon 知识引擎 monorepo 聚合入口 |
 | `cockpit kems` | 🧬 KEMS 域治理 (domains/status/scan) |
 | `cockpit knowledge` | 📚 KOS 知识检索 (search/status/stats) |
@@ -217,7 +219,7 @@
 | `cockpit pptx` | 渲染为 16:9 高管技术汇报 PPTX |
 | `cockpit product-health` | 产品健康度检测 |
 | `cockpit profile` | 查看/编辑身份档案 (L4 入口) |
-| `cockpit project` | 🔍 16 项目全景 4D 体检与诊断 |
+| `cockpit project` | inspect|list (default: inspect) |
 | `cockpit proxy-env` | 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE) |
 | `cockpit publish` | 发布研究为正式 Markdown 报告 |
 | `cockpit quarantine` | 隔离可疑研究记录 |
@@ -243,6 +245,7 @@
 | `cockpit sanyi-status` | 读取 Runtime 三医状态一致性回执 |
 | `cockpit scan` | 平面扫描 |
 | `cockpit scenario` | P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review) |
+| `cockpit scene` | 🗺️ 业务场景正交领域 (scenario/journey/gongwen/brief/family-hub) |
 | `cockpit score` | 评分债务项 |
 | `cockpit search` | 全文搜索 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
@@ -259,7 +262,9 @@
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
 | `cockpit svg` | 渲染 ```diagram 代码块为矢量架构图 SVG |
 | `cockpit swarm` | 分布式跨节点 KV 共享池与超长上下文置换基准 |
+| `cockpit system` | 🖥️ 系统与运维正交领域 (status/health/dashboard/readiness/runtime) |
 | `cockpit tag` | 为研究添加/覆盖标签 |
+| `cockpit telemetry` | 命令遥测与 Prometheus 指标导出 |
 | `cockpit test_export_formats` | 离线自测: 三格式导出 + GB/T 参数断言 |
 | `cockpit timeline` | 查看研究的演化时间线 |
 | `cockpit topics` | 列出已注册 topic |
@@ -270,6 +275,7 @@
 | `cockpit unarchive` | 恢复已归档研究记录 |
 | `cockpit up` | 启动观测栈 |
 | `cockpit url` | 打印 Langfuse Web URL |
+| `cockpit user` | 👤 用户体验与向导正交领域 (quickstart/help/demo/init/profile/completion) |
 | `cockpit validate` | 验证 Workspace 契约 |
 | `cockpit vault` | 搜索 L4 Vault 知识库 |
 | `cockpit version` | 版本信息 |

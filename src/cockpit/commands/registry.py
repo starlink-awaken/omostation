@@ -85,6 +85,78 @@ CATEGORY_GROUPS: dict[str, tuple[int, str]] = {
     "🔧 通用 (General)": (900, "white"),
 }
 
+# ──────────────────────────────────────────────────────────────────────────────
+# 8 大正交一级领域 (Orthogonal Domains) 与向后兼容映射
+# ──────────────────────────────────────────────────────────────────────────────
+
+ORTHOGONAL_DOMAINS: dict[str, str] = {
+    "governance": "🏛️ 架构与治理 (Governance, Contracts, GAC, Audits)",
+    "workflow": "📋 智能体与交付 (Workflows, Agent Lifecycle, Residents, BCOS)",
+    "memory": "🧠 记忆与认知 (Memory OS, Knowledge Graph, Search, Brain)",
+    "compute": "⚡️ 算力与推理 (Compute Fabric, Models, VRAM, Mesh)",
+    "bus": "🌐 总线与通信 (Omni-Bus, Agora, BOS Services, Events)",
+    "scene": "🗺️ 业务场景 (Scenario Cards, Journeys, Gongwen, Brief)",
+    "system": "🖥️ 系统与运维 (System Health, Dashboard, Runtime Sandbox)",
+    "user": "👤 体验与向导 (Quickstart, Help, Onboarding, TUI)",
+}
+
+LEGACY_COMMAND_MAPPING: dict[str, tuple[str, str]] = {
+    # 治理域
+    "gac": ("governance", "gac"),
+    "audit": ("governance", "audit"),
+    "debt": ("governance", "debt"),
+    "contracts": ("governance", "contracts"),
+    "policy": ("governance", "policy"),
+    "watchdog": ("governance", "watchdog"),
+    "kems": ("governance", "kems"),
+    # 工作流域
+    "agent": ("workflow", "agent"),
+    "agent-workflow": ("workflow", "workflow"),
+    "bcos": ("workflow", "bcos"),
+    "resident": ("workflow", "resident"),
+    "iterate": ("workflow", "iterate"),
+    # 记忆域
+    "memory": ("memory", "memory"),
+    "knowledge": ("memory", "knowledge"),
+    "vault": ("memory", "vault"),
+    "search": ("memory", "search"),
+    "brain": ("memory", "brain"),
+    "gbrain": ("memory", "gbrain"),
+    "kairon": ("memory", "kairon"),
+    # 算力域
+    "fabric": ("compute", "fabric"),
+    "mesh": ("compute", "mesh"),
+    "warm": ("compute", "warm"),
+    "vram": ("compute", "vram"),
+    "triage": ("compute", "triage"),
+    # 总线域
+    "agora": ("bus", "agora"),
+    "bos": ("bus", "bos"),
+    "bus": ("bus", "bus"),
+    "events": ("bus", "events"),
+    "capability": ("bus", "capability"),
+    # 场景域
+    "scenario": ("scene", "scenario"),
+    "journey": ("scene", "journey"),
+    "gongwen": ("scene", "gongwen"),
+    "brief": ("scene", "brief"),
+    "family-hub": ("scene", "family-hub"),
+    # 系统域
+    "status": ("system", "status"),
+    "health": ("system", "health"),
+    "dashboard": ("system", "dashboard"),
+    "readiness": ("system", "readiness"),
+    "runtime": ("system", "runtime"),
+    "telemetry": ("system", "telemetry"),
+    # 用户体验域
+    "quickstart": ("user", "quickstart"),
+    "help": ("user", "help"),
+    "demo": ("user", "demo"),
+    "completion": ("user", "completion"),
+    "docs": ("user", "docs"),
+}
+
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # COMMAND_CATALOG: 所有 cockpit 子命令的权威元数据
@@ -392,6 +464,11 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
         category="🖥️ 基础设施 (Infra)",
         summary="打开 Web Dashboard",
     ),
+    "telemetry": CommandMeta(
+        name="telemetry",
+        category="🖥️ 基础设施 (Infra)",
+        summary="命令全生命周期可观测性与 Prometheus 指标导出",
+    ),
     "observe": CommandMeta(
         name="observe",
         category="🖥️ 基础设施 (Infra)",
@@ -469,6 +546,16 @@ COMMAND_CATALOG: dict[str, CommandMeta] = {
         name="demo",
         category="👤 用户 (User)",
         summary="快速演示",
+    ),
+    "completion": CommandMeta(
+        name="completion",
+        category="👤 用户 (User)",
+        summary="生成 Shell 自动补全脚本 (bash/zsh/fish)",
+    ),
+    "docs": CommandMeta(
+        name="docs",
+        category="👤 用户 (User)",
+        summary="CLI 参考手册生成与导出 (docs/CLI-REFERENCE.md)",
     ),
     # ── Phase A2 补齐: handlers 已注册但 catalog 缺失的 23 条 ─────────────────
     "domain-status": CommandMeta(

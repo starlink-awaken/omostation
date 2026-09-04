@@ -644,3 +644,34 @@ def render_command_result(
         console.print(table)
     else:
         console.print(Panel(str(data), title=f"[bold cyan]{title}[/bold cyan]", box=_box.ROUNDED))
+
+
+def is_interactive() -> bool:
+    """Check whether stdout is connected to an interactive TTY."""
+    import sys
+
+    return sys.stdout.isatty()
+
+
+def output_result(data: Any, args: Any = None, default_render_fn: Any = None) -> int:
+    """Unified output renderer respecting --json, global output mode, and TTY purity."""
+    import json
+
+    fmt = getattr(args, "format", None) or getattr(args, "global_output", "text")
+    if getattr(args, "json", False) or fmt == "json":
+        if isinstance(data, (dict, list)):
+            print(json.dumps(data, ensure_ascii=False, indent=2))
+        else:
+            print(json.dumps({"result": data}, ensure_ascii=False, indent=2))
+        return 0
+
+    if default_render_fn:
+        return default_render_fn(data)
+
+    console = _get_console()
+    if isinstance(data, (dict, list)):
+        render_geek_panel(data)
+    else:
+        console.print(data)
+    return 0
+

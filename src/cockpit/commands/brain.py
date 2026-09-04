@@ -301,34 +301,67 @@ def cmd_brain_ask(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_brain_context(_args: argparse.Namespace) -> int:  # pyright: ignore[reportUnusedParameter]
-    """cockpit brain context — 显示记忆摘要."""
+def cmd_brain_context(_args: argparse.Namespace) -> int:
+    """cockpit brain context — 显示记忆摘要 (支持 --json, --dry-run 与 Rich 表格)."""
+    from rich.console import Console
+    from rich.table import Table
+    from cockpit.domain.exit_codes import ExitCode
+
     prefs = get_preferences()
     history = get_history(limit=10)
+    is_json = getattr(_args, "json", False)
+    is_dry_run = getattr(_args, "dry_run", False)
 
-    print("=" * 60)
-    print("🧠 个人数字大脑 — 记忆摘要")
-    print("=" * 60)
+    if is_json:
+        payload: dict[str, Any] = {
+            "status": "ok",
+            "db_path": str(_db_path()),
+            "preferences_count": len(prefs),
+            "history_count": len(history),
+            "preferences": prefs,
+            "recent_history": history[-10:],
+            "ready": True,
+        }
+        if is_dry_run:
+            payload["dry_run"] = True
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return int(ExitCode.SUCCESS)
 
-    print(f"\n📌 用户偏好 ({len(prefs)} 条):")
+    console = Console()
+    console.print("[bold cyan]🧠 个人数字大脑 — 记忆与偏好摘要[/bold cyan]")
+    if is_dry_run:
+        console.print("[yellow][DRY-RUN 模式][/yellow]")
+
+    pref_table = Table(title=f"📌 用户偏好 ({len(prefs)} 条)", border_style="cyan")
+    pref_table.add_column("来源 (Source)", style="dim")
+    pref_table.add_column("键名 (Key)", style="bold cyan")
+    pref_table.add_column("取值 (Value)", style="white")
+
     if prefs:
         for p in prefs[:10]:
-            src = "👤" if p["source"] == "explicit" else "🔍"
-            print(f"  {src} {p['key']}: {p['value']}")
+            src = "👤 explicit" if p["source"] == "explicit" else "🔍 extracted"
+            pref_table.add_row(src, str(p["key"]), str(p["value"]))
     else:
-        print("  (暂无偏好记录)")
+        pref_table.add_row("-", "(暂无偏好记录)", "-")
+    console.print(pref_table)
 
-    print(f"\n💬 最近对话 ({len(history)} 条):")
+    hist_table = Table(title=f"💬 最近对话历史 ({len(history)} 条)", border_style="green")
+    hist_table.add_column("角色 (Role)", style="bold")
+    hist_table.add_column("时间 (Time)", style="dim")
+    hist_table.add_column("内容摘要 (Snippet)", style="white")
+
     if history:
         for h in history[-6:]:
-            role_icon = "👤" if h["role"] == "user" else "🧠"
-            ts = h.get("created_at", "")[:19]
-            print(f"  {role_icon} [{ts}] {h['content'][:80]}")
+            role_icon = "👤 user" if h["role"] == "user" else "🧠 assistant"
+            ts = str(h.get("created_at", ""))[:19]
+            snippet = str(h.get("content", ""))[:80].replace("\n", " ")
+            hist_table.add_row(role_icon, ts, snippet)
     else:
-        print("  (暂无对话记录)")
+        hist_table.add_row("-", "-", "(暂无对话记录)")
+    console.print(hist_table)
 
-    print(f"\n{'=' * 60}")
-    return 0
+    console.print(f"\n[dim]存储位置: {_db_path()}[/dim]")
+    return int(ExitCode.SUCCESS)
 
 
 def cmd_brain_remember(args: argparse.Namespace) -> int:

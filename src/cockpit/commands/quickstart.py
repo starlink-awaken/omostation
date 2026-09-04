@@ -207,10 +207,11 @@ def _cmd_quickstart_check(args: argparse.Namespace, output_format: str = "tty") 
     data.append(
         {
             "item": "Python 版本",
-            "status": "✅ 正常" if _check_python() else "❌ 未达标",
+            "status": "✅ 正常" if _check_python() is None else "❌ 未达标",
             "detail": sys.version.split()[0],
         }
     )
+
     # Tools
     for tool, found in _check_cli_tools().items():
         data.append(
@@ -276,12 +277,18 @@ def _cmd_quickstart_check(args: argparse.Namespace, output_format: str = "tty") 
 
 
 def cmd_quickstart(args: argparse.Namespace) -> int:
+    from cockpit.domain.exit_codes import ExitCode
+
     c = _get_console()
-    output_format = getattr(args, "global_output", "tty") or "tty"
-    if getattr(args, "check", False):
+    as_json = getattr(args, "json", False) or getattr(args, "global_output", "text") == "json"
+    is_dry_run = getattr(args, "dry_run", False)
+    output_format = "json" if as_json else (getattr(args, "global_output", "tty") or "tty")
+
+    if getattr(args, "check", False) or as_json or is_dry_run:
         return _cmd_quickstart_check(args, output_format=output_format)
     if getattr(args, "fix", False):
         return _auto_fix(c, args)
+
     c.print()
     c.print(
         Panel.fit(

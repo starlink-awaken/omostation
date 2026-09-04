@@ -834,76 +834,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
 
 
 def cmd_dashboard(args: argparse.Namespace) -> int:
-    import os
-    import sys
-    import webbrowser
-    from urllib import request as urlrequest
+    from .dashboard import cmd_dashboard as _modern_dashboard
 
-    c = _get_console()
-    port = os.environ.get("COCKPIT_DASHBOARD_PORT", "8090")
-    url = f"http://localhost:{port}/bos"
-    workspace_root = Path(__file__).resolve().parents[5]
+    return _modern_dashboard(args)
 
-    def _print_dashboard_fixes() -> None:
-        c.print("[yellow]试试:[/]")
-        c.print("  [cyan]uv run cockpit-dashboard[/]  — 手动启动")
-        c.print("  [cyan]cockpit status[/]            — 检查服务状态")
-        c.print("  [cyan]cockpit demo[/]              — 在 CLI 中体验")
-
-    # 若 Dashboard 已在运行，直接打开
-    try:
-        r = urlrequest.urlopen(url, timeout=2)
-        if getattr(r, "status", 200) == 200:
-            webbrowser.open(url)
-            c.print(f"[green]✅ Dashboard 已运行: [cyan]{url}[/][/]")
-            return 0
-    except Exception:
-        pass
-
-    c.print(f"[dim]正在启动 Cockpit Dashboard (port {port})...[/]")
-    cmd = [sys.executable, "-m", "cockpit.dashboard_server"]
-    # Inject Memory OS / Neo4j env so /api/memory and /memory panel see the graph
-    child_env = os.environ.copy()
-    try:
-        from cockpit.web.memory_env import apply_memory_os_env
-
-        apply_memory_os_env()
-        child_env = os.environ.copy()
-    except Exception:
-        pass
-    try:
-        proc = subprocess.Popen(
-            cmd,
-            cwd=str(workspace_root),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            env=child_env,
-        )
-    except FileNotFoundError:
-        c.print("[red]❌ 无法启动 Dashboard[/]")
-        _print_dashboard_fixes()
-        return 1
-
-    time.sleep(2)
-    try:
-        r = urlrequest.urlopen(url, timeout=3)
-        if getattr(r, "status", 200) != 200:
-            c.print(f"[red]Dashboard returned HTTP {r.status}[/]")
-            _print_dashboard_fixes()
-            proc.terminate()
-            return 1
-    except Exception:
-        c.print(f"[red]无法连接到 Dashboard :{port}[/]")
-        _print_dashboard_fixes()
-        proc.terminate()
-        return 1
-
-    webbrowser.open(url)
-    c.print(f"[green]✅ Dashboard 已启动: [cyan]{url}[/][/]")
-    c.print("[dim]按 Ctrl+C 停止服务[/]")
-    try:
-        proc.wait()
-    except KeyboardInterrupt:
-        proc.terminate()
-        c.print("\n[yellow]Dashboard 已停止[/]")
-    return 0

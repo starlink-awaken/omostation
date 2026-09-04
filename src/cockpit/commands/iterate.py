@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -14,7 +15,9 @@ console = Console()
 
 
 def cmd_iterate(args) -> int:
-    console.print("[bold cyan]🔄 正在启动 C2G 双擎编排流 (Creative-to-Governance)...[/]")
+    as_json = getattr(args, "json", False) or getattr(args, "global_output", "text") == "json"
+    if not as_json:
+        console.print("[bold cyan]🔄 正在启动 C2G 双擎编排流 (Creative-to-Governance)...[/]")
 
     topic = getattr(args, "topic", "未命名探索主题")
 
@@ -23,21 +26,28 @@ def cmd_iterate(args) -> int:
     sandbox_dir.mkdir(parents=True, exist_ok=True)
     omo_dir = workspace_root / "projects" / "omo"
 
-    # [C2G v2] 解法二: 架构双轨制与“免签快车道”
-    # 健壮性 (产品走查 v2 2026-06-19): 非交互环境 (脚本/CI/管道无 TTY) Confirm.ask 抛 EOFError,
-    # 降级默认走标准 C2G 流, 而非 traceback 崩溃, 让 iterate 可在自动化场景运行.
-    try:
-        is_fast_track = Confirm.ask(
-            "\n[bold magenta]❓ 认知复杂度分级 (Cognitive Triage):[/]\n"
-            "这是一项复杂度极低的微观任务吗？(选 y 将触发 Fast-Track 免签快车道，跳过沙箱与架构审查)",
-            default=False,
-        )
-    except EOFError:
-        console.print("\n[yellow]⚠️ 非交互环境 (无 TTY), 默认走标准 C2G 流 (非 Fast-Track)。[/]")
+
+    as_json = getattr(args, "json", False) or getattr(args, "global_output", "text") == "json"
+    is_dry_run = getattr(args, "dry_run", False)
+    non_interactive = getattr(args, "non_interactive", False) or not sys.stdout.isatty() or as_json
+
+    # 显式参数优先于交互式询问
+    explicit_ft = getattr(args, "fast_track", None)
+    if explicit_ft is not None:
+        is_fast_track = explicit_ft
+    elif non_interactive:
         is_fast_track = False
+    else:
+        try:
+            is_fast_track = Confirm.ask(
+                "\n[bold magenta]❓ 认知复杂度分级 (Cognitive Triage):[/]\n"
+                "这是一项复杂度极低的微观任务吗？(选 y 将触发 Fast-Track 免签快车道，跳过沙箱与架构审查)",
+                default=False,
+            )
+        except EOFError:
+            is_fast_track = False
 
     if is_fast_track:
-        console.print("\n[bold yellow]► 🚀 触发 Mode B: Fast-Track 免签快车道[/]")
         task_id = f"FAST-{int(time.time())}"
         fast_task = {
             "id": task_id,
@@ -56,14 +66,34 @@ def cmd_iterate(args) -> int:
             "human_approval_required": False,
         }
         planned_dir = omo_dir / "tasks" / "planned"
-        planned_dir.mkdir(parents=True, exist_ok=True)
         task_file = planned_dir / f"{task_id}.yaml"
-        task_file.write_text(yaml.dump(fast_task, allow_unicode=True, sort_keys=False))
 
-        console.print(
-            f"[bold green]✅ Fast-Track 成功: 已直接落盘为 OMO CARDS ({task_id}.yaml)，立即进入 GSD 模式。[/]"
-        )
+        if not is_dry_run:
+            planned_dir.mkdir(parents=True, exist_ok=True)
+            task_file.write_text(yaml.dump(fast_task, allow_unicode=True, sort_keys=False))
+
+        if as_json:
+            import json
+            payload = {
+                "ok": True,
+                "mode": "fast_track",
+                "dry_run": is_dry_run,
+                "task_id": task_id,
+                "task_file": str(task_file),
+                "task": fast_task,
+            }
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+            return 0
+
+        console.print("\n[bold yellow]► 🚀 触发 Mode B: Fast-Track 免签快车道[/]")
+        if is_dry_run:
+            console.print(f"[bold cyan]🔍 [Dry-Run] 预检 Fast-Track 任务定义成功 (未写入 {task_file})[/]")
+        else:
+            console.print(
+                f"[bold green]✅ Fast-Track 成功: 已直接落盘为 OMO CARDS ({task_id}.yaml)，立即进入 GSD 模式。[/]"
+            )
         return 0
+
 
     console.print("\n[bold yellow]► Phase 1: 认知发散 (Mode A: MetaOS Sandbox)[/]")
     console.print(f"主题: '{topic}'")
