@@ -4,6 +4,7 @@ lifecycle: plan
 owner: family-hub
 created: 2026-08-30
 last-reviewed: 2026-09-02
+last_updated: 2026-09-03
 title: Family dashboard runtime-state and HITL writes Phase B implementation plan
 type: doc
 bet_id: BET-Y1Q3-T10-122

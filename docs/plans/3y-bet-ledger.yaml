@@ -19599,3 +19599,130 @@ bets:
   human_gate: false
   circuit_breaker: 子模块对齐后若父仓库仍有未跟踪变更或子模块内部出现本地修改 → 暂停提交并人工检查
   retro: required
+- id: BET-Y1Q3-T10-200
+  track: T10-MATURITY
+  window: Y1Q3
+  title: docs last_updated保鲜batch1-6
+  appetite: 0.5 day
+  priority: P2
+  status: done
+  goal: 给 3 个点名 docs 加 last_updated 并跑 batch1-6 保鲜，验证 docdate 扫描口径可用，不碰业务逻辑。
+  non_goals:
+  - 不改文档正文语义，只补 last_updated 保鲜字段
+  - 不碰业务代码与治理门禁逻辑
+  - 不一次全量改 165 个文件，本 bet 只做 batch1-6
+  done_when:
+  - docs/local-compute/compute-fabric-workflow.md、docs/local-compute/omlx-cluster-architecture.md、docs/overview/cross-package-api-map.md
+    均有 last_updated 且格式合法
+  - docdate 扫描对上述 3 文件不再报缺失
+  - ledger lint 通过
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0，BET-Y1Q3-T10-200 结构合法
+  - cmd: grep -n last_updated docs/local-compute/compute-fabric-workflow.md docs/local-compute/omlx-cluster-architecture.md
+      docs/overview/cross-package-api-map.md
+    expect: 3 文件均有输出
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/local-compute/compute-fabric-workflow.md
+  - docs/local-compute/omlx-cluster-architecture.md
+  - docs/overview/cross-package-api-map.md
+  - docs/notes/**
+  - docs/superpowers/plans/**
+  - docs/superpowers/specs/2026-09-03-docdate-freshness-batch1-spec.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-200.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-03-docdate-freshness-batch1-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:c4aad51e62106b46bfaff709fd2df931b5a156b16ee1c9f0e0f081800858e14f
+    decision_ref: decision://accepted/BET-Y1Q3-T10-200
+  pasw_required: false
+  depends_on: []
+  risk_level: L4
+  human_gate: false
+  circuit_breaker: 发现正文语义需改或扫描口径争议时停手，只保留 last_updated 改动并上报。
+  value_indicator_policy: false
+  retro: required
+  done_at: '2026-09-03'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@420adfa900d8874eb18b10d50c8d4d20b74fee0d
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-200.md
+            sha256: sha256:07566572939ff1d8de3c7d65543017a13c105be98bebc4a68d65c6cfb0ffea89
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-200.md
+            sha256: sha256:07566572939ff1d8de3c7d65543017a13c105be98bebc4a68d65c6cfb0ffea89
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-200.md
+            sha256: sha256:07566572939ff1d8de3c7d65543017a13c105be98bebc4a68d65c6cfb0ffea89
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-200.md
+            sha256: sha256:07566572939ff1d8de3c7d65543017a13c105be98bebc4a68d65c6cfb0ffea89
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-200.md
+            sha256: sha256:07566572939ff1d8de3c7d65543017a13c105be98bebc4a68d65c6cfb0ffea89
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-200.md
+            sha256: sha256:07566572939ff1d8de3c7d65543017a13c105be98bebc4a68d65c6cfb0ffea89
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-200.md
+            sha256: sha256:07566572939ff1d8de3c7d65543017a13c105be98bebc4a68d65c6cfb0ffea89
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+- id: BET-Y1Q3-T10-201
+  track: T10-MATURITY
+  window: Y1Q3
+  title: docs last_updated保鲜batch3-6
+  appetite: 0.5 day
+  priority: P2
+  status: candidate
+  goal: 给 20 个 docs/superpowers/plans 点名 docs 加 last_updated 并跑 batch3-6 保鲜，验证 docdate 扫描口径可用，不碰业务逻辑。
+  non_goals:
+  - 不改文档正文语义，只补 last_updated 保鲜字段
+  - 不碰业务代码与治理门禁逻辑
+  - 不一次全量改剩余文件，本 bet 只做 batch3-6
+  done_when:
+  - 20 个点名 plans 文件均有 last_updated 且格式合法
+  - docdate 扫描对上述 20 文件不再报缺失
+  - ledger lint 通过
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0，BET-Y1Q3-T10-201 结构合法
+  - cmd: grep -l last_updated docs/superpowers/plans/2026-08-08-phase4-federalization.md docs/superpowers/plans/2026-08-12-chatgpt-secure-mcp-routing.md
+      docs/superpowers/plans/2026-08-12-documents-owner-job.md docs/superpowers/plans/2026-08-13-codex-exec-worker.md
+    expect: 点名文件均有输出
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/superpowers/plans/**
+  - docs/notes/**
+  - docs/local-compute/**
+  - docs/overview/**
+  - docs/superpowers/specs/2026-09-04-docdate-freshness-batch3-spec.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q3-T10-201.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-docdate-freshness-batch3-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:5e043ac58134536f361d3b22b2f7884f51dff90ac0da0bd3ecd6d05cb74ecf7c
+    decision_ref: decision://accepted/BET-Y1Q3-T10-201
+  pasw_required: false
+  depends_on: []
+  risk_level: L4
+  human_gate: false
+  circuit_breaker: 发现正文语义需改或扫描口径争议时停手，只保留 last_updated 改动并上报。
+  value_indicator_policy: false
+  retro: required
