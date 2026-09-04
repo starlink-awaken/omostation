@@ -70,7 +70,7 @@ Authoritative SSOT map (fact types → sources): [ARCHITECTURE.md §1](ARCHITECT
 | Agent skills | [.agents/skills/](.agents/skills/) |
 | Scene cards & journeys | [docs/superpowers/](docs/superpowers/) |
 
-## 5. Closeout
+## 6. Closeout
 
 ```bash
 git status --short
@@ -78,13 +78,13 @@ make gac-local-gate
 make ssot-guardian
 ```
 
-Full checklist: [AGENTS.md §9](AGENTS.md)
+Full checklist: [AGENTS.md §8](AGENTS.md)
 
 ---
 
 > **Pyramid principle**: Navigation layer only. All operational details live in AGENTS.md or dedicated docs.
 
-## 6. Onboarding & Patterns
+## 7. Onboarding & Patterns
 
 New agent? Read these historical patterns to avoid known pitfalls:
 - [P74 Workflow Solidification](.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md)
