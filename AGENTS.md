@@ -176,7 +176,7 @@ SSOT [`docs/plans/3y-bet-ledger.yaml`](docs/plans/3y-bet-ledger.yaml) · 视图 
 
 Do not hard-code current phase, health score, test counts, tool counts, service counts, source-file counts, port values, or generated rule inventories in Markdown. Use pointers.
 
-The full documentation contract is [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md).
+The full documentation contract is [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md). The CLI and surface behavior contract is [`.omo/standards/cli-behavior-contract.md`](.omo/standards/cli-behavior-contract.md).
 
 ## 3. Architecture Summary
 

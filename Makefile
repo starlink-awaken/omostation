@@ -592,6 +592,16 @@ cockpit-dashboard-stop:  ## 停止后台 cockpit Web 控制台
 cockpit-dashboard-status:  ## 查看 cockpit Web 控制台状态 (running / not running)
 	bash bin/runtime/start-cockpit-dashboard.sh status
 
+cockpit-install:  ## 安装 cockpit 软链接至 ~/.local/bin/cockpit (全局免路径调用)
+	@mkdir -p $(HOME)/.local/bin
+	@ln -sf $(CURDIR)/bin/cockpit $(HOME)/.local/bin/cockpit
+	@echo "✅ 已成功安装 cockpit 至 $(HOME)/.local/bin/cockpit"
+	@echo "   请确保 $(HOME)/.local/bin 在 PATH 中即可在任意终端直接执行 cockpit"
+
+cockpit-completions-install:  ## 生成当前 Shell 补全脚本
+	@./bin/cockpit completion zsh > $(HOME)/.cockpit-completion.zsh 2>/dev/null && \
+		echo "✅ 已生成 Zsh 补全脚本: $(HOME)/.cockpit-completion.zsh (可在 ~/.zshrc 中添加: source ~/.cockpit-completion.zsh)" || true
+
 doc-ssot-lint:
 	$(PY) bin/ssot/doc-ssot-lint.py --json
 

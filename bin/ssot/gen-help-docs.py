@@ -255,6 +255,8 @@ _CMD_CATEGORIES: dict[str, list[str]] = {
         "logs",
         "watch",
         "tui",
+        "telemetry",
+        "system",
     ],
     "生活与业务场景": [
         "gongwen",
@@ -264,6 +266,7 @@ _CMD_CATEGORIES: dict[str, list[str]] = {
         "family-hub",
         "inbox",
         "list",
+        "scene",
     ],
     "新手与入门": [
         "quickstart",
@@ -274,6 +277,9 @@ _CMD_CATEGORIES: dict[str, list[str]] = {
         "analyze",
         "project",
         "model-driven",
+        "completion",
+        "docs",
+        "user",
     ],
 }
 
@@ -297,6 +303,17 @@ def _extract_frontmatter(path: Path) -> str:
 
 
 def gen_cli_reference(reg: dict, frontmatter: str = "") -> str:
+    # Prefer Tier-1 rich reference generator from cockpit.commands.docs (BET-Y1Q4-T8-16)
+    try:
+        cockpit_src = WORKSPACE / "projects" / "cockpit" / "src"
+        if cockpit_src.is_dir() and str(cockpit_src) not in sys.path:
+            sys.path.insert(0, str(cockpit_src))
+        from cockpit.commands.docs import generate_cli_reference_markdown
+
+        return generate_cli_reference_markdown(frontmatter=frontmatter)
+    except Exception:
+        pass
+
     lines = []
     if frontmatter:
         lines.append(frontmatter.rstrip())

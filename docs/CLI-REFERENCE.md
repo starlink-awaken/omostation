@@ -2,9 +2,7 @@
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
-type: ssot
-last_updated: 2026-09-03
+last-reviewed: 2026-09-04
 ---
 
 # Cockpit CLI 命令参考
@@ -12,7 +10,7 @@ last_updated: 2026-09-03
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-共 **201** 个命令 (含子命令)。按场景分组如下。
+共 **207** 个命令 (含子命令)。按场景分组如下。
 
 ## 治理与门禁
 
@@ -59,7 +57,7 @@ last_updated: 2026-09-03
 | `cockpit events` | 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard) |
 | `cockpit events-watch` | 实时监听 SSE 事件流简便入口 |
 | `cockpit iterate` | ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行) |
-| `cockpit journey` | 🗺️ Journey State Graph 状态表达校验器 |
+| `cockpit journey` | 🗺️ Journey State Graph 业务场景旅程与状态图校验器 |
 | `cockpit monitor` | 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出) |
 | `cockpit onboarding` | 为 AI 构建项目全貌上下文 |
 | `cockpit panorama` | 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产) |
@@ -186,7 +184,7 @@ last_updated: 2026-09-03
 |------|------|
 | `cockpit brief` | 会话简报 / 每日早报 (--morning) |
 | `cockpit context` | 显示系统上下文 (Phase/CARDS/约束/引导) |
-| `cockpit dashboard` | 打开 Web Dashboard |
+| `cockpit dashboard` | 打开 Web 运维与全景仪表盘 (Web Dashboard) |
 | `cockpit health` | 查看研究健康报告（衰减状态/保鲜建议） |
 | `cockpit history` | 查看对话历史 |
 | `cockpit inspect` | 查看算力网格健康度与节点状态 |
@@ -200,6 +198,8 @@ last_updated: 2026-09-03
 | `cockpit stats` | 索引统计 |
 | `cockpit status` | 系统健康 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
+| `cockpit system` | 🖥️ 系统与运维正交领域 (status/health/dashboard/readiness/runtime) |
+| `cockpit telemetry` | 命令遥测与 Prometheus 指标导出 |
 | `cockpit tui` | 极客终端交互控制台 (Textual 全屏 TUI) |
 | `cockpit version` | 版本信息 |
 | `cockpit watch` | 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher) |
@@ -215,19 +215,23 @@ last_updated: 2026-09-03
 | `cockpit list` | 查看研究历史 |
 | `cockpit profile` | 查看/编辑身份档案 (L4 入口) |
 | `cockpit scenario` | P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review) |
+| `cockpit scene` | 🗺️ 业务场景正交领域 (scenario/journey/gongwen/brief/family-hub) |
 
 ## 新手与入门
 
 | 命令 | 描述 |
 |------|------|
 | `cockpit analyze` | 运行全部分析工具 |
+| `cockpit completion` | 生成 Shell 自动补全脚本 |
 | `cockpit demo` | 快速演示 |
+| `cockpit docs` | 📚 CLI 参考手册生成与导出 |
 | `cockpit help` | 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务) |
 | `cockpit init` | 🚀 初始化向导（同 quickstart） |
 | `cockpit model-driven` | — |
-| `cockpit project` | 🔍 16 项目全景 4D 体检与诊断 |
+| `cockpit project` | inspect|list (default: inspect) |
 | `cockpit quickstart` | 🚀 新用户快速上手向导（环境核验 + 上手指引） |
 | `cockpit quickstart-check` | 快速检查新用户环境核验状态 |
+| `cockpit user` | 👤 用户体验与向导正交领域 (quickstart/help/demo/init/profile/completion) |
 
 ## 其他
 
