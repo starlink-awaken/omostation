@@ -88,6 +88,52 @@ def cmd_complete(args: argparse.Namespace) -> int:
     return 0 if verdict.ok else 1
 
 
+
+def cmd_portfolio(args: argparse.Namespace) -> int:
+    """Read-only Milestone/Vision predicates (T1-06). Never mutates Ledger/OMO."""
+    ws = Path(args.workspace) if args.workspace else _workspace()
+    ledger = chain_bind.load_ledger(ws) if not args.ledger_json else _load_json_or_yaml(Path(args.ledger_json))
+    evidence = {}
+    if args.evidence_json:
+        evidence = _load_json_or_yaml(Path(args.evidence_json))
+
+    if args.milestone_id:
+        milestones = ledger.get("milestones") or []
+        milestone = next((m for m in milestones if isinstance(m, dict) and m.get("id") == args.milestone_id), None)
+        if milestone is None and args.milestone_json:
+            milestone = _load_json_or_yaml(Path(args.milestone_json))
+        if milestone is None:
+            print(f"chain-bind-check: unknown milestone {args.milestone_id}", file=sys.stderr)
+            return 1
+        verdict = chain_bind.evaluate_milestone(milestone, ledger, evidence)
+    elif args.vision:
+        vision = ledger.get("vision") if isinstance(ledger.get("vision"), dict) else {"id": "VISION"}
+        objectives = []
+        if args.objectives_json:
+            objectives = _load_json_or_yaml(Path(args.objectives_json))
+            if isinstance(objectives, dict):
+                objectives = objectives.get("objectives") or []
+        window = []
+        if args.window_json:
+            window = _load_json_or_yaml(Path(args.window_json))
+            if isinstance(window, dict):
+                window = window.get("window") or []
+        verdict = chain_bind.evaluate_vision(vision, objectives, window, evidence=evidence)
+    else:
+        print("chain-bind-check portfolio: require --milestone-id or --vision", file=sys.stderr)
+        return 2
+
+    payload = verdict.as_dict()
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+    else:
+        print(f"{'OK' if verdict.ok else 'FAIL'} -- {verdict.code}")
+        for reason in verdict.reasons:
+            print(f"  {reason}")
+    return 0 if verdict.ok else 1
+
+
+
 def cmd_self_check(_args: argparse.Namespace) -> int:
     """Deterministic fixture cases — used by T6-02 verify (not file-exists theater)."""
     cases = [
@@ -236,6 +282,18 @@ def main(argv: list[str] | None = None) -> int:
     p_cp.add_argument("--missing-run-bind", action="store_true")
     p_cp.add_argument("--north-star", choices=["yes", "no", "detect"], default="detect")
     p_cp.add_argument("--force", action="store_true")
+
+    portfolio_p = sub.add_parser("portfolio", help="T1-06 Milestone/Vision derived predicates (read-only)")
+    portfolio_p.add_argument("--workspace", default="")
+    portfolio_p.add_argument("--ledger-json", default="")
+    portfolio_p.add_argument("--evidence-json", default="")
+    portfolio_p.add_argument("--milestone-id", default="")
+    portfolio_p.add_argument("--milestone-json", default="")
+    portfolio_p.add_argument("--vision", action="store_true")
+    portfolio_p.add_argument("--objectives-json", default="")
+    portfolio_p.add_argument("--window-json", default="")
+    portfolio_p.add_argument("--json", action="store_true")
+    portfolio_p.set_defaults(func=cmd_portfolio)
 
     sub.add_parser("self-check", help="run fixture halt/pass cases")
     p_pe = sub.add_parser("perception", help="print north-star / bet / overdue retros")
