@@ -1,24 +1,23 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-04T13:40:00Z
 status: candidate
 counts:
-  runs: 41
-  failures: 25
-  total: 66
-failure_rate: 0.3788
+  runs: 43
+  failures: 0
+  total: 43
+failure_rate: 0.0
 failure_breakdown:
   by_event_type:
-    StepFailed: 25
-  trace_count: 25
+  trace_count: 0
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-04T13:40:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 41 成功运行 + 25 失败模式 = 66 草稿
-- 失败率: 37.88%
+- sediment 覆盖: 43 成功运行 + 0 失败模式 = 43 草稿
+- 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
@@ -63,64 +62,16 @@ failure_breakdown:
 - 20260828T113920Z-bet-execution-c67c8f30.md
 - 20260828T115530Z-bet-execution-1c4e82b0.md
 - 20260831T062756Z-bet-execution-3f66970c.md
+- 20260902T030349Z-bet-execution-70a88720.md
+- 20260903T082902Z-bet-execution-5c8e13e2.md
 
 ## 失败模式 (failures/)
 
-- 20260807T130548Z-bet-execution-be3544c4-1c47d0f5.md
-- 20260808T020406Z-bet-execution-528a2fb6-171a7f22.md
-- 20260808T041815Z-bet-execution-053948fb-58de7842.md
-- 20260808T130448Z-bet-execution-7f7b8dd2-cf461567.md
-- 20260808T141706Z-bet-execution-f6b1bc5b-69b466b9.md
-- 20260808T233049Z-bet-execution-67a82a81-4fc61b31.md
-- 20260808T235723Z-bet-execution-f1b22516-78d6ee9a.md
-- 20260809T002015Z-bet-execution-2f976e93-bf91597d.md
-- 20260809T003604Z-bet-execution-c2a83c6b-d6c5d3bf.md
-- 20260809T005325Z-bet-execution-ae24983d-0ac309e4.md
-- 20260809T011348Z-bet-execution-120fc7c6-3a198c50.md
-- 20260809T012730Z-bet-execution-b2956466-64002902.md
-- 20260809T014308Z-bet-execution-40b3cd13-59b42f53.md
-- 20260809T020020Z-bet-execution-b33f81a6-818e6606.md
-- 20260809T021558Z-bet-execution-e898fdda-b4baa6d6.md
-- 20260809T023252Z-bet-execution-a51fe519-902f0a2f.md
-- 20260809T051522Z-bet-execution-5b278374-b178648c.md
-- 20260809T055007Z-bet-execution-d342f79d-d801e1c3.md
-- 20260809T083614Z-bet-execution-290d144a-e4398843.md
-- 20260809T084619Z-bet-execution-36e8738f-16140eff.md
-- 20260816T123949Z-bet-execution-c654bb0f-93f8d4a5.md
-- 20260817T054104Z-bet-execution-dd5fb3cd-fc7d7b15.md
-- 20260818T020320Z-bet-execution-182821e7-a677906a.md
-- 20260820T122929Z-bet-execution-fceac207-930e945f.md
-- 20260821T111433Z-bet-execution-967f03e6-f19fb0db.md
+- (无)
 
 ## 失败根因画像 (确定性启发式)
 
-- StepFailed: 25 篇
-- 关联工作流溯源: 25 个 (trace_id 见下)
-  - `20260807T130548Z-bet-execution-be3544c4`
-  - `20260808T020406Z-bet-execution-528a2fb6`
-  - `20260808T041815Z-bet-execution-053948fb`
-  - `20260808T130448Z-bet-execution-7f7b8dd2`
-  - `20260808T141706Z-bet-execution-f6b1bc5b`
-  - `20260808T233049Z-bet-execution-67a82a81`
-  - `20260808T235723Z-bet-execution-f1b22516`
-  - `20260809T002015Z-bet-execution-2f976e93`
-  - `20260809T003604Z-bet-execution-c2a83c6b`
-  - `20260809T005325Z-bet-execution-ae24983d`
-  - `20260809T011348Z-bet-execution-120fc7c6`
-  - `20260809T012730Z-bet-execution-b2956466`
-  - `20260809T014308Z-bet-execution-40b3cd13`
-  - `20260809T020020Z-bet-execution-b33f81a6`
-  - `20260809T021558Z-bet-execution-e898fdda`
-  - `20260809T023252Z-bet-execution-a51fe519`
-  - `20260809T051522Z-bet-execution-5b278374`
-  - `20260809T055007Z-bet-execution-d342f79d`
-  - `20260809T083614Z-bet-execution-290d144a`
-  - `20260809T084619Z-bet-execution-36e8738f`
-  - `20260816T123949Z-bet-execution-c654bb0f`
-  - `20260817T054104Z-bet-execution-dd5fb3cd`
-  - `20260818T020320Z-bet-execution-182821e7`
-  - `20260820T122929Z-bet-execution-fceac207`
-  - `20260821T111433Z-bet-execution-967f03e6`
+- (无失败模式沉淀)
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
@@ -400,7 +351,24 @@ failure_breakdown:
 - **20260831T062756Z-bet-execution-3f66970c**
   - 计划 (objective): [BET-Y1Q3-T10-122] Relocate family dashboard runtime state and prove HITL Documents writes (Appetite: 4 days)
   - workflow: bet-execution
-  - 指标: event_count=1, duration_s=0.0
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=74038.202
+- **20260902T030349Z-bet-execution-70a88720**
+  - 计划 (objective): [BET-Y1Q3-T10-122] Relocate family dashboard runtime state and prove HITL Documents writes (Appetite: 4 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=79974.262
+- **20260903T082902Z-bet-execution-5c8e13e2**
+  - 计划 (objective): [BET-Y1Q3-T10-200] docs last_updated保鲜batch1-6 (Appetite: 0.5 day)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=5586.28
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

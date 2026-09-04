@@ -24,9 +24,9 @@
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
-## Completed Tasks (290 个)
+## Completed Tasks (292 个)
 
-> `tasks/done/` — 290 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
+> `tasks/done/` — 292 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
 
 近期关键完成里程碑（done/ 顶层）:
 - P42-W0-W1-COMBO / P42-W2-COMBO — P42 治理面 SSOT 同步
@@ -64,5 +64,5 @@
 | bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | blocked |
 
 ---
-*Updated: 2026-08-30 (依据 `omo state sync-tasks` 与真实目录重算: done=290, planned=7, active=1, blocked=1, archived=6 顶层)*
+*Updated: 2026-09-04 (依据 `omo state sync-tasks` 与真实目录重算: done=292, planned=7, active=1, blocked=1, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*

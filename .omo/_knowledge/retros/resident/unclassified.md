@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: unclassified
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-04T13:40:00Z
 status: candidate
 counts:
-  runs: 22
+  runs: 32
   failures: 0
-  total: 22
+  total: 32
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # unclassified 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-04T13:40:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 22 成功运行 + 0 失败模式 = 22 草稿
+- sediment 覆盖: 32 成功运行 + 0 失败模式 = 32 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -43,6 +43,16 @@ failure_breakdown:
 - delivery-run-pr-1891-v3.md
 - delivery-run-pr-1893-v3.md
 - delivery-run-pr-1895-v3.md
+- points-calc-043db0da5c2f.md
+- points-calc-04774c653abc.md
+- points-calc-056b6520e170.md
+- points-calc-2ad8657b515a.md
+- points-calc-932d00a3e992.md
+- workflow-1593a0f41982.md
+- workflow-356d1ca06c86.md
+- workflow-5b998d332a49.md
+- workflow-c5934f665864.md
+- workflow-d61748e3a563.md
 
 ## 失败模式 (failures/)
 
@@ -114,6 +124,46 @@ failure_breakdown:
 - **delivery-run-pr-1895-v3**
   - 结果与证据: ok=None, status=None, evidence_count=None
   - 指标: event_count=6, duration_s=-936.371
+- **points-calc-043db0da5c2f**
+  - 实际步骤: complete-quest
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 失败根因: step=complete-quest, error=None
+  - 指标: event_count=6, duration_s=0.159
+- **points-calc-04774c653abc**
+  - 实际步骤: complete-quest
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 失败根因: step=complete-quest, error=None
+  - 指标: event_count=6, duration_s=0.135
+- **points-calc-056b6520e170**
+  - 实际步骤: complete-quest
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 失败根因: step=complete-quest, error=None
+  - 指标: event_count=6, duration_s=0.271
+- **points-calc-2ad8657b515a**
+  - 实际步骤: complete-quest
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 失败根因: step=complete-quest, error=None
+  - 指标: event_count=6, duration_s=0.267
+- **points-calc-932d00a3e992**
+  - 实际步骤: complete-quest
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 失败根因: step=complete-quest, error=None
+  - 指标: event_count=6, duration_s=0.259
+- **workflow-1593a0f41982**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=2, duration_s=0.075
+- **workflow-356d1ca06c86**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=2, duration_s=0.077
+- **workflow-5b998d332a49**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=2, duration_s=0.072
+- **workflow-c5934f665864**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=2, duration_s=0.055
+- **workflow-d61748e3a563**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=2, duration_s=0.065
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

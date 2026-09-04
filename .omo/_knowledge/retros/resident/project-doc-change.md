@@ -1,24 +1,23 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-doc-change
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-04T13:40:00Z
 status: candidate
 counts:
   runs: 25
-  failures: 14
-  total: 39
-failure_rate: 0.359
+  failures: 0
+  total: 25
+failure_rate: 0.0
 failure_breakdown:
   by_event_type:
-    StepFailed: 14
-  trace_count: 14
+  trace_count: 0
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-04T13:40:00Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 25 成功运行 + 14 失败模式 = 39 草稿
-- 失败率: 35.90%
+- sediment 覆盖: 25 成功运行 + 0 失败模式 = 25 草稿
+- 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
@@ -50,39 +49,11 @@ failure_breakdown:
 
 ## 失败模式 (failures/)
 
-- 20260804T035034Z-project-doc-change-5f6ff67b-aa01698a.md
-- 20260806T043854Z-project-doc-change-d04c2601-e2872979.md
-- 20260806T044652Z-project-doc-change-cc6e9deb-47752729.md
-- 20260806T045515Z-project-doc-change-8102535f-875675b3.md
-- 20260806T121006Z-project-doc-change-7aae1292-19c772cd.md
-- 20260806T122816Z-project-doc-change-fe690043-1d5ff092.md
-- 20260806T125818Z-project-doc-change-1e386c0b-d0189ee6.md
-- 20260807T023335Z-project-doc-change-fe1ac78c-8e105a4d.md
-- 20260807T034407Z-project-doc-change-468f966b-d40e2022.md
-- 20260808T234306Z-project-doc-change-bc18e917-12eb00a0.md
-- 20260814T121446Z-project-doc-change-9cd9b9e1-df3f8217.md
-- 20260815T060912Z-project-doc-change-b775a96f-28846c46.md
-- 20260821T184348Z-project-doc-change-31c3f51b-eecbe42a.md
-- 20260822T032336Z-project-doc-change-8da4c56e-6c6968f3.md
+- (无)
 
 ## 失败根因画像 (确定性启发式)
 
-- StepFailed: 14 篇
-- 关联工作流溯源: 14 个 (trace_id 见下)
-  - `20260804T035034Z-project-doc-change-5f6ff67b`
-  - `20260806T043854Z-project-doc-change-d04c2601`
-  - `20260806T044652Z-project-doc-change-cc6e9deb`
-  - `20260806T045515Z-project-doc-change-8102535f`
-  - `20260806T121006Z-project-doc-change-7aae1292`
-  - `20260806T122816Z-project-doc-change-fe690043`
-  - `20260806T125818Z-project-doc-change-1e386c0b`
-  - `20260807T023335Z-project-doc-change-fe1ac78c`
-  - `20260807T034407Z-project-doc-change-468f966b`
-  - `20260808T234306Z-project-doc-change-bc18e917`
-  - `20260814T121446Z-project-doc-change-9cd9b9e1`
-  - `20260815T060912Z-project-doc-change-b775a96f`
-  - `20260821T184348Z-project-doc-change-31c3f51b`
-  - `20260822T032336Z-project-doc-change-8da4c56e`
+- (无失败模式沉淀)
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
