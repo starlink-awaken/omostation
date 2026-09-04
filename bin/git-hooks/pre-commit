@@ -1,0 +1,177 @@
+#!/bin/bash
+# pre-commit — GaC + SSOT 本地硬门
+#
+# commit 前:
+#   1. hygiene advisory: 0 字节/大小写冲突提示
+#   2. GaC local gate: validate + drift + doc SSOT + snapshot + doc links
+#   3. SSOT guardian: task count/current wave/submodule/direct-io 等漂移
+#   4. audit-engine: Python AST 静态非原子写审计与拦截
+#
+# 安装: make install-hooks (从 .githooks/ 复制到 .git/hooks/)
+# 新 clone 必跑: make install-hooks
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+PY_RUNTIME="$ROOT/bin/gac/managed-python"
+
+run_py() {
+  "$PY_RUNTIME" run --profile stdlib -- "$@"
+}
+
+run_py_with_yaml() {
+  "$PY_RUNTIME" run --profile pyyaml -- "$@"
+}
+
+# ── T1-05 D1: independent-clone identity guard ────────────────────
+# New agent clones activate this tracked hook through clone-local
+# core.hooksPath=.githooks. Human shells (AGENT_ID unset) remain unaffected.
+# Every agent identity must now present a verified independent-clone identity;
+# legacy linked worktrees remain available only to human migration/inspection.
+if [ -f "$ROOT/bin/gac/agent-clone.py" ]; then
+  if [ -n "${AGENT_ID:-}" ]; then
+    _clone_guard_out="$(run_py "$ROOT/bin/gac/agent-clone.py" guard --workspace "$ROOT" --require-clone --json 2>&1)" || _clone_guard_rc=$?
+  else
+    _clone_guard_out="$(run_py "$ROOT/bin/gac/agent-clone.py" guard --workspace "$ROOT" --json 2>&1)" || _clone_guard_rc=$?
+  fi
+  _clone_guard_rc="${_clone_guard_rc:-0}"
+  printf '%s\n' "$_clone_guard_out" | sed 's/^/[clone-guard] /' >&2
+  if [ "$_clone_guard_rc" -ne 0 ]; then
+    echo "[clone-guard] ❌ agent identity is not allowed to commit from this workspace" >&2
+    exit 1
+  fi
+fi
+
+# ── D3 retired 2026-08-19 (BET-Y1Q1-T1-05 D3 减法) ───────────────────
+# 独立 clone 拓扑消除共享 worktree, D3 shared-worktree claim 不再需要.
+# 历史代码已移除. 参见 .omo/_truth/registry/swarm-coordination.yaml.
+
+if [ -x "$ROOT/bin/gac-hygiene-check.py" ]; then
+  # advisory: 输出到 stderr, 不阻断 commit (|| true)
+  run_py "$ROOT/bin/gac-hygiene-check.py" 2>&1 | sed 's/^/[hygiene] /' >&2 || true
+fi
+
+if [ -f "$ROOT/bin/gac-local-gate.py" ]; then
+  run_py_with_yaml "$ROOT/bin/gac-local-gate.py" 2>&1 | sed 's/^/[gac] /' >&2
+fi
+
+if [ -f "$ROOT/bin/ssot-guardian.py" ]; then
+  run_py_with_yaml "$ROOT/bin/ssot-guardian.py" 2>&1 | sed 's/^/[ssot] /' >&2
+fi
+
+if [ -f "$ROOT/bin/gac-audit-engine.py" ]; then
+  # 调用中央 audit-engine 进行 atomic_write (debt) 的静态 AST 审计拦截
+  run_py "$ROOT/bin/gac-audit-engine.py" --staged 2>&1 | sed 's/^/[audit] /' >&2
+fi
+
+# ── D5 升级: 跨仓子模块一致性校验 (2026-08-19) ─────────────────────
+# 独立 clone 拓扑下, 子模块隔离由每 clone 自带 .git/modules 保证.
+# 保留 fast-forward 一致性校验作为 defense-in-depth:
+#   1. 子模块指针变更必须是 fast-forward (禁止 force-push / divergence)
+#   2. 子模块目录必须在当前 clone 内已初始化
+# G3 (P79, 2026-08-04): merge commit 豁免 — merge main 带入的 gitlink 变更不拦.
+if git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1; then
+  echo "[submodule-guard] ℹ️ merge commit (MERGE_HEAD), 跳过 gitlink 变更检查 (G3/P79, CI 兜底)" >&2
+else
+# P97 (2026-09-04): 动态枚举全量子模块 (原硬编码 3 个 → 12 个裸奔)
+SUBMODULE_CHECK=$(git config --file "$ROOT/.gitmodules" --get-regexp '^submodule\..*\.path$' 2>/dev/null | awk '{print $2}')
+for sub in $SUBMODULE_CHECK; do
+  if git diff --cached --name-only | grep -qxF "$sub"; then
+    # 获取 staged (新) 与 HEAD (基线) 的 gitlink SHA
+    staged_sha=$(git ls-files --stage -- "$sub" | awk '$1 == "160000" {print $2}')
+    base_sha=$(git rev-parse -q --verify "HEAD:$sub" 2>/dev/null || echo "")
+    sub_path="$ROOT/$sub"
+
+    # 校验 1: 子模块目录必须已初始化 (独立 clone 内)
+    if [ ! -f "$sub_path/.git" ] && [ ! -d "$sub_path/.git" ]; then
+      echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 子模块未初始化" >&2
+      echo "   请先: git submodule update --init $sub" >&2
+      exit 1
+    fi
+
+    # 校验 2: fast-forward 一致性 (新 SHA 必须是基线的后代)
+    # 防止 force-pushed 或 diverged 子模块指针被引入
+    if [ -n "$base_sha" ] && [ -n "$staged_sha" ] && [ "$base_sha" != "$staged_sha" ]; then
+      # Git hooks inherit the root repository's GIT_DIR.  Clear that context
+      # before entering the initialized child so merge-base reads child objects.
+      if ! (
+        unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
+        git -C "$sub_path" merge-base --is-ancestor "$base_sha" "$staged_sha"
+      ) 2>/dev/null; then
+        echo "[submodule-guard] ❌ $sub 指针变更被拒绝: 不是 fast-forward" >&2
+        echo "   base SHA: $base_sha" >&2
+        echo "   staged SHA: $staged_sha" >&2
+        echo "   子模块指针变更必须是基线的后代 (禁止 force-push / divergence)" >&2
+        exit 1
+      fi
+    fi
+
+    # 校验 3 (P97, 2026-09-04): 远端可达性 — staged SHA 必须在子仓 origin/main 祖先链
+    # 防 squash-merge 毒药: squash 后原 SHA 不进 main → gitlink 悬空 → CI checkout 全红
+    # 判定标准与 CI PASW 相同 (严格 main 标准, 非"任意分支"宽松标准)
+    if [ -n "$staged_sha" ]; then
+      if ! (
+        unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
+        git -C "$sub_path" merge-base --is-ancestor "$staged_sha" origin/main
+      ) 2>/dev/null; then
+        echo "[submodule-guard] ❌ $sub 指针变更被拒绝: gitlink 悬空 (P97)" >&2
+        echo "   staged SHA: $staged_sha 不在子仓 origin/main 祖先链" >&2
+        echo "   常见原因: 子仓 PR 被 squash 合并后 bump 了原分支 SHA" >&2
+        echo "   修法 A: 子仓分支 fast-forward push (git push origin HEAD:main)" >&2
+        echo "   修法 B: bump 到子仓 origin/main tip (git -C $sub checkout origin/main && git add $sub)" >&2
+        echo "   详见: .omo/_knowledge/patterns/p97-squash-submodule-sha-dangling-pattern.md" >&2
+        exit 1
+      fi
+    fi
+
+    echo "[submodule-guard] ✅ $sub 指针变更通过 fast-forward 校验" >&2
+  fi
+done
+fi
+
+# ── Debt directory deletion guard ──
+# 禁止 unstaged 删除 .omo/debt/ 下的文件
+if git status --short -- ".omo/debt/" | grep -q "^.D"; then
+  echo "[debt-guard] ❌ .omo/debt/ 下有关联删除文件:" >&2
+  git status --short -- ".omo/debt/" | grep "^.D" | sed 's/^/[debt-guard]   /' >&2
+  echo "[debt-guard] ⛔ 拒绝提交 — 债务文件只能通过 omo debt CLI 管理" >&2
+  exit 1
+fi
+
+
+# --- mass-deletion gate (2026-08-08 agora 整仓被清空事故) ---
+# 工作树被 rm -rf / 子模块未 init 时, git add -A 会把"文件消失"记成删除,
+# commit+push 后远端整仓归零。这里在提交前拦一次量级异常。
+GATE="$(git rev-parse --show-toplevel)/bin/gac/mass-deletion-gate.py"
+if [ -f "$GATE" ]; then
+  run_py "$GATE" --staged || exit 1
+fi
+
+# --- conflict-marker gate (2026-08-08) ---
+# 未解决 git 冲突标记 (<<<<<<<) 被提交会污染 main 致 check-yaml/派生 CI 失败.
+CONFLICT_CHECK="$(git rev-parse --show-toplevel)/bin/ssot/conflict-marker-check.py"
+if [ -f "$CONFLICT_CHECK" ]; then
+  run_py "$CONFLICT_CHECK" || exit 1
+fi
+
+# ── Ruff format/lint check (advisory) ────────────────────────────
+# 检查 staged Python 文件的格式和 lint 问题 (warn 不阻断)
+RUFF="$(git rev-parse --show-toplevel)/.venv/bin/ruff"
+if [ ! -x "$RUFF" ]; then
+  RUFF="$(command -v ruff 2>/dev/null || true)"
+fi
+if [ -n "$RUFF" ] && [ -x "$RUFF" ]; then
+  STAGED_PY="$(git diff --cached --name-only --diff-filter=ACM -- '*.py' 2>/dev/null || true)"
+  if [ -n "$STAGED_PY" ]; then
+    echo "[ruff] 检查 staged Python 文件..." >&2
+    echo "$STAGED_PY" | while read -r f; do
+      if [ -f "$f" ]; then
+        "$RUFF" check --quiet "$f" 2>/dev/null || echo "[ruff] ⚠ $f 有 lint 问题 (运行 'ruff check --fix $f' 修复)" >&2
+        "$RUFF" format --check --quiet "$f" 2>/dev/null || echo "[ruff] ⚠ $f 格式不规范 (运行 'ruff format $f' 修复)" >&2
+      fi
+    done
+    echo "[ruff] ✅ 检查完成 (advisory, 不阻断提交)" >&2
+  fi
+fi
+
+exit 0

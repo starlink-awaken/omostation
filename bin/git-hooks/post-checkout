@@ -1,0 +1,55 @@
+#!/bin/sh
+# post-checkout — Qoder tracker + orphan commit protection (M3)
+#
+# 当 HEAD 从一个 commit 移到另一个 commit 时 (checkout/reset --hard),
+# 检测 old_head 是否有未 push 的提交. 如果有, 自动打 tag 保存, 防止丢失.
+#
+# 触发条件: git checkout, git reset --hard, git switch
+# 参数: $1=previous_head $2=new_head $3=is_branch_checkout
+
+previous_head="$1"
+new_head="$2"
+is_branch_checkout="$3"
+
+# ── Qoder AI tracker (保留原有) ──
+case "$previous_head" in
+  ''|*[!0]*) is_zero_head="0" ;;
+  *) is_zero_head="1" ;;
+esac
+if [ "$is_branch_checkout" = "1" ] && [ "$previous_head" != "$new_head" ] && [ "$is_zero_head" = "0" ]; then
+  repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd -W 2>/dev/null || pwd)"
+  "/Users/xiamingxing/.local/bin/qoderclicn" ai-code-tracking-hook post-checkout --workspace "$repo_root" --old-head "$previous_head" --new-head "$new_head" --is-branch "$is_branch_checkout" >/dev/null 2>&1 || true
+fi
+
+# ── M3: Orphan commit protection ──
+# 如果 previous_head 不在新 HEAD 的祖先链中, 说明 HEAD 倒退了 (reset --hard)
+# 检测 previous_head 上是否有未 push 的提交, 如果有则自动 tag 保存
+if [ -n "$previous_head" ] && [ "$previous_head" != "$new_head" ] && [ "$previous_head" != "0000000000000000000000000000000000000000" ]; then
+  # 检查 previous_head 是否还在当前分支历史中
+  if ! git merge-base --is-ancestor "$previous_head" "$new_head" 2>/dev/null; then
+    # HEAD 倒退了 — 检查是否有未 push 的提交
+    orphan_commits=$(git log "$new_head..$previous_head" --oneline 2>/dev/null | head -20)
+    if [ -n "$orphan_commits" ]; then
+      ts=$(date +%Y%m%d-%H%M%S)
+      tag_name="orphan-recovery/${ts}"
+      git tag "$tag_name" "$previous_head" 2>/dev/null
+      echo "⚠️  [post-checkout] HEAD moved backward: ${previous_head:0:12} → ${new_head:0:12}" >&2
+      echo "⚠️  [post-checkout] Orphaned commits detected and tagged as '$tag_name':" >&2
+      echo "$orphan_commits" | sed 's/^/    /' >&2
+      echo "⚠️  [post-checkout] To restore: git cherry-pick $tag_name or git reset --hard $tag_name" >&2
+    fi
+  fi
+fi
+
+# ── P96 (2026-09-04): checkout 追溯 — 谁切的 HEAD 从此有账 ──
+# 共享 worktree 多 agent 并发, HEAD 劫持案 (P96 #1/7/9/11) 靠此追溯
+agent_id="${AGENT_ID:-${CLAUDE_SESSION_ID:+claude-${CLAUDE_SESSION_ID:0:8}}}"
+agent_id="${agent_id:-manual}"
+wt="$(git rev-parse --show-toplevel 2>/dev/null)"
+[ -n "$wt" ] && {
+  log_dir="$wt/.omo/locks"
+  mkdir -p "$log_dir"
+  printf '%s\t%s\t%s\t%s\t%s\n'     "$(date -u +%Y-%m-%dT%H:%M:%SZ)"     "$agent_id"     "${previous_head:0:12}" "${new_head:0:12}"     "$(git branch --show-current 2>/dev/null || echo detached)"     >> "$log_dir/checkout-log.tsv"
+}
+
+exit 0

@@ -4,6 +4,7 @@ lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-14
 type: ssot
+last_updated: 2026-09-04
 ---
 
 # Codex ACP stdio 权限代理切换设计
