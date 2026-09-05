@@ -14,10 +14,16 @@ last-reviewed: 2026-09-05
 - `forge.design_asset_adapter`：扫出真实 `design-md/*/DESIGN.md` 资产，提取 frontmatter metadata、品牌/样式/布局/色板信息，并输出结构化 `design_context`
 - `forge.__init__`：导出 `build_design_context`、`choose_design_assets` 与 CLI 入口
 - `forge.forge`：新增 `design-assets` / `design` 命令，支持品牌/平台/查询过滤并生成结构化 design context + prompt；默认 repo 现在从硬编码用户路径改为当前目录，避免环境绑定
+- `src/forge/design_renderer.py`：新增 `build_page_spec()` 与 `render_page_spec()`，把 matched design asset 变成稳定的 page-spec / HTML 输出
 - `forge/README.md`：补充设计资产命令说明，方便直接调用和接入
-- `tests/test_design_asset_adapter.py`：覆盖扫描、清单生成、过滤、结构化 context 和 prompt 注入
+- `tests/test_design_asset_adapter.py`：覆盖扫描、清单生成、过滤、结构化 context、prompt 注入，以及 page-spec 渲染
 - `docs/design-assets/awesome-design-manifest.yaml`：已用真实 corpus 重新生成，当前记录 74 个真实设计资产
 - `docs/plans/2026-09-04-design-asset-forge-integration.md`：接入设计与架构结论
+
+交付状态（2026-09-05）：
+- 已在隔离 worktree 中提交并打 tag：`forge-page-spec-2026-09-05`
+- 验证命令：`pytest -q tests/test_design_asset_adapter.py`，结果为 `4 passed in 0.13s`
+- CLI smoke test：`PYTHONPATH=src python3 -m forge.forge design-page --query claude --format json`，已输出真实 `Claude` page-spec
 
 验证结论：
 - `cd projects/knowledge/kairon/packages/forge && python3 -m pytest tests/test_design_asset_adapter.py -q`
@@ -31,8 +37,22 @@ last-reviewed: 2026-09-05
 - 现在这条链路已经具备“真实检索 → 真实匹配 → 结构化 context → 生成 prompt”的闭环
 
 下一步：
-- 可继续把结构化 `design_context` 挂到更高层 UI 生成器，形成完整页面草图生成闭环
+- 已将 `page_spec` 升级为真实的响应式 section 模板（hero / feature_grid / testimonial / CTA / footer），并保持 JSON + HTML 双输出契约稳定。
+- 可继续把结构化 `design_context` 挂到更高层 UI 生成器，形成完整页面草图生成闭环；当前链路已经在 forge 能力层中可直接消费。
 - 若需要发布到远端，继续在具备权限的 worktree / repo 环境里执行 push + PR
+
+已完成的进展（2026-09-05）
+- `src/forge/design_renderer.py`：增加 `layout`、`eyebrow`、`testimonial`、`section_order` 等更真实页面结构字段，确保输出不再只是单一通用 html shell。
+- `tests/test_design_asset_adapter.py`：强化断言，要求 page_spec 具备真实 section 结构与响应式约束，并验证 HTML 里包含 testimonial / quote 类输出。
+- 验证命令：`pytest -q tests/test_design_asset_adapter.py`，结果为 `4 passed in 0.10s`。
+- CLI 验证：`PYTHONPATH=src python3 -m forge.forge design-page --query claude --format json`，输出 `Claude` 与 `['hero', 'feature_grid', 'testimonial', 'cta', 'footer']`，可直接消费。
+
+建议（优先级）
+1. 把 `page_spec` 固定成一个稳定的“契约层”，不要在当前阶段上再做过重的运行时渲染器；先做 schema 稳定、测试覆盖、可扩展。
+2. 继续沿用 forge / aetherforge 作为能力层，保持 omostation 主控制面不变；不要让 asset layer 参与 governance 或状态落盘。
+3. 下一步最有价值的是：用 3～5 个真实设计资产做端到端输出验证，并继续扩展更贴近真实产品页的 section 组合（pricing / metrics / testimonials / editorial hero）。
+4. 最优落地方式是先做一个轻量 HTML renderer，再在需要时再升级成更复杂的 UI generator；不要一次性做全站生成器。
+5. 如果要推进到产品化，下一轮要补充：输入规范（brand/platform/style），输出规范（JSON + HTML），以及审查门槛（palette/sections/contrast/spacing compliance）。
 
 ---
 
