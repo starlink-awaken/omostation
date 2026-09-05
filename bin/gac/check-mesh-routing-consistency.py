@@ -6,8 +6,12 @@ Mesh 路由 (bin/mesh/, 以及 mesh 相关工具) 必须遵循 BOS URI 标准,
 """
 
 import re
+import subprocess
 import sys
 from pathlib import Path
+
+TIMEOUT = 30  # seconds per subprocess call
+RETRY = 3    # max retries on transient failure
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

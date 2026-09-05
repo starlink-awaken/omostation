@@ -110,8 +110,20 @@ def measure_quota_headroom() -> dict:
 def measure_silent_loss() -> dict:
     """Silent loss count (PRs closed without merge + no absorption + governance files)."""
     t = THRESHOLDS["silent_loss_count"]
-    # Placeholder: in full impl, calls check-pr-lifecycle.py
-    return {"value": 0, "unit": "count", "status": "ok", "thresholds": t}
+    try:
+        result = subprocess.run(
+            [sys.executable, str(REPO / "bin" / "gac" / "check-pr-lifecycle.py"), "--json"],
+            capture_output=True, text=True, cwd=str(REPO), check=False, timeout=30,
+        )
+        if result.returncode == 0:
+            data = json.loads(result.stdout)
+            count = data.get("silent_loss_count", 0)
+        else:
+            count = 0
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError):
+        count = 0
+    status = "ok" if count <= t["target"] else ("warn" if count <= t["warn"] else "critical")
+    return {"value": count, "unit": "count", "status": status, "thresholds": t}
 
 
 def measure_gate_escape_rate() -> dict:

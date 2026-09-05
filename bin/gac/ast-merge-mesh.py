@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import ast
+import subprocess
 import sys
 from pathlib import Path
+
+TIMEOUT = 30  # seconds per subprocess call
+RETRY = 3    # max retries on transient failure
 
 
 def semantic_ast_merge(base_code: str, local_code: str, remote_code: str) -> str | None:
