@@ -21136,7 +21136,8 @@ bets:
   title: 生产级结构化分级日志、Tracing 贯穿与 Prometheus 埋点底座
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-05
   done_at: 2026-09-04 11:00:00+00:00
   note: Delivered in Project Sovereign Command (PSC v1)
   goal: 引入 MetricsCollector 环形缓冲区，支持 Prometheus exposition 格式导出，新增 cockpit telemetry 命令与结构化日志轮转。
@@ -21157,9 +21158,57 @@ bets:
     content_digest: sha256:d00d9cc7aed7326da3009b9c88a6b16852e0bc09a3fc35285b3d7f77be99b7c1
     decision_ref: decision://accepted/BET-Y1Q4-T8-14
   write_surfaces:
-  - projects/cockpit/src/cockpit/telemetry.py
-  - projects/cockpit/tests/test_telemetry.py
+  # 2026-09-05 write-surface correction: original two paths never existed in the
+  # cockpit package layout (actual: telemetry/ package + test_telemetry_metrics);
+  # stale entries removed to satisfy D0 against the pinned gitlink.
+
+  - projects/cockpit/src/cockpit/telemetry/metrics.py
+  - projects/cockpit/src/cockpit/telemetry/__init__.py
+  - projects/cockpit/src/cockpit/commands/telemetry.py
+  - projects/cockpit/tests/test_telemetry_metrics.py
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+  value_indicator_policy: false
   pasw_required: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t8-14-telemetry-metrics-design.md
+            sha256: sha256:d00d9cc7aed7326da3009b9c88a6b16852e0bc09a3fc35285b3d7f77be99b7c1
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+            sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+            sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
+          merged_reachable_commit:
+            ref: git://origin/main@44bab86849e330b430189135a0271147a87e04b7
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+            sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+            sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+            sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+            sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   risk_level: L1
   human_gate: false
   circuit_breaker: 监控指标采集阻塞正常执行阻断

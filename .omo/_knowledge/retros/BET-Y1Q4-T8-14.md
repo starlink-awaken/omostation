@@ -1,34 +1,39 @@
 ---
-schema_version: retro/v1
-status: active
+schema: bet-retro/v1
+bet_id: BET-Y1Q4-T8-14
+status: closed
 lifecycle: history
 owner: governance-team
-created: 2026-09-04
-last-reviewed: 2026-09-04
-bet: BET-Y1Q4-T8-14
-title: 生产级结构化分级日志、Tracing 贯穿与 Prometheus 埋点底座
-symptom: logging_alerting 维度全仓最低分 (2.57 分)，缺乏指标收集与标准监控抓取面
-solution: MetricsCollector 本地环形缓冲 + Prometheus exposition 文本格式导出 + cockpit telemetry 命令
+last-reviewed: 2026-09-05
 type: ephemeral
-status: archived
 ---
 
-# BET-Y1Q4-T8-14 复盘
+# BET-Y1Q4-T8-14 retro — 结构化日志/诊断环/Prometheus 底座
 
-## 做对了什么
+## What changed
 
-1. **轻量原子持久化**：采用 `~/.workspace/telemetry/cockpit_metrics.json` 环形缓冲，单次写入耗时 < 0.5ms，无重型外部守护进程依赖。
-2. **Prometheus 工业标准兼容**：实现符合标准 Prometheus text exposition 格式的指标导出（`cockpit telemetry export`），涵盖调用计数、分桶延迟与错误计数。
-3. **可观测与主流程隔离**：在 `cli.py` 的 `finally` 块中捕获所有异常，确保遥测埋点故障永远不影响命令正常返回。
+- 前序交付（已在 main，docstring 标注本 bet）：`telemetry/metrics.py`
+  MetricsCollector（counter/histogram/持久化 + Prometheus exposition）、
+  `commands/telemetry.py` status/export/reset、4 个单测。
+- 本轮收尾增量：**DiagnosticsRing**（512 容量环形缓冲、线程安全、
+  ERROR/WARNING 自动捕获 via `DiagnosticsLoggingHandler` 挂 root logger，
+  observability 异常永不冒泡）；`cockpit telemetry diagnostics [--limit]`
+  CLI（JSON + TTY 表）；status JSON 附 diagnostics 摘要；parser 两处
+  choices 扩展。
+- 测试 9/9（新增 5：record/snapshot、容量淘汰、clear、handler 自动捕获
+  且 INFO 不入环、CLI diagnostics JSON）；ruff clean（顺手修 6 处 UP）。
 
-## 踩了什么坑
+## Q3 (打假)
 
-| 坑 | 修复 |
-|----|------|
-| 并发写入可能导致 JSON 文件破坏 | 采用原子临时文件写入与 replace 替换 |
-| 历史记录无限膨胀 | 实施 1000 条最大限制的环形缓冲机制 |
+- ledger 原写面 `telemetry.py`（单文件假设）与真实包布局不符——claim 被
+  WORK_PACKET_SCOPE_MISMATCH 拦两次后修正为 6 面（含 _subcommands.py，
+  parser choices 扩展必需）。教训：bet 铸造时写面按"当时的想象"写，
+  claim 时才撞现实。
+- work packet hash 在 start 钉死：改 ledger 必须重 start（两轮 run 作废
+  c4ffae53/615b2f65）。
 
-## 交付自证
+## Q4 (遗留)
 
-- 测试覆盖：`test_telemetry_metrics.py` (ALL PASS)
-- 门禁状态：`make gac-local-gate` 56 项全绿通过。
+- 诊断环为进程内内存环，未跨进程持久化（daemon 化后可加 storage_path 落盘）。
+- 结构化日志轮转（spec §2.4 JSON 行 + 5MB×3）未在本轮实现——现有
+  MetricsCollector 已有 JSON 持久化；独立日志文件轮转留 follow-up bet。
