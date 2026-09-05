@@ -37,3 +37,41 @@ jobs:
     owner: governance-team
     sfop_slot: S
     status: active
+
+  # ── 运维卫生四件套 (2026-09-05 固化: 原 session 级 cron, session 结束即失效) ──
+
+  - name: worktree-hygiene-daily
+    schedule: "0 2 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/gac/worktree-hygiene-audit.py --auto-clean --execute --stale-days 3 >> runtime/cron/worktree-hygiene.log 2>&1'
+    planes: [crontab]
+    sla_heartbeat_hours: 48
+    owner: governance-team
+    sfop_slot: S
+    status: active
+
+  - name: branch-prune-weekly
+    schedule: "30 3 * * 1"
+    command: 'cd "$HOME/Workspace" && bash bin/gac/gac-branch-prune.sh >> runtime/cron/branch-prune.log 2>&1'
+    planes: [crontab]
+    sla_heartbeat_hours: 336
+    owner: governance-team
+    sfop_slot: S
+    status: active
+
+  - name: capability-registry-sync-daily
+    schedule: "0 4 * * *"
+    command: 'cd "$HOME/Workspace" && make sync-capability-registry >> runtime/cron/capability-registry-sync.log 2>&1'
+    planes: [crontab]
+    sla_heartbeat_hours: 48
+    owner: governance-team
+    sfop_slot: S
+    status: active
+
+  - name: ssot-guardian-daily
+    schedule: "0 5 * * *"
+    command: 'cd "$HOME/Workspace" && make ssot-guardian >> runtime/cron/ssot-guardian.log 2>&1'
+    planes: [crontab]
+    sla_heartbeat_hours: 48
+    owner: governance-team
+    sfop_slot: S
+    status: active
