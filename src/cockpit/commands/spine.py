@@ -44,6 +44,26 @@ def _telemetry() -> dict:
         return {}
 
 
+def _omlxc_python(code: str, timeout: float = 120.0) -> tuple[int, str]:
+    """Run a Python snippet inside the omlxc project env (BET-Y1Q3-T10-105).
+
+    Keeps cockpit decoupled from omlxc internals: the snippet must print one
+    JSON line. Returns (returncode, stdout). Missing omlxc checkout -> (127, msg).
+    """
+    omlxc_root = _ws() / "projects" / "omlxc"
+    if not (omlxc_root / "pyproject.toml").is_file():
+        return 127, "omlxc checkout not found"
+    cmd = ["uv", "run", "python", "-c", code]
+    try:
+        res = subprocess.run(
+            cmd, cwd=str(omlxc_root), capture_output=True, text=True,
+            timeout=timeout, check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return 124, "omlxc python snippet timed out"
+    return res.returncode, (res.stdout or res.stderr).strip()
+
+
 def _replay_buffer_stats() -> dict:
     path = _ws() / ".omo" / "state" / "lora-replay-buffer.jsonl"
     if not path.exists():
@@ -70,15 +90,40 @@ def cmd_spine_draft(args: argparse.Namespace) -> int:
         console.print("[red]缺少 --prompt 参数[/red]")
         return 1
     model = getattr(args, "model", "qwen3.8-27b")
+    adapter_name = getattr(args, "adapter", "adapter-xiamingxing-v1")
+
+    # Detect a trained personal-style adapter (BET-Y1Q3-T10-105).
+    adapter_line = "[dim]无个人文风适配层 (先经 spine sign/distill 生成)[/dim]"
+    adapter_path = ""
+    rc, out = _omlxc_python(
+        "from omlxc.dataplane.experience_replay import adapter_status\n"
+        "import json\n"
+        f"print(json.dumps(adapter_status({adapter_name!r})))",
+        timeout=30.0,
+    )
+    if rc == 0:
+        try:
+            ad = json.loads(out.splitlines()[-1])
+            if ad.get("exists"):
+                adapter_path = ad["path"]
+                adapter_line = f"[bold green]已加载适配层[/bold green] {adapter_name} ({ad.get('size_bytes', 0)} bytes)"
+            else:
+                adapter_line = "[yellow]适配层未训练 (adapter missing, distill 后可用)[/yellow]"
+        except Exception:
+            pass
+
     console.print(
         Panel(
             f"[cyan]Spine Draft[/cyan]\n"
             f"Prompt: {prompt[:80]}...\n"
             f"Model: {model}\n"
+            f"Adapter: {adapter_line}\n"
             f"BOS: [yellow]bos://compute/aetherforge/infer[/yellow]",
             title="⚡ Sovereign Draft",
         )
     )
+    if adapter_path:
+        console.print(f"[dim]adapter 元数据将随 BOS 推理请求发送: {adapter_path}[/dim]")
     # Delegate to cockpit compute gateway
     ws_root = _ws()
     omlxc_root = ws_root / "projects" / "omlxc"
@@ -116,11 +161,32 @@ def cmd_spine_sign(args: argparse.Namespace) -> int:
         ]
         res = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if res.returncode == 0:
+            # Persist into the experience replay buffer (BET-Y1Q3-T10-105).
+            snippet = (
+                "import json\n"
+                "from omlxc.dataplane.experience_replay import ExperienceReplayManager\n"
+                "mgr = ExperienceReplayManager()\n"
+                f"mgr.add_sample(instruction={original!r}, output={signed!r}, domain={domain!r})\n"
+                "n = mgr.persist()\n"
+                "print(json.dumps({'persisted': n, 'stats': mgr.stats()}))\n"
+            )
+            rc, out = _omlxc_python(snippet, timeout=60.0)
+            buffer_line = "[yellow]replay buffer 未落盘 (omlxc env 不可用)[/yellow]"
+            if rc == 0:
+                try:
+                    payload = json.loads(out.splitlines()[-1])
+                    dom = payload.get("stats", {}).get(domain, {})
+                    buffer_line = (
+                        f"[bold green]replay buffer 已落盘[/bold green] "
+                        f"共 {payload.get('persisted', 0)} 条样本, 域 '{domain}' {dom.get('size', 0)}/{dom.get('capacity', 0)}"
+                    )
+                except Exception:
+                    pass
             console.print(
                 Panel(
                     f"[green]署名 Diff 已记录[/green]\n"
                     f"Domain: {domain}\n"
-                    f"[dim]通过 value-evolution-connector 经纪人写入 lora-replay-buffer[/dim]\n\n"
+                    f"{buffer_line}\n\n"
                     f"[dim]下次空闲 distillation 时将自动加入训练集[/dim]",
                     title="✅ Spine Sign",
                 )
@@ -188,7 +254,7 @@ def cmd_spine_status(args: argparse.Namespace) -> int:
 
 
 def cmd_spine_distill(args: argparse.Namespace) -> int:
-    """Trigger idle LoRA distillation run."""
+    """Dispatch a real LoRA distillation job (local MLX first, mesh roaming second)."""
     domain = getattr(args, "domain", "signature-style")
     epochs = getattr(args, "epochs", 3)
 
@@ -201,19 +267,66 @@ def cmd_spine_distill(args: argparse.Namespace) -> int:
 
     console.print(
         Panel(
-            f"[cyan]触发 LoRA Distillation[/cyan]\n"
+            f"[cyan]LoRA Distillation 派发[/cyan]\n"
             f"Domain: {domain}\n"
             f"Samples: {n_samples}\n"
             f"Epochs: {epochs}\n"
-            f"Target Node: MacMini-M4 (BOS: [yellow]bos://compute/omlxc/lora[/yellow])\n\n"
-            f"[dim]在 Mac mini M4 空闲算力上运行，不影响当前推理。[/dim]",
+            f"优先级: 本地 MLX → mesh 漫游 (Mac mini M4) → 诚实失败\n"
+            f"BOS: [yellow]bos://compute/omlxc/lora[/yellow]",
             title="🔬 Spine Distill",
         )
     )
-    # In a real deployment, this would dispatch a BOS job to bos://compute/omlxc/lora
-    # Here we simulate the job scheduling acknowledgment
-    console.print(f"[green]✅ Distillation job queued: ft-job-{int(time.time())}[/green]")
-    return 0
+
+    snippet = (
+        "import json\n"
+        "from omlxc.dataplane.experience_replay import dispatch_distill, ExperienceReplayManager\n"
+        "mgr = ExperienceReplayManager()\n"
+        f"job = dispatch_distill(mgr, domain={domain!r}, epochs={epochs!r})\n"
+        "print(json.dumps(job.__dict__))\n"
+    )
+    rc, out = _omlxc_python(snippet, timeout=300.0)
+    if rc != 0:
+        console.print(f"[red]派发失败 (omlxc env): {out[:300]}[/red]")
+        return 1
+    try:
+        job = json.loads(out.splitlines()[-1])
+    except Exception:
+        console.print(f"[red]派发输出解析失败: {out[:300]}[/red]")
+        return 1
+
+    status = job.get("status", "unknown")
+    detail = job.get("detail", "")
+    if status == "dispatched":
+        console.print(
+            Panel(
+                f"[bold green]✅ 训练完成[/bold green]\n"
+                f"Job: {job.get('job_id')}\n"
+                f"Samples: {job.get('sample_count')}\n"
+                f"Adapter: {job.get('adapter_path')}\n"
+                f"[dim]{detail}[/dim]",
+                title="🔬 Spine Distill",
+            )
+        )
+        return 0
+    if status == "routed":
+        console.print(
+            Panel(
+                f"[bold cyan]➜ 已路由至 mesh 节点[/bold cyan]\n"
+                f"Job: {job.get('job_id')}\n"
+                f"Target: {job.get('target_node')} ({job.get('target_endpoint')})\n"
+                f"[dim]{detail}[/dim]",
+                title="🔬 Spine Distill",
+            )
+        )
+        return 0
+    if status == "insufficient_samples":
+        console.print(
+            f"[yellow]样本不足: {detail} — 先用 spine sign 积累真实署名样本[/yellow]"
+        )
+        return 1
+    console.print(f"[red]派发未执行 ({status}): {detail}[/red]")
+    console.print("[dim]本机安装 mlx-lm 或提供 mesh 节点后可真实训练 (不模拟成功)[/dim]")
+    return 1
 
 
 def cmd_spine_replay(args: argparse.Namespace) -> int:

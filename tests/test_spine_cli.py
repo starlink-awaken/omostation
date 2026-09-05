@@ -72,13 +72,13 @@ def test_spine_sign_and_diff(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     # Diff command shows the sample
     assert cmd_spine(args_diff) == 0
 
-    # Distill command succeeds with 1 sample
+    # Distill honestly fails without an omlxc env (no simulated success, D1)
     args_distill = argparse.Namespace(
         spine_command="distill",
         domain="signature-style",
         epochs=2,
     )
-    assert cmd_spine(args_distill) == 0
+    assert cmd_spine(args_distill) == 1
 
 
 def test_spine_status(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
