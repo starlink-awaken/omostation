@@ -26,31 +26,47 @@ def _normalize_palette(raw: Any) -> list[dict[str, str]]:
     return tokens[:6]
 
 
-def _default_sections(layout_pattern: str, brand: str) -> list[dict[str, Any]]:
+def _default_sections(layout_pattern: str, brand: str, *, platform: str = "general-web", design_tags: list[str] | None = None) -> list[dict[str, Any]]:
+    tags = design_tags or ["premium", "clarity", "conversion"]
+    feature_items = [
+        "Clear value narrative",
+        "Responsive product system",
+        f"{layout_pattern.replace('-', ' ').title()} composition",
+        f"{platform.title()} ready interface",
+        *[str(tag).title() for tag in tags[:3]],
+    ]
     return [
         {
             "type": "hero",
+            "layout": "split",
+            "eyebrow": f"{platform.title()} experience",
             "title": f"{brand} experience",
             "subtitle": "High-clarity product narrative designed for conversion, trust, and brand recognition.",
             "cta": "Explore the experience",
+            "secondary_cta": "See the system",
         },
         {
             "type": "feature_grid",
+            "layout": "grid",
             "title": "Core capabilities",
-            "items": [
-                "Clear value narrative",
-                "Responsive product system",
-                f"{layout_pattern.title()} composition",
-            ],
+            "items": feature_items[:5],
+        },
+        {
+            "type": "testimonial",
+            "layout": "quote",
+            "quote": "A premium, conversion-oriented interface that feels unmistakably branded and easy to trust.",
+            "author": brand,
         },
         {
             "type": "cta",
+            "layout": "stacked",
             "title": "Launch the next interaction layer",
             "body": "Translate the design language into a page system that stays consistent across surfaces.",
             "cta": "Build the experience",
         },
         {
             "type": "footer",
+            "layout": "stacked",
             "title": brand,
             "body": "Design system driven by palette, rhythm, and product clarity.",
         },
@@ -75,7 +91,7 @@ def build_page_spec(
     if isinstance(design_tags, str):
         design_tags = [tag.strip() for tag in design_tags.split(",") if tag.strip()]
     if sections is None:
-        sections = _default_sections(layout_pattern, brand)
+        sections = _default_sections(layout_pattern, brand, platform=platform, design_tags=[str(tag) for tag in design_tags[:6]])
     content_strategy = {
         "tone": "premium, purposeful, and conversion-oriented",
         "layout_focus": layout_pattern,
@@ -85,8 +101,11 @@ def build_page_spec(
     }
     responsive_constraints = {
         "breakpoints": ["mobile: 320px", "tablet: 768px", "desktop: 1200px"],
-        "priority": ["hero", "feature_grid", "cta"],
+        "priority": ["hero", "feature_grid", "testimonial", "cta"],
+        "section_order": [section.get("type") for section in (sections or []) if isinstance(section, dict)],
         "safe_area": "16px horizontal padding on mobile, 24px on larger screens",
+        "mobile_layout": "stacked",
+        "desktop_layout": "split",
     }
     return {
         "brand": brand,
@@ -102,6 +121,7 @@ def build_page_spec(
 
 def render_page_spec(page_spec: dict[str, Any], output_format: str = "html") -> str:
     spec = dict(page_spec)
+    brand = str(spec.get("brand") or "Brand")
     palette_tokens = _normalize_palette(spec.get("palette_tokens") or [])
     primary = palette_tokens[0].get("value") if palette_tokens else "#111827"
     secondary = palette_tokens[1].get("value") if len(palette_tokens) > 1 else "#6B7280"
@@ -114,21 +134,33 @@ def render_page_spec(page_spec: dict[str, Any], output_format: str = "html") -> 
             items = section.get("items") or []
             items_html = "".join(f"<li>{item}</li>" for item in items)
             section_html.append(
-                f"<section class='section section--{kind}'><h2>{title}</h2><ul>{items_html}</ul></section>"
+                f"<section class='section section--{kind}' data-layout='{section.get('layout', 'grid')}'><h2>{title}</h2><ul>{items_html}</ul></section>"
+            )
+        elif kind == "testimonial":
+            quote = str(section.get("quote") or subtitle or "A premium, conversion-oriented experience.")
+            author = str(section.get("author") or brand)
+            section_html.append(
+                f"<section class='section section--{kind}' data-layout='{section.get('layout', 'quote')}'><blockquote>“{quote}”</blockquote><p class='author'>— {author}</p></section>"
             )
         elif kind == "cta":
             cta_label = str(section.get("cta") or "Take action")
             section_html.append(
-                f"<section class='section section--{kind}'><h2>{title}</h2><p>{subtitle}</p><button>{cta_label}</button></section>"
+                f"<section class='section section--{kind}' data-layout='{section.get('layout', 'stacked')}'><h2>{title}</h2><p>{subtitle}</p><button>{cta_label}</button></section>"
             )
         elif kind == "footer":
             section_html.append(
-                f"<footer class='section section--{kind}'><h2>{title}</h2><p>{subtitle}</p></footer>"
+                f"<footer class='section section--{kind}' data-layout='{section.get('layout', 'stacked')}'><h2>{title}</h2><p>{subtitle}</p></footer>"
             )
         else:
+            eyebrow = str(section.get("eyebrow") or "")
             cta_label = str(section.get("cta") or "Explore")
+            secondary = str(section.get("secondary_cta") or "")
+            hero_buttons = f"<button>{cta_label}</button>" if cta_label else ""
+            if secondary:
+                hero_buttons += f" <button class='secondary'>{secondary}</button>"
+            eyebrow_html = f"<p class='eyebrow'>{eyebrow}</p>" if eyebrow else ""
             section_html.append(
-                f"<section class='section section--{kind}'><h1>{title}</h1><p>{subtitle}</p><button>{cta_label}</button></section>"
+                f"<section class='section section--{kind}' data-layout='{section.get('layout', 'split')}'>{eyebrow_html}<h1>{title}</h1><p>{subtitle}</p>{hero_buttons}</section>"
             )
     if output_format.lower() == "json":
         return json.dumps(spec, ensure_ascii=False, indent=2)
