@@ -21510,11 +21510,6 @@ bets:
   close_evidence: validate --all exit 0 (63/63 PASS) + 5 admin-* cards advanced to
     shadow + HITL proposal hitl-20260905001528-20683e approved
   note: First production use of HITL Proposal System (proposal hitl-20260905001528-20683e).
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:b7fa6fd3e2dfec8fad8e6e9bb6336d62e219365800bffe7ee995d205daff368c
-    decision_ref: decision://accepted/BET-Y1Q4-T8-04
 - id: BET-Y1Q4-T9-01
   track: T9-OBSERV
   window: Y1Q4
@@ -23559,45 +23554,73 @@ bets:
     parent_bet: BET-Y1Q4-T1-14
     milestone_refs: []
 - id: BET-Y1Q4-T6-17
-  title: 文档 SSOT 全量治理 — 去重/合并/指针化
-  status: candidate
+  track: T6-SUBTRACT
   window: Y1Q4
+  title: 文档 SSOT 全量治理 — 去重/合并/指针化
+  appetite: 3 days
   priority: high
-  workload_days: 2-3
-  objective: 主仓+子仓所有 .md 文档 SSOT 判定，重复内容收敛，过时文档归档
-  deliverables:
-  - 文档索引报告 (每个文档的 SSOT 状态)
+  status: candidate
+  goal: 主仓+子仓所有 .md 文档 SSOT 判定，重复内容收敛，过时文档归档
+  done_when:
+  - 文档索引报告（每个文档的 SSOT 状态）
   - 重复内容合并 PR
   - AGENTS.md/CLAUDE.md 对齐更新
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  workflow: project-doc-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/standards/doc-ssot-contract.md
+  - AGENTS.md
+  - CLAUDE.md
   dependencies: []
   risks:
   - 子仓文档可能需各仓 maintainer 配合
 - id: BET-Y1Q4-T6-18
-  title: 架构健康度量化 — 6 维度周报
-  status: candidate
+  track: T6-EVOLUTION
   window: Y1Q4
+  title: 架构健康度量化 — 6 维度周报
+  appetite: 2 days
   priority: high
-  workload_days: 1-2
-  objective: 定义场景/架构/进化/运维/防腐/感知 6 维度量化指标，每周自动生成报告
-  deliverables:
+  status: candidate
+  goal: 定义场景/架构/进化/运维/防腐/感知 6 维度量化指标，每周自动生成报告
+  done_when:
   - 6 维度指标定义文档
   - 数据采集脚本
   - 周报模板 + cron 接入
+  verify:
+  - cmd: test -f docs/reports/architecture-health-weekly.md
+    expect: exit 0
+  workflow: project-code-change
+  write_surfaces:
+  - bin/arch-health-meter.py
+  - docs/reports/**
+  - docs/plans/3y-bet-ledger.yaml
   dependencies:
-  - BET-Y1Q4-T6-17 (文档治理后指标更准确)
+  - BET-Y1Q4-T6-17
   risks: []
 - id: BET-Y1Q4-T6-19
-  title: Agent 感知覆盖率提升 — Skills/Workflows 可发现
-  status: candidate
+  track: T6-EVOLUTION
   window: Y1Q4
+  title: Agent 感知覆盖率提升 — Skills/Workflows 可发现
+  appetite: 1 day
   priority: high
-  workload_days: '1'
-  objective: 确保新增 skills/workflows 可被其他 agent 发现和正确使用
-  deliverables:
+  status: candidate
+  goal: 确保新增 skills/workflows 可被其他 agent 发现和正确使用
+  done_when:
   - Skills INDEX.md 更新
   - Workflow 注册验证
   - AGENTS.md 能力发现引导段落
   - MCP/BOS URI 完整性检查
+  verify:
+  - cmd: test -f .agents/skills/INDEX.md
+    expect: exit 0
+  workflow: project-doc-change
+  write_surfaces:
+  - .agents/skills/INDEX.md
+  - AGENTS.md
+  - docs/plans/3y-bet-ledger.yaml
   dependencies: []
   risks: []
 
