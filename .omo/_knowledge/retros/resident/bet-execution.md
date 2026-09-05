@@ -1,24 +1,22 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-generated_at: 2026-09-04T13:40:00Z
+generated_at: 2026-09-05T12:00:01Z
 status: candidate
 counts:
-  runs: 43
+  runs: 45
   failures: 0
-  total: 43
+  total: 45
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
-type: ephemeral
-status: archived
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-04T13:40:00Z
+- generated_at: 2026-09-05T12:00:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 43 成功运行 + 0 失败模式 = 43 草稿
+- sediment 覆盖: 45 成功运行 + 0 失败模式 = 45 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -66,6 +64,8 @@ status: archived
 - 20260831T062756Z-bet-execution-3f66970c.md
 - 20260902T030349Z-bet-execution-70a88720.md
 - 20260903T082902Z-bet-execution-5c8e13e2.md
+- 20260905T041128Z-bet-execution-6a96cfd5.md
+- 20260905T043248Z-bet-execution-71f0b872.md
 
 ## 失败模式 (failures/)
 
@@ -371,6 +371,20 @@ status: archived
   - 结果与证据: ok=False, status=blocked, evidence_count=1
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=5586.28
+- **20260905T041128Z-bet-execution-6a96cfd5**
+  - 计划 (objective): [BET-Y1Q3-T6-15] Post-2408 main recovery 与 required gac-gate promotion (Appetite: 2 weeks)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1176.109
+- **20260905T043248Z-bet-execution-71f0b872**
+  - 计划 (objective): [BET-Y1Q3-T10-105] 主干真值流业务实战与夏明星个人文风 LoRA 首期结晶 (Appetite: 2 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1993.03
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

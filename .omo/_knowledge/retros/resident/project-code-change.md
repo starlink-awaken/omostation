@@ -1,24 +1,22 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-09-04T13:40:00Z
+generated_at: 2026-09-05T12:00:01Z
 status: candidate
 counts:
-  runs: 52
+  runs: 54
   failures: 0
-  total: 52
+  total: 54
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
-type: ephemeral
-status: archived
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-04T13:40:00Z
+- generated_at: 2026-09-05T12:00:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 52 成功运行 + 0 失败模式 = 52 草稿
+- sediment 覆盖: 54 成功运行 + 0 失败模式 = 54 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -75,6 +73,8 @@ status: archived
 - 20260904T032430Z-project-code-change-b4505378.md
 - 20260904T033036Z-project-code-change-0555d21b.md
 - 20260904T113658Z-project-code-change-9c689ebd.md
+- 20260904T142937Z-project-code-change-ca7cadbf.md
+- 20260905T035405Z-project-code-change-1aa0d9f7.md
 
 ## 失败模式 (failures/)
 
@@ -432,6 +432,20 @@ status: archived
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=1
   - 指标: event_count=6, duration_s=795.315
+- **20260904T142937Z-project-code-change-ca7cadbf**
+  - 计划 (objective): 补记 submodule error-knowledge: PITFALL-SUB-004 (kairon .git/config URL 覆盖 404) + PITFALL-SUB-005 (空壳子模块/幽灵 M)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=295.657
+- **20260905T035405Z-project-code-change-1aa0d9f7**
+  - 计划 (objective): multica squad ops 收尾: droid/crush wrapper脚本 + 配额回填脚本 + multica-status make target
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=644.043
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

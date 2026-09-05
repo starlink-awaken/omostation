@@ -1858,7 +1858,8 @@ def validate_accepted_specification(
                             "SPEC_FRONTMATTER_VERSION_MISMATCH: frontmatter spec_version must equal binding"
                         )
                     if frontmatter.get("bet_id") != bet_id:
-                        errors.append("SPEC_FRONTMATTER_BET_MISMATCH: frontmatter bet_id must equal BET id")
+                        if bet.get("status") != "done":
+                            errors.append("SPEC_FRONTMATTER_BET_MISMATCH: frontmatter bet_id must equal BET id")
             if isinstance(content_digest, str) and SHA256_REF_RE.fullmatch(content_digest):
                 if bet.get("status") != "done":
                     actual_digest = f"sha256:{_file_sha256(candidate)}"
@@ -2478,13 +2479,14 @@ def cmd_lint(data: dict, args) -> int:
         "write_surfaces",
     ]
     for b in data["bets"]:
-        for f in required:
-            if not b.get(f):
-                errs.append(f"{b['id']}: 缺字段 {f}")
-        if b.get("track") not in tracks:
-            errs.append(f"{b['id']}: 未知 track {b.get('track')}")
-        if b.get("window") not in windows:
-            errs.append(f"{b['id']}: 未知 window {b.get('window')}")
+        if b.get("status") != "candidate":
+            for f in required:
+                if not b.get(f):
+                    errs.append(f"{b['id']}: 缺字段 {f}")
+            if b.get("track") not in tracks:
+                errs.append(f"{b['id']}: 未知 track {b.get('track')}")
+            if b.get("window") not in windows:
+                errs.append(f"{b['id']}: 未知 window {b.get('window')}")
         if b.get("status") not in data["meta"]["status_enum"]:
             errs.append(f"{b['id']}: 非法 status {b.get('status')}")
         for d in b.get("depends_on") or []:

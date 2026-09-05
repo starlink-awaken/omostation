@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-05
+---
 # BET-Y1Q4-T9-02 复盘
 
 ## Q1 实际耗时 vs appetite？超出比例？

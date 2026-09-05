@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-05
+---
 # 2026-09-04 Design Asset Forge Integration
 
 ## 结论
