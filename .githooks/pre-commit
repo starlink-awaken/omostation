@@ -143,6 +143,18 @@ if [ -f "$GATE" ]; then
   run_py "$GATE" --staged || exit 1
 fi
 
+# ── 运行时产物门 ───────────────────────────────────────────────
+echo "[pre-commit] ▶ runtime artifact gate"
+if [ -f "$ROOT/bin/gac/check-runtime-artifacts.py" ]; then
+  run_py "$ROOT/bin/gac/check-runtime-artifacts.py" || exit 1
+fi
+
+# ── gitignore 漂移门 ───────────────────────────────────────────
+echo "[pre-commit] ▶ gitignore drift check"
+if [ -f "$ROOT/bin/gac/check-gitignore-enforce.py" ]; then
+  run_py "$ROOT/bin/gac/check-gitignore-enforce.py" || exit 1
+fi
+
 # --- conflict-marker gate (2026-08-08) ---
 # 未解决 git 冲突标记 (<<<<<<<) 被提交会污染 main 致 check-yaml/派生 CI 失败.
 CONFLICT_CHECK="$(git rev-parse --show-toplevel)/bin/ssot/conflict-marker-check.py"

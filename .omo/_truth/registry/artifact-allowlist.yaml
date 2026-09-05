@@ -1,0 +1,6 @@
+# artifact-allowlist.yaml — 运行时产物白名单
+
+# 允许被跟踪的运行时产物路径/模式（glob）
+# 添加新条目需要 code review
+
+allowlist: []
