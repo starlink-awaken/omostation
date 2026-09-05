@@ -18868,7 +18868,8 @@ bets:
   title: 50 万字超长政务/架构全案文档树状上下文压缩与毫秒级精准问答
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-05
   goal: 针对大型国家级卫生信息化方案、大型技术标书与历史五年全量 ADR（数十万字），构建分层树状上下文摘要与 PagedKV 块级缓存，实现超长文本秒级跨卷对比检索与逻辑矛盾检测。
   non_goals:
   - 不使用丢失细节信息的过度有损摘要
