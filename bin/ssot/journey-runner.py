@@ -264,6 +264,20 @@ def dispatch_dry_run(scene_id: str, input_data: dict, token: dict) -> dict[str, 
             "curation": {"indexed": True},
         },
         "agora-bos-gateway": {"status": "succeeded"},
+        # admin-notification-workflow (7 状态闭环): 输出字段对齐 spec transitions
+        # 条件 (has_task/requires_forwarding/email_drafts_created/report_compiled),
+        # 缺失时 journey 卡死在 received (fallback 只有 status)。
+        "admin-inbox": {"status": "succeeded", "has_task": True},
+        "admin-classify": {
+            "status": "succeeded",
+            "requires_forwarding": input_data.get("requires_forwarding", True),
+            "task_type": "转发通知",
+        },
+        "admin-forward": {"status": "succeeded", "email_drafts_created": True},
+        "admin-collect": {"status": "succeeded"},
+        "admin-compile": {"status": "succeeded", "report_compiled": True},
+        "admin-review": {"status": "succeeded"},
+        "admin-submit": {"status": "succeeded"},
     }
     return defaults.get(scene_id, {"status": "succeeded"})
 
