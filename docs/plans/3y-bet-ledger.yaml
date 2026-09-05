@@ -20390,7 +20390,9 @@ bets:
   title: calibration 与五档 tier 语义统一 — review 视图并入 lifecycle 主径
   appetite: 1 days
   priority: P3
-  status: candidate
+  status: done
+  done_at: 2026-09-05 23:35:00+00:00
+  note: T7-03 (PR #3226, commit 7494bb127) 已实现 storage 归一 + lifecycle 5 档同源; 本 bet 补 T7-05 专用 spec + retro + flip status.
   goal: T7-03 迁移后 calibration (review 工具) 与五档 tier (lifecycle 工具) 已同源
     读取 docs/scene-cards, 但语义未统一 — assisted 升级门以 readiness (trial 证据)
     为准, calibration 0.65 只是随卡字段。统一二者为单一路径或在标准里明确分工。
@@ -20410,6 +20412,11 @@ bets:
   pasw_required: false
   risk_level: L1
   human_gate: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t7-05-calibration-tier-unification.md
+    spec_version: 1.0.0
+    content_digest: sha256:39ff89f62144a91ab8c23de585a8bf8f6d6219c8a88f0eeb6eb367dce8115fc2
+    decision_ref: decision://accepted/BET-Y2Q1-T7-05
   circuit_breaker: review 工具改动若破坏 weekly-report 消费方则回退
   retro: required
   completion_evidence:
@@ -20433,8 +20440,8 @@ bets:
         status: PROVEN
         evidence:
           live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-03.md
-            sha256: sha256:9426cd7ab541e4608ae0b41ae1a77f774e699dac3d21ffaa2e4197aafc7b9b98
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-05.md
+            sha256: sha256:7a0b7b8fdb8aa5a36f6a11ac5b0190050fdfed3fb9a75eae5bc8e8e89f62655c
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-03.md
             sha256: sha256:9426cd7ab541e4608ae0b41ae1a77f774e699dac3d21ffaa2e4197aafc7b9b98
@@ -20449,7 +20456,8 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
   value_indicator_policy: false
-  retro: required
+  close_evidence: .omo/_knowledge/retros/BET-Y2Q1-T7-05.md
+  retro: .omo/_knowledge/retros/BET-Y2Q1-T7-05.md
 - id: BET-Y2Q1-T10-01
   track: T10-MATURITY
   window: Y2Q1
