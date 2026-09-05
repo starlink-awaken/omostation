@@ -20332,7 +20332,9 @@ bets:
   title: Portfolio-status broker ownership 注册与投影 apply 接线
   appetite: 1 day
   priority: P2
-  status: candidate
+  status: done
+  done_at: 2026-09-05 00:51:22+00:00
+  note: Registered portfolio-status broker ownership; --check-broker returns broker_ok; apply remains NOT_WIRED.
   goal: 为 .omo/_control/portfolio-status.json 注册 broker 写主，消除 PORTFOLIO_BROKER_OWNER_MISSING，使 portfolio_projection 可授权 apply。
   non_goals:
   - 不改 Ledger 真值写回方向
@@ -20358,6 +20360,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:2ff35bcc4744ca21a445edc6d9a2e179beb8fd503dbab85780e78fd94d74509e
     decision_ref: decision://accepted/BET-Y1Q4-T1-13
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-portfolio-status-broker-ownership-design.md
+            sha256: sha256:2ff35bcc4744ca21a445edc6d9a2e179beb8fd503dbab85780e78fd94d74509e
+          tests:
+            ref: receipt://docs/reports/2026-09-05-t1-13-portfolio-status-broker-closeout.md
+            sha256: sha256:b0b5c0213b05a1b27fc33482a406c18bc0a6f38339dcef9e4a010acef6cf8224
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-13.md
+            sha256: sha256:5fcb343c3983242de693c066ea2f82c08472d9e58dfa73bbc468987469bb39a7
+          merged_reachable_commit:
+            ref: git://origin/main@cf7e452637b4599108f42a5d90417132abe505a5
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-05-t1-13-portfolio-status-broker-closeout.md
+            sha256: sha256:b0b5c0213b05a1b27fc33482a406c18bc0a6f38339dcef9e4a010acef6cf8224
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-05-t1-13-portfolio-status-broker-closeout.md
+            sha256: sha256:b0b5c0213b05a1b27fc33482a406c18bc0a6f38339dcef9e4a010acef6cf8224
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-13.md
+            sha256: sha256:5fcb343c3983242de693c066ea2f82c08472d9e58dfa73bbc468987469bb39a7
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-13.md
+            sha256: sha256:5fcb343c3983242de693c066ea2f82c08472d9e58dfa73bbc468987469bb39a7
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   pasw_required: false
   depends_on:
   - BET-Y1Q4-T1-08
