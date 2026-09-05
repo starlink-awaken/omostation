@@ -247,6 +247,11 @@ DEFAULT_POLICY = {
             "command": ["bin/gac/check-work-landed.py"],
             "timeout": 45,
         },
+        # ADR-0424 配套: 校验错误知识库 (pitfalls yaml) 一致性 — 解析/必填字段/id 唯一
+        {
+            "id": "error-knowledge-check",
+            "command": ["bin/gac/error-knowledge.py", "check"],
+        },
         {
             "id": "check-governance-ratio",
             "command": ["bin/gac/check-governance-ratio.py"],
