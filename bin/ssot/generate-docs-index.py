@@ -45,6 +45,9 @@ IGNORE_DIRS = {
     "kos",
     ".pytest_cache",
     ".ruff_cache",
+    # 工具产物/镜像目录: gitignore 的本地快照与 subtree 镜像, 非治理文档面
+    ".codebase-memory",
+    ".subtrees",
 }
 IGNORE_FILES = {"LAYER-INDEX.md"}  # 由其他脚本生成
 
