@@ -42,10 +42,9 @@
 [submodule "projects/omlxc"]
 	path = projects/omlxc
 	url = https://github.com/starlink-awaken/omostation-omlxc.git
-	branch = main
 [submodule "projects/cockpit-ui"]
 	path = projects/cockpit-ui
-	url = git@github.com:starlink-awaken/omostation-cockpit-ui.git
+	url = https://github.com/starlink-awaken/omostation-cockpit-ui.git
 [submodule "projects/knowledge/kairon"]
 	path = projects/knowledge/kairon
 	url = https://github.com/starlink-awaken/kairon.git

@@ -1,10 +1,10 @@
 name: Submodule Auto-Bump
-# 自动 bump 子模块指针到远端 main 的精确 SHA, 每 2h 运行一次.
+# 自动 bump 子模块指针到远端 main 的精确 SHA, 每日一次.
 # 全量验证通过且有变动才 bump + 开 PR; 任何 fetch/验证失败 → fail-closed, 不开 PR.
 
 on:
   schedule:
-    - cron: "0 */2 * * *"
+    - cron: "0 4 * * *"
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
