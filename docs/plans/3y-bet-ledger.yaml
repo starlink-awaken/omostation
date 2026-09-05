@@ -22141,6 +22141,11 @@ bets:
   - docs/reports/**
   - .omo/_knowledge/retros/BET-Y1Q4-T4-05.md
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-bet-y1q4-t4-05-value-proof-debt-registry-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:0f0fdb3606c95e062e146a6c2760eda4387a1b1338323f3c075efe53b0301499
+    decision_ref: decision://accepted/BET-Y1Q4-T4-05
   risk_level: L1
   human_gate: false
   value_indicator_policy: false
