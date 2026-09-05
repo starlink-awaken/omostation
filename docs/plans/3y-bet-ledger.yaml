@@ -21155,6 +21155,14 @@ bets:
   write_surfaces:
   - projects/cockpit/src/cockpit/telemetry.py
   - projects/cockpit/tests/test_telemetry.py
+  # 2026-09-05 write-surface correction: actual cockpit layout is a package
+  - projects/cockpit/src/cockpit/telemetry/metrics.py
+  - projects/cockpit/src/cockpit/telemetry/__init__.py
+  - projects/cockpit/src/cockpit/commands/telemetry.py
+  - projects/cockpit/tests/test_telemetry_metrics.py
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-14.md
   pasw_required: false
   risk_level: L1
   human_gate: false
