@@ -21502,7 +21502,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@d6ee5dac94402a20507deffb0dfcacd1ff351f8c
+            ref: git://origin/main@04f8d3b59e497cbbefabcb38319dd14f82a93afc
             sha256: sha256:3b6ea250c62666f782286807a00988fa64ef568331adb4ff068b566ceccfdbfe
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-v1.1-design.md
@@ -21521,7 +21521,7 @@ bets:
             sha256: sha256:86e9f060de6775b835341643b43e8773943bf7dd686eba21e5f67c1c349e8c1f
           fresh_receipt:
             ref: receipt://bin/hitl-proposal.py
-            sha256: sha256:4b1012d7a10a0323ac3b3209a0fe74b86e607044410a8a73ee745dbc832562d1
+            sha256: sha256:3af415630ba82cc04344352e1581008f9803cf4ff151a30955ac633bb7f4740e
           replay:
             ref: receipt://bin/harness
             sha256: sha256:d0ab729df23fe694b4c6f0f4b9a2c9b65ffbdba58d8d0669714707f6c33e8752
