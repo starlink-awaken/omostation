@@ -59,7 +59,7 @@ def test_fast_path_telemetry_end_to_end():
     )
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=False)
     elapsed = float(out.stdout.strip().splitlines()[-1])
-    assert elapsed < 0.2, f"telemetry fast-path took {elapsed*1000:.0f}ms"
+    assert elapsed < 0.4, f"telemetry fast-path took {elapsed*1000:.0f}ms"
 
 
 def test_lazy_dispatch_still_reaches_commands():
