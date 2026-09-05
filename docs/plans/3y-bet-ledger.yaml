@@ -18552,6 +18552,11 @@ bets:
   - projects/knowledge/kairon/src/kairon/graph/kems_v2.py
   - projects/knowledge/gbrain/src/retrieval/hybrid.ts
   - .omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t10-117-kems-v2-hybrid-retrieval-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3c08a885965cc7293a591fee77ae195ff791627e7dc0774de953135227ee1e4b
+    decision_ref: decision://accepted/BET-Y1Q3-T10-117
   pasw_required: false
   depends_on:
   - BET-Y1Q3-T10-105

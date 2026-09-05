@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-09-05T12:00:01Z
+generated_at: 2026-09-05T12:50:04Z
 status: candidate
 counts:
-  runs: 54
+  runs: 55
   failures: 0
-  total: 54
+  total: 55
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-05T12:00:01Z
+- generated_at: 2026-09-05T12:50:04Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 54 成功运行 + 0 失败模式 = 54 草稿
+- sediment 覆盖: 55 成功运行 + 0 失败模式 = 55 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -75,6 +75,7 @@ failure_breakdown:
 - 20260904T113658Z-project-code-change-9c689ebd.md
 - 20260904T142937Z-project-code-change-ca7cadbf.md
 - 20260905T035405Z-project-code-change-1aa0d9f7.md
+- 20260905T123719Z-project-code-change-b39eb6a8.md
 
 ## 失败模式 (failures/)
 
@@ -446,6 +447,10 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=3
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=644.043
+- **20260905T123719Z-project-code-change-b39eb6a8**
+  - 计划 (objective): [BET-Y1Q3-T10-117] KEMS-v2 卫生政务与技术架构领域知识图谱毫秒级混合检索 (Appetite: 2 days)
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
