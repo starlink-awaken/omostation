@@ -198,12 +198,38 @@ def check_readiness(root: Path, scene_card_path: Path) -> dict[str, Any]:
         # External track: delegate to external-scene-trial for preflight
         checks["preconditions"]["preflight_pass"] = True  # external track has its own tools
 
-    # Check 4: trial evidence must exist
-    if scene_type == "internal_pipeline":
-        trial_log = root / ".omo" / "_knowledge" / "workflow-mesh" / "internal-scene-trials.jsonl"
-    else:
-        trial_log = root / ".omo" / "_knowledge" / "workflow-mesh" / "external-scene-trials.jsonl"
-    checks["preconditions"]["trial_recorded"] = trial_log.exists()
+    # Check 4: trial evidence must exist (BET-Y2Q1-T7-02: 按 scene 精确匹配,
+    # 不再是文件级存在性 — 三类试验日志任一含本 scene 的条目即算数。
+    # shadow-scene-trials.jsonl 由 journey-runner 完成 run 后落盘, mode 字段
+    # 诚实区分 dry_run/live; internal/external 条目带 scene_id 字段)
+    mesh = root / ".omo" / "_knowledge" / "workflow-mesh"
+    trial_logs = [
+        mesh / "internal-scene-trials.jsonl",
+        mesh / "external-scene-trials.jsonl",
+        mesh / "shadow-scene-trials.jsonl",
+    ]
+    scene_id_target = str(card.get("scene_id", ""))
+    trial_recorded = False
+    for log_path in trial_logs:
+        if not log_path.exists():
+            continue
+        for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if scene_id_target and (
+                entry.get("scene_id") == scene_id_target
+                or scene_id_target in (entry.get("scene_ids") or [])
+            ):
+                trial_recorded = True
+                break
+        if trial_recorded:
+            break
+    checks["preconditions"]["trial_recorded"] = trial_recorded
 
     # Aggregate
     checks["ready"] = all(checks["preconditions"].values())

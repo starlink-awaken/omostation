@@ -19968,6 +19968,43 @@ bets:
   human_gate: true
   circuit_breaker: 人际关系上下文置信度低时仅作为补充参考不强行修改行文。
   retro: required
+- id: BET-Y2Q1-T7-02
+  track: T7-SCENE
+  window: Y2Q1
+  title: shadow 试验记录机制 — journey-runner 落盘 + readiness 门按 scene 精确化
+  appetite: 1 days
+  priority: P2
+  status: candidate
+  goal: 打通 shadow→assisted 的试验证据断层 — journey-runner 完成的 run 落盘
+    shadow-scene-trials.jsonl (mode 字段诚实区分 dry_run/live), scene-card-lifecycle
+    Check4 从文件级存在性升级为按 scene_id 精确匹配 (三类试验日志任一含本 scene 条目即过)。
+  non_goals:
+  - 不自动升级任何场景卡 (transition 仍需人工命令)
+  - 不改 internal/external 准入试验工具 (proposal_only 语义不变)
+  - 不触碰 .omo/_truth/scenarios 第三套卡存储 (另行归一立项)
+  done_when:
+  - journey-runner 完成的 run 写入 shadow-scene-trials.jsonl (含 journey_id/run_id/mode/scene_ids)
+  - Check4 按本卡 scene_id 精确匹配, 无试验记录的卡 trial_recorded=false
+  - 实测 admin-notification-workflow 一次 dry-run 后 admin-classify readiness ready=true
+  verify:
+  - cmd: python3 bin/ssot/journey-runner.py run --journey admin-notification-workflow --dry-run
+    expect: exit 0 且 jsonl 追加一条
+  - cmd: python3 bin/ssot/scene-card-lifecycle.py check --scene-card docs/scene-cards/admin-classify.yaml
+    expect: trial_recorded=true
+  - cmd: uv run --with pyyaml --with pytest pytest tests/test_journey_runner_validate.py -q
+    expect: 4 passed
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ssot/journey-runner.py
+  - bin/ssot/scene-card-lifecycle.py
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q1-T7-02.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: shadow 试验记录失败不阻断 journey 主流程 (stderr 告警后继续)
+  retro: required
 - id: BET-Y2Q1-T10-01
   track: T10-MATURITY
   window: Y2Q1
