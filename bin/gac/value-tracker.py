@@ -99,6 +99,41 @@ def update_north_star() -> dict:
     return {"ok": True, "north_star": north_star_data}
 
 
+def record_journey_baseline(
+    *, window_days: int = 7, db_path: str = "", output: str = ""
+) -> dict:
+    """Record journey completion baseline as value evidence (BET-Y1Q4-T4-02).
+
+    Wraps north_star_meter_v3.measure_journey_completion() and stores
+    the baseline receipt for value-tracker evidence.
+    """
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location(
+        "nsm3", str(REPO / "bc-os" / "north_star_meter_v3.py")
+    )
+    _mod = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_mod)
+    _measure = _mod.measure_journey_completion
+
+    kwargs: dict = {"window_days": window_days}
+    if db_path:
+        from pathlib import Path as _P
+        kwargs["db_path"] = _P(db_path)
+    result = _measure(**kwargs)
+
+    receipt = {
+        "source": "journey-baseline",
+        "recorded_at": datetime.now(UTC).isoformat(),
+        "baseline": result,
+    }
+
+    if output:
+        _save_json(Path(output), receipt)
+        receipt["output_path"] = output
+
+    return {"ok": True, "receipt": receipt}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Value Tracker")
     parser.add_argument("--record", type=float, help="Record minutes saved")
@@ -106,6 +141,10 @@ def main() -> int:
     parser.add_argument("--description", default="", help="Description")
     parser.add_argument("--report", action="store_true", help="Generate report")
     parser.add_argument("--update-north-star", action="store_true", help="Update North Star")
+    parser.add_argument("--journey-baseline", action="store_true", help="Record journey completion baseline (BET-Y1Q4-T4-02)")
+    parser.add_argument("--journey-window", type=int, default=7, help="Journey baseline window (days)")
+    parser.add_argument("--journey-db", default="", help="Event ledger path")
+    parser.add_argument("--journey-output", default="", help="Output path for baseline receipt")
     args = parser.parse_args()
 
     if args.record is not None:
@@ -120,6 +159,15 @@ def main() -> int:
 
     if args.update_north_star:
         result = update_north_star()
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.journey_baseline:
+        result = record_journey_baseline(
+            window_days=args.journey_window,
+            db_path=args.journey_db,
+            output=args.journey_output,
+        )
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
 

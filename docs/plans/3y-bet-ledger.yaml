@@ -305,12 +305,16 @@ objectives:
     metric: effective_work_journey_completion_rate
     baseline:
       value: null
-      status: unmeasured
+      status: measured
+      measured_at: '2026-09-05T04:55:00Z'
+      evidence_refs:
+      - receipt://docs/reports/2026-09-05-journey-completion-baseline.md
     target:
       operator: exists
       value: baseline
-    status: unmeasured
-    evidence_refs: []
+    status: measured
+    evidence_refs:
+    - receipt://docs/reports/2026-09-05-journey-completion-baseline.md
   - id: KR-VALUE-WEEKLY-ADOPTION
     metric: weekly_principal_accepted_suggestions
     baseline:
@@ -21797,7 +21801,7 @@ bets:
   title: 有效工作旅程完成率北极星基线接入
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: in_progress
   goal: 把战略北极星「有效工作旅程完成率」落到可周报的基线：定义分母/分子（禁止代理量），接线 north_star_meter / journey 证据，输出首份基线收据，使 KR-VALUE-JOURNEY-COMPLETION 从
     unmeasured 变为 baseline measured。
   non_goals:
@@ -21826,11 +21830,29 @@ bets:
   risk_level: L1
   human_gate: false
   value_indicator_policy: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-journey-completion-baseline-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b8a8d738e5ec86b714c2282b396fab8aae843af9e37d141f5011c4333add2821
+    decision_ref: decision://accepted/BET-Y1Q4-T4-02
   circuit_breaker: 真实旅程样本不足则保持 unmeasured 并输出缺口清单，禁止用 synthetic/fixture 凑基线。
   retro: required
   depends_on:
   - BET-Y1Q4-T1-14
   - BET-Y1Q3-T4-07
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
   portfolio_binding:
     schema_state: enforced
     campaign_ref: CMP-Y1-VALUE-PROOF
