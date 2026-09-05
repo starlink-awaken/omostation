@@ -20556,6 +20556,7 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T8-11.md
   - docs/superpowers/specs/2026-09-05-t8-11-orthogonal-domain-router-design.md
+  - docs/reports/2026-09-05-t8-11-hierarchy-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-t8-11-orthogonal-domain-router-design.md
     spec_version: 1.0.0
@@ -20575,8 +20576,8 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@eea5d56c6a55800096cb2cb2f914785d6a10ec38
           tests:
-            ref: receipt://projects/cockpit/tests/test_command_hierarchy.py
-            sha256: sha256:d3da9306a38e85a4dbcaf849f4391cd27521721fa3a40bdc7bfbff6258af6d0c
+            ref: receipt://docs/reports/2026-09-05-t8-11-hierarchy-closeout.md
+            sha256: sha256:13138247aadd674b44003fcecab101110d8431d966622d1260fd45e92b4efb40
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-05-t8-11-orthogonal-domain-router-design.md
             sha256: sha256:49d97c4ddaceb61de685268bf24d352d243da62aeabb5a6401fd010fe64500df
