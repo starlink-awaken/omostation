@@ -17208,6 +17208,7 @@ bets:
   - .omo/state/lora-replay-buffer.jsonl
   - projects/omlxc/src/omlxc/dataplane/experience_replay.py
   - projects/cockpit/src/cockpit/commands/spine.py
+  - projects/cockpit/tests/test_spine_cli.py
   - .omo/_knowledge/retros/BET-Y1Q3-T10-105.md
   - projects/omlxc/tests/unit/test_experience_replay.py
   pasw_required: false
