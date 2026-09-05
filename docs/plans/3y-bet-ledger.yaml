@@ -18883,6 +18883,11 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t3-04-tree-context-paged-kv-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:efc5eb8a1ade3ac52d5dfe5a093872ccabc9f3716d2273ef8b82ef8110268313
+    decision_ref: decision://accepted/BET-Y2Q1-T3-04
   write_surfaces:
   - projects/omlxc/src/omlxc/dataplane/tree_context.py
   - projects/omlxc/src/omlxc/dataplane/paged_kv.py
@@ -19011,6 +19016,11 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t10-01-cold-backup-restore-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:a193790d9d300cf0fde6490d5f346e73c4f4e6e4093d3d76e7279090a5144881
+    decision_ref: decision://accepted/BET-Y2Q1-T10-01
   write_surfaces:
   - bin/ops/cold-backup-drill.sh
   - bin/ops/restore-cold-snapshot.sh
