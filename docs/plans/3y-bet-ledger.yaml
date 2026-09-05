@@ -20573,7 +20573,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@116adbd2fe2c05209e5cd2a30f10313a0f20c709
+            ref: git://origin/main@eea5d56c6a55800096cb2cb2f914785d6a10ec38
           tests:
             ref: receipt://projects/cockpit/tests/test_command_hierarchy.py
             sha256: sha256:d3da9306a38e85a4dbcaf849f4391cd27521721fa3a40bdc7bfbff6258af6d0c
