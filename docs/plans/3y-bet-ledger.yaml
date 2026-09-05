@@ -20836,8 +20836,6 @@ bets:
     expect: 全绿
   workflow: bet-execution
   underlying_workflow: project-code-change
-  human_gate: true
-  risk_level: L2
   write_surfaces:
   - bin/hitl-proposal.py
   - bin/harness
@@ -20846,9 +20844,54 @@ bets:
   - .omo/_knowledge/hitl-proposals/
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:f98e04b9f83ee715343428e706bd48742d2841d7b80c1d6a3938d54b92b2c168
+    decision_ref: decision://accepted/BET-Y1Q4-HITL-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
+            sha256: sha256:f98e04b9f83ee715343428e706bd48742d2841d7b80c1d6a3938d54b92b2c168
+          tests:
+            ref: receipt://tests/test_hitl_proposal.py
+            sha256: sha256:c4d976962458333d3f6125f7bc40ac76eb4900f7c75756f67a0d85dd8dbe8b22
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-HITL-01.md
+            sha256: sha256:c5cdc6895601cb7fc014041f231f6e1ef18468f8258b36ce198ec9369e202112
+          merged_reachable_commit:
+            ref: git://origin/main@6495720e915445a9e38011158f46a5ead7a35069
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-HITL-01.md
+            sha256: sha256:c5cdc6895601cb7fc014041f231f6e1ef18468f8258b36ce198ec9369e202112
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-HITL-01.md
+            sha256: sha256:c5cdc6895601cb7fc014041f231f6e1ef18468f8258b36ce198ec9369e202112
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-HITL-01.md
+            sha256: sha256:c5cdc6895601cb7fc014041f231f6e1ef18468f8258b36ce198ec9369e202112
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-HITL-01.md
+            sha256: sha256:c5cdc6895601cb7fc014041f231f6e1ef18468f8258b36ce198ec9369e202112
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   circuit_breaker: Proposal 生成失败或模块导入异常时降级为 direct execution (无 HITL)
   close_evidence: .omo/_knowledge/retros/BET-Y1Q4-HITL-01.md
-  retro: required
+  retro: .omo/_knowledge/retros/BET-Y1Q4-HITL-01.md
+  risk_level: L2
+  human_gate: true
+  value_indicator_policy: false
 - id: BET-Y1Q4-T1-10
   track: T1-TRUTH
   window: Y1Q4
