@@ -18888,9 +18888,48 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:efc5eb8a1ade3ac52d5dfe5a093872ccabc9f3716d2273ef8b82ef8110268313
     decision_ref: decision://accepted/BET-Y2Q1-T3-04
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t3-04-tree-context-paged-kv-design.md
+            sha256: sha256:efc5eb8a1ade3ac52d5dfe5a093872ccabc9f3716d2273ef8b82ef8110268313
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T3-04.md
+            sha256: sha256:9db26d05f5c5b809fcd21e7b4e329ca348f8b67795d656b46f260f4964d7bf9d
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T3-04.md
+            sha256: sha256:9db26d05f5c5b809fcd21e7b4e329ca348f8b67795d656b46f260f4964d7bf9d
+          merged_reachable_commit:
+            ref: git://origin/main@c1498244d381a2f2181445e115d58168a4af1451
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T3-04.md
+            sha256: sha256:9db26d05f5c5b809fcd21e7b4e329ca348f8b67795d656b46f260f4964d7bf9d
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T3-04.md
+            sha256: sha256:9db26d05f5c5b809fcd21e7b4e329ca348f8b67795d656b46f260f4964d7bf9d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T3-04.md
+            sha256: sha256:9db26d05f5c5b809fcd21e7b4e329ca348f8b67795d656b46f260f4964d7bf9d
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T3-04.md
+            sha256: sha256:9db26d05f5c5b809fcd21e7b4e329ca348f8b67795d656b46f260f4964d7bf9d
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/omlxc/src/omlxc/dataplane/tree_context.py
   - projects/omlxc/src/omlxc/dataplane/paged_kv.py
+  - projects/omlxc/tests/unit/test_tree_context.py
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q1-T3-04.md
   pasw_required: false
   depends_on:
