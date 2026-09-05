@@ -20415,7 +20415,8 @@ bets:
   title: Resident ledger lock-monitor 定时 tick / hook 接线
   appetite: 0.5 day
   priority: P3
-  status: candidate
+  status: done
+  done_at: '2026-09-05T01:25:00+00:00'
   goal: 将 T9-01 ledger_check.check_and_recover 挂到 resident cron 或 heartbeat tick，使锁监控不依赖人工跑 status。
   non_goals:
   - 不改锁判定阈值与 zombie kill 策略
@@ -20429,7 +20430,8 @@ bets:
   workflow: project-code-change
   underlying_workflow: project-code-change
   write_surfaces:
-  - projects/omo/src/omo/resident/
+  - projects/omo/src/omo/resident/daemon.py
+  - projects/omo/src/omo/resident/heartbeat.py
   - projects/omo/tests/unit/test_resident_daemon.py
   - projects/omo/tests/unit/test_resident_heartbeat.py
   - docs/plans/3y-bet-ledger.yaml
@@ -20443,12 +20445,48 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:2b1a1b59af7bf5f4d1af74934166f7640d26bb54ea67faac5af1ae78faccda33
     decision_ref: decision://accepted/BET-Y1Q4-T9-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-resident-ledger-lock-monitor-tick-wiring-design.md
+            sha256: sha256:2b1a1b59af7bf5f4d1af74934166f7640d26bb54ea67faac5af1ae78faccda33
+          tests:
+            ref: receipt://docs/reports/2026-09-05-t9-02-ledger-lock-monitor-tick-wiring-closeout.md
+            sha256: sha256:037aa58b0d0a50f62ea743b12058a173136d1f08b3a8eb8938d8aa75a6f511bb
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-02.md
+            sha256: sha256:191bd3171c497de017941aea1f2c4c113cd6e1e15bf40f20b17e8a25fdd68b02
+          merged_reachable_commit:
+            ref: git://origin/main@e1318bd5c72fa315585e78a0eca3902afe174d9c
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-05-t9-02-ledger-lock-monitor-tick-wiring-closeout.md
+            sha256: sha256:037aa58b0d0a50f62ea743b12058a173136d1f08b3a8eb8938d8aa75a6f511bb
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-05-t9-02-ledger-lock-monitor-tick-wiring-closeout.md
+            sha256: sha256:037aa58b0d0a50f62ea743b12058a173136d1f08b3a8eb8938d8aa75a6f511bb
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-02.md
+            sha256: sha256:191bd3171c497de017941aea1f2c4c113cd6e1e15bf40f20b17e8a25fdd68b02
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-02.md
+            sha256: sha256:191bd3171c497de017941aea1f2c4c113cd6e1e15bf40f20b17e8a25fdd68b02
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q4-T9-01
   risk_level: L1
   human_gate: false
   circuit_breaker: 若 cron 面拥堵，仅加 status 侧主动 recover，不做新 bin 脚本
-  retro: required
+  retro: .omo/_knowledge/retros/BET-Y1Q4-T9-02.md
 - id: BET-Y1Q4-T10-03
   track: T10-MATURITY
   window: Y1Q4
