@@ -13241,7 +13241,7 @@ bets:
   title: 多仓本地分支、脏工作树与未合并交付的保护性收敛
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
   goal: 在不丢弃并发工作、不强推、不重置共享树的前提下，盘点根仓及子仓本地分支、未提交状态和开放 PR，按 owner、可达性、测试与合并状态形成可执行的收敛序列。
   non_goals:
   - 不批量删除、reset、clean、stash 或强推任何未知工作。
@@ -13263,6 +13263,11 @@ bets:
   - docs/superpowers/specs/2026-09-02-local-repository-reconciliation-design.md
   - .omo/_knowledge/retros/BET-Y1Q3-T6-16.md
   pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-02-local-repository-reconciliation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:ccad86c174e26b5771a07b73f37d4562dd78ca159233f6bbeed9ab8acdb17464
+    decision_ref: decision://accepted/BET-Y1Q3-T6-16
   depends_on:
   - BET-Y1Q3-T6-15
   risk_level: L3
@@ -13270,6 +13275,13 @@ bets:
   circuit_breaker: 发现不明 owner、不可达 gitlink、失败 required check、scope 外写面或共享树需 destructive cleanup 时立即停止并保留原状。
   value_indicator_policy: false
   retro: required
+  completion_evidence:
+  - cmd: git worktree list
+    expect: 5 worktrees (main + bet-y1q3-t6-16 + 3 human-decision)
+  - cmd: git branch -vv | wc -l
+    expect: ≤6 local branches
+  - cmd: git branch -vv | grep "gone\]" | wc -l
+    expect: ≤1 gone-tracking branch
 - id: BET-Y1Q3-T10-01
   track: T10-MATURITY
   window: Y1Q3
