@@ -20487,7 +20487,6 @@ bets:
   human_gate: false
   circuit_breaker: 若 cron 面拥堵，仅加 status 侧主动 recover，不做新 bin 脚本
   retro: .omo/_knowledge/retros/BET-Y1Q4-T9-02.md
-|||||||  retro: required
 
   retro: required
 - id: BET-Y1Q4-T10-03
@@ -21372,13 +21371,11 @@ bets:
   retro: .omo/_knowledge/retros/BET-Y1Q4-T1-12.md
   depends_on:
   - BET-Y1Q4-HITL-01
-|||||||  - PR-3077
   - PR-129
   - PR-3119
   - PR-3077
   - PR-129
   - PR-3119
-|||||||  - PR-3077
   - PR-129
   - PR-3119
   done_at: '2026-09-05T00:35:00+00:00'
