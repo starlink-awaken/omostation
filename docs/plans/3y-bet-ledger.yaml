@@ -23878,9 +23878,7 @@ bets:
   priority: high
   status: done
   done_at: '2026-09-05T13:30:00+00:00'
-  close_evidence: 主仓 3216 .md 盘点报告入库 (docs/reports/doc-ssot-inventory-2026-09-05.md)
-    + 3 个 completed ephemeral 顶层文档归档 .omo/_archive/ + 2 retro 引用指针化 + AGENTS.md 归档约定对齐;
-    doc-ssot-lint exit 0
+  close_evidence: 主仓 3216 .md 盘点报告入库 (docs/reports/doc-ssot-inventory-2026-09-05.md) + 3 个 completed ephemeral 顶层文档归档 .omo/_knowledge/design/plans/archive/ + 2 retro 引用指针化 + AGENTS.md 归档约定对齐; doc-ssot-lint exit 0
   retro: .omo/_knowledge/retros/BET-Y1Q4-T6-17.md
   goal: 主仓+子仓所有 .md 文档 SSOT 判定，重复内容收敛，过时文档归档
   done_when:
