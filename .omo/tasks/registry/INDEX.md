@@ -69,5 +69,5 @@ status: archived
 | bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | blocked |
 
 ---
-*Updated: 2026-09-04 (依据 `omo state sync-tasks` 与真实目录重算: done=292, planned=7, active=1, blocked=1, archived=6 顶层)*
+*Updated: 2026-09-05 (依据 `omo state sync-tasks` 与真实目录重算: done=292, planned=7, active=1, blocked=1, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
