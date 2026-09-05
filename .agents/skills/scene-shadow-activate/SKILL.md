@@ -1,4 +1,6 @@
 ---
+name: scene-shadow-activate
+description: "场景影子激活 skill：将 scene card 从 draft/shadow 阶段推进到 assisted/supervised 生命周期"
 title: Scene Shadow Activate
 type: skill
 owner: governance-team

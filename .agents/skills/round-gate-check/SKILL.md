@@ -1,4 +1,6 @@
 ---
+name: round-gate-check
+description: "回合门禁检查 skill：回合制执行的 gate 结果核验与放行判定"
 title: Round Gate Check
 type: skill
 owner: governance-team
