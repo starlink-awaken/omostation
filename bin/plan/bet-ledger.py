@@ -2479,13 +2479,14 @@ def cmd_lint(data: dict, args) -> int:
         "write_surfaces",
     ]
     for b in data["bets"]:
-        for f in required:
-            if not b.get(f):
-                errs.append(f"{b['id']}: 缺字段 {f}")
-        if b.get("track") not in tracks:
-            errs.append(f"{b['id']}: 未知 track {b.get('track')}")
-        if b.get("window") not in windows:
-            errs.append(f"{b['id']}: 未知 window {b.get('window')}")
+        if b.get("status") != "candidate":
+            for f in required:
+                if not b.get(f):
+                    errs.append(f"{b['id']}: 缺字段 {f}")
+            if b.get("track") not in tracks:
+                errs.append(f"{b['id']}: 未知 track {b.get('track')}")
+            if b.get("window") not in windows:
+                errs.append(f"{b['id']}: 未知 window {b.get('window')}")
         if b.get("status") not in data["meta"]["status_enum"]:
             errs.append(f"{b['id']}: 非法 status {b.get('status')}")
         for d in b.get("depends_on") or []:
