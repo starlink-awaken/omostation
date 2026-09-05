@@ -20784,6 +20784,11 @@ bets:
   circuit_breaker: TUI 启动异常优雅降级至静态版面
   retro: required
 - id: BET-Y1Q4-T8-19
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-w0-cockpit-ui-reorganization-and-bundle-optimization.md
+    spec_version: 1.0.0
+    content_digest: sha256:3d3a39a2b750b82c361916139d94a7e3ddbcac22af8da7a094b04cedb386e4a1
+    decision_ref: decision://accepted/BET-Y1Q4-T8-19
   track: T8-SURFACE
   window: Y1Q4
   title: Web UI (cockpit-ui) 8 大正交一级领域重组与包体瘦身
