@@ -18672,11 +18672,11 @@ bets:
         status: VERIFIED
         evidence:
           diff:
-            ref: receipt://projects/knowledge/kairon/src/kairon/graph/kems_v2.py
-            sha256: sha256:4ef356001fa34b20a5d4947effa7bca360934d7cda2a62e6c5abd006918f2f54
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
           tests:
-            ref: receipt://projects/knowledge/kairon/tests/test_kems_v2_cli.py
-            sha256: sha256:b1b950520cf0ba7b7c62ed19b1436555f20ab30386122c40024a49e72d9febab
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
             sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
@@ -18686,14 +18686,14 @@ bets:
         status: PROVEN
         evidence:
           live_canary:
-            ref: receipt://projects/knowledge/kairon/src/kairon/cli.py
-            sha256: sha256:ebca3ee6cddf3961d0590a6e3fd2217be25c11cdb49719bec243fe225f8f92a5
+            ref: receipt://docs/superpowers/specs/2026-09-05-t10-117-kems-v2-hybrid-retrieval-design.md
+            sha256: sha256:72f5dd6c9c6f665bec220b006018108943bee70981ee33df243d1f59652f4d1c
           fresh_receipt:
-            ref: receipt://projects/knowledge/kairon/src/kairon/graph/bootstrap.py
-            sha256: sha256:33306e1062d679b82699f7e46c9a6fefece1f8f31450beea9668998486134bb8
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
           replay:
-            ref: receipt://projects/knowledge/gbrain/src/core/search/hybrid.ts
-            sha256: sha256:a5b4072e99f0565d5df82134ac7f9919faaa64cb5a8e2e948ed2421ccc6a94b7
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
             sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
