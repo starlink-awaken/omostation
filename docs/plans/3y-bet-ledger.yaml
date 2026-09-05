@@ -21756,7 +21756,7 @@ bets:
             sha256: sha256:a865b818cfecb1c61f71665072f460ae34b5006960d79a94e51d209d65d23720
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-14.md
-            sha256: sha256:365d5feaad17aff4d8d3cf6cf14c68fa06e3a98b6211782fac7fa5bdfb99bc89
+            sha256: sha256:017b8af16b128b81c875485c62f19b5404da9aefab715e12c9f6f839c0e4b9b0
           replay:
             ref: receipt://docs/superpowers/specs/2026-09-05-obj-value-portfolio-split-design.md
             sha256: sha256:6f78fefdd491ae2c2bcfdd28130a762623cb28e1e9a7165e5d007d97ee749d89
