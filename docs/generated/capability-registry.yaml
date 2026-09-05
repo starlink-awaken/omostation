@@ -11,10 +11,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 636
+  mcp_tools: 637
   bos_services: 299
   bos_domains: 22
-  cli_commands: 207
+  cli_commands: 210
   skills: 40
   workflows: 24
 mcp_servers:
@@ -236,6 +236,7 @@ mcp_servers:
   - bos_inbox_search
   - bos_inbox_triage
   - bos_inbox_watch
+  - bos_mail_draft
   - bos_mesh_dma_status
   - bos_metrics_status
   - bos_middleware_status
@@ -323,7 +324,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 106
+  tool_count: 107
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -2345,6 +2346,8 @@ cli_commands:
   description: 查看日志
 - name: lora
   description: 查看与测试端侧在线 LoRA 适配层热插拔
+- name: mail-draft
+  description: 邮箱 3 档拟复 (经 BOS inbox/mail/draft 服务)
 - name: mcp
   description: 启动 MCP server 或列出工具
 - name: memory
@@ -2437,6 +2440,8 @@ cli_commands:
   description: 统一 BOS URI 路由解析与目标元数据提取
 - name: restore
   description: 恢复已隔离研究记录
+- name: review
+  description: 左右分栏 Diff 审阅工作台 (初稿 vs 编辑态)
 - name: route
   description: 为模型选择最优节点
 - name: run
@@ -2455,6 +2460,8 @@ cli_commands:
   description: 评分债务项
 - name: search
   description: 全文搜索
+- name: send
+  description: 一键确认署名并经外发网关真实外发
 - name: serve
   description: stdio JSON-RPC serve mode
 - name: sign
