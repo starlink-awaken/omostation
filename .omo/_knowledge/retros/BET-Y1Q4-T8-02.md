@@ -36,3 +36,22 @@ solution: 主仓直接跟踪新目录; 手续后补
 ## 后续
 
 - 真机部署后 Face ID 实测; supervisor 状态面接入 cards
+
+---
+
+## 2026-09-05 追加 — HITL Retroactive Adoption (BET-Y1Q4-T1-12)
+
+**背景**: Mobile Cockpit 移动轻控制台 BET 于 2026-09-03 完成,涉及 iOS PWA 集成 + 滑动署名,风险等级 L1。HITL v1.0 于 2026-09-04 落地后,本 BET 适合 retroactive 标记 HITL adoption。
+
+**HITL 适配性**:
+- 风险等级: L1
+- 关键路径: 移动端用户操作需要 principal (夏明星) 滑动作出署名
+- 当时实现: 客户端触摸事件直接通过 webhook 调用签字服务
+- HITL 模式: 移动端动作 → 提案 → bin/cockpit decide approve (未来 mobile UI 直接调用)
+
+**价值**:
+- 移动端用户操作天然需要 human 确认,HITL 比 in-band 更可追溯
+- 滑动署名本身是 0.5-2s 短操作,HITL proposal TTL 24h 完全覆盖
+- 多设备操作 (iOS/PWA/web) 共享同一 proposal ID,统一审计
+
+**关联**: BET-Y1Q4-T1-12 (adoption), HITL-01 (tool), T8-04 + T10-03 (前 2 个 HITL production users)
