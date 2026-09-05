@@ -1,0 +1,21 @@
+schema: agent-error/v1
+id: PITFALL-GAT-006
+category: gate
+severity: high
+title: 交付内容已被 main 等价合并/自愈 — 在过期 base 上重复造轮子
+symptom: 本地分支基于旧 main 的修复/交付, 合并前发现 main 已含等价内容 (patch-id 命中 / content diff 为空 / rebase 自动 drop "patch contents already upstream"), 白白浪费一轮 claim→verify→PR; 甚至 PR 合并会回退 main 正确值 (total_bets 305→295)
+root_cause: 动手前未 fetch 最新 main 并做内容等价检查; 多 agent 并发下 main 持续前进, 修复目标可能已被其他 PR 达成
+solution: '动手前 (claim/start 之前) 先 git fetch origin main 并做内容等价检查: ① git diff origin/main...<branch> 是否为空/仅剩预期增量 ② 被修改文件在最新 main 上是否已含目标字段/值 ③ git log --oneline origin/main -N 是否出现同类 PR; 发现已被合入则放弃分支, 不必开 PR'
+prevention: 'AGENTS.md §11 分支等价性判据: 判断"分支内容是否已合入 main"只用内容 diff (git diff origin/main...<branch>), 不看 commit SHA; merge-tree 预测无冲突 ≠ 内容未合入, 需再查 patch-id'
+tags:
+- gate
+- main
+- already-upstream
+- equivalent-merge
+- drift
+- rebase-drop
+discovered_by: bet-execution-session
+discovered_at: '2026-09-04'
+times_encountered: 2
+last_confirmed_at: '2026-09-05'
+status: active
