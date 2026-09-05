@@ -2,7 +2,7 @@
 schema_version: specification/v1
 spec_version: 1.0.0
 title: HITL Proposal System — harness 层人类审批提案生成与 Cockpit 集成
-bet_id: BET-Y1Q4-HITL-01
+bet_id: BET-Y1Q4-T8-04
 status: accepted
 lifecycle: contract
 owner: omo-platform-team
