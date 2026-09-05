@@ -7,15 +7,16 @@ related:
 - ./admin-inbox.yaml
 ---
 schema: scene-card/v2
-lifecycle: draft
+lifecycle: shadow
 bet: BET-Y1Q4-T8-04
-falsifier: "若 30 天内无 admin 类任务触发，则场景无实际价值"
+falsifier: 若 30 天内无 admin 类任务触发，则场景无实际价值
 scene_id: admin-classify
 journey_id: admin-notification-workflow
 goal: 对已判定为任务的邮件做 LLM 任务分解, 识别转发需求/任务类型/截止时间/转发对象
 trigger: journey received→classified 转移 (has_task == true)
 input_contract: latest_subject + mails 分类上下文
-result_contract: 'requires_forwarding 布尔 + task_type (转发通知/收集数据/提交报告) + deadline + target + required_docs'
+result_contract: requires_forwarding 布尔 + task_type (转发通知/收集数据/提交报告) + deadline +
+  target + required_docs
 outcome_metric: classify_accuracy
 consumer: xiamingxing
 approver: business-governance
@@ -28,3 +29,7 @@ required_capabilities:
 - llm:local-classify
 notes:
 - '实现: bin/ssot/admin_scenes.py dispatch_admin_classify (LLM JSON 分解, 解析失败保守默认 requires_forwarding=true)'
+- Transitioned draft→shadow at 2026-09-05T00:15:09.875529+00:00 by xiamingxing
+activation: preview
+activation_blockers: []
+approval_state: confirmed
