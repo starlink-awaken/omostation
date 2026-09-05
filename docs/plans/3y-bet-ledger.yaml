@@ -20249,6 +20249,11 @@ bets:
   close_evidence: validate --all exit 0 (63/63 PASS) + 5 admin-* cards advanced to shadow + HITL proposal hitl-20260905001528-20683e
     approved
   note: First production use of HITL Proposal System (proposal hitl-20260905001528-20683e).
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b7fa6fd3e2dfec8fad8e6e9bb6336d62e219365800bffe7ee995d205daff368c
+    decision_ref: decision://accepted/BET-Y1Q4-T8-04
 - id: BET-Y1Q4-T9-01
   track: T9-OBSERV
   window: Y1Q4
@@ -20389,7 +20394,6 @@ bets:
   human_gate: false
   circuit_breaker: 若 cron 面拥堵，仅加 status 侧主动 recover，不做新 bin 脚本
   retro: required
-
 - id: BET-Y1Q4-T10-03
   track: T10-MATURITY
   window: Y1Q4
@@ -21139,33 +21143,50 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
     spec_version: 1.0.0
-    content_digest: PENDING
+    content_digest: sha256:f1f320dcfbbd8a1cc4f08bc0e3a16f9aa35155ee36c5d7b8d5282f69ac867d8a
     decision_ref: decision://accepted/BET-Y1Q4-T1-12
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: PARTIAL
+        status: VERIFIED
         evidence:
-          runbook_authored: docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
-          tool_landed: bin/hitl-proposal.py + cockpit decide integration
+          merged_reachable_commit:
+            ref: git://origin/main@3c0ef85524125d9b559069e734764a9caac0d853
+            sha256: sha256:b7fa6fd3e2dfec8fad8e6e9bb6336d62e219365800bffe7ee995d205daff368c
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
+            sha256: sha256:b7fa6fd3e2dfec8fad8e6e9bb6336d62e219365800bffe7ee995d205daff368c
+          tests:
+            ref: receipt://tests/test_hitl_proposal.py
+            sha256: sha256:c4d976962458333d3f6125f7bc40ac76eb4900f7c75756f67a0d85dd8dbe8b22
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
+            sha256: sha256:f1f320dcfbbd8a1cc4f08bc0e3a16f9aa35155ee36c5d7b8d5282f69ac867d8a
       operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-04.md
+            sha256: sha256:75588280efb478b3a40ab4cc8f7714dc7994803da3afb7ea28aeedde01b89604
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-03.md
+            sha256: sha256:03851867ddd3f429f9482a0bb560a8643a7d1c66976d54af692dceca0b78c6a2
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-02.md
+            sha256: sha256:64d092450d12398130f30ae2c7bc309262e4c5652d4d7633f14cadf94c8f42ae
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
+            sha256: sha256:e4891d0dfcaba569d6b73182ffbeaf0f37b1a3c86ffb0a29de5d08c75786061b
+      value:
         status: NOT_PROVEN
         evidence: {}
-      value:
-        status: POTENTIAL
-        evidence:
-          bets_unlocked: 118 L2/L0 human_gate BETs
-          target_adoption: 30 percent by Y1Q4 end
-    overall_state: evaluating
-  value_indicator_policy: true
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   circuit_breaker: 30% 门槛达不到则继续推进 v1.1 自动化
   retro: .omo/_knowledge/retros/BET-Y1Q4-T1-12.md
   depends_on:
   - BET-Y1Q4-HITL-01
-  - PR-3077
-  - PR-129
-  - PR-3119
   done_at: '2026-09-05T00:35:00+00:00'
   close_evidence: '5 L1/L2 human_gate BETs retroactively adopted HITL in retros: T8-04, T10-03 (genuine production users via
     E2E), T1-02, T8-02, T10-01 (retroactive annotations on existing done BETs). Adoption runbook in main (PR #3135). Runbook
