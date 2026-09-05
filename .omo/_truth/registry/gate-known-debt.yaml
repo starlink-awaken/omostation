@@ -244,3 +244,12 @@ entries:
   range: origin/main..f1c7d5d52664
   recorded_at: '2026-09-04T14:10:13.079668+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|e6e5d21f488ad6f5
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: e6e5d21f488ad6f5
+  kind: gitlink-regress
+  reason: submodule projects/knowledge/kairon pointer e777becf1d8d rewinds 6dcd4c6e8ae6
+  range: origin/main..770c49726399
+  recorded_at: '2026-09-05T04:08:58.439073+00:00'
+  active: true
