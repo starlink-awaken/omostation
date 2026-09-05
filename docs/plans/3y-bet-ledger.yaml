@@ -20574,7 +20574,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@eea5d56c6a55800096cb2cb2f914785d6a10ec38
+            ref: git://origin/main@bc16c88f3d40b035748d3d9b8a94ec0c75d15370
           tests:
             ref: receipt://docs/reports/2026-09-05-t8-11-hierarchy-closeout.md
             sha256: sha256:13138247aadd674b44003fcecab101110d8431d966622d1260fd45e92b4efb40
