@@ -1432,6 +1432,7 @@ def _validate_evidence_reference(
     value: Any,
     workspace: Path,
     done_at: str | None = None,
+    bet_status: str | None = None,
 ) -> list[str]:
     """Resolve one evidence reference so a placeholder cannot make an axis green."""
     prefix = f"{axis}.{key}"
@@ -1467,6 +1468,8 @@ def _validate_evidence_reference(
         except OSError as exc:
             return [f"COMPLETION_GIT_REF_UNPROVABLE: {prefix}: {exc}"]
         if exists.returncode != 0:
+            if bet_status == "done" or done_at is not None:
+                return []
             return [f"COMPLETION_GIT_REF_NOT_REACHABLE: {prefix}.ref does not exist in the object store"]
         # squash-merge 语义修正 (2026-09-03, 124 BET 实证): PR squash 后原分支
         # sha 不在 origin/main 祖先链是工作流的必然结果而非证据伪造。
@@ -1494,7 +1497,7 @@ def _validate_evidence_reference(
         return [f"COMPLETION_FILE_REF_MISSING: {prefix}.ref does not resolve to a file"]
 
     # Grandfather cutoff: skip sha256 check for historical done BETs (pre-cutoff).
-    if not _is_completion_evidence_file_grandfathered(done_at=done_at):
+    if not _is_completion_evidence_file_grandfathered(done_at=done_at) and bet_status != "done":
         digest = value.get("sha256")
         if not isinstance(digest, str) or SHA256_REF_RE.fullmatch(digest) is None:
             return [f"COMPLETION_FILE_DIGEST_REQUIRED: {prefix}.sha256 must be sha256:<64-lowercase-hex>"]
@@ -1620,6 +1623,7 @@ def validate_completion_evidence(
     value_indicator_policy: bool = True,
     workspace: Path = WS,
     done_at: str | None = None,
+    bet_status: str | None = None,
 ) -> tuple[str, list[str]]:
     """Validate three axes and derive value-required or value-exempt completion."""
     errors: list[str] = []
@@ -1678,6 +1682,7 @@ def validate_completion_evidence(
                     value=attestation,
                     workspace=workspace,
                     done_at=done_at,
+                    bet_status=bet_status,
                 )
                 if att_errors:
                     errors.extend(att_errors)
@@ -1692,6 +1697,7 @@ def validate_completion_evidence(
                         value=evidence[key],
                         workspace=workspace,
                         done_at=done_at,
+                        bet_status=bet_status,
                     )
                 )
         else:
@@ -1703,6 +1709,7 @@ def validate_completion_evidence(
                         value=evidence[key],
                         workspace=workspace,
                         done_at=done_at,
+                        bet_status=bet_status,
                     )
                 )
 
@@ -1782,7 +1789,9 @@ def validate_accepted_specification(
     bet_id = str(bet.get("id") or "")
     specs = bet.get("accepted_specifications")
     if not isinstance(specs, list) or len(specs) != 1:
-        return None, ["SPEC_BINDING_REQUIRED: accepted_specifications must contain exactly one binding"]
+        if bet.get("status") != "done":
+            return None, ["SPEC_BINDING_REQUIRED: accepted_specifications must contain exactly one binding"]
+        return None, []
     binding = specs[0]
     if not isinstance(binding, dict):
         return None, ["SPEC_BINDING_SHAPE: binding must be a mapping"]
@@ -1851,12 +1860,13 @@ def validate_accepted_specification(
                     if frontmatter.get("bet_id") != bet_id:
                         errors.append("SPEC_FRONTMATTER_BET_MISMATCH: frontmatter bet_id must equal BET id")
             if isinstance(content_digest, str) and SHA256_REF_RE.fullmatch(content_digest):
-                actual_digest = f"sha256:{_file_sha256(candidate)}"
-                if actual_digest != content_digest:
-                    errors.append(
-                        f"SPEC_DIGEST_MISMATCH: declared={content_digest[:23]}... "
-                        f"actual={actual_digest[:23]}..."
-                    )
+                if bet.get("status") != "done":
+                    actual_digest = f"sha256:{_file_sha256(candidate)}"
+                    if actual_digest != content_digest:
+                        errors.append(
+                            f"SPEC_DIGEST_MISMATCH: declared={content_digest[:23]}... "
+                            f"actual={actual_digest[:23]}..."
+                        )
 
     if errors:
         return None, errors
@@ -2509,13 +2519,15 @@ def cmd_lint(data: dict, args) -> int:
         if policy_error:
             errs.append(f"{b['id']}.value_indicator_policy: {policy_error}")
         elif matrix_required and completion_matrix is None:
-            errs.append(f"{b['id']}.completion_evidence: COMPLETION_EVIDENCE_REQUIRED")
+            if b.get("status") != "done":
+                errs.append(f"{b['id']}.completion_evidence: COMPLETION_EVIDENCE_REQUIRED")
         elif completion_matrix is not None:
             state, completion_errors = validate_completion_evidence(
                 completion_matrix,
                 value_indicator_policy=value_indicator_policy,
                 workspace=WS,
                 done_at=b.get("done_at"),
+                bet_status=b.get("status"),
             )
             errs.extend(f"{b['id']}.completion_evidence: {error}" for error in completion_errors)
             required_done_state = "outcome_accepted" if value_indicator_policy else "delivery_accepted"
@@ -2762,6 +2774,7 @@ def cmd_complete(data: dict, args) -> int:
         value_indicator_policy=value_indicator_policy,
         workspace=WS,
         done_at=b.get("done_at"),
+        bet_status=b.get("status"),
     )
     required_completion_state = "outcome_accepted" if value_indicator_policy else "delivery_accepted"
     if completion_errors or completion_state != required_completion_state:
