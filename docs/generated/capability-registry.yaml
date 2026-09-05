@@ -15,7 +15,7 @@ totals:
   bos_services: 299
   bos_domains: 22
   cli_commands: 207
-  skills: 39
+  skills: 40
   workflows: 24
 mcp_servers:
 - id: omo
@@ -2546,6 +2546,9 @@ skills:
   exists: true
 - id: bdsk-virtual-board
   file: .agents/skills/bdsk-virtual-board/SKILL.md
+  exists: true
+- id: bet-closeout-chain
+  file: .agents/skills/bet-closeout-chain/SKILL.md
   exists: true
 - id: bet-execution
   file: .agents/skills/bet-execution/SKILL.md

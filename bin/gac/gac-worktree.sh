@@ -295,6 +295,18 @@ case "$cmd" in
       git add -- ':!.subtrees' . || true
       git commit -m "wip: $session worktree 提交" 2>&1 | tail -2
     fi
+    # 多 agent 并发 main 高速前进: push 前自动 rebase (PITFALL-GAT-007 预防层;
+    # 陈旧 base → gitlink-ancestry 拦回退 / registry drift 假阳性, 实测一晚 5 次)
+    if git fetch origin main 2>/dev/null; then
+      _ahead="$(git rev-list --count HEAD..origin/main 2>/dev/null || echo 0)"
+      if [ "$_ahead" -gt 0 ]; then
+        echo "⬆ origin/main 前进 $_ahead commits, auto-rebase (PITFALL-GAT-007 预防)"
+        if ! git rebase origin/main; then
+          echo "❌ auto-rebase 冲突: 手动解决后重跑 submit, 或 git rebase --abort 回滚" >&2
+          exit 1
+        fi
+      fi
+    fi
     # BET-Y1Q1-T1-05A: fencing token 校验 (shadow 阶段只判定不阻断, exit 2 才停)
     # token 从 claim 文件读 (claim 时由镜像写入 coordination_token 字段);
     # 无 token (claim 早于本 bet / 镜像失败) 也必须进入可审计 shadow verdict

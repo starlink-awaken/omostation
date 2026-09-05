@@ -1,0 +1,26 @@
+schema: agent-error/v1
+id: PITFALL-GAT-007
+category: gate
+severity: medium
+title: CI 假失败分诊 — 同命令本地绿 CI 红时按 gitlink→base→registry 顺序排查
+symptom: 'PR CI 挂 (governance-verify/capability-registry-drift/mutation-surfaces)
+  但完全相同的命令在本地 worktree exit 0; 报 stale surface 或 registry drift 而本地 regen 无 diff —
+  与 SUB-003 的区别: 那是功能消失, 这是 CI 分诊路径'
+root_cause: CI checkout 的子模块 SHA 由主仓 gitlink 决定且 base 为 PR 创建时快照; 并发合并推进 main 后, 分支上的
+  gitlink/registry 基线滞后, CI 用旧校验器或对比旧基线产生假阳性
+solution: ① git ls-tree origin/main <sub> 对账; ② fetch+rebase 最新 main (拿到新 gitlink
+  与新 registry 基线); ③ rebase 后本地跑 gen-capability-registry --check 复现真实漂移则重同步提交; ④ 子模块对齐用
+  checkout --detach <gitlink-sha>
+prevention: submit 前自动 rebase (gac-worktree.sh 2026-09-05 内置)
+tags:
+- gate
+- ci
+- false-positive
+- triage
+- gitlink
+- registry-drift
+discovered_by: laowang-session
+discovered_at: '2026-09-05'
+times_encountered: 1
+last_confirmed_at: '2026-09-05'
+status: active
