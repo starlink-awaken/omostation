@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 307
+  total_bets: 310
   windows:
   - Y1Q1
   - Y1Q2
@@ -20256,6 +20256,7 @@ bets:
   appetite: 1 day
   priority: P2
   status: done
+  done_at: 2026-09-05
   goal: 建立 resident agent ledger SQLite 锁的监控与自动恢复机制，防止数据库锁死导致记账功能持续不可用。增加 WAL checkpoint 定期执行和锁超时自动释放。
   non_goals:
   - 不替换 SQLite 为其他数据库
@@ -20276,6 +20277,7 @@ bets:
   - projects/omo/tests/unit/test_ledger_check.py
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-05-resident-ledger-lock-monitor-design.md
+  - docs/reports/2026-09-05-t9-01-ledger-lock-monitor-closeout.md
   - .omo/_knowledge/retros/BET-Y1Q4-T9-01.md
   pasw_required: false
   accepted_specifications:
@@ -20293,8 +20295,8 @@ bets:
             ref: receipt://docs/superpowers/specs/2026-09-05-resident-ledger-lock-monitor-design.md
             sha256: sha256:b62640138587b9d7ce3aad85285905634487adb2210d5d87bd3236cd397167ef
           tests:
-            ref: receipt://projects/omo/tests/unit/test_ledger_check.py
-            sha256: sha256:9ccff76d5949c0cb2456a946e1548626921bc702754d3c949319182bd93f992a
+            ref: receipt://docs/reports/2026-09-05-t9-01-ledger-lock-monitor-closeout.md
+            sha256: sha256:edd6a32925bff2045ee5a1dde34c287d76ff23a7a229fada762c1aa4077d0c70
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-01.md
             sha256: sha256:305588a670bd959aa12fc0704582ce26e0a0fef2c33b8b210a14a542b5fecd79
@@ -20307,8 +20309,8 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-01.md
             sha256: sha256:305588a670bd959aa12fc0704582ce26e0a0fef2c33b8b210a14a542b5fecd79
           fresh_receipt:
-            ref: receipt://projects/omo/src/omo/resident/ledger_check.py
-            sha256: sha256:ce66ab5796f0c176d57e142d2ae7d677602786a10b077d34e8ea111fbac7b434
+            ref: receipt://docs/reports/2026-09-05-t9-01-ledger-lock-monitor-closeout.md
+            sha256: sha256:edd6a32925bff2045ee5a1dde34c287d76ff23a7a229fada762c1aa4077d0c70
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-01.md
             sha256: sha256:305588a670bd959aa12fc0704582ce26e0a0fef2c33b8b210a14a542b5fecd79
@@ -20319,10 +20321,75 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  value_indicator_policy: false
   risk_level: L1
   human_gate: false
   circuit_breaker: 自动 kill 进程前需确认进程已僵死（CPU time < 1% over 5min）
   retro: required
+- id: BET-Y1Q4-T1-13
+  track: T1-TRUTH
+  window: Y1Q4
+  title: Portfolio-status broker ownership 注册与投影 apply 接线
+  appetite: 1 day
+  priority: P2
+  status: candidate
+  goal: 为 .omo/_control/portfolio-status.json 注册 broker 写主，消除 PORTFOLIO_BROKER_OWNER_MISSING，使 portfolio_projection 可授权 apply。
+  non_goals:
+  - 不改 Ledger 真值写回方向
+  - 不重做 W0 Markdown 投影
+  done_when:
+  - mutation-surfaces / write-owners 登记 portfolio-status.json 写主
+  - portfolio_projection broker_owns_portfolio_targets 返回 ok
+  - dry-run apply 不因 PORTFOLIO_BROKER_OWNER_MISSING halt
+  verify:
+  - cmd: python3 bin/plan/portfolio_projection.py --check-broker
+    expect: broker ok
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - .omo/_truth/registry/mutation-surfaces.yaml
+  - bin/plan/portfolio_projection.py
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-13.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q4-T1-08
+  value_indicator_policy: false
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 若无既有 broker 模板可复用，降级为只登记 ownership + dry-run 文档，不接 apply
+  retro: required
+- id: BET-Y1Q4-T9-02
+  track: T9-OBSERV
+  window: Y1Q4
+  title: Resident ledger lock-monitor 定时 tick / hook 接线
+  appetite: 0.5 day
+  priority: P3
+  status: candidate
+  goal: 将 T9-01 ledger_check.check_and_recover 挂到 resident cron 或 heartbeat tick，使锁监控不依赖人工跑 status。
+  non_goals:
+  - 不改锁判定阈值与 zombie kill 策略
+  - 不替换 SQLite
+  done_when:
+  - resident daemon/heartbeat 路径调用 check_and_recover
+  - make resident-status 仍 health=recovered|ok
+  verify:
+  - cmd: make resident-status
+    expect: health=recovered or ok
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T9-02.md
+  pasw_required: false
+  depends_on:
+  - BET-Y1Q4-T9-01
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 若 cron 面拥堵，仅加 status 侧主动 recover，不做新 bin 脚本
+  retro: required
+
 - id: BET-Y1Q4-T10-03
   track: T10-MATURITY
   window: Y1Q4
