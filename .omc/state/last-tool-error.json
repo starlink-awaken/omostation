@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"rtk ls /Users/xiamingxing/Workspace/projects/omo/src/omo/*episode* /Users/xiamingxing/Workspace/projects/omo/src/omo/*projection* 2>/dev/null\",\"description\":\"List episode/projection files\"...",
-  "error": "Exit code 1",
-  "timestamp": "2026-08-12T04:49:36.146Z",
-  "retry_count": 1
-}
