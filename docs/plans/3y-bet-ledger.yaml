@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 311
+  total_bets: 316
   windows:
   - Y1Q1
   - Y1Q2
@@ -258,6 +258,7 @@ vision:
   required_objectives:
   - OBJ-TRUST
   - OBJ-HOLDABILITY
+  - OBJ-VALUE
 objectives:
 - id: OBJ-TRUST
   statement: 愿景到交付的证据链可审计、可复现，禁止虚假完成
@@ -295,6 +296,41 @@ objectives:
     - receipt://docs/reports/2026-09-03-w0-portfolio-v2-dogfood-canary.md
     - receipt://tests/test_bet_portfolio_canary.py
     - receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-09.md
+- id: OBJ-VALUE
+  statement: 结果面可证伪——真实外部信号经人类裁决变成愿意署名的产出，修订被记住且能量化
+  owner: human-principal
+  required: true
+  key_results:
+  - id: KR-VALUE-JOURNEY-COMPLETION
+    metric: effective_work_journey_completion_rate
+    baseline:
+      value: null
+      status: unmeasured
+    target:
+      operator: exists
+      value: baseline
+    status: unmeasured
+    evidence_refs: []
+  - id: KR-VALUE-WEEKLY-ADOPTION
+    metric: weekly_principal_accepted_suggestions
+    baseline:
+      value: null
+      status: unmeasured
+    target:
+      operator: gte
+      value: 3
+    status: unmeasured
+    evidence_refs: []
+  - id: KR-VALUE-REVISION-RATE
+    metric: principal_revision_rate
+    baseline:
+      value: null
+      status: unmeasured
+    target:
+      operator: exists
+      value: baseline
+    status: unmeasured
+    evidence_refs: []
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   title: Portfolio/BET v2 机制升级
@@ -310,6 +346,15 @@ campaigns:
   - MS-W0-CANARY
   max_parallel_writers: 2
   status: derived
+- id: CMP-Y1-VALUE-PROOF
+  title: 愿景结果面价值证明（北极星/周采纳/修订率）
+  objective_refs:
+  - OBJ-VALUE
+  owner: portfolio-governance
+  target_window: Y1Q4
+  required_milestones: []
+  max_parallel_writers: 2
+  status: active
 milestones:
 - id: MS-W0-CONTRACT
   campaign_ref: CMP-W0-PORTFOLIO-TRUTH
@@ -21631,3 +21676,252 @@ bets:
   close_evidence: '5 L1/L2 human_gate BETs retroactively adopted HITL in retros: T8-04, T10-03 (genuine production users via
     E2E), T1-02, T8-02, T10-01 (retroactive annotations on existing done BETs). Adoption runbook in main (PR #3135). Runbook
     referenced by 6+ files (4 retros + 2 PR bodies).'
+
+- id: BET-Y1Q4-T1-14
+  track: T1-TRUTH
+  window: Y1Q4
+  title: Portfolio 挂载 OBJ-VALUE 与愿景结果面 KR
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: 在 bet-portfolio/v2 台账写入 OBJ-VALUE 及三条 KR（旅程完成率 / 周采纳 / 修订率），挂入 VISION-2029.required_objectives 与 CMP-Y1-VALUE-PROOF，使结果面目标可被 coverage 与 status 查询，而不再只剩 TRUST/HOLDABILITY。
+  non_goals:
+  - 不在本 bet 实现计量器或采集管道（交给 T4-02/03/04）
+  - 不把 KR.required 设为 true（避免 NONTERMINAL_BET_UNBOUND 波及全仓 candidate）
+  - 不启动 W1-W6，不扩 T8 DX 表面
+  done_when:
+  - objectives 含 OBJ-VALUE，且含 KR-VALUE-JOURNEY-COMPLETION / KR-VALUE-WEEKLY-ADOPTION / KR-VALUE-REVISION-RATE
+  - vision.required_objectives 含 OBJ-VALUE
+  - campaigns 含 CMP-Y1-VALUE-PROOF，objective_refs 含 OBJ-VALUE
+  - 至少 3 个 candidate bet 经 portfolio_binding.kr_refs 分别覆盖三条 KR，且带 coverage_rationale
+  - meta.total_bets == len(bets)；bet-ledger.py lint 与 portfolio validate 对新增实体无 typed error
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0 or only pre-existing non-blocking warnings
+  - cmd: uv run --with pyyaml python -c "import yaml;from pathlib import Path;d=yaml.safe_load(Path('docs/plans/3y-bet-ledger.yaml').read_text());assert d['meta']['total_bets']==len(d['bets']);assert 'OBJ-VALUE' in d['vision']['required_objectives'];oids=[o['id'] for o in d['objectives']];assert 'OBJ-VALUE' in oids;kr={k['id'] for o in d['objectives'] if o['id']=='OBJ-VALUE' for k in o['key_results']};assert kr=={'KR-VALUE-JOURNEY-COMPLETION','KR-VALUE-WEEKLY-ADOPTION','KR-VALUE-REVISION-RATE'}"
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-05-obj-value-portfolio-split-design.md
+  - docs/reports/2026-09-05-obj-value-portfolio-split.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T1-14.md
+  pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-obj-value-portfolio-split-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:6f78fefdd491ae2c2bcfdd28130a762623cb28e1e9a7165e5d007d97ee749d89
+    decision_ref: decision://accepted/BET-Y1Q4-T1-14
+  risk_level: L1
+  human_gate: false
+  value_indicator_policy: false
+  circuit_breaker: 若 portfolio validate 因历史 DUPLICATE_COVERAGE / 悬空 PR 依赖失败，仅允许新增实体零回归；不在本 bet 清历史债。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T1-09
+  portfolio_binding:
+    schema_state: enforced
+    campaign_ref: CMP-Y1-VALUE-PROOF
+    objective_refs:
+    - OBJ-VALUE
+    kr_refs:
+    - KR-VALUE-JOURNEY-COMPLETION
+    - KR-VALUE-WEEKLY-ADOPTION
+    - KR-VALUE-REVISION-RATE
+    coverage_rationale: T1-14 只负责把 OBJ-VALUE/KR 写入 portfolio SSOT 并挂到愿景；计量实现由 T4-02/03/04 分担，故本 bet 覆盖全部三条 KR 作为注册面。
+    parent_bet: null
+    milestone_refs: []
+
+- id: BET-Y1Q4-T4-02
+  track: T4-OUTCOME
+  window: Y1Q4
+  title: 有效工作旅程完成率北极星基线接入
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 把战略北极星「有效工作旅程完成率」落到可周报的基线：定义分母/分子（禁止代理量），接线 north_star_meter / journey 证据，输出首份基线收据，使 KR-VALUE-JOURNEY-COMPLETION 从 unmeasured 变为 baseline measured。
+  non_goals:
+  - 不追求立刻 ≥50%（那是 Y2 目标）；本 bet 只建立可复核基线
+  - 不用健康分、能力通过率、mtime 交付等已废除代理量冒充
+  - 不改造 Cockpit UI 大盘视觉（可用 CLI/JSON 收据）
+  done_when:
+  - 成文口径（分母=进入工作旅程的真实外部信号实例；分子=到达人类裁决终态且非 discard-only 的旅程）
+  - 可重复命令输出 JSON 基线（window≥7d），缺数据时显式 unmeasured 而非填 0 伪装
+  - KR-VALUE-JOURNEY-COMPLETION.baseline.status 更新为 measured，并挂 evidence_refs
+  - 至少 1 份 docs/reports 周基线收据入库
+  verify:
+  - cmd: test -f docs/superpowers/specs/2026-09-05-obj-value-portfolio-split-design.md
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py show BET-Y1Q4-T4-02
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/bc-os/north_star_meter_v3.py
+  - bin/gac/value-tracker.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/**
+  - .omo/_knowledge/retros/BET-Y1Q4-T4-02.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  value_indicator_policy: true
+  circuit_breaker: 真实旅程样本不足则保持 unmeasured 并输出缺口清单，禁止用 synthetic/fixture 凑基线。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T1-14
+  - BET-Y1Q3-T4-07
+  portfolio_binding:
+    schema_state: enforced
+    campaign_ref: CMP-Y1-VALUE-PROOF
+    objective_refs:
+    - OBJ-VALUE
+    kr_refs:
+    - KR-VALUE-JOURNEY-COMPLETION
+    coverage_rationale: T4-02 独占旅程完成率基线实现；与 T1-14 注册面分工，避免重复无 rationale。
+    parent_bet: BET-Y1Q4-T1-14
+    milestone_refs: []
+
+- id: BET-Y1Q4-T4-03
+  track: T4-OUTCOME
+  window: Y1Q4
+  title: 每周真实外部信号与本人采纳证伪计量
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 对 VISION 证伪条件（连续 12 周每周 ≥3 条本人采纳建议）建立可自动红绿的周度量：真实外部信号数 + 本人采纳数，写入 KR-VALUE-WEEKLY-ADOPTION 基线，并提供 cockpit/CLI 一周快照。
+  non_goals:
+  - 不在本 bet 完成 12 周连续达标（那是运行事实，不是一次交付）
+  - 不计入 PR/CI/agent 自报/synthetic 样本
+  - 不实现多渠道通知（属 HITL-02）
+  done_when:
+  - 周快照命令可输出 signals_count / accepted_by_principal / window_start/end，缺权威绑定时 fail-closed
+  - 连续周文件或 append-only 日志可追溯 ≥1 周真实窗口
+  - KR-VALUE-WEEKLY-ADOPTION.baseline 写入 measured 或显式记录 blocker
+  - 与 decision_outcome / adjudication 血缘可对账（至少抽样 1 条）
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py show BET-Y1Q4-T4-03
+    expect: exit 0
+  - cmd: test -f docs/plans/3y-bet-ledger.yaml
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/bc-os/weekly-value-report.py
+  - bin/gac/value-tracker.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/**
+  - .omo/_knowledge/retros/BET-Y1Q4-T4-03.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  value_indicator_policy: true
+  circuit_breaker: 无真实采纳样本时保持红灯/unmeasured，不得用测试夹具把周采纳刷成 ≥3。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T1-14
+  - BET-Y1Q3-T4-07
+  portfolio_binding:
+    schema_state: enforced
+    campaign_ref: CMP-Y1-VALUE-PROOF
+    objective_refs:
+    - OBJ-VALUE
+    kr_refs:
+    - KR-VALUE-WEEKLY-ADOPTION
+    coverage_rationale: T4-03 独占周采纳/证伪计量；注册面由 T1-14 承担。
+    parent_bet: BET-Y1Q4-T1-14
+    milestone_refs: []
+
+- id: BET-Y1Q4-T4-04
+  track: T4-OUTCOME
+  window: Y1Q4
+  title: 署名修订率基线与仪表
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 对「记住每次修改」产品化：从署名 Diff / 裁决 edit 路径计量 principal_revision_rate 基线，挂到 KR-VALUE-REVISION-RATE，为 Y2「修订率降 20%」提供对照原点。
+  non_goals:
+  - 不实现 LoRA/SEMA 蒸馏（T10-105/115）
+  - 不在本 bet 宣称修订率已下降
+  - 不用文档字数或 commit 数代替署名 Diff
+  done_when:
+  - 修订率口径成文（edit 采纳次数 / 有人类出口的建议次数，或等价可审计定义）
+  - 可重复命令输出当前窗口修订率；无 Diff 时 unmeasured
+  - KR-VALUE-REVISION-RATE.baseline.status=measured 或缺口清单入库
+  - 与至少 1 条真实 adjudication(edit) 或署名 Diff 收据对账
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py show BET-Y1Q4-T4-04
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/bc-os/north_star_meter_v3.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/**
+  - .omo/_knowledge/retros/BET-Y1Q4-T4-04.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  value_indicator_policy: true
+  circuit_breaker: 无真实 Diff 样本则停止并列出依赖（如 T10-105），禁止合成 Diff。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T1-14
+  - BET-Y1Q3-T4-07
+  portfolio_binding:
+    schema_state: enforced
+    campaign_ref: CMP-Y1-VALUE-PROOF
+    objective_refs:
+    - OBJ-VALUE
+    kr_refs:
+    - KR-VALUE-REVISION-RATE
+    coverage_rationale: T4-04 独占修订率基线；学习侧实现仍归 T10-115，本 bet 只做度量原点。
+    parent_bet: BET-Y1Q4-T1-14
+    milestone_refs: []
+
+- id: BET-Y1Q4-T4-05
+  track: T4-OUTCOME
+  window: Y1Q4
+  title: Spine done 价值证明债清册与抽样回填
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 清点已 done 的 spine/价值相关 bet 中 value_indicator_policy=false 且 completion_evidence.value=NOT_PROVEN/缺失的条目，产出债清册；对抽样 ≥5 条补齐可复查证据或显式永久 NOT_PROVEN 理由，避免「已 done」被误读为愿景已证明。
+  non_goals:
+  - 不要求一次回填全部历史 done bet
+  - 不重做工程交付轴（engineering VERIFIED 保持）
+  - 不新增功能表面
+  done_when:
+  - 债清册 docs/reports 入库（含 bet_id、vip、value 轴状态、建议动作）
+  - 抽样 ≥5 条完成回填或书面豁免（豁免须引用 D1/D6）
+  - 清册统计进入 OBJ-VALUE 相关报告，可供下一次季度门阅读
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py show BET-Y1Q4-T4-05
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/**
+  - .omo/_knowledge/retros/BET-Y1Q4-T4-05.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  value_indicator_policy: false
+  circuit_breaker: 抽样无法取证则扩大 NOT_PROVEN 标注而非伪造 value ACCEPTED。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T1-14
+  portfolio_binding:
+    schema_state: enforced
+    campaign_ref: CMP-Y1-VALUE-PROOF
+    objective_refs:
+    - OBJ-VALUE
+    kr_refs:
+    - KR-VALUE-JOURNEY-COMPLETION
+    - KR-VALUE-WEEKLY-ADOPTION
+    - KR-VALUE-REVISION-RATE
+    coverage_rationale: T4-05 是跨 KR 的价值证明债治理，不替代 T4-02/03/04 的计量实现；rationale 声明与实现 bet 并存。
+    parent_bet: BET-Y1Q4-T1-14
+    milestone_refs: []
