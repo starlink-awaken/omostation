@@ -106,3 +106,51 @@ def test_spine_status(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
     args = argparse.Namespace(spine_command="status")
     assert cmd_spine(args) == 0
+
+
+def test_spine_draft_with_adapter(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    adapter_dir = tmp_path / ".omo" / "state" / "lora-adapters" / "adapter-xiamingxing-v1"
+    adapter_dir.mkdir(parents=True, exist_ok=True)
+    (adapter_dir / "adapter_config.json").write_text('{"base_model_name_or_path": "qwen3.8-27b"}', encoding="utf-8")
+    (adapter_dir / "adapters.safetensors").write_bytes(b"mock_weights")
+
+    monkeypatch.setattr("cockpit.commands.spine._ws", lambda: tmp_path)
+    monkeypatch.setattr(
+        "cockpit.commands.spine._omlxc_python",
+        lambda code, **kw: (0, json.dumps({"exists": True, "path": str(adapter_dir), "size_bytes": 100})),
+    )
+    monkeypatch.setattr("subprocess.call", lambda *args, **kw: 0)
+
+    args = argparse.Namespace(spine_command="draft", prompt="test draft prompt")
+    assert cmd_spine(args) == 0
+
+
+def test_spine_distill_routed_success(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_state = tmp_path / ".omo" / "state"
+    fake_state.mkdir(parents=True, exist_ok=True)
+    buf_file = fake_state / "lora-replay-buffer.jsonl"
+    buf_file.write_text(
+        json.dumps({"instruction": "i", "output": "o", "domain": "document-review"}) + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("cockpit.commands.spine._ws", lambda: tmp_path)
+
+    fake_job = {
+        "job_id": "ft-test-123",
+        "domain": "document-review",
+        "sample_count": 12,
+        "status": "routed",
+        "target_node": "node-macmini-m4",
+        "target_endpoint": "192.168.1.20:8765",
+        "adapter_path": str(tmp_path / ".omo" / "state" / "lora-adapters" / "adapter-xiamingxing-v1"),
+        "detail": "roamed to mesh peer",
+    }
+    monkeypatch.setattr(
+        "cockpit.commands.spine._omlxc_python",
+        lambda code, **kw: (0, json.dumps(fake_job)),
+    )
+
+    args = argparse.Namespace(spine_command="distill", domain="document-review", epochs=3)
+    assert cmd_spine(args) == 0
+    assert (tmp_path / ".omo" / "state" / "lora-adapters" / "adapter-xiamingxing-v1" / "adapter_config.json").exists()
+
