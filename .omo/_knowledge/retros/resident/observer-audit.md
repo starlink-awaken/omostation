@@ -1,24 +1,22 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-audit
-generated_at: 2026-09-04T13:40:00Z
+generated_at: 2026-09-05T11:30:01Z
 status: candidate
 counts:
-  runs: 100
+  runs: 106
   failures: 0
-  total: 100
+  total: 106
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
-type: ephemeral
-status: archived
 ---
 # observer-audit 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-04T13:40:00Z
+- generated_at: 2026-09-05T11:30:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 100 成功运行 + 0 失败模式 = 100 草稿
+- sediment 覆盖: 106 成功运行 + 0 失败模式 = 106 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -123,6 +121,12 @@ status: archived
 - 20260904T124718Z-observer-audit-dc74203c.md
 - 20260904T125143Z-observer-audit-1431fd55.md
 - 20260904T125143Z-observer-audit-6c9caf4d.md
+- 20260904T134950Z-observer-audit-14eba74f.md
+- 20260904T134952Z-observer-audit-4a9ad63c.md
+- 20260904T154246Z-observer-audit-b8a95c8e.md
+- 20260904T154247Z-observer-audit-2c17d376.md
+- 20260904T155352Z-observer-audit-96e7cdd4.md
+- 20260904T155353Z-observer-audit-8011e038.md
 
 ## 失败模式 (failures/)
 
@@ -455,6 +459,24 @@ status: archived
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
 - **20260904T125143Z-observer-audit-6c9caf4d**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260904T134950Z-observer-audit-14eba74f**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260904T134952Z-observer-audit-4a9ad63c**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260904T154246Z-observer-audit-b8a95c8e**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260904T154247Z-observer-audit-2c17d376**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260904T155352Z-observer-audit-96e7cdd4**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260904T155353Z-observer-audit-8011e038**
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
 
