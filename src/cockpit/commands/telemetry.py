@@ -50,12 +50,63 @@ def cmd_telemetry(args: argparse.Namespace) -> int:
             print(prom_text, end="")
         return int(ExitCode.SUCCESS)
 
+    if action == "diagnostics":
+        from cockpit.telemetry.metrics import get_diagnostics_ring
+
+        ring = get_diagnostics_ring()
+        limit = getattr(args, "limit", None)
+        events = ring.snapshot(limit=limit)
+        if is_json:
+            import json
+
+            print(json.dumps(
+                {
+                    "status": "ok",
+                    "capacity": ring.capacity,
+                    "total_events": len(events),
+                    "diagnostics": events,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ))
+            return int(ExitCode.SUCCESS)
+
+        console.print(f"[bold cyan]🩺 诊断环形缓冲区 (容量 {ring.capacity}, 当前 {len(events)} 条)[/bold cyan]")
+        if not events:
+            console.print("[dim](无 WARNING/ERROR 事件 — 运行环境健康)[/dim]")
+            return int(ExitCode.SUCCESS)
+        diag_table = Table(title="最近诊断事件", border_style="yellow")
+        diag_table.add_column("时间戳", style="dim")
+        diag_table.add_column("级别", style="bold")
+        diag_table.add_column("事件", style="white", max_width=60)
+        diag_table.add_column("来源", style="dim")
+        for ev in events[-30:]:
+            ctx = ev.get("context", {})
+            diag_table.add_row(
+                str(ev.get("ts", "")),
+                str(ev.get("level", "")),
+                str(ev.get("event", "")),
+                f"{ctx.get('logger', '?')}:{ctx.get('lineno', '?')}",
+            )
+        console.print(diag_table)
+        return int(ExitCode.SUCCESS)
+
     # Default action: status / summary
     summary = collector.get_summary()
+    from cockpit.telemetry.metrics import get_diagnostics_ring
+
+    ring = get_diagnostics_ring()
     if is_json:
         import json
 
-        payload: dict[str, Any] = {"status": "ok", "telemetry": summary}
+        payload: dict[str, Any] = {
+            "status": "ok",
+            "telemetry": summary,
+            "diagnostics": {
+                "capacity": ring.capacity,
+                "total_events": len(ring.snapshot()),
+            },
+        }
         if is_dry_run:
             payload["dry_run"] = True
         print(json.dumps(payload, ensure_ascii=False, indent=2))

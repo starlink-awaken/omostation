@@ -53,3 +53,77 @@ def test_cli_telemetry_reset(capsys):
     captured = capsys.readouterr()
     data = json.loads(captured.out)
     assert data.get("dry_run") is True
+
+
+# --- T8-14: diagnostics ring (auto-capture WARNING/ERROR, bounded eviction) ---
+
+import logging
+
+from cockpit.telemetry.metrics import (
+    DiagnosticsLoggingHandler,
+    DiagnosticsRing,
+)
+
+
+def test_diagnostics_ring_record_and_snapshot():
+    ring = DiagnosticsRing(capacity=8)
+    ring.record("warning", "first warning", {"logger": "a"})
+    ring.record("error", "first error")
+    events = ring.snapshot()
+    assert len(events) == 2
+    assert events[0]["level"] == "WARNING"
+    assert events[1]["level"] == "ERROR"
+    assert events[0]["context"]["logger"] == "a"
+    assert ring.snapshot(limit=1)[-1]["event"] == "first error"
+
+
+def test_diagnostics_ring_capacity_eviction():
+    ring = DiagnosticsRing(capacity=4)
+    for i in range(10):
+        ring.record("error", f"err-{i}")
+    events = ring.snapshot()
+    assert len(events) == 4
+    assert events[0]["event"] == "err-6"
+    assert events[-1]["event"] == "err-9"
+
+
+def test_diagnostics_ring_clear():
+    ring = DiagnosticsRing()
+    ring.record("error", "x")
+    ring.clear()
+    assert ring.snapshot() == []
+
+
+def test_logging_handler_auto_captures_warning_and_error(caplog):
+    ring = DiagnosticsRing(capacity=16)
+    logger = logging.getLogger("cockpit.test.diag")
+    handler = ring.attach_logging_handler(logger)
+    try:
+        logger.setLevel(logging.INFO)
+        logger.info("info should not be captured")
+        logger.warning("warn captured")
+        logger.error("error captured")
+    finally:
+        logger.removeHandler(handler)
+
+    events = ring.snapshot()
+    levels = [e["level"] for e in events]
+    assert "WARNING" in levels and "ERROR" in levels
+    assert all("info should not be captured" != e["event"] for e in events)
+    assert isinstance(handler, DiagnosticsLoggingHandler)
+    ctx = next(e for e in events if e["level"] == "ERROR")
+    assert ctx["context"]["logger"] == "cockpit.test.diag"
+
+
+def test_cli_telemetry_diagnostics_json(capsys):
+    from cockpit.telemetry.metrics import get_diagnostics_ring
+
+    ring = get_diagnostics_ring()
+    ring.clear()
+    ring.record("error", "cli-visible diagnostic")
+    rc = main(["telemetry", "diagnostics", "--json"])
+    assert rc == ExitCode.SUCCESS
+    data = json.loads(capsys.readouterr().out)
+    assert data["status"] == "ok"
+    assert data["total_events"] >= 1
+    assert any(e["event"] == "cli-visible diagnostic" for e in data["diagnostics"])

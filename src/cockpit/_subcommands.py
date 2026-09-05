@@ -1321,7 +1321,8 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     system_sub.add_parser("readiness", help="治理成熟度检查")
     system_sub.add_parser("runtime", help="运行时沙箱管理")
     system_tel = system_sub.add_parser("telemetry", help="命令遥测与 Prometheus 指标导出")
-    system_tel.add_argument("telemetry_action", nargs="?", choices=["status", "export", "reset"], default="status")
+    system_tel.add_argument("telemetry_action", nargs="?", choices=["status", "export", "reset", "diagnostics"], default="status")
+    system_tel.add_argument("--limit", type=int, default=None, help="diagnostics 视图最多返回的事件数")
     system_tel.add_argument("--json", action="store_true")
     system_tel.add_argument("--dry-run", action="store_true")
 
@@ -1351,7 +1352,8 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
 
     # ── 顶级常用命令直接快捷方式挂载 ──
     tel_p = sub.add_parser("telemetry", help="📊 命令全生命周期遥测与 Prometheus 指标导出")
-    tel_p.add_argument("telemetry_action", nargs="?", choices=["status", "export", "reset"], default="status", help="操作类型 (status|export|reset)")
+    tel_p.add_argument("telemetry_action", nargs="?", choices=["status", "export", "reset", "diagnostics"], default="status", help="操作类型 (status|export|reset|diagnostics)")
+    tel_p.add_argument("--limit", type=int, default=None, help="diagnostics 视图最多返回的事件数")
     tel_p.add_argument("--json", action="store_true", help="以纯净 JSON 格式输出")
     tel_p.add_argument("--dry-run", action="store_true", help="预检模式")
 

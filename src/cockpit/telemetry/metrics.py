@@ -7,8 +7,11 @@ and Prometheus text exposition without requiring heavyweight daemons.
 from __future__ import annotations
 
 import json
+import logging
 import os
+import threading
 import time
+from collections import deque
 from pathlib import Path
 from typing import Any
 
@@ -28,7 +31,7 @@ class MetricsCollector:
         """Load persisted metrics or initialize fresh store."""
         if self.storage_path.exists():
             try:
-                with open(self.storage_path, "r", encoding="utf-8") as f:
+                with open(self.storage_path, encoding="utf-8") as f:
                     data = json.load(f)
                     if isinstance(data, dict) and "counters" in data:
                         return data
@@ -209,3 +212,76 @@ def record_command_metric(
     """Global helper to record a command execution metric."""
     collector = get_metrics_collector()
     collector.record_command(command, domain, exit_code, duration_seconds, error=error)
+
+
+class DiagnosticsRing:
+    """Bounded diagnostic ring buffer that auto-captures ERROR/WARNING events.
+
+    Thread-safe. Capacity-bounded (oldest evicted). Intended to be attached to
+    the root logger via :class:`DiagnosticsLoggingHandler` so every WARNING+
+    record across the CLI process lands in the ring without per-module wiring.
+    """
+
+    def __init__(self, capacity: int = 512, storage_path: Path | None = None):
+        self.capacity = capacity
+        self.storage_path = storage_path
+        self._events: deque[dict[str, Any]] = deque(maxlen=capacity)
+        self._lock = threading.Lock()
+
+    def record(self, level: str, event: str, context: dict[str, Any] | None = None) -> None:
+        entry = {
+            "ts": round(time.time(), 3),
+            "level": level.upper(),
+            "event": event[:200],
+            "context": context or {},
+        }
+        with self._lock:
+            self._events.append(entry)
+
+    def snapshot(self, limit: int | None = None) -> list[dict[str, Any]]:
+        with self._lock:
+            items = list(self._events)
+        return items if limit is None else items[-limit:]
+
+    def clear(self) -> None:
+        with self._lock:
+            self._events.clear()
+
+    def attach_logging_handler(self, logger: logging.Logger | None = None) -> DiagnosticsLoggingHandler:
+        """Install a WARNING+ auto-capture handler on the given logger (default: root)."""
+        handler = DiagnosticsLoggingHandler(self)
+        (logger or logging.getLogger()).addHandler(handler)
+        return handler
+
+
+class DiagnosticsLoggingHandler(logging.Handler):
+    """Logging handler that funnels WARNING and above into a DiagnosticsRing."""
+
+    def __init__(self, ring: DiagnosticsRing):
+        super().__init__(level=logging.WARNING)
+        self._ring = ring
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            self._ring.record(
+                level=record.levelname,
+                event=record.getMessage(),
+                context={
+                    "logger": record.name,
+                    "module": record.module,
+                    "lineno": record.lineno,
+                },
+            )
+        except Exception:
+            pass
+
+
+_GLOBAL_DIAGNOSTICS_RING: DiagnosticsRing | None = None
+
+
+def get_diagnostics_ring(capacity: int = 512) -> DiagnosticsRing:
+    """Retrieve or initialize the global DiagnosticsRing singleton."""
+    global _GLOBAL_DIAGNOSTICS_RING
+    if _GLOBAL_DIAGNOSTICS_RING is None:
+        _GLOBAL_DIAGNOSTICS_RING = DiagnosticsRing(capacity=capacity)
+    return _GLOBAL_DIAGNOSTICS_RING
