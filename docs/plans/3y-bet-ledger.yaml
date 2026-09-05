@@ -20271,8 +20271,18 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - projects/omo/src/omo/resident/ledger_check.py
+  - projects/omo/src/omo/resident/status.py
+  - projects/omo/tests/unit/test_resident_status.py
+  - projects/omo/tests/unit/test_ledger_check.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-05-resident-ledger-lock-monitor-design.md
   - .omo/_knowledge/retros/BET-Y1Q4-T9-01.md
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-resident-ledger-lock-monitor-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b62640138587b9d7ce3aad85285905634487adb2210d5d87bd3236cd397167ef
+    decision_ref: decision://accepted/BET-Y1Q4-T9-01
   risk_level: L1
   human_gate: false
   circuit_breaker: 自动 kill 进程前需确认进程已僵死（CPU time < 1% over 5min）
