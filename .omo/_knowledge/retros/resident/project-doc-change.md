@@ -1,24 +1,22 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-doc-change
-generated_at: 2026-09-04T13:40:00Z
+generated_at: 2026-09-05T11:30:01Z
 status: candidate
 counts:
-  runs: 25
+  runs: 28
   failures: 0
-  total: 25
+  total: 28
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
-type: ephemeral
-status: archived
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-04T13:40:00Z
+- generated_at: 2026-09-05T11:30:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 25 成功运行 + 0 失败模式 = 25 草稿
+- sediment 覆盖: 28 成功运行 + 0 失败模式 = 28 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -48,6 +46,9 @@ status: archived
 - 20260824T075257Z-project-doc-change-ee42e0c7.md
 - 20260825T132256Z-project-doc-change-e2914012.md
 - 20260828T115730Z-project-doc-change-08be17ff.md
+- 20260905T030841Z-project-doc-change-2dc3f5be.md
+- 20260905T040605Z-project-doc-change-c33324b2.md
+- 20260905T041743Z-project-doc-change-b9bcff45.md
 
 ## 失败模式 (failures/)
 
@@ -225,6 +226,27 @@ status: archived
   - 结果与证据: ok=False, status=failed, evidence_count=1
   - 失败根因: step=execute, error=workflow failed
   - 指标: event_count=6, duration_s=4483.473
+- **20260905T030841Z-project-doc-change-2dc3f5be**
+  - 计划 (objective): multica squad ops: Squad A dry-run 验证 + SOP 沉淀
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=435.566
+- **20260905T040605Z-project-doc-change-c33324b2**
+  - 计划 (objective): multica squad ops: Squad E 供应链多样性小队 + Tier 表扩容 + 新增4智能体 文档同步
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=171.388
+- **20260905T041743Z-project-doc-change-b9bcff45**
+  - 计划 (objective): multica squad ops: 13 agent system prompt + 7 squad 指引 + Squad F/G 新增
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=84.811
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

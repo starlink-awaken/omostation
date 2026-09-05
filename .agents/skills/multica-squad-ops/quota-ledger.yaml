@@ -1,0 +1,185 @@
+# multica runtime 配额观察台账 —— 运行时数据文件，非治理 SSOT
+# 用法见 ../multica-squad-ops/SKILL.md §4「分派决策（配额感知）」
+#
+# 字段说明:
+#   runtime            : provider 名 (multica-native 对应 `multica runtime list` 的 provider 字段;
+#                         direct-cli 对应本机可执行文件名)
+#   invocation_mode    : multica-native (走 multica issue/agent) | direct-cli (Bash 直接调用其非交互命令)
+#   tier               : 当前所属能力分层 (T0-T4，见 docs/architecture/multica-squad-system-v1.md §2)
+#   quota_type         : 次数 | token | 并发 | unknown (初始未知时填 unknown，靠观察积累)
+#   period             : 日 | 月 | unknown
+#   known_limit        : 已知官方限额数值，无则 null (多数订阅制工具没有公开 quota API)
+#   exhaustion_signals : 观察到的报错关键字列表 (人工/Observer squad 补充)
+#   last_exhausted_at  : ISO8601 时间戳，最近一次判定为耗尽的时间；null 表示未触发过
+#   cooldown_hours     : 冷却期，期间该 runtime 在同 Tier 分派中降权/跳过 (默认 24)
+#
+# 熔断降级规则: 连续 2 次命中 exhaustion_signals -> 写入 last_exhausted_at ->
+#   本次及 cooldown_hours 内的分派改派同 Tier 备选。
+
+schema_version: multica-quota-ledger/v1
+entries:
+- runtime: claude
+  invocation_mode: multica-native
+  tier: T0
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+- runtime: codex
+  invocation_mode: multica-native
+  tier: T0
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+- runtime: codebuddy
+  invocation_mode: multica-native
+  tier: T1
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+- runtime: reasonix
+  invocation_mode: multica-native
+  tier: T1
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+- runtime: opencode
+  invocation_mode: multica-native
+  tier: T1
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+- runtime: droid
+  invocation_mode: direct-cli
+  tier: T1
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals:
+  - rate limit
+  - quota exceeded
+  - insufficient credit
+  last_exhausted_at: null
+  cooldown_hours: 24
+  notes: 'direct-cli: `droid exec --auto low|medium --model custom:DeepSeek-V4-Flash---Anthropic-6
+    ...`；禁止 --auto high / --skip-permissions-unsafe；2026-09-05 实测默认模型 gpt-5.6-sol
+    在当前账号地区策略下 400(Provider not available)，必须显式 --model'
+- runtime: grok
+  invocation_mode: multica-native
+  tier: T2
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+- runtime: kimi
+  invocation_mode: multica-native
+  tier: T2
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+- runtime: crush
+  invocation_mode: direct-cli
+  tier: T2
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals:
+  - rate limit
+  - quota exceeded
+  - insufficient credit
+  last_exhausted_at: null
+  cooldown_hours: 24
+  notes: 'direct-cli: `crush run --model zai/glm-5.3 ...`(模型需 provider/model 格式，裸名如"glm"会报错)；仅用于只读复核
+    prompt；2026-09-05 实测 --yolo/-y 在已装 v0.92.0 上不可用(Unknown flag)，不依赖它，靠 prompt 边界(只读不改文件)'
+- runtime: omp
+  invocation_mode: multica-native
+  tier: T3
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+- runtime: pi
+  invocation_mode: multica-native
+  tier: T3
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+- runtime: agy
+  invocation_mode: multica-native
+  tier: T0
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+  notes: 'Squad E 灾备(Agy Architect)。2026-09-05 实测确认: Google Antigravity, `agy models`
+    显示 Gemini 3.8/3.7/3.6 Flash + Gemini 3.1 Pro + Claude Sonnet/Opus 4.6(thinking)
+    + gpt-oss-120b 均可选——本身就是个多模型网关，不止 Gemini 一家。'
+- runtime: copilot
+  invocation_mode: multica-native
+  tier: T1
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+  notes: 'Squad E 灾备(Copilot Batch)。2026-09-05 实测确认: `copilot -p "..."` 默认走 GPT-5.6
+    Luna(OpenAI家族，经GitHub Copilot CLI，独立quota池，与codex/T1其它worker都不共享)。'
+- runtime: hermes
+  invocation_mode: multica-native
+  tier: T1
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals: []
+  last_exhausted_at: null
+  cooldown_hours: 24
+  notes: 'Squad E 灾备(Hermes Batch)。2026-09-05 实测确认: `hermes -z "..."` 默认走 deepseek-v4-flash
+    (provider=opencode-go)，与其它 T1 worker 模型同源但走独立 quota 池，纯用于分流不用于换视角。'
+- runtime: qoderclicn
+  invocation_mode: multica-native
+  tier: T2
+  quota_type: unknown
+  period: unknown
+  known_limit: null
+  exhaustion_signals:
+  - You've reached your credit usage limit
+  last_exhausted_at: null
+  cooldown_hours: 24
+  notes: 'Squad E 灾备(Qoder CrossReview)。2026-09-05 实测确认: `qoderclicn --list-models`
+    显示 Qwen3.8-Max/Flash + Qwen3.7-Max/Plus/Flash(阿里家族)，与 grok/kimi/crush 均不同源。'
+unclassified:
+- runtime: kilocode
+  invocation_mode: direct-cli
+  note: '有非交互命令 `kilo run --format json`，但暂不设 --auto、仅供只读实验，role=unclassified；2026-09-05
+    决定: 不再作为待办追踪，用户不特别在意这个工具，搁置不再主动推进'
+- runtime: qwen
+  invocation_mode: multica-native
+  note: '2026-09-05 实测 `qwen -p ...` 报 `[API Error: 401 invalid access token or token
+    expired]`——认证已过期，不是模型/协议问题。需要用户重新 `qwen auth` 登录后才能定级，暂不接入生产。'
