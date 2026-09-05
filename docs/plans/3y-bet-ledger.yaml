@@ -18471,7 +18471,8 @@ bets:
   title: 署名 Diff 语义反向萃取引擎与负样本硬过滤
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-05
   goal: 深入解析夏明星对初稿修改的每处 Diff（删除、替换、补充），反向提炼“避坑原则”（如禁止的空洞套话、特定行文修辞偏好、格式习惯），沉淀为 SEMA
     信念库与 MOS 规则。
   non_goals:
@@ -18491,6 +18492,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:40f50252e08923bd6f6fbe4d9ead541afec0bd05f49a87113b3c51efe65847ce
     decision_ref: decision://accepted/BET-Y1Q3-T10-115
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t10-115-hard-negative-miner-design.md
+            sha256: sha256:40f50252e08923bd6f6fbe4d9ead541afec0bd05f49a87113b3c51efe65847ce
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-115.md
+            sha256: sha256:aecd87d1486e53081135e9a61d9ad9f82cf92d21c007b09240c367d2978ea7bb
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-115.md
+            sha256: sha256:aecd87d1486e53081135e9a61d9ad9f82cf92d21c007b09240c367d2978ea7bb
+          merged_reachable_commit:
+            ref: git://origin/main@e0a4de867460ab2e1ca4123205303f1bfbda5e5a
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-115.md
+            sha256: sha256:aecd87d1486e53081135e9a61d9ad9f82cf92d21c007b09240c367d2978ea7bb
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-115.md
+            sha256: sha256:aecd87d1486e53081135e9a61d9ad9f82cf92d21c007b09240c367d2978ea7bb
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-115.md
+            sha256: sha256:aecd87d1486e53081135e9a61d9ad9f82cf92d21c007b09240c367d2978ea7bb
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-115.md
+            sha256: sha256:aecd87d1486e53081135e9a61d9ad9f82cf92d21c007b09240c367d2978ea7bb
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/omlxc/src/omlxc/dataplane/hard_negative_miner.py
   - projects/ecos/src/ecos/governance/diff_broker.py
