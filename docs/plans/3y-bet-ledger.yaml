@@ -20432,6 +20432,37 @@ bets:
     covering L0-L4/workflow/resident/BOS/execution backend + short/mid/long-term roadmap + risks/acceptance) + verify yaml_ok
     + HITL proposal hitl-20260905002432-2df9c0 approved
   note: 2nd production use of HITL Proposal System (after BET-Y1Q4-T8-04).
+  retro: required
+- id: BET-Y1Q4-T10-04
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 知识文档 type 批量分类 — UNTYPED 软信号清零收口
+  appetite: 2 days
+  priority: P2
+  status: candidate
+  goal: 为 .omo/_knowledge 等目录约 1836 个 UNTYPED 文档按目录规则批量赋 type (长期知识→ssot + --fix 补 owner/date; 时点产物→ephemeral + status:archived), 使 UNTYPED 软信号降至 <300 且硬阻塞维持 0。
+  non_goals:
+  - 不改变任何文档正文内容 (仅 frontmatter)
+  - 不处理 .omo 之外的散点 (projects/* 子模块自行治理)
+  done_when:
+  - doc-index UNTYPED 软信号 < 300 (基线 1939)
+  - doc-index 硬阻塞维持 0 (无 SSOT/DERIVED/EPHEMERAL 类回归)
+  - 目录→type 分类规则表落盘至 docs/plans/2026-09-05-untyped-classification-rules.md
+  verify:
+  - cmd: python3 bin/ssot/generate-docs-index.py --check
+    expect: exit 0 且 UNTYPED < 300
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - .omo/_knowledge/**/*.md
+  - bin/ssot/generate-docs-index.py
+  - docs/plans/2026-09-05-untyped-classification-rules.md
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 批量分类引发硬阻塞回归时立即回滚 frontmatter 变更, 不阻塞其他交付
+  retro: required
 - id: BET-Y1Q4-T10-02
   track: T10-MATURITY
   window: Y1Q4
