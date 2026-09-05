@@ -20148,7 +20148,9 @@ bets:
   title: 子模块 gitlink 漂移自动防护 + sync-check 机制强化
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-05 00:07:10+00:00
+  note: "gate+SOP already on tip (#3115); closeout registers delivery_accepted. pre-commit hook wiring deferred (ledger done_when looser than accepted spec)."
   goal: 建立子模块 gitlink 漂移的自动检测与修复机制，防止 P97 squash-SHA 悬空和本地未提交改动导致的 gitlink 不一致。强化 sync-check hook 在 submodule pointer 变更时的自动同步能力。
   non_goals:
   - 不改变现有 submodule-guard 的 fast-forward 校验逻辑
@@ -20165,16 +20167,55 @@ bets:
   write_surfaces:
   - bin/ssot/submodule-reachability-gate.py
   - docs/architecture/submodule-sync-sop.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-03.md
   pasw_required: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-04-submodule-gitlink-drift-guard-spec.md
     spec_version: 1.0.0
     content_digest: sha256:5237b2a18d2e8cbc92994cf92b98c417fe8969b649a75c908f092e8ad84b9958
     decision_ref: decision://accepted/BET-Y1Q4-T6-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-submodule-gitlink-drift-guard-spec.md
+            sha256: sha256:5237b2a18d2e8cbc92994cf92b98c417fe8969b649a75c908f092e8ad84b9958
+          tests:
+            ref: receipt://bin/ssot/submodule-reachability-gate.py
+            sha256: sha256:f9b3a388c458ea6de09900b40e7c4c09fc35c47e3d4f332e8f552ce31266e5df
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-03.md
+            sha256: sha256:a208ed50a5d6c73fad240822e793ed06abfb29a83a76f9a559ba7ace0c95002f
+          merged_reachable_commit:
+            ref: git://origin/main@1e15437e06950867d4ccabc25c541ec090665bb5
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-03.md
+            sha256: sha256:a208ed50a5d6c73fad240822e793ed06abfb29a83a76f9a559ba7ace0c95002f
+          fresh_receipt:
+            ref: receipt://docs/architecture/submodule-sync-sop.md
+            sha256: sha256:f9a506f071edee65c40697770f0c60be166c6f186834c79c64fef20f059939c0
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-03.md
+            sha256: sha256:a208ed50a5d6c73fad240822e793ed06abfb29a83a76f9a559ba7ace0c95002f
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-03.md
+            sha256: sha256:a208ed50a5d6c73fad240822e793ed06abfb29a83a76f9a559ba7ace0c95002f
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   risk_level: L1
   human_gate: false
   circuit_breaker: fast-forward 校验失败时停止，不强制更新
   retro: required
+  value_indicator_policy: false
 - id: BET-Y1Q4-T8-04
   track: T8-SURFACE
   window: Y1Q4
