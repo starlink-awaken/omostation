@@ -10,12 +10,12 @@ import argparse
 import sys
 from typing import Any
 
-from cockpit.domain.exit_codes import ExitCode
 from cockpit.commands.registry import (
-    ORTHOGONAL_DOMAINS,
-    LEGACY_COMMAND_MAPPING,
     COMMAND_CATALOG,
+    LEGACY_COMMAND_MAPPING,
+    ORTHOGONAL_DOMAINS,
 )
+from cockpit.domain.exit_codes import ExitCode
 
 SUPPORTED_SHELLS = ("bash", "zsh", "fish")
 
@@ -285,3 +285,44 @@ def cmd_completion(args: argparse.Namespace) -> int:
         print(script, end="")
 
     return int(ExitCode.SUCCESS)
+
+
+# ── T8-16: typo correction (Levenshtein did-you-mean) ────────────────────
+
+def _levenshtein(a: str, b: str) -> int:
+    """Classic edit distance (insert/delete/substitute, all cost 1)."""
+    if a == b:
+        return 0
+    if not a:
+        return len(b)
+    if not b:
+        return len(a)
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1]
+
+
+def suggest_commands(unknown: str, max_distance: int = 2, limit: int = 3) -> list[str]:
+    """Return the closest known commands for an unknown token.
+
+    Candidates come from the SSOT registry (COMMAND_CATALOG + legacy mapping
+    keys + domain names). Sorted by edit distance, then alphabetically.
+    """
+    from cockpit.commands.registry import COMMAND_CATALOG, LEGACY_COMMAND_MAPPING, ORTHOGONAL_DOMAINS
+
+    candidates: set[str] = set(COMMAND_CATALOG.keys()) | set(LEGACY_COMMAND_MAPPING.keys())
+    candidates.update(ORTHOGONAL_DOMAINS.keys())
+    candidates.update({"help", "completion", "telemetry"})
+    token = unknown.strip().lower()
+    if not token:
+        return []
+    scored = sorted(
+        (_levenshtein(token, c), c)
+        for c in candidates
+        if abs(len(c) - len(token)) <= max_distance + 1
+    )
+    return [cmd for dist, cmd in scored if dist <= max_distance][:limit]
