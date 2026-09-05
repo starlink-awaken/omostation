@@ -13258,6 +13258,11 @@ bets:
     expect: candidate BET 结构合法
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t6-16-protective-convergence-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:5f96c8b175460b626d86416d8679988963349ebe0b0c6fa80562f9400b85951b
+    decision_ref: decision://accepted/BET-Y1Q3-T6-16
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-02-local-repository-reconciliation-design.md
