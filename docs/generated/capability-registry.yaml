@@ -15,7 +15,7 @@ totals:
   bos_services: 298
   bos_domains: 22
   cli_commands: 207
-  skills: 38
+  skills: 39
   workflows: 24
 mcp_servers:
 - id: omo
@@ -2588,6 +2588,9 @@ skills:
   exists: true
 - id: memory-recall
   file: .agents/skills/memory-recall/SKILL.md
+  exists: true
+- id: multica-squad-ops
+  file: .agents/skills/multica-squad-ops/SKILL.md
   exists: true
 - id: nextgen-cognitive-mesh
   file: .agents/skills/nextgen-cognitive-mesh/SKILL.md
