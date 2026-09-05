@@ -8,6 +8,7 @@ related:
   - ../../projects/runtime/src/runtime/scheduler.py
   - p73-truth-driven-engineering-pattern.md
   - decl-exec-gap-meta-pattern.md
+type: ssot
 ---
 
 # P76 — Launcher Zombie False Positive Pattern (launchd 保活掩盖子服务死亡)

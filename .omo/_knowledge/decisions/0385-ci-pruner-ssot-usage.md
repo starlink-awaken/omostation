@@ -5,6 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-07
+type: ssot
 ---
 
 # 0385 — CI Pruner + SSOT Usage Round

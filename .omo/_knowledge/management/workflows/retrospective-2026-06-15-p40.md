@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: retrospective-2026-06-15-p40.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # P40-W2 + W3 收官复盘 — 2026-06-15

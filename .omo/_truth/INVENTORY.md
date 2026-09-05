@@ -3,6 +3,7 @@ status: active
 lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-29
+type: ssot
 ---
 
 # Workspace 项目资产索引

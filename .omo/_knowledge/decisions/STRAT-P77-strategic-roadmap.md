@@ -9,6 +9,7 @@ related:
   - STRAT-P76-strategic-roadmap.md (上一路线图, 已 100% closed)
 supersedes:
   - STRAT-P76 (P77 接替 P76 路线图目标)
+type: ssot
 ---
 
 # STRATEGY-DECISION: P77 战略路线图 — 12 周 5 phase 跨仓一致性 + 演化护栏

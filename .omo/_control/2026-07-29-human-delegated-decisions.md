@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 # 人类授权决策记录 — 2026-07-29
 
 > **性质**: 人类（xiamingxing）于 2026-07-29 明确授权：「按照你的建议来，决策项按照最优解来，你帮我辅助决策」。

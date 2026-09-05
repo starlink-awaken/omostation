@@ -12,6 +12,7 @@ related:
   - ../../../../../docs/operations/knowledge-foundry-sop.md
   - ../../../../../.omo/_truth/registry/governance-checks.yaml
 supersedes: []
+type: ssot
 ---
 
 # ADR-0178: P79 Phase 5 — 收官 (SOP + GaC 冻结 + 路线图结项)

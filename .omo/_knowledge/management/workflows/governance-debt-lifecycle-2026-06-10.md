@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: governance-debt-lifecycle-2026-06-10.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # §15 治理债管理流程 — 债的生命周期 (Round 33 起步)

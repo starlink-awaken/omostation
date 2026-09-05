@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 1
   trace_count: 1
+type: ephemeral
+status: archived
 ---
 # pyright-sweep 运行复盘聚合 (resident 事件驱动)
 

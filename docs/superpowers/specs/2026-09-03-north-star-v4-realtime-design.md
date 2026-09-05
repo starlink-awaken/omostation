@@ -8,6 +8,7 @@ lifecycle: contract
 owner: governance-team
 created: 2026-09-03
 last-reviewed: 2026-09-03
+type: ssot
 ---
 
 # 北极星价值度量看板 V4 与认知杠杆率实时投影

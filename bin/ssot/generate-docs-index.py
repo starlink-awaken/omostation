@@ -153,6 +153,63 @@ def fix_missing_metadata(files: list[dict], owner: str, date: str) -> int:
     return fixed
 
 
+def classify_files(rules: list[dict], owner: str, date: str) -> tuple[int, dict[str, int]]:
+    """--classify 模式: 按目录规则给 UNTYPED 文档批量写 type[/status]。
+    ssot 类同时补 owner/last-reviewed (与 --fix 同口径), 单次操作完成,
+    避免跑全局 --fix 弄脏子模块工作区。
+    规则匹配: 路径以 dir + '/' 开头 (目录边界), 最长前缀优先。
+    返回 (修复文件数, {规则: 命中数})。"""
+    files = scan_md_files()
+    ordered = sorted(rules, key=lambda r: len(r.get("dir", "")), reverse=True)
+    fixed = 0
+    stats: dict[str, int] = {}
+    for f in files:
+        if f["type"] != "untyped":
+            continue
+        rule = next(
+            (r for r in ordered if f["path"].startswith(r.get("dir", "").rstrip("/") + "/")),
+            None,
+        )
+        if rule is None:
+            continue
+        new_type = rule.get("type", "")
+        if new_type not in ("ssot", "derived", "ephemeral"):
+            print(f"[doc-index --classify] 跳过非法 type: {rule}")
+            continue
+        additions = [f"type: {new_type}"]
+        status = rule.get("status", "")
+        if status:
+            additions.append(f"status: {status}")
+        if new_type == "ssot":
+            # 与 --fix 同口径: 已有 owner/date 不重复写 (避免重复键)
+            if not f.get("owner"):
+                additions.append(f"owner: {owner}")
+            if not (f.get("last_updated") or f.get("last-reviewed")):
+                additions.append(f"last-reviewed: {date}")
+        path = ROOT / f["path"]
+        try:
+            content = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if content.startswith("---"):
+            end = content.find("---", 3)
+            if end == -1:
+                continue
+            block = content[3:end]
+            if block and not block.endswith("\n"):
+                block += "\n"
+            block += "\n".join(additions) + "\n"
+            path.write_text(content[:3] + block + content[end:], encoding="utf-8")
+        else:
+            # 无 frontmatter: 新建块 (与正文间空行分隔)
+            fm = "---\n" + "\n".join(additions) + "\n---\n\n"
+            path.write_text(fm + content, encoding="utf-8")
+        fixed += 1
+        key = f"{rule['dir']} -> {new_type}" + (f" ({status})" if status else "")
+        stats[key] = stats.get(key, 0) + 1
+    return fixed, stats
+
+
 def check_compliance(files: list[dict]) -> list[str]:
     """合规检查，返回问题列表"""
     issues = []
@@ -275,10 +332,38 @@ def main():
     parser.add_argument("--json", action="store_true", help="输出 JSON 格式")
     parser.add_argument("--fix", action="store_true",
                         help="自愈模式: 批量补 type:ssot 缺失的 owner/last-reviewed (文本级最小 diff)")
+    parser.add_argument("--classify", metavar="RULES",
+                        help="批量分类模式: 按规则 YAML 给 UNTYPED 文档写 type[/status] (ssot 同时补 owner/date; 需 pyyaml)")
     parser.add_argument("--owner", default="governance-team", help="--fix 模式补写的 owner 值")
     parser.add_argument("--date", default=datetime.now().strftime("%Y-%m-%d"),
                         help="--fix 模式补写的 last-reviewed 日期 (默认今天)")
     args = parser.parse_args()
+
+    if args.classify:
+        try:
+            import yaml  # noqa: F401  -- 仅 --classify 需要 (一次性治理操作)
+        except ImportError:
+            print("[doc-index --classify] 需要 pyyaml: uv run --with pyyaml python3 bin/ssot/generate-docs-index.py --classify <rules>")
+            return 2
+        rules_path = Path(args.classify)
+        rules_doc = yaml.safe_load(rules_path.read_text(encoding="utf-8")) or {}
+        rules = rules_doc.get("rules") or []
+        if not rules:
+            print(f"[doc-index --classify] 规则文件无 rules 列表: {rules_path}")
+            return 2
+        fixed, stats = classify_files(rules, args.owner, args.date)
+        print(f"[doc-index --classify] 分类 {fixed} 个文件")
+        for key, n in sorted(stats.items(), key=lambda kv: -kv[1]):
+            print(f"  {key}: {n}")
+        # 分类后重扫验证: 硬阻塞应维持 0
+        files2 = scan_md_files()
+        hard_after = [i for i in check_compliance(files2) if not i.startswith("[UNTYPED]")]
+        print(f"[doc-index --classify] 剩余硬阻塞 {len(hard_after)}")
+        for i in hard_after[:10]:
+            print(f"  残留: {i[:110]}")
+        untyped_after = sum(1 for f in files2 if f["type"] == "untyped")
+        print(f"[doc-index --classify] UNTYPED 剩余 {untyped_after}")
+        return 0
 
     if args.fix:
         files = scan_md_files()

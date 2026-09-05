@@ -10,6 +10,7 @@ supersedes: []
 related:
   - 0209-ledger-trim-and-adr-ssot-renumbering.md
   - 0130-p74-workflow-solidification.md
+type: ssot
 ---
 
 # ADR-0211 — P74 `excluded_workflows` 字段废弃 → `run_frequency` 落地

@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: "2026-07-29"
+type: ssot
 ---
 # P84 自动推进终止条件 (Q1, ADV 传送带停)
 

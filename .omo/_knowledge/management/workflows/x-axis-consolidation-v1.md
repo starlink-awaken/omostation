@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: x-axis-consolidation-v1.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 5+3+1 X 轴架构体系融合设计 (X-Axis Architecture Consolidation)

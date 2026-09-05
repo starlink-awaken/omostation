@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0108: P110-A ecos domain_manager 2 子模块化 (1914→1406L, 跨 submodule 治理)

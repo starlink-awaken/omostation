@@ -7,6 +7,7 @@ deprecated-since: 2026-06-23
 migrated-to: .omo/_knowledge/design/specs/memtheta-operators.md
 migration-date: 2026-06-23
 migration-reason: "P54 R2: 真迁移到 design/specs/ 统一设计契约区, 本文件保留为历史指针"
+type: ssot
 ---
 
 # Memθ (Mem-Theta) 记忆算子体系与接口规范设计 (DEPRECATED)

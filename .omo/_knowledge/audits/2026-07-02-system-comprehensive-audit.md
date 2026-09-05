@@ -8,6 +8,8 @@ related:
   - 0115-bin-governance-rationalize.md
   - 0119-systemic-optimization-roadmap-2026h2.md
   - 0120-runtime-health-semantics-fix.md
+type: ephemeral
+status: archived
 ---
 
 # 系统全面审计 (2026-07-02) — 架构 / 功能 / 文档 / 债务 / 配置 5 维

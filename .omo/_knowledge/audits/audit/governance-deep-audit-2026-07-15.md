@@ -5,6 +5,8 @@ owner: kems-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ephemeral
+status: archived
 ---
 # 治理深度审计 — 问题验证与根本性治理方案
 

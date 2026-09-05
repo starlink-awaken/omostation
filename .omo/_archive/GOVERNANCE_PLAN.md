@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # ⚠️ LEGACY — WorkSpace 治理计划 — 总纲
 
 > **历史战略快照，不再作为当前治理执行源。**

@@ -9,6 +9,8 @@ related:
   - ../../standards/p74-solidification-contract.md
   - ../../../.agents/skills/workflow-silence-detection/SKILL.md
   - 2026-07-02-p0-baseline-recovery-closeout.md
+type: ephemeral
+status: archived
 ---
 
 # P74 Workflow Solidification — Closeout Report

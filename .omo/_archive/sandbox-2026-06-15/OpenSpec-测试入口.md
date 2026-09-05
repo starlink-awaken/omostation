@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 测试入口
 - [ ] TODO: 补充详细需求
 - [ ] 实现核心模块

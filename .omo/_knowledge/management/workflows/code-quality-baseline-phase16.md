@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: code-quality-baseline-phase16.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 代码质量基线 — Phase 16 完成后

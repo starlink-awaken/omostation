@@ -9,6 +9,7 @@ related:
   - 0152-m4-gac-rules.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0238: MOF/M4 Phase 0 注册面守自止血 (P0-1..P0-4)

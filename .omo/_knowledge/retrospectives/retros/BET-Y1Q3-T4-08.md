@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-30
+type: ephemeral
+status: archived
 ---
 # BET-Y1Q3-T4-08 Retrospective — WP6 Physical Backup Restore Integrity Drill
 

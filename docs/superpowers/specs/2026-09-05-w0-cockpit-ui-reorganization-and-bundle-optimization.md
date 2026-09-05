@@ -11,6 +11,7 @@ risk_level: L1
 human_gate: false
 value_indicator_policy: false
 implementation_authorized: true
+type: ssot
 ---
 
 # Web UI (cockpit-ui) 8 大正交一级领域重组与包体瘦身设计规约

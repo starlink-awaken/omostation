@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-29
+type: ssot
 ---
 
 # SSOT 7 Domain Schema — Full Execution Governance Standard

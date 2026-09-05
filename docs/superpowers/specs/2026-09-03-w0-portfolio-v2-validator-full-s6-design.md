@@ -14,6 +14,7 @@ source_design_sha256: d6c9aa76d4e1a9f6e4a2a4d1b21f1c1b2b3f4f5f6f7f8f9fafbfcfdfef
 source_proposal_sha256: d6c9aa76d4e1a9f6e4a2a4d1b21f1c1b2b3f4f5f6f7f8f9fafbfcfdfeff0002
 source_amendment_sha256: d6c9aa76d4e1a9f6e4a2a4d1b21f1c1b2b3f4f5f6f7f8f9fafbfcfdfeff0003
 implementation_authorized: true
+type: ssot
 ---
 
 # W0 Portfolio v2 Validator Full §6 Check Expansion

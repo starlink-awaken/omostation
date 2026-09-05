@@ -10,6 +10,7 @@ related:
   - 0204-requirement-iteration-enforcement.md
   - 0211-p74-run-frequency-field-and-excluded-workflows-removal.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0213 — ADR-0209 附录 A 收口（A2 / A4 / A6）

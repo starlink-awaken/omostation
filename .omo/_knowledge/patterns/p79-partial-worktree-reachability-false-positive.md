@@ -3,6 +3,7 @@ status: active
 lifecycle: pattern
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ssot
 ---
 # P79 — Partial Worktree Reachability False-Positive Pattern
 

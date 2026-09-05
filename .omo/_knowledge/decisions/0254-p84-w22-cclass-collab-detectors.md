@@ -9,6 +9,7 @@ related:
   - .omo/_knowledge/audits/2026-07-28-p84-w2-27fail-retry-triage.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0254: P84 W2.2 C/S 类协作检测器落地

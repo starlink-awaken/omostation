@@ -12,6 +12,7 @@ related:
   - 0294-knowledge-gateway-decoupling-and-event-pipeline.md
   - 0315-knowledge-to-action-loop.md
   - 0156-p76-phase2-call-direction.md
+type: ssot
 ---
 
 # ADR-0372: Memory OS 控制面

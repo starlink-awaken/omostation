@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: architecture-health-snapshot-phase16-post.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 架构健康快照 — Phase 16 完成后

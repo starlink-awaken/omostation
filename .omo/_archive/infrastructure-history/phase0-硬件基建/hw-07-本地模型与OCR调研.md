@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 07 — 本地模型补充调研：Qwopus 与 OCR 方案
 
 > 更新日期：2026-05-20

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Closeout — 2026-07-15 plan --acl + demo seed UI
 
 - ADR-0196: omo acl plan --acl (dry-run ACE script)

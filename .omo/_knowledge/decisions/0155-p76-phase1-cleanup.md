@@ -10,6 +10,7 @@ related:
   - 0153-m4-agent-workflows-tools.md
   - 0154-m4-omo-cron-integration.md
   - ../../../../../docs/SOP-GOD-MODULE-SPLIT.md
+type: ssot
 ---
 
 # ADR-0155: P76 Phase 1 收口 (积压清理)

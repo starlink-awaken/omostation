@@ -1,4 +1,6 @@
 ---
+name: round-workflow
+description: "回合工作流 skill：回合制任务的状态机管理与轮次推进"
 title: Round Workflow
 type: skill
 owner: governance-team

@@ -4,6 +4,7 @@ lifecycle: deprecated
 owner: governance-team
 last-reviewed: 2026-07-02
 note: "P77 migrated to workflows/governance-charter-v1.md; keep stub for backward compat"
+type: ssot
 ---
 
 > **已迁移**: 本文件已物理迁移到 [workflows/governance-charter-v1.md](workflows/governance-charter-v1.md) (P77). 请从新路径引用.

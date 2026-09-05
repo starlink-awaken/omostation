@@ -8,6 +8,7 @@ related:
   - 0216-compass-feedback-partial-smoke.md
   - 0217-workflow-hygiene-layer-check-and-evidence.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0219 — BOS 全量 evidence-smoke 可复现路径

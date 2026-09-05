@@ -5,6 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-08
+type: ssot
 ---
 
 # ADR-0393 Decision: god-module 大文件治理计划

@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-07-28
+type: ephemeral
+status: archived
 ---
 # 决策 Inbox 落地收口（2026-07-28）
 

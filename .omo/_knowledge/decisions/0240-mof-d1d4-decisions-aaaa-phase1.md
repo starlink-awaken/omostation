@@ -9,6 +9,7 @@ related:
   - docs/proposals/2026-07-25-mof-m4-governance-optimization-plan.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0240: MOF/M4 D1-D4 决策 (A/A/A/A) — Phase 1 启动

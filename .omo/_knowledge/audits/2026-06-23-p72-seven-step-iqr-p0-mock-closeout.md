@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ephemeral
+status: archived
 ---
 
 # P72 — governance-agent 7 步 + alert-history sup_state 扩展 + dim-weight IQR 调优 + P0 mock 通知 收口

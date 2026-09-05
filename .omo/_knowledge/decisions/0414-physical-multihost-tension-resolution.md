@@ -18,6 +18,7 @@ amends:
   - 0225-g-del-physical-multihost-gate-caliber.md
   - 0226-g-del-1-blocked-until-four-hosts.md
 session: strategy-convergence-r3
+type: ssot
 ---
 
 # ADR-0414: 物理多机张力 — 0247 与 0225/0226 的关系澄清

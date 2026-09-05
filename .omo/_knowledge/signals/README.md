@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 信号库（signals/）
 
 > ADR-0443 决策分级：信号/draft 级内容在此**不占 ADR 编号**。人审后若升格为

@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: "2026-07-29"
+type: ephemeral
+status: archived
 ---
 # P86 A/B/C/D 最终收尾结案
 

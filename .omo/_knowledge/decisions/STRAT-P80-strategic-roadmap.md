@@ -11,6 +11,7 @@ related:
   - STRAT-P79-strategic-roadmap.md
   - phase45-plan.md
 supersedes: []
+type: ssot
 ---
 
 > 📋 **处置 (2026-08-17 分类, 推演文档 §4 分支B)**: SUPERSEDED — M1 提前与收敛期精神已由 ADR-0410 主线 + T 系执行覆盖

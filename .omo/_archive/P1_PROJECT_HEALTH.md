@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # P1 三个早期项目分析报告
 
 > Phase 1 历史分析快照，不再作为当前 phase 决策入口。

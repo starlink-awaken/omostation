@@ -6,6 +6,7 @@ last-reviewed: 2026-08-04
 related:
   - ../decisions/0364-pyright-sweep-algorithm.md
   - p74-workflow-solidification-pattern.md
+type: ssot
 ---
 
 # P91 — Pyright Sweep Pattern

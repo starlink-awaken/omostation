@@ -5,6 +5,7 @@ created: 2026-08-30
 last-reviewed: 2026-08-30
 owner: governance-team
 adr: ADR-0441
+type: ssot
 ---
 
 # DW 协同契约 v1（Documents↔Workspace 三原语）

@@ -20,6 +20,7 @@ related:
   - TELOS.md#beliefs (B1: dormant code is dead code)
   - ../../gac-local-gate.py (the bus-usage-report gate)
   - ../../../CLAUDE.md
+type: ssot
 ---
 
 # Dormant Adapter Detector

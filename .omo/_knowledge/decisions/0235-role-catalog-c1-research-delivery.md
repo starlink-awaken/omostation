@@ -9,6 +9,7 @@ related:
   - STRAT-P81-strategic-roadmap.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0235: ROLE_CATALOG C1 扩展 — research/delivery 第二波角色

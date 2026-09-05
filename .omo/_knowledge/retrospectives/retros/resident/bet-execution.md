@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 25
   trace_count: 25
+type: ephemeral
+status: archived
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 

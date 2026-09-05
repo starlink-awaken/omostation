@@ -5,6 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-07
+type: ssot
 ---
 
 # ADR-0388 Decision: CI 平面减法收官

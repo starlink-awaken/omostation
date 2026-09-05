@@ -7,6 +7,8 @@ workflow_run_id: points-calc-043db0da5c2f
 event_id: 2abe1cd5b043446aa8a6807daeb19c63
 proposal_count: 2
 generated_at: 2026-09-04T08:24:52Z
+type: ephemeral
+status: archived
 ---
 
 # 决策提案收件箱 (T10-13)

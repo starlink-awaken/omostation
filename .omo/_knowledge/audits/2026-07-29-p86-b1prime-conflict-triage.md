@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: "2026-07-29"
+type: ephemeral
+status: archived
 ---
 # P86 B1' 六类冲突取舍 + 协议边界标注 (P3)
 

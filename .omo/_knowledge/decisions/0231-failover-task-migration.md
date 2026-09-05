@@ -9,6 +9,7 @@ related:
   - 0228-m1-acceptance-physical-deferred-reorder.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0231: Failover — task migration on node loss

@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 33
   trace_count: 33
+type: ephemeral
+status: archived
 ---
 # mini 运行复盘聚合 (resident 事件驱动)
 

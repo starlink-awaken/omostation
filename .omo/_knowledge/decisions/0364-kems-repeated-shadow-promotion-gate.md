@@ -6,6 +6,7 @@ date: 2026-08-04
 owner: architecture-governance
 lifecycle: spec
 last-reviewed: 2026-08-04
+type: ssot
 ---
 
 # ADR-0364: KEMS Repeated Shadow Evaluation and Human Promotion Gate

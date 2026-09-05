@@ -9,6 +9,7 @@ related:
   - ADR-0407
   - ADR-0371
   - ADR-0220
+type: ssot
 ---
 
 # ADR-0408: G-1 Swarm Readiness Gate Close — Six SR Direct Evidence

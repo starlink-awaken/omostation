@@ -8,6 +8,7 @@ related:
   - ../../../docs/AGENT-ISOLATION-ROLLOUT.md
   - p72-follow-up-completion-pattern.md
   - p71-baseline-recovery-pattern.md
+type: ssot
 ---
 
 # P73 Truth-Driven Engineering Pattern — eCOS 多迁移/并发/声明执行鸿沟下的工程纪律

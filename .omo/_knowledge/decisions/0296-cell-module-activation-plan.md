@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-agent
 last-reviewed: 2026-09-01
+type: ssot
 ---
 
 # Cell 模块激活方案 (chain_4 修复)

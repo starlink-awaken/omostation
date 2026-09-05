@@ -18,6 +18,7 @@ related:
   - .omo/_knowledge/retros/BET-Y1Q3-T6-01.md
 supersedes: []
 session: strategy-convergence-r3
+type: ssot
 ---
 
 # ADR-0413: gbrain + kairon 归并为 knowledge — 决策补档

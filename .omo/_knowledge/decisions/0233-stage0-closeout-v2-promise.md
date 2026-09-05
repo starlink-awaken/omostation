@@ -16,6 +16,7 @@ related:
   - ADR-0232 g-del-2b-official-pass
   - STRAT-P81-strategic-roadmap.md
   - 2026-07-24-p81-stage0-closeout-v2 (audit)
+type: ssot
 ---
 
 # 0233 - STRAT-P81 Stage 0 closeout v2 占位

@@ -7,6 +7,8 @@ workflow_run_id: 20260828T041632Z-project-code-change-fa15f5e3
 event_id: 2bb1242b713b43a28626d24432cce1b7
 proposal_count: 0
 generated_at: 2026-08-28T04:44:26Z
+type: ephemeral
+status: archived
 ---
 
 # 决策提案收件箱 (T10-13)

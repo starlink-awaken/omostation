@@ -10,6 +10,7 @@ related:
 - CR-GIT-STAGE-SUBMODULE-PIN
 origin_reports:
 - docs/reports/2026-08-31-swarm-collaboration-retro.md
+type: ssot
 ---
 
 # P96: 多 agent 共享状态卫生（swarm shared-state hygiene）

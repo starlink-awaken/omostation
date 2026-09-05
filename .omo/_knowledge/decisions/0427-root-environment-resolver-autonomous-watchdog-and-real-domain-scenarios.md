@@ -4,6 +4,7 @@ status: archived
 lifecycle: spec
 owner: cockpit
 last-reviewed: '2026-08-25'
+type: ssot
 ---
 
 # ADR-0427: 根级环境解析器、自愈看门狗与真实领域业务卡带架构

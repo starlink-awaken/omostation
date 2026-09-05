@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-13
 title: 低分 P0 核心命令群体验重构与参数面补全
 symptom: 9 个高频核心命令缺乏 --dry-run、JSON 格式不纯或缺失、容错自愈能力弱
 solution: 全面重构 dashboard, quickstart, journey, capabilities, data, iterate, workflow, compass, brain
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-13 复盘

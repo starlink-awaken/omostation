@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # OpenHuman 分析报告 — 借鉴点与集成评估
 
 > 来源: [tinyhumansai/openhuman](https://github.com/tinyhumansai/openhuman)

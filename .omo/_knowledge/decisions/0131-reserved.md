@@ -4,6 +4,7 @@ status: superseded
 lifecycle: spec
 owner: none
 last-reviewed: 2026-07-06
+type: ssot
 ---
 # ADR 0131: Reserved
 

@@ -6,6 +6,7 @@ lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-04
 note: "Reissues the AGT × eCOS v6 contract under a fresh id (replaces the placeholder that collided with ADR-0366); see ADR-0366 for the Pyright sweep algorithm."
+type: ssot
 ---
 
 # ADR-0370: AGT × eCOS v6 Integration via BOS URI External Adapter Pattern

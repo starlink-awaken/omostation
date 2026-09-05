@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: '@Builder'
 last-reviewed: '2026-08-09'
+type: ssot
 ---
 
 # ADR-0402: 门禁后移与自主审查架构

@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 # CLAUDE.md — Obsidian Vault
 
 域入口协议。

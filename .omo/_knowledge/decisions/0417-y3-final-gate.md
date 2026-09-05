@@ -13,6 +13,7 @@ related:
   - .omo/_knowledge/decisions/0415-reject-agt-integration-adopt-capability-parity.md
   - .omo/_knowledge/decisions/0416-y2-gate-vision-falsification.md
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+type: ssot
 ---
 
 # ADR-0417: Y3 终局门 — 三年验收标准判定

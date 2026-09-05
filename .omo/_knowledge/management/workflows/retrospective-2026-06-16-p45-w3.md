@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: retrospective-2026-06-16-p45-w3.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # P45 W3 复盘: OMO/eCOS 面板 cockpit 收敛验证 + simplify 3 + .omc gitignore

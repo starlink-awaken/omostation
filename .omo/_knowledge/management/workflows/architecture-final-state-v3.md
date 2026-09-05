@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: architecture-final-state-v3.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # eCOS 最终态架构 v3.0 (依赖分析修正版)

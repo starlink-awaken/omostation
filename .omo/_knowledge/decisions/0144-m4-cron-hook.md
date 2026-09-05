@@ -13,6 +13,7 @@ related:
   - ../../../../.omo/_derived/m4-cron-log.json
   - ../../../../.omo/cron/operating-rhythm-crontab
 supersedes: []
+type: ssot
 ---
 
 # ADR-0144: M4 Cron Hook (Round 4d)

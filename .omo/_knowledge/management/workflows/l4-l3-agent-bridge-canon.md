@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: l4-l3-agent-bridge-canon.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # L4 → L3 → Agent 桥接协议 (Architecture Canon)

@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: 2026-06-19-bet-38c6-p0-triage-report.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # BET-38c6 P0 Task Triage Report

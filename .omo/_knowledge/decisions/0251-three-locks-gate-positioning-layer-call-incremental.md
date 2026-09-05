@@ -10,6 +10,7 @@ related:
   - 0238-mof-m4-phase0-registry-self-governance.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0251: 三把锁 gate 定位 (layer-call/drift/doc-claims) + layer-call 增量快路径

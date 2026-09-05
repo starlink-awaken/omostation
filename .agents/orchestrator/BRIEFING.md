@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 # BRIEFING — 2026-06-23T10:26:11+08:00
 
 ## Mission

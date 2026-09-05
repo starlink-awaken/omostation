@@ -13,6 +13,7 @@ related:
   - ../../../projects/ecos/src/ecos/ssot/mof/m0/mof_driven.py
   - ../../../../bin/mof-bootstrap.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0134: meta_model ↔ m3.yaml 双轨桥接受 (M3-meta ACCEPTED)

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 机制体系索引
 
 > v1.0.0 | 从 `.omo/` 和 `GOVERNANCE_PLAN.md` 提取的工程治理机制

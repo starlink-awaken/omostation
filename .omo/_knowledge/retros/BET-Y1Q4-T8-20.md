@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-20
 title: 声明式卡片扩展 SDK 与外部业务域即插即用挂载
 symptom: 旧版 Cockpit 卡片全硬编码在核心库中，外部业务域（如 family-hub、omlxc 等）无法通过声明式配置动态挂载卡片与操作面板
 solution: 研发 DCE SDK v1 声明式卡片工坊与 surface-manifest/v1 规范，实现基于 Directory Glob 的自动发现加载器、Schema 校验熔断器与 USP v1 SurfaceEnvelope 动态转换，成功挂载 family-hub 业务卡片
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-20 复盘

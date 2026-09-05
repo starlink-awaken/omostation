@@ -6,6 +6,7 @@ date: 2026-08-04
 owner: architecture-governance
 lifecycle: spec
 last-reviewed: 2026-08-04
+type: ssot
 ---
 
 # ADR-0363: External Resource Refresh Plan and Controlled Reachability

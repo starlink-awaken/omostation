@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: opc-m15-gate-b2-closure-2026-06-11.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # OPC M1.5 Gate B2 收口 (Cross-repo governance baseline)

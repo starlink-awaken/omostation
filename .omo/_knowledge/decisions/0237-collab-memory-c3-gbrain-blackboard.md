@@ -10,6 +10,7 @@ related:
   - STRAT-P81-strategic-roadmap.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0237: C3 协作记忆 — gbrain 公共黑板（跨任务上下文复用）

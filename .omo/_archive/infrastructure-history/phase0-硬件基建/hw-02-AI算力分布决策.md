@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 02 — AI 算力分布决策
 
 > 核心问题：各设备的本地推理能力如何分配？
