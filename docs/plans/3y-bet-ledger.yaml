@@ -18546,7 +18546,8 @@ bets:
   title: Cockpit Spine 交互控制台 V2 与一键外发网关
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-05
   goal: 打造极具沉浸感的公文/邮件审阅与修改工作台（Textual 1.x 终端 HUD + Web 控制台），支持左右分栏对比、行级快捷微调、一键确认署名并直接通过
     API / SMTP 真实外发。
   non_goals:
@@ -18567,9 +18568,48 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:9f1ff542ff657599572930adb8dca0dafc4e96b235bf0f771d3b8984303478e8
     decision_ref: decision://accepted/BET-Y1Q3-T10-116
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t10-116-spine-review-workbench-design.md
+            sha256: sha256:9f1ff542ff657599572930adb8dca0dafc4e96b235bf0f771d3b8984303478e8
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-116.md
+            sha256: sha256:71f0f2eabfa084ca9ff1a44633b5706f0c58520caac40755875a0d9d24ecfd16
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-116.md
+            sha256: sha256:71f0f2eabfa084ca9ff1a44633b5706f0c58520caac40755875a0d9d24ecfd16
+          merged_reachable_commit:
+            ref: git://origin/main@a2a5663244d81534552f098072428dc5ba272a6f
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-116.md
+            sha256: sha256:71f0f2eabfa084ca9ff1a44633b5706f0c58520caac40755875a0d9d24ecfd16
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-116.md
+            sha256: sha256:71f0f2eabfa084ca9ff1a44633b5706f0c58520caac40755875a0d9d24ecfd16
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-116.md
+            sha256: sha256:71f0f2eabfa084ca9ff1a44633b5706f0c58520caac40755875a0d9d24ecfd16
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-116.md
+            sha256: sha256:71f0f2eabfa084ca9ff1a44633b5706f0c58520caac40755875a0d9d24ecfd16
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/spine.py
   - projects/cockpit-ui/src/components/SpineReviewModal.tsx
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T10-116.md
   pasw_required: false
   depends_on:
