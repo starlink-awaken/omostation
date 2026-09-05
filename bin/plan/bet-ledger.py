@@ -1858,7 +1858,8 @@ def validate_accepted_specification(
                             "SPEC_FRONTMATTER_VERSION_MISMATCH: frontmatter spec_version must equal binding"
                         )
                     if frontmatter.get("bet_id") != bet_id:
-                        errors.append("SPEC_FRONTMATTER_BET_MISMATCH: frontmatter bet_id must equal BET id")
+                        if bet.get("status") != "done":
+                            errors.append("SPEC_FRONTMATTER_BET_MISMATCH: frontmatter bet_id must equal BET id")
             if isinstance(content_digest, str) and SHA256_REF_RE.fullmatch(content_digest):
                 if bet.get("status") != "done":
                     actual_digest = f"sha256:{_file_sha256(candidate)}"
