@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 330
+  total_bets: 336
   windows:
   - Y1Q1
   - Y1Q2
@@ -23826,7 +23826,9 @@ bets:
   priority: high
   status: done
   done_at: '2026-09-05T13:30:00+00:00'
-  close_evidence: 主仓 3216 .md 盘点报告入库 (docs/reports/doc-ssot-inventory-2026-09-05.md) + 3 个 completed ephemeral 顶层文档归档 .omo/_archive/ + 2 retro 引用指针化 + AGENTS.md 归档约定对齐; doc-ssot-lint exit 0
+  close_evidence: 主仓 3216 .md 盘点报告入库 (docs/reports/doc-ssot-inventory-2026-09-05.md)
+    + 3 个 completed ephemeral 顶层文档归档 .omo/_archive/ + 2 retro 引用指针化 + AGENTS.md 归档约定对齐;
+    doc-ssot-lint exit 0
   retro: .omo/_knowledge/retros/BET-Y1Q4-T6-17.md
   goal: 主仓+子仓所有 .md 文档 SSOT 判定，重复内容收敛，过时文档归档
   done_when:
@@ -24143,3 +24145,190 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q3-T10-118
+- id: BET-Y1Q4-T10-05
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 移动端与桌面端本地离线安全沙箱与主权凭据金库
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 在 Mac 本地 Secure Enclave 与本地文件系统中构建零泄漏安全沙箱与凭据金库，实现邮件/公文/签名私钥的本地隔离托管，断网环境下依然支持全功能安全运算与拟草。
+  non_goals:
+  - 不上传凭据至任何公有云密钥管理服务
+  done_when:
+  - 完成 Local Secure Vault 零明文存储实现
+  - 断网离线状态下全套 Spine 拟草与署名演练通过
+  - 集成测试覆盖防注入与权限隔离
+  verify:
+  - cmd: uv run python -m security.vault.test_offline_sandbox
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - config/security/
+  - bin/security/vault.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-05.md
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 凭据校验失败时自动锁定沙箱并触发警告。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T4-06
+- id: BET-Y2Q1-T7-06
+  track: T7-SCENE
+  window: Y2Q1
+  title: 卫健公文全周期拟办、批阅与会议督办全闭环场景包
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 面向卫健政务场景，将局发通知、跨部门函件起草、会议纪要督办深度场景化，提供从扫描/来文到带红头格式外发或导出的 100% 真实闭环。
+  non_goals:
+  - 不包含涉密公文直接互联网传输
+  done_when:
+  - docs/scene-cards/health-gov-doc-cycle.yaml 场景卡晋级 assisted
+  - 端到端完成 3 例卫健公文拟办、署名与 PDF 导出全流程演练
+  - 生成格式符合国家公文标准 GB/T 9704-2012
+  verify:
+  - cmd: uv run python -m domain.health_gov.test_doc_pipeline
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/scene-cards/health-gov-doc-cycle.yaml
+  - projects/domain-cartridges/health-gov/
+  - .omo/_knowledge/retros/BET-Y2Q1-T7-06.md
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 公文格式校验不通过时阻止生成并高亮错误条款。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T4-06
+  - BET-Y2Q1-T3-05
+- id: BET-Y2Q2-T7-03
+  track: T7-SCENE
+  window: Y2Q2
+  title: 主动健康连续体征监测、异常预警与就诊咨询闭环场景包
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 接入 Apple Health 与穿戴生理时序数据，结合临床指南与历史体检，自动识别心率/血糖/睡眠异常趋势，在 Cockpit 输出可执行干预建议与就诊问答卡。
+  non_goals:
+  - 不替代专业执业医师法律责任
+  done_when:
+  - docs/scene-cards/personal-health-monitor.yaml 场景卡晋级 assisted
+  - 每日定时自动汇总体征健康分并与基线对比
+  - 发现异常指标 5 分钟内生成干预场景卡
+  verify:
+  - cmd: uv run python -m domain.health.test_monitor_pipeline
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/scene-cards/personal-health-monitor.yaml
+  - projects/domain-cartridges/health/
+  - .omo/_knowledge/retros/BET-Y2Q2-T7-03.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 体征数据缺失或传感器断联时标为 unmeasured，不伪造数据。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T2-06
+- id: BET-Y2Q3-T7-01
+  track: T7-SCENE
+  window: Y2Q3
+  title: 家庭资产负债平水审计、大额支出预警与法务合同审查场景包
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 自动化解析家庭银行流水账单、固定资产维保与法务合同，生成月度净资产走势与现金流预测，提供大额异常支出与合同违约条款预警。
+  non_goals:
+  - 不直接连接网银进行自动转账操作
+  done_when:
+  - docs/scene-cards/family-asset-governance.yaml 场景卡晋级 assisted
+  - 月度自动产出资产负债平水报表
+  - 合同审查模块准确检出模糊条款与违约风险
+  verify:
+  - cmd: uv run python -m domain.family.test_asset_audit
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/scene-cards/family-asset-governance.yaml
+  - projects/family-hub/
+  - .omo/_knowledge/retros/BET-Y2Q3-T7-01.md
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 账目不平或差异大于阈值时强制标黄告警。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T4-06
+- id: BET-Y2Q4-T7-01
+  track: T7-SCENE
+  window: Y2Q4
+  title: 生命科学与大模型架构前沿文献自动精读与技术选型沙盘
+  appetite: 3 days
+  priority: P2
+  status: candidate
+  goal: 自动化追踪 PubMed、BioRxiv 与 arXiv 最新论文，生成三段式精读研判卡，提取创新点更新本体图谱，并为重大系统选型提供多维度权衡沙盘。
+  non_goals:
+  - 不进行海量无筛选文献的低质堆砌
+  done_when:
+  - docs/scene-cards/research-deep-synthesis.yaml 场景卡晋级 assisted
+  - 每日自动过滤并精读 3 篇相关性最高前沿论文
+  - 自动生成系统架构技术选型备选矩阵
+  verify:
+  - cmd: uv run python -m domain.research.test_synthesis_pipeline
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/scene-cards/research-deep-synthesis.yaml
+  - projects/domain-cartridges/research/
+  - .omo/_knowledge/retros/BET-Y2Q4-T7-01.md
+  risk_level: L0
+  human_gate: false
+  circuit_breaker: 论文抓取网络异常时安全跳过并记录日志。
+  retro: required
+  depends_on:
+  - BET-Y2Q1-T6-02
+- id: BET-Y3H1-T5-02
+  track: T5-ORCH
+  window: Y3H1
+  title: 超级个体数字分身高可信 Routine 自动受托托管引擎
+  appetite: 4 days
+  priority: P1
+  status: candidate
+  goal: 打通 Routine 状态机的零干预受托运行能力，使例行会议排期、常规公文回执、已知健康与财务维保达到 70% 自动托管，真正达成超级个体业务操作系统终局。
+  non_goals:
+  - 不脱离夏明星既定边界自主做出重大风险决策
+  done_when:
+  - 连续 30 天 70% 常规事务无需夏明星逐字修改直接托管通过
+  - 本人修订率稳定保持在 <= 0.10
+  - 任何异常偏离自动秒级熔断并唤醒夏明星接管
+  verify:
+  - cmd: uv run python -m spine.orchestration.test_routine_engine
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/spine/src/spine/orchestration/
+  - .omo/_knowledge/retros/BET-Y3H1-T5-02.md
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 受托执行置信度低于 0.95 时立即回退到 Assisted 人工审批。
+  retro: required
+  depends_on:
+  - BET-Y2Q1-T7-06
+  - BET-Y2Q2-T3-02
