@@ -20807,7 +20807,7 @@ bets:
   title: HITL Proposal System — harness 层人类审批提案生成与 Cockpit 集成
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
   done_at: 2026-09-04 14:30:00+00:00
   note: Delivered in PR
   goal: Build a standalone HITL proposal system that auto-generates approval proposals when a BET has human_gate=true, stores
@@ -21270,7 +21270,6 @@ bets:
   appetite: 2 days
   priority: P0
   status: done
-  done_at: 2026-09-05
   done_at: 2026-09-04 11:00:00+00:00
   note: Delivered in Project Sovereign Command (PSC v1)
   goal: 实现 Fast-path 直通分发、全域 Lazy Import 与 Flags 层级继承，使高频命令冷启动耗时大幅压降至 <150ms。
