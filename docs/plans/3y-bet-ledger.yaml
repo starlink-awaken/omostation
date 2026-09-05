@@ -21147,6 +21147,11 @@ bets:
     expect: exit 0
   workflow: project-code-change
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t8-14-telemetry-metrics-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d00d9cc7aed7326da3009b9c88a6b16852e0bc09a3fc35285b3d7f77be99b7c1
+    decision_ref: decision://accepted/BET-Y1Q4-T8-14
   write_surfaces:
   - projects/cockpit/src/cockpit/telemetry.py
   - projects/cockpit/tests/test_telemetry.py
