@@ -55,6 +55,17 @@ last_updated: 2026-09-04
 
 **Binding architecture (DFSQ/SFOP)**: Mesh (`COMP-WS-omo`) is the only active `S` slot. Do **not** add a second dispatcher or fifth ontology.
 
+### 能力发现
+
+| 需求 | 入口 |
+|------|------|
+| 查看所有可用 skills | `cat .agents/skills/INDEX.md`（41 个，按域分组） |
+| 查看所有 workflows | `cat .omo/_truth/registry/agent-workflows/INDEX.md`（24 个） |
+| 智能推荐 workflow | `uv run python bin/agent-workflow.py suggest --from-diff --profile <agent>` |
+| Cockpit CLI 命令 | `cockpit <domain> <verb>`（详见 `docs/CLI-REFERENCE.md`） |
+| BOS 服务发现 | `.omo/_truth/registry/capability-providers.yaml` |
+| MCP 工具清单 | `docs/generated/capability-registry.yaml` |
+
 ---
 
 ## 2. Documentation SSOT Contract
