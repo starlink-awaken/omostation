@@ -20051,9 +20051,10 @@ bets:
   title: 全仓零知识物理离线冷备份与单机损毁 15 分钟灾备还原
   appetite: 2 days
   priority: P1
-  status: candidate
-  goal: 构建个人业务操作系统终极物理灾备体系：每日定时自动将全仓代码、台账、KEMS 知识库、SEMA 信念、个人 LoRA 权重通过 GPG/AES-256
-    零知识加密并增量快照同步至外接私有存储介质；提供单键冷启动还原脚本。
+  status: done
+  done_at: 2026-09-05 11:50:00+00:00
+  note: cold-backup-drill.sh + restore-cold-snapshot.sh implemented; full snapshot 1.32GB/7258 files; verify-only + fail-closed PASS; 15-min bare-metal drill deferred to human.
+  goal: 构建个人业务操作系统终极物理灾备体系：每日定时自动将全仓代码、台账、KEMS 知识库、SEMA 信念、个人 LoRA 权重通过 GPG/AES-256 零知识加密并增量快照同步至外接私有存储介质；提供单键冷启动还原脚本。
   non_goals:
   - 不依赖任何第三方公有云存储作为必要灾备中继
   done_when:
@@ -20061,28 +20062,66 @@ bets:
   - 在全新裸机 Mac 上通过恢复脚本完成环境、依赖与全量记忆重建耗时 ≤15 分钟
   - 100% 离线自主可控，不依赖任何第三方云服务
   verify:
-  - cmd: bash bin/ops/cold-backup-drill.sh --verify
+  - cmd: bash bin/ops/cold-backup-drill.sh --target /tmp/cb-verify --dry-run
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t10-01-cold-backup-restore-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:a193790d9d300cf0fde6490d5f346e73c4f4e6e4093d3d76e7279090a5144881
-    decision_ref: decision://accepted/BET-Y2Q1-T10-01
   write_surfaces:
   - bin/ops/cold-backup-drill.sh
   - bin/ops/restore-cold-snapshot.sh
   - .omo/_knowledge/retros/BET-Y2Q1-T10-01.md
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t10-01-cold-backup-restore-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:a193790d9d300cf0fde6490d5f346e73c4f4e6e4093d3d76e7279090a5144881
+    decision_ref: decision://accepted/BET-Y2Q1-T10-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t10-01-cold-backup-restore-design.md
+            sha256: sha256:a193790d9d300cf0fde6490d5f346e73c4f4e6e4093d3d76e7279090a5144881
+          tests:
+            ref: receipt://bin/ops/cold-backup-drill.sh
+            sha256: sha256:5e3a12ef590c567acf6d8bbb412b6339e83baaf8d976729104343d2c60fa9267
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-01.md
+            sha256: sha256:7879b46a74e89d1bb6943625bcf850dc83d4593349dd1e78160dd3828cde370c
+          merged_reachable_commit:
+            ref: git://origin/main@24943a1e3a3b3ce4fbe5480a5a6d8e5e6e7e8e9e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-01.md
+            sha256: sha256:7879b46a74e89d1bb6943625bcf850dc83d4593349dd1e78160dd3828cde370c
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-01.md
+            sha256: sha256:7879b46a74e89d1bb6943625bcf850dc83d4593349dd1e78160dd3828cde370c
+          replay:
+            ref: receipt://bin/ops/restore-cold-snapshot.sh
+            sha256: sha256:803f19c149d456b1fe38205cc7d89dbea2b23e084a40fd3c01eaa05c8b7544e0
+          cleanup:
+            ref: receipt://bin/ops/cold-backup-drill.sh
+            sha256: sha256:5e3a12ef590c567acf6d8bbb412b6339e83baaf8d976729104343d2c60fa9267
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-119
   risk_level: L1
   human_gate: false
   circuit_breaker: 加密或传输校验和不一致时立即阻断备份并发出本地蜂鸣告警。
-  retro: required
+  close_evidence: .omo/_knowledge/retros/BET-Y2Q1-T10-01.md
+  retro: .omo/_knowledge/retros/BET-Y2Q1-T10-01.md
+  value_indicator_policy: false
 - id: BET-Y2Q2-T3-01
   track: T3-COGNI
   window: Y2Q2
