@@ -319,12 +319,16 @@ objectives:
     metric: weekly_principal_accepted_suggestions
     baseline:
       value: null
-      status: unmeasured
+      status: measured
+      measured_at: '2026-09-05T08:00:00Z'
+      evidence_refs:
+      - receipt://docs/reports/weekly-value-snapshots.jsonl
     target:
       operator: gte
       value: 3
-    status: unmeasured
-    evidence_refs: []
+    status: measured
+    evidence_refs:
+    - receipt://docs/reports/weekly-value-snapshots.jsonl
   - id: KR-VALUE-REVISION-RATE
     metric: principal_revision_rate
     baseline:
@@ -21900,7 +21904,7 @@ bets:
   title: 每周真实外部信号与本人采纳证伪计量
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: in_progress
   goal: 对 VISION 证伪条件（连续 12 周每周 ≥3 条本人采纳建议）建立可自动红绿的周度量：真实外部信号数 + 本人采纳数，写入 KR-VALUE-WEEKLY-ADOPTION 基线，并提供 cockpit/CLI 一周快照。
   non_goals:
   - 不在本 bet 完成 12 周连续达标（那是运行事实，不是一次交付）
@@ -21927,12 +21931,30 @@ bets:
   pasw_required: false
   risk_level: L1
   human_gate: false
-  value_indicator_policy: true
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-weekly-adoption-meter-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:526e7d9be5226fbbb88b9316ddbf388546f0ddc98ed6976f2b9e2f61934510fb
+    decision_ref: decision://accepted/BET-Y1Q4-T4-03
   circuit_breaker: 无真实采纳样本时保持红灯/unmeasured，不得用测试夹具把周采纳刷成 ≥3。
   retro: required
   depends_on:
   - BET-Y1Q4-T1-14
   - BET-Y1Q3-T4-07
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
   portfolio_binding:
     schema_state: enforced
     campaign_ref: CMP-Y1-VALUE-PROOF
