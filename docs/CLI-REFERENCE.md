@@ -16,9 +16,9 @@ last-reviewed: 2026-09-04
 
 - [🏛️ 治理 (Governance)](#治理-governance) (16 个命令)
 - [👤 用户 (User)](#用户-user) (8 个命令)
-- [📄 专项工具 (Domain)](#专项工具-domain) (12 个命令)
+- [📄 专项工具 (Domain)](#专项工具-domain) (13 个命令)
 - [📋 项目 (Project)](#项目-project) (12 个命令)
-- [📚 研究 (Research)](#研究-research) (9 个命令)
+- [📚 研究 (Research)](#研究-research) (8 个命令)
 - [📡 通讯 (Messaging)](#通讯-messaging) (5 个命令)
 - [📦 数据 (Data)](#数据-data) (3 个命令)
 - [🔌 总线接入 (ECCP)](#总线接入-eccp) (1 个命令)
@@ -26,7 +26,7 @@ last-reviewed: 2026-09-04
 - [🛠️ 系统 (System)](#系统-system) (15 个命令)
 - [🤖 Agent 协作](#agent-协作) (4 个命令)
 - [🧠 知识引擎 (BOS)](#知识引擎-bos) (10 个命令)
-- [遗留命令映射](#遗留命令映射) (45 个)
+- [遗留命令映射](#遗留命令映射) (46 个)
 - [全局 Flags](#全局-flags)
 - [MCP 工具映射](#mcp-工具映射)
 
@@ -580,6 +580,25 @@ cockpit render --help          # 完整参数面
 
   · 成熟度: stable  |  风险: low
 
+### `cockpit spine`
+
+Spine 主干真值流与署名自进化操作 (ADR-0437)
+
+**用法**:
+
+```bash
+cockpit spine [flags]
+cockpit spine --json          # 机器可读输出
+cockpit spine --dry-run       # 预检 (无副作用)
+cockpit spine --help          # 完整参数面
+```
+
+  · 所属域: `scene`  |  成熟度: stable  |  风险: low
+
+```bash
+cockpit status / distill / sign / replay
+```
+
 
 ## 📋 项目 (Project)
 
@@ -885,21 +904,6 @@ cockpit search --help          # 完整参数面
 ```
 
   · 所属域: `memory`  |  成熟度: stable  |  风险: low
-
-### `cockpit spine`
-
-Spine 主干真值流与署名自进化操作 (ADR-0437)
-
-**用法**:
-
-```bash
-cockpit spine [flags]
-cockpit spine --json          # 机器可读输出
-cockpit spine --dry-run       # 预检 (无副作用)
-cockpit spine --help          # 完整参数面
-```
-
-  · 成熟度: stable  |  风险: low
 
 
 ## 📡 通讯 (Messaging)
@@ -1700,6 +1704,7 @@ cockpit vault --help          # 完整参数面
 | `cockpit runtime` | system | runtime |
 | `cockpit scenario` | scene | scenario |
 | `cockpit search` | memory | search |
+| `cockpit spine` | scene | spine |
 | `cockpit status` | system | status |
 | `cockpit telemetry` | system | telemetry |
 | `cockpit triage` | compute | triage |
@@ -1846,7 +1851,7 @@ cockpit completion fish | source    # Fish
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
-| `cockpit agora` | `agora` | 104 |
+| `cockpit agora` | `agora` | 106 |
 | `cockpit family-hub` | `family-hub` | 6 |
 | `cockpit mesh` | `aetherforge` | 15 |
 | `cockpit compute` | `aetherforge` | 15 |

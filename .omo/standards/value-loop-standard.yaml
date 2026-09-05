@@ -47,11 +47,13 @@ stages:
 
   evolution:
     name: "进化反馈"
-    description: "将价值数据反馈到进化引擎"
+    description: "将价值数据与署名决策差分反馈到进化引擎与模型微调"
     actions:
       - "生成进化提案"
       - "自动实施高置信提案"
       - "度量实施效果"
+      - "Spine 署名 Diff 经验沉淀 (.omo/state/spine-diff-buffer.jsonl)"
+      - "Mac mini M4 闲时 LoRA 增量蒸馏与个人文风 Adapter 热加载 (ADR-0437)"
     output: "evolution_feedback"
 
 # 价值度量 (北极星 v3)
