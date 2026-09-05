@@ -64,6 +64,7 @@ from cockpit.surface.cards import (
     MetricGridCard,
 )
 from cockpit.surface.protocol import CardType, SurfaceDomain, SurfaceEnvelope
+from cockpit.surface.loader import ExtensionRegistry
 from cockpit.tui.adapters import get_adapter
 
 logger = logging.getLogger(__name__)
@@ -228,6 +229,7 @@ class CardDeck(VerticalScroll):
         yield Vertical(id="cards-container")
 
     def update_envelopes(self, envelopes: list[SurfaceEnvelope]) -> None:
+        self.envelopes = envelopes
         container = self.query_one("#cards-container")
         container.remove_children()
         widgets_to_mount = []
@@ -342,6 +344,8 @@ class SovereignCockpitApp(App):
         self.active_domain = domain_key
         adapter = get_adapter(domain_key)
         envelopes = [adapter.get_summary_card()] + adapter.get_detail_cards()
+        ext_envelopes = ExtensionRegistry.default().get_envelopes_for_domain(domain_key)
+        envelopes.extend(ext_envelopes)
         deck = self.query_one(CardDeck)
         deck.update_envelopes(envelopes)
         self.notify(f"🌐 已切换至正交领域: {domain_key.capitalize()}", timeout=2)

@@ -33,6 +33,17 @@ from cockpit.surface.protocol import (
     SurfaceEnvelope,
 )
 
+from cockpit.surface.loader import (
+    CardManifest,
+    ExtensionManifest,
+    ExtensionRegistry,
+    ManifestError,
+    load_manifest_file,
+    manifest_card_to_envelope,
+    parse_manifest_dict,
+    scan_manifests,
+)
+
 __all__ = [
     # Protocol
     "SurfaceEnvelope",
@@ -45,4 +56,14 @@ __all__ = [
     "LogStreamCard",
     "DagGraphCard",
     "ActionPanelCard",
+    # Loader & Extension SDK
+    "CardManifest",
+    "ExtensionManifest",
+    "ExtensionRegistry",
+    "ManifestError",
+    "load_manifest_file",
+    "parse_manifest_dict",
+    "manifest_card_to_envelope",
+    "scan_manifests",
 ]
+
