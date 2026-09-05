@@ -21014,6 +21014,11 @@ bets:
   circuit_breaker: 构建失败阻断
   retro: required
 - id: BET-Y1Q4-T8-20
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-w0-declarative-card-extension-sdk-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:2bd846ac27f230b387921e5ae6eaa2680f4a68d4925f8fb390b391951895cb89
+    decision_ref: decision://accepted/BET-Y1Q4-T8-20
   track: T8-SURFACE
   window: Y1Q4
   title: 声明式卡片扩展 SDK 与外部业务域即插即用挂载
