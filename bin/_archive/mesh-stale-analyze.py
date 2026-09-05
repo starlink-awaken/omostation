@@ -10,9 +10,13 @@
 用法: python3 bin/ssot/mesh-stale-analyze.py
 """
 
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
+
+TIMEOUT = 30  # seconds per subprocess call
+RETRY = 3    # max retries on transient failure
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WORKSPACE / "projects" / "omo" / "src"))
