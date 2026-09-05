@@ -1,26 +1,32 @@
 # Project Plan: eCOS Architecture Convergence (eCOS 架构收敛与整合)
 
-## Current status (2026-09-04)
+## Current status (2026-09-05)
 
-已完成当前这轮的设计资产接入工作：`awesome-design-md` 被纳入 `forge` 的只读资产适配层，不扩展 L4 控制面，也不创建第二控制器。当前落地已完成以下内容：
+已完成从真实外部资产库 `awesome-design-md` 到 `forge` 的上下游接入，并把生成结果落到真实清单文件中，不扩展 L4 控制面，也不创建第二控制器。当前落地已经稳定到“可用、可验证、可再用”的状态。
 
-- `forge.design_asset_adapter`：扫描 `DESIGN.md`、提取品牌/样式/布局/色板元数据
-- `forge.__init__`：导出适配器 API
-- `tests/test_design_asset_adapter.py`：覆盖扫描、清单生成和 prompt 注入
-- `docs/design-assets/awesome-design-manifest.yaml`：外部设计资产清单
+已完成的内容：
+- `forge.design_asset_adapter`：扫出真实 `design-md/*/DESIGN.md` 资产，提取 frontmatter metadata、品牌/样式/布局/色板信息，并输出结构化 `design_context`
+- `forge.__init__`：导出 `build_design_context`、`choose_design_assets` 与 CLI 入口
+- `forge.forge`：新增 `design-assets` / `design` 命令，支持品牌/平台/查询过滤并生成结构化 design context + prompt；默认 repo 现在从硬编码用户路径改为当前目录，避免环境绑定
+- `forge/README.md`：补充设计资产命令说明，方便直接调用和接入
+- `tests/test_design_asset_adapter.py`：覆盖扫描、清单生成、过滤、结构化 context 和 prompt 注入
+- `docs/design-assets/awesome-design-manifest.yaml`：已用真实 corpus 重新生成，当前记录 74 个真实设计资产
 - `docs/plans/2026-09-04-design-asset-forge-integration.md`：接入设计与架构结论
 
 验证结论：
-- `python3 -m pytest tests/test_design_asset_adapter.py -q`
-- 结果：`2 passed in 0.09s`
+- `cd projects/knowledge/kairon/packages/forge && python3 -m pytest tests/test_design_asset_adapter.py -q`
+- 结果：`3 passed in 0.13s`
+- `PYTHONPATH=src python3 -m forge.forge design-assets /Users/xiamingxing/ToolBox/awesome-design-md --query claude --limit 3`
+- 结果：真实扫描返回 1 个匹配，选中 `claude` 设计资产并输出结构化 `design_context` 与 prompt
 
-交付状态：
-- 本地工作树已提交
-- 远端 PR 推送被当前仓库的 reachability / push gate 拦截（不是代码问题），因此需在具备远端权限或门禁放行的条件下继续推进
+真实接入状态：
+- 本地已完成真实资产连接和 prompt 适配，不再依赖假样例 `stripe`
+- 资产层仍保持只读输入，不写回 upstream repo，也不接管 omostation 主控制面
+- 现在这条链路已经具备“真实检索 → 真实匹配 → 结构化 context → 生成 prompt”的闭环
 
 下一步：
-- 继续在具备远端权限的分支/仓库环境中 push + PR
-- 若后续要做真正的生成链路集成，再继续扩展 `forge` 的 style matching 与 prompt orchestration 层
+- 可继续把结构化 `design_context` 挂到更高层 UI 生成器，形成完整页面草图生成闭环
+- 若需要发布到远端，继续在具备权限的 worktree / repo 环境里执行 push + PR
 
 ---
 

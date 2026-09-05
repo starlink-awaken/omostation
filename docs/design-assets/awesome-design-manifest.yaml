@@ -5,28 +5,2443 @@ layer: X/forge
 governance:
   control_plane: omostation
   rules:
-    - read-only asset ingestion
-    - forge owns style matching and prompt orchestration
-    - l4 remains self-governance only
+  - read-only asset ingestion
+  - forge owns style matching and prompt orchestration
+  - l4 remains self-governance only
 source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+asset_count: 74
 assets:
-  - id: stripe
-    brand: stripe
-    title: Stripe
-    source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
-    source_path: design-md/stripe/DESIGN.md
-    layer: forge
-    access_mode: read-only
-    platform: web
-    style_family: premium-editorial
-    layout_pattern: landing-page
-    palette_tokens:
-      - "#635bff"
-      - "#0f172a"
-    tags:
-      - Product
-      - Dashboard
-    governance:
-      context: external design corpus only
-      read_only: true
-      allowed_usage: prompt-injection for UI generation and style matching
+- id: airbnb-airbnb
+  brand: airbnb
+  title: Airbnb-design-analysis
+  summary: A warm, generous consumer marketplace anchored on a clean white canvas
+    and Airbnb Rausch (#ff385c), the single brand voltage that carries every primary
+    CTA, search-button orb, and rating dot. Type runs Airbnb Cereal VF a
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/airbnb/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#ff385c'
+  - '#e00b41'
+  - '#ffd1da'
+  - '#c13515'
+  - '#b32505'
+  - '#460479'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Hairlines & Borders
+  - Text
+  - Semantic
+  - Scrim
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: airtable-airtable
+  brand: airtable
+  title: Airtable-design-analysis
+  summary: A sober, editorial workflow-software interface anchored on white canvas
+    and dark-ink type, where brand voltage comes from full-bleed signature cards in
+    coral, dark green, peach, and dark navy that punctuate long-scroll e
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/airtable/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#181d26'
+  - '#0d1218'
+  - '#333840'
+  - '#41454d'
+  - '#dddddd'
+  - '#9297a0'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Signature Card Surfaces
+  - Semantic
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: apple-apple
+  brand: apple
+  title: Apple-design-analysis
+  summary: 'A photography-first interface that turns marketing into a museum gallery.
+    Edge-to-edge product tiles alternate light and dark canvases, framed by SF Pro
+    Display headlines with negative letter-spacing and a single Action '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/apple/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0066cc'
+  - '#0071e3'
+  - '#2997ff'
+  - '#1d1d1f'
+  - '#ffffff'
+  - '#cccccc'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Hairlines & Borders
+  - Brand Gradient
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: binance-binance
+  brand: binance
+  title: Binance-design-analysis
+  summary: A confident financial-platform interface anchored on a deep near-black
+    canvas, where Binance's iconic yellow (#FCD535) carries every primary CTA, brand
+    accent, and value-claim moment. Type runs Binance's custom BinanceNo
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/binance/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#FCD535'
+  - '#fcd535'
+  - '#f0b90b'
+  - '#3a3a1f'
+  - '#181a20'
+  - '#eaecef'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Hairlines & Borders
+  - Text
+  - Trading Semantics
+  - Info / Focus
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: bmw-bmw
+  brand: bmw
+  title: BMW-design-analysis
+  summary: BMW's corporate site — distinct from BMW M's motorsport-bombastic variant,
+    this is a measured and settled corporate-automotive interface. On a light (cream-tinted
+    white) canvas, BMW corporate blue (#1c69d4) carries every
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/bmw/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#1c69d4'
+  - '#0653b6'
+  - '#d6d6d6'
+  - '#262626'
+  - '#3c3c3c'
+  - '#1a1a1a'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Hairlines
+  - Text
+  - Semantic
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: bmw-m-bmw-m
+  brand: bmw-m
+  title: BMW-M-design-analysis
+  summary: A motorsport-engineering interface anchored on a near-black canvas with
+    white BMW Type Next Latin display headlines in confident UPPERCASE. The brand
+    carries no decorative voltage — its energy comes from full-bleed autom
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/bmw-m/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#ffffff'
+  - '#bbbbbb'
+  - '#e6e6e6'
+  - '#7e7e7e'
+  - '#3c3c3c'
+  - '#262626'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Hairlines & Borders
+  - Text
+  - Semantic
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: bugatti-bugatti
+  brand: bugatti
+  title: Bugatti-design-analysis
+  summary: An austere luxury-automotive interface that uses near-pure black canvas,
+    white uppercase letterspaced display, and full-bleed automotive photography as
+    the only voltage. The system runs three custom Bugatti typefaces — B
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/bugatti/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#ffffff'
+  - '#cccccc'
+  - '#e6e6e6'
+  - '#999999'
+  - '#666666'
+  - '#262626'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: cal-cal
+  brand: cal
+  title: Cal.com-design-analysis
+  summary: A clean, calendar-software-first interface anchored on white canvas with
+    black primary CTAs and custom Cal Sans display typography. The system reads as
+    friendly modern SaaS — generous whitespace, soft-rounded cards (~12p
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/cal/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#111111'
+  - '#242424'
+  - '#e5e7eb'
+  - '#374151'
+  - '#6b7280'
+  - '#898989'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: claude-claude
+  brand: claude
+  title: Claude-design-analysis
+  summary: A warm-canvas editorial interface for Anthropic's Claude product. The system
+    anchors on a tinted cream canvas with serif display headlines, warm coral CTAs,
+    and dark navy product surfaces (code editor mockups, model show
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/claude/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#cc785c'
+  - '#a9583e'
+  - '#e6dfd8'
+  - '#141413'
+  - '#3d3d3a'
+  - '#252523'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: clay-clay
+  brand: clay
+  title: Clay-design-analysis
+  summary: A vibrant claymation-meets-data interface for Clay.com (GTM data-orchestration
+    platform). Anchors on white canvas with dark-navy primary CTAs, custom rounded
+    display type, and saturated single-color feature cards — hot p
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/clay/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0a0a0a'
+  - '#1f1f1f'
+  - '#e5e5e5'
+  - '#3a3a3a'
+  - '#1a1a1a'
+  - '#6a6a6a'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: clickhouse-clickhouse
+  brand: clickhouse
+  title: ClickHouse-design-analysis
+  summary: A high-performance database interface anchored on near-pure black canvas
+    with electric yellow as the brand voltage. White typography in confident sans,
+    yellow CTAs, and yellow-text stat numbers carry the brand voice acro
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/clickhouse/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#faff69'
+  - '#e6eb52'
+  - '#3a3a1f'
+  - '#ffffff'
+  - '#cccccc'
+  - '#e6e6e6'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic / Accent
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: cohere-cohere
+  brand: cohere
+  title: Cohere-design-analysis
+  summary: Cohere's 2026 web system is a controlled enterprise AI interface built
+    from stark white editorial space, deep green-black product bands, soft mineral
+    surfaces, rounded media cards, and a distinctive type split between mo
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/cohere/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#17171c'
+  - '#000000'
+  - '#212121'
+  - '#003c33'
+  - '#071829'
+  - '#ffffff'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface & Background
+  - Text & Rules
+  - Semantic
+  - Gradient System
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: coinbase-coinbase
+  brand: coinbase
+  title: Coinbase-design-analysis
+  summary: 'An institutional-grade crypto exchange whose marketing surfaces read like
+    a quietly-confident financial-services brand. The base canvas is pure white; Coinbase
+    Blue (`#0052ff`) is the single brand voltage, used scarcely '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/coinbase/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0052ff'
+  - '#0a0b0d'
+  - '#003ecc'
+  - '#a8b8cc'
+  - '#5b616e'
+  - '#7c828a'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Hairlines
+  - Text
+  - Trading Semantics
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: composio-composio
+  brand: composio
+  title: Composio-design-analysis
+  summary: A developer-tools brand for AI-agent tool integration whose marketing surfaces
+    lean into a dark, technical aesthetic with a single deep-electric-blue voltage
+    (`#0007cd`). The page floor is near-black (`#0f0f0f`); cards f
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/composio/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0007cd'
+  - '#0f0f0f'
+  - '#0005a3'
+  - '#1a26ff'
+  - '#ffffff'
+  - '#a8a8a8'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Hairlines
+  - Text
+  - Semantic
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: cursor-cursor
+  brand: cursor
+  title: Cursor-design-analysis
+  summary: An AI-first code editor whose marketing site reads like a quietly-confident
+    developer-tools brand with a warm-cream editorial canvas (`#f7f7f4`) instead of
+    the typical dark IDE atmosphere. Near-black warm ink (`#26251e`)
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/cursor/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#f7f7f4'
+  - '#26251e'
+  - '#f54e00'
+  - '#d04200'
+  - '#5a5852'
+  - '#807d72'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Hairlines
+  - Text
+  - Timeline (AI-action signature)
+  - Semantic
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: dell-1996-dell-1996
+  brand: dell-1996
+  title: Dell 1996 Inspired
+  summary: 'An inspired interpretation of Dell.com''s 1996 design language — a catalog-era
+    enterprise web design built around a literal black page frame, vivid flat color-block
+    "ribbon cards" tinted in sage, salmon, periwinkle, sky, '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/dell-1996/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#e91d2a'
+  - '#ffffff'
+  - '#000000'
+  - '#fcc20f'
+  - '#6a26a4'
+  - '#0000ee'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Ribbon-Card Tint Family
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: elevenlabs-elevenlabs
+  brand: elevenlabs
+  title: Design Asset
+  summary: '--- version: alpha name: ElevenLabs-design-analysis description: A voice-AI
+    brand whose marketing surfaces read like a quietly editorial print magazine. The
+    base canvas is off-white (`#f5f5f5`) holding warm near-black in'
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/elevenlabs/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#f5f5f5'
+  - '#292524'
+  - '#0c0a09'
+  - '#4e4e4e'
+  - '#777169'
+  - '#a8a29e'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Hairlines
+  - Text
+  - Atmospheric Gradient Stops (signature)
+  - Semantic
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: expo-expo
+  brand: expo
+  title: Expo-design-analysis
+  summary: A React Native developer-platform whose marketing site reads like a quietly-confident
+    infrastructure brand. The base canvas is pure white with a soft sky-blue gradient
+    atmospheric wash behind the hero; near-black ink (`#
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/expo/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#171717'
+  - '#000000'
+  - '#0d74ce'
+  - '#1a1a1a'
+  - '#476cff'
+  - '#60646c'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Atmospheric Backdrop
+  - Hairlines
+  - Text
+  - Semantic
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: ferrari-ferrari
+  brand: ferrari
+  title: Ferrari-design-analysis
+  summary: A luxury-automotive brand whose marketing surfaces read as cinematic editorial.
+    The base canvas is **near-black** (`#181818`) holding pure white display type;
+    white-canvas bands appear only inside specific editorial cont
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/ferrari/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#181818'
+  - '#da291c'
+  - '#b01e0a'
+  - '#9d2211'
+  - '#ffffff'
+  - '#969696'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Hairlines
+  - Text
+  - Semantic
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: figma-figma
+  brand: figma
+  title: Figma-design-analysis
+  summary: A confident black-and-white editorial frame interrupted by oversized, hand-cut
+    pastel color blocks. The marketing canvas is rigorously monochrome — figmaSans
+    variable type, pure white surfaces, pure black ink, pill-shape
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/figma/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#000000'
+  - '#ffffff'
+  - '#e6e6e6'
+  - '#f1f1f1'
+  - '#f7f7f5'
+  - '#dceeb1'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: framer-framer
+  brand: framer
+  title: Framer-design-analysis
+  summary: A confident dark-canvas builder marketing site that treats the page like
+    a working artboard — pure black surfaces, white display type set in GT Walsheim
+    Medium with aggressive negative tracking, and a single confident bl
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/framer/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0099ff'
+  - '#ffffff'
+  - '#000000'
+  - '#999999'
+  - '#090909'
+  - '#141414'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Brand Gradient (signature)
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: hashicorp-hashicorp
+  brand: hashicorp
+  title: HashiCorp-design-analysis
+  summary: 'An enterprise-infrastructure marketing canvas built around a near-black
+    ground (#000000) and a system of per-product accent colors — Terraform purple,
+    Vault yellow, Consul pink, Waypoint cyan, Vagrant blue — that act as '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/hashicorp/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#000000'
+  - '#ffffff'
+  - '#2b89ff'
+  - '#b2b6bd'
+  - '#656a76'
+  - '#15181e'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Per-Product Identity (signature)
+  - Semantic
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: hp-hp
+  brand: hp
+  title: HP-design-analysis
+  summary: An inspired interpretation of HP's design language — a white-paper enterprise-consumer
+    system anchored by HP Electric Blue (`#024ad8`) as the lone signal CTA, near-black
+    ink (`#1a1a1a`) for headlines, geometric Forma-DJR
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/hp/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#024ad8'
+  - '#1a1a1a'
+  - '#296ef9'
+  - '#0e3191'
+  - '#c9e0fc'
+  - '#ffffff'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: ibm-ibm
+  brand: ibm
+  title: IBM-design-analysis
+  summary: 'An enterprise-marketing canvas faithful to Carbon Design System: white
+    surfaces, charcoal type, IBM Blue (#0f62fe) as the single confident accent, and
+    a deliberately flat-square aesthetic where corners stay at 0–4px. Typ'
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/ibm/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0f62fe'
+  - '#ffffff'
+  - '#161616'
+  - '#525252'
+  - '#8c8c8c'
+  - '#f4f4f4'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: intercom-intercom
+  brand: intercom
+  title: Intercom-design-analysis
+  summary: 'An editorial customer-service marketing canvas built around a soft cream-white
+    ground, charcoal type set in Saans (Intercom''s proprietary geometric sans), and
+    a single confident Fin Orange (#ff5600) reserved for the Fin '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/intercom/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#ff5600'
+  - '#111111'
+  - '#ffffff'
+  - '#626260'
+  - '#7b7b78'
+  - '#9c9fa5'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic & Report Palette (in-product mockups)
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: kraken-kraken
+  brand: kraken
+  title: Design System Inspired by Kraken
+  summary: Design System Inspired by Kraken
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/kraken/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: web
+  style_family: dark-technical
+  layout_pattern: landing-page
+  palette_tokens:
+  - '#7132f5'
+  - '#5741d8'
+  - '#5b1ecf'
+  - '#101114'
+  - '#149e61'
+  - '#686b82'
+  tags:
+  - Design System Inspired by Kraken
+  - 1. Visual Theme & Atmosphere
+  - 2. Color Palette & Roles
+  - Primary
+  - Neutral
+  - Semantic
+  - 3. Typography Rules
+  - Font Families
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: lamborghini-lamborghini
+  brand: lamborghini
+  title: Design System Inspired by Lamborghini
+  summary: Design System Inspired by Lamborghini
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/lamborghini/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#000000'
+  - '#FFC000'
+  - '#FFFFFF'
+  - '#917300'
+  - '#FFCE3E'
+  - '#29ABE2'
+  tags:
+  - Design System Inspired by Lamborghini
+  - 1. Visual Theme & Atmosphere
+  - 2. Color Palette & Roles
+  - Primary
+  - Secondary & Accent
+  - Surface & Background
+  - Neutrals & Text
+  - Semantic & Accent
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: linear-app-linear-app
+  brand: linear.app
+  title: Linear-design-analysis
+  summary: 'A near-black product-focused marketing canvas built around #010102 (the
+    deepest dark surface of any tool in this collection), light gray text (#f7f8f8),
+    and the signature Linear lavender-blue (#5e6ad2) used as the single'
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/linear.app/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#010102'
+  - '#f7f8f8'
+  - '#5e6ad2'
+  - '#0f1011'
+  - '#ffffff'
+  - '#828fff'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: lovable-lovable
+  brand: lovable
+  title: Design System Inspired by Lovable
+  summary: Design System Inspired by Lovable
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/lovable/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#f7f4ed'
+  - '#1c1c1c'
+  - '#eceae4'
+  - '#fcfbf8'
+  - '#5f5f5d'
+  - '#3b82f6'
+  tags:
+  - Design System Inspired by Lovable
+  - 1. Visual Theme & Atmosphere
+  - 2. Color Palette & Roles
+  - Primary
+  - Neutral Scale (Opacity-Based)
+  - Surface & Border
+  - Interactive
+  - Inset Shadows
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: mastercard-mastercard
+  brand: mastercard
+  title: Design System Inspired by Mastercard
+  summary: Design System Inspired by Mastercard
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/mastercard/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#F3F0EE'
+  - '#141413'
+  - '#EB001B'
+  - '#F79E1B'
+  - '#CF4500'
+  - '#F37338'
+  tags:
+  - Design System Inspired by Mastercard
+  - 1. Visual Theme & Atmosphere
+  - 2. Color Palette & Roles
+  - Primary
+  - Secondary & Accent
+  - Surface & Background
+  - Neutrals & Text
+  - Semantic & Accent
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: meta-meta
+  brand: meta
+  title: Meta-design-analysis
+  summary: Meta's design system spans hardware commerce (Quest VR, Ray-Ban Meta AI
+    glasses) and brand surfaces with a confident product-merchandising voice. The
+    system pairs a stark white canvas with full-bleed photographic product
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/meta/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0064E0'
+  - '#0064e0'
+  - '#0457cb'
+  - '#0091ff'
+  - '#ffffff'
+  - '#000000'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: minimax-minimax
+  brand: minimax
+  title: MiniMax-design-analysis
+  summary: MiniMax presents itself as a premium AI infrastructure brand through a
+    striking duality — bold black-pill CTAs and stark white canvas for marketing,
+    paired with vibrant gradient product cards (orange-red, magenta-pink, p
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/minimax/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0a0a0a'
+  - '#ffffff'
+  - '#181e25'
+  - '#ff5530'
+  - '#ea5ec1'
+  - '#1456f0'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: mintlify-mintlify
+  brand: mintlify
+  title: Mintlify-design-analysis
+  summary: Mintlify presents documentation infrastructure with a dual-mode aesthetic
+    — atmospheric sky-gradient marketing heroes (cloud illustration backdrops, soft
+    cream-to-blue washes) paired with dense developer-grade documentat
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/mintlify/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0a0a0a'
+  - '#ffffff'
+  - '#00d4a4'
+  - '#00b48a'
+  - '#7cebcb'
+  - '#3772cf'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Hero Atmospheric
+  - Text
+  - Semantic
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: miro-miro
+  brand: miro
+  title: Miro-design-analysis
+  summary: Miro presents itself as the AI-powered visual workspace through a confident,
+    almost playful brand voice — anchored by its signature canary yellow ({colors.brand-yellow})
+    wordmark over white canvas, broken open by colorfu
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/miro/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#1c1c1e'
+  - '#ffffff'
+  - '#ffd02f'
+  - '#fcb900'
+  - '#fff4c4'
+  - '#746019'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: mistral-ai-mistral-ai
+  brand: mistral.ai
+  title: Mistral-AI-design-analysis
+  summary: Mistral AI brands itself with a singular signature — atmospheric sunset
+    gradients (mustard, orange, deep red) layered over photography of mountains, plus
+    a horizontal "sunset stripe" bar that closes every page. The syste
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/mistral.ai/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#fa520f'
+  - '#cc3a05'
+  - '#ffffff'
+  - '#ffd06a'
+  - '#ffb83e'
+  - '#ffa110'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Cream / Neutral Warm
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: mongodb-mongodb
+  brand: mongodb
+  title: MongoDB-design-analysis
+  summary: MongoDB carries a strong dual-mode visual identity — dark deep-teal hero
+    bands with bright MongoDB green ({colors.brand-green}) CTAs paired with stark
+    white documentation surfaces. The signature green pill button is unmi
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/mongodb/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#00ed64'
+  - '#00b545'
+  - '#008c34'
+  - '#001e2b'
+  - '#00684a'
+  - '#00a35c'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Category Accent (Course Tags)
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: nike-nike
+  brand: nike
+  title: Nike-design-analysis
+  summary: 'A photography-first commerce system built on extreme typographic contrast
+    — towering uppercase Futura display lockups burned into editorial campaign imagery,
+    sitting above a dense, neutral, near-monochrome retail chrome '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/nike/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#111111'
+  - '#ffffff'
+  - '#f5f5f5'
+  - '#39393b'
+  - '#4b4b4d'
+  - '#707072'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Category Accents (sport / collection chips)
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: nintendo-2001-nintendo-2001
+  brand: nintendo-2001
+  title: Nintendo.com (2001) Analysis
+  summary: An analysis of Nintendo.com's 2001 design language — a brushed-periwinkle
+    "console chrome" interface where every panel is a beveled metal plate, navigation
+    glows amber over a halftone-dotted carbon bar, and bold outlined
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/nintendo-2001/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: web
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#e60012'
+  - '#f68d1f'
+  - '#ecab37'
+  - '#e48600'
+  - '#7a8aba'
+  - '#9fbee7'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: notion-notion
+  brand: notion
+  title: Notion-design-analysis
+  summary: 'Notion presents itself as the all-in-one workspace through a confident,
+    illustration-rich brand voice — anchored by a deep navy hero band ({colors.brand-navy})
+    decorated with brand-colored sticky-note dots and mesh wire '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/notion/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#5645d4'
+  - '#4534b3'
+  - '#3a2a99'
+  - '#ffffff'
+  - '#0a1530'
+  - '#070f24'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Primary
+  - Brand Color Spectrum (echoes live product database properties)
+  - Card Tints (Pastel Feature Card Backgrounds)
+  - Surface
+  - Text
+  - Semantic
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: nvidia-nvidia
+  brand: nvidia
+  title: NVIDIA-design-analysis
+  summary: An engineering-grade marketing system organized around two surface modes
+    — a deep black canvas for hero and footer chapters and a flat paper-white canvas
+    for body content — connected by a single, almost violently saturat
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/nvidia/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#76b900'
+  - '#000000'
+  - '#5a8d00'
+  - '#ffffff'
+  - '#f7f7f7'
+  - '#1a1a1a'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Editorial Accents (used sparingly inside long-form content)
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: ollama-ollama
+  brand: ollama
+  title: Ollama-design-analysis
+  summary: 'An almost defiantly minimal documentation-first system that treats the
+    home page like a Markdown README — paper-white canvas, 36px center-aligned heading,
+    a single black pill CTA, an inline terminal install snippet, and '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/ollama/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#000000'
+  - '#ffffff'
+  - '#090909'
+  - '#525252'
+  - '#737373'
+  - '#a3a3a3'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Focus
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: opencode-ai-opencode-ai
+  brand: opencode.ai
+  title: OpenCode-design-analysis
+  summary: A terminal-native marketing system rendered entirely in Berkeley Mono —
+    every word on the page, from the hero headline down to the footer fine print,
+    is monospaced. The page itself reads like a manpage or a static-site R
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/opencode.ai/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#fdfcfc'
+  - '#201d1d'
+  - '#0f0000'
+  - '#302c2c'
+  - '#424245'
+  - '#646262'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: pinterest-pinterest
+  brand: pinterest
+  title: Pinterest-design-analysis
+  summary: A photography-first discovery system organized around the Pinterest Red
+    CTA, the masonry pin grid, and a soft warm-cream chrome that gets out of the imagery's
+    way. The home page is a content-discovery tool wearing the ch
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/pinterest/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#e60023'
+  - '#ffffff'
+  - '#cc001f'
+  - '#000000'
+  - '#211922'
+  - '#33332e'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Editorial Accents (used sparingly inside content imagery and category badges)
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: playstation-playstation
+  brand: playstation
+  title: PlayStation-design-analysis
+  summary: A three-surface marketing system organized around alternating black, white,
+    and PlayStation Blue chapters that scroll past the viewer like a console launch
+    trailer. Each section has a single editorial purpose — hero phot
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/playstation/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0070d1'
+  - '#0064b7'
+  - '#004d8d'
+  - '#ffffff'
+  - '#53b1ff'
+  - '#d53b00'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Brand Gradient
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: posthog-posthog
+  brand: posthog
+  title: PostHog-design-analysis
+  summary: 'A playful developer-tools system rendered on a warm cream canvas with
+    hand-drawn hedgehog mascots dotted across every page like marginalia in a sketchbook.
+    The chrome reads like a friendly engineering blog: olive-gray in'
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/posthog/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#4d4f46'
+  - '#23251d'
+  - '#f7a501'
+  - '#dd9001'
+  - '#b17816'
+  - '#33342d'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: raycast-raycast
+  brand: raycast
+  title: Design Asset
+  summary: '--- version: alpha name: Raycast-design-analysis 属于: A dark-canvas developer-tools
+    system that treats the marketing page like an extended product screenshot — pure-near-black
+    background, command-palette mockups as the he'
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/raycast/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#07080a'
+  - '#0d0d0d'
+  - '#101111'
+  - '#242728'
+  - '#ffffff'
+  - '#e8e8e8'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Brand Gradient
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: renault-renault
+  brand: renault
+  title: Renault-design-analysis
+  summary: 'Renault''s web presence pairs the freshly-modernised Renault diamond
+
+    (the 2021 flat-line rhombus mark) with a stark black-and-white canvas, a
+
+    signature Sunlight Yellow accent, and the proprietary NouvelR display
+
+    typeface.'
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/renault/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#ffed00'
+  - '#e6d200'
+  - '#000000'
+  - '#222222'
+  - '#333333'
+  - '#666666'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: replicate-replicate
+  brand: replicate
+  title: Replicate-design-analysis
+  summary: 'Replicate''s marketing surfaces pair the warm-cream developer-tools aesthetic
+
+    of an indie ML playground with a confident hot-orange brand accent and a
+
+    signature display typeface (rb-freigeist-neue) sized aggressively larg'
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/replicate/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#ea2804'
+  - '#c01f00'
+  - '#ffffff'
+  - '#202020'
+  - '#3a3a3a'
+  - '#575757'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: resend-resend
+  brand: resend
+  title: Resend-design-analysis
+  summary: 'Resend''s marketing surfaces sit on a near-pure black canvas with off-white
+
+    text and a single signature color — the deep editorial-serif Domaine
+
+    Display headline mark — that gives an otherwise utilitarian developer-tool
+
+    b'
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/resend/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#fcfdff'
+  - '#000000'
+  - '#a1a4a5'
+  - '#888e90'
+  - '#464a4d'
+  - '#0a0a0c'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: revolut-revolut
+  brand: revolut
+  title: Revolut-design-analysis
+  summary: 'Revolut''s marketing surfaces pair a stark black canvas with the brand''s
+
+    cobalt-violet (`#494fdf`) and a wide accent palette of deep, fully-saturated
+
+    product colours — teal, light-blue, deep pink, light-green, warning ora'
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/revolut/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#494fdf'
+  - '#4f55f1'
+  - '#3a40c4'
+  - '#ffffff'
+  - '#191c1f'
+  - '#1f2226'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: runwayml-runwayml
+  brand: runwayml
+  title: Design System Inspired by Runway
+  summary: Design System Inspired by Runway
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/runwayml/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#767d88'
+  - '#7d848e'
+  - '#000000'
+  - '#030303'
+  - '#1a1a1a'
+  - '#ffffff'
+  tags:
+  - Design System Inspired by Runway
+  - 1. Visual Theme & Atmosphere
+  - 2. Color Palette & Roles
+  - Primary
+  - Surface & Background
+  - Neutrals & Text
+  - Gradient System
+  - 3. Typography Rules
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: sanity-sanity
+  brand: sanity
+  title: Design System Inspired by Sanity
+  summary: Design System Inspired by Sanity
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/sanity/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#0b0b0b'
+  - '#212121'
+  - '#353535'
+  - '#797979'
+  - '#b9b9b9'
+  - '#ededed'
+  tags:
+  - Design System Inspired by Sanity
+  - 1. Visual Theme & Atmosphere
+  - 2. Color Palette & Roles
+  - Primary Brand
+  - Accent & Interactive
+  - Surface & Background
+  - Neutrals & Text
+  - Semantic
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: sentry-sentry
+  brand: sentry
+  title: Sentri-Inspired-design-analysis
+  summary: An inspired interpretation of Sentri's design language — a developer-tools
+    brand built on a deep purple-violet midnight canvas, electric lime accents, and
+    a slightly subversive illustrated personality. The system pairs a
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/sentry/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#150f23'
+  - '#1f1633'
+  - '#ffffff'
+  - '#c2ef4e'
+  - '#fa7faa'
+  - '#6a5fc1'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: shopify-shopify
+  brand: shopify
+  title: Shopifi-Inspired-design-analysis
+  summary: An inspired interpretation of Shopifi's design language — a cinematic commerce
+    platform that runs two parallel design tracks. The marketing-hero and product-narrative
+    pages live on near-black canvases with full-bleed pho
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/shopify/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#000000'
+  - '#ffffff'
+  - '#0a0a0a'
+  - '#fbfbf5'
+  - '#1e2c31'
+  - '#d4d4d8'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Shade Ladder
+  - Text
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: slack-slack
+  brand: slack
+  title: Slacc-Inspired-design-analysis
+  summary: 'An inspired interpretation of Slacc''s design language — a workplace messaging
+    brand built on a deep aubergine primary, with cream-lavender hero gradients, blue
+    inline links, and pill CTAs. The system pairs a proprietary '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/slack/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#4a154b'
+  - '#481a54'
+  - '#611f69'
+  - '#592466'
+  - '#ffffff'
+  - '#1d1d1d'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: spacex-spacex
+  brand: spacex
+  title: Spacex-Inspired-design-analysis
+  summary: An inspired interpretation of Spasex's design language — a mission-oriented
+    aerospace brand built on pure black canvas, full-bleed photographic and video
+    heroes of rockets and Mars landscapes, and uppercase D-DIN display
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/spacex/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#000000'
+  - '#ffffff'
+  - '#f0f0fa'
+  - '#0a0a0a'
+  - '#3a3a3f'
+  - '#e0e0e8'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Link
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: spotify-spotify
+  brand: spotify
+  title: Design System Inspired by Spotify
+  summary: Design System Inspired by Spotify
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/spotify/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#121212'
+  - '#181818'
+  - '#1f1f1f'
+  - '#1ed760'
+  - '#f3727f'
+  - '#ffa42b'
+  tags:
+  - Design System Inspired by Spotify
+  - 1. Visual Theme & Atmosphere
+  - 2. Color Palette & Roles
+  - Primary Brand
+  - Text
+  - Semantic
+  - Surface & Border
+  - Shadows
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: starbucks-starbucks
+  brand: starbucks
+  title: Design System Inspired by Starbucks
+  summary: Design System Inspired by Starbucks
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/starbucks/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#f2f0eb'
+  - '#edebe9'
+  - '#006241'
+  - '#cba258'
+  - '#00754A'
+  - '#1E3932'
+  tags:
+  - Design System Inspired by Starbucks
+  - 1. Visual Theme & Atmosphere
+  - 2. Color Palette & Roles
+  - Primary
+  - Secondary & Accent
+  - Surface & Background
+  - Neutrals & Text
+  - Semantic & Accent
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: stripe-stripe
+  brand: stripe
+  title: Stripi-Inspired-design-analysis
+  summary: An inspired interpretation of Stripi's design language — a financial-infrastructure
+    brand built on a deep navy ink, an electric indigo primary, and a recurring atmospheric
+    gradient mesh that occupies the upper third of n
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/stripe/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#533afd'
+  - '#4434d4'
+  - '#2e2b8c'
+  - '#665efd'
+  - '#b9b9f9'
+  - '#1c1e54'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: supabase-supabase
+  brand: supabase
+  title: Design Asset
+  summary: '--- version: alpha name: Supabaze-Inspired-design-analysis description:
+    An inspired interpretation of Supabaze''s design language — an open-source database
+    platform built on a clean white-and-near-black system with a sing'
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/supabase/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#3ecf8e'
+  - '#24b47e'
+  - '#4ade80'
+  - '#171717'
+  - '#212121'
+  - '#707070'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Typography
+  - Font Family
+  - Hierarchy
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: superhuman-superhuman
+  brand: superhuman
+  title: Superhumon-Inspired-design-analysis
+  summary: An inspired interpretation of Superhumon's design language — a fast-email
+    productivity brand split between an editorial dark hero (deep indigo navy with
+    violet-sky atmospheric backdrop and a portrait subject) and a quiet
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/superhuman/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#1b1938'
+  - '#0e0c1f'
+  - '#ffffff'
+  - '#292827'
+  - '#73706d'
+  - '#9a9794'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Typography
+  - Font Family
+  - Hierarchy
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: tesla-tesla
+  brand: tesla
+  title: Design System Inspired by Tesla
+  summary: Design System Inspired by Tesla
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/tesla/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#3E6AE1'
+  - '#FFFFFF'
+  - '#F4F4F4'
+  - '#171A20'
+  - '#393C41'
+  - '#5C5E62'
+  tags:
+  - Design System Inspired by Tesla
+  - 1. Visual Theme & Atmosphere
+  - 2. Color Palette & Roles
+  - Primary
+  - Secondary & Accent
+  - Surface & Background
+  - Neutrals & Text
+  - Semantic & Accent
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: theverge-theverge
+  brand: theverge
+  title: Design System Inspired by The Verge
+  summary: Design System Inspired by The Verge
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/theverge/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#131313'
+  - '#3cffd0'
+  - '#5200ff'
+  - '#ffffff'
+  - '#2d2d2d'
+  - '#309875'
+  tags:
+  - Design System Inspired by The Verge
+  - 1. Visual Theme & Atmosphere
+  - 2. Color Palette & Roles
+  - Primary (Brand Hazards)
+  - Secondary & Accent
+  - Surface & Background
+  - Neutrals & Text
+  - Semantic & Accent
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: together-ai-together-ai
+  brand: together.ai
+  title: Together-AI-Inspired-design-analysis
+  summary: An inspired interpretation of Together AI's design language — an AI infrastructure
+    platform whose surface alternates between near-black hero bands (with a three-color
+    orange-magenta-periwinkle gradient as the single piec
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/together.ai/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#000000'
+  - '#ffffff'
+  - '#959494'
+  - '#010120'
+  - '#313641'
+  - '#fc4c02'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Brand Gradient
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: uber-uber
+  brand: uber
+  title: Uber-Inspired-design-analysis
+  summary: 'An inspired interpretation of Uber''s design language — a transportation-and-delivery
+    super-app brand whose web surface is a black-and-white duet, framed by a custom
+    geometric display sans, accented by a single signature '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/uber/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#000000'
+  - '#ffffff'
+  - '#5e5e5e'
+  - '#afafaf'
+  - '#4b4b4b'
+  - '#efefef'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: vercel-vercel
+  brand: vercel
+  title: Vercel-Inspired-design-analysis
+  summary: An inspired interpretation of Vercel's design language — a developer-platform
+    brand whose surface is a stark black-and-ink duet on near-white canvas, broken
+    at hero scale by a multi-color mesh gradient (cyan / blue / mag
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/vercel/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#171717'
+  - '#ffffff'
+  - '#4d4d4d'
+  - '#888888'
+  - '#ebebeb'
+  - '#a1a1a1'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Brand Gradient
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: vodafone-vodafone
+  brand: vodafone
+  title: Vodafone-Inspired-design-analysis
+  summary: An inspired interpretation of Vodafone's design language — a telecom super-brand
+    whose web surface alternates between editorial photography hero bands with massive
+    uppercase display headlines and clean white content band
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/vodafone/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#e60000'
+  - '#ffffff'
+  - '#25282b'
+  - '#7e7e7e'
+  - '#bebebe'
+  - '#f2f2f2'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: voltagent-voltagent
+  brand: voltagent
+  title: Voltagent-Inspired-design-analysis
+  summary: An inspired interpretation of Voltagent's design language — a developer-focused
+    AI agent engineering platform whose surface is an unrelenting near-black canvas
+    broken only by a single electric-green brand accent, code-ed
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/voltagent/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#00d992'
+  - '#2fd6a1'
+  - '#10b981'
+  - '#101010'
+  - '#f2f2f2'
+  - '#ffffff'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: warp-warp
+  brand: warp
+  title: Warp-Inspired-design-analysis
+  summary: An inspired interpretation of Warp's design language — an agentic terminal-and-development-environment
+    brand whose surface is a warm near-charcoal canvas (a tint warmer than pure black),
+    broken only by clean Inter typogr
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/warp/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#f7f5f0'
+  - '#2b2622'
+  - '#c9c0ad'
+  - '#dad2c1'
+  - '#aea69c'
+  - '#383330'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: webflow-webflow
+  brand: webflow
+  title: Webflow-Inspired-design-analysis
+  summary: An inspired interpretation of Webflow's design language — a visual web
+    development platform whose surface contrasts a deep near-black `#080808` primary
+    against a generous white canvas, broken by a five-stop chromatic acc
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/webflow/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#080808'
+  - '#ffffff'
+  - '#222222'
+  - '#363636'
+  - '#5a5a5a'
+  - '#898989'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: wired-wired
+  brand: wired
+  title: Wired-Inspired-design-analysis
+  summary: An inspired interpretation of Wired's design language — a flagship technology-magazine
+    brand whose surface is a strict editorial duet of stark black wordmark on white
+    canvas, anchored by a tall narrow custom display seri
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/wired/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#000000'
+  - '#ffffff'
+  - '#1a1a1a'
+  - '#757575'
+  - '#e0e0e0'
+  - '#f5f5f5'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: wise-wise
+  brand: wise
+  title: Wise-Inspired-design-analysis
+  summary: An inspired interpretation of Wise's design language — a global money-transfer
+    brand whose surface combines an unusually heavy near-black display sans (weight
+    900 at 64–126 px) with a vivid lime-green brand accent, sage-
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/wise/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#9fe870'
+  - '#0e0f0c'
+  - '#cdffad'
+  - '#c5edab'
+  - '#e2f6d5'
+  - '#163300'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Brand Accent — Tertiary
+  - Typography
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: x-ai-x-ai
+  brand: x.ai
+  title: xAI-Inspired-design-analysis
+  summary: 'An inspired interpretation of xAI''s design language — Elon Musk''s frontier-AI
+    company whose web surface is a strict near-black canvas broken only by white pill
+    outlines, occasional warm sunset / dusk gradient accents, a '
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/x.ai/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#ffffff'
+  - '#0a0a0a'
+  - '#fafaf7'
+  - '#dadbdf'
+  - '#7d8187'
+  - '#212327'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
+- id: zapier-zapier
+  brand: zapier
+  title: Zapier-Inspired-design-analysis
+  summary: An inspired interpretation of Zapier's design language — a workflow-automation
+    platform whose surface combines warm-cream neutrals (`#fffefb` canvas, `#f8f4f0`
+    soft cream) with deep coffee ink (`#201515`) and a single sa
+  source_repo: /Users/xiamingxing/ToolBox/awesome-design-md
+  source_path: design-md/zapier/DESIGN.md
+  layer: forge
+  access_mode: read-only
+  platform: mobile
+  style_family: dark-technical
+  layout_pattern: sidebar-dashboard
+  palette_tokens:
+  - '#fffefb'
+  - '#f8f4f0'
+  - '#201515'
+  - '#ff4f00'
+  - '#2f2a26'
+  - '#36342e'
+  tags:
+  - Overview
+  - Colors
+  - Brand & Accent
+  - Surface
+  - Text
+  - Semantic
+  - Typography
+  - Font Family
+  governance:
+    context: external design corpus only
+    read_only: true
+    allowed_usage: prompt-injection for UI generation and style matching
