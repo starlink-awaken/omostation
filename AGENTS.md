@@ -82,6 +82,8 @@ last_updated: 2026-09-04
 
 **Do not hard-code** current phase, health score, test counts, or port values in Markdown. Use pointers.
 
+**文档归档约定**（T6-17 治理，2026-09-05）：`type: ephemeral + status: completed` 的一次性文档（总结/交接/审计报告）完成后归档到 `.omo/_knowledge/design/plans/archive/`（`.omo/_archive/` 被 .gitignore 忽略，新文件不可用），顶层不再留存；文档引用同步改为归档路径（指针化）。SSOT 判定盘点见 `docs/reports/doc-ssot-inventory-2026-09-05.md`。
+
 Full contract: [`.omo/standards/doc-ssot-contract.md`](.omo/standards/doc-ssot-contract.md)
 
 ---
