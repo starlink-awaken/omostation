@@ -4,6 +4,8 @@ spec_version: 1.0.0
 title: UNTYPED 批量分类规则表 — BET-Y1Q4-T10-04
 bet_id: BET-Y1Q4-T10-04
 status: accepted
+lifecycle: contract
+last-reviewed: 2026-09-05
 type: plan
 owner: governance-team
 last_updated: 2026-09-05

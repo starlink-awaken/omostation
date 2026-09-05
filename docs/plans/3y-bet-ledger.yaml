@@ -20542,7 +20542,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-untyped-classification-rules.md
     spec_version: 1.0.0
-    content_digest: sha256:8e1d69fa681e72534e3250a6064d0913bc2411f1e4754a7f983d0818c153aa63
+    content_digest: sha256:88da7ae45524cbe24f77d7c20148627eb477d50b92c104707e47323881c7582d
     decision_ref: decision://accepted/BET-Y1Q4-T10-04
   non_goals:
   - 不改变任何文档正文内容 (仅 frontmatter)
