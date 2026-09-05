@@ -8,13 +8,13 @@ related:
 ---
 schema: scene-card/v2
 bet: BET-Y1Q4-T8-04
-falsifier: "若 30 天内无 admin 类任务触发，则场景无实际价值"
+falsifier: 若 30 天内无 admin 类任务触发，则场景无实际价值
 scene_id: admin-collect
 journey_id: admin-notification-workflow
 goal: 向 deadline_tracker 注册任务截止追踪, 进入等待回复状态
 trigger: journey forwarding→collecting 转移 (email_drafts_created == true)
 input_contract: latest_subject + deadline + target + task_type
-result_contract: 'deadline_registered 布尔 + awaiting_replies 恒 true (注册失败时带 error 字段但不阻塞流程)'
+result_contract: deadline_registered 布尔 + awaiting_replies 恒 true (注册失败时带 error 字段但不阻塞流程)
 outcome_metric: deadline_registration_rate
 consumer: xiamingxing
 approver: business-governance
@@ -26,5 +26,12 @@ operator: admin-collect-dispatch
 required_capabilities:
 - tracker:deadline-register
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_admin_collect (deadline_tracker.register_task, 异常降级不阻塞)'
-- '2026-08-26: deadline_tracker 补 30min launchd 常驻巡查(com.omostation.deadline-tracker, 指稳定副本) — 此前注册后无调度, 回复检测/截止告警无人执行; 首轮实测检测到真实回复'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_collect (deadline_tracker.register_task,
+  异常降级不阻塞)'
+- '2026-08-26: deadline_tracker 补 30min launchd 常驻巡查(com.omostation.deadline-tracker,
+  指稳定副本) — 此前注册后无调度, 回复检测/截止告警无人执行; 首轮实测检测到真实回复'
+- Transitioned draft→shadow at 2026-09-05T00:15:13.027981+00:00 by xiamingxing
+lifecycle: shadow
+activation: preview
+activation_blockers: []
+approval_state: confirmed

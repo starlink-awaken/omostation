@@ -8,13 +8,14 @@ related:
 ---
 schema: scene-card/v2
 bet: BET-Y1Q4-T8-04
-falsifier: "若 30 天内无 admin 类任务触发，则场景无实际价值"
+falsifier: 若 30 天内无 admin 类任务触发，则场景无实际价值
 scene_id: admin-forward
 journey_id: admin-notification-workflow
 goal: 生成转发通知与数据收集表两份草稿, 供人工确认后发送
 trigger: journey classified→forwarding 转移 (requires_forwarding == true)
 input_contract: latest_subject + target + deadline
-result_contract: 'email_drafts_created 布尔 + notice_draft/form_draft 草稿路径 + requires_human_confirm (恒 true)'
+result_contract: email_drafts_created 布尔 + notice_draft/form_draft 草稿路径 + requires_human_confirm
+  (恒 true)
 outcome_metric: draft_acceptance_rate
 consumer: xiamingxing
 approver: business-governance
@@ -28,3 +29,8 @@ required_capabilities:
 - doc:generate-draft
 notes:
 - '实现: bin/ssot/admin_scenes.py dispatch_admin_forward (risk_engine L4 拒绝检查 + 只落草稿不发送)'
+- Transitioned draft→shadow at 2026-09-05T00:15:13.167300+00:00 by xiamingxing
+lifecycle: shadow
+activation: preview
+activation_blockers: []
+approval_state: confirmed

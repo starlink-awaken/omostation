@@ -8,13 +8,13 @@ related:
 ---
 schema: scene-card/v2
 bet: BET-Y1Q4-T8-04
-falsifier: "若 30 天内无 admin 类任务触发，则场景无实际价值"
+falsifier: 若 30 天内无 admin 类任务触发，则场景无实际价值
 scene_id: admin-compile
 journey_id: admin-notification-workflow
 goal: 汇总收集结果生成工作报告草稿
 trigger: journey collecting→compiling / classified→compiling 转移
 input_contract: latest_subject + deadline + 已收集材料上下文
-result_contract: 'report_compiled 布尔 + report_draft 草稿路径'
+result_contract: report_compiled 布尔 + report_draft 草稿路径
 outcome_metric: report_draft_acceptance_rate
 consumer: xiamingxing
 approver: business-governance
@@ -26,4 +26,10 @@ operator: admin-compile-dispatch
 required_capabilities:
 - doc:generate-draft
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_admin_compile (doc_generator summary_report 模板)'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_compile (doc_generator summary_report
+  模板)'
+- Transitioned draft→shadow at 2026-09-05T00:15:13.097854+00:00 by xiamingxing
+lifecycle: shadow
+activation: preview
+activation_blockers: []
+approval_state: confirmed

@@ -8,13 +8,13 @@ related:
 ---
 schema: scene-card/v2
 bet: BET-Y1Q4-T8-04
-falsifier: "若 30 天内无 admin 类任务触发，则场景无实际价值"
+falsifier: 若 30 天内无 admin 类任务触发，则场景无实际价值
 scene_id: admin-review
 journey_id: admin-notification-workflow
 goal: 生成发领导的审阅请求邮件草稿 (占位收件人, 人工确认时修改)
 trigger: journey compiling→reviewing 转移 (report_compiled == true)
 input_contract: latest_subject + report_draft 路径
-result_contract: 'leader_email_draft 草稿路径 + requires_human_confirm 恒 true'
+result_contract: leader_email_draft 草稿路径 + requires_human_confirm 恒 true
 outcome_metric: review_draft_acceptance_rate
 consumer: xiamingxing
 approver: business-governance
@@ -27,4 +27,10 @@ required_capabilities:
 - risk_engine:send-email-check
 - mail:create-draft
 notes:
-- '实现: bin/ssot/admin_scenes.py dispatch_admin_review (risk_engine L3 检查 + create_draft 占位收件人 leader@bjfsh.gov.cn)'
+- '实现: bin/ssot/admin_scenes.py dispatch_admin_review (risk_engine L3 检查 + create_draft
+  占位收件人 leader@bjfsh.gov.cn)'
+- Transitioned draft→shadow at 2026-09-05T00:15:13.235204+00:00 by xiamingxing
+lifecycle: shadow
+activation: preview
+activation_blockers: []
+approval_state: confirmed
