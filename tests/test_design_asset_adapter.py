@@ -40,6 +40,9 @@ def test_build_page_spec_and_render_page_spec():
     assert page_spec["brand"] == "Claude"
     assert page_spec["sections"]
     assert any(section["type"] == "hero" for section in page_spec["sections"])
+    assert any(section.get("layout") in {"split", "grid", "stacked"} for section in page_spec["sections"])
+    assert page_spec["responsive_constraints"]["section_order"]
     html = render_page_spec(page_spec, output_format="html")
     assert "Claude" in html
     assert "<section" in html
+    assert "testimonial" in html.lower() or "quote" in html.lower()
