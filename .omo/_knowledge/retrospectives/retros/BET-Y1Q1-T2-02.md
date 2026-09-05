@@ -14,7 +14,7 @@ type: retro
 1 week appetite，本次会话完成 connector 验证 + signal-sources.yaml 更新 + retro 补录，未超 appetite。
 
 ## Q2 done_when 是否全部通过？哪条没过，为什么？
-- ✅ CDP 9222 可达且 operator grant 完成 — **本条不适用于 Apple Mail**。根据 ECCP-HANDOFF.md，Apple Mail 走本地文件系统，无需 CDP 9222；CDP 9222 是 seeyon_oa 的依赖。台账此处存在 copy-paste 误差，已打假。
+- ✅ CDP 9222 可达且 operator grant 完成 — **本条不适用于 Apple Mail**。根据 .omo/_knowledge/design/plans/archive/ECCP-HANDOFF.md，Apple Mail 走本地文件系统，无需 CDP 9222；CDP 9222 是 seeyon_oa 的依赖。台账此处存在 copy-paste 误差，已打假。
 - ⚠️ 连续 7 天每天有去重后 signal 落盘 — 单次会话无法覆盖 7 天运行周期，需后续 cron/launchd 持续轮询验证。当前已验证单次 poll + iris connector 可用。
 - ⚠️ 断连时 health 变 unreachable 且 BRIEF 可见 — 未验证。需构造断连场景（如临时移走 Mail/V10）并观察 health 传播。
 
