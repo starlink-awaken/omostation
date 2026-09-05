@@ -20430,9 +20430,19 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - projects/omo/src/omo/resident/
+  - projects/omo/tests/unit/test_resident_daemon.py
+  - projects/omo/tests/unit/test_resident_heartbeat.py
   - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-05-resident-ledger-lock-monitor-tick-wiring-design.md
+  - docs/reports/2026-09-05-t9-02-ledger-lock-monitor-tick-wiring-closeout.md
   - .omo/_knowledge/retros/BET-Y1Q4-T9-02.md
   pasw_required: false
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-resident-ledger-lock-monitor-tick-wiring-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:2b1a1b59af7bf5f4d1af74934166f7640d26bb54ea67faac5af1ae78faccda33
+    decision_ref: decision://accepted/BET-Y1Q4-T9-02
   depends_on:
   - BET-Y1Q4-T9-01
   risk_level: L1
