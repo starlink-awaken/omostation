@@ -18191,7 +18191,6 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 出现灾难性遗忘、通用推理能力下降超过 10% 或生成内容偏离事实时立即回滚 LoRA 适配器。
-  retro: required
 - id: BET-Y1Q3-T10-106
   track: T10-MATURITY
   window: Y1Q3
@@ -20114,10 +20113,10 @@ bets:
   priority: P2
   status: done
   done_at: 2026-09-05 12:42:00+00:00
-  note: PR #3215 already implemented; this commit registers spec + CE matrix + flips status.
-  goal: 打通 shadow→assisted 的试验证据断层 — journey-runner 完成的 run 落盘
-    shadow-scene-trials.jsonl (mode 字段诚实区分 dry_run/live), scene-card-lifecycle
-    Check4 从文件级存在性升级为按 scene_id 精确匹配 (三类试验日志任一含本 scene 条目即过)。
+  note: PR
+  goal: 打通 shadow→assisted 的试验证据断层 — journey-runner 完成的 run 落盘 shadow-scene-trials.jsonl
+    (mode 字段诚实区分 dry_run/live), scene-card-lifecycle Check4 从文件级存在性升级为按 scene_id 精确匹配
+    (三类试验日志任一含本 scene 条目即过)。
   non_goals:
   - 不自动升级任何场景卡 (transition 仍需人工命令)
   - 不改 internal/external 准入试验工具 (proposal_only 语义不变)
@@ -20127,11 +20126,13 @@ bets:
   - Check4 按本卡 scene_id 精确匹配, 无试验记录的卡 trial_recorded=false
   - 实测 admin-notification-workflow 一次 dry-run 后 admin-classify readiness ready=true
   verify:
-  - cmd: python3 bin/ssot/journey-runner.py run --journey admin-notification-workflow --dry-run
+  - cmd: python3 bin/ssot/journey-runner.py run --journey admin-notification-workflow
+      --dry-run
     expect: exit 0 且 jsonl 追加一条
   - cmd: python3 bin/ssot/scene-card-lifecycle.py check --scene-card docs/scene-cards/admin-classify.yaml
     expect: trial_recorded=true
-  - cmd: uv run --with pyyaml --with pytest pytest tests/test_journey_runner_validate.py -q
+  - cmd: uv run --with pyyaml --with pytest pytest tests/test_journey_runner_validate.py
+      -q
     expect: 4 passed
   workflow: project-code-change
   underlying_workflow: project-code-change
@@ -20196,9 +20197,8 @@ bets:
   priority: P2
   status: done
   done_at: 2026-09-05
-  goal: 消灭场景卡双存储口径分裂 — docs/scene-cards (63 张, lifecycle/registry 消费) 与
-    .omo/_truth/scenarios (5 张, review/candidates 消费) 归一为单一 SSOT, calibration
-    与 trial 证据链 (T7-02) 汇入同一条升级路径。
+  goal: 消灭场景卡双存储口径分裂 — docs/scene-cards (63 张, lifecycle/registry 消费) 与 .omo/_truth/scenarios
+    (5 张, review/candidates 消费) 归一为单一 SSOT, calibration 与 trial 证据链 (T7-02) 汇入同一条升级路径。
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-scene-card-store-unification-spec.md
     spec_version: 1.0.0
@@ -20231,9 +20231,9 @@ bets:
   appetite: 1 days
   priority: P2
   status: candidate
-  goal: 复盘 2026-09-04~05 会战 (9 交付 3 病灶模式), 固化 gitlink 假失败分诊
-    (PITFALL-GAT-007)、BET 闭环 8 步 skill、submit auto-rebase 预防层、
-    scene-shadow-activate 参数纠偏; 挂账 omo 死链与 calibration 语义统一。
+  goal: 复盘 2026-09-04~05 会战 (9 交付 3 病灶模式), 固化 gitlink 假失败分诊 (PITFALL-GAT-007)、BET
+    闭环 8 步 skill、submit auto-rebase 预防层、 scene-shadow-activate 参数纠偏; 挂账 omo 死链与 calibration
+    语义统一。
   non_goals:
   - 不执行 CR-PITFALL-COO-003 规则草案 (等人审)
   - 不动 omo/ecos 子模块 (T7-04 立项另做)
@@ -20272,10 +20272,9 @@ bets:
   title: 场景卡归一遗留 — omo phase15/16 死链清理 + ecos 第四家存储收口
   appetite: 1 days
   priority: P3
-  status: candidate
-  goal: T7-03 归一后的两个悬挂引用 — ① omo 子模块 phase15/16 指向不存在的
-    .omo/_truth/scenarios/research-pipeline.yaml (迁移前已断); ② ecos registry
-    scene-cards.yaml 作为第四家存储 (scene-card-review 头部 SSOT 注记指向它)。
+  status: done
+  goal: T7-03 归一后的两个悬挂引用 — ① omo 子模块 phase15/16 指向不存在的 .omo/_truth/scenarios/research-pipeline.yaml
+    (迁移前已断); ② ecos registry scene-cards.yaml 作为第四家存储 (scene-card-review 头部 SSOT 注记指向它)。
   non_goals:
   - 不改场景卡本体
   done_when:
@@ -20295,6 +20294,8 @@ bets:
   human_gate: false
   circuit_breaker: ecos registry 变更需 ecos 侧对齐, 单方面不动
   retro: required
+  done_at: '2026-09-05'
+  close_evidence: .omo/_knowledge/retros/BET-Y2Q1-T7-04.md
 - id: BET-Y2Q1-T7-05
   track: T7-SCENE
   window: Y2Q1
@@ -20302,9 +20303,8 @@ bets:
   appetite: 1 days
   priority: P3
   status: candidate
-  goal: T7-03 迁移后 calibration (review 工具) 与五档 tier (lifecycle 工具) 已同源
-    读取 docs/scene-cards, 但语义未统一 — assisted 升级门以 readiness (trial 证据)
-    为准, calibration 0.65 只是随卡字段。统一二者为单一路径或在标准里明确分工。
+  goal: T7-03 迁移后 calibration (review 工具) 与五档 tier (lifecycle 工具) 已同源 读取 docs/scene-cards,
+    但语义未统一 — assisted 升级门以 readiness (trial 证据) 为准, calibration 0.65 只是随卡字段。统一二者为单一路径或在标准里明确分工。
   non_goals:
   - 不改 readiness 门 (T7-02 刚固化)
   done_when:
@@ -20360,7 +20360,6 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
   value_indicator_policy: false
-  retro: required
 - id: BET-Y2Q1-T10-01
   track: T10-MATURITY
   window: Y2Q1
@@ -20369,8 +20368,11 @@ bets:
   priority: P1
   status: done
   done_at: 2026-09-05 11:50:00+00:00
-  note: cold-backup-drill.sh + restore-cold-snapshot.sh implemented; full snapshot 1.32GB/7258 files; verify-only + fail-closed PASS; 15-min bare-metal drill deferred to human.
-  goal: 构建个人业务操作系统终极物理灾备体系：每日定时自动将全仓代码、台账、KEMS 知识库、SEMA 信念、个人 LoRA 权重通过 GPG/AES-256 零知识加密并增量快照同步至外接私有存储介质；提供单键冷启动还原脚本。
+  note: cold-backup-drill.sh + restore-cold-snapshot.sh implemented; full snapshot
+    1.32GB/7258 files; verify-only + fail-closed PASS; 15-min bare-metal drill deferred
+    to human.
+  goal: 构建个人业务操作系统终极物理灾备体系：每日定时自动将全仓代码、台账、KEMS 知识库、SEMA 信念、个人 LoRA 权重通过 GPG/AES-256
+    零知识加密并增量快照同步至外接私有存储介质；提供单键冷启动还原脚本。
   non_goals:
   - 不依赖任何第三方公有云存储作为必要灾备中继
   done_when:
@@ -23826,7 +23828,9 @@ bets:
   priority: high
   status: done
   done_at: '2026-09-05T13:30:00+00:00'
-  close_evidence: 主仓 3216 .md 盘点报告入库 (docs/reports/doc-ssot-inventory-2026-09-05.md) + 3 个 completed ephemeral 顶层文档归档 .omo/_archive/ + 2 retro 引用指针化 + AGENTS.md 归档约定对齐; doc-ssot-lint exit 0
+  close_evidence: 主仓 3216 .md 盘点报告入库 (docs/reports/doc-ssot-inventory-2026-09-05.md)
+    + 3 个 completed ephemeral 顶层文档归档 .omo/_archive/ + 2 retro 引用指针化 + AGENTS.md 归档约定对齐;
+    doc-ssot-lint exit 0
   retro: .omo/_knowledge/retros/BET-Y1Q4-T6-17.md
   goal: 主仓+子仓所有 .md 文档 SSOT 判定，重复内容收敛，过时文档归档
   done_when:
@@ -23950,4 +23954,3 @@ bets:
   circuit_breaker: 不修改已有 skill/workflow 内容, 只校验完整性 + 添加 URI check 脚本
   close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T6-19.md
   retro: .omo/_knowledge/retros/BET-Y1Q4-T6-19.md
-
