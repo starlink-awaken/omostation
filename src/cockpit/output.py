@@ -36,18 +36,30 @@ def get_console(
 
     When ``force_json`` is set or the target stream is not a TTY, construct with
     ``no_color=True`` and ``force_terminal=False`` so markup never emits ANSI.
+
+    Important: do **not** bind ``file=sys.stdout`` at construction for the default
+    path — Rich keeps a live ``sys.stdout`` lookup when ``file`` is omitted, which
+    keeps pytest monkeypatches working.
     """
-    stream = file if file is not None else (sys.stderr if stderr else sys.stdout)
-    machine = wants_machine_output(force_json=force_json, stream=stream)
-    if machine:
+    if file is not None:
+        machine = wants_machine_output(force_json=force_json, stream=file)
         return Console(
-            file=stream,
-            stderr=stderr and file is None,
-            no_color=True,
-            force_terminal=False,
-            highlight=False,
+            file=file,
+            no_color=machine,
+            force_terminal=False if machine else None,
+            highlight=False if machine else True,
         )
-    return Console(file=stream, stderr=stderr and file is None)
+
+    probe = sys.stderr if stderr else sys.stdout
+    machine = wants_machine_output(force_json=force_json, stream=probe)
+    kwargs: dict[str, Any] = {
+        "stderr": stderr,
+        "no_color": machine,
+        "highlight": not machine,
+    }
+    if machine:
+        kwargs["force_terminal"] = False
+    return Console(**kwargs)
 
 
 def ansi_free_print(text: str, *, file: TextIO | None = None) -> None:
