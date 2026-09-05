@@ -1,0 +1,40 @@
+---
+schema_version: notification-config/v1
+config_version: 1
+owner: governance-team
+last_reviewed: "2026-09-05"
+status: active
+
+# HITL Proposal System v1.1 notification config (BET-Y1Q4-HITL-02)
+# Configure which channels to use for principal notifications.
+# Channels without config (slack, email) gracefully no-op with a warning.
+
+default_channels:
+  - log       # always-on, writes to .omo/_knowledge/hitl-proposals/.notifications.log
+  - stdout    # always-on, prints to console (visible in harness run output)
+
+# Per-channel opt-in (leave empty to disable)
+slack:
+  enabled: false
+  webhook_url: null  # set to https://hooks.slack.com/services/.../.../... to enable
+  channel: null      # e.g. "#hitl-approvals"
+
+email:
+  enabled: false
+  smtp_server: null
+  smtp_port: 587
+  from_addr: null
+  to_addrs: []
+  subject_template: "[HITL] Approval needed: {proposal_id} ({title})"
+
+# Notification triggers (when to send)
+triggers:
+  on_proposal_created: true
+  on_proposal_approved: false  # future v1.2
+  on_proposal_rejected: false  # future v1.2
+  on_proposal_expired: false   # future v1.2
+
+# Retry policy (future v1.2)
+retry:
+  max_attempts: 3
+  backoff_seconds: 30

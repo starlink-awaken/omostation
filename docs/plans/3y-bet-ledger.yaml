@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 310
+  total_bets: 311
   windows:
   - Y1Q1
   - Y1Q2
@@ -20486,7 +20486,7 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 若 cron 面拥堵，仅加 status 侧主动 recover，不做新 bin 脚本
-  retro: .omo/_knowledge/retros/BET-Y1Q4-T9-02.md
+  retro: required
 - id: BET-Y1Q4-T10-03
   track: T10-MATURITY
   window: Y1Q4
@@ -20530,6 +20530,11 @@ bets:
     + HITL proposal hitl-20260905002432-2df9c0 approved
   note: 2nd production use of HITL Proposal System (after BET-Y1Q4-T8-04).
   retro: required
+  done_at: '2026-09-05T00:24:32+00:00'
+  close_evidence: docs/plans/2026-09-04-architecture-analysis-and-requirements-consolidation.md 落盘 (320 lines, 7 chapters
+    covering L0-L4/workflow/resident/BOS/execution backend + short/mid/long-term roadmap + risks/acceptance) + verify yaml_ok
+    + HITL proposal hitl-20260905002432-2df9c0 approved
+  note: 2nd production use of HITL Proposal System (after BET-Y1Q4-T8-04).
 - id: BET-Y1Q4-T10-04
   track: T10-MATURITY
   window: Y1Q4
@@ -20538,7 +20543,8 @@ bets:
   priority: P2
   status: done
   done_at: 2026-09-05
-  goal: 为 .omo/_knowledge 等目录约 1836 个 UNTYPED 文档按目录规则批量赋 type (长期知识→ssot + --fix 补 owner/date; 时点产物→ephemeral + status:archived), 使 UNTYPED 软信号降至 <300 且硬阻塞维持 0。
+  goal: 为 .omo/_knowledge 等目录约 1836 个 UNTYPED 文档按目录规则批量赋 type (长期知识→ssot + --fix 补 owner/date; 时点产物→ephemeral + status:archived),
+    使 UNTYPED 软信号降至 <300 且硬阻塞维持 0。
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-untyped-classification-rules.md
     spec_version: 1.0.0
@@ -20763,7 +20769,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-validator-full-s6-design.md
     spec_version: 1.0.0
-    content_digest: sha256:7125cff02fa8082fd95979d442f216995f82051f725a40595f62ef01e873e640
+    content_digest: sha256:286d18b326b7ce34180a48e75041287ff308a3f7d0173a9da33fe3ab4570924c
     decision_ref: decision://accepted/BET-Y1Q4-T1-10
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -20773,30 +20779,30 @@ bets:
         evidence:
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-validator-full-s6-design.md
-            sha256: sha256:7125cff02fa8082fd95979d442f216995f82051f725a40595f62ef01e873e640
+            sha256: sha256:286d18b326b7ce34180a48e75041287ff308a3f7d0173a9da33fe3ab4570924c
           tests:
             ref: receipt://tests/test_bet_portfolio_contract.py
             sha256: sha256:2dd7fecb9bbd74de1c660a30ac566a7631c6bde9c9c4bd445a2d14b1af60c5da
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-10.md
-            sha256: sha256:c9203d64a813f6efa3e8715f7a5bdcc174383278e2286f82fcc97e25cde26fcd
+            sha256: sha256:d55a7b8a77264cf63f032cff6c9638329b27867c3de615b7b09b99ecdbaa1d75
           merged_reachable_commit:
-            ref: git://origin/main@9e81919c79aa5f99aa6ae89573df8b6d87212125
+            ref: git://origin/main@4ab195f5514a4f8c27448f5c923087d59f7e5aeb
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-10.md
-            sha256: sha256:c9203d64a813f6efa3e8715f7a5bdcc174383278e2286f82fcc97e25cde26fcd
+            sha256: sha256:d55a7b8a77264cf63f032cff6c9638329b27867c3de615b7b09b99ecdbaa1d75
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-10.md
-            sha256: sha256:c9203d64a813f6efa3e8715f7a5bdcc174383278e2286f82fcc97e25cde26fcd
+            sha256: sha256:d55a7b8a77264cf63f032cff6c9638329b27867c3de615b7b09b99ecdbaa1d75
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-10.md
-            sha256: sha256:c9203d64a813f6efa3e8715f7a5bdcc174383278e2286f82fcc97e25cde26fcd
+            sha256: sha256:d55a7b8a77264cf63f032cff6c9638329b27867c3de615b7b09b99ecdbaa1d75
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-10.md
-            sha256: sha256:c9203d64a813f6efa3e8715f7a5bdcc174383278e2286f82fcc97e25cde26fcd
+            sha256: sha256:d55a7b8a77264cf63f032cff6c9638329b27867c3de615b7b09b99ecdbaa1d75
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -20819,6 +20825,8 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: 需要数据库、新服务、第二 dispatcher、破坏 v1 CLI、strict mode 先于单字段 meta.total_bets 修复启用，或无法保持历史 BET 对象语义等价时停止
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T1-10.md
+  retro: .omo/_knowledge/retros/BET-Y1Q4-T1-10.md
 - id: BET-Y1Q4-T8-11
   track: T8-SURFACE
   window: Y1Q4
@@ -20979,9 +20987,9 @@ bets:
   title: 低分 P0 核心命令群体验重构与参数面补全
   appetite: 3 days
   priority: P0
-  status: candidate
-  done_at: 2026-09-04 11:00:00+00:00
-  note: Delivered in Project Sovereign Command (PSC v1)
+  status: done
+  done_at: 2026-09-05 02:30:00+00:00
+  note: Spec + test_core_commands.py contract lock; child PR
   goal: 重构 9 大核心高频命令群 (dashboard, quickstart, journey, capabilities, data, iterate, workflow, compass, brain)，全面支持 --dry-run、-o
     json 与容错自愈。
   non_goals:
@@ -20998,10 +21006,56 @@ bets:
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/
   - projects/cockpit/tests/test_core_commands.py
-  pasw_required: false
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-05-t8-13-p0-core-commands-contract-design.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+  - docs/reports/2026-09-05-t8-13-p0-core-commands-closeout.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t8-13-p0-core-commands-contract-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:858a3245e8cc536a1cb8ff129e516e99359f532ef42ab512028aae5669ec1cde
+    decision_ref: decision://accepted/BET-Y1Q4-T8-13
   risk_level: L1
   human_gate: false
   circuit_breaker: 核心命令回归失败阻断
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@692c1aaa030c1612851ca6ebaddef52a2aa47bc2
+          tests:
+            ref: receipt://docs/reports/2026-09-05-t8-13-p0-core-commands-closeout.md
+            sha256: sha256:9a28426a9257ba0b9296e258f2add93a9c4f5c3feda091b0ff62b72430a6d741
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t8-13-p0-core-commands-contract-design.md
+            sha256: sha256:858a3245e8cc536a1cb8ff129e516e99359f532ef42ab512028aae5669ec1cde
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+            sha256: sha256:c4cd3b8669f7b3459fb1bca07701e287eb2570fa6b782acf3d7fa4f00d7829e7
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+            sha256: sha256:c4cd3b8669f7b3459fb1bca07701e287eb2570fa6b782acf3d7fa4f00d7829e7
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+            sha256: sha256:c4cd3b8669f7b3459fb1bca07701e287eb2570fa6b782acf3d7fa4f00d7829e7
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+            sha256: sha256:c4cd3b8669f7b3459fb1bca07701e287eb2570fa6b782acf3d7fa4f00d7829e7
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+            sha256: sha256:c4cd3b8669f7b3459fb1bca07701e287eb2570fa6b782acf3d7fa4f00d7829e7
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-13.md
   retro: required
 - id: BET-Y1Q4-T8-14
@@ -21100,14 +21154,15 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-04-w0-unified-surface-protocol-design.md
     spec_version: 1.0.0
-    content_digest: sha256:248269b03910ea9693b4a499cd4a66c070408773d33fbc4709a40ff0cb1677c4
+    content_digest: sha256:5aede3d1386e07ad2ee6aaa47dc3341428b7adb892b8b4bf7539765dc0148ae6
     decision_ref: decision://accepted/BET-Y1Q4-T8-17
   track: T8-SURFACE
   window: Y1Q4
   title: 统一表面协议 (USP v1) 与通用交互卡片元语模型规范
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-09-04'
   goal: 建立全终端统一的抽象数据与交互契约（USP v1），定义 MetricGrid, DataTable, LogStream, DagGraph, ActionPanel 5 大通用交互卡片元语，彻底解耦底层 BOS/Agora
     数据源与终端展示层。
   non_goals:
@@ -21130,19 +21185,58 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 协议校验失败阻断
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-17.md
   retro: required
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bb8fab534f1904d331f498d38b20e2d523d6e50f
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-w0-unified-surface-protocol-design.md
+            sha256: sha256:5aede3d1386e07ad2ee6aaa47dc3341428b7adb892b8b4bf7539765dc0148ae6
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-T8-18
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-04-w0-sovereign-tui-2.0-design.md
     spec_version: 1.0.0
-    content_digest: sha256:e3190347bfeaa0a5121094927f7ffb4f0ab85df20b4b9467357c3d3edcd7fcb3
+    content_digest: sha256:a75bbfed242b250bf1a84a1cdf08415f61ce4de714b4735522822f63186d430f
     decision_ref: decision://accepted/BET-Y1Q4-T8-18
   track: T8-SURFACE
   window: Y1Q4
   title: Sovereign TUI 2.0 旗舰多窗格终端控制台融合重构
   appetite: 4 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-09-04'
   goal: 打破 app.py、swarm_app.py 与 compute_hud 碎片化孤岛，基于 Textual 1.x 打造对标 k9s/lazygit 的一站式 8 领域多窗格极客终端控制台，支持全键盘 Vim 流、8 领域左侧树、卡片甲板与底部事件流抽屉。
   non_goals:
   - 不引入 Python 外的重型编译依赖 (如 Rust ratatui 二进制)
@@ -21158,25 +21252,64 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - projects/cockpit/src/cockpit/tui/app.py
-  - projects/cockpit/src/cockpit/tui/adapters/
+  - projects/cockpit/src/cockpit/tui/adapters/__init__.py
   - projects/cockpit/src/cockpit/tui/__init__.py
   pasw_required: false
   risk_level: L1
   human_gate: false
   circuit_breaker: TUI 启动异常优雅降级至静态版面
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-18.md
   retro: required
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c46ee420a9d1bfb14b810f930dfd2cf6d2a809a6
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-w0-sovereign-tui-2.0-design.md
+            sha256: sha256:a75bbfed242b250bf1a84a1cdf08415f61ce4de714b4735522822f63186d430f
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-T8-19
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-w0-cockpit-ui-reorganization-and-bundle-optimization.md
     spec_version: 1.0.0
-    content_digest: sha256:3d3a39a2b750b82c361916139d94a7e3ddbcac22af8da7a094b04cedb386e4a1
+    content_digest: sha256:a58e48153520319c4a3628a92b15ecd83a52f07ccd4219eb0994a991d167bcd6
     decision_ref: decision://accepted/BET-Y1Q4-T8-19
   track: T8-SURFACE
   window: Y1Q4
   title: Web UI (cockpit-ui) 8 大正交一级领域重组与包体瘦身
   appetite: 4 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: '2026-09-05'
   goal: 重构 cockpit-ui 信息架构，将 42 个散乱路由归纳至 8 大正交一级领域；引入细粒度路由 Code-Splitting 消除 >1MB 单 Chunk 警告 (压降至 <300KB)；修复无头测试环境下的 DOM 拦截报错。
   non_goals:
   - 不重写整个 React 前端框架
@@ -21193,24 +21326,63 @@ bets:
   write_surfaces:
   - projects/cockpit-ui/src/routes.tsx
   - projects/cockpit-ui/vite.config.ts
-  - projects/cockpit-ui/src/components/
+  - projects/cockpit-ui/src/components/ActionSurfacePanel.tsx
   pasw_required: false
   risk_level: L1
   human_gate: false
   circuit_breaker: 构建失败阻断
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-19.md
   retro: required
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@736948a134620849b7a3535ad9e212a8644cc5bc
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-w0-cockpit-ui-reorganization-and-bundle-optimization.md
+            sha256: sha256:a58e48153520319c4a3628a92b15ecd83a52f07ccd4219eb0994a991d167bcd6
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-T8-20
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-w0-declarative-card-extension-sdk-design.md
     spec_version: 1.0.0
-    content_digest: sha256:2bd846ac27f230b387921e5ae6eaa2680f4a68d4925f8fb390b391951895cb89
+    content_digest: sha256:b1fd2443fc798286642d8ff477a274ea0d947cb67fc177e0a42bfd0821d58596
     decision_ref: decision://accepted/BET-Y1Q4-T8-20
   track: T8-SURFACE
   window: Y1Q4
   title: 声明式卡片扩展 SDK 与外部业务域即插即用挂载
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: '2026-09-05'
   goal: 研发声明式卡片工坊，支持外部子项目通过编写 surface.manifest.yaml 声明自定义卡片与操作，实现 CLI / TUI / Web UI 全端自动扫描与动态挂载。
   non_goals:
   - 不支持非沙箱环境的任意原生二进制插件执行
@@ -21226,18 +21398,60 @@ bets:
   write_surfaces:
   - projects/cockpit/src/cockpit/surface/loader.py
   - projects/family-hub/surface.manifest.yaml
+  - projects/omlxc/surface.manifest.yaml
+  - projects/cockpit-ui/**
+  - projects/omlxc/**
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
   risk_level: L1
   human_gate: false
   circuit_breaker: Manifest 校验失败跳过该扩展并告警
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-20.md
   retro: required
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@74fb50bda2c52143f192813b39d71558c2d03d9b
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-w0-declarative-card-extension-sdk-design.md
+            sha256: sha256:b1fd2443fc798286642d8ff477a274ea0d947cb67fc177e0a42bfd0821d58596
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-HITL-02
   track: T1-TRUTH
   window: Y1Q4
   title: HITL Proposal System v1.1 — wait 语义 + 多渠道通知
   appetite: 3 days
   priority: P2
-  status: candidate
+  status: done
   note: v1.0 落地后 (PR
   goal: 在 v1.0 producer-only 基础上,完成真正的 wait 语义(harness stage_execute 阻塞至 proposal resolved)与多渠道通知(principal 通过 Slack/邮件收到待审批提醒),同时把
     fcntl 单机锁升级为 etcd/redis 分布式锁以覆盖多节点场景
@@ -21280,6 +21494,50 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-HITL-01
+  done_at: '2026-09-05T02:42:00+00:00'
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-hitl-proposal-system-v1.1-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3b6ea250c62666f782286807a00988fa64ef568331adb4ff068b566ceccfdbfe
+    decision_ref: decision://accepted/BET-Y1Q4-HITL-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@04f8d3b59e497cbbefabcb38319dd14f82a93afc
+            sha256: sha256:3b6ea250c62666f782286807a00988fa64ef568331adb4ff068b566ceccfdbfe
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-v1.1-design.md
+            sha256: sha256:3b6ea250c62666f782286807a00988fa64ef568331adb4ff068b566ceccfdbfe
+          tests:
+            ref: receipt://tests/test_hitl_v11.py
+            sha256: sha256:841b8661f7c653b2bedf98b56e6aa5a7f221bbca01bb23b04b8b0c49512460ba
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-v1.1-design.md
+            sha256: sha256:3b6ea250c62666f782286807a00988fa64ef568331adb4ff068b566ceccfdbfe
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://bin/notification.py
+            sha256: sha256:86e9f060de6775b835341643b43e8773943bf7dd686eba21e5f67c1c349e8c1f
+          fresh_receipt:
+            ref: receipt://bin/hitl-proposal.py
+            sha256: sha256:3af415630ba82cc04344352e1581008f9803cf4ff151a30955ac633bb7f4740e
+          replay:
+            ref: receipt://bin/harness
+            sha256: sha256:d0ab729df23fe694b4c6f0f4b9a2c9b65ffbdba58d8d0669714707f6c33e8752
+          cleanup:
+            ref: receipt://bin/_registry/scripts/governance/notification.yaml
+            sha256: sha256:cdf4c5e6997efbf62243c96d8675f57f6125b0ffe2ac03a5337063ab58ca1311
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-T1-12
   track: T1-TRUTH
   window: Y1Q4
@@ -21334,11 +21592,11 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@3c0ef85524125d9b559069e734764a9caac0d853
-            sha256: sha256:b7fa6fd3e2dfec8fad8e6e9bb6336d62e219365800bffe7ee995d205daff368c
+            ref: git://origin/main@2bf32620f7c1aad77ab34b85950b4a5d6379f82a
+            sha256: sha256:f1f320dcfbbd8a1cc4f08bc0e3a16f9aa35155ee36c5d7b8d5282f69ac867d8a
           diff:
-            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
-            sha256: sha256:b7fa6fd3e2dfec8fad8e6e9bb6336d62e219365800bffe7ee995d205daff368c
+            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
+            sha256: sha256:f1f320dcfbbd8a1cc4f08bc0e3a16f9aa35155ee36c5d7b8d5282f69ac867d8a
           tests:
             ref: receipt://tests/test_hitl_proposal.py
             sha256: sha256:c4d976962458333d3f6125f7bc40ac76eb4900f7c75756f67a0d85dd8dbe8b22
@@ -21353,13 +21611,13 @@ bets:
             sha256: sha256:75588280efb478b3a40ab4cc8f7714dc7994803da3afb7ea28aeedde01b89604
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-03.md
-            sha256: sha256:03851867ddd3f429f9482a0bb560a8643a7d1c66976d54af692dceca0b78c6a2
+            sha256: sha256:f2e53981ea71fea48a67766faa4a36727f265774944fd25f3e84fa587efc84bc
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-02.md
             sha256: sha256:64d092450d12398130f30ae2c7bc309262e4c5652d4d7633f14cadf94c8f42ae
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
-            sha256: sha256:e4891d0dfcaba569d6b73182ffbeaf0f37b1a3c86ffb0a29de5d08c75786061b
+            sha256: sha256:8c8fda8c5ede141a38c895e22e38edbe15df4784472778fd85f238f6f29a9e37
       value:
         status: NOT_PROVEN
         evidence: {}

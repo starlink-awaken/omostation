@@ -1,36 +1,42 @@
 ---
-schema_version: retro/v1
-status: active
-lifecycle: history
-owner: governance-team
-created: 2026-09-04
-last-reviewed: 2026-09-04
-bet: BET-Y1Q4-T8-13
-title: 低分 P0 核心命令群体验重构与参数面补全
-symptom: 9 个高频核心命令缺乏 --dry-run、JSON 格式不纯或缺失、容错自愈能力弱
-solution: 全面重构 dashboard, quickstart, journey, capabilities, data, iterate, workflow, compass, brain
-type: ephemeral
+schema_version: retrospective/v1
+type: retro
+title: BET-Y1Q4-T8-13 Closeout Retro — P0 core command dry-run/JSON contract
+bet_id: BET-Y1Q4-T8-13
 status: archived
+lifecycle: contract
+owner: governance-team
+created: 2026-09-05
+last-reviewed: 2026-09-05
 ---
 
-# BET-Y1Q4-T8-13 复盘
+# BET-Y1Q4-T8-13 Closeout Retro
 
-## 做对了什么
+> **TL;DR**: PSC v1 已落地 9 个 P0 命令的 `--dry-run`/`--json`；本轮以 Spec + `tests/test_core_commands.py` 锁死契约，零命令改写。Child PR `#134` → root pointer bump → ledger `delivery_accepted`。
 
-1. **P0 命令全面跃升**：彻底攻克 9 大高频低分命令，实现 100% 结构化输出支持与预检能力。
-2. **端口自愈与无头模式**：重构 `dashboard` 支持端口占用探测、自愈与 `--no-open` 无头环境。
-3. **环境检测修复**：修复 `quickstart` 中 Python 3.13 版本的错误判断逻辑。
-4. **统一战略罗盘与工作流**：重构 `workflow` 与 `compass`，空参默认输出清晰的编排矩阵与机制概览。
+## Deliverables
+- Cockpit child: `#134` (`agent/bet-y1q4-t8-13-cockpit`) — `tests/test_core_commands.py`（13 cases）
+- Spec: `docs/superpowers/specs/2026-09-05-t8-13-p0-core-commands-contract-design.md`
+- Closeout receipt: `docs/reports/2026-09-05-t8-13-p0-core-commands-closeout.md`
+- Pointer: `projects/cockpit` → `42c429fb4792cdce172fab10b4f5ec2c508a627e`
 
-## 踩了什么坑
+## Q1
+Appetite 3 days；本轮以最小增量关账（Spec binding + 统一契约测试 + pointer），约数小时。
 
-| 坑 | 修复 |
-|----|------|
-| `quickstart` Python 3.13 误报版本不达标 | 修复 `_check_python() is None` 判断逻辑 |
-| `data` 空参直接异常退出 | 提供默认安全元数据聚合展示 |
-| `brain` 硬编码 ASCII 边框且无 JSON 支持 | 重构为 Rich 表格并增加完整纯净 JSON 输出 |
+## Q2
+- 9 大命令均支持 `-o json` 与 `--dry-run`：PASS（`JSON_CAPABLE` + 契约矩阵）
+- 格式一致性校验全部通过：PASS（ANSI-free `json.loads(stdout)`）
+- 单测覆盖率达标：PASS — `pytest .../test_core_commands.py` → **13 passed**
+- Verify 命令 exit 0：PASS
 
-## 交付自证
+## Q3
+1. `accepted_specifications` 缺失会在 `start --bet` 被 SPEC_BINDING 拦截 — 必须先写 Spec 再 start。
+2. claim 需要 `affected-graph` 含 `workspace-root`；仅 `cockpit` 不够。
+3. PASW：代码改在 `.subtrees/cockpit`，verify 路径仍是 `projects/cockpit` — 本地需 copy 或 bump 后再跑门禁命令。
+4. PSC 已交付实现；本 BET 缺口是 **统一 verify 面**（`test_core_commands.py`），勿重写已绿命令。
 
-- 测试用例：`test_dashboard_modernized.py`, `test_modernized_p0_commands.py`, `test_modernized_p0_wave2.py` 全部 100% PASS。
-- 门禁状态：`make gac-local-gate` 56 项全绿通过。
+## Q4
+净增：契约测试、Spec/retro/report、ledger binding；命令文件零改动。modernized 分测可并存。
+
+## Q5
+后续可逐步让 9 命令改用 `cockpit.output.json_print`；telemetry/结构化日志交给 T8-14。关账两段：delivery（含 pointer）→ done+completion_evidence（squash 后如需 rebind `merged_reachable_commit`）。
