@@ -480,6 +480,18 @@ if not any(gate.get("id") == "bin-quota-diff" for gate in GATES_LIST):
         }
     )
 
+# Root-owned PITFALL-GAT-006 detector (2026-09-05): 检测当前分支是否在 main 已自愈后
+# 重复造轮子. 分支 diff 为空 + main 有近期 merge → WARNING (exit 0, 非阻断).
+# 防多 agent 并发下修复目标已被其他 PR 达成, 合并后回退 main 正确值.
+# 详见 .omo/_knowledge/pitfalls/gate/PITFALL-GAT-006.yaml
+if not any(gate.get("id") == "pitfall-gat006-check" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "pitfall-gat006-check",
+            "command": ["bin/gac/check-pitfall-gat006.py"],
+        }
+    )
+
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
@@ -528,6 +540,7 @@ SOFT_CHECKS = {
     "derived-only-fast-track",  # GOV-REBAL (S5): 纯派生文档 fast-track 建议, 非阻断
     "command-discovery",  # UX-NOISE (S5): 命令密度/重复定位, 非阻断
     "resident-bos-check",  # CR-RESIDENT-BOS-01: agora bos-services.yaml 缺 resident 域, 非阻断
+    "pitfall-gat006-check",  # PITFALL-GAT-006: 分支与 main 等价检测, 警告不阻断
 }
 
 
@@ -776,6 +789,10 @@ FINDING_TOPIC_CHECKS: dict[str, dict[str, str]] = {
     "bus-usage-report": {
         "topic": "bus-dormant-adapter",
         "label": "总线休眠适配器 (declaration without execution)",
+    },
+    "pitfall-gat006-check": {
+        "topic": "pitfall-gat006-redundant-branch",
+        "label": "分支等价检测 (main 已自愈 / 重复造轮子)",
     },
 }
 
