@@ -13,6 +13,39 @@ harness:
   # agent-workflow.py 保留为兼容马甲：harness run → 内部调 agent-workflow start/claim/verify/closeout
 
 # ──────────────────────────────────────────────────────────────
+# 运行时门 — 拦截产物/漂移
+# ──────────────────────────────────────────────────────────────
+gates:
+  runtime_artifact_gate:
+    script: bin/gac/check-runtime-artifacts.py
+    stages: [pre_commit, pre_push]
+    on_fail: block
+
+  gitignore_enforce:
+    script: bin/gac/check-gitignore-enforce.py
+    stages: [pre_commit, pre_push]
+    on_fail: warn
+
+# ──────────────────────────────────────────────────────────────
+# 度量指标 — 仓库健康度
+# ──────────────────────────────────────────────────────────────
+metrics:
+  repo_health:
+    script: bin/gac/repo-health-metrics.py
+    schedule: daily
+    storage: .omo/state/history/repo-health.jsonl
+
+  stale_branches:
+    script: bin/gac/stale-branch-scan.py
+    schedule: weekly
+    storage: .omo/_truth/registry/stale-branch-report.json
+
+  worktree_hygiene:
+    script: bin/gac/prune-zombie-worktrees.py
+    schedule: weekly
+    storage: .omo/_truth/registry/worktree-hygiene-report.json
+
+# ──────────────────────────────────────────────────────────────
 # 1. Admission — 起跑前准入（硬拦截，不可逃生）
 # ──────────────────────────────────────────────────────────────
 admission:

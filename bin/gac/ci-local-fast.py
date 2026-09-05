@@ -421,6 +421,17 @@ def build_checks(*, root: Path = WORKSPACE) -> tuple[Check, ...]:
         ),
         Check("html", "HTML entity encoding", (python, script, "--html-entities")),
         Check("yaml", "YAML syntax", (python, str(root / "bin/ssot/yaml-validate.py"))),
+        Check(
+            "runtime-artifacts",
+            "Runtime artifact gate",
+            (python, str(root / "bin/gac/check-runtime-artifacts.py")),
+        ),
+        Check(
+            "gitignore-enforce",
+            "Gitignore drift check",
+            (python, str(root / "bin/gac/check-gitignore-enforce.py")),
+            blocking=False,
+        ),
     )
 
 

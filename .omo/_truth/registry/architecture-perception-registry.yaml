@@ -81,6 +81,39 @@ check_engines:
     triggers:
       - "bin/gac/check-sfop-slots.py"
 
+  runtime_artifact_gate:
+    path: "bin/gac/check-runtime-artifacts.py"
+    description: "Block runtime artifacts (.sqlite/.db/.omo/locks) from staging"
+    triggers:
+      - "*.sqlite"
+      - "*.db"
+      - ".omo/locks/*"
+      - "__pycache__/*"
+
+  gitignore_enforce:
+    path: "bin/gac/check-gitignore-enforce.py"
+    description: "Detect tracked files matching gitignore rules (drift)"
+    triggers:
+      - "*"
+
+  repo_health_metrics:
+    path: "bin/gac/repo-health-metrics.py"
+    description: "Collect worktree/branch/submodule health metrics"
+    triggers:
+      - "daily"
+
+  stale_branch_scan:
+    path: "bin/gac/stale-branch-scan.py"
+    description: "Scan remote branches for staleness (>14d)"
+    triggers:
+      - "weekly"
+
+  prune_zombie_worktrees:
+    path: "bin/gac/prune-zombie-worktrees.py"
+    description: "Detect and prune zombie/stale worktrees and merged branches"
+    triggers:
+      - "weekly"
+
 # ── Agent 感知触发器 ──
 triggers:
   # 编辑前检查 (pre-edit hook)
