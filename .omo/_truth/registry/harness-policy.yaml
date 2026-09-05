@@ -50,6 +50,7 @@ execution:
   worktree:
     lease: true  # DCA 并发 main conflict=0 由 Harness 持有
     isolated_clone: "~/agents/<actor>/attempts/<attempt>/ws"
+    start_location: worktree_only  # workflow run 必须在 worktree 内 start (主树 start 会成孤儿 run, 2026-09-04 实证)
   write_surfaces: strict  # 越权写直接 halt，非事后 audit
   appetite:
     max_overrun: 1.5

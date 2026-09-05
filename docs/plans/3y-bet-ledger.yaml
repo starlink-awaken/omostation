@@ -20150,7 +20150,8 @@ bets:
   priority: P1
   status: done
   done_at: 2026-09-05 00:07:10+00:00
-  note: "gate+SOP already on tip (#3115); closeout registers delivery_accepted. pre-commit hook wiring deferred (ledger done_when looser than accepted spec)."
+  note: gate+SOP already on tip (#3115); closeout registers delivery_accepted. pre-commit hook wiring deferred (ledger done_when
+    looser than accepted spec).
   goal: 建立子模块 gitlink 漂移的自动检测与修复机制，防止 P97 squash-SHA 悬空和本地未提交改动导致的 gitlink 不一致。强化 sync-check hook 在 submodule pointer 变更时的自动同步能力。
   non_goals:
   - 不改变现有 submodule-guard 的 fast-forward 校验逻辑
@@ -20282,7 +20283,7 @@ bets:
   title: omostation 架构分析与需求收敛：主线架构/协作机制/执行后端盘点
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
   goal: 在不进行大规模代码重构的前提下，对 omostation 的主线架构、多 Agent 协作机制、BOS 与执行后端关系进行系统梳理，输出一份可执行的架构优化方案与需求文档，并将结论固化进 BET 记录和 PR 流程。
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-04-architecture-analysis-requirements-spec.md
@@ -20312,6 +20313,12 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 若定位与源码/SSOT 因果不一致，必须回到文档基线重新修正，不得继续推进实现
+  retro: .omo/_knowledge/retros/BET-Y1Q4-T10-03.md (含 2026-09-05 HITL adoption 追加)
+  done_at: '2026-09-05T00:24:32+00:00'
+  close_evidence: docs/plans/2026-09-04-architecture-analysis-and-requirements-consolidation.md 落盘 (320 lines, 7 chapters
+    covering L0-L4/workflow/resident/BOS/execution backend + short/mid/long-term roadmap + risks/acceptance) + verify yaml_ok
+    + HITL proposal hitl-20260905002432-2df9c0 approved
+  note: 2nd production use of HITL Proposal System (after BET-Y1Q4-T8-04).
   retro: required
 - id: BET-Y1Q4-T10-04
   track: T10-MATURITY
