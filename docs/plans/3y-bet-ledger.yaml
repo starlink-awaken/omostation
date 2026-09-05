@@ -21936,6 +21936,7 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T1-14
+  - BET-Y1Q3-T4-07
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -21949,7 +21950,6 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
-  - BET-Y1Q3-T4-07
   portfolio_binding:
     schema_state: enforced
     campaign_ref: CMP-Y1-VALUE-PROOF
