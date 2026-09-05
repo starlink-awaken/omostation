@@ -18112,7 +18112,47 @@ bets:
   title: 主干真值流业务实战与夏明星个人文风 LoRA 首期结晶
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-09-05'
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q3-T10-105.md
+  retro: required
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@4bdfbeef7a978071e96df1edb671d41427ba4e69
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-105.md
+            sha256: sha256:79803b0f396d4eef5f09dd1bc199233b7e2661ae4580db68051a64cf007253cf
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-30-spine-value-flow-and-persona-lora-design.md
+            sha256: sha256:ae9322ba7019888baadcaf10be6d2751e2db7977e538a145ca477dfdc3eeefe0
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-105.md
+            sha256: sha256:79803b0f396d4eef5f09dd1bc199233b7e2661ae4580db68051a64cf007253cf
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-105.md
+            sha256: sha256:79803b0f396d4eef5f09dd1bc199233b7e2661ae4580db68051a64cf007253cf
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-105.md
+            sha256: sha256:79803b0f396d4eef5f09dd1bc199233b7e2661ae4580db68051a64cf007253cf
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-105.md
+            sha256: sha256:79803b0f396d4eef5f09dd1bc199233b7e2661ae4580db68051a64cf007253cf
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-105.md
+            sha256: sha256:79803b0f396d4eef5f09dd1bc199233b7e2661ae4580db68051a64cf007253cf
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   goal: 贯通外部真实信号到 Cockpit Spine 拟办草稿生成、夏明星署名 Diff 录入、Experience Replay 水塘样本沉淀（目标≥30条真实样本），并在
     Mac mini M4 上完成首个个人文风在线 LoRA 适配层蒸馏与热插拔验证。
   non_goals:
