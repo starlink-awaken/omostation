@@ -10,6 +10,7 @@ related:
   - ADR-0388
   - ADR-0390
   - BET-Y1Q2-T6-03
+type: ssot
 ---
 
 # ADR-0407: ci-local-fast 真实退出码与 Ruff 有界债务门

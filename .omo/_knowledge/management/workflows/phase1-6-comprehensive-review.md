@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: phase1-6-comprehensive-review.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Phase 1-6 全面 Review 报告

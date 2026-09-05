@@ -2,7 +2,10 @@
 name: domain-cartridge-governance
 description: "Master governance and execution skill for domain-specific .cartridge capsules (ADR-0203). Guides packaging, cryptographic verification, intent extraction, and sandboxed policy-compliant execution for Sovereign Health and Family Hub workflows."
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # 👁️ 领域治理卡带胶囊化与沙箱运行时规范 (ADR-0203)
 

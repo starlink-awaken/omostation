@@ -7,6 +7,7 @@ last-reviewed: 2026-07-03
 related:
   - ../decisions/0126-s2-final-analysis.md
   - ../../.omo/_knowledge/decisions/0126-s2-final-analysis.md
+type: ssot
 ---
 
 # Code Review: S2 阶段主仓 PR + 后续 (2026-07-03)

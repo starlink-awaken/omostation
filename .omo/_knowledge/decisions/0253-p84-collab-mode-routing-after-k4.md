@@ -10,6 +10,7 @@ related:
   - 0247-strategic-pivot-collab-first-physical-deferred.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0253: P84 协作模式路由 — K4 批次2「协作劣」后的路线 A

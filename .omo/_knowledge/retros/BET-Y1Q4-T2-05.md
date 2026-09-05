@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T2-05
 title: 管线 supervisor 常驻化
 symptom: _run 截断致 OCR JSON 解析失败; resident-status 卡 ledger/watermark 初始化
 solution: 全量捕获+前导剥离; heartbeat 角色实例补齐部署态
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T2-05 复盘

@@ -5,6 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-06
+type: ssot
 ---
 
 # 0380 — CI Plane Completion Round

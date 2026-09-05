@@ -11,6 +11,7 @@ related:
   - ../../../../../bin/_archive/2026-08-conv3/port-governance-deck.py
   - ../../../../../docs/operations/knowledge-foundry-monitor.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0173: P78 Phase 2 — 基线重放 + Foundry v2

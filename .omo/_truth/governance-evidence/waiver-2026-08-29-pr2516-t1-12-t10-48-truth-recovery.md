@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-29
+type: ssot
 ---
 # PR #2516 T1-12/T10-48 Truth Recovery Waiver
 

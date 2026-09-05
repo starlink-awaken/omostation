@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: DEBT-ANALYSIS.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 四维债务分析报告

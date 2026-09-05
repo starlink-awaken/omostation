@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: retrospective-2026-06-16-p45-w5.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # P45 W5 + P46 收口: HTTP-MCP 收敛 5 阶段全 done + cockpit 端点真修

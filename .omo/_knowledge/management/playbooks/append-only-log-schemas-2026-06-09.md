@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: append-only-log-schemas-2026-06-09.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # AppendOnlyLog 6 个 Consumer Schema SSOT (Round 8 P2) — 2026-06-09

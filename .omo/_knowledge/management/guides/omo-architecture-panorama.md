@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: omo-architecture-panorama.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # OMO 体系全景架构分析 (v1.0)

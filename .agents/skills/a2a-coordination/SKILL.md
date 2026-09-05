@@ -2,7 +2,10 @@
 name: a2a-coordination
 description: "Coordinate tasks between multiple AI agents using the A2A (Agent-to-Agent) protocol via Agora MCP. Covers Agent Card registration, task delegation, status tracking, and swarm node discovery. Use when multiple agents need to collaborate, delegate work, or discover each other's capabilities."
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # A2A Coordination - Agent-to-Agent Task Delegation
 

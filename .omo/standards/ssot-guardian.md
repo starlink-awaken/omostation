@@ -3,6 +3,7 @@ status: active
 lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-24
+type: ssot
 ---
 
 # SSOT Guardian — 治理状态漂移防护机制

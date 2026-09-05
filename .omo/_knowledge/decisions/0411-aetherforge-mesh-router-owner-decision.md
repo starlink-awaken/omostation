@@ -8,6 +8,7 @@ created: 2026-08-16
 last-reviewed: 2026-08-16
 related:
   - ./0409-documents-capability-route-owner-convergence.md
+type: ssot
 ---
 
 # ADR-0411: 算力路由双 Owner 收敛决策 — AetherForge 单一所有权

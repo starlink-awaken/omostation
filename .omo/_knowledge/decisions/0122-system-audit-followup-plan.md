@@ -11,6 +11,7 @@ related:
   - 0119-systemic-optimization-roadmap-2026h2.md
   - 0120-runtime-health-semantics-fix.md
   - 0121-gcsi-governance-convergence-special-initiative.md
+type: ssot
 ---
 
 # ADR-0122: 系统全面审计 18 项 Follow-up 实施计划 (排除 god-module)

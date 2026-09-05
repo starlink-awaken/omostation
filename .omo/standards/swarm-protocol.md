@@ -4,6 +4,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-08-08
+type: ssot
 ---
 
 # Swarm Protocol — 多twin协作标准

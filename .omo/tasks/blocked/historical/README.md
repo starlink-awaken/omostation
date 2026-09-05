@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Historical Blocked Tasks
 
 > Phase 2 (M2.6) 遗留的 blocked 任务，已移至 historical/ 子目录。

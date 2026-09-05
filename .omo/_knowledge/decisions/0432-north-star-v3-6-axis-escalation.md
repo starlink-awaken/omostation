@@ -4,6 +4,7 @@ status: candidate
 lifecycle: spec
 owner: xiamingxing
 last-reviewed: 2026-08-28
+type: ssot
 ---
 
 # ADR-0432: North Star v3 6-Axis Escalation

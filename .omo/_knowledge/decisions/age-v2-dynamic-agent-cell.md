@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: architecture-governance
 last-reviewed: 2026-08-24
+type: ssot
 ---
 
 # ADR-0401 — AGE-v2 动态 Agent Cell 架构

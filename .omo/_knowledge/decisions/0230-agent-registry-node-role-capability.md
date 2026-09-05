@@ -10,6 +10,7 @@ related:
   - STRAT-P81-strategic-roadmap.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0230: Agent registry — node / role / capability (sim first)

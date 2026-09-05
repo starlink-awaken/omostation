@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 # P99 — Pre-commit Hook Install Hygiene
 
 **Pattern observed**: 2026-09-04 in BET-Y1Q4-HITL-01 (PR #3077).

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Design a new caching layer
 
 ## 0.1 竞品与现状调研 (Research & Benchmarking)

@@ -6,6 +6,7 @@ date: 2026-08-03
 owner: governance-team
 lifecycle: spec
 last-reviewed: 2026-08-03
+type: ssot
 ---
 
 # ADR-0359: Engineering Delivery Cockpit 人工复核工作台边界

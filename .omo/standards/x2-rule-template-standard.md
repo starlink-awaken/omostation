@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # X2 Standard: Freshness Rule Definition & Lifecycle

@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-15
 title: CLI 亚百毫秒极致冷启动加速与高频 BOS 传输优化
 symptom: 基础查询命令冷启动耗时超 360ms，130+ 解析器顶层贪婪加载拖慢终端体验
 solution: Fast-path 直通路径 + 全局 Flags 级联 + 全域 Lazy Import
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-15 复盘

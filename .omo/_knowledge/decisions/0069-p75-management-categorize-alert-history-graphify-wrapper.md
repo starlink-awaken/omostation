@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ssot
 ---
 
 # ADR-0069: P75 management 142 分类 + alert-history 多维深化 + graphify 重生 wrapper

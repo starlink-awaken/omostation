@@ -6,6 +6,7 @@ date: 2026-08-03
 owner: governance-team
 lifecycle: spec
 last-reviewed: 2026-08-03
+type: ssot
 ---
 
 # ADR-0358: Engineering Delivery 机器摄取与人工复核反馈边界

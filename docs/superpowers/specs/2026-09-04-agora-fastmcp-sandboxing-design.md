@@ -8,6 +8,7 @@ lifecycle: contract
 owner: agora-team
 created: 2026-09-04
 last-reviewed: 2026-09-04
+type: ssot
 ---
 
 # Agora FastMCP 工具生态全域自动化测试与动态沙箱权限隔离

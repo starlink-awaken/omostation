@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-18
 title: Sovereign TUI 2.0 旗舰多窗格终端控制台融合重构
 symptom: 旧版 TUI 仅支持单屏简易状态展示，缺乏 8 大核心领域多窗格导航、实时数据流适配及深度 Vim 交互
 solution: 基于 USP v1 表面协议重构 SovereignCockpitApp，集成 8 领域导航树、响应式卡片甲板、折叠实时日志抽屉、ctrl+p 命令面板与 Vim 键位
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-18 复盘

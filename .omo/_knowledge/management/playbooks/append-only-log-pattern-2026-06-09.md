@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: append-only-log-pattern-2026-06-09.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # AppendOnlyLog 模式 (Round 1-5 收尾) — 2026-06-09

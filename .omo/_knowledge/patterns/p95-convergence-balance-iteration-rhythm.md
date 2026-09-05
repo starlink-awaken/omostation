@@ -11,6 +11,7 @@ related:
 - ADR-0389
 origin_bets:
 - ADR-0443 v1-v5
+type: ssot
 ---
 
 # P95: 产出/收敛平衡的迭代节奏（复盘产入口）

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # REMEDIATE-KAIRON-ARCH-BASELINE 审查笔记
 
 **审查日期**: 2026-06-09

@@ -11,6 +11,8 @@ failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
+type: ephemeral
+status: archived
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 

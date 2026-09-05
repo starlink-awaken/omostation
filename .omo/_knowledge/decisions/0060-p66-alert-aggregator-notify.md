@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ssot
 ---
 
 # ADR-0060: P66 alert-aggregator --notify 主动通知 (omo event emit aggregated)

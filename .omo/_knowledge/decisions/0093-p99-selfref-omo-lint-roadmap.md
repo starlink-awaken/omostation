@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0093: P99 ADR-0092 self-ref 清 + omo_lint 兑现路径 (10 轮推迟 → 11 轮)

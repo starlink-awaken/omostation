@@ -5,6 +5,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-28
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q3-T6-15 retro — R1 through R2a

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # XX — 各设备操作步骤（逐条执行）
 
 > 更新日期：2026-05-20

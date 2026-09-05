@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: deep-defects-analysis-2026-06-06.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 系统深度缺陷与长期风险分析

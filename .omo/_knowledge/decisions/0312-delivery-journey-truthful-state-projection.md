@@ -10,6 +10,7 @@ related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - ../../standards/agent-workflow-contract.md
   - ../../../projects/cockpit/src/cockpit/delivery_journey.py
+type: ssot
 ---
 
 # ADR-0312: Cockpit Delivery Journey truthful state projection

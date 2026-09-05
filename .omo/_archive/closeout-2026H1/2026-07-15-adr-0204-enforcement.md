@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Closeout — ADR-0204 enforcement bundle
 
 ## Landed

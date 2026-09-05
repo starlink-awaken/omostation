@@ -8,6 +8,7 @@ related:
   - 0247-strategic-pivot-collab-first-physical-deferred.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0249: 治理自省预算封顶 (40/40/20, 用户已同意)

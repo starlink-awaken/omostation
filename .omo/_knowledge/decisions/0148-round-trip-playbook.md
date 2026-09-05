@@ -10,6 +10,7 @@ related:
   - 0140-m4-health-score.md
   - ../../../AGENTS.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0148: Round-Trip 流程文档化 (Round 5c)

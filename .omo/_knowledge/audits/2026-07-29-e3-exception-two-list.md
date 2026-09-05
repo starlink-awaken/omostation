@@ -3,6 +3,8 @@ status: needs-human
 lifecycle: history
 owner: governance-team
 last-reviewed: "2026-07-29"
+type: ephemeral
+status: archived
 ---
 # E3 例外二清单: 依赖"协作普遍正收益"的决策 → 退回人类 (单独产出)
 

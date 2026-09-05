@@ -5,6 +5,8 @@ lifecycle: signal
 owner: evolution-agent
 last-reviewed: 2026-08-31
 source: evolution-proposal
+type: ephemeral
+status: archived
 ---
 
 # Signal: Address: unhealthy_service

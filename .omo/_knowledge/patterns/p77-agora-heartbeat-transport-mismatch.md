@@ -8,6 +8,7 @@ related:
   - decl-exec-gap-meta-pattern.md
   - ../../projects/agora/src/agora/mcp_proxy/health.py
   - ../../projects/runtime/src/runtime/health/agora_gateway_probe.py
+type: ssot
 ---
 
 # P77 — Agora Heartbeat Transport Mismatch (stdio 按需服务被当 daemon heartbeat 验活 → 永久假 dead)

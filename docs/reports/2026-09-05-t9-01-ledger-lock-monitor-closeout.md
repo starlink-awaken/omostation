@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # BET-Y1Q4-T9-01 closeout receipt
 
 ## Delivered

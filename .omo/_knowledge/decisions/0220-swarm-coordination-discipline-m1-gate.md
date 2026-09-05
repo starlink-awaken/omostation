@@ -10,6 +10,7 @@ related:
   - 0202-fake-green-prevention.md
   - ../patterns/p73-truth-driven-engineering-pattern.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0220: Swarm 协调纪律 — M1 收口前置

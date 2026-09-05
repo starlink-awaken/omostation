@@ -10,6 +10,7 @@ related:
   - 0129-state-projection-plane-phase3.md
   - ../../../../bin/omo-state-cleanup.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0135: 派生面统一收口 (ADR-0129 范式 enforcement)

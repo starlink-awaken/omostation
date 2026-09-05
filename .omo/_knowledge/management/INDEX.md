@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-07-31
+type: ssot
 ---
 
 # management/ INDEX — P77 物理迁移后结构

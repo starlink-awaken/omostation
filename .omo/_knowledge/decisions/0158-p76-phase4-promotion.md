@@ -10,6 +10,7 @@ related:
   - 0155-p76-phase1-cleanup.md
   - STRAT-P76-strategic-roadmap.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0158: P76 Phase 4 — X 扩展晋升机制 + 主仓-子仓对称修复

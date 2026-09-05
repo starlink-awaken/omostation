@@ -3,6 +3,8 @@ status: needs-human
 lifecycle: history
 owner: governance-team
 last-reviewed: "2026-07-29"
+type: ephemeral
+status: archived
 ---
 # P86 T3: W 波驱动源定位 (三轮未果, 诚实记录找不到)
 

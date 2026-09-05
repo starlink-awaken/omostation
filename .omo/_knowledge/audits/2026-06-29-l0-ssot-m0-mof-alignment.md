@@ -8,6 +8,8 @@ related:
   - ssot-7-domain-schema.md
   - ../../../projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
   - ../_truth/registry/mof-capabilities.yaml
+type: ephemeral
+status: archived
 ---
 
 # L0 / SSOT / M0 / MOF 全链路对齐审计 (2026-06-29)

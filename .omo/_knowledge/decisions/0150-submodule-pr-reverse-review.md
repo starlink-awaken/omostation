@@ -11,6 +11,7 @@ related:
   - 0149-p71-baseline-no-replay.md
   - ../../../../docs/SUBMODULE-PR-REVIEW-GUIDE.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0150: Submodule PR 反向 Review (Round 5e)

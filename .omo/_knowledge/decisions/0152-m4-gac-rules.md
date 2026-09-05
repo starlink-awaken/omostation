@@ -15,6 +15,7 @@ related:
   - ../../../../bin/mcp-tool-data-complete.py
   - ../../../../bin/omo-state-cleanup.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0152: M4 5 GaC 规则追加 (Phase 1)

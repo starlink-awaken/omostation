@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 治理指标校准
 
 > 校准日期: 2026-05-26

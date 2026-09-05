@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Self-Evolution Remediation Review — OPC-P6-SELF-EVOLUTION-doc-gate-e
 
 - Routed by: self-evolve

@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: "2026-07-29"
+type: ephemeral
+status: archived
 ---
 # X4: 综合 D1-D6 执行 (integrated-governance-master-workorder §D)
 

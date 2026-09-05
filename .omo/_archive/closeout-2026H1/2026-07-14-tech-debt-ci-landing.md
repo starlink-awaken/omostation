@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Closeout — 2026-07-14 tech-debt + CI landing
 
 ## Stack landed on main

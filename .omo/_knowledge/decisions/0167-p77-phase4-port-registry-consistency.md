@@ -12,6 +12,7 @@ related:
   - ../../../../../bin/check-cross-repo-consistency.py
   - ../../../../../tests/test_cross_repo_consistency_phase4.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0167: P77 Phase 4 — 跨仓 port-registry 一致性 (bug 修复 + 6 端口对齐)

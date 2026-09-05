@@ -6,6 +6,7 @@ last-reviewed: 2026-08-30
 owner: governance-team
 origin_bets: BET-Y1Q3-T4-07 (三轮 DIGEST_MISMATCH 事故)
 review_before: 2026-11-28
+type: ssot
 ---
 
 # completion_evidence 锚新鲜度契约

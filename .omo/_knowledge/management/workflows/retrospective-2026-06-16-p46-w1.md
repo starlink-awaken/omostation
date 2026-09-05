@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: retrospective-2026-06-16-p46-w1.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # P46 W1 复盘: 7 端点端到端验证 + simplify 5 + cockpit pointer 对齐

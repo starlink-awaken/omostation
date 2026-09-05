@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: '@Builder'
 last-reviewed: '2026-08-09'
+type: ssot
 ---
 
 # ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成)

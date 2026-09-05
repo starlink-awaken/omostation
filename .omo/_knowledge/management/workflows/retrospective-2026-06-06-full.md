@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: retrospective-2026-06-06-full.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 复盘报告: 5+3+1 架构全量治理 · 2026-06-06

@@ -11,6 +11,7 @@ risk_level: L1
 human_gate: false
 value_indicator_policy: false
 implementation_authorized: true
+type: ssot
 ---
 
 # Sovereign TUI 2.0 旗舰多窗格终端控制台架构设计规范

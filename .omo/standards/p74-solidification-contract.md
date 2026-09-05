@@ -10,6 +10,7 @@ related:
   - ../_truth/registry/governance-checks.yaml
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 
 # P74 Solidification Contract — 操作契约

@@ -6,6 +6,7 @@ date: 2026-08-04
 owner: governance-team
 lifecycle: spec
 last-reviewed: 2026-08-04
+type: ssot
 ---
 
 # ADR-0360: Engineering Delivery Cockpit UI 收件箱与人工复核边界

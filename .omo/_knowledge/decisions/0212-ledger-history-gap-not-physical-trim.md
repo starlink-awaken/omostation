@@ -10,6 +10,7 @@ supersedes: []
 related:
   - 0209-ledger-trim-and-adr-ssot-renumbering.md
   - 0211-p74-run-frequency-field-and-excluded-workflows-removal.md
+type: ssot
 ---
 
 # ADR-0212 — ledger trim 现象修正：history gap 而非物理 trim

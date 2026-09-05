@@ -12,6 +12,7 @@ related:
   - docs/operations/engineering-golden-rules.md (SCRIPT-BASELINE-SYNC)
   - bin/gac/unified-health-score.py (UHS 度量)
   - BET-Y1Q3-T10-11 (sediment promotion pipeline)
+type: ssot
 ---
 
 # ADR-0424: 防腐流水线与价值起搏器 — 48 小时全弧线架构决策沉淀

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # BET-Y1Q4-T7-03 Retro — 政策雷达晨报
 
 ## 做对了

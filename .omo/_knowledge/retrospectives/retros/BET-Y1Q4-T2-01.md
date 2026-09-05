@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # BET-Y1Q4-T2-01 Retro — Event Stream Bus
 
 ## 做对了

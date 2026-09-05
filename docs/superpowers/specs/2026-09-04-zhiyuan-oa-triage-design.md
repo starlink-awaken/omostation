@@ -8,6 +8,7 @@ lifecycle: contract
 owner: omo-platform-team
 created: 2026-09-04
 last-reviewed: 2026-09-04
+type: ssot
 ---
 
 # 致远 OA 待办与审批流逆向感知与公文智能分拣

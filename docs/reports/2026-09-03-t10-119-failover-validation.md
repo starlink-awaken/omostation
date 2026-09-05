@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # BET-Y1Q3-T10-119 Validation Report
 
 > 验证日期: 2026-09-03

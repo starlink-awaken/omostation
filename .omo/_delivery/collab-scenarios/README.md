@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 协作场景库（能力轨 · STRAT-P84 W1）
 
 > 测**协作机制响应质量**（能力轨），**不计入产能轨**。

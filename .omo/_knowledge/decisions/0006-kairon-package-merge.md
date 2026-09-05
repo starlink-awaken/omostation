@@ -6,6 +6,7 @@ owner: governance-team
 last-reviewed: 2026-06-22
 archived-since: 2026-06-22
 note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+type: ssot
 ---
 
 # ADR-0006: kairon 17 包合并到 12 包（方向 C — 4 组瘦包合并）

@@ -10,6 +10,7 @@ related:
   - STRAT-P76-strategic-roadmap.md
   - 0115-bin-governance-rationalize.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0157: P76 Phase 3 — 元治全自 + debt-closed-per-feature 指标

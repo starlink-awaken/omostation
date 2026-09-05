@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # MECH-05: 任务分解 Wave 模型
 
 > **来源**: `.omo/GOVERNANCE_PLAN.md` + `TASK_POOL.md` + `boulder.json`

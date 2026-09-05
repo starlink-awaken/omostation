@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: ecos-v5-deep-analysis-2026-06-05.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # eCOS v5 (5+3+1) 架构完全缺陷分析

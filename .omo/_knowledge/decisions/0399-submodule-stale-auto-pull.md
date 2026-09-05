@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: '@Builder'
 last-reviewed: '2026-08-09'
+type: ssot
 ---
 
 # ADR-0399: 治本 E — 子模块 stale 自动 pull + PASW 漂移检测增强

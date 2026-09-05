@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-09-04
+type: ephemeral
+status: archived
 ---
 # Cockpit 命令评分卡报告 (command-audit)
 

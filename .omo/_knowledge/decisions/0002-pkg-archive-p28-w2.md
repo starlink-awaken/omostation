@@ -6,6 +6,7 @@ owner: governance-team
 last-reviewed: 2026-06-22
 archived-since: 2026-06-22
 note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+type: ssot
 ---
 
 # ADR-0002: kairon-assistant / kairon-voice 首批归档策略

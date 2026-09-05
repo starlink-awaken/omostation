@@ -12,6 +12,7 @@ current-version: "eCOS v6 (5+4+1+1)"
 migrated_to: eCOS-v5-Architecture-SSOT.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # eCOS v5 Architecture SSOT (DEPRECATED · BREAK-LINK)

@@ -11,6 +11,7 @@ related:
   - ../../../../../docs/project-registry.yaml
   - ../../../../../protocols/port-registry.yaml
 supersedes: []
+type: ssot
 ---
 
 # ADR-0177: P79 Phase 4 — 文档刷新 (ARCHITECTURE.md + SSOT 契约)

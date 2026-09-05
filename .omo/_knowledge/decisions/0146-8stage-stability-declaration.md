@@ -13,6 +13,7 @@ related:
   - ../../../projects/ecos/src/ecos/ssot/m3.yaml::Decision
   - ../../../projects/ecos/src/ecos/ssot/m3.yaml::Constraint
 supersedes: []  # 不 supersede ADR-0139, 是稳定性升级而非内容替换
+type: ssot
 ---
 
 # ADR-0146: 8 阶段反向 ADR 稳定性声明 (M4 Health = 100/100)

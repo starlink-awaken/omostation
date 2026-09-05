@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: "2026-07-29"
+type: ephemeral
+status: archived
 ---
 # E1/E2/E4/E5 执行记录 (人类 delegated decisions 授权)
 

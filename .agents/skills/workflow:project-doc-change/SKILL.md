@@ -3,7 +3,10 @@ name: workflow:project-doc-change
 description: SEMA 自动结晶技能包 — 基于 3 条 MOS 踩坑信念反向萃取
 category: SEMA-Crystallized-Skill
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # Skill: workflow:project-doc-change
 

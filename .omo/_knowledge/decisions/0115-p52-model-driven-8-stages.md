@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-30
+type: ssot
 ---
 
 # ADR-0115: model-driven LifecycleStage 7→8 阶段 (P60 GOVERNANCE_MAINTENANCE)

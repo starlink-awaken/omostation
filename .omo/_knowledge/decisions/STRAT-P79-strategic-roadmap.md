@@ -11,6 +11,7 @@ related:
   - 0170-p77-phase7-env-var-port-migration.md
   - 0164-p77-phase1-cross-repo-consistency.md
 supersedes: []
+type: ssot
 ---
 
 # STRAT-P79: 2026H2 治理巩固 + Foundry 运营化路线图

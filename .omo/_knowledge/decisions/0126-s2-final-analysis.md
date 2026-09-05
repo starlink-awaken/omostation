@@ -9,6 +9,7 @@ related:
   - 0125-s2-followup-retrospective.md
   - 0124-s1-followup-retrospective.md
   - ../../SYSTEM-INDEX.md
+type: ssot
 ---
 
 # S2 阶段深度分析 (2026-07-03) — 当前状态 + 后续建议

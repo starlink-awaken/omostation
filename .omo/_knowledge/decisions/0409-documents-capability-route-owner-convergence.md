@@ -7,6 +7,7 @@ owner: governance-team
 last-reviewed: 2026-08-13
 related:
   - ADR-0342
+type: ssot
 ---
 
 # ADR-0409: Documents Capability Routes Converge on Workspace Owners
