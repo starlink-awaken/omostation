@@ -152,6 +152,13 @@ def cmd_list(args: argparse.Namespace) -> int:
         for p in hitl_pending:
             console.print(f"  [magenta]{p['proposal_id'][:18]}[/] {p.get('title', '(untitled)')}")
             console.print(f"    [dim]bet={p.get('bet_id')} expires={p.get('expires_at')}[/]")
+            # v1.1: show notification state
+            notified_at = p.get("notified_at")
+            channels = p.get("notification_channels", [])
+            if notified_at:
+                console.print(f"    [dim]notified={notified_at} channels={','.join(channels) or '(none)'}[/]")
+            else:
+                console.print(f"    [dim]notified=(not yet) channels=(none)[/]")
     return 0
 
 
