@@ -1,7 +1,5 @@
 ---
-name: scene-shadow-activate
 title: Scene Shadow Activate
-description: 场景卡 shadow 阶段激活流程
 type: skill
 owner: governance-team
 version: "1.0"

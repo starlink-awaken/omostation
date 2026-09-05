@@ -1,7 +1,5 @@
 ---
-name: closeout-retro
 title: Closeout & Retrospective
-description: 闭环收尾与复盘 - 将 AGENTS.md §8 Closeout Checklist + P78 复盘固化为可执行 skill
 type: skill
 owner: governance-team
 version: "1.0"
