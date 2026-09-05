@@ -1,9 +1,12 @@
 ---
+schema_version: specification/v1
+spec_version: 1.0.0
 title: UNTYPED 批量分类规则表 — BET-Y1Q4-T10-04
+bet_id: BET-Y1Q4-T10-04
+status: accepted
 type: plan
 owner: governance-team
 last_updated: 2026-09-05
-bet: BET-Y1Q4-T10-04
 ---
 
 # UNTYPED 批量分类规则表 (BET-Y1Q4-T10-04)
