@@ -1,32 +1,39 @@
 ---
-schema_version: retro/v1
-status: active
-lifecycle: history
+schema_version: retrospective/v1
+type: retro
+title: BET-Y1Q4-T8-11 Closeout Retro — Orthogonal domains + dual-track router
+bet_id: BET-Y1Q4-T8-11
+status: archived
+lifecycle: contract
 owner: governance-team
 created: 2026-09-04
-last-reviewed: 2026-09-04
-bet: BET-Y1Q4-T8-11
-title: 8大正交一级领域树与双轨无感知兼容路由器
-symptom: 存量 130+ 命令扁平无序，认知负荷过高；缺乏体系化分层
-solution: ORTHOGONAL_DOMAINS 8 域模型 + 双轨透明预处理分发
+last-reviewed: 2026-09-05
 ---
 
-# BET-Y1Q4-T8-11 复盘
+# BET-Y1Q4-T8-11 Closeout Retro
 
-## 做对了什么
+> **TL;DR**: PSC v1 已交付 `ORTHOGONAL_DOMAINS` 8 域树 + 双轨透明预处理路由器；本轮仅做台账 closeout（`candidate`→`done` + `delivery_accepted`），不 bump cockpit gitlink。
 
-1. **双轨无感知分发**：`cockpit system dashboard` 与 `cockpit dashboard` 双向等价分发，全仓自动化与 Agent 脚本 100% 零破坏兼容。
-2. **挂载原生子解析树**：通过 `_subcommands.py` 为 8 大正交一级领域挂载完整子解析器，支持 `cockpit <domain>` 打印富文本领域功能地图与子命令表格。
-3. **自动化测试守底**：`test_command_hierarchy.py` 完整覆盖 8 大领域定义、别名分发与帮助提示。
+## Deliverables
+- Cockpit child: PSC v1 `#130` (`16a9d65`) — `_subcommands.py` + `test_command_hierarchy.py`
+- Root mainline pointer carrying PSC: `#3099` / later tips (current cockpit ptr includes delivery)
+- Closeout: design binding + retro archive + ledger completion matrix
 
-## 踩了什么坑
+## Q1
+Appetite 2 days；实现已在 PSC v1 同日落地。本轮 closeout 约 1h（binding 补齐 + evidence 入账）。
 
-| 坑 | 修复 |
-|----|------|
-| REMAINDER 参数将子命令参数全量截留导致 flags 丢失 | 预处理识别全局通用 flags 并进行层级同步 |
-| 存量命令调用示例缺少正交域前缀提示 | 在领域 help 表格中补充双轨调用映射提示 |
+## Q2
+- 8 大正交领域树在 help 中清晰展现：PASS（hierarchy tests）
+- 双轨无感知路由器透明拦截并映射旧命令：PASS（`cockpit <cmd>` ↔ `cockpit <domain> <cmd>`）
+- 单测全部通过：PASS（`test_command_hierarchy.py` 4 passed）
 
-## 交付自证
+## Q3
+1. BET 长期停在 `candidate` 且仅有 `done_at` note，缺 `accepted_specifications` → `start --bet` 被 SPEC_BINDING 拦截；closeout 须先补 canonical Spec。
+2. `write_surfaces` initially 只有 cockpit 路径，关账改 ledger/retro 前必须扩写面，否则 claim 被 scope 拒绝。
+3. PASW：交付已在 submodule main 可达时，根仓 closeout 不必再 bump cockpit pointer。
 
-- 映射与分发测试：`uv run --project projects/cockpit pytest projects/cockpit/tests/test_command_hierarchy.py` (ALL PASS)
-- 门禁状态：`make gac-local-gate` 56 项全绿通过。
+## Q4
+Closeout 净增：+1 Spec、retro 归档、ledger done matrix。GaC/脚本配额 0；不改 cockpit 运行时代码。
+
+## Q5
+同类 PSC 批量 BET（T8-12..）关账前先检查 binding + write_surfaces 是否覆盖 ledger/retro；两段 commit：先用 main tip 占位 `merged_reachable_commit`，再用 delivery commit 自绑定。

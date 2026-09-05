@@ -20534,7 +20534,7 @@ bets:
   title: 8大正交一级领域树与双轨无感知兼容路由器
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
   done_at: 2026-09-04 11:00:00+00:00
   note: Delivered in Project Sovereign Command (PSC v1)
   goal: 建立 ORTHOGONAL_DOMAINS 8 大正交一级领域树模型，实现双轨透明预处理路由器，保持全仓存量调用 100% 零破坏兼容。
@@ -20553,10 +20553,55 @@ bets:
   - projects/cockpit/src/cockpit/_subcommands.py
   - projects/cockpit/src/cockpit/commands/
   - projects/cockpit/tests/test_command_hierarchy.py
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-11.md
+  - docs/superpowers/specs/2026-09-05-t8-11-orthogonal-domain-router-design.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t8-11-orthogonal-domain-router-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:49d97c4ddaceb61de685268bf24d352d243da62aeabb5a6401fd010fe64500df
+    decision_ref: decision://accepted/BET-Y1Q4-T8-11
   pasw_required: false
   risk_level: L1
   human_gate: false
   circuit_breaker: 命令冲突阻断
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@116adbd2fe2c05209e5cd2a30f10313a0f20c709
+          tests:
+            ref: receipt://projects/cockpit/tests/test_command_hierarchy.py
+            sha256: sha256:d3da9306a38e85a4dbcaf849f4391cd27521721fa3a40bdc7bfbff6258af6d0c
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t8-11-orthogonal-domain-router-design.md
+            sha256: sha256:49d97c4ddaceb61de685268bf24d352d243da62aeabb5a6401fd010fe64500df
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-11.md
+            sha256: sha256:e8c01145b1d674a89c53cfba593821a8df01c51634f674a4b87a597865dbc32e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-11.md
+            sha256: sha256:e8c01145b1d674a89c53cfba593821a8df01c51634f674a4b87a597865dbc32e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-11.md
+            sha256: sha256:e8c01145b1d674a89c53cfba593821a8df01c51634f674a4b87a597865dbc32e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-11.md
+            sha256: sha256:e8c01145b1d674a89c53cfba593821a8df01c51634f674a4b87a597865dbc32e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-11.md
+            sha256: sha256:e8c01145b1d674a89c53cfba593821a8df01c51634f674a4b87a597865dbc32e
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-11.md
   retro: required
 - id: BET-Y1Q4-T8-12
