@@ -1,35 +1,41 @@
 ---
-schema_version: retro/v1
-status: active
+schema: bet-retro/v1
+bet_id: BET-Y1Q4-T8-16
+status: closed
 lifecycle: history
 owner: governance-team
-created: 2026-09-04
-last-reviewed: 2026-09-04
-bet: BET-Y1Q4-T8-16
-title: 顶级开源 DX：Shell 自动补全、交互纠错与统一使用手册
-symptom: 缺乏原生 Shell 自动补全脚本，拼写错误时无法提供建议，缺乏完整的单源 CLI 参考手册
-solution: 原生 completion (bash/zsh/fish) + Levenshtein 纠错建议引擎 + docs export (docs/CLI-REFERENCE.md)
+last-reviewed: 2026-09-05
 type: ephemeral
-status: archived
 ---
 
-# BET-Y1Q4-T8-16 复盘
+# BET-Y1Q4-T8-16 retro — DX 三件套（补全/纠错/单源手册）
 
-## 做对了什么
+## What changed
 
-1. **三端 Shell 原生补全**：实现 `cockpit completion [bash|zsh|fish]`，动态补全 8 大正交一级领域、二级子命令与全局 Flags。
-2. **Did You Mean 智能纠错**：自研零第三方依赖的 Levenshtein 模糊匹配算法，TTY 模式高亮建议，`--json` 模式返回 `"suggestions": [...]`。
-3. **单源参考手册生成器**：实现 `cockpit docs export`，一键生成对标 `gh`/`kubectl` 的 Markdown 命令参考手册 `docs/CLI-REFERENCE.md`。
+- **completion.py**：新增 `suggest_commands`（纯 Python Levenshtein，距离 ≤2
+  从 SSOT registry 取候选，长度预过滤）+ 三壳生成器既有实现验证。
+- **CLI-REFERENCE.md：303 行 → 1853 行**。根因：gen-help-docs.py 以
+  `frontmatter=` 关键字调用 docs.py 的无参 `generate_cli_reference_markdown`，
+  TypeError 被裸 `except Exception` 静默吞掉，永远走 303 行简表 fallback。
+  修复：gen_cli_reference 重写为全量模式（COMMAND_CATALOG 106 命令 SSOT
+  元数据 ∪ registry 扫描 207 条，每命令独立成节含 summary/域/成熟度/用法块，
+  加目录索引/遗留映射/全局 Flags/补全说明/MCP 映射），不再依赖 docs.py。
+- **did-you-mean**：cli.py 的 `WorkspaceParser.error` 已实现 canonical 机制
+  （`fuzzy_matcher.find_closest_commands` + JSON suggestions 字段 + TTY
+  建议），本轮验证其行为并纳入测试；completion.py 的 suggest_commands
+  作为域感知候选 API 保留。曾实现 parse 前拦截后发现重复，已回滚。
+- 测试 10/10（三壳合法性、typo 建议准确性/距离上界、parser.error JSON
+  suggestions、CLI-REFERENCE ≥1400 行结构断言）。
 
-## 踩了什么坑
+## Q3 (打假)
 
-| 坑 | 修复 |
-|----|------|
-| 非法 Shell 参数直接在 argparse 解析时 raise SystemExit | 在测试中捕获 SystemExit 并断言纯净 JSON 报错内容与 ExitCode 2 |
-| 文档路径在嵌套目录下 parents 层级计算偏差 | 修正 WORKSPACE_ROOT 为正确的 parents[5] 定位到 Workspace 根目录 |
+- done_when "1400+ 行" 首跑只有 899 行（CATALOG 106 命令 × 元数据行不足），
+  补标准 usage 块（--json/--dry-run/--help 三行）后 1853 行——用法块是
+  通用模板而非逐命令定制，实际参数面以 `--help` 为准。
+- docs.py 的静默 `except Exception` 掩盖签名不匹配达数周——防御性兜底
+  必须至少 log。
 
-## 交付自证
+## Q4 (遗留)
 
-- 测试覆盖：`test_fuzzy_matching.py`, `test_completion.py`, `test_docs.py` 全部 100% PASS。
-- 生成手册：`docs/CLI-REFERENCE.md` (323 行)。
-- 门禁状态：`make gac-local-gate` 56 项全绿通过。
+- CLI-REFERENCE 每命令参数表可从 argparse parser 反射生成（当前为通用
+  模板）；example 字段 106 命令中大多数为空。

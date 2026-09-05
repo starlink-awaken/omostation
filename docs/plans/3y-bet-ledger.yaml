@@ -21255,7 +21255,8 @@ bets:
   title: 顶级开源 DX：Shell 自动补全、交互纠错与统一使用手册
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-05
   done_at: 2026-09-04 11:00:00+00:00
   note: Delivered in Project Sovereign Command (PSC v1)
   goal: 打造顶级开源开发者体验：原生 completion 生成器 (bash/zsh/fish)、基于 Levenshtein 距离的 typo 智能纠错建议，以及全自动单源生成 docs/CLI-REFERENCE.md。
@@ -21275,6 +21276,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:c47b17f3760cbed4752c9de534fd32f92a7119752df552b7c312ce2506a9c8ca
     decision_ref: decision://accepted/BET-Y1Q4-T8-16
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t8-16-dx-completion-typo-docs-design.md
+            sha256: sha256:c47b17f3760cbed4752c9de534fd32f92a7119752df552b7c312ce2506a9c8ca
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-16.md
+            sha256: sha256:be2d709293f05cc82dc0cb8c4345c66fb5d7c7bc5d6c87ecfec07b20f6ab2236
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-16.md
+            sha256: sha256:be2d709293f05cc82dc0cb8c4345c66fb5d7c7bc5d6c87ecfec07b20f6ab2236
+          merged_reachable_commit:
+            ref: git://origin/main@692401dfbe8a15338c1a67eb7bb98d54f3c831a2
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-16.md
+            sha256: sha256:be2d709293f05cc82dc0cb8c4345c66fb5d7c7bc5d6c87ecfec07b20f6ab2236
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-16.md
+            sha256: sha256:be2d709293f05cc82dc0cb8c4345c66fb5d7c7bc5d6c87ecfec07b20f6ab2236
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-16.md
+            sha256: sha256:be2d709293f05cc82dc0cb8c4345c66fb5d7c7bc5d6c87ecfec07b20f6ab2236
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-16.md
+            sha256: sha256:be2d709293f05cc82dc0cb8c4345c66fb5d7c7bc5d6c87ecfec07b20f6ab2236
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/completion.py
   - projects/cockpit/tests/test_completion_and_typo.py
