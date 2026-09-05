@@ -1,10 +1,10 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-09-04T13:53:10Z
+# generated_at: 2026-09-05T13:50:54Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5, 'drift': 0.1, 'staleness': 0.1}
 
-generated_at: "2026-09-04T13:53:10Z"
+generated_at: "2026-09-05T13:50:54Z"
 source: "c2g.strategy (real audit, no mock)"
 health_score: 52
 governance_anomaly_score: 0
@@ -12,21 +12,21 @@ anomaly_count: 2
 service_online_ratio: 0.500
 freshness_score: 100
 drift_score: 85
-staleness_score: 95
+staleness_score: 94
 alignment_score: "unavailable"
 feedback_alive: True
-feedback_last_ts: "2026-09-04T13:51:45+00:00"
-feedback_staleness_hours: 0.1
+feedback_last_ts: "2026-09-05T13:35:24+00:00"
+feedback_staleness_hours: 0.3
 total_tasks: 9
 done: 2
 planned: 7
 
 governance_execution_surface:
   base_anomaly_score: 70
-  execution_deduction: 160
+  execution_deduction: 104
   orphan_worktrees: 0
   adr_renumber_events: 0
-  concurrent_conflicts: 20
+  concurrent_conflicts: 13
   score: 0
   weights:
     orphan_worktrees: 4
@@ -45,8 +45,8 @@ health_composite_breakdown:
     freshness: 20.0
     runtime: 25.0
     drift: 8.5
-    staleness: 9.5
-  raw: 52.5
+    staleness: 9.4
+  raw: 52.42
 
 anomalies:
   - "[WARN]  L3 高风险任务 3 个, 需重点 review"
@@ -62,16 +62,16 @@ drift_detail:
 
 staleness_detail:
   source: "staleness-check"
-  checked: "518"
-  clean: "503"
-  stale: "15"
-  total_issues: "17"
-  stale_ratio: "0.029"
-  issue_density: "0.0328"
-  score: "95"
+  checked: "524"
+  clean: "505"
+  stale: "19"
+  total_issues: "21"
+  stale_ratio: "0.0363"
+  issue_density: "0.0401"
+  score: "94"
 
 alignment_detail:
-  error: "subprocess: Command '['/Users/xiamingxing/Workspace/projects/omo/.venv/bin/python3', '/Users/xiamingxing/Workspace/bin/gac/maturity-"
+  error: "subprocess: Command '['/opt/homebrew/opt/python@3.14/bin/python3.14', '/Users/xiamingxing/ws-solidify-lessons/bin/gac/maturity-align"
 
 distributions:
   priority_dist:
