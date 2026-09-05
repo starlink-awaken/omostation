@@ -1,5 +1,5 @@
 generated_at: '2026-08-31T06:22:15Z'
-last_scan: 2026-08-30 07:42:08+00:00
+last_scan: '2026-09-05T15:01:26.938428+00:00'
 services:
   agora-gateway:
     health_check: healthy (probe)
