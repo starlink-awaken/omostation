@@ -20846,3 +20846,70 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-HITL-01
+
+- id: BET-Y1Q4-T1-12
+  track: T1-TRUTH
+  window: Y1Q4
+  title: HITL adoption — 启用率从 0 提到 ≥ 30% L2/L0 human_gate BETs
+  appetite: 5 days
+  priority: P1
+  status: candidate
+  note: HITL v1.0 已落地 (PR #3077 + #129 + #3119, ADR-0460),需要推动实际采用
+  goal: |
+    把 HITL proposal system 真正铺到 L2/L0 风险 BET 中,而非停留在"工具就绪"阶段。
+    - 量化指标:human_gate: true 的 L2/L0 BET 中,至少 30% 在 retro 中提到 HITL adoption
+    - 质量指标:被启用的 BET 必须在 retro 中记录 E2E flow evidence
+    - 流程指标:adoption runbook 至少被 2 个新 PR 引用
+  non_goals:
+    - 不强制所有 human_gate BET 必须使用
+    - 不改变 HITL v1.0 工具行为
+    - 不实现 v1.1 (wait 默认 + 通知)
+  done_when:
+  - adoption runbook 在主仓
+  - 至少 2 个新 PR 引用 runbook
+  - 至少 5 个 L2/L0 human_gate BET 的 retro 提到 HITL adoption
+  verify:
+  - cmd: test -f docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
+    expect: exit 0
+  - cmd: bash -c "ls .omo/_knowledge/hitl-proposals/ 2>/dev/null | wc -l"
+    expect: 至少 5 个不同 proposal id 曾经生成
+  - cmd: bash -c "grep -rl hitl-proposal-system-adoption-runbook . 2>/dev/null | wc -l"
+    expect: 至少 2 个文件引用 runbook
+  workflow: bet-execution
+  underlying_workflow: project-doc-change
+  human_gate: false
+  risk_level: L2
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-*.md
+  - docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
+    spec_version: 1.0.0
+    content_digest: PENDING
+    decision_ref: decision://accepted/BET-Y1Q4-T1-12
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: PARTIAL
+        evidence:
+          runbook_authored: docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
+          tool_landed: bin/hitl-proposal.py + cockpit decide integration
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: POTENTIAL
+        evidence:
+          bets_unlocked: 118 L2/L0 human_gate BETs
+          target_adoption: 30 percent by Y1Q4 end
+    overall_state: evaluating
+  value_indicator_policy: true
+  circuit_breaker: 30% 门槛达不到则继续推进 v1.1 自动化
+  retro: required
+  depends_on:
+  - BET-Y1Q4-HITL-01
+  - PR-3077
+  - PR-129
+  - PR-3119
