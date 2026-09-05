@@ -1,17 +1,17 @@
 # 文档索引 (自动生成)
 
-> 生成时间: 2026-09-05 08:53
-> 总文档数: 4100
+> 生成时间: 2026-09-05 16:01
+> 总文档数: 4134
 > 本文件由 `bin/ssot/generate-docs-index.py` 自动维护，不要手动编辑。
 
 ## 统计
 
 | 类型 | 数量 |
 |------|------|
-| SSOT | 1922 |
+| SSOT | 1935 |
 | derived | 46 |
-| ephemeral | 760 |
-| untyped | 213 |
+| ephemeral | 757 |
+| untyped | 222 |
 
 ## SSOT 清单
 
@@ -19,7 +19,7 @@
 |------|-------|----------|------|
 | .agents/orchestrator/BRIEFING.md | governance-team | 2026-09-05 | 96 |
 | .agents/orchestrator/ORIGINAL_REQUEST.md | governance-team | 2026-09-05 | 30 |
-| .agents/orchestrator/plan.md | governance-team | 2026-09-05 | 81 |
+| .agents/orchestrator/plan.md | governance-team | 2026-09-05 | 111 |
 | .agents/orchestrator/progress.md | governance-team | 2026-09-05 | 30 |
 | .agents/skills/a2a-coordination/SKILL.md | governance-team | 2026-09-05 | 238 |
 | .agents/skills/agent-onboarding/SKILL.md | governance-team | 2026-09-05 | 238 |
@@ -944,6 +944,7 @@
 | .omo/_truth/goals/README.md | governance-team | 2026-09-05 | 73 |
 | .omo/_truth/governance-charter-v1.md | governance-team | 2026-09-05 | 249 |
 | .omo/_truth/governance-evidence/approval-2026-08-31-t10-122-family-dashboard-canary.md | human | 2026-09-05 | 44 |
+| .omo/_truth/governance-evidence/danger-gate-approval-20260905-t10-122-task11.md | xiamingxing | 2026-09-05 | 57 |
 | .omo/_truth/governance-evidence/waiver-2026-08-28-t10-44-pointer-bet-bootstrap.md | governance-team | 2026-09-05 | 23 |
 | .omo/_truth/governance-evidence/waiver-2026-08-28-t10-45-bootstrap.md | governance-team | 2026-09-05 | 23 |
 | .omo/_truth/governance-evidence/waiver-2026-08-28-t10-46-bootstrap.md | governance-team | 2026-09-05 | 23 |
@@ -1081,6 +1082,11 @@
 | docs/adr/ADR-0198-domain-cartridge-factory.md | governance-team | 2026-09-05 | 31 |
 | docs/adr/ADR-0199-unified-bos-cockpit-and-cognitive-workflow.md | governance-team | 2026-09-05 | 38 |
 | docs/adr/ADR-0200-y1q4-code-loc-gate-rebaseline.md | governance-team | 2026-09-05 | 74 |
+| docs/adr/ADR-0201-git-stage-submodule-pin-discipline.md | governance-team | 2026-09-05 | 42 |
+| docs/adr/ADR-0202-harness-structure-completeness.md | governance-team | 2026-09-05 | 40 |
+| docs/adr/ADR-0203-harness-mof-integration.md | governance-team | 2026-09-05 | 40 |
+| docs/adr/ADR-0204-harness-operations-probe-value-loop.md | governance-team | 2026-09-05 | 41 |
+| docs/adr/ADR-0205-harness-governance-debt-sync-anti-corrosion.md | governance-team | 2026-09-05 | 41 |
 | docs/architecture/90pct-maturity-architecture.md | governance-team | 2026-09-05 | 19 |
 | docs/architecture/harness-comprehensive-analysis.md | governance-team | 2026-09-05 | 379 |
 | docs/business/Y1Q4/README.md | auto-fix-loop | 2026-09-05 | 24 |
@@ -1111,6 +1117,7 @@
 | docs/observability-unified-architecture.md | governance-team | 2026-09-05 | 257 |
 | docs/overview/cross-package-api-map.md | architecture-team | 2026-09-05 | 89 |
 | docs/plans/2026-09-03-t1-02-squash-retirement-tdd-plan.md | governance-team | 2026-09-05 | 171 |
+| docs/standards/docs-freshness-sop.md | governance-team | 2026-09-05 | 290 |
 | docs/superpowers/plans/2026-08-27-governance-optimization.md | auto-fix-loop | 2026-09-05 | 580 |
 | docs/superpowers/plans/2026-08-28-post2408-main-recovery-and-required-gac-gate.md | governance-team | 2026-09-05 | 1986 |
 | docs/superpowers/plans/2026-08-28-product-p0-truth-loop.md | auto-fix-loop | 2026-09-05 | 594 |
@@ -1292,8 +1299,14 @@
 | docs/superpowers/specs/2026-09-04-w0-sovereign-tui-2.0-design.md | human-principal | 2026-09-05 | 58 |
 | docs/superpowers/specs/2026-09-04-w0-unified-surface-protocol-design.md | human-principal | 2026-09-05 | 85 |
 | docs/superpowers/specs/2026-09-04-zhiyuan-oa-triage-design.md | omo-platform-team | 2026-09-05 | 66 |
+| docs/superpowers/specs/2026-09-05-cli-behavior-contract-design.md | governance-team | 2026-09-05 | 71 |
+| docs/superpowers/specs/2026-09-05-journey-completion-baseline-design.md | governance-team | 2026-09-05 | 93 |
+| docs/superpowers/specs/2026-09-05-obj-value-portfolio-split-design.md | governance-team | 2026-09-05 | 56 |
+| docs/superpowers/specs/2026-09-05-portfolio-status-broker-ownership-design.md | governance-team | 2026-09-05 | 64 |
 | docs/superpowers/specs/2026-09-05-resident-ledger-lock-monitor-design.md | governance-team | 2026-09-05 | 43 |
+| docs/superpowers/specs/2026-09-05-resident-ledger-lock-monitor-tick-wiring-design.md | governance-team | 2026-09-05 | 52 |
 | docs/superpowers/specs/2026-09-05-t8-11-orthogonal-domain-router-design.md | governance-team | 2026-09-05 | 43 |
+| docs/superpowers/specs/2026-09-05-t8-13-p0-core-commands-contract-design.md | governance-team | 2026-09-05 | 74 |
 | docs/superpowers/specs/2026-09-05-w0-cockpit-ui-reorganization-and-bundle-optimization.md | human-principal | 2026-09-05 | 65 |
 | docs/superpowers/specs/2026-09-05-w0-declarative-card-extension-sdk-design.md | human-principal | 2026-09-05 | 135 |
 | docs/superpowers/specs/README.md | governance-team | 2026-09-05 | 66 |
@@ -2379,8 +2392,6 @@
 | .omo/_knowledge/retros/BET-Y1Q4-T7-03.md | archived | - |
 | .omo/_knowledge/retros/BET-Y1Q4-T8-02.md | archived | - |
 | .omo/_knowledge/retros/BET-Y1Q4-T8-03.md | archived | - |
-| .omo/_knowledge/retros/BET-Y1Q4-T8-12.md | archived | - |
-| .omo/_knowledge/retros/BET-Y1Q4-T8-13.md | archived | - |
 | .omo/_knowledge/retros/BET-Y1Q4-T8-14.md | archived | - |
 | .omo/_knowledge/retros/BET-Y1Q4-T8-15.md | archived | - |
 | .omo/_knowledge/retros/BET-Y1Q4-T8-16.md | archived | - |
@@ -2427,7 +2438,6 @@
 | .omo/_knowledge/retrospectives/retros/BET-Y1Q4-T8-03.md | archived | - |
 | .omo/_knowledge/retrospectives/retros/BET-Y1Q4-T8-11.md | archived | - |
 | .omo/_knowledge/retrospectives/retros/BET-Y1Q4-T8-12.md | archived | - |
-| .omo/_knowledge/retrospectives/retros/BET-Y1Q4-T8-13.md | archived | - |
 | .omo/_knowledge/retrospectives/retros/BET-Y1Q4-T8-14.md | archived | - |
 | .omo/_knowledge/retrospectives/retros/BET-Y1Q4-T8-15.md | archived | - |
 | .omo/_knowledge/retrospectives/retros/BET-Y1Q4-T8-16.md | archived | - |
@@ -2756,7 +2766,7 @@
 | projects/family-hub/apps/dashboard/tests/fixtures/documents/_knowledge/02.医疗健康/Synthetic Member 02/疫苗接种计划.md | - | 2026-09-03 |
 | projects/family-hub/apps/dashboard/tests/fixtures/documents/_knowledge/03.育儿成长/Synthetic Member 02发育里程碑.md | - | 2026-09-03 |
 
-## 合规问题 (214)
+## 合规问题 (223)
 
 - [UNTYPED] locks/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] locks/AGENTS.md: 未声明 type (建议添加 frontmatter)
@@ -2812,6 +2822,7 @@
 - [UNTYPED] protocols/append-only-log-rollout.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .mimocode/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .mimocode/AGENTS.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] src/forge/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .mimocode/commands/trajectory-distill.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .mimocode/commands/design-self-critique.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] data/驾驶舱/CARDS/README.md: 未声明 type (建议添加 frontmatter)
@@ -2826,10 +2837,15 @@
 - [UNTYPED] docs/generated/doc-gov-framework.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/generated/doc-inventory.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/isa/debt-remediation-isa.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/plans/2026-09-04-design-asset-forge-integration.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/plans/3Y-BET-PORTFOLIO.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/plans/2026-09-04-architecture-analysis-and-requirements-consolidation.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/architecture/submodule-sync-sop.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/command-audit/_REPORT.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/reports/2026-09-05-t1-13-portfolio-status-broker-closeout.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/reports/2026-09-05-obj-value-portfolio-split.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/reports/BET-Y1Q3-T10-122-final-report.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] docs/reports/2026-09-05-t9-02-ledger-lock-monitor-tick-wiring-closeout.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] docs/operations/human-attestations/BET-Y1Q3-T1-12-SIGNING.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] aetherforge-archive/swarm/README.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] aetherforge-archive/swarm/MERGE-NOTES.md: 未声明 type (建议添加 frontmatter)
@@ -2966,14 +2982,17 @@
 - [UNTYPED] .omo/state/policy-radar/brief-20260831.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/analysis/relation_type_duplication.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/drafts/scenario-analysis.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .omo/_knowledge/decisions/0401-unhealthy-service.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/sweeps/INDEX.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/architecture/2026-06-15-unified-audit-architecture.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/architecture/README.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T9-02.md: 未声明 type (建议添加 frontmatter)
+- [UNTYPED] .omo/_knowledge/retros/BET-Y1Q3-T6-15-pr1-pitfall-gat006.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/strategy/governance-root-cause-fix.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/strategy/strategic-analysis-2026-07-16.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/standards/p52-true-fix-paradigm.md: 未声明 type (建议添加 frontmatter)
 
-## 孤立文档 (213)
+## 孤立文档 (222)
 
 > 未声明 type，也不引用任何 SSOT。
 
@@ -3027,4 +3046,4 @@
 - data/README.md
 - data/AGENTS.md
 - protocols/README.md
-- ... 和另外 163 个文档
+- ... 和另外 172 个文档
