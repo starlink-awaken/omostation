@@ -18635,8 +18635,10 @@ bets:
   - 为 Spine Draft 提供政策依据与法规条文精准溯源链接
   - 检索准确率 Top-3 Recall ≥95%
   verify:
-  - cmd: uv run python -m projects.knowledge.kairon.cli hybrid-query --q 卫生健康数字化转型
-    expect: exit 0
+  - cmd: cd projects/knowledge/kairon && uv run --with pyyaml python -m kairon.cli bootstrap --output /tmp/kems-v2-verify.jsonl
+    expect: "exit 0, 输出含 policy: 2000 / regulation: 1500 / adr: 1000 / approval: 500 / edges: ≥20000"
+  - cmd: cd projects/knowledge/kairon && uv run --with pyyaml python -m kairon.cli hybrid-query --q "卫生健康数字化转型" --graph /tmp/kems-v2-verify.jsonl --top-k 3
+    expect: "exit 0, 至少 1 行命中且首条为 policy 类型"
   - cmd: make gac-local-gate
     expect: exit 0
   workflow: bet-execution
@@ -18648,15 +18650,64 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q3-T10-117
   write_surfaces:
   - projects/knowledge/kairon/src/kairon/graph/kems_v2.py
-  - projects/knowledge/gbrain/src/retrieval/hybrid.ts
+  - projects/knowledge/kairon/src/kairon/graph/bootstrap.py
+  - projects/knowledge/kairon/src/kairon/cli.py
+  - projects/knowledge/kairon/tests/test_kems_v2_cli.py
+  - projects/knowledge/gbrain/src/core/search/hybrid.ts
   - .omo/_knowledge/retros/BET-Y1Q3-T10-117.md
   pasw_required: false
   depends_on:
   - BET-Y1Q3-T10-105
   risk_level: L1
   human_gate: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t10-117-kems-v2-hybrid-retrieval-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:72f5dd6c9c6f665bec220b006018108943bee70981ee33df243d1f59652f4d1c
+    decision_ref: decision://accepted/BET-Y1Q3-T10-117
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
+          merged_reachable_commit:
+            ref: git://origin/main@39582e40c8752d08dfe12b3552966906b8160c90
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t10-117-kems-v2-hybrid-retrieval-design.md
+            sha256: sha256:72f5dd6c9c6f665bec220b006018108943bee70981ee33df243d1f59652f4d1c
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:349e9f66734e471b1248535a51bf7980a6b238936d8b60cfc629591bce89a2d9
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+  retro: .omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+  value_indicator_policy: false
   circuit_breaker: 向量检索服务异常时自动平滑回退到 BM25 纯文本检索。
-  retro: required
+  done_at: 2026-09-05 14:00:00+00:00
+  status: done
+  note: kairon 实现已 ship (PR #3231 graph core + PR #69 CLI + bootstrap + tests). main-repo closeout 登记 spec binding + CE matrix + retro.
 - id: BET-Y1Q3-T10-118
   track: T10-MATURITY
   window: Y1Q3
