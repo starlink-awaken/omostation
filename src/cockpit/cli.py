@@ -24,90 +24,293 @@ time = _time_mod
 
 # ── Command modules ──
 # ── Compatibility re-exports (tests monkeypatch these via cli.xxx) ──
-from .commands.agora import cmd_agora
-from .commands.audit import cmd_audit
-from .commands.base import (
-    _SCRIPT_DIR,
-    _find_cli,
-)
-from .commands.bos import (
-    cmd_bos_backends,
-    cmd_bos_capability,
-    cmd_bos_discover,
-    cmd_bos_health,
-    cmd_bos_list,
-    cmd_bos_mutate,
-    cmd_bos_read,
-    cmd_bos_register,
-    cmd_bos_reload,
-    cmd_bos_resolve,
-    cmd_bos_status,
-    cmd_bos_workflow,
-)
-from .commands.brain import cmd_brain
-from .commands.brief import _cmd_brief, _cmd_brief_morning
-from .commands.bus import cmd_bus
-from .commands.capabilities import cmd_capabilities
-from .commands.contracts import (
-    cmd_contracts_export_event,
-    cmd_contracts_export_identity,
-    cmd_contracts_export_research,
-    cmd_contracts_list,
-    cmd_contracts_validate,
-)
-from .commands.data import cmd_data_gc, cmd_data_index, cmd_data_types
-from .commands.discover import _cmd_discover
-from .commands.family_hub import cmd_family_hub
-from .commands.gbrain import cmd_gbrain
-from .commands.governance import cmd_governance
-from .commands.health import _cmd_health
-from .commands.importer import cmd_import
-from .commands.kairon import cmd_kairon
-from .commands.mcp import cmd_mcp
-from .commands.mesh import cmd_mesh
-from .commands.model_driven import cmd_model_driven
-from .commands.observe import cmd_observe
-from .commands.profile import cmd_profile
-from .commands.research import (
-    _cmd_research_batch,
-    _notify_research_complete,
-    _research_progress,
-    cmd_research,
-    cmd_research_agent,
-    cmd_research_archive,
-    cmd_research_ask,
-    cmd_research_audit,
-    cmd_research_backup,
-    cmd_research_backup_restore,
-    cmd_research_compare,
-    cmd_research_digest,
-    cmd_research_dossier,
-    cmd_research_export,
-    cmd_research_follow_up,
-    cmd_research_health,
-    cmd_research_heatmap,
-    cmd_research_list,
-    cmd_research_merge,
-    cmd_research_open,
-    cmd_research_publish,
-    cmd_research_quarantine,
-    cmd_research_rename,
-    cmd_research_restore,
-    cmd_research_search,
-    cmd_research_tag,
-    cmd_research_timeline,
-    cmd_research_unarchive,
-)
-from .commands.search import _cmd_search
-from .commands.spine import cmd_spine
-from .commands.status import (
-    _render_workbench,
-    cmd_daily,
-    cmd_dashboard,
-    cmd_demo,
-    cmd_help,
-    cmd_status,
-)
+def cmd_agora(*args, **kwargs):  # T8-15 lazy
+    from .commands.agora import cmd_agora as _f
+    return _f(*args, **kwargs)
+def cmd_audit(*args, **kwargs):  # T8-15 lazy
+    from .commands.audit import cmd_audit as _f
+    return _f(*args, **kwargs)
+# ── T8-15: lazy base symbols (commands.base pulls rich.markdown/urllib chain) ──
+def _script_dir():
+    from .commands.base import _SCRIPT_DIR
+
+    return _SCRIPT_DIR
+
+
+def _find_cli(name):
+    from .commands.base import _find_cli as _f
+
+    return _f(name)
+
+def cmd_bos_backends(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_backends as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_capability(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_capability as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_discover(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_discover as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_health(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_health as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_list(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_list as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_mutate(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_mutate as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_read(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_read as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_register(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_register as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_reload(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_reload as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_resolve(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_resolve as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_status(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_status as _f
+    return _f(*args, **kwargs)
+
+def cmd_bos_workflow(*args, **kwargs):  # T8-15 lazy
+    from .commands.bos import cmd_bos_workflow as _f
+    return _f(*args, **kwargs)
+def cmd_brain(*args, **kwargs):  # T8-15 lazy
+    from .commands.brain import cmd_brain as _f
+    return _f(*args, **kwargs)
+def _cmd_brief(*args, **kwargs):  # T8-15 lazy
+    from .commands.brief import _cmd_brief as _f
+    return _f(*args, **kwargs)
+
+def _cmd_brief_morning(*args, **kwargs):  # T8-15 lazy
+    from .commands.brief import _cmd_brief_morning as _f
+    return _f(*args, **kwargs)
+def cmd_bus(*args, **kwargs):  # T8-15 lazy
+    from .commands.bus import cmd_bus as _f
+    return _f(*args, **kwargs)
+def cmd_capabilities(*args, **kwargs):  # T8-15 lazy
+    from .commands.capabilities import cmd_capabilities as _f
+    return _f(*args, **kwargs)
+def cmd_contracts_export_event(*args, **kwargs):  # T8-15 lazy
+    from .commands.contracts import cmd_contracts_export_event as _f
+    return _f(*args, **kwargs)
+
+def cmd_contracts_export_identity(*args, **kwargs):  # T8-15 lazy
+    from .commands.contracts import cmd_contracts_export_identity as _f
+    return _f(*args, **kwargs)
+
+def cmd_contracts_export_research(*args, **kwargs):  # T8-15 lazy
+    from .commands.contracts import cmd_contracts_export_research as _f
+    return _f(*args, **kwargs)
+
+def cmd_contracts_list(*args, **kwargs):  # T8-15 lazy
+    from .commands.contracts import cmd_contracts_list as _f
+    return _f(*args, **kwargs)
+
+def cmd_contracts_validate(*args, **kwargs):  # T8-15 lazy
+    from .commands.contracts import cmd_contracts_validate as _f
+    return _f(*args, **kwargs)
+def cmd_data_gc(*args, **kwargs):  # T8-15 lazy
+    from .commands.data import cmd_data_gc as _f
+    return _f(*args, **kwargs)
+
+def cmd_data_index(*args, **kwargs):  # T8-15 lazy
+    from .commands.data import cmd_data_index as _f
+    return _f(*args, **kwargs)
+
+def cmd_data_types(*args, **kwargs):  # T8-15 lazy
+    from .commands.data import cmd_data_types as _f
+    return _f(*args, **kwargs)
+def _cmd_discover(*args, **kwargs):  # T8-15 lazy
+    from .commands.discover import _cmd_discover as _f
+    return _f(*args, **kwargs)
+def cmd_family_hub(*args, **kwargs):  # T8-15 lazy
+    from .commands.family_hub import cmd_family_hub as _f
+    return _f(*args, **kwargs)
+def cmd_gbrain(*args, **kwargs):  # T8-15 lazy
+    from .commands.gbrain import cmd_gbrain as _f
+    return _f(*args, **kwargs)
+def cmd_governance(*args, **kwargs):  # T8-15 lazy
+    from .commands.governance import cmd_governance as _f
+    return _f(*args, **kwargs)
+def _cmd_health(*args, **kwargs):  # T8-15 lazy
+    from .commands.health import _cmd_health as _f
+    return _f(*args, **kwargs)
+def cmd_import(*args, **kwargs):  # T8-15 lazy
+    from .commands.importer import cmd_import as _f
+    return _f(*args, **kwargs)
+def cmd_kairon(*args, **kwargs):  # T8-15 lazy
+    from .commands.kairon import cmd_kairon as _f
+    return _f(*args, **kwargs)
+def cmd_mcp(*args, **kwargs):  # T8-15 lazy
+    from .commands.mcp import cmd_mcp as _f
+    return _f(*args, **kwargs)
+def cmd_mesh(*args, **kwargs):  # T8-15 lazy
+    from .commands.mesh import cmd_mesh as _f
+    return _f(*args, **kwargs)
+def cmd_model_driven(*args, **kwargs):  # T8-15 lazy
+    from .commands.model_driven import cmd_model_driven as _f
+    return _f(*args, **kwargs)
+def cmd_observe(*args, **kwargs):  # T8-15 lazy
+    from .commands.observe import cmd_observe as _f
+    return _f(*args, **kwargs)
+def cmd_profile(*args, **kwargs):  # T8-15 lazy
+    from .commands.profile import cmd_profile as _f
+    return _f(*args, **kwargs)
+def _cmd_research_batch(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import _cmd_research_batch as _f
+    return _f(*args, **kwargs)
+
+def _notify_research_complete(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import _notify_research_complete as _f
+    return _f(*args, **kwargs)
+
+def _research_progress(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import _research_progress as _f
+    return _f(*args, **kwargs)
+
+def cmd_research(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_agent(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_agent as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_archive(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_archive as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_ask(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_ask as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_audit(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_audit as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_backup(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_backup as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_backup_restore(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_backup_restore as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_compare(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_compare as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_digest(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_digest as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_dossier(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_dossier as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_export(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_export as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_follow_up(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_follow_up as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_health(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_health as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_heatmap(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_heatmap as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_list(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_list as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_merge(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_merge as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_open(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_open as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_publish(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_publish as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_quarantine(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_quarantine as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_rename(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_rename as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_restore(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_restore as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_search(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_search as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_tag(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_tag as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_timeline(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_timeline as _f
+    return _f(*args, **kwargs)
+
+def cmd_research_unarchive(*args, **kwargs):  # T8-15 lazy
+    from .commands.research import cmd_research_unarchive as _f
+    return _f(*args, **kwargs)
+def _cmd_search(*args, **kwargs):  # T8-15 lazy
+    from .commands.search import _cmd_search as _f
+    return _f(*args, **kwargs)
+def cmd_spine(*args, **kwargs):  # T8-15 lazy
+    from .commands.spine import cmd_spine as _f
+    return _f(*args, **kwargs)
+def _render_workbench(*args, **kwargs):  # T8-15 lazy
+    from .commands.status import _render_workbench as _f
+    return _f(*args, **kwargs)
+
+def cmd_daily(*args, **kwargs):  # T8-15 lazy
+    from .commands.status import cmd_daily as _f
+    return _f(*args, **kwargs)
+
+def cmd_dashboard(*args, **kwargs):  # T8-15 lazy
+    from .commands.status import cmd_dashboard as _f
+    return _f(*args, **kwargs)
+
+def cmd_demo(*args, **kwargs):  # T8-15 lazy
+    from .commands.status import cmd_demo as _f
+    return _f(*args, **kwargs)
+
+def cmd_help(*args, **kwargs):  # T8-15 lazy
+    from .commands.status import cmd_help as _f
+    return _f(*args, **kwargs)
+
+def cmd_status(*args, **kwargs):  # T8-15 lazy
+    from .commands.status import cmd_status as _f
+    return _f(*args, **kwargs)
 
 
 def cmd_ssb(a):
@@ -239,6 +442,7 @@ def create_parser(active_argv: list[str] | None = None) -> tuple[argparse.Argume
         def error(self, message):
             import json
             import re
+
             from cockpit.domain.fuzzy_matcher import find_closest_commands
 
             suggestions = []
@@ -383,7 +587,8 @@ def create_parser(active_argv: list[str] | None = None) -> tuple[argparse.Argume
 def handle_domain_help(domain: str) -> int:
     """展示正交一级领域的聚合帮助与功能清单"""
     from rich.table import Table
-    from cockpit.commands.registry import ORTHOGONAL_DOMAINS, LEGACY_COMMAND_MAPPING, COMMAND_CATALOG
+
+    from cockpit.commands.registry import COMMAND_CATALOG, LEGACY_COMMAND_MAPPING, ORTHOGONAL_DOMAINS
 
     domain_desc = ORTHOGONAL_DOMAINS.get(domain, domain)
     table = Table(title=f"正交一级领域: {domain_desc}", border_style="cyan")
@@ -421,8 +626,34 @@ def main(argv: list[str] | None = None) -> int:
         print(f"cockpit v{__version__}")
         return 0
 
+    # ── Fast-path: telemetry / completion 直通 (T8-15, 跳过全量 parser 注册) ──
+    # 仅覆盖无 flag 的简单形态, 带 flag (--json/--dry-run/...) 走全量路径保持语义。
+    if _argv and _argv[0] in ("telemetry", "completion") and not any(
+        t.startswith("-") for t in _argv[1:]
+    ):
+        if _argv[0] == "telemetry":
+            from cockpit.commands.telemetry import cmd_telemetry as _cmd_tel
+
+            return _cmd_tel(
+                argparse.Namespace(
+                    telemetry_action=_argv[1] if len(_argv) > 1 else "status",
+                    json=False,
+                    dry_run=False,
+                    limit=None,
+                )
+            )
+        from cockpit.commands.completion import cmd_completion as _cmd_comp
+
+        return _cmd_comp(
+            argparse.Namespace(
+                shell=_argv[1] if len(_argv) > 1 else None,
+                json=False,
+                dry_run=False,
+            )
+        )
+
     # ── 双轨正交领域预处理 (Dual-Track Pre-processing) ──
-    from cockpit.commands.registry import ORTHOGONAL_DOMAINS, LEGACY_COMMAND_MAPPING
+    from cockpit.commands.registry import LEGACY_COMMAND_MAPPING, ORTHOGONAL_DOMAINS
 
     if _argv and _argv[0] in ORTHOGONAL_DOMAINS:
         domain = _argv[0]
@@ -785,7 +1016,7 @@ def main(argv: list[str] | None = None) -> int:
         if subcmd == "simulate":
             import subprocess
 
-            ws_root = (_SCRIPT_DIR.parent.parent.parent.parent.parent).resolve()
+            ws_root = (_script_dir().parent.parent.parent.parent.parent).resolve()
             script_path = ws_root / "bin" / "gac" / "bdsk-shadow-sandbox.py"
             return subprocess.call([sys.executable, str(script_path)], cwd=str(ws_root))
 
@@ -829,7 +1060,7 @@ def main(argv: list[str] | None = None) -> int:
     def dispatch_panorama(a):
         import subprocess
 
-        omo_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "omo").resolve())
+        omo_project = str((_script_dir().parent.parent.parent.parent / "omo").resolve())
         cmd = ["uv", "run", "--project", omo_project, "python", "-m", "omo.cli", "panorama"]
         if getattr(a, "json", False):
             cmd.append("--json")
@@ -839,7 +1070,7 @@ def main(argv: list[str] | None = None) -> int:
     def dispatch_project(a):
         import subprocess
 
-        omo_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "omo").resolve())
+        omo_project = str((_script_dir().parent.parent.parent.parent / "omo").resolve())
         subcmd = getattr(a, "project_subcmd", "inspect")
         pname = getattr(a, "project_name", "")
         cmd = ["uv", "run", "--project", omo_project, "python", "-m", "omo.cli", "project", subcmd]
@@ -947,7 +1178,7 @@ def main(argv: list[str] | None = None) -> int:
         import subprocess as _sp
         import sys
 
-        result = _sp.run([sys.executable, str(_SCRIPT_DIR / "product-health")])
+        result = _sp.run([sys.executable, str(_script_dir() / "product-health")])
         returncode = getattr(result, "returncode", 0)
         return returncode if isinstance(returncode, int) else 0
 
@@ -1200,8 +1431,8 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             duration = time.perf_counter() - start_time
             try:
-                from cockpit.telemetry.metrics import record_command_metric
                 from cockpit.commands.registry import LEGACY_COMMAND_MAPPING
+                from cockpit.telemetry.metrics import record_command_metric
 
                 cmd_name = getattr(args, "command", "unknown") or "unknown"
                 domain = LEGACY_COMMAND_MAPPING.get(cmd_name, ("unknown", cmd_name))[0]
