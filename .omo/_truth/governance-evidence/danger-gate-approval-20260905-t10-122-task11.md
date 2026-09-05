@@ -7,6 +7,8 @@ approved_at: '2026-09-05T10:22:25+08:00'
 approved_by: xiamingxing
 lifecycle: ssot
 type: ssot
+owner: xiamingxing
+last-reviewed: 2026-09-05
 ---
 
 # Danger-Gate Approval — BET-Y1Q3-T10-122 Task 11
