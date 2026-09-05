@@ -1,7 +1,5 @@
 ---
-name: round-gate-check
 title: Round Gate Check
-description: 轮次门禁检查 - P72/P52/P74 三门槛验证
 type: skill
 owner: governance-team
 version: "1.0"
