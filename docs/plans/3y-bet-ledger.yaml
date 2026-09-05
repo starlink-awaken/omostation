@@ -20222,7 +20222,7 @@ bets:
   title: Scene card bet/falsifier 全量补全 + 生命周期推进
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
   goal: 63 张 scene card 补全 bet 和 falsifier 必填字段，推进 draft→shadow→assisted→supervised→routine 生命周期，消除 validate --all 的 FAIL。
   non_goals:
   - 不改变现有 scene card 的 goal/trigger/input/output 核心字段
@@ -20243,7 +20243,11 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 单卡推进需人工确认，不批量自动升级
-  retro: required
+  retro: .omo/_knowledge/retros/BET-Y1Q4-T8-04.md
+  done_at: '2026-09-05T00:15:30+00:00'
+  close_evidence: validate --all exit 0 (63/63 PASS) + 5 admin-* cards advanced to shadow + HITL proposal hitl-20260905001528-20683e
+    approved
+  note: First production use of HITL Proposal System (proposal hitl-20260905001528-20683e).
 - id: BET-Y1Q4-T9-01
   track: T9-OBSERV
   window: Y1Q4
@@ -20388,7 +20392,7 @@ bets:
   priority: P1
   status: candidate
   done_at: 2026-09-04 14:30:00+00:00
-  note: Delivered in PR #3077 + PR #129 + PR #3119
+  note: Delivered in PR
   goal: Build a standalone HITL proposal system that auto-generates approval proposals when a BET has human_gate=true, stores
     them as atomic YAML files, and integrates with cockpit decide commands for human approval. The agent-workflow execute
     stage waits for approval before proceeding; expired proposals auto-downgrade to direct execution (circuit breaker).
@@ -20433,12 +20437,9 @@ bets:
   title: Portfolio v2 validator 全 §6 校验扩展 (follow-up)
   appetite: 2 days
   priority: P1
-  status: done
-  done_at: 2026-09-04 14:18:57+00:00
-  note: "§6 validator already on tip (18 tests); closeout registers delivery_accepted."
-  goal: 将 T1-04 Wave A1 的 validator 扩展到 spec §6 全量校验面：实体 ID 唯一性 (vision/objective/KR/campaign/milestone/bet)、跨实体引用存在性 (campaign_ref/objective_refs/kr_refs/parent_bet)、metric shape、bet_type 枚举、boolean policy、ISO-8601 时间戳、typed error contract；保持 v1 兼容与无副作用。
-  goal: 将 T1-04 Wave A1 的 validator 扩展到 spec §6 全量校验面：实体 ID 唯一性 (vision/objective/KR/campaign/milestone/bet)、跨实体引用存在性 (campaign_ref/objective_refs/kr_refs/parent_bet)、metric shape、bet_type 枚举、boolean policy、ISO-8601 时间戳、typed error contract；保持 v1 兼容与无副作用。
   status: candidate
+  done_at: 2026-09-04 14:18:57+00:00
+  note: §6 validator already on tip (18 tests); closeout registers delivery_accepted.
   goal: 将 T1-04 Wave A1 的 validator 扩展到 spec §6 全量校验面：实体 ID 唯一性 (vision/objective/KR/campaign/milestone/bet)、跨实体引用存在性 (campaign_ref/objective_refs/kr_refs/parent_bet)、metric
     shape、bet_type 枚举、boolean policy、ISO-8601 时间戳、typed error contract；保持 v1 兼容与无副作用。
   non_goals:
@@ -20887,7 +20888,6 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-HITL-01
-
 - id: BET-Y1Q4-T1-12
   track: T1-TRUTH
   window: Y1Q4
@@ -20895,16 +20895,20 @@ bets:
   appetite: 5 days
   priority: P1
   status: candidate
-  note: HITL v1.0 已落地 (PR #3077 + #129 + #3119, ADR-0460),需要推动实际采用
-  goal: |
-    把 HITL proposal system 真正铺到 L2/L0 风险 BET 中,而非停留在"工具就绪"阶段。
+  note: HITL v1.0 已落地 (PR
+  goal: '把 HITL proposal system 真正铺到 L2/L0 风险 BET 中,而非停留在"工具就绪"阶段。
+
     - 量化指标:human_gate: true 的 L2/L0 BET 中,至少 30% 在 retro 中提到 HITL adoption
+
     - 质量指标:被启用的 BET 必须在 retro 中记录 E2E flow evidence
+
     - 流程指标:adoption runbook 至少被 2 个新 PR 引用
+
+    '
   non_goals:
-    - 不强制所有 human_gate BET 必须使用
-    - 不改变 HITL v1.0 工具行为
-    - 不实现 v1.1 (wait 默认 + 通知)
+  - 不强制所有 human_gate BET 必须使用
+  - 不改变 HITL v1.0 工具行为
+  - 不实现 v1.1 (wait 默认 + 通知)
   done_when:
   - adoption runbook 在主仓
   - 至少 2 个新 PR 引用 runbook
