@@ -20851,7 +20851,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@af6c24a41cf1ab2ed2ee721d9519f582247a3ff0
+            ref: git://origin/main@2a863111a4cd47d0d3cf6ca0107136451542844a
           tests:
             ref: receipt://docs/reports/2026-09-05-t8-12-cli-contract-closeout.md
             sha256: sha256:25beef31160afb9ec4657e096eda764ac42ef38526a39194952acd427caecdd1
