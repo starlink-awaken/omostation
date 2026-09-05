@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 310
+  total_bets: 311
   windows:
   - Y1Q1
   - Y1Q2
@@ -20729,7 +20729,7 @@ bets:
   title: Portfolio v2 validator 全 §6 校验扩展 (follow-up)
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
   done_at: 2026-09-04 14:18:57+00:00
   note: §6 validator already on tip (18 tests); closeout registers delivery_accepted.
   goal: 将 T1-04 Wave A1 的 validator 扩展到 spec §6 全量校验面：实体 ID 唯一性 (vision/objective/KR/campaign/milestone/bet)、跨实体引用存在性 (campaign_ref/objective_refs/kr_refs/parent_bet)、metric
@@ -20765,7 +20765,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-validator-full-s6-design.md
     spec_version: 1.0.0
-    content_digest: sha256:7125cff02fa8082fd95979d442f216995f82051f725a40595f62ef01e873e640
+    content_digest: sha256:286d18b326b7ce34180a48e75041287ff308a3f7d0173a9da33fe3ab4570924c
     decision_ref: decision://accepted/BET-Y1Q4-T1-10
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -20775,30 +20775,30 @@ bets:
         evidence:
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-03-w0-portfolio-v2-validator-full-s6-design.md
-            sha256: sha256:7125cff02fa8082fd95979d442f216995f82051f725a40595f62ef01e873e640
+            sha256: sha256:286d18b326b7ce34180a48e75041287ff308a3f7d0173a9da33fe3ab4570924c
           tests:
             ref: receipt://tests/test_bet_portfolio_contract.py
             sha256: sha256:2dd7fecb9bbd74de1c660a30ac566a7631c6bde9c9c4bd445a2d14b1af60c5da
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-10.md
-            sha256: sha256:c9203d64a813f6efa3e8715f7a5bdcc174383278e2286f82fcc97e25cde26fcd
+            sha256: sha256:d55a7b8a77264cf63f032cff6c9638329b27867c3de615b7b09b99ecdbaa1d75
           merged_reachable_commit:
-            ref: git://origin/main@9e81919c79aa5f99aa6ae89573df8b6d87212125
+            ref: git://origin/main@4ab195f5514a4f8c27448f5c923087d59f7e5aeb
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-10.md
-            sha256: sha256:c9203d64a813f6efa3e8715f7a5bdcc174383278e2286f82fcc97e25cde26fcd
+            sha256: sha256:d55a7b8a77264cf63f032cff6c9638329b27867c3de615b7b09b99ecdbaa1d75
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-10.md
-            sha256: sha256:c9203d64a813f6efa3e8715f7a5bdcc174383278e2286f82fcc97e25cde26fcd
+            sha256: sha256:d55a7b8a77264cf63f032cff6c9638329b27867c3de615b7b09b99ecdbaa1d75
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-10.md
-            sha256: sha256:c9203d64a813f6efa3e8715f7a5bdcc174383278e2286f82fcc97e25cde26fcd
+            sha256: sha256:d55a7b8a77264cf63f032cff6c9638329b27867c3de615b7b09b99ecdbaa1d75
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-10.md
-            sha256: sha256:c9203d64a813f6efa3e8715f7a5bdcc174383278e2286f82fcc97e25cde26fcd
+            sha256: sha256:d55a7b8a77264cf63f032cff6c9638329b27867c3de615b7b09b99ecdbaa1d75
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -20821,6 +20821,9 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: 需要数据库、新服务、第二 dispatcher、破坏 v1 CLI、strict mode 先于单字段 meta.total_bets 修复启用，或无法保持历史 BET 对象语义等价时停止
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T1-10.md
+  retro: .omo/_knowledge/retros/BET-Y1Q4-T1-10.md
+
 - id: BET-Y1Q4-T8-11
   track: T8-SURFACE
   window: Y1Q4
