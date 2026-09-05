@@ -1,0 +1,42 @@
+schema: script-registry/v1
+id: bin/ops/cold-backup-drill.sh
+name: Cold Backup Drill (Zero-Knowledge Encrypted Snapshot)
+category: runtime
+owner: governance-team
+description: >-
+  Creates a GPG AES-256 encrypted incremental snapshot of the omostation
+  workspace via `git ls-files`. Outputs tar.gpg + manifest.sha256 in the
+  --target directory. Fail-closed on missing passphrase. Verifies read-only
+  operation via pre/post workspace digest. See BET-Y2Q1-T10-01.
+inputs:
+  - name: --target
+    type: path
+    required: true
+    description: Output directory for snapshot (must be outside workspace).
+  - name: --dry-run
+    type: flag
+    required: false
+    description: Enumerate source files only, no tar/gpg written.
+  - name: --include-runtime
+    type: flag
+    required: false
+    description: Include high-churn .omo runtime paths in snapshot.
+  - name: COLD_BACKUP_PASSPHRASE
+    type: env
+    required: true
+    description: GPG passphrase (>=12 chars env var name), fail-closed if unset.
+outputs:
+  - type: exit_code
+  - type: tar_archive
+  - type: gpg_encrypted_file
+  - type: manifest_sha256
+dependencies:
+  - tar
+  - gpg
+  - git
+  - sha256sum_or_shasum
+triggers: []
+related:
+  - bin/ops/restore-cold-snapshot.sh
+maturity: stable
+last_reviewed: "2026-09-05"

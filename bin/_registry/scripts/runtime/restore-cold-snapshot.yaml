@@ -1,0 +1,39 @@
+schema: script-registry/v1
+id: bin/ops/restore-cold-snapshot.sh
+name: Restore Cold Snapshot (Verify + Decrypt + Extract)
+category: runtime
+owner: governance-team
+description: >-
+  Restores a cold-backup snapshot: verifies manifest digest, optionally
+  decrypts GPG archive (--verify-only skips extract), then tar-extracts
+  to --dest directory and prints bootstrap instructions for submodules,
+  dependencies, and runtime data. See BET-Y2Q1-T10-01.
+inputs:
+  - name: snapshot_dir
+    type: positional
+    required: true
+    description: Path to the snapshot directory (containing manifest.sha256).
+  - name: --verify-only
+    type: flag
+    required: false
+    description: Verify manifest + decrypt header without extracting.
+  - name: --dest
+    type: path
+    required: false
+    description: Destination directory for extracted files (default ./restored).
+  - name: COLD_BACKUP_PASSPHRASE
+    type: env
+    required_if: encrypted_snapshot
+    description: GPG passphrase for encrypted snapshots.
+outputs:
+  - type: exit_code
+  - type: extracted_directory
+dependencies:
+  - gpg
+  - tar
+  - sha256sum_or_shasum
+triggers: []
+related:
+  - bin/ops/cold-backup-drill.sh
+maturity: stable
+last_reviewed: "2026-09-05"
