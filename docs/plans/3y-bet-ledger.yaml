@@ -20034,7 +20034,9 @@ bets:
   title: shadow 试验记录机制 — journey-runner 落盘 + readiness 门按 scene 精确化
   appetite: 1 days
   priority: P2
-  status: candidate
+  status: done
+  done_at: 2026-09-05 12:42:00+00:00
+  note: PR #3215 already implemented; this commit registers spec + CE matrix + flips status.
   goal: 打通 shadow→assisted 的试验证据断层 — journey-runner 完成的 run 落盘
     shadow-scene-trials.jsonl (mode 字段诚实区分 dry_run/live), scene-card-lifecycle
     Check4 从文件级存在性升级为按 scene_id 精确匹配 (三类试验日志任一含本 scene 条目即过)。
@@ -20061,10 +20063,53 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q1-T7-02.md
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-y2q1-t7-02-shadow-trial-record-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d04edf425e56012c5d68b63d84717ae030da4c24bf6696667530dca7bb973b13
+    decision_ref: decision://accepted/BET-Y2Q1-T7-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-y2q1-t7-02-shadow-trial-record-design.md
+            sha256: sha256:d04edf425e56012c5d68b63d84717ae030da4c24bf6696667530dca7bb973b13
+          tests:
+            ref: receipt://tests/test_journey_runner_validate.py
+            sha256: sha256:4759e583affcb27a94648308d4799d8e67ed687b9d7ce37963638c6c3dbe8ee7
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-02.md
+            sha256: sha256:32a0bb0d98fa2998f9bb0ff3f49c5f77655118c42691300cf4bdaf853959be00
+          merged_reachable_commit:
+            ref: git://origin/main@8b8d2ab126a787a8790207f848a46e4fb17fb719
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://bin/ssot/journey-runner.py
+            sha256: sha256:49ce03d888af2cc7797ce2f160cada361821dd5e7f05dc079952643f17e4484c
+          fresh_receipt:
+            ref: receipt://bin/ssot/scene-card-lifecycle.py
+            sha256: sha256:9a8a87c9218b91f5b4b28d444ea0fcc3be5fd8578ad0e5276bdab5932991d9f5
+          replay:
+            ref: receipt://tests/test_journey_runner_validate.py
+            sha256: sha256:4759e583affcb27a94648308d4799d8e67ed687b9d7ce37963638c6c3dbe8ee7
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-02.md
+            sha256: sha256:32a0bb0d98fa2998f9bb0ff3f49c5f77655118c42691300cf4bdaf853959be00
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   risk_level: L1
   human_gate: false
   circuit_breaker: shadow 试验记录失败不阻断 journey 主流程 (stderr 告警后继续)
-  retro: required
+  close_evidence: .omo/_knowledge/retros/BET-Y2Q1-T7-02.md
+  retro: .omo/_knowledge/retros/BET-Y2Q1-T7-02.md
+  value_indicator_policy: false
 - id: BET-Y2Q1-T7-03
   track: T7-SCENE
   window: Y2Q1
