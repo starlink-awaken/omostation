@@ -21024,7 +21024,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@af494feb7e84711ea99a41755db2d980763579a2
+            ref: git://origin/main@692c1aaa030c1612851ca6ebaddef52a2aa47bc2
           tests:
             ref: receipt://docs/reports/2026-09-05-t8-13-p0-core-commands-closeout.md
             sha256: sha256:9a28426a9257ba0b9296e258f2add93a9c4f5c3feda091b0ff62b72430a6d741
