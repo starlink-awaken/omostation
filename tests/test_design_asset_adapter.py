@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from forge import build_design_context, choose_design_assets, discover_design_assets, find_awesome_design_repo
+from forge import (
+    build_design_context,
+    build_page_spec,
+    choose_design_assets,
+    discover_design_assets,
+    find_awesome_design_repo,
+    render_page_spec,
+)
 
 
 def test_find_awesome_design_repo_returns_live_repo():
@@ -24,3 +31,16 @@ def test_choose_design_assets_builds_context_and_prompt():
     assert context["brand"] == "Claude"
     assert "prompt" in context
     assert "claude" in context["prompt"].lower() or "Claude" in context["prompt"]
+
+
+def test_build_page_spec_and_render_page_spec():
+    assets = choose_design_assets(find_awesome_design_repo(), query="claude", limit=1)
+    assert len(assets) >= 1
+    spec = build_page_spec(assets[0], query="claude")
+    assert spec["brand"] == "Claude"
+    assert spec["page_spec_version"] == "1.0"
+    assert "sections" in spec
+    rendered = render_page_spec(spec, output_format="json")
+    assert "page_spec_version" in rendered
+    html = render_page_spec(spec, output_format="html")
+    assert "<html" in html.lower()
