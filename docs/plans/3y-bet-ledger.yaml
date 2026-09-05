@@ -20351,6 +20351,13 @@ bets:
   - bin/plan/portfolio_projection.py
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T1-13.md
+  - docs/superpowers/specs/2026-09-05-portfolio-status-broker-ownership-design.md
+  - docs/reports/2026-09-05-t1-13-portfolio-status-broker-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-portfolio-status-broker-ownership-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:2ff35bcc4744ca21a445edc6d9a2e179beb8fd503dbab85780e78fd94d74509e
+    decision_ref: decision://accepted/BET-Y1Q4-T1-13
   pasw_required: false
   depends_on:
   - BET-Y1Q4-T1-08

@@ -314,12 +314,31 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workspace", default=".")
     parser.add_argument("--ledger", default=str(LEDGER_REL))
     parser.add_argument("--check", action="store_true")
+    parser.add_argument(
+        "--check-broker",
+        action="store_true",
+        help="Ownership dry-run: print broker_reason for REQUIRED_OMO_TARGETS",
+    )
     parser.add_argument("--apply-markdown", action="store_true")
     parser.add_argument("--apply-omo", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
     workspace = Path(args.workspace).resolve()
+
+    if args.check_broker:
+        broker_ok, broker_reason = broker_owns_portfolio_targets(workspace)
+        if args.json:
+            print(
+                json.dumps(
+                    {"broker_ok": broker_ok, "broker_reason": broker_reason},
+                    sort_keys=True,
+                )
+            )
+        else:
+            print(broker_reason)
+        return 0 if broker_ok else 1
+
     ledger_path = workspace / args.ledger
     if not ledger_path.is_file():
         print("unavailable: ledger missing", file=sys.stderr)
