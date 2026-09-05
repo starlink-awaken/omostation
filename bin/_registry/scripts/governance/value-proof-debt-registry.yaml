@@ -1,0 +1,23 @@
+schema: script-registry/v1
+id: bin/plan/value-proof-debt-registry.py
+name: Value-Proof Debt Registry
+category: governance
+owner: governance-team
+description: Scans done BETs for unproven value axis (vip=false AND value=NOT_PROVEN); produces registry for quarterly governance review.
+inputs:
+  - name: --ledger
+    type: path
+    required: false
+  - name: --output
+    type: path
+    required: false
+outputs:
+  - type: exit_code
+  - type: json
+  - type: markdown_report
+dependencies: []
+triggers: []
+related:
+  - bin/plan/bet-ledger.py
+maturity: draft
+last_reviewed: "2026-09-05"
