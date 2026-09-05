@@ -21586,11 +21586,11 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@3c0ef85524125d9b559069e734764a9caac0d853
-            sha256: sha256:b7fa6fd3e2dfec8fad8e6e9bb6336d62e219365800bffe7ee995d205daff368c
+            ref: git://origin/main@2bf32620f7c1aad77ab34b85950b4a5d6379f82a
+            sha256: sha256:f1f320dcfbbd8a1cc4f08bc0e3a16f9aa35155ee36c5d7b8d5282f69ac867d8a
           diff:
-            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
-            sha256: sha256:b7fa6fd3e2dfec8fad8e6e9bb6336d62e219365800bffe7ee995d205daff368c
+            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
+            sha256: sha256:f1f320dcfbbd8a1cc4f08bc0e3a16f9aa35155ee36c5d7b8d5282f69ac867d8a
           tests:
             ref: receipt://tests/test_hitl_proposal.py
             sha256: sha256:c4d976962458333d3f6125f7bc40ac76eb4900f7c75756f67a0d85dd8dbe8b22
@@ -21605,13 +21605,13 @@ bets:
             sha256: sha256:75588280efb478b3a40ab4cc8f7714dc7994803da3afb7ea28aeedde01b89604
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-03.md
-            sha256: sha256:03851867ddd3f429f9482a0bb560a8643a7d1c66976d54af692dceca0b78c6a2
+            sha256: sha256:f2e53981ea71fea48a67766faa4a36727f265774944fd25f3e84fa587efc84bc
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-02.md
             sha256: sha256:64d092450d12398130f30ae2c7bc309262e4c5652d4d7633f14cadf94c8f42ae
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
-            sha256: sha256:e4891d0dfcaba569d6b73182ffbeaf0f37b1a3c86ffb0a29de5d08c75786061b
+            sha256: sha256:8c8fda8c5ede141a38c895e22e38edbe15df4784472778fd85f238f6f29a9e37
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -21621,13 +21621,6 @@ bets:
   retro: .omo/_knowledge/retros/BET-Y1Q4-T1-12.md
   depends_on:
   - BET-Y1Q4-HITL-01
-  - PR-129
-  - PR-3119
-  - PR-3077
-  - PR-129
-  - PR-3119
-  - PR-129
-  - PR-3119
   done_at: '2026-09-05T00:35:00+00:00'
   close_evidence: '5 L1/L2 human_gate BETs retroactively adopted HITL in retros: T8-04, T10-03 (genuine production users via
     E2E), T1-02, T8-02, T10-01 (retroactive annotations on existing done BETs). Adoption runbook in main (PR #3135). Runbook
