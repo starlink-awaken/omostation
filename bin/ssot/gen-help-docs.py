@@ -303,58 +303,164 @@ def _extract_frontmatter(path: Path) -> str:
 
 
 def gen_cli_reference(reg: dict, frontmatter: str = "") -> str:
-    # Prefer Tier-1 rich reference generator from cockpit.commands.docs (BET-Y1Q4-T8-16)
-    try:
-        cockpit_src = WORKSPACE / "projects" / "cockpit" / "src"
-        if cockpit_src.is_dir() and str(cockpit_src) not in sys.path:
+    """Tier-1 全量 CLI 参考 (BET-Y1Q4-T8-16): 每个命令独立成节, 单源生成。
+
+    数据源优先级: cockpit.commands.registry.COMMAND_CATALOG (SSOT 元数据,
+    含 summary/category/aliases/example) > capability-registry.yaml 的
+    cli_commands (207 项, 扫描自 cli.py)。两者并集全量展开。
+    """
+    # 导入 cockpit SSOT registry
+    catalog: dict = {}
+    legacy: dict = {}
+    domains: dict = {}
+    cockpit_src = WORKSPACE / "projects" / "cockpit" / "src"
+    if cockpit_src.is_dir():
+        if str(cockpit_src) not in sys.path:
             sys.path.insert(0, str(cockpit_src))
-        from cockpit.commands.docs import generate_cli_reference_markdown
+        try:
+            from cockpit.commands.registry import COMMAND_CATALOG, LEGACY_COMMAND_MAPPING, ORTHOGONAL_DOMAINS
 
-        return generate_cli_reference_markdown(frontmatter=frontmatter)
-    except Exception:
-        pass
+            catalog = dict(COMMAND_CATALOG)
+            legacy = dict(LEGACY_COMMAND_MAPPING)
+            domains = dict(ORTHOGONAL_DOMAINS)
+        except Exception:
+            catalog, legacy, domains = {}, {}, {}
 
-    lines = []
+    # 命令 -> 描述 (registry 扫描结果)
+    scanned: dict[str, str] = {c["name"]: (c.get("description") or "") for c in reg["cli_commands"]}
+    gen_at = reg["generated_at"]
+
+    lines: list[str] = []
     if frontmatter:
         lines.append(frontmatter.rstrip())
         lines.append("")
     lines.extend([
         "# Cockpit CLI 命令参考",
         "",
-        f"> 自动生成于 {reg['generated_at']}",
-        "> 源: `docs/generated/capability-registry.yaml`",
+        f"> 自动生成于 {gen_at} | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml",
+        "> 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑",
         "",
-        f"共 **{reg['totals']['cli_commands']}** 个命令 (含子命令)。按场景分组如下。",
+        f"共 **{len(set(scanned) | set(catalog) | set(legacy))}** 个命令条目。八大正交域: "
+        + "、".join(f"**{d}**" for d in domains) + "。",
+        "",
+        "## 目录",
         "",
     ])
-    # 过滤掉子命令 (只保留顶层命令, 通过黑名单判断)
-    # 子命令特征: xxx_sub.add_parser 注册的, 难以区分, 这里展示全部但按分类
-    by_cat: dict[str, list[dict]] = {}
-    for cmd in reg["cli_commands"]:
-        cat = _categorize(cmd["name"])
-        by_cat.setdefault(cat, []).append(cmd)
 
-    for cat in list(_CMD_CATEGORIES.keys()) + ["其他"]:
-        cmds = by_cat.get(cat, [])
-        if not cmds:
-            continue
+    # 按 category 分组构建目录
+    by_cat: dict[str, list[str]] = {}
+    for name, meta in catalog.items():
+        by_cat.setdefault(getattr(meta, "category", "其他") or "其他", []).append(name)
+    for cat in sorted(by_cat):
+        anchor = re.sub(r"[^a-z0-9\u4e00-\u9fff]+", "-", cat.lower()).strip("-")
+        lines.append(f"- [{cat}](#{anchor}) ({len(by_cat[cat])} 个命令)")
+    lines.extend([
+        "- [遗留命令映射](#遗留命令映射) " + f"({len(legacy)} 个)",
+        "- [全局 Flags](#全局-flags)",
+        "- [MCP 工具映射](#mcp-工具映射)",
+        "",
+        "---",
+        "",
+    ])
+
+    # 每命令详情节
+    for cat in sorted(by_cat):
         lines.append(f"## {cat}")
         lines.append("")
-        lines.append("| 命令 | 描述 |")
-        lines.append("|------|------|")
-        for cmd in sorted(cmds, key=lambda c: c["name"]):
-            desc = cmd["description"] or "—"
-            lines.append(f"| `cockpit {cmd['name']}` | {desc} |")
+        for name in sorted(by_cat[cat]):
+            meta = catalog[name]
+            summary = (getattr(meta, "summary", "") or scanned.get(name, "—")).strip()
+            aliases = getattr(meta, "aliases", ()) or ()
+            example = (getattr(meta, "example", "") or "").strip()
+            maturity = getattr(meta, "maturity", "")
+            risk = getattr(meta, "risk", "")
+            delegated = getattr(meta, "delegated_target", "") or ""
+            domain = domains.get(name) or (legacy.get(name) or ("", ""))[0]
+            lines.append(f"### `cockpit {name}`")
+            lines.append("")
+            lines.append(summary or "—")
+            lines.append("")
+            lines.append("**用法**:")
+            lines.append("")
+            lines.append("```bash")
+            lines.append(f"cockpit {name} [flags]")
+            lines.append(f"cockpit {name} --json          # 机器可读输出")
+            lines.append(f"cockpit {name} --dry-run       # 预检 (无副作用)")
+            lines.append(f"cockpit {name} --help          # 完整参数面")
+            lines.append("```")
+            lines.append("")
+            meta_rows = []
+            if domain:
+                meta_rows.append(f"所属域: `{domain}`")
+            if maturity:
+                meta_rows.append(f"成熟度: {maturity}")
+            if risk:
+                meta_rows.append(f"风险: {risk}")
+            if aliases:
+                meta_rows.append(f"别名: {', '.join(f'`{a}`' for a in aliases)}")
+            if delegated:
+                meta_rows.append(f"委派目标: `{delegated}`")
+            if meta_rows:
+                lines.append("  · " + "  |  ".join(meta_rows))
+                lines.append("")
+            if example:
+                lines.append("```bash")
+                lines.append(example if example.startswith("cockpit") else f"cockpit {example}")
+                lines.append("```")
+                lines.append("")
         lines.append("")
 
-    lines.append("---")
+    # 遗留命令映射
+    lines.extend(["## 遗留命令映射", "", "| 命令 | 域 | 目标 |", "|------|-----|------|"])
+    for name in sorted(legacy):
+        dom, target = legacy[name]
+        lines.append(f"| `cockpit {name}` | {dom} | {target} |")
     lines.append("")
-    lines.append("### MCP 工具映射")
-    lines.append("")
-    lines.append("每个项目入口命令对应的 MCP 服务器:")
-    lines.append("")
-    lines.append("| CLI 命令 | MCP 服务器 | 工具数 |")
-    lines.append("|----------|-----------|--------|")
+
+    # 仅出现在扫描结果、不在 CATALOG 的命令补全节
+    extra = sorted(set(scanned) - set(catalog) - set(legacy))
+    if extra:
+        lines.extend(["## 扫描发现的其他命令", "", "| 命令 | 描述 |", "|------|------|"])
+        for name in extra:
+            lines.append(f"| `cockpit {name}` | {scanned.get(name) or '—'} |")
+        lines.append("")
+
+    # 全局 Flags
+    lines.extend([
+        "## 全局 Flags",
+        "",
+        "所有命令共享的全局参数面:",
+        "",
+        "| Flag | 说明 |",
+        "|------|------|",
+        "| `--help` / `-h` | 命令帮助 |",
+        "| `--version` / `-V` | 版本号 |",
+        "| `--json` | 机器可读 JSON 输出 |",
+        "| `--dry-run` | 预检模式 (不执行副作用) |",
+        "| `--quiet` / `-q` | 静默模式 |",
+        "| `--verbose` / `-v` | 详细输出 |",
+        "| `--output` / `-o` | 输出文件路径 |",
+        "| `--trace-id` | 链路追踪 ID (跨命令 trace 贯穿) |",
+        "",
+        "## Shell 自动补全",
+        "",
+        "```bash",
+        "source <(cockpit completion bash)   # Bash",
+        "source <(cockpit completion zsh)    # Zsh",
+        "cockpit completion fish | source    # Fish",
+        "```",
+        "",
+        "输错命令时会给出 Levenshtein 最近邻建议 (`Did you mean ...`)。",
+        "",
+    ])
+
+    # MCP 映射 (保留既有表)
+    lines.extend([
+        "## MCP 工具映射",
+        "",
+        "| CLI 命令 | MCP 服务器 | 工具数 |",
+        "|----------|-----------|--------|",
+    ])
     cli_to_mcp = {
         "omo": "omo",
         "kairon": "kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive",
@@ -369,10 +475,11 @@ def gen_cli_reference(reg: dict, frontmatter: str = "") -> str:
     for cli_cmd, mcp_ids in cli_to_mcp.items():
         total = sum(srv_map.get(mid, 0) for mid in mcp_ids.split("/"))
         lines.append(f"| `cockpit {cli_cmd}` | `{mcp_ids}` | {total} |")
-    lines.append("")
-    lines.append(f"*由 `bin/ssot/gen-help-docs.py` 于 {reg['generated_at']} 生成*")
+    lines.extend([
+        "",
+        f"*由 `bin/ssot/gen-help-docs.py` 于 {gen_at} 生成 (T8-16 全量模式)*",
+    ])
     return "\n".join(lines)
-
 
 # ── INDEX-MCP.md ───────────────────────────────────────────────
 
