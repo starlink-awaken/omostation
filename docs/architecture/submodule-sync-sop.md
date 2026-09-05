@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-05
+---
 # Submodule Sync SOP
 
 > Status: active | Lifecycle: contract | Owner: governance-team | Last-reviewed: 2026-09-04

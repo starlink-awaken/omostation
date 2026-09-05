@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-05
+---
 # 3Y BET Portfolio (projection)
 
 <!-- source_digest: sha256:d255e4476884e07511fc5b522400748d6fe302d2e140a8480bd22c2c5a6b0966 -->

@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-05
+---
 # BET-Y1Q3-T6-15 Retrospective: PITFALL-GAT-006 Gate Detection (PR1)
 
 **Date**: 2026-09-05
