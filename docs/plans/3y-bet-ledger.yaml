@@ -21279,6 +21279,7 @@ bets:
   - projects/cockpit/src/cockpit/commands/completion.py
   - projects/cockpit/tests/test_completion_and_typo.py
   - bin/ssot/gen-help-docs.py
+  - projects/cockpit/src/cockpit/cli.py
   - docs/CLI-REFERENCE.md
   pasw_required: false
   risk_level: L1
