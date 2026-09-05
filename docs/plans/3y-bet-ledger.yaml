@@ -20069,17 +20069,17 @@ bets:
         status: PROVEN
         evidence:
           live_canary:
-            ref: receipt://.omo/_knowledge/workflow-mesh/shadow-scene-trials.jsonl
-            sha256: sha256:513d9ab6828ba782b601fa69a643b6b25c742aa220b2989e9568ce85374794f4
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/workflow-mesh/shadow-scene-trials.jsonl
-            sha256: sha256:513d9ab6828ba782b601fa69a643b6b25c742aa220b2989e9568ce85374794f4
-          replay:
             ref: receipt://bin/ssot/journey-runner.py
             sha256: sha256:49ce03d888af2cc7797ce2f160cada361821dd5e7f05dc079952643f17e4484c
-          cleanup:
+          fresh_receipt:
             ref: receipt://bin/ssot/scene-card-lifecycle.py
             sha256: sha256:9a8a87c9218b91f5b4b28d444ea0fcc3be5fd8578ad0e5276bdab5932991d9f5
+          replay:
+            ref: receipt://tests/test_journey_runner_validate.py
+            sha256: sha256:4759e583affcb27a94648308d4799d8e67ed687b9d7ce37963638c6c3dbe8ee7
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-02.md
+            sha256: sha256:32a0bb0d98fa2998f9bb0ff3f49c5f77655118c42691300cf4bdaf853959be00
       value:
         status: NOT_PROVEN
         evidence: {}
