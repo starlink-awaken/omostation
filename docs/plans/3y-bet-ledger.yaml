@@ -21235,6 +21235,11 @@ bets:
     expect: exit 0
   workflow: project-code-change
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t8-15-fast-path-lazy-import-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:143edd606819ee414db825bb552732f8df9f142b3954789ab6ba4592fd35fd2a
+    decision_ref: decision://accepted/BET-Y1Q4-T8-15
   write_surfaces:
   - projects/cockpit/src/cockpit/cli.py
   - projects/cockpit/tests/test_fast_path.py
@@ -21265,10 +21270,16 @@ bets:
     expect: exit 0
   workflow: project-code-change
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t8-16-dx-completion-typo-docs-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:c47b17f3760cbed4752c9de534fd32f92a7119752df552b7c312ce2506a9c8ca
+    decision_ref: decision://accepted/BET-Y1Q4-T8-16
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/completion.py
   - projects/cockpit/tests/test_completion_and_typo.py
   - bin/ssot/gen-help-docs.py
+  - projects/cockpit/src/cockpit/cli.py
   - docs/CLI-REFERENCE.md
   pasw_required: false
   risk_level: L1
