@@ -9,16 +9,16 @@
 | 通道 | 数量 |
 |------|------|
 | CLI 命令 (含子命令) | 207 |
-| MCP 工具 | 634 |
+| MCP 工具 | 636 |
 | MCP 服务器 | 27 |
-| BOS 服务 | 298 |
+| BOS 服务 | 299 |
 | BOS 域 | 22 |
 
 ## MCP 服务器清单
 
 | 服务器 | 层 | 工具数 | 传输 | 文件 |
 |--------|-----|--------|------|------|
-| `agora` | I0 | 104 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
+| `agora` | I0 | 106 | stdio/sse | `projects/agora/src/agora/server/mcp.py` |
 | `gbrain` | L2 | 75 | stdio | `projects/knowledge/gbrain/src/core/operations/exports.ts` |
 | `runtime` | L1 | 50 | stdio | `projects/runtime/src/runtime/mcp_server.py` |
 | `l4-kernel` | L4 | 47 | stdio/http/sse | `projects/l4-kernel/src/l4_kernel/mcp_server.py` |
@@ -55,7 +55,7 @@
 | `analysis` | 28 |
 | `bcos` | 3 |
 | `capability` | 44 |
-| `cockpit` | 7 |
+| `cockpit` | 8 |
 | `compute` | 17 |
 | `ecos` | 10 |
 | `fabric` | 1 |
