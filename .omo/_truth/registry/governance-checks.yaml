@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 580
+    script_baseline: 581
     # 2026-09-03: +1 perception-coverage
     # 2026-09-03: +2 ops-cron-install + weekly-evolution-report
     # 2026-09-04: +2 T10-105 work branch net bin diff baseline
@@ -187,6 +187,7 @@ gac:
     # 2026-09-04: +1 portfolio_contract.py (BET-Y1Q4-T1-04 Wave A1 validator)
     # 2026-09-04: +1 portfolio_graph.py (BET-Y1Q4-T1-05 coverage graph)
     # 2026-09-04: +1 hitl-proposal.py (BET-Y1Q4-HITL-01 HITL proposal system)
+    # 2026-09-05: +1 notification.py (BET-Y1Q4-HITL-02 HITL v1.1 multi-channel)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

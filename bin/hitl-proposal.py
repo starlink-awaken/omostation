@@ -116,6 +116,10 @@ def create_proposal(
         "responded_at": None,
         "response_actor": None,
         "response_option": None,
+        # v1.1: notification tracking (backward-compat; None for proposals
+        # created without notify invoked, populated by bin/notification.py)
+        "notified_at": None,
+        "notification_channels": [],
     }
 
     path = PROPOSALS_DIR / f"{proposal_id}.yaml"
