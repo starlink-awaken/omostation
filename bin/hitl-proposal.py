@@ -24,6 +24,14 @@ PROPOSALS_DIR = Path(os.environ.get("HITL_PROPOSALS_DIR", ".omo/_knowledge/hitl-
 DEFAULT_TTL_HOURS = 24
 SCHEMA_VERSION = "hitl-proposal/v1"
 
+# v1.1: distributed lock backend
+# - "fcntl" (default): POSIX file lock, works on local FS only
+# - "etcd": distributed lock via etcd v3 API (STUB: requires HITL_LOCK_ETCD_ENDPOINTS env var)
+# - "redis": distributed lock via redis SET NX PX (STUB: requires HITL_LOCK_REDIS_URL)
+LOCK_BACKEND = os.environ.get("HITL_LOCK_BACKEND", "fcntl")
+LOCK_ETCD_ENDPOINTS = os.environ.get("HITL_LOCK_ETCD_ENDPOINTS", "")
+LOCK_REDIS_URL = os.environ.get("HITL_LOCK_REDIS_URL", "")
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -31,6 +39,45 @@ def _now() -> str:
 
 def _parse_ts(ts: str) -> datetime:
     return datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+
+
+def _acquire_lock(f, blocking: bool = True) -> None:
+    """Acquire a lock on file `f` using the configured backend.
+
+    - fcntl: POSIX file lock (local FS only)
+    - etcd: distributed lock (STUB: logs warning, falls back to fcntl)
+    - redis: distributed lock (STUB: logs warning, falls back to fcntl)
+    """
+    if LOCK_BACKEND == "fcntl":
+        op = fcntl.LOCK_EX if blocking else fcntl.LOCK_EX | fcntl.LOCK_NB
+        fcntl.flock(f, op)
+    elif LOCK_BACKEND == "etcd":
+        # STUB: real implementation would use etcd3 lock API
+        if not LOCK_ETCD_ENDPOINTS:
+            print(f"[HITL lock] WARN: HITL_LOCK_BACKEND=etcd but HITL_LOCK_ETCD_ENDPOINTS not set; falling back to fcntl", file=sys.stderr)
+            fcntl.flock(f, fcntl.LOCK_EX)
+        else:
+            print(f"[HITL lock] STUB: would acquire etcd lock via {LOCK_ETCD_ENDPOINTS}; falling back to fcntl", file=sys.stderr)
+            fcntl.flock(f, fcntl.LOCK_EX)
+    elif LOCK_BACKEND == "redis":
+        # STUB: real implementation would use redis SET NX PX
+        if not LOCK_REDIS_URL:
+            print(f"[HITL lock] WARN: HITL_LOCK_BACKEND=redis but HITL_LOCK_REDIS_URL not set; falling back to fcntl", file=sys.stderr)
+            fcntl.flock(f, fcntl.LOCK_EX)
+        else:
+            print(f"[HITL lock] STUB: would acquire redis lock via {LOCK_REDIS_URL}; falling back to fcntl", file=sys.stderr)
+            fcntl.flock(f, fcntl.LOCK_EX)
+    else:
+        raise ValueError(f"unknown LOCK_BACKEND: {LOCK_BACKEND}")
+
+
+def _release_lock(f) -> None:
+    """Release the lock held by the configured backend."""
+    if LOCK_BACKEND in ("fcntl", "etcd", "redis"):
+        # All backends fall back to fcntl under the hood (for now)
+        fcntl.flock(f, fcntl.LOCK_UN)
+    else:
+        raise ValueError(f"unknown LOCK_BACKEND: {LOCK_BACKEND}")
 
 
 def _generate_id() -> str:
@@ -174,7 +221,7 @@ def update_status(
     path = PROPOSALS_DIR / f"{proposal['proposal_id']}.yaml"
 
     with open(path, "r+") as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
+        _acquire_lock(f)
         try:
             current = yaml.safe_load(f) or {}
             if current.get("status") != "proposal":
@@ -187,9 +234,9 @@ def update_status(
             f.seek(0)
             f.truncate()
             yaml.dump(current, f, default_flow_style=False, sort_keys=False)
-            fcntl.flock(f, fcntl.LOCK_UN)
+            _release_lock(f)
         except BaseException:
-            fcntl.flock(f, fcntl.LOCK_UN)
+            _release_lock(f)
             raise
 
     return get_proposal(proposal["proposal_id"])
@@ -343,6 +390,19 @@ def cmd_wait(args: argparse.Namespace) -> int:
     return 0 if status == "approved" else 1
 
 
+def cmd_lock_backend(args: argparse.Namespace) -> int:
+    """Show current distributed lock backend config (v1.1)."""
+    print(f"Lock backend: {LOCK_BACKEND}")
+    print(f"  fcntl: always available (POSIX file lock)")
+    print(f"  etcd: STUB — requires HITL_LOCK_ETCD_ENDPOINTS env var")
+    print(f"  redis: STUB — requires HITL_LOCK_REDIS_URL env var")
+    if LOCK_BACKEND == "etcd":
+        print(f"  etcd endpoints: {LOCK_ETCD_ENDPOINTS or '(not set)'}")
+    elif LOCK_BACKEND == "redis":
+        print(f"  redis url: {LOCK_REDIS_URL or '(not set)'}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="hitl-proposal",
@@ -382,6 +442,9 @@ def main(argv: list[str] | None = None) -> int:
     p_check = sub.add_parser("check", help="Check if BET requires HITL approval")
     p_check.add_argument("--bet-id", required=True)
     p_check.set_defaults(func=cmd_check)
+
+    p_lock = sub.add_parser("lock-backend", help="Show current lock backend config (v1.1)")
+    p_lock.set_defaults(func=cmd_lock_backend)
 
     p_wait = sub.add_parser("wait", help="Block until proposal resolved (v1.1)")
     p_wait.add_argument("proposal_id")

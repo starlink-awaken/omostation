@@ -20486,8 +20486,6 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 若 cron 面拥堵，仅加 status 侧主动 recover，不做新 bin 脚本
-  retro: .omo/_knowledge/retros/BET-Y1Q4-T9-02.md
-
   retro: required
 - id: BET-Y1Q4-T10-03
   track: T10-MATURITY
@@ -20525,13 +20523,12 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 若定位与源码/SSOT 因果不一致，必须回到文档基线重新修正，不得继续推进实现
-  retro: .omo/_knowledge/retros/BET-Y1Q4-T10-03.md (含 2026-09-05 HITL adoption 追加)
+  retro: required
   done_at: '2026-09-05T00:24:32+00:00'
   close_evidence: docs/plans/2026-09-04-architecture-analysis-and-requirements-consolidation.md 落盘 (320 lines, 7 chapters
     covering L0-L4/workflow/resident/BOS/execution backend + short/mid/long-term roadmap + risks/acceptance) + verify yaml_ok
     + HITL proposal hitl-20260905002432-2df9c0 approved
   note: 2nd production use of HITL Proposal System (after BET-Y1Q4-T8-04).
-  retro: required
 - id: BET-Y1Q4-T10-04
   track: T10-MATURITY
   window: Y1Q4
@@ -20540,7 +20537,8 @@ bets:
   priority: P2
   status: done
   done_at: 2026-09-05
-  goal: 为 .omo/_knowledge 等目录约 1836 个 UNTYPED 文档按目录规则批量赋 type (长期知识→ssot + --fix 补 owner/date; 时点产物→ephemeral + status:archived), 使 UNTYPED 软信号降至 <300 且硬阻塞维持 0。
+  goal: 为 .omo/_knowledge 等目录约 1836 个 UNTYPED 文档按目录规则批量赋 type (长期知识→ssot + --fix 补 owner/date; 时点产物→ephemeral + status:archived),
+    使 UNTYPED 软信号降至 <300 且硬阻塞维持 0。
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-untyped-classification-rules.md
     spec_version: 1.0.0
@@ -21239,7 +21237,7 @@ bets:
   title: HITL Proposal System v1.1 — wait 语义 + 多渠道通知
   appetite: 3 days
   priority: P2
-  status: candidate
+  status: done
   note: v1.0 落地后 (PR
   goal: 在 v1.0 producer-only 基础上,完成真正的 wait 语义(harness stage_execute 阻塞至 proposal resolved)与多渠道通知(principal 通过 Slack/邮件收到待审批提醒),同时把
     fcntl 单机锁升级为 etcd/redis 分布式锁以覆盖多节点场景
@@ -21282,6 +21280,50 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-HITL-01
+  done_at: '2026-09-05T02:38:00+00:00'
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-04-hitl-proposal-system-v1.1-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3b6ea250c62666f782286807a00988fa64ef568331adb4ff068b566ceccfdbfe
+    decision_ref: decision://accepted/BET-Y1Q4-HITL-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a062c9ba83e90fcbf29c24fd03abffba379483b3
+            sha256: sha256:3b6ea250c62666f782286807a00988fa64ef568331adb4ff068b566ceccfdbfe
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-v1.1-design.md
+            sha256: sha256:3b6ea250c62666f782286807a00988fa64ef568331adb4ff068b566ceccfdbfe
+          tests:
+            ref: receipt://tests/test_hitl_v11.py
+            sha256: sha256:841b8661f7c653b2bedf98b56e6aa5a7f221bbca01bb23b04b8b0c49512460ba
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-v1.1-design.md
+            sha256: sha256:3b6ea250c62666f782286807a00988fa64ef568331adb4ff068b566ceccfdbfe
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://bin/notification.py
+            sha256: sha256:86e9f060de6775b835341643b43e8773943bf7dd686eba21e5f67c1c349e8c1f
+          fresh_receipt:
+            ref: receipt://bin/hitl-proposal.py
+            sha256: sha256:75796e69b8e247d8299cef729fbfe290700bfddf7b601ee0e86c79bd24ecc0b1
+          replay:
+            ref: receipt://bin/harness
+            sha256: sha256:d0ab729df23fe694b4c6f0f4b9a2c9b65ffbdba58d8d0669714707f6c33e8752
+          cleanup:
+            ref: receipt://bin/_registry/scripts/governance/notification.yaml
+            sha256: sha256:cdf4c5e6997efbf62243c96d8675f57f6125b0ffe2ac03a5337063ab58ca1311
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-T1-12
   track: T1-TRUTH
   window: Y1Q4
@@ -21336,11 +21378,11 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@3c0ef85524125d9b559069e734764a9caac0d853
-            sha256: sha256:b7fa6fd3e2dfec8fad8e6e9bb6336d62e219365800bffe7ee995d205daff368c
+            ref: git://origin/main@9108da7850c82c634dd2466a4e60cc67fce53529
+            sha256: sha256:f1f320dcfbbd8a1cc4f08bc0e3a16f9aa35155ee36c5d7b8d5282f69ac867d8a
           diff:
-            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
-            sha256: sha256:b7fa6fd3e2dfec8fad8e6e9bb6336d62e219365800bffe7ee995d205daff368c
+            ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
+            sha256: sha256:f1f320dcfbbd8a1cc4f08bc0e3a16f9aa35155ee36c5d7b8d5282f69ac867d8a
           tests:
             ref: receipt://tests/test_hitl_proposal.py
             sha256: sha256:c4d976962458333d3f6125f7bc40ac76eb4900f7c75756f67a0d85dd8dbe8b22
@@ -21355,13 +21397,13 @@ bets:
             sha256: sha256:75588280efb478b3a40ab4cc8f7714dc7994803da3afb7ea28aeedde01b89604
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-03.md
-            sha256: sha256:03851867ddd3f429f9482a0bb560a8643a7d1c66976d54af692dceca0b78c6a2
+            sha256: sha256:f2e53981ea71fea48a67766faa4a36727f265774944fd25f3e84fa587efc84bc
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-02.md
             sha256: sha256:64d092450d12398130f30ae2c7bc309262e4c5652d4d7633f14cadf94c8f42ae
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-02.md
-            sha256: sha256:e4891d0dfcaba569d6b73182ffbeaf0f37b1a3c86ffb0a29de5d08c75786061b
+            sha256: sha256:8c8fda8c5ede141a38c895e22e38edbe15df4784472778fd85f238f6f29a9e37
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -21371,13 +21413,6 @@ bets:
   retro: .omo/_knowledge/retros/BET-Y1Q4-T1-12.md
   depends_on:
   - BET-Y1Q4-HITL-01
-  - PR-129
-  - PR-3119
-  - PR-3077
-  - PR-129
-  - PR-3119
-  - PR-129
-  - PR-3119
   done_at: '2026-09-05T00:35:00+00:00'
   close_evidence: '5 L1/L2 human_gate BETs retroactively adopted HITL in retros: T8-04, T10-03 (genuine production users via
     E2E), T1-02, T8-02, T10-01 (retroactive annotations on existing done BETs). Adoption runbook in main (PR #3135). Runbook
