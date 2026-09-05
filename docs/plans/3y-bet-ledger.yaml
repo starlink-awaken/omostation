@@ -21240,6 +21240,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:143edd606819ee414db825bb552732f8df9f142b3954789ab6ba4592fd35fd2a
     decision_ref: decision://accepted/BET-Y1Q4-T8-15
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t8-15-fast-path-lazy-import-design.md
+            sha256: sha256:143edd606819ee414db825bb552732f8df9f142b3954789ab6ba4592fd35fd2a
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:eb0e2c3b0dfb3d9a778c94a7f19284627537775e1dc7a08052ca8d053ab766ee
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:eb0e2c3b0dfb3d9a778c94a7f19284627537775e1dc7a08052ca8d053ab766ee
+          merged_reachable_commit:
+            ref: git://origin/main@fd6a178eb7c8aaa34d8c367a06456dcd69431315
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:eb0e2c3b0dfb3d9a778c94a7f19284627537775e1dc7a08052ca8d053ab766ee
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:eb0e2c3b0dfb3d9a778c94a7f19284627537775e1dc7a08052ca8d053ab766ee
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:eb0e2c3b0dfb3d9a778c94a7f19284627537775e1dc7a08052ca8d053ab766ee
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:eb0e2c3b0dfb3d9a778c94a7f19284627537775e1dc7a08052ca8d053ab766ee
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/cockpit/src/cockpit/cli.py
   - projects/cockpit/tests/test_fast_path.py
