@@ -95,3 +95,30 @@ budget explicit and covered by a test.
 
 Proceed only with a separately scoped H1a/H1b assessment. H1c and any host
 operation still require their operation-specific human authorization.
+
+## R2b host retention — executed 2026-08-30 (second explicit human authorization)
+
+External backup `~/Workspace-runtime-backup-20260830/` (928 files / 113MB, manifest
+sha256 `c7268bec…`), producer bootout/bootstrap for `com.l4.resident.event-ingest`
+and `com.omostation.agent-tick-daemon` (pre-existing broken plist surfaced and fixed
+via `bin/ssot/resident-event-ingest.sh` wrapper), SQLite `PRAGMA integrity_check`
+ok for both live ledgers, live checkout HEAD == origin/main (ff-only), ignored
+restore no-op, rollback path quarantined at `~/Library/LaunchAgents.quarantine-20260830/`.
+Retention and operational axes moved from `UNPROVABLE` to `PROVEN`. Full receipt:
+`docs/reports/2026-08-28-post2408-main-recovery-closeout.md` § R2b.
+
+## R1 fresh-main revalidation — 2026-09-03
+
+Immutable clone at `a8391f6c8…`: full strict GaC, conflict scan, script registry,
+`git diff --check` all green after the narrow `agent-workflow-doctor` timeout
+repair (15s implicit → 45s explicit) plus two root test-harness drift fixes.
+Receipt: `/tmp/post2408-preflight-20260903T025553Z-bet-execution-fb8f3947.json`.
+
+## Closeout — 2026-09-05
+
+All five done_when items hold: R1 (09-03 revalidation + 2026-09-05 fresh-clone
+spot-check at `ba4b60786`, CI strict `PASS (68 checks)`), H1a/H1b (gac-gate
+blocking and repeatedly green on main), H1c (live required contexts verified via
+branch-protection API), R2a (PR `#2457`), R2b (08-30 executed, receipts complete).
+completion_evidence backfilled to engineering=VERIFIED / operational=PROVEN /
+value=NOT_PROVEN (value_indicator_policy=false); overall delivery_accepted.
