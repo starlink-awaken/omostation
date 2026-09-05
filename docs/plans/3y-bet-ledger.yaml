@@ -20184,6 +20184,105 @@ bets:
   risk_level: L2
   human_gate: true
   circuit_breaker: 迁移引发 lifecycle/review 工具回归时立即回滚, 保持双存储现状待重新拍板
+- id: BET-Y2Q1-T10-02
+  track: T10-MATURITY
+  window: Y2Q1
+  title: 两日会战经验固化 — PITFALL/skill/机制三层落地
+  appetite: 1 days
+  priority: P2
+  status: candidate
+  goal: 复盘 2026-09-04~05 会战 (9 交付 3 病灶模式), 固化 gitlink 假失败分诊
+    (PITFALL-GAT-007)、BET 闭环 8 步 skill、submit auto-rebase 预防层、
+    scene-shadow-activate 参数纠偏; 挂账 omo 死链与 calibration 语义统一。
+  non_goals:
+  - 不执行 CR-PITFALL-COO-003 规则草案 (等人审)
+  - 不动 omo/ecos 子模块 (T7-04 立项另做)
+  done_when:
+  - PITFALL-GAT-007 落盘 + COO-003 计数更新
+  - bet-closeout-chain skill 注册 (check-agent-skills 过)
+  - gac-worktree.sh auto-rebase + bash -n 过
+  - T7-04/T7-05 candidate 立项
+  verify:
+  - cmd: python3 bin/gac/error-knowledge.py check
+    expect: exit 0
+  - cmd: python3 bin/ssot/check-agent-skills.py
+    expect: exit 0
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-lessons-solidification-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:6a37d916cae47d308ec347a0cb4cf743e399e8b96e1ffb1eda684d0dee08d042
+    decision_ref: decision://accepted/BET-Y2Q1-T10-02
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - .omo/_knowledge/pitfalls/
+  - .agents/skills/bet-closeout-chain/SKILL.md
+  - .agents/skills/scene-shadow-activate/SKILL.md
+  - bin/gac/gac-worktree.sh
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-05-lessons-solidification-spec.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: auto-rebase 若破坏既有 submit 语义则回退该 hunk, 其余交付不受影响
+  retro: required
+- id: BET-Y2Q1-T7-04
+  track: T7-SCENE
+  window: Y2Q1
+  title: 场景卡归一遗留 — omo phase15/16 死链清理 + ecos 第四家存储收口
+  appetite: 1 days
+  priority: P3
+  status: candidate
+  goal: T7-03 归一后的两个悬挂引用 — ① omo 子模块 phase15/16 指向不存在的
+    .omo/_truth/scenarios/research-pipeline.yaml (迁移前已断); ② ecos registry
+    scene-cards.yaml 作为第四家存储 (scene-card-review 头部 SSOT 注记指向它)。
+  non_goals:
+  - 不改场景卡本体
+  done_when:
+  - omo 死链改指真实路径或删除引用 (omo 侧 PR)
+  - ecos registry 的定位结论落盘 (归一进 docs/scene-cards 或明确独立语义)
+  verify:
+  - cmd: rg -c "_truth/scenarios" projects/omo/src/omo/omo_phase15.py projects/omo/src/omo/omo_phase16.py
+    expect: 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/omo_phase15.py
+  - projects/omo/src/omo/omo_phase16.py
+  - ecos/src/ecos/ssot/registry/scene-cards.yaml
+  pasw_required: false
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: ecos registry 变更需 ecos 侧对齐, 单方面不动
+  retro: required
+- id: BET-Y2Q1-T7-05
+  track: T7-SCENE
+  window: Y2Q1
+  title: calibration 与五档 tier 语义统一 — review 视图并入 lifecycle 主径
+  appetite: 1 days
+  priority: P3
+  status: candidate
+  goal: T7-03 迁移后 calibration (review 工具) 与五档 tier (lifecycle 工具) 已同源
+    读取 docs/scene-cards, 但语义未统一 — assisted 升级门以 readiness (trial 证据)
+    为准, calibration 0.65 只是随卡字段。统一二者为单一路径或在标准里明确分工。
+  non_goals:
+  - 不改 readiness 门 (T7-02 刚固化)
+  done_when:
+  - scene-card-lifecycle 标准文件写明 calibration 字段的角色 (参考视图 or 升级输入)
+  - review 工具的 promote/weekly-review 输出与五档枚举一致
+  verify:
+  - cmd: python3 bin/ssot/scene-card-review.py status inbox-to-decision
+    expect: exit 0 且 tier 枚举与 lifecycle 一致
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - .omo/standards/scene-card-lifecycle.yaml
+  - bin/ssot/scene-card-review.py
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: review 工具改动若破坏 weekly-report 消费方则回退
+  retro: required
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:

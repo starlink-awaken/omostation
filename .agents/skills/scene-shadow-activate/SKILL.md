@@ -27,9 +27,11 @@ triggers:
 
 ```yaml
 # docs/scene-cards/<scene-id>.yaml
-schema: scene-card/v1
+schema: scene-card/v2
 scene_id: <scene-id>
 lifecycle: draft
+bet: <BET-ID>
+falsifier: "<可证伪条件, validate --all 必填>"
 journey_id: <journey-id>
 goal: <one-line-goal>
 trigger: <trigger-condition>
@@ -48,24 +50,38 @@ rollback_plan: <rollback>
 ### Step 2: 升级到 shadow
 
 ```bash
-python3 bin/ssot/scene-card-review.py promote <scene-id> --to shadow
+python3 bin/ssot/scene-card-lifecycle.py transition \
+  --scene-card docs/scene-cards/<scene-id>.yaml --tier shadow --actor <operator>
+# draft→shadow 需 approval_state: confirmed (human gate)
 ```
 
-### Step 3: 积累 3 个 sample
+### Step 3: 积累 trial (2026-09-05 实况, BET-Y2Q1-T7-02)
 
 ```bash
-python3 bin/ssot/journey-runner.py run <journey-id> --dry-run --samples 3
+# journey-runner 无 --samples 参数; 跑 N 次即 N 个 trial
+python3 bin/ssot/journey-runner.py run --journey <journey-id> --dry-run
+# 分支演练: --input '{"requires_forwarding": false}'
+# 每次完成的 run 自动落盘 shadow-scene-trials.jsonl (mode 字段区分 dry_run/live)
 ```
 
-### Step 4: 验证 calibration
+### Step 4: 验证 readiness (升级 assisted 的门)
 
 ```bash
-python3 bin/ssot/scene-card-review.py validate <scene-id>
-# calibration >= 0.6 才能升级到 assisted
+python3 bin/ssot/scene-card-lifecycle.py check --scene-card docs/scene-cards/<scene-id>.yaml
+# trial_recorded=true (按 scene_id 精确匹配) + blockers 空 + approval confirmed → ready
+# calibration (review 工具) 是补充视图; assisted 升级门以 readiness 为准
+```
+
+### Step 5: shadow → assisted
+
+```bash
+python3 bin/ssot/scene-card-lifecycle.py transition \
+  --scene-card docs/scene-cards/<scene-id>.yaml --tier assisted --actor <operator>
 ```
 
 ## 相关
 
 - `.omo/standards/scene-card-lifecycle.yaml` — 5 级生命周期
-- `bin/ssot/scene-card-review.py` — 场景卡审查工具
+- `bin/ssot/scene-card-lifecycle.py` — 五档 transition/readiness (T7-02 试验门)
+- `bin/ssot/scene-card-review.py` — 校准/审查视图 (2026-09-05 起读 docs/scene-cards)
 - `docs/superpowers/specs/` — 设计规格库
