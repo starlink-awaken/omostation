@@ -1,0 +1,124 @@
+name: Stale Branch Reminder
+
+# Weekly scan of remote branches to flag stale ones.
+# Opens/updates an Issue with branches that haven't been updated in 14+ days.
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'  # Every Monday 07:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed for branch date checks
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install GitHub CLI
+        run: gh --version
+
+      - name: Scan stale branches
+        id: scan
+        run: |
+          python3 bin/gac/stale-branch-scan.py --days 14 --json > stale-report.json
+          echo "report<<EOF" >> "$GITHUB_OUTPUT"
+          cat stale-report.json >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report to Issue
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            let report;
+            try {
+              report = JSON.parse(fs.readFileSync('stale-report.json', 'utf8'));
+            } catch (e) {
+              console.error('Failed to parse report:', e);
+              return;
+            }
+
+            const branches = report.branches || [];
+            const critical = branches.filter(b => b.severity === 'critical');
+            const warning = branches.filter(b => b.severity === 'warning');
+
+            const formatBranch = (b) => {
+              const prLink = b.pr_status === 'OPEN'
+                ? `(#${b.pr_status})`
+                : b.pr_status === 'MERGED'
+                ? '✅ merged'
+                : b.pr_status === 'CLOSED'
+                ? '❌ closed'
+                : '';
+              return `- \`${b.branch}\` — ${b.days_inactive}d inactive ${prLink} — ${b.subject}`;
+            };
+
+            let body = `## 🌿 Stale Branch Report\n\n`;
+            body += `**Threshold**: ${report.threshold_days} days | `;
+            body += `**Total stale**: ${report.total_stale} | `;
+            body += `**Critical (>30d)**: ${critical.length} | `;
+            body += `**Warning (14-30d)**: ${warning.length}\n\n`;
+
+            if (critical.length > 0) {
+              body += `### 🔴 Critical (>30 days)\n`;
+              body += critical.map(formatBranch).join('\n');
+              body += '\n\n';
+            }
+
+            if (warning.length > 0) {
+              body += `### 🟡 Warning (14-30 days)\n`;
+              body += warning.map(formatBranch).join('\n');
+              body += '\n\n';
+            }
+
+            if (branches.length === 0) {
+              body += '✅ No stale branches detected.\n';
+            } else {
+              body += `\n---\n*Consider deleting merged branches or closing stale PRs.*\n`;
+            }
+
+            // Find or create the tracking issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'stale-branch',
+              state: 'open',
+              per_page: 1,
+            });
+
+            if (issues.length > 0) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body,
+              });
+              console.log(`Updated issue #${issues[0].number}`);
+            } else if (branches.length > 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🌿 Stale Branch Report — ${new Date().toISOString().slice(0, 10)}`,
+                body,
+                labels: ['stale-branch'],
+              });
+              console.log('Created new issue');
+            }
