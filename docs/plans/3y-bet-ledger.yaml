@@ -21904,7 +21904,8 @@ bets:
   title: 每周真实外部信号与本人采纳证伪计量
   appetite: 2 days
   priority: P0
-  status: in_progress
+  done_at: '2026-09-05T08:20:00+00:00'
+  status: done
   goal: 对 VISION 证伪条件（连续 12 周每周 ≥3 条本人采纳建议）建立可自动红绿的周度量：真实外部信号数 + 本人采纳数，写入 KR-VALUE-WEEKLY-ADOPTION 基线，并提供 cockpit/CLI 一周快照。
   non_goals:
   - 不在本 bet 完成 12 周连续达标（那是运行事实，不是一次交付）
@@ -21946,15 +21947,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@4ec21965eaae697eb601068881ca9f429706778c
+            sha256: sha256:526e7d9be5226fbbb88b9316ddbf388546f0ddc98ed6976f2b9e2f61934510fb
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-weekly-adoption-meter-design.md
+            sha256: sha256:526e7d9be5226fbbb88b9316ddbf388546f0ddc98ed6976f2b9e2f61934510fb
+          tests:
+            ref: receipt://docs/reports/2026-09-05-weekly-adoption-falsification-baseline.md
+            sha256: sha256:dbe7568e0f1d2b75e9ac844d4e7b7934602a2f9fcd7d6952f73d5a0179d98792
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-05-weekly-adoption-meter-design.md
+            sha256: sha256:526e7d9be5226fbbb88b9316ddbf388546f0ddc98ed6976f2b9e2f61934510fb
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-05-weekly-adoption-falsification-baseline.md
+            sha256: sha256:dbe7568e0f1d2b75e9ac844d4e7b7934602a2f9fcd7d6952f73d5a0179d98792
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-03.md
+            sha256: sha256:c7b03761c0b1daddc5f6f4cdbb37b10716f4f42767ae662a08b9f48a343314d0
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-09-05-weekly-adoption-meter-design.md
+            sha256: sha256:526e7d9be5226fbbb88b9316ddbf388546f0ddc98ed6976f2b9e2f61934510fb
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-09-05-weekly-adoption-meter-design.md
+            sha256: sha256:526e7d9be5226fbbb88b9316ddbf388546f0ddc98ed6976f2b9e2f61934510fb
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   portfolio_binding:
     schema_state: enforced
     campaign_ref: CMP-Y1-VALUE-PROOF
