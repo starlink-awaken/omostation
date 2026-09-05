@@ -21151,14 +21151,15 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-04-w0-unified-surface-protocol-design.md
     spec_version: 1.0.0
-    content_digest: sha256:248269b03910ea9693b4a499cd4a66c070408773d33fbc4709a40ff0cb1677c4
+    content_digest: sha256:5aede3d1386e07ad2ee6aaa47dc3341428b7adb892b8b4bf7539765dc0148ae6
     decision_ref: decision://accepted/BET-Y1Q4-T8-17
   track: T8-SURFACE
   window: Y1Q4
   title: 统一表面协议 (USP v1) 与通用交互卡片元语模型规范
   appetite: 3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-09-04'
   goal: 建立全终端统一的抽象数据与交互契约（USP v1），定义 MetricGrid, DataTable, LogStream, DagGraph, ActionPanel 5 大通用交互卡片元语，彻底解耦底层 BOS/Agora
     数据源与终端展示层。
   non_goals:
@@ -21181,19 +21182,59 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 协议校验失败阻断
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-17.md
   retro: required
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bb8fab534f1904d331f498d38b20e2d523d6e50f
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-w0-unified-surface-protocol-design.md
+            sha256: sha256:5aede3d1386e07ad2ee6aaa47dc3341428b7adb892b8b4bf7539765dc0148ae6
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-17.md
+            sha256: sha256:0693acaa15059339db5b2d02408baca74991cf96552046bd21f4fac26ce2f4ce
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+
 - id: BET-Y1Q4-T8-18
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-04-w0-sovereign-tui-2.0-design.md
     spec_version: 1.0.0
-    content_digest: sha256:e3190347bfeaa0a5121094927f7ffb4f0ab85df20b4b9467357c3d3edcd7fcb3
+    content_digest: sha256:a75bbfed242b250bf1a84a1cdf08415f61ce4de714b4735522822f63186d430f
     decision_ref: decision://accepted/BET-Y1Q4-T8-18
   track: T8-SURFACE
   window: Y1Q4
   title: Sovereign TUI 2.0 旗舰多窗格终端控制台融合重构
   appetite: 4 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-09-04'
   goal: 打破 app.py、swarm_app.py 与 compute_hud 碎片化孤岛，基于 Textual 1.x 打造对标 k9s/lazygit 的一站式 8 领域多窗格极客终端控制台，支持全键盘 Vim 流、8 领域左侧树、卡片甲板与底部事件流抽屉。
   non_goals:
   - 不引入 Python 外的重型编译依赖 (如 Rust ratatui 二进制)
@@ -21209,25 +21250,65 @@ bets:
   underlying_workflow: project-code-change
   write_surfaces:
   - projects/cockpit/src/cockpit/tui/app.py
-  - projects/cockpit/src/cockpit/tui/adapters/
+  - projects/cockpit/src/cockpit/tui/adapters/__init__.py
   - projects/cockpit/src/cockpit/tui/__init__.py
   pasw_required: false
   risk_level: L1
   human_gate: false
   circuit_breaker: TUI 启动异常优雅降级至静态版面
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-18.md
   retro: required
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c46ee420a9d1bfb14b810f930dfd2cf6d2a809a6
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-04-w0-sovereign-tui-2.0-design.md
+            sha256: sha256:a75bbfed242b250bf1a84a1cdf08415f61ce4de714b4735522822f63186d430f
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-18.md
+            sha256: sha256:eb6595bec12ff5a76c251cc305d21968fe4bac119297eaeb8c17a64e15cb5db1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+
 - id: BET-Y1Q4-T8-19
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-w0-cockpit-ui-reorganization-and-bundle-optimization.md
     spec_version: 1.0.0
-    content_digest: sha256:3d3a39a2b750b82c361916139d94a7e3ddbcac22af8da7a094b04cedb386e4a1
+    content_digest: sha256:a58e48153520319c4a3628a92b15ecd83a52f07ccd4219eb0994a991d167bcd6
     decision_ref: decision://accepted/BET-Y1Q4-T8-19
   track: T8-SURFACE
   window: Y1Q4
   title: Web UI (cockpit-ui) 8 大正交一级领域重组与包体瘦身
   appetite: 4 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: '2026-09-05'
   goal: 重构 cockpit-ui 信息架构，将 42 个散乱路由归纳至 8 大正交一级领域；引入细粒度路由 Code-Splitting 消除 >1MB 单 Chunk 警告 (压降至 <300KB)；修复无头测试环境下的 DOM 拦截报错。
   non_goals:
   - 不重写整个 React 前端框架
@@ -21244,24 +21325,64 @@ bets:
   write_surfaces:
   - projects/cockpit-ui/src/routes.tsx
   - projects/cockpit-ui/vite.config.ts
-  - projects/cockpit-ui/src/components/
+  - projects/cockpit-ui/src/components/ActionSurfacePanel.tsx
   pasw_required: false
   risk_level: L1
   human_gate: false
   circuit_breaker: 构建失败阻断
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-19.md
   retro: required
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@736948a134620849b7a3535ad9e212a8644cc5bc
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-w0-cockpit-ui-reorganization-and-bundle-optimization.md
+            sha256: sha256:a58e48153520319c4a3628a92b15ecd83a52f07ccd4219eb0994a991d167bcd6
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-19.md
+            sha256: sha256:0580174e672a33af8ccca3b8623c4449d29e9b66c50d62adf6e5fb15bd4e6f53
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+
 - id: BET-Y1Q4-T8-20
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-w0-declarative-card-extension-sdk-design.md
     spec_version: 1.0.0
-    content_digest: sha256:2bd846ac27f230b387921e5ae6eaa2680f4a68d4925f8fb390b391951895cb89
+    content_digest: sha256:b1fd2443fc798286642d8ff477a274ea0d947cb67fc177e0a42bfd0821d58596
     decision_ref: decision://accepted/BET-Y1Q4-T8-20
   track: T8-SURFACE
   window: Y1Q4
   title: 声明式卡片扩展 SDK 与外部业务域即插即用挂载
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: '2026-09-05'
   goal: 研发声明式卡片工坊，支持外部子项目通过编写 surface.manifest.yaml 声明自定义卡片与操作，实现 CLI / TUI / Web UI 全端自动扫描与动态挂载。
   non_goals:
   - 不支持非沙箱环境的任意原生二进制插件执行
@@ -21277,11 +21398,54 @@ bets:
   write_surfaces:
   - projects/cockpit/src/cockpit/surface/loader.py
   - projects/family-hub/surface.manifest.yaml
+  - projects/omlxc/surface.manifest.yaml
+  - projects/cockpit-ui/**
+  - projects/omlxc/**
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
   risk_level: L1
   human_gate: false
   circuit_breaker: Manifest 校验失败跳过该扩展并告警
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-20.md
   retro: required
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@74fb50bda2c52143f192813b39d71558c2d03d9b
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-w0-declarative-card-extension-sdk-design.md
+            sha256: sha256:b1fd2443fc798286642d8ff477a274ea0d947cb67fc177e0a42bfd0821d58596
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-20.md
+            sha256: sha256:8f40805bcebc7c0ef53117a5fe3c20099712021b44b6089c320dc4217517510e
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+
 - id: BET-Y1Q4-HITL-02
   track: T1-TRUTH
   window: Y1Q4
