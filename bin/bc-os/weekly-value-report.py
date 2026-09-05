@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Weekly Value Report — 自动化周度价值证明报告.
+"""Weekly Value Report — 周度价值证明报告 (BET-Y1Q4-T4-03 主入口 + 旧 weekly-review).
 
-生成 weekly-review.json:
-  - A 轴时间节省 (north_star v3)
-  - B 轴决策吞吐
-  - C 轴项目推进力 (BET done rate)
-  - 趋势分析 (vs 上周)
-  - 改进建议
+本 BET 在原有 weekly-review 报告基础上追加 weekly adoption-falsification snapshot:
+  - signals_count: 真实外部信号数
+  - accepted_by_principal: 本人采纳数
+  - weekly_adoption_rate + status (red/amber/green/unmeasured)
+  - falsification_risk (VISION 12-week x 3-accept 目标进度)
 
-输出: .omo/state/weekly-review-{YYYY-WNN}.json
+用法:
+    python3 bin/bc-os/weekly-value-report.py --json
+    python3 bin/bc-os/weekly-value-report.py --week 2026-W36 --json
+    python3 bin/bc-os/weekly-value-report.py --append  # 追加到 jsonl
+    python3 bin/bc-os/weekly-value-report.py           # 输出 weekly-review.json
 """
 
 from __future__ import annotations
@@ -22,6 +25,169 @@ from pathlib import Path
 WS_ROOT = Path(__file__).resolve().parent.parent.parent
 STATE_DIR = WS_ROOT / ".omo" / "state"
 REPORT_FILE = STATE_DIR / "weekly-review.json"
+
+# Weekly adoption-falsification snapshot (BET-Y1Q4-T4-03)
+DEFAULT_EVENT_LEDGER = WS_ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
+SNAPSHOT_LOG = WS_ROOT / "docs" / "reports" / "weekly-value-snapshots.jsonl"
+SNAPSHOT_SCHEMA = "weekly-value-snapshot/v1"
+THRESHOLD_GREEN = 3
+CONSECUTIVE_WEEKS_TARGET = 12
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _iso_week_bounds(week_key: str | None = None) -> tuple[str, str, str]:
+    if week_key:
+        year, week = week_key.split("-W")
+        monday = datetime.strptime(f"{year}-W{week}-1", "%Y-W%W-%w").replace(tzinfo=UTC)
+        week_iso = week_key
+    else:
+        today = datetime.now(UTC)
+        monday = today - timedelta(days=today.weekday())
+        year, week, _ = today.iscalender() if hasattr(today, "iscalender") else today.isocalendar()
+        week_iso = f"{year}-W{week:02d}"
+    end = monday + timedelta(days=7)
+    return (
+        week_iso,
+        monday.isoformat().replace("+00:00", "Z"),
+        end.isoformat().replace("+00:00", "Z"),
+    )
+
+
+def _query_event_ledger(
+    db_path: Path,
+    window_start: str,
+    window_end: str,
+) -> tuple[int, int, list[str]]:
+    import sqlite3
+    blockers: list[str] = []
+    if not db_path.is_file():
+        blockers.append("event-ledger-missing")
+        return 0, 0, blockers
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    except sqlite3.Error as exc:
+        blockers.append(f"ledger-open-failed:{exc}")
+        return 0, 0, blockers
+
+    signals = 0
+    accepted = 0
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = {row[0] for row in cur.fetchall()}
+        if "signal_event" in tables:
+            cur.execute(
+                "SELECT COUNT(*) FROM signal_event WHERE timestamp >= ? AND timestamp < ?",
+                (window_start, window_end),
+            )
+            signals = cur.fetchone()[0] or 0
+        elif "events" in tables:
+            cur.execute(
+                "SELECT COUNT(*) FROM events WHERE type='signal.ingested' AND timestamp >= ? AND timestamp < ?",
+                (window_start, window_end),
+            )
+            signals = cur.fetchone()[0] or 0
+        else:
+            blockers.append("ledger-no-signal-table")
+        if "outcome_event" in tables:
+            cur.execute(
+                "SELECT COUNT(*) FROM outcome_event WHERE verdict='accept' AND binding=1 AND timestamp >= ? AND timestamp < ?",
+                (window_start, window_end),
+            )
+            accepted = cur.fetchone()[0] or 0
+        elif "events" in tables:
+            cur.execute(
+                "SELECT COUNT(*) FROM events WHERE type='outcome.resolved' AND verdict='accept' AND binding=1 AND timestamp >= ? AND timestamp < ?",
+                (window_start, window_end),
+            )
+            accepted = cur.fetchone()[0] or 0
+        else:
+            blockers.append("ledger-no-outcome-table")
+        conn.close()
+    except sqlite3.Error as exc:
+        blockers.append(f"ledger-query-failed:{exc}")
+        conn.close()
+        return 0, 0, blockers
+    return signals, accepted, blockers
+
+
+def _derive_weekly_status(signals: int, accepted: int) -> str:
+    if signals == 0:
+        return "unmeasured"
+    if accepted >= THRESHOLD_GREEN:
+        return "green"
+    if accepted >= 1:
+        return "amber"
+    return "red"
+
+
+def _append_snapshot(snapshot: dict[str, Any], log_path: Path = SNAPSHOT_LOG) -> Path:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(snapshot, ensure_ascii=False, separators=(",", ":")) + "\n")
+    return log_path
+
+
+def measure_weekly_snapshot(
+    *,
+    db_path: Path = DEFAULT_EVENT_LEDGER,
+    week_iso: str | None = None,
+    append: bool = False,
+) -> dict[str, Any]:
+    week_key, start, end = _iso_week_bounds(week_iso)
+    signals, accepted, blockers = _query_event_ledger(db_path, start, end)
+    status = _derive_weekly_status(signals, accepted)
+    rate = (accepted / signals) if signals > 0 else 0.0
+    snapshot = {
+        "schema_version": SNAPSHOT_SCHEMA,
+        "week_iso": week_key,
+        "window": {"start": start, "end": end},
+        "signals_count": signals,
+        "accepted_by_principal": accepted,
+        "weekly_adoption_rate": round(rate, 4),
+        "status": status,
+        "falsification_risk": "insufficient_data" if status == "unmeasured" else "in_progress",
+        "consecutive_qualifying_weeks": 0,
+        "blockers": blockers,
+        "observed_at": _utc_now_iso(),
+    }
+    if append:
+        log = _append_snapshot(snapshot)
+        snapshot["snapshot_log"] = str(log)
+    return snapshot
+
+
+def argparse_init() -> Any:
+    """Build argparser; factored for reuse."""
+    import argparse
+    p = argparse.ArgumentParser(description="Weekly value report + adoption falsification meter")
+    p.add_argument("--week", type=str, default=None, help="ISO week (e.g., 2026-W36)")
+    p.add_argument("--json", action="store_true", help="Output JSON")
+    p.add_argument("--append", action="store_true", help="Append snapshot to weekly-value-snapshots.jsonl")
+    p.add_argument("--db-path", type=str, default=str(DEFAULT_EVENT_LEDGER))
+    return p
+
+
+def _snapshot_main(parser: Any) -> int:
+    args = parser.parse_args()
+    snapshot = measure_weekly_snapshot(
+        db_path=Path(args.db_path),
+        week_iso=args.week,
+        append=args.append,
+    )
+    if args.json:
+        print(json.dumps(snapshot, indent=2, ensure_ascii=False))
+    else:
+        status = snapshot["status"]
+        print(f"week {snapshot['week_iso']}: status={status.upper()} signals={snapshot['signals_count']} accepted={snapshot['accepted_by_principal']} rate={snapshot['weekly_adoption_rate']:.2%}")
+        print(f"  falsification_risk: {snapshot['falsification_risk']}")
+        if snapshot["blockers"]:
+            print(f"  blockers: {', '.join(snapshot['blockers'])}")
+        print(f"  window: {snapshot['window']['start'][:10]} .. {snapshot['window']['end'][:10]}")
+    return 0
 
 
 def _now() -> datetime:
@@ -142,6 +308,10 @@ def generate_report() -> dict:
 
 
 def main():
+    parser_init = argparse_init()
+    if "--json" in sys.argv or "--append" in sys.argv or "--week" in sys.argv:
+        return _snapshot_main(parser_init)
+
     report = generate_report()
 
     # Save report
