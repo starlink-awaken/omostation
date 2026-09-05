@@ -30,6 +30,11 @@ type: ephemeral
 
 ## Q3 (打假)
 
+- **流程违规自曝**: 本 bet 的代码改造先于 agent-workflow start 执行（跳过了
+  claim 门），complete 的 vision→retro 链校验以 missing_bet_binding 正确
+  拦截后补 start/claim。次序违规已记入 error-knowledge 素材——治理链的
+  事后拦截有效，但流程纪律不应依赖兜底。
+
 - 首轮只 lazy 化 audit+base 不够：base 被 24 个 commands 共用，**任一贪婪
   import 都触发全链**——懒加载必须全域一致，没有 80/20 捷径。
 - 机械转换器两个教训：多行括号 import 的文本替换丢换行；正则改写会误伤
