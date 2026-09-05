@@ -31,6 +31,6 @@ uv run --project projects/cockpit pytest projects/cockpit/tests/test_cli_contrac
 ## Artifacts
 
 - Spec: `docs/superpowers/specs/2026-09-05-cli-behavior-contract-design.md`
-- Child PR: https://github.com/starlink-awaken/omostation-cockpit/pull/132
-- Delivery SHA (child, post-rebase): `83990eac42d48ada7563d741572b313f7b050843`
+- Child PR: https://github.com/starlink-awaken/omostation-cockpit/pull/132 (+ fix #133)
+- Delivery SHA (child, post-rebase): `96f94bacc10f6741ee773807ac3d0d4304ab58c6`
 - Retro: `.omo/_knowledge/retros/BET-Y1Q4-T8-12.md`
