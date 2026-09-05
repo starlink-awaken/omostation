@@ -20045,6 +20045,37 @@ bets:
   human_gate: false
   circuit_breaker: shadow 试验记录失败不阻断 journey 主流程 (stderr 告警后继续)
   retro: required
+- id: BET-Y2Q1-T7-03
+  track: T7-SCENE
+  window: Y2Q1
+  title: 场景卡存储归一 — 三套存储对账与收敛 (待架构拍板)
+  appetite: 2 days
+  priority: P2
+  status: candidate
+  goal: 消灭场景卡双存储口径分裂 — docs/scene-cards (63 张, lifecycle/registry 消费) 与
+    .omo/_truth/scenarios (5 张, review/candidates 消费) 归一为单一 SSOT, calibration
+    与 trial 证据链 (T7-02) 汇入同一条升级路径。
+  non_goals:
+  - 不触碰 ADR-0387 admission_track 语义
+  - 不在本 BET 内执行迁移 (先拍板选项 A/B/C)
+  done_when:
+  - 架构决策落盘 (提案 docs/plans/2026-09-05-scene-card-store-unification-proposal.md 获批)
+  - 按所选选项完成迁移且 scene-card-lint/lifecycle/review 全绿
+  - scene-shadow-activate skill 路径指引与实况一致
+  verify:
+  - cmd: python3 bin/ssot/scene-card-lifecycle.py validate --all
+    expect: exit 0
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - docs/plans/2026-09-05-scene-card-store-unification-proposal.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .agents/skills/scene-shadow-activate/SKILL.md
+  pasw_required: false
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 迁移引发 lifecycle/review 工具回归时立即回滚, 保持双存储现状待重新拍板
+  retro: required
 - id: BET-Y2Q1-T10-01
   track: T10-MATURITY
   window: Y2Q1
