@@ -1,5 +1,29 @@
 # Project Plan: eCOS Architecture Convergence (eCOS 架构收敛与整合)
 
+## Current status (2026-09-04)
+
+已完成当前这轮的设计资产接入工作：`awesome-design-md` 被纳入 `forge` 的只读资产适配层，不扩展 L4 控制面，也不创建第二控制器。当前落地已完成以下内容：
+
+- `forge.design_asset_adapter`：扫描 `DESIGN.md`、提取品牌/样式/布局/色板元数据
+- `forge.__init__`：导出适配器 API
+- `tests/test_design_asset_adapter.py`：覆盖扫描、清单生成和 prompt 注入
+- `docs/design-assets/awesome-design-manifest.yaml`：外部设计资产清单
+- `docs/plans/2026-09-04-design-asset-forge-integration.md`：接入设计与架构结论
+
+验证结论：
+- `python3 -m pytest tests/test_design_asset_adapter.py -q`
+- 结果：`2 passed in 0.09s`
+
+交付状态：
+- 本地工作树已提交
+- 远端 PR 推送被当前仓库的 reachability / push gate 拦截（不是代码问题），因此需在具备远端权限或门禁放行的条件下继续推进
+
+下一步：
+- 继续在具备远端权限的分支/仓库环境中 push + PR
+- 若后续要做真正的生成链路集成，再继续扩展 `forge` 的 style matching 与 prompt orchestration 层
+
+---
+
 本计划旨在重构 AetherForge 与 ECOS 的跨层 subprocess 直连为 Agora I0 网格的 BOS 协议通信，以真实的 `bus-foundation` 替换 Swarm 底层 Mock Stub，并打通算力网格与 OMO 任务/稳态配置的自适应闭环控制。
 
 ## Milestones (里程碑分解)
