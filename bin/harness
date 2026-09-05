@@ -411,7 +411,16 @@ def stage_execute(bet_id, profile, objective, run_id, agent_run_id=None,
             print(f"  HITL proposal created: {proposal_id}")
             print(f"  Run: cockpit decide approve {proposal_id}")
 
-            # v1.1: block on proposal resolution
+            # v1.1: notify principal via multi-channel (opt-in)
+            if proposal_id:
+                notify_res = _run(["python3", "bin/notification.py", "notify", proposal_id])
+                # Notification failure is non-fatal (circuit breaker)
+                r["checks"].append({
+                    "name": "hitl_notify", "ok": True,
+                    "skipped": notify_res.returncode != 0,
+                })
+
+            # v1.1: block on proposal resolution (default ON)
             if hitl_wait and proposal_id:
                 print(f"  Waiting for human approval (timeout: {hitl_timeout}s)...")
                 wait_res = _run([
@@ -1158,8 +1167,10 @@ def main():
     pr.add_argument("--bet", required=True)
     pr.add_argument("--profile", required=True)
     pr.add_argument("--objective", required=True)
-    pr.add_argument("--hitl-wait", action="store_true",
-                    help="Block on HITL proposal resolution (v1.1). Default: create proposal and continue (v1.0)")
+    pr.add_argument("--hitl-wait", action="store_true", default=True,
+                    help="Block on HITL proposal resolution (v1.1, default ON). Use --no-hitl-wait to opt out.")
+    pr.add_argument("--no-hitl-wait", dest="hitl_wait", action="store_false",
+                    help="Opt out of blocking wait (v1.0 producer-only mode).")
     pr.add_argument("--hitl-timeout", type=int, default=86400,
                     help="Max seconds to wait for HITL approval (default 24h, matches TTL)")
 

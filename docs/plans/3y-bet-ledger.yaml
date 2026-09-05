@@ -20487,6 +20487,8 @@ bets:
   human_gate: false
   circuit_breaker: 若 cron 面拥堵，仅加 status 侧主动 recover，不做新 bin 脚本
   retro: .omo/_knowledge/retros/BET-Y1Q4-T9-02.md
+
+  retro: required
 - id: BET-Y1Q4-T10-03
   track: T10-MATURITY
   window: Y1Q4
@@ -21369,6 +21371,13 @@ bets:
   retro: .omo/_knowledge/retros/BET-Y1Q4-T1-12.md
   depends_on:
   - BET-Y1Q4-HITL-01
+  - PR-129
+  - PR-3119
+  - PR-3077
+  - PR-129
+  - PR-3119
+  - PR-129
+  - PR-3119
   done_at: '2026-09-05T00:35:00+00:00'
   close_evidence: '5 L1/L2 human_gate BETs retroactively adopted HITL in retros: T8-04, T10-03 (genuine production users via
     E2E), T1-02, T8-02, T10-01 (retroactive annotations on existing done BETs). Adoption runbook in main (PR #3135). Runbook
