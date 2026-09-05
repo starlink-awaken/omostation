@@ -74,7 +74,7 @@
 | round-gate-check | Round Gate Check | round start, PR creation, architecture change | .agents/skills/round-gate-check/SKILL.md |
 | round-workflow | Round Workflow | new feature work, architecture change, multi-PR effort | .agents/skills/round-workflow/SKILL.md |
 | scene-shadow-activate | Scene Shadow Activate | new scene card, scene promotion request, Y1 scenario activation | .agents/skills/scene-shadow-activate/SKILL.md |
-| spine-value-pipeline | Spine Value Pipeline | general | .agents/skills/spine-value-pipeline/SKILL.md |
+| spine-value-pipeline | Spine Value Pipeline | spine, 署名, 主干真值流, LoRA, diff, 进化反馈 | .agents/skills/spine-value-pipeline/SKILL.md |
 | swarm-escape | Swarm Escape | git hook blocked, CI failure bypass needed, emergency state sync | .agents/skills/swarm-escape/SKILL.md |
 | system-index-distill | System Index Distill | general | .agents/skills/system-index-distill/SKILL.md |
 | workflow-silence-detection | Workflow Silence Detection | general | .agents/skills/workflow-silence-detection/SKILL.md |
