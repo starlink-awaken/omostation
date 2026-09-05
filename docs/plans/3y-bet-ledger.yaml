@@ -21230,7 +21230,6 @@ bets:
   appetite: 2 days
   priority: P0
   status: done
-  done_at: 2026-09-05
   done_at: 2026-09-04 11:00:00+00:00
   note: Delivered in Project Sovereign Command (PSC v1)
   goal: 引入 MetricsCollector 环形缓冲区，支持 Prometheus exposition 格式导出，新增 cockpit telemetry 命令与结构化日志轮转。
@@ -21386,7 +21385,6 @@ bets:
   appetite: 2 days
   priority: P0
   status: done
-  done_at: 2026-09-05
   done_at: 2026-09-04 11:00:00+00:00
   note: Delivered in Project Sovereign Command (PSC v1)
   goal: 打造顶级开源开发者体验：原生 completion 生成器 (bash/zsh/fish)、基于 Levenshtein 距离的 typo 智能纠错建议，以及全自动单源生成 docs/CLI-REFERENCE.md。
