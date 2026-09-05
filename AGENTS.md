@@ -221,6 +221,7 @@ cockpit harness compliance|full|status
 
 - **Historical patterns**: `.omo/_knowledge/patterns/` (P75, P91, P43, P71, P72, P78, etc.)
 - **分支等价性判据**: 只用 **内容 diff** (`git diff origin/main...<branch>`)
+- **动手前先查 main 是否已自愈 (PITFALL-GAT-006)**: claim/start 前先 `git fetch origin main` 并做内容等价检查 — 被改文件在最新 main 是否已含目标内容 (`git diff origin/main...<branch>` 是否为空/仅剩预期增量), `git log --oneline origin/main -N` 是否已有同类 PR. 多 agent 并发下修复目标可能已被其他 PR 达成 (total_bets #3099 / scene-cards #3097 两次复发); 已合入则放弃分支, 勿开 PR — 否则 PR 合并会回退 main 正确值.
 - **Resident Agent**: `make resident-status` | BOS: `bos://resident/*`
 - **BCOS**: `make bcos-evolve` | `python3 bin/bc-os/evolution_engine.py --json`
 - **ADR index**: `.omo/_knowledge/decisions/`
