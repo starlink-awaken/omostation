@@ -3,7 +3,7 @@ name: spine-value-pipeline
 description: omostation (eCOS v6) 主干真值流与署名自进化技能包。指导 AI Agent 如何通过标准 bos:// 服务感知外部信号、驱动 Journey 状态机、调用本地主权算力生成草稿、在 Cockpit 呈递待办并捕获夏明星署名修改的 Diff 进行自适应学习。
 type: ssot
 owner: agent-skills-team
-last_updated: 2026-09-03
+last_updated: 2026-09-05
 ---
 
 # 主干真值流与署名自进化技能 (Spine Value Pipeline Skill)
@@ -15,7 +15,7 @@ last_updated: 2026-09-03
 当 Agent 需要处理任何业务需求、邮件公文、健康数据或日程待办时，必须严格遵循以下 5 步真值流：
 
 ```text
-[1. 信号感知] ──► [2. LECP 分诊] ──► [3. 智能草稿生成] ──► [4. Cockpit 审阅署名] ──► [5. Diff 记忆沉淀]
+[1. 信号感知] ──► [2. LECP 分诊] ──► [3. 智能草稿生成] ──► [4. Cockpit 审阅署名] ──► [5. Diff 记忆沉淀与闲时蒸馏]
 ```
 
 ### 步骤 1：信号感知 (Ingress)
@@ -28,18 +28,18 @@ last_updated: 2026-09-03
   * `privacy_level`: `public` / `internal` / `secret` (健康数据必须标记为 `secret`)
 
 ### 步骤 3：本地算力草稿拟定 (Drafting)
-* 调用 `bos://compute/omlxc/infer`：
+* 调用 `bos://compute/aetherforge/infer`：
   * 健康场景：强制 100% 本地离线 Metal 推理；
-  * 公文场景：复用静态 Prompt 前缀缓存 (0ms TTFT)，生成结构化回信/清单草稿。
+  * 公文场景：复用静态 Prompt 前缀缓存 (0ms TTFT)，生成结构化回信/清单草稿；自动挂载夏明星个人文风 LoRA Adapter（若已结晶）。
 
 ### 步骤 4：呈递 Cockpit 审阅与一键署名 (HITL Sign)
 * 调用 Cockpit API (`POST /api/inbox/sign`) 或在 Web 界面呈现待办卡片；
 * 绝不代替夏明星直接对外发送未经审阅的内容，必须由本人确认署名。
 
 ### 步骤 5：Diff 捕获与自适应记忆沉淀 (Feedback & Continuous LoRA Adaptation)
-* 调用 `bos://memory/mos/diff` 或使用 CLI `cockpit spine sign --original <草稿> --signed <定稿>`；
+* 调用 `bos://cockpit/spine/sign` 或使用 CLI `cockpit spine sign <journey-id> --note "..."` / `cockpit spine sign --original <草稿> --signed <定稿>`；
 * 自动提取用词/修辞偏好追加至 `~/Documents/_entities/facts/preferences.md`；
-* 样本自动同步至 `.omo/state/lora-replay-buffer.jsonl`，在 Mac mini M4 闲时触发 LoRA 在线增量微调（30% 历史经验回放防遗忘）。
+* 署名样本自动存入经验回放池（`.omo/state/spine-diff-buffer.jsonl`），样本达到 32 条门槛后，在 Mac mini M4 闲时漫游触发在线增量 LoRA 蒸馏（双语正则 ROUGE-L 达标后自动发布为生效 Adapter）。
 
 ## 2. 标准 BOS 服务契约速查
 
@@ -49,25 +49,34 @@ last_updated: 2026-09-03
 | `bos://ingress/inbox` | stdio | 获取 ~/Documents/_inbox 待办 |
 | `bos://compute/aetherforge/infer` | stdio / http | 本地 0ms TTFT 主权大模型推理 (27B/70B) |
 | `bos://compute/omlxc/dma` | stdio | 雷雳 5 120Gbps P2P 零拷贝 DMA 跨机总线 |
-| `bos://compute/omlxc/lora` | stdio | 夏明星专属署名 Diff 闲时在线 LoRA 蒸馏 |
-| `bos://memory/mos/diff` | stdio | 提取署名 Diff 并更新偏好库 |
+| `bos://cockpit/spine/sign` | stdio / http | 署名决策提交与 Diff 偏好捕获 |
+| `bos://cockpit/spine/distill` | stdio / http | 闲时个人文风 LoRA 增量蒸馏与微调 |
+| `bos://cockpit/spine/replay` | stdio / http | 署名历史与经验回放流回溯检视 |
 | `bos://ops/health` | stdio | 全仓健康度巡检 |
 
-## 3. Cockpit Spine CLI 常用操作
+## 3. Agora MCP 工具速查
+
+在 Agent MCP 工具链中，可通过 `codebase-memory-mcp` 或 `agora` 访问以下工具：
+
+* `bos_spine_distill(min_samples=32, target_node="mac-mini-m4")`：触发 M4 闲时主权 LoRA 增量微调。
+* `bos_spine_replay(journey_id=None, limit=20)`：检索并回放历史署名样本及修改 Diff。
+
+## 4. Cockpit Spine CLI 常用操作
 
 ```bash
 # 1. 请求本地主权模型草稿
 cockpit spine draft --prompt "请拟定下周架构演进计划"
 
-# 2. 审议修改后一键提交署名 Diff 并记录价值
-cockpit spine sign --original "草稿文本" --signed "定稿文本" --domain "architecture"
+# 2. 审议修改后提交署名 Diff 并记录价值
+cockpit spine sign <journey-id> --note "确认采纳"
+cockpit spine sign --original "草稿文本" --signed "定稿文本" --domain "work"
 
-# 3. 查看署名 Diff 经验回放池状态
-cockpit spine diff
+# 3. 查看署名 Diff 经验回放池
 cockpit spine replay
+cockpit spine replay <journey-id>
 
 # 4. 触发 Mac mini M4 闲时 LoRA 增量蒸馏
-cockpit spine distill --domain "architecture" --epochs 3
+cockpit spine distill --min-samples 32
 
 # 5. 查看实时 DMA 链路与显存遥测
 cockpit spine status
