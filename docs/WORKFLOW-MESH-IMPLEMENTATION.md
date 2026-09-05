@@ -302,7 +302,7 @@ Phase 23 将知识到行动漏斗从 `task_created` 推进到一个可审计、�
 ### 6.3 候选发现与激活边界
 
 在业务资料尚未形成连续使用场景时，系统只运行候选发现，不运行连接激活。入口
-`bin/ssot/scene-card-candidates.py` 将现有 `.omo/_truth/scenarios` 合同和显式维护的
+`bin/ssot/scene-card-candidates.py` 将现有 `.omo/_truth/contracts` 合同和显式维护的
 `docs/scene-card-candidate-seeds.yaml` 归一为 `scene-card-candidate/v1` 投影，供产品、业务
 负责人和架构治理共同审阅。
 

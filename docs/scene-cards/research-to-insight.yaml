@@ -1,4 +1,6 @@
-schema: scene-card/v1
+schema: scene-card/v2
+bet: BET-Y2Q1-T7-03
+falsifier: "若 30 天内研究成果无一条被后续任务/决策引用 (insight 复用=0), 场景无实际价值"
 scene_id: research-to-insight
 lifecycle: assisted
 journey_id: research-to-insight

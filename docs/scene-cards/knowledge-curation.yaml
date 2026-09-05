@@ -8,7 +8,7 @@ last-reviewed: 2026-08-07
 related:
 - ./engineering-delivery-dogfood.yaml
 - ./document-review.yaml
-- ../../.omo/_truth/scenarios/knowledge-capture-search.yaml
+- ../../.omo/_truth/contracts/knowledge-capture-search.yaml
 ---
 schema: scene-card/v2
 scene_type: external_resource
@@ -55,7 +55,7 @@ downstream_refs:
 notes:
 - '2026-08-07: proposal_only→shadow 批量转换. 无业务副作用, 仅观察. falsifier: 若 shadow 期间无知识条目被自动索引，则场景无价值，回退
   draft'
-- '知识沉淀: 多场景产出 → 结构化 → 检索复用. 提升自 .omo/_truth/scenarios/knowledge-capture-search.yaml.'
+- '知识沉淀: 多场景产出 → 结构化 → 检索复用. 提升自 .omo/_truth/contracts/knowledge-capture-search.yaml.'
 - '连接器: iris:wpsnote (WPS笔记, 17K实现) + iris:obsidian (本地知识库, 15.7K实现). 两者均已有完整connector代码.'
 - '关键: 本场景是知识循环的枢纽 — 接收所有场景的产出, 输出给所有需要知识的场景.'
 input_schema:

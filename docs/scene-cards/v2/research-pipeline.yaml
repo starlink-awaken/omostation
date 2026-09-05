@@ -5,7 +5,7 @@ owner: product-architecture
 last-reviewed: 2026-08-07
 related:
 - ./knowledge-curation.yaml
-- ../../.omo/_truth/scenarios/research-pipeline-legacy.yaml
+- ../../.omo/_archive/scenarios/research-pipeline-legacy.yaml
 ---
 schema: scene-card/v2
 scene_type: external_resource

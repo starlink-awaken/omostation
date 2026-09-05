@@ -26,7 +26,7 @@ triggers:
 ### Step 1: 创建场景卡 (draft)
 
 ```yaml
-# .omo/_truth/scenarios/<scene-id>.yaml
+# docs/scene-cards/<scene-id>.yaml
 schema: scene-card/v1
 scene_id: <scene-id>
 lifecycle: draft
