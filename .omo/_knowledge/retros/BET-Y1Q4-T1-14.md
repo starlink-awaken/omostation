@@ -1,3 +1,15 @@
+---
+schema_version: retrospective/v1
+type: retro
+title: BET-Y1Q4-T1-14 Closeout Retro — Portfolio OBJ-VALUE + 3 KR registration
+bet_id: BET-Y1Q4-T1-14
+status: archived
+lifecycle: contract
+owner: governance-agent
+created: 2026-09-05
+last-reviewed: 2026-09-05
+---
+
 # BET-Y1Q4-T1-14 复盘
 
 ## Q1 实际耗时 vs appetite？超出比例？
