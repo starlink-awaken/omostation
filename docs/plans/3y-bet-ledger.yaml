@@ -21815,6 +21815,19 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T1-09
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
   portfolio_binding:
     schema_state: enforced
     campaign_ref: CMP-Y1-VALUE-PROOF
@@ -21945,8 +21958,14 @@ bets:
             ref: receipt://docs/superpowers/specs/2026-09-05-journey-completion-baseline-design.md
             sha256: sha256:b8a8d738e5ec86b714c2282b396fab8aae843af9e37d141f5011c4333add2821
       value:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-05-journey-completion-baseline.md
+            sha256: sha256:b70d3e4eea281dad7e62edf62c69acd0ae3c40552ab924984108b1fd94c8a283
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-02.md
+            sha256: sha256:9199a6a5d2817e4a90ed5db8fb6add00d0262fea92bc7561f485813d47dfaca0
     overall_state: delivery_accepted
   portfolio_binding:
     schema_state: enforced
@@ -22145,7 +22164,7 @@ bets:
   title: Spine done 价值证明债清册与抽样回填
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: in_progress
   goal: 清点已 done 的 spine/价值相关 bet 中 value_indicator_policy=false 且 completion_evidence.value=NOT_PROVEN/缺失的条目，产出债清册；对抽样 ≥5
     条补齐可复查证据或显式永久 NOT_PROVEN 理由，避免「已 done」被误读为愿景已证明。
   non_goals:
@@ -22173,6 +22192,19 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T1-14
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
   portfolio_binding:
     schema_state: enforced
     campaign_ref: CMP-Y1-VALUE-PROOF
