@@ -18,3 +18,7 @@ select = ["E", "F", "W", "I", "N", "UP", "S", "PLE", "RUF100"]
 ignore = ["S101", "S603", "S607", "S108", "S110", "S112", "S310", "S314", "S608", "S602", "S103", "S105", "S605", "S324", "S104", "E402", "E501", "SIM115", "N813", "UP047", "F401", "F841", "N806", "W291", "W292", "E741", "RUF100", "S311", "N999", "UP022", "E722", "S102"]
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
