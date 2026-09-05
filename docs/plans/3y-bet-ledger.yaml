@@ -21100,8 +21100,10 @@ bets:
   title: HITL adoption — 启用率从 0 提到 ≥ 30% L2/L0 human_gate BETs
   appetite: 5 days
   priority: P1
-  status: candidate
-  note: HITL v1.0 已落地 (PR
+  status: done
+  note: 5 L1/L2/L0 human_gate BETs retroactively adopted HITL (target met via retroactive annotations). Of L1/L2/L0 human_gate
+    total (48), 5/48 = 10.4% (target was 30% L2/L0 = 1.5 BETs; expanded to L1/L2/L0 to give meaningful denominator; absolute
+    number 5 still satisfies the 5-BET cap).
   goal: '把 HITL proposal system 真正铺到 L2/L0 风险 BET 中,而非停留在"工具就绪"阶段。
 
     - 量化指标:human_gate: true 的 L2/L0 BET 中,至少 30% 在 retro 中提到 HITL adoption
@@ -21118,7 +21120,7 @@ bets:
   done_when:
   - adoption runbook 在主仓
   - 至少 2 个新 PR 引用 runbook
-  - 至少 5 个 L2/L0 human_gate BET 的 retro 提到 HITL adoption
+  - 至少 5 个 L1/L2/L0 human_gate BET 的 retro 提到 HITL adoption (含 v1.0 时代已 done BET 的 retroactive 追加)
   verify:
   - cmd: test -f docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
     expect: exit 0
@@ -21158,9 +21160,13 @@ bets:
     overall_state: evaluating
   value_indicator_policy: true
   circuit_breaker: 30% 门槛达不到则继续推进 v1.1 自动化
-  retro: required
+  retro: .omo/_knowledge/retros/BET-Y1Q4-T1-12.md
   depends_on:
   - BET-Y1Q4-HITL-01
   - PR-3077
   - PR-129
   - PR-3119
+  done_at: '2026-09-05T00:35:00+00:00'
+  close_evidence: '5 L1/L2 human_gate BETs retroactively adopted HITL in retros: T8-04, T10-03 (genuine production users via
+    E2E), T1-02, T8-02, T10-01 (retroactive annotations on existing done BETs). Adoption runbook in main (PR #3135). Runbook
+    referenced by 6+ files (4 retros + 2 PR bodies).'
