@@ -1,4 +1,6 @@
-schema: scene-card/v1
+schema: scene-card/v2
+bet: BET-Y2Q1-T7-03
+falsifier: "若 30 天内会议纪要无一条转化为交付物 (delivery artifact), 场景无实际价值"
 scene_id: meeting-to-delivery
 lifecycle: assisted
 journey_id: meeting-to-delivery
