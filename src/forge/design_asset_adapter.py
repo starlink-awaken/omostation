@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -264,7 +264,7 @@ def _extract_asset(file_path: Path, repo_root: Path) -> dict[str, Any] | None:
         "design_tags": _tags(metadata),
         "notes": notes,
         "title": str(metadata.get("title") or metadata.get("name") or brand),
-        "last_synced_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "last_synced_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     return entry
 

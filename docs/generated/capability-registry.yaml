@@ -14,7 +14,7 @@ totals:
   mcp_tools: 636
   bos_services: 299
   bos_domains: 22
-  cli_commands: 207
+  cli_commands: 209
   skills: 40
   workflows: 24
 mcp_servers:
@@ -2437,6 +2437,8 @@ cli_commands:
   description: 统一 BOS URI 路由解析与目标元数据提取
 - name: restore
   description: 恢复已隔离研究记录
+- name: review
+  description: 左右分栏 Diff 审阅工作台 (初稿 vs 编辑态)
 - name: route
   description: 为模型选择最优节点
 - name: run
@@ -2455,6 +2457,8 @@ cli_commands:
   description: 评分债务项
 - name: search
   description: 全文搜索
+- name: send
+  description: 一键确认署名并经外发网关真实外发
 - name: serve
   description: stdio JSON-RPC serve mode
 - name: sign
