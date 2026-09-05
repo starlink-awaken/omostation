@@ -20568,12 +20568,6 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 若定位与源码/SSOT 因果不一致，必须回到文档基线重新修正，不得继续推进实现
-  retro: .omo/_knowledge/retros/BET-Y1Q4-T10-03.md (含 2026-09-05 HITL adoption 追加)
-  done_at: '2026-09-05T00:24:32+00:00'
-  close_evidence: docs/plans/2026-09-04-architecture-analysis-and-requirements-consolidation.md 落盘 (320 lines, 7 chapters
-    covering L0-L4/workflow/resident/BOS/execution backend + short/mid/long-term roadmap + risks/acceptance) + verify yaml_ok
-    + HITL proposal hitl-20260905002432-2df9c0 approved
-  note: 2nd production use of HITL Proposal System (after BET-Y1Q4-T8-04).
   retro: required
   done_at: '2026-09-05T00:24:32+00:00'
   close_evidence: docs/plans/2026-09-04-architecture-analysis-and-requirements-consolidation.md 落盘 (320 lines, 7 chapters
@@ -21676,15 +21670,15 @@ bets:
   close_evidence: '5 L1/L2 human_gate BETs retroactively adopted HITL in retros: T8-04, T10-03 (genuine production users via
     E2E), T1-02, T8-02, T10-01 (retroactive annotations on existing done BETs). Adoption runbook in main (PR #3135). Runbook
     referenced by 6+ files (4 retros + 2 PR bodies).'
-
 - id: BET-Y1Q4-T1-14
   track: T1-TRUTH
   window: Y1Q4
   title: Portfolio 挂载 OBJ-VALUE 与愿景结果面 KR
   appetite: 1 day
   priority: P0
-  status: candidate
-  goal: 在 bet-portfolio/v2 台账写入 OBJ-VALUE 及三条 KR（旅程完成率 / 周采纳 / 修订率），挂入 VISION-2029.required_objectives 与 CMP-Y1-VALUE-PROOF，使结果面目标可被 coverage 与 status 查询，而不再只剩 TRUST/HOLDABILITY。
+  status: done
+  goal: 在 bet-portfolio/v2 台账写入 OBJ-VALUE 及三条 KR（旅程完成率 / 周采纳 / 修订率），挂入 VISION-2029.required_objectives 与 CMP-Y1-VALUE-PROOF，使结果面目标可被
+    coverage 与 status 查询，而不再只剩 TRUST/HOLDABILITY。
   non_goals:
   - 不在本 bet 实现计量器或采集管道（交给 T4-02/03/04）
   - 不把 KR.required 设为 true（避免 NONTERMINAL_BET_UNBOUND 波及全仓 candidate）
@@ -21698,7 +21692,10 @@ bets:
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0 or only pre-existing non-blocking warnings
-  - cmd: uv run --with pyyaml python -c "import yaml;from pathlib import Path;d=yaml.safe_load(Path('docs/plans/3y-bet-ledger.yaml').read_text());assert d['meta']['total_bets']==len(d['bets']);assert 'OBJ-VALUE' in d['vision']['required_objectives'];oids=[o['id'] for o in d['objectives']];assert 'OBJ-VALUE' in oids;kr={k['id'] for o in d['objectives'] if o['id']=='OBJ-VALUE' for k in o['key_results']};assert kr=={'KR-VALUE-JOURNEY-COMPLETION','KR-VALUE-WEEKLY-ADOPTION','KR-VALUE-REVISION-RATE'}"
+  - cmd: uv run --with pyyaml python -c "import yaml;from pathlib import Path;d=yaml.safe_load(Path('docs/plans/3y-bet-ledger.yaml').read_text());assert
+      d['meta']['total_bets']==len(d['bets']);assert 'OBJ-VALUE' in d['vision']['required_objectives'];oids=[o['id'] for o
+      in d['objectives']];assert 'OBJ-VALUE' in oids;kr={k['id'] for o in d['objectives'] if o['id']=='OBJ-VALUE' for k in
+      o['key_results']};assert kr=={'KR-VALUE-JOURNEY-COMPLETION','KR-VALUE-WEEKLY-ADOPTION','KR-VALUE-REVISION-RATE'}"
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-doc-change
@@ -21732,7 +21729,44 @@ bets:
     coverage_rationale: T1-14 只负责把 OBJ-VALUE/KR 写入 portfolio SSOT 并挂到愿景；计量实现由 T4-02/03/04 分担，故本 bet 覆盖全部三条 KR 作为注册面。
     parent_bet: null
     milestone_refs: []
-
+  done_at: '2026-09-05T12:00:00+00:00'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ba4b6078604f7d2526b3273013859cfdc7cc9ffa
+            sha256: sha256:6f78fefdd491ae2c2bcfdd28130a762623cb28e1e9a7165e5d007d97ee749d89
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-obj-value-portfolio-split-design.md
+            sha256: sha256:6f78fefdd491ae2c2bcfdd28130a762623cb28e1e9a7165e5d007d97ee749d89
+          tests:
+            ref: receipt://docs/reports/2026-09-05-obj-value-portfolio-split.md
+            sha256: sha256:a865b818cfecb1c61f71665072f460ae34b5006960d79a94e51d209d65d23720
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-05-obj-value-portfolio-split-design.md
+            sha256: sha256:6f78fefdd491ae2c2bcfdd28130a762623cb28e1e9a7165e5d007d97ee749d89
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-05-obj-value-portfolio-split.md
+            sha256: sha256:a865b818cfecb1c61f71665072f460ae34b5006960d79a94e51d209d65d23720
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-14.md
+            sha256: sha256:365d5feaad17aff4d8d3cf6cf14c68fa06e3a98b6211782fac7fa5bdfb99bc89
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-09-05-obj-value-portfolio-split-design.md
+            sha256: sha256:6f78fefdd491ae2c2bcfdd28130a762623cb28e1e9a7165e5d007d97ee749d89
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-09-05-obj-value-portfolio-split-design.md
+            sha256: sha256:6f78fefdd491ae2c2bcfdd28130a762623cb28e1e9a7165e5d007d97ee749d89
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-T4-02
   track: T4-OUTCOME
   window: Y1Q4
@@ -21740,7 +21774,8 @@ bets:
   appetite: 2 days
   priority: P0
   status: candidate
-  goal: 把战略北极星「有效工作旅程完成率」落到可周报的基线：定义分母/分子（禁止代理量），接线 north_star_meter / journey 证据，输出首份基线收据，使 KR-VALUE-JOURNEY-COMPLETION 从 unmeasured 变为 baseline measured。
+  goal: 把战略北极星「有效工作旅程完成率」落到可周报的基线：定义分母/分子（禁止代理量），接线 north_star_meter / journey 证据，输出首份基线收据，使 KR-VALUE-JOURNEY-COMPLETION 从
+    unmeasured 变为 baseline measured。
   non_goals:
   - 不追求立刻 ≥50%（那是 Y2 目标）；本 bet 只建立可复核基线
   - 不用健康分、能力通过率、mtime 交付等已废除代理量冒充
@@ -21782,7 +21817,6 @@ bets:
     coverage_rationale: T4-02 独占旅程完成率基线实现；与 T1-14 注册面分工，避免重复无 rationale。
     parent_bet: BET-Y1Q4-T1-14
     milestone_refs: []
-
 - id: BET-Y1Q4-T4-03
   track: T4-OUTCOME
   window: Y1Q4
@@ -21832,7 +21866,6 @@ bets:
     coverage_rationale: T4-03 独占周采纳/证伪计量；注册面由 T1-14 承担。
     parent_bet: BET-Y1Q4-T1-14
     milestone_refs: []
-
 - id: BET-Y1Q4-T4-04
   track: T4-OUTCOME
   window: Y1Q4
@@ -21879,7 +21912,6 @@ bets:
     coverage_rationale: T4-04 独占修订率基线；学习侧实现仍归 T10-115，本 bet 只做度量原点。
     parent_bet: BET-Y1Q4-T1-14
     milestone_refs: []
-
 - id: BET-Y1Q4-T4-05
   track: T4-OUTCOME
   window: Y1Q4
@@ -21887,7 +21919,8 @@ bets:
   appetite: 2 days
   priority: P1
   status: candidate
-  goal: 清点已 done 的 spine/价值相关 bet 中 value_indicator_policy=false 且 completion_evidence.value=NOT_PROVEN/缺失的条目，产出债清册；对抽样 ≥5 条补齐可复查证据或显式永久 NOT_PROVEN 理由，避免「已 done」被误读为愿景已证明。
+  goal: 清点已 done 的 spine/价值相关 bet 中 value_indicator_policy=false 且 completion_evidence.value=NOT_PROVEN/缺失的条目，产出债清册；对抽样 ≥5
+    条补齐可复查证据或显式永久 NOT_PROVEN 理由，避免「已 done」被误读为愿景已证明。
   non_goals:
   - 不要求一次回填全部历史 done bet
   - 不重做工程交付轴（engineering VERIFIED 保持）
