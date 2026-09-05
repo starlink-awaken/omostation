@@ -2,7 +2,10 @@
 name: ci-red-triage
 description: "Diagnose & fix omostation CI red via 6-layer recursive triage (P75). Use when gh pr checks fail, main CI red, or gac-local-gate FAIL. Triggers: CI fail, evidence-gate fail, governance-verify fail, interface-check fail, actionlint/shellcheck/ruff/markdownlint fail, ModuleNotFound, uv.lock gitignored, set -e silent break, P75."
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # CI Red Recursive Triage (P75)
 

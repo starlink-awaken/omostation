@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 # Control Plane — 控制面
 
 > 定义方向、阶段状态、门禁、决策快照。

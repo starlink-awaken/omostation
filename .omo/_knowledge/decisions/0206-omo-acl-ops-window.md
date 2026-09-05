@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-15
+type: ssot
 ---
 
 # ADR-0206 — `omo-acl-ops-window` 运维窗口脚本

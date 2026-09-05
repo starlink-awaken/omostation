@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-agent
 last-reviewed: 2026-08-01
+type: ssot
 ---
 
 # ADR-0295: Wave 2 (C2G + OMO) — Completed & Archived

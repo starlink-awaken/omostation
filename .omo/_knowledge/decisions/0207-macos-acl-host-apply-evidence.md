@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-15
+type: ssot
 ---
 
 # ADR-0207 — macOS 主机 `omo acl apply --acl` 实机证据

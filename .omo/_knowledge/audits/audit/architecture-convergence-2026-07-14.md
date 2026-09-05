@@ -5,6 +5,8 @@ owner: kems-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ephemeral
+status: archived
 ---
 # 架构收敛审计 — 2026-07-14T23:20:00Z
 

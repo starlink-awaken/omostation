@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 # Install: Dormant Adapter Detector
 
 ## 1. System Analysis

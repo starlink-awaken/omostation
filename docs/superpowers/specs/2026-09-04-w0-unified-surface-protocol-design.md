@@ -11,6 +11,7 @@ risk_level: L1
 human_gate: false
 value_indicator_policy: false
 implementation_authorized: true
+type: ssot
 ---
 
 # W0 Unified Surface Protocol (USP v1) & Universal Card Primitives Specification

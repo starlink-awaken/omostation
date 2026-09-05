@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-29
+type: ephemeral
+status: archived
 ---
 # BET-Y1Q3-T4-04 Retrospective — Product P0 WP4 Principal Authority Binding
 

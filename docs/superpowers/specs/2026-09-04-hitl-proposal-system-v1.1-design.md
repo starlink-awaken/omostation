@@ -8,6 +8,7 @@ lifecycle: spec
 owner: omo-platform-team
 created: 2026-09-04
 last-reviewed: 2026-09-04
+type: ssot
 ---
 
 # HITL Proposal System v1.1 — Wait + Multi-channel

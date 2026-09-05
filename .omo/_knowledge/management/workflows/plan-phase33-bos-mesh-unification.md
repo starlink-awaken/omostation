@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: plan-phase33-bos-mesh-unification.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Phase 33: BOS URI & Agora Mesh Unification

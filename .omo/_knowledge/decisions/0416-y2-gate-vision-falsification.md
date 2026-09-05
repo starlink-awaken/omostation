@@ -13,6 +13,7 @@ related:
   - .omo/_knowledge/decisions/0415-reject-agt-integration-adopt-capability-parity.md
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
   - docs/plans/BET-EXECUTION-ROADMAP-2026H2.md
+type: ssot
 ---
 
 # ADR-0416: Y2 年度门 — 愿景证伪判定

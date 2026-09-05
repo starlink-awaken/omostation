@@ -8,6 +8,8 @@ last-reviewed: '2026-08-25'
 scenario_id: SC-WJ-HOSPITAL-CLOUD-001
 domain: work-weijian
 verdict: APPROVED
+type: ephemeral
+status: archived
 ---
 
 # 决策提案: 市级三甲医院智慧医疗云平台重大信息化项目论证与合规报批

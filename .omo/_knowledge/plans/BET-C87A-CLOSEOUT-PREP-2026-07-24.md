@@ -13,6 +13,7 @@ warning: |
   立项后启动收尾工程。
 last-reviewed: 2026-08-25
 lifecycle: plan
+type: ssot
 ---
 
 # BET-c87a 收尾准备 (evidence)

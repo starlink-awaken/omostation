@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-12
 title: 全局行为契约与 ExitCode/Trace-ID/机器纯净度规范
 symptom: 退出码随意、JSON 输出混带 ANSI 终端彩色转义字符、缺少分布式链路追踪
 solution: ExitCode IntEnum 体系 + ANSI 拦截 + Trace-ID 贯穿日志
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-12 复盘

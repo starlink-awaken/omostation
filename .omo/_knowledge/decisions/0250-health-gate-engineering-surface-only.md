@@ -9,6 +9,7 @@ related:
   - 0247-strategic-pivot-collab-first-physical-deferred.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0250: health 门禁改为只卡工程执行面 (owner 集中度不再阻断)

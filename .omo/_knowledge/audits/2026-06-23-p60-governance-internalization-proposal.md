@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ephemeral
+status: archived
 ---
 
 # P60 — P43-P59 治理方法论内化提案 (L/X/M 三层 + Workflow Skills)

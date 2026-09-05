@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Closeout — 2026-07-15 5c L2 + Wave2 dashboard contract
 
 ## Landed

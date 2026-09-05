@@ -16,6 +16,7 @@ related:
   - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-RUNTIME-STAMP-POLICY.yaml
   - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-WORKFLOW-SILENCE.yaml
   - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-WORKFLOW-SUGGEST.yaml
+type: ssot
 ---
 
 # ADR-0130: P74 Workflow Solidification — 常态化工作流沉默治理

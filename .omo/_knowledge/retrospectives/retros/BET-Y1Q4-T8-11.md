@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-11
 title: 8大正交一级领域树与双轨无感知兼容路由器
 symptom: 存量 130+ 命令扁平无序，认知负荷过高；缺乏体系化分层
 solution: ORTHOGONAL_DOMAINS 8 域模型 + 双轨透明预处理分发
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-11 复盘

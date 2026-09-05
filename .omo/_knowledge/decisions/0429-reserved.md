@@ -5,6 +5,7 @@ status: reserved
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-09-01
+type: ssot
 ---
 
 # ADR 0429: Reserved

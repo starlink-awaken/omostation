@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-07-28
+type: ephemeral
+status: archived
 ---
 # P84 W2 能力轨基线报告（134 场景全量跑批）
 

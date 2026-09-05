@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0088: P94 adr-drift-apply + 13 god-module list + REAL_BUG 修复

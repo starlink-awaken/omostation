@@ -7,6 +7,7 @@ last-reviewed: 2026-07-29
 related:
   - 0260-p84-wave5-adv-bos-m2.md
   - 0254-p84-w22-cclass-collab-detectors.md
+type: ssot
 ---
 
 # ADR-0261: wave6 — ADV25/27/29 检测闭环 + ADV31/33/35 加硬

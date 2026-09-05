@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # BET-Y1Q4-T9-01 复盘
 
 ## Q1 实际耗时 vs appetite？超出比例？

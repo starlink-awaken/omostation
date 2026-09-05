@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Tasks Registry — 结构化任务注册表
 
 > 替代 system.yaml 中的 orphaned_tasks blob。

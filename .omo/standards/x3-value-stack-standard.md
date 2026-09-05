@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-29
+type: ssot
 ---
 
 # X3 Standard: Value Stack & Cost Attribution

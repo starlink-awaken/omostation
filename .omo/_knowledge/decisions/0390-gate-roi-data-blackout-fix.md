@@ -5,6 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-08
+type: ssot
 ---
 
 # ADR-0390 Decision: M5 数据黑障修复 + 减法治理 Phase 2

@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-14
 title: 生产级结构化分级日志、Tracing 贯穿与 Prometheus 埋点底座
 symptom: logging_alerting 维度全仓最低分 (2.57 分)，缺乏指标收集与标准监控抓取面
 solution: MetricsCollector 本地环形缓冲 + Prometheus exposition 文本格式导出 + cockpit telemetry 命令
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-14 复盘

@@ -8,6 +8,7 @@ related:
   - ../decisions/0189-scheme-c-5c-l2-acl-plan-apply.md
   - ../decisions/0198-omo-acl-apply-named-ace.md
 source: learner-2026-07-15-stack-retro
+type: ssot
 ---
 
 # Pattern — 主机写面双闸门（Scheme C 5c）

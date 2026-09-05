@@ -13,6 +13,7 @@ related:
   - ../../bin/generate-brief.py
   - ../../scripts/sync_omo_state.py
   - ../../scripts/generate-governance-data.py
+type: ssot
 ---
 
 # ADR-0128: 多 Agent 并发下治理状态生成的架构收敛

@@ -11,6 +11,7 @@ related:
   - p71-baseline-recovery-pattern.md
   - p72-follow-up-completion-pattern.md
   - p73-truth-driven-engineering-pattern.md
+type: ssot
 ---
 
 # P74 — Workflow Solidification Pattern (常态化工作流沉默治理)

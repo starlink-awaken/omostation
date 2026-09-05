@@ -1,4 +1,6 @@
 ---
+name: swarm-escape
+description: "蜂群逃生 skill：多 agent 冲突/死锁时的逃生阀与冲突升级路径"
 title: Swarm Escape
 type: skill
 owner: governance-team

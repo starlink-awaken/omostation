@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-03
 title: 红头 DOCX/PPTX/SVG 渲染引擎
 symptom: 无（按计划交付）；外围 gate 债务两处随车清理
 solution: GOV_SPEC 单源 + cockpit venv 依赖隔离 + subprocess 委派测试
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-03 复盘

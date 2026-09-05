@@ -14,6 +14,7 @@ amended_by: [0224]
 note: >
   ADR-0224 收紧：当被动窗 conflict_count>0 时，path B 不得单独 pass，
   必须 rootcause 证明无 coverage_gap_bypass / unresolved。
+type: ssot
 ---
 
 # ADR-0222: M1「冲突=0」证据标准扩展 — 对抗验证等效于 72h 被动窗

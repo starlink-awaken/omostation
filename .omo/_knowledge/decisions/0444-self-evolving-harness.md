@@ -4,6 +4,7 @@ status: accepted
 lifecycle: spec
 owner: xiamingxing
 last-reviewed: 2026-08-31
+type: ssot
 ---
 
 # ADR-0444: 自进化 Harness 异构生态收束

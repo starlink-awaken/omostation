@@ -11,6 +11,7 @@ related:
   - ../../bin/change-lane-check.py
   - ../../projects/omo/src/omo/omo_ingress_state.py
   - ../../projects/omo/src/omo/omo_state.py
+type: ssot
 ---
 
 # ADR-0129: 运行时投影面分离（ADR-0128 Phase 3 治本设计）

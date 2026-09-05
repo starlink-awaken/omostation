@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-16
 title: 顶级开源 DX：Shell 自动补全、交互纠错与统一使用手册
 symptom: 缺乏原生 Shell 自动补全脚本，拼写错误时无法提供建议，缺乏完整的单源 CLI 参考手册
 solution: 原生 completion (bash/zsh/fish) + Levenshtein 纠错建议引擎 + docs export (docs/CLI-REFERENCE.md)
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-16 复盘

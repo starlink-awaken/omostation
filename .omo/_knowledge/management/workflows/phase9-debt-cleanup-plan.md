@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: phase9-debt-cleanup-plan.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Phase 9 债务清理需求分析

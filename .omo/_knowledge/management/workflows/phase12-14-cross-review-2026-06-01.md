@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: phase12-14-cross-review-2026-06-01.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Phase 12-14 cross-review

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # resident retro 索引 (promote 自动生成)
 
 - generated_at: 2026-08-31T08:20:01Z

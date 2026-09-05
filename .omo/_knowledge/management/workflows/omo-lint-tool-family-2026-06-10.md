@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: omo-lint-tool-family-2026-06-10.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # §13 omo_lint 工具家族 — 静态校验规则集 (Round 29 起步)

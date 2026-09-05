@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: workspace-architecture-diagnosis.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Workspace 级架构诊断 (全系统视角)

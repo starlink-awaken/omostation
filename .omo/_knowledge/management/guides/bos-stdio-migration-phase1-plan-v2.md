@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+type: ssot
+owner: governance-team
 ---
 
 # BOS stdio → mcp_proxy 迁移实施方案 (详细版)

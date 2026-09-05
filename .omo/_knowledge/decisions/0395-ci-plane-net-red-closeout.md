@@ -5,6 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-08
+type: ssot
 ---
 
 # ADR-0395 Decision: CI 平面净红收官

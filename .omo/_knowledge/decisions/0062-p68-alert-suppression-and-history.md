@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ssot
 ---
 
 # ADR-0062: P68 告警抑制时间窗 + 告警历史趋势报告

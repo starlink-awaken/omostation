@@ -10,6 +10,7 @@ related:
   - ../../../../bin/m4-health-score.py
   - ../../../projects/ecos/.omo/_derived/m4-health.json
 supersedes: []
+type: ssot
 ---
 
 # ADR-0140: M4 Health Score 量化与派生面落地 (Round 3b)

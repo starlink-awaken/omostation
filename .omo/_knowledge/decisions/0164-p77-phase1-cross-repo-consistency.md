@@ -10,6 +10,7 @@ related:
   - ../../../../../tests/test_cross_repo_consistency.py
   - 0162-p76-phase8-real-engineering.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0164: P77 Phase 1 — 跨仓一致性 detector (CR-CROSS-REPO-CONSISTENT)

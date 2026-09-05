@@ -11,6 +11,7 @@ related:
 supersedes: []
 amends:
   - 0253-p84-collab-mode-routing-after-k4.md
+type: ssot
 ---
 
 # ADR-0255: K4 批次3/4 对照结果 — 强化 ADR-0253 路由表

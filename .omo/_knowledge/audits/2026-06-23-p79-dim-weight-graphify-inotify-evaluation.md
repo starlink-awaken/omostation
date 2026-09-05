@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ephemeral
+status: archived
 ---
 
 # P79 dim-weight 真实数据调优 + graphify 报告 + inotify 评估

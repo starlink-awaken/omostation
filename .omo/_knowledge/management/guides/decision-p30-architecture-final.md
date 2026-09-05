@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: decision-p30-architecture-final.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # P30 架构最终决策 — v3.0 实施令

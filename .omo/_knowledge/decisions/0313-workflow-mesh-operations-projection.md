@@ -11,6 +11,7 @@ related:
   - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - ../../../projects/omo/src/omo/workflow_eval.py
   - ../../../projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
+type: ssot
 ---
 
 # ADR-0313: Workflow Mesh 运营投影与显式消费边界

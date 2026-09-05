@@ -8,6 +8,8 @@ event_id: 4f003a0a5dae4e0ea229a24c687b0a4f
 proposal_count: 1
 generated_at: 2026-08-25T08:36:38Z
 last-reviewed: 2026-08-25
+type: ephemeral
+status: archived
 ---
 
 # 决策提案收件箱 (T10-13)

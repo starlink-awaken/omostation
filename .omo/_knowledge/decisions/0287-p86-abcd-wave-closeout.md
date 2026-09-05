@@ -7,6 +7,7 @@ last-reviewed: 2026-07-29
 related:
   - 0247-strategic-pivot-collab-first-physical-deferred.md
   - 0249-governance-budget-cap-40-40-20.md
+type: ssot
 ---
 
 # ADR-0287: P86 A/B/C/D 波关闭 + §STOP 冻结

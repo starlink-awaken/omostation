@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-02
 title: Mobile Cockpit PWA 滑动署名
 symptom: cockpit-ui 台账前瞻但物理不存在; workflow start 未落 run 文件
 solution: 主仓直接跟踪新目录; 手续后补
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-02 复盘

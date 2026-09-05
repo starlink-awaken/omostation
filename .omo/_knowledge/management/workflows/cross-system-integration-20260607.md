@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: cross-system-integration-20260607.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 跨系统集成清单 (2026-06-07)

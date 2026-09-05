@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: bos-perf-baseline-20260607.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # BOS URI 性能基线报告 (2026-06-07)

@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-30
+type: ssot
 ---
 
 # ADR-0118: 根仓 dev-deps 统一 — 部分真治本 + P3 follow-up

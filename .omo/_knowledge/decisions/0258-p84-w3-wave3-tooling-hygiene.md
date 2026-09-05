@@ -8,6 +8,7 @@ related:
   - 0256-p84-w3-throughput-wave.md
   - 0257-p84-w3-wave2-mof-d4-l0-debt.md
   - 0240-mof-d1d4-decisions-aaaa-phase1.md
+type: ssot
 ---
 
 # ADR-0258: W3 wave3 — dualtrack gap 工具 + M2 inventory + planned 卫生

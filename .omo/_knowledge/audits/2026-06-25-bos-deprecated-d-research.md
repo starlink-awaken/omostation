@@ -2,6 +2,8 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+type: ephemeral
+status: archived
 ---
 
 # BOS Deprecated 声明 D 调研 — agent-runtime 部分

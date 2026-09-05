@@ -9,6 +9,7 @@ related:
   - STRAT-P76-strategic-roadmap.md
   - ../../../.omo/_knowledge/audits/2026-07-02-system-comprehensive-audit.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0156: P76 Phase 2 — 分层调用方向契约硬化

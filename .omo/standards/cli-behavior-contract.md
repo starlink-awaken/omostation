@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-09-04
+type: ssot
 ---
 
 # Sovereign CLI Behavior and Surface Contract (PSC v1)

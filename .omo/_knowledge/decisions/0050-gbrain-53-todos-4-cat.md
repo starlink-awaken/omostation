@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ssot
 ---
 
 # ADR-0050: gbrain 53 TODOs 4 类决策 (P50 R2)

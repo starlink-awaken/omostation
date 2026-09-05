@@ -23,6 +23,7 @@ precedents:
   - 0090-mof-schema-design.md
   - 0091-layer-modeling-spec.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0132: L0 / M0 / MOF 统一元模型 (M4 升级)

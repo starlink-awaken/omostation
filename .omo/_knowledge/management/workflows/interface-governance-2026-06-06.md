@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: interface-governance-2026-06-06.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 5+3+1 接口架构治理报告 (Final)

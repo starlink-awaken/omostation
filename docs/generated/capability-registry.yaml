@@ -15,7 +15,7 @@ totals:
   bos_services: 298
   bos_domains: 22
   cli_commands: 207
-  skills: 12
+  skills: 38
   workflows: 24
 mcp_servers:
 - id: omo
@@ -2526,11 +2526,47 @@ cli_commands:
 - name: write
   description: 双轨写入 (+ Neo4j FACT 若配置)
 skills:
+- id: a2a-coordination
+  file: .agents/skills/a2a-coordination/SKILL.md
+  exists: true
+- id: agent-onboarding
+  file: .agents/skills/agent-onboarding/SKILL.md
+  exists: true
+- id: agent-quickstart
+  file: .agents/skills/agent-quickstart/SKILL.md
+  exists: true
 - id: architecture-perception
   file: .agents/skills/architecture-perception/SKILL.md
   exists: true
+- id: bdsk-virtual-board
+  file: .agents/skills/bdsk-virtual-board/SKILL.md
+  exists: true
+- id: bet-execution
+  file: .agents/skills/bet-execution/SKILL.md
+  exists: true
+- id: bos-service-discovery
+  file: .agents/skills/bos-service-discovery/SKILL.md
+  exists: true
+- id: ci-red-triage
+  file: .agents/skills/ci-red-triage/SKILL.md
+  exists: true
 - id: closeout-retro
   file: .agents/skills/closeout-retro/SKILL.md
+  exists: true
+- id: cognitive-governance
+  file: .agents/skills/cognitive-governance/SKILL.md
+  exists: true
+- id: delegation-guardrails
+  file: .agents/skills/delegation-guardrails/SKILL.md
+  exists: true
+- id: domain-cartridge-governance
+  file: .agents/skills/domain-cartridge-governance/SKILL.md
+  exists: true
+- id: ecos-test-cycle
+  file: .agents/skills/ecos-test-cycle/SKILL.md
+  exists: true
+- id: external-agent-attach
+  file: .agents/skills/external-agent-attach/SKILL.md
   exists: true
 - id: git-discipline
   file: .agents/skills/git-discipline/SKILL.md
@@ -2538,11 +2574,32 @@ skills:
 - id: git-safety-check
   file: .agents/skills/git-safety-check/SKILL.md
   exists: true
+- id: governance-phase-orchestrator
+  file: .agents/skills/governance-phase-orchestrator/SKILL.md
+  exists: true
+- id: governance-ssot-edit
+  file: .agents/skills/governance-ssot-edit/SKILL.md
+  exists: true
 - id: harness-compliance
   file: .agents/skills/harness-compliance/SKILL.md
   exists: true
 - id: kos-cold-start
   file: .agents/skills/kos-cold-start/SKILL.md
+  exists: true
+- id: memory-recall
+  file: .agents/skills/memory-recall/SKILL.md
+  exists: true
+- id: nextgen-cognitive-mesh
+  file: .agents/skills/nextgen-cognitive-mesh/SKILL.md
+  exists: true
+- id: omlxc-compute-fabric
+  file: .agents/skills/omlxc-compute-fabric/SKILL.md
+  exists: true
+- id: omo-audit-baseline
+  file: .agents/skills/omo-audit-baseline/SKILL.md
+  exists: true
+- id: project-governance
+  file: .agents/skills/project-governance/SKILL.md
   exists: true
 - id: round-gate-check
   file: .agents/skills/round-gate-check/SKILL.md
@@ -2559,8 +2616,29 @@ skills:
 - id: swarm-escape
   file: .agents/skills/swarm-escape/SKILL.md
   exists: true
+- id: system-index-distill
+  file: .agents/skills/system-index-distill/SKILL.md
+  exists: true
+- id: workflow-silence-detection
+  file: .agents/skills/workflow-silence-detection/SKILL.md
+  exists: true
 - id: workflow:bet-execution
   file: .agents/skills/workflow:bet-execution/SKILL.md
+  exists: true
+- id: workflow:governance-state-mutation
+  file: .agents/skills/workflow:governance-state-mutation/SKILL.md
+  exists: true
+- id: workflow:mini
+  file: .agents/skills/workflow:mini/SKILL.md
+  exists: true
+- id: workflow:project-code-change
+  file: .agents/skills/workflow:project-code-change/SKILL.md
+  exists: true
+- id: workflow:project-doc-change
+  file: .agents/skills/workflow:project-doc-change/SKILL.md
+  exists: true
+- id: worktree-ci-isolate
+  file: .agents/skills/worktree-ci-isolate/SKILL.md
   exists: true
 workflows:
 - id: agent-onboarding

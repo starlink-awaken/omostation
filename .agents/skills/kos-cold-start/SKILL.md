@@ -1,4 +1,6 @@
 ---
+name: kos-cold-start
+description: "KOS 冷启动 skill：会话启动时从 KOS 加载 BRIEF/ADR/实体，对齐历史架构决策"
 title: KOS Cold Start
 type: skill
 owner: governance-team

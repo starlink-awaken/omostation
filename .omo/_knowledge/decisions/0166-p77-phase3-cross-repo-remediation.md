@@ -11,6 +11,7 @@ related:
   - ../../../../../bin/check-cross-repo-consistency.py
   - ../../../../../tests/test_cross_repo_consistency_phase3.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0166: P77 Phase 3 — 跨仓 unregistered 治本 (threshold 20→0 + 升 hard)

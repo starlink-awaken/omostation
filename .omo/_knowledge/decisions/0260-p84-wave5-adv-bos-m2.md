@@ -8,6 +8,7 @@ related:
   - 0259-p84-w3-wave4-close-gap.md
   - 0254-p84-w22-cclass-collab-detectors.md
   - 0240-mof-d1d4-decisions-aaaa-phase1.md
+type: ssot
 ---
 
 # ADR-0260: wave5 — ADV19/21/23 检测闭环 + 加硬 ADV25/27/29 + bos/m2 工具

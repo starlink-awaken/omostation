@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-14
+type: ssot
 ---
 
 # ADR-0182 — CI · evidence · BOS registry 常态化落地

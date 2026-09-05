@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 4
   trace_count: 4
+type: ephemeral
+status: archived
 ---
 # governance-audit 运行复盘聚合 (resident 事件驱动)
 

@@ -5,6 +5,8 @@ owner: governance-team
 last-reviewed: 2026-06-22
 archived-since: 2026-06-22
 note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+type: ephemeral
+status: archived
 ---
 
 # P44 治理收口报告 — 债务清理 + 架构收敛

@@ -6,6 +6,7 @@ last-reviewed: 2026-07-15
 related:
   - ../../bin/ssot/sync-submodules-push.sh
 source: learner-2026-07-15-stack-retro
+type: ssot
 ---
 
 # Pattern — pre-push 脚本路径漂移（bin rationalization）

@@ -10,6 +10,7 @@ related:
   - 0225-g-del-physical-multihost-gate-caliber.md
 supersedes: []
 amends: [0225]
+type: ssot
 ---
 
 # ADR-0226: G-DEL.1 正式 BLOCKED 直至 4 物理节点（fail-closed）

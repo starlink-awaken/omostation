@@ -12,6 +12,7 @@ related:
   - ../../../../.gitignore
   - ../../../runtime/.gitignore
 supersedes: []
+type: ssot
 ---
 
 # ADR-0151: 子模块 gitignore 守门 (Round 5f)

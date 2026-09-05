@@ -15,6 +15,7 @@ source_proposal_sha256: 26bd1b3df552e693f2ac2684df255436522ff816d7844459523fafe1
 source_amendment_sha256: 5b1bb03274d8f7383b67f88953cf0c7074a571a9a1d5aebb1ab68bb234042409
 source_id_collision_amendment_sha256: 1a6a63d4fc20b6d3f385b27518018fdb633e5cd38ee9c171db1c08773eecd992
 implementation_authorized: false
+type: ssot
 ---
 
 

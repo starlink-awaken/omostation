@@ -11,6 +11,7 @@ related:
   - ../../../../../projects/aetherforge/packages/gateway/src/llm_gateway/quota_engine.py (Phase 8.2 PR)
   - ../../../../../projects/c2g/src/c2g/cli.py (Phase 8.3 PR)
 supersedes: []
+type: ssot
 ---
 
 # ADR-0162: P76 Phase 8 — 4 真工程 follow-up 治本收口

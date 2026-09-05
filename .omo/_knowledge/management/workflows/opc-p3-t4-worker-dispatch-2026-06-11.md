@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: opc-p3-t4-worker-dispatch-2026-06-11.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # OPC-P3-T4 worker dispatch (heartbeat + retry + failure debt + result)

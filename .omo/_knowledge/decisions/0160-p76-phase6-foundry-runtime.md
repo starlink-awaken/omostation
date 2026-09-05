@@ -10,6 +10,7 @@ related:
   - STRAT-P76-strategic-roadmap.md
   - ../../../../../docs/architecture/knowledge-foundry-cron.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0160: P76 Phase 6 — Knowledge Foundry 真正集成 (radar_cron + cockpit 监控 + LLM-assisted commit)

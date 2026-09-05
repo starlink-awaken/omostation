@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: phase17-planning-gate-risk-assessment.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Phase 17 Planning Gate 风险评估

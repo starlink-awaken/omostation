@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 13 项决策一页清单 — 2026-07-28 已拍板收口
 
 > 人类会话 2026-07-28 拍板落地（worktree `decision-inbox-land-20260728`）。

@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: retrospective-2026-06-12-p37.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # P37 收官复盘 — 2026-06-12

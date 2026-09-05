@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 # Project Plan: eCOS Architecture Convergence (eCOS 架构收敛与整合)
 
 ## Current status (2026-09-05)

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 共享任务池
 
 > 状态: legacy mirror

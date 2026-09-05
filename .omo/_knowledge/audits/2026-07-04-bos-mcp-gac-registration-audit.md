@@ -2,6 +2,8 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+type: ephemeral
+status: archived
 ---
 
 # BOS / MCP / GaC 注册全面审计报告

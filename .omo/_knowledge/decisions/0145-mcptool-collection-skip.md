@@ -12,6 +12,7 @@ related:
   - ../../../../bin/mcp-tool-data-complete.py
   - ../../../../tests/integration/m4_metamodel/run_all.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0145: MCPTOOL 集合占位识别 (Round 4a) — 100/100 Health Score

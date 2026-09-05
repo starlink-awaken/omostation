@@ -4,6 +4,7 @@ status: active
 lifecycle: pattern
 owner: governance-team
 last-reviewed: 2026-07-27
+type: ssot
 ---
 
 # Pattern: as_of 基线锚点（治理方案防脱钩）

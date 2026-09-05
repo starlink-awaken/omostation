@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T8-17
 title: 统一表面协议 (USP v1) 与通用交互卡片元语模型规范
 symptom: 终端渲染与后端业务逻辑强耦合，各视图缺少统一抽象契约
 solution: 实现纯净 USP v1 协议（SurfaceEnvelope）与 5 大交互卡片元语（MetricGrid, DataTable, LogStream, DagGraph, ActionPanel）
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T8-17 复盘

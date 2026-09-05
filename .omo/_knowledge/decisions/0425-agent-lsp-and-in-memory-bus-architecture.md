@@ -4,6 +4,7 @@ status: archived
 lifecycle: spec
 owner: agora
 last-reviewed: '2026-08-25'
+type: ssot
 ---
 
 # ADR-0425: Agent LSP 潜意识护航与 Agora 2.0 内存总线架构

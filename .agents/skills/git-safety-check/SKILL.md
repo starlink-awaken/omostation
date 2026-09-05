@@ -1,4 +1,6 @@
 ---
+name: git-safety-check
+description: "git 安全检查 skill：高危 git 操作（reset/push/子模块指针）前置校验与守门"
 title: Git Safety Check
 type: skill
 owner: governance-team
