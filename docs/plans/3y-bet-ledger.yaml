@@ -21220,7 +21220,8 @@ bets:
   title: CLI 亚百毫秒极致冷启动加速与高频 BOS 传输优化
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-05
   done_at: 2026-09-04 11:00:00+00:00
   note: Delivered in Project Sovereign Command (PSC v1)
   goal: 实现 Fast-path 直通分发、全域 Lazy Import 与 Flags 层级继承，使高频命令冷启动耗时大幅压降至 <150ms。
@@ -21240,6 +21241,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:143edd606819ee414db825bb552732f8df9f142b3954789ab6ba4592fd35fd2a
     decision_ref: decision://accepted/BET-Y1Q4-T8-15
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t8-15-fast-path-lazy-import-design.md
+            sha256: sha256:143edd606819ee414db825bb552732f8df9f142b3954789ab6ba4592fd35fd2a
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:613069ebde83336006ea76541a5193a8f67c8cf8ae251b1877a0a85219a63aa5
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:613069ebde83336006ea76541a5193a8f67c8cf8ae251b1877a0a85219a63aa5
+          merged_reachable_commit:
+            ref: git://origin/main@fd6a178eb7c8aaa34d8c367a06456dcd69431315
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:613069ebde83336006ea76541a5193a8f67c8cf8ae251b1877a0a85219a63aa5
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:613069ebde83336006ea76541a5193a8f67c8cf8ae251b1877a0a85219a63aa5
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:613069ebde83336006ea76541a5193a8f67c8cf8ae251b1877a0a85219a63aa5
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-15.md
+            sha256: sha256:613069ebde83336006ea76541a5193a8f67c8cf8ae251b1877a0a85219a63aa5
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/cockpit/src/cockpit/cli.py
   - projects/cockpit/tests/test_fast_path.py
