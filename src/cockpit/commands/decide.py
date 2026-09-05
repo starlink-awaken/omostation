@@ -158,7 +158,7 @@ def cmd_list(args: argparse.Namespace) -> int:
             if notified_at:
                 console.print(f"    [dim]notified={notified_at} channels={','.join(channels) or '(none)'}[/]")
             else:
-                console.print(f"    [dim]notified=(not yet) channels=(none)[/]")
+                console.print("    [dim]notified=(not yet) channels=(none)[/]")
     return 0
 
 
