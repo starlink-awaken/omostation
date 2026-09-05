@@ -546,6 +546,34 @@ def evaluate_condition(condition: str, context: dict) -> bool:
 # ── Journey Engine ─────────────────────────────────────────────────
 
 
+def _record_shadow_trial(
+    journey_id: str, run_id: str, spec: dict, *, dry_run: bool, steps: int
+) -> None:
+    """Append a completed run as shadow trial evidence (BET-Y2Q1-T7-02).
+
+    Runtime-local JSONL under workflow-mesh (gitignored churn plane — same
+    convention as internal/external-scene-trials.jsonl). scene-card-lifecycle
+    Check4 reads it for per-scene trial_recorded (shadow→assisted gate).
+    mode 字段诚实区分 dry_run (管线演练) 与 live (真实流量)。
+    """
+    from datetime import UTC, datetime
+
+    log_path = ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "shadow-scene-trials.jsonl"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    entry = {
+        "schema": "shadow-scene-trial/v1",
+        "journey_id": journey_id,
+        "run_id": run_id,
+        "mode": "dry_run" if dry_run else "live",
+        "status": "completed",
+        "steps": steps,
+        "scene_ids": [s.get("scene", "") for s in spec.get("states", []) if s.get("scene")],
+        "recorded_at": datetime.now(UTC).isoformat(),
+    }
+    with log_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
 def run_journey(
     journey_id: str,
     *,
@@ -816,6 +844,11 @@ def run_journey(
         "dry_run": dry_run,
         "final_context": {k: v for k, v in context.items() if isinstance(v, (str, int, float, bool))},
     }
+    # BET-Y2Q1-T7-02: 完成的 run 落盘为 shadow 试验证据 (记录失败不阻断主流程)
+    try:
+        _record_shadow_trial(journey_id, run_id, spec, dry_run=dry_run, steps=step_count)
+    except OSError as exc:
+        print(f"[journey-runner] shadow trial record failed: {exc}", file=sys.stderr)
     print(f"\n✅ Journey completed: {journey_id} ({step_count} steps)")
     return result
 
