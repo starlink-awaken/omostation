@@ -21174,11 +21174,12 @@ bets:
         status: VERIFIED
         evidence:
           diff:
-            ref: receipt://projects/cockpit/src/cockpit/telemetry/metrics.py
-            sha256: sha256:1e99f2a494c029ec1a9ff680bbf668318eebb7d5ce03f575a5e8cf397354d627
+            ref: receipt://docs/superpowers/specs/2026-09-05-t8-14-telemetry-metrics-design.md
+            sha256: sha256:d00d9cc7aed7326da3009b9c88a6b16852e0bc09a3fc35285b3d7f77be99b7c1
           tests:
-            ref: receipt://projects/cockpit/tests/test_telemetry_metrics.py
-            sha256: sha256:3ea1480bb7dc6cbfa195a54febd860b848c16a9230ca34f03b4cd58d340470e3
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
             sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
@@ -21194,8 +21195,8 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
             sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
           replay:
-            ref: receipt://projects/cockpit/tests/test_telemetry_metrics.py
-            sha256: sha256:3ea1480bb7dc6cbfa195a54febd860b848c16a9230ca34f03b4cd58d340470e3
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+            sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
             sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
