@@ -1,7 +1,5 @@
 ---
-name: git-safety-check
 title: Git Safety Check
-description: Git 危险操作防护 - 拦截 push/reset/clean/destructive 操作
 type: skill
 owner: governance-team
 version: "1.0"

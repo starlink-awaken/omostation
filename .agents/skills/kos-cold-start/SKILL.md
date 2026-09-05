@@ -1,7 +1,5 @@
 ---
-name: kos-cold-start
 title: KOS Cold Start
-description: KOS 冷启动协议 - 加载 BRIEF.md/ADR/entities 上下文对齐
 type: skill
 owner: governance-team
 version: "1.0"

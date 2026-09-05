@@ -1,7 +1,5 @@
 ---
-name: swarm-escape
 title: Swarm Escape
-description: 多 agent 共享树并发吸收的逃生口使用规范
 type: skill
 owner: governance-team
 version: "1.0"
