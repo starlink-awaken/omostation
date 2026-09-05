@@ -1,32 +1,41 @@
 ---
-schema_version: retro/v1
-status: active
-lifecycle: history
+schema_version: retrospective/v1
+type: retro
+title: BET-Y1Q4-T8-12 Closeout Retro — ExitCode / ANSI purity / Trace-ID
+bet_id: BET-Y1Q4-T8-12
+status: archived
+lifecycle: contract
 owner: governance-team
-created: 2026-09-04
-last-reviewed: 2026-09-04
-bet: BET-Y1Q4-T8-12
-title: 全局行为契约与 ExitCode/Trace-ID/机器纯净度规范
-symptom: 退出码随意、JSON 输出混带 ANSI 终端彩色转义字符、缺少分布式链路追踪
-solution: ExitCode IntEnum 体系 + ANSI 拦截 + Trace-ID 贯穿日志
+created: 2026-09-05
+last-reviewed: 2026-09-05
 ---
 
-# BET-Y1Q4-T8-12 复盘
+# BET-Y1Q4-T8-12 Closeout Retro
 
-## 做对了什么
+> **TL;DR**: 落地 `cockpit.output` + `cli.py` 机器路径接线；ExitCode 0..5、`--json` 0 ANSI、`trace_id` 信封由 `tests/test_cli_contract.py` 锁死。Child PR `#132` → root pointer bump → ledger `delivery_accepted`。
 
-1. **退出码语义规范**：标准化 `ExitCode.SUCCESS (0)` 至 `UPSTREAM_ERROR (5)` 枚举，错误时返回准确的状态码。
-2. **机器纯净度保证**：在 `error()` 与 `output_result` 强制拦截 Rich ANSI 控制字符，保证 `--json` 输出始终为纯净 JSON。
-3. **Trace-ID 全链路贯穿**：通过 `logger.py` 与环境变量/全局选项注入 Trace-ID，支持链路级诊断。
+## Deliverables
+- Cockpit child: `#132` (`agent/bet-y1q4-t8-12-cockpit`) — `output.py` + `cli.py` + `test_cli_contract.py`
+- Spec: `docs/superpowers/specs/2026-09-05-cli-behavior-contract-design.md`
+- Closeout receipt: `docs/reports/2026-09-05-t8-12-cli-contract-closeout.md`
 
-## 踩了什么坑
+## Q1
+Appetite 2 days；本轮实现+关账约数小时（含 Spec binding、PASW claim、child PR、root closeout）。
 
-| 坑 | 修复 |
-|----|------|
-| 解析器遇到无效子命令时 Rich Console 直接打印 ANSI 污染 JSON | 在 WorkspaceParser.error() 提前判断 `--json` 标志并拦截输出纯 JSON |
-| sys.exit(2) 被上层异常捕获吞噬 | 规范异常拦截与 ExitCode 映射逻辑 |
+## Q2
+- ExitCode 统一收敛至 ExitCode 规范：PASS（IntEnum 0..5 + 别名断言）
+- 机器输出 (`--json`) 达到 0 ANSI 纯净度：PASS（`get_console(force_json=True)` + e2e unknown-command）
+- `trace_id` 全链路贯穿：PASS（`configure_logging` 注入 env + JSON 信封 `trace_id`）
+- Verify：`uv run --project projects/cockpit pytest projects/cockpit/tests/test_cli_contract.py` → 6 passed
 
-## 交付自证
+## Q3
+1. `accepted_specifications` 缺失会在 `start --bet` 被 SPEC_BINDING 拦截 — 必须先写 Spec 再 start。
+2. claim docs/retro/ledger 需要 affected-graph 含 `workspace-root`；仅 `cockpit` 不够。
+3. PASW：代码改在 `.subtrees/cockpit`，verify 路径仍是 `projects/cockpit` — 本地需 sync/copy 或 bump 后再跑门禁命令。
+4. argparse 非法子命令走 `sys.exit(2)`，契约测试须 `pytest.raises(SystemExit)`，不能假设 `main()` 返回。
 
-- 测试覆盖：`uv run --project projects/cockpit pytest projects/cockpit/tests/test_universal_flags.py` (ALL PASS)
-- 门禁状态：`make gac-local-gate` 56 项全绿通过。
+## Q4
+净增：`output.py`、契约测试、Spec/retro/report；`cli.py` 小范围接线。不扩散全量子命令改写（non-goal / follow-up）。
+
+## Q5
+后续命令群可逐步改用 `cockpit.output.json_print` / `get_console`；结构化 JSON logging handler 留给 T8-14。关账两段 commit：delivery（含 pointer）→ done+completion_evidence（`merged_reachable_commit` 用 PR 分支可达 SHA，rebase 后用重写后的 delivery SHA）。
