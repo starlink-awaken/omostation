@@ -20303,6 +20303,11 @@ bets:
   human_gate: false
   circuit_breaker: 单模块 frontmatter 迁移冲突时跳过该模块，不阻塞整体
   value_indicator_policy: false
+  accepted_specifications:
+    - spec_ref: repo://docs/superpowers/specs/2026-09-04-doc-frontmatter-migration-closeout-spec.md
+      spec_version: 1.0.0
+      content_digest: sha256:171612d38499ee90c8fe11fc75bed03b14d668c07e8c197eb56a434f7f4b75a7
+      decision_ref: decision://accepted/BET-Y1Q4-T10-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -20892,7 +20897,7 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: PARTIAL
+        status: IN_PROGRESS
         evidence:
           runbook_authored: docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
           tool_landed: bin/hitl-proposal.py + cockpit decide integration
@@ -20900,7 +20905,7 @@ bets:
         status: NOT_PROVEN
         evidence: {}
       value:
-        status: POTENTIAL
+        status: NOT_PROVEN
         evidence:
           bets_unlocked: 118 L2/L0 human_gate BETs
           target_adoption: 30 percent by Y1Q4 end
@@ -20910,6 +20915,3 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-HITL-01
-  - PR-3077
-  - PR-129
-  - PR-3119
