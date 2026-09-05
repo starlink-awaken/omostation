@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 584
+    script_baseline: 585
     # 2026-09-03: +1 perception-coverage
     # 2026-09-03: +2 ops-cron-install + weekly-evolution-report
     # 2026-09-04: +2 T10-105 work branch net bin diff baseline
@@ -189,8 +189,7 @@ gac:
     # 2026-09-04: +1 hitl-proposal.py (BET-Y1Q4-HITL-01 HITL proposal system)
     # 2026-09-05: +1 notification.py (BET-Y1Q4-HITL-02 HITL v1.1 multi-channel)
     # 2026-09-05: +2 cold-backup-drill.sh + restore-cold-snapshot.sh (BET-Y2Q1-T10-01)
-    # 2026-09-04: +1 hitl-proposal.py (BET-Y1Q4-HITL-01 HITL proposal system)
-    # 2026-09-05: +1 notification.py (BET-Y1Q4-HITL-02 HITL v1.1 multi-channel)
+    # 2026-09-05: +1 check-mcp-bos-uri-completeness.py (BET-Y1Q4-T6-19)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
