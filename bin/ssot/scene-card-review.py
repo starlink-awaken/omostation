@@ -179,7 +179,7 @@ def _parse_time(ts: str) -> datetime | None:
 
 def validate_scene_card(workspace_root: Path, scene_id: str) -> dict[str, Any]:
     """Validate a scene card's field completeness."""
-    scene_file = workspace_root / ".omo" / "_truth" / "scenarios" / f"{scene_id}.yaml"
+    scene_file = workspace_root / "docs" / "scene-cards" / f"{scene_id}.yaml"
     if not scene_file.exists():
         return {"valid": False, "error": f"Scene card not found: {scene_file}"}
 
@@ -212,7 +212,7 @@ def promote_scene_card(workspace_root: Path, scene_id: str, target_lifecycle: st
     if target_lifecycle not in valid_order:
         return {"success": False, "error": f"Invalid lifecycle: {target_lifecycle}"}
 
-    scene_file = workspace_root / ".omo" / "_truth" / "scenarios" / f"{scene_id}.yaml"
+    scene_file = workspace_root / "docs" / "scene-cards" / f"{scene_id}.yaml"
     if not scene_file.exists():
         return {"success": False, "error": f"Scene card not found: {scene_file}"}
 
@@ -234,7 +234,7 @@ def promote_scene_card(workspace_root: Path, scene_id: str, target_lifecycle: st
 
 def status_scene_card(workspace_root: Path, scene_id: str) -> dict[str, Any]:
     """Get scene card status."""
-    scene_file = workspace_root / ".omo" / "_truth" / "scenarios" / f"{scene_id}.yaml"
+    scene_file = workspace_root / "docs" / "scene-cards" / f"{scene_id}.yaml"
     if not scene_file.exists():
         return {"error": f"Scene card not found: {scene_file}"}
 

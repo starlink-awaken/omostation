@@ -17,7 +17,7 @@ from typing import Any
 
 SCHEMA = "scene-card-candidate/v1"
 DEFAULT_SEED_FILE = Path("docs/scene-card-candidate-seeds.yaml")
-DEFAULT_SCENARIO_DIR = Path(".omo/_truth/scenarios")
+DEFAULT_SCENARIO_DIR = Path(".omo/_truth/contracts")
 CARD_FIELDS = (
     "scene_id",
     "journey_id",

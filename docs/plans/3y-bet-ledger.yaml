@@ -20075,6 +20075,11 @@ bets:
   goal: 消灭场景卡双存储口径分裂 — docs/scene-cards (63 张, lifecycle/registry 消费) 与
     .omo/_truth/scenarios (5 张, review/candidates 消费) 归一为单一 SSOT, calibration
     与 trial 证据链 (T7-02) 汇入同一条升级路径。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-scene-card-store-unification-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:a04246c58a38563108de7eac3800f1869da1c614eae039c2d65ce49b52ae862a
+    decision_ref: decision://accepted/BET-Y2Q1-T7-03
   non_goals:
   - 不触碰 ADR-0387 admission_track 语义
   - 不在本 BET 内执行迁移 (先拍板选项 A/B/C)

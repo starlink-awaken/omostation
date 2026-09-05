@@ -224,7 +224,7 @@ def build_report(root: Path) -> dict[str, Any]:
             "system": ".omo/state/system.yaml",
             "goals": ".omo/goals/current.yaml",
             "tasks": ".omo/tasks/",
-            "scene_candidates": "docs/scene-card-candidate-seeds.yaml + .omo/_truth/scenarios/",
+            "scene_candidates": "docs/scene-card-candidate-seeds.yaml + .omo/_truth/contracts/",
             "scene_cards": "docs/scene-cards/",
         },
         "phase": {

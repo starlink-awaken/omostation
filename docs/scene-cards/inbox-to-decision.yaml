@@ -1,4 +1,6 @@
-schema: scene-card/v1
+schema: scene-card/v2
+bet: BET-Y2Q1-T7-03
+falsifier: "若 30 天内收件箱消息 auto_resolution_rate 持续 <0.6 且无人工复核增益, 场景无实际价值"
 scene_id: inbox-to-decision
 lifecycle: assisted
 journey_id: inbox-to-decision
