@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 319
+  total_bets: 330
   windows:
   - Y1Q1
   - Y1Q2
@@ -18191,7 +18191,6 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 出现灾难性遗忘、通用推理能力下降超过 10% 或生成内容偏离事实时立即回滚 LoRA 适配器。
-  retro: required
 - id: BET-Y1Q3-T10-106
   track: T10-MATURITY
   window: Y1Q3
@@ -20114,10 +20113,10 @@ bets:
   priority: P2
   status: done
   done_at: 2026-09-05 12:42:00+00:00
-  note: PR #3215 already implemented; this commit registers spec + CE matrix + flips status.
-  goal: 打通 shadow→assisted 的试验证据断层 — journey-runner 完成的 run 落盘
-    shadow-scene-trials.jsonl (mode 字段诚实区分 dry_run/live), scene-card-lifecycle
-    Check4 从文件级存在性升级为按 scene_id 精确匹配 (三类试验日志任一含本 scene 条目即过)。
+  note: PR
+  goal: 打通 shadow→assisted 的试验证据断层 — journey-runner 完成的 run 落盘 shadow-scene-trials.jsonl
+    (mode 字段诚实区分 dry_run/live), scene-card-lifecycle Check4 从文件级存在性升级为按 scene_id 精确匹配
+    (三类试验日志任一含本 scene 条目即过)。
   non_goals:
   - 不自动升级任何场景卡 (transition 仍需人工命令)
   - 不改 internal/external 准入试验工具 (proposal_only 语义不变)
@@ -20127,11 +20126,13 @@ bets:
   - Check4 按本卡 scene_id 精确匹配, 无试验记录的卡 trial_recorded=false
   - 实测 admin-notification-workflow 一次 dry-run 后 admin-classify readiness ready=true
   verify:
-  - cmd: python3 bin/ssot/journey-runner.py run --journey admin-notification-workflow --dry-run
+  - cmd: python3 bin/ssot/journey-runner.py run --journey admin-notification-workflow
+      --dry-run
     expect: exit 0 且 jsonl 追加一条
   - cmd: python3 bin/ssot/scene-card-lifecycle.py check --scene-card docs/scene-cards/admin-classify.yaml
     expect: trial_recorded=true
-  - cmd: uv run --with pyyaml --with pytest pytest tests/test_journey_runner_validate.py -q
+  - cmd: uv run --with pyyaml --with pytest pytest tests/test_journey_runner_validate.py
+      -q
     expect: 4 passed
   workflow: project-code-change
   underlying_workflow: project-code-change
@@ -20196,9 +20197,8 @@ bets:
   priority: P2
   status: done
   done_at: 2026-09-05
-  goal: 消灭场景卡双存储口径分裂 — docs/scene-cards (63 张, lifecycle/registry 消费) 与
-    .omo/_truth/scenarios (5 张, review/candidates 消费) 归一为单一 SSOT, calibration
-    与 trial 证据链 (T7-02) 汇入同一条升级路径。
+  goal: 消灭场景卡双存储口径分裂 — docs/scene-cards (63 张, lifecycle/registry 消费) 与 .omo/_truth/scenarios
+    (5 张, review/candidates 消费) 归一为单一 SSOT, calibration 与 trial 证据链 (T7-02) 汇入同一条升级路径。
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-scene-card-store-unification-spec.md
     spec_version: 1.0.0
@@ -20231,9 +20231,9 @@ bets:
   appetite: 1 days
   priority: P2
   status: candidate
-  goal: 复盘 2026-09-04~05 会战 (9 交付 3 病灶模式), 固化 gitlink 假失败分诊
-    (PITFALL-GAT-007)、BET 闭环 8 步 skill、submit auto-rebase 预防层、
-    scene-shadow-activate 参数纠偏; 挂账 omo 死链与 calibration 语义统一。
+  goal: 复盘 2026-09-04~05 会战 (9 交付 3 病灶模式), 固化 gitlink 假失败分诊 (PITFALL-GAT-007)、BET
+    闭环 8 步 skill、submit auto-rebase 预防层、 scene-shadow-activate 参数纠偏; 挂账 omo 死链与 calibration
+    语义统一。
   non_goals:
   - 不执行 CR-PITFALL-COO-003 规则草案 (等人审)
   - 不动 omo/ecos 子模块 (T7-04 立项另做)
@@ -20273,9 +20273,8 @@ bets:
   appetite: 1 days
   priority: P3
   status: candidate
-  goal: T7-03 归一后的两个悬挂引用 — ① omo 子模块 phase15/16 指向不存在的
-    .omo/_truth/scenarios/research-pipeline.yaml (迁移前已断); ② ecos registry
-    scene-cards.yaml 作为第四家存储 (scene-card-review 头部 SSOT 注记指向它)。
+  goal: T7-03 归一后的两个悬挂引用 — ① omo 子模块 phase15/16 指向不存在的 .omo/_truth/scenarios/research-pipeline.yaml
+    (迁移前已断); ② ecos registry scene-cards.yaml 作为第四家存储 (scene-card-review 头部 SSOT 注记指向它)。
   non_goals:
   - 不改场景卡本体
   done_when:
@@ -20302,9 +20301,8 @@ bets:
   appetite: 1 days
   priority: P3
   status: candidate
-  goal: T7-03 迁移后 calibration (review 工具) 与五档 tier (lifecycle 工具) 已同源
-    读取 docs/scene-cards, 但语义未统一 — assisted 升级门以 readiness (trial 证据)
-    为准, calibration 0.65 只是随卡字段。统一二者为单一路径或在标准里明确分工。
+  goal: T7-03 迁移后 calibration (review 工具) 与五档 tier (lifecycle 工具) 已同源 读取 docs/scene-cards,
+    但语义未统一 — assisted 升级门以 readiness (trial 证据) 为准, calibration 0.65 只是随卡字段。统一二者为单一路径或在标准里明确分工。
   non_goals:
   - 不改 readiness 门 (T7-02 刚固化)
   done_when:
@@ -20360,7 +20358,6 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
   value_indicator_policy: false
-  retro: required
 - id: BET-Y2Q1-T10-01
   track: T10-MATURITY
   window: Y2Q1
@@ -20369,8 +20366,11 @@ bets:
   priority: P1
   status: done
   done_at: 2026-09-05 11:50:00+00:00
-  note: cold-backup-drill.sh + restore-cold-snapshot.sh implemented; full snapshot 1.32GB/7258 files; verify-only + fail-closed PASS; 15-min bare-metal drill deferred to human.
-  goal: 构建个人业务操作系统终极物理灾备体系：每日定时自动将全仓代码、台账、KEMS 知识库、SEMA 信念、个人 LoRA 权重通过 GPG/AES-256 零知识加密并增量快照同步至外接私有存储介质；提供单键冷启动还原脚本。
+  note: cold-backup-drill.sh + restore-cold-snapshot.sh implemented; full snapshot
+    1.32GB/7258 files; verify-only + fail-closed PASS; 15-min bare-metal drill deferred
+    to human.
+  goal: 构建个人业务操作系统终极物理灾备体系：每日定时自动将全仓代码、台账、KEMS 知识库、SEMA 信念、个人 LoRA 权重通过 GPG/AES-256
+    零知识加密并增量快照同步至外接私有存储介质；提供单键冷启动还原脚本。
   non_goals:
   - 不依赖任何第三方公有云存储作为必要灾备中继
   done_when:
@@ -23950,4 +23950,196 @@ bets:
   circuit_breaker: 不修改已有 skill/workflow 内容, 只校验完整性 + 添加 URI check 脚本
   close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T6-19.md
   retro: .omo/_knowledge/retros/BET-Y1Q4-T6-19.md
-
+- id: BET-Y1Q4-T2-06
+  track: T2-PERCEPT
+  window: Y1Q4
+  title: 真实邮件/日历多通道 Ingress 自动感知与 LECP 实体分诊管道
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 打通真实外部信号源（IMAP/Exchange/CalDAV/ICS），实现近实时邮件收取与日历行程抓取，统一抽取为 LECP 规范信号并存入主干感知通道，摆脱人工触发与
+    mock 数据输入。
+  non_goals:
+  - 不直接修改邮件服务器上的未读状态
+  - 不对外发送任何回复
+  done_when:
+  - 部署本地 daemon 或 cron 定时探测邮件及日程更新
+  - 收到新邮件 60s 内自动产出标准 Signal 事件并投递至 bos://spine/ingress
+  - 集成测试覆盖真实 eml 与 ics 解析
+  verify:
+  - cmd: uv run python -m spine.ingress.test_pipeline
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/spine/src/spine/ingress/
+  - bin/daemon/mail_ingress.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 外部信号解析异常时记录告警日志并安全降级，不阻断主干运行。
+  retro: required
+  depends_on:
+  - BET-Y1Q3-T10-113
+- id: BET-Y1Q4-T4-06
+  track: T4-OUTCOME
+  window: Y1Q4
+  title: Cockpit 全渠道一键署名外发真实网关与业务消费追踪
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 提供安全沙箱外发网关（SMTP/REST API/公文红头导出），在 Cockpit 呈递本人署名确认后一键安全触达外部真实系统，并回传消费与采纳凭据至
+    Value Ledger。
+  non_goals:
+  - 不在未经夏明星点击确认前执行外发
+  done_when:
+  - 在 Cockpit 审查并一键外发测试邮件至真实收件箱
+  - 自动记录 OutboundMessageReceipt 进 value 账本
+  - 具备安全重放拦截与敏感词风控拦截
+  verify:
+  - cmd: uv run python -m spine.outcome.test_gateway
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/spine/src/spine/outcome/
+  - projects/cockpit/src/cockpit/commands/spine.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T4-06.md
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 单日外发频次超限或敏感词命中时强制阻断并提示人工确认。
+  retro: required
+  depends_on:
+  - BET-Y1Q3-T10-116
+- id: BET-Y2Q1-T6-02
+  track: T6-SUBTRACT
+  window: Y2Q1
+  title: 知识层彻底归并首期（gbrain/kairon 存取去重，统一至 MOS）
+  appetite: 4 days
+  priority: P1
+  status: candidate
+  goal: 解决知识层双头重叠（gbrain+kairon 占全系 51% 代码）病灶，将向量索引、图谱检索与长期情景记忆存取统一路由到 MOS 内核，消除 duplicate
+    adapter。
+  non_goals:
+  - 不删除任何已有的有效测试用例
+  - 不修改历史架构决策 ADR
+  done_when:
+  - 提供统一的高层知识查询与写入接口 bos://memory/unified
+  - 归并至少 10,000 LOC 重复适配层与假实现，且既有单元/集成测试全绿通过
+  - 保护 test_loc 不降，所有 ADR 完整保留
+  verify:
+  - cmd: uv run python -m mos.test_unified_memory
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/mos/
+  - projects/knowledge/
+  - .omo/_knowledge/retros/BET-Y2Q1-T6-02.md
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 原有知识检索测试失败时立即阻断代码删除并回滚。
+  retro: required
+  depends_on:
+  - BET-Y1Q3-T10-117
+- id: BET-Y2Q1-T3-05
+  track: T3-COGNI
+  window: Y2Q1
+  title: 心智模型四件套首期落地与有状态 SceneWatcher
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 落地 PersonaProfile（表达文风）、AgendaRadar（轻重缓急）、AttentionField（精力分配）、ContextAnchor（历史决策链）四件套模型，驱动有状态常驻
+    SceneWatcher 替代轮询。
+  non_goals:
+  - 不引入云端外部心智分析服务
+  done_when:
+  - 形成四件套 JSON Schema 与持久化/热更新机制
+  - SceneWatcher 事件驱动延迟 <= 500ms
+  - 覆盖 10 个典型真实业务上下文的分级决策仿真测试
+  verify:
+  - cmd: uv run python -m spine.cognitive.test_mind_quartet
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/spine/src/spine/cognitive/
+  - .omo/_knowledge/retros/BET-Y2Q1-T3-05.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 心智模型解析异常时回退到默认静态规则配置。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T2-06
+- id: BET-Y2Q1-T6-03
+  track: T6-EVOLUTION
+  window: Y2Q1
+  title: 防腐看门狗常态化与表面积自动熔断巡检
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 落地代码/文档表面积每日硬性限额监控、GaC 规则健康度打分与自动退役、双头依赖与死代码自动报警熔断，守死每周净增行数 <= 0 防腐红线。
+  non_goals:
+  - 不直接强行删除未经弃用标记的代码
+  done_when:
+  - bin/gac/anti-corrosion-patrol.py 每日或 PR 自动化触发
+  - 超预算自动阻断并在 Cockpit 标红告警
+  - 违例 0 容忍测试套件通过
+  verify:
+  - cmd: python3 bin/gac/anti-corrosion-patrol.py --strict
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/anti-corrosion-patrol.py
+  - .omo/_truth/registry/governance-checks.yaml
+  - .omo/_knowledge/retros/BET-Y2Q1-T6-03.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 防腐巡检自身报错时降级为 Warning，不阻塞紧急热修 PR。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-17
+  - BET-Y1Q4-T6-18
+- id: BET-Y2Q2-T3-02
+  track: T3-COGNI
+  window: Y2Q2
+  title: 个人文风多领域 LoRA 适配器矩阵与语气自适应调节
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 从单一 LoRA 扩展为分领域（政务公文、技术架构、对外协作、随想随笔）适配器矩阵，推理时根据任务领域动态切换 LoRA 权重，结合 ROUGE-L
+    与双语正则防遗忘，全面降低本人修订率。
+  non_goals:
+  - 不在非必要场合强行套用模板
+  done_when:
+  - 训练并导出 3 个核心领域 LoRA 权重
+  - AetherForge 本地推理动态无缝热加载
+  - 评测基准下语气还原度 ROUGE-L >= 0.75，修订率降低至少 30%
+  verify:
+  - cmd: uv run python -m omlxc.dataplane.lora.test_matrix
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omlxc/src/omlxc/dataplane/lora/
+  - projects/spine/src/spine/cognitive/
+  - .omo/_knowledge/retros/BET-Y2Q2-T3-02.md
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 文风严重失真时自动回退至基准中立模板。
+  retro: required
+  depends_on:
+  - BET-Y1Q3-T10-118
