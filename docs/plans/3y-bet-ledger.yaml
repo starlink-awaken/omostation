@@ -21180,6 +21180,7 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
+            sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-14.md
             sha256: sha256:5b5f836e139b98419d4f1db117623648502f9862a27d6e6fa92cd8fdba529ead
