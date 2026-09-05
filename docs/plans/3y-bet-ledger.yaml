@@ -22045,7 +22045,7 @@ bets:
   title: 署名修订率基线与仪表
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: in_progress
   goal: 对「记住每次修改」产品化：从署名 Diff / 裁决 edit 路径计量 principal_revision_rate 基线，挂到 KR-VALUE-REVISION-RATE，为 Y2「修订率降 20%」提供对照原点。
   non_goals:
   - 不实现 LoRA/SEMA 蒸馏（T10-105/115）
@@ -22069,12 +22069,30 @@ bets:
   pasw_required: false
   risk_level: L1
   human_gate: false
-  value_indicator_policy: true
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-revision-rate-baseline-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:43ac4c80e2ed373fe6e144a113ee93a0c9209e89b43fb9ca86f3e3b335a65792
+    decision_ref: decision://accepted/BET-Y1Q4-T4-04
   circuit_breaker: 无真实 Diff 样本则停止并列出依赖（如 T10-105），禁止合成 Diff。
   retro: required
   depends_on:
   - BET-Y1Q4-T1-14
   - BET-Y1Q3-T4-07
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
   portfolio_binding:
     schema_state: enforced
     campaign_ref: CMP-Y1-VALUE-PROOF

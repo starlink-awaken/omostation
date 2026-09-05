@@ -44,6 +44,146 @@ WORKFLOW_MESH_EVENTS = WS_ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "even
 # ---------------------------------------------------------------------------
 
 JOURNEY_BASELINE_SCHEMA = "journey-baseline/v1"
+
+# Revision Rate Baseline (BET-Y1Q4-T4-04)
+REVISION_RATE_SCHEMA = "revision-rate-baseline/v1"
+MIN_REVISION_WINDOW_DAYS = 30
+
+
+def _query_revisions(
+    db_path: Path,
+    window_start: str,
+    window_end: str,
+) -> tuple[int, int, list[str]]:
+    """Query event ledger for revision rate data.
+
+    Returns (denominator, numerator, gap_inventory).
+
+    Denominator = suggestions exiting to principal adjudication
+                  (verdict in {accept, edit, reject}, binding=true)
+    Numerator = suggestions where verdict='edit' (signed off after modification)
+    """
+    gaps: list[str] = []
+    if not db_path.is_file():
+        gaps.append("event-ledger-missing")
+        return 0, 0, gaps
+
+    import sqlite3
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    except sqlite3.Error as exc:
+        gaps.append(f"ledger-open-failed:{exc}")
+        return 0, 0, gaps
+
+    denominator = 0
+    numerator = 0
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = {row[0] for row in cur.fetchall()}
+
+        if "outcome_event" in tables:
+            cur.execute(
+                """
+                SELECT COUNT(*) FROM outcome_event
+                WHERE verdict IN ('accept', 'edit', 'reject')
+                  AND binding = 1
+                  AND timestamp >= ? AND timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            denominator = cur.fetchone()[0] or 0
+            cur.execute(
+                """
+                SELECT COUNT(*) FROM outcome_event
+                WHERE verdict = 'edit' AND binding = 1
+                  AND timestamp >= ? AND timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            numerator = cur.fetchone()[0] or 0
+        elif "events" in tables:
+            cur.execute(
+                """
+                SELECT COUNT(*) FROM events
+                WHERE type = 'outcome.resolved'
+                  AND verdict IN ('accept', 'edit', 'reject')
+                  AND binding = 1
+                  AND timestamp >= ? AND timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            denominator = cur.fetchone()[0] or 0
+            cur.execute(
+                """
+                SELECT COUNT(*) FROM events
+                WHERE type = 'outcome.resolved'
+                  AND verdict = 'edit' AND binding = 1
+                  AND timestamp >= ? AND timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            numerator = cur.fetchone()[0] or 0
+        else:
+            gaps.append("ledger-no-outcome-table")
+
+        conn.close()
+    except sqlite3.Error as exc:
+        gaps.append(f"ledger-query-failed:{exc}")
+        conn.close()
+        return 0, 0, gaps
+
+    return denominator, numerator, gaps
+
+
+def measure_revision_rate(
+    *,
+    db_path: Path | str = None,
+    window_days: int = MIN_REVISION_WINDOW_DAYS,
+) -> dict[str, Any]:
+    """Compute principal revision rate baseline. Projection only, never writes.
+
+    Metric: edit_verdicts / total_adjudicated_suggestions
+    Y2 target: -20% (target ≤ 0.2)
+    Circuit breaker: returns unmeasured + gap inventory when data insufficient.
+    """
+    if db_path is None:
+        db_path = DEFAULT_EVENT_LEDGER
+    path = Path(db_path)
+    end = dt.datetime.now(dt.UTC)
+    start = end - dt.timedelta(days=window_days)
+    start_str = start.isoformat().replace("+00:00", "Z")
+    end_str = end.isoformat().replace("+00:00", "Z")
+
+    denominator, numerator, gaps = _query_revisions(path, start_str, end_str)
+
+    result: dict[str, Any] = {
+        "schema_version": REVISION_RATE_SCHEMA,
+        "observed_at": _utc_now().isoformat().replace("+00:00", "Z"),
+        "window": {"start": start_str, "end": end_str, "days": window_days},
+        "metric": "principal_revision_rate",
+        "denominator": denominator,
+        "numerator": numerator,
+        "evidence_refs": [],
+        "gap_inventory": gaps,
+    }
+
+    if not path.is_file():
+        result["status"] = "unmeasured"
+        result["reason"] = "event-ledger-not-available"
+        return result
+
+    if denominator < 1:
+        result["status"] = "unmeasured"
+        result["reason"] = "insufficient-adjudication-data"
+        gaps.append("need-at-least-1-adjudicated-suggestion")
+        return result
+
+    rate = numerator / denominator if denominator > 0 else 0.0
+    result["status"] = "measured"
+    result["value"] = round(rate, 4)
+    result["evidence_refs"] = [f"repo://{path.relative_to(WS_ROOT).as_posix()}"]
+    return result
 DEFAULT_EVENT_LEDGER = WS_ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
 MIN_JOURNEY_WINDOW_DAYS = 7
 
@@ -645,6 +785,8 @@ def main() -> int:
     parser.add_argument("--window", type=int, default=30, help="统计窗口 (天)")
     parser.add_argument("--journey", action="store_true", help="仅输出旅程完成率基线 (journey-baseline/v1)")
     parser.add_argument("--journey-window", type=int, default=MIN_JOURNEY_WINDOW_DAYS, help=f"旅程基线窗口天数 (默认 {MIN_JOURNEY_WINDOW_DAYS})")
+    parser.add_argument("--revision-rate", action="store_true", help="仅输出修订率基线 (revision-rate-baseline/v1, BET-Y1Q4-T4-04)")
+    parser.add_argument("--revision-window", type=int, default=MIN_REVISION_WINDOW_DAYS, help=f"修订率窗口天数 (默认 {MIN_REVISION_WINDOW_DAYS})")
     parser.add_argument("--db-path", type=str, default=str(DEFAULT_EVENT_LEDGER), help="事件台账 SQLite 路径")
     args = parser.parse_args()
 
@@ -658,6 +800,20 @@ def main() -> int:
                 print(f"journey_completion_rate: {result['value']:.2%} ({result['numerator']}/{result['denominator']})")
             else:
                 print(f"journey_completion_rate: {status} ({result.get('reason', 'unknown')})")
+                if result.get("gap_inventory"):
+                    print(f"  gaps: {', '.join(result['gap_inventory'])}")
+        return 0
+
+    if args.revision_rate:
+        result = measure_revision_rate(db_path=args.db_path, window_days=args.revision_window)
+        if args.json:
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+        else:
+            status = result["status"]
+            if status == "measured":
+                print(f"principal_revision_rate: {result['value']:.2%} ({result['numerator']}/{result['denominator']})")
+            else:
+                print(f"principal_revision_rate: {status} ({result.get('reason', 'unknown')})")
                 if result.get("gap_inventory"):
                     print(f"  gaps: {', '.join(result['gap_inventory'])}")
         return 0
