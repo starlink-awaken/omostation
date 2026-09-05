@@ -6,7 +6,8 @@
 #
 # 用法:
 #   gac-worktree.sh claim <session>      # 创建 worktree + 分支 work/<session>
-#   gac-worktree.sh submit <session>     # push 分支 + 开 PR (base main)
+#   gac-worktree.sh submit [--strict] <session>  # push 分支 + 开 PR (base main)
+#                                         # --strict: 子模块 pointer 不可达时阻止提交
 #   gac-worktree.sh merge <session>      # squash 合并 PR + release worktree + 删分支
 #   gac-worktree.sh release <session>    # 清理 worktree (手动, 合并后)
 #   gac-worktree.sh bump-fast <submodule-path> [--sha <sha>|--latest-main]
@@ -263,7 +264,19 @@ case "$cmd" in
     ;;
 
   submit)
-    [ -z "$session" ] && echo "用法: submit <session>" >&2 && exit 1
+    # PR2: 支持 --strict 标志 (子模块 pointer 不可达时阻塞提交, 默认仅 warning)
+    SUBMOD_PREFLIGHT_STRICT=0
+    _args=()
+    for _a in "$@"; do
+      if [ "$_a" = "--strict" ]; then
+        SUBMOD_PREFLIGHT_STRICT=1
+      else
+        _args+=("$_a")
+      fi
+    done
+    set -- "${_args[@]}"
+    cmd="${1:-}" ; session="${2:-}"
+    [ -z "$session" ] && echo "用法: submit [--strict] <session>" >&2 && exit 1
     validate_session "$session"
     wt="$WS_PARENT/ws-$session"
     branch="work/$session"
@@ -325,6 +338,78 @@ except Exception: print('')" 2>/dev/null || true)"
           git commit --amend --no-edit 2>&1 | tail -1
           echo "   ✅ baseline 已自动补录, commit 已 amend"
         fi
+      fi
+    fi
+    # ── PR2: 子模块 pointer SHA 可达性前置检查 ─────────────────────────
+    # 扫描本分支相对于 base 的子模块指针变更 (projects/*), 对每个变更子模块:
+    #   1. 从 root index 获取 pointer SHA
+    #   2. 通过 git ls-remote 检查 SHA 是否在 child origin/main refs 中
+    # 默认: 不可达时 warning (不阻塞); --strict: 阻塞提交
+    _submod_check_base=""
+    if git rev-parse --verify --quiet "origin/main^{commit}" >/dev/null 2>&1; then
+      _submod_check_base="origin/main"
+    elif git rev-parse --verify --quiet "upstream/main^{commit}" >/dev/null 2>&1; then
+      _submod_check_base="upstream/main"
+    fi
+    if [ -n "$_submod_check_base" ]; then
+      _submod_changed=$(git diff --name-only "$_submod_check_base"...HEAD -- 'projects/' 2>/dev/null \
+        | grep -E '^projects/[^/]+/?$' | sort -u || true)
+    else
+      _submod_changed=""
+    fi
+    if [ -z "$_submod_changed" ]; then
+      echo "   ℹ️  子模块指针无变更, 跳过可达性检查"
+    else
+      echo "⚡ PR2: 检查子模块 pointer SHA 可达性 (base=$_submod_check_base)..."
+      _submod_strict_fails=0
+      while IFS= read -r _sub_path; do
+        [ -z "$_sub_path" ] && continue
+        _sub_sha=$(git ls-files -s -- "$_sub_path" 2>/dev/null | awk '{print $2}')
+        if [ -z "$_sub_sha" ]; then
+          echo "   ⚠️  $_sub_path: 无法获取 pointer SHA" >&2
+          continue
+        fi
+        _sub_url=$(git config --file .gitmodules --get "submodule.$_sub_path.url" 2>/dev/null || true)
+        if [ -z "$_sub_url" ]; then
+          echo "   ⚠️  $_sub_path: 无法获取 submodule URL, 跳过检查" >&2
+          continue
+        fi
+        # 通过 ls-remote 获取 child origin/main refs, 检查 SHA 是否可达
+        _sub_main_refs=$(git ls-remote "$_sub_url" "refs/heads/main" 2>/dev/null || true)
+        _sub_main_tip=$(printf '%s\n' "$_sub_main_refs" | awk '$2 == "refs/heads/main" {print $1}')
+        if [ -z "$_sub_main_tip" ]; then
+          echo "   ⚠️  $_sub_path: 无法获取 origin/main tip (可能仓库不可达)" >&2
+          continue
+        fi
+        _reachable=0
+        # 精确匹配 main tip (最快路径, 无需 git clone)
+        if [ "$_sub_sha" = "$_sub_main_tip" ]; then
+          _reachable=1
+        else
+          # 通用检查: 需要子模块已 init 才能用 branch -r --contains
+          # 子模块未 init 时只能精确匹配, 无法验证间接可达性
+          if [ -d "$_sub_path/.git" ] || [ -f "$_sub_path/.git" ]; then
+            if ( cd "$_sub_path" 2>/dev/null && unset GIT_DIR GIT_WORK_TREE GIT_QUARANTINE_PATH 2>/dev/null; git branch -r --contains "$_sub_sha" 2>/dev/null | grep -q . ); then
+              _reachable=1
+            fi
+          fi
+        fi
+        if [ "$_reachable" -eq 0 ]; then
+          echo "   ⚠️  $_sub_path: SHA $_sub_sha 在 child origin/main 不可达 (main tip: ${_sub_main_tip:0:12})" >&2
+          if [ "$SUBMOD_PREFLIGHT_STRICT" -eq 1 ]; then
+            echo "   ❌ --strict: 子模块 $_sub_path 指针不可达, 阻止提交" >&2
+            _submod_strict_fails=$((_submod_strict_fails+1))
+          else
+            echo "   ℹ️  默认模式: 仅 warning, 继续提交 (加 --strict 可阻塞)" >&2
+          fi
+        else
+          echo "   ✅ $_sub_path: SHA ${_sub_sha:0:12} 在 child origin/main 可达"
+        fi
+      done <<< "$_submod_changed"
+      if [ "$_submod_strict_fails" -gt 0 ]; then
+        echo "❌ $_submod_strict_fails 个子模块指针在 origin/main 不可达, --strict 阻止提交" >&2
+        echo "   修复: 先推送子模块 commit 到 origin/main, 再重新提交" >&2
+        exit 1
       fi
     fi
     # 推送子模块 commit 到远程 (防 CI "not our ref" 错误)
@@ -868,10 +953,11 @@ PYEOF
   *)
     echo "GaC worktree per session (ADR-0106 P2)"
     echo ""
-    echo "用法: gac-worktree.sh {claim|submit|merge|release|bump-fast|bump-pointer|list|agents|onboard|cleanup} [args]"
+    echo "用法: gac-worktree.sh {claim|submit [--strict]|merge|release|bump-fast|bump-pointer|list|agents|onboard|cleanup} [args]"
     echo ""
     echo "  claim <session>      创建 worktree + 分支 work/<session>"
-    echo "  submit <session>     push 分支 + 开 PR (base main)"
+    echo "  submit [--strict] <session>  push 分支 + 开 PR (base main)"
+    echo "                       --strict: 子模块 pointer 不可达时阻止提交 (默认仅 warning)"
     echo "  merge <session>      squash 合并 PR + release worktree + 删分支"
     echo "  release <session>    清理 worktree (手动, 合并后)"
     echo "  bump-fast <submodule-path> [--sha <sha>|--latest-main]  流程内快速更新单个子模块指针"
