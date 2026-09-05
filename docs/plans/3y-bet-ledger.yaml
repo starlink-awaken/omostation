@@ -20523,6 +20523,12 @@ bets:
   risk_level: L1
   human_gate: true
   circuit_breaker: 若定位与源码/SSOT 因果不一致，必须回到文档基线重新修正，不得继续推进实现
+  retro: .omo/_knowledge/retros/BET-Y1Q4-T10-03.md (含 2026-09-05 HITL adoption 追加)
+  done_at: '2026-09-05T00:24:32+00:00'
+  close_evidence: docs/plans/2026-09-04-architecture-analysis-and-requirements-consolidation.md 落盘 (320 lines, 7 chapters
+    covering L0-L4/workflow/resident/BOS/execution backend + short/mid/long-term roadmap + risks/acceptance) + verify yaml_ok
+    + HITL proposal hitl-20260905002432-2df9c0 approved
+  note: 2nd production use of HITL Proposal System (after BET-Y1Q4-T8-04).
   retro: required
   done_at: '2026-09-05T00:24:32+00:00'
   close_evidence: docs/plans/2026-09-04-architecture-analysis-and-requirements-consolidation.md 落盘 (320 lines, 7 chapters
@@ -20727,7 +20733,7 @@ bets:
   title: Portfolio v2 validator 全 §6 校验扩展 (follow-up)
   appetite: 2 days
   priority: P1
-  status: done
+  status: candidate
   done_at: 2026-09-04 14:18:57+00:00
   note: §6 validator already on tip (18 tests); closeout registers delivery_accepted.
   goal: 将 T1-04 Wave A1 的 validator 扩展到 spec §6 全量校验面：实体 ID 唯一性 (vision/objective/KR/campaign/milestone/bet)、跨实体引用存在性 (campaign_ref/objective_refs/kr_refs/parent_bet)、metric
