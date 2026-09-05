@@ -1,0 +1,21 @@
+schema: script-registry/v1
+id: bin/gac/prune-zombie-worktrees.py
+name: Prune Zombie Worktrees
+category: governance
+owner: governance-team
+description: Detect and optionally prune zombie worktrees, stale worktrees, and merged branches.
+inputs:
+  - name: days
+    type: integer
+    description: Days threshold for stale worktree detection
+  - name: prune
+    type: boolean
+    description: Whether to actually prune or just report
+outputs:
+  - type: json
+  - type: exit_code
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-09-05"
