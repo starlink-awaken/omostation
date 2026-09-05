@@ -20154,7 +20154,8 @@ bets:
   title: 场景卡存储归一 — 三套存储对账与收敛 (待架构拍板)
   appetite: 2 days
   priority: P2
-  status: candidate
+  status: done
+  done_at: 2026-09-05
   goal: 消灭场景卡双存储口径分裂 — docs/scene-cards (63 张, lifecycle/registry 消费) 与
     .omo/_truth/scenarios (5 张, review/candidates 消费) 归一为单一 SSOT, calibration
     与 trial 证据链 (T7-02) 汇入同一条升级路径。
@@ -20183,6 +20184,43 @@ bets:
   risk_level: L2
   human_gate: true
   circuit_breaker: 迁移引发 lifecycle/review 工具回归时立即回滚, 保持双存储现状待重新拍板
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@7494bb127f1408ff7b80f483f1a1b96fddcd3b7f
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-09-05-scene-card-store-unification-spec.md
+            sha256: sha256:a04246c58a38563108de7eac3800f1869da1c614eae039c2d65ce49b52ae862a
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-scene-card-store-unification-spec.md
+            sha256: sha256:a04246c58a38563108de7eac3800f1869da1c614eae039c2d65ce49b52ae862a
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-03.md
+            sha256: sha256:9426cd7ab541e4608ae0b41ae1a77f774e699dac3d21ffaa2e4197aafc7b9b98
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-03.md
+            sha256: sha256:9426cd7ab541e4608ae0b41ae1a77f774e699dac3d21ffaa2e4197aafc7b9b98
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-03.md
+            sha256: sha256:9426cd7ab541e4608ae0b41ae1a77f774e699dac3d21ffaa2e4197aafc7b9b98
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-03.md
+            sha256: sha256:9426cd7ab541e4608ae0b41ae1a77f774e699dac3d21ffaa2e4197aafc7b9b98
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-03.md
+            sha256: sha256:9426cd7ab541e4608ae0b41ae1a77f774e699dac3d21ffaa2e4197aafc7b9b98
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 - id: BET-Y2Q1-T10-01
   track: T10-MATURITY
