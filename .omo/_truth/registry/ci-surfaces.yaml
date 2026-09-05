@@ -337,6 +337,24 @@ surfaces:
   - push
   status: active
   note: Perception coverage report generator (7 probes + 25 routes + 17 data sources).
+- id: bin-ops-lighthouse-stub-py
+  tool: bin/ops/lighthouse-stub.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: Lighthouse CI stub (pending real integration).
+- id: bin-ops-nfr-stub-py
+  tool: bin/ops/nfr-stub.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: NFR metrics stub (pending real integration).
 - id: bin-ssot-check-hardcoded-ports-py
   tool: bin/ssot/check-hardcoded-ports.py
   workflow: mof-update.yml
