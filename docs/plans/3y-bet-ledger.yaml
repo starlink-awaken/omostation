@@ -19405,7 +19405,7 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T1-03.md
             sha256: sha256:4b00cd70edb5382328b26375ae1a33401a5b9beaa4f3f9e3e8cce0b63fda6c22
           merged_reachable_commit:
-            ref: git://origin/main@2c0c930ba6a0b3a4e7efb6aafa6eb304ff97c6bf
+            ref: git://origin/main@13cc1e45f07f7098ff5892e72a6b5633ecd4aaeb
       operational:
         status: PROVEN
         evidence:
@@ -20192,7 +20192,7 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-03.md
             sha256: sha256:a208ed50a5d6c73fad240822e793ed06abfb29a83a76f9a559ba7ace0c95002f
           merged_reachable_commit:
-            ref: git://origin/main@8558a654494e0c7066e194ea3848155349487fc2
+            ref: git://origin/main@80d48883fdd54fe9e8780438fdcaf16bdfbd9b6a
       operational:
         status: PROVEN
         evidence:
@@ -20301,7 +20301,7 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-01.md
             sha256: sha256:305588a670bd959aa12fc0704582ce26e0a0fef2c33b8b210a14a542b5fecd79
           merged_reachable_commit:
-            ref: git://origin/main@d184fb5a8e0ded3c4771466ef11ff486c94ff71e
+            ref: git://origin/main@47c8e9c746a8f80448de9a63f870cf216a46a923
       operational:
         status: PROVEN
         evidence:
@@ -20694,7 +20694,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@bc16c88f3d40b035748d3d9b8a94ec0c75d15370
+            ref: git://origin/main@9799f190de28bc432c47809fc99b61d971bb1dbd
           tests:
             ref: receipt://docs/reports/2026-09-05-t8-11-hierarchy-closeout.md
             sha256: sha256:13138247aadd674b44003fcecab101110d8431d966622d1260fd45e92b4efb40
