@@ -20255,7 +20255,7 @@ bets:
   title: Resident agent ledger 锁监控与自动恢复机制
   appetite: 1 day
   priority: P2
-  status: candidate
+  status: done
   goal: 建立 resident agent ledger SQLite 锁的监控与自动恢复机制，防止数据库锁死导致记账功能持续不可用。增加 WAL checkpoint 定期执行和锁超时自动释放。
   non_goals:
   - 不替换 SQLite 为其他数据库
@@ -20283,6 +20283,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:b62640138587b9d7ce3aad85285905634487adb2210d5d87bd3236cd397167ef
     decision_ref: decision://accepted/BET-Y1Q4-T9-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-resident-ledger-lock-monitor-design.md
+            sha256: sha256:b62640138587b9d7ce3aad85285905634487adb2210d5d87bd3236cd397167ef
+          tests:
+            ref: receipt://projects/omo/tests/unit/test_ledger_check.py
+            sha256: sha256:9ccff76d5949c0cb2456a946e1548626921bc702754d3c949319182bd93f992a
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-01.md
+            sha256: sha256:305588a670bd959aa12fc0704582ce26e0a0fef2c33b8b210a14a542b5fecd79
+          merged_reachable_commit:
+            ref: git://origin/main@d184fb5a8e0ded3c4771466ef11ff486c94ff71e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-01.md
+            sha256: sha256:305588a670bd959aa12fc0704582ce26e0a0fef2c33b8b210a14a542b5fecd79
+          fresh_receipt:
+            ref: receipt://projects/omo/src/omo/resident/ledger_check.py
+            sha256: sha256:ce66ab5796f0c176d57e142d2ae7d677602786a10b077d34e8ea111fbac7b434
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-01.md
+            sha256: sha256:305588a670bd959aa12fc0704582ce26e0a0fef2c33b8b210a14a542b5fecd79
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T9-01.md
+            sha256: sha256:305588a670bd959aa12fc0704582ce26e0a0fef2c33b8b210a14a542b5fecd79
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   risk_level: L1
   human_gate: false
   circuit_breaker: 自动 kill 进程前需确认进程已僵死（CPU time < 1% over 5min）
