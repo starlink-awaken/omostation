@@ -18355,7 +18355,8 @@ bets:
   title: 企业邮箱智能拟复与复杂多模态附件深度解析引擎
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-05
   goal: 监听企业邮箱收件箱，基于夏明星个人文风与历史来信自动生成 3 档拟复方案（简要确认、详尽批复、委婉谢绝），并支持超大 PDF/Word/Excel
     附件的语义级表格与图表结构化提取。
   non_goals:
@@ -18377,9 +18378,50 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:a5a00fc88ab4ff40dfe4f18602cabe43f30acb984292c71ba938d15733fc1cce
     decision_ref: decision://accepted/BET-Y1Q3-T10-113
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t10-113-mail-draft-service-design.md
+            sha256: sha256:a5a00fc88ab4ff40dfe4f18602cabe43f30acb984292c71ba938d15733fc1cce
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-113.md
+            sha256: sha256:37c2b0469beda2899e196d9dac3c065afde8169c30823e90476312800e02e2fa
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-113.md
+            sha256: sha256:37c2b0469beda2899e196d9dac3c065afde8169c30823e90476312800e02e2fa
+          merged_reachable_commit:
+            ref: git://origin/main@74401444bf432df5f2e79a75c517bbddf6755f90
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-113.md
+            sha256: sha256:37c2b0469beda2899e196d9dac3c065afde8169c30823e90476312800e02e2fa
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-113.md
+            sha256: sha256:37c2b0469beda2899e196d9dac3c065afde8169c30823e90476312800e02e2fa
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-113.md
+            sha256: sha256:37c2b0469beda2899e196d9dac3c065afde8169c30823e90476312800e02e2fa
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-113.md
+            sha256: sha256:37c2b0469beda2899e196d9dac3c065afde8169c30823e90476312800e02e2fa
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/agora/src/agora/server/tools_bos/mail.py
   - projects/cockpit/src/cockpit/commands/inbox.py
+  - projects/agora/src/agora/server/tools_bos/registration.py
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - projects/agora/tests/test_mail_draft.py
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T10-113.md
   pasw_required: false
   depends_on:
