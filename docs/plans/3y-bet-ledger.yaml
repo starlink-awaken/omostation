@@ -21021,7 +21021,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@af494feb7e84711ea99a41755db2d980763579a2
+            ref: git://origin/main@692c1aaa030c1612851ca6ebaddef52a2aa47bc2
           tests:
             ref: receipt://docs/reports/2026-09-05-t8-13-p0-core-commands-closeout.md
             sha256: sha256:9a28426a9257ba0b9296e258f2add93a9c4f5c3feda091b0ff62b72430a6d741
@@ -21502,7 +21502,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@04f8d3b59e497cbbefabcb38319dd14f82a93afc
+            ref: git://origin/main@9e5c98cce9e98034bda80e129dff90f6dfefa077
             sha256: sha256:3b6ea250c62666f782286807a00988fa64ef568331adb4ff068b566ceccfdbfe
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-v1.1-design.md
@@ -21586,7 +21586,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@2bf32620f7c1aad77ab34b85950b4a5d6379f82a
+            ref: git://origin/main@9e5c98cce9e98034bda80e129dff90f6dfefa077
             sha256: sha256:f1f320dcfbbd8a1cc4f08bc0e3a16f9aa35155ee36c5d7b8d5282f69ac867d8a
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
