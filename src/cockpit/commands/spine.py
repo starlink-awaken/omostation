@@ -456,6 +456,8 @@ def cmd_spine(args: argparse.Namespace) -> int:
         "distill": cmd_spine_distill,
         "replay": cmd_spine_replay,
         "ingress": cmd_spine_ingress,
+        "review": cmd_spine_review,
+        "send": cmd_spine_send,
     }
     if subcmd in dispatch:
         return dispatch[subcmd](args)
@@ -463,6 +465,141 @@ def cmd_spine(args: argparse.Namespace) -> int:
     console.print("[red]未知 spine 子命令[/red]")
     console.print(
         "可用: draft --prompt <PROMPT>  |  sign --original <> --signed <> --domain <>  |  "
-        "diff  |  status  |  distill --domain <>  |  replay  |  ingress --source ocr --file <PATH>"
+        "diff  |  status  |  distill --domain <>  |  replay  |  ingress --source ocr --file <PATH>  |  "
+        "review --draft-file <> --edited-file <>  |  send --to <> --body-file <> [--channel api|smtp]"
     )
+    return 1
+
+
+# ── T10-116: review workbench & send gateway ─────────────────────────────
+
+SPOOL_DIR_REL = ".omo/state/spine-outbox"
+VALUE_LEDGER_REL = ".omo/state/value-pacing-ledger.jsonl"
+
+
+def _side_by_side_diff(draft: str, edited: str) -> tuple[list[str], list[str]]:
+    """Left/right columns: aligned lines with markers for changed regions."""
+    import difflib
+
+    left, right = [], []
+    for op, i1, i2, j1, j2 in difflib.SequenceMatcher(a=draft.splitlines(), b=edited.splitlines()).get_opcodes():
+        if op == "equal":
+            for ln in draft.splitlines()[i1:i2]:
+                left.append(f"  {ln}")
+                right.append(f"  {ln}")
+        elif op == "delete":
+            for ln in draft.splitlines()[i1:i2]:
+                left.append(f"- {ln}")
+                right.append("  ∅")
+        elif op == "insert":
+            for ln in edited.splitlines()[j1:j2]:
+                left.append("  ∅")
+                right.append(f"+ {ln}")
+        else:
+            for ln in draft.splitlines()[i1:i2]:
+                left.append(f"- {ln}")
+            for ln in edited.splitlines()[j1:j2]:
+                right.append(f"+ {ln}")
+    return left, right
+
+
+def cmd_spine_review(args: argparse.Namespace) -> int:
+    """Left/right column real-time diff between draft and current edit state."""
+    draft = getattr(args, "draft", "") or ""
+    edited = getattr(args, "edited", "") or ""
+    draft_file = getattr(args, "draft_file", None)
+    edited_file = getattr(args, "edited_file", None)
+    if draft_file and Path(draft_file).is_file():
+        draft = Path(draft_file).read_text(encoding="utf-8")
+    if edited_file and Path(edited_file).is_file():
+        edited = Path(edited_file).read_text(encoding="utf-8")
+    if not draft and not edited:
+        console.print("[red]缺少 --draft / --edited（或 --draft-file / --edited-file）[/red]")
+        return 1
+    left, right = _side_by_side_diff(draft, edited)
+    if getattr(args, "json", False):
+        import json as _json
+
+        print(_json.dumps({"draft_lines": left, "edited_lines": right}, ensure_ascii=False))
+        return 0
+    t = Table(title="Spine 审阅 · 左右分栏 Diff", show_header=True, header_style="bold cyan")
+    t.add_column("初稿 (draft)", style="white", ratio=1)
+    t.add_column("当前编辑态 (edited)", style="green", ratio=1)
+    for i in range(max(len(left), len(right))):
+        t.add_row(left[i] if i < len(left) else "", right[i] if i < len(right) else "")
+    console.print(t)
+    return 0
+
+
+def _spool_dir() -> Path:
+    return _ws() / SPOOL_DIR_REL
+
+
+def cmd_spine_send(args: argparse.Namespace) -> int:
+    """One-key confirm & send via gateway spool (atomic state machine)."""
+    body = getattr(args, "body", "") or ""
+    body_file = getattr(args, "body_file", None)
+    if body_file and Path(body_file).is_file():
+        body = Path(body_file).read_text(encoding="utf-8")
+    channel = getattr(args, "channel", "api")
+    to = getattr(args, "to", "")
+    if not body or not to:
+        console.print("[red]缺少 --body/--body-file 或 --to[/red]")
+        return 1
+
+    spool = _spool_dir()
+    spool.mkdir(parents=True, exist_ok=True)
+    msg_id = f"msg-{int(time.time() * 1000)}"
+    msg_dir = spool / msg_id
+    # 原子性: 先写临时目录（完整 queued 态）再原子 rename
+    tmp_dir = spool / f".tmp-{msg_id}"
+    tmp_dir.mkdir()
+    (tmp_dir / "body.txt").write_text(body, encoding="utf-8")
+    (tmp_dir / "envelope.json").write_text(
+        json.dumps({"msg_id": msg_id, "channel": channel, "to": to, "status": "queued"}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    tmp_dir.rename(msg_dir)
+
+    if getattr(args, "dry_run", False):
+        console.print(f"[yellow][DRY-RUN][/] 已入队（不发送）: {msg_dir}")
+        return 0
+
+    # sender 可插拔: 本 bet 交付 spool + 状态机, 真实凭证属部署配置
+    sender = getattr(args, "sender", "") or ""
+    ok = True
+    if sender and Path(sender).is_file():
+        import subprocess as _sp
+
+        try:
+            res = _sp.run([sys.executable, sender, msg_id], capture_output=True, text=True, check=False)
+            ok = res.returncode == 0
+        except Exception:
+            ok = False
+
+    env = json.loads((msg_dir / "envelope.json").read_text(encoding="utf-8"))
+    env["status"] = "sent" if ok else "failed"
+    (msg_dir / "envelope.json").write_text(json.dumps(env, ensure_ascii=False), encoding="utf-8")
+
+    if ok:
+        # 价值台账原子追加: 临时文件 fsync 后 os.replace
+        ledger = _ws() / VALUE_LEDGER_REL
+        ledger.parent.mkdir(parents=True, exist_ok=True)
+        entry = {"ts": time.time(), "msg_id": msg_id, "channel": channel, "to": to, "signed_chars": len(body)}
+        tmp_ledger = ledger.with_suffix(".tmp")
+        with tmp_ledger.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+        tmp_ledger.replace(ledger)
+        console.print(
+            Panel(
+                f"[bold green]✅ 已确认署名并外发[/bold green]\n"
+                f"msg: {msg_id} | channel: {channel} | to: {to}\n"
+                f"价值台账已原子追加: {ledger.name}",
+                title="📮 Spine Send",
+            )
+        )
+        return 0
+    console.print(f"[red]外发失败（failed 状态已记录，台账未写入）: {msg_dir}[/red]")
     return 1

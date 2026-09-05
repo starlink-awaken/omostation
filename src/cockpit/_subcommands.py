@@ -706,6 +706,20 @@ def register_subcommands(sub: argparse._SubParsersAction, workspace_parser: type
     spine_ingress_p = spine_sub.add_parser("ingress", help="感知源接入 Spine 管线 (T2-03: OCR 扫描件)")
     spine_ingress_p.add_argument("--source", required=True, help="感知源类型 (当前支持: ocr)")
     spine_ingress_p.add_argument("--file", required=True, help="扫描件图片/PDF 路径")
+    # ── T10-116: review workbench & send gateway ──
+    spine_review_p = spine_sub.add_parser("review", help="左右分栏 Diff 审阅工作台 (初稿 vs 编辑态)")
+    spine_review_p.add_argument("--draft", "-d", default="", help="初稿内容 (内联)")
+    spine_review_p.add_argument("--edited", "-e", default="", help="当前编辑态内容 (内联)")
+    spine_review_p.add_argument("--draft-file", default=None, help="初稿文件路径")
+    spine_review_p.add_argument("--edited-file", default=None, help="编辑态文件路径")
+    spine_review_p.add_argument("--json", action="store_true", help="机器可读输出")
+    spine_send_p = spine_sub.add_parser("send", help="一键确认署名并经外发网关真实外发")
+    spine_send_p.add_argument("--body", "-b", default="", help="外发正文 (内联)")
+    spine_send_p.add_argument("--body-file", default=None, help="外发正文文件路径")
+    spine_send_p.add_argument("--channel", choices=["api", "smtp"], default="api", help="外发通道")
+    spine_send_p.add_argument("--to", required=True, help="外发目标地址")
+    spine_send_p.add_argument("--sender", default="", help="可插拔 sender 脚本路径 (缺省仅入队)")
+    spine_send_p.add_argument("--dry-run", action="store_true", help="仅入队不发送")
 
     # ── dlp-guard ─────────────────────────────────────────────
     # BET-Y1Q4-T10-01: 外发前 DLP 扫描
