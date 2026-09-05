@@ -22202,7 +22202,8 @@ bets:
   title: Spine done 价值证明债清册与抽样回填
   appetite: 2 days
   priority: P1
-  status: in_progress
+  status: done
+  done_at: '2026-09-05T10:07:00+00:00'
   goal: 清点已 done 的 spine/价值相关 bet 中 value_indicator_policy=false 且 completion_evidence.value=NOT_PROVEN/缺失的条目，产出债清册；对抽样 ≥5
     条补齐可复查证据或显式永久 NOT_PROVEN 理由，避免「已 done」被误读为愿景已证明。
   non_goals:
@@ -22226,6 +22227,11 @@ bets:
   risk_level: L1
   human_gate: false
   value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-bet-y1q4-t4-05-value-proof-debt-registry-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:0f0fdb3606c95e062e146a6c2760eda4387a1b1338323f3c075efe53b0301499
+    decision_ref: decision://accepted/BET-Y1Q4-T4-05
   circuit_breaker: 抽样无法取证则扩大 NOT_PROVEN 标注而非伪造 value ACCEPTED。
   retro: required
   depends_on:
@@ -22234,15 +22240,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ba7283f612dff6c036a26d8d80c67ba23f31b32a
+            sha256: sha256:0f0fdb3606c95e062e146a6c2760eda4387a1b1338323f3c075efe53b0301499
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-bet-y1q4-t4-05-value-proof-debt-registry-design.md
+            sha256: sha256:0f0fdb3606c95e062e146a6c2760eda4387a1b1338323f3c075efe53b0301499
+          tests:
+            ref: receipt://docs/reports/2026-09-05-value-proof-debt-registry.md
+            sha256: sha256:af796e7ce51a1b14e949e64c94878fa72dbcfa10772bccc49d16be471bec2492
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-05-bet-y1q4-t4-05-value-proof-debt-registry-design.md
+            sha256: sha256:0f0fdb3606c95e062e146a6c2760eda4387a1b1338323f3c075efe53b0301499
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-05-value-proof-debt-registry.md
+            sha256: sha256:af796e7ce51a1b14e949e64c94878fa72dbcfa10772bccc49d16be471bec2492
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-05.md
+            sha256: sha256:06b765ae6d576e2a588e70dfe201fdc5a40f011d80f7efecb1bd6cfaa28c7a52
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-09-05-bet-y1q4-t4-05-value-proof-debt-registry-design.md
+            sha256: sha256:0f0fdb3606c95e062e146a6c2760eda4387a1b1338323f3c075efe53b0301499
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-09-05-bet-y1q4-t4-05-value-proof-debt-registry-design.md
+            sha256: sha256:0f0fdb3606c95e062e146a6c2760eda4387a1b1338323f3c075efe53b0301499
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   portfolio_binding:
     schema_state: enforced
     campaign_ref: CMP-Y1-VALUE-PROOF
