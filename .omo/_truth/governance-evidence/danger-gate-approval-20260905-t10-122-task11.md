@@ -2,10 +2,10 @@
 schema_version: danger-gate-approval/v1
 bet_id: BET-Y1Q3-T10-122
 run_id: 20260905T022225Z-bet-execution-9ecde217
-status: approved
+status: active
 approved_at: '2026-09-05T10:22:25+08:00'
 approved_by: xiamingxing
-lifecycle: evidence
+lifecycle: ssot
 type: ssot
 ---
 
