@@ -20815,8 +20815,8 @@ bets:
   title: Portfolio v2 validator 全 §6 校验扩展 (follow-up)
   appetite: 2 days
   priority: P1
-  status: candidate
-  done_at: 2026-09-04 14:18:57+00:00
+  status: done
+  done_at: 2026-09-05 10:41:01+00:00
   note: §6 validator already on tip (18 tests); closeout registers delivery_accepted.
   goal: 将 T1-04 Wave A1 的 validator 扩展到 spec §6 全量校验面：实体 ID 唯一性 (vision/objective/KR/campaign/milestone/bet)、跨实体引用存在性 (campaign_ref/objective_refs/kr_refs/parent_bet)、metric
     shape、bet_type 枚举、boolean policy、ISO-8601 时间戳、typed error contract；保持 v1 兼容与无副作用。
