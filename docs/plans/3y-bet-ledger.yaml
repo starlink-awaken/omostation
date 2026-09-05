@@ -20979,9 +20979,9 @@ bets:
   title: 低分 P0 核心命令群体验重构与参数面补全
   appetite: 3 days
   priority: P0
-  status: candidate
-  done_at: 2026-09-04 11:00:00+00:00
-  note: Delivered in Project Sovereign Command (PSC v1)
+  status: done
+  done_at: 2026-09-05 02:30:00+00:00
+  note: Spec + test_core_commands.py contract lock; child PR #134; PSC v1 impl reused
   goal: 重构 9 大核心高频命令群 (dashboard, quickstart, journey, capabilities, data, iterate, workflow, compass, brain)，全面支持 --dry-run、-o
     json 与容错自愈。
   non_goals:
@@ -20998,10 +20998,56 @@ bets:
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/
   - projects/cockpit/tests/test_core_commands.py
-  pasw_required: false
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-05-t8-13-p0-core-commands-contract-design.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+  - docs/reports/2026-09-05-t8-13-p0-core-commands-closeout.md
+  pasw_required: true
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t8-13-p0-core-commands-contract-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:858a3245e8cc536a1cb8ff129e516e99359f532ef42ab512028aae5669ec1cde
+    decision_ref: decision://accepted/BET-Y1Q4-T8-13
   risk_level: L1
   human_gate: false
   circuit_breaker: 核心命令回归失败阻断
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d576ffbfffaa3ee12d18137079cd36e9b74b700d
+          tests:
+            ref: receipt://docs/reports/2026-09-05-t8-13-p0-core-commands-closeout.md
+            sha256: sha256:9a28426a9257ba0b9296e258f2add93a9c4f5c3feda091b0ff62b72430a6d741
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t8-13-p0-core-commands-contract-design.md
+            sha256: sha256:858a3245e8cc536a1cb8ff129e516e99359f532ef42ab512028aae5669ec1cde
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+            sha256: sha256:c4cd3b8669f7b3459fb1bca07701e287eb2570fa6b782acf3d7fa4f00d7829e7
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+            sha256: sha256:c4cd3b8669f7b3459fb1bca07701e287eb2570fa6b782acf3d7fa4f00d7829e7
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+            sha256: sha256:c4cd3b8669f7b3459fb1bca07701e287eb2570fa6b782acf3d7fa4f00d7829e7
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+            sha256: sha256:c4cd3b8669f7b3459fb1bca07701e287eb2570fa6b782acf3d7fa4f00d7829e7
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-13.md
+            sha256: sha256:c4cd3b8669f7b3459fb1bca07701e287eb2570fa6b782acf3d7fa4f00d7829e7
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T8-13.md
   retro: required
 - id: BET-Y1Q4-T8-14
