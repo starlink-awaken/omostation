@@ -936,7 +936,7 @@ bets:
             sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-108.md
-            sha256: sha256:0137f83c2ca32ddc2d34aee51109e99d573a3f61de3c298ff4fdad6c543016d0
+            sha256: sha256:9199a6a5d2817e4a90ed5db8fb6add00d0262fea92bc7561f485813d47dfaca0137f83c2ca32ddc2d34aee51109e99d573a3f61de3c298ff4fdad6c543016d0
           cleanup:
             ref: receipt://docs/reports/2026-08-30-cc-switch-recovery-state-relocation.md
             sha256: sha256:cce6a4e554eff6391d97338918c4e7225a621349bca1344253d9f0473694f8cd
@@ -21802,7 +21802,8 @@ bets:
   title: 有效工作旅程完成率北极星基线接入
   appetite: 2 days
   priority: P0
-  status: in_progress
+  status: done
+  done_at: '2026-09-05T05:06:00+00:00'
   goal: 把战略北极星「有效工作旅程完成率」落到可周报的基线：定义分母/分子（禁止代理量），接线 north_star_meter / journey 证据，输出首份基线收据，使 KR-VALUE-JOURNEY-COMPLETION 从
     unmeasured 变为 baseline measured。
   non_goals:
@@ -21830,7 +21831,7 @@ bets:
   pasw_required: false
   risk_level: L1
   human_gate: false
-  value_indicator_policy: true
+  value_indicator_policy: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-05-journey-completion-baseline-design.md
     spec_version: 1.0.0
@@ -21845,15 +21846,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b9df8aecbf4dd819a11cf06255b834677e799283
+            sha256: sha256:b8a8d738e5ec86b714c2282b396fab8aae843af9e37d141f5011c4333add2821
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-journey-completion-baseline-design.md
+            sha256: sha256:b8a8d738e5ec86b714c2282b396fab8aae843af9e37d141f5011c4333add2821
+          tests:
+            ref: receipt://docs/reports/2026-09-05-journey-completion-baseline.md
+            sha256: sha256:b70d3e4eea281dad7e62edf62c69acd0ae3c40552ab924984108b1fd94c8a283
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-05-journey-completion-baseline-design.md
+            sha256: sha256:b8a8d738e5ec86b714c2282b396fab8aae843af9e37d141f5011c4333add2821
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-05-journey-completion-baseline.md
+            sha256: sha256:b70d3e4eea281dad7e62edf62c69acd0ae3c40552ab924984108b1fd94c8a283
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-02.md
+            sha256: sha256:9199a6a5d2817e4a90ed5db8fb6add00d0262fea92bc7561f485813d47dfaca0
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-09-05-journey-completion-baseline-design.md
+            sha256: sha256:b8a8d738e5ec86b714c2282b396fab8aae843af9e37d141f5011c4333add2821
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-09-05-journey-completion-baseline-design.md
+            sha256: sha256:b8a8d738e5ec86b714c2282b396fab8aae843af9e37d141f5011c4333add2821
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   portfolio_binding:
     schema_state: enforced
     campaign_ref: CMP-Y1-VALUE-PROOF
