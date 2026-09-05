@@ -10,12 +10,14 @@ import time as _time_mod
 from urllib import request as urlrequest
 
 from rich import box
-from rich.console import Console
 from rich.panel import Panel
 
+from cockpit.output import apply_machine_consoles, get_console, json_print
+
 # ── Shared singletons (defined here so tests can monkeypatch cli.xxx) ──
-console = Console()
-err = Console(stderr=True)
+# TTY-aware: non-TTY defaults to no_color so pipes stay ANSI-free.
+console = get_console()
+err = get_console(stderr=True)
 from .storage import get_data_access
 
 time = _time_mod
@@ -250,10 +252,10 @@ def create_parser(active_argv: list[str] | None = None) -> tuple[argparse.Argume
                 payload = {"ok": False, "error": message, "exit_code": 2}
                 if suggestions:
                     payload["suggestions"] = suggestions
-                print(json.dumps(payload, ensure_ascii=False))
+                json_print(payload)
                 sys.exit(2)
 
-            parser_console = Console()
+            parser_console = get_console()
             parser_console.print(f"\n[bold red]✗[/] {message}")
 
             if suggestions:
@@ -283,7 +285,7 @@ def create_parser(active_argv: list[str] | None = None) -> tuple[argparse.Argume
                 return super().print_help(file)
             from cockpit.commands.help_map import render_compact_help
 
-            c = Console(file=file) if file is not None else console
+            c = get_console(file=file) if file is not None else console
             render_compact_help(c)
             # 仍打印全局 flags（output 等）
             c.print("[bold]全局选项[/]")
@@ -460,6 +462,7 @@ def main(argv: list[str] | None = None) -> int:
     if getattr(args, "json", False) or "--json" in _argv or "--output=json" in _argv or ("--output" in _argv and "json" in _argv):
         args.json = True
         args.global_output = "json"
+        apply_machine_consoles(sys.modules[__name__])
     if getattr(args, "dry_run", False) or "--dry-run" in _argv:
         args.dry_run = True
     if getattr(args, "quiet", False) or "-q" in _argv or "--quiet" in _argv:
@@ -467,14 +470,17 @@ def main(argv: list[str] | None = None) -> int:
     if getattr(args, "verbose", False) or "-v" in _argv or "--verbose" in _argv:
         args.verbose = True
 
-    # ── 初始化结构化分级日志 ──
+    # ── 初始化结构化分级日志（trace_id 全链路） ──
     try:
-        from cockpit.logger import configure_logging
+        from cockpit.logger import configure_logging, get_or_create_trace_id
+
+        _trace = getattr(args, "trace_id", None) or get_or_create_trace_id()
+        args.trace_id = _trace
         configure_logging(
             verbose=getattr(args, "verbose", False),
             quiet=getattr(args, "quiet", False),
             as_json=getattr(args, "global_output", "text") == "json",
-            trace_id=getattr(args, "trace_id", None),
+            trace_id=_trace,
         )
     except Exception:
         pass
@@ -1175,8 +1181,14 @@ def main(argv: list[str] | None = None) -> int:
             return ret
         except Exception as e:
             if global_output == "json":
-                import json
-                print(json.dumps({"ok": False, "error": str(e), "command": args.command}, ensure_ascii=False))
+                json_print(
+                    {
+                        "ok": False,
+                        "error": str(e),
+                        "command": args.command,
+                        "exit_code": ExitCode.GENERAL_ERROR.value,
+                    }
+                )
             else:
                 console.print(f"[red]❌ 执行错误: {e}[/]")
                 if getattr(args, "verbose", False):
@@ -1198,8 +1210,13 @@ def main(argv: list[str] | None = None) -> int:
                 pass
 
     if global_output == "json":
-        import json
-        print(json.dumps({"ok": False, "error": f"未知命令: {args.command}", "exit_code": ExitCode.INVALID_ARGS.value}, ensure_ascii=False))
+        json_print(
+            {
+                "ok": False,
+                "error": f"未知命令: {args.command}",
+                "exit_code": ExitCode.INVALID_ARGS.value,
+            }
+        )
     else:
         console.print(f"[red]未知命令: {args.command}[/]")
         parser.print_help()
