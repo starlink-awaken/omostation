@@ -14,10 +14,16 @@ last-reviewed: 2026-09-05
 - `forge.design_asset_adapter`：扫出真实 `design-md/*/DESIGN.md` 资产，提取 frontmatter metadata、品牌/样式/布局/色板信息，并输出结构化 `design_context`
 - `forge.__init__`：导出 `build_design_context`、`choose_design_assets` 与 CLI 入口
 - `forge.forge`：新增 `design-assets` / `design` 命令，支持品牌/平台/查询过滤并生成结构化 design context + prompt；默认 repo 现在从硬编码用户路径改为当前目录，避免环境绑定
+- `src/forge/design_renderer.py`：新增 `build_page_spec()` 与 `render_page_spec()`，把 matched design asset 变成稳定的 page-spec / HTML 输出
 - `forge/README.md`：补充设计资产命令说明，方便直接调用和接入
-- `tests/test_design_asset_adapter.py`：覆盖扫描、清单生成、过滤、结构化 context 和 prompt 注入
+- `tests/test_design_asset_adapter.py`：覆盖扫描、清单生成、过滤、结构化 context、prompt 注入，以及 page-spec 渲染
 - `docs/design-assets/awesome-design-manifest.yaml`：已用真实 corpus 重新生成，当前记录 74 个真实设计资产
 - `docs/plans/2026-09-04-design-asset-forge-integration.md`：接入设计与架构结论
+
+交付状态（2026-09-05）：
+- 已在隔离 worktree 中提交并打 tag：`forge-page-spec-2026-09-05`
+- 验证命令：`pytest -q tests/test_design_asset_adapter.py`，结果为 `4 passed in 0.13s`
+- CLI smoke test：`PYTHONPATH=src python3 -m forge.forge design-page --query claude --format json`，已输出真实 `Claude` page-spec
 
 验证结论：
 - `cd projects/knowledge/kairon/packages/forge && python3 -m pytest tests/test_design_asset_adapter.py -q`
