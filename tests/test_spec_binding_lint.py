@@ -250,14 +250,23 @@ def test_lint_fails_for_active_bet_without_binding(capsys) -> None:
     assert "SPEC_BINDING_REQUIRED" in capsys.readouterr().out
 
 
-def test_lint_rejects_newly_constructed_done_bet_without_binding(capsys) -> None:
+def test_lint_allows_done_bet_without_binding_grandfathered(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    """#3209 契约: done 无 binding 在 lint 层安静 (validate_accepted_specification
+    对 done 返回空错误) — 准入约束由 cmd_complete + workflow start 门承担,
+    lint 只管 transition-diff (done_at/matrix 状态一致性)。"""
     newly_constructed = _bet(status="done", risk_level="L3")
     newly_constructed["done_at"] = bl.SPEC_BINDING_GRANDFATHER_CUTOFF
+    # 注入 base (BET 不存在 = 新 done 转移): 即使构成转移, 无 binding 仍安静
+    _transition_base(monkeypatch, base_status=None)
 
     rc = bl.cmd_lint(_lint_data(newly_constructed), type("Args", (), {})())
 
-    assert rc == 1
-    assert "SPEC_BINDING_REQUIRED" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "SPEC_BINDING_REQUIRED" not in out
 
 
 def test_complete_rejects_unbound_nonterminal_bet_even_with_force(capsys) -> None:
@@ -487,20 +496,27 @@ def test_lint_requires_matrix_for_in_progress_bet(capsys) -> None:
     assert "COMPLETION_EVIDENCE_REQUIRED" in capsys.readouterr().out
 
 
-def test_lint_requires_matrix_for_new_done_bet(
+def test_lint_allows_done_bet_without_matrix_grandfathered(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys,
 ) -> None:
+    """#3209 契约: done 无 completion_evidence 在 lint 层安静 (cmd_lint 的
+    COMPLETION_EVIDENCE_REQUIRED 只对非 done 的 matrix-required 状态生效) —
+    done 证据闸在 cmd_complete; lint 的 transition 守卫只校验已有 matrix 的
+    状态一致性 (BET_DONE_REQUIRES_*) 与 done_at 存在性。"""
     bet = _bet(status="done")
     bet["done_at"] = "2026-08-21"
     bet["accepted_specifications"] = [_canonical_binding(tmp_path)]
     monkeypatch.setattr(bl, "WS", tmp_path)
+    # 注入 base (BET 不存在 = 新 done 转移): 即使构成转移, 无 matrix 仍安静
+    _transition_base(monkeypatch, base_status=None)
 
     rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
 
-    assert rc == 1
-    assert "COMPLETION_EVIDENCE_REQUIRED" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "COMPLETION_EVIDENCE_REQUIRED" not in out
 
 
 def _transition_base(monkeypatch: pytest.MonkeyPatch, *, base_status: str | None) -> None:
@@ -562,7 +578,7 @@ def test_lint_requires_done_at_for_transitioned_done_bet_with_outcome_accepted(
     monkeypatch.setattr(
         bl,
         "validate_completion_evidence",
-        lambda matrix, *, value_indicator_policy=True, workspace, done_at=None: ("outcome_accepted", []),
+        lambda matrix, *, value_indicator_policy=True, workspace, done_at=None, bet_status=None: ("outcome_accepted", []),
     )
 
     rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
@@ -590,7 +606,7 @@ def test_lint_accepts_transitioned_done_bet_with_outcome_accepted_and_done_at(
     monkeypatch.setattr(
         bl,
         "validate_completion_evidence",
-        lambda matrix, *, value_indicator_policy=True, workspace, done_at=None: ("outcome_accepted", []),
+        lambda matrix, *, value_indicator_policy=True, workspace, done_at=None, bet_status=None: ("outcome_accepted", []),
     )
 
     rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
@@ -734,7 +750,7 @@ def test_lint_fails_closed_when_declared_base_is_unreadable(
     monkeypatch.setattr(
         bl,
         "validate_completion_evidence",
-        lambda matrix, *, value_indicator_policy=True, workspace, done_at=None: ("outcome_accepted", []),
+        lambda matrix, *, value_indicator_policy=True, workspace, done_at=None, bet_status=None: ("outcome_accepted", []),
     )
 
     rc = bl.cmd_lint(_lint_data(bet), type("Args", (), {})())
