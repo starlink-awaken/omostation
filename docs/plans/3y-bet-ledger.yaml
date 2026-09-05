@@ -23694,7 +23694,8 @@ bets:
   title: Agent 感知覆盖率提升 — Skills/Workflows 可发现
   appetite: 1 day
   priority: high
-  status: candidate
+  status: done
+  done_at: 2026-09-05 13:15:00+00:00
   goal: 确保新增 skills/workflows 可被其他 agent 发现和正确使用
   done_when:
   - Skills INDEX.md 更新
@@ -23704,11 +23705,64 @@ bets:
   verify:
   - cmd: test -f .agents/skills/INDEX.md
     expect: exit 0
+  - cmd: python3 bin/gac/check-mcp-bos-uri-completeness.py --warn
+    expect: exit 0 (审计信号模式, 不阻断)
   workflow: project-doc-change
+  underlying_workflow: project-code-change
   write_surfaces:
   - .agents/skills/INDEX.md
   - AGENTS.md
   - docs/plans/3y-bet-ledger.yaml
+  - bin/gac/check-mcp-bos-uri-completeness.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-19.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t6-19-agent-discoverability-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:33c837044696f9efcfe718f38a633eff0abbaf66e1a94c36ae51a7f3c90b1135
+    decision_ref: decision://accepted/BET-Y1Q4-T6-19
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t6-19-agent-discoverability-design.md
+            sha256: sha256:33c837044696f9efcfe718f38a633eff0abbaf66e1a94c36ae51a7f3c90b1135
+          tests:
+            ref: receipt://bin/gac/check-mcp-bos-uri-completeness.py
+            sha256: sha256:028b2316e8c857fefee85978d61a1d7b6551034106d630f6f517ae0f5780bc5c
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-19.md
+            sha256: sha256:d732d83f9a1a472529dd45a20b246588f1e08d79416bcd4a82a633c3d3b3f562
+          merged_reachable_commit:
+            ref: git://origin/main@7602096c9d15a9327982c8d12b558f3fac410375
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://bin/gac/check-mcp-bos-uri-completeness.py
+            sha256: sha256:028b2316e8c857fefee85978d61a1d7b6551034106d630f6f517ae0f5780bc5c
+          fresh_receipt:
+            ref: receipt://.agents/skills/INDEX.md
+            sha256: sha256:b5ac9d6d13267548925bfdb63db590b59921b075d6d08f8c1481f053e2b13984
+          replay:
+            ref: receipt://AGENTS.md
+            sha256: sha256:cadba626f807100a7da6f707c904d2323551165803cbbc373bc836f9e84ea285
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-19.md
+            sha256: sha256:d732d83f9a1a472529dd45a20b246588f1e08d79416bcd4a82a633c3d3b3f562
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   dependencies: []
   risks: []
+  value_indicator_policy: false
+  circuit_breaker: 不修改已有 skill/workflow 内容, 只校验完整性 + 添加 URI check 脚本
+  close_evidence: .omo/_knowledge/retros/BET-Y1Q4-T6-19.md
+  retro: .omo/_knowledge/retros/BET-Y1Q4-T6-19.md
 
