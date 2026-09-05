@@ -11,8 +11,8 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 634
-  bos_services: 298
+  mcp_tools: 636
+  bos_services: 299
   bos_domains: 22
   cli_commands: 207
   skills: 39
@@ -243,7 +243,9 @@ mcp_servers:
   - bos_reload_m1
   - bos_reload_routes
   - bos_spine_diff
+  - bos_spine_distill
   - bos_spine_draft
+  - bos_spine_replay
   - bos_spine_sign
   - bos_spine_status
   - cartridge_pack
@@ -321,7 +323,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 104
+  tool_count: 106
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -878,7 +880,7 @@ bos_services:
     analysis: 28
     bcos: 3
     capability: 44
-    cockpit: 7
+    cockpit: 8
     compute: 17
     ecos: 10
     fabric: 1
@@ -1332,6 +1334,10 @@ bos_services:
       status: active
     - uri: bos://cockpit/spine/distill
       description: Cockpit/Spine 触发 Mac mini M4 闲时在线 LoRA 蒸馏
+      transport: stdio
+      status: active
+    - uri: bos://cockpit/spine/replay
+      description: Cockpit/Spine 经验回放水塘状态、容量与样本域分布查看
       transport: stdio
       status: active
     compute:
