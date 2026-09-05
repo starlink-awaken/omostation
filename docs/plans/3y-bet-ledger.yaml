@@ -18372,6 +18372,11 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t10-113-mail-draft-service-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:a5a00fc88ab4ff40dfe4f18602cabe43f30acb984292c71ba938d15733fc1cce
+    decision_ref: decision://accepted/BET-Y1Q3-T10-113
   write_surfaces:
   - projects/agora/src/agora/server/tools_bos/mail.py
   - projects/cockpit/src/cockpit/commands/inbox.py
@@ -18481,6 +18486,11 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t10-115-hard-negative-miner-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:40f50252e08923bd6f6fbe4d9ead541afec0bd05f49a87113b3c51efe65847ce
+    decision_ref: decision://accepted/BET-Y1Q3-T10-115
   write_surfaces:
   - projects/omlxc/src/omlxc/dataplane/hard_negative_miner.py
   - projects/ecos/src/ecos/governance/diff_broker.py
@@ -18514,6 +18524,11 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t10-116-spine-review-workbench-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:9f1ff542ff657599572930adb8dca0dafc4e96b235bf0f771d3b8984303478e8
+    decision_ref: decision://accepted/BET-Y1Q3-T10-116
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/spine.py
   - projects/cockpit-ui/src/components/SpineReviewModal.tsx
@@ -18548,6 +18563,11 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t10-117-kems-v2-hybrid-retrieval-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:72f5dd6c9c6f665bec220b006018108943bee70981ee33df243d1f59652f4d1c
+    decision_ref: decision://accepted/BET-Y1Q3-T10-117
   write_surfaces:
   - projects/knowledge/kairon/src/kairon/graph/kems_v2.py
   - projects/knowledge/gbrain/src/retrieval/hybrid.ts
