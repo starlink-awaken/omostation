@@ -20191,7 +20191,7 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-03.md
             sha256: sha256:a208ed50a5d6c73fad240822e793ed06abfb29a83a76f9a559ba7ace0c95002f
           merged_reachable_commit:
-            ref: git://origin/main@1e15437e06950867d4ccabc25c541ec090665bb5
+            ref: git://origin/main@8558a654494e0c7066e194ea3848155349487fc2
       operational:
         status: PROVEN
         evidence:
