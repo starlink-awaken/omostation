@@ -584,7 +584,6 @@ def cmd_spine_send(args: argparse.Namespace) -> int:
     if ok:
         # 价值台账原子追加: 临时文件 fsync 后 os.replace
         ledger = _ws() / VALUE_LEDGER_REL
-        ledger.parent.mkdir(parents=True, exist_ok=True)
         entry = {"ts": time.time(), "msg_id": msg_id, "channel": channel, "to": to, "signed_chars": len(body)}
         tmp_ledger = ledger.with_suffix(".tmp")
         with tmp_ledger.open("a", encoding="utf-8") as f:
