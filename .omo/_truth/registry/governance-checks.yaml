@@ -192,7 +192,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 612
+    script_baseline: 622
     # 2026-09-05: +24 from T6-20 (CR-EDOC-001~005 + Documents boundary gate + check scripts)
     # 2026-09-03: +1 perception-coverage
     # 2026-09-03: +2 ops-cron-install + weekly-evolution-report
@@ -206,6 +206,7 @@ gac:
     # 2026-09-06: +1 check-documents-boundary.py (BET-Y1Q4-T6-20 E-DOC-001~005)
     # 2026-09-05: +1 check-mcp-bos-uri-completeness.py (BET-Y1Q4-T6-19)
     # 2026-09-05: +2 arch-health-meter.py + architecture-health-weekly.sh (BET-Y1Q4-T6-18)
+    # 2026-09-06: +10 mechanism-22c hook 加固 (9 WIP scripts + check-runtime-artifacts.py, BET-Y1Q4-T6-24)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
