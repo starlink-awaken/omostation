@@ -20683,8 +20683,17 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t6-01-sema-crystallizer-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:1ed2a069d26065234665a0315e1eeebd6a2b23fa72b114021ccd0a6f69df613b
+    decision_ref: decision://accepted/BET-Y2Q2-T6-01
+  # 2026-09-06 write-surface completion (pre-claim): tests/INDEX/ledger 预置
   write_surfaces:
   - projects/omo/src/omo/resident/sema_crystallizer.py
+  - projects/omo/tests/unit/resident/test_sema_crystallizer.py
+  - .agents/skills/INDEX.md
+  - docs/plans/3y-bet-ledger.yaml
   - .agents/skills/auto-crystallized/SKILL.md
   - .omo/_knowledge/retros/BET-Y2Q2-T6-01.md
   pasw_required: false
