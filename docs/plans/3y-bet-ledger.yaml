@@ -20403,7 +20403,9 @@ bets:
   title: 场景卡归一遗留 — omo phase15/16 死链清理 + ecos 第四家存储收口
   appetite: 1 days
   priority: P3
-  status: candidate
+  status: done
+  done_at: 2026-09-05 23:50:00+00:00
+  note: omo + ecos 子模块 commit (e11b30a76) 已在工作树合入, 死链清理 + registry 注记 ship; 本 bet 补 spec + retro + flip status.
   goal: T7-03 归一后的两个悬挂引用 — ① omo 子模块 phase15/16 指向不存在的
     .omo/_truth/scenarios/research-pipeline.yaml (迁移前已断); ② ecos registry
     scene-cards.yaml 作为第四家存储 (scene-card-review 头部 SSOT 注记指向它)。
@@ -20421,11 +20423,56 @@ bets:
   - projects/omo/src/omo/omo_phase15.py
   - projects/omo/src/omo/omo_phase16.py
   - ecos/src/ecos/ssot/registry/scene-cards.yaml
+  - docs/superpowers/specs/2026-09-05-t7-04-omo-deadlink-ecos-registry-design.md
+  - .omo/_knowledge/retros/BET-Y2Q1-T7-04.md
   pasw_required: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t7-04-omo-deadlink-ecos-registry-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:1696d8d5fb45e36bdb8d40118c3fcb1aee9c30ca3705a6e14eb588d11d608b74
+    decision_ref: decision://accepted/BET-Y2Q1-T7-04
   risk_level: L2
   human_gate: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-04.md
+            sha256: sha256:d1670502c7579f100a935b0f70f2daf13770645c4d3329f24a4fd21da61c2f2e
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-04.md
+            sha256: sha256:d1670502c7579f100a935b0f70f2daf13770645c4d3329f24a4fd21da61c2f2e
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-04.md
+            sha256: sha256:d1670502c7579f100a935b0f70f2daf13770645c4d3329f24a4fd21da61c2f2e
+          merged_reachable_commit:
+            ref: git://origin/main@e11b30a76d552bfce269b186cb2fbf8633c6aeaf
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-04.md
+            sha256: sha256:d1670502c7579f100a935b0f70f2daf13770645c4d3329f24a4fd21da61c2f2e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-04.md
+            sha256: sha256:d1670502c7579f100a935b0f70f2daf13770645c4d3329f24a4fd21da61c2f2e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-04.md
+            sha256: sha256:d1670502c7579f100a935b0f70f2daf13770645c4d3329f24a4fd21da61c2f2e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-04.md
+            sha256: sha256:d1670502c7579f100a935b0f70f2daf13770645c4d3329f24a4fd21da61c2f2e
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   circuit_breaker: ecos registry 变更需 ecos 侧对齐, 单方面不动
-  retro: required
+  close_evidence: .omo/_knowledge/retros/BET-Y2Q1-T7-04.md
+  retro: .omo/_knowledge/retros/BET-Y2Q1-T7-04.md
+  value_indicator_policy: false
 - id: BET-Y2Q1-T7-05
   track: T7-SCENE
   window: Y2Q1
