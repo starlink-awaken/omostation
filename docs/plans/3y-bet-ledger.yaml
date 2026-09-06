@@ -24902,7 +24902,9 @@ bets:
   title: 机制 22c Git Hook 调度引擎完整化 — runner/manifest 接线 + 缺失检查脚本补齐 + 净减配平
   appetite: 2 days
   priority: P1
-  status: candidate
+  value_indicator_policy: false
+  status: done
+  done_at: 2026-09-06
   goal: 把散落在工作树的机制 22c hook 加固 WIP（hook-runner 调度引擎 + hook-manifest 声明式清单 + hook-installer + 12 个检查脚本）补完为可交付状态：补齐被引用的缺失脚本、修复 D1-D7 缺陷、将 canonical .githooks 接线到 runner、让 make install-hooks 统一走 hook-installer，并以"删除被替代的重复内联逻辑"做净减配平。
   non_goals:
   - 不新增 hook 检查项（只修复/接线既有 22c 设计）
@@ -24942,6 +24944,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:982040c456cf3d0b072e9d3e96cbf5e3f3f2b782c84cf6e372ae3dd0329bb4c2
     decision_ref: decision://accepted/BET-Y1Q4-T6-24
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@60db91bf02bd55ceab7bd210ac7066d4221581b6
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-24.md
+            sha256: sha256:49a5ff5202fde9ca524d206b7b3f07a8b1aaee8e69259c42304dd1a0131d3124
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t6-24-hook-runner-completion-design.md
+            sha256: sha256:982040c456cf3d0b072e9d3e96cbf5e3f3f2b782c84cf6e372ae3dd0329bb4c2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-24.md
+            sha256: sha256:49a5ff5202fde9ca524d206b7b3f07a8b1aaee8e69259c42304dd1a0131d3124
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-24.md
+            sha256: sha256:49a5ff5202fde9ca524d206b7b3f07a8b1aaee8e69259c42304dd1a0131d3124
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-24.md
+            sha256: sha256:49a5ff5202fde9ca524d206b7b3f07a8b1aaee8e69259c42304dd1a0131d3124
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-24.md
+            sha256: sha256:49a5ff5202fde9ca524d206b7b3f07a8b1aaee8e69259c42304dd1a0131d3124
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-24.md
+            sha256: sha256:49a5ff5202fde9ca524d206b7b3f07a8b1aaee8e69259c42304dd1a0131d3124
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 
 
 - id: BET-Y1Q4-T10-125
