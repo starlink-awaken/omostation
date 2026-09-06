@@ -3,9 +3,10 @@ schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q4-T10-128
 created: 2026-09-06
-status: accepted
+status: active
 lifecycle: contract
 owner: governance-agent
+last-reviewed: 2026-09-06
 ---
 
 # Spec: 并发 Agent 分支命名空间隔离
