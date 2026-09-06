@@ -1,3 +1,8 @@
+---
+type: documentation
+owner: governance-team
+last_updated: 2026-09-06
+---
 # SYSTEM-INDEX.md — Workspace 全景导航
 
 > **维护规则**
@@ -80,7 +85,7 @@
 
 → [Agent 能力索引](INDEX-AGENTS.md) — 当前 agent 配置 + 技能清单
 
-→ [Closeout 记录](closeout/) — 各轮关闭记录和复盘（详见 `docs/closeout/`）
+→ [Closeout 记录](../.omo/_archive/closeout-2026H1/) — 2026H1 各轮关闭记录和复盘
 
 → [交付笔记](notes/) — 快速 closeout 模板与交付闭环笔记（详见 `docs/notes/`）
 
@@ -98,11 +103,7 @@
 
 → [织星架构战略深度复盘](reports/2026-08-20-blueprint-strategy-retrospective.md) — 三轴完成语义、机制收敛、Golden Slice 准入与停线边界
 
-→ [共享运行时协调缺口](downloads/2026-08-14-shared-runtime-coordination-gap.md) — 运行时共享边界与待治理缺口
-→ [运营基础设施治理简报](downloads/AGENT-BRIEF-OPS-INFRA-GOVERNANCE.md) — 运营治理执行摘要
-→ [战略收敛剩余项简报](downloads/AGENT-BRIEF-STRATEGY-CONVERGENCE-REMAINDER.md) — 战略收敛剩余工作
-→ [架构战略展望 2026-08](downloads/ARCHITECTURE-STRATEGY-OUTLOOK-2026-08.md) — 架构战略展望
-→ [决策场景推导确认](downloads/DECISION-SCENARIO-DERIVATION-CONFIRMATION-2026-08.md) — 决策与场景推导确认
+→ [共享运行时协调缺口](reports/2026-08-14-shared-runtime-coordination-gap.md) — 运行时共享边界与待治理缺口
 
 → [BET-Y1Q2-T1-19 权威复盘](../.omo/_knowledge/retros/BET-Y1Q2-T1-19.md) — Codex ACP 切割的当前事实与未证边界
 
@@ -227,7 +228,7 @@
 → [document-governance-standard.md](../.omo/standards/document-governance-standard.md) — ownership/lifecycle/freshness 契约
 → [layer-contract.yaml](layer-contract.yaml) — 分层依赖规则
 → [生成的索引](generated/) — `project-layer-index.md`, `agent-gac-rules.md` 等自动生成的文档
-→ [近期报告](closeout/) — 2026-07-15 各轮 closeout 记录
+→ [近期报告](../.omo/_archive/closeout-2026H1/) — 2026-07-15 各轮 closeout 记录
 
 - [closeout-template-5min](notes/closeout-template-5min.md)
 - [closeout-template-5min-dev](notes/closeout-template-5min-dev.md)
@@ -237,7 +238,7 @@
 → [运行验证证据](evidence/) — 可重放、脱敏的交付验证回执
 → [T1-18 Codex 人工确认 canary](evidence/t1-18-codex-dogfood-canary.md) — Orca 交互式 Codex 手动批准验证工件
 → [操作 SOP](operations/) — 运维手册、模板、清单
-→ [BET-Y1Q3-T4-01 交付证据](operations/value-evidence/BET-Y1Q3-T4-01/) — value-evidence/: [ACCEPTANCE](operations/value-evidence/BET-Y1Q3-T4-01/ACCEPTANCE.md) · [human_verdict](operations/value-evidence/BET-Y1Q3-T4-01/human_verdict.md) · [real_signal](operations/value-evidence/BET-Y1Q3-T4-01/real_signal.md) · [revision](operations/value-evidence/BET-Y1Q3-T4-01/revision.md) · [time_burden](operations/value-evidence/BET-Y1Q3-T4-01/time_burden.md) · [engineering/](operations/value-evidence/BET-Y1Q3-T4-01/engineering/) · [operational/](operations/value-evidence/BET-Y1Q3-T4-01/operational/)
+→ [BET-Y1Q3-T4-01 交付证据](../.omo/_archive/operations-2026H1/value-evidence/BET-Y1Q3-T4-01/) — value-evidence/: [ACCEPTANCE](../.omo/_archive/operations-2026H1/value-evidence/BET-Y1Q3-T4-01/ACCEPTANCE.md) · [human_verdict](../.omo/_archive/operations-2026H1/value-evidence/BET-Y1Q3-T4-01/human_verdict.md) · [real_signal](../.omo/_archive/operations-2026H1/value-evidence/BET-Y1Q3-T4-01/real_signal.md) · [revision](../.omo/_archive/operations-2026H1/value-evidence/BET-Y1Q3-T4-01/revision.md) · [time_burden](../.omo/_archive/operations-2026H1/value-evidence/BET-Y1Q3-T4-01/time_burden.md) · [engineering/](../.omo/_archive/operations-2026H1/value-evidence/BET-Y1Q3-T4-01/engineering/) · [operational/](../.omo/_archive/operations-2026H1/value-evidence/BET-Y1Q3-T4-01/operational/)
 
 ## docs/ 专题子目录
 

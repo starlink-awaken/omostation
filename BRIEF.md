@@ -1,3 +1,8 @@
+---
+type: documentation
+owner: governance-team
+last_updated: 2026-09-06
+---
 # BRIEF.md — 织星状态简报与决策收件箱
 
 > **Generated**: `2026-09-06T12:52:24.819682Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `54/100`

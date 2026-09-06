@@ -1,3 +1,8 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-06
+---
 # LAYER-INDEX.md — eCOS v6 Layer Index
 
 > Human-readable placement index for the 5+4+1+1 architecture.
