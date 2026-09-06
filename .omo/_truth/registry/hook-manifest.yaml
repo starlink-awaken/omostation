@@ -21,6 +21,7 @@ pre-commit:
       blocking: true
       timeout: 3
       description: "分支前缀策略合规"
+      fix: "git switch -c work/<合规名> (前缀规则见 branch-prefix-policy.yaml)"
 
     - id: conflict-marker
       script: "bin/gac/check-conflict-markers.py"
@@ -33,6 +34,7 @@ pre-commit:
       blocking: true
       timeout: 3
       description: "大量删除守卫"
+      fix: "git add -p 恢复误删文件; 确属批量删除则 SWARM_ESCAPE_ID=mass-deletion-documented git push"
 
     - id: runtime-artifacts
       script: "bin/gac/check-runtime-artifacts.py --staged"
@@ -68,6 +70,7 @@ pre-push:
       blocking: true
       timeout: 3
       description: "推送目标分支合规"
+      fix: "git switch -c work/<合规名> (前缀规则见 branch-prefix-policy.yaml)"
 
     - id: direct-push-main
       script: "bin/gac/guard-direct-push-main.py"
@@ -92,18 +95,21 @@ pre-push:
       blocking: true
       timeout: 5
       description: "批量删除检测"
+      fix: "git add -p 恢复误删文件; 确属批量删除则 SWARM_ESCAPE_ID=mass-deletion-documented git push"
 
     - id: gitlink-ancestry
       script: "bin/gac/check-submodule-rewind.py --range origin/main $PUSH_LOCAL_SHA"
       blocking: true
       timeout: 5
       description: "子模块指针回退检测"
+      fix: "git checkout origin/main -- <回退子模块> && git commit -m 'fix(submodule): 恢复前进指针'"
 
     - id: remote-hygiene
       script: "bin/gac/remote-hygiene-check.py"
       blocking: true
       timeout: 3
       description: "origin 指向校验"
+      fix: "python3 bin/ssot/fix-remotes.sh 2>/dev/null || git submodule update --init <空目录子模块>; git config remote.origin.url https://github.com/starlink-awaken/omostation.git"
 
 # ── post-checkout ───────────────────────────────────────────
 post-checkout:
@@ -114,6 +120,7 @@ post-checkout:
       blocking: true
       timeout: 3
       description: "新分支命名合规 (已有分支 advisory)"
+      fix: "git switch -c work/<合规名> (前缀规则见 branch-prefix-policy.yaml)"
 
 # ── pre-rebase ──────────────────────────────────────────────
 pre-rebase:
@@ -146,6 +153,7 @@ pre-merge-commit:
       blocking: true
       timeout: 3
       description: "大量删除守卫"
+      fix: "git add -p 恢复误删文件; 确属批量删除则 SWARM_ESCAPE_ID=mass-deletion-documented git push"
 
 # ── post-merge ──────────────────────────────────────────────
 post-merge:
