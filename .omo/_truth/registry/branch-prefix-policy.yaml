@@ -1,0 +1,86 @@
+version: 1
+description: "分支前缀策略 SSOT — 命名/生命周期/门禁统一注册表"
+
+naming:
+  main: "^main$"
+  work: "^work/[a-z0-9][a-z0-9-]{1,60}$"
+  agent: "^agent/[a-z][a-z0-9-]{1,30}--[a-z0-9]{1,20}$"
+  feat: "^feat/[a-z0-9][a-z0-9-]{1,60}$"
+  fix: "^fix/[a-z0-9][a-z0-9-]{1,60}$"
+  chore: "^chore/[a-z0-9][a-z0-9-]{1,60}$"
+  auto: "^auto/[a-z0-9][a-z0-9-]{1,60}$"
+  temp: "^temp-[a-z0-9][a-z0-9-]{1,60}$"
+  pr: "^pr/[a-z0-9][a-z0-9-]{1,60}$"
+
+prefixes:
+  work:
+    pattern: "^work/[a-z0-9][a-z0-9-]{1,60}$"
+    ttl_days: 7
+    action: remind
+    creators: [human, agent]
+    requires_worktree: true
+    pr_into_main: required
+    description: "worktree 开发分支 (gac-worktree.sh claim)"
+  agent:
+    pattern: "^agent/[a-z][a-z0-9-]{1,30}--[a-z0-9]{1,20}$"
+    ttl_days: 3
+    action: remind
+    creators: [agent]
+    requires_worktree: true
+    pr_into_main: required
+    description: "独立 clone agent 分支 (clone-lifecycle)"
+  feat:
+    pattern: "^feat/[a-z0-9][a-z0-9-]{1,60}$"
+    ttl_days: 14
+    action: remind
+    creators: [human]
+    requires_worktree: false
+    pr_into_main: required
+    description: "功能开发分支"
+  fix:
+    pattern: "^fix/[a-z0-9][a-z0-9-]{1,60}$"
+    ttl_days: 14
+    action: remind
+    creators: [human, agent]
+    requires_worktree: false
+    pr_into_main: required
+    description: "修复分支"
+  chore:
+    pattern: "^chore/[a-z0-9][a-z0-9-]{1,60}$"
+    ttl_days: 7
+    action: remind
+    creators: [human, agent]
+    requires_worktree: false
+    pr_into_main: required
+    description: "杂务/清理分支"
+  auto:
+    pattern: "^auto/[a-z0-9][a-z0-9-]{1,60}$"
+    ttl_days: 1
+    action: auto-delete
+    creators: [ci]
+    requires_worktree: false
+    pr_into_main: required
+    description: "自动化产物 (submodule-bump 等)"
+  temp:
+    pattern: "^temp-[a-z0-9][a-z0-9-]{1,60}$"
+    ttl_days: 3
+    action: auto-delete
+    creators: [human, agent]
+    requires_worktree: false
+    pr_into_main: required
+    description: "临时修复分支"
+  pr:
+    pattern: "^pr/[a-z0-9][a-z0-9-]{1,60}$"
+    ttl_days: 7
+    action: remind
+    creators: [ci, bot]
+    requires_worktree: false
+    pr_into_main: required
+    description: "PR 辅助分支"
+
+immortal:
+  - "origin/main"
+  - "origin/HEAD"
+
+# 合并后保留 TTL 策略的引用
+ttl_bridge: ".omo/_truth/registry/branch-ttl-policy.yaml"
