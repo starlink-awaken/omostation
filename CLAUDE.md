@@ -74,6 +74,11 @@ make omo-status        # 或 bin/omo-status：<0.2s 秒级 Rich 快照 (Agent心
 make omo-top           # 或 bin/omo-top：Textual 实时 4 象限互动大盘
 ```
 
+**Agent Session Dashboard（ASD）**：会话冷启动信息聚合规格见
+[`docs/plans/2026-09-06-agent-session-dashboard-spec.md`](docs/plans/2026-09-06-agent-session-dashboard-spec.md)
+（`BET-Y1Q4-T9-01`）。MVP CLI（`bin/agent-session-dashboard.py`）由后续 `T9-02` 交付；在此之前用
+`omo-status` + `bet-ledger status` + bootstrap 组合代替。
+
 ### Step B.0.5 · 架构约束检查 (每次编辑会话)
 
 编辑架构相关文件前，必须检查以下约束:

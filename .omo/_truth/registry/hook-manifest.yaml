@@ -82,7 +82,7 @@ pre-push:
       description: "子模块自动同步"
 
     - id: submodule-reachability
-      script: "bin/ssot/submodule-reachability-gate.py --source head --fetch --changed-from $REACH_CHANGED_FROM"
+      script: "bin/ssot/submodule-reachability-gate.py --source head --fetch"
       blocking: true
       timeout: 15
       description: "增量 reachability 校验"
