@@ -200,3 +200,10 @@ warning_exceptions:
       expires: 2026-10-31
       owner: governance-team
       reason: Existing document status/lifecycle values require explicit migration decisions.
+    - id: accepted-specs-invalid-metadata
+      rule: invalid_metadata
+      surface: accepted-specifications
+      max_findings: 2
+      expires: 2026-10-31
+      owner: governance-team
+      reason: Newly created specs may have last-reviewed set to creation date which CI flags as future-dated.

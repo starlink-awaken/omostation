@@ -3338,7 +3338,12 @@ bets:
   title: 子模块生命周期管理 — 指针同步/分支清理/Tags 管理
   appetite: 2-3 days
   priority: P1
-  status: candidate
+  status: done
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-submodule-lifecycle-management-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:c52b45bfd3306920c099849c740520a50f13de4c30fc931c50e4c6bda6e4e1ba
+    decision_ref: decision://accepted/BET-Y1Q4-T10-129
   goal: 建立子模块生命周期管理体系，包括指针漂移检测、过期远程分支清理、Tags 管理，以及子模块健康报告。
   non_goals:
   - 不修改子模块源码
@@ -3364,6 +3369,38 @@ bets:
   human_gate: false
   circuit_breaker: 子模块指针回退时阻断并提醒，不自动修复。
   retro: required
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c1e3db34a191277c0d26567038b19fcfc7d63b0e
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  done_at: '2026-09-07'
+  pr_number: 3347
 - id: BET-Y1Q4-T10-130
   track: T10-MATURITY
   window: Y1Q4
