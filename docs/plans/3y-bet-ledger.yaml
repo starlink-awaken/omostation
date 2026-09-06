@@ -20100,9 +20100,18 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t2-01-voice-memo-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d9de5d06cd99d20f5bed11160dc17d80c513d9f67a4e94e26d3b1538bb66473f
+    decision_ref: decision://accepted/BET-Y2Q1-T2-01
   write_surfaces:
   - projects/agora/src/agora/server/tools_bos/voice.py
   - projects/cockpit/src/cockpit/commands/voice_memo.py
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - projects/cockpit/tests/test_voice_memo.py
+  - projects/agora/tests/test_voice_tools.py
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q1-T2-01.md
   pasw_required: false
   depends_on:
