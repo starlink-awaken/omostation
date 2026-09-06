@@ -434,7 +434,7 @@ milestones:
 - id: MS-Y1-ASD-SPEC
   campaign_ref: CMP-Y1-AGENT-ORIENT
   required_bets:
-  - BET-Y1Q4-T9-01
+  - BET-Y1Q4-T9-03
   required_krs:
   - KR-HOLDABILITY-ORPHAN-BETS
   exit_gate:
@@ -3295,7 +3295,7 @@ bets:
   - BET-Y1Q4-T6-29
   - BET-Y1Q4-T8-23
 
-- id: BET-Y1Q4-T9-01
+- id: BET-Y1Q4-T9-03
   track: T9-OBSERV
   window: Y1Q4
   title: Agent Session Dashboard 规格与台账立项（无 UI 信息聚合）
@@ -3305,20 +3305,20 @@ bets:
   goal: 完成 Agent Session Dashboard（ASD）全景规格：定义 8 板块 IA、维度映射、asd.session.v1 schema、触发路径与分阶段交付；写入台账并关联 Agent 冷启动定向战役，使后续 MVP 实现有可验证边界。
   non_goals:
   - 不实现 Web UI / cockpit-ui 页面
-  - 不在本 bet 内实现完整 aggregator（MVP 留给 BET-Y1Q4-T9-02）
+  - 不在本 bet 内实现完整 aggregator（MVP 留给 BET-Y1Q4-T9-04）
   - 不新增第二控制面或平行 dispatcher
   - 不把运行时数值硬编码进 CLAUDE.md
   done_when:
   - docs/plans/2026-09-06-agent-session-dashboard-spec.md 存在且含 IA/schema/触发/阶段/验收
-  - 3y-bet-ledger.yaml 含 BET-Y1Q4-T9-01 与 CMP-Y1-AGENT-ORIENT，lint 通过
+  - 3y-bet-ledger.yaml 含 BET-Y1Q4-T9-03 与 CMP-Y1-AGENT-ORIENT，lint 通过
   - BET 通过 campaign_ref/milestone 关联到 OBJ-HOLDABILITY
-  - bet-ledger.py show BET-Y1Q4-T9-01 可解析
+  - bet-ledger.py show BET-Y1Q4-T9-03 可解析
   verify:
   - cmd: test -f docs/plans/2026-09-06-agent-session-dashboard-spec.md
     expect: exit 0
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0
-  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py show BET-Y1Q4-T9-01
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py show BET-Y1Q4-T9-03
     expect: exit 0
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py portfolio lint
     expect: exit 0
@@ -3329,7 +3329,7 @@ bets:
   - docs/superpowers/specs/2026-09-06-agent-session-dashboard-design.md
   - docs/plans/3y-bet-ledger.yaml
   - CLAUDE.md
-  - .omo/_knowledge/retros/BET-Y1Q4-T9-01.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T9-03.md
   pasw_required: false
   depends_on: []
   risk_level: L1
@@ -3340,6 +3340,6 @@ bets:
   value_indicator_policy: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-06-agent-session-dashboard-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:ff7315ee9674347cec83f56a9eed9a08aa1477f885f2353fcd985f55892e2485
-    decision_ref: decision://accepted/BET-Y1Q4-T9-01
+    spec_version: 1.0.1
+    content_digest: sha256:cd8573840afe4878120d7614a7ef1c38f295d57db50342b338f07b64cc178302
+    decision_ref: decision://accepted/BET-Y1Q4-T9-03
