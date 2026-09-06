@@ -10,7 +10,7 @@ last-reviewed: 2026-09-04
 > 自动生成于 1970-01-01T00:00:00Z | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 
-共 **210** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
+共 **213** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
 
 ## 目录
 
@@ -1766,6 +1766,7 @@ cockpit vault --help          # 完整参数面
 | `cockpit list` | 查看研究历史 |
 | `cockpit logs` | 查看日志 |
 | `cockpit lora` | 查看与测试端侧在线 LoRA 适配层热插拔 |
+| `cockpit mail-draft` | 邮箱 3 档拟复 (经 BOS inbox/mail/draft 服务) |
 | `cockpit merge` | 合并多个研究结果为新研究 |
 | `cockpit metrics` | 查看 bus metrics 快照 |
 | `cockpit mutate` | 通过 agora 统一 BOS URI 写协议修改资源 |
@@ -1789,11 +1790,13 @@ cockpit vault --help          # 完整参数面
 | `cockpit replay` | 查看 Experience Replay 缓冲区状态 |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit restore` | 恢复已隔离研究记录 |
+| `cockpit review` | 左右分栏 Diff 审阅工作台 (初稿 vs 编辑态) |
 | `cockpit route` | 为模型选择最优节点 |
 | `cockpit run` | 在隔离沙箱中挂载卡带并执行领域意图 |
 | `cockpit scan` | 平面扫描 |
 | `cockpit scene` | 🗺️ 业务场景正交领域 (scenario/journey/gongwen/brief/family-hub) |
 | `cockpit score` | 评分债务项 |
+| `cockpit send` | 一键确认署名并经外发网关真实外发 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit sign` | 提交用户署名 Diff 并入队 Experience Replay |
 | `cockpit snapshot` | KV 缓存快照管理与预热 |
@@ -1851,7 +1854,7 @@ cockpit completion fish | source    # Fish
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
-| `cockpit agora` | `agora` | 106 |
+| `cockpit agora` | `agora` | 107 |
 | `cockpit family-hub` | `family-hub` | 6 |
 | `cockpit mesh` | `aetherforge` | 15 |
 | `cockpit compute` | `aetherforge` | 15 |
