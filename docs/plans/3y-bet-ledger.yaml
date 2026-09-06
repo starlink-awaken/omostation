@@ -3338,6 +3338,11 @@ bets:
   appetite: 2-3 days
   priority: P1
   status: candidate
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-submodule-lifecycle-management-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:6e43bb119abcbbd926bfbc8ed076605988fb29e7
+    decision_ref: decision://accepted/BET-Y1Q4-T10-129
   goal: 建立子模块生命周期管理体系，包括指针漂移检测、过期远程分支清理、Tags 管理，以及子模块健康报告。
   non_goals:
   - 不修改子模块源码
