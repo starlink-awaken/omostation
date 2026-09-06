@@ -3382,6 +3382,16 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+      value:
+        status: ACCEPTED
+        evidence:
+          stakeholder_sign_off:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
 - id: BET-Y1Q4-T10-130
   track: T10-MATURITY
   window: Y1Q4
