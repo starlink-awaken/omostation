@@ -19117,7 +19117,8 @@ bets:
   title: B.D.S.K. 虚拟董事会对抗审议流常态化挂载与自动化决策提案
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-06
   goal: 将商业（Business）、研发（Developer）、安全（Security）、知识（Knowledge）四角对抗审议深度融入 Cockpit，针对重大技术方案或高风险外发内容自动触发对抗评审，生成
     MADR 决策提案。
   non_goals:
@@ -19137,8 +19138,48 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:d8383f8d2f0c9216a84f5ca011e58a91a6215d94dbd0b6f9c57d1e40fc34f3cb
     decision_ref: decision://accepted/BET-Y1Q4-T5-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t5-02-bdsk-evaluate-design.md
+            sha256: sha256:d8383f8d2f0c9216a84f5ca011e58a91a6215d94dbd0b6f9c57d1e40fc34f3cb
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-02.md
+            sha256: sha256:12bf36c59ab72826c14e7fe24296b48c017d187f46c07c7d27ffc09466a665a2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-02.md
+            sha256: sha256:12bf36c59ab72826c14e7fe24296b48c017d187f46c07c7d27ffc09466a665a2
+          merged_reachable_commit:
+            ref: git://origin/main@6dc0e0e3f96fb194043510167d96a07be2dc8f98
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-02.md
+            sha256: sha256:12bf36c59ab72826c14e7fe24296b48c017d187f46c07c7d27ffc09466a665a2
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-02.md
+            sha256: sha256:12bf36c59ab72826c14e7fe24296b48c017d187f46c07c7d27ffc09466a665a2
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-02.md
+            sha256: sha256:12bf36c59ab72826c14e7fe24296b48c017d187f46c07c7d27ffc09466a665a2
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-02.md
+            sha256: sha256:12bf36c59ab72826c14e7fe24296b48c017d187f46c07c7d27ffc09466a665a2
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/bdsk.py
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - projects/cockpit/src/cockpit/cli.py
+  - docs/plans/3y-bet-ledger.yaml
   - .agents/skills/bdsk-virtual-board/SKILL.md
   - .omo/_knowledge/retros/BET-Y1Q4-T5-02.md
   pasw_required: false
