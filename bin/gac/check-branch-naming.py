@@ -1,92 +1,120 @@
 #!/usr/bin/env python3
-"""Branch naming gate — 校验分支名符合 branch-prefix-policy.yaml 命名 SSOT.
+"""
+机制 22d (2026-09-06): 分支命名合规校验 — 强制命名空间隔离.
 
-被 hook-runner 以 blocking 引用 (manifest: branch-naming, pre-commit/pre-push/pre-rebase 段).
-此前为 placeholder 空壳 (exit 0 零校验); 本实现恢复真实校验:
+使用:
+  python bin/gac/check-branch-naming.py --branch work/test --policy .omo/_truth/registry/branch-prefix-policy.yaml
+  python bin/gac/check-branch-naming.py --list --policy .omo/_truth/registry/branch-prefix-policy.yaml
 
-- 读 --policy 的 naming 段 (每个前缀一条正则) + immortal 段 (放行列表)
-- --branch 匹配任一 naming 正则 → PASS
-- --branch 命中 immortal (origin/main, origin/HEAD) → PASS
-- 否则 → FAIL (exit 1), 列出允许的前缀
-
-用法:
-    check-branch-naming.py --branch <branch> --policy <path>
+退出码:
+  0 = 合规 (或 main/HEAD)
+  1 = 不合规
 """
 
 import argparse
+import json
+import os
 import re
 import sys
 from pathlib import Path
 
-EXIT_PASS = 0
-EXIT_FAIL = 1
-EXIT_ERR = 2
+import yaml
 
 
 def load_policy(policy_path: str) -> dict:
-    """读取 branch-prefix-policy.yaml, 返回 {naming: {prefix: regex}, immortal: [...]}."""
-    import yaml
+    """加载策略文件."""
+    if not os.path.exists(policy_path):
+        print(f"⚠️ 策略文件不存在: {policy_path}", file=sys.stderr)
+        return {}
+    with open(policy_path, encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
 
-    path = Path(policy_path)
-    if not path.is_file():
-        print(f"[check-branch-naming] ❌ policy 文件不存在: {path}", file=sys.stderr)
-        sys.exit(EXIT_ERR)
 
-    try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except Exception as exc:  # noqa: BLE001 — yaml 解析失败统一报错
-        print(f"[check-branch-naming] ❌ policy 解析失败: {exc}", file=sys.stderr)
-        sys.exit(EXIT_ERR)
+def check_branch(branch: str, policy: dict) -> tuple[bool, str, dict]:
+    """检查分支名是否合规. 返回 (ok, matched_prefix, prefix_info)."""
+    naming = policy.get("naming", {})
+    prefixes = policy.get("prefixes", {})
+    immortal = set(policy.get("immortal", []))
 
-    naming = data.get("naming") or {}
-    if not isinstance(naming, dict) or not naming:
-        print(f"[check-branch-naming] ❌ policy 缺少 naming 段: {path}", file=sys.stderr)
-        sys.exit(EXIT_ERR)
+    # 永不过期的分支
+    if branch in immortal or branch in ("main", "HEAD", ""):
+        return True, "main", {}
 
-    compiled = {}
-    for prefix, pattern in naming.items():
-        if not isinstance(pattern, str):
-            print(f"[check-branch-naming] ❌ naming.{prefix} 不是正则字符串", file=sys.stderr)
-            sys.exit(EXIT_ERR)
-        try:
-            compiled[prefix] = re.compile(pattern)
-        except re.error as exc:
-            print(f"[check-branch-naming] ❌ naming.{prefix} 正则无效 ({pattern!r}): {exc}", file=sys.stderr)
-            sys.exit(EXIT_ERR)
+    # 精确匹配 main
+    if re.match(naming.get("main", "^main$"), branch):
+        return True, "main", {}
 
-    immortal = data.get("immortal") or []
-    return {"naming": compiled, "immortal": list(immortal)}
+    # 逐前缀匹配
+    for prefix, info in prefixes.items():
+        pattern = info.get("pattern", "")
+        if pattern and re.match(pattern, branch):
+            return True, prefix, info
+
+    # 全不匹配
+    return False, "", {}
+
+
+def list_prefixes(policy: dict) -> list[dict]:
+    """列出所有可用前缀."""
+    prefixes = policy.get("prefixes", {})
+    result = []
+    for prefix, info in prefixes.items():
+        result.append({
+            "prefix": prefix,
+            "pattern": info.get("pattern", ""),
+            "ttl_days": info.get("ttl_days", 30),
+            "action": info.get("action", "remind"),
+            "creators": info.get("creators", []),
+            "description": info.get("description", ""),
+        })
+    return result
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Branch naming gate (policy SSOT)")
-    parser.add_argument("--branch", required=True, help="分支名 (git rev-parse --abbrev-ref HEAD)")
-    parser.add_argument("--policy", required=True, help="branch-prefix-policy.yaml 路径")
+    parser = argparse.ArgumentParser(description="分支命名合规校验")
+    parser.add_argument("--branch", type=str, help="待检查的分支名")
+    parser.add_argument("--policy", type=str, required=True, help="策略文件路径")
+    parser.add_argument("--list", action="store_true", help="列出所有可用前缀")
+    parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()
 
     policy = load_policy(args.policy)
-    branch = args.branch.strip()
 
-    # immortal 放行 (origin/main, origin/HEAD)
-    if branch in policy["immortal"]:
-        print(f"✓ branch naming: {branch} (immortal 放行)")
-        return EXIT_PASS
+    if args.list:
+        prefixes = list_prefixes(policy)
+        if args.json:
+            print(json.dumps({"available_prefixes": prefixes}, indent=2, ensure_ascii=False))
+        else:
+            print("可用前缀:")
+            for p in prefixes:
+                print(f"  {p['prefix']:10s}  pattern={p['pattern']}  ttl={p['ttl_days']}d  creators={p['creators']}  {p['description']}")
+        return 0
 
-    matched = None
-    for prefix, regex in policy["naming"].items():
-        if regex.fullmatch(branch):
-            matched = prefix
-            break
+    if not args.branch:
+        parser.error("--branch or --list is required")
 
-    if matched:
-        print(f"✓ branch naming: {branch} (前缀 {matched})")
-        return EXIT_PASS
+    ok, matched, info = check_branch(args.branch, policy)
 
-    allowed = ", ".join(sorted(policy["naming"].keys()))
-    print(f"❌ branch naming: {branch} 不符合分支前缀策略", file=sys.stderr)
-    print(f"   允许前缀: {allowed}", file=sys.stderr)
-    print("   示例: work/my-topic, fix/xxx, chore/yyy, feat/zzz, temp-xxx, pr/xxx", file=sys.stderr)
-    return EXIT_FAIL
+    if args.json:
+        result = {
+            "branch": args.branch,
+            "ok": ok,
+            "matched_prefix": matched,
+            "info": info,
+        }
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0 if ok else 1
+
+    if ok:
+        print(f"✅ 分支 '{args.branch}' 合规 (前缀: {matched})", file=sys.stderr)
+        return 0
+
+    # 不合规
+    print(f"❌ 分支 '{args.branch}' 不符合前缀策略", file=sys.stderr)
+    print("可用前缀:", file=sys.stderr)
+    for prefix, pinfo in policy.get("prefixes", {}).items():
+        print(f"  {prefix:10s}  {pinfo.get('pattern', '')}  ({pinfo.get('description', '')})", file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":
