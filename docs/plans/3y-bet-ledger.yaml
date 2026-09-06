@@ -1289,7 +1289,8 @@ bets:
   title: KEMS-v2 卫生政务与技术架构领域知识图谱毫秒级混合检索
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-06
   goal: 将卫生健康国家政策、公文规程、系统全量 ADR 与历史优秀批复沉淀为 KEMS-v2 知识图谱，结合向量嵌入、BM25 全文索引与图关系推理，实现
     <50ms 的混合检索与精准引用溯源。
   non_goals:
@@ -1310,9 +1311,48 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:72f5dd6c9c6f665bec220b006018108943bee70981ee33df243d1f59652f4d1c
     decision_ref: decision://accepted/BET-Y1Q3-T10-117
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-t10-117-kems-v2-hybrid-retrieval-design.md
+            sha256: sha256:72f5dd6c9c6f665bec220b006018108943bee70981ee33df243d1f59652f4d1c
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:e1f0a589d9e017c18a5ddeb541c8636629b26690b02b7d4b83ec336dd8ffc52f
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:e1f0a589d9e017c18a5ddeb541c8636629b26690b02b7d4b83ec336dd8ffc52f
+          merged_reachable_commit:
+            ref: git://origin/main@cbc4ba6112df9e5aad5d16242c108a363439272e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:e1f0a589d9e017c18a5ddeb541c8636629b26690b02b7d4b83ec336dd8ffc52f
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:e1f0a589d9e017c18a5ddeb541c8636629b26690b02b7d4b83ec336dd8ffc52f
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:e1f0a589d9e017c18a5ddeb541c8636629b26690b02b7d4b83ec336dd8ffc52f
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-117.md
+            sha256: sha256:e1f0a589d9e017c18a5ddeb541c8636629b26690b02b7d4b83ec336dd8ffc52f
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/knowledge/kairon/src/kairon/graph/kems_v2.py
   - projects/knowledge/gbrain/src/retrieval/hybrid.ts
+  - projects/knowledge/kairon/tests/test_kems_v2_scale.py
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q3-T10-117.md
   pasw_required: false
   depends_on:
