@@ -451,7 +451,7 @@ except Exception: print('')" 2>/dev/null || true)"
     # push 分支
     ROOT_REMOTE=$(resolve_root_remote) || exit 1
     echo "   remote: $ROOT_REMOTE ($(git remote get-url "$ROOT_REMOTE")); repo: $CANONICAL_ROOT_REPO"
-    git push -u "$ROOT_REMOTE" "$branch" 2>&1 | tail -3
+    bash "$(dirname "$0")/git-retry.sh" push -u "$ROOT_REMOTE" "$branch" 2>&1 | tail -3
     # 开 PR
     if command -v gh &>/dev/null; then
       gh pr create --repo "$CANONICAL_ROOT_REPO" --base main --head "$branch" \

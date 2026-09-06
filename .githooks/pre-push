@@ -1,5 +1,11 @@
 #!/bin/bash
 # 机制 22c: pre-push 委托给 hook-runner.sh
+# BET-Y1Q4-T10-131: 推送前网络连通性预检 (建议性, 不阻断)
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
+
+# 网络预检: 检测 SSH 连通性, 失败时提示 git-retry 自动切换 HTTPS
+REMOTE="${GIT_REMOTE:-origin}"
+bash "$ROOT/bin/gac/pre-push-network-check.sh" "$REMOTE" 2>&1 || true
+
 bash "$ROOT/bin/gac/hook-runner.sh" --hook pre-push
