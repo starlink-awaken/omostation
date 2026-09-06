@@ -3118,7 +3118,8 @@ bets:
   title: 仓库维护任务 Cron 化 — 分支/Tags/Worktree 自动清理
   appetite: 2-3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-09-06'
   goal: 将仓库维护任务自动化并接入 cron 定时执行，包括僵尸 worktree 清理、过期分支 TTL 强制执行、README 硬编码数据检测，以及自动生成仓库健康度周报。
   non_goals:
   - 不修改现有 git hook 逻辑
@@ -3149,6 +3150,43 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: cron 任务失败时记录日志并发送通知，不自动重试，防止误删活跃分支。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@0e6d649d53ea4b2e13ffd109783a76f5a0f99598
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-09-06-repo-maintenance-cron-spec.md
+            sha256: sha256:218dc8171b6ae851d578155b8f3b2372b9f09815bc6ca2d095f6a42361c619f3
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-repo-maintenance-cron-spec.md
+            sha256: sha256:218dc8171b6ae851d578155b8f3b2372b9f09815bc6ca2d095f6a42361c619f3
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-06-repo-maintenance-cron-spec.md
+            sha256: sha256:218dc8171b6ae851d578155b8f3b2372b9f09815bc6ca2d095f6a42361c619f3
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-127.md
+            sha256: sha256:8660d54859a26574263f736a516c14927c66d03955cf0da1a755599d8ed2afe0
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-127.md
+            sha256: sha256:8660d54859a26574263f736a516c14927c66d03955cf0da1a755599d8ed2afe0
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-127.md
+            sha256: sha256:8660d54859a26574263f736a516c14927c66d03955cf0da1a755599d8ed2afe0
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-127.md
+            sha256: sha256:8660d54859a26574263f736a516c14927c66d03955cf0da1a755599d8ed2afe0
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-06-repo-maintenance-cron-spec.md
     spec_version: 1.0.0
