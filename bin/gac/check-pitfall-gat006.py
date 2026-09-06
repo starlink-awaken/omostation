@@ -27,7 +27,7 @@ from pathlib import Path
 WORKSPACE = Path(__file__).resolve().parents[2]
 
 
-def _git(args: list[str], timeout: int = 10) -> subprocess.CompletedProcess:
+def _git(args: list[str], timeout: int = 30) -> subprocess.CompletedProcess:
     """Run a git command in the workspace, capturing output."""
     return subprocess.run(
         ["git"] + args,
@@ -44,7 +44,7 @@ def check_pitfall_gat006() -> dict:
     findings: list[str] = []
 
     # Step 1: fetch latest origin/main (best-effort, non-blocking)
-    fetch_result = _git(["fetch", "origin", "main"], timeout=15)
+    fetch_result = _git(["fetch", "origin", "main"], timeout=30)
     if fetch_result.returncode != 0:
         # fetch failed (no network, no remote) — skip check gracefully
         return {"ok": True, "message": "PITFALL-GAT-006 skipped (git fetch failed)", "findings": []}
