@@ -24427,7 +24427,8 @@ bets:
   title: 防腐看门狗常态化与表面积自动熔断巡检
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-06
   goal: 落地代码/文档表面积每日硬性限额监控、GaC 规则健康度打分与自动退役、双头依赖与死代码自动报警熔断，守死每周净增行数 <= 0 防腐红线。
   non_goals:
   - 不直接强行删除未经弃用标记的代码
@@ -24447,6 +24448,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:b08869579bb4c19afa8944cb1ac517a1a6c2deeaa759e77b311f81eaf7d10057
     decision_ref: decision://accepted/BET-Y2Q1-T6-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t6-03-anti-corrosion-patrol-design.md
+            sha256: sha256:b08869579bb4c19afa8944cb1ac517a1a6c2deeaa759e77b311f81eaf7d10057
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-03.md
+            sha256: sha256:1c111755652aecddf542f8f7f75431b3ee7b25d5fad8d40311b4b34c412acabf
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-03.md
+            sha256: sha256:1c111755652aecddf542f8f7f75431b3ee7b25d5fad8d40311b4b34c412acabf
+          merged_reachable_commit:
+            ref: git://origin/main@31851c87dcea67d502882e024f662f819decdee8
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-03.md
+            sha256: sha256:1c111755652aecddf542f8f7f75431b3ee7b25d5fad8d40311b4b34c412acabf
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-03.md
+            sha256: sha256:1c111755652aecddf542f8f7f75431b3ee7b25d5fad8d40311b4b34c412acabf
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-03.md
+            sha256: sha256:1c111755652aecddf542f8f7f75431b3ee7b25d5fad8d40311b4b34c412acabf
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-03.md
+            sha256: sha256:1c111755652aecddf542f8f7f75431b3ee7b25d5fad8d40311b4b34c412acabf
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - bin/gac/anti-corrosion-patrol.py
   - .omo/_truth/registry/governance-checks.yaml
