@@ -53,18 +53,6 @@ checkers:
   expected: All rules enforced by CI + pre-commit + doc checks (X4 consistency)
   remediation: Apply consistency rules via x4-consistency-rules; fix violation source
   schedule: daily
-- id: check-documents-boundary
-  dimension: X4
-  name: E-DOC 双平面边界检查器
-  description: E-DOC-001~005 Documents 内容平面边界规则检查 (ADR-0191)
-  module: bin/gac/check-documents-boundary.py
-  type: script
-  severity: high
-  enabled: true
-  owner: governance-team
-  expected: No executable scripts, env deps, cross-domain writes, or config drift in Documents
-  remediation: Run check-documents-boundary.py --auto-fix or follow Diagnostic Envelope suggestions
-  schedule: on_commit
 execution:
   parallel: true
   max_workers: 4
@@ -168,7 +156,6 @@ gac:
     - eval_exec
     - mutable_default
     - placeholder
-    - documents_boundary
     lifecycle_enum:
     - draft
     - active
@@ -192,9 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 623
-    # 2026-09-05: +24 from T6-20 (CR-EDOC-001~005 + Documents boundary gate + check scripts)
-    # 2026-09-06: +1 anti-corrosion-patrol.py (BET-Y2Q1-T6-03)
+    script_baseline: 599
     # 2026-09-03: +1 perception-coverage
     # 2026-09-03: +2 ops-cron-install + weekly-evolution-report
     # 2026-09-04: +2 T10-105 work branch net bin diff baseline
@@ -202,12 +187,11 @@ gac:
     # 2026-09-04: +1 portfolio_contract.py (BET-Y1Q4-T1-04 Wave A1 validator)
     # 2026-09-04: +1 portfolio_graph.py (BET-Y1Q4-T1-05 coverage graph)
     # 2026-09-04: +1 hitl-proposal.py (BET-Y1Q4-HITL-01 HITL proposal system)
+    # 2026-09-06: +12 mechanism 22c hook runner + guard scripts (BET-Y1Q4-T6-24)
     # 2026-09-05: +1 notification.py (BET-Y1Q4-HITL-02 HITL v1.1 multi-channel)
     # 2026-09-05: +2 cold-backup-drill.sh + restore-cold-snapshot.sh (BET-Y2Q1-T10-01)
-    # 2026-09-06: +1 check-documents-boundary.py (BET-Y1Q4-T6-20 E-DOC-001~005)
     # 2026-09-05: +1 check-mcp-bos-uri-completeness.py (BET-Y1Q4-T6-19)
     # 2026-09-05: +2 arch-health-meter.py + architecture-health-weekly.sh (BET-Y1Q4-T6-18)
-    # 2026-09-06: +10 mechanism-22c hook 加固 (9 WIP scripts + check-runtime-artifacts.py, BET-Y1Q4-T6-24)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -2515,106 +2499,38 @@ gac:
     version: 2
     lifecycle: active
     adr: ADR-0205
-  - id: CR-EDOC-001
-    dimension: X4
-    layer: L2
-    name: E-DOC-001 禁止 Documents 可执行脚本
-    description: Documents 内容平面禁止 .py/.sh/.bash/.js/.ts/.rb/.go 可执行脚本文件
-    check_type: direct_io_gate
-    target: ~/Documents
-    executor:
-    - gac_local_gate
-    - ci_gate
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-09-06'
-    relates_to:
-    - CR-L2-DIRECT-IO
-    adr: ADR-0191
-    enforcement: required
-    source_ref: bin/gac/check-documents-boundary.py
-    owner: governance-team
-    expected: No executable script files exist in Documents content plane
-    remediation: Move script to Workspace/scripts/ or bin/gac/
-  - id: CR-EDOC-002
-    dimension: X4
-    layer: L2
-    name: E-DOC-002 禁止 Documents 环境依赖目录
-    description: Documents 内容平面禁止 node_modules/.venv/__pycache__/.pytest_cache 等环境目录
-    check_type: direct_io_gate
-    target: ~/Documents
-    executor:
-    - gac_local_gate
-    - ci_gate
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-09-06'
-    relates_to:
-    - CR-L2-DIRECT-IO
-    adr: ADR-0191
-    enforcement: required
-    source_ref: bin/gac/check-documents-boundary.py
-    owner: governance-team
-    expected: No environment/cache directories exist in Documents content plane
-    remediation: rm -rf the banned directory and add to .gitignore in Workspace
-  - id: CR-EDOC-003
-    dimension: X4
-    layer: L2
-    name: E-DOC-003 禁止跨域裸写
-    description: "Workspace→Documents 直接写入必须通过 BOS 路由，事实文件需 bos_routed 标记"
-    check_type: direct_io_gate
-    target: ~/Documents/_entities/facts
-    executor:
-    - gac_local_gate
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-09-06'
-    relates_to:
-    - CR-L2-DIRECT-IO
-    adr: ADR-0191
-    enforcement: required
-    source_ref: bin/gac/check-documents-boundary.py
-    owner: governance-team
-    expected: "Fact files routed through bos:// or marked with bos_routed: true"
-    remediation: Route writes through bos://documents/{domain}/{resource}
-  - id: CR-EDOC-004
-    dimension: X4
-    layer: L2
-    name: E-DOC-004 关键事实文件 Schema 与保鲜校验
-    description: _entities/facts/*.yaml 必须合法 YAML mapping 且 14 天内更新
-    check_type: direct_io_gate
-    target: ~/Documents/_entities/facts
-    executor:
-    - gac_local_gate
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-09-06'
-    relates_to:
-    - CR-L2-DIRECT-IO
-    adr: ADR-0191
-    enforcement: required
-    source_ref: bin/gac/check-documents-boundary.py
-    owner: governance-team
-    expected: All fact files are valid YAML mappings updated within 14 days
-    remediation: Fix YAML syntax or refresh stale fact files
-  - id: CR-EDOC-005
-    dimension: X4
-    layer: L2
-    name: E-DOC-005 多客户端配置 SSOT 一致性
-    description: 多客户端配置必须由 documents-domain-projects.yaml SSOT 生成，禁止手工维护
-    check_type: direct_io_gate
-    target: bin/gac/documents-*-config.py
-    executor:
-    - gac_local_gate
-    - ci_gate
-    lifecycle: active
-    version: 1.0.0
-    created_at: '2026-09-06'
-    relates_to:
-    - CR-L2-DIRECT-IO
-    adr: ADR-0191
-    enforcement: required
-    source_ref: bin/gac/check-documents-boundary.py
-    owner: governance-team
-    expected: Client configs generated from SSOT registry, no hand-maintained configs
-    remediation: Create generator scripts reading from documents-domain-projects.yaml
+  drift:
+    schedule: daily
+    auto_heal: false
+    alert_on:
+    - missing_executor
+    - ghost_rule
+    - version_mismatch
+  freeze:
+    active: true
+    since: '2026-08-05'
+    max_rules: 150
+    dimension_limits:
+      X1: 38
+      X2: 35
+      X3: 38
+      X4: 60
+      rationale: 各维度上限确保均衡覆盖, 防止单维度主导. X4 上限最高因其一致性检查需求最大 (含 Harness 合规).
+    slot_reservation:
+      X4: 8
+      X1: 5
+      X3: 5
+      X2: 4
+      rationale: 剩余 22 槽位按需分配, 优先 X4 一致性检查和新维度扩展.
+    exemption_process: ADR + governance-team approval
+    review_trigger: 剩余槽位 < 5 或每季度末
+    reason: Phase 8 合并完成 — 10 条 CR-HARNESS-* 合并为 4 条 (STRUCTURE/MOF-INTEGRATION/OPERATIONS/GOVERNANCE).
+      当前 85 active, 预算内.
+  lifecycle:
+    draft_to_active_days: 7
+    deprecated_to_removed_days: 28
+_meta:
+  status: active
+  lifecycle: ssot
+  owner: governance-team
+  last-reviewed: 2026-06-28

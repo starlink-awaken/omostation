@@ -149,7 +149,7 @@ pre-merge-commit:
 
 # ── post-merge ──────────────────────────────────────────────
 post-merge:
-  description: "合并后自动同步 (advisory only, 由 canonical post-merge 内联实现)"
+  description: "合并后自动同步 (advisory only)"
   checks:
     - id: auto-sync-docs
       script: "bin/ssot/post-commit-sync-check.py"
@@ -158,17 +158,17 @@ post-merge:
       description: "文档自动同步"
 
     - id: submodule-change-notify
-      script: ".githooks/post-merge"  # canonical post-merge 内联实现子模块变更通知
+      script: "bin/gac/notify-submodule-change.py"
       blocking: false
       timeout: 5
-      description: "子模块指针变更通知 (canonical post-merge 内联)"
+      description: "子模块指针变更通知"
 
 # ── commit-msg ──────────────────────────────────────────────
 commit-msg:
-  description: "提交消息规范 (由 canonical commit-msg 实现)"
+  description: "提交消息规范"
   checks:
     - id: chore-state-guard
-      script: ".githooks/commit-msg"  # canonical commit-msg 内联实现 chore(state) 守卫
+      script: "bin/gac/guard-chore-state.py $1"
       blocking: true
       timeout: 3
-      description: "chore(state) 禁止直连 main (canonical commit-msg)"
+      description: "chore(state) 禁止直连 main"
