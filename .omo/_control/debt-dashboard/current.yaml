@@ -1,14 +1,14 @@
+generated_at: '2026-09-06T06:35:01Z'
 debt_metrics:
-  backlog_pressure: 1.0
+  debt_health: 87.5
   classification_entropy: 0.0
-  coupling_load: 4.33
-  debt_health: 0.0
-  pointer_entropy: 2.0
   state_entropy: 0.0
+  pointer_entropy: 2.0
   time_entropy: 0.0
+  backlog_pressure: 0.1
+  coupling_load: 46.0
+watchlist_item_ids: []
 gate_item_ids: []
-generated_at: '2026-08-31T06:23:56Z'
-next_review_queue: []
 overdue_review_count: 0
 overdue_review_item_ids: []
-watchlist_item_ids: []
+next_review_queue: []

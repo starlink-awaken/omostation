@@ -1,0 +1,56 @@
+id: TASK-262B9E59
+title: '退役 mof-model.py 弃用 CLI: --save 默认覆写 nodes/ + 每分钟调度链待定位'
+description: 'mof-model.py (已弃用, stderr 提示走 cockpit) 仍被某调度链触发: 2026-09-06T05:59:36Z
+  曾一次覆写 projects/ecos/src/ecos/ssot/mof/nodes/ 66 文件 + 新增 6 个低质 PROTOCOL-WS-* 节点 (properties
+  丢失 sfop_slot/dao_layer, description 空), 并把 --save 设为 argparse 默认 True 导致任何调用都落盘。2026-09-06
+  已手工恢复 nodes/ 并删除生成物; 70s 观察无重写, 但调度源 (crontab 55 项/LaunchAgents 4 个/watch-dispatch)
+  未定位到具体条目, 复发风险未消除。另: docs/CLI-REFERENCE.md 与 ssot/README.md 仍把 mof-model 列为工具链成员,
+  与弃用状态矛盾。'
+status: candidate
+task_type: debt
+risk_level: L2
+depends_on: []
+source_docs:
+- projects/ecos/src/ecos/ssot/tools/mof-model.py
+- .omo/standards/omo-governance-surfaces.md
+- docs/CLI-REFERENCE.md
+deliverables:
+- mof-model.py --save 默认值改 False 或直接删除 save_nodes 落盘路径
+- 调度源定位并在源头摘除 mof-model 调用 (或节点产出改走 m1/ 规范路径)
+- docs/CLI-REFERENCE.md 与 ssot/README.md 移除 mof-model 工具链条目
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/TASK-262B9E59
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- 调度源定位证据 (crontab/plist grep 输出)
+- nodes/ 目录 72h 零复发 mtime 证据
+test_plan:
+- grep -rn 'mof-model' crontab 全表 + LaunchAgents + lib/workspace_watch_dispatch.py
+  全部快照, 输出空 (调度源清零)
+- python3 projects/ecos/src/ecos/ssot/tools/mof-model.py --summary 2>&1 | grep -c
+  '已弃用' >= 1 且不产生任何文件写入 (strace 或 mtime 前后比对)
+- git -C projects/ecos status --short src/ecos/ssot/mof/nodes/ 输出空 (72h 无复发)
+allowed_operation_level: L2
+human_approval_required: false
+metadata:
+  priority: P1
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-09-06T06:33:51Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: omo:task:create:TASK-262B9E59
