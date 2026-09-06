@@ -24896,10 +24896,41 @@ bets:
   title: Documents Runtime Jobs 契约对齐与自动化守护常态化 (Runtime Jobs Parity & Cadence)
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-06
+  value_indicator_policy: false
   goal: 修复 documents_domain_jobs.py 对 runtime-learning 任务的 Schema 缺失与校验崩溃，恢复 documents-domain-project-check.py
     绿灯；并将 7 个 manual 运行时巡检任务接入常态化自动化管道（launchd/crontab 调度），定时产出结构化 evidence 并汇入 Cockpit
     驾驶舱事实面。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@17e67f107d474c9d425a8cc4b4136e31ac6acfc6
+          tests:
+            ref: receipt://tests/test_documents_domain_project_check.py
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t10-124-runtime-jobs-parity.md
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t10-124-runtime-jobs-parity.md
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://bin/gac/documents-jobs-scheduler.py
+          fresh_receipt:
+            ref: receipt://bin/gac/documents-domain-project-check.py
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-124.md
+          cleanup:
+            ref: receipt://bin/gac/documents-jobs-scheduler.py
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   non_goals:
   - 不在 Documents 物理目录启动常驻守护进程
   - 不新增未经 ADR 审议的第 8 个 runtime job
@@ -24932,6 +24963,11 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T6-20
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t10-124-runtime-jobs-parity.md
+    spec_version: 1.0.0
+    content_digest: sha256:b82365a89f515f121bead5ffe864483b758553e6102f2991d873006cccf2bfa5
+    decision_ref: decision://accepted/BET-Y1Q4-T10-124
 - id: BET-Y1Q4-T6-21
   track: T6-EVOLUTION
   window: Y1Q4
