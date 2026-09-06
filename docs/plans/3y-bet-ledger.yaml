@@ -19132,6 +19132,11 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t5-02-bdsk-evaluate-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d8383f8d2f0c9216a84f5ca011e58a91a6215d94dbd0b6f9c57d1e40fc34f3cb
+    decision_ref: decision://accepted/BET-Y1Q4-T5-02
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/bdsk.py
   - .agents/skills/bdsk-virtual-board/SKILL.md
