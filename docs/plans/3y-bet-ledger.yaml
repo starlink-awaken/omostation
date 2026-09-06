@@ -20363,7 +20363,9 @@ bets:
   title: 两日会战经验固化 — PITFALL/skill/机制三层落地
   appetite: 1 days
   priority: P2
-  status: candidate
+  status: done
+  done_at: 2026-09-05 13:00:00+00:00
+  note: skill 41 个 + spec + retro + gac-worktree.sh 改动已 ship; 本 bet 补 CE matrix + flip status (strategic-panorama worktree 先前 re-verted).
   goal: 复盘 2026-09-04~05 会战 (9 交付 3 病灶模式), 固化 gitlink 假失败分诊 (PITFALL-GAT-007)、BET
     闭环 8 步 skill、submit auto-rebase 预防层、 scene-shadow-activate 参数纠偏; 挂账 omo 死链与 calibration
     语义统一。
@@ -20392,13 +20394,52 @@ bets:
   - .agents/skills/bet-closeout-chain/SKILL.md
   - .agents/skills/scene-shadow-activate/SKILL.md
   - bin/gac/gac-worktree.sh
-  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q1-T10-02.md
   - docs/superpowers/specs/2026-09-05-lessons-solidification-spec.md
+  - docs/plans/3y-bet-ledger.yaml
   pasw_required: false
   risk_level: L1
   human_gate: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.agents/skills/bet-closeout-chain/SKILL.md
+            sha256: sha256:9eeea82b8438a4602c2cdbbbf0c8ae0fc894a8004d8b0e0015050f0f482ac9e6
+          tests:
+            ref: receipt://.agents/skills/scene-shadow-activate/SKILL.md
+            sha256: sha256:c1a0fe2cb8559bc20ec68c9b71e2a85000991f23078cd5e12d6f7fd6d9922dd5
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-02.md
+            sha256: sha256:a5ba65f8d4e38161d721668b8f635aeb1ba1ba6bb1f25994b352c1aaa43a208f
+          merged_reachable_commit:
+            ref: git://origin/main@dec04de0111ad92d1f38fc2883bc82f6857c6d3b
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-02.md
+            sha256: sha256:a5ba65f8d4e38161d721668b8f635aeb1ba1ba6bb1f25994b352c1aaa43a208f
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-02.md
+            sha256: sha256:a5ba65f8d4e38161d721668b8f635aeb1ba1ba6bb1f25994b352c1aaa43a208f
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-02.md
+            sha256: sha256:a5ba65f8d4e38161d721668b8f635aeb1ba1ba6bb1f25994b352c1aaa43a208f
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-02.md
+            sha256: sha256:a5ba65f8d4e38161d721668b8f635aeb1ba6bb1ba1ba6bb1f25994b352c1aaa43a208f
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   circuit_breaker: auto-rebase 若破坏既有 submit 语义则回退该 hunk, 其余交付不受影响
-  retro: required
+  close_evidence: .omo/_knowledge/retros/BET-Y2Q1-T10-02.md
+  retro: .omo/_knowledge/retros/BET-Y2Q1-T10-02.md
+  value_indicator_policy: false
 - id: BET-Y2Q1-T7-04
   track: T7-SCENE
   window: Y2Q1
