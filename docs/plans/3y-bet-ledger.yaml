@@ -428,7 +428,8 @@ bets:
   title: Relocate family dashboard runtime state and prove HITL Documents writes
   appetite: 4 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-06
   goal: Materialize the real family dashboard state beneath the Workspace runtime
     plane and replace every direct Documents mutation with Cockpit-approved, OMO-recorded,
     Agora-routed, family-hub CAS transactions, without performing Phase C entry cutover
@@ -530,6 +531,42 @@ bets:
     spec_version: 1.2.0
     content_digest: sha256:66bfa238c8d59050f406b88ef0b63345efaf0a07495a3d2c8af301aa4ea732c1
     decision_ref: decision://accepted/BET-Y1Q3-T10-122
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a638559653983b781d83b6709bb6a96fd75d4902
+          tests:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b.md
+            sha256: sha256:a49e1580fa1db9d39723188db778feb2536ef3fea4d7c537d427fc271cdfc082
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md
+            sha256: sha256:66bfa238c8d59050f406b88ef0b63345efaf0a07495a3d2c8af301aa4ea732c1
+          rollback:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b.md
+            sha256: sha256:a49e1580fa1db9d39723188db778feb2536ef3fea4d7c537d427fc271cdfc082
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b.md
+            sha256: sha256:a49e1580fa1db9d39723188db778feb2536ef3fea4d7c537d427fc271cdfc082
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b.md
+            sha256: sha256:a49e1580fa1db9d39723188db778feb2536ef3fea4d7c537d427fc271cdfc082
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-122.md
+            sha256: sha256:eda16d04ae476102f7d440fe28eb40327ec91a7d45fefedf6096bc2ffba1db7d
+          cleanup:
+            ref: receipt://docs/reports/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b.md
+            sha256: sha256:a49e1580fa1db9d39723188db778feb2536ef3fea4d7c537d427fc271cdfc082
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q3-T10-111
   risk_level: L3
