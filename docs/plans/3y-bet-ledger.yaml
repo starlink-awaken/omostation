@@ -1584,6 +1584,43 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: 任何消费工具回归则归档回滚 (archive 拼回主文件), 主台账恢复原样
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@3001f509148214239fa1f9415ef78861f2b33b92
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-09-05-ledger-slimming-spec.md
+            sha256: sha256:c48e1af6fa5de6a5506e834a966c4c0a1ed65516df50abc7b6721759afe869a7
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-05-ledger-slimming-spec.md
+            sha256: sha256:c48e1af6fa5de6a5506e834a966c4c0a1ed65516df50abc7b6721759afe869a7
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-05-ledger-slimming-spec.md
+            sha256: sha256:c48e1af6fa5de6a5506e834a966c4c0a1ed65516df50abc7b6721759afe869a7
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-03.md
+            sha256: sha256:1b35b9f12cfe04977f50e1ce6fa692a982d4ff366a20b4a53d3631c64cddcd85
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-03.md
+            sha256: sha256:1b35b9f12cfe04977f50e1ce6fa692a982d4ff366a20b4a53d3631c64cddcd85
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-03.md
+            sha256: sha256:1b35b9f12cfe04977f50e1ce6fa692a982d4ff366a20b4a53d3631c64cddcd85
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T10-03.md
+            sha256: sha256:1b35b9f12cfe04977f50e1ce6fa692a982d4ff366a20b4a53d3631c64cddcd85
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 - id: BET-Y2Q2-T3-01
   track: T3-COGNI
