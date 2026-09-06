@@ -24927,7 +24927,7 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T5-03
-- id: BET-Y1Q4-T6-24
+- id: BET-Y1Q4-T6-25
   track: T6-EVOLUTION
   window: Y1Q4
   title: OpenHuman 本地桥接器升级与多源健康生物标记物 Schema 归一化 (OpenHuman Local Bridge & Biometric Normalizer)
@@ -24956,7 +24956,7 @@ bets:
   - projects/knowledge/kairon/packages/iris/src/iris/connectors/openhuman/biomarkers.py
   - projects/family-hub/src/family_hub/health_importer.py
   - projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py
-  - .omo/_knowledge/retros/BET-Y1Q4-T6-24.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-25.md
   risk_level: L2
   human_gate: false
   circuit_breaker: 敏感健康与生理体征数据处理全程必须保留在本地，严禁通过未经脱敏的网络请求发送至云端 API。
