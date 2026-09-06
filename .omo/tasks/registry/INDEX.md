@@ -16,9 +16,10 @@ status: archived
 |----|-------|--------|
 | kos-q-growth-rolling | KOS 季度扩量持续监测 (rolling goal 关联 task | active |
 
-## Planned Tasks (7 个)
+## Planned Tasks (8 个)
 | ID | Title | Status |
 |----|-------|--------|
+| TASK-262B9E59 | 退役 mof-model.py 弃用 CLI: --save 默认覆写 nodes/ + 每分钟 | candidate |
 | bet-y3h1-t7-01 | 中试 / 政策申报升 assisted | candidate |
 | bet-y3h2-t7-01 | 公文场景 routine (限格式类 | candidate |
 | cockpit-debt-debt-1 | 治理技术债务：债务 | candidate |
@@ -69,5 +70,5 @@ status: archived
 | bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | blocked |
 
 ---
-*Updated: 2026-09-05 (依据 `omo state sync-tasks` 与真实目录重算: done=292, planned=7, active=1, blocked=1, archived=6 顶层)*
+*Updated: 2026-09-06 (依据 `omo state sync-tasks` 与真实目录重算: done=292, planned=8, active=1, blocked=1, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
