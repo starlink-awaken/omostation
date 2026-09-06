@@ -2492,7 +2492,8 @@ bets:
   title: 文档生命周期体系落地与主仓+Documents 存量文档深度去重指针化 (Doc Lifecycle & De-duplication)
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-06
   goal: 基于 T6-17 盘点发现，实现自动化的文档生命周期引擎 bin/ssot/doc-lifecycle.py：批量为无 frontmatter 的
     226 篇文档补齐元数据，自动归档 723 篇 completed ephemeral 文档到归档目录，合并消歧架构与战略重复文档，打通主仓文档与 Documents
     域知识文档的双向索引与新鲜度门禁。
@@ -2526,6 +2527,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:d7853af8948a0cd6b1561e476d86a4b5091fed6aae60170f3b05999a2af36a6e
     decision_ref: decision://accepted/BET-Y1Q4-T6-22
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t6-22-doc-lifecycle-engine-design.md
+            sha256: sha256:d7853af8948a0cd6b1561e476d86a4b5091fed6aae60170f3b05999a2af36a6e
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-22.md
+            sha256: sha256:bef1110d33bbb5f20360e41b1bdc50e9b663e5f74305b6061daa7b95b302a783
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-22.md
+            sha256: sha256:bef1110d33bbb5f20360e41b1bdc50e9b663e5f74305b6061daa7b95b302a783
+          merged_reachable_commit:
+            ref: git://origin/main@c81528c191fe3e524ad3ef518706abc767bca4fd
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-22.md
+            sha256: sha256:bef1110d33bbb5f20360e41b1bdc50e9b663e5f74305b6061daa7b95b302a783
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-22.md
+            sha256: sha256:bef1110d33bbb5f20360e41b1bdc50e9b663e5f74305b6061daa7b95b302a783
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-22.md
+            sha256: sha256:bef1110d33bbb5f20360e41b1bdc50e9b663e5f74305b6061daa7b95b302a783
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-22.md
+            sha256: sha256:bef1110d33bbb5f20360e41b1bdc50e9b663e5f74305b6061daa7b95b302a783
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
   depends_on:
   - BET-Y1Q4-T6-17
