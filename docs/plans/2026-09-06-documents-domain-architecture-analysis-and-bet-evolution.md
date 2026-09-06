@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-06
+---
 # Documents 域现状深度剖析、架构防腐全景与新建 Bet 演进方案
 
 > **归属工程**：omostation / eCOS v6 主干治理  

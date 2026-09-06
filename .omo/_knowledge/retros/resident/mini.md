@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: mini
-generated_at: 2026-09-05T12:00:01Z
+generated_at: 2026-09-06T01:30:01Z
 status: candidate
 counts:
-  runs: 232
+  runs: 236
   failures: 0
-  total: 232
+  total: 236
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-05T12:00:01Z
+- generated_at: 2026-09-06T01:30:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 232 成功运行 + 0 失败模式 = 232 草稿
+- sediment 覆盖: 236 成功运行 + 0 失败模式 = 236 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -253,6 +253,10 @@ failure_breakdown:
 - 20260904T154259Z-mini-67f5a687.md
 - 20260904T155434Z-mini-0713ae0a.md
 - 20260904T155435Z-mini-abeb2464.md
+- 20260905T124935Z-mini-44f917ef.md
+- 20260905T124938Z-mini-279f9571.md
+- 20260905T125244Z-mini-a47130ff.md
+- 20260905T125245Z-mini-1eeefcf3.md
 
 ## 失败模式 (failures/)
 
@@ -1739,6 +1743,32 @@ failure_breakdown:
   - 结果与证据: ok=False, status=failed, evidence_count=0
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=0.224
+- **20260905T124935Z-mini-44f917ef**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=1.06
+- **20260905T124938Z-mini-279f9571**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1.262
+- **20260905T125244Z-mini-a47130ff**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.354
+- **20260905T125245Z-mini-1eeefcf3**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.293
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
