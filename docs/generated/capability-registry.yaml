@@ -11,10 +11,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 637
+  mcp_tools: 195
   bos_services: 299
   bos_domains: 22
-  cli_commands: 210
+  cli_commands: 0
   skills: 40
   workflows: 24
 mcp_servers:
@@ -53,163 +53,28 @@ mcp_servers:
   layer: L2
   file: projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py
   transport: stdio
-  exists: true
-  tools:
-  - build_context
-  - check_subscription
-  - collab.add_artifact
-  - collab.claim_subtask
-  - collab.create_task
-  - collab.get_task
-  - collab.list_tasks
-  - collab.update_task
-  - consensus.create
-  - consensus.get
-  - consensus.list_expired
-  - consensus.renew
-  - consensus.trace
-  - cross_domain_sync
-  - db_vacuum
-  - entity_explore
-  - fact_check
-  - full_sync
-  - get_entity
-  - get_entity_timeline
-  - get_knowledge
-  - get_stats
-  - get_system_status
-  - graph_search
-  - knowledge_ask
-  - list_domains
-  - mcp_market_discover
-  - memory_stats
-  - ontology_graph
-  - ontology_rebuild
-  - research_now
-  - research_pipeline
-  - run_indexer
-  - search_entity
-  - search_knowledge
-  - self.get_current_role
-  - self.get_profile
-  - self.get_vision_summary
-  - semantic_scholar
-  - semantic_search
-  - subscribe_topic
-  - sync_gbrain
-  - verify_claim
-  - viz_render
-  tool_count: 44
+  exists: false
+  tools: []
+  tool_count: 0
 - id: kos-stdio
   name: KOS (stdio JSON-RPC, legacy)
   layer: L2
   file: projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py
   transport: stdio
-  exists: true
-  tools:
-  - build_context
-  - check_subscription
-  - collab.add_artifact
-  - collab.claim_subtask
-  - collab.create_task
-  - collab.get_task
-  - collab.list_tasks
-  - collab.update_task
-  - consensus.create
-  - consensus.get
-  - consensus.list_expired
-  - consensus.renew
-  - consensus.trace
-  - cross_domain_sync
-  - db_vacuum
-  - entity_explore
-  - fact_check
-  - full_sync
-  - get_entity
-  - get_entity_timeline
-  - get_knowledge
-  - get_stats
-  - get_system_status
-  - graph_search
-  - knowledge_ask
-  - list_domains
-  - mcp_market_discover
-  - memory_stats
-  - ontology_graph
-  - ontology_rebuild
-  - research_now
-  - research_pipeline
-  - run_indexer
-  - search_entity
-  - search_knowledge
-  - self.get_current_role
-  - self.get_profile
-  - self.get_vision_summary
-  - semantic_scholar
-  - semantic_search
-  - subscribe_topic
-  - sync_gbrain
-  - verify_claim
-  - viz_render
-  tool_count: 44
+  exists: false
+  tools: []
+  tool_count: 0
 - id: l4-kernel
   name: L4 Self-Layer Kernel
   layer: L4
   file: projects/l4-kernel/src/l4_kernel/mcp_server.py
   transport: stdio/http/sse
-  exists: true
+  exists: false
   ports:
     http: 7455
     sse: 7456
-  tools:
-  - l4_cards_check
-  - l4_cards_compliance
-  - l4_cards_get
-  - l4_cards_list
-  - l4_cards_search
-  - l4_claude_validate
-  - l4_config_read
-  - l4_contract_validate
-  - l4_cross_search
-  - l4_dashboard
-  - l4_domain_create
-  - l4_domain_freeze
-  - l4_domain_info
-  - l4_domain_migrate
-  - l4_domain_unfreeze
-  - l4_domain_validate
-  - l4_domains_list
-  - l4_engine_check
-  - l4_engine_logs
-  - l4_entrypoint_read
-  - l4_evolution_status
-  - l4_evolution_tasks
-  - l4_evolution_trigger
-  - l4_files_list
-  - l4_freshness
-  - l4_harness_run
-  - l4_health
-  - l4_kems_validate
-  - l4_memory_read
-  - l4_models_list
-  - l4_plugin_actions
-  - l4_plugin_run_action
-  - l4_plugin_run_mechanism
-  - l4_plugin_specs
-  - l4_plugin_workflows
-  - l4_reload
-  - l4_rules_read
-  - l4_search
-  - l4_signal_emit
-  - l4_signal_patterns
-  - l4_signals_list
-  - l4_state_read
-  - l4_status_read
-  - l4_storage_usage
-  - l4_timeline_list
-  - l4_tools_list
-  - l4_workspace_search
-  tool_count: 47
+  tools: []
+  tool_count: 0
 - id: agora
   name: Agora Service Convergence Hub
   layer: I0
@@ -417,127 +282,49 @@ mcp_servers:
   layer: L2
   file: projects/metaos/src/metaos/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - handle_day
-  - handle_device_orchestrator
-  - handle_evening
-  - handle_family_brief
-  - handle_gate
-  - handle_health
-  - handle_morning
-  - handle_request
-  - handle_review
-  - handle_ssot
-  - handle_status
-  - handle_trace
-  - metaos-engine
-  - metaos_day
-  - metaos_device_orchestrator
-  - metaos_evening
-  - metaos_family_brief
-  - metaos_gate
-  - metaos_health
-  - metaos_morning
-  - metaos_review
-  - metaos_ssot
-  - metaos_status
-  - metaos_trace
-  tool_count: 24
+  exists: false
+  tools: []
+  tool_count: 0
 - id: aetherforge
   name: AetherForge Compute
   layer: X
   file: projects/aetherforge/src/aetherforge/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - forge_cost_report
-  - forge_fabric_compact
-  - forge_fabric_inspect
-  - forge_fabric_vram
-  - forge_fabric_warm
-  - forge_generate
-  - forge_generate_mesh
-  - forge_health_check
-  - forge_list_nodes
-  - forge_mesh_status
-  - forge_swarm_run
-  - forge_triage
-  - forge_triage_batch
-  - forge_triage_consensus
-  - forge_triage_status
-  tool_count: 15
+  exists: false
+  tools: []
+  tool_count: 0
 - id: aetherforge-gateway
   name: AetherForge LLM Gateway
   layer: X
   file: projects/aetherforge/packages/gateway/src/llm_gateway/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - gateway_generate
-  - gateway_health
-  - llm_generate
-  tool_count: 3
+  exists: false
+  tools: []
+  tool_count: 0
 - id: aetherforge-mesh
   name: AetherForge Compute Mesh
   layer: X
   file: projects/aetherforge/packages/mesh/src/compute_mesh/api/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - mesh_cost_report
-  - mesh_generate
-  - mesh_health_check
-  - mesh_list_nodes
-  - mesh_status
-  - mesh_wakeup
-  tool_count: 6
+  exists: false
+  tools: []
+  tool_count: 0
 - id: model-driven
   name: Model-Driven Lifecycle
   layer: M0
   file: projects/model-driven/src/model_driven/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - adr-create
-  - adr-list
-  - audit-record
-  - collab-assign
-  - collab-create
-  - collab-status
-  - cross-stage-check
-  - debt-register
-  - lifecycle-advance
-  - lifecycle-blockers
-  - lifecycle-create
-  - lifecycle-dashboard
-  - lifecycle-status
-  - model-execute
-  - model-tools
-  - okr-create
-  - okr-progress
-  - spec-create
-  - spec-list
-  - ssot-drift-check
-  - task-create
-  - trigger-dashboard
-  - trigger-derive
-  - trigger-drift
-  - trigger-heal
-  - trigger-list
-  - trigger-status
-  - value-roi
-  tool_count: 28
+  exists: false
+  tools: []
+  tool_count: 0
 - id: model-driven-fastmcp
   name: Model-Driven FastMCP
   layer: M0
   file: projects/model-driven/src/model_driven/fastmcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - model_tool_execute
-  - model_tools_list
-  tool_count: 2
+  exists: false
+  tools: []
+  tool_count: 0
 - id: c2g
   name: C2G Strategy Compass
   layer: X
@@ -554,326 +341,97 @@ mcp_servers:
   layer: X
   file: projects/family-hub/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - complete_quest
-  - create_quest
-  - generate_smart_quests
-  - get_active_quests
-  - get_health
-  - get_profiles
-  tool_count: 6
+  exists: false
+  tools: []
+  tool_count: 0
 - id: agent-runtime
   name: Cockpit Agent Runtime
   layer: L3
   file: projects/cockpit/src/cockpit/agent_runtime_mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - cards_check
-  - cards_status
-  - chat
-  - domain_context
-  - domain_controller_shadow_status
-  - domain_facts_audit
-  - domain_facts_validation_status
-  - domain_model_freshness_status
-  - domain_project_status
-  - domain_sanyi_status_consistency_status
-  - domains_list
-  - kems_status
-  - run_task
-  - workspace_context
-  tool_count: 14
+  exists: false
+  tools: []
+  tool_count: 0
 - id: runtime
   name: eCOS Runtime Services
   layer: L1
   file: projects/runtime/src/runtime/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - handle_agent_chat
-  - handle_agent_execute
-  - handle_agent_list
-  - handle_agent_list_tools
-  - handle_agent_run_task
-  - handle_agent_status
-  - handle_agent_task_status
-  - handle_brief
-  - handle_cartridge_inspect
-  - handle_cartridge_list
-  - handle_documents_audit
-  - handle_documents_guardrails
-  - handle_domain_compliance_audit
-  - handle_governance_explain
-  - handle_governance_guardrails
-  - handle_governance_preflight
-  - handle_health
-  - handle_intent_compile
-  - handle_kv_get
-  - handle_matrix_list
-  - handle_ontology
-  - handle_pitfall_check
-  - handle_protocol_get
-  - handle_protocol_list
-  - handle_shadow_challenge
-  - runtime_agent_chat
-  - runtime_agent_execute
-  - runtime_agent_list
-  - runtime_agent_list_tools
-  - runtime_agent_run_task
-  - runtime_agent_status
-  - runtime_agent_task_status
-  - runtime_brief
-  - runtime_cartridge_inspect
-  - runtime_cartridge_list
-  - runtime_documents_audit
-  - runtime_documents_guardrails
-  - runtime_domain_compliance_audit
-  - runtime_governance_explain
-  - runtime_governance_guardrails
-  - runtime_governance_preflight
-  - runtime_health
-  - runtime_intent_compile
-  - runtime_kv_get
-  - runtime_matrix_list
-  - runtime_ontology_get
-  - runtime_pitfall_check
-  - runtime_protocol_get
-  - runtime_protocol_list
-  - runtime_shadow_challenge
-  tool_count: 50
+  exists: false
+  tools: []
+  tool_count: 0
 - id: iris
   name: Iris
   layer: L2
   file: projects/knowledge/kairon/packages/iris/src/iris/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - iris_connector_status
-  - iris_get_item
-  - iris_list_connectors
-  - iris_list_items
-  - iris_search
-  - iris_sync
-  - iris_sync_bidirectional
-  - iris_validate
-  tool_count: 8
+  exists: false
+  tools: []
+  tool_count: 0
 - id: sophia
   name: Sophia Research Paradigm
   layer: L2
   file: projects/knowledge/kairon/packages/sophia/src/sophia/server/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - compile_paradigm
-  - get_effective_ops
-  - get_transitions
-  - list_operations
-  - list_states
-  - record_trace
-  - suggest_ops
-  - suggest_paradigm
-  tool_count: 8
+  exists: false
+  tools: []
+  tool_count: 0
 - id: kronos
   name: Kronos
   layer: L2
   file: projects/knowledge/kairon/packages/kronos/src/kronos/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - cloakbrowser
-  - eidos
-  - kos
-  - kronos
-  - kronos_browser_fetch
-  - kronos_extract
-  - kronos_fetch
-  - kronos_insight
-  - kronos_pipelines
-  - kronos_plan
-  - kronos_route
-  - kronos_status
-  - kronos_tools
-  - ollama
-  - vault
-  - wps_note
-  tool_count: 16
+  exists: false
+  tools: []
+  tool_count: 0
 - id: minerva
   name: Minerva
   layer: L2
   file: projects/knowledge/kairon/packages/minerva/src/minerva/mcp_server/server.py
   transport: stdio
-  exists: true
-  tools:
-  - cross_domain_research
-  - knowledge_closed_loop
-  - knowledge_ingest
-  - knowledge_search
-  - minerva_bfs_search
-  - research_now
-  - research_schedule
-  - research_watch
-  tool_count: 8
+  exists: false
+  tools: []
+  tool_count: 0
 - id: codeanalyze
   name: CodeAnalyze
   layer: L2
   file: projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/mcp.py
   transport: stdio
-  exists: true
-  tools:
-  - analyze_project
-  - architecture_generate_diagram
-  - architecture_get_code_metrics
-  - ast_search
-  - audit_project
-  - cgc_query
-  - codegraph_callees
-  - codegraph_callers
-  - codegraph_context
-  - codegraph_get_affected_tests
-  - codegraph_get_impact_radius
-  - codegraph_get_symbol_graph
-  - codegraph_init
-  - codegraph_search
-  - codegraph_sync
-  - crg_build
-  - crg_status
-  - export_graph
-  - extract_policy_docs
-  - pack_repo
-  - rg_search
-  - scan_directory
-  - status
-  - workflow_impact_analysis
-  - workflow_onboarding
-  tool_count: 25
+  exists: false
+  tools: []
+  tool_count: 0
 - id: forge
   name: Forge
   layer: L2
   file: projects/knowledge/kairon/packages/forge/src/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - get_project_status
-  - get_tool_info
-  - list_tools
-  - market_install
-  - market_list
-  - market_remove
-  - search_tools
-  tool_count: 7
+  exists: false
+  tools: []
+  tool_count: 0
 - id: ontoderive
   name: OntoDerive
   layer: L2
   file: projects/knowledge/kairon/packages/ontoderive/src/ontoderive/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - derive
-  - handle_mcp_request
-  - list_entities
-  - ontoderive
-  - pipeline_status
-  - trace
-  - validate
-  tool_count: 7
+  exists: false
+  tools: []
+  tool_count: 0
 - id: toolforge
   name: ToolForge
   layer: L2
   file: projects/knowledge/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py
   transport: stdio
-  exists: true
-  tools:
-  - handle_request
-  - ontoderive-toolforge
-  - toolforge_guide
-  - toolforge_match
-  - toolforge_select
-  tool_count: 5
+  exists: false
+  tools: []
+  tool_count: 0
 - id: gbrain
   name: gbrain Knowledge DB
   layer: L2
   file: projects/knowledge/gbrain/src/core/operations/exports.ts
   transport: stdio
-  exists: true
-  tools:
-  - add_link
-  - add_tag
-  - add_timeline_entry
-  - cancel_job
-  - code_blast
-  - code_callees
-  - code_callers
-  - code_def
-  - code_flow
-  - code_refs
-  - code_traversal_cache_clear
-  - delete_page
-  - extract_facts
-  - file_list
-  - file_upload
-  - file_url
-  - find_anomalies
-  - find_contradictions
-  - find_experts
-  - find_orphans
-  - find_trajectory
-  - forget_fact
-  - get_backlinks
-  - get_brain_identity
-  - get_calibration_profile
-  - get_chunks
-  - get_health
-  - get_ingest_log
-  - get_job
-  - get_job_progress
-  - get_links
-  - get_page
-  - get_raw_data
-  - get_recent_salience
-  - get_recent_transcripts
-  - get_stats
-  - get_tags
-  - get_timeline
-  - get_versions
-  - list_jobs
-  - list_pages
-  - log_ingest
-  - memory_tree
-  - pause_job
-  - purge_deleted_pages
-  - put_page
-  - put_raw_data
-  - query
-  - recall
-  - remove_link
-  - remove_tag
-  - replay_job
-  - resolve_slugs
-  - restore_page
-  - resume_job
-  - retry_job
-  - revert_version
-  - run_doctor
-  - search
-  - search_by_image
-  - send_job_message
-  - sources_add
-  - sources_list
-  - sources_remove
-  - sources_status
-  - submit_agent
-  - submit_job
-  - sync_brain
-  - takes_calibration
-  - takes_list
-  - takes_scorecard
-  - takes_search
-  - think
-  - traverse_graph
-  - whoami
-  tool_count: 75
+  exists: false
+  tools: []
+  tool_count: 0
 bos_services:
   _domain_counts:
     agent-cell: 23
@@ -2117,427 +1675,7 @@ bos_services:
       description: vault _state 端点 (ecos services integration gateway 引用)
       transport: inline
       status: active
-cli_commands:
-- name: ack
-  description: 确认任务完成
-- name: add
-  description: 手动添加决策项
-- name: agent
-  description: 🤖 Agent 治理控制入口 (bootstrap / status / start / claim / verify / closeout)
-- name: agent-onboard
-  description: 🤖 Agent 入职引导 checklist (profile + MCP + BOS + skills)
-- name: agent-runtime
-  description: 🤖 Agent Runtime 任务执行 / HTTP server (替代独立 agent-runtime 命令)
-- name: agent-workflow
-  description: 🤖 Agent 可执行治理流程 (委派 root bin/agent-workflow.py)
-- name: agora
-  description: Agora BOS 网关入口 (委派 agora CLI)
-- name: analyze
-  description: 运行全部分析工具
-- name: api
-  description: 启动 API server
-- name: approve
-  description: 批准决策
-- name: archive
-  description: 归档研究记录
-- name: ask
-  description: 对指定研究发起追问
-- name: audit
-  description: 扫描可疑研究记录
-- name: audit-ledger
-  description: ''
-- name: backends
-  description: 列出 BOS 后端
-- name: backup
-  description: 全量备份研究数据到 JSON 文件
-- name: backup-restore
-  description: 从备份 JSON 文件恢复研究数据
-- name: batch
-  description: '批量研究模式: 逐个处理多个 topic，汇总结果'
-- name: bcos
-  description: BCOS 业务域系统 (evolve/signals/north-star)
-- name: bdsk
-  description: 🧠 B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演)
-- name: bos
-  description: BOS URI 查询与管理
-- name: bos-capability
-  description: BOS capability / toolbox 外部能力
-- name: bos-inbox
-  description: BOS Inbox 多源私有知识神经网查询与操作
-- name: brain
-  description: 个人数字大脑 — 知识检索 + 记忆 + 智能问答
-- name: brief
-  description: 会话简报 / 每日早报 (--morning)
-- name: bus
-  description: Omni-Bus 三平面入口
-- name: c2g
-  description: 🎯 C2G 战略罗盘 (status/pipeline)
-- name: cache
-  description: 检查三级分层缓存与 Radix 前缀树状态 (含基准压测)
-- name: capabilities
-  description: 统一能力发现入口 — 搜索/推荐/全量列出 (CLI+BOS+Scene+Journey+Governance)
-- name: capability
-  description: BOS capability 域 / toolbox 外部能力
-- name: cards
-  description: 显示 CARDS 卡片状态
-- name: cartridge
-  description: 👁️ 长尾领域治理卡带工坊 (ADR-0198/0203)
-- name: cell
-  description: 🤖 AGE-v2 动态 Agent Cell (规划/执行/验证/治理)
-- name: challenge
-  description: ⚡️ 影子红蓝对抗审查与合规自动打补丁 (ADR-0196)
-- name: channels
-  description: 🌐 External channels inventory (ECCP) — 生成/查看 external-channels.yaml
-- name: client
-  description: 以 REPL 模式连接到 MCP server
-- name: cluster
-  description: 异构三节点智能路由与拓扑诊断
-- name: code
-  description: 代码库分析与审查 (基于 codeanalyze)
-- name: compact
-  description: 上下文滑动蒸馏与双区自适应量化压缩模拟
-- name: compare
-  description: 对比多个研究结果
-- name: compass
-  description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
-- name: completion
-  description: 生成 Shell 自动补全脚本
-- name: compute
-  description: 算力与 LLM 网关操作 (委派 aetherforge)
-- name: consolidate
-  description: sleep-time 巩固 (默认 dry-run)
-- name: context
-  description: 显示系统上下文 (Phase/CARDS/约束/引导)
-- name: contracts
-  description: 契约验证
-- name: control
-  description: 控制平面：submit / ack / nack
-- name: controller-shadow
-  description: 读取 Runtime 旧控制器影子迁移回执
-- name: create
-  description: 创建新研究
-- name: daily
-  description: 每日研究简报
-- name: dashboard
-  description: 打开 Web 运维与全景仪表盘 (Web Dashboard)
-- name: data
-  description: 数据目录索引 / 类型注册 / TTL 清理
-- name: debt
-  description: 债务评分 (omo-debt Pattern 09 v2.1)
-- name: decide
-  description: 📬 决策收件箱 (列出/添加/批准/拒绝)
-- name: demo
-  description: 快速演示
-- name: dflash
-  description: DFlash 2 块扩散投机解码加速与集群基准
-- name: diff
-  description: 查看待处理署名 Diff 统计
-- name: digest
-  description: 提炼多个研究结果
-- name: discover
-  description: 发现可用功能和资源
-- name: distill
-  description: 在 Mac mini M4 触发闲时 LoRA 蒸馏
-- name: dlp-guard
-  description: 外发前防泄密扫描 (敏感识别+挂起+脱敏)
-- name: dma
-  description: 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准
-- name: docs
-  description: 📚 CLI 参考手册生成与导出
-- name: docx
-  description: 渲染为 GB/T 9704-2012 红头公文 DOCX
-- name: domain-status
-  description: 显示 Documents 域项目绑定与引导状态
-- name: domains
-  description: 列出 L4 所有域及其状态
-- name: dossier
-  description: 查看研究的关系与产物视图
-- name: down
-  description: 停止观测栈
-- name: draft
-  description: 从本地主权大模型请求草稿
-- name: event
-  description: 导出事件封套 (EventEnvelope)
-- name: events
-  description: 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)
-- name: events-watch
-  description: 实时监听 SSE 事件流简便入口
-- name: export
-  description: 导出研究 (markdown/text/json)
-- name: export-research
-  description: 将研究对象导出为 WorkspaceObject JSON
-- name: fabric
-  description: 检查 omlxc 智能算力织网 (温控/分诊/显存/缓存)
-- name: fabric-mesh
-  description: ''
-- name: facts-audit
-  description: 审计 Documents 文档域 facts 文件
-- name: facts-validation
-  description: 读取 Runtime Facts 审计回执
-- name: family-hub
-  description: 家庭数字枢纽入口
-- name: finance
-  description: 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域)
-- name: follow-up
-  description: 查看追问工作台（待追问/已回答统计）
-- name: forget
-  description: 遗忘传播
-- name: gac
-  description: GaC 治理健康检查 (ADR-0106, 7 机制 + 115 规则 + drift)
-- name: gbrain
-  description: Postgres-native 知识库入口 (委派 gbrain CLI)
-- name: gc
-  description: 清理 data/tmp 过期文件
-- name: get
-  description: 查 1 个 card
-- name: gongwen
-  description: 📄 公文写作门户引导 (文种/规范/入口, 委派 @公文 域)
-- name: governance
-  description: 架构治理 (委派 arcnode-*)
-- name: graph
-  description: 运行语义图谱分析
-- name: health
-  description: 查看研究健康报告（衰减状态/保鲜建议）
-- name: heatmap
-  description: 显示研究活跃度热力图
-- name: help
-  description: 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务)
-- name: history
-  description: 查看对话历史
-- name: hud
-  description: 查看次世代主权算力织网全景 HUD 实时状态
-- name: identity
-  description: 导出身份封套 (IdentityEnvelope)
-- name: im-triage
-  description: 渲染 IM 会话感知待办卡片 (bos://im/session/triage)
-- name: impact
-  description: 分析符号的变更影响面
-- name: import
-  description: 导入外部内容
-- name: inbox
-  description: BOS Inbox 多源私有知识神经网查询与操作
-- name: index
-  description: 刷新 data/_index 元数据
-- name: ingress
-  description: '感知源接入 Spine 管线 (T2-03: OCR 扫描件)'
-- name: init
-  description: 🚀 初始化向导（同 quickstart）
-- name: inspect
-  description: 查看算力网格健康度与节点状态
-- name: intent
-  description: 🧠 自然语言意图解构与工程规格编译器 (ADR-0195)
-- name: invoke
-  description: 通过治理网关调用 exact native BOS capability
-- name: iterate
-  description: ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)
-- name: journey
-  description: 🗺️ Journey State Graph 业务场景旅程与状态图校验器
-- name: kairon
-  description: kairon 知识引擎 monorepo 聚合入口
-- name: kems
-  description: 🧬 KEMS 域治理 (domains/status/scan)
-- name: knowledge
-  description: 📚 KOS 知识检索 (search/status/stats)
-- name: knowledge-ref
-  description: ADR-0315 引用元数据 (无正文)
-- name: list
-  description: 查看研究历史
-- name: logs
-  description: 查看日志
-- name: lora
-  description: 查看与测试端侧在线 LoRA 适配层热插拔
-- name: mail-draft
-  description: 邮箱 3 档拟复 (经 BOS inbox/mail/draft 服务)
-- name: mcp
-  description: 启动 MCP server 或列出工具
-- name: memory
-  description: 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)
-- name: memory-distill
-  description: ''
-- name: merge
-  description: 合并多个研究结果为新研究
-- name: mesh
-  description: omlx 算力网格路由入口
-- name: metrics
-  description: 查看 bus metrics 快照
-- name: model-driven
-  description: ''
-- name: model-freshness
-  description: 读取 Runtime 模型新鲜度回执
-- name: mof
-  description: MOF 元模型操作 (委派 mof CLI)
-- name: monitor
-  description: 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出)
-- name: mutate
-  description: 通过 agora 统一 BOS URI 写协议修改资源
-- name: nack
-  description: 否定确认任务
-- name: nodes
-  description: 列出 KOS 中注册的算力节点
-- name: observe
-  description: 可观测性栈（Langfuse）入口
-- name: omo
-  description: OMO CLI 委派 (debt/state/governance/lint/...)
-- name: onboarding
-  description: 为 AI 构建项目全貌上下文
-- name: open
-  description: 打开研究全文
-- name: ops
-  description: 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate)
-- name: pack
-  description: 将代码库打包为 LLM 友好格式
-- name: panorama
-  description: 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)
-- name: pending
-  description: 查看未决待办快照预览
-- name: pipeline
-  description: pipeline 概览
-- name: policy
-  description: ⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)
-- name: pptx
-  description: 渲染为 16:9 高管技术汇报 PPTX
-- name: product-health
-  description: 产品健康度检测
-- name: profile
-  description: 查看/编辑身份档案 (L4 入口)
-- name: project
-  description: 'inspect|list (default: inspect)'
-- name: proxy-env
-  description: 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE)
-- name: publish
-  description: 发布研究为正式 Markdown 报告
-- name: quarantine
-  description: 隔离可疑研究记录
-- name: quickstart
-  description: 🚀 新用户快速上手向导（环境核验 + 上手指引）
-- name: quickstart-check
-  description: 快速检查新用户环境核验状态
-- name: read
-  description: 通过 BOS 网关统一读取指定 URI 资源
-- name: readiness
-  description: 'P66: governance readiness dashboard 摘要 (4 卡片: summary/dimensions/alerts/history)'
-- name: recall
-  description: 意图路由召回（neo4j/temporal 支持 --as-of）
-- name: register
-  description: 注册 BOS 服务
-- name: reject
-  description: 拒绝决策
-- name: reload
-  description: 重载 BOS 配置/M1
-- name: remember
-  description: 手动存入偏好/事实
-- name: rename
-  description: 重命名研究标题
-- name: render
-  description: 初稿 Markdown 一键渲染导出 (GB/T 9704 DOCX / 16:9 PPTX / 矢量图)
-- name: replay
-  description: 查看 Experience Replay 缓冲区状态
-- name: research
-  description: 深度研究 — 创建/查询/管理研究对象
-- name: resident
-  description: Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)
-- name: resolve
-  description: 统一 BOS URI 路由解析与目标元数据提取
-- name: restore
-  description: 恢复已隔离研究记录
-- name: review
-  description: 左右分栏 Diff 审阅工作台 (初稿 vs 编辑态)
-- name: route
-  description: 为模型选择最优节点
-- name: run
-  description: 在隔离沙箱中挂载卡带并执行领域意图
-- name: runtime
-  description: runtime CLI 委派 (Matrix/Scheduler/KEI 沙箱)
-- name: sanyi-status
-  description: 读取 Runtime 三医状态一致性回执
-- name: scan
-  description: 平面扫描
-- name: scenario
-  description: P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review)
-- name: scene
-  description: 🗺️ 业务场景正交领域 (scenario/journey/gongwen/brief/family-hub)
-- name: score
-  description: 评分债务项
-- name: search
-  description: 全文搜索
-- name: send
-  description: 一键确认署名并经外发网关真实外发
-- name: serve
-  description: stdio JSON-RPC serve mode
-- name: sign
-  description: 提交用户署名 Diff 并入队 Experience Replay
-- name: skill
-  description: 运行 L4 定时技能
-- name: snapshot
-  description: KV 缓存快照管理与预热
-- name: speculative-eval
-  description: 本地首选投机推演评估
-- name: spine
-  description: Spine 主干真值流与署名自进化操作 (ADR-0437)
-- name: ssb
-  description: ''
-- name: stats
-  description: 索引统计
-- name: status
-  description: 系统健康
-- name: stream
-  description: 跨节点 Chunk-level 流式协同流水线基准
-- name: submit
-  description: 提交控制任务
-- name: summary
-  description: 债务摘要 (委派 omo debt)
-- name: svg
-  description: 渲染 ```diagram 代码块为矢量架构图 SVG
-- name: swarm
-  description: 分布式跨节点 KV 共享池与超长上下文置换基准
-- name: system
-  description: 🖥️ 系统与运维正交领域 (status/health/dashboard/readiness/runtime)
-- name: tag
-  description: 为研究添加/覆盖标签
-- name: telemetry
-  description: 命令遥测与 Prometheus 指标导出
-- name: test_export_formats
-  description: '离线自测: 三格式导出 + GB/T 参数断言'
-- name: timeline
-  description: 查看研究的演化时间线
-- name: topics
-  description: 列出已注册 topic
-- name: tree
-  description: 自适应熵感知树状投机解码与多候选验证基准
-- name: triage
-  description: 分析 Prompt 意图复杂度分级
-- name: tui
-  description: 极客终端交互控制台 (Textual 全屏 TUI)
-- name: types
-  description: 查看已注册的数据类型
-- name: unarchive
-  description: 恢复已归档研究记录
-- name: up
-  description: 启动观测栈
-- name: url
-  description: 打印 Langfuse Web URL
-- name: user
-  description: 👤 用户体验与向导正交领域 (quickstart/help/demo/init/profile/completion)
-- name: validate
-  description: 验证 Workspace 契约
-- name: vault
-  description: 搜索 L4 Vault 知识库
-- name: version
-  description: 版本信息
-- name: vram
-  description: 计算模型动态 KV Cache 显存预算
-- name: warm
-  description: 预热系统 Prompt 前缀缓存以实现 0ms TTFT
-- name: watch
-  description: 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher)
-- name: watchdog
-  description: 🐕 自治守护犬与自愈探针 (Agora Bus / Resident 监视器)
-- name: wave2
-  description: 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON)
-- name: workflow
-  description: BOS workflow 相关
-- name: write
-  description: 双轨写入 (+ Neo4j FACT 若配置)
+cli_commands: []
 skills:
 - id: a2a-coordination
   file: .agents/skills/a2a-coordination/SKILL.md
