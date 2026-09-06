@@ -23965,11 +23965,32 @@ bets:
   verify:
   - cmd: test -f docs/reports/architecture-health-weekly.md
     expect: exit 0
+  - cmd: python3 bin/arch-health-meter.py --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
   workflow: project-code-change
+  underlying_workflow: project-code-change
   write_surfaces:
   - bin/arch-health-meter.py
-  - docs/reports/**
+  - bin/ops/architecture-health-weekly.sh
+  - bin/ops/launchd/com.omostation.arch-health-weekly.plist
+  - bin/_registry/scripts/governance/arch-health-meter.yaml
+  - bin/_registry/scripts/observability/architecture-health-weekly.yaml
+  - .omo/standards/architecture-health-six-dim.md
+  - docs/reports/architecture-health-weekly.md
+  - .omo/_truth/registry/governance-checks.yaml
+  - docs/superpowers/specs/2026-09-05-t6-18-architecture-health-weekly-design.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-18.md
   - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-05-t6-18-architecture-health-weekly-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d8be08fda9007aae9a2501a6ab4597b1d05e6cc72e98b32f2f999ce399ca7fbd
+    decision_ref: decision://accepted/BET-Y1Q4-T6-18
   dependencies:
   - BET-Y1Q4-T6-17
   risks: []
