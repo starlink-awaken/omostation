@@ -20667,7 +20667,8 @@ bets:
   title: SEMA 踩坑信念跨代自结晶与技能包热重载引擎
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-06
   goal: SEMA 引擎进化升级：从每次夏明星署名修改的 Diff 与 CI 拦截记录中自动反向萃取“防踩坑信念”，自动生成对应的 Agent Skill（如
     skill-gov-audit），并在无需重启服务的情况下秒级热加载生效。
   non_goals:
@@ -20689,12 +20690,49 @@ bets:
     content_digest: sha256:1ed2a069d26065234665a0315e1eeebd6a2b23fa72b114021ccd0a6f69df613b
     decision_ref: decision://accepted/BET-Y2Q2-T6-01
   # 2026-09-06 write-surface completion (pre-claim): tests/INDEX/ledger 预置
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t6-01-sema-crystallizer-design.md
+            sha256: sha256:1ed2a069d26065234665a0315e1eeebd6a2b23fa72b114021ccd0a6f69df613b
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-01.md
+            sha256: sha256:42eb82f341b4f9afb959bbbce938a7861fef0c22ccdecde8aaebd28c28adf590
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-01.md
+            sha256: sha256:42eb82f341b4f9afb959bbbce938a7861fef0c22ccdecde8aaebd28c28adf590
+          merged_reachable_commit:
+            ref: git://origin/main@56a7022134059839f791a3a26f6b1bb68266edfc
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-01.md
+            sha256: sha256:42eb82f341b4f9afb959bbbce938a7861fef0c22ccdecde8aaebd28c28adf590
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-01.md
+            sha256: sha256:42eb82f341b4f9afb959bbbce938a7861fef0c22ccdecde8aaebd28c28adf590
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-01.md
+            sha256: sha256:42eb82f341b4f9afb959bbbce938a7861fef0c22ccdecde8aaebd28c28adf590
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-01.md
+            sha256: sha256:42eb82f341b4f9afb959bbbce938a7861fef0c22ccdecde8aaebd28c28adf590
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/omo/src/omo/resident/sema_crystallizer.py
   - projects/omo/tests/unit/resident/test_sema_crystallizer.py
   - .agents/skills/INDEX.md
   - docs/plans/3y-bet-ledger.yaml
-  - .agents/skills/auto-crystallized/SKILL.md
+  - .agents/skills/auto-crystallized/
   - .omo/_knowledge/retros/BET-Y2Q2-T6-01.md
   pasw_required: false
   depends_on:
