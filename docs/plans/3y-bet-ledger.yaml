@@ -3495,10 +3495,16 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-t10-132-hydration-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:81d4f64fac64ace10adb4597666760889fe675694c9e0fba5f3f4cc402caad94
+    decision_ref: decision://accepted/BET-Y1Q4-T10-132
   write_surfaces:
   - projects/omo/src/omo/resident/hydration.py
   - projects/omo/src/omo/resident/schema_v3.sql
   - projects/omo/tests/test_resident_hydration.py
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-132.md
   risk_level: L1
   human_gate: false
