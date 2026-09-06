@@ -18720,6 +18720,11 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t10-118-lora-domain-distill-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3b51287281458486aa7606aeb88e7fabe355dc7672ef429a80a5f6207f5ee501
+    decision_ref: decision://accepted/BET-Y1Q3-T10-118
   write_surfaces:
   - projects/omlxc/src/omlxc/dataplane/lora_manager.py
   - projects/cockpit/src/cockpit/commands/spine.py
