@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/dormant-cleanup-scanner.py
-name: Dormant Cleanup Scanner
+id: bin/gac/prune-zombie-worktrees.py
+name: Prune Zombie Worktrees
 category: governance
 owner: governance-team
 description: ""
