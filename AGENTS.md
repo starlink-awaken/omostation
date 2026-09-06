@@ -174,7 +174,7 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
 ### Hook 机制 22c（2026-09-06, BET-Y1Q4-T6-24）
 
 - **本仓 `core.hooksPath=.githooks`**：hooks 从 canonical 直读生效。`git rev-parse --git-path hooks` 会被重定向到 `.githooks`（不是真实 git-dir/hooks）。
-- **元数据路径纪律**：installer/runner/health-check 写读 `.version`/`.content-hash` 一律用 `$(git rev-parse --git-dir)/hooks`（worktree 感知、不受 hooksPath 影响）；不用 `--git-path hooks`（core.hooksPath 下 cp 自拷贝/检查错位，2026-09-06 实证回归）。
+- **元数据路径纪律**：installer/runner/health-check 写读 `.version`/`.content-hash` 一律用 `$(git rev-parse --git-common-dir)/hooks`（worktree 感知、不受 hooksPath 影响）；**不要用 `--git-dir`**（worktree 下返回 `.git/worktrees/<name>/`，读不到共享元数据 → 版本误报 0.0.0，2026-09-06 实证）；也不用 `--git-path hooks`（core.hooksPath 下 cp 自拷贝/检查错位，2026-09-06 实证回归）。
 - **manifest 引用路径全量扫描**：改 hook 脚本路径后必须扫描 manifest 全部 hook 段（pre-commit/pre-push/post-checkout/pre-rebase/pre-merge-commit/post-merge/commit-msg），别只修一段——#3282 只改 pre-commit 段、回退 pre-merge-commit 的 conflict-marker 路径致检查静默失效。
 - **同 BET 并行交付防回退**：改 canonical hooks 前先 `git fetch` 查 main 是否已含目标内容（PITFALL-GAT-006）；并行 agent 同名 BET 的 PR 可能基于旧 main、合并后回退正确值（#3282 回退 #3277 的 5 处修复实录）。
 
