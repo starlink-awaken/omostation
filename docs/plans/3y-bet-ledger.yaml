@@ -24854,6 +24854,55 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T10-05
+
+- id: BET-Y1Q4-T6-24
+  track: T6-SUBTRACT
+  window: Y1Q4
+  title: 机制 22c Git Hook 调度引擎完整化 — runner/manifest 接线 + 缺失检查脚本补齐 + 净减配平
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 把散落在工作树的机制 22c hook 加固 WIP（hook-runner 调度引擎 + hook-manifest 声明式清单 + hook-installer + 12 个检查脚本）补完为可交付状态：补齐被引用的缺失脚本、修复 D1-D7 缺陷、将 canonical .githooks 接线到 runner、让 make install-hooks 统一走 hook-installer，并以"删除被替代的重复内联逻辑"做净减配平。
+  non_goals:
+  - 不新增 hook 检查项（只修复/接线既有 22c 设计）
+  - 不改变已 tracked 旧 hook 的既有行为语义
+  - 不做新功能（如新 hook 触发点、远程 hook 服务）
+  done_when:
+  - hook-runner 能执行 manifest 声明的全部 hook 段（pre-commit/pre-push/post-checkout），缺失脚本补齐、引用路径修正
+  - canonical .githooks 接线完成：fresh clone 后 make install-hooks 走 hook-installer 写 git-dir/hooks 元数据（VERSION/.version/.content-hash 一致性），core.hooksPath 下 canonical 直接生效
+  - 修复 D1-D7 缺陷（blocking/timeout 参数错位、BLOCKING_FAILED 退出、macOS %N、stdin 消费、health-check hash 算法对齐等）
+  - hook-health-check.py --check 自检通过且新增缺失脚本均通过语法检查（bash -n / py_compile）
+  - README/.githooks/README.md 更新为新架构，Makefile install-hooks 接入 hook-installer
+  verify:
+  - cmd: python3 -m py_compile bin/gac/check-runtime-artifacts.py bin/gac/hook-health-check.py bin/gac/check-dangerous-rebase.py
+    expect: exit 0
+  - cmd: bash -n bin/gac/hook-runner.sh bin/gac/hook-installer.sh .githooks/pre-merge-commit .githooks/pre-rebase .githooks/post-merge
+    expect: exit 0
+  - cmd: bash bin/gac/hook-installer.sh --check
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/
+  - .githooks/
+  - .omo/_truth/registry/hook-manifest.yaml
+  - .omo/_truth/registry/branch-prefix-policy.yaml
+  - Makefile
+  - .githooks/README.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-24.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 接线改动必须保证本地 commit/push 不被阻断（或提供 SWARM_ESCAPE_ID 逃生口），任何 check 缺失脚本引用必须先补脚本或改引用，禁止引入新的硬阻断点。
+  retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t6-24-hook-runner-completion-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:982040c456cf3d0b072e9d3e96cbf5e3f3f2b782c84cf6e372ae3dd0329bb4c2
+    decision_ref: decision://accepted/BET-Y1Q4-T6-24
+
+
 - id: BET-Y1Q4-T10-125
   track: T10-MATURITY
   window: Y1Q4
