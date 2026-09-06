@@ -1,40 +1,38 @@
 ---
+schema: bet-retro/v1
 bet_id: BET-Y1Q4-T6-21
-title: "Documents 多客户端配置自愈守护与 BOS 统一事实服务网关"
-status: completed
-completed_at: 2026-09-06
+status: closed
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-06
+type: ephemeral
 ---
 
-# Retro: BET-Y1Q4-T6-21
+# BET-Y1Q4-T6-21 retro — Documents 多客户端配置自愈与 BOS 统一事实网关
 
-## What shipped
+## What changed
 
-1. **`bin/gac/documents-client-sync.py`** — CLI tool for multi-IDE config drift detection and atomic repair
-   - `check` mode: scans Claude Desktop, Codex, Zed, ZCode configs against canonical `documents-domain-projects.yaml`
-   - `apply` mode: atomically repairs drift with `.bak` backup
-   - JSON envelope output (`--json`)
-   - Verified: detected real drift in Claude Desktop config during live test
+- **`bin/gac/documents-client-sync.py`**（主体交付，check/apply 双模式 +
+  --json）：真实主机实测发现 4 处 drift 并自愈（claude_desktop repaired /
+  codex created / zed repaired / zcode repaired——全部对齐 managed MCP
+  server 'cockpit'）；apply 后 check 恢复一致（OK no drift）。
+- **agora `tools_bos/documents.py`**（收口修复，40081a6 已进 agora main）：
+  三个 handler 修复 registry 路径解析（优先可 patch 的
+  `_DOMAIN_REGISTRY_FILE` 常量）+ registry 返回补
+  `client_contracts`/`schema_valid` 契约字段 + state env var 固定为
+  `OMOSTATION_RUNTIME_STATE_ROOT`——三处"实现与测试契约脱节"全修。
+- 测试：agora facade 15/15 + root client-sync 8/8，ruff clean。
 
-2. **`projects/agora/src/agora/tools_bos/documents.py`** — BOS Documents read-only facade
-   - `bos://documents/{domain}/registry` → domain registry + client contracts
-   - `bos://documents/{domain}/jobs` → runtime job definitions
-   - `bos://documents/{domain}/state` → runtime state
-   - All routes read-only, fail-closed on mutation
-   - Schema validation on all responses
+## Q3 (打假)
 
-3. **Tests**: 8 CLI tests + 12 BOS facade tests (all passing)
+- 首版实现三处 handler 全部绕过可 patch 常量——单测 patch 全失效
+  （7 失败）。教训：模块级常量作为契约 seam 暴露后，handler 必须消费它。
+- state 的 env var 名首版从 registry config 读；测试契约是固定协议名——
+  固定协议名优先，config 只做 default。
+- worktree 反复被并发清理两次（本会话与并发 agent 撞 worktree 生命周期）
+  ——最终用独立命名的 b 后缀 worktree 完成收账。
 
-## Lessons
+## Q4 (遗留)
 
-1. **Spec binding is mandatory for workflow start**: Candidate bets without `accepted_specifications` block `agent-workflow start` (SPEC_BINDING_REQUIRED). Always create spec + bind before starting.
-
-2. **Submodule init is slow in worktrees**: Full `git submodule update --init` times out at 60s. Selective init (`projects/agora`, `projects/omo`, `projects/ecos`) is sufficient for most bets.
-
-3. **Submodule dirty state in worktrees**: `projects/bus-foundation` had all files staged as deleted. `git reset HEAD . && git checkout .` restores them. Consider adding submodule health check to worktree claim flow.
-
-4. **Agora test isolation**: The agora package has deep dependency chains (pydantic, bus-foundation, ecos). BOS facade tests work best as standalone imports via `importlib.util.spec_from_file_location` rather than through the full agora pytest suite.
-
-## Risk review
-
-- L2 risk (atomic writes): Implemented via `shutil.copy2` backup + tmp-then-replace atomic write pattern.
-- No unregistered new dependencies added.
+- drift 检测只覆盖 managed MCP server 段（防自愈过度，设计如此）。
+- Documents registry 的 apiVersion 演进策略待后续。

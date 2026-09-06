@@ -2410,7 +2410,8 @@ bets:
   title: Documents 多客户端配置自愈守护与 BOS 统一事实服务网关 (Client Config Self-Healing & BOS Facade)
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-06
   goal: 研发统一的客户端多端配置守护工具 bin/gac/documents-client-sync.py，消除 Claude Desktop 与 Codex
     当前的 drift 报错；在 Agora/BOS 中构建统一的只读事实穿透网关（bos://documents/{domain}/{resource}），为
     Agent 提供标准化的结构化数据查询与缓存服务。
@@ -2431,6 +2432,43 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t6-21-documents-client-config-selfhealing.md
+            sha256: sha256:7da3b7c739fb4aae671de59aaf3199d07b5ed7a4b9f5935d03a19e54997f555c
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-21.md
+            sha256: sha256:c7941dff89a5e9e01efee50aab92d1bf9920b517817d3c54ce679eff0f1257cf
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-21.md
+            sha256: sha256:c7941dff89a5e9e01efee50aab92d1bf9920b517817d3c54ce679eff0f1257cf
+          merged_reachable_commit:
+            ref: git://origin/main@a62526d6959f7a019471c4dd547adb31e4b9ab45
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-21.md
+            sha256: sha256:c7941dff89a5e9e01efee50aab92d1bf9920b517817d3c54ce679eff0f1257cf
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-21.md
+            sha256: sha256:c7941dff89a5e9e01efee50aab92d1bf9920b517817d3c54ce679eff0f1257cf
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-21.md
+            sha256: sha256:c7941dff89a5e9e01efee50aab92d1bf9920b517817d3c54ce679eff0f1257cf
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-21.md
+            sha256: sha256:c7941dff89a5e9e01efee50aab92d1bf9920b517817d3c54ce679eff0f1257cf
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - bin/gac/documents-client-sync.py
   - projects/agora/src/agora/tools_bos/documents.py
