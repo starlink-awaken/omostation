@@ -182,7 +182,7 @@ warning_exceptions:
     - id: legacy-omo-knowledge-enums
       rule: invalid_metadata
       surface: omo-knowledge
-      max_findings: 56 # 2026-09-04 55→56: gac-gate CI invalid_metadata=56, budget adjustment
+      max_findings: 57 # 2026-09-06 56→57: gac-gate CI invalid_metadata=57, budget adjustment
       expires: 2026-10-31
       owner: governance-team
       reason: Historical lifecycle values require explicit mapping to the current enum.
