@@ -3479,7 +3479,8 @@ bets:
   title: DBOS 离散状态水合与 SQLite WAL 原子事件调度引擎 (DBOS Discrete State Hydration & Atomic Event Engine)
   appetite: 3-4 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-06
   goal: 实现持久化 Agent 心智状态与物理显存解耦。会话上下文与认知帧持久化于 SQLite WAL，外部事件触发时 <15ms 快速水合恢复，单步执行完毕即去水合释放显存，彻底解决多 Agent 并发显存 OOM 与进程崩塌遗忘问题。
   non_goals:
   - 不引入分布式外部数据库集群，严格使用本地 SQLite WAL
@@ -3498,8 +3499,45 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-07-t10-132-hydration-design.md
     spec_version: 1.0.0
-    content_digest: sha256:81d4f64fac64ace10adb4597666760889fe675694c9e0fba5f3f4cc402caad94
+    content_digest: sha256:48436c33bef728c528c804def6df80e6cf8e10e31eb6f79c46bcc9a8835cb8d7
     decision_ref: decision://accepted/BET-Y1Q4-T10-132
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-07-t10-132-hydration-design.md
+            sha256: sha256:48436c33bef728c528c804def6df80e6cf8e10e31eb6f79c46bcc9a8835cb8d7
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-132.md
+            sha256: sha256:5ae53151a1bd0dd03043305fa7550433f788400b63aee5a0ea0bd1c06f380a2f
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-132.md
+            sha256: sha256:5ae53151a1bd0dd03043305fa7550433f788400b63aee5a0ea0bd1c06f380a2f
+          merged_reachable_commit:
+            ref: git://origin/main@ffaaa09eaf315ba2bb28f3f5e4cafc7980839619
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-132.md
+            sha256: sha256:5ae53151a1bd0dd03043305fa7550433f788400b63aee5a0ea0bd1c06f380a2f
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-132.md
+            sha256: sha256:5ae53151a1bd0dd03043305fa7550433f788400b63aee5a0ea0bd1c06f380a2f
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-132.md
+            sha256: sha256:5ae53151a1bd0dd03043305fa7550433f788400b63aee5a0ea0bd1c06f380a2f
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-132.md
+            sha256: sha256:5ae53151a1bd0dd03043305fa7550433f788400b63aee5a0ea0bd1c06f380a2f
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/omo/src/omo/resident/hydration.py
   - projects/omo/src/omo/resident/schema_v3.sql
