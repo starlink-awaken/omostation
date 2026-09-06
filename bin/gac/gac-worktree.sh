@@ -307,6 +307,26 @@ case "$cmd" in
         fi
       fi
     fi
+    # BET-Y2Q1-T10-03: 台账预检 — 裸冒号会让 YAML 解析炸 (三犯教训), 坏文件拦在 push 前
+    if git diff origin/main...HEAD --name-only -- docs/plans/3y-bet-ledger.yaml 2>/dev/null | \
+       grep -q .; then
+      if ! python3 -c "import yaml,sys; yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml')); print('[ledger-precheck] YAML OK')" 2>/dev/null; then
+        echo "❌ 台账 YAML 解析失败 (多半是值里的裸冒号, 冒号后加空格或引号包裹)" >&2
+        exit 1
+      fi
+    fi
+    # BET-Y2Q1-T10-03: 台账并发写警告 — 其他 worktree 有未提交台账变更时提示 (非阻塞)
+    if git diff origin/main...HEAD --name-only -- docs/plans/3y-bet-ledger.yaml 2>/dev/null | \
+       grep -q .; then
+      for _wt in "$WS_PARENT"/ws-*/docs/plans/3y-bet-ledger.yaml; do
+        _other="${_wt%/docs/plans/3y-bet-ledger.yaml}"
+        [ "$_other" = "$PWD" ] && continue
+        [ -f "$_wt" ] || continue
+        if ! git -C "$_other" diff --quiet -- docs/plans/3y-bet-ledger.yaml 2>/dev/null; then
+          echo "⚠️  台账并发写提醒: $_other 的主台账有未提交变更 — 建议协调合并 (非阻塞)" >&2
+        fi
+      done
+    fi
     # BET-Y1Q1-T1-05A: fencing token 校验 (shadow 阶段只判定不阻断, exit 2 才停)
     # token 从 claim 文件读 (claim 时由镜像写入 coordination_token 字段);
     # 无 token (claim 早于本 bet / 镜像失败) 也必须进入可审计 shadow verdict

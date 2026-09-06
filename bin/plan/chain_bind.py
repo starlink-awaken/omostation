@@ -127,6 +127,17 @@ def load_ledger(workspace: Path) -> dict[str, Any]:
         if isinstance(doc, dict):
             data.update(doc)
     data.setdefault("bets", [])
+    # BET-Y2Q1-T10-03: done BET 归档后合并读 — 历史统计/chain 校验不缩水
+    arch = workspace / "docs/plans/3y-bet-ledger-archive.yaml"
+    if arch.is_file():
+        import yaml as _yaml
+        try:
+            adoc = _yaml.safe_load(arch.read_text(encoding="utf-8"))
+            if isinstance(adoc, dict) and isinstance(adoc.get("bets"), list):
+                seen = {b.get("id") for b in data["bets"] if isinstance(b, dict)}
+                data["bets"].extend(b for b in adoc["bets"] if isinstance(b, dict) and b.get("id") not in seen)
+        except _yaml.YAMLError:
+            pass  # archive 损坏不阻断主台账加载
     return data
 
 
