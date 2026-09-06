@@ -30,13 +30,7 @@ from datetime import datetime, timedelta
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 
 SCAN_GLOBS = [
-    "CLAUDE.md",
-    "AGENTS.md",
-    "ARCHITECTURE.md",
-    "LAYER-INDEX.md",
-    "README.md",
-    "CONTRIBUTING.md",
-    "DESIGN.md",
+    "*.md",  # 根目录全部 (含 ROADMAP.md 等 completed ephemeral)
     "docs/*.md",
     "docs/**/*.md",
     "projects/AGENTS.md",
@@ -58,7 +52,7 @@ EXCLUDE_SUBSTRINGS = [
     ".pytest_cache",
 ]
 
-ARCHIVE_DIR = WORKSPACE_ROOT / ".omo" / "_archive"
+ARCHIVE_DIR = WORKSPACE_ROOT / ".omo" / "_knowledge" / "design" / "plans" / "archive"
 MAX_AGE_DAYS = 90
 
 
@@ -75,8 +69,16 @@ def find_md_files() -> list[Path]:
         path_str = str(f)
         if any(excl in path_str for excl in EXCLUDE_SUBSTRINGS):
             continue
-        if f.is_file():
-            result.append(f)
+        if not f.is_file():
+            continue
+        # 排除归档反向指针文件 (本工具自身生成, 无 frontmatter 属正常)
+        try:
+            head = f.read_text(encoding="utf-8", errors="ignore")[:64]
+        except Exception:
+            head = ""
+        if head.startswith("<!-- 已归档"):
+            continue
+        result.append(f)
     return sorted(result)
 
 
@@ -137,16 +139,27 @@ def audit_duplicates() -> dict[str, list[Path]]:
 
 
 def audit_ephemeral() -> list[tuple[Path, int]]:
-    cutoff = datetime.now() - timedelta(days=MAX_AGE_DAYS)
-    old = []
+    """按 T6-17 归档约定判定: type: ephemeral + status: completed.
+
+    (不再用 mtime>MAX_AGE_DAYS — 那是"陈旧"而非"已完成一次性文档".
+     completed ephemeral 是明确标记生命周期结束、可归档的文档.)
+    """
+    completed = []
     for fp in find_md_files():
         try:
-            mtime = datetime.fromtimestamp(fp.stat().st_mtime)
+            content = fp.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             continue
-        if mtime < cutoff:
-            old.append((fp, (datetime.now() - mtime).days))
-    return sorted(old, key=lambda x: x[1], reverse=True)
+        fm = parse_frontmatter(content)
+        ftype = fm.get("type", "")
+        status = fm.get("status", "")
+        if ftype == "ephemeral" and status == "completed":
+            try:
+                days = (datetime.now() - datetime.fromtimestamp(fp.stat().st_mtime)).days
+            except Exception:
+                days = 0
+            completed.append((fp, days))
+    return sorted(completed, key=lambda x: x[1], reverse=True)
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
@@ -194,6 +207,14 @@ def cmd_archive(args: argparse.Namespace) -> int:
         print(f"  {rel} -> {dest} ({days}d)")
         if not dry_run:
             shutil.move(str(fp), str(dest))
+            # 反向指针: 原位置写指针说明, 防止死链 (circuit_breaker)
+            pointer = (
+                f"<!-- 已归档 → {dest.relative_to(WORKSPACE_ROOT)} -->\n"
+                f"> 本文档已归档 (T6-22 doc-lifecycle)。\n"
+                f"> 原路径: `{rel}`\n"
+                f"> 新路径: `{dest.relative_to(WORKSPACE_ROOT)}`\n"
+            )
+            fp.write_text(pointer, encoding="utf-8")
         moved += 1
 
     print(f"\n{'将归档' if dry_run else '已归档'} {moved} 个文档到 {ARCHIVE_DIR}")
