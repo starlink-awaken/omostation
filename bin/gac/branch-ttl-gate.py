@@ -7,6 +7,8 @@
 用法:
   python3 bin/gac/branch-ttl-gate.py                 # dry-run
   python3 bin/gac/branch-ttl-gate.py --enforce       # 实删
+  python3 bin/gac/branch-ttl-gate.py --submodules    # 扫描所有子模块
+  python3 bin/gac/branch-ttl-gate.py --submodules --dry-run  # 子模块 dry-run
 """
 from __future__ import annotations
 
@@ -50,17 +52,63 @@ def _claim_release(session: str) -> None:
         )
 
 
+def _parse_submodule_paths() -> list[Path]:
+    """从 .gitmodules 解析子模块路径。"""
+    gitmodules = WS_ROOT / ".gitmodules"
+    if not gitmodules.exists():
+        return []
+    paths: list[Path] = []
+    for line in gitmodules.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line.startswith("path ="):
+            sub_path = line.split("=", 1)[1].strip()
+            full = WS_ROOT / sub_path
+            if full.exists() and (full / ".git").exists():
+                paths.append(full)
+    return paths
+
+
+def _scan_repo_branches(repo_dir: Path, ttls: dict[str, int], now: float) -> dict[str, list[str]]:
+    """扫描单个仓库的过期分支。"""
+    stale: dict[str, list[str]] = {"work": [], "agent": []}
+    branch_out = _git("branch", "--format=%(refname:short)", cwd=repo_dir)
+    if not branch_out:
+        return stale
+    for branch_line in branch_out.splitlines():
+        branch = branch_line.strip().lstrip("* ")
+        if not branch or branch == "main":
+            continue
+        prefix = branch.split("/", 1)[0]
+        if prefix not in ttls:
+            continue
+        last_commit = _git("log", "-1", "--format=%ct", branch, cwd=repo_dir)
+        try:
+            age_hours = (now - int(last_commit)) / 3600 if last_commit else 0
+        except ValueError:
+            continue
+        if age_hours >= ttls[prefix]:
+            stale[prefix].append(f"{branch} ({age_hours:.0f}h)")
+    return stale
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--enforce", action="store_true", help="实删 (默认 dry-run)")
+    ap.add_argument("--submodules", action="store_true",
+                    help="同时扫描所有子模块的远程分支")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="显式 dry-run (与 --submodules 搭配)")
     args = ap.parse_args()
 
     ttls = _load_ttls()
-    mode = "ENFORCE" if args.enforce else "DRY-RUN"
+    enforce = args.enforce and not args.dry_run
+    mode = "ENFORCE" if enforce else "DRY-RUN"
     print(f"=== Branch TTL Gate ({mode}) ttl={ttls} ===")
     now = time.time()
-    stale: dict[str, list[str]] = {"work": [], "agent": []}
-    while_fragments = []
+
+    # 主仓扫描
+    stale_main: dict[str, list[str]] = {"work": [], "agent": []}
+    while_fragments: list[str] = []
     for branch_line in _git("branch", "--format=%(refname:short)").splitlines():
         branch = branch_line.strip().lstrip("* ")
         if not branch or branch == "main":
@@ -68,7 +116,6 @@ def main() -> int:
         prefix = branch.split("/", 1)[0]
         if prefix not in ttls:
             continue
-        # open PR 保护
         if _git_pr_open(branch):
             continue
         last_commit = _git("log", "-1", "--format=%ct", branch)
@@ -77,14 +124,15 @@ def main() -> int:
         except ValueError:
             continue
         if age_hours >= ttls[prefix]:
-            stale[prefix].append(f"{branch} ({age_hours:.0f}h)")
+            stale_main[prefix].append(f"{branch} ({age_hours:.0f}h)")
             while_fragments.append(branch)
 
-    removed = 0
-    for prefix, branches in stale.items():
+    total_main = sum(len(v) for v in stale_main.values())
+    removed_main = 0
+    for prefix, branches in stale_main.items():
         for b in branches:
             print(f"  过期: {b}")
-            if args.enforce:
+            if enforce:
                 session = b.rsplit("/", 1)[-1]
                 wt = WS_ROOT.parent / f"ws-{session}"
                 if wt.is_dir() and _git("status", "--porcelain", cwd=wt):
@@ -92,9 +140,31 @@ def main() -> int:
                     continue
                 subprocess.run(["git", "branch", "-D", b], capture_output=True)
                 _claim_release(session)
-                removed += 1
-    total = sum(len(v) for v in stale.values())
-    print(f"=== 结果: 发现 {total}, 实删 {removed} ===")
+                removed_main += 1
+    print(f"  主仓: 发现 {total_main}, 实删 {removed_main}")
+
+    # 子模块扫描
+    total_sub = 0
+    if args.submodules:
+        sub_paths = _parse_submodule_paths()
+        print(f"\n=== 子模块分支扫描 ({len(sub_paths)} repos) ===")
+        for sub_dir in sub_paths:
+            sub_name = sub_dir.relative_to(WS_ROOT)
+            stale_sub = _scan_repo_branches(sub_dir, ttls, now)
+            sub_total = sum(len(v) for v in stale_sub.values())
+            total_sub += sub_total
+            if sub_total > 0:
+                print(f"  📁 {sub_name}:")
+                for prefix, branches in stale_sub.items():
+                    for b in branches:
+                        print(f"    过期: {b}")
+            else:
+                print(f"  ✅ {sub_name}: no stale branches")
+
+    grand_total = total_main + total_sub
+    grand_removed = removed_main
+    print(f"\n=== 结果: 主仓发现 {total_main} (实删 {removed_main}), "
+          f"子模块发现 {total_sub}, 总计 {grand_total} ===")
     return 0
 
 
