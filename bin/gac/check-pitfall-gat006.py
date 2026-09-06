@@ -44,7 +44,7 @@ def check_pitfall_gat006() -> dict:
     findings: list[str] = []
 
     # Step 1: fetch latest origin/main (best-effort, non-blocking)
-    fetch_result = _git(["fetch", "origin", "main"], timeout=30)
+    fetch_result = _git(["fetch", "origin", "main", "--depth=1"], timeout=15)
     if fetch_result.returncode != 0:
         # fetch failed (no network, no remote) — skip check gracefully
         return {"ok": True, "message": "PITFALL-GAT-006 skipped (git fetch failed)", "findings": []}
