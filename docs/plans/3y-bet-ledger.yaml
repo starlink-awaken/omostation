@@ -3200,7 +3200,8 @@ bets:
   title: 门禁迭代 — Gatekeeper baseline/grace + hook-runner 处方化报错
   appetite: 1 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: '2026-09-07'
   goal: 消灭门禁两类摩擦 — 全量 Gatekeeper 存量违规"谁撞谁倒霉" (M2 baseline/grace
     范式推广 — 存量进 grace 清单降级 warn, shrink_only) 与 hook-runner 失败无处方
     (manifest 加 fix 字段, 失败时打印可复制修复命令)。
