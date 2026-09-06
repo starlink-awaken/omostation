@@ -25058,3 +25058,116 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T5-04
+
+- id: BET-Y1Q4-T6-26
+  track: T6-EVOLUTION
+  window: Y1Q4
+  title: Semantica 嵌入式图引擎内核集成与 BOS 决策网格 (Semantica Graph Kernel & BOS Decision Mesh)
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 引入并集成开源 Semantica 核心架构（采用本地嵌入式 Oxigraph 存储后端与本地 SQLite 属性图，绝无外部云端依赖与数据外泄）；在 projects/knowledge/kairon 中构建轻量适配层，抽象 bos://decision/record、bos://decision/trace 与 bos://graph/reason 统一服务契约；完成与本地主权算力 AetherForge (bos://compute/aetherforge/infer) 的连通测试与 100% 确定性因果链回归测试。
+  non_goals:
+  - 不引入外部云端托管图数据库（如云端 Neo4j/Neptune）
+  - 不替代 gbrain 现有的双链工作记忆与个人笔记
+  - 不修改底层的 Merkle 账本格式
+  done_when:
+  - 在 kairon 中集成嵌入式 Oxigraph 并完成单元测试覆盖
+  - 在 bos-services.yaml 中注册 bos://decision/* 与 bos://graph/* 路由端点
+  - 实现决策记录、因果链追溯（CAUSED/INFLUENCED）与 Datalog 确定性推理示例
+  - 本地大模型抽取管道与 AetherForge 端点联调通过
+  verify:
+  - cmd: uv run pytest projects/knowledge/kairon/tests/test_semantica_kernel.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/knowledge/kairon/pyproject.toml
+  - projects/knowledge/kairon/src/kairon/graph/semantica_kernel.py
+  - projects/knowledge/kairon/src/kairon/decision/causal_tracer.py
+  - projects/agora/etc/bos-services.yaml
+  - projects/knowledge/kairon/tests/test_semantica_kernel.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-26.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 图存储与推理全量在本地沙箱运行；若 Oxigraph 初始化或查询失败，自动降级为 SQLite 本地事务存储，严禁阻塞核心流程。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-25
+
+- id: BET-Y1Q4-T5-05
+  track: T5-ORCH
+  window: Y1Q4
+  title: 常驻 Agent 2.0 决策因果图化与多 Agent 先例仲裁引擎 (Resident Agent Causal Graph & Precedent Arbitration)
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 全面升级常驻 Agent 2.0（Resident Daemon）的决策归因与多 Agent 协同仲裁机制：将所有自愈、巡检、告警与代码评审操作通过 bos://decision/record 写入因果图；当多 Agent 发生方案冲突或分支死锁时，基于 Semantica 的 find_similar_decisions 与先例库（Precedents）进行历史判例检索与自动加权裁决；在 Cockpit 看板呈递可交互的决策因果树（Sigma.js 渲染），并导出 W3C PROV-O 审计证据。
+  non_goals:
+  - 不改变现有的 8 阶段 Harness DAG 主控状态机
+  - 不影响人类夏明星的最终一票否决权（HITL）
+  done_when:
+  - Resident Daemon 每次巡检与自愈动作均生成图原生决策节点与因果连线
+  - 实现多 Agent 先例仲裁算法并在仿真冲突场景通过评测
+  - Cockpit 能够直观展示任意决策的完整因果祖先链与下游影响面拓扑
+  - 自动化导出符合 W3C PROV-O 标准的 Turtle/JSON-LD 审计文件
+  verify:
+  - cmd: uv run pytest projects/omo/tests/unit/test_resident_causal_decision.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/decision_bridge.py
+  - projects/omo/src/omo/resident/arbitration.py
+  - projects/cockpit/src/cockpit/handlers/decision_graph.py
+  - projects/cockpit-ui/src/components/DecisionGraphViewer.tsx
+  - projects/omo/tests/unit/test_resident_causal_decision.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T5-05.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 先例仲裁必须设定置信度下限（confidence >= 0.85），低于阈值时自动升级至人类待办，严禁低置信度盲目合并。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-26
+  - BET-Y1Q4-T5-04
+
+- id: BET-Y1Q4-T6-27
+  track: T6-EVOLUTION
+  window: Y1Q4
+  title: GraphRAG 实体感知切片与 SHACL 架构形状验证引擎 (Entity-Aware Chunking & SHACL Architecture Validator)
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 借鉴 Semantica 的实体与关系感知切片算法（Entity/Relation-Aware Chunking），重构 Iris 连接器与 Minerva 的文本分块流水线，确保多源长文档摄取时专有名词、业务实体与三元组永不跨 chunk 割裂；同时引入 W3C SHACL 形状验证器，将 eCOS 的道法术器（DFSQ）与场景卡生命周期状态机编纂为标准 SHACL Shapes，接入 make gac-local-gate 本地 CI 门禁，实现工业级拓扑断言。
+  non_goals:
+  - 不推翻现有已归档的历史文档格式
+  - 不影响现有快速文本搜索的延迟表现
+  done_when:
+  - Iris 连接器和 Minerva 分块管线接入 EntityAwareChunker，实体割裂率降为 0
+  - 编制 dfsq-shapes.ttl 与 scene-card-shapes.ttl 架构验证规范
+  - CI 门禁中集成 SHACL 静态拓扑校验器，违规拓扑立刻拦截
+  - 单元测试覆盖实体切分保全率与 SHACL 形状违例告警
+  verify:
+  - cmd: uv run pytest projects/knowledge/kairon/tests/test_entity_chunking_shacl.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/knowledge/kairon/packages/iris/src/iris/split/entity_chunker.py
+  - projects/knowledge/kairon/src/kairon/ontology/shacl_validator.py
+  - .omo/standards/shapes/dfsq-shapes.ttl
+  - .omo/standards/shapes/scene-card-shapes.ttl
+  - projects/knowledge/kairon/tests/test_entity_chunking_shacl.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-27.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: SHACL 验证器仅针对纳管的核心架构资产运行，非受管目录的草稿文件走 warn 模式不阻断。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-26
