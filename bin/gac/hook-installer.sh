@@ -18,7 +18,8 @@ CANONICAL="$ROOT/.githooks"
 # 本仓用 core.hooksPath=.githooks (hooks 直接从 canonical 生效), installer 负责
 # 在真实 git-dir/hooks 写入 .version/.content-hash 供 health-check/版本自检.
 # 不用 git-path hooks (会被 core.hooksPath 重定向到 .githooks 导致 cp 自拷贝).
-GIT_DIR_REAL="$(git rev-parse --git-dir 2>/dev/null || echo "$ROOT/.git")"
+# 用 --git-common-dir: worktree 下返回共享主仓 .git (元数据单点), 而非 .git/worktrees/<name>.
+GIT_DIR_REAL="$(git rev-parse --git-common-dir 2>/dev/null || echo "$ROOT/.git")"
 TARGET="$GIT_DIR_REAL/hooks"
 FORCE=0
 CHECK_ONLY=0
