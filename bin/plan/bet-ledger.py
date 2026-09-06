@@ -701,6 +701,16 @@ def load() -> dict:
             data.update(d)
     if "bets" not in data:
         sys.exit("台账缺少 bets 段")
+    # BET-Y2Q1-T10-03: 归档合并读 — show/list/complete 等命令对历史 BET 不失明
+    arch = Path("docs/plans/3y-bet-ledger-archive.yaml")
+    if arch.exists():
+        try:
+            adoc = yaml.safe_load(arch.read_text(encoding="utf-8"))
+            if isinstance(adoc, dict) and isinstance(adoc.get("bets"), list):
+                seen = {b.get("id") for b in data["bets"]}
+                data["bets"].extend(b for b in adoc["bets"] if isinstance(b, dict) and b.get("id") not in seen)
+        except yaml.YAMLError:
+            pass  # archive 损坏不阻断主台账
     return data
 
 

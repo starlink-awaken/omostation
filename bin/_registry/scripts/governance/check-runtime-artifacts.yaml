@@ -3,13 +3,16 @@ id: bin/gac/check-runtime-artifacts.py
 name: Check Runtime Artifacts
 category: governance
 owner: governance-team
-description: ""
-inputs: []
+description: "运行时产物门禁 — 阻止运行时产物 (黑名单后缀/文件名/前缀) 进入 git index (blocking hook-runner 检查, 同源 ci-local-fast gate)"
+inputs:
+  - --staged
 outputs:
   - type: exit_code
   - type: json
 dependencies: []
-triggers: []
-related: []
+triggers:
+  - pre-commit
+related:
+  - bin/gac/ci-local-fast.py
 maturity: draft
-last_reviewed: "2026-08-24"
+last_reviewed: "2026-09-06"

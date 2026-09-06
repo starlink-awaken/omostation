@@ -51,6 +51,17 @@ def scan_debt(ledger_path: Path = LEDGER) -> dict[str, Any]:
     data = yaml.safe_load(ledger_path.read_text())
     bets = data.get("bets", [])
 
+    # BET-Y2Q1-T10-03: 归档合并读 — 价值债盘点不缩水
+    _arch = ledger_path.parent / "3y-bet-ledger-archive.yaml"
+    if _arch.is_file():
+        try:
+            _adoc = yaml.safe_load(_arch.read_text(encoding="utf-8"))
+            if isinstance(_adoc, dict) and isinstance(_adoc.get("bets"), list):
+                _seen = {b.get("id") for b in bets}
+                bets.extend(b for b in _adoc["bets"] if isinstance(b, dict) and b.get("id") not in _seen)
+        except yaml.YAMLError:
+            pass
+
     entries: list[dict[str, Any]] = []
     for b in bets:
         if b.get("status") != "done":
