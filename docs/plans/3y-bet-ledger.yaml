@@ -3119,7 +3119,8 @@ bets:
   title: 并发 Agent 分支命名空间隔离 — 防冲突与自动清理
   appetite: 1-2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: '2026-09-06'
   goal: 为并发 agent 分支引入命名空间隔离（agent/{actor_id}/ 前缀），防止分支命名冲突，并自动清理过期 agent 分支。
   non_goals:
   - 不修改现有 work/ 前缀分支
@@ -3148,6 +3149,43 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 命名空间冲突时阻断创建并提示重命名，不自动覆盖。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@733a28ed7c891a64ba844f26fbd107ef42eb8353
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-09-06-agent-branch-namespace-spec.md
+            sha256: sha256:10c2084187d6ac69329bd2c225a1a9ac216bd699b4d0d72603c5e1e6a0871d5b
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-agent-branch-namespace-spec.md
+            sha256: sha256:10c2084187d6ac69329bd2c225a1a9ac216bd699b4d0d72603c5e1e6a0871d5b
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-06-agent-branch-namespace-spec.md
+            sha256: sha256:10c2084187d6ac69329bd2c225a1a9ac216bd699b4d0d72603c5e1e6a0871d5b
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-128.md
+            sha256: sha256:cac70b015d62cf681e05deb7bae0b96b4a21db8cb140a0775be31fdae8f7df36
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-128.md
+            sha256: sha256:cac70b015d62cf681e05deb7bae0b96b4a21db8cb140a0775be31fdae8f7df36
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-128.md
+            sha256: sha256:cac70b015d62cf681e05deb7bae0b96b4a21db8cb140a0775be31fdae8f7df36
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-128.md
+            sha256: sha256:cac70b015d62cf681e05deb7bae0b96b4a21db8cb140a0775be31fdae8f7df36
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
 - id: BET-Y1Q4-T10-129
   track: T10-MATURITY
