@@ -235,3 +235,4 @@ make bcos-north-star   # 北极星价值度量 v2
 - 信号路由: `bin/bc-os/signal_router.py`（W1-D2, 公文/会议/调研/代码）
 - 北极星: `bin/bc-os/north_star_meter_v2.py`（排除 self-data）
 - MOF: `mof/m2/bcos_system.yaml`（BCOSystem）· BOS: `bos://bcos/*`
+
