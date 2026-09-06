@@ -3397,6 +3397,7 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  value_indicator_policy: false
   done_at: '2026-09-07'
   pr_number: 3347
 - id: BET-Y1Q4-T10-130
