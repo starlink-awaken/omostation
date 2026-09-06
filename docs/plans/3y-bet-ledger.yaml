@@ -25267,3 +25267,150 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T6-26
+
+- id: BET-Y1Q4-T7-04
+  track: T7-SCENE
+  window: Y1Q4
+  title: 多 Agent 场景导航锚点与运行时防跑偏护栏机制 (Scene Navigation Anchor & Runtime Guardrail Framework)
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  goal: 建立多 Agent 协作业务导航锚点与动态防跑偏护栏（SNARF）：抽象 bos://scene/anchor 握手协议，强制要求任何 Agent 执行复杂需求前必须绑定具体的 Scene Card 与 Journey 节点并签发场景飞行计划（Flight Plan）；在网关层建立 CapabilityJail（能力白名单拦截，越界即熔断）与 DataScopeGuard（数据读写围栏）；构建运行时偏离度雷达，彻底根绝多 Agent“自发散、自说自话、过度设计与破坏性越界”。
+  non_goals:
+  - 不废弃现有的 66 个受管场景卡 YAML 定义
+  - 不替代已有的 Git worktree 隔离机制
+  - 不阻断只读查询与探活行为
+  done_when:
+  - 交付 bos://scene/anchor 握手网关并支持场景意图自动推荐与解析
+  - 实现 CapabilityJail 工具越界拦截与 DataScopeGuard 目录沙盒围栏
+  - 交付 Drift Radar 偏离度监控算法并在仿真漂移场景中 100% 成功拦截
+  - 在 document-review 与 engineering-delivery 核心场景完成端到端闭环验证
+  verify:
+  - cmd: uv run pytest projects/omo/tests/unit/test_scene_guardrail_anchor.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/scene/anchor.py
+  - projects/omo/src/omo/guardrail/enforcer.py
+  - projects/agora/src/agora/server/tools_scene.py
+  - projects/omo/tests/unit/test_scene_guardrail_anchor.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T7-04.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 护栏拦截仅针对执行写操作与工具调用的 Agent 行为；探活类操作走 warn 模式，严禁误报阻断系统基础健康感知。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T5-05
+  - BET-Y1Q4-T7-01
+
+- id: BET-Y1Q4-T7-05
+  track: T7-SCENE
+  window: Y1Q4
+  title: 业务场景五档生命周期自动巡航与金牌样例自学习闭环 (Autonomous Scene Lifecycle Cruiser & Golden Sample Loop)
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 打通场景执行与价值反馈的自演进飞轮：实现场景交付成果（result_contract）与 Semantica 因果图的自动对齐，将成功履约的旅程沉淀为场景级金牌样例（Golden Sample）；常驻 Agent 定期根据样本量与校准度，自动推进场景卡在 draft → shadow → assisted → supervised → routine 五档生命周期中自动跃迁与降级熔断。
+  non_goals:
+  - 不绕过 supervised 到 routine 的高风险人工把关要求
+  - 不修改底层 value-loop-standard.yaml 的五阶段状态机定义
+  done_when:
+  - 每次场景成功执行自动记录 Value Record 并注入 Semantica 先例库
+  - 实现 SceneLifecycleCruiser，支持按 3-sample (shadow门) 与 30-sample+0.6 calib (assisted门) 自动巡航跃迁
+  - 在 Cockpit 中可视化呈现场景卡的生命周期状态与样本积累雷达图
+  - 单元测试覆盖自动晋级、校准度不足降级与金牌样本检索
+  verify:
+  - cmd: uv run pytest projects/omo/tests/unit/test_scene_lifecycle_cruiser.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/scene/cruiser.py
+  - projects/omo/src/omo/scene/golden_samples.py
+  - projects/cockpit/src/cockpit/handlers/scene_lifecycle.py
+  - projects/omo/tests/unit/test_scene_lifecycle_cruiser.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T7-05.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 场景升级巡航器如遇校准度骤降（calibration < 0.5），必须自动回退至上一级受控状态并告警。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T7-04
+
+- id: BET-Y1Q4-T8-22
+  track: T8-SURFACE
+  window: Y1Q4
+  title: TinyBOS 极简边缘具身协议与家庭局域网算力网格漫游 (TinyBOS Embodied Protocol & Home LAN Roaming Mesh)
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 拓展系统的物理边缘感知与伴随式守护边界：使用 Rust/C 开发内存开销 < 10MB 的超轻量 TinyBOS 边缘守护端，接入智能手环、随身穿戴与家庭控制屏；实时采集心率变异率、跌倒碰撞与空间位移，直通发射为场景触发信号；基于 P2P WireGuard 实现家庭局域网自组织，当开发工作站休眠时守护任务无损漫游至家庭微型主机（NAS/Mac mini），构建 7×24 小时物理世界态势感知图谱。
+  non_goals:
+  - 不依赖任何第三方云端物联网平台中继（坚持本地 Local-First 与 P2P 加密）
+  - 不破坏现有 BOS 协议的 URL 寻址规范
+  done_when:
+  - 编译产出轻量 TinyBOS 边缘守护二进制并完成近场设备探活测试
+  - 实现心率突变与跌倒加速度物理信号向 health-visit 场景卡的自动映射触发
+  - 验证主工作站休眠场景下，守护进程与状态上下文向微型主机的平滑热漫游
+  - 单元测试覆盖边缘报文编解码、P2P 网格连通与网络波动断线重连
+  verify:
+  - cmd: uv run pytest projects/agora/tests/test_tinybos_mesh.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/surface/tinybos/src/main.rs
+  - projects/agora/src/agora/transport/tinybos_bridge.py
+  - projects/agora/src/agora/transport/p2p_mesh.py
+  - projects/agora/tests/test_tinybos_mesh.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 边缘节点离线或网络分区时自动进入离线数据缓冲模式，本地持久化至环形缓冲区，严禁阻塞或丢弃体征事件。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T8-20
+  - BET-Y1Q4-T6-25
+
+- id: BET-Y1Q4-T6-28
+  track: T6-EVOLUTION
+  window: Y1Q4
+  title: 四级认知阶梯分级投机推理与 Radix 前缀树热缓存加速引擎 (4-Tier Cognitive Hierarchy & Radix KV Cache Engine)
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 重构本地主权推理引擎（AetherForge / omlxc）：落地 L0（1B~3B 专用 NPU 毫秒意图与护栏拦截，首字 < 5ms）→ L1（7B~14B 骨干任务与代码补丁编写）→ L2（32B~70B+ 重型仲裁与高难逻辑）的四级投机调度架构；将 66 个场景卡与核心 GaC 规约预编译为持久化 Radix 前缀树 Paged KV Cache，系统启动即常驻内存，彻底消除交互时的 Prompt Prefill 计算，使本地推理吞吐提升 3 倍且显存节省 50%。
+  non_goals:
+  - 不修改底层大语言模型的权重参数
+  - 不引入未经加密的外部云端模型端点
+  done_when:
+  - 实现 4-Tier 认知分级调度器并支持首字延迟 < 5ms 的 L0 快速拦截
+  - 交付 Radix 前缀树 Paged KV Cache 预编译管线并在系统启动时热加载
+  - 在高并发测试下对比基线模型：显存占用降低 ≥40%，吞吐提升 ≥2.5 倍
+  - 单元测试覆盖级联路由决策、Cache Hit 率度量与模型降级容错
+  verify:
+  - cmd: uv run pytest projects/aetherforge/tests/test_cognitive_hierarchy.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/aetherforge/src/aetherforge/scheduler/hierarchy.py
+  - projects/aetherforge/src/aetherforge/cache/radix_paged.py
+  - projects/aetherforge/src/aetherforge/engine/speculative.py
+  - projects/aetherforge/tests/test_cognitive_hierarchy.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 分级路由如遇 L0/L1 判定置信度低于阈值，必须平滑降级至上一层重型模型，严禁因追求低延迟而牺牲决策正确性。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-26
