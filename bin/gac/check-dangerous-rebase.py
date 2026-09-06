@@ -11,20 +11,8 @@
 """
 
 import argparse
-import hashlib
-import os
 import subprocess
 import sys
-
-
-def check_known_debt(sub: str, base_sha: str, staged_sha: str) -> bool:
-    """检查是否在 known-debt 指纹中."""
-    debt_path = os.path.join(os.getcwd(), ".omo/_truth/registry/gate-known-debt.yaml")
-    if not os.path.exists(debt_path):
-        return False
-    fingerprint = hashlib.sha256(f"{sub}\n{base_sha}\n{staged_sha}".encode()).hexdigest()[:16]
-    with open(debt_path, encoding="utf-8") as f:
-        return fingerprint in f.read()
 
 
 def main() -> int:

@@ -34,10 +34,11 @@ def main() -> int:
     ).stdout.strip()
 
     canonical_dir = os.path.join(root, ".githooks")
-    target_dir = subprocess.run(
-        ["git", "rev-parse", "--git-path", "hooks"],
-        capture_output=True, text=True, check=True,
+    git_dir = subprocess.run(
+        ["git", "rev-parse", "--git-dir"],
+        capture_output=True, text=True, check=False,
     ).stdout.strip()
+    target_dir = os.path.join(git_dir, "hooks") if git_dir else os.path.join(root, ".git/hooks")
 
     canonical_version = ""
     version_path = os.path.join(canonical_dir, "VERSION")
@@ -49,23 +50,31 @@ def main() -> int:
     if os.path.exists(installed_version_path):
         installed_version = open(installed_version_path).read().strip()
 
-    # 计算 canonical hash
-    canonical_files = sorted([
-        f for f in os.listdir(canonical_dir)
-        if os.path.isfile(os.path.join(canonical_dir, f))
-        and not f.endswith(".md") and not f.startswith(".") and f != "VERSION"
-    ])
-
-    canonical_hash = hashlib.sha256()
-    for name in canonical_files:
-        with open(os.path.join(canonical_dir, name), "rb") as f:
-            canonical_hash.update(f.read())
-    canonical_hash_hex = canonical_hash.hexdigest()[:16]
+    # 计算 canonical hash (与 hook-installer.sh 同算法: find|xargs shasum|shasum)
+    canonical_hash_hex = ""
+    try:
+        find_cmd = (
+            f"find {canonical_dir} -type f -not -name '*.md' -not -name '.*' "
+            "| sort | xargs shasum -a 256 2>/dev/null | shasum -a 256 | awk '{print $1}'"
+        )
+        canonical_hash_hex = subprocess.run(
+            ["bash", "-c", find_cmd],
+            capture_output=True, text=True, check=False,
+        ).stdout.strip()[:16]
+    except OSError:
+        canonical_hash_hex = ""
 
     installed_hash = ""
     installed_hash_path = os.path.join(target_dir, ".content-hash")
     if os.path.exists(installed_hash_path):
         installed_hash = open(installed_hash_path).read().strip()[:16]
+
+    # canonical 文件清单 (用于逐 hook 状态 + missing/orphaned)
+    canonical_files = sorted([
+        f for f in os.listdir(canonical_dir)
+        if os.path.isfile(os.path.join(canonical_dir, f))
+        and not f.endswith(".md") and not f.startswith(".") and f != "VERSION"
+    ])
 
     # 检查每个 hook
     hooks_status = {}
