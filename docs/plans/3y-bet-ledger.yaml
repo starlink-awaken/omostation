@@ -3617,7 +3617,9 @@ bets:
   title: Agent Session Dashboard 规格与台账立项（无 UI 信息聚合）
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-06 21:45:00+00:00
+  note: ASD spec (v1.0.1) + design spec + CLAUDE.md delivered in #3317; campaign_ref/milestone wired.
   goal: 完成 Agent Session Dashboard（ASD）全景规格：定义 8 板块 IA、维度映射、asd.session.v1 schema、触发路径与分阶段交付；写入台账并关联 Agent 冷启动定向战役，使后续 MVP 实现有可验证边界。
   non_goals:
   - 不实现 Web UI / cockpit-ui 页面
