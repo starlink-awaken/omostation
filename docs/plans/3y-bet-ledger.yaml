@@ -3351,11 +3351,17 @@ bets:
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
-      value:
-        status: ACCEPTED
-        evidence:
-          stakeholder_sign_off:
+          fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  pr_number: 3347
 - id: BET-Y1Q4-T10-130
   track: T10-MATURITY
   window: Y1Q4
