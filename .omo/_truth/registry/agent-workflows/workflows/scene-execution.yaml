@@ -19,11 +19,11 @@ surfaces:
     - .omo/_knowledge/workflow-mesh/scene-outcomes.jsonl
 phases:
   preflight:
-    - {id: validate_scene, mode: required, command: [python3, bin/ssot/scene-card-lifecycle.py, check, --scene-card, .omo/_truth/scenarios/v3/{scene_id}.yaml]}
+    - {id: validate_scene, mode: required, command: [python3, bin/ssot/scene-card-lifecycle.py, check, --scene-card, ".omo/_truth/scenarios/v3/{scene_id}.yaml"]}
   execute:
-    - {id: run_journey, mode: required, command: [python3, bin/ssot/journey-engine.py, execute, {scene_id}]}
+    - {id: run_journey, mode: required, command: [python3, bin/ssot/journey-engine.py, execute, "{scene_id}"]}
   verification:
-    - {id: record_outcome, mode: required, command: [python3, bin/ssot/scene-outcome-recorder.py, record, --scene-id, {scene_id}]}
+    - {id: record_outcome, mode: required, command: [python3, bin/ssot/scene-outcome-recorder.py, record, --scene-id, "{scene_id}"]}
   closeout:
-    - {id: reflection, mode: required, command: [python3, bin/ssot/scene-reflection.py, generate, --scene-id, {scene_id}]}
+    - {id: reflection, mode: required, command: [python3, bin/ssot/scene-reflection.py, generate, --scene-id, "{scene_id}"]}
 evidence_required: [journey_run_ref, capability_outcome_refs, calibration_delta]
