@@ -1,0 +1,24 @@
+schema: script-registry/v1
+id: bin/gac/documents-client-sync.py
+name: Documents Client Sync
+category: governance
+owner: governance-team
+description: "Documents multi-IDE config drift detection and atomic repair (Claude Desktop, Codex, Zed, ZCode)"
+inputs:
+  - type: mode
+    description: "check or apply"
+  - type: flag
+    description: "--json for JSON output"
+  - type: path
+    description: "--registry for custom registry path"
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - pyyaml
+triggers:
+  - gac-local-gate
+related:
+  - bin/gac/documents-domain-project-check.py
+maturity: production
+last_reviewed: "2026-09-06"
