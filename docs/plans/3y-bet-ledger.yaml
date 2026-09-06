@@ -24812,10 +24812,20 @@ bets:
   title: Documents Runtime Jobs 契约对齐与自动化守护常态化 (Runtime Jobs Parity & Cadence)
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
   goal: 修复 documents_domain_jobs.py 对 runtime-learning 任务的 Schema 缺失与校验崩溃，恢复 documents-domain-project-check.py
     绿灯；并将 7 个 manual 运行时巡检任务接入常态化自动化管道（launchd/crontab 调度），定时产出结构化 evidence 并汇入 Cockpit
     驾驶舱事实面。
+  completion_evidence:
+  - cmd: uv run --with pyyaml python bin/gac/documents-domain-project-check.py --domain-registry
+      /Users/xiamingxing/Documents/@公共/_control/L4-DOMAIN-REGISTRY.yaml --project-registry
+      .omo/_truth/registry/documents-domain-projects.yaml --json
+    result: '{"ok": true, "domain_count": 12, "gateway_count": 12, "errors": []}'
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_documents_domain_project_check.py -q
+    result: 87 passed
+  - cmd: uv run --with pyyaml python bin/gac/documents-jobs-scheduler.py --dry-run
+    result: previewed 7 plists
+  - pr: https://github.com/starlink-awaken/omostation/pull/3293
   non_goals:
   - 不在 Documents 物理目录启动常驻守护进程
   - 不新增未经 ADR 审议的第 8 个 runtime job
