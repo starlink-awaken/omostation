@@ -153,7 +153,7 @@ tools:
   ecos-ssot-tools:
     path: projects/ecos/src/ecos/ssot/tools
     description: MOF 实现层工具链 (44 个 Python 工具, bin/mof/* 入口包装的内部实现; 见该目录各脚本 docstring)
-    commands: [mof-validate, mof-schema-validate, mof-enforce, mof-audit, mof-bootstrap, mof-sla, mof-compile, mof-scan, mof-derive, mof-extract, mof-l4-bridge, "..."]
+    commands: [mof-validate, mof-schema-validate, mof-enforce, mof-audit, mof-bootstrap, mof-sla, mof-compile, mof-scan, mof-derive, mof-extract, mof-l4-bridge, mof-kems-bridge, "..."]
     usage: "python3 projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py --staged --strict"
     generatable: false
     verifiable: true
