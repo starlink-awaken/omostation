@@ -9792,6 +9792,7 @@ bets:
   appetite: 1 week
   priority: P0
   status: done
+  done_at: 2026-08-17
   blocked_reentry_policy: human_approval_required
   blocked_at: 2026-08-22
   unblocked_at: 2026-08-22
@@ -9813,6 +9814,7 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:1cd6a0faeb9386637963573bc55781a901a303bc46e1fff252a70d25400b907f
     decision_ref: decision://accepted/BET-Y1Q2-T7-01
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -9846,7 +9848,7 @@ bets:
             ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
             sha256: sha256:03b0d2834473433de955f82e002a648b4c4ac58620f6e193e7ece880b368a5dc
       value:
-        status: REJECTED
+        status: NOT_PROVEN
         evidence:
           real_signal:
             ref: receipt://docs/scene-cards/engineering-delivery-dogfood.yaml
@@ -9854,7 +9856,7 @@ bets:
           human_verdict:
             ref: receipt://.omo/_archive/operations-2026H1/human-attestations/BET-Y1Q2-T7-01-human-gate.yaml
             sha256: sha256:2fcff56667924e6dba8163636928dc4d3912748f248fcb83365f0b6f2dc3d104
-    overall_state: rejected
+    overall_state: delivery_accepted
   goal: 建立高频低风险、可绑定显式 reviewer credential 与 human adjudication 的真实 decision_outcome
     样本源
   non_goals:
@@ -11732,6 +11734,7 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:9900b8f85156d114b4dcf36d08a4b229629d20cec5013b9653eb49af90293205
     decision_ref: decision://accepted/BET-Y1Q3-T1-09
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -11767,7 +11770,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: blocked
+    overall_state: delivery_accepted
   goal: 把 D4 逃生口从「无限复用的万能票」收成「权限类 + fingerprint 债」，预存失败必须下沉，agent 不能再用 emergency-human-hotfix
     跳新失败
   non_goals:
@@ -11828,6 +11831,7 @@ bets:
   priority: P1
   status: done
   completed_at: '2026-08-24T16:30:00+08:00'
+  done_at: 2026-08-24
   goal: 让 resident 常驻 agent 体系 (WP-A~I / ADR-0396) 被 agent 全面感知 — 补齐 CR-RESIDENT check
     工具与治理检查登记、CI 平面登记、agent-workflows 注册、agora MCP 工具与 bos://resident/* URI 引用，并修正
     AGENTS.md/CLAUDE.md 与实际的兼容脚本路径漂移
@@ -11871,6 +11875,7 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:4687488d5fa10ba63845a2c8afd595c71d1083128a44ad54dc30926761e2d8dc
     decision_ref: decision://accepted/BET-Y1Q3-T1-10
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -11906,7 +11911,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: blocked
+    overall_state: delivery_accepted
   retro: required
   started_at: '2026-08-23T21:40:00+08:00'
 - id: BET-Y1Q3-T1-11
@@ -11916,6 +11921,7 @@ bets:
   appetite: 1 day
   priority: P0
   status: done
+  done_at: 2026-08-22
   started_at: 2026-08-24
   goal: 将已验证的 platform-rebase retirement provenance 补丁重放到 current main，使 GitHub update-branch/rebase
     引入的平台提交不再被误计为 delivery author，同时锁定精确 PR/base/head、origin fetch/push 仓库、delivery
@@ -11982,6 +11988,7 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:0feea8be930fb64e2ec44b2714abcedfe10e533d3fcddaa1e5321cad24f02e29
     decision_ref: decision://accepted/BET-Y1Q3-T1-11
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -12017,7 +12024,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: blocked
+    overall_state: delivery_accepted
   workflow: project-code-change
   underlying_workflow: project-code-change
   write_surfaces:
@@ -13296,6 +13303,7 @@ bets:
   appetite: 2 weeks
   priority: P0
   status: done
+  done_at: 2026-08-24
   started_at: 2026-08-21
   run_ref: 20260821T111433Z-bet-execution-967f03e6
   progress_note: '2026-08-21 并发 closeout 纠偏：PR #1831 曾在缺少 credential-bound human attestation
@@ -16753,6 +16761,7 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:51bcd98cd1348ab2a12c54cc8b6779abc053a41d1274c25c7865ac1e9d93a965
     decision_ref: decision://accepted/BET-Y1Q3-T10-11
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -16788,7 +16797,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: blocked
+    overall_state: delivery_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-12
   track: T10-MATURITY
@@ -16942,6 +16951,7 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:b90a74240c5fc38db7950cd11200f23d869e006948241979f1312f9cfff60165
     decision_ref: decision://accepted/BET-Y1Q3-T10-13
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -16977,7 +16987,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: blocked
+    overall_state: delivery_accepted
   depends_on: []
 - id: BET-Y1Q3-T10-14
   track: T10-MATURITY

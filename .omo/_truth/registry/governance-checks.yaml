@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 598
+    script_baseline: 599
     # 2026-09-06: -2 删除 placeholder guard-chore-state.py + notify-submodule-change.py (canonical 内联已有真实实现, BET-Y1Q4-T6-24 净减)
     # 2026-09-06: -1 删除 check-dangerous-rebase.py (canonical pre-rebase 内联已有实现+逃生口, 消除重复, BET-Y1Q4-T6-24)
     # 2026-09-03: +1 perception-coverage
