@@ -44,13 +44,13 @@ def check_pitfall_gat006() -> dict:
     findings: list[str] = []
 
     # Step 1: fetch latest origin/main (best-effort, non-blocking)
-    fetch_result = _git(["fetch", "origin", "main"], timeout=30)
+    fetch_result = _git(["fetch", "origin", "main", "--depth=1"], timeout=15)
     if fetch_result.returncode != 0:
         # fetch failed (no network, no remote) — skip check gracefully
         return {"ok": True, "message": "PITFALL-GAT-006 skipped (git fetch failed)", "findings": []}
 
     # Step 2: check if branch has any diff against origin/main
-    diff_result = _git(["diff", "--name-only", "origin/main...HEAD"])
+    diff_result = _git(["diff", "--name-only", "origin/main...HEAD"], timeout=15)
     changed_files = [f for f in diff_result.stdout.strip().splitlines() if f.strip()]
 
     if changed_files:
