@@ -6,6 +6,7 @@
 #
 # 用法:
 #   gac-worktree.sh claim <session>      # 创建 worktree + 分支 work/<session>
+#                                         # --actor-id <id> → agent/<id>/<session>
 #   gac-worktree.sh submit [--strict] <session>  # push 分支 + 开 PR (base main)
 #                                         # --strict: 子模块 pointer 不可达时阻止提交
 #   gac-worktree.sh merge <session>      # squash 合并 PR + release worktree + 删分支
@@ -202,7 +203,7 @@ remove_verified_pasw() {
 
 case "$cmd" in
   claim)
-    [ -z "$session" ] && echo "用法: claim <session>" >&2 && exit 1
+    [ -z "$session" ] && echo "用法: claim <session> [--actor-id <id>]" >&2 && exit 1
     validate_session "$session"
     ROOT_REMOTE=$(cd "$WS_ROOT" && resolve_root_remote) || exit 1
     wt="$WS_PARENT/ws-$session"

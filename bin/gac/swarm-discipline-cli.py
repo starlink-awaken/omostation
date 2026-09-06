@@ -83,7 +83,7 @@ def cmd_branch_release(args: argparse.Namespace) -> int:
 
 def cmd_claim_gc(args: argparse.Namespace) -> int:
     root = root_from_cwd()
-    result = sd.claim_gc(root, ttl_hours=args.ttl_hours, dry_run=args.dry_run)
+    result = sd.claim_gc(root, ttl_hours=args.ttl_hours, dry_run=args.dry_run, namespace=args.namespace)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 
@@ -419,6 +419,12 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=168,
         help="TTL 小时 (默认 168=7天, claim 是长期占位)",
+    )
+    s.add_argument(
+        "--namespace",
+        choices=["work", "agent"],
+        default=None,
+        help="仅清理指定命名空间的 claim (work=work/*, agent=agent/*)",
     )
     s.add_argument("--dry-run", action="store_true")
     s.set_defaults(func=cmd_claim_gc)
