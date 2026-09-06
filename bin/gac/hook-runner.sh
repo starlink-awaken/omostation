@@ -118,6 +118,23 @@ run_check() {
   if [ $rc -ne 0 ]; then
     if [ "$blocking" = "true" ]; then
       echo "[hook-runner] ❌ [$id] failed (${elapsed}ms)" >&2
+      # T10-134 处方化: 从 manifest 读 fix 字段打印可复制修复命令
+      _fix_cmd="$(python3 -c "
+import yaml, sys
+try:
+    m = yaml.safe_load(open('$MANIFEST'))
+    for hook in m.values():
+        if isinstance(hook, dict):
+            for c in (hook.get('checks') or []):
+                if isinstance(c, dict) and c.get('id') == '$id':
+                    print(c.get('fix') or '')
+                    sys.exit(0)
+except Exception:
+    pass
+" 2>/dev/null || true)"
+      if [ -n "$_fix_cmd" ]; then
+        echo "[hook-runner] 💡 fix → $_fix_cmd" >&2
+      fi
       echo "$output" | sed 's/^/   /' >&2
       BLOCKING_FAILED=$((BLOCKING_FAILED + 1))
       return 1

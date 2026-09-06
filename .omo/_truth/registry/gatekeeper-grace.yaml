@@ -1,0 +1,15 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-09-07
+policy: grandfather-existing-only
+growth_policy: shrink_only
+note: >-
+  contract_gatekeeper 的存量豁免清单 (与 omo direct-io-baseline 解耦 —
+  后者是清零压力缓冲区, 本清单是修复排期登记). 修复后必须移除条目.
+---
+entries:
+  - path: projects/cockpit/src/cockpit/commands/voice_memo.py
+    reason: "存量直写 (BET-Y2Q1-T2-01 引入, 全量扫描挡全舰队 PR) — 待作者修复后移除"
+    added_at: "2026-09-07"
