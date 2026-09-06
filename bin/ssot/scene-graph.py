@@ -87,33 +87,40 @@ def build_graph_from_scenes() -> SceneGraph:
     return g
 
 def execute_graph(graph, initial_signal, dry_run=False) -> dict:
+    """Execute all reachable scenes from entry point via DFS."""
     run_id = f"graph-{uuid.uuid4().hex[:12]}"; corr = f"corr-{uuid.uuid4().hex[:12]}"; results = {}
-    cur = graph.entry_point
-    if not cur: raise ValueError("No entry point")
     visited = set(); sig = dict(initial_signal)
-    while cur and cur not in visited:
-        visited.add(cur)
-        if dry_run: result = {"status":"succeeded","dry_run":True,"confidence":0.85}
+
+    def _exec_node(node_id):
+        if node_id in visited or node_id not in graph.nodes: return
+        visited.add(node_id)
+        if dry_run:
+            result = {"status":"succeeded","dry_run":True,"confidence":0.85,"scene_id":node_id}
         else:
             try:
-                proc = subprocess.run([sys.executable,str(JOURNEY_ENGINE),"execute",cur,"--signal",json.dumps(sig)],
+                proc = subprocess.run([sys.executable,str(JOURNEY_ENGINE),"execute",node_id,"--signal",json.dumps(sig)],
                     capture_output=True,text=True,cwd=str(_ROOT),timeout=300)
                 result = json.loads(proc.stdout.strip()) if proc.stdout.strip() else {"status":"error","error":proc.stderr}
             except Exception as e: result = {"status":"error","error":str(e)}
-        results[cur] = result
-        emit_scene_event("scene.completed",cur,{"result":result,"graph_id":graph.graph_id,"run_id":run_id},corr)
-        node = graph.nodes.get(cur)
-        if not node or not node.children: break
-        nxt = None
-        for t,c in node.children:
-            if c == "always": nxt = t; break
-            try:
-                ns = {"result":result,"confidence":result.get("confidence",0)}
-                if "==" in c:
-                    l,r = c.split("==",1)
-                    if _resolve(l.strip(),ns) == _resolve_lit(r.strip()): nxt = t; break
-            except: pass
-        cur = nxt
+        results[node_id] = result
+        emit_scene_event("scene.completed",node_id,{"result":result,"graph_id":graph.graph_id,"run_id":run_id},corr)
+        # Follow edges (DFS)
+        node = graph.nodes.get(node_id)
+        if node:
+            for target, condition in node.children:
+                if condition == "always":
+                    _exec_node(target)
+                else:
+                    try:
+                        ns = {"result":result,"confidence":result.get("confidence",0)}
+                        if "==" in condition:
+                            l,r = condition.split("==",1)
+                            if _resolve(l.strip(),ns) == _resolve_lit(r.strip()): _exec_node(target)
+                    except: pass
+
+    entry = graph.entry_point
+    if not entry: raise ValueError("No entry point")
+    _exec_node(entry)
     return {"run_id":run_id,"correlation_id":corr,"graph_id":graph.graph_id,"scenes_executed":len(results),"results":results}
 
 def _resolve(p,d):
