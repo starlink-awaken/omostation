@@ -120,7 +120,7 @@ pre-rebase:
   description: "rebase 前危险检测"
   checks:
     - id: dangerous-rebase
-      script: "bin/gac/check-dangerous-rebase.py --base $1 --onto ${2:-}"
+      script: ".githooks/pre-rebase"  # canonical pre-rebase 内联实现危险 rebase 检测 (含 SWARM_ESCAPE_ID 逃生口)
       blocking: true
       timeout: 5
       description: "危险 rebase 检测"
@@ -162,6 +162,12 @@ post-merge:
       blocking: false
       timeout: 5
       description: "子模块指针变更通知"
+
+    - id: state-stale-emit
+      script: "bin/gac/state-stale-emit.py --source post-merge"
+      blocking: false
+      timeout: 5
+      description: "状态陈旧信号发射 (canonical post-merge 实际执行)"
 
 # ── commit-msg ──────────────────────────────────────────────
 commit-msg:
