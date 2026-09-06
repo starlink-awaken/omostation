@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-audit
-generated_at: 2026-09-05T12:00:01Z
+generated_at: 2026-09-06T01:30:01Z
 status: candidate
 counts:
-  runs: 106
+  runs: 112
   failures: 0
-  total: 106
+  total: 112
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # observer-audit 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-05T12:00:01Z
+- generated_at: 2026-09-06T01:30:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 106 成功运行 + 0 失败模式 = 106 草稿
+- sediment 覆盖: 112 成功运行 + 0 失败模式 = 112 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -127,6 +127,12 @@ failure_breakdown:
 - 20260904T154247Z-observer-audit-2c17d376.md
 - 20260904T155352Z-observer-audit-96e7cdd4.md
 - 20260904T155353Z-observer-audit-8011e038.md
+- 20260905T124809Z-observer-audit-7d5fc24b.md
+- 20260905T124810Z-observer-audit-fce26434.md
+- 20260905T125035Z-observer-audit-70d5214b.md
+- 20260905T125036Z-observer-audit-3d917b00.md
+- 20260905T125147Z-observer-audit-42146988.md
+- 20260905T125148Z-observer-audit-d98057e9.md
 
 ## 失败模式 (failures/)
 
@@ -477,6 +483,24 @@ failure_breakdown:
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
 - **20260904T155353Z-observer-audit-8011e038**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260905T124809Z-observer-audit-7d5fc24b**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260905T124810Z-observer-audit-fce26434**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260905T125035Z-observer-audit-70d5214b**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260905T125036Z-observer-audit-3d917b00**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260905T125147Z-observer-audit-42146988**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260905T125148Z-observer-audit-d98057e9**
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
 
