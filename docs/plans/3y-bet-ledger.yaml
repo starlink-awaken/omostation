@@ -24401,9 +24401,16 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t6-03-anti-corrosion-patrol-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b08869579bb4c19afa8944cb1ac517a1a6c2deeaa759e77b311f81eaf7d10057
+    decision_ref: decision://accepted/BET-Y2Q1-T6-03
   write_surfaces:
   - bin/gac/anti-corrosion-patrol.py
   - .omo/_truth/registry/governance-checks.yaml
+  - tests/test_anti_corrosion_patrol.py
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q1-T6-03.md
   risk_level: L1
   human_gate: false
