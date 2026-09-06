@@ -24848,6 +24848,11 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T6-20
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t10-124-runtime-jobs-parity.md
+    spec_version: 1.0.0
+    content_digest: sha256:b82365a89f515f121bead5ffe864483b758553e6102f2991d873006cccf2bfa5
+    decision_ref: decision://accepted/BET-Y1Q4-T10-124
 - id: BET-Y1Q4-T6-21
   track: T6-EVOLUTION
   window: Y1Q4

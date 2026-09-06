@@ -1250,3 +1250,117 @@ def test_gateway_allows_non_executable_prohibition_statement(tmp_path: Path) -> 
     result = _run(domain_registry, project_registry, ("vault",))
 
     assert result.returncode == 0, result.stderr
+
+
+def _learning_decay_job() -> dict[str, object]:
+    return {
+        "id": "documents-learning-decay",
+        "domain_id": "vault",
+        "owner": "runtime-learning",
+        "action": "audit_concept_decay",
+        "schedule": "manual",
+        "timeout_seconds": 60,
+        "reads": ["@学习进化/_knowledge/50-concepts"],
+        "writes": [],
+        "evidence_relative_path": "control/evidence/documents-learning-decay/documents-learning-decay.json",
+        "evidence_schema": "runtime.documents-learning-decay.evidence.v1",
+        "fail_closed": True,
+    }
+
+
+def _learning_orphans_job() -> dict[str, object]:
+    return {
+        "id": "documents-learning-orphans",
+        "domain_id": "vault",
+        "owner": "runtime-learning",
+        "action": "list_orphan_concepts",
+        "schedule": "manual",
+        "timeout_seconds": 60,
+        "reads": ["@学习进化/_knowledge/50-concepts"],
+        "writes": [],
+        "evidence_relative_path": "control/evidence/documents-learning-orphans/documents-learning-orphans.json",
+        "evidence_schema": "runtime.documents-learning-decay.evidence.v1",
+        "fail_closed": True,
+    }
+
+
+def test_workspace_binding_declares_runtime_learning_jobs() -> None:
+    """The runtime-learning jobs pass schema validation."""
+
+    registry = yaml.safe_load(
+        (ROOT / ".omo" / "_truth" / "registry" / "documents-domain-projects.yaml").read_text(encoding="utf-8")
+    )
+    learning_jobs = [j for j in registry["runtime_jobs"] if j.get("owner") == "runtime-learning"]
+    assert len(learning_jobs) == 2
+    decay = next(j for j in learning_jobs if j["action"] == "audit_concept_decay")
+    assert decay == _learning_decay_job()
+    orphans = next(j for j in learning_jobs if j["action"] == "list_orphan_concepts")
+    assert orphans == _learning_orphans_job()
+
+
+def test_domain_check_passes_with_learning_jobs(tmp_path: Path) -> None:
+    """Adding learning jobs to the test registry still passes the check."""
+
+    domain_ids = ["vault", "shared"]
+    domain_registry = _domain_registry(tmp_path, domain_ids)
+    project_registry = _project_registry(tmp_path, domain_ids)
+
+    # Inject learning jobs into the project registry
+    raw = yaml.safe_load(project_registry.read_text(encoding="utf-8"))
+    raw["runtime_jobs"].append(_learning_decay_job())
+    raw["runtime_jobs"].append(_learning_orphans_job())
+    project_registry.write_text(yaml.safe_dump(raw, allow_unicode=True, sort_keys=False), encoding="utf-8")
+
+    result = _run(domain_registry, project_registry)
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["ok"] is True
+    assert payload["errors"] == []
+
+
+def test_learning_job_rejects_unknown_fields() -> None:
+    """A learning job with extra fields should fail validation."""
+
+    sys.path.insert(0, str(ROOT / "bin" / "gac"))
+    from documents_domain_jobs import validate_runtime_jobs
+
+    job = _learning_decay_job()
+    job["bogus_field"] = "should_fail"
+    errors = validate_runtime_jobs([job], ["vault"])
+    assert any("unknown fields" in e and "bogus_field" in e for e in errors)
+
+
+def test_learning_job_rejects_wrong_owner() -> None:
+    """A learning job with wrong owner should fail validation."""
+
+    sys.path.insert(0, str(ROOT / "bin" / "gac"))
+    from documents_domain_jobs import validate_runtime_jobs
+
+    job = _learning_decay_job()
+    job["owner"] = "runtime"
+    errors = validate_runtime_jobs([job], ["vault"])
+    assert any("owner must be runtime-learning" in e for e in errors)
+
+
+def test_learning_job_rejects_wrong_action() -> None:
+    """A learning job with unknown action should fail validation."""
+
+    sys.path.insert(0, str(ROOT / "bin" / "gac"))
+    from documents_domain_jobs import validate_runtime_jobs
+
+    job = _learning_decay_job()
+    job["action"] = "unknown_action"
+    errors = validate_runtime_jobs([job], ["vault"])
+    assert any("action must be one of" in e for e in errors)
+
+
+def test_learning_job_rejects_wrong_domain() -> None:
+    """A learning job with wrong domain should fail validation."""
+
+    sys.path.insert(0, str(ROOT / "bin" / "gac"))
+    from documents_domain_jobs import validate_runtime_jobs
+
+    job = _learning_decay_job()
+    job["domain_id"] = "work-weijian"
+    errors = validate_runtime_jobs([job], ["vault"])
+    assert any("domain_id must be vault" in e for e in errors)
