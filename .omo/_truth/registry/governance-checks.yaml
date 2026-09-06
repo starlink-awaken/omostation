@@ -192,7 +192,8 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 588
+    script_baseline: 612
+    # 2026-09-05: +24 from T6-20 (CR-EDOC-001~005 + Documents boundary gate + check scripts)
     # 2026-09-03: +1 perception-coverage
     # 2026-09-03: +2 ops-cron-install + weekly-evolution-report
     # 2026-09-04: +2 T10-105 work branch net bin diff baseline
@@ -2517,7 +2518,7 @@ gac:
     layer: L2
     name: E-DOC-001 禁止 Documents 可执行脚本
     description: Documents 内容平面禁止 .py/.sh/.bash/.js/.ts/.rb/.go 可执行脚本文件
-    check_type: documents_boundary
+    check_type: direct_io_gate
     target: ~/Documents
     executor:
     - gac_local_gate
@@ -2525,6 +2526,8 @@ gac:
     lifecycle: active
     version: 1.0.0
     created_at: '2026-09-06'
+    relates_to:
+    - CR-L2-DIRECT-IO
     adr: ADR-0191
     enforcement: required
     source_ref: bin/gac/check-documents-boundary.py
@@ -2536,7 +2539,7 @@ gac:
     layer: L2
     name: E-DOC-002 禁止 Documents 环境依赖目录
     description: Documents 内容平面禁止 node_modules/.venv/__pycache__/.pytest_cache 等环境目录
-    check_type: documents_boundary
+    check_type: direct_io_gate
     target: ~/Documents
     executor:
     - gac_local_gate
@@ -2544,6 +2547,8 @@ gac:
     lifecycle: active
     version: 1.0.0
     created_at: '2026-09-06'
+    relates_to:
+    - CR-L2-DIRECT-IO
     adr: ADR-0191
     enforcement: required
     source_ref: bin/gac/check-documents-boundary.py
@@ -2555,13 +2560,15 @@ gac:
     layer: L2
     name: E-DOC-003 禁止跨域裸写
     description: "Workspace→Documents 直接写入必须通过 BOS 路由，事实文件需 bos_routed 标记"
-    check_type: documents_boundary
+    check_type: direct_io_gate
     target: ~/Documents/_entities/facts
     executor:
     - gac_local_gate
     lifecycle: active
     version: 1.0.0
     created_at: '2026-09-06'
+    relates_to:
+    - CR-L2-DIRECT-IO
     adr: ADR-0191
     enforcement: required
     source_ref: bin/gac/check-documents-boundary.py
@@ -2573,13 +2580,15 @@ gac:
     layer: L2
     name: E-DOC-004 关键事实文件 Schema 与保鲜校验
     description: _entities/facts/*.yaml 必须合法 YAML mapping 且 14 天内更新
-    check_type: documents_boundary
+    check_type: direct_io_gate
     target: ~/Documents/_entities/facts
     executor:
     - gac_local_gate
     lifecycle: active
     version: 1.0.0
     created_at: '2026-09-06'
+    relates_to:
+    - CR-L2-DIRECT-IO
     adr: ADR-0191
     enforcement: required
     source_ref: bin/gac/check-documents-boundary.py
@@ -2591,7 +2600,7 @@ gac:
     layer: L2
     name: E-DOC-005 多客户端配置 SSOT 一致性
     description: 多客户端配置必须由 documents-domain-projects.yaml SSOT 生成，禁止手工维护
-    check_type: documents_boundary
+    check_type: direct_io_gate
     target: bin/gac/documents-*-config.py
     executor:
     - gac_local_gate
@@ -2599,6 +2608,8 @@ gac:
     lifecycle: active
     version: 1.0.0
     created_at: '2026-09-06'
+    relates_to:
+    - CR-L2-DIRECT-IO
     adr: ADR-0191
     enforcement: required
     source_ref: bin/gac/check-documents-boundary.py
