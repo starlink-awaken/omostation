@@ -92,7 +92,7 @@ make install-hooks
 
 等价于 `bash bin/gac/hook-installer.sh`：
 - 校验 canonical 与安装元数据一致
-- 向 `$(git rev-parse --git-dir)/hooks` 写 `.version` + `.content-hash`
+- 向 `$(git rev-parse --git-common-dir)/hooks` 写 `.version` + `.content-hash`（worktree 下指向共享主仓 `.git`，元数据单点）
 - (兼容) 额外生成 `pre-edit-architecture` 旧名副本
 
 改 `.githooks/` 后须在本机重跑 `make install-hooks` (已安装元数据不会自动更新)。
