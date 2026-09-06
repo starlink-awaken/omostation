@@ -1,12 +1,12 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.0.1
 status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-09-06
 last-reviewed: 2026-09-06
-bet_id: BET-Y1Q4-T9-01
+bet_id: BET-Y1Q4-T9-03
 risk_level: L1
 human_gate: false
 value_indicator_policy: false
@@ -17,7 +17,7 @@ type: ssot
 
 > **定位**：新 agent 会话冷启动时加载的**无 UI 信息聚合面板**。  
 > **形态**：Markdown + JSON（`asd.session.v1`），可选 ASCII/Mermaid；**不是** Web Dashboard。  
-> **台账**：`BET-Y1Q4-T9-01`（本规格）→ `BET-Y1Q4-T9-02`（MVP）→ `BET-Y1Q4-T9-03`（全板块+MCP+drill）。
+> **台账**：`BET-Y1Q4-T9-03`（本规格）→ `BET-Y1Q4-T9-04`（MVP）→ `BET-Y1Q4-T9-03`（全板块+MCP+drill）。
 
 ---
 
@@ -204,9 +204,9 @@ KOS / remote submodule probe 默认 lazy + degraded。
 
 | Phase | BET | 交付 |
 |-------|-----|------|
-| **0** | **T9-01（本）** | 本规格 + 台账/战役关联 + CLAUDE 指针 |
-| 1 | T9-02 | MVP aggregator + 5 核心面板 + 单测 |
-| 2 | T9-03 | 全 8 面板 + bootstrap 钩子 + MCP + drill |
+| **0** | **T9-03（本）** | 本规格 + 台账/战役关联 + CLAUDE 指针 |
+| 1 | T9-04 | MVP aggregator + 5 核心面板 + 单测 |
+| 2 | T9-05 | 全 8 面板 + bootstrap 钩子 + MCP + drill |
 | 3 | 可选 | Mermaid/spark 打磨；收敛 brief 重复面 |
 
 ---
@@ -214,7 +214,7 @@ KOS / remote submodule probe 默认 lazy + degraded。
 ## 7. 验收（T9-01）
 
 - [x] 本文件含 IA / schema / 触发 / 阶段 / 验收  
-- [ ] `3y-bet-ledger.yaml` 含 `BET-Y1Q4-T9-01`、`CMP-Y1-AGENT-ORIENT`、`MS-Y1-ASD-SPEC`  
+- [ ] `3y-bet-ledger.yaml` 含 `BET-Y1Q4-T9-03`、`CMP-Y1-AGENT-ORIENT`、`MS-Y1-ASD-SPEC`  
 - [ ] `bet-ledger.py lint` / `show` / `portfolio lint` 通过  
 - [ ] `CLAUDE.md` 有 ASD 入口指针（无硬编码数值）
 
@@ -253,6 +253,6 @@ drill: P-LEDGER | P-ARCH | P-VALUE | P-NEXT
 ## 10. 关联
 
 - Campaign：`CMP-Y1-AGENT-ORIENT` → Objective：`OBJ-HOLDABILITY`  
-- Milestone：`MS-Y1-ASD-SPEC` → required bet：`BET-Y1Q4-T9-01`  
+- Milestone：`MS-Y1-ASD-SPEC` → required bet：`BET-Y1Q4-T9-03`  
 - Track：`T9-OBSERV`  
-- 后续：`BET-Y1Q4-T9-02` / `T9-03`（实现轨，本文件仅预告）
+- 后续：`BET-Y1Q4-T9-04` / `T9-05`（实现轨，本文件仅预告）
