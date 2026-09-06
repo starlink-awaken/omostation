@@ -24978,9 +24978,7 @@ bets:
   appetite: 3 days
   priority: P1
   status: candidate
-  goal: 基于 T6-17 盘点发现，实现自动化的文档生命周期引擎 bin/ssot/doc-lifecycle.py：批量为无 frontmatter 的
-    226 篇文档补齐元数据，自动归档 723 篇 completed ephemeral 文档到归档目录，合并消歧架构与战略重复文档，打通主仓文档与 Documents
-    域知识文档的双向索引与新鲜度门禁。
+  goal: 基于 T6-17 盘点发现，实现自动化的文档生命周期引擎 bin/ssot/doc-lifecycle.py：批量为无 frontmatter 的 226 篇文档补齐元数据，自动归档 723 篇 completed ephemeral 文档到归档目录，合并消歧架构与战略重复文档，打通主仓文档与 Documents 域知识文档的双向索引与新鲜度门禁。
   non_goals:
   - 不删除任何具有历史决策价值的 ADR 或 Retro
   - 不破坏外部系统正在引用的稳定 URL 路径
