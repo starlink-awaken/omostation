@@ -6,7 +6,7 @@
 #
 # Gates:
 #   D1 adr_atomic_claim      — ADR numbers claimed before write [ACTIVE]
-#   D2 branch_occupancy      — RETIRED 2026-08-19 (独立 clone 消除分支竞争)
+#   D2 branch_occupancy      — CONDITIONAL ACTIVE 2026-09-06 (T10-128: worktree 拓扑回滚, 仅 agent/ 前缀)
 #   D3 shared_worktree_claim — RETIRED 2026-08-19 (独立 clone 消除共享 worktree)
 #   D4 escape_hatch          — --no-verify / CI_LOCAL_SKIP allowlist only [ACTIVE]
 #   D5 pasw_submodule_isolation — PARTIALLY RETIRED (gitlink FF 校验保留)
@@ -108,9 +108,10 @@ gates:
   # D1 (ADR atomic) 与 D4 (escape hatch) 保留 — 与拓扑无关.
   d2_branch_occupancy:
     id: d2
-    name: "[RETIRED 2026-08-19] work-branch occupancy lock"
-    status: retired
+    name: "[CONDITIONAL ACTIVE 2026-09-06] agent-branch occupancy lock (T10-128)"
+    status: conditional_active
     retired_reason: "独立 clone 拓扑消除分支竞争 (BET-Y1Q1-T1-05)"
+    restored_reason: "独立 clone 未消除竞争 (PITFALL-COO-003 x5); worktree 拓扑实测稳定; agent/{actor}/{session} 命名空间 + 仅 agent/ 前缀检查"
     entry: bin/gac/gac-worktree.sh claim
     check: bin/gac/swarm-discipline-cli.py branch-check
     fail_closed: false

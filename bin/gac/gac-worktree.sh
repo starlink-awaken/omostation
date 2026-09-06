@@ -36,6 +36,31 @@ WS_PARENT="${WS_PARENT:-$(dirname "$WS_ROOT")}"
 cmd="${1:-list}"
 session="${2:-}"
 
+# BET-Y1Q4-T10-128: 从 claim JSON 读 branch (fallback work/<session> 向后兼容)
+resolve_branch_for() {
+  local session="$1"
+  local cj="$WS_ROOT/.omo/_delivery/branch-claims/${session}.json"
+  if [ -f "$cj" ] && command -v python3 >/dev/null 2>&1; then
+    local b
+    b="$(python3 -c "import json,sys; print(json.load(open('$cj')).get('branch',''))" 2>/dev/null || true)"
+    if [ -n "$b" ]; then
+      printf '%s' "$b"
+      return 0
+    fi
+  fi
+  printf 'work/%s' "$session"
+}
+
+# BET-Y1Q4-T10-128: actor 解析 (claim 第三参数 > OMO_ACTOR > 默认 governance-agent)
+resolve_actor() {
+  local a="${1:-${OMO_ACTOR:-governance-agent}}"
+  if ! printf '%s' "$a" | grep -qE '^[a-z][a-z0-9-]{1,30}$'; then
+    echo "❌ actor 非法: '$a' (规则 [a-z][a-z0-9-]{1,30})" >&2
+    exit 1
+  fi
+  printf '%s' "$a"
+}
+
 # session 名只允许小写字母/数字/连字符 (防 work/<session> 含 git 分支非法字符)
 validate_session() {
   local s="$1"
@@ -181,7 +206,9 @@ case "$cmd" in
     validate_session "$session"
     ROOT_REMOTE=$(cd "$WS_ROOT" && resolve_root_remote) || exit 1
     wt="$WS_PARENT/ws-$session"
-    branch="work/$session"
+    # BET-Y1Q4-T10-128: 并发 agent 命名空间 — claim 强制 agent/{actor}/{session}
+    actor="$(resolve_actor "${3:-}")"
+    branch="agent/${actor}/${session}"
     claim_in_progress="$WS_PARENT/.ws-$session.claiming"
     cleanup_claim_marker() {
       rm -f "$claim_in_progress"
@@ -200,9 +227,10 @@ case "$cmd" in
       rm -f /tmp/gconv7-branch-claim-$$.json /tmp/gconv7-branch-claim-$$.err
       echo "   🔒 D2 branch lock: $branch (session=$session)"
     fi
-    # 分支已存在但 worktree 缺失 → 残留/重名, 提示清理 (防 claim 撞残留分支)
+    # T10-128 circuit_breaker: agent/ 分支已存在且 worktree 缺失 → 阻断 (不自动覆盖)
     if git -C "$WS_ROOT" show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null && [ ! -d "$wt" ]; then
-      echo "⚠️  分支 $branch 已存在但 worktree 缺失 (残留? 清理: git branch -D $branch)" >&2
+      echo "❌ 分支 $branch 已存在但 worktree 缺失 (命名空间冲突)。请重命名 session 或清理: git branch -D $branch" >&2
+      exit 1
       exit 1
     fi
     if [ -d "$wt" ]; then
@@ -279,7 +307,7 @@ case "$cmd" in
     [ -z "$session" ] && echo "用法: submit [--strict] <session>" >&2 && exit 1
     validate_session "$session"
     wt="$WS_PARENT/ws-$session"
-    branch="work/$session"
+    branch="$(resolve_branch_for "$session")"
     if [ ! -d "$wt" ]; then
       echo "❌ worktree 不存在: $wt (先 claim)" >&2
       exit 1
@@ -517,7 +545,7 @@ except Exception:
     # PASW: 清理 claim 记录
     pasw_claim_clean "$session"
     # 分支清理: 已合并到 main → 删; 否则保留
-    branch="work/$session"
+    branch="$(resolve_branch_for "$session")"
     if git rev-parse --verify "$branch" >/dev/null 2>&1; then
       if git log --oneline --not "origin/main" "$branch" 2>/dev/null | head -1 | grep -q .; then
         echo "   分支 $branch 有 main 外 commit, 保留 (可手动 git branch -D)"
@@ -539,7 +567,7 @@ except Exception:
     [ -z "$session" ] && echo "用法: merge <session> [--auto]" >&2 && exit 1
     validate_session "$session"
     wt="$WS_PARENT/ws-$session"
-    branch="work/$session"
+    branch="$(resolve_branch_for "$session")"
     if [ ! -d "$wt" ]; then
       echo "❌ worktree 不存在: $wt (先 claim + submit)" >&2
       exit 1

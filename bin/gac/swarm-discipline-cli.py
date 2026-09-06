@@ -64,6 +64,11 @@ def cmd_branch_claim(args: argparse.Namespace) -> int:
 
 def cmd_branch_check(args: argparse.Namespace) -> int:
     root = root_from_cwd()
+    # T10-128: D2 conditional active — 仅 agent/ 前缀启用 occupancy 检查,
+    # work/ 分支豁免 (2026-08-19 独立 clone 时代的存量兼容)
+    if not args.branch.startswith("agent/"):
+        print(json.dumps({"ok": True, "reason": "work-branch-out-of-scope", "branch": args.branch}, indent=2))
+        return 0
     ok, reason = sd.check_branch_available(root, args.branch, args.session)
     print(json.dumps({"ok": ok, "reason": reason, "branch": args.branch}, indent=2))
     return 0 if ok else 1

@@ -3084,6 +3084,11 @@ bets:
   non_goals:
   - 不修改现有 work/ 前缀分支
   - 不影响已存在的 agent 分支
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-agent-branch-namespace-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:10c2084187d6ac69329bd2c225a1a9ac216bd699b4d0d72603c5e1e6a0871d5b
+    decision_ref: decision://accepted/BET-Y1Q4-T10-128
   done_when:
   - gac-worktree.sh claim 强制使用 agent/{actor_id}/ 命名空间
   - 自动清理 >7天无活动的 agent/ 前缀分支
