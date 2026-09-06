@@ -53,6 +53,18 @@ checkers:
   expected: All rules enforced by CI + pre-commit + doc checks (X4 consistency)
   remediation: Apply consistency rules via x4-consistency-rules; fix violation source
   schedule: daily
+- id: check-documents-boundary
+  dimension: X4
+  name: E-DOC 双平面边界检查器
+  description: E-DOC-001~005 Documents 内容平面边界规则检查 (ADR-0191)
+  module: bin/gac/check-documents-boundary.py
+  type: script
+  severity: high
+  enabled: true
+  owner: governance-team
+  expected: No executable scripts, env deps, cross-domain writes, or config drift in Documents
+  remediation: Run check-documents-boundary.py --auto-fix or follow Diagnostic Envelope suggestions
+  schedule: on_commit
 execution:
   parallel: true
   max_workers: 4
@@ -156,6 +168,7 @@ gac:
     - eval_exec
     - mutable_default
     - placeholder
+    - documents_boundary
     lifecycle_enum:
     - draft
     - active
@@ -2498,6 +2511,99 @@ gac:
     version: 2
     lifecycle: active
     adr: ADR-0205
+  - id: CR-EDOC-001
+    dimension: X4
+    layer: L2
+    name: E-DOC-001 禁止 Documents 可执行脚本
+    description: Documents 内容平面禁止 .py/.sh/.bash/.js/.ts/.rb/.go 可执行脚本文件
+    check_type: documents_boundary
+    target: ~/Documents
+    executor:
+    - gac_local_gate
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-09-06'
+    adr: ADR-0191
+    enforcement: required
+    source_ref: bin/gac/check-documents-boundary.py
+    owner: governance-team
+    expected: No executable script files exist in Documents content plane
+    remediation: Move script to Workspace/scripts/ or bin/gac/
+  - id: CR-EDOC-002
+    dimension: X4
+    layer: L2
+    name: E-DOC-002 禁止 Documents 环境依赖目录
+    description: Documents 内容平面禁止 node_modules/.venv/__pycache__/.pytest_cache 等环境目录
+    check_type: documents_boundary
+    target: ~/Documents
+    executor:
+    - gac_local_gate
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-09-06'
+    adr: ADR-0191
+    enforcement: required
+    source_ref: bin/gac/check-documents-boundary.py
+    owner: governance-team
+    expected: No environment/cache directories exist in Documents content plane
+    remediation: rm -rf the banned directory and add to .gitignore in Workspace
+  - id: CR-EDOC-003
+    dimension: X4
+    layer: L2
+    name: E-DOC-003 禁止跨域裸写
+    description: Workspace→Documents 直接写入必须通过 BOS 路由，事实文件需 bos_routed 标记
+    check_type: documents_boundary
+    target: ~/Documents/_entities/facts
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-09-06'
+    adr: ADR-0191
+    enforcement: required
+    source_ref: bin/gac/check-documents-boundary.py
+    owner: governance-team
+    expected: Fact files routed through bos:// or marked with bos_routed: true
+    remediation: Route writes through bos://documents/{domain}/{resource}
+  - id: CR-EDOC-004
+    dimension: X4
+    layer: L2
+    name: E-DOC-004 关键事实文件 Schema 与保鲜校验
+    description: _entities/facts/*.yaml 必须合法 YAML mapping 且 14 天内更新
+    check_type: documents_boundary
+    target: ~/Documents/_entities/facts
+    executor:
+    - gac_local_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-09-06'
+    adr: ADR-0191
+    enforcement: required
+    source_ref: bin/gac/check-documents-boundary.py
+    owner: governance-team
+    expected: All fact files are valid YAML mappings updated within 14 days
+    remediation: Fix YAML syntax or refresh stale fact files
+  - id: CR-EDOC-005
+    dimension: X4
+    layer: L2
+    name: E-DOC-005 多客户端配置 SSOT 一致性
+    description: 多客户端配置必须由 documents-domain-projects.yaml SSOT 生成，禁止手工维护
+    check_type: documents_boundary
+    target: bin/gac/documents-*-config.py
+    executor:
+    - gac_local_gate
+    - ci_gate
+    lifecycle: active
+    version: 1.0.0
+    created_at: '2026-09-06'
+    adr: ADR-0191
+    enforcement: required
+    source_ref: bin/gac/check-documents-boundary.py
+    owner: governance-team
+    expected: Client configs generated from SSOT registry, no hand-maintained configs
+    remediation: Create generator scripts reading from documents-domain-projects.yaml
   drift:
     schedule: daily
     auto_heal: false
