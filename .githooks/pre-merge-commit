@@ -22,8 +22,8 @@ if [ -f "$ROOT/bin/gac/submodule-guard.py" ]; then
 fi
 
 # ── conflict-marker ────────────────────────────────────────
-if [ -f "$ROOT/bin/ssot/conflict-marker-check.py" ]; then
-  if ! run_py "$ROOT/bin/ssot/conflict-marker-check.py" 2>&1; then
+if [ -f "$ROOT/bin/gac/check-conflict-markers.py" ]; then
+  if ! run_py "$ROOT/bin/gac/check-conflict-markers.py" 2>&1; then
     echo "[pre-merge-commit] ❌ 发现未解决冲突标记" >&2
     exit 1
   fi
