@@ -1333,6 +1333,19 @@ def _ledger_base_statuses(ref: str, *, workspace: Path = WS) -> dict[str, str] |
     for item in bets:
         if isinstance(item, dict) and isinstance(item.get("id"), str):
             statuses[item["id"]] = str(item.get("status") or "")
+    # BET-Y2Q1-T10-03: 归档合并投影，确保 base revision 的历史 done BET 不被误判为新 transition
+    arch_res = subprocess.run(
+        ["git", "-C", str(workspace), "show", f"{ref}:docs/plans/3y-bet-ledger-archive.yaml"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if arch_res.returncode == 0:
+        arch_bets = _yaml_mapping(arch_res.stdout).get("bets")
+        if isinstance(arch_bets, list):
+            for item in arch_bets:
+                if isinstance(item, dict) and isinstance(item.get("id"), str):
+                    statuses.setdefault(item["id"], str(item.get("status") or ""))
     return statuses
 
 
