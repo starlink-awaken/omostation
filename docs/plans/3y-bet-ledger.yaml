@@ -2492,7 +2492,9 @@ bets:
   title: 文档生命周期体系落地与主仓+Documents 存量文档深度去重指针化 (Doc Lifecycle & De-duplication)
   appetite: 3 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-06 22:00:00+00:00
+  note: doc-lifecycle.py delivered in PR #3340 (audit/archive/lint); frontmatter + arch-evolution merge done.
   goal: 基于 T6-17 盘点发现，实现自动化的文档生命周期引擎 bin/ssot/doc-lifecycle.py：批量为无 frontmatter 的
     226 篇文档补齐元数据，自动归档 723 篇 completed ephemeral 文档到归档目录，合并消歧架构与战略重复文档，打通主仓文档与 Documents
     域知识文档的双向索引与新鲜度门禁。
