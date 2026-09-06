@@ -24952,9 +24952,24 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-doc-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t6-22-doc-lifecycle-closeout-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:e89192ac4259506add5e3a33c84e4aa36b90762ee70c7bc3dba606bc7b806129
+    decision_ref: decision://accepted/BET-Y1Q4-T6-22
   write_surfaces:
   - bin/ssot/doc-lifecycle.py
   - .omo/standards/doc-ssot-contract.md
+  - BRIEF.md
+  - projects/metaos/GOVERNANCE.md
+  - projects/l4-kernel/GOVERNANCE.md
+  - projects/model-driven/GOVERNANCE.md
+  - projects/observability/GOVERNANCE.md
+  - projects/runtime/GOVERNANCE.md
+  - projects/aetherforge/GOVERNANCE.md
+  - projects/cockpit/GOVERNANCE.md
+  - projects/ecos/GOVERNANCE.md
+  - docs/plans/3y-bet-ledger.yaml
   - docs/reports/doc-ssot-inventory-2026-09-05.md
   - .omo/_knowledge/retros/BET-Y1Q4-T6-22.md
   risk_level: L1
