@@ -19023,9 +19023,17 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t7-02-calendar-ingest-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:7afc86c608341cd9a4dd074490a98c82774827e43c7faea859844accc658b2d0
+    decision_ref: decision://accepted/BET-Y1Q4-T7-02
   write_surfaces:
   - bin/bc-os/signal_router.py
   - projects/cockpit/src/cockpit/commands/calendar.py
+  - projects/cockpit/tests/test_calendar.py
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T7-02.md
   pasw_required: false
   depends_on:
