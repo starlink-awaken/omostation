@@ -81,3 +81,4 @@
 | workflow:mini | Workflow:Mini | general | .agents/skills/workflow:mini/SKILL.md |
 | workflow:project-code-change | Workflow:Project Code Change | general | .agents/skills/workflow:project-code-change/SKILL.md |
 | workflow:project-doc-change | Workflow:Project Doc Change | general | .agents/skills/workflow:project-doc-change/SKILL.md |
+| sema-terminology-replace | Sema Crystallized | 术语统一：「高度重视」应替换为署名偏好用语 | .agents/skills/auto-crystallized/sema-terminology-replace/SKILL.md |
