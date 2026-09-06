@@ -643,8 +643,11 @@ canvas-serve:  ## 启动 Dual-Plane Truth Canvas Web 事实大盘 (ADR-0194)
 
 OMO_RESIDENT := uv run --directory projects/omo python -m omo.cli resident
 
-resident-status:  ## resident 运行状态快照 (daemon/events/sediment/alert/ledger)
+resident-status:  ## resident 运行状态快照 (daemon/events/sediment/alert/ledger) — read-only
 	$(OMO_RESIDENT) status
+
+resident-recover:  ## ⚠️  WRITES — 显式 ops-only 恢复 (status 不会自动调用); stale lock + WAL checkpoint
+	uv run --directory projects/omo python -c "from omo.resident.ledger_check import recover_ledger_with_wal_checkpoint as r; import sys; from pathlib import Path; r_ = r(Path('runtime/omo/event-ledger.sqlite3')); print(r_); sys.exit(0 if r_.get('ok', True) else 1)"
 
 resident-roles:  ## resident 五类角色配置 (sediment/decision/execute/monitor/heartbeat)
 	$(OMO_RESIDENT) roles
