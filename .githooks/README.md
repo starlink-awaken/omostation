@@ -16,19 +16,22 @@
 
 ### pre-commit — GaC / SSOT 本地硬门
 
-commit 前依次运行 (blocking 失败即 exit 1):
+commit 前运行 (blocking 失败即 exit 1)，委托 `hook-runner.sh --hook pre-commit`:
 
-- `bin/gac/agent-clone.py guard` — 克隆守卫 (agent-clone 冲突防护)
-- `bin/gac/gac-hygiene-check.py` (advisory, 不阻断)
-- `bin/gac-local-gate.py` (blocking)
-- `bin/ssot-guardian.py` (blocking)
-- `bin/gac-audit-engine.py --staged` (blocking)
-- `bin/gac/mass-deletion-gate.py --staged` (blocking)
-- `bin/gac/check-conflict-markers.py` (blocking)
+- 克隆守卫 (`agent-clone.py guard`)
+- 分支前缀策略 (`check-branch-naming.py`)
+- 冲突标记 (`check-conflict-markers.py`)
+- 大量删除守卫 (`mass-deletion-gate.py --staged`)
+- 运行时产物黑名单 (`check-runtime-artifacts.py --staged`)
+- 债务文件守卫 (`debt-directory-guard.py`)
+- 子模块 fast-forward (`submodule-guard.py --staged`)
+- 目录卫生 advisory (`gac-hygiene-check.py`)
+
+完整检查清单 (脚本/超时/blocking) 见 [`hook-manifest.yaml`](../.omo/_truth/registry/hook-manifest.yaml) (SSOT)。
 
 ### pre-push — 子模块自动同步硬门
 
-主仓 push 前自动把"本地领先远程"的子模块 push 上去,让 gitlink 可达,防 CI 悬空。子模块同步失败会阻断主仓 push。
+主仓 push 前自动把"本地领先远程"的子模块 push 上去,让 gitlink 可达,防 CI 悬空。子模块同步失败会阻断主仓 push。委托 `hook-runner.sh --hook pre-push`，另执行 分支命名 / 直推 main 守卫 / reachability / gitlink 祖先 / 远程卫生 等检查（完整清单见 `hook-manifest.yaml`）。
 
 **病根**:自动化 agent (OMC/autopilot) commit 子模块 + bump 主仓指针却不 push → 主仓 gitlink 指向子模块远程没有的 commit → CI `submodules: recursive` 拉不到 (`not our ref`) → 整条 CI 红。(2026-06-17 实测 14/18 子模块悬空)
 
@@ -51,10 +54,13 @@ commit 前依次运行 (blocking 失败即 exit 1):
 
 ### post-merge — 合并后检查
 
-合并后触发: 通知子模块指针变化 + 运行时产物/契约校验 (非阻断 advisory)。
+`.githooks/post-merge` (canonical 内联实现, advisory only):
+子模块指针变更通知 + 文档自动同步 (`post-commit-sync-check.py`) + state-stale 检查
+(`state-stale-emit.py --source post-merge`)。完整清单见 `hook-manifest.yaml`。
 
 ### pre-merge-commit — 合并前校验
 
+`.githooks/pre-merge-commit` (canonical 内联实现, blocking):
 `git merge` 生成提交前校验:
 
 - `bin/gac/submodule-guard.py --merge` (blocking)
@@ -63,8 +69,8 @@ commit 前依次运行 (blocking 失败即 exit 1):
 
 ### pre-rebase — 危险 rebase 拦截
 
-`bin/gac/check-dangerous-rebase.py --base <base> --onto <onto>` (blocking):
-拒绝 rebase onto main，拒绝 base 非 HEAD 祖先的重写式 rebase。
+`.githooks/pre-rebase` (canonical 内联实现, blocking):
+拒绝 rebase onto main，拒绝 base 非 HEAD 祖先的重写式 rebase。含 `SWARM_ESCAPE_ID` 逃生口。
 
 ### pre-edit-architecture — 架构感知预编辑钩子 (Phase 8)
 
