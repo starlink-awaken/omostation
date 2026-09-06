@@ -20105,6 +20105,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:d9de5d06cd99d20f5bed11160dc17d80c513d9f67a4e94e26d3b1538bb66473f
     decision_ref: decision://accepted/BET-Y2Q1-T2-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t2-01-voice-memo-design.md
+            sha256: sha256:d9de5d06cd99d20f5bed11160dc17d80c513d9f67a4e94e26d3b1538bb66473f
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+            sha256: sha256:16c9008b0671b59a92133cfb79bebf8bf08ec9a6d8e212487cbba2e10e68b16d
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+            sha256: sha256:16c9008b0671b59a92133cfb79bebf8bf08ec9a6d8e212487cbba2e10e68b16d
+          merged_reachable_commit:
+            ref: git://origin/main@29bccaeb1f66e0bf49b5358e51b6f16bcf9148c1
+      operational:
+        status: DEGRADED
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+            sha256: sha256:16c9008b0671b59a92133cfb79bebf8bf08ec9a6d8e212487cbba2e10e68b16d
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+            sha256: sha256:16c9008b0671b59a92133cfb79bebf8bf08ec9a6d8e212487cbba2e10e68b16d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+            sha256: sha256:16c9008b0671b59a92133cfb79bebf8bf08ec9a6d8e212487cbba2e10e68b16d
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+            sha256: sha256:16c9008b0671b59a92133cfb79bebf8bf08ec9a6d8e212487cbba2e10e68b16d
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  value_indicator_policy: false
   write_surfaces:
   - projects/agora/src/agora/server/tools_bos/voice.py
   - projects/cockpit/src/cockpit/commands/voice_memo.py
