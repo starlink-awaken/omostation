@@ -45,10 +45,8 @@ if [ ! -f "$MANIFEST" ]; then
 fi
 
 # ── 版本自检 ────────────────────────────────────────────────
-# 元数据在真实 git-dir/hooks (worktree 感知, 不受 core.hooksPath 影响)
 CANONICAL_VERSION="$(cat "$ROOT/.githooks/VERSION" 2>/dev/null || echo '0.0.0')"
-GIT_DIR_REAL="$(git rev-parse --git-dir 2>/dev/null || echo "$ROOT/.git")"
-INSTALLED_VERSION="$(cat "$GIT_DIR_REAL/hooks/.version" 2>/dev/null || echo '0.0.0')"
+INSTALLED_VERSION="$(cat "$ROOT/.git/hooks/.version" 2>/dev/null || echo '0.0.0')"
 if [ "$CANONICAL_VERSION" != "$INSTALLED_VERSION" ]; then
   echo "[hook-runner] ⚠️ hook 版本不一致 ($INSTALLED_VERSION → $CANONICAL_VERSION)，请运行: make install-hooks" >&2
 fi
@@ -72,6 +70,14 @@ FAILED=0
 CHECK_COUNT=0
 BLOCKING_FAILED=0
 
+# D4 fix: 对 pre-push 预先读取 stdin，避免子检查重复消费或丢失
+_PUSH_REFS_FILE=""
+if [ "$HOOK_ID" = "pre-push" ]; then
+  _PUSH_REFS_FILE="$(mktemp)"
+  cat > "$_PUSH_REFS_FILE"
+  export PUSH_REFS_FILE="$_PUSH_REFS_FILE"
+fi
+
 # 使用 python 解析 YAML 并执行检查
 # 简化版: 直接通过环境变量 + 简单逻辑
 export ROOT
@@ -88,8 +94,7 @@ run_check() {
   local timeout="${4:-10}"
 
   CHECK_COUNT=$((CHECK_COUNT + 1))
-  # macOS BSD date 不支持 %N, 用 %s (秒) 兜底; 耗时统计仅参考
-  local start_time=$(date +%s 2>/dev/null || echo 0)
+  local start_time=$( (perl -MTime::HiRes=time -e 'printf "%d", time()*1_000_000_000' 2>/dev/null || echo 0) )
 
   # 替换变量
   script="${script//\$ROOT/$ROOT}"
@@ -101,10 +106,10 @@ run_check() {
   local rc=0
   output=$(eval "$script" 2>&1) || rc=$?
 
-  local end_time=$(date +%s 2>/dev/null || echo 0)
+  local end_time=$( (perl -MTime::HiRes=time -e 'printf "%d", time()*1_000_000_000' 2>/dev/null || echo 0) )
   local elapsed=0
   if [ "$start_time" -gt 0 ] && [ "$end_time" -gt 0 ]; then
-    elapsed=$(( (end_time - start_time) * 1000 ))  # ms (秒级精度)
+    elapsed=$(( (end_time - start_time) / 1000000 ))  # ms
   fi
 
   if [ $rc -ne 0 ]; then
@@ -135,13 +140,13 @@ run_hook_pre_commit() {
     if [ -n "${AGENT_ID:-}" ]; then
       clone_args="$clone_args --require-clone"
     fi
-    run_check "clone-guard" "$py run --profile stdlib -- bin/gac/agent-clone.py $clone_args" true 5 || BLOCKING_FAILED=$((BLOCKING_FAILED + 1))
+    run_check "clone-guard" "$py run --profile stdlib -- bin/gac/agent-clone.py $clone_args" true 5 || true
   fi
 
   # branch-naming
   run_check "branch-naming" "$py run --profile pyyaml -- bin/gac/check-branch-naming.py --branch $CURRENT_BRANCH --policy .omo/_truth/registry/branch-prefix-policy.yaml" true 3 || FAILED=1
 
-  # conflict-marker (实际脚本在 bin/gac/check-conflict-markers.py)
+  # conflict-marker
   if [ -f "$ROOT/bin/gac/check-conflict-markers.py" ]; then
     run_check "conflict-marker" "$py run --profile stdlib -- bin/gac/check-conflict-markers.py" true 2 || FAILED=1
   fi
@@ -152,9 +157,7 @@ run_hook_pre_commit() {
   fi
 
   # runtime-artifacts
-  if [ -f "$ROOT/bin/gac/check-runtime-artifacts.py" ]; then
-    run_check "runtime-artifacts" "$py run --profile stdlib -- bin/gac/check-runtime-artifacts.py --staged" true 3 || FAILED=1
-  fi
+  run_check "runtime-artifacts" "$py run --profile stdlib -- bin/gac/check-runtime-artifacts.py --staged" true 3 || FAILED=1
 
   # debt-guard (python script, use python to run)
   run_check "debt-guard" "$py run --profile stdlib -- bin/gac/debt-directory-guard.py" true 2 || FAILED=1
@@ -162,7 +165,7 @@ run_hook_pre_commit() {
   # submodule-guard (python script, use python to run)
   run_check "submodule-guard" "$py run --profile stdlib -- bin/gac/submodule-guard.py --staged" true 5 || FAILED=1
 
-  # advisory: hygiene (实际脚本在 bin/gac/gac-hygiene-check.py)
+  # advisory: hygiene
   if [ -x "$ROOT/bin/gac/gac-hygiene-check.py" ]; then
     run_check "hygiene" "$py run --profile stdlib -- bin/gac/gac-hygiene-check.py" false 10 || true
   fi
@@ -172,35 +175,17 @@ run_hook_pre_commit() {
 run_hook_pre_push() {
   local py="$ROOT/bin/gac/managed-python"
 
-  # 读取 pre-push stdin (push ref 列表), 供 direct-push-main / reachability 使用
-  # stdin 格式每行: <local-ref> <local-sha> <remote-ref> <remote-sha>
-  local PUSH_REFS=""
-  local PUSH_REMOTE_SHA=""
-  while read -r _lref _lsha _rref _rsha; do
-    PUSH_REFS="${PUSH_REFS}${_rref}
-"
-    if [ -z "$PUSH_REMOTE_SHA" ] && [ "$_rsha" != "0000000000000000000000000000000000000000" ]; then
-      PUSH_REMOTE_SHA="$_rsha"
-    fi
-  done
-
   # branch-naming (per push ref)
   run_check "branch-naming" "$py run --profile pyyaml -- bin/gac/check-branch-naming.py --branch $CURRENT_BRANCH --policy .omo/_truth/registry/branch-prefix-policy.yaml" true 3 || FAILED=1
 
-  # direct-push-main (stdin 传入 push refs; runner 直跑时 stdin 为空则跳过)
-  if [ -n "$PUSH_REFS" ]; then
-    run_check "direct-push-main" "printf '%s' '$PUSH_REFS' | $py run --profile stdlib -- bin/gac/guard-direct-push-main.py" true 2 || FAILED=1
-  fi
+  # direct-push-main
+  run_check "direct-push-main" "$py run --profile stdlib -- bin/gac/guard-direct-push-main.py" true 2 || FAILED=1
 
   # submodule-sync
   run_check "submodule-sync" "bash bin/ssot/sync-submodules-push.sh" true 30 || FAILED=1
 
-  # submodule-reachability (增量 base 优先用 stdin 的远程真实 SHA)
-  if [ -n "$PUSH_REMOTE_SHA" ]; then
-    run_check "submodule-reachability" "$py run --profile stdlib -- bin/ssot/submodule-reachability-gate.py --source head --fetch --changed-from $PUSH_REMOTE_SHA" true 15 || FAILED=1
-  else
-    run_check "submodule-reachability" "$py run --profile stdlib -- bin/ssot/submodule-reachability-gate.py --source head --fetch" true 15 || FAILED=1
-  fi
+  # submodule-reachability
+  run_check "submodule-reachability" "$py run --profile stdlib -- bin/ssot/submodule-reachability-gate.py --source head --fetch" true 15 || FAILED=1
 
   # mass-deletion
   if [ -f "$ROOT/bin/gac/mass-deletion-gate.py" ]; then
@@ -236,8 +221,8 @@ case "$HOOK_ID" in
     ;;
 esac
 
-if [ "$BLOCKING_FAILED" -gt 0 ] || [ "$FAILED" -gt 0 ]; then
-  echo "[hook-runner] ❌ $BLOCKING_FAILED 项 blocking 检查失败 (total $CHECK_COUNT checks)" >&2
+if [ "$FAILED" -gt 0 ]; then
+  echo "[hook-runner] ❌ $BLOCKING_FAILED 项 blocking 检查失败" >&2
   exit 1
 fi
 

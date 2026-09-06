@@ -14,11 +14,19 @@ EXPECTED_REMOTES = {
 }
 
 
+def _git(args, cwd):
+    return subprocess.run(
+        ["git", "-C", cwd, *args],
+        capture_output=True,
+        text=True,
+        env={k: v for k, v in os.environ.items() if k not in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES")},
+    )
+
+
 def main() -> int:
-    root = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        capture_output=True, text=True, check=True,
-    ).stdout.strip()
+    root = _git(["rev-parse", "--show-toplevel"], ".").stdout.strip()
+    if not root:
+        return 0
 
     failed = 0
     for sub_path, expected_url in EXPECTED_REMOTES.items():
@@ -26,10 +34,7 @@ def main() -> int:
         if not os.path.isdir(repo_path):
             continue
 
-        result = subprocess.run(
-            ["git", "-C", repo_path, "remote", "get-url", "origin"],
-            capture_output=True, text=True,
-        )
+        result = _git(["remote", "get-url", "origin"], repo_path)
         if result.returncode != 0:
             continue
 

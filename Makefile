@@ -890,8 +890,6 @@ ops-template-apply:  ## 应用模板创建服务
 
 # ── Git Hooks 安装 ──────────────────────────────────────────────────────────────
 
-install-hooks:  ## 安装 Git hooks (.githooks/ → .git/hooks/, 机制 22c 统一安装)
+install-hooks:  ## 安装 Git hooks (.githooks/ → .git/hooks/)
 	@bash bin/gac/hook-installer.sh
-	@# 兼容旧名: pre-edit-architecture.sh → pre-edit-architecture (历史 hook 名)
-	@if [ -f .git/hooks/pre-edit-architecture.sh ] && [ ! -f .git/hooks/pre-edit-architecture ]; then cp .git/hooks/pre-edit-architecture.sh .git/hooks/pre-edit-architecture && chmod +x .git/hooks/pre-edit-architecture; fi
-	@echo "✅ Git hooks installed (mechanism 22c, v$$(cat .githooks/VERSION 2>/dev/null || echo 0.0.0))"
+	@echo "✅ Git hooks installed via hook-installer"
