@@ -1,0 +1,54 @@
+# 机制 22a (2026-09-05): 分支 TTL 过期执行.
+# 每周日 UTC 23:00 扫描远程分支, 按策略自动删除超期分支.
+name: Branch TTL Enforce
+on:
+  schedule:
+    - cron: '0 23 * * 0'  # 每周日 UTC 23:00
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  branch-ttl:
+    name: Branch TTL Enforcement
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 0
+          token: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install deps
+        run: pip install pyyaml
+
+      - name: Run Branch TTL Gate (dry-run)
+        id: dryrun
+        run: python3 bin/gac/branch-ttl-gate.py --json
+        continue-on-error: true
+
+      - name: Run Branch TTL Gate (enforce)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: python3 bin/gac/branch-ttl-gate.py --enforce
+        continue-on-error: true
+
+      - name: Create TTL Report Issue
+        if: ${{ steps.dryrun.outcome == 'success' }}
+        run: |
+          DRYRUN_JSON="${{ steps.dryrun.outputs.stdout }}"
+          EXPIRED_COUNT=$(echo "$DRYRUN_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('expired_count', 0))")
+          if [ "$EXPIRED_COUNT" -gt 0 ]; then
+            # 创建 Issue 报告过期分支
+            echo "Found $EXPIRED_COUNT expired branches"
+            echo "$DRYRUN_JSON" > /tmp/ttl-report.json
+          fi

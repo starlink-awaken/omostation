@@ -187,6 +187,22 @@ case "$cmd" in
       rm -f "$claim_in_progress"
     }
     trap cleanup_claim_marker EXIT INT TERM
+    # ── 机制 22d: 分支命名合规校验 (创建即约束) ─────────────────
+    # 在创建 worktree 之前, 校验完整分支名是否符合前缀策略.
+    # 病根: validate_session 仅校验 slug 字符, 不校验完整分支名 (work/<slug>).
+    # 左移拦截: 创建前校验, 避免事后修复.
+    POLICY="$WS_ROOT/.omo/_truth/registry/branch-prefix-policy.yaml"
+    if [ -f "$POLICY" ] && [ -f "$WS_ROOT/bin/gac/check-branch-naming.py" ]; then
+      if ! python3 "$WS_ROOT/bin/gac/check-branch-naming.py" \
+           --branch "$branch" --policy "$POLICY" >/dev/null 2>&1; then
+        echo "❌ 分支 '$branch' 不符合前缀策略" >&2
+        echo "   参考: $POLICY" >&2
+        echo "   修复: 使用合规的 session 名 (如: fix-route-bug)" >&2
+        cleanup_claim_marker
+        trap - EXIT INT TERM
+        exit 1
+      fi
+    fi
     # ── G-CONV.7 / ADR-0220 D2: branch occupancy lock ─────────────────
     # Register before creating worktree so concurrent claim of same slug fails closed.
     if [ -f "$WS_ROOT/bin/gac/swarm-discipline-cli.py" ]; then

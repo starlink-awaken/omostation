@@ -1,0 +1,8 @@
+# .omo/_truth/registry/branch-ttl-policy.yaml
+# 机制 22a (2026-09-05): 分支 TTL 过期策略.
+#
+# 本文件已合并到 branch-prefix-policy.yaml (机制 22b).
+# 保留此文件作为向后兼容的指针引用.
+
+pointer: ".omo/_truth/registry/branch-prefix-policy.yaml"
+note: "TTL 策略已合并到 branch-prefix-policy.yaml, 请直接编辑该文件"

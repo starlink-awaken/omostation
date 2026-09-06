@@ -1,0 +1,89 @@
+{
+  "bet_progress": {
+    "done": 303,
+    "done_rate": 0.94,
+    "total": 321
+  },
+  "coverage_rate": 0.0,
+  "detail": [
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Relocate family dashboard runtime state and prove HITL Documents writes"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Establish the family dashboard Workspace owner in family-hub"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Quarantine retired Documents runner logs through exact selection"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Detect machine-generated logs in the L4 Documents content plane"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Relocate CC Switch recovery state out of Documents"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Sync convergence pulse capability projection"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Relocate ZCode client state to durable App Support"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Cut over vault-daily-health to Workspace owner"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Harden Documents consumer-audit command path tokenization"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Converge learning L4 control-plane owners into Workspace"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Converge learning content mutation owners into Workspace"
+    },
+    {
+      "coverage": "gap",
+      "implementation_signals": [],
+      "pillar": "Establish Workspace owner parity for learning decay inspection"
+    }
+  ],
+  "gap_pillars": [
+    "Relocate family dashboard runtime state and prove HITL Documents writes",
+    "Establish the family dashboard Workspace owner in family-hub",
+    "Quarantine retired Documents runner logs through exact selection",
+    "Detect machine-generated logs in the L4 Documents content plane",
+    "Relocate CC Switch recovery state out of Documents",
+    "Sync convergence pulse capability projection",
+    "Relocate ZCode client state to durable App Support",
+    "Cut over vault-daily-health to Workspace owner",
+    "Harden Documents consumer-audit command path tokenization",
+    "Converge learning L4 control-plane owners into Workspace",
+    "Converge learning content mutation owners into Workspace",
+    "Establish Workspace owner parity for learning decay inspection"
+  ],
+  "gaps": 12,
+  "generated_at": "2026-09-05T13:48:06Z",
+  "implemented": 0,
+  "pillars_found": 12,
+  "schema": "vision-audit/v1"
+}

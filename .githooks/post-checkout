@@ -1,0 +1,74 @@
+#!/bin/bash
+# post-checkout — 分支检出后自动校验命名合规.
+#
+# 机制 22d (2026-09-05): 分支创建即约束.
+# 在 git checkout -b <new-branch> 或 git checkout <branch> 后自动执行.
+# 覆盖以下路径:
+#   - git checkout -b <new-branch>  (创建并切换到新分支)
+#   - git checkout <branch>         (切换到已有分支)
+#   - git switch -c <new-branch>    (switch 创建新分支)
+#   - git worktree add -b <branch>  (worktree 创建分支)
+#
+# 安装: make install-hooks (从 .githooks/ 复制到 .git/hooks/)
+# 新 clone 必跑: make install-hooks
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo '')"
+if [ -z "$ROOT" ]; then
+  exit 0
+fi
+
+# post-checkout 接收 3 个参数:
+#   $1 = previous HEAD ref
+#   $2 = new HEAD ref
+#   $3 = flag: 1=branch checkout, 0=file checkout
+PREV_HEAD="${1:-}"
+NEW_HEAD="${2:-}"
+FLAG="${3:-}"
+
+# 仅处理 branch checkout (flag=1), 跳过 file checkout
+if [ "$FLAG" != "1" ]; then
+  exit 0
+fi
+
+# 获取当前分支名
+BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+
+# 跳过 detached HEAD 和 main
+if [ "$BRANCH" = "HEAD" ] || [ "$BRANCH" = "main" ] || [ -z "$BRANCH" ]; then
+  exit 0
+fi
+
+POLICY="$ROOT/.omo/_truth/registry/branch-prefix-policy.yaml"
+if [ ! -f "$POLICY" ]; then
+  exit 0
+fi
+
+# 仅对新增分支执行校验 (previous HEAD 为空或 new branch)
+# 对于切换到已有分支, 仅 advisory (不阻断)
+IS_NEW_BRANCH=0
+if [ -z "$PREV_HEAD" ] || [ "$PREV_HEAD" = "0000000000000000000000000000000000000000" ]; then
+  IS_NEW_BRANCH=1
+fi
+
+# 执行命名校验
+if [ -f "$ROOT/bin/gac/check-branch-naming.py" ]; then
+  if ! python3 "$ROOT/bin/gac/check-branch-naming.py" \
+       --branch "$BRANCH" --policy "$POLICY" 2>&1; then
+    if [ "$IS_NEW_BRANCH" -eq 1 ]; then
+      # 新分支: blocking
+      echo "[post-checkout] ❌ 新分支 '$BRANCH' 不符合前缀策略" >&2
+      echo "   参考: $POLICY" >&2
+      echo "   修复: git branch -m <old> <new-compliant-name>" >&2
+      echo "   或删除: git checkout main && git branch -D $BRANCH" >&2
+      exit 1
+    else
+      # 已有分支: advisory
+      echo "[post-checkout] ⚠️ 分支 '$BRANCH' 不符合前缀策略 (advisory)" >&2
+      echo "   参考: $POLICY" >&2
+    fi
+  fi
+fi
+
+exit 0

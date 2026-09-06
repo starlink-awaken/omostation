@@ -10,7 +10,7 @@ last-reviewed: 2026-09-04
 > 自动生成于 1970-01-01T00:00:00Z | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 
-共 **210** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
+共 **212** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
 
 ## 目录
 
@@ -1789,11 +1789,13 @@ cockpit vault --help          # 完整参数面
 | `cockpit replay` | 查看 Experience Replay 缓冲区状态 |
 | `cockpit resolve` | 统一 BOS URI 路由解析与目标元数据提取 |
 | `cockpit restore` | 恢复已隔离研究记录 |
+| `cockpit review` | 左右分栏 Diff 审阅工作台 (初稿 vs 编辑态) |
 | `cockpit route` | 为模型选择最优节点 |
 | `cockpit run` | 在隔离沙箱中挂载卡带并执行领域意图 |
 | `cockpit scan` | 平面扫描 |
 | `cockpit scene` | 🗺️ 业务场景正交领域 (scenario/journey/gongwen/brief/family-hub) |
 | `cockpit score` | 评分债务项 |
+| `cockpit send` | 一键确认署名并经外发网关真实外发 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit sign` | 提交用户署名 Diff 并入队 Experience Replay |
 | `cockpit snapshot` | KV 缓存快照管理与预热 |

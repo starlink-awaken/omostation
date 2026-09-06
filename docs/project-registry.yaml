@@ -66,6 +66,7 @@ projects:
         build_backend: "bun"
         role: "Postgres 知识数据库"
         src_dir: "src/"
+        path: "projects/knowledge/gbrain"
         submodule: true
         repository: "https://github.com/starlink-awaken/omostation-gbrain.git"
     kairon:
@@ -75,6 +76,7 @@ projects:
         version: "1.0.0"
         role: "知识引擎 monorepo"
         src_dir: "src/"
+        path: "projects/knowledge/kairon"
         submodule: true
         repository: "https://github.com/starlink-awaken/kairon.git"
         packages: 16                 # ls packages/*/ | wc -l

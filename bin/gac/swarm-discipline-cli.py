@@ -76,6 +76,48 @@ def cmd_branch_release(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_branch_policy(args: argparse.Namespace) -> int:
+    """机制 22b: 列出可用前缀, 供 agent 创建分支前查询."""
+    import os
+    import yaml
+    root = root_from_cwd()
+    policy_path = args.policy
+    if not os.path.isabs(policy_path):
+        policy_path = os.path.join(root, policy_path)
+    if not os.path.exists(policy_path):
+        print(json.dumps({"error": f"policy not found: {policy_path}"}, indent=2))
+        return 1
+    with open(policy_path, encoding="utf-8") as f:
+        policy = yaml.safe_load(f) or {}
+
+    prefixes = policy.get("prefixes", {})
+    output = {
+        "available_prefixes": [
+            {
+                "prefix": p + ("/" if not p.endswith("-") else ""),
+                "pattern": info.get("pattern", ""),
+                "ttl_days": info.get("ttl_days", 30),
+                "action": info.get("action", "remind"),
+                "creators": info.get("creators", []),
+                "requires_worktree": info.get("requires_worktree", False),
+                "pr_into_main": info.get("pr_into_main", "required"),
+                "description": info.get("description", ""),
+            }
+            for p, info in prefixes.items()
+        ],
+        "immortal": policy.get("immortal", []),
+    }
+
+    if args.json or args.list:
+        print(json.dumps(output, indent=2, ensure_ascii=False))
+        return 0
+
+    print("可用前缀:")
+    for p in output["available_prefixes"]:
+        print(f"  {p['prefix']:10s}  pattern={p['pattern']}  ttl={p['ttl_days']}d  creators={p['creators']}  {p['description']}")
+    return 0
+
+
 def cmd_claim_gc(args: argparse.Namespace) -> int:
     root = root_from_cwd()
     result = sd.claim_gc(root, ttl_hours=args.ttl_hours, dry_run=args.dry_run)
@@ -407,6 +449,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     s.add_argument("--no-purge-orphans", action="store_true", help="关闭孤儿清理")
     s.set_defaults(func=cmd_branch_release)
+
+    s = sub.add_parser("branch-policy", help="列出可用前缀 (机制 22b)")
+    s.add_argument("--list", action="store_true")
+    s.add_argument("--policy", type=str, default=".omo/_truth/registry/branch-prefix-policy.yaml")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(func=cmd_branch_policy)
 
     s = sub.add_parser("claim-gc", help="GC 过期 claim (branch/agent/adr, D1)")
     s.add_argument(

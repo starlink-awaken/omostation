@@ -896,7 +896,8 @@ install-hooks:  ## 安装 Git hooks (.githooks/ → .git/hooks/)
 	cp .githooks/pre-push .git/hooks/pre-push
 	cp .githooks/commit-msg .git/hooks/commit-msg
 	cp .githooks/post-commit .git/hooks/post-commit
+	cp .githooks/post-checkout .git/hooks/post-checkout
 	cp .githooks/prepare-commit-msg-commit-assist .git/hooks/prepare-commit-msg
 	cp .githooks/pre-edit-architecture.sh .git/hooks/pre-edit-architecture
-	chmod +x .git/hooks/pre-commit .git/hooks/pre-push .git/hooks/commit-msg .git/hooks/post-commit .git/hooks/prepare-commit-msg .git/hooks/pre-edit-architecture
-	@echo "✅ Git hooks installed (including pre-edit-architecture)"
+	chmod +x .git/hooks/pre-commit .git/hooks/pre-push .git/hooks/commit-msg .git/hooks/post-commit .git/hooks/post-checkout .git/hooks/prepare-commit-msg .git/hooks/pre-edit-architecture
+	@echo "✅ Git hooks installed (including post-checkout + pre-edit-architecture)"

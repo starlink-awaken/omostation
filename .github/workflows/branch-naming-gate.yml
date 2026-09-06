@@ -1,0 +1,76 @@
+name: Branch Naming Gate
+# 机制 22b (2026-09-05): PR 创建时校验分支名是否符合前缀策略.
+# 病根: hook 可被 --no-verify 绕过, CI 是最后一道防线.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  branch-naming:
+    name: Branch Naming Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install deps
+        run: pip install pyyaml
+
+      - name: Check branch naming
+        id: naming
+        run: |
+          python3 bin/gac/check-branch-naming.py \
+            --branch "${{ github.head_ref }}" \
+            --policy .omo/_truth/registry/branch-prefix-policy.yaml \
+            --json
+        continue-on-error: true
+
+      - name: Comment on PR (if naming fails)
+        if: steps.naming.outcome == 'failure'
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          COMMENT="## ❌ 分支命名不合规
+
+          **分支**: \`$BRANCH\`
+
+          请参考 \`.omo/_truth/registry/branch-prefix-policy.yaml\` 修改分支名。
+
+          **可用前缀**:
+          - \`work/\` — worktree 开发分支 (human/agent, TTL 7d)
+          - \`agent/\` — 独立 clone agent 分支 (agent only, TTL 3d)
+          - \`feat/\` — 功能开发分支 (human, TTL 14d)
+          - \`fix/\` — 修复分支 (human/agent, TTL 14d)
+          - \`chore/\` — 杂务分支 (human/agent, TTL 7d)
+          - \`auto/\` — 自动化产物 (CI only, TTL 1d)
+          - \`temp-\` — 临时分支 (human/agent, TTL 3d, auto-delete)
+          - \`pr/\` — PR 辅助分支 (CI/bot, TTL 7d)
+
+          **修复方法**:
+          \`\`\`bash
+          git branch -m $BRANCH <new-compliant-name>
+          git push origin --force-with-lease
+          \`\`\`"
+
+          gh pr comment "${{ github.event.pull_request.number }}" --body "$COMMENT" || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fail if naming non-compliant
+        if: steps.naming.outcome == 'failure'
+        run: |
+          echo "❌ Branch naming check failed. See PR comment for details."
+          exit 1

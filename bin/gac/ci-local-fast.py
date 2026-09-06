@@ -480,37 +480,29 @@ def run_html_entity_check(*, root: Path = WORKSPACE, output: TextIO = sys.stdout
     return 0
 
 
-def build_checks(*, root: Path = WORKSPACE) -> tuple[Check, ...]:
+def build_checks(*, root: Path = WORKSPACE, strict: bool = False) -> tuple[Check, ...]:
     python = sys.executable
     script = str(Path(__file__).resolve())
-    return (
+    checks = [
         Check("gac", "GaC local gate", (python, str(root / "bin/gac/gac-local-gate.py"))),
-        Check(
-            "hygiene",
-            "dir-hygiene",
-            (python, str(root / "bin/ssot/dir-hygiene-check.py")),
-        ),
+        Check("hygiene", "dir-hygiene", (python, str(root / "bin/ssot/dir-hygiene-check.py"))),
         Check("ruff", "Ruff regression gate", (python, script, "--ruff-gate")),
-        Check(
-            "ruff-debt",
-            "Ruff full-scope debt report",
-            (python, script, "--ruff-debt"),
-            blocking=False,
-        ),
+        Check("ruff-debt", "Ruff full-scope debt report", (python, script, "--ruff-debt"), blocking=False),
         Check("html", "HTML entity encoding", (python, script, "--html-entities")),
         Check("yaml", "YAML syntax", (python, str(root / "bin/ssot/yaml-validate.py"))),
-        Check(
-            "runtime-artifacts",
-            "Runtime artifact gate",
-            (python, script, "--runtime-artifacts"),
-        ),
-        Check(
-            "gitignore-drift",
-            "Gitignore drift check",
-            (python, script, "--gitignore-drift"),
-            blocking=False,
-        ),
-    )
+        Check("runtime-artifacts", "Runtime artifact gate", (python, script, "--runtime-artifacts")),
+        Check("gitignore-drift", "Gitignore drift check", (python, script, "--gitignore-drift"), blocking=False),
+    ]
+    if strict:
+        checks.append(Check("submodule-consistency", "Submodule three-way consistency",
+            (python, str(root / "bin/gac/check-submodule-consistency.py"), "--fail-on-drift")))
+        checks.append(Check("doc-numbers", "Doc number drift detection",
+            (python, str(root / "bin/gac/check-doc-numbers.py"), "--fail-on-drift")))
+        checks.append(Check("branch-freshness", "Branch freshness check",
+            (python, str(root / "bin/gac/check-branch-freshness.py")), blocking=False))
+        checks.append(Check("branch-ttl", "Branch TTL policy check",
+            (python, str(root / "bin/gac/branch-ttl-gate.py")), blocking=False))
+    return tuple(checks)
 
 
 def _agent_collision_check() -> None:
@@ -558,6 +550,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--html-entities", action="store_true")
     parser.add_argument("--runtime-artifacts", action="store_true")
     parser.add_argument("--gitignore-drift", action="store_true")
+    parser.add_argument("--strict", action="store_true",
+        help="严格模式: 增加子模块一致性、文档数字、分支新鲜度、TTL 校验")
     parser.add_argument(
         "--failures-json",
         default="",
@@ -579,7 +573,7 @@ def main(argv: list[str] | None = None) -> int:
     print("  ci-local-fast — 本地 CI 预检（真实退出码）")
     print("════════════════════════════════════════════════════")
     failure_sink: list[dict[str, Any]] = []
-    rc = run_suite(build_checks(), cwd=WORKSPACE, output=sys.stdout, failure_sink=failure_sink)
+    rc = run_suite(build_checks(strict=args.strict), cwd=WORKSPACE, output=sys.stdout, failure_sink=failure_sink)
     if args.failures_json:
         payload = {"ok": rc == 0, "failures": failure_sink}
         Path(args.failures_json).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

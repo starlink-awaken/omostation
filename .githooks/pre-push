@@ -79,6 +79,27 @@ EOF
   fi
 }
 
+# ── push target branch naming compliance (机制 22b, 2026-09-05) ---
+# 推送前校验目标分支名是否合规, 防止不合规分支被推到远端.
+POLICY="$ROOT/.omo/_truth/registry/branch-prefix-policy.yaml"
+if [ -f "$POLICY" ]; then
+  while IFS= read -r _push_line; do
+    _push_branch="$(printf '%s' "$_push_line" | awk '{print $3}')"
+    _push_branch="${_push_branch#refs/heads/}"
+    case "$_push_branch" in
+      main|HEAD|"") continue ;;
+    esac
+    if [ -n "$_push_branch" ]; then
+      if ! run_py_with_yaml "$ROOT/bin/gac/check-branch-naming.py" \
+           --branch "$_push_branch" --policy "$POLICY" 2>&1; then
+        echo "[pre-push] ❌ 推送目标 '$_push_branch' 违反命名策略" >&2
+        echo "   参考: .omo/_truth/registry/branch-prefix-policy.yaml" >&2
+        exit 1
+      fi
+    fi
+  done <<< "$PUSH_REFS"
+fi
+
 # ── 治本 D: sync 子模块, 防 gitlink 悬空 ─────────────────────────
 # SSOT paths live under bin/ssot/ (bin rationalization). Prefer ssot/,
 # fall back to bin/ wrappers for older checkouts.
