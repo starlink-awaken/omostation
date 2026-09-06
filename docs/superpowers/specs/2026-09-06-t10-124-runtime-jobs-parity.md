@@ -4,6 +4,9 @@ spec_version: 1.0.0
 bet_id: BET-Y1Q4-T10-124
 title: "Runtime Jobs Parity & Cadence"
 status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-06
 date: 2026-09-06
 ---
 # Runtime Jobs Parity & Cadence

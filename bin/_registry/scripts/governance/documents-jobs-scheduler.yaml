@@ -1,0 +1,21 @@
+schema: script-registry/v1
+id: bin/gac/documents-jobs-scheduler.py
+name: Documents Jobs Scheduler
+category: governance
+owner: governance-team
+description: "Dry-run / preview scheduler for Documents runtime jobs (launchd plist generation)"
+inputs:
+  - type: flag
+    name: --dry-run
+    description: Preview plists without writing
+outputs:
+  - type: exit_code
+  - type: stdout
+dependencies: []
+triggers:
+  - gac-local-gate
+related:
+  - bin/gac/documents_domain_jobs.py
+  - bin/gac/documents-domain-project-check.py
+maturity: draft
+last_reviewed: "2026-09-06"
