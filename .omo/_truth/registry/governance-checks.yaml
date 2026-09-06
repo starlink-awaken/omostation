@@ -179,7 +179,8 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 599
+    script_baseline: 597
+    # 2026-09-06: -2 删除 placeholder guard-chore-state.py + notify-submodule-change.py (canonical 内联已有真实实现, BET-Y1Q4-T6-24 净减)
     # 2026-09-03: +1 perception-coverage
     # 2026-09-03: +2 ops-cron-install + weekly-evolution-report
     # 2026-09-04: +2 T10-105 work branch net bin diff baseline
