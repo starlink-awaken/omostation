@@ -1,3 +1,9 @@
+---
+project: projects
+type: ssot
+owner: governance-team
+last_updated: 2026-09-06
+---
 # AGENTS.md — projects/ Directory Guide
 
 > Scope: the `projects/` container and its child repositories.

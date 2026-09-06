@@ -1551,7 +1551,8 @@ bets:
   title: 台账瘦身 — 306 done 归档 + 消费方合并读 + submit 双预检
   appetite: 1 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-06 19:00:00+00:00
   goal: 消灭 20000+ 行主台账的并发编辑冲突热区 — 306 个 done BET (无跨引用)
     归档至 3y-bet-ledger-archive.yaml, 主台账只留活跃 BET 与 14 个被引用锚点;
     6 个消费加载器补合并读; submit 增加冒号预检与并发写警告。

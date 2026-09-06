@@ -1,3 +1,8 @@
+---
+type: documentation
+owner: governance-team
+last_updated: 2026-09-06
+---
 # 文档治理框架 (DocGov Framework)
 
 > SSOT: docs/generated/doc-gov-framework.md

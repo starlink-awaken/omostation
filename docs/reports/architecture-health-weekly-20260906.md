@@ -1,3 +1,8 @@
+---
+type: documentation
+owner: governance-team
+last_updated: 2026-09-06
+---
 # 架构健康度 6 维度周报
 
 > 自动生成: `bash bin/ops/architecture-health-weekly.sh` (T6-18)

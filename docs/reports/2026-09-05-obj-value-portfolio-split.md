@@ -1,3 +1,8 @@
+---
+type: documentation
+owner: governance-team
+last_updated: 2026-09-06
+---
 # OBJ-VALUE portfolio split — landing receipt
 
 Date: 2026-09-05  

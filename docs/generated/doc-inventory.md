@@ -1,3 +1,8 @@
+---
+type: documentation
+owner: governance-team
+last_updated: 2026-09-06
+---
 # 文档索引 (自动生成)
 
 > 生成时间: 2026-09-05 16:01

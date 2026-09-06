@@ -1,3 +1,8 @@
+---
+type: documentation
+owner: governance-team
+last_updated: 2026-09-06
+---
 # BET-Y1Q4-T1-13 closeout receipt
 
 ## Delivered
