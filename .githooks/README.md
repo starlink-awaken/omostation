@@ -41,6 +41,14 @@ commit 前依次运行 (blocking 失败即 exit 1):
 （commit → push 拒 → reset 循环，2026-08-29 实测）。此 hook 在本地 main 上拦截
 该类提交，引导走 worktree+PR（如 #2519）。逃生口: `SWARM_ESCAPE_ID=<id>` (D4)。
 
+### post-checkout — 分支检出后命名合规
+
+`git checkout` / `git switch` / `git worktree add` (flag=1 分支切换) 触发:
+
+- `bin/gac/check-branch-naming.py --branch $BRANCH --policy ...` (blocking)
+
+委托 `hook-runner.sh --hook post-checkout` 执行。新分支命名不合规会阻断检出。
+
 ### post-merge — 合并后检查
 
 合并后触发: 通知子模块指针变化 + 运行时产物/契约校验 (非阻断 advisory)。

@@ -1,0 +1,6 @@
+#!/bin/bash
+# 机制 22c: post-checkout 委托给 hook-runner.sh (分支检出后命名合规)
+# 触发: git checkout / git switch / git worktree add (flag=1 分支切换)
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+bash "$ROOT/bin/gac/hook-runner.sh" --hook post-checkout
