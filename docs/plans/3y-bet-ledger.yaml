@@ -3337,7 +3337,7 @@ bets:
   title: 子模块生命周期管理 — 指针同步/分支清理/Tags 管理
   appetite: 2-3 days
   priority: P1
-  status: candidate
+  status: done
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-07-submodule-lifecycle-management-design.md
     spec_version: 1.0.0
@@ -3397,6 +3397,7 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  done_at: '2026-09-07'
   pr_number: 3347
 - id: BET-Y1Q4-T10-130
   track: T10-MATURITY
