@@ -890,13 +890,8 @@ ops-template-apply:  ## 应用模板创建服务
 
 # ── Git Hooks 安装 ──────────────────────────────────────────────────────────────
 
-install-hooks:  ## 安装 Git hooks (.githooks/ → .git/hooks/)
-	@mkdir -p .git/hooks
-	cp .githooks/pre-commit .git/hooks/pre-commit
-	cp .githooks/pre-push .git/hooks/pre-push
-	cp .githooks/commit-msg .git/hooks/commit-msg
-	cp .githooks/post-commit .git/hooks/post-commit
-	cp .githooks/prepare-commit-msg-commit-assist .git/hooks/prepare-commit-msg
-	cp .githooks/pre-edit-architecture.sh .git/hooks/pre-edit-architecture
-	chmod +x .git/hooks/pre-commit .git/hooks/pre-push .git/hooks/commit-msg .git/hooks/post-commit .git/hooks/prepare-commit-msg .git/hooks/pre-edit-architecture
-	@echo "✅ Git hooks installed (including pre-edit-architecture)"
+install-hooks:  ## 安装 Git hooks (.githooks/ → .git/hooks/, 机制 22c 统一安装)
+	@bash bin/gac/hook-installer.sh
+	@# 兼容旧名: pre-edit-architecture.sh → pre-edit-architecture (历史 hook 名)
+	@if [ -f .git/hooks/pre-edit-architecture.sh ] && [ ! -f .git/hooks/pre-edit-architecture ]; then cp .git/hooks/pre-edit-architecture.sh .git/hooks/pre-edit-architecture && chmod +x .git/hooks/pre-edit-architecture; fi
+	@echo "✅ Git hooks installed (mechanism 22c, v$$(cat .githooks/VERSION 2>/dev/null || echo 0.0.0))"

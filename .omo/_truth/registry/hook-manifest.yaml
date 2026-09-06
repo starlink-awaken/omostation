@@ -1,0 +1,174 @@
+# .omo/_truth/registry/hook-manifest.yaml
+# 机制 22c (2026-09-05): Hook 检查清单注册表.
+# 每个 hook 声明自己执行的检查（顺序执行）.
+# hook-runner.sh 读取此文件并调度各检查项.
+
+version: 2
+description: "Hook 检查清单 — 声明式注册表"
+
+# ── pre-commit ──────────────────────────────────────────────
+pre-commit:
+  description: "提交前快速检查 (<5s)"
+  checks:
+    - id: clone-guard
+      script: "bin/gac/agent-clone.py guard --workspace $ROOT --json"
+      blocking: true
+      timeout: 5
+      description: "agent identity 校验"
+
+    - id: branch-naming
+      script: "bin/gac/check-branch-naming.py --branch $BRANCH --policy .omo/_truth/registry/branch-prefix-policy.yaml"
+      blocking: true
+      timeout: 3
+      description: "分支前缀策略合规"
+
+    - id: conflict-marker
+      script: "bin/gac/check-conflict-markers.py"
+      blocking: true
+      timeout: 2
+      description: "未解决 git 冲突标记"
+
+    - id: mass-deletion
+      script: "bin/gac/mass-deletion-gate.py --staged"
+      blocking: true
+      timeout: 3
+      description: "大量删除守卫"
+
+    - id: runtime-artifacts
+      script: "bin/gac/check-runtime-artifacts.py --staged"
+      blocking: true
+      timeout: 3
+      description: "运行时产物黑名单"
+
+    - id: debt-guard
+      script: "bin/gac/debt-directory-guard.py"
+      blocking: true
+      timeout: 2
+      description: "债务文件删除守卫"
+
+    - id: submodule-guard
+      script: "bin/gac/submodule-guard.py --staged"
+      blocking: true
+      timeout: 5
+      description: "子模块 fast-forward 校验"
+
+  # advisory 检查 (不阻断)
+  advisory:
+    - id: hygiene
+      script: "bin/gac/gac-hygiene-check.py"
+      timeout: 10
+      description: "目录卫生 advisory"
+
+# ── pre-push ────────────────────────────────────────────────
+pre-push:
+  description: "推送前检查"
+  checks:
+    - id: branch-naming
+      script: "bin/gac/check-branch-naming.py --branch $PUSH_BRANCH --policy .omo/_truth/registry/branch-prefix-policy.yaml"
+      blocking: true
+      timeout: 3
+      description: "推送目标分支合规"
+
+    - id: direct-push-main
+      script: "bin/gac/guard-direct-push-main.py"
+      blocking: true
+      timeout: 2
+      description: "拒绝 main 直推"
+
+    - id: submodule-sync
+      script: "bin/ssot/sync-submodules-push.sh"
+      blocking: true
+      timeout: 30
+      description: "子模块自动同步"
+
+    - id: submodule-reachability
+      script: "bin/ssot/submodule-reachability-gate.py --source head --fetch --changed-from $REACH_CHANGED_FROM"
+      blocking: true
+      timeout: 15
+      description: "增量 reachability 校验"
+
+    - id: mass-deletion
+      script: "bin/gac/mass-deletion-gate.py --range origin/main HEAD --submodules"
+      blocking: true
+      timeout: 5
+      description: "批量删除检测"
+
+    - id: gitlink-ancestry
+      script: "bin/gac/check-submodule-rewind.py --range origin/main $PUSH_LOCAL_SHA"
+      blocking: true
+      timeout: 5
+      description: "子模块指针回退检测"
+
+    - id: remote-hygiene
+      script: "bin/gac/remote-hygiene-check.py"
+      blocking: true
+      timeout: 3
+      description: "origin 指向校验"
+
+# ── post-checkout ───────────────────────────────────────────
+post-checkout:
+  description: "分支检出后命名合规"
+  checks:
+    - id: branch-naming
+      script: "bin/gac/check-branch-naming.py --branch $BRANCH --policy .omo/_truth/registry/branch-prefix-policy.yaml"
+      blocking: true
+      timeout: 3
+      description: "新分支命名合规 (已有分支 advisory)"
+
+# ── pre-rebase ──────────────────────────────────────────────
+pre-rebase:
+  description: "rebase 前危险检测"
+  checks:
+    - id: dangerous-rebase
+      script: "bin/gac/check-dangerous-rebase.py --base $1 --onto ${2:-}"
+      blocking: true
+      timeout: 5
+      description: "危险 rebase 检测"
+
+# ── pre-merge-commit ────────────────────────────────────────
+pre-merge-commit:
+  description: "合并前校验"
+  checks:
+    - id: submodule-guard
+      script: "bin/gac/submodule-guard.py --merge"
+      blocking: true
+      timeout: 5
+      description: "子模块校验 (merge 模式)"
+
+    - id: conflict-marker
+      script: "bin/gac/check-conflict-markers.py"
+      blocking: true
+      timeout: 2
+      description: "冲突标记检测"
+
+    - id: mass-deletion
+      script: "bin/gac/mass-deletion-gate.py --staged"
+      blocking: true
+      timeout: 3
+      description: "大量删除守卫"
+
+# ── post-merge ──────────────────────────────────────────────
+post-merge:
+  description: "合并后自动同步 (advisory only, 由 canonical post-merge 内联实现)"
+  checks:
+    - id: auto-sync-docs
+      script: "bin/ssot/post-commit-sync-check.py"
+      blocking: false
+      timeout: 10
+      description: "文档自动同步"
+
+    - id: submodule-change-notify
+      script: ".githooks/post-merge"  # canonical post-merge 内联实现子模块变更通知
+      blocking: false
+      timeout: 5
+      description: "子模块指针变更通知 (canonical post-merge 内联)"
+
+# ── commit-msg ──────────────────────────────────────────────
+commit-msg:
+  description: "提交消息规范 (由 canonical commit-msg 实现)"
+  checks:
+    - id: chore-state-guard
+      script: ".githooks/commit-msg"  # canonical commit-msg 内联实现 chore(state) 守卫
+      blocking: true
+      timeout: 3
+      description: "chore(state) 禁止直连 main (canonical commit-msg)"
