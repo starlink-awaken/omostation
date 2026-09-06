@@ -24644,7 +24644,8 @@ bets:
   title: ADR-0191 E-DOC 双平面边界门禁落地与 CI/Pre-commit 硬拦截
   appetite: 2 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-06 09:50:00+00:00
   goal: 将 ADR-0191 长期处于 DESIGN-ONLY 的 E-DOC-001~005 边界规则正式接线入 MOF 规则引擎与 CI 门禁，实现 Documents 内容平面零脚本、零构建缓存、零跨域裸写与客户端配置防漂移硬拦截。
   non_goals:
   - 不物理删除历史已归档的旧代码文件（由归档迁移负责）
@@ -24674,6 +24675,11 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T6-17
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t6-20-edoc-boundary-gate-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:b9bf6cccf6aa9e0e9dbf24b1066918dac722e3138c9cb3b2a3ab16bfc3feef6b
+    decision_ref: decision://accepted/BET-Y1Q4-T6-20
 - id: BET-Y1Q4-T10-123
   track: T10-MATURITY
   window: Y1Q4
