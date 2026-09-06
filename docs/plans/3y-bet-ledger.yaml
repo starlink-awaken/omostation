@@ -24886,3 +24886,75 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T10-05
+- id: BET-Y1Q4-T5-04
+  track: T5-ORCH
+  window: Y1Q4
+  title: 主权连接器架构升级与 Kairon/Iris 外部数据源统一 BOS 网关化 (Sovereign Connector Fabric & Iris BOS Gateway)
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 将长期局限在 projects/knowledge/kairon/packages/iris/src/iris/connectors/ 内部的 15+ 种连接器（包含 local_files, obsidian, apple_mail, github, wechat 等）解耦提升为全系统统一的 Sovereign Connector Fabric；在 bos-services.yaml 中注册 bos://connectors/{source}/sync 与 bos://connectors/{source}/list 端点；并在 Agora MCP 中暴露统一的 connector_sync 工具；实现常驻 Agent 守护进程周期调度连接器增量拉取并汇入统一事件流。
+  non_goals:
+  - 不重写各连接器底层的协议解析代码
+  - 不破坏 Kairon 现有的离线批处理能力
+  done_when:
+  - 交付 .omo/_truth/registry/connector-manifest.yaml 统一登记所有 15+ 种连接器元数据
+  - 在 Agora 中注册 bos://connectors/* 路由并暴露 MCP 工具 connector_list / connector_sync
+  - Resident Daemon 接入 connector-fetch 周期任务（支持 watermark 增量拉取）
+  - 单元测试覆盖连接器发现、BOS 网关调用与增量事件发射
+  verify:
+  - cmd: uv run pytest projects/agora/tests/test_connectors_bos.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - .omo/_truth/registry/connector-manifest.yaml
+  - projects/agora/etc/bos-services.yaml
+  - projects/agora/src/agora/server/tools_connectors.py
+  - projects/omo/src/omo/resident/connectors_poll.py
+  - projects/agora/tests/test_connectors_bos.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 连接器拉取失败时自动降级跳过；严禁单个连接器超时或鉴权失败阻断其他连接器调度。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T5-03
+- id: BET-Y1Q4-T6-24
+  track: T6-EVOLUTION
+  window: Y1Q4
+  title: OpenHuman 本地桥接器升级与多源健康生物标记物 Schema 归一化 (OpenHuman Local Bridge & Biometric Normalizer)
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 深度重构已有的 projects/knowledge/kairon/packages/iris/src/iris/connectors/openhuman/connector.py：新增本地 JSON-RPC 7788 看门狗与重试容错；引入 TokenJuice 风格的 HTML/JSON 高密 Markdown 压缩管道（平均降噪压缩 70%+）；借鉴 Open Humans 开源规范，实现 Apple HealthKit、CGM 连续血糖、Garmin/Fitbit 穿戴指标的统一归一化解析器（Biomarker Normalizer），并将清洗后的连续生理体征直通汇入 Family-Hub 与 bos://persona/health-profile/*。
+  non_goals:
+  - 不引入任何第三方云端托管中继（坚持本地 Local-First 与零凭据泄露）
+  - 不修改外部硬件厂商固件
+  done_when:
+  - OpenHumanConnector 支持本地进程可用性探测、自愈心跳与安全 fallback
+  - 交付 TokenJuice 轻量数据压缩器模块，并通过长文本/HTML 压缩率测试（≥60% 冗余剔除）
+  - 实现 BiomarkerNormalizer，支持 Apple Health 导出 XML/JSON 与 CGM 血糖数据的归一化解析
+  - 结构化体征数据成功在 Family-Hub 与 health-profile 事实投影中渲染
+  verify:
+  - cmd: uv run pytest projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/knowledge/kairon/packages/iris/src/iris/connectors/openhuman/connector.py
+  - projects/knowledge/kairon/packages/iris/src/iris/connectors/openhuman/token_juice.py
+  - projects/knowledge/kairon/packages/iris/src/iris/connectors/openhuman/biomarkers.py
+  - projects/family-hub/src/family_hub/health_importer.py
+  - projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-24.md
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 敏感健康与生理体征数据处理全程必须保留在本地，严禁通过未经脱敏的网络请求发送至云端 API。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T5-04
