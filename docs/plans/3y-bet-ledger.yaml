@@ -2970,7 +2970,8 @@ bets:
   title: 仓库健康度可视化 — 周报自动生成与趋势分析
   appetite: 1-2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-06
   goal: 实现仓库健康度可视化，自动生成包含分支数/Tags 数/worktree 数/松散对象/悬空跟踪等指标的周报，并提供趋势分析。
   non_goals:
   - 不修改现有仓库结构
@@ -2991,11 +2992,47 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:8a39008fed2025c1a7711103873cdb0fe4531eab43c509f8e1137ff6480b81e5
     decision_ref: decision://accepted/BET-Y1Q4-T10-130
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t10-130-repo-health-report-design.md
+            sha256: sha256:8a39008fed2025c1a7711103873cdb0fe4531eab43c509f8e1137ff6480b81e5
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-130.md
+            sha256: sha256:103e2135339d1ed3f8113890925f5a24b4334370706705b842a74c159025ae16
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-130.md
+            sha256: sha256:103e2135339d1ed3f8113890925f5a24b4334370706705b842a74c159025ae16
+          merged_reachable_commit:
+            ref: git://origin/main@69fd27db48121b5dc4ca2839393ffdc6a1bcaccf
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-130.md
+            sha256: sha256:103e2135339d1ed3f8113890925f5a24b4334370706705b842a74c159025ae16
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-130.md
+            sha256: sha256:103e2135339d1ed3f8113890925f5a24b4334370706705b842a74c159025ae16
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-130.md
+            sha256: sha256:103e2135339d1ed3f8113890925f5a24b4334370706705b842a74c159025ae16
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-130.md
+            sha256: sha256:103e2135339d1ed3f8113890925f5a24b4334370706705b842a74c159025ae16
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - docs/repository-health.md
   - bin/gac/repo-health-metrics.py
   - tests/test_repo_health_metrics.py
-  - runtime/cockpit/repo-health-history.jsonl
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-130.md
   risk_level: L1
