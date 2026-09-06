@@ -46,9 +46,9 @@ fi
 # 独立 clone 拓扑消除共享 worktree, D3 shared-worktree claim 不再需要.
 # 历史代码已移除. 参见 .omo/_truth/registry/swarm-coordination.yaml.
 
-if [ -x "$ROOT/bin/gac-hygiene-check.py" ]; then
+if [ -x "$ROOT/bin/gac/gac-hygiene-check.py" ]; then
   # advisory: 输出到 stderr, 不阻断 commit (|| true)
-  run_py "$ROOT/bin/gac-hygiene-check.py" 2>&1 | sed 's/^/[hygiene] /' >&2 || true
+  run_py "$ROOT/bin/gac/gac-hygiene-check.py" 2>&1 | sed 's/^/[hygiene] /' >&2 || true
 fi
 
 if [ -f "$ROOT/bin/gac-local-gate.py" ]; then
@@ -145,7 +145,7 @@ fi
 
 # --- conflict-marker gate (2026-08-08) ---
 # 未解决 git 冲突标记 (<<<<<<<) 被提交会污染 main 致 check-yaml/派生 CI 失败.
-CONFLICT_CHECK="$(git rev-parse --show-toplevel)/bin/ssot/conflict-marker-check.py"
+CONFLICT_CHECK="$(git rev-parse --show-toplevel)/bin/gac/check-conflict-markers.py"
 if [ -f "$CONFLICT_CHECK" ]; then
   run_py "$CONFLICT_CHECK" || exit 1
 fi

@@ -1,0 +1,40 @@
+#!/bin/bash
+# pre-rebase — 危险 rebase 检测.
+#
+# 机制 22c (2026-09-05): 阻止 rebase onto main, 检测危险 rebase.
+# 参数:
+#   $1 = base (rebase 的底)
+#   $2 = onto (rebase 的目标, 可选)
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo '')"
+if [ -z "$ROOT" ]; then
+  exit 0
+fi
+
+BASE="${1:-}"
+ONTO="${2:-}"
+
+# 检查 rebase 目标是否为 main
+if [ -n "$ONTO" ] && [[ "$ONTO" =~ ^(main|origin/main|upstream/main)$ ]]; then
+  echo "[pre-rebase] ❌ 拒绝 rebase onto $ONTO" >&2
+  echo "   应走 merge/PR 合流，而非 rebase" >&2
+  echo "   逃生: SWARM_ESCAPE_ID=rebase-<reason> git rebase ..." >&2
+  if [ "${SWARM_ESCAPE_ID:-}" != rebase-* ]; then
+    exit 1
+  fi
+fi
+
+# 检查 base 是否为 HEAD 的祖先
+if [ -n "$BASE" ]; then
+  if ! git merge-base --is-ancestor "$BASE" HEAD 2>/dev/null; then
+    echo "[pre-rebase] ❌ base $BASE 不是 HEAD 的祖先" >&2
+    echo "   rebase 会重写历史，请先确认" >&2
+    if [ "${SWARM_ESCAPE_ID:-}" != rebase-* ]; then
+      exit 1
+    fi
+  fi
+fi
+
+exit 0
