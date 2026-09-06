@@ -1,7 +1,7 @@
 meta:
   schema_version: bet-portfolio/v2
   horizon: 2026H2-2029
-  total_bets: 336
+  total_bets: 341
   windows:
   - Y1Q1
   - Y1Q2
@@ -24430,3 +24430,180 @@ bets:
   depends_on:
   - BET-Y2Q1-T7-06
   - BET-Y2Q2-T3-02
+- id: BET-Y1Q4-T6-20
+  track: T6-SUBTRACT
+  window: Y1Q4
+  title: ADR-0191 E-DOC 双平面边界门禁落地与 CI/Pre-commit 硬拦截
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 将 ADR-0191 长期处于 DESIGN-ONLY 的 E-DOC-001~005 边界规则正式接线入 MOF 规则引擎与 CI 门禁，实现 Documents 内容平面零脚本、零构建缓存、零跨域裸写与客户端配置防漂移硬拦截。
+  non_goals:
+  - 不物理删除历史已归档的旧代码文件（由归档迁移负责）
+  - 不修改 Documents 物理目录中已受保护的真实业务事实
+  done_when:
+  - 交付 bin/gac/check-documents-boundary.py，覆盖可执行文件扫描、环境依赖检测、跨域写入拦截与客户端配置一致性检查
+  - 在 .omo/_truth/registry/governance-checks.yaml 注册 E-DOC-001~005 检查项，并接入 make gac-local-gate 与 pre-commit
+  - 编写违规样本注入测试，验证拦截率 100% 且准确输出自愈修复建议（Diagnostic Envelope）
+  verify:
+  - cmd: uv run --with pyyaml python bin/gac/check-documents-boundary.py --documents-root /Users/xiamingxing/Documents --json
+    expect: exit 0 with ok=true
+  - cmd: uv run pytest tests/test_documents_boundary_check.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - bin/gac/check-documents-boundary.py
+  - .omo/_truth/registry/governance-checks.yaml
+  - tests/test_documents_boundary_check.py
+  - docs/adr/ADR-0191-workspace-documents-dual-plane-architecture.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-20.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 门禁脚本必须支持 --dry-run 与 Diagnostic Envelope 修复建议；发现真实违规时输出阻断错误，误报时允许通过治理白名单登记而非修改规则。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-17
+- id: BET-Y1Q4-T10-123
+  track: T10-MATURITY
+  window: Y1Q4
+  title: Documents 5 大内容归档族只读冻结与外挂工具终态清退 (Content Archives & External Tools Retirement)
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 终态收敛 documents-content-plane-migrations.yaml 中停滞的 9 个 pending 家族：对 5 大内容归档族（career/family/learning/work/creative-content-archives）实施只读哈希冻结，清理并重定位 toolbox-staging、zotero-app-data 与 root-oneoff-assets，将 non_terminal_families 数量大幅压缩。
+  non_goals:
+  - 不介入正在进行 Phase B 验证的 family-dashboard-app
+  - 不删除用户的真实个人与家庭文档资产
+  done_when:
+  - 为 5 大内容归档生成 SHA-256 冻结清单，并在迁移注册表中标记为 verified/content_archive
+  - 将 toolbox-staging 中的 DeepTutor 彻底重定位至 Workspace，并在 Documents 留下只读指针
+  - documents-content-plane-migration-check.py 的 non_terminal_families 减少至少 7 个家族
+  verify:
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+    expect: exit 0 with non_terminal_families count <= 6
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - bin/gac/documents-content-plane-migration-check.py
+  - docs/reports/2026-09-documents-content-plane-archive-freeze.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-123.md
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 任何涉及 Documents 历史业务文件的归档操作必须先生成 SHA-256 清单与只读锁定快照；禁止物理 rm -rf 任何未确认归档备份的文件。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-20
+- id: BET-Y1Q4-T10-124
+  track: T10-MATURITY
+  window: Y1Q4
+  title: Documents Runtime Jobs 契约对齐与自动化守护常态化 (Runtime Jobs Parity & Cadence)
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 修复 documents_domain_jobs.py 对 runtime-learning 任务的 Schema 缺失与校验崩溃，恢复 documents-domain-project-check.py 绿灯；并将 7 个 manual 运行时巡检任务接入常态化自动化管道（launchd/crontab 调度），定时产出结构化 evidence 并汇入 Cockpit 驾驶舱事实面。
+  non_goals:
+  - 不在 Documents 物理目录启动常驻守护进程
+  - 不新增未经 ADR 审议的第 8 个 runtime job
+  done_when:
+  - bin/gac/documents_domain_jobs.py 完整实现 runtime-learning 校验器，包含 audit_concept_decay 与 list_orphan_concepts 契约
+  - documents-domain-project-check.py 针对全量 12 域及 7 个 jobs 校验返回 ok=true 零错误
+  - 7 个 jobs 配置规范的 host-level 定时调度与 evidence 生成验证
+  verify:
+  - cmd: uv run --with pyyaml python bin/gac/documents-domain-project-check.py --domain-registry /Users/xiamingxing/Documents/@公共/_control/L4-DOMAIN-REGISTRY.yaml --project-registry .omo/_truth/registry/documents-domain-projects.yaml --json
+    expect: exit 0 with ok=true and errors=[]
+  - cmd: uv run pytest tests/test_documents_domain_project_check.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/documents_domain_jobs.py
+  - bin/gac/documents-domain-project-check.py
+  - tests/test_documents_domain_project_check.py
+  - .omo/_truth/registry/documents-domain-projects.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-124.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 修复校验器必须保持向后兼容；自动化 cron 失败时只能记录 fail-closed evidence，严禁向 Documents 物理目录写入任何重试临时文件。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-20
+- id: BET-Y1Q4-T6-21
+  track: T6-EVOLUTION
+  window: Y1Q4
+  title: Documents 多客户端配置自愈守护与 BOS 统一事实服务网关 (Client Config Self-Healing & BOS Facade)
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  goal: 研发统一的客户端多端配置守护工具 bin/gac/documents-client-sync.py，消除 Claude Desktop 与 Codex 当前的 drift 报错；在 Agora/BOS 中构建统一的只读事实穿透网关（bos://documents/{domain}/{resource}），为 Agent 提供标准化的结构化数据查询与缓存服务。
+  non_goals:
+  - 不修改第三方 IDE 自身的二进制文件或其非 Cockpit 配置
+  - 不开放公网未经认证的端口服务
+  done_when:
+  - 交付 bin/gac/documents-client-sync.py，支持 check 与 apply 模式，一键修复 Claude Desktop、Codex、Zed、ZCode 的配置漂移
+  - 在 Agora 中注册 bos://documents/* 统一只读事实服务路由与 Schema 校验
+  - 单元测试与端到端模拟测试全部通过
+  verify:
+  - cmd: uv run --with pyyaml python bin/gac/documents-client-sync.py check
+    expect: exit 0 with status ok
+  - cmd: uv run pytest projects/agora/tests/test_bos_documents_facade.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/documents-client-sync.py
+  - projects/agora/src/agora/tools_bos/documents.py
+  - projects/agora/tests/test_bos_documents_facade.py
+  - tests/test_documents_client_sync.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-21.md
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 配置修改必须执行原子写入并备份旧配置；未认证客户端请求 BOS 网关时执行只读受控拒绝。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-20
+- id: BET-Y1Q4-T6-22
+  track: T6-SUBTRACT
+  window: Y1Q4
+  title: 文档生命周期体系落地与主仓+Documents 存量文档深度去重指针化 (Doc Lifecycle & De-duplication)
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 基于 T6-17 盘点发现，实现自动化的文档生命周期引擎 bin/ssot/doc-lifecycle.py：批量为无 frontmatter 的 226 篇文档补齐元数据，自动归档 723 篇 completed ephemeral 文档到归档目录，合并消歧架构与战略重复文档，打通主仓文档与 Documents 域知识文档的双向索引与新鲜度门禁。
+  non_goals:
+  - 不删除任何具有历史决策价值的 ADR 或 Retro
+  - 不破坏外部系统正在引用的稳定 URL 路径
+  done_when:
+  - 交付 bin/ssot/doc-lifecycle.py 并支持 audit、archive 与 lint 模式
+  - 主仓无 frontmatter 文档数清零
+  - 完成 ARCHITECTURE-EVOLUTION 等已识别主题重复文档的合并指针化
+  - doc-ssot-lint.py 与 check-doc-freshness-gate.py 维持 0 错误
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/gac/check-doc-freshness-gate.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - bin/ssot/doc-lifecycle.py
+  - .omo/standards/doc-ssot-contract.md
+  - docs/reports/doc-ssot-inventory-2026-09-05.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-22.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 归档与合并操作必须保留原有相对路径的反向软链或指针说明文件，绝不允许引发已有代码或测试的死链（broken links）。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-17
