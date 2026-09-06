@@ -42,6 +42,8 @@ last_updated: 2026-09-06
 将机制 22c 补完为**可交付、可运行、自洽**的 hook 统一安装/健康检查框架：
 
 1. **补齐缺失脚本**：新建被引用的 `check-runtime-artifacts.py` / `notify-submodule-change.py` / `guard-chore-state.py`；修正 `gac-hygiene-check.py` / `conflict-marker-check.py` 引用到现有真实路径（`bin/gac/gac-hygiene-check.py`、`bin/gac/check-conflict-markers.py`）。
+
+> **结果注记（2026-09-06 净减收尾）**：方案 A 的 `notify-submodule-change.py` / `guard-chore-state.py` 最终以 placeholder 空壳形式经 #3282 引入（仅打印 "not yet implemented" + exit 0），而 canonical `.githooks/post-merge` / `.githooks/commit-msg` 内联已有真实实现（子模块变更检测 / T10-57 chore(state) 守卫）。T6-24 净减收尾已删除这两个空壳脚本及 registry 条目，manifest 恢复指向 canonical 内联 —— canonical 为实际执行者，manifest 与执行一致。
 2. **修复 D1-D7 缺陷**：`run_check` 参数错位、`BLOCKING_FAILED` 退出逻辑、macOS `date %N` 兼容、pre-push stdin 消费、health-check hash 算法对齐、manifest 与 runner 清单对齐、缺失脚本引用守卫。
 3. **接线（方案 B）**：`make install-hooks` 统一走 `hook-installer.sh`（含新 hook + VERSION/.version/content-hash）；`hook-health-check.py` 作为校验入口；`.githooks/README.md` 更新为新架构。
 4. **净减配平**：删除死代码（`check-dangerous-rebase.py` 的 `check_known_debt`），删除 manifest 中 runner 无法分派的重复段声明，实现净减或持平。
@@ -70,11 +72,12 @@ bash bin/gac/hook-installer.sh --check
 python3 bin/gac/hook-health-check.py
 make gac-local-gate
 ```
+> 注：`notify-submodule-change.py` / `guard-chore-state.py` 已于净减收尾删除（canonical 内联已有真实实现），上一条 `py_compile` 仅对当时的暂存状态有效。
 
 ## 净减记账（D2）
 
-- 新增：`check-runtime-artifacts.py`、`notify-submodule-change.py`、`guard-chore-state.py`（3 脚本，均为缺失引用补齐）
-- 删除：`check-dangerous-rebase.py` 死代码 `check_known_debt`、manifest 中 runner 无法分派的重复段（pre-rebase/pre-merge-commit/post-merge/commit-msg 若与 canonical 执行冲突则收敛为记录）
+- 新增：`check-runtime-artifacts.py`（唯一保留的新建脚本）；`notify-submodule-change.py` / `guard-chore-state.py` 曾以 placeholder 形式引入、后于净减收尾删除（canonical 内联已有实现，见方案 1 结果注记）
+- 删除：`check-dangerous-rebase.py` 死代码 `check_known_debt`、manifest 中 runner 无法分派的重复段（pre-rebase/pre-merge-commit/post-merge/commit-msg 若与 canonical 执行冲突则收敛为记录）、`guard-chore-state.py` / `notify-submodule-change.py` 空壳脚本
 - 目标：净减或持平（Y1 主目标变小）
 
 ## 逃生口
