@@ -18727,6 +18727,9 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q3-T10-118
   write_surfaces:
   - projects/omlxc/src/omlxc/dataplane/lora_manager.py
+  - projects/omlxc/tests/unit/test_lora_manager.py
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - docs/plans/3y-bet-ledger.yaml
   - projects/cockpit/src/cockpit/commands/spine.py
   - .omo/_knowledge/retros/BET-Y1Q3-T10-118.md
   pasw_required: false
