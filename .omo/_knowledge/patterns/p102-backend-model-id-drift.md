@@ -50,17 +50,21 @@ for p in d.get('placements', []):
 
 ## Root Cause
 
-两个独立事实叠加：
+**配置和后端各自演化，没有对账机制。** 后端模型清单是运行时事实，
+`backend_model_id` 是配置里的声明，两者之间没有任何一致性检查。
 
-1. **配置和后端各自演化，没有对账机制。** 后端模型清单是运行时事实，
-   `backend_model_id` 是配置里的声明，两者之间没有任何一致性检查。
-2. **后端的 `/v1/models` 不暴露加载状态。** oMLX App 返回的是标准 OpenAI
-   模型列表（`id` / `object` / `created` / `owned_by` / `max_model_len`），
-   **没有 `state` 字段**。而 omlxc 的探测逻辑依赖
-   `model.state is ModelRuntimeState.LOADED` 来判定 `loaded`——
-   信号源根本给不出这个信息，下游一切基于 `loaded` 的调度决策都建立在猜测上。
-
-第 2 条是更根本的：**调度器要求的可观测性，后端没有提供。**
+> **订正 (2026-09-06)**：本文原来这里还写了第二条"后端 `/v1/models` 不暴露
+> 加载状态，信号源根本给不出这个信息"——**这句话是错的**，没有先查 adapter
+> 代码就下的结论。真相：`/v1/models`（裸端点）确实没有 `state` 字段，但
+> omlx_app 后端另有 `/v1/models/status` 端点给出真实的逐模型 `loaded` +
+> 内存数据，Ollama 有 `/api/ps`，LM Studio 走 SSH `lms ps --json`——三个
+> adapter 都已经正确实现了这些机制，不是"信号源给不出"。真实、且窄得多的
+> 缺口是：这台机器的 LM Studio 后端一直没配 `control_endpoint`，所以
+> **诚实地**回退成 `UNKNOWN`（这是设计对了，不是 bug）。已在
+> `starlink-awaken/omostation-omlxc` 补上 mac-mini/y7000p 的 SSH control
+> 配置，两边验证过 `loaded` 现在是真实值。教训见
+> [[p78-triple-axis-diagnostic-pattern]]：断言"某能力不存在"前，要先读
+> 三个 adapter 的实现，不能只测一个端点就下全局结论。
 
 ## Fix Pattern
 
@@ -69,11 +73,12 @@ for p in d.get('placements', []):
 放进 `omlxc doctor` 或启动自检里。漂移应该是**显式告警到具体条目**，
 不是一句 `inventory_drop 38→16`。
 
-### 2. 后端必须暴露加载状态，否则 loaded 就是假信号
+### 2. `loaded` 状态要么接真实机制，要么诚实标 UNKNOWN——别猜
 
-要么后端加 `state` 字段，要么 adapter 用别的手段（进程内存、专用端点）
-判定，要么**诚实地把 `loaded` 标成未知**，让调度器知道自己不知道——
-而不是默认成 True/False 然后基于它做决策。
+三个后端已经各自有正确的真实机制（见上面的订正），唯一会退化成 UNKNOWN
+的情况是控制通道没配置（比如 LM Studio 的 `control_endpoint`）——这时
+adapter 正确地报 UNKNOWN，而不是编一个 True/False 出来。落地新后端时
+照这个标准: 有真实信号就用，没有就诚实标未知，别在两者之间瞎猜。
 
 ### 3. 诊断纪律：错误码要按字面读
 
