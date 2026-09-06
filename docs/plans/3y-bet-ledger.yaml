@@ -24612,3 +24612,174 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T6-17
+- id: BET-Y1Q4-T5-03
+  track: T5-ORCH
+  window: Y1Q4
+  title: Agora A2A 双向任务委派与 Resident Agent Card 协议接入 (A2A Task Delegation & Resident Agent Card)
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 在 Agora MCP 中注册 resident-orchestrator 的标准 Agent Card（支持后台分析、深度巡检、对账等技能）；打通外部瞬态 Agent（Antigravity、Claude Code、Codex）通过 a2a_send_task 直接向常驻 Agent 委派长时后台任务，并通过 a2a_get_task 追踪进度与获取产物。
+  non_goals:
+  - 不重构 Agora 既有 A2A 核心调度协议
+  - 不改变瞬态 Agent 自身的工作流生命周期
+  done_when:
+  - list_agent_cards 工具输出包含完整的 resident-orchestrator 卡片元数据及 Capabilities
+  - 支持通过 a2a_send_task 提交 resident 任务并返回有效 task_id 与状态跟踪
+  - Agora 单元测试与集成测试验证 A2A 委托与结果拉取闭环全部通过
+  verify:
+  - cmd: uv run pytest projects/agora/tests/test_resident_a2a.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/agora/src/agora/server/tools_governance.py
+  - projects/agora/src/agora/server/tools_resident.py
+  - projects/agora/tests/test_resident_a2a.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: A2A 任务派发必须具备幂等 ID 与超时隔离；任务异常时 fail-closed，严禁挂起阻塞主进程。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T10-05
+- id: BET-Y1Q4-T10-125
+  track: T10-MATURITY
+  window: Y1Q4
+  title: Resident BOS 双向任务网关与异步队列调度中枢 (BOS Resident Task Gateway & Async Queue)
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: 在 bos-services.yaml 与 resident-routes.yaml 中扩展双向任务端点（bos://resident/task/submit、bos://resident/task/status、bos://resident/sediment/trigger、bos://resident/decision/trigger）；在常驻内核中构建持久化任务就绪队列，守护进程在每次 tick 时拉取就绪任务并持久化状态机。
+  non_goals:
+  - 不引入外部 Redis 或消息中间件，依托本地原子事务文件与 SQLite 实现
+  - 不修改现有只读状态服务的 URI 契约
+  done_when:
+  - bos-services.yaml 登记 4 个双向任务端点并通过 check-resident-bos.py 校验
+  - 交付 projects/omo/src/omo/resident/task_queue.py，支持 submit/poll/complete/fail 状态机
+  - resident-orchestrator-daemon.py 支持在周期 tick 中拉取并执行就绪任务
+  verify:
+  - cmd: uv run pytest projects/omo/tests/unit/test_resident_task_queue.py -q
+    expect: exit 0
+  - cmd: python3 bin/gac/check-resident-bos.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - .omo/_truth/registry/bos-services.yaml
+  - projects/omo/src/omo/resident/resident-routes.yaml
+  - projects/omo/src/omo/resident/task_queue.py
+  - projects/omo/src/omo/resident/daemon.py
+  - projects/omo/tests/unit/test_resident_task_queue.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-125.md
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 任务队列入队必须具备最大长度上限保护（默认 1000）；队列溢出时拒绝入队并发出降级告警。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T10-05
+- id: BET-Y1Q4-T8-21
+  track: T8-SURFACE
+  window: Y1Q4
+  title: 常驻决策提案 (Decision Proposals) 闭环消费与 Cockpit 审批自进化通道 (Decision Proposals Closeout & Cockpit Triage)
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 打通 .omo/_knowledge/decision-proposals/ 积累的 80+ 份提案与 138 条建议至 Cockpit 呈递面；提供 cockpit resident decision triage CLI 与 Web 仪表盘待办卡片；支持人类一键批准将高价值建议结晶为 3Y-BET-LEDGER 新 Bet 或架构 ADR，消除资产积压。
+  non_goals:
+  - 不做未经人类确认的全自动生产代码合入
+  - 不删除历史提案原始内容（保持不可篡改追溯）
+  done_when:
+  - Cockpit Web 与 CLI 提供决策提案审查入口，支持按 S2/L3 与事件类型聚合过滤
+  - 提供 cockpit resident decision approve 自动化转换工具，一键生成标准 Bet YAML 模板
+  - 存量 80 份提案完成状态标记归档（reviewed / promoted / dismissed）
+  verify:
+  - cmd: uv run pytest projects/cockpit/tests/test_resident_decision_triage.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/web/api_reflection.py
+  - projects/cockpit/src/cockpit/cli/resident_cli.py
+  - projects/omo/src/omo/resident/decision.py
+  - projects/cockpit/tests/test_resident_decision_triage.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+  risk_level: L1
+  human_gate: true
+  circuit_breaker: 自动结晶为 Bet 时必须经严格 Schema 校验与人类最终确认，禁止向主台账写入未审核草稿。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T10-125
+- id: BET-Y1Q4-T6-23
+  track: T6-EVOLUTION
+  window: Y1Q4
+  title: Resident Daemon 与 AGE-v2 CellPool 算力池合体调度 (Resident Daemon & Agent Cell Elastic Pool Integration)
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 将具备动态扩缩容（80% 扩容，30% 缩容）、故障转移与 Episode 分配的 CellPool 接入 Resident Daemon 执行引擎；当收到高耗时推理、深度巡检或代码演进任务时，动态唤醒 1~4 个隔离的 Agent Cell 实例并发分发，任务结束自动休眠与回收。
+  non_goals:
+  - 不修改现有单步本地执行回退通路
+  - 不允许单个 Cell 突破主机算力内存配额
+  done_when:
+  - projects/omo/src/omo/resident/execute.py 原生挂载 CellPool 弹性调度路由
+  - 支持在单机多进程/协程模式下隔离运行 Cell，具备显存与超时超限熔断保护
+  - 真实并发调度与异常恢复测试用例全部通过
+  verify:
+  - cmd: uv run pytest projects/omo/tests/test_resident_cell_pool_exec.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/execute.py
+  - projects/omo/src/omo/resident/cell_pool.py
+  - projects/omo/tests/test_resident_cell_pool_exec.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-23.md
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 单个 Cell 执行超时（默认 120s）强制终止并隔离状态；Cell 崩溃时自动故障转移，不影响守护进程主循环。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T10-125
+- id: BET-Y1Q4-T10-126
+  track: T10-MATURITY
+  window: Y1Q4
+  title: Resident 只读观测零锁加固与 WAL 并发防腐 (Zero-Lock Read-Only Status & SQLite WAL Robustness)
+  appetite: 1 day
+  priority: P0
+  status: candidate
+  goal: 重构 projects/omo/src/omo/resident/status.py 与 ledger_check.py，确保所有健康探测均使用真正的无锁只读 URI（file:...mode=ro）；彻底消除低版本 Python SQLite 环境因安全模式校验误尝试降级 journal_mode 引发的锁争用，确保 make resident-status 在任意环境 100% 幂等瞬时返回。
+  non_goals:
+  - 不修改后台 Daemon 写入 SQLite WAL 账本的核心事务协议
+  done_when:
+  - status.py 探测过程完全杜绝写锁申请与模式变更 PRAGMA，使用只读 URI 连接
+  - 在后台 Daemon 处于持续写入状态下，并发执行 100 次 status.py 零报错、零锁死
+  - make resident-status 在各开发环境与 CI 环境均稳定返回 recovered/healthy
+  verify:
+  - cmd: uv run pytest projects/omo/tests/unit/test_resident_status.py -q
+    expect: exit 0
+  - cmd: make resident-status
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/status.py
+  - projects/omo/src/omo/resident/ledger_check.py
+  - projects/omo/tests/unit/test_resident_status.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-126.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 只读探测如遇异常，必须以只读降级状态输出 JSON，严禁尝试对数据库文件进行任何形式的写操作或锁修复。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T10-05
