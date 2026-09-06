@@ -144,6 +144,20 @@ python3 bin/ssot/doc-ssot-lint.py --json       # 机器可读 JSON (gac-healthch
 4. 根文档更新 — CLAUDE.md / AGENTS.md 引用本契约
 5. 子项目文档清理 — 逐步将硬编码指针化 (本批次已完成大部分)
 
+## 文档生命周期规则 (T6-17 / T6-22, 2026-09-06)
+
+一次性文档（总结/交接/审计/closeout 报告）生命周期结束必须归档，不得在顶层留存：
+
+1. **ephemeral 标记**: 一次性文档 frontmatter 写 `type: ephemeral` + `status: completed`（完成后）
+2. **归档目标**: `.omo/_knowledge/design/plans/archive/`（注意: `.omo/_archive/` 被 .gitignore 忽略，不可用）
+3. **归档执行**: `python3 bin/ssot/doc-lifecycle.py archive`（按 frontmatter 判定，非 mtime）
+4. **反向指针 (circuit_breaker)**: 归档后原位置写指针文件（`<!-- 已归档 → <dest> -->` + 新路径说明），防止死链；指针文件由 doc-lifecycle 扫描豁免
+5. **引用指针化**: 其他文档引用同步改为归档路径（不指向顶层原路径）
+6. **生成文档豁免**: `docs/generated/*`、`docs/reports/*`（生成报告）、`docs/repository-health.md` 是派生产物，**不手改 frontmatter**，由生成器管理
+7. **子模块豁免**: `projects/*/` 下文档归各子仓维护，主仓 doc-lifecycle 不修改
+
+执行工具: `bin/ssot/doc-lifecycle.py`（audit / archive / lint 三子命令，与 doc-ssot-lint 共用扫描范围）
+
 ## 维护模式 (BET-Y1Q3-T6-06, 2026-08-17)
 
 doc-ssot-lint 已达 0 违规基线 (185 文件)。**文档治理进入纯维护模式**：

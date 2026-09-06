@@ -104,3 +104,48 @@ bet: BET-Y1Q4-T6-17
 ## 6. 子仓说明
 
 16 个子仓各自维护 .md，SSOT 判定需各仓 maintainer 配合（T6-17 risks 已记录）。本次仅盘点主仓。
+
+---
+
+## 7. T6-22 执行结果（2026-09-06 增补）
+
+> 增补：BET-Y1Q4-T6-22（文档生命周期去重指针化）执行后状态
+> 工具：`bin/ssot/doc-lifecycle.py` audit / archive（frontmatter 判定，非 mtime）
+
+### 7.1 已归档（completed ephemeral，原位置保留反向指针）
+
+| 文档 | 归档目标 |
+|------|----------|
+| `ROADMAP.md` | `.omo/_knowledge/design/plans/archive/ROADMAP.md` |
+| `docs/reports/2026-09-05-obj-value-portfolio-split.md` | `.omo/_knowledge/design/plans/archive/docs/reports/…` |
+| `docs/reports/2026-09-05-t1-13-portfolio-status-broker-closeout.md` | `.omo/_knowledge/design/plans/archive/docs/reports/…` |
+| `docs/reports/2026-09-05-t9-02-ledger-lock-monitor-tick-wiring-closeout.md` | `.omo/_knowledge/design/plans/archive/docs/reports/…` |
+
+### 7.2 已补 frontmatter（原 no-frontmatter → 有标注）
+
+- `BRIEF.md`（documentation）、`LAYER-INDEX.md`（ssot）
+- `docs/INDEX-MCP.md`、`docs/SYSTEM-INDEX.md`（documentation）
+- `projects/AGENTS.md`（ssot）、`projects/README.md`（documentation）
+- `projects/knowledge/AGENTS.md`（ssot）、`projects/knowledge/README.md`（documentation）
+
+### 7.3 重复文档组复核结论
+
+| 组 | 复核结论 | 处置 |
+|----|----------|------|
+| `docs/reports/architecture-health-weekly.md` vs `-20260906.md` | 内容相同（T6-18 生成周报，LIVE+快照） | 豁免（生成器管理） |
+| `projects/*/GOVERNANCE.md`（6 份 + 2 份） | 跨子项目各自维护 | 误报，豁免 |
+| `docs/ARCHITECTURE-EVOLUTION.md` vs `-2026H2.md` | 语义互补（ssot 契约 vs H2 实施方案，37 vs 3 引用） | 非重复，不合并 |
+
+### 7.4 doc-lifecycle 工具修复
+
+| 修复 | 说明 |
+|------|------|
+| ARCHIVE_DIR | `.omo/_archive`（被 .gitignore）→ `.omo/_knowledge/design/plans/archive` |
+| audit_ephemeral | mtime>90 天 → frontmatter `type: ephemeral + status: completed`（T6-17 约定） |
+| cmd_archive | 归档后源位置写反向指针文件（circuit_breaker，防死链） |
+| SCAN_GLOBS | 固定文件列表 → `*.md`（覆盖 ROADMAP.md 等根目录 ephemeral） |
+| find_md_files | 排除本工具生成的指针文件（`<!-- 已归档` 开头） |
+
+### 7.5 归档约定固化
+
+`.omo/standards/doc-ssot-contract.md` 新增「文档生命周期规则」段（ephemeral 归档 + 反向指针 + 生成物/子模块豁免）。

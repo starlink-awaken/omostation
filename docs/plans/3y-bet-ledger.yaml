@@ -2521,6 +2521,11 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 归档与合并操作必须保留原有相对路径的反向软链或指针说明文件，绝不允许引发已有代码或测试的死链（broken links）。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t6-22-doc-lifecycle-engine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d7853af8948a0cd6b1561e476d86a4b5091fed6aae60170f3b05999a2af36a6e
+    decision_ref: decision://accepted/BET-Y1Q4-T6-22
   retro: required
   depends_on:
   - BET-Y1Q4-T6-17
