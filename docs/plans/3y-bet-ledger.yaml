@@ -25681,3 +25681,167 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T6-26
+
+- id: BET-Y1Q4-T10-127
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 仓库维护任务 Cron 化 — 分支/Tags/Worktree 自动清理
+  appetite: 2-3 days
+  priority: P0
+  status: candidate
+  goal: 将仓库维护任务自动化并接入 cron 定时执行，包括僵尸 worktree 清理、过期分支 TTL 强制执行、README 硬编码数据检测，以及自动生成仓库健康度周报。
+  non_goals:
+  - 不修改现有 git hook 逻辑
+  - 不影响正常开发流程
+  - 不删除活跃分支
+  done_when:
+  - 配置 3 个 cron job（每周一 worktree 清理、每周日 TTL 强制执行、每日 README 检测）
+  - 自动生成 docs/repository-health.md 周报
+  - 过期分支自动删除（dry-run 一周确认无误）
+  - 过期 worktree 自动清理
+  verify:
+  - cmd: crontab -l | grep -q "prune-zombie-worktrees"
+    expect: exit 0
+  - cmd: crontab -l | grep -q "branch-ttl-gate"
+    expect: exit 0
+  - cmd: crontab -l | grep -q "check-readme-hardcoded"
+    expect: exit 0
+  - cmd: test -f docs/repository-health.md
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/prune-zombie-worktrees.py
+  - bin/gac/branch-ttl-gate.py
+  - bin/gac/check-readme-hardcoded.py
+  - docs/repository-health.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-127.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: cron 任务失败时记录日志并发送通知，不自动重试，防止误删活跃分支。
+  retro: required
+
+- id: BET-Y1Q4-T10-128
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 并发 Agent 分支命名空间隔离 — 防冲突与自动清理
+  appetite: 1-2 days
+  priority: P0
+  status: candidate
+  goal: 为并发 agent 分支引入命名空间隔离（agent/{actor_id}/ 前缀），防止分支命名冲突，并自动清理过期 agent 分支。
+  non_goals:
+  - 不修改现有 work/ 前缀分支
+  - 不影响已存在的 agent 分支
+  done_when:
+  - gac-worktree.sh claim 强制使用 agent/{actor_id}/ 命名空间
+  - 自动清理 >7天无活动的 agent/ 前缀分支
+  - D2 branch_occupancy 恢复为 conditional active
+  verify:
+  - cmd: bash bin/gac/gac-worktree.sh claim test-session-1788690971 2>&1 | grep -q "agent/"
+    expect: exit 0
+  - cmd: python3 bin/gac/check-branch-naming.py --branch "agent/test/session" --policy .omo/_truth/registry/branch-prefix-policy.yaml
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/gac-worktree.sh
+  - bin/gac/swarm-discipline-cli.py
+  - .omo/_truth/registry/branch-prefix-policy.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-128.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 命名空间冲突时阻断创建并提示重命名，不自动覆盖。
+  retro: required
+- id: BET-Y1Q4-T10-129
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 子模块生命周期管理 — 指针同步/分支清理/Tags 管理
+  appetite: 2-3 days
+  priority: P1
+  status: candidate
+  goal: 建立子模块生命周期管理体系，包括指针漂移检测、过期远程分支清理、Tags 管理，以及子模块健康报告。
+  non_goals:
+  - 不修改子模块源码
+  - 不影响子模块正常开发
+  done_when:
+  - 每周自动检查子模块指针漂移
+  - 子模块远程分支定期 prune（已合入 main 的）
+  - 子模块 tags 定期清理
+  - 子模块健康报告生成
+  verify:
+  - cmd: python3 bin/gac/check-submodule-consistency.py --fail-on-drift
+    expect: exit 0
+  - cmd: test -f docs/submodule-health.md
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/check-submodule-consistency.py
+  - bin/gac/branch-ttl-gate.py
+  - docs/submodule-health.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 子模块指针回退时阻断并提醒，不自动修复。
+  retro: required
+- id: BET-Y1Q4-T10-130
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 仓库健康度可视化 — 周报自动生成与趋势分析
+  appetite: 1-2 days
+  priority: P1
+  status: candidate
+  goal: 实现仓库健康度可视化，自动生成包含分支数/Tags 数/worktree 数/松散对象/悬空跟踪等指标的周报，并提供趋势分析。
+  non_goals:
+  - 不修改现有仓库结构
+  - 不影响正常开发流程
+  done_when:
+  - 自动生成 docs/repository-health.md 周报
+  - 包含趋势数据（每周采样）
+  - 异常自动告警
+  verify:
+  - cmd: test -f docs/repository-health.md
+    expect: exit 0
+  - cmd: grep -q "分支数" docs/repository-health.md
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/repository-health.md
+  - bin/gac/repo-health-metrics.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-130.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 数据采集失败时跳过该指标，不影响其他指标采集。
+  retro: required
+- id: BET-Y1Q4-T10-131
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 网络稳定性集成 — git-retry 与 HTTPS 自动切换
+  appetite: 1 day
+  priority: P2
+  status: candidate
+  goal: 将 git-retry.sh 集成到 push 流程，检测 SSH 连通性并在失败时自动切换到 HTTPS，解决 LibreSSL 超时问题。
+  non_goals:
+  - 不修改 git 配置
+  - 不影响现有 push 流程
+  done_when:
+  - push 自动重试（最多 3 次）
+  - SSH 失败自动切 HTTPS
+  - 网络异常不影响正常开发
+  verify:
+  - cmd: bash bin/gac/git-retry.sh --help
+    expect: exit 0
+  - cmd: grep -q "git-retry" bin/gac/gac-worktree.sh
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/git-retry.sh
+  - bin/gac/gac-worktree.sh
+  - .githooks/pre-push
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-131.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 重试 3 次后仍失败则报错，不无限重试。
+  retro: required
