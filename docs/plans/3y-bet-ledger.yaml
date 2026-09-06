@@ -3111,6 +3111,11 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: cron 任务失败时记录日志并发送通知，不自动重试，防止误删活跃分支。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-repo-maintenance-cron-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:218dc8171b6ae851d578155b8f3b2372b9f09815bc6ca2d095f6a42361c619f3
+    decision_ref: decision://accepted/BET-Y1Q4-T10-127
   retro: required
 
 - id: BET-Y1Q4-T10-128
