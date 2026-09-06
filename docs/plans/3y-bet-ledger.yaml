@@ -24645,6 +24645,7 @@ bets:
   appetite: 2 days
   priority: P0
   status: done
+  done_at: 2026-09-06 09:50:00+00:00
   goal: 将 ADR-0191 长期处于 DESIGN-ONLY 的 E-DOC-001~005 边界规则正式接线入 MOF 规则引擎与 CI 门禁，实现 Documents 内容平面零脚本、零构建缓存、零跨域裸写与客户端配置防漂移硬拦截。
   non_goals:
   - 不物理删除历史已归档的旧代码文件（由归档迁移负责）
