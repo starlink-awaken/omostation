@@ -3150,48 +3150,46 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: cron 任务失败时记录日志并发送通知，不自动重试，防止误删活跃分支。
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@0e6d649d53ea4b2e13ffd109783a76f5a0f99598
-          tests:
-            ref: receipt://docs/superpowers/specs/2026-09-06-repo-maintenance-cron-spec.md
-            sha256: sha256:218dc8171b6ae851d578155b8f3b2372b9f09815bc6ca2d095f6a42361c619f3
-          diff:
-            ref: receipt://docs/superpowers/specs/2026-09-06-repo-maintenance-cron-spec.md
-            sha256: sha256:218dc8171b6ae851d578155b8f3b2372b9f09815bc6ca2d095f6a42361c619f3
-          rollback:
-            ref: receipt://docs/superpowers/specs/2026-09-06-repo-maintenance-cron-spec.md
-            sha256: sha256:218dc8171b6ae851d578155b8f3b2372b9f09815bc6ca2d095f6a42361c619f3
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-127.md
-            sha256: sha256:8660d54859a26574263f736a516c14927c66d03955cf0da1a755599d8ed2afe0
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-127.md
-            sha256: sha256:8660d54859a26574263f736a516c14927c66d03955cf0da1a755599d8ed2afe0
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-127.md
-            sha256: sha256:8660d54859a26574263f736a516c14927c66d03955cf0da1a755599d8ed2afe0
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-127.md
-            sha256: sha256:8660d54859a26574263f736a516c14927c66d03955cf0da1a755599d8ed2afe0
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-  value_indicator_policy: false
+
+- id: BET-Y1Q4-T10-134
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 门禁迭代 — Gatekeeper baseline/grace + hook-runner 处方化报错
+  appetite: 1 days
+  priority: P1
+  status: candidate
+  goal: 消灭门禁两类摩擦 — 全量 Gatekeeper 存量违规"谁撞谁倒霉" (M2 baseline/grace
+    范式推广 — 存量进 grace 清单降级 warn, shrink_only) 与 hook-runner 失败无处方
+    (manifest 加 fix 字段, 失败时打印可复制修复命令)。
+  non_goals:
+  - 不放松任何 blocking 语义 (新违规仍硬失败)
+  - 不改 hook 脚本本身逻辑
   accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-06-repo-maintenance-cron-spec.md
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-gate-baseline-prescription-spec.md
     spec_version: 1.0.0
-    content_digest: sha256:218dc8171b6ae851d578155b8f3b2372b9f09815bc6ca2d095f6a42361c619f3
-    decision_ref: decision://accepted/BET-Y1Q4-T10-127
+    content_digest: sha256:f44a9be6136d60a940e1bc5dd0dec53f58d0f48fbe51adbe53c10da277e9f79b
+    decision_ref: decision://accepted/BET-Y1Q4-T10-134
+  done_when:
+  - contract_gatekeeper --baseline 命中存量 → exit 0, 新违规仍 FAIL
+  - hook-runner 失败打印 fix 处方 (script-registry 实测)
+  - grace 清单 shrink_only 声明落盘
+  verify:
+  - cmd: python3 projects/omo/scripts/contract_gatekeeper.py --baseline .omo/_truth/registry/gatekeeper-grace.yaml projects/cockpit/src 2>&1
+    expect: voice_memo 命中 grace 且 exit 0
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/scripts/contract_gatekeeper.py
+  - bin/gac/hook-runner.sh
+  - .omo/_truth/registry/hook-manifest.yaml
+  - .omo/_truth/registry/gatekeeper-grace.yaml
+  - bin/ssot/verify-omo.sh
+  - docs/superpowers/specs/2026-09-07-gate-baseline-prescription-spec.md
+  pasw_required: false
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: baseline 只降级存量打印不改判定核心; grace 清单被滥用 (增长) 时 revert 整个机制
+  retro: required
   retro: required
 
 - id: BET-Y1Q4-T10-128
