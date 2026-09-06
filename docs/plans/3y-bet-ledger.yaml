@@ -3368,6 +3368,20 @@ bets:
   human_gate: false
   circuit_breaker: 子模块指针回退时阻断并提醒，不自动修复。
   retro: required
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c1e3db34a191277c0d26567038b19fcfc7d63b0e
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-129.md
 - id: BET-Y1Q4-T10-130
   track: T10-MATURITY
   window: Y1Q4
