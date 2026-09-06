@@ -20365,7 +20365,8 @@ bets:
   priority: P2
   status: done
   done_at: 2026-09-05 13:00:00+00:00
-  note: skill 41 个 + spec + retro + gac-worktree.sh 改动已 ship; 本 bet 补 CE matrix + flip status (strategic-panorama worktree 先前 re-verted).
+  note: skill 41 个 + spec + retro + gac-worktree.sh 改动已 ship; 本 bet 补 CE matrix +
+    flip status (strategic-panorama worktree 先前 re-verted).
   goal: 复盘 2026-09-04~05 会战 (9 交付 3 病灶模式), 固化 gitlink 假失败分诊 (PITFALL-GAT-007)、BET
     闭环 8 步 skill、submit auto-rebase 预防层、 scene-shadow-activate 参数纠偏; 挂账 omo 死链与 calibration
     语义统一。
@@ -20448,10 +20449,10 @@ bets:
   priority: P3
   status: done
   done_at: 2026-09-05 23:50:00+00:00
-  note: omo + ecos 子模块 commit (e11b30a76) 已在工作树合入, 死链清理 + registry 注记 ship; 本 bet 补 spec + retro + flip status.
-  goal: T7-03 归一后的两个悬挂引用 — ① omo 子模块 phase15/16 指向不存在的
-    .omo/_truth/scenarios/research-pipeline.yaml (迁移前已断); ② ecos registry
-    scene-cards.yaml 作为第四家存储 (scene-card-review 头部 SSOT 注记指向它)。
+  note: omo + ecos 子模块 commit (e11b30a76) 已在工作树合入, 死链清理 + registry 注记 ship; 本 bet
+    补 spec + retro + flip status.
+  goal: T7-03 归一后的两个悬挂引用 — ① omo 子模块 phase15/16 指向不存在的 .omo/_truth/scenarios/research-pipeline.yaml
+    (迁移前已断); ② ecos registry scene-cards.yaml 作为第四家存储 (scene-card-review 头部 SSOT 注记指向它)。
   non_goals:
   - 不改场景卡本体
   done_when:
@@ -20524,10 +20525,9 @@ bets:
   priority: P3
   status: done
   done_at: 2026-09-05 23:35:00+00:00
-  note: T7-03 (PR #3226, commit 7494bb127) 已实现 storage 归一 + lifecycle 5 档同源; 本 bet 补 T7-05 专用 spec + retro + flip status.
-  goal: T7-03 迁移后 calibration (review 工具) 与五档 tier (lifecycle 工具) 已同源
-    读取 docs/scene-cards, 但语义未统一 — assisted 升级门以 readiness (trial 证据)
-    为准, calibration 0.65 只是随卡字段。统一二者为单一路径或在标准里明确分工。
+  note: T7-03 (PR
+  goal: T7-03 迁移后 calibration (review 工具) 与五档 tier (lifecycle 工具) 已同源 读取 docs/scene-cards,
+    但语义未统一 — assisted 升级门以 readiness (trial 证据) 为准, calibration 0.65 只是随卡字段。统一二者为单一路径或在标准里明确分工。
   non_goals:
   - 不改 readiness 门 (T7-02 刚固化)
   done_when:
@@ -20550,7 +20550,7 @@ bets:
     content_digest: sha256:39ff89f62144a91ab8c23de585a8bf8f6d6219c8a88f0eeb6eb367dce8115fc2
     decision_ref: decision://accepted/BET-Y2Q1-T7-05
   circuit_breaker: review 工具改动若破坏 weekly-report 消费方则回退
-  retro: required
+  retro: .omo/_knowledge/retros/BET-Y2Q1-T7-05.md
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -20589,7 +20589,6 @@ bets:
     overall_state: delivery_accepted
   value_indicator_policy: false
   close_evidence: .omo/_knowledge/retros/BET-Y2Q1-T7-05.md
-  retro: .omo/_knowledge/retros/BET-Y2Q1-T7-05.md
 - id: BET-Y2Q1-T10-01
   track: T10-MATURITY
   window: Y2Q1
@@ -20730,7 +20729,6 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:1ed2a069d26065234665a0315e1eeebd6a2b23fa72b114021ccd0a6f69df613b
     decision_ref: decision://accepted/BET-Y2Q2-T6-01
-  # 2026-09-06 write-surface completion (pre-claim): tests/INDEX/ledger 预置
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -24105,7 +24103,9 @@ bets:
   priority: high
   status: done
   done_at: '2026-09-05T13:30:00+00:00'
-  close_evidence: 主仓 3216 .md 盘点报告入库 (docs/reports/doc-ssot-inventory-2026-09-05.md) + 3 个 completed ephemeral 顶层文档归档 .omo/_knowledge/design/plans/archive/ + 2 retro 引用指针化 + AGENTS.md 归档约定对齐; doc-ssot-lint exit 0
+  close_evidence: 主仓 3216 .md 盘点报告入库 (docs/reports/doc-ssot-inventory-2026-09-05.md)
+    + 3 个 completed ephemeral 顶层文档归档 .omo/_knowledge/design/plans/archive/ + 2 retro
+    引用指针化 + AGENTS.md 归档约定对齐; doc-ssot-lint exit 0
   retro: .omo/_knowledge/retros/BET-Y1Q4-T6-17.md
   goal: 主仓+子仓所有 .md 文档 SSOT 判定，重复内容收敛，过时文档归档
   done_when:
@@ -24137,7 +24137,8 @@ bets:
   priority: high
   status: done
   done_at: 2026-09-05 13:00:00+00:00
-  note: 交付 arch-health-meter.py + weekly wrap + 6-dim standard + launchd snippet. verify all PASS.
+  note: 交付 arch-health-meter.py + weekly wrap + 6-dim standard + launchd snippet.
+    verify all PASS.
   goal: 定义场景/架构/进化/运维/防腐/感知 6 维度量化指标，每周自动生成报告
   done_when:
   - 6 维度指标定义文档
@@ -24725,16 +24726,19 @@ bets:
   priority: P0
   status: done
   done_at: 2026-09-06 09:50:00+00:00
-  goal: 将 ADR-0191 长期处于 DESIGN-ONLY 的 E-DOC-001~005 边界规则正式接线入 MOF 规则引擎与 CI 门禁，实现 Documents 内容平面零脚本、零构建缓存、零跨域裸写与客户端配置防漂移硬拦截。
+  goal: 将 ADR-0191 长期处于 DESIGN-ONLY 的 E-DOC-001~005 边界规则正式接线入 MOF 规则引擎与 CI 门禁，实现 Documents
+    内容平面零脚本、零构建缓存、零跨域裸写与客户端配置防漂移硬拦截。
   non_goals:
   - 不物理删除历史已归档的旧代码文件（由归档迁移负责）
   - 不修改 Documents 物理目录中已受保护的真实业务事实
   done_when:
   - 交付 bin/gac/check-documents-boundary.py，覆盖可执行文件扫描、环境依赖检测、跨域写入拦截与客户端配置一致性检查
-  - 在 .omo/_truth/registry/governance-checks.yaml 注册 E-DOC-001~005 检查项，并接入 make gac-local-gate 与 pre-commit
+  - 在 .omo/_truth/registry/governance-checks.yaml 注册 E-DOC-001~005 检查项，并接入 make gac-local-gate
+    与 pre-commit
   - 编写违规样本注入测试，验证拦截率 100% 且准确输出自愈修复建议（Diagnostic Envelope）
   verify:
-  - cmd: uv run --with pyyaml python bin/gac/check-documents-boundary.py --documents-root /Users/xiamingxing/Documents --json
+  - cmd: uv run --with pyyaml python bin/gac/check-documents-boundary.py --documents-root
+      /Users/xiamingxing/Documents --json
     expect: exit 0 with ok=true
   - cmd: uv run pytest tests/test_documents_boundary_check.py -q
     expect: exit 0
@@ -24766,7 +24770,8 @@ bets:
   appetite: 3 days
   priority: P1
   status: candidate
-  goal: 终态收敛 documents-content-plane-migrations.yaml 中停滞的 9 个 pending 家族：对 5 大内容归档族（career/family/learning/work/creative-content-archives）实施只读哈希冻结，清理并重定位 toolbox-staging、zotero-app-data 与 root-oneoff-assets，将 non_terminal_families 数量大幅压缩。
+  goal: 终态收敛 documents-content-plane-migrations.yaml 中停滞的 9 个 pending 家族：对 5 大内容归档族（career/family/learning/work/creative-content-archives）实施只读哈希冻结，清理并重定位
+    toolbox-staging、zotero-app-data 与 root-oneoff-assets，将 non_terminal_families 数量大幅压缩。
   non_goals:
   - 不介入正在进行 Phase B 验证的 family-dashboard-app
   - 不删除用户的真实个人与家庭文档资产
@@ -24775,7 +24780,8 @@ bets:
   - 将 toolbox-staging 中的 DeepTutor 彻底重定位至 Workspace，并在 Documents 留下只读指针
   - documents-content-plane-migration-check.py 的 non_terminal_families 减少至少 7 个家族
   verify:
-  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py --json
+  - cmd: uv run --with pyyaml python bin/gac/documents-content-plane-migration-check.py
+      --json
     expect: exit 0 with non_terminal_families count <= 6
   - cmd: make gac-local-gate
     expect: exit 0
@@ -24799,16 +24805,21 @@ bets:
   appetite: 2 days
   priority: P0
   status: candidate
-  goal: 修复 documents_domain_jobs.py 对 runtime-learning 任务的 Schema 缺失与校验崩溃，恢复 documents-domain-project-check.py 绿灯；并将 7 个 manual 运行时巡检任务接入常态化自动化管道（launchd/crontab 调度），定时产出结构化 evidence 并汇入 Cockpit 驾驶舱事实面。
+  goal: 修复 documents_domain_jobs.py 对 runtime-learning 任务的 Schema 缺失与校验崩溃，恢复 documents-domain-project-check.py
+    绿灯；并将 7 个 manual 运行时巡检任务接入常态化自动化管道（launchd/crontab 调度），定时产出结构化 evidence 并汇入 Cockpit
+    驾驶舱事实面。
   non_goals:
   - 不在 Documents 物理目录启动常驻守护进程
   - 不新增未经 ADR 审议的第 8 个 runtime job
   done_when:
-  - bin/gac/documents_domain_jobs.py 完整实现 runtime-learning 校验器，包含 audit_concept_decay 与 list_orphan_concepts 契约
+  - bin/gac/documents_domain_jobs.py 完整实现 runtime-learning 校验器，包含 audit_concept_decay
+    与 list_orphan_concepts 契约
   - documents-domain-project-check.py 针对全量 12 域及 7 个 jobs 校验返回 ok=true 零错误
   - 7 个 jobs 配置规范的 host-level 定时调度与 evidence 生成验证
   verify:
-  - cmd: uv run --with pyyaml python bin/gac/documents-domain-project-check.py --domain-registry /Users/xiamingxing/Documents/@公共/_control/L4-DOMAIN-REGISTRY.yaml --project-registry .omo/_truth/registry/documents-domain-projects.yaml --json
+  - cmd: uv run --with pyyaml python bin/gac/documents-domain-project-check.py --domain-registry
+      /Users/xiamingxing/Documents/@公共/_control/L4-DOMAIN-REGISTRY.yaml --project-registry
+      .omo/_truth/registry/documents-domain-projects.yaml --json
     expect: exit 0 with ok=true and errors=[]
   - cmd: uv run pytest tests/test_documents_domain_project_check.py -q
     expect: exit 0
@@ -24824,7 +24835,8 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T10-124.md
   risk_level: L1
   human_gate: false
-  circuit_breaker: 修复校验器必须保持向后兼容；自动化 cron 失败时只能记录 fail-closed evidence，严禁向 Documents 物理目录写入任何重试临时文件。
+  circuit_breaker: 修复校验器必须保持向后兼容；自动化 cron 失败时只能记录 fail-closed evidence，严禁向 Documents
+    物理目录写入任何重试临时文件。
   retro: required
   depends_on:
   - BET-Y1Q4-T6-20
@@ -24835,12 +24847,15 @@ bets:
   appetite: 2 days
   priority: P1
   status: candidate
-  goal: 研发统一的客户端多端配置守护工具 bin/gac/documents-client-sync.py，消除 Claude Desktop 与 Codex 当前的 drift 报错；在 Agora/BOS 中构建统一的只读事实穿透网关（bos://documents/{domain}/{resource}），为 Agent 提供标准化的结构化数据查询与缓存服务。
+  goal: 研发统一的客户端多端配置守护工具 bin/gac/documents-client-sync.py，消除 Claude Desktop 与 Codex
+    当前的 drift 报错；在 Agora/BOS 中构建统一的只读事实穿透网关（bos://documents/{domain}/{resource}），为
+    Agent 提供标准化的结构化数据查询与缓存服务。
   non_goals:
   - 不修改第三方 IDE 自身的二进制文件或其非 Cockpit 配置
   - 不开放公网未经认证的端口服务
   done_when:
-  - 交付 bin/gac/documents-client-sync.py，支持 check 与 apply 模式，一键修复 Claude Desktop、Codex、Zed、ZCode 的配置漂移
+  - 交付 bin/gac/documents-client-sync.py，支持 check 与 apply 模式，一键修复 Claude Desktop、Codex、Zed、ZCode
+    的配置漂移
   - 在 Agora 中注册 bos://documents/* 统一只读事实服务路由与 Schema 校验
   - 单元测试与端到端模拟测试全部通过
   verify:
@@ -24871,7 +24886,9 @@ bets:
   appetite: 3 days
   priority: P1
   status: candidate
-  goal: 基于 T6-17 盘点发现，实现自动化的文档生命周期引擎 bin/ssot/doc-lifecycle.py：批量为无 frontmatter 的 226 篇文档补齐元数据，自动归档 723 篇 completed ephemeral 文档到归档目录，合并消歧架构与战略重复文档，打通主仓文档与 Documents 域知识文档的双向索引与新鲜度门禁。
+  goal: 基于 T6-17 盘点发现，实现自动化的文档生命周期引擎 bin/ssot/doc-lifecycle.py：批量为无 frontmatter 的
+    226 篇文档补齐元数据，自动归档 723 篇 completed ephemeral 文档到归档目录，合并消歧架构与战略重复文档，打通主仓文档与 Documents
+    域知识文档的双向索引与新鲜度门禁。
   non_goals:
   - 不删除任何具有历史决策价值的 ADR 或 Retro
   - 不破坏外部系统正在引用的稳定 URL 路径
@@ -24903,11 +24920,14 @@ bets:
 - id: BET-Y1Q4-T5-03
   track: T5-ORCH
   window: Y1Q4
-  title: Agora A2A 双向任务委派与 Resident Agent Card 协议接入 (A2A Task Delegation & Resident Agent Card)
+  title: Agora A2A 双向任务委派与 Resident Agent Card 协议接入 (A2A Task Delegation & Resident
+    Agent Card)
   appetite: 2 days
   priority: P0
   status: candidate
-  goal: 在 Agora MCP 中注册 resident-orchestrator 的标准 Agent Card（支持后台分析、深度巡检、对账等技能）；打通外部瞬态 Agent（Antigravity、Claude Code、Codex）通过 a2a_send_task 直接向常驻 Agent 委派长时后台任务，并通过 a2a_get_task 追踪进度与获取产物。
+  goal: 在 Agora MCP 中注册 resident-orchestrator 的标准 Agent Card（支持后台分析、深度巡检、对账等技能）；打通外部瞬态
+    Agent（Antigravity、Claude Code、Codex）通过 a2a_send_task 直接向常驻 Agent 委派长时后台任务，并通过
+    a2a_get_task 追踪进度与获取产物。
   non_goals:
   - 不重构 Agora 既有 A2A 核心调度协议
   - 不改变瞬态 Agent 自身的工作流生命周期
@@ -24933,7 +24953,6 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T10-05
-
 - id: BET-Y1Q4-T6-24
   track: T6-SUBTRACT
   window: Y1Q4
@@ -24943,21 +24962,27 @@ bets:
   value_indicator_policy: false
   status: done
   done_at: 2026-09-06
-  goal: 把散落在工作树的机制 22c hook 加固 WIP（hook-runner 调度引擎 + hook-manifest 声明式清单 + hook-installer + 12 个检查脚本）补完为可交付状态：补齐被引用的缺失脚本、修复 D1-D7 缺陷、将 canonical .githooks 接线到 runner、让 make install-hooks 统一走 hook-installer，并以"删除被替代的重复内联逻辑"做净减配平。
+  goal: 把散落在工作树的机制 22c hook 加固 WIP（hook-runner 调度引擎 + hook-manifest 声明式清单 + hook-installer
+    + 12 个检查脚本）补完为可交付状态：补齐被引用的缺失脚本、修复 D1-D7 缺陷、将 canonical .githooks 接线到 runner、让
+    make install-hooks 统一走 hook-installer，并以"删除被替代的重复内联逻辑"做净减配平。
   non_goals:
   - 不新增 hook 检查项（只修复/接线既有 22c 设计）
   - 不改变已 tracked 旧 hook 的既有行为语义
   - 不做新功能（如新 hook 触发点、远程 hook 服务）
   done_when:
   - hook-runner 能执行 manifest 声明的全部 hook 段（pre-commit/pre-push/post-checkout），缺失脚本补齐、引用路径修正
-  - canonical .githooks 接线完成：fresh clone 后 make install-hooks 走 hook-installer 写 git-dir/hooks 元数据（VERSION/.version/.content-hash 一致性），core.hooksPath 下 canonical 直接生效
-  - 修复 D1-D7 缺陷（blocking/timeout 参数错位、BLOCKING_FAILED 退出、macOS %N、stdin 消费、health-check hash 算法对齐等）
+  - canonical .githooks 接线完成：fresh clone 后 make install-hooks 走 hook-installer 写 git-dir/hooks
+    元数据（VERSION/.version/.content-hash 一致性），core.hooksPath 下 canonical 直接生效
+  - 修复 D1-D7 缺陷（blocking/timeout 参数错位、BLOCKING_FAILED 退出、macOS %N、stdin 消费、health-check
+    hash 算法对齐等）
   - hook-health-check.py --check 自检通过且新增缺失脚本均通过语法检查（bash -n / py_compile）
   - README/.githooks/README.md 更新为新架构，Makefile install-hooks 接入 hook-installer
   verify:
-  - cmd: python3 -m py_compile bin/gac/check-runtime-artifacts.py bin/gac/hook-health-check.py bin/gac/check-dangerous-rebase.py
+  - cmd: python3 -m py_compile bin/gac/check-runtime-artifacts.py bin/gac/hook-health-check.py
+      bin/gac/check-dangerous-rebase.py
     expect: exit 0
-  - cmd: bash -n bin/gac/hook-runner.sh bin/gac/hook-installer.sh .githooks/pre-merge-commit .githooks/pre-rebase .githooks/post-merge
+  - cmd: bash -n bin/gac/hook-runner.sh bin/gac/hook-installer.sh .githooks/pre-merge-commit
+      .githooks/pre-rebase .githooks/post-merge
     expect: exit 0
   - cmd: bash bin/gac/hook-installer.sh --check
     expect: exit 0
@@ -25018,8 +25043,6 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
-
-
 - id: BET-Y1Q4-T10-125
   track: T10-MATURITY
   window: Y1Q4
@@ -25027,7 +25050,8 @@ bets:
   appetite: 2 days
   priority: P0
   status: candidate
-  goal: 在 bos-services.yaml 与 resident-routes.yaml 中扩展双向任务端点（bos://resident/task/submit、bos://resident/task/status、bos://resident/sediment/trigger、bos://resident/decision/trigger）；在常驻内核中构建持久化任务就绪队列，守护进程在每次 tick 时拉取就绪任务并持久化状态机。
+  goal: 在 bos-services.yaml 与 resident-routes.yaml 中扩展双向任务端点（bos://resident/task/submit、bos://resident/task/status、bos://resident/sediment/trigger、bos://resident/decision/trigger）；在常驻内核中构建持久化任务就绪队列，守护进程在每次
+    tick 时拉取就绪任务并持久化状态机。
   non_goals:
   - 不引入外部 Redis 或消息中间件，依托本地原子事务文件与 SQLite 实现
   - 不修改现有只读状态服务的 URI 契约
@@ -25060,11 +25084,14 @@ bets:
 - id: BET-Y1Q4-T8-21
   track: T8-SURFACE
   window: Y1Q4
-  title: 常驻决策提案 (Decision Proposals) 闭环消费与 Cockpit 审批自进化通道 (Decision Proposals Closeout & Cockpit Triage)
+  title: 常驻决策提案 (Decision Proposals) 闭环消费与 Cockpit 审批自进化通道 (Decision Proposals Closeout
+    & Cockpit Triage)
   appetite: 3 days
   priority: P1
   status: candidate
-  goal: 打通 .omo/_knowledge/decision-proposals/ 积累的 80+ 份提案与 138 条建议至 Cockpit 呈递面；提供 cockpit resident decision triage CLI 与 Web 仪表盘待办卡片；支持人类一键批准将高价值建议结晶为 3Y-BET-LEDGER 新 Bet 或架构 ADR，消除资产积压。
+  goal: 打通 .omo/_knowledge/decision-proposals/ 积累的 80+ 份提案与 138 条建议至 Cockpit 呈递面；提供
+    cockpit resident decision triage CLI 与 Web 仪表盘待办卡片；支持人类一键批准将高价值建议结晶为 3Y-BET-LEDGER
+    新 Bet 或架构 ADR，消除资产积压。
   non_goals:
   - 不做未经人类确认的全自动生产代码合入
   - 不删除历史提案原始内容（保持不可篡改追溯）
@@ -25094,11 +25121,13 @@ bets:
 - id: BET-Y1Q4-T6-23
   track: T6-EVOLUTION
   window: Y1Q4
-  title: Resident Daemon 与 AGE-v2 CellPool 算力池合体调度 (Resident Daemon & Agent Cell Elastic Pool Integration)
+  title: Resident Daemon 与 AGE-v2 CellPool 算力池合体调度 (Resident Daemon & Agent Cell Elastic
+    Pool Integration)
   appetite: 3 days
   priority: P1
   status: candidate
-  goal: 将具备动态扩缩容（80% 扩容，30% 缩容）、故障转移与 Episode 分配的 CellPool 接入 Resident Daemon 执行引擎；当收到高耗时推理、深度巡检或代码演进任务时，动态唤醒 1~4 个隔离的 Agent Cell 实例并发分发，任务结束自动休眠与回收。
+  goal: 将具备动态扩缩容（80% 扩容，30% 缩容）、故障转移与 Episode 分配的 CellPool 接入 Resident Daemon 执行引擎；当收到高耗时推理、深度巡检或代码演进任务时，动态唤醒
+    1~4 个隔离的 Agent Cell 实例并发分发，任务结束自动休眠与回收。
   non_goals:
   - 不修改现有单步本地执行回退通路
   - 不允许单个 Cell 突破主机算力内存配额
@@ -25131,7 +25160,9 @@ bets:
   appetite: 1 day
   priority: P0
   status: candidate
-  goal: 重构 projects/omo/src/omo/resident/status.py 与 ledger_check.py，确保所有健康探测均使用真正的无锁只读 URI（file:...mode=ro）；彻底消除低版本 Python SQLite 环境因安全模式校验误尝试降级 journal_mode 引发的锁争用，确保 make resident-status 在任意环境 100% 幂等瞬时返回。
+  goal: 重构 projects/omo/src/omo/resident/status.py 与 ledger_check.py，确保所有健康探测均使用真正的无锁只读
+    URI（file:...mode=ro）；彻底消除低版本 Python SQLite 环境因安全模式校验误尝试降级 journal_mode 引发的锁争用，确保
+    make resident-status 在任意环境 100% 幂等瞬时返回。
   non_goals:
   - 不修改后台 Daemon 写入 SQLite WAL 账本的核心事务协议
   done_when:
@@ -25158,14 +25189,23 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T10-05
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-resident-readonly-zero-lock-wal-robustness.md
+    spec_version: 1.0.0
+    content_digest: sha256:0085ad0bdfaca904efb3a54ea00f96ec2ee123742ebe1d9b920922721f7c46c9
+    decision_ref: decision://accepted/BET-Y1Q4-T10-126
 - id: BET-Y1Q4-T5-04
   track: T5-ORCH
   window: Y1Q4
-  title: 主权连接器架构升级与 Kairon/Iris 外部数据源统一 BOS 网关化 (Sovereign Connector Fabric & Iris BOS Gateway)
+  title: 主权连接器架构升级与 Kairon/Iris 外部数据源统一 BOS 网关化 (Sovereign Connector Fabric & Iris
+    BOS Gateway)
   appetite: 2 days
   priority: P0
   status: candidate
-  goal: 将长期局限在 projects/knowledge/kairon/packages/iris/src/iris/connectors/ 内部的 15+ 种连接器（包含 local_files, obsidian, apple_mail, github, wechat 等）解耦提升为全系统统一的 Sovereign Connector Fabric；在 bos-services.yaml 中注册 bos://connectors/{source}/sync 与 bos://connectors/{source}/list 端点；并在 Agora MCP 中暴露统一的 connector_sync 工具；实现常驻 Agent 守护进程周期调度连接器增量拉取并汇入统一事件流。
+  goal: 将长期局限在 projects/knowledge/kairon/packages/iris/src/iris/connectors/ 内部的 15+
+    种连接器（包含 local_files, obsidian, apple_mail, github, wechat 等）解耦提升为全系统统一的 Sovereign
+    Connector Fabric；在 bos-services.yaml 中注册 bos://connectors/{source}/sync 与 bos://connectors/{source}/list
+    端点；并在 Agora MCP 中暴露统一的 connector_sync 工具；实现常驻 Agent 守护进程周期调度连接器增量拉取并汇入统一事件流。
   non_goals:
   - 不重写各连接器底层的协议解析代码
   - 不破坏 Kairon 现有的离线批处理能力
@@ -25197,11 +25237,15 @@ bets:
 - id: BET-Y1Q4-T6-25
   track: T6-EVOLUTION
   window: Y1Q4
-  title: OpenHuman 本地桥接器升级与多源健康生物标记物 Schema 归一化 (OpenHuman Local Bridge & Biometric Normalizer)
+  title: OpenHuman 本地桥接器升级与多源健康生物标记物 Schema 归一化 (OpenHuman Local Bridge & Biometric
+    Normalizer)
   appetite: 3 days
   priority: P1
   status: candidate
-  goal: 深度重构已有的 projects/knowledge/kairon/packages/iris/src/iris/connectors/openhuman/connector.py：新增本地 JSON-RPC 7788 看门狗与重试容错；引入 TokenJuice 风格的 HTML/JSON 高密 Markdown 压缩管道（平均降噪压缩 70%+）；借鉴 Open Humans 开源规范，实现 Apple HealthKit、CGM 连续血糖、Garmin/Fitbit 穿戴指标的统一归一化解析器（Biomarker Normalizer），并将清洗后的连续生理体征直通汇入 Family-Hub 与 bos://persona/health-profile/*。
+  goal: 深度重构已有的 projects/knowledge/kairon/packages/iris/src/iris/connectors/openhuman/connector.py：新增本地
+    JSON-RPC 7788 看门狗与重试容错；引入 TokenJuice 风格的 HTML/JSON 高密 Markdown 压缩管道（平均降噪压缩 70%+）；借鉴
+    Open Humans 开源规范，实现 Apple HealthKit、CGM 连续血糖、Garmin/Fitbit 穿戴指标的统一归一化解析器（Biomarker
+    Normalizer），并将清洗后的连续生理体征直通汇入 Family-Hub 与 bos://persona/health-profile/*。
   non_goals:
   - 不引入任何第三方云端托管中继（坚持本地 Local-First 与零凭据泄露）
   - 不修改外部硬件厂商固件
@@ -25211,7 +25255,8 @@ bets:
   - 实现 BiomarkerNormalizer，支持 Apple Health 导出 XML/JSON 与 CGM 血糖数据的归一化解析
   - 结构化体征数据成功在 Family-Hub 与 health-profile 事实投影中渲染
   verify:
-  - cmd: uv run pytest projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py -q
+  - cmd: uv run pytest projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py
+      -q
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
@@ -25230,7 +25275,6 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T5-04
-
 - id: BET-Y1Q4-T6-26
   track: T6-EVOLUTION
   window: Y1Q4
@@ -25238,7 +25282,10 @@ bets:
   appetite: 2 days
   priority: P0
   status: candidate
-  goal: 引入并集成开源 Semantica 核心架构（采用本地嵌入式 Oxigraph 存储后端与本地 SQLite 属性图，绝无外部云端依赖与数据外泄）；在 projects/knowledge/kairon 中构建轻量适配层，抽象 bos://decision/record、bos://decision/trace 与 bos://graph/reason 统一服务契约；完成与本地主权算力 AetherForge (bos://compute/aetherforge/infer) 的连通测试与 100% 确定性因果链回归测试。
+  goal: 引入并集成开源 Semantica 核心架构（采用本地嵌入式 Oxigraph 存储后端与本地 SQLite 属性图，绝无外部云端依赖与数据外泄）；在
+    projects/knowledge/kairon 中构建轻量适配层，抽象 bos://decision/record、bos://decision/trace
+    与 bos://graph/reason 统一服务契约；完成与本地主权算力 AetherForge (bos://compute/aetherforge/infer)
+    的连通测试与 100% 确定性因果链回归测试。
   non_goals:
   - 不引入外部云端托管图数据库（如云端 Neo4j/Neptune）
   - 不替代 gbrain 现有的双链工作记忆与个人笔记
@@ -25268,15 +25315,18 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T6-25
-
 - id: BET-Y1Q4-T5-05
   track: T5-ORCH
   window: Y1Q4
-  title: 常驻 Agent 2.0 决策因果图化与多 Agent 先例仲裁引擎 (Resident Agent Causal Graph & Precedent Arbitration)
+  title: 常驻 Agent 2.0 决策因果图化与多 Agent 先例仲裁引擎 (Resident Agent Causal Graph & Precedent
+    Arbitration)
   appetite: 2 days
   priority: P0
   status: candidate
-  goal: 全面升级常驻 Agent 2.0（Resident Daemon）的决策归因与多 Agent 协同仲裁机制：将所有自愈、巡检、告警与代码评审操作通过 bos://decision/record 写入因果图；当多 Agent 发生方案冲突或分支死锁时，基于 Semantica 的 find_similar_decisions 与先例库（Precedents）进行历史判例检索与自动加权裁决；在 Cockpit 看板呈递可交互的决策因果树（Sigma.js 渲染），并导出 W3C PROV-O 审计证据。
+  goal: 全面升级常驻 Agent 2.0（Resident Daemon）的决策归因与多 Agent 协同仲裁机制：将所有自愈、巡检、告警与代码评审操作通过
+    bos://decision/record 写入因果图；当多 Agent 发生方案冲突或分支死锁时，基于 Semantica 的 find_similar_decisions
+    与先例库（Precedents）进行历史判例检索与自动加权裁决；在 Cockpit 看板呈递可交互的决策因果树（Sigma.js 渲染），并导出 W3C PROV-O
+    审计证据。
   non_goals:
   - 不改变现有的 8 阶段 Harness DAG 主控状态机
   - 不影响人类夏明星的最终一票否决权（HITL）
@@ -25306,15 +25356,17 @@ bets:
   depends_on:
   - BET-Y1Q4-T6-26
   - BET-Y1Q4-T5-04
-
 - id: BET-Y1Q4-T6-27
   track: T6-EVOLUTION
   window: Y1Q4
-  title: GraphRAG 实体感知切片与 SHACL 架构形状验证引擎 (Entity-Aware Chunking & SHACL Architecture Validator)
+  title: GraphRAG 实体感知切片与 SHACL 架构形状验证引擎 (Entity-Aware Chunking & SHACL Architecture
+    Validator)
   appetite: 2 days
   priority: P1
   status: candidate
-  goal: 借鉴 Semantica 的实体与关系感知切片算法（Entity/Relation-Aware Chunking），重构 Iris 连接器与 Minerva 的文本分块流水线，确保多源长文档摄取时专有名词、业务实体与三元组永不跨 chunk 割裂；同时引入 W3C SHACL 形状验证器，将 eCOS 的道法术器（DFSQ）与场景卡生命周期状态机编纂为标准 SHACL Shapes，接入 make gac-local-gate 本地 CI 门禁，实现工业级拓扑断言。
+  goal: 借鉴 Semantica 的实体与关系感知切片算法（Entity/Relation-Aware Chunking），重构 Iris 连接器与 Minerva
+    的文本分块流水线，确保多源长文档摄取时专有名词、业务实体与三元组永不跨 chunk 割裂；同时引入 W3C SHACL 形状验证器，将 eCOS 的道法术器（DFSQ）与场景卡生命周期状态机编纂为标准
+    SHACL Shapes，接入 make gac-local-gate 本地 CI 门禁，实现工业级拓扑断言。
   non_goals:
   - 不推翻现有已归档的历史文档格式
   - 不影响现有快速文本搜索的延迟表现
@@ -25324,7 +25376,8 @@ bets:
   - CI 门禁中集成 SHACL 静态拓扑校验器，违规拓扑立刻拦截
   - 单元测试覆盖实体切分保全率与 SHACL 形状违例告警
   verify:
-  - cmd: uv run pytest projects/knowledge/kairon/tests/test_entity_chunking_shacl.py -q
+  - cmd: uv run pytest projects/knowledge/kairon/tests/test_entity_chunking_shacl.py
+      -q
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
@@ -25343,7 +25396,6 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T6-26
-
 - id: BET-Y1Q4-T7-04
   track: T7-SCENE
   window: Y1Q4
@@ -25351,7 +25403,9 @@ bets:
   appetite: 3 days
   priority: P0
   status: candidate
-  goal: 建立多 Agent 协作业务导航锚点与动态防跑偏护栏（SNARF）：抽象 bos://scene/anchor 握手协议，强制要求任何 Agent 执行复杂需求前必须绑定具体的 Scene Card 与 Journey 节点并签发场景飞行计划（Flight Plan）；在网关层建立 CapabilityJail（能力白名单拦截，越界即熔断）与 DataScopeGuard（数据读写围栏）；构建运行时偏离度雷达，彻底根绝多 Agent“自发散、自说自话、过度设计与破坏性越界”。
+  goal: 建立多 Agent 协作业务导航锚点与动态防跑偏护栏（SNARF）：抽象 bos://scene/anchor 握手协议，强制要求任何 Agent
+    执行复杂需求前必须绑定具体的 Scene Card 与 Journey 节点并签发场景飞行计划（Flight Plan）；在网关层建立 CapabilityJail（能力白名单拦截，越界即熔断）与
+    DataScopeGuard（数据读写围栏）；构建运行时偏离度雷达，彻底根绝多 Agent“自发散、自说自话、过度设计与破坏性越界”。
   non_goals:
   - 不废弃现有的 66 个受管场景卡 YAML 定义
   - 不替代已有的 Git worktree 隔离机制
@@ -25381,21 +25435,24 @@ bets:
   depends_on:
   - BET-Y1Q4-T5-05
   - BET-Y1Q4-T7-01
-
 - id: BET-Y1Q4-T7-05
   track: T7-SCENE
   window: Y1Q4
-  title: 业务场景五档生命周期自动巡航与金牌样例自学习闭环 (Autonomous Scene Lifecycle Cruiser & Golden Sample Loop)
+  title: 业务场景五档生命周期自动巡航与金牌样例自学习闭环 (Autonomous Scene Lifecycle Cruiser & Golden Sample
+    Loop)
   appetite: 2 days
   priority: P1
   status: candidate
-  goal: 打通场景执行与价值反馈的自演进飞轮：实现场景交付成果（result_contract）与 Semantica 因果图的自动对齐，将成功履约的旅程沉淀为场景级金牌样例（Golden Sample）；常驻 Agent 定期根据样本量与校准度，自动推进场景卡在 draft → shadow → assisted → supervised → routine 五档生命周期中自动跃迁与降级熔断。
+  goal: 打通场景执行与价值反馈的自演进飞轮：实现场景交付成果（result_contract）与 Semantica 因果图的自动对齐，将成功履约的旅程沉淀为场景级金牌样例（Golden
+    Sample）；常驻 Agent 定期根据样本量与校准度，自动推进场景卡在 draft → shadow → assisted → supervised →
+    routine 五档生命周期中自动跃迁与降级熔断。
   non_goals:
   - 不绕过 supervised 到 routine 的高风险人工把关要求
   - 不修改底层 value-loop-standard.yaml 的五阶段状态机定义
   done_when:
   - 每次场景成功执行自动记录 Value Record 并注入 Semantica 先例库
-  - 实现 SceneLifecycleCruiser，支持按 3-sample (shadow门) 与 30-sample+0.6 calib (assisted门) 自动巡航跃迁
+  - 实现 SceneLifecycleCruiser，支持按 3-sample (shadow门) 与 30-sample+0.6 calib (assisted门)
+    自动巡航跃迁
   - 在 Cockpit 中可视化呈现场景卡的生命周期状态与样本积累雷达图
   - 单元测试覆盖自动晋级、校准度不足降级与金牌样本检索
   verify:
@@ -25417,15 +25474,16 @@ bets:
   retro: required
   depends_on:
   - BET-Y1Q4-T7-04
-
 - id: BET-Y1Q4-T8-22
   track: T8-SURFACE
   window: Y1Q4
-  title: TinyBOS 极简边缘具身协议与家庭局域网算力网格漫游 (TinyBOS Embodied Protocol & Home LAN Roaming Mesh)
+  title: TinyBOS 极简边缘具身协议与家庭局域网算力网格漫游 (TinyBOS Embodied Protocol & Home LAN Roaming
+    Mesh)
   appetite: 3 days
   priority: P1
   status: candidate
-  goal: 拓展系统的物理边缘感知与伴随式守护边界：使用 Rust/C 开发内存开销 < 10MB 的超轻量 TinyBOS 边缘守护端，接入智能手环、随身穿戴与家庭控制屏；实时采集心率变异率、跌倒碰撞与空间位移，直通发射为场景触发信号；基于 P2P WireGuard 实现家庭局域网自组织，当开发工作站休眠时守护任务无损漫游至家庭微型主机（NAS/Mac mini），构建 7×24 小时物理世界态势感知图谱。
+  goal: 拓展系统的物理边缘感知与伴随式守护边界：使用 Rust/C 开发内存开销 < 10MB 的超轻量 TinyBOS 边缘守护端，接入智能手环、随身穿戴与家庭控制屏；实时采集心率变异率、跌倒碰撞与空间位移，直通发射为场景触发信号；基于
+    P2P WireGuard 实现家庭局域网自组织，当开发工作站休眠时守护任务无损漫游至家庭微型主机（NAS/Mac mini），构建 7×24 小时物理世界态势感知图谱。
   non_goals:
   - 不依赖任何第三方云端物联网平台中继（坚持本地 Local-First 与 P2P 加密）
   - 不破坏现有 BOS 协议的 URL 寻址规范
@@ -25454,15 +25512,17 @@ bets:
   depends_on:
   - BET-Y1Q4-T8-20
   - BET-Y1Q4-T6-25
-
 - id: BET-Y1Q4-T6-28
   track: T6-EVOLUTION
   window: Y1Q4
-  title: 四级认知阶梯分级投机推理与 Radix 前缀树热缓存加速引擎 (4-Tier Cognitive Hierarchy & Radix KV Cache Engine)
+  title: 四级认知阶梯分级投机推理与 Radix 前缀树热缓存加速引擎 (4-Tier Cognitive Hierarchy & Radix KV Cache
+    Engine)
   appetite: 3 days
   priority: P1
   status: candidate
-  goal: 重构本地主权推理引擎（AetherForge / omlxc）：落地 L0（1B~3B 专用 NPU 毫秒意图与护栏拦截，首字 < 5ms）→ L1（7B~14B 骨干任务与代码补丁编写）→ L2（32B~70B+ 重型仲裁与高难逻辑）的四级投机调度架构；将 66 个场景卡与核心 GaC 规约预编译为持久化 Radix 前缀树 Paged KV Cache，系统启动即常驻内存，彻底消除交互时的 Prompt Prefill 计算，使本地推理吞吐提升 3 倍且显存节省 50%。
+  goal: 重构本地主权推理引擎（AetherForge / omlxc）：落地 L0（1B~3B 专用 NPU 毫秒意图与护栏拦截，首字 < 5ms）→ L1（7B~14B
+    骨干任务与代码补丁编写）→ L2（32B~70B+ 重型仲裁与高难逻辑）的四级投机调度架构；将 66 个场景卡与核心 GaC 规约预编译为持久化 Radix
+    前缀树 Paged KV Cache，系统启动即常驻内存，彻底消除交互时的 Prompt Prefill 计算，使本地推理吞吐提升 3 倍且显存节省 50%。
   non_goals:
   - 不修改底层大语言模型的权重参数
   - 不引入未经加密的外部云端模型端点
