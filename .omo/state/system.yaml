@@ -2,7 +2,7 @@ current_phase: 29
 current_wave: W1
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-09-05T13:54:20.475717+00:00'
+health_score_evidence_generated_at: '2026-09-06T13:03:18.325526+00:00'
 completed_tasks: 292
 planned_tasks: 8
 active_tasks: 1
@@ -20,7 +20,7 @@ next_planned_tasks:
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
-updated_at: '2026-09-06T07:22:01Z'
+updated_at: '2026-09-06T12:56:37Z'
 harness:
   last_run: null
   last_status: null
@@ -36,24 +36,24 @@ self_evolution:
   proposals_pending: 0
   proposals_approved: 0
   proposals_executed: 0
-health_score: 52
-governance_anomaly_score: 0
+health_score: 54
+governance_anomaly_score: 6
 service_online_ratio: 0.5
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-09-05T13:50:54Z'
+health_score_generated_at: '2026-09-06T12:53:21Z'
 runtime_health_summary:
   online_services: 2
   total_services: 4
   ratio: 0.5
-  health_score: 52
-  last_scan: '2026-09-05T13:50:54Z'
+  health_score: 54
+  last_scan: '2026-09-06T12:53:21Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
-governance_feedback_last_run: '2026-09-05T13:50:54Z'
+governance_feedback_last_run: '2026-09-06T12:53:21Z'
 workflow_mesh_health:
   status: healthy
   event_count: 1
   events_last_hour: 1
-  last_event_age_seconds: 1144.0
+  last_event_age_seconds: 2105.3
   bridges_active:
   - agent-workflow
