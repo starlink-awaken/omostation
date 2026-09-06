@@ -2904,3 +2904,206 @@ bets:
   human_gate: false
   circuit_breaker: 重试 3 次后仍失败则报错，不无限重试。
   retro: required
+- id: BET-Y1Q4-T10-132
+  track: T10-MATURITY
+  window: Y1Q4
+  title: DBOS 离散状态水合与 SQLite WAL 原子事件调度引擎 (DBOS Discrete State Hydration & Atomic Event Engine)
+  appetite: 3-4 days
+  priority: P0
+  status: candidate
+  goal: 实现持久化 Agent 心智状态与物理显存解耦。会话上下文与认知帧持久化于 SQLite WAL，外部事件触发时 <15ms 快速水合恢复，单步执行完毕即去水合释放显存，彻底解决多 Agent 并发显存 OOM 与进程崩塌遗忘问题。
+  non_goals:
+  - 不引入分布式外部数据库集群，严格使用本地 SQLite WAL
+  - 不重载底层 AetherForge 模型权重，仅水合心智上下文
+  done_when:
+  - 交付 projects/omo/src/omo/resident/hydration.py 实现水合与去水合状态机
+  - SQLite WAL mode=ro 只读探测延迟 <= 15ms，休眠状态显存增量为 0
+  - 单元测试与压力测试 100% 通过
+  verify:
+  - cmd: python3 -m pytest projects/omo/tests/test_resident_hydration.py
+    expect: exit 0
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/hydration.py
+  - projects/omo/src/omo/resident/schema_v3.sql
+  - projects/omo/tests/test_resident_hydration.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-132.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 水合耗时超过 50ms 时记录降级告警并回退只读快照，避免请求堆积。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T10-126
+- id: BET-Y1Q4-T10-133
+  track: T10-MATURITY
+  window: Y1Q4
+  title: Git Worktree 物理沙箱秒级 CoW 快照克隆与试错安全回滚时光机 (Git Worktree CoW Sandbox & Time-Machine Rollback)
+  appetite: 2-3 days
+  priority: P0
+  status: candidate
+  goal: 为持久化 Agent 的高危或未知探索任务提供秒级建立的隔离 Git Worktree 物理沙箱。在沙箱内运行门禁与试错，若出现异常或 GaC 红灯立即执行硬性时光机回滚自毁，绝对防止主工作区受污染。
+  non_goals:
+  - 不允许沙箱绕过 gac-worktree 机制直接写主工作区
+  - 不在未经验收门禁全绿前将沙箱分支合入 main
+  done_when:
+  - 交付 bin/gac/resident-sandbox-timemachine.sh 支持秒级沙箱创建与时光机回滚
+  - 交付 projects/omo/src/omo/resident/sandbox_driver.py 驱动沙箱受控执行
+  - 试错失败回滚后，主工作区 git status 干净度 100%
+  verify:
+  - cmd: bash bin/gac/resident-sandbox-timemachine.sh --help
+    expect: exit 0
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/resident-sandbox-timemachine.sh
+  - projects/omo/src/omo/resident/sandbox_driver.py
+  - tests/integration/test-sandbox-timemachine.sh
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-133.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 沙箱创建超时 > 5s 时阻断试错任务，向指挥舱上报环境异常。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T10-132
+- id: BET-Y1Q4-T6-29
+  track: T6-EVOLUTION
+  window: Y1Q4
+  title: 仿生清醒-睡眠双相记忆巩固与 Semantica 因果三元组夜间蒸馏系统 (Bionic Dual-Phase Memory Consolidation & Semantica Distillation)
+  appetite: 3-4 days
+  priority: P1
+  status: candidate
+  goal: 落地仿生双相记忆体系：白天清醒相纳秒级追加记录高吞吐 Working Memory 与事件流水；夜间睡眠相利用 Semantica 因果三元组提取器和 SEMA 逆向萃取引擎，提炼出不可变知识与踩坑信念沉淀入长期图谱 Gbrain，会话上下文永久不膨胀。
+  non_goals:
+  - 不在清醒相执行大算力耗时图谱蒸馏
+  - 不将未经验证的猜测性反思直接作为不可变信念落盘
+  done_when:
+  - 交付 bin/ops/bionic-memory-consolidation.py 夜间记忆巩固后台作业
+  - 交付 projects/knowledge/gbrain/src/causal_distillation.py 因果提炼模块
+  - 连续 7 次模拟夜间蒸馏任务 PASS，召回率 Recall@5 >= 0.88
+  verify:
+  - cmd: python3 bin/ops/bionic-memory-consolidation.py --help
+    expect: exit 0
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ops/bionic-memory-consolidation.py
+  - projects/knowledge/gbrain/src/causal_distillation.py
+  - tests/integration/test-bionic-memory.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-29.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 夜间蒸馏发现置信度 < 0.6 的因果三元组自动丢弃，不污染长期信念库。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-26
+  - BET-Y1Q4-T10-132
+- id: BET-Y1Q4-T7-06
+  track: T7-COOPERATION
+  window: Y1Q4
+  title: 合同网协议 (CNP) 任务自主竞标与临时突击队动态自组织编排 (Contract Net Protocol Autonomous Bidding & Dynamic Taskforce Swarm)
+  appetite: 3 days
+  priority: P1
+  status: candidate
+  goal: 废除硬编码分派，引入合同网协议（CNP）任务自主招标与抢标机制。Agent 基于实时算力负载、技能匹配度与历史信誉自主竞标；复合跨域任务自动结盟组建临时突击队（Taskforce），任务结案后自动解散。
+  non_goals:
+  - 不允许无技能资质的 Agent 盲目投标
+  - 不在无超时兜底的情况下无限期等待投标
+  done_when:
+  - 交付 projects/omo/src/omo/resident/contract_net.py 竞标状态机与评分算法
+  - 交付 projects/omo/src/omo/resident/taskforce.py 临时突击队编排管理
+  - 竞标评估单次耗时 <= 300ms，Token 消耗 <= 500，3 秒超时自动兜底率 100%
+  verify:
+  - cmd: python3 -m pytest projects/omo/tests/test_contract_net.py
+    expect: exit 0
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/contract_net.py
+  - projects/omo/src/omo/resident/taskforce.py
+  - projects/omo/tests/test_contract_net.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 投标消耗超过 500 Token 时强行截断，自动转为默认 Archetype 兜底指派。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T7-04
+  - BET-Y1Q4-T10-132
+- id: BET-Y1Q4-T8-23
+  track: T8-EXECUTION
+  window: Y1Q4
+  title: 基于风险-置信度矩阵的自适应授权与 Cockpit Resident Flight Deck 四维透明指挥舱 (Risk-Confidence Adaptive Authorization & Cockpit Flight Deck)
+  appetite: 3-4 days
+  priority: P1
+  status: candidate
+  goal: 建立 L1~L4 四阶梯自适应风险授权拦截网关；在 Cockpit 前端集成 Resident Flight Deck 四维透明指挥舱，实现心跳健康、任务 DAG 流水、算力显存遥测与人工熔断介入全景可见。
+  non_goals:
+  - 不允许任何未经验证的绕过命令越权执行
+  - 不在 Cockpit UI 中引入冗余重型第三方依赖
+  done_when:
+  - 交付 projects/cockpit/src/cockpit/resident_flight_deck.py 授权与遥测服务
+  - 交付 projects/cockpit-ui/src/pages/ResidentFlightDeck.vue 前端透明指挥舱页面
+  - 越权拦截率 100%，紧急人工熔断在 1 秒内生效
+  verify:
+  - cmd: python3 -m pytest projects/cockpit/tests/test_resident_flight_deck.py
+    expect: exit 0
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/resident_flight_deck.py
+  - projects/cockpit-ui/src/pages/ResidentFlightDeck.vue
+  - projects/cockpit/tests/test_resident_flight_deck.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 连续 3 次心跳上报超时自动降级为只读观测模式，不执行任何写操作。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T7-04
+  - BET-Y1Q4-T8-22
+- id: BET-Y1Q4-T6-30
+  track: T6-EVOLUTION
+  window: Y1Q4
+  title: 夏明星数字化 Persona 心智镜像微调与主权分身共生体系 (Xia Mingxing Digital Persona Mirror Fine-tuning & Sovereign Symbiosis)
+  appetite: 4-5 days
+  priority: P2
+  status: candidate
+  goal: 精准捕获夏明星对 Agent 成果的手写 Diff 偏好、修改意见与架构裁决记录，自动化清洗为 DPO 偏好对数据集；利用本地 AetherForge 在离线环境下微调 Persona LoRA 适配层，打造高拟真夏明星主权分身。
+  non_goals:
+  - 不将夏明星个人修改与敏感偏好数据上传至外部公有云
+  - 不在未达到对齐度门禁（>= 0.90）前对外启用代行权限
+  done_when:
+  - 交付 bin/evolution/extract-persona-diffs.py 偏好提取与配对工具
+  - 交付 projects/aetherforge/src/persona_trainer.py 本地 LoRA 微调流水线
+  - 偏好对抽取校验集通过，决策风格对齐度达到 >= 0.90
+  verify:
+  - cmd: python3 bin/evolution/extract-persona-diffs.py --help
+    expect: exit 0
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/evolution/extract-persona-diffs.py
+  - projects/aetherforge/src/persona_trainer.py
+  - tests/integration/test-persona-mirror.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T6-30.md
+  risk_level: L2
+  human_gate: true
+  circuit_breaker: 数据集包含敏感密钥或凭证时立即终止并清洗，拒绝脏数据进入训练集。
+  retro: required
+  depends_on:
+  - BET-Y1Q4-T6-29
+  - BET-Y1Q4-T8-23
+
