@@ -3268,6 +3268,11 @@ bets:
     overall_state: delivery_accepted
   value_indicator_policy: false
   retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t10-128-agent-namespace-isolation.md
+    spec_version: 1.0.0
+    content_digest: sha256:8e8350351b6f2c444a4bdef4bd7fbc811f4ac255654b39c5b184225f2ed251d0
+    decision_ref: decision://accepted/BET-Y1Q4-T10-128
 - id: BET-Y1Q4-T10-129
   track: T10-MATURITY
   window: Y1Q4
