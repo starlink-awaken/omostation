@@ -3300,7 +3300,9 @@ bets:
   title: 网络稳定性集成 — git-retry 与 HTTPS 自动切换
   appetite: 1 day
   priority: P2
-  status: candidate
+  status: done
+  done_at: 2026-09-06 21:30:00+00:00
+  note: git-retry.sh + SSH→HTTPS failover delivered in PR #3308; rebinded to T9-03 per #3318.
   goal: 将 git-retry.sh 集成到 push 流程，检测 SSH 连通性并在失败时自动切换到 HTTPS，解决 LibreSSL 超时问题。
   non_goals:
   - 不修改 git 配置
