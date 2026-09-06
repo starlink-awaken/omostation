@@ -19009,7 +19009,8 @@ bets:
   title: 多维日历日程感知、会议纪要自动提炼与督办待办闭环
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-06
   goal: 接入 CalDAV / 腾讯会议 / 钉钉日程，提取会前背景准备材料；结合会议录音/转写文本自动提炼夏明星关注的核心议题，生成下发交办与督办清单。
   non_goals:
   - 不做未经审阅的静默交办下发
@@ -19028,6 +19029,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:7afc86c608341cd9a4dd074490a98c82774827e43c7faea859844accc658b2d0
     decision_ref: decision://accepted/BET-Y1Q4-T7-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-06-t7-02-calendar-ingest-design.md
+            sha256: sha256:7afc86c608341cd9a4dd074490a98c82774827e43c7faea859844accc658b2d0
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-02.md
+            sha256: sha256:81c7e658c1327474a6fc685dda2688f9f32f249013cc4b923b396d0cf61e5c4d
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-02.md
+            sha256: sha256:81c7e658c1327474a6fc685dda2688f9f32f249013cc4b923b396d0cf61e5c4d
+          merged_reachable_commit:
+            ref: git://origin/main@be1cc2246edf48d1519645e7221bbc4509b234b4
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-02.md
+            sha256: sha256:81c7e658c1327474a6fc685dda2688f9f32f249013cc4b923b396d0cf61e5c4d
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-02.md
+            sha256: sha256:81c7e658c1327474a6fc685dda2688f9f32f249013cc4b923b396d0cf61e5c4d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-02.md
+            sha256: sha256:81c7e658c1327474a6fc685dda2688f9f32f249013cc4b923b396d0cf61e5c4d
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-02.md
+            sha256: sha256:81c7e658c1327474a6fc685dda2688f9f32f249013cc4b923b396d0cf61e5c4d
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - bin/bc-os/signal_router.py
   - projects/cockpit/src/cockpit/commands/calendar.py
