@@ -89,4 +89,51 @@ while IFS= read -r branch; do
 done < <(git branch --format='%(refname:short)')
 echo "   ✅ 已清理 $stale 个过期分支"
 
-echo "=== Branch Prune 完成: 合并=$merged, 过期=$stale ==="
+AGENT_TTL_HOURS="$(python3 -c "
+import yaml
+try:
+    p = yaml.safe_load(open('.omo/_truth/registry/branch-prefix-policy.yaml'))
+    print(int(p.get('prefixes', {}).get('agent', {}).get('ttl_days', 7)) * 24)
+except Exception:
+    print(168)
+" 2>/dev/null || echo 168)"
+echo "── 4. 清理过期 agent 分支 (TTL: ${AGENT_TTL_HOURS}h, T10-128) --"
+# agent/{actor}/{session} TTL 清理 (policy 驱动 TTL); 删除时同步清 D2 claim 防假占用
+agent_stale=0
+now2="$(date +%s)"
+while IFS= read -r branch; do
+  branch="$(echo "$branch" | tr -d ' *')"
+  [ -z "$branch" ] && continue
+  [[ "$branch" != agent/* ]] && continue
+
+  # open PR 保护
+  if command -v gh >/dev/null 2>&1; then
+    has_pr="$(gh pr list --head "$branch" --state open --json number 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")"
+    if [ "$has_pr" != "0" ]; then
+      continue
+    fi
+  fi
+
+  last_commit="$(git log -1 --format=%ct "$branch" 2>/dev/null || echo 0)"
+  age_hours=$(( (now2 - last_commit) / 3600 ))
+
+  if [ "$age_hours" -ge "${AGENT_TTL_HOURS}" ]; then
+    echo "   过期 (${age_hours}h): $branch"
+    if [ "$DRY_RUN" = false ]; then
+      session="${branch##*/}"
+      wt_path="$(dirname "$(git rev-parse --show-toplevel)")/ws-${session}"
+      if [ -d "$wt_path" ] && ! git -C "$wt_path" diff --quiet 2>/dev/null; then
+        echo "   ⚠️  路径有未保存改动: $branch"
+        continue
+      fi
+      git branch -D "$branch" 2>/dev/null || true
+      if [ -f "bin/gac/swarm-discipline-cli.py" ]; then
+        python3 "bin/gac/swarm-discipline-cli.py" branch-release --session "$session" >/dev/null 2>&1 || true
+      fi
+    fi
+    agent_stale=$((agent_stale + 1))
+  fi
+done < <(git branch --format='%(refname:short)')
+echo "   ✅ 已清理 $agent_stale 个过期 agent 分支"
+
+echo "=== Branch Prune 完成: 合并=$merged, 过期=$stale, agent过期=$agent_stale ==="

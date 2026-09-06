@@ -28,7 +28,8 @@ UTC = UTC
 
 DEFAULT_REGISTRY = ".omo/_truth/registry/swarm-coordination.yaml"
 ADR_FILE_RE = re.compile(r"^\.omo/_knowledge/decisions/(\d{4})-.*\.md$")
-BRANCH_RE = re.compile(r"^work/[a-z0-9][a-z0-9-]*$")
+# T10-128: agent/{actor}/{session} 三段式 + work/ 存量兼容
+BRANCH_RE = re.compile(r"^(work/[a-z0-9][a-z0-9-]*|agent/[a-z][a-z0-9-]{1,30}/[a-z0-9][a-z0-9-]{1,60})$")
 
 
 def _utc_now() -> datetime:
