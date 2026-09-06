@@ -2949,9 +2949,17 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t10-130-repo-health-report-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:8a39008fed2025c1a7711103873cdb0fe4531eab43c509f8e1137ff6480b81e5
+    decision_ref: decision://accepted/BET-Y1Q4-T10-130
   write_surfaces:
   - docs/repository-health.md
   - bin/gac/repo-health-metrics.py
+  - tests/test_repo_health_metrics.py
+  - runtime/cockpit/repo-health-history.jsonl
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-130.md
   risk_level: L1
   human_gate: false
