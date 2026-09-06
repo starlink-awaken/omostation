@@ -192,7 +192,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 587
+    script_baseline: 588
     # 2026-09-03: +1 perception-coverage
     # 2026-09-03: +2 ops-cron-install + weekly-evolution-report
     # 2026-09-04: +2 T10-105 work branch net bin diff baseline
@@ -202,6 +202,7 @@ gac:
     # 2026-09-04: +1 hitl-proposal.py (BET-Y1Q4-HITL-01 HITL proposal system)
     # 2026-09-05: +1 notification.py (BET-Y1Q4-HITL-02 HITL v1.1 multi-channel)
     # 2026-09-05: +2 cold-backup-drill.sh + restore-cold-snapshot.sh (BET-Y2Q1-T10-01)
+    # 2026-09-06: +1 check-documents-boundary.py (BET-Y1Q4-T6-20 E-DOC-001~005)
     # 2026-09-05: +1 check-mcp-bos-uri-completeness.py (BET-Y1Q4-T6-19)
     # 2026-09-05: +2 arch-health-meter.py + architecture-health-weekly.sh (BET-Y1Q4-T6-18)
   rules:
@@ -2553,7 +2554,7 @@ gac:
     dimension: X4
     layer: L2
     name: E-DOC-003 禁止跨域裸写
-    description: Workspace→Documents 直接写入必须通过 BOS 路由，事实文件需 bos_routed 标记
+    description: "Workspace→Documents 直接写入必须通过 BOS 路由，事实文件需 bos_routed 标记"
     check_type: documents_boundary
     target: ~/Documents/_entities/facts
     executor:
@@ -2565,7 +2566,7 @@ gac:
     enforcement: required
     source_ref: bin/gac/check-documents-boundary.py
     owner: governance-team
-    expected: Fact files routed through bos:// or marked with bos_routed: true
+    expected: "Fact files routed through bos:// or marked with bos_routed: true"
     remediation: Route writes through bos://documents/{domain}/{resource}
   - id: CR-EDOC-004
     dimension: X4
