@@ -34,8 +34,9 @@ def main() -> int:
     ).stdout.strip()
 
     canonical_dir = os.path.join(root, ".githooks")
+    # --git-common-dir: worktree 下返回共享主仓 .git (元数据单点), 而非 .git/worktrees/<name>
     git_dir = subprocess.run(
-        ["git", "rev-parse", "--git-dir"],
+        ["git", "rev-parse", "--git-common-dir"],
         capture_output=True, text=True, check=False,
     ).stdout.strip()
     target_dir = os.path.join(git_dir, "hooks") if git_dir else os.path.join(root, ".git/hooks")

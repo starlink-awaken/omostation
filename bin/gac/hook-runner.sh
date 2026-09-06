@@ -46,8 +46,9 @@ fi
 
 # ── 版本自检 ────────────────────────────────────────────────
 # 元数据在真实 git-dir/hooks (worktree 感知, 不受 core.hooksPath 影响)
+# 用 --git-common-dir: worktree 下返回共享主仓 .git (元数据单点), 而非 .git/worktrees/<name>.
 CANONICAL_VERSION="$(cat "$ROOT/.githooks/VERSION" 2>/dev/null || echo '0.0.0')"
-GIT_DIR_REAL="$(git rev-parse --git-dir 2>/dev/null || echo "$ROOT/.git")"
+GIT_DIR_REAL="$(git rev-parse --git-common-dir 2>/dev/null || echo "$ROOT/.git")"
 INSTALLED_VERSION="$(cat "$GIT_DIR_REAL/hooks/.version" 2>/dev/null || echo '0.0.0')"
 if [ "$CANONICAL_VERSION" != "$INSTALLED_VERSION" ]; then
   echo "[hook-runner] ⚠️ hook 版本不一致 ($INSTALLED_VERSION → $CANONICAL_VERSION)，请运行: make install-hooks" >&2

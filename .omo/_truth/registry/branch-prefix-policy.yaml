@@ -4,7 +4,7 @@ description: "分支前缀策略 SSOT — 命名/生命周期/门禁统一注册
 naming:
   main: "^main$"
   work: "^work/[a-z0-9][a-z0-9-]{1,60}$"
-  agent: "^agent/[a-z][a-z0-9-]{1,30}--[a-z0-9]{1,20}$"
+  agent: "^agent/[a-z][a-z0-9-]{1,30}/[a-z0-9][a-z0-9-]{1,60}$"
   feat: "^feat/[a-z0-9][a-z0-9-]{1,60}$"
   fix: "^fix/[a-z0-9][a-z0-9-]{1,60}$"
   chore: "^chore/[a-z0-9][a-z0-9-]{1,60}$"
@@ -22,13 +22,13 @@ prefixes:
     pr_into_main: required
     description: "worktree 开发分支 (gac-worktree.sh claim)"
   agent:
-    pattern: "^agent/[a-z][a-z0-9-]{1,30}--[a-z0-9]{1,20}$"
-    ttl_days: 3
+    pattern: "^agent/[a-z][a-z0-9-]{1,30}/[a-z0-9][a-z0-9-]{1,60}$"
+    ttl_days: 7
     action: remind
-    creators: [agent]
+    creators: [agent, human]
     requires_worktree: true
     pr_into_main: required
-    description: "独立 clone agent 分支 (clone-lifecycle)"
+    description: "并发 agent worktree 分支 (gac-worktree.sh claim, agent/{actor}/{session}, T10-128)"
   feat:
     pattern: "^feat/[a-z0-9][a-z0-9-]{1,60}$"
     ttl_days: 14
