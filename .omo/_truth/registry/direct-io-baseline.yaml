@@ -12,9 +12,3 @@ owner: governance
 runtime_ref: projects/ecos/scripts/contract_gatekeeper.py
 policy: grandfather-existing-only
 entries:
-  - path: projects/cockpit/src/cockpit/commands/voice_memo.py
-    reason: "存量直写 (BET-Y2Q1-T2-01 引入, 全量 Gatekeeper 挡全舰队 PR) — 待作者修复后移除"
-    added_at: "2026-09-07"
-  - path: projects/cockpit/src/cockpit/commands/voice_memo.py
-    reason: "存量直写 (BET-Y2Q1-T2-01 引入, 全量扫描挡全舰队 PR) — 待作者修复后移除"
-    added_at: "2026-09-07"
