@@ -14,9 +14,9 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 LOG_DIR = WORKSPACE / "runtime/cron"
 
 TASKS = [
-    {"id": "hardcode", "name": "硬编码数据检测", "script": "bin/gac/check-readme-hardcoded.py", "args": ["--json"]},
-    {"id": "worktree", "name": "Worktree 清理", "script": "bin/gac/prune-zombie-worktrees.py", "args": ["--apply"]},
-    {"id": "branch", "name": "分支 TTL 清理", "script": "bin/gac/branch-ttl-gate.py", "args": ["--enforce", "--ttl-hours", "168"]},
+    {"id": "hardcode", "name": "硬编码数据检测", "script": "bin/gac/repo-maintenance-tools.py", "args": ["check-readme-hardcoded", "--json"]},
+    {"id": "worktree", "name": "Worktree 清理", "script": "bin/gac/repo-maintenance-tools.py", "args": ["prune-zombie-worktrees", "--apply"]},
+    {"id": "branch", "name": "分支 TTL 清理", "script": "bin/gac/repo-maintenance-tools.py", "args": ["branch-ttl-gate", "--enforce", "--ttl-hours", "168"]},
     {"id": "ssot", "name": "SSOT 守护", "script": "make", "args": ["ssot-guardian"]},
 ]
 
