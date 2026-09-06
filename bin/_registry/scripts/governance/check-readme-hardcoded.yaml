@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/gac-worktree-prune.sh
-name: Gac Worktree Prune
+id: bin/gac/check-readme-hardcoded.py
+name: Check Readme Hardcoded
 category: governance
 owner: governance-team
 description: ""

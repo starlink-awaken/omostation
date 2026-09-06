@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/gac-worktree-cleanup.sh
-name: Gac Worktree Cleanup
+id: bin/gac/branch-ttl-gate.py
+name: Branch Ttl Gate
 category: governance
 owner: governance-team
 description: ""

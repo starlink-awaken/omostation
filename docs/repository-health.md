@@ -1,21 +1,18 @@
-# 仓库健康度周报
+# Repository Health 周报 (自动生成)
 
-> 采样时间: 2026-09-06T19:35:34+0800 | 生成器: `bin/gac/repo-health-metrics.py` (BET-Y1Q4-T10-130)
+> 生成: 2026-09-06 | 工具: check-readme-hardcoded.py --update-health (T10-127)
+> 本文件为派生物, 不要手编。
 
-## 当期指标
+## 文档硬编码检测
 
-| 指标 | 数值 | 趋势 |
-|------|------|------|
-| 松散对象 | 4307 | — |
-| 悬空跟踪分支 | 9 | — |
-| Worktrees | 8 | — |
-| Gitlink 偏差 | 0 | — |
-| 本地分支 | 38 | — |
-| 远程分支 | 11 | — |
-| Tags | 332 | — |
-| 打包对象 | 119622 | — |
+- 违规: 1
+  - [hardcoded-count] L171: | SSOT 追踪 | `make ssot-{status,log,sync}` | 12 个 SSOT 文件的 SH
 
-## 告警
+## BET 台账规模
 
-- ⚠️ loose_objects=4307 > 阈值 1000
-- ⚠️ dangling_remote_branches=9 > 阈值 5
+- 总数: n/a | done: n/a (归档另计, 见 3y-bet-ledger-archive.yaml)
+
+## 分支/worktree 治理
+
+- work/ 分支: 29 | agent/ 分支: 1 (TTL 见 branch-prefix-policy.yaml)
+- 活跃 worktree: 16
