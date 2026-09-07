@@ -34,7 +34,7 @@ last-reviewed: 2026-09-06
 | resident-runtime-observe | workflows/resident-runtime-observe.yaml |
 | round-engineering | workflows/round-engineering.yaml |
 | round-type-router | workflows/round-type-router.yaml |
-| scene-card-promotion | workflows/scene-card-promotion.yaml |
+| scene-lifecycle | workflows/scene-lifecycle.yaml |
 | state-sync | workflows/state-sync.yaml |
 | submodule-pointer-bump | workflows/submodule-pointer-bump.yaml |
 | submodule-pointer-close | workflows/submodule-pointer-close.yaml |

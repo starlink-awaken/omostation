@@ -126,7 +126,7 @@ agent_profiles:
     - round-engineering
     - round-type-router
     - closeout-with-retro
-    - scene-card-promotion
+    - scene-lifecycle
     - scene-lifecycle
     - scene-execution
     - submodule-pointer-bump
@@ -3231,7 +3231,7 @@ workflows:
   - promotion_evidence
   - sample_refs
   - calibration_score
-  id: scene-card-promotion
+  id: scene-lifecycle
   lock_scopes:
   - scene:{scene_id}
   phases:
