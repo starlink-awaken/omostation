@@ -2759,38 +2759,28 @@ bets:
   - bin/gac/check-readme-hardcoded.py
   - docs/repository-health.md
   - .omo/_knowledge/retros/BET-Y1Q4-T10-127.md
-- accepted_specifications:
-  - content_digest: sha256:f44a9be6136d60a940e1bc5dd0dec53f58d0f48fbe51adbe53c10da277e9f79b
-    decision_ref: decision://accepted/BET-Y1Q4-T10-134
-    spec_ref: repo://docs/superpowers/specs/2026-09-07-gate-baseline-prescription-spec.md
-    spec_version: 1.0.0
+- id: BET-Y1Q4-T10-134
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 门禁迭代 — Gatekeeper baseline/grace + hook-runner 处方化报错
   appetite: 1 days
-  circuit_breaker: baseline 只降级存量打印不改判定核心; grace 清单被滥用 (增长) 时 revert 整个机制
-  done_at: '2026-09-07'
+  priority: P1
+  status: done
+  goal: 消灭门禁两类摩擦 — 全量 Gatekeeper 存量违规"谁撞谁倒霉" (M2 baseline/grace 范式推广 — 存量进 grace 清单降级
+    warn, shrink_only) 与 hook-runner 失败无处方 (manifest 加 fix 字段, 失败时打印可复制修复命令)。
+  non_goals:
+  - 不放松任何 blocking 语义 (新违规仍硬失败)
+  - 不改 hook 脚本本身逻辑
   done_when:
   - contract_gatekeeper --baseline 命中存量 → exit 0, 新违规仍 FAIL
   - hook-runner 失败打印 fix 处方 (script-registry 实测)
   - grace 清单 shrink_only 声明落盘
-  goal: 消灭门禁两类摩擦 — 全量 Gatekeeper 存量违规"谁撞谁倒霉" (M2 baseline/grace 范式推广 — 存量进 grace 清单降级
-    warn, shrink_only) 与 hook-runner 失败无处方 (manifest 加 fix 字段, 失败时打印可复制修复命令)。
-  human_gate: false
-  id: BET-Y1Q4-T10-134
-  non_goals:
-  - 不放松任何 blocking 语义 (新违规仍硬失败)
-  - 不改 hook 脚本本身逻辑
-  pasw_required: false
-  priority: P1
-  risk_level: L2
-  status: done
-  title: 门禁迭代 — Gatekeeper baseline/grace + hook-runner 处方化报错
-  track: T10-MATURITY
-  underlying_workflow: project-code-change
   verify:
   - cmd: python3 projects/omo/scripts/contract_gatekeeper.py --baseline .omo/_truth/registry/gatekeeper-grace.yaml
       projects/cockpit/src 2>&1
     expect: voice_memo 命中 grace 且 exit 0
-  window: Y1Q4
   workflow: project-code-change
+  underlying_workflow: project-code-change
   write_surfaces:
   - projects/omo/scripts/contract_gatekeeper.py
   - bin/gac/hook-runner.sh
@@ -2798,6 +2788,12 @@ bets:
   - .omo/_truth/registry/gatekeeper-grace.yaml
   - bin/ssot/verify-omo.sh
   - docs/superpowers/specs/2026-09-07-gate-baseline-prescription-spec.md
+  pasw_required: false
+  risk_level: L2
+  human_gate: false
+  circuit_breaker: 加锁写若引发死锁/性能问题则回退直写
+  retro: required
+  done_at: '2026-09-07'
 - accepted_specifications:
   - content_digest: sha256:fa4ea2de623a3f5182a9e19bf9891d5bb96dbb8fa225054f4e16c8d361c8c973
     decision_ref: decision://accepted/BET-Y1Q4-T10-135
@@ -26472,6 +26468,11 @@ bets:
   - projects/omo/tests/test_rlm_subagent.py
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-137.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-ledger-lock-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:28f5d9cc26ff1afc92c67bcfd7bfd48d98a9f91ab7deaad2f1f78e8a4c99b8d8
+    decision_ref: decision://accepted/BET-Y1Q4-T10-137
 - appetite: 3 days
   circuit_breaker: 若 refine 生成的技能导致回归报错，5 秒内自动回滚至上一个稳定 refinement_id。
   depends_on:
