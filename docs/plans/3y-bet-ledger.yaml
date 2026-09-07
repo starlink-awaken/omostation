@@ -26548,6 +26548,76 @@ bets:
   - projects/omo/tests/test_rlm_governance.py
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T6-31.md
+- id: BET-Y1Q4-T10-138
+  track: T10-MATURITY
+  window: Y1Q4
+  title: ledger 并发回写根治 — save_ledger_locked 加锁原子通道
+  appetite: 1 days
+  priority: P1
+  status: done
+  done_at: '2026-09-07'
+  goal: 根治 ledger status/evidence 回写与并行写入撞车的竞态 (四日四次观测) — save_ledger_locked (flock
+    进程互斥 + tmp+rename 原子落盘) 统一回写通道, complete 的 status 回写迁移至锁内读-改-写 (幂等, 并发已写时静默跳过)。
+  non_goals:
+  - 不改 ledger 文件格式与读取语义
+  done_when:
+  - save_ledger_locked 单测通过 (变换正确+幂等+原子写冒烟)
+  - complete 的 status 回写走加锁通道
+  verify:
+  - cmd: python3 -c "import ast; ast.parse(open('bin/plan/bet-ledger.py').read())"
+    expect: exit 0 且含 save_ledger_locked
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/plan/bet-ledger.py
+  - docs/superpowers/specs/2026-09-07-ledger-lock-spec.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 加锁写若引发死锁/性能问题则回退直写
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-ledger-lock-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:28f5d9cc26ff1afc92c67bcfd7bfd48d98a9f91ab7deaad2f1f78e8a4c99b8d8
+    decision_ref: decision://accepted/BET-Y1Q4-T10-138
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@40503616fa51ee47f0de03e5b04610a9cf72fda4
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-09-07-ledger-lock-spec.md
+            sha256: sha256:28f5d9cc26ff1afc92c67bcfd7bfd48d98a9f91ab7deaad2f1f78e8a4c99b8d8
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-07-ledger-lock-spec.md
+            sha256: sha256:28f5d9cc26ff1afc92c67bcfd7bfd48d98a9f91ab7deaad2f1f78e8a4c99b8d8
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-07-ledger-lock-spec.md
+            sha256: sha256:28f5d9cc26ff1afc92c67bcfd7bfd48d98a9f91ab7deaad2f1f78e8a4c99b8d8
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/superpowers/specs/2026-09-07-ledger-lock-spec.md
+            sha256: sha256:28f5d9cc26ff1afc92c67bcfd7bfd48d98a9f91ab7deaad2f1f78e8a4c99b8d8
+          fresh_receipt:
+            ref: receipt://docs/superpowers/specs/2026-09-07-ledger-lock-spec.md
+            sha256: sha256:28f5d9cc26ff1afc92c67bcfd7bfd48d98a9f91ab7deaad2f1f78e8a4c99b8d8
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-09-07-ledger-lock-spec.md
+            sha256: sha256:28f5d9cc26ff1afc92c67bcfd7bfd48d98a9f91ab7deaad2f1f78e8a4c99b8d8
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-09-07-ledger-lock-spec.md
+            sha256: sha256:28f5d9cc26ff1afc92c67bcfd7bfd48d98a9f91ab7deaad2f1f78e8a4c99b8d8
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  retro: required
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
