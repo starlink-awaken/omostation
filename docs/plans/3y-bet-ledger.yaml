@@ -3731,7 +3731,8 @@ bets:
     & Semantica Distillation)
   appetite: 3-4 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: '2026-09-07'
   goal: 落地仿生双相记忆体系：白天清醒相纳秒级追加记录高吞吐 Working Memory 与事件流水；夜间睡眠相利用 Semantica 因果三元组提取器和
     SEMA 逆向萃取引擎，提炼出不可变知识与踩坑信念沉淀入长期图谱 Gbrain，会话上下文永久不膨胀。
   non_goals:
