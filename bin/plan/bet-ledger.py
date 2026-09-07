@@ -714,6 +714,25 @@ def load() -> dict:
     return data
 
 
+def save_ledger_locked(transform) -> None:
+    """T10-136: 加锁读-改-写 — 多 agent 并发回写 status/evidence 的竞态根治.
+
+    transform(text) -> str: 在锁内对最新 ledger 文本做变换后原子落盘.
+    锁文件 docs/plans/.3y-bet-ledger.lock (flock, 进程级互斥)."""
+    import fcntl
+    lock_path = LEDGER.parent / ".3y-bet-ledger.lock"
+    with open(lock_path, "w") as lock_f:
+        fcntl.flock(lock_f, fcntl.LOCK_EX)
+        try:
+            latest = LEDGER.read_text(encoding="utf-8")
+            new_text = transform(latest)
+            tmp = LEDGER.with_suffix(".yaml.tmp")
+            tmp.write_text(new_text, encoding="utf-8")
+            tmp.replace(LEDGER)
+        finally:
+            fcntl.flock(lock_f, fcntl.LOCK_UN)
+
+
 def bet_by_id(data: dict, bet_id: str) -> dict:
     for b in data["bets"]:
         if b["id"] == bet_id:
@@ -2959,14 +2978,15 @@ def cmd_complete(data: dict, args) -> int:
             # 用更精确替换: status: <old> → status: done (保留 done_at)
             import re
 
-            block_new = re.sub(r"status: (\w+)", "status: done", block, count=1)
-            block_new = block_new.replace(
-                "status: done",
-                f"status: done\n  done_at: {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d')}",
-                1,
-            )
-            text = text[:idx] + block_new + text[block_end:]
-            path.write_text(text, encoding="utf-8")
+            done_at = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d")
+
+            def _mark_done(latest: str) -> str:
+                m = re.search(r"(- id: " + re.escape(b["id"]) + r"\n(?:.*\n)*?)  status: candidate\n", latest)
+                if not m:
+                    return latest  # 并发已写/条目状态已变 — 幂等返回
+                return latest[: m.start()] + m.group(1) + f"  status: done\n  done_at: '{done_at}'\n" + latest[m.start() + len(m.group(0)) :]
+
+            save_ledger_locked(_mark_done)
         print(f"[complete] ✅ {b['id']} → done")
         return 0
     except Exception as exc:
