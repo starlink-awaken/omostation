@@ -26871,6 +26871,11 @@ bets:
   circuit_breaker: 变量内存占用超过 2GB 或执行超时 60s 时强制熔断重置，避免宿主 OOM。
   retro: required
   value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-t10-136-rlm-kernel-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:68d290d0a311be920f288836569b4541a46384d27aefed2fe72f70053db1ed39
+    decision_ref: decision://accepted/BET-Y1Q4-T10-136
 
 - id: BET-Y1Q4-T10-137
   track: T10-MATURITY
