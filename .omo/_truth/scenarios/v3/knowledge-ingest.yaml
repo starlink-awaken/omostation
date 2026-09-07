@@ -11,7 +11,7 @@ scene_type: inbound
 domain: knowledge
 
 lifecycle: assisted
-activation: allowed
+activation: controlled
 owner: xiamingxing
 approver: governance-agent
 approval_state: confirmed

@@ -105,19 +105,48 @@ draft → shadow → assisted → supervised → routine
 
 ## 4. 快速开始
 
+### OMO CLI
+
 ```bash
 # 列出所有场景
-python3 -m omo.cli scene list
+PYTHONPATH=projects/omo/src python3 -m omo.cli scene list
 
 # 执行场景（dry-run）
-python3 -m omo.cli scene execute scene-inbox-to-decision --dry-run
+PYTHONPATH=projects/omo/src python3 -m omo.cli scene execute scene-inbox-to-decision --dry-run
 
 # 查看校准分数
-python3 -m omo.cli scene calibrate scene-inbox-to-decision
+PYTHONPATH=projects/omo/src python3 -m omo.cli scene calibrate scene-inbox-to-decision
 
 # 验证场景卡
-python3 -m omo.cli scene validate scene-inbox-to-decision
+PYTHONPATH=projects/omo/src python3 -m omo.cli scene validate scene-inbox-to-decision
 
+# 晋升/降级
+PYTHONPATH=projects/omo/src python3 -m omo.cli scene promote scene-inbox-to-decision --to supervised
+```
+
+### Cockpit CLI
+
+```bash
+# 列出所有场景
+cockpit scene lifecycle list
+
+# 执行场景
+cockpit scene execute scene-inbox-to-decision --dry-run
+
+# 校准
+cockpit scene calibrate scene-inbox-to-decision
+
+# 场景图
+cockpit scene graph
+
+# 详情/验证
+cockpit scene lifecycle status --scene-id scene-inbox-to-decision
+cockpit scene lifecycle validate --scene-id scene-inbox-to-decision
+```
+
+### 直接调用
+
+```bash
 # 构建场景图
 python3 bin/ssot/scene-graph.py build
 
@@ -126,9 +155,26 @@ python3 bin/ssot/journey-engine.py validate journey-inbox-to-decision
 
 # 迁移旧场景卡
 python3 bin/ssot/journey-engine.py migrate --all
+
+# 运行集成测试
+python3 tests/scene_v2/test_journey_engine.py
+python3 tests/scene_v2/test_calibration_engine.py
+python3 tests/scene_v2/test_scene_graph.py
 ```
 
-## 5. 存储结构
+## 5. Cockpit Web API
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/scene-lifecycle/list` | 列出所有场景 |
+| GET | `/api/scene-lifecycle/status/{scene_id}` | 场景详情 |
+| POST | `/api/scene-lifecycle/execute` | 执行场景 |
+| POST | `/api/scene-lifecycle/promote` | 晋升场景 |
+| POST | `/api/scene-lifecycle/demote` | 降级场景 |
+| GET | `/api/scene-lifecycle/graph` | 场景图 |
+| GET | `/api/scene-lifecycle/metrics/{scene_id}` | 校准指标 |
+
+## 6. 存储结构
 
 ```
 .omo/_truth/scenarios/v3/        — v3 场景卡

@@ -82,6 +82,8 @@ agent_profiles:
     - round-type-router
     - closeout-with-retro
     - scene-card-promotion
+    - scene-lifecycle
+    - scene-execution
     - submodule-pointer-bump
     can_write_lanes:
     - docs
