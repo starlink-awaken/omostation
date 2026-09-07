@@ -179,7 +179,8 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 601
+    script_baseline: 602
+    # 2026-09-07: +1 resident-sandbox-timemachine (BET-Y1Q4-T10-133 沙箱基建)
     # 2026-09-07: +2 T10-129 check-submodule-consistency + generate-submodule-health-report (子模块生命周期管理)
     # 2026-09-06: -2 删除 placeholder guard-chore-state.py + notify-submodule-change.py (canonical 内联已有真实实现, BET-Y1Q4-T6-24 净减)
     # 2026-09-06: -1 删除 check-dangerous-rebase.py (canonical pre-rebase 内联已有实现+逃生口, 消除重复, BET-Y1Q4-T6-24)

@@ -3616,6 +3616,11 @@ bets:
   risk_level: L1
   human_gate: false
   circuit_breaker: 沙箱创建超时 > 5s 时阻断试错任务，向指挥舱上报环境异常。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-t10-133-sandbox-timemachine-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:a879abffc84ead4d0e927ad345cd6f7a1cbafa94168fd14e5ce035df74f93129
+    decision_ref: decision://accepted/BET-Y1Q4-T10-133
   retro: required
   depends_on:
   - BET-Y1Q4-T10-132
