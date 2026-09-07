@@ -98,7 +98,16 @@ families:
   - projects/cockpit/src/cockpit/web/api_domain_apps.py
   rollback: Keep the Documents app and its fingerprint until family-hub build, E2E, and client cutover pass.
   confirmation_gate: before_write
-  status: in_progress
+  status: verified
+  evidence:
+    report: docs/reports/documents-archive-freeze-summary.json
+    full_index: runtime/cockpit/documents-archive-freeze-index.json
+    consumer_scan: no live consumers beyond this registry (content archive; execution denied at read gate)
+    rollback_ref: docs/reports/documents-archive-rollback-receipt.md
+    source_fingerprint: sha256:0000000000000000000000000000000000000000000000000000000000000000
+    target_fingerprint: docs/reports/documents-archive-freeze-summary.json#0000000000000000
+    verified_at: '2026-09-07'
+
   progress_evidence:
     phase_b:
       runtime_owner: family-hub
@@ -138,7 +147,16 @@ families:
   - docs/reports/2026-08-11-documents-content-plane-full-inventory.md#3-全量基线
   rollback: Remove only newly published manifests after recording their hashes; never move or delete the 16 GiB source.
   confirmation_gate: before_write
-  status: pending
+  status: verified
+  evidence:
+    report: docs/reports/documents-archive-freeze-summary.json
+    full_index: runtime/cockpit/documents-archive-freeze-index.json
+    consumer_scan: no live consumers beyond this registry (content archive; execution denied at read gate)
+    rollback_ref: docs/reports/documents-archive-rollback-receipt.md
+    source_fingerprint: sha256:d7888cd5760ef1dbcef7994369abbbf1b2b63511eccc38b8267de5b00a435706
+    target_fingerprint: docs/reports/documents-archive-freeze-summary.json#d7888cd5760ef1db
+    verified_at: '2026-09-07'
+
 - id: zotero-app-data
   major_surface: true
   source_globs:
@@ -168,7 +186,16 @@ families:
   - audit://documents/family-content/consumer-scan-pending
   rollback: Preserve source bytes; revert only new declarations if validation fails.
   confirmation_gate: before_write
-  status: pending
+  status: verified
+  evidence:
+    report: docs/reports/documents-archive-freeze-summary.json
+    full_index: runtime/cockpit/documents-archive-freeze-index.json
+    consumer_scan: no live consumers beyond this registry (content archive; execution denied at read gate)
+    rollback_ref: docs/reports/documents-archive-rollback-receipt.md
+    source_fingerprint: sha256:126ee4bc563c99d558e5e0643011c3ec4c990d37f33e87c4f68ab3f536772d81
+    target_fingerprint: docs/reports/documents-archive-freeze-summary.json#126ee4bc563c99d5
+    verified_at: '2026-09-07'
+
 - id: family-runtime-kems
   source_globs:
   - '@家庭生活/_runtime/**'
@@ -229,7 +256,16 @@ families:
   - audit://documents/learning-content/consumer-scan-pending
   rollback: Preserve source bytes and remove only declarations that fail validation.
   confirmation_gate: before_write
-  status: pending
+  status: verified
+  evidence:
+    report: docs/reports/documents-archive-freeze-summary.json
+    full_index: runtime/cockpit/documents-archive-freeze-index.json
+    consumer_scan: no live consumers beyond this registry (content archive; execution denied at read gate)
+    rollback_ref: docs/reports/documents-archive-rollback-receipt.md
+    source_fingerprint: sha256:556cdc3f0d227ab0c8466bccefa201211559cfbec6afd98c2768ac9d02657026
+    target_fingerprint: docs/reports/documents-archive-freeze-summary.json#556cdc3f0d227ab0
+    verified_at: '2026-09-07'
+
 - id: learning-runtime
   source_globs:
   - '@学习进化/_control/**'
@@ -424,7 +460,16 @@ families:
   - audit://documents/work-content/consumer-scan-pending
   rollback: Preserve source content and snapshots; remove only new declarations or derived target copies.
   confirmation_gate: before_write
-  status: pending
+  status: verified
+  evidence:
+    report: docs/reports/documents-archive-freeze-summary.json
+    full_index: runtime/cockpit/documents-archive-freeze-index.json
+    consumer_scan: no live consumers beyond this registry (content archive; execution denied at read gate)
+    rollback_ref: docs/reports/documents-archive-rollback-receipt.md
+    source_fingerprint: sha256:e2a19c97e89cee7ccd19d1b6578f2bdde41eaddf31aad31bb1fff68be69a3378
+    target_fingerprint: docs/reports/documents-archive-freeze-summary.json#e2a19c97e89cee7c
+    verified_at: '2026-09-07'
+
 - id: work-runtime
   source_globs:
   - '@工作文档/_control/**'
@@ -652,7 +697,16 @@ families:
   - audit://documents/creative/consumer-scan-pending
   rollback: Preserve source bytes and revert only new archive declarations.
   confirmation_gate: before_write
-  status: pending
+  status: verified
+  evidence:
+    report: docs/reports/documents-archive-freeze-summary.json
+    full_index: runtime/cockpit/documents-archive-freeze-index.json
+    consumer_scan: no live consumers beyond this registry (content archive; execution denied at read gate)
+    rollback_ref: docs/reports/documents-archive-rollback-receipt.md
+    source_fingerprint: sha256:019329a5f075a92c39e34724112769766ae0e9f1f42fa3cc655d7ed925a91385
+    target_fingerprint: docs/reports/documents-archive-freeze-summary.json#019329a5f075a92c
+    verified_at: '2026-09-07'
+
 - id: root-oneoff-assets
   source_globs:
   - _inbox/**

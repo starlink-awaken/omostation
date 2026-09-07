@@ -1,0 +1,27 @@
+{
+ "generated_at": "2026-09-07T15:02:06+0800",
+ "note": "per-file SHA-256 index stored locally at runtime/cockpit/documents-archive-freeze-index.json (too large for git); this report carries per-family summary digests",
+ "families": {
+  "career-code-archives": {
+   "file_count": 31491,
+   "aggregate_sha256": "d7888cd5760ef1dbcef7994369abbbf1b2b63511eccc38b8267de5b00a435706"
+  },
+  "family-content-archives": {
+   "file_count": 3323,
+   "aggregate_sha256": "126ee4bc563c99d558e5e0643011c3ec4c990d37f33e87c4f68ab3f536772d81"
+  },
+  "learning-content-archives": {
+   "file_count": 223714,
+   "aggregate_sha256": "556cdc3f0d227ab0c8466bccefa201211559cfbec6afd98c2768ac9d02657026"
+  },
+  "work-content-archives": {
+   "file_count": 14871,
+   "aggregate_sha256": "e2a19c97e89cee7ccd19d1b6578f2bdde41eaddf31aad31bb1fff68be69a3378"
+  },
+  "creative-content-archives": {
+   "file_count": 703,
+   "aggregate_sha256": "019329a5f075a92c39e34724112769766ae0e9f1f42fa3cc655d7ed925a91385"
+  }
+ },
+ "total_files": 274102
+}
