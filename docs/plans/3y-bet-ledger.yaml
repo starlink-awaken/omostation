@@ -2025,6 +2025,11 @@ bets:
   status: candidate
   goal: 解决知识层双头重叠（gbrain+kairon 占全系 51% 代码）病灶，将向量索引、图谱检索与长期情景记忆存取统一路由到 MOS 内核，消除 duplicate
     adapter。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-t6-02-unified-memory-merge-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:1db2d9d4eafc40e035d598f2d740491b802a20bc83871b1460a594f8aa04cead
+    decision_ref: decision://accepted/BET-Y2Q1-T6-02
   non_goals:
   - 不删除任何已有的有效测试用例
   - 不修改历史架构决策 ADR
@@ -2040,7 +2045,6 @@ bets:
   workflow: bet-execution
   underlying_workflow: project-code-change
   write_surfaces:
-  - projects/mos/
   - projects/knowledge/
   - .omo/_knowledge/retros/BET-Y2Q1-T6-02.md
   risk_level: L2
