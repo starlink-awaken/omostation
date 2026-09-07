@@ -1,0 +1,71 @@
+schema: scene-registry/v1
+generated_at: '2026-09-07T02:46:06.853985+00:00'
+total_scenes: 3
+domains:
+  work: 2
+  knowledge: 1
+lifecycles:
+  assisted: 3
+classes:
+  business: 3
+capabilities:
+- bos://analysis/codeanalyze/scan
+- bos://capability/compute/generate
+- bos://memory/gbrain/sync
+- bos://memory/kos/ingest
+- bos://memory/kos/mcp-v2
+- bos://memory/kos/search
+scenes:
+- scene_id: scene-document-review
+  name: 公文审查
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: assisted
+  activation: controlled
+  owner: xiamingxing
+  capability_refs:
+  - bos://capability/compute/generate
+  - bos://memory/kos/search
+  upstream:
+  - scene-inbox-to-decision
+  downstream:
+  - scene-knowledge-ingest
+  source_file: .omo/_truth/scenarios/v3/document-review.yaml
+- scene_id: scene-inbox-to-decision
+  name: 收件箱到决策
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: assisted
+  activation: controlled
+  owner: xiamingxing
+  capability_refs:
+  - bos://memory/kos/search
+  - bos://capability/compute/generate
+  - bos://analysis/codeanalyze/scan
+  upstream:
+  - scene-unified-inbox
+  downstream:
+  - scene-knowledge-ingest
+  - scene-document-review
+  source_file: .omo/_truth/scenarios/v3/inbox-to-decision.yaml
+- scene_id: scene-knowledge-ingest
+  name: 知识沉淀与检索
+  scene_class: business
+  scene_type: inbound
+  domain: knowledge
+  lifecycle: assisted
+  activation: controlled
+  owner: xiamingxing
+  capability_refs:
+  - bos://memory/kos/ingest
+  - bos://memory/kos/mcp-v2
+  - bos://memory/gbrain/sync
+  - bos://capability/compute/generate
+  upstream:
+  - scene-inbox-to-decision
+  - scene-document-review
+  - scene-meeting-supervision
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/knowledge-ingest.yaml
