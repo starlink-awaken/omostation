@@ -3243,7 +3243,8 @@ bets:
   title: 门禁优化二期 — 文档 PR 风险分级 + spec-init 一键工具
   appetite: 1 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: '2026-09-07'
   goal: 门禁摩擦第二波 — docs-only PR 跳过重检查 (ci-surfaces 加 skip_if_docs_only, runner 检测变更面自动降级)
     与 spec-init 一键工具 (frontmatter 七件套 + digest + binding 插入幂等完成), 消灭 spec binding
     五连报错试错。
@@ -3266,6 +3267,43 @@ bets:
   risk_level: L2
   human_gate: false
   circuit_breaker: docs-only 检测误跳过 (漏抓代码变更) 时 revert 字段标记
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@94030491a4134154277aa946939186d565c23afd
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-09-07-gate-optimization-phase2-spec.md
+            sha256: sha256:fa4ea2de623a3f5182a9e19bf9891d5bb96dbb8fa225054f4e16c8d361c8c973
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-07-gate-optimization-phase2-spec.md
+            sha256: sha256:fa4ea2de623a3f5182a9e19bf9891d5bb96dbb8fa225054f4e16c8d361c8c973
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-07-gate-optimization-phase2-spec.md
+            sha256: sha256:fa4ea2de623a3f5182a9e19bf9891d5bb96dbb8fa225054f4e16c8d361c8c973
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-135.md
+            sha256: sha256:c372db79e92ec202adc800d5d52edf5fef94dee4f2c4e912a7a7bf2f769b97ed
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-135.md
+            sha256: sha256:c372db79e92ec202adc800d5d52edf5fef94dee4f2c4e912a7a7bf2f769b97ed
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-135.md
+            sha256: sha256:c372db79e92ec202adc800d5d52edf5fef94dee4f2c4e912a7a7bf2f769b97ed
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-135.md
+            sha256: sha256:c372db79e92ec202adc800d5d52edf5fef94dee4f2c4e912a7a7bf2f769b97ed
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   retro: required
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-07-gate-optimization-phase2-spec.md
