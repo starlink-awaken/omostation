@@ -1,16 +1,15 @@
-id: scene-v3-registry
-title: Scene v3 Registry Generator
-description: Auto-generate index of all v3 scene cards
-maturity: active
-entry: bin/ssot/scene-v3-registry.py
-commands:
-  - scan
-  - generate
-  - report
-frequency: on_demand
+schema: script-registry/v1
+id: bin/ssot/scene-v3-registry.py
+name: Scene v3 Registry Generator
+category: governance
 owner: governance-team
-surfaces:
-  read:
-    - .omo/_truth/scenarios/v3/
-  write:
-    - .omo/_truth/registry/scene-cards-v3.yaml
+description: Auto-generate index of all v3 scene cards
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: active
+last_reviewed: "2026-09-07"
