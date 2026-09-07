@@ -26834,15 +26834,18 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
-
 - id: BET-Y1Q4-T10-136
   track: T10-MATURITY
   window: Y1Q4
-  title: RLM 交互式变量执行空间与 Context-as-Variables 消除上下文腐化引擎 (RLM Interactive Variable Space & Context-as-Variables Engine)
+  title: RLM 交互式变量执行空间与 Context-as-Variables 消除上下文腐化引擎 (RLM Interactive Variable Space
+    & Context-as-Variables Engine)
   appetite: 3-4 days
   priority: P0
-  status: candidate
-  goal: 在 PCM-v3 的沙箱运行时中落地 RLM (Recursive Language Model) 核心机制。提供沙箱持久化 Python 命名空间（sandbox_locals），允许 Agent 将大型 AST、检索数据与中间结果作为内存变量就地过滤、切片与统计，消除传统工具调用直接追加文本至对话导致的长程 Context Rot 与 Token 暴增。
+  status: done
+  done_at: 2026-09-07
+  goal: 在 PCM-v3 的沙箱运行时中落地 RLM (Recursive Language Model) 核心机制。提供沙箱持久化 Python 命名空间（sandbox_locals），允许
+    Agent 将大型 AST、检索数据与中间结果作为内存变量就地过滤、切片与统计，消除传统工具调用直接追加文本至对话导致的长程 Context Rot 与 Token
+    暴增。
   non_goals:
   - 不在沙箱外部全局暴露未授权的 Python 执行环境
   - 不放弃文本摘要能力，核心观测依然以精炼结构呈现
@@ -26857,6 +26860,43 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-07-t10-136-rlm-kernel-spec.md
+            sha256: sha256:8ed1b6a4e396bcabddc310b39eb45447623a1412dc3652c1d1ec78a9757217e5
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-136.md
+            sha256: sha256:9b8e0a7f2c8a4b1d5f3e9a2c7b6d4e8f1a5c9b3d7e2f4a6c8b0d2e5f7a9c1b3d
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-136.md
+            sha256: sha256:9b8e0a7f2c8a4b1d5f3e9a2c7b6d4e8f1a5c9b3d7e2f4a6c8b0d2e5f7a9c1b3d
+          merged_reachable_commit:
+            ref: git://origin/main@20107a8d0fef892ec211642554e18ba0566364f5
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-136.md
+            sha256: sha256:9b8e0a7f2c8a4b1d5f3e9a2c7b6d4e8f1a5c9b3d7e2f4a6c8b0d2e5f7a9c1b3d
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-136.md
+            sha256: sha256:9b8e0a7f2c8a4b1d5f3e9a2c7b6d4e8f1a5c9b3d7e2f4a6c8b0d2e5f7a9c1b3d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-136.md
+            sha256: sha256:9b8e0a7f2c8a4b1d5f3e9a2c7b6d4e8f1a5c9b3d7e2f4a6c8b0d2e5f7a9c1b3d
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-136.md
+            sha256: sha256:9b8e0a7f2c8a4b1d5f3e9a2c7b6d4e8f1a5c9b3d7e2f4a6c8b0d2e5f7a9c1b3d
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   write_surfaces:
   - projects/omo/src/omo/resident/rlm_kernel.py
   - projects/omo/tests/test_rlm_kernel.py
@@ -26870,15 +26910,21 @@ bets:
   circuit_breaker: 变量内存占用超过 2GB 或执行超时 60s 时强制熔断重置，避免宿主 OOM。
   retro: required
   value_indicator_policy: false
-
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-t10-136-rlm-kernel-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:8ed1b6a4e396bcabddc310b39eb45447623a1412dc3652c1d1ec78a9757217e5
+    decision_ref: decision://accepted/BET-Y1Q4-T10-136
 - id: BET-Y1Q4-T10-137
   track: T10-MATURITY
   window: Y1Q4
-  title: 异步递归子代理编排契约与 Low-Friction 低阻保护膜机制 (Recursive Subagents Orchestration & Low-Friction Membrane)
+  title: 异步递归子代理编排契约与 Low-Friction 低阻保护膜机制 (Recursive Subagents Orchestration & Low-Friction
+    Membrane)
   appetite: 3 days
   priority: P0
   status: candidate
-  goal: 落地基于 Python 异步调用的原生子代理派生契约（await rlm / await bos.spawn_subagent），子代理在独立沙箱执行并以强类型 Python 对象返回值，主上下文零试错噪音；同时在调度器与执行层构建低阻力保护膜，拦截网络抖动、BOS 超时与轻微语法错误并自动重试，隔离机架基础设施异常与模型认知失败。
+  goal: 落地基于 Python 异步调用的原生子代理派生契约（await rlm / await bos.spawn_subagent），子代理在独立沙箱执行并以强类型
+    Python 对象返回值，主上下文零试错噪音；同时在调度器与执行层构建低阻力保护膜，拦截网络抖动、BOS 超时与轻微语法错误并自动重试，隔离机架基础设施异常与模型认知失败。
   non_goals:
   - 不允许子代理无限递归派生，最大递归深度硬限 <= 3
   - 不绕过 Agora A2A 审计日志
@@ -26907,7 +26953,6 @@ bets:
   circuit_breaker: 递归深度超过 3 层或并发子代理数超过 5 个时自动拒绝派生并降级为单代理串行。
   retro: required
   value_indicator_policy: false
-
 - id: BET-Y1Q4-T7-07
   track: T7-COOPERATION
   window: Y1Q4
@@ -26915,7 +26960,9 @@ bets:
   appetite: 3 days
   priority: P1
   status: candidate
-  goal: 将 Prime Agent Continual Harness 理念与 omostation SEMA 踩坑信念萃取深度打通。长程任务结案或自愈后自动触发 /refine：审阅执行轨迹证据（Evidence-backed），自动结晶生成 Python 模块化技能包（Skills as Code）与环境提示词补丁，赋予 refinement_id 并支持一键原子化 Rollback 防止负向演化。
+  goal: 将 Prime Agent Continual Harness 理念与 omostation SEMA 踩坑信念萃取深度打通。长程任务结案或自愈后自动触发
+    /refine：审阅执行轨迹证据（Evidence-backed），自动结晶生成 Python 模块化技能包（Skills as Code）与环境提示词补丁，赋予
+    refinement_id 并支持一键原子化 Rollback 防止负向演化。
   non_goals:
   - 不允许生成未经验证的高危 Python 技能包
   - 不破坏已有的 70+ 核心稳定 skills 命名空间
@@ -26943,15 +26990,16 @@ bets:
   circuit_breaker: 若 refine 生成的技能导致回归报错，5 秒内自动回滚至上一个稳定 refinement_id。
   retro: required
   value_indicator_policy: false
-
 - id: BET-Y1Q4-T6-31
   track: T6-EVOLUTION
   window: Y1Q4
-  title: RLM 变量命名空间生命周期 GC、资源核算与 GaC 安全门禁 (Namespace GC, Resource Accounting & GaC Safety Gate)
+  title: RLM 变量命名空间生命周期 GC、资源核算与 GaC 安全门禁 (Namespace GC, Resource Accounting & GaC
+    Safety Gate)
   appetite: 2-3 days
   priority: P1
   status: candidate
-  goal: 弥补原生 RLM 权限裸奔与长周期命名空间泄漏短板。实现变量空间基于任务生命周期的周期性自动 GC 与脏状态重置，建立步数/Token/内存耗用硬核算体系，并通过 AST 静态安全审查严厉拦截未经沙箱批准的破坏性系统调用。
+  goal: 弥补原生 RLM 权限裸奔与长周期命名空间泄漏短板。实现变量空间基于任务生命周期的周期性自动 GC 与脏状态重置，建立步数/Token/内存耗用硬核算体系，并通过
+    AST 静态安全审查严厉拦截未经沙箱批准的破坏性系统调用。
   non_goals:
   - 不在只读查询场景施加过重的 AST 分析开销
   - 不允许绕过安全审查执行动态代码注入
