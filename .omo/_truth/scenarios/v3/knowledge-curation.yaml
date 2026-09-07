@@ -1,0 +1,63 @@
+schema: scene-card/v3
+scene_id: knowledge-curation
+version: 3.0.0
+name: Knowledge Curation
+description: 将工作中产生的知识 (公文经验/工程实践/会议洞察/调研发现) 沉淀为可检索、可复用的结构化知识资产
+scene_class: business
+scene_type: external_resource
+domain: work
+lifecycle: supervised
+activation: active
+owner: xiamingxing
+approver: business-governance
+approval_state: pending_business_confirmation
+bet: BET-Y1Q1-T3-01
+runtime:
+  journey_ref: capture-to-retrieval
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities:
+    - iris:wpsnote
+    - iris:obsidian
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 shadow 期间无知识条目被自动索引，则场景无价值，回退 draft
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: 工作完成产生可沉淀知识 (PR merge后/公文审查后/会议结束后/调研完成后)
+input_contract: 知识片段引用 (evidence:// 或 vault://redacted/), 含上下文标签和来源场景
+result_contract: 结构化知识条目 (标题/标签/摘要/全文引用/关联项) + 检索索引更新
+outcome_metric: knowledge_reuse_rate / retrieval_precision
+consumer: xiamingxing
+failure_cost: 知识流失/重复劳动/经验无法复用导致效率下降
+data_classification: internal
+data_scope: redacted-knowledge-references-and-curation-metadata
+operator: knowledge-curation-agent-under-human-review
+permission_ref: permission://scene/knowledge-curation
+downstream_refs:
+- scene: document-review
+  handoff: evidence://scene/knowledge-curation/output:relevant-knowledge
+  trigger: on_review_requested
+- scene: research-pipeline
+  handoff: evidence://scene/knowledge-curation/output:research-feed
+  trigger: on_knowledge_published
+sample_refs:
+- vault://redacted/knowledge-curation/sample-1
+- vault://redacted/knowledge-curation/sample-2
+- vault://redacted/knowledge-curation/sample-3

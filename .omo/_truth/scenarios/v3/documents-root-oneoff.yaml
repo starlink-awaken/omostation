@@ -1,0 +1,45 @@
+schema: scene-card/v3
+scene_id: documents-root-oneoff
+version: 3.0.0
+name: Documents Root Oneoff
+description: 根一次性运行时隔离
+scene_class: business
+scene_type: inbound
+domain: work
+lifecycle: supervised
+activation: active
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q4-T8-04
+runtime:
+  journey_ref: documents-root-oneoff-journey
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities: []
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 shadow 期间无文档被处理，则场景无实际价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: 检测到 quarantine 类 documents 任务需要执行
+input_contract: 源文件路径/范围
+result_contract: 完成确认 + 证据记录
+outcome_metric: documents_quarantine_success_rate
+consumer: xiamingxing
