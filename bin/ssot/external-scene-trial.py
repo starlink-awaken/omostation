@@ -143,6 +143,7 @@ def build_scene_trial(
     )
     intake = intake_module.build_intake(dict(scene_card))
     preflight = preflight_module.build_preflight(dict(scene_card), dict(catalog), now=now)
+    safe_plan = _trial_plan(trial_plan, scene_card)
     if intake["status"] == "blocked" or preflight["status"] == "blocked":
         return {
             "schema": SCHEMA,
@@ -160,7 +161,6 @@ def build_scene_trial(
                 "activation_attempted": False,
             },
         }
-    safe_plan = _trial_plan(trial_plan, scene_card)
     scene = preflight["scene"]
     identity = {
         "scene": scene,
