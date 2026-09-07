@@ -2002,7 +2002,13 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
   value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-t10-123-freeze-closeout-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:fcac723a234d4024d6a018a6da982aaa23fd2813446147291a74527a8f311b70
+    decision_ref: decision://accepted/BET-Y1Q4-T10-123
   write_surfaces:
+  - docs/superpowers/specs/2026-09-07-t10-123-freeze-closeout-design.md
   - .omo/_truth/registry/documents-content-plane-migrations.yaml
   - bin/gac/documents-content-plane-migration-check.py
   - docs/reports/2026-09-documents-content-plane-archive-freeze.md
