@@ -1,8 +1,14 @@
+---
+status: accepted
+lifecycle: history
+owner: governance-team
+created: 2026-09-07
+last-reviewed: 2026-09-07
+title: BET-Y1Q4-T10-136 RLM 变量内核设计
+type: doc
+---
+
 # BET-Y1Q4-T10-136: RLM 交互式变量执行空间与 Context-as-Variables 引擎
-
-## Status
-
-accepted
 
 ## Context
 
