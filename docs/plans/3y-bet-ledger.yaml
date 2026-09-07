@@ -1638,7 +1638,8 @@ bets:
   title: 跨生命周期记忆衰减与冲突消除引擎（过时政策自动标记与认知重整）
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
+  done_at: 2026-09-07
   goal: 建立 MOS 记忆全生命周期管理：基于时间戳与权威更新动态衰减旧版规章制度（如《旧暂行办法》被《新实施细则》废止），自动消除记忆图谱中的语义冲突与陈旧过时事实。
   non_goals:
   - 不物理抹除历史档案，保留全量历史快照可审计
