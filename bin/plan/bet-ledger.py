@@ -714,6 +714,25 @@ def load() -> dict:
     return data
 
 
+def save_ledger_locked(transform) -> None:
+    """T10-137: 加锁读-改-写 — 多 agent 并发回写 status/evidence 的竞态根治.
+
+    transform(text) -> str: 在锁内对最新 ledger 文本做变换后原子落盘.
+    锁文件 docs/plans/.3y-bet-ledger.lock (flock, 进程级互斥)."""
+    import fcntl
+    lock_path = LEDGER.parent / ".3y-bet-ledger.lock"
+    with open(lock_path, "w") as lock_f:
+        fcntl.flock(lock_f, fcntl.LOCK_EX)
+        try:
+            latest = LEDGER.read_text(encoding="utf-8")
+            new_text = transform(latest)
+            tmp = LEDGER.with_suffix(".yaml.tmp")
+            tmp.write_text(new_text, encoding="utf-8")
+            tmp.replace(LEDGER)
+        finally:
+            fcntl.flock(lock_f, fcntl.LOCK_UN)
+
+
 def bet_by_id(data: dict, bet_id: str) -> dict:
     for b in data["bets"]:
         if b["id"] == bet_id:
