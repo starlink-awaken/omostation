@@ -5,10 +5,10 @@ purpose: >
   执行场景卡 v3 — 通过 BOS URI 解析能力引用，在 KEI 沙箱中执行 journey 状态机。
   信号触发 → scene-trigger → journey-engine → Agora BOS Router → MCP 工具 → 结果记录。
 agents:
-  roles: [governance-agent, executor-agent]
+  roles: [governance-agent]
 observer_policy: required
 allowed_lanes: [config, governance_state]
-lock_scopes: [scene:{scene_id}]
+lock_scopes: ["scene:{scene_id}"]
 surfaces:
   read:
     - projects/agora/etc/bos-services.yaml

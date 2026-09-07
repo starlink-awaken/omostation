@@ -8,7 +8,7 @@ agents:
   roles: [governance-agent]
   observer_policy: optional
 allowed_lanes: [governance_state, docs, config]
-lock_scopes: [scene:{scene_id}]
+lock_scopes: ["scene:{scene_id}"]
 surfaces:
   read:
     - .omo/standards/scene-card-lifecycle.yaml
