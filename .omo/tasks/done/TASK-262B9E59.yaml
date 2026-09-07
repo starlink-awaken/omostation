@@ -6,7 +6,7 @@ description: 'mof-model.py (已弃用, stderr 提示走 cockpit) 仍被某调度
   已手工恢复 nodes/ 并删除生成物; 70s 观察无重写, 但调度源 (crontab 55 项/LaunchAgents 4 个/watch-dispatch)
   未定位到具体条目, 复发风险未消除。另: docs/CLI-REFERENCE.md 与 ssot/README.md 仍把 mof-model 列为工具链成员,
   与弃用状态矛盾。'
-status: candidate
+status: done
 task_type: debt
 risk_level: L2
 depends_on: []
@@ -54,3 +54,13 @@ metadata:
   created_at: '2026-09-06T06:33:51Z'
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: omo:task:create:TASK-262B9E59
+  evidence_paths_refreshed_at: '2026-09-07T00:04:22Z'
+  evidence_paths_refreshed_by: projects/omo
+  evidence_paths_refresh_source_ref: omo:task:add-evidence:TASK-262B9E59
+  completed_at: '2026-09-07T00:04:35Z'
+  completed_via: omo task done
+  completion_actor: projects/omo
+  completion_source_ref: omo:task:done:TASK-262B9E59
+evidence_paths:
+- projects/ecos/src/ecos/ssot/README.md
+completed_at: '2026-09-07T00:04:35Z'
