@@ -1965,7 +1965,50 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_truth/registry/documents-content-plane-migrations.yaml
+            sha256: sha256:baf516d44b18eb40f2c40078da3e742747a8a442bf6f8bf9902c551fd295b3e6
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-123.md
+            sha256: sha256:b31787c923c731c34457034b3c15a886ec8e1dddd2a79175f92d2678fa94c82b
+          rollback:
+            ref: receipt://docs/reports/documents-archive-rollback-receipt.md
+            sha256: sha256:27e5b338f9f9841faff1133895c2072ea7a2d230a46d0cf3e934d2b3d0854c8e
+          merged_reachable_commit:
+            ref: git://origin/main@16740cd86b92aa68b323443aa44c433be4433388
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/documents-archive-freeze-summary.json
+            sha256: sha256:4db430a0df14c2e3f6af8831dd74db0cd7f4660458c9ec7b55479c62b75912be
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-123.md
+            sha256: sha256:b31787c923c731c34457034b3c15a886ec8e1dddd2a79175f92d2678fa94c82b
+          replay:
+            ref: receipt://docs/reports/2026-09-documents-content-plane-archive-freeze.md
+            sha256: sha256:a0cb49dc8a005e60b59946a9a61767e838e6f577b410bc93af418eef1644d983
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-123.md
+            sha256: sha256:b31787c923c731c34457034b3c15a886ec8e1dddd2a79175f92d2678fa94c82b
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-t10-123-freeze-closeout-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:fcac723a234d4024d6a018a6da982aaa23fd2813446147291a74527a8f311b70
+    decision_ref: decision://accepted/BET-Y1Q4-T10-123
   write_surfaces:
+  - docs/superpowers/specs/2026-09-07-t10-123-freeze-closeout-design.md
   - .omo/_truth/registry/documents-content-plane-migrations.yaml
   - bin/gac/documents-content-plane-migration-check.py
   - docs/reports/2026-09-documents-content-plane-archive-freeze.md
