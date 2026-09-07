@@ -1,0 +1,50 @@
+schema: scene-card/v3
+scene_id: admin-collect
+version: 3.0.0
+name: Admin Collect
+description: 向 deadline_tracker 注册任务截止追踪, 进入等待回复状态
+scene_class: business
+scene_type: inbound
+domain: work
+lifecycle: shadow
+activation: preview
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q4-T8-04
+runtime:
+  journey_ref: admin-notification-workflow
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities:
+    - tracker:deadline-register
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 30 天内无 admin 类任务触发，则场景无实际价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: journey forwarding→collecting 转移 (email_drafts_created == true)
+input_contract: latest_subject + deadline + target + task_type
+result_contract: deadline_registered 布尔 + awaiting_replies 恒 true (注册失败时带 error 字段但不阻塞流程)
+outcome_metric: deadline_registration_rate
+consumer: xiamingxing
+failure_cost: 截止漏登记导致催办缺失
+data_classification: internal
+data_scope: task-deadline-metadata
+operator: admin-collect-dispatch

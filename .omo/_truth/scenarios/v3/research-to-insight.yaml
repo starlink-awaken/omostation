@@ -1,8 +1,8 @@
 schema: scene-card/v3
-scene_id: inbox-to-decision
+scene_id: research-to-insight
 version: 3.0.0
-name: Inbox To Decision
-description: 统一收件箱消息自动分类、审查、决策、沉淀
+name: Research To Insight
+description: 研究任务完成后的知识沉淀与关联发现
 scene_class: business
 scene_type: inbound
 domain: work
@@ -13,7 +13,7 @@ approver: governance-agent
 approval_state: confirmed
 bet: BET-Y2Q1-T7-03
 runtime:
-  journey_ref: inbox-to-decision
+  journey_ref: research-to-insight
   timeout: 3600s
   sandbox:
     level: isolated
@@ -33,21 +33,21 @@ quality:
     - name: false_positive_rate
       target: 0.1
       weight: 0.2
-falsifier: 若 30 天内收件箱消息 auto_resolution_rate 持续 <0.6 且无人工复核增益, 场景无实际价值
+falsifier: 若 30 天内研究成果无一条被后续任务/决策引用 (insight 复用=0), 场景无实际价值
 observability:
   tracing: true
   evidence_capture: full
 activation_blockers: []
-trigger: 新消息进入 unified-inbox
-input_contract: InboxMessage[] (sender, subject, body, attachments)
-result_contract: Decision | Task | Knowledge | Archived
-outcome_metric: auto_resolution_rate >= 0.6
+trigger: 研究任务状态变为 completed
+input_contract: ResearchTask (query, sources, findings)
+result_contract: Insight[] + KnowledgeNode[]
+outcome_metric: insights_per_research >= 2
 failure_cost: low
 data_classification: internal
-data_scope: workspace-inbox
+data_scope: workspace-research
 operator: omo-resident
-permission_ref: bos://resident/inbox/read
+permission_ref: bos://resident/research/read
 sample_refs:
-- .omo/state/scene-cards/inbox-to-decision/samples/sample-1.json
-- .omo/state/scene-cards/inbox-to-decision/samples/sample-2.json
-- .omo/state/scene-cards/inbox-to-decision/samples/sample-3.json
+- .omo/state/scene-cards/research-to-insight/samples/sample-1.json
+- .omo/state/scene-cards/research-to-insight/samples/sample-2.json
+- .omo/state/scene-cards/research-to-insight/samples/sample-3.json

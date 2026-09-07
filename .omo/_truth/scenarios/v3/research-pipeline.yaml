@@ -4,7 +4,7 @@ version: 3.0.0
 name: Research Pipeline
 description: 将调研问题转化为结构化的收集、推导、检索和记忆流程，产出可引用的洞察报告
 scene_class: business
-scene_type: inbound
+scene_type: external_resource
 domain: work
 lifecycle: supervised
 activation: active
@@ -12,18 +12,15 @@ owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
 bet: BET-Y1Q1-T3-01
-triggers:
-- type: manual
-output:
-  contract: 调研报告 (发现/结论/引用/建议) + 知识条目 (自动沉淀到 knowledge-curation)
-  events_emitted:
-  - scene.completed
 runtime:
   journey_ref: research-to-insight
   timeout: 3600s
   sandbox:
     level: isolated
-    capabilities: []
+    capabilities:
+    - iris:rss
+    - iris:zhihu
+    - iris:wxread
     permissions: []
 quality:
   calibration:
@@ -46,6 +43,7 @@ observability:
 activation_blockers: []
 trigger: '提出调研问题 (来源: 会议需求/公文要求/技术选型/政策研究)'
 input_contract: 调研问题 + 范围约束 + 预期深度 (evidence:// 或 vault://redacted/)
+result_contract: 调研报告 (发现/结论/引用/建议) + 知识条目 (自动沉淀到 knowledge-curation)
 outcome_metric: research_cycle_hours / insight_citation_rate
 consumer: xiamingxing
 failure_cost: 调研遗漏/结论不准/引用缺失导致决策依据薄弱
@@ -53,3 +51,14 @@ data_classification: internal
 data_scope: redacted-research-references-and-pipeline-metadata
 operator: research-agent-under-human-review
 permission_ref: permission://scene/research-pipeline
+downstream_refs:
+- scene: knowledge-curation
+  handoff: evidence://scene/research-pipeline/output:research-findings
+  trigger: on_research_completed
+- scene: document-review
+  handoff: evidence://scene/research-pipeline/output:policy-reference
+  trigger: on_policy_research_completed
+sample_refs:
+- vault://redacted/research-pipeline/sample-1
+- vault://redacted/research-pipeline/sample-2
+- vault://redacted/research-pipeline/sample-3

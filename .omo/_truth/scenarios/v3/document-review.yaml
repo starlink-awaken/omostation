@@ -1,81 +1,56 @@
 schema: scene-card/v3
-scene_id: scene-document-review
-version: "3.0.0"
-name: 公文审查
-description: >
-  公文起草 → 格式检查 → 敏感项核查 → 依据验证，全程审计留痕。
-  支持公文格式(GB/T 9704)、敏感词、政策依据三维度审查。
-
+scene_id: document-review
+version: 3.0.0
+name: Document Review
+description: 将公文草稿生成、格式检查、敏感项检查和依据核验放进同一条可审计、可退回的决策旅程
 scene_class: business
 scene_type: inbound
 domain: work
-
-lifecycle: assisted
-activation: controlled
+lifecycle: supervised
+activation: active
 owner: xiamingxing
-approver: governance-agent
+approver: business-governance
 approval_state: confirmed
-
-bet: BET-Y1Q4-T6-24
-
-triggers:
-  - type: signal
-    signal: document.created
-    filter: "category == 'official'"
-    debounce: 60s
-  - type: manual
-
-input:
-  contract: scene-document-input-v3
-  required: [document_path, document_type]
-  optional: [context, related_documents]
-
-output:
-  contract: scene-review-output-v3
-  produces: [review_report, issues, decision]
-  events_emitted: [scene.completed, scene.review_completed]
-
+bet: BET-Y1Q1-T7-01
 runtime:
-  journey_ref: journey-document-review
-  timeout: 1800s
-  retry:
-    max_attempts: 2
-    backoff: fixed
-    initial_delay: 10s
+  journey_ref: inbox-to-decision
+  timeout: 3600s
   sandbox:
     level: isolated
     capabilities:
-      - bos://capability/compute/generate
-      - bos://memory/kos/search
-    permissions: [workflow-read, evidence-write]
-    resource_limits:
-      max_tokens: 30000
-      max_tool_calls: 10
-      max_duration: 180s
-
+    - bos://capability/compute/generate
+    - bos://memory/kos/search
+    permissions: []
 quality:
   calibration:
     min_samples: 30
-    min_calibration: 0.65
+    min_calibration: 0.6
     metrics:
-      - {name: issue_detection_rate, target: 0.85, weight: 0.5}
-      - {name: false_positive_rate, target: 0.1, weight: 0.3}
-      - {name: review_speed_seconds, target: 120, weight: 0.2}
-  falsifier:
-    - {condition: "issue_detection_rate < 0.7 over 30d", action: demote_to_shadow}
-
-topology:
-  upstream:
-    - {scene: scene-inbox-to-decision, handoff_via: event}
-  downstream:
-    - {scene: scene-knowledge-ingest, trigger_on: scene.completed}
-
-human_in_the_loop:
-  escalation:
-    - {condition: "review.severity == 'critical'", action: require_approval}
-  notification:
-    - {event: scene.escalated, channel: push}
-
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 shadow 期间无文档被自动审查，则场景无价值
 observability:
   tracing: true
   evidence_capture: full
+activation_blockers: []
+trigger: '公文起草/审查需求进入确认队列 (来源: 卫健委借调 / 国转中心 / 日常公文)'
+input_contract: 具备主题、时间、接收对象、核心内容四要素的公文任务引用 (evidence:// 或 vault://redacted/)
+result_contract: 包含草稿、格式检查、敏感项审查、依据核验、人工退回记录的 Workflow Mesh 证据
+outcome_metric: review_cycle_hours
+consumer: document-owner-and-reviewer
+failure_cost: 公文格式/敏感项/依据错误外发，造成返工、合规风险或决策延误
+data_classification: internal
+data_scope: redacted-document-references-and-governed-review-evidence
+operator: document-review-agent-under-human-review
+permission_ref: permission://scene/document-review
+sample_refs:
+- vault://redacted/document-review/sample-1
+- vault://redacted/document-review/sample-2
+- vault://redacted/document-review/sample-3
