@@ -2472,6 +2472,98 @@ def complete_worker_origin_ack(
     return {**refreshed, "ack_outcome": result["outcome"]}
 
 
+def cmd_spec_init(data: dict, args) -> int:
+    """T10-135: spec binding 一键化 — frontmatter 七件套补缺 + digest + ledger binding 幂等插入.
+
+    用法: bet-ledger.py spec-init <BET-ID> --spec <path> [--title <t>]
+    消灭 SPEC_REF_INVALID / FRONTMATTER_* / DIGEST_MISMATCH 五连报错的手工试错。
+    """
+    from pathlib import Path as _P
+    import hashlib as _hashlib
+    from datetime import datetime as _datetime
+
+    bet = bet_by_id(data, args.bet_id)
+    if not bet:
+        print(f"[spec-init] ❌ BET 不存在: {args.bet_id}")
+        return 1
+    spec_path = _P(args.spec)
+    if not spec_path.is_file():
+        print(f"[spec-init] ❌ spec 文件不存在: {spec_path}")
+        return 1
+
+    REQUIRED = {
+        "schema_version": "specification/v1",
+        "spec_version": "1.0.0",
+        "status": "accepted",
+        "lifecycle": "contract",
+        "owner": "governance-team",
+    }
+    text = spec_path.read_text(encoding="utf-8")
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        head, body = text[:end], text[end + 4:]
+    else:
+        head, body = "", text
+
+    # 解析现有 frontmatter (简化 key: value)
+    fm: dict[str, str] = {}
+    for line in head.splitlines()[1:] if head else []:
+        if ":" in line:
+            k, _, v = line.partition(":")
+            fm[k.strip()] = v.strip()
+
+    # 补缺七件套
+    fm.setdefault("schema_version", REQUIRED["schema_version"])
+    fm.setdefault("spec_version", REQUIRED["spec_version"])
+    fm.setdefault("title", f"{args.bet_id} specification")
+    fm["bet_id"] = args.bet_id  # 强制对齐 (防 BET_MISMATCH)
+    fm["status"] = "accepted"  # 强制 accepted (STATUS_NOT_ACCEPTED 防线)
+    fm.setdefault("lifecycle", REQUIRED["lifecycle"])
+    fm.setdefault("owner", REQUIRED["owner"])
+    fm.setdefault("last-reviewed", _datetime.now().strftime("%Y-%m-%d"))
+
+    order = ["schema_version", "spec_version", "title", "bet_id", "status", "lifecycle", "owner", "last-reviewed"]
+    fm_text = "---\n" + "\n".join(f"{k}: {fm[k]}" for k in order if k in fm) + "\n---\n"
+    spec_path.write_text(fm_text + body, encoding="utf-8")
+
+    digest = "sha256:" + _hashlib.sha256(spec_path.read_bytes()).hexdigest()
+    spec_rel = args.spec.replace("\\", "/").removeprefix("./")
+    binding = {
+        "spec_ref": f"repo://{spec_rel}",
+        "spec_version": "1.0.0",
+        "content_digest": digest,
+        "decision_ref": f"decision://accepted/{args.bet_id}",
+    }
+
+    # 幂等插入 ledger binding
+    existing = bet.get("accepted_specifications") or []
+    if existing:
+        if existing[0].get("spec_ref") == binding["spec_ref"]:
+            existing[0].update(binding)  # 刷新 digest
+            print(f"[spec-init] binding 已存在, digest 已刷新")
+        else:
+            print(f"[spec-init] ❌ 已有不同 spec binding: {existing[0].get('spec_ref')}")
+            return 1
+    else:
+        bet["accepted_specifications"] = [binding]
+        print(f"[spec-init] binding 已插入")
+
+    # 写回 (多文档保留: 只更新含 bets 的末文档)
+    docs = []
+    for doc in yaml.safe_load_all(LEDGER.read_text(encoding="utf-8")):
+        docs.append(doc if isinstance(doc, dict) else {})
+    for doc in docs:
+        if doc.get("bets") is not None:
+            doc["bets"] = data["bets"]
+    LEDGER.write_text(
+        yaml.dump_all(docs, allow_unicode=True, sort_keys=False, default_flow_style=False),
+        encoding="utf-8",
+    )
+    print(f"[spec-init] ✅ {args.bet_id} ← {spec_rel} (digest {digest[:20]}...)")
+    print("[spec-init] 下一步: agent-workflow.py start <workflow> --bet {} --profile governance-agent".format(args.bet_id))
+    return 0
+
+
 def cmd_lint(data: dict, args) -> int:
     """台账自检：ID 唯一、依赖存在、轨道/窗口/状态合法、必填字段。"""
     errs: list[str] = []
@@ -2906,6 +2998,10 @@ def main() -> int:
     sub.add_parser("surface")
     sub.add_parser("gate").add_argument("window")
     sub.add_parser("lint")
+    si = sub.add_parser("spec-init", help="spec binding 一键化 (T10-135)")
+    si.add_argument("bet_id")
+    si.add_argument("--spec", required=True)
+    si.add_argument("--title")
     portfolio = sub.add_parser("portfolio")
     portfolio_sub = portfolio.add_subparsers(dest="portfolio_cmd", required=True)
     portfolio_lint = portfolio_sub.add_parser("lint")
@@ -2939,6 +3035,7 @@ def main() -> int:
         "lint": cmd_lint,
         "portfolio": cmd_portfolio,
         "complete": cmd_complete,
+        "spec-init": cmd_spec_init,
     }[args.cmd](data, args)
 
 

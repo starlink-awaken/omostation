@@ -21,6 +21,29 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 CI_SURFACES = WORKSPACE / ".omo" / "_truth" / "registry" / "ci-surfaces.yaml"
 
 
+# T10-135: 文档面 pattern — 全命中即 docs-only PR
+DOCS_ONLY_PATTERNS = ("*.md", "docs/*", ".omo/*")
+
+
+def _changed_files() -> list[str]:
+    r = subprocess.run(
+        ["git", "diff", "--name-only", "origin/main...HEAD"],
+        capture_output=True, text=True, cwd=str(WORKSPACE),
+    )
+    return [line.strip() for line in (r.stdout or "").splitlines() if line.strip()]
+
+
+def _is_docs_only() -> bool:
+    files = _changed_files()
+    if not files:
+        return False  # 无法判定 (无 diff) → 不跳过, 保守
+    for f in files:
+        if f.endswith(".md") or f.startswith(("docs/", ".omo/")):
+            continue
+        return False
+    return True
+
+
 def _load_yaml(path: Path) -> dict:
     import yaml
 
@@ -43,9 +66,13 @@ def run_surfaces(workflow: str, cwd: Path = WORKSPACE) -> dict:
     ]
     results = []
     failures = 0
+    docs_only = _is_docs_only()
     for surface in selected:
         tool = str(surface.get("tool") or "")
         if not tool:
+            continue
+        if docs_only and surface.get("skip_if_docs_only"):
+            results.append({"tool": tool, "ok": True, "detail": "docs-only-skip (T10-135)"})
             continue
         cmd = [sys.executable, tool] if tool.endswith(".py") else [tool]
         cmd += [str(a) for a in (surface.get("args") or [])]

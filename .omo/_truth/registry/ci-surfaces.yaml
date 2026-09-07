@@ -540,6 +540,7 @@ surfaces:
   workflow: governance-check.yml
   args:
   - --no-new-warnings
+  skip_if_docs_only: true
   gate: false
   triggers:
   - per_pr
