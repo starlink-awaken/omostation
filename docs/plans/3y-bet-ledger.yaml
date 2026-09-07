@@ -26431,7 +26431,7 @@ bets:
   - .githooks/README.md
   - .omo/_knowledge/retros/BET-Y1Q4-T6-24.md
 - accepted_specifications:
-  - content_digest: sha256:578348ae082552d354aa66a38156e3a395e6d8a07c7ec88151204989c7d3a6e0
+  - content_digest: sha256:e8ebbbde0fdc0dde3262bbdb2aac32896c6c21d5a453252aa0053e3fd7662cad
     decision_ref: decision://accepted/BET-Y1Q4-T10-136
     spec_ref: repo://docs/superpowers/specs/2026-09-07-t10-136-rlm-kernel-spec.md
     spec_version: 1.0.0
@@ -26455,7 +26455,8 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  done_at: '2026-09-07'
+  status: done
   title: RLM 交互式变量执行空间与 Context-as-Variables 消除上下文腐化引擎 (RLM Interactive Variable Space
     & Context-as-Variables Engine)
   track: T10-MATURITY
@@ -26484,6 +26485,7 @@ bets:
   - 单元测试 100% 通过
   goal: 落地基于 Python 异步调用的原生子代理派生契约（await rlm / await bos.spawn_subagent），子代理在独立沙箱执行并以强类型
     Python 对象返回值，主上下文零试错噪音；同时在调度器与执行层构建低阻力保护膜，拦截网络抖动、BOS 超时与轻微语法错误并自动重试，隔离机架基础设施异常与模型认知失败。
+  done_at: '2026-09-07'
   human_gate: false
   id: BET-Y1Q4-T10-137
   non_goals:
@@ -26493,7 +26495,7 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 异步递归子代理编排契约与 Low-Friction 低阻保护膜机制 (Recursive Subagents Orchestration & Low-Friction
     Membrane)
   track: T10-MATURITY
