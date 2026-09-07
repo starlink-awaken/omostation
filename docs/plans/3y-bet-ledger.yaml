@@ -1596,7 +1596,45 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
+            sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
+          merged_reachable_commit:
+            ref: git://origin/main@be77bc53cfa238d4b95fbe4fe42e33221b0950df
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
+            sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
+            sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
+            sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
+            sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
+            sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
+            sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
+  status: done
+  done_at: 2026-09-07
   title: 知识层彻底归并首期（gbrain/kairon 存取去重，统一至 MOS）
   track: T6-SUBTRACT
   underlying_workflow: project-code-change
