@@ -36,13 +36,27 @@ def get_submodules(root: str) -> list[str]:
     return paths
 
 
-def get_staged_submodules() -> list[str]:
-    """获取 staged 的子模块变更."""
+def get_staged_submodules(root: str) -> list[str]:
+    """获取 staged 的子模块变更 (仅返回真实子模块路径)."""
+    # 获取所有已注册的子模块路径
+    known_submodules = set(get_submodules(root))
+    if not known_submodules:
+        return []
     result = subprocess.run(
         ["git", "diff", "--cached", "--name-only"],
         capture_output=True, text=True, check=True,
     )
-    return [line for line in result.stdout.splitlines() if line.startswith("projects/")]
+    # 只返回属于已注册子模块的变更
+    staged = []
+    for line in result.stdout.splitlines():
+        if not line.startswith("projects/"):
+            continue
+        # 匹配精确子模块路径或其子路径
+        for sub in known_submodules:
+            if line == sub or line.startswith(sub + "/"):
+                staged.append(sub)
+                break
+    return list(set(staged))
 
 
 def check_submodule(sub_path: str, root: str, merge_mode: bool) -> tuple[bool, str]:
@@ -119,7 +133,7 @@ def main() -> int:
     merge_mode = args.merge
 
     if args.staged:
-        submodules = get_staged_submodules()
+        submodules = get_staged_submodules(root)
     else:
         submodules = get_submodules(root)
 
