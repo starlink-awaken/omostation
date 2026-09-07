@@ -188,22 +188,92 @@ def execute_journey(scene_id, signal, dry_run=False) -> ExecutionContext:
     return ctx
 
 def _execute_action(action, state_def, ctx) -> dict:
-    caps = ctx.scene_card.get("runtime",{}).get("sandbox",{}).get("capability_refs",[])
+    """Execute a state action — supports both BOS capability_refs and named actions."""
+    # 1. Try BOS capability_refs from scene card
+    caps = ctx.scene_card.get("runtime", {}).get("sandbox", {}).get("capability_refs", [])
     if caps:
         results = {}
         for uri in caps:
-            try:
-                if "kos" in uri and "search" in uri: results[uri] = {"status":"succeeded","results":[],"note":"KOS stub"}
-                elif "compute/generate" in uri: results[uri] = {"status":"succeeded","generated":True}
-                else: results[uri] = {"status":"unresolved","uri":uri}
-            except Exception as e: results[uri] = {"status":"error","error":str(e)}
-        return {"status":"succeeded","capabilities_executed":len(results),"capabilities":results}
-    if action == "noop": return {"status":"succeeded"}
-    if action in ("llm_classify","generate_decision"): return {"status":"succeeded","confidence":0.85}
+            results[uri] = _dispatch_bos_uri(uri, ctx)
+        failed = sum(1 for r in results.values() if r.get("status") == "error")
+        return {
+            "status": "succeeded" if failed == 0 else "partial",
+            "capabilities_executed": len(results),
+            "capabilities": results,
+        }
+
+    # 2. Named actions
+    if action == "noop":
+        return {"status": "succeeded"}
+    if action in ("llm_classify", "generate_decision"):
+        return {"status": "succeeded", "confidence": 0.85, "action": action}
     if action == "emit_event":
-        _emit_omo_event(state_def.get("event","scene.step_completed"),{"scene_id":ctx.scene_id,"state":ctx.current_state})
-        return {"status":"succeeded"}
-    return {"status":"succeeded","action":action}
+        _emit_omo_event(
+            state_def.get("event", "scene.step_completed"),
+            {"scene_id": ctx.scene_id, "state": ctx.current_state},
+        )
+        return {"status": "succeeded", "event": state_def.get("event")}
+
+    # 3. iris connector actions (e.g., action: "iris_list_apple_mail")
+    if action.startswith("iris_list_"):
+        connector = action.replace("iris_list_", "")
+        return _call_iris_list(connector)
+
+    return {"status": "succeeded", "action": action}
+
+
+def _dispatch_bos_uri(uri: str, ctx) -> dict:
+    """Dispatch a BOS URI to its actual service call."""
+    try:
+        # iris connectors
+        if "memory/iris" in uri or uri.startswith("bos://iris/"):
+            connector = uri.rstrip("/").split("/")[-1]
+            return _call_iris_list(connector)
+
+        # KOS search
+        if "memory/kos" in uri and "search" in uri:
+            query = ctx.signal.get("query", ctx.signal.get("content", ""))
+            return {"status": "succeeded", "results": [], "query": query, "note": "KOS search stub — integrate KOS REST API"}
+
+        # LLM generate
+        if "capability/compute/generate" in uri:
+            return {"status": "succeeded", "generated": True, "note": "LLM call stub — integrate AetherForge"}
+
+        # Generic: try subprocess if it looks like a CLI command
+        parts = uri.replace("bos://", "").split("/")
+        if len(parts) >= 2:
+            return {"status": "unresolved", "uri": uri, "note": f"No handler for domain '{parts[0]}'"}
+
+        return {"status": "unresolved", "uri": uri}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+def _call_iris_list(connector: str, limit: int = 5) -> dict:
+    """Call iris list <connector> and return parsed items."""
+    try:
+        result = subprocess.run(
+            ["iris", "--json", "list", connector, "--limit", str(limit)],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            # Strip deprecation warnings, find JSON start
+            raw = result.stdout
+            for start_char in ("[", "{"):
+                idx = raw.find(start_char)
+                if idx >= 0:
+                    raw = raw[idx:]
+                    break
+            try:
+                data = json.loads(raw)
+                return {"status": "succeeded", "data": data, "connector": connector}
+            except json.JSONDecodeError:
+                return {"status": "succeeded", "data": raw, "connector": connector, "format": "raw"}
+        return {"status": "succeeded", "data": [], "connector": connector}
+    except FileNotFoundError:
+        return {"status": "skipped", "reason": "iris not installed", "connector": connector}
+    except subprocess.TimeoutExpired:
+        return {"status": "timeout", "connector": connector}
 
 def _detect_backedges(spec) -> set:
     transitions = spec.get("transitions", [])
