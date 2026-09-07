@@ -3249,9 +3249,9 @@ bets:
   - 不修改现有 work/ 前缀分支
   - 不影响已存在的 agent 分支
   accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-06-agent-branch-namespace-spec.md
+  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t10-128-agent-namespace-isolation.md
     spec_version: 1.0.0
-    content_digest: sha256:10c2084187d6ac69329bd2c225a1a9ac216bd699b4d0d72603c5e1e6a0871d5b
+    content_digest: sha256:8e8350351b6f2c444a4bdef4bd7fbc811f4ac255654b39c5b184225f2ed251d0
     decision_ref: decision://accepted/BET-Y1Q4-T10-128
   done_when:
   - gac-worktree.sh claim 强制使用 agent/{actor_id}/ 命名空间
@@ -3281,14 +3281,14 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@733a28ed7c891a64ba844f26fbd107ef42eb8353
           tests:
-            ref: receipt://docs/superpowers/specs/2026-09-06-agent-branch-namespace-spec.md
-            sha256: sha256:10c2084187d6ac69329bd2c225a1a9ac216bd699b4d0d72603c5e1e6a0871d5b
+            ref: receipt://docs/superpowers/specs/2026-09-06-t10-128-agent-namespace-isolation.md
+            sha256: sha256:8e8350351b6f2c444a4bdef4bd7fbc811f4ac255654b39c5b184225f2ed251d0
           diff:
-            ref: receipt://docs/superpowers/specs/2026-09-06-agent-branch-namespace-spec.md
-            sha256: sha256:10c2084187d6ac69329bd2c225a1a9ac216bd699b4d0d72603c5e1e6a0871d5b
+            ref: receipt://docs/superpowers/specs/2026-09-06-t10-128-agent-namespace-isolation.md
+            sha256: sha256:8e8350351b6f2c444a4bdef4bd7fbc811f4ac255654b39c5b184225f2ed251d0
           rollback:
-            ref: receipt://docs/superpowers/specs/2026-09-06-agent-branch-namespace-spec.md
-            sha256: sha256:10c2084187d6ac69329bd2c225a1a9ac216bd699b4d0d72603c5e1e6a0871d5b
+            ref: receipt://docs/superpowers/specs/2026-09-06-t10-128-agent-namespace-isolation.md
+            sha256: sha256:8e8350351b6f2c444a4bdef4bd7fbc811f4ac255654b39c5b184225f2ed251d0
       operational:
         status: PROVEN
         evidence:
@@ -3310,28 +3310,6 @@ bets:
     overall_state: delivery_accepted
   value_indicator_policy: false
   retro: required
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-06-t10-128-agent-namespace-isolation.md
-    spec_version: 1.0.0
-    content_digest: sha256:8e8350351b6f2c444a4bdef4bd7fbc811f4ac255654b39c5b184225f2ed251d0
-    decision_ref: decision://accepted/BET-Y1Q4-T10-128
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://work/bet-y1q4-t10-128@c724a3b41
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-128.md
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-128.md
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-128.md
 - id: BET-Y1Q4-T10-129
   track: T10-MATURITY
   window: Y1Q4
