@@ -3611,7 +3611,8 @@ bets:
     Rollback)
   appetite: 2-3 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-07
   goal: 为持久化 Agent 的高危或未知探索任务提供秒级建立的隔离 Git Worktree 物理沙箱。在沙箱内运行门禁与试错，若出现异常或 GaC 红灯立即执行硬性时光机回滚自毁，绝对防止主工作区受污染。
   non_goals:
   - 不允许沙箱绕过 gac-worktree 机制直接写主工作区
@@ -3627,6 +3628,43 @@ bets:
     expect: exit 0
   workflow: bet-execution
   underlying_workflow: project-code-change
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-07-t10-133-sandbox-timemachine-design.md
+            sha256: sha256:a879abffc84ead4d0e927ad345cd6f7a1cbafa94168fd14e5ce035df74f93129
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-133.md
+            sha256: sha256:dd3c0c7a4066f6ea4c09d37e6a0679527166a5d9215685bd137ecbfa96fe3949
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-133.md
+            sha256: sha256:dd3c0c7a4066f6ea4c09d37e6a0679527166a5d9215685bd137ecbfa96fe3949
+          merged_reachable_commit:
+            ref: git://origin/main@c7b7951f9d59c9e44036d5d10199330c5f004097
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-133.md
+            sha256: sha256:dd3c0c7a4066f6ea4c09d37e6a0679527166a5d9215685bd137ecbfa96fe3949
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-133.md
+            sha256: sha256:dd3c0c7a4066f6ea4c09d37e6a0679527166a5d9215685bd137ecbfa96fe3949
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-133.md
+            sha256: sha256:dd3c0c7a4066f6ea4c09d37e6a0679527166a5d9215685bd137ecbfa96fe3949
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-133.md
+            sha256: sha256:dd3c0c7a4066f6ea4c09d37e6a0679527166a5d9215685bd137ecbfa96fe3949
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   write_surfaces:
   - bin/gac/resident-sandbox-timemachine.sh
   - projects/omo/src/omo/resident/sandbox_driver.py
