@@ -75,3 +75,21 @@ jobs:
     owner: governance-team
     sfop_slot: S
     status: active
+
+  - name: scene-calibration-weekly
+    schedule: "0 6 * * 1"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/calibration-engine.py daily >> runtime/cron/scene-calibration.log 2>&1'
+    planes: [crontab]
+    sla_heartbeat_hours: 336
+    owner: governance-team
+    sfop_slot: S
+    status: active
+
+  - name: scene-registry-sync-daily
+    schedule: "15 6 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-v3-registry.py generate >> runtime/cron/scene-registry.log 2>&1'
+    planes: [crontab]
+    sla_heartbeat_hours: 48
+    owner: governance-team
+    sfop_slot: S
+    status: active

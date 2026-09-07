@@ -1,0 +1,59 @@
+schema: scene-card/v3
+scene_id: project-supervision
+version: 3.0.0
+name: Project Supervision
+description: 对在管项目进行多维度监督 (进度/风险/质量/资源), 输出决策建议和干预方案
+scene_class: business
+scene_type: inbound
+domain: work
+lifecycle: supervised
+activation: active
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q2-T6-04
+triggers:
+- type: manual
+output:
+  contract: 监督报告 (红黄绿灯/风险项/决策建议) + 干预方案 (调整/升级/暂停)
+  events_emitted:
+  - scene.completed
+runtime:
+  journey_ref: oversight-to-decision
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities: []
+    permissions:
+    - ci-read
+    - workflow-read
+    - evidence-write
+    - state-read
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 shadow 期间无项目健康报告产出，则场景无价值，回退 draft
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: 项目里程碑到达 / 风险告警 / 定期监督审查 / 管理层信息请求
+input_contract: 项目状态引用 (周期报送产出 + 会议督办记录 + 工程交付指标, evidence:// 格式)
+outcome_metric: decision_response_latency / risk_forecast_accuracy
+consumer: xiamingxing
+failure_cost: 项目风险未及时发现/决策延误导致项目失控
+data_classification: internal
+data_scope: project-metadata-and-supervision-evidence
+operator: supervision-agent-under-human-review
+permission_ref: permission://internal/project-supervision

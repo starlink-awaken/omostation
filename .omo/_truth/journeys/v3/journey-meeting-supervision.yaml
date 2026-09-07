@@ -1,0 +1,24 @@
+schema: journey-spec/v3
+journey_id: journey-meeting-supervision
+name: 会议督办旅程
+description: 会议决议 → 任务派发 → 督办追踪 → 闭环
+
+initial_state: detected
+
+states:
+  - {name: detected, type: initial}
+  - {name: extract_decisions, type: task, action: extract_decisions, timeout: 30s}
+  - {name: create_tasks, type: task, action: create_tasks, timeout: 30s}
+  - {name: assign_owners, type: task, action: assign_owners, timeout: 15s}
+  - {name: supervision_loop, type: task, action: track_progress, timeout: 60s}
+  - {name: escalate_overdue, type: task, action: escalate, timeout: 15s}
+  - {name: closed, type: final}
+
+transitions:
+  - {from: detected, to: extract_decisions}
+  - {from: extract_decisions, to: create_tasks}
+  - {from: create_tasks, to: assign_owners}
+  - {from: assign_owners, to: supervision_loop}
+  - {from: supervision_loop, to: escalate_overdue, condition: "result.has_overdue == true"}
+  - {from: supervision_loop, to: closed, condition: "result.all_complete == true"}
+  - {from: escalate_overdue, to: supervision_loop}

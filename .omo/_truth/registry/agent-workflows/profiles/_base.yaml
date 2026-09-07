@@ -81,7 +81,7 @@ agent_profiles:
     - round-engineering
     - round-type-router
     - closeout-with-retro
-    - scene-card-promotion
+    - scene-lifecycle
     - scene-lifecycle
     - scene-execution
     - submodule-pointer-bump
