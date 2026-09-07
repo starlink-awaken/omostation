@@ -1,0 +1,86 @@
+schema: scene-card/v3
+scene_id: scene-knowledge-ingest
+version: "3.0.0"
+name: 知识沉淀与检索
+description: >
+  知识中枢——接收所有场景输出，自动结构化知识片段并索引。
+  为所有场景提供检索服务。上游场景完成后自动触发知识入库。
+
+scene_class: business
+scene_type: inbound
+domain: knowledge
+
+lifecycle: assisted
+activation: controlled
+owner: xiamingxing
+approver: governance-agent
+approval_state: confirmed
+
+bet: BET-Y1Q4-T6-24
+
+triggers:
+  - type: signal
+    signal: scene.completed
+    debounce: 120s
+  - type: schedule
+    cron: "0 2 * * *"
+
+input:
+  contract: scene-knowledge-input-v3
+  required: [knowledge_fragment, source_scene]
+  optional: [entities, relations, tags]
+
+output:
+  contract: scene-knowledge-output-v3
+  produces: [indexed_fragment, entities, search_index_update]
+  events_emitted: [scene.completed, knowledge.indexed]
+
+runtime:
+  journey_ref: journey-knowledge-ingest
+  timeout: 1800s
+  retry:
+    max_attempts: 3
+    backoff: exponential
+    initial_delay: 5s
+    max_delay: 30s
+  sandbox:
+    level: isolated
+    capabilities:
+      - bos://memory/kos/ingest
+      - bos://memory/kos/mcp-v2
+      - bos://memory/gbrain/sync
+      - bos://capability/compute/generate
+    permissions: [workflow-read, evidence-write, knowledge-write]
+    resource_limits:
+      max_tokens: 30000
+      max_tool_calls: 15
+      max_duration: 240s
+
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    min_recall_citation_rate: 0.25
+    metrics:
+      - {name: indexing_success_rate, target: 0.95, weight: 0.4}
+      - {name: recall_citation_rate, target: 0.25, weight: 0.3}
+      - {name: entity_extraction_f1, target: 0.8, weight: 0.3}
+  falsifier:
+    - {condition: "calibration < 0.6 over 30d OR recall_citation_rate < 0.25", action: demote_to_shadow}
+
+topology:
+  upstream:
+    - {scene: scene-inbox-to-decision, handoff_via: event}
+    - {scene: scene-document-review, handoff_via: event}
+    - {scene: scene-meeting-supervision, handoff_via: event}
+  downstream: []
+
+human_in_the_loop:
+  escalation:
+    - {condition: "confidence < 0.6", action: require_approval}
+  notification:
+    - {event: scene.escalated, channel: dashboard}
+
+observability:
+  tracing: true
+  evidence_capture: full

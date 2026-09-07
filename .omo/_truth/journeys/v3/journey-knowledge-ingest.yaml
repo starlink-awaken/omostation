@@ -1,0 +1,22 @@
+schema: journey-spec/v3
+journey_id: journey-knowledge-ingest
+name: 知识沉淀旅程
+description: 知识片段 → 结构化 → 质量门 → 索引 → 完成
+
+initial_state: captured
+
+states:
+  - {name: captured, type: initial}
+  - {name: extract, type: task, action: extract_entities, timeout: 30s}
+  - {name: quality_gate, type: task, action: check_quality, timeout: 15s}
+  - {name: structured, type: task, action: structure_fragment, timeout: 30s}
+  - {name: index, type: task, action: emit_event, event: knowledge.indexed}
+  - {name: completed, type: final}
+
+transitions:
+  - {from: captured, to: extract}
+  - {from: extract, to: quality_gate}
+  - {from: quality_gate, to: structured, condition: "result.quality == 'pass'"}
+  - {from: quality_gate, to: completed, condition: "result.quality == 'reject'"}
+  - {from: structured, to: index}
+  - {from: index, to: completed}

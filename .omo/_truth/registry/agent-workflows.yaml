@@ -127,6 +127,8 @@ agent_profiles:
     - round-type-router
     - closeout-with-retro
     - scene-card-promotion
+    - scene-lifecycle
+    - scene-execution
     - submodule-pointer-bump
     can_write_lanes:
     - docs
@@ -1323,7 +1325,7 @@ projection:
   lifecycle: read_only_generated_compatibility
   schema: agent-workflow-compat-projection/v1
   source: .omo/_truth/registry/agent-workflows
-  source_digest: sha256:7ee086272e8275fcc8e8304b8175e338fbcfdf27482e3f3b225ac21e162a4abe
+  source_digest: sha256:174ed468864abe2b13f755fa3dc12c9344df39487a0a80281a71ad671794de58
   writer: bin/agent-workflow.py projection-sync
 requirement_iteration_policy:
   adr: ADR-0203
@@ -3281,6 +3283,150 @@ workflows:
     write:
     - .omo/_truth/scenarios/{scene_id}.yaml
   title: Scene card lifecycle promotion
+- agents:
+    roles:
+    - governance-agent
+  allowed_lanes:
+  - config
+  - governance_state
+  evidence_required:
+  - journey_run_ref
+  - capability_outcome_refs
+  - calibration_delta
+  id: scene-execution
+  lock_scopes:
+  - scene:{scene_id}
+  observer_policy: required
+  phases:
+    closeout:
+    - command:
+      - python3
+      - bin/ssot/scene-reflection.py
+      - generate
+      - --scene-id
+      - '{scene_id}'
+      id: reflection
+      mode: required
+    execute:
+    - command:
+      - python3
+      - bin/ssot/journey-engine.py
+      - execute
+      - '{scene_id}'
+      id: run_journey
+      mode: required
+    preflight:
+    - command:
+      - python3
+      - bin/ssot/scene-card-lifecycle.py
+      - check
+      - --scene-card
+      - .omo/_truth/scenarios/v3/{scene_id}.yaml
+      id: validate_scene
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/ssot/scene-outcome-recorder.py
+      - record
+      - --scene-id
+      - '{scene_id}'
+      id: record_outcome
+      mode: required
+  purpose: '执行场景卡 v3 — 通过 BOS URI 解析能力引用，在 KEI 沙箱中执行 journey 状态机。 信号触发 → scene-trigger → journey-engine → Agora BOS Router → MCP 工具 → 结果记录。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - projects/agora/etc/bos-services.yaml
+    - .omo/_truth/scenarios/v3/{scene_id}.yaml
+    - bin/ssot/journey-engine.py
+    - bin/ssot/calibration-engine.py
+    write:
+    - .omo/_knowledge/workflow-mesh/scene-outcomes.jsonl
+  title: Scene v3 execution via BOS/MCP capability refs
+- agents:
+    observer_policy: optional
+    roles:
+    - governance-agent
+  allowed_lanes:
+  - governance_state
+  - docs
+  - config
+  evidence_required:
+  - transition_evidence
+  - sample_refs
+  - calibration_score
+  id: scene-lifecycle
+  lock_scopes:
+  - scene:{scene_id}
+  phases:
+    closeout:
+    - command:
+      - python3
+      - bin/ssot/scene-outcome-recorder.py
+      - record-lifecycle
+      - --scene-id
+      - '{scene_id}'
+      - --from
+      - <from_level>
+      - --to
+      - <to_level>
+      id: record
+      mode: required
+    execute:
+    - command:
+      - python3
+      - bin/ssot/scene-card-lifecycle.py
+      - transition
+      - --scene-card
+      - .omo/_truth/scenarios/v3/{scene_id}.yaml
+      - --tier
+      - <target_level>
+      - --actor
+      - <actor>
+      id: transition
+      mode: manual
+    preflight:
+    - command:
+      - python3
+      - bin/ssot/journey-engine.py
+      - validate
+      - <journey_id>
+      id: validate_schema
+      mode: required
+    - command:
+      - python3
+      - bin/ssot/scene-card-lifecycle.py
+      - check
+      - --scene-card
+      - .omo/_truth/scenarios/v3/{scene_id}.yaml
+      id: check_readiness
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/ssot/scene-card-lifecycle.py
+      - check
+      - --scene-card
+      - .omo/_truth/scenarios/v3/{scene_id}.yaml
+      id: verify
+      mode: required
+  purpose: '场景卡 v3 生命周期状态转换 — 复用 OMO 任务门禁 + Workflow Mesh。 支持 promote（升级）、demote（降级）、calibrate（校准）三种操作。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .omo/standards/scene-card-lifecycle.yaml
+    - .omo/_truth/scenarios/v3/{scene_id}.yaml
+    - bin/ssot/scene-card-lifecycle.py
+    - bin/ssot/journey-engine.py
+    - bin/ssot/calibration-engine.py
+    write:
+    - .omo/_truth/scenarios/v3/{scene_id}.yaml
+  title: Scene v3 lifecycle transition (promote/demote/calibrate)
 - agents:
     observer_policy: recommended_for_unattended_runs
     roles:

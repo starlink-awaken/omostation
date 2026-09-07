@@ -1,0 +1,34 @@
+schema: journey-spec/v3
+journey_id: journey-inbox-to-decision
+name: 收件箱到决策旅程
+description: 统一收件箱信号 → 智能分类 → 审查 → 决策 → 归档
+
+initial_state: detected
+
+states:
+  - {name: detected, type: initial}
+  - {name: classified, type: task, action: llm_classify, timeout: 30s}
+  - {name: routed, type: router}
+  - {name: document_review, type: task, action: run_document_review, timeout: 120s}
+  - {name: decision_generation, type: task, action: generate_decision, timeout: 60s}
+  - {name: decision_gate, type: human_gate, requires_human: true, approval_timeout: 86400s}
+  - {name: decision_recorded, type: task, action: record_decision}
+  - {name: knowledge_capture, type: task, action: emit_event, event: scene.completed}
+  - {name: archived, type: final}
+  - {name: escalated, type: final}
+
+transitions:
+  - {from: detected, to: classified}
+  - {from: classified, to: routed}
+  - {from: routed, to: document_review, condition: "result.classification == 'document'"}
+  - {from: routed, to: decision_generation, condition: "result.classification == 'task_assignment'"}
+  - {from: routed, to: decision_generation, condition: "result.classification == 'info'"}
+  - {from: document_review, to: decision_generation}
+  - {from: decision_generation, to: decision_gate}
+  - {from: decision_gate, to: decision_recorded, condition: "confidence >= 0.7"}
+  - {from: decision_gate, to: escalated, condition: "confidence < 0.5"}
+  - {from: decision_recorded, to: knowledge_capture}
+  - {from: knowledge_capture, to: archived}
+
+compensation:
+  decision_recorded: {type: revert_file, payload: {path: ".omo/_evidence/decisions/{run_id}.md"}}
