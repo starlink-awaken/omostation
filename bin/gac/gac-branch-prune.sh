@@ -76,6 +76,12 @@ while IFS= read -r branch; do
   if [ "$age_hours" -ge "${TTL_HOURS}" ]; then
     echo "   过期 (${age_hours}h): $branch"
     if [ "$DRY_RUN" = false ]; then
+      # T10-140 引用保护: 未推 commit / open PR / 活跃认领 → 跳过
+      guard_out="$(python3 lib/cleanup-guard.py check "$branch" 2>/dev/null || echo "DELETABLE")"
+      if [ "$guard_out" != "DELETABLE" ]; then
+        echo "   ⛔ 跳过 (引用保护 ${guard_out#PROTECTED: }): $branch"
+        continue
+      fi
       # 检查是否有对应的 worktree 且有未保存改动
       wt_path="$(git rev-parse --show-toplevel)/../$(echo "$branch" | sed 's|work/||')"
       if [ -d "$wt_path" ] && ! git -C "$wt_path" diff --quiet 2>/dev/null; then
@@ -120,6 +126,12 @@ while IFS= read -r branch; do
   if [ "$age_hours" -ge "${AGENT_TTL_HOURS}" ]; then
     echo "   过期 (${age_hours}h): $branch"
     if [ "$DRY_RUN" = false ]; then
+      # T10-140 引用保护: 未推 commit / open PR / 活跃认领 → 跳过
+      guard_out="$(python3 lib/cleanup-guard.py check "$branch" 2>/dev/null || echo "DELETABLE")"
+      if [ "$guard_out" != "DELETABLE" ]; then
+        echo "   ⛔ 跳过 (引用保护 ${guard_out#PROTECTED: }): $branch"
+        continue
+      fi
       session="${branch##*/}"
       wt_path="$(dirname "$(git rev-parse --show-toplevel)")/ws-${session}"
       if [ -d "$wt_path" ] && ! git -C "$wt_path" diff --quiet 2>/dev/null; then

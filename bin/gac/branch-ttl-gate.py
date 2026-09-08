@@ -131,14 +131,20 @@ def main() -> int:
     removed_main = 0
     for prefix, branches in stale_main.items():
         for b in branches:
+            b_name = b.split(" (")[0]
             print(f"  过期: {b}")
             if enforce:
-                session = b.rsplit("/", 1)[-1]
+                session = b_name.rsplit("/", 1)[-1]
                 wt = WS_ROOT.parent / f"ws-{session}"
                 if wt.is_dir() and _git("status", "--porcelain", cwd=wt):
                     print(f"    ⏭  跳过 (worktree 有未提交改动): {b}")
                     continue
-                subprocess.run(["git", "branch", "-D", b], capture_output=True)
+                # T10-140 引用保护: 未推 commit / open PR / 活跃认领 一律跳过
+                guard = _cleanup_guard(b_name)
+                if guard is not None:
+                    print(f"    ⛔ 跳过 (引用保护 {guard}): {b}")
+                    continue
+                subprocess.run(["git", "branch", "-D", b_name], capture_output=True)
                 _claim_release(session)
                 removed_main += 1
     print(f"  主仓: 发现 {total_main}, 实删 {removed_main}")
@@ -178,6 +184,17 @@ def _git_pr_open(branch: str) -> bool:
         return bool(json.loads(out.stdout or "[]"))
     except Exception:
         return False
+
+
+def _cleanup_guard(branch: str) -> str | None:
+    """T10-140: 删除前置引用保护 (共享 lib/cleanup-guard; 加载失败宽容放行)."""
+    try:
+        sys.path.insert(0, str(WS_ROOT / "lib"))
+        import cleanup_guard
+        return cleanup_guard.protect_reason(branch)
+    except Exception as exc:  # noqa: BLE001 — guard 故障不阻断清理主流程
+        print(f"    ⚠️  guard 跳过 ({exc})")
+        return None
 
 
 if __name__ == "__main__":
