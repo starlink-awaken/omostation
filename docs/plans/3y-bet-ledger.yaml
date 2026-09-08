@@ -1852,7 +1852,45 @@ bets:
   priority: P2
   retro: required
   risk_level: L0
-  status: candidate
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-01.md
+            sha256: sha256:216d24b15da0daad404158c7756ff266cd12c670350db9281af43697cfb7f85a
+          merged_reachable_commit:
+            ref: git://origin/main@f472fd981b1745f3fdff912a9414a07e1789bb6e
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-01.md
+            sha256: sha256:216d24b15da0daad404158c7756ff266cd12c670350db9281af43697cfb7f85a
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-01.md
+            sha256: sha256:216d24b15da0daad404158c7756ff266cd12c670350db9281af43697cfb7f85a
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-01.md
+            sha256: sha256:216d24b15da0daad404158c7756ff266cd12c670350db9281af43697cfb7f85a
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-01.md
+            sha256: sha256:216d24b15da0daad404158c7756ff266cd12c670350db9281af43697cfb7f85a
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-01.md
+            sha256: sha256:216d24b15da0daad404158c7756ff266cd12c670350db9281af43697cfb7f85a
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-01.md
+            sha256: sha256:216d24b15da0daad404158c7756ff266cd12c670350db9281af43697cfb7f85a
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+  status: done
+  done_at: 2026-09-08
   title: 生命科学与大模型架构前沿文献自动精读与技术选型沙盘
   track: T7-SCENE
   underlying_workflow: project-code-change
