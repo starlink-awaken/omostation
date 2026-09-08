@@ -275,7 +275,9 @@ SEMVER_RE = re.compile(
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
 )
 SHA256_REF_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
-STARTABLE_BET_STATUSES = frozenset({"candidate", "pending", "blocked"})
+# T10-139: in_progress 必须可 start — claim-bet 认领即置 in_progress (标记执行意图),
+# 认领者 start 是流程正门; 若 in_progress 不可 start, 认领后流程自锁.
+STARTABLE_BET_STATUSES = frozenset({"candidate", "pending", "blocked", "in_progress"})
 HUMAN_APPROVAL_BLOCKED_REENTRY_POLICY = "human_approval_required"
 
 
