@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-09-06T06:30:01Z
+generated_at: 2026-09-08T02:46:09Z
 status: candidate
 counts:
-  runs: 56
+  runs: 57
   failures: 0
-  total: 56
+  total: 57
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-06T06:30:01Z
+- generated_at: 2026-09-08T02:46:09Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 56 成功运行 + 0 失败模式 = 56 草稿
+- sediment 覆盖: 57 成功运行 + 0 失败模式 = 57 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -77,6 +77,7 @@ failure_breakdown:
 - 20260905T035405Z-project-code-change-1aa0d9f7.md
 - 20260905T123719Z-project-code-change-b39eb6a8.md
 - 20260905T133828Z-project-code-change-4018a578.md
+- 20260907T070230Z-project-code-change-5648a2cb.md
 
 ## 失败模式 (failures/)
 
@@ -462,6 +463,13 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=0
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=1131.142
+- **20260907T070230Z-project-code-change-5648a2cb**
+  - 计划 (objective): [BET-Y1Q4-T10-137] 异步递归子代理编排契约与 Low-Friction 低阻保护膜机制 (Recursive Subagents Orchestration & Low-Friction Membrane) (Appetite: 3 days)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=3714.804
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
