@@ -4,13 +4,14 @@ health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
 health_score_evidence_generated_at: '2026-09-06T13:03:18.325526+00:00'
 completed_tasks: 293
-planned_tasks: 7
+planned_tasks: 8
 active_tasks: 1
 blocked_tasks: 1
-total_tasks: 302
+total_tasks: 303
 next_active_tasks:
 - kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 next_planned_tasks:
+- bet-y1q4-t10-141 (Cockpit CLI 106 命令可用性台账与修复)
 - 'TASK-262B9E59 (退役 mof-model.py 弃用 CLI: --save 默认覆写 nodes/ + 每分钟)'
 - bet-y3h1-t7-01 (中试 / 政策申报升 assisted)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
