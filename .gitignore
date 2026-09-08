@@ -324,3 +324,4 @@ projects/omo-debt/
 # 运行时 bin/.omo 状态 (resident 运行时 _state, 不入库)
 bin/.omo/
 .commandcode/
+runtime/mos/
