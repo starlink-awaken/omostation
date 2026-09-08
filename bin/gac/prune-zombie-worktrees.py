@@ -40,6 +40,17 @@ def _claim_release(session: str) -> None:
         )
 
 
+def _cleanup_guard(branch: str) -> str | None:
+    """T10-140: 删除前置引用保护 (共享 lib/cleanup-guard; 加载失败宽容放行)."""
+    try:
+        sys.path.insert(0, str(WS_ROOT / "lib"))
+        import cleanup_guard
+        return cleanup_guard.protect_reason(branch)
+    except Exception as exc:  # noqa: BLE001 — guard 故障不阻断清理主流程
+        print(f"    ⚠️  guard 跳过 ({exc})")
+        return None
+
+
 def scan_zombies(ws_parent: Path, ttl_days: int) -> list[dict]:
     now = time.time()
     zombies: list[dict] = []
@@ -90,9 +101,16 @@ def main() -> int:
             continue
         print(f"  僵尸: {z['path']} [{', '.join(z['reasons'])}]")
         if args.enforce and z.get("session"):
+            # T10-140 引用保护: 分支有未推 commit / open PR / 活跃认领 → 只删 worktree 留分支
+            guard_skip = False
+            if z.get("branch") and z["branch"] != "HEAD":
+                guard = _cleanup_guard(z["branch"])
+                if guard is not None:
+                    print(f"    ⛔ 分支保留 (引用保护 {guard}): {z['branch']}")
+                    guard_skip = True
             subprocess.run(["git", "worktree", "remove", "--force", z["path"]],
                            capture_output=True)
-            if z.get("branch") and z["branch"] != "HEAD":
+            if z.get("branch") and z["branch"] != "HEAD" and not guard_skip:
                 subprocess.run(["git", "branch", "-D", z["branch"]], capture_output=True)
             _claim_release(z["session"])
             removed += 1
