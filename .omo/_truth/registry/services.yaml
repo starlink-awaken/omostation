@@ -5092,3 +5092,18 @@ services:
   notes: OMO Web MCP
   ports:
   - 7456
+- label: com.l4.bet-claim-gc
+  description: BET 认领广播 TTL 自清理 (T10-139 claim-gc; 7d 过期视为放弃)
+  interval_sec: 86400
+  program:
+    interpreter: /bin/bash
+    entrypoint: lib/bet-claim-gc.sh
+    args: []
+  resilience:
+    keepalive: crashed
+    throttle_interval: 3600
+  run_at_load: false
+  notes: T10-139 四件套的调度补全 (T10-140 迭代); claim 过期清理只删广播文件不动 ledger status
+  scheduler: launchd
+  id: bet-claim-gc
+  trigger: interval
