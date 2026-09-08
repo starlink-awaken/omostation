@@ -69,7 +69,8 @@ def _parse_submodule_paths() -> list[Path]:
 
 
 def _scan_repo_branches(repo_dir: Path, ttls: dict[str, int], now: float) -> dict[str, list[str]]:
-    """扫描单个仓库的过期分支。"""
+    """扫描单个仓库的过期分支 (T10-140 迭代: guard 保护标注 — 受保护分支标 ⛔ 前缀,
+    报告分可清理/受保护两档; 未来子模块加 enforce 时 guard 判定即删除前置)."""
     stale: dict[str, list[str]] = {"work": [], "agent": []}
     branch_out = _git("branch", "--format=%(refname:short)", cwd=repo_dir)
     if not branch_out:
@@ -87,7 +88,9 @@ def _scan_repo_branches(repo_dir: Path, ttls: dict[str, int], now: float) -> dic
         except ValueError:
             continue
         if age_hours >= ttls[prefix]:
-            stale[prefix].append(f"{branch} ({age_hours:.0f}h)")
+            guard = _cleanup_guard_scoped(branch, repo_dir)
+            tag = f"⛔ {guard} | " if guard else ""
+            stale[prefix].append(f"{tag}{branch} ({age_hours:.0f}h)")
     return stale
 
 
@@ -193,6 +196,17 @@ def _cleanup_guard(branch: str) -> str | None:
         import cleanup_guard
         return cleanup_guard.protect_reason(branch)
     except Exception as exc:  # noqa: BLE001 — guard 故障不阻断清理主流程
+        print(f"    ⚠️  guard 跳过 ({exc})")
+        return None
+
+
+def _cleanup_guard_scoped(branch: str, repo_dir: Path) -> str | None:
+    """T10-140 迭代: 子仓范围的 guard (cwd=repo_dir; bet-claimed 维度共用主仓 claim)."""
+    try:
+        sys.path.insert(0, str(WS_ROOT / "lib"))
+        import cleanup_guard
+        return cleanup_guard.protect_reason(branch, cwd=repo_dir)
+    except Exception as exc:  # noqa: BLE001 — guard 故障不阻断
         print(f"    ⚠️  guard 跳过 ({exc})")
         return None
 
