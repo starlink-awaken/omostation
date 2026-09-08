@@ -34,6 +34,9 @@ def _init_repo(tmp_path: Path) -> Path:
     (repo / "f.txt").write_text("1")
     git("add", ".")
     git("commit", "-m", "init")
+    (repo / "f.txt").write_text("1.1")
+    git("add", ".")
+    git("commit", "-m", "second")  # main ≥2 commits, 保证 main~1 可用
     # origin 同步分支: clean (远端有同名分支且无新 commit)
     git("branch", "work/clean-branch")
     # 哑 origin: 用本地 bare 仓模拟远端同名分支
@@ -48,6 +51,8 @@ def _init_repo(tmp_path: Path) -> Path:
     git("add", ".")
     git("commit", "-m", "local-only")
     git("checkout", "main")
+    # 等效吸收分支: tip 是 main 祖先 (fast-forward 已合, 无远端副本 — squash/ff 残留形态)
+    git("branch", "work/absorbed-branch", "main~1")
     return repo
 
 
@@ -55,6 +60,21 @@ def test_unpushed_protected(tmp_path: Path) -> None:
     """未推 commit 分支 → unpushed 保护."""
     repo = _init_repo(tmp_path)
     assert cg.protect_reason("work/unpushed-branch", cwd=repo) == "unpushed"
+
+
+def test_patch_absorbed_exempt_from_unpushed(tmp_path: Path, monkeypatch) -> None:
+    """T10-140 迭代: patch 已等效进 main (无远端副本的 ff/squash 残留) → 不算 unpushed.
+
+    场景: work/absorbed-branch tip 是 main 祖先, git cherry 全 '-' → 等效吸收豁免.
+    """
+    repo = _init_repo(tmp_path)
+    monkeypatch.setattr(cg, "pr_open", lambda b: False)
+    monkeypatch.setattr(cg, "active_claim_bets", lambda: [])
+    # 等效吸收分支放行 (非 unpushed)
+    assert cg.has_unpushed_commits("work/absorbed-branch", cwd=repo) is False
+    assert cg.protect_reason("work/absorbed-branch", cwd=repo) is None
+    # 对照: 真未推分支仍保护
+    assert cg.has_unpushed_commits("work/unpushed-branch", cwd=repo) is True
 
 
 def test_clean_branch_deletable(tmp_path: Path, monkeypatch) -> None:

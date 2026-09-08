@@ -33,12 +33,19 @@ def _git(*args: str, cwd: Path | None = None) -> str:
 
 def has_unpushed_commits(branch: str, cwd: Path | None = None) -> bool:
     """分支有未推 commit: 有 upstream 比 @{u}..b; 无 upstream 比 origin/<b>..b;
-    远端也无同名分支 → 整条分支都是未推 (True)."""
+    远端也无同名分支时做 patch 等效性豁免 — git cherry main 全 '-' (内容已
+    等效进 main, squash 合并残留) 则不算未推; 有 '+' 才是真未推 (T10-140 迭代)."""
     upstream = _git("rev-parse", "--abbrev-ref", f"{branch}@{{u}}", cwd=cwd)
     base = upstream if upstream and "origin" in upstream else f"origin/{branch}"
     probe = _git("rev-parse", "--verify", base, cwd=cwd)
     if not probe:
-        return True  # 远端不存在该分支 → 全部 commit 都是本地未推
+        # 远端不存在该分支: 检查 patch 是否已等效进 main (squash/ff 合并残留豁免)
+        cherry = _git("cherry", "main", branch, cwd=cwd)
+        lines = cherry.splitlines() if cherry else []
+        if all(line.startswith("-") for line in lines):
+            # 空 (tip 已在 main 内, 完全吸收) 或全 '-' (等效吸收) → 不是未推
+            return False
+        return True  # 有 '+' 未吸收 patch 或 cherry 不可判 → 保守按未推处理
     return bool(_git("log", "--oneline", f"{base}..{branch}", cwd=cwd))
 
 
