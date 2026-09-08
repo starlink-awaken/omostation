@@ -1,17 +1,12 @@
----
-type: documentation
-owner: governance-team
-last_updated: 2026-09-06
----
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-09-06T12:52:24.819682Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `54/100`
+> **Generated**: `2026-09-08T02:52:53.976409Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `54/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/closed/decision-checklist-13-items.md`.
 
 ### ⏳ 待处理卡片与债务 (Needs Human Decisions)
-- **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/ws-t10-128-ns/.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml)
+- **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml)
 
 > 📊 **治理预算**: 40/40/20 (治理≤40%/协作≥40%/弹性20%, ADR-0249). 超40%须送卡.
 
@@ -21,7 +16,7 @@ last_updated: 2026-09-06
 |------|----------|------|------------|
 | **创意创作** | 新增发布数: `676` | 正常 | `@创意创作/_outputs` |
 | **工作交付** | 未接入真实数据源 (BET-Y1Q1-T1-01 废除 mtime 伪指标) | 待接入 | — |
-| **知识复用** | KOS 索引篇: `0` | 正常 | `kos/` 篇目 |
+| **知识复用** | KOS 索引篇: `5193` | 正常 | `kos/` 篇目 |
 | **角色·engineering** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·governance** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·audit** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
@@ -49,3 +44,22 @@ last_updated: 2026-09-06
 - **复合健康分**: `54/100` (警戒, 请看下方分项)
 - **GAC 异常扣分**: `6/100`
 - **常驻 daemon 在线率**: `50.00%`
+
+## 🌐 L4 Domain Health (Harness)
+
+| 域 | ok | issues |
+|---|---|---|
+| cockpit | ✅ | 0 |
+| creative | ✅ | 0 |
+| family | ✅ | 0 |
+| opc | ✅ | 0 |
+| personal | ✅ | 0 |
+| shared | ✅ | 0 |
+| vault | ✅ | 0 |
+| work-contracts | ✅ | 0 |
+| work-docs | ✅ | 0 |
+| work-guozhuan | ✅ | 0 |
+| work-liyongke | ✅ | 0 |
+| work-weijian | ✅ | 0 |
+
+**12/12** 域 Harness 通过

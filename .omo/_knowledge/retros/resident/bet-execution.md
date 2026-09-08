@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-generated_at: 2026-09-06T06:30:01Z
+generated_at: 2026-09-08T02:46:09Z
 status: candidate
 counts:
-  runs: 45
+  runs: 48
   failures: 0
-  total: 45
+  total: 48
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-06T06:30:01Z
+- generated_at: 2026-09-08T02:46:09Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 45 成功运行 + 0 失败模式 = 45 草稿
+- sediment 覆盖: 48 成功运行 + 0 失败模式 = 48 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -66,6 +66,9 @@ failure_breakdown:
 - 20260903T082902Z-bet-execution-5c8e13e2.md
 - 20260905T041128Z-bet-execution-6a96cfd5.md
 - 20260905T043248Z-bet-execution-71f0b872.md
+- 20260906T070711Z-bet-execution-1c44e57c.md
+- 20260906T114837Z-bet-execution-7e4a6af3.md
+- 20260907T012421Z-bet-execution-225a3003.md
 
 ## 失败模式 (failures/)
 
@@ -385,6 +388,27 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=3
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=1993.03
+- **20260906T070711Z-bet-execution-1c44e57c**
+  - 计划 (objective): [BET-Y1Q4-T6-24] 机制 22c Git Hook 调度引擎完整化 — runner/manifest 接线 + 缺失检查脚本补齐 + 净减配平 (Appetite: 2 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=7756.287
+- **20260906T114837Z-bet-execution-7e4a6af3**
+  - 计划 (objective): [BET-Y1Q4-T10-131] 网络稳定性集成 — git-retry 与 HTTPS 自动切换 (Appetite: 1 day)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=2
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=947.709
+- **20260907T012421Z-bet-execution-225a3003**
+  - 计划 (objective): [BET-Y2Q1-T6-01] 跨生命周期记忆衰减与冲突消除引擎（过时政策自动标记与认知重整） (Appetite: 2 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=24019.934
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

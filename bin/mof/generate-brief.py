@@ -455,6 +455,28 @@ def generate_brief_content() -> str:
         lines.append(f"- **常驻 daemon 在线率**: `{online_ratio:.2%}`")
         lines.append("")
 
+    # 4. L4 Domain Health (12 域 Harness 结果, 从 M0 snapshot 读取)
+    m0_file = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m0" / "snapshot.yaml"
+    if m0_file.is_file():
+        try:
+            m0 = yaml.safe_load(m0_file.read_text(encoding="utf-8")) or {}
+            l4h = m0.get("l4_domain_health") or {}
+            if l4h:
+                ok_count = sum(1 for v in l4h.values() if v.get("ok"))
+                total = len(l4h)
+                lines.append("## 🌐 L4 Domain Health (Harness)")
+                lines.append("")
+                lines.append(f"| 域 | ok | issues |")
+                lines.append(f"|---|---|---|")
+                for dom_id, h in sorted(l4h.items()):
+                    mark = "✅" if h.get("ok") else "❌"
+                    lines.append(f"| {dom_id} | {mark} | {h.get('issue_count', 0)} |")
+                lines.append("")
+                lines.append(f"**{ok_count}/{total}** 域 Harness 通过")
+                lines.append("")
+        except Exception:
+            pass
+
     return "\n".join(lines)
 
 
