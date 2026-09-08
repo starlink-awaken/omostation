@@ -1991,7 +1991,9 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: 2026-09-07
+
   title: Documents 5 大内容归档族只读冻结与外挂工具终态清退 (Content Archives & External Tools Retirement)
   track: T10-MATURITY
   underlying_workflow: project-code-change
