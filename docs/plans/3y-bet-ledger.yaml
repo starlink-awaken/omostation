@@ -26828,7 +26828,8 @@ bets:
   title: 清理器引用保护 — reset/prune/clean 对未推 commit 与活跃分支的防御
   appetite: 1 days
   priority: P1
-  status: in_progress
+  status: done
+  done_at: 2026-09-08
   goal: '根治并行 agent 无差别 reset --hard / prune 吃掉未推 commit 与活跃工作面 (T10-139 交付期间 7 次观测,
     含刀落 commit 后的案例) — 清理动作执行前检查引用保护: 未推 commit / open PR 关联分支 / 活跃 run 绑定分支 一律跳过并警告。'
   non_goals:
@@ -26857,6 +26858,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:bfb62821300d3bc8296e5298c7adbbe1f66cb1cec34de564bec195f286267ec8
     decision_ref: decision://accepted/BET-Y1Q4-T10-140
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@3f34f8734be1ff765c65341c237d95290600088f
+          tests:
+            ref: receipt://tests/test_cleanup_guard.py
+            sha256: sha256:529d2516f2009eafc85b36ceb8e919bde3be7b1ee0550c68227f3320dc725b0c
+          diff:
+            ref: receipt://tests/test_cleanup_guard.py
+            sha256: sha256:529d2516f2009eafc85b36ceb8e919bde3be7b1ee0550c68227f3320dc725b0c
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-140.md
+            sha256: sha256:e664622e963983957e82508ea271dc97209b25f3e21b1d6595a22a02787ea415
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-140.md
+            sha256: sha256:e664622e963983957e82508ea271dc97209b25f3e21b1d6595a22a02787ea415
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-140.md
+            sha256: sha256:e664622e963983957e82508ea271dc97209b25f3e21b1d6595a22a02787ea415
+          replay:
+            ref: receipt://tests/test_cleanup_guard.py
+            sha256: sha256:529d2516f2009eafc85b36ceb8e919bde3be7b1ee0550c68227f3320dc725b0c
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-140.md
+            sha256: sha256:e664622e963983957e82508ea271dc97209b25f3e21b1d6595a22a02787ea415
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
