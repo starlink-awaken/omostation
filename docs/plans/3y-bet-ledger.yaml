@@ -26745,7 +26745,8 @@ bets:
   title: BET 认领广播 — 同号竞速防护 (claim-bet / start 拦截 / 自动释放)
   appetite: 1 days
   priority: P1
-  status: in_progress
+  status: done
+  done_at: '2026-09-08'
   goal: 根治同号竞速 (4 轮 PR 浪费; 并行 agent 互盲同一 candidate → 都 start → 互覆盖) — 认领广播落共享物理位置
     (git-common-dir 锚定主 checkout, `.omo/` gitignored 时 worktree 互盲), claim-bet 子命令
     + `_claim_interlock_guard` start 双认领拦截 (BET_CLAIM_HELD) + `complete` 后自动释放 + `claim-gc`
@@ -26792,36 +26793,35 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@016edc7fbc1269a174bf9bd39a415a8dae153a9c
+            ref: git://origin/main@e22a9ca42f99da71edae588fd648d0e41ef4067a
           tests:
             ref: receipt://tests/test_bet_claim_broadcast.py
-            sha256: receipt://tests/test_bet_claim_broadcast.py
+            sha256: sha256:0b2329cc8e9280282fe6e228a12b1c253d6f83def5af68d99cf97fe7bfc65ca4
           diff:
-            ref: receipt://PR#3405+#3408
-            sha256: receipt://PR#3405+#3408
+            ref: receipt://tests/test_bet_claim_broadcast.py
+            sha256: sha256:0b2329cc8e9280282fe6e228a12b1c253d6f83def5af68d99cf97fe7bfc65ca4
           rollback:
-            ref: receipt://PR#3405 revert
-            sha256: receipt://PR#3405 revert
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-139.md
+            sha256: sha256:7666d55913778dd579c736e59cdadb6140ef616259e39a6fe875b8c7688041ac
       operational:
         status: PROVEN
         evidence:
           live_canary:
-            ref: receipt://dogfood-claim-BET-Y1Q4-T10-139
-            sha256: receipt://dogfood
+            ref: receipt://docs/superpowers/specs/2026-09-07-bet-claim-broadcast-spec.md
+            sha256: sha256:5c01fad985c95f9103451694639ccbdf53e6f205544d7722688a2fce903d8d7c
           fresh_receipt:
-            ref: receipt://2026-09-08-run-6de0ad38
-            sha256: receipt://run
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-139.md
+            sha256: sha256:7666d55913778dd579c736e59cdadb6140ef616259e39a6fe875b8c7688041ac
           replay:
-            ref: receipt://guard-interlock-e2e
-            sha256: receipt://guard-e2e
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-139.md
+            sha256: sha256:7666d55913778dd579c736e59cdadb6140ef616259e39a6fe875b8c7688041ac
           cleanup:
-            ref: receipt://claim-gc-dry-run
-            sha256: receipt://gc
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-139.md
+            sha256: sha256:7666d55913778dd579c736e59cdadb6140ef616259e39a6fe875b8c7688041ac
       value:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
-  done_at: '2026-09-08'
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
