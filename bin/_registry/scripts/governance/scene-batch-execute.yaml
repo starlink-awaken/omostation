@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/ssot/scene-batch-execute.py
+name: Scene Batch Execution
+category: governance
+owner: governance-team
+description: Batch dry-run all scenes and record calibration samples
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: active
+last_reviewed: "2026-09-08"
