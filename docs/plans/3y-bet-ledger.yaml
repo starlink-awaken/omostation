@@ -1596,25 +1596,26 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: VERIFIED
         evidence:
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
             sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
           merged_reachable_commit:
-            ref: git://origin/main@be77bc53cfa238d4b95fbe4fe42e33221b0950df
+            ref: git://origin/main@df792dac4631723fd576b8be39eea19e839a773b
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
             sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
             sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
+        status: VERIFIED
       operational:
-        status: PROVEN
         evidence:
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
@@ -1628,13 +1629,12 @@ bets:
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T6-02.md
             sha256: sha256:899513f2081ac2bf27f8959880bec905cc8436689b5f1d1ae95b3d4897a85cca
+        status: PROVEN
       value:
-        status: NOT_PROVEN
         evidence: {}
-    overall_state: delivery_accepted
-  value_indicator_policy: false
-  status: done
+        status: NOT_PROVEN
   done_at: 2026-09-07
+  status: done
   title: 知识层彻底归并首期（gbrain/kairon 存取去重，统一至 MOS）
   track: T6-SUBTRACT
   underlying_workflow: project-code-change
@@ -26615,7 +26615,44 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-31.md
+            sha256: sha256:217ed459b37f6cd330434d4ac1d52a64ab719da32584ec19cda302366d19d123
+          merged_reachable_commit:
+            ref: git://origin/main@df792dac4631723fd576b8be39eea19e839a773b
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-31.md
+            sha256: sha256:217ed459b37f6cd330434d4ac1d52a64ab719da32584ec19cda302366d19d123
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-31.md
+            sha256: sha256:217ed459b37f6cd330434d4ac1d52a64ab719da32584ec19cda302366d19d123
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-31.md
+            sha256: sha256:217ed459b37f6cd330434d4ac1d52a64ab719da32584ec19cda302366d19d123
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-31.md
+            sha256: sha256:217ed459b37f6cd330434d4ac1d52a64ab719da32584ec19cda302366d19d123
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-31.md
+            sha256: sha256:217ed459b37f6cd330434d4ac1d52a64ab719da32584ec19cda302366d19d123
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-31.md
+            sha256: sha256:217ed459b37f6cd330434d4ac1d52a64ab719da32584ec19cda302366d19d123
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+  done_at: 2026-09-07
+  status: done
   title: RLM 变量命名空间生命周期 GC、资源核算与 GaC 安全门禁 (Namespace GC, Resource Accounting & GaC
     Safety Gate)
   track: T6-EVOLUTION
