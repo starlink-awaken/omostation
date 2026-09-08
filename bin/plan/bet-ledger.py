@@ -3129,33 +3129,40 @@ def cmd_complete(data: dict, args) -> int:
 
         path = LEDGER
         text = path.read_text(encoding="utf-8")
-        marker = f"id: {args.bet_id}"
-        idx = text.find(marker)
+        # 行首锚定 id 定位 (2026-09-08: 朴素子串匹配会被其他文本里的
+        # "id: <bet_id>" 字样误伤; 顶层 bet 块以 2 空格缩进 "  id:" 开始)
+        idx = text.find(f"\n  id: {args.bet_id}")
+        if idx < 0:
+            idx = text.find(f"id: {args.bet_id}")
         if idx < 0:
             print(f"[complete] ❌ 未找到 {args.bet_id}")
             return 1
-        # 在该 bet 块内找 status: X → status: done
-        block_end = text.find("\n- id:", idx + len(marker))
+        # 块边界: 当前块到下一个顶格 "- " 顶层列表项 (任意 key 开头, 2026-09-08:
+        # 原 "\n- id:" 只匹配 id 开头的块, 152/160 bet 以 "- appetite:" 开头导致
+        # block 吞掉后续多个块 → 误检到别的 done bet 的 "status: done" → 静默跳过写盘)。
+        # 块内子列表 (depends_on/verify/write_surfaces) 均为缩进的 "\n  - ", 不匹配。
+        block_end = text.find("\n- ", idx + len(f"\n  id: {args.bet_id}"))
         if block_end < 0:
             block_end = len(text)
         block = text[idx:block_end]
-        # 行首锚定匹配 (2026-08-29 bug: 朴素子串匹配会被 waiver 中文注释里的
-        # "status: done" 字样误伤, 导致 complete 跳过写盘却报成功)
-        import re as _re_done
-
-        if not _re_done.search(r"^  status: done$", block, _re_done.MULTILINE):
-            block_new = block.replace("status: ", "status: done\n  done_at: ", 1) if "status:" in block else block
-            # 用更精确替换: status: <old> → status: done (保留 done_at)
-            import re
-
-            block_new = re.sub(r"status: (\w+)", "status: done", block, count=1)
-            block_new = block_new.replace(
-                "status: done",
-                f"status: done\n  done_at: {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d')}",
-                1,
-            )
-            text = text[:idx] + block_new + text[block_end:]
-            path.write_text(text, encoding="utf-8")
+        # 只锚定块级 status (2 空格缩进行首), 不碰 completion_evidence 里
+        # 8 空格缩进的 axis status (engineering/operational/value)。
+        status_m = re.search(r"^  status: (\w+)", block, re.MULTILINE)
+        if status_m is None:
+            print(f"[complete] ❌ 无法定位 {args.bet_id} 的块级 status")
+            return 1
+        old_status = status_m.group(1)
+        if old_status == "done":
+            print(f"[complete] {b['id']} 已是 done, 无需操作")
+            return 0
+        block_new = (
+            block[: status_m.start()]
+            + "  status: done\n"
+            + f"  done_at: {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d')}"
+            + block[status_m.end():]
+        )
+        text = text[:idx] + block_new + text[block_end:]
+        path.write_text(text, encoding="utf-8")
         # T10-139: done 置位成功后自动释放 claim 广播
         if _release_claim(args.bet_id):
             print(f"[complete] ✅ {b['id']} → done (claim 已释放)")

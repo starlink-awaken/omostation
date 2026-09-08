@@ -159,7 +159,7 @@ def test_complete_accepts_index_pinned_submodule_surface(
     monkeypatch.setattr(
         BET_LEDGER,
         "validate_completion_evidence",
-        lambda matrix, *, workspace, value_indicator_policy, done_at=None: ("outcome_accepted", []),
+        lambda matrix, *, workspace, value_indicator_policy, done_at=None, bet_status=None: ("outcome_accepted", []),
     )
     monkeypatch.setitem(
         sys.modules,
@@ -194,6 +194,76 @@ def test_complete_accepts_index_pinned_submodule_surface(
 
     assert rc == 0
     assert "status: done" in ledger.read_text(encoding="utf-8")
+
+
+def test_complete_writes_only_target_block_not_later_done_bets(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression: cmd_complete 的写盘段曾因块边界按 '\\n- id:' 定位, 而 152/160 bet
+    块以 '- appetite:' 开头, block 会吞进后续多个块 → 误检到别的 done bet 的
+    'status: done' → 静默跳过写盘却报成功 (T6-02 complete 实录 2026-09-08)。
+
+    同时验证: completion_evidence 里 8 空格缩进的 axis status (engineering/
+    operational/value) 不会被误改, 只锚定 2 空格缩进的块级 status。
+    """
+    root = tmp_path
+    ledger = root / "ledger.yaml"
+    ledger.write_text(
+        "bets:\n"
+        "- id: BET-DONE-PREV\n"
+        "  status: done\n"
+        "  done_at: 2026-01-01\n"
+        "- id: BET-TEST\n"
+        "  non_goals:\n"
+        "  - x\n"
+        "  completion_evidence:\n"
+        "    schema_version: completion-evidence-matrix/v1\n"
+        "    axes:\n"
+        "      engineering:\n"
+        "        status: VERIFIED\n"
+        "      operational:\n"
+        "        status: PROVEN\n"
+        "      value:\n"
+        "        status: NOT_PROVEN\n"
+        "        evidence: {}\n"
+        "    overall_state: delivery_accepted\n"
+        "  status: candidate\n"
+        "  title: Test\n"
+        "- id: BET-DONE-NEXT\n"
+        "  status: done\n"
+        "  done_at: 2026-01-02\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(BET_LEDGER, "WS", root)
+    monkeypatch.setattr(BET_LEDGER, "LEDGER", ledger)
+    monkeypatch.setattr(BET_LEDGER, "_is_spec_binding_required", lambda bet, workspace: False)
+    monkeypatch.setattr(BET_LEDGER, "resolve_value_indicator_policy", lambda bet: (False, None))
+    monkeypatch.setattr(
+        BET_LEDGER,
+        "validate_completion_evidence",
+        lambda matrix, *, workspace, value_indicator_policy, done_at=None, bet_status=None: (
+            "delivery_accepted",
+            [],
+        ),
+    )
+    data = {
+        "bets": [
+            {"id": "BET-TEST", "status": "candidate", "completion_evidence": {}},
+        ]
+    }
+    rc = BET_LEDGER.cmd_complete(data, SimpleNamespace(bet_id="BET-TEST", force=True))
+    out = ledger.read_text(encoding="utf-8")
+    assert rc == 0
+    # 目标块置 done + done_at
+    assert "  status: done\n  done_at: " in out
+    # 相邻 done 块原样保留（不被吞改）
+    assert "  done_at: 2026-01-02" in out
+    assert "  done_at: 2026-01-01" in out
+    # evidence 的 axis status 未被误改为 done
+    assert "        status: VERIFIED" in out
+    assert "        status: PROVEN" in out
+    assert "        status: NOT_PROVEN" in out
 
 
 def test_verify_execute_fails_when_command_exits_nonzero(
