@@ -134,6 +134,64 @@ def _validate_packet_run(
         raise WorkflowError(str(exc)) from exc
 
 
+def _delivery_claims_root() -> Path:
+    """T10-139: 共享认领根锚点 (与 bet-ledger.py 同源逻辑).
+
+    `.omo/` gitignored → worktree 本地互相不可见 → 广播必须落共享物理位置.
+    git-common-dir 恒指向主仓 .git; 其父目录即主 checkout. 任何一侧解析
+    失败时回退各自 WS (宽容, 不因防御层故障阻断主流程).
+    """
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--git-common-dir"],
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        common = Path(out)
+        if not common.is_absolute():
+            common = WORKSPACE / common
+        root = common.resolve().parent
+        # 主 checkout 判定: 恒存在 .git 目录 (worktree 的 .git 是文件不是目录)
+        if (root / ".git").is_dir():
+            return root
+        return WORKSPACE
+    except (OSError, subprocess.CalledProcessError):
+        return WORKSPACE
+
+
+def _claim_interlock_guard(bet_id: str, argv: list[str]) -> str | None:
+    """T10-139: 双认领拦截 — 他人持有 claim 广播时 fail closed.
+
+    返回 None = 放行; str = 拒绝原因. actor 解析: --actor → $USER →
+    governance-agent. 无广播 = 放行 (不强制先 claim, 兼容存量);
+    持有者本人放行; 损坏文件宽容放行 (写入侧 fail closed, 读取侧宽容).
+    """
+    actor = _claim_interlock_actor(argv)
+    claim_path = (
+        _delivery_claims_root() / ".omo/_delivery/bet-claims" / f"{bet_id}.json"
+    )
+    if not claim_path.is_file():
+        return None
+    try:
+        claim = json.loads(claim_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    holder = claim.get("actor")
+    if not holder or holder == actor:
+        return None
+    return (
+        f"BET_CLAIM_HELD: {bet_id} 已被 {holder} 认领 "
+        f"(claimed_at {claim.get('claimed_at', '?')}) — 同号竞速防护 (T10-139)"
+    )
+
+
+def _claim_interlock_actor(argv: list[str]) -> str:
+    """T10-139: start 拦截用的 actor 解析 (--actor → $USER → governance-agent)."""
+    return _flag(argv, "--actor") or os.environ.get("USER") or "governance-agent"
+
+
 def _clone_identity_for_preflight(workspace: Path) -> dict[str, str]:
     git_entry = workspace / ".git"
     if git_entry.is_file():
@@ -762,6 +820,19 @@ def wrapped_main(argv: list[str] | None = None) -> int:
             )
             return 1
         if bet_id:
+            # T10-139 双认领拦截: 他人持有 claim 广播 → 拒绝 start (fail closed)
+            try:
+                _guard_msg = _claim_interlock_guard(bet_id, argv)
+                if _guard_msg is not None:
+                    print(f"agent-workflow: {_guard_msg}", file=sys.stderr)
+                    print(
+                        "  协调: bet-ledger.py claim-bet <BET-ID> --force (显式接管) "
+                        "或等 claim-gc TTL (7d) 过期",
+                        file=sys.stderr,
+                    )
+                    return 1
+            except Exception as _gexc:  # noqa: BLE001 — guard 故障不应阻断 start
+                print(f"agent-workflow: [claim-guard] 跳过 ({_gexc})", file=sys.stderr)
             try:
                 prepared = _prepare_bet_execution(bet_id)
                 if not parent_run_id and "capability_requirements_digest" in prepared:

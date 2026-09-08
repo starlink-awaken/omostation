@@ -26740,6 +26740,52 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
   retro: required
+- id: BET-Y1Q4-T10-139
+  track: T10-MATURITY
+  window: Y1Q4
+  title: BET 认领广播 — 同号竞速防护 (claim-bet / start 拦截 / 自动释放)
+  appetite: 1 days
+  priority: P1
+  status: in_progress
+  goal: 根治同号竞速 (4 轮 PR 浪费; 并行 agent 互盲同一 candidate → 都 start → 互覆盖) — 认领广播落共享物理位置
+    (git-common-dir 锚定主 checkout, `.omo/` gitignored 时 worktree 互盲), claim-bet 子命令
+    + `_claim_interlock_guard` start 双认领拦截 (BET_CLAIM_HELD) + `complete` 后自动释放 + `claim-gc`
+    7d TTL。
+  non_goals:
+  - 不改 ledger 锁机制 (T10-137 已交付)
+  - start 不强制预 claim (兼容存量; 广播存在时才拦截)
+  - claim-gc 不回退 ledger status (只删广播文件, 后续认领自然接管)
+  done_when:
+  - claim-bet 三态 (首认 candidate→in_progress / 异 actor fail closed / 同 actor 幂等) 单测绿
+  - --force 接管 + claim-gc TTL 过期清理 + `_release_claim` 释放链路单测绿
+  - start 拦截四场景 (无广播放行 / 他人 BET_CLAIM_HELD / 本人放行 / 损坏宽容) 单测绿
+  - dogfood — 本 BET 自身交付用 claim-bet 认领
+  verify:
+  - cmd: uv run --with pyyaml python -m pytest tests/test_bet_claim_broadcast.py -q
+    expect: exit 0 (9 tests)
+  - cmd: python3 -c "import ast; ast.parse(open('bin/agent-workflow.py').read());
+      ast.parse(open('bin/plan/bet-ledger.py').read())"
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/plan/bet-ledger.py
+  - bin/agent-workflow.py
+  - tests/test_bet_claim_broadcast.py
+  - docs/superpowers/specs/2026-09-07-bet-claim-broadcast-spec.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-139.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  circuit_breaker: 若 guard 误拦正常 start 则加 OMO_BET_CLAIM_GUARD=0 逃生门
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-07-bet-claim-broadcast-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:5c01fad985c95f9103451694639ccbdf53e6f205544d7722688a2fce903d8d7c
+    decision_ref: decision://accepted/BET-Y1Q4-T10-139
+  retro: required
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2

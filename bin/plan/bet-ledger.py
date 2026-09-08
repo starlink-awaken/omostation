@@ -275,7 +275,9 @@ SEMVER_RE = re.compile(
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
 )
 SHA256_REF_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
-STARTABLE_BET_STATUSES = frozenset({"candidate", "pending", "blocked"})
+# T10-139: in_progress 必须可 start — claim-bet 认领即置 in_progress (标记执行意图),
+# 认领者 start 是流程正门; 若 in_progress 不可 start, 认领后流程自锁.
+STARTABLE_BET_STATUSES = frozenset({"candidate", "pending", "blocked", "in_progress"})
 HUMAN_APPROVAL_BLOCKED_REENTRY_POLICY = "human_approval_required"
 
 
@@ -2583,6 +2585,174 @@ def cmd_spec_init(data: dict, args) -> int:
     return 0
 
 
+# ---------------------------------------------------------------------------
+# T10-139: BET 认领广播 (同号竞速防护)
+# 事故根因: 并行 agent 各在独立 worktree 里看到同一 candidate → 都 start →
+# 都交付 → 合并互相覆盖 (T10-135/136/137/138 cycle, 4 轮 PR 浪费).
+# 广播必须落共享物理位置才防得住 — `.omo/` 是 gitignored, worktree 本地目录
+# 互相不可见, 故以 git commondir 锚定主 checkout (方案 A, 用户 2026-09-07 确认方向).
+# ---------------------------------------------------------------------------
+
+CLAIM_TTL_DAYS = 7  # claim 默认 TTL — 过期视为放弃, claim-gc 自清理
+
+
+def _delivery_claims_root() -> Path:
+    """共享认领根: 经 git-common-dir 锚定主 checkout; 解析失败回退 WS (宽容)."""
+    import subprocess as _sp
+
+    try:
+        out = (
+            _sp.run(
+                ["git", "rev-parse", "--git-common-dir"],
+                cwd=WS,
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.strip()
+        )
+        common = Path(out)
+        if not common.is_absolute():
+            common = WS / common
+        root = common.resolve().parent
+        return root if root != WS.resolve() else WS
+    except (OSError, _sp.CalledProcessError):
+        return WS
+
+
+CLAIM_DIR = _delivery_claims_root() / ".omo" / "_delivery" / "bet-claims"
+
+
+def _claim_file(bet_id: str) -> Path:
+    return CLAIM_DIR / f"{bet_id}.json"
+
+
+def _release_claim(bet_id: str) -> bool:
+    """T10-139: 释放认领 — complete 置 done 成功后自动调用."""
+    c = _claim_file(bet_id)
+    if c.is_file():
+        c.unlink(missing_ok=True)
+        return True
+    return False
+
+
+def cmd_claim_bet(data: dict, args) -> int:
+    """T10-139: BET 级认领广播 — candidate→in_progress + 广播文件, 防同号竞速.
+
+    用法: bet-ledger.py claim-bet <BET-ID> [--actor <a>] [--force]
+    - 首次认领: 写 .omo/_delivery/bet-claims/<BET-ID>.json (共享锚点) +
+      save_ledger_locked 内把 status 切为 in_progress
+    - 异 actor → fail closed (打印持有者; --force 显式接管)
+    - 同 actor → 幂等 (刷新时间戳延长 TTL)
+    """
+    from datetime import datetime as _dt, timezone as _tz
+
+    _utc = _tz.utc  # 兼容: timezone.UTC 需 3.11+, utc 全版本可用
+    bets = data.get("bets") or []
+    bet = next((b for b in bets if b.get("id") == args.bet_id), None)
+    if not bet:
+        print(f"[claim-bet] ❌ BET 不存在: {args.bet_id}")
+        return 1
+
+    actor = args.actor or "governance-agent"
+    now = _dt.now(_utc)
+    CLAIM_DIR.mkdir(parents=True, exist_ok=True)
+    cf = _claim_file(args.bet_id)
+    existing = None
+    if cf.is_file():
+        try:
+            existing = json.loads(cf.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            existing = {"actor": "<corrupt>"}  # 损坏按他人认领处理, 防误接管
+
+    if existing and not args.force:
+        holder = existing.get("actor", "<unknown>")
+        if holder == actor:
+            existing["claimed_at"] = now.isoformat()
+            cf.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
+            print(f"[claim-bet] 🔁 {args.bet_id} 已由 {actor} 持有, 刷新时间戳 (幂等)")
+            return 0
+        print(
+            f"[claim-bet] ❌ {args.bet_id} 已被 {holder} 认领 "
+            f"(claimed_at {existing.get('claimed_at', '?')}) — 同号竞速防护 (T10-139); "
+            f"协调后 --force 接管"
+        )
+        return 1
+
+    cf.write_text(
+        json.dumps(
+            {
+                "bet_id": args.bet_id,
+                "actor": actor,
+                "claimed_at": now.isoformat(),
+                "ttl_days": CLAIM_TTL_DAYS,
+                "purpose": "candidate→in_progress 认领广播 (T10-139, 共享锚点)",
+            },
+            indent=2,
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    def _claim_transform(latest: str) -> str:
+        marker = f"id: {args.bet_id}"
+        idx = latest.find(marker)
+        if idx < 0:
+            return latest
+        end = latest.find("\n- id:", idx + len(marker))
+        if end < 0:
+            end = len(latest)
+        import re as _re
+
+        new_block = _re.sub(r"status: \w+", "status: in_progress", latest[idx:end], count=1)
+        return latest[:idx] + new_block + latest[end:]
+
+    save_ledger_locked(_claim_transform)
+
+    try:
+        fresh = yaml.safe_load(LEDGER.read_text(encoding="utf-8"))
+        fb = next((b for b in (fresh.get("bets") or []) if b.get("id") == args.bet_id), None)
+        if fb and fb.get("status") != "in_progress":
+            print(f"[claim-bet] ⚠️ ledger status 仍为 {fb.get('status')} (锚失配); 广播文件已写, start 会拦截")
+    except yaml.YAMLError:
+        pass
+    print(f"[claim-bet] ✅ {args.bet_id} 已由 {actor} 认领 (in_progress, 广播文件已写)")
+    return 0
+
+
+def cmd_claim_gc(data: dict, args) -> int:
+    """T10-139: claim TTL 自清理 — expire 视为放弃; 只删文件不动 ledger status."""
+    from datetime import datetime as _dt, timezone as _tz
+
+    _utc = _tz.utc
+    ttl_days = args.ttl or CLAIM_TTL_DAYS
+    now = _dt.now(_utc)
+    if not CLAIM_DIR.is_dir():
+        print("[claim-gc] ✅ 无认领目录, 无需清理")
+        return 0
+    purged = 0
+    for f in sorted(CLAIM_DIR.glob("*.json")):
+        try:
+            claim = json.loads(f.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            print(f"[claim-gc] ⚠️ 损坏文件: {f.name} (跳过)")
+            continue
+        try:
+            claimed_at = _dt.fromisoformat(claim.get("claimed_at", ""))
+            age = (now - claimed_at).total_seconds() / 86400
+        except ValueError:
+            print(f"[claim-gc] ⚠️ 无法解析时间: {f.name} (跳过)")
+            continue
+        if age > claim.get("ttl_days", ttl_days):
+            if args.dry_run:
+                print(f"[claim-gc] 🔎 dry-run 待清理: {f.name} (actor {claim.get('actor')})")
+            else:
+                f.unlink()
+                print(f"[claim-gc] 🧹 已清理过期认领: {f.name} (actor {claim.get('actor')})")
+            purged += 1
+    print(f"[claim-gc] ✅ 处理 {purged} 个过期认领" + (" (dry-run)" if args.dry_run else ""))
+    return 0
+
+
 def cmd_lint(data: dict, args) -> int:
     """台账自检：ID 唯一、依赖存在、轨道/窗口/状态合法、必填字段。"""
     errs: list[str] = []
@@ -2986,6 +3156,10 @@ def cmd_complete(data: dict, args) -> int:
             )
             text = text[:idx] + block_new + text[block_end:]
             path.write_text(text, encoding="utf-8")
+        # T10-139: done 置位成功后自动释放 claim 广播
+        if _release_claim(args.bet_id):
+            print(f"[complete] ✅ {b['id']} → done (claim 已释放)")
+            return 0
         print(f"[complete] ✅ {b['id']} → done")
         return 0
     except Exception as exc:
@@ -3017,6 +3191,13 @@ def main() -> int:
     sub.add_parser("surface")
     sub.add_parser("gate").add_argument("window")
     sub.add_parser("lint")
+    si = sub.add_parser("claim-bet", help="BET 级认领广播 (T10-139)")
+    si.add_argument("bet_id")
+    si.add_argument("--actor", default=None)
+    si.add_argument("--force", action="store_true", help="接管他人认领 (显式协调)")
+    cg = sub.add_parser("claim-gc", help="认领广播 TTL 自清理 (T10-139)")
+    cg.add_argument("--ttl", type=int, default=None)
+    cg.add_argument("--dry-run", action="store_true")
     si = sub.add_parser("spec-init", help="spec binding 一键化 (T10-135)")
     si.add_argument("bet_id")
     si.add_argument("--spec", required=True)
@@ -3055,6 +3236,8 @@ def main() -> int:
         "portfolio": cmd_portfolio,
         "complete": cmd_complete,
         "spec-init": cmd_spec_init,
+        "claim-bet": cmd_claim_bet,
+        "claim-gc": cmd_claim_gc,
     }[args.cmd](data, args)
 
 
