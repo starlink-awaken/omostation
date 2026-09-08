@@ -92,12 +92,23 @@ def main() -> int:
 
     ws_parent = WS_ROOT.parent
     zombies = scan_zombies(ws_parent, args.ttl_days)
+    # T10-140 迭代: 注册中的 worktree (git worktree list 认) = 活现场,
+    # 不论 merged-clean/idle 一律跳过 — 僵尸语义修正 (git 不认的孤儿目录才是僵尸).
+    # 背景: merged-clean 判定曾把并行方的活 worktree 标为可删 (dry-run 实测).
+    registered = {
+        line.split(maxsplit=1)[0]
+        for line in _git("worktree", "list").splitlines()
+        if line.strip()
+    }
     mode = "ENFORCE" if args.enforce else "DRY-RUN"
     print(f"=== Zombie Worktree 扫描 ({mode}, ttl={args.ttl_days}d) ===")
     removed = 0
     for z in zombies:
         if z.get("skip"):
             print(f"  ⏭  跳过 (有未提交改动): {z['path']} — 请人工处理")
+            continue
+        if z["path"] in registered:
+            print(f"  ⏭  跳过 (注册中 worktree, 活现场): {z['path']} [{', '.join(z['reasons'])}]")
             continue
         print(f"  僵尸: {z['path']} [{', '.join(z['reasons'])}]")
         if args.enforce and z.get("session"):
