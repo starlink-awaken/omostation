@@ -1,0 +1,21 @@
+schema: agent-error/v1
+id: PITFALL-ENV-002
+category: environment
+severity: medium
+title: matrix.yaml 声明退役服务仍留 launchd_label → scheduler 永久 false-positive (agora-gateway/agora-sse)
+symptom: 'cockpit health --full 报 L1 异常 agora-gateway/agora-sse 持续 unrecoverable/failed;
+  两者均已官方退役 (agora-gateway: commit d128c5f P2-5 SSE/gateway 统一, install-launchd.sh
+  已注释独立 plist 安装块; agora-sse: services.yaml enabled:false, 死 plist 已卸载); 但 ~/runtime/matrix.yaml
+  声明仍保留 launchd_label 字段'
+root_cause: ''
+solution: runtime.scheduler.MatrixScheduler.scan_once 的状态判定只看 svc.launchd_label 是否存在决定探测分支
+  (存在则调 _check_launchd, 持续查不到 plist 则 failed→backoff→1800s 后 unrecoverable), 完全不读声明的
+  status 字段 (那只是人类可读标注, 不影响判定逻辑)。退役服务必须移除 launchd_label 声明整条 (或整个条目), 仅打 status:retired
+  注释无效。已清理两条目, 复核 scan_once 输出确认 unmanaged/移除生效, ratio 1.0。
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-09-08'
+times_encountered: 1
+last_confirmed_at: '2026-09-08'
+status: active
