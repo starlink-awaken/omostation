@@ -585,12 +585,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.sediment
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - sediment
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -611,12 +609,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.decision
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - decision
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -634,12 +630,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.execute
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - execute
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -657,12 +651,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.monitor
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - monitor
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -680,12 +672,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.heartbeat
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - heartbeat
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -723,12 +713,10 @@ services:
   interval_sec: 300
   label: com.l4.resident.signals
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - signals
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 300
@@ -745,12 +733,10 @@ services:
   interval_sec: 300
   label: com.l4.resident.inbox
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - inbox
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 300
@@ -767,12 +753,10 @@ services:
   interval_sec: 600
   label: com.l4.resident.promote
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - promote
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 600
