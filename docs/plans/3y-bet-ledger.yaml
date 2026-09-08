@@ -26822,6 +26822,36 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y1Q4-T10-140
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 清理器引用保护 — reset/prune/clean 对未推 commit 与活跃分支的防御
+  appetite: 1 days
+  priority: P1
+  status: candidate
+  goal: '根治并行 agent 无差别 reset --hard / prune 吃掉未推 commit 与活跃工作面 (T10-139 交付期间 7 次观测,
+    含刀落 commit 后的案例) — 清理动作执行前检查引用保护: 未推 commit / open PR 关联分支 / 活跃 run 绑定分支 一律跳过并警告。'
+  non_goals:
+  - 不改 gac-worktree 生命周期语义 (claim/submit/merge/release 不动)
+  done_when:
+  - prune-zombie-worktrees.py / branch-ttl-gate.py / gac-branch-prune.sh 加保护前置检查
+  - 未推 commit 的分支被清理器跳过 (单测)
+  - open PR 关联分支被清理器跳过 (单测)
+  verify:
+  - cmd: uv run --with pyyaml python -m pytest tests/ -q -k protect
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/prune-zombie-worktrees.py
+  - bin/gac/branch-ttl-gate.py
+  - bin/gac/gac-branch-prune.sh
+  - docs/plans/3y-bet-ledger.yaml
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  value_indicator_policy: false
+  retro: required
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
