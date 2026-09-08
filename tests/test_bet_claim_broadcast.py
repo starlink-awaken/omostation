@@ -148,7 +148,10 @@ def test_start_guard_scenarios(tmp_path: Path, monkeypatch) -> None:
     spec2.loader.exec_module(aw)
 
     bet = "BET-GUARD-1"
-    cf = claims / f"{bet}.json"
+    # guard 读路径: <root>/.omo/_delivery/bet-claims/<BET>.json — 测试文件必须写对齐位置
+    guard_claims = tmp_path / ".omo" / "_delivery" / "bet-claims"
+    guard_claims.mkdir(parents=True, exist_ok=True)
+    cf = guard_claims / f"{bet}.json"
     monkeypatch.setattr(aw, "WORKSPACE", tmp_path)
     monkeypatch.setattr(aw, "_delivery_claims_root", lambda: tmp_path)
 
