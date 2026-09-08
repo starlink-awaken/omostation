@@ -1858,7 +1858,7 @@ cockpit completion fish | source    # Fish
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
-| `cockpit agora` | `agora` | 107 |
+| `cockpit agora` | `agora` | 110 |
 | `cockpit family-hub` | `family-hub` | 6 |
 | `cockpit mesh` | `aetherforge` | 15 |
 | `cockpit compute` | `aetherforge` | 15 |
