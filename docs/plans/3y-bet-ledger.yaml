@@ -1857,7 +1857,7 @@ bets:
   track: T7-SCENE
   underlying_workflow: project-code-change
   verify:
-  - cmd: uv run python -m domain.research.test_synthesis_pipeline
+  - cmd: cd projects/domain-cartridges/research && uv run python -m domain.research.test_synthesis_pipeline
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
@@ -1867,6 +1867,11 @@ bets:
   - docs/scene-cards/research-deep-synthesis.yaml
   - projects/domain-cartridges/research/
   - .omo/_knowledge/retros/BET-Y2Q4-T7-01.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-08-y2q4-t7-01-research-deep-synthesis-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:cf46209a6b20827414574bb5671708e23b117518c2930d1b2cc28c40b72f66ba
+    decision_ref: decision://accepted/BET-Y2Q4-T7-01
 - appetite: 4 days
   circuit_breaker: 受托执行置信度低于 0.95 时立即回退到 Assisted 人工审批。
   depends_on:
