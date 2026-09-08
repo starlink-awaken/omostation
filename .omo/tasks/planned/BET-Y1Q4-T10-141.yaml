@@ -1,0 +1,19 @@
+id: BET-Y1Q4-T10-141
+track: T10-MATURITY
+window: Y1Q4
+title: "Cockpit CLI 命令可用性台账 — 106 命令逐批验证与修复"
+priority: P1
+status: candidate
+goal: >
+  106 个 cockpit CLI 命令全量 smoke test。
+  84 PASS (含参数/子命令需求) / 8 服务依赖 / 4 stub / 4 交互/弃用 / 2 环境。
+  修复 4 个 stub 命令和 8 个服务依赖命令，确保全量命令可用。
+non_goals:
+  - 不修改命令的业务逻辑
+  - 不新增命令
+deliverables:
+  - 4 个 stub 命令实现或标注 deprecated (audit-ledger, fabric-mesh, memory-distill, watchdog)
+  - 8 个服务依赖命令的启动脚本/说明
+  - 全量命令可用性台账持续更新 (docs/reports/cockpit-cli-command-availability-ledger.md)
+appetite: 5 days
+depends_on: []
