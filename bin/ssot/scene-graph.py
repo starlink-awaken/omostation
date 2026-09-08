@@ -86,42 +86,136 @@ def build_graph_from_scenes() -> SceneGraph:
     elif scenes: g.set_entry(scenes[0].get("scene_id",""))
     return g
 
-def execute_graph(graph, initial_signal, dry_run=False) -> dict:
-    """Execute all reachable scenes from entry point via DFS."""
-    run_id = f"graph-{uuid.uuid4().hex[:12]}"; corr = f"corr-{uuid.uuid4().hex[:12]}"; results = {}
-    visited = set(); sig = dict(initial_signal)
+def execute_graph(graph, initial_signal, dry_run=False, parallel=True, max_workers=4) -> dict:
+    """Execute all reachable scenes from entry point.
 
-    def _exec_node(node_id):
-        if node_id in visited or node_id not in graph.nodes: return
-        visited.add(node_id)
+    When parallel=True, independent branches execute concurrently
+    using ThreadPoolExecutor (BFS level-by-level).
+    When parallel=False, falls back to sequential DFS.
+    """
+    run_id = f"graph-{uuid.uuid4().hex[:12]}"
+    corr = f"corr-{uuid.uuid4().hex[:12]}"
+    results = {}
+    lock = __import__("threading").Lock()
+
+    def _exec_single(node_id, sig):
+        """Execute a single scene and return its result."""
         if dry_run:
-            result = {"status":"succeeded","dry_run":True,"confidence":0.85,"scene_id":node_id}
-        else:
-            try:
-                proc = subprocess.run([sys.executable,str(JOURNEY_ENGINE),"execute",node_id,"--signal",json.dumps(sig)],
-                    capture_output=True,text=True,cwd=str(_ROOT),timeout=300)
-                result = json.loads(proc.stdout.strip()) if proc.stdout.strip() else {"status":"error","error":proc.stderr}
-            except Exception as e: result = {"status":"error","error":str(e)}
-        results[node_id] = result
-        emit_scene_event("scene.completed",node_id,{"result":result,"graph_id":graph.graph_id,"run_id":run_id},corr)
-        # Follow edges (DFS)
+            return {"status": "succeeded", "dry_run": True, "confidence": 0.85, "scene_id": node_id}
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(JOURNEY_ENGINE), "execute", node_id, "--signal", json.dumps(sig)],
+                capture_output=True, text=True, cwd=str(_ROOT), timeout=300,
+            )
+            return json.loads(proc.stdout.strip()) if proc.stdout.strip() else {"status": "error", "error": proc.stderr}
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+
+    def _get_valid_children(node_id, result):
+        """Get children that should be executed based on conditions."""
         node = graph.nodes.get(node_id)
-        if node:
-            for target, condition in node.children:
-                if condition == "always":
-                    _exec_node(target)
-                else:
+        if not node:
+            return []
+        valid = []
+        for target, condition in node.children:
+            if condition == "always":
+                valid.append(target)
+            else:
+                try:
+                    ns = {"result": result, "confidence": result.get("confidence", 0)}
+                    if "==" in condition:
+                        l, r = condition.split("==", 1)
+                        if _resolve(l.strip(), ns) == _resolve_lit(r.strip()):
+                            valid.append(target)
+                except Exception:
+                    pass
+        return valid
+
+    def _exec_parallel(entry_id, sig):
+        """BFS with parallel execution at each level."""
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        visited_local = set()
+        frontier = [entry_id]
+        all_results = {}
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            while frontier:
+                # Filter out already-visited nodes
+                level = [n for n in frontier if n not in visited_local and n in graph.nodes]
+                if not level:
+                    break
+
+                for n in level:
+                    visited_local.add(n)
+
+                # Execute current level in parallel
+                futures = {}
+                for node_id in level:
+                    future = executor.submit(_exec_single, node_id, sig)
+                    futures[future] = node_id
+
+                # Collect results and determine next frontier
+                next_frontier = []
+                for future in as_completed(futures):
+                    node_id = futures[future]
                     try:
-                        ns = {"result":result,"confidence":result.get("confidence",0)}
-                        if "==" in condition:
-                            l,r = condition.split("==",1)
-                            if _resolve(l.strip(),ns) == _resolve_lit(r.strip()): _exec_node(target)
-                    except: pass
+                        result = future.result()
+                    except Exception as e:
+                        result = {"status": "error", "error": str(e)}
+
+                    with lock:
+                        all_results[node_id] = result
+
+                    emit_scene_event("scene.completed", node_id,
+                                     {"result": result, "graph_id": graph.graph_id, "run_id": run_id}, corr)
+
+                    # Get valid children for next level
+                    children = _get_valid_children(node_id, result)
+                    for child in children:
+                        if child not in visited_local:
+                            next_frontier.append(child)
+
+                frontier = next_frontier
+
+        return all_results
+
+    def _exec_sequential(entry_id, sig):
+        """Original sequential DFS execution."""
+        visited_local = set()
+        all_results = {}
+
+        def _exec_node(node_id):
+            if node_id in visited_local or node_id not in graph.nodes:
+                return
+            visited_local.add(node_id)
+            result = _exec_single(node_id, sig)
+            all_results[node_id] = result
+            emit_scene_event("scene.completed", node_id,
+                             {"result": result, "graph_id": graph.graph_id, "run_id": run_id}, corr)
+            for child in _get_valid_children(node_id, result):
+                _exec_node(child)
+
+        _exec_node(entry_id)
+        return all_results
 
     entry = graph.entry_point
-    if not entry: raise ValueError("No entry point")
-    _exec_node(entry)
-    return {"run_id":run_id,"correlation_id":corr,"graph_id":graph.graph_id,"scenes_executed":len(results),"results":results}
+    if not entry:
+        raise ValueError("No entry point")
+
+    if parallel:
+        results = _exec_parallel(entry, dict(initial_signal))
+    else:
+        results = _exec_sequential(entry, dict(initial_signal))
+
+    return {
+        "run_id": run_id,
+        "correlation_id": corr,
+        "graph_id": graph.graph_id,
+        "scenes_executed": len(results),
+        "results": results,
+        "parallel": parallel,
+    }
 
 def _resolve(p,d):
     c=d
