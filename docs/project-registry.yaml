@@ -110,6 +110,16 @@ projects:
             embedding_model: "BAAI/bge-small-zh-v1.5"
             vector_dim: 512
 
+  # domain-cartridges 不是独立 git 仓 — 主仓内普通目录 (research/health 等领域场景卡 + 精读 pipeline)
+  domain-cartridges:
+    layer: "L2"
+    stack: "Python (stdlib only)"
+    python: ">=3.13"
+    role: "领域场景卡内容包 · research 精读 pipeline (sources/filter/synthesis/pipeline) (BET-Y2Q4-T7-01)"
+    src_dir: "research/"
+    submodule: false
+    physical_location: "projects/domain-cartridges/"
+
   omo:
     # exact-capability-binding: delivery/exact-capability-binding-omo-integrity-20260824-v1
     layer: "L2"
