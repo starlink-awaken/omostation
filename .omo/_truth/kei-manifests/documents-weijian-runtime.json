@@ -1,0 +1,13 @@
+{
+  "schema": "kei-manifest/v1",
+  "scene_id": "documents-weijian-runtime",
+  "name": "Documents Weijian Runtime",
+  "lifecycle": "supervised",
+  "permissions": {
+    "fs_read": [],
+    "fs_write": [],
+    "network": [],
+    "shell_exec": false
+  },
+  "generated_at": "2026-09-08T02:37:36.094047+00:00"
+}

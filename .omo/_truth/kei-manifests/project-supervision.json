@@ -1,0 +1,18 @@
+{
+  "schema": "kei-manifest/v1",
+  "scene_id": "project-supervision",
+  "name": "Project Supervision",
+  "lifecycle": "supervised",
+  "permissions": {
+    "fs_read": [
+      ".omo/"
+    ],
+    "fs_write": [
+      ".omo/_delivery/",
+      ".omo/_knowledge/"
+    ],
+    "network": [],
+    "shell_exec": false
+  },
+  "generated_at": "2026-09-08T02:37:36.576371+00:00"
+}

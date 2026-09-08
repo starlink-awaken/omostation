@@ -1,0 +1,18 @@
+{
+  "schema": "kei-manifest/v1",
+  "scene_id": "document-review",
+  "name": "Document Review",
+  "lifecycle": "supervised",
+  "permissions": {
+    "fs_read": [],
+    "fs_write": [],
+    "network": [
+      "localhost:4000",
+      "localhost:5432",
+      "localhost:8766",
+      "localhost:9290"
+    ],
+    "shell_exec": false
+  },
+  "generated_at": "2026-09-08T02:37:34.878425+00:00"
+}
