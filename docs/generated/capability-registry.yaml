@@ -11,12 +11,12 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 637
+  mcp_tools: 640
   bos_services: 299
   bos_domains: 22
   cli_commands: 214
   skills: 40
-  workflows: 24
+  workflows: 25
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -229,6 +229,9 @@ mcp_servers:
   - bcos_evolve
   - bcos_north_star
   - bcos_signals
+  - bos_documents_jobs
+  - bos_documents_registry
+  - bos_documents_state
   - bos_health
   - bos_inbox_archive
   - bos_inbox_draft
@@ -324,7 +327,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 107
+  tool_count: 110
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -2728,8 +2731,11 @@ workflows:
 - id: round-type-router
   file: .omo/_truth/registry/agent-workflows/workflows/round-type-router.yaml
   exists: true
-- id: scene-card-promotion
-  file: .omo/_truth/registry/agent-workflows/workflows/scene-card-promotion.yaml
+- id: scene-execution
+  file: .omo/_truth/registry/agent-workflows/workflows/scene-execution.yaml
+  exists: true
+- id: scene-lifecycle
+  file: .omo/_truth/registry/agent-workflows/workflows/scene-lifecycle.yaml
   exists: true
 - id: state-sync
   file: .omo/_truth/registry/agent-workflows/workflows/state-sync.yaml
