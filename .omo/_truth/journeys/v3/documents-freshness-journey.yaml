@@ -1,0 +1,54 @@
+schema: journey-spec/v3
+journey_id: documents-freshness-journey
+name: Documents Freshness 旅程
+description: Documents 保鲜审计
+initial_state: detected
+states:
+- name: detected
+  type: initial
+  description: 信号到达
+- name: classified
+  type: task
+  action: llm_classify
+  timeout: 30s
+  description: LLM 分类
+- name: processing
+  type: task
+  action: process
+  timeout: 120s
+  description: 核心处理
+- name: review_gate
+  type: human_gate
+  requires_human: true
+  approval_timeout: 86400s
+  description: 人机介入门控
+- name: recorded
+  type: task
+  action: record_result
+  description: 记录结果
+- name: knowledge_capture
+  type: task
+  action: emit_event
+  event: scene.completed
+  description: 知识沉淀
+- name: completed
+  type: final
+- name: escalated
+  type: final
+transitions:
+- from: detected
+  to: classified
+- from: classified
+  to: processing
+- from: processing
+  to: review_gate
+- from: review_gate
+  to: recorded
+  condition: confidence >= 0.7
+- from: review_gate
+  to: escalated
+  condition: confidence < 0.5
+- from: recorded
+  to: knowledge_capture
+- from: knowledge_capture
+  to: completed
