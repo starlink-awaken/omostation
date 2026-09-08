@@ -171,6 +171,14 @@ def gen_launchd_plist(svc: dict) -> str:
         )
     throttle = res.get("throttle_interval")
     throttle_xml = f"    <key>ThrottleInterval</key>\n    <integer>{throttle}</integer>\n" if throttle else ""
+    # trigger: interval → StartInterval (此前静默丢弃: interval 型服务退化成
+    # RunAtLoad 一次性, load 后永不再调度 —— 角色 jobs 40min 水位 stale 的根因)
+    trigger = svc.get("trigger", "")
+    interval_sec = svc.get("interval_sec")
+    start_interval_xml = (
+        f"    <key>StartInterval</key>\n    <integer>{int(interval_sec)}</integer>\n"
+        if trigger == "interval" and interval_sec else ""
+    )
     run_at_load_xml = "    <key>RunAtLoad</key>\n    <true/>\n" if svc.get("run_at_load") else ""
     out = svc.get("outputs", {})
     # 与 entrypoint 同样要过 _resolve_path —— 否则 "~/Library/Logs/x.log" 会被
@@ -198,6 +206,7 @@ def gen_launchd_plist(svc: dict) -> str:
         + keepalive_xml
         + throttle_xml
         + run_at_load_xml
+        + start_interval_xml
         + stdout_xml
         + stderr_xml
         + "</dict>\n</plist>\n"
