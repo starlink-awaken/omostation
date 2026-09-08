@@ -17,12 +17,60 @@ from typing import Any
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT / "bin" / "ssot"))
 
+# ── Performance: YAML parse cache (mtime-aware) ──────────────────────
+_yaml_cache: dict[str, tuple[float, dict[str, Any]]] = {}
+
 def _load_yaml(path: Path) -> dict[str, Any]:
+    """Load YAML with mtime-based caching to avoid repeated disk I/O."""
     import yaml
+    cache_key = str(path)
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        mtime = 0.0
+
+    cached = _yaml_cache.get(cache_key)
+    if cached and cached[0] == mtime:
+        return cached[1]
+
     with open(path, encoding="utf-8") as f:
         docs = list(yaml.safe_load_all(f))
     body = docs[-1] if len(docs) > 1 else docs[0]
-    return body if isinstance(body, dict) else {}
+    result = body if isinstance(body, dict) else {}
+
+    _yaml_cache[cache_key] = (mtime, result)
+    return result
+
+# ── Performance: scene card index (built once, O(1) lookup) ─────────
+_scene_index: dict[str, dict[str, Any]] | None = None
+_scene_index_built_at: float = 0.0
+_SCENE_INDEX_TTL = 60.0  # Rebuild every 60s
+
+def _build_scene_index() -> dict[str, dict[str, Any]]:
+    """Build a scene_id → card mapping in one pass."""
+    index = {}
+    for d in [_ROOT / ".omo" / "_truth" / "scenarios" / "v3", _ROOT / "docs" / "scene-cards"]:
+        if not d.is_dir():
+            continue
+        for p in d.glob("*.yaml"):
+            try:
+                body = _load_yaml(p)
+                sid = body.get("scene_id")
+                if sid and sid not in index:
+                    index[sid] = body
+            except Exception:
+                continue
+    return index
+
+def _get_scene_index() -> dict[str, dict[str, Any]]:
+    """Get or rebuild the scene index (TTL-based)."""
+    global _scene_index, _scene_index_built_at
+    import time
+    now = time.time()
+    if _scene_index is None or (now - _scene_index_built_at) > _SCENE_INDEX_TTL:
+        _scene_index = _build_scene_index()
+        _scene_index_built_at = now
+    return _scene_index
 
 def _find_journey_spec(journey_id: str) -> Path:
     v3_path = _ROOT / ".omo" / "_truth" / "journeys" / "v3" / f"{journey_id}.yaml"
@@ -32,14 +80,8 @@ def _find_journey_spec(journey_id: str) -> Path:
     raise FileNotFoundError(f"journey spec not found: {journey_id}")
 
 def _find_scene_card(scene_id: str) -> dict[str, Any] | None:
-    for d in [_ROOT / ".omo" / "_truth" / "scenarios" / "v3", _ROOT / "docs" / "scene-cards"]:
-        if not d.is_dir(): continue
-        for p in d.glob("*.yaml"):
-            try:
-                body = _load_yaml(p)
-                if body.get("scene_id") == scene_id: return body
-            except: continue
-    return None
+    """O(1) scene card lookup via cached index."""
+    return _get_scene_index().get(scene_id)
 
 class CompensationAction:
     def __init__(self, action_type: str, payload: dict, description: str = ""):

@@ -12,7 +12,13 @@ _DB_PATH = _ROOT / "data" / "scene-metrics.db"
 
 def _get_db() -> sqlite3.Connection:
     _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(_DB_PATH)); conn.row_factory = sqlite3.Row
+    conn = sqlite3.connect(str(_DB_PATH), timeout=10)
+    conn.row_factory = sqlite3.Row
+    # Performance: WAL mode for concurrent reads + busy timeout
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=5000")
+    conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA cache_size=-8000")  # 8MB cache
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS scene_execution (id TEXT PRIMARY KEY, scene_id TEXT NOT NULL,
             run_id TEXT NOT NULL, status TEXT NOT NULL, confidence REAL DEFAULT 0.0,
