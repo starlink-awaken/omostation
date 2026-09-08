@@ -1,61 +1,60 @@
-generated_at: '2026-08-31T06:22:15Z'
-last_scan: 2026-08-30 07:42:08+00:00
+last_scan: 1788850839.5295591
 services:
   agora-gateway:
     health_check: healthy (probe)
     name: agora-gateway
     runtime:
       exit_code: 113
-      last_healthy_seconds: 2056822
+      last_healthy_seconds: 2831933
       status: unrecoverable
       unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
         fault)
-    timestamp: 1788075728.198524
+    timestamp: 1788850839.5295591
     type: daemon
   agora-sse:
     health_check: unreachable
     name: agora-sse
     port_listening: false
     runtime:
-      exit_code: 113
-      last_healthy_seconds: 252336
+      exit_code: '512'
+      last_healthy_seconds: 1027447
       status: unrecoverable
       unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
         fault)
-    timestamp: 1788075728.198524
+    timestamp: 1788850839.5295591
     type: daemon
   cron-service:
-    health_check: unreachable
+    health_check: healthy
     name: cron-service
-    port_listening: false
+    port_listening: true
     runtime:
-      exit_code: 113
-      last_healthy_seconds: 252336
-      status: unrecoverable
-      unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
-        fault)
-    timestamp: 1788075728.198524
+      freshness_seconds: 60
+      last_healthy_seconds: 0
+      pid: '8315'
+      status: running
+      uptime_seconds: 242
+    timestamp: 1788850839.5295591
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1788075728.198524
+    timestamp: 1788850839.5295591
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1788075728.198524
+    timestamp: 1788850839.5295591
     type: scheduled
   kos:
     name: kos
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1788075728.198524
+    timestamp: 1788850839.5295591
     type: integrated
   ollama:
     health_check: healthy
@@ -65,12 +64,12 @@ services:
       exit_code: 113
       last_healthy_seconds: 0
       status: BACKOFF
-    timestamp: 1788075728.198524
+    timestamp: 1788850839.5295591
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1788075728.198524
+    timestamp: 1788850839.5295591
     type: mcp
