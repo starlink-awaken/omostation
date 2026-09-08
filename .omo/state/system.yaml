@@ -20,7 +20,7 @@ next_planned_tasks:
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
-updated_at: '2026-09-08T14:57:37.821900+08:00'
+updated_at: '2026-09-08T16:09:00.479234+08:00'
 harness:
   last_run: null
   last_status: null
@@ -38,19 +38,19 @@ self_evolution:
   proposals_executed: 0
 health_score: 54
 governance_anomaly_score: 6
-service_online_ratio: 0.5
+service_online_ratio: 1.0
 health_score_source: compass_radar_composite_isc3
 health_score_generated_at: '2026-09-06T12:53:21Z'
 runtime_health_summary:
   online_services: 2
-  total_services: 4
-  ratio: 0.5
-  health_score: 50
-  last_scan: '1788850657.488885'
-  service_count: 8
+  total_services: 2
+  ratio: 1.0
+  health_score: 100
+  last_scan: '1788854940.212735'
+  service_count: 6
   degraded: []
   source: runtime_daemon_de_false_positive
-governance_feedback_last_run: '2026-09-08T14:57:37.821900+08:00'
+governance_feedback_last_run: '2026-09-08T16:09:00.479234+08:00'
 workflow_mesh_health:
   status: healthy
   event_count: 1
