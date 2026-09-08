@@ -527,6 +527,9 @@ _DEFAULT_CHECK_TIMEOUTS = {
     "gac-drift": 45,
     "mof-schema-validate": 45,
     "sfop-slots": 45,
+    # bet-retro-due-check: CI 冷环境 import yaml + 读 378-bet ledger 需 7-8s,
+    # gate 内系统负载下超 15s 默认 → false TIMEOUT (2026-09-08 CI 实证, PR #3436)
+    "bet-retro-due-check": 60,
 }
 _CHECK_TIMEOUTS = {
     g["id"]: g.get("timeout", _DEFAULT_CHECK_TIMEOUTS.get(g["id"], 15)) for g in GATES_LIST
