@@ -26669,7 +26669,7 @@ bets:
   title: BET 认领广播 — 同号竞速防护 (claim-bet / start 拦截 / 自动释放)
   appetite: 1 days
   priority: P1
-  status: candidate
+  status: in_progress
   goal: 根治同号竞速 (4 轮 PR 浪费; 并行 agent 互盲同一 candidate → 都 start → 互覆盖) — 认领广播落共享物理位置
     (git-common-dir 锚定主 checkout, `.omo/` gitignored 时 worktree 互盲), claim-bet 子命令
     + `_claim_interlock_guard` start 双认领拦截 (BET_CLAIM_HELD) + `complete` 后自动释放 + `claim-gc`
