@@ -1417,15 +1417,15 @@ bos_services:
     documents:
     - uri: bos://documents/registry
       description: Documents L4 域注册表只读查询 (域元数据/客户端契约/能力路由)
-      transport: mcp
+      transport: inline
       status: active
     - uri: bos://documents/jobs
       description: Documents 运行时任务配置只读查询 (job 定义/调度/证据路径)
-      transport: mcp
+      transport: inline
       status: active
     - uri: bos://documents/state
       description: Documents 运行时状态只读查询
-      transport: mcp
+      transport: inline
       status: active
     ecos:
     - uri: bos://ecos/workflow/list
