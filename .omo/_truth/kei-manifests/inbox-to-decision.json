@@ -1,0 +1,13 @@
+{
+  "schema": "kei-manifest/v1",
+  "scene_id": "inbox-to-decision",
+  "name": "Inbox To Decision",
+  "lifecycle": "assisted",
+  "permissions": {
+    "fs_read": [],
+    "fs_write": [],
+    "network": [],
+    "shell_exec": false
+  },
+  "generated_at": "2026-09-08T02:37:36.328716+00:00"
+}
