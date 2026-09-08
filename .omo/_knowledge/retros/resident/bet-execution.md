@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-generated_at: 2026-09-08T02:46:09Z
+generated_at: 2026-09-08T05:47:51Z
 status: candidate
 counts:
-  runs: 48
+  runs: 50
   failures: 0
-  total: 48
+  total: 50
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-08T02:46:09Z
+- generated_at: 2026-09-08T05:47:51Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 48 成功运行 + 0 失败模式 = 48 草稿
+- sediment 覆盖: 50 成功运行 + 0 失败模式 = 50 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -69,6 +69,8 @@ failure_breakdown:
 - 20260906T070711Z-bet-execution-1c44e57c.md
 - 20260906T114837Z-bet-execution-7e4a6af3.md
 - 20260907T012421Z-bet-execution-225a3003.md
+- 20260908T011338Z-bet-execution-6de0ad38.md
+- 20260908T031155Z-bet-execution-cf6bdf89.md
 
 ## 失败模式 (failures/)
 
@@ -409,6 +411,18 @@ failure_breakdown:
   - 结果与证据: ok=False, status=failed, evidence_count=3
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=24019.934
+- **20260908T011338Z-bet-execution-6de0ad38**
+  - 计划 (objective): [BET-Y1Q4-T10-139] BET 认领广播 — 同号竞速防护 (claim-bet / start 拦截 / 自动释放) (Appetite: 1 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=6494.135
+- **20260908T031155Z-bet-execution-cf6bdf89**
+  - 计划 (objective): [BET-Y1Q4-T10-140] 清理器引用保护 — reset/prune/clean 对未推 commit 与活跃分支的防御 (Appetite: 1 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=2805.473
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
