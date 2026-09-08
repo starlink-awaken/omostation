@@ -183,24 +183,6 @@ jobs:
         run: python3 -m pytest tests/test_spec_binding_lint.py -q
       - name: Run full governance verification
         run: make governance-verify
-      - name: TEMP DEBUG retro-due diagnosis
-        if: runner.os == 'Linux'
-        run: |
-          echo "=== pwd / WS ==="
-          pwd
-          echo "=== retro-due --json (exit captured) ==="
-          set +e
-          python3 bin/plan/bet-ledger.py retro-due --json; echo "RETRO_RC=$?"
-          echo "=== retro-due plain ==="
-          python3 bin/plan/bet-ledger.py retro-due; echo "PLAIN_RC=$?"
-          echo "=== retros dir ==="
-          ls .omo/_knowledge/retros/ | head -3
-          echo "retros top-level md count: $(ls .omo/_knowledge/retros/*.md 2>/dev/null | wc -l)"
-          echo "=== ledger done bets ==="
-          python3 -c "import yaml; d=yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml')); b=d['bets'] if isinstance(d,dict) and 'bets' in d else d; print('done+retro_required:', sum(1 for x in b if isinstance(x,dict) and x.get('status')=='done' and x.get('retro') in ('required','light')))"
-          echo "=== gate sys.executable ==="
-          python3 -c "import sys; print(sys.executable, sys.version)"
-          set -e
       - name: GaC local gate
         run: python3 bin/gac/gac-local-gate.py --strict
       - name: Submodule pointer drift check
