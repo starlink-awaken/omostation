@@ -1,15 +1,15 @@
-last_scan: 1788851508.0600572
+last_scan: 1788851573.555192
 services:
   agora-gateway:
     health_check: healthy (probe)
     name: agora-gateway
     runtime:
       exit_code: 113
-      last_healthy_seconds: 2832601
+      last_healthy_seconds: 2832667
       status: unrecoverable
       unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
         fault)
-    timestamp: 1788851508.0600572
+    timestamp: 1788851573.555192
     type: daemon
   agora-sse:
     health_check: unreachable
@@ -17,44 +17,44 @@ services:
     port_listening: false
     runtime:
       exit_code: 113
-      last_healthy_seconds: 1028116
+      last_healthy_seconds: 1028182
       status: unrecoverable
       unrecoverable_reason: persistent failure >1800s despite self-heal (deterministic
         fault)
-    timestamp: 1788851508.0600572
+    timestamp: 1788851573.555192
     type: daemon
   cron-service:
     health_check: healthy
     name: cron-service
     port_listening: true
     runtime:
-      freshness_seconds: 60
+      freshness_seconds: 65
       last_healthy_seconds: 0
       pid: '8315'
       status: running
-      uptime_seconds: 911
-    timestamp: 1788851508.0600572
+      uptime_seconds: 976
+    timestamp: 1788851573.555192
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1788851508.0600572
+    timestamp: 1788851573.555192
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1788851508.0600572
+    timestamp: 1788851573.555192
     type: scheduled
   kos:
     name: kos
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1788851508.0600572
+    timestamp: 1788851573.555192
     type: integrated
   ollama:
     health_check: healthy
@@ -65,12 +65,12 @@ services:
       last_healthy_seconds: 0
       self_heal_attempted: true
       status: failed
-    timestamp: 1788851508.0600572
+    timestamp: 1788851573.555192
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1788851508.0600572
+    timestamp: 1788851573.555192
     type: mcp
