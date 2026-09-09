@@ -196,3 +196,50 @@ Publication of this two-path draft amendment may proceed only through default
 verification, independent review and required CI. If fixed claims-authority
 policy rejects normal publication, the exact failure and any one-time delegated
 publication decision must be appended before publication.
+
+## Exact publication recovery record
+
+The independently accepted two-path amendment was committed as:
+
+```text
+a70a5c5cebc13bbb33a8f659df3a57523cd4e287
+```
+
+The commit hook accepted the commit and emitted the existing local metadata
+warning `hook version mismatch (0.0.0 -> 2.0.0)`. This transaction records the
+warning; it does not represent hook metadata as healthy or modify hooks.
+
+The correct immutable-manifest changeset verification returned:
+
+```text
+reason: claims_authority_mismatch
+claims root: /Users/xiamingxing/agents/codex-agent-os-recovery/attempts/claims-authority-bridge-amendment-20260909-01/ws
+fixed authority root: /Users/xiamingxing/Workspace
+```
+
+No claim-verified changeset or integrate receipt exists. This is the exact gap
+the amended draft designs; the draft itself is not evidence that the bridge is
+implemented.
+
+Under the time-bounded Principal delegation above, the exact recovery decision
+is:
+
+- permit one waiver-only successor commit whose parent is
+  `a70a5c5cebc13bbb33a8f659df3a57523cd4e287` and whose only change is this
+  publication-recovery record;
+- bind the resulting head with annotated tag
+  `claims-authority-bridge-amendment-20260909-01`;
+- after default verification/compliance and blocked workflow closeout, permit
+  one ordinary non-force `git push --no-verify` publishing only that branch and
+  tag, because the exact pre-push claims check has already returned the fixed
+  authority rejection;
+- create one unique PR whose diff contains only the amended draft and waiver;
+- require `phase-gate`, `bet-done-transition` and `gac-gate`, plus the complete
+  Governance Check, to pass before squash merge;
+- verify final main objects, Spec SHA/frontmatter, zero locks and the external
+  retirement chain after merge.
+
+The final source head is bound by the tag and PR because a commit cannot contain
+its own OID. Any new path, force operation, gate failure, main conflict or
+digest drift cancels this decision. This exception is not a reusable
+publication policy and does not authorize accepted binding or implementation.
