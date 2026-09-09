@@ -26986,6 +26986,67 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y1Q4-T10-142
+  track: T10-MATURITY
+  window: Y1Q4
+  title: A3 Managed Python test-only integration recovery
+  appetite: 0.5 days
+  priority: P0
+  status: candidate
+  goal: 仅通过修复现有测试 fixture，恢复真实 thin hook → hook-runner → managed-Python selector
+    与 clone-snapshot 身份合同的集成覆盖，不改变任何生产行为。
+  non_goals:
+  - 不修改生产 hook、hook-runner、managed-Python selector、hook manifest 或 Makefile
+  - 不以 test-only green 追认 A3 完整运行证明、完成证据或价值证明
+  - 不修改 CI、host 配置、运行态或其他 BET/Spec
+  done_when:
+  - tests/unit/gac/test_managed_python_runtime.py 以 canonical focused command 达到 6/6 通过
+  - fixture 使用真实 thin hooks、真实 hook-runner 与真实 hook manifest，fake selector 仅记录 leaf 调用
+  - pre-push 对 blocking leaf 非零结果保持 fail-closed 传播
+  - clone-snapshot fixture 同时传入 AGENT_ID 与 DELIVERY_ATTEMPT_ID
+  - stdlib 与 pyyaml 两个 probe 均返回 managed-python-runtime-receipt/v1、Python 3.14.7 与精确能力
+  - 默认 workflow verify/compliance、GaC、required PR contexts 与 post-merge exact-object 验证通过
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 GIT_OPTIONAL_LOCKS=0
+      /opt/homebrew/bin/python3 -B -m pytest -q -p no:cacheprovider tests/unit/gac/test_managed_python_runtime.py
+    expect: exit 0; 6 passed
+  - cmd: OMO_MANAGED_PYTHON=/opt/homebrew/bin/python3 bin/gac/managed-python probe --profile
+      stdlib --json
+    expect: exit 0; schema=managed-python-runtime-receipt/v1; executable Python 3.14.7
+  - cmd: OMO_MANAGED_PYTHON=/opt/homebrew/bin/python3 bin/gac/managed-python probe --profile
+      pyyaml --json
+    expect: exit 0; schema=managed-python-runtime-receipt/v1; executable Python 3.14.7
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - tests/unit/gac/test_managed_python_runtime.py
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  value_indicator_policy: false
+  retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-08-managed-python-integration-recovery-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:e097950a5979c2a7b05edb75d8e432171a4050e8cf6a259f3053a308d9d639a1
+    decision_ref: decision://accepted/BET-Y1Q4-T10-142
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  circuit_breaker: accepted Spec digest、generated WorkPacket 或 claim 若超出唯一测试文件，或任何生产路径、默认门、CI
+    要求扩大范围，则立即停止并申请 scope successor；不得旁路或以 test-only green 宣称 A3 已完整通过。
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
@@ -27160,7 +27221,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 341
+  total_bets: 380
   windows:
   - Y1Q1
   - Y1Q2
