@@ -116,3 +116,28 @@ Publication, review and merge of this two-path draft are permitted only through
 the normal default gates. If the known claims-authority mismatch blocks normal
 publication, execution must stop and obtain a new exact-commit degraded
 authorization; this waiver is not that authorization.
+
+## Temporary delegated authorization
+
+Principal statement, verbatim:
+
+> 我要去休息了，针对上述这种精细化的授权，我估计暂时不能给你处理，直到明天上午10点之前，所有相关授权，你来自主处理，做好备案即可。
+
+Interpretation recorded at 2026-09-09 under Asia/Shanghai:
+
+- delegation expires at 2026-09-10T10:00:00+08:00;
+- it covers the fine-grained, in-scope authorizations needed to continue the
+  already approved Claims Bridge first and A2 second draft-Spec sequence;
+- every exercised authorization must be recorded before or with the affected
+  transaction and remain bounded to exact artifacts and reversible operations;
+- it does not permit false evidence, force push, history rewrite, destructive
+  cleanup, secret access, unreviewed host mutation, or value/completion claims.
+
+For this exact two-path draft transaction, the delegated decision authorizes
+one non-force degraded direct publication if the known fixed claims-authority
+policy again rejects the managed clone's otherwise valid claims. The exception
+is limited to the final exact commit(s), one annotated tag, one branch push,
+one unique PR, required CI, squash merge and exact post-merge verification.
+The PR must disclose the failed claim-verification result and must not claim a
+claim-verified changeset. This decision is not a general publication policy and
+does not authorize Spec acceptance, Ledger/BET binding or implementation.
