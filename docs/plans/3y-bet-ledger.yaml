@@ -1558,7 +1558,8 @@ bets:
   priority: P0
   retro: required
   risk_level: L2
-  status: in_progress
+  status: done
+  done_at: 2026-09-09
   title: Cockpit 全渠道一键署名外发真实网关与业务消费追踪
   track: T4-OUTCOME
   underlying_workflow: project-code-change
