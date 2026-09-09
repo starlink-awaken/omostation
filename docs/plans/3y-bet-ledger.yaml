@@ -1591,7 +1591,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@8950daab05342ec1103abca106a5bb238cbfa3e5
+            ref: git://origin/main@761b73e0c303a48a1c8ae91a223d01f1f214b84b
           tests:
             ref: receipt://projects/cockpit/tests/test_spine_gateway_risk.py
             sha256: sha256:dfa922fa932060768079e0c835f1ffb6c7e37e55dd7995459954fd31e58f5b0c
@@ -1599,17 +1599,17 @@ bets:
             ref: receipt://projects/cockpit/tests/test_spine_gateway_risk.py
             sha256: sha256:dfa922fa932060768079e0c835f1ffb6c7e37e55dd7995459954fd31e58f5b0c
           rollback:
-            ref: receipt://docs/superpowers/specs/2026-09-09-outbound-gateway-spec.md
-            sha256: sha256:d13886145ff25981dda76e630c1f9b9f717c27ee30dce4410857c6beadb693de
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-06.md
+            sha256: sha256:f25e0b8de3e6348f152ba928aabf4f4b20969e9d40fdd13d2efb9741ce80d474
       operational:
         status: PROVEN
         evidence:
           live_canary:
-            ref: receipt://docs/superpowers/specs/2026-09-09-outbound-gateway-spec.md
-            sha256: sha256:d13886145ff25981dda76e630c1f9b9f717c27ee30dce4410857c6beadb693de
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-06.md
+            sha256: sha256:f25e0b8de3e6348f152ba928aabf4f4b20969e9d40fdd13d2efb9741ce80d474
           fresh_receipt:
-            ref: receipt://docs/superpowers/specs/2026-09-09-outbound-gateway-spec.md
-            sha256: sha256:d13886145ff25981dda76e630c1f9b9f717c27ee30dce4410857c6beadb693de
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-06.md
+            sha256: sha256:f25e0b8de3e6348f152ba928aabf4f4b20969e9d40fdd13d2efb9741ce80d474
           replay:
             ref: receipt://projects/cockpit/tests/test_spine_gateway_risk.py
             sha256: sha256:dfa922fa932060768079e0c835f1ffb6c7e37e55dd7995459954fd31e58f5b0c
