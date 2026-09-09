@@ -112,3 +112,36 @@ done
 
 ## 关联 PR
 - agora #73 (fix(bos): 注册 documents 域白名单 + Transport 加 'mcp' 字面量) — 修复 cascading_test 因 documents 路由校验失败
+
+
+## 批次 3 闭环 (2026-09-09): 服务依赖命令可用性修复
+
+### 修复 (4 个真实问题)
+| 命令 | cockpit PR #138 | 真实问题 | 修复 |
+|---|---|---|---|
+| ops | ✅ | `parents[3]` 路径错 → `No module named bin` | 改用 `env_resolver.get_workspace_root()` 跨 worktree/主仓兼容 |
+| monitor | ✅ | 无参数直接进 TUI 交互循环 (timeout) | 加 `--status` / `--no-tui` 一次性快照模式 |
+| resident | ✅ | `VIRTUAL_ENV` 警告干扰 stdout | 调用 `uv run` 时 unset VIRTUAL_ENV |
+| tui | ⚠️ | 交互式 (需 TTY) | 台账标注 (不是 bug, 是设计) |
+
+### 验证 (4 命令)
+```
+cockpit ops → bin/ops/cli.py status 真实调用 ✅ exit=0
+cockpit monitor --status → 一次性快照 ✅ exit=0
+cockpit resident → omo resident 子命令传递 ✅ exit=0 (无警告)
+cockpit tui → 交互式 (设计) ✅ 不算修复目标
+```
+
+### 当前命令可用性总览 (批次 3 后)
+| 类别 | 数量 | 变化 |
+|---|---|---|
+| ✅ PASS (含 deprecated 软提示) | **91** | +3 (ops/monitor/resident 修复) |
+| ⚠️ 服务依赖 | 5 | -3 (修复后入 PASS) |
+| ⚠️ 交互式/弃用 | 5 | +1 (tui 从服务依赖归类) |
+| ⚠️ 环境 | 2 | 不变 |
+| ❌ stub | 0 | 不变 |
+| **合计** | **106** | **100%** |
+
+## 批次 4 计划
+- 5 个交互式/弃用命令的文档化
+- tui / bdsk / model-driven / agent-runtime / 需特殊环境命令
