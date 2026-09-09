@@ -26986,6 +26986,42 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y1Q4-T4-07
+  track: T4-OUTCOME
+  window: Y1Q4
+  title: T4-06 外发网关真实收件箱一键实测 (operator human moment 收尾件)
+  appetite: 0.5 days
+  priority: P1
+  status: candidate
+  goal: '完成 T4-06 done_when ① 的最后一环: operator 部署 SMTP 凭据 (~/.config/spine/smtp.json,
+    凭据不入仓) 后, 经 cockpit spine send 向真实收件箱一键外发测试邮件, 核对 OutboundMessageReceipt status=sent
+    — 网关全链路 (spool→风控→真实通道→回执→价值台账) 真实环境闭环。凭据模板 ~/.config/spine/smtp.json.example
+    (含 163/QQ/iCloud/企业邮箱参数表, 465 隐式 SSL 已由 cockpit #143 支持)。'
+  depends_on:
+  - BET-Y1Q4-T4-06
+  non_goals:
+  - 'agent 不得代填凭据或代执行外发 (T4-06 non_goals: 未经夏明星确认不外发)'
+  - 不做多收件人/批量外发 (超出网关单发契约)
+  done_when:
+  - SMTP 凭据部署且 spine send 真实外发成功 (目标收件箱收到测试邮件)
+  - receipt.json status=sent + 价值台账 entry 落盘核对
+  - T4-06 done_when ① 在 ledger 视角闭环 (本 BET done 即代表)
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: test -f ~/.config/spine/smtp.json
+    expect: exit 0 (凭据已部署; closeout 时 operator 口头确认即可, 凭据本身不入任何证据文件)
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: true
+  value_indicator_policy: false
+  circuit_breaker: 外发内容固定为测试邮件; 频次受 T4-06 网关 daily_send_cap 熔断保护
+  retro: required
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
