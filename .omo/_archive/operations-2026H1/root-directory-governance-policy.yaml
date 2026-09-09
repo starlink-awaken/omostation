@@ -67,6 +67,11 @@ local_surfaces:
     class: client-metadata
     lifecycle: local
     reason: Codebuddy editor metadata and local lock files
+  .commandcode:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: CommandCode client metadata and taste data
   .openclaude:
     owner: workspace-tooling
     class: client-metadata
