@@ -629,7 +629,7 @@ diff_checks:
   - bin/sweep/**
   - tests/test_sweep_tools.py
   - bin/gac/gac-worktree.sh
-  - bin/gac/gac-worktree-cleanup.sh
+  - bin/gac/prune-zombie-worktrees.py
   - tests/test_gac_worktree_lifecycle.py
   - projects/*/src/**/*.py
   - projects/*/tests/**/*.py

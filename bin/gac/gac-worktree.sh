@@ -211,8 +211,16 @@ case "$cmd" in
     actor="$(resolve_actor "${3:-}")"
     branch="agent/${actor}/${session}"
     claim_in_progress="$WS_PARENT/.ws-$session.claiming"
+    lifecycle_guard="$WS_PARENT/.ws-$session.lifecycle-lock"
+    if ! mkdir -m 700 "$lifecycle_guard" 2>/dev/null; then
+      echo "❌ lifecycle guard held: $lifecycle_guard" >&2
+      exit 1
+    fi
     cleanup_claim_marker() {
       rm -f "$claim_in_progress"
+      if ! rmdir "$lifecycle_guard" 2>/dev/null; then
+        echo "⚠️ lifecycle guard release failed: $lifecycle_guard" >&2
+      fi
     }
     trap cleanup_claim_marker EXIT INT TERM
     # ── G-CONV.7 / ADR-0220 D2: branch occupancy lock ─────────────────
@@ -966,7 +974,7 @@ PYEOF
     ;;
 
   cleanup)
-    # TTL 过期 worktree 回收 (cron 调用入口; gac-worktree-cleanup.sh 委托本子命令)
+    # 旧手动 TTL 兼容入口；定时回收的 canonical successor 是 prune-zombie-worktrees.py。
     # 判定: mtime (非 atime — relatime 下 atime 不更新) 超 TTL 且无脏改动 → 删除
     TTL_HOURS="${PASW_TTL_HOURS:-24}"
     DRY=false

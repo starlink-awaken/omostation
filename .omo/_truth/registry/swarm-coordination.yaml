@@ -152,8 +152,8 @@ gates:
       - projects/knowledge/gbrain
       - projects/cockpit
       - projects/agora
-    ttl_hours: 24
-    cleanup_script: bin/gac/gac-worktree-cleanup.sh
+    ttl_days: 7
+    cleanup_script: bin/gac/prune-zombie-worktrees.py
 
 # Paths that may be committed on the shared main worktree without isolation
 # (docs-only / generated / self-describing). Everything else needs claim or worktree.
