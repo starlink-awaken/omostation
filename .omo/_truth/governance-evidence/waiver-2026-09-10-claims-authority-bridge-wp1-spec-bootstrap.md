@@ -58,3 +58,21 @@ one staged commit. Following the existing two-commit bootstrap precedent, the Sp
 validated and committed in the `docs` lane first. This waiver is validated and
 committed separately in the `governance_state` lane. Both commits remain in one exact
 two-path PR; no gate is bypassed by the split.
+
+## One-time degraded publication record
+
+At 2026-09-10 04:48 Asia/Shanghai, the standard
+`clone-lifecycle changeset --verify-claims` path was attempted against the managed
+clone and failed before publication with `claims_authority_mismatch`: the verifier
+accepts only `/Users/xiamingxing/Workspace`, while the exact active run and two claims
+are in this managed clone. This waiver does not claim that changeset verification or
+`clone-lifecycle integrate` passed.
+
+Under the same time-bounded Human delegation, the Agent authorizes one annotated tag,
+one normal non-force push of the immutable final branch, and one unique draft-Spec PR.
+The PR must state `changeset_claims_unverified`, identify this fixed authority gap and
+contain exactly the two bootstrap paths. It may merge only after required contexts are
+green, followed by exact-SHA/two-path verification, blocked workflow closeout, lock
+zero and clone retirement. Any actual gate rejection stops the transaction. The
+exception is commit/attempt-bounded, is not a precedent and grants no implementation,
+Ledger/BET, WP2 or runtime authority.
