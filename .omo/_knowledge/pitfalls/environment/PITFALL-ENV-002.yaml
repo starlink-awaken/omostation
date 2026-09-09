@@ -16,6 +16,8 @@ prevention: ''
 tags: []
 discovered_by: unknown
 discovered_at: '2026-09-08'
-times_encountered: 1
-last_confirmed_at: '2026-09-08'
+times_encountered: 2
+last_confirmed_at: '2026-09-09'
 status: active
+_path: /Users/xiamingxing/Workspace/.omo/_knowledge/pitfalls/environment/PITFALL-ENV-002.yaml
+_file: PITFALL-ENV-002.yaml

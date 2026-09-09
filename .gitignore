@@ -65,7 +65,7 @@ runtime/concept-weave-preflight*.json
 runtime/consumer-audit-*.json
 runtime/control/evidence/documents-weijian-*/
 runtime/daily-health-preflight*.json
-runtime/heartbeats/weijian-*
+runtime/heartbeats/
 runtime/kos-preflight-*.json
 runtime/predictor-preflight*.json
 runtime/quarantine/documents-bos-neural-mesh-20260828/
