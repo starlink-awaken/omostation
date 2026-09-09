@@ -27121,6 +27121,77 @@ bets:
     任何 unbound v2、stage-union claim、force/force-with-lease canary、
     caller-selected authority、descriptor drift、high-water gap、自动重推、
     R1/host scope 或 completion/value 扩张均立即停止。
+- id: BET-Y1Q4-T10-144
+  track: T10-MATURITY
+  window: Y1Q4
+  title: A2 Resident Status Purity Truth Recovery
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  goal: >-
+    将 resident status 恢复为严格只读、单次、无重试的 Query，保留显式 recovery
+    Command，使 locked、busy、I/O error 与 unknown 都只被真实报告而不触发 SQLite、
+    进程、服务或主机副作用。
+  depends_on: []
+  non_goals:
+  - 不重写或重开 BET-Y1Q3-T10-48、BET-Y1Q4-T10-126 或其历史完成证据
+  - 不要求 BET-Y1Q4-T10-142 变为 done，不推进其 operational/value 状态
+  - 不改变 WAL checkpoint、holder discovery、CPU sampling、kill 阈值、daemon tick 或 heartbeat 语义
+  - 不在 child WorkPacket 中修改根 gitlink、运行 host canary 或执行 recovery/restart/kill
+  - 不把工程、CI、gitlink 或只读可用性证据计入个人价值
+  done_when:
+  - 完整 resident status 路径对 recovery、checkpoint、holder、CPU、kill、sleep 和 write-capable SQLite 的调用均为零
+  - check_lock_state_only 对 missing、unlocked、locked、busy、I/O error 与 unknown 返回稳定 typed read-only 结果
+  - busy 路径只执行一次 lock observation 和一次 chain probe，零 retry/零 sleep，并诚实 degraded
+  - 100 个并发完整 snapshot 在预算内终止、JSON 可序列化且零副作用，显式 recovery/daemon 回归保持
+  - child PR 先合并并可达 authoritative child main；后续 root-only binding amendment 仅推进 projects/omo gitlink
+  - root 合并后独立 100/100 只读 host canary 有直接证据；operational/value 未证明前保持 NOT_PROVEN
+  verify:
+  - cmd: >-
+      cd projects/omo &&
+      PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+      /opt/homebrew/bin/python3 -B -m pytest -q -p no:cacheprovider
+      tests/unit/test_resident_status.py tests/unit/test_ledger_check.py
+      tests/unit/test_resident_daemon.py
+    expect: exit 0；RED-to-GREEN、100 并发 snapshot、显式 recovery/daemon 回归全部通过
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/resident/status.py
+  - projects/omo/src/omo/resident/ledger_check.py
+  - projects/omo/tests/unit/test_resident_status.py
+  - projects/omo/tests/unit/test_ledger_check.py
+  pasw_required: false
+  risk_level: L2
+  human_gate: true
+  value_indicator_policy: false
+  retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-09-a2-resident-status-purity-truth-recovery-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:8518e8ec12372d127a49965be651fd593be0030350cc454064ad3ee7a63b59b6
+    decision_ref: decision://accepted/BET-Y1Q4-T10-144
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  circuit_breaker: >-
+    version 1.0.0 仅授权四个 child 路径；若 claim 包含 projects/omo 根 gitlink、
+    child/root union、host mutation、错误 RED symbol、status retry/sleep/repair、
+    T10-142 状态变化或 completion/value 推进，立即停止。root 集成必须等待 child
+    run 关闭、child PR 合并和 child-main reachability 后，以 later binding revision
+    替换为唯一 projects/omo 写面并使用 fresh run/new WorkPacket hash。
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
@@ -27295,7 +27366,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 381
+  total_bets: 382
   windows:
   - Y1Q1
   - Y1Q2
