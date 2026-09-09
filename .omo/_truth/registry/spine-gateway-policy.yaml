@@ -1,0 +1,10 @@
+schema: spine-gateway-policy/v1
+id: spine-gateway-policy
+title: Spine 外发网关 policy (BET-Y1Q4-T4-06)
+owner: governance-team
+lifecycle: ssot
+last-reviewed: 2026-09-09
+
+# 单日 (本地日期) 外发频次硬熔断 — circuit_breaker "单日外发频次超限强制阻断"
+# 无 flag 可解, 次日自动恢复。计数源: spool 内 receipt.json status=sent 的当日条数。
+daily_send_cap: 50
