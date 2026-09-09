@@ -1,6 +1,7 @@
 # Scene System v3 — 场景系统全面体系化设计
 
-> 版本：v3.0.0 | 日期：2026-09-06 | 状态：已实现
+> 版本：v3.1.0 | 日期：2026-09-07 | 状态：已实现
+> PR: #3348 (核心引擎) + #3478 (Cockpit集成 + 前端)
 
 ## 0. 设计原则
 
@@ -8,8 +9,8 @@
 
 | 现有系统 | 场景系统融合方式 |
 |---------|----------------|
-| OMO | 新增 `task_type: scene_lifecycle`，复用任务门禁模型 |
-| Cockpit | `cockpit scene {execute,calibrate,promote,demote,status,list,metrics}` |
+| OMO | `omo scene {execute,calibrate,promote,demote,status,list,validate}` + MCP 工具 |
+| Cockpit | `cockpit scene {lifecycle,execute,calibrate,graph}` + Web API + 前端页面 |
 | Agora BOS | `capability_refs` 走 `bos_router.resolve()` → `resolve_bos_uri()` |
 | MetaOS | 场景晋升决策 → `DecisionGate.evaluate()` |
 | Runtime KEI | 场景执行在 KEI 沙箱中运行 |
@@ -173,6 +174,15 @@ python3 tests/scene_v2/test_scene_graph.py
 | POST | `/api/scene-lifecycle/demote` | 降级场景 |
 | GET | `/api/scene-lifecycle/graph` | 场景图 |
 | GET | `/api/scene-lifecycle/metrics/{scene_id}` | 校准指标 |
+
+### 前端页面
+
+| 页面 | 路由 | 功能 |
+|------|------|------|
+| 场景总览 | `/scenes` | 卡片网格 + 生命周期分布 |
+| 场景详情 | `/scenes/{id}` | journey 状态机 + 校准曲线 |
+| 场景图 | `/scene-graph` | DAG 拓扑可视化 |
+| 校准中心 | `/calibration` | 分数表格 + 升级队列 |
 
 ## 6. 存储结构
 
