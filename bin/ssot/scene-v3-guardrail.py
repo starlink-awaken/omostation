@@ -42,37 +42,29 @@ def validate_structure(card: dict[str, Any]) -> list[str]:
     for field in required:
         if not card.get(field):
             errors.append(f"missing required field: {field}")
-
     if card.get("schema") != "scene-card/v3":
         errors.append(f"schema must be 'scene-card/v3', got '{card.get('schema')}'")
-
     valid_levels = ["draft", "shadow", "assisted", "supervised", "routine"]
     if card.get("lifecycle") not in valid_levels:
         errors.append(f"invalid lifecycle: {card.get('lifecycle')}")
-
     valid_activation = ["preview", "controlled", "active", "allowed"]
     if card.get("activation") not in valid_activation:
         errors.append(f"invalid activation: {card.get('activation')}")
-
     return errors
 
 
 def validate_consistency(card: dict[str, Any]) -> list[str]:
     """Validate lifecycle/activation consistency."""
-    errors = []
     tier_activation = {
-        "draft": "preview",
-        "shadow": "preview",
-        "assisted": "controlled",
-        "supervised": "active",
-        "routine": "allowed",
+        "draft": "preview", "shadow": "preview", "assisted": "controlled",
+        "supervised": "active", "routine": "allowed",
     }
     lifecycle = card.get("lifecycle", "")
     activation = card.get("activation", "")
     expected = tier_activation.get(lifecycle)
     if expected and activation != expected:
-        errors.append(f"lifecycle '{lifecycle}' expects activation '{expected}', got '{activation}'")
-    return errors
+        return [f"lifecycle '{lifecycle}' expects activation '{expected}', got '{activation}'"]
+    return []
 
 
 def validate_capability_refs(card: dict[str, Any]) -> list[str]:
@@ -91,17 +83,14 @@ def validate_topology(card: dict[str, Any], all_scene_ids: set[str]) -> list[str
     """Validate topology references point to existing scenes."""
     errors = []
     topo = card.get("topology", {})
-
     for upstream in topo.get("upstream", []):
         scene = upstream.get("scene", "")
         if scene and scene not in all_scene_ids:
             errors.append(f"upstream scene '{scene}' not found in v3 registry")
-
     for downstream in topo.get("downstream", []):
         scene = downstream.get("scene", "")
         if scene and scene not in all_scene_ids:
             errors.append(f"downstream scene '{scene}' not found in v3 registry")
-
     return errors
 
 
@@ -120,16 +109,12 @@ def validate_scene_card(path: Path) -> dict[str, Any]:
     """Full validation of a single scene card."""
     card = _load_yaml(path)
     scene_id = card.get("scene_id", path.stem)
-
     all_errors = []
     all_warnings = []
-
     all_errors.extend(validate_structure(card))
     all_errors.extend(validate_consistency(card))
     all_errors.extend(validate_capability_refs(card))
     all_errors.extend(validate_quality(card))
-
-    # Topology validation requires all scene IDs
     all_scene_ids = set()
     if SCENES_DIR.is_dir():
         for p in SCENES_DIR.glob("*.yaml"):
@@ -137,7 +122,6 @@ def validate_scene_card(path: Path) -> dict[str, Any]:
             if c.get("scene_id"):
                 all_scene_ids.add(c["scene_id"])
     all_errors.extend(validate_topology(card, all_scene_ids))
-
     return {
         "scene_id": scene_id,
         "path": str(path),
@@ -150,16 +134,12 @@ def validate_scene_card(path: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command")
-
     vp = sub.add_parser("validate", help="Validate a single scene card")
-    vp.add_argument("scene_card", type=Path, help="Path to scene card YAML")
+    vp.add_argument("scene_card", type=Path)
     vp.add_argument("--allow-forward-refs", action="store_true",
-                     help="Allow topology refs to non-existent scenes (forward refs)")
-
+                     help="Allow topology refs to non-existent scenes")
     va = sub.add_parser("validate-all", help="Validate all v3 scene cards")
-    va.add_argument("--allow-forward-refs", action="store_true",
-                     help="Allow topology refs to non-existent scenes (forward refs)")
-    vc = sub.add_parser("check-consistency", help="Check lifecycle/activation consistency")
+    va.add_argument("--allow-forward-refs", action="store_true")
 
     args = parser.parse_args(argv)
     command = args.command or "validate-all"
@@ -168,9 +148,6 @@ def main(argv: list[str] | None = None) -> int:
         result = validate_scene_card(args.scene_card)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result["valid"] else 1
-
-    # validate-all or check-consistency
-    allow_forward = getattr(args, "allow_forward_refs", False)
 
     if not SCENES_DIR.is_dir():
         print(f"ERROR: {SCENES_DIR} not found", file=sys.stderr)
@@ -184,14 +161,12 @@ def main(argv: list[str] | None = None) -> int:
     all_valid = True
     for card_path in cards:
         result = validate_scene_card(card_path)
-        # Filter forward-ref errors if allowed
-        if allow_forward:
-            result["errors"] = [e for e in result["errors"]
-                                if "not found in v3 registry" not in e]
+        if getattr(args, "allow_forward_refs", False):
+            result["errors"] = [e for e in result["errors"] if "not found in v3 registry" not in e]
             result["valid"] = len(result["errors"]) == 0
-        status = "PASS" if result["valid"] else "FAIL"
         if not result["valid"]:
             all_valid = False
+        status = "PASS" if result["valid"] else "FAIL"
         print(f"[{status}] {result['scene_id']}")
         for e in result["errors"]:
             print(f"  ERROR: {e}")

@@ -4,9 +4,9 @@ version = "0.0.0"
 requires-python = ">=3.13"
 
 [project.scripts]
-scene-engine = "bin.ssot.journey_engine:main"
-scene-calibrate = "bin.ssot.calibration_engine:main"
-scene-graph = "bin.ssot.scene_graph:main"
+# Note: bin/ssot scripts are invoked directly via python3 bin/ssot/<script>.py
+# due to hyphenated filenames not being valid Python module identifiers.
+# These entries serve as documentation of CLI entry points.
 
 # 根仓 ruff 配置 — 全局统一 lint select (2026-08-17 收敛)
 # 统一标准: select=[E,F,W,I,N,UP,S,PLE,RUF100], ignore=安全豁免集
