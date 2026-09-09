@@ -1,10 +1,3 @@
----
-status: active
-lifecycle: entry
-owner: auto-fix-loop
-last-reviewed: 2026-09-04
----
-
 # Cockpit CLI 命令参考
 
 > 自动生成于 1970-01-01T00:00:00Z | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml
@@ -36,7 +29,7 @@ last-reviewed: 2026-09-04
 
 ### `cockpit audit-ledger`
 
-治理审计账本查询 (隐藏运维面)
+📒 [DEPRECATED] 治理审计账本 ADR-0201 → 查询 .omo/_knowledge/decisions/ + cockpit command-audit
 
 **用法**:
 
@@ -47,7 +40,12 @@ cockpit audit-ledger --dry-run       # 预检 (无副作用)
 cockpit audit-ledger --help          # 完整参数面
 ```
 
-  · 成熟度: stable  |  风险: low
+  · 成熟度: deprecated  |  风险: low
+
+```bash
+cockpit audit-ledger
+  # → 提示: 决策查询改用: ls .omo/_knowledge/decisions/ | grep ADR-0201
+```
 
 ### `cockpit bdsk`
 
@@ -862,7 +860,7 @@ cockpit memory --help          # 完整参数面
 
 ### `cockpit memory-distill`
 
-记忆蒸馏 (隐藏运维面)
+🧠 [DEPRECATED] 记忆蒸馏 ADR-0200 → KOS pipeline (gbrain + eidos)
 
 **用法**:
 
@@ -873,7 +871,12 @@ cockpit memory-distill --dry-run       # 预检 (无副作用)
 cockpit memory-distill --help          # 完整参数面
 ```
 
-  · 成熟度: stable  |  风险: low
+  · 成熟度: deprecated  |  风险: low
+
+```bash
+cockpit memory-distill
+  # → 提示: 改用: cockpit kairon --distill + cockpit gbrain --digest
+```
 
 ### `cockpit research`
 
@@ -1099,7 +1102,7 @@ cockpit fabric --help          # 完整参数面
 
 ### `cockpit fabric-mesh`
 
-算力网格 fabric 检视 (隐藏运维面)
+🕸️ [DEPRECATED] 算力网格检视 ADR-0202 → omlxc-compute-fabric skill
 
 **用法**:
 
@@ -1110,7 +1113,12 @@ cockpit fabric-mesh --dry-run       # 预检 (无副作用)
 cockpit fabric-mesh --help          # 完整参数面
 ```
 
-  · 成熟度: stable  |  风险: low
+  · 成熟度: deprecated  |  风险: low
+
+```bash
+cockpit fabric-mesh
+  # → 提示: 改用 skill: omlxc-compute-fabric (本地大模型推理 + 算力调度)
+```
 
 ### `cockpit mesh`
 
@@ -1140,7 +1148,7 @@ cockpit model-driven --dry-run       # 预检 (无副作用)
 cockpit model-driven --help          # 完整参数面
 ```
 
-  · 成熟度: stable  |  风险: low
+  · 成熟度: deprecated  |  风险: low
 
 ### `cockpit mof`
 
@@ -1204,7 +1212,7 @@ cockpit telemetry --help          # 完整参数面
 
 ### `cockpit watchdog`
 
-🐕 自治守护犬与自愈探针 (Agora Bus / Resident 监视器)
+🐕 [DEPRECATED] 自治守护犬已退役 → Mesh-bound capability admission (Cockpit PR #78)
 
 **用法**:
 
@@ -1215,7 +1223,12 @@ cockpit watchdog --dry-run       # 预检 (无副作用)
 cockpit watchdog --help          # 完整参数面
 ```
 
-  · 所属域: `governance`  |  成熟度: stable  |  风险: low
+  · 所属域: `governance`  |  成熟度: deprecated  |  风险: low
+
+```bash
+cockpit watchdog --help
+  # → 提示: 守护犬已退役, 请用 mesh capability admission (cockpit mesh fabric)
+```
 
 
 ## 🛠️ 系统 (System)
