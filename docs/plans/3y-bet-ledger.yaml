@@ -27047,6 +27047,80 @@ bets:
     overall_state: evaluating
   circuit_breaker: accepted Spec digest、generated WorkPacket 或 claim 若超出唯一测试文件，或任何生产路径、默认门、CI
     要求扩大范围，则立即停止并申请 scope successor；不得旁路或以 test-only green 宣称 A3 已完整通过。
+- id: BET-Y1Q4-T10-143
+  track: T10-MATURITY
+  window: Y1Q4
+  title: OMO canonical claims-authority bridge R0
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  goal: >-
+    让 managed clone 通过唯一 OMO canonical broker 获得可复核的
+    run、claim、lease、PublishIntent 与 settlement，在保留执行树隔离的同时
+    消除 claims-authority mismatch 与 degraded direct publication。
+  non_goals:
+  - 不信任 arbitrary external 或 clone-local root
+  - 不复制、提升或追认历史 v1/A1/A3 receipt
+  - 不在 R0 声称抵抗同 UID 恶意 writer
+  - 不实施 R1、LaunchDaemon、service account、UDS、Keychain 或 host install
+  - 不修改其他 BET、completion/value evidence、branch protection 或业务运行态
+  done_when:
+  - WP1 shadow 连续至少 24 小时并覆盖三个 lifecycle 类、完整 RED matrix、零未解释差异和零 v2 false-allow
+  - legacy v1 publication 全部经过 drainable fence，managed clone 在 shadow 期间仍不得由 v1 或 v2 放行
+  - WP2 cutover 具备 closed legacy epoch、drain receipt、零 unresolved publication、exact policy commit/blob 和 descriptor activation receipt
+  - v2 成为 managed-clone 唯一 effective authority，v1 永久 readonly，projection 不可授权
+  - 真实 managed clone 仅用一次普通 non-force push 完成 PR、required CI、settlement 与 retirement，不使用 no-verify 或 degraded waiver
+  - 最终状态最高仅为 R0_COOPERATIVE_PROVEN，value 保持 NOT_PROVEN
+  verify:
+  - cmd: >-
+      cd projects/omo &&
+      PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+      /opt/homebrew/bin/python3 -B -m pytest -q -p no:cacheprovider
+      tests/test_workflow_claims_authority_bridge.py
+    expect: exit 0
+  - cmd: >-
+      PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+      /opt/homebrew/bin/python3 -B -m pytest -q -p no:cacheprovider
+      tests/test_agent_workflow.py tests/test_clone_lifecycle.py
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces: []
+  pasw_required: false
+  risk_level: L2
+  human_gate: true
+  value_indicator_policy: false
+  retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-09-claims-authority-bridge-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:a419e2fb3cd67026edebd39b25a1e1b77e6c92978ce1cf1be6b8e4be19cf8c58
+    decision_ref: decision://accepted/BET-Y1Q4-T10-143
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  circuit_breaker: >-
+    父 BET 的 canonical WorkPacket 必须保持零实现写面；WP1 仅可由后续独立 child
+    BET/accepted Spec/WorkPacket 绑定；WP2 在 WP1 done 前不得存在于 Ledger 或建立 binding。
+    WP1 中 v2 只能 shadow 且 legacy Git effect 必须 fence-aware；WP2 不得在 shadow
+    graduation、legacy drain、child-first/root-last 和零 unresolved publication 之前 cutover。
+    任何 unbound v2、stage-union claim、force/force-with-lease canary、
+    caller-selected authority、descriptor drift、high-water gap、自动重推、
+    R1/host scope 或 completion/value 扩张均立即停止。
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
@@ -27221,7 +27295,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 380
+  total_bets: 381
   windows:
   - Y1Q1
   - Y1Q2
