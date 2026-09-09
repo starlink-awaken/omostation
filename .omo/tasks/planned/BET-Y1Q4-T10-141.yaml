@@ -17,3 +17,30 @@ deliverables:
   - 全量命令可用性台账持续更新 (docs/reports/cockpit-cli-command-availability-ledger.md)
 appetite: 5 days
 depends_on: []
+task_type: bet
+owner: human
+source: manual
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+  - docs/reports/cockpit-cli-command-availability-ledger.md
+  - docs/CLI-REFERENCE.md
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+entry_gate:
+  - 确认 106 命令台账基线（84 PASS / 8 服务依赖 / 4 stub / 4 交互弃用 / 2 环境）
+evidence_required:
+  - 106 个 cockpit CLI 命令全量 smoke test 通过（台账基线对齐）
+  - 4 个 stub 命令已修复或标注 deprecated (audit-ledger, fabric-mesh, memory-distill, watchdog)
+  - 8 个服务依赖命令可用（启动脚本/说明落地）
+  - 全量命令可用性台账持续更新 (docs/reports/cockpit-cli-command-availability-ledger.md)
+test_plan:
+  - cockpit --help 与 docs/CLI-REFERENCE.md 清单对照，确认 106 命令基线
+  - cockpit <domain> <verb> 逐命令 smoke test，结果回写台账
+  - python3 bin/cockpit-readiness.py --json 核对命令可用性
