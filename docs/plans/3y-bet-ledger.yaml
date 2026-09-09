@@ -27138,6 +27138,7 @@ bets:
   - 不要求 BET-Y1Q4-T10-142 变为 done，不推进其 operational/value 状态
   - 不改变 WAL checkpoint、holder discovery、CPU sampling、kill 阈值、daemon tick 或 heartbeat 语义
   - 不在 child WorkPacket 中修改根 gitlink、运行 host canary 或执行 recovery/restart/kill
+  - 1.1.0 root WorkPacket 不修改 child 源码/测试、Ledger/Spec、其他 gitlink 或 host 证据
   - 不把工程、CI、gitlink 或只读可用性证据计入个人价值
   done_when:
   - 完整 resident status 路径对 recovery、checkpoint、holder、CPU、kill、sleep 和 write-capable SQLite 的调用均为零
@@ -27147,22 +27148,18 @@ bets:
   - child PR 先合并并可达 authoritative child main；后续 root-only binding amendment 仅推进 projects/omo gitlink
   - root 合并后独立 100/100 只读 host canary 有直接证据；operational/value 未证明前保持 NOT_PROVEN
   verify:
-  - cmd: >-
-      cd projects/omo &&
-      PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
-      /opt/homebrew/bin/python3 -B -m pytest -q -p no:cacheprovider
-      tests/unit/test_resident_status.py tests/unit/test_ledger_check.py
-      tests/unit/test_resident_daemon.py
-    expect: exit 0；RED-to-GREEN、100 并发 snapshot、显式 recovery/daemon 回归全部通过
+  - cmd: python3 bin/gac/check-submodule-pointer-drift.py --json
+    expect: exit 0；projects/omo 无 divergence/unreachable pin
+  - cmd: python3 bin/ssot/submodule-reachability-gate.py --source index --require-main --json
+    expect: exit 0；projects/omo 目标位于 authoritative child main
+  - cmd: make gac-local-gate
+    expect: exit 0
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0
   workflow: bet-execution
-  underlying_workflow: project-code-change
+  underlying_workflow: submodule-pointer-close
   write_surfaces:
-  - projects/omo/src/omo/resident/status.py
-  - projects/omo/src/omo/resident/ledger_check.py
-  - projects/omo/tests/unit/test_resident_status.py
-  - projects/omo/tests/unit/test_ledger_check.py
+  - projects/omo
   pasw_required: false
   risk_level: L2
   human_gate: true
@@ -27170,8 +27167,8 @@ bets:
   retro: required
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-09-a2-resident-status-purity-truth-recovery-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:8518e8ec12372d127a49965be651fd593be0030350cc454064ad3ee7a63b59b6
+    spec_version: 1.1.0
+    content_digest: sha256:e0b0c3949fea84a85121a70e2da2bd9c02884eeba40425d4907f7743cdb87126
     decision_ref: decision://accepted/BET-Y1Q4-T10-144
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -27187,11 +27184,11 @@ bets:
         evidence: {}
     overall_state: evaluating
   circuit_breaker: >-
-    version 1.0.0 仅授权四个 child 路径；若 claim 包含 projects/omo 根 gitlink、
-    child/root union、host mutation、错误 RED symbol、status retry/sleep/repair、
-    T10-142 状态变化或 completion/value 推进，立即停止。root 集成必须等待 child
-    run 关闭、child PR 合并和 child-main reachability 后，以 later binding revision
-    替换为唯一 projects/omo 写面并使用 fresh run/new WorkPacket hash。
+    version 1.1.0 仅授权 projects/omo 根 gitlink；四个 child 路径已对新 run
+    撤销，不得 union。目标必须是 edf2301e9344cbfbeb90599f405acb8cc29d9301
+    或直接重证的 authoritative child-main 后继；若修改 source/test、Ledger/Spec、
+    其他 gitlink、host/runtime、T10-142、completion/value/overall，复用 child run/hash，
+    或 reachability/required gate 失败，立即停止。host canary 仍需独立授权与事务。
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4

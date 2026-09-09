@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.1.0
 status: accepted
 lifecycle: contract
 owner: governance-team
@@ -18,11 +18,14 @@ human_gate: true
 
 ## 1. Status and authority
 
-This document is the accepted contract for `BET-Y1Q4-T10-144`. Under the
-Principal's time-bounded delegated authority, version 1.0.0 authorizes only the
-child RED-to-GREEN implementation in §10. It does not authorize the root
-gitlink amendment, host canary, recovery command, service/database/process
-mutation, completion transition or value claim.
+This document is the accepted contract for `BET-Y1Q4-T10-144`. Version 1.0.0
+authorized only the child RED-to-GREEN implementation in §10; that immutable
+stage closed after child PR #152 merged. Under the Principal's time-bounded
+delegated authority, version 1.1.0 authorizes only the fresh WP-A2-ROOT gitlink
+integration in §10. The four child source/test paths are revoked for new runs,
+not appended to the root scope. Version 1.1.0 does not authorize a host canary,
+recovery command, service/database/process mutation, completion transition or
+value claim.
 
 The approved Documents proposal input is:
 
@@ -42,6 +45,14 @@ The design baseline is root main
 `e1d36dc8f36b2acdf1a8beea4c289a16d9aae045`, whose `projects/omo` gitlink is
 `db7217913dc95f727f26d66b9f7df5675404077b`. The OMO child gitlink is reachable
 and its relevant tree matches the proposal's inspected child baseline.
+
+The 1.1.0 binding-replacement baseline is root main
+`0941c21d5eca3580af928d6a930afded8645f676`, whose root gitlink still points to
+`db7217913dc95f727f26d66b9f7df5675404077b`. Authoritative OMO child main is
+`edf2301e9344cbfbeb90599f405acb8cc29d9301`: it contains the prerequisite RLM
+compatibility recovery `e2a75531b5f1926d56b3badd9c43b86c22ba864c` and merged
+A2 child PR #152. The reviewed four-path content aggregate is
+`012a978e3a4716ea3d85fb9f05517ac15a2ee147d7bb905e1327f599db94f42b`.
 
 The current execution chain is:
 
@@ -255,36 +266,38 @@ not prove A3 operational/value completion and do not alter the Ledger.
 
 ## 10. Accepted binding and sequential WorkPackets
 
-At the accepted-binding transaction, the writer reread the execution-time
-remote Ledger, open PRs and remote branches. `BET-Y1Q4-T10-144` was absent and
-collision-free after Claims Bridge parent `BET-Y1Q4-T10-143` merged. This
-version binds exactly that candidate.
+The original accepted-binding transaction reread the execution-time remote
+Ledger, open PRs and remote branches. `BET-Y1Q4-T10-144` was absent and
+collision-free after Claims Bridge parent `BET-Y1Q4-T10-143` merged. Version
+1.0.0 bound the child stage only.
 
-The binding transaction is limited to:
+The version 1.1.0 binding-replacement transaction is limited to:
 
 ```text
 docs/superpowers/specs/2026-09-09-a2-resident-status-purity-truth-recovery-design.md
 docs/plans/3y-bet-ledger.yaml
-.omo/_truth/governance-evidence/waiver-2026-09-09-a2-resident-status-purity-binding.md
+.omo/_truth/governance-evidence/waiver-2026-09-10-a2-root-binding-amendment.md
 ```
 
-The current Ledger compiler generates one WorkPacket per BET and copies the
-BET's complete `write_surfaces` list into that packet. It has no stage-aware
-path fence. Therefore child and root paths must never be exposed as a union.
-The two stages use sequential binding revisions of this one BET:
+The Ledger compiler generates one WorkPacket per BET and copies the BET's
+complete `write_surfaces` list into that packet. It has no stage-aware path
+fence. Therefore child and root paths must never be exposed as a union. The
+sequential binding state is:
 
-1. version 1.0.0 exposes only the four WP-A2-CHILD paths below;
-2. the child run must close and the child PR must merge before any root
-   amendment;
-3. authoritative child-main reachability and exact child objects must be
-   proven before the root amendment starts;
-4. a later accepted Spec/binding revision must replace the four child paths
-   with the single `projects/omo` gitlink path; it must not append or union the
-   two scopes;
-5. the root run is fresh and binds the newly generated immutable WorkPacket
-   hash. The old closed child run remains bound to its original hash;
+1. version 1.0.0 exposed only the four WP-A2-CHILD paths below;
+2. its final child run is closed and PR #152 is merged as authoritative child
+   main `edf2301e9344cbfbeb90599f405acb8cc29d9301` with required and post-merge
+   child CI green;
+3. version 1.1.0 replaces all four child paths with the single `projects/omo`
+   gitlink path; it does not append or union the scopes;
+4. the root run must be fresh and bind the newly generated immutable
+   WorkPacket hash. Closed 1.0.0 child runs retain their original hash and
+   evidence;
+5. the root pointer may target `edf2301e9344cbfbeb90599f405acb8cc29d9301`
+   or a directly re-proven authoritative child-main descendant containing the
+   reviewed four objects;
 6. the host canary remains a third, post-root operational transaction and is
-   not authorized by version 1.0.0.
+   not authorized by version 1.1.0.
 
 `BET-Y1Q4-T10-144` has no Ledger dependency on T10-142 or T10-143. A3 is
 consumed only through the exact engineering receipts in §9. Claims Bridge R0
@@ -300,9 +313,9 @@ projects/omo/tests/unit/test_resident_status.py
 projects/omo/tests/unit/test_ledger_check.py
 ```
 
-The child repository owns RED-to-GREEN implementation and its own PR. This is
-the only implementation stage authorized by version 1.0.0. No root gitlink or
-host operation belongs in this WorkPacket.
+The child repository owned RED-to-GREEN implementation and its own PR. This
+historical stage was authorized only by version 1.0.0 and is now delivered and
+closed. Its paths are not authorized for a new 1.1.0 run.
 
 ### WP-A2-ROOT — authoritative child integration
 
@@ -310,12 +323,12 @@ host operation belongs in this WorkPacket.
 projects/omo
 ```
 
-This stage is not authorized by version 1.0.0. A later reviewed binding
-amendment must replace the child write set with exactly `projects/omo` before a
-fresh root run can start. The root PR may then advance only the mode-160000
-gitlink to the already merged, authoritative child-main commit or a verified
-child-main successor containing it. It must not carry source code, tests,
-Ledger changes or unrelated gitlinks.
+This is the only implementation stage authorized by version 1.1.0. The active
+binding replaces the child write set with exactly `projects/omo`; a fresh root
+run may advance only that mode-160000 gitlink to the already merged,
+authoritative child-main commit or a verified child-main successor containing
+it. The root PR must not carry source code, tests, Ledger/Spec changes, host
+evidence or unrelated gitlinks.
 
 ## 11. RED-to-GREEN matrix
 
@@ -421,7 +434,7 @@ and authorized Ledger transition.
 Stop and require a successor decision if:
 
 - T10-142 must be falsely marked done to continue;
-- the implementation needs any path outside the four child paths;
+- the active 1.1.0 root WorkPacket needs any path outside `projects/omo`;
 - status still sleeps, retries, checkpoints, discovers holders, samples CPU or
   signals a process;
 - a RED test patches the wrong symbol or covers only `_probe_ledger_once`;
@@ -438,16 +451,17 @@ Stop and require a successor decision if:
 
 ## 16. Ordered rollout
 
-1. Merge this accepted 1.0.0 child-only binding through normal required gates.
-2. Start a fresh bound child workflow; do not reuse the bootstrap run.
-3. Execute WP-A2-CHILD with an actual RED-to-GREEN sequence and child PR.
-4. Close the child run and prove child-main reachability plus exact objects.
-5. Review and merge a root-only Spec/binding amendment that replaces, rather
-   than unions, the child write set.
-6. Start a fresh root run and execute only the `projects/omo` pointer change.
-7. After root merge, separately authorize and run the read-only 100/100
-   operational canary.
-8. Update only the evidence layer actually proven; never infer value or done.
+1. Preserve the accepted 1.0.0 child binding and its closed immutable runs.
+2. Preserve child PR #152 merge/reachability, exact objects and CI as the
+   engineering prerequisite; do not copy them into completion/value evidence.
+3. Merge this accepted 1.1.0 root-only binding replacement through normal
+   required gates.
+4. Start a fresh 1.1.0 root run and execute only the `projects/omo` pointer
+   change.
+5. After root merge, obtain a separate operation-specific authorization and
+   run the read-only 100/100 operational canary.
+6. Update only the evidence layer actually proven in a later transaction;
+   never infer value or done.
 
 ## 17. Decision log
 
@@ -459,6 +473,6 @@ Stop and require a successor decision if:
 | Historical BET truth | Preserve | Current-tree recovery does not rewrite prior evidence. |
 | A3 prerequisite | Exact engineering receipts | T10-142 completion/value is neither true nor required. |
 | Delivery topology | Child first, root last | Source authority and root integration authority are separate. |
-| Mechanical scope | Replace child scope with root-only scope in a later binding revision | The current compiler has no stage fence; a union would authorize premature gitlink claims. |
+| Mechanical scope | Version 1.1.0 replaces the delivered child scope with the sole root gitlink scope | The current compiler has no stage fence; a union would authorize child/root writes together. |
 | Host proof | Post-merge read-only 100/100 | Hermetic tests cannot prove production execution identity. |
 | Value | Excluded / NOT_PROVEN | Infrastructure purity is not a personal decision outcome. |
