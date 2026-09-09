@@ -145,3 +145,50 @@ cockpit tui → 交互式 (设计) ✅ 不算修复目标
 ## 批次 4 计划
 - 5 个交互式/弃用命令的文档化
 - tui / bdsk / model-driven / agent-runtime / 需特殊环境命令
+
+
+## 批次 4 闭环 (2026-09-09): 5 交互式/弃用命令 command-audit 文档化
+
+### 重新分类 (实测发现)
+| 命令 | 之前分类 | 实际行为 | 新分类 |
+|---|---|---|---|
+| tui | 交互式 | 启动 TUI (有 rich 降级路径) | ✅ PASS |
+| bdsk | 交互式 | BOSRouter + 评估输出 (非交互) | ✅ PASS |
+| agent-runtime | 交互式 | 需 --prompt/--task/--server | ✅ PASS |
+| model-driven | 交互式 | 拒绝执行 + 弃用提示 | ⚠️ DEPRECATED (ADR-0240 D1) |
+| fabric-mesh | 服务依赖 | 已 deprecated (批次 2) | ⚠️ DEPRECATED (ADR-0202) |
+
+### 交付物 (cockpit PR #139)
+- `docs/command-audit/{tui,bdsk,model-driven,agent-runtime,fabric-mesh}.yaml`:
+  完整 description (300-550 字) + 13 维度评分
+- `src/cockpit/commands/registry.py`: 5 CommandMeta 加 audit_ref
+- `model-driven` 在 registry 标 `maturity=deprecated`
+- `docs/reports/cli-interactive-commands-audit-batch4.md`: 可用性矩阵
+
+### 当前命令可用性总览 (批次 4 后 - **BET 闭环**)
+| 类别 | 数量 | 累计变化 |
+|---|---|---|
+| ✅ PASS | **95** | +11 (84→95) |
+| ⚠️ 服务依赖 | 5 | -3 (8→5) |
+| ⚠️ DEPRECATED (有迁移提示) | 2 | +2 |
+| ⚠️ 环境 | 2 | 不变 |
+| ❌ stub 未实现 | 0 | -4 (4→0) |
+| **合计** | **106** | **100%** |
+
+## BET-Y1Q4-T10-141 总结
+- **批次 1**: 106 命令 smoke test + 台账 (PR #3456)
+- **批次 2**: 4 stub 命令 deprecated 化 (cockpit #137 / main #3458)
+- **批次 3**: 4 服务依赖命令修复 (cockpit #138 / main #3461)
+- **批次 4**: 5 交互式/弃用命令 audit 文档化 (cockpit #139 / main #3463)
+- **总 PR**: cockpit 3 个 (137/138/139) + main 4 个 (3456/3458/3461/3462/3463)
+- **净修复**: 8 命令从 ❌/⚠升级为 ✅ (PASS)
+
+### 命令统计前后
+| 类别 | 批次 1 立项 | 批次 4 闭环 | Δ |
+|---|---|---|---|
+| ✅ PASS | 84 | **95** | **+11** |
+| ❌ stub | 4 | **0** | **-4** |
+| ⚠️ 服务依赖 | 8 | 5 | -3 |
+| ⚠️ 弃用 | 4 | 2 | -2 (移到 DEPRECATED) |
+| ⚠️ DEPRECATED (有迁移) | 0 | 2 | +2 |
+| ⚠️ 环境 | 2 | 2 | 0 |
