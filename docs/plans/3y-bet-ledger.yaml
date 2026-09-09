@@ -27189,6 +27189,85 @@ bets:
     或直接重证的 authoritative child-main 后继；若修改 source/test、Ledger/Spec、
     其他 gitlink、host/runtime、T10-142、completion/value/overall，复用 child run/hash，
     或 reachability/required gate 失败，立即停止。host canary 仍需独立授权与事务。
+- id: BET-Y1Q4-T10-145
+  track: T10-MATURITY
+  window: Y1Q4
+  title: Claims Authority Bridge WP1 R0 Shadow
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T10-143
+  goal: >-
+    在 v1 继续作为唯一有效发布权限的前提下，建立 OMO canonical claims broker、
+    v2 shadow receipt 与 drainable legacy fence，将 managed clone claims-authority
+    mismatch 归类为唯一预期差异，完成 shadow graduation，并为尚未物化的 WP2
+    提供可审计前置证据。
+  depends_on: []
+  non_goals:
+  - 1.0.0 不实施代码、创建 store/receipt、修改 Git 发布行为或启动 WP2
+  - 不信任 arbitrary external 或 clone-local root，不追认历史 v1/A1/A3 receipt
+  - 不实施 R1、host service、service account、UDS、Keychain、多租户 RBAC 或高可用
+  - 不修改其他 BET、completion/value evidence、branch protection 或业务运行态
+  - 不把工程、CI、shadow 或 Git 成功计入个人价值
+  done_when:
+  - 每个 1.0.0 至 1.7.0 accepted binding 均为完整非 union 替换，旧 run 已关闭且锁归零
+  - canonical store、receipt chain、幂等、CAS、high-water、crash-tail、备份轮转与完整 RED matrix 全绿
+  - v2 shadow 从不 grant/deny，v1 始终是唯一 effective authority，valid managed clone 保持不发布
+  - legacy v1 publication 在 exact shadow activation 后全部经过 drainable fence，canonical push argv 不变
+  - tracked publication inventory 仅剩 clone-lifecycle 一个 push/PR effect owner，其余入口零发布副作用
+  - child-first、root-last 各阶段 required CI、exact digest 与 WorkPacket scope 均有可重复证据
+  - WP1 shadow 连续至少 24 小时，覆盖三个 lifecycle 类、零未解释差异和零 v2 false-allow
+  - WP2 在 WP1 done 前没有 Ledger ID、binding、run 或 write surface
+  - 最终仅记录 R0 cooperative shadow graduation，operational/value 保持 NOT_PROVEN
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  - cmd: >-
+      cd projects/omo &&
+      PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+      /opt/homebrew/bin/python3 -B -m pytest -q -p no:cacheprovider
+      tests/test_workflow_claims_authority_bridge.py
+    expect: exit 0 after Wave A
+  - cmd: >-
+      PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+      /opt/homebrew/bin/python3 -B -m pytest -q -p no:cacheprovider
+      tests/test_agent_workflow.py tests/test_clone_lifecycle.py
+    expect: exit 0 after Wave B1
+  workflow: bet-execution
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - docs/superpowers/plans/2026-09-10-claims-authority-bridge-wp1-shadow.md
+  pasw_required: false
+  risk_level: L2
+  human_gate: true
+  value_indicator_policy: false
+  retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:302bca4c509abc37b16e0cd1498de4217ffc961e7db9bc7231c3b1fb889aa2ba
+    decision_ref: decision://accepted/BET-Y1Q4-T10-145
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  circuit_breaker: >-
+    1.0.0 WorkPacket 必须只含计划路径并保持 implementation_authorized=false；
+    任一 implementation/store/receipt/WP2/runtime 写面、scope union、旧 WorkPacket hash
+    复用、v2 effective admission、自动 Git 重试、force/force-with-lease、历史 receipt
+    追认、completion/value 扩张或默认门禁失败都立即停止。后续版本只能在前一 run
+    关闭且锁归零后，通过独立 accepted-binding transaction 完整替换写面。
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
@@ -27363,7 +27442,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 382
+  total_bets: 383
   windows:
   - Y1Q1
   - Y1Q2

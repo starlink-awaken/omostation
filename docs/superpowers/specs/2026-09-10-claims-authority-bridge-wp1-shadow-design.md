@@ -1,13 +1,13 @@
 ---
 schema_version: specification/v1
-spec_version: 0.1.0
-status: draft
-lifecycle: spec
+spec_version: 1.0.0
+status: accepted
+lifecycle: contract
 owner: governance-team
 created: 2026-09-09
 last-reviewed: 2026-09-09
 title: Claims Authority Bridge WP1 R0 Shadow
-bet_id: unbound
+bet_id: BET-Y1Q4-T10-145
 implementation_authorized: false
 value_indicator_policy: false
 risk_level: L2
@@ -25,13 +25,13 @@ R0 claims broker that records v2 shadow decisions and drainable legacy fences wh
 the current v1 gate remains the only effective publication authority and the existing
 `clone-lifecycle integrate` path remains the only Git effect owner.
 
-This is the first implementation child of parent `BET-Y1Q4-T10-143`. The parent
+This is the first child of parent `BET-Y1Q4-T10-143`. The parent
 contract is
 `docs/superpowers/specs/2026-09-09-claims-authority-bridge-design.md` version 1.0.0,
 SHA-256 `a419e2fb3cd67026edebd39b25a1e1b77e6c92978ce1cf1be6b8e4be19cf8c58`.
-This draft does not allocate a Ledger ID, create a WorkPacket, authorize
-implementation, initialize a production store, change Git publication behavior or
-materialize WP2.
+Accepted version 1.0.0 allocates `BET-Y1Q4-T10-145` and creates a plan-only
+WorkPacket. It does not authorize implementation, initialize a production store,
+change Git publication behavior or materialize WP2.
 
 ## 2. Problem and current-state audit
 
@@ -469,11 +469,11 @@ contains no source, test, registry, plan or evidence path.
 .omo/_knowledge/retros/BET-Y1Q4-T10-145.md
 ```
 
-The ID above is a collision-checked candidate only while this Spec is draft. It is not
-allocated until an accepted binding transaction. Wave D may write `done` evidence only
-after the complete 24-hour window and all criteria in §12. Before that it records a
-non-terminal shadow report and leaves the child candidate/evaluating. Version 1.7.0
-contains no implementation or gitlink path.
+The ID above is collision-checked and allocated by the accepted 1.0.0 binding. It
+remains candidate/evaluating. Wave D may write `done` evidence only after the complete
+24-hour window and all criteria in §12. Before that it records a non-terminal shadow
+report and leaves the child candidate/evaluating. Version 1.7.0 contains no
+implementation or gitlink path.
 
 The initial 1.0.0 accepted binding is plan-only. Writing-plans uses a fresh bound run,
 claims only the plan, verifies and closes before the 1.1.0 Wave A amendment. It cannot
@@ -681,9 +681,9 @@ It does not change the canonical Git push command, add multi-tenant RBAC/HA/R1
 security, modify branch protection, install host services, operate the Dashboard,
 complete the parent BET or create WP2.
 
-## 17. Draft review and transition gate
+## 17. Acceptance record and transition gate
 
-Before this draft may become accepted:
+Version 1.0.0 acceptance requires and records:
 
 1. two independent read-only reviews must find no scope, authority, storage or effect
    ownership contradiction;
