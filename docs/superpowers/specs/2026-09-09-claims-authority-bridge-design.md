@@ -1,24 +1,28 @@
 ---
 schema_version: specification/v1
-spec_version: 0.2.0
-status: draft
+spec_version: 1.0.0
+status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-09-09
 last-reviewed: 2026-09-09
 title: OMO Canonical Claims Authority Bridge
-bet_id: unbound
+bet_id: BET-Y1Q4-T10-143
 implementation_authorized: false
 value_indicator_policy: false
+risk_level: L2
+human_gate: true
 ---
 
 # OMO Canonical Claims Authority Bridge
 
 ## 1. Status and authority
 
-This document is a draft design contract. It is not an accepted specification,
-does not create a BET, does not authorize implementation, and cannot authorize
-a workflow claim or Git publication.
+This document is the accepted R0 architecture contract for the portfolio
+parent `BET-Y1Q4-T10-143`. Acceptance authorizes only the zero-write parent
+binding. It does not authorize a WP1/WP2 child BET, implementation, store
+creation, implementation workflow claims, Git publication effects or host
+mutation.
 
 The accepted Documents proposal input is:
 
@@ -27,11 +31,11 @@ The accepted Documents proposal input is:
 - SHA-256:
   b6c54868a3cda277cfa27fd7643dd3a2cde118a34c51c9f56d1b567f3d41d14c
 
-Version 0.2 resolves the R0 acceptance blockers found by the independent
-post-bootstrap audit. It remains draft/unbound. The amendment selects the R0
-store, transport, publication owner, v1/v2 migration semantics, object
-encoding, failure taxonomy, durability rules, cutover gate, Dashboard read
-contract and exact WorkPacket surfaces. R1 remains a separate future design.
+Version 0.2 resolved the R0 acceptance blockers found by the independent
+post-bootstrap audit. Two final read-only reviews returned `APPROVED / CLEAR`
+and `ACCEPTABLE_DRAFT / CLEAR`. Version 1.0 accepts that reviewed content and
+binds one candidate while keeping implementation unauthorized. R1 remains a
+separate future design.
 
 ## 2. Problem
 
@@ -583,9 +587,27 @@ alters both DB and high-water remains outside the R0 claim.
 
 ## 12. Delivery WorkPackets
 
-The current R0 parent has three WorkPackets. WP0 is a binding transaction, not
-an implementation wave. R1 is not a fourth WorkPacket; it is a separate future
-Spec/BET.
+The current R0 parent is a portfolio-only coordination BET. Its Ledger-derived
+canonical WorkPacket `WP-BET-Y1Q4-T10-143` has an empty implementation
+`scope.write_surfaces` list and therefore cannot claim an implementation path.
+WP0 is this binding transaction, not an implementation wave.
+
+WP1 and WP2 are future child BETs. Each requires its own accepted Spec, exact
+non-union WorkPacket and collision-checked binding. They are materialized
+sequentially rather than pre-created together:
+
+1. only after this parent binding is merged may a WP1 child be proposed;
+2. WP2 must not exist in the Ledger and must not have an accepted binding while
+   WP1 is incomplete;
+3. only after WP1 is `done` with its shadow-graduation evidence may a WP2 child
+   be proposed and bound, with an explicit `depends_on` edge to WP1;
+4. each child exposes only the paths required for that stage and owns its own
+   run, claims, PRs, evidence, rollback and closeout.
+
+This sequencing is enforced by the absence of a later-stage executable BET,
+not by prose or a union of paths in one WorkPacket. The Ledger's current
+`depends_on` field remains portfolio metadata and is not treated as the sole
+workflow-start fence. R1 is a separate future Spec/BET after R0.
 
 ### WP0 — Accepted contract and binding
 
@@ -596,8 +618,13 @@ Spec/BET.
   `engineering=NOT_STARTED`, `operational/value=NOT_PROVEN`,
   `overall=evaluating`, `value_indicator_policy=false`.
 - Do not implement code, create the store, change a host or issue a receipt.
+- Keep the parent WorkPacket implementation write set empty. A claim of any
+  implementation path must return `WORK_PACKET_SCOPE_MISMATCH`.
 
 ### WP1 — R0 shadow
+
+WP1 is a future child BET/accepted Spec/WorkPacket. It is not created or
+authorized by this parent binding.
 
 - Add v2 schemas, canonical broker storage and shadow receipts.
 - v1 remains the only effective gate for the legacy Workspace/worktree roots
@@ -621,6 +648,9 @@ Shadow graduation requires all of the following:
    rejects solely because of its fixed authority root while v2 shadow accepts.
 
 ### WP2 — R0 cooperative enforcement and canary
+
+WP2 is a separate future child BET/accepted Spec/WorkPacket, created only after
+WP1 is `done`. It is not created or authorized by this parent binding.
 
 - Make the canonical broker the sole effective managed-clone claims authority.
 - Reduce clone-local run/claim state to a read-only projection.
@@ -674,7 +704,9 @@ parent is `R0_COOPERATIVE_PROVEN`.
 
 ## 13. Candidate implementation surfaces
 
-These are design candidates, not authorized write surfaces.
+These are design candidates, not authorized write surfaces. They must not be
+copied as a union into the parent BET. Each future child binding selects only
+its stage-specific subset after the preceding materialization gate passes.
 
 ### WP0 binding-only
 
@@ -795,6 +827,7 @@ acceptance as `admitted`.
 | CAB-AC-17 | Entering `publishing` freezes the claim durably; close, takeover, expiry, heartbeat and a second intent are rejected until settlement or separately authorized resolution proves process termination and exact remote OID. | race tests |
 | CAB-AC-18 | Every legacy v1 Git effect is fence-aware and a pre-cutover v1 snapshot cannot execute after legacy epoch closure. | drain-race tests |
 | CAB-AC-19 | The canonical broker rejects drift in any critical dependency closure object or runtime receipt before reading a mutation request. | closure-manifest tests |
+| CAB-AC-20 | The parent WorkPacket has zero implementation write surfaces; WP2 has no Ledger/binding identity until WP1 is done, and each future child has its own exact accepted Spec and WorkPacket. | Ledger/WorkPacket contract tests |
 
 ## 15. Rollback
 
@@ -876,7 +909,7 @@ authorization.
 | Publication race | Durable `publishing` claim/fence state | Prevents claim mutation or authority cutover between verification and Git. |
 | Legacy cutover | Issue/consume/settle v1 drain fence | Makes existing snapshot-based publishers observable and drainable. |
 | Cutover rollback | Human-degraded-only | A failed v2 cutover must not silently resurrect v1 authority. |
-| Work decomposition | One parent BET with WP0/WP1/WP2 | One portfolio truth with binding, shadow and enforce stop points; R1 is separate. |
+| Work decomposition | Zero-write parent plus sequential WP1/WP2 child BETs | Prevents the current path-only WorkPacket compiler from exposing a stage-union claim surface; later-stage binding does not exist until its predecessor is done. |
 
 ## 19. Stop conditions
 
@@ -892,6 +925,8 @@ Stop if implementation would:
 - let claim close, expiry, takeover, heartbeat or a second intent mutate a
   claim in durable publishing state;
 - authorize from projection bytes;
+- expose an implementation path on the parent WorkPacket or materialize a WP2
+  BET/binding before WP1 is done;
 - omit WorkPacket/path/change/remote-OID fencing;
 - introduce an automatic publish retry;
 - publish the R0 canary with force, force-with-lease, an existing branch or an
