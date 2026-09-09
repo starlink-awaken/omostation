@@ -170,3 +170,57 @@ claim-verification result and must not claim a claim-verified changeset. The
 exact commit/tag decision must be appended before publication. This is not a
 general publication precedent and does not authorize Spec acceptance, Ledger
 binding or implementation.
+
+## Exact publication recovery record
+
+The reviewed two-path content was committed as:
+
+```text
+837451486e1dc63def21482a98e6ecbf8a9524bc
+```
+
+The commit hook completed and accepted the commit. It also emitted the existing
+local metadata warning `hook version mismatch (0.0.0 -> 2.0.0)`; this warning is
+not represented as a hook-version PASS and is not repaired by this transaction.
+
+The first changeset command incorrectly supplied the frozen commit OID to the
+`--baseline` option, whose contract requires the frozen manifest path. It
+returned `baseline_unreadable` before producing a changeset receipt. The
+corrected command used the immutable manifest with digest
+`b55e15953de4c35a39e2c536cff29dfe930556183f99db7066e380f2fd4d40a4`
+and then returned the expected policy result:
+
+```text
+reason: claims_authority_mismatch
+claims root: /Users/xiamingxing/agents/codex-agent-os-recovery/attempts/a2-resident-status-purity-spec-20260909-01/ws
+fixed authority root: /Users/xiamingxing/Workspace
+```
+
+No claim-verified changeset or integrate receipt exists. The two clone-local
+claims remain real workflow evidence, but the current fixed authority policy
+cannot consume them.
+
+Under the time-bounded Principal delegation recorded above, the exact recovery
+decision is:
+
+- permit one waiver-only successor commit whose parent is
+  `837451486e1dc63def21482a98e6ecbf8a9524bc` and whose only change is this
+  publication-recovery record;
+- bind the resulting source head with annotated tag
+  `a2-resident-status-purity-spec-20260909-01`;
+- after default verification/compliance and blocked workflow closeout, permit
+  one normal, non-force `git push --no-verify` publishing only that branch and
+  tag, because the pre-push claims check has already returned the exact fixed
+  authority rejection above;
+- create one unique draft-Spec PR whose diff contains only the Spec and waiver;
+- require `phase-gate`, `bet-done-transition` and `gac-gate` to pass before
+  squash merge;
+- verify the final main path objects, Spec SHA-256, draft/unbound frontmatter,
+  workflow lock count and retirement receipt chain after merge.
+
+The exact final source head and tag object will be recorded in the PR and
+external retirement receipts because a commit cannot contain its own OID. Any
+new content path, force operation, gate failure, mainline conflict or digest
+drift cancels this authorization. This exception remains a consequence of the
+Claims Authority Bridge gap and does not constitute a reusable direct-publish
+policy.
