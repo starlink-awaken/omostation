@@ -1654,25 +1654,6 @@
       }
     },
     {
-      "name": "gac_worktree_cleanup",
-      "bin": "bin/gac/gac-worktree-cleanup.sh",
-      "scripts": "scripts/bin/gac/gac-worktree-cleanup.sh",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
-      "owner": "governance",
-      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
-      "evidence": {
-        "active_files": [
-          "bin/gac/gac-worktree-cleanup.sh"
-        ],
-        "retired_files": [
-          "scripts/bin/gac/gac-worktree-cleanup.sh"
-        ],
-        "risk_score": 15,
-        "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
-      }
-    },
-    {
       "name": "gac_worktree_guard",
       "bin": "bin/gac/gac-worktree-guard.sh",
       "scripts": "scripts/bin/gac/gac-worktree-guard.sh",

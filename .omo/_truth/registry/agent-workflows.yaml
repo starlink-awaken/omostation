@@ -411,7 +411,7 @@ diff_checks:
   - bin/sweep/**
   - tests/test_sweep_tools.py
   - bin/gac/gac-worktree.sh
-  - bin/gac/gac-worktree-cleanup.sh
+  - bin/gac/prune-zombie-worktrees.py
   - tests/test_gac_worktree_lifecycle.py
   - projects/*/src/**/*.py
   - projects/*/tests/**/*.py
@@ -1325,7 +1325,7 @@ projection:
   lifecycle: read_only_generated_compatibility
   schema: agent-workflow-compat-projection/v1
   source: .omo/_truth/registry/agent-workflows
-  source_digest: sha256:174ed468864abe2b13f755fa3dc12c9344df39487a0a80281a71ad671794de58
+  source_digest: sha256:e7cba5657f21ce28e7ab9346b8ebfaf9002bb03a47bc98c882e5f5e277e2d405
   writer: bin/agent-workflow.py projection-sync
 requirement_iteration_policy:
   adr: ADR-0203
@@ -3219,70 +3219,6 @@ workflows:
     - .agents/skills/round-workflow/SKILL.md
     write: []
   title: Round type recommendation
-- agents:
-    observer_policy: optional
-    roles:
-    - governance-agent
-  allowed_lanes:
-  - governance_state
-  - docs
-  - config
-  evidence_required:
-  - promotion_evidence
-  - sample_refs
-  - calibration_score
-  id: scene-lifecycle
-  lock_scopes:
-  - scene:{scene_id}
-  phases:
-    closeout:
-    - command:
-      - echo
-      - record_promotion
-      id: record_promotion
-      mode: required
-    execute:
-    - command:
-      - python3
-      - bin/ssot/scene-card-review.py
-      - promote
-      - <scene_id>
-      id: promote
-      mode: manual
-    preflight:
-    - command:
-      - python3
-      - bin/ssot/scene-card-review.py
-      - validate
-      - <scene_id>
-      id: validate_schema
-      mode: required
-    verification:
-    - command:
-      - python3
-      - bin/ssot/journey-runner.py
-      - validate
-      - <scene_id>
-      id: check_samples
-      mode: required
-    - command:
-      - echo
-      - check_calibration
-      id: check_calibration
-      mode: advisory
-  purpose: '5 级场景卡生命周期晋升 — draft → shadow → assisted → supervised → routine。 每级有明确的 sample 数量和 calibration 门槛。
-
-    '
-  run_frequency: on_demand
-  surfaces:
-    read:
-    - .omo/standards/scene-card-lifecycle.yaml
-    - .agents/skills/scene-shadow-activate/SKILL.md
-    - bin/ssot/scene-card-review.py
-    - bin/ssot/journey-runner.py
-    write:
-    - .omo/_truth/scenarios/{scene_id}.yaml
-  title: Scene card lifecycle promotion
 - agents:
     roles:
     - governance-agent
