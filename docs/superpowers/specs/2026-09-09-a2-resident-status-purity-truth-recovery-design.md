@@ -1,24 +1,28 @@
 ---
 schema_version: specification/v1
-spec_version: 0.1.0
-status: draft
+spec_version: 1.0.0
+status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-09-09
 last-reviewed: 2026-09-09
 title: A2 Resident Status Purity Truth Recovery
-bet_id: unbound
-implementation_authorized: false
+bet_id: BET-Y1Q4-T10-144
+implementation_authorized: true
 value_indicator_policy: false
+risk_level: L2
+human_gate: true
 ---
 
 # A2 Resident Status Purity Truth Recovery
 
 ## 1. Status and authority
 
-This document is a draft design contract. It is not an accepted specification,
-does not create or reserve a BET, does not authorize implementation, and does
-not authorize a child or root delivery.
+This document is the accepted contract for `BET-Y1Q4-T10-144`. Under the
+Principal's time-bounded delegated authority, version 1.0.0 authorizes only the
+child RED-to-GREEN implementation in §10. It does not authorize the root
+gitlink amendment, host canary, recovery command, service/database/process
+mutation, completion transition or value claim.
 
 The approved Documents proposal input is:
 
@@ -27,8 +31,10 @@ The approved Documents proposal input is:
 - SHA-256:
   `acefb7211a66b7cbbe7506c70c27e74108fcd833e55922802d7e439e48123205`
 - approval scope: all architecture decisions and authorization boundaries in
-  that proposal, limited in this transaction to this draft/unbound Spec and its
-  bootstrap waiver.
+  that proposal. The original bootstrap transaction was limited to a
+  draft/unbound Spec and waiver. The later temporary delegation recorded in the
+  binding waiver authorizes this independently reviewed acceptance and the
+  bounded child implementation.
 
 ## 2. Verified baseline
 
@@ -247,14 +253,14 @@ A2 instead consumes the following non-BET engineering prerequisites:
 These receipts prove a managed-Python engineering prerequisite only. They do
 not prove A3 operational/value completion and do not alter the Ledger.
 
-## 10. Future binding and WorkPackets
+## 10. Accepted binding and sequential WorkPackets
 
-This draft reserves no identifier. At a future binding transaction, the writer
-must recheck the live Ledger, open PRs and remote branches. If still collision
-free, `BET-Y1Q4-T10-144` is the proposal's preferred candidate; otherwise the
-next collision-free ID must be selected and recorded.
+At the accepted-binding transaction, the writer reread the execution-time
+remote Ledger, open PRs and remote branches. `BET-Y1Q4-T10-144` was absent and
+collision-free after Claims Bridge parent `BET-Y1Q4-T10-143` merged. This
+version binds exactly that candidate.
 
-The future binding-only transaction is limited to:
+The binding transaction is limited to:
 
 ```text
 docs/superpowers/specs/2026-09-09-a2-resident-status-purity-truth-recovery-design.md
@@ -262,8 +268,28 @@ docs/plans/3y-bet-ledger.yaml
 .omo/_truth/governance-evidence/waiver-2026-09-09-a2-resident-status-purity-binding.md
 ```
 
-After an accepted binding, implementation must use two sequential
-WorkPackets.
+The current Ledger compiler generates one WorkPacket per BET and copies the
+BET's complete `write_surfaces` list into that packet. It has no stage-aware
+path fence. Therefore child and root paths must never be exposed as a union.
+The two stages use sequential binding revisions of this one BET:
+
+1. version 1.0.0 exposes only the four WP-A2-CHILD paths below;
+2. the child run must close and the child PR must merge before any root
+   amendment;
+3. authoritative child-main reachability and exact child objects must be
+   proven before the root amendment starts;
+4. a later accepted Spec/binding revision must replace the four child paths
+   with the single `projects/omo` gitlink path; it must not append or union the
+   two scopes;
+5. the root run is fresh and binds the newly generated immutable WorkPacket
+   hash. The old closed child run remains bound to its original hash;
+6. the host canary remains a third, post-root operational transaction and is
+   not authorized by version 1.0.0.
+
+`BET-Y1Q4-T10-144` has no Ledger dependency on T10-142 or T10-143. A3 is
+consumed only through the exact engineering receipts in §9. Claims Bridge R0
+enforcement affects the normal managed-clone publication route, not the A2
+engineering dependency graph.
 
 ### WP-A2-CHILD — OMO CQS implementation
 
@@ -274,8 +300,9 @@ projects/omo/tests/unit/test_resident_status.py
 projects/omo/tests/unit/test_ledger_check.py
 ```
 
-The child repository owns RED-to-GREEN implementation and its own PR. No root
-gitlink or host operation belongs in this WorkPacket.
+The child repository owns RED-to-GREEN implementation and its own PR. This is
+the only implementation stage authorized by version 1.0.0. No root gitlink or
+host operation belongs in this WorkPacket.
 
 ### WP-A2-ROOT — authoritative child integration
 
@@ -283,9 +310,12 @@ gitlink or host operation belongs in this WorkPacket.
 projects/omo
 ```
 
-The root PR may advance only the mode-160000 gitlink to the already merged,
-authoritative child-main commit or a verified child-main successor containing
-it. It must not carry source code, tests, Ledger changes or unrelated gitlinks.
+This stage is not authorized by version 1.0.0. A later reviewed binding
+amendment must replace the child write set with exactly `projects/omo` before a
+fresh root run can start. The root PR may then advance only the mode-160000
+gitlink to the already merged, authoritative child-main commit or a verified
+child-main successor containing it. It must not carry source code, tests,
+Ledger changes or unrelated gitlinks.
 
 ## 11. RED-to-GREEN matrix
 
@@ -398,20 +428,26 @@ Stop and require a successor decision if:
 - checkpoint, kill thresholds, daemon scheduling or heartbeat semantics must
   change;
 - child code and root gitlink would enter one repository commit/PR;
+- a WorkPacket or Ledger revision exposes the four child paths and
+  `projects/omo` together;
+- a root run reuses the child run or starts before the child run is closed and
+  child-main reachability is proven;
 - the root gitlink is not an authoritative child-main descendant;
 - a host canary would require recovery or runtime mutation;
 - any accepted Spec, WorkPacket, required context or digest check fails.
 
 ## 16. Ordered rollout
 
-1. Review this exact draft and its digest.
-2. If approved, transition it to `accepted`, create one collision-safe
-   candidate binding and record the exact accepted specification once.
-3. Start a fresh bound child workflow; do not reuse this bootstrap run.
-4. Execute WP-A2-CHILD with an actual RED-to-GREEN sequence and child PR.
-5. After child main reachability is proven, execute WP-A2-ROOT.
-6. After root merge, run the read-only 100/100 operational canary.
-7. Update only the evidence layer actually proven; never infer value or done.
+1. Merge this accepted 1.0.0 child-only binding through normal required gates.
+2. Start a fresh bound child workflow; do not reuse the bootstrap run.
+3. Execute WP-A2-CHILD with an actual RED-to-GREEN sequence and child PR.
+4. Close the child run and prove child-main reachability plus exact objects.
+5. Review and merge a root-only Spec/binding amendment that replaces, rather
+   than unions, the child write set.
+6. Start a fresh root run and execute only the `projects/omo` pointer change.
+7. After root merge, separately authorize and run the read-only 100/100
+   operational canary.
+8. Update only the evidence layer actually proven; never infer value or done.
 
 ## 17. Decision log
 
@@ -423,5 +459,6 @@ Stop and require a successor decision if:
 | Historical BET truth | Preserve | Current-tree recovery does not rewrite prior evidence. |
 | A3 prerequisite | Exact engineering receipts | T10-142 completion/value is neither true nor required. |
 | Delivery topology | Child first, root last | Source authority and root integration authority are separate. |
+| Mechanical scope | Replace child scope with root-only scope in a later binding revision | The current compiler has no stage fence; a union would authorize premature gitlink claims. |
 | Host proof | Post-merge read-only 100/100 | Hermetic tests cannot prove production execution identity. |
 | Value | Excluded / NOT_PROVEN | Infrastructure purity is not a personal decision outcome. |
