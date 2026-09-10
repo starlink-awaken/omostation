@@ -1,19 +1,19 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.1.0
 status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-09-09
-last-reviewed: 2026-09-09
+last-reviewed: 2026-09-10
 title: Claims Authority Bridge WP1 R0 Shadow
 bet_id: BET-Y1Q4-T10-145
-implementation_authorized: false
+implementation_authorized: true
 value_indicator_policy: false
 risk_level: L2
 human_gate: true
 type: ssot
-last_updated: 2026-09-09
+last_updated: 2026-09-10
 ---
 
 # Claims Authority Bridge WP1 R0 Shadow
@@ -29,9 +29,11 @@ This is the first child of parent `BET-Y1Q4-T10-143`. The parent
 contract is
 `docs/superpowers/specs/2026-09-09-claims-authority-bridge-design.md` version 1.0.0,
 SHA-256 `a419e2fb3cd67026edebd39b25a1e1b77e6c92978ce1cf1be6b8e4be19cf8c58`.
-Accepted version 1.0.0 allocates `BET-Y1Q4-T10-145` and creates a plan-only
-WorkPacket. It does not authorize implementation, initialize a production store,
-change Git publication behavior or materialize WP2.
+Accepted version 1.0.0 allocated `BET-Y1Q4-T10-145` and authorized only its
+implementation plan. Version 1.1.0 is the complete non-union Wave A replacement: it
+authorizes only the three child paths in §9 and still does not initialize a production
+store, change Git publication behavior, activate shadow mode or materialize WP2 by
+itself.
 
 ## 2. Problem and current-state audit
 
@@ -131,6 +133,10 @@ binds the integration root to the canonical Workspace identity from committed po
 It must not accept `$HOME`, cwd, a clone-local policy, `--claims-root`, `--store`,
 `--db`, `WORKSPACE_ROOT` or `OMO_COORDINATION_DB` as a production authority selector.
 
+Every production lifecycle call reaches the broker only through the integration-root
+stdio entry resolved from that identity. A caller may not substitute a clone-local
+module, executable or repository root, even when the caller owns a valid v1 run.
+
 The R0 authority identity is `omo-claims-authority-r0`. Its dedicated store, high-water
 and backup directories follow parent Spec §8.1. Existing ancestors are verified, never
 chmodded. Symlink, owner or unsafe-mode drift returns `AUTHORITY_STORE_UNSAFE`.
@@ -176,6 +182,19 @@ It never runs Git, `gh`, workflow closeout, service control or host recovery.
 4. emits `shadow_observed`, `shadow_difference` or `shadow_unprovable`;
 5. returns the original v1 result unchanged.
 
+Claim addition, heartbeat, close, takeover and expiry are represented as durable,
+run-scoped mutation batches. Each batch freezes and covers the complete sorted set of
+v1 claims and the exact lock existence/content set for that run; a partial member
+update cannot settle the batch. Claim versions and lease epochs are broker-owned
+state only. They never add a field to, rewrite or promote existing v1 YAML bytes.
+
+Stale-lock pruning freezes one selected-candidate set from one initial scan, acquires
+all affected run-update locks in stable run-ID order, records each candidate's
+path/kind/content digest, revalidates that exact set under lock and deletes only
+unchanged reserved candidates. New, changed or unreserved candidates remain for a
+later explicit prune. The implementation must not call discovery-style
+`prune_stale_locks()` or perform a second discovery scan before deletion.
+
 Broker absence, timeout, malformed stdout or mismatch cannot change the stored v1
 claim verdict. Separately, a v1-allowed publication still stops before Git when it
 cannot obtain and enter the mandatory LegacyPublishFence.
@@ -217,6 +236,14 @@ WP1 does not consume a v2 PublishIntent, change the canonical push argv, add aut
 retry or create a second push path. Settlement records the exact remote observation
 for the same legacy fence. An unknown effect result freezes that fence and requires
 operator resolution; it never mints a replacement.
+
+Remote double-read belongs only to the descriptor-bound `clone-lifecycle` effect
+owner. That process supplies the before/after observation pair and exact OIDs to the
+broker. The broker validates the pair, fence and CAS state but never invokes Git,
+`gh`, a network transport or a caller-selected remote helper. Unknown mutation batches
+and unknown fences use separate operator-required markers; resolution is bound to an
+explicit authorization digest, stopped-process proof and two equal complete reads of
+the affected v1 run/claims, locks and remote result as applicable.
 
 The current `--force-with-lease` new-branch command and exact PR lookup/create logic
 remain byte-for-byte behaviorally equivalent. WP2, not WP1, owns cooperative
@@ -271,6 +298,10 @@ receipt, is the sole transition from `unactivated` to `shadow-active`. A missing
 failed activation receipt leaves the system unactivated and cannot partially require a
 fence.
 
+Descriptor `operating_mode=shadow` is a requested behavior and remains distinct from
+runtime `activation_state=shadow-active`. Configuration alone, including an exact
+policy blob, never proves activation or starts the observation clock.
+
 ## 7. Data and state contracts
 
 The child module implements the parent v2 object set without changing parent schemas:
@@ -295,6 +326,7 @@ v2 shadow result -----+                           |
 shadow receipt: proposed -> active -> closed | expired | taken_over
 legacy fence:  issued -> publishing -> settled | unknown
 activation:    unactivated -> shadow-active
+run mutation:  reserved -> settled(outcome=applied|rejected) | unknown(operator_required=false|true) -> settled(outcome=applied|rejected)
 ```
 
 The v2 claim verdict is evidence-only during WP1. A LegacyPublishFence is different:
@@ -306,6 +338,12 @@ Every mutation uses `BEGIN IMMEDIATE`, WAL, `synchronous=FULL`, foreign keys and
 5-second busy timeout. Receipt, sequence, previous digest, idempotency row and state
 transition commit atomically. High-water reconciliation is limited to the exact
 one-tail case defined by the parent. Corruption never auto-restores.
+
+The broker owns monotonically increasing claim versions and lease epochs for every
+member of a run-scoped batch. Prepared and settled records bind the complete member
+tuple and lock-set digest before and after the v1 operation. An unknown batch remains
+frozen until its own authorization-bound resolution succeeds; a fence-resolution
+marker cannot resolve a mutation batch, and a mutation marker cannot resolve a fence.
 
 WP1 inherits the parent time contract without weakening it:
 
@@ -341,6 +379,9 @@ Each observation records the same immutable input identity and two results:
 The only expected difference is a valid managed clone denied solely by the fixed v1
 authority root while v2 independently validates it. Any other difference, missing
 input or v2 false-allow is `UNPROVABLE` and resets the continuous graduation window.
+An exact-commit degraded bootstrap publication is recorded only as legacy delivery
+evidence; it never counts as a v2 observation, lifecycle sample, graduation sample or
+value evidence.
 
 ## 9. Exact delivery partitions and binding versions
 
@@ -592,7 +633,7 @@ No production store, Git remote or host service is used by unit tests; test auth
 | CAB-WP1-AC-05 | Child, B1 adapter, B2/B3 local convergence, B4 cloud convergence and root pointer PRs merge in order with exact-SHA and required CI | delivery receipts |
 | CAB-WP1-AC-06 | Same immutable fixtures produce recorded v1/v2 comparison pairs with typed classifications | comparison report |
 | CAB-WP1-AC-07 | Shadow status is redacted, `instruction_capable=false`, and stale after 120 seconds | observer contract tests |
-| CAB-WP1-AC-08 | At least three independent lifecycles cover managed clone, legacy regression and expiry/replay | lifecycle receipts |
+| CAB-WP1-AC-08 | Three distinct real workflow run IDs cover managed clone, legacy regression and expiry/replay; fixtures do not count | lifecycle receipts |
 | CAB-WP1-AC-09 | A continuous 24-hour window has zero unexplained differences and zero false-allows | graduation report |
 | CAB-WP1-AC-10 | R0 is labeled cooperative; operational/value remain `NOT_PROVEN` until direct evidence | schema/Ledger check |
 | CAB-WP1-AC-11 | WP2 has no Ledger ID, binding, run or write surface before WP1 is done | portfolio gate |
@@ -683,18 +724,22 @@ complete the parent BET or create WP2.
 
 ## 17. Acceptance record and transition gate
 
-Version 1.0.0 acceptance requires and records:
+Version 1.0.0 remains immutable historical plan authority. Version 1.1.0 acceptance
+requires and records:
 
-1. two independent read-only reviews must find no scope, authority, storage or effect
-   ownership contradiction;
-2. candidate ID `BET-Y1Q4-T10-145` must remain collision-free at binding time;
-3. accepted version 1.0.0 must have a plan-only WorkPacket and parent relation to
-   `BET-Y1Q4-T10-143`;
-4. version 1.0.0 keeps `implementation_authorized=false`; it authorizes only the
-   writing-plans artifact;
-5. `implementation_authorized` may become true only in the 1.1.0 Wave A replacement
-   under direct or time-bounded delegated Human authority;
-6. every later binding must replace, not append, `write_surfaces`, keep one current
-   `accepted_specifications` entry and reject an earlier WorkPacket hash;
-7. writing-plans starts only after the 1.0.0 binding merges and its exact Spec digest
-   is verified.
+1. the 1.0.0 plan is merged at its reviewed digest, its run is closed and all locks
+   are zero;
+2. two independent read-only reviews find no scope, authority, storage or effect-owner
+   contradiction in the exact 1.1.0 bytes;
+3. the Ledger retains candidate `BET-Y1Q4-T10-145`, its parent relation to
+   `BET-Y1Q4-T10-143`, one current accepted binding and no completion/value expansion;
+4. the current WorkPacket replaces the plan path with exactly the three Wave A child
+   paths and rejects the 1.0.0 WorkPacket hash;
+5. `implementation_authorized=true` authorizes only Wave A under the new WorkPacket;
+   this binding transaction itself changes no implementation, runtime or gitlink;
+6. appetite is re-baselined to 12 days of elapsed delivery time, including the
+   mandatory 24-hour observation, and is not a completion or value claim;
+7. every later binding replaces rather than appends `write_surfaces`, keeps one current
+   `accepted_specifications` entry and rejects an earlier WorkPacket hash; and
+8. Wave A starts only after the 1.1.0 binding merges, its exact Spec digest and compiled
+   WorkPacket are verified, the binding run closes and every lock is zero.
