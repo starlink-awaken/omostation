@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.1.0
+spec_version: 1.1.1
 status: accepted
 lifecycle: contract
 owner: governance-team
@@ -30,10 +30,10 @@ contract is
 `docs/superpowers/specs/2026-09-09-claims-authority-bridge-design.md` version 1.0.0,
 SHA-256 `a419e2fb3cd67026edebd39b25a1e1b77e6c92978ce1cf1be6b8e4be19cf8c58`.
 Accepted version 1.0.0 allocated `BET-Y1Q4-T10-145` and authorized only its
-implementation plan. Version 1.1.0 is the complete non-union Wave A replacement: it
-authorizes only the three child paths in §9 and still does not initialize a production
-store, change Git publication behavior, activate shadow mode or materialize WP2 by
-itself.
+implementation plan. Version 1.1.1 supersedes the 1.1.0 Wave A binding with the same
+complete non-union three-path partition and adds only the monotonic activation-witness
+contract below. It still does not initialize a production store, change Git
+publication behavior, activate shadow mode or materialize WP2 by itself.
 
 ## 2. Problem and current-state audit
 
@@ -57,6 +57,7 @@ gap between claim validation and the single push effect.
 | Git/PR effect owner | [PARTIAL] | `clone-lifecycle.py::cmd_integrate()` is canonical, but legacy scripts still push/create PRs directly | [EXTEND] converge every tracked root/child publication entry through `cmd_integrate`; push argv is unchanged |
 | Cross-clone coordination store | [EXISTS] | WAL/CAS/backup patterns, but environment-selectable and declared non-authoritative | [REFERENCE] reuse patterns only, never promote its DB |
 | Canonical claims store | [BUILD] | absent | dedicated R0 store, receipt chain and external high-water |
+| Monotonic activation witness | [BUILD] | absent | deny-only account-resolved witness distinguishes pristine bootstrap from activated/unprovable broker outage |
 | Claims broker CLI | [BUILD] | absent | one-request canonical stdio entry rooted in integration main |
 | v2 shadow comparison | [BUILD] | absent | record v1/v2 pair and typed differences |
 | Legacy publication fence | [BUILD] | absent | mandatory one-shot effect fence after v1 allow; cannot grant scope |
@@ -137,6 +138,23 @@ Every production lifecycle call reaches the broker only through the integration-
 stdio entry resolved from that identity. A caller may not substitute a clone-local
 module, executable or repository root, even when the caller owns a valid v1 run.
 
+The sole narrow exception is a read-only, deny-only activation-witness check when that
+canonical stdio entry is unavailable. The witness path is derived from the same
+account identity, never from caller environment, cwd, clone state or request JSON. It
+cannot grant a claim, issue a receipt/fence, settle a mutation or authorize Git.
+
+The broker creates a canonical `unactivated` witness on first store initialization and
+replaces it monotonically through `prepared` to `shadow-active` during activation.
+Pristine absence permits bootstrap only when the witness, store and high-water are all
+absent. A valid `unactivated` witness permits byte-equivalent bootstrap. A valid
+`prepared` or `shadow-active` witness, any missing witness after store/high-water
+initialization, unsafe path, malformed body, descriptor/sequence mismatch, unreadable
+state or rollback is fail-closed when stdio is unavailable. Broker activation and
+witness publication form one recoverable transaction: `prepared` is durable before
+the SQLite activation CAS, and any crash or disagreement remains fail-closed until the
+broker reconciles the same activation receipt. `lifecycle.py` may only read and verify
+this fixed witness for that conservative distinction.
+
 The R0 authority identity is `omo-claims-authority-r0`. Its dedicated store, high-water
 and backup directories follow parent Spec §8.1. Existing ancestors are verified, never
 chmodded. Symlink, owner or unsafe-mode drift returns `AUTHORITY_STORE_UNSAFE`.
@@ -167,6 +185,7 @@ editing a projection cannot create, close, renew or settle a canonical claim.
 - claim/lease CAS and shadow decision recording;
 - legacy-fence shadow state and settlement evidence;
 - high-water verification, crash-tail reconciliation and backup manifests;
+- monotonic activation-witness creation, verification and crash reconciliation;
 - redacted status response and stable typed errors.
 
 It never runs Git, `gh`, workflow closeout, service control or host recovery.
@@ -198,6 +217,12 @@ later explicit prune. The implementation must not call discovery-style
 Broker absence, timeout, malformed stdout or mismatch cannot change the stored v1
 claim verdict. Separately, a v1-allowed publication still stops before Git when it
 cannot obtain and enter the mandatory LegacyPublishFence.
+
+For lifecycle mutations, broker unavailability uses the §5.1 witness rule. Verified
+pristine or `unactivated` state preserves pre-activation v1 bytes and records
+`shadow_unprovable:not_activated`; `prepared`, `shadow-active`, invalid, rollback or
+missing-after-initialization state rejects the mutation before any v1 write. The
+witness is never a positive authority result.
 
 ### 6.3 Root CLI adapter
 
@@ -314,6 +339,9 @@ The child module implements the parent v2 object set without changing parent sch
 - `claims-authority-projection/v2`;
 - `claims-authority-status/v2`.
 
+The deny-only safety object is `claims-activation-witness/v1`; it is not a claim,
+receipt, fence, projection or new authority schema.
+
 WP1 may represent PublishIntent fixtures for RED/race tests, but it never issues a
 publishable production v2 intent.
 
@@ -323,10 +351,11 @@ v1 claim result ------+
 v2 shadow result -----+                           |
                                                   +--> graduation counter
 
-shadow receipt: proposed -> active -> closed | expired | taken_over
-legacy fence:  issued -> publishing -> settled | unknown
-activation:    unactivated -> shadow-active
-run mutation:  reserved -> settled(outcome=applied|rejected) | unknown(operator_required=false|true) -> settled(outcome=applied|rejected)
+shadow receipt:     proposed -> active -> closed | expired | taken_over
+legacy fence:      issued -> publishing -> settled | unknown
+activation DB:     unactivated -> shadow-active
+activation witness: absent(pristine only) -> unactivated -> prepared -> shadow-active
+run mutation:      reserved -> settled(outcome=applied|rejected) | unknown(operator_required=false|true) -> settled(outcome=applied|rejected)
 ```
 
 The v2 claim verdict is evidence-only during WP1. A LegacyPublishFence is different:
@@ -338,6 +367,15 @@ Every mutation uses `BEGIN IMMEDIATE`, WAL, `synchronous=FULL`, foreign keys and
 5-second busy timeout. Receipt, sequence, previous digest, idempotency row and state
 transition commit atomically. High-water reconciliation is limited to the exact
 one-tail case defined by the parent. Corruption never auto-restores.
+
+Activation first writes and fsyncs the canonical `prepared` witness bound to the
+request, descriptor, root commit, policy blob, child gitlink, expected authority epoch
+and next sequence. It then commits the SQLite activation row and receipt, updates
+high-water, and atomically replaces the witness with the matching `shadow-active`
+body. A `prepared` witness or any DB/high-water/witness disagreement is fail-closed;
+only the broker may reconcile it to the exact committed activation receipt. Witness
+rollback or replacement with `unactivated` after activation is
+`AUTHORITY_ACTIVATION_WITNESS_INVALID`.
 
 The broker owns monotonically increasing claim versions and lease epochs for every
 member of a run-scoped batch. Prepared and settled records bind the complete member
@@ -394,7 +432,8 @@ union, append-only accumulation or reuse of an earlier WorkPacket hash is a hard
 | Accepted version | Only permitted write surface | Purpose |
 |---|---|---|
 | 1.0.0 | `docs/superpowers/plans/2026-09-10-claims-authority-bridge-wp1-shadow.md` | writing-plans only; implementation remains unauthorized |
-| 1.1.0 | Wave A three child paths | child broker/lifecycle implementation |
+| 1.1.0 | Wave A three child paths | historical initial child binding, superseded before implementation |
+| 1.1.1 | Wave A same three child paths | child broker/lifecycle implementation with monotonic activation-witness boundary |
 | 1.2.0 | Wave B1 six root paths | lazy shadow adapter, fence integration and registry |
 | 1.3.0 | Wave B2 nine effect-convergence paths | eliminate every alternate tracked push/PR owner |
 | 1.4.0 | Wave B3 nine bypass/shim paths | close Git Data API and wrapper publication bypasses |
@@ -417,7 +456,7 @@ projects/omo/tests/test_workflow_claims_authority_bridge.py
 ```
 
 Wave A is a child-repository PR. It must merge and pass child post-merge CI before any
-version 1.2.0 is created. Version 1.1.0 contains none of the plan, root, pointer or
+version 1.2.0 is created. Version 1.1.1 contains none of the plan, root, pointer or
 evidence paths.
 
 ### Wave B1 — root shadow adapter and canonical fence owner
@@ -517,7 +556,7 @@ report and leaves the child candidate/evaluating. Version 1.7.0 contains no
 implementation or gitlink path.
 
 The initial 1.0.0 accepted binding is plan-only. Writing-plans uses a fresh bound run,
-claims only the plan, verifies and closes before the 1.1.0 Wave A amendment. It cannot
+claims only the plan, verifies and closes before the Wave A binding. It cannot
 create code, a store, a receipt or an implementation claim.
 
 ### 9.1 Binding replacement transaction
@@ -545,7 +584,8 @@ closed and all its locks zero before the next binding transaction starts.
 
 | Code | Scenario | WP1 result | Retry |
 |---|---|---|---|
-| `AUTHORITY_UNAVAILABLE` | broker unavailable/timeout | before activation: observation `unprovable`, legacy bootstrap unchanged; after activation: any unfenced Git effect stops | no automatic retry in effect path |
+| `AUTHORITY_UNAVAILABLE` | broker unavailable/timeout | witness proves pristine/unactivated: observation `unprovable`, legacy bootstrap unchanged; witness prepared/active/invalid: mutation/effect stops | no automatic retry in effect path |
+| `AUTHORITY_ACTIVATION_WITNESS_INVALID` | witness missing after initialization, unsafe, malformed, mismatched or rolled back | reject lifecycle mutation/effect before v1 write; preserve evidence | broker-only reconciliation of the same activation receipt |
 | `AUTHORITY_DESCRIPTOR_MISMATCH` | critical path/runtime drift | v2 `unprovable`; no receipt | no |
 | `AUTHORITY_STORE_UNSAFE` | symlink/owner/mode violation | fail closed for v2 | no |
 | `AUTHORITY_STORE_CORRUPT` | integrity or chain failure | preserve store; v2 unavailable | operator-only recovery |
@@ -584,6 +624,8 @@ binding failure.
 | clone-local or arbitrary external root presented as authority | RED |
 | hand-created, copied or modified run/receipt presented as authority | RED |
 | environment/cwd/CLI attempts to redirect production store | RED |
+| broker unavailable with prepared/active/missing-after-initialization, corrupt or rollback activation witness | RED before v1 mutation/effect |
+| broker unavailable with pristine absence or verified unactivated witness | GREEN bootstrap: v1 byte-equivalent plus `shadow_unprovable:not_activated` |
 | store, high-water, backup or clone path symlink escape | RED |
 | wrong owner or unsafe mode | RED |
 | actor, attempt, repository, branch or HEAD mismatch | RED |
@@ -639,6 +681,7 @@ No production store, Git remote or host service is used by unit tests; test auth
 | CAB-WP1-AC-11 | WP2 has no Ledger ID, binding, run or write surface before WP1 is done | portfolio gate |
 | CAB-WP1-AC-12 | Tracked repository publication inventory finds exactly one push/PR effect owner; wrappers, API helpers, cloud workflows and submodule pre-push perform no alternate publication | source scan and negative tests |
 | CAB-WP1-AC-13 | Before descriptor activation, bridge delivery preserves legacy bootstrap effects; after exact `shadow-active`, every v1-allowed effect requires a fence | pre/post activation test pair |
+| CAB-WP1-AC-14 | Broker-unavailable lifecycle uses only the account-resolved deny-only witness: pristine/unactivated bootstraps; prepared/active/invalid/rollback/missing-after-initialization fails before v1 mutation | witness state/race tests |
 
 The 24-hour clock starts only after Waves A, B1, B2, B3, B4 and C are on authoritative main, production
 shadow activation has an exact descriptor receipt, the observer reads are repeatable
@@ -650,8 +693,8 @@ identity drift or observer blindness resets the window.
 | ID | Timebox | Prerequisite | Work | Acceptance | Output | Main risk |
 |---|---|---|---|---|---|---|
 | D0 | 0.5 day | accepted 1.0.0 plan-only binding | write implementation plan and frozen fixture matrix; close plan run | plan review clear; only plan path changed | exact plan | scope union |
-| D1 | 0.5 day | D0 closed | replace binding with 1.1.0 Wave A only | current WorkPacket has exactly three child paths | binding receipt | stale plan surface |
-| D2 | 1 day | 1.1.0 | RED tests plus canonical schemas/store core | RED proves current absence; store unit tests green | child commit | accidental second authority |
+| D1 | 0.5 day | D0 closed | replace binding with current 1.1.1 Wave A only | current WorkPacket has exactly three child paths | binding receipt | stale plan surface |
+| D2 | 1 day | 1.1.1 | RED tests plus canonical schemas/store core | RED proves current absence; store unit tests green | child commit | accidental second authority |
 | D3 | 1 day | D2 | lifecycle shadow hook, receipts/high-water/backup | v1 result byte-equivalent; child CI green | child PR | shadow affecting gate |
 | D4 | 0.5 day | child main | replace binding with 1.2.0 Wave B1 only | current WorkPacket has exactly six B1 paths | binding receipt | child/root union |
 | D5 | 1 day | 1.2.0 | root CLI, comparison adapter and mandatory legacy fence owner | v1 claim regressions green; canonical push argv unchanged | root adapter PR | lazy-interface mismatch |
@@ -724,13 +767,13 @@ complete the parent BET or create WP2.
 
 ## 17. Acceptance record and transition gate
 
-Version 1.0.0 remains immutable historical plan authority. Version 1.1.0 acceptance
-requires and records:
+Versions 1.0.0 and 1.1.0 remain immutable historical plan/initial-Wave-A authority.
+Version 1.1.1 acceptance requires and records:
 
 1. the 1.0.0 plan is merged at its reviewed digest, its run is closed and all locks
    are zero;
 2. two independent read-only reviews find no scope, authority, storage or effect-owner
-   contradiction in the exact 1.1.0 bytes;
+   contradiction in the exact 1.1.1 bytes;
 3. the Ledger retains candidate `BET-Y1Q4-T10-145`, its parent relation to
    `BET-Y1Q4-T10-143`, one current accepted binding and no completion/value expansion;
 4. the current WorkPacket replaces the plan path with exactly the three Wave A child
@@ -741,5 +784,5 @@ requires and records:
    mandatory 24-hour observation, and is not a completion or value claim;
 7. every later binding replaces rather than appends `write_surfaces`, keeps one current
    `accepted_specifications` entry and rejects an earlier WorkPacket hash; and
-8. Wave A starts only after the 1.1.0 binding merges, its exact Spec digest and compiled
+8. Wave A starts only after the 1.1.1 binding merges, its exact Spec digest and compiled
    WorkPacket are verified, the binding run closes and every lock is zero.

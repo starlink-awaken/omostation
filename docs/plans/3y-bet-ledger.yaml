@@ -27204,7 +27204,7 @@ bets:
     提供可审计前置证据。
   depends_on: []
   non_goals:
-  - 1.1.0 仅授权 Wave A 三个 child 路径，不修改 root adapter、Git 发布行为、gitlink、runtime 或启动 WP2
+  - 1.1.1 仅授权 Wave A 三个 child 路径，不修改 root adapter、Git 发布行为、gitlink、runtime 或启动 WP2
   - 不信任 arbitrary external 或 clone-local root，不追认历史 v1/A1/A3 receipt
   - 不实施 R1、host service、service account、UDS、Keychain、多租户 RBAC 或高可用
   - 不修改其他 BET、completion/value evidence、branch protection 或业务运行态
@@ -27248,8 +27248,8 @@ bets:
   retro: required
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
-    spec_version: 1.1.0
-    content_digest: sha256:032957ededf4b7ade8e9543ae38f322083908a99c840d7e8a52f7300dc2e16cf
+    spec_version: 1.1.1
+    content_digest: sha256:7a4cdbae6fb4ce5af09b77438cf56c0b57bddc50e94d3db824ad5d79f1104bae
     decision_ref: decision://accepted/BET-Y1Q4-T10-145
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -27265,7 +27265,7 @@ bets:
         evidence: {}
     overall_state: evaluating
   circuit_breaker: >-
-    1.1.0 WorkPacket 必须只含 Wave A 三个 child 路径并保持
+    1.1.1 WorkPacket 必须只含 Wave A 三个 child 路径并保持
     implementation_authorized=true；任一 plan/root/pointer/evidence/WP2/runtime 写面、
     scope union、1.0.0 WorkPacket hash 复用、v1 YAML 版本字段泄漏、broker 调用 Git/gh、
     非 run-scoped 完整 batch、v2 effective admission、自动 Git 重试、历史 receipt 追认、
