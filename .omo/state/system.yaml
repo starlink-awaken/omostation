@@ -4,10 +4,10 @@ health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
 health_score_evidence_generated_at: '2026-09-06T13:03:18.325526+00:00'
 completed_tasks: 293
-planned_tasks: 9
+planned_tasks: 13
 active_tasks: 1
 blocked_tasks: 1
-total_tasks: 304
+total_tasks: 308
 next_active_tasks:
 - kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 next_planned_tasks:
@@ -21,7 +21,7 @@ next_planned_tasks:
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
-updated_at: '2026-09-10T11:54:57.679584+08:00'
+updated_at: '2026-09-10T12:47:41.246289+08:00'
 harness:
   last_run: null
   last_status: null
@@ -47,11 +47,11 @@ runtime_health_summary:
   total_services: 1
   ratio: 1.0
   health_score: 100
-  last_scan: '1789012421.868709'
+  last_scan: '1789015652.5120919'
   service_count: 6
   degraded: []
   source: runtime_daemon_de_false_positive
-governance_feedback_last_run: '2026-09-10T11:54:57.679584+08:00'
+governance_feedback_last_run: '2026-09-10T12:47:41.246289+08:00'
 workflow_mesh_health:
   status: healthy
   event_count: 1
