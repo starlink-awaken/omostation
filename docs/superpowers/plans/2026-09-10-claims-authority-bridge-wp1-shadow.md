@@ -2,8 +2,8 @@
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-09-09
-last_updated: 2026-09-09
+last-reviewed: 2026-09-10
+last_updated: 2026-09-10
 type: doc
 ---
 
@@ -19,10 +19,10 @@ type: doc
 
 ## Global Constraints
 
-- Canonical Spec: `docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md`, accepted version `1.0.0`, SHA-256 `302bca4c509abc37b16e0cd1498de4217ffc961e7db9bc7231c3b1fb889aa2ba`.
+- Canonical Spec: `docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md`, accepted version `1.1.1`, SHA-256 `7a4cdbae6fb4ce5af09b77438cf56c0b57bddc50e94d3db824ad5d79f1104bae`.
 - Parent/child: `BET-Y1Q4-T10-145` is a child of zero-write parent `BET-Y1Q4-T10-143`; `depends_on=[]` is intentional because parent coordination is not a completed execution predecessor.
-- Current WorkPacket `sha256:35654ba38b1b87803700e755a8d7d83ddc5c6a75f3c9e56e76bf9957fa9306b7` permits only this plan. Nothing below is implementation authority until a later binding transaction merges.
-- Each version `1.1.0` through `1.7.0` is a complete replacement, never a union. The prior run must be closed, its locks must be zero, and the new Spec digest and WorkPacket hash must be verified before any new path is claimed.
+- Current WorkPacket `sha256:d844394dcbfb67dcea9e5a770696e12a69b75b36dc88c4fdde2a17140863b4d2` authorizes only the three Wave A child paths listed by Task 2–4. Versions 1.0.0 and 1.1.0 are immutable history, not current execution authority.
+- Each later version `1.2.0` through `1.7.0` is a complete replacement, never a union. The prior run must be closed, its locks must be zero, and the new Spec digest and WorkPacket hash must be verified before any new path is claimed.
 - WP1 is shadow-only: `effective_claim_authority=v1`; v2 may return `would_allow`, `would_deny` or `unprovable` but may never grant, deny or publish.
 - v2 never authorizes a valid managed clone during WP1. The managed-clone shadow
   lifecycle remains unpublished and the only expected difference is v1 fixed-root
@@ -31,11 +31,11 @@ type: doc
   exact-commit Human/time-bounded-delegated degraded publication; that exception is
   never a v2 receipt, never graduation evidence and never a reusable precedent.
 - `clone-lifecycle.py::cmd_integrate()` is the only remote Git/ref and PR effect owner. The broker never runs Git or `gh`.
-- Before exact descriptor activation, all new seams return `shadow_unprovable:not_activated` and preserve bootstrap behavior. After activation, every v1-allowed publication must possess one fresh, consumable legacy fence before Git.
+- Before exact descriptor activation, only pristine total absence or a verified canonical `unactivated` witness returns `shadow_unprovable:not_activated` and preserves bootstrap behavior. If the canonical stdio broker is unavailable while the account-resolved witness is `prepared`, `shadow-active`, invalid, rolled back, unsafe or missing after store/high-water initialization, reject before any v1 write. After activation, every v1-allowed publication must possess one fresh, consumable legacy fence before Git.
 - No daemon, UDS, LaunchAgent, network port, MCP server, Dashboard authority, service account, Keychain material, multi-tenant RBAC, HA or R1 security is introduced.
 - Production store paths derive from `pwd.getpwuid(os.getuid()).pw_dir`; `$HOME`, cwd, CLI/env store overrides and clone-local policy never choose authority.
 - Production paths and ancestors must not be symlinks, must be owned by the current UID, and must not be group/world writable. Dedicated directories use `0700`; files use `0600`; shared ancestors are never chmodded.
-- Every mutation uses `BEGIN IMMEDIATE`, WAL, `synchronous=FULL`, foreign keys and a 5-second busy timeout. Corruption never auto-restores; only the exact one-tail crash case may reconcile.
+- Before creating a production store, reuse the canonical SQLite WAL-safety predicate. An unsafe SQLite runtime fails closed with `AUTHORITY_STORE_UNSAFE` before DDL, witness or high-water mutation; it never downgrades to `journal_mode=DELETE`. Every admitted mutation then verifies actual WAL mode and uses `BEGIN IMMEDIATE`, `synchronous=FULL`, foreign keys and a 5-second busy timeout. Corruption never auto-restores; only the exact one-tail crash case may reconcile.
 - Broker-owned claim lease is 15 minutes; heartbeat is at most 5 minutes and
   increments the broker-owned lease epoch without adding fields to v1; broker clock
   rollback beyond 30 seconds fails closed; observer freshness is 120 seconds.
@@ -46,7 +46,7 @@ type: doc
 - No automatic push retry, replacement token/fence, force push, `--no-verify`, projection-to-authority write, historical receipt promotion, completion inflation or value claim.
 - `value_indicator_policy=false`; engineering/CI/shadow evidence never counts as personal value. Operational/value remain `NOT_PROVEN` through WP1.
 - WP2 must have no Ledger ID, Spec, binding, run or write surface before WP1 is honestly done.
-- The accepted `appetite: 3 days` is shorter than the Spec's D1–D15 sequence. Treat this as an explicit control: before the 1.1.0 binding, record whether appetite is re-baselined to the Spec's 11.5-day elapsed plan or whether the work is stopped. Do not silently exceed 3 days.
+- The accepted Ledger appetite is `12 days` of elapsed delivery time, including the mandatory 24-hour observation. It is a circuit-breaker budget, not completion, graduation, operational or value evidence.
 
 ## Frozen Command and Data Contracts
 
@@ -68,6 +68,7 @@ class AuthorityPaths:
     store: Path
     high_water: Path
     backups: Path
+    activation_witness: Path
 
 @dataclass(frozen=True)
 class V1Decision:
@@ -319,7 +320,7 @@ CREATE INDEX fences_state ON legacy_fences(epoch, state);
 
 ```text
 plan run close + locks=0
-  -> 1.1.0 binding -> Wave A child PR/main
+  -> 1.1.1 binding -> Wave A child PR/main
   -> 1.2.0 binding -> Wave B1 root PR/main
   -> 1.3.0 binding -> Wave B2 root PR/main
   -> 1.4.0 binding -> Wave B3 root PR/main
@@ -475,18 +476,24 @@ At each stage the orchestrator reports only: current Writer; parallel read-only 
 and bound digest; passed/blocked items; next executable transaction; and remaining
 critical-path time.
 
-### Task 1: Replace the binding with version 1.1.0 for Wave A
+### Task 1: Confirm the current version 1.1.1 binding for Wave A
 
-**Files:**
-- Modify: `docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md`
-- Modify: `docs/plans/3y-bet-ledger.yaml`
-- Create: `.omo/_truth/governance-evidence/waiver-2026-09-10-claims-authority-bridge-wp1-v110-wave-a-binding.md`
+**Status:** completed prerequisite. PR #3513 merged as
+`2b59cdf349ef8a5c0614a62bc8e82be5adedd0fd`; the source/merge objects, Spec digest,
+WorkPacket, Ledger/Portfolio lint, strict GaC and zero-lock closeout were independently
+reproduced. The 1.0.0 and 1.1.0 bindings are historical predecessors and are not
+current execution authority.
+
+**Historical binding files (read-only after #3513):**
+- Read: `docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md`
+- Read: `docs/plans/3y-bet-ledger.yaml`
+- Read: `.omo/_truth/governance-evidence/waiver-2026-09-10-claims-authority-bridge-wp1-v111-activation-witness-amendment.md`
 
 **Interfaces:**
-- Consumes: merged plan and closed `20260909T230554Z-bet-execution-54a7ea84`; accepted 1.0.0 digest.
-- Produces: exactly one 1.1.0 WorkPacket with the three Wave A child paths and `implementation_authorized=true`.
+- Consumes: merged 1.1.1 binding and closed `20260910T091550Z-governance-state-mutation-6ab2e46f`.
+- Produces: exactly one 1.1.1 WorkPacket with the three Wave A child paths and `implementation_authorized=true`.
 
-- [ ] **Step 1: Prove the planning run is closed and all locks are zero**
+- [x] **Step 1: Prove the binding run is closed and all locks are zero**
 
 Run:
 
@@ -494,19 +501,21 @@ Run:
 uv run --with pyyaml python bin/agent-workflow.py status --json
 ```
 
-Expected: no active T10-145 run, `stale_locks=0`, `live_locks=0` in the retired planning clone evidence.
+Expected and observed after #3513: no active binding run, `stale_locks=0`, `live_locks=0`.
 
-- [ ] **Step 2: Create a fresh full clone from a twice-read latest main and start one unbound binding transaction**
+- [x] **Step 2: Use a fresh full clone from a twice-read latest main for the binding transaction**
 
-Use `AGCP_REQUIREMENT_ITERATION_GATE=0` only on `start governance-state-mutation`; claim exactly the three files above. Record the direct or still-valid delegated Human authorization verbatim in the waiver.
+Historical evidence confirms `AGCP_REQUIREMENT_ITERATION_GATE=0` was used only on the
+binding transaction's fresh unbound start; all claims, verification, Git, CI and
+closeout used the default policy. Do not repeat the binding transaction.
 
-- [ ] **Step 3: Convert the Spec and Ledger to a complete non-union 1.1.0 replacement**
+- [x] **Step 3: Confirm the complete non-union 1.1.1 replacement**
 
-Apply this semantic change:
+The merged binding has this exact semantic shape:
 
 ```yaml
 # Spec frontmatter
-spec_version: 1.1.0
+spec_version: 1.1.1
 status: accepted
 bet_id: BET-Y1Q4-T10-145
 implementation_authorized: true
@@ -518,15 +527,14 @@ write_surfaces:
   - projects/omo/tests/test_workflow_claims_authority_bridge.py
 accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
-    spec_version: 1.1.0
+    spec_version: 1.1.1
     decision_ref: decision://accepted/BET-Y1Q4-T10-145
 underlying_workflow: project-code-change
 ```
 
-The required `content_digest` field is added only after the Spec bytes are final. In
-the same transaction, run `shasum -a 256` over those bytes, prepend `sha256:`, apply
-that exact output to the Ledger, recompute it, and fail unless the two values are
-identical. Never hand-enter or predict the digest.
+The required `content_digest` was computed from the final Spec bytes and reproduced
+after merge. Future replacements must repeat that calculation and fail unless the
+Spec and Ledger values are identical; never hand-enter or predict the digest.
 
 Remove the plan path; do not append the child paths to it. Re-baseline `appetite` to
 `12 days` in the same T10-145 Ledger entry and record in the waiver that this is
@@ -535,7 +543,7 @@ completion claim. This is the selected resolution of the accepted 3-day/D1–D15
 contradiction. If that exact re-baseline is not covered by a live delegated/direct
 decision at execution time, stop.
 
-The 1.1.0 Spec replacement must also incorporate the frozen clarifications from this
+The 1.1.1 Spec replacement incorporates the frozen clarifications from this
 reviewed plan: production lifecycle calls only the integration-root stdio broker;
 claim addition/heartbeat/close/takeover/expiry use durable run-scoped mutation batches
 covering every v1 claim, while versions/epochs remain broker-only and v1 bytes stay
@@ -547,7 +555,7 @@ authorization-bound resolution; remote double-read belongs only to descriptor-bo
 or graduation evidence; and graduation requires three distinct real workflow run IDs,
 not fixtures. These are contract corrections, not extra Wave A write surfaces.
 
-- [ ] **Step 4: Recompute and inspect the WorkPacket**
+- [x] **Step 4: Recompute and inspect the WorkPacket**
 
 Run the repository `prepare_bet_execution()` helper and assert:
 
@@ -561,9 +569,9 @@ assert packet["scope"]["write_surfaces"] == sorted([
 assert packet["dependencies"]["required_packets"] == []
 ```
 
-- [ ] **Step 5: Verify, review, publish and merge only the binding**
+- [x] **Step 5: Verify, review, publish and merge only the binding**
 
-Execute every command and assertion in `Binding QA Protocol` with version `1.1.0`,
+Execute every command and assertion in `Binding QA Protocol` with version `1.1.1`,
 the three Wave A paths and the Task 1 waiver. Close the binding run and release all
 locks before Task 2.
 
@@ -637,6 +645,16 @@ Implement `AuthorityError`, the frozen dataclasses, `canonical_json`, `canonical
 
 Expected: canonical/path/schema tests pass; store and lifecycle tests may remain RED until Tasks 3–4.
 
+- [ ] **Step 6: Establish the activation-witness RED matrix before any lifecycle mutation code**
+
+Cover exact canonical states `absent(pristine only)`, `unactivated`, `prepared` and
+`shadow-active`, plus missing-after-initialization, malformed body, unsafe
+owner/mode/symlink, sequence mismatch, descriptor mismatch and rollback. Only the
+first two may preserve v1 bootstrap when stdio is unavailable; every other state must
+raise `AUTHORITY_ACTIVATION_WITNESS_INVALID` or `AUTHORITY_STORE_UNSAFE` before a v1
+write. Prove the witness is read from the account-resolved fixed path and cannot
+grant a claim, issue/settle a receipt or fence, authorize Git, or select a store.
+
 ### Task 3: Implement the canonical SQLite store, chain and recovery rules
 
 **Files:**
@@ -646,6 +664,17 @@ Expected: canonical/path/schema tests pass; store and lifecycle tests may remain
 **Interfaces:**
 - Consumes: canonical models from Task 2.
 - Produces: atomic idempotent receipts, CAS claims/fences, high-water checks, one-tail recovery and three-backup rotation.
+
+- [ ] **Step 0: Prove SQLite/WAL admission and activation crash ordering RED**
+
+Reuse the existing pure SQLite-version safety predicate. An unsafe fresh runtime, an
+unsafe pre-existing WAL store or failure to enter/read back `journal_mode=wal` must
+raise `AUTHORITY_STORE_UNSAFE` before DDL, witness, high-water or backup mutation;
+never execute `journal_mode=DELETE`. For activation, cover each crash boundary in
+order: durable `prepared` witness → SQLite activation CAS/receipt → high-water update
+→ atomic `shadow-active` replacement. A crash or disagreement at any boundary remains
+fail-closed and only broker reconciliation of the same activation receipt may advance
+the witness.
 
 - [ ] **Step 1: Add RED tests for PRAGMAs and atomic receipt order**
 
@@ -769,13 +798,17 @@ managed Python with a bounded subprocess. The writer/child checkout is a client 
 production `lifecycle.py` must never import or call its clone-local
 `claims_authority.observe_claim()` implementation.
 
-After `write_run()` and the existing claim ledger event, build an immutable
-`ClaimMutationEnvelope`, call that stdio client, and attach only a receipt
-reference/digest, sequence and observed timestamp. Before activation, unavailable or
-unrecognized integration-root broker output becomes a redacted
-`shadow_unprovable:not_activated` sibling and v1 remains unchanged. Catch malformed
-or unexpected failures into another redacted `shadow_unprovable:CODE`; never roll back
-or rewrite the successful v1 claim.
+Before every claim/lifecycle mutation, call the canonical stdio broker or, only when
+that exact entry is unavailable, classify the account-resolved deny-only activation
+witness. Verified pristine total absence or `unactivated` permits the existing v1
+mutation; after `write_run()` and the claim ledger event, attach only a redacted
+`shadow_unprovable:not_activated` sibling. A `prepared` or `shadow-active` witness,
+missing witness after store/high-water initialization, malformed/unsafe body,
+descriptor or sequence mismatch, or rollback rejects before any v1 write. The witness
+never substitutes a positive broker response. Malformed or unexpected broker output
+may be attached as `shadow_unprovable:CODE` only for a pre-activation mutation already
+permitted by verified pristine/unactivated state; after preparation/activation it
+fails closed before the mutation. Never roll back or rewrite a successful v1 claim.
 
 - [ ] **Step 4: Fence every v1 claim mutation without importing another module**
 
@@ -791,11 +824,16 @@ the durable batch/fence for operator resolution.
 Before activation, preserve byte-equivalent bootstrap behavior and record only an
 unprovable shadow observation.
 
-Hold the existing per-run `run_update_lock` across run/lock snapshot → begin batch →
-existing v1 mutation → final run/lock snapshot → settle batch. Add that same lock
-boundary to direct close. A newly appended v1 claim becomes a new broker member only
-at settlement; fence entry and another batch cannot interleave. This changes no
-existing v1 payload/return fields.
+Hold the existing per-run `run_update_lock` across run/lock snapshot → broker begin
+CAS → immediate exact snapshot revalidation → existing v1 mutation → final run/lock
+snapshot → settle batch. Add that same lock boundary to direct close. Treat the local
+lock as best-effort R0 exclusion: if its 30-second stale behavior admits a second
+process, the durable run-wide broker CAS must reject that process before any v1 write.
+Never pass `force=True` through the post-preparation/activation path; a force request
+against a live lock must leave v1 bytes unchanged. A newly appended v1 claim becomes
+a new broker member only at settlement; fence entry and another batch cannot
+interleave. This changes no existing v1 payload/return fields and does not widen the
+WorkPacket to `lifecycle_locks.py`.
 
 If the local mutation completes but settlement becomes unknown, do not retry the
 mutation. Mark that same batch operator-required and stop. A separately
@@ -815,6 +853,11 @@ stale lock is left untouched for the next explicit prune. Do not modify
 `lifecycle_locks.py`; if exact selected deletion cannot be implemented from
 `lifecycle.py`, stop and amend the accepted Spec/write surface instead of leaving a
 bypass.
+
+Add RED races proving that a process admitted after a 30-second local-lock unlink
+obtains no second broker batch and performs zero v1 writes, a force request leaves a
+live lock byte-identical, a candidate changed after the frozen scan survives, and the
+legacy discovery-style `prune_stale_locks()` function is never called.
 
 - [ ] **Step 5: Prove Wave A cannot publish**
 
@@ -846,7 +889,7 @@ If it rejects solely because of the fixed authority root, require a recorded exa
 commit, one-time Human/time-bounded-delegated degraded publication; disclose the gap
 and exclude the publication from graduation evidence. Otherwise stop. Create one
 child PR, wait for post-merge CI and prove the merge commit is reachable from
-authoritative child `main`. Close the 1.1.0 run and release every lock. Do not update
+authoritative child `main`. Close the current 1.1.1 Wave A run and release every lock. Do not update
 the root gitlink yet.
 
 ### Task 5: Replace the binding with version 1.2.0 for Wave B1
@@ -857,14 +900,14 @@ the root gitlink yet.
 - Create: `.omo/_truth/governance-evidence/waiver-2026-09-10-claims-authority-bridge-wp1-v120-wave-b1-binding.md`
 
 **Interfaces:**
-- Consumes: the exact merged Wave A child commit, its post-merge CI receipt and a closed 1.1.0 run.
+- Consumes: the exact merged Wave A child commit, its post-merge CI receipt and a closed 1.1.1 Wave A run.
 - Produces: one non-union 1.2.0 WorkPacket containing exactly the six Wave B1 root paths.
 
 - [ ] **Step 1: Re-read child main and prove Wave A completion**
 
 Read the authoritative `projects/omo` remote twice. Assert the merged child commit is
 an ancestor of child main, the three child objects match the reviewed PR, child
-post-merge CI succeeded, the 1.1.0 workflow is closed and every 1.1.0 lock is zero.
+post-merge CI succeeded, the 1.1.1 Wave A workflow is closed and every Wave A lock is zero.
 
 - [ ] **Step 2: Start a fresh binding transaction from then-latest root main**
 
@@ -1639,6 +1682,10 @@ means `tests/test_git_publication_effect_owner.py`; `cloud-effects` means
 | clone-local or arbitrary external authority root | `test_red_authority_root_is_account_resolved` | A / child |
 | hand-created, copied or modified run/receipt | `test_red_unverifiable_run_or_receipt_is_rejected` | A / child |
 | environment, cwd or CLI redirects production store | `test_red_caller_cannot_redirect_production_store` | A / child |
+| broker unavailable with pristine total absence or verified unactivated witness | `test_green_broker_unavailable_pristine_or_unactivated_preserves_v1_bytes` | A / child |
+| broker unavailable with prepared/active/invalid/rollback/missing-after-init witness | `test_red_broker_unavailable_prepared_active_invalid_rollback_blocks_v1_write` | A / child |
+| crash between prepared witness, activation CAS, high-water and active replacement | `test_red_activation_crash_boundaries_require_same_receipt_reconciliation` | A / child |
+| unsafe SQLite or failure to enter WAL before store creation | `test_red_unsafe_sqlite_wal_admission_has_zero_mutation` | A / child |
 | store/high-water/backup/clone symlink escape | `test_red_authority_paths_reject_every_symlink_escape` | A / child |
 | wrong owner or unsafe mode | `test_red_authority_paths_reject_wrong_owner_or_mode` | A / child |
 | actor/attempt/repository/branch/HEAD mismatch | `test_red_identity_tuple_mismatch_is_denied` | A / child |
@@ -1646,6 +1693,8 @@ means `tests/test_git_publication_effect_owner.py`; `cloud-effects` means
 | unbound/stale WorkPacket or scope overflow | `test_red_work_packet_binding_and_scope_are_exact` | A / child |
 | affected graph/path mismatch | `test_red_affected_graph_path_mismatch_is_denied` | A / child |
 | broker claim version/lease race, expiry, takeover or replay | `test_red_claim_cas_lease_and_takeover_races_are_denied` | A / child |
+| local update lock is unlinked after 30 seconds while first batch remains reserved | `test_red_local_lock_timeout_overlap_performs_zero_second_v1_write` | A / child |
+| post-activation force request targets an existing live lock | `test_red_post_activation_force_preserves_live_lock_and_v1_bytes` | A / child |
 | broker clock rollback over 30 seconds | `test_red_broker_clock_rollback_issues_nothing` | A / child |
 | fence consumed twice or refreshed after expiry | `test_red_fence_replay_and_expiry_issue_no_replacement` | A / child |
 | claim mutation or second fence while publishing | `test_red_publishing_claim_is_frozen_until_settlement` | A / child |
@@ -1706,6 +1755,9 @@ refine rather than replace a Spec §11 row:
 |---|---:|---|---|
 | Authority/path redirection and unsafe filesystem | 2–3, 16 | AC-01 | negative path/owner/mode/symlink tests plus host preflight |
 | Idempotency, receipt chain, CAS, high-water and backup | 3 | AC-02 | fresh-store replay, corruption negatives and three rotations |
+| Activation witness outage and crash reconciliation | 2–4 | AC-02, AC-14 | named witness-state and four-boundary crash tests; only pristine/unactivated may bootstrap |
+| SQLite WAL admission | 3 | AC-02, AC-04 | unsafe-runtime/pre-existing-store/failed-WAL tests prove zero mutation and no DELETE fallback |
+| Local-lock overlap, force and prune races | 4 | AC-02, AC-04 | durable broker CAS rejects the second writer; live locks/v1 bytes and changed candidates survive |
 | Shadow non-authority and legacy fence | 4, 6 | AC-03, AC-13 | byte-equivalence and pre/post activation fake-effect pair |
 | Complete attack matrix and false allow | 2–4, 6, 8, 10, 12 | AC-04 | one named negative mutation per Spec §11 row |
 | Ordered repository delivery | 4–14 | AC-05 | child/B1/B2/B3/B4/C merge and exact-object receipts |
@@ -1745,7 +1797,7 @@ Stop the current transaction without expanding scope when any of these occurs:
 - an unfenced post-activation Git/PR effect or any alternate publication owner is observed;
 - a push outcome is unknown, a fence or claim-mutation batch is unresolved, or
   an observer gap exceeds 120 seconds;
-- the 3-day appetite contradiction has no explicit delegated/direct resolution before 1.1.0.
+- the current 1.1.1 Spec digest, WorkPacket, three-path scope or accepted 12-day appetite cannot be reproduced exactly.
 
 For a moving main, create a new immutable successor from the new exact main; do not
 rebase, merge or rewrite an immutable writer. For a transient network error before an
