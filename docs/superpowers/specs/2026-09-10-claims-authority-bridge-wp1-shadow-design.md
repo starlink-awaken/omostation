@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.1.1
+spec_version: 1.1.2
 status: accepted
 lifecycle: contract
 owner: governance-team
@@ -30,10 +30,13 @@ contract is
 `docs/superpowers/specs/2026-09-09-claims-authority-bridge-design.md` version 1.0.0,
 SHA-256 `a419e2fb3cd67026edebd39b25a1e1b77e6c92978ce1cf1be6b8e4be19cf8c58`.
 Accepted version 1.0.0 allocated `BET-Y1Q4-T10-145` and authorized only its
-implementation plan. Version 1.1.1 supersedes the 1.1.0 Wave A binding with the same
-complete non-union three-path partition and adds only the monotonic activation-witness
-contract below. It still does not initialize a production store, change Git
-publication behavior, activate shadow mode or materialize WP2 by itself.
+implementation plan. Version 1.1.2 supersedes the blocked 1.1.1 Wave A implementation
+attempt with the same complete non-union three-path partition. It preserves the
+monotonic activation-witness contract and closes four pre-publication ambiguities:
+auxiliary R0 operator evidence, complete activation closure, integration-root
+WorkPacket recomputation and idempotent settlement confirmation. It still does not
+initialize a production store, change Git publication behavior, activate shadow mode
+or materialize WP2 by itself.
 
 ## 2. Problem and current-state audit
 
@@ -164,6 +167,17 @@ chmodded. Symlink, owner or unsafe-mode drift returns `AUTHORITY_STORE_UNSAFE`.
 Every production WP1 receipt is labeled `R0_COOPERATIVE`. Same-UID malicious writes
 remain out of scope. No object may claim `ADVERSARIAL_ENFORCED`; R1 remains a separate
 future Spec and operation-specific host decision.
+
+R0 does not turn a caller-provided digest into Human authority. Unknown recovery uses
+the two auxiliary evidence contracts in §7.1, resolved only from the fixed account
+authority directory. Their producer is outside Wave A and must itself be bound to an
+OMO-verified Human principal or valid delegated decision plus an independent process
+observer. Until such a producer exists and every required receipt binding verifies,
+production unknown resolution remains fail-closed. Wave A tests may create
+`test:<uuid>` evidence fixtures, but those fixtures are never production authority.
+No production activation is permitted until a later accepted non-union binding names
+the exact principal-decision verifier and independent stopped-process verifier, binds
+their immutable digests into the activation closure, and proves their producer paths.
 
 ### 5.3 Projection boundary
 
@@ -342,6 +356,119 @@ The child module implements the parent v2 object set without changing parent sch
 The deny-only safety object is `claims-activation-witness/v1`; it is not a claim,
 receipt, fence, projection or new authority schema.
 
+Version 1.1.2 also defines two auxiliary R0 recovery-evidence objects. They are not
+claims, receipts, fences, projections, admissions or publication authority:
+
+- `claims-operator-authorization/v1`;
+- `claims-stopped-process-proof/v1`.
+
+### 7.1 Auxiliary R0 operator evidence
+
+`claims-operator-authorization/v1` contains exactly:
+
+```text
+schema, authority_id, security_level, principal_id, principal_authority_ref,
+principal_receipt_digest, decision_ref, target_kind, target_id,
+unknown_receipt_digest, resolver_operation, authorized_outcome,
+process_identity_digest, issued_at, expires_at, digest
+```
+
+`security_level` is `R0_COOPERATIVE`; `target_kind` is `claim_mutation` or
+`legacy_fence`. The object binds one principal decision to one unknown receipt, one
+target, one resolver, one outcome and one process identity. It is valid for at most
+300 seconds, is issued no earlier than `operator_required_at`, and is create-once.
+
+`claims-stopped-process-proof/v1` contains exactly:
+
+```text
+schema, authority_id, security_level, observer_kind, observer_receipt_digest,
+target_kind, target_id, unknown_receipt_digest, authorization_digest,
+process_identity_digest, status, observed_at, digest
+```
+
+`status` is exactly `stopped`. The proof binds the same target, unknown receipt,
+authorization and process identity; `observed_at` is no earlier than the Human
+authorization. A missing, live, ambiguous or mismatched process observation is never
+normalized to stopped.
+
+Both objects are canonical JSON of at most 16 KiB and live only at paths derived from
+`pwd.getpwuid(os.getuid()).pw_dir`:
+
+```text
+agents/_shared/runtime/omo-claims-authority-r0/
+  operator-authorizations/<digest-hex>.json
+  stopped-process-proofs/<digest-hex>.json
+```
+
+Directories are `0700`; files are `0600`, regular, current-UID-owned, link-count one,
+non-symlink and content-addressed. Environment, cwd, CLI and request JSON cannot
+redirect either path. File presence and self-digest alone are insufficient: all
+principal/decision/observer, target, receipt, process, time and outcome bindings must
+match. The broker never writes these objects. No production producer is introduced
+by the 1.1.2 Wave A binding; absence keeps the unknown object frozen. In this binding,
+even a structurally valid production file remains insufficient because no accepted
+principal-decision or process-observer verifier is bound. Positive production recovery
+is deferred until those two verifier interfaces receive their own accepted binding;
+until then `resolve-*-unknown` always retains the unknown object and returns the
+corresponding operator-proof error. Only `test:<uuid>` stores may exercise the positive
+resolution mechanics in Wave A.
+
+### 7.2 Complete activation closure
+
+The `claims-authority-descriptor/v2` closure contains exactly the existing descriptor
+fields plus:
+
+```text
+root_commit_oid, policy_blob_digest, child_gitlink_oid,
+critical_dependency_entries, managed_python_receipt_digest,
+managed_python_executable_digest, operator_authorization_verifier_digest,
+stopped_process_verifier_digest
+```
+
+`critical_dependency_entries` is sorted by canonical path. Each item contains exactly
+`path`, `kind` (`blob`, `tree`, `gitlink` or `runtime_receipt`) and
+`object_oid_or_digest`. The broker independently double-reads the passwd-derived
+integration root and requires both reads, the descriptor and activation request to
+agree. The policy blob cannot contain its own descriptor digest. Any root, policy,
+gitlink, dependency or managed-Python drift returns
+`AUTHORITY_DESCRIPTOR_MISMATCH` before witness, database or high-water mutation.
+Both verifier digests must resolve to entries in the same critical dependency closure;
+their absence is `AUTHORITY_DESCRIPTOR_MISMATCH` and prevents activation.
+
+### 7.3 Integration-root WorkPacket authority
+
+Clone-local run, Spec binding and WorkPacket bytes are request evidence only. Before
+every production request that can issue a receipt/fence or change authority state,
+the broker loads the fixed integration-root
+`bin/plan/bet-ledger.py`, calls `prepare_bet_execution(...,
+require_startable=False)`, and compares the rebuilt BET ID, packet ID/hash, unique
+accepted Spec version/digest, `implementation_authorized`, sorted write surfaces,
+required packets, candidate/evaluating state and `value_indicator_policy=false`.
+It then applies the canonical `validate_work_packet_run()` scope check. The helper,
+Ledger, Instruction Pack and Spec bytes are part of the activation closure. A
+clone-local packet that is internally self-consistent but differs from this rebuild is
+`WORK_PACKET_UNBOUND` and creates no authority receipt.
+The sole exception is a read-only replay of an already committed request with the same
+request ID and canonical request digest; it returns the stored response and performs
+no new source-dependent mutation.
+
+### 7.4 Settlement confirmation
+
+`begin-claim-mutation` allocates one `settlement_request_id`; entering legacy
+`publishing` does the same for that fence. The client constructs one canonical
+settlement body. If the broker response is lost, only the identical request ID and
+identical body may be replayed; this confirmation never repeats the v1 mutation or
+Git effect. Same ID plus changed bytes is `REQUEST_ID_REUSE_MISMATCH`; an already
+committed request returns its original receipt.
+
+If the initial settlement never committed, exact replay may commit it once. If the
+broker remains unavailable, the batch/fence stays `reserved`/`publishing`; no code
+may fabricate `unknown` or an operator marker. Only a durable `unknown` state may
+transition to `operator_required`, and only §7.1 evidence plus the existing double
+reads may settle that same object. Because no production store exists, version 1.1.2
+may add unique `settlement_request_id` columns while retaining
+`PRAGMA user_version=1`; no live migration or runtime mutation is authorized.
+
 WP1 may represent PublishIntent fixtures for RED/race tests, but it never issues a
 publishable production v2 intent.
 
@@ -433,7 +560,8 @@ union, append-only accumulation or reuse of an earlier WorkPacket hash is a hard
 |---|---|---|
 | 1.0.0 | `docs/superpowers/plans/2026-09-10-claims-authority-bridge-wp1-shadow.md` | writing-plans only; implementation remains unauthorized |
 | 1.1.0 | Wave A three child paths | historical initial child binding, superseded before implementation |
-| 1.1.1 | Wave A same three child paths | child broker/lifecycle implementation with monotonic activation-witness boundary |
+| 1.1.1 | Wave A same three child paths | historical blocked implementation attempt; no child commit or publication |
+| 1.1.2 | Wave A same three child paths | child broker/lifecycle successor with witness, closure, canonical packet and settlement-confirmation contracts |
 | 1.2.0 | Wave B1 six root paths | lazy shadow adapter, fence integration and registry |
 | 1.3.0 | Wave B2 nine effect-convergence paths | eliminate every alternate tracked push/PR owner |
 | 1.4.0 | Wave B3 nine bypass/shim paths | close Git Data API and wrapper publication bypasses |
@@ -456,7 +584,7 @@ projects/omo/tests/test_workflow_claims_authority_bridge.py
 ```
 
 Wave A is a child-repository PR. It must merge and pass child post-merge CI before any
-version 1.2.0 is created. Version 1.1.1 contains none of the plan, root, pointer or
+version 1.2.0 is created. Version 1.1.2 contains none of the plan, root, pointer or
 evidence paths.
 
 ### Wave B1 — root shadow adapter and canonical fence owner
@@ -600,6 +728,8 @@ closed and all its locks zero before the next binding transaction starts.
 | `AFFECTED_GRAPH_MISMATCH` | graph/path digest disagreement | would-deny | rebuild exact receipt |
 | `CLAIM_VERSION_STALE` | claim/lease changed | would-deny | fresh lifecycle transaction |
 | `CLAIM_LEASE_EXPIRED` | claim lease exceeded 15m | would-deny; no fence | fresh run only |
+| `OPERATOR_AUTHORIZATION_REQUIRED` | missing/expired/mismatched Human or delegated decision binding | retain the same unknown object | fresh canonical authorization only |
+| `OPERATOR_STOPPED_PROCESS_PROOF_INVALID` | missing/live/ambiguous/mismatched process observation | retain the same unknown object | fresh independent observation only |
 | `LEGACY_FENCE_ISSUANCE_CLOSED` | legacy epoch is draining | zero Git effect | no |
 | `LEGACY_FENCE_REPLAY` | reused legacy fence | zero Git effect | no |
 | `LEGACY_DRAIN_INCOMPLETE` | unresolved legacy effect exists | no graduation/cutover | settle same fence |
@@ -631,6 +761,7 @@ binding failure.
 | actor, attempt, repository, branch or HEAD mismatch | RED |
 | identity, manifest or readiness digest drift | RED |
 | unbound/stale WorkPacket or scope overflow | RED |
+| clone-local WorkPacket is self-consistent but differs from integration-root Ledger rebuild | RED; zero authority mutation |
 | affected graph/path mismatch | RED |
 | claim version/lease race, expiry, takeover or replay | RED |
 | broker clock rolls back more than 30 seconds | RED; issue nothing |
@@ -639,8 +770,12 @@ binding failure.
 | legacy epoch closes after a v1 snapshot but before Git | RED before effect |
 | cutover/graduation while any `issued/publishing/unknown/operator_required` fence exists | RED |
 | request ID reused with different payload | RED |
+| settlement response is lost after commit and the identical request is confirmed | GREEN: original receipt; mutation/effect count remains one |
+| settlement response is lost before commit and the identical request is confirmed | GREEN: commit once; mutation/effect count remains one |
+| broker remains unavailable during settlement confirmation | RED: retain `reserved`/`publishing`; no fabricated marker |
 | expected remote OID changes between verification and effect | RED before Git |
 | descriptor closure or managed-Python receipt drift | RED |
+| root commit, policy blob, child gitlink or closure double-read differs | RED before activation mutation |
 | policy blob attempts to embed the descriptor digest that includes itself | RED self-reference |
 | two authority reads disagree | RED; no receipt/fence/effect |
 | store sequence rollback, high-water gap or broken receipt chain | RED |
@@ -658,6 +793,9 @@ binding failure.
 | any tracked script, GitHub workflow, Git Data API helper or wrapper outside `clone-lifecycle.py` reaches a Git/PR write | RED |
 | valid legacy claim + exact HEAD + fresh fence | GREEN: consume once, enter `publishing`, execute canonical argv once, reread remote and settle same fence |
 | repeated settlement with the same canonical payload | GREEN: return the same receipt idempotently |
+| operator evidence lacks principal/decision/observer/process binding, is expired, redirected or cross-target replayed | RED; retain the same unknown object |
+| exact R0 operator evidence and two equal reads before verifier binding | RED in production; GREEN only in `test:<uuid>` stores |
+| exact evidence after a later descriptor-bound principal/process verifier binding | GREEN: settle the same durable unknown once; grant no new authority |
 | valid managed clone | v1 fixed-root deny + v2 expected shadow difference; no publication |
 
 Tests must demonstrate RED before implementation where a current behavior is wrong.
@@ -682,6 +820,10 @@ No production store, Git remote or host service is used by unit tests; test auth
 | CAB-WP1-AC-12 | Tracked repository publication inventory finds exactly one push/PR effect owner; wrappers, API helpers, cloud workflows and submodule pre-push perform no alternate publication | source scan and negative tests |
 | CAB-WP1-AC-13 | Before descriptor activation, bridge delivery preserves legacy bootstrap effects; after exact `shadow-active`, every v1-allowed effect requires a fence | pre/post activation test pair |
 | CAB-WP1-AC-14 | Broker-unavailable lifecycle uses only the account-resolved deny-only witness: pristine/unactivated bootstraps; prepared/active/invalid/rollback/missing-after-initialization fails before v1 mutation | witness state/race tests |
+| CAB-WP1-AC-15 | Auxiliary operator evidence is fixed-path, content-addressed, fully bound and cannot grant a claim/fence or resolve another unknown object | schema/provenance/replay RED matrix |
+| CAB-WP1-AC-16 | Activation independently double-reads and binds exact root, policy, gitlink, dependency closure and managed-Python identities before any activation mutation | closure drift/race tests |
+| CAB-WP1-AC-17 | Every production request capable of issuing a receipt/fence or changing authority state rejects a self-consistent clone packet whenever integration-root Ledger/Spec/Instruction recomputation differs; only an exact committed-request replay is exempt | source-drift RED plus canonical rebuild/idempotent-replay GREEN |
+| CAB-WP1-AC-18 | Lost settlement responses are confirmed only with the same request ID/body and never repeat a v1 mutation or Git effect | pre/post-commit response-loss tests |
 
 The 24-hour clock starts only after Waves A, B1, B2, B3, B4 and C are on authoritative main, production
 shadow activation has an exact descriptor receipt, the observer reads are repeatable
@@ -693,8 +835,8 @@ identity drift or observer blindness resets the window.
 | ID | Timebox | Prerequisite | Work | Acceptance | Output | Main risk |
 |---|---|---|---|---|---|---|
 | D0 | 0.5 day | accepted 1.0.0 plan-only binding | write implementation plan and frozen fixture matrix; close plan run | plan review clear; only plan path changed | exact plan | scope union |
-| D1 | 0.5 day | D0 closed | replace binding with current 1.1.1 Wave A only | current WorkPacket has exactly three child paths | binding receipt | stale plan surface |
-| D2 | 1 day | 1.1.1 | RED tests plus canonical schemas/store core | RED proves current absence; store unit tests green | child commit | accidental second authority |
+| D1 | 0.5 day | D0 closed and 1.1.1 blocked | replace binding with current 1.1.2 Wave A only, then converge plan separately | current WorkPacket has exactly three child paths | binding and plan receipts | stale plan surface |
+| D2 | 1 day | 1.1.2 binding and plan closed | replay reviewed patch, add amendment REDs, and complete canonical schemas/store core | closure/packet/settlement/operator RED-GREEN plus store regressions green | child commit | accidental second authority |
 | D3 | 1 day | D2 | lifecycle shadow hook, receipts/high-water/backup | v1 result byte-equivalent; child CI green | child PR | shadow affecting gate |
 | D4 | 0.5 day | child main | replace binding with 1.2.0 Wave B1 only | current WorkPacket has exactly six B1 paths | binding receipt | child/root union |
 | D5 | 1 day | 1.2.0 | root CLI, comparison adapter and mandatory legacy fence owner | v1 claim regressions green; canonical push argv unchanged | root adapter PR | lazy-interface mismatch |
@@ -768,21 +910,26 @@ complete the parent BET or create WP2.
 ## 17. Acceptance record and transition gate
 
 Versions 1.0.0 and 1.1.0 remain immutable historical plan/initial-Wave-A authority.
-Version 1.1.1 acceptance requires and records:
+Version 1.1.1 remains immutable historical authority for the blocked implementation
+run `20260910T110304Z-bet-execution-74895d83`; it produced no child commit, tag, push
+or PR and released all five locks. Version 1.1.2 acceptance requires and records:
 
 1. the 1.0.0 plan is merged at its reviewed digest, its run is closed and all locks
    are zero;
-2. two independent read-only reviews find no scope, authority, storage or effect-owner
-   contradiction in the exact 1.1.1 bytes;
+2. fixed-digest review of 1.1.1 found the operator-evidence schema, activation closure,
+   integration-root WorkPacket and settlement-confirmation gaps now closed by 1.1.2;
 3. the Ledger retains candidate `BET-Y1Q4-T10-145`, its parent relation to
    `BET-Y1Q4-T10-143`, one current accepted binding and no completion/value expansion;
-4. the current WorkPacket replaces the plan path with exactly the three Wave A child
-   paths and rejects the 1.0.0 WorkPacket hash;
+4. the current WorkPacket retains exactly the three Wave A child paths and rejects the
+   1.0.0, 1.1.0 and 1.1.1 WorkPacket hashes;
 5. `implementation_authorized=true` authorizes only Wave A under the new WorkPacket;
    this binding transaction itself changes no implementation, runtime or gitlink;
 6. appetite is re-baselined to 12 days of elapsed delivery time, including the
    mandatory 24-hour observation, and is not a completion or value claim;
 7. every later binding replaces rather than appends `write_surfaces`, keeps one current
    `accepted_specifications` entry and rejects an earlier WorkPacket hash; and
-8. Wave A starts only after the 1.1.1 binding merges, its exact Spec digest and compiled
-   WorkPacket are verified, the binding run closes and every lock is zero.
+8. Wave A restarts only after the 1.1.2 binding and its separate plan-convergence PR
+   merge, their exact digests and compiled WorkPacket are verified, both runs close and
+   every lock is zero; and
+9. the prior implementation clone remains immutable evidence while a fresh successor
+   replays only the reviewed three-path patch onto then-current child main.
