@@ -325,3 +325,4 @@ projects/omo-debt/
 bin/.omo/
 .commandcode/
 runtime/mos/
+.tokensave
