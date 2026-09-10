@@ -36,10 +36,11 @@ approval_ref: null
 review_ref: null
 knowledge_refs: []
 handoff_refs: []
-risk_level: medium
-allowed_operation_level: read_only
+risk_level: L2
+allowed_operation_level: L2
 human_approval_required: false
-entry_gate: gate/standard
+entry_gate:
+- gate/standard
 source_docs:
 - src/cockpit/cli.py
 - src/cockpit/_subcommands.py
@@ -47,6 +48,6 @@ source_docs:
 evidence_required:
 - T11-env-resolver-unify acceptance criteria met
 - 相关测试通过
-test_plan: '1. 跑 BET-Y1Q4-T11-env-resolver-unify.yaml 范围内的命令/脚本
-
-  2. 验证 acceptance 标准'
+test_plan:
+- 1. 跑 BET-Y1Q4-T11-env-resolver-unify.yaml 范围内的命令/脚本
+- 2. 验证 acceptance 标准

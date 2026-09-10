@@ -1,30 +1,26 @@
 id: BET-Y1Q4-T15
 track: T15-PERFORMANCE
 window: Y1Q4
-title: "cockpit import 性能回归 (164ms > 120ms 预算) 排查"
+title: cockpit import 性能回归 (164ms > 120ms 预算) 排查
 priority: P2
 status: candidate
-goal: >
-  批次 12 全量测试发现 test_import_time_budget 失败:
-  import cockpit.cli 实际 164ms, 预算 120ms。
-  历史基线 60ms (PR 061b683 feat(cli): cold-start fast-path)。
-  退化 104ms, 需要找根因 (新增 import? 同步代码路径? 慢 lookup?)
+goal: '批次 12 全量测试发现 test_import_time_budget 失败: import cockpit.cli 实际 164ms, 预算 120ms。
+  历史基线 60ms (PR 061b683 feat(cli): cold-start fast-path)。 退化 104ms, 需要找根因 (新增 import?
+  同步代码路径? 慢 lookup?)
 
+  '
 non_goals:
-  - 不重写 fast-path 优化 (61b683 已做)
-  - 不改测试预算 (120ms 是基线 2x, 留余量)
-
+- 不重写 fast-path 优化 (61b683 已做)
+- 不改测试预算 (120ms 是基线 2x, 留余量)
 deliverables:
-  - 在 main 仓跑 `python -X importtime -c "import cockpit.cli"` 找慢的 import
-  - 列出每个 import 的耗时, 排序
-  - 找最近合并的代码 (cockpit PR) 是否引入新 import
-  - 修复 (lazy import / deferred loading)
-
+- 在 main 仓跑 `python -X importtime -c "import cockpit.cli"` 找慢的 import
+- 列出每个 import 的耗时, 排序
+- 找最近合并的代码 (cockpit PR) 是否引入新 import
+- 修复 (lazy import / deferred loading)
 acceptance:
-  - import cockpit.cli < 120ms (恢复 fast-path 优化基线)
-  - test_import_time_budget PASS
-  - test_fast_path_telemetry_end_to_end PASS (其阈值 200ms)
-
+- import cockpit.cli < 120ms (恢复 fast-path 优化基线)
+- test_import_time_budget PASS
+- test_fast_path_telemetry_end_to_end PASS (其阈值 200ms)
 appetite: 1 day
 task_type: bet
 owner: human
@@ -36,21 +32,25 @@ approval_ref: null
 review_ref: null
 knowledge_refs: []
 handoff_refs: []
-source_docs: []
-risk_level: medium
-allowed_operation_level: read_only
+source_docs:
+- src/cockpit/cli.py
+- src/cockpit/__init__.py
+- tests/test_fast_path.py
+risk_level: L2
+allowed_operation_level: L2
 human_approval_required: false
-entry_gate: gate/test
+entry_gate:
+- gate/test
 evidence_required:
-  - import cockpit.cli 时间 < 200ms (实测 baseline 186ms)
-  - test_import_time_budget PASS
-  - test_fast_path_telemetry_end_to_end PASS
-test_plan: |
-  1. 在 main 仓跑 python -X importtime -c "import cockpit.cli"
-  2. 对比 3a92158 (test relax) 前后 import 拓扑
-  3. 找出 top 5 慢 import, 各看 git blame
-  4. 修 (lazy / deferred)
+- import cockpit.cli 时间 < 200ms (实测 baseline 186ms)
+- test_import_time_budget PASS
+- test_fast_path_telemetry_end_to_end PASS
+test_plan:
+- 1. 在 main 仓跑 python -X importtime -c "import cockpit.cli"
+- 2. 对比 3a92158 (test relax) 前后 import 拓扑
+- 3. 找出 top 5 慢 import, 各看 git blame
+- 4. 修 (lazy / deferred)
 depends_on: []
 risk:
-  - 中. cockpit 仓已被多 agent 改动, import 慢的根因可能跨多个 commit
-  - 缓解: 优先查最近 5 个 PR 的 import 差异
+- 中. cockpit 仓已被多 agent 改动, import 慢的根因可能跨多个 commit
+- 缓解: 优先查最近 5 个 PR 的 import 差异

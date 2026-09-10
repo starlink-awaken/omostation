@@ -33,16 +33,17 @@ approval_ref: null
 review_ref: null
 knowledge_refs: []
 handoff_refs: []
-risk_level: medium
-allowed_operation_level: read_only
+risk_level: L2
+allowed_operation_level: L2
 human_approval_required: false
-entry_gate: gate/standard
+entry_gate:
+- gate/standard
 source_docs:
 - docs/reports/cockpit-cli-command-availability-ledger.md
 - bin/harness/harness-cron.sh
 evidence_required:
 - T13-cli-smoke-test-harness acceptance criteria met
 - 相关测试通过
-test_plan: '1. 跑 BET-Y1Q4-T13-cli-smoke-test-harness.yaml 范围内的命令/脚本
-
-  2. 验证 acceptance 标准'
+test_plan:
+- 1. 跑 BET-Y1Q4-T13-cli-smoke-test-harness.yaml 范围内的命令/脚本
+- 2. 验证 acceptance 标准

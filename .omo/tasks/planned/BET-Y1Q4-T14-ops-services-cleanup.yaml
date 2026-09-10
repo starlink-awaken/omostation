@@ -1,34 +1,34 @@
 id: BET-Y1Q4-T14
 track: T14-CLEANUP
 window: Y1Q4
-title: "ops services 20 missing 清理 — 注册表与现实同步"
+title: ops services 20 missing 清理 — 注册表与现实同步
 priority: P2
 status: candidate
-goal: |
-  ops status 显示 20 missing services, 这些是历史遗留 (analyzer/chat-history/
+goal: 'ops status 显示 20 missing services, 这些是历史遗留 (analyzer/chat-history/
+
   cli.*/diary-synthesizer 等), 已不在 codebase 但仍在 bos-services.yaml 注册。
+
   同步删除或重新生成。
 
+  '
 non_goals:
-  - 不删除活跃服务
-  - 不重写 ops 工具
-
+- 不删除活跃服务
+- 不重写 ops 工具
 deliverables:
-  - 列出 20 missing services + 各自归宿 (删除/重建/标注 deprecated)
-  - 删除确认无用的
-  - 重建仍需的
-  - 验证 ops status 显示 0 missing (除显式 disabled)
+- 列出 20 missing services + 各自归宿 (删除/重建/标注 deprecated)
+- 删除确认无用的
+- 重建仍需的
+- 验证 ops status 显示 0 missing (除显式 disabled)
+acceptance: 'ops status missing 数 ≤ 5;
 
-acceptance: |
-  ops status missing 数 ≤ 5;
   20 missing 中每条都有 audit trail。
 
+  '
 appetite: 2 days
 depends_on: []
 risk:
-  - 中. 删除服务可能影响其他工具
-  - 缓解: 每条删除前 git revert 演练
-
+- 中. 删除服务可能影响其他工具
+- 缓解: 每条删除前 git revert 演练
 task_type: bet
 owner: human
 source: manual
@@ -40,17 +40,18 @@ review_ref: null
 knowledge_refs: []
 handoff_refs: []
 source_docs:
-  - .omo/_truth/registry/services.yaml
-  - bin/ops/cli.py
-risk_level: medium
-allowed_operation_level: read_only
+- .omo/_truth/registry/services.yaml
+- bin/ops/cli.py
+risk_level: L2
+allowed_operation_level: L2
 human_approval_required: false
-entry_gate: gate/service-registry
+entry_gate:
+- gate/service-registry
 evidence_required:
-  - ops status 报告 missing 数 ≤ 5
-  - 删除/重建决策文档化
-test_plan: |
-  1. cockpit ops status 列出 20 missing
-  2. 逐个归类 (删除/重建/deprecated)
-  3. 实施变更
-  4. 验证 missing ≤ 5
+- ops status 报告 missing 数 ≤ 5
+- 删除/重建决策文档化
+test_plan:
+- 1. cockpit ops status 列出 20 missing
+- 2. 逐个归类 (删除/重建/deprecated)
+- 3. 实施变更
+- 4. 验证 missing ≤ 5
