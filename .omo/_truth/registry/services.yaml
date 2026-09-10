@@ -5105,3 +5105,22 @@ services:
   scheduler: launchd
   id: bet-claim-gc
   trigger: interval
+- id: agora.daemon
+  label: com.agora.daemon
+  description: Agora 2.0 A2A 事件总线 daemon (:7432) — I0 服务网格枢纽
+  scheduler: launchd
+  trigger: keepalive
+  program:
+    interpreter: /bin/bash
+    entrypoint: lib/agora-daemon.sh
+    args: []
+  resilience:
+    keepalive: crashed
+  run_at_load: true
+  ports:
+  - 7432
+  outputs:
+    stdout: ~/.agora/logs/daemon-stdout.log
+    stderr: ~/.agora/logs/daemon-stderr.log
+  notes: '2026-09-10 修复 exit 78: 旧手写 plist WorkingDirectory 指向已清理的 T1-12 worktree
+    + 裸 python3 无依赖。ADR-0435 模式收编 (wrapper + 注册表 + 生成器)。'
