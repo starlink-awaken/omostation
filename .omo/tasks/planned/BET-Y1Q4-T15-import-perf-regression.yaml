@@ -26,6 +26,30 @@ acceptance:
   - test_fast_path_telemetry_end_to_end PASS (其阈值 200ms)
 
 appetite: 1 day
+task_type: bet
+owner: human
+source: manual
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs: []
+risk_level: medium
+allowed_operation_level: read_only
+human_approval_required: false
+entry_gate: gate/test
+evidence_required:
+  - import cockpit.cli 时间 < 200ms (实测 baseline 186ms)
+  - test_import_time_budget PASS
+  - test_fast_path_telemetry_end_to_end PASS
+test_plan: |
+  1. 在 main 仓跑 python -X importtime -c "import cockpit.cli"
+  2. 对比 3a92158 (test relax) 前后 import 拓扑
+  3. 找出 top 5 慢 import, 各看 git blame
+  4. 修 (lazy / deferred)
 depends_on: []
 risk:
   - 中. cockpit 仓已被多 agent 改动, import 慢的根因可能跨多个 commit
