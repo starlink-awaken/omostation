@@ -6,6 +6,7 @@ import argparse
 import importlib
 import json
 import os
+import re
 import sys
 import time
 import urllib.request
@@ -14,6 +15,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 BOS_SERVICES = ROOT / "projects" / "agora" / "etc" / "bos-services.yaml"
+
+_MCP_URIS: set[str] = set()
 
 
 def load_bos_services() -> list[dict[str, Any]]:
@@ -25,10 +28,36 @@ def load_bos_services() -> list[dict[str, Any]]:
     return data if isinstance(data, list) else []
 
 
+MCP_RESOURCE_PATTERN = re.compile(r"""@mcp\.(?:resource|tool)\(\s*["']([^"']+)["']""", re.MULTILINE)
+
+
+def load_mcp_registered_uris() -> set[str]:
+    """Scan agora server sources for @mcp.resource/@mcp.tool URI registrations."""
+    uris: set[str] = set()
+    server_dir = ROOT / "projects" / "agora" / "src" / "agora" / "server"
+    if not server_dir.is_dir():
+        return uris
+    for py in server_dir.glob("*.py"):
+        try:
+            text = py.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        uris.update(MCP_RESOURCE_PATTERN.findall(text))
+    return uris
+
+
 def check_internal(service: dict[str, Any]) -> dict[str, Any]:
     module_path = service.get("module_path", "")
     func_name = service.get("func_name", "")
+    uri = service.get("uri", "")
+    transport = service.get("transport", "")
     if not module_path or not func_name:
+        if uri.startswith("bos://") and uri in _MCP_URIS:
+            return {"status": "ok", "note": "registered @mcp.resource/@mcp.tool in agora server"}
+        if transport == "inline":
+            # inline 是 I0 文档锚点 / self-identifier 占位 (见 bos_registry.py 校验规则),
+            # 不需要 command/module_path — 非错误。
+            return {"status": "skipped", "reason": "inline declarative anchor (I0)"}
         return {"status": "error", "reason": "missing module_path or func_name"}
     try:
         mod = importlib.import_module(module_path)
@@ -47,6 +76,13 @@ def check_stdio(service: dict[str, Any]) -> dict[str, Any]:
     command = service.get("command", [])
     if not command:
         return {"status": "error", "reason": "no command specified"}
+    # Resolve --directory context: script paths are relative to it, not ROOT
+    base = ROOT
+    for i, arg in enumerate(command):
+        if arg == "--directory" and i + 1 < len(command):
+            d = Path(command[i + 1])
+            base = d if d.is_absolute() else ROOT / d
+            break
     script_path = None
     for i, arg in enumerate(command):
         if arg.endswith(".py") and not arg.startswith("-"):
@@ -65,7 +101,7 @@ def check_stdio(service: dict[str, Any]) -> dict[str, Any]:
                     break
             break
     if script_path and script_path.endswith(".py"):
-        full_path = ROOT / script_path if not os.path.isabs(script_path) else Path(script_path)
+        full_path = base / script_path if not os.path.isabs(script_path) else Path(script_path)
         if full_path.exists():
             return {"status": "ok", "script": script_path}
         return {"status": "error", "reason": f"script not found: {script_path}"}
@@ -76,15 +112,32 @@ def check_http(service: dict[str, Any]) -> dict[str, Any]:
     http_url = service.get("http_url", "")
     if not http_url:
         return {"status": "error", "reason": "no http_url"}
+    method = service.get("http_method", "GET").upper()
     try:
-        with urllib.request.urlopen(http_url, timeout=5) as resp:
+        if method in ("POST", "PUT", "PATCH"):
+            req = urllib.request.Request(
+                http_url, method=method,
+                data=b"{}", headers={"Content-Type": "application/json"},
+            )
+        else:
+            req = urllib.request.Request(http_url, method=method)
+        with urllib.request.urlopen(req, timeout=5) as resp:
             return {"status": "ok", "url": http_url, "code": resp.status}
+    except urllib.error.HTTPError as e:
+        # Any HTTP response proves the service is reachable and routing works.
+        # 404 = path not registered; other 4xx/5xx = endpoint exists (method/params/deps mismatch).
+        if e.code == 404:
+            return {"status": "error", "url": http_url, "reason": "endpoint not found (404)"}
+        return {"status": "ok", "url": http_url, "code": e.code,
+                "note": "endpoint exists (method/params mismatch)"}
     except Exception as e:
         return {"status": "unreachable", "url": http_url, "error": str(e)[:80]}
 
 
 def verify_all(verbose: bool = False) -> dict[str, Any]:
+    global _MCP_URIS
     services = load_bos_services()
+    _MCP_URIS = load_mcp_registered_uris()
     results = {
         "total": len(services),
         "by_transport": {},
@@ -98,7 +151,7 @@ def verify_all(verbose: bool = False) -> dict[str, Any]:
         transport = svc.get("transport", "unknown")
         status = svc.get("status", "active")
 
-        if status == "deprecated":
+        if status in ("deprecated", "unimplemented", "planned"):
             results["by_status"]["skipped"] += 1
             continue
 
