@@ -6,8 +6,8 @@ description: 生成发领导的审阅请求邮件草稿 (占位收件人, 人工
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: shadow
-activation: preview
+lifecycle: assisted
+activation: controlled
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -49,3 +49,5 @@ failure_cost: 审阅请求遗漏或措辞不当 (只生成草稿, 发送由人�
 data_classification: internal
 data_scope: draft-email-only
 operator: admin-review-dispatch-under-risk-engine
+notes:
+- Transitioned shadow→assisted at 2026-09-11T22:51:19.457927+00:00 by evolution-agent

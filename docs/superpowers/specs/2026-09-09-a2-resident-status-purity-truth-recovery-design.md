@@ -5,8 +5,8 @@ status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-09-09
-last-reviewed: 2026-09-12
-last_updated: 2026-09-12
+last-reviewed: 2026-09-11
+last_updated: 2026-09-11
 title: A2 Resident Status Purity Truth Recovery
 bet_id: BET-Y1Q4-T10-144
 implementation_authorized: true

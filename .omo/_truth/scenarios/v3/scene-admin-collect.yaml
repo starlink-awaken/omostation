@@ -6,8 +6,8 @@ description: 向 deadline_tracker 注册任务截止追踪, 进入等待回复�
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: shadow
-activation: preview
+lifecycle: assisted
+activation: controlled
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -58,3 +58,5 @@ triggers:
   signal: email.received
   connector: apple_mail
   debounce: 300s
+notes:
+- Transitioned shadow→assisted at 2026-09-11T22:51:19.287758+00:00 by evolution-agent

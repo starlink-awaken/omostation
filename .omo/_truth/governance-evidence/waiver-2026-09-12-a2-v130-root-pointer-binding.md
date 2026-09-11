@@ -1,9 +1,13 @@
 ---
 schema_version: governance-evidence/v1
 type: binding-waiver
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-11
+created: 2026-09-11
 bet_id: BET-Y1Q4-T10-144
 spec_version: 1.3.0
-created: 2026-09-12
 ---
 
 # Waiver — A2 Spec 1.3.0 root pointer binding

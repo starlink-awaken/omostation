@@ -183,6 +183,33 @@ jobs:
       已踩过一次坑修好)。原 Codex automation `~/.codex/automations/automation` 保持
       PAUSED, 建议后续正式归档删除, 避免和这条重复。
 
+  # ── knowledge-foundry-6h: P76 Phase6 治理编排 (14 子任务) ──
+  # plist 已随仓安装且与 repo 一致, 但从未 launchctl load (无 foundry.log 历史),
+  # spec (docs/architecture/knowledge-foundry-cron.md) 仍为 draft。
+  # 不激活原因: brief-gen 子任务每 6h 写 BRIEF.md (tracked) 到主树,
+  # 与 ADR-4443 v8/P96 主树只读纪律冲突; 激活前需先解决输出落点
+  # (worktree 提交流 或 BRIEF.md 迁 runtime/)。登记 = 把隐形债务转为
+  # 可观测的待决策项, 不代表激活。status=proposed 故 scheduler-compile
+  # 不校验 drift。
+
+  - name: knowledge-foundry-6h
+    schedule: "0 0,6,12,18 * * *"
+    command: >-
+      cd $WORKSPACE && uv run python bin/gac/knowledge-foundry-cron.py
+      >> $HOME/.local/state/omostation/foundry.log 2>&1
+    planes: [launchd]
+    reality: installed
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      plist ~/Library/LaunchAgents/com.omostation.knowledge-foundry.plist
+      与 runtime/cron/ 版本一致 (2026-09-12 校验), 但 launchctl 未 load,
+      无运行日志。14 子任务 (omo-sync/compliance/p74/mof-drift/m4-health/
+      debt/bootloader/submodule-bump/gitlink/swarm-window/brief-gen/port-governance/
+      memory-os-consolidate) 全 dormant。激活阻塞: brief-gen 写 tracked BRIEF.md
+      违反主树只读 (ADR-4443 v8); 需先改输出落点。meta-doctor 2026-09-12 发现。
+
   # ── 从未真正安装, 只存在于声明文件里 (reality: declared_only) ──
   # 以下 10 条来自 operating-rhythm-crontab (ADR-0119/0121), 设计有 fail-closed
   # 防护 (OMO_WORKSPACE_ROOT 校验), 但从未真正 `crontab` 安装过。是否现在正式启用
