@@ -1,0 +1,51 @@
+schema: scene-card/v3
+scene_id: scene-admin-review
+version: 3.0.0
+name: Admin Review
+description: 生成发领导的审阅请求邮件草稿 (占位收件人, 人工确认时修改)
+scene_class: business
+scene_type: inbound
+domain: work
+lifecycle: shadow
+activation: preview
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q4-T8-04
+runtime:
+  journey_ref: admin-notification-workflow
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities:
+    - risk_engine:send-email-check
+    - mail:create-draft
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 30 天内无 admin 类任务触发，则场景无实际价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: journey compiling→reviewing 转移 (report_compiled == true)
+input_contract: latest_subject + report_draft 路径
+result_contract: leader_email_draft 草稿路径 + requires_human_confirm 恒 true
+outcome_metric: review_draft_acceptance_rate
+consumer: xiamingxing
+failure_cost: 审阅请求遗漏或措辞不当 (只生成草稿, 发送由人确认)
+data_classification: internal
+data_scope: draft-email-only
+operator: admin-review-dispatch-under-risk-engine

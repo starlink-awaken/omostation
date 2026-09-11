@@ -253,3 +253,12 @@ entries:
   range: origin/main..770c49726399
   recorded_at: '2026-09-05T04:08:58.439073+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|16c09780d627aaa1
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 16c09780d627aaa1
+  kind: gitlink-regress
+  reason: submodule projects/agora pointer 9578d7b07e7f advances 24387abce0f8 via squash #76 (content-identical, non-FF by squash)
+  range: origin/main..3018d3897
+  recorded_at: '2026-09-11T08:02:03.623579+00:00'
+  active: true
