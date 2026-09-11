@@ -27708,7 +27708,8 @@ bets:
   title: ops 注册表防漂移双闸 — check-signals + cron 准入
   appetite: 1 day
   priority: P2
-  status: candidate
+  status: done
+  done_at: 2026-09-11
   goal: >-
     BET-Y1Q4-T14 一次性清理 303 missing 后漂移机制仍在。建双闸:
     1) ops check-signals 常态 drift 检测 (cron/launchd/file anchor 存在性);
@@ -27749,15 +27750,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@cbf5eb98918d2c920d616ed04fd3c9161e153209
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-T8-24
   track: T8-SURFACE
   window: Y1Q4
@@ -28310,6 +28334,17 @@ tracks:
     scope: 'maturity-scorecard 口径对齐 / 治理 bet 绑定 / resident promote + 事件源管线 / gaC 机制自进化
       (G10 三方口径: scorecard/health/台账)'
     title: 成熟度收官 (scorecard 0-10, target 9.0)
+  T16-DRIFT-GUARD:
+    agent_profile_hint: governance-agent
+    default_workflow: project-doc-change
+    pasw_required: false
+    primary_write_surfaces:
+    - .omo/_truth/registry/services.yaml
+    - bin/mof/**
+    - bin/ops/**
+    - docs/plans/3y-bet-ledger.yaml
+    scope: 运维服务注册表漂移检测 / cron 准入校验 / ops anchor 一致性
+    title: 运维注册表防漂移
   T2-PERCEPT:
     agent_profile_hint: adapter-agent
     default_workflow: external-adapter-sync
