@@ -134,8 +134,9 @@ def validate_service_declaration(svc: dict) -> list[str]:
     return violations
 
 
-def load_services() -> list[dict]:
-    docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
+def load_services(path: Path | None = None) -> list[dict]:
+    reg = path or REGISTRY
+    docs = [d for d in yaml.safe_load_all(reg.read_text(encoding="utf-8")) if d]
     return (docs[-1] if docs else {}).get("services", []) or []
 
 
@@ -263,10 +264,12 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="JSON 输出 (--check/--validate)")
     parser.add_argument("--validate", action="store_true", help="验注册自洽 (CI, 不依赖本机 plist)")
     args = parser.parse_args()
-    if not REGISTRY.exists():
-        print(f"❌ 注册不存在: {REGISTRY}", file=sys.stderr)
+    local_root = Path(__file__).resolve().parents[2]
+    registry_path = local_root / ".omo" / "_truth" / "registry" / "services.yaml" if args.validate else REGISTRY
+    if not registry_path.exists():
+        print(f"❌ 注册不存在: {registry_path}", file=sys.stderr)
         return 1
-    services = load_services()
+    services = load_services(registry_path)
     if args.validate:
         # 验注册自洽 (CI 可验, 不依赖本机 plist). 治 service-config-drift gate 在 CI 无本机 plist 的设计问题.
         violations: list[str] = []
@@ -285,7 +288,7 @@ def main() -> int:
                 sched_ref = svc.get("schedule_ref")
                 if not sched_ref:
                     violations.append(f"{svc.get('id', '?')}: gha 调度缺 schedule_ref")
-                elif not (WORKSPACE / sched_ref).is_file():
+                elif not (local_root / sched_ref).is_file():
                     violations.append(f"{svc.get('id', '?')}: schedule_ref 不存在 {sched_ref}")
         report = {
             "ok": not violations,

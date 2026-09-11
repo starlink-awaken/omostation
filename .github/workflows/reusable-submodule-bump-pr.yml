@@ -17,13 +17,13 @@ on:
         required: false
         type: string
         default: ''
-    secrets:
-      bot_token:
-        required: true
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  actions: write
 
 jobs:
   bump-pointer:
@@ -33,7 +33,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: starlink-awaken/omostation
-          token: ${{ secrets.bot_token }}
           fetch-depth: 0
 
       - name: Setup Python
@@ -41,70 +40,112 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Resolve Target SHA and Run bump-fast
-        id: bump
+      - name: Resolve Target SHA (read-only)
+        id: resolve
         run: |
+          set -euo pipefail
           SUB="${{ inputs.submodule_path }}"
           TARGET_SHA="${{ inputs.target_sha }}"
           TAG="${{ inputs.release_tag }}"
-          
-          # 1. 运行 bump-fast 更新指针
+
+          if [ ! -e "$SUB/.git" ] && [ ! -f "$SUB/.git" ]; then
+            echo "::error::submodule path not initialized: $SUB"
+            exit 1
+          fi
+
+          BASE_SHA="$(git ls-files -s -- "$SUB" | awk '{print $2}')"
+          if [ -z "$BASE_SHA" ]; then
+            echo "::error::unable to read current gitlink for $SUB"
+            exit 1
+          fi
+
           if [ -n "$TARGET_SHA" ]; then
-            bash bin/gac/gac-worktree.sh bump-fast "$SUB" --sha="$TARGET_SHA"
             ACTUAL_SHA="$TARGET_SHA"
           else
-            bash bin/gac/gac-worktree.sh bump-fast "$SUB" --latest-main
-            ACTUAL_SHA=$(git rev-parse :"$SUB" 2>/dev/null || git ls-files -s "$SUB" | awk '{print $2}')
+            REMOTE_LINE="$(git -C "$SUB" ls-remote origin refs/heads/main | awk 'NR==1 {print $1}')"
+            if ! printf '%s' "$REMOTE_LINE" | grep -Eq '^[0-9a-f]{40}$'; then
+              echo "::error::unable to resolve origin/main for $SUB"
+              exit 1
+            fi
+            ACTUAL_SHA="$REMOTE_LINE"
           fi
-          
-          SHORT_SHA=$(echo "$ACTUAL_SHA" | cut -c1-7)
-          SUB_NAME=$(basename "$SUB")
-          BRANCH_NAME="auto-bump/${SUB_NAME}-${SHORT_SHA}"
-          
-          echo "sub_name=$SUB_NAME" >> $GITHUB_OUTPUT
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-          echo "actual_sha=$ACTUAL_SHA" >> $GITHUB_OUTPUT
 
-      - name: Check for Changes
-        id: git-diff
-        run: |
-          if git diff --quiet && git diff --cached --quiet; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "No pointer changes detected."
+          SHORT_SHA="$(echo "$ACTUAL_SHA" | cut -c1-7)"
+          SUB_NAME="$(basename "$SUB")"
+          PROPOSED_REF="proposal/auto-bump/${SUB_NAME}-${SHORT_SHA}"
+
+          if [ "$BASE_SHA" = "$ACTUAL_SHA" ]; then
+            HAS_CHANGES=false
+            STATUS=clean
           else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
+            HAS_CHANGES=true
+            STATUS=drift_detected
           fi
 
-      - name: Commit and Create Pull Request
-        if: steps.git-diff.outputs.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.bot_token }}
+          echo "sub_name=$SUB_NAME" >> "$GITHUB_OUTPUT"
+          echo "sub_path=$SUB" >> "$GITHUB_OUTPUT"
+          echo "base_sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$ACTUAL_SHA" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "proposed_ref=$PROPOSED_REF" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "has_changes=$HAS_CHANGES" >> "$GITHUB_OUTPUT"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+
+      - name: Emit publication proposal artifact
         run: |
-          SUB_NAME="${{ steps.bump.outputs.sub_name }}"
-          SHORT_SHA="${{ steps.bump.outputs.short_sha }}"
-          ACTUAL_SHA="${{ steps.bump.outputs.actual_sha }}"
-          BRANCH_NAME="${{ steps.bump.outputs.branch_name }}"
-          TAG="${{ inputs.release_tag }}"
-          
-          git config user.name "omostation-bot[bot]"
-          git config user.email "omostation-bot@users.noreply.github.com"
-          
-          git checkout -B "$BRANCH_NAME"
-          git add -u
-          
-          TITLE="chore: auto-bump $SUB_NAME to ${TAG:-$SHORT_SHA}"
-          BODY="Automated submodule pointer bump triggered by $SUB_NAME release/commit ($ACTUAL_SHA)."
-          
-          git commit -m "$TITLE"
-          git push origin "$BRANCH_NAME" --force
-          
-          # 创建 PR (如果已存在则更新)
-          if ! gh pr view "$BRANCH_NAME" >/dev/null 2>&1; then
-            gh pr create \
-              --title "$TITLE" \
-              --body "$BODY" \
-              --head "$BRANCH_NAME" \
-              --base main \
-              --label "submodule-bump"
-          fi
+          set -euo pipefail
+          mkdir -p proposal-artifact
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          proposal = {
+              "schema": "github-publication-proposal/v1",
+              "workflow": "reusable-submodule-bump-pr",
+              "status": os.environ["STATUS"],
+              "submodule_path": os.environ["SUB_PATH"],
+              "submodule_name": os.environ["SUB_NAME"],
+              "base_sha": os.environ["BASE_SHA"],
+              "head_sha": os.environ["HEAD_SHA"],
+              "base_ref": "main",
+              "proposed_ref": os.environ["PROPOSED_REF"],
+              "ref": os.environ["PROPOSED_REF"],
+              "release_tag": os.environ.get("RELEASE_TAG", ""),
+              "instruction": "PUBLICATION_OWNER_REQUIRED",
+              "managed_remediation_entrypoint": "bin/gac/clone-lifecycle.py integrate",
+              "remediation": {
+                  "summary": (
+                      "Proposed submodule pointer bump; cloud job does not publish refs/PRs."
+                  ),
+                  "paths": [os.environ["SUB_PATH"]],
+                  "from_sha": os.environ["BASE_SHA"],
+                  "to_sha": os.environ["HEAD_SHA"],
+              },
+          }
+          out = Path("proposal-artifact/publication-proposal.json")
+          out.write_text(json.dumps(proposal, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          print(out.read_text(encoding="utf-8"))
+          PY
+        env:
+          STATUS: ${{ steps.resolve.outputs.status }}
+          SUB_PATH: ${{ steps.resolve.outputs.sub_path }}
+          SUB_NAME: ${{ steps.resolve.outputs.sub_name }}
+          BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
+          HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
+          PROPOSED_REF: ${{ steps.resolve.outputs.proposed_ref }}
+          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
+
+      - name: Upload proposal artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: reusable-submodule-bump-publication-proposal
+          path: proposal-artifact/publication-proposal.json
+          retention-days: 30
+
+      - name: Fail closed on detected drift (no self-heal)
+        if: steps.resolve.outputs.has_changes == 'true'
+        run: |
+          echo "::error::submodule drift detected for ${{ steps.resolve.outputs.sub_path }}; proposal artifact uploaded, no cloud publication performed"
+          exit 1
