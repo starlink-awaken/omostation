@@ -1786,7 +1786,7 @@ bets:
   track: T10-MATURITY
   underlying_workflow: project-code-change
   verify:
-  - cmd: uv run python -m security.vault.test_offline_sandbox
+  - cmd: PYTHONPATH=bin python -m security.test_offline_sandbox
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0

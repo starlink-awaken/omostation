@@ -43,7 +43,7 @@ ledger `goal/done_when/verify` 为准，`write_surfaces` 收敛到 `config/secur
 
 ## 验证（Verify）
 
-- `uv run python -m security.vault.test_offline_sandbox` → exit 0。
+- `PYTHONPATH=bin python -m security.test_offline_sandbox` → exit 0。
 - `make gac-local-gate` → exit 0。
 - `uv run --with pyyaml python bin/plan/bet-ledger.py lint` → exit 0（结构合法）。
 
