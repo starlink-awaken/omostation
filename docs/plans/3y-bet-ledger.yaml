@@ -27513,7 +27513,8 @@ bets:
   priority: P2
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: Orca R0 正式准入验证工具链
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -27546,7 +27547,8 @@ bets:
   priority: P2
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: Multica AS0 正式准入验证工具链
   track: T10-MATURITY
   underlying_workflow: project-code-change
