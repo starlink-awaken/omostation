@@ -27698,6 +27698,204 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+- id: BET-Y1Q4-T8-24
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Cockpit-UI 全面重构与六面合流涅槃战役 (总揽)
+  appetite: 16 days
+  priority: P0
+  status: candidate
+  goal: >-
+    彻底收敛现存 cockpit-ui 40+ 扁平路由与 50+ 散乱后端接口，将 43191 全景观测站
+    （81知识条目/302个BOS服务/1248能力/6大记忆分类）作为真实数据面归一至
+    projects/cockpit，并在前端以三大主态工作台（Mission/Operations/Studio）
+    立体承接控制面、知识面、业务面、进化面、协作面、交付面六大正交系统维度。
+  non_goals:
+  - 不建立第二数据中心或平行控制面，100% 依托 OMO 控制面与既有 LedgerBroker
+  - 不做粗暴的 6 个一级 Tab 横排堆砌（避免云厂商低质管理后台反模式）
+  done_when:
+  - Observatory 统一数据面收敛至 projects/cockpit，废除 50+ 散乱旧 API
+  - 前端 6 大正交 Store 建立，状态严格解耦互不污染
+  - Studio 工作台深度升级交付 #know（六大记忆通道/42技能拓扑/BOS调试网格）
+  - Operations 业务协同与 Mission 战略交付工作台交付并接入 Scene v3 与 Work Cases
+  - A9 全景观测门禁终验完成，43191 独立脚本平稳退役
+  verify:
+  - cmd: cd projects/cockpit-ui && bun test && bun run build
+    expect: exit 0
+  - cmd: uv run pytest projects/cockpit/tests/test_observatory_unified.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/
+  - projects/cockpit/
+  - projects/cockpit-ui/
+  human_gate: true
+  risk_level: L2
+  retro: required
+  circuit_breaker: 任何改动若破坏现有 Work Cases 案件数据持久性或导致 A9 门禁数据漂移，立即暂停并回滚。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-11-cockpit-nextgen-architecture-and-six-planes-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:8ee45eb70954907dba8dea308a702800e8d15125fbbe3660445837bf06f2e7a3
+    decision_ref: decision://accepted/BET-Y1Q4-T8-24
+- id: BET-Y1Q4-T8-24A
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Observatory 统一数据面收敛与增量流式投影服务
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T8-24
+  goal: >-
+    将 43191 端口全景观测站经过实战检验的高保真采集与投影内核（catalog_sources,
+    strategy_sources, observatory_query）完整收敛并入 projects/cockpit/src/cockpit/observatory/，
+    提供 REST 与 SSE 增量推送接口，废除 50+ 个散乱旧 API。
+  non_goals:
+  - 不破坏现存已有关键业务 API 的向下兼容性
+  done_when:
+  - projects/cockpit/src/cockpit/observatory/ 建立并集成 42 技能、6 记忆、302 BOS 采集
+  - FastAPI 统一挂载 /api/v1/observatory/ 路由，支持 generation 锁定
+  - SSE 增量变更流在 100ms 内完成广播
+  - 旧 web/api_*.py 散乱接口废除或重定向
+  verify:
+  - cmd: uv run pytest projects/cockpit/tests/test_observatory_unified.py
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit/src/cockpit/observatory/
+  - projects/cockpit/src/cockpit/web/
+  - projects/cockpit/src/cockpit/dashboard_server.py
+  human_gate: false
+  risk_level: L1
+  retro: required
+  circuit_breaker: 采集逻辑若出现单次请求阻塞超过 500ms，立即熔断降级为缓存快照。
+- id: BET-Y1Q4-T8-24B
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Cockpit-UI 六面正交 Store 底座与 ⌘K 全键盘命令中枢
+  appetite: 3 days
+  priority: P0
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T8-24
+  goal: >-
+    在 projects/cockpit-ui 中构建控制、知识、业务、进化、协作、交付 6 大正交
+    Zustand Store，彻底清除 40+ 扁平路由，上线 ⌘K 全局命令面板与 Causal Inspector 侧抽屉。
+  non_goals:
+  - 不引入额外的重型外部 UI 库，纯基于既有 React 19 + TailwindCSS 4 + Lucide
+  done_when:
+  - 6 大 Zustand Store 建立，状态解耦互不污染
+  - ⌘K 命令面板在 50ms 内模糊检索 1248 能力与 302 服务
+  - Causal Inspector 侧抽屉实现六面全息折叠卡片与 SHA-256 展示
+  verify:
+  - cmd: cd projects/cockpit-ui && bun test src/stores/
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit-ui/src/stores/
+  - projects/cockpit-ui/src/components/common/
+  - projects/cockpit-ui/src/routes.tsx
+  human_gate: false
+  risk_level: L1
+  retro: required
+  circuit_breaker: 路由重构若导致旧有深度链接无法访问，立即恢复重定向表。
+- id: BET-Y1Q4-T8-24C
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Studio 机理工坊与知识记忆中枢深度交付 (升级 #know)
+  appetite: 4 days
+  priority: P0
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T8-24
+  goal: >-
+    深度重构 43191 #know 页面，在 Studio 工作台打造六大记忆通道状态透视、
+    ReactFlow 42 技能拓扑网格、302 BOS 全息调试网格与 46 份受管文档双版本 Diff 阅读器。
+  non_goals:
+  - 不读取受保护的私人记忆正文，严格遵循白名单安全元数据边界
+  done_when:
+  - 六大记忆通道状态墙与意图路由仿真器流畅运行
+  - ReactFlow 渲染 42 技能与 25 工作流拓扑网，点击下钻代码与证据
+  - 302 BOS 服务网格支持在线 Dry-run 测试
+  - 46 份受管文档支持跨 generation 双版本 Diff 比对
+  verify:
+  - cmd: cd projects/cockpit-ui && bun test src/views/StudioView.test.tsx
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit-ui/src/views/StudioView.tsx
+  - projects/cockpit-ui/src/components/studio/
+  human_gate: false
+  risk_level: L1
+  retro: required
+  circuit_breaker: 拓扑图渲染节点数过大导致帧率低于 30fps 时启用虚拟化视口。
+- id: BET-Y1Q4-T8-24D
+  track: T8-SURFACE
+  window: Y1Q4
+  title: Operations 业务协同与 Mission 战略交付工作台落地
+  appetite: 4 days
+  priority: P1
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T8-24
+  goal: >-
+    全面交付 Operations（整合 Work Cases 案件大厅、Scene v3 旅程状态机、SpineReviewModal
+    署名确认与 PersistentQueue 监控）与 Mission（3Y-BET 全景矩阵、交互式甘特图、Golden Slice 真实价值公证）。
+  non_goals:
+  - 不修改现有 Work Cases 的底层存储协议，仅重构呈现与联动层
+  done_when:
+  - Work Cases 案件流转、材料提交与回执归档流畅运行
+  - Scene v3 旅程状态机与校准曲线无缝接入
+  - SpineReviewModal 左右分屏署名 Diff 确认打通
+  - 3Y-BET 矩阵检索、甘特图交互与 Golden Slice 验收度量上线
+  verify:
+  - cmd: cd projects/cockpit-ui && bun test src/views/OperationsView.test.tsx src/views/MissionView.test.tsx
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit-ui/src/views/OperationsView.tsx
+  - projects/cockpit-ui/src/views/MissionView.tsx
+  - projects/cockpit-ui/src/components/operations/
+  - projects/cockpit-ui/src/components/mission/
+  human_gate: false
+  risk_level: L1
+  retro: required
+  circuit_breaker: 任何导致用户审批误点击或案件数据丢失的 UI 缺陷立即回滚。
+- id: BET-Y1Q4-T8-24E
+  track: T8-SURFACE
+  window: Y1Q4
+  title: A9 全景观测终验对账、43191 进程平稳退役与 Closeout
+  appetite: 2 days
+  priority: P0
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T8-24
+  goal: >-
+    执行端到端全量数据对账，确保 Cockpit-UI 达到 43191 的 100% 数据保真度与 SHA-256 对齐，
+    签署 A9 门禁，平稳关闭 43191 独立脚本，完成闭环交付与 Retro 归档。
+  non_goals:
+  - 不在未完成 100% 数据对账前杀掉 43191 服务
+  done_when:
+  - Cockpit 数据点与原 43191 达到 100% 一致性与 SHA-256 对齐
+  - A9 全景观测准入门禁证据链完成签署
+  - 平稳停止 live_server.py (PID 74291)，所有入口统一指向 Cockpit
+  - make gac-local-gate 全绿通过
+  verify:
+  - cmd: python3 bin/gac/ci-check-runner.py && make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/reports/
+  - .omo/_knowledge/retros/
+  human_gate: true
+  risk_level: L1
+  retro: required
+  circuit_breaker: 对账若发现任何一个指标丢失，严禁关闭 43191 原服务。
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
