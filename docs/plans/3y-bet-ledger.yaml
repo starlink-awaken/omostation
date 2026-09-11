@@ -2424,7 +2424,7 @@ bets:
   track: T10-MATURITY
   underlying_workflow: project-code-change
   verify:
-  - cmd: uv run pytest projects/omo/tests/unit/test_resident_task_queue.py -q
+  - cmd: uv run pytest projects/omo/tests/unit/test_task_queue.py -q
     expect: exit 0
   - cmd: python3 bin/gac/check-resident-bos.py
     expect: exit 0
@@ -2437,7 +2437,7 @@ bets:
   - projects/omo/src/omo/resident/resident-routes.yaml
   - projects/omo/src/omo/resident/task_queue.py
   - projects/omo/src/omo/resident/daemon.py
-  - projects/omo/tests/unit/test_resident_task_queue.py
+  - projects/omo/tests/unit/test_task_queue.py
   - docs/superpowers/specs/2026-09-11-t10-125-bos-gateway-spec.md
   - .omo/_knowledge/retros/BET-Y1Q4-T10-125.md
   accepted_specifications:
