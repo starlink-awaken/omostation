@@ -28068,7 +28068,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 384
+  total_bets: 387
   windows:
   - Y1Q1
   - Y1Q2
@@ -28364,6 +28364,46 @@ tracks:
     - projects/cockpit/src/cockpit/web/**
     scope: 统一事件面常态化 / 告警到人 / Langfuse trace / RED 指标 / cockpit 聚合
     title: 可观测性收官
+- appetite: 1 sprint
+  created_at: 2026-09-11
+  discipline: T10-REPO-HYGIENE
+  id: BET-Y1Q4-T10-145
+  invariants:
+  - 不修改已合并 commit 的历史
+  - 不对主分支做不可逆操作
+  - 脚本必须支持 --workspace 显式参数
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  objective_ref: OBJ-HOLDABILITY
+  priority: P1
+  title: Diff Lifecycle Closure: 检测孤立未应用代码 diff
+  workstream: HOLDABILITY
+- appetite: 1 sprint
+  created_at: 2026-09-11
+  discipline: T10-REPO-HYGIENE
+  id: BET-Y1Q4-T10-146
+  invariants:
+  - 债务标记为 warning 不阻断
+  - 仅对当前分支的 diff 生效
+  - 脚本必须支持 --workspace 显式参数
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  objective_ref: OBJ-HOLDABILITY
+  priority: P2
+  title: Diff Debt Tracking: 跟踪代码变更中的历史债务
+  workstream: HOLDABILITY
+- appetite: 1 sprint
+  created_at: 2026-09-11
+  discipline: T10-REPO-HYGIENE
+  id: BET-Y1Q4-T10-147
+  invariants:
+  - 超阈值标记为 warning 不阻断
+  - 仅对当前分支的 diff 生效
+  - 脚本必须支持 --workspace 显式参数
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  objective_ref: OBJ-HOLDABILITY
+  priority: P2
+  title: Diff Growth Detection: 检测单 PR 的代码膨胀
+  workstream: HOLDABILITY
+
 vision:
   horizon_end: 2029-06-30
   id: VISION-2029
