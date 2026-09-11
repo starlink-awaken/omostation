@@ -1,0 +1,71 @@
+{
+  "schema": "claims-authority-wp1-graduation/v1",
+  "bet_id": "BET-Y1Q4-T10-145",
+  "report_kind": "non_terminal_shadow_report",
+  "done": false,
+  "descriptor_digest": null,
+  "window": {
+    "started_at": null,
+    "ended_at": null,
+    "continuous_seconds": 0,
+    "status": "NOT_STARTED",
+    "reason": "Host activation (Task 16) not authorized by Spec 1.7.0 binding alone; observation clock must start only after activation receipt."
+  },
+  "sequence": {
+    "first": null,
+    "last": null,
+    "chain_ok": false,
+    "highwater_ok": false
+  },
+  "samples": {
+    "total": 0,
+    "expected_difference": 0,
+    "equivalent": 0,
+    "unexplained": 0,
+    "false_allow": 0
+  },
+  "lifecycles": {
+    "managed_clone": false,
+    "legacy_regression": false,
+    "expiry_replay": false
+  },
+  "observer": {
+    "max_gap_seconds": 0,
+    "repeatable": false
+  },
+  "checkpoints": {
+    "smoke": false,
+    "provisional": false,
+    "sustained": false,
+    "graduation": false
+  },
+  "engineering_delivery": {
+    "status": "REPOSITORY_PARTITIONS_MERGED",
+    "not_operational_proof": true,
+    "waves": {
+      "A": {"pr": "omo#154", "merge": "15ee4ab", "note": "child claims broker"},
+      "B1": {"pr": 3535, "merge": "a02dbc6a4"},
+      "B2": {"pr": 3554, "merge": "654b13439"},
+      "B3": {"pr": 3564, "merge": "ff63d9171"},
+      "B4": {"pr": 3575, "merge": "73978058c"},
+      "C": {"pr": 3581, "merge": "74f72d5c5", "omo_pin": "83c27519bf0b574beb192d37a0245d221806d4c2"}
+    },
+    "bindings": {
+      "1.7.0": {"pr": 3583, "merge": "0d0d456c5", "work_packet": "sha256:abc012a6ddfedd39d4e93c0c6d44e37908d5c681dc05486dd5502416043f258e"}
+    }
+  },
+  "acceptance": {
+    "AC-09_24h_window": "NOT_PROVEN",
+    "AC-host_activation": "NOT_STARTED",
+    "AC-three_lifecycles": "NOT_STARTED",
+    "value_indicator_policy": false,
+    "operational": "NOT_PROVEN",
+    "value": "NOT_PROVEN"
+  },
+  "decision": "NOT_READY",
+  "recorded_at": "2026-09-11T13:24:00Z",
+  "notes": [
+    "Honest non-terminal report after Spec 1.7.0 binding. No done/done_at.",
+    "Next: separately recorded host activation (Task 16), then foreground 24h observer, then independent audit before any graduation."
+  ]
+}
