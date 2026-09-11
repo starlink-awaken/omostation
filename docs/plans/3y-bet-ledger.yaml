@@ -2438,7 +2438,13 @@ bets:
   - projects/omo/src/omo/resident/task_queue.py
   - projects/omo/src/omo/resident/daemon.py
   - projects/omo/tests/unit/test_resident_task_queue.py
+  - docs/superpowers/specs/2026-09-11-t10-125-bos-gateway-spec.md
   - .omo/_knowledge/retros/BET-Y1Q4-T10-125.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-11-t10-125-bos-gateway-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:07edff7014a86df77a987aa86dba473ee8e17f8f550122ed59116a35a1abf7ce
+    decision_ref: decision://accepted/BET-Y1Q4-T10-125
 - appetite: 3 days
   circuit_breaker: 自动结晶为 Bet 时必须经严格 Schema 校验与人类最终确认，禁止向主台账写入未审核草稿。
   depends_on:

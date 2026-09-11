@@ -1,0 +1,60 @@
+schema: scene-card/v3
+scene_id: scene-agora-bos-gateway
+version: 3.0.0
+name: Agora Bos Gateway
+description: AI agent 经 agora MCP 网关 (SSE :7431) 统一调用 BOS 能力 (bos:// 路由 + 准入 + 审计
+  + 可观测)
+scene_class: business
+scene_type: inbound
+domain: work
+lifecycle: routine
+activation: allowed
+owner: agora-gateway
+approver: platform-architecture
+approval_state: approved
+bet: BET-ARCH-CONVERGENCE
+runtime:
+  journey_ref: intent-to-execution
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities: []
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 BOS gateway 离线超 1h 无告警，则场景无价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers:
+- admission_provider_unavailable_in_production
+- backends_connection_ratio_low
+- audit_chain_broken
+- unauthorized_register_endpoint
+trigger: agent 或 cockpit CLI 发起 bos:// URI 调用 (resolve/read/mutate)
+input_contract: 合法 bos:// URI + 参数 + 认证 (AGORA_API_KEY Bearer 或 permissive 本地模式)
+result_contract: 结构化调用结果 {status, result, transport, uri} + audit hashchain 落库 + /metrics
+  指标计数
+outcome_metric: bos_call_success_rate / backends_alive_ratio / audit_chain_ok
+consumer: all-layers-agents-and-cockpit-cli
+failure_cost: BOS 调用失败/认证绕过/审计链断裂导致跨层调用不可信
+data_classification: internal
+data_scope: bos-uri-call-metadata-audit-chain-and-aggregated-metrics
+operator: agora-mcp-sse-service
+permission_ref: permission://bos/capability-invoke
+sample_refs:
+- bos://capability/omo/task/create
+- bos://memory/kos/search
+- bos://governance/omo/audit

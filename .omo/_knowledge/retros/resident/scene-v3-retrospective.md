@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-11
+---
 # Scene System v3 — 全面复盘
 
 > 日期：2026-09-07 | 范围：PR #3348 + #3368 | 状态：已合并到 main
