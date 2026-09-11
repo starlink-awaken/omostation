@@ -5443,7 +5443,7 @@ services:
   trigger: schedule
   schedule: 20 6 * * *
   program:
-    interpreter: python3
+    interpreter: stable-python3
     entrypoint: bin/ops/cli.py
   crontab_token: ops-signal-drift
   liveness:
