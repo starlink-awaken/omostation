@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.4.0
+spec_version: 1.5.0
 status: accepted
 lifecycle: contract
 owner: governance-team
@@ -33,13 +33,14 @@ Accepted version 1.0.0 allocated `BET-Y1Q4-T10-145` and authorized only its
 implementation plan. Version 1.1.2 authorized and delivered the Wave A child broker
 partition. Version 1.2.0 authorized and delivered the Wave B1 root shadow adapter and
 fence owner. Version 1.3.0 authorized and delivered the Wave B2 local publication
-effect-convergence partition. Version 1.4.0 is a complete non-union replacement that
-removes every Wave B2 path from the current WorkPacket and authorizes only the nine
-Wave B3 API/shim bypass-closure paths. It closes Git Data API write helpers and Git
-wrapper push verbs so that tracked automation outside `clone-lifecycle integrate`
-cannot reach a remote ref or PR writer. It preserves v1 as the only effective
-publication authority, keeps `value_indicator_policy=false`, and still does not bump
-the root `projects/omo` gitlink, activate production shadow mode or materialize WP2.
+effect-convergence partition. Version 1.4.0 authorized and delivered the Wave B3
+API/shim bypass-closure partition. Version 1.5.0 is a complete non-union replacement
+that removes every Wave B3 path from the current WorkPacket and authorizes only the
+five Wave B4 cloud automation paths. It converts GitHub workflow publication into
+read-only detection plus uploaded proposal artifacts so cloud jobs cannot write a
+ref or open a PR. It preserves v1 as the only effective publication authority, keeps
+`value_indicator_policy=false`, and still does not bump the root `projects/omo`
+gitlink, activate production shadow mode or materialize WP2.
 
 ## 2. Problem and current-state audit
 
@@ -914,28 +915,29 @@ complete the parent BET or create WP2.
 
 Versions 1.0.0–1.1.2 remain immutable historical plan/Wave-A authority. Version 1.2.0
 remains immutable historical authority for the Wave B1 root partition that merged at
-`a02dbc6a458490ac9cfc447b1384b4fe821d7048` with reviewed source
-`62938ca13550c0ad8e27521db9bc8f96c7b02567`. Version 1.3.0 remains immutable historical
+`a02dbc6a458490ac9cfc447b1384b4fe821d7048`. Version 1.3.0 remains immutable historical
 authority for the Wave B2 root partition that merged at
-`654b134396ee3424b1abd9c23810b571769c4729` with reviewed source
-`df114e6d74cc4b29d44a8369b466aca3372d87cc`; its implementation run
-`20260911T103242Z-bet-execution-37d616a4` closed with locks zero and without a root
-gitlink bump. Version 1.4.0 acceptance requires and records:
+`654b134396ee3424b1abd9c23810b571769c4729`. Version 1.4.0 remains immutable historical
+authority for the Wave B3 root partition that merged at
+`ff63d9171b2d0bb2f21cb91019f8a5fc6df36e2a` with reviewed source
+`941ac9c5c31eba777276a79ce606e01bad1f5c97`; its implementation run
+`20260911T114307Z-bet-execution-547b208b` closed with locks zero and without a root
+gitlink bump. Version 1.5.0 acceptance requires and records:
 
-1. Wave B2 root main contains the reviewed merge, the nine final objects match, required
-   contexts succeeded, the 1.3.0 implementation run is closed and every B2 lock is zero;
+1. Wave B3 root main contains the reviewed merge, the nine final objects match, required
+   contexts succeeded, the 1.4.0 implementation run is closed and every B3 lock is zero;
 2. the Ledger retains candidate `BET-Y1Q4-T10-145`, its parent relation to
    `BET-Y1Q4-T10-143`, one current accepted binding and no completion/value expansion;
-3. the current WorkPacket contains exactly the nine Wave B3 paths and rejects the
-   1.3.0 Wave B2 WorkPacket hash `sha256:8ff37c0a02ad75b725df9d8f3de0b3343395fb332b60c34f751faec4eba58045`;
-4. `implementation_authorized=true` authorizes only Wave B3 under the new WorkPacket;
+3. the current WorkPacket contains exactly the five Wave B4 paths and rejects the
+   1.4.0 Wave B3 WorkPacket hash `sha256:1cbe5402fcc4c3d08e1f967c19dd52dee88bb02e29c1e65c750c28bc9fbe441c`;
+4. `implementation_authorized=true` authorizes only Wave B4 under the new WorkPacket;
    this binding transaction itself changes no implementation, runtime or gitlink;
 5. appetite remains 12 days of elapsed delivery time, including the mandatory
    24-hour observation, and is not a completion or value claim;
 6. every later binding replaces rather than appends `write_surfaces`, keeps one current
    `accepted_specifications` entry and rejects an earlier WorkPacket hash;
-7. Git Data API helpers and Git wrappers under 1.4.0 must fail closed before any remote
-   ref/PR write, with no exact-argv exception remaining in the wrappers; and
-8. Wave B3 implementation starts only after this 1.4.0 binding merges, its exact Spec
+7. cloud workflows under 1.5.0 may detect drift and upload proposal artifacts but must
+   not write refs, commit, push or create PRs; and
+8. Wave B4 implementation starts only after this 1.5.0 binding merges, its exact Spec
    digest and compiled WorkPacket are verified, the binding run closes and every lock
    is zero on a fresh managed successor.
