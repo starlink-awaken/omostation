@@ -4,8 +4,8 @@ spec_version: 1.0.0
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-12
-last-reviewed: 2026-09-12
+created: 2026-09-11
+last-reviewed: 2026-09-11
 title: Multica AS0 read-only admission verify toolchain
 bet_id: BET-Y1Q4-T10-150
 implementation_authorized: true
