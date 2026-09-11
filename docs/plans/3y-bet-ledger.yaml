@@ -28173,7 +28173,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 384
+  total_bets: 387
   windows:
   - Y1Q1
   - Y1Q2
@@ -28480,6 +28480,7 @@ tracks:
     - projects/cockpit/src/cockpit/web/**
     scope: 统一事件面常态化 / 告警到人 / Langfuse trace / RED 指标 / cockpit 聚合
     title: 可观测性收官
+
 vision:
   horizon_end: 2029-06-30
   id: VISION-2029
