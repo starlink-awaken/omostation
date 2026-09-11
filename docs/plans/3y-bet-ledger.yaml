@@ -952,7 +952,7 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 个人文风 Continuous LoRA 在线蒸馏与多业务领域适配器管理
   track: T10-MATURITY
   underlying_workflow: project-code-change
