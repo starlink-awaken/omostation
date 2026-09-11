@@ -27864,12 +27864,50 @@ bets:
   - projects/cockpit/
   - projects/cockpit-ui/
 - accepted_specifications:
-  - content_digest: sha256:8ee45eb70954907dba8dea308a702800e8d15125fbbe3660445837bf06f2e7a3
+  - content_digest: sha256:c4e872bb66b558c41328127900d1ffbd7a54fdd6ae2d0e983eb9599ab2629438
     decision_ref: decision://accepted/BET-Y1Q4-T8-24A
-    spec_ref: repo://docs/superpowers/specs/2026-09-11-cockpit-nextgen-architecture-and-six-planes-spec.md
+    spec_ref: repo://docs/superpowers/specs/2026-09-11-t8-24a-observatory-convergence-spec.md
     spec_version: 1.0.0
   appetite: 3 days
   circuit_breaker: 采集逻辑若出现单次请求阻塞超过 500ms，立即熔断降级为缓存快照。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
+            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+          merged_reachable_commit:
+            ref: git://origin/main@c254601eeefc1981a4fa1946e6a682f111459831
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
+            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
+            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
+            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
+            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
+            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
+            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    decision_ref: decision://accepted/BET-Y1Q4-T8-24A
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-12
   done_when:
   - projects/cockpit/src/cockpit/observatory/ 建立并集成 42 技能、6 记忆、302 BOS 采集
   - FastAPI 统一挂载 /api/v1/observatory/ 路由，支持 generation 锁定
@@ -27885,20 +27923,22 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-11
   title: Observatory 统一数据面收敛与增量流式投影服务
   track: T8-SURFACE
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest projects/cockpit/tests/test_observatory_unified.py
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
   write_surfaces:
-  - projects/cockpit/src/cockpit/observatory/
-  - projects/cockpit/src/cockpit/web/
+  - projects/cockpit/src/cockpit/observatory/*
+  - projects/cockpit/src/cockpit/web/*
   - projects/cockpit/src/cockpit/dashboard_server.py
-  - projects/cockpit/tests/
+  - projects/cockpit/tests/*
   - .omo/cron/registry.yaml
   - .omo/_truth/registry/services.yaml
 - appetite: 3 days
