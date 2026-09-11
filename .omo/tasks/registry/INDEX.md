@@ -16,10 +16,17 @@ status: archived
 |----|-------|--------|
 | kos-q-growth-rolling | KOS 季度扩量持续监测 (rolling goal 关联 task | active |
 
-## Planned Tasks (8 个)
+## Planned Tasks (15 个)
 | ID | Title | Status |
 |----|-------|--------|
-| TASK-262B9E59 | 退役 mof-model.py 弃用 CLI: --save 默认覆写 nodes/ + 每分钟 | candidate |
+| BET-Y1Q4-T10-141 | Cockpit CLI 命令可用性台账 — 106 命令逐批验证与修复 | candidate |
+| BET-Y1Q4-T11-env-resolver-unify | env_resolver 跨 worktree/主仓兼容 — 统一替换 parents[N] 硬 | candidate |
+| BET-Y1Q4-T12-arcnode-integration | arcnode-* 外部依赖纳入主仓 — 治理命令不再依赖 ~/.hermes | candidate |
+| BET-Y1Q4-T13-cli-smoke-test-harness | Cockpit CLI 106 命令 smoke test 接入 Harness — 每 6h | candidate |
+| BET-Y1Q4-T14-ops-services-cleanup | ops services 20 missing 清理 — 注册表与现实同步 | candidate |
+| BET-Y1Q4-T15-import-perf-regression | cockpit import 性能回归 (164ms > 120ms 预算) 排查 | candidate |
+| TASK-117310A1 | AGE-v2 Agent Cell 违反 SFOP 八律第3条(后端不拥有收件箱): omo c | candidate |
+| TASK-B3229A65 | A4 调度真相收敛: 统一三源声明 + 修复死引用 + 面板刷新退出 token 自动化 | candidate |
 | bet-y3h1-t7-01 | 中试 / 政策申报升 assisted | candidate |
 | bet-y3h2-t7-01 | 公文场景 routine (限格式类 | candidate |
 | cockpit-debt-debt-1 | 治理技术债务：债务 | candidate |
@@ -30,9 +37,9 @@ status: archived
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
-## Completed Tasks (292 个)
+## Completed Tasks (293 个)
 
-> `tasks/done/` — 292 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
+> `tasks/done/` — 293 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
 
 近期关键完成里程碑（done/ 顶层）:
 - P42-W0-W1-COMBO / P42-W2-COMBO — P42 治理面 SSOT 同步
@@ -70,5 +77,5 @@ status: archived
 | bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | blocked |
 
 ---
-*Updated: 2026-09-06 (依据 `omo state sync-tasks` 与真实目录重算: done=292, planned=8, active=1, blocked=1, archived=6 顶层)*
+*Updated: 2026-09-11 (依据 `omo state sync-tasks` 与真实目录重算: done=293, planned=15, active=1, blocked=1, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
