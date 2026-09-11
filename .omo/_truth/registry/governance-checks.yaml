@@ -179,7 +179,8 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 602
+    script_baseline: 650
+    # 2026-09-11: +48 T16 ops check-signals + gen-service-configs 语法修复 + cron 准入 (BET-Y1Q4-T16)
     # 2026-09-07: +1 resident-sandbox-timemachine (BET-Y1Q4-T10-133 沙箱基建)
     # 2026-09-07: +2 T10-129 check-submodule-consistency + generate-submodule-health-report (子模块生命周期管理)
     # 2026-09-06: -2 删除 placeholder guard-chore-state.py + notify-submodule-change.py (canonical 内联已有真实实现, BET-Y1Q4-T6-24 净减)
