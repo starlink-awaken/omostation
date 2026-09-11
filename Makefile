@@ -339,7 +339,7 @@ worktree-guard:  ## 检查 worktree 数量上限
 	bash bin/gac/gac-worktree-guard.sh --check
 
 worktree-prune:  ## 清理已合并/冗余 worktree
-	bash bin/gac/gac-worktree-prune.sh --apply
+	bash bin/gac/gac-branch-prune.sh
 
 escape-digest:  ## D4 逃逸台账只读聚类 (不改白名单, ADR-0422)
 	python3 bin/gac/escape-digest.py --dry-run

@@ -18,7 +18,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-WORKSPACE = Path(__file__).resolve().parents[2]
+WORKSPACE = Path(__file__).resolve().parents[1]
 REGISTRY = WORKSPACE / ".omo" / "cron" / "registry.yaml"
 
 
@@ -87,11 +87,22 @@ def main():
 
 
 def check_drift():
-    """校验登记源 vs crontab 安装态一致性."""
+    """校验登记源 vs crontab 安装态一致性.
+
+    只比较 status=active 且 planes 含 crontab 的条目; status=proposed 是尚未
+    正式启用的治理巡检 backlog, 不该被算成 drift (v2, TASK-B3229A65)。
+    """
     registered = _load_jobs()
     reg_set = set()
     for j in registered:
+        if j.get("status", "active") != "active":
+            continue
+        if "crontab" not in j.get("planes", []):
+            continue
         sched, cmd = j.get("schedule", ""), j.get("command", "")
+        cmd = cmd.replace('"$HOME/Workspace"', "/Users/xiamingxing/Workspace").replace(
+            "$HOME/Workspace", "/Users/xiamingxing/Workspace"
+        )
         reg_set.add(f"{sched} {cmd}"[:120])
     try:
         r = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=10)

@@ -1,95 +1,364 @@
-# 调度编译器登记源 — 单一事实源 (ADR-A)
+# 调度编译器登记源 — 单一事实源 (ADR-A, ADR-0119/0121)
 # 编译产物: crontab / launchd / GitHub Actions schedule
-version: 1
+#
+# v2 (2026-09-11, TASK-B3229A65): 收敛 3 个互相矛盾的历史声明源——
+#   v1 registry.yaml (10条, 全部从未真正安装) /
+#   .omo/cron/operating-rhythm-crontab (14条, ADR-0119/0121, OMO_WORKSPACE_ROOT 留空从未安装) /
+#   真实 `crontab -l` (10条, 唯一真的在保护系统, 但两个声明文件都不认识它)
+# 每条都标 `reality`, 冲突处保留 reconciliation_note, 不静默替你做决定。
+# operating-rhythm-crontab 内容已并入本文件, 原文件归档到 bin/_archive/。
+version: 2
 jobs:
+
+  # ── 真实在跑 (reality: installed) ── 与当前 crontab -l 完全一致 ──
+
+  - name: log-rotate-daily
+    schedule: "0 3 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/log-rotate.py --daily >> runtime/cron/log-rotate.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-11 修复: 原命令 bash bin/gac/log-rotate.sh 已不存在 (A5 dead-ref),
+      改指向已验证可用的 bin/ssot/log-rotate.py --daily (与 operating-rhythm-crontab
+      08:35 声明的脚本一致，收敛为一条，删除重复声明)。
+
+  - name: worktree-hygiene-daily
+    schedule: "0 4 * * *"
+    command: 'cd "$HOME/Workspace" && make worktree-hygiene >> runtime/cron/worktree-hygiene.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      make 目标实际调用 bin/gac/worktree-hygiene-audit.py --auto-clean --fail-on-unsafe。
+      v1 registry 原声明多带 --stale-days 3 且用 --execute 而非 --fail-on-unsafe；
+      是否需要把这两个 flag 补回 make 目标，留给 owner 决定 (D2)。
+
+  - name: branch-prune-daily
+    schedule: "30 4 * * *"
+    command: 'cd "$HOME/Workspace" && make worktree-prune >> runtime/cron/branch-prune.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-11 修复: Makefile 的 worktree-prune 目标原调用不存在的
+      bin/gac/gac-worktree-prune.sh (A4 新发现的死引用)，已改指向真实存在的
+      bin/gac/gac-branch-prune.sh 并用 --dry-run 验证可用。v1 registry 原声明为
+      每周一 03:30 (weekly)，真实安装是每天 04:30 (daily)；频率不同，保留真实
+      运行的每日频率为准，如需改回每周请 owner 定夺 (D2)。
+
+  - name: hygiene-dir-daily
+    schedule: "0 5 * * *"
+    command: 'cd "$HOME/Workspace" && make hygiene-dir >> runtime/cron/hygiene-dir.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: 纯登记债务补齐，两个旧声明文件都没有这条，无冲突。
+
+  - name: weekly-hygiene-patrol
+    schedule: "0 7 * * 1"
+    command: 'cd "$HOME/Workspace" && make hygiene-patrol >> runtime/cron/weekly-hygiene.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: 纯登记债务补齐，无冲突。
+
+  - name: ssot-guardian-weekly
+    schedule: "0 6 * * 3"
+    command: 'cd "$HOME/Workspace" && make ssot-guardian >> runtime/cron/ssot-sync.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      v1 registry 原声明 ssot-guardian-daily 为每天 05:00；真实安装是每周三 06:00，
+      脚本本体相同 (make ssot-guardian → bin/ssot/ssot-guardian.py)，只是频率不同。
+      保留真实运行的每周频率为准 (D3)。
+
+  - name: capability-registry-sync-daily
+    schedule: "5 4 * * *"
+    command: >-
+      cd "$HOME/Workspace" && git add docs/generated/capability-registry.yaml
+      docs/INDEX-MCP.md docs/CLI-REFERENCE.md 2>/dev/null && git diff --cached
+      --quiet || git commit -m 'chore(auto): capability-registry daily sync [skip ci]'
+      >> runtime/cron/capability-registry-sync.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      v1 registry 声明 make sync-capability-registry (调用 gen-capability-registry.py
+      生成投影)，真实安装是生成后的 git add/commit 步骤。两者功能互补(先生成后提交)，
+      建议未来合并成一条 "生成→提交" 完整流水线，而非两个各自代表不同世代的独立声明。
+
+  - name: ecos-kems-freshness-daily
+    schedule: "30 4 * * *"
+    command: >-
+      cd $HOME/Workspace/projects/ecos && python3
+      src/ecos/ssot/tools/mof-kems-bridge.py --freshness >>
+      $HOME/Workspace/runtime/cron/kems-freshness.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: 纯登记债务补齐，无冲突。
+
+  - name: mof-sla-m0-snapshot-daily
+    schedule: "35 4 * * *"
+    command: >-
+      cd $HOME/Workspace/projects/ecos && python3 src/ecos/ssot/tools/mof-sla.py
+      --snapshot-only >> $HOME/Workspace/runtime/cron/mof-sla-m0.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: 纯登记债务补齐，无冲突。
+
+  # l4-harness-6h (真实在跑: 0 */6 * * * bash projects/l4-kernel/scripts/harness-cron.sh)
+  # 2026-09-11 发现: 故意不在此登记。l4-kernel 是 dao_layer=dao 组件, 一旦登记进
+  # 这份 cron registry, bin/gac/check-sfop-slots.py 的 CR-DFSQ-01("dao 层组件
+  # 不得出现在 cron 执行账本")会硬性 FAIL——这条规则对任何 status 值都无条件检查,
+  # 不存在标 proposed 就能绕过的办法。这个 cron job 本身已经真实运行、违反
+  # CR-DFSQ-01 有一段时间了(不是本次改动引入的), 只是此前从未被任何声明源登记过,
+  # 所以一直没触发这条检查。是否该让 l4-kernel 的每日 harness 巡检继续走 cron、
+  # 还是改走别的机制(或重新评估 l4-kernel 的 dao_layer 归类), 是一个独立的架构决定,
+  # 不该在这次"调度声明收敛"里顺手拍板。见 open_decisions D7。
+
+  # ── 面板刷新: 2026-09-11 退出 Codex LLM automation (token 耗尽即停摆),
+  #    改用 launchd，零推理需求、零 token 依赖 ──
+
+  - name: zhixing-dashboard-refresh
+    schedule: "*/5 * * * *"
+    command: >-
+      PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 -B
+      /Users/xiamingxing/.local/share/zhixing-dashboard/refresh.py
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: agent-experience-steward
+    sfop_slot: S
+    reconciliation_note: >
+      已验证: ~/Library/LaunchAgents/com.omostation.zhixing-dashboard-refresh.plist,
+      StartInterval=300, WorkingDirectory=zhixing-dashboard 目录 (缺这个会静默不执行,
+      已踩过一次坑修好)。原 Codex automation `~/.codex/automations/automation` 保持
+      PAUSED, 建议后续正式归档删除, 避免和这条重复。
+
+  # ── 从未真正安装, 只存在于声明文件里 (reality: declared_only) ──
+  # 以下 10 条来自 operating-rhythm-crontab (ADR-0119/0121), 设计有 fail-closed
+  # 防护 (OMO_WORKSPACE_ROOT 校验), 但从未真正 `crontab` 安装过。是否现在正式启用
+  # 是新增真实自动化的决定 (D4), 本次收敛只做文档统一, 不擅自激活。
+  # 若启用: 需要真实设置 OMO_WORKSPACE_ROOT=/Users/xiamingxing/Workspace (原模板留空)。
+
+  - name: agent-workflow-status-daily
+    schedule: "0 9 * * *"
+    command: >-
+      cd "$HOME/Workspace" && bash bin/gac/heartbeat-wrapper.sh
+      agent-workflow-status uv run --with pyyaml python bin/agent-workflow.py
+      status --json >> runtime/cron/operating-rhythm-daily.log 2>&1
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: governance-evolution-status-daily
+    schedule: "5 9 * * *"
+    command: >-
+      cd "$HOME/Workspace" && uv run --with pyyaml python
+      bin/gac/governance-evolution.py status --json >>
+      runtime/cron/operating-rhythm-daily.log 2>&1
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: governance-evolution-packages-daily
+    schedule: "10 9 * * *"
+    command: >-
+      cd "$HOME/Workspace" && uv run --with pyyaml python
+      bin/gac/governance-evolution.py packages --json >>
+      runtime/cron/operating-rhythm-daily.log 2>&1
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: m4-health-score-daily
+    schedule: "15 9 * * *"
+    command: >-
+      cd "$HOME/Workspace" && uv run --with pyyaml python
+      bin/mof/m4-health-score.py --emit >> runtime/cron/operating-rhythm-daily.log 2>&1
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: agent-workflow-doctor-daily
+    schedule: "20 9 * * *"
+    command: >-
+      cd "$HOME/Workspace" && uv run --with pyyaml python
+      bin/agent-workflow.py doctor --json >> runtime/cron/operating-rhythm-daily.log 2>&1
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: mof-drift-weekly
+    schedule: "5 10 * * 1"
+    command: 'cd "$HOME/Workspace" && bin/mof/mof-drift >> runtime/cron/operating-rhythm-weekly.log 2>&1'
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: debt-refresh-weekly
+    schedule: "30 10 * * 1"
+    command: >-
+      cd "$HOME/Workspace" && uv run --project projects/omo omo debt refresh
+      --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> runtime/cron/operating-rhythm-weekly.log 2>&1
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: weekly-review-post-inbox
+    schedule: "35 10 * * 1"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/weekly-review.py --post-inbox >> runtime/cron/weekly-review.log 2>&1'
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: drift-sweep-weekly
+    schedule: "0 9 * * 3"
+    command: >-
+      cd "$HOME/Workspace" && bash bin/gac/heartbeat-wrapper.sh drift-sweep
+      python3 bin/gac/drift-sweep.py --json >> runtime/cron/drift-sweep.log 2>&1
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: capability-ownership-daily
+    schedule: "30 8 * * *"
+    command: >-
+      cd "$HOME/Workspace" && bash bin/gac/heartbeat-wrapper.sh
+      capability-ownership python3 bin/gac/check-capability-ownership.py --json
+      >> runtime/cron/capability-ownership.log 2>&1
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: observability-events-adapters-daily
+    schedule: "30 8 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/observability-events.py adapters run >> runtime/cron/observability-daily.log 2>&1'
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
+  - name: anomaly-alert-daily
+    schedule: "45 8 * * *"
+    command: >-
+      cd "$HOME/Workspace" && python3 bin/gac/anomaly-detector.py --json >>
+      runtime/cron/observability-daily.log 2>&1 && python3 bin/gac/alert-router.py
+      --window 20 >> runtime/cron/observability-daily.log 2>&1
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
   - name: meta-doctor-daily
     schedule: "25 9 * * *"
     command: 'cd "$HOME/Workspace" && python3 bin/gac/meta-doctor.py --json >> runtime/cron/operating-rhythm-daily.log 2>&1'
     planes: [crontab]
-    sla_heartbeat_hours: 48
+    reality: declared_only
+    status: proposed
     owner: governance-team
     sfop_slot: S
-    status: active
+    reconciliation_note: v1 registry 与 operating-rhythm-crontab 各有一份几乎相同定义, 已收敛为这一条。
 
-  - name: debt-refresh-weekly
-    schedule: "30 10 * * 1"
-    command: 'cd "$HOME/Workspace" && uv run --project projects/omo omo debt refresh --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> runtime/cron/operating-rhythm-weekly.log 2>&1'
+  - name: unified-health-score-sync-daily
+    schedule: "30 9 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/gac/unified-health-score.py --sync >> runtime/cron/operating-rhythm-daily.log 2>&1'
     planes: [crontab]
-    sla_heartbeat_hours: 336
+    reality: declared_only
+    status: proposed
     owner: governance-team
     sfop_slot: S
-    status: active
 
-  - name: agent-workflow-status
-    schedule: "0 9 * * *"
-    command: 'cd "$HOME/Workspace" && uv run --with pyyaml python bin/agent-workflow.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1'
+  - name: rules-lifecycle-weekly
+    schedule: "0 9 * * 1"
+    command: 'cd "$HOME/Workspace" && python3 bin/gac/rules-lifecycle.py >> .omo/_log/rules-lifecycle.log 2>&1'
     planes: [crontab]
-    sla_heartbeat_hours: 48
+    reality: declared_only
+    status: proposed
     owner: governance-team
     sfop_slot: S
-    status: active
-
-  - name: governance-evolution-status
-    schedule: "5 9 * * *"
-    command: 'cd "$HOME/Workspace" && uv run --with pyyaml python bin/governance-evolution.py status --json >> runtime/cron/operating-rhythm-daily.log 2>&1'
-    planes: [crontab]
-    sla_heartbeat_hours: 48
-    owner: governance-team
-    sfop_slot: S
-    status: active
-
-  # ── 运维卫生四件套 (2026-09-05 固化: 原 session 级 cron, session 结束即失效) ──
-
-  - name: worktree-hygiene-daily
-    schedule: "0 2 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/gac/worktree-hygiene-audit.py --auto-clean --execute --stale-days 3 >> runtime/cron/worktree-hygiene.log 2>&1'
-    planes: [crontab]
-    sla_heartbeat_hours: 48
-    owner: governance-team
-    sfop_slot: S
-    status: active
-
-  - name: branch-prune-weekly
-    schedule: "30 3 * * 1"
-    command: 'cd "$HOME/Workspace" && bash bin/gac/gac-branch-prune.sh >> runtime/cron/branch-prune.log 2>&1'
-    planes: [crontab]
-    sla_heartbeat_hours: 336
-    owner: governance-team
-    sfop_slot: S
-    status: active
-
-  - name: capability-registry-sync-daily
-    schedule: "0 4 * * *"
-    command: 'cd "$HOME/Workspace" && make sync-capability-registry >> runtime/cron/capability-registry-sync.log 2>&1'
-    planes: [crontab]
-    sla_heartbeat_hours: 48
-    owner: governance-team
-    sfop_slot: S
-    status: active
-
-  - name: ssot-guardian-daily
-    schedule: "0 5 * * *"
-    command: 'cd "$HOME/Workspace" && make ssot-guardian >> runtime/cron/ssot-guardian.log 2>&1'
-    planes: [crontab]
-    sla_heartbeat_hours: 48
-    owner: governance-team
-    sfop_slot: S
-    status: active
+    reconciliation_note: ADR-0431 D2 要求的规则生命周期扫描, 目前完全没有在跑。
 
   - name: scene-calibration-weekly
     schedule: "0 6 * * 1"
     command: 'cd "$HOME/Workspace" && python3 bin/ssot/calibration-engine.py daily >> runtime/cron/scene-calibration.log 2>&1'
     planes: [crontab]
-    sla_heartbeat_hours: 336
+    reality: declared_only
+    status: proposed
     owner: governance-team
     sfop_slot: S
-    status: active
 
   - name: scene-registry-sync-daily
     schedule: "15 6 * * *"
     command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-v3-registry.py generate >> runtime/cron/scene-registry.log 2>&1'
     planes: [crontab]
-    sla_heartbeat_hours: 48
+    reality: declared_only
+    status: proposed
     owner: governance-team
     sfop_slot: S
-    status: active
+
+# ── 待人工一次性拍板 (不影响本次收敛的文档统一, 只影响是否改变真实运行行为) ──
+open_decisions:
+  - id: D2
+    question: worktree-hygiene 是否要把 --stale-days 3 补回 make 目标? branch-prune 频率日/周哪个对?
+  - id: D3
+    question: ssot-guardian 频率到底是每日还是每周三? 当前保留真实运行的每周三。
+  - id: D4
+    question: >-
+      上面 17 条 status: proposed 的治理巡检任务(agent-workflow-status/governance-evolution/
+      m4-health-score/doctor/mof-drift/debt-refresh/weekly-review/drift-sweep/
+      capability-ownership/observability/anomaly-alert/meta-doctor/unified-health-score/
+      rules-lifecycle/scene-calibration/scene-registry-sync) 是否现在正式启用为真实
+      crontab? 这是新增自动化, 不是文档整理, 需要单独决定, 启用前需设置真实
+      OMO_WORKSPACE_ROOT。
+  - id: D7
+    question: >-
+      真实在跑的 l4-harness-6h(每6小时跑一次 projects/l4-kernel 的 harness 巡检)
+      违反 CR-DFSQ-01(dao 层组件不得出现在 cron 执行账本), 且已经违反了一段时间
+      (不是本次改动引入)。故意没有登记进本文件(登记会让 check-sfop-slots.py 硬性
+      FAIL)。需要决定: 停用这条 cron、把 harness 巡检挪到 cron 之外的机制、还是
+      重新评估 l4-kernel 的 dao_layer 归类。
