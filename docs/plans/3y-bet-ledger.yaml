@@ -27608,7 +27608,7 @@ bets:
   title: A5 AetherForge 门面常驻化恢复 — launchd 服务缺失修复
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
   value_indicator_policy: false
   parent_bet_id: BET-Y1Q4-T10-146
   goal: 2026-09-11 排查"本地 agent 工具无法接入 omlxc 算力"时发现真正根因：
@@ -27640,6 +27640,37 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:8d7f260ed6510857fd4d17ac0213e62963357785d4368f9e2d3840423faa9b0d
     decision_ref: decision://accepted/BET-Y1Q4-T10-153
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+          merged_reachable_commit:
+            ref: git://origin/main@cf83e34c0472785e138c0a13b6da4b8f8524d7ee
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+    decision_ref: decision://accepted/BET-Y1Q4-T10-153
+  done_at: 2026-09-11
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
