@@ -98,7 +98,10 @@ def test_immutable_writer_blocks_history_rewrites_and_upstream_merges(
     for argv in blocked:
         proc = _run(script, env, *argv)
         assert proc.returncode != 0, (argv, proc.stdout, proc.stderr)
-        assert "immutable" in proc.stderr.lower(), (argv, proc.stderr)
+        if argv[0] == "push" or "push" in argv:
+            assert "PUBLICATION_OWNER_REQUIRED" in proc.stderr, (argv, proc.stderr)
+        else:
+            assert "immutable" in proc.stderr.lower(), (argv, proc.stderr)
 
 
 @pytest.mark.parametrize("shim", [False, True], ids=["swarm-git", "git-shim-fallback"])
@@ -127,7 +130,7 @@ def test_immutable_writer_allows_abort_and_read_only_recovery(
 
 
 @pytest.mark.parametrize("shim", [False, True], ids=["swarm-git", "git-shim-fallback"])
-def test_immutable_writer_allows_only_atomic_first_publication_lease(
+def test_immutable_writer_rejects_all_publication_forms(
     tmp_path: Path,
     shim: bool,
 ) -> None:
@@ -136,51 +139,31 @@ def test_immutable_writer_allows_only_atomic_first_publication_lease(
     env["FAKE_GIT_BRANCH"] = branch
     head = "a" * 40
 
-    allowed = _run(
-        script,
-        env,
-        "push",
-        "--porcelain",
-        f"--force-with-lease=refs/heads/{branch}:",
-        "origin",
-        f"{head}:refs/heads/{branch}",
+    push_forms = (
+        ("push", "origin", "HEAD"),
+        ("push", "-f", "origin", "HEAD"),
+        ("push", "--force", "origin", "HEAD"),
+        ("push", "--force-with-lease", "origin", "HEAD"),
+        (
+            "push",
+            "--porcelain",
+            f"--force-with-lease=refs/heads/{branch}:",
+            "origin",
+            f"{head}:refs/heads/{branch}",
+        ),
+        ("push", "--no-verify", "origin", "HEAD"),
+        ("-C", ".", "push", "origin", "HEAD"),
+        ("-c", "push.default=current", "push", "origin", "HEAD"),
+        ("--git-dir=.git", "push", "--force", "origin", "HEAD"),
     )
-    assert allowed.returncode == 0, (allowed.stdout, allowed.stderr)
-    assert f"--force-with-lease=refs/heads/{branch}:" in log.read_text(encoding="utf-8")
-
-    for argv in (
-        (
-            "push",
-            "--porcelain",
-            f"--force-with-lease=refs/heads/{branch}",
-            "origin",
-            f"{head}:refs/heads/{branch}",
-        ),
-        (
-            "push",
-            "--porcelain",
-            "--force-with-lease=refs/heads/agent/actor-1--other:",
-            "origin",
-            f"{head}:refs/heads/{branch}",
-        ),
-        (
-            "push",
-            "--porcelain",
-            f"--force-with-lease=refs/heads/{branch}:",
-            "origin",
-            f"{head}:refs/heads/agent/actor-1--other",
-        ),
-        (
-            "push",
-            "--porcelain",
-            f"--force-with-lease=refs/heads/{branch}:",
-            "fork",
-            f"{head}:refs/heads/{branch}",
-        ),
-    ):
+    for argv in push_forms:
         blocked = _run(script, env, *argv)
         assert blocked.returncode != 0, (argv, blocked.stdout, blocked.stderr)
-        assert "immutable" in blocked.stderr.lower()
+        assert "PUBLICATION_OWNER_REQUIRED" in blocked.stderr, (argv, blocked.stderr)
+
+    # Fake git only creates the log when a command is forwarded; absence means
+    # zero publication-effect calls reached the recorder.
+    assert (not log.exists()) or log.read_text(encoding="utf-8") == ""
 
 
 @pytest.mark.parametrize("shim", [False, True], ids=["swarm-git", "git-shim-fallback"])

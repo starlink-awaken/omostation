@@ -3,35 +3,39 @@ id: bin/gac/gh-api-push.sh
 name: Gh Api Push
 category: governance
 owner: governance-team
-description: "GitHub API 一键推送交付物到分支 — 内置 base_tree 完整快照 + 推后验证 .github/workflows 存在 (BASE-TREE-SNAPSHOT golden rule 防复发)。用法: gh-api-push.sh <owner> <repo> <branch> <base-ref> <commit-msg> <file...>"
+description: >
+  Non-publishing / proposal-only / diagnostic-read-only surface (WP1 Wave B3).
+  Emits PUBLICATION_OWNER_REQUIRED before any Git Data API write. Does not claim
+  publishing capability. Canonical remote ref/PR publication is managed
+  clone-lifecycle integrate only; proposal creation is not publication and
+  unknown outcomes remain query-only.
 inputs:
   - name: owner
     type: string
-    description: GitHub owner (e.g. starlink-awaken)
+    description: GitHub owner (diagnostic argv only; no write effect)
   - name: repo
     type: string
-    description: GitHub repo (e.g. omostation)
+    description: GitHub repo (diagnostic argv only; no write effect)
   - name: branch
     type: string
-    description: 目标分支名 (不存在则基于 base-ref 创建)
+    description: Target branch name (rejected; no ref write)
   - name: base-ref
     type: string
-    description: base ref (main 或 完整 sha)
+    description: Base ref name or sha (diagnostic argv only; no write effect)
   - name: commit-msg
     type: string
-    description: commit message
+    description: Commit message (rejected; no commit write)
   - name: files
     type: list
-    description: 要推送的本地文件路径 (相对 workspace root)
+    description: Local file paths (rejected; no blob/tree write)
 outputs:
   - type: exit_code
   - type: json
 dependencies: []
 triggers:
-  - API 推送交付物到 GitHub 分支
-  - 建 commit / 更新 ref / 推送 PR 分支
+  - Diagnostic rejection of legacy Git Data API publication attempts
 related:
-  - bin/gac/gac-worktree.sh
-  - docs/operations/engineering-golden-rules.md
+  - bin/gac/clone-lifecycle.py
+  - docs/plans/AGENT-BRIEF.md
 maturity: draft
-last_reviewed: "2026-08-24"
+last_reviewed: "2026-09-11"
