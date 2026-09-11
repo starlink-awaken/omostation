@@ -1,7 +1,7 @@
 ---
 schema: bet-retro/v1
 bet_id: BET-Y1Q4-T16
-status: completed
+status: archived
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-11

@@ -27730,28 +27730,28 @@ bets:
             ref: git://origin/main@cbf5eb98918d2c920d616ed04fd3c9161e153209
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
-            sha256: sha256:2b945ea33b96626f33182b5611e9388f61f876577eff883b32383908cd25e608
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
-            sha256: sha256:2b945ea33b96626f33182b5611e9388f61f876577eff883b32383908cd25e608
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
-            sha256: sha256:2b945ea33b96626f33182b5611e9388f61f876577eff883b32383908cd25e608
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
-            sha256: sha256:2b945ea33b96626f33182b5611e9388f61f876577eff883b32383908cd25e608
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
-            sha256: sha256:2b945ea33b96626f33182b5611e9388f61f876577eff883b32383908cd25e608
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
-            sha256: sha256:2b945ea33b96626f33182b5611e9388f61f876577eff883b32383908cd25e608
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
-            sha256: sha256:2b945ea33b96626f33182b5611e9388f61f876577eff883b32383908cd25e608
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
       value:
         status: NOT_PROVEN
         evidence: {}
