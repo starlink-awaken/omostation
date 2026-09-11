@@ -255,6 +255,7 @@ def check(
             "constraint_ids": [
                 "CR-SFOP-01",
                 "CR-SFOP-02",
+                "CR-SFOP-03",
                 "CR-SFOP-04",
                 "CR-SFOP-05",
                 "CR-SFOP-06",
@@ -399,6 +400,18 @@ def check(
             f"{ns_hits} (preferred; north_star_meter_v2 already excludes self-data)"
         )
 
+    # CR-SFOP-03: B 槽后端不得拥有收件箱。cli.py 的 cell 分支必须经 Mesh
+    # (dispatch_backend) 分发，不得直连 cell_cli（否则后端独立充当收件箱）。
+    cli_py = repo_root / "projects/omo/src/omo/cli.py"
+    if cli_py.exists():
+        cli_src = cli_py.read_text(encoding="utf-8")
+        if 'args[0] == "cell"' in cli_src and "cell_cli" in cli_src:
+            if "dispatch_backend" not in cli_src:
+                errors.append(
+                    "CR-SFOP-03: cli.py cell 分支直连 cell_cli（后端拥有收件箱）；"
+                    "必须经 Mesh dispatch_backend 分发"
+                )
+
     return {
         "ok": not errors,
         "errors": errors,
@@ -411,6 +424,7 @@ def check(
         "constraint_ids": [
             "CR-SFOP-01",
             "CR-SFOP-02",
+            "CR-SFOP-03",
             "CR-SFOP-04",
             "CR-SFOP-05",
             "CR-SFOP-06",
