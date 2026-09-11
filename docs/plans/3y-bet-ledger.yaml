@@ -26992,7 +26992,8 @@ bets:
   title: A3 Managed Python test-only integration recovery
   appetite: 0.5 days
   priority: P0
-  status: candidate
+  status: done
+  done_at: 2026-09-11
   goal: 仅通过修复现有测试 fixture，恢复真实 thin hook → hook-runner → managed-Python selector
     与 clone-snapshot 身份合同的集成覆盖，不改变任何生产行为。
   non_goals:
@@ -27036,15 +27037,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@5fb98bd3f4a342b77c5a0560eaf13bc02ed5d893
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-09-08-managed-python-integration-recovery-design.md
+            sha256: sha256:e097950a5979c2a7b05edb75d8e432171a4050e8cf6a259f3053a308d9d639a1
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-08-managed-python-integration-recovery-design.md
+            sha256: sha256:e097950a5979c2a7b05edb75d8e432171a4050e8cf6a259f3053a308d9d639a1
+          rollback:
+            ref: receipt://docs/superpowers/specs/2026-09-08-managed-python-integration-recovery-design.md
+            sha256: sha256:e097950a5979c2a7b05edb75d8e432171a4050e8cf6a259f3053a308d9d639a1
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/superpowers/specs/2026-09-08-managed-python-integration-recovery-design.md
+            sha256: sha256:e097950a5979c2a7b05edb75d8e432171a4050e8cf6a259f3053a308d9d639a1
+          fresh_receipt:
+            ref: receipt://docs/superpowers/specs/2026-09-08-managed-python-integration-recovery-design.md
+            sha256: sha256:e097950a5979c2a7b05edb75d8e432171a4050e8cf6a259f3053a308d9d639a1
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-09-08-managed-python-integration-recovery-design.md
+            sha256: sha256:e097950a5979c2a7b05edb75d8e432171a4050e8cf6a259f3053a308d9d639a1
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-09-08-managed-python-integration-recovery-design.md
+            sha256: sha256:e097950a5979c2a7b05edb75d8e432171a4050e8cf6a259f3053a308d9d639a1
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   circuit_breaker: accepted Spec digest、generated WorkPacket 或 claim 若超出唯一测试文件，或任何生产路径、默认门、CI
     要求扩大范围，则立即停止并申请 scope successor；不得旁路或以 test-only green 宣称 A3 已完整通过。
 - id: BET-Y1Q4-T10-143
