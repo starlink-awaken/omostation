@@ -27535,6 +27535,7 @@ bets:
   appetite: 2 days
   priority: P1
   status: candidate
+  value_indicator_policy: false
   parent_bet_id: BET-Y1Q4-T10-146
   goal: 2026-09-11 A4/A5 收口过程中发现：com.omostation.resident-daemon、 com.omostation.pipeline-morning、com.omostation.tailscale-heartbeat
     三个 launchd 服务的 ProgramArguments/WorkingDirectory 指向 /Users/xiamingxing/ws-t1069（该目录存在但不是
@@ -27554,6 +27555,14 @@ bets:
   risk_level: L1
   retro: required
   circuit_breaker: 发现有其他 agent 正在处理 ws-t1069 归属问题时立即停止，不重复劳动。
+  write_surfaces:
+  - docs/superpowers/specs/2026-09-11-a5-launchd-ws-t1069-fix.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-152.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-11-a5-launchd-ws-t1069-fix.md
+    spec_version: 1.0.0
+    content_digest: sha256:c1a2fe8d14405235e91af84941d7580e0f0c9a6891b55230cc20e1d883adad21
+    decision_ref: decision://accepted/BET-Y1Q4-T10-152
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
