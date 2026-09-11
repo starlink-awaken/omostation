@@ -27835,10 +27835,18 @@ bets:
   - projects/cockpit/src/cockpit/observatory/
   - projects/cockpit/src/cockpit/web/
   - projects/cockpit/src/cockpit/dashboard_server.py
+  - projects/cockpit/tests/
+  - .omo/cron/registry.yaml
+  - .omo/_truth/registry/services.yaml
   human_gate: false
   risk_level: L1
   retro: required
   circuit_breaker: 采集逻辑若出现单次请求阻塞超过 500ms，立即熔断降级为缓存快照。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-11-cockpit-nextgen-architecture-and-six-planes-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:8ee45eb70954907dba8dea308a702800e8d15125fbbe3660445837bf06f2e7a3
+    decision_ref: decision://accepted/BET-Y1Q4-T8-24A
 - id: BET-Y1Q4-T8-24B
   track: T8-SURFACE
   window: Y1Q4
