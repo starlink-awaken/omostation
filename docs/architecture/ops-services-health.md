@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-11
+---
 # ops services 健康状态说明 (BET-Y1Q4-T14)
 
 > **关联**: BET-Y1Q4-T14 (ops services 清理立项)

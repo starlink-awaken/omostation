@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-11
+---
 # Scene System v3 — 场景系统全面体系化设计
 
 > 版本：v3.1.0 | 日期：2026-09-07 | 状态：已实现
