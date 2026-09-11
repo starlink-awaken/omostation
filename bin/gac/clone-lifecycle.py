@@ -35,6 +35,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]  # workspace root
 AGENT_CLONE = ROOT / "bin" / "gac" / "agent-clone.py"
+AGENT_WORKFLOW = ROOT / "bin" / "agent-workflow.py"
+CLAIMS_AUTHORITY_ID = "omo-claims-authority-r0"
+CLAIMS_AUTHORITY_TIMEOUT_SECONDS = 5.0
 
 EXIT_OK = 0
 EXIT_POLICY = 1
@@ -1108,6 +1111,305 @@ def cmd_changeset(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _authority_canonical_json(value: object) -> str:
+    return json.dumps(
+        value,
+        ensure_ascii=True,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _authority_digest(value: object) -> str:
+    if isinstance(value, dict):
+        preimage = {
+            key: item for key, item in value.items() if key not in {"digest", "signature"}
+        }
+    else:
+        preimage = value
+    return "sha256:" + hashlib.sha256(_authority_canonical_json(preimage).encode("utf-8")).hexdigest()
+
+
+def _account_authority_paths() -> dict[str, Path]:
+    import pwd
+
+    account_home = Path(pwd.getpwuid(os.getuid()).pw_dir)
+    authority_dir = account_home / "agents/_shared/runtime/omo-claims-authority-r0"
+    return {
+        "account_home": account_home,
+        "integration_root": account_home / "Workspace",
+        "authority_dir": authority_dir,
+        "store": authority_dir / "store.sqlite3",
+        "high_water": authority_dir / "high-water.json",
+        "backups": authority_dir / "backups",
+        "witness": authority_dir / "activation-witness.json",
+    }
+
+
+def call_claims_authority(verb: str, request: dict | None = None) -> dict:
+    """One-request stdio call to the root claims-authority entry. Never runs Git/gh."""
+    paths = _account_authority_paths()
+    runner = paths["integration_root"] / "bin" / "agent-workflow.py"
+    if not runner.is_file():
+        # Fall back to this checkout's script for hermetic tests / lazy bootstrap.
+        runner = AGENT_WORKFLOW
+    command = [sys.executable, str(runner), "claims-authority", verb]
+    encoded: str | None
+    if verb == "status":
+        if request is not None:
+            raise RuntimeError("REQUEST_SCHEMA_INVALID")
+        command.append("--json")
+        encoded = None
+    else:
+        if request is None:
+            raise RuntimeError("REQUEST_SCHEMA_INVALID")
+        command.extend(("--request-json", "-"))
+        encoded = _authority_canonical_json(request)
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=str(paths["integration_root"] if paths["integration_root"].is_dir() else ROOT),
+            input=encoded,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=CLAIMS_AUTHORITY_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError("AUTHORITY_UNAVAILABLE") from exc
+    lines = [line for line in completed.stdout.splitlines() if line.strip()]
+    if len(lines) != 1:
+        raise RuntimeError("AUTHORITY_UNAVAILABLE")
+    try:
+        response = json.loads(lines[0])
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("AUTHORITY_UNAVAILABLE") from exc
+    if not isinstance(response, dict) or response.get("schema") != "claims-authority-response/v2":
+        raise RuntimeError("AUTHORITY_UNAVAILABLE")
+    if response.get("ok") is not True:
+        error = response.get("error")
+        code = error.get("code") if isinstance(error, dict) else "AUTHORITY_UNAVAILABLE"
+        raise RuntimeError(str(code or "AUTHORITY_UNAVAILABLE"))
+    result = response.get("result")
+    if not isinstance(result, dict):
+        raise RuntimeError("AUTHORITY_UNAVAILABLE")
+    return result
+
+
+def claims_authority_activation_mode() -> str:
+    """Return unactivated|shadow-active. Fail closed on invalid activated witness."""
+    paths = _account_authority_paths()
+    witness_path = paths["witness"]
+    initialized = paths["store"].exists() or paths["high_water"].exists() or paths["backups"].exists()
+    try:
+        status = call_claims_authority("status", None)
+    except RuntimeError as exc:
+        if not witness_path.is_file():
+            if initialized or os.path.lexists(witness_path):
+                raise RuntimeError("AUTHORITY_ACTIVATION_WITNESS_INVALID") from exc
+            return "unactivated"
+        raise
+    state = status.get("activation_state")
+    if state == "unactivated" or status.get("code") == "not_activated":
+        return "unactivated"
+    if state == "shadow-active":
+        return "shadow-active"
+    raise RuntimeError("AUTHORITY_ACTIVATION_WITNESS_INVALID")
+
+
+def resolve_real_git_executable() -> str:
+    """Resolve a real Git executable outside shim wrappers."""
+    import shutil
+
+    found = shutil.which("git")
+    if not found:
+        raise RuntimeError("git_executable_missing")
+    resolved = Path(found).resolve()
+    name = resolved.name
+    # Reject known publication wrappers; descriptor-bound real git only.
+    if name in {"git-shim", "swarm-git"} or resolved.parent.name in {"git-shim"}:
+        raise RuntimeError("git_executable_shim_rejected")
+    return str(resolved)
+
+
+def build_remote_observation_pair(
+    *,
+    clone: Path,
+    git_executable: str,
+    remote_ref: str,
+    expected_oid: str,
+    descriptor_digest: str,
+    effect_process_id: str,
+) -> tuple[dict, dict]:
+    """Descriptor-bound remote double-read owned only by clone-lifecycle."""
+    observations: list[dict] = []
+    for _ in range(2):
+        probe = run(
+            [git_executable, "-C", str(clone), "ls-remote", "--exit-code", "origin", remote_ref]
+        )
+        oid = ""
+        if probe.returncode == 0:
+            rows = [line.split() for line in probe.stdout.splitlines() if line.strip()]
+            if rows and re.fullmatch(r"[0-9a-f]{40}", rows[0][0] or ""):
+                oid = rows[0][0]
+        if expected_oid == "" and oid == "":
+            observed = ""
+        else:
+            observed = oid
+        record = {
+            "schema": "claims-remote-observation/v1",
+            "authority_id": CLAIMS_AUTHORITY_ID,
+            "remote_ref": remote_ref,
+            "observed_oid": observed,
+            "expected_oid": expected_oid,
+            "descriptor_digest": descriptor_digest,
+            "git_executable_digest": _authority_digest({"path": git_executable}),
+            "effect_process_id": effect_process_id,
+        }
+        record["digest"] = _authority_digest(record)
+        observations.append(record)
+    first, second = observations
+    if (
+        first["remote_ref"] != second["remote_ref"]
+        or first["observed_oid"] != second["observed_oid"]
+        or first["descriptor_digest"] != second["descriptor_digest"]
+    ):
+        raise RuntimeError("REMOTE_OID_DRIFT")
+    return first, second
+
+
+def enter_legacy_publish_fence(
+    *,
+    clone: Path,
+    branch: str,
+    head_sha: str,
+    verification: dict,
+) -> dict:
+    """Issue + enter one consumable fence before the canonical push."""
+    git_executable = resolve_real_git_executable()
+    effect_process_id = f"integrate:{os.getpid()}:{secrets.token_hex(8)}"
+    remote_ref = f"refs/heads/{branch}"
+    status = call_claims_authority("status", None)
+    descriptor_digest = status.get("descriptor_digest")
+    if not isinstance(descriptor_digest, str) or not descriptor_digest:
+        raise RuntimeError("AUTHORITY_DESCRIPTOR_MISMATCH")
+    # New-branch publication expects empty remote OID before push.
+    first, second = build_remote_observation_pair(
+        clone=clone,
+        git_executable=git_executable,
+        remote_ref=remote_ref,
+        expected_oid="",
+        descriptor_digest=descriptor_digest,
+        effect_process_id=effect_process_id,
+    )
+    if first["observed_oid"] not in {"", None}:
+        raise RuntimeError("REMOTE_OID_DRIFT")
+    v1_snapshot_digest = _authority_digest(
+        {
+            "change_id": verification.get("change_id"),
+            "root_head_sha": verification.get("root_head_sha") or head_sha,
+            "changed_paths": verification.get("changed_paths") or [],
+        }
+    )
+    claim_version = status.get("sequence", 0)
+    lease_epoch = status.get("authority_epoch", 0)
+    issue_req = {
+        "schema": "claim-mutation-envelope/v2",
+        "operation": "issue-legacy-fence",
+        "request_id": str(__import__("uuid").uuid4()),
+        "authority_id": CLAIMS_AUTHORITY_ID,
+        "v1_decision": "allow",
+        "v1_snapshot_digest": v1_snapshot_digest,
+        "claim_version": claim_version,
+        "lease_epoch": lease_epoch,
+        "changeset_digest": verification.get("change_id"),
+        "head_sha": head_sha,
+        "remote_ref": remote_ref,
+        "expected_remote_oid": "",
+        "descriptor_digest": descriptor_digest,
+        "first_remote_observation": first,
+        "second_remote_observation": second,
+    }
+    issued = call_claims_authority("issue-legacy-fence", issue_req)
+    fence_id = issued.get("fence_id")
+    if not isinstance(fence_id, str) or not fence_id:
+        raise RuntimeError("LEGACY_FENCE_ISSUANCE_CLOSED")
+    # Re-read and enter publishing with a fresh observation pair.
+    first2, second2 = build_remote_observation_pair(
+        clone=clone,
+        git_executable=git_executable,
+        remote_ref=remote_ref,
+        expected_oid="",
+        descriptor_digest=descriptor_digest,
+        effect_process_id=effect_process_id,
+    )
+    if first2["observed_oid"] != first["observed_oid"]:
+        raise RuntimeError("REMOTE_OID_DRIFT")
+    enter_req = {
+        "schema": "claim-mutation-envelope/v2",
+        "operation": "enter-legacy-publishing",
+        "request_id": str(__import__("uuid").uuid4()),
+        "authority_id": CLAIMS_AUTHORITY_ID,
+        "fence_id": fence_id,
+        "expected_state": "issued",
+        "v1_snapshot_digest": v1_snapshot_digest,
+        "claim_version": claim_version,
+        "lease_epoch": lease_epoch,
+        "remote_ref": remote_ref,
+        "expected_remote_oid": "",
+        "first_remote_observation": first2,
+        "second_remote_observation": second2,
+    }
+    entered = call_claims_authority("enter-legacy-publishing", enter_req)
+    return {
+        "fence_id": fence_id,
+        "git_executable": git_executable,
+        "effect_process_id": effect_process_id,
+        "remote_ref": remote_ref,
+        "descriptor_digest": descriptor_digest,
+        "v1_snapshot_digest": v1_snapshot_digest,
+        "issue": issued,
+        "enter": entered,
+    }
+
+
+def settle_legacy_publish_fence(
+    *,
+    clone: Path,
+    fence_session: dict,
+    push_returncode: int,
+    head_sha: str,
+) -> dict:
+    """Settle the same fence from descriptor-bound remote observations. No Git from broker."""
+    outcome = "success" if push_returncode == 0 else "rejected"
+    first, second = build_remote_observation_pair(
+        clone=clone,
+        git_executable=str(fence_session["git_executable"]),
+        remote_ref=str(fence_session["remote_ref"]),
+        expected_oid=head_sha if outcome == "success" else "",
+        descriptor_digest=str(fence_session["descriptor_digest"]),
+        effect_process_id=str(fence_session["effect_process_id"]),
+    )
+    if outcome == "success" and first["observed_oid"] != head_sha:
+        outcome = "unknown"
+    settle_req = {
+        "schema": "claim-mutation-envelope/v2",
+        "operation": "settle-legacy-publication",
+        "request_id": str(__import__("uuid").uuid4()),
+        "authority_id": CLAIMS_AUTHORITY_ID,
+        "fence_id": fence_session["fence_id"],
+        "outcome": outcome,
+        "effect_process_id": fence_session["effect_process_id"],
+        "first_remote_observation": first,
+        "second_remote_observation": second,
+    }
+    settled = call_claims_authority("settle-legacy-publication", settle_req)
+    settled = dict(settled)
+    settled["_local_outcome"] = outcome
+    return settled
+
+
 def cmd_integrate(args: argparse.Namespace) -> int:
     """推送分支 + 创建 PR (dry-run 默认)."""
     clone = Path(args.clone)
@@ -1238,20 +1540,74 @@ def cmd_integrate(args: argparse.Namespace) -> int:
             or final_verification.stderr.strip()
             or "claims changed before push",
         )
-    # 推送分支
-    r = run(
-        [
-            "git",
-            "-C",
-            str(clone),
-            "push",
-            "--porcelain",
-            f"--force-with-lease=refs/heads/{branch}:",
-            "origin",
-            f"{head_sha}:refs/heads/{branch}",
-        ]
-    )
-    if r.returncode != 0:
+    # Wave B1 fence seam: inert before exact activation; mandatory after shadow-active.
+    fence_session = None
+    try:
+        activation_mode = claims_authority_activation_mode()
+    except RuntimeError as exc:
+        return reject(
+            "integrate",
+            "claims_authority_activation_invalid",
+            str(exc) or "claims authority activation is invalid",
+        )
+    if activation_mode == "shadow-active":
+        try:
+            fence_session = enter_legacy_publish_fence(
+                clone=clone,
+                branch=branch,
+                head_sha=head_sha,
+                verification=verification,
+            )
+        except RuntimeError as exc:
+            return reject(
+                "integrate",
+                "legacy_publish_fence_required",
+                str(exc) or "legacy publish fence unavailable",
+            )
+    elif activation_mode != "unactivated":
+        return reject(
+            "integrate",
+            "claims_authority_activation_invalid",
+            f"unsupported activation mode {activation_mode!r}",
+        )
+    # 推送分支 — canonical argv byte-for-byte (WP1 must not change it).
+    push_argv = [
+        "git",
+        "-C",
+        str(clone),
+        "push",
+        "--porcelain",
+        f"--force-with-lease=refs/heads/{branch}:",
+        "origin",
+        f"{head_sha}:refs/heads/{branch}",
+    ]
+    r = run(push_argv)
+    if fence_session is not None:
+        try:
+            settled = settle_legacy_publish_fence(
+                clone=clone,
+                fence_session=fence_session,
+                push_returncode=r.returncode,
+                head_sha=head_sha,
+            )
+        except RuntimeError as exc:
+            return reject(
+                "integrate",
+                "legacy_publish_fence_settle_failed",
+                str(exc) or "legacy publish fence settlement failed",
+            )
+        local_outcome = settled.get("_local_outcome")
+        if local_outcome == "unknown":
+            return reject(
+                "integrate",
+                "legacy_publish_unknown",
+                "push outcome is unknown; operator resolution required for the same fence",
+                fence_id=fence_session.get("fence_id"),
+            )
+        if local_outcome != "success" or r.returncode != 0:
+            audit("integrate_failed", f"push rc={r.returncode} fence={fence_session.get('fence_id')}")
+            return EXIT_POLICY
+    elif r.returncode != 0:
         audit("integrate_failed", f"push rc={r.returncode}")
         return EXIT_POLICY
     new_branch_marker = f":refs/heads/{branch}\t[new branch]"

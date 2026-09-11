@@ -3161,6 +3161,88 @@ def object_at_path(repo_root: str, revision: str, path: str) -> str | None:
     return proc.stdout.strip() if proc.returncode == 0 else None
 
 
+def build_claims_authority_shadow_projection(
+    *,
+    claim_verification: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Redacted observer projection only — never authority and never publication grant."""
+    observed_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    projection: dict[str, Any] = {
+        "schema": "claims-authority-projection/v2",
+        "authority_id": "omo-claims-authority-r0",
+        "security_level": "R0_COOPERATIVE",
+        "effective_claim_authority": "v1",
+        "instruction_capable": False,
+        "event": "shadow_unprovable",
+        "code": "not_activated",
+        "descriptor_digest": None,
+        "sequence": 0,
+        "comparison_ref": None,
+        "observed_at": observed_at,
+        "fresh": False,
+    }
+    # Lazy stdio status against passwd-derived Workspace broker entry.
+    runner = ACCOUNT_WORKSPACE_ROOT / "bin" / "agent-workflow.py"
+    if not runner.is_file():
+        # Root checkout without activated child broker remains bootstrap-safe.
+        if claim_verification is not None:
+            projection["comparison_ref"] = {
+                "all_covered": claim_verification.get("all_covered"),
+                "enabled": claim_verification.get("enabled"),
+            }
+        return projection
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(runner), "claims-authority", "status", "--json"],
+            cwd=str(ACCOUNT_WORKSPACE_ROOT),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5.0,
+        )
+    except (OSError, subprocess.SubprocessError):
+        projection["code"] = "broker_timeout"
+        return projection
+    lines = [line for line in completed.stdout.splitlines() if line.strip()]
+    if completed.returncode != 0 or len(lines) != 1:
+        projection["code"] = "broker_unavailable"
+        return projection
+    try:
+        response = json.loads(lines[0])
+    except json.JSONDecodeError:
+        projection["code"] = "malformed_response"
+        return projection
+    if not isinstance(response, dict) or response.get("schema") != "claims-authority-response/v2":
+        projection["code"] = "malformed_response"
+        return projection
+    result = response.get("result") if response.get("ok") is True else None
+    if not isinstance(result, dict):
+        error = response.get("error")
+        code = error.get("code") if isinstance(error, dict) else "broker_unavailable"
+        projection["code"] = str(code or "broker_unavailable")
+        return projection
+    activation = result.get("activation_state")
+    projection["descriptor_digest"] = result.get("descriptor_digest")
+    sequence = result.get("sequence", 0)
+    projection["sequence"] = sequence if isinstance(sequence, int) and not isinstance(sequence, bool) else 0
+    projection["observed_at"] = result.get("observed_at") or observed_at
+    projection["fresh"] = bool(result.get("fresh") is True)
+    if activation == "shadow-active" and result.get("instruction_capable") is not True:
+        projection["event"] = "shadow_observed"
+        projection["code"] = str(result.get("code") or "shadow_active")
+    else:
+        projection["event"] = "shadow_unprovable"
+        projection["code"] = str(result.get("code") or "not_activated")
+    if claim_verification is not None:
+        projection["comparison_ref"] = {
+            "all_covered": claim_verification.get("all_covered"),
+            "enabled": claim_verification.get("enabled"),
+        }
+    # Projection never authorizes publication and never overwrites broker state.
+    projection["instruction_capable"] = False
+    return projection
+
+
 def trusted_claims_authority(
     repo_root: str,
     baseline_revision: str,
@@ -3530,6 +3612,10 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
     }
     changeset.update(attempt_identity)
     changeset["change_id"] = canonical_digest(changeset, exclude_field="change_id")
+    # Timestamped projection is a sibling only; never part of change_id authority.
+    changeset["claims_authority_shadow"] = build_claims_authority_shadow_projection(
+        claim_verification=claim_verification,
+    )
 
     write_json_exclusive(args.output, changeset, "changeset_write_failed")
     if claim_verification is not None:
@@ -3556,6 +3642,7 @@ def cmd_changeset(args: argparse.Namespace) -> dict:
         "change_id": changeset["change_id"],
         "no_change": no_change,
         "changes_count": len(changes),
+        "claims_authority_shadow": changeset["claims_authority_shadow"],
     }
 
 
@@ -3580,7 +3667,11 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
             EXIT_POLICY,
         )
     stored_digest = stored.get("change_id")
-    recomputed_digest = canonical_digest(stored, exclude_field="change_id")
+    # claims_authority_shadow is a timestamped projection sibling, not digest material.
+    digest_source = {
+        key: value for key, value in stored.items() if key != "claims_authority_shadow"
+    }
+    recomputed_digest = canonical_digest(digest_source, exclude_field="change_id")
     if stored_digest != recomputed_digest:
         raise ToolError(
             "changeset_digest_mismatch",
@@ -3686,7 +3777,14 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
         )
         with open(output, encoding="utf-8") as fh:
             current = json.load(fh)
-    if stored != current:
+    # Shadow projections are timestamped observer siblings, not authority bytes.
+    stored_authority = {
+        key: value for key, value in stored.items() if key != "claims_authority_shadow"
+    }
+    current_authority = {
+        key: value for key, value in current.items() if key != "claims_authority_shadow"
+    }
+    if stored_authority != current_authority:
         raise ToolError(
             "changeset_stale",
             "changeset does not match current baseline, HEAD, paths, objects, or claims",
@@ -3698,6 +3796,13 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
                 "current_change_id": current.get("change_id"),
             },
         )
+    shadow = current.get("claims_authority_shadow")
+    if not isinstance(shadow, dict):
+        shadow = build_claims_authority_shadow_projection(
+            claim_verification=stored.get("claim_verification")
+            if isinstance(stored.get("claim_verification"), dict)
+            else None
+        )
     return {
         "ok": True,
         "reason": "changeset_verified",
@@ -3707,6 +3812,7 @@ def cmd_verify_changeset(args: argparse.Namespace) -> dict:
         "changed_paths": [change["path"] for change in stored.get("changes", [])],
         "change_id": stored_digest,
         "no_change": stored.get("no_change", False),
+        "claims_authority_shadow": shadow,
     }
 
 
