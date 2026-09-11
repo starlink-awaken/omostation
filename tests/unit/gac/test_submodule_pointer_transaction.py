@@ -6,6 +6,19 @@ ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = ROOT / "bin" / "ssot" / "submodule-pointer-transaction.sh"
 
 
+def test_production_sync_helpers_are_detection_only() -> None:
+    sync_root = (ROOT / "bin" / "sync-submodules.sh").read_text(encoding="utf-8")
+    sync_push = (ROOT / "bin" / "ssot" / "sync-submodules-push.sh").read_text(encoding="utf-8")
+
+    assert "git push" not in sync_root
+    assert "--no-verify" not in sync_root
+    assert "detection-only" in sync_root or "Detection" in sync_root or "检测" in sync_root
+
+    assert "git push" not in sync_push
+    assert "--no-verify" not in sync_push
+    assert "verification-only" in sync_push or "Verification" in sync_push or "检测" in sync_push
+
+
 def test_transaction_lock_resolves_the_actual_gitdir() -> None:
     content = SCRIPT.read_text(encoding="utf-8")
 

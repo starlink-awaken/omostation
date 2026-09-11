@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""gitlink-drift-protect — 子模块指针漂移检测与自动修复。
+"""gitlink-drift-protect — 子模块指针漂移检测与 remediation 提案。
 
 检测子模块指针漂移 (本地超前于追踪 commit) 并:
-1. 尝试自动 fast-forward push
-2. 如果无法 fast-forward，报告需人工介入
+1. 报告漂移 (path / current OID / target OID)
+2. --fix 时发出托管 remediation 提案 (不 push)
 3. 记录漂移指纹到 gate-known-debt
 
 Usage:
@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+MANAGED_REMEDIATION_ENTRYPOINT = "bin/gac/clone-lifecycle.py integrate"
 
 
 def get_submodule_status() -> list[dict]:
@@ -59,7 +60,7 @@ def get_ahead_count(path: Path) -> int:
     """获取本地超前于 origin/main 的 commit 数。"""
     try:
         result = subprocess.run(
-            ["git", "rev-list", "--count", f"origin/main..HEAD"],
+            ["git", "rev-list", "--count", "origin/main..HEAD"],
             capture_output=True, text=True, cwd=path,
         )
         if result.returncode == 0:
@@ -69,50 +70,37 @@ def get_ahead_count(path: Path) -> int:
     return 0
 
 
-def can_fast_forward(path: Path) -> bool:
-    """检查是否可以 fast-forward push。"""
+def get_oid(path: Path, ref: str) -> str | None:
+    """解析子模块内 ref 的 OID。"""
     try:
-        # 先 fetch
-        subprocess.run(
-            ["git", "fetch", "origin"],
-            capture_output=True, timeout=30, cwd=path,
-        )
-        # 检查是否可以 fast-forward
         result = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", "origin/main", "HEAD"],
-            capture_output=True, cwd=path,
+            ["git", "rev-parse", "--verify", ref],
+            capture_output=True, text=True, cwd=path,
         )
-        return result.returncode == 0
+        if result.returncode == 0:
+            return result.stdout.strip()
     except Exception:
-        return False
+        pass
+    return None
 
 
-def try_auto_push(path: Path) -> dict:
-    """尝试自动推送。"""
-    result = {"pushed": False, "error": None}
-
-    if not can_fast_forward(path):
-        result["error"] = "Cannot fast-forward, manual intervention needed"
-        return result
-
-    try:
-        push_result = subprocess.run(
-            ["git", "push", "origin", "HEAD:main"],
-            capture_output=True, text=True, timeout=60, cwd=path,
-        )
-        if push_result.returncode == 0:
-            result["pushed"] = True
-        else:
-            result["error"] = push_result.stderr[:200]
-    except Exception as e:
-        result["error"] = str(e)
-
-    return result
+def build_remediation_proposal(sub: dict, path: Path) -> dict:
+    """构造托管 remediation 提案 (不执行 push)。"""
+    current_oid = get_oid(path, "HEAD") or sub.get("sha")
+    target_oid = get_oid(path, "origin/main") or sub.get("sha")
+    return {
+        "repository": str(REPO),
+        "path": sub["path"],
+        "current_oid": current_oid,
+        "target_oid": target_oid,
+        "managed_remediation_entrypoint": MANAGED_REMEDIATION_ENTRYPOINT,
+        "instruction": "PUBLICATION_OWNER_REQUIRED",
+    }
 
 
 def main():
     parser = argparse.ArgumentParser(description="Gitlink 漂移防护")
-    parser.add_argument("--fix", action="store_true", help="尝试自动修复")
+    parser.add_argument("--fix", action="store_true", help="发出 remediation 提案 (不 push)")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()
 
@@ -120,6 +108,7 @@ def main():
     drifts = []
     clean = []
     uninitialized = []
+    proposals = []
 
     for sub in submodules:
         path = REPO / sub["path"]
@@ -138,7 +127,9 @@ def main():
         sub["branch"] = get_branch(path)
 
         if args.fix:
-            sub["push_result"] = try_auto_push(path)
+            proposal = build_remediation_proposal(sub, path)
+            sub["remediation_proposal"] = proposal
+            proposals.append(proposal)
 
         drifts.append(sub)
 
@@ -148,6 +139,7 @@ def main():
         "drifted": len(drifts),
         "uninitialized": len(uninitialized),
         "drifts": drifts,
+        "remediation_proposals": proposals,
     }
 
     if args.json:
@@ -159,15 +151,20 @@ def main():
         if drifts:
             print(f"\n  Drifted submodules:")
             for d in drifts:
-                push_status = ""
-                if args.fix:
-                    push_status = " [PUSHED]" if d.get("push_result", {}).get("pushed") else f" [FAIL: {d.get('push_result', {}).get('error', '?')}]"
-                print(f"    ⚠️ {d['path']}: +{d.get('ahead_commits', '?')} commits ({d.get('branch', '?')}){push_status}")
+                print(f"    ⚠️ {d['path']}: +{d.get('ahead_commits', '?')} commits ({d.get('branch', '?')})")
+                if args.fix and d.get("remediation_proposal"):
+                    p = d["remediation_proposal"]
+                    print(f"       proposal: path={p['path']} current={p['current_oid']} target={p['target_oid']}")
+                    print(f"       entrypoint: {p['managed_remediation_entrypoint']}")
+                    print(f"       instruction: {p['instruction']}")
 
         if uninitialized:
             print(f"\n  Uninitialized:")
             for u in uninitialized:
                 print(f"    ❌ {u['path']}")
+
+        if args.fix and proposals:
+            print(f"\n  Remediation proposals emitted: {len(proposals)} (no push performed)")
 
     return 1 if drifts or uninitialized else 0
 
