@@ -27292,14 +27292,14 @@ bets:
   write_surfaces:
   - projects/omo
 - accepted_specifications:
-  - content_digest: sha256:ad0a40bb9fddcab5b4eb8acb54ad524ccb934280b09a4eb48d74bfeadce58db2
+  - content_digest: sha256:b643890f3fda5bee575630018b155fb68ba0ce6f58af9c2b6772a2ff29bb0197
     decision_ref: decision://accepted/BET-Y1Q4-T10-145
     spec_ref: repo://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
-    spec_version: 1.7.0
+    spec_version: 1.9.0
   appetite: 12 days
-  circuit_breaker: 1.7.0 WorkPacket 必须只含两个 Wave D 证据路径并保持 implementation_authorized=true；
-    任一实现/gitlink/host 激活、提前写 done/done_at、completion/value 扩张、缩短 24h 窗、 scope union、旧
-    WorkPacket hash 复用或默认门禁失败都立即停止。毕业只能在满窗且独立 审计通过后由新一轮授权证据写入。
+  circuit_breaker: 1.9.0 WorkPacket 必须只含 projects/omo 并保持 implementation_authorized=true；
+    任一源码改动、host 激活、24h 窗、done/done_at、scope union、旧 WorkPacket hash 复用或
+    默认门禁失败都立即停止。Task 16 只能在指针合入且锁归零后单独授权。
   completion_evidence:
     axes:
       engineering:
@@ -27315,7 +27315,7 @@ bets:
     schema_version: completion-evidence-matrix/v1
   depends_on: []
   done_when:
-  - 每个 1.0.0 至 1.7.0 accepted binding 均为完整非 union 替换，旧 run 已关闭且锁归零
+  - 每个 1.0.0 至 1.9.0 accepted binding 均为完整非 union 替换，旧 run 已关闭且锁归零
   - canonical store、receipt chain、幂等、CAS、high-water、crash-tail、备份轮转与完整 RED matrix
     全绿
   - v2 shadow 从不 grant/deny，v1 始终是唯一 effective authority，valid managed clone 保持不发布
@@ -27332,11 +27332,11 @@ bets:
   human_gate: true
   id: BET-Y1Q4-T10-145
   non_goals:
-  - 1.7.0 仅授权 Wave D 两个证据路径，不修改实现/gitlink/host runtime、不提前写 done、不启动 WP2
+  - 1.9.0 仅授权 root projects/omo gitlink 指针事务，不改 Wave E 源码、不写 host runtime、不启动 24h 窗、不写 done
   - 不信任 arbitrary external 或 clone-local root，不追认历史 v1/A1/A3 receipt
   - 不实施 R1、host service、service account、UDS、Keychain、多租户 RBAC 或高可用
   - 不修改其他 BET、completion/value evidence、branch protection 或业务运行态
-  - 不把工程、CI、shadow 或 Git 成功计入个人价值；24h 观察未满不得毕业
+  - 不把工程、CI、shadow 或 Git 成功计入个人价值
   parent_bet_id: BET-Y1Q4-T10-143
   pasw_required: false
   priority: P0
@@ -27361,8 +27361,7 @@ bets:
   window: Y1Q4
   workflow: submodule-pointer-transaction
   write_surfaces:
-  - .omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-  - .omo/_truth/governance-evidence/claims-authority-bridge-wp1-shadow-graduation.json
+  - projects/omo
 - appetite: 40 days
   circuit_breaker: 任一子 BET 的 writer 操作触及未过门的 Orca/Multica、或与并发 agent 产生 write 冲突，立即停止并记录，不强行覆盖。
   done_when:
