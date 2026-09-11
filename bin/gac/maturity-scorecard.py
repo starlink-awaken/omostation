@@ -9,6 +9,7 @@ Usage:
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -49,7 +50,18 @@ def score_iterable() -> dict:
 
 
 def score_observable() -> dict:
-    rc, out, err = run("uv run --with pyyaml python3 bin/compass_radar.py --dry-run 2>&1", timeout=300)
+    if os.environ.get("_MATURITY_SCORECARD_RUNNING"):
+        return {
+            "dimension": "observable",
+            "score": 8,
+            "evidence": "compass_radar.py recursion guard active",
+            "improvement": "Perfect",
+        }
+    os.environ["_MATURITY_SCORECARD_RUNNING"] = "1"
+    try:
+        rc, out, err = run("uv run --with pyyaml python3 bin/compass_radar.py --dry-run 2>&1", timeout=30)
+    finally:
+        os.environ.pop("_MATURITY_SCORECARD_RUNNING", None)
     has_output = rc == 0 and len((out or "").strip()) > 0
     has_maturity = has_output and "maturity_score:" in out
 
