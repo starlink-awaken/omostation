@@ -4,7 +4,9 @@
 北极星: 从"治理代码"升级为"治理治理本身".
 
 M1 心跳契约 — 关键状态投影文件的 generated_at/last_scan 是否超 SLA
-M2 引用活性   — cron / launchd 登记中的可执行目标路径是否存在
+M2 引用活性   — cron / launchd 登记中的可执行目标路径是否存在;
+              存在且位于 workspace 树内的引用追加 git 跟踪检查
+              (untracked = 生产依赖未入库, 清理即断链; 警告级, 见 untracked_refs)
 
 输出: 单行 JSON; exit 0=全绿, 1=存在失活项 (供调度层告警)
 --refs-only: 跳过 M1 心跳 (CI 检出态投影恒陈旧, 仅验仓库侧引用活性)
@@ -118,6 +120,69 @@ def resolve_candidate(tok: str, ws_root: Path) -> Path:
     if tok.startswith("/"):
         return Path(tok)
     return ws_root / tok
+
+
+def _find_repo_root(path: Path) -> Path | None:
+    """向上查找含 .git 的目录 (文件/目录均可, 兼容 submodule gitdir 指针与 worktree)."""
+    cur = path if path.is_dir() else path.parent
+    for d in (cur, *cur.parents):
+        if (d / ".git").exists():
+            return d
+    return None
+
+
+def _git_track_status(path: Path) -> str | None:
+    """path 在其所属 git 仓库中的跟踪状态.
+
+    返回 "tracked" | "untracked" | "ignored" | None(不属于任何仓库).
+    2026-09-11: harness-cron.sh 未跟踪但被生产 crontab 引用, 清理即静默
+    断链 — M2 原只查存在性, 补跟踪性维度 (存在 ≠ 受版本控制保护).
+    """
+    repo = _find_repo_root(path)
+    if repo is None:
+        return None
+    try:
+        rel = path.relative_to(repo)
+    except ValueError:
+        return None
+    r = subprocess.run(
+        ["git", "-C", str(repo), "ls-files", "--error-unmatch", "--", str(rel)],
+        capture_output=True, text=True, timeout=10,
+    )
+    if r.returncode == 0:
+        return "tracked"
+    r2 = subprocess.run(
+        ["git", "-C", str(repo), "check-ignore", "-q", "--", str(rel)],
+        capture_output=True, text=True, timeout=10,
+    )
+    return "ignored" if r2.returncode == 0 else "untracked"
+
+
+def annotate_tracking(refs: list[dict], ws_root: Path) -> list[dict]:
+    """标注 workspace 树内 ok 引用的 git 跟踪状态, 返回未跟踪子集 (警告级).
+
+    只查 workspace 树内 (主仓或子模块) 的引用; $HOME 等外部路径不在范围内。
+    不修改 refs 中条目的 status/ok (保持 M2 原有分类语义与既有测试兼容),
+    仅追加 "track" 字段并把未跟踪且未忽略的条目收进返回值。
+    """
+    untracked: list[dict] = []
+    cache: dict[str, str | None] = {}
+    ws_str = str(ws_root)
+    for ref in refs:
+        if ref.get("status") != "ok":
+            continue
+        resolved = str(ref.get("resolved", ""))
+        if not resolved.startswith(ws_str):
+            continue
+        if resolved not in cache:
+            cache[resolved] = _git_track_status(Path(resolved))
+        status = cache[resolved]
+        if status is None:
+            continue
+        ref["track"] = status
+        if status == "untracked":
+            untracked.append(ref)
+    return untracked
 
 
 def scan_crontab_lines(lines: list[str], source: str, ws_root: Path) -> list[dict]:
@@ -315,6 +380,7 @@ def main(argv: list[str] | None = None) -> int:
 
     beats = [] if args.refs_only else check_heartbeats(ws_root)
     refs = collect_references(ws_root)
+    untracked_refs = annotate_tracking(refs, ws_root)
 
     stale_beats = [b for b in beats if not b["ok"]]
     dead_refs = [r for r in refs if r.get("status") == "dead"]
@@ -326,10 +392,12 @@ def main(argv: list[str] | None = None) -> int:
         "ok": not stale_beats and not dead_refs and not ritual_proposals,
         "heartbeat": beats,
         "references": refs,
+        "untracked_refs": untracked_refs,
         "summary": {
             "stale_beats": len(stale_beats),
             "dead_refs": len(dead_refs),
             "ritual_lapsed": len(ritual_proposals),
+            "untracked_refs": len(untracked_refs),
         },
         "debt_proposals": all_proposals,
     }
