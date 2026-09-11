@@ -36,9 +36,20 @@ channels:
     enabled: true
     routes:
       severity: [critical, degraded]
-      domains: [governance]
+      domains: [governance, scene]
     owner: governance-team
     note: "飞书群机器人 webhook — 配置 ALERT_FEISHU_WEBHOOK 环境变量后生效"
+  - id: alert-dingtalk
+    kind: channel
+    provider: dingtalk
+    protocol: https-webhook
+    url_ref: env://ALERT_DINGTALK_WEBHOOK
+    enabled: true
+    routes:
+      severity: [critical, degraded]
+      domains: [scene]
+    owner: governance-team
+    note: "钉钉群机器人 webhook (scene 升级/失败告警) — 配置 ALERT_DINGTALK_WEBHOOK 环境变量后生效"
   - id: alert-wecom
     kind: channel
     provider: wecom
