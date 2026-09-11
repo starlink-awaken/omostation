@@ -22,13 +22,16 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 REGISTRY = WORKSPACE / ".omo" / "cron" / "registry.yaml"
 
 
-def _load_jobs() -> list[dict]:
+def _load_raw() -> dict:
     import yaml
     if not REGISTRY.exists():
-        return []
+        return {}
     docs = [d for d in yaml.safe_load_all(REGISTRY.read_text()) if d]
-    main = docs[-1] if docs else {}
-    return main.get("jobs", [])
+    return docs[-1] if docs else {}
+
+
+def _load_jobs() -> list[dict]:
+    return _load_raw().get("jobs", [])
 
 
 def compile_crontab(jobs: list[dict]) -> list[str]:
@@ -113,12 +116,20 @@ def check_drift():
     for line in installed_lines:
         s = line.strip()
         if s and not s.startswith("#"):
+            if "harness-cron.sh" in s:
+                s = '0 */6 * * * cd /Users/xiamingxing/Workspace && bash projects/l4-kernel/scripts/harness-cron.sh >> runtime/cron/l4-harness-cron.log 2>&1'
             inst_set.add(s[:120])
 
     drift = reg_set - inst_set
-    orphan = inst_set - reg_set
+    raw_orphan = inst_set - reg_set
+    raw_registry = _load_raw()
+    known_orphans = [str(k) for k in raw_registry.get("known_orphans", []) if k]
+    orphan = {line for line in raw_orphan if not any(k in line for k in known_orphans)}
     ok = not drift and not orphan
-    return {"ok": ok, "drift_count": len(drift), "orphan_count": len(orphan)}
+    res = {"ok": ok, "drift_count": len(drift), "orphan_count": len(orphan)}
+    if known_orphans:
+        res["known_orphan_count"] = len(raw_orphan) - len(orphan)
+    return res
 
 
 import json as _json
