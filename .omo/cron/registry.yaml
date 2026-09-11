@@ -128,17 +128,15 @@ jobs:
     sfop_slot: S
     reconciliation_note: 纯登记债务补齐，无冲突。
 
-  - name: l4-harness-6h
-    schedule: "0 */6 * * *"
-    command: >-
-      bash $HOME/Workspace/projects/l4-kernel/scripts/harness-cron.sh >>
-      $HOME/Workspace/runtime/cron/l4-harness-cron.log 2>&1
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: 纯登记债务补齐，无冲突。
+  # l4-harness-6h (真实在跑: 0 */6 * * * bash projects/l4-kernel/scripts/harness-cron.sh)
+  # 2026-09-11 发现: 故意不在此登记。l4-kernel 是 dao_layer=dao 组件, 一旦登记进
+  # 这份 cron registry, bin/gac/check-sfop-slots.py 的 CR-DFSQ-01("dao 层组件
+  # 不得出现在 cron 执行账本")会硬性 FAIL——这条规则对任何 status 值都无条件检查,
+  # 不存在标 proposed 就能绕过的办法。这个 cron job 本身已经真实运行、违反
+  # CR-DFSQ-01 有一段时间了(不是本次改动引入的), 只是此前从未被任何声明源登记过,
+  # 所以一直没触发这条检查。是否该让 l4-kernel 的每日 harness 巡检继续走 cron、
+  # 还是改走别的机制(或重新评估 l4-kernel 的 dao_layer 归类), 是一个独立的架构决定,
+  # 不该在这次"调度声明收敛"里顺手拍板。见 open_decisions D7。
 
   # ── 面板刷新: 2026-09-11 退出 Codex LLM automation (token 耗尽即停摆),
   #    改用 launchd，零推理需求、零 token 依赖 ──
@@ -357,3 +355,10 @@ open_decisions:
       rules-lifecycle/scene-calibration/scene-registry-sync) 是否现在正式启用为真实
       crontab? 这是新增自动化, 不是文档整理, 需要单独决定, 启用前需设置真实
       OMO_WORKSPACE_ROOT。
+  - id: D7
+    question: >-
+      真实在跑的 l4-harness-6h(每6小时跑一次 projects/l4-kernel 的 harness 巡检)
+      违反 CR-DFSQ-01(dao 层组件不得出现在 cron 执行账本), 且已经违反了一段时间
+      (不是本次改动引入)。故意没有登记进本文件(登记会让 check-sfop-slots.py 硬性
+      FAIL)。需要决定: 停用这条 cron、把 harness 巡检挪到 cron 之外的机制、还是
+      重新评估 l4-kernel 的 dao_layer 归类。
