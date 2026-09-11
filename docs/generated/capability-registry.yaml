@@ -11,10 +11,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 199
+  mcp_tools: 246
   bos_services: 306
   bos_domains: 23
-  cli_commands: 214
+  cli_commands: 217
   skills: 40
   workflows: 25
 mcp_servers:
@@ -47,12 +47,59 @@ mcp_servers:
   layer: L4
   file: projects/l4-kernel/src/l4_kernel/mcp_server.py
   transport: stdio/http/sse
-  exists: false
+  exists: true
   ports:
     http: 7455
     sse: 7456
-  tools: []
-  tool_count: 0
+  tools:
+  - l4_cards_check
+  - l4_cards_compliance
+  - l4_cards_get
+  - l4_cards_list
+  - l4_cards_search
+  - l4_claude_validate
+  - l4_config_read
+  - l4_contract_validate
+  - l4_cross_search
+  - l4_dashboard
+  - l4_domain_create
+  - l4_domain_freeze
+  - l4_domain_info
+  - l4_domain_migrate
+  - l4_domain_unfreeze
+  - l4_domain_validate
+  - l4_domains_list
+  - l4_engine_check
+  - l4_engine_logs
+  - l4_entrypoint_read
+  - l4_evolution_status
+  - l4_evolution_tasks
+  - l4_evolution_trigger
+  - l4_files_list
+  - l4_freshness
+  - l4_harness_run
+  - l4_health
+  - l4_kems_validate
+  - l4_memory_read
+  - l4_models_list
+  - l4_plugin_actions
+  - l4_plugin_run_action
+  - l4_plugin_run_mechanism
+  - l4_plugin_specs
+  - l4_plugin_workflows
+  - l4_reload
+  - l4_rules_read
+  - l4_search
+  - l4_signal_emit
+  - l4_signal_patterns
+  - l4_signals_list
+  - l4_state_read
+  - l4_status_read
+  - l4_storage_usage
+  - l4_timeline_list
+  - l4_tools_list
+  - l4_workspace_search
+  tool_count: 47
 - id: agora
   name: Agora Service Convergence Hub
   layer: I0
@@ -1768,6 +1815,8 @@ cli_commands:
   description: 检查三级分层缓存与 Radix 前缀树状态 (含基准压测)
 - name: calendar
   description: 多维日历感知与督办闭环 (T7-02)
+- name: calibrate
+  description: '[v2] 校准场景卡'
 - name: capabilities
   description: 统一能力发现入口 — 搜索/推荐/全量列出 (CLI+BOS+Scene+Journey+Governance)
 - name: capability
@@ -1856,6 +1905,8 @@ cli_commands:
   description: 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)
 - name: events-watch
   description: 实时监听 SSE 事件流简便入口
+- name: execute
+  description: '[v2] 执行场景卡 (BOS/MCP 驱动)'
 - name: export
   description: 导出研究 (markdown/text/json)
 - name: export-research
@@ -1934,6 +1985,8 @@ cli_commands:
   description: 📚 KOS 知识检索 (search/status/stats)
 - name: knowledge-ref
   description: ADR-0315 引用元数据 (无正文)
+- name: lifecycle
+  description: '[v2] 场景卡生命周期管理 (list/status/promote/demote/validate)'
 - name: list
   description: 查看研究历史
 - name: logs
