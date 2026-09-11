@@ -27223,14 +27223,14 @@ bets:
   workflow: bet-execution
   write_surfaces: []
 - accepted_specifications:
-  - content_digest: sha256:8341324e3a1e3d67ce28663fe23191999fa3f6ee68e60f196250ff0b83640b8c
+  - content_digest: sha256:75b4750eb89b0193b37b579174feecbdb568c14edb3d467278ce9769892db23c
     decision_ref: decision://accepted/BET-Y1Q4-T10-144
     spec_ref: repo://docs/superpowers/specs/2026-09-09-a2-resident-status-purity-truth-recovery-design.md
-    spec_version: 1.2.0
+    spec_version: 1.3.0
   appetite: 2 days
-  circuit_breaker: version 1.2.0 WorkPacket 必须只含 status.py 与 test_resident_status.py 两路径；
-    不得 union 1.1.0 gitlink 面。禁止改其他源码、gitlink、host/runtime、T10-142、completion/value/overall，
-    或复用旧 WorkPacket hash；默认门禁失败立即停止。child 合入后 root 指针另开事务。
+  circuit_breaker: version 1.3.0 WorkPacket 必须只含 projects/omo；不得 union 1.2.0 源码面。
+    禁止改源码/host/completion/value；目标须为含 omo#162 的 authoritative child main；门禁失败立即停止。
+
   completion_evidence:
     axes:
       engineering:
@@ -27260,7 +27260,7 @@ bets:
   human_gate: true
   id: BET-Y1Q4-T10-144
   non_goals:
-  - 1.2.0 仅修正 genesis NULL 探针误判，不 bump gitlink、不写 host runtime、不改完成证据
+  - 1.3.0 仅授权 root projects/omo gitlink，不改源码、不写 host runtime、不改完成证据
   - 不要求 BET-Y1Q4-T10-142 变为 done，不推进其 operational/value 状态
   - 不改变 WAL checkpoint、holder discovery、CPU sampling、kill 阈值、daemon tick 或 heartbeat
     语义
@@ -27287,10 +27287,9 @@ bets:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0
   window: Y1Q4
-  workflow: project-code-change
+  workflow: submodule-pointer-transaction
   write_surfaces:
-  - projects/omo/src/omo/resident/status.py
-  - projects/omo/tests/unit/test_resident_status.py
+  - projects/omo
 - accepted_specifications:
   - content_digest: sha256:b643890f3fda5bee575630018b155fb68ba0ce6f58af9c2b6772a2ff29bb0197
     decision_ref: decision://accepted/BET-Y1Q4-T10-145

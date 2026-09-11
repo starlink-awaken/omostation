@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.2.0
+spec_version: 1.3.0
 status: accepted
 lifecycle: contract
 owner: governance-team
@@ -518,3 +518,16 @@ Stop and require a successor decision if:
 | Mechanical scope | Version 1.1.0 replaces the delivered child scope with the sole root gitlink scope | The current compiler has no stage fence; a union would authorize child/root writes together. |
 | Host proof | Post-merge read-only 100/100 | Hermetic tests cannot prove production execution identity. |
 | Value | Excluded / NOT_PROVEN | Infrastructure purity is not a personal decision outcome. |
+
+## 10.y Wave — Spec 1.3.0 root pointer only
+
+Version 1.3.0 is a complete non-union replacement that authorizes only:
+
+```text
+projects/omo
+```
+
+Target: authoritative child main containing the Spec 1.2.0 genesis NULL probe
+fix (omo#162 / `769e280a…` or successor). Does not modify source, host runtime,
+or completion/value evidence.
+
