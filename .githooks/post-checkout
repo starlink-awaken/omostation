@@ -3,4 +3,6 @@
 # 触发: git checkout / git switch / git worktree add (flag=1 分支切换)
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
+# 子模块上下文守卫: 同 pre-commit, 主仓 hook-runner 在子模块不存在则跳过
+[ -f "$ROOT/bin/gac/hook-runner.sh" ] || exit 0
 bash "$ROOT/bin/gac/hook-runner.sh" --hook post-checkout

@@ -4,6 +4,10 @@
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 
+# 子模块上下文守卫: 网络预检 + hook-runner 脚本均位于主仓 bin/gac/,
+# 子模块不存在则整体跳过 (子模块 push 走其自身门禁/CI)
+[ -f "$ROOT/bin/gac/hook-runner.sh" ] || exit 0
+
 # 网络预检: 检测 SSH 连通性, 失败时提示 git-retry 自动切换 HTTPS
 REMOTE="${GIT_REMOTE:-origin}"
 bash "$ROOT/bin/gac/pre-push-network-check.sh" "$REMOTE" 2>&1 || true
