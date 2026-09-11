@@ -2371,7 +2371,7 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: in_progress
   title: Agora A2A 双向任务委派与 Resident Agent Card 协议接入 (A2A Task Delegation & Resident
     Agent Card)
   track: T5-ORCH
@@ -2388,6 +2388,18 @@ bets:
   - projects/agora/src/agora/server/tools_resident.py
   - projects/agora/tests/test_resident_a2a.py
   - .omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-11-t5-03-resident-a2a-delegation-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:d2aadf130dac9d87d60304abf752b16450a326c8e000c2a365a95ac52d485b81
+    decision_ref: decision://accepted/BET-Y1Q4-T5-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering: {status: IN_PROGRESS, evidence: {}}
+      operational: {status: NOT_PROVEN, evidence: {}}
+      value: {status: NOT_PROVEN, evidence: {}}
 - appetite: 2 days
   circuit_breaker: 任务队列入队必须具备最大长度上限保护（默认 1000）；队列溢出时拒绝入队并发出降级告警。
   depends_on:
