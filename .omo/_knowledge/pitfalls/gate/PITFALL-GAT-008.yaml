@@ -1,0 +1,18 @@
+schema: agent-error/v1
+id: PITFALL-GAT-008
+category: gate
+severity: medium
+title: completion_evidence receipt 引用必须指向主仓 tracked 文件 — CI 无子模块检出
+symptom: 'T4-06 closeout PR 的 bet-done-transition (required) CI 失败: receipt://projects/cockpit/tests/...
+  在 CI 上 COMPLETION_FILE_REF_MISSING — CI 只检出主仓, 子模块内容文件不存在; 本地 lint 因子仓已 init 全绿
+  (环境差假绿)'
+root_cause: ''
+solution: completion_evidence 的 receipt 引用一律指向主仓 tracked 文件 (spec/retro/policy/ledger);
+  子仓交付物的证据用主仓的 spec/retro 文件承载, 不引用子仓内部路径
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-09-09'
+times_encountered: 1
+last_confirmed_at: '2026-09-09'
+status: active
