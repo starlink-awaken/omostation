@@ -1,13 +1,13 @@
 ---
 status: active
 lifecycle: entry
-owner: auto-fix-loop
+owner: governance-team
 last-reviewed: 2026-09-11
 ---
 # Scene System v3 — 场景系统全面体系化设计
 
-> 版本：v3.1.0 | 日期：2026-09-07 | 状态：已实现
-> PR: #3348 (核心引擎) + #3478 (Cockpit集成 + 前端)
+> 版本：v3.2.0 | 日期：2026-09-11 | 状态：全链路落地
+> 9 轮迭代 · 15+ PR · #3348 → #3592
 
 ## 0. 设计原则
 
@@ -15,12 +15,13 @@ last-reviewed: 2026-09-11
 
 | 现有系统 | 场景系统融合方式 |
 |---------|----------------|
-| OMO | `omo scene {execute,calibrate,promote,demote,status,list,validate}` + MCP 工具 |
-| Cockpit | `cockpit scene {lifecycle,execute,calibrate,graph}` + Web API + 前端页面 |
-| Agora BOS | `capability_refs` 走 `bos_router.resolve()` → `resolve_bos_uri()` |
-| MetaOS | 场景晋升决策 → `DecisionGate.evaluate()` |
+| OMO | `omo scene` CLI + `scene_execute`/`scene_calibrate` MCP 工具 |
+| Cockpit | `cockpit scene` CLI + `/api/scene-lifecycle/*` (9 端点) + 4 前端页面 |
+| Agora BOS | `capability_refs` → `bos_router.resolve()` → MCP 工具 |
+| MetaOS | 场景晋升决策 → `DecisionGate.evaluate()`；异常 → `ImmuneMonitor` |
 | Runtime KEI | 场景执行在 KEI 沙箱中运行 |
-| Event Bus | 场景事件走现有 Workflow Mesh JSONL |
+| Event Bus | 场景事件走 Workflow Mesh + observability-events (告警面) |
+| North Star | scene-outcome → Outcome.Human.v1 → event-ledger |
 
 ## 1. 核心组件
 
@@ -28,145 +29,127 @@ last-reviewed: 2026-09-11
 
 位置：`.omo/_truth/scenarios/v3/{scene_id}.yaml`
 
-关键字段：
 - `schema: scene-card/v3` — 版本标识
-- `scene_id`, `name`, `description` — 基础元数据
-- `scene_class` — business | governance | infra
-- `scene_type` — inbound | outbound | cycle
-- `domain` — work | health | research | knowledge | governance
+- `scene_id` — 必须匹配 `^scene-[a-z0-9-]+$`
 - `lifecycle` — draft → shadow → assisted → supervised → routine
-- `activation` — preview | controlled | active | allowed
-- `runtime.journey_ref` — 绑定的旅程
-- `runtime.sandbox.capability_refs` — BOS URI 能力引用
-- `quality.calibration` — 校准配置
+- `triggers` — 信号/定时/webhook/条件/手动 5 种
+- `runtime.sandbox.capabilities` — BOS URI 能力引用
 - `topology.upstream/downstream` — 场景间拓扑关系
-- `human_in_the_loop` — 人机协同配置
+- `quality.falsifier` — 降级规则
 
 ### 1.2 旅程引擎 (Journey Engine)
 
-位置：`bin/ssot/journey-engine.py`
+`bin/ssot/journey-engine.py`
 
-BOS 驱动的状态机执行引擎：
-- 加载场景卡 → 找到旅程规范 → 推进状态机
-- 每个状态通过 BOS URI 调用能力
+- BOS URI 驱动的状态机执行
 - Saga 补偿链（失败时逆序回滚）
-- 人机介入门控（低置信度暂停等待审批）
+- human_gate 人机介入门控
+- 信号源触发（iris 邮件连接器轮询）
+- 告警发射（escalated → critical → feishu/钉钉）
+- BOS 真实调用（KOS search/ingest、LLM generate、scene-to-scene）
 
 ### 1.3 校准引擎 (Calibration Engine)
 
-位置：`bin/ssot/calibration-engine.py`
+`bin/ssot/calibration-engine.py`
 
-持续信任评分，滑动窗口：
-- **实时**：每次执行后更新指标
-- **每日**：`cron 0 2 * * *` 综合评分 + 升级/降级检查
-- **每周**：`cron 0 3 * * 1` 趋势分析 + 进化建议
+- 滑动窗口信任评分（30d SQLite WAL）
+- 三周期：实时 / 每日 cron / 每周
+- 升级/降级门控自动检查
+- LLM 成本追踪（token_usage → llm_cost.jsonl，X3/K1）
 
 ### 1.4 场景图 (Scene Graph)
 
-位置：`bin/ssot/scene-graph.py`
+`bin/ssot/scene-graph.py`
 
-DAG 编排 + 事件驱动：
-- 从场景卡拓扑自动构建 DAG
-- 拓扑排序 + 环检测
-- 6 种编排模式（顺序/路由/并行/事件/监督/交接）
-- 跨场景事件通信（correlation_id 追踪链）
+- DAG 编排 + 完整 DFS 遍历
+- 环检测 + 拓扑排序
+- 事件驱动场景间通信（correlation_id）
+- 并行执行（ThreadPoolExecutor）
 
-### 1.5 OMO 融合
+### 1.5 防腐层 (Guardrail)
 
-- `omo scene execute/calibrate/promote/demote/status/list/validate` CLI
-- `scene_execute` / `scene_calibrate` MCP 工具
-- `scene-lifecycle` / `scene-execution` workflow 注册
+`bin/ssot/scene-v3-guardrail.py`
+
+- Schema 校验 + lifecycle 一致性 + BOS 可达性
+- cron `scene-guardrail-daily` (06:30)
+- strict 模式 67/67 PASS
+
+### 1.6 信号轮询器 (Signal Poller)
+
+`bin/ssot/scene-signal-poller.py`
+
+- 轮询 iris 连接器（netease_mailmaster + apple_mail）
+- 水印去重（per scene+connector）
+- 按 lifecycle 分级调度（assisted+ live, shadow dry-run）
+- cron `scene-signal-poll` (工作日 9-18 点每 15 分钟)
+
+### 1.7 人类裁决流
+
+- escalated 场景 → 钉钉/飞书通知 → cockpit UI Accept/Reject
+- `POST /api/scene-lifecycle/adjudicate` → scene-outcome-recorder
+- 信任回路（MOSBeliefManager）+ 价值证据（value-evidence）+ North Star（Outcome.Human.v1）
 
 ## 2. 执行链路
 
 ```
-信号源 → scene-trigger (KEI校验+MetaOS门控)
-       → OMO Workflow Mesh (planned→admitted→dispatched→running→succeeded→closed)
-       → journey-engine (BOS驱动+Saga补偿)
-       → Agora BOS Router (bos:// URI → MCP工具)
-       → outcome-recorder + calibration-engine
-       → Event Bus → 下游场景
+信号轮询 (iris/邮件) → scene-signal-poller (水印去重)
+  → journey-engine (BOS 驱动 + Saga 补偿 + human_gate)
+    → escalated → 钉钉/飞书通知 (critical)
+    → operator Accept/Reject (cockpit UI)
+      → scene-outcome-recorder
+        ├→ scene-outcomes.jsonl (信任回路 + BRIEF X3 行)
+        ├→ value-evidence.jsonl (X3 价值)
+        ├→ Outcome.Human.v1 → event-ledger (North Star)
+        └→ MOSBeliefManager (能力校准)
+  → llm_cost.jsonl (token_usage → X3/K1 成本追踪)
 ```
 
 ## 3. 场景卡生命周期
 
 ```
 draft → shadow → assisted → supervised → routine
-  │         │          │             │           │
-  │         │          │             │           │
-设计      观察       协作运行       受信运行     无人值守
-不执行    只记录     人审批低置信    人拦截高风险  仅异常告警
+设计     观察     协作运行     受信运行     无人值守
 ```
 
-升级门控：
 | 升级 | 自动条件 | 必须人工 |
 |------|---------|---------|
 | shadow → assisted | dry_run 3次 + 无关键错误 | approver 确认 |
 | assisted → supervised | 30样本 + calibration≥0.6 + fp≤0.15 | approver 确认 |
-| supervised → routine | 100样本 + calibration≥0.8 + 30天稳定 | **必须双人确认** |
-
-降级自动触发（falsifier 规则）：
-- calibration < 0.6 over 30d → shadow
-- fp_rate > 0.2 → 降级一级
-- owner_idle > 60d → draft
+| supervised → routine | 100样本 + calibration≥0.8 + 30天稳定 | **双人确认** |
 
 ## 4. 快速开始
 
 ### OMO CLI
 
 ```bash
-# 列出所有场景
 PYTHONPATH=projects/omo/src python3 -m omo.cli scene list
-
-# 执行场景（dry-run）
 PYTHONPATH=projects/omo/src python3 -m omo.cli scene execute scene-inbox-to-decision --dry-run
-
-# 查看校准分数
 PYTHONPATH=projects/omo/src python3 -m omo.cli scene calibrate scene-inbox-to-decision
-
-# 验证场景卡
-PYTHONPATH=projects/omo/src python3 -m omo.cli scene validate scene-inbox-to-decision
-
-# 晋升/降级
 PYTHONPATH=projects/omo/src python3 -m omo.cli scene promote scene-inbox-to-decision --to supervised
 ```
 
 ### Cockpit CLI
 
 ```bash
-# 列出所有场景
 cockpit scene lifecycle list
-
-# 执行场景
 cockpit scene execute scene-inbox-to-decision --dry-run
-
-# 校准
 cockpit scene calibrate scene-inbox-to-decision
-
-# 场景图
 cockpit scene graph
-
-# 详情/验证
 cockpit scene lifecycle status --scene-id scene-inbox-to-decision
-cockpit scene lifecycle validate --scene-id scene-inbox-to-decision
 ```
 
-### 直接调用
+### 信号轮询
 
 ```bash
-# 构建场景图
-python3 bin/ssot/scene-graph.py build
+python3 bin/ssot/scene-signal-poller.py poll
+python3 bin/ssot/scene-signal-poller.py status
+# cron: */15 9-18 * * 1-5
+```
 
-# 验证旅程
-python3 bin/ssot/journey-engine.py validate journey-inbox-to-decision
+### 防腐校验
 
-# 迁移旧场景卡
-python3 bin/ssot/journey-engine.py migrate --all
-
-# 运行集成测试
-python3 tests/scene_v2/test_journey_engine.py
-python3 tests/scene_v2/test_calibration_engine.py
-python3 tests/scene_v2/test_scene_graph.py
+```bash
+python3 bin/ssot/scene-v3-guardrail.py validate-all --allow-forward-refs
 ```
 
 ## 5. Cockpit Web API
@@ -180,21 +163,23 @@ python3 tests/scene_v2/test_scene_graph.py
 | POST | `/api/scene-lifecycle/demote` | 降级场景 |
 | GET | `/api/scene-lifecycle/graph` | 场景图 |
 | GET | `/api/scene-lifecycle/metrics/{scene_id}` | 校准指标 |
+| GET | `/api/scene-lifecycle/escalations` | 升级队列（待裁决） |
+| POST | `/api/scene-lifecycle/adjudicate` | 人工裁决 |
 
 ### 前端页面
 
 | 页面 | 路由 | 功能 |
 |------|------|------|
-| 场景总览 | `/scenes` | 卡片网格 + 生命周期分布 |
-| 场景详情 | `/scenes/{id}` | journey 状态机 + 校准曲线 |
+| 场景总览 | `/scenes` | 卡片网格 + 生命周期分布 + 升级横幅 |
+| 场景详情 | `/scenes/{id}` | 校准曲线 + 裁决面板 + 操作 |
 | 场景图 | `/scene-graph` | DAG 拓扑可视化 |
 | 校准中心 | `/calibration` | 分数表格 + 升级队列 |
 
 ## 6. 存储结构
 
 ```
-.omo/_truth/scenarios/v3/        — v3 场景卡
-.omo/_truth/journeys/v3/         — v3 旅程规范
+.omo/_truth/scenarios/v3/        — v3 场景卡 (67 张)
+.omo/_truth/journeys/v3/         — v3 旅程规范 (58 个)
 .omo/_truth/registry/agent-workflows/workflows/
   ├── scene-lifecycle.yaml       — 生命周期转换工作流
   └── scene-execution.yaml       — 场景执行工作流
@@ -202,11 +187,31 @@ bin/ssot/
   ├── journey-engine.py          — 执行引擎
   ├── calibration-engine.py      — 校准引擎
   ├── scene-graph.py             — 场景图 DAG
+  ├── scene-v3-guardrail.py      — 防腐层
+  ├── scene-signal-poller.py     — 信号轮询器
+  ├── scene-v3-registry.py       — 注册表生成
+  ├── scene-batch-execute.py     — 批量执行
+  ├── scene-journey-autogen.py   — 旅程自动生成
   └── scene-card-v3-schema.json  — JSON Schema
 data/scene-metrics.db            — 校准指标 (SQLite)
+~/runtime/data/llm_cost.jsonl    — LLM 成本 (X3/K1)
+.omo/_delivery/ingress/value-evidence.jsonl — 价值证据
+.omo/_delivery/observability/events.jsonl   — 告警事件面
+runtime/omo/event-ledger.sqlite3 — North Star 事件账本
 ```
 
-## 6. 与现有标准的对齐
+## 7. cron 任务
+
+| 任务 | 周期 | 状态 |
+|------|------|------|
+| scene-signal-poll | 工作日 9-18 点每 15 分钟 | proposed |
+| scene-guardrail-daily | 每日 06:30 | proposed |
+| scene-calibration-weekly | 每周一 06:00 | proposed |
+| scene-registry-sync-daily | 每日 06:15 | proposed |
+
+> 注：所有 cron 当前为 `proposed` 状态。启用需人工确认并安装到真实 crontab。
+
+## 8. 与现有标准的对齐
 
 | 标准 | 对齐方式 |
 |------|---------|
@@ -215,3 +220,4 @@ data/scene-metrics.db            — 校准指标 (SQLite)
 | mcp-tool-and-transport-standard.md | 遵循返回格式标准 |
 | doc-ssot-contract.md | 场景卡作为 SSOT 在 _truth/ 管理 |
 | SFOP/DFSQ | 场景作为"术"层能力，不新增"器" |
+| x-axis-registry.yaml | X3/K1 (llm_cost) + X3 工作交付 (scene-outcomes) |
