@@ -3198,6 +3198,342 @@ def test_audit_logging(capsys, tmp_path):
     assert "LIFECYCLE=snapshot_ok" in err
 
 
+
+
+# ---------------------------------------------------------------------------
+# Claims Authority Bridge WP1 Wave B1 — fence-aware integrate owner
+# ---------------------------------------------------------------------------
+
+
+def _b1_strip_shadow(payload: dict) -> dict:
+    return {key: value for key, value in payload.items() if key != "claims_authority_shadow"}
+
+
+def test_b1_unactivated_adapter_preserves_v1_and_does_not_require_fence(tmp_path, monkeypatch, capsys):
+    clone, _remote, _initial_head = make_retirable_clone(tmp_path)
+    baseline, changeset, authority, head = make_verified_changeset(tmp_path, clone)
+    stored = json.loads(Path(changeset).read_text())
+    assert "claims_authority_shadow" in stored
+    assert stored["claims_authority_shadow"]["event"] == "shadow_unprovable"
+    assert stored["claims_authority_shadow"]["code"] == "not_activated"
+    assert stored["claims_authority_shadow"]["instruction_capable"] is False
+    # Shadow must not alter v1 claim coverage semantics.
+    assert stored["claim_verification"]["all_covered"] is True
+
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **kwargs):
+        calls.append(cmd)
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:6] == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(cmd, 0, "git@github.com:owner/repository.git\n", "")
+        if cmd[:3] == ["gh", "pr", "list"]:
+            return subprocess.CompletedProcess(cmd, 0, "[]", "")
+        if cmd[:3] == ["gh", "pr", "create"]:
+            return subprocess.CompletedProcess(cmd, 0, "https://example.test/pr/b1\n", "")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    monkeypatch.setattr(lc, "claims_authority_activation_mode", lambda: "unactivated")
+
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+    assert rc == 0
+    push_calls = [cmd for cmd in calls if cmd[:4] == ["git", "-C", str(clone), "push"]]
+    assert len(push_calls) == 1
+    assert push_calls[0] == [
+        "git",
+        "-C",
+        str(clone),
+        "push",
+        "--porcelain",
+        "--force-with-lease=refs/heads/agent/agent-1--attempt-001:",
+        "origin",
+        f"{head}:refs/heads/agent/agent-1--attempt-001",
+    ]
+
+
+def test_b1_activated_fence_failure_blocks_git(tmp_path, monkeypatch, capsys):
+    clone, _remote, _head = make_retirable_clone(tmp_path)
+    baseline, changeset, authority, head = make_verified_changeset(tmp_path, clone)
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **kwargs):
+        calls.append(cmd)
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:6] == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(cmd, 0, "git@github.com:owner/repository.git\n", "")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    monkeypatch.setattr(lc, "claims_authority_activation_mode", lambda: "shadow-active")
+
+    def boom(**_kwargs):
+        raise RuntimeError("LEGACY_FENCE_ISSUANCE_CLOSED")
+
+    monkeypatch.setattr(lc, "enter_legacy_publish_fence", boom)
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+    assert rc == lc.EXIT_POLICY
+    assert not any(cmd[:4] == ["git", "-C", str(clone), "push"] for cmd in calls)
+    assert "legacy_publish_fence_required" in capsys.readouterr().err
+
+
+def test_b1_activated_green_path_one_canonical_push_argv(tmp_path, monkeypatch, capsys):
+    clone, _remote, _initial = make_retirable_clone(tmp_path)
+    baseline, changeset, authority, head = make_verified_changeset(tmp_path, clone)
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **kwargs):
+        calls.append(cmd)
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:6] == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(cmd, 0, "git@github.com:owner/repository.git\n", "")
+        if cmd[:3] == ["gh", "pr", "list"]:
+            return subprocess.CompletedProcess(cmd, 0, "[]", "")
+        if cmd[:3] == ["gh", "pr", "create"]:
+            return subprocess.CompletedProcess(cmd, 0, "https://example.test/pr/b1-green\n", "")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    monkeypatch.setattr(lc, "claims_authority_activation_mode", lambda: "shadow-active")
+    monkeypatch.setattr(
+        lc,
+        "enter_legacy_publish_fence",
+        lambda **_kwargs: {
+            "fence_id": "fence-1",
+            "git_executable": "git",
+            "effect_process_id": "proc-1",
+            "remote_ref": "refs/heads/agent/agent-1--attempt-001",
+            "descriptor_digest": "sha256:" + ("a" * 64),
+        },
+    )
+    monkeypatch.setattr(
+        lc,
+        "settle_legacy_publish_fence",
+        lambda **_kwargs: {"_local_outcome": "success", "fence_id": "fence-1"},
+    )
+
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+    assert rc == 0
+    push_calls = [cmd for cmd in calls if cmd[:4] == ["git", "-C", str(clone), "push"]]
+    assert len(push_calls) == 1
+    assert push_calls[0][4:] == [
+        "--porcelain",
+        "--force-with-lease=refs/heads/agent/agent-1--attempt-001:",
+        "origin",
+        f"{head}:refs/heads/agent/agent-1--attempt-001",
+    ]
+
+
+def test_b1_remote_oid_drift_blocks_before_git(tmp_path, monkeypatch, capsys):
+    clone, _remote, _head = make_retirable_clone(tmp_path)
+    baseline, changeset, authority, _ = make_verified_changeset(tmp_path, clone)
+    calls: list[list[str]] = []
+    monkeypatch.setattr(lc, "run", lambda cmd, **kwargs: calls.append(cmd) or subprocess.CompletedProcess(cmd, 0, "", ""))
+    monkeypatch.setattr(lc, "claims_authority_activation_mode", lambda: "shadow-active")
+
+    def drift(**_kwargs):
+        raise RuntimeError("REMOTE_OID_DRIFT")
+
+    monkeypatch.setattr(lc, "enter_legacy_publish_fence", drift)
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+    assert rc == lc.EXIT_POLICY
+    assert not any(isinstance(cmd, list) and cmd[:1] == ["git"] and "push" in cmd for cmd in calls)
+
+
+def test_b1_unknown_settlement_does_not_create_pr(tmp_path, monkeypatch, capsys):
+    clone, _remote, _ = make_retirable_clone(tmp_path)
+    baseline, changeset, authority, head = make_verified_changeset(tmp_path, clone)
+    calls: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **kwargs):
+        calls.append(cmd)
+        if len(cmd) >= 6 and cmd[0:2] == ["git", "-C"] and cmd[3:6] == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(cmd, 0, "git@github.com:owner/repository.git\n", "")
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
+
+    monkeypatch.setattr(lc, "run", fake_run)
+    monkeypatch.setattr(lc, "claims_authority_activation_mode", lambda: "shadow-active")
+    monkeypatch.setattr(
+        lc,
+        "enter_legacy_publish_fence",
+        lambda **_kwargs: {
+            "fence_id": "fence-unknown",
+            "git_executable": "git",
+            "effect_process_id": "proc",
+            "remote_ref": "refs/heads/agent/agent-1--attempt-001",
+            "descriptor_digest": "sha256:" + ("b" * 64),
+        },
+    )
+    monkeypatch.setattr(
+        lc,
+        "settle_legacy_publish_fence",
+        lambda **_kwargs: {"_local_outcome": "unknown", "fence_id": "fence-unknown"},
+    )
+    rc = lc.cmd_integrate(
+        argparse.Namespace(
+            clone=str(clone),
+            agent_id="agent-1",
+            delivery_attempt_id="attempt-001",
+            dry_run=False,
+            base="main",
+            baseline=str(baseline),
+            changeset=str(changeset),
+            claims_root=str(authority),
+        )
+    )
+    assert rc == lc.EXIT_POLICY
+    assert any(cmd[:4] == ["git", "-C", str(clone), "push"] for cmd in calls)
+    assert not any(cmd[:3] == ["gh", "pr", "create"] for cmd in calls)
+    assert "legacy_publish_unknown" in capsys.readouterr().err
+
+
+def test_b1_second_fence_replay_is_blocked(monkeypatch):
+    calls = {"issue": 0}
+
+    def fake_call(verb: str, request=None):
+        if verb == "status":
+            return {
+                "activation_state": "shadow-active",
+                "descriptor_digest": "sha256:" + ("c" * 64),
+                "sequence": 1,
+                "authority_epoch": 1,
+            }
+        if verb == "issue-legacy-fence":
+            calls["issue"] += 1
+            if calls["issue"] > 1:
+                raise RuntimeError("LEGACY_FENCE_REPLAY")
+            return {"fence_id": "fence-once", "state": "issued"}
+        if verb == "enter-legacy-publishing":
+            return {"fence_id": "fence-once", "state": "publishing"}
+        raise RuntimeError(f"unexpected {verb}")
+
+    monkeypatch.setattr(lc, "call_claims_authority", fake_call)
+    monkeypatch.setattr(lc, "resolve_real_git_executable", lambda: "git")
+    monkeypatch.setattr(
+        lc,
+        "build_remote_observation_pair",
+        lambda **kwargs: (
+            {
+                "schema": "claims-remote-observation/v1",
+                "remote_ref": kwargs["remote_ref"],
+                "observed_oid": "",
+                "digest": "sha256:" + ("d" * 64),
+                "descriptor_digest": kwargs["descriptor_digest"],
+            },
+            {
+                "schema": "claims-remote-observation/v1",
+                "remote_ref": kwargs["remote_ref"],
+                "observed_oid": "",
+                "digest": "sha256:" + ("d" * 64),
+                "descriptor_digest": kwargs["descriptor_digest"],
+            },
+        ),
+    )
+    first = lc.enter_legacy_publish_fence(
+        clone=Path("/tmp"),
+        branch="agent/x--attempt-1",
+        head_sha="a" * 40,
+        verification={"change_id": "sha256:" + ("e" * 64), "root_head_sha": "a" * 40, "changed_paths": ["f"]},
+    )
+    assert first["fence_id"] == "fence-once"
+    try:
+        lc.enter_legacy_publish_fence(
+            clone=Path("/tmp"),
+            branch="agent/x--attempt-1",
+            head_sha="a" * 40,
+            verification={"change_id": "sha256:" + ("e" * 64), "root_head_sha": "a" * 40, "changed_paths": ["f"]},
+        )
+        raise AssertionError("second fence must fail")
+    except RuntimeError as exc:
+        assert "LEGACY_FENCE_REPLAY" in str(exc)
+
+
+def test_b1_resolve_unknown_requires_stopped_process_proof(monkeypatch):
+    def fake_call(verb: str, request=None):
+        if verb != "resolve-legacy-unknown":
+            raise RuntimeError("unexpected")
+        assert isinstance(request, dict)
+        if "stopped_process_proof_digest" not in request:
+            raise RuntimeError("OPERATOR_STOPPED_PROCESS_PROOF_INVALID")
+        return {"fence_id": request["fence_id"], "state": "settled"}
+
+    monkeypatch.setattr(lc, "call_claims_authority", fake_call)
+    try:
+        lc.call_claims_authority(
+            "resolve-legacy-unknown",
+            {
+                "schema": "claim-mutation-envelope/v2",
+                "operation": "resolve-legacy-unknown",
+                "request_id": "00000000-0000-4000-8000-000000000010",
+                "authority_id": "omo-claims-authority-r0",
+                "fence_id": "fence-u",
+                "authorization_digest": "sha256:" + ("f" * 64),
+                # missing stopped_process_proof_digest
+            },
+        )
+        raise AssertionError("must require stopped-process proof")
+    except RuntimeError as exc:
+        assert "OPERATOR_STOPPED_PROCESS_PROOF_INVALID" in str(exc)
+
+
+def test_b1_swarm_registry_registers_broker_not_dispatcher():
+    import yaml
+
+    policy = yaml.safe_load(
+        (Path(__file__).resolve().parents[1] / ".omo/_truth/registry/swarm-coordination.yaml").read_text()
+    )
+    bridge = policy["claims_authority_bridge"]
+    assert bridge["effective_claim_authority"] == "v1"
+    assert bridge["instruction_capable"] is False
+    assert bridge["security_level"] == "R0_COOPERATIVE"
+    assert "daemon" in bridge["non_goals"]
+    assert "network_port" in bridge["non_goals"]
+    assert "second_dispatcher" in bridge["non_goals"]
+    assert "wp2" in bridge["non_goals"]
+    assert bridge["fence"]["owner"] == "bin/gac/clone-lifecycle.py"
+    assert bridge["fence"]["grants_scope"] is False
+
 if __name__ == "__main__":
     import pytest
 

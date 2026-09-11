@@ -234,3 +234,39 @@ conflict_event_kinds:
 observation:
   window_hours: 72
   m1_pass_requires: "elapsed_hours >= 72 AND conflict_count == 0"
+
+# Claims Authority Bridge WP1 Wave B1 — cooperative R0 shadow broker contract only.
+# v1 remains the sole effective claim authority. No daemon/port/dispatcher/WP2.
+claims_authority_bridge:
+  version: "1.2.0"
+  authority_id: omo-claims-authority-r0
+  security_level: R0_COOPERATIVE
+  effective_claim_authority: v1
+  instruction_capable: false
+  value_indicator_policy: false
+  stdio_entry: bin/agent-workflow.py claims-authority
+  child_module: projects/omo/src/omo/workflow/claims_authority.py
+  descriptor_schema: claims-authority-descriptor/v2
+  projection_schema: claims-authority-projection/v2
+  response_schema: claims-authority-response/v2
+  observer:
+    verb: status
+    flags: [--json]
+    freshness_seconds: 120
+    redacted: true
+    instruction_capable: false
+  fence:
+    owner: bin/gac/clone-lifecycle.py
+    command: integrate
+    mandatory_after_activation: true
+    grants_scope: false
+    preserves_canonical_push_argv: true
+  non_goals:
+    - daemon
+    - uds
+    - launchagent
+    - network_port
+    - mcp_server
+    - dashboard_authority
+    - second_dispatcher
+    - wp2
