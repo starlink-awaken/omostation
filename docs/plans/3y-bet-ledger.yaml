@@ -27534,7 +27534,7 @@ bets:
   title: A5 残留死引用修复 — 3个 launchd 服务指向已废弃 ws-t1069 路径
   appetite: 2 days
   priority: P1
-  status: candidate
+  status: done
   value_indicator_policy: false
   parent_bet_id: BET-Y1Q4-T10-146
   goal: 2026-09-11 A4/A5 收口过程中发现：com.omostation.resident-daemon、 com.omostation.pipeline-morning、com.omostation.tailscale-heartbeat
@@ -27563,6 +27563,37 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:c1a2fe8d14405235e91af84941d7580e0f0c9a6891b55230cc20e1d883adad21
     decision_ref: decision://accepted/BET-Y1Q4-T10-152
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-152.md
+          merged_reachable_commit:
+            ref: git://origin/main@c993d8a239062b0ef1404c08718677e490f1fee2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-152.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-152.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-152.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-152.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-152.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-152.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+    decision_ref: decision://accepted/BET-Y1Q4-T10-152
+  done_at: 2026-09-11
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
