@@ -242,3 +242,76 @@ def test_annotate_tracking_flags_untracked_in_workspace(tmp_path):
     # status/ok 不变 (M2 分类语义保持)
     assert by["scripts/ok_untracked.sh"]["status"] == "ok"
     assert by["scripts/ok_untracked.sh"]["ok"] is True
+
+
+def test_script_registry_coverage_flags_unregistered(tmp_path, monkeypatch):
+    mod = _load()
+    _git_init(tmp_path)
+    ws = tmp_path
+
+    # 在 ws/bin/_registry/scripts/ 放一个登记条目
+    reg_dir = ws / "bin" / "_registry" / "scripts"
+    reg_dir.mkdir(parents=True)
+    (reg_dir / "known.yaml").write_text(
+        "id: bin/scripts/known_job.sh\n", encoding="utf-8")
+
+    scripts = ws / "bin" / "scripts"
+    known = scripts / "known_job.sh"
+    unknown = scripts / "unknown_job.sh"
+    for p in (known, unknown):
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("#!/bin/sh\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(ws), "add", "bin/scripts/" + p.name],
+                       check=True, capture_output=True)
+    # 库脚本不应被要求登记
+    lib = scripts / "_lib.py"
+    lib.write_text("# lib\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(ws), "add", "bin/scripts/_lib.py"],
+                   check=True, capture_output=True)
+
+    refs = [
+        {"source": "cron", "line": 1, "target": "bin/scripts/known_job.sh",
+         "resolved": str(known), "exists": True, "ok": True, "status": "ok"},
+        {"source": "cron", "line": 2, "target": "bin/scripts/unknown_job.sh",
+         "resolved": str(unknown), "exists": True, "ok": True, "status": "ok"},
+        {"source": "cron", "line": 3, "target": "bin/scripts/_lib.py",
+         "resolved": str(lib), "exists": True, "ok": True, "status": "ok"},
+    ]
+
+    unreg = mod._script_registry_coverage(refs, ws)
+
+    assert [r["target"] for r in unreg] == ["bin/scripts/unknown_job.sh"]
+    by = {r["target"]: r for r in refs}
+    assert by["bin/scripts/known_job.sh"]["registry"] == "registered"
+    assert by["bin/scripts/unknown_job.sh"]["registry"] == "unregistered"
+    assert by["bin/scripts/_lib.py"]["registry"] == "na"  # 库脚本不要求登记
+
+
+def test_is_library_script():
+    mod = _load()
+    assert mod._is_library_script("gac/_lib.py") is True
+    assert mod._is_library_script("ssot/__init__.py") is True
+    assert mod._is_library_script("gac/check-sfop-slots.py") is False
+
+
+def test_submodule_ff_check_detects_regression(tmp_path, monkeypatch):
+    mod = _load()
+    # 直接测 fast-forward 判定逻辑: origin/main 指针 = bbb (更新), HEAD = aaa (回退)
+    def fake_ptrs(ref):
+        if ref == "HEAD":
+            return {"projects/l4-kernel": "aaa", "projects/ecos": "ccc"}
+        if ref == "origin/main":
+            return {"projects/l4-kernel": "bbb", "projects/ecos": "ccc"}
+        return {}
+    monkeypatch.setattr(mod, "_submod_ptrs", lambda _ws, ref: fake_ptrs(ref))
+    # bbb 不是 aaa 的祖先 (模拟回退)
+    monkeypatch.setattr("subprocess.run", lambda *a, **k: type("R", (), {"returncode": 1, "stdout": "", "stderr": ""})())
+
+    regressions = mod._submodule_ff_check(tmp_path)
+
+    subs = [r for r in regressions if r["submodule"] == "projects/l4-kernel"]
+    assert len(subs) == 1
+    assert subs[0]["origin_main"] == "bbb"
+    assert subs[0]["head"] == "aaa"
+    # ecos 两指针相同 (ccc), 不报
+    assert not any(r["submodule"] == "projects/ecos" for r in regressions)
