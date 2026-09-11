@@ -13,6 +13,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GAC_WORKTREE = ROOT / "bin" / "gac" / "gac-worktree.sh"
 GIT_RETRY = ROOT / "bin" / "gac" / "git-retry.sh"
+GH_API_PUSH = ROOT / "bin" / "gac" / "gh-api-push.sh"
+GIT_SHIM = ROOT / "bin" / "gac" / "git-shim"
+SWARM_GIT = ROOT / "bin" / "gac" / "swarm-git"
 GITLINK_DRIFT = ROOT / "bin" / "gac" / "gitlink-drift-protect.py"
 SYNC_SUBMODULES = ROOT / "bin" / "sync-submodules.sh"
 SYNC_SUBMODULES_PUSH = ROOT / "bin" / "ssot" / "sync-submodules-push.sh"
@@ -241,6 +244,73 @@ def test_git_retry_push_rejects_before_git(tmp_path: Path) -> None:
     combined = result.stdout + "\n" + result.stderr
     assert result.returncode != 0
     assert "PUBLICATION_OWNER_REQUIRED" in combined
+    harness.assert_no_publication_effects()
+
+
+def test_gh_api_push_rejects_before_any_gh_call(tmp_path: Path) -> None:
+    harness = PublicationEffectHarness(tmp_path)
+    payload = tmp_path / "payload.txt"
+    payload.write_text("proposed change\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            "bash",
+            str(GH_API_PUSH),
+            "example-owner",
+            "example-repo",
+            "agent/example--attempt-1",
+            "main",
+            "chore: propose change",
+            str(payload),
+        ],
+        cwd=ROOT,
+        env=harness.env(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    combined = result.stdout + "\n" + result.stderr
+    assert result.returncode != 0, combined
+    assert "PUBLICATION_OWNER_REQUIRED" in combined
+    assert harness.events() == ""
+    harness.assert_no_publication_effects()
+
+
+def test_git_wrappers_reject_every_push_form_before_git(tmp_path: Path) -> None:
+    harness = PublicationEffectHarness(tmp_path)
+    branch = "agent/example--attempt-1"
+    head = "a" * 40
+    push_forms = (
+        ("push", "origin", "HEAD"),
+        ("push", "-f", "origin", "HEAD"),
+        ("push", "--force", "origin", "HEAD"),
+        ("push", "--force-with-lease", "origin", "HEAD"),
+        (
+            "push",
+            "--porcelain",
+            f"--force-with-lease=refs/heads/{branch}:",
+            "origin",
+            f"{head}:refs/heads/{branch}",
+        ),
+        ("push", "--no-verify", "origin", "HEAD"),
+        ("-C", str(ROOT), "push", "origin", "HEAD"),
+        ("-c", "push.default=current", "push", "origin", "HEAD"),
+        ("--git-dir=.git", "push", "origin", "HEAD"),
+    )
+
+    for script in (GIT_SHIM, SWARM_GIT):
+        for argv in push_forms:
+            result = subprocess.run(
+                ["bash", str(script), *argv],
+                cwd=ROOT,
+                env=harness.env({"AGENT_ID": "publication-test"}),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            combined = result.stdout + "\n" + result.stderr
+            assert result.returncode != 0, (script.name, argv, combined)
+            assert "PUBLICATION_OWNER_REQUIRED" in combined, (script.name, argv, combined)
     harness.assert_no_publication_effects()
 
 

@@ -27287,7 +27287,7 @@ bets:
     shadow graduation，并为尚未物化的 WP2 提供可审计前置证据。
   depends_on: []
   non_goals:
-  - 1.3.0 仅授权 Wave B2 九个 effect-convergence 路径，不修改 B1 adapter、child、gitlink、runtime 或启动 WP2
+  - 1.4.0 仅授权 Wave B3 九个 API/shim bypass-closure 路径，不修改 B2 入口、child、gitlink、runtime 或启动 WP2
   - 不信任 arbitrary external 或 clone-local root，不追认历史 v1/A1/A3 receipt
   - 不实施 R1、host service、service account、UDS、Keychain、多租户 RBAC 或高可用
   - 不修改其他 BET、completion/value evidence、branch protection 或业务运行态
@@ -27318,15 +27318,15 @@ bets:
   workflow: bet-execution
   underlying_workflow: project-code-change
   write_surfaces:
-  - bin/gac/gac-worktree.sh
-  - bin/gac/git-retry.sh
-  - bin/gac/gitlink-drift-protect.py
-  - bin/ssot/sync-submodules-push.sh
-  - bin/sync-submodules.sh
-  - scripts/wait-and-bump-cockpit.sh
-  - tests/test_gac_worktree_claim_pasw.py
+  - bin/_registry/scripts/governance/gh-api-push.yaml
+  - bin/gac/gh-api-push.sh
+  - bin/gac/git-shim
+  - bin/gac/swarm-git
+  - docs/plans/AGENT-BRIEF.md
+  - tests/integration/test-git-shim.sh
   - tests/test_git_publication_effect_owner.py
-  - tests/unit/gac/test_submodule_pointer_transaction.py
+  - tests/test_swarm_discipline.py
+  - tests/unit/gac/test_immutable_writer_git_policy.py
   pasw_required: false
   risk_level: L2
   human_gate: true
@@ -27334,8 +27334,8 @@ bets:
   retro: required
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
-    spec_version: 1.3.0
-    content_digest: sha256:aa4cb61e10c38ed94e4b6b52a9e0160422ad1079c5bae6ab6d90b2ecd01340ab
+    spec_version: 1.4.0
+    content_digest: sha256:2733d7b47ebb4cf5e8f221b5964f681b03e2953d90fa348e166e0c8557862851
     decision_ref: decision://accepted/BET-Y1Q4-T10-145
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -27351,12 +27351,12 @@ bets:
         evidence: {}
     overall_state: evaluating
   circuit_breaker: >-
-    1.3.0 WorkPacket 必须只含 Wave B2 九个路径并保持
-    implementation_authorized=true；任一 child/B1/plan/pointer/evidence/WP2/runtime 写面、
-    scope union、旧 WorkPacket hash 复用、worktree 直连 integrate、第二 publication owner、
+    1.4.0 WorkPacket 必须只含 Wave B3 九个路径并保持
+    implementation_authorized=true；任一 child/B1/B2/plan/pointer/evidence/WP2/runtime 写面、
+    scope union、旧 WorkPacket hash 复用、wrapper/API 继续发布、第二 publication owner、
     自动 rebase/merge/pull 吸收上游、root gitlink bump、v2 effective admission、
-    completion/value 扩张或默认门禁失败都立即停止。1.4.0 只能在 Wave B2 root main/CI
-    可重算、1.3.0 implementation run 关闭且锁归零后通过独立 binding 完整替换。
+    completion/value 扩张或默认门禁失败都立即停止。1.5.0 只能在 Wave B3 root main/CI
+    可重算、1.4.0 implementation run 关闭且锁归零后通过独立 binding 完整替换。
 - id: BET-Y1Q4-T10-146
   track: T10-MATURITY
   window: Y1Q4

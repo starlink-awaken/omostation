@@ -526,6 +526,14 @@ def test_scan_orphan_commits_dedupes_and_shapes(tmp_path):
     assert hits == []
 
 
+def test_git_wrappers_have_no_publication_escape_hatch():
+    """Wave B3 source inventory complements executable effect-owner tests."""
+    for wrapper in (ROOT / "bin/gac/git-shim", ROOT / "bin/gac/swarm-git"):
+        text = wrapper.read_text(encoding="utf-8")
+        assert "PUBLICATION_OWNER_REQUIRED" in text
+        assert "_atomic_create_lease" not in text
+
+
 def test_wired_entrypoints_reference_gates():
     """Structural: real entrypoints call into swarm discipline (no orphan registry)."""
     wt = (ROOT / "bin/gac/gac-worktree.sh").read_text(encoding="utf-8")
