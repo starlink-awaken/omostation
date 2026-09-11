@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/gac/multica-as0-verify.py
+name: Multica AS0 Admission Verify
+category: governance
+owner: governance-team
+description: Read-only Multica AS0 admission verifier (30 API / 7 topology / 3 trust). No writer dispatch.
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - BET-Y1Q4-T10-150
+maturity: active
+last_reviewed: "2026-09-11"
