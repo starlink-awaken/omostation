@@ -1,0 +1,24 @@
+schema: script-registry/v1
+id: bin/cli-availability-probe.sh
+name: Cli Availability Probe
+category: governance
+owner: governance-team
+description: "Cockpit CLI 关键入口每日探活, JSONL 台账落 runtime/probes/cli-availability.jsonl (BET-Y1Q4-T13)"
+inputs:
+  - name: mode
+    type: flag
+    description: "--quick 只跑 4 项核心探针"
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - projects/cockpit
+triggers:
+  - type: cron
+    schedule: "15 6 * * *"
+    command: "cd /Users/xiamingxing/Workspace && bash bin/cli-availability-probe.sh >> runtime/cron/cli-availability-probe.log 2>&1"
+related:
+  - bin/memory-os-smoke.sh
+  - docs/reports/cockpit-cli-command-availability-ledger.md
+maturity: draft
+last_reviewed: "2026-09-11"
