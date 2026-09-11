@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/security/vault.py
+name: Vault
+category: governance
+owner: governance-team
+description: "Local Secure Vault seal/reveal/lockout (BET-Y1Q4-T10-05 offline sandbox)"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-08-24"
