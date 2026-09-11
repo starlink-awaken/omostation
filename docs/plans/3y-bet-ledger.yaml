@@ -27287,7 +27287,7 @@ bets:
     shadow graduation，并为尚未物化的 WP2 提供可审计前置证据。
   depends_on: []
   non_goals:
-  - 1.5.0 仅授权 Wave B4 五个云端 automation 路径，不修改 B3 入口、child、gitlink、runtime 或启动 WP2
+  - 1.6.0 仅授权 root projects/omo gitlink 指针事务，不修改 B4/云端/child 源码、runtime 或启动 WP2
   - 不信任 arbitrary external 或 clone-local root，不追认历史 v1/A1/A3 receipt
   - 不实施 R1、host service、service account、UDS、Keychain、多租户 RBAC 或高可用
   - 不修改其他 BET、completion/value evidence、branch protection 或业务运行态
@@ -27315,14 +27315,10 @@ bets:
   - cmd: PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /opt/homebrew/bin/python3
       -B -m pytest -q -p no:cacheprovider tests/test_agent_workflow.py tests/test_clone_lifecycle.py
     expect: exit 0 after Wave B1
-  workflow: bet-execution
+  workflow: submodule-pointer-transaction
   underlying_workflow: project-code-change
   write_surfaces:
-  - .github/workflows/omo-autopilot.yml
-  - .github/workflows/reusable-submodule-bump-pr.yml
-  - .github/workflows/submodule-autobump.yml
-  - .github/workflows/submodule-freshness-gatekeeper.yml
-  - tests/test_github_publication_effect_owner.py
+  - projects/omo
   pasw_required: false
   risk_level: L2
   human_gate: true
@@ -27330,8 +27326,8 @@ bets:
   retro: required
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
-    spec_version: 1.5.0
-    content_digest: sha256:e0e0301c934c112cb595b4ed1f02fd28201a1024db9dfaa0fb8e1babc4405e09
+    spec_version: 1.6.0
+    content_digest: sha256:5d1a34964b57e42cbbd5df99edcb789094e408103052eee63d21d02872e83689
     decision_ref: decision://accepted/BET-Y1Q4-T10-145
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -27347,12 +27343,11 @@ bets:
         evidence: {}
     overall_state: evaluating
   circuit_breaker: >-
-    1.5.0 WorkPacket 必须只含 Wave B4 五个路径并保持
-    implementation_authorized=true；任一 child/B1/B2/B3/plan/pointer/evidence/WP2/runtime 写面、
-    scope union、旧 WorkPacket hash 复用、云端继续 commit/push/PR、第二 publication owner、
-    自动 rebase/merge/pull 吸收上游、root gitlink bump、v2 effective admission、
-    completion/value 扩张或默认门禁失败都立即停止。1.6.0 只能在 Wave B4 root main/CI
-    可重算、1.5.0 implementation run 关闭且锁归零后通过独立 binding 完整替换。
+    1.6.0 WorkPacket 必须只含 projects/omo 并保持 implementation_authorized=true；
+    任一 B4/child 源码/plan/evidence/WP2/runtime 写面、scope union、旧 WorkPacket hash 复用、
+    非 submodule-pointer 事务改 gitlink、第二 publication owner、completion/value 扩张或
+    默认门禁失败都立即停止。1.7.0 只能在 Wave C root/child 可达、1.6.0 run 关闭且锁归零后
+    通过独立 binding 完整替换。
 - id: BET-Y1Q4-T10-146
   track: T10-MATURITY
   window: Y1Q4
