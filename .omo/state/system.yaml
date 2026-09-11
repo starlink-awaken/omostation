@@ -1,8 +1,8 @@
 current_phase: 29
 current_wave: W1
-health_score_evidence: 100.0
-health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-09-11T22:30:11.583833+00:00'
+health_score_evidence: 72
+health_score_evidence_source: compass_radar (synced)
+health_score_evidence_generated_at: '2026-09-11T22:52:22.453002+00:00'
 completed_tasks: 293
 planned_tasks: 16
 active_tasks: 1
@@ -46,25 +46,23 @@ self_evolution:
   proposals_pending: 0
   proposals_approved: 0
   proposals_executed: 0
-health_score: 54
-governance_anomaly_score: 6
+health_score: 72
+governance_anomaly_score: 0
 service_online_ratio: 1.0
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-09-06T12:53:21Z'
+health_score_generated_at: '2026-09-11T22:51:58Z'
 runtime_health_summary:
   online_services: 1
   total_services: 1
   ratio: 1.0
-  health_score: 100
-  last_scan: '1789114876.376411'
-  service_count: 6
+  health_score: 72
+  last_scan: '2026-09-11T22:51:58Z'
+  source: compass_radar_isc3_daemon_ratio
   degraded: []
-  source: runtime_daemon_de_false_positive
 governance_feedback_last_run: '2026-09-11T16:21:16.646354+08:00'
 workflow_mesh_health:
-  status: healthy
-  event_count: 1
-  events_last_hour: 1
-  last_event_age_seconds: 2105.3
-  bridges_active:
-  - agent-workflow
+  status: degraded
+  event_count: 0
+  events_last_hour: 0
+  last_event_age_seconds: null
+  bridges_active: []

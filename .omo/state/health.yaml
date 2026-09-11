@@ -1,33 +1,33 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-09-06T12:53:21Z
+# generated_at: 2026-09-11T22:51:58Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
-# health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5, 'drift': 0.1, 'staleness': 0.1}
+# health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5, 'drift': 0.1, 'staleness': 0.1, 'alignment': 0.1}
 
-generated_at: "2026-09-06T12:53:21Z"
+generated_at: "2026-09-11T22:51:58Z"
 source: "c2g.strategy (real audit, no mock)"
-health_score: 54
-governance_anomaly_score: 6
+health_score: 72
+governance_anomaly_score: 0
 anomaly_count: 2
-service_online_ratio: 0.500
+service_online_ratio: 1.000
 freshness_score: 100
 drift_score: 85
-staleness_score: 94
-alignment_score: "unavailable"
+staleness_score: 93
+alignment_score: 62
 feedback_alive: True
-feedback_last_ts: "2026-09-06T12:43:38+00:00"
-feedback_staleness_hours: 0.2
-total_tasks: 10
-done: 2
-planned: 8
+feedback_last_ts: "2026-09-11T22:51:44+00:00"
+feedback_staleness_hours: 0.0
+total_tasks: 19
+done: 3
+planned: 16
 
 governance_execution_surface:
   base_anomaly_score: 70
-  execution_deduction: 64
+  execution_deduction: 72
   orphan_worktrees: 0
   adr_renumber_events: 0
-  concurrent_conflicts: 8
-  score: 6
+  concurrent_conflicts: 9
+  score: 0
   weights:
     orphan_worktrees: 4
     adr_renumber_events: 5
@@ -40,17 +40,19 @@ health_composite_breakdown:
     runtime: 0.5
     drift: 0.1
     staleness: 0.1
+    alignment: 0.1
   contributions:
-    governance: 1.7999999999999998
+    governance: 0.0
     freshness: 20.0
-    runtime: 25.0
+    runtime: 50.0
     drift: 8.5
-    staleness: 9.4
-  raw: 53.92
+    staleness: 9.3
+    alignment: 6.2
+  raw: 72.31
 
 anomalies:
   - "[WARN]  L3 高风险任务 3 个, 需重点 review"
-  - "[WARN]  Owner 集中度: human 持有 62% 待处理任务 (单点故障风险, 知识/能力集中)"
+  - "[WARN]  Owner 集中度: human 持有 75% 待处理任务 (单点故障风险, 知识/能力集中)"
 
 drift_detail:
   source: "drift-sweep"
@@ -62,41 +64,48 @@ drift_detail:
 
 staleness_detail:
   source: "staleness-check"
-  checked: "524"
+  checked: "526"
   clean: "505"
-  stale: "19"
-  total_issues: "21"
-  stale_ratio: "0.0363"
-  issue_density: "0.0401"
-  score: "94"
+  stale: "21"
+  total_issues: "24"
+  stale_ratio: "0.0399"
+  issue_density: "0.0456"
+  score: "93"
 
 alignment_detail:
-  error: "subprocess: Command '['/Users/xiamingxing/ws-t10-128-ns/projects/omo/.venv/bin/python3', '/Users/xiamingxing/ws-t10-128-ns/bin/gac/m"
+  source: "maturity-align"
+  reconciliation_score: "62"
+  drift_detected: "True"
+  normalised: "{'compass_radar': 50.0, 'maturity_scorecard': 70.0, 'bet_ledger': 88.0}"
+  high_dimension: "bet_ledger"
+  low_dimension: "compass_radar"
+  warnings: "['score spread = 38 (compass 50.0, scorecard 70.0, ledger 88.0)']"
+  score: "62"
 
 distributions:
   priority_dist:
     P0: 1
-    P1: 2
-    P2: 2
+    P1: 5
+    P2: 6
     P3: 1
     medium: 1
-    unassigned: 3
+    unassigned: 5
   risk_dist:
     L0: 2
-    L1: 2
-    L2: 3
+    L1: 3
+    L2: 11
     L3: 3
   owner_dist:
     agent: 1
-    human: 5
-    unassigned: 4
+    human: 12
+    unassigned: 6
   phase_dist:
-    unphased: 10
+    unphased: 19
   status_dist:
-    candidate: 4
-    done: 2
+    candidate: 12
+    done: 3
     pending: 4
   governance_dist:
     freshness: 20
-    governance: 2
-    runtime: 25
+    governance: 0
+    runtime: 50
