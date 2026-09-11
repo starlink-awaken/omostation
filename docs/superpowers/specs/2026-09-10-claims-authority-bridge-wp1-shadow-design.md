@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.8.0
+spec_version: 1.9.0
 status: accepted
 lifecycle: contract
 owner: governance-team
@@ -30,14 +30,13 @@ contract is
 `docs/superpowers/specs/2026-09-09-claims-authority-bridge-design.md` version 1.0.0,
 SHA-256 `a419e2fb3cd67026edebd39b25a1e1b77e6c92978ce1cf1be6b8e4be19cf8c58`.
 Accepted version 1.0.0 allocated `BET-Y1Q4-T10-145` and authorized only its
-implementation plan. Versions 1.1.2–1.7.0 authorized and delivered Waves A–D through the
-non-terminal shadow evidence report. Version 1.8.0 is a complete non-union replacement
-that removes the Wave D evidence paths from the current WorkPacket and authorizes only
-the Wave E verifier-interface paths in `projects/omo`. It names and closure-binds the
-principal-decision verifier and independent stopped-process verifier required before
-Task 16 host activation. It does not itself activate production shadow mode, start the
-24-hour clock, write graduation `done`, or materialize WP2. It preserves v1 as the only
-effective publication authority and keeps `value_indicator_policy=false`.
+implementation plan. Versions 1.1.2–1.8.0 authorized and delivered Waves A–E through the
+omo verifier interface binding. Version 1.9.0 is a complete non-union replacement that
+removes the Wave E source paths from the current WorkPacket and authorizes only the root
+`projects/omo` gitlink pointer transaction to the Wave E child main. It does not activate
+production shadow mode, start the 24-hour clock, write graduation `done`, or materialize
+WP2. It preserves v1 as the only effective publication authority and keeps
+`value_indicator_policy=false`.
 
 ## 2. Problem and current-state audit
 
@@ -705,6 +704,18 @@ It does not bump the root gitlink, write host runtime, start the observation clo
 mark graduation. Host activation remains Task 16 after this WorkPacket merges and a
 fresh root pointer (if required) is authorized separately.
 
+### Wave F — root pointer after verifiers
+
+```text
+projects/omo
+```
+
+Wave F advances the root `projects/omo` gitlink to the authoritative child main that
+contains Wave E verifier bindings. It does not edit source files, activate host shadow,
+or start the 24-hour clock.
+
+
+
 The initial 1.0.0 accepted binding is plan-only. Writing-plans uses a fresh bound run,
 claims only the plan, verifies and closes before the Wave A binding. It cannot
 create code, a store, a receipt or an implementation claim.
@@ -931,7 +942,22 @@ complete the parent BET or create WP2.
 
 ## 17. Acceptance record and transition gate
 
-Versions 1.0.0–1.7.0 remain immutable historical authority through Wave D's
+Versions 1.0.0–1.8.0 remain immutable historical authority through Wave E. Wave E
+child merge is `bd884f87bad8d3738f30b62e79d1a35b767c8c5e` (omo#161). Version 1.9.0
+acceptance requires and records:
+
+1. Wave E verifier code is on authoritative child main and prior binding runs are closed;
+2. the Ledger retains candidate `BET-Y1Q4-T10-145`, one current accepted binding and no
+   completion/value expansion;
+3. the current WorkPacket contains exactly `projects/omo` and rejects the 1.8.0 WorkPacket
+   hash `sha256:309f9af75d11d814de01f7beffbcde76cfc6c09e81b841f69586948e97529fec`;
+4. `implementation_authorized=true` authorizes only the root pointer transaction;
+5. appetite remains 12 days including the mandatory 24-hour observation;
+6. every later binding replaces rather than appends write_surfaces;
+7. the pointer target must be a double-read child main OID containing Wave E; and
+8. Wave F starts only after this 1.9.0 binding merges and locks return to zero on a fresh
+   managed successor.
+main immutable historical authority through Wave D's
 non-terminal shadow report (`8c728c892c2d39e19e74a49e8328039b4419a156`, source
 `ac8d3f70c3ead233a69881e049da252e5ffd513b`). Version 1.8.0 acceptance requires and
 records:
