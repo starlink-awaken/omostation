@@ -72,6 +72,16 @@ local_surfaces:
     class: client-metadata
     lifecycle: local
     reason: CommandCode client metadata and taste data
+  .tokensave:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: TokenSave client metadata and cache
+  .claude-flow:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: ClaudeFlow client metadata and session state
   .openclaude:
     owner: workspace-tooling
     class: client-metadata
