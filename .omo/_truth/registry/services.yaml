@@ -5163,6 +5163,21 @@ services:
     max_stale_hours: 24
   notes: 每周 worktree 清理
   depends_on: []
+  crontab_token: worktree-prune
+- id: cron.ops_signal_drift_check
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 30 8 * * *
+  program:
+    interpreter: uv
+    entrypoint: bin/ops/cli.py
+  liveness:
+    signal: runtime/cron/signal-drift-check.log
+    max_stale_hours: 24
+  notes: 每日 ops 注册表漂移巡检 (check-signals)
+  depends_on: []
+  crontab_token: ops-signal-drift-check
 - id: omo.governor
   enabled: false
   scheduler: launchd

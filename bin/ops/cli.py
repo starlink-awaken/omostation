@@ -909,6 +909,11 @@ def main() -> int:
                            help="Service profile (default: full)")
     recover_p.set_defaults(func=cmd_recover)
 
+    # ── check-signals ──
+    check_signals_p = sub.add_parser("check-signals", help="Detect drift between registry and real anchors")
+    check_signals_p.add_argument("--json", action="store_true", help="Output as JSON")
+    check_signals_p.set_defaults(func=cmd_check_signals)
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1097,6 +1102,134 @@ def cmd_recover(args: argparse.Namespace) -> int:
 
     print(f"\nSummary: {recovered} recovered, {skipped} healthy, {failed} failed")
     return 0
+
+
+def cmd_check_signals(args: argparse.Namespace) -> int:
+    """Detect drift between services.yaml registry and real anchors (BET-Y1Q4-T16).
+
+    Checks:
+      - scheduler: cron → crontab has matching line (word-boundary token match)
+      - scheduler: launchd → ~/Library/LaunchAgents/<label>.plist exists
+      - liveness.signal (file/file::attr) → path exists
+
+    exit 0 = zero drift, exit 1 = has drift.
+    """
+    import re
+    import subprocess as sp
+
+    services = load_services()
+    enabled = [s for s in services if s.get("enabled", True)]
+
+    # Fetch crontab lines
+    crontab_lines: list[str] = []
+    try:
+        proc = sp.run(["crontab", "-l"], capture_output=True, text=True, timeout=5)
+        if proc.returncode == 0:
+            crontab_lines = [l.strip() for l in proc.stdout.splitlines() if l.strip() and not l.startswith("#")]
+    except Exception:
+        pass
+
+    launchd_dir = Path.home() / "Library" / "LaunchAgents"
+
+    results: list[dict] = []
+    drift_count = 0
+
+    for svc in enabled:
+        sid = svc.get("id", "?")
+        scheduler = svc.get("scheduler", "")
+        drift = False
+        reason = ""
+
+        if scheduler == "cron":
+            program = svc.get("program", {})
+            entrypoint = program.get("entrypoint", "") if isinstance(program, dict) else ""
+            crontab_token = svc.get("crontab_token", "")
+
+            # Build token set for word-boundary matching
+            tokens = set()
+            tail = sid.rsplit(".", 1)[-1]
+            tokens.add(sid)
+            tokens.add(tail)
+            tokens.add(tail.replace("_", "-"))
+            if isinstance(crontab_token, str) and crontab_token.strip():
+                tokens.add(crontab_token.strip())
+
+            # Check crontab for matching line
+            matched = False
+            for line in crontab_lines:
+                for token in tokens:
+                    if len(token) >= 4:
+                        if re.search(rf"(?<![A-Za-z0-9_-]){re.escape(token)}(?![A-Za-z0-9_-])", line):
+                            matched = True
+                            break
+                if matched:
+                    break
+
+            if not matched:
+                drift = True
+                reason = "crontab line not found (word-boundary match)"
+
+        elif scheduler == "launchd":
+            label = svc.get("label", "")
+            if label:
+                plist_path = launchd_dir / f"{label}.plist"
+                if not plist_path.exists():
+                    drift = True
+                    reason = f"plist not found: {plist_path}"
+            else:
+                drift = True
+                reason = "launchd service missing label"
+
+        # Check liveness signal path
+        liveness = svc.get("liveness", {})
+        if isinstance(liveness, dict):
+            signal = liveness.get("signal", "")
+            if isinstance(signal, str) and signal:
+                signal_path = signal.split("::")[0]  # file::attr → file
+                if signal_path.startswith("/"):
+                    abs_path = Path(signal_path)
+                else:
+                    abs_path = WORKSPACE / signal_path
+                if not abs_path.exists():
+                    if not drift:
+                        drift = True
+                        reason = f"liveness signal path missing: {abs_path}"
+                    else:
+                        reason += f"; signal missing: {abs_path}"
+
+        status = "DRIFT" if drift else "OK"
+        results.append({
+            "id": sid,
+            "scheduler": scheduler,
+            "status": status,
+            "reason": reason,
+        })
+        if drift:
+            drift_count += 1
+
+    # Output
+    if args.json:
+        report = {
+            "ok": drift_count == 0,
+            "drift_count": drift_count,
+            "total_checked": len(enabled),
+            "results": results,
+        }
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        # Human-readable table
+        print(f"{'ID':<35} {'Scheduler':<10} {'Status':<8} {'Reason'}")
+        print("-" * 100)
+        for r in results:
+            print(f"{r['id']:<35} {r['scheduler']:<10} {r['status']:<8} {r['reason']}")
+        print(f"\n{'='*100}")
+        print(f"Total: {len(enabled)} checked, {drift_count} drift")
+        if drift_count == 0:
+            print("✅ Zero drift — all anchors verified")
+        else:
+            print(f"❌ {drift_count} drift detected")
+
+    return 0 if drift_count == 0 else 1
 
 
 def cmd_generate(args: argparse.Namespace) -> int:
