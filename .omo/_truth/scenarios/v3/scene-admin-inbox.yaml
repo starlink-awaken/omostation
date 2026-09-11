@@ -50,3 +50,13 @@ failure_cost: 任务邮件漏判导致行政工作延误
 data_classification: internal
 data_scope: work-mail-metadata-and-llm-summary
 operator: admin-inbox-dispatch-under-human-review
+triggers:
+- type: signal
+  signal: email.received
+  connector: netease_mailmaster
+  filter: subject MATCHES notification
+  debounce: 300s
+- type: signal
+  signal: email.received
+  connector: apple_mail
+  debounce: 300s

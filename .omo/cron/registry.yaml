@@ -376,6 +376,16 @@ jobs:
     owner: governance-team
     sfop_slot: S
 
+  - name: scene-signal-poll
+    schedule: "*/15 9-18 * * 1-5"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-signal-poller.py poll >> runtime/cron/scene-signal-poll.log 2>&1'
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+    note: "工作日 9-18 点每 15 分钟轮询邮件信号并触发场景 (assisted+ live, shadow dry-run)"
+
 # ── 待人工一次性拍板 (不影响本次收敛的文档统一, 只影响是否改变真实运行行为) ──
 open_decisions:
   - id: D2
